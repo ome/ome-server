@@ -1,4 +1,4 @@
-# OME/Analysis/CLIHandler.pm
+# OME/module_execution/CLIHandler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Josiah Johnston <siah@nih.gov>
@@ -32,10 +32,10 @@ use base qw(OME::Analysis::Handler);
 use fields qw(_outputHandle);
 
 sub new {
-    my ($proto,$location,$session,$program,$node) = @_;
+    my ($proto,$location,$session,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$program,$node);
+    my $self = $class->SUPER::new($location,$session,$module,$node);
 
     bless $self,$class;
     return $self;
@@ -45,8 +45,8 @@ sub new {
 sub precalculateDataset {
     my ($self) = @_;
 
-	my $program                  = $self->{_program};
-	my $executionInstructions    = $program->execution_instructions();
+	my $module                  = $self->{_program};
+	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
@@ -54,7 +54,7 @@ sub precalculateDataset {
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
 	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'precalculateDataset' ) {
-		my @formalInputs          = $program->inputs();
+		my @formalInputs          = $module->inputs();
 		my %inputs                = map { $_->name() => $self->getDatasetInputs($_->name()) } @formalInputs;
 		$self->_execute(\%inputs);
 	}
@@ -63,8 +63,8 @@ sub precalculateDataset {
 sub precalculateImage {
     my ($self) = @_;
 
-	my $program                  = $self->{_program};
-	my $executionInstructions    = $program->execution_instructions();
+	my $module                  = $self->{_program};
+	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
@@ -72,7 +72,7 @@ sub precalculateImage {
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
 	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'precalculateImage' ) {
-		my @formalInputs          = $program->inputs();
+		my @formalInputs          = $module->inputs();
 		my %inputs                = map { $_->name() => $self->getImageInputs($_->name()) } @formalInputs;
 		$self->_execute(\%inputs);
 	}
@@ -81,8 +81,8 @@ sub precalculateImage {
 sub calculateFeature {
     my ($self) = @_;
 
-	my $program                  = $self->{_program};
-	my $executionInstructions    = $program->execution_instructions();
+	my $module                  = $self->{_program};
+	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
@@ -90,7 +90,7 @@ sub calculateFeature {
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
 	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'calculateFeature' ) {
-		my @formalInputs          = $program->inputs();
+		my @formalInputs          = $module->inputs();
 		my %inputs                = map { $_->name() => $self->getFeatureInputs($_->name()) } @formalInputs;
 		$self->_execute(\%inputs);
 	}
@@ -100,8 +100,8 @@ sub calculateFeature {
 sub postcalculateImage {
     my ($self) = @_;
 
-	my $program                  = $self->{_program};
-	my $executionInstructions    = $program->execution_instructions();
+	my $module                  = $self->{_program};
+	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
@@ -109,7 +109,7 @@ sub postcalculateImage {
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
 	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'postcalculateImage' ) {
-		my @formalInputs          = $program->inputs();
+		my @formalInputs          = $module->inputs();
 		my %inputs                = map { $_->name() => $self->getImageInputs($_->name()) } @formalInputs;
 		$self->_execute(\%inputs);
 	}
@@ -118,8 +118,8 @@ sub postcalculateImage {
 sub postcalculateDataset {
     my ($self) = @_;
 
-	my $program                  = $self->{_program};
-	my $executionInstructions    = $program->execution_instructions();
+	my $module                  = $self->{_program};
+	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
@@ -127,7 +127,7 @@ sub postcalculateDataset {
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
 	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'postcalculateDataset' ) {
-		my @formalInputs          = $program->inputs();
+		my @formalInputs          = $module->inputs();
 		my %inputs                = map { $_->name() => $self->getDatasetInputs($_->name()) } @formalInputs;
 		$self->_execute(\%inputs);
 	}
@@ -140,9 +140,9 @@ sub _execute {
 
     my $image  = $self->getCurrentImage();
 
-	my $program               = $self->{_program};
+	my $module               = $self->{_program};
 	my %outputs;
-	my $executionInstructions = $program->execution_instructions();
+	my $executionInstructions = $module->execution_instructions();
 	my $debug                 = 0;
 	my $session               = $self->Session();
 	my $imagePix;
@@ -181,7 +181,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	# 	the import process normalized planeID's - it gives every plane a unique ID and updates all references
 	# 	autoIterators is hash reference. hash is keyed by planeID. values are references to hashes keyed by theZ, theW, & theT. these values are references to scalars.
 	# 		The reason for this is each plane needs a set of plane indexes {theZ, theW, theT}, but sometimes a component of these will overlap.
-	# 		For example, the cross correlation program needs two planes synced on theZ and theT with differing constant wavenumbers.
+	# 		For example, the cross correlation module needs two planes synced on theZ and theT with differing constant wavenumbers.
 	# 		Since theZ theW and theT are references, it is a simple matter to sync any of these.
 	#
 	my $planeIndexes;
@@ -348,7 +348,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	
 	#####################################################################
 	#
-	# Execute the program
+	# Execute the module
 	#
 	my $runAgain;
 	my $cmdXML      = $root->getElementsByTagName( "CommandLine" )->[0];
@@ -453,7 +453,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			#############################################################
 			}
 		}
-		my $executeString = $program->location() . $cmdLineString;
+		my $executeString = $module->location() . $cmdLineString;
 print STDERR "Execution string is:\n$executeString\n";# if $debug;
 		print STDERR "Execution string is:\n$executeString\n" if $debug;
 		#
@@ -466,7 +466,7 @@ print STDERR "Execution string is:\n$executeString\n";# if $debug;
 	#
 		my $_STDOUT = new IO::File;
 		open $_STDOUT, "$executeString |" or
-			die "Cannot open analysis program";
+			die "Cannot open module_execution module";
 		my $outputStream='';
 		while( <$_STDOUT> ) {
 			$outputStream .= $_;
@@ -647,7 +647,7 @@ print STDERR "Execution string is:\n$executeString\n";# if $debug;
 	
 	} while($runAgain);
 	#
-	# END "Execute the program"
+	# END "Execute the module"
 	#
 	#####################################################################
 

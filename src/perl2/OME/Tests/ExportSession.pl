@@ -30,9 +30,9 @@ my $factory = $session->Factory();
 my $ExportSTDs;
 
 
-my @featureAttributes = $factory->findObjects("OME::AttributeType",granularity => 'F');
-my @datasetAttributes = $factory->findObjects("OME::AttributeType",granularity => 'D');
-my @imageAttributes = $factory->findObjects("OME::AttributeType",granularity => 'I');
+my @featureAttributes = $factory->findObjects("OME::SemanticType",granularity => 'F');
+my @datasetAttributes = $factory->findObjects("OME::SemanticType",granularity => 'D');
+my @imageAttributes = $factory->findObjects("OME::SemanticType",granularity => 'I');
 my ($object,$attribute);
 
 for (my $i=0; $i < @ARGV; $i++) {

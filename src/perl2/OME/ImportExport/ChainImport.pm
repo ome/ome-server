@@ -85,7 +85,7 @@ sub processDOM {
         if ($flags{NoDuplicates}) {
             my $chainName = $chain->getAttribute('Name');
             my $oldChain = $factory->
-              findObject("OME::AnalysisView",
+              findObject("OME::AnalysisChain",
                          name => $chainName);
             die "Chain \"$chainName\" already exists"
               if defined $oldChain;
@@ -97,18 +97,18 @@ sub processDOM {
         foreach my $node ($nodesTag->getElementsByTagName('Node')) {
             my $nodeID = $node->getAttribute('NodeID');
             my $programName = $node->getAttribute('ProgramName');
-            my $program = $factory->
-              findObject('OME::Program',
-                         program_name => $programName);
-            die "Cannot find program named \"$programName\""
-              unless defined $program;
+            my $module = $factory->
+              findObject('OME::Module',
+                         name => $programName);
+            die "Cannot find module named \"$programName\""
+              unless defined $module;
 
             my $hash = {
-                        program         => $program,
+                        module         => $module,
                         iterator_tag    => $node->getAttribute('IteratorTag') ||
-                                           $program->default_iterator(),
+                                           $module->default_iterator(),
                         new_feature_tag => $node->getAttribute('NewFeatureTag') ||
-                                           $program->new_feature_tag(),
+                                           $module->new_feature_tag(),
                        };
 
             $nodes{$nodeID} = $hash;
@@ -125,8 +125,8 @@ sub processDOM {
               unless defined $fromNode;
 
             my $output = $factory->
-              findObject("OME::Program::FormalOutput",
-                         program_id => $fromNode->{program}->id(),
+              findObject("OME::Module::FormalOutput",
+                         module_id => $fromNode->{module}->id(),
                          name       => $fromOutputName);
             die "Cannot find output \"$fromOutputName\""
               unless defined $output;
@@ -136,8 +136,8 @@ sub processDOM {
               unless defined $toNode;
 
             my $input = $factory->
-              findObject("OME::Program::FormalInput",
-                         program_id => $toNode->{program}->id(),
+              findObject("OME::Module::FormalInput",
+                         module_id => $toNode->{module}->id(),
                          name       => $toInputName);
             die "Cannot find input \"$toInputName\""
               unless defined $input;
@@ -152,7 +152,7 @@ sub processDOM {
         }
 
         my $chainObject = $factory->
-          newObject("OME::AnalysisView",
+          newObject("OME::AnalysisChain",
                     {
                      owner  => $session->User()->id(),
                      name   => $chain->getAttribute('Name'),
@@ -161,18 +161,18 @@ sub processDOM {
 
         foreach my $nodeID (keys %nodes) {
             my $node = $nodes{$nodeID};
-            $node->{analysis_view} = $chainObject;
+            $node->{analysis_chain} = $chainObject;
             my $nodeObject = $factory->
-              newObject("OME::AnalysisView::Node",$node);
+              newObject("OME::AnalysisChain::Node",$node);
             $nodes{$nodeID} = $nodeObject;
         }
 
         foreach my $link (@links) {
             $link->{from_node} = $nodes{$link->{from_node}};
             $link->{to_node} = $nodes{$link->{to_node}};
-            $link->{analysis_view} = $chainObject;
+            $link->{analysis_chain} = $chainObject;
             my $linkObject = $factory->
-              newObject("OME::AnalysisView::Link",$link);
+              newObject("OME::AnalysisChain::Link",$link);
         }
 
         $chainObject->storeObject();

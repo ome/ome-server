@@ -20,7 +20,7 @@
 
 use OME::Session;
 use OME::SessionManager;
-use OME::AnalysisView;
+use OME::AnalysisChain;
 use OME::Dataset;
 use OME::Tasks::AnalysisEngine;
 use OME::Tasks::ChainManager;
@@ -52,7 +52,7 @@ my $factory = $session->Factory();
 $factory->Debug(0);
 
 
-my $view = $factory->loadObject("OME::AnalysisView",$viewID);
+my $view = $factory->loadObject("OME::AnalysisChain",$viewID);
 my $dataset = $factory->loadObject("OME::Dataset",$datasetID);
 
 my $engine = OME::Tasks::AnalysisEngine->new();
@@ -79,11 +79,11 @@ print "User inputs:\n";
 my %user_inputs;
 
 foreach my $user_input (@$user_input_list) {
-    my ($node,$program,$formal_input,$attribute_type) = @$user_input;
-    print "\n",$program->program_name(),".",$formal_input->name(),":\n";
+    my ($node,$module,$formal_input,$semantic_type) = @$user_input;
+    print "\n",$module->name(),".",$formal_input->name(),":\n";
 
     my $count = 0;
-    my @columns = $attribute_type->attribute_columns();
+    my @columns = $semantic_type->semantic_elements();
     my @attributes;
 
   LIST_LOOP:
@@ -105,7 +105,7 @@ foreach my $user_input (@$user_input_list) {
         }
 
         my $attribute = $factory->
-          newAttribute($attribute_type,undef,undef,$data_hash);
+          newAttribute($semantic_type,undef,undef,$data_hash);
         push @attributes,$attribute;
     }
 

@@ -291,25 +291,25 @@ our $debug = 0;
 our $test = 0;
 
 # Just to shut up some of the tests that aren't actually wrong
-require OME::AttributeType;
+require OME::SemanticType;
 require OME::Factory;
 
 addPrototype("OME::DBObject","id",['$'],['$']);
 addPrototype("OME::DBObject","writeObject",[],[]);
 addPrototype("OME::DBObject","Session",[],['OME::Session']);
 
-addPrototype("OME::AttributeType::Superclass","id",['$'],['$']);
-addPrototype("OME::AttributeType::Superclass","writeObject",[],[]);
-addPrototype("OME::AttributeType::Superclass","Session",[],['OME::Session']);
-addPrototype("OME::AttributeType::Superclass","attribute_type",
-             [],["OME::AttributeType"]);
-addPrototype("OME::AttributeType::Superclass","analysis",
-             [],["OME::Analysis"]);
-addPrototype("OME::AttributeType::Superclass","_getTarget",
-             [],["OME::Analysis"],
+addPrototype("OME::SemanticType::Superclass","id",['$'],['$']);
+addPrototype("OME::SemanticType::Superclass","writeObject",[],[]);
+addPrototype("OME::SemanticType::Superclass","Session",[],['OME::Session']);
+addPrototype("OME::SemanticType::Superclass","semantic_type",
+             [],["OME::SemanticType"]);
+addPrototype("OME::SemanticType::Superclass","module_execution",
+             [],["OME::ModuleExecution"]);
+addPrototype("OME::SemanticType::Superclass","_getTarget",
+             [],["OME::ModuleExecution"],
              publishedName => "target");
 
-addPrototype("OME::Session","User",[],['OME::AttributeType::Superclass']);
+addPrototype("OME::Session","User",[],['OME::SemanticType::Superclass']);
 addPrototype("OME::Session","Factory",[],['OME::Factory']);
 addPrototype("OME::Session","project",['OME::Project'],['OME::Project']);
 addPrototype("OME::Session","dataset",['OME::Dataset'],['OME::Dataset']);
@@ -326,12 +326,12 @@ addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::DBObject','*']);
 addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::Factory::Iterator'],
              publishedName => "iterateObjectsLike");
 addPrototype("OME::Factory","findAttributes",
-             ['$','OME::DBObject'],['OME::AttributeType::Superclass','*']);
+             ['$','OME::DBObject'],['OME::SemanticType::Superclass','*']);
 addPrototype("OME::Factory","newAttribute",
-             ['$','OME::DBObject','OME::Analysis','%'],
-             ['OME::AttributeType::Superclass']);
+             ['$','OME::DBObject','OME::ModuleExecution','%'],
+             ['OME::SemanticType::Superclass']);
 addPrototype("OME::Factory","loadAttribute",
-             ['$','$'],['OME::AttributeType::Superclass']);
+             ['$','$'],['OME::SemanticType::Superclass']);
 
 addPrototype("OME::Factory::Iterator","first",[],['OME::DBObject']);
 addPrototype("OME::Factory::Iterator","next",[],['OME::DBObject']);
@@ -339,9 +339,9 @@ addPrototype("OME::Factory::Iterator","next",[],['OME::DBObject']);
 addPrototype("OME::Project","name",['$'],['$']);
 addPrototype("OME::Project","description",['$'],['$']);
 addPrototype("OME::Project","owner",
-             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
 #addPrototype("OME::Project","group",
-#             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+#             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
 addPrototype("OME::Project","dataset_links",[],['OME::Project::DatasetMap','*']);
 addPrototype("OME::Project","dataset_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_dataset_links");
@@ -355,9 +355,9 @@ addPrototype("OME::Dataset","name",['$'],['$']);
 addPrototype("OME::Dataset","description",['$'],['$']);
 addPrototype("OME::Dataset","locked",['$'],['$']);
 addPrototype("OME::Dataset","owner",
-             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
 #addPrototype("OME::Dataset","group",
-#             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+#             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
 addPrototype("OME::Dataset","project_links",[],['OME::Project::DatasetMap','*']);
 addPrototype("OME::Dataset","project_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_project_links");
@@ -371,9 +371,9 @@ addPrototype("OME::Image","image_guid",['$'],['$']);
 addPrototype("OME::Image","created",['$'],['$']);
 addPrototype("OME::Image","inserted",['$'],['$']);
 addPrototype("OME::Image","experimenter",
-             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
 addPrototype("OME::Image","group",
-             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
 addPrototype("OME::Image","dataset_links",[],['OME::Image::DatasetMap','*']);
 addPrototype("OME::Image","dataset_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_dataset_links");
@@ -381,7 +381,7 @@ addPrototype("OME::Image","all_features",[],['OME::Feature','*']);
 addPrototype("OME::Image","all_features",[],['OME::Factory::Iterator'],
              publishedName => "iterate_all_features");
 addPrototype("OME::Image","GetPix",
-             ['OME::AttributeType::Superclass','OME::AttributeType::Superclass'],
+             ['OME::SemanticType::Superclass','OME::SemanticType::Superclass'],
              ['OME::Image::Pix']);
 
 addPrototype("OME::Image::Pix","GetPixels",[],['$$']);
@@ -425,128 +425,128 @@ addPrototype("OME::DataTable::Column","column_name",['$'],['$']);
 addPrototype("OME::DataTable::Column","description",['$'],['$']);
 addPrototype("OME::DataTable::Column","sql_type",['$'],['$']);
 addPrototype("OME::DataTable::Column","reference_type",
-             ['OME::AttributeType'],['OME::AttributeType']);
+             ['OME::SemanticType'],['OME::SemanticType']);
 addPrototype("OME::DataTable::Column","data_table",
              ['OME::DataTable'],['OME::DataTable']);
 
-addPrototype("OME::AttributeType","granularity",['$'],['$']);
-addPrototype("OME::AttributeType","name",['$'],['$']);
-addPrototype("OME::AttributeType","description",['$'],['$']);
-addPrototype("OME::AttributeType","attribute_columns",
-             [],['OME::AttributeType::Column','*']);
-addPrototype("OME::AttributeType","attribute_columns",
+addPrototype("OME::SemanticType","granularity",['$'],['$']);
+addPrototype("OME::SemanticType","name",['$'],['$']);
+addPrototype("OME::SemanticType","description",['$'],['$']);
+addPrototype("OME::SemanticType","semantic_elements",
+             [],['OME::SemanticType::Column','*']);
+addPrototype("OME::SemanticType","semantic_elements",
              [],['OME::Factory::Iterator'],
              publishedName => "iterate_attribute_columns");
 
-addPrototype("OME::AttributeType::Column","name",['$'],['$']);
-addPrototype("OME::AttributeType::Column","description",['$'],['$']);
-addPrototype("OME::AttributeType::Column","attribute_type",
-             ['OME::AttributeType'],['OME::AttributeType']);
-addPrototype("OME::AttributeType::Column","data_column",
+addPrototype("OME::SemanticType::Column","name",['$'],['$']);
+addPrototype("OME::SemanticType::Column","description",['$'],['$']);
+addPrototype("OME::SemanticType::Column","semantic_type",
+             ['OME::SemanticType'],['OME::SemanticType']);
+addPrototype("OME::SemanticType::Column","data_column",
              ['OME::DataTable::Column'],['OME::DataTable::Column']);
 
-addPrototype("OME::Program","program_name",['$'],['$']);
-addPrototype("OME::Program","description",['$'],['$']);
-addPrototype("OME::Program","category",['$'],['$']);
-addPrototype("OME::Program","module_type",['$'],['$']);
-addPrototype("OME::Program","location",['$'],['$']);
-addPrototype("OME::Program","default_iterator",['$'],['$']);
-addPrototype("OME::Program","new_feature_tag",['$'],['$']);
-addPrototype("OME::Program","execution_instructions",['$'],['$']);
-addPrototype("OME::Program","inputs",[],['OME::Program::FormalInput','*']);
-addPrototype("OME::Program","inputs",[],['OME::Factory::Iterator'],
+addPrototype("OME::Module","name",['$'],['$']);
+addPrototype("OME::Module","description",['$'],['$']);
+addPrototype("OME::Module","category",['$'],['$']);
+addPrototype("OME::Module","module_type",['$'],['$']);
+addPrototype("OME::Module","location",['$'],['$']);
+addPrototype("OME::Module","default_iterator",['$'],['$']);
+addPrototype("OME::Module","new_feature_tag",['$'],['$']);
+addPrototype("OME::Module","execution_instructions",['$'],['$']);
+addPrototype("OME::Module","inputs",[],['OME::Module::FormalInput','*']);
+addPrototype("OME::Module","inputs",[],['OME::Factory::Iterator'],
              publishedName => "iterate_inputs");
-addPrototype("OME::Program","outputs",[],['OME::Program::FormalOutput','*']);
-addPrototype("OME::Program","outputs",[],['OME::Factory::Iterator'],
+addPrototype("OME::Module","outputs",[],['OME::Module::FormalOutput','*']);
+addPrototype("OME::Module","outputs",[],['OME::Factory::Iterator'],
              publishedName => "iterate_outputs");
-addPrototype("OME::Program","analyses",[],['OME::Analysis','*']);
-addPrototype("OME::Program","analyses",[],['OME::Factory::Iterator'],
+addPrototype("OME::Module","analyses",[],['OME::ModuleExecution','*']);
+addPrototype("OME::Module","analyses",[],['OME::Factory::Iterator'],
              publishedName => "iterate_analyses");
 
-addPrototype("OME::Program::FormalInput","name",['$'],['$']);
-addPrototype("OME::Program::FormalInput","description",['$'],['$']);
-addPrototype("OME::Program::FormalInput","optional",['$'],['$']);
-addPrototype("OME::Program::FormalInput","list",['$'],['$']);
-addPrototype("OME::Program::FormalInput","user_defined",['$'],['$']);
-addPrototype("OME::Program::FormalInput","attribute_type",
-             ['OME::AttributeType'],['OME::AttributeType']);
-addPrototype("OME::Program::FormalInput","lookup_table",
+addPrototype("OME::Module::FormalInput","name",['$'],['$']);
+addPrototype("OME::Module::FormalInput","description",['$'],['$']);
+addPrototype("OME::Module::FormalInput","optional",['$'],['$']);
+addPrototype("OME::Module::FormalInput","list",['$'],['$']);
+addPrototype("OME::Module::FormalInput","user_defined",['$'],['$']);
+addPrototype("OME::Module::FormalInput","semantic_type",
+             ['OME::SemanticType'],['OME::SemanticType']);
+addPrototype("OME::Module::FormalInput","lookup_table",
              ['OME::LookupTable'],['OME::LookupTable']);
-addPrototype("OME::Program::FormalInput","program",
-             ['OME::Program'],['OME::Program']);
+addPrototype("OME::Module::FormalInput","module",
+             ['OME::Module'],['OME::Module']);
 
-addPrototype("OME::Program::FormalOutput","name",['$'],['$']);
-addPrototype("OME::Program::FormalOutput","description",['$'],['$']);
-addPrototype("OME::Program::FormalOutput","feature_tag",['$'],['$']);
-addPrototype("OME::Program::FormalOutput","optional",['$'],['$']);
-addPrototype("OME::Program::FormalOutput","list",['$'],['$']);
-addPrototype("OME::Program::FormalOutput","attribute_type",
-             ['OME::AttributeType'],['OME::AttributeType']);
-addPrototype("OME::Program::FormalOutput","program",
-             ['OME::Program'],['OME::Program']);
+addPrototype("OME::Module::FormalOutput","name",['$'],['$']);
+addPrototype("OME::Module::FormalOutput","description",['$'],['$']);
+addPrototype("OME::Module::FormalOutput","feature_tag",['$'],['$']);
+addPrototype("OME::Module::FormalOutput","optional",['$'],['$']);
+addPrototype("OME::Module::FormalOutput","list",['$'],['$']);
+addPrototype("OME::Module::FormalOutput","semantic_type",
+             ['OME::SemanticType'],['OME::SemanticType']);
+addPrototype("OME::Module::FormalOutput","module",
+             ['OME::Module'],['OME::Module']);
 
-addPrototype("OME::Analysis","program",['OME::Program'],['OME::Program']);
-addPrototype("OME::Analysis","dataset",['OME::Dataset'],['OME::Dataset']);
-addPrototype("OME::Analysis","dependence",['$'],['$']);
-addPrototype("OME::Analysis","timestamp",['$'],['$']);
-addPrototype("OME::Analysis","status",['$'],['$']);
-addPrototype("OME::Analysis","inputs",[],['OME::Analysis::ActualInput','*']);
-addPrototype("OME::Analysis","inputs",[],['OME::Factory::Iterator'],
+addPrototype("OME::ModuleExecution","module",['OME::Module'],['OME::Module']);
+addPrototype("OME::ModuleExecution","dataset",['OME::Dataset'],['OME::Dataset']);
+addPrototype("OME::ModuleExecution","dependence",['$'],['$']);
+addPrototype("OME::ModuleExecution","timestamp",['$'],['$']);
+addPrototype("OME::ModuleExecution","status",['$'],['$']);
+addPrototype("OME::ModuleExecution","inputs",[],['OME::ModuleExecution::ActualInput','*']);
+addPrototype("OME::ModuleExecution","inputs",[],['OME::Factory::Iterator'],
              publishedName => "iterate_inputs");
 
-addPrototype("OME::Analysis::ActualInput","analysis",
-             ['OME::Analysis'],['OME::Analysis']);
-addPrototype("OME::Analysis::ActualInput","input_analysis",
-             ['OME::Analysis'],['OME::Analysis']);
-addPrototype("OME::Analysis::ActualInput","formal_input",
-             ['OME::Program::FormalInput'],['OME::Program::FormalInput']);
+addPrototype("OME::ModuleExecution::ActualInput","module_execution",
+             ['OME::ModuleExecution'],['OME::ModuleExecution']);
+addPrototype("OME::ModuleExecution::ActualInput","input_module_execution",
+             ['OME::ModuleExecution'],['OME::ModuleExecution']);
+addPrototype("OME::ModuleExecution::ActualInput","formal_input",
+             ['OME::Module::FormalInput'],['OME::Module::FormalInput']);
 
-addPrototype("OME::AnalysisView","owner",
-             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
-addPrototype("OME::AnalysisView","name",['$'],['$']);
-addPrototype("OME::AnalysisView","description",['$'],['$']);
-addPrototype("OME::AnalysisView","locked",['$'],['$']);
-addPrototype("OME::AnalysisView","nodes",[],['OME::AnalysisView::Node','*']);
-addPrototype("OME::AnalysisView","nodes",[],['OME::Factory::Iterator'],
+addPrototype("OME::AnalysisChain","owner",
+             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
+addPrototype("OME::AnalysisChain","name",['$'],['$']);
+addPrototype("OME::AnalysisChain","description",['$'],['$']);
+addPrototype("OME::AnalysisChain","locked",['$'],['$']);
+addPrototype("OME::AnalysisChain","nodes",[],['OME::AnalysisChain::Node','*']);
+addPrototype("OME::AnalysisChain","nodes",[],['OME::Factory::Iterator'],
              publishedName => "iterate_nodes");
-addPrototype("OME::AnalysisView","links",[],['OME::AnalysisView::Link','*']);
-addPrototype("OME::AnalysisView","links",[],['OME::Factory::Iterator'],
+addPrototype("OME::AnalysisChain","links",[],['OME::AnalysisChain::Link','*']);
+addPrototype("OME::AnalysisChain","links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_links");
-addPrototype("OME::AnalysisView","paths",[],['OME::AnalysisPath','*']);
-addPrototype("OME::AnalysisView","paths",[],['OME::Factory::Iterator'],
+addPrototype("OME::AnalysisChain","paths",[],['OME::AnalysisPath','*']);
+addPrototype("OME::AnalysisChain","paths",[],['OME::Factory::Iterator'],
              publishedName => "iterate_paths");
 
-addPrototype("OME::AnalysisView::Node","analysis_view",
-             ['OME::AnalysisView'],['OME::AnalysisView']);
-addPrototype("OME::AnalysisView::Node","program",
-             ['OME::Program'],['OME::Program']);
-addPrototype("OME::AnalysisView::Node","iterator_tag",['$'],['$']);
-addPrototype("OME::AnalysisView::Node","new_feature_tag",['$'],['$']);
-addPrototype("OME::AnalysisView::Node","input_links",
-             [],['OME::AnalysisView::Link','*']);
-addPrototype("OME::AnalysisView::Node","input_links",
+addPrototype("OME::AnalysisChain::Node","analysis_chain",
+             ['OME::AnalysisChain'],['OME::AnalysisChain']);
+addPrototype("OME::AnalysisChain::Node","module",
+             ['OME::Module'],['OME::Module']);
+addPrototype("OME::AnalysisChain::Node","iterator_tag",['$'],['$']);
+addPrototype("OME::AnalysisChain::Node","new_feature_tag",['$'],['$']);
+addPrototype("OME::AnalysisChain::Node","input_links",
+             [],['OME::AnalysisChain::Link','*']);
+addPrototype("OME::AnalysisChain::Node","input_links",
              [],['OME::Factory::Iterator'],
              publishedName => "iterate_input_links");
-addPrototype("OME::AnalysisView::Node","output_links",
-             [],['OME::AnalysisView::Link','*']);
-addPrototype("OME::AnalysisView::Node","output_links",
+addPrototype("OME::AnalysisChain::Node","output_links",
+             [],['OME::AnalysisChain::Link','*']);
+addPrototype("OME::AnalysisChain::Node","output_links",
              [],['OME::Factory::Iterator'],
              publishedName => "iterate_output_links");
 
-addPrototype("OME::AnalysisView::Link","analysis_view",
-             ['OME::AnalysisView'],['OME::AnalysisView']);
-addPrototype("OME::AnalysisView::Link","from_node",
-             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
-addPrototype("OME::AnalysisView::Link","from_output",
-             ['OME::Program::FormalOutput'],['OME::Program::FormalOutput']);
-addPrototype("OME::AnalysisView::Link","to_node",
-             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
-addPrototype("OME::AnalysisView::Link","to_input",
-             ['OME::Program::FormalInput'],['OME::Program::FormalInput']);
+addPrototype("OME::AnalysisChain::Link","analysis_chain",
+             ['OME::AnalysisChain'],['OME::AnalysisChain']);
+addPrototype("OME::AnalysisChain::Link","from_node",
+             ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
+addPrototype("OME::AnalysisChain::Link","from_output",
+             ['OME::Module::FormalOutput'],['OME::Module::FormalOutput']);
+addPrototype("OME::AnalysisChain::Link","to_node",
+             ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
+addPrototype("OME::AnalysisChain::Link","to_input",
+             ['OME::Module::FormalInput'],['OME::Module::FormalInput']);
 
 addPrototype("OME::AnalysisPath","path_length",['$'],['$']);
-addPrototype("OME::AnalysisPath","analysis_view",
-             ['OME::AnalysisView'],['OME::AnalysisView']);
+addPrototype("OME::AnalysisPath","analysis_chain",
+             ['OME::AnalysisChain'],['OME::AnalysisChain']);
 addPrototype("OME::AnalysisPath","path_nodes",
              [],['OME::AnalysisPath::Map','*']);
 addPrototype("OME::AnalysisPath","path_nodes",
@@ -556,28 +556,28 @@ addPrototype("OME::AnalysisPath","path_nodes",
 addPrototype("OME::AnalysisPath::Map","path_order",['$'],['$']);
 addPrototype("OME::AnalysisPath::Map","path",
              ['OME::AnalysisPath'],['OME::AnalysisPath']);
-addPrototype("OME::AnalysisPath::Map","analysis_view_node",
-             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
+addPrototype("OME::AnalysisPath::Map","analysis_chain_node",
+             ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
 
 addPrototype("OME::AnalysisExecution","timestamp",['$'],['$']);
-addPrototype("OME::AnalysisExecution","analysis_view",
-             ['OME::AnalysisView'],['OME::AnalysisView']);
+addPrototype("OME::AnalysisExecution","analysis_chain",
+             ['OME::AnalysisChain'],['OME::AnalysisChain']);
 addPrototype("OME::AnalysisExecution","dataset",
              ['OME::Dataset'],['OME::Dataset']);
 addPrototype("OME::AnalysisExecution","experimenter",
-             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+             ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
 addPrototype("OME::AnalysisExecution","node_executions",
              [],['OME::AnalysisExecution::NodeExecution','*']);
 addPrototype("OME::AnalysisExecution","node_executions",
              [],['OME::Factory::Iterator'],
              publishedName => "iterate_node_executions");
 
-addPrototype("OME::AnalysisExecution::NodeExecution","analysis_execution",
+addPrototype("OME::AnalysisExecution::NodeExecution","analysis_chain_execution",
              ['OME::AnalysisExecution'],['OME::AnalysisExecution']);
-addPrototype("OME::AnalysisExecution::NodeExecution","analysis_view_node",
-             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
-addPrototype("OME::AnalysisExecution::NodeExecution","analysis",
-             ['OME::Analysis'],['OME::Analysis']);
+addPrototype("OME::AnalysisExecution::NodeExecution","analysis_chain_node",
+             ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
+addPrototype("OME::AnalysisExecution::NodeExecution","module_execution",
+             ['OME::ModuleExecution'],['OME::ModuleExecution']);
 
 
 sub addPrototype {

@@ -22,20 +22,20 @@ package OME::AnalysisPath;
 
 =head1 NAME
 
-OME::AnalysisPath - a data path within an analysis chain
+OME::AnalysisPath - a data path within an module_execution chain
 
 OME::AnalysisPath::Map - the individual entries in a data path
 
 =head1 DESCRIPTION
 
 The C<AnalysisPath> class represents a single, linear data path
-through an analysis chain.  Each chain has one I<data path> for each
+through an module_execution chain.  Each chain has one I<data path> for each
 linear path from a root node to a leaf node.  (A root node contains no
-inputs; a leaf node contains no outputs.  Since analysis chains are
+inputs; a leaf node contains no outputs.  Since module_execution chains are
 acyclic, there must be at least one of each in any chain.)
 
 The C<AnalysisPath::Map> class represents each element in a data path.
-It corresponds to one of the nodes in the analysis chain.
+It corresponds to one of the nodes in the module_execution chain.
 
 =cut
 
@@ -46,14 +46,14 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    analysis_view_id => 'analysis_view'
+    analysis_chain_id => 'analysis_chain'
     });
 
 __PACKAGE__->table('analysis_paths');
 __PACKAGE__->sequence('analysis_path_seq');
 __PACKAGE__->columns(Primary => qw(path_id));
-__PACKAGE__->columns(Essential => qw(path_length analysis_view_id));
-__PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
+__PACKAGE__->columns(Essential => qw(path_length analysis_chain_id));
+__PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
 __PACKAGE__->has_many('path_nodes', 'OME::AnalysisPath::Map' => qw(path_id));
 
 =head1 METHODS (C<AnalysisPath>)
@@ -69,12 +69,12 @@ those defined by L<OME::DBObject>.
 Returns or sets the length of the path.  This should correspond to the
 number of items returned by C<path_nodes>.
 
-=head2 analysis_view
+=head2 analysis_chain
 
-	my $analysis_view = $execution->analysis_view();
-	$execution->analysis_view($analysis_view);
+	my $analysis_chain = $execution->analysis_chain();
+	$execution->analysis_chain($analysis_chain);
 
-Returns or sets the analysis chain that this data path belongs to.
+Returns or sets the module_execution chain that this data path belongs to.
 
 =head2 path_nodes
 
@@ -96,15 +96,15 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    analysis_view_node_id => 'analysis_view_node',
+    analysis_chain_node_id => 'analysis_chain_node',
     path_id               => 'path'
     });
 
 __PACKAGE__->table('analysis_path_map');
 __PACKAGE__->columns(Essential => qw(path_id path_order
-				     analysis_view_node_id));
+				     analysis_chain_node_id));
 __PACKAGE__->hasa('OME::AnalysisPath' => qw(path_id));
-__PACKAGE__->hasa('OME::AnalysisView::Node' => qw(analysis_view_node_id));
+__PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(analysis_chain_node_id));
 
 =head1 METHODS (C<AnalysisPath::Map>)
 
@@ -118,12 +118,12 @@ addition to those defined by L<OME::DBObject>.
 
 Returns or sets the data path that this entry belongs to.
 
-=head2 analysis_view_node
+=head2 analysis_chain_node
 
-	my $analysis_view_node = $execution->analysis_view_node();
-	$execution->analysis_view_node($analysis_view_node);
+	my $analysis_chain_node = $execution->analysis_chain_node();
+	$execution->analysis_chain_node($analysis_chain_node);
 
-Returns ot sets the analysis chain node that this entry corresponds
+Returns ot sets the module_execution chain node that this entry corresponds
 to.
 
 =head2 path_order

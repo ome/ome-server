@@ -33,15 +33,15 @@ OME::DBObject - OME-specific extensions to Class::DBI
 
 	# Enables caching for all but one class
 	OME::DBObject->Caching(1);
-	OME::Program->Caching(0);
+	OME::Module->Caching(0);
 
 	# Enables caching for all classes, but stores
-	# OME::Program's separately
+	# OME::Module's separately
 	OME::DBObject->Caching(1);
-	OME::Program->useSeparateCache();
+	OME::Module->useSeparateCache();
 	     # ... load some objects ...
-	OME::Program->clearCache();
-	# At this point, cached OME::Programs are discarded,
+	OME::Module->clearCache();
+	# At this point, cached OME::Modules are discarded,
 	# allowing them to be reread from the database.  All
 	# other cached objects remain.
 

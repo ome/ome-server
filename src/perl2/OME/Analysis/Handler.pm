@@ -1,4 +1,4 @@
-# OME/Analysis/Handler.pm
+# OME/module_execution/Handler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -22,25 +22,25 @@ package OME::Analysis::Handler;
 
 =head1 NAME
 
-OME::Analysis::Handler - the superclass of all analysis handlers
+OME::Analysis::Handler - the superclass of all module_execution handlers
 
 =head1 SYNOPSIS
 
 	use OME::Analysis::Handler;
 	my $handler = OME::Analysis::Handler->new($location,$session,
-	                                          $program,$node);
+	                                          $module,$node);
 
 =head1 DESCRIPTION
 
-The analysis handlers are the chief mechanism supporting language
-independence in the modules of the analysis system.  The handlers
+The module_execution handlers are the chief mechanism supporting language
+independence in the modules of the module_execution system.  The handlers
 serve to decouple the details of interfacing with a given language
-from the analysis engine, and to decouple the common functionality of
-interacting with the database away from the analysis modules.
+from the module_execution engine, and to decouple the common functionality of
+interacting with the database away from the module_execution modules.
 
-The Handler class follows the same interface that the analysis engine
+The Handler class follows the same interface that the module_execution engine
 expects of its modules; in this way, the handlers can be seen as
-delegate classes, deferring to the analysis module itself to perform
+delegate classes, deferring to the module_execution module itself to perform
 the actual calculations.
 
 =cut
@@ -50,7 +50,7 @@ our $VERSION = '1.0';
 
 use Log::Agent;
 use OME::DataTable;
-use OME::AttributeType;
+use OME::SemanticType;
 use Benchmark qw(timediff timesum timestr);
 
 use fields qw(_location _session _node _output_types _untyped_output
@@ -67,23 +67,23 @@ use fields qw(_location _session _node _output_types _untyped_output
 =head2 new
 
 	my $handler = OME::Analysis::Handler->
-	    new($location,$session,$program,$node);
+	    new($location,$session,$module,$node);
 
-Creates a new instance of the analysis handler.  Subclass constructors
+Creates a new instance of the module_execution handler.  Subclass constructors
 I<must> call this as part of their construction code.  The helper
-methods used to create new attributes for the analysis results will
+methods used to create new attributes for the module_execution results will
 not work without the variables assigned by this method.
 
 =cut
 
 sub new {
-    my ($proto,$location,$session,$program,$node) = @_;
+    my ($proto,$location,$session,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
     my $self = {};
     $self->{_location} = $location;
     $self->{_session} = $session;
-    $self->{_program} = $program;
+    $self->{_program} = $module;
     $self->{_node} = $node;
 
     # Hash the formal inputs by name and by granularity, so they can
@@ -96,9 +96,9 @@ sub new {
     my $inputs = {};
     my $granularity_inputs = {};
 
-    foreach my $formal_input ($program->inputs()) {
+    foreach my $formal_input ($module->inputs()) {
         $inputs->{$formal_input->name()} = $formal_input;
-        my $granularity = $formal_input->attribute_type()->granularity();
+        my $granularity = $formal_input->semantic_type()->granularity();
         push @{$granularity_inputs->{$granularity}}, $formal_input;
         if ($granularity ne 'G') {
             $globalOutputsAllowed = 0;
@@ -116,18 +116,18 @@ sub new {
     my $untyped_output;
     my $granularity_outputs = {};
 
-    foreach my $formal_output ($program->outputs()) {
+    foreach my $formal_output ($module->outputs()) {
         $outputs{$formal_output->name()} = $formal_output;
-        my $attribute_type = $formal_output->attribute_type();
-        if (!defined $attribute_type) {
+        my $semantic_type = $formal_output->semantic_type();
+        if (!defined $semantic_type) {
             die "Cannot have two untyped outputs!"
               if defined $untyped_output;
             $untyped_output = $formal_output;
         } else {
             die "Cannot have two outputs of the same type!"
-              if exists $types{$attribute_type->id()};
-            $types{$attribute_type->id()} = $formal_output;
-            my $granularity = $attribute_type->granularity();
+              if exists $types{$semantic_type->id()};
+            $types{$semantic_type->id()} = $formal_output;
+            my $granularity = $semantic_type->granularity();
             push @{$granularity_outputs->{$granularity}}, $formal_output;
         }
     }
@@ -173,7 +173,7 @@ sub Factory {
 	my $feature = $handler->getCurrentFeature();
 
 These methods can be used by Handler subclasses during the execution
-of the analysis module.  They return the dataset, image, and feature
+of the module_execution module.  They return the dataset, image, and feature
 that is currently being analyzed by the module.  As the module
 progresses through the methods defined by the Module interface, the
 values these methods return are automatically updated.
@@ -281,7 +281,7 @@ sub getFeatureInputs {
 
 Creates a new feature for use as an actual output of this module.  The
 name of the feature is specified as input.  The tag of the feature is
-determined by the analysis chain to which this module belongs.  New
+determined by the module_execution chain to which this module belongs.  New
 feature attributes are associated with this feature via the
 newAttribute method.
 
@@ -355,7 +355,7 @@ sub newFeature {
 =head2 newAttributes
 
 	my $attribute = $handler->
-	    newAttributes($self,[$attribute_type,$data]...);
+	    newAttributes($self,[$semantic_type,$data]...);
 
 	# or
 
@@ -371,11 +371,11 @@ the new attribute is automatically targeted to the currently analyzed
 dataset and image.  In the case of feature outputs, there are three
 possibilities.  The new attribute can be targeted to the current
 feature, the current feature's parent, or a new feature created by the
-module.  The feature actually used is determined by the analysis chain
+module.  The feature actually used is determined by the module_execution chain
 that the module appears in.
 
 Any attributes created via this method will automatically be returned
-to the analysis engine when the collectFeatureOutputs,
+to the module_execution engine when the collectFeatureOutputs,
 collectImageOutputs, and collectDatasetOutputs methods are called.
 Subclasses need not reimplement this functionality.
 
@@ -421,24 +421,24 @@ sub newAttributes {
     for ($i = 0; $i < $length; $i += 2) {
         my $key = $attribute_info[$i];
         my $data_hash = $attribute_info[$i+1];
-        my ($attribute_type,$formal_output,$formal_output_name);
+        my ($semantic_type,$formal_output,$formal_output_name);
 
         if (!ref($key)) {
             # This is a string, treat it as a formal input name.
             $formal_output_name = $key;
             $formal_output = $self->{_formal_outputs}->{$formal_output_name};
-            $attribute_type = $formal_output->attribute_type();
-        } elsif (UNIVERSAL::isa($key,"OME::AttributeType")) {
+            $semantic_type = $formal_output->semantic_type();
+        } elsif (UNIVERSAL::isa($key,"OME::SemanticType")) {
             # This is an attribute type
-            $attribute_type = $key;
+            $semantic_type = $key;
 
             $formal_output =
-              (exists $output_types->{$attribute_type->id()})?
-                $output_types->{$attribute_type->id()}:
+              (exists $output_types->{$semantic_type->id()})?
+                $output_types->{$semantic_type->id()}:
                   $self->{_untyped_output};
 
             die "Cannot find a formal output for semantic type ".
-              $attribute_type->name()
+              $semantic_type->name()
                 unless defined $formal_output;
 
             $formal_output_name = $formal_output->name();
@@ -448,7 +448,7 @@ sub newAttributes {
         }
 
         __debug("  $formal_output_name");
-        my $granularity = $attribute_type->granularity();
+        my $granularity = $semantic_type->granularity();
 
         if ($granularity eq 'G') {
             die "This module is not allowed to create global attributes"
@@ -488,14 +488,14 @@ sub newAttributes {
             $data_hash->{feature_id} = $target;
         }
 
-        push @new_attribute_info, $attribute_type, $data_hash;
+        push @new_attribute_info, $semantic_type, $data_hash;
     }
 
     my $t1 = new Benchmark;
 
-    OME::AttributeType->__addOneTime('_sortTime',timediff($t1,$t0));
+    OME::SemanticType->__addOneTime('_sortTime',timediff($t1,$t0));
 
-    my $attributes = OME::AttributeType->newAttributes($self->Session(),
+    my $attributes = OME::SemanticType->newAttributes($self->Session(),
                                                        $self->{_analysis},
                                                        @new_attribute_info);
 
@@ -506,7 +506,7 @@ sub newAttributes {
 =head2 newAttributesWithTargets
 
 	my $attribute = $handler->
-	    newAttributesWithTargets($self,[$attribute_type,$data]...);
+	    newAttributesWithTargets($self,[$semantic_type,$data]...);
 
 	# or
 
@@ -520,7 +520,7 @@ attribute column names to values.  The target of the attributes must
 be specified in the data hashes.
 
 Any attributes created via this method will automatically be returned
-to the analysis engine when the collectFeatureOutputs,
+to the module_execution engine when the collectFeatureOutputs,
 collectImageOutputs, and collectDatasetOutputs methods are called.
 Subclasses need not reimplement this functionality.
 
@@ -564,24 +564,24 @@ sub newAttributesWithTargets {
     for ($i = 0; $i < $length; $i += 2) {
         my $key = $attribute_info[$i];
         my $data_hash = $attribute_info[$i+1];
-        my ($attribute_type,$formal_output,$formal_output_name);
+        my ($semantic_type,$formal_output,$formal_output_name);
 
         if (!ref($key)) {
             # This is a string, treat it as a formal input name.
             $formal_output_name = $key;
             $formal_output = $self->{_formal_outputs}->{$formal_output_name};
-            $attribute_type = $formal_output->attribute_type();
-        } elsif (UNIVERSAL::isa($key,"OME::AttributeType")) {
+            $semantic_type = $formal_output->semantic_type();
+        } elsif (UNIVERSAL::isa($key,"OME::SemanticType")) {
             # This is an attribute type
-            $attribute_type = $key;
+            $semantic_type = $key;
 
             $formal_output =
-              (exists $output_types->{$attribute_type->id()})?
-                $output_types->{$attribute_type->id()}:
+              (exists $output_types->{$semantic_type->id()})?
+                $output_types->{$semantic_type->id()}:
                 $self->{_untyped_output};
 
             die "Cannot find a formal output for semantic type ".
-              $attribute_type->name()
+              $semantic_type->name()
                 unless defined $formal_output;
 
             $formal_output_name = $formal_output->name();
@@ -591,7 +591,7 @@ sub newAttributesWithTargets {
         }
 
         __debug("  $formal_output_name");
-        my $granularity = $attribute_type->granularity();
+        my $granularity = $semantic_type->granularity();
 
         if ($granularity eq 'G') {
             die "This module is not allowed to create global attributes"
@@ -613,10 +613,10 @@ sub newAttributesWithTargets {
             delete $data_hash->{target};
         }
 
-        push @new_attribute_info, $attribute_type, $data_hash;
+        push @new_attribute_info, $semantic_type, $data_hash;
     }
 
-    my $attributes = OME::AttributeType->newAttributes($self->Session(),
+    my $attributes = OME::SemanticType->newAttributes($self->Session(),
                                                        $self->{_analysis},
                                                        @new_attribute_info);
 
@@ -624,15 +624,15 @@ sub newAttributesWithTargets {
     return $attributes;
 }
 
-# A helper method used to save any attributes created by the analysis.
+# A helper method used to save any attributes created by the module_execution.
 
 sub __saveAttributes {
     my ($self,$attributes) = @_;
     my $formal_outputs = $self->{_output_types};
 
     foreach my $attribute (@$attributes) {
-        my $attribute_type = $attribute->_attribute_type();
-        my $formal_output = $formal_outputs->{$attribute_type->id()};
+        my $semantic_type = $attribute->_attribute_type();
+        my $formal_output = $formal_outputs->{$semantic_type->id()};
         if (!defined $formal_output) {
             # There is no typed formal output for this attribute type,
             # so we must use the untyped formal output.  If there is no
@@ -645,7 +645,7 @@ sub __saveAttributes {
         }
         my $foID = $formal_output->id();
         my $foName = $formal_output->name();
-        my $granularity = $attribute_type->granularity();
+        my $granularity = $semantic_type->granularity();
 
         # Save this new attribute as an actual output of the
         # appropriate formal output.  The
@@ -678,7 +678,7 @@ sub __checkInputParameters {
 
     foreach my $param (@{$self->{_inputs_by_granularity}->{$granularity}}) {
         my $formal_input_name = $param->name();
-        my $attribute_type = $param->attribute_type();
+        my $semantic_type = $param->semantic_type();
 
         my $optional = $param->optional();
         my $list = $param->list();
@@ -706,11 +706,11 @@ sub __checkOutputParameters {
 
     foreach my $param (@{$self->{_outputs_by_granularity}->{$granularity}}) {
         my $formal_output_name = $param->name();
-        my $attribute_type = $param->attribute_type();
+        my $semantic_type = $param->semantic_type();
 
         # We don't check untyped outputs.  They can be anything.
         next if
-          (!defined $attribute_type);
+          (!defined $semantic_type);
 
         my $optional = $param->optional();
         my $list = $param->list();
@@ -755,7 +755,7 @@ sub __checkOutputParameters {
 
 =head2 Module interface methods
 
-	$handler->startAnalysis($analysis);
+	$handler->startAnalysis($module_execution);
 	$handler->globalInputs($global_input_hash);
 	$handler->precalculateGlobal();
 	$handler->startDataset($dataset);
@@ -792,9 +792,9 @@ as it progresses through these interface methods.
 =cut
 
 sub startAnalysis {
-    my ($self,$analysis) = @_;
-    $self->{_analysis} = $analysis;
-    OME::AttributeType->__resetTiming();
+    my ($self,$module_execution) = @_;
+    $self->{_analysis} = $module_execution;
+    OME::SemanticType->__resetTiming();
 }
 
 sub globalInputs {
@@ -936,12 +936,12 @@ sub finishAnalysis {
     $self->{_dataset_outputs} = undef;
     $self->{_global_outputs} = undef;
 
-    my $analysis = $self->{_analysis};
-    return unless defined $analysis;
-    $analysis->attribute_sort_time(OME::AttributeType->__getSeconds('_sortTime'));
-    $analysis->attribute_db_time(OME::AttributeType->__getSeconds('_dbTime'));
-    $analysis->attribute_create_time(OME::AttributeType->__getSeconds('_createTime'));
-    $analysis->storeObject();
+    my $module_execution = $self->{_analysis};
+    return unless defined $module_execution;
+    $module_execution->attribute_sort_time(OME::SemanticType->__getSeconds('_sortTime'));
+    $module_execution->attribute_db_time(OME::SemanticType->__getSeconds('_dbTime'));
+    $module_execution->attribute_create_time(OME::SemanticType->__getSeconds('_createTime'));
+    $module_execution->storeObject();
 }
 
 

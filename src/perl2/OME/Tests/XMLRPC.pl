@@ -51,11 +51,11 @@ my $factory = $result;
 
 
 $result = $soap
-  ->call(dispatch => $session, $factory, "loadObject", "OME::Program", 1)
+  ->call(dispatch => $session, $factory, "loadObject", "OME::Module", 1)
   ->result();
 
 print "factory->loadObject\nGot '$result'...\n\n";
-my $program = $result;
+my $module = $result;
 
 
 $result = $soap

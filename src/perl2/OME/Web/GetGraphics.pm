@@ -1021,28 +1021,28 @@ sub SVGgetDataJS {
 	#
 	#	Get Stack Statistics
 	#
-	my $stackStats = $factory->findObject( "OME::Program", program_name => 'Stack statistics' )
+	my $stackStats = $factory->findObject( "OME::Module", name => 'Stack statistics' )
 		or die "Stack statistics must be installed for this viewer to work!\n";
-	my $pixelsFI = $factory->findObject( "OME::Program::FormalInput", 
-		program_id => $stackStats->id(),
+	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
+		module_id => $stackStats->id(),
 		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for Program 'Stack Statistics'.\n";
-	my $actualInput = $factory->findObject( "OME::Analysis::ActualInput",
+		or die "Cannot find 'Pixels' formal input for module 'Stack Statistics'.\n";
+	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
 		formal_input_id   => $pixelsFI->id(),
-		input_analysis_id => $pixels->analysis()->id() )
+		input_module_execution_id => $pixels->module_execution()->id() )
 		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
-	my $stackStatsAnalysisID = $actualInput->analysis()->id();
+	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
 
 	# FIXME: update this method call when method accepts search parameters
-	my @mins   = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+	my @mins   = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackMinimum", $image ) );
-	my @maxes  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+	my @maxes  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackMaximum", $image ) );
-	my @means  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+	my @means  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackMean", $image ) );
-	my @gmeans = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackGeometricMean", $image ) );
-	my @sigma  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+	my @sigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackSigma", $image ) );
 	
 	my $sh; # stats hash

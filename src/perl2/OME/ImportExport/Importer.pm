@@ -360,23 +360,23 @@ sub store_image_metadata {
                   });
     $self->{dummy_dataset} = $dataset;
 
-    my $analysis = $session->Factory()->
-      newObject("OME::Analysis",
+    my $module_execution = $session->Factory()->
+      newObject("OME::ModuleExecution",
                 {
                  dependence => 'I',
                  dataset_id => $dataset->id(),
                  timestamp  => 'now',
                  status     => 'FINISHED',
-                 program_id => $self->{config}->import_module()->id(),
+                 module_id => $self->{config}->import_module()->id(),
                 });
-    $self->{analysis} = $analysis;
+    $self->{module_execution} = $module_execution;
 
     # Now, create the real filename.
 
     my $qual_name = $image->id()."-".$name.".ori";
 
     my $pixels = $session->Factory()->
-      newAttribute("Pixels",$image,$analysis,
+      newAttribute("Pixels",$image,$module_execution,
                    {
                     Repository => $repository->id(),
                     Path       => $qual_name,
@@ -425,7 +425,7 @@ sub store_image_attributes {
 #		   'BitsPerPixel' => $href->{'Image.BitsPerPixel'}
 	};
     my $attributes = $session->Factory()->
-	newAttribute("Dimensions",$image,$self->{analysis},$recordData);
+	newAttribute("Dimensions",$image,$self->{module_execution},$recordData);
 
     if (!defined $attributes) {
 	$status = "Can\'t create new image attribute table";
@@ -494,7 +494,7 @@ sub store_wavelength_info {
 	    $wave->{'WavelengthInfo.NDfilter'} = undef;
 	}
     my $logical = $session->Factory()->
-      newAttribute("LogicalChannel",$image,$self->{analysis},
+      newAttribute("LogicalChannel",$image,$self->{module_execution},
                    {
                     ExWave   => $wave->{'WavelengthInfo.ExWave'},
                     EmWave   => $wave->{'WavelengthInfo.ExWave'},
@@ -504,7 +504,7 @@ sub store_wavelength_info {
                    });
 
     my $component = $session->Factory()->
-      newAttribute("PixelChannelComponent",$image,$self->{analysis},
+      newAttribute("PixelChannelComponent",$image,$self->{module_execution},
                    {
                     Pixels         => $self->{pixelsAttr}->id(),
                     Index          => $wave->{'WavelengthInfo.WaveNumber'},
@@ -516,8 +516,8 @@ sub store_wavelength_info {
     
 
 # Calculate & store the information about each xyz_image chunk into rows in xyz_image_info
-# Calls external program OME_Image_XYZ_stats, whose location is hardwired to /OME/bin
-# The program output is tab-delimited columns like so:
+# Calls external module OME_Image_XYZ_stats, whose location is hardwired to /OME/bin
+# The module output is tab-delimited columns like so:
 #    Wave Time Min Max Mean GeoMean Sigma Centroid_x Centroid_y Centroid_z
 # The first line contains the column headings, and is discarded. Table row looks like:
 # image_id | the_w | the_t | deltatime | min | max | mean | geomean | sigma | centroid_x | centroid_y | centroid_z
@@ -538,7 +538,7 @@ sub store_xyz_info {
                   });
 
     if (!defined $view) {
-        carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+        carp "The image import module_execution chain is not defined.  Skipping predefined analyses...";
         return "";
     }
 

@@ -22,14 +22,14 @@ package OME::Tasks::AnalysisEngine;
 
 =head1 NAME
 
-OME::Tasks::AnalysisEngine - OME analysis subsystem
+OME::Tasks::AnalysisEngine - OME module_execution subsystem
 
 =head1 SYNOPSIS
 
 	use OME::Tasks::AnalysisEngine;
 	my $engine = new OME::Tasks::AnalysisEngine();
 
-	# login to OME, load/create an analysis view and dataset
+	# login to OME, load/create an module_execution view and dataset
 	$engine->executeAnalysisView($session,$view,$free_inputs,$dataset);
 
 	# Voila, you're done.
@@ -37,8 +37,8 @@ OME::Tasks::AnalysisEngine - OME analysis subsystem
 =head1 DESCRIPTION
 
 OME::Tasks::AnalysisEngine is implements the execution algorithm of
-the OME analysis subsystem.  Given an analysis chain, which is a
-directed acylic graph of analysis nodes, and a dataset, which is a
+the OME module_execution subsystem.  Given an module_execution chain, which is a
+directed acylic graph of module_execution nodes, and a dataset, which is a
 collection of OME images, the engine will execute each node in the
 chain against the dataset, recording the results and all of the
 appropriate metadata into the OME database.
@@ -54,11 +54,11 @@ use OME::Factory;
 use OME::DBObject;
 use OME::Dataset;
 use OME::Image;
-use OME::Program;
-use OME::Analysis;
-use OME::AnalysisView;
+use OME::Module;
+use OME::ModuleExecution;
+use OME::AnalysisChain;
 use OME::AnalysisPath;
-use OME::AnalysisExecution;
+use OME::AnalysisChainExecution;
 use OME::SessionManager;
 use OME::DBConnection;
 use Ima::DBI;
@@ -94,18 +94,18 @@ stored internally in Perl variables.
 	$sth = $self->sql_get_root_node();
 	$sth->execute($viewID);
 
-Returns the node ID's of all of the root nodes in an analysis view.
+Returns the node ID's of all of the root nodes in an module_execution view.
 
 =cut
 
 __PACKAGE__->set_sql('get_root_nodes',<<'SQL;','Main');
-SELECT avn.analysis_view_node_id
-  FROM analysis_view_nodes avn
- WHERE avn.analysis_view_id = ?
+SELECT avn.analysis_chain_node_id
+  FROM analysis_chain_nodes avn
+ WHERE avn.analysis_chain_id = ?
    AND NOT EXISTS
-       (SELECT avl.analysis_view_link_id
-          FROM analysis_view_links avl
-         WHERE avl.to_node = avn.analysis_view_node_id)
+       (SELECT avl.analysis_chain_link_id
+          FROM analysis_chain_links avl
+         WHERE avl.to_node = avn.analysis_chain_node_id)
 SQL;
 
 =head2 sql_get_predecessors
@@ -119,7 +119,7 @@ Returns the node ID's of all of the predecessors of a node.
 
 __PACKAGE__->set_sql('get_predecessors',<<'SQL;','Main');
 SELECT DISTINCT avl.from_node
-  FROM analysis_view_links avl
+  FROM analysis_chain_links avl
  WHERE avl.to_node = ?
 SQL;
 
@@ -134,7 +134,7 @@ Returns the node ID's of all of the successors of a node.
 
 __PACKAGE__->set_sql('get_successors',<<'SQL;','Main');
 SELECT DISTINCT avl.to_node
-  FROM analysis_view_links avl
+  FROM analysis_chain_links avl
  WHERE avl.from_node = ?
 SQL;
 
@@ -151,7 +151,7 @@ analysis.
 __PACKAGE__->set_sql('get_input_attributes',<<'SQL;','Main');
   SELECT dt.attribute_id
     FROM %s dt
-   WHERE dt.analysis_id = ?
+   WHERE dt.module_execution_id = ?
 ORDER BY dt.attribute_id
 SQL;
 
@@ -170,7 +170,7 @@ specific image.
 __PACKAGE__->set_sql('get_input_image_attributes',<<'SQL;','Main');
   SELECT dt.attribute_id
     FROM %s dt
-   WHERE dt.analysis_id = ?
+   WHERE dt.module_execution_id = ?
      AND dt.image_id = ?
 ORDER BY dt.attribute_id
 SQL;
@@ -191,7 +191,7 @@ attribute belongs to.)
 __PACKAGE__->set_sql('get_input_feature_attributes',<<'SQL;','Main');
   SELECT dt.attribute_id
     FROM %s dt, features f
-   WHERE dt.analysis_id = ?
+   WHERE dt.module_execution_id = ?
      AND dt.feature_id = f.feature_id
      AND f.image_id = ?
 ORDER BY dt.attribute_id
@@ -213,7 +213,7 @@ attribute belongs to.)
 __PACKAGE__->set_sql('get_input_feature_attributes_by_feature',<<'SQL;','Main');
   SELECT dt.attribute_id
     FROM %s dt
-   WHERE dt.analysis_id = ?
+   WHERE dt.module_execution_id = ?
      AND dt.feature_id in %s
 ORDER BY dt.attribute_id
 SQL;
@@ -224,7 +224,7 @@ SQL;
 	$sth->execute($analysisID,$imageID);
 
 Returns the feature tags of the attributes created as outputs from a
-specific analysis.  Assumes that the attribute type has feature-level
+specific module_execution.  Assumes that the attribute type has feature-level
 granularity, and limits the attributes returned to those keyed to a
 specific image.
 
@@ -233,7 +233,7 @@ specific image.
 __PACKAGE__->set_sql('get_input_feature_tags',<<'SQL;','Main');
   SELECT DISTINCT f.tag
     FROM %s dt, features f
-   WHERE dt.analysis_id = ?
+   WHERE dt.module_execution_id = ?
      AND f.image_id = ?
      AND dt.feature_id = f.feature_id
 SQL;
@@ -244,7 +244,7 @@ SQL;
 	$sth->execute($analysisID,$imageID);
 
 Returns the feature ID's and tags of the attributes created as outputs
-from a specific analysis.  Assumes that the attribute type has
+from a specific module_execution.  Assumes that the attribute type has
 feature-level granularity, and limits the attributes returned to those
 keyed to a specific image.
 
@@ -253,7 +253,7 @@ keyed to a specific image.
 __PACKAGE__->set_sql('get_input_features',<<'SQL;','Main');
   SELECT DISTINCT f.feature_id, f.tag
     FROM %s dt, features f
-   WHERE dt.analysis_id = ?
+   WHERE dt.module_execution_id = ?
      AND f.image_id = ?
      AND dt.feature_id = f.feature_id
 SQL;
@@ -263,14 +263,14 @@ SQL;
 	$sth = $self->sql_get_input_link();
 	$sth->execute($nodeID,$formal_inputID);
 
-Returns the data link providing input to a formal input of an analysis
+Returns the data link providing input to a formal input of an module_execution
 node.
 
 =cut
 
 __PACKAGE__->set_sql('get_input_link',<<'SQL;','Main');
-SELECT avl.analysis_view_link_id
-  FROM analysis_view_links avl
+SELECT avl.analysis_chain_link_id
+  FROM analysis_chain_links avl
  WHERE avl.to_node = ?
    AND avl.to_input = ?
 SQL;
@@ -280,15 +280,15 @@ SQL;
 	$sth = $self->sql_get_actual_output_from_input();
 	$sth->execute($analysisID,$formal_inputID);
 
-Returns the analysis providing input to a formal input of an analysis
+Returns the module_execution providing input to a formal input of an module_execution
 node.
 
 =cut
 
 __PACKAGE__->set_sql('get_analysis_from_input',<<'SQL;','Main');
-  SELECT ai.input_analysis_id
+  SELECT ai.input_module_execution_id
     FROM actual_inputs ai
-   WHERE ai.analysis_id = ?
+   WHERE ai.module_execution_id = ?
      AND ai.formal_input_id = ?
 SQL;
 
@@ -303,12 +303,12 @@ Returns all of the formal inputs of a given granularity for a node.
 
 __PACKAGE__->set_sql('get_formal_inputs_by_node',<<'SQL;','Main');
   SELECT fi.formal_input_id
-    FROM analysis_view_nodes avn,
-         formal_inputs fi, attribute_types at
-   WHERE avn.analysis_view_node_id = ?
+    FROM analysis_chain_nodes avn,
+         formal_inputs fi, semantic_types at
+   WHERE avn.analysis_chain_node_id = ?
      AND at.granularity = ?
-     AND avn.program_id = fi.program_id
-     AND fi.attribute_type_id = at.attribute_type_id
+     AND avn.module_id = fi.module_id
+     AND fi.semantic_type_id = at.semantic_type_id
 ORDER BY fi.formal_input_id
 SQL;
 
@@ -324,12 +324,12 @@ node.
 
 __PACKAGE__->set_sql('get_formal_inputs_by_not_node',<<'SQL;','Main');
   SELECT fi.formal_input_id
-    FROM analysis_view_nodes avn,
-         formal_inputs fi, attribute_types at
-   WHERE avn.analysis_view_node_id = ?
+    FROM analysis_chain_nodes avn,
+         formal_inputs fi, semantic_types at
+   WHERE avn.analysis_chain_node_id = ?
      AND at.granularity != ?
-     AND avn.program_id = fi.program_id
-     AND fi.attribute_type_id = at.attribute_type_id
+     AND avn.module_id = fi.module_id
+     AND fi.semantic_type_id = at.semantic_type_id
 ORDER BY fi.formal_input_id
 SQL;
 
@@ -344,12 +344,12 @@ Returns all of the formal outputs of a given granularity for a node.
 
 __PACKAGE__->set_sql('get_formal_outputs_by_node',<<'SQL;','Main');
   SELECT fo.formal_output_id
-    FROM analysis_view_nodes avn,
-         formal_outputs fo, attribute_types at
-   WHERE avn.analysis_view_node_id = ?
+    FROM analysis_chain_nodes avn,
+         formal_outputs fo, semantic_types at
+   WHERE avn.analysis_chain_node_id = ?
      AND at.granularity = ?
-     AND avn.program_id = fo.program_id
-     AND fo.attribute_type_id = at.attribute_type_id
+     AND avn.module_id = fo.module_id
+     AND fo.semantic_type_id = at.semantic_type_id
 ORDER BY fo.formal_output_id
 SQL;
 
@@ -365,12 +365,12 @@ execution.
 
 __PACKAGE__->set_sql('get_formal_inputs_by_analysis',<<'SQL;','Main');
   SELECT fi.formal_input_id
-    FROM analyses a,
-         formal_inputs fi, attribute_types at
-   WHERE a.analysis_id = ?
+    FROM module_executions a,
+         formal_inputs fi, semantic_types at
+   WHERE a.module_execution_id = ?
      AND at.granularity = ?
-     AND a.program_id = fi.program_id
-     AND fi.attribute_type_id = at.attribute_type_id
+     AND a.module_id = fi.module_id
+     AND fi.semantic_type_id = at.semantic_type_id
 ORDER BY fi.formal_input_id
 SQL;
 
@@ -384,13 +384,13 @@ Returns all of the data links of a given granularity for a node.
 =cut
 
 __PACKAGE__->set_sql('get_input_links_by_node',<<'SQL;','Main');
-  SELECT avl.analysis_view_link_id
-    FROM analysis_view_links avl,
-         attribute_types at, formal_inputs fi
+  SELECT avl.analysis_chain_link_id
+    FROM analysis_chain_links avl,
+         semantic_types at, formal_inputs fi
    WHERE avl.to_node = ?
      AND at.granularity = ?
      AND avl.to_input = fi.formal_input_id
-     AND fi.attribute_type_id = at.attribute_type_id
+     AND fi.semantic_type_id = at.semantic_type_id
 ORDER BY fi.formal_input_id
 SQL;
 
@@ -441,8 +441,8 @@ sub findModuleHandler {
     # find existing ones.
     my $factory;
 
-    # The analysis view being executed.
-    my $analysis_view;
+    # The module_execution view being executed.
+    my $analysis_chain;
 
     # The hash of the user-specified input parameters.
     my $input_parameters;
@@ -455,13 +455,13 @@ sub findModuleHandler {
     # The dataset the chain is being executed against.
     my $dataset;
 
-    # A list of nodes in the analysis view.
+    # A list of nodes in the module_execution view.
     my @nodes;
 
     # A hash of nodes keyed by node ID.
     my %nodes;
 
-    # The instantiated program modules for each analyis node.
+    # The instantiated module modules for each analyis node.
     my %node_modules;
 
     # The current state of each node.
@@ -475,17 +475,17 @@ sub findModuleHandler {
     #my %input_links;
     #my %output_links;
 
-    # The ANALYSIS_EXECUTION entry for this chain execution.
-    my $analysis_execution;
+    # The analysis_chain_execution entry for this chain execution.
+    my $analysis_chain_execution;
 
     # The dataset-dependence of each node.
     # $dependence{$nodeID} = [D,I]
     my %dependence;
 
     # The ANALYSES for each node.
-    # $global_analysis($nodeID} = $analysis
-    # $perdataset_analysis{$nodeID} = $analysis
-    # $perimage_analysis{$nodeID}->{$imageID} = $analysis
+    # $global_analysis($nodeID} = $module_execution
+    # $perdataset_analysis{$nodeID} = $module_execution
+    # $perimage_analysis{$nodeID}->{$imageID} = $module_execution
     my (%global_analysis, %perdataset_analysis,%perimage_analysis);
 
     # The outputs generated by each node
@@ -535,7 +535,7 @@ sub findModuleHandler {
         %nodes = ();
         %node_modules = ();
         %node_states = ();
-        $analysis_execution = undef;
+        $analysis_chain_execution = undef;
         %dependence = ();
         %global_analysis = ();
         %perdataset_analysis = ();
@@ -632,20 +632,20 @@ sub findModuleHandler {
     # linked to anything.  However, only those inputs which are
     # connected are pushed into their hashes.
     sub __initializeNode {
-        my $program = $curr_node->program();
-        my $module_type = $program->module_type();
-        my $location = $program->location();
+        my $module = $curr_node->module();
+        my $module_type = $module->module_type();
+        my $location = $module->location();
 
         $nodes{$curr_nodeID} = $curr_node;
 
-        __debug("  ".$program->program_name());
+        __debug("  ".$module->name());
 
         __debug("    Loading module $location via handler $module_type");
         my $handler = findModuleHandler($module_type);
         logcroak "Malformed class name $handler"
           unless $handler =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $handler";
-        my $module = $handler->new($location,$session,$program,$curr_node);
+        my $module = $handler->new($location,$session,$module,$curr_node);
         $node_modules{$curr_nodeID} = $module;
 
         $node_states{$curr_nodeID} = INPUT_STATE;
@@ -670,36 +670,36 @@ sub findModuleHandler {
     # "to input" match.
     sub __checkInputs {
         __debug("    Sorting and checking links");
-        foreach my $link ($analysis_view->links()) {
+        foreach my $link ($analysis_chain->links()) {
             my $from_node = $link->from_node();
             my $from_output = $link->from_output();
             my $to_node = $link->to_node();
             my $to_input = $link->to_input();
 
             my $long_name =
-              $from_node->program()->program_name().".".
+              $from_node->module()->name().".".
               $from_output->name()." -> ".
-              $to_node->program()->program_name().".".
+              $to_node->module()->name().".".
               $to_input->name();
             my $short_name =
-              $to_node->program()->program_name().".".
+              $to_node->module()->name().".".
               $to_input->name();
 
             die
               "$long_name: 'From output' does not belong to 'from node'"
-              if ($from_output->program()->id() ne
-                  $from_node->program()->id());
+              if ($from_output->module()->id() ne
+                  $from_node->module()->id());
 
             die
               "$long_name: 'To input' does not belong to 'to node'"
-              if ($to_input->program()->id() ne
-                  $to_node->program()->id());
+              if ($to_input->module()->id() ne
+                  $to_node->module()->id());
 
             die
               "$long_name: Types don't match"
-              unless (!defined $from_output->attribute_type())
-                || ($from_output->attribute_type()->id() eq
-                    $to_input->attribute_type()->id());
+              unless (!defined $from_output->semantic_type())
+                || ($from_output->semantic_type()->id() eq
+                    $to_input->semantic_type()->id());
 
             die
               "$short_name: Two links cannot feed into the same input!"
@@ -716,8 +716,8 @@ sub findModuleHandler {
 
         __debug("    Checking nodes");
         foreach my $node (@nodes) {
-            __debug("      ".$node->program()->program_name());
-            my @inputs = $node->program()->inputs();
+            __debug("      ".$node->module()->name());
+            my @inputs = $node->module()->inputs();
             foreach my $input (@inputs) {
                 # Okay if there's a link feeding this input
                 my $nodeID = $node->id();
@@ -725,8 +725,8 @@ sub findModuleHandler {
                 next if exists $node_inputs{$nodeID}->{$inputID};
 
                 # Keep a count of the number of user inputs of this type
-                my $attribute_type = $input->attribute_type();
-                my $attribute_typeID = $attribute_type->id();
+                my $semantic_type = $input->semantic_type();
+                my $attribute_typeID = $semantic_type->id();
                 $input_types{$attribute_typeID}++;
 
                 # ...and keep track of the maximum of that count
@@ -739,7 +739,7 @@ sub findModuleHandler {
                 my $user;
                 if (exists $input_parameters->{$nodeID}->{$inputID}) {
                     $user = $input_parameters->{$nodeID}->{$inputID};
-                    if (UNIVERSAL::isa($user,"OME::AttributeType::Superclass")) {
+                    if (UNIVERSAL::isa($user,"OME::SemanticType::Superclass")) {
                         # If the user provided a single input, wrap it
                         # in an array ref
                         $user = [$user];
@@ -747,7 +747,7 @@ sub findModuleHandler {
                         # Otherwise only accept the input if its an
                         # array ref
                         die
-                          $node->program()->program_name().".".
+                          $node->module()->name().".".
                           $input->name().
                           ": User input must be an attribute ".
                           "or array of attributes";
@@ -770,9 +770,9 @@ sub findModuleHandler {
         __debug("    Creating $max_input_analyses user input analyses");
         my @analyses;
         $analyses[$_] = $factory->
-          newObject("OME::Analysis",
+          newObject("OME::ModuleExecution",
                     {
-                     program_id => undef,
+                     module_id => undef,
                      dependence => 'D',
                      dataset_id => $dataset->id(),
                      timestamp  => 'now',
@@ -782,7 +782,7 @@ sub findModuleHandler {
 
         #print join("\n",@analyses),"\n";
 
-        # Create a hash, recording which analysis we will associate each
+        # Create a hash, recording which module_execution we will associate each
         # user input with.  We won't actually clone the user inputs
         # until it's time to execute the module.  (This prevents extra
         # user inputs from cluttering everything in case the chain
@@ -799,30 +799,30 @@ sub findModuleHandler {
     }
 
     # Clones the user inputs for the current node.  The cloned
-    # attributes are associated with the analysis created by the
+    # attributes are associated with the module_execution created by the
     # __checkInputs method.
 
     sub __cloneUserInputs {
         #print "      CLONE $curr_nodeID\n";
         foreach my $inputID (keys %{$user_input_analyses{$curr_nodeID}}) {
             my $inputs = $input_parameters->{$curr_nodeID}->{$inputID};
-            my $analysis = $user_input_analyses{$curr_nodeID}->{$inputID};
-            #print "         $inputID - ",$analysis->id(),"\n";
+            my $module_execution = $user_input_analyses{$curr_nodeID}->{$inputID};
+            #print "         $inputID - ",$module_execution->id(),"\n";
 
             foreach my $attribute (@$inputs) {
-                my $type = $attribute->attribute_type();
+                my $type = $attribute->semantic_type();
                 my $target = $attribute->_getTarget();
                 my $hash = $attribute->getDataHash();
 
                 my $clone = $factory->
-                  newAttribute($type,$target,$analysis,$hash);
+                  newAttribute($type,$target,$module_execution,$hash);
                 $session->commitTransaction();
                 #print "          $clone\n";
             }
         }
     }
 
-    # Builds the data paths for an analysis chain.  Simultaneous
+    # Builds the data paths for an module_execution chain.  Simultaneous
     # verifies that the graph is acyclic.
     sub __buildDataPaths {
         __debug("  Building data paths");
@@ -834,7 +834,7 @@ sub findModuleHandler {
 
         # First, we create paths for each root node in the chain
         $sth = $self->sql_get_root_nodes();
-        $sth->execute($analysis_view->id());
+        $sth->execute($analysis_chain->id());
         while (my $row = $sth->fetch) {
             __debug("    Found root node ".$row->[0]);
             my $path = [$row->[0]];
@@ -898,7 +898,7 @@ sub findModuleHandler {
               newObject("OME::AnalysisPath",
                         {
                          path_length   => scalar(@$data_path_list),
-                         analysis_view => $analysis_view
+                         analysis_chain => $analysis_chain
                         });
             my $data_pathID = $data_path->id();
 
@@ -908,7 +908,7 @@ sub findModuleHandler {
                   {
                    path               => $data_path,
                    path_order         => $order,
-                   analysis_view_node => $nodeID
+                   analysis_chain_node => $nodeID
                   };
                 my $db_path_entry = $factory->
                   newObject("OME::AnalysisPath::Map",
@@ -919,25 +919,25 @@ sub findModuleHandler {
         }
     }
 
-    # Loads the data paths for an analysis chain which has already had
+    # Loads the data paths for an module_execution chain which has already had
     # them built.
     sub __loadDataPaths {
         __debug("  Loading data paths");
 
-        my @db_paths = $analysis_view->paths();
+        my @db_paths = $analysis_chain->paths();
         foreach my $db_path (@db_paths) {
             my @db_path_entries = $db_path->path_nodes();
             foreach my $db_path_entry (@db_path_entries) {
                 push
-                  @{$data_paths{$db_path_entry->analysis_view_node()->id()}},
+                  @{$data_paths{$db_path_entry->analysis_chain_node()->id()}},
                   $db_path_entry;
             }
         }
     }
 
-    # Returns the correct ANALYSIS entry for the given node.  Takes
+    # Returns the correct module_execution entry for the given node.  Takes
     # into account the dataset-dependence of the node; if it is a
-    # per-image node, it finds the ANALYSIS entry for the current
+    # per-image node, it finds the module_execution entry for the current
     # image.
     sub __getAnalysis {
         my ($nodeID) = @_;
@@ -1024,10 +1024,10 @@ sub findModuleHandler {
     sub __getDataTables {
         my ($formal_input) = @_;
 
-        my $attr_type = $formal_input->attribute_type();
+        my $attr_type = $formal_input->semantic_type();
 
         my %data_tables;
-        foreach my $attr_column ($attr_type->attribute_columns()) {
+        foreach my $attr_column ($attr_type->semantic_elements()) {
             my $data_column = $attr_column->data_column();
             my $data_table = $data_column->data_table();
             my $table_name = $data_table->table_name();
@@ -1075,7 +1075,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
-            my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+            my $input_link = __fetchobj("OME::AnalysisChain::Link",$sth);
             my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
@@ -1114,7 +1114,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
-            my $input_link = __fetchobj("OME::AnalysisView::Link",$sth); 
+            my $input_link = __fetchobj("OME::AnalysisChain::Link",$sth); 
             my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
@@ -1127,7 +1127,7 @@ sub findModuleHandler {
 
             my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
-              loadObject("OME::Program::FormalInput",
+              loadObject("OME::Module::FormalInput",
                          $formal_inputID);
 
             my %attributes;
@@ -1154,7 +1154,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
-            my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+            my $input_link = __fetchobj("OME::AnalysisChain::Link",$sth);
             my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
@@ -1167,7 +1167,7 @@ sub findModuleHandler {
 
             my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
-              loadObject("OME::Program::FormalInput",
+              loadObject("OME::Module::FormalInput",
                          $formal_inputID);
 
             my %attributes;
@@ -1200,7 +1200,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
-            my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+            my $input_link = __fetchobj("OME::AnalysisChain::Link",$sth);
             my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
@@ -1212,7 +1212,7 @@ sub findModuleHandler {
             }
 
             my $pred_analysisID = $pred_analysis->id();
-            my $formal_input = $factory->loadObject("OME::Program::FormalInput",
+            my $formal_input = $factory->loadObject("OME::Module::FormalInput",
                                                     $formal_inputID);
 
             my %attributes;
@@ -1240,7 +1240,7 @@ sub findModuleHandler {
         return $paramString;
     }
 
-    # This routine calculates the input tag of a previous analysis.
+    # This routine calculates the input tag of a previous module_execution.
     # All of the appropriate elements of the tag can be retrieved from
     # the ANALYSES and ACTUAL_INPUTS tables.
     sub __calculatePastInputTag {
@@ -1266,7 +1266,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
-            my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my $input_module_execution = __fetchobj("OME::ModuleExecution",$sth);
             my ($pred_node,$pred_analysis);
             my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
@@ -1280,13 +1280,13 @@ sub findModuleHandler {
 
             my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
-              loadObject("OME::Program::FormalInput",
+              loadObject("OME::Module::FormalInput",
                          $formal_inputID);
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
                 $sth = $self->sql_get_input_attributes($table_name);
-                $sth->execute($input_analysis->id());
+                $sth->execute($input_module_execution->id());
 
                 $attributes{$_} = $_
                     foreach @{__fetchall($sth)};
@@ -1307,7 +1307,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
-            my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my $input_module_execution = __fetchobj("OME::ModuleExecution",$sth);
             my ($pred_node,$pred_analysis);
             my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
@@ -1321,13 +1321,13 @@ sub findModuleHandler {
 
             my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
-              loadObject("OME::Program::FormalInput",
+              loadObject("OME::Module::FormalInput",
                          $formal_inputID);
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
                 $sth = $self->sql_get_input_attributes($table_name);
-                $sth->execute($input_analysis->id());
+                $sth->execute($input_module_execution->id());
 
                 $attributes{$_} = $_
                     foreach @{__fetchall($sth)};
@@ -1348,7 +1348,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
-            my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my $input_module_execution = __fetchobj("OME::ModuleExecution",$sth);
             my ($pred_node,$pred_analysis);
             my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
@@ -1362,17 +1362,17 @@ sub findModuleHandler {
 
             my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
-              loadObject("OME::Program::FormalInput",
+              loadObject("OME::Module::FormalInput",
                          $formal_inputID);
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
                 if ($dependence{$curr_nodeID} eq 'D') {
                     $sth = $self->sql_get_input_attributes($table_name);
-                    $sth->execute($input_analysis->id());
+                    $sth->execute($input_module_execution->id());
                 } else {
                     $sth = $self->sql_get_input_image_attributes($table_name);
-                    $sth->execute($input_analysis->id(),
+                    $sth->execute($input_module_execution->id(),
                                   $curr_imageID);
                 }
 
@@ -1395,7 +1395,7 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
-            my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my $input_module_execution = __fetchobj("OME::ModuleExecution",$sth);
             my ($pred_node,$pred_analysis);
             my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
@@ -1408,17 +1408,17 @@ sub findModuleHandler {
             }
 
             my $pred_analysisID = $pred_analysis->id();
-            my $formal_input = $factory->loadObject("OME::Program::FormalInput",
+            my $formal_input = $factory->loadObject("OME::Module::FormalInput",
                                                     $formal_inputID);
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
                 if ($dependence{$curr_nodeID} eq 'D') {
                     $sth = $self->sql_get_input_attributes($table_name);
-                    $sth->execute($input_analysis->id());
+                    $sth->execute($input_module_execution->id());
                 } else {
                     $sth = $self->sql_get_input_feature_attributes($table_name);
-                    $sth->execute($input_analysis->id(),
+                    $sth->execute($input_module_execution->id(),
                                   $curr_imageID);
                 }
 
@@ -1436,25 +1436,25 @@ sub findModuleHandler {
 
     sub __createAnalysis {
         my ($data) = @_;
-        my $analysis = $factory->
-          newObject("OME::Analysis",
+        my $module_execution = $factory->
+          newObject("OME::ModuleExecution",
                     $data);
-        __addAnalysisToPaths($analysis);
+        __addAnalysisToPaths($module_execution);
 
-        return $analysis;
+        return $module_execution;
     }
 
     sub __createActualInputs {
         my ($node) = @_;
         my $nodeID = $node->id();
-        my $analysis = __getAnalysis($nodeID);
+        my $module_execution = __getAnalysis($nodeID);
 
         my %actual_inputs;
 
         #__debug("**** actual inputs");
-        my $program = $analysis->program();
+        my $module = $module_execution->module();
 
-        foreach my $formal_input ($program->inputs()) {
+        foreach my $formal_input ($module->inputs()) {
             my $inputID = $formal_input->id();
             my $input_link = $node_inputs{$nodeID}->{$inputID};
 
@@ -1475,11 +1475,11 @@ sub findModuleHandler {
             #__debug("****     $actual_outputID");
 
             my $actual_input = $factory->
-              newObject("OME::Analysis::ActualInput",
+              newObject("OME::ModuleExecution::ActualInput",
                         {
-                         analysis          => $analysis->id(),
+                         module_execution          => $module_execution->id(),
                          formal_input_id   => $inputID,
-                         input_analysis_id => $pred_analysis->id()
+                         input_module_execution_id => $pred_analysis->id()
                         });
 
             #__debug("****     ".$actual_input->id());
@@ -1487,40 +1487,40 @@ sub findModuleHandler {
     }
 
     sub __addAnalysisToPaths {
-        my ($analysis) = @_;
+        my ($module_execution) = @_;
         foreach my $db_data_path_entry (@{$data_paths{$curr_nodeID}}) {
             my $node_execution = $factory->
-              newObject("OME::AnalysisExecution::NodeExecution",
+              newObject("OME::AnalysisChainExecution::NodeExecution",
                         {
-                         analysis_execution => $analysis_execution,
-                         analysis_view_node => $curr_nodeID,
-                         analysis           => $analysis,
+                         analysis_chain_execution => $analysis_chain_execution,
+                         analysis_chain_node => $curr_nodeID,
+                         module_execution           => $module_execution,
                         });
         }
     }
 
-    # Updates the hash of ANALYSIS entries.  Takes into account the
+    # Updates the hash of module_execution entries.  Takes into account the
     # dataset-dependency of the current module.
     sub __assignAnalysis {
-        my ($analysis,$reused) = @_;
+        my ($module_execution,$reused) = @_;
 
         if ($dependence{$curr_nodeID} eq 'G') {
-            $global_analysis{$curr_nodeID} = $analysis;
+            $global_analysis{$curr_nodeID} = $module_execution;
         } elsif ($dependence{$curr_nodeID} eq 'D') {
-            $perdataset_analysis{$curr_nodeID} = $analysis;
+            $perdataset_analysis{$curr_nodeID} = $module_execution;
         } else {
-            $perimage_analysis{$curr_nodeID}->{$curr_imageID} = $analysis;
+            $perimage_analysis{$curr_nodeID}->{$curr_imageID} = $module_execution;
         }
-        #$analysis{$curr_nodeID} = $analysis unless $reused;
+        #$module_execution{$curr_nodeID} = $module_execution unless $reused;
     }
 
     # This routine performs the check that determines whether results
     # can be reused, using the methods described above.
     sub __checkPastResults {
-        # Allow the user to skip analysis reuse.  This should really
+        # Allow the user to skip module_execution reuse.  This should really
         # only be used for testing.
         return 0 if (!$self->Flag('ReuseResults')
-                     && $curr_node->program()->program_name() ne "Importer");
+                     && $curr_node->module()->name() ne "Importer");
 
         my $paramString = __calculateCurrentInputTag();
         my $space = ($dependence{$curr_nodeID} eq 'I')? '  ': '';
@@ -1529,22 +1529,22 @@ sub findModuleHandler {
         my $match = 0;
         my $matched_analysis;
         my @past_analyses = $factory->
-          findObjects("OME::Analysis",
-                      program_id => $curr_node->program()->id());
+          findObjects("OME::ModuleExecution",
+                      module_id => $curr_node->module()->id());
         my $this_analysis = __getAnalysis($curr_nodeID);
         my $this_analysisID;
         $this_analysisID = $this_analysis->id() if (defined $this_analysis);
 
       FIND_MATCH:
         foreach my $past_analysis (@past_analyses) {
-            __debug("$space    Checking analysis ".$past_analysis->id()."...");
+            __debug("$space    Checking module_execution ".$past_analysis->id()."...");
             if ($past_analysis->status() ne 'FINISHED') {
                 __debug("$space      unfinished.");
                 next FIND_MATCH;
             }
             if (defined $this_analysisID &&
                 $past_analysis->id() eq $this_analysisID) {
-                __debug("$space      current analysis.");
+                __debug("$space      current module_execution.");
                 next FIND_MATCH;
             }
             my $image_map = $factory->
@@ -1570,7 +1570,7 @@ sub findModuleHandler {
         }
 
         if ($match) {
-            __debug("$space    Found reusable analysis ".$matched_analysis->id());
+            __debug("$space    Found reusable module_execution ".$matched_analysis->id());
             __addAnalysisToPaths($matched_analysis);
             __assignAnalysis($matched_analysis,1);
         }
@@ -1636,7 +1636,7 @@ sub findModuleHandler {
 
                 my $sth = $self->sql_get_input_links_by_node();
                 $sth->execute($this_nodeID,'F');
-                foreach my $input_link (@{__fetchobjs("OME::AnalysisView::Link",$sth)}) {
+                foreach my $input_link (@{__fetchobjs("OME::AnalysisChain::Link",$sth)}) {
                     my $formal_input = $input_link->to_input();
                     #my $attr_table = $formal_input->datatype()->table_name();
 
@@ -1940,7 +1940,7 @@ sub findModuleHandler {
 
         foreach my $formal_input (@curr_feature_inputs) {
             #__debug("  Link ".$input_link." ".$formal_input->name());
-            my $attr_type_name = $formal_input->attribute_type()->name();
+            my $attr_type_name = $formal_input->semantic_type()->name();
             my @attributes = @{__findFeatureAttributes($formal_input)};
 
             # Turn the attribute ID's into attribute objects.
@@ -1967,7 +1967,7 @@ sub findModuleHandler {
         #my $formal_input = $input_link->to_input();
         my $inputID = $formal_input->id();
         my $input_link = $node_inputs{$curr_nodeID}->{$inputID};
-        my $attr_type = $formal_input->attribute_type();
+        my $attr_type = $formal_input->semantic_type();
         my $attr_type_name = $attr_type->name();
 
         my $pred_analysis;
@@ -2013,11 +2013,11 @@ sub findModuleHandler {
         return \@attribute_list;
     }
 
-    # The main body of the analysis engine.  Its purpose is to execute
-    # a prebuilt analysis chain against a dataset, reusing results if
+    # The main body of the module_execution engine.  Its purpose is to execute
+    # a prebuilt module_execution chain against a dataset, reusing results if
     # possible.
     sub executeAnalysisView {
-        ($self, $session, $analysis_view, $input_parameters, $dataset) = @_;
+        ($self, $session, $analysis_chain, $input_parameters, $dataset) = @_;
 
         __clearEverything();
         $factory = $session->Factory();
@@ -2025,7 +2025,7 @@ sub findModuleHandler {
         $start_time = new Benchmark;
 
         # all nodes
-        @nodes = $analysis_view->nodes();
+        @nodes = $analysis_chain->nodes();
 
         __debug("Setup");
 
@@ -2037,30 +2037,30 @@ sub findModuleHandler {
         $dataset->storeObject();
 
         # Build the data paths.  Since data paths are now associated
-        # with analysis views, we only need to calculate them once.
+        # with module_execution views, we only need to calculate them once.
         # Since the view is only locked when it is executed, we assume
         # that an unlocked view has not had paths calculated, whereas
         # a locked one has.
-        if (!$analysis_view->locked()) {
+        if (!$analysis_chain->locked()) {
             __debug("  Chain has not been locked yet");
 
             __buildDataPaths();
 
             __debug("  Locking the chain");
-            $analysis_view->locked('true');
-            $analysis_view->storeObject();
+            $analysis_chain->locked('true');
+            $analysis_chain->storeObject();
         } else {
             __debug("  Chain has already been locked");
 
             __loadDataPaths();
         }
 
-        __debug("  Creating ANALYSIS_EXECUTION table entry");
+        __debug("  Creating analysis_chain_execution table entry");
 
-        $analysis_execution = $factory->
-          newObject("OME::AnalysisExecution",
+        $analysis_chain_execution = $factory->
+          newObject("OME::AnalysisChainExecution",
                     {
-                     analysis_view => $analysis_view,
+                     analysis_chain => $analysis_chain,
                      dataset       => $dataset,
                      experimenter_id  => $session->User()->id()
                     });
@@ -2093,8 +2093,8 @@ sub findModuleHandler {
 
                 # Go ahead and skip if we've completed this module.
                 if ($node_states{$curr_nodeID} > INPUT_STATE) {
-                    __debug("  ".$curr_node->program()->
-                      program_name()." already completed");
+                    __debug("  ".$curr_node->module()->
+                      name()." already completed");
                     next ANALYSIS_LOOP;
                 }
 
@@ -2104,8 +2104,8 @@ sub findModuleHandler {
 
 
                 if (!__testModulePredecessors()) {
-                    __debug("  Skipping ".$curr_node->program()->
-                      program_name());
+                    __debug("  Skipping ".$curr_node->module()->
+                      name());
                     next ANALYSIS_LOOP;
                 }
 
@@ -2116,42 +2116,42 @@ sub findModuleHandler {
                 $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'G');
                 @curr_global_inputs = 
-                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalInput",$sth)};
 
                 $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'D');
                 @curr_dataset_inputs = 
-                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalInput",$sth)};
 
                 $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'I');
                 @curr_image_inputs = 
-                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalInput",$sth)};
 
                 $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'F');
                 @curr_feature_inputs = 
-                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalInput",$sth)};
 
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'G');
                 @curr_global_outputs =
-                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalOutput",$sth)};
 
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'D');
                 @curr_dataset_outputs =
-                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalOutput",$sth)};
 
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'I');
                 @curr_image_outputs =
-                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalOutput",$sth)};
 
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'F');
                 @curr_feature_outputs =
-                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
+                  @{__fetchobjs("OME::Module::FormalOutput",$sth)};
 
                 $last_node = $curr_node;
 
@@ -2168,17 +2168,17 @@ sub findModuleHandler {
 
                 my $new_analysis;
 
-                __debug("  Executing ".$curr_node->program()->
-                  program_name()." (".$dependence{$curr_nodeID}.")");
+                __debug("  Executing ".$curr_node->module()->
+                  name()." (".$dependence{$curr_nodeID}.")");
 
                 __cloneUserInputs();
 
                 # Execute away.
                 if ($dependence{$curr_nodeID} ne 'I') {
-                    __debug("    Creating ANALYSIS entry");
+                    __debug("    Creating module_execution entry");
                     $new_analysis = 
                       __createAnalysis({
-                                        program    => $curr_node->program(),
+                                        module    => $curr_node->module(),
                                         dependence => $dependence{$curr_nodeID},
                                         dataset    => $dataset,
                                         timestamp  => 'now',
@@ -2237,10 +2237,10 @@ sub findModuleHandler {
                         if (__checkPastResults()) {
                             next IMAGE_LOOP;
                         } elsif (!defined $new_analysis) {
-                            __debug("    Creating ANALYSIS entry");
+                            __debug("    Creating module_execution entry");
                             $new_analysis =
                               __createAnalysis({
-                                                program    => $curr_node->program(),
+                                                module    => $curr_node->module(),
                                                 dependence => $dependence{$curr_nodeID},
                                                 dataset    => $dataset,
                                                 timestamp  => 'now',
@@ -2330,7 +2330,7 @@ sub findModuleHandler {
                 __debug("    Checking global outputs");
                 $curr_module->collectGlobalOutputs();
 
-                __debug("    Finishing analysis");
+                __debug("    Finishing module_execution");
                 $curr_module->finishAnalysis();
 
                 # Mark this node as finished, and flag that we need

@@ -20,7 +20,7 @@
 
 use OME::Session;
 use OME::SessionManager;
-use OME::AnalysisView;
+use OME::AnalysisChain;
 use Term::ReadKey;
 
 print "\nOME Test Case - Create view\n";
@@ -42,26 +42,26 @@ my ($node1, $node2, $node3, $node4, $link);
 
 print "Finding programs...\n";
 
-my $calcXYZInfo = OME::Program->findByName('Stack statistics');
-print $calcXYZInfo->program_name()." (".$calcXYZInfo->id().")\n";
+my $calcXYZInfo = OME::Module->findByName('Stack statistics');
+print $calcXYZInfo->name()." (".$calcXYZInfo->id().")\n";
 
-my $calcXYInfo = OME::Program->findByName('Plane statistics');
-print $calcXYInfo->program_name()." (".$calcXYInfo->id().")\n";
+my $calcXYInfo = OME::Module->findByName('Plane statistics');
+print $calcXYInfo->name()." (".$calcXYInfo->id().")\n";
 
-my $findSpots = OME::Program->findByName('Find spots');
-print $findSpots->program_name()." (".$findSpots->id().")\n";
+my $findSpots = OME::Module->findByName('Find spots');
+print $findSpots->name()." (".$findSpots->id().")\n";
 
-my $findCells = OME::Program->findByName('Find cells');
-print $findCells->program_name()." (".$findCells->id().")\n";
+my $findCells = OME::Module->findByName('Find cells');
+print $findCells->name()." (".$findCells->id().")\n";
 
-my $findGolgi = OME::Program->findByName('Find golgi');
-print $findGolgi->program_name()." (".$findGolgi->id().")\n";
+my $findGolgi = OME::Module->findByName('Find golgi');
+print $findGolgi->name()." (".$findGolgi->id().")\n";
 
-my $findMito = OME::Program->findByName('Find mito');
-print $findMito->program_name()." (".$findMito->id().")\n";
+my $findMito = OME::Module->findByName('Find mito');
+print $findMito->name()." (".$findMito->id().")\n";
 
-my $findRatio = OME::Program->findByName('Find ratio');
-print $findRatio->program_name()." (".$findRatio->id().")\n";
+my $findRatio = OME::Module->findByName('Find ratio');
+print $findRatio->name()." (".$findRatio->id().")\n";
 
 
 sub __createChain {
@@ -70,7 +70,7 @@ sub __createChain {
     my @nodes;
 
     my $view = $factory->
-        newObject("OME::AnalysisView",
+        newObject("OME::AnalysisChain",
                   {
                    owner => $session->User(),
                    name  => $viewdef->[0],
@@ -81,14 +81,14 @@ sub __createChain {
     my $nodeCount = 0;
     foreach my $nodedef (@$nodedefs) {
         my $node = $factory->
-            newObject("OME::AnalysisView::Node",
+            newObject("OME::AnalysisChain::Node",
                       {
-                       analysis_view   => $view,
-                       program         => $nodedef->[0],
+                       analysis_chain   => $view,
+                       module         => $nodedef->[0],
                        iterator_tag    => $nodedef->[1],
                        new_feature_tag => $nodedef->[2]
                       });
-        print "    Node $nodeCount ".$node->program()->program_name()." (".$node->id().")\n";
+        print "    Node $nodeCount ".$node->module()->name()." (".$node->id().")\n";
         push @nodes, $node;
         $nodeCount++;
     }
@@ -98,14 +98,14 @@ sub __createChain {
         my $node2 = $nodes[$linkdef->[2]];
 
         my $link = $factory->
-            newObject("OME::AnalysisView::Link",
+            newObject("OME::AnalysisChain::Link",
                       {
-                       analysis_view => $view,
+                       analysis_chain => $view,
                        from_node     => $node1,
-                       from_output   => $node1->program()->
+                       from_output   => $node1->module()->
                        findOutputByName($linkdef->[1]),
                        to_node       => $node2,
-                       to_input      => $node2->program()->
+                       to_input      => $node2->module()->
                        findInputByName($linkdef->[3])
                       });
         print "    Link [Node ".$linkdef->[0].".".$linkdef->[1]."]->[Node ".$linkdef->[2].".".$linkdef->[3]."]\n";

@@ -1,4 +1,4 @@
-# OME/Analysis/FindBounds.pm
+# OME/module_execution/FindBounds.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>

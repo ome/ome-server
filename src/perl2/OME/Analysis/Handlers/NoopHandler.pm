@@ -1,4 +1,4 @@
-# OME/Analysis/NoopHandler.pm
+# OME/module_execution/NoopHandler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -22,7 +22,7 @@ package OME::Analysis::NoopHandler;
 
 =head1 NAME
 
-OME::Analysis::NoopHandler - analysis handler for unexecute placeholder modules
+OME::Analysis::NoopHandler - module_execution handler for unexecute placeholder modules
 
 =head1 SYNOPSIS
 
@@ -34,22 +34,22 @@ C<OME::Analysis::NoopHandler>.
 =head1 DESCRIPTION
 
 It is often the case that another piece of code, completely separate
-from the analysis engine, creates OME data attributes.  Further, it
+from the module_execution engine, creates OME data attributes.  Further, it
 might not be desirable (or feasible) to write an executable handler or
 module wrapper for this piece of code.  However, in order for these
-attributes to be visible to the analysis engine, they must be fit into
-a proper data-dependency tree, which requires analysis modules to be
+attributes to be visible to the module_execution engine, they must be fit into
+a proper data-dependency tree, which requires module_execution modules to be
 defined for each node in the tree.  In this case, the data-dependency
-tree is describning to the analysis engine what exactly was computed
-by the outside code.  Since the analysis engine does not control the
+tree is describning to the module_execution engine what exactly was computed
+by the outside code.  Since the module_execution engine does not control the
 execution of this code, the handler for these nodes should not do
 anything.  This is where the NoopHandler comes in.
 
-The NoopHandler is used to declare that an analysis module should
-never be executed by the analysis engine.  It is currently used by the
-image importer to describe to the analysis engine all of the
-attributes it creates as a result of image import.  When the analysis
-engine comes across a NoopHandler module in an analysis chain, it must
+The NoopHandler is used to declare that an module_execution module should
+never be executed by the module_execution engine.  It is currently used by the
+image importer to describe to the module_execution engine all of the
+attributes it creates as a result of image import.  When the module_execution
+engine comes across a NoopHandler module in an module_execution chain, it must
 be able to find reusable attributes in order for execution to proceed.
 In other words, the outside code must have already been run for an
 analysis chain to be able to use the outside results.
@@ -62,26 +62,26 @@ our $VERSION = '1.0';
 use base qw(OME::Analysis::Handler);
 
 # It is okay to instantiate the NoopHandler, since this will be done
-# by the analysis engine regardless of whether the module actually
+# by the module_execution engine regardless of whether the module actually
 # needs to execute.
 
 sub new {
-    my ($proto,$location,$session,$program,$node) = @_;
+    my ($proto,$location,$session,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$program,$node);
+    my $self = $class->SUPER::new($location,$session,$module,$node);
 
     bless $self,$class;
     return $self;
 }
 
 
-# However, it is not okay for the analysis engine to actually perform
+# However, it is not okay for the module_execution engine to actually perform
 # computations with this module.  Throw an error if it tries to.
 
 sub startAnalysis {
-    my ($self,$analysis) = @_;
-    $self->SUPER::startAnalysis($analysis);
+    my ($self,$module_execution) = @_;
+    $self->SUPER::startAnalysis($module_execution);
     die "Cannot execute a NoopHandler module";
 }
 

@@ -32,8 +32,8 @@ __PACKAGE__->columns(All => qw(mac_address db_instance lsid_authority
                                input_dir repository_dir ome_root
                                tmp_dir xml_dir bin_dir
                                display_settings import_module import_chain));
-__PACKAGE__->hasa('OME::Program' => qw(import_module));
-__PACKAGE__->hasa('OME::AnalysisView' => qw(import_chain));
+__PACKAGE__->hasa('OME::Module' => qw(import_module));
+__PACKAGE__->hasa('OME::AnalysisChain' => qw(import_chain));
 
 
 1;

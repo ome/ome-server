@@ -114,7 +114,7 @@ sub new {
 This will read the XML sub-tree under the $root element, creating objects in the DB.  A reference to the list
 of objects in the sub-tree will be returned.
 The objects will be written to the DB at the end of the import, and the Session's database handle committed.
-All images will be imported into a dummy dataset and the standard analysis chain will be executed on them.
+All images will be imported into a dummy dataset and the standard module_execution chain will be executed on them.
 
 =cut
 
@@ -223,8 +223,8 @@ sub processDOM {
 			{image_id => $objectID, dataset_id => $importDataset->id()}
 		));
 
-		# We need an analysis for these.  This will return the one stored in the object or make a new one.
-		$importAnalysis = $self->analysis();
+		# We need an module_execution for these.  This will return the one stored in the object or make a new one.
+		$importAnalysis = $self->module_execution();
 
 		# Import Image CAs
 		$CAnode = $node->getChildrenByTagName('CustomAttributes')->[0];
@@ -255,13 +255,13 @@ sub processDOM {
 
 	# Run the engine on the dataset.
     my $view = $factory->
-		findObject("OME::AnalysisView",name => 'Image import analyses');
+		findObject("OME::AnalysisChain",name => 'Image import analyses');
 	
 	if (!defined $view or !defined $importAnalysis) {
-		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+		logcarp "The image import module_execution chain is not defined.  Skipping predefined analyses...";
 		return $self->{_DBObjects};
 	}
-	logdbg "debug", ref ($self)."->processDOM: Running Analysis tasks";
+	logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
 	my $engine = OME::Tasks::AnalysisEngine->new();
 	eval {
 		$engine->executeAnalysisView($session,$view,{},$importDataset);
@@ -292,7 +292,7 @@ my ($self, $imageID, $parentFeature, $importAnalysis, $node) = @_;
 		}
 }
 
-sub analysis () {
+sub module_execution () {
 	my $self = shift;
 
 	return $self->{_analysis} if exists $self->{_analysis} and defined $self->{_analysis};
@@ -300,18 +300,18 @@ sub analysis () {
 
     my $config = $session->Factory()->loadObject("OME::Configuration", 1);
 
-    my $analysis = $session->Factory()->
-		newObject("OME::Analysis", {
+    my $module_execution = $session->Factory()->
+		newObject("OME::ModuleExecution", {
 			dependence => 'I',
 			dataset_id => $self->dataset()->id(),
 			timestamp  => 'now',
 			status     => 'FINISHED',
-			program_id => $config->import_module()->id(),
+			module_id => $config->import_module()->id(),
 		});
 
-    $self->{_analysis} = $analysis;
-    $self->addObject ($analysis);
-    return ($analysis);
+    $self->{_analysis} = $module_execution;
+    $self->addObject ($module_execution);
+    return ($module_execution);
 }
 
 
@@ -352,7 +352,7 @@ sub addObject ($) {
 
 
 sub importObject ($$$$) {
-	my ($self, $node, $granularity, $parentDBID, $analysis) = @_;
+	my ($self, $node, $granularity, $parentDBID, $module_execution) = @_;
 	return undef unless defined $node;
 
 	my $docIDs     = $self->{_docIDs};
@@ -373,7 +373,7 @@ sub importObject ($$$$) {
 
 	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 	$parentDBID = undef if $granularity eq 'G';
-	$analysis = undef if $granularity eq 'G' or $granularity eq 'D';
+	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
 
 	my $session	   = $self->{session};
 	my $factory	   = $session->Factory();
@@ -385,7 +385,7 @@ sub importObject ($$$$) {
 
 	my ($objectType,$isAttribute,$objectData,$refCols) = $self->getObjectTypeInfo($node,$parentDBID);
 	logdbg "debug", ref ($self)."->importObject:   Got info - object type $objectType.";
-	$analysis = undef if exists $self->{_nullAnalysisSTs}->{$objectType};
+	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$objectType};
 
 	# Process references in this object.
 	# If the reference was to an object already read from the document, resolve it.
@@ -415,7 +415,7 @@ sub importObject ($$$$) {
 	if ($isAttribute) {
 		logdbg "debug", ref ($self)."->importObject:   Calling newAttribute.".
 			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
-		$theObject = $factory->newAttribute($objectType,$parentDBID,$analysis,$objectData);
+		$theObject = $factory->newAttribute($objectType,$parentDBID,$module_execution,$objectData);
 	} else {
 		logdbg "debug", ref ($self)."->importObject:   Calling newObject.".
 			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
@@ -512,9 +512,9 @@ sub getObjectTypeInfo ($$) {
 	} else {
 		my $session	   = $self->{session};
 		my $factory	   = $session->Factory();
-		my $attrType = $factory->findObject("OME::AttributeType",name => $objectType)
+		my $attrType = $factory->findObject("OME::SemanticType",name => $objectType)
 			|| logdie ref ($self) . "->getObjectTypeInfo: Attempt to import an undefined attribute type: $objectType";
-		my @attrColumns = $attrType->attribute_columns();
+		my @attrColumns = $attrType->semantic_elements();
 		my ($attrCol,$attrColName);
 		foreach $attrCol (@attrColumns) {
 			$attrColName = $attrCol->name();

@@ -64,7 +64,7 @@ sub experimenter {
     if (@_) {
         my $attribute = shift;
         die "Owner must be an Experimenter"
-          unless $attribute->attribute_type()->name() eq "Experimenter";
+          unless $attribute->semantic_type()->name() eq "Experimenter";
         $self->experimenter_id($attribute->id());
         return undef;
     } else {
@@ -78,7 +78,7 @@ sub group {
     if (@_) {
         my $attribute = shift;
         die "Group must be a Group"
-          unless $attribute->attribute_type()->name() eq "Group";
+          unless $attribute->semantic_type()->name() eq "Group";
         $self->group_id($attribute->id());
         return undef;
     } else {

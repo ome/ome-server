@@ -70,7 +70,7 @@ sub exportToXMLFile {
   	my  ($self, $images, $file) = @_ ;
  	my  $factory = $self->{session}->Factory() ;
 	# To-do check if can write in file
-  	my  @imageAttributes = $factory->findObjects("OME::AttributeType",
+  	my  @imageAttributes = $factory->findObjects("OME::SemanticType",
                                                         granularity => 'I');
   	my  $exporter = OME::Tasks::OMEExport->new( session => $self->{session} ) ;
   	my  @exportObjects = () ;

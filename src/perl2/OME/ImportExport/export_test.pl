@@ -19,7 +19,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-# This program acts as a test jig for the Exporter class. It uses the same
+# This module acts as a test jig for the Exporter class. It uses the same
 # API for Exporter as the production OME.
 #
 

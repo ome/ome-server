@@ -77,7 +77,7 @@ attribute type to construct OME::DBObject subclasses at runtime.  (The
 real situation is slightly more complex than this because of the
 distinction between data tables and attribute types.  See the
 L<OME::DataTable|OME::DataTable> and
-L<OME::AttributeType|OME::AttributeType> modules for more details.)
+L<OME::SemanticType|OME::SemanticType> modules for more details.)
 Methods such as newAttribute and loadAttribute operate on these
 user-defined attribute types, and identify the specific OME::DBObject
 subclass by the attribute type.
@@ -151,25 +151,25 @@ adding items to a many-to-many map.  For instance,
 =head2 newAttribute
 
 	my $attribute = $factory->
-	    newAttribute($attributeType,$target,$analysis,$dataHash);
+	    newAttribute($attributeType,$target,$module_execution,$dataHash);
 
 Creates a new attribute object.  Note that this is not technically a
 DBObject subclass, since attributes can (conceivably) live in multiple
 data tables.  Each attribute is associated with one DBObject per data
 table is resides in.  (For more information on this, see
-L<OME::AttributeType|OME::AttributeType>.
+L<OME::SemanticType|OME::SemanticType>.
 
 The target of the attribute (dataset, image, or feature) should not be
 specified in $dataHash.  Rather, is should be passed in the $target
 parameter.  The appropriate key will be added to the $dataHash
 depending on the granularity of the attribute type.  Similarly, the
 analysis that this attribute should be associated with should be
-passed in the $analysis parameter, not the $dataHash.
+passed in the $module_execution parameter, not the $dataHash.
 
 Since attribute type packages are created dynamically, attribute types
 are not referred to by class name, like objects are.  The
 $attributeType parameter should be either an instance of
-OME::AttributeType (which I<is> an OME::DBObject, and can be obtained
+OME::SemanticType (which I<is> an OME::DBObject, and can be obtained
 via any of the *Object methods), or the name of an attribute type.
 Note that:
 
@@ -179,7 +179,7 @@ Note that:
 is exactly equivalent to:
 
 	my $type = $factory->
-	    findObject("OME::AttributeType",
+	    findObject("OME::SemanticType",
 	               name => "Stack mean");
 	my $attribute = $factory->
 	    newAttribute($type,$image,$hash);
@@ -198,7 +198,7 @@ row with that primary key.
 
 Loads in the attribute with the specified primary key.  As in the case
 of newAttribute, $attributeType can be either an attribute type name
-or an instance of OME::AttributeType.  Since all of the data rows that
+or an instance of OME::SemanticType.  Since all of the data rows that
 make up an attribute are required to have the same primary key value,
 this method works by calling loadObject on all of the data table
 classes that make up the given attribute type, and then creating a new
@@ -274,7 +274,7 @@ operator for comparison, rather than the = operator.
 
 Finds the attribute of a given type referring to a given target.  As
 in the case of newAttribute, $attributeType can be either an attribute
-type name or an instance of OME::AttributeType.  The target must be an
+type name or an instance of OME::SemanticType.  The target must be an
 OME::Dataset, OME::Image, or OME::Feature object, depending on the
 granularity of the type.  Note that arbitrary search criteria is not
 currently supported in this method.  If you need this functionality,
@@ -293,8 +293,8 @@ the methods, these criteria should be passed in directly in the
 parameter list, not as a hash reference.  For instance:
 
 	my @programs = $factory->
-	    findObjects("OME::Programs",
-	                module_type => "OME::Analysis::CLIHandler",
+	    findObjects("OME::Modules",
+	                module_type => "OME::ModuleExecution::CLIHandler",
 	                category    => "Statistics");
 
 Also note that these methods are not intended to support arbitrarily
@@ -309,73 +309,73 @@ Class::DBI methods.
 =head2 create
 
 	# Through Class::DBI
-	my $program = OME::Program->create($data_hash);
+	my $module = OME::Module->create($data_hash);
 
 	# Through OME::Factory
-	my $program = $factory->newObject("OME::Program",$data_hash);
+	my $module = $factory->newObject("OME::Module",$data_hash);
 
 =head2 find_or_create
 
 	# Through Class::DBI
-	my $program = OME::Program->find_or_create($data_hash);
+	my $module = OME::Module->find_or_create($data_hash);
 
 	# Through OME::Factory
-	my $program = $factory->
-	    maybeNewObject("OME::Program",$data_hash);
+	my $module = $factory->
+	    maybeNewObject("OME::Module",$data_hash);
 
 =head2 retrieve
 
 	# Through Class::DBI
-	my $program = OME::Program->retrieve($id);
+	my $module = OME::Module->retrieve($id);
 
 	# Through OME::Factory
-	my $program = $factory->loadObject("OME::Program",$id);
+	my $module = $factory->loadObject("OME::Module",$id);
 
 =head2 search
 
 	# Through Class::DBI
-	my @programs = OME::Program->
+	my @programs = OME::Module->
 	    search(name        => $name,
 	           module_type => $module_type);
-	my $programIterator = OME::Program->
+	my $programIterator = OME::Module->
 	    search(name        => $name,
 	           module_type => $module_type);
 
 	# Through OME::Factory
 	my $oneProgram = $factory->
-	    findObject("OME::Program",
+	    findObject("OME::Module",
 	               name        => $name,
 	               module_type => $module_type);
 	my @manyPrograms = $factory->
-	    findObjects("OME::Program",
+	    findObjects("OME::Module",
 	                name        => $name,
 	                module_type => $module_type);
 	my $programIterator = $factory->
-	    findObjects("OME::Program",
+	    findObjects("OME::Module",
 	                name        => $name,
 	                module_type => $module_type);
 
 =head2 search_like
 
 	# Through Class::DBI
-	my @programs = OME::Program->
+	my @programs = OME::Module->
 	    search_like(name        => $name,
 	                module_type => $module_type);
-	my $programIterator = OME::Program->
+	my $programIterator = OME::Module->
 	    search_like(name        => $name,
 	                module_type => $module_type);
 
 	# Through OME::Factory
 	my $oneProgram = $factory->
-	    findObjectLike("OME::Program",
+	    findObjectLike("OME::Module",
 	                   name        => $name,
 	                   module_type => $module_type);
 	my @manyPrograms = $factory->
-	    findObjectsLike("OME::Program",
+	    findObjectsLike("OME::Module",
 	                    name        => $name,
 	                    module_type => $module_type);
 	my $programIterator = $factory->
-	    findObjectsLike("OME::Program",
+	    findObjectsLike("OME::Module",
 	                    name        => $name,
 	                    module_type => $module_type);
 
@@ -457,14 +457,14 @@ sub loadObject {
 }
 
 sub loadAttribute {
-    my ($self, $attribute_type, $id) = @_;
+    my ($self, $semantic_type, $id) = @_;
 
     my $type =
-      ref($attribute_type) eq "OME::AttributeType"?
-        $attribute_type:
-        $self->findObject("OME::AttributeType",
-                          name => $attribute_type);
-    die "Cannot find attribute type $attribute_type"
+      ref($semantic_type) eq "OME::SemanticType"?
+        $semantic_type:
+        $self->findObject("OME::SemanticType",
+                          name => $semantic_type);
+    die "Cannot find attribute type $semantic_type"
         unless defined $type;
 
     return $type->loadAttribute($id);
@@ -595,17 +595,17 @@ sub maybeNewObject {
 }
 
 sub newAttribute {
-    my ($self, $attribute_type, $target, $analysis, $data_hash) = @_;
+    my ($self, $semantic_type, $target, $module_execution, $data_hash) = @_;
 
     my $type =
-      ref($attribute_type) eq "OME::AttributeType"?
-        $attribute_type:
-        $self->findObject("OME::AttributeType",
-                          name => $attribute_type);
-    die "Cannot find attribute type $attribute_type"
+      ref($semantic_type) eq "OME::SemanticType"?
+        $semantic_type:
+        $self->findObject("OME::SemanticType",
+                          name => $semantic_type);
+    die "Cannot find attribute type $semantic_type"
         unless defined $type;
 
-    #print STDERR "$attribute_type -> Session = ",$type->Session(),"\n";
+    #print STDERR "$semantic_type -> Session = ",$type->Session(),"\n";
 
     my $granularity = $type->granularity();
     if ($granularity eq 'D') {
@@ -616,8 +616,8 @@ sub newAttribute {
         $data_hash->{feature_id} = $target;
     }
 
-    my $result = OME::AttributeType->newAttributes($self->Session(),
-                                                   $analysis,
+    my $result = OME::SemanticType->newAttributes($self->Session(),
+                                                   $module_execution,
                                                    $type => $data_hash);
 
 
@@ -628,14 +628,14 @@ sub newAttribute {
 }
 
 sub findAttributes {
-    my ($self, $attribute_type, $target) = @_;
+    my ($self, $semantic_type, $target) = @_;
 
     my $type =
-      ref($attribute_type) eq "OME::AttributeType"?
-        $attribute_type:
-        $self->findObject("OME::AttributeType",
-                          name => $attribute_type);
-    die "Cannot find attribute type $attribute_type"
+      ref($semantic_type) eq "OME::SemanticType"?
+        $semantic_type:
+        $self->findObject("OME::SemanticType",
+                          name => $semantic_type);
+    die "Cannot find attribute type $semantic_type"
         unless defined $type;
 
     return $type->findAttributes($target);
@@ -648,7 +648,7 @@ Douglas Creager (dcreager@alum.mit.edu)
 =head1 SEE ALSO
 
 L<OME::DBObject|OME::DBObject>,
-L<OME::AttributeType|OME::AttributeType>
+L<OME::SemanticType|OME::SemanticType>
 
 =cut
 

@@ -128,7 +128,7 @@ sub findColumnByName {
 
 sub findAttributesByTarget {
     my ($self, $targetID) = @_;
-    my $granularity = $self->attribute_type();
+    my $granularity = $self->semantic_type();
     my $attr_table = $self->table_name();
 
     my %columns = ('D' => 'dataset_id','I' => 'image_id','F' => 'feature_id');
@@ -172,10 +172,10 @@ sub requireDataTablePackage {
     my $table = $self->table_name();
     $pkg->table($table);
     $pkg->sequence('attribute_seq');
-    $pkg->columns(Primary => qw(attribute_id analysis_id));
+    $pkg->columns(Primary => qw(attribute_id module_execution_id));
 
     my $columns = $self->data_columns();
-    my @column_defs = ('analysis_id');
+    my @column_defs = ('module_execution_id');
     while (my $column = $columns->next()) {
         push @column_defs, lc($column->column_name());
         #print STDERR "   $table.".lc($column->column_name())."\n";
@@ -192,11 +192,11 @@ sub requireDataTablePackage {
 
     $pkg->columns(Essential => @column_defs);
 
-    #$pkg->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
-    $pkg->has_a(analysis_id => 'OME::Analysis');
+    #$pkg->hasa('OME::ModuleExecution::ActualOutput' => qw(actual_output_id));
+    $pkg->has_a(module_execution_id => 'OME::ModuleExecution');
 
     no strict 'refs';
-    *{$pkg."::analysis"} = \&{$pkg."::analysis_id"};
+    *{$pkg."::module_execution"} = \&{$pkg."::module_execution_id"};
     use strict 'refs';
 
     # Make accessors for actual output, dataset, image, and feature.
@@ -238,10 +238,10 @@ sub loadRow {
 }
 
 sub newRow {
-    my ($self,$analysis,$target,$data) = @_;
+    my ($self,$module_execution,$target,$data) = @_;
     my $pkg = $self->requireDataTablePackage();
     my $granularity = $self->granularity();
-    $data->{analysis_id} = $analysis;
+    $data->{module_execution_id} = $module_execution;
     if ($granularity eq 'D') {
         $data->{dataset_id} = ref ($target) ? $target->id() : $target;
     } elsif ($granularity eq 'I') {

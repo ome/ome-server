@@ -61,19 +61,19 @@ __PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH ApacheSession SessionKey));
 __PACKAGE__->AccessorNames({
     dataset_id      => 'dataset',
     project_id      => 'project',
-    analysis_id     => 'analysis',
+    module_execution_id     => 'module_execution',
 });
 
 __PACKAGE__->table('ome_sessions');
 __PACKAGE__->sequence('session_seq');
 __PACKAGE__->columns(Primary => qw(session_id));
 __PACKAGE__->columns(Essential => qw(experimenter_id dataset_id project_id last_access));
-__PACKAGE__->columns(Others => qw(host image_view feature_view display_settings analysis_id started));
-#__PACKAGE__->has_a(experimenter_id => 'OME::AttributeType::__Experimenter',
+__PACKAGE__->columns(Others => qw(host image_view feature_view display_settings module_execution_id started));
+#__PACKAGE__->has_a(experimenter_id => 'OME::SemanticType::__Experimenter',
 #b                   inflate => 'load', deflate => 'id');
 __PACKAGE__->has_a(dataset_id => 'OME::Dataset');
 __PACKAGE__->has_a(project_id => 'OME::Project');
-__PACKAGE__->has_a(analysis_id => 'OME::Analysis');
+__PACKAGE__->has_a(module_execution_id => 'OME::ModuleExecution');
 
 
 =head1 METHODS

@@ -70,11 +70,11 @@ sub executeView{
 	my @attributes=();
 	my $engine = OME::Tasks::AnalysisEngine->new();
 	my $cmanager = OME::Tasks::ChainManager->new($session);
-	my $view=$self->{session}->Factory()->findObject("OME::AnalysisView",
+	my $view=$self->{session}->Factory()->findObject("OME::AnalysisChain",
 							name=>$nameView);
-	print STDERR "view===".$view->analysis_view_id()."\n";
+	print STDERR "view===".$view->analysis_chain_id()."\n";
 	my $node=$cmanager->getNode($view,$nameFunction);
-print STDERR "nodeID===".$node->analysis_view()->id()."\n";
+print STDERR "nodeID===".$node->analysis_chain()->id()."\n";
 
 	my $formal_input=$cmanager->getFormalInput($view,$node,$string);
 

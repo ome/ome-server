@@ -1,4 +1,4 @@
-# OME/Analysis/FindSpotsHandler.pm
+# OME/module_execution/FindSpotsHandler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -32,10 +32,10 @@ use fields qw(_options _inputHandle _outputHandle _errorHandle
 	      _inputFile _outputFile _errorFile _cmdLine);
 
 sub new {
-    my ($proto,$location,$session,$program,$node) = @_;
+    my ($proto,$location,$session,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$program,$node);
+    my $self = $class->SUPER::new($location,$session,$module,$node);
 
     $self->{_options} = "-db -tt -th -c 0 -i 0 -m 0 -g 0 -ms 0 -gs 0 -mc -v -sa -per -ff";
 

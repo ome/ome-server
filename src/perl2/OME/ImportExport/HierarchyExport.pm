@@ -152,8 +152,8 @@ sub buildDOM {
 	
 			# Process the various kinds of attributes.
 			# While we're at it, build the CA's parents.
-			if (UNIVERSAL::isa($object,"OME::AttributeType::Superclass") ) {
-				$granularity = $object->attribute_type()->granularity();
+			if (UNIVERSAL::isa($object,"OME::SemanticType::Superclass") ) {
+				$granularity = $object->semantic_type()->granularity();
 				if ($granularity eq 'G')  {
 					if ( not exists $GlobalCAs->{$id} ) {
 						$GlobalCAs->{$id}->{node} = $self->Attribute2doc ($object);
@@ -563,16 +563,16 @@ my ($self, $object, $parent) = @_;
 	my $DOM = $self->doc();
 	my $lsid = $self->lsidResolver();
 	my $objectID = $lsid->getLSID ($object);
-	my $attribute_type = $object->attribute_type();
-	my $attribute_name = $attribute_type->name();
-	my $attribute_columns = $attribute_type->attribute_columns();
+	my $semantic_type = $object->semantic_type();
+	my $attribute_name = $semantic_type->name();
+	my $semantic_elements = $semantic_type->semantic_elements();
 	my $element = $DOM->createElement($attribute_name);
 	$element->setAttribute( 'ID' , $objectID );
 	logdbg "debug", ref ($self)."->Attribute2doc:  Exporting Attribute '$attribute_name'";
 	my ($ref,$refID);
-	while (my $attribute_column = $attribute_columns->next()) {
-		my $SEName = $attribute_column->name();
-		my $type = $attribute_column->data_column->sql_type();
+	while (my $semantic_element = $semantic_elements->next()) {
+		my $SEName = $semantic_element->name();
+		my $type = $semantic_element->data_column->sql_type();
 		if ($type eq 'reference') {
 			$ref = $object->$SEName();
 			$refID =  $lsid->getLSID($ref) ;

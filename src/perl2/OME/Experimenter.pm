@@ -35,7 +35,7 @@ __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
 __PACKAGE__->columns(Essential => qw(ome_name firstname lastname email
                                      data_dir password group_id));
-#__PACKAGE__->has_a(group_id => 'OME::AttributeType::__Group',
+#__PACKAGE__->has_a(group_id => 'OME::SemanticType::__Group',
 #                   inflate => 'load',
 #                   deflate => 'id');
 

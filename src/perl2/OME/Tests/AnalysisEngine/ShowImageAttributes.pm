@@ -50,7 +50,7 @@ $factory->Debug(0);
 my @all_datatypes = OME::DataTable->retrieve_all();
 
 my %temp_datatypes = (D => [], I => [], F => []);
-push @{$temp_datatypes{$_->attribute_type()}}, $_ foreach @all_datatypes;
+push @{$temp_datatypes{$_->semantic_type()}}, $_ foreach @all_datatypes;
 
 my %datatypes;
 foreach ('D','I','F') {

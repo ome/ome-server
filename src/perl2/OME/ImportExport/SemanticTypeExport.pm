@@ -88,9 +88,9 @@ sub buildDOM {
 	my $session = $self->{session};
 	my $factory = $session->Factory();
 	
-	# Go through the list of objects and export STDs for the ones that inherit from OME::AttributeType::Superclass.
+	# Go through the list of objects and export STDs for the ones that inherit from OME::SemanticType::Superclass.
 	foreach (@$objects) {
-		$self->exportST ($_) if UNIVERSAL::isa($_,"OME::AttributeType::Superclass");
+		$self->exportST ($_) if UNIVERSAL::isa($_,"OME::SemanticType::Superclass");
 	}
 }
 
@@ -133,11 +133,11 @@ sub STDelement {
 	return $STDelement;
 }
 
-# Export the ST declaration for an OME::AttributeType::Superclass object.
+# Export the ST declaration for an OME::SemanticType::Superclass object.
 sub exportST {
 	my ($self, $object) = @_;
-	my $attribute_type = $object->attribute_type();
-	my $attribute_name = $attribute_type->name();
+	my $semantic_type = $object->semantic_type();
+	my $attribute_name = $semantic_type->name();
 
 	logdbg "debug", ref ($self)."->exportST:  Exporting STD $attribute_name";
 	
@@ -149,19 +149,19 @@ sub exportST {
 		# get the STD element and the DOM
 		my $STDelement = $self->STDelement();
 		my $DOM = $self->doc();
-		my $attribute_columns = $attribute_type->attribute_columns();
+		my $semantic_elements = $semantic_type->semantic_elements();
 
 		# Make the ST element
 		my $ST = $DOM->createElement('SemanticType');
 		$ST->setAttribute( 'Name', $attribute_name );
-		$ST->setAttribute( 'AppliesTo', $attribute_type->granularity() );
-		$ST->setAttribute( 'Description', $attribute_type->description() );
+		$ST->setAttribute( 'AppliesTo', $semantic_type->granularity() );
+		$ST->setAttribute( 'Description', $semantic_type->description() );
 		
 		# Make ST's Element elements
-		while (my $attribute_column = $attribute_columns->next()) {
-	        my $data_column = $attribute_column->data_column();
+		while (my $semantic_element = $semantic_elements->next()) {
+	        my $data_column = $semantic_element->data_column();
 			my $DBLocation = $data_column->data_table()->table_name().'.'.$data_column->column_name();
-			my $SEName = $attribute_column->name();
+			my $SEName = $semantic_element->name();
 
 			my $element = $DOM->createElement('Element');
 			$element->setAttribute( 'Name', $SEName);
@@ -178,7 +178,7 @@ sub exportST {
 		
 		# Attach the ST element to the STD element
 		$STDelement->appendChild( $ST );
-		$self->{_STDs}->{$attribute_name} = $attribute_type;
+		$self->{_STDs}->{$attribute_name} = $semantic_type;
 	} else {
 		logdbg "debug", ref ($self)."->exportST:  STD $attribute_name already in DOM";
 	}

@@ -92,8 +92,8 @@ my ($self,$object) = @_;
 	my $type;
 	my $ref = ref ($object);
 
-		if (UNIVERSAL::isa($object,"OME::AttributeType::Superclass") ) {
-			$type = $object->attribute_type()->name();
+		if (UNIVERSAL::isa($object,"OME::SemanticType::Superclass") ) {
+			$type = $object->semantic_type()->name();
 		} elsif ($ref eq 'OME::Project') {
 			$type = 'Project';
 		} elsif ($ref eq 'OME::Dataset') {

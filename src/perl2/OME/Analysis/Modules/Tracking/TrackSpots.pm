@@ -1,4 +1,4 @@
-# OME/Analysis/TrackSpotsHandler.pm
+# OME/module_execution/TrackSpotsHandler.pm
 
 # Copyright (C) 2003 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -32,10 +32,10 @@ use fields qw(_timepointSpots _nextTrajectoryNumber _spotEntries
               _spotTrajectories _spotOrders _physicalCoordinates);
 
 sub new {
-    my ($proto,$location,$session,$program,$node) = @_;
+    my ($proto,$location,$session,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$program,$node);
+    my $self = $class->SUPER::new($location,$session,$module,$node);
     $self->{_timepointSpots} = {};
     $self->{_nextTrajectoryNumber} = 1;
     $self->{_spotEntries} = {};

@@ -22,7 +22,7 @@ package OME::Tasks::ChainManager;
 
 =head1 NAME
 
-OME::Tasks::ChainManager - Workflow methods for handling analysis chains
+OME::Tasks::ChainManager - Workflow methods for handling module_execution chains
 
 =head1 SYNOPSIS
 
@@ -39,8 +39,8 @@ use strict;
 our $VERSION = '1.0';
 
 use OME::Session;
-use OME::Program;
-use OME::AnalysisView;
+use OME::Module;
+use OME::AnalysisChain;
 
 use fields qw(session);
 
@@ -82,7 +82,7 @@ sub Session { return shift->{session}; }
 
 	my $chain = $manager->createChain($name,$description,[$owner]);
 
-Creates a new analysis chain with the given name and description.  If
+Creates a new module_execution chain with the given name and description.  If
 $owner is specified, it must be an Experimenter attribute.  This
 Experimenter will own the created chain.  If $owner is not specified,
 the chain will be owned by the user running the session.
@@ -98,7 +98,7 @@ sub createChain {
     $owner->verifyType("Experimenter");
 
     my $chain = $factory->
-      newObject("OME::AnalysisView",
+      newObject("OME::AnalysisChain",
                 {
                  name        => $name,
                  owner       => $owner->id(),
@@ -113,7 +113,7 @@ sub createChain {
 
 	my $newChain = $manager->cloneChain($oldChain,[$owner]);
 
-Creates a new analysis chain which is a clone of $oldChain.  If $owner
+Creates a new module_execution chain which is a clone of $oldChain.  If $owner
 is specified, it must be an Experimenter attribute.  This Experimenter
 will own the created chain.  If $owner is not specified, the chain
 will be owned by the user running the session.  The new chain will be
@@ -126,16 +126,16 @@ sub cloneChain {
     my $session = $self->Session();
     my $factory = $session->Factory();
 
-    die "cloneChain needs an analysis chain!"
+    die "cloneChain needs an module_execution chain!"
       unless
         defined $old_chain &&
-        UNIVERSAL::isa($old_chain,"OME::AnalysisView");
+        UNIVERSAL::isa($old_chain,"OME::AnalysisChain");
 
     $owner = $session->User() unless defined $owner;
     $owner->verifyType("Experimenter");
 
     my $new_chain = $factory->
-      newObject("OME::AnalysisView",
+      newObject("OME::AnalysisChain",
                 {
                  name        => $old_chain->name(),
                  owner       => $owner->id(),
@@ -146,10 +146,10 @@ sub cloneChain {
     my %new_nodes;
     foreach my $node ($old_chain->nodes()) {
         my $new_node = $factory->
-          newObject("OME::AnalysisView::Node",
+          newObject("OME::AnalysisChain::Node",
                     {
-                     analysis_view_id => $new_chain->id(),
-                     program_id       => $node->program()->id(),
+                     analysis_chain_id => $new_chain->id(),
+                     module_id       => $node->module()->id(),
                      iterator_tag     => $node->iterator_tag(),
                      new_feature_tag  => $node->new_feature_tag(),
                     });
@@ -161,9 +161,9 @@ sub cloneChain {
         my $to_node = $new_nodes{$link->to_node()->id()};
 
         my $new_link = $factory->
-          newObject("OME::AnalysisView::Link",
+          newObject("OME::AnalysisChain::Link",
                     {
-                     analysis_view_id => $new_chain->id(),
+                     analysis_chain_id => $new_chain->id(),
                      from_node        => $from_node->id(),
                      from_output      => $link->from_output()->id(),
                      to_node          => $to_node->id(),
@@ -189,50 +189,50 @@ sub findModule {
     my $session = $self->Session();
     my $factory = $session->Factory();
 
-    return $factory->findObject("OME::Program",program_name => $name);
+    return $factory->findObject("OME::Module",name => $name);
 }
 
 
 =head2 addNode
 
-	my $node = $manager->addNode($chain,$program,
+	my $node = $manager->addNode($chain,$module,
 	                             [$iterator_tag],[$new_feature_tag]);
 
-Adds a node to the specified chain corresponding to $program.  Throws
+Adds a node to the specified chain corresponding to $module.  Throws
 an error if the chain is locked.  The $iterator_tag and
 $new_feature_tag parameters are optional; if they are not given, they
-will take their values from the $program.
+will take their values from the $module.
 
 =cut
 
 sub addNode {
-    my ($self,$chain,$program,$iterator_tag,$new_feature_tag) = @_;
+    my ($self,$chain,$module,$iterator_tag,$new_feature_tag) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
 
     die "addNode needs a chain!"
       unless
         defined $chain
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
     die "addNode: Chain '".$chain->name()."' is locked!"
       if $chain->locked();
 
-    die "addNode needs a program!"
+    die "addNode needs a module!"
       unless
-        defined $program
-        && UNIVERSAL::isa($program,"OME::Program");
+        defined $module
+        && UNIVERSAL::isa($module,"OME::Module");
 
-    $iterator_tag = $program->default_iterator()
+    $iterator_tag = $module->default_iterator()
       unless defined $iterator_tag;
-    $new_feature_tag = $program->new_feature_tag()
+    $new_feature_tag = $module->new_feature_tag()
       unless defined $new_feature_tag;
 
     my $node = $factory->
-      newObject("OME::AnalysisView::Node",
+      newObject("OME::AnalysisChain::Node",
                 {
-                 analysis_view_id => $chain->id(),
-                 program_id       => $program->id(),
+                 analysis_chain_id => $chain->id(),
+                 module_id       => $module->id(),
                  iterator_tag     => $iterator_tag,
                  new_feature_tag  => $new_feature_tag,
                 });
@@ -257,7 +257,7 @@ sub removeNode {
     die "removeNode needs a chain!"
       unless
         defined $chain
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
     die "removeNode: Chain '".$chain->name()."' is locked!"
       if $chain->locked();
@@ -265,21 +265,21 @@ sub removeNode {
     die "removeNode needs a node!"
       unless
         defined $node
-        && UNIVERSAL::isa($node,"OME::AnalysisView::Node");
+        && UNIVERSAL::isa($node,"OME::AnalysisChain::Node");
 
-    die "removeNode: Node '".$node->program()->program_name().
+    die "removeNode: Node '".$node->module()->name().
       "' does not belong to chain!"
-      if $node->analysis_view()->id() ne $chain->id();
+      if $node->analysis_chain()->id() ne $chain->id();
 
     # Delete all of the links associated with this node
     my @input_links = $factory->
-      findObjects("OME::AnalysisView::Link",
-                  analysis_view_id => $chain->id(),
+      findObjects("OME::AnalysisChain::Link",
+                  analysis_chain_id => $chain->id(),
                   to_node          => $node->id());
 
     my @output_links = $factory->
-      findObjects("OME::AnalysisView::Link",
-                  analysis_view_id => $chain->id(),
+      findObjects("OME::AnalysisChain::Link",
+                  analysis_chain_id => $chain->id(),
                   from_node        => $node->id());
 
     # This is a horrible hack which must be removed ASAP.
@@ -292,34 +292,34 @@ sub removeNode {
 
 =head2 getNode
 
-	my $node = $manager->getNode($chain,$program_name);
+	my $node = $manager->getNode($chain,$name);
 
 Returns the node representing the module of the given name in the
-specified analysis chain.
+specified module_execution chain.
 
 =cut
 
 sub getNode {
-    my ($self,$chain,$program_name) = @_;
+    my ($self,$chain,$name) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
 
     die "getNode needs a chain!"
       unless
         defined $chain
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
-    die "getNode needs a program name!"
+    die "getNode needs a module name!"
       unless
-        defined $program_name
-        && !ref($program_name);
+        defined $name
+        && !ref($name);
 
     # Man, we should have a better method for searching for things...
     my @nodes = $chain->nodes();
 
     foreach my $node (@nodes) {
-        my $program = $node->program();
-        return $node if $program->program_name() eq $program_name;
+        my $module = $node->module();
+        return $node if $module->name() eq $name;
     }
 
     return undef;
@@ -330,7 +330,7 @@ sub getNode {
 	my $input = $manager->getFormalInput($chain,$node,$input_name);
 
 Returns the formal input of the specified name in the node of the
-specified analysis chain.
+specified module_execution chain.
 
 =cut
 
@@ -342,12 +342,12 @@ sub getFormalInput {
     die "getFormalInput needs a chain!"
       unless
         defined $chain
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
     die "getFormalInput needs a node!"
       unless
         defined $node
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
     die "getFormalInput needs an input name!"
       unless
@@ -356,14 +356,14 @@ sub getFormalInput {
 
     die "getFormalInput: node does not belong to chain!"
       unless
-       #$node->analysis_view()->id() ne $chain->analysis_view_id();
-	  $node->analysis_view()->id() eq $chain->id();
+       #$node->analysis_chain()->id() ne $chain->analysis_chain_id();
+	  $node->analysis_chain()->id() eq $chain->id();
 	  
 
-    my $program = $node->program();
+    my $module = $node->module();
     return $factory->
-      findObject('OME::Program::FormalInput',
-                 program_id => $program->id(),
+      findObject('OME::Module::FormalInput',
+                 module_id => $module->id(),
                  name       => $input_name);
 }
 
@@ -375,13 +375,13 @@ sub getFormalInput {
 
 Adds a link to the specified chain, connecting $from_node and
 $to_node.  The chain must be unlocked.  Both nodes must belong to
-$chain.  $from_output must belong to the program represented by
-$from_node, and $to_input must belong to the program represented by
+$chain.  $from_output must belong to the module represented by
+$from_node, and $to_input must belong to the module represented by
 $to_node.  There cannot already be a link pointing to $to_input on
 $to_node.  If any of these conditions are not met, an error is thrown.
 
 The $from_output and $to_input parameters can be specified either as
-an instance of OME::Program::FormalOutput (or ::FormalInput), or as
+an instance of OME::Module::FormalOutput (or ::FormalInput), or as
 the name if the output (or input).  If specified as a name, an error
 is thrown if no output (or input) exists of that name.
 
@@ -395,7 +395,7 @@ sub addLink {
     die "addLink needs a chain!"
       unless
         defined $chain
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
     die "addLink: Chain '".$chain->name()."' is locked!"
       if $chain->locked();
@@ -403,20 +403,20 @@ sub addLink {
     die "addLink needs a 'from' node!"
       unless
         defined $from_node
-        && UNIVERSAL::isa($from_node,"OME::AnalysisView::Node");
+        && UNIVERSAL::isa($from_node,"OME::AnalysisChain::Node");
 
-    die "addLink: Node '".$from_node->program()->program_name().
+    die "addLink: Node '".$from_node->module()->name().
       "' does not belong to chain!"
-      if $from_node->analysis_view()->id() ne $chain->id();
+      if $from_node->analysis_chain()->id() ne $chain->id();
 
     die "addLink needs a 'to' node!"
       unless
         defined $to_node
-        && UNIVERSAL::isa($to_node,"OME::AnalysisView::Node");
+        && UNIVERSAL::isa($to_node,"OME::AnalysisChain::Node");
 
-    die "addLink: Node '".$to_node->program()->program_name().
+    die "addLink: Node '".$to_node->module()->name().
       "' does not belong to chain!"
-      if $to_node->analysis_view()->id() ne $chain->id();
+      if $to_node->analysis_chain()->id() ne $chain->id();
 
     die "addLink needs a 'from' output!"
       unless
@@ -426,13 +426,13 @@ sub addLink {
         # $from_output is an object
         die "addLink needs a 'from' output!"
           unless
-            UNIVERSAL::isa($from_output,"OME::Program::FormalOutput");
+            UNIVERSAL::isa($from_output,"OME::Module::FormalOutput");
     } else {
         # $from_output is a name
         my $name = $from_output;
         $from_output = $factory->
-          findObject("OME::Program::FormalOutput",
-                     program_id => $from_node->program()->id(),
+          findObject("OME::Module::FormalOutput",
+                     module_id => $from_node->module()->id(),
                      name       => $name);
         die "addLink:  Cannot find output named '$name'"
           unless defined $from_output;
@@ -442,21 +442,21 @@ sub addLink {
         # $to_input is an object
         die "addLink needs a 'to' input!"
           unless
-            UNIVERSAL::isa($to_input,"OME::Program::FormalInput");
+            UNIVERSAL::isa($to_input,"OME::Module::FormalInput");
     } else {
         # $to_input is a name
         my $name = $to_input;
         $to_input = $factory->
-          findObject("OME::Program::FormalInput",
-                     program_id => $to_node->program()->id(),
+          findObject("OME::Module::FormalInput",
+                     module_id => $to_node->module()->id(),
                      name       => $name);
         die "addLink:  Cannot find input named '$name'"
           unless defined $to_input;
     }
 
     my $link_exists = $factory->
-      objectExists("OME::AnalysisView::Link",
-                   analysis_view_id => $chain->id(),
+      objectExists("OME::AnalysisChain::Link",
+                   analysis_chain_id => $chain->id(),
                    to_node          => $to_node->id(),
                    to_input         => $to_input->id());
 
@@ -464,9 +464,9 @@ sub addLink {
       if $link_exists;
 
     my $link = $factory->
-      newObject("OME::AnalysisView::Link",
+      newObject("OME::AnalysisChain::Link",
                 {
-                 analysis_view_id => $chain->id(),
+                 analysis_chain_id => $chain->id(),
                  from_node        => $from_node->id(),
                  from_output      => $from_output->id(),
                  to_node          => $to_node->id(),
@@ -499,7 +499,7 @@ sub removeLink {
     die "removeLink needs a chain!"
       unless
         defined $chain
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
     die "removeLink: Chain '".$chain->name()."' is locked!"
       if $chain->locked();
@@ -510,27 +510,27 @@ sub removeLink {
         die "removeLink needs a link!"
           unless
             defined $link
-            && UNIVERSAL::isa($link,"OME::AnalysisView::Link");
+            && UNIVERSAL::isa($link,"OME::AnalysisChain::Link");
     } else {
         ($from_node,$from_output,$to_node,$to_input) = @_;
 
         die "removeLink needs a 'from' node!"
           unless
             defined $from_node
-              && UNIVERSAL::isa($from_node,"OME::AnalysisView::Node");
+              && UNIVERSAL::isa($from_node,"OME::AnalysisChain::Node");
 
-        die "removeLink: Node '".$from_node->program()->program_name().
+        die "removeLink: Node '".$from_node->module()->name().
           "' does not belong to chain!"
-            if $from_node->analysis_view()->id() ne $chain->id();
+            if $from_node->analysis_chain()->id() ne $chain->id();
 
         die "removeLink needs a 'to' node!"
           unless
             defined $to_node
-              && UNIVERSAL::isa($to_node,"OME::AnalysisView::Node");
+              && UNIVERSAL::isa($to_node,"OME::AnalysisChain::Node");
 
-        die "removeLink: Node '".$to_node->program()->program_name().
+        die "removeLink: Node '".$to_node->module()->name().
           "' does not belong to chain!"
-            if $to_node->analysis_view()->id() ne $chain->id();
+            if $to_node->analysis_chain()->id() ne $chain->id();
 
         die "removeLink needs a 'from' output!"
           unless
@@ -540,13 +540,13 @@ sub removeLink {
             # $from_output is an object
             die "removeLink needs a 'from' output!"
               unless
-                UNIVERSAL::isa($from_output,"OME::Program::FormalOutput");
+                UNIVERSAL::isa($from_output,"OME::Module::FormalOutput");
         } else {
             # $from_output is a name
             my $name = $from_output;
             $from_output = $factory->
-              findObject("OME::Program::FormalOutput",
-                         program_id => $from_node->program()->id(),
+              findObject("OME::Module::FormalOutput",
+                         module_id => $from_node->module()->id(),
                          name       => $name);
             die "removeLink:  Cannot find output named '$name'"
               unless defined $from_output;
@@ -556,21 +556,21 @@ sub removeLink {
             # $to_input is an object
             die "removeLink needs a 'to' input!"
               unless
-                UNIVERSAL::isa($to_input,"OME::Program::FormalInput");
+                UNIVERSAL::isa($to_input,"OME::Module::FormalInput");
         } else {
             # $to_input is a name
             my $name = $to_input;
             $to_input = $factory->
-              findObject("OME::Program::FormalInput",
-                         program_id => $to_node->program()->id(),
+              findObject("OME::Module::FormalInput",
+                         module_id => $to_node->module()->id(),
                          name       => $name);
             die "removeLink:  Cannot find input named '$name'"
               unless defined $to_input;
         }
 
         $link = $factory->
-          findObject("OME::AnalysisView::Link",
-                     analysis_view_id => $chain->id(),
+          findObject("OME::AnalysisChain::Link",
+                     analysis_chain_id => $chain->id(),
                      from_node        => $from_node->id(),
                      from_output      => $from_output->id(),
                      to_node          => $to_node->id(),
@@ -597,7 +597,7 @@ must provide a value for.
 The return value will be an array reference.  Each element of the
 array will have the following form:
 
-	[$node, $program, $formal_input, $attribute_type]
+	[$node, $module, $formal_input, $semantic_type]
 
 The output array will be grouped by $node.
 
@@ -611,7 +611,7 @@ sub getUserInputs {
     die "getUserInputs needs a chain!"
       unless
         defined $chain
-        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+        && UNIVERSAL::isa($chain,"OME::AnalysisChain");
 
     my @inputs;
     my %input_links;
@@ -621,13 +621,13 @@ sub getUserInputs {
       foreach $chain->links();
 
     foreach my $node ($chain->nodes()) {
-        my $program = $node->program();
-        foreach my $input ($program->inputs()) {
+        my $module = $node->module();
+        foreach my $input ($module->inputs()) {
             my $input_link = $input_links{$node->id()}->{$input->id()};
             # If there was an input link for this input, skip it.
             next if defined $input_link;
 
-            my $element = [$node,$program,$input,$input->attribute_type()];
+            my $element = [$node,$module,$input,$input->semantic_type()];
             push @inputs,$element;
         }
     }

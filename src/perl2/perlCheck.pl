@@ -152,7 +152,7 @@ my @modules = ({
 );
 
 #####################
-# Da 'main' program:
+# Da 'main' module:
 
 # Grab command line options (POSIX)
 my %options;

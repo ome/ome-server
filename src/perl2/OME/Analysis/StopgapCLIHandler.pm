@@ -1,4 +1,4 @@
-# OME/Analysis/StatsCLIHandler.pm
+# OME/module_execution/StatsCLIHandler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -31,10 +31,10 @@ use base qw(OME::Analysis::Handler);
 use fields qw(_outputHandle);
 
 sub new {
-    my ($proto,$location,$session,$program,$node) = @_;
+    my ($proto,$location,$session,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$program,$node);
+    my $self = $class->SUPER::new($location,$session,$module,$node);
 
     bless $self,$class;
     return $self;
@@ -57,7 +57,7 @@ sub precalculateImage {
     my $output = new IO::File;
     my $location = $self->{_location};
     open $output, "$location $pathString $dimString |" or
-        die "Cannot open analysis program";
+        die "Cannot open module_execution module";
 
     print STDERR "      $location $pathString $dimString\n";
 
@@ -69,7 +69,7 @@ sub postcalculateImage {
     my ($self) = @_;
 
     my $output = $self->{_outputHandle};
-    my $program = $self->{_program};
+    my $module = $self->{_program};
     my $image = $self->getCurrentImage();
     my $factory = $self->Factory();
 
@@ -131,7 +131,7 @@ sub postcalculateImage {
 #                         'Stack statistics' => 'Stack info'
 #                         );
 
-    my $useful_hash = $hashes{$program->program_name()};
+    my $useful_hash = $hashes{$module->name()};
     my %attribute_data;
 
     while (my $input = <$output>) {

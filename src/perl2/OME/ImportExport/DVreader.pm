@@ -199,7 +199,7 @@ sub readImage {
     return ($status = "Bad pixel type")
 	unless $pix_OK == 1;
 
-    # check that ImgSeq has a value this program supports
+    # check that ImgSeq has a value this module supports
     foreach $seq (@seq_types) {
 	if ($seq == $self->{"ImgSeq"}) {
 	    $seq_OK = 1;

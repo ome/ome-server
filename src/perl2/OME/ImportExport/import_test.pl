@@ -19,7 +19,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-# This program acts as a test jig for the Importer class. It uses the same
+# This module acts as a test jig for the Importer class. It uses the same
 # API for Importer as the production OME.
 #
 

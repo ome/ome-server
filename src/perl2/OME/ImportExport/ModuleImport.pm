@@ -24,7 +24,7 @@ use strict;
 
 =head1 NAME
 
-OME::Tasks::ProgramImport - Import an Analysis Module XML specification.
+OME::Tasks::ProgramImport - Import an module_execution Module XML specification.
 
 =head1 SYNOPSIS
 
@@ -141,7 +141,7 @@ sub importXMLFile {
 	print STDERR ref ($self) . "->importXMLFile processed DOM\n"
 		if $debug > 1;
 
-	#return a list of imported programs (OME::Programs objects)
+	#return a list of imported programs (OME::Modules objects)
 	print STDERR ref ($self) . "->importXMLFile returning\n" 
 		if $debug > 0;
 	return $newPrograms;
@@ -170,7 +170,7 @@ sub __getCategory {
           if defined $last_parent;
 
         $last_parent = $factory->
-          maybeNewObject('OME::Program::Category',$criteria);
+          maybeNewObject('OME::Module::Category',$criteria);
     }
 
     # And then do the same for the leaf element
@@ -181,10 +181,10 @@ sub __getCategory {
     # We can't use maybeNewObject b/c the search criteria is not the
     # same as the hash to create the new object.
 
-    my $category = $factory->findObject('OME::Program::Category',%criteria);
+    my $category = $factory->findObject('OME::Module::Category',%criteria);
     if (!defined $category) {
         $criteria{description} = $description;
-        $category = $factory->newObject('OME::Program::Category',\%criteria);
+        $category = $factory->newObject('OME::Module::Category',\%criteria);
     }
 
     return $category;
@@ -225,13 +225,13 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
 	###########################################################################
 	#
-	# make OME::Programs object
+	# make OME::Modules object
 	#
 # À use find_or_create instead ?
-	print STDERR ref ($self) . "->processDOM about to create an OME::Program object\n"
+	print STDERR ref ($self) . "->processDOM about to create an OME::Module object\n"
 		if $debug > 1;
-	my @programs = $factory->findObjects( "OME::Program", 
-		'program_name', $moduleXML->getAttribute( 'ModuleName' ) );
+	my @programs = $factory->findObjects( "OME::Module", 
+		'name', $moduleXML->getAttribute( 'ModuleName' ) );
 	die "\nCannot add module ". $moduleXML->getAttribute( 'ModuleName' ) . ". A module of the same name already exists.\n"
 		unless scalar (@programs) eq 0;
         my $categoryPath = $moduleXML->getAttribute('Category');
@@ -241,7 +241,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
             $categoryID = $category->id();
         }
 	my $data = {
-		program_name     => $moduleXML->getAttribute( 'ModuleName' ),
+		name     => $moduleXML->getAttribute( 'ModuleName' ),
 		description      => $moduleXML->getAttribute( 'Description' ),
 		category         => $categoryID,
 		module_type      => $moduleXML->getAttribute( 'ModuleType' ),
@@ -252,12 +252,12 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#visual_design => $moduleXML->getAttribute( 'VisualDesign' )
 		# visual design is not implemented in the api. I think it is depricated.
 	};
-	print STDERR "Program parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
+	print STDERR "module parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
 		if $debug > 1;
-	my $newProgram = $factory->newObject("OME::Program",$data)
-		or die "Could not create OME::Program object\n";
+	my $newProgram = $factory->newObject("OME::Module",$data)
+		or die "Could not create OME::Module object\n";
 	push(@commitOnSuccessfulImport, $newProgram);
-	print STDERR ref ($self) . "->processDOM created an OME::Program object\n"
+	print STDERR ref ($self) . "->processDOM created an OME::Module object\n"
 		if $debug > 1;
 	#
 	#
@@ -329,7 +329,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#
 		# make OME::FormalInput object
 		#
-		my $semanticType = $factory->findObject( "OME::AttributeType", name => $formalInputXML->getAttribute( 'SemanticTypeName' ) )
+		my $semanticType = $factory->findObject( "OME::SemanticType", name => $formalInputXML->getAttribute( 'SemanticTypeName' ) )
 			or die "When processing Formal Input (name=".$formalInputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalInputXML->getAttribute( 'SemanticTypeName' )."\n";
 
 		my ($optional, $list, $count);
@@ -344,15 +344,15 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		my $data = {
 			name               => $formalInputXML->getAttribute( 'Name' ),
 			description        => $formalInputXML->getAttribute( 'Description' ),
-			program_id         => $newProgram,
-			attribute_type_id  => $semanticType->id(),
+			module_id         => $newProgram,
+			semantic_type_id  => $semanticType->id(),
 			lookup_table_id    => $newLookupTable,
 			optional           => $optional,
 			list               => $list,
 			user_defined       => $formalInputXML->getAttribute( 'UserDefined' )
 		};
-		my $newFormalInput = $factory->newObject( "OME::Program::FormalInput", $data )
-			or die ref ($self) . " could not create OME::Program::FormalInput object (name=".$formalInputXML->getAttribute( 'Name' ).")\n";
+		my $newFormalInput = $factory->newObject( "OME::Module::FormalInput", $data )
+			or die ref ($self) . " could not create OME::Module::FormalInput object (name=".$formalInputXML->getAttribute( 'Name' ).")\n";
 
 		push(@commitOnSuccessfulImport, $newFormalInput);
 		$formalInputs{ $newFormalInput->name() } = $newFormalInput;
@@ -389,7 +389,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		# make OME::FormalOutput object
 		#
         my $semanticTypeName = $formalOutputXML->getAttribute('SemanticTypeName');
-        my $semanticType = $factory->findObject( "OME::AttributeType", name => $semanticTypeName );
+        my $semanticType = $factory->findObject( "OME::SemanticType", name => $semanticTypeName );
         # Null semantic types are now allowed for formal outputs
         if (defined $semanticTypeName) {
             die "When processing Formal Output (name=".$formalOutputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$semanticTypeName."\n"
@@ -407,14 +407,14 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		my $data = {
 			name               => $formalOutputXML->getAttribute( 'Name' ),
 			description        => $formalOutputXML->getAttribute( 'Description' ),
-			program_id         => $newProgram,
-			attribute_type_id  => $semanticType,
+			module_id         => $newProgram,
+			semantic_type_id  => $semanticType,
 			feature_tag        => $formalOutputXML->getAttribute( 'IBelongTo' ),
 			optional           => $optional,
 			list               => $list
 		};
-		my $newFormalOutput = $factory->newObject( "OME::Program::FormalOutput", $data )
-			or die "Could not create OME::Program::FormalOutput object\n";
+		my $newFormalOutput = $factory->newObject( "OME::Module::FormalOutput", $data )
+			or die "Could not create OME::Module::FormalOutput object\n";
 
 		push(@commitOnSuccessfulImport, $newFormalOutput);
 		$formalOutputs{ $newFormalOutput->name() } = $newFormalOutput;
@@ -463,14 +463,14 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		foreach my $input (@inputs) {
 			my $formalInput    = $formalInputs{ $input->getAttribute( "FormalInputName" ) }
 				or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
-			my $semanticType   = $formalInput->attribute_type();
+			my $semanticType   = $formalInput->semantic_type();
 
 			my $sen = $input->getAttribute( "SemanticElementName" );
 			$sen =~ s/^(.*?)\..*$/$1/;
-			my $semanticElement = $factory->findObject( "OME::AttributeType::Column", attribute_type_id => $semanticType->id(), name => $sen )
+			my $semanticElement = $factory->findObject( "OME::SemanticType::Column", semantic_type_id => $semanticType->id(), name => $sen )
 				or die "Could not find semantic column referenced by element ".$input->tagName()." with SemanticElementName ".$input->getAttribute( "SemanticElementName" );
 		
-			# Create attributes FormalInputID and SemanticElementID to store FORMAL_INPUT_ID and ATTRIBUTE_COLUMN_ID.
+			# Create attributes FormalInputID and SemanticElementID to store FORMAL_INPUT_ID and semantic_element_id.
 			print STDERR ref ($self) . "->processDOM: creating FormalInputID attribute in element type ".$input->tagName()."\n\tValue is ".
 				$formalInput->id() . "\n"
 				if $debug > 1;
@@ -501,8 +501,8 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		foreach my $output (@outputs) {
 			my $formalOutput    = $formalOutputs{ $output->getAttribute( "FormalOutputName" ) }
 				or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
-			my $semanticType   = $formalOutput->attribute_type();
-			my $semanticElement = $factory->findObject( "OME::AttributeType::Column", attribute_type_id => $semanticType->id(), name => $output->getAttribute( "SemanticElementName" ) )
+			my $semanticType   = $formalOutput->semantic_type();
+			my $semanticElement = $factory->findObject( "OME::SemanticType::Column", semantic_type_id => $semanticType->id(), name => $output->getAttribute( "SemanticElementName" ) )
 				or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
 
 			# Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
@@ -569,7 +569,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 			print STDERR ref ($self) . "->processDOM: inspecting pattern:\n$pat\n"
 				if $debug > 1;
 			eval { "" =~ /$pat/; };
-			die "Invalid regular expression pattern: $pat in program ".$newProgram->program_name()
+			die "Invalid regular expression pattern: $pat in module ".$newProgram->name()
 				if $@;
 		}
 		print STDERR ref ($self) . "->processDOM: finished checking regular expression patterns\n"
@@ -577,7 +577,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#
 		#######################################################################
 
-		print STDERR ref ($self) . "->processDOM: finished processing ExecutionInstructions. Writing them to DBObject Program\n"
+		print STDERR ref ($self) . "->processDOM: finished processing ExecutionInstructions. Writing them to DBObject module\n"
 			if $debug > 1;
 		$newProgram->execution_instructions( $executionInstructionXML->toString() );
 	}
@@ -588,7 +588,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	###########################################################################
 	# commit this module. It's been successfully imported
 	#
-	print STDERR ref ($self) . "->processDOM: imported module '".$newProgram->program_name."' sucessfully. Committing to DB...\n"
+	print STDERR ref ($self) . "->processDOM: imported module '".$newProgram->name."' sucessfully. Committing to DB...\n"
 		if $debug > 0;
 	print STDERR ref ($self) . "->processDOM: committing DBObjects\n"
 		if $debug > 2;

@@ -38,7 +38,7 @@ documentation for the individual classes:
 
 Database access layer
 
-=item OME::Analysis
+=item OME::ModuleExecution
 
 Analysis engine
 
@@ -56,7 +56,7 @@ http://openmicroscopy.org/
 
 =head1 COPYRIGHT
 
-This program is free software licensed under the...
+This module is free software licensed under the...
 
 	The GNU Lesser General Public License (LGPL)
 	Version 2.1, February 1999

@@ -20,12 +20,12 @@
 
 use OME::Session;
 use OME::SessionManager;
-use OME::Program;
+use OME::Module;
 use OME::DataTable;
-use OME::AttributeType;
+use OME::SemanticType;
 use Term::ReadKey;
 
-print "\nOME Test Case - Create program\n";
+print "\nOME Test Case - Create module\n";
 print "---------------------------\n";
 
 if (scalar(@ARGV) != 0) {
@@ -79,7 +79,7 @@ sub __createType {
     my ($typedef,$coldefs) = @_;
 
     my $atype = $factory->
-        newObject("OME::AttributeType",{
+        newObject("OME::SemanticType",{
             name        => $typedef->[0],
             granularity => $typedef->[1],
             description => $typedef->[2]
@@ -87,8 +87,8 @@ sub __createType {
     print "  ".$atype->name()." (".$atype->id().")\n";
 
     foreach my $coldef (@$coldefs) {
-        $acolumn = $factory->newObject("OME::AttributeType::Column",{
-            attribute_type => $atype,
+        $acolumn = $factory->newObject("OME::SemanticType::Column",{
+            semantic_type => $atype,
             name           => $coldef->[0],
             data_column    => $coldef->[1]->findColumnByName($coldef->[2]),
             description    => $coldef->[3]
@@ -229,9 +229,9 @@ print "Creating programs...\n";
 sub __createProgram {
     my ($progdef,$inputdefs,$outputdefs) = @_;
 
-    my $program = $factory->
-        newObject("OME::Program",{
-            program_name     => $progdef->[0],
+    my $module = $factory->
+        newObject("OME::Module",{
+            name     => $progdef->[0],
             description      => $progdef->[1],
             category         => $progdef->[2],
             module_type      => $progdef->[3],
@@ -239,30 +239,30 @@ sub __createProgram {
             default_iterator => $progdef->[5],
             new_feature_tag  => $progdef->[6]
             });
-    print "  ".$program->program_name()." (".$program->id().")\n";
+    print "  ".$module->name()." (".$module->id().")\n";
 
     foreach my $inputdef (@$inputdefs) {
         $input = $factory->
-            newObject("OME::Program::FormalInput",{
-                program        => $program,
+            newObject("OME::Module::FormalInput",{
+                module        => $module,
                 name           => $inputdef->[0],
-                attribute_type => $inputdef->[1]
+                semantic_type => $inputdef->[1]
                 });
         print "    Input: ".$input->name()." (".$input->id().")\n";
     }
 
     foreach my $outputdef (@$outputdefs) {
         $output = $factory->
-            newObject("OME::Program::FormalOutput",{
-                program        => $program,
+            newObject("OME::Module::FormalOutput",{
+                module        => $module,
                 name           => $outputdef->[0],
-                attribute_type => $outputdef->[1],
+                semantic_type => $outputdef->[1],
                 feature_tag    => $outputdef->[2]
                 });
         print "    Output: ".$output->name()." (".$output->id().")\n";
     }
 
-    return $program;
+    return $module;
 }
 
 
@@ -271,7 +271,7 @@ my $calcXYZInfo = __createProgram
     (['Stack statistics',
       'Calculate pixel statistics for each XYZ stack',
       'Statistics',
-      'OME::Analysis::StopgapCLIHandler',
+      'OME::ModuleExecution::StopgapCLIHandler',
       '/OME/bin/OME_Image_XYZ_stats'],
      [],
      [['Stack mean',$atXYZMean],
@@ -285,7 +285,7 @@ my $calcXYInfo = __createProgram
     (['Plane statistics',
       'Calculate pixel statistics for each XY plane',
       'Statistics',
-      'OME::Analysis::StopgapCLIHandler',
+      'OME::ModuleExecution::StopgapCLIHandler',
       '/OME/bin/OME_Image_XY_stats'],
      [],
      [['Plane mean',$atXYMean],
@@ -299,7 +299,7 @@ my $findSpots = __createProgram
     (['Find spots',
       'Find spots in the image',
       'Segmentation',
-      'OME::Analysis::FindSpotsHandler',
+      'OME::ModuleExecution::FindSpotsHandler',
       '/OME/bin/findSpotsOME',
       undef,
       'SPOT'],
@@ -318,7 +318,7 @@ my $findCells = __createProgram
     (['Find cells',
       'Find cells',
       'Testing',
-      'OME::Analysis::FindBounds',
+      'OME::ModuleExecution::FindBounds',
       '',
       undef,
       'CELL'],
@@ -329,7 +329,7 @@ my $findGolgi = __createProgram
     (['Find golgi',
       'Find golgi',
       'Testing',
-      'OME::Analysis::FindBounds',
+      'OME::ModuleExecution::FindBounds',
       '',
       'CELL',
       'GOLGI'],
@@ -340,7 +340,7 @@ my $findMito = __createProgram
     (['Find mito',
       'Find mito',
       'Testing',
-      'OME::Analysis::FindBounds',
+      'OME::ModuleExecution::FindBounds',
       '',
       'CELL',
       'MITOCHONDRIA'],
@@ -351,7 +351,7 @@ my $findRatio = __createProgram
     (['Find ratio',
       'Find ratio',
       'Testing',
-      'OME::Analysis::FindRatio',
+      'OME::ModuleExecution::FindRatio',
       '',
       'CELL',
       undef],

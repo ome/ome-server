@@ -110,7 +110,7 @@ sub processDOM {
     my $semanticTypes;
 
     # semanticColumns is a double keyed hash
-    #   keyed by {Attribute_Type.Name}->{Attribute_Column.Name}
+    #   keyed by {semantic_type.Name}->{semantic_element.Name}
     #   valued by DBObject AttributeColumn
     my $semanticColumns;
 
@@ -154,10 +154,10 @@ sub processDOM {
 
         # look for existing AttributeType
         logdbg "debug", ref($self).
-          "->processDOM is looking for an OME::AttributeType ".
+          "->processDOM is looking for an OME::SemanticType ".
           "object called:\n\t$stName";
         my $existingAttrType = $factory->
-          findObject("OME::AttributeType",
+          findObject("OME::SemanticType",
                      name => $stName);
 
         my $newAttrType;
@@ -170,10 +170,10 @@ sub processDOM {
         #
         if (defined $existingAttrType ) {
             logdbg "debug", ref ($self) . 
-              "->processDOM: found a OME::AttributeType object with matching ".
+              "->processDOM: found a OME::SemanticType object with matching ".
               "name ($stName). inspecting it to see if it completely matches.";
 
-            my @attrColumns = $existingAttrType->attribute_columns();
+            my @attrColumns = $existingAttrType->semantic_elements();
 
             logdie ref ($self) . ": While processing Semantic Type $stName, ".
               " existing $stName has ".scalar(@attrColumns).
@@ -244,7 +244,7 @@ sub processDOM {
                 if ($dataType eq 'reference') {
                     my $referenceTo = $SE_XML->getAttribute('RefersTo');
                     $tables->{$tName}->{columns}->{$cName}->{reference}->{STname} = $referenceTo;
-                    $tables->{$tName}->{columns}->{$cName}->{reference}->{DBObject} = $factory->findObject("OME::AttributeType",name => $referenceTo);
+                    $tables->{$tName}->{columns}->{$cName}->{reference}->{DBObject} = $factory->findObject("OME::SemanticType",name => $referenceTo);
                 }
                 $tables->{$tName}->{columns}->{$cName}->{order} = scalar (keys %{$tables->{$tName}->{columns}}) + 1;
                 $tables->{$tName}->{columns}->{$cName}->{description} = [];
@@ -307,7 +307,7 @@ sub processDOM {
             my $statement = "
                 CREATE TABLE $tName (
                 ATTRIBUTE_ID  OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,
-                ANALYSIS_ID   OID REFERENCES ANALYSES
+                module_execution_id   OID REFERENCES MODULE_EXECUTIONS
                               DEFERRABLE INITIALLY DEFERRED";
 
             if ( $newTable->granularity() eq 'I' ) {
@@ -566,10 +566,10 @@ sub processDOM {
         # look for existing AttributeType
         # If the AttributeType exists, we already know it doesn't conflict from the first pass.
         logdbg "debug", ref($self).
-          "->processDOM is looking for an OME::AttributeType ".
+          "->processDOM is looking for an OME::SemanticType ".
           "object\n\t[name=$stName]\n";
         my $existingAttrType = $factory->
-          findObject("OME::AttributeType",
+          findObject("OME::SemanticType",
                      name => $stName);
 
         my $newAttrType;
@@ -588,22 +588,22 @@ sub processDOM {
                        };
 
             logdbg "debug", ref ($self) . 
-              "->processDOM: about to make a new OME::AttributeType for $stName.\n\t".
+              "->processDOM: about to make a new OME::SemanticType for $stName.\n\t".
               join( "\n\t", map { $_."=>".$data->{$_} } keys %$data );
 
-            $newAttrType = $factory->newObject("OME::AttributeType",$data)
+            $newAttrType = $factory->newObject("OME::SemanticType",$data)
               or logdie ref ($self) . 
-              " could not create new object of type OME::AttributeType with".
+              " could not create new object of type OME::SemanticType with".
               "parameters:\n\t".
                 join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n";
 
             logdbg "debug", ref ($self) . 
-              "->processDOM: made a new OME::AttributeType object\n";
+              "->processDOM: made a new OME::SemanticType object\n";
 
 
             #######################################################################
             #
-            # make OME::AttributeType::Column objects
+            # make OME::SemanticType::Column objects
             #
             logdbg "debug", ref ($self) .
               "->processDOM: about to make AttributeColumns from SemanticElements for $stName";
@@ -626,15 +626,15 @@ sub processDOM {
                 #Create object
 
                 my $newAttrColumn = $factory->
-                  newObject( "OME::AttributeType::Column",
+                  newObject( "OME::SemanticType::Column",
                              {
-                              attribute_type => $newAttrType,
+                              semantic_type => $newAttrType,
                               name           => $seName,
                               data_column    => $dataColumn,
                               description    => $seDescription,
                              })
                   or logdie ref ($self) . 
-                    " could not create new OME::AttributeType::Column object, ".
+                    " could not create new OME::SemanticType::Column object, ".
                     "name = $seName";
 
                 $semanticColumns->{$stName}->{ $seName } =
