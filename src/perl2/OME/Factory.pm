@@ -535,7 +535,10 @@ sub __disconnectAll {
     $self->{__allHandles} = {};
     $self->{__handlesAvailable} = {};
     
-    $self->{__ourDBH}->disconnect() or die $self->{__ourDBH}->errstr;;
+	if (defined $self->{__ourDBH}) {
+    	$self->{__ourDBH}->disconnect() or die $self->{__ourDBH}->errstr;
+	}
+
     $self->{__ourDBH} = undef;
 
 }
