@@ -480,7 +480,7 @@ sub importGroup {
             last FILENAME;
         }
         close TIFF;
-#        $pix->TIFF2Plane ($filename,0,$theC,0);
+        $pix->TIFF2Plane ($filename,0,$theC,0);
     }
 
     if ($image_invalid && $pixels_created) {
