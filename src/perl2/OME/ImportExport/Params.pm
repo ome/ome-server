@@ -73,8 +73,6 @@ sub new {
     return $self;
 }
 
-
-
 # Store/retrieve endian value
 sub endian {
     my $self = shift;
@@ -88,6 +86,14 @@ sub host_endian {
     my $self = shift;
     $self->{host_endian} = shift if @_;
     return $self->{host_endian};
+}
+
+
+# Store/retrieve output (repository) file name
+sub oname {
+    my $self = shift;
+    $self->{oname} = shift if @_;
+    return $self->{oname};
 }
 
 
