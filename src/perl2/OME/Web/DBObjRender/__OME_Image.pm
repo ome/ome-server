@@ -72,7 +72,6 @@ sub new {
 		'original_file'  => "Original File"
 	};
 	$self->{ _summaryFields } = [
-		'id',
 		'default_pixels',
 		'name',
 		'description',
@@ -81,7 +80,6 @@ sub new {
 		'created',
 	];
 	$self->{ _allFields } = [
-		'id',
 		'default_pixels',
 		'name',
 		'description',
@@ -104,7 +102,7 @@ linking to the Image object.
 =cut
 
 sub _getRef {
-	my ($proto,$obj,$format) = @_;
+	my ($self,$obj,$format) = @_;
 	
 	for( $format ) {
 		if( /^txt$/ ) {
@@ -116,7 +114,7 @@ sub _getRef {
 			my $id   = $obj->id();
 			my $name = $obj->name();
 			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
-			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed info about this Image' class='ome_detail'>$name</a><br>".
+			my $ref = #"<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed info about this Image' class='ome_detail'>$name</a><br>".
 			          "<a href='javascript: openPopUpImage($id);' title='View this image'><img src='$thumbURL'></a>";
 			return $ref;
 		}
@@ -130,10 +128,10 @@ populates thumb_url, original_file, and module_executions
 =cut
 
 sub _renderData {
-	my ($proto, $obj, $field_names, $format, $mode, $options) = @_;
+	my ($self, $obj, $field_names, $format, $mode, $options) = @_;
 	
 	my $factory = $obj->Session()->Factory();
-	my $q       = new CGI;
+	my $q = $self->CGI();
 	my %record;
 
 	# thumbnail url
@@ -160,7 +158,7 @@ sub _renderData {
 		my $original_file = $original_files->[0];
 		if( $original_file and $original_file->Repository() ) { 
 			my $originalFile_url =  $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
-			my $path = $proto->_trim( $original_file->Path(), $options );
+			my $path = $self->_trim( $original_file->Path(), $options );
 			$record{ 'original_file' } = $q->a( { -href => $originalFile_url, title => 'Download original file' }, $path )
 				if( $format eq 'html' );
 			$record{ 'original_file' } = $path
