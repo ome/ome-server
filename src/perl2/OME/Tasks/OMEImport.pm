@@ -248,23 +248,26 @@ sub detectAndMarkDuplicateObjects {
 			my $criteria = $object->getDataHash();
 			$criteria->{ target_id } = $object->target_id
 				unless $object->semantic_type->granularity eq 'G';
+			# objects without a module execution in the imported file are assigned one by the hierarchyImporter
+			#   the module_execution_id is not considered relevent in the test for equality if it was not
+			#   given in the file.
 			$criteria->{ module_execution_id } = $object->module_execution_id
-				unless $object->module_execution_id eq $hierarchyImporter->module_execution();
-			logdbg "debug", ref ($self)."->detectDuplicateObjects: searching with criteria\n".join( "\n\t", map ( $_." => ".$criteria->{$_}, keys %$criteria ) );
+				unless $hierarchyImporter->createdMEXduringImport( $object->module_execution_id );
+			logdbg "debug", ref ($self)."->detectDuplicateObjects: searching with criteria\n\t".join( "\n\t", map ( $_." => ".$criteria->{$_}, keys %$criteria ) );
 			my @matches = $factory->findAttributes( $object->semantic_type, $criteria);
 			@matches = grep( $_->id ne $object->id, @matches);
 			if( scalar @matches > 0 ) {  # duplicate object found
 				my $new_referent = $matches[0];
 				logdbg "debug", ref ($self)."->detectDuplicateObjects: found matching object ($new_referent, ".$new_referent->id.")";
-				# We found an existing attr that matches. Set fields that reference the xml obj to the existing db obj.
+				# We found an existing attr that matches. Change references to the duplicate obj to the existing db object.
 				while( my ($obj, $field) = each %$refs2Obj ) {
 					$obj->$field( $new_referent );
-					$obj->storeObject();
 				}
 			}
 			push(@dupObjs, $object);
 		}
 	}
+	# FIXME: need to map duplicated objects' recent import MEX to pre-existing objects via virtual MEX once Imports are recorded as virtual MEXs
 	$hierarchyImporter->doNotStoreTheseObjects( @dupObjs );
 }
 
