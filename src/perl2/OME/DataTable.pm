@@ -192,7 +192,6 @@ sub requireDataTablePackage {
 
     $pkg->columns(Essential => @column_defs);
 
-    #$pkg->hasa('OME::ModuleExecution::ActualOutput' => qw(actual_output_id));
     $pkg->has_a(module_execution_id => 'OME::ModuleExecution');
 
     no strict 'refs';
