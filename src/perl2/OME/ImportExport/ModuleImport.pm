@@ -138,6 +138,46 @@ sub importXMLFile {
 #
 ###############################################################################
 
+# Given a full category path and optional description, ensures that all
+# portions of the path exist in the database as categories, and returns
+# the Category object for the leaf category.
+
+sub __getCategory {
+    my ($self,$path,$description) = @_;
+    my $session = $self->{session};
+    my $factory = $session->Factory();
+
+    my @names = split(/\./,$path);
+    my $leaf_name = pop(@names);
+
+    # Create/load categories for all but the leaf element
+    my $last_parent;
+    foreach my $name (@names) {
+        my $criteria = { name => $name };
+        $criteria->{parent_category_id} = $last_parent->id()
+          if defined $last_parent;
+
+        $last_parent = $factory->
+          maybeNewObject('OME::Program::Category',$criteria);
+    }
+
+    # And then do the same for the leaf element
+    my %criteria = ( name => $leaf_name );
+    $criteria{parent_category_id} = $last_parent->id()
+      if defined $last_parent;
+
+    # We can't use maybeNewObject b/c the search criteria is not the
+    # same as the hash to create the new object.
+
+    my $category = $factory->findObject('OME::Program::Category',%criteria);
+    if (!defined $category) {
+        $criteria{description} = $description;
+        $category = $factory->newObject('OME::Program::Category',\%criteria);
+    }
+
+    return $category;
+}
+
 
 ###############################################################################
 #
@@ -162,6 +202,12 @@ sub processDOM {
 		if $debug > 0;
 
 
+    foreach my $categoryXML ($root->getElementsByLocalName('Category')) {
+        my $categoryPath = $categoryXML->getAttribute('FullName');
+        my $categoryDescription = $categoryXML->getAttribute('Description');
+        my $category = $self->__getCategory($categoryPath,$categoryDescription);
+    }
+
 
 foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
@@ -176,10 +222,16 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		'program_name', $moduleXML->getAttribute( 'ModuleName' ) );
 	die "\nCannot add module ". $moduleXML->getAttribute( 'ModuleName' ) . ". A module of the same name already exists.\n"
 		unless scalar (@programs) eq 0;
+        my $categoryPath = $moduleXML->getAttribute('Category');
+        my $categoryID;
+        if (defined $categoryPath) {
+            my $category = $self->__getCategory($categoryPath);
+            $categoryID = $category->id();
+        }
 	my $data = {
 		program_name     => $moduleXML->getAttribute( 'ModuleName' ),
 		description      => $moduleXML->getAttribute( 'Description' ),
-		category         => $moduleXML->getAttribute( 'Category' ),
+		category         => $categoryID,
 		module_type      => $moduleXML->getAttribute( 'ModuleType' ),
 		# location using ProgramID attribute is a temporary hack
 		location         => $moduleXML->getAttribute( 'ProgramID' ),
