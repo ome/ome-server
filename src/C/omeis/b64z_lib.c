@@ -107,17 +107,20 @@ void b64z_mem_error (void) {
 *		returns the length of the decoded buffer
 */
 /* decodes base64 data from 'strm->next_in' to 'to' & updates strm variables
-/ len is the length of base64 data that can fit in 'to' ( sizeof(to) / 3 * 4 )
+/ len is the length of 'to'
 */
 unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned int len ) {
-	unsigned int extracted;
-	int t, l;
-
-	extracted = l = 0;
+	unsigned int extracted = 0;
+	int t; /* size needed to complete a buffered partial block */
+	int r; /* partial block remainder */
+	long rc; /* return code */
+	unsigned char tmp_buf[4];
 	
-	/* deal with buffered input of partial blocks */
+	/* deal with buffered input of partial blocks. 
+	 *   strm->state->b64_buf will either be empty or contain a partial block
+	 *   a partial block is an incomplete portion of a 4 byte base 64 block */
 	if( strm->state->b64_buf[0] != 0 ) {
-		t = 4 - strlen( strm->state->b64_buf );
+		t = 4 - strlen( strm->state->b64_buf );  /* size needed to complete block */
 		if( strm->avail_in >= t ) {
 			memcpy( strm->state->b64_buf + strlen( strm->state->b64_buf ), strm->next_in, t );
 			strm->next_in  += t;
@@ -125,12 +128,29 @@ unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned in
 			strm->avail_in -= t;
 			
 			if( len >= 3 ) {
-				extracted = base64_decode( to, strm->state->b64_buf, 4 );
-				l   = 3;
-				to += l;
+				rc = base64_decode( to, strm->state->b64_buf, 4 );
+				if( rc < 0 ) {
+#ifndef NO_VERBIAGE
+					fprintf( stderr, "Error! could not decode the base64 string!\n" );
+#endif
+					exit(-1);
+				}
+				extracted = (unsigned int) rc;
+				to  += extracted;
+				len -= extracted;
 				strm->state->b64_buf[0] = 0;
+			} 
+			/* less than 3 bytes are available in 'to'.
+			 *   determine if the decoded string can fit into 'to'. */
+			else if (strm->state->b64_buf[3] == '=') { 
+				extracted = base64_decode( tmp_buf, strm->state->b64_buf, 4 );
+				if( extracted <= len ) {
+					memcpy( to, tmp_buf, extracted );
+					strm->state->b64_buf[0] = 0;
+					return extracted;
+				}
+				return 0;
 			} else {
-				len = 0;
 				return 0;
 			}
 		} else {
@@ -143,22 +163,45 @@ unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned in
 		}
 	}
 
-	len -= l;
-	len -= len % 3;
+	/* Decode the largest whole block buffer amount possible. */
 	if( len > strm->avail_in / 4 * 3 )
 		len = strm->avail_in / 4 * 3;
-	extracted += base64_decode( to, strm->next_in, len * 4 / 3);
-	if( extracted < 0 ) {
+	r = len % 3;
+	len -= r;
+	rc = base64_decode( to, strm->next_in, len * 4 / 3);
+	if( rc < 0 ) {
 #ifndef NO_VERBIAGE
 		fprintf( stderr, "Error! could not decode the base64 string!\n" );
 #endif
 		exit(-1);
 	}
-	strm->next_in  += len * 4 / 3;
-	strm->avail_in -= len * 4 / 3;
-	strm->total_in += len * 4 / 3;
+	extracted += (unsigned int) rc;
+	to += rc;
+	strm->next_in  += rc * 4 / 3;
+	strm->avail_in -= rc * 4 / 3;
+	strm->total_in += rc * 4 / 3;
 
-	// suck up input if there is a partial block of input sitting around
+	/* If there is one block left in the input stream that ends with padding 
+	 *   AND there is some room left in the output stream, 
+	 *   THEN see if the decoded string will fit */
+	if( strm->avail_in == 4 && strm->next_in[3] == '=' && r > 0 ) {
+		rc = base64_decode( tmp_buf, strm->next_in, 4 );
+		if( rc < 0 ) {
+#ifndef NO_VERBIAGE
+			fprintf( stderr, "Error! could not decode the base64 string!\n" );
+#endif
+			exit(-1);
+		} else if( rc <= r ) {
+			memcpy( to, tmp_buf, rc );
+			strm->next_in  += rc * 4 / 3;
+			strm->avail_in -= rc * 4 / 3;
+			strm->total_in += rc * 4 / 3;
+			extracted += rc;
+			return extracted;
+		}
+	}
+	else 
+	/* if there is a partial block of input sitting around, suck it up */
 	if( strm->avail_in < 4 && strm->avail_in > 0 ) { 
 		strncpy( strm->state->b64_buf, strm->next_in, strm->avail_in );
 		strm->state->b64_buf[strm->avail_in] = 0;
@@ -166,8 +209,7 @@ unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned in
 		strm->total_in += strm->avail_in;
 		strm->avail_in  = 0;
 	}
-	
-	len += l;
+
 
 	return extracted;
 }
@@ -1075,52 +1117,27 @@ int b64z_encode_end( b64z_stream* strm ) {
 * 	tests this library & provides example usage of the library's code
 * 	It returns the number of tests failed.
 * 	this WILL WRITE TO stdout if verbosity is non zero.
-* 	Allowed values of verbosity are 0-3, with 0 being silent and 3 being verbose
+* 	Allowed values of verbosity are 0-2, with 0 being silent, 1 being succinct, and 2 being verbose
 *
 */
-int test(int verbosity) {
+int test(char debug) {
 	b64z_stream *strm;
 	int rC;	/* return Code */
-	int r, p, bS, failures, test;
-	unsigned int len, eL, d, dL;
-	const int bufSize = 512;
+	int action_code, n_failures = 0, n_tests;
+	unsigned int len_of_remaining_input;
+	
+	const int resultBufSize = 512;
+	const int len_strm_input = 7;
+	const int len_strm_output = 7;
 
 	unsigned char *testString = "\"The state can't give you free speech, and the state can't take it away. You're born with it, like your eyes, like your ears. Freedom is something you assume, then you wait for someone to try to take it away. The degree to which you resist is the degree to which you are free...\"\n---Utah Phillips";
-	unsigned char *dec, *enc, *buf;
+	unsigned char *dec, *enc;
 	compression_type comps[] = { none, bzip2, zlib };
 	char *comp_labels[] = {"none", "bzip2", "zlib" };
 
-	enum { verbose, terse, quiet, silent } debug;
-	switch( verbosity ) {
-	  case 0:
-		debug = silent;
-		break;
-	  case 1:
-		debug = quiet;
-		break;
-	  case 2:
-		debug = terse;
-		break;
-	  case 3:
-		debug = verbose;
-		break;
-	  default:
-		debug = verbose;
-		break;
-	}
-	failures = test = 0;
-
-	srand( 0 );
-	do {
-		bS = rand()%70;
-	} while( bS < 4 );
-	buf = (unsigned char * ) malloc( bS + 1 );
-
-
-
-	for(test=0;test<3;test++) {
-		enc = (unsigned char *) malloc( bufSize );
-		dec = (unsigned char *) malloc( bufSize );
+	for(n_tests=0;n_tests<3;n_tests++) {
+		enc = (unsigned char *) malloc( resultBufSize );
+		dec = (unsigned char *) malloc( resultBufSize );
 		if( enc == NULL || dec == NULL ) {
 #ifndef NO_VERBIAGE
 			fprintf( stderr, "out of memory!\n" );
@@ -1129,40 +1146,33 @@ int test(int verbosity) {
 		}
 			
 #ifndef NO_VERBIAGE
-		if( debug != silent  ) fprintf( stdout, "Testing conversion using compression '%s'\n", comp_labels[test] );
-		if( debug == terse   ) fprintf( stdout, "\toriginal length: %i\n", strlen(testString) );
-		if( debug == verbose ) fprintf( stdout, "\toriginal: %s\n", testString );
+		if( debug ) fprintf( stdout, "Testing conversion using compression '%s'\n", comp_labels[n_tests] );
+		if( debug == 2 ) fprintf( stdout, "\toriginal: %s\n", testString );
 #endif
 
-		strm = b64z_new_stream( NULL, 0, NULL, 0, comps[test] );
-		/* b64z_new_stream receives (next_in, avail_in, next_out, and avail_out); */
+		strm = b64z_new_stream( NULL, 0, NULL, 0, comps[n_tests] );
+		/* b64z_new_stream(next_in, avail_in, next_out, avail_out, compression); */
 		b64z_encode_init( strm );
 	
-		len = strlen( testString );
+		len_of_remaining_input = strlen( testString );
 		strm->next_in  = testString;
 		strm->avail_in = 0;
-		eL = 0;
-		p = B64Z_RUN;
+		action_code = B64Z_RUN;
 		do {
-			/* This block throws input into the stream in random sized chunks */
-			r = rand() % 50;
-			if( len > r ) {
-				strm->avail_in += r;
-				len -= r;
+			if( len_of_remaining_input > len_strm_input ) {
+				strm->avail_in += len_strm_input;
+				len_of_remaining_input -= len_strm_input;
 			}
 			else {
-				strm->avail_in += len;
-				len = 0;
-				p = B64Z_FINISH;
+				strm->avail_in += len_of_remaining_input;
+				len_of_remaining_input = 0;
+				action_code = B64Z_FINISH;
 			}
-			/* end block */
 			
-			*buf = 0;
-			strm->next_out = buf;
-			strm->avail_out = bS;
-			d = strm->avail_out;
+			strm->next_out = enc + strm->total_out;
+			strm->avail_out = len_strm_output;
 
-			rC = b64z_encode( strm, p );
+			rC = b64z_encode( strm, action_code );
 			/* Remember, when using b64z_encode, you must request for the 
 			/ stream to end.
 			/ The stream WILL NOT END until you request it. Also, it may 
@@ -1170,55 +1180,37 @@ int test(int verbosity) {
 			/ bzip2 will barf if you supply more input after you request the
 			/ stream to end. I haven't tested what the other compression 
 			/ schemes do in that situation, but I would advise NOT TO DO IT.
-			*/
-			
-			*( strm->next_out ) = 0;
-			d -= strm->avail_out;
-			memcpy( enc + eL, buf, d );
-			eL += d;
-			
+			*/			
 		} while(rC != B64Z_STREAM_END);
 
 		b64z_encode_end( strm );
-
-		enc[eL] = 0;
+		enc[strm->total_out] = 0;
 
 #ifndef NO_VERBIAGE
-		if( debug == terse   ) fprintf( stdout, "\tencoded length : %i\n", eL );
-		if( debug == verbose ) fprintf( stdout, "\tencoded : %s\n", enc );
+		if( debug == 2 ) fprintf( stdout, "\tencoded : %s\n", enc );
 #endif
+		len_of_remaining_input = strm->total_out;
 	
 	/* DECODE */
 		b64z_decode_init( strm );
 
-		len = eL;
 		strm->next_in  = enc;
 		strm->avail_in = 0;
-		dL = 0;
 		do {
-			/* This block throws input into the stream in random sized chunks */
-			r = rand() % 50 + 4;
-			if( len > r ) {
-				strm->avail_in += r;
-				len -= r;
+			if( len_of_remaining_input > len_strm_input ) {
+				strm->avail_in += len_strm_input;
+				len_of_remaining_input -= len_strm_input;
 			}
 			else {
-				strm->avail_in += len;
-				len ^= len;  /* equiv to 'len = 0;' */
+				strm->avail_in += len_of_remaining_input;
+				len_of_remaining_input ^= len_of_remaining_input;  /* equiv to 'len_of_remaining_input = 0;' */
 			}
-			/* end block */
 			
-			*buf = 0;
-			strm->next_out = buf;
-			strm->avail_out = bS;
-			d = strm->avail_out;
+			strm->next_out = dec + strm->total_out;
+			strm->avail_out = len_strm_output;
 
 			rC = b64z_decode( strm );
-			
-			d -= strm->avail_out;
-			memcpy( dec + dL, buf, d );
-			dL += d;
-		} while(len != 0 || rC != B64Z_STREAM_END);
+		} while(! (len_of_remaining_input == 0 && rC == B64Z_STREAM_END));
 		/* b64z_decode will return B64Z_STREAM_END any time the input buffer
 		/ and internal buffers are empty. This behavior is very distinct from 
 		/ the behavior of b64z_encode.
@@ -1226,17 +1218,14 @@ int test(int verbosity) {
 		
 		b64z_decode_end( strm );
 
-		dec[dL] = 0;
+		dec[strm->total_out] = 0;
 #ifndef NO_VERBIAGE
-		if( debug == terse   ) fprintf( stdout, "\tdecoded length : %i\n", strlen(dec) );
-		if( debug == verbose ) fprintf( stdout, "\tdecoded : %s\n", dec );
-		if( debug != silent ) {
+		if( debug == 2 ) fprintf( stdout, "\tdecoded : %s\n", dec );
+		if( debug ) {
 			if( strcmp( testString, dec ) != 0 ) {
-				failures++;
+				n_failures++;
 				fprintf( stdout, "\tError! Test failed. The original string and the final string differ!\n" );
 			}
-			else if( debug != quiet )
-				fprintf( stdout, "\tTest passed. strcmp( original, decoded ) returned 0.\n" );
 			else
 				fprintf( stdout, "\tTest passed.\n" );
 		}
@@ -1247,12 +1236,13 @@ int test(int verbosity) {
 		free( dec );
 	}
 #ifndef NO_VERBIAGE
-	if( debug != silent ) fprintf( stdout, "Failed %i out of %i tests\n", failures, test );
+	if( debug ) {
+		if( n_failures == 0 ) fprintf( stdout, "Passed all %i tests\n", n_tests );
+		else fprintf( stdout, "Failed %i out of %i tests\n", n_failures, n_tests );
+	}
 #endif
-	
-	free( buf );
-	
-	return failures;
+		
+	return n_failures;
 }
 /*
 * END 'test'
