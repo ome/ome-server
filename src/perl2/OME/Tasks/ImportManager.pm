@@ -411,6 +411,18 @@ sub markImageFiles {
     return;
 }
 
+sub getImageFiles {
+    my $class = shift;
+    die "No active import!" unless defined $self;
+    return undef unless $self->{valid_modules};
+
+    my $image = shift;
+    my $image_id = ref($image)? $image->id(): $image;
+    
+    return $self->{image_files}->{$image_id} if exists $self->{image_files}->{$image_id};
+    return undef;
+}
+
 1;
 
 __END__

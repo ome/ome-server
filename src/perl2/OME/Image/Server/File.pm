@@ -390,6 +390,21 @@ call, calling any other OME::File method should result in an error.
 
 sub close { return }
 
+=head2 delete
+
+	$file->delete();
+
+This will physically delete the file from the server.  Use with caution.
+Note that making any subsequent server calls on this file will result in an error.
+
+=cut
+
+sub delete {
+    my $self = shift;
+    my $fileID = $self->[FILE_ID];
+    return OME::Image::Server->deleteFile($fileID);
+}
+
 1;
 
 __END__

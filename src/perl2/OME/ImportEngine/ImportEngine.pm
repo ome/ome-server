@@ -67,11 +67,15 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use base qw(Class::Accessor);
+__PACKAGE__->mk_ro_accessors(qw(nUnknown nDups nError nFiles nImages nImageFiles));
+
 use Class::Data::Inheritable;
 use Log::Agent;
 use OME::Image;
 use OME::Tasks::ImportManager;
 use UNIVERSAL::require;
+
 
 # ---------------------
 # The formats now come from the CONFIGURATION table.
@@ -80,7 +84,7 @@ use UNIVERSAL::require;
 #__PACKAGE__->DefaultFormats(['OME::ImportEngine::MetamorphHTDFormat']);
 # ---------------------
 
-use fields qw(_flags);
+# use fields qw(_flags nUnknown nDups nError);
 
 =head1 METHODS
 
@@ -185,8 +189,19 @@ sub startImport {
     OME::Tasks::ImportManager->startImport();
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
     $session->commitTransaction();
-    
+	$self->{nUnknown} = 0;
+	$self->{nDups} = 0;
+	$self->{nError} = 0;
+	$self->{nFiles} = 0;
+	$self->{nImages} = 0;
+	$self->{nImageFiles} = 0;
+	$self->{_image_files} = {};
+	$self->{_images} = [];
+	
     return $files_mex;
+}
+
+sub __resetCounters() {
 }
 
 sub importFiles {
@@ -210,6 +225,7 @@ sub importFiles {
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
     my %files;
+    $self->{nFiles} = scalar (@$files);
     foreach my $file (@$files) {
         $files{$file->getFilename()} = $file;
     }
@@ -269,6 +285,16 @@ sub importFiles {
     # You know, come to think of it, we don't really need this to be two
     # separate loops.  An interesting thought.  --DC
 
+	# At this juncture, we know how many files we're going to ignore
+	# due to unknown formats
+	$self->{nUnknown} = scalar (keys %files);
+	
+	# No point in keeping around ignored files
+	foreach (values %files) {
+        __debug("Deleting ".$_->getFilename()."\n");
+		$_->delete();
+	}
+
     my @images;
 
   FORMAT:
@@ -305,6 +331,7 @@ sub importFiles {
                         __debug("AllowDuplicates is on.\n");
                     } else {
                         __debug("Skipping...\n");
+                        $self->{nDups}++;
                         next GROUP;
                     }
                 } else {
@@ -325,6 +352,7 @@ sub importFiles {
                 logwarn "Error $@ importing image: $format_class $group";
                 $session->rollbackTransaction();
                 doGroupCallback($self->{_flags}, 0);
+                $self->{nError}++;
                 next GROUP;
             }
 
@@ -332,6 +360,7 @@ sub importFiles {
                 logwarn "Undefined image: $format_class $group";
                 $session->rollbackTransaction();
                 doGroupCallback($self->{_flags}, 0);
+                $self->{nError}++;
                 next GROUP;
             } elsif (ref ($image) eq 'ARRAY') {
             	$import_images = $image;
@@ -347,11 +376,19 @@ sub importFiles {
 				  getImageImportMEX($image);
 				$image_mex->status('FINISHED');
 				$image_mex->storeObject();
+				
 				doGroupCallback($self->{_flags}, 1);
+
+				my $image_files = OME::Tasks::ImportManager->getImageFiles($image);
+				foreach (@$image_files) {
+					$self->{_image_files}->{$_->id()} = $_;
+				}
+				
 	
 				$session->commitTransaction();
 	            push @images, $image;
 				logdbg "debug", ref ($self)."->importFiles: imported ".$image->name();
+                $self->{nImages}++;
             }
 
         }
@@ -359,6 +396,8 @@ sub importFiles {
 
     #print STDERR "\n";
 	push( @{ $self->{_images} }, @images );
+	$self->{nImageFiles} = $self->{_image_files} ? scalar (keys (%{$self->{_image_files}})) : 0 ;
+	
     $self->finishImport() if $called_as_class;
 
     return \@images;

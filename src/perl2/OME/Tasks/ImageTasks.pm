@@ -40,6 +40,8 @@ package OME::Tasks::ImageTasks;
 use OME::Session;
 use OME::Dataset;
 use OME::Image;
+use OME::ImportExport::Importer;
+use OME::ImportExport::Exporter;
 use OME::Analysis::Engine;
 use OME::ImportEngine::ImportEngine;
 use OME::Tasks::PixelsManager;
@@ -271,8 +273,13 @@ sub forkedImportFiles {
         } else {
             eval {
                 $task->finish();
-                $task->setMessage('Successfully imported '.scalar(@$image_list).
-                                  ' images');
+                $task->setMessage('Imported '.$importer->nImages().' images '.
+                	'from '.$importer->nImageFiles().' files. '.
+                	$importer->nFiles().' scanned. '.
+                	$importer->nUnknown().' unknown format, '.
+                	$importer->nDups().' duplicates, '.
+                	$importer->nError().' errors.'
+                );
             };
 
             logwarn "Could not close task - $@" if $@;
@@ -281,4 +288,37 @@ sub forkedImportFiles {
         CORE::exit(0);
     }
 }
+
+# exportFiles(session,images)
+# --------------------------------------
+# Exports the selected images out of OME.  The session is used to
+# interact with the database.
+
+
+sub exportFiles {
+	my ($i, $sz, $type);
+	my $image_list;
+	my ($session, $argref) = @_;
+
+	return unless
+		(defined $session) &&
+		(defined $argref);
+
+	$type = $$argref[0];
+	$sz = scalar(@$argref);
+	for ($i = 1; $i < $sz; $i++) {
+	push @image_list, $$argref[$i];
+	}
+
+	# FIXME:
+	# Need to determine how to locate repository for given image IDs\
+	# when we go to more than 1 repository.
+	my $repository = $session->findRepository();
+
+	my $xporter = OME::ImportExport::Exporter->new($session, $type, \@image_list, $repository);
+
+}
+
+
+
 1;

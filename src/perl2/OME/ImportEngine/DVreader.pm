@@ -232,33 +232,21 @@ decides that the file has the DV format.
 sub getGroups {
     my $self = shift;
     my $fhash = shift;
-    my @inlist = values %$fhash;
-    my $nmlen = scalar(@inlist);
-    my @outlist;
+    my $file;
+    my @files_found;
 
-    for(my $i = 0, my $ndx = 0; $i < $nmlen; $i++, $ndx++) {
-        my $file = $inlist[$ndx];
-        $file->open('r');
-
-	my $len;
-	my $buf;
-	my $dvid;
-	my $endian = "";
-	
-	$len = $file->getLength();
-	if ($len >= DV_HEADER_LENGTH) {
-	    $endian = getEndian($file);
-	    # if it's DV format, remove from input list, put on output list
-	    if ($endian ne ""){
-		splice(@inlist, $ndx, 1);
-		$ndx--;
-		push @outlist, $file;
-	    }
+	foreach $file (values (%$fhash)) {
+		$file->open('r');
+		if ($file->getLength() > DV_HEADER_LENGTH) {
+			push (@files_found, $file) if getEndian($file) ne "";
+		}
+		$file->close();
 	}
-        $file->close();
-    }
 
-    return \@outlist;
+    # Clean out the $filenames list.
+    $self->__removeFiles($fhash,\@files_found);
+
+    return \@files_found;
 }
 
 
