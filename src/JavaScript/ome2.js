@@ -194,6 +194,8 @@ function openImage (id) {
 		openInfoImage(id)
 	} else if( mode == 'declassify' ) {
 		declassifyImage( id );
+	} else if( mode == 'classify' ) {
+		classifyImage( id );
 	} else {
 		openPopUpImage( id );
 	} 
@@ -205,6 +207,15 @@ function declassifyImage (id) {
 		document.forms[0].submit();
 	} else {
 		alert( 'The document does not have a form properly set up to declassify images.' );
+	}
+}
+
+function classifyImage (id) {
+	if( document.forms && document.forms[0] && document.forms[0].classifyImage) {
+		document.forms[0].classifyImage.value = id;
+		document.forms[0].submit();
+	} else {
+		alert( 'The document does not have a form properly set up to classify images.' );
 	}
 }
 
