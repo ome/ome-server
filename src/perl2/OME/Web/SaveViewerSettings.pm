@@ -41,16 +41,47 @@ use strict;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
+use base qw{ OME::Web };
 
 use CGI;
 use Log::Agent;
 use OME::ViewerPreferences;
+use OME::Tasks::PixelsManager;
 
-use base qw{ OME::Web };
 
 sub getPageTitle {
     return "Open Microscopy Environment - Save Viewer Settings";
 }
+
+our $ONE_PIXEL_GIF = pack("H1614", join ('',qw /
+	47494638396101000100f70031ffffffffffccffff99ffff66ffff33ffff00ff
+	ccffffccccffcc99ffcc66ffcc33ffcc00ff99ffff99ccff9999ff9966ff9933
+	ff9900ff66ffff66ccff6699ff6666ff6633ff6600ff33ffff33ccff3399ff33
+	66ff3333ff3300ff00ffff00ccff0099ff0066ff0033ff0000ccffffccffcccc
+	ff99ccff66ccff33ccff00ccccffcccccccccc99cccc66cccc33cccc00cc99ff
+	cc99cccc9999cc9966cc9933cc9900cc66ffcc66cccc6699cc6666cc6633cc66
+	00cc33ffcc33cccc3399cc3366cc3333cc3300cc00ffcc00cccc0099cc0066cc
+	0033cc000099ffff99ffcc99ff9999ff6699ff3399ff0099ccff99cccc99cc99
+	99cc6699cc3399cc009999ff9999cc9999999999669999339999009966ff9966
+	cc9966999966669966339966009933ff9933cc99339999336699333399330099
+	00ff9900cc99009999006699003399000066ffff66ffcc66ff9966ff6666ff33
+	66ff0066ccff66cccc66cc9966cc6666cc3366cc006699ff6699cc6699996699
+	666699336699006666ff6666cc6666996666666666336666006633ff6633cc66
+	33996633666633336633006600ff6600cc66009966006666003366000033ffff
+	33ffcc33ff9933ff6633ff3333ff0033ccff33cccc33cc9933cc6633cc3333cc
+	003399ff3399cc3399993399663399333399003366ff3366cc33669933666633
+	66333366003333ff3333cc3333993333663333333333003300ff3300cc330099
+	33006633003333000000ffff00ffcc00ff9900ff6600ff3300ff0000ccff00cc
+	cc00cc9900cc6600cc3300cc000099ff0099cc00999900996600993300990000
+	66ff0066cc0066990066660066330066000033ff0033cc003399003366003333
+	0033000000ff0000cc000099000066000033ee0000dd0000bb0000aa00008800
+	0077000055000044000022000011000000ee0000dd0000bb0000aa0000880000
+	77000055000044000022000011000000ee0000dd0000bb0000aa000088000077
+	000055000044000022000011eeeeeeddddddbbbbbbaaaaaa8888887777775555
+	5544444422222211111100000021f904010000ff002c00000000010001000008
+	0400ff0504003b
+/));
+
 
 sub getPageBody {
     my $self = shift;
@@ -75,8 +106,8 @@ sub getPageBody {
 
 		$self->SavePreferences( $toolBoxScale );
 	}
-
-    return ('HTML','');
+	$self->contentType ('image/gif');
+    return ('IMAGE', $ONE_PIXEL_GIF);
 }
 
 sub SavePreferences {
@@ -112,88 +143,42 @@ sub SaveDisplaySettings {
 	$pixels = $image->DefaultPixels()
 		unless $pixels;
 
-	my $displayOptions = $factory->findAttribute( 'DisplayOptions', $imageID );
+	my $displayOptions = OME::Tasks::PixelsManager->getDisplayOptions( $pixels );
+
 	my ( $redChannel, $greenChannel, $blueChannel, $greyChannel );
 
-	if( $displayOptions ) {
-		$redChannel = $displayOptions->RedChannel();
-		$redChannel->ChannelNumber  ( $CBW->[0] );
-		$redChannel->BlackLevel     ( $CBW->[1] );
-		$redChannel->WhiteLevel     ( $CBW->[2] );
-		$greenChannel = $displayOptions->GreenChannel();
-		$greenChannel->ChannelNumber( $CBW->[3] );
-		$greenChannel->BlackLevel   ( $CBW->[4] );
-		$greenChannel->WhiteLevel   ( $CBW->[5] );
-		$blueChannel = $displayOptions->BlueChannel();
-		$blueChannel->ChannelNumber ( $CBW->[6] );
-		$blueChannel->BlackLevel    ( $CBW->[7] );
-		$blueChannel->WhiteLevel    ( $CBW->[8] );
-		$greyChannel = $displayOptions->GreyChannel();
-		$greyChannel->ChannelNumber ( $CBW->[9] );
-		$greyChannel->BlackLevel    ( $CBW->[10] );
-		$greyChannel->WhiteLevel    ( $CBW->[11] );
-		$displayOptions->RedChannelOn( $RGBon->[0] );
-		$displayOptions->GreenChannelOn( $RGBon->[1] );
-		$displayOptions->BlueChannelOn( $RGBon->[2] );
-		$displayOptions->TStart($theT);
-		$displayOptions->TStop($theT);
-		$displayOptions->ZStart($theZ);
-		$displayOptions->ZStop($theZ);
-		$displayOptions->DisplayRGB( $isRGB );
-		$displayOptions->Pixels( $pixels );
+	$redChannel = $displayOptions->RedChannel();
+	$redChannel->ChannelNumber  ( $CBW->[0] );
+	$redChannel->BlackLevel     ( $CBW->[1] );
+	$redChannel->WhiteLevel     ( $CBW->[2] );
+	$greenChannel = $displayOptions->GreenChannel();
+	$greenChannel->ChannelNumber( $CBW->[3] );
+	$greenChannel->BlackLevel   ( $CBW->[4] );
+	$greenChannel->WhiteLevel   ( $CBW->[5] );
+	$blueChannel = $displayOptions->BlueChannel();
+	$blueChannel->ChannelNumber ( $CBW->[6] );
+	$blueChannel->BlackLevel    ( $CBW->[7] );
+	$blueChannel->WhiteLevel    ( $CBW->[8] );
+	$greyChannel = $displayOptions->GreyChannel();
+	$greyChannel->ChannelNumber ( $CBW->[9] );
+	$greyChannel->BlackLevel    ( $CBW->[10] );
+	$greyChannel->WhiteLevel    ( $CBW->[11] );
+	$displayOptions->RedChannelOn( $RGBon->[0] );
+	$displayOptions->GreenChannelOn( $RGBon->[1] );
+	$displayOptions->BlueChannelOn( $RGBon->[2] );
+	$displayOptions->TStart($theT);
+	$displayOptions->TStop($theT);
+	$displayOptions->ZStart($theZ);
+	$displayOptions->ZStop($theZ);
+	$displayOptions->DisplayRGB( $isRGB );
+	$displayOptions->Pixels( $pixels );
 
-		$displayOptions->storeObject();
-		$redChannel->storeObject();
-		$greenChannel->storeObject();
-		$blueChannel->storeObject();
-		$greyChannel->storeObject();
-	} else {
-		my $data = {
-			ChannelNumber => $CBW->[0],
-			BlackLevel    => $CBW->[1],
-			WhiteLevel    => $CBW->[2]
-		};
-		$redChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
-			or die "Could not create new DisplayChannel attribute\n";
-		$data = {
-			ChannelNumber => $CBW->[3],
-			BlackLevel    => $CBW->[4],
-			WhiteLevel    => $CBW->[5]
-		};
-		$greenChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
-			or die "Could not create new DisplayChannel attribute\n";
-		$data = {
-			ChannelNumber => $CBW->[6],
-			BlackLevel    => $CBW->[7],
-			WhiteLevel    => $CBW->[8]
-		};
-		$blueChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
-			or die "Could not create new DisplayChannel attribute\n";
-		$data = {
-			ChannelNumber => $CBW->[9],
-			BlackLevel    => $CBW->[10],
-			WhiteLevel    => $CBW->[11]
-		};
-		$greyChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
-			or die "Could not create new DisplayChannel attribute\n";
-		$data = {
-			RedChannel     => $redChannel->id(),
-			GreenChannel   => $greenChannel->id(),
-			BlueChannel    => $blueChannel->id(),
-			GreyChannel    => $greyChannel->id(),
-			RedChannelOn   => $RGBon->[0],
-			GreenChannelOn => $RGBon->[1],
-			BlueChannelOn  => $RGBon->[2],
-			TStart         => $theT,
-			TStop          => $theT,
-			ZStart         => $theZ,
-			ZStop          => $theZ,
-			DisplayRGB     => $isRGB,
-			Pixels         => $pixels
-		};
-		$displayOptions = $factory->newAttribute( 'DisplayOptions', $image, undef, $data )
-			or die "Could not create new DisplayOptions attribute\n";			
-	}
+	$displayOptions->storeObject();
+	$redChannel->storeObject();
+	$greenChannel->storeObject();
+	$blueChannel->storeObject();
+	$greyChannel->storeObject();
+	OME::Tasks::PixelsManager->saveThumb( $pixels, $displayOptions );
 	
 	$session->commitTransaction();
 
