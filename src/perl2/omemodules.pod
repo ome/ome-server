@@ -20,18 +20,20 @@ OME Modules - Table of Contents
         OME::LookupTable::Entry
     OME::DataTable
         OME::DataTable::Column
-    OME::AttributeType
-        OME::AttributeType::Column
-    OME::Program
-        OME::Program::FormalInput
-        OME::Program::FormalOutput
-    OME::Analysis
-        OME::Analysis::ActualInput
-    OME::AnalysisView
-        OME::AnalysisView::Node
-        OME::AnalysisView::Link
-    OME::AnalysisExecution
-        OME::AnalysisExecution::NodeExecution
+    OME::SemanticType
+        OME::SemanticType::Element
+        OME::SemanticType::Superclass
+    OME::Module
+        OME::Module::Category
+        OME::Module::FormalInput
+        OME::Module::FormalOutput
+    OME::ModuleExecution
+        OME::ModuleExecution::ActualInput
+    OME::AnalysisChain
+        OME::AnalysisChain::Node
+        OME::AnalysisChain::Link
+    OME::AnalysisChainExecution
+        OME::AnalysisChainExecution::NodeExecution
     OME::AnalysisPath
         OME::AnalysisPath::Map
 
@@ -40,8 +42,6 @@ OME Modules - Table of Contents
 =item Deprecated
 
     OME::Experimenter
-    OME::Group
-    OME::Instrument
     OME::Repository
 
 =back
@@ -57,36 +57,32 @@ OME Modules - Table of Contents
     OME::Analysis::FindBounds
     OME::Analysis::FindRatio
     OME::Analysis::FindSpotsHandler
+    OME::Analysis::TrackSpotsHandler
     OME::Analysis::Handler
-    OME::Analysis::StopgapCLIHandler
-    OME::Analysis::TestCounts
-    OME::Analysis::TestStatistics
     OME::Analysis::NoopHandler
     OME::Tasks::AnalysisEngine
 
 =head2 OME XML file format
 
     OME::Tasks::OMEImport
-    OME::Tasks::SemanticTypeImport
+    OME::Tasks::OMEExport
+    OME::ImportExport::SemanticTypeImport
+    OME::ImportExport::SemanticTypeExport
     OME::Tasks::ProgramImport
     OME::Tasks::ChainImport
-    OME::Tasks::HierarchyImport
-    OME::Tasks::AttributeImport
+    OME::ImportExport::HierarchyImport
+    OME::ImportExport::HierarchyExport
 
 =head2 Proprietary image format importers
 
     OME::ImportExport::Importer
-    OME::ImportExport::Exporter
     OME::ImportExport::Import_reader
-    OME::ImportExport::Export_writer
     OME::ImportExport::FileUtils
-    OME::ImportExport::Repacker
     OME::ImportExport::Params
     OME::ImportExport::PixWrapper
     OME::ImportExport::DVreader
     OME::ImportExport::STKreader
     OME::ImportExport::TIFFreader
-    OME::ImportExport::TIFFwriter
 
 =head2 Workflow layer
 
@@ -96,65 +92,83 @@ OME Modules - Table of Contents
 
     OME::Remote::Dispatcher
     OME::Remote::Prototypes
+    OME::Remote::Utils
 
 =head2 Web-based user interface
 
     OME::Web
     OME::Web::DatasetMetadata
+    OME::Web::AddImageDataset
+    OME::Web::DatasetComponents
+    OME::Web::DatasetInProjects
+    OME::Web::DatasetMetadata
+    OME::Web::DatasetSearch
+    OME::Web::DatasetSwitch
     OME::Web::DirTree
+    OME::Web::DirTreeImport
+    OME::Web::DirTreeImportSelect
     OME::Web::DirTreeSelect
+    OME::Web::FindSpots
     OME::Web::GetGraphics
+    OME::Web::GetInfo
+    OME::Web::Helper::HTMLFormat
+    OME::Web::Helper::JScriptFormat
     OME::Web::Home
+    OME::Web::ImageSearch
+    OME::Web::InfoDataset
+    OME::Web::InfoProject
     OME::Web::Login
     OME::Web::Logout
     OME::Web::MakeNewProject
+    OME::Web::ManageDataset
+    OME::Web::ManageImage
+    OME::Web::ManageProject
     OME::Web::ProjectDataset
-    OME::Web::ProjectManager
+    OME::Web::ProjectDatasetImage
     OME::Web::ProjectMetadata
+    OME::Web::ProjectSearch
     OME::Web::ProjectSwitch
+    OME::Web::SaveViewerSettings
+    OME::Web::Thumb
+    OME::Web::ThumbCurrentDataset
+    OME::Web::ThumbCurrentProject
+    OME::Web::ThumbWrite
     OME::Web::TitleBar
     OME::Web::Validation
-    OME::Web::DatasetComponents
-    OME::Web::DatasetInProjects
-    OME::Web::DatasetManager
-    OME::Web::DatasetSearch
-    OME::Web::DatasetSwitch
-    OME::Web::GetInfo
-    OME::Web::ImageManager
-    OME::Web::ImageSearch
-    OME::Web::ProjectDatasetImage
-    OME::Web::ProjectSearch
     OME::Web::Viewer
-    OME::Web::SaveViewerSettings
-    OME::Web::AddImageDataset
-    OME::Web::InfoDataset
-    OME::Web::InfoProject
-
-=head2 SVG image viewer
-
-    OME::Graphics
-    OME::Graphics::GD::Centroids
-    OME::Graphics::GD::Vectors
-    OME::Graphics::GD
-    OME::Graphics::IM::Vectors
-    OME::Graphics::JavaScript
-    OME::Graphics::JavaScript::Layer::Centroids
-    OME::Graphics::JavaScript::Layer::OMEimage
-    OME::Graphics::JavaScript::Layer::Vectors
-    OME::Graphics::JavaScript::Layer
+    OME::Web::XMLFileExport 
 
 =begin comment
 
-    OME::Image::Pix::Pix
+    OME::Image::Pix
     OME::Session::Attributes
-    OME::Tasks::ModuleTasks
-    OME::Tests::AnalysisEngine::ShowImageAttributes
     OME::Research::AnalyseText
     OME::Research::SearchEngine
     OME::Research::SetStatement
     OME::SetDB
-    OME::DisplaySettings
     OME::ViewerPreferences
+
+unsorted:
+	OME::Factory::Iterator
+	OME::Image::Wavelengths
+	OME::Image::LogicalChannel
+	OME::Image::ImageFilesXYZWT
+	OME::Image::DatasetMap
+	OME::ImportExport::InsertFiles
+	OME::ImportExport::ResolveFiles
+	OME::LSID
+	OME::Project::DatasetMap
+	OME::Remote
+	OME::SOAP::Exports
+	OME::Tasks::OMEXMLImportExport
+	OME::Tasks::AEFacade
+	OME::Tasks::ChainManager
+	OME::Tasks::DatasetManager
+	OME::Tasks::ImageManager
+	OME::Tasks::OMEXMLImportExport
+	OME::Tasks::ProjectManager
+	OME::Tasks::Thumbnails
+
 
 =end comment
 
