@@ -184,6 +184,16 @@ my ($self,$lsid) = @_;
 	return $self->getLocalObject ($lsid) || $self->getRemoteObject ($lsid);
 }
 
+=head2 checkLSID
+
+	if( $resolver->checkLSID ($LSID) ) {
+		# do something
+	}
+
+This determines if an LSID is properly formed. Returns undef if not, $LSID if so.
+
+=cut
+
 sub checkLSID ($) {
 my ($self,$lsid) = @_;
 	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
