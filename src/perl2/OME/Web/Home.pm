@@ -38,9 +38,6 @@ my $HTML;
 my $cgi  = $self->CGI();
 my $home = '/html/noOp.html';
 
-print STDERR "\nOME::Session->dataset via OME::Web::Home\n".$self->Session()->dataset()."\n";
-print STDERR "\nOME::Session->project via OME::Web::Home\n".$self->Session()->project()."\n";
-
 	$self->{contentType} = 'text/html';
 	$HTML = <<ENDHTML;
 		<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -52,6 +49,8 @@ print STDERR "\nOME::Session->project via OME::Web::Home\n".$self->Session()->pr
 ENDHTML
 
 	# Force project creation if a project isn't defined for the session.
+# FIXME: User should have option to select project if possible. 
+#	Q: When is possible? When group user belongs to has projects? This is permissions issue.
 	if( not defined $self->Session->project() ) {
 		$HTML .= <<ENDHTML;
 		<frameset cols="100%" rows="70,*">
@@ -62,6 +61,8 @@ ENDHTML
 ENDHTML
 	}
 	# Force Import images if a dataset isn't defined for the session.
+# FIXME: User should have option to select dataset if possible. 
+#	Q: When is possible? When group user belongs to has datasets? This is permissions issue.
 	elsif( not defined $self->Session()->dataset() ) {
 		$HTML .= <<ENDHTML;
 		<frameset cols="100%" rows="70,*">
