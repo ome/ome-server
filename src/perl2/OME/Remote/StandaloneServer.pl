@@ -50,6 +50,7 @@ use POSIX;
 #SOAP::Trace->import('all');
 
 use OME::Remote::Dispatcher;
+use OME::Remote::Facade;
 my @dispatchObjects =
   qw(OME::Remote::Dispatcher);
 
@@ -64,7 +65,7 @@ $XMLRPC::Constants::DO_NOT_USE_XML_PARSER = 1;
 
 # Command line options
 my ($show_calls, $show_results, $show_caching, $verbose, $help, $debug,
-    $foreground);
+    $foreground, $new_dispatcher);
 
 # Command line defaults
 my $port = 8002;
@@ -118,6 +119,7 @@ GetOptions ("s|show-calls", \$show_calls,	# Show call generation
             "f|foreground", \$foreground,       # Foreground mode
 	    "v|verbose", \$verbose,		# Verbose operation
 	    "t|transport=s", \$transport,	# Transport
+        "n|new", \$new_dispatcher,
 	    "h|help", \$help			# Show usage
 	    );
 
@@ -134,6 +136,7 @@ if ($verbose) { $show_calls = 1; $show_results = 1; $show_caching = 1; }
 if ($show_calls) { $OME::Remote::Dispatcher::SHOW_CALLS = 1 }
 if ($show_results) { $OME::Remote::Dispatcher::SHOW_RESULTS = 1 } 
 if ($show_caching) { $OME::Remote::Dispatcher::SHOW_CACHING = 1 }
+if ($new_dispatcher) { @dispatchObjects = qw(OME::Remote::Facade); }
 
 # Fork once so that the parent can exit unless we're debugging
 unless ($debug) {
@@ -163,8 +166,8 @@ if (lc($transport) eq "xmlrpc") {
     # all is "" in dispatch_with()
     $daemon = $transport_class
       ->new(LocalPort => $port)
-      ->dispatch_to('OME::Remote::Dispatcher')		
-      ->dispatch_with({"", 'OME::Remote::Dispatcher'});
+      ->dispatch_to($dispatchObjects[0])
+      ->dispatch_with({"", $dispatchObjects[0]});
     $style = "XML-RPC";
 } elsif (lc($transport) eq "soap") {
     $transport_class = "SOAP::Transport::HTTP::Daemon";
