@@ -69,9 +69,9 @@
 		<Description>This is an Image</Description>
 		<ExperimentRef ID = "urn:lsid:foo.bar.com:Experiment:123456"/>
 		<GroupRef ID = "urn:lsid:foo.bar.com:Group:123456"/>
-		<!--DatasetRef ID = "urn:lsid:foo.bar.com:Dataset:123456"/-->
+		<DatasetRef ID = "urn:lsid:foo.bar.com:Dataset:123456"/>
 		<InstrumentRef ID = "urn:lsid:foo.bar.com:Instrument:123456"/>
-		<!--ObjectiveRef ID = "urn:lsid:foo.bar.com:Objective:123456"/-->
+		<ObjectiveRef ID = "urn:lsid:foo.bar.com:Objective:123456"/>
 		<ImagingEnvironment Temperature = ".1" AirPressure = ".1" Humidity = ".2" CO2Percent = ".3"/>
 		<Thumbnail href = "http://ome.nia.gov/GetThumbnail?ID=urn:lsid:foo.bar.com:Image:123456" MIMEtype = "image/jpeg"/>
 		<ChannelInfo ID="urn:lsid:foo.bar.com:LogicalChannel:123456" Name = "Channel 1" IlluminationType="Epifluorescence" ExWave = "490" EmWave = "528" Fluor = "GFP" NDfilter = "0.0">
