@@ -470,26 +470,32 @@ sub getImageWavelengths{
 	my @Wavelengths;
 	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", {
 		image  => $image,
-		Pixels => $pixels } )
-		or die "Cannot find PixelChannelComponent's for image (id=".$image->id()."), pixels (id=".$pixels->id().")\n";
-	@channelComponents = sort 
-		{ $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
-		@channelComponents;
-	foreach my $cc (@channelComponents) {
-		my $ChannelNum = $cc->Index();
-		my $Label;
-    		my @overlap=();
-		$Label = $cc->LogicalChannel()->Name()  || 
-		         $cc->LogicalChannel()->Fluor() || 
-		         $cc->LogicalChannel()->EmissionWavelength();
-
-		#@overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
-		$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq "" );
-    		my %h=();
-		$h{WaveNum}=$ChannelNum;
-		$h{Label}=$Label;
-		push (@Wavelengths,\%h);
+		Pixels => $pixels } );
+	if( @channelComponents ) {
+		@channelComponents = sort 
+			{ $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
+			@channelComponents;
+		foreach my $cc (@channelComponents) {
+			my $ChannelNum = $cc->Index();
+			my $Label;
+			$Label = $cc->LogicalChannel()->Name()  || 
+					 $cc->LogicalChannel()->Fluor() || 
+					 $cc->LogicalChannel()->EmissionWavelength();
+	
+			$Label .= $cc->Index() if( $Label eq "" );
+			my %h=();
+			$h{WaveNum}=$ChannelNum;
+			$h{Label}=$Label;
+			push (@Wavelengths,\%h);
+		}
+	
+	# If there's no PixelChannelComponents found, throw something else together.
+	} else {
+		# Wavenumbers 0 to (SizeC - 1); Labels 1 to SizeC
+		( push( @Wavelengths, { WaveNum => $_, Label => $_ } ) and print STDERR "it is $_\n" )
+			foreach( 0..($pixels->SizeC() - 1) );
 	}
+
 	return \@Wavelengths;
 }
 
