@@ -65,23 +65,23 @@ print "Finding programs...\n";
 my $calcXyzInfo = OME::Program->findByName('Stack statistics');
 print $calcXyzInfo->program_name()." (".$calcXyzInfo->id().")\n";
 
-my $calcXyInfo = OME::Program->findByName('Plane statistics');
-print $calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
+# my $calcXyInfo = OME::Program->findByName('Plane statistics');
+# print $calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
 
-my $findSpots = OME::Program->findByName('Find spots');
-print $findSpots->program_name()." (".$findSpots->id().")\n";
+# my $findSpots = OME::Program->findByName('Find spots');
+# print $findSpots->program_name()." (".$findSpots->id().")\n";
 
-my $findCells = OME::Program->findByName('Find cells');
-print $findCells->program_name()." (".$findCells->id().")\n";
+# my $findCells = OME::Program->findByName('Find cells');
+# print $findCells->program_name()." (".$findCells->id().")\n";
 
-my $findGolgi = OME::Program->findByName('Find golgi');
-print $findGolgi->program_name()." (".$findGolgi->id().")\n";
+# my $findGolgi = OME::Program->findByName('Find golgi');
+# print $findGolgi->program_name()." (".$findGolgi->id().")\n";
 
-my $findMito = OME::Program->findByName('Find mito');
-print $findMito->program_name()." (".$findMito->id().")\n";
+# my $findMito = OME::Program->findByName('Find mito');
+# print $findMito->program_name()." (".$findMito->id().")\n";
 
-my $findRatio = OME::Program->findByName('Find ratio');
-print $findRatio->program_name()." (".$findRatio->id().")\n";
+# my $findRatio = OME::Program->findByName('Find ratio');
+# print $findRatio->program_name()." (".$findRatio->id().")\n";
 
 print "Image import chain...\n";
 
@@ -105,160 +105,160 @@ $node1 = $factory->
             });
 print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
 
-$node1 = $factory->
-  newObject("OME::AnalysisView::Node",
-            {
-             analysis_view => $view,
-             program       => $calcXyInfo,
-             iterator_tag  => undef,
-             new_feature_tag => undef
-            });
-print "    Node 2 ".$node1->program()->program_name()." (".$node1->id().")\n";
+# $node1 = $factory->
+#   newObject("OME::AnalysisView::Node",
+#             {
+#              analysis_view => $view,
+#              program       => $calcXyInfo,
+#              iterator_tag  => undef,
+#              new_feature_tag => undef
+#             });
+# print "    Node 2 ".$node1->program()->program_name()." (".$node1->id().")\n";
 
 
-print "Find spots chain...\n";
+# print "Find spots chain...\n";
 
-my $view = $factory->
-  newObject("OME::AnalysisView",
-            {
-             owner => $session->User(),
-             name  => "Find spots"
-            });
-die "Bad view" if !defined $view;
-print "  ".$view->name()." (".$view->id().")\n";
-
-
-$node1 = $factory->
-  newObject("OME::AnalysisView::Node",
-            {
-             analysis_view => $view,
-             program       => $calcXyzInfo,
-             iterator_tag  => undef,
-             new_feature_tag => undef
-            });
-print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
-
-$node2 = $factory->
-  newObject("OME::AnalysisView::Node",
-            {
-             analysis_view => $view,
-             program       => $findSpots,
-             iterator_tag  => undef,
-             new_feature_tag => 'SPOT'
-            });
-print "    Node 2 ".$node2->program()->program_name()." (".$node2->id().")\n";
-
-$link = $factory->
-  newObject("OME::AnalysisView::Link",
-            {
-             analysis_view => $view,
-             from_node     => $node1,
-             from_output   => $node1->program()->findOutputByName('Stack info'),
-             to_node       => $node2,
-             to_input      => $node2->program()->findInputByName('Stack info')
-            });
-print "    Link [Node 1.Stack info]->[Node 2.Stack info]\n";
+# my $view = $factory->
+#   newObject("OME::AnalysisView",
+#             {
+#              owner => $session->User(),
+#              name  => "Find spots"
+#             });
+# die "Bad view" if !defined $view;
+# print "  ".$view->name()." (".$view->id().")\n";
 
 
-print "Feature test chain...\n";
+# $node1 = $factory->
+#   newObject("OME::AnalysisView::Node",
+#             {
+#              analysis_view => $view,
+#              program       => $calcXyzInfo,
+#              iterator_tag  => undef,
+#              new_feature_tag => undef
+#             });
+# print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
 
-my $view = $factory->
-  newObject("OME::AnalysisView",
-            {
-             owner => $session->User(),
-             name  => "Find lots o' stuff"
-            });
-die "Bad view" if !defined $view;
-print "  ".$view->name()." (".$view->id().")\n";
+# $node2 = $factory->
+#   newObject("OME::AnalysisView::Node",
+#             {
+#              analysis_view => $view,
+#              program       => $findSpots,
+#              iterator_tag  => undef,
+#              new_feature_tag => 'SPOT'
+#             });
+# print "    Node 2 ".$node2->program()->program_name()." (".$node2->id().")\n";
 
-
-$node1 = $factory->
-  newObject("OME::AnalysisView::Node",
-            {
-             analysis_view => $view,
-             program       => $findCells,
-             iterator_tag  => undef,
-             new_feature_tag => 'CELL'
-            });
-print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
-
-$node2 = $factory->
-  newObject("OME::AnalysisView::Node",
-            {
-             analysis_view => $view,
-             program       => $findGolgi,
-             iterator_tag  => 'CELL',
-             new_feature_tag => 'GOLGI'
-            });
-print "    Node 2 ".$node2->program()->program_name()." (".$node2->id().")\n";
-
-$node3 = $factory->
-  newObject("OME::AnalysisView::Node",
-            {
-             analysis_view => $view,
-             program       => $findMito,
-             iterator_tag  => 'CELL',
-             new_feature_tag => 'MITOCHONDRIA'
-            });
-print "    Node 3 ".$node3->program()->program_name()." (".$node3->id().")\n";
-
-$node4 = $factory->
-  newObject("OME::AnalysisView::Node",
-            {
-             analysis_view => $view,
-             program       => $findRatio,
-             iterator_tag  => 'CELL',
-             new_feature_tag => undef
-            });
-print "    Node 4 ".$node4->program()->program_name()." (".$node4->id().")\n";
-
-$link = $factory->
-  newObject("OME::AnalysisView::Link",
-            {
-             analysis_view => $view,
-             from_node     => $node1,
-             from_output   => $node1->program()->findOutputByName('Output bounds'),
-             to_node       => $node2,
-             to_input      => $node2->program()->findInputByName('Input bounds')
-            });
-print "    Link [Node 1.Output bounds]->[Node 2.Input bounds]\n";
-
-$link = $factory->
-  newObject("OME::AnalysisView::Link",
-            {
-             analysis_view => $view,
-             from_node     => $node1,
-             from_output   => $node1->program()->findOutputByName('Output bounds'),
-             to_node       => $node3,
-             to_input      => $node3->program()->findInputByName('Input bounds')
-            });
-print "    Link [Node 1.Output bounds]->[Node 3.Input bounds]\n";
-
-$link = $factory->
-  newObject("OME::AnalysisView::Link",
-            {
-             analysis_view => $view,
-             from_node     => $node2,
-             from_output   => $node2->program()->findOutputByName('Output bounds'),
-             to_node       => $node4,
-             to_input      => $node4->program()->findInputByName('Golgi bounds')
-            });
-print "    Link [Node 2.Output bounds]->[Node 4.Golgi bounds]\n";
-
-$link = $factory->
-  newObject("OME::AnalysisView::Link",
-            {
-             analysis_view => $view,
-             from_node     => $node3,
-             from_output   => $node3->program()->findOutputByName('Output bounds'),
-             to_node       => $node4,
-             to_input      => $node4->program()->findInputByName('Mito bounds')
-            });
-print "    Link [Node 3.Output bounds]->[Node 4.Mito bounds]\n";
+# $link = $factory->
+#   newObject("OME::AnalysisView::Link",
+#             {
+#              analysis_view => $view,
+#              from_node     => $node1,
+#              from_output   => $node1->program()->findOutputByName('Stack info'),
+#              to_node       => $node2,
+#              to_input      => $node2->program()->findInputByName('Stack info')
+#             });
+# print "    Link [Node 1.Stack info]->[Node 2.Stack info]\n";
 
 
+# print "Feature test chain...\n";
+
+# my $view = $factory->
+#   newObject("OME::AnalysisView",
+#             {
+#              owner => $session->User(),
+#              name  => "Find lots o' stuff"
+#             });
+# die "Bad view" if !defined $view;
+# print "  ".$view->name()." (".$view->id().")\n";
 
 
-$link->dbi_commit();
+# $node1 = $factory->
+#   newObject("OME::AnalysisView::Node",
+#             {
+#              analysis_view => $view,
+#              program       => $findCells,
+#              iterator_tag  => undef,
+#              new_feature_tag => 'CELL'
+#             });
+# print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
+
+# $node2 = $factory->
+#   newObject("OME::AnalysisView::Node",
+#             {
+#              analysis_view => $view,
+#              program       => $findGolgi,
+#              iterator_tag  => 'CELL',
+#              new_feature_tag => 'GOLGI'
+#             });
+# print "    Node 2 ".$node2->program()->program_name()." (".$node2->id().")\n";
+
+# $node3 = $factory->
+#   newObject("OME::AnalysisView::Node",
+#             {
+#              analysis_view => $view,
+#              program       => $findMito,
+#              iterator_tag  => 'CELL',
+#              new_feature_tag => 'MITOCHONDRIA'
+#             });
+# print "    Node 3 ".$node3->program()->program_name()." (".$node3->id().")\n";
+
+# $node4 = $factory->
+#   newObject("OME::AnalysisView::Node",
+#             {
+#              analysis_view => $view,
+#              program       => $findRatio,
+#              iterator_tag  => 'CELL',
+#              new_feature_tag => undef
+#             });
+# print "    Node 4 ".$node4->program()->program_name()." (".$node4->id().")\n";
+
+# $link = $factory->
+#   newObject("OME::AnalysisView::Link",
+#             {
+#              analysis_view => $view,
+#              from_node     => $node1,
+#              from_output   => $node1->program()->findOutputByName('Output bounds'),
+#              to_node       => $node2,
+#              to_input      => $node2->program()->findInputByName('Input bounds')
+#             });
+# print "    Link [Node 1.Output bounds]->[Node 2.Input bounds]\n";
+
+# $link = $factory->
+#   newObject("OME::AnalysisView::Link",
+#             {
+#              analysis_view => $view,
+#              from_node     => $node1,
+#              from_output   => $node1->program()->findOutputByName('Output bounds'),
+#              to_node       => $node3,
+#              to_input      => $node3->program()->findInputByName('Input bounds')
+#             });
+# print "    Link [Node 1.Output bounds]->[Node 3.Input bounds]\n";
+
+# $link = $factory->
+#   newObject("OME::AnalysisView::Link",
+#             {
+#              analysis_view => $view,
+#              from_node     => $node2,
+#              from_output   => $node2->program()->findOutputByName('Output bounds'),
+#              to_node       => $node4,
+#              to_input      => $node4->program()->findInputByName('Golgi bounds')
+#             });
+# print "    Link [Node 2.Output bounds]->[Node 4.Golgi bounds]\n";
+
+# $link = $factory->
+#   newObject("OME::AnalysisView::Link",
+#             {
+#              analysis_view => $view,
+#              from_node     => $node3,
+#              from_output   => $node3->program()->findOutputByName('Output bounds'),
+#              to_node       => $node4,
+#              to_input      => $node4->program()->findInputByName('Mito bounds')
+#             });
+# print "    Link [Node 3.Output bounds]->[Node 4.Mito bounds]\n";
+
+
+
+
+$view->dbi_commit();
 
 1;

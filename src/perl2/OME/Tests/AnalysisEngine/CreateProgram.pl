@@ -110,7 +110,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -118,7 +118,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -126,7 +126,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('MEAN'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 
 my $atype = $factory->newObject("OME::AttributeType",{
@@ -143,7 +143,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -151,7 +151,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -159,7 +159,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('GEOMEAN'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 
 my $atype = $factory->newObject("OME::AttributeType",{
@@ -176,7 +176,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -184,7 +184,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -192,7 +192,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('SIGMA'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 
 my $atype = $factory->newObject("OME::AttributeType",{
@@ -209,7 +209,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -217,7 +217,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -225,7 +225,40 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('MAX'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
+
+
+my $atype = $factory->newObject("OME::AttributeType",{
+    name        => 'Stack maximum',
+    granularity => 'I',
+    description => ''
+    });
+print "  ".$atype->name()." (".$atype->id().")\n";
+my $xyzMaximum = $atype;
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'WAVENUMBER',
+    data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'TIMEPOINT',
+    data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'MAX',
+    data_column    => $xyzImageInfo->findColumnByName('MAX'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 
 my $atype = $factory->newObject("OME::AttributeType",{
@@ -242,7 +275,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -250,7 +283,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -258,7 +291,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('CENTROID_X'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -266,7 +299,7 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('CENTROID_Y'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 $acolumn = $factory->newObject("OME::AttributeType::Column",{
     attribute_type => $atype,
@@ -274,40 +307,38 @@ $acolumn = $factory->newObject("OME::AttributeType::Column",{
     data_column    => $xyzImageInfo->findColumnByName('CENTROID_Z'),
     description    => ''
     });
-print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id().")\n";
 
 
-$acolumn->dbi_commit();
 
-exit;
 
 
 print "Creating programs...\n";
 
 my ($input,$output);
 
-my $calcXyInfo = $factory->
-  newObject("OME::Program",
-            {
-             program_name     => 'Plane statistics',
-             description      => 'Calculate pixel statistics for each XY plane',
-             category         => 'Statistics',
-             module_type      => 'OME::Analysis::CLIHandler',
-             location         => '/OME/bin/OME_Image_XY_stats',
-             default_iterator => undef,
-             new_feature_tag  => undef
-            });
-print "  ".$calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
+# my $calcXyInfo = $factory->
+#   newObject("OME::Program",
+#             {
+#              program_name     => 'Plane statistics',
+#              description      => 'Calculate pixel statistics for each XY plane',
+#              category         => 'Statistics',
+#              module_type      => 'OME::Analysis::CLIHandler',
+#              location         => '/OME/bin/OME_Image_XY_stats',
+#              default_iterator => undef,
+#              new_feature_tag  => undef
+#             });
+# print "  ".$calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
 
 
-$output = $factory->
-  newObject("OME::Program::FormalOutput",
-            {
-             program  => $calcXyInfo,
-             name     => 'Plane info',
-             datatype => $xyImageInfo
-            });
-print "    ".$output->name()." (".$output->id().")\n";
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $calcXyInfo,
+#              name     => 'Plane info',
+#              datatype => $xyImageInfo
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
 
 
 
@@ -328,217 +359,262 @@ $output = $factory->
   newObject("OME::Program::FormalOutput",
             {
              program  => $calcXyzInfo,
-             name     => 'Stack info',
-             datatype => $xyzImageInfo
-            });
-print "    ".$output->name()." (".$output->id().")\n";
-
-
-
-my $findSpots = $factory->
-  newObject("OME::Program",
-            {
-             program_name     => 'Find spots',
-             description      => 'Find spots in the image',
-             category         => 'Segmentation',
-             module_type      => 'OME::Analysis::FindSpotsHandler',
-             location         => '/OME/bin/findSpotsOME',
-             default_iterator => undef,
-             new_feature_tag  => 'SPOT'
-            });
-print "  ".$findSpots->program_name()." (".$findSpots->id().")\n";
-
-$input = $factory->
-  newObject("OME::Program::FormalInput",
-            {
-             program  => $findSpots,
-             name     => 'Stack info',
-             datatype => $xyzImageInfo
-            });
-print "    ".$input->name()." (".$input->id().")\n";
-
-
-$output = $factory->
-  newObject("OME::Program::FormalOutput",
-            {
-             program  => $findSpots,
-             name     => 'Timepoint',
-             datatype => $timepoint,
-             feature_tag => '[Feature]'
+             name     => 'Stack mean',
+             attribute_type => $xyzMean
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
 $output = $factory->
   newObject("OME::Program::FormalOutput",
             {
-             program  => $findSpots,
-             name     => 'Threshold',
-             datatype => $threshold,
-             feature_tag => '[Feature]'
+             program  => $calcXyzInfo,
+             name     => 'Stack geomean',
+             attribute_type => $xyzGeomean
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
 $output = $factory->
   newObject("OME::Program::FormalOutput",
             {
-             program  => $findSpots,
-             name     => 'Location',
-             datatype => $location,
-             feature_tag => '[Feature]'
+             program  => $calcXyzInfo,
+             name     => 'Stack sigma',
+             attribute_type => $xyzSigma
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
 $output = $factory->
   newObject("OME::Program::FormalOutput",
             {
-             program  => $findSpots,
-             name     => 'Extent',
-             datatype => $extent,
-             feature_tag => '[Feature]'
+             program  => $calcXyzInfo,
+             name     => 'Stack minimum',
+             attribute_type => $xyzMinimum
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
 $output = $factory->
   newObject("OME::Program::FormalOutput",
             {
-             program  => $findSpots,
-             name     => 'Signals',
-             datatype => $signal,
-             feature_tag => '[Feature]'
+             program  => $calcXyzInfo,
+             name     => 'Stack maximum',
+             attribute_type => $xyzMaximum
             });
 print "    ".$output->name()." (".$output->id().")\n";
-
-
-my $findCells = $factory->
-  newObject("OME::Program",
-            {
-             program_name     => 'Find cells',
-             description      => 'Find cells',
-             category         => 'Testing',
-             module_type      => 'OME::Analysis::FindBounds',
-             location         => '',
-             default_iterator => undef,
-             new_feature_tag  => 'CELL'
-            });
-print "  ".$findCells->program_name()." (".$findCells->id().")\n";
 
 $output = $factory->
   newObject("OME::Program::FormalOutput",
             {
-             program  => $findCells,
-             name     => 'Output bounds',
-             datatype => $bounds,
-             feature_tag => '[Feature]'
+             program  => $calcXyzInfo,
+             name     => 'Stack centroid',
+             attribute_type => $xyzCentroid
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
 
-my $findGolgi = $factory->
-  newObject("OME::Program",
-            {
-             program_name     => 'Find golgi',
-             description      => 'Find golgi',
-             category         => 'Testing',
-             module_type      => 'OME::Analysis::FindBounds',
-             location         => '',
-             default_iterator => 'CELL',
-             new_feature_tag  => 'GOLGI'
-            });
-print "  ".$findGolgi->program_name()." (".$findGolgi->id().")\n";
 
-$input = $factory->
-  newObject("OME::Program::FormalInput",
-            {
-             program  => $findGolgi,
-             name     => 'Input bounds',
-             datatype => $bounds
-            });
-print "    ".$input->name()." (".$input->id().")\n";
+# my $findSpots = $factory->
+#   newObject("OME::Program",
+#             {
+#              program_name     => 'Find spots',
+#              description      => 'Find spots in the image',
+#              category         => 'Segmentation',
+#              module_type      => 'OME::Analysis::FindSpotsHandler',
+#              location         => '/OME/bin/findSpotsOME',
+#              default_iterator => undef,
+#              new_feature_tag  => 'SPOT'
+#             });
+# print "  ".$findSpots->program_name()." (".$findSpots->id().")\n";
 
-$output = $factory->
-  newObject("OME::Program::FormalOutput",
-            {
-             program  => $findGolgi,
-             name     => 'Output bounds',
-             datatype => $bounds,
-             feature_tag => '[Feature]'
-            });
-print "    ".$output->name()." (".$output->id().")\n";
+# $input = $factory->
+#   newObject("OME::Program::FormalInput",
+#             {
+#              program  => $findSpots,
+#              name     => 'Stack info',
+#              attribute_type => $xyzImageInfo
+#             });
+# print "    ".$input->name()." (".$input->id().")\n";
 
 
-my $findMito = $factory->
-  newObject("OME::Program",
-            {
-             program_name     => 'Find mito',
-             description      => 'Find mito',
-             category         => 'Testing',
-             module_type      => 'OME::Analysis::FindBounds',
-             location         => '',
-             default_iterator => 'CELL',
-             new_feature_tag  => 'MITOCHONDRIA'
-            });
-print "  ".$findMito->program_name()." (".$findMito->id().")\n";
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findSpots,
+#              name     => 'Timepoint',
+#              attribute_type => $timepoint,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
 
-$input = $factory->
-  newObject("OME::Program::FormalInput",
-            {
-             program  => $findMito,
-             name     => 'Input bounds',
-             datatype => $bounds
-            });
-print "    ".$input->name()." (".$input->id().")\n";
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findSpots,
+#              name     => 'Threshold',
+#              attribute_type => $threshold,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
 
-$output = $factory->
-  newObject("OME::Program::FormalOutput",
-            {
-             program  => $findMito,
-             name     => 'Output bounds',
-             datatype => $bounds,
-             feature_tag => '[Feature]'
-            });
-print "    ".$output->name()." (".$output->id().")\n";
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findSpots,
+#              name     => 'Location',
+#              attribute_type => $location,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
+
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findSpots,
+#              name     => 'Extent',
+#              attribute_type => $extent,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
+
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findSpots,
+#              name     => 'Signals',
+#              attribute_type => $signal,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
 
 
-my $findRatio = $factory->
-  newObject("OME::Program",
-            {
-             program_name     => 'Find ratio',
-             description      => 'Find ratio',
-             category         => 'Testing',
-             module_type      => 'OME::Analysis::FindRatio',
-             location         => '',
-             default_iterator => 'CELL',
-             new_feature_tag  => undef
-            });
-print "  ".$findRatio->program_name()." (".$findRatio->id().")\n";
+# my $findCells = $factory->
+#   newObject("OME::Program",
+#             {
+#              program_name     => 'Find cells',
+#              description      => 'Find cells',
+#              category         => 'Testing',
+#              module_type      => 'OME::Analysis::FindBounds',
+#              location         => '',
+#              default_iterator => undef,
+#              new_feature_tag  => 'CELL'
+#             });
+# print "  ".$findCells->program_name()." (".$findCells->id().")\n";
 
-$input = $factory->
-  newObject("OME::Program::FormalInput",
-            {
-             program  => $findRatio,
-             name     => 'Golgi bounds',
-             datatype => $bounds
-            });
-print "    ".$input->name()." (".$input->id().")\n";
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findCells,
+#              name     => 'Output bounds',
+#              attribute_type => $bounds,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
 
-$input = $factory->
-  newObject("OME::Program::FormalInput",
-            {
-             program  => $findRatio,
-             name     => 'Mito bounds',
-             datatype => $bounds
-            });
-print "    ".$input->name()." (".$input->id().")\n";
 
-$output = $factory->
-  newObject("OME::Program::FormalOutput",
-            {
-             program  => $findRatio,
-             name     => 'Golgi-mito ratio',
-             datatype => $ratio,
-             feature_tag => '[Iterator]'
-            });
-print "    ".$output->name()." (".$output->id().")\n";
+# my $findGolgi = $factory->
+#   newObject("OME::Program",
+#             {
+#              program_name     => 'Find golgi',
+#              description      => 'Find golgi',
+#              category         => 'Testing',
+#              module_type      => 'OME::Analysis::FindBounds',
+#              location         => '',
+#              default_iterator => 'CELL',
+#              new_feature_tag  => 'GOLGI'
+#             });
+# print "  ".$findGolgi->program_name()." (".$findGolgi->id().")\n";
+
+# $input = $factory->
+#   newObject("OME::Program::FormalInput",
+#             {
+#              program  => $findGolgi,
+#              name     => 'Input bounds',
+#              attribute_type => $bounds
+#             });
+# print "    ".$input->name()." (".$input->id().")\n";
+
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findGolgi,
+#              name     => 'Output bounds',
+#              attribute_type => $bounds,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
+
+
+# my $findMito = $factory->
+#   newObject("OME::Program",
+#             {
+#              program_name     => 'Find mito',
+#              description      => 'Find mito',
+#              category         => 'Testing',
+#              module_type      => 'OME::Analysis::FindBounds',
+#              location         => '',
+#              default_iterator => 'CELL',
+#              new_feature_tag  => 'MITOCHONDRIA'
+#             });
+# print "  ".$findMito->program_name()." (".$findMito->id().")\n";
+
+# $input = $factory->
+#   newObject("OME::Program::FormalInput",
+#             {
+#              program  => $findMito,
+#              name     => 'Input bounds',
+#              attribute_type => $bounds
+#             });
+# print "    ".$input->name()." (".$input->id().")\n";
+
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findMito,
+#              name     => 'Output bounds',
+#              attribute_type => $bounds,
+#              feature_tag => '[Feature]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
+
+
+# my $findRatio = $factory->
+#   newObject("OME::Program",
+#             {
+#              program_name     => 'Find ratio',
+#              description      => 'Find ratio',
+#              category         => 'Testing',
+#              module_type      => 'OME::Analysis::FindRatio',
+#              location         => '',
+#              default_iterator => 'CELL',
+#              new_feature_tag  => undef
+#             });
+# print "  ".$findRatio->program_name()." (".$findRatio->id().")\n";
+
+# $input = $factory->
+#   newObject("OME::Program::FormalInput",
+#             {
+#              program  => $findRatio,
+#              name     => 'Golgi bounds',
+#              attribute_type => $bounds
+#             });
+# print "    ".$input->name()." (".$input->id().")\n";
+
+# $input = $factory->
+#   newObject("OME::Program::FormalInput",
+#             {
+#              program  => $findRatio,
+#              name     => 'Mito bounds',
+#              attribute_type => $bounds
+#             });
+# print "    ".$input->name()." (".$input->id().")\n";
+
+# $output = $factory->
+#   newObject("OME::Program::FormalOutput",
+#             {
+#              program  => $findRatio,
+#              name     => 'Golgi-mito ratio',
+#              attribute_type => $ratio,
+#              feature_tag => '[Iterator]'
+#             });
+# print "    ".$output->name()." (".$output->id().")\n";
 
 
 

@@ -76,36 +76,48 @@ sub postcalculateImage {
     chomp $headerString;
     my @headers = split("\t",$headerString);
 
-    my %imageOutputs;
-    my @attributes;
-
     # The following hack is necessary now that inputs/outputs
     # are row-based instead of column-based.
 
     my %xy_hash = (
-                   'Wave'       => 'wavenumber',
-                   'Time'       => 'timepoint',
-                   'Z'          => 'zsection',
-                   'Min'        => 'min',
-                   'Max'        => 'max',
-                   'Mean'       => 'mean',
-                   'GeoMean'    => 'geomean',
-                   'Sigma'      => 'sigma',
-                   'Centroid_X' => 'centroid_x',
-                   'Centroid_Y' => 'centroid_y'
+                   'Wave'       => ['wavenumber',
+                                     ['Plane mean','Plane geomean','Plane sigma',
+                                      'Plane minimum','Plane maximum',
+                                      'Plane centroid']],
+                   'Time'       => ['timepoint',
+                                     ['Plane mean','Plane geomean','Plane sigma',
+                                      'Plane minimum','Plane maximum',
+                                      'Plane centroid']],
+                   'Z'          => ['zsection',
+                                     ['Plane mean','Plane geomean','Plane sigma',
+                                      'Plane minimum','Plane maximum',
+                                      'Plane centroid']],
+                   'Min'        => ['min',['Plane minimum']],
+                   'Max'        => ['max',['Plane maximum']],
+                   'Mean'       => ['mean',['Plane mean']],
+                   'GeoMean'    => ['geomean',['Plane geomean']],
+                   'Sigma'      => ['sigma',['Plane sigma']],
+                   'Centroid_X' => ['centroid_x',['Plane centroid']],
+                   'Centroid_Y' => ['centroid_y'['Plane centroid']],
         );
 
     my %xyz_hash = (
-                    'Wave'       => 'wavenumber',
-                    'Time'       => 'timepoint',
-                    'Min'        => 'min',
-                    'Max'        => 'max',
-                    'Mean'       => 'mean',
-                    'GeoMean'    => 'geomean',
-                    'Sigma'      => 'sigma',
-                    'Centroid_x' => 'centroid_x',
-                    'Centroid_y' => 'centroid_y',
-                    'Centroid_z' => 'centroid_z'
+                    'Wave'       => ['wavenumber',
+                                     ['Stack mean','Stack geomean','Stack sigma',
+                                      'Stack minimum','Stack maximum',
+                                      'Stack centroid']],
+                    'Time'       => ['timepoint',
+                                     ['Stack mean','Stack geomean','Stack sigma',
+                                      'Stack minimum','Stack maximum',
+                                      'Stack centroid']],
+                    'Min'        => ['min',['Stack minimum']],
+                    'Max'        => ['max',['Stack maximum']],
+                    'Mean'       => ['mean',['Stack mean']],
+                    'GeoMean'    => ['geomean',['Stack geomean']],
+                    'Sigma'      => ['sigma',['Stack sigma']],
+                    'Centroid_x' => ['centroid_x',['Stack centroid']],
+                    'Centroid_y' => ['centroid_y',['Stack centroid']],
+                    'Centroid_z' => ['centroid_z'['Stack centroid']],
                    );
 
     my %hashes = (
@@ -113,13 +125,12 @@ sub postcalculateImage {
                   'Stack statistics' => \%xyz_hash
                   );
 
-    my %output_names = (
-                        'Plane statistics' => 'Plane info',
-                        'Stack statistics' => 'Stack info'
-                        );
+#     my %output_names = (
+#                         'Plane statistics' => 'Plane info',
+#                         'Stack statistics' => 'Stack info'
+#                         );
 
     my $useful_hash = $hashes{$program->program_name()};
-    my $useful_output = $output_names{$program->program_name()};
 
     while (my $input = <$output>) {
         my $attribute_data = {};
@@ -127,15 +138,24 @@ sub postcalculateImage {
         chomp $input;
         my @data = split("\t",$input);
         my $count = 0;
-        my %attributes;
+
         foreach my $datum (@data) {
             my $output_name = $headers[$count];
+
             #print STDERR "      * $output_name\n";
             #print STDERR "      $output_name = '$datum'\n";
             #my $column_type = $formal_output->column_type();
             #my $column_name = lc($column_type->column_name());
             #my $datatype = $formal_output->datatype();
-            my $column_name = $useful_hash->{$output_name};
+
+            my $column_info = $useful_hash->{$output_name};
+            my $column_name = $column_info->[0];
+            my $output_list = $column_info->[1];
+
+            foreach my $formal_output_name (@$output_list) {
+                $attribute_data->{$formal_output_name}->{$column_name} = $datum;
+            }
+
             #print STDERR "      $column_name\n";
             #my $datatype = $column_type->datatype();
             #my $attribute;
@@ -151,18 +171,16 @@ sub postcalculateImage {
             #    push @attributes, $attribute;
             #}
 
-            $attribute_data->{$column_name} = $datum;
+            #$attribute_data->{$column_name} = $datum;
             $count++;
         }
 
-        my $attribute = $self->newAttribute($useful_output,$attribute_data);
+        my $attributes = $self->newAttributes(%attribute_data);
     }
 
     #foreach my $attribute (@attributes) {
     #    $attribute->commit();
     #}
-
-    return \%imageOutputs;
 }
 
 
