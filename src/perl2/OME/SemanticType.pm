@@ -202,7 +202,7 @@ sub requireAttributeTypePackage {
         my $sql_type = OME::DataTable->getSQLType($type);
         my $data_table = $data_column->data_table();
         my $table_name = $data_table->table_name();
-        $data_table->requireDataTablePackage();
+        $data_table->requireDataTablePackage($force);
 
         $any_table = $table_name unless defined $any_table;
 
