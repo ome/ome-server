@@ -438,12 +438,7 @@ sub getSHA1 {
     my $grp = shift;
 
     my $fn = $grp->[0];
-    open IMG, $fn
-	or return undef;
-    binmode(IMG);
-    my $fh = *IMG;
-    my $sha1 = $self->getCommonSHA1($fh);
-    close IMG;
+    my $sha1 = $self->getCommonSHA1($fn);
 
     return $sha1;
 }
