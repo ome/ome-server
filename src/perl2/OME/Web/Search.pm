@@ -175,10 +175,6 @@ END_HTML
 		return( 'HTML', $html );
 	}
 
-	# if the type isn't in the list of searchable types, add it. 
-	# This stores the type, which is required for paging to work.
-	unshift( @{ $self->{ _published_search_types } }, $type )
-		unless grep( $_ eq $type, @{ $self->{ _published_search_types } } );
 	# load Types to search on	
 	foreach my $formal_name ( @{ $self->{ _published_search_types } } ) {
 		my ($package_name, $common_name, undef, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
