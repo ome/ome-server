@@ -104,7 +104,7 @@ public class PScalableDatasetLabel extends PText implements PBrowserNodeWithTool
 		addChild(shortLabel);
 	}
 	
-	private PNode getFullLabel() {
+	private PNode getFullToolTip() {
 		PPath p = new PPath();
 		String name = dataset.getName();
 		String shortName;
@@ -139,9 +139,7 @@ public class PScalableDatasetLabel extends PText implements PBrowserNodeWithTool
 		return shortLabel.intersects(localBounds);
 	}
 	
-	public PNode getFullToolTip() {
-		return getFullLabel();
-	}
+	
 	
 	public PNode getShortToolTip() {
 		return getFullToolTip();
