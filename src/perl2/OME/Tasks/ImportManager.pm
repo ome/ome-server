@@ -399,7 +399,7 @@ sub markImageFiles {
     } elsif (UNIVERSAL::isa($files,'OME::SemanticType::Superclass')) {
         push @{$self->{image_files}->{$image_id}}, $files;
     } else {
-        die "Invalid files parameter";
+        die "Invalid files parameter - ".ref($files);
     }
 
     return;
