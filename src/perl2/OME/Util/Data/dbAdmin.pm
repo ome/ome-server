@@ -63,8 +63,9 @@ my $dbAdmin_version = "2.2.1";
 sub getCommands {
     return
       {
-       'backup' => 'backup',
+       'backup'  => 'backup',
        'restore' => 'restore',
+       'delete'  => ['OME::Util::Delete'],
       };
 }
 
@@ -82,6 +83,7 @@ Usage:
 Available OME database related commands are:
     backup      Backup OME data to an .tar.bz2 archive.
     restore     Restore OME data from an .tar.bz2 archive.
+    delete      Delete things in the OME DB.
 CMDS
 }
 
