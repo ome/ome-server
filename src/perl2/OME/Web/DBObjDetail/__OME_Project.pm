@@ -59,15 +59,8 @@ our $VERSION = $OME::VERSION;
 
 use CGI;
 use Log::Agent;
-
-use OME::Web::DBObjRender;
 use OME::Web::DBObjTable;
 
-#*********
-#********* GLOBALS AND DEFINES
-#*********
-
-$VERSION = $OME::VERSION;
 use base qw(OME::Web::DBObjDetail);
 
 #*********
@@ -81,6 +74,7 @@ sub new {
 
 	bless $self, $class;
 
+	# this project has the focus
 	my $object = $self->_loadObject();
 	$self->Session()->project( $object );
 	$self->Session()->storeObject();
@@ -103,58 +97,6 @@ sub _takeAction {
 }
 
 
-sub TableHeader {
-	my ($self, $object) = @_;
-	my $q = $self->CGI();
-	return $q->a( {
-		-href => "#",
-		-onClick => "document.forms['".$self->{ form_name }."'].action.value='SaveChanges'; document.forms['".$self->{ form_name }."'].submit(); return false",
-		}, 
-		'Save Changes'
-	);
-}
-
-sub _overrideRecord {
-	my ($self, $record) = @_;
-	my $object = $self->_loadObject();
-	my $q = $self->CGI();
-	
-	$record->{'description'} = $q->textarea( {
-			-name => 'description',
-			-value => $object->description(),
-			-rows => 5,
-			-columns => 30,
-		}
-	);
-	$record->{'name'} = $q->textfield( {
-			-name => 'name',
-			-value => $object->name(),
-			-size => 30,
-		}
-	);
-	return $record;
-}
-
-sub getFooter { 
-	my $self = shift;
-	my $object = $self->_loadObject();
-	my $q = $self->CGI();
-	# Relationship button
-	return 
-		$q->p() . 
-		$q->table( {
-				-class => 'ome_table',
-				-align => 'center',
-				-cellspacing => 1,
-				-cellpadding => 4,
-			},
-			$q->Tr($q->td({style => 'background-color: #D1D7DC'}, $q->a( {
-				class => 'ome_widget',
-				href => "javascript:openRelationships('OME::Project', 'OME::Dataset', " . $object->id() . ");"
-			}, 'Add/Remove Datasets'))),
-		);
-}
-			
 =head1 Author
 
 Josiah Johnston <siah@nih.gov>
