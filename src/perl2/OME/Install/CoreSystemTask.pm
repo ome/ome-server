@@ -41,9 +41,11 @@ use File::Copy;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 
-use base qw(OME::Install::InstallationTask);
 use OME::Install::Terminal;
 use OME::Install::Environment;
+use OME::Install::Util;
+
+use base qw(OME::Install::InstallationTask);
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -99,11 +101,12 @@ sub fix_ownership {
     my ($dir_uid, $dir_gid) = (stat($dir))[4,5] or croak "Unable to find directory: \"$dir\"";
     my ($uid, $gid) = (getpwnam($user))[2,3] or croak "Unable to find user: \"$user\"";
 
-    # If we've got a wrong UID or GID do a full chown it no harm in doing both if we only need one
+    # If we've got a wrong UID or GID do a full chown, no harm in doing both if we only need one
     if (($dir_uid != $uid) or ($dir_gid != $gid)) {
-	chown ($uid, $gid, $dir) or carp "Unable to change owner of $dir, $!";
-	return $! ? undef : 1;
+	chown ($uid, $gid, $dir) or croak "Unable to change owner of $dir, $!";
     }
+    
+    return 1;
 }
 
 #*********
@@ -143,15 +146,15 @@ sub execute {
 
     # Group creation if needed
     if (not $OME_GID = getgrnam($OME_GROUP)) {
-	print "  \\_ Adding group \"$OME_GROUP\".\n";
-	$environment->addgroup($OME_GROUP);
+	print "  \\_ Adding group ", BOLD, "\"$OME_GROUP\"", RESET, ".\n", ;
+	add_group($OME_GROUP);
 	$OME_GID = getgrnam($OME_GROUP) or croak "Failure creating group \"$OME_GROUP\"";
     }
 
     # User creation if needed
     if (not $OME_UID = getpwnam($OME_USER)) {
-	print "  \\_ Adding user \"$OME_USER\".\n";
-	$environment->adduser ($OME_USER, $$OME_BASE_DIR, $OME_GROUP);
+	print "  \\_ Adding user ", BOLD, "\"$OME_USER\"", RESET, ".\n", ;
+	add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP);
 	$OME_UID = getpwnam($OME_USER) or croak "Failure creating user \"$OME_USER\"";
     }
     
@@ -167,10 +170,10 @@ sub execute {
 	}
 
 	# Make sure the core dirs are owned by the $OMEUser
-	fix_ownership($OME_USER, $directory->{path}) or croak "Failure setting permissions on \"$directory->{path}\"";
+	fix_ownership($OME_USER, $directory->{path}) or croak "Failure setting permissions on \"$directory->{path}\" $!";
 
 	# Set the "Set-GID" bit on the dir so that all files will inherit it's GID
-	chmod(02775, $directory->{path}) or croak "Failure setting GID on \"$directory->{path}\"";
+	chmod(02775, $directory->{path}) or croak "Failure setting GID on \"$directory->{path}\" $!";
 
 	# Create each core dir's children
 	foreach my $child (@{$directory->{children}}) {
@@ -219,7 +222,7 @@ sub execute {
 
     foreach my $directory (@html_core) {
 	print "  \\_ $directory\n";
-	$environment->copyTree ("$directory", "$$OME_BASE_DIR/$directory");
+	copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
     }
     
     # Back to UID 0 we go
