@@ -304,7 +304,7 @@ sub formatImage {
 	    }
 	    # For now, at least, we don't handle > 1 Z or T dimension
 	    my $nPixOut = $pixWrap->SetRows ($rows, $num_rows);
-	    if ($plane_size != $nPixOut) {
+	    if ($plane_size != $nPixOut*$bps) {
 		$status = "Failed to write repository file - $plane_size != $nPixOut";
 		last;
 	    }
