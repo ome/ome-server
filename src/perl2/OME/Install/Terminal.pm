@@ -38,7 +38,7 @@ require Exporter;
 #*********
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(confirm_default print_header);
+our @EXPORT = qw(confirm confirm_path print_header question);
 
 #*********
 #********* EXPORTED SUBROUTINES
@@ -55,7 +55,19 @@ sub print_header {
     print RESET;
 }
 
-sub confirm_default {
+sub confirm {
+    my $text = shift;
+
+    print "Using \"$text\", are you sure ? ", BOLD, "[y/n]", RESET, ": ";
+    my $y_or_n = ReadLine 0;
+    chomp $y_or_n;
+
+    if (lc($y_or_n) eq "y") { return 1 };
+
+    return 0;
+}
+
+sub confirm_path {
     my ($text, $default) = @_; 
 
     while (1) {
@@ -65,6 +77,19 @@ sub confirm_default {
 	($input = $default) unless $input;
 	# Rip trailing slash
 	if ($input =~ /^(.*)\/$/) { $input = $1 }
+
+	return $input unless not confirm($input);
+    }
+
+}
+
+sub question {
+    my $text = shift;
+
+    while (1) {
+	print "$text";
+	my $input = ReadLine 0;
+	chomp $input;
 
 	print "Using \"$input\", are you sure ? ", BOLD, "[y/n]", RESET, ": ";
 	my $y_or_n = ReadLine 0;
