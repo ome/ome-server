@@ -322,6 +322,7 @@ sub newAttributes {
     my %targets;
     my %granularities;
     my %feature_tags;
+    my %formal_outputs;
 
     # These hashes are keyed by attribute type ID.
     my %attribute_tables;
@@ -329,139 +330,48 @@ sub newAttributes {
     # Merge the attribute data hashes into hashes for each data table.
     # Also, mark which data tables belong to each attribute.
 
-    __debug("\nMerging attributes\n");
+    my @new_attribute_info;
+    my %granularityColumns = 
+      (
+       'G' => undef,
+       'D' => 'dataset_id',
+       'I' => 'image_id',
+       'F' => 'feature_id'
+      );
 
     foreach my $formal_output_name (keys %attribute_info) {
         my $formal_output = $self->{_formal_outputs}->{$formal_output_name};
         my $attribute_type = $formal_output->attribute_type();
-        my @attribute_columns = $attribute_type->attribute_columns();
         my $granularity = $attribute_type->granularity();
         my $data_hash = $attribute_info{$formal_output_name};
 
-        __debug("  $formal_output_name (".scalar(@attribute_columns)." columns)\n");
+        $formal_outputs{$attribute_type->id()} = $formal_output;
 
-        my $feature_tag;
+        __debug("  $formal_output_name\n");
 
-        if ($granularity eq 'F') {
-            $feature_tag = $formal_output->feature_tag();
-            die "Cannot create an untagged feature!"
-                unless (defined $feature_tag);
-        }
-
-        # Follow each attribute column to its location in the
-        # database.  Mark some information about that data table, and
-        # ensure that all of the attributes and data tables merge
-        # properly.  Specifically, make sure that if two attributes
-        # are writing to the same data column, then they write the
-        # same value.  Also, ensure that each data table that an
-        # attribute writes to is of the same granularity as the
-        # attribute itself.
-
-        foreach my $column (@attribute_columns) {
-            my $data_column = $column->data_column();
-            my $column_name = $data_column->column_name();
-            my $data_table = $data_column->data_table();
-            my $table_name = $data_table->table_name();
-            my $data_granularity = $data_table->granularity();
-            my $attribute_column_name = $column->name();
-
-            die "Attribute granularity and data table granularity don't match!"
-                if ($granularity ne $data_granularity);
-
-            __debug("    $attribute_column_name -> ${table_name}.$column_name");
-
-            # Mark that $attribute_type resides in $table_name.
-            $attribute_tables{$attribute_type->id()}->{$table_name} = 1;
-
-            # Save the data table for later.
-            $data_tables{$table_name} = $data_table;
-
-            if (exists $granularities{$table_name}) {
-                die "Granularities clash!"
-                    if ($granularity ne $granularities{$table_name});
-            } else {
-                $granularities{$table_name} = $granularity;
-            }
-
-            if ($granularity eq 'F') {
-                if (exists $feature_tags{$table_name}) {
-                    die "Feature tags clash!"
-                        if ($feature_tag ne $feature_tags{$table_name});
-                } else {
-                    $feature_tags{$table_name} = $feature_tag;
-                }
-            }
-
-            # Build the data hash for this data table.  The required
-            # implicit fields, analysis_id and
-            # [dataset/image/feature]_id, are not added until the
-            # per-table loop.  (Target is the dataset/image/feature
-            # that an attribute describes.)
-
-            # Pull out the datum from the attribute hash.
-            my $new_data = $data_hash->{$attribute_column_name};
-
-            __debug(" = $new_data");
-
-            # If we've already filled in this column in the data table
-            # hash, ensure it doesn't clash with this new piece of
-            # data.
-
-            if (exists $data{$table_name}->{$column_name}) {
-                my $old_data = $data{$table_name}->{$column_name};
-                __debug(" ?= $old_data ");
-                die "Attribute values clash"
-                    if ($new_data ne $old_data);
-            }
-
-            __debug("\n");
-
-            # Store the datum into the data table hash.
-            $data{$table_name}->{$column_name} = $new_data;
-        }
-    }
-
-
-    # Now, create a new row in each data table.
-
-    my %data_rows;
-    my $factory = $self->Factory();
-
-    __debug("Creating data rows\n");
-
-    foreach my $table_name (keys %data_tables) {
-        my $data_table = $data_tables{$table_name};
-        my $data_pkg = $data_table->requireDataTablePackage();
-        my $data = $data{$table_name};
-        my $granularity = $granularities{$table_name};
-        my $feature_tag = $feature_tags{$table_name};
-
-        __debug("  Table $table_name (Package $data_pkg)\n");
-
-        # Add the implicit fields to the data hash.
-
-        $data{$table_name}->{analysis_id} = $self->{_analysis};
         if ($granularity eq 'D') {
-            $targets{$table_name} = $self->{_current_dataset};
-            $data{$table_name}->{dataset_id} = $self->{_current_dataset};
+            $data_hash->{dataset_id} = $self->{_current_dataset};
         } elsif ($granularity eq 'I') {
-            $targets{$table_name} = $self->{_current_image};
-            $data{$table_name}->{image_id} = $self->{_current_image};
+            $data_hash->{image_id} = $self->{_current_image};
         } elsif ($granularity eq 'F') {
-            my $feature;
+            my $feature_tag = $formal_output->feature_tag();
+            die "Cannot create an untagged feature attribute!"
+              unless (defined $feature_tag);
 
             # The special tags are used to specify which feature a
             # new attribute belongs to.  All of the possibilites
             # have been stored in local fields, so we just have to
             # pick out the right one.
 
+            my $target;
+
             if ($feature_tag eq '[Iterator]') {
-                $feature = $self->{_current_feature};
+                $target = $self->{_current_feature};
             } elsif ($feature_tag eq '[Feature]') {
-                $feature = $self->{_last_new_feature};
+                $target = $self->{_last_new_feature};
             } elsif ($feature_tag eq '[Parent]') {
                 my $last_new = $self->{_last_new_feature};
-                $feature = $last_new->parent_feature() if (defined $last_new);
+                $target = $last_new->parent_feature() if (defined $last_new);
             } else {
                 die "Invalid feature tag for new feature attribute: $feature_tag\n";
             }
@@ -469,55 +379,22 @@ sub newAttributes {
             # Every feature attribute must refer to a some feature.
 
             die "Desired feature ($feature_tag) does not exist"
-                unless defined $feature;
+                unless defined $target;
 
-            $targets{$table_name} = $feature;
-            $data{$table_name}->{feature_id} = $feature;
+            $data_hash->{feature_id} = $target;
         }
 
-        #foreach my $column_name (sort keys %$data) {
-        #    __debug("    $column_name = ".$data->{$column_name}."\n");
-        #}
-
-        # We've already created the correct data hash, so just create
-        # the object.
-
-        my $data_row = $factory->newObject($data_pkg,$data);
-
-        # Store the new data row objects so that we can create the
-        # attributes from then.
-
-        $data_rows{$table_name} = $data_row;
+        push @new_attribute_info, $attribute_type, $data_hash;
     }
 
-    # Now, create attribute objects from the data rows we just
-    # created.
+    my $attributes = OME::AttributeType->newAttributes($self->{_analysis},
+                                                       @new_attribute_info);
 
-    my @attributes;
-
-    foreach my $formal_output_name (keys %attribute_info) {
-        my $formal_output = $self->{_formal_outputs}->{$formal_output_name};
-        my $attribute_type = $formal_output->attribute_type();
-        my $attribute_tables = $attribute_tables{$attribute_type->id()};
-        my $rows = {};
-        my $target;
+    foreach my $attribute (@$attributes) {
+        my $attribute_type = $attribute->_attribute_type();
+        my $formal_output = $formal_outputs{$attribute_type->id()};
+        my $formal_output_name = $formal_output->name();
         my $granularity = $attribute_type->granularity();
-
-        # Collect all of the data rows needed for this attribute.
-
-        foreach my $table_name (keys %$attribute_tables) {
-            my $data_table = $data_tables{$table_name};
-            $rows->{$data_table->id()} = $data_rows{$table_name};
-            $target = $targets{$table_name};
-        }
-
-        # Create the attribute object.  (Note, this is basically just
-        # a logical view into the database, it does not create any new
-        # entries in the database itself.)
-
-        my $attribute = $factory->newAttribute($attribute_type->name(),
-                                               $target,
-                                               $rows);
 
         # Save this new attribute as an actual output of the
         # appropriate formal output.  The
@@ -525,15 +402,15 @@ sub newAttributes {
         # these lists, so subclasses using this method will
         # automatically fulfill that part of the contract.
 
-        if ($granularity eq 'D') {
+        if ($granularity eq 'G') {
+            die "Global attributes not allowed in analysis modules!";
+        } elsif ($granularity eq 'D') {
             push @{$self->{_dataset_outputs}->{$formal_output_name}}, $attribute;
         } elsif ($granularity eq 'I') {
             push @{$self->{_image_outputs}->{$formal_output_name}}, $attribute;
         } elsif ($granularity eq 'F') {
             push @{$self->{_feature_outputs}->{$formal_output_name}}, $attribute;
         }
-
-        push @attributes, $attribute;
     }
 
     my $t1 = new Benchmark;
@@ -545,7 +422,7 @@ sub newAttributes {
         $self->{_timing} = $td;
     }
 
-    return \@attributes;
+    return $attributes;
 }
 
 

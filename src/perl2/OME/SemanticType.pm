@@ -20,6 +20,33 @@
 
 package OME::AttributeType;
 
+=head1 NAME
+
+OME::AttributeType - data object representing attribute types
+
+=head1 SYNOPSIS
+
+	use OME::AttributeType;
+
+	# Load object via primary key
+	my $atype = $factory->loadObject("OME::AttributeType",1);
+
+	# Ensure that instance package is created
+	my $pkg = $atype->requireAttributeTypePackage();
+
+	# Create a new instance of this attribute type via primary key
+	my $attribute = $pkg->load(1);
+
+=head1 DESCRIPTION
+
+OME::AttributeType serves two purposes.  First, it functoins just like
+any other OME DBObject, representing rows from the ATTRIBUTE_TYPES
+table in the OME database.  More importantly, though, it serves as the
+means of creating data classes for each attribute type, similar to how
+OME::DataTable create data classes for each attribute table.
+
+=cut
+
 use strict;
 our $VERSION = '1.0';
 
@@ -40,6 +67,10 @@ __PACKAGE__->has_many('attribute_columns',
 __PACKAGE__->add_trigger(after_create => \&requireAttributeTypePackage);
 __PACKAGE__->add_trigger(select => \&requireAttributeTypePackage);
 
+
+=head1
+
+=cut
 
 sub getAttributeTypePackage {
     my $self = shift;
@@ -93,6 +124,193 @@ sub requireAttributeTypePackage {
     $self->_attributeTypePackages()->{$pkg} = 1;
 
     return $pkg;
+}
+
+sub loadAttribute {
+    my ($self,$id) = @_;
+    my $pkg = $self->requireAttributeTypePackage();
+    return $pkg->load($id);
+}
+
+sub newAttribute {
+    my ($self,$target,$rows) = @_;
+    my $pkg = $self->requireAttributeTypePackage();
+    return $pkg->new($target,$rows);
+}
+
+
+sub __debug {
+    #print STDERR @_;
+}
+
+
+sub newAttributes {
+    my ($self,$analysis,@attribute_info) = @_;
+
+    # These hashes are keyed by table name.
+    my %data_tables;
+    my %data;
+    my %targets;
+    my %granularities;
+
+    # These hashes are keyed by attribute type ID.
+    my %attribute_tables;
+
+    # Merge the attribute data hashes into hashes for each data table.
+    # Also, mark which data tables belong to each attribute.
+
+    __debug("\nMerging attributes\n");
+
+    my %granularityColumns =
+      (
+       'G' => undef,
+       'D' => 'dataset_id',
+       'I' => 'image_id',
+       'F' => 'feature_id'
+      );
+
+    my ($attribute_type, $data_hash, $factory);
+
+    while (($attribute_type = shift(@attribute_info)) &&
+           ($data_hash = shift(@attribute_info))) {
+        $factory = $attribute_type->Session()->Factory()
+          if !defined $factory;
+        my @attribute_columns = $attribute_type->attribute_columns();
+        my $granularity = $attribute_type->granularity();
+        my $granularityColumn = $granularityColumns{$granularity};
+
+        __debug("  ".$attribute_type->name()." (".scalar(@attribute_columns)." columns)\n");
+
+        # Follow each attribute column to its location in the
+        # database.  Mark some information about that data table, and
+        # ensure that all of the attributes and data tables merge
+        # properly.  Specifically, make sure that if two attributes
+        # are writing to the same data column, then they write the
+        # same value.  Also, ensure that each data table that an
+        # attribute writes to is of the same granularity as the
+        # attribute itself.
+
+        foreach my $column (@attribute_columns) {
+            my $data_column = $column->data_column();
+            my $column_name = $data_column->column_name();
+            my $data_table = $data_column->data_table();
+            my $table_name = $data_table->table_name();
+            my $data_granularity = $data_table->granularity();
+            my $attribute_column_name = $column->name();
+
+            die "Attribute granularity and data table granularity don't match!"
+                if ($granularity ne $data_granularity);
+
+            __debug("    $attribute_column_name -> ${table_name}.$column_name");
+
+            # Mark that $attribute_type resides in $table_name.
+            $attribute_tables{$attribute_type->id()}->{$table_name} = 1;
+
+            # Save the data table for later.
+            $data_tables{$table_name} = $data_table;
+
+            if (exists $granularities{$table_name}) {
+                die "Granularities clash!"
+                    if ($granularity ne $granularities{$table_name});
+            } else {
+                $granularities{$table_name} = $granularity;
+            }
+
+            # Build the data hash for this data table.
+
+            if (defined $granularityColumn) {
+                my $new_target = $data_hash->{$granularityColumn};
+                if (exists $targets{$table_name}) {
+                    my $old_target = $targets{$table_name};
+                    die "Targets clash"
+                      if ($new_target ne $old_target);
+                }
+                $targets{$table_name} = $new_target;
+            }
+
+            # Pull out the datum from the attribute hash.
+            my $new_data = $data_hash->{$attribute_column_name};
+
+            __debug(" = $new_data");
+
+            # If we've already filled in this column in the data table
+            # hash, ensure it doesn't clash with this new piece of
+            # data.
+
+            if (exists $data{$table_name}->{$column_name}) {
+                my $old_data = $data{$table_name}->{$column_name};
+                __debug(" ?= $old_data ");
+                die "Attribute values clash"
+                    if ($new_data ne $old_data);
+            }
+
+            __debug("\n");
+
+            # Store the datum into the data table hash.
+            $data{$table_name}->{$column_name} = $new_data;
+        }
+    }
+
+
+    # Now, create a new row in each data table.
+
+    my %data_rows;
+
+    __debug("Creating data rows\n");
+
+    foreach my $table_name (keys %data_tables) {
+        my $data_table = $data_tables{$table_name};
+        my $granularity = $granularities{$table_name};
+
+        __debug("  Table $table_name\n");
+
+        #foreach my $column_name (sort keys %$data) {
+        #    __debug("    $column_name = ".$data->{$column_name}."\n");
+        #}
+
+        # We've already created the correct data hash, so just create
+        # the object.
+
+        my $data_row = $data_table->newRow($analysis,
+                                           $targets{$table_name},
+                                           $data{$table_name});
+
+        # Store the new data row objects so that we can create the
+        # attributes from then.
+
+        $data_rows{$table_name} = $data_row;
+    }
+
+    # Now, create attribute objects from the data rows we just
+    # created.
+
+    my @attributes;
+
+    while (($attribute_type = shift(@attribute_info)) &&
+           ($data_hash = shift(@attribute_info))) {
+        my $attribute_tables = $attribute_tables{$attribute_type->id()};
+        my $rows = {};
+        my $target;
+        my $granularity = $attribute_type->granularity();
+
+        # Collect all of the data rows needed for this attribute.
+
+        foreach my $table_name (keys %$attribute_tables) {
+            my $data_table = $data_tables{$table_name};
+            $rows->{$data_table->id()} = $data_rows{$table_name};
+            $target = $targets{$table_name};
+        }
+
+        # Create the attribute object.  (Note, this is basically just
+        # a logical view into the database, it does not create any new
+        # entries in the database itself.)
+
+        my $attribute = $attribute_type->newAttribute($target,$rows);
+
+        push @attributes, $attribute;
+    }
+
+    return \@attributes;
 }
 
 

@@ -148,6 +148,26 @@ sub requireDataTablePackage {
 }
 
 
+sub loadRow {
+    my ($self,$id) = @_;
+    my $pkg = $self->requireDataTablePackage();
+    return $self->Session()->Factory()->loadObject($pkg,$id);
+}
+
+sub newRow {
+    my ($self,$analysis,$target,$data) = @_;
+    my $pkg = $self->requireDataTablePackage();
+    my $granularity = $self->granularity();
+    $data->{analysis_id} = $analysis;
+    if ($granularity eq 'D') {
+        $data->{dataset_id} = $target;
+    } elsif ($granularity eq 'I') {
+        $data->{image_id} = $target;
+    } elsif ($granularity eq 'F') {
+        $data->{feature_id} = $target;
+    }
+    return $self->Session()->Factory()->newObject($pkg,$data);
+}
 
 package OME::DataTable::Column;
 

@@ -90,9 +90,8 @@ sub loadAttribute {
                                  name => $attribute_type_name);
     die "Cannot find attribute type $attribute_type_name"
         unless defined $type;
-    my $pkg = $type->requireAttributeTypePackage();
 
-    return $pkg->load($id);
+    return $type->loadAttribute($id);
 }
 
 
@@ -137,9 +136,7 @@ sub newAttribute {
                                  name => $attribute_type_name);
     die "Cannot find attribute type $attribute_type_name"
         unless defined $type;
-    my $pkg = $type->requireAttributeTypePackage();
-
-    return $pkg->new($target, $rows);
+    return $type->newAttribute($target, $rows);
 }
 
 1;
