@@ -174,6 +174,7 @@ public class PDataset extends PGenericBox {
 		x=HGAP;
 		y=VGAP+ nameLabel.getHeight()+VGAP;
 		Iterator iter;
+		double maxWidth = 0;
 	
 		iter = getChildrenIterator();
 		//System.err.println("laying out images. width is "+width);
@@ -197,6 +198,8 @@ public class PDataset extends PGenericBox {
 				thumb.setOffset(x,y);
 			}
 		 	x+= thumbWidth;
+		 	if (x > maxWidth) 
+		 		maxWidth =  x;
 		}	
 		// roll back y if we were just about to start a new row
 		if (x== HGAP)
@@ -222,15 +225,15 @@ public class PDataset extends PGenericBox {
 			PBounds b2 =chainLabels.getGlobalFullBounds();
 			y+= b2.getHeight()+VGAP;
 			fullWidth =  b2.getX()+b2.getWidth()+VGAP;
-			if (fullWidth > width)
-				width = fullWidth;
+			if (fullWidth > maxWidth)
+				maxWidth = fullWidth;
 		}
 		
 		float height =(float)y-VGAP;
 		
 		//System.err.println("width of dataset is "+width);
 		//System.err.println("height is "+height);
-		setExtent(width+PConstants.SMALL_BORDER,
+		setExtent(maxWidth+PConstants.SMALL_BORDER,
 			height+PConstants.SMALL_BORDER);
 	}
 	

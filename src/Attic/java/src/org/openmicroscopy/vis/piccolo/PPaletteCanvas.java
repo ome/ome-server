@@ -61,7 +61,6 @@ import org.openmicroscopy.vis.util.SwingWorker;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
-import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.util.Vector;
 import java.awt.dnd.DragSourceAdapter;
@@ -86,15 +85,11 @@ import java.util.TreeSet;
 public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 	PBufferedObject {
 	
-	/**
-	 * Typeface for category names
-	 */
-	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,24);
 	
 	/**
 	 * Some screen layout parameters
 	 */
-	private static final float HGAP=30f;
+	private static final float HGAP=10f;
 	private static final float TOP=20f;
 	private static final float LEFT=20f;
 	private static final float VGAP=10f;
@@ -301,7 +296,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 		if (name.compareTo("") !=0) {// if there is a name
 		//System.err.println("next category at "+VGAP); //was y
 			PText nameText = new PText(name);
-			nameText.setFont(NAME_FONT);
+			nameText.setFont(PConstants.LARGE_NAME_FONT);
 			nameText.setPickable(false);
 			box.addLabel(nameText);
 			nameText.setScale(2);
@@ -409,7 +404,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 		PBufferedNode box;
 		//double stripAspectRatio = 0;
 		//double newAspectRatio = 0;
-		float x = LEFT+HGAP;
+		float x = LEFT;
 		float maxHeight = 0;
 		float maxWidth =0;
 		Object obj=null;
@@ -446,7 +441,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 			
 		
 			// find out how high and wide the strip is.
-			float ytemp = (float)pt.getY()+VGAP;  
+			float ytemp = (float)pt.getY();  
 			if (ytemp-y > height) {
 				height = ytemp-y; 
 			}
@@ -465,7 +460,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 				//create a new strip and add curent box to it.
 				curStrip.clear();
 				// move onto the next line.
-				y= (float)pt.getY()+VGAP;
+				y= (float)pt.getY();
 				
 				width =0;
 			}	
@@ -482,7 +477,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 			// adjust the size of the category box
 			b = new PBounds();
 			b = node.getUnionOfChildrenBounds(b);
-			((PCategoryBox) node).setExtent(b.getWidth()+2*HGAP,b.getHeight()+4*VGAP);
+			((PCategoryBox) node).setExtent(b.getWidth()+2*HGAP,
+					b.getHeight()+4*VGAP);
 		}
 	} 
 	
@@ -495,7 +491,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 	 * 		the y coordinate of the bottom of the row
 	 */
 	private Point2D placeChildren(Vector v,float y) {
-		float x = LEFT+HGAP;
+		float x = LEFT;
 		PBufferedNode node;
 		Iterator iter = v.iterator();
 		float maxHeight = 0;
@@ -520,7 +516,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 		
 		// return a point that indicates how wide the row is and the 
 		// y-coordinate of the bottom.
-		return new Point2D.Float(x-(LEFT+HGAP),y+maxHeight);
+		return new Point2D.Float(x-(LEFT),y+maxHeight);
 	}
 	
 	/**

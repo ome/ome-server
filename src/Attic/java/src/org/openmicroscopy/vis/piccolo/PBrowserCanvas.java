@@ -228,8 +228,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 					//System.err.println(" at "+x+","+ y);
 					node.setOffset(x,y);
 					layer.addChild(node);
-					x+= node.getGlobalFullBounds().getWidth()+HGAP;
-					double height = node.getGlobalFullBounds().getHeight()+VGAP;
+					x+= node.getGlobalFullBounds().getWidth();
+					double height = node.getGlobalFullBounds().getHeight();
 					if (height > maxHeight)
 						maxHeight = height;
 				}

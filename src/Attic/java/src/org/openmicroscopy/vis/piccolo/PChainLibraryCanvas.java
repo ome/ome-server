@@ -58,7 +58,6 @@ import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import java.util.Iterator;
 import java.util.Collection;
-import java.awt.Font;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragGestureListener;
@@ -92,10 +91,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 */
 	private static float HGAP=40f;
 	
-	/** 
-	 * Typeface for the name of the chain
-	 */
-	private static Font nameFont = new Font("Helvetica",Font.BOLD,18);
 	
 	/**
 	 * Connection to the OME Database
@@ -198,7 +193,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 				// move on to next row.
 				count = 0;
 				x = 0;
-				y+= rowHeight+VGAP;
+				y+= rowHeight;
 				rowHeight = 0;
 			}
 		}
@@ -225,10 +220,10 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		height = (float) box.getHeight();
  		// set the row height if this is taller than others in the row.
 		if (height+VGAP>rowHeight)
-			rowHeight = height+VGAP;
+			rowHeight = height;
 		
 		//advance the horizontal position
-		x+= box.getWidth()+HGAP;
+		x+= box.getWidth();
 	}
 	
 
