@@ -165,7 +165,6 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 
 #define TIFF_MAGIC 3232
 #define DV_MAGIC -16224
-#define DV_REV_ENDIAN_MAGIC 16224
 
 #define PI 3.14159265358979323846264338327
 #define SQUARE_ROOT_OF_2 1.4142135623731
@@ -223,6 +222,7 @@ PixPtr Get_Index_From_Coords (SpotPtr theSpot, short X,short Y,short Z);
 void Get_Perimiter (SpotPtr theSpot);
 void SwapListElements (CoordList previousElement1, CoordList previousElement2);
 void Get_Surface_Area (SpotPtr theSpot);
+double Get_Surface_Area_CC (char *c, int n);
 PixPtr Update_Index (PixPtr index, char direction);
 void Set_Border_Pixel (short X, short Y, short Z);
 SpotPtr New_Spot (SpotPtr spotList,DVstack *theStackG, int itsWave, short itsTime);
@@ -244,6 +244,8 @@ pixel Get_Thresh_Otsu (DVstack *theStack);
 pixel Get_Thresh_ME (DVstack *theStack);
 pixel Get_Thresh_Kittler (DVstack *theStack);
 
+void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes);
+void BSUtilsSwapHeader(char *cTheHeader);
 
 
 
@@ -555,6 +557,7 @@ pixel thresholdG;
 long stack_size = 0;
 unsigned long max_stack_size = 0;
 char doBorderG=1;
+short DV_REV_ENDIAN_MAGIC;
 
 
 
@@ -591,9 +594,21 @@ DVhead *ReadDVHeader( DVhead *head, FILE *fp )
 
 /* See if the DV file has a good DV magic number */
 	if (head->nDVID != DV_MAGIC)
-		return (NULL);
+	{
+		DV_REV_ENDIAN_MAGIC = head->nDVID;
+		BSUtilsSwapHeader ( (char *)head);
+		if (head->nDVID != DV_MAGIC)
+			return (NULL);
+		else
+		{
+			head->nDVID = DV_REV_ENDIAN_MAGIC;
+		}
+			
+	}
 	else
 		return (head);
+
+	return (head);
 }
 
 
@@ -827,6 +842,11 @@ int i;
 			fprintf (stderr,"Number of pixels in file does not match number in header.\n");
 			return (NULL);
 			}
+
+	/* Swap bytes if needed. */
+	if (head->nDVID == DV_REV_ENDIAN_MAGIC)
+		BSUtilsSwap2Byte ( (char *) (inStack->stack), Cols*Rows*numZ*numWaves);
+
 	}
 
 /*
@@ -1798,8 +1818,6 @@ PixPtr pixPtr;
 		updateSpot->geomean_i[i] = exp (updateSpot->geomean_i[i] / spotVol );
 	}
 	
-fprintf (stderr,"redoing border pixels\n");
-fflush (stderr);
 /*
 * Set border pixels to the border pixel value
 */
@@ -1810,13 +1828,19 @@ fflush (stderr);
 	while (borderPixel)
 	{
 		pixPtr = Get_Index_From_Coords (updateSpot,borderPixel->X,borderPixel->Y,borderPixel->Z);
-		if (*pixPtr != BORDER_PIXEL)
+		if (*pixPtr == SPOT_PIXEL)
 			*pixPtr = BORDER_PIXEL;
 		else
 			{
+/*
+#ifdef DEBUG
+fprintf (stderr,"Deleting Spot #%ld (%d,%d,%d) = %d\n",updateSpot->ID,borderPixel->X,borderPixel->Y,borderPixel->Z,*pixPtr);
+fflush (stderr);
+#endif
+*/
 			previousPixel->next = borderPixel->next;
 			free (borderPixel);
-			borderPixel = previousPixel->next;
+			borderPixel = previousPixel;
 			updateSpot->borderCount--;
 			}
 		previousPixel = borderPixel;
@@ -1826,8 +1850,6 @@ fflush (stderr);
 /*
 * calculate stuff from the border pixels.
 */
-fprintf (stderr,"getting perimiters\n");
-fflush (stderr);
 	if (updateSpot->itsStack->max_z)
 		Get_Surface_Area (updateSpot);
 	else
@@ -1889,7 +1911,7 @@ void chain8 (SpotPtr theSpot, char *c, short i, short j, int *nn)
 
 	if ( (q!=i) || (r!=j) )
 	{
-		fprintf (stderr,"Failed to achieve closure in Spot %ld!\n",theSpot->ID);
+		fprintf (stderr,"WARNING: Failed to achieve closure in Spot %ld!\n",theSpot->ID);
 		fflush (stderr);
 	}
 	*nn = n;
@@ -1897,15 +1919,53 @@ void chain8 (SpotPtr theSpot, char *c, short i, short j, int *nn)
 
 
 
+double Get_Surface_Area_CC (char *c, int n)
+{
+	int i,x,y;
+	double a;
+
+	a = 0.0;	x = n;	y = n;
+	for (i=0; i<n; i++) {
+	  switch (c[i]) {
+case 0:		a -= y;	x++;
+		break;
+
+case 1:		a -= (y + 0.5);	y++; x++;
+		break;
+
+case 2:		y++;
+		break;
+
+case 3:		a += (y + 0.5);	y++;	x--;
+		break;
+
+case 4:		a += y;	x--;
+		break;
+
+case 5:		a += (y-0.5);	y--;	x--;
+		break;
+
+case 6:		y--;
+		break;
+
+case 7:		a -= (y-0.5);	y--; x++;
+		break;
+	  }
+	}
+/*
+#ifdef DEBUG
+	fprintf (stderr,"Chain code area is %10.4f (%d,%d)\n", a, x, y);
+#endif
+*/
+	return (fabs(a));
+}
 
 
 
 void Get_Perimiter (SpotPtr theSpot)
 {
-CoordList borderPixel,previousPixel=NULL,thePixel,borderNext;
-int diffX,diffY,nCodes,i;
-double perimiter=0.0,perimiter2=0.0;
-char done;
+int nCodes,i;
+double perimiter=0.0;
 char *chainCode;
 
 	nCodes = theSpot->borderCount;
@@ -1917,108 +1977,19 @@ char *chainCode;
 	}
 	
 	chain8 (theSpot, chainCode, theSpot->seedX, theSpot->seedY, &nCodes);
-fprintf (stderr,"calculated chaincodes.  Seed = (%d,%d) nCodes: %ld\n",theSpot->seedX, theSpot->seedY,nCodes);
-fflush (stderr);
 
 	perimiter = 0.0;
 	for (i=0; i<nCodes; i++)
 	   if (chainCode[i]%2) perimiter += SQUARE_ROOT_OF_2;
 	   else perimiter += 1.0;
 
+
+	theSpot->surfaceArea = Get_Surface_Area_CC (chainCode,nCodes);
+
 	free (chainCode);
 
-	borderPixel = theSpot->borderPixels;
-	borderPixel->flag = 1;
-	while (borderPixel)
-	{
-		thePixel = borderPixel->next;
-		done = 0;
-		while (!done && thePixel)
-		{
-			diffX = abs (thePixel->X - borderPixel->X);
-			diffY = abs (thePixel->Y - borderPixel->Y);
-			if ( (diffX == 1 && diffY == 0) ||
-					(diffX == 0 && diffY == 1) ||
-					(diffX == 1 && diffY == 1) )
-						done=1;
-			else
-				thePixel = thePixel->next;
-		}
-/*
-#ifdef DEBUG
-fprintf (stderr,"Perimiter:  diffX=%d,diffY=%d\n",diffX,diffY);
-fflush (stderr);
-#endif
-*/
-		if (thePixel)
-		{
-			if (diffX == 1 && diffY == 1)
-				perimiter2 += SQUARE_ROOT_OF_2;
-			else if (diffX == 1 || diffY == 1)
-				perimiter2 += 1.0;
-#ifdef DEBUG
-if (thePixel->flag)
-{
-fprintf (stderr,"Border flag already set in spot %ld (%d,%d,%d)\n",
-	theSpot->ID,thePixel->X,thePixel->Y,thePixel->Z);
-fflush (stderr);
-}
-#endif
-			thePixel->flag = 1;
-			if (thePixel != borderPixel->next)
-				SwapListElements (thePixel,borderPixel->next);
-		}
-		previousPixel = borderPixel;
-		borderPixel = borderPixel->next;
-	}
-
-	borderPixel = theSpot->borderPixels;
-	diffX = abs (previousPixel->X - borderPixel->X);
-	diffY = abs (previousPixel->Y - borderPixel->Y);
-	if (diffX == 1 && diffY == 1)
-		perimiter2 += SQUARE_ROOT_OF_2;
-	else if ( (diffX == 1 && diffY == 0) || (diffX == 0 && diffY == 1) )
-		perimiter2 += 1.0;
-	else
-		{
-		fprintf (stderr,"Failed to acieve closure for spot %ld.  Delta X,Y = (%d,%d)\n",theSpot->ID,diffX,diffY);
-		borderPixel = theSpot->borderPixels;
-		while (borderPixel)
-		{
-			fprintf (stderr,"%ld:  %d\t%d\t%d\n",theSpot->ID,borderPixel->X,borderPixel->Y,borderPixel->Z);
-			borderPixel = borderPixel->next;
-		}
-		fflush (stderr);
-		}
-
-	if (theSpot->ID == 0)
-	{
-		borderPixel = theSpot->borderPixels;
-		while (borderPixel)
-		{
-			fprintf (stderr,"%ld:  %d\t%d\t%d\n",theSpot->ID,borderPixel->X,borderPixel->Y,borderPixel->Z);
-			borderPixel = borderPixel->next;
-		}
-	}
-
-
-
-#ifdef DEBUG
-borderPixel = theSpot->borderPixels;
-while (borderPixel)
-{
-	if (!borderPixel->flag)
-	{
-		fprintf (stderr,"Border flag was not set in spot %ld (%d,%d,%d)\n",
-			theSpot->ID,borderPixel->X,borderPixel->Y,borderPixel->Z);
-		fflush (stderr);
-	}
-	borderPixel = borderPixel->next;
-}
-#endif
-
 	theSpot->perimiter = perimiter;
-	theSpot->formFactor = (4.0*PI*theSpot->volume) / (perimiter*perimiter);
+	theSpot->formFactor = (4.0*PI*theSpot->surfaceArea) / (perimiter*perimiter);
 }
 
 
@@ -3750,7 +3721,6 @@ fflush (stderr);
 */
 	while (theSpotList->nextTimePointList != NULL)
 		{
-
 		theSpot = theSpotList;
 	
 	/*
@@ -3780,9 +3750,10 @@ fflush (stderr);
 				theSpotNextTime = theSpotNextTime->next;
 				} /* find nearest neighbor */
 
-			if (theSpot->nextTimePoint != NULL)
+			if (theSpot->nextTimePoint != NULL) {
 				theSpot->nextTimePoint->trajID = theSpot->trajID;
-			Calculate_Spot_Vector (theSpot);
+				Calculate_Spot_Vector (theSpot);
+				}
 			theSpot = theSpot->next;
 			} /* This timepoint's list of spots */
 

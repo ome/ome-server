@@ -22,15 +22,14 @@
 
 /*
 Title:	findSpots
-Purpose:  This program reads in a stack of Delta Vision images contained in
-	a DeltaVision file or a TIFF file.	 The program then finds all "spots" that are above the specified
-	threshold at the specified wavelegth, and bigger than the specified size.
-	The program then reports various statistics that it has collected about these "spots"
-	and their trajectories - according to the user's specification.
+Purpose:  This program reads in a 5D image contained in an OME repository format (a raw pixel dump in XYZWT order),
+	then finds all "spots" that are above the specified threshold at the specified wavelegth, and bigger than the specified size.
+	The program then reports various statistics that it has collected about these "spots".
 Inputs:	 There are four required inputs separated by spaces.
-The order of the inputs is important.
+The order of the inputs is not important.
+The inputs are Path, Dims, XYZmean, XYZgeoMean, XYZsigma, SpotWave, and Threshold.
 Usage:
->findSpots <dataset> <spot wavelngth> <threshold> <min. vol.> <optional arguments> <output options>
+>findSpots Path=/some/path/to/image.orf Dims=[640,480,30,3,60,2]  <threshold> <min. vol.> <optional arguments> <output options>
 <dataset> a path to a file that can be either TIFF or DeltaVision.
 <spot wavelegth> is the wavelegth from which to pick out "spots"
 	This parameter will be ignored if the file is a TIFF file.  Use '0' for TIFF files.
