@@ -790,6 +790,32 @@ sub getColumnType {
     }
 }
 
+=head2 getColumnSQLType
+
+	my $column_sql_type = $class->getColumnSQLType($alias);
+
+Returns the SQL type of the alias. If the column does not
+exist or is a reference, the method returns undef.
+
+=cut
+
+sub getColumnSQLType {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $alias = shift;
+
+    if ($alias eq 'id') {
+        return "integer"
+        	if( scalar( keys %{ $class->__primaryKeys() } ) > 0 );
+        return undef;
+    } elsif (defined $class->__columns()->{$alias}) {
+    	return undef unless $class->__columns()->{$alias}->[3];
+        return $class->__columns()->{$alias}->[3]->{ SQLType };
+    } else {
+        return undef;
+    }
+}
+
 =haed2 getPseudoColumnType
 
 =cut
