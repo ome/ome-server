@@ -194,7 +194,6 @@ use OME::Tasks::NotificationManager;
 # Since this handle is auto-commit, we only need one.
 # Hence the class (not instance) variable to hold the factory.
 sub getFactory {
-print STDERR "Retreiving factory from Task\n";
 	return OME::Tasks::NotificationManager->taskFactory();
 }
 
