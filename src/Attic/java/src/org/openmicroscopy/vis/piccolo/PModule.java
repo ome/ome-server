@@ -51,7 +51,10 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
 import org.openmicroscopy.Module;
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+//import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+import org.openmicroscopy.Module.FormalParameter;
+import org.openmicroscopy.Module.FormalInput;
+import org.openmicroscopy.Module.FormalOutput;
 import java.awt.geom.RoundRectangle2D;
 import javax.swing.event.EventListenerList;
 import java.awt.BasicStroke;
@@ -85,7 +88,7 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final float DEFAULT_ARC_HEIGHT=10.0f;
 	private static final float NAME_LABEL_OFFSET=5.0f;
 	private static final float NAME_SPACING=15.0f;
-	private static final float PARAMETER_SPACING=3.0f;
+	public static final float PARAMETER_SPACING=3.0f;
 	private static final float HORIZONTAL_GAP =50.0f;
 	private static final float SCALE_THRESHOLD=.3f;
 	
@@ -272,7 +275,8 @@ public class PModule extends PPath implements PBufferedNode {
 				rowHeight = (float) outs[i].getFullBoundsReference().getHeight();
 			}
 			// advance to next row in height.
-			height += rowHeight+PARAMETER_SPACING;
+			height += rowHeight; // was +PARAMETER_SPACING;, but now
+					// we're adding that spacing into the height of each row.
 		}
 	}
 	
@@ -363,6 +367,10 @@ public class PModule extends PPath implements PBufferedNode {
 		fireStateChanged();
 	}
 
+	public void setAllHighlights(boolean v) {
+		setModulesHighlighted(v);
+		setParamsHighlighted(v);
+	}
 	public void setModulesHighlighted(boolean v) {
 		
 		PModule m;
@@ -370,16 +378,20 @@ public class PModule extends PPath implements PBufferedNode {
 		ModuleInfo info =  getModuleInfo();
 		ArrayList widgets = info.getModuleWidgets();
 		
-		System.err.println("setting highlighting for "+
-			info.getModule().getName());
-		if (v == true)
-			System.err.println("highlighting on..");
-		else 
-			System.err.println("highlighting off..");
 		
 		for  (int i = 0; i < widgets.size(); i++) {
 			m = (PModule) widgets.get(i);
 			m.setHighlighted(v);
+		}
+	}
+	
+	public void setParamsHighlighted(boolean v) {
+
+		Iterator iter = labelNodes.getChildrenIterator();
+		PFormalParameter p;
+		while (iter.hasNext()) {
+			p = (PFormalParameter) iter.next();
+			p.setParamsHighlighted(v);
 		}
 	}	
 
@@ -414,4 +426,36 @@ public class PModule extends PPath implements PBufferedNode {
 		}
 		removeChildren(handles);
 	}
+	
+	public PFormalOutput getFormalOutputNode(FormalOutput out) {
+		return (PFormalOutput) getMatchingParameterNode(PFormalOutput.class,out);
+	}
+	
+	
+	public PFormalInput getFormalInputNode(FormalInput in) {
+		return (PFormalInput) getMatchingParameterNode(PFormalInput.class,in);
+	}	
+	
+	private PFormalParameter getMatchingParameterNode(final Class clazz,
+		FormalParameter target) {
+		
+		Iterator iter = labelNodes.getChildrenIterator();
+		
+		PFormalParameter p;
+		FormalParameter param;
+		
+		while (iter.hasNext()) {
+			p = (PFormalParameter) iter.next();
+			Class pClass = p.getClass();
+			if (pClass ==  clazz) {
+				param = p.getParameter();
+				if (target == param)
+					return p;
+			}
+		}
+		// should never reach her.
+		return null;
+	}
+	
+	
 }
