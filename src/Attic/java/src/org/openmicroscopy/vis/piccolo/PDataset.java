@@ -76,7 +76,8 @@ public class PDataset extends PGenericBox {
 	private double prevWidth;
 	private double width;
 	private double height = 0;
-	private PDatasetImagesNode images;
+	private PDatasetImagesNode images=null;
+	Iterator iter;
 	
 	public PDataset(CDataset dataset,Connection connection) {
 		super();
@@ -104,22 +105,28 @@ public class PDataset extends PGenericBox {
 		
 		y+= nameLabel.getBounds().getHeight()+VGAP;
 
-				
-		images = new PDatasetImagesNode();
+		double totalArea = 0;
 		
 		
 		System.err.println("+++++++++++++++++++++");
-		System.err.println("dataset..."+dataset.getName());
-		addChild(images);
+		System.err.println("dataset..."+dataset.getName()+" "+dataset.getID());
 		
-		double totalArea = 0;
-		Iterator iter  = dataset.getCachedImages(connection).iterator();
-		while (iter.hasNext()) {
-			CImage image = (CImage) iter.next();
-			thumb  =new PThumbnail(image);
-			images.addImage(thumb);
-			b = thumb.getGlobalFullBounds();
-			totalArea += b.getWidth()*b.getHeight();
+		Collection imageCollection = dataset.getCachedImages(connection);
+		if (imageCollection.size() > 0) { 
+			// if there are images 
+			images = new PDatasetImagesNode();
+			addChild(images);
+		
+			iter  = imageCollection.iterator();
+			while (iter.hasNext()) {
+				CImage image = (CImage) iter.next();
+				thumb  =new PThumbnail(image);
+				images.addImage(thumb);
+				b = thumb.getGlobalFullBounds();
+				System.err.println("addign image.."+b.getWidth()+","+b.getHeight());
+				totalArea += b.getWidth()*b.getHeight();
+			}
+			images.setOffset(x,y);
 		}
 		
 		double effectiveHeight = height -y;
@@ -134,12 +141,13 @@ public class PDataset extends PGenericBox {
 			
 			chainLabels.layout(width);
 			b =chainLabels.getGlobalFullBounds();
-			effectiveHeight -= b.getHeight()+2*VGAP;	
+			effectiveHeight -= b.getHeight()+2*VGAP;
+			System.err.println("setting max width to "+b.getWidth()+" in chain labels");	
 			maxWidth = b.getWidth();
 		}
 			
 		
-		images.setOffset(x,y);
+		
 		
 		double scaledArea = effectiveWidth*effectiveHeight;
 		
@@ -153,47 +161,49 @@ public class PDataset extends PGenericBox {
 		System.err.println("scaled width is "+scaledWidth);
 		System.err.println("scaled height is "+scaledHeight);
 	
-		iter  = dataset.getCachedImages(connection).iterator();
+		if (imageCollection.size() > 0) {
+			iter  = dataset.getCachedImages(connection).iterator();
 	
-		x=0;
-		y=0;
-		iter = images.getImageIterator();
-		while (iter.hasNext()) {
-			thumb = (PThumbnail) iter.next();
+			x=0;
+			y=0;
+			iter = images.getImageIterator();
+			while (iter.hasNext()) {
+				thumb = (PThumbnail) iter.next();
+				
+				
+				//PThumbnail thumb = (PThumbnail) obj;
 			
-			
-			//PThumbnail thumb = (PThumbnail) obj;
+				b =  thumb.getGlobalFullBounds();
 		
-			b =  thumb.getGlobalFullBounds();
-	
-	//		System.err.println("dataset scaled height is "+scaledHeight);
-	//		System.err.println("dataset scaled width is "+scaledWidth);
-	//		System.err.println("thumb width is "+b.getWidth()+", height "+b.getHeight());
-		//	System.err.println("starting x is "+x+", starting y is "+y);
-			double thumbWidth = b.getWidth();
-			if (x+thumbWidth  < scaledWidth) {
-				thumb.setOffset(x,y);
-				//System.err.println("same row. offset is "+x+","+y);
-			}
-			else {
-				y += maxHeight+VGAP;
-				x = 0;
-				thumb.setOffset(x,y);
-					
-				//	System.err.println("new row. offset is "+x+","+y);
-				maxHeight = 0;
-			}
-			lastThumb=thumb;
-			if (b.getHeight() > maxHeight) 
-				maxHeight = (float)b.getHeight();
-		 	x+= thumbWidth;
-		 	//System.err.println("new x is "+x+", new maxHeight is "+maxHeight);
-		 	if (x > maxWidth) 
-		 		maxWidth =  x;
-		 	x+= HGAP;
-		}	
-		images.completeImages(scaledWidth,scaledHeight);
-		y+= maxHeight;
+		//		System.err.println("dataset scaled height is "+scaledHeight);
+		//		System.err.println("dataset scaled width is "+scaledWidth);
+		//		System.err.println("thumb width is "+b.getWidth()+", height "+b.getHeight());
+			//	System.err.println("starting x is "+x+", starting y is "+y);
+				double thumbWidth = b.getWidth();
+				if (x+thumbWidth  < scaledWidth) {
+					thumb.setOffset(x,y);
+					//System.err.println("same row. offset is "+x+","+y);
+				}
+				else {
+					y += maxHeight+VGAP;
+					x = 0;
+					thumb.setOffset(x,y);
+						
+					//	System.err.println("new row. offset is "+x+","+y);
+					maxHeight = 0;
+				}
+				lastThumb=thumb;
+				if (b.getHeight() > maxHeight) 
+					maxHeight = (float)b.getHeight();
+			 	x+= thumbWidth;
+			 	//System.err.println("new x is "+x+", new maxHeight is "+maxHeight);
+			 	if (x > maxWidth) 
+			 		maxWidth =  x;
+			 	x+= HGAP;
+			}	
+			images.completeImages(scaledWidth,scaledHeight);
+			y+= maxHeight;
+		}
 	
 		
 		//System.err.println("calculated max widith of dataset.."+maxWidth);
@@ -207,21 +217,32 @@ public class PDataset extends PGenericBox {
 		double scaleEffective = scaledHeight/effectiveHeight;
 		System.err.println("effective scale is "+scaleEffective);
 		//double scaleRatio = 1/(scaleEffective*scaleEffective);
+		
+		if (scaleEffective == 0 || imageCollection.size() == 0)
+			scaleEffective = 1; 
 		double scaleRatio = 1/scaleEffective;
 		System.err.println("scale ratio is "+scaleRatio);
 		maxWidth /= scaleEffective;
+		
+		System.err.println("max width scales to "+maxWidth);
 		if (maxWidth < width)
 			nameLabel.resetWidth(maxWidth);		
 		
-	
-		images.setScale(scaleRatio);
+		if (images != null)
+			images.setScale(scaleRatio);
 		if (chains.size() > 0)  {
-			b= images.getGlobalFullBounds();
-			y = b.getY()+b.getHeight()+VGAP;
+			if (imageCollection.size() > 0) { 
+				b= images.getGlobalFullBounds();
+				y = b.getY()+b.getHeight()+VGAP;
+			}
+			else {
+				y = VGAP+nameLabel.getBounds().getHeight()+VGAP;
+			}
 			chainLabels.setOffset(HGAP,y);
 		}
+		System.err.println("height is "+height+", max width is "+maxWidth);
 		setExtent(maxWidth+PConstants.SMALL_BORDER,
-				height+PConstants.SMALL_BORDER); // was maxWidth
+				height+PConstants.SMALL_BORDER);
 	}
 	
 	public double getContentsArea() {
