@@ -68,7 +68,7 @@ our %DELETED_ORIGINAL_FILES;
 sub getCommands {
     return
       {
-       'MEX'  => 'DeleteMEX',
+       'MEX'     => 'DeleteMEX',
       };
 }
 
@@ -98,17 +98,18 @@ sub DeleteMEX_help {
     $self->printHeader();
     print <<"CMDS";
 Usage:
-    $script $command_name [<options>] MEX_ID
+    $script $command_name [<options>] [MEX_ID]+
 
-Delete a MEX and all of its descendents. This can potentially delete a lot.
+Delete one or more MEXes and all of their descendents. This can potentially delete a lot.
 Images, Datasets, the whole lot potentially.
 It is suggested to try -n first to see what will happen.
 And once its gone, its gone.  You can only get it back from a backup.
 You do have a backup, right?
 
 Options:
-  -n, --noop        Don't actually delete anything, just report what would be deleted.
-  -d, --delete      Actually delete the MEX.  Nothing will happen unless -n or -d is specified.  
+  -n, --noop        Don't delete anything, just report what would be deleted.
+  -d, --delete      Actually delete the MEX(es).  Nothing will happen unless -n or -d is specified.  
+  -m, --module      Delete all MEXes for the specified module (ID if numeric, otherwise by name).  
   -f, --keep-files  Keep orphaned OMEIS Files.  
   -p, --keep-pixels Keep orphaned OMEIS Pixels.  
 CMDS
@@ -119,18 +120,17 @@ sub DeleteMEX {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
 	my $command_name = $self->commandName($commands);
-	my ($noop,$delete,$keep_files,$keep_pixels);
-
-	$RECURSION_LEVEL=0;
+	my ($noop,$delete,$module_in,$keep_files,$keep_pixels);
 
 	# Parse our command line options
 	GetOptions('noop|n!' => \$noop,
 		   'delete|d' => \$delete,
+		   'module|m=s' => \$module_in,
 		   'keep-files|f' => \$keep_files,
 		   'keep-pixels|p' => \$keep_pixels,
 		   );
 
-	if (scalar(@ARGV) <= 0) {
+	if (scalar(@ARGV) <= 0 and not defined $module_in) {
 		$self->MEX_help();
 	}
 	$keep_files  = 1 if $noop;
@@ -145,20 +145,53 @@ sub DeleteMEX {
 
 	$IMAGE_IMPORT_MODULE_ID = $session->Configuration()->image_import_module()->id();
 
-	# Get the MEX
-	my ($delMEX_ID) = @ARGV;
-	
-	my $delMEX = $FACTORY->loadObject( "OME::ModuleExecution", $delMEX_ID);
-	die "Could not retreive MEX ID=$delMEX_ID\n" unless $delMEX;
-	
-	print "Retreived MEX ID = $delMEX_ID\n";
-	
-	unless ($delete or $noop) {
-		print "Nothing to do.  Try -n\n";
-		exit;
+	# Get the MEX(es)
+	my @MEXes;
+	my $module;
+
+	if (defined $module_in and $module_in =~ /^(\d+)$/) {
+		$module = $FACTORY->loadObject( "OME::Module", $module_in) or 
+			die "Could not load Module ID $module_in\n";
+	} elsif (defined $module_in) {
+		$module = $FACTORY->findObject( "OME::Module", {name => $module_in}) or 
+			die "Could not load Module '$module_in'\n";
 	}
 
-	$self->delete_mex ($delMEX,$delete);
+	if ($module) {
+		@MEXes = $FACTORY->
+			findObjects("OME::ModuleExecution",
+				{
+				module_id => $module->id(),
+				});
+		
+		print "Retreived ",scalar (@MEXes)," MEXes for module '",$module->name(),"'\n";
+	}
+
+	foreach my $arg_mex_id (@ARGV) {
+		my $arg_mex = $FACTORY->loadObject( "OME::ModuleExecution", $arg_mex_id) or 
+			die "Could not load MEX ID=$arg_mex_id specified on the comman-line.\n";
+		push (@MEXes,$arg_mex);
+		print "Retreived MEX ID = $arg_mex_id\n";
+	}
+
+
+
+	$RECURSION_LEVEL=0;
+	undef %DELETED_ATTRS;
+	undef %DELETED_MEXES;
+	undef %ACS_DELETED_NODES;
+	undef %DELETED_PIXELS;
+	undef %DELETED_ORIGINAL_FILES;
+
+	foreach my $MEX (@MEXes) {		
+		
+		unless ($delete or $noop) {
+			print "Nothing to do.  Try -n\n";
+			exit;
+		}
+	
+		$self->delete_mex ($MEX,$delete);
+	}
 
 	$session->commitTransaction() if $delete;
 	
@@ -167,6 +200,11 @@ sub DeleteMEX {
 	$self->cleanup_omeis($keep_files,$keep_pixels);
 	
 	undef $FACTORY;
+	undef %DELETED_ATTRS;
+	undef %DELETED_MEXES;
+	undef %ACS_DELETED_NODES;
+	undef %DELETED_PIXELS;
+	undef %DELETED_ORIGINAL_FILES;
 }
 
 
@@ -179,15 +217,6 @@ my $mex_id;
 	$mex_id = $mex->id();
 
 	return if exists $DELETED_MEXES{$mex_id};
-
-	# If this is the entry point, then clear out our globals
-	if ($RECURSION_LEVEL == 0) {
-		undef %DELETED_ATTRS;
-		undef %DELETED_MEXES;
-		undef %ACS_DELETED_NODES;
-		undef %DELETED_PIXELS;
-		undef %DELETED_ORIGINAL_FILES;
-	}
 
 
 	# This prevents infinite recursion.  When we actually delete the MEX, this
@@ -637,6 +666,7 @@ my $keep_pixels = shift;
 		}
 	} # DELETED_ORIGINAL_FILES
 }
+
 
 
 1;
