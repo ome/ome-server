@@ -107,34 +107,20 @@ public class RemoteFactory
     {
         if (criteria == null)
             return new Object[] { className };
-
-        List list = new ArrayList();
-        list.add(className);
-        Iterator iter = criteria.keySet().iterator();
-        while (iter.hasNext())
-        {
-            Object key = iter.next();
-            list.add(key);
-            list.add(criteria.get(key));
-        }
-
-        Object[] result = new Object[list.size()];
-        for (int i = 0; i < result.length; i++)
-            result[i] = list.get(i);
-
-        return result;
+        else
+            return new Object[] { className, criteria };
     }
 
     public boolean objectExists(String className, Map criteria)
     {
-        return (caller.dispatch(this,"objectExists",
+        return (caller.dispatch(this,"objectExistsByCriteriaHash",
                                 fixCriteria(className,criteria)).toString()
                 .equals("1"));
     }
 
     public OMEObject findObject(String className, Map criteria)
     {
-        String newRef = caller.dispatch(this,"findObject",
+        String newRef = caller.dispatch(this,"findObjectByCriteriaHash",
                                         fixCriteria(className,criteria))
             .toString();
         return (OMEObject) getRemoteSession().getObjectCache().
@@ -143,7 +129,7 @@ public class RemoteFactory
 
     public List findObjects(String className, Map criteria)
     {
-        List refList = (List) caller.dispatch(this,"findObjects",
+        List refList = (List) caller.dispatch(this,"findObjectsByCriteriaHash",
                                               fixCriteria(className,criteria));
         List objList = new ArrayList();
         if (refList != null)
@@ -161,7 +147,7 @@ public class RemoteFactory
         RemoteIterator i = (RemoteIterator) 
             getRemoteSession().getObjectCache().
             getObject("OME::Factory::Iterator",
-                      (String) caller.dispatch(this,"iterateObjects",
+                      (String) caller.dispatch(this,"iterateObjectsByCriteriaHash",
                                                fixCriteria(className,
                                                            criteria)));
         i.setClass(className);
@@ -170,7 +156,7 @@ public class RemoteFactory
 
     public OMEObject findObjectLike(String className, Map criteria)
     {
-        String newRef = caller.dispatch(this,"findObjectLike",
+        String newRef = caller.dispatch(this,"findObjectLikeByCriteriaHash",
                                         fixCriteria(className,criteria))
             .toString();
         return (OMEObject) getRemoteSession().getObjectCache().
@@ -179,7 +165,7 @@ public class RemoteFactory
 
     public List findObjectsLike(String className, Map criteria)
     {
-        List refList = (List) caller.dispatch(this,"findObjectsLike",
+        List refList = (List) caller.dispatch(this,"findObjectsLikeByCriteriaHash",
                                               fixCriteria(className,criteria));
         List objList = new ArrayList();
         if (refList != null)
@@ -197,7 +183,7 @@ public class RemoteFactory
         RemoteIterator i = (RemoteIterator) 
             getRemoteSession().getObjectCache().
             getObject("OME::Factory::Iterator",
-                      (String) caller.dispatch(this,"iterateObjectsLike",
+                      (String) caller.dispatch(this,"iterateObjectsLikeByCriteriaHash",
                                                fixCriteria(className,
                                                            criteria)));
         i.setClass(className);
@@ -260,4 +246,32 @@ public class RemoteFactory
         return objList;
     }
 
+    public List findAttributes(String typeName, Map criteria)
+    {
+        List refList = (List) caller.dispatch(this,"findAttributesByCriteriaHash",
+                                              fixCriteria(typeName,criteria));
+        List objList = new ArrayList();
+        if (refList != null)
+        {
+            RemoteObjectCache  cache = getRemoteSession().getObjectCache();
+            Iterator i = refList.iterator();
+            while (i.hasNext())
+                objList.add(cache.getObject("OME::SemanticType::Superclass",
+                                            (String) i.next()));
+        }
+        return objList;
+    }
+
+
+    public Iterator iterateAttributes(String typeName, Map criteria)
+    {
+        RemoteIterator i = (RemoteIterator) 
+            getRemoteSession().getObjectCache().
+            getObject("OME::Factory::Iterator",
+                      (String) caller.dispatch(this,"iterateAttributesByCriteriaHash",
+                                               fixCriteria(typeName,
+                                                           criteria)));
+        i.setClass("OME::SemanticType::Superclass");
+        return i;
+    }
 }
