@@ -62,7 +62,7 @@ public class ChainFrame extends ChainFrameBase {
 	private ChainToolBar toolBar;
 	PChainLibraryCanvas libraryCanvas;
 	
-	private static int X = 410;
+	private static int X = 510;
 	private static int Y=510;
 	private static int WIDTH=400;
 	private static int HEIGHT=400;
