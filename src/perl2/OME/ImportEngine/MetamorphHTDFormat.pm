@@ -271,7 +271,7 @@ sub getGroups {
                 my $group =
                   {
                    description => $description,
-                   htd_file    => $filename,
+                   htd_file    => $file,
                    image_files => [],
                    well        => $well,
                    site        => $site,
@@ -374,12 +374,20 @@ sub importGroup {
     my $session = $self->Session();
     my $factory = $session->Factory();
 
+    my $user = $session->UserState()->experimenter();
+
     my $well = $group->{well};
     my $address = __wellAddress($well->[0],$well->[1]);
 
     my $site = $group->{site};
-    my $site_name =
-      defined $site? " Site ".$site->[0]: "";
+    my ($sample_number,$site_name);
+    if (defined $site) {
+        $sample_number = $site->[0];
+        $site_name = " Site $sample_number";
+    } else {
+        $sample_number = undef;
+        $site_name = "";
+    }
 
     my $image_name = $group->{description}." Well $address$site_name";
     #print STDERR "Name $image_name\n";
@@ -390,9 +398,10 @@ sub importGroup {
     my $image = $self->__newImage($image_name);
 
     # Touch the HTD file
-    my $htd_mex = $self->
+    my $htd_attr = $self->
       __touchOriginalFile($group->{htd_file},"MetaMorph HTD");
-    OME::Tasks::ImportManager->markImageFiles($image,$htd_mex);
+    print STDERR "Got attribute $htd_attr\n";
+    OME::Tasks::ImportManager->markImageFiles($image,$htd_attr);
 
     # We can't create the pixels attribute until we know the dimensions.
     my $pixels_created = 0;
@@ -403,6 +412,8 @@ sub importGroup {
     $sizeT = 1;
 
     my $image_invalid = 0;
+    my $image_mex = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
 
     # Loop through all of the TIFF files for this image.
 
@@ -414,9 +425,9 @@ sub importGroup {
         my $filename = $file->getFilename();
 
         # Touch the TIFF file
-        my $tiff_mex = $self->
+        my $tiff_attr = $self->
           __touchOriginalFile($file,"MetaMorph TIFF");
-        OME::Tasks::ImportManager->markImageFiles($image,$tiff_mex);
+        OME::Tasks::ImportManager->markImageFiles($image,$tiff_attr);
 
         $theC++;
         #print STDERR "  Wavelength $theC - $filename\n";
@@ -520,8 +531,8 @@ sub importGroup {
 
         $pix->convertPlaneFromTIFF($file,0,$theC,0);
 
-        my $image_mex = OME::Tasks::ImportManager->
-          getImageImportMEX($image);
+        # Create attributes to describe the channels in this image.
+
         my $logical = $factory->
           newAttribute('LogicalChannel',$image,$image_mex,
                        {
@@ -535,7 +546,6 @@ sub importGroup {
                         Index          => $theC,
                         LogicalChannel => $logical,
                        });
-
 	doSliceCallback($callback);
 
     }
@@ -552,10 +562,49 @@ sub importGroup {
     }
 
     if ($image_invalid) {
-	die $dieStatus;
-    } else {
-	return $image;
+        die $dieStatus;
     }
+
+    # Create attributes to describe the plate.
+
+    print STDERR "Creating plate attributes...\n";
+
+    my $global_module = $session->Configuration->global_import_module();
+    my $plate_name = $group->{description};
+
+    my $plate_attr = $factory->
+      findAttribute('Plate',
+                    {
+                     Name => $plate_name,
+                     'module_execution.module' => $global_module,
+                     'module_execution.experimenter' => $user,
+                    });
+
+    if (defined $plate_attr) {
+        print STDERR "  Found existing plate.\n";
+    } else {
+        print STDERR "  Creating new plate...\n";
+
+        my $global_mex = OME::Tasks::ImportManager->
+          getGlobalImportMEX();
+
+        $plate_attr = $factory->
+          newAttribute('Plate',undef,$global_mex,
+                       {
+                        Name => $plate_name,
+                       });
+    }
+
+    print STDERR "  Creating well...\n";
+    my $well_attr = $factory->
+      newAttribute('ImagePlate',$image,$image_mex,
+                   {
+                    Plate  => $plate_attr,
+                    Sample => $sample_number,
+                    Well   => $address,
+                   });
+
+	return $image;
 
 }
 
