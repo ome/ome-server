@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+    "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd" [
+    <!ATTLIST svg
+              xmlns:a3 CDATA #IMPLIED
+              a3:scriptImplementation CDATA #IMPLIED>
+    <!ATTLIST script
+              a3:scriptImplementation CDATA #IMPLIED>
+]>
+<svg xml:space="preserve" onload="init(evt)"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xmlns:a3="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	a3:scriptImplementation="Adobe">
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+		xlink:href="../../../src/JavaScript/SVG_GUI/widget.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+		xlink:href="../../../src/JavaScript/SVG_GUI/button.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+		xlink:href="../../../src/JavaScript/SVG_GUI/AntiZoomAndPan.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
+		var b1, b2, b3, b4;
+		var azap = new AntiZoomAndPan();
+
+		function init(e) {
+			b1 = new button( 
+				20, 20, showB1,
+				svgDocument.getElementById("redButtonOn").firstChild.data,
+				svgDocument.getElementById("redButtonOff").firstChild.data,
+				svgDocument.getElementById("blankButtonHighlight").firstChild.data
+			);
+			b2 = new button( 
+				40, 20, showB2,
+				svgDocument.getElementById("greenButtonOn").firstChild.data,
+				svgDocument.getElementById("greenButtonOff").firstChild.data,
+				svgDocument.getElementById("blankButtonHighlight").firstChild.data
+			);
+			b2.setLabel(2, -5, "2");
+			b3 = new button(
+				60, 20, showB3,
+				svgDocument.getElementById("blueButtonOn").firstChild.data,
+				svgDocument.getElementById("blueButtonOff").firstChild.data,
+				svgDocument.getElementById("blankButtonHighlight").firstChild.data
+			);
+			b4 = new button( 40, 50, showB4 );
+
+			var controls=svgDocument.getElementById("controls");
+			b1.realize(controls);
+			b2.realize(controls);
+			b3.realize(controls);
+			b4.realize(controls);
+			
+			// call setState functions to set some buttons to false
+			// and make all buttons issue callbacks to update labels
+			setTimeout( "b1.setState(false)", 0 );
+			setTimeout( "b2.setState(true)", 0 );
+			setTimeout( "b3.setState(false)", 0 );
+			setTimeout( "b4.setState(true)", 0 );
+			
+			b1.setHighlight(false);
+			b2.setHighlight(false);
+			b3.setHighlight(false);
+			
+			azap.appendNode(controls);
+		}
+
+		function showB1(val) {
+			svgDocument.getElementById("label1").firstChild.data =
+				"Button 1 is "+val;
+		}
+		function showB2(val) {
+			svgDocument.getElementById("label2").firstChild.data =
+				"Button 2 is "+val;
+		}
+		function showB3(val) {
+			svgDocument.getElementById("label3").firstChild.data =
+				"Button 3 is "+val;
+		}
+		function showB4(val) {
+			svgDocument.getElementById("label4").firstChild.data =
+				"Button 4 is "+val;
+		}
+
+
+	]]></script>
+	<defs>
+		<text id="redButtonOn"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="pink" stroke="black" stroke-width="1"/>
+		]]></text>
+		<text id="redButtonOff"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="darkred"/>
+		]]></text>
+		<text id="greenButtonOn"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="lightgreen" stroke="black" stroke-width="1"/>
+		]]></text>
+		<text id="greenButtonOff"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="darkgreen"/>
+		]]></text>
+		<text id="blueButtonOn"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="lightblue" stroke="black" stroke-width="1"/>
+		]]></text>
+		<text id="blueButtonOff"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="darkblue"/>
+		]]></text>
+		<text id="blankButtonHighlight"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="white" stroke="none" opacity="0"/>
+		]]></text>
+	</defs>
+	<g id="controls">
+	</g>
+	<g id="labels" transform="translate(23, 120)">
+		<rect x="-3" y="-3" width="100" height="60" fill="white" stroke-width="2"
+			stroke="black" opacity="0.5"/>
+		<text id="label1" y="1em" fill="red"> </text>
+		<text id="label2" y="2em" fill="green"> </text>
+		<text id="label3" y="3em" fill="blue"> </text>
+		<text id="label4" y="4em" fill="black"> </text>
+	</g>
+</svg>
