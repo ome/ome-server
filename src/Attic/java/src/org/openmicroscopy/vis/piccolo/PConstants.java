@@ -122,6 +122,13 @@ public class PConstants {
 	 */
     public static final Color CATEGORY_COLOR= new Color(204,204,255,100);
 	
+	/**
+	 * color for an executed chain.
+	 */	
+	public static final Color EXECUTED_COLOR = new Color(150,150,255,100);
+
+
+	public static final Color LOCKED_COLOR = Color.RED;
     /**
      * default colors
      */
@@ -141,13 +148,13 @@ public class PConstants {
      * 
      */
     
-    public static final Color HIGHLIGHT_COLOR_OUTER = new Color(47,140,215);
-    public static final Color HIGHLIGHT_COLOR_MIDDLE = new Color(89,163,223);
-    public static final Color HIGHLIGHT_COLOR_INNER = new Color(130,186,231);
+    public static final Color HIGHLIGHT_COLOR_OUTER = new Color(215,140,47);
+    public static final Color HIGHLIGHT_COLOR_MIDDLE = new Color(223,163,89);
+    public static final Color HIGHLIGHT_COLOR_INNER = new Color(231,186,130);
     
-    public static final Color PROJECT_SELECTED_COLOR = HIGHLIGHT_COLOR_OUTER;
-    public static final Color PROJECT_ACTIVE_COLOR = HIGHLIGHT_COLOR_MIDDLE;
-    public static final Color PROJECT_ROLLOVER_COLOR = HIGHLIGHT_COLOR_MIDDLE;
+    public static final Color PROJECT_SELECTED_COLOR = new Color(0,0,255);
+    public static final Color PROJECT_ACTIVE_COLOR = new Color(0,0,220);
+    public static final Color PROJECT_ROLLOVER_COLOR = new Color(0,0,200);
     
     /**
      * Border colors
