@@ -106,7 +106,7 @@ sub __parseInstructions {
     my $tree                  = $parser->parse_string( $executionInstructions );
     my $root                  = $tree->getDocumentElement();
 
-    print "**** Parsing instructions\n";
+    print "\n**** Parsing instructions\n";
 
     my $references_needed =
       $root->getElementsByLocalName('ReferencesNeeded')->[0];
@@ -187,6 +187,7 @@ sub __parseInstructions {
     }
     $self->{__matlabOutputs} = \@outputs;
     print "   Outputs @outputs\n";
+    print "**** Done Parsing Instructions\n";
 }
 
 sub __openEngine {
@@ -212,6 +213,107 @@ sub __closeEngine {
         $self->{__engineOpen} = 0;
     }
 }
+
+sub placeInputs {
+    my ($self,$granularity) = @_;
+    my $factory = OME::Session->instance()->Factory();
+
+    my @inputs = $factory->
+      findObjects('OME::Module::FormalInput',
+                  {
+                   module => $self->getModule(),
+                   'semantic_type.granularity' => $granularity,
+                  });
+
+    foreach my $formal_input (@inputs) {
+        my $semantic_type  = $formal_input->semantic_type();
+		my $attribute_list = $self->getCurrentInputAttributes($formal_input);
+		$self -> placeAttributes($formal_input->name(),
+							  $semantic_type,
+							  $attribute_list);	
+    }
+}
+
+sub placeAttributes {
+    my ($self,$variable_name,$semantic_type,$attribute_list) = @_;
+
+    die "Not connected to Matlab"
+      unless $self->{__engineOpen};
+
+	# pixel semantic types have special action 
+
+    my $num_attributes = scalar(@$attribute_list);
+
+    my @elements = $semantic_type->semantic_elements();
+    my @names = ('id');
+    push @names, $_->name() foreach @elements;
+
+    my $struct = OME::Matlab::Array->
+      newStructMatrix(1,$num_attributes,\@names);
+    die "Could not create struct"
+      unless $struct;
+
+    # Matlab will free this itself, so we need to make sure that the
+    # DESTROY method does not try to also free the memory.  This is
+    # true of the arrays we create in the next loop, too.
+    $struct->makePersistent();
+
+    my $attr_idx = 0;
+    
+   	if ($semantic_type->name() eq "Pixels"){
+   	
+   		print "**** START special action for SE Pixels\n";
+   		
+   		my $attribute = @$attribute_list[0];
+   		# translate the attirbute_list into known pixel attributes
+   		my ($omeisID, $pixelType, $sizeX, $sizeY, $sizeZ, $sizeC, $sizeT) =
+ 	  		($attribute->ImageServerID(), $attribute->PixelType(), $attribute->SizeX(), 
+   			 $attribute->SizeY(), $attribute->SizeZ(), $attribute->SizeC(), $attribute->SizeT());
+   		
+   		$struct = OME::Matlab::Array->newNumericArray($mxUINT8_CLASS, $mxREAL,
+   						$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT);
+   		
+   		#  prepare for the incoming pixels
+   		my $session = OME::Session->instance();
+   		my $filename = $session->getTemporaryFilename("pixels","raw");
+   		
+   		open my $pix, ">", $filename or die "Could not open local pixels file";
+      		
+		# holly shit macs are big endian and intelions are little endian.
+   		my $buf = OME::Image::Server->getPixels($omeisID);
+   		print $pix $buf;
+   		close $pix;
+   		
+   		my $matlab_name = "ome_${variable_name}";
+   		$self->{__engine}->eval("global $matlab_name");
+   		$self->{__engine}->putVariable($matlab_name,$struct);
+   		
+   		# magic one-liner. One liner means no variables are left in matlab's workplace
+   		# this one-liner fills an array based on OMEIS's output which went to a temp file
+   		$self->{__engine}->eval("[$matlab_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_name),'$pixelType');");
+   		$session->finishTemporaryFile($filename);
+   		
+   		print "**** DONE special action for SE Pixels\n";
+   		
+   	} else {
+		print "**** Creating Matlab struct from OME object \n";
+		foreach my $attribute (@$attribute_list) {
+			$self->__createAttribute($struct,$attr_idx,$variable_name,
+									 $attribute,\@elements);
+		} continue {
+			$attr_idx++;
+		};
+		print "**** Done Creating Matlab struct\n";
+	
+		my $matlab_name = "ome_${variable_name}";
+		print "putting $matlab_name\n\n";
+		$self->{__engine}->eval("global $matlab_name");
+		$self->{__engine}->putVariable($matlab_name,$struct);
+   	}
+   	
+
+}
+
 
 sub __createAttribute {
     my ($self,$struct,$attr_idx,$attr_name,$attribute,$elements) = @_;
@@ -257,8 +359,9 @@ sub __createAttribute {
                 $array = OME::Matlab::Array->newDoubleScalar($value);
                 $array->makePersistent();
             }
+            print "[$sql_type] '$value'\n";
         } else {
-            print "Undefined\n";
+            print "[Undefined]\n";
         }
 
         $struct->setField($attr_idx,$elem_idx,$array)
@@ -291,40 +394,6 @@ sub __createReferenceAttribute {
     return $struct;
 }
 
-sub placeAttributes {
-    my ($self,$variable_name,$semantic_type,$attribute_list) = @_;
-
-    die "Not connected to Matlab"
-      unless $self->{__engineOpen};
-
-    my $num_attributes = scalar(@$attribute_list);
-
-    my @elements = $semantic_type->semantic_elements();
-    my @names = ('id');
-    push @names, $_->name() foreach @elements;
-
-    my $struct = OME::Matlab::Array->
-      newStructMatrix(1,$num_attributes,\@names);
-    die "Could not create struct"
-      unless $struct;
-
-    # Matlab will free this itself, so we need to make sure that the
-    # DESTROY method does not try to also free the memory.  This is
-    # true of the arrays we create in the next loop, too.
-    $struct->makePersistent();
-
-    my $attr_idx = 0;
-    foreach my $attribute (@$attribute_list) {
-        $self->__createAttribute($struct,$attr_idx,$variable_name,
-                                 $attribute,\@elements);
-    } continue {
-        $attr_idx++;
-    };
-
-    my $matlab_name = "ome_${variable_name}";
-    $self->{__engine}->eval("global $matlab_name");
-    $self->{__engine}->putVariable($matlab_name,$struct);
-}
 
 sub printarray {
     #my $name = shift;
@@ -353,7 +422,6 @@ sub __execute {
     # count > 1, this is not a problem yet.
 	my @params;
 	foreach( @$inputs ) {
-print STDERR "processing __matlab input $_\n";
 		if( exists $self->{__inputInstructions}->{$_}->{loadPixelsPlane} ) {
 			push @params, "ome_loadPixelsPlane( ome_$_ )";
 		} elsif( exists $self->{__inputInstructions}->{$_}->{literalString} ) {
@@ -470,27 +538,6 @@ sub startAnalysis {
     $self->SUPER::startAnalysis($module_execution);
 
     $self->__openEngine();
-}
-
-sub placeInputs {
-    my ($self,$granularity) = @_;
-    my $factory = OME::Session->instance()->Factory();
-
-    my @inputs = $factory->
-      findObjects('OME::Module::FormalInput',
-                  {
-                   module => $self->getModule(),
-                   'semantic_type.granularity' => $granularity,
-                  });
-
-    foreach my $formal_input (@inputs) {
-        my $semantic_type  = $formal_input->semantic_type();
-        my $attribute_list = $self->getCurrentInputAttributes($formal_input);
-        $self->
-          placeAttributes($formal_input->name(),
-                          $semantic_type,
-                          $attribute_list);
-    }
 }
 
 sub executeGlobal {
