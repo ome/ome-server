@@ -62,12 +62,10 @@ public class PDataset extends PGenericBox {
 	private CDataset dataset;
 	private Connection connection;
 	
-	private static float VGAP=5;
-	private static float HGAP=5;
 	private static float FUDGE=5;
 
-	private double x=HGAP;
-	private double y=VGAP;
+	private double x=PConstants.DATASET_IMAGE_GAP;
+	private double y=PConstants.DATASET_IMAGE_GAP;
 	private PScalableDatasetLabel nameLabel;
 	private PChainLabels chainLabels;
 	private double LABEL_SCALE=.6;
@@ -92,13 +90,13 @@ public class PDataset extends PGenericBox {
 	public void layoutImages() {
 		
 		removeAllChildren();
-		double x=HGAP;
-		double y= VGAP;
+		double x=PConstants.DATASET_IMAGE_GAP;
+		double y= PConstants.DATASET_IMAGE_GAP;
 		
 		nameLabel = new PScalableDatasetLabel(dataset,width);
 		addChild(nameLabel);
 		nameLabel.setOffset(x,y);
-		y+= nameLabel.getBounds().getHeight()+VGAP;
+		y+= nameLabel.getBounds().getHeight()+PConstants.DATASET_IMAGE_GAP;
 		
 		Collection imageCollection = dataset.getCachedImages(connection);
 		double totalArea = buildImages(imageCollection,x,y);
@@ -110,7 +108,7 @@ public class PDataset extends PGenericBox {
 		Collection chains = dataset.getChains(connection);
 		if (chains.size() > 0) {
 			double h = buildChainLabels(chains);
-			effectiveHeight -= h+2*VGAP;
+			effectiveHeight -= h+2*PConstants.DATASET_IMAGE_GAP;
 		}
 			
 		double scaledArea = effectiveWidth*effectiveHeight;
@@ -139,15 +137,17 @@ public class PDataset extends PGenericBox {
 		if (chains.size() > 0)  {
 			if (imageCollection.size() > 0) { 
 				PBounds b= images.getGlobalFullBounds();
-				y = b.getY()+b.getHeight()+VGAP;
+				y = b.getY()+b.getHeight()+PConstants.DATASET_IMAGE_GAP;
 			}
 			else {
-				y = VGAP+nameLabel.getBounds().getHeight()+VGAP;
+				y = PConstants.DATASET_IMAGE_GAP+nameLabel.getBounds().getHeight()+PConstants.DATASET_IMAGE_GAP;
 			}
-			chainLabels.setOffset(HGAP,y);
+			chainLabels.setOffset(PConstants.DATASET_IMAGE_GAP,y);
 			if (maxWidth < chainLabels.getGlobalFullBounds().getWidth())
 				maxWidth = chainLabels.getGlobalFullBounds().getWidth();
 		}
+		if (maxWidth < nameLabel.getBounds().getWidth())
+			maxWidth = nameLabel.getBounds().getWidth();
 		nameLabel.resetWidth(maxWidth);		
 		setExtent(maxWidth+PConstants.SMALL_BORDER,
 				height+PConstants.SMALL_BORDER);
@@ -205,7 +205,7 @@ public class PDataset extends PGenericBox {
 				thumb.setOffset(x,y);
 			}
 			else {
-				y += maxHeight+VGAP;
+				y += maxHeight+PConstants.DATASET_IMAGE_GAP;
 				x = 0;
 				if (rowSz > 0) {
 					images.setRowCount(row,rowSz);
@@ -221,7 +221,7 @@ public class PDataset extends PGenericBox {
 			x+= maxThumbWidth;
 			if (x > maxWidth) 
 				maxWidth =  x;
-			x+= HGAP;
+			x+= PConstants.DATASET_IMAGE_GAP;
 		}	
 		images.setRowCount(row,rowSz);
 		images.completeImages(scaledWidth,scaledHeight);
