@@ -36,7 +36,8 @@ sub new {
 	sizeY        => ['ATTRIBUTES_IMAGE_XYZWT','SIZE_Y'],
 	sizeZ        => ['ATTRIBUTES_IMAGE_XYZWT','SIZE_Z'],
 	sizeW        => ['ATTRIBUTES_IMAGE_XYZWT','NUM_WAVES'],
-	sizeT        => ['ATTRIBUTES_IMAGE_XYZWT','NUM_TIMES']
+	sizeT        => ['ATTRIBUTES_IMAGE_XYZWT','NUM_TIMES'],
+	bitsPerPixel => ['ATTRIBUTES_IMAGE_XYZWT','BITS_PER_PIXEL']
     };
 
     return $self;

@@ -87,6 +87,7 @@ sub importFiles {
         $image->Field("sizeZ",$href->{'Image.SizeZ'});
         $image->Field("sizeW",$href->{'Image.NumWaves'});
         $image->Field("sizeT",$href->{'Image.NumTimes'});
+        $image->Field("bitsPerPixel",16);
 
         my $path = $imageID.".orf";
         $image->Field("path",$path);

@@ -147,8 +147,15 @@ sub writeObject {
     my %tables;
     my $idFieldName = $fields->{id}->[1];
 
+    # Create a hash of table specs, from the list of field specs.
+    # Each element of the hash is an list of arrays:
+    #   0. List of column names
+    #   1. The value of the corresponding field in the object
+    #   2. A '?' (for building inserts and updates)
+    #   3. The options from the field spec
+
     foreach my $fieldName (keys %$fields) {
-	#if ($fieldName ne 'id') {
+	if ($fieldName ne 'id') {
 	    my $fieldDef = $fields->{$fieldName};
 	    my ($tableName, $columnName, $options) = @$fieldDef;
 
@@ -156,7 +163,19 @@ sub writeObject {
 	    push @{$tables{$tableName}->[1]}, $values->{$fieldName};
 	    push @{$tables{$tableName}->[2]}, '?';
 	    push @{$tables{$tableName}->[3]}, $options;
-	#}
+	}
+    }
+
+    # Add the primary key field to each table.  (Each table referred
+    # to in a field spec must contain the primary key field, either as
+    # an actual primary key, or as a reference into the primary table
+    # for this object.)
+
+    foreach my $tableName (keys %tables) {
+        push @{$tables{$tableName}->[0]}, $idFieldName;
+        push @{$tables{$tableName}->[1]}, $values->{id};
+        push @{$tables{$tableName}->[2]}, '?';
+        push @{$tables{$tableName}->[3]}, {};
     }
 
     my ($dbh,$sth,$sql,$rs);
