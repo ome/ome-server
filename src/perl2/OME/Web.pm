@@ -112,7 +112,7 @@ sub DBH { my $self = shift; return $self->{manager}->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
 sub Session { my $self = shift; return $self->{session}; }
 sub Factory { my $self = shift; return $self->{session}->Factory(); }
-sub ApacheSession { my $self = shift; return $self->{apacheSession}; }
+sub ApacheSession { my $self = shift; return $self->{session}->{ApacheSession}; }
 sub User { my $self = shift; return $self->{user}; }
 
 
@@ -136,85 +136,62 @@ sub ensureLogin {
 	my $cgi = $self->CGI();
 
 	#or a new session if we got no cookie my %session;
-	my %apacheSession = $self->getApacheSession();
-print STDERR "\napacheSession{username} is ".(defined $apacheSession{username} ? "defined" : "undefined")."\n\n";
-	my $session = undef;
-	if (exists $apacheSession{username}) {
-		$session = $manager->createSession($apacheSession{username},$apacheSession{password});
-	}
-	$self->{session} = $session;
-
-	if (defined $session) {
-		my $factory = $session->Factory();
-		my $sql = "select experimenter_id from experimenters where ome_name = ?";
-		my $userid = $dbh->selectrow_array($sql,{},$session->Username());
-		my $user = $factory->loadObject('OME::Experimenter',$userid);
-	
-		$self->{user} = $user;
+	my $sessionKey = $self->getSessionKey();
+print STDERR "\nensureLogin: sessionKey is ".(defined $sessionKey ? "defined" : "undefined")."\n";
+	$self->{session} = undef;
+	if (defined $sessionKey) {
+		$self->{session} = $manager->createSession($sessionKey);
+		$self->setSessionCookie();
 	}
 
-print STDERR "\nsession is ".(defined $session ? "defined" : "undefined")."\n\n";
-	return defined $session;
+	if (defined $self->{session}) {
+		$self->{user} = $self->{session}->experimenter();
+	}
+
+print STDERR "\nensureLogin: session is ".(defined $self->{session} ? "defined" : "undefined")."\n";
+print STDERR "\nensureLogin: user is ".(defined $self->{user} ? "defined" : "undefined")."\n";
+	return defined $self->{session};
 }
 
 
 #
-# setApacheSession
+# setSessionCookie
 # ----------------
 
-sub setApacheSession {
+sub setSessionCookie {
 my $self = shift;
 my $cgi = $self->CGI();
 my %params = @_;
-my $userName = $params{'username'};
-my $password = $params{'password'};
-my %apacheSession;
+my $sessionKey;
 
-	if (not defined $self->{apacheSession}) {
-		tie %apacheSession, 'Apache::Session::File', undef, {
-			Directory	  => '/var/tmp/OME/sessions',
-			LockDirectory => '/var/tmp/OME/lock'
-		};
-		$self->{apacheSession} = \%apacheSession;
+	$sessionKey = $self->{session}->SessionKey() if defined $self->{session};
+
+	if (defined $sessionKey) {
+print STDERR "\nSetting cookie: $sessionKey\n";
+		$self->{_cookies}->{'SESSION_KEY'} =
+			$cgi->cookie( -name	   => 'SESSION_KEY',
+						  -value   => $sessionKey,
+						  -path    => '/',
+						  -expires => '30m');
 	} else {
-		%apacheSession = %$self->{apacheSession};
+print STDERR "\nLogging out - resetting cookie\n";
+		$self->{_cookies}->{'SESSION_KEY'} =
+			$cgi->cookie( -name	   => 'SESSION_KEY',
+						  -value   => '',
+						  -path    => '/',
+						  -expires => '-1d');
 	}
-
-	$apacheSession{username} = $userName;
-	$apacheSession{password} = $password;
-
-	$self->{_cookies}->{'SESSION_KEY'} =
-		$cgi->cookie( -name	   => 'SESSION_KEY',
-					  -value   => $apacheSession{_session_id},
-					  -path    => '/',
-					  -expires => (defined $userName and defined $password ? '30m' : '-1d' ));
 }
 
 
 #
-# getApacheSession
+# getSessionKey
 # ----------------
 
-sub getApacheSession {
+sub getSessionKey {
 my $self = shift;
 my $cgi = $self->CGI();
-my $sessionKey = $cgi->cookie('SESSION_KEY');
-print STDERR "getApacheSession: sessionKey=$sessionKey\n";
-my %apacheSession;
-
-	tie %apacheSession, 'Apache::Session::File', $sessionKey, {
-	Directory	  => '/var/tmp/OME/sessions',
-	LockDirectory => '/var/tmp/OME/lock'
-	};
-
-	$self->{_cookies}->{'SESSION_KEY'} =
-		$cgi->cookie( -name		=> 'SESSION_KEY',
-					  -value	=> $apacheSession{_session_id},
-					  -path    => '/',
-					  -expires	=> '30m' );
-
-
-	return %apacheSession;
+return $cgi->cookie('SESSION_KEY');
 }
 
 
