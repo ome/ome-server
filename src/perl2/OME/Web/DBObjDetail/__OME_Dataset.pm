@@ -76,18 +76,30 @@ sub getPageBody {
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data = $self->Renderer()->_populate_object_in_template( $dataset, $tmpl );
 	
-	# Gather Category Groups used in this dataset & make a popup list from them
-	my %image_ids = map{ $_->id => undef } $dataset->images();
+	my @hidden_fields;
+	my %cgi_params = $q->Vars();
+	
 	my %unique_cg_hash;
-	if( %image_ids ) {
-		my @classifications = $factory->
-			findObjects( '@Classification',
-			image_id => ['in', [ keys %image_ids ] ]
-		);
+	if (exists $cgi_params{cg_list}) {
+		my @cg_ids = $q->param( 'cg_list' );
+		my @cgs = $factory->findObjects ('@CategoryGroup', id => ['in',\@cg_ids]);
 		%unique_cg_hash = map
-			{ $_->Category->CategoryGroup->id => $_->Category->CategoryGroup }
-			@classifications;
+			{ $_->id() => $_ }
+			@cgs;
+	} else {
+		my @cgs = $factory->findObjects ('@CategoryGroup');
+		%unique_cg_hash = map
+			{ $_->id => $_ }
+			@cgs;
 	}
+
+	push (@hidden_fields,$q->hidden ({
+		-name => 'cg_list',
+	# Making -default an empty list causes the parameter to be not set!
+		-default => keys %unique_cg_hash ? [keys %unique_cg_hash] : [0]
+		}));
+
+
 	# If the user selected another CG with the Search or Create link,
 	# then include that in the drop down list of CGs
 	my $cg_id = $q->param( 'selected_cg' );
@@ -96,12 +108,13 @@ sub getPageBody {
 		( not exists $unique_cg_hash{ $cg_id } ) ) {
 		my $cg = $factory->loadObject( '@CategoryGroup', $cg_id )
 			or die "Couldn't load CategoryGroup id='$cg_id'";
-		$unique_cg_hash{ $cg_id } = $cg;
+		$unique_cg_hash{ $cg_id } = $cg if $cg;
 	}
 	$cg_id = $q->param( 'group_images_by_cg' )
 		unless $cg_id;
-	my @cg_list = sort{ $a->Name cmp $b->Name } values %unique_cg_hash ;
+
 	# actually make the popup list
+	my @cg_list = sort{ $a->Name cmp $b->Name } values %unique_cg_hash ;
 	$tmpl_data{ categories_used } = (
 		@cg_list ?
 		$q->popup_menu(
@@ -118,11 +131,12 @@ sub getPageBody {
 	);
 
 	# Use selected CategoryGroup (if there is one) to group images.
-	if( $cg_id && $cg_id ne '' ) {
-		my $cg = $factory->loadObject( '@CategoryGroup', $cg_id )
-			or die "Couldn't load CategoryGroup ID=$cg_id";
+	if( $cg_id and exists $unique_cg_hash{$cg_id}) {
+		my $cg = $unique_cg_hash{$cg_id};
 		my %image_classifications;
-		foreach my $image ( $dataset->images() ) {
+		my $image_iter = $dataset->images();
+		my $image;
+		while ($image = $image_iter->next()) {
 			my $classification = OME::Tasks::CategoryManager->
 				getImageClassification( $image, $cg );
 			# Watch out for multiple classifications
@@ -183,6 +197,7 @@ sub getPageBody {
 	         $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	         $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	         $q->hidden({-name => 'action', -default => ''}).
+	         join (' ',@hidden_fields).
 	         $tmpl->output().
 	         $q->endform();
 
