@@ -220,7 +220,7 @@ sub finishImport {
 
 sub forgetImport {
     my $class = shift;
-    die "No active import!" unless defined $self;
+#    die "No active import!" unless defined $self;
     $self = undef;
 }
 
