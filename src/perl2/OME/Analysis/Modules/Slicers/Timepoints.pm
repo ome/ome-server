@@ -64,7 +64,7 @@ sub startImage {
     $self->SUPER::startImage($image);
 
     my $session = OME::Session->instance();
-    my $factory = OME::Session->instance();
+    my $factory = $session->Factory();
     my $mex     = $self->getModuleExecution();
 
     my @slices  = $self->getCurrentInputAttributes("Slices");
