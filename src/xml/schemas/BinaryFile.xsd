@@ -50,16 +50,6 @@ If Offset and ReadLength are specified in conjuction with Compression, then they
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute name = "Offset" type = "positiveInteger">
-				<annotation>
-					<documentation>In bytes.</documentation>
-				</annotation>
-			</attribute>
-			<attribute name = "ReadLength" type = "positiveInteger">
-				<annotation>
-					<documentation>In bytes.</documentation>
-				</annotation>
-			</attribute>
 		</complexType>
 	</element>
 	<element name = "BinData">
