@@ -86,8 +86,12 @@ __PACKAGE__->_allFieldNames( [
 sub getObjectLabel {
 	my ($proto,$obj,$format) = @_;
 
-	return $obj->module()->name()."(".$obj->timestamp().")"
-		if( $obj->module() );
+	if( $obj->module() ) {
+		( my $summary_timestamp = $obj->timestamp() ) =~
+			s/\..*$//;
+		return $obj->module()->name()." (".$summary_timestamp.")";
+	}
+
 	return $obj->id();
 }
 =head1 Author
