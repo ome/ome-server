@@ -291,7 +291,7 @@ END_HTML
 =head2 getSearchFields
 
 	# get html form elements keyed by field names 
-	my ($form_fields, $search_paths) = OME::Web::DBObjRender->getSearchFields( $type, \@field_names, \%default_search_values );
+	my ($form_fields, $search_paths) = OME::Web::Search->getSearchFields( $type, \@field_names, \%default_search_values );
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -435,7 +435,11 @@ sub getSearchCriteria {
 	my ($form_fields, $search_paths) = $self->getSearchFields( $type, \@search_fields );
 	my %field_titles = $render->getFieldTitles( $type, \@search_fields );
 	$q->param( 'search_names', values %$search_paths); # explicitly record what fields we are searching on.
-	my $order = $self->__sort_field( $search_paths, $search_paths->{ $search_fields[0] });
+	my $specializedSearch = $self->_specialize( $type );
+	my $order = ( $specializedSearch ?
+		$specializedSearch->__sort_field( $search_paths, $search_paths->{ $search_fields[0] }) :
+		$self->__sort_field( $search_paths, $search_paths->{ $search_fields[0] })
+	);
 	
 	# Render search fields
 	my $search_field_tmpl = HTML::Template->new( 
