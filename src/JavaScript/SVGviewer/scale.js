@@ -88,10 +88,10 @@ function Scale(displayChannelLabel, toolboxLayer) {
 }
 
 
+
 /*****
 	setLogicalChannel
 		logicalChannelIndex
-	
 	change the logical channel mapped to this display channel
 *****/
 Scale.prototype.setLogicalChannel = function(logicalChannelIndex) {
@@ -102,34 +102,23 @@ Scale.prototype.setLogicalChannel = function(logicalChannelIndex) {
 	
 	var itemList = this.logicalChannelPopupList.getItemList();
 	this.logicalChannelPopupList.setSelectionByValue( itemList[logicalChannelIndex], true);
-	if( this.tiedLogicalChannelPopupList ) {
-		itemList = this.tiedLogicalChannelPopupList.getItemList();
-		this.tiedLogicalChannelPopupList.setSelectionByValue( itemList[logicalChannelIndex], true);
+	if( this.tiedLogicalChannelPopupLists ) {
+		for( var i in this.tiedLogicalChannelPopupLists ) {
+			itemList = this.tiedLogicalChannelPopupLists[i].getItemList();
+			this.tiedLogicalChannelPopupLists[i].setSelectionByValue( itemList[logicalChannelIndex], true);
+		}
 	}
 	this.updateScaleDisplay();
 };
 
 
+
+
 /*****
-
-	updateScaleDisplay (class method)
-		uses global var 'theT'
-	
-	Update scale bar for all display channels.
-	
+	updateBlackLevel
+		val - value of white slider bar
+	callback for moving the white level slider
 *****/
-Scale.updateScaleDisplay = function() {
-	if(!Scale.initialized) {
-		return null;
-	}
-
-	for( var i in Scale.displayChannels ) {
-		Scale.displayChannels[ i ].updateScaleDisplay();
-	}
-};
-
-
-
 Scale.prototype.updateBlackLevel = function( val ) {
 	if(Math.round(val) == this.blackBar.getAttribute("width")) { return; }
 	
@@ -150,6 +139,12 @@ Scale.prototype.updateBlackLevel = function( val ) {
 };
 
 
+
+/*****
+	updateWhiteLevel
+		val - value of white slider bar
+	callback for moving the white level slider
+*****/
 Scale.prototype.updateWhiteLevel = function( val ) {
 	if(Math.round(val) == this.whiteBar.getAttribute("x")) { return; }
 	
@@ -173,13 +168,11 @@ Scale.prototype.updateWhiteLevel = function( val ) {
 
 
 /*****
-
-	updateScaleDisplay (instance method)
+	updateScaleDisplay
+		instance method
 		uses global var 'theT'
-	
 	Update scale bar to match a stack's info. Specifically, move tick 
 	marks & update labels.
-	
 *****/
 Scale.prototype.updateScaleDisplay = function() {
 	if(!this.initialized) {
@@ -207,6 +200,33 @@ Scale.prototype.updateScaleDisplay = function() {
 
 
 
+/*****
+	tieLogicalChannelPopupList ()
+		popupList - popupList to synchronize logical Channel with.
+	allows a second control to be synchonized with the logical Channel map popup List.
+*****/
+Scale.prototype.tieLogicalChannelPopupList = function(logicalChannelPopupList) {
+	if( ! this.tiedLogicalChannelPopupLists ) { this.tiedLogicalChannelPopupLists = new Array(); }
+	this.tiedLogicalChannelPopupLists.push( logicalChannelPopupList );
+};
+
+
+/*****
+	updateScaleDisplay
+		class method
+	Update scale bar for all instances.
+*****/
+Scale.updateScaleDisplay = function() {
+	if(!Scale.initialized) {
+		return null;
+	}
+
+	for( var i in Scale.displayChannels ) {
+		Scale.displayChannels[ i ].updateScaleDisplay();
+	}
+};
+
+
 
 
 Scale.setClassData = function(image, channelLabels) {
@@ -225,7 +245,7 @@ Scale.setClassData = function(image, channelLabels) {
 		Scale.BW[channelIndex] = new Array();
 		Scale.popupListChannelLabels[channelIndex] = '[ ' + channelLabels[channelIndex] + ' ]';
 		// copy values from image's CBW?
-		for(var j=0;j<4;j++) {
+		for(var j=0;j<4;++j) {
 			if(imageCBW[j*3] == channelIndex) {
 				Scale.BW[ channelIndex ]['B'] = imageCBW[j*3+1];
 				Scale.BW[ channelIndex ]['W'] = imageCBW[j*3+2];
@@ -245,10 +265,6 @@ Scale.setClassData = function(image, channelLabels) {
 
 };
 
-Scale.prototype.tieLogicalChannelPopupList = function(logicalChannelPopupList) {
-	this.tiedLogicalChannelPopupList = logicalChannelPopupList;
-};
-
 /********************************************************************************************
                                  Private Functions 
 ********************************************************************************************/
@@ -260,7 +276,7 @@ Scale.updateCBW = function() {
 	var CBW = Scale.image.getCBW();
 	var changed = false;
 
-	for(var i=0;i<4;i++) {
+	for(var i=0;i<4;++i) {
 		var _ci = CBW[i*3];
 		if(CBW[i*3+1] != Scale.BW[_ci]['B']) {
 			changed = true;
@@ -327,7 +343,7 @@ Scale.prototype.buildDisplay = function() {
 
 
 // build SVG
-	this.displayContent =  createElementSVG( 'g' );
+	this.displayContent =  Util.createElementSVG( 'g' );
 
 	// set up GUI
 	this.blackSlider = new Slider( 
@@ -346,11 +362,11 @@ Scale.prototype.buildDisplay = function() {
 	);
 		
 	// build slider background
-	this.backgroundLayer = createElementSVG( 'g', {
+	this.backgroundLayer = Util.createElementSVG( 'g', {
 		transform: 'translate(0,70)'
 	});
 	this.backgroundLayer.appendChild( 
-		createElementSVG( 'line', {
+		Util.createElementSVG( 'line', {
 			x2: (Scale.scaleWidth),
 			'stroke-width': 2,
 			stroke: "midnightblue"
@@ -358,14 +374,14 @@ Scale.prototype.buildDisplay = function() {
 	);
 	// global minimum tick
 	this.backgroundLayer.appendChild( 
-		createElementSVG( 'line', { 
+		Util.createElementSVG( 'line', { 
 			y2: 10, 
 			'stroke-width': 2, 
 			stroke: "midnightblue" 
 		}) 
 	);
 	// global minimum label
-	this.globalMinLabel = createTextSVG( Scale.global_Min[channelIndex], { 
+	this.globalMinLabel = Util.createTextSVG( Scale.global_Min[channelIndex], { 
 		'text-anchor': 'middle', 
 		y: 10, 
 		'dominant-baseline': 'hanging'
@@ -373,7 +389,7 @@ Scale.prototype.buildDisplay = function() {
 	this.backgroundLayer.appendChild( this.globalMinLabel );
 	// global maximum tick
 	this.backgroundLayer.appendChild( 
-		createElementSVG( 'line', {
+		Util.createElementSVG( 'line', {
 			x1: Scale.scaleWidth, 
 			x2: Scale.scaleWidth, 
 			y2: 10, 
@@ -382,7 +398,7 @@ Scale.prototype.buildDisplay = function() {
 		}) 
 	);
 	// global maximum label
-	this.globalMaxLabel = createTextSVG( Scale.global_Max[channelIndex], { 
+	this.globalMaxLabel = Util.createTextSVG( Scale.global_Max[channelIndex], { 
 		'text-anchor': 'middle', 
 		x: Scale.scaleWidth, 
 		y: 10, 
@@ -391,7 +407,7 @@ Scale.prototype.buildDisplay = function() {
 	this.backgroundLayer.appendChild( this.globalMaxLabel );
 	// global label
 	this.backgroundLayer.appendChild( 
-		createTextSVG( 'min <-- GLOBAL --> max', { 
+		Util.createTextSVG( 'min <-- GLOBAL --> max', { 
 			'text-anchor': 'middle', 
 			x: (Scale.scaleWidth/2), 
 			y: 10, 
@@ -402,7 +418,7 @@ Scale.prototype.buildDisplay = function() {
 	);
 	// stack label
 	this.backgroundLayer.appendChild( 
-		createTextSVG( 'STACK', { 
+		Util.createTextSVG( 'STACK', { 
 			'text-anchor': 'middle', 
 			x: (Scale.scaleWidth/2), 
 			y: -2, 
@@ -411,23 +427,23 @@ Scale.prototype.buildDisplay = function() {
 		}) 
 	);
 	// stack min/max ticks & labels
-	this.stackMinTick = createElementSVG( 'line', { 
+	this.stackMinTick = Util.createElementSVG( 'line', { 
 		y1: -12, 
 		y2: 0, 
 		'stroke-width': 2, 
 		stroke: "midnightblue" 
 	});
-	this.stackMinLabel = createTextSVG( '', { 
+	this.stackMinLabel = Util.createTextSVG( '', { 
 		'text-anchor': 'middle', 
 		y: -14
 	});
-	this.stackMaxTick = createElementSVG( 'line', {
+	this.stackMaxTick = Util.createElementSVG( 'line', {
 		y1: -12, 
 		y2: 0, 
 		'stroke-width': 2, 
 		stroke: "midnightblue" 
 	});
-	this.stackMaxLabel = createTextSVG( '', { 
+	this.stackMaxLabel = Util.createTextSVG( '', { 
 		'text-anchor': 'middle', 
 		y: -14
 	});
@@ -436,7 +452,7 @@ Scale.prototype.buildDisplay = function() {
 	this.backgroundLayer.appendChild( this.stackMaxTick );
 	this.backgroundLayer.appendChild( this.stackMaxLabel );
 
-	this.blackBar = createElementSVG( 'rect', {
+	this.blackBar = Util.createElementSVG( 'rect', {
 		y: 0,
 		width: blackSliderPosition,
 		height: 10,
@@ -444,7 +460,7 @@ Scale.prototype.buildDisplay = function() {
 		opacity: 0.3
 	});
 	this.backgroundLayer.appendChild( this.blackBar );
-	this.whiteBar = createElementSVG( 'rect', {
+	this.whiteBar = Util.createElementSVG( 'rect', {
 		x: whiteSliderPosition,
 		y: -12,
 		width: ( Scale.scaleWidth - whiteSliderPosition ),
@@ -456,12 +472,12 @@ Scale.prototype.buildDisplay = function() {
 	this.displayContent.appendChild( this.backgroundLayer );
 
 	// build displays
-	this.blackLabel = createTextSVG( blackLevel, { x: Scale.scaleWidth, y: '1em', 'text-anchor': 'end' });
-	this.whiteLabel = createTextSVG( whiteLevel, { x: Scale.scaleWidth, y: '2em', 'text-anchor': 'end' });
+	this.blackLabel = Util.createTextSVG( blackLevel, { x: Scale.scaleWidth, y: '1em', 'text-anchor': 'end' });
+	this.whiteLabel = Util.createTextSVG( whiteLevel, { x: Scale.scaleWidth, y: '2em', 'text-anchor': 'end' });
 	this.displayContent.appendChild( this.blackLabel );
 	this.displayContent.appendChild( this.whiteLabel );
-	this.displayContent.appendChild( createTextSVG( 'Black level: ', { x: 10, y: '1em' }));
-	this.displayContent.appendChild( createTextSVG( 'White level: ', { x: 10, y: '2em' }));
+	this.displayContent.appendChild( Util.createTextSVG( 'Black level: ', { x: 10, y: '1em' }));
+	this.displayContent.appendChild( Util.createTextSVG( 'White level: ', { x: 10, y: '2em' }));
 
 	this.blackSlider.realize( this.displayContent );
 	this.whiteSlider.realize( this.displayContent );
