@@ -10,8 +10,8 @@
   xmlns:STD=
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
@@ -25,13 +25,14 @@
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-    <SemanticType Name="Bounds" AppliesTo="F" Description="Bounds of a feature">
+    <SemanticType Name="Bounds" AppliesTo="F">
+      <Description>Bounds of a feature</Description>
       <Element Name="X" DBLocation="BOUNDS.X" DataType="integer"/>
       <Element Name="Y" DBLocation="BOUNDS.Y" DataType="integer"/>
       <Element Name="Width" DBLocation="BOUNDS.WIDTH" DataType="integer"/>
       <Element Name="Height" DBLocation="BOUNDS.HEIGHT" DataType="integer"/>
     </SemanticType>
-    <SemanticType Name="Ratio" AppliesTo="F" Description="Ratio">
+    <SemanticType Name="Ratio" AppliesTo="F">
       <Element Name="Ratio" DBLocation="RATIO.RATIO" DataType="float"/>
     </SemanticType>
 </STD:SemanticTypeDefinitions>
@@ -49,13 +50,13 @@
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
     Category="Testing"
-    Description="Find cells"
     NewFeatureName="CELL">
+  <Description>Find cells</Description>
 
   <Declaration>
     <FormalOutput
-        Name="Output bounds" STD:SemanticTypeName="Bounds"
-        Description="" IBelongTo="[Feature]" />
+        Name="Output bounds" SemanticTypeName="Bounds"
+        IBelongTo="[Feature]" />
 
   </Declaration>
 </AnalysisModule>
@@ -65,18 +66,17 @@
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
     Category="Testing"
-    Description="Find mito"
     FeatureIterator="CELL"
     NewFeatureName="MITOCHONDRIA">
+  <Description>Find mito</Description>
 
   <Declaration>
     <FormalInput
-        Name="Input bounds" STD:SemanticTypeName="Bounds"
-        Description=""/>
+        Name="Input bounds" SemanticTypeName="Bounds"/>
 
     <FormalOutput
-        Name="Output bounds" STD:SemanticTypeName="Bounds"
-        Description="" IBelongTo="[Feature]" />
+        Name="Output bounds" SemanticTypeName="Bounds"
+        IBelongTo="[Feature]" />
 
   </Declaration>
 </AnalysisModule>
@@ -86,18 +86,17 @@
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
     Category="Testing"
-    Description="Find golgi"
     FeatureIterator="CELL"
     NewFeatureName="GOLGI">
+  <Description>Find golgi</Description>
 
   <Declaration>
     <FormalInput
-        Name="Input bounds" STD:SemanticTypeName="Bounds"
-        Description="" />
+        Name="Input bounds" SemanticTypeName="Bounds"/>
 
     <FormalOutput
-        Name="Output bounds" STD:SemanticTypeName="Bounds"
-        Description="" IBelongTo="[Feature]" />
+        Name="Output bounds" SemanticTypeName="Bounds"
+        IBelongTo="[Feature]" />
 
   </Declaration>
 </AnalysisModule>
@@ -107,24 +106,26 @@
     ModuleType="OME::Analysis::FindRatio"
     ProgramID=""
     Category="Testing"
-    Description="Find ratio"
     FeatureIterator="CELL">
+  <Description>Find ratio</Description>
 
   <Declaration>
     <FormalInput
-        Name="Mito bounds" STD:SemanticTypeName="Bounds"
-        Description="" />
+        Name="Mito bounds" SemanticTypeName="Bounds"/>
 
     <FormalInput
-        Name="Golgi bounds" STD:SemanticTypeName="Bounds"
-        Description="" />
+        Name="Golgi bounds" SemanticTypeName="Bounds"/>
 
     <FormalOutput
-        Name="Golgi-mito ratio" STD:SemanticTypeName="Ratio"
-        Description="" IBelongTo="[Iterator]" />
+        Name="Golgi-mito ratio" SemanticTypeName="Ratio"
+        IBelongTo="[Iterator]" />
 
   </Declaration>
 </AnalysisModule>
+
+<Category Path="Testing">
+	<Description>Modules in this category do nothing useful. They merely test the functionality of the system.</Description>
+</Category>
 
 </AML:AnalysisModuleLibrary>
 

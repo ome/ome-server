@@ -10,8 +10,8 @@
   xmlns:STD=
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
@@ -101,34 +101,39 @@
 
 		<SemanticType
 			Name= "Pixels"
-			AppliesTo = "I"
-			Description = "Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.">
+			AppliesTo = "I">
+			<Description>Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.</Description>
 		
 			<Element
 				Name= "SizeX"
 				DBLocation = "IMAGE_PIXELS.SIZE_X"
-				DataType = "integer"
-				Description="Number of pixels on the X axis."/>
+				DataType = "integer">
+				<Description>Number of pixels on the X axis.</Description>
+			</Element>
 			<Element
 				Name= "SizeY"
 				DBLocation = "IMAGE_PIXELS.SIZE_Y"
-				DataType = "integer"
-				Description="Number of pixels on the Y axis."/>
+				DataType = "integer">
+				<Description>Number of pixels on the Y axis.</Description>
+			</Element>
 			<Element
 				Name= "SizeZ"
 				DBLocation = "IMAGE_PIXELS.SIZE_Z"
-				DataType = "integer"
-				Description="Number of pixels on the Z axis."/>
+				DataType = "integer">
+				<Description>Number of pixels on the Z axis.</Description>
+			</Element>
 			<Element
 				Name= "SizeC"
 				DBLocation = "IMAGE_PIXELS.SIZE_C"
-				DataType = "integer"
-				Description="Number of channel components in all logical channels."/>
+				DataType = "integer">
+				<Description>Number of channel components in all logical channels.</Description>
+			</Element>
 			<Element
 				Name= "SizeT"
 				DBLocation = "IMAGE_PIXELS.SIZE_T"
-				DataType = "integer"
-				Description="Number of time points"/>
+				DataType = "integer">
+				<Description>Number of time points</Description>
+			</Element>
 			<Element
 				Name= "BitsPerPixel"
 				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
@@ -162,26 +167,27 @@
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule ModuleName = "Plane statistics and sums" 
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_sums" 
-	Description = "Calculate pixel statistics and sums for each XY plane. Produced from XML specification.">
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_sums" >
+	<Description>Calculate pixel statistics and sums for each XY plane.</Description>
 	<Declaration>
-		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = "" Count="!"/>
-		<FormalOutput Name = "Minima" SemanticTypeName = "PlaneMinimum" Description = "" Count="+"/>
-		<FormalOutput Name = "Maxima" SemanticTypeName = "PlaneMaximum" Description = "" Count="+"/>
-		<FormalOutput Name = "Mean" SemanticTypeName = "PlaneMean" Description = "" Count="+"/>
-		<FormalOutput Name = "Geomean" SemanticTypeName = "PlaneGeometricMean" Description = "" Count="+"/>
-		<FormalOutput Name = "Sigma" SemanticTypeName = "PlaneSigma" Description = "" Count="+"/>
-		<FormalOutput Name = "Centroid" SemanticTypeName = "PlaneCentroid" Description = "" Count="+"/>
-		<FormalOutput Name = "Sum i" SemanticTypeName = "PlaneSum_i" Description = "" Count="+"/>
-		<FormalOutput Name = "Sum i^2" SemanticTypeName = "PlaneSum_i2" Description = "" Count="+"/>
-		<FormalOutput Name = "Sum log(i)" SemanticTypeName = "PlaneSum_log_i" Description = "" Count="+"/>
-		<FormalOutput Name = "Sum Xi" SemanticTypeName = "PlaneSum_Xi" Description = "" Count="+"/>
-		<FormalOutput Name = "Sum Yi" SemanticTypeName = "PlaneSum_Yi" Description = "" Count="+"/>
-		<FormalOutput Name = "Sum Zi" SemanticTypeName = "PlaneSum_Zi" Description = "" Count="+"/>
+		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Count="!"/>
+		<FormalOutput Name = "Minima" SemanticTypeName = "PlaneMinimum" Count="+"/>
+		<FormalOutput Name = "Maxima" SemanticTypeName = "PlaneMaximum" Count="+"/>
+		<FormalOutput Name = "Mean" SemanticTypeName = "PlaneMean" Count="+"/>
+		<FormalOutput Name = "Geomean" SemanticTypeName = "PlaneGeometricMean" Count="+"/>
+		<FormalOutput Name = "Sigma" SemanticTypeName = "PlaneSigma" Count="+"/>
+		<FormalOutput Name = "Centroid" SemanticTypeName = "PlaneCentroid" Count="+"/>
+		<FormalOutput Name = "Sum i" SemanticTypeName = "PlaneSum_i" Count="+"/>
+		<FormalOutput Name = "Sum i^2" SemanticTypeName = "PlaneSum_i2" Count="+"/>
+		<FormalOutput Name = "Sum log(i)" SemanticTypeName = "PlaneSum_log_i" Count="+"/>
+		<FormalOutput Name = "Sum Xi" SemanticTypeName = "PlaneSum_Xi" Count="+"/>
+		<FormalOutput Name = "Sum Yi" SemanticTypeName = "PlaneSum_Yi" Count="+"/>
+		<FormalOutput Name = "Sum Zi" SemanticTypeName = "PlaneSum_Zi" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
-		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
+		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
 		<CommandLine>
 			<InputSubString>
 				<RawText>Path=</RawText>
@@ -322,6 +328,10 @@
 		</STDOUT>
 	</ExecutionInstructions>
 </AnalysisModule>
+
+    <Category Path="Statistics">
+      <Description>Modules for calculating Pixel Statistics</Description>
+    </Category>
 
 
 </AML:AnalysisModuleLibrary>

@@ -10,8 +10,8 @@
   xmlns:STD=
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
@@ -75,20 +75,21 @@
 
 <AnalysisModule ModuleName = "Plane statistics" 
         Category="Statistics"
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
-	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" >
+	<Description>Calculate pixel statistics for each XY plane.</Description>
 	<Declaration>
-		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = "" Count="!"/>
-		<FormalOutput Name = "Minima" SemanticTypeName = "PlaneMinimum" Description = "" Count="+"/>
-		<FormalOutput Name = "Maxima" SemanticTypeName = "PlaneMaximum" Description = "" Count="+"/>
-		<FormalOutput Name = "Mean" SemanticTypeName = "PlaneMean" Description = "" Count="+"/>
-		<FormalOutput Name = "Geomean" SemanticTypeName = "PlaneGeometricMean" Description = "" Count="+"/>
-		<FormalOutput Name = "Sigma" SemanticTypeName = "PlaneSigma" Description = "" Count="+"/>
-		<FormalOutput Name = "Centroid" SemanticTypeName = "PlaneCentroid" Description = "" Count="+"/>
+		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Count="!"/>
+		<FormalOutput Name = "Minima" SemanticTypeName = "PlaneMinimum" Count="+"/>
+		<FormalOutput Name = "Maxima" SemanticTypeName = "PlaneMaximum" Count="+"/>
+		<FormalOutput Name = "Mean" SemanticTypeName = "PlaneMean" Count="+"/>
+		<FormalOutput Name = "Geomean" SemanticTypeName = "PlaneGeometricMean" Count="+"/>
+		<FormalOutput Name = "Sigma" SemanticTypeName = "PlaneSigma" Count="+"/>
+		<FormalOutput Name = "Centroid" SemanticTypeName = "PlaneCentroid" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
-		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
+		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
 		<CommandLine>
 			<InputSubString>
 				<RawText>Path=</RawText>
@@ -194,6 +195,9 @@
 	</ExecutionInstructions>
 </AnalysisModule>
 
+    <Category Path="Statistics">
+      <Description>Modules for calculating Pixel Statistics</Description>
+    </Category>
 
 </AML:AnalysisModuleLibrary>
 
