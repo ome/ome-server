@@ -117,7 +117,7 @@
           <Element
              Name="FileID"
              DBLocation="ORIGINAL_FILES.FILE_ID"
-             DataType="integer">
+             DataType="bigint">
             <Description>
             </Description>
           </Element>
@@ -1128,7 +1128,7 @@ for a given laser type (for example, 'Nd-YAG').</Description>
             <Element
                Name="ImageServerID"
                DBLocation="IMAGE_PIXELS.IMAGE_SERVER_ID"
-               DataType="integer"/>
+               DataType="bigint"/>
 		</SemanticType>
 
 	</SemanticTypeDefinitions>

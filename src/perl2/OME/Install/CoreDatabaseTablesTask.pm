@@ -77,7 +77,7 @@ our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $ADMIN_UID);
 our $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
 
 # Database version
-our $DB_VERSION = "2.5";
+our $DB_VERSION = "2.6";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
