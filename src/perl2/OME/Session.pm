@@ -362,6 +362,34 @@ sub deleteInstance {
 	return 1;
 }
 
+=head2 forgetInstance
+
+This method is only intended for multi-threaded code involving the
+fork() call.  In this case, the child will have a lingering copy of
+the session used by the parent thread.  The child needs to call this
+method immediately after the fork, so that the child process will not
+try to clean up the parent's session.  (Otherwise, the parent will
+eventually die with when it tries to access the database connection
+which was closed by the child.)  If the child needs its own database
+connection, it should use the SessionManager reauthenticate (via
+username/password or session key) and create a new Session object.
+
+=cut
+
+sub forgetInstance {
+    my $class = shift;
+
+    if (defined $__soleInstance) {
+        if (defined $__soleInstance->{Factory}) {
+            # DO NOT DISCONNECT!  THIS IS THE RESPONSIBILITY OF THE PARENT
+            # PROCESS!!!
+            $__soleInstance->{Factory}->{__ourDBH} = undef;
+            $__soleInstance->{Factory} = undef;
+        }
+        $__soleInstance = undef;
+    }
+}
+
 # Accessors
 # ---------
 sub DBH { carp "Noo!!!!!"; return shift->{Factory}->obtainDBH(); }
