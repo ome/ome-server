@@ -142,18 +142,18 @@
 			<xsl:attribute name = "Group">
 				<xsl:value-of select = "OME:GroupRef/@ID"/>
 			</xsl:attribute>
-			<xsl:attribute name = "DefaultPixels">
-				<xsl:if test = "string-length(@DefaultPixels) > 0">
-					<xsl:attribute name = "DefaultPixels">
-						<xsl:value-of select = "@DefaultPixels"/>
-					</xsl:attribute>
-				</xsl:if>
-				<xsl:if test = "not (string-length(@DefaultPixels) > 0)">
+			<xsl:if test = "string-length(@DefaultPixels) > 0">
+				<xsl:attribute name = "DefaultPixels">
+					<xsl:value-of select = "@DefaultPixels"/>
+				</xsl:attribute>
+			</xsl:if>
+			<xsl:if test = "not (string-length(@DefaultPixels) > 0)">
+				<xsl:if test = "string-length(OME:CustomAttributes/OME:Pixels [1] /@ID) > 0">
 					<xsl:attribute name = "DefaultPixels">
 						<xsl:value-of select = "OME:CustomAttributes/OME:Pixels [1] /@ID"/>
 					</xsl:attribute>
 				</xsl:if>
-			</xsl:attribute>
+			</xsl:if>
 			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:DatasetRef" mode = "CopyRefs"/>
 			<xsl:element name = "CustomAttributes">
