@@ -41,7 +41,6 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 use OME::Session;
-
 use Carp;
 use Log::Agent;
 use XML::LibXML;
@@ -121,13 +120,16 @@ sub processDOM {
               unless defined $module;
 
             my $hash = {
-                        module         => $module,
+                        module          => $module,
                         iterator_tag    => $node->getAttribute('IteratorTag') ||
                                            $module->default_iterator(),
                         new_feature_tag => $node->getAttribute('NewFeatureTag') ||
                                            $module->new_feature_tag(),
                        };
-
+                       
+            die "Node already defined \"".$node->toString()."\n"
+              if (exists $nodes{$nodeID});
+              
             $nodes{$nodeID} = $hash;
         }
 
@@ -164,6 +166,7 @@ sub processDOM {
                         from_output => $output,
                         to_node     => $toNodeID,
                         to_input    => $input,
+                        toString    => $link->toString(),
                        };
             push @links, $hash;
         }
@@ -178,16 +181,23 @@ sub processDOM {
 
         foreach my $nodeID (keys %nodes) {
             my $node = $nodes{$nodeID};
+            delete $node->{toString};
             $node->{analysis_chain} = $chainObject;
+            
             my $nodeObject = $factory->
               newObject("OME::AnalysisChain::Node",$node);
             $nodes{$nodeID} = $nodeObject;
         }
 
         foreach my $link (@links) {
+        	my $string = $link->{toString};
+        	delete $link->{toString};
             $link->{from_node} = $nodes{$link->{from_node}};
             $link->{to_node} = $nodes{$link->{to_node}};
             $link->{analysis_chain} = $chainObject;
+            
+            die "Link already defined \"".$string."\n"
+           	  if $factory->findObject("OME::AnalysisChain::Link",$link);
             my $linkObject = $factory->
               newObject("OME::AnalysisChain::Link",$link);
         }
