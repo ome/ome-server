@@ -98,6 +98,7 @@ from the input list and added to the preliminary output list.
 Since some Biorad images can be composed of several different files,
 this subroutine then takes the preliminary outlist and sorts it to
 finalOutlist (eventually) based on base filename.
+
 =cut
 
 sub getGroups
