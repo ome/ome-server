@@ -26,6 +26,9 @@ ifndef OME_ROOT
 OME_ROOT=/OME
 endif
 
+export OME_ROOT
+
+
 all: $(TARGETS)
 
 zernike : dataset.h dataset.c dataset.o zernike.c zernike.h BSUtils.o zernike.o
@@ -122,7 +125,7 @@ maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/
 	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
 omeis2:
-	$(MAKE) OME_ROOT='$(OME_ROOT)' -C omeis
+	$(MAKE) -C omeis
 
 
 OMEdb.o : OMEdb.h
@@ -168,6 +171,6 @@ install:
 	install -d /usr/local/bin
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
-	$(MAKE) OME_ROOT='$(OME_ROOT)' -C cgrayce install
-	$(MAKE) OME_ROOT='$(OME_ROOT)' -C omeis install
+	$(MAKE) -C cgrayce install
+	$(MAKE) -C omeis install
 
