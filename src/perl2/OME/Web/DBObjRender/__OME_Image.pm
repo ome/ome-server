@@ -96,14 +96,14 @@ sub new {
 	return $self;
 }
 
-=head2 getRef
+=head2 _getRef
 
 html format returns a thumbnail linking to the image viewer and the image name
 linking to the Image object.
 
 =cut
 
-sub getRef {
+sub _getRef {
 	my ($proto,$obj,$format) = @_;
 	
 	for( $format ) {
