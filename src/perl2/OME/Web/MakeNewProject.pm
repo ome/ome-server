@@ -57,9 +57,9 @@ sub getPageBody {
 		$session->project($project);
 		$session->writeObject();
 		
-		$body .= "At this point, session's dataset should be set to undef and you should be directed to create or choos a dataset. The second part is easy. Setting session's dataset is harder. Using \$session->dataset( undef ) to do this results in a fatal error. Message is:<br><pre>";
+		$body .= "<p>At this point, session's dataset should be set to undef and you should be directed to validation for this to be dealt with. The second part is easy. Setting session's dataset is harder. Using \$session->dataset( undef ) to do this results in a fatal error. Message is:<br><pre>";
 		$body .= "'' is not an object of type 'OME::Dataset' at /Users/josiah/OME/src/perl2//OME/Web/MakeNewProject.pm line 58";
-		$body .= "</pre><br>I believe this teaches us that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?";
+		$body .= "</pre><br>I tried using 1 instead of undef and it gave the message <pre>'1' is not an object...</pre> This demonstrates that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?</p>";
 
 		# this will add a script to reload OME::Home. User will be automatically directed to define a dataset.
 #		$body .= OME::Web::Validation->ReloadHomeScript();
