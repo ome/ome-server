@@ -570,7 +570,9 @@ sub renderData {
 				}
 	
 				# *many reference accessor
-				if( $type eq "has-many" || $type eq 'many-to-many' ) {
+				if( $type eq "has-many" || $type eq 'many-to-many' || exists $request->{ inferred_relation }) {
+# Magic to force load of the inferred relation accessor. It's kind of a hack.
+$obj->$field if exists $request->{ inferred_relation };
 					# ref_list if no field specified in command
 					my $render_mode = ( $request->{ render } or 'ref_list' );
 					$record{ $request_string } = $self->renderArray( 
