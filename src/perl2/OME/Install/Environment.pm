@@ -41,6 +41,10 @@ use Carp;
 #********* GLOBALS AND DEFINES
 #*********
 
+# The default location for the environment file
+use constant ENV_FILE        => '/etc/ome-install.store';
+#use constant ENV_FILE        => '/etc/foo';
+
 # The singleton instance.
 my $sole_instance = undef;
 
@@ -64,7 +68,9 @@ sub restore_from {
     eval "require Storable;";
     croak "Called OME::Install::Environment->restore_from(), but Storable could not be loaded."
     	if $@;
-    $sole_instance = Storable::retrieve ($env_file);
+    
+    $env_file = ENV_FILE unless $env_file;
+    $sole_instance = Storable::retrieve ($env_file) if -f $env_file;
 
     return $sole_instance;
 }
@@ -79,8 +85,11 @@ sub restore_from {
 #
 sub initialize {
     unless ($sole_instance) { # first time we're called
+        # Try to reload it from a file
+        restore_from();
         # Create the singleton
-        $sole_instance = &$new();
+        $sole_instance = &$new() unless $sole_instance;
+        
     }
 
     return $sole_instance;
@@ -96,6 +105,7 @@ sub store_to {
     croak "Called OME::Install::Environment->store_to(), but Storable could not be loaded."
     	if $@;
 
+    $env_file = ENV_FILE unless $env_file;
     print "Storing OME::Install::Environment in \"$env_file\"\n";
 
     Storable::store ($sole_instance, $env_file) or croak "Unable to store instance in \"$env_file\". $!";
@@ -273,34 +283,34 @@ sub lsid {
 }
 
 sub apache_conf {
-    my ($self, $apache_conf) = @_;
+	my $self = shift;
 
-    if($apache_conf) {
-	$self->{apache_conf} = $apache_conf;
+    if (scalar @_) {
+		$self->{apache_conf} = shift @_;
     } else {
-	return $self->{apache_conf} unless not exists $self->{apache_conf};
+		return $self->{apache_conf} unless not exists $self->{apache_conf};
     }
 
     return;
 }
 
 sub cron_conf {
-    my ($self, $cron_conf) = @_;
+	my $self = shift;
 
-    if($cron_conf) {
-	$self->{cron_conf} = $cron_conf;
+    if (scalar @_) {
+		$self->{cron_conf} = shift @_;
     } else {
-	return $self->{cron_conf} unless not exists $self->{cron_conf};
+		return $self->{cron_conf} unless not exists $self->{cron_conf};
     }
 
     return;
 }
 
 sub matlab_conf{
-    my ($self, $dir) = @_;
+	my $self = shift;
 
-    if($dir) {
-		$self->{matlab_conf} = $dir;
+    if (scalar @_) {
+		$self->{matlab_conf} = shift @_;
     } else {
 		return $self->{matlab_conf} unless not exists $self->{matlab_conf};
     }
@@ -309,12 +319,24 @@ sub matlab_conf{
 }
 
 sub worker_conf{
-    my ($self, $conf) = @_;
+	my $self = shift;
 
-    if($conf) {
-		$self->{worker_conf} = $conf;
+    if (scalar @_) {
+		$self->{worker_conf} = shift @_;
     } else {
 		return $self->{worker_conf} unless not exists $self->{worker_conf};
+    }
+
+    return;
+}
+
+sub DB_conf{
+	my $self = shift;
+
+    if (scalar @_) {
+		$self->{DB_conf} = shift @_;
+    } else {
+		return $self->{DB_conf} unless not exists $self->{DB_conf};
     }
 
     return;
