@@ -169,7 +169,6 @@ sub feature_view { return shift->{UserState}->feature_view(@_); }
 sub last_access { return shift->{UserState}->last_access(@_); }
 sub started { return shift->{UserState}->started(@_); }
 sub storeObject { return shift->{UserState}->storeObject(@_); }
-sub writeObject { return shift->{UserState}->writeObject(@_); }
 
 # __newInstance is truly local; it should never be able to be called
 # from outside of this module.

@@ -597,7 +597,8 @@ sub reorganizeSession{
 	}else{
 		$session->dataset($newdataset[0]);
 	}
-	$session->writeObject(); 
+	$session->storeObject(); 
+	$session->commitTransaction();
 	return 1;
 }
 
