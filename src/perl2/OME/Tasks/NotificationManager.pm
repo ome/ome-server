@@ -155,36 +155,67 @@ sub clear {
     }
 }
 
-=head2 wait ('condition',$timeout)
+=head2 registerListener ('condition')
 
-This method can be called to wait for a certain named condition.  Anybody connected
-to the DB (locally or remotely) can issue the condition by calling:
+This method can be called to register a listener for a certain named condition.
+Anybody connected to the DB (locally or remotely) can issue the condition by calling:
 
  OME::Tasks::NotificationManager->notify ('condition');
 
-The $timeout parameter is specified in seconds (can be fractional).  An undef $timeout
-is forever.  The condition string can be any "normal" kind of string.  What's a normal
+The condition string can be any "normal" kind of string.  What's a normal
 kind of string, you may ask?  Well, it shouldn't have any "funny stuff" in it.
 
-Note that this method can return for various reasons, but if the specified
-event didn't occur, it will return undef.
+This method only registers a listener - it doesn't actually listen for any events.
+To block and wait for any condition with a registered listener, call:
+ OME::Tasks::NotificationManager->listen ('condition',$timeout);
 
 =cut
 
-sub wait {
-	my ($proto,$condition,$timeout) = @_;
+sub registerListener {
+	my ($proto,$condition) = @_;
     my $class = ref($proto) || $proto;
 
 	my $dbh = $class->taskFactory()->obtainDBH();
     my $delegate = OME::Database::Delegate->getDefaultDelegate();
 	$delegate->registerListener ($dbh,$condition);
-	$condition = $delegate->waitCondition ($dbh,$condition,$timeout);
-	$delegate->unregisterListener ($dbh,$condition);
-	
-	return ($condition);
-
 
 	return 1;
+}
+
+=head2 unregisterListener ('condition')
+
+This method is  called to un-register a listener for a certain named condition.
+
+=cut
+
+sub unregisterListener {
+	my ($proto,$condition) = @_;
+    my $class = ref($proto) || $proto;
+
+	my $dbh = $class->taskFactory()->obtainDBH();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+	$delegate->unregisterListener ($dbh,$condition);
+
+	return 1;
+}
+
+=head2 listen ($timeout)
+
+This method will block until $timeout seconds (can be fractional) or forever
+if $timeout is undef, listening for any conditions with registered listeners.
+
+An array ref is returned containing a list of conditions that occured.  If the
+timeout expires without any conditions occuring, returns undef.
+
+=cut
+
+sub listen {
+	my ($proto,$timeout) = @_;
+    my $class = ref($proto) || $proto;
+
+	my $dbh = $class->taskFactory()->obtainDBH();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+	return ($delegate->waitNotifies ($dbh,$timeout));
 }
 
 =head2 notify ('condition')
