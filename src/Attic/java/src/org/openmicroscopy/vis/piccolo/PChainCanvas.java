@@ -45,6 +45,7 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.Module;
@@ -70,6 +71,7 @@ import java.util.List;
 
 public class PChainCanvas extends PCanvas implements DropTargetListener {
 	
+	private static float INIT_SCALE=0.6f;
 	private Connection connection=null;
 	private int modCount;
 	private PLayer layer;
@@ -85,7 +87,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		this.connection  = c;
 		layer = getLayer();
 	
-		removeInputEventListener(getPanEventHandler());
+		removeInputEventListener(getZoomEventHandler());
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
 		linkLayer.moveToFront();
@@ -95,10 +97,16 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		
 
 		final PCamera camera = getCamera();
-	       
+	    getCamera().setViewScale(INIT_SCALE);
 		camera.addInputEventListener(new PChainToolTipHandler(camera));
 		
 		
+	}
+	
+	public PBounds getBufferedBounds() {
+		PBounds b = layer.getFullBounds();
+		return new PBounds(b.getX(),b.getY(),b.getWidth()+2*PConstants.BORDER,
+		b.getHeight()+2*PConstants.BORDER); 
 	}
 	
 
@@ -184,5 +192,5 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 			mod = (PModule) childObjects[i];
 			mod.remove();
 		}
-	}		
+	}
 }
