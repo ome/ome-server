@@ -74,6 +74,13 @@ Important!! Subclasses should not be accessed directly. All Rendering
 should go through DBObjRendering. Specialization is completely
 transparent.
 
+For a simple and complete example of rendering activity, check out: 
+src/html/Templates/OME_Image_detail.tmpl,
+OME::Web::DBObjRender::__OME_Image, and
+OME::Web::DBObjDetail::__OME_Image
+Also, check out how dataset asks for it's images in
+src/html/Templates/OME_Dataset_detail.tmpl
+
 =cut
 
 use strict;
