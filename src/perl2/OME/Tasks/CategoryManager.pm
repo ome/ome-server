@@ -73,7 +73,7 @@ sub getImagesInCategory {
 # as a filtering parameter consistently fails with the message
 # "DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 1069."
 # so i'll just filter the list with grep
-	@classifications = grep( ( ( not defined $_->Valid ) || $_->Valid ne 0 ), @classifications );
+	@classifications = grep( ( ( not defined $_->Valid ) || $_->Valid eq 1 ), @classifications );
 	my @images = sort( { $a->name cmp $b->name } map( $_->image, @classifications ) );
 	return @images;
 }
@@ -111,8 +111,10 @@ sub classifyImage {
 		} ) :
 		()
 	);
-	@other_classifications = grep( (not defined $_->Valid || $_->Valid eq 1 ), @other_classifications );
-	return $other_classifications[0]->Category() if( @other_classifications );
+	@other_classifications = grep( ( (not defined $_->Valid) || ( $_->Valid eq 1 ) ), @other_classifications );
+	if( @other_classifications ) {
+		return $other_classifications[0]->Category();
+	}
 	
 	# skip if the image has already been classified with this classification
 	if( my $classification = $factory->findObject( '@Classification', {
@@ -158,6 +160,36 @@ sub declassifyImage {
 	$classification->storeObject();
 	$session->commitTransaction();
 }
+
+=head2 getImageClassification()
+
+	my $classification = OME::Tasks::CategoryManager->
+		getImageClassification($image, $categoryGroup);
+
+Find the classification for the image in this categoryGroup. If there is
+more than one valid classification found, this method will return an
+array reference. If exactly one valid classification is found, it will
+return it. If none are found, it will return undef.
+
+=cut
+
+sub getImageClassification {
+	my ($proto, $image, $categoryGroup ) = @_;
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+	my @classifications = $factory->findObjects( 
+		'@Classification', 
+		'Category.CategoryGroup' => $categoryGroup,
+		image                    => $image
+	);
+	@classifications = grep( ( ( not defined $_->Valid ) || $_->Valid ne 0 ), @classifications );
+	return \@classifications
+		if( @classifications > 1 );
+	return $classifications[0]
+		if( @classifications eq 1 );
+	return undef;
+}
+
 
 =head1 AUTHOR
 
