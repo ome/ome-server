@@ -40,6 +40,7 @@
  package org.openmicroscopy.vis.ome;
  
 import org.openmicroscopy.remote.RemoteModule;
+import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.vis.piccolo.PModule;
 import java.util.ArrayList;
@@ -54,6 +55,10 @@ import java.util.ArrayList;
 	
 	public CModule() {
 		super();
+	}
+	
+	public CModule(RemoteSession session,String reference) {
+		super(session,reference);
 	}
 	
 	public void addModuleWidget(PModule pMod) {
