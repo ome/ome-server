@@ -135,8 +135,9 @@ void Get_Image_Stats (char *dims)
 	planeStats = (statsPtr) malloc (numStackStats * sizeof (statsStruct) );
 	for (i = 0; i < numStackStats; i++) {
 		numFloats = fscanf (stdin,"%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f",&theZ,&theW,&theT,&min,&max,&sum_i,&sum_i2,&sum_log_i,&sum_xi,&sum_yi,&sum_zi);
-		if (numFloats < 6) {
-			fprintf (stderr,"Must have 6 sums, found %d\n",numFloats);
+		numFloats = fprintf (stderr,"%d: %d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f\n",i,theZ,theW,theT,min,max,sum_i,sum_i2,sum_log_i,sum_xi,sum_yi,sum_zi);
+		if (numFloats < 11) {
+			fprintf (stderr,"Must have 5 integers and 6 floats (11 total), found %d total\n",numFloats);
 			exit (-1);
 		}
 		
