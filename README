@@ -1,0 +1,112 @@
+
+
+
+                                   README
+
+                      OPEN MICROSCOPY ENVIRONMENT (OME)
+
+
+
+
+
+
+Contents
+
+   * Introduction
+   * Relationship with SCM
+   * Dependencies
+   * Building and deploying OME
+   * License
+   
+
+
+
+Introduction
+
+    This README file shortly sums up the contents of the Software Build
+    and Deployment Document (SBDD) that is located in the OME/doc/SBDD 
+    directory. 
+
+    The SBDD describes how to build and deploy the Open Microscopy 
+    Environment (OME) software. 
+
+    All the information that is necessary and strictly related to the 
+    build and deployment process is unfolded: the mechanism that we use 
+    to tag and document software builds, the relationship between SBDD
+    and builds, a description of the project repository and its 
+    organization, directions on how to retrieve the files needed for a 
+    given build as well as how to retrieve the latest developed source 
+    code, a list of constraints that your system must satisfy if you 
+    want to build and deploy OME, and, of course, detailed build and 
+    deployment instructions.
+
+
+
+
+Relationship with SCM
+
+    Software Configuration Management in the OME project makes use of 
+    CVS.
+    Every time the OME development reaches a state that is noteworthy 
+    to the developers and the system is successfully built and deployed, 
+    the CVS repository is tagged to freeze that point in time. Also, a 
+    Software Build and Deployment Document is written to detail necessary 
+    information for the build and deployment process. 
+
+    The information contained in the SBDD only refer to a specific 
+    version of the source code and related artifacts in the project 
+    repository. That version may not be the same as the latest version in 
+    the project repository. Please, read carefully Section I-1 of the SBDD 
+    in order to understand the relationship of this document with source 
+    code and related build artifacts.
+
+
+
+
+Dependencies
+
+    The system is being developed and tested on Linux and Mac OS X.
+    We're making use of Apache Web Server, mod_perl and PostgreSQL. 
+    The system is being mainly developed in Perl and partially in C.
+    Several Perl libraries and a few C libraries are required.
+    
+    These dependencies are detailed in Section III of the SBDD.
+
+
+
+
+Building and deploying OME
+
+    OME is built from scratch with a few standard make commands.
+    In the current deployment configuration, OME is running within 
+    mod_perl. This process is created by the Apache httpd process in 
+    order to take care of execution of HTTP requests that are handled 
+    by Perl scripts via CGI. Apache and mod_perl are configured so that 
+    they have access to the OME Perl scripts and modules. Apache is also 
+    made aware of some HTML static pages and JavaScript libraries that 
+    are needed to support dynamic content provided through mod_perl.
+    
+    Please refer to Section IV of the SBDD for detailed build and 
+    deployment instructions.
+
+
+
+
+License
+
+    OME is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published 
+    by the Free Software Foundation; either version 2 of the License, 
+    or (at your option) any later version.
+
+    OME is distributed in the hope that it will be useful, but WITHOUT 
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+    FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License 
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OME; if not, write to the Free Software Foundation, Inc., 
+    59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+
