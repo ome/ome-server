@@ -64,6 +64,7 @@ import java.util.List;
 import java.lang.Object;
 import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 /** 
  * A Piccolo widget for a module. This widget will consist of a 
@@ -231,32 +232,48 @@ public class PModule extends PPath implements PBufferedNode {
 		int 	rows = inSize > outSize? inSize: outSize;
 		
 		FormalParameter param;
-		PFormalInput ins[] = new PFormalInput [inSize];
-		PFormalOutput outs[] = new PFormalOutput [outSize];
+		PFormalInput inp;
+		PFormalOutput outp;
+		//PFormalInput ins[] = new PFormalInput [inSize];
+		//PFormalOutput outs[] = new PFormalOutput [outSize];
+		TreeSet inSet  = new TreeSet();
+		TreeSet outSet= new TreeSet();
 		
 		// get input nodes and find max input width
 		float maxInputWidth =0;
 		float maxOutputWidth =0;
 		
 		// for each row.
+		System.err.println("module name is "+module.getName());
 		for (int i = 0; i < rows; i++) {
 			if (i < inSize) {
 				// as long as I have more inputs, create them, 
 				// add them to label nodes, 
 				// and store max width
 				param = (FormalParameter) inputs.get(i);
-				ins[i]= new PFormalInput(this,param,connection);
+				inp = new PFormalInput(this,param,connection);
+				labelNodes.addChild(inp);
+				inSet.add(inp);
+				if (inp.getLabelWidth() > maxInputWidth)
+					maxInputWidth = inp.getLabelWidth();
+				/*ins[i]= new PFormalInput(this,param,connection);
 				labelNodes.addChild(ins[i]);
 				if (ins[i].getLabelWidth() > maxInputWidth)
 					maxInputWidth = ins[i].getLabelWidth();
+				*/
 				
 			}
 			if (i < outSize) {
 				param = (FormalParameter) outputs.get(i);
-				outs[i]= new PFormalOutput(this,param,connection);
+				outp = new PFormalOutput(this,param,connection);
+				labelNodes.addChild(outp);
+				outSet.add(outp);
+				if (outp.getLabelWidth() > maxOutputWidth)
+					maxOutputWidth = outp.getLabelWidth();
+				/*outs[i]= new PFormalOutput(this,param,connection);
 				labelNodes.addChild(outs[i]);
-				if (outs[i].getLabelWidth() > maxOutputWidth)
-					maxOutputWidth = outs[i].getLabelWidth();
+								if (outs[i].getLabelWidth() > maxOutputWidth)
+									maxOutputWidth = outs[i].getLabelWidth();*/
 			}
 		}
 		
@@ -274,12 +291,18 @@ public class PModule extends PPath implements PBufferedNode {
 		height+=NAME_SPACING;
 		float rowHeight=0;
 		
+		
+	 		
+	 	Object[] ins = inSet.toArray();
+	 	Object[] outs = outSet.toArray();
+	
 		// place things at appropriate x,y.
 		for (int i =0; i < rows; i++) {
 			// get ith input 
 			if (i <inSize) {
-				ins[i].setOffset(NAME_LABEL_OFFSET,height);
-				rowHeight = (float) ins[i].getFullBoundsReference().getHeight();	
+				inp = (PFormalInput) ins[i];
+				inp.setOffset(NAME_LABEL_OFFSET,height);
+				rowHeight = (float) inp.getFullBoundsReference().getHeight();	
 			}
 			// get ith output
 			if (i < outSize) {
@@ -288,11 +311,12 @@ public class PModule extends PPath implements PBufferedNode {
 				// and the width of this one.
 				//float rightJustifyGap = maxOutputWidth-
 				//	((float) outs[i].getFullBoundsReference().getWidth());
+				outp = (PFormalOutput) outs[i];
 				float rightJustifyGap = maxOutputWidth-
-					outs[i].getLabelWidth();
+					outp.getLabelWidth();
 				// and then move right by that amount.
-				outs[i].setOffset(outputColumnX+rightJustifyGap,height);
-				rowHeight = (float) outs[i].getFullBoundsReference().getHeight();
+				outp.setOffset(outputColumnX+rightJustifyGap,height);
+				rowHeight = (float) outp.getFullBoundsReference().getHeight();
 			}
 			// advance to next row in height.
 			height += rowHeight; // was +PARAMETER_SPACING;, but now
@@ -310,6 +334,7 @@ public class PModule extends PPath implements PBufferedNode {
 	
 		if (s < PConstants.SCALE_THRESHOLD) {
 			labelNodes.setVisible(false);
+			labelNodes.setPickable(false);
 			name.setVisible(false);
 			zoomName.setVisible(true);
 			linkTargets.setVisible(true);
@@ -318,6 +343,7 @@ public class PModule extends PPath implements PBufferedNode {
 			linkTargets.setVisible(false);
 			name.setVisible(true);
 			labelNodes.setVisible(true);
+			labelNodes.setPickable(true);
 			zoomName.setVisible(false);
 		} 
 		super.paint(aPaintContext);
