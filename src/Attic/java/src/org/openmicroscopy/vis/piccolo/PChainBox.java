@@ -41,7 +41,6 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.chains.ControlPanel;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
@@ -96,6 +95,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 	private static final float VGAP=10;
 	private static final float HGAP=20;
+	private static final float FUDGE=3;
 	
 	private PText name;
 	
@@ -109,12 +109,11 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 	private Color baseColor;
 	
-	public PChainBox(Connection connection,ControlPanel controlPanel,
-		CChain chain) {
+	public PChainBox(Connection connection,CChain chain) {
 		super();
 		this.chain = chain;
 		chainID = chain.getID();
-		SelectionState selectionState = controlPanel.getSelectionState();
+		SelectionState selectionState = SelectionState.getState();
 		selectionState.addSelectionEventListener(this);
 		
 		// base Color is EXECUTED_COLOR if there are any executions at all
@@ -182,13 +181,13 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 			
 			// add individual datasets
 			PDatasetLabels datasetLabels = new 
-				PDatasetLabels(datasets,datasetsWidth,selectionState);
+				PDatasetLabels(datasets,datasetsWidth);
 			
 			// adjust size
 			chainLayer.addChild(datasetLabels);
 			double ratio = PConstants.ITEM_LABEL_SCALE/
 				PConstants.FIELD_LABEL_SCALE;
-			y += (1-ratio)*dlbounds.getHeight()-VGAP;
+			y += (1-ratio)*dlbounds.getHeight()-VGAP-FUDGE;
 			datasetLabels.setOffset(x+dlbounds.getWidth()+2*HGAP,y);
 			PBounds b2 = datasetLabels.getGlobalFullBounds();
 			double datasetHeight = dlbounds.getHeight();
