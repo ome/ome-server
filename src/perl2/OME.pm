@@ -37,14 +37,17 @@
 
 package OME;
 use strict;
-use OME;
 our $VERSION = 2.001_000;
 
 use Config;
-my $THREADS_AVAILABLE = 0;
+our $THREADS_AVAILABLE = 0;
+our $BIG_ENDIAN;
 
 BEGIN {
     $THREADS_AVAILABLE = $Config{useithreads} && $ENV{OME_USE_THREADS};
+    $BIG_ENDIAN =
+      ($Config{byteorder} == 1234) ||
+      ($Config{byteorder} == 12345678);
 }
 
 =head1 NAME
