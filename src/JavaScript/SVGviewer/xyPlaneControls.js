@@ -231,7 +231,7 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 	this.prefsButton = new button( 
 		10, 70, 
 		{ obj: this.prefs.toolBox, method: 'unhide' },
-		'<text fill="black" text-decoration="underline">Viewer Preferences</text>'
+		'<text fill="black" text-decoration="underline">Resize Toolboxes</text>'
 	);
 	this.prefsButton.realize( this.displayContent );
 
