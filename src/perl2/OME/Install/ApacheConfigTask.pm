@@ -66,6 +66,7 @@ our $APACHE_CONF_DEF = {
 	OMEIS    => 1,
 	OMEDS    => 1,
 	WEB      => undef,
+	CGI_BIN  => undef,
 	HUP      => 1,
 };
 
@@ -394,7 +395,8 @@ sub execute {
 		$apache_info->{ome_conf} = $ome_conf;
 		getApacheInfo($apache_info);
 		$httpd_vers = 'httpd2' if $apache_info->{version} == 2;
-		$APACHE->{WEB} = $apache_info->{DocumentRoot} unless defined $APACHE->{WEB} and not $APACHE->{WEB};
+		$APACHE->{WEB} = $apache_info->{DocumentRoot} unless defined $APACHE->{WEB} and $APACHE->{WEB};
+		$APACHE->{CGI_BIN} = $apache_info->{cgi_bin} unless defined $APACHE->{CGI_BIN} and $APACHE->{CGI_BIN};
 	}
 
 	# Confirm all flag
@@ -406,6 +408,7 @@ sub execute {
 
 			# Ask user to confirm his/her original entries
 	
+			print BOLD,"Apache configuration:\n",RESET;
 			print "       Configure Apache?: ", BOLD, $APACHE->{DO_CONF}  ?'yes':'no', RESET, "\n";
 			print " Developer configuration: ", BOLD, $APACHE->{DEV_CONF} ?'yes':'no', RESET, "\n";
 			print "         Server restart?: ", BOLD, $APACHE->{HUP}      ?'yes':'no', RESET, "\n";
@@ -413,6 +416,9 @@ sub execute {
 			print "          Images (omeis): ", BOLD, $APACHE->{OMEIS}    ?'yes':'no', RESET, "\n";
 			print "            Data (omeds): ", BOLD, $APACHE->{OMEDS}    ?'yes':'no', RESET, "\n";
 			print "                     Web: ", BOLD, $APACHE->{WEB}      ?'yes':'no', RESET, "\n";
+			print BOLD,"Apache directories:\n",RESET if $APACHE->{WEB} or $APACHE->{OMEIS};
+			print "           DocumentRoot: ", BOLD, $APACHE->{WEB}, RESET, "\n" if $APACHE->{WEB};
+			print "                cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
 
 			print "\n";  # Spacing
 
@@ -455,8 +461,12 @@ sub execute {
 		#******** Install omeis?
 		#********
 		if (y_or_n("Install image server (omeis) ?",'y')) {
-			$apache_info->{cgi_bin}
-				or croak "Apache httpd.conf does not have a cgi-bin directory";
+			my $cgi_bin = $APACHE->{CGI_BIN};
+			$cgi_bin = $apache_info->{cgi_bin} unless $cgi_bin;
+			$APACHE->{CGI_BIN} = confirm_path ('Apache cgi-bin directory :', $cgi_bin);
+			while (! -e $APACHE->{CGI_BIN} or ! -d $APACHE->{CGI_BIN}) {
+				$APACHE->{CGI_BIN} = confirm_path ('Apache cgi-bin directory :', $cgi_bin);
+			}
 			$APACHE->{OMEIS} = 1;
 		} else {
 			$APACHE->{OMEIS} = 0;
@@ -522,7 +532,7 @@ sub execute {
 	#********
 	if ($APACHE->{OMEIS}) {
 		$source = 'src/C/omeis/omeis';
-		$dest = $apache_info->{cgi_bin}.'/omeis';
+		$dest = $APACHE->{CGI_BIN}.'/omeis';
 		copy ($source,$dest) or croak "Could not copy $source to $dest:\n$!\n";
 		chmod (0755,$dest) or croak "Could not chmod $dest:\n$!\n";
 		chown ($APACHE_UID,$OME_GID,$dest) or croak "Could not chown $dest:\n$!\n";
