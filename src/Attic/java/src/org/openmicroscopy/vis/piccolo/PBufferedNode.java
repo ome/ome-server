@@ -56,4 +56,7 @@ public interface PBufferedNode  {
 
 	public PBounds getBufferedBounds();	
 	
+	public void setOffset(double x,double y);
+	
+	
 }
