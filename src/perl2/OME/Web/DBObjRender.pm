@@ -435,9 +435,30 @@ sub getRelationAccessors {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
 		    $proto eq __PACKAGE__);
 
+	my $iterator = OME::Web::DBObjRender::Iterator->new( 
+		$proto->__gather_PublishedManyRefs( $obj ) );
+
+	return $iterator;
+}
+
+sub __gather_PublishedManyRefs {
+	my ($proto,$obj) = @_;
+
 	my $relation_accessors = $obj->getPublishedManyRefs();
-	return %$relation_accessors if wantarray;
-	return $relation_accessors;
+	my @methods = sort( keys %$relation_accessors );
+	my @objects = map( \$obj, @methods );
+	my @names;
+	foreach my $method (@methods ) {
+		(my $name = $method) =~ s/_/ /g;
+		$name = ucfirst( $name );
+		push @names, $name;
+	}
+	@names             = sort( @names );
+	my @params         = map( (), @methods );
+	my @call_as_scalar = map( 0, @methods );
+	my @return_type    = map{ $relation_accessors->{ $_ } } @methods;
+
+	return( \@objects, \@methods, \@params, \@return_type, \@names, \@call_as_scalar );
 }
 
 =head2 getSearchFields
@@ -552,5 +573,69 @@ sub _getSpecializedRenderer {
 Josiah Johnston <siah@nih.gov>
 
 =cut
+
+package OME::Web::DBObjRender::Iterator;
+
+sub new {
+	my $proto = shift;
+	my $class = ref( $proto ) || $proto;
+	
+	my ($objects, $methods, $params, $return_type, $names, $call_as_scalar) = @_;
+	
+	my $self = {
+		__objects     => $objects,
+		__methods     => $methods,
+		__params      => $params,
+		__return_type => $return_type,
+		__names       => $names,
+		__call_as_scalar => $call_as_scalar,
+		__count       => 0,
+		__length      => scalar( @$objects )
+	};
+	
+	bless $self, $class;
+	return $self;
+}
+
+sub next {
+	my $self = shift;
+	return undef
+		if( ($self->{__count} + 1) >= $self->{__length} );
+	$self->{__count}++;
+	return $self;
+}
+
+sub first {
+	my $self = shift;
+	return undef
+		if( $self->{__length} eq 0 );
+	$self->{__count} = 0;
+	return $self;
+}
+
+sub name {
+	my $self = shift;
+	return $self->{__names}->[ $self->{__count} ];
+}
+
+sub return_type {
+	my $self = shift;
+	return $self->{__return_type}->[ $self->{__count} ];
+}
+
+sub getList {
+	my $self = shift;
+	my $object = ${ $self->{__objects}->[ $self->{__count} ] };
+	my $method = $self->{__methods}->[ $self->{__count} ];
+	my $params = $self->{__params }->[ $self->{__count} ] or [];
+	my @list;
+	if ( $self->{__call_as_scalar}->[ $self->{__count} ] ) {
+		my $list = $object->$method( @$params );
+		@list = @$list;
+	} else {
+		@list = $object->$method( @$params );
+	}
+	return \@list;
+}
 
 1;
