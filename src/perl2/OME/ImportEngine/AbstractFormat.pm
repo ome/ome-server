@@ -63,6 +63,8 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use OME::Tasks::ImportManager;
+
 use fields qw(_session _module_execution);
 use File::Basename;
 
@@ -73,30 +75,25 @@ by the import engine to import images.
 
 =head2 new
 
-	my $format = OME::ImportEngine::AbstractFormat->
-	    new($session,$module_execution);
+	my $format = OME::ImportEngine::AbstractFormat->new();
 
-Creates a new instance of this format import class.  The module
-execution parameter specifies an instance of the Importer analysis
-module which will have been already created by the import engine.  Any
-new attributes created by this importer should point to this module
-execution, otherwise they will not be visible to any future analysis
-chains.
+Creates a new instance of this format import class.  Any new
+attributes created by this importer should point to the appropriate
+import module executions, otherwise they will not be visible to any
+future analysis chains.  This MEX's can be obtained via the get*MEX
+methods in the OME::Tasks::ImportManager class.
 
 This is the only contract method which has a non-abstract
 implementation in AbstractFormat.  Any subclasses should be sure to
-call $self->SUPER::new($module_execution) in their own constructors.
+call $self->SUPER::new() in their own constructors.
 
 =cut
 
 sub new {
-    my ($proto,$session,$module_execution) = @_;
+    my ($proto) = @_;
     my $class = ref($proto) || $proto;
 
     my $self = {};
-    $self->{_session} = $session;
-    $self->{_module_execution} = $module_execution;
-    my %paramHash;
 
     bless $self, $class;
     return $self;
@@ -204,18 +201,6 @@ represent the fact that these methods are to be called from within
 overrides of the above contract methods, and are not meant to be
 called publicly.
 
-=head2 ModuleExecution
-
-	my $module_execution = $self->ModuleExecution();
-
-Returns the module execution that was given as a parameter to the
-C<new> method.  Note that this will only return a correct value if the
-overridden C<new> method calls its superclass C<new> method.
-
-=cut
-
-sub ModuleExecution { return shift->{_module_execution}; }
-
 =head2 Session
 
 	my $session = $self->Session();
@@ -226,7 +211,7 @@ C<new> method calls its superclass C<new> method.
 
 =cut
 
-sub Session { return shift->{_session}; }
+sub Session { return OME::Session->instance(); }
 
 
 =head2 __newImage
@@ -288,6 +273,51 @@ sub __getFileSHA1 {
     close (STDOUT_PIPE);
 
     return $sha1;
+}
+
+=head2 __touchOriginalFile
+
+	my $file_attribute = $self->__touchOriginalFile($filename,$format);
+
+Should be called once for each file which constitutes an image.
+Creates an OriginalFile attribute for this file.  If this file is
+touched more than once during the import process, only one attribute
+will be created.
+
+=cut
+
+sub __touchOriginalFile {
+    my ($self,$filename,$format) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    my $file_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
+
+    print STDERR "Touch '$format' $filename\n";
+
+    my $sha1 = $self->__getFileSHA1($filename);
+
+    # If we've already touched this file during this import, reuse the
+    # existing attribute.
+
+    my $file = $factory->
+      findAttribute("OriginalFile",
+                    {
+                     module_execution => $file_mex,
+                     Path             => $filename,
+                    });
+
+    # Otherwise create a new one.
+
+    $file ||= $factory->
+      newAttribute("OriginalFile",undef,$file_mex,
+                   {
+                    Repository => undef,
+                    Path       => $filename,
+                    SHA1       => $sha1,
+                    Format     => $format,
+                   });
+
+    return $file;
 }
 
 =head2 __removeFilenames
@@ -371,7 +401,8 @@ sub __createRepositoryFile {
 
     my $session = $self->Session();
     my $factory = $session->Factory();
-    my $module_execution = $self->ModuleExecution();
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
     my @repository = $factory->findAttributes("Repository");
     my $repository = $repository[0];
 
