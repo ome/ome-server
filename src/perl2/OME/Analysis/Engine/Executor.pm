@@ -78,6 +78,9 @@ sub getDefaultExecutor {
     if ($ENV{OME_THREADED}) {
         OME::Analysis::Engine::ForkedPerlExecutor->require();
         return OME::Analysis::Engine::ForkedPerlExecutor->new();
+    } elsif ($ENV{OME_DISTRIBUTED}) {
+        OME::Analysis::Engine::SimpleWorkerExecutor->require();
+        return OME::Analysis::Engine::SimpleWorkerExecutor->new();
     } else {
         OME::Analysis::Engine::UnthreadedPerlExecutor->require();
         return OME::Analysis::Engine::UnthreadedPerlExecutor->new();
