@@ -53,9 +53,9 @@ var xlinkns  = "http://www.w3.org/1999/xlink";
 			isRGB is a boolean value, indication if display is set to RGB or Greyscale
 
 *****/
-function OMEimage( imageID, Stats, Dims, CGI_URL, CGI_optionStr, 
+function OMEimage( imageID, pixelsID, Stats, Dims, CGI_URL, CGI_optionStr, 
                    SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis ) {
-	this.init( imageID, Stats, Dims, CGI_URL, CGI_optionStr, 
+	this.init( imageID, pixelsID, Stats, Dims, CGI_URL, CGI_optionStr, 
 	           SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis );
 }
 
@@ -83,7 +83,8 @@ OMEimage.prototype.saveState = function() {
 	var unique   = Math.random();
 	var imageURL = this.SaveDisplayCGI_URL + '&ImageID=' + this.imageID + 
 		'&theZ=' + theZ + '&theT=' + theT + "&RGBon=" + this.RGBon.join() +
-		'&CBW=' + this.CBW.join() + "&isRGB=" + this.inColor + "&Unique=" + unique;
+		'&CBW=' + this.CBW.join() + "&isRGB=" + this.inColor + "&Unique=" + unique + 
+		'&PixelsID=' + this.pixelsID;
 	tmpImg.setAttributeNS(xlinkns, "xlink:href",imageURL);
 
 	this.SVGimageContainer.appendChild(tmpImg);
@@ -294,11 +295,12 @@ OMEimage.prototype.getDimT = function() {
                                  Private Functions
 ********************************************************************************************/
 
-OMEimage.prototype.init = function( imageID, Stats, Dims,  CGI_URL, CGI_optionStr,
+OMEimage.prototype.init = function( imageID, pixelsID, Stats, Dims,  CGI_URL, CGI_optionStr,
 	SaveDisplayCGI_URL, default_CBW, default_RGBon, default_isRGB, use_omeis ) {
 	this.initialized        = true;
 	// set variables
 	this.imageID            = imageID;
+	this.pixelsID           = pixelsID;
 	this.Stats              = Stats;
 	this.CGI_URL            = CGI_URL;
 	this.CGI_optionStr      = CGI_optionStr;
