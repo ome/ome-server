@@ -99,7 +99,7 @@ our @core_dirs = (
 		children => ["lock", "sessions", "install"],
 		owner => \$OME_USER,
 		group => \$OME_GROUP,
-		mode => 02755, # Set the "Set-GID" bit on the dir
+		mode => 02775, # Set the "Set-GID" bit on the dir
 	}
 );
 
