@@ -377,7 +377,6 @@ public class Connection {
 				return null;
 			}
 			public void finished() {
-				System.err.println("finishing with the datasets");
 				controller.finishInitThread();
 			}
 		};
@@ -389,7 +388,9 @@ public class Connection {
 			return null;
 			
 		HashMap crit = new HashMap();
+		Attribute user = session.getUser();
 		crit.put("analysis_chain",c);
+		crit.put("experimenter_id",user);
 		List execs  = factory.findObjects("OME::AnalysisChainExecution",crit);
 		return execs;
 	}
@@ -418,6 +419,7 @@ public class Connection {
 			BufferedImage image = null;
 			public Object construct() {
 				try {
+				//	System.err.println("trying to get image "+id);
 					image = thumbnails.getThumbnail(id);
 				}
 				catch (Exception e) {
