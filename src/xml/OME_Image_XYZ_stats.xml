@@ -1,0 +1,118 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<AnalysisModule Category = "Statistics" ModuleName = "XYZ Plane statistics - XML" 
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
+	Description = "Calculate pixel statistics for each XYZ plane. Produced from XML specification.">
+	<Declaration>
+		<Table AttributeType = "I" TableName = "XYZ_IMAGE_INFO" 
+			Description = "General image XYZ stack attributes. Produced from XML.">
+			<Column ColumnID = "theW" ColumnName = "THE_W" SQL_DataType = "integer" Description = "Specifies Wavelength"/>
+			<Column ColumnID = "theT" ColumnName = "THE_T" SQL_DataType = "integer" Description = "Specifies Timepoint"/>
+			<Column ColumnID = "Min" ColumnName = "MIN" SQL_DataType = "integer" Description = "Minimum value"/>
+			<Column ColumnID = "Max" ColumnName = "MAX" SQL_DataType = "integer" Description = "Maximum value"/>
+			<Column ColumnID = "Mean" ColumnName = "MEAN" SQL_DataType = "float" Description = "Arithmetic Mean"/>
+			<Column ColumnID = "Geomean" ColumnName = "GEOMEAN" SQL_DataType = "float" Description = "Geometric Mean"/>
+			<Column ColumnID = "Sigma" ColumnName = "SIGMA" SQL_DataType = "float" Description = "Standard Deviation"/>
+			<Column ColumnID = "CentroidX" ColumnName = "CENTROID_X" SQL_DataType = "float" Description = ""/>
+			<Column ColumnID = "CentroidY" ColumnName = "CENTROID_Y" SQL_DataType = "float" Description = ""/>
+			<Column ColumnID = "CentroidZ" ColumnName = "CENTROID_Z" SQL_DataType = "float" Description = ""/>
+		</Table>
+		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
+		<FormalOutput Name = "XYZStackMin" Description = "Minimum pixel intensity in an XYZ stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMin.Min" ColumnID = "Min" Description = "Minimum pixel intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMin.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMin.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYZStackMax" Description = "Maximum pixel intensity in an XYZ stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMax.Max" ColumnID = "Max" Description = "Maximum pixel intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMax.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMax.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYZStackMean" Description = "Mean of pixel intensities in an XYZ stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMean.Mean" ColumnID = "Mean" Description = "Mean of pixel intensities"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackMean.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYZStackGeoMean" Description = "Geometric mean of pixel intensities in an XYZ stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackGeoMean.Geomean" ColumnID = "Geomean" Description = "Geometric mean of pixel intensities"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackGeoMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackGeoMean.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYZStackSigma" Description = "Standard deviation of pixel intensities in an XYZ stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackSigma.Sigma" ColumnID = "Sigma" Description = "Standard Deviation of pixel intensities"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackSigma.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYZStackCentroidX" Description = "x, in pixels, of center of intensity for the stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackCentroidX.CentroidX" ColumnID = "CentroidX" Description = "x, in pixels, of center of intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackCentroidX.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackCentroidX.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYZStackCentroidY" Description = "y, in pixels, of center of intensity for the stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackCentroidY.CentroidY" ColumnID = "CentroidY" Description = "y, in pixels, of center of intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackCentroidY.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStackCentroidY.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYZStacCentroidZ" Description = "z, in pixels, of center of intensity for the stack">
+			<FormalOutputColumn FormalOutputColumnID = "XYZStacCentroidZ.CentroidZ" ColumnID = "CentroidZ" Description = "z, in pixels, of center of intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStacCentroidZ.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYZStacCentroidZ.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+		</FormalOutput>
+	</Declaration>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false">
+		<CommandLine>Path=<RawImageFilePath/> Dims=<sizeX/>,<sizeY/>,<sizeZ/>,<sizeT/>,<sizeW/>,<BytesPerPixel/></CommandLine>
+		<STDOUT>
+			<OutputRecord RepeatCount= "1">
+				<pat>^.*?\n</pat>
+			</OutputRecord>
+			<!-- That eats a line. The first line of the output is column headers -->
+			<OutputRecord>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<Output AccessBy = "1">
+					<OutputTo FormalOutputColumnID = "XYZStackMin.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStackMax.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStackMean.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStackGeoMean.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStackSigma.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStacCentroidZ.theW"/>
+				</Output>
+				<Output AccessBy = "2">
+					<OutputTo FormalOutputColumnID = "XYZStackMin.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStackMax.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStackMean.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStackGeoMean.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStackSigma.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStacCentroidZ.theT"/>
+				</Output>
+				<Output AccessBy = "3">
+					<OutputTo FormalOutputColumnID = "XYPlaneMin.Min"/>
+				</Output>
+				<Output AccessBy = "4">
+					<OutputTo FormalOutputColumnID = "XYPlaneMax.Max"/>
+				</Output>
+				<Output AccessBy = "5">
+					<OutputTo FormalOutputColumnID = "XYPlaneMean.Mean"/>
+				</Output>
+				<Output AccessBy = "6">
+					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.Geomean"/>
+				</Output>
+				<Output AccessBy = "7">
+					<OutputTo FormalOutputColumnID = "XYPlaneSigma.Sigma"/>
+				</Output>
+				<Output AccessBy = "8">
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.CentroidX"/>
+				</Output>
+				<Output AccessBy = "9">
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.CentroidY"/>
+				</Output>
+				<Output AccessBy = "10">
+					<OutputTo FormalOutputColumnID = "XYZStacCentroidZ.CentroidZ"/>
+				</Output>
+			</OutputRecord>
+			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
+		</STDOUT>
+	</ExecutionInstructions>
+</AnalysisModule>
