@@ -167,8 +167,8 @@ sub importFile() {
 		# the only valid case that has no $repository is during bootstrap
 		if( $repository ) {
 			foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
-				my $caXML = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
-				$caXML = $caXML->[0] if $caXML;
+				my @caXML_list = $imageXML->getChildrenByTagNameNS( $OMENS, "CustomAttributes" );
+				my $caXML = $caXML_list[0] if scalar @caXML_list > 0;
 				if( ! $caXML ) {
 					$caXML = $doc->createElementNS( $OMENS, "CustomAttributes" )	
 						or die "Could not make <CustomAttributes>!";
@@ -179,10 +179,11 @@ sub importFile() {
 					my $externalXML = @{ $pixelsXML->getElementsByTagNameNS( $BinNS, "External" ) }[0];
 					my $href = $externalXML->getAttribute( "href" );
 					my $sha1 = getSha1( $href );
-					rename ($href,$repository->Path().$sha1)
-						or die "Could not move Pixels file ($href) to repository file (".$repository->Path().$sha1.")\n$!\n";
+					my $tmpFile = $session->getTemporaryFilenameRepository( repository => $repository );
+					rename ($href,$repository->Path().$tmpFile)
+						or die "Could not move Pixels file ($href) to repository file ($tmpFile)\n$!\n";
 	
-					$href = $sha1;
+					$href = $tmpFile;
 					$pixelsXML->setAttribute( "Path", $href );
 					$pixelsXML->setAttribute( "FileSHA1", $sha1 );
 	
