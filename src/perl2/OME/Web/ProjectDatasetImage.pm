@@ -58,6 +58,12 @@ use base qw{ OME::Web };
 #********* PUBLIC METHODS
 #*********
 
+{
+	my $menu_text = 'Make dataset';
+
+	sub getMenuText { return $menu_text; }
+}
+
 sub getPageTitle {
 	return "Open Microscopy Environment - Make Dataset from existing images";
 }
