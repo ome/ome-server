@@ -31,7 +31,7 @@
 
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by: Jeff Mellen <yokozuna@alum.mit.edu>
+# Written by: Jeff Mellen <jeffm@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
@@ -108,6 +108,14 @@
        Name = "Confidence"
        DBLocation = "CLASSIFICATION.CONFIDENCE"
        DataType = "float" />
+    <Element
+	  Name = "Valid"
+	  DBLocation = "CLASSIFICATION.VALID"
+	  DataType = "boolean">
+	  <Description>
+		Set to false to invalidate this classification.
+	  </Description>
+	</Element>
   </SemanticType>
 
 </STD:SemanticTypeDefinitions>
