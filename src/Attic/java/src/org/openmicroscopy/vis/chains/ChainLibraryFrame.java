@@ -73,4 +73,8 @@ public class ChainLibraryFrame extends ChainFrameBase {
 	protected void layoutFrame() {
 		contentPane.add(canvas);
 	}
+	
+	public PChainLibraryCanvas getCanvas() {
+		return (PChainLibraryCanvas) canvas;
+	}
 }
