@@ -189,12 +189,7 @@
 			<Description>Standard geometric deviation of pixel intensities in an XYZ stack i.e. distance between point and geometric mean</Description>
 		</FormalOutput>
 	</Declaration>
-	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
-		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="
-			http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd
-			http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
+    <ExecutionInstructions xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ExecutionPoint="precalculateImage" MakesNewFeature="false" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd     http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
 		<CommandLine>
 			<InputSubString>
 				<RawText> Dims=</RawText>
