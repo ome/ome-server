@@ -440,6 +440,7 @@ use fields qw(__handlesAvailable __allHandles);
 
 sub new {
     my $proto = shift;
+    my $dbFlags = shift;
     my $class = ref($proto) || $proto;
 
     my $delegate = OME::Database::Delegate->getDefaultDelegate()
@@ -448,7 +449,8 @@ sub new {
     my $dbh = $delegate->
       connectToDatabase(OME::DBConnection->DataSource(),
                         OME::DBConnection->DBUser(),
-                        OME::DBConnection->DBPassword());
+                        OME::DBConnection->DBPassword(),
+                        $dbFlags);
     confess "Cannot create database handle"
       unless defined $dbh;
 
