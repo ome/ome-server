@@ -70,6 +70,7 @@ sub new {
 		'status',
 	];
 	$self->{ _allFields } = [
+		'id',
 		@{ $self->{ _summaryFields } },
 		'dependence',
 		'virtual_mex',
@@ -135,7 +136,10 @@ sub getName {
 			12 => 'Dec'
 		);
 		my $name = $obj->module()->name();
-		$name =~ s/^(.{11})....*$/$1\.\.\./;
+		unless( exists $options->{max_text_length} and not defined $options->{max_text_length} ) {
+			my $len = $options->{max_text_length} - 23;
+			$name =~ s/^(.{$len})....*$/$1\.\.\./;
+		}
 		return $name." ($yr ".$month_abbr{ $mo }." $dy $hr:$min)";
 	}
 
