@@ -1,10 +1,10 @@
 /*
- * org.openmicroscopy.vis.chains.Chains
+ * org.openmicroscopy.vis.piccolo.ModuleNodeDragHandler
  *
  *------------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 Open Microscopy Environment
- *      Massachusetts Institute of Technology,
+ *      Massachusetts Institue of Technology,
  *      National Institutes of Health,
  *      University of Dundee
  *
@@ -37,45 +37,35 @@
  *------------------------------------------------------------------------------
  */
 
+package org.openmicroscopy.vis.piccolo;
 
 
+import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import java.awt.geom.Dimension2D;
 
-package org.openmicroscopy.vis.chains;
+
 
 /** 
- * <p>The main class for the Chain-building application. This class
- * is just a shell that will instantiate appropriate classes for
- * display, control, and other functionality.<p>
+ * <p>Highlighting of module outputs that correspond to this input.
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class Chains {
-
-    public static String VERSION="0.1";
-    public static String TIMESTAMP="094304082003";
-
-    public static void main(String[] args) {
-		System.out.println("OME Chains, Version "+VERSION+", "+TIMESTAMP);
-		
-		// These property calls should fail silently if the given things aren't there.
-		
-		System.setProperty("com.apple.mrj.application.apple.menu.about.name",
-								  "OME Chains");
-		System.setProperty("com.apple.mrj.application.live-resize","true");
-		System.setProperty("com.apple.mrj.application.growbox.intrudes","true");
-		System.setProperty("apple.laf.useScreenMenuBar","true");
-		
-		Controller controller = new Controller();
-
-		MainFrame mainFrame = new MainFrame(controller);
-		mainFrame.setVisible(true);
-		controller.setMainFrame(mainFrame);
-    }
-    
-   
-
+public class ModuleNodeDragHandler extends PBasicInputEventHandler {
+	
+	public ModuleNode node;
+	
+	public ModuleNodeDragHandler(ModuleNode node) {
+		super();
+		this.node = node;
+	}
+	
+	public void mouseDragged(PInputEvent aEvent) {
+		Dimension2D delta = aEvent.getDeltaRelativeTo(node);
+		node.translate(delta.getWidth(),delta.getHeight());
+		aEvent.setHandled(true);
+	}
 }
-    

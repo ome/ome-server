@@ -1,10 +1,10 @@
 /*
- * org.openmicroscopy.vis.piccolo.OMECanvas
+ * org.openmicroscopy.vis.piccolo.ModuleOutput
  *
  *------------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 Open Microscopy Environment
- *      Massachusetts Institute of Technology,
+ *      Massachusetts Institue of Technology,
  *      National Institutes of Health,
  *      University of Dundee
  *
@@ -29,7 +29,6 @@
 
 
 
-
 /*------------------------------------------------------------------------------
  *
  * Written by:    Harry Hochheiser <hsh@nih.gov>
@@ -37,58 +36,19 @@
  *------------------------------------------------------------------------------
  */
 
-
-
-
 package org.openmicroscopy.vis.piccolo;
 
-import edu.umd.cs.piccolo.PCanvas;
-import edu.umd.cs.piccolo.PLayer;
-import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.remote.RemoteModule;
+import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+import edu.umd.cs.piccolox.util.PBoundsLocator;
 
-/** 
- * <p>Extends PCanvas to provide functionality necessary for a piccolo canvas. 
- * Currently doesn't have much functionality, but is also useful for isolating
- * piccolo contact from other code..<p>
- * 
- * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
- */
-
-public class OMECanvas extends PCanvas{
+public class ModuleOutput extends ModuleParameter {
 	
-	private Connection connection;
-	private int modCount;
-	private RemoteModule module;
-	private PLayer layer;
-	
-	private static final float GAP=30f;
-	private float top=20f;
-	
-	public OMECanvas() {
-		super();
-		layer = getLayer();
-	}
-	
-	public void setConnection(Connection connection) {
-		this.connection = connection;
-		
-		modCount = connection.moduleCount();
-		module = connection.getModule(0);
-		
-		
-		for (int i = 0; i < modCount; i++ ) {
-			displayModule(connection.getModule(i),20);
-		}
-	}
-	
-	public void displayModule(RemoteModule module,float x) {
-		System.err.println("displaying module "+module.getName());
-		ModuleNode mNode = new ModuleNode(module,x,top);
-		float h = (float) mNode.getBounds().getHeight();
-		top += h+GAP;
-		layer.addChild(mNode);
+	public ModuleOutput(FormalParameter param,ChainCanvas canvas) {
+		super(param,canvas);
+		//System.err.println("adding output "+param.getParameterName());
+		if (param.getSemanticType() != null)
+			canvas.addOutput(param.getSemanticType(),this);
+		addInputEventListener(new ModuleOutputEventHandler(this));
+		locator = PBoundsLocator.createEastLocator(this);
 	}
 }

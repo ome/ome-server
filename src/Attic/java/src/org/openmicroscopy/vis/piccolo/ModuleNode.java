@@ -44,18 +44,17 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
-import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.remote.RemoteModule;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.BasicStroke;
-//import java.awt.Graphics2D;
 import java.awt.Font;
-//import java.awt.FontMetrics;
 import java.awt.Paint;
 import java.awt.Color;
 import java.util.List;
+
 
 /** 
  * <p>Displays a RemoteModule in the Chains scenegraph
@@ -78,8 +77,9 @@ public class ModuleNode extends PPath {
 	private static final float SCALE_THRESHOLD=0.5f;
 	
 	private static final Paint DEFAULT_PAINT=Color.black;
+	private static final Paint DEFAULT_FILL = Color.lightGray;
 	
-	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(2.0f); 
+	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(1.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,14);
 	private static final Font PARAM_FONT = new Font("Helvetica",Font.PLAIN,8);
 
@@ -92,13 +92,13 @@ public class ModuleNode extends PPath {
 	private float height;
 	private float width;
 	
-	private PLayer labelNodes;
+	private PNode labelNodes;
 	
-	public ModuleNode(RemoteModule module,float x,float y) {
+	public ModuleNode(ChainCanvas canvas,RemoteModule module,float x,float y) {
 		super();
 		this.module=module;
 		
-		labelNodes = new PLayer();
+		labelNodes = new PNode();
 		addChild(labelNodes);
 		// do name.
 		name = new PText(module.getName());
@@ -112,18 +112,20 @@ public class ModuleNode extends PPath {
 		width = (float) name.getBounds().getWidth();
 		
 		// do the individual labels.
-		addParameterLabels();  
+		addParameterLabels(canvas);  
 		width = NAME_LABEL_OFFSET*2+width;
 		
 		rect = 
 			new RoundRectangle2D.Float(0f,0f,width,height,
 					DEFAULT_ARC_WIDTH,DEFAULT_ARC_HEIGHT);
 		setPathTo(rect);
+		setPaint(DEFAULT_FILL);
 		setStroke(DEFAULT_STROKE);
 		setOffset(x,y);
+		addInputEventListener(new ModuleNodeDragHandler(this));
 	}
 	
-	private void addParameterLabels() {
+	private void addParameterLabels(ChainCanvas canvas) {
 		
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
@@ -136,8 +138,8 @@ public class ModuleNode extends PPath {
 		int 	rows = inSize > outSize? inSize: outSize;
 		
 		FormalParameter param;
-		PText inTexts[] = new PText[inSize];
-		PText outTexts[] = new PText[outSize];
+		ModuleInput  inTexts[] = new ModuleInput [inSize];
+		ModuleOutput  outTexts[] = new ModuleOutput [outSize];
 		
 		// get input nodes and find max input width
 		float maxInputWidth =0;
@@ -145,14 +147,14 @@ public class ModuleNode extends PPath {
 		for (int i = 0; i < rows; i++) {
 			if (i < inSize) {
 				param = (FormalParameter) inputs.get(i);
-				inTexts[i]= new PText(param.getParameterName());
+				inTexts[i]= new ModuleInput (param,canvas);
 				labelNodes.addChild(inTexts[i]);
 				if (inTexts[i].getBounds().getWidth() > maxInputWidth)
 					maxInputWidth = (float) inTexts[i].getBounds().getWidth();
 			}
 			if (i < outSize) {
 				param = (FormalParameter) outputs.get(i);
-				outTexts[i]= new PText(param.getParameterName());
+				outTexts[i]= new ModuleOutput(param,canvas);
 				labelNodes.addChild(outTexts[i]);
 				if (outTexts[i].getBounds().getWidth() > maxOutputWidth)
 					maxOutputWidth = (float) outTexts[i].getBounds().getWidth();
@@ -188,6 +190,7 @@ public class ModuleNode extends PPath {
 	
 	public void paint(PPaintContext aPaintContext) {
 		double s = aPaintContext.getScale();
+	//	System.err.println("painting module node. scale is "+s);
 		if (s < SCALE_THRESHOLD)
 			labelNodes.setVisible(false);
 		else

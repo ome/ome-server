@@ -60,7 +60,7 @@ public class Connection {
 	Session session;
 	Factory factory;
 	
-	ModuleList modules;
+	Modules modules;
 
 	
 	/***
@@ -90,13 +90,14 @@ public class Connection {
 				return remote;
 			}
 			public void finished() {
-				session = remote.getSession();
-				factory = remote.getFactory();
-				modules  = new ModuleList(factory);
-				controller.completeLogin();
+				if (remote != null) {
+					session = remote.getSession();
+					factory = remote.getFactory();
+					modules  = new Modules(factory);
+					controller.completeLogin();
 				// for debugging only
 				//modules.dump();
-				
+				}
 			}
 		};
 		worker.start();
