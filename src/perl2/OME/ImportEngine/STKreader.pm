@@ -297,8 +297,6 @@ sub importGroup {
 	return undef;
     }
     my $filename = $file->getFilename();
-    my $crtime = OME::ImportEngine::ImportCommon::__getFileSQLTimestamp($filename);
-
     my $base = ($self->{super})->__nameOnly($filename);
 
     my ($offsets_arr, $bytesize_arr) = getStrips($tags);
@@ -327,7 +325,7 @@ sub importGroup {
 	    unless ($status eq "");
     }
 
-    my $image = ($self->{super})->__newImage($base, $crtime);
+    my $image = ($self->{super})->__newImage($base);
     $self->{image} = $image;
 
 

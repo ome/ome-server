@@ -301,10 +301,7 @@ sub importGroup {
     my $factory = $session->Factory();
 
     $file->open('r');
-
     my $filename = $file->getFilename();
-    my $crtime = OME::ImportEngine::ImportCommon::__getFileSQLTimestamp($filename);
-    
     my $base = ($self->{super})->__nameOnly($filename);
 
     my $params = $self->getParams();
@@ -312,7 +309,7 @@ sub importGroup {
     $params->oname($base);
     $params->endian(getEndian($file));
 
-    my $image = ($self->{super})->__newImage($base, $crtime);
+    my $image = ($self->{super})->__newImage($base);
     $self->{image} = $image;
     if (!defined($image)) {
 	$file->close();
