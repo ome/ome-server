@@ -48,12 +48,22 @@ use OME::Tasks::NotificationManager;
 
 =head1 NAME
 
-OME::Fork - centralized handling for OME process forking
+OME::Fork - centralized handling for OME process forking and task deferal
 
 =head1 SYNOPSIS
 
 	use OME::Fork;
 
+	# Execute task() later
+	sub task {
+		my $stuff = shift;
+		# do something later with $stuff
+	}
+	
+	OME::Fork->doLater ( sub { task ($params) } );
+	# N.B.: will execute even if you call die();
+
+	# Fork a process right away
 	sub callback {
 	    my ($child_pid) = @_;
 	    # do something once the child finishes
@@ -64,12 +74,17 @@ OME::Fork - centralized handling for OME process forking
 =head1 DESCRIPTION
 
 There are several parts of the OME Perl API which need a separate
-process in order to work correctly.  For instance, the Web UI and
-Remote Framework both run image imports in a separate process, so as
-not to block the main mechanisms of the transport layer.
+or non-blocking process in order to work correctly.  For instance,
+the Web UI and Remote Framework both run image imports in a deferred
+non-blocking process, so as not to block the main mechanisms of the
+transport layer.
 
 In practice, there are two main problems with code which uses the fork
-call:
+call, which is why it is better to simply defer the task when possible:
+
+=over
+
+=item Forking
 
 =over
 
@@ -95,7 +110,8 @@ It is necessary to reap the child processes which are created, so that
 the process table does not get filled with a bunch of zombies.  This
 can usually be accomplished by having Perl ignore the CHLD signal, but
 this prevents forking code from using its own reaping logic to track
-when its children exit.
+when its children exit.  This is further complicated in Apache 2 which
+uses threads as well as processes.
 
 =back
 
@@ -118,6 +134,30 @@ Note that this callback function is called from within the SIGCHLD
 handler.  This means that it should follow the same guidelines as
 those outlines for signal handlers in the perlipc manpage.
 
+=item Deferal
+
+Defering a task is often the desired behavior and it is much more
+straigh-forward than forking.  A fork call done inside an Apache
+process will fork the entire process, including the mod_perl interpreter
+any modules loaded into Apache, etc.  Its a biggie.
+
+Deferal simply schedules a task to execute in the same process once
+the main flow of the program is complete.  This is done in two different
+ways depending on wether the main program is executing in Apache/mod_perl
+or not.  If its in mod_perl, the Apache PerlCleanupHandler is used to
+schedule the task after the responce is sent, but before the responce handler
+exits completely.  When not in mod_perl, the task is executed in an END block.
+
+Several tasks can be defered for later execution, though the order of execution
+is not guaranteed.  Specifically in Apache 1/mod_perl and without mod_perl,
+the last task will be executed first.  In Apache 2/mod_perl, the first task
+will be executed first.
+
+N.B.:  There is currently no way to un-register deferred tasks.
+They will execute even if you call die().
+
+=back
+
 =cut
 
 # This hash is keyed by child process ID, and contains a reference to
@@ -133,6 +173,47 @@ my %CHILD_PROCESSES;
 # after that child exits.
 
 my %CHILD_STATUSES;
+
+our @TASKS;        # Deferred tasks - only for END blocks
+our $MPV;          # mod_perl version
+
+# We need to figure out what mod_perl we're running if we're in
+# Apache before we do anything else.
+sub BEGIN {
+	if ( UNIVERSAL::can ('Apache','request') ) {
+		eval { mod_perl->require(); };
+		unless ($@) {
+			$MPV = 2 if $mod_perl::VERSION >= 1.99;
+			$MPV = 1 if $mod_perl::VERSION < 1.99;
+		}
+	} else {
+		$MPV = 0;
+	}
+}
+
+# This will call the tasks only if we're not in mod_perl
+sub END {
+	if ($MPV == 0) {&$_ foreach @TASKS;}
+}
+
+
+sub doLater {
+my $proto = shift;
+my $task = shift;
+
+	if ($MPV == 1) {
+		my $r = Apache->request();
+		$r->register_cleanup( sub {&$task;return 0;} );
+	} elsif ($MPV == 2) {
+		APR::Pool->require();
+		my $r = Apache->request();
+		$r->pool->cleanup_register( sub {&$task;return 0;} );
+	} elsif ($MPV == 0) {
+		push (@TASKS,$task);
+	}
+}
+
+
 
 # This is taken straight from the perlipc manpage.
 
