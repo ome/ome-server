@@ -105,8 +105,10 @@ sub processDOM {
             my $oldChain = $factory->
               findObject("OME::AnalysisChain",
                          name => $chainName);
-            die "Chain \"$chainName\" already exists"
-              if defined $oldChain;
+            if (defined $oldChain) {
+            	print STDERR "Chain \"$chainName\" already exists\n";
+            	next;
+            }
         }
 
         my $nodesTag = $chain->getElementsByTagName('Nodes')->[0];
