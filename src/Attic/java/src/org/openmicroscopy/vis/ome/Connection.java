@@ -136,24 +136,13 @@ public class Connection {
 		this.passWord = passWord;
 		this.host = getHost(URL);
 		//buildStatusWindow();	
+		thumbnails = new ThumbnailAgent(host,userName,passWord);
 		worker = 
 			new ConnectionWorker(controller,this,URL,userName,passWord);
 		
 		worker.start();
 	}
 	
-	
-	public void createThumbnailAgent() {
-		
-		thumbnails = new ThumbnailAgent(host,userName,passWord);
-		try {
-			thumbnails.initialize();
-		} catch( Exception e) {
-			e.printStackTrace();
-			thumbnails = null;
-		}
-
-	}
 		
 	/**
 	 * The assumption is that if we are connecting to the XMLRPC server
@@ -417,7 +406,7 @@ public class Connection {
 			}
 		} catch(Exception e) {
 			System.err.println("exception in grabbing thumbnail "+id);
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	//	System.err.println(" returning from connection.getThumbnail..");
 		/*if (image == null) 
@@ -443,4 +432,11 @@ public class Connection {
 		};
 		worker.start();
 	}
+	
+	public List getCategories(CImage image) {
+		HashMap crit = new HashMap();
+		crit.put("image",image);
+		return factory.findAttributes("CategoryRef3",crit);
+	}
+	
 }
