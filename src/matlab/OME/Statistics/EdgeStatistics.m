@@ -76,3 +76,8 @@ DiffDirecHist = DiffDirecHist ./ (DirecHist(1:NUM_BINS_HALF)+DirecHist(NUM_BINS_
 % The fraction of edge pixels that are in the first two bins of the histogram measure
 % edge homogeneity
 DirecHomogeneity = sum(DirecVec(1:2))/sum(DirecVec);
+
+% Correctly set output type
+EdgeArea  = uint16(EdgeArea);
+MagHist   = uint16(MagHist);
+DirecHist = uint16(DirecHist);

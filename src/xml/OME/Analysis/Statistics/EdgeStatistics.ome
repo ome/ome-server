@@ -50,7 +50,7 @@
 			 <Element
 				Name="MagMean"
 				DBLocation="EDGE_STATISTICS2.MAG_MEAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<SemanticType Name="EdgeMagMedian" AppliesTo="I">
@@ -58,7 +58,7 @@
 			 <Element
 				Name="MagMedian"
 				DBLocation="EDGE_STATISTICS3.MAG_MEDIAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<SemanticType Name="EdgeMagVar" AppliesTo="I">
@@ -66,7 +66,7 @@
 			 <Element
 				Name="MagVar"
 				DBLocation="EDGE_STATISTICS4.MAG_VAR"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 	
 		<SemanticType Name="EdgeMagHist" AppliesTo="I">
@@ -111,7 +111,7 @@
 			 <Element
 				Name="DirecMean"
 				DBLocation="EDGE_STATISTICS6.DIREC_MEAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<SemanticType Name="EdgeDirecMedian" AppliesTo="I">
@@ -119,7 +119,7 @@
 			 <Element
 				Name="DirecMedian"
 				DBLocation="EDGE_STATISTICS7.DIREC_MEDIAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<SemanticType Name="EdgeDirecVar" AppliesTo="I">
@@ -127,7 +127,7 @@
 			 <Element
 				Name="DirecVar"
 				DBLocation="EDGE_STATISTICS8.DIREC_VAR"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 	
 		<SemanticType Name="EdgeDirecHist" AppliesTo="I">
@@ -185,7 +185,7 @@
 			 <Element
 				Name="DirecHomo"
 				DBLocation="EDGE_STATISTICS10.DIREC_HOMO"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 	
 		<SemanticType Name="EdgeDiffDirecHist" AppliesTo="I">
@@ -194,19 +194,19 @@
 			<Element
 				Name="Bin0"
 				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Bin1"
 				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Bin2"
 				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Bin3"
 				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN3"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
 

@@ -40,7 +40,7 @@
 		 <SemanticType Name="FeatureCount" AppliesTo="I">
 			<Description>Number of contigious regions (features) there are in the image after thresholding.</Description>
 			<Element 
-				Name="FeatureNum" 
+				Name="FeatureCount" 
 				DBLocation="FEATURE_STATISTICS15.COUNT"  
 				DataType="integer"/>
 		</SemanticType>
@@ -58,11 +58,11 @@
 			 <Element
 				Name="X"
 				DBLocation="FEATURE_STATISTICS2.CENTROID_X"
-				DataType="float"/>
+				DataType="double"/>
 			 <Element
 				Name="Y"
 				DBLocation="FEATURE_STATISTICS2.CENTROID_Y"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<!-- Feature Area Descriptors -->
@@ -71,7 +71,7 @@
 			<Element
 				Name="FeatureAreaMin"
 				DBLocation="FEATURE_STATISTICS4.AREA_MIN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 		
 		<SemanticType Name="FeatureAreaMax" AppliesTo="I">
@@ -79,7 +79,7 @@
 			<Element
 				Name="FeatureAreaMax"
 				DBLocation="FEATURE_STATISTICS5.AREA_MAX"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<SemanticType Name="FeatureAreaMean" AppliesTo="I">
@@ -87,7 +87,7 @@
 			<Element
 				Name="FeatureAreaMean"
 				DBLocation="FEATURE_STATISTICS6.AREA_MEAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 
 		<SemanticType Name="FeatureAreaMedian" AppliesTo="I">
@@ -95,7 +95,7 @@
 			<Element
 				Name="FeatureAreaMedian"
 				DBLocation="FEATURE_STATISTICS7.AREA_MEDIAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 		
 		<SemanticType Name="FeatureAreaVar" AppliesTo="I">
@@ -103,7 +103,7 @@
 			<Element
 				Name="FeatureAreaVar"
 				DBLocation="FEATURE_STATISTICS3.AREA_VAR"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 
 		<SemanticType Name="FeatureAreaHist" AppliesTo="I">
@@ -156,7 +156,7 @@
 			<Element
 				Name="FeatureDistMin"
 				DBLocation="FEATURE_STATISTICS9.DIST_MIN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 	
 		<SemanticType Name="FeatureDistMax" AppliesTo="I">
@@ -164,7 +164,7 @@
 			<Element
 				Name="FeatureDistMax"
 				DBLocation="FEATURE_STATISTICS11.DIST_MAX"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 		
 		<SemanticType Name="FeatureDistMean" AppliesTo="I">
@@ -172,7 +172,7 @@
 			<Element
 				Name="FeatureDistMean"
 				DBLocation="FEATURE_STATISTICS12.DIST_MEAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 		
 		<SemanticType Name="FeatureDistMedian" AppliesTo="I">
@@ -180,7 +180,7 @@
 			<Element
 				Name="FeatureDistMedian"
 				DBLocation="FEATURE_STATISTICS13.DIST_MEDIAN"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 		
 		<SemanticType Name="FeatureDistVar" AppliesTo="I">
@@ -188,7 +188,7 @@
 			<Element
 				Name="FeatureDistVar"
 				DBLocation="FEATURE_STATISTICS14.DIST_VAR"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType> 
 		
 		<SemanticType Name="FeatureDistHist" AppliesTo="I">
@@ -272,10 +272,10 @@
 		
 		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-				<Input><PixelsArray FormalInput="Binary Mask"/></Input>
+				<Input><PixelsArray FormalInput="Binary Mask" ConvertToDatatype="logical"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-				<Output><Scalar OutputLocation="Count.FeatureNum"/></Output>
+				<Output><Scalar OutputLocation="Count.FeatureCount"/></Output>
 				<Output><Scalar OutputLocation="Euler.FeatureEuler"/></Output>
 				<Output><Vector DecodeWith="Centroid"/></Output>
 				

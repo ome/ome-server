@@ -180,7 +180,7 @@
 				DBLocation="CO_OCCURRENCE_MATRIX.MAX_CORR_COEF"  
 				DataType="float"/>
 		</SemanticType>	
-	</SemanticTypeDefinitions>	
+	</SemanticTypeDefinitions>
 	
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
@@ -211,8 +211,8 @@
 		  </Description>
 		  <Declaration>
 			<FormalInput    Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"        Count="!"/>
-			<FormalInput    Name="Texture Direction" SemanticTypeName="HaralickTextureDirection" Count="!"/>
-			<FormalInput    Name="Texture Distance"  SemanticTypeName="HaralickTextureDistance"  Count="!"/>	
+			<FormalInput    Name="Texture Direction"  SemanticTypeName="HaralickTextureDirection" Count="!"/>
+			<FormalInput    Name="Texture Distance"   SemanticTypeName="HaralickTextureDistance"  Count="!"/>	
 			
 			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
 			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>

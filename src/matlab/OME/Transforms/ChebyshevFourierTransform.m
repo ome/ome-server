@@ -79,7 +79,7 @@ coeff = C'*img(kk);
 
 % filter out some of coeff in 'Chebyshev-Fourier space'
 %coeff_packed = coeff;    
-coeff_packed = hist(abs(coeff(:)),packingOrder); 
+coeff_packed = uint16(hist(abs(coeff(:)),packingOrder)); 
 
 if ~recYes,X=[];Y=[];rec=[];tts=[];return;
 else,

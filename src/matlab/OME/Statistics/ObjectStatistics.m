@@ -33,12 +33,13 @@
 %
 function [Count, Euler, Centroid, ...
 		 AreaMin, AreaMax, AreaMean, AreaMedian, AreaVar, AreaHist, ...
-		 DistMin, DistMax, DistMean, DistMedian, DistVar, DistHist ] ...
+		 DistMin, DistMax, DistMean, DistMedian, DistVar, DistHist] ...
 		                                          = FeatureStatistics(BinaryMask)
 
 % How many bins the histograms have
 NUM_BINS = 10;
-
+class(BinaryMask)
+size(BinaryMask)
 % Calculate number of contiguous regions in the image
 features = bwlabel(im2bw(BinaryMask));
 Count = max(max(features));
@@ -76,3 +77,9 @@ DistMean   = mean(featuresCentroidDist);
 DistMedian = median(featuresCentroidDist);
 DistVar    = var(featuresCentroidDist);
 DistHist   = hist(featuresCentroidDist, NUM_BINS);
+
+% Correctly set output type
+Count    = uint16(Count);
+Euler    = int32(Euler);
+AreaHist = uint16(AreaHist);
+DistHist = uint16(DistHist);

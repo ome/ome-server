@@ -48,5 +48,5 @@ function ch = ChebyshevStatistics(Im,N);
 if nargin < 2 N = 20; end
 
 ch = ChebyshevTransform(Im,N);
-ch = hist(ch(:),32);
+ch = uint16(hist(ch(:),32));
 return;

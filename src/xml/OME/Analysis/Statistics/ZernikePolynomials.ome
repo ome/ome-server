@@ -41,291 +41,291 @@
 			<Element
 				Name="Z_0_0"
 				DBLocation="ZERNIKE.Z_0_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_1_1"
 				DBLocation="ZERNIKE.Z_1_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_2_0"
 				DBLocation="ZERNIKE.Z_2_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_2_2"
 				DBLocation="ZERNIKE.Z_2_2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_3_1"
 				DBLocation="ZERNIKE.Z_3_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_3_3"
 				DBLocation="ZERNIKE.Z_3_3"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_4_0"
 				DBLocation="ZERNIKE.Z_4_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_4_2"
 				DBLocation="ZERNIKE.Z_4_2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_4_4"
 				DBLocation="ZERNIKE.Z_4_4"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_5_1"
 				DBLocation="ZERNIKE.Z_5_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_5_3"
 				DBLocation="ZERNIKE.Z_5_3"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_5_5"
 				DBLocation="ZERNIKE.Z_5_5"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_6_0"
 				DBLocation="ZERNIKE.Z_6_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_6_2"
 				DBLocation="ZERNIKE.Z_6_2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_6_4"
 				DBLocation="ZERNIKE.Z_6_4"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_6_6"
 				DBLocation="ZERNIKE.Z_6_6"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_7_1"
 				DBLocation="ZERNIKE.Z_7_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_7_3"
 				DBLocation="ZERNIKE.Z_7_3"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_7_5"
 				DBLocation="ZERNIKE.Z_7_5"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_7_7"
 				DBLocation="ZERNIKE.Z_7_7"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_8_0"
 				DBLocation="ZERNIKE.Z_8_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_8_2"
 				DBLocation="ZERNIKE.Z_8_2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_8_4"
 				DBLocation="ZERNIKE.Z_8_4"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_8_6"
 				DBLocation="ZERNIKE.Z_8_6"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_8_8"
 				DBLocation="ZERNIKE.Z_8_8"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_9_1"
 				DBLocation="ZERNIKE.Z_9_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_9_3"
 				DBLocation="ZERNIKE.Z_9_3"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_9_5"
 				DBLocation="ZERNIKE.Z_9_5"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_9_7"
 				DBLocation="ZERNIKE.Z_9_7"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_9_9"
 				DBLocation="ZERNIKE.Z_9_9"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_10_0"
 				DBLocation="ZERNIKE.Z_10_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_10_2"
 				DBLocation="ZERNIKE.Z_10_2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_10_4"
 				DBLocation="ZERNIKE.Z_10_4"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_10_6"
 				DBLocation="ZERNIKE.Z_10_6"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_10_8"
 				DBLocation="ZERNIKE.Z_10_8"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_10_10"
 				DBLocation="ZERNIKE.Z_10_10"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_11_1"
 				DBLocation="ZERNIKE.Z_11_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_11_3"
 				DBLocation="ZERNIKE.Z_11_3"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_11_5"
 				DBLocation="ZERNIKE.Z_11_5"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_11_7"
 				DBLocation="ZERNIKE.Z_11_7"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_11_9"
 				DBLocation="ZERNIKE.Z_11_9"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_11_11"
 				DBLocation="ZERNIKE.Z_11_11"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_12_0"
 				DBLocation="ZERNIKE.Z_12_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_12_2"
 				DBLocation="ZERNIKE.Z_12_2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_12_4"
 				DBLocation="ZERNIKE.Z_12_4"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_12_6"
 				DBLocation="ZERNIKE.Z_12_6"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_12_8"
 				DBLocation="ZERNIKE.Z_12_8"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_12_10"
 				DBLocation="ZERNIKE.Z_12_10"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_12_12"
 				DBLocation="ZERNIKE.Z_12_12"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_13_1"
 				DBLocation="ZERNIKE.Z_13_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_13_3"
 				DBLocation="ZERNIKE.Z_13_3"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_13_5"
 				DBLocation="ZERNIKE.Z_13_5"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_13_7"
 				DBLocation="ZERNIKE.Z_13_7"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_13_9"
 				DBLocation="ZERNIKE.Z_13_9"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_13_11"
 				DBLocation="ZERNIKE.Z_13_11"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_13_13"
 				DBLocation="ZERNIKE.Z_13_13"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_0"
 				DBLocation="ZERNIKE.Z_14_0"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_2"
 				DBLocation="ZERNIKE.Z_14_2"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_4"
 				DBLocation="ZERNIKE.Z_14_4"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_6"
 				DBLocation="ZERNIKE.Z_14_6"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_8"
 				DBLocation="ZERNIKE.Z_14_8"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_10"
 				DBLocation="ZERNIKE.Z_14_10"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_12"
 				DBLocation="ZERNIKE.Z_14_12"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_14_14"
 				DBLocation="ZERNIKE.Z_14_14"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_1"
 				DBLocation="ZERNIKE.Z_15_1"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_3"
 				DBLocation="ZERNIKE.Z_15_3"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_5"
 				DBLocation="ZERNIKE.Z_15_5"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_7"
 				DBLocation="ZERNIKE.Z_15_7"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_9"
 				DBLocation="ZERNIKE.Z_15_9"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_11"
 				DBLocation="ZERNIKE.Z_15_11"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_13"
 				DBLocation="ZERNIKE.Z_15_13"
-				DataType="float"/>
+				DataType="double"/>
 			<Element
 				Name="Z_15_15"
 				DBLocation="ZERNIKE.Z_15_15"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<SemanticType Name="MaxZernikePolynomialDegree" AppliesTo="I">

@@ -42,7 +42,7 @@
 			<Element
 				Name="ThresholdLevel"
 				DBLocation="IMAGE_THRESHOLD.THRESHOLD_LEVEL"
-				DataType="float"/>
+				DataType="double"/>
 		</SemanticType>
 		
 		<SemanticType Name="BinaryMask" AppliesTo="I">
