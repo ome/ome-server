@@ -179,12 +179,14 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 	
 	// the guts of the dataset display thread
+	
 	private void arrangeDisplay() {
+		layer.removeAllChildren();
 		if (datasets == null)
 			return;
 		//System.err.println("browser canvas. displaying datasets.");
 		//System.err.println("width is "+getWidth()+", height is"+getHeight());
-		layer.removeAllChildren();
+		
 		totalArea = 0;
 		Iterator iter = datasets.iterator();
 		
@@ -208,6 +210,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 
 	private void doLayout(boolean layoutDatasets) {
+		if (datasets == null)
+			return;
 		layer.setScale(1.0);
 		//System.err.println("in doLayout..");
 		x = HGAP;
@@ -373,6 +377,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		if ((mask & SelectionEvent.SET_ROLLOVER_PROJECT)
 			== SelectionEvent.SET_ROLLOVER_PROJECT) {
 			CProject rollover = state.getRolloverProject();
+			if (rollover != state.getSelectedProject() || rollover == null)
 			highlightDatasetsForProject(rollover);
 		}
 		else if ((mask & SelectionEvent.SET_ROLLOVER_DATASET) ==
@@ -432,13 +437,18 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 		Iterator iter = layer.getChildrenIterator();
 		while (iter.hasNext()) {
-			PDataset dNode = (PDataset) iter.next();
-			CDataset d = dNode.getDataset();
-			if (p != null && p.hasDataset(d)) {
-				dNode.setHighlighted(true);
+			Object obj = iter.next();
+			if (obj instanceof PDataset) {
+				PDataset dNode = (PDataset) obj;
+				CDataset d = dNode.getDataset();
+				if (p != null && p.hasDataset(d)) {
+					dNode.setHighlighted(true);
+				}
+				else
+					dNode.setHighlighted(false);
 			}
-			else
-				dNode.setHighlighted(false);
+			else 
+				System.err.println("browser canvas. child was "+obj);
 		}
 	}
 	
