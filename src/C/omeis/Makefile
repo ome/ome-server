@@ -90,6 +90,9 @@ File.o: File.c File.h digest.h repository.h sha1DB.h
 sha1DB.o: sha1DB.c sha1DB.h repository.h digest.h
 	$(CC) $(CFLAGS) $(DB_DEFINES) $(IM_CFLAGS) -c sha1DB.c
 
+auth.o: auth.c auth.h
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) -c auth.c
+
 xmlBinaryResolution.o: xmlBinaryResolution.c xmlBinaryResolution.h Pixels.h digest.h ../base64.h ../b64z_lib.h
 	$(CC) $(CFLAGS) $(DB_DEFINES) -c xmlBinaryResolution.c $(INCS) $(XML2_CFLAGS)
 
