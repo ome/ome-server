@@ -73,8 +73,10 @@ public class PParamLink extends  PLink {
 	public PParamLink(PFormalInput in,PFormalOutput out) {
 		super();
 		//System.err.println("link between parameters");
-		this.start = in;
-		this.end = out;
+		//this.start = in;
+		//this.end = out;
+		this.start=out;
+		this.end=in;
 		start.addNodeEventListener(this);
 		end.addNodeEventListener(this);
 		start.setLinkedTo(end,this);
