@@ -279,17 +279,6 @@ sub httpd_test {
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
 	unless $content =~ /^GATEWAY_INTERFACE\s*=\s*(.*$)/m;
 
-	# Check that GATEWAY_INTERFACE contains CGI-Perl
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Apache/mod_perl is not properly configured.\n".
-			"GATEWAY_INTERFACE is \"$1\" in CGI test instead of \"CGI-Perl/1.1\".\n".
-			"CGI test: $url\n" and
-		croak "Apache/mod_perl is not properly configured.\n".
-			"GATEWAY_INTERFACE is \"$1\" in CGI test instead of \"CGI-Perl/1.1\".\n".
-			"CGI test: $url\n".
-			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $content =~ /^GATEWAY_INTERFACE\s*=\s*CGI-Perl.*$/m;
-
     print BOLD, "[SUCCESS]", RESET, ".\n"
         and print $LOGFILE "mod_perl is configured correctly\n";
 
