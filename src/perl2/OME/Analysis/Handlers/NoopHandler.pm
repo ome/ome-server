@@ -59,6 +59,8 @@ analysis chain to be able to use the outside results.
 use strict;
 our $VERSION = '1.0';
 
+use base qw(OME::Analysis::Handler);
+
 # It is okay to instantiate the NoopHandler, since this will be done
 # by the analysis engine regardless of whether the module actually
 # needs to execute.
