@@ -42,12 +42,15 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PImage;
 import edu.umd.cs.piccolo.nodes.PText;
+import edu.umd.cs.piccolo.nodes.PPath;
 import org.openmicroscopy.vis.ome.CImage;
 import java.awt.Image;
 import java.awt.Font;
+import java.awt.BasicStroke;
 
 /** 
  * A node for displaying a thumbnail of an OME IMAGe
@@ -67,9 +70,12 @@ public class PThumbnail extends PNode implements PBufferedNode {
 	private Image imageData;
 	private PText label=null;
 	
+	private PPath highlightRect;
+	
 	
 	public PThumbnail(CImage image) {
 		super();
+		//setChildrenPickable(false);
 		this.image=image;
 		imageData = image.getImageData();
 		if (imageData != null) {
@@ -78,11 +84,11 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		}
 		else {
 //			System.err.println("thumbnail for image "+image.getID()+", data not ready");
-			label = new PText(DEFAULT_LABEL);
+			label = new PText(DEFAULT_LABEL+" "+image.getID());
 			label.setFont(LABEL_FONT);
 			addChild(label);
-			image.setThumbnail(this);
 		}
+		image.addThumbnail(this);
 	}
 	/**
 	 * @return
@@ -95,11 +101,24 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		PBounds b  = super.getGlobalFullBounds();
 		
 		if (label != null) {
-			return new PBounds(b.getX(),b.getY(),75,75);
+			return new PBounds(b.getX(),b.getY(),50,50);
 		}
 		else 
 			return b;
 	}
+	
+	protected boolean pick(PPickPath pickPath) {
+		if (imageNode != null) {
+			PBounds b = imageNode.getFullBoundsReference();
+			if (b.intersects(pickPath.getPickBounds())) 
+				return true;
+			else 
+				return false;
+		}
+		else 
+			return false;
+	}
+	
 	
 	public PBounds getBufferedBounds() {
 			PBounds b = getGlobalFullBounds();
@@ -130,5 +149,33 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		}
 		else
 			return -1;
+	}
+	
+	public void setHighlighted(boolean v) {
+		// no highlight if no image. 
+		
+		if (imageNode == null)
+			return;
+		if (v == true) {
+			if (highlightRect == null)
+				highlightRect = makeHighlight(imageNode);
+			addChild(highlightRect);
+			System.err.println("highlighting image for "+image.getID());
+		}
+		else {
+			System.err.println("unhighlighting image for "+image.getID());
+			if (highlightRect != null && isAncestorOf(highlightRect))
+				removeChild(highlightRect);
+		}
+		image.highlightThumbnails(v);
+	}
+	
+	private PPath makeHighlight(PImage imageNode) {
+		PBounds b = imageNode.getFullBoundsReference();
+		PPath path = new PPath(b);
+		path.setStroke(new 
+			BasicStroke(3,BasicStroke.CAP_BUTT,BasicStroke.JOIN_ROUND));
+		path.setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
+		return path;
 	}
 }
