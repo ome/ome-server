@@ -42,7 +42,6 @@ use OME;
 our $VERSION = $OME::VERSION;
 use CGI;
 use Log::Agent;
-use OME::Web::DBObjRender;
 use OME::Web::DBObjTable;
 use base qw(OME::Web);
 
@@ -80,7 +79,8 @@ sub new {
 =head2 getMenuText
 
 If called from the Package, will return "DB Detail"
-Otherwise, will return the common name of the object type followed by ' Detail'
+If called from an instance that has CGI parameters, will return the common name of the
+object type followed by ' Detail'
 
 Overridable.
 
@@ -117,14 +117,14 @@ sub getPageTitle {
 		    ref( $self ) eq __PACKAGE__ );
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
-    return OME::Web::DBObjRender->getObjectTitle($object, 'txt');
+    return $self->Renderer()->getTitle($object, 'txt');
 }
 
 =head2 getPageBody
 
 calls _takeAction() to allow subclasses to respond to form actions
 also composites the html by calling doLayout() with the results of getObjDetail(),
-getListsOfRelations(), getTablesOfRelations(), and getFooter(). All of this gets
+getListsOfRelations(), getTablesOfRelations(). All of this gets
 embedded in a form.
 
 Strongly consider overriding the methods getPageBody uses instead of getPageBody. It
@@ -160,11 +160,9 @@ sub getPageBody {
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	           $q->hidden({-name => 'action', -default => ''});
 	my $objDetail = $self->getObjDetail( $object );
-	my %relationLists  = $self->getListsOfRelations( $object );
-	my %relationTables = $self->getTablesOfRelations( $object );
-	$html .= $self->doLayout($objDetail, \%relationLists, \%relationTables);
-	$html .= $self->getFooter();
+	$html .= $objDetail;
 	$html .= $q->endform();
+
 	return ('HTML', $html);
 }
 
@@ -228,19 +226,6 @@ sub _takeAction {
 # virtual method
 }
 
-=head2 getFooter
-
-virtual method. Override to put a footer on the resultant page. Called
-by getPageBody.
-
-Overridable
-
-=cut
-
-sub getFooter { 
-# virtual method
-}
-
 =head2 getDBObjDetail
 
 Called by getPageBody. uses OME::Web::DBObjRender services to construct
@@ -258,92 +243,12 @@ sub getObjDetail {
 	my ($self, $object) = @_;
 
 	my $specializedDetail;
-	return $specializedDetail->getObjDetail( )
+	return $specializedDetail->getObjDetail( $object )
 		if( $specializedDetail = $self->__specialize( ) and
 		    ref( $self ) eq __PACKAGE__ );
 
-	my $q = $self->CGI();
-
-	my $table_label = $q->font( { -class => 'ome_header_title' },
-		OME::Web::DBObjRender->getObjectTitle($object, 'html') );
-
-	my $obj_table;
-
-	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $object );
-	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames, 'html' );
-	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
-	my $header  = $self->TableHeader($object);
-	my $footer  = $self->TableFooter($object);
-
-	%record = %{ $self->_overrideRecord( \%record ) };
-
-	$obj_table .= $q->table( { -class => 'ome_table' },
-		$q->caption( $table_label ),
-		( $header ? 
-			$q->Tr( $q->td( { -class => 'ome_td', -align => 'right', -colspan => 2 }, $header ) ) :
-			()
-		),
-		map(
-			$q->Tr( 
-				$q->td( { -class => 'ome_td', -align => 'left', -valign => 'top' }, $labels{ $_ } ),
-				$q->td( { -class => 'ome_td', -align => 'right', -valign => 'top' }, $record{ $_ } ) 
-			),
-			@fieldNames
-		),
-		( $footer ? 
-			$q->Tr( $q->td( { -class => 'ome_td', -align => 'right', -colspan => 2 }, $footer ) ) :
-			()
-		)
-	);
-	
-	return $obj_table;
+	return $self->Renderer()->render( $object, 'detail' );
 }
-
-=head2 TableHeader
-
-Virtual Method. Returns a chunk of html used as a table header
-
-=cut
-
-sub TableHeader {
-	return undef;
-}
-
-=head2 TableFooter
-
-Virtual Method. Returns a chunk of html used as a table header
-
-=cut
-
-sub TableFooter {
-	return undef;
-}
-
-=head2 _overrideRecord
-
-	%record = %{ $self->_overrideRecord( \%record ) };
-
-virtual method used by getObjDetail to allow easy overriding of
-select portion of records. This should *NOT* be used instead of of
-DBObjRender methods.
-
-If you want to do something like make an email field into an active
-link, override OME::Web::DBObjRender->renderSingle. Changes there will
-be reflected in everything that displays a given type.
-
-If you want to do something like make a field editable by inserting a
-text input box, use this method. Changes here will be reflected only in
-this OME::Web::DBObjDetail.
-
-Overridable
-
-=cut
-
-sub _overrideRecord { 
-	my ($self, $record) = @_;
-	return $record;
-}
-
 
 =head2 getListsOfRelations
 
@@ -354,7 +259,7 @@ many-to-many relationships the given object has. The hash is keyed by the
 name of the relationship.
 
 Do Not Override this method.
-Override OME::Web::DBObjRender->getRelationAccessors() instead.
+Override OME::Web::DBObjRender->getRelations() instead.
 
 =cut
 
@@ -362,17 +267,16 @@ sub getListsOfRelations {
 	my ($self, $object) = @_;
 	my $q = $self->CGI();
 	my %relations;
-	my $iter = OME::Web::DBObjRender->getRelationAccessors( $object ); 
+	my ($relations, $names) = $self->Renderer()->getRelations( $object ); 
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-	if( $iter->first() ) { do {
-		my ( $options, $type, $renderInstrs ) = $iter->getRenderParams();
-		$options->{ Length }           = 5;
+	while( @$relations and @$names ) {
+		my ( $options, $type, $renderInstrs ) = @{ shift @$relations };
+		my $name = shift @$names;
 		$options->{ embedded_in_form } = $self->{ form_name };
-		$options->{ URLtoMoreInfo }    = '#'.$iter->name();
-		$relations{ $iter->name() } = $q->p( 
+		$options->{ anchor }           = $name;
+		$relations{ $name } = $q->p( 
 			$tableMaker->getList(  $options, $type, $renderInstrs ) );
-	} while( $iter->next() ); }
-	
+	}
 	return %relations;
 }
 
@@ -386,7 +290,7 @@ many-to-many relationships the given object has. The hash is keyed by the
 name of the relationship.
 
 Do Not Override this method.
-Override OME::Web::DBObjRender->getRelationAccessors() instead.
+Override OME::Web::DBObjRender->getRelations() instead.
 
 =cut
 
@@ -394,16 +298,16 @@ sub getTablesOfRelations {
 	my ($self, $object) = @_;
 	my $q = $self->CGI();
 	my %relations;
-	my $iter = OME::Web::DBObjRender->getRelationAccessors( $object ); 
+	my ($relations, $names) = $self->Renderer()->getRelations( $object ); 
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-	if( $iter->first() ) { do {
-		my ( $options, $type, $renderInstrs ) = $iter->getRenderParams();
+	while( @$relations and @$names ) {
+		my ( $options, $type, $renderInstrs ) = @{ shift @$relations };
+		my $name = shift @$names;
 		$options->{ embedded_in_form } = $self->{ form_name };
-		$options->{ anchor }           = $iter->name();
-		$relations{ $iter->name() } = $q->p( 
+		$options->{ anchor }           = $name;
+		$relations{ $name } = $q->p( 
 			$tableMaker->getTable(  $options, $type, $renderInstrs ) );
-	} while( $iter->next() ); }
-	
+	}
 	return %relations;
 }
 
@@ -463,7 +367,7 @@ sub __specialize {
 
 	# obtain package
 	eval( "use $specializedPackage" );
-	return $specializedPackage->new( CGI => $self->CGI() )
+	return $specializedPackage->new( CGI => $self->CGI(), form_name => $self->{ form_name } )
 		unless $@ or ref( $self ) eq $specializedPackage;
 
 	return undef;
