@@ -227,6 +227,13 @@ public class RemoteBindings
     }
 
     /**
+     * Returns whether there is an active remote session for this
+     * <code>RemoteBindings</code>.
+     */
+
+    public boolean isLoggedIn() { return loggedIn; }
+
+    /**
      * <p>Returns the {@link Session} object associated with this
      * <code>RemoteBindings</code>.  If it is not logged into OME,
      * this method returns <code>null</code>.</p>
