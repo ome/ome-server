@@ -123,12 +123,10 @@ sub getPageTitle {
 =head2 getPageBody
 
 calls _takeAction() to allow subclasses to respond to form actions
-also composites the html by calling doLayout() with the results of getObjDetail(),
-getListsOfRelations(), getTablesOfRelations(). All of this gets
+A detailed view is acquired from OME::Web::DBObjRender services. This gets
 embedded in a form.
 
-Strongly consider overriding the methods getPageBody uses instead of getPageBody. It
-could save you some work and reduces the possibility of bugs creeping in.
+Write a template for OME::Web::DBObjRender to change the look of this.
 
 Any subclass that overrides this method is expected to insert the
 following lines inside a form in whatever they spit out. (If whatever
@@ -158,58 +156,11 @@ sub getPageBody {
 	my $html = $q->startform( { -name => $self->{ form_name } } ).
 	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
-	           $q->hidden({-name => 'action', -default => ''});
-	my $objDetail = $self->getObjDetail( $object );
-	$html .= $objDetail;
-	$html .= $q->endform();
+	           $q->hidden({-name => 'action', -default => ''}).
+	           $self->Renderer()->render( $object, 'detail' ).
+	           $q->endform();
 
 	return ('HTML', $html);
-}
-
-=head2 doLayout
-
-	$html = $self->doLayout($objDetail, \%relationLists, \%relationTables );
-
-Lays out the display. Overridable.
-
-=cut
-
-sub doLayout {
-	my ($self,$objDetail, $relationLists, $relationTables) = @_;
-	my $q = $self->CGI();
-	
-	my (@col1, @col2, @col3, @col4);
-	my @relation_list = ( $relationLists ? map( $relationLists->{$_}, sort( keys %$relationLists ) ): () );
-	push( @col3, splice( @relation_list, 0, 2 ) );
-	push( @col4, splice( @relation_list, 0, 2 ) );
-
-	my $r = POSIX::ceil( scalar( @relation_list) / 4 );
-	push( @col1, splice( @relation_list, 0, $r ) );
-	push( @col2, splice( @relation_list, 0, $r ) );
-	push( @col3, splice( @relation_list, 0, $r ) );
-	push( @col4, splice( @relation_list, 0, $r ) );
-
-	my $html = $q->table( {-width => '100%', -cellpadding => 10 },
-		$q->Tr(
-			$q->td(  { -colspan => '2', -width => '50%', -valign => 'top', -align => 'center'}, 
-				$objDetail
-			),
-			$q->td(  { -rowspan => '2', -width => '25%', -valign => 'top', -align => 'right' }, [
-				join( '', @col3 ),
-				join( '', @col4 ),
-			] )
-		),
-		$q->Tr( $q->td(  { -width => '25%', -valign => 'top', -align => 'right' }, [
-			join( '', @col1 ),
-			join( '', @col2 ),
-		] ) )
-	);
-	
-	$html .= ( $relationTables ? 
-		join( '', map( $relationTables->{$_}, sort( keys %$relationTables ) ) ) :
-		'' );
-	
-	return $html;
 }
 
 =head2 _takeAction
@@ -225,92 +176,6 @@ Overridable
 sub _takeAction { 
 # virtual method
 }
-
-=head2 getDBObjDetail
-
-Called by getPageBody. uses OME::Web::DBObjRender services to construct
-a detailed object description. Returns a table.
-
-Uses _tableDescriptor() to make a table header. Specifically, it inserts
-what is returned from _tableDescriptor in the first row of the table.
-This row spans every column in the table.
-
-Overridable
-
-=cut
-
-sub getObjDetail {
-	my ($self, $object) = @_;
-
-	my $specializedDetail;
-	return $specializedDetail->getObjDetail( $object )
-		if( $specializedDetail = $self->__specialize( ) and
-		    ref( $self ) eq __PACKAGE__ );
-
-	return $self->Renderer()->render( $object, 'detail' );
-}
-
-=head2 getListsOfRelations
-
-	my %relationLists = $self->getListsOfRelations( $object );
-
-returns a hash of html tables, each describing a list of has-many or
-many-to-many relationships the given object has. The hash is keyed by the
-name of the relationship.
-
-Do Not Override this method.
-Override OME::Web::DBObjRender->getRelations() instead.
-
-=cut
-
-sub getListsOfRelations {
-	my ($self, $object) = @_;
-	my $q = $self->CGI();
-	my %relations;
-	my ($relations, $names) = $self->Renderer()->getRelations( $object ); 
-	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-	while( @$relations and @$names ) {
-		my ( $options, $type, $renderInstrs ) = @{ shift @$relations };
-		my $name = shift @$names;
-		$options->{ embedded_in_form } = $self->{ form_name };
-		$options->{ anchor }           = $name;
-		$relations{ $name } = $q->p( 
-			$tableMaker->getList(  $options, $type, $renderInstrs ) );
-	}
-	return %relations;
-}
-
-
-=head2 getTablesOfRelations
-
-	my %relationTables = $self->getTablesOfRelations( $object );
-
-returns a hash of html tables, each describing a list of has-many or
-many-to-many relationships the given object has. The hash is keyed by the
-name of the relationship.
-
-Do Not Override this method.
-Override OME::Web::DBObjRender->getRelations() instead.
-
-=cut
-
-sub getTablesOfRelations {
-	my ($self, $object) = @_;
-	my $q = $self->CGI();
-	my %relations;
-	my ($relations, $names) = $self->Renderer()->getRelations( $object ); 
-	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-	while( @$relations and @$names ) {
-		my ( $options, $type, $renderInstrs ) = @{ shift @$relations };
-		my $name = shift @$names;
-		$options->{ embedded_in_form } = $self->{ form_name };
-		$options->{ anchor }           = $name;
-		$relations{ $name } = $q->p( 
-			$tableMaker->getTable(  $options, $type, $renderInstrs ) );
-	}
-	return %relations;
-}
-
 
 =head2 _loadObject
 
