@@ -58,7 +58,7 @@ export DEFINES
 export FINK_INCLUDE
 
 make_zoom:
-	$(MAKE) -C zoom install
+	$(MAKE) -C zoom
 
 omeis: make_zoom omeis.o $(OBJS)
 	$(CC) $(OBJS) $(LIBS) -o omeis omeis.o
