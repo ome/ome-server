@@ -132,6 +132,7 @@ my $sampleinfo;
 my $prepdate;
 my $preptime;
 my $fileunits;
+my $manufacturer;
 
 =head2 Patterns Defining Groups
 
@@ -324,7 +325,8 @@ sub importGroup {
 			      0, $xref->{'Image.SizeY'}-1,
 			      0, 0,
 			      0, 0,
-			      0, 0);
+			      0, 0,
+			      "Molecular Dynamics GEL");
 
     # Re-enable this line when system can handle 4 byte data
     #$self->{inflation} = ($pixel_format == SQUARE_ROOT) ? 2 : 1;
@@ -349,11 +351,16 @@ sub importGroup {
 	$self->__storeInputFileInfo($session, \@finfo);
 	# Store info about each input channel (wavelength).
 	storeChannelInfo($self, $session);
-	return $image;
     } else {
 	print STDERR "status: $status\n";
 	return;
     }
+
+    my @instrInfo;
+    $instrInfo[0] = $fileunits;
+    $instrInfo[1] = $manufacturer;
+    $self->__storeInstrumemtInfo($image, @instrInfo);
+    return $image;
 
 }
 
@@ -529,8 +536,24 @@ sub fileunits {
     my ($self, $endian, $fih, $type, $cnt, $offset) = @_;
 
     my @vals = OME::ImportEngine::TIFFUtils::getTagValue($fih, $type, $cnt, $offset, $endian);
-    my $fileunits = pop(@vals);
+    $fileunits = pop(@vals);
+    $fileunits =~ s/[\x00]//g;
+    $manufacturer = getManu($fileunits);
+    
     return "";
+}
+
+
+# Return manufacturer's name depending on model name passed in
+sub getManu {
+    my $model = shift;
+    if (($model =~ m/^rfu$/i) || 
+	($model =~ m/^counts$/i) ||
+	($model =~ m/o\.d\.$/i)) {
+	return("Molecular Dynamics");
+    } else {
+	return "";
+    }
 }
 
 sub storeChannelInfo {
