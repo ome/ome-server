@@ -42,8 +42,9 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
+use Carp;
 
-use base qw{ OME::Web };
+use base qw(OME::Web);
 
 sub new {
     my $proto = shift;
@@ -73,12 +74,11 @@ sub getPageBody {
 
 		if (defined $session) {
 			# login successful, redirect
-			$self->Session($session);
-            $self->setSessionCookie();
+            $self->setSessionCookie($self->Session()->SessionKey());
             return ('REDIRECT',$self->pageURL('OME::Web::Home'));
 		} else {
 			# login failed, report it
-			return ('HTML', $self->loginForm($q->h3("The username and/or password you entered don't match an experimenter in the system.  Please try again.")));
+			return ('HTML', $self->loginForm($q->p({-class => 'error'}, "The username and/or password you entered don't match an experimenter in the system.  Please try again.")));
 		}
     } else { return ('HTML', $self->loginForm()) }
 }
@@ -94,7 +94,7 @@ sub loginForm {
 	my $error = shift || undef;
 	my $q = $self->CGI();
 
-	my $html = $q->h3("Login") .
+	my $html = $q->p({-class => 'title'}, "Login") .
 	           ($error or "Please enter your username and password") .
 			   $q->startform .
 			   $q->p .
