@@ -66,13 +66,13 @@ sub startImport {
     # global import MEX among other things).
 
     my $importer = OME::ImportEngine::ImportEngine->new();
-    my $dataset = $factory->
+    my $dataset = OME::Session->instance()->factory->
       newObject("OME::Dataset",
                 {
                  name => "ImportFacade Dummy Dataset",
                  description => "Images imported by OME::Remote::Facades::ImportFacade",
                  locked => 0,
-                 owner_id => $session->experimenter_id(),
+                 owner_id => OME::Session->instance()->experimenter_id(),
                 });
     my $files_mex = $importer->startImport($dataset);
     my $session_key = OME::Session->instance()->SessionKey();
