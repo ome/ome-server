@@ -86,6 +86,7 @@ public class Connection {
  	private Hashtable outputs = new Hashtable();
  	
  	
+ 	private final ConnectionWorker worker;
 	/***
 	 * Creates a new connection to the database via XMLRPC. If successful, gets 
 	 * session and factory objects that are used to access data in the database.
@@ -101,7 +102,7 @@ public class Connection {
 	public Connection(final ApplicationController controller,
 		final String URL,final String userName,final String passWord) {
 		
-		final ConnectionWorker worker = 
+		worker = 
 			new ConnectionWorker(controller,this,URL,userName,passWord);
 		
 		worker.start();
@@ -143,6 +144,10 @@ public class Connection {
 		return chains;
 	}
 	
+	
+	public void layoutChains() {
+		chains.layout();
+	}
 	/**
 	 * Shortcut interface to allow users to get access to modules
 	 * without going through the Modules object. <p>
@@ -157,11 +162,11 @@ public class Connection {
 		return modules.getModule(id);
 	}
 	
-	public Chain getChain(int i) {
+	public CChain getChain(int i) {
 		return chains.getChain(i);
 	}
 	
-	public void addChain(Chain c) {
+	public void addChain(CChain c) {
 		chains.addChain(c);
 	}
 	
