@@ -44,7 +44,7 @@ use OME::LSID;
 
 # package constants
 my $BinNS = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd";
-my $OMENS = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd";
+my $OMENS = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd";
 my %pixelTypeConversion = ( bit => 1, int8 => 8, int16 => 16, int32 => 32, Uint8 => 8, Uint16 => 16, Uint32 => 32, float => 32, 'double' => 64, complex => 64, 'double-complex' => 128 );
 
 sub new {
@@ -116,21 +116,12 @@ sub importFile() {
 		# call extractBinData
 		#
 		my $executionPath   = $configuration->bin_dir() . '/extractBinData';
-		$tmpDir             = $session->getTemporaryFilename();
+		$tmpDir             = $session->getScratchDir('ResolveFiles');
 		my @repositories    = $factory->findAttributes( "Repository" );
 		my $repository      = $repositories[0];
-		(my $unique = $tmpDir ) =~ s/.*\/(.+)$/$1/;
 		# a path to scratch space on the same file system as the repository
-		my $pixelDir        = $repository->Path() . $unique;
-		
-
-		# a path to scratch space
-		`rm $tmpDir`; # session->getTemporaryFilename() has a side affect of making
-		              # a file, so we gotta delete it before we can make a directory with that name.
+		my $pixelDir        = $session->getScratchDirRepository(repository => $repository, progName => 'ResolveFiles');
 		my @newdirs = ( $pixelDir, $tmpDir );
-		foreach (@newdirs) {
-			die "Couldn't make directory $_: $!\n" unless mkdir ($_,0777);
-		}
 		
 		my $fh;
 		open( $fh, "$executionPath $pixelDir $tmpDir $inputFile |" );
@@ -191,7 +182,6 @@ sub importFile() {
 		# Process the Pixels:
 		# rewrite <Pixels> to ST format
 		#
-
 		foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
 			my $ca = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
 			foreach my $pixelsXML( $imageXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
@@ -200,6 +190,7 @@ sub importFile() {
 				my $sha1 = getSha1( $href );
 				system( "mv $href ". $repository->Path().$sha1 ) eq 0
 					or die "Could not move pixel file to repository.\n";
+
 				$href = $repository->Path().$sha1;
 				$pixelsXML->setAttribute( "Path", $href );
 				$pixelsXML->setAttribute( "FileSHA1", $sha1 );
