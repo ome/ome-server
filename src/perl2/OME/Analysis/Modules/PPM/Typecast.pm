@@ -129,20 +129,14 @@ sub execute {
                         
 			# check that the Formal Input's Parent has a corresponding 
 			# formal output
-			my $found = 0;
-			foreach (@formal_outputs) {
-				if ($_->semantic_type()->name() eq 
-				    $parent->semantic_type()->name() ) {
-					$found = 1;
-				}
-			}
-			if ($found != 1) {
-				# Element is not a reference
-				die  "Formal input '".$formal_input->name()."' of module '".
-				  $module->name()." PPM inherits from semantic type '".
-				  $parent->semantic_type()->name(). "' which does not correspond "
-				  ."to the ST of any of the module's formal outputs.";
-			}
+			die "Formal input '".$formal_input->name()."' of module '".
+			    $module->name()." PPM inherits from semantic type '".
+			    $parent->semantic_type()->name(). "' which does not correspond ".
+			   "to the ST of any of the module's formal outputs."
+				if grep(
+					$_->semantic_type()->id() eq $parent->semantic_type()->id(),
+					@formal_outputs
+				);
         }
     }
 }
