@@ -112,6 +112,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private PDataset lastRolledOver = null;
 	
+	private PBrowserEventHandler eventHandler;
+	
 	public PBrowserCanvas(Connection c) {
 		super();
 		this.connection  = c;
@@ -129,13 +131,12 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		 removeInputEventListener(getPanEventHandler());
 		 
 		//	install custom event handler
-		addInputEventListener(new PBrowserEventHandler(this)); 
+		eventHandler = new PBrowserEventHandler(this);
+		addInputEventListener(eventHandler); 
 			
-		
-			// setup tool tips.
 		final PCamera camera = getCamera();
 		camera.addInputEventListener(new PBrowserCanvasToolTipHandler(camera));
-		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
+		eventHandler.animateToBounds(getBufferedBounds());
 	
 		allDatasets = connection.getDatasetsForUser();
 		
@@ -169,8 +170,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		if (v== true)
 			arrangeDisplay(datasets);
 		doLayout(datasets,v);
-		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
-						PConstants.ANIMATION_DELAY);
+		eventHandler.animateToBounds(getBufferedBounds());
 	
 	}
 	
