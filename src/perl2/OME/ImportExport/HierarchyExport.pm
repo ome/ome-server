@@ -77,10 +77,10 @@ sub new {
 	my ($proto, %params) = @_;
 	my $class = ref($proto) || $proto;
 
-	my @fieldsILike = qw(session _doc _lsidResolver);
-
 	my $self;
-
+	
+	# this is our standard method of defining class parameters and assigning them to class fields.
+	my @fieldsILike = qw(session _doc _lsidResolver);
 	@$self{@fieldsILike} = @params{@fieldsILike};
 
 	logdie "I need a session"
