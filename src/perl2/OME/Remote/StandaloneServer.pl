@@ -46,13 +46,12 @@ use XMLRPC::Lite;
 use Getopt::Long;
 use POSIX;
 
+use UNIVERSAL::require;
+
 # We'd rather not have tracing right now :)
 #SOAP::Trace->import('all');
 
-use OME::Remote::Dispatcher;
-use OME::Remote::Facade;
-my @dispatchObjects =
-  qw(OME::Remote::Dispatcher);
+my @dispatchObjects;
 
 use SOAP::Transport::HTTP;
 use XMLRPC::Transport::HTTP;
@@ -130,13 +129,30 @@ if ((lc($transport) ne "xmlrpc") && (lc($transport) ne "soap") ) {
     usage ();
 }
 
+# The Facade class mucks around with what the XML-RPC layer is going to
+# return for null values, so we should only load the dispatch class that
+# we're actually going to use.
+
+if ($new_dispatcher) {
+    OME::Remote::Facade->require();
+    @dispatchObjects = qw(OME::Remote::Facade);
+} else {
+    OME::Remote::Dispatcher->require();
+    @dispatchObjects = qw(OME::Remote::Dispatcher);
+
+    {
+        # Yes, I know that the compiler cannot see these variables et.
+        no warnings;
+
+        if ($show_calls) { $OME::Remote::Dispatcher::SHOW_CALLS = 1 }
+        if ($show_results) { $OME::Remote::Dispatcher::SHOW_RESULTS = 1 } 
+        if ($show_caching) { $OME::Remote::Dispatcher::SHOW_CACHING = 1 }
+    }
+}
+
 if ($debug) { $verbose = 1 }
 if ($foreground) { $debug = 1 }
 if ($verbose) { $show_calls = 1; $show_results = 1; $show_caching = 1; }
-if ($show_calls) { $OME::Remote::Dispatcher::SHOW_CALLS = 1 }
-if ($show_results) { $OME::Remote::Dispatcher::SHOW_RESULTS = 1 } 
-if ($show_caching) { $OME::Remote::Dispatcher::SHOW_CACHING = 1 }
-if ($new_dispatcher) { @dispatchObjects = qw(OME::Remote::Facade); }
 
 # Fork once so that the parent can exit unless we're debugging
 unless ($debug) {
