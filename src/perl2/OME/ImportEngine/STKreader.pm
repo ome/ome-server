@@ -70,7 +70,6 @@ into a separate OME 5D image.
 package OME::ImportEngine::STKreader;
 use strict;
 use Carp;
-use OME::ImportEngine::FileUtils qw(/^.*/);
 use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::Params;
 use OME::ImportEngine::TIFFUtils;
@@ -201,7 +200,7 @@ sub new {
 
 =head2 B<getGroups> S< > S< > S< >
 
-    my $group_output_list = $importer->getGroups(\@filepaths)
+    my $group_output_list = $importer->getGroups(\@files)
 
 This method examines the list of filenames that is passed in by
 reference. Any files on the list that are STK files are removed
@@ -219,35 +218,26 @@ has the STK format.
 sub getGroups {
     my $self = shift;
     my $fref = shift;
-    my $nmlen = scalar(@$fref);
-    my @inlist = @$fref;
+    my $nmlen = scalar(keys %$fref);
     my @outlist;
 
-    for(my $i = 0, my $ndx = 0; $i < $nmlen; $i++, $ndx++) {
-	my $fn = $$fref[$ndx];
-	open IMG, $fn
-	    or die "Can't open $fn - $@\n";
-	binmode(IMG);
-	my $fh = *IMG;
+    foreach my $key (keys %$fref) {
+        my $file = $fref->{$key};
 
-	my $len;
-	my $buf;
-	
-	my $tags = readTiffIFD($fh);
-	my $uic2 = UIC2;
-	if (!defined($tags->{$uic2})) {
-	    close IMG;
-	    next;
-	}
+        $file->open('r');
+
+        my $tags = readTiffIFD($file);
+        $file->close();
+
+        my $uic2 = UIC2;
+        next if (!defined($tags->{$uic2}));
+
         my $t_arr = $tags->{$uic2};
-	my $t_hash = $$t_arr[0];
+        my $t_hash = $$t_arr[0];
 
-	# it's STK format, so remove from input list, put on output list
-	splice(@$fref, $ndx, 1);
-	$ndx--;
-	push @outlist, $fn;
-
-	close IMG;
+        # it's STK format, so remove from input list, put on output list
+        delete $fref->{$key};
+        push @outlist, $file;
     }
 
     $self->{groups} = \@outlist;
@@ -259,7 +249,7 @@ sub getGroups {
 
 =head2 importGroup
 
-    my $image = $importer->importGroup(\@filenames)
+    my $image = $importer->importGroup(\@files)
 
 This method imports individual STK format files into OME
 5D images. The caller passes a set of input files by
@@ -290,21 +280,18 @@ database transactions.
 
 sub importGroup {
     my $self = shift;
-    my $fn   = shift;
+    my $file = shift;
     my $status;
 
-    my $sha1 = $self->getSHA1($fn);
+    my $sha1 = $file->getSHA1();
 
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
 
-    open IMG, $fn
-	or die "Can't open STK file $fn\n";
-    binmode(IMG);
-    my $fh = *IMG;
+    $file->open('r');
 
 
-    my $tags = readTiffIFD($fh);
+    my $tags = readTiffIFD($file);
     return undef
 	unless defined($tags);
 
@@ -314,8 +301,8 @@ sub importGroup {
     $params->image_offsets($offsets_arr);
     $params->image_bytecounts($bytesize_arr);
     
-    $params->fref(*IMG);
-    $params->oname($self->__nameOnly($fn));
+    $params->fref($file);
+    $params->oname($file->getFilename());
     $params->endian($tags->{__Endian});
     my $xref = $params->{xml_hash};
     $xref->{'Image.SizeX'} = $tags->{TAGS->{ImageWidth}}->[0];
@@ -332,13 +319,13 @@ sub importGroup {
 			    $t_hash->{value_count}, $t_hash->{value_offset});
     }
 
-    my $image = ($self->{super})->__newImage(($self->{super})->__nameOnly($fn));
+    my $image = ($self->{super})->__newImage($file->getFilename());
     $self->{image} = $image;
 
 
     # pack together & store info on input file
     my @finfo;
-    $self->__storeOneFileInfo(\@finfo, $fn, $params, $image,
+    $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
 			      0, $xref->{'Image.SizeX'}-1,
 			      0, $xref->{'Image.SizeY'}-1,
 			      0, $xref->{'Image.SizeZ'}-1,
@@ -357,7 +344,7 @@ sub importGroup {
     $self->{pixels} = $pixels;
     $status = readWritePixels($self, $params, $pix);
 
-    close(IMG);
+    $file->close();
 
     if ($status eq "") {
 	$self->__storeInputFileInfo($session, \@finfo);
@@ -381,9 +368,7 @@ sub readTag {
     my $status;
 
 
-    $status = seek_it($fih, $offset);
-    return $status
-	unless $status eq "";
+    $offset = $fih->setCurrentPosition($offset,0);
 
     if ($tagname == UIC1 ) {
 	$status = do_uic1("UIC1", $endian, $fih, $type, $cnt);
@@ -418,6 +403,7 @@ sub readWritePixels {
     my $params =shift;
     my $pix = shift;
     my $fih            = $params->fref;
+    my $endian         = $params->endian;
     my $xml_hash       = $params->xml_hash;
     my $row_size       = $params->row_size;
     my $offsets_arr    = $params->image_offsets;
@@ -437,6 +423,8 @@ sub readWritePixels {
     my $dtm = $uic2_ndxs{Cr_dt};
     my %planes;
     my @args;
+
+    print "write $endian\n";
 
     $start_offset = $$offsets_arr[0];
     $end_offset = $$offsets_arr[$#$offsets_arr];         # start of last strip\
@@ -482,21 +470,12 @@ sub readWritePixels {
 	for ($c = 0; $c < $maxC; $c++) {
 	    for ($z = 0; $z < $maxZ; $z++) {
 		my $offset = $start_offset + ($planes{$i}) * $plane_size;
-		$status = seek_and_read($fih,
-								      \$ibuf,
-								      $offset,
-								      $plane_size);
-		my $nPixOut = $pix->SetPlane($ibuf, $z, $c, $t);
-
-		if ($plane_size/$params->byte_size != $nPixOut) {
-		    $status = "Failed to write repository file - $plane_size/$params->byte_size != $nPixOut";
-		    last;
-		}
-		
+        $pix->convertPlane($fih,$offset,$z,$c,$t,$endian);
 	    }
 	}
     }
 
+    $pix->finishPixels();
 
     return $status;
 }
@@ -614,7 +593,7 @@ sub slice_sorter {
 # is parsed in case a use is ever found for it (or the UIC4 data gets reliable)
 
 sub do_uic1 {
-    my ($caller, $endian, $fih, $type, $tag_cnt) = @_;
+    my ($caller, $endian, $file, $type, $tag_cnt) = @_;
     my $status = "";
     my $i;
     my $id;
@@ -639,10 +618,7 @@ sub do_uic1 {
 
     for ($i = 0; $i < $tag_cnt; $i++) {
 	# Get ID of next field
-	$status = read_it($fih, 
-							\$buf, $id_len);
-	last
-	    unless $status eq "";
+        $buf = $file->readData($id_len);
 	$id = unpack($fmt, $buf);
 	if (($caller =~ /UIC4/) && ($id == 0)) {
 	    last;   # in UIC4, an ID of 0 is the signal to stop processing the tag
@@ -653,12 +629,12 @@ sub do_uic1 {
 	$MMtype = $codes{$id}[0];
 
 	if ($caller =~ /UIC4/) {
-	    skip($fih, 2);
+	    $file->setCurrentPosition(2,1);
 	}
 
 	$read_it = $codes{$id}[$readit_loc];    # Each ID is only valid in one of UIC1 or UIC4
 	if ($read_it == 0) {
-	    skip($fih, 4);    # ignore this field, so skip over it
+        $file->setCurrentPosition(4,1);
 	    next;
 	}
 
@@ -673,10 +649,10 @@ sub do_uic1 {
 	    $type4 = $MMtype;
 	}
 	if ($name =~ m/(StagePosition)|(CameraChipOffset)|(StageLabel)|(AbsoluteZ)|(AbsoluteZValid)/) {
-	    $status = get_value($type4, $fih, $endian, $tag_cnt);
+	    $status = get_value($type4, $file, $endian, $tag_cnt);
 	}
 	else {
-	    $status = get_value($type1, $fih, $endian, $tag_cnt);
+	    $status = get_value($type1, $file, $endian, $tag_cnt);
 	}
 	last
 	    unless $status eq "";
@@ -695,7 +671,7 @@ sub do_uic1 {
 # Put each set of 6 values, as an array, into the %uic2 hash, keyed by its plane number (0 to N-1)
 
 sub do_uic2 {
-    my ($self, $endian, $fih, $type, $num_planes) = @_;
+    my ($self, $endian, $file, $type, $num_planes) = @_;
     my $params = $self->{params};
     my $xml_hash = $params->xml_hash;
     my $status = "";
@@ -715,9 +691,7 @@ sub do_uic2 {
 
     # read in a 6-tuple set of values for each of the $num_planes planes in the stack
     for ($i = 0; $i < $num_planes; $i++) {
-	$status = read_it($fih, \$buf, 6*4);
-	last
-	    unless ($status eq "");
+        $buf = $file->readData(6*4);
 	($Z_num, $Z_denom, $cdate, $ctime, $mdate, $mtime) = unpack($fmt, $buf);
 	$Z_val = $Z_num/$Z_denom;
 	# keep track of # different Z values
@@ -757,7 +731,7 @@ sub do_uic2 {
 # the other per plane data in the %uic2 hash.
 
 sub do_uic3 {
-    my ($self, $endian, $fih, $type, $num_planes) = @_;
+    my ($self, $endian, $file, $type, $num_planes) = @_;
     my $fmt = ($endian == LITTLE_ENDIAN) ? "V2" : "N2";
     my $params = $self->{params};
     my $xml_hash = $params->xml_hash;
@@ -773,9 +747,7 @@ sub do_uic3 {
     my %uic3;
 
     for ($i = 0; $i < $num_planes; $i++) {
-	$status = read_it($fih, \$buf, 2*4);
-	last
-	    unless ($status eq "");
+        $buf = $file->readData(2*4);
 	($numer, $denom) = unpack($fmt, $buf);
 	$W_val = $numer/$denom;
 	# keep track of # different wave values
@@ -806,7 +778,7 @@ sub do_uic3 {
 # leave the file pntr positioned at the start of the next tag.
 
 sub get_value {
-    my ($MMtype, $fih, $endian, $cnt) = @_;
+    my ($MMtype, $file, $endian, $cnt) = @_;
     my $status;
     my $buf;
     my $cur_offset;
@@ -815,30 +787,30 @@ sub get_value {
     my $i;
 
     {    # Double block to allow use of the 'last' operator
-    $cur_offset = tell $fih;
+    $cur_offset = $file->getCurrentPosition();
     # all except types L have an offset to where their values are
     if ($MMtype !~ /^L$/) {  
 	# remember current file pntr position & go to the value(s)
-	($cur_offset, $status) = go_there($fih, $endian); 
+	($cur_offset, $status) = go_there($file, $endian); 
 	last unless $status eq "";
     }
 
     # long type
     if ($MMtype eq 'L') {
-	$status = get_long($fih, $endian, \$value);
+	$status = get_long($file, $endian, \$value);
 	if ($status eq "") {
 	    $cur_offset += 4;
 	}
     }
     # string type
     elsif ($MMtype eq 'S') {
-	$status = get_string($fih, $endian, \$buf);
+	$status = get_string($file, $endian, \$buf);
 	if ($status eq "") {
 	}
     }
     # "rational" type - read 2 longs, value is the 1st divided by the 2nd
     elsif ($MMtype eq 'R') {
-	$status = get_rational($fih, $endian, \$val1, \$val2);
+	$status = get_rational($file, $endian, \$val1, \$val2);
 	last unless (($status eq "") && ($val2 != 0));
 	$rat = $val1/$val2;
     }
@@ -846,13 +818,13 @@ sub get_value {
     elsif ($MMtype eq 'N4') {
 	for ($i = 0; $i < $cnt; $i++) {
 	    my ($rat1, $rat2);
-	    $status = get_long($fih, $endian, \$val1);   # get 1st Long
+	    $status = get_long($file, $endian, \$val1);   # get 1st Long
 	    last unless $status eq "";
-	    $status = get_long($fih, $endian, \$val2);   # get 2nd Long
+	    $status = get_long($file, $endian, \$val2);   # get 2nd Long
 	    last unless $status eq "";
-	    $status = get_long($fih, $endian, \$val3);   # get 3rd Long
+	    $status = get_long($file, $endian, \$val3);   # get 3rd Long
 	    last unless $status eq "";
-	    $status = get_long($fih, $endian, \$val4);   # get 4th Long
+	    $status = get_long($file, $endian, \$val4);   # get 4th Long
 	    last unless $status eq "";
 	    last unless (($val2 > 0) && ($val4 > 0)); 
 	    $rat1 = $val1/$val2;
@@ -862,7 +834,7 @@ sub get_value {
     # 'NS' type - N strings
     elsif ($MMtype eq 'NS') {
 	for ($i = 0; $i < $cnt; $i++) {
-	    $status = get_string($fih, $endian, \$buf);
+	    $status = get_string($file, $endian, \$buf);
 	    last
 		unless $status eq "";
 	}
@@ -870,28 +842,28 @@ sub get_value {
     # 'N2' type - N rationals
     elsif ($MMtype eq 'N2') {
 	for ($i = 0; $i < $cnt; $i++) {
-	    $status = get_rational($fih, $endian, \$val1, \$val2);
+	    $status = get_rational($file, $endian, \$val1, \$val2);
 	    last unless (($status eq "") && ($val2 != 0));
 	    $rat = $val1/$val2;
 	}
     }
     # Date/Time type
     elsif ($MMtype eq 'T') {
-	$status = get_long ($fih, $endian, \$value);
+	$status = get_long ($file, $endian, \$value);
 	if ($status eq "") {
-	    $status = get_long ($fih, $endian, \$value);
+	    $status = get_long ($file, $endian, \$value);
 	    TimeOfDay($value);
 	}
     }
     elsif ($MMtype eq 'NL') {
 	for ($i = 0; $i < $cnt; $i++) {
-	    $status = get_long($fih, $endian, \$value);
+	    $status = get_long($file, $endian, \$value);
 	    last unless $status eq "";
 	}
     }
     # 'LO' type - offset to a single Long. Why not put the long in the tag itself?
     elsif ($MMtype eq 'LO') {
-	$status = get_long($fih, $endian, \$value);
+	$status = get_long($file, $endian, \$value);
 	last unless $status eq "";
     }
 			 
@@ -901,13 +873,14 @@ sub get_value {
 
     if ($status eq "") {
 	# restore file pntr to end of tag
-	$status = seek_it($fih, $cur_offset);
+        $file->setCurrentPosition($cur_offset,0);
     }
 
 }
 
     if ($status eq "Skip") {
-	$status = seek_it($fih, $cur_offset);
+        $file->setCurrentPosition($cur_offset,0);
+        $status = "";
     }
     return $status;
 }
@@ -922,7 +895,7 @@ sub get_long {
     if (ref($value) eq "") {
 	confess "Need to be passed a reference to a variable";
     }
-    $status = read_it($fih, \$buf, 4);
+    $buf = $fih->readData(4);
     return $status
 	unless $status eq "";
     $fmt = ($endian == LITTLE_ENDIAN) ? "V" : "N";
@@ -939,12 +912,13 @@ sub go_there {
     my $offset;
 
     $status = get_long($fih, $endian, \$offset); # value is offset to where data stored
-    $cur_offset = tell $fih;
+    $cur_offset = $fih->getCurrentPosition();
     if ($offset == 0) {     # Apparently, they use an offset of 0 to mean 'ignore field'
 	$status = "Skip";
     }
     if ($status eq "") {
-	$status = seek_it($fih, $offset);
+        $fih->setCurrentPosition($offset,0);
+        $status = "";
     }
     return ($cur_offset, $status);
 }
@@ -959,7 +933,7 @@ sub get_string {
     $status = get_long($fih, $endian, \$len);     # string length precedes characters
     if ($status eq "") {
 	# read 'length' characters
-	$status = read_it($fih, \$buf2, $len);
+        $buf2 = $fih->readData($len);
 	$$buf = $buf2;
     }
     if ($len == 0) {

@@ -176,8 +176,9 @@ sub __storeOneFileInfo {
 	$st_t, $end_t,$format) = @_;
 
 
-    push @$info_aref, { path => $fn,
-		      bigendian => ($params->{endian} eq "big") ? 't':'f',
+    push @$info_aref, { file => $fn,
+                        path => $fn->getFilename(),
+		      bigendian => ($params->{endian} eq "big"),
 		      image_id => $image->id(),
 		      x_start => $st_x,
 		      x_stop => $end_x,
@@ -210,7 +211,7 @@ sub __storeInputFileInfo {
     my $inarr = shift;
 
     foreach my $file_info (@$inarr) {
-        $self->{super}->__touchOriginalFile($file_info->{path},
+        $self->{super}->__touchOriginalFile($file_info->{file},
                                             $file_info->{format});
     }
 

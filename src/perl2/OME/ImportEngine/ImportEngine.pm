@@ -60,6 +60,8 @@ The interface that external format importers must adhere to is
 described in
 L<OME::ImportEngine::AbstractFormat|OME::ImportEngine::AbstractFormat>.
 
+Files are given to the import engine as instances of the OME::File interface.  Currently, there are two implementations of this interface -- 
+
 =cut
 
 use strict;
@@ -174,18 +176,23 @@ whereas C<AllowDuplicates> is optional).
 
 sub importFiles {
     my $self = shift;
-    my $filenames;
+    my $files;
 
     # Allows this to be called as a class method.
     if (!ref($self)) {
-        $filenames = pop;
+        $files = pop;
         $self = $self->new(@_);
     } else {
-        $filenames = shift;
+        $files = shift;
     }
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
+
+    my %files;
+    foreach my $file (@$files) {
+        $files{$file->getFilename()} = $file;
+    }
 
     # Create the new dummy dataset.
 
@@ -194,7 +201,7 @@ sub importFiles {
                 {
                  name => "ImportSet",
                  description => "Images imported by OME::ImportEngine",
-                 locked => 'f',
+                 locked => 1,
                  owner_id => $session->User()->id(),
                 });
 
@@ -216,7 +223,7 @@ sub importFiles {
 
     foreach my $format_class (@$formats) {
 	last
-	    unless (scalar(@$filenames) > 0);
+	    unless (scalar(keys %files) > 0);
 
         eval {
             # Verify that the format class has a well-formed name
@@ -234,7 +241,7 @@ sub importFiles {
             # filenames.  Any files that correspond to importable
             # images will be removed from the list by the getGroups
             # method.
-            my $group = $format->getGroups($filenames);
+            my $group = $format->getGroups(\%files);
 
             # Make sure the getGroups method returned an array ref.
             die "${format_class}: getGroups must return an array ref"

@@ -47,6 +47,8 @@ use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::TIFFUtils;
 use OME::ImportExport::Repacker::Repacker;
 
+use OME::Tasks::PixelsManager;
+
 use base qw(OME::ImportEngine::AbstractFormat);
 
 # Used to create well addresses
@@ -80,7 +82,7 @@ sub __wellAddress ($$) {
 }
 
 sub getGroups {
-    my ($self,$filenames) = @_;
+    my ($self,$files) = @_;
 
     # Keep a list of the files that we're going to import, so that
     # we can remove them from $filenames at the end.
@@ -89,20 +91,23 @@ sub getGroups {
     # Keep track of the groups that we find.
     my @groups;
 
-    my $HTD_FILE = new IO::File;
     my $file_opened;
 
+    my @files = values %$files;
+
   FILENAME:
-    foreach my $filename (@$filenames) {
+    foreach my $file (@files) {
         $file_opened = 0;
+        my $filename = $file->getFilename();
 
         # We're only interested in .HTD files
         next FILENAME unless $filename =~ /\.[Hh][Tt][Dd]$/;
 
         print STDERR "Found $filename\n";
 
-        if (!$HTD_FILE->open($filename)) {
-            carp "Could not open $filename";
+        eval { $file->open('r') };
+        if ($@) {
+            carp "Could not open $filename - $@";
             next FILENAME;
         }
 
@@ -118,10 +123,11 @@ sub getGroups {
 
         #print "/ $/\n";
 
+        local $/ = "\015\012";
+
         my $line;
-        if ($line = <$HTD_FILE>) {
+        if ($line = $file->readLine()) {
             chomp($line);
-            $line =~ s/\r$//;
             #print "$line\n";
             if ($line !~ /^"HTSInfoFile",/) {
                 carp "Not an HTS file";
@@ -146,9 +152,8 @@ sub getGroups {
 
         my $lines;
 
-        while (my $line = <$HTD_FILE>) {
+        while (my $line = $file->readLine()) {
             chomp($line);
-            $line =~ s/\r$//;
             my @columns = __parseCSV($line);
 
             my $line_name = shift(@columns);
@@ -232,7 +237,7 @@ sub getGroups {
             push @waves, undef;
         }
 
-        push @files_found, $filename;
+        push @files_found, $file;
 
         # Now that we've parsed the HTD file, we need to determine which
         # image files should be imported.
@@ -275,7 +280,7 @@ sub getGroups {
                 # consider this group valid.
                 my $group_valid = 0;
 
-                # If any of the files doesn't exist, this group is
+                # If any of the files don't exist, this group is
                 # invalid, regardless of what $group_valid says.
                 my $group_invalid = 0;
 
@@ -292,17 +297,17 @@ sub getGroups {
                       sprintf("_w%d",$wave->[0])
                       if defined $wave;
 
-                    my $real_filename;
+                    my $real_file;
                   TEST_SUFFIX:
                     foreach my $suffix (@{SUFFIXES()}) {
                         my $f = "$tif_base_filename$suffix";
-                        if (-e "$tif_base_filename$suffix") {
-                            $real_filename = "$tif_base_filename$suffix";
+                        if (exists $files->{$f}) {
+                            $real_file = $files->{$f};
                             last TEST_SUFFIX;
                         }
                     }
 
-                    if (!defined $real_filename) {
+                    if (!defined $real_file) {
                         $group_invalid = 1;
                         print STDERR "Cannot find file for $tif_base_filename\n";
                         last WAVELENGTHS;
@@ -310,9 +315,9 @@ sub getGroups {
 
                     $group_valid = 1;
 
-                    push @{$group->{image_files}}, $real_filename;
+                    push @{$group->{image_files}}, $real_file;
                     push @{$group->{wavelengths}}, $wave;
-                    push @files_found, $real_filename;
+                    push @files_found, $real_file;
                 }
 
                 push @groups, $group if ($group_valid && !$group_invalid);
@@ -323,11 +328,11 @@ sub getGroups {
         # Ensure that we close the HTD file after this loop iteration,
         # no matter how that iteration finishes.
 
-        $HTD_FILE->close() if $file_opened;
+        $file->close() if $file_opened;
     }
 
     # Clean out the $filenames list.
-    $self->__removeFilenames($filenames,\@files_found);
+    $self->__removeFiles($files,\@files_found);
 
     print STDERR "\nFound ",scalar(@groups)," groups.\n";
 
@@ -342,14 +347,14 @@ sub getSHA1 {
     # all of the images.  Any of the TIF files will do, though, so
     # we'll arbitrarily choose the first.
 
-    my $filename = $group->{image_files}->[0];
+    my $file = $group->{image_files}->[0];
 
     # The group should never have been created if there are no files in
     # it.  If this is the case, die horribly.
 
-    die "Invalid MetamorphHTDFormat group!" unless defined $filename;
+    die "Invalid MetamorphHTDFormat group!" unless defined $file;
 
-    return $self->__getFileSHA1($filename);
+    return $file->getSHA1();
 }
 
 
@@ -376,9 +381,7 @@ sub importGroup {
     print STDERR "Name $image_name\n";
 
     # Figure out the endian-ness of this machine.
-    my $byteorder = $Config{byteorder};
-    my $our_endian = (($byteorder == 1234) ||
-		      ($byteorder == 12345678)) ? LITTLE_ENDIAN : BIG_ENDIAN;
+    my $our_endian = OME->BIG_ENDIAN()? BIG_ENDIAN: LITTLE_ENDIAN;
 
     my $image = $self->__newImage($image_name);
 
@@ -401,25 +404,29 @@ sub importGroup {
     my $buf;
 
   FILENAME:
-    foreach my $filename (@{$group->{image_files}}) {
+    foreach my $file (@{$group->{image_files}}) {
+        my $filename = $file->getFilename();
+
         # Touch the TIFF file
-        $self->__touchOriginalFile($filename,"MetaMorph TIFF");
+        $self->__touchOriginalFile($file,"MetaMorph TIFF");
 
         $theC++;
         print STDERR "  Wavelength $theC - $filename\n";
         my $wavelength = $group->{wavelengths}->[$theC];
 
-        open TIFF, $filename or last FILENAME;
+        $file->open('r') or last FILENAME;
 
         # Read the IFD for this TIFF file.
 
-        my $ifd = readTiffIFD(*TIFF);
+        my $ifd = readTiffIFD($file);
         if (!defined $ifd) {
             print STDERR "Error reading IFD from $filename\n";
             $image_invalid = 1;
-            close TIFF;
+            $file->close();
             last FILENAME;
         }
+
+        print STDERR "Tags: ",join(' ',keys %$ifd),"\n";
 
         # Retrieve the dimensions of this TIFF.
 
@@ -435,14 +442,14 @@ sub importGroup {
         if ($samplesPerPix != 1) {
             print STDERR "Not a monochrome image\n";
             $image_invalid = 1;
-            close TIFF;
+            $file->close;
             last FILENAME;
         }
 
         if (not ($thisBitsPerPixel == 8 || $thisBitsPerPixel == 16) ) {
             print STDERR "Bits per bixel must be 8 or 16.  Got $thisBitsPerPixel.\n";
             $image_invalid = 1;
-            close TIFF;
+            $file->close;
             last FILENAME;
         }
 
@@ -453,7 +460,7 @@ sub importGroup {
                 $bitsPerPixel != $thisBitsPerPixel) {
                 print STDERR "Inconsistent sizes\n";
                 $image_invalid = 1;
-                close TIFF;
+                $file->close;
                 last FILENAME;
             }
         } else {
@@ -484,7 +491,7 @@ sub importGroup {
         if ($rows_per_strip <= 0) {
             print STDERR "MetamorphHTDFormat does not support non-strip TIFFs\n";
             $image_invalid = 1;
-            close TIFF;
+            $file->close;
             last FILENAME;
         }
 
@@ -492,26 +499,24 @@ sub importGroup {
             print STDERR "MetamorphHTDFormat only supports uncompressed TIFFs\n";
             print STDERR "$compression\n";
             $image_invalid = 1;
-            close TIFF;
+            $file->close;
             last FILENAME;
         }
-        close TIFF;
-        my $nPix = $pix->TIFF2Plane ($filename,0,$theC,0);
-        if ($nPix != $sizeX*$sizeY) {
-            print STDERR "Problems writing TIFF to repository file\n";
-            $image_invalid = 1;
-            last FILENAME;
-        }
+        $file->close;
+
+        $pix->convertPlaneFromTIFF($file,0,$theC,0);
     }
+
+    $pix->finishPixels();
 
     if ($image_invalid && $pixels_created) {
         # If there was an error, make sure to remove the repository file
         # since it's no longer valid.
 
-        my $repository = $pixels->Repository();
-        my $full_path = $repository->Path() . $pixels->Path();
-        print STDERR "Removing repository file $full_path\n";
-        unlink $full_path;
+        # FIXME:  Add an image server method to delete an
+        # unfinished Pixels.
+        print STDERR "Removing repository file... UNIMPLEMENTED!!!\n";
+        # $pix->delete();
     }
 
     return $image_invalid? undef: $image;

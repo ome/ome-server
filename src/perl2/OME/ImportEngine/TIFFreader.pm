@@ -86,7 +86,6 @@ use Class::Struct;
 use strict;
 use File::Basename;
 use Carp;
-use OME::ImportEngine::FileUtils qw(/^.*/);
 use OME::ImportEngine::Params;
 use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::TIFFUtils;
@@ -190,58 +189,60 @@ sub getGroups {
     my $self = shift;
     my $fref = shift;
     my $digits = '[1-9]';
-    my $nmlen = scalar(@$fref);
-    my @inlist = reverse sort @$fref;
+    my @inlist = sort keys %$fref;
     my @outlist;
 
-    while (my $fn = pop @inlist) {
-	next
-	    unless (defined(is_tiff($fn)));
+    while (my $fn = shift @inlist) {
+        my $file = $fref->{$fn};
+
+        next
+          unless (defined(is_tiff($file)));
 
         my $bn = basename($fn);
         my $matched = 0;
-	my @grp;
+        my @grp;
         foreach my $k (keys %fmts) {
             my $pattern = $fmts{$k};
-            if ($bn =~ m/$pattern/i) {    # found a file that matches a pattern
+            if ($bn =~ m/$pattern/i) { # found a file that matches a pattern
                 $matched = 1;
                 my $subp = $5 ? "$4$5" : "$4";
-		my $outname = defined($5) ? "$1$4" : "$1";
+                my $outname = defined($5) ? "$1$4" : "$1";
                 my $subpattern = "$1$2$digits$subp";
-                @grp = ($fn);
-                while (1) {        #    now find all similarly named files
-                    if ($fn = pop @inlist) {
+                @grp = ($file);
+                delete $fref->{$fn};
+                while (1) {    #    now find all similarly named files
+                    if ($fn = shift @inlist) {
+                        $file = $fref->{$fn};
                         $bn = basename($fn);
                         if ($bn =~ m/$subpattern/i) {
-                            push @grp, $fn;
-			    $matched++;
-                        }
-                        else {
-                            push @inlist, $fn;
+                            push @grp, $file;
+                            delete $fref->{$fn};
+                            $matched++;
+                        } else {
+                            unshift @inlist, $fn;
                             last;
                         }
-                    }
-                    else {
+                    } else {
                         last;
                     }
                 }
-		if ($matched > 1) {
-		    push @grp, $outname;
-		} else {
-		    push @grp, $bn;
-		}
+                if ($matched > 1) {
+                    push @grp, $outname;
+                } else {
+                    push @grp, $bn;
+                }
                 push @outlist, \@grp;
-		last;
+                last;
             }
         }
         if ($matched == 0) {
-	    if ($fn =~ LONE_TIFF) {
-		push @grp, $fn;
-		push @grp, basename($fn);
-		push @outlist, \@grp;
-	    }
+            if ($fn =~ LONE_TIFF) {
+                push @grp, $file;
+                push @grp, basename($fn);
+                push @outlist, \@grp;
+                delete $fref->{$fn};
+            }
         }
-	$self->__removeFilenames($fref, \@grp);
     }
 
     return \@outlist;
@@ -289,18 +290,16 @@ sub importGroup {
     my $factory = $session->Factory();
     my $params  = $self->{params};
     my $status = "";
-    my ($fh, $fn);
+    my ($file, $fn);
 
     # getGroups has left the output image file name at the end of @$grp
     my $ofn = pop @$grp;
 
     # Use the 1st file's parameters to get the X, Y, & pixel size 
-    $fn = $grp->[0];
-    open $fh,$fn
-	or return undef; 
-    binmode($fh);
-    my $tags =  readTiffIFD($fh);
-    close($fh);
+    $file = $grp->[0];
+    $file->open('r');
+    my $tags =  readTiffIFD($file);
+    $file->close();
     $params->endian($tags->{__Endian});
     my $xref = $params->{xml_hash};
     $xref->{'Image.SizeX'} = $tags->{TAGS->{ImageWidth}}->[0];
@@ -335,33 +334,31 @@ sub importGroup {
     # for each channel (wavelength) read an input file and append to output
     my (@finfo, @channelInfo);
     for (my $c = 0; $c < scalar(@$grp); $c++) {
-	$fn = $grp->[$c];
-	open $fh,$fn
-	    or return undef; 
-	binmode($fh);
-	$params->fref($fh);
-	$tags =  readTiffIFD($fh)
-	    unless ($c == 0);        # 1st file's tags already read
-	$status = readWritePixels($self, $tags, $c);
-	last
-	    unless ($status eq "");
-	# Store summary info about each input file
-	$self->__storeOneFileInfo(\@finfo, $fn, $params, $image,
-				  0, $xref->{'Image.SizeX'}-1,
-				  0, $xref->{'Image.SizeY'}-1,
-				  0, 0,
-				  $c, $c,
-				  0, 0,
-                  "TIFF");
+        $file = $grp->[$c];
+        $file->open('r');
+        $params->fref($file);
+        $tags =  readTiffIFD($file)
+          unless ($c == 0);     # 1st file's tags already read
+        $status = readWritePixels($self, $tags, $c);
+        last
+          unless ($status eq "");
+        # Store summary info about each input file
+        $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+                                  0, $xref->{'Image.SizeX'}-1,
+                                  0, $xref->{'Image.SizeY'}-1,
+                                  0, 0,
+                                  $c, $c,
+                                  0, 0,
+                                  "TIFF");
 
-	# Store info about each input channel (wavelength)
-	push @channelInfo, {chnlNumber => $c,
-			    ExWave     => undef,
-			    EmWave     => undef,
-			    Fluor      => undef,
-			    NDfilter   => undef};
+        # Store info about each input channel (wavelength)
+        push @channelInfo, {chnlNumber => $c,
+                            ExWave     => undef,
+                            EmWave     => undef,
+                            Fluor      => undef,
+                            NDfilter   => undef};
 
-	close $fh;
+        $file->close();
     }
 
     if ($status eq "") {
@@ -387,35 +384,10 @@ sub readWritePixels {
     my $sz_read = 0;
     my $fih      = $params->fref;
     my $status = "";
-    my $rows_per_strip = $tags->{TAGS->{RowsPerStrip}}->[0];
-    $rows_per_strip = $xref->{'Image.SizeY'}
-        unless (defined $rows_per_strip);
 
+    $self->{pix}->convertPlaneFromTIFF($fih,0,$theC,0);
+    $self->{pix}->finishPixels();
 
-    my ($offsets_arr, $bytesize_arr) = getStrips($tags);
- 
-    for (my $i = 0; $i < $#$bytesize_arr+1; $i++) {
-	my $sz = $bytesize_arr->[$i];
-	my $offset = $offsets_arr->[$i];
-	my $status = seek_and_read($fih, \$buf, $offset, $sz);
-	last
-	    unless ($status eq "");
-
-	my $endian   = $params->endian;
-	my $bps      = $params->byte_size;
-	my $cnt = Repacker::repack($buf, $sz, $bps,
-				   $endian eq "little",
-				   $params->{host_endian} eq "little");
-	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == WHITE_IS_ZERO) {
-	    my $cnt2 = Repacker::invert($buf, $sz, $bps);
-	}
-	my $nPixOut = $self->{pix}->SetRows($buf, $rows_per_strip, 
-					    $theY, 0, $theC, 0);
-	if ($self->{plane_size}/$params->byte_size != $nPixOut) {
-	    $status = "Failed to write repository file - $self->{plane_size}/".$params->byte_size." != $nPixOut";
-	}
-	$theY += $rows_per_strip;
-    }
     return $status;
 
 }
@@ -423,15 +395,11 @@ sub readWritePixels {
 
 
 sub is_tiff {
-    my $fn= shift;
+    my $file = shift;
 
-    open IMG, $fn
-	or return undef; 
-    binmode(IMG);
-    my $fh = *IMG;
-
-    my $tags =  readTiffIFD($fh);
-    close IMG;
+    $file->open('r');
+    my $tags =  readTiffIFD($file);
+    $file->close();
 
     return $tags;
 }
@@ -442,7 +410,7 @@ sub getSHA1 {
     my $grp = shift;
 
     my $fn = $grp->[0];
-    my $sha1 = $self->getCommonSHA1($fn);
+    my $sha1 = $fn->getSHA1();
 
     return $sha1;
 }

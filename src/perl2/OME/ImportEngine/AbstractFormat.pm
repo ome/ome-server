@@ -64,6 +64,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use OME::Tasks::ImportManager;
+use OME::Tasks::PixelsManager;
 
 use fields qw(_session _module_execution);
 use File::Basename;
@@ -287,37 +288,15 @@ will be created.
 =cut
 
 sub __touchOriginalFile {
-    my ($self,$filename,$format) = @_;
+    my ($self,$file,$format) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
     my $file_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
-    print STDERR "Touch '$format' $filename\n";
+    print STDERR "Touch '$format' $file\n";
 
-    my $sha1 = $self->__getFileSHA1($filename);
-
-    # If we've already touched this file during this import, reuse the
-    # existing attribute.
-
-    my $file = $factory->
-      findAttribute("OriginalFile",
-                    {
-                     module_execution => $file_mex,
-                     Path             => $filename,
-                    });
-
-    # Otherwise create a new one.
-
-    $file ||= $factory->
-      newAttribute("OriginalFile",undef,$file_mex,
-                   {
-                    Repository => undef,
-                    Path       => $filename,
-                    SHA1       => $sha1,
-                    Format     => $format,
-                   });
-
-    return $file;
+    return OME::Tasks::PixelsManager->
+      createOriginalFileAttribute($file,$format,$file_mex);
 }
 
 
@@ -349,32 +328,22 @@ sub __storeInstrumemtInfo {
 }
 
 
-=head2 __removeFilenames
+=head2 __removeFiles
 
-	$self->__removeFilenames($filenames,$to_remove);
+	$self->__removeFiles($files,$to_remove);
 
-Takes in two array references of filenames.  After this method
-returns, none of the members of the $to_remove list will exist in the
-$filenames list.
+Takes in two array references of files.  After this method returns,
+none of the members of the $to_remove list will exist in the $files
+list.
 
 =cut
 
-sub __removeFilenames {
-    my ($self,$filename_list,$to_remove) = @_;
+sub __removeFiles {
+    my ($self,$file_list,$to_remove) = @_;
 
-    # turn to_remove into a hash for easier access
-    my %to_remove;
-    $to_remove{$_} = undef foreach @$to_remove;
-
-    my $i = 0;
-    while ($i < scalar(@$filename_list)) {
-        if (exists $to_remove{$filename_list->[$i]}) {
-            # This element should be removed
-            splice(@$filename_list,$i,1);
-        } else {
-            # This element is okay
-            $i++;
-        }
+    foreach my $file (@$to_remove) {
+        my $filename = $file->getFilename();
+        delete $file_list->{$filename};
     }
 
     return;
@@ -404,71 +373,45 @@ sub __nameOnly {
 
 	my ($pixels_attribute,$pix_object) = $self->
 	    __createRepositoryFile($image,$sizeX,$sizeY,$sizeZ,
-	                           $sizeC,$sizeT,$bitsPerPixel);
+	                           $sizeC,$sizeT,$bitsPerPixel,
+	                           [$isSigned],[$isFloat]);
 
 Creates a new repository file for the given image, creates a Pixels
 attribute to refer to it ($pixels_attribute), and creates an instance
-of OME::Image::Pix to access the pixel data ($pix_object).  The
+of OME::Image::Pixels to access the pixel data ($pix_object).  The
 dimensions of the image must be specified before the repository file
 is created.
 
 The Pixels attribute will not be very useful to most import code,
 except that any newly created attributes which require a reference to
 a Pixels will point to it.  The import code will use the
-OME::Image::Pix instance much more, as it provides the low-level
-access to the repository file.  For reasons of efficiency, most import
-code should use the SetPlane method of OME::Image::Pix to store the
-pixels in the repository.  (Using SetStack or SetPixels would use too
-much memory in the case of large images; using SetROI would take more
-time than the other Set* methods.)
+OME::Image::Pixels instance much more, as it provides the low-level
+access to the repository file.
 
 =cut
 
 
 sub __createRepositoryFile {
-    my ($self,$image,$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bitsPerPixel) = @_;
+    my ($self,$image,$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,
+        $bitsPerPixel,$isSigned,$isFloat) = @_;
+
+    $isSigned ||= 0;
+    $isFloat ||= 0;
 
     my $session = $self->Session();
     my $factory = $session->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
-    my @repository = $factory->findAttributes("Repository");
-    my $repository = $repository[0];
 
-    # Create the Pixels attribute.  Note that the Path element depends
-    # on the primary key ID assigned to the attribute, so we must set
-    # it to a dummy value first.
+    my ($pixels,$attr) = OME::Tasks::PixelsManager->
+      createPixels($image,$module_execution,
+                   $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,
+                   $bitsPerPixel/8,$isSigned,$isFloat);
 
-    my $pixels = $factory->
-      newAttribute("Pixels",$image,$module_execution,
-                   {
-                    Repository   => $repository->id(),
-                    SizeX        => $sizeX,
-                    SizeY        => $sizeY,
-                    SizeZ        => $sizeZ,
-                    SizeC        => $sizeC,
-                    SizeT        => $sizeT,
-                    BitsPerPixel => $bitsPerPixel,
-                    Path         => 'x',
-                   });
-
-    # Now that the attribute has an ID, calculate the actual Path
-    # element and store it.
-
-    my $path = $pixels->id()."-".$image->name().".ori";
-    $path =~ s/[^A-Za-z0-9-_.]/_/g;
-    $pixels->Path($path);
-    $pixels->storeObject();
-
-    $image->pixels_id( $pixels->id() ); # Josiah's viewer hack
+    $image->pixels_id( $attr->id() ); # Josiah's viewer hack
     $image->storeObject();
 
-    # Create an OME::Image::Pix instance to correspond to this new
-    # Pixels attribute.
-
-    my $pix = $image->GetPix($pixels);
-
-    return ($pixels,$pix);
+    return ($attr,$pixels);
 }
 
 =head1 AUTHOR
