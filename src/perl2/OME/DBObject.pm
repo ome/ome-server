@@ -1936,8 +1936,10 @@ sub __newInstance {
         return $cached_object if defined $cached_object;
     }
 
+    my $columns_specified = 1;
     if ((!defined $columns_wanted) || (scalar(@$columns_wanted) <= 0)) {
         $columns_wanted = [keys %{$class->__columns()}];
+        $columns_specified = 0;
     }
 
     # Create a hash to store the fields that we're loading in.
@@ -1953,7 +1955,8 @@ sub __newInstance {
 
     $self->__fillInstance($i,$columns_wanted,$sth_vals);
 
-    $self->__storeCachedObject();
+    $self->__storeCachedObject()
+      unless $columns_specified;
 
     return $self;
 }
@@ -1984,8 +1987,6 @@ sub __newByID {
     my $cached_object = $class->__getCachedObject($id);
     return $cached_object if defined $cached_object;
 
-    $columns_wanted = [keys %{$class->__columns()}]
-      unless defined $columns_wanted && scalar(@$columns_wanted) > 0;
     my ($sql,$id_available,$values) = $class->
       __makeSelectSQL($columns_wanted,{id => $id});
 
