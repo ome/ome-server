@@ -156,7 +156,7 @@ sub getTable {
 			filters => $options->{filters},
 			filter_object => 'OME::Image'
 		}
-	) unless (@images);
+	) unless (@images or caller ne ref($self));
 	
 	my @column_headers = qw(ID Name Preview Owner Group Description);
 

@@ -132,6 +132,12 @@ sub new {
 	return $self;
 }
 
+{
+	my $menu_text = 'N/A';
+
+	sub getMenuText { return }
+}
+
 sub getTable {
 	my ($self, $options, @datasets) = @_;
 
@@ -153,7 +159,7 @@ sub getTable {
 			filters => $options->{filters},
 			filter_object => 'OME::Dataset'
 		}
-	) unless (@datasets);
+	) unless (@datasets or caller ne ref($self));
 
 	my @column_headers = qw(ID Status Name Owner Group Description);
 
