@@ -44,6 +44,7 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.Module;
@@ -91,6 +92,11 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		handler = new PChainEventHandler(this,linkLayer);
 		addInputEventListener(handler);
 		dropTarget = new DropTarget(this,this);
+		
+
+		final PCamera camera = getCamera();
+	       
+		camera.addInputEventListener(new PChainToolTipHandler(camera));
 	}
 	
 
