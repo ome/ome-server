@@ -94,6 +94,9 @@ public class RemoteBindings
 		    factory = session.getFactory();
 		    loggedIn = true;
 		}
+		else {
+		    throw new RemoteException("Failed to log in");
+		}
             } else {
                 throw new RemoteException("Already logged in!");
             }
