@@ -1,0 +1,315 @@
+=head1 NAME
+
+Open Microscopy Environment API
+
+=head1 Overview
+
+The OME API is an object-oriented framework for accessing information
+in an OME database, and for performing common workflow tasks in a
+consistent way.  It is written in Perl, but can be called from any
+language via the OME Remote Framework.  The Remote Framework also
+allows OME applications to be written in a client-server design
+pattern.
+
+=head2 Organization of the OME database
+
+Since the OME design relies heavily on extensible semantic types,
+almost all of the underlying database is defined via XML-based
+semantic type descriptors.  Those tables which cannot be defined as
+semantic types are defined explicitly via SQL.
+
+This dichotomy is visible at the API layer, as well.  Access to rows
+in the core tables not defined as semantic types (or, "database
+objects") is provided by the OME::DBObject class, whereas access to
+instances of semantic types (or, "attributes") is provide by the
+OME::AttributeType::Superclass class.
+
+=head2 Session management and the factory
+
+All OME tasks must be performed in the context of a "session".  This
+requires a valid OME user to be logged in.  Currently, there is no
+security model in the OME API, so all tasks can be performed by all
+users.  Part of the design criteria for the OME API is to provide a
+place to add a security model in the future, and to prevent this
+addition from breaking previous code.
+
+All database access should be done via database objects and
+attributes.  Arbitrary SQL should not be used except in extreme cases
+where performance is a premium.  Database objects and attributes are
+instantiated via an OME::Factory instance, which is provided by the
+active session.  Since these objects are coupled to the factory that
+created them, they must not be shared among sessions.
+
+=head2 Workflow layer
+
+Although the OME::DBObject and OME::AttributeType::Superclass classes
+provide mutator methods, these should not be used in most cases, since
+they provide direct access to the database.  Rather than using these
+objects to modify the underlying database tables, the workflow classes
+in the OME::Tasks:: package should be used.  This allows client code
+to be written independent of how particular workflow tasks are
+implemented.
+
+=head2 Remote Framework
+
+The OME Remote Framework provides access to the OME API to other
+languages and physical machines.  For security reasons, only a portion
+of the API is published via the Remote Framework.  It is, however,
+enough to fully implement an OME client program which uses an OME
+API-based server as its data store and which uses the workflow classes
+to implement its underlying functionality.
+
+The Remote Framework is designed independent of the actual RPC
+protocol used.  (This means that no features specific to any RPC
+protocol are used.)  SOAP and XML-RPC are the currently supported
+protocols.
+
+=head1 Database object classes
+
+The following core tables are implemented in Perl as database objects.
+The name of the corresponding Perl class is given.
+
+=over
+
+=item *
+
+CONFIGURATION (OME::Configuration)
+
+=item *
+
+OME_SESSIONS (OME::Session)
+
+=item *
+
+PROJECTS (OME::Project)
+
+=item *
+
+DATASETS (OME::Dataset)
+
+=item *
+
+IMAGES (OME::Image)
+
+=item *
+
+FEATURES (OME::Feature)
+
+=item *
+
+LOOKUP_TABLES (OME::LookupTable)
+
+=item *
+
+LOOKUP_TABLE_ENTRIES (OME::LookupTable::Entries)
+
+=item *
+
+DATA_TABLES (OME::DataTable)
+
+=item *
+
+DATA_COLUMNS (OME::DataTable::Column)
+
+=item *
+
+ATTRIBUTE_TYPES (OME::AttributeType)
+
+=item *
+
+ATTRIBUTE_COLUMNS (OME::AttributeType::Column)
+
+=item *
+
+PROJECT_DATASET_MAP (OME::Project::DatasetMap)
+
+=item *
+
+IMAGE_DATASET_MAP (OME::Image::DatasetMap)
+
+=item *
+
+PROGRAMS (OME::Program)
+
+=item *
+
+FORMAL_INPUTS (OME::Program::FormalInput)
+
+=item *
+
+FORMAL_OUTPUTS (OME::Program::FormalOutput)
+
+=item *
+
+ANALYSES (OME::Analysis)
+
+=item *
+
+ACTUAL_INPUTS (OME::Analysis::ActualInput)
+
+=item *
+
+ANALYSIS_VIEWS (OME::AnalysisView)
+
+=item *
+
+ANALYSIS_VIEW_NODES (OME::AnalysisView::Node)
+
+=item *
+
+ANALYSIS_VIEW_LINKS (OME::AnalysisView::Link)
+
+=item *
+
+ANALYSIS_PATHS (OME::AnalysisPath)
+
+=item *
+
+ANALYSIS_PATH_MAP (OME::AnalysisPath::Map)
+
+=item *
+
+ANALYSIS_EXECUTIONS (OME::AnalysisExecution)
+
+=item *
+
+ANALYSIS_NODE_EXECUTIONS (OME::AnalysisExecution::NodeExecution)
+
+=back
+
+An accessor/mutator method is defined for each column in the table.
+The method's name is the same as the columns name, but in lowercase.
+If a column is a foreign key to another core table, then its
+accessor/mutator method will expect values of the corresponding
+database class, not primary key values.  Further, a foreign key method
+will have any trailing "_id" removed from the method name.
+
+=over
+
+B<NOTE:> Columns which point to attributes are currently in a state of
+flux.  Ideally, they will deal with instances of the attribute
+classes, in the same way that foreign key columns deal with instances
+of the database object class.  Currently, this is not the case; these
+accessors return an attribute ID.  To get the attribute object itself,
+this ID must be passed to the OME::Factory->loadAttribute method.
+
+=back
+
+=head1 Attribute classes
+
+Attributes are handled differently than database objects, since they
+are user-defined.  Since an attribute is not well-defined without its
+semantic type definition, you must first load the appropriate row from
+the ATTRIBUTE_TYPES table (using the database object interfaces
+described in the previous section).  You can then use this
+AttributeType object with the factory object to load attributes of
+that type.  These routines dynamically generate a subclass of
+OME::AttributeType::Superclass for the semantic type, and creates
+accessor/mutator methods for all of the semantic elements.  The
+methods have the exact same name as the semantic elements, including
+case.  If a semantic element is a reference to another semantic type,
+the method will expect values of the corresponding attribute class.
+The method name will remain unchanged.
+
+The following core semantic types will almost certainly be used by any
+OME client program:
+
+=over
+
+=item *
+
+Experimenter
+
+=item *
+
+Group
+
+=item *
+
+Repository
+
+=item *
+
+Dimensions
+
+=item *
+
+Pixels
+
+=back
+
+=head1 Examples
+
+These examples are written in Perl.  Except for the act of opening and
+closing a session, the Remote Framework uses the exact same method
+calls.
+
+=head2 Example 1: Simple database objects
+
+	1. my $username = "omeuser";
+	2. my $password = "password0";
+	3. my $manager = OME::SessionManager->new();
+	4. my $session = $manager->createSession($username,$password);
+	5. my $factory = $session->Factory();
+	6. my $image = $factory->loadObject("OME::Image",1);
+	7. print $image->name(),"\n";
+
+Lines 1 and 2 would, of course, be replaced by whatever code is
+necessary to get a username and password from the user.  Line 3 loads
+in a session manager, and then line 4 uses it to create a session for
+the user.  Line 5 obtains the factory for the newly created session,
+and line 6 uses it to load in the row in the IMAGES table with a
+primary key ID of 1.  Line 7 prints this image's name to standard out.
+
+Note that this example does absolutely no error-checking.  A null
+value (undef in Perl) would be returned by line 4 if the username and
+password were invalid, or if there was some other problem connecting
+to the OME server.  Line 6 would also return a null value if there was
+no image in the database with an ID of 1.  In each of these cases,
+Perl would die with an error on the following line, when the code
+tried to call a method on the null value.
+
+=head2 Example 2: Simple attributes
+
+	 1. my $username = "omeuser";
+	 2. my $password = "password0";
+	 3. my $manager = OME::SessionManager->new();
+	 4. my $session = $manager->createSession($username,$password);
+	 5. my $factory = $session->Factory();
+	 6. my $image = $factory->loadObject("OME::Image",1);
+	 7. my @pixelses = $factory->findAttributes("Pixels",$image);
+	 8. foreach my $pixels (@pixelses) {
+	 9.     my $repository = $pixels->Repository();
+	10.     my $rPath = $repository->Path();
+	11.     my $iPath = $pixels->Path();
+	12.     my $fullPath = $rPath.$iPath;
+	13.     print "$fullPath\n";
+	14. }
+
+Lines 1 and 2 would, of course, be replaced by whatever code is
+necessary to get a username and password from the user.  Line 3 loads
+in a session manager, and then line 4 uses it to create a session for
+the user.  Line 5 obtains the factory for the newly created session,
+and line 6 uses it to load in the row in the IMAGES table with a
+primary key ID of 1.
+
+Line 7 loads in all of the Pixels attributes corresponding to the
+image.  For each set of pixels, line 9 loads in the repository object
+corresponding to where those pixels are stored.  Line 10 gets the
+repository's base path, and line 11 gets the relative path of the
+pixels in the repository.  Lines 12-13 concatenate the two together to
+get the full path of the pixels, and prints this to standard output.
+
+As in example 1, no error-checking is performed.
+
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
+=head1 SEE ALSO
+
+L<OME::DBObject|OME::DBObject>,
+L<OME::AttributeType|OME::AttributeType>,
+L<OME::Factory|OME::Factory>
+
+=cut
