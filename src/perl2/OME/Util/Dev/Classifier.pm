@@ -53,10 +53,8 @@ use OME::Session;
 use OME::Tasks::ImageTasks;
 use OME::Tasks::ChainManager;
 use OME::Tasks::OMEImport;
-use OME::Tasks::ModuleExecutionManager;
 use OME::ImportExport::ChainExport;
 use OME::Matlab;
-use OME::Session;
 
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
@@ -102,6 +100,11 @@ Options:
 
   -d  Dataset name or ID.
 
+  -e  Analysis Chain Execution ID. This Optional parameter takes precedence over
+      the -a and -d flags. If you specify this then you don't need to specify
+      -a and -d. This is especially useful if the analysis chain was executed
+      multiple times against the dataset.
+  
   -o  Output filename.
   
   -f, --force
@@ -195,32 +198,53 @@ END_STDS
 
 sub compile_sigs {
 	my ($self,$commands) = @_;
-	my ($datasetStr, $chainStr, $output_file_name, $show_help, $force_new_chex );
+	my ($datasetStr, $chainStr, $output_file_name, $chex_id, $show_help, $force_new_chex );
 	
 	GetOptions ('d=s' => \$datasetStr,
 	            'a=s' => \$chainStr,
 	            'o=s' => \$output_file_name,
+	            'e=i' => \$chex_id,
 	            'h' => \$show_help,
 	            'f|force' => \$force_new_chex );
 	            
 	return $self->compile_sigs_help($commands) if $show_help;
 	die "one or more options not specified"
-		unless $datasetStr and $chainStr and $output_file_name;
+		unless (($datasetStr and $chainStr) or $chex_id) and $output_file_name;
 	
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
 	
 	logdbg "debug", "loading chain, dataset, and signature stitcher chain node";
 	
-	# get chain	
+	# sanity check
+	die "Cannot specify options -f and -e. \n" if (defined $chex_id and $force_new_chex);
+	
+	# get chex if appropriate
+	my $chex;
 	my $chain;
-	if ($chainStr =~ /^([0-9]+)$/) {
-		$chain= $factory->loadObject( "OME::AnalysisChain", $chainStr )
-			or die "Cannot find an analysis chain with id = $chainStr";
-	} else {
-		my $chainData = {name => $chainStr};
-		$chain = $factory->findObject( "OME::AnalysisChain", $chainData)
-			or die "Cannot find an analysis chain with name = $chainStr";
+	my $dataset;
+	
+	if ($chex_id) {
+		$chex = $factory->findObject( "OME::AnalysisChainExecution",
+			id => $chex_id,
+		);
+		die "Could not find chain execution with (id=".$chex_id.")"
+			unless ($chex);
+		$chain   = $chex->analysis_chain();
+		$dataset = $chex->dataset();
+		print $chain->name()."  ".$dataset->name()."\n";
+	}
+
+	# get chain	if neccessary
+	if (not defined $chain) {
+		if ($chainStr =~ /^([0-9]+)$/) {
+			$chain= $factory->loadObject( "OME::AnalysisChain", $chainStr )
+				or die "Cannot find an analysis chain with id = $chainStr";
+		} else {
+			my $chainData = {name => $chainStr};
+			$chain = $factory->findObject( "OME::AnalysisChain", $chainData)
+				or die "Cannot find an analysis chain with name = $chainStr";
+		}
 	}
 	
 	# get signature module
@@ -231,36 +255,65 @@ sub compile_sigs {
 	logdbg "debug", "found signature stitcher module (name=".$sig_stitch_node->module->name()."), node (id=".$sig_stitch_node->id.".";
 	
 	
-	# get a dataset
-	my $dataset;
-	if ($datasetStr =~ /^([0-9]+)$/) {
-		my $datasetID = $1;
-		$dataset = $factory->loadObject ("OME::Dataset", $datasetID);
-		die "Dataset with ID $datasetStr doesn't exist!" unless $dataset;
-	} else {
-		my $datasetData = {
-							name   => $datasetStr,
-							owner  => $session->User(),
-						  };
-		$dataset = $factory->findObject( "OME::Dataset", $datasetData);
-		die "Dataset with name $datasetStr doesn't exist!" unless $dataset;
+	# get dataset if neccesary
+	if (not defined $dataset) {
+		if ($datasetStr =~ /^([0-9]+)$/) {
+			my $datasetID = $1;
+			$dataset = $factory->loadObject ("OME::Dataset", $datasetID);
+			die "Dataset with ID $datasetStr doesn't exist!" unless $dataset;
+		} else {
+			my $datasetData = {
+								name   => $datasetStr,
+								owner  => $session->User(),
+							  };
+			$dataset = $factory->findObject( "OME::Dataset", $datasetData);
+			die "Dataset with name $datasetStr doesn't exist!" unless $dataset;
+		}
+	}	
+	my @images = $dataset->images;
+	@images = sort {$a->id <=> $b->id} @images;
+	
+	# collect image classifications.
+	logdbg "debug", "collecting image classifications.";
+	my %classifications;
+	my $category_group;
+	foreach my $image ( @images ) {
+		my @classification_list = $factory->findAttributes( 'Classification', image => $image )
+			or die "Could not find a classification for image id=".$image->id;
+		die "More than one classification found for image id=".$image->id
+			unless scalar( @classification_list ) eq 1;
+		$category_group = $classification_list[0]->Category->CategoryGroup
+			unless $category_group;
+		die "Classification for image id=".$image->id." does not belong to the same category group as other images in this dataset."
+			unless $category_group->id eq $classification_list[0]->Category->CategoryGroup->id;
+		$classifications{ $image->id } = $classification_list[0];
+	}
+	# map categories to category numbers
+	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
+	my %category_numbers;
+	my $cn = 0;
+	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
+		$cn++;
+		$category_numbers{ $_->id } = $cn;
 	}
 	
 	# collect sig stitcher module execution for this chain
 	logdbg "debug", "finding signature stitcher module execution.";
-	my $chex;
-	unless( $force_new_chex ) {
+	if ($force_new_chex) {
+		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, undef, ReuseResults => 0);
+	} else {
+		# chex might already be loaded if chex_id was specified as program parameter
 		$chex = $factory->findObject( "OME::AnalysisChainExecution",
 			analysis_chain => $chain,
 			dataset        => $dataset
-		) unless $force_new_chex;
-		unless ($chex) {
+		) unless ($chex);
+		
+		if (not $chex) {
 			logdbg "debug", "Could not find execution of chain (id=".$chain->id."). Executing chain";
 			$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
 		}
-	} else {
-		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, undef, ReuseResults => 0);
 	}
+	
 	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
 		analysis_chain_execution => $chex,
 		analysis_chain_node      => $sig_stitch_node
@@ -271,10 +324,46 @@ sub compile_sigs {
 	logdbg "debug", "found signature stitcher module execution (mex=".$stitcher_mex->id().").";
 	
 	# make the matlab signature array. 
-	my @images = $dataset->images;
-	@images = sort {$a->id <=> $b->id} @images;
-	my $signature_array = $self->
-		compile_signature_matrix( $stitcher_mex, \@images);
+	#	number of columns is the size of the signature vector plus one for the image classification.
+	#	number of rows is the number of images.
+	logdbg "debug", "Making the signature array.";
+	my @vector_legends = $factory->findAttributes( "SignatureVectorLegend", module_execution => $stitcher_mex )
+		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, scalar( @images ));
+	$signature_array->makePersistent();
+	
+	# populate the signature matrix. The format is:
+	#	        Img 1  Img 2  ...
+	#	Sig 1 [     x,     x, ... ]
+	#	Sig 2 [     x,     x, ... ]
+	#	...   [   ...,   ..., ... ]
+	#	Sig n [     x,     x, ... ]
+	#	Class [     x,     x, ... ]
+	my $image_number = 0;
+	my @sig_array;
+	foreach my $image ( @images ) {
+		my $signature_entry_iterator = $factory->findAttributes( "SignatureVectorEntry", 
+			module_execution => $stitcher_mex,
+			image            => $image
+		) or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
+		# set the image category
+		$signature_array->set( 
+			scalar( @vector_legends ), 
+			$image_number, 
+			$category_numbers{ $classifications{ $image->id }->Category->id }
+		);
+		# set the image's signature vector
+		while (my $sig_entry = $signature_entry_iterator->next()) {
+			# VectorPosition is numbered 1 to n.
+			# Array positions should be 0 to (n-1).
+			$signature_array->set( 
+				$sig_entry->Legend->VectorPosition() - 1, 
+				$image_number, 
+				$sig_entry->Value()
+			);
+		}
+		$image_number += 1;
+	}
 
 	# save the array to disk
 	logdbg "debug", "Saving the array to disk.";
@@ -453,81 +542,6 @@ ENDDESCRIPTION
 	$chainExport->buildDOM ([$new_chain]);
 	$chainExport->exportFile ($chain_file, compression => 0 );
 	
-}
-
-# I'm putting this in a separate function because the implementation
-# will probably change.
-sub get_classifications_and_category_numbers {
-	my ($proto, $images, $classification_mex) = @_;
-	logdbg "debug", "collecting image classifications.";
-	my $factory = OME::Session->instance()->Factory();
-	my %classifications;
-	my $category_group;
-	foreach my $image ( @$images ) {
-		# If we were given a mex or list of mexes, then use it to find classifications
-		my @classification_list = ( $classification_mex ?
-			@{ OME::Tasks::ModuleExecutionManager->
-				getAttributesForMEX( $classification_mex, "Classification",
-					{image => $image } 
-				) } :
-			$factory->findAttributes( 'Classification', image => $image )
-		) or die "Could not find a classification for image id=".$image->id;
-		die "More than one classification found for image id=".$image->id
-			unless scalar( @classification_list ) eq 1;
-		$category_group = $classification_list[0]->Category->CategoryGroup
-			unless $category_group;
-		die "Classification for image id=".$image->id." does not belong to the same category group as other images in this dataset."
-			unless $category_group->id eq $classification_list[0]->Category->CategoryGroup->id;
-		$classifications{ $image->id } = $classification_list[0];
-	}
-	# map categories to category numbers
-	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
-	my %category_numbers;
-	my $cn = 0;
-	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
-		$cn++;
-		$category_numbers{ $_->id } = $cn;
-	}
-	return (\%classifications, \%category_numbers );
-}
-
-# returns the matlab signature array
-sub compile_signature_matrix {
-	my ($proto, $stitcher_mex, $images, $classification_mex) = @_;
-	my $factory = OME::Session->instance()->Factory();
-	my ( $classifications, $category_numbers ) = 
-		$proto->get_classifications_and_category_numbers( $images, $classification_mex );
-
-	# instantiate the matlab signature array. 
-	#	number of columns is the size of the signature vector plus one for the image classification.
-	#	number of rows is the number of images.
-	my $vector_legends = OME::Tasks::ModuleExecutionManager->
-		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
-		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
-	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @$vector_legends ) + 1, scalar( @$images ));
-	$signature_array->makePersistent();
-	
-	# populate the signature matrix.
-	my $image_number = 0;
-	my $category_col_index = scalar( @$vector_legends );
-	foreach my $image ( @$images ) {
-		my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
-			getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
-				{ image => $image }
-			)
-			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
-		# set the image category
-		my $category_num = $category_numbers->{ $classifications->{ $image->id }->Category->id };
-		$signature_array->set( $category_col_index, $image_number, $category_num );
-		# set the image's signature vector
-		foreach my $sig_entry ( @$signature_entry_list ) {
-			# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
-			my $col_index = $sig_entry->Legend->VectorPosition() - 1;
-			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
-		}
-		$image_number += 1;
-	}	
-	return $signature_array;
 }
 
 sub get_next_LSID {
