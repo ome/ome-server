@@ -906,8 +906,7 @@ sub mod_perl_script {
 	return <<'SCRIPT_END';
 #!/usr/bin/perl -w
 use strict;
-print "HTTP/1.1 200 OK\r\n";
-print "Content-Type: text/plain\r\n\r\n";
+print "Content-Type: text/plain\015\012\015\012";
 
 my ($key,$value);
 while ( ($key, $value) = each %ENV)
