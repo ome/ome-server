@@ -554,7 +554,7 @@ sub __getImportBody {
 
 	$body .= $q->p($info);
 
-	my $images = OME::Tasks::ImageTasks::importFiles(@import_q);
+	my $images = OME::Tasks::ImageTasks::importFiles($import_d, \@import_q);
 	my @image_ids;
 
 	if (scalar(@$images) < 0) {
@@ -563,8 +563,6 @@ sub __getImportBody {
 	} else {
 		my $i_count = $q->span({class => 'ome_info_strong'}, scalar(@$images));
 		$body .= $q->p({class => 'ome_info'}, "Imported total ($i_count) images.");
-		@image_ids = map($_->id(), @$images);
-		$d_manager->addImages(\@image_ids, $import_d->id());
 	}
 
 	return $body;
