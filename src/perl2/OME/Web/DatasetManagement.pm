@@ -43,9 +43,7 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Web::Validation;
-use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
-use OME::Web::Helper::HTMLFormat;
 use OME::Web::ImageTable;
 
 use base qw{ OME::Web };
@@ -56,18 +54,21 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;
-
 	my $cgi     = $self->CGI();
 	my $session = $self->Session();
 	my $factory = $session->Factory();
-	my $dataset = $session->dataset();
+	my $dataset;
 
-	my $datasetManager      = OME::Tasks::DatasetManager->new($session);
-	my $imageManager        = OME::Tasks::ImageManager->new($session);
-	$self->{datasetManager} = $datasetManager;
-	$self->{htmlFormat}     = OME::Web::Helper::HTMLFormat->new();
+	my $d_manager = $self->{datasetManager} = new OME::Tasks::DatasetManager;
+	my $i_manager = new OME::Tasks::ImageManager;
+	
+	if ($cgi->param('dataset_id')) {
+		$self->{__dataset} = $dataset = $d_manager->load($cgi->param('dataset_id'));
+	} else {
+		$self->{__dataset} = $dataset = $session->dataset();
+	}
 
-	my $body .= $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
+	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
 
 	# Image objects that were selected
 	my @selected = $cgi->param('selected');
@@ -76,22 +77,23 @@ sub getPageBody {
 	my $action = $cgi->param('action') || '';
 	
 	# determine action
-	if($action eq 'save') {
-		my $datasetname = $cgi->param('name')
-			or return (
-				'HTML', 
-				"<b>Please enter a name for your dataset.</b>".$self->print_form() 
-			);
-		if ($session->dataset()->name() ne $cgi->param('name')){
-			my $ref=$datasetManager->nameExists($datasetname)
-				or return (
-					'HTML',
-					"<b>This name is already used. Please enter a new name for your dataset.</b>".$self->print_form()
-				);
+	if($cgi->param('save')) {
+		if ($cgi->param('name')) {
+			my $new_name = $cgi->param('name');
+			my $new_description = $cgi->param('description') || '';
+
+			if (($new_name ne $dataset->name()) and (not $d_manager->nameExists($new_name))) {
+				$d_manager->change($new_description, $new_name, $dataset->id());
+			}
+			
+			$body .= $cgi->p({-class => 'ome_info'}, 
+				'Save of new dataset metadata successful.');
+		
+			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+		} else {
+			$body .= $cgi->p({class => 'ome_error'},
+				"ERROR: Name is a required field.");
 		}
-		$datasetManager->change($cgi->param('description'),$cgi->param('name'));
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		$body .= "Save successful<br>";
 	} elsif ($cgi->param('Add')) {
 		if ($dataset->locked()) {
 			# Data
@@ -100,7 +102,7 @@ sub getPageBody {
 		} else {
 			# Action
 			my $image = $factory->findObject("OME::Image", name => $selected[0]);
-			$datasetManager->addImages([$image->id()]);
+			$d_manager->addImages([$image->id()]);
 			$body .= $cgi->p({-class => 'ome_info'},
 				"Added image ", $image->name(), " to the dataset.");
 		}
@@ -109,56 +111,126 @@ sub getPageBody {
 		my $to_remove = {};
 		foreach (@selected) { $to_remove->{$_} = [$dataset->id()] }
 
-		print STDERR Dumper($to_remove);
-
 		# Make sure we're not operating on a locked dataset
 		if ($dataset->locked()) {
 			$body .= $cgi->p({class => 'ome_error'},
 				"WARNING: Images not being removed from locked dataset.");
 		} else {
-			$imageManager->remove($to_remove);
+			$i_manager->remove($to_remove);
 			$body .= $cgi->p({-class => 'ome_info'},
 				"Removed image(s) @selected from dataset ", $dataset->name(), ".");
 		}
 	}
 	
 	# print form
-	$body .= $self->print_form();
+	$body .= $self->__printForm();
 	
 	return ('HTML',$body);
 }
 
 
 
-###################
-sub print_form {
-	my $self = shift;
-	my $cgi        = $self->CGI();
-	my $session    = $self->Session();
-	my $dataset    = $session->dataset();
-	my $factory    = $session->Factory();
-	my $htmlFormat = $self->{htmlFormat};
-	my $userID     = $dataset->owner_id();
-	my $user       = $factory->loadAttribute("Experimenter",$userID);	
+sub __printForm {
+	my $self       = shift;
+	my $q          = $self->CGI();
+	my $user       = $self->Session()->User();
+	my $dataset    = $self->{__dataset};
 
-	my $datasetManager = $self->{datasetManager};
+	my $metadata = $q->Tr({-bgcolor => '#FFFFFF'}, [
+		$q->td( [
+			$q->span("Name *"),
+			$q->textfield( {
+					-name => 'name',
+					-value => $dataset->name(),
+					-size => 40
+				}
+			)
+			]
+		),
+		$q->td( [
+			$q->span("Description"),
+			$q->textarea( {
+					-name => 'description',
+					-value => $dataset->description(),
+					-rows => 3,
+					-columns => 50,
+				}
+			)
+			]
+		),
+		$q->td( [
+			$q->span("ID"),
+			$q->span($dataset->id()),
+			]
+		),
+		$q->td( [
+			$q->span("Owner"),
+			$q->a({-href => "mailto: " . $user->Email()},
+				$user->FirstName . ' ' . $user->LastName
+			),
+			]
+		),
+		$q->td( [
+			$q->span("Group"),
+			$q->span($user->Group()->Name()),
+			]
+		),
+		]
+	);
 
-	my $text = '';
+	my $footer_table = $q->table( {
+			-width => '100%',
+			-cellspacing => 0,
+			-cellpadding => 3,
+		},
+		$q->Tr( {-bgcolor => '#E0E0E0'},
+			$q->td({-align => 'left'},
+				$q->span( {
+						-class => 'ome_info',
+						-style => 'font-size: 10px;',
+					}, "Items marked with a * are required unless otherwise specified"
+				),
+			),
+			$q->td({-align => 'right'},
+				$q->a( {
+						-href => '/JavaScript/DirTree/index.htm',
+						-class => 'ome_widget',
+					}, "Import Images" 
+				),
+				"|",
+				$q->a( {
+						-href => "#",
+						-onClick => "document.forms['metadata'].action.value='save'; document.forms['metadata'].submit(); return false",
+						-class => 'ome_widget'
+					}, "Save Changes"
+				),
+			),
+		),
+	);
 
-	$text .= $cgi->startform();
-	$text .= $htmlFormat->formChange("dataset",$session->dataset(),$user);
-	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, 'Images');
-	$text .= $cgi->endform();
-	$text .= $self->makeImageListings($dataset);
-	
-	return $text;
+	my $border_table = $q->table( {
+			-class => 'ome_table',
+			-width => '100%',
+			-cellspacing => 1,
+			-cellpadding => 3,
+		},
+		$q->startform({-name => 'metadata'}),
+		$q->hidden(-name => 'action', -default => ''),
+		$metadata,
+	);	
+
+	return $border_table .
+	       $footer_table .
+	       $q->endform() .
+		   $self->__makeImageListings();
 }
 
-sub makeImageListings {
+sub __makeImageListings {
 	my ($self, $dataset) = @_;
 	my $t_generator = new OME::Web::ImageTable;
-	my $cgi = $self->CGI();;
+	my $q = $self->CGI();;
 	my $factory = $self->Session()->Factory();
+	my $dataset = $self->{__dataset};
 	
 	# Grab the ID of each of our images that's in the project
 	my $in_project;
@@ -189,35 +261,36 @@ sub makeImageListings {
 	unshift(@additional_images, 'None');
 
 	# Add dataset table
-	$html .= $cgi->p .
-	         $cgi->table( {
+	$html .= $q->p .
+	         $q->table( {
 					 -class => 'ome_table',
 					 -align => 'center',
 					 -cellspacing => 1,
 					 -cellpadding => 4
 				 },
-				 $cgi->Tr(
-					 $cgi->startform(),
-					 $cgi->td(
+				 $q->Tr(
+					 $q->startform(),
+					 $q->td(
 						 {-class => 'ome_action_td'},
 						 '&nbsp',
-						 $cgi->span("Add images: "),
-						 $cgi->popup_menu( {
+						 $q->span("Add images: "),
+						 $q->popup_menu( {
 								 -name => 'selected',
 								 -values => [@additional_images],
 								 -default => $additional_images[0]
 							 }
 						 ),
 						 '&nbsp',
-						 $cgi->submit({-name => 'Add', -value => 'Add'}),
+						 $q->submit({-name => 'Add', -value => 'Add'}),
 						 '&nbsp'
 					 ),
-					 $cgi->endform()
+					 $q->endform()
 				 )
 			 );
 
 
-	return $html;
+	return $q->p({-class => 'ome_title', -align => 'center'}, "Datasets") .
+	       $html;
 }
 
 #sub makeImageListings{
