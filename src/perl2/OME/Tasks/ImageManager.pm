@@ -39,6 +39,7 @@ package OME::Tasks::ImageManager;
 
 use OME;
 use OME::Session;
+use Log::Agent;
 our $VERSION = $OME::VERSION;
 
 =head 1 NAME
@@ -275,16 +276,21 @@ usage:
 	# retrieve the URL for the thumbnail of the specified pixels attribute
 	my $thumbnailURL = $imageManager->getThumbURL($pixels);
 	
+Will return undef if there is not a default pixels associated with
+the image or the repository is not local.
+	
 =cut
 sub getThumbURL{
 	my $self=shift;
 	my $session=$self->__Session();
 	my $param = shift;
 	my $pixels;
-	$pixels = $param->default_pixels()
-		if( $param->isa( "OME::Image" ) );
-	$pixels = $param
-		unless $pixels;
+	if( $param->isa( "OME::Image" ) ) {
+		$pixels = $param->default_pixels()
+			or return undef;
+	} else {
+		$pixels = $param;
+	}
 	my $rep = $pixels->Repository();
 	return undef if($rep->IsLocal());
 	return $rep->ImageServerURL()."?Method=GetThumb&PixelsID=".$pixels->ImageServerID();
