@@ -322,7 +322,7 @@ public class Controller  implements LoginResponder {
 	
 	public void buildLibraryFrame() {
 		library = new ChainLibraryFrame(this,connection);
-		//System.err.println("finishing chain library frame");
+		System.err.println("finishing chain library frame");
 		finishInitThread();
 	}
 	
@@ -334,6 +334,7 @@ public class Controller  implements LoginResponder {
 			if (moduleFrame != null)
 				moduleFrame.completeInitialization();
 			setStatusLabel("Dataset Browser layout..");
+			System.err.println("dataset browser layed out.");
 			controlPanel.completeInitialization(connection.getUserName());
 			closeStatusWindow();
 		}
