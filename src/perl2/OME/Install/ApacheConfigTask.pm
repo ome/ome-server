@@ -361,7 +361,7 @@ sub need_omeis_update {
 	my $pixels_update=1;
 	my $files_update=1;
 
-	# Be the apache user for this.
+	# Be the root user for this.
 	my $old_UID = euid($APACHE_UID);
 
 	if ( open(VERS, "$OME_BASE_DIR/bin/updateOMEIS -q |") ) {
@@ -406,6 +406,7 @@ my $sleep;
 		print $LOGFILE "Child PID=$pid\n";
 		return ($pid);
 	} elsif ($pid == 0) { # child
+		chdir($OMEIS_BASE_DIR);
 		euid($APACHE_UID);
 		exec ("(sleep $sleep ; $OME_BASE_DIR/bin/updateOMEIS -s)");
 		# NOTREACHED
@@ -1045,7 +1046,7 @@ BLURB
 	#********
 	httpd_test ();
 	
-	print BOLD, "Don't forget to update omeis by executing\n> $OME_BASE_DIR/bin/updateOMEIS\nAt your earliest convenience !!!", RESET
+	print BOLD, "Don't forget to update omeis by executing\n> $OME_BASE_DIR/bin/updateOMEIS\nAt your earliest convenience !!!\n", RESET
 		if $APACHE->{OMEIS} and $APACHE->{OMEIS_UP} eq 'manual' and $APACHE_OMEIS_UPDATE_REQUIRED;
 
 	# Set a proper umask
