@@ -102,6 +102,8 @@ sub new {
 	$self->{_Datasets} = {};
 	$self->{_Images} = {};
 	$self->{_Features} = {};
+	$self->{_unresolvedRefs} = {};
+	$self->{_docIDs} = {};
 
 	return bless $self, $class;
 }
@@ -124,8 +126,10 @@ sub buildDOM {
 	my ($self, $objects, %flags) = @_;
 	logdie ref ($self)."->buildDOM:	 Need a reference to an array of objects."
 		unless ref($objects) eq 'ARRAY';
+	$self->{_DBObjects} = $objects;
 
 	my $session = $self->{session};
+	my $lsid = $self->lsidResolver();
 
 	my $GlobalCAs = $self->{_GlobalCAs};
 	my $Projects = $self->{_Projects};
@@ -138,81 +142,81 @@ sub buildDOM {
 	my ($object,$ref,$id,$granularity);
 	my ($target,$targetID);
 	
-	foreach $object (@$objects) {
-		next unless ($object);
-		$ref = ref ($object);
-		$id = $object->id();
-
-		# Process the various kinds of attributes.
-		# While we're at it, build the CA's parents.
-		if (UNIVERSAL::isa($object,"OME::AttributeType::Superclass") ) {
-			$granularity = $object->attribute_type()->granularity();
-			if ($granularity eq 'G')  {
-				if ( not exists $GlobalCAs->{$id} ) {
-					$GlobalCAs->{$id}->{node} = $self->Attribute2doc ($object);
-					$GlobalCAs->{$id}->{object} = $object;
+	while (scalar (@$objects) > 0) {
+		foreach $object (@$objects) {
+			next unless ($object);
+			$ref = ref ($object);
+			$id = $lsid->getLSID ($object);
+	
+			# Process the various kinds of attributes.
+			# While we're at it, build the CA's parents.
+			if (UNIVERSAL::isa($object,"OME::AttributeType::Superclass") ) {
+				$granularity = $object->attribute_type()->granularity();
+				if ($granularity eq 'G')  {
+					if ( not exists $GlobalCAs->{$id} ) {
+						$GlobalCAs->{$id}->{node} = $self->Attribute2doc ($object);
+						$GlobalCAs->{$id}->{object} = $object;
+					}
+				} elsif ($granularity eq 'D')  {
+					$target = $object->dataset();
+					$targetID = $lsid->getLSID ($target);
+					$self->Dataset2doc ($target);
+					if (not exists $Datasets->{$targetID}->{CAs}) {
+						$Datasets->{$targetID}->{CAs}->{node} = $self->newCAnode ($Datasets->{$targetID}->{node});
+					}
+					if (not exists $Datasets->{$targetID}->{CAs}->{$id}) {
+						my $newNode = $self->Attribute2doc ($object,$Datasets->{$targetID}->{CAs}->{node});
+						$Datasets->{$targetID}->{CAs}->{$id}->{node} = $newNode;
+						$Datasets->{$targetID}->{CAs}->{$id}->{object} = $object;
+					}
+	
+				} elsif ($granularity eq 'I')  {
+					$target = $object->image();
+					$targetID = $lsid->getLSID ($target);
+					$self->Image2doc ($target);
+					if (not exists $Images->{$targetID}->{CAs}) {
+						$Images->{$targetID}->{CAs}->{node} = $self->newCAnode ($Images->{$targetID}->{node});
+					}
+					if (not exists $Images->{$targetID}->{CAs}->{$id}) {
+						my $newNode = $self->Attribute2doc ($object,$Images->{$targetID}->{CAs}->{node});
+						$Images->{$targetID}->{CAs}->{$id}->{node} = $newNode;
+						$Images->{$targetID}->{CAs}->{$id}->{object} = $object;
+					}
+	
+				} elsif ($granularity eq 'F')  {
+					my ($feature, $featureID);
+					$feature = $object->feature();
+					$featureID = $lsid->getLSID ($feature);
+					$self->Feature2doc($feature) or logdie ref ($self)."->buildDOM:  Couldn't create a Feature element.";
+					if (not exists $Features->{$featureID}->{CAs}) {
+						$Features->{$featureID}->{CAs}->{node} = $self->newCAnode ($Features->{$featureID}->{node});
+					}
+					if (not exists $Features->{$featureID}->{CAs}->{$id}) {
+						my $newNode = $self->Attribute2doc ($object,$Features->{$featureID}->{CAs}->{node});
+						$Features->{$featureID}->{CAs}->{$id}->{node} = $newNode;
+						$Features->{$featureID}->{CAs}->{$id}->{object} = $object;
+					}
 				}
-			} elsif ($granularity eq 'D')  {
-				$target = $object->dataset();
-				$targetID = $target->id();
-				if (not exists $Datasets->{$targetID}) {
-					$Datasets->{$targetID}->{node} = $self->Dataset2doc($target);
-					$Datasets->{$targetID}->{object} = $target;
-				}
-				if (not exists $Datasets->{$targetID}->{CAs}) {
-					$Datasets->{$targetID}->{CAs}->{node} = $self->newCAnode ($Datasets->{$targetID}->{node});
-				}
-				if (not exists $Datasets->{$targetID}->{CAs}->{$id}) {
-					my $newNode = $self->Attribute2doc ($object,$Datasets->{$targetID}->{CAs}->{node});
-					$Datasets->{$targetID}->{CAs}->{$id}->{node} = $newNode;
-					$Datasets->{$targetID}->{CAs}->{$id}->{object} = $object;
-				}
-
-			} elsif ($granularity eq 'I')  {
-				$target = $object->image();
-				$targetID = $target->id();
-				if (not exists $Images->{$targetID}) {
-					$Images->{$targetID}->{node} = $self->Image2doc($target);
-					$Images->{$targetID}->{object} = $target;
-				}
-				if (not exists $Images->{$targetID}->{CAs}) {
-					$Images->{$targetID}->{CAs}->{node} = $self->newCAnode ($Images->{$targetID}->{node});
-				}
-				if (not exists $Images->{$targetID}->{CAs}->{$id}) {
-					my $newNode = $self->Attribute2doc ($object,$Images->{$targetID}->{CAs}->{node});
-					$Images->{$targetID}->{CAs}->{$id}->{node} = $newNode;
-					$Images->{$targetID}->{CAs}->{$id}->{object} = $object;
-				}
-
-			} elsif ($granularity eq 'F')  {
-				my ($feature, $featureID);
-				$feature = $object->feature();
-				$featureID = $feature->id();
-				$self->Feature2doc($feature) or logdie ref ($self)."->buildDOM:  Couldn't create a Feature element.";
-				if (not exists $Features->{$featureID}->{CAs}) {
-					$Features->{$featureID}->{CAs}->{node} = $self->newCAnode ($Features->{$featureID}->{node});
-				}
-				if (not exists $Features->{$featureID}->{CAs}->{$id}) {
-					my $newNode = $self->Attribute2doc ($object,$Features->{$featureID}->{CAs}->{node});
-					$Features->{$featureID}->{CAs}->{$id}->{node} = $newNode;
-					$Features->{$featureID}->{CAs}->{$id}->{object} = $object;
-				}
+	
+			# Process the hierarchy objects
+			} elsif ($ref eq 'OME::Project' and not exists $Projects->{$id}) {
+				$Projects->{$id}->{node} = $self->Project2doc ($object);
+				$Projects->{$id}->{object} = $object;
+			} elsif ($ref eq 'OME::Dataset' and not exists $Datasets->{$id}) {
+				$Datasets->{$id}->{node} = $self->Dataset2doc ($object);
+				$Datasets->{$id}->{object} = $object;
+			} elsif ($ref eq 'OME::Image' and not exists $Images->{$id}) {
+				$Images->{$id}->{node} = $self->Image2doc ($object);
+				$Images->{$id}->{object} = $object;
+			} elsif ($ref eq 'OME::Feature' and not exists $Features->{$id}) {
+				$Features->{$id}->{node} = $self->Feature2doc ($object);
+				$Features->{$id}->{object} = $object;
 			}
-
-		# Process the hierarchy objects
-		} elsif ($ref eq 'OME::Project' and not exists $Projects->{$id}) {
-			$Projects->{$id}->{node} = $self->Project2doc ($object);
-			$Projects->{$id}->{object} = $object;
-		} elsif ($ref eq 'OME::Dataset' and not exists $Datasets->{$id}) {
-			$Datasets->{$id}->{node} = $self->Dataset2doc ($object);
-			$Datasets->{$id}->{object} = $object;
-		} elsif ($ref eq 'OME::Image' and not exists $Images->{$id}) {
-			$Images->{$id}->{node} = $self->Image2doc ($object);
-			$Images->{$id}->{object} = $object;
-		} elsif ($ref eq 'OME::Feature' and not exists $Features->{$id}) {
-			$Features->{$id}->{node} = $self->Feature2doc ($object);
-			$Features->{$id}->{object} = $object;
 		}
+
+		# Copy the unresolved objects
+		$objects = [grep( defined $_, values (%{$self->{_unresolvedRefs}}) )];
+		logdbg 'debug', ref ($self).' '.scalar (@$objects).' Unresolved Refs: '.join ("\n\t",keys (%{$self->{_unresolvedRefs}}));
 	}
 	# End first run through objects array.
 	
@@ -336,22 +340,36 @@ sub Project2doc {
 my ($self, $project) = @_;
 
 	return undef unless defined $project;
+	my $lsid = $self->lsidResolver();
 	my $Projects = $self->{_Projects};
-	my $projectID = $project->id();
+	my $projectID = $lsid->getLSID ($project);
 	if (exists $Projects->{$projectID}) {
 		return $Projects->{$projectID}->{node};
 	}
 
 	my $DOM = $self->doc();
-	my $lsid = $self->lsidResolver();
 	my $element = $DOM->createElement('Project');
 #  <Project ID="123.456.1.123.123" Name="Stress Response Pathway" Description="" Experimenter="lsid" Group="lsid">
-	$element->setAttribute( 'ID' , $lsid->getLSID ($project) );
+	my $experimenterID = $lsid->getLSID ($project->owner());
+	my $groupID = $lsid->getLSID ($project->group());
+	
+
+	$element->setAttribute( 'ID' , $projectID );
 	$element->setAttribute( 'Name' , $project->name() );
 	$element->setAttribute( 'Description' , $project->description() );
-	$element->setAttribute( 'Experimenter' , $lsid->getLSID ($project->owner()) );
-	$element->setAttribute( 'Group' , $lsid->getLSID ($project->group()) );
+	$element->setAttribute( 'Experimenter' , $experimenterID );
+	$element->setAttribute( 'Group' , $groupID );
 	logdbg "debug", ref ($self)."->Project2doc:  Adding Project element.";
+	
+	if (not exists $self->{_docIDs}->{$experimenterID}) {
+		$self->{_unresolvedRefs}->{$experimenterID} = $project->owner();
+	}
+	if (not exists $self->{_docIDs}->{$groupID}) {
+		$self->{_unresolvedRefs}->{$groupID} = $project->group();
+	}
+
+	delete $self->{_unresolvedRefs}->{$projectID};
+	$self->{_docIDs}->{$projectID} = $project;
 	
 	$Projects->{$projectID}->{node} = $element;
 	$Projects->{$projectID}->{object} = $project;
@@ -369,31 +387,41 @@ my ($self, $dataset) = @_;
 
 	return undef unless defined $dataset;
 	my $Datasets = $self->{_Datasets};
-	my $datasetID = $dataset->id();
+	my $lsid = $self->lsidResolver();
+	my $datasetID =  $lsid->getLSID ($dataset);
 	if (exists $Datasets->{$datasetID}) {
 		return $Datasets->{$datasetID}->{node};
 	}
 
 	my $DOM = $self->doc();
-	my $lsid = $self->lsidResolver();
 	my $element = $DOM->createElement('Dataset');
-#  <Dataset ID="123.456.2.123.123" Name="Controls" Description="" Locked="true">
-#    <Ref Name="Experimenter" ID="123.456.71.123.123"/>
-#    <Ref Name="Group" ID="123.456.73.123.123"/>
-#    <Ref Name="Project" ID="123.456.1.123.123"/>
-#  </Dataset>
-	$element->setAttribute( 'ID' , $lsid->getLSID ($dataset) );
+	my $experimenterID = $lsid->getLSID ($dataset->owner());
+	my $groupID = $lsid->getLSID ($dataset->group());
+
+
+	$element->setAttribute( 'ID' , $datasetID );
 	$element->setAttribute( 'Name' , $dataset->name() );
 	$element->setAttribute( 'Description' , $dataset->description() );
 	$element->setAttribute( 'Locked' , $dataset->locked() ? 'true' : 'false' );
-	$element->setAttribute( 'Experimenter' , $lsid->getLSID ($dataset->owner()) );
-	$element->setAttribute( 'Group' , $lsid->getLSID ($dataset->group()) );
+	$element->setAttribute( 'Experimenter' , $experimenterID );
+	$element->setAttribute( 'Group' , $groupID );
 # N.B.:  This element has optional multiple Project elements as 'Ref' child elements.
 # These children should be added by calling $self->addRefNode ($object, 'Project', $parent) with this node as $parent
 	logdbg "debug", ref ($self)."->Dataset2doc:  Adding Dataset element.";
 
 	$Datasets->{$datasetID}->{node} = $element;
 	$Datasets->{$datasetID}->{object} = $dataset;
+
+	if (not exists $self->{_docIDs}->{$experimenterID}) {
+		$self->{_unresolvedRefs}->{$experimenterID} = $dataset->owner();
+	}
+	if (not exists $self->{_docIDs}->{$groupID}) {
+		$self->{_unresolvedRefs}->{$groupID} = $dataset->group();
+	}
+
+	delete $self->{_unresolvedRefs}->{$datasetID};
+	$self->{_docIDs}->{$datasetID} = $dataset;
+
 
 	return $element;
 }
@@ -404,25 +432,31 @@ my ($self, $dataset) = @_;
 # Returns: Image element
 sub Image2doc {
 my ($self, $image) = @_;
+my $factory = $self->{session}->Factory();
 
 	return undef unless defined $image;
 	my $Images = $self->{_Images};
-	my $imageID = $image->id();
+	my $lsid = $self->lsidResolver();
+	my $imageID = $lsid->getLSID ($image);
 	if (exists $Images->{$imageID}) {
 		return $Images->{$imageID}->{node};
 	}
 
-	my $DOM = $self->doc();
-	my $lsid = $self->lsidResolver();
-	my $element = $DOM->createElement('Image');
+	my $experimenterID = $lsid->getLSID (
+		$factory->loadAttribute( "Experimenter", $image->experimenter_id()));
+	my $groupID = $lsid->getLSID (
+		$factory->loadAttribute( "Group", $image->group_id()));
+	my $pixelsID = $lsid->getLSID ($image->DefaultPixels());
 
-	$element->setAttribute( 'ID' , $lsid->getLSID ($image) );
+	my $DOM = $self->doc();
+	my $element = $DOM->createElement('Image');
+	$element->setAttribute( 'ID' , $imageID );
 	$element->setAttribute( 'Name' , $image->name() );
 	$element->setAttribute( 'CreationDate' , $image->created() );
 	$element->setAttribute( 'Description' , $image->description() );
-	$element->setAttribute( 'Experimenter' , $lsid->getLSID ($image->experimenter()) );
-	$element->setAttribute( 'Group' , $lsid->getLSID ($image->group()) );
-	$element->setAttribute( 'DefaultPixels' , $lsid->getLSID ($image->DefaultPixels()) );
+	$element->setAttribute( 'Experimenter' , $experimenterID );
+	$element->setAttribute( 'Group' , $groupID );
+	$element->setAttribute( 'DefaultPixels' , $pixelsID );
 # N.B.:  This element has optional multiple Dataset elements as 'Ref' child elements.
 # These children should be added by calling $self->addRefNode ($object, 'Dataset', $parent) with this node as $parent
 	logdbg "debug", ref ($self)."->Image2doc:  Adding Image element.";
@@ -430,6 +464,18 @@ my ($self, $image) = @_;
 	$Images->{$imageID}->{node} = $element;
 	$Images->{$imageID}->{object} = $image;
 
+	if (not exists $self->{_docIDs}->{$experimenterID}) {
+		$self->{_unresolvedRefs}->{$experimenterID} = $image->experimenter_id();
+	}
+	if (not exists $self->{_docIDs}->{$groupID}) {
+		$self->{_unresolvedRefs}->{$groupID} = $image->group_id();
+	}
+	if (not exists $self->{_docIDs}->{$pixelsID}) {
+		$self->{_unresolvedRefs}->{$pixelsID} = $image->DefaultPixels();
+	}
+
+	delete $self->{_unresolvedRefs}->{$imageID};
+	$self->{_docIDs}->{$imageID} = $image;
 
 	return $element;
 
@@ -445,17 +491,17 @@ my ($self, $feature) = @_;
 	return undef unless defined $feature;
 
 	my $Features = $self->{_Features};
-	my $featureID = $feature->id();
+	my $lsid = $self->lsidResolver();
+	my $featureID = $lsid->getLSID ($feature);
 	if (exists $Features->{$featureID}) {
 		return $Features->{$featureID}->{node};
 	}
 
 	my $DOM = $self->doc();
-	my $lsid = $self->lsidResolver();
 	my $element = $DOM->createElement('Feature');
 	my $Images = $self->{_Images};
 
-	$element->setAttribute( 'ID' , $lsid->getLSID ($feature) );
+	$element->setAttribute( 'ID' , $featureID );
 	$element->setAttribute( 'Name' , $feature->name() );
 	$element->setAttribute( 'Tag' , $feature->tag() );
 	logdbg "debug", ref ($self)."->Feature2doc:  Adding Feature element.";
@@ -469,7 +515,7 @@ my ($self, $feature) = @_;
 	} else {
 		# The ultimate parent of a feature is an Image, so we have to make that too.
 		my $image = $feature->image();
-		my $imageID = $image->id();
+		my $imageID = $lsid->getLSID ($image);
 		if (not exists $Images->{$imageID}) {
 			$Images->{$imageID}->{node} = $self->Image2doc ($image);
 			$Images->{$imageID}->{object} = $image;
@@ -477,6 +523,10 @@ my ($self, $feature) = @_;
 		# Add the top-most feature to the image.
 		$Images->{$imageID}->{features}->{$featureID} = $Features->{$featureID};
 	}
+	
+	delete $self->{_unresolvedRefs}->{$featureID};
+	$self->{_docIDs}->{$featureID} = $feature;
+
 
 	return $element;
 }
@@ -504,17 +554,24 @@ my ($self, $object, $parent) = @_;
 
 	my $DOM = $self->doc();
 	my $lsid = $self->lsidResolver();
+	my $objectID = $lsid->getLSID ($object);
 	my $attribute_type = $object->attribute_type();
 	my $attribute_name = $attribute_type->name();
 	my $attribute_columns = $attribute_type->attribute_columns();
 	my $element = $DOM->createElement($attribute_name);
-	$element->setAttribute( 'ID' , $lsid->getLSID ($object) );
+	$element->setAttribute( 'ID' , $objectID );
 	logdbg "debug", ref ($self)."->Attribute2doc:  Exporting Attribute '$attribute_name'";
+	my ($ref,$refID);
 	while (my $attribute_column = $attribute_columns->next()) {
 		my $SEName = $attribute_column->name();
 		my $type = $attribute_column->data_column->sql_type();
 		if ($type eq 'reference') {
-			$element->setAttribute( $SEName, $lsid->getLSID($object->$SEName()));
+			$ref = $object->$SEName();
+			$refID =  $lsid->getLSID($ref) ;
+			$element->setAttribute( $SEName, $refID);
+			if (not exists $self->{_docIDs}->{$refID}) {
+				$self->{_unresolvedRefs}->{$refID} = $ref;
+			}
 		} else {
 			$element->setAttribute( $SEName, $object->$SEName() );
 		}
@@ -523,6 +580,10 @@ my ($self, $object, $parent) = @_;
 	if (defined $parent) {
 		$parent->appendChild ($element);
 	}
+	
+	delete $self->{_unresolvedRefs}->{$objectID};
+	$self->{_docIDs}->{$objectID} = $object;
+
 	
 	return ($element);
 }
