@@ -924,7 +924,7 @@ sub manyToMany {
 		eval "use $map_class";
 		die "error when loading package $map_class\n$@" if $@;
         $many_to_many->{$alias} = [
-        	$map_class->getPackageReference( $map_linker_alias ),
+        	$map_class->getAccessorReferenceType( $map_linker_alias ),
         	$map_class, 
         	$map_alias, 
         	$map_linker_alias
@@ -956,7 +956,7 @@ sub getReferences {
 		keys %{ $class->__manyToMany() } );
 	my %relations;
 	foreach (@aliases) {
-		my $returnedClass = $class->getPackageReference( $_ );
+		my $returnedClass = $class->getAccessorReferenceType( $_ );
 		$relations{ $_ } = $returnedClass
 			if $returnedClass;
 	}
@@ -980,7 +980,7 @@ sub getHasMany {
 	my @aliases = ( keys %{ $class->__hasManys() } );
 	my %relations;
 	foreach (@aliases) {
-		my $returnedClass = $class->getPackageReference( $_ );
+		my $returnedClass = $class->getAccessorReferenceType( $_ );
 		$relations{ $_ } = $returnedClass
 			if $returnedClass;
 	}
@@ -1004,7 +1004,7 @@ sub getManyToMany {
 	my @aliases = ( keys %{ $class->__manyToMany() } );
 	my %relations;
 	foreach (@aliases) {
-		my $returnedClass = $class->getPackageReference( $_ );
+		my $returnedClass = $class->getAccessorReferenceType( $_ );
 		$relations{ $_ } = $returnedClass
 			if $returnedClass;
 	}
@@ -1097,16 +1097,16 @@ sub getPublishedCols {
 	return @publishedCols;
 }
 
-=head2 getPackageReference
+=head2 getAccessorReferenceType
 
-	__PACKAGE__->getPackageReference($alias);
+	__PACKAGE__->getAccessorReferenceType($alias);
 
 Returns the package name of the object that will be returned by the alias method.
 If the alias returns a scalar, this method will return undef.
 
 =cut
 
-sub getPackageReference {
+sub getAccessorReferenceType {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
@@ -1591,6 +1591,8 @@ sub __addForeignJoin {
             my $local_column_name = $column->[1];
             my $fkey_class = $column->[2];
 
+			$fkey_class->require()
+				or die "Error loading package $fkey_class.";
             my $target_columns = $fkey_class->__columns();
             my $target_column = $target_columns->{$target_alias};
             my $target_table_name = $target_column->[0];
