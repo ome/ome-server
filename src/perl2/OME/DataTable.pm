@@ -215,6 +215,7 @@ use OME;
 
     my $type = $self->granularity();
     if ($type eq 'D') {
+        $pkg->addColumn(['dataset_id','target_id'] => 'dataset_id');
         $pkg->addColumn(['dataset','target'] => 'dataset_id','OME::Dataset',
                         {
                          SQLType => 'integer',
@@ -223,6 +224,7 @@ use OME;
                          ForeignKey => 'datasets',
                         });
     } elsif ($type eq 'I') {
+        $pkg->addColumn(['image_id','target_id'] => 'image_id');
         $pkg->addColumn(['image','target'] => 'image_id','OME::Image',
                         {
                          SQLType => 'integer',
@@ -231,6 +233,7 @@ use OME;
                          ForeignKey => 'images',
                         });
     } elsif ($type eq 'F') {
+        $pkg->addColumn(['feature_id','target_id'] => 'feature_id');
         $pkg->addColumn(['feature','target'] => 'feature_id','OME::Feature',
                         {
                          SQLType => 'integer',
