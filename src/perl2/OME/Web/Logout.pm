@@ -25,6 +25,7 @@ use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
 use OME;
+use OME::Web::Validation;
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -38,8 +39,10 @@ print STDERR "\nLogging out...\n\n";
 	$self->Session( undef );
 	$self->setSessionCookie();
 
+	# this will add a script to reload OME::Home 
+	my $body = OME::Web::Validation->ReloadHomeScript();
 
-    return ('REDIRECT',$self->pageURL('OME::Web::Login'));
+    return ('HTML',$body);
 }
 
 1;
