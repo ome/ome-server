@@ -12,6 +12,7 @@ endif
 
 IM_CFLAGS = -Izoom/include
 IM_LIBS = -ltiff -ljpeg -lpng -Lzoom/lib/ -lpic -lzoom
+
 # The CPP (C-Pre-Processor) in Apple's GCC 1175 is broken, upgrade to the
 # August 2003 GCC for -pedantic
 CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wmissing-noreturn -Wundef -std=c99
@@ -38,7 +39,7 @@ make_zoom:
 	$(MAKE) -C zoom install
 
 omeis: omeis.c omeis.h $(OBJS)
-	$(CC) $(CFLAGS) $(LIBS) $(INCS) $(XML2_CFLAGS) $(DEFINES) -o omeis omeis.c $(OBJS)
+	$(CC) $(CFLAGS) $(IM_CFLAGS) $(LIBS) $(INCS) $(XML2_CFLAGS) $(DEFINES) -o omeis omeis.c $(OBJS)
 
 digest.o: digest.c digest.h
 	$(CC) $(CFLAGS) -c digest.c
