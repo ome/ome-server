@@ -32,13 +32,13 @@ foreach $pixels (@pixelses) {
 		if (not $pixelsID) {
 			print " *** ", BOLD, "FAILED !!!", RESET, " *** \n";
 		} else {
-			OME::Tasks::PixelsManager->saveThumb( $pixels );
 			print " OMEIS ID = $pixelsID\n";
 			$pixels->ImageServerID ($pixelsID);
 			$pixels->Repository ($repository);
 			$pixels->Path (undef);
 			$pixels->storeObject();
 			$factory->commitTransaction();
+			OME::Tasks::PixelsManager->saveThumb( $pixels );
 		}
 	}
 }
