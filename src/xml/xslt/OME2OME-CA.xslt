@@ -83,6 +83,7 @@
 			<xsl:attribute name = "Description">
 				<xsl:value-of select = "OME:Description"/>
 			</xsl:attribute>
+			<xsl:apply-templates select = "OME:DatasetRef" mode = "MakeRefs"/>
 			<xsl:element name = "CustomAttributes">
 				<xsl:element name = "Dimensions">
 					<xsl:attribute name = "SizeX">
@@ -479,13 +480,13 @@
 				<xsl:value-of select = "OME:LastName"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Email">
-				<xsl:value-of select = "OME:email"/>
+				<xsl:value-of select = "OME:Email"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Institution">
 				<xsl:value-of select = "OME:Institution"/>
 			</xsl:attribute>
-			<xsl:attribute name = "OMEname">
-				<xsl:value-of select = "OME:OMEname"/>
+			<xsl:attribute name = "OMEName">
+				<xsl:value-of select = "OME:OMEName"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "OME:GroupRef" mode = "MakeRefs"/>
 		</xsl:element>

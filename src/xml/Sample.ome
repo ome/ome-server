@@ -26,9 +26,9 @@
 	<Experimenter ExperimenterID = "123.456.71.123.123">
 		<FirstName>Nicola</FirstName>
 		<LastName>Sacco</LastName>
-		<email>Nicola.Sacco@justice.net</email>
+		<Email>Nicola.Sacco@justice.net</Email>
 		<Institution/>
-		<OMEname>nico</OMEname>
+		<OMEName>nico</OMEName>
 		<GroupRef GroupID = "123.456.73.123.123"/>
 	</Experimenter>
 	<Group GroupID = "123.456.73.123.123" Name = "IICBU">

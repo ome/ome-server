@@ -13,6 +13,7 @@
 		<Ref Name = "Project" ID = "123.456.1.123.123"/>
 	</Dataset>
 	<Image ID = "123.456.3.123.123" Name = "P1W1S1" CreationDate = "1988-04-07T18:39:09" Description = "This is an Image">
+		<Ref Name = "Dataset" ID = "123.456.2.123.123"/>
 		<CustomAttributes>
 			<Dimensions SizeX = "512" SizeY = "512" SizeZ = "1" SizeC = "1" SizeT = "1" BitsPerPixel = "16" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" PixelSizeC = "" PixelSizeT = ""/>
 			<ImageExperiment>
@@ -55,7 +56,7 @@
 		</CustomAttributes>
 	</Image>
 	<CustomAttributes>
-		<Experimenter ID = "123.456.71.123.123" FirstName = "Nicola" LastName = "Sacco" Email = "Nicola.Sacco@justice.net" Institution = "" OMEname = "nico">
+		<Experimenter ID = "123.456.71.123.123" FirstName = "Nicola" LastName = "Sacco" Email = "Nicola.Sacco@justice.net" Institution = "" OMEName = "nico">
 			<Ref Name = "Group" ID = "123.456.73.123.123"/>
 		</Experimenter>
 		<Group ID = "123.456.73.123.123" Name = "IICBU">
