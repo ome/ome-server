@@ -1,0 +1,32 @@
+my $factory = $session->Factory();
+
+use OME::Tasks::ImageManager;
+use OME::Tasks::PixelsManager;
+
+my $image_iterator = $factory->findObjects( "OME::Image" );
+my $image;
+while( $image = $image_iterator->next() ) {
+	my @display_options_list = $factory->findObjects( '@DisplayOptions', image => $image, module_execution => undef );
+	foreach my $display_options ( @display_options_list ) {
+		my $stats = OME::Tasks::ImageManager->getImageStats( $image, $display_options->Pixels() );
+		my $theT = ($display_options->TStart + $display_options->TStop ) /2;
+		my $updateThumbNail = undef;
+		foreach my $dc ( $display_options->RedChannel(), $display_options->GreenChannel(), $display_options->BlueChannel(), $display_options->GreyChannel(),  ) {
+			my $theC = $dc->ChannelNumber();
+			if( $dc->WhiteLevel() > $stats->[ $theC ][ $theT ]->{ max } ) {
+				$updateThumbNail = 1;
+				$dc->WhiteLevel( $stats->[ $theC ][ $theT ]->{ max } );
+				$dc->storeObject();
+			}
+			if( $dc->BlackLevel() < $stats->[ $theC ][ $theT ]->{ min } ) {
+				$updateThumbNail = 1;
+				$dc->BlackLevel( $stats->[ $theC ][ $theT ]->{ min } );
+				$dc->storeObject();
+			}
+		}
+		OME::Tasks::PixelsManager->saveThumb( $display_options->Pixels(), $display_options )
+			if( $updateThumbNail );
+	}
+}
+
+1;

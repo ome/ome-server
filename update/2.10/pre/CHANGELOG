@@ -1,0 +1,3 @@
+Check Pixel display settings for black or white levels out of range. If
+any are found, bring them back into bounds. Propogate new settings to
+thumbnails.
