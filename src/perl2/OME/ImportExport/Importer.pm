@@ -68,13 +68,13 @@ sub new {
     my $session = shift;
     $self->{session} = $session;
 
+    my $config = $session->Factory()->loadObject("OME::Configuration", 1);
+    $self->{config} = $config;    # load OME's configuration parameters table
+
     sort_and_group($image_file_list_ref, \@fn_groups);
-    #my @in_files = @$image_file_list_ref;
-    #sort_and_group(\@in_files, \@fn_groups);
     $self->{fn_groups} = \@fn_groups;
 
     bless $self,$class;
-
 }
 
 # Actually import a single image, which may be composed from several files
@@ -341,6 +341,7 @@ sub store_image_metadata {
 		      'description' => $href->{'Image.Description'},
 		      'experimenter_id' => $session->User(),
 		      'group_id' => $session->User()->Field("group"),
+		      'lens_id'  => $href->{'Image.LensID'},
 		      'created' => $created,
 		      'inserted' => "now",
 		      'repository_id' => $repository};
@@ -506,6 +507,7 @@ sub store_xyz_info {
     my ($self, $session, $href) = @_;
     my $image = $self->{'image'};
     my $imageID = $image->id();
+    my $omeBase = $self->{config}->ome_root;
     my $status = "";
     my $sth;
 
@@ -513,7 +515,7 @@ sub store_xyz_info {
         'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
     my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
         $href->{'Image.NumWaves'}, $href->{'Image.NumTimes'}, ($href->{'Image.BitsPerPixel'})/8));
-    my $cmd = '/OME/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
+    my $cmd = $omeBase.'/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
     
     open (STDOUT_PIPE,$cmd) || return "Failed to execute '$cmd':\n$!\n";
     while (<STDOUT_PIPE>) {
