@@ -62,7 +62,7 @@ public class PDatasetImagesNode extends PNode implements PropertyChangeListener 
 	private static final double SCALE_THRESHOLD=.75;
 	
 	private PNode imagesNode = new PNode();
-	private PImage thumbnailNode;
+	private PImage thumbnailNode = null;
 	
 	public PDatasetImagesNode() {
 		super();	
@@ -78,11 +78,15 @@ public class PDatasetImagesNode extends PNode implements PropertyChangeListener 
 		return imagesNode.getChildrenIterator();
 	}
 	
+	
 	public void completeImages(double width,double height) {
 		PBounds b = imagesNode.getGlobalFullBounds();
-		thumbnailNode = new PImage(imagesNode.toImage((int)b.getWidth(),
-			(int) b.getHeight(),null),true);
-		addChild(thumbnailNode);
+		if (b.getWidth() > 0 && b.getHeight() > 0 &&
+			imagesNode.getChildrenCount() > 200) {
+			thumbnailNode = new PImage(imagesNode.toImage((int)b.getWidth(),
+				(int) b.getHeight(),null),true);
+			addChild(thumbnailNode);
+		}
 	}
 	
 	public void setScale(double scale) {
@@ -91,7 +95,8 @@ public class PDatasetImagesNode extends PNode implements PropertyChangeListener 
 	}
 	
 	public void paint(PPaintContext aPaintContext) {
-		if (aPaintContext.getScale() < SCALE_THRESHOLD) {
+		if (aPaintContext.getScale() < SCALE_THRESHOLD &&
+			thumbnailNode != null) {
 			// show images node
 			System.err.println("showing thumbnail...");
 			imagesNode.setVisible(false);
@@ -99,7 +104,8 @@ public class PDatasetImagesNode extends PNode implements PropertyChangeListener 
 		}
 		else {
 			System.err.println("showing individual images");
-			thumbnailNode.setVisible(false);
+			if (thumbnailNode != null)
+				thumbnailNode.setVisible(false);
 			imagesNode.setVisible(true);
 		}
 		super.paint(aPaintContext);
