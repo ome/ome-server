@@ -58,6 +58,7 @@ our $VERSION = $OME::VERSION;
 use OME::Tasks::ImageManager;
 use OME::Tasks::ModuleExecutionManager;
 use base qw(OME::Web::DBObjRender);
+use Carp 'cluck';
 
 sub new {
 	my $proto = shift;
@@ -77,6 +78,23 @@ sub new {
 	];
 	
 	return $self;
+}
+
+=head2 getRefSearchField
+
+Set default to session's active project.
+
+=cut
+
+sub _getRefSearchField {
+	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
+ 	my $q = $self->CGI();
+	$q->param( $accessor_to_type.'.name', $default ) # or $self->Session()->dataset()->name() ) )
+		unless defined $q->param($accessor_to_type.'.name' );
+	return ( 
+		$q->textfield( -name => $accessor_to_type.'.name' , -size => 17 ),
+		$accessor_to_type.'.name'
+	);
 }
 
 =head1 Author
