@@ -238,7 +238,7 @@ sub getGroups {
         if ($matched == 0) {
             if ($fn =~ LONE_TIFF) {
                 push @grp, $file;
-                push @grp, basename($fn);
+		push @grp, $self->{super}->__nameOnly($fn);
                 push @outlist, \@grp;
                 delete $fref->{$fn};
             }
