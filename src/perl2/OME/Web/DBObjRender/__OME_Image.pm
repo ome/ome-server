@@ -37,10 +37,25 @@
 
 package OME::Web::RenderData::__OME_Image;
 
+=pod
+
+=head1 NAME
+
+OME::Web::RenderData::__OME_Image - Render DBObjects for display
+
+=head1 DESCRIPTION
+
+Provides custom behavior for rendering an OME::Image
+
+=head1 METHODS
+
+=cut
+
 use strict;
 use vars qw($VERSION);
 use OME;
 use OME::Session;
+use OME::Tasks::ImageManager;
 use base qw(OME::Web::RenderData);
 
 # Class data
@@ -59,10 +74,19 @@ my @_fieldNames = ('id', 'default_pixels', 'name', 'description', 'owner', 'grou
 my @_allFieldNames = (@_fieldNames, 'inserted', 'image_guid');
 
 
+=head2 getFieldNames
+Overrides default behavior, uses class data to return labels
+=cut
 sub getFieldNames { return @_fieldNames if wantarray; return \@_fieldNames; }
 
+=head2 getAllFieldNames
+Overrides default behavior, uses class data to return labels
+=cut
 sub getAllFieldNames { return @_allFieldNames if wantarray; return \@_allFieldNames; }
 
+=head2 getFieldLabels
+Overrides default behavior, uses class data to return labels
+=cut
 sub getFieldLabels {
 	my ($proto,$type,$fieldNames) = @_;
 	$fieldNames = $proto->getFieldNames() unless $fieldNames;
@@ -70,5 +94,31 @@ sub getFieldLabels {
 	return %fieldLabels if wantarray;
 	return \%fieldLabels;
 }
+
+=head2 getRefToObject
+Overrides default behavior, html format uses a thumbnail for the link.
+=cut
+sub getRefToObject {
+	my ($proto,$obj,$format) = @_;
+	
+	for( $format ) {
+		if( /^txt$/ ) {
+			return $obj->id();
+		}
+		# FIXME
+		if( /^html$/ ) {
+			my $type = $proto->_getType( $obj );
+			my $id   = $obj->id();
+			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
+			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'><table style='background-image:url(\"$thumbURL\")' width='50' height='50' cellpadding='0'><tr valign='bottom'><td align='right'><font class='ome_text_over_thumbnail'>I($id)</font></td></tr></table></a>";
+		}
+	}
+}
+
+=head1 Author
+
+Josiah Johnston <siah@nih.gov>
+
+=cut
 
 1;
