@@ -62,21 +62,21 @@
 
 // selectAllCheckboxes()
 function selectAllCheckboxes (select_name) {
-	for (i = 0; i < document.datatable.length; i++)
+	for (i = 0; i < document.forms[0].length; i++)
 	{
-		if (document.datatable.elements[i].type == "checkbox" &&
-		    document.datatable.elements[i].name == select_name)
-			document.datatable.elements[i].checked = true;
+		if (document.forms[0].elements[i].type == "checkbox" &&
+		    document.forms[0].elements[i].name == select_name)
+			document.forms[0].elements[i].checked = true;
 	}
 }
 
 // deselectAllCheckboxes()
 function deselectAllCheckboxes (select_name) {
-	for (i = 0; i < document.datatable.length; i++)
+	for (i = 0; i < document.forms[0].length; i++)
 	{
-		if (document.datatable.elements[i].type == "checkbox" &&
-		    document.datatable.elements[i].name == select_name)
-			document.datatable.elements[i].checked = false;
+		if (document.forms[0].elements[i].type == "checkbox" &&
+		    document.forms[0].elements[i].name == select_name)
+			document.forms[0].elements[i].checked = false;
 	}
 }
 
