@@ -219,7 +219,7 @@ sub buildDOM {
 				my $imageID = $image->id();
 				$targetID = $target->id();
 				if (not exists $Images{$imageID}) {
-					$Images{$imageID}->{node} = $self->Image2doc ($object);
+					$Images{$imageID}->{node} = $self->Image2doc ($image);
 					$Images{$imageID}->{object} = $image;
 				}
 				# Add the top-most feature to the image.
