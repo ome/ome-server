@@ -74,7 +74,7 @@
 			<FormalInput
 				Name="Max degree of Zernike Polynomials"
 				SemanticTypeName="MaxZernikePolynomialDegree"
-				Count="*"/>		
+				Count="?"/>		
 			<FormalOutput
 				Name="Zernike Moments"
 				SemanticTypeName="ZernikeMoments"

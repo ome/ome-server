@@ -42,7 +42,7 @@
 				Name="Parent" 
 				DBLocation="CHEBYSHEV_FOURIER.COEFFICIENT_MATRIX"   
 				DataType = "reference"
-				RefersTo = "PixelsSlice"/>
+				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
 

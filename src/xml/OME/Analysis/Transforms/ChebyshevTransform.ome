@@ -42,7 +42,7 @@
 				Name="Parent" 
 				DBLocation="CHEBYSHEV.COEFFICIENT_MATRIX"   
 				DataType = "reference"
-				RefersTo = "PixelsSlice"/>
+				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
 		
 		<SemanticType Name="MaxChebyshevPolynomialDegree" AppliesTo="G">
@@ -74,7 +74,7 @@
 			<FormalInput
 				Name="Max degree of Chebyshev Polynomials"
 				SemanticTypeName="MaxChebyshevPolynomialDegree"
-				Count="*"/>
+				Count="?"/>
 			<FormalOutput
 				Name="Chebyshev Coefficient Matrix"
 				SemanticTypeName="ChebyshevCoefficientMatrix"

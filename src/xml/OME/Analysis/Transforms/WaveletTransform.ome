@@ -42,7 +42,7 @@
 				Name="Parent" 
 				DBLocation="WAVELET.COEFFICIENTS_LEVEL_1"   
 				DataType = "reference"
-				RefersTo = "PixelsSlice"/>
+				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
 		
 		<SemanticType Name="WaveletCoefficientsLevel2" AppliesTo="I">
@@ -53,7 +53,7 @@
 				Name="Parent" 
 				DBLocation="WAVELET.COEFFICIENTS_LEVEL_2"   
 				DataType = "reference"
-				RefersTo = "PixelsSlice"/>
+				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
 		
 	</SemanticTypeDefinitions>	
