@@ -330,14 +330,14 @@ sub renderSingle {
 		$fieldnames = $proto->getFieldNames( $obj ) unless $fieldnames;
 		my $id   = $obj->id();
 		foreach my $field( @$fieldnames ) {
-			if( $field eq 'id') {
-				$record{ $field } = ( 
-					($format eq 'html') ?
-					$q->a( 
-						{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
-						$id
-					) :
-					$id
+			if( ($field eq 'id' or $field eq 'name' ) and $format eq 'html' ) {
+				$record{ $field } = $q->a( 
+					{ 
+						href  => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
+						title => "Detailed info about this $common_name",
+						class => 'ome_detail'
+					},
+					$obj->$field
 				);
 			} else {
 				$record{ $field } = $obj->$field;
@@ -479,7 +479,11 @@ sub getRefToObject {
 			my $id = $obj->id();
 			my $label = $proto->getObjectLabel( $obj );
 			return  $q->a( 
-				{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
+				{ 
+					href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
+					title => "Detailed info about this $common_name",
+					class => 'ome_detail'
+				},
 				$label
 			);
 		}
