@@ -123,6 +123,7 @@ sub finishImage {
         # For each spot in a given timepoint
         foreach my $spot (@{$self->{_timepointSpots}->{$timepoint}}) {
             my $trajectory = $self->{_spotTrajectories}->{$spot->id()};
+            my $tAttr;
             my $order = $self->{_spotOrders}->{$spot->id()};
             my $phys = $self->{_physicalCoordinates}->{$spot->id()};
             print STDERR $spot->id();
@@ -132,20 +133,22 @@ sub finishImage {
                 # previous timepoint, it should start a new trajectory.
                 $trajectory = $self->createNewTrajectory();
                 $order = 1;
-                my $tAttr = $self->
+                $tAttr = $self->
                   newAttributes("Trajectory",
                                 {
                                  target          => $trajectory,
                                  Name            => $trajectory->name(),
                                  TotalDistance   => undef,
                                  AverageVelocity => undef,
-                                });
+                                })->[0];
                 $trajectories{$trajectory->id()}->{trajectory} = $trajectory;
                 $trajectories{$trajectory->id()}->{attribute} = $tAttr->[0];
                 $trajectories{$trajectory->id()}->{minX} = $phys->{X};
                 $trajectories{$trajectory->id()}->{minY} = $phys->{Y};
                 $trajectories{$trajectory->id()}->{minZ} = $phys->{Z};
                 $trajectories{$trajectory->id()}->{minT} = $timepoint;
+            } else {
+                $tAttr = $trajectories{$trajectory->id()}->{attribute};
             }
 
             my ($nextSpot,$deltaX,$deltaY,$deltaZ,$squareDistance) =
@@ -161,7 +164,7 @@ sub finishImage {
               newAttributes("Entries",
                             {
                              target     => $spot,
-                             Trajectory => $trajectory->id(),
+                             Trajectory => $tAttr->id(),
                              Order      => $order,
                              DeltaX     => $deltaX,
                              DeltaY     => $deltaY,
@@ -184,6 +187,7 @@ sub finishImage {
     my $lastTimepoint = $timepoints[$#timepoints];
     foreach my $spot (@{$self->{_timepointSpots}->{$lastTimepoint}}) {
         my $trajectory = $self->{_spotTrajectories}->{$spot->id()};
+        my $tAttr;
         my $order = $self->{_spotOrders}->{$spot->id()};
         my $phys = $self->{_physicalCoordinates}->{$spot->id()};
 
@@ -192,18 +196,30 @@ sub finishImage {
             # previous timepoint, it should start a new trajectory.
             $trajectory = $self->createNewTrajectory();
             $order = 1;
+            $tAttr = $self->
+              newAttributes("Trajectory",
+                            {
+                             target          => $trajectory,
+                             Name            => $trajectory->name(),
+                             TotalDistance   => undef,
+                             AverageVelocity => undef,
+                            })->[0];
+
             $trajectories{$trajectory->id()}->{trajectory} = $trajectory;
+            $trajectories{$trajectory->id()}->{attribute} = $tAttr;
             $trajectories{$trajectory->id()}->{minX} = $phys->{X};
             $trajectories{$trajectory->id()}->{minY} = $phys->{Y};
             $trajectories{$trajectory->id()}->{minZ} = $phys->{Z};
             $trajectories{$trajectory->id()}->{minT} = $lastTimepoint;
+        } else {
+            $tAttr = $trajectories{$trajectory->id()}->{attribute};
         }
 
         my $spotEntry = $self->
           newAttributes("Entries",
                         {
                          target     => $spot,
-                         Trajectory => $trajectory->id(),
+                         Trajectory => $tAttr->id(),
                          Order      => $order,
                         });
         $trajectories{$trajectory->id()}->{maxX} = $phys->{X};
