@@ -56,6 +56,7 @@ XYPlaneControls.prototype.init = function( urls, image, stats, prefs, overlays )
 	
 	this.image.registerListener( 'theZ', this, 'sync_z' );
 	this.image.registerListener( 'theT', this, 'sync_t' );
+	this.image.registerListener( 'updatePlane', this, 'updatePlaneURL' );
 };
 
 XYPlaneControls.prototype.buildToolBox = function( toolboxLayer ) {
@@ -210,7 +211,6 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 	this.saveSettingsButton.realize( this.displayContent );
 	this.saveAsTIFFLink = new Util.createTextLinkSVG( {
 		href: this.image.getImageURL(),
-		attrs: { target: 'plane' },
 		text: 'Save as TIFF...',
 		text_attrs: {
 			x: 211,
