@@ -781,7 +781,23 @@ sub __verifyOneValue {
 
     if ($type eq '%') {
         # Function expects a hash reference
-        return $ref eq "HASH";
+        return 0 if  $ref ne "HASH";
+
+        # Check the values of the hash -- if any is an object, use this
+        # method recursively to turn it into an object reference.
+        foreach my $value (values %$ref) {
+            if (ref($value) eq 'ARRAY') {
+                # Possibly handle recursive data structures in the future
+            } elsif (ref($value) eq 'HASH') {
+                # Possibly handle recursive data structures in the future
+            } elsif (ref($value)) {
+                my $good = __verifyOneValue($which,$value,'UNIVERSAL',
+                                            $subroutine,@subInputs);
+                return 0 unless $good;
+            }
+        }
+
+        return 1;
     }
 
     if (!defined $param) {
