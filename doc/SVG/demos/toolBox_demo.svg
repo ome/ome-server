@@ -25,7 +25,6 @@
 		var zSlider, tSlider;
         var azap = new AntiZoomAndPan();
 
-
         function init(e) {
             if ( window.svgDocument == null )
                 svgDocument = e.ownerDocument;
@@ -69,6 +68,7 @@
 			
             
             azap.appendNode(controls);
+            
         }
 		
 		function updateZLabel(data) {
@@ -159,15 +159,13 @@
 			</g>
 		]]></text>
 	</defs>
-    <g id="controls">
-    </g>
-	<g id="world">
-	</g>
 	<g id="info" transform="translate(160,250) scale(2)">
-		<rect x="-5" y="-15" width="110" height="60" fill="none" stroke="black"
+		<rect x="-5" y="-15" width="110" height="60" fill="white" stroke="black"
 		stroke-width="2"/>
 		<text>Information:</text>
 		<text x="30" y="15" id="zLabel">z-value is 0</text>
 		<text x="30" y="30" id="tLabel">t-value is 0</text>
 	</g>
+    <g id="controls">
+    </g>
 </svg>
