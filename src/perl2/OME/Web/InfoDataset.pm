@@ -32,7 +32,8 @@ sub getPageTitle {
 }
 
 
-sub createOMEPage{
+#sub createOMEPage{
+sub getPageBody{
   my $self=shift;
   my $cgi=$self->CGI();
   my $body="";

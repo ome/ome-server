@@ -31,8 +31,7 @@ sub getPageTitle {
 	return "Open Microscopy Environment" ;
 }
 
-
-sub createOMEPage{
+sub getPageBody{
   my $self=shift;
   my $cgi=$self->CGI();
   my $body="";
