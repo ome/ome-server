@@ -361,8 +361,16 @@ The OME database tracks the exections of the modules and chains. The
 "module_executions" table contains an entry for each "run' of a
 module against a dataset. "Actual_inputs" tracks the inputs used for
 each run,  and "semantic_type_outputs" tracks the results of the
-run. "Analysis_chain_executions" and "analysis_node_executions" track
-the instances of chains and individual nodes.
+run.  The "module_executions" table is use to cache results: if a
+module is about to be executed with the same inputs as a previous
+execution, the previous results will be re-used, and no new entry
+will be added ot the "module_executions" table.
+
+The "Analysis_node_executions" table tracks executions of a node in
+an analysis chain. Entries will be added to this table even when the
+results of the associated module are retrieved from the
+"modules_execution" cache. "Analysis_chain_executions" track the
+execution of entire chains.
 
 The structures of the analysis_chains, modules, etc. are
 re-capitulated in XML schema for in AnalysisModule.xsd. This schema
