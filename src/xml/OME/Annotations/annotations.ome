@@ -73,18 +73,9 @@
     </Description>
 
     <Element
-       Name = "Experimenter"
-       DBLocation = "DATASET_ANNOTATIONS.EXPERIMENTER"
-       DataType = "reference"
-       RefersTo = "Experimenter" />
-    <Element
        Name = "Content"
        DBLocation = "DATASET_ANNOTATIONS.CONTENT"
        DataType = "string" />
-    <Element
-       Name = "Timestamp"
-       DBLocation = "DATASET_ANNOTATIONS.TIMESTAMP"
-       DataType = "bigint" />
     <Element
 	  Name = "Valid"
 	  DBLocation = "DATASET_ANNOTATIONS.VALID"
@@ -106,18 +97,9 @@
     </Description>
 
     <Element
-       Name = "Experimenter"
-       DBLocation = "IMAGE_ANNOTATIONS.EXPERIMENTER"
-       DataType = "reference"
-       RefersTo = "Experimenter" />
-    <Element
        Name = "Content"
        DBLocation = "IMAGE_ANNOTATIONS.CONTENT"
        DataType = "string" />
-    <Element
-       Name = "Timestamp"
-       DBLocation = "IMAGE_ANNOTATIONS.TIMESTAMP"
-       DataType = "bigint" />
     <Element
        Name = "TheC"
        DBLocation = "IMAGE_ANNOTATIONS.THE_C"
