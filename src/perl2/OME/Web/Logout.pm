@@ -60,7 +60,7 @@ sub getPageBody {
     $self->Manager()->logout($self->Session());
 	$self->setSessionCookie();
 
-	my $body = $self->redirect($self->getURL('OME::Web::Home'));
+	my $body = $self->redirect($self->pageURL('OME::Web::Home'));
 
     return ('HTML',$body);
 }
