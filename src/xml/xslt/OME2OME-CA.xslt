@@ -31,7 +31,7 @@
 
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by:  
+# Written by:  Ilya G. Goldberg <igg@nig.gov>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
@@ -140,32 +140,6 @@
 			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:DatasetRef" mode = "CopyRefs"/>
 			<xsl:element name = "CustomAttributes">
-				<!--
-				<xsl:element name = "Pixels">
-					<xsl:attribute name = "SizeX">
-						<xsl:value-of select = "@SizeX"/>
-					</xsl:attribute>
-					<xsl:attribute name = "SizeY">
-						<xsl:value-of select = "@SizeY"/>
-					</xsl:attribute>
-					<xsl:attribute name = "SizeZ">
-						<xsl:value-of select = "@SizeZ"/>
-					</xsl:attribute>
-					<xsl:attribute name = "SizeC">
-						<xsl:value-of select = "@NumChannels"/>
-					</xsl:attribute>
-					<xsl:attribute name = "SizeT">
-						<xsl:value-of select = "@NumTimes"/>
-					</xsl:attribute>
-					<xsl:attribute name = "BitsPerPixel">
-						<xsl:call-template name = "PixelType2BitsPerPixel">
-							<xsl:with-param name = "PixelType">
-								<xsl:value-of select = "OME:Pixels/@PixelType"/>
-							</xsl:with-param>
-						</xsl:call-template>
-					</xsl:attribute>
-				</xsl:element>
-				-->
 				<xsl:element name = "Dimensions">
 					<xsl:attribute name = "ID">
 						<xsl:value-of select = "generate-id()"/>
