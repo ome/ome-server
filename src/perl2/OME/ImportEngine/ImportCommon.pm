@@ -76,6 +76,7 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 
+use OME::Tasks::ImportManager;
 
 =head2 B<getCommonSHA1>
 
@@ -119,6 +120,8 @@ Each channel info hash is keyed thusly:
 sub __storeChannelInfo {
     my ($self, $session, $numWaves, @channelData) = @_;
     my $image = $self->{image};
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
 
     my $channel;
     for (my $w = 0; $w < $numWaves; $w++) {
@@ -133,7 +136,7 @@ sub __storeChannelInfo {
 
 	}
 	my $logical = $session->Factory()->
-	    newAttribute("LogicalChannel",$image,$self->{module_execution},
+	    newAttribute("LogicalChannel",$image,$module_execution,
 			 {
 			     ExcitationWavelength   => $channel->{'ExWave'},
 			     EmissionWavelength   => $channel->{'EmWave'},
@@ -143,7 +146,7 @@ sub __storeChannelInfo {
 			 });
 	
 	my $component = $session->Factory()->
-	    newAttribute("PixelChannelComponent",$image,$self->{module_execution},
+	    newAttribute("PixelChannelComponent",$image,$module_execution,
 			 {
 			     Pixels         => $self->{pixels}->id(),
 			     Index          => $w,
@@ -170,12 +173,13 @@ file & stores that as part of the file info.
 sub __storeOneFileInfo {
     my ($self, $info_aref, $fn, $params, $image, $st_x, $end_x,
 	$st_y, $end_y, $st_z, $end_z, $st_c, $end_c,
-	$st_t, $end_t) = @_;
+	$st_t, $end_t,$format) = @_;
 
-    my $sha1 = getCommonSHA1($self, $fn);
+    # Now calculated by __touchOriginalFile
+    #my $sha1 = getCommonSHA1($self, $fn);
 
     push @$info_aref, { path => $fn,
-		      file_sha1 => $sha1,
+		      #file_sha1 => $sha1,
 		      bigendian => ($params->{endian} eq "big") ? 't':'f',
 		      image_id => $image->id(),
 		      x_start => $st_x,
@@ -187,7 +191,8 @@ sub __storeOneFileInfo {
 		      w_start => $st_c,
 		      w_stop => $end_c,
 		      t_start => $st_t,
-		      t_stop => $end_t};
+		      t_stop => $end_t,
+              format => $format};
 }
 
 
@@ -207,9 +212,9 @@ sub __storeInputFileInfo {
     my $session = shift;
     my $inarr = shift;
 
-    for (my $i = 0; $i < scalar @$inarr; $i++) {
-	$session->Factory()->newObject("OME::Image::ImageFilesXYZWT",
-				       $inarr->[$i]);
+    foreach my $file_info (@$inarr) {
+        $self->{super}->__touchOriginalFile($file_info->{path},
+                                            $file_info->{format});
     }
 
 }

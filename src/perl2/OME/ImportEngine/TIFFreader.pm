@@ -154,7 +154,7 @@ sub new {
     my $module_execution = shift;
 
     bless $self, $class;
-    $self->{super} = $self->SUPER::new($session, $module_execution);
+    $self->{super} = $self->SUPER::new();
 
     my %paramHash;
     $self->{params} = new OME::ImportEngine::Params(\%paramHash);
@@ -348,7 +348,8 @@ sub importGroup {
 				  0, $xref->{'Image.SizeY'}-1,
 				  0, 0,
 				  $c, $c,
-				  0, 0);
+				  0, 0,
+                  "TIFF");
 
 	# Store info about each input channel (wavelength)
 	push @channelInfo, {chnlNumber => $c,

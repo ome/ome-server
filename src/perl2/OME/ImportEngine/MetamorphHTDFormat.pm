@@ -356,8 +356,11 @@ sub getSHA1 {
 sub importGroup {
     my ($self,$group) = @_;
 
-    #return undef if $self->{importedOne};
-    #$self->{importedOne} = 1;
+    # This is useful for testing purposes.  Uncomment the next two
+    # lines if you don't want to import all of the images in a plate.
+
+    #return undef if $self->{importedOne} > 5;
+    #$self->{importedOne}++;
 
     my $session = $self->Session();
     my $factory = $session->Factory();
@@ -379,6 +382,9 @@ sub importGroup {
 
     my $image = $self->__newImage($image_name);
 
+    # Touch the HTD file
+    $self->__touchOriginalFile($group->{htd_file},"MetaMorph HTD");
+
     # We can't create the pixels attribute until we know the dimensions.
     my $pixels_created = 0;
     my ($pixels,$pix);
@@ -396,6 +402,9 @@ sub importGroup {
 
   FILENAME:
     foreach my $filename (@{$group->{image_files}}) {
+        # Touch the TIFF file
+        $self->__touchOriginalFile($filename,"MetaMorph TIFF");
+
         $theC++;
         print STDERR "  Wavelength $theC - $filename\n";
         my $wavelength = $group->{wavelengths}->[$theC];

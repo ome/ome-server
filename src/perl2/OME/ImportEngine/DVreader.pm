@@ -202,12 +202,10 @@ sub new {
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
     my $self = {};
-    my $session = shift;
-    my $module_execution = shift;
 
 
     bless $self, $class;
-    $self->{super} = $self->SUPER::new($session, $module_execution);
+    $self->{super} = $self->SUPER::new();
     my %paramHash;
     $self->{params} = new OME::ImportEngine::Params(\%paramHash);
     return $self;
@@ -354,7 +352,8 @@ sub importGroup {
 			  w_start => 0,
 			  w_stop => $xref->{'Image.NumWaves'}-1,
 			  t_start => 0,
-			  t_stop => $xref->{'Image.NumTimes'}-1 };
+			  t_stop => $xref->{'Image.NumTimes'}-1,
+              format => "DeltaVision R3D"};
 
     close(IMG);
 
