@@ -507,22 +507,12 @@ sub importGroup {
         my $strip_offsets = $ifd->{TAGS->{StripOffsets}};
         my $strip_lengths = $ifd->{TAGS->{StripByteCounts}};
         my $rows_per_strip = $ifd->{TAGS->{RowsPerStrip}}->[0] || 0;
-        my $compression = $ifd->{TAGS->{Compression}}->[0] || 1;
 
         # Verify that we can handle this format.
 
         if ($rows_per_strip <= 0) {
             #print STDERR "MetamorphHTDFormat does not support non-strip TIFFs\n";
 	    $dieStatus = "MetamorphHTDFormat does not support non-strip TIFFs\n";
-            $image_invalid = 1;
-            $file->close;
-            last FILENAME;
-        }
-
-        if ($compression != 1) {
-            #print STDERR "MetamorphHTDFormat only supports uncompressed TIFFs\n";
-	    $dieStatus = "MetamorphHTDFormat only supports uncompressed TIFFs\n";
-            #print STDERR "$compression\n";
             $image_invalid = 1;
             $file->close;
             last FILENAME;
