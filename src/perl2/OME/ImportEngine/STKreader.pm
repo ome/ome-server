@@ -424,7 +424,6 @@ sub readWritePixels {
     my %planes;
     my @args;
 
-    print "write $endian\n";
 
     $start_offset = $$offsets_arr[0];
     $end_offset = $$offsets_arr[$#$offsets_arr];         # start of last strip\
