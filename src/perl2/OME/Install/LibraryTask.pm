@@ -423,7 +423,10 @@ sub execute {
 	    	close ($CHECK_C);
 
 	    	$CC = whereis ("compiler") unless which ("$CC");
-			@error = `$CC $source_file -o $binary 2>&1`;
+	    	my $finkIncs;
+	    	$finkIncs = '-I/sw/include'
+	    		if( $ENV{OSTYPE} eq "darwin" and -e '/sw/include/' );
+			@error = `$CC $finkIncs $source_file -o $binary 2>&1`;
 
 	    	if ($? == 0) {
 				$library->{version} = `$binary 2>&1`;
