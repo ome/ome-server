@@ -461,6 +461,90 @@ sub finishPixels {
     OME::Image::Server->finishPixels($self->[PIXELS_ID]);
 }
 
+=head2 getTemporaryLocalPixels
+
+	my $filename = $self->getTemporaryLocalPixels($big_endian);
+
+This method should be used for legacy code which must read the pixels
+from a local file.  Returns the filename of a local file, copying the
+pixels from wherever they might be.  This local file can be opened for
+reading.  When the file is no longer needed, it should be closed, and
+the finishLocalPixels method should be called.
+
+The $big_endian parameter can be specified to the get the pixels file
+in a certian endianness.  If it is omitted, then the pixels will be
+returned in the endianness of the local machine.
+
+=cut
+
+sub getTemporaryLocalPixels {
+    my ($self,$big_endian) = @_;
+    my $session = OME::Session->instance();
+    my $filename = $session->getTemporaryFilename("pixels","raw");
+    $big_endian = OME->BIG_ENDIAN() unless defined $big_endian;
+
+    OME::Image::Server->
+      getPixels($self->[PIXELS_ID],$big_endian,$filename);
+
+    return $filename;
+}
+
+=head2 getTemporaryLocalStack
+
+	my $filename = $self->getTemporaryLocalStack($c,$t,$big_endian);
+
+This method should be used for legacy code which must read the pixels
+from a local file.  Returns the filename of a local file, copying the
+specified stack from wherever they might be.  This local file can be
+opened for reading.  When the file is no longer needed, it should be
+closed, and the finishLocalPixels method should be called.
+
+The $big_endian parameter can be specified to the get the pixels file
+in a certian endianness.  If it is omitted, then the pixels will be
+returned in the endianness of the local machine.
+
+=cut
+
+sub getTemporaryLocalStack {
+    my ($self,$c,$t,$big_endian) = @_;
+    my $session = OME::Session->instance();
+    my $filename = $session->getTemporaryFilename("pixels","raw");
+    $big_endian = OME->BIG_ENDIAN() unless defined $big_endian;
+
+    OME::Image::Server->
+      getStack($self->[PIXELS_ID],$c,$t,$big_endian,$filename);
+
+    return $filename;
+}
+
+=head2 getTemporaryLocalPlane
+
+	my $filename = $self->getTemporaryLocalPlane($z,$c,$t,$big_endian);
+
+This method should be used for legacy code which must read the pixels
+from a local file.  Returns the filename of a local file, copying the
+specified plane from wherever they might be.  This local file can be
+opened for reading.  When the file is no longer needed, it should be
+closed, and the finishLocalPixels method should be called.
+
+The $big_endian parameter can be specified to the get the pixels file
+in a certian endianness.  If it is omitted, then the pixels will be
+returned in the endianness of the local machine.
+
+=cut
+
+sub getTemporaryLocalPlane {
+    my ($self,$z,$c,$t,$big_endian) = @_;
+    my $session = OME::Session->instance();
+    my $filename = $session->getTemporaryFilename("pixels","raw");
+    $big_endian = OME->BIG_ENDIAN() unless defined $big_endian;
+
+    OME::Image::Server->
+      getPlane($self->[PIXELS_ID],$z,$c,$t,$big_endian,$filename);
+
+    return $filename;
+}
+
 1;
 
 __END__
