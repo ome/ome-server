@@ -144,10 +144,10 @@ if ($ENV{OME_DEBUG}) {
 }
 
 # Number of checks to run
-my $checks_to_run;
+my $checks_to_run = 0;
 
-# Command line defaults
-my $env_file = ( -e '/OME/conf/environment.store' ? '/OME/conf/environment.store' : undef );
+# Default env file location
+my $env_file = ('/OME/conf/environment.store');
 
 # Command line options
 my ($update, $perl_check, $lib_check, $check_all, $usage, $install);
@@ -168,19 +168,23 @@ usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
 usage () if $usage;
 
 if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
-restore_env ($env_file) if $env_file;
+
+# These need a restored environment
+if ($perl_check or $update) {
+	restore_env ($env_file)
+}
 
 if ($update) {
-
     my $environment = initialize OME::Install::Environment;
-    $environment->flag ("UPDATE");
+    $environment->set_flag ("UPDATE");
 }
 
 if ($lib_check) {
+	require OME::Install::Environment;
 
     # Initialize our environment and set the LIB_CHECK flag
-    my $environment = initialize OME::Install::Environment;
-    $environment->flag ("LIB_CHECK");
+	my $environment = initialize OME::Install::Environment;
+    $environment->set_flag ("LIB_CHECK");
 
     eval "require OME::Install::LibraryTask";
     croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
@@ -197,7 +201,7 @@ if ($perl_check) {
 
     # Initialize our environment and set the PERL_CHECK flag
     my $environment = initialize OME::Install::Environment;
-    $environment->flag ("PERL_CHECK");
+    $environment->set_flag ("PERL_CHECK");
 
     eval "require OME::Install::PerlModuleTask";
     croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes

@@ -437,35 +437,86 @@ sub execute {
 	    	# Log the error returned by get_library_version ()
 	    	print $LOGFILE "ERRORS LOADING LIBRARY \"$library->{name}\" -- OUTPUT: \"", $@ || @error, "\"\n\n";
 
-	    	print BOLD, " [NOT INSTALLED]", RESET;
+	    	print BOLD, " [NOT INSTALLED]", RESET, ".\n";
 
-			$library->{version} = 'N/A';
+			$library->{version} = undef;
 			
 			$bad_libraries = 1;
 		}
 
-		if (check_library($library)) {
-			print " $library->{version} ", BOLD, "[OK]", RESET, ".\n";
-			next;
-		} else {
-			print " $library->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
-			print STDERR "\nUnsupported version \($library->{version}\) of \"$library->{name}\".\n\n";
+		if ($library->{version}) {
+			if (check_library($library)) {
+				print " $library->{version} ", BOLD, "[OK]", RESET, ".\n";
+				next;
+			} else {
+				print " $library->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
+				print STDERR "\nUnsupported version \($library->{version}\) of \"$library->{name}\".\n\n";
 
+				$bad_libraries = 1;
+			}
+		} else {
 			$bad_libraries = 1;
 		}
 	}
 
-	if ($bad_libraries) {
+	print "\n";  #Spacing
+
+	if ($bad_libraries and not $environment->get_flag("LIB_CHECK")) {
 		my $y_or_n = y_or_n ("One or more libraries is not installed or is of an unsupported version. Please read the installation notes for your platform in /doc (INSTALL.FreeBSD for example) for a detailed list of OME's library dependencies and locations to get packages if available. \n\nIf you, for example, have installed all these specific dependencies beforehand these checks may fail due to a lack of development files and you may wish to continue anyway. \n\nWould you like to continue ?");
 
 		exit(1) unless $y_or_n;
 	}
 
-	chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
+	#*********
+    #********* Return to our initial working directory and then install OME's C binaries
+    #*********
 
-	print "\n";  # Spacing
+    chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
-    return 1;
+    # Unless we're just doing the LIB_CHECK sanity check
+    unless ($environment->get_flag ("LIB_CHECK")) {
+		print_header ("Core Binary Setup");
+    
+		print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
+
+		my $retval = 0;
+
+		print "Installing core binaries\n";
+
+		# XXX: Unneeded at the moment
+		# Configure
+		# print "  \\_ Configuring ";
+		# $retval = configure_module ("src/C/", $LOGFILE);
+		# 
+		#print BOLD, "[FAILURE]", RESET, ".\n"
+		#    and croak "Unable to configure module, see $LOGFILE_NAME for details."
+		#    unless $retval;
+		#print BOLD, "[SUCCESS]", RESET, ".\n";
+
+		# Compile
+		print "  \\_ Compiling ";
+		$retval = compile_module ("src/C/", $LOGFILE);
+    
+		print BOLD, "[FAILURE]", RESET, ".\n"
+		    and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
+		    unless $retval;
+		print BOLD, "[SUCCESS]", RESET, ".\n";
+
+		# Install
+		print "  \\_ Installing ";
+		$retval = install_module ("src/C/", $LOGFILE);
+
+		print BOLD, "[FAILURE]", RESET, ".\n"
+		    and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
+		    unless $retval;
+		print BOLD, "[SUCCESS]", RESET, ".\n";
+
+		chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
+
+		print "\n";  # Spacing
+	}
+
+   	 return 1;
 }
 
 sub rollback {

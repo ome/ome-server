@@ -97,17 +97,23 @@ sub store_to {
 }
 
 
-# Class method to get or set specific flags.
+# Class methods to get or set specific flags.
 #
-# Returns 1 if the flag is set.
-sub flag {
+sub set_flag {
     my ($self, $flag) = @_;
 
     return unless $flag;
-    return 1 if $self->{flags}->{$flag};
 
     $self->{flags}->{$flag} = 1;
     return;
+}
+
+sub get_flag {
+	my ($self, $flag) = @_;
+    
+	return unless $flag;
+
+    return $self->{flags}->{$flag} ? 1 : 0;
 }
     
 

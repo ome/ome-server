@@ -1,4 +1,3 @@
-
 # OME/Install/CoreSystemTask.pm
 # This task initializes the core OME system which currently consists of the 
 # OME_BASE directory structure and ome user/group.
@@ -107,7 +106,7 @@ sub fix_ownership {
 
     # If we've got a wrong UID or GID do a full chown, no harm in doing both if we only need one
     if (($dir_uid != $uid) or ($dir_gid != $gid)) {
-	chown ($uid, $gid, $dir) or croak "Unable to change owner of $dir, $!";
+		chown ($uid, $gid, $dir) or croak "Unable to change owner of $dir, $!";
     }
     
     return 1;
@@ -136,11 +135,10 @@ sub get_apache_user {
     # file so lets confirm things. By the same token, if that the user is of a
     # different name, ask for it.
     while (1) {
-	$username = confirm_default ("What is the Unix username that Apache runs under ?", $username);
-	getpwnam ($username)
-	    or (print "User \"$username\" does not exist, try again.\n" and next);
-
-	last;
+		$username = confirm_default ("What is the Unix username that Apache runs under ?", $username);
+		getpwnam ($username)
+			or (print "User \"$username\" does not exist, try again.\n" and next);
+		last;
     }
 
     return $username;
@@ -150,30 +148,30 @@ sub get_postgres_user {
     my $username = shift;  # A user specified default if we have one
 
     unless ($username) {
-	$username = "";
+		$username = "";
 
-	# Grab our PostgreSQL user from the password file
-	open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
-	while (<PW_FILE>) {
-	    chomp;
-	    $username = (split ":")[0];
-	    if ($username =~ /postgres|postgre|pgsql|psql/) {
-		last;
-	    }
+		# Grab our PostgreSQL user from the password file
+		open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
+		while (<PW_FILE>) {
+			chomp;
+			$username = (split ":")[0];
+			if ($username =~ /postgres|postgre|pgsql|psql/) {
+				last;
+			}
+		}
 	}
-    }
     close(PW_FILE);
 
     # It's possible we've got multiple instances of these users in the password
     # file so lets confirm things. By the same token, if that the user is of a
     # different name, ask for it.
     while (1) {
-	$username = confirm_default ("What is the Unix username of the Postgres default user?", $username);
-	getpwnam ($username)
-	    or (print "User \"$username\" does not exist, try again.\n" and next);
+		$username = confirm_default ("What is the Unix username of the Postgres default user?", $username);
+		getpwnam ($username)
+			or (print "User \"$username\" does not exist, try again.\n" and next);
 
-	last;
-    }
+		last;
+	}
 
     return $username;
 }
@@ -185,7 +183,7 @@ sub get_postgres_user {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
-    
+	
     print_header ("Core System Setup");
 
     #********
@@ -203,58 +201,66 @@ sub execute {
 	$POSTGRES_USER = $environment->postgres_user() if $environment->postgres_user() ;
 	$ADMIN_USER    = $environment->admin_user()    if $environment->admin_user() ;
 
+	# Confirm all flag
+	my $confirm_all;
+
     while (1) {
+		if ($environment->get_flag("UPDATE") or $confirm_all) {
+			print "\n";  # Spacing
 
-	print "\n";  # Spacing
-
-	# Ask user to confirm his/her entries
-	foreach my $directory (@core_dirs) {
-	    printf '%25s: %s%s%s%s', $directory->{description}, BOLD, $directory->{path}, RESET, "\n";
-	}
+			# Ask user to confirm his/her original entries
+			foreach my $directory (@core_dirs) {
+				printf '%25s: %s%s%s%s', $directory->{description}, BOLD, $directory->{path}, RESET, "\n";
+			}
 	
-	print "            OME groupname: ", BOLD, $OME_GROUP     , RESET, "\n";
-	print "       OME Unix  username: ", BOLD, $OME_USER      , RESET, "\n";
-	print "    Apache Unix  username: ", BOLD, $APACHE_USER   , RESET, "\n";
-	print " Postgres admin  username: ", BOLD, $POSTGRES_USER , RESET, "\n";
-	print "   Special Unix  username: ", BOLD, $ADMIN_USER    , RESET, "\n";
+			print "            OME groupname: ", BOLD, $OME_GROUP     , RESET, "\n";
+			print "       OME Unix  username: ", BOLD, $OME_USER      , RESET, "\n";
+			print "    Apache Unix  username: ", BOLD, $APACHE_USER   , RESET, "\n";
+			print " Postgres admin  username: ", BOLD, $POSTGRES_USER , RESET, "\n";
+			print "   Special Unix  username: ", BOLD, $ADMIN_USER    , RESET, "\n";
 
-	print "\n";  # Spacing
+			print "\n";  # Spacing
 
-	y_or_n ("Are these values correct ?") and last;
+			y_or_n ("Are these values correct ?") and last;
+		}
+		
+		$confirm_all = 0;
 
-	print "\n";  # Spacing
-	# Confirm and/or update all our installation dirs
-	foreach my $directory (@core_dirs) {
-	   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
-	}
+		print "\n";  # Spacing
+		# Confirm and/or update all our installation dirs
+		foreach my $directory (@core_dirs) {
+		   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
+		}
 
-	# Make sure the rest of the installation knows where the core directories are
-	$environment->base_dir($$OME_BASE_DIR);
-	$environment->tmp_dir($$OME_TMP_DIR);
+		# Make sure the rest of the installation knows where the core directories are
+		$environment->base_dir($$OME_BASE_DIR);
+		$environment->tmp_dir($$OME_TMP_DIR);
     
-	# Confirm and/or update our group information
-	$OME_GROUP = confirm_default ("The group which OME should be run under", $OME_GROUP);
+		# Confirm and/or update our group information
+		$OME_GROUP = confirm_default("The group which OME should be run under", $OME_GROUP);
 
-	# Confirm and/or update our user information
-	$OME_USER = confirm_default ("The user which OME should be run under", $OME_USER);
+		# Confirm and/or update our user information
+		$OME_USER = confirm_default("The user which OME should be run under", $OME_USER);
+	
+		# Get and/or update our apache user information
+		$APACHE_USER = get_apache_user($APACHE_USER);
 
-	# Get and/or update our apache user information
-	$APACHE_USER = get_apache_user ($APACHE_USER);
+		# Get and/or update our postgres admin information
+		$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
 
-	# Get and/or update our postgres admin information
-	$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
+		# Get and/or update our "special" Unix user information
+		$ADMIN_USER =
+			confirm_default ("Unix user to include in the OME group (optional, i.e. your real username)", $ADMIN_USER || "");
 
-	# Get and/or update our "special" Unix user information
-	$ADMIN_USER =
-		confirm_default ("Unix user to include in the OME group (optional, i.e. your real username)", $ADMIN_USER || "");
+		# Make sure the rest of the installation knows who the apache and ome users are
+		$environment->user($OME_USER);
+		$environment->apache_user($APACHE_USER);
+		$environment->postgres_user($POSTGRES_USER);
+		$environment->admin_user($ADMIN_USER);
 
-	# Make sure the rest of the installation knows who the apache and ome users are
-	$environment->user($OME_USER);
-	$environment->apache_user($APACHE_USER);
-	$environment->postgres_user($POSTGRES_USER);
-	$environment->admin_user($ADMIN_USER);
+		$confirm_all = 1;
 
-	print "\n";  # Spacing
+		print "\n";  # Spacing
     }
 
     print "\nBuilding the core system\n";

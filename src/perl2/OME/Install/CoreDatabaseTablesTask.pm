@@ -42,6 +42,7 @@ use MIME::Base64;
 use Term::ANSIColor qw(:constants);
 use File::Basename;
 use File::Spec::Functions qw(rel2abs);
+use Log::Agent;
 
 use OME::Install::Util;
 use OME::Install::Environment;
@@ -183,7 +184,7 @@ sub get_db_version {
     print "Checking database\n";
 
     $dbh = DBI->connect("dbi:Pg:dbname=ome")
-      or return undef;
+		or return undef;
 
     # Shush!
     $dbh->{PrintError} = '0';
@@ -340,52 +341,61 @@ sub load_schema {
 
 sub create_experimenter {
     my $manager = shift;
-    my ($first_name,$last_name);
+    my ($first_name, $last_name, $username, $personal_info, $data_dir, $e_mail) = ("", "", "", undef, "", undef);
 
-    my ($username, $password, $personal_info, $data_dir) = (getpwuid($ADMIN_UID))[0,1,6,7];
-    if ($personal_info) {
-		my $full_name = (split (',',$personal_info,2))[0];
-		($first_name,$last_name) = split (' ',$full_name,2);
-    } else {
-		($first_name,$last_name) = ('','');
-    }
-	my $e_mail = $username.'@'.hostname();
+	if ($ADMIN_UID) {
+		($username, $personal_info, $data_dir) = (getpwuid($ADMIN_UID))[0,6,7];
+    
+		if ($personal_info) {
+			my $full_name = (split (',',$personal_info,2))[0];
+			($first_name,$last_name) = split (' ',$full_name,2);
+		} else {
+			($first_name,$last_name) = ('','');
+		}
+	
+		$e_mail = $username.'@'.hostname();
+	}
 
     print_header "Initial user creation";
-    
+
+	# Confirm all flag
+	my $confirm_all;
 
     while (1) {
-	print "            First name: ", BOLD, $first_name, RESET, "\n";
-	print "             Last name: ", BOLD, $last_name , RESET, "\n";
-	print "              Username: ", BOLD, $username  , RESET, "\n";
-	print "        E-mail address: ", BOLD, $e_mail    , RESET, "\n";
-	print "Default data directory: ", BOLD, $data_dir  , RESET, "\n";
+		if ($ADMIN_UID or $confirm_all) {
+			print "            First name: ", BOLD, $first_name, RESET, "\n";
+			print "             Last name: ", BOLD, $last_name , RESET, "\n";
+			print "              Username: ", BOLD, $username  , RESET, "\n";
+			print "        E-mail address: ", BOLD, $e_mail    , RESET, "\n";
+			print "Default data directory: ", BOLD, $data_dir  , RESET, "\n";
 	
-	print "\n";  # Spacing
+			print "\n";  # Spacing
 
-	y_or_n ("Are these values correct ?") and last;
+			y_or_n ("Are these values correct ?") and last;
+		}
 
-	$first_name = confirm_default ("            First name: ", $first_name);
-	$last_name  = confirm_default ("             Last name: ", $last_name);
-	$username   = confirm_default ("              Username: ", ($username or lc (substr ($first_name, 0, 1).$last_name)));  
-	$e_mail     = confirm_default ("        E-mail address: ", ($e_mail or $username.'@'.hostname ()));
-	$data_dir   = confirm_default ("Default data directory: ", $data_dir);
+		$confirm_all = 0;
 
-	print "\n";  # Spacing
+		$first_name = confirm_default ("            First name", $first_name);
+		$last_name  = confirm_default ("             Last name", $last_name);
+		$username   = confirm_default ("              Username", ($username or lc (substr ($first_name, 0, 1).$last_name)));  
+		$e_mail     = confirm_default ("        E-mail address", ($e_mail or $username.'@'.hostname ()));
+		$data_dir   = confirm_default ("Default data directory", $data_dir);
 
+		print "\n";  # Spacing
+
+		$confirm_all = 1;
     }
     
     if (not -d $data_dir) {
-	my $y_or_n = confirm_default ("Directory \"$data_dir\" does not exist. Do you want to create it ?", "no");
+		my $y_or_n = confirm_default ("Directory \"$data_dir\" does not exist. Do you want to create it ?", "no");
 
-	if ((lc ($y_or_n) eq 'y') or (lc ($y_or_n) eq 'yes')) {
-	    mkdir ($data_dir, 0755) or croak "Unable to create directory \"$data_dir\". $!";
-	}
+		if ((lc ($y_or_n) eq 'y') or (lc ($y_or_n) eq 'yes')) {
+			mkdir ($data_dir, 0755) or croak "Unable to create directory \"$data_dir\". $!";
+		}
     }
 
-
-	my $hashed_password;
-    ($password, $hashed_password) = get_password ("Password: ", 6);
+    my ($password, $hashed_password) = get_password ("Password: ", 6);
 
     print "\n";  # Spacing
 
@@ -413,7 +423,7 @@ sub create_experimenter {
 }
 
 sub init_configuration {
-my $factory = OME::Factory->new();
+	my $factory = OME::Factory->new();
 
     print_header "Initializing configuration";
 
@@ -451,9 +461,10 @@ my $factory = OME::Factory->new();
 
 
 sub update_configuration {
-my $session = shift;
-my $factory = $session->Factory();
-my $var;
+	my $session = shift;
+	my $factory = $session->Factory();
+	my $var;
+
 	# Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
 	# was ignored due to a pre-existing ocnfiguration
 	$var = $factory->findObject('OME::Configuration::Variable',
@@ -614,14 +625,15 @@ sub load_analysis_core {
 #*********
 
 sub execute {
-use Log::Agent;
-if ($ENV{OME_DEBUG} > 0) {	
-	logconfig(
-		-prefix      => "$0",
-		-level    => 'debug'
-	);
-	print STDERR "Debugging on\n";
-}
+	if ($ENV{OME_DEBUG}) {	
+		logconfig(
+			-prefix      => "$0",
+			-level    => 'debug'
+		);
+	
+		print STDERR "Debugging on\n";
+	}
+
     my $retval;
 
     print_header "Database Bootstrap";
@@ -643,7 +655,10 @@ if ($ENV{OME_DEBUG} > 0) {
     $POSTGRES_USER = $environment->postgres_user()
 	or croak "Unable to retrieve POSTGRES_USER!";
     $ADMIN_USER = $environment->admin_user();
-    $ADMIN_UID = getpwnam ($ADMIN_USER);
+
+	if ($ADMIN_USER) {
+    	$ADMIN_UID = getpwnam ($ADMIN_USER);
+	}
 
     # Set our installation home
     $INSTALL_HOME = $OME_TMP_DIR."/install";
@@ -683,14 +698,16 @@ if ($ENV{OME_DEBUG} > 0) {
 
     # Check the DB version
     my $db_db_version = get_db_version();
-    print "Form DB, got DB_Version = '$db_db_version'\n";
+	if ($db_db_version) {
+    	print "Form DB, got DB_Version = '$db_db_version'\n";
+	}
     croak "Found existing database, but its too old to be updated.\n".
         "You will have to upgrade it manually.  Sorry\n"
         if defined $db_db_version and $db_db_version eq '0';
 
     if (defined $db_db_version) {
         print "Found existing database version $db_db_version.";
-	    $environment->flag ("UPDATE");
+	    $environment->set_flag ("UPDATE");
         if ($db_db_version ne $DB_VERSION) {
             print "  Updating to $DB_VERSION.\n";
             $retval = update_database($db_db_version);

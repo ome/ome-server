@@ -501,7 +501,7 @@ sub execute {
     chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
     # Only if we're not just running a Perl check
-    unless ($environment->flag ("PERL_CHECK")) {
+    unless ($environment->get_flag ("PERL_CHECK")) {
 		print_header ("Core Perl Module Setup");
     
 		print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
