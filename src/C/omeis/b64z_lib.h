@@ -54,11 +54,7 @@
 #define B64Z_RUN 0
 #define B64Z_FINISH 1
 
-typedef enum {
-	bzip2,
-	zlib,
-	none
-} compression_type;
+#define compression_type enum { bzip2, zlib, none }
 
 typedef struct {
 	bz_stream *bzip_stream;
