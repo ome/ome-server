@@ -13,8 +13,12 @@
 %                     collective predictive abilities.
 %   'sigs_excluded' - sigs that could not be discretized and 
 %                     therefore were excluded.
+%   'discWalls'     - cell array with bin wall locations
+%   'bnet'          - Bayesian Belief Network object
+%   'conf_mat'      - Confusion Matrix summarizing results classifier
+%                     achieved during training
 
-function [sigs_used, sigs_used_col, sigs_excluded, discWalls, bnet] = ...
+function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ...
 	ML_BayesNet_Trainer(contData)
 	
 contData    = double(contData);
@@ -40,24 +44,24 @@ end
 discData(end,:) = contData(end,:); % restoring the class signatures
 discData = uint8(discData);
 
-% Uncomment the line below to take a look at a feature graph
+% Uncomment the line below to visualize the feature's discriminating power
 % plot_discData(discData([555 end],:));
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % find optimal subset of signatures                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded] = FindSignatureSubset(discData, discWalls);
+[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = FindSignatureSubset(discData, discWalls);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% build the bayes net (BNET)                                    %
+% build the Bayes Net (BNET)                                    %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 discData = discData(sigs_used,:);
-discWalls = discWalls{:,[sigs_used]};
+size(discWalls)
+sigs_used
 
 [rows cols] = size(discData);
-for i=1:length(discWalls)
-	node_sizes(i) = length(discWalls{i}) + 1;
+for i=1:length(sigs_used)
+	node_sizes(i) = length(discWalls(sigs_used(i))) + 1;
 end
 node_sizes(end+1) = length(unique(contData(end,:))); % how many different classes
                                                      %there are

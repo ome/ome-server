@@ -28,7 +28,7 @@
 %             Tom Macura <tmacura@nih.gov>
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded] = ...
+function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = ...
 			FindSignatureSubset (discData, discWalls, test_samples, iterations)
 
 % INPUT NEEDED      
@@ -48,6 +48,8 @@ function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded] = ...
 %                     collective predictive abilities.
 %   'sigs_excluded' - sigs that could not be discretized and 
 %                     therefore were excluded.
+%   'conf_mat'      - Confusion Matrix summarizing results classifier
+%                     achieved during training
 % INTRODUCTION
 %   Instead of trying to figure out how to classify the test set, N-fold-verification
 %   looks to see how to classify a portion of the training set.  Assuming that 
@@ -82,47 +84,55 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [hei len] = size(discData);
 sigs_excluded = [];
-good_sigs = [];
+sigs_left = [];
 
 % Only signatures that can be discretized are used for classification
 for i = 1:hei-1                  % don't involve the class row, (-1)
     if length(discWalls{i}) == 0
     	sigs_excluded = [sigs_excluded i];
     else
-        good_sigs = [good_sigs i];
+        sigs_left = [sigs_left i];
     end
 end
 length_sigs_excl = length(sigs_excluded)
-length_good_sigs = length(good_sigs)
+length_sigs_left = length(sigs_left)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find initial best signature to classify with                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for i = 1:length(good_sigs)
-	ind_score(i) = n_fold_validate(good_sigs(i), discData, discWalls, test_samples, iterations);
-	fprintf(1, 'Signature: %03d -- Score: %f\n', good_sigs(i), ind_score(i));
+for i = 1:length(sigs_left)
+	conf_mat = n_fold_validate(sigs_left(i), discData, discWalls, test_samples, iterations);
+	ind_score(i) = ConfusionMatrixScore(conf_mat);
+	fprintf(1, 'Signature: %03d -- Score: %f\n', sigs_left(i), ind_score(i));
 end
 
-[big_score score_place] = max(ind_score);                                              
-sigs_used               = good_sigs(score_place);
+[big_score, score_place] = max(ind_score);                                              
 sigs_used_ind           = big_score;
 sigs_used_col           = big_score;
-sigs_left               = setdiff(good_sigs, good_sigs(score_place));
-ind_score               = setdiff(ind_score, ind_score(score_place));
+sigs_used               = sigs_left(score_place);
+sigs_left               = [sigs_left(1:score_place-1) sigs_left(score_place+1:end)]
+ind_score               = [ind_score(1:score_place-1) ind_score(score_place+1:end)]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % greedy hill-climbing                                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+conf_mat = cell(1,length(sigs_left));
 done = 0;
 while ~done
 
 	% find signature with largest impact on cumulative score
 	for i = 1:length(sigs_left)
-        score(i) = n_fold_validate([sigs_used sigs_left(i)], discData, discWalls, test_samples, iterations);
+        conf_mat{i} = n_fold_validate([sigs_used sigs_left(i)], discData, discWalls, test_samples, iterations);
+		score(i) = ConfusionMatrixScore(conf_mat{i});
 		fprintf(1, 'Signature: %03d -- Cum. Score: %f\n', sigs_left(i), score(i));
 	end
 
-    [temp_score temp_place] = max(score);
+    [temp_score, temp_place] = max(score)
+    sigs_used
+    sigs_used_ind
+    sigs_used_col
+    sigs_left
+    ind_score
     
     % add signature if it improves cumulative score
     if temp_score > big_score                                      
@@ -131,19 +141,21 @@ while ~done
         sigs_used_ind  = [sigs_used_ind ind_score(temp_place)];
         sigs_used_col  = [sigs_used_col temp_score];
         
+		sigs_left = [sigs_left(1:temp_place) sigs_left(temp_place+1:end)];
+		ind_score = [ind_score(1:temp_place) ind_score(temp_place+1:end)];
+		
 		% optimal performanced reached, additional signatures are superflous
         if ( abs(temp_score-1) < 0.01)                                      
             done = 1;
         end
-		sigs_left = setdiff(good_sigs, good_sigs(temp_place));
-		ind_score = setdiff(ind_score, ind_score(temp_place));
 	else
     	% additional signature did not improve score
         done = 1;
     end
 end
+conf_mat = conf_mat{temp_place};
 
-function [score] = n_fold_validate (sigs_to_use, discData, discWalls, test_samples, iterations)
+function [conf_mat] = n_fold_validate (sigs_to_use, discData, discWalls, test_samples, iterations)
 % INPUTS NEEDED:
 %   'sigs_to_use'   - vector of integers representing signatures you want to use
 %   'discData'      - data, in the form where rows are signatures and
@@ -153,7 +165,9 @@ function [score] = n_fold_validate (sigs_to_use, discData, discWalls, test_sampl
 %   'test_samples'  - how many instances per class to use in testing set (optional)
 %   'iterations'    - how many times to perform n_fold_validation (optional)
 % OUTPUTS GIVEN:
-%   'score'         - how well signature set fared at n_fold_verification
+%   'conf_mat'      - confusion matrix summarizing how signature set fared at
+%                     n_fold_verification
+%
 % NOTES:
 %   This group of code is a rough driver to quickly pull in discretized data,
 %   learn a classifier, and then output how the classifer fared on multiple 
@@ -176,7 +190,7 @@ if (test_samples < 1)
 	end
 
 	% 15 percent of instances for testing, 85 percent for training
-	test_samples = ceil(.25*min(ind_class_size));     
+	test_samples = ceil(.15*min(ind_class_size));     
 end
 
 if (iterations < 1) 
@@ -190,12 +204,10 @@ abso = 0; % variable to hold sums of 'all or nothing' decisions
 for i = 1:iterations
 	% remember about discData(end,:). That is the row of classes 
 	[percentages absolutes]  = TrainAndTest(discData([sigs_to_use end],:), discWalls(sigs_to_use), test_samples); 
-	
-	% DEBUG lets take a look
-	absolutes;
+
     abso = abso + absolutes;
 end
-score = (sum(diag(abso))/(iterations*test_samples*class_number));
+conf_mat = abso
 
 function [percentages, absolutes] = TrainAndTest(discData, discWalls, test_samples)
 % INPUTS NEEDED:  
@@ -275,7 +287,6 @@ discTestData  = discData(:,discTest_cols);
 node_sizes = zeros(1,length(discWalls));
 for i = 1:length(discWalls)                         % setting 'node sizes' - a variable 
     node_sizes(i) = (length(discWalls{i}) + 1);
-   % necessary for the K2 algorithm. 
 end                                                 % +1 since there is always one
 node_sizes(end+1) = class_number;                   % more bin than walls.
 
@@ -283,7 +294,7 @@ node_sizes(end+1) = class_number;                   % more bin than walls.
 dag = false(hei, hei);
 dag([1:end-1],end) = true;
 
-bnet = mk_bnet(double(dag), double(node_sizes)); % generate bayes net
+bnet = mk_bnet(double(dag), double(node_sizes)); % generate bayes net, some datatype issues
 
 for i = 1:hei                               
     bnet.CPD{i} = tabular_CPD(bnet,i);          % make each node 'tabular' so that it knows 
@@ -300,7 +311,11 @@ percentages = zeros(class_number, class_number);
 for u = 1:len % for each instance
 	actual_class = discTestData(end,u);
 	marginal_probs = BayesNetClassifier(bnet, discTestData(1:end-1,u));
+	
+	% find which classes are predicted
 	predicted_class = find (marginal_probs == max(marginal_probs));
+	predicted_class = randperm(length(predicted_class)); % randomize the predicted class
+	predicted_class = predicted_class(1);                % select the first class
 	
 	if (sum(marginal_probs) == 0)
 		fprintf (1, 'All O marginal_probs happened. SHIT\n');
