@@ -43,6 +43,8 @@ import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.nodes.PText;
+import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.geom.Point2D;
 import java.awt.Color;
 import java.awt.Font;
@@ -55,18 +57,25 @@ import java.awt.Font;
 public abstract class PToolTipHandler extends PBasicInputEventHandler {
 
 	protected static double 	SCALE_THRESHOLD=0.8;
-	protected static Color	TIP_COLOR = Color.BLUE;
+	protected static Color BORDER_COLOR = new Color(102,102,153);
+	protected static Color FILL_COLOR = new Color(153,153,204);
 	protected PCamera camera;
-	protected PText tooltipNode;
-	protected Font font = new Font("Helvetica",Font.BOLD,14);
 	
+	protected Font font = new Font("Helvetica",Font.PLAIN,12);
+	
+	protected PPath tooltip;
+	protected PText tooltipText;
+	
+	protected boolean displayed = false;
 
 	PToolTipHandler(PCamera camera) {
 		this.camera = camera;
-		tooltipNode = new PText();
-		tooltipNode.setFont(font);
-		camera.addChild(tooltipNode);
-		tooltipNode.setPaint(TIP_COLOR);
+		tooltip = new PPath();
+		tooltip.setPaint(FILL_COLOR);
+		tooltip.setStrokePaint(BORDER_COLOR);
+		tooltipText = new PText();
+		tooltipText.setFont(font);
+		tooltip.addChild(tooltipText);
 	}
 	
 	
@@ -89,11 +98,27 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 			// layers can be in the way, so we
 				//can't go localToGlobal.
 		event.getPath().canvasToLocal(p, camera);
-		tooltipNode.setOffset(p.getX() + 8, p.getY() - 8);
+		tooltip.setOffset(p.getX() + 8, p.getY() - 8);
 	}
 	
 	public abstract void  setToolTipString(PInputEvent event);
 	
+	public void setToolTipText(String s) {
+		if (s.compareTo("") ==0) {
+			if (displayed == true)
+				camera.removeChild(tooltip);
+			displayed = false;   
+		}
+		else {
+			if (displayed == false)
+				camera.addChild(tooltip);
+			displayed = true;
+			tooltipText.setText(s);
+			PBounds b = tooltipText.getFullBounds();
+			PBounds newBounds = new PBounds(0,0,b.getWidth(),b.getHeight());
+			tooltip.setPathTo(newBounds);
+		}	
+	}
 	
 }
 
