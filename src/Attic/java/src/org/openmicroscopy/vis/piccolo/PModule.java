@@ -102,7 +102,7 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final Color DEFAULT_COLOR=Color.black;
 	private static final Color DEFAULT_FILL = Color.lightGray;
 	
-	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(3.0f); 
+	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(5.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
 
 	
@@ -366,13 +366,19 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	public void setHighlighted(boolean v) {
 		if (v == true)
-			setStrokePaint(PConstants.HIGHLIGHT_COLOR);
+			setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
 		else
 			setStrokePaint(DEFAULT_COLOR);
 		repaint();
 	}
 	
-	
+	public void setLinkableHighlighted(boolean v) {
+		if (v == true)
+			setStrokePaint(PConstants.HIGHLIGHT_COLOR);
+		else
+			setStrokePaint(DEFAULT_COLOR);
+		repaint();
+	}
 	public Module getModule() {
 		return module;
 	}
