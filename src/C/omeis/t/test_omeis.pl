@@ -66,17 +66,20 @@ if( $system_return == 0 ) {
 
 $n_tests++;
 print "testing ImportOMEfile...\n";
-$system_return = system( "../omeis Method=ImportOMEfile FileID=$fileID > ImportOMEfile; diff ImportOMEfile _ImportOMEfile > /dev/null" );
-if( $system_return == 0 ) {
+open( IMPORT_OME_FILE, "../omeis Method=ImportOMEfile FileID=$fileID > ImportOMEfile; diff ImportOMEfile _ImportOMEfile |" );
+$returnMsg = <IMPORT_OME_FILE>;
+close( IMPORT_OME_FILE );
+if( $returnMsg =~ m/^124c124\s*<\s*<External xmlns="http:\/\/www\.openmicroscopy\.org\/XMLschemas\/BinaryFile\/RC1\/BinaryFile\.xsd" href="\d+" SHA1=""\/><\/Pixels>\s*---\s*>\s*<External xmlns="http:\/\/www\.openmicroscopy\.org\/XMLschemas\/BinaryFile\/RC1\/BinaryFile\.xsd" href="\d+" SHA1=""\/><\/Pixels>\s*$/ ) {
 	print "\tTest Passed.\n" ;
 	$n_passes++; 
 } else {
-	print "\tTest Failed. ImportOMEfile return message is in file 'ImportOMEfile'\n";
+	print "\tTest Failed. $returnMsg ImportOMEfile return message is in file 'ImportOMEfile'\n";
 }
 
+print "Passed all $n_tests tests!\n" if ( $n_tests == $n_passes );
+print "Failed ".($n_tests - $n_passes)."/$n_tests tests.\n" unless ( $n_tests == $n_passes );
+
 =pod
-echo "testing ImportOMEfile..."
-../omeis Method=ImportOMEfile FileID=1 > SampleAfterImport.ome; diff SampleAfterImport.ome _SampleAfterImport.ome
 
 # add tests for NewPixels, SetPixels, SetPlane, SetStack, SetROI, ConvertFile, and FinishPixels
 echo "testing GetPlaneStats..."
