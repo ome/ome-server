@@ -187,7 +187,7 @@ sub get_postgres_user {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
-	
+
     print_header ("Core System Setup");
 
     #********
@@ -221,7 +221,7 @@ sub execute {
 			print "       OME Unix  username: ", BOLD, $OME_USER      , RESET, "\n";
 			print "    Apache Unix  username: ", BOLD, $APACHE_USER   , RESET, "\n";
 			print " Postgres admin  username: ", BOLD, $POSTGRES_USER , RESET, "\n";
-			print "   Special Unix  username: ", BOLD, $ADMIN_USER    , RESET, "\n";
+			print "  Administrator  username: ", BOLD, $ADMIN_USER    , RESET, "\n";
 
 			print "\n";  # Spacing
 
@@ -250,8 +250,20 @@ sub execute {
 		$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
 
 		# Get and/or update our "special" Unix user information
-		$ADMIN_USER =
-			confirm_default ("Unix user to include in the OME group (optional, i.e. your real username)", $ADMIN_USER || "");
+		if (y_or_n ("Set up a separate admin user for OME (i.e. your account)?") ) {
+			my $admin_def = $ADMIN_USER;
+			if (not defined $admin_def or not $admin_def) {
+			# Who owns the cwd?
+				$admin_def  = getpwuid((stat ('.'))[4]); 
+			}
+			undef $ADMIN_USER;
+			while (not $ADMIN_USER) {
+				$ADMIN_USER = confirm_default ("Unix user to include in the OME group", $admin_def);
+				undef $ADMIN_USER unless getpwnam($ADMIN_USER);
+			}
+		} else {
+			$ADMIN_USER = '';
+		}
 
 		# Make sure the rest of the installation knows who the apache and ome users are
 		$environment->user($OME_USER);
