@@ -1,12 +1,4 @@
-<p class="ome_title">Create a:
-<select name="Type" onchange="if(this.value != '' ) { document.forms[0].submit(); } return false;">
-	<option value="">Select a Type</option>
-	<!-- TMPL_LOOP NAME=/custom/name-types_loop -->
-		<option value="<!-- TMPL_VAR NAME=formal_name -->" <!-- TMPL_VAR NAME=selected -->><!-- TMPL_VAR NAME=common_name --></option>
-	<!-- /TMPL_LOOP -->
-</select></p>
-<input type="hidden" name="action">
-
+<TMPL_INCLUDE NAME="Create_header.tmpl">
 <table cellpadding="3" cellspacing="1" class="ome_table" width="100%">
 <tr bgcolor="#FFFFFF">
 	<td>Name *</td>
