@@ -70,7 +70,6 @@ use strict;
 our $VERSION = '1.0';
 
 use OME::DBObject;
-use OME::DataType;
 use base qw(OME::DBObject);
 
 require OME::Analysis;
