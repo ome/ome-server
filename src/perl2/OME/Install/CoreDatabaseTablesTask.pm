@@ -98,7 +98,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.11";
+our $DB_VERSION = "2.10";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -346,9 +346,11 @@ sub create_database {
     $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
 
     print "  \\__ Adding PL-PGSQL language\n";
-    my @CMD_OUT = `su $POSTGRES_USER -c "$createlang plpgsql ome" 2>&1`;
-    die join ("\n",@CMD_OUT) if $? != 0;
-
+    my $iEUID = euid(scalar(getpwnam $POSTGRES_USER));
+    my @CMD_OUT = `$createlang plpgsql ome 2>&1`; # returns 0 if no error
+    die join ("\n",@CMD_OUT) if $CHILD_ERROR != 0;
+	euid($iEUID);
+	
     # Fix our little object ID bug
     print "  \\__ Fixing OID/INTEGER compatability bug\n";
     $dbh = DBI->connect("dbi:Pg:dbname=ome")
