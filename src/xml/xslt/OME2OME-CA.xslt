@@ -150,12 +150,7 @@
 				</xsl:element>
 				<xsl:apply-templates select = "OME:ExperimentRef"/>
 
-				<!-- These do not have semantic types -->
-				<!--xsl:apply-templates select = "OME:GroupRef"/-->
-				<!--xsl:apply-templates select = "OME:DatasetRef"/-->
-
 				<xsl:apply-templates select = "OME:InstrumentRef"/>
-				<xsl:apply-templates select = "OME:ObjectiveRef"/>
 				<xsl:apply-templates select = "OME:ImagingEnvironment"/>
 				<xsl:apply-templates select = "OME:Thumbnail"/>
 				<xsl:apply-templates select = "OME:ChannelInfo"/>
@@ -181,16 +176,6 @@
 			<xsl:apply-templates select = "." mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-	<!-- GroupRef
-	<xsl:template match = "OME:Image/OME:GroupRef">
-		<xsl:element name = "ImageGroup">
-			<xsl:attribute name = "ID">
-				<xsl:value-of select = "generate-id()"/>
-			</xsl:attribute>
-			<xsl:apply-templates select = "." mode = "MakeRefs"/>
-		</xsl:element>
-	</xsl:template>
-	 -->
 	<!-- InstrumentRef -->
 	<xsl:template match = "OME:Image/OME:InstrumentRef">
 		<xsl:element name = "ImageInstrument">
