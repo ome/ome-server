@@ -276,6 +276,7 @@ OID existOID;
 		sha1DB_close (myFile->DB);
 		myFile->DB = NULL;
 		DeleteFile (myFile);
+		myFile->ID = existOID;
 		return (existOID);
 	}
 

@@ -1155,6 +1155,7 @@ OID existOID;
 		sha1DB_close (myPixels->DB);
 		myPixels->DB = NULL;
 		DeletePixels (myPixels);
+		myPixels->ID = existOID;
 		return (existOID);
 	}
 
