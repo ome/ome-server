@@ -51,10 +51,15 @@ OME::Matlab - Perl interface to Matlab
 
 	my $array = OME::Matlab::Array->newDoubleScalar(4);
 	my $engine = OME::Matlab::Engine->open();
-	$engine->putVariable('x',$array);
+	my $outBuffer = " " x 512;
+	
+	$engine->setOutputBuffer($outBuffer, length($outBuffer));
+	$engine->putVariable('x', $array);
 	$engine->eval('y = x .* 8;');
+	
 	my $output = $engine->getVariable('y');
-
+	print "Matlab's Output:\n $outBuffer\n";
+	
 =head1 DESCRIPTION
 
 The OME::Matlab::* packages provide a Perl interface to an embedded
@@ -261,10 +266,19 @@ complexity.  (The complexity defaults to I<real> if unspecified.)
 
 =head2 newNumericMatrix
 
-	my $array = OME::Matlab::Array->newNumericMatrix($m,$n,[$complexity]);
+	my $array = OME::Matlab::Array->newNumericMatrix($m,$n,[$class],[$complexity]);
 
-Creates a new $m x $n matrix of class C<double> and the specified
-complexity.  (The complexity defaults to I<real> if unspecified.)
+Creates a new $m x $n matrix of the specified class and complexity.  
+(defaults to C<double> and I<real> resp)
+
+=head2 newNumericArray
+
+	my $array = OME::Matlab::Array->newNumericArray($class,$complexity,@dim);
+
+Creates a multidimensional matrix of the specified type $class and $complexity 
+(defaults to C<double> and I<real> resp). The matrix has scalar(@dim) dimensions as
+@dim is the dimesions list. Each element in the dimesions listg contains the size 
+of the array in the dimension.
 
 =head2 Memory management
 
