@@ -535,7 +535,7 @@ size_t stack_offset;
 		if (chSpec->black > stackInfoP->max) chSpec->black = stackInfoP->max;
 		if (chSpec->white < stackInfoP->min) chSpec->white = stackInfoP->min;
 		if (chSpec->white > stackInfoP->max) chSpec->white = stackInfoP->max;
-		if (chSpec->white < chSpec->black) chSpec->white = chSpec->black;
+		if (chSpec->white <= chSpec->black) chSpec->white = chSpec->black+1;
 		chSpec->scale =  255.0 / (chSpec->white - chSpec->black);
 	}
 	
