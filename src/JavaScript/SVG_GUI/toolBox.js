@@ -54,30 +54,30 @@ toolBox.prototype.padding = toolBox.padding;
 toolBox.prototype.menuBarText = 
 '<rect width="{$width}" height="15" fill="lightslategrey" opacity="0.9"/>';
 
-toolBox.prototype.hideControlText = 
-'<g>' +
-'	<g transform="rotate(90)">' +
-'		<path d="M -5,-3 l 0,6 l 9,-3 z" fill="purple" ' +
-'			stroke="green" stroke-width="1" opacity="0.9"/>' +
-'		<animateTransform attributeName="transform"' +
-'			type="rotate" from="90" to="0" dur="0.1s" fill="freeze"' +
-'			repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
-'		<animateTransform attributeName="transform"' +
-'			type="rotate" from="0" to="90" dur="0.1s" fill="freeze"' +
-'			repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
-'	</g>' +
-'</g>';
+toolBox.prototype.hideControlText =
+'<g>\
+	<g transform="rotate(90)">\
+		<path d="M -5,-3 l 0,6 l 9,-3 z" fill="purple" \
+			stroke="green" stroke-width="1" opacity="0.9"/>\
+		<animateTransform attributeName="transform"\
+			type="rotate" from="90" to="0" dur="0.1s" fill="freeze"\
+			repeatCount="0" restart="whenNotActive" begin="indefinite"/>\
+		<animateTransform attributeName="transform"\
+			type="rotate" from="0" to="90" dur="0.1s" fill="freeze"\
+			repeatCount="0" restart="whenNotActive" begin="indefinite"/>\
+	</g>\
+</g>';
 
 toolBox.prototype.GUIboxText = 
-'<g>' +
-'	<rect width="{$width}" height="{$height}" fill="darkgrey" opacity="0.8"/>' +
-'</g>';
-toolBox.prototype.fadeInText = 
-'<animate attributeName="opacity" from="0" to="1" dur="0.1s" fill="freeze"' +
-'	repeatCount="0" restart="whenNotActive"	begin="indefinite"/>';
+'<g>\
+	<rect width="{$width}" height="{$height}" fill="darkgrey" opacity="0.8"/>\
+</g>';
+toolBox.prototype.fadeInText =
+'<animate attributeName="opacity" from="0" to="1" dur="0.1s" fill="freeze" \
+	repeatCount="0" restart="whenNotActive"	begin="indefinite"/>';
 toolBox.prototype.fadeOutText = 
-'<animate attributeName="opacity" from="1" to="0" dur="0.1s" fill="freeze"' +
-'	repeatCount="0" restart="whenNotActive"	begin="indefinite"/>';
+'<animate attributeName="opacity" from="1" to="0" dur="0.1s" fill="freeze" \
+	repeatCount="0" restart="whenNotActive"	begin="indefinite"/>';
 toolBox.prototype.onSwitchText = 
 '<set attributeName="display" to="inline" begin="indefinite"/>';
 toolBox.prototype.offSwitchText = 
@@ -109,8 +109,9 @@ toolBox.prototype.GUIboxHideDelay = 1;
 *
 *****/
 function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText, noclip) {
-	if(arguments.length > 0 )
+	if(arguments.length > 0 ) {
 		this.init(x,y,width,height,menuBarText,hideControlText,GUIboxText, noclip);
+	}
 }
 
 /*****
@@ -140,10 +141,10 @@ toolBox.prototype.init = function( x, y, width, height, menuBarText,
 	this.noclip = noclip;
 	
 	// allow user defined custimization of apperance
-	if( menuBarText ) this.menuBarText = menuBarText;
-	if( hideControlText ) this.hideControlText = hideControlText;
-	if( GUIboxText ) this.GUIboxText = GUIboxText;
-}
+	if( menuBarText ) { this.menuBarText = menuBarText; }
+	if( hideControlText ) { this.hideControlText = hideControlText; }
+	if( GUIboxText ) { this.GUIboxText = GUIboxText; }
+};
 
 /*****
 *
@@ -156,8 +157,9 @@ toolBox.prototype.realize = function(svgParentNode) {
 
     this.buildSVG();
     this.addEventListeners();
-    if( this.nodes.label )
+    if( this.nodes.label ) {
     	this.nodes.menuBar.appendChild( this.nodes.label );
+    }
 };
 
 
@@ -175,13 +177,20 @@ toolBox.prototype.buildSVG = function() {
 	this.nodes.root = box;
 	this.nodes.parent.appendChild(box);
 	
+	// create menuBar
+	this.nodes.menuBar = svgDocument.createElementNS(svgns, 'g');
+	this.nodes.menuBar.appendChild( this.textToSVG(this.menuBarText) );
+	this.nodes.menuBar.setAttribute( 'name', 'menuBar' );
+	box.appendChild( this.nodes.menuBar );
+	var menuHeight = this.nodes.menuBar.getBBox().height;
+	
 	// Add toolBox components and keep track of them.
 	var GUIboxContainer = svgDocument.createElementNS(svgns, "g");
 	var GUIboxClip = svgDocument.createElementNS(svgns, "svg");
 	var GUIboxNoClip = svgDocument.createElementNS(svgns, "g");
 	GUIboxClip.setAttributeNS( null, "width", this.width );
 	GUIboxClip.setAttributeNS( null, "height", this.height );
-	if( this.noclip != null ) {
+	if( this.noclip !== null ) {
 		GUIboxNoClip.appendChild( this.textToSVG(this.GUIboxText) );
 		this.nodes.GUIbox = GUIboxNoClip.lastChild;
 	} else {
@@ -196,14 +205,6 @@ toolBox.prototype.buildSVG = function() {
 	this.nodes.GUIboxClip = GUIboxClip;
 	this.nodes.GUIboxNoClip = GUIboxNoClip;
 
-	// create menuBar. I'm putting stuff in it, so I'm making sure it has a g
-	// for a root node.
-	this.nodes.menuBar = svgDocument.createElementNS(svgns, 'g');
-	this.nodes.menuBar.appendChild( this.textToSVG(this.menuBarText) );
-	this.nodes.menuBar.setAttribute( 'name', 'menuBar' );
-	box.appendChild( this.nodes.menuBar );
-	var menuHeight = this.nodes.menuBar.getBBox().height;
-	
 	// create hideControl, move into position, & append to menuBar
 	this.nodes.menuBar.appendChild( this.textToSVG(this.hideControlText) );
 	this.nodes.hideControl = this.nodes.menuBar.lastChild;
@@ -244,7 +245,7 @@ toolBox.prototype.buildSVG = function() {
 	this.nodes.hideControl.setAttribute("transform", "translate(" + hideX + "," + hideY +")" );
 
 	GUIboxContainer.setAttributeNS(null, "transform", "translate(0,"+ menuHeight +")");
-}
+};
 
 /*****
 *
@@ -252,11 +253,12 @@ toolBox.prototype.buildSVG = function() {
 *
 *****/
 toolBox.prototype.closeOnMinimize = function(val) {
-	if(val) 
+	if(val) {
 		this.CLOSE_ON_MINIMIZE = true;
-	else
+	} else {
 		this.CLOSE_ON_MINIMIZE = false;
-}
+	}
+};
 
 /****************   Get functions   **********************/
 
@@ -267,7 +269,7 @@ toolBox.prototype.closeOnMinimize = function(val) {
 *****/
 toolBox.prototype.getGUIbox = function(){
 	return this.nodes.GUIbox;
-}
+};
 
 /*****
 *
@@ -276,7 +278,7 @@ toolBox.prototype.getGUIbox = function(){
 *****/
 toolBox.prototype.getGUIboxNoClip = function(){
 	return this.nodes.GUIboxNoClip;
-}
+};
 
 /*****
 *
@@ -285,7 +287,7 @@ toolBox.prototype.getGUIboxNoClip = function(){
 *****/
 toolBox.prototype.getMenuBar = function() {
 	return this.nodes.menuBar;
-}
+};
 
 /*****
 *
@@ -294,7 +296,7 @@ toolBox.prototype.getMenuBar = function() {
 *****/
 toolBox.prototype.getScale = function() {
 	return this.scale;
-}
+};
 
 /****************   Set functions   **********************/
 
@@ -308,14 +310,16 @@ toolBox.prototype.setLabel = function(x, y, content) {
 	if(!this.nodes.label) {
 		this.nodes.label = svgDocument.createElementNS( "http://www.w3.org/2000/svg", "text" );
 		this.nodes.label.appendChild( svgDocument.createTextNode(content) );
-    	if( this.nodes.menuBar )
+    	if( this.nodes.menuBar ) {
     		this.nodes.menuBar.appendChild( this.nodes.label );
+    	}
     }
-    else
+    else {
     	this.nodes.label.firstChild.data = content;
-	if(x!=null) this.nodes.label.setAttribute( "x", x );
-	if(y!=null) this.nodes.label.setAttribute( "y", y );
-}
+    }
+	if(x !== null) { this.nodes.label.setAttribute( "x", x ); }
+	if(y !== null) { this.nodes.label.setAttribute( "y", y ); }
+};
 
 /*****
 
@@ -325,11 +329,12 @@ alter the size of the toolbox
 			
 *****/
 toolBox.prototype.setScale = function(scale) {
-	if(scale < 0) return;
+	if(scale < 0) { return; }
 	this.scale = scale;
-	if(this.nodes.root)
+	if(this.nodes.root) {
 		this.nodes.root.setAttribute("transform", "translate( "+this.x+","+this.y+") scale("+this.scale+")");
-}
+	}
+};
 
 /*****
 *
@@ -363,7 +368,7 @@ toolBox.prototype.drawMenuTop = function() {
 		this.nodes.root.removeChild( this.nodes.menuBar );
 		this.nodes.root.appendChild( this.nodes.menuBar );
 	}
-}
+};
 
 /*****
 *
@@ -386,47 +391,53 @@ toolBox.prototype.drawGUITop = function() {
 
 
 toolBox.prototype.toggle = function() {
-	if(this.hidden)
+	if(this.hidden) {
 		this.unhide();
-	else
+	} else {
 		this.hide();
+	}
 };
 
 
 toolBox.prototype.hide = function() {
-	if( this.hidden == true ) return;
+	if( this.hidden === true ) { return; }
 	this.hidden = true;
 	
 	// begin animations
-	if( this.noclip != null )
+	if( this.noclip !== null ) {
 		this.nodes.GUIboxClip.appendChild( 
 			this.nodes.GUIboxNoClip.removeChild( this.nodes.GUIbox ) 
 		);
-	if(this.hideControlAnimate1)
+	}
+	if(this.hideControlAnimate1) {
 		this.hideControlAnimate1.beginElement();
+	}
 	this.GUIboxAnimate1.beginElement();
 	this.GUIboxOff.beginElementAt(this.GUIboxHideDelay);
-	if(this.CLOSE_ON_MINIMIZE)
+	if(this.CLOSE_ON_MINIMIZE) {
 		this.rootOff.beginElementAt(this.GUIboxHideDelay);
-	
+	}
 };
 
 
 toolBox.prototype.unhide = function() {
-	if( this.hidden == false ) return;
+	if( this.hidden === false ) { return; }
 	this.hidden = false;
 	
 	// begin animations
-	if(this.hideControlAnimate2)
+	if(this.hideControlAnimate2) {
 		this.hideControlAnimate2.beginElement();
+	}
 	this.GUIboxOn.beginElement();
 	this.GUIboxAnimate2.beginElement();
-	if(this.CLOSE_ON_MINIMIZE)
+	if(this.CLOSE_ON_MINIMIZE) {
 		this.rootOn.beginElement();
-	if( this.noclip != null )
+	}
+	if( this.noclip !== null ) {
 		this.nodes.GUIboxNoClip.appendChild( 
 			this.nodes.GUIboxClip.removeChild( this.nodes.GUIbox ) 
 		);
+	}
 };
 
 
@@ -443,10 +454,6 @@ toolBox.prototype.addEventListeners = function() {
 	this.nodes.menuBar.addEventListener("mousedown", this, false);
 	this.nodes.menuBar.addEventListener("mouseup", this, false);
 	this.nodes.hideControl.addEventListener("click", this, false);
-	// these mouseover events are to render either the menu bar or gui box on top.
-	// this keeps expanding menus from one from being rendered behind the other
-	this.nodes.menuBar.addEventListener("mouseover", this, false);
-	this.nodes.GUIbox.addEventListener("mouseover", this, false);
 	// magic to make this toolbar rendered on top of it's siblings when it gets a DOM focus
 	this.nodes.root.addEventListener("DOMFocusIn", this, false);
 };
@@ -454,28 +461,24 @@ toolBox.prototype.addEventListeners = function() {
 
 /************   Event handlers   ************/
 
-
+// click and drag
 toolBox.prototype.mousedown = function(e) {
 	svgDocument.documentElement.addEventListener("mousemove", this, false);
 	this.localPoint = this.getUserCoordinate(this.nodes.root, e.clientX, e.clientY);
+	// disable other event listeners while dragging
+	this.nodes.root.removeEventListener("DOMFocusIn", this, false);
 };
 
-
+// end click and drag
 toolBox.prototype.mouseup = function(e) {
 	svgDocument.documentElement.removeEventListener("mousemove", this, false);
+	// re-enable event listeners
+	this.nodes.root.addEventListener("DOMFocusIn", this, false);
 };
 
 
 toolBox.prototype.mousemove = function(e) {
 	this.move(e);
-};
-
-toolBox.prototype.mouseover = function(e) {
-	if( e.currentTarget.getAttribute('name') == 'menuBar' ) {
-		this.drawMenuTop();
-	} else if( e.currentTarget.getAttribute('name') == 'GUIbox' ) {
-		this.drawGUITop();
-	}
 };
 
 
@@ -493,11 +496,14 @@ toolBox.prototype.DOMFocusIn = function(e) {
 function findAnimationsInNode( node ) {
 	var animations =
 		node.getElementsByTagNameNS( svgns, "animateTransform");
-	if(animations.length ==0)
+	if(animations.length === 0) {
 		animations = node.getElementsByTagNameNS( svgns,"animate");
-	if(animations.length ==0)
+	}
+	if(animations.length === 0) {
 		animations = node.getElementsByTagNameNS( svgns,"animateMotion");
-	if(animations.length ==0)
+	}
+	if(animations.length === 0) {
 		animations = node.getElementsByTagNameNS( svgns,"animateColor");
+	}
 	return animations;
 }
