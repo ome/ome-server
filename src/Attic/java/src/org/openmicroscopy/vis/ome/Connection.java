@@ -110,6 +110,10 @@ public class Connection {
 		this.session = session;
 	}
 	
+	public Session getSession() {
+		return session;
+	}
+	
 	public void setFactory(Factory factory) {
 		this.factory = factory;
 	}
@@ -154,6 +158,10 @@ public class Connection {
 	
 	public ChainInfo getChainInfo(int i) {
 		return chains.getChainInfo(i);
+	}
+	
+	public void addChain(ChainInfo info) {
+		chains.addChain(info);
 	}
 	
 	/**
