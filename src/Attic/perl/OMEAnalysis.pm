@@ -96,23 +96,12 @@ sub GetHTMLParams {
 
 # GetSelectedDatasets([wavelength])
 # ---------------------------------
-# Retrieves the selected datasets from the OME system.  If a
-# wavelength is specified, the only the datasets matching the
-# specified wavelength are returned.
+# Retrieves the selected datasets from the OME system.  Override this
+# to filter the list if the user can specify extra constraints.
 
 sub GetSelectedDatasets {
-    my $self         = shift;
-    my @result;
-    my $dataset;
-    my $datasets     = $self->{OME}->GetSelectedDatasetObjects();
-    my $wavelength   = shift;
-    
-    foreach $dataset (@$datasets) {
-	next if defined $wavelength and exists $dataset->{Wave} and $dataset->{Wave} ne $wavelength;
-	push(@result,$dataset);
-    }
-
-    return \@result;
+    my $self = shift;
+    return $self->{OME}->GetSelectedDatasetObjects();
 }
 
 # StartAnalysis(Parameter hash)
@@ -146,13 +135,14 @@ sub FinishAnalysis {
 # PerformAnalysis(Input parameters)
 # ---------------------------------
 # Performs the entire analysis process, including setup and cleanup.
-# Performs the analysis on the datasets selected by the user in the
-# OME interface.
+# The analysis is performed on whichever datasets are returned by
+# GetSelectedDatasets.  (By default, the datasets selected by the
+# user.)
 
 sub PerformAnalysis {
-    my $self   = shift;
-    my $params = shift;
-    my $OME    = $self->{OME};
+    my $self       = shift;
+    my $params     = shift;
+    my $OME        = $self->{OME};
     
     $self->StartAnalysis($params);
 
@@ -167,20 +157,21 @@ sub PerformAnalysis {
 }
 
 
-# ProcessOutput(AnalysisID, Filename, ColumnKey, ColumnKeyRE)
+# ProcessOutput(AnalysisID, Filename, [columnKey, columnKeyRE])
 # -----------------------------------------------------------
 # Processes the tab-delimited output of an external analysis program.
 # The first line of output should be column headings.  One feature
 # will be added to the dataset for each subsequent line of output.
-# Allowed columns are specified by the ColumnKey and ColumnKeyRE
-# hashes.
+# Allowed columns are specified by the columnKey and columnKeyRE
+# hashes.  If columnKey and columnKeyRE aren't passed in as
+# parameters, they are taken from instance variables of the same name.
 #
-# The ColumnKey hash defines columns whose headings are expected to
+# The columnKey hash defines columns whose headings are expected to
 # have an exact match.  The column heading is the hash key.  The
 # values are table column definitions which will be used by the
 # OMEpl::WriteFeatures method.
 #
-# The ColumnKeyRE hash defines columns whose headings should match the
+# The columnKeyRE hash defines columns whose headings should match the
 # given regular expression.  Column headings that don't match a
 # heading specified above are searched against these REs.  The first
 # parenthesis group in the RE will be pushed onto the end of each of

@@ -77,6 +77,21 @@ sub new {
     return $self;
 }
 
+sub GetSelectedDatasets {
+    my $self         = shift;
+    my @result;
+    my $dataset;
+    my $datasets     = $self->SUPER::GetSelectedDatasets();
+    my $wavelength   = $self->{wavelength};
+    
+    foreach $dataset (@$datasets) {
+	next if defined $wavelength and exists $dataset->{Wave} and $dataset->{Wave} ne $wavelength;
+	push(@result,$dataset);
+    }
+
+    return \@result;
+}
+
 sub StartAnalysis {
     my $self   = shift;
     my $params = shift;
