@@ -81,135 +81,130 @@ multipaneToolBox.prototype.updateLabel = function(val) {
 
 /*****
 
-	addLayer( newLayer, name )
-		adds a single layer
-		newLayer is a single SVG node
-		name is optional. If given, you may refer to the layer by name instead of number.
-		if called without any parameters, it will make a new empty layer
-		returns index to newLayer
+	addPane( newPane, name )
+		adds a single pane
+		newPane is a single SVG node
+		name is optional. If given, you may refer to the pane by name instead of number.
+		if called without any parameters, it will make a new empty pane
+		returns index to newPane
 	
 	tested
 
 *****/
-multipaneToolBox.prototype.addLayer = function(newLayer, name) {
-	var i = ( name ? name : this.layers.length )
+multipaneToolBox.prototype.addPane = function(newPane, name) {
+	var i = ( name ? name : this.panes.length )
 
-	//	make a new layer, turn its display off
-	this.layers[i] = svgDocument.createElementNS(svgns, 'g');
-	this.layers[i].setAttribute("display","none");
-	this.getGUIbox().appendChild(this.layers[i]);
+	//	make a new pane, turn its display off
+	this.panes[i] = svgDocument.createElementNS(svgns, 'g');
+	this.panes[i].setAttribute("display","none");
+	this.getGUIbox().appendChild(this.panes[i]);
 
-	//	add layer content
-	if(newLayer)
-		this.layers[i].appendChild(newLayer);
+	//	add pane content
+	if(newPane)
+		this.panes[i].appendChild(newPane);
 
-	// return index to layer
+	// return index to pane
 	return i;
 }
 
 /*****
 
-	addLayers( newLayers )
-		adds multiple layers at once
-		newLayers is an array of SVG nodes
-		returns array of indexes to layers
+	addPanes( newPanes )
+		adds multiple panes at once
+		newPanes is an array of SVG nodes
+		returns array of indexes to panes
 		
 	untested
 	
 *****/
-multipaneToolBox.prototype.addLayers = function(newLayers) {
+multipaneToolBox.prototype.addPanes = function(newPanes) {
 	var indexes = new Array();
-	for(var i in newLayers)
-		indexes.push(this.addLayer(newLayers[i]));
+	for(var i in newPanes)
+		indexes.push(this.addPane(newPanes[i]));
 	return indexes;
 }
 
 /*****
 
-	addLayerText( layerText, name )
-		adds a layer, makes content from SVG text
-		layerText is the layer content as SVG tags
-		name is optional. If given, you may refer to the layer by name instead of number.
-		returns index to newLayer
+	addPaneText( paneText, name )
+		adds a pane, makes content from SVG text
+		paneText is the pane content as SVG tags
+		name is optional. If given, you may refer to the pane by name instead of number.
+		returns index to newPane
 		
 	tested
 	
 *****/
-multipaneToolBox.prototype.addLayerText = function( layerText, name ) {
-	return this.addLayer( this.textToSVG( layerText ), name );
+multipaneToolBox.prototype.addPaneText = function( paneText, name ) {
+	return this.addPane( this.textToSVG( paneText ), name );
 }
 
 /*****
 
-	addLayersText( layerTextArray )
-		adds multiple layers, makes content from SVG text
-		layerTextArray is an array of SVG tags
-		returns array of indexes to layers
+	addPanesText( paneTextArray )
+		adds multiple panes, makes content from SVG text
+		paneTextArray is an array of SVG tags
+		returns array of indexes to panes
 		
 	tested
 	
 *****/
-multipaneToolBox.prototype.addLayersText = function( layerTextArray ) {
+multipaneToolBox.prototype.addPanesText = function( paneTextArray ) {
 	var indexes = new Array();
-	for(i in layerTextArray)
-		indexes.push(this.addLayerText( layerTextArray[i] ));
+	for(i in paneTextArray)
+		indexes.push(this.addPaneText( paneTextArray[i] ));
 	return indexes;
 }
 
 /*****
 
-	changeLayer(layerIndex)
-		changes displayed layer to layerIndex
-		returns layer if successful
+	changePane(paneIndex)
+		changes displayed pane to paneIndex
+		returns pane if successful
 		returns null if unsuccessful
 		
 		untested
 	
 *****/
-multipaneToolBox.prototype.changeLayer = function(layerIndex) {
-	if(this.layers[layerIndex]) {
-		// switch layers, update pointer to displayed layer
+multipaneToolBox.prototype.changePane = function(paneIndex) {
+	if(this.panes[paneIndex]) {
+		// switch panes, update pointer to displayed pane
 		if(this.currentDisplay) {
-			this.layers[ this.currentDisplay ].setAttribute("display","none");
-			var Obbox = this.layers[ this.currentDisplay ].getBBox();
+			this.panes[ this.currentDisplay ].setAttribute("display","none");
+			var Obbox = this.panes[ this.currentDisplay ].getBBox();
 		}
-		this.layers[layerIndex].setAttribute("display","inline");
-		this.currentDisplay = layerIndex;
+		this.panes[paneIndex].setAttribute("display","inline");
+		this.currentDisplay = paneIndex;
 
 		// update label
 		if(this.UPDATE_LABEL)
-			this.setLabel(null, null, layerIndex);
-		// change size to match size of new layer
-		if(Obbox) {
-			if(Obbox.width>=0 && Obbox.height>=0) {
-				this.shrinkGUIboxWidth.setAttribute("from", Obbox.width + 2*Obbox.x);
+			this.setLabel(null, null, paneIndex);
+		// change size to match size of new pane
+		if(Obbox)
+			if(Obbox.height>=1)
 				this.shrinkGUIboxHeight.setAttribute("from", Obbox.height + 2*Obbox.y);
-			}
-		}
-		var Nbbox = this.layers[layerIndex].getBBox();
-		if(Nbbox.width>=1 && Nbbox.height>=1) {
-			this.shrinkGUIboxWidth.setAttribute("to", Nbbox.width + 2*Nbbox.x);
+		var Nbbox = this.panes[paneIndex].getBBox();
+		if(Nbbox.height>=1) {
 			this.shrinkGUIboxHeight.setAttribute("to", Nbbox.height + 2*Nbbox.y);
-			this.shrinkGUIboxWidth.beginElement();
 			this.shrinkGUIboxHeight.beginElement();
 		}
 	}
-	return this.layers[layerIndex];
+	return this.panes[paneIndex];
 }
 
 /*****
 
-	getLayerIndexes()
-		returns a complete list of layer indexes
+	getPaneIndexes()
+		returns a complete list of pane indexes
 		
 	untested
 	
 *****/
-multipaneToolBox.prototype.getLayerIndexes = function() {
-	var layerIndexes = new Array();
-	for(var i in this.layers)
-		layerIndexes.push(i);
-	return layerIndexes;
+multipaneToolBox.prototype.getPaneIndexes = function() {
+	var paneIndexes = new Array();
+	for(var i in this.panes)
+		paneIndexes.push(i);
+	return paneIndexes;
 }
 
 /********************************************************************************************/
@@ -229,7 +224,7 @@ multipaneToolBox.prototype.init = function( x, y, width, height, menuBarText,
 	// call superclass method
 	multipaneToolBox.superclass.init.call(this,x,y, width, height, menuBarText, hideControlText, GUIboxText );
 
-	this.layers = new Array();
+	this.panes = new Array();
 	this.currentDisplay = null;
 }
 
@@ -242,13 +237,6 @@ multipaneToolBox.prototype.buildSVG = function() {
 	// call superclass method
 	multipaneToolBox.superclass.buildSVG.call(this);
 	
-	this.shrinkGUIboxWidth = svgDocument.createElementNS(svgns, "animate");
-	this.shrinkGUIboxWidth.setAttributeNS(null, "attributeName", "width");
-	this.shrinkGUIboxWidth.setAttributeNS(null, "dur", "0.2s");
-	this.shrinkGUIboxWidth.setAttributeNS(null, "fill", "freeze");
-	this.shrinkGUIboxWidth.setAttributeNS(null, "begin", "indefinite");
-	this.shrinkGUIboxWidth.setAttributeNS(null, "repeatCount", 0);
-
 	this.shrinkGUIboxHeight = svgDocument.createElementNS(svgns, "animate");
 	this.shrinkGUIboxHeight.setAttributeNS(null, "attributeName", "height");
 	this.shrinkGUIboxHeight.setAttributeNS(null, "dur", "0.2s");
@@ -256,6 +244,5 @@ multipaneToolBox.prototype.buildSVG = function() {
 	this.shrinkGUIboxHeight.setAttributeNS(null, "begin", "indefinite");
 	this.shrinkGUIboxHeight.setAttributeNS(null, "repeatCount", 0);
 
-	this.nodes.GUIboxBorder.appendChild(this.shrinkGUIboxWidth);
 	this.nodes.GUIboxBorder.appendChild(this.shrinkGUIboxHeight);
 }
