@@ -117,11 +117,37 @@ Delete a project and update OME session if the project is the current project.
 
 Note: If the user doesn't have another project, the current active project and dataset are set to undefined. Otherwise the first arbitrary project and/or dataset are set to active.
 
+=head2 getAllProjectCount()
+
+	my $p_count = $projectManager->getAllProjectCount();
+
+	Gets a count of all the projects in the database.
+
 =head2 getAllProjects ()
 
 	my @projects = $projectManager->getAllProjects();
 
 	Get all the projects in the database.
+
+=head2 getDatasetCount ($project/$project_id)
+
+	my $d_count1 = $projectManager->getDatasetCount($project1);
+	my $d_count2 = $projectManager->getDatasetCount($project2->id());
+
+	Get the dataset count of a given project.
+
+Note: This method allows you to pass either a project object or a project ID.
+
+=head2 getUserProjectCount ($experimenter)
+
+	my $user_p_count = $projectManager->getUserProjectCount();
+	my $other_p_count = $projectManager->getUserProjects(
+		$other_experimenter
+	);
+
+	Get a count of all the projects owned by a given user.
+
+Note: By default this method uses the Session's experimenter as a filter.
 
 =head2 getUserProjects ($experimenter)
 
@@ -276,18 +302,54 @@ sub getAllProjects {
 	my $factory = $self->Session()->Factory();
 
 	return $factory->findObjects("OME::Project");
-};
+}
+
+#################
+# Parameters: (void)
+# 	
+sub getAllProjectCount {
+	my $self = shift;
+	my $factory = $self->Session()->Factory();
+
+	return $factory->countObjects("OME::Project");
+}
+
+#################
+# Parameters: (project/project_id)
+# 	
+sub getDatasetCount {
+	my ($self, $project_id) = @_;
+	my $factory = $self->Session()->Factory();
+
+	if (ref($project_id) eq 'OME::Project') {
+		$project_id = $project_id->id()
+	}
+
+	return $factory->countObjects("OME::Project::DatasetMap", project_id => $project_id);
+}
 
 #################
 # Parameters: (experimenter object)
 #
 sub getUserProjects {
-	my ($self, $experimenter) = shift;
+	my ($self, $experimenter) = @_;
 	my $factory = $self->Session()->Factory();
 
 	$experimenter = $self->Session()->User() unless defined $experimenter;
 
 	return $factory->findObjects("OME::Project", owner_id => $experimenter->id());
+}
+
+#################
+# Parameters: (experimenter object)
+#
+sub getUserProjectCount {
+	my ($self, $experimenter) = @_;
+	my $factory = $self->Session()->Factory();
+
+	$experimenter = $self->Session()->User() unless defined $experimenter;
+
+	return $factory->countObjects("OME::Project", owner_id => $experimenter->id());
 }
 
 #################
@@ -314,7 +376,6 @@ sub addToProject{
       $datasetID:
       $factory->loadObject("OME::Dataset",$datasetID);
 }
-
 
 ###############################
 # Paramaters:

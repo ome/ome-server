@@ -134,11 +134,26 @@ Note: The method adds the dataset to the active project ($session->project()) if
 
 Delete a dataset and update OME session if the dataset is the current dataset. If the user doesn't have another dataset, set the current dataset to undefined, otherwise set the first (arbitrary in the dataset list) dataset to the current dataset.
 
+=head2 getAllDatasetCount ()
+
+	my $d_count = $datasetManager->getAllDatasetCount();
+
+Gets a count of all the datasets in the database.
+
 =head2 getAllDatasets ()
 
 	my @datasets = $datasetManager->getAllDatasets();
 
 Get all the datasets in the database.
+
+=head2 getImageCount ($dataset/$dataset_id)
+
+	my $i_count1 = $datasetManager->getImageCount($dataset1);
+	my $i_count2 = $datasetManager->getImageCount($dataset2->id());
+
+	Get the image count of a given dataset.
+
+Note: This method allows you to pass either a dataset object or a dataset ID.
 
 =head2 getUserDatasets ($experimenter)
 
@@ -148,6 +163,17 @@ Get all the datasets in the database.
 	);
 
 Get all the datasets related to an experimenter.
+
+Note: The method uses the Session's experimenter as a filter if none is specified.
+
+=head2 getUserDatasetCount ()
+
+	my $d_count = $datasetManager->getUserDatasetCount();
+	my $other_d_count = $datasetManager->getUserDatasetCount(
+		$other_experimenter
+	);
+
+Gets a count of all the datasets owner by a user.
 
 Note: The method uses the Session's experimenter as a filter if none is specified.
 
@@ -390,15 +416,51 @@ sub getAllDatasets {
 };
 
 #################
+# Parameters: (void)
+# 	
+sub getAllDatasetCount {
+	my $self = shift;
+	my $factory = $self->Session()->Factory();
+
+	return $factory->countObjects("OME::Dataset");
+};
+
+#################
+# Parameters: (dataset/dataset_id)
+# 	
+sub getImageCount {
+	my ($self, $dataset_id) = @_;
+	my $factory = $self->Session()->Factory();
+
+	if (ref($dataset_id) eq 'OME::Dataset') {
+		$dataset_id = $dataset_id->id()
+	}
+
+	return $factory->countObjects("OME::Image::DatasetMap", dataset_id => $dataset_id);
+}
+
+#################
 # Parameters: (experimenter object)
 #
 sub getUserDatasets {
-	my ($self, $experimenter) = shift;
+	my ($self, $experimenter) = @_;
 	my $factory = $self->Session()->Factory();
 
 	$experimenter = $self->Session()->User() unless defined $experimenter;
 
 	return $factory->findObjects("OME::Dataset", owner_id => $experimenter->id());
+}
+
+#################
+# Parameters: (experimenter object)
+#
+sub getUserDatasetCount {
+	my ($self, $experimenter) = @_;
+	my $factory = $self->Session()->Factory();
+
+	$experimenter = $self->Session()->User() unless defined $experimenter;
+
+	return $factory->countObjects("OME::Dataset", owner_id => $experimenter->id());
 }
 
 ################

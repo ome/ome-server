@@ -42,17 +42,17 @@ use OME::Session;
 use Log::Agent;
 our $VERSION = $OME::VERSION;
 
-=head 1 NAME
+=head1 NAME
 
 OME::Tasks::ImageManager - utility methods to manage images
 
-=head 1 SYNOPSIS
+=head1 SYNOPSIS
 
 	use OME::Tasks::ImageManager;
 	my $imageManager = OME::Tasks::ImageManager->new();
 	
 
-=head 1 DESCRIPTION
+=head1 DESCRIPTION
 
 OME::Tasks::ImageManager provides utility methods to manage images
 
@@ -68,6 +68,12 @@ Delete Image from database
 
 Get all the images in the database.
 
+=head2 getAllImageCount ()
+
+	my $i_count = $imageManager->getAllImageCount();
+
+Gets a count of all the images in the database.
+
 =head2 getUserImages ($experimenter)
 
 	my @user_images = $imageManager->getUserImages();
@@ -79,13 +85,24 @@ Get all the images related to an experimenter.
 
 Note: The method uses the Session's experimenter as a filter if none is specified.
 
+=head2 getUserImageCount ()
+
+	my $i_count = $imageManager->getUserImageCount();
+	my $other_i_count = $imageManager->getUserImageCount(
+		$other_experimenter
+	);
+
+Gets a count of all the images owner by a user.
+
+Note: The method uses the Session's experimenter as a filter if none is specified.
+
 =head2 listMatching ($ref,$used,$datasetID)
+
 datasetID (optional) if not defined dataset=current dataset
 ref=ref array  list group_id (optional)
 
 Images in Research group
 if used defined, images in Research group not already used by project
-
 
 =head2 load ($imageID)
 
@@ -93,6 +110,7 @@ Load image object
 Return: image object
 
 =head2 manage
+
 ref =ref array list of group_id
 
 Informations to manage images
@@ -109,8 +127,8 @@ key: image_id
 ->{remove}=> ref hash dataset_id value booleen 
 ->{image} => image object;
 
-
 =head2 remove ($ref)
+
 Remove image from datasets
 
 =cut
@@ -163,10 +181,20 @@ sub getAllImages {
 };
 
 #################
+# Parameters: (void)
+# 	
+sub getAllImageCount {
+	my $self = shift;
+	my $factory = $self->__Session()->Factory();
+
+	return $factory->countObjects("OME::Image");
+};
+
+#################
 # Parameters: (experimenter object)
 #
 sub getUserImages {
-	my ($self, $experimenter) = shift;
+	my ($self, $experimenter) = @_;
 	my $factory = $self->__Session()->Factory();
 
 	$experimenter = $self->__Session()->User() unless defined $experimenter;
@@ -174,6 +202,17 @@ sub getUserImages {
 	return $factory->findObjects("OME::Image", experimenter_id => $experimenter->id());
 }
 
+#################
+# Parameters: (experimenter object)
+#
+sub getUserImageCount {
+	my ($self, $experimenter) = @_;
+	my $factory = $self->__Session()->Factory();
+
+	$experimenter = $self->__Session()->User() unless defined $experimenter;
+
+	return $factory->countObjects("OME::Image", experimenter_id => $experimenter->id());
+}
 
 #########################
 # Parameters:
