@@ -1,4 +1,4 @@
-# OME/Web/RenderData.pm
+# OME/Web/DBObjRender.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -35,7 +35,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::RenderData;
+package OME::Web::DBObjRender;
 
 use strict;
 use vars qw($VERSION);
@@ -58,11 +58,11 @@ __PACKAGE__->mk_classdata('_allFieldNames');
 
 =head1 NAME
 
-OME::Web::RenderData - Render DBObjects for display
+OME::Web::DBObjRender - Render DBObjects for display
 
 =head1 DESCRIPTION
 
-RenderData will render DBObjects (and attributes) for display in HTML,
+DBObjRender will render DBObjects (and attributes) for display in HTML,
 TXT, (and potentially) SVG. It's default rendering can be overridden by
 writing subclasses.
 
@@ -79,40 +79,40 @@ references to arrays and hashes.
 
 =head1 Synopsis
 
-	use OME::Web::RenderData;
+	use OME::Web::DBObjRender;
 
 	# get field names for a DBObject  ( field_name, ... )
-	my @fieldNames = OME::Web::RenderData->getFieldNames( $type );
+	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $type );
 
 	# get all field names for a DBObject  ( field_name, ... )
-	my @fieldNames = OME::Web::RenderData->getAllFieldNames( $type );
+	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $type );
 
 	# get field types { field_name => field_type, ... }
-	my %fieldTypes = OME::Web::RenderData->getFieldTypes( $type );
+	my %fieldTypes = OME::Web::DBObjRender->getFieldTypes( $type );
 
 	# get field labels { field_name => field_label, ... }
-	my %fieldLabels = OME::Web::RenderData->getFieldLabels( $type );
+	my %fieldLabels = OME::Web::DBObjRender->getFieldLabels( $type );
 
 	# get search form elements keyed by field names (html only) { field_name => search_field, ... }
-	my %searchFields = OME::Web::RenderData->getSearchFields( $type );
+	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type );
 
 	# get an html reference to this object "<a href=...>"
-	my $renderedRef = OME::Web::RenderData->getRefToObject( $object, 'html' );
+	my $renderedRef = OME::Web::DBObjRender->getRefToObject( $object, 'html' );
 
 	# render object data to html format ( { field_name => rendered_field, ... }, ... )
-	my @records = OME::Web::RenderData->render( \@objects, 'html' );
+	my @records = OME::Web::DBObjRender->render( \@objects, 'html' );
  	# or txt format
- 	my @records = OME::Web::RenderData->render( \@objects, 'txt' );
+ 	my @records = OME::Web::DBObjRender->render( \@objects, 'txt' );
 
 	# obtain a specialized rendering class
-	my $specializedRenderer = ( OME::Web::RenderData->_getSpecializedRenderer($type) || OME::Web::RenderData )
+	my $specializedRenderer = ( OME::Web::DBObjRender->_getSpecializedRenderer($type) || OME::Web::DBObjRender )
 
 
 =head1 Methods
 
 =head2 getFieldNames
 
-	my @fieldNames = OME::Web::RenderData->getFieldNames($type);
+	my @fieldNames = OME::Web::DBObjRender->getFieldNames($type);
 
 $type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance of either
 
@@ -147,7 +147,7 @@ sub getFieldNames {
 
 =head2 getAllFieldNames
 
-	my @fieldNames = OME::Web::RenderData->getAllFieldNames($type);
+	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames($type);
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -178,7 +178,7 @@ sub getAllFieldNames {
 
 =head2 getFieldTypes
 
-	my %fieldTypes = OME::Web::RenderData->getFieldTypes($type, \@fieldNames);
+	my %fieldTypes = OME::Web::DBObjRender->getFieldTypes($type, \@fieldNames);
 
 $type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance of either
 $fieldNames is optional. It is used to populate the returned hash. Default is the list returned by getFieldNames.
@@ -208,7 +208,7 @@ sub getFieldTypes {
 
 =head2 getFieldLabels
 
-	my %fieldLabels = OME::Web::RenderData->getFieldLabels( $type, \@fieldNames );
+	my %fieldLabels = OME::Web::DBObjRender->getFieldLabels( $type, \@fieldNames );
 	
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -246,7 +246,7 @@ sub getFieldLabels {
 
 =head2 render
 
-	my @records = OME::Web::RenderData->render( \@objects, $format, \@fieldNames );
+	my @records = OME::Web::DBObjRender->render( \@objects, $format, \@fieldNames );
 
 @objects is an array of instances of a DBObject or a Semantic Type.
 $format is either 'html' or 'txt'
@@ -282,7 +282,7 @@ sub render {
 
 =head2 renderSingle
 
-	my %record = OME::Web::RenderData->renderSingle( $object, $format, \@fieldNames );
+	my %record = OME::Web::DBObjRender->renderSingle( $object, $format, \@fieldNames );
 
 $fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
@@ -308,12 +308,12 @@ sub renderSingle {
 	foreach my $field( @$fieldnames ) {
 		if( $field eq 'id') {
 			$record{ $field } = $q->a( 
-				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id" },
+				{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
 				$id
 			);
 		} else {
 			$record{ $field } = $obj->$field;
-			$record{ $field } = OME::Web::RenderData->getRefToObject( $record{ $field }, $format )
+			$record{ $field } = OME::Web::DBObjRender->getRefToObject( $record{ $field }, $format )
 				if( ref( $record{ $field } ) );
 		}
 	}
@@ -324,7 +324,7 @@ sub renderSingle {
 
 =head2 getObjectLabel
 
-	my $object_label = OME::Web::RenderData->getObjectLabel( $object  );
+	my $object_label = OME::Web::DBObjRender->getObjectLabel( $object  );
 
 Gets a name for this object. Subclasses may override this method.
 If a 'name' or a 'Name' method exists for this object, it will be returned.
@@ -347,7 +347,7 @@ sub getObjectLabel {
 
 =head2 getRefToObject
 
-	my $formated_ref = OME::Web::RenderData->getRefToObject( $object, $format );
+	my $formated_ref = OME::Web::DBObjRender->getRefToObject( $object, $format );
 
 $object is an instance of a DBObject or an Attribute.
 $format is either 'html' or 'txt'
@@ -378,7 +378,7 @@ sub getRefToObject {
 			my $id = $obj->id();
 			my $label = $proto->getObjectLabel( $obj, $format );
 			return  $q->a( 
-				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id" },
+				{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
 				$label
 			);
 		}
@@ -388,7 +388,7 @@ sub getRefToObject {
 =head2 getSearchFields
 
 	# get html form elements keyed by field names 
-	my %searchFields = OME::Web::RenderData->getSearchFields( $type, @fieldNames );
+	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type, @fieldNames );
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -429,7 +429,7 @@ sub getSearchFields {
 =head2 getRefSearchField
 
 	# get an html form element that will allow searches to $type
-	my $searchField = OME::Web::RenderData->getRefSearchField( $from_type, $to_type, $accessor_to_type );
+	my $searchField = OME::Web::DBObjRender->getRefSearchField( $from_type, $to_type, $accessor_to_type );
 
 the types may be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -461,7 +461,7 @@ sub getRefSearchField {
 
 =head2 _getSpecializedRenderer
 
-	my $specializedRenderer = OME::Web::RenderData->_getSpecializedRenderer($type);
+	my $specializedRenderer = OME::Web::DBObjRender->_getSpecializedRenderer($type);
 	
 $type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance of either
 
@@ -482,7 +482,7 @@ sub _getSpecializedRenderer {
 	# construct specialized package name
 	my $specializedPackage = $formal_name;
 	($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
-	$specializedPackage = "OME::Web::RenderData::__".$specializedPackage;
+	$specializedPackage = "OME::Web::DBObjRender::__".$specializedPackage;
 
 	# obtain package
 	eval( "use $specializedPackage" );

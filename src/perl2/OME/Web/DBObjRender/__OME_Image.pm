@@ -1,4 +1,4 @@
-# OME/Web/RenderData/__OME_Image.pm
+# OME/Web/DBObjRender/__OME_Image.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -35,13 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::RenderData::__OME_Image;
+package OME::Web::DBObjRender::__OME_Image;
 
 =pod
 
 =head1 NAME
 
-OME::Web::RenderData::__OME_Image - Specialized rendering for OME::Image
+OME::Web::DBObjRender::__OME_Image - Specialized rendering for OME::Image
 
 =head1 DESCRIPTION
 
@@ -56,7 +56,7 @@ use vars qw($VERSION);
 use OME;
 use OME::Session;
 use OME::Tasks::ImageManager;
-use base qw(OME::Web::RenderData);
+use base qw(OME::Web::DBObjRender);
 
 # Class data
 __PACKAGE__->_fieldLabels( {
@@ -100,7 +100,7 @@ sub getRefToObject {
 			my $name = $obj->name();
 			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
 			my $ref = "<a href='#' onClick='openPopUpImage($id); return false'><img src='$thumbURL'></a><br>".
-			          "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id'>$name</a>";
+			          "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id'>$name</a>";
 			return $ref;
 		}
 	}

@@ -1,4 +1,4 @@
-# OME/Web/RenderData/__OME_ModuleExecution.pm
+# OME/Web/DBObjRender/__OME_ModuleExecution.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -35,13 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::RenderData::__OME_ModuleExecution;
+package OME::Web::DBObjRender::__OME_ModuleExecution;
 
 =pod
 
 =head1 NAME
 
-OME::Web::RenderData::__OME_ModuleExecution - Specialized rendering for OME::ModuleExecution
+OME::Web::DBObjRender::__OME_ModuleExecution - Specialized rendering for OME::ModuleExecution
 
 =head1 DESCRIPTION
 
@@ -55,7 +55,7 @@ use strict;
 use vars qw($VERSION);
 use OME;
 use OME::Session;
-use base qw(OME::Web::RenderData);
+use base qw(OME::Web::DBObjRender);
 
 # Class data
 __PACKAGE__->_fieldLabels( {

@@ -1,4 +1,4 @@
-# OME/Web/RenderData/__Pixels.pm
+# OME/Web/DBObjRender/__Pixels.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -35,13 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::RenderData::__Pixels;
+package OME::Web::DBObjRender::__Pixels;
 
 =pod
 
 =head1 NAME
 
-OME::Web::RenderData::__Pixels - specialized rendering of Pixels ST
+OME::Web::DBObjRender::__Pixels - specialized rendering of Pixels ST
 
 =head1 DESCRIPTION
 
@@ -57,7 +57,7 @@ use OME;
 use OME::Web;
 use OME::Session;
 use OME::Tasks::PixelsManager;
-use base qw(OME::Web::RenderData);
+use base qw(OME::Web::DBObjRender);
 
 # Class data - override default behavior
 __PACKAGE__->_fieldLabels( {
@@ -104,7 +104,7 @@ sub getRefToObject {
 			my $id   = $obj->id();
 			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
 			my $ref = "<a href='#' onClick='openPopUpPixels($id); return false'><img src='$thumbURL'></a><br>".
-			          "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id'>Pixels $id</a>";
+			          "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id'>Pixels $id</a>";
 			return $ref;
 		}
 	}

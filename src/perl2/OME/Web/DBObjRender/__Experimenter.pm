@@ -1,4 +1,4 @@
-# OME/Web/RenderData/__Experimenter.pm
+# OME/Web/DBObjRender/__Experimenter.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -35,13 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::RenderData::__Experimenter;
+package OME::Web::DBObjRender::__Experimenter;
 
 =pod
 
 =head1 NAME
 
-OME::Web::RenderData::__Experimenter - Specialized rendering for Experimenter Attribute
+OME::Web::DBObjRender::__Experimenter - Specialized rendering for Experimenter Attribute
 
 =head1 DESCRIPTION
 
@@ -55,7 +55,7 @@ use strict;
 use vars qw($VERSION);
 use OME;
 use OME::Session;
-use base qw(OME::Web::RenderData);
+use base qw(OME::Web::DBObjRender);
 
 =head2 getObjectLabel
 
