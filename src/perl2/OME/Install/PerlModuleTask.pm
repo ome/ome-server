@@ -37,6 +37,7 @@ use warnings;
 use Carp;
 use English;
 use Term::ANSIColor qw(:constants);
+use File::Copy;
 use File::Basename;
 use Cwd;
 
@@ -751,8 +752,11 @@ sub execute {
 	
 			# Testing
 			print "  \\_ Testing ";
-			$retval = test_module ("src/perl2/OME/Matlab/", $LOGFILE, 
+			
+			copy_tree("src/perl2/OME/Matlab/", $OME_TMP_DIR);  # problems here result in croaks
+			$retval = test_module ("$OME_TMP_DIR/Matlab", $LOGFILE, 
 				{user =>"$MATLAB->{USER}"});
+			rm_tree("$OME_TMP_DIR/Matlab"); # problems here result in croaks
 				
 			print BOLD, "[FAILURE]", RESET, ".\n"
 				and croak "Tests failed, see $LOGFILE_NAME for details."
