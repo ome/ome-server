@@ -251,7 +251,7 @@ L<OME::ModuleExecution::ActualInputs> associated with this
 Returns the set  of all of the module executions that are immediate
 predecessors to this module execution in the data history.  
 
-=head2 predecessors
+=head2 successors
     
        my @successors = $module_execution->successors();
 
@@ -280,34 +280,31 @@ input_module_execution.
 
 sub predecessors {
     my $self = shift;
-    my $mex = $self->ID();
 
     my $factory = $self->Session()->Factory();
     return $factory->findObjects('OME::ModuleExecution',
-				 { 'consumed_outputs.module_execution_id' => $mex });
+				 { 'consumed_outputs.module_execution' => $self ,
+				    '__distinct' => 'id'});
 }
 
 sub successors { 
     my $self = shift;
-    my $mex = $self->ID();
 
     my $factory = $self->Session()->Factory();
 
     return $factory->findObjects('OME::ModuleExecution',
-				{ 'consumed_outputs.input_module_execution_id' => $mex});
-
+				{ 'inputs.input_module_execution' => $self,
+				 '__distinct' => 'id'});
 }
 
 sub chain_executions {
     my $self = shift;
-    my $mex = $self->ID();
 
     my $factory = $self->Session()->Factory();
     
     return $factory->findObjects('OME::AnalysisChainExecution', 
-				 {
-				 'node_executions.module_execution_id'
-				     => $mex});
+				 {'node_executions.module_execution' => $self,
+				 '__distinct' => 'id'});
 }
 
 
