@@ -233,10 +233,10 @@ sub getGroups {
 	my $len;
 	my $buf;
 	
-	#my $tags = readTiffIFD($fh);
 	my $tags = readTiffIFD($fh);
 	my $uic2 = UIC2;
 	if (!defined($tags->{$uic2})) {
+	    close IMG;
 	    next;
 	}
         my $t_arr = $tags->{$uic2};
