@@ -20,6 +20,25 @@
 
 package OME::AnalysisPath;
 
+=head1 NAME
+
+OME::AnalysisPath - a data path within an analysis chain
+
+OME::AnalysisPath::Map - the individual entries in a data path
+
+=head1 DESCRIPTION
+
+The C<AnalysisPath> class represents a single, linear data path
+through an analysis chain.  Each chain has one I<data path> for each
+linear path from a root node to a leaf node.  (A root node contains no
+inputs; a leaf node contains no outputs.  Since analysis chains are
+acyclic, there must be at least one of each in any chain.)
+
+The C<AnalysisPath::Map> class represents each element in a data path.
+It corresponds to one of the nodes in the analysis chain.
+
+=cut
+
 use strict;
 our $VERSION = '1.0';
 
@@ -36,6 +55,36 @@ __PACKAGE__->columns(Primary => qw(path_id));
 __PACKAGE__->columns(Essential => qw(path_length analysis_view_id));
 __PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
 __PACKAGE__->has_many('path_nodes', 'OME::AnalysisPath::Map' => qw(path_id));
+
+=head1 METHODS (C<AnalysisPath>)
+
+The following methods are available to C<AnalysisPath> in addition to
+those defined by L<OME::DBObject>.
+
+=head2 path_length
+
+	my $path_length = $execution->path_length();
+	$execution->path_length($path_length);
+
+Returns or sets the length of the path.  This should correspond to the
+number of items returned by C<path_nodes>.
+
+=head2 analysis_view
+
+	my $analysis_view = $execution->analysis_view();
+	$execution->analysis_view($analysis_view);
+
+Returns or sets the analysis chain that this data path belongs to.
+
+=head2 path_nodes
+
+	my @nodes = $execution->path_nodes();
+	my $node_iterator = $execution->path_nodes();
+
+Returns or iterates, depending on context, a list of the path entries
+in this data path.
+
+=cut
 
 
 package OME::AnalysisPath::Map;
@@ -57,4 +106,44 @@ __PACKAGE__->columns(Essential => qw(path_id path_order
 __PACKAGE__->hasa('OME::AnalysisPath' => qw(path_id));
 __PACKAGE__->hasa('OME::AnalysisView::Node' => qw(analysis_view_node_id));
 
+=head1 METHODS (C<AnalysisPath::Map>)
+
+The following methods are available to C<AnalysisPath::Map> in
+addition to those defined by L<OME::DBObject>.
+
+=head2 path
+
+	my $path = $execution->path();
+	$execution->path($path);
+
+Returns or sets the data path that this entry belongs to.
+
+=head2 analysis_view_node
+
+	my $analysis_view_node = $execution->analysis_view_node();
+	$execution->analysis_view_node($analysis_view_node);
+
+Returns ot sets the analysis chain node that this entry corresponds
+to.
+
+=head2 path_order
+
+	my $path_order = $execution->path_order();
+	$execution->path_order($path_order);
+
+Returns or sets the position along the data path (indexed from 1) of
+this entry.
+
+=cut
+
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=cut
+
