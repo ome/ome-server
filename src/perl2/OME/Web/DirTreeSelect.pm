@@ -56,6 +56,9 @@ sub getPageBody {
 
 	if (scalar (@selections) > 0) {
 		if ($cgi->param('Import')) {
+# magic line to import:
+# OME::Tasks::ImageTasks::importFiles($session, $project, $datasetName, \@ARGV);
+
 			my $datasetIDs;# = ImportSelections(\@paths);
 		# We want to commit the imported projects no matter what errors we get while doing the extra stuff that follows.
 #			$OME->Commit();
@@ -87,39 +90,41 @@ sub getPageBody {
 
 sub print_form {
 my $self = shift;
-my $selection = shift;
+my $recentSelection = shift;
 my $cgi = $self->CGI();
-my @tableRows;
-my @tableColumns;
-my $datasetNames;# = $OME->GetProjectNames;
+
+# Stub: this needs to be an array of dataset names for the user to
+#       "Add imported images to existing dataset"
+my $datasetNames;
 my $text = '';
 
 	$text .= "\n".$cgi->startform;
 	$text .= "<CENTER>\n	".$cgi->submit (-name=>'Import',-value=>'Import Selected Files/Folders')."\n</CENTER>\n";
 
-	my @pathElements = split ('/',$selection);
-	my $projName = $pathElements[$#pathElements];
-	my $defaultRadio = 'addNewProj';
-	my %projHash;
-	foreach (@$datasetNames) {$projHash{$_} = 1};
-	$defaultRadio = 'addExistProj' if (exists $projHash{$projName});
-	my $newProjName = '';
-	$newProjName = $projName unless (exists $projHash{$projName});
-	my $existProjName;
-	$existProjName = $projName if (exists $projHash{$projName});
+	# this sets default datasetName
+	my @pathElements = split ('/',$recentSelection);
+	my $datasetName = $pathElements[$#pathElements];
+	my $defaultRadio = 'addNewDataset';
+	my %datasetHash;
+	foreach (@$datasetNames) {$datasetHash{$_} = 1};
+	$defaultRadio = 'addExistDataset' if (exists $datasetHash{$datasetName});
+	my $newDatasetName = '';
+	$newDatasetName = $datasetName unless (exists $datasetHash{$datasetName});
+	my $existDatasetName;
+	$existDatasetName = $datasetName if (exists $datasetHash{$datasetName});
 
 	$text .= "<BLOCKQUOTE>\n";
-	my @projectRadios = $cgi->radio_group(-name=>'DoProjectType',
-				-values => ['addNewProj','addExistProj'],
+	my @datasetRadios = $cgi->radio_group(-name=>'DoDatasetType',
+				-values => ['addNewDataset','addExistDataset'],
 				-default=>$defaultRadio,
 				-labels => {
-					'addNewProj'   => 'New dataset named: ',
-					'addExistProj' => 'Add imported images to existing dataset ',
+					'addNewDataset'   => 'New dataset named: ',
+					'addExistDataset' => 'Add imported images to existing dataset ',
 				}
 			);
 
-	$text .= '	'.$projectRadios[0]."\n	".$cgi->textfield(-name=>'newProject', -size=>32,-default=>$newProjName)."<BR>\n";
-	$text .= '	'.$projectRadios[1]."\n	".$cgi->popup_menu(-name=>'addProject',-values=>$datasetNames,-default=>$existProjName)."<BR>\n";
+	$text .= '	'.$datasetRadios[0]."\n	".$cgi->textfield(-name=>'newDataset', -size=>32,-default=>$newDatasetName)."<BR>\n";
+	$text .= '	'.$datasetRadios[1]."\n	".$cgi->popup_menu(-name=>'addDataset',-values=>$datasetNames,-default=>$existDatasetName)."<BR>\n";
 
 	$text .= "</BLOCKQUOTE>\n";
 
@@ -204,9 +209,6 @@ my $OME;
 
 
 
-
-
-
 sub ImportSelections {
 my $selections = shift;
 my %selectedFiles;
@@ -277,18 +279,6 @@ my $OME;
 	ReportDocStatus ("Total: <B>".scalar @datasetIDs."</B> Datasets imported.<BR>");
 	$OME->StopProgress();
 	return \@datasetIDs;
-}
-
-
-sub ReportDocStatus {
-my $message = shift;
-print qq {
-	<script language="JavaScript">
-		<!--
-			importStatWin.document.writeln ("<font size=-1>$message</font>");
-		//-->
-	</script>
-	}
 }
 
 1;
