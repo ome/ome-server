@@ -1,30 +1,33 @@
 ---------------------------------------------------------------------------
 
-   ome-1.4
+   OME Library routines & utility programs
 
-   Copyright (c) 2001 Christopher J. Grayce
-
-   Permission to use, copy, modify, distribute and sell this software
-   including C source code and header files for any purpose is hereby 
-   granted provided the above copyright notice and this permission 
-   notice appear in all copies of the software.
-
-   THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-   EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-   WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+     OME is free software, which falls under either the GNU General
+     Public License, or the GNU Lesser General Public License. Refer
+     to the specific licensing details written in each individual file.
+                                                                          
+     OME is distributed in the hope that it will be useful,               
+     but WITHOUT ANY WARRANTY; without even the implied warranty of       
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        
+     GNU General Public License for more details.                         
+                                                                          
+     You should have received a copy of the GNU General Public License
+     and Lesser General Public License along with OME; if not, write to
+     the Free Software Foundation, Inc. 59 Temple Place, Suite 330, Boston,
+     MA  02111-1307  USA           
 
 ---------------------------------------------------------------------------
 
-   ++ Notes as of 9/01/01 ++
+   To build everything:
 
-   1. To build everything:
-
-      tar -xzvf ome-1.4.tar.gz
-      cd ome-1.4
       make clean
       make
      
-   2. Programs:
+   Library produced:
+
+      libome.a     - various analysis & measurement routines
+
+   Programs produced:
 
       ome_info     - prints information about an image file.
       ome_make     - creates TIFF test image files.
@@ -32,6 +35,7 @@
       ome_hist     - makes graylevel histograms.
       ome_obj      - finds foreground objects.
   
-      ome_cccp     - CCCP correlation. 
-      ome_tmcp     - TMCP correlation.
+      ome_tmcp     - Calculates avg. distance from dot in an object's center
+                     to dots in associated object 'arms'.
+      ome_cccp     - Another such measure
     

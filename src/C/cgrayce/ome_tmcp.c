@@ -1,8 +1,48 @@
-/******************************************************************************
+/****************************************************************************/
+/*                                                                          */
+/*  ome_tmcp.c                                                              */
+/*                                                                          */
+/*  OME module                                                              */
+/*      performs analysis: TMCP correlation - Total Movement Cell Position  */
+/*                                                                          */
+/*     Author:  Brian S. Hughes (bshughes@mit.edu)                          */
+/*     Copyright 2001 Brian S. Hughes                                       */
+/*     This file is part of OME.                                            */
+/*                                                                          */ 
+/*     OME is free software; you can redistribute it and/or modify          */
+/*     it under the terms of the GNU General Public License as published by */
+/*     the Free Software Foundation; either version 2 of the License, or    */
+/*     (at your option) any later version.                                  */
+/*                                                                          */
+/*     OME is distributed in the hope that it will be useful,               */
+/*     but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/*     GNU General Public License for more details.                         */
+/*                                                                          */
+/*     You should have received a copy of the GNU General Public License    */
+/*     along with OME; if not, write to the Free Software Foundation, Inc.  */
+/*        59 Temple Place, Suite 330, Boston, MA  02111-1307  USA           */
+/*                                                                          */
+/*                                                                          */
+/*   This program finds the distance between a neuron's nucleus and its     */
+/*   dendrites. It is given two images of the same field; one image         */
+/*   shows only the cells' nucleii, while the other image shows only        */
+/*   the dendrites. This program assumes that a dendrite belongs to         */
+/*   the nucleus closest to it. The program measures the distance           */
+/*   between each dendrite and its associated nucleus, and emits a          */
+/*   figure that is the weighted average of all these distances in the      */
+/*   image. This figure can be taken as an indication of the robustness     */
+/*   of the cell sample's growth.                                           */
+/*                                                                          */
+/*   This program doesn't know neurons - it just calculates, for all dots   */
+/*   in an image, how far away the closest dot in a second image lies.      */
+/*                                                                          */
+/* BUGS                                                                     */
+/*  If two or more neurons overlap, it's unlikely that this program will    */
+/*  accurately match each dendrite with its own neuron.                     */
+/*                                                                          */
+/****************************************************************************/
 
-   TMCP correlation.
-
- */
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -11,145 +51,236 @@
 #include "obj.h"
 #include "geo.h"
 #include "util.h"
+#include "tmcp.h"
 
-verb_t verbosity = MSG_WARN ;
 
-/* when finding background by thresholding, threshold min/max */
-static int tmin = 0 ;
-static int tmax = 1 ;
-/* how small an object we ignore, in pixels */
-static int amin = 1 ;
-/* that we ignore objects which are not entirely within the image frame */
-#define IGNORE_PARTIALS (1)
+typedef struct {
+  int thold;
+  verb_t verbosity;
+  char* fn_tst;
+  char* fn_ref;
+  char* fn_msk;
+  char* batch_file;
+} ARGS;
 
-/******************************************************************************
 
-  Calculate and return TMCP correlation.
+/* Externally visible storage */
+verb_t verbosity = MSG_FATAL;
 
-  */
-static double make_corr(double xctr, double yctr,
-			const int *x, const int *y, const unsigned *gv, 
-			unsigned thold, int n) {
+static int skip_internals = TRUE;
 
-  double r2,sum ;
-  unsigned g,gsum ;
-  int i ;
-  const char *me = "make_corr" ;
-		     
-  sum = 0.0 ; gsum = 0 ;
-  for(i=0;i<n;i++) {
-    if ((g = gv[i] - thold) < 0) g = 0 ;
-    r2 = SQ(x[i] - xctr) + SQ(y[i] - yctr) ;
-    sum += sqrt(r2) * gv[i] ; 
-    gsum += g ;
-  } ;
-  if (verbosity == MSG_DEBUG) {
-    printf("> %s [%s:%d]: pixels = %d\n",me,__FILE__,__LINE__,n) ;
-    printf("   sum scaled pix val = %d\n",gsum) ;
-    printf("   sum distance * scaled pix val = %f\n",sum) ;
-  } ;
-  if (gsum) return(sum/gsum) ;
-  return(0.0) ;
+
+/* Prototypes */
+static int process_images(ARGS *argsp);
+static int usage(const char *id, ARGS* argsp);
+static int parse_args(int argc, char *argv[], ARGS* argsp);
+static int load_images(char* tst_nm, gras_t *gr_tstp, 
+		       char* ref_nm, gras_t *gr_refp);
+
+
+
+/*****************************************************************************/
+int main(int argc, char *argv[]) {
+
+  ARGS our_args;
+  int num_scan;
+  int stat = OK;
+  FILE* fp;
+
+  our_args.batch_file = NULL;
+  /* First parse input arguments */
+  if (parse_args(argc, argv, &our_args) == FALSE)
+    return(usage(argv[0], &our_args));
+
+  /* If user provided a batch file, process it line by line */
+  if (our_args.batch_file) {
+    if ((fp = fopen(our_args.batch_file, "r")) == NULL) {
+      stat = FATAL;
+    }
+    else {
+      while (!feof(fp)) {
+	num_scan = fscanf(fp, "%as%as%d", &our_args.fn_tst, &our_args.fn_ref,
+	       &our_args.thold);
+	if (num_scan == 3) {
+	  if (process_images(&our_args) == FALSE) {
+	    stat = FATAL;
+	  }
+	  free(our_args.fn_tst);
+	  free(our_args.fn_ref);
+	}
+	else if (!feof(fp)) {
+	  if (our_args.verbosity != MSG_NONE) {
+	    printf("Error reading input list from %s\n", our_args.batch_file);
+	  }
+	  stat = FATAL;
+	  break;
+	}
+      }
+    }
+  }
+  else {
+    if (process_images(&our_args) == FALSE) {
+      stat = FATAL;
+    }
+  }
+
+  return(stat);
 }
+
+
+
+/* Process the input images, and produce a single numberic score from the
+ * analysis. First load the images into a gras_t structure via the
+ * routine load_images(). Next find the minimum distance between every spot
+ * above a background level in the 2nd image, and one of the non-null spots
+ * in the 1st image. Each minimum distance gets weighted by the intensity
+ * of the reference spot. The numeric score is the ratio of the sum of
+ * the weighted distances to the sum of the reference dots' intensities.
+ */
+
+static int process_images(ARGS *argsp)
+{
+  gras_t gr_tst, gr_ref;
+  int was_blank;
+  long signalSum=0;
+  double weightedDistance=0;
+  double averageDistance=0;
+
+  if ((argsp->verbosity == MSG_WARN) || (argsp->verbosity == MSG_DEBUG)) {
+    printf("%s\t%s %d\n", argsp->fn_tst, argsp->fn_ref, argsp->thold);
+  }
+  if (load_images(argsp->fn_tst, &gr_tst,
+		  argsp->fn_ref, &gr_ref) == FALSE)
+    return(FALSE);
+
+
+  distanceBetween(argsp->thold, &gr_tst, &gr_ref, &signalSum,
+		  &weightedDistance, &was_blank, argsp->verbosity, skip_internals);
+
+  averageDistance=weightedDistance/signalSum;
+
+  if (argsp->verbosity != MSG_NONE) {
+    if (was_blank != 1) 
+      printf("%f\n", averageDistance);
+    if (was_blank == 1) 
+      printf("%s\n", "NaN");
+  }
+  
+  return(OK);
+}
+
+
 
 /******************************************************************************
 
   Usage complaint.
 
   */
-static int usage(const char *id) {
+static int usage(const char *id, ARGS* argsp) {
 
-  const char *fmt = 
+  const char *fmt =
+    "\n"
     "Usage: %s [options] test_imagefile ref_imagefile\n"
-    "Options:\n"
+    "       Returns TMCP correlation.\n"
+    "  Options:\n"
+    "   -v <n>              \tSet verbosity to n (%d=debug,%d=all,%d=fatal,%d=none)\n"
+    "   -i                  \tInclude points inside objects in calculations\n"
     "   -t <threshold_value>\tSet threshold value in test image (default=0)\n"
-    "   -v <n>              \tSet verbosity to n (%d=all,%d=fatal,%d=none,%d=debug)\n"
-    "Return TMCP correlation.\n"
-    ;
+    "                        Ignored if -f option present\n"
+    "   -f <batch file name>\tUse file containing lines of the form:\n"
+    "                        <test file name> <ref filename> <threshold>\n"
+    "\n";
     
-  if (verbosity != MSG_NONE) 
-    printf(fmt,id,MSG_WARN,MSG_FATAL,MSG_NONE,MSG_DEBUG) ;
+  if (argsp->verbosity != MSG_NONE) 
+    printf(fmt, id, MSG_DEBUG, MSG_WARN, MSG_FATAL, MSG_NONE);
   return(FATAL) ;
 }
 
 /******************************************************************************
 
-  The walrus.
+  Argument parser
 
   */
-int main(int argc, char *argv[]) {
 
-  int thold = 0 ;
-  gras_t gr_tst, gr_ref, gr_mk ;
-  objl_t oref, otst ;
-  pixl_t pl ;
-  double *xc,*yc ;
-  double corr ;
-  unsigned *g ;
-  char *fn_tst, *fn_ref ;
-  int ai,i ;
+static int parse_args(int argc, char *argv[], ARGS* argsp)
+{
+  int ai   = 1;
+  int success = TRUE;
+  int batch = FALSE;
 
-  /* parse options */
-  ai = 1 ;
-  while ((argc > ai) && *(argv[ai]) == '-') {
+  argsp->thold = 0;
+  argsp->verbosity = MSG_WARN;
+  argsp->fn_tst = argsp->fn_ref = NULL;
+
+  for (ai = 1;  ((argc > ai) && (*(argv[ai]) == '-')); ai++) {
     switch(*(argv[ai]+1)) {
+    case 'f' :
+      batch = TRUE;
+      if (++ai >= argc)
+	success = FALSE;
+      else
+	argsp->batch_file = argv[ai];
+      break;
     case 't' :
-      if ((ai += 1) >= argc) return(usage(argv[0])) ;
-      thold = atoi(argv[ai++]) ;
-      break ;
+      if (++ai >= argc)
+	success = FALSE;
+      else
+	argsp->thold = atoi(argv[ai]);
+      break;
     case 'v' :
-      if ((ai += 1) >= argc) return(usage(argv[0])) ;
-      verbosity = atoi(argv[ai++]) ;
-      break ;
+      if (++ai >= argc)
+	success = FALSE;
+      else
+	argsp->verbosity = atoi(argv[ai]);
+      break;
+    case 'i':
+      skip_internals = FALSE;
+      break;
     default :
-      return(usage(argv[0])) ;
-    } ;
-  } ;
-  if (ai >= argc) return(usage(argv[0])) ;
-  fn_tst = argv[ai++] ;
-  if (ai >= argc) return(usage(argv[0])) ;
-  fn_ref = argv[ai++] ;
+      success = FALSE;
+    }
 
-  /* load data files */
-  gras_init(&gr_tst,0,0) ; gras_init(&gr_ref,0,0) ;
-  if ((tiff_load_gras(fn_tst,&gr_tst) != OK) ||
-      (tiff_load_gras(fn_ref,&gr_ref) != OK) ) return(FATAL) ;
+    if (batch == TRUE)
+      break;
+  }
 
-  /* verify that test and reference images are the same size */
-  if ((gr_tst.nx != gr_ref.nx) || (gr_tst.ny != gr_ref.ny))
-    return(punt(__FILE__,__LINE__,argv[0],
-		"test and reference images not same size")) ;
-  
-  /* get all the objects in the reference image */
-  gras_init(&gr_mk,gr_ref.ny,gr_ref.nx) ;
-  if (gras_mark_gray(&gr_ref,&gr_mk,tmin,tmax) != OK) return(FATAL) ;
-  objl_init(&oref,100) ;
-  if (objl_marked(&oref,&gr_ref,&gr_mk,amin,IGNORE_PARTIALS) != OK) 
-    return(FATAL) ;
+  if ((success) && (!batch)) {
+      if (ai >= argc)
+	success = FALSE;
+      else {
+	argsp->fn_tst = argv[ai++] ;
+	if (ai >= argc)
+	  success = FALSE;
+	else
+	  argsp->fn_ref = argv[ai++];
+      }
+    }
 
-  if (!oref.n) return(punt(__FILE__,__LINE__,argv[0],"no objects.")) ;
-  
-  /* make a list of their centers of mass */
-  if (!(xc = (double *)malloc(oref.n * sizeof(double))) ||
-      !(yc = (double *)malloc(oref.n * sizeof(double))) )
-    return(memfail(__FILE__,__LINE__,argv[0])) ;
-  for(i=0;i<oref.n;i++) geo_com(oref.obj[i],yc+i,xc+i) ;
+  verbosity = argsp->verbosity;
 
-  /* get Voronoy polygon objects surrounding each COM */
-  objl_init(&otst,100) ;
-  if (objl_voy(&otst,&gr_tst,yc,xc,oref.n) != OK) return(FATAL) ;
-  
-  /* do our calculation */
-  pixl_init(&pl,10000) ;
-  corr = 0.0 ;
-  for(i=0;i<otst.n;i++) {
-    if (obj2pixl(otst.obj[i],&pl,&g) != OK) return(FATAL) ;
-    corr += make_corr(xc[i],yc[i],pl.x,pl.y,g,thold,pl.n) ;
-  } ;
-
-  /* report average correlation per polygon */
-  corr /= otst.n ;
-  printf("%f\n",corr) ;
-
-  return(OK) ;
+  return(success);
 }
+
+
+
+/*****************************************************************************/
+/*                                                                           */
+/*     Load in image files, and optionally a mask file                       */
+
+static int load_images(char* tst_nm, gras_t *gr_tstp, 
+		       char* ref_nm, gras_t *gr_refp)
+{
+  int  stat = FALSE;
+
+  gras_init(gr_tstp, 0, 0);
+  gras_init(gr_refp, 0,0);
+  if (tiff_load_gras(tst_nm, gr_tstp) == OK) {
+    if (tiff_load_gras(ref_nm, gr_refp) == OK) {
+      stat = TRUE;
+    }
+  }
+
+  return(stat);
+}
+
+

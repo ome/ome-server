@@ -1,8 +1,34 @@
-/***********************************************************************
+/****************************************************************************/
+/*                                                                          */
+/*                                                                          */
+/*     datafile.c                                                           */
+/*                                                                          */
+/*   Author:  Christopher Grayce                                            */
+/*   Copyright 2001 Christopher Grayce                                      */
+/*   This file is part of OME.                                              */
+/*                                                                          */
+/*  Text data file routines.                                                */
+/*                                                                          */ 
+/*     OME is free software; you can redistribute it and/or modify          */
+/*     it under the terms of the GNU Lesser General Public License as       */
+/*     published by the Free Software Foundation; either version 2.1 of     */
+/*     the License, or (at your option) any later version.                  */
+/*                                                                          */
+/*     OME is distributed in the hope that it will be useful,               */
+/*     but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/*     GNU General Public License for more details.                         */
+/*                                                                          */
+/*     You should have received a copy of the GNU General Public License    */
+/*     along with OME; if not, write to the Free Software Foundation, Inc.  */
+/*        59 Temple Place, Suite 330, Boston, MA  02111-1307  USA           */
+/*                                                                          */
+/*                                                                          */
+/*                                                                          */
+/****************************************************************************/
 
-  Text data files.
-
-  Routines to ensure a text data file when it is opened has a 
+/*
+  Routines to ensure a text data file when it is opened has a
   comment header automatically written of the form:
 
 # program = foo.c of Aug 31 2001 04:44 PDT
@@ -30,7 +56,8 @@
 
   Note that the leading comments above are added automatically.
 
-  */
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

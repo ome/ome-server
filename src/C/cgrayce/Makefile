@@ -1,17 +1,23 @@
 #---------------------------------------------------------------------------
 #
-#   ome-1.5
 #
 #   Copyright (c) 2001 Christopher J. Grayce
 #
-#   Permission to use, copy, modify, distribute and sell this software
-#   including C source code and header files for any purpose is hereby 
-#   granted provided the above copyright notice and this permission 
-#   notice appear in all copies of the software.
+#     OME is free software; you can redistribute it and/or modify          
+#     it under the terms of the GNU General Public License as published by 
+#     the Free Software Foundation; either version 2 of the License, or    
+#     (at your option) any later version.                                  
 #
-#   THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-#   EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-#   WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+#     OME is distributed in the hope that it will be useful,               
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of       
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        
+#     GNU General Public License for more details.                         
+#
+#     You should have received a copy of the GNU General Public License    
+#     along with OME; if not, write to the Free Software Foundation, Inc.  
+#        59 Temple Place, Suite 330, Boston, MA  02111-1307  USA           
+#                                                                          
+#
 #
 #-------------------------- generic macros ---------------------------------
 
@@ -21,8 +27,7 @@ BINDIR = $(BUILDIR)
 INCDIR = $(BUILDIR)
 LIBDIR = $(BUILDIR)
 
-CFLAGS = -O2 -Wall -finline-functions -ffast-math -funroll-loops
-#CFLAGS = -g -Wall
+CFLAGS = -g -O2 -Wall -finline-functions -ffast-math -funroll-loops
 
 CC = gcc
 
@@ -33,16 +38,17 @@ STDLIBS = -lm
 
 #------------------ specific targets -----------------------
 
-NAME     = ome-1.5
+NAME     = ome-1.1-IR4
 LIBNAME  = ome
 LIB      = lib$(LIBNAME).a
 HEADERS  = img_file.h gras.h hist.h datafile.h fit_nonlinear.h obj.h \
            util.h pixl.h voronoy.h fit_linear.h mosaic.h geo.h
-CSRC     = img_file_tiff.c gras.c hist.c datafile.c fit_nonlinear.c \
-           obj.c util.c voronoy.c pixl.c fit_linear.c mosaic.c geo.c \
-           ome_info.c ome_make.c ome_copy.c ome_hist.c ome_obj.c \
-           ome_cccp.c ome_tmcp.c
+CSRC     = calc_separation.c gras.c datafile.c fit_linear.c \
+	   fit_nonlinear.c geo.c hist.c img_file_tiff.c mosaic.c\
+           obj.c ome_cccp.c ome_copy.c ome_hist.c ome_info.c \
+           ome_make.c ome_obj.c ome_tmcp.c pixl.c util.c voronoy.c
 OBJS     = img_file_tiff.o gras.o hist.o datafile.o fit_nonlinear.o \
+	   calc_separation.o \
            obj.o geo.o pixl.o util.o voronoy.o fit_linear.o mosaic.o
 HELPERS  = ome_info ome_make ome_copy ome_hist ome_obj
 XTRALIBS = -lome -ltiff
@@ -53,8 +59,7 @@ TARFILE  = README Makefile $(CSRC) $(HEADERS) $(IHEADERS)
 all: $(LIB) helpers ome_cccp ome_tmcp
 
 $(LIB): $(OBJS) $(HEADERS)
-	ar cr $@ $(OBJS)
-	ranlib $@
+	ar csr $@ $(OBJS)
 
 helpers: $(LIB) $(HELPERS)
 
@@ -95,9 +100,3 @@ tarfile:
 	tar -cvf $(NAME).tar $(NAME)
 	gzip -f $(NAME).tar
 	/bin/rm -R $(NAME)
-
-install:
-	install -d /OME/bin
-	install -c ome_cccp /OME/bin/ome_cccp
-	install -c ome_tmcp /OME/bin/ome_tmcp
-
