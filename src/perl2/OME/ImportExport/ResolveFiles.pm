@@ -189,7 +189,14 @@ sub importFile() {
 		# the only valid case that has no $repository is during bootstrap
 		if( $repository ) {
 			foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
-				my $ca = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
+				my $caXML = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
+				$caXML = $caXML->[0] if $caXML;
+				if( ! $caXML ) {
+					$caXML = $doc->createElementNS( $OMENS, "CustomAttributes" )	
+						or die "Could not make <CustomAttributes>!";
+					$imageXML->appendChild( $caXML );
+				}
+
 				foreach my $pixelsXML( $imageXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
 					my $externalXML = @{ $pixelsXML->getElementsByTagNameNS( $BinNS, "External" ) }[0];
 					my $href = $externalXML->getAttribute( "href" );
@@ -223,11 +230,6 @@ sub importFile() {
 					$pixelsXML->removeAttribute( "BigEndian" );
 	
 					$pixelsXML->removeChild( $externalXML );
-					if( ! $ca ) {
-						$ca = $doc->createElementNS( $OMENS, "CustomAttributes" )	
-							or die "Could not make <CustomAttributes>!";
-						$imageXML->appendChild( $ca );
-					}
 					
 					#strip out comments inside of <Pixels>
 					foreach( $pixelsXML->childNodes() ) {
@@ -235,7 +237,7 @@ sub importFile() {
 					}
 					
 					$imageXML->removeChild( $pixelsXML );
-					$ca->appendChild( $pixelsXML );
+					$caXML->appendChild( $pixelsXML );
 					
 				}
 			}
