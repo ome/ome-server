@@ -25,9 +25,33 @@ hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
 
 .ome_action_td { background-color: #006699; }
 
+.ome_menu_td { background-color: #E0E0E0; }
+
 /* OME Widgets for submit buttons and menu controls (usually grey on grey) */
-a.ome_widget { text-decoration: none; color: #353535; none; font-size: 10px; font-weight: bold; }
+/* Classes for <a> and <input> tags */
+a.ome_widget {
+	text-decoration: none;
+	color: #353535;
+	font-size: 10px;
+	font-weight: bold;
+}
+
 a.ome_widget:hover { text-decoration: none; color: #006699; }
+
+input.ome_widget {
+	font-size: 10px;
+	color: #353535;
+	font-weight: bold;
+	padding:0px;
+	border:0px;
+	cursor:pointer;
+	background: none;
+}
+
+input.ome_widget:hover {
+	text-decoration: none;
+	color: #006699;
+}
 
 /* Image based links */
 a.ome_imagelink:hover { color: #FF0000; border-width: 2px; }
