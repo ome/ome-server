@@ -344,15 +344,7 @@ public class Controller  implements LoginResponder {
 	public void doLogout() {
 
 		cancelLogin();
-		/*moduleFrame.dispose();
-		controlPanel.dispose();
-		removeFrames();
-		// remove library
-		if (library !=null) {
-			library.dispose();
-			
-		}
-		doLogin(); */
+
 	}
 	
 	/**
