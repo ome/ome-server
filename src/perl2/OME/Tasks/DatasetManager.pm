@@ -277,6 +277,7 @@ use strict;
 use OME::SetDB;
 use OME::DBObject;
 OME::DBObject->Caching(0);
+use Carp;
 
 use OME;
 our $VERSION = $OME::VERSION;
@@ -300,7 +301,8 @@ sub addImages{
 	my $factory=$session->Factory();
 	my $dataset;
 	if (defined $datasetID){
-		$dataset=$factory->loadObject("OME::Dataset",$datasetID);
+		$dataset=$factory->loadObject("OME::Dataset",$datasetID)
+			or confess "Couldn't load dataset id '$datasetID'";
 	} else{
 		$dataset=$session->dataset();
 	}
