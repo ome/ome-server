@@ -362,6 +362,8 @@ sub importGroup {
         $file->close();
     }
 
+    OME::Tasks::PixelsManager->finishPixels ($self->{pix},$self->{pixels});
+
     if ($status eq "") {
 	$self->__storeInputFileInfo($session, \@finfo);
 	$self->__storeChannelInfo($session, scalar(@$grp), @channelInfo);
@@ -390,8 +392,6 @@ sub readWritePixels {
     my $status = "";
 
     $self->{pix}->convertPlaneFromTIFF($fih,0,$theC,0);
-    OME::Tasks::PixelsManager->finishPixels ($self->{pix},$self->{pixels});
-
     doSliceCallback($callback);
 
     return $status;
