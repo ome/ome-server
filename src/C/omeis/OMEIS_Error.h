@@ -36,7 +36,7 @@
 #ifndef OMEIS_Error_h
 #define OMEIS_Error_h
 
-#define OMEIS_ERROR_SIZE   1024
+#define OMEIS_ERROR_SIZE   4096
 
 /* ------------------- */
 /* External Prototypes */
@@ -46,6 +46,9 @@ OMEIS_GetError ();
 
 void
 OMEIS_ClearError ();
+
+int
+OMEIS_CheckError ();
 
 void
 OMEIS_ReportError (char *method, char *ID_label, unsigned long long ID, const char *template, ...)

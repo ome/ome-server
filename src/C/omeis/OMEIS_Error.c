@@ -60,6 +60,12 @@ OMEIS_ClearError () {
 	memset(OMEIS_ERROR_STR, 0, OMEIS_ERROR_SIZE);
 }
 
+int
+OMEIS_CheckError () {
+	if (*OMEIS_ERROR_STR == '\0') return (0);
+	else return (1);
+}
+
 
 void
 OMEIS_ReportError (char *method, char *ID_label, unsigned long long ID, const char *template, ...) {
@@ -122,13 +128,19 @@ void OMEIS_DoError (const char *template, ...) {
 va_list ap;
 size_t lngth= strlen (OMEIS_ERROR_STR);
 
-		snprintf (OMEIS_ERROR_STR+lngth,OMEIS_ERROR_SIZE-lngth,"Error in %s at line %d: ", __FILE__ , __LINE__);
-
-		lngth= strlen (OMEIS_ERROR_STR);
-		va_start (ap, template);
-		vsnprintf (OMEIS_ERROR_STR + lngth, OMEIS_ERROR_SIZE-lngth-1, template, ap);
-		va_end (ap);
-		lngth= strlen (OMEIS_ERROR_STR);
-		if (*(OMEIS_ERROR_STR+lngth-1) != '\n')
-			*(OMEIS_ERROR_STR+lngth-1) = '\n';
+/*
+  This is kind of stupid because it always prints this file and line.
+	snprintf (OMEIS_ERROR_STR+lngth,OMEIS_ERROR_SIZE-lngth-1,"Error in %s at line %d: ", __FILE__ , __LINE__);
+	Either put it in a macro, or a #define, or just pass these into OMEIS_DoError every time.
+	Leaving this out for now.
+*/
+	lngth= strlen (OMEIS_ERROR_STR);
+	va_start (ap, template);
+	vsnprintf (OMEIS_ERROR_STR + lngth, OMEIS_ERROR_SIZE-lngth-1, template, ap);
+	va_end (ap);
+	lngth = strlen (OMEIS_ERROR_STR);
+	if (*(OMEIS_ERROR_STR+lngth-1) != '\n') {
+		*(OMEIS_ERROR_STR+lngth) = '\n';
+		*(OMEIS_ERROR_STR+lngth+1) = '\0';
+	}
 }
