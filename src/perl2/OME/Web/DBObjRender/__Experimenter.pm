@@ -36,6 +36,10 @@
 
 
 package OME::Web::DBObjRender::__Experimenter;
+use strict;
+use OME;
+our $VERSION = $OME::VERSION;
+use base qw(OME::Web::DBObjRender);
 
 =pod
 
@@ -43,19 +47,7 @@ package OME::Web::DBObjRender::__Experimenter;
 
 OME::Web::DBObjRender::__Experimenter - Specialized rendering for Experimenter Attribute
 
-=head1 DESCRIPTION
-
-Provides custom behavior for rendering an Experimenter Attribute
-
 =head1 METHODS
-
-=cut
-
-use strict;
-use OME;
-our $VERSION = $OME::VERSION;
-
-use base qw(OME::Web::DBObjRender);
 
 =head2 _renderData
 
@@ -75,41 +67,6 @@ sub _renderData {
 	}
 	return %record;
 }
-
-=head2 getRefSearchField
-
-returns a dropdown list of Experimenter names valued by id.
-
-=cut
-
-sub _getRefSearchField {
-	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
-	
-	my $factory = $self->Session()->Factory();
-	$default = $self->Session()->experimenter_id()
-		unless $default;
-	
-	my (undef, undef, $from_formal_name) = $self->_loadTypeAndGetInfo( $from_type );
-
-	# Owner list
-	my @experimenters = $factory->findAttributes( "Experimenter" );
-	my %experimenter_names = map{ $_->id() => $_->FirstName().' '.$_->LastName() } @experimenters;
-	my $experimenter_order = [ '', sort( { $experimenter_names{$a} cmp $experimenter_names{$b} } keys( %experimenter_names ) ) ];
-	$experimenter_names{''} = 'All';
-
-	my $q = $self->CGI();
-	$q->param( $accessor_to_type, $default ) unless defined $q->param( $accessor_to_type );
-	return (
-		$q->popup_menu( 
-			-name     => $accessor_to_type,
-			'-values' => $experimenter_order,
-			-labels	  => \%experimenter_names,
-			-default  => $default
-		),
-		$accessor_to_type
-	);
-}
-
 
 =head1 Author
 

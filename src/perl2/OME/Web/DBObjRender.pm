@@ -239,14 +239,27 @@ sub _populate_object_in_template {
 		my $render_mode = $1;
 		my @relations_data;
 		foreach my $relation( @$relations ) {
-			my( $title, $method, $relation_type ) = @$relation;
+			my( $title, $method, $foreign_key_class ) = @$relation;
+			my $more_info_url;
+			if( $obj->getColumnType( $method ) eq 'has-many' ) {
+				# has many accessor needs the search field set.
+				my ($foreign_key_class, $foreign_key_alias ) = @{ $obj->__hasManys()->{ $method } };
+				my ( undef, $search_path, $default_search_value ) = $self->SearchUtil()->
+					getRefSearchField( $foreign_key_class, $obj->getFormalName(), $foreign_key_alias, $obj );
+				$more_info_url = $self->pageURL( 'OME::Web::Search', {
+					Type         => $foreign_key_class,
+					$search_path => $default_search_value
+				} );
+			} else { # many to many accessor needs the accessor field set
+				$more_info_url = $self->getSearchAccessorURL( $obj, $method )
+			}
 
 			push( @relations_data, { 
 				name => $title, 
 				$object_list_request => $self->renderArray( 
 					[ $obj, $method ], 
 					$render_mode, 
-					{ more_info_url => $self->getSearchAccessorURL( $obj, $method ),
+					{ more_info_url => $more_info_url,
 					  type => $obj->getAccessorReferenceType( $method )->getFormalName()
 					}
 				)
@@ -403,7 +416,7 @@ sub _pagerControl {
 	my $numPages = POSIX::ceil( $obj_count / $limit );
 
 	# Turn the page
-	my $action = $q->param( 'page_action' ) ;
+	my $action = $q->param( $control_name.'_page_action' ) ;
 	if( $action ) {
 		if( $action eq 'FirstPage_'.$control_name ) {
 			$offset = 0;
@@ -421,17 +434,17 @@ sub _pagerControl {
 	# make controls
 	if( $numPages > 1 ) {
 		$pagingText = "<input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
-		$pagingText .= "<input type='hidden' name='page_action'>";
+		$pagingText .= "<input type='hidden' name='${control_name}_page_action'>";
 		$pagingText .= $q->a( {
 				-title => "First Page",
-				-href => "javascript: document.forms[0].page_action.value='FirstPage_$control_name'; document.forms[0].submit();",
+				-href => "javascript: document.forms[0].${control_name}_page_action.value='FirstPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'<<'
 			)." "
 			if ( $currentPage > 1 and $numPages > 2 );
 		$pagingText .= $q->a( {
 				-title => "Previous Page",
-				-href => "javascript: document.forms[0].page_action.value='PrevPage_$control_name'; document.forms[0].submit();",
+				-href => "javascript: document.forms[0].${control_name}_page_action.value='PrevPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'<'
 			)." "
@@ -439,14 +452,14 @@ sub _pagerControl {
 		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 		$pagingText .= "\n".$q->a( {
 				-title => "Next Page",
-				-href  => "javascript: document.forms[0].page_action.value='NextPage_$control_name'; document.forms[0].submit();",
+				-href  => "javascript: document.forms[0].${control_name}_page_action.value='NextPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'>'
 			)." "
 			if $currentPage < $numPages;
 		$pagingText .= "\n".$q->a( {
 				-title => "Last Page",
-				-href  => "javascript: document.forms[0].page_action.value='LastPage_$control_name'; document.forms[0].submit();",
+				-href  => "javascript: document.forms[0].${control_name}_page_action.value='LastPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'>>'
 			)
@@ -801,96 +814,6 @@ sub _parse_tmpl_fields {
 	return $field_requests;
 }
 
-=head2 getSearchFields
-
-	# get html form elements keyed by field names 
-	my ($form_fields, $search_paths) = OME::Web::DBObjRender->getSearchFields( $type, \@field_names, \%default_search_values );
-
-$type can be a DBObject name ("OME::Image"), an Attribute name
-("@Pixels"), or an instance of either
-@field_names is used to populate the returned hash.
-%default_search_values is also optional. If given, it is used to populate the search form fields.
-
-$form_fields is a hash reference of html form inputs { field_name => form_input, ... }
-$search_paths is also a hash reference keyed by field names. It's values
-are search paths. In most cases the search path will be the same as
-the field name. For reference fields, the path will specify a field in the referent. 
-For example, a reference field named 'dataset' would have a search path 'dataset.name'
-
-=cut
-
-sub getSearchFields {
-	my ($self, $type, $field_names, $defaults) = @_;
-	my ($form_fields, $search_paths);
-	
-	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
-	($form_fields, $search_paths) = $specializedRenderer->_getSearchFields( $type, $field_names, $defaults )
-		if( $specializedRenderer and $specializedRenderer->can('_getSearchFields') );
-
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $type );
-
-	my $q = $self->CGI();
-	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$field_names;
-	foreach my $field ( @$field_names ) {
-		next if exists $form_fields->{ $field };
-		if( $fieldRefs{ $field } ) {
-			( $form_fields->{ $field }, $search_paths->{ $field } ) = 
-				$self->getRefSearchField( $formal_name, $fieldRefs{ $field }, $field, $defaults->{ $field } );
-		} else {
-			$q->param( $field, $defaults->{ $field }  ) 
-				unless defined $q->param( $field );
-			$form_fields->{ $field } = $q->textfield( 
-				-name    => $field , 
-				-size    => 17, 
-				-default => $defaults->{ $field } 
-			);
-			$search_paths->{ $field } = $field;
-		}
-	}
-
-	return ( $form_fields, $search_paths );
-}
-
-=head2 getRefSearchField
-
-	# get an html form element that will allow searches to $to_type
-	my ( $searchField, $search_path ) = OME::Web::DBObjRender->getRefSearchField( $from_type, $to_type, $accessor_to_type );
-
-the types may be a DBObject name ("OME::Image"), an Attribute name
-("@Pixels"), or an instance of either
-$from_type is the type you are searching from
-$accessor_to_type is an accessor of $from_type that returns an instance of $to_type
-$to_type is the type the accessor returns
-
-returns a form input and a search path for that input. The search path
-for a module_execution's module field is module.name
-
-=cut
-
-sub getRefSearchField {
-	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
-	
-	my $specializedRenderer = $self->_getSpecializedRenderer( $to_type );
-	return $specializedRenderer->_getRefSearchField( $from_type, $to_type, $accessor_to_type, $default )
-		if( $specializedRenderer and $specializedRenderer->can('_getRefSearchField') );
-
-	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
-	my ($to_package) = OME::Web->_loadTypeAndGetInfo( $to_type );
-	my $searchOn = '';
-	$searchOn = '.name' if( $to_package->getColumnType( 'name' ) );
-	$searchOn = '.Name' if( $to_package->getColumnType( 'Name' ) );
-
-	my $q = $self->CGI();
-	$q->param( $accessor_to_type.$searchOn, $default  ) 
-		unless defined $q->param($accessor_to_type.$searchOn );
-	return ( 
-		$q->textfield( -name => $accessor_to_type.$searchOn , -size => 17 ),
-		$accessor_to_type.$searchOn
-	);
-}
-
-
 =head1 Internal Methods
 
 These methods should not be accessed from outside the class
@@ -1088,21 +1011,6 @@ additionally, the orgininal request is stored in:  $request{ 'request_string' }
 the record returned needs to be keyed by the original request.
 
 Subclasses need only populate fields they are overriding.
-
-=head2 _getSearchFields
-
-	%partial_search_fields = 
-		$specializedRenderer->_getSearchFields( $type, $field_names, $defaults );
-
-Implement this to do custom rendering of search fields. Subclasses need
-only populate fields they are overriding.
-
-=head2 _getRefSearchField
-
-	my ( $form_input, $search_path ) = $specializedRenderer->_getRefSearchField( 
-		$from_type, $to_type, $accessor_to_type, $default )
-	
-	overrides getRefSearchField()
 
 =head1 Roadmap/2do list
 

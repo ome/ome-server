@@ -89,6 +89,7 @@ use OME::SessionManager;
 use OME::Web::DefaultHeaderBuilder;
 use OME::Web::DefaultMenuBuilder;
 use OME::Web::DBObjRender;
+use OME::Web::Search;
 
 use base qw(Class::Data::Inheritable);
 
@@ -157,6 +158,11 @@ sub Renderer {
 	my $self = shift; 
 	return $self->{renderer} if $self->{renderer};
 	return ( $self->{renderer} = OME::Web::DBObjRender->new( CGI => $self->CGI() ) );
+}
+sub SearchUtil { 
+	my $self = shift; 
+	return $self->{search_util} if $self->{search_util};
+	return ( $self->{search_util} = OME::Web::Search->new( CGI => $self->CGI() ) );
 }
 sub Tablemaker { 
 	my $self = shift; 
@@ -857,10 +863,10 @@ sub getSearchAccessorURL {
 	$self->_loadTypeAndGetInfo( $obj->getAccessorReferenceType( $method ) );
 	return $self->pageURL( 'OME::Web::Search', {
 		Type         => $obj->getAccessorReferenceType( $method )->getFormalName(),
-		search_names => 'accessor',
-		accessor     => join( ',', $obj->getFormalName(), $obj->id(), $method )
+		accessor_type   => $obj->getFormalName(),
+		accessor_id     => $obj->id, 
+		accessor_method => $method
 	} );
-#e	return "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=".$obj->id();
 }
 
 

@@ -201,7 +201,7 @@ sub getTable {
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
 	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
-	my ($searches, $search_on)  = $self->Renderer()->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
+	my ($searches, $search_on) = $self->SearchUtil()->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
 	my @records    = $self->Renderer()->renderData( $objects, [@fieldNames, 'id', '/obj_detail_url' ]);
 
 	# table data
