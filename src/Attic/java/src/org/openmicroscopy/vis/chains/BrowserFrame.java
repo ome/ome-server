@@ -76,8 +76,6 @@ public class BrowserFrame extends ChainFrameBase {
 		layoutFrame();
 		show();
 		PBrowserCanvas browserCanvas = (PBrowserCanvas) canvas;
-		browserCanvas.setFrame(this);
-	
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
