@@ -286,7 +286,6 @@ sub create_experimenter {
     print_header "Initial user creation";
     
     my $factory = OME::Factory->new();
-    my $dbh = $factory->obtainDBH();
 
     while (1) {
 	$first_name = confirm_default ("First name", $first_name);
@@ -332,7 +331,6 @@ sub create_experimenter {
             });
 
     $factory->commitTransaction();
-    $factory->releaseDBH($dbh);
 
     return ($username, $password);
 }

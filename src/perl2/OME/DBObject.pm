@@ -984,6 +984,7 @@ sub refresh {
     my ($sql,$id_available,$values) = $self->
       __makeSelectSQL($columns_wanted,{id => $id});
 
+#   This call obtains the Factory's DBH (not a new one).
     my $dbh = $factory->obtainDBH();
     eval {
         my $sth = $dbh->prepare($sql) or die "Could not prepare";
@@ -993,7 +994,8 @@ sub refresh {
         $i++ if $id_available;
         $self->__fillInstance($i,$columns_wanted,$sth_vals);
     };
-    $factory->releaseDBH($dbh);
+# releaseDBH is only called to balance a Factory->newDBH call.
+#   $factory->releaseDBH($dbh);
     confess $@ if $@;
 }
 
@@ -1040,7 +1042,8 @@ sub storeObject {
         eval {
             $self->__writeToDatabase($dbh);
         };
-        $factory->releaseDBH($dbh);
+# releaseDBH is only called to balance a Factory->newDBH call.
+#       $factory->releaseDBH($dbh);
         die $@ if $@;
     }
 

@@ -452,9 +452,11 @@ sub processDOM {
         my $pkg = $newTable->requireDataTablePackage(1);
 
         # Add the table to the database
+        # This gets the Factory's DBH - not a new one.
         my $dbh = $factory->obtainDBH();
         $delegate->addClassToDatabase($dbh,$pkg);
-        $factory->releaseDBH($dbh);
+# We're not supposed to release the Factory's DBH.  Only ones we get from Factory->newDBH
+#        $factory->releaseDBH($dbh);
 
     }
 
