@@ -217,8 +217,12 @@ sub __processElement {
 		}
 
 		# Get link text
+		my $text;
+
 		$web_class->require();
-		my $text = $web_class->getMenuText();
+		if ($web_class->can('getMenuText')) {
+			$text = $web_class->getMenuText();
+		}
 
 		# Get HREF
 		my $href = $web_class->pageURL($web_class);
@@ -287,7 +291,10 @@ sub getPageLocationMenu {
 
 	# Make sure the class is loaded
 	$web_class->require();
-	my $menu_text = $web_class->getMenuText();
+	my $menu_text;
+	if ($web_class->can('getMenuText')) {
+		$menu_text = $web_class->getMenuText();
+	}
 
 	# OME::Web::Home specific
 	if ($web_class eq 'OME::Web::Home') {
