@@ -36,47 +36,47 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		<SemanticType Name="ChebyshevCoefficientHistogram" AppliesTo="I">
 			<Description>
-			32 bin histogram computed from coefficients of 2D Chebyshev transform
+			32 bin histogram computed from coefficients of 2D Chebyshev Transform
 			</Description>
 			<Element
-				Name="Bin0"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_0"
+				Name="Bin00"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_00"
 				DataType="integer"/>
 			<Element
-				Name="Bin1"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_1"
+				Name="Bin01"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_01"
 				DataType="integer"/>
 			<Element
-				Name="Bin2"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_2"
+				Name="Bin02"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_02"
 				DataType="integer"/>
 			<Element
-				Name="Bin3"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_3"
+				Name="Bin03"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_03"
 				DataType="integer"/>
 			<Element
-				Name="Bin4"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_4"
+				Name="Bin04"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_04"
 				DataType="integer"/>
 			<Element
-				Name="Bin5"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_5"
+				Name="Bin05"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_05"
 				DataType="integer"/>
 			<Element
-				Name="Bin6"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_6"
+				Name="Bin06"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_06"
 				DataType="integer"/>
 			<Element
-				Name="Bin7"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_7"
+				Name="Bin07"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_07"
 				DataType="integer"/>
 			<Element
-				Name="Bin8"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_8"
+				Name="Bin08"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_08"
 				DataType="integer"/>
 			<Element
-				Name="Bin9"
-				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_9"
+				Name="Bin09"
+				DBLocation="CHEBYSHEV_STATISTICS.HIST_BIN_09"
 				DataType="integer"/>
 			<Element
 				Name="Bin10"
@@ -205,16 +205,16 @@
 			  <Output><Vector DecodeWith="Chebyshev Coefficient Histogram"/></Output>
 			</FunctionOutputs>			
 			  <VectorDecoder ID="Chebyshev Coefficient Histogram">
-				<Element Index="1"  OutputLocation="Chebyshev Coefficient Histogram.Bin0"/>
-				<Element Index="2"  OutputLocation="Chebyshev Coefficient Histogram.Bin1"/>
-				<Element Index="3"  OutputLocation="Chebyshev Coefficient Histogram.Bin2"/>
-				<Element Index="4"  OutputLocation="Chebyshev Coefficient Histogram.Bin3"/>
-				<Element Index="5"  OutputLocation="Chebyshev Coefficient Histogram.Bin4"/>
-				<Element Index="6"  OutputLocation="Chebyshev Coefficient Histogram.Bin5"/>
-				<Element Index="7"  OutputLocation="Chebyshev Coefficient Histogram.Bin6"/>
-				<Element Index="8"  OutputLocation="Chebyshev Coefficient Histogram.Bin7"/>
-				<Element Index="9"  OutputLocation="Chebyshev Coefficient Histogram.Bin8"/>
-				<Element Index="10" OutputLocation="Chebyshev Coefficient Histogram.Bin9"/>
+				<Element Index="1"  OutputLocation="Chebyshev Coefficient Histogram.Bin00"/>
+				<Element Index="2"  OutputLocation="Chebyshev Coefficient Histogram.Bin01"/>
+				<Element Index="3"  OutputLocation="Chebyshev Coefficient Histogram.Bin02"/>
+				<Element Index="4"  OutputLocation="Chebyshev Coefficient Histogram.Bin03"/>
+				<Element Index="5"  OutputLocation="Chebyshev Coefficient Histogram.Bin04"/>
+				<Element Index="6"  OutputLocation="Chebyshev Coefficient Histogram.Bin05"/>
+				<Element Index="7"  OutputLocation="Chebyshev Coefficient Histogram.Bin06"/>
+				<Element Index="8"  OutputLocation="Chebyshev Coefficient Histogram.Bin07"/>
+				<Element Index="9"  OutputLocation="Chebyshev Coefficient Histogram.Bin08"/>
+				<Element Index="10" OutputLocation="Chebyshev Coefficient Histogram.Bin09"/>
 				<Element Index="11" OutputLocation="Chebyshev Coefficient Histogram.Bin10"/>
 				<Element Index="12" OutputLocation="Chebyshev Coefficient Histogram.Bin11"/>
 				<Element Index="13" OutputLocation="Chebyshev Coefficient Histogram.Bin12"/>
