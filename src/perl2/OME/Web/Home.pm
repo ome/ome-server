@@ -55,7 +55,7 @@ sub createOMEPage {
 	my $home = '/html/noOp.html';
 	my $HTML;
 
-	$self->{contentType} = 'text/html';
+	$self->contentType('text/html');
 	$HTML = <<ENDHTML;
 		<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 		<HTML><HEAD>

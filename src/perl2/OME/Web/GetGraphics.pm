@@ -95,11 +95,6 @@ sub getPageTitle {
     return "OME - SVG viewer";
 }
 
-sub contentType {
-my $self = shift;
-	return $self->{contentType};
-}
-
 sub DrawMainWindowSVGimage {
 my $self      = shift;
 my $cgi       = $self->CGI();
@@ -107,7 +102,7 @@ my $ImageID   = $cgi->url_param("ImageID")  || die "\nImage id not supplied to G
 my $DatasetID = $cgi->url_param("DatasetID");
 my $HTML='';
 
-	$self->{contentType} = 'text/html';
+	$self->contentType('text/html');
 #	$HTML = $cgi->start_html(-title=>'OME SVG 2D Viewer');
 # Add controls to change the displayed image. e.g. switch to previous or next image in a set.
 # Embedding in frames instead of object allows Mozilla > v1 to run it. Keep if no problems w/ it.
@@ -136,7 +131,7 @@ my $cgi   = $self->CGI();
 my $DatasetID = $cgi->url_param('DatasetID') || die "\nDataset id not supplied to GetGraphics.pm ";
 my $HTML='';
 
-	$self->{contentType} = 'text/html';
+	$self->contentType('text/html');
 	$HTML .= <<ENDHTML;
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
@@ -172,7 +167,7 @@ sub DrawDatasetControl {
 	$JS_SetImagePathArray = join( "\n", map( "imagePaths[$_] = '".$ImagePaths{$_}."';", keys %ImagePaths) );
 	
 
-	$self->{contentType} = 'text/html';
+	$self->contentType('text/html');
 	$HTML = <<ENDHTML;
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
@@ -398,7 +393,7 @@ my $overlayData        = $self->getOverlayJS();
 my $centroidData       = $overlayData->{ centroids };
 my $featureData        = $overlayData->{ features };
 
-	$self->{contentType} = "image/svg+xml";
+	$self->contentType("image/svg+xml");
 	$SVG = <<'ENDSVG';
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"

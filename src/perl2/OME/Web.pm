@@ -60,8 +60,6 @@ __PACKAGE__->mk_classdata('__Session');
 #	My solution: Use the class variable __Session and have a Session 
 #	accessor/mutator method that deals with things appropriately.
 
-
-
 # The OME::Web class serves as the ancestor of all webpages accessed
 # through the OME system.  Functionaly common to all pages of the site
 # are defined here.	 Each webpage is defined by a subclass (ideally
@@ -70,7 +68,13 @@ __PACKAGE__->mk_classdata('__Session');
 #
 #	 getPageTitle
 #	 getPageBody
+#	 
 
+# IGG 9/18/03:
+# contentType no longer defined as a method in this package
+# to make it easier to modify in subclasses.
+__PACKAGE__->mk_classdata('contentType');
+__PACKAGE__->contentType('text/html');
 
 my $loginPage = 'OME::Web::Login';
 
@@ -256,11 +260,14 @@ sub serve {
 
 	print $self->CGI()->header(-type => $self->contentType(),%headers);
 
+	# This would be a place to put browser-specific handling if necessary
 	if ($result eq 'HTML' && defined $content) {
 		print $content;
 	} elsif ($result eq 'IMAGE' && defined $content) {
 		print $content;
 	} elsif ($result eq 'SVG' && defined $content) {
+		print $content;
+	} elsif ($result eq 'XML' && defined $content) {
 		print $content;
 	} elsif ($result eq 'REDIRECT' && defined $content) {
 		$self->redirect($content);
@@ -333,9 +340,8 @@ sub createOMEPage {
 	my $CGI	  = $self->CGI();
 	my $title = $self->getPageTitle();
 	my ($result,$body)	= $self->getPageBody();
-
 	return ('ERROR',undef) if (!defined $title || !defined $body);
-	return ($result,$body) if ($result eq 'REDIRECT');
+	return ($result,$body) if ($result ne 'HTML');
 
 	my $head = $CGI->start_html({title => $title,
 				 bgcolor => $self->{OMEbgcolor},
@@ -448,9 +454,7 @@ sub font {
 
 # contentType
 # -----------------
-sub contentType {
-	return 'text/html';
-}
+# no longer defined as sub - using mk_classdata to store/access contentType.
 
 
 # table(params, ...)
