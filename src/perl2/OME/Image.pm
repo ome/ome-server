@@ -121,6 +121,8 @@ sub GetPix {
 
     if (@_) {
         my ($pixelAttr, $dimensionsAttr) = @_;
+        $pixelAttr->verifyType("Pixels");
+        $dimensionsAttr->verifyType("Dimensions");
         my $repositoryAttr = $pixelAttr->Repository();
         my $pix = OME::Image::Pix->
           new($repositoryAttr->Path().$pixelAttr->Path(),
