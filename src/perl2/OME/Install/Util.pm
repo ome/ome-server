@@ -103,7 +103,46 @@ my %os_specific = (
 	    chomp($macAddr);
 
 	    return $macAddr;
-	}
+	},
+
+	# XXX: Since OS X is braindead and has no useradd commands we have to do the whole thing ourselves.
+	add_user => sub {
+	    my ($user, $homedir, $group) = @_;
+
+	    my $gid = getgrnam ($group);
+	    my @uids = `nireport / /users uid`;
+	    if ($? == 0) {
+		sort {$a <=> $b} @uids;
+		$uid = $gids[$#uids]++;  # Value of the last element plus one
+	    } else { return 0 }
+
+	    (system ("nicl / -create /users/$user uid $uid") == 0) or return 0;
+	    (system ("nicl / -create /users/$user gid $gid") == 0) or return 0;
+	    # XXX: Yes, more of OS X being braindead, putting false in /usr/bin
+	    (system ("nicl / -create /users/$user shell /usr/bin/false") == 0) or return 0;
+	    (system ("nicl / -create /users/$user home $homedir") == 0) or return 0;
+	    (system ("nicl / -create /users/$user realname \"OME User\"") == 0) or return 0;
+	    (system ("nicl / -create /users/$user passwd \'\*\'") == 0) or return 0;
+
+	    return 1;
+	},
+
+	# XXX: Once again, since we've got no groupadd command either we have to do the whole thing ourselves.
+	add_group => sub {
+	    my $group = shift;
+
+	    my @gids = `nireport / /groups gid`;
+	    if ($? == 0) {
+		sort {$a <=> $b} @gids;
+		$gid = $gids[$#gids]++;  # Value of the last element plus one
+	    } else { return 0 }
+
+	    (system ("nicl / -create /groups/ome gid $gid") == 0) or return 0;
+	    (system ("nicl / -create /groups/ome password \'\*\'") == 0) or return 0;
+
+	    return 1;
+	},
+
     },
 
     # HP-UX specific stuff
