@@ -130,7 +130,7 @@ public class DataAttribute
    * Sets the element to the specified object, and the type of the element
    * to type OBJECT if the element is not yet present.  getElement() or
    * getObjectElement() must be used in conjunction with elements set with
-   * this method.  Will return false if the element is null, or if
+   * this method.  Will return false if the key is null, or if
    * you try to set an existing element of an incompatible type.
    * 
    * @param key The name of the element to add.
@@ -139,7 +139,7 @@ public class DataAttribute
    */
   public boolean setObjectElement(String key, Object element)
   {
-    if(key == null || element == null)
+    if(element == null)
     {
       return false;
     }
@@ -556,5 +556,52 @@ public class DataAttribute
       elementMap.put(key,element);
       return true;
     }
+  }
+  
+  /**
+   * Defines an element without initializing it.  A call to setXXX will have
+   * the same effect when called for the first time, but will assign a value.
+   * If this is called on an element that already exists, nothing will happen,
+   * and the method will return false.
+   * 
+   * @param key The element to define.
+   * @param type The type of the element to define.
+   * @return true if the element was created, false otherwise (including null
+   *         parameters)
+   */
+  public boolean defineElement(String key, DataElementType type)
+  {
+    if(key == null || type == null)
+    {
+      return false;
+    }
+    if(elementMap.containsKey(key))
+    {
+      return false;
+    }
+    else
+    {
+      elementMap.put(key,null);
+      elementTypeMap.put(key,type);
+      return true;
+    }
+  }
+  
+  /**
+   * Set the current value of the specified element to null.  Returns true
+   * if the key is a valid element name, false otherwise.
+   * 
+   * @param key The name of the element to nullify.
+   * @return Whether or not the key was valid (and thus, the element was
+   *         nullified)
+   */
+  public boolean setElementNull(String key)
+  {
+    if(elementMap.containsKey(key))
+    {
+      elementMap.put(key,null);
+      return true;
+    }
+    else return false;
   }
 }
