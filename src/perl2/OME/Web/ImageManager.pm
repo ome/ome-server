@@ -136,8 +136,13 @@ sub print_list{
   my $session = $self->Session();
   my $user=$session->User();
   my $ownerid=$user->experimenter_id;
-  my @userProjects = OME::Project->search( owner_id => $ownerid );
-  my @groupProjects=OME::Project->search( group_id => $user->group()->group_id());
+ # my @userProjects = OME::Project->search( owner_id => $ownerid );
+  #my @groupProjects=OME::Project->search( group_id => $user->group()->group_id());
+
+  my @groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->group()->group_id());
+  my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $ownerid);
+ 
+
   my $text="";
 
   my $rep=not_owned_project(\@groupProjects,\@userProjects); 

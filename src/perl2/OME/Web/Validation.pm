@@ -135,9 +135,11 @@ sub projectNotDefined {
 	# Has this function been called inappropriately?
 	die ref ($self)."->projectNotDefined() has been called inappropriately. There is a project defined for this session."
 		if( defined $session->project() );
-	
-	my @projects = OME::Project->search( group_id => $user->group()->group_id());
-	my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
+	my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->group()->group_id());
+	my @ownprojects=$session->Factory()->findObjects("OME::Project",'owner_id' =>$user->experimenter_id);
+
+	#my @projects = OME::Project->search( group_id => $user->group()->group_id());
+	#my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
       my $usergpid=$user->group()->group_id();
 
 	# Is this a first time login? How do I check for that? For the time being, I'm going to say if neither a project nor dataset is defined, it is a first time login. Since this function won't be called if a project
@@ -190,8 +192,12 @@ sub datasetNotDefined {
 		return $text;
 	}
 	my $usergpid=$user->group()->group_id();
-	@datasets    = OME::Dataset->search( group_id => $user->group()->group_id());
-	my @images   = OME::Image->search( group_id => $user->group()->group_id());
+      @datasets =$session->Factory()->findObjects("OME::Dataset",'group_id'=>$user->group()->group_id());
+      my @images =$session->Factory()->findObjects("OME::Image",'group_id'=>$user->group()->group_id());
+
+
+	#@datasets    = OME::Dataset->search( group_id => $user->group()->group_id());
+	#my @images   = OME::Image->search( group_id => $user->group()->group_id());
 	$text	.=$self->printPopUpdataset();
 	$text .= "<p>There is not a dataset defined for your session. <li>Click ".$cgi->a({href=>'/JavaScript/DirTree/index.htm'},'here')." to create a new dataset by importing images. ";
 	#$text .= "<li>Click ".$cgi->a({href=>qq{javascript: alert('This is not implemented yet.')}},'here')." to make a dataset from existing images. "

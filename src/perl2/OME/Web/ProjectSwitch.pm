@@ -107,10 +107,11 @@ sub print_form {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $project = $self->Session()->project();
-	# find all projects involving user's group
-	#my @projects = OME::Project->search( group_id => $self->Session()->User()->group()->group_id() );
-	# Only project owned
-      my @projects = OME::Project->search( owner_id => $self->Session()->User()->experimenter_id );
+      my $session =$self->Session();
+
+	# User's projects
+     # my @projects = OME::Project->search( owner_id => $self->Session()->User()->experimenter_id );
+      my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->experimenter_id );
 
 
       my %projectList = map { $_->project_id() => $_->name()} @projects

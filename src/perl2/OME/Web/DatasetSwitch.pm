@@ -62,11 +62,11 @@ sub print_form {
    my $cgi = $self->CGI();
    my $text="";
    my $dataset = $self->Session()->dataset();
+   my $session=$self->Session();
+   # Switch to  a dataset you are using
+   my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$self->Session()->User()->experimenter_id  );
 
-  # my @datasets = OME::Dataset->search( group_id => $self->Session()->User()->group()->group_id() );
-  
-  # Switch to  a dataset you are using
-  my @userProjects = OME::Project->search( owner_id => $self->Session()->User()->experimenter_id );
+  #my @userProjects = OME::Project->search( owner_id => $self->Session()->User()->experimenter_id );
   return "You must define a project first." unless scalar(@userProjects)>0;
   my %datasetList=();
   foreach (@userProjects){

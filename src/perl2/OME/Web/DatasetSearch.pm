@@ -67,7 +67,7 @@ sub getPageBody {
          }
           if (defined $ref){
 		$body.=format_popup();
-            $body.=format_output($ref,$ownerID,$cgi);
+            $body.=format_output($session,$ref,$ownerID,$cgi);
           }else{
 		$body.="No Dataset found.";
           }
@@ -106,11 +106,13 @@ sub format_form{
 }
 
 sub format_output{
-   my ($ref,$ownerID,$cgi)=@_;
+   my ($session,$ref,$ownerID,$cgi)=@_;
    my $tableRows="";
    my $text="";
    # select button only for the dataset used
-   my @userProjects = OME::Project->search( owner_id => $ownerID );
+   my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$ownerID);
+
+  # my @userProjects = OME::Project->search( owner_id => $ownerID );
    my %datasetList=();
    foreach (@userProjects){
      my @datasets=$_->datasets();
@@ -125,7 +127,7 @@ sub format_output{
 
    foreach (@$ref){
 	my ($buttonSelect,$buttonInfo);
-	#Control for the time being.
+	#Control for the time being. due to import process
 	if ($_->{name} eq "Dummy import dataset"){
 	  next;
       }

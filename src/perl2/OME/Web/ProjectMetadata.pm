@@ -47,7 +47,8 @@ sub getPageBody {
 	my $projectname=cleaning($cgi->param('name'));
 	return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
 	if ($project->name() ne $cgi->param('name')){
-         my @nameprojects=OME::Project->search(name=>$projectname);
+         my @nameprojects=$session->Factory()->findObjects("OME::Project",'name'=>$projectname);
+         #my @nameprojects=OME::Project->search(name=>$projectname);
 	   return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless scalar(@nameprojects)==0;
       }
 

@@ -53,7 +53,9 @@ sub getPageBody {
 		return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
 	
 		# $projectname exists??
-		my @nameprojects=OME::Project->search(name=>$projectname);
+		#my @nameprojects=OME::Project->search(name=>$projectname);
+		my @nameprojects=$session->Factory()->findObjects("OME::Project",'name'=>$projectname);
+
 		return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless scalar(@nameprojects)==0;
 		my $data = {name => $cgi->param('name'),
 			description => $cgi->param('description'),

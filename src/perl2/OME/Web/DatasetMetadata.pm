@@ -37,7 +37,7 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
-		my $project=$session->project();
+	my $project=$session->project();
       my @listdataset=$project->datasets();
       if (scalar(@listdataset)==0){
 		$body.=$cgi->h3("No current dataset. Please define a dataset");
@@ -54,7 +54,8 @@ sub getPageBody {
 		my $datasetname=cleaning($cgi->param('name'));
 		return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetname;
 		if ($dataset->name() ne $cgi->param('name')){
-         		my @namedatasets=OME::Dataset->search(name=>$datasetname);
+                  my @namedatasets=$session->Factory()->findObjects("OME::Dataset", 'name'=>$datasetname);
+         		#my @namedatasets=OME::Dataset->search(name=>$datasetname);
 	   		return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless scalar(@namedatasets)==0;
      		 }
 

@@ -114,9 +114,13 @@ sub print_status{
  my $self=shift;
  my $cgi=$self->CGI();
  my $text="";
- my $user=$self->Session()->User();
+ my $session=$self->Session();
+ my $user=$session->User();
+
  #User's datasets
- my @ownDatasets=OME::Dataset->search( owner_id => $user->experimenter_id );
+ my @ownDatasets=$session->Factory()->findObjects("OME::Dataset",'owner_id' => $user->experimenter_id );
+
+ #my @ownDatasets=OME::Dataset->search( owner_id => $user->experimenter_id );
  my %UserDataset=();
  my %Share=();
  my %CanAdd=();
@@ -125,9 +129,11 @@ sub print_status{
  %CanAdd=%UserDataset;
 
  #Check if used by others members.
-
- my @groupProjects=OME::Project->search( group_id => $user->group()->group_id());
- my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
+ my @groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->group()->group_id());
+ my @ownprojects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $user->experimenter_id);
+ 
+ #my @groupProjects=OME::Project->search( group_id => $user->group()->group_id());
+ #my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
  
  my $rep=not_owned_project(\@groupProjects,\@ownprojects); 
  if (defined $rep){
@@ -326,10 +332,6 @@ sub print_checkbox{
 
  }
  $text.=join("<br>",@list);
-
-
-
-
 
  return $text;
 }

@@ -84,7 +84,9 @@ sub getPageBody {
 				return ('HTML',$text) unless $datasetname;
          			
         			#name already exists
-				my @namedatasets=OME::Dataset->search(name=>$datasetname);
+				my @namedatasets=$session->Factory()->findObjects("OME::Dataset",'name'=>$datasetname);
+
+				#my @namedatasets=OME::Dataset->search(name=>$datasetname);
 				my $txt="";
 				$txt.="<b>This name already exists. Please enter a new name for your dataset</b><br>";
 				$txt.=$self->print_form($selections[0]);

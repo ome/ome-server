@@ -188,9 +188,12 @@ sub retrieve_result{
   my $cgi=$self->CGI();
   my $session=$self->Session();
   my $ownerid=$session->User()->experimenter_id;
-  my @userProjects = OME::Project->search( owner_id => $ownerid );
+  #my @userProjects = OME::Project->search( owner_id => $ownerid );
+  my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $ownerid);
+
   return "You must define a project first." unless scalar(@userProjects)>0;
-  my @groupProjects=OME::Project->search( group_id => $session->User()->group()->group_id());
+  #my @groupProjects=OME::Project->search( group_id => $session->User()->group()->group_id());
+  my @groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=>$session->User()->group()->group_id() );
 
   my $rep=not_owned_project(\@groupProjects,\@userProjects);
   my %gpDatasetList=();
