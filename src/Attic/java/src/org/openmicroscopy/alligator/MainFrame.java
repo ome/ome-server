@@ -105,7 +105,7 @@ public class MainFrame
         jLocalLabel.setText("Local"); */
         jRemoteLabel.setHorizontalAlignment(SwingConstants.CENTER);
         jRemoteLabel.setText("Remote");
-        jTypesLabel.setText("Types");
+        jTypesLabel.setText("Semantic Types");
         jModulesLabel.setText("Modules");
         //jScrollPane1.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
