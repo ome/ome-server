@@ -233,7 +233,7 @@ sub update_database {
         undef $version;
 
         foreach my $file (@files) {
-            if ($file =~ /^README/) {
+            if ($file =~ /^CHANGELOG/) {
                 next;
             } elsif ($file =~ /\.sql$/) {
                 eval { `psql -f $file ome` };
