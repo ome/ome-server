@@ -112,7 +112,6 @@ public class ControlPanel extends JFrame  {
 			projCanvas =  new PProjectSelectionCanvas(this,projects);
 			//content.add(projCanvas);
 		}
-		System.err.println("tool bar width is "+toolBar.getWidth());
 		browser = new PBrowserCanvas(connection);
 		browser.setPreferredSize(new Dimension(BROWSER_SIDE,BROWSER_SIDE));
 		//content.add(browser);
@@ -137,10 +136,12 @@ public class ControlPanel extends JFrame  {
 
 
 
-	public void completeInitialization() {
+	public void completeInitialization(String user) {
 		browser.displayAllDatasets();	
 		SelectionState selectionState = SelectionState.getState();
 		selectionState.addSelectionEventListener(browser);
+		setLoggedIn(user);
+		setEnabled(true);
 	}
 	
 	private JToolBar buildToolBar() {
