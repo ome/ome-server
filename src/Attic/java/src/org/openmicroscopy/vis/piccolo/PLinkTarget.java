@@ -53,16 +53,16 @@ import java.awt.geom.Point2D;
 
 public class PLinkTarget extends PPath {
 	
-	public static final Color CIRC_COLOR = new Color(0,225,0);
-	public static final Color CIRC_SELECTED_COLOR = Color.WHITE;
- 	public static final float CIRC_SIZE=10;
- 	public static final float CIRC_HALF_SIZE=CIRC_SIZE/2;
- 	public static final float  CIRC_BUFFER=3;
+	public static final Color LINK_TARGET_COLOR = new Color(0,225,0);
+	public static final Color LINK_TARGET_SELECTED_COLOR = Color.WHITE;
+ 	public static final float LINK_TARGET_SIZE=10;
+ 	public static final float LINK_TARGET_HALF_SIZE=LINK_TARGET_SIZE/2;
+ 	public static final float  LINK_TARGET_BUFFER=3;
  	
  	public PLinkTarget() {
  		super();
- 		setPathToEllipse(0,0,CIRC_SIZE,CIRC_SIZE);
- 		setPaint(CIRC_COLOR);
+ 		setPathToRectangle(0,0,LINK_TARGET_SIZE,LINK_TARGET_SIZE);
+ 		setPaint(LINK_TARGET_COLOR);
  	}	
  	
  	public Point2D getCenter() {
@@ -75,9 +75,9 @@ public class PLinkTarget extends PPath {
  	
  	public void setSelected(boolean v) {
  		if (v == true) 
- 			setPaint(CIRC_SELECTED_COLOR);
+ 			setPaint(LINK_TARGET_SELECTED_COLOR);
  		else
- 			setPaint(CIRC_COLOR);
+ 			setPaint(LINK_TARGET_COLOR);
  		repaint();
  	}
 }
