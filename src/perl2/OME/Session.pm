@@ -149,22 +149,16 @@ sub _newInstance {
     die "User State parameter is not of class OME::UserState"
     	unless (ref($userState) eq "OME::UserState") ;
     
-		#carp "New instance.";
 
     my $self = $class->SUPER::new();
     
     $self->{UserState} = $userState;
-    
-	#if ($factory) {
-	#	$factory->swapSessions($self);
-	#} else {
-	#	$factory = OME::Factory->new($self);
-	#}
     $self->{Factory} = OME::Factory->new();
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
     
     $__soleInstance = $self;
     
+	# carp "New instance.";
     return $self;
 }
 
@@ -172,19 +166,10 @@ sub instance {
 	my $self = shift;
 	my $userState = shift;
 
-	# Recycle the singleton if possible.
-	if ((defined $__soleInstance and defined $userState) and
-		($__soleInstance->UserState()->id() eq $userState->id())) {
-		#carp "Total recycle.";
-			return $__soleInstance;
-		}
-
-	# If we've got a different user, salvage the reusable resources
-	if ((defined $__soleInstance and defined $userState) and
-		($__soleInstance->UserState()->id() ne $userState->id())) {
-		#carp "Partial recycle.";
-			return $__soleInstance->_salvageSession( $userState );
-		}
+	# Recycle the singleton resources if possible.
+	if ($__soleInstance and $userState and $__soleInstance->UserState()) {
+		return $__soleInstance->_salvageSession( $userState );
+	}
 
 	$self->_newInstance($userState) unless $__soleInstance;
 
@@ -200,6 +185,7 @@ sub _salvageSession {
 
 	OME::DBObject->clearAllCaches();
 
+	#carp "Returning salvaged session.";
 	return $self;
 }
 
