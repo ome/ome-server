@@ -39,7 +39,6 @@ use English;
 use Carp;
 use File::Copy;
 use Term::ANSIColor qw(:constants);
-use Term::ReadKey;
 
 require Exporter;
 
@@ -108,12 +107,13 @@ my %os_specific = (
 	# XXX: Since OS X is braindead and has no useradd commands we have to do the whole thing ourselves.
 	add_user => sub {
 	    my ($user, $homedir, $group) = @_;
+	    my $uid;
 
 	    my $gid = getgrnam ($group);
 	    my @uids = `nireport / /users uid`;
 	    if ($? == 0) {
-		sort {$a <=> $b} @uids;
-		$uid = $gids[$#uids]++;  # Value of the last element plus one
+		@uids = sort {$a <=> $b} @uids;
+		$uid = $uids[$#uids]++;  # Value of the last element plus one
 	    } else { return 0 }
 
 	    (system ("nicl / -create /users/$user uid $uid") == 0) or return 0;
@@ -130,10 +130,11 @@ my %os_specific = (
 	# XXX: Once again, since we've got no groupadd command either we have to do the whole thing ourselves.
 	add_group => sub {
 	    my $group = shift;
+	    my $gid;
 
 	    my @gids = `nireport / /groups gid`;
 	    if ($? == 0) {
-		sort {$a <=> $b} @gids;
+		@gids = sort {$a <=> $b} @gids;
 		$gid = $gids[$#gids]++;  # Value of the last element plus one
 	    } else { return 0 }
 
