@@ -72,7 +72,7 @@ sub getPageBody {
 			{ valign => 'MIDDLE', align => 'CENTER' },
 			$left,
 			$right ));
-	$body .= <<ENDJS;
+	$body .= <<ENDJS if defined $dataset;
 <script language="JavaScript">
 <!--
 function openPopup() {
@@ -80,7 +80,7 @@ function openPopup() {
 		"/perl2/serve.pl?Page=OME::Web::GetGraphics&DatasetID=$datasetID",
 		"DatasetViewer",
 		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
-// smart sizing would go right above here: width=[width],height=[height]
+// smart sizing would go right above here: width=_WIDTH_,height=_HEIGHT_
 	DatasetViewer.focus();
 }
 -->
