@@ -69,4 +69,8 @@ public class ChainLibraryFrame extends ChainFrameBase {
 	public Rectangle getInitialBounds() {
 		return new Rectangle(10,410,400,400);
 	}
+	
+	protected void layoutFrame() {
+		contentPane.add(canvas);
+	}
 }
