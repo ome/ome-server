@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>The Joust Outliner - Menu Controls</TITLE>
+<META NAME="ROBOTS" CONTENT="NOINDEX,NOFOLLOW">
+<script language="JavaScript">
+<!--
+if ((self.name != 'menuCntrl') & (self.location.protocol != "file:")) {
+	self.location = "index.html";
+}
+if (parent.theBrowser) {
+	if (parent.theBrowser.canOnError) {window.onerror = parent.defOnError;}
+}
+//-->
+</script>
+</HEAD>
+<BODY BGCOLOR=#000000 marginwidth="0" marginheight="0">
+<IMG SRC="/images/joust/menucntrl.gif" WIDTH=205 HEIGHT=40 BORDER=0 ALT="Menu Control Imagemap" USEMAP="#menucntrl">
+<MAP NAME="menucntrl">
+<AREA SHAPE=RECT COORDS="0,0,61,20" HREF="javascript:parent.theMenu.openAll();" ALT="Expand All"
+	onMouseOver="parent.setStatus('Click to expand all folders in the menu.');" 
+	onMouseOut="return parent.clearStatus();">
+<AREA SHAPE=RECT COORDS="62,0,130,20" HREF="javascript:parent.theMenu.closeAll();" ALT="Collapse All"
+	onMouseOver="return parent.setStatus('Click to collapse all folders in the menu.');" 
+	onMouseOut="return parent.clearStatus();">
+<AREA SHAPE=RECT COORDS="131,0,165,20" HREF="help.htm" TARGET="text" ALT="Help"
+	onMouseOver="return parent.setStatus('Click to get help on using this site.');" 
+	onMouseOut="return parent.clearStatus();">
+<AREA SHAPE=RECT COORDS="166,0,205,20" HREF="home.htm" TARGET="text" ALT="Home page"
+	onMouseOver="return parent.setStatus('Click to go to the Home page.');" 
+	onMouseOut="return parent.clearStatus();">
+<AREA SHAPE=RECT COORDS="0,20,50,40" HREF="javascript:parent.setMode('Frames', self);" ALT="Frames"
+	onMouseOver="return parent.setStatus('Click to display the menu in the standard \'Frames\' layout.');" 
+	onMouseOut="return parent.clearStatus();">
+<AREA SHAPE=RECT COORDS="51,20,119,40" HREF="javascript:parent.setMode('NoFrames', self);" ALT="No Frames"
+	onMouseOver="return parent.setStatus('Click to display the \'No Frames\' version of this site (without the menu system).');" 
+	onMouseOut="return parent.clearStatus();">
+<AREA SHAPE=RECT COORDS="120,20,205,40" HREF="javascript:parent.setMode('Floating', self);" ALT="Floating Menu"
+	onMouseOver="return parent.setStatus('Click to display the menu in a floating window.');" 
+	onMouseOut="return parent.clearStatus();">
+</MAP>
+</BODY>
+</HTML>
+
+
