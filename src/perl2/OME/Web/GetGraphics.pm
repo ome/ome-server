@@ -278,7 +278,7 @@ sub BuildSVGviewer {
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/scale.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
-			xlink:href="/JavaScript/SVGviewer/imageControls.js.js" />
+			xlink:href="/JavaScript/SVGviewer/xyPlaneControls.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/featureInfo.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
