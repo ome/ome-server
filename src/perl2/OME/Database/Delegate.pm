@@ -173,9 +173,9 @@ sub connectToDatabase {
     $flags->{RaiseError}      = 1 unless exists $flags->{RaiseError};
     $flags->{InactiveDestroy} = 1 unless exists $flags->{InactiveDestroy};
 
-    my $dbh = DBI->connect(OME::DBConnection->DataSource(),
-                           OME::DBConnection->DBUser(),
-                           OME::DBConnection->DBPassword(),
+    my $dbh = DBI->connect($datasource,
+                           $username,
+                           $password,
                            $flags);
     return $dbh;
 }
