@@ -58,7 +58,7 @@ sub getPageBody {
 	my $selection;
 	my @paths;
 	my $body = '';
-
+	my $existFlag=undef;
 	foreach $selection ($cgi->url_param()) {
 		$selection = $cgi->unescape($selection);
 		if ( not ($selection eq 'action' or $selection eq 'keywords' or $selection eq 'Page' or not $selection)) {
@@ -98,15 +98,13 @@ sub getPageBody {
 				$txt.=print_form($session,$cgi,$htmlFormat,\@selections);
 	   			return ('HTML',$txt) unless (defined $rep);
 				# must find better solution
-$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'),$userID,$usergpID,$project->project_id());
-
-
+				$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'),$userID,$usergpID,$project->project_id());
 				#$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
 
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
 				$dataset=$datasetManager->load($cgi->param('addDataset'));
-				
+				$existFlag=1;
 								
 			}
 
@@ -120,8 +118,11 @@ $dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('descript
 			# Import messed up. Display error message & let them try again.
 			if ($errorMessage) { 
 				#Delete $dataset 
-				# +link. MUST BE DONE BEFORE (New class) domain logic 
-				$datasetManager->delete($session->dataset()->dataset_id());
+				# +link. MUST BE DONE BEFORE (New class) domain logic
+				# must find solution next version
+
+				$datasetManager->delete($session->dataset()->dataset_id()) unless (defined $existFlag);
+				########
 				$body .= "<b>".$errorMessage."</b><br>";
 				$body .= print_form($session,$cgi,$htmlFormat,\@selections);
 			} else {
@@ -168,7 +169,8 @@ sub print_form {
 	
 	# this sets default datasetName to the last directory path
 	my @pathElements = split ('/',$recentSelection);
-	my $datasetName = $pathElements[$#pathElements-1];
+	my $n=scalar(@pathElements);
+	my $datasetName = $pathElements[$n-1];
 	my ($key, $value,$defaultDatasetID);
 	while (($key, $value) = each %datasetHash) {
 		$defaultDatasetID = $key if $value eq $datasetName;
