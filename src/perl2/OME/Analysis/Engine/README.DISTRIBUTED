@@ -12,7 +12,7 @@ Setup the Workers
 --------------------------------
 On EACH worker node:
 
-* Install OME (sudo perl install.pl). OMEIS is optional
+* Install OME (sudo perl install.pl). OMEIS and a local database is optional
 
 * Copy src/perl2/OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl into the appropriate
 Apache accessible directory so that you could specify a URL that would execute
@@ -34,14 +34,15 @@ Setup the Back End:
 needs an entry in this table for every worker it has.  The URL should execute
 OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl as a mod_perl CGI.
 
-e.g:
+e.g, to install a localhost worker after copying NonblockingSlaveWorkerCGI.pl
+to the same directory as serve.pl:
 
-INSERT INTO analysis_workers(worker_id, status, url) 
-VALUES (1,'IDLE','http://localhost/perl2/NonblockingSlaveWorkerCGI.pl');
+INSERT INTO analysis_workers(status, url) 
+VALUES ('IDLE','http://localhost/perl2/NonblockingSlaveWorkerCGI.pl');
 
 * And lastly, the OME::Analysis::Engine::SimpleWorkerExecutor is selected as
 the executor by setting the OME_DISTRIBUTED environment variable.  If that's
-not convenient, you can change how this is done in:
+not convenient, you can change how getDefaultExecutor() does this in:
 OME/Analysis/Engine/Executor.pm
 
 
