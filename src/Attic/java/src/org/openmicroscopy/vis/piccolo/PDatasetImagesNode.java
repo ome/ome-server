@@ -42,8 +42,6 @@ import edu.umd.cs.piccolo.nodes.PImage;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.util.Iterator;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
 
 /**
  * 
@@ -57,17 +55,18 @@ import java.beans.PropertyChangeEvent;
  * </small>
  * @since OME2.2
  */
-public class PDatasetImagesNode extends PNode implements PropertyChangeListener {
+public class PDatasetImagesNode extends PNode  {
 
 	private static final double SCALE_THRESHOLD=.75;
 	
 	private PNode imagesNode = new PNode();
 	private PImage thumbnailNode = null;
+	private boolean selected = false;
 	
 	public PDatasetImagesNode() {
 		super();	
-		addPropertyChangeListener(PROPERTY_TRANSFORM,this);
 		addChild(imagesNode);
+		setPickable(true);
 	}
 	
 	public void addImage(PThumbnail thumb) {
@@ -85,6 +84,7 @@ public class PDatasetImagesNode extends PNode implements PropertyChangeListener 
 			imagesNode.getChildrenCount() > 200) {
 			thumbnailNode = new PImage(imagesNode.toImage((int)b.getWidth(),
 				(int) b.getHeight(),null),true);
+			System.err.println("thumbnail node is "+thumbnailNode);
 			addChild(thumbnailNode);
 		}
 	}
@@ -95,23 +95,30 @@ public class PDatasetImagesNode extends PNode implements PropertyChangeListener 
 	}
 	
 	public void paint(PPaintContext aPaintContext) {
-		if (aPaintContext.getScale() < SCALE_THRESHOLD &&
-			thumbnailNode != null) {
-			// show images node
-			System.err.println("showing thumbnail...");
-			imagesNode.setVisible(false);
-			thumbnailNode.setVisible(true);
+		
+		if (thumbnailNode == null || selected == true || 
+			aPaintContext.getScale() > SCALE_THRESHOLD){
+			if (thumbnailNode != null) {
+				thumbnailNode.setVisible(false);
+				thumbnailNode.setPickable(false);
+			}
+			imagesNode.setVisible(true);
+			setPickable(true);
 		}
 		else {
-			System.err.println("showing individual images");
-			if (thumbnailNode != null)
-				thumbnailNode.setVisible(false);
-			imagesNode.setVisible(true);
+			
+			// show images node
+			imagesNode.setVisible(false);
+			if (thumbnailNode != null) {
+				thumbnailNode.setVisible(true);
+				thumbnailNode.setPickable(true);	
+			}
+			setPickable(false);
 		}
 		super.paint(aPaintContext);
 	}
 	
-	public void propertyChange(PropertyChangeEvent evt) {
-		System.err.println("transform changed. scale is "+getScale());
+	public void setSelected(boolean v) {
+		selected = v;
 	}
 }
