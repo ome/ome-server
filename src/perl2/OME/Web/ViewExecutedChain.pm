@@ -43,7 +43,6 @@ use OME;
 $VERSION = $OME::VERSION;
 
 use OME::DBObject;
-use OME::Web::Helper::JScriptFormat;
 use OME::Tasks::ChainManager;
 
 use base qw{ OME::Web };
