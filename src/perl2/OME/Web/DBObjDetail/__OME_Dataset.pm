@@ -57,6 +57,7 @@ implements _takeAction to allow changes to name and description
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
+use OME::Tasks::DatasetManager;
 
 use Log::Agent;
 use base qw(OME::Web::DBObjDetail);
@@ -90,6 +91,11 @@ sub _takeAction {
 		$object->name( $q->param( 'name' ) );
 		$object->storeObject();
 		$self->Session()->commitTransaction();
+	}
+	
+	my @image_ids = $q->param( 'images_to_add' );
+	if( @image_ids ) {
+		OME::Tasks::DatasetManager->addImages( \@image_ids );
 	}
 }
 
