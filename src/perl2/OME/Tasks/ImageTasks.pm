@@ -143,6 +143,91 @@ sub importFiles {
 }
 
 
+=head2 forkedImportFiles
+
+	my $task = forkedImportFiles($dataset,\@filenames,\%options);
+
+Performs the same operation as importFiles, but forks off a new
+process first.  An OME::Task object is created to track the import's
+progress.
+
+=cut
+
+sub forkedImportFiles {
+	my ($dataset, $filenames, $options) = @_;
+
+    my $task = OME::Tasks::NotificationManager->
+      new('Importing images',3+scalar(@$filenames));
+
+    my $importer = OME::ImportEngine::ImportEngine->new(%$options);
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+    if (!defined $dataset) {
+        $dataset = $factory->
+          newObject("OME::Dataset",
+                    {
+                     name => "Forked import Dummy Dataset",
+                     description => "Images imported by Remote Importer",
+                     locked => 0,
+                     owner_id => $session->experimenter_id(),
+                    });
+    }
+
+    my $files_mex = $importer->startImport($dataset);
+    my $session_key = $session->SessionKey();
+
+    my $parent_pid = $$;
+    my $pid = fork;
+
+    if (!defined $pid) {
+        die "Could not fork off process to perform the import";
+    } elsif ($pid) {
+        # Parent process
+
+        OME::Tasks::ImportManager->forgetImport();
+        return $task;
+    } else {
+        # Child process
+
+        POSIX::setsid() or die "Can't start a new session. $!";
+        OME::Session->forgetInstance();
+        OME::Tasks::NotificationManager->forget();
+
+        my $session = OME::SessionManager->createSession($session_key);
+
+        $task->step();
+        $task->setMessage('Starting import');
+
+        my @files;
+
+        foreach my $filename (@$filenames) {
+            push @files, OME::Image::Server::File->upload($filename);
+            $task->step();
+            $task->setMessage('Uploaded $filename');
+        }
+
+        $task->step();
+        $task->setMessage('Importing');
+        my $image_list = $importer->importFiles(\@files);
+        $importer->finishImport();
+
+        $task->step();
+        $task->setMessage('Executing import chain');
+        my $chain = $session->Configuration()->import_chain();
+        if (defined $chain) {
+            $OME::Analysis::Engine::DEBUG = 0;
+            OME::Analysis::Engine->executeChain($chain,$dataset,{});
+        }
+
+        $task->finish();
+        $task->setMessage('Successfully imported '.scalar(@$image_list).
+                          ' images');
+
+        CORE::exit(0);
+    }
+}
+
 # exportFiles(session,images)
 # --------------------------------------
 # Exports the selected images out of OME.  The session is used to
