@@ -132,51 +132,55 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
 		<CommandLine>
-			<InputSubString>
-				<RawText>Path=</RawText>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.Repository.Path"/>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.Path"/>
-			</InputSubString>
-			<InputSubString>
-				<RawText> Dims=</RawText>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.SizeX"/>
-			</InputSubString>
-			<InputSubString>
-				<RawText>,</RawText>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.SizeY"/>
-			</InputSubString>
-			<InputSubString>
-				<RawText>,</RawText>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.SizeZ"/>
-			</InputSubString>
-			<InputSubString>
-				<RawText>,</RawText>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.SizeC"/>
-			</InputSubString>
-			<InputSubString>
-				<RawText>,</RawText>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.SizeT"/>
-			</InputSubString>
-			<InputSubString>
-				<RawText>,</RawText>
-			</InputSubString>
-			<InputSubString>
-				<Input Location = "Pixels.BitsPerPixel" DivideBy = "8"/>
-			</InputSubString>
+			<Parameter>
+				<InputSubString>
+					<RawText>Path=</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.Repository.Path"/>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.Path"/>
+				</InputSubString>
+			</Parameter>
+			<Parameter>
+				<InputSubString>
+					<RawText>Dims=</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.SizeX"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.SizeY"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.SizeZ"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.SizeC"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.SizeT"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "Pixels.BitsPerPixel" DivideBy = "8"/>
+				</InputSubString>
+			</Parameter>
 		</CommandLine>
 		<STDOUT>
 			<OutputRecord RepeatCount = "1">

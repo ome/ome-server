@@ -56,39 +56,40 @@
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
 		<CommandLine>
-			<InputSubString>
-				<XYPlane XYPlaneID = "Plane1" Format = "TIFF" FormalInputPixels = "Pixels" >
-					<theZ>
-						<AutoIterate>
-							<OutputTo Location = "XYPlaneCrossCorrelation.theZ"/>
-						</AutoIterate>
-					</theZ>
-					<theT>
-						<AutoIterate>
-							<OutputTo Location = "XYPlaneCrossCorrelation.theT"/>
-						</AutoIterate>
-					</theT>
-					<theW>
-						<UseValue Location = "ChannelNumber 1.theW"/>
-					</theW>
-				</XYPlane>
-			</InputSubString>
-			<InputSubString>
-				<RawText> </RawText>
-			</InputSubString>
-			<InputSubString>
-				<XYPlane Format = "TIFF" FormalInputPixels = "Pixels" >
-					<theZ>
-						<Match XYPlaneID = "Plane1"/>
-					</theZ>
-					<theT>
-						<Match XYPlaneID = "Plane1"/>
-					</theT>
-					<theW>
-						<UseValue Location = "ChannelNumber 2.theW"/>
-					</theW>
-				</XYPlane>
-			</InputSubString>
+			<Parameter>
+				<InputSubString>
+					<XYPlane XYPlaneID = "Plane1" Format = "TIFF" FormalInputPixels = "Pixels" >
+						<theZ>
+							<AutoIterate>
+								<OutputTo Location = "XYPlaneCrossCorrelation.theZ"/>
+							</AutoIterate>
+						</theZ>
+						<theT>
+							<AutoIterate>
+								<OutputTo Location = "XYPlaneCrossCorrelation.theT"/>
+							</AutoIterate>
+						</theT>
+						<theW>
+							<UseValue Location = "ChannelNumber 1.theW"/>
+						</theW>
+					</XYPlane>
+				</InputSubString>
+			</Parameter>
+			<Parameter>
+				<InputSubString>
+					<XYPlane Format = "TIFF" FormalInputPixels = "Pixels" >
+						<theZ>
+							<Match XYPlaneID = "Plane1"/>
+						</theZ>
+						<theT>
+							<Match XYPlaneID = "Plane1"/>
+						</theT>
+						<theW>
+							<UseValue Location = "ChannelNumber 2.theW"/>
+						</theW>
+					</XYPlane>
+				</InputSubString>
+			</Parameter>
 		</CommandLine>
 		<STDOUT>
 			<OutputRecord>
