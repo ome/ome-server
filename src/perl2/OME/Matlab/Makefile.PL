@@ -87,10 +87,11 @@ if ($matlab_vers =~ /6\.5\.0.+/) {
 	$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat";
 	$matlab_lib_cmd .= " -L$matlab_dir/sys/os/mac -ldl" if $matlab_arch eq 'mac';
 	
-} elsif ($matlab_vers =~ /7\.0\.0.+/)  {
+} elsif ($matlab_vers =~ /7\.0\.0.+/ or $matlab_vers =~ /7\.0\.1.+/)  {
 	$matlab_include = "$matlab_dir/extern/include";
 	$matlab_lib = "$matlab_dir/bin/$matlab_arch";
 	$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
+	
 } else {
 	print STDERR "WARNING Matlab Version $matlab_vers not supported.\n";	
 }
