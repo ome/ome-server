@@ -821,6 +821,14 @@ sub newObject {
     __checkClass($class);
     $class->require();
 
+# HACK
+# filter out keys in the data hash that don't have corrosponding
+# DBObject columns. This is to let Curtis move forward with his debugging.
+my @cols = $class->getColumns();
+foreach my $key ( keys %$data ) {
+	delete $data->{ $key } unless grep( $_ eq $key, @cols );
+}
+
 #logdbg "debug", ref($self)."->newObject( $class, { ".join(', ', map{$_.' => '.$data->{$_}} keys %$data)." } )";
     my $object;
     eval {
