@@ -31,7 +31,7 @@ package OME::Install::CoreDatabaseTablesTask;
 # that some files declare multiple DBObject subclasses; only the
 # package corresponding to the filename should be "required".
 
-my @coreClasses =
+our @coreClasses =
   (
    ['OME::LookupTable',       'OME::LookupTable'],
    [undef,                    'OME::LookupTable::Entry'],
@@ -48,9 +48,25 @@ my @coreClasses =
    ['OME::Image',             'OME::Image'],
    ['OME::Image',             'OME::Image::DatasetMap'],
    ['OME::Image',             'OME::Image::ImageFilesXYZWT'],
+   ['OME::Feature',           'OME::Feature'],
    ['OME::Session',           'OME::Session'],
    ['OME::ViewerPreferences', 'OME::ViewerPreferences'],
    ['OME::Module::Category',  'OME::Module::Category'],
+   ['OME::Module',            'OME::Module'],
+   ['OME::Module',            'OME::Module::FormalInput'],
+   ['OME::Module',            'OME::Module::FormalOutput'],
+   ['OME::AnalysisChain',     'OME::AnalysisChain'],
+   ['OME::AnalysisChain',     'OME::AnalysisChain::Node'],
+   ['OME::AnalysisChain',     'OME::AnalysisChain::Link'],
+   ['OME::AnalysisPath',      'OME::AnalysisPath'],
+   ['OME::AnalysisPath',      'OME::AnalysisPath::Map'],
+   ['OME::ModuleExecution',   'OME::ModuleExecution'],
+   ['OME::ModuleExecution',   'OME::ModuleExecution::ActualInput'],
+   ['OME::ModuleExecution',   'OME::ModuleExecution::SemanticTypeOutput'],
+   ['OME::AnalysisChainExecution',
+                              'OME::AnalysisChainExecution'],
+   ['OME::AnalysisChainExecution',
+                              'OME::AnalysisChainExecution::NodeExecution'],
    # Make sure this next one is last
    ['OME::Configuration',     'OME::Configuration'],
   );
