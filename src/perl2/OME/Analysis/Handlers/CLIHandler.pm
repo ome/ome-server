@@ -146,6 +146,8 @@ sub _execute {
 	my $debug                 = 0;
 	my $session               = $self->Session();
 	my $imagePix;
+	my $CLIns = 'http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd';
+
 my $Pixels =  $self->getImageInputs("Pixels")->[0];	
 my %dims = ( 'x'   => $Pixels->SizeX(),
 			 'y'   => $Pixels->SizeY(),
@@ -185,7 +187,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	# 		Since theZ theW and theT are references, it is a simple matter to sync any of these.
 	#
 	my $planeIndexes;
-	my @planes = $root->getElementsByTagName( "XYPlane" );
+	my @planes = $root->getElementsByTagNameNS( $CLIns, "XYPlane" );
 	if(scalar(@planes) > 0 ) {
 		my $imagePix = $image->GetPix($Pixels)
 			or die "Could not load image->Pix, image_ID = ".$image->id();
@@ -211,13 +213,13 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			#	Process indexes with non referential methods.
 			#
 			foreach my $index (@planeIndexTypes) {
-				my $indexXML    = $plane->getElementsByTagName( $index )->[0];
+				my $indexXML    = $plane->getElementsByTagNameNS( $CLIns, $index )->[0];
 				print STDERR "\tProcessing index: ".$index."\n" if $debug eq 2;
 				#############################################################
 				#
 				# AutoIterate
 				#
-				if ( $indexXML->getElementsByTagName( 'AutoIterate' ) ) {
+				if ( $indexXML->getElementsByTagNameNS( $CLIns, 'AutoIterate' ) ) {
 					print STDERR "\t\tUses method: AutoIterate\n" if $debug eq 2;
 					$planeIndexes->{ $planeID }->{$index} = 
 						newScalarRef( 0 );
@@ -226,15 +228,15 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					$planeIndexes->{ $planeID }->{IterateEnd}->{$index} = 
 						$indexSize{ $index }-1;
 					$planeIndexes->{ $planeID }->{Output}->{$index} = 
-						$indexXML->getElementsByTagName( 'AutoIterate')->[0];
+						$indexXML->getElementsByTagNameNS( $CLIns, 'AutoIterate')->[0];
 				#
 				#
 				#############################################################
 				#
 				# UseValue
 				#
-				} elsif ( $indexXML->getElementsByTagName( 'UseValue' ) ) {
-					my $indexMethod = $indexXML->getElementsByTagName( 'UseValue' )->[0];
+				} elsif ( $indexXML->getElementsByTagNameNS( $CLIns, 'UseValue' ) ) {
+					my $indexMethod = $indexXML->getElementsByTagNameNS( $CLIns, 'UseValue' )->[0];
 					print STDERR "\t\tUses method: UseValue\n" if $debug eq 2;
 					$planeIndexes->{ $planeID }->{$index} = 
 						newScalarRef (
@@ -249,31 +251,31 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 				#
 				# IterateRange
 				#
-				} elsif ( $indexXML->getElementsByTagName( 'IterateRange' ) ) {
+				} elsif ( $indexXML->getElementsByTagNameNS( $CLIns, 'IterateRange' ) ) {
 					print STDERR "\t\tUses method: IterateRange\n" if $debug eq 2;
-					my $indexMethod = $indexXML->getElementsByTagName( 'IterateRange' )->[0];
+					my $indexMethod = $indexXML->getElementsByTagNameNS( $CLIns, 'IterateRange' )->[0];
 					$planeIndexes->{ $planeID }->{$index} = 
 						newScalarRef (
 							$inputs{ 
-								$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "FormalInputName" )
+								$indexMethod->getElementsByTagNameNS( $CLIns, "Start" )->[0]->getAttribute( "FormalInputName" )
 							}->[0]->{
-								$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "SemanticElementName" )
+								$indexMethod->getElementsByTagNameNS( $CLIns, "Start" )->[0]->getAttribute( "SemanticElementName" )
 							} 
 						);
 					$planeIndexes->{ $planeID }->{IterateStart}->{$index} = 
 						$inputs{ 
-							$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "FormalInputName" )
+							$indexMethod->getElementsByTagNameNS( $CLIns, "Start" )->[0]->getAttribute( "FormalInputName" )
 						}->[0]->{
-							$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "SemanticElementName" )
+							$indexMethod->getElementsByTagNameNS( $CLIns, "Start" )->[0]->getAttribute( "SemanticElementName" )
 						};
 					$planeIndexes->{ $planeID }->{IterateEnd}->{$index} = 
 						$inputs{ 
-							$indexMethod->getElementsByTagName( "End" )->[0]->getAttribute( "FormalInputName" )
+							$indexMethod->getElementsByTagNameNS( $CLIns, "End" )->[0]->getAttribute( "FormalInputName" )
 						}->[0]->{
-							$indexMethod->getElementsByTagName( "End" )->[0]->getAttribute( "SemanticElementName" )
+							$indexMethod->getElementsByTagNameNS( $CLIns, "End" )->[0]->getAttribute( "SemanticElementName" )
 						};
 					$planeIndexes->{ $planeID }->{Output}->{$index} = 
-						$indexXML->getElementsByTagName( 'IterateRange')->[0];
+						$indexXML->getElementsByTagNameNS( $CLIns, 'IterateRange')->[0];
 				}
 				#
 				#############################################################
@@ -318,10 +320,10 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			my $planeID     = $plane->getAttribute( "XYPlaneID" );
 			print STDERR "Processing plane ".$planeID."\n" if $debug eq 2;
 			foreach my $index (@planeIndexTypes) {
-				my $indexXML    = $plane->getElementsByTagName( $index )->[0];
+				my $indexXML    = $plane->getElementsByTagNameNS( $CLIns, $index )->[0];
 				print STDERR "\tProcessing index: ".$index."\n" if $debug eq 2;
-				if ( $indexXML->getElementsByTagName( 'Match' ) ) {
-					my $indexMethod = $indexXML->getElementsByTagName( 'Match' )->[0];
+				if ( $indexXML->getElementsByTagNameNS( $CLIns, 'Match' ) ) {
+					my $indexMethod = $indexXML->getElementsByTagNameNS( $CLIns, 'Match' )->[0];
 					$planeIndexes->{ $planeID }->{$index} = 
 						$planeIndexes->{
 							$indexMethod->getAttribute( "XYPlaneID" )
@@ -351,8 +353,11 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	# Execute the module
 	#
 	my $runAgain;
-	my $cmdXML      = $root->getElementsByTagName( "CommandLine" )->[0];
-	my @cmdElements = $cmdXML->getElementsByTagName( "InputSubString" );
+	my $cmdXML      = $root->getElementsByTagNameNS( $CLIns, "CommandLine" )->[0];
+	my @cmdElements = $cmdXML->getElementsByTagNameNS( $CLIns, "InputSubString" )
+		if defined $cmdXML;
+	my @planes = $cmdXML->getElementsByTagNameNS( $CLIns, "XYPlane" )
+		if defined $cmdXML;
 	print STDERR "\n" if $debug eq 2;
 	print STDERR "----------------------\n" if $debug eq 2;
 	print STDERR "      Executing\n" if $debug eq 2;
@@ -498,36 +503,36 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			#
 			# plain text - no processing required
 			#		
-			if( $subString->getElementsByTagName( 'RawText' ) ) {
-				return $subString->getElementsByTagName( 'RawText' )->[0]->getFirstChild->getData;
+			if( $subString->getElementsByTagNameNS( $CLIns, 'RawText' ) ) {
+				return $subString->getElementsByTagNameNS( $CLIns, 'RawText' )->[0]->getFirstChild->getData;
 			#
 			#############################################################
 			#
 			# Input request
 			#
-			} elsif ($subString->getElementsByTagName( 'Input' ) ) {
-				my $se = $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('SemanticElementName');
+			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'Input' ) ) {
+				my $se = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('SemanticElementName');
 				$se =~ s/\./\(\)->/g;
 				my $str = '$inputs{'.
-						$subString->getElementsByTagName( 'Input' )->[0]->getAttribute('FormalInputName').
+						$subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('FormalInputName').
 					'}->[0]->'.$se.'()';
 				my $val;
 				# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
 				eval('$val ='. $str)
 					or die "Could not resolve input call '$str'\n";
 				
-				$val /= $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('DivideBy')
-					if defined $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('DivideBy');
-				$val *= $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('MultiplyBy')
-					if defined $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('MultiplyBy');
+				$val /= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy')
+					if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy');
+				$val *= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy')
+					if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy');
 				return $val;
 			#
 			#############################################################
 			#
 			# Generate a plane - currently only TIFFs are supported
 			#		
-			} elsif ($subString->getElementsByTagName( 'XYPlane' ) ) {
-				my $planeXML = $subString->getElementsByTagName( 'XYPlane' )->[0];
+			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'XYPlane' ) ) {
+				my $planeXML = $subString->getElementsByTagNameNS( $CLIns, 'XYPlane' )->[0];
 				my $planeID = $planeXML->getAttribute( 'XYPlaneID' );
 				my $planePath = $session->getTemporaryFilename('ome_cccp','TIFF')
 					or die "Could not get temporary file to write image plane.";
@@ -581,7 +586,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		#	is $planeIndexTypes[0] and so forth.
 		# 
 		print STDERR "\tDoing plane iteration and index storage.\n" if $debug eq 2;
-		foreach my $plane($cmdXML->getElementsByTagName('XYPlane')) {
+		foreach my $plane(@planes) {
 			my $planeID = $plane->getAttribute( 'XYPlaneID' );
 			print STDERR "\t\tInspecting plane " . $planeID . "\n" if $debug eq 2;
 			#########################################################
@@ -589,9 +594,9 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			# Store indexes that need storing
 			#
 			foreach my $index (@planeIndexTypes) {
-				my $indexXML = $plane->getElementsByTagName( $index )->[0];
+				my $indexXML = $plane->getElementsByTagNameNS( $CLIns, $index )->[0];
 				
-				foreach my $outputTo ($indexXML->getElementsByTagName( "OutputTo" ) ) {
+				foreach my $outputTo ($indexXML->getElementsByTagNameNS( $CLIns, "OutputTo" ) ) {
 					my $semanticElementName = $outputTo->getAttribute( "SemanticElementName" );
 					my $formalOutputName       = $outputTo->getAttribute( "FormalOutputName" );
 					$outputs{ $formalOutputName }->{$semanticElementName} = 
@@ -665,20 +670,20 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		#   
 		# Process output from STDOUT
 		#
-		my $stdout = $root->getElementsByTagName( "STDOUT" )->[0];
-		my @outputRecords = $stdout->getElementsByTagName( "OutputRecord" );
+		my $stdout = $root->getElementsByTagNameNS( $CLIns, "STDOUT" )->[0];
+		my @outputRecords = $stdout->getElementsByTagNameNS( $CLIns, "OutputRecord" );
 		print STDERR "Collecting output from STDOUT\n" if $debug and $stdout;
 		foreach my $outputRecord( @outputRecords) {
 			my $repeatCount = $outputRecord->getAttribute( "RepeatCount" );
 			my $terminateAt = $outputRecord->getAttribute( "TerminateAt" );
-			my $pat = $outputRecord->getElementsByTagName( "pat" )->[0]->getFirstChild->getData();
-			my @outputs = $outputRecord->getElementsByTagName( "Output" );
+			my $pat = $outputRecord->getElementsByTagNameNS( $CLIns, "pat" )->[0]->getFirstChild->getData();
+			my @outputs = $outputRecord->getElementsByTagNameNS( $CLIns, "Output" );
 
 			while( keepGoing($repeatCount, $terminateAt, $outputStream) and ($outputStream =~ s/$pat// )) {
 				$repeatCount-- if defined $repeatCount;
 				my @outputRecord;
 				foreach my $output(@outputs) {
-					foreach my $outputTo ($output->getElementsByTagName( "OutputTo" ) ) {
+					foreach my $outputTo ($output->getElementsByTagNameNS( $CLIns, "OutputTo" ) ) {
 						# This use of eval is not a security hole. ExecutionInstructions has been validated against XML schema.
 						# XML schema dictates AccessBy attribute must be an integer.
 						# ...but I'm paranoid, so I'm going to check anyway
