@@ -1003,35 +1003,28 @@ sub newAttribute {
 
     my $attr = $self->newObject($pkg,$data);
 
-	# Add the SEMANTIC_TYPE_OUTPUT entry
-	#     if there is a mex defined and
-	#        the attribute is not marked a Parental Output
-	#        there is neither a module defined for this mex nor 
-	#                         a formal output of this type
-	$self->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
-		module_execution => $module_execution,
-		semantic_type    => $type,
-	}) if (defined $module_execution &&
-	      not $isParentalOutput && 
+	# Deal with Parental & Untyped outputs
+	# if there is a mex defined and
+	#    there is neither a module defined for this mex nor 
+	#                     a formal output of this type
+	# then this attribute needs to be recorded
+	if( defined $module_execution and
 		  ( not $module_execution->module() or
 			not $self->findObject("OME::Module::FormalOutput",
 					module        => $module_execution->module,
-					semantic_type => $type ) ) );
-
-	# Add the PARENTAL_OUTPUT entry
-	#     if there is a mex defined and
-	#        the attribute is marked a Parental Output
-	#        there is neither a module defined for this mex nor 
-	#                         a formal output of this type
-	$self->maybeNewObject("OME::ModuleExecution::ParentalOutput", {
-		module_execution => $module_execution,
-		semantic_type    => $type,
-	}) if (defined $module_execution &&
-	      $isParentalOutput && 
-		  ( not $module_execution->module() or
-			not $self->findObject("OME::Module::FormalOutput",
-					module        => $module_execution->module,
-					semantic_type => $type ) ) );
+					semantic_type => $type ) ) ) {
+		if( $isParentalOutput ) {
+			$self->newObject("OME::ModuleExecution::ParentalOutput", {
+				module_execution => $module_execution,
+				semantic_type    => $type,
+			});
+		} else {
+			$self->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
+				module_execution => $module_execution,
+				semantic_type    => $type,
+			});
+		}
+	}
 
 	return $attr;
 }
