@@ -113,7 +113,7 @@
     <Element
        Name = "TheC"
        DBLocation = "IMAGE_ANNOTATIONS.THE_C"
-       DataType = "int">
+       DataType = "integer">
        <Description>
 	 Make null to imply generality across channels.
        </Description>
@@ -121,7 +121,7 @@
     <Element
        Name = "TheT"
        DBLocation = "IMAGE_ANNOTATIONS.THE_T"
-       DataType = "int">
+       DataType = "integer">
        <Description>
 	 Make null to imply generality across channels.
        </Description>
@@ -129,7 +129,7 @@
     <Element
        Name = "TheZ"
        DBLocation = "IMAGE_ANNOTATIONS.THE_Z"
-       DataType = "int">
+       DataType = "integer">
        <Description>
 	 Make null to imply generality across channels.
        </Description>
