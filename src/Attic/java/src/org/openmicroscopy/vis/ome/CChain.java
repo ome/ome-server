@@ -42,6 +42,7 @@
 import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.remote.RemoteChain;
 import org.openmicroscopy.remote.RemoteSession;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.Iterator;
 import java.util.List;
@@ -52,29 +53,43 @@ import java.util.List;
 		RemoteObjectCache.addClass("OME::AnalysisChain",CChain.class);
 	}
 	
+	private static final int CROSSING_ITERATIONS=5;
+	private static final double DELTA=0.1;
 	private Vector layers = new Vector();
+	private boolean orderChanged = false;
 	
 	
 	public CChain() {
 		super();
-		init();
 	}
 	
 	public CChain(RemoteSession session,String reference) {
 		super(session,reference);
-		init();
 	}
 	
-	private void init() {
-		System.err.println("making chain.. "+getName());
-	}
 	
 	public void layout() {
 		System.err.println("Laying out..."+getName());
+		initNodes();
+		System.err.println("nodes initialized");
 		layerNodes();
+		System.err.println("nodes layered");
 		makeProper();
 		System.err.println("GRAPHS HAVE BEEN MADE PROPER");
+		reduceCrossings();
 		dumpLayers();
+	}
+	
+	
+	// this is an ugly thing to have to do, but we have to - can't call
+	// buildLinkLists in the constructor for each node...
+	private void initNodes() {
+		List nodes = getNodes();
+		Iterator iter = nodes.iterator();
+		while (iter.hasNext()) {
+			CNode node = (CNode) iter.next();
+			node.buildLinkLists();
+		}
 	}
 	/** 
 	* some code for computing a layered graph layout of this chain.
@@ -108,7 +123,7 @@ import java.util.List;
 				
 				System.err.println("finding successors for "+
 					node.getModule().getName());	
-				List succs = node.getSuccessors();	
+				Collection succs = node.getSuccessors();	
 						
 					
 				Iterator succIter = succs.iterator();	
@@ -168,18 +183,18 @@ import java.util.List;
 	
 	private void makeProperNode(CNode node,int i) {
 		Vector newLinks = new Vector();
-		Iterator iter = node.layoutLinkIterator();
+		Iterator iter = node.succLinkIterator();
 		CLayoutLink link;
 		
-		if (!(node instanceof CLayoutNode))
+		/* if (!(node instanceof CLayoutNode))
 			System.err.println("making node proper: "+node.getModule().getName());
 		else	
-			System.err.println("making dummy node proper");
+			System.err.println("making dummy node proper"); */
 		while (iter.hasNext()) {
 			link = (CLayoutLink) iter.next();
 			makeProperLink(node,link,i,newLinks);
 		}
-		node.setLayoutLinks(newLinks);
+		node.setSuccLinks(newLinks);
 	}
 	
 	private void makeProperLink(CNode node,CLayoutLink link,int i,
@@ -187,10 +202,10 @@ import java.util.List;
 		// we know node is at i.
 		
 		CNode to = (CNode) link.getToNode();
-		if (!(to instanceof CLayoutNode))
+		/*if (!(to instanceof CLayoutNode))
 			System.err.println("..link to "+to.getModule().getName());
 		else 
-			System.err.println("... link to dummy node");
+			System.err.println("... link to dummy node"); */
 		int toLayer = to.getLayer();
 		if (toLayer == (i-1)) {
 			// layer is correct
@@ -201,7 +216,7 @@ import java.util.List;
 			CLayoutNode dummy = new CLayoutNode();
 			// make this node point to "to"
 			CLayoutLink dummyOutLink = new CLayoutLink(dummy,to);
-			dummy.addLayoutLink(dummyOutLink);
+			dummy.addSuccLink(dummyOutLink);
 			
 			// make node point to new node
 			CLayoutLink newOutLink = new CLayoutLink(node,dummy);
@@ -209,13 +224,109 @@ import java.util.List;
 			// add new link to links.
 			newLinks.add(newOutLink);
 			
+			// remove successor from node
+			// don't need to do this, as we set the successors of this node
+			// en masse 
+			
+			// adjust predecessors for to
+			to.removePredLink(link);
+			to.addPredLink(dummyOutLink);
+			
 			// add dummy to next layer.
 			Vector nextLayer = (Vector)layers.get(i-1);
 			nextLayer.add(dummy);			
 		}
 	}
 	
+	private void reduceCrossings() {
+		Iterator iter = layers.iterator();
+		
+		if (!iter.hasNext())
+			return; // no layers
+			
+		// first entry in layers is bottom layer (1 or zero)
+		assignPosFromLayer((Vector) iter.next());
+		
+		for (int i =0;  i < CROSSING_ITERATIONS; i++) {
+			orderChanged = false;
+			
+			// reduce successor crossings
+			while (iter.hasNext()) {
+				Vector layer = (Vector) iter.next();
+				crossingReduction(layer,false);
+			}
+			
+			for (int curLayer = layers.size()-2; curLayer >=0; curLayer--) {
+				Vector layer  = (Vector) layers.elementAt(curLayer);
+				crossingReduction(layer,false);
+			}
+			//stop if no changes
+			if (!orderChanged)
+				break;
+		}
+	}
 	
+	private void crossingReduction(Vector layer,boolean pred) {
+		Iterator iter = layer.iterator();
+		CNode node;
+		Collection adjs;
+		double baryCenter=0.0;
+		
+		while (iter.hasNext()) {
+			node = (CNode) iter.next();
+			if (pred == true)
+				adjs = node.getPredecessors();
+			else
+				adjs = node.getSuccessors();
+			if (adjs.size()>0)
+				baryCenter = calcBaryCenter(layer,adjs);
+			else
+				baryCenter = 0.0;
+			node.setPosInLayer(baryCenter); 
+		}
+		sortLayerByPos(layer);
+		assignPosFromLayer(layer);
+	}
+	
+	private double calcBaryCenter(Vector layer,Collection adjs) {
+		double center=0.0;
+		int deg = adjs.size();
+		int total =0;
+		Iterator iter = adjs.iterator();
+		while (iter.hasNext()) {
+			CNode c = (CNode) iter.next();
+			total += c.getPosInLayer(); 
+		}
+		center = total/deg;
+		return center;
+	}
+	
+	
+	private void sortLayerByPos(Vector layer) {
+		int n = layer.size();
+		for (int i = 1; i < n; i++) {
+			CNode node = (CNode) layer.elementAt(i);
+			for (int j = i-1; j >=0; j--) {
+				CNode prev = (CNode) layer.elementAt(j);
+				if (prev.getPosInLayer() >= node.getPosInLayer()) {
+					layer.setElementAt(prev,j+1);
+					layer.setElementAt(node,j);
+					orderChanged = true;
+				}
+			}
+		}
+	}
+	
+	private void assignPosFromLayer(Vector layer) {
+		Iterator iter = layer.iterator();
+		double pos = 0.0;
+		
+		while (iter.hasNext()) {
+			CNode node = (CNode) iter.next();
+			node.setPosInLayer(pos);
+			pos +=1.0;
+		}
+	}
 	
 	// stub code...
 	private void dumpLayers() {
@@ -236,6 +347,8 @@ import java.util.List;
 					else
 						System.err.println("non dummy w/out a module");
 				}
+				System.err.println("... position in layer is "+
+					node.getPosInLayer());
 			} 
 		}
 	}
