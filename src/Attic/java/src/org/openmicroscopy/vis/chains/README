@@ -1,0 +1,248 @@
+
+
+Chains: The OME ChainBuilder Tool
+Release Notes
+25 September 2003 
+Harry Hochheiser
+hsh@nih.gov
+
+Introduction
+------------
+
+As a prototype chain-building tool for use with OME, Chains
+explores interface ideas for building analysis chains and
+(eventually) visualizing analysis results. As a research
+work-in-progress under development, Chains is subject to
+change. Details in this document may or may not reflect the latest
+implementation of Chains.
+
+This document provides a brief overview of the use of Chains,
+including descriptions of interaction techniques, etc. 
+
+System Requirements
+-------------------
+
+To run Chains, you'll need a system running Java 1.4 or
+later. Chains should run on any such system -  Mac, Linux, Windows,
+etc.
+
+To build Chains, you'll need a working installation of the ant build
+program. See ant.apache.org for details.
+
+You'll also need a running OME installation. See
+www.openmicroscopy.org for details and installation
+instructions.
+
+Finally, you'll need to have the OME XMLRPC server up and running. In
+your OME distribution, go to src/perl2/OME/Remote and type 
+
+perl StandaloneServer.pl -p 8002 -t XMLRPC
+
+The "8002" after the "-p" is the port number. Almost any number between 1025
+and 65535 will be acceptable - the program will print an error message
+if an unuable port number is specified. 
+
+Building Chains
+---------------
+
+To build Chains, go to "src/java/" in your OME distribution and type
+"ant jar".  Ant will take care of the rest, compiling the java and
+building jar files.
+
+
+Running Chains
+--------------
+
+To run chains, cd into "src/java/jar" in your OME distribution and
+type "java -jar org.openmicroscopy.vis.chains.jar".
+
+Logging in
+----------
+
+Once Chains has started, you'll need to login. Go to the file menu and
+click "Login". You'll need to give 3 fields to the dialog box that
+appears:
+
+	1) A URL: this will consist of "http://", the hostname of the
+	   server running OME's StandaloneServer, a colon (":"), and
+	   the port number. Thus, if you're running Chains on the same
+	   system that OME is on, and you're using port 8002, you'd
+	   say http://localhost:8002
+
+	2) a user name
+	3) a password. 
+
+The user name and password must be legal for the OME database
+installation on the machine that is running OME's
+StandaloneServer. These were assigned to you when you installed
+OME, or perhaps by subsequent addition to the database.
+	   
+When you provide appropriate values for these three fields, Chains
+will contact the specified server and read values for analysis
+modules and chains. These values will be used to populate two of the
+main windows in Chains - the palette and the chain library.
+
+The Palette
+-----------
+
+The module palette contains all of the analysis modules in the OME
+database. Each module is drawn in the palette as a rectangle whose
+size and shape is determined by the number of inputs and outputs to
+the module: modules with more inputs or outputs will appear taller. 
+
+The modules are organized by category, with each category displayed in
+a separate light-blue region in the background. Each category region
+has a text label indicating the name of the region. Modules that do
+not have an assigned category are placed in an unnamed
+region. 
+
+The palette (like the chain library and canvas) supports zooming to
+focus in on areas of interest. To get a better view of the modules in
+a category, double-click on hte blue region for that category. this
+will cause the category to be magnified and centered in the palette
+window. 
+
+The details of each module will also change in this view. Where the
+original view displayed only the name of each module, the close-up
+view will display the names of each of the inputs and outputs. This
+phenomenom of providing more information as the magnification
+increases is known as semantic zooming. 
+
+To get a better view of an individual module, double click on the
+module. You can also double-click on a module directly from the
+initial view. To zoom out to the category view, double-click on the
+surrounding category. To return to the original view of all modules,
+double-click on the white background space surrounding the module
+category boxes.
+
+The palette (and other windows) uses mouse-over highlighting to
+indicate possibilities for linkages between modules. When the mouse is
+moved over a module, it will be highlighted with a pink
+outline. Furthermore, all modules that that module might be linked to
+are also highlighted.  
+
+At increased levels of magnification, individual inputs and outputs
+will be highlighted as well. When mousing over a module, all
+inputs and outputs (from other modules) that can be linked to that
+module will be highlighted. If the mouse is moved onto the label of a
+specific input or output, those inputs/outputs that can be linked
+to the parameter under the mouse will be highlighted.  This
+highlighting also applies to modules in the chain library and canvas 
+windows.
+
+The size of the palette window can be adjusted via the usual window
+resize mechanisms for the OS being used. If the window is resized, any
+subsequent zoom operations (double-clicking on a module, category, or
+background) will fill the new window dimensions.
+
+ 
+The Chain Library
+-----------
+
+The chain library is the other window that is populated during the
+login process. This window contains a graphical representation of each
+of the chains in the OME database. Each chain is displayed on a
+light-blue background, similar to the category regions in the module
+palette. 
+
+Like the palette, the chain library supports zooming via
+double-clicking on category regions, individual modules, or the
+background. The library can also be resized as desired.
+
+
+The Chain Canvas
+-----------------
+
+The chain canvas is where chains are built. To start building a new
+chain, click the "new chain" button on the palette toolbar. This will
+lead to the creation of a blank palette window. 
+
+The easiest way to start building a chain is to drag a module onto the
+chain canvas. Move to the module palette, click on the module of
+choice, drag until the mouse is over the desired position in the chain
+canvas, and release the mouse. This will lead to an instantiation of
+the selected module at the point of mouse release.
+
+Like the palette and chain library, the chain canvas supports
+zooming. However, the specific mechanism used is somewhat different
+(this is an issue that might be particularly subject to change). To
+zoom out on the contents of the canvas, left-click on the background. To
+zoom-in, right-click (or option-click on Mac) on the background. To
+zoom to fill the window with the contents of the canvas, shift-click
+on the background.
+
+Like the other windows, the palette can also be resized as desired.
+
+Once a canvas has more than one module in it, it might become
+necessary to navigate and to arrange the modules. To "pan" the view in
+the canvas, left-click on the background and drag. To move an
+individual module relative to other modules, click on a module to
+select it, and then click-drag until to move it to the new position. 
+When a module is selected, it can also be deleted by pressing the
+"delete" key.
+
+Once there is more than one module on the canvas, the process of
+building a chain can continue. By connecting inputs to outputs, users
+can specify the flow of data in an analysis chain.
+
+There are two ways that links can be drawn: single-pair and bulk.
+
+Single-pair links connect one input to one output. To create a
+single-pair link, click on a given output(input), move the mouse
+until it is on top of the desired input(output) target and
+click. These clicks can either be on the label that names the
+input(output), or on the green rectangles that serve as anchors for
+the parameters. As the link is being drawn, an arrow (with the arrow
+pointing at the input) will follow the mouse. Furthermore, once the
+link has been started, the input(output) that was the starting end
+point of the link will be outlined in pink, and all corresponding
+outputs(inputs) that may serve as the other end of the link will be
+highlighted. 
+
+To cancel a link in progress, double-click on the canvas background. 
+
+Bulk links are created by double-clicking on one side of the
+module. If the double-click is on the left side of the module the
+bulk-links will be links to the module's inputs. Otherwise, the bulk
+links will be from the module's outputs. In either case, a set of
+links - one for each input(output) will be created. These can then be
+dragged onto the corresponding side of the target module, where a
+double-click will create the links. Exactly one link will be created
+from the initial set of outputs(inputs) - if there are parameters in
+the originating module that do not have corresponding parameters (ie.,
+same semantic type) in the destination, no links will be created for
+those parameters.
+
+Once a link is created, it will be adjusted when either of the
+connected modules move.  A link can be selected by clicking on
+it. Once selected, it can be deleted by pressing the delete button.
+
+If a module is deleted (as described above) all links incident on that
+module will also be removed.
+
+The chain canvas also supports semantic zooming.As in the palette and
+library, module details will not be displayed once the magnification
+decreases below a threshold. Furthermore, links between modules will
+be revised, with multiple individual links being a pair of modules
+being replaced by a single line between those modules at low
+mangification levels. If this link is selected and deleted, all links
+between the two moodules will be deleted.
+
+
+The chain canvas can also be populated by dragging and dropping
+complete chains from the chain library onto the canvas. To drag a
+chain, simply click on the background border and drag it onto the
+canvas. This will cause a copy of the selected chain to be
+instantiated on the canvas.
+
+Once a chain is created, it can be saved by selecting the "save chain"
+button on the canvas toolbar. A dialog box will ask the user for a
+name and description. Once these are provided, the chain will be
+written to the database, and the library will be updated to show the
+new chain.
+
+As currently implemented, the chain saving code does not deal with
+issues of whether a chain is locked, and there are no checks for
+naming conflicts. These areas will (hopefully) be addressed at a
+future point.
+
