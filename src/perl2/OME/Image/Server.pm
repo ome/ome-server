@@ -466,7 +466,7 @@ sub __callOMEIS {
         if ($response->is_success()) {
             return $response->content();
         } else {
-            Carp::confess $response->message();
+            Carp::confess $response->content();
         }
     }
 }
@@ -995,6 +995,24 @@ sub uploadFile {
     die "Error uploading file" unless defined $result;
     chomp($result);
     die "Error uploading file" unless $result > 0;
+    return $result;
+}
+
+=head2 deleteFile
+
+	my $fileID = OME::Image::Server->deleteFile($fileID);
+
+This method deletes the specified file on the image server.
+
+=cut
+
+sub deleteFile {
+    my $proto = shift;
+    my ($fileID) = @_;
+    my $result = $proto->__callOMEIS(Method => 'DeleteFile',
+                                     FileID => $fileID);
+    die "Error retrieving file info" unless defined $result;
+    chomp($result);
     return $result;
 }
 
