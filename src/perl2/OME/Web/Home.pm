@@ -38,42 +38,64 @@ my $HTML;
 my $cgi  = $self->CGI();
 my $home = '/html/noOp.html';
 
+print STDERR "\nOME::Session->dataset via OME::Web::Home\n".$self->Session()->dataset()."\n";
+print STDERR "\nOME::Session->project via OME::Web::Home\n".$self->Session()->project()."\n";
+
 	$self->{contentType} = 'text/html';
 	$HTML = <<ENDHTML;
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML><HEAD>
-<TITLE>Open Microscopy Environment</TITLE>
-<META NAME="ROBOTS" CONTENT="NOINDEX">
-<script language="JavaScript" src="/JavaScript/UseWithJoust.js"></script>
-</HEAD>
+		<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+		<HTML><HEAD>
+		<TITLE>Open Microscopy Environment</TITLE>
+		<META NAME="ROBOTS" CONTENT="NOINDEX">
+		<script language="JavaScript" src="/JavaScript/UseWithJoust.js"></script>
+		</HEAD>
 ENDHTML
 
-	if( $cgi->url_param('Float') ) {
+	# Force project creation if a project isn't defined for the session.
+	if( not defined $self->Session->project() ) {
+		$HTML .= <<ENDHTML;
+		<frameset cols="100%" rows="70,*">
+			<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0">
+			<frame name="text" src="serve.pl?Page=OME::Web::MakeNewProject" scrolling="auto" marginwidth="5" marginheight="5">
+		</frameset>
+		</HTML>
+ENDHTML
+	}
+	# Force Import images if a dataset isn't defined for the session.
+	elsif( not defined $self->Session()->dataset() ) {
+		$HTML .= <<ENDHTML;
+		<frameset cols="100%" rows="70,*">
+			<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0">
+			<frame name="text" src="/JavaScript/DirTree/index.htm" scrolling="auto" marginwidth="5" marginheight="5">
+		</frameset>
+		</HTML>
+ENDHTML
+	} elsif ( $cgi->url_param('Float') ) {
 		$HTML .= <<ENDHTML
-<SCRIPT LANGUAGE="JavaScript">
-<!--
-	var thePage = pageFromSearch('$home', true);
-	openMenu("/html/menuFrame.html?content=" + escape(thePage), "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=230,height=400");
-
-//-->
-</SCRIPT>
-<frameset cols="100%" rows="70,*" onLoad="loaded(); updatePage('$home');" onUnload="closeMenu();">
-	<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0">
-	<frame name="text" src="" scrolling="auto" marginwidth="5" marginheight="5">
-</frameset>
-</HTML>
+		<SCRIPT LANGUAGE="JavaScript">
+		<!--
+			var thePage = pageFromSearch('$home', true);
+			openMenu("/html/menuFrame.html?content=" + escape(thePage), "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=230,height=400");
+		
+		//-->
+		</SCRIPT>
+		<frameset cols="100%" rows="70,*" onLoad="loaded(); updatePage('$home');" onUnload="closeMenu();">
+			<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0">
+			<frame name="text" src="" scrolling="auto" marginwidth="5" marginheight="5">
+		</frameset>
+		</HTML>
 ENDHTML
 	}
 	else {
 		$HTML .= <<ENDHTML
-<frameset cols="100%" rows="70,*" onLoad="loaded(); updatePage('$home');" onResize="defaultResizeHandler();">
-	<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0" APPLICATION="yes">
-	<frameset cols="230,*" rows="100%">
-		<frame name="menuFrame" src="/html/menuFrame.html" scrolling="auto" marginwidth="1" marginheight="1" APPLICATION="yes">
-		<frame name="text" src="" scrolling="auto" APPLICATION="yes">
-	</frameset>
-</frameset>
-</HTML>
+		<frameset cols="100%" rows="70,*" onLoad="loaded(); updatePage('$home');" onResize="defaultResizeHandler();">
+			<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0" APPLICATION="yes">
+			<frameset cols="230,*" rows="100%">
+				<frame name="menuFrame" src="/html/menuFrame.html" scrolling="auto" marginwidth="1" marginheight="1" APPLICATION="yes">
+				<frame name="text" src="" scrolling="auto" APPLICATION="yes">
+			</frameset>
+		</frameset>
+		</HTML>
 ENDHTML
 	}
 
