@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.ds.RemoteServices
+ * org.openmicroscopy.ds.DataServices
  *
  *------------------------------------------------------------------------------
  *
@@ -39,18 +39,25 @@ package org.openmicroscopy.ds;
 import java.util.Map;
 import java.util.HashMap;
 
-public class RemoteServices
+public class DataServices
 {
     private static Map instances = new HashMap();
 
-    public static RemoteServices getInstance(RemoteCaller caller)
+    public static DataServices getNewInstance()
     {
-        RemoteServices instance = (RemoteServices) instances.get(caller);
+        DataServices instance = new DataServices();
+        return instance;
+    }
+
+    public static DataServices getInstance(RemoteCaller caller)
+    {
+        DataServices instance = (DataServices) instances.get(caller);
 
         if (instance != null)
             return instance;
 
-        instance = new RemoteServices(caller);
+        instance = getNewInstance();
+        instance.assignRemoteCaller(caller);
         return instance;
     }
 
@@ -58,28 +65,56 @@ public class RemoteServices
 
     private Map  services = new HashMap();
 
-    private RemoteServices(RemoteCaller caller)
+    private DataServices()
+    {
+        super();
+        this.remoteCaller = null;
+    }
+
+    private DataServices(RemoteCaller caller)
     {
         super();
         this.remoteCaller = caller;
     }
 
-    public String getSessionKey() { return remoteCaller.getSessionKey(); }
-
-    public RemoteCaller getRemoteCaller() { return remoteCaller; }
-
-    private RemoteService instantiateService(Class clazz)
+    public String getSessionKey()
     {
-        if (!RemoteService.class.isAssignableFrom(clazz))
-            throw new IllegalArgumentException("Class is not a RemoteService implementation");
+        if (this.remoteCaller == null)
+            throw new IllegalStateException("No RemoteCaller");
 
-        RemoteService service = (RemoteService) services.get(clazz);
+        return remoteCaller.getSessionKey();
+    }
+
+    public RemoteCaller getRemoteCaller()
+    {
+        if (this.remoteCaller == null)
+            throw new IllegalStateException("No RemoteCaller");
+
+        return remoteCaller;
+    }
+
+    public void assignRemoteCaller(RemoteCaller caller)
+    {
+        if (this.remoteCaller != null)
+            throw new IllegalStateException("RemoteCaller already assigned");
+
+        this.remoteCaller = caller;
+        instances.put(caller,this);
+        services.put(RemoteCaller.class,caller);
+    }
+
+    private DataService instantiateService(Class clazz)
+    {
+        if (!DataService.class.isAssignableFrom(clazz))
+            throw new IllegalArgumentException("Class is not a DataService implementation");
+
+        DataService service = (DataService) services.get(clazz);
         if (service != null)
             return service;
 
         try
         {
-            service = (RemoteService) clazz.newInstance();
+            service = (DataService) clazz.newInstance();
         } catch (InstantiationException e) {
             throw new RemoteException("Could not instantiate service");
         } catch (IllegalAccessException e) {
@@ -92,7 +127,7 @@ public class RemoteServices
         return service;
     }
 
-    public RemoteService getService(Class clazz)
+    public DataService getService(Class clazz)
     {
         return instantiateService(clazz);
     }

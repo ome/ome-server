@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.openmicroscopy.ds.RemoteServices;
+import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.FieldsSpecification;
@@ -70,7 +70,7 @@ public class DatasetManager
     public DatasetManager(RemoteCaller caller)
     {
         super();
-        initializeService(RemoteServices.getInstance(caller));
+        initializeService(DataServices.getInstance(caller));
     }
 
     /**

@@ -44,7 +44,7 @@ import java.awt.image.BufferedImage;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.openmicroscopy.ds.RemoteServices;
+import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.DataFactory;
 import org.openmicroscopy.ds.DataException;
@@ -101,11 +101,11 @@ public class PixelsFactory
     public PixelsFactory(DataFactory factory)
     {
         super();
-        initializeService(RemoteServices.
+        initializeService(DataServices.
                           getInstance(factory.getRemoteCaller()));
     }
 
-    public void initializeService(RemoteServices services)
+    public void initializeService(DataServices services)
     {
         super.initializeService(services);
         this.factory = (DataFactory)

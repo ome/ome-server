@@ -111,7 +111,7 @@ public class DataFactory
     public DataFactory(RemoteCaller caller)
     {
         super();
-        initializeService(RemoteServices.getInstance(caller));
+        initializeService(DataServices.getInstance(caller));
     }
 
     /**
@@ -121,11 +121,11 @@ public class DataFactory
     public DataFactory(InstantiatingCaller caller)
     {
         super();
-        initializeService(RemoteServices.
+        initializeService(DataServices.
                           getInstance(caller.getRemoteCaller()));
     }
 
-    public void initializeService(RemoteServices services)
+    public void initializeService(DataServices services)
     {
         super.initializeService(services);
         icaller = (InstantiatingCaller)

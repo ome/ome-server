@@ -91,25 +91,25 @@ public class DataServer
     }
 
     /**
-     * Returns a {@link RemoteServices} which can be used to communicate
+     * Returns a {@link DataServices} which can be used to communicate
      * with a data server at the specified URL.
      * @param url the URL of the data server
      * @throws MalformedURLException if <code>url</code> does not
      * encode a well-formed URL
      */
-    public static RemoteServices getDefaultServices(String url)
+    public static DataServices getDefaultServices(String url)
         throws MalformedURLException
     {
         return getDefaultServices(new URL(url));
     }
 
     /**
-     * Returns a {@link RemoteServices} which can be used to communicate
+     * Returns a {@link DataServices} which can be used to communicate
      * with a data server at the specified URL.
      * @param url the URL of the data server
      */
-    public static RemoteServices getDefaultServices(URL url)
+    public static DataServices getDefaultServices(URL url)
     {
-        return RemoteServices.getInstance(getDefaultCaller(url));
+        return DataServices.getInstance(getDefaultCaller(url));
     }
 }

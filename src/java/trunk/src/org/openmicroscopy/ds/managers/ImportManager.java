@@ -39,7 +39,7 @@ package org.openmicroscopy.ds.managers;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.openmicroscopy.ds.RemoteServices;
+import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.DataFactory;
 import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.AbstractService;
@@ -65,7 +65,7 @@ public class ImportManager
 
     public ImportManager() { super(); }
 
-    public void initializeService(RemoteServices services)
+    public void initializeService(DataServices services)
     {
         super.initializeService(services);
         factory = (DataFactory) services.getService(DataFactory.class);

@@ -25,10 +25,10 @@ public class TestImport
                 throw new IllegalArgumentException("Need a filename");
             }
 
-            // Login to OME.  Note the new RemoteServices class --
+            // Login to OME.  Note the new DataServices class --
             // this is quite useful if you're going to be using
             // several of the helper classes on the remote interface.
-            RemoteServices rs = DataServer.getDefaultServices(urlString);
+            DataServices rs = DataServer.getDefaultServices(urlString);
             RemoteCaller rc = rs.getRemoteCaller();
 
             BufferedReader in =

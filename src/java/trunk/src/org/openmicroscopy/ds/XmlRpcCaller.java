@@ -100,6 +100,11 @@ public class XmlRpcCaller
     private File  traceFilename;
     private PrintWriter  traceFile;
 
+    public XmlRpcCaller()
+    {
+        super();
+    }
+
     /**
      * Creates a new <code>XmlRpcCaller</code> which can be used to
      * send remote method calls to the data server at the specified

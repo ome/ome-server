@@ -38,7 +38,7 @@ package org.openmicroscopy.ds.managers;
 
 import java.util.Map;
 
-import org.openmicroscopy.ds.RemoteServices;
+import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.AbstractService;
@@ -60,7 +60,7 @@ public class ConfigurationManager
 
     public ConfigurationManager() { super(); }
 
-    public void initializeService(RemoteServices services)
+    public void initializeService(DataServices services)
     {
         super.initializeService(services);
         icaller = (InstantiatingCaller)

@@ -49,6 +49,7 @@ package org.openmicroscopy.ds;
  */
 
 public interface RemoteCaller
+    extends DataService
 {
     public void login(String username, String password);
 

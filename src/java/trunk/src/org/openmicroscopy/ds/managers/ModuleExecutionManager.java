@@ -38,7 +38,7 @@ package org.openmicroscopy.ds.managers;
 
 import java.util.Map;
 
-import org.openmicroscopy.ds.RemoteServices;
+import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.DataFactory;
 import org.openmicroscopy.ds.Criteria;
@@ -80,7 +80,7 @@ public class ModuleExecutionManager
     public ModuleExecutionManager(RemoteCaller caller)
     {
         super();
-        initializeService(RemoteServices.getInstance(caller));
+        initializeService(DataServices.getInstance(caller));
     }
 
     /**
@@ -91,11 +91,11 @@ public class ModuleExecutionManager
     public ModuleExecutionManager(InstantiatingCaller caller)
     {
         super();
-        initializeService(RemoteServices.
+        initializeService(DataServices.
                           getInstance(caller.getRemoteCaller()));
     }
 
-    public void initializeService(RemoteServices services)
+    public void initializeService(DataServices services)
     {
         super.initializeService(services);
         icaller = (InstantiatingCaller)

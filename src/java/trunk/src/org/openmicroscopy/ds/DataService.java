@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.ds.RemoteService
+ * org.openmicroscopy.ds.DataService
  *
  *------------------------------------------------------------------------------
  *
@@ -36,10 +36,10 @@
 
 package org.openmicroscopy.ds;
 
-public interface RemoteService
+public interface DataService
 {
-    public void initializeService(RemoteServices services);
+    public void initializeService(DataServices services);
 
-    public RemoteServices getRemoteServices();
+    public DataServices getDataServices();
 
 }

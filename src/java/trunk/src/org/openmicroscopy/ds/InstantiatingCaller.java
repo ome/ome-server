@@ -75,10 +75,10 @@ public class InstantiatingCaller
     public InstantiatingCaller(RemoteCaller caller)
     {
         super();
-        initializeService(RemoteServices.getInstance(caller));
+        initializeService(DataServices.getInstance(caller));
     }
 
-    public void initializeService(RemoteServices services)
+    public void initializeService(DataServices services)
     {
         super.initializeService(services);
         this.instantiator = new Instantiator();

@@ -37,23 +37,23 @@
 package org.openmicroscopy.ds;
 
 public class AbstractService
-    implements RemoteService
+    implements DataService
 {
-    protected RemoteServices services = null;
-    protected RemoteCaller   caller = null;
+    protected DataServices  services = null;
+    protected RemoteCaller  caller = null;
 
     public AbstractService()
     {
         super();
     }
 
-    public void initializeService(RemoteServices services)
+    public void initializeService(DataServices services)
     {
         this.services = services;
         this.caller = services.getRemoteCaller();
     }
 
-    public RemoteServices getRemoteServices() { return services; }
+    public DataServices getDataServices() { return services; }
 
     public RemoteCaller getRemoteCaller() { return caller; }
 

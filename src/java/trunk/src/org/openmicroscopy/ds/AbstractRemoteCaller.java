@@ -46,12 +46,22 @@ package org.openmicroscopy.ds;
  */
 
 public abstract class AbstractRemoteCaller
+    extends AbstractService
     implements RemoteCaller
 {
+    protected DataServices services;
+
     /**
      * Creates a new <code>AbstractRemoteCaller</code> instance.
      */
     public AbstractRemoteCaller() { super(); }
+
+    public void initializeService(DataServices services)
+    {
+        this.services = services;
+    }
+
+    public DataServices getDataServices() { return services; }
 
     ////////////////////////////////////////////////////////////////////
     // All of the following methods are implemented in terms of
