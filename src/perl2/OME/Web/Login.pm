@@ -21,11 +21,10 @@
 package OME::Web::Login;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
-@ISA = ("OME::Web");
+use base qw{ OME::Web };
 
 sub new {
     my $proto = shift;
@@ -52,8 +51,6 @@ sub getPageBody {
     my $session = $self->Manager()->createSession($cgi->param('username'),
                               $cgi->param('password'));
     if (defined $session) {
-print STDERR "\nin Login, session is defined\n\n";
-        $self->Session( $session );
         $self->setSessionCookie();
         return ('REDIRECT',$self->pageURL('OME::Web::Home'));
     } else {

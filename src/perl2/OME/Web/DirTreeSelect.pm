@@ -22,12 +22,11 @@
 package OME::Web::DirTreeSelect;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
 use OME::DBObject;
-@ISA = ("OME::Web");
+use base qw{ OME::Web };
 
 use OME::Tasks::ImageTasks;
 
