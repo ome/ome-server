@@ -68,6 +68,7 @@ public class SelectionState {
 	private CChain	currentChain = null;
 	private ChainExecution currentExecution = null;
 	private Project currentProject = null;
+	private Project rolloverProject = null;
 	private Collection activeProjects = null;
 	
 	// listener lists
@@ -171,6 +172,21 @@ public class SelectionState {
 	
 	public Project getSelectedProject() {
 		return currentProject;
+	}
+	
+	public boolean isActiveProject(Project p) {
+		if (activeProjects == null)
+			return false;
+		else return activeProjects.contains(p);
+	}
+	
+	public void setRolloverProject(Project p) {
+		rolloverProject =p;
+		fireSelectionEvent();
+	}
+	
+	public Project getRolloverProject() {
+		return rolloverProject;
 	}
 	
 	// DATASETS
