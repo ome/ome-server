@@ -357,7 +357,7 @@ my @modules = (
 	repository_file => "$REPOSITORY/XML-LibXML-Common-0.12.tar.gz"
     },{
 	name => 'XML::LibXML',
-	repository_file => "$REPOSITORY/XML-LibXML-1.56.tar.gz",
+	repository_file => "$REPOSITORY/XML-LibXML-1.58.tar.gz",
 	get_module_version => sub {
 	    my $version;
 	    my $eval = 'use XML::LibXML; $version = $XML::LibXML::VERSION;';
@@ -407,7 +407,7 @@ my @modules = (
 	}
     },{
 	name => 'XML::LibXSLT',
-	repository_file => "$REPOSITORY/XML-LibXSLT-1.53.tar.gz",
+	repository_file => "$REPOSITORY/XML-LibXSLT-1.57.tar.gz",
     }
 );
 
