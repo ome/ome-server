@@ -56,6 +56,9 @@ import java.util.Vector;
 import java.util.Iterator;
 import java.util.Collection;
 import java.awt.event.MouseEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.Timer;
 
 
 
@@ -79,7 +82,8 @@ import java.awt.event.MouseEvent;
  * @since OME2.1
  */
 
-public class PChainEventHandler extends  PPanEventHandler {
+public class PChainEventHandler extends  PPanEventHandler 
+	implements ActionListener {
 	
 	/**
 	 * This handler can be viewed as a state machine, with differing
@@ -199,6 +203,9 @@ public class PChainEventHandler extends  PPanEventHandler {
 	 */
 	private boolean postPopup= false;
 	
+	private final Timer timer = new Timer(300,this);
+	
+	private PInputEvent cachedEvent;
 	
 	public PChainEventHandler(PChainCanvas canvas,PLinkLayer linkLayer) {
 		super();
@@ -357,6 +364,29 @@ public class PChainEventHandler extends  PPanEventHandler {
 
 	}
 	
+	
+	public void actionPerformed(ActionEvent e) {
+		if (cachedEvent != null) 
+			doMouseClicked(cachedEvent);
+		cachedEvent = null;
+		timer.stop();
+	}
+	
+	public void mouseClicked(PInputEvent e) {
+		if (timer.isRunning()) {
+			timer.stop();
+			PNode node = e.getPickedNode();
+			if (node instanceof PModule)
+				startModuleLinks(e);
+			//mousePressed(e);
+			cachedEvent = null;
+		}
+		else {
+			timer.restart();
+			cachedEvent = e;
+		}
+	}
+	
 	/**
 	 * Cases for mouse clicks:
 	 * 
@@ -369,7 +399,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	 *  b) If the control key is down, or it's a right click, zoom out
 	 *  c) Otherwise zoom in.
 	 */
-	public void mouseClicked(PInputEvent e) {
+	public void doMouseClicked(PInputEvent e) {
 		// we only scale if we're not drawing a link.
 		if (linkState != NOT_LINKING) {
 			if (linkState == LINKING_CANCELLATION)
@@ -392,12 +422,15 @@ public class PChainEventHandler extends  PPanEventHandler {
 			PBufferedNode mod = (PBufferedNode) node;
 			PCamera camera = canvas.getCamera();
 			if (mask == MouseEvent.BUTTON1_MASK && e.getClickCount()==1) {
+				System.err.println("zooming in on node...");
 				PBounds b = mod.getBufferedBounds();
 				camera.animateViewToCenterBounds(b,true,
 					PConstants.ANIMATION_DELAY);
 			}
-			else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK)==1)
+			else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK)==1) {
+				//System.err.println("canvas right click..");
 				evaluatePopup(e);					
+			}
 		}
 		
 		// otherwise, must be a camera
@@ -406,6 +439,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		
 		if (e.isShiftDown()) {
 			PBounds b = canvas.getBufferedBounds();
+			//System.err.println("shift zoom");
 			canvas.getCamera().animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 			e.setHandled(true);
 		}
@@ -608,6 +642,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	 * @param e
 	 */
 	private void mousePressedNotLinking(PNode node,PInputEvent e) {
+		//System.err.println("got mouse presssed not linking..");
 		if (node instanceof PFormalParameter) {
 			if (lastParameterEntered == null) 
 				mouseEntered(e);
@@ -615,10 +650,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 			if (param.canBeLinkOrigin())
 				startParamLink(param);
 		}
-		else if (node instanceof PModule && e.getClickCount() ==2)
-			startModuleLinks(e);
 		else if (node instanceof PLinkSelectionTarget) {
-			System.err.println("pressiing on target..");
+		//	System.err.println("pressiing on target..");
 			selectionTarget  = (PLinkSelectionTarget) node;
 			linkState = LINK_CHANGING_POINT;
 		}
@@ -859,6 +892,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	 * @param e
 	 */
 	private void evaluatePopup(PInputEvent e) {
+		System.err.println("chain canvas popup...");
 		PNode n = e.getPickedNode();
 		PNode p = n.getParent();
 		if (p instanceof PBufferedNode) {
@@ -874,7 +908,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);			
 		}
 		else {
-			//System.err.println("popup event"+e);
 			double scaleFactor = 1/PConstants.SCALE_FACTOR;
 			zoom(scaleFactor,e);
 			e.setHandled(true);
