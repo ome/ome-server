@@ -42,19 +42,19 @@
 			<CommandLine>Path=<RawImageFilePath/> Dims=<sizeX/>,<sizeY/>,<sizeZ/>,<sizeT/>,<sizeW/>,<BytesPerPixel/></CommandLine>
 			<STDOUT>
 				<OutputRecord RepeatCount= "1">
-					<re>/.*$/</re>
+					<pat>^.*?\n</pat>
 				</OutputRecord>
 				<!-- That was supposed to eat a line -->
 				<OutputRecord>
-					<re>/^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\st\d+)\t(\d+)\t(\d+)$/</re>
-					<Output FormalOutputID = "theW" AccessBy = "$1"/>
-					<Output FormalOutputID = "theT" AccessBy = "$2"/>
-					<Output FormalOutputID = "theZ" AccessBy = "$3"/>
-					<Output FormalOutputID = "MIN" AccessBy = "$4"/>
-					<Output FormalOutputID = "MAX" AccessBy = "$5"/>
-					<Output FormalOutputID = "MEAN" AccessBy = "$6"/>
-					<Output FormalOutputID = "GEOMEAN" AccessBy = "$7"/>
-					<Output FormalOutputID = "SIGMA" AccessBy = "$8"/>
+					<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+					<Output FormalOutputID = "theW" AccessBy = "1"/>
+					<Output FormalOutputID = "theT" AccessBy = "2"/>
+					<Output FormalOutputID = "theZ" AccessBy = "3"/>
+					<Output FormalOutputID = "MIN" AccessBy = "4"/>
+					<Output FormalOutputID = "MAX" AccessBy = "5"/>
+					<Output FormalOutputID = "MEAN" AccessBy = "6"/>
+					<Output FormalOutputID = "GEOMEAN" AccessBy = "7"/>
+					<Output FormalOutputID = "SIGMA" AccessBy = "8"/>
 				</OutputRecord>
 				<!-- That was supposed to read a line of output & repeat until it has reached the end of the stream. -->
 			</STDOUT>
