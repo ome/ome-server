@@ -58,7 +58,7 @@ our @core_dirs = (
 	name => "base",
 	path => "/OME",
 	description => "Base OME directory",
-	children => ["xml", "bin", "perl2", "cgi", "repository"]
+	children => ["xml", "bin", "perl2", "cgi", "repository", "OMEIS", "OMEIS/Files", "OMEIS/Pixels"]
     },
     {
 	name => "temp_base",
@@ -282,7 +282,7 @@ sub execute {
 		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\". $!";
 
     print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
-    
+
     my $retval = 0;
 
     print "Installing core binaries\n";
