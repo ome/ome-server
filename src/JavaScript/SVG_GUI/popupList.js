@@ -72,7 +72,7 @@ popupList.prototype.fadeOutText =
 *****/
 function popupList(x, y, itemList, callback, selection, anchorText, 
 	itemBackgroundText, itemHighlightText) {
-	if(arguments.length > 0)
+	if(arguments.length >= 4)
 		this.init(x, y, itemList, callback, selection, anchorText,
 			itemBackgroundText, itemHighlightText);
 }
@@ -93,8 +93,8 @@ popupList.prototype.setSelection = function(i) {
 
 	this.selection = i;
 	this.update();
-	if( this.callback ) 
-		this.callback( this.selection );
+	if( this.callback )
+		this.callback( this.getSelection() );
 }
 
 /*****
@@ -106,6 +106,16 @@ popupList.prototype.getItemList = function() {
 	// return a COPY
 	if(this.itemList)
 		return this.itemList.join().split(',');
+}
+
+/*****
+*
+*	getSelection()
+*
+*****/
+
+popupList.prototype.getSelection = function() {
+	return this.listIndex[this.selection];
 }
 
 /*****
@@ -159,30 +169,36 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 	popupList.superclass.init.call(this, x, y);
 
 	// set variables
-	this.size = itemList.length;
 	this.callback = callback;
 	this.active = false;
 	this.padding = 3;
 	this.itemList = itemList;
+	//	itemList could be an array with holes or a mix of a hash and array or anything
+	//	popupList will return the INDEX of itemList that corrosponds with the selection
+	//	listIndex holds these indexes
+	this.listIndex = new Array();
 	
 	// make list of elements, find width & height
 	this.itemText = new Array();
 	var width = 0; 
 	var height = 0;
-	for(i=0;i<itemList.length;i++) {
+	this.size = 0;
+	for(i in itemList) {
+		this.size++;
 		var text = svgDocument.createElementNS( svgns, "text");
 		text.appendChild( svgDocument.createTextNode(itemList[i]) );
 		text.setAttributeNS(null, "y", "1em");
 		text.setAttributeNS(null, "text-anchor", "middle");
 		// add set text style
 		this.itemText.push(text);
+		this.listIndex.push(i);
 		bbox = text.getBBox();
 		width = Math.max(width, bbox.width);
 		height = Math.max(height, bbox.height);
 	}
 	this.width = Math.round(width + 2*this.padding);
 	this.height = Math.round(height + 2*this.padding);
-	for(i=0;i<itemList.length;i++)
+	for(i in this.itemText)
 		this.itemText[i].setAttributeNS(null, "x", Math.round(this.width/2) );
 		
 	// set selection
