@@ -279,8 +279,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			//System.err.println(" old aspect ratio is "+oldAspectRatio);
 			if (strip.size()>1 &&  newAspectRatio > oldAspectRatio) {
 				// move it to next strip.
-				System.err.println("-------");
-				System.err.println("moving on to next strip");
+				//System.err.println("-------");
+				//System.err.println("moving on to next strip");
 				strip.remove(node);
 				//System.err.println("strip heiight is "+stripHeight);
 				//System.err.println("reverting to "+oldHeight);
