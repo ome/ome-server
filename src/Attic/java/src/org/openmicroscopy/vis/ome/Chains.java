@@ -40,6 +40,7 @@
  package org.openmicroscopy.vis.ome;
  
  import org.openmicroscopy.vis.chains.Controller;
+ import org.openmicroscopy.vis.util.SwingWorker;
  import java.util.TreeMap;
  import java.util.List;
  import java.util.Iterator;
@@ -64,7 +65,7 @@ public class Chains {
 		CChain c;
 		Integer id;
 		
-		List  cs= connection.loadChains();
+		final List  cs= connection.loadChains();
 		Iterator iter = cs.iterator();
 		
 		while (iter.hasNext()) {
@@ -75,6 +76,8 @@ public class Chains {
 			id = new Integer(c.getID());
 			chains.put(id,c);
 		}
+		
+		
 	}
 	
 	/**
@@ -82,7 +85,7 @@ public class Chains {
 	 *
 	 */
 	public void layout() {
-		CChain c;
+		/*CChain c;
 		
 		Iterator iter = chains.values().iterator();
 		while (iter.hasNext()) {
@@ -90,7 +93,24 @@ public class Chains {
 			controller.setStatusLabel("Chain Layout.."+c.getName());
 			//System.err.println("Laying out chain ..."+c.getName());
 			c.layout();
-		}
+		} */
+		final SwingWorker worker = new SwingWorker() {
+			public Object construct() {
+				Iterator iter = chains.values().iterator();
+				while (iter.hasNext()) {
+					CChain c = (CChain) iter.next();
+					controller.setStatusLabel("Chain Layout.."+c.getName());
+					//System.err.println("Laying out chain ..."+c.getName());
+					c.layout();
+				}
+				return null;
+			}
+
+			public void finished() {
+				controller.buildLibraryFrame();
+			}
+		};
+		worker.start();
 	}
 	
 	/**
