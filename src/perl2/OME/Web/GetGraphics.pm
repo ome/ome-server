@@ -333,7 +333,7 @@ L<OME::Graphics::JavaScript/"{JSref}">
 =item Generated Javascript will reference
 
 OME::Web::GetGraphics via serve.pl, eventually calling 
-L<"DrawLayersControls()" and L<"DrawGraphics()">
+L<"DrawLayersControls()"> and L<"DrawGraphics()">
 
 =back
 
