@@ -593,6 +593,8 @@ sub load {
     my $attribute_type = $class->_attribute_type();
     my $granularity = $attribute_type->granularity();
     my $attribute_columns = $attribute_type->attribute_columns();
+	my $found_data_row = 0;
+
     while (my $attribute_column = $attribute_columns->next()) {
         my $data_column = $attribute_column->data_column();
         my $data_table = $data_column->data_table();
@@ -601,6 +603,9 @@ sub load {
         next if exists $rows->{$data_tableID};
 
         my $data_row = $factory->loadObject($data_table_pkg,$id);
+		next unless defined $data_row;
+		$found_data_row = 1;
+
         $rows->{$data_tableID} = $data_row;
 
         if (!defined $target) {
@@ -618,6 +623,7 @@ sub load {
         }
     }
 
+	return undef unless $found_data_row;
     return $class->new($session,$target,$id,$rows);
 }
 
