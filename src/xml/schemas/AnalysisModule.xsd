@@ -39,7 +39,6 @@ The outputs are completely different. You need to specify an interface for each 
 Or pretend you have a powerful program that can do 10 unrelated tasks, each of which outputs an image. While the outputs are the same type and format, they represent 10 completely different things. In this case, it might make sense to define 10 corrosponding AnalysisModule to represent the 10 logical functions.
 
 In any case, use AnalysisModule to define an interface and Program to store installation software for a program.
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -55,7 +54,6 @@ In any case, use AnalysisModule to define an interface and Program to store inst
 									<documentation>States module requirements.
 Formal Inputs are optional because input requirements may be specified by guaranteed image attributes. For example, OME_Image_XYZ_stats requires a path to the OME repository file, and Dimensions.
 These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &lt;sizeT>, and &lt;sizeW>.
-						
 									</documentation>
 								</annotation>
 								<complexType>
@@ -63,7 +61,6 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 										<element name = "FormalInput" minOccurs = "0" maxOccurs = "unbounded">
 											<annotation>
 												<documentation>Specifies an input requirement for a module. Image dimensions and image file locations (repository or other format) should not be specified with this. Image dimensions are intrisic to an image. They do not represent a special requirement. Image file locations and contents are specified by other elements. Specifically, RawImageFile, RawImageFilePath, XYPlaneFile, and XYPlaneFilePath.
-									
 												</documentation>
 											</annotation>
 											<complexType>
@@ -98,6 +95,7 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 																		</attribute>
 																	</complexType>
 																</element>
+																<element ref = "AML:Description" minOccurs = "0"/>
 															</sequence>
 															<attribute name = "Name" use = "required">
 																<annotation>
@@ -109,13 +107,9 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 																	</restriction>
 																</simpleType>
 															</attribute>
-															<attribute name = "Description" type = "string">
-																<annotation>
-																	<documentation>Tied to DB. LOOKUP_TABLES.DESCRIPTION</documentation>
-																</annotation>
-															</attribute>
 														</complexType>
 													</element>
+													<element ref = "AML:Description" minOccurs = "0"/>
 												</sequence>
 												<attribute ref = "AML:FormalInputName" use = "required"/>
 												<attribute name = "UserDefined" default = "false" type = "boolean">
@@ -123,13 +117,7 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 														<documentation>OME interprets this as a recommendation rather than a requirement.
 
 Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
-											
 														</documentation>
-													</annotation>
-												</attribute>
-												<attribute name = "Description" type = "string">
-													<annotation>
-														<documentation>Tied to DB. Table FORMAL_INPUTS Column DESCRIPTION</documentation>
 													</annotation>
 												</attribute>
 												<attribute ref = "STD:SemanticTypeName" use = "required"/>
@@ -141,7 +129,6 @@ Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 ? = zero or one
 + = one or more
 * = zero or more
-											
 														</documentation>
 													</annotation>
 													<simpleType>
@@ -160,12 +147,10 @@ Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 												<documentation>Specifies an output element of a module.</documentation>
 											</annotation>
 											<complexType>
+												<sequence>
+													<element ref = "AML:Description" minOccurs = "0"/>
+												</sequence>
 												<attribute ref = "AML:FormalOutputName" use = "required"/>
-												<attribute name = "Description" type = "string">
-													<annotation>
-														<documentation>Tied to DB. Table FORMAL_OUTPUTS Column DESCRIPTION</documentation>
-													</annotation>
-												</attribute>
 												<attribute name = "IBelongTo">
 													<annotation>
 														<documentation>Concerning MakeNewFeature attribute of ExecutionInstructions, if a new feature type is made, then there are two possible places a formal output attribute can be stored: It can be stored as an attribute of the FeatureIterator, or it can be stored as an attribute of the new Feature.
@@ -173,7 +158,6 @@ This tag is supposed to specify which. Can be left blank if module does not make
 
 Tied to DB. FORMAL_OUTPUTS.FEATURE_TAG
 Processed before storage to DB
-											
 														</documentation>
 													</annotation>
 													<simpleType>
@@ -192,7 +176,6 @@ Processed before storage to DB
 ? = zero or one
 + = one or more
 * = zero or more
-											
 														</documentation>
 													</annotation>
 													<simpleType>
@@ -210,22 +193,14 @@ Processed before storage to DB
 								</complexType>
 							</element>
 							<element ref = "CLI:ExecutionInstructions" minOccurs = "0"/>
+							<element ref = "AML:Description" minOccurs = "0"/>
 						</sequence>
-						<attribute ref = "AML:ModuleName" use = "required">
-							<annotation>
-								<documentation>PROGRAM_NAME in the database is a misnomer. It really should be changed to NAME.
-
-Tied to DB. Table PROGRAMS Column PROGRAM_NAME
-					
-								</documentation>
-							</annotation>
-						</attribute>
+						<attribute ref = "AML:ModuleName" use = "required"/>
 						<attribute name = "Category">
 							<annotation>
 								<documentation>Specifies what category this program belongs to.
 
 Tied to DB. Table PROGRAMS Column CATEGORY
-					
 								</documentation>
 							</annotation>
 							<simpleType>
@@ -233,11 +208,6 @@ Tied to DB. Table PROGRAMS Column CATEGORY
 									<maxLength value = "32"/>
 								</restriction>
 							</simpleType>
-						</attribute>
-						<attribute name = "Description" type = "string">
-							<annotation>
-								<documentation>Tied to DB. Table PROGRAMS Column DESCRIPTION</documentation>
-							</annotation>
 						</attribute>
 						<attribute name = "isStreamAlgorithm" default = "false" type = "boolean">
 							<annotation>
@@ -253,7 +223,6 @@ Example of an algorithms that is not a stream algorithm is:
 If a module is a stream algorithm, it can function across the x, y, z, and time dimensions.
 
 Tied to DB. Table PROGRAMS Column IS_STREAM_ALGORITHM
-					
 								</documentation>
 							</annotation>
 						</attribute>
@@ -262,7 +231,6 @@ Tied to DB. Table PROGRAMS Column IS_STREAM_ALGORITHM
 								<documentation>As more handlers, are added, this part of the schema needs to be changed
 
 Tied to DB. Table PROGRAMS Column MODULE_TYPE
-					
 								</documentation>
 							</annotation>
 							<simpleType>
@@ -352,12 +320,6 @@ Tied to DB. PROGRAMS.NEW_FEATURE_TAG
 												<documentation>This is a stub for future development. Don't bother with it unless you know more about it.
 
 Specifies the packaging and/or compression format of the Installation file.
-					
-					
-					
-									
-									
-									
 												</documentation>
 											</annotation>
 										</attribute>
@@ -376,12 +338,6 @@ Specifies the packaging and/or compression format of the Installation file.
 								<documentation>Program name.
 
 Unclear how this would be used. DB location PROGRAMS.PROGRAM_NAME is populated by XML attribute AnalysisModule.Name.
-					
-					
-					
-					
-					
-					
 								</documentation>
 							</annotation>
 							<simpleType>
@@ -446,7 +402,7 @@ Unclear how this would be used. DB location PROGRAMS.PROGRAM_NAME is populated b
 			</restriction>
 		</simpleType>
 	</attribute>
-	<attribute name = "ProgramID" type = "NMTOKEN"/>
+	<attribute name = "ProgramID" type = "positiveInteger"/>
 	<attribute name = "ModuleName">
 		<simpleType>
 			<restriction base = "string">
@@ -454,4 +410,12 @@ Unclear how this would be used. DB location PROGRAMS.PROGRAM_NAME is populated b
 			</restriction>
 		</simpleType>
 	</attribute>
+	<element name = "Description">
+		<annotation>
+			<documentation>
+				Just some free-form text to describe Images, Screens and Projects.
+				The content model is ANY, which means that en entire XML sub-document can be placed here.
+			</documentation>
+		</annotation>
+	</element>
 </schema>
