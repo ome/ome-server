@@ -135,6 +135,32 @@ my @modules = ({
 	},{
 	Name => 'XML::LibXML',
 	repositoryFile => 'XML-LibXML-1.53.tar.gz',
+	},{
+	Name => 'Compress::Zlib',
+	repositoryFile => 'Compress-Zlib-1.19.tar.gz',
+	},{
+	Name => 'Pod::Parser',
+	repositoryFile => 'PodParser-1.21.tar.gz',
+	},{
+	Name => 'URI',
+	repositoryFile => 'URI-1.23.tar.gz',
+	},{
+	Name => 'HTML::Tagset',
+	repositoryFile => 'HTML-Tagset-3.03.tar.gz',
+	},{
+	Name => 'HTML::Parser',
+	repositoryFile => 'HTML-Parser-3.27.tar.gz',
+	},{
+	Name => 'Net::Config',
+	repositoryFile => 'libnet-1.13.tar.gz',
+	},{
+	Name => 'LWP',
+	repositoryFile => 'libwww-perl-5.69.tar.gz',
+	},{
+	Name => 'SOAP::Lite',
+	repositoryFile => 'SOAP-Lite-0.55.tar.gz',
+	checkVersion => sub {shift >= 0.55 ? return (1) : return (0);}, # security flaw in < 0.55
+	installModule => \&SOAP_Lite_Install,
 	}
 );
 
@@ -321,6 +347,54 @@ my $error;
 }
 
 
+sub SOAP_Lite_Install {
+my $module = shift;
+my $installTarBall = $module->{repositoryFile};
+my $badTestsFatal;
+$badTestsFatal = $module->{badTestsFatal} if exists $module->{badTestsFatal};
+$badTestsFatal = $DEFAULT_badTestsFatal unless defined $badTestsFatal;
+my $installDir = $module->{installDir};
+my $error;
+my $makeFileOpts = join (' ',qw (
+	--HTTP-Client
+	--noHTTPS-Client
+	--noMAILTO-Client
+	--noFTP-Client
+	--noHTTP-Daemon
+	--HTTP-Apache
+	--noHTTP-FCGI
+	--noPOP3-Server
+	--noIO-Server
+	--noMQ
+	--noJABBER
+	--noMIMEParser
+	--noTCP
+	--HTTP
+	--noprompt
+) );
+
+	print "\nInstalling $installDir\n";
+	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+
+	die "Couldn't execute perl script 'Makefile.PL'.\n" if system ("perl Makefile.PL $makeFileOpts") != 0;
+	die "Compilation errors - script aborted.\n" if system ('make') != 0;
+	my $testStatus = system ('make test');
+	die "Test errors - script aborted.\n" if $testStatus != 0 and $badTestsFatal;
+	if ($testStatus != 0 and not $badTestsFatal) {
+		print "\n**** Test Errors - attempt install anyway? [NO] ";
+		my $yorn = <STDIN>;
+		chomp $yorn;
+		$yorn = uc ($yorn);
+		if (not ($yorn eq 'Y' or $yorn eq 'YES') ) {
+				die "\n Script aborted \n";
+		}
+	}
+	
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
+	chdir '..';
+
+
+}
 
 ##################################################################
 # Special GetVersion subs:
