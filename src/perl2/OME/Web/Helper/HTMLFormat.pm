@@ -50,12 +50,14 @@ The OME::Web::Helper::HTMLFormat provides a list of methods to write HTML code
 =head2 formatProject
 =head2 formChange
 =head2 formCreate
+=head2 formImport
 =head2 formLogin
 =head2 formSearch
 =head2 imageInDataset
 =head2 listImages
 =head2 manager
 =head2 projectList
+=head2 radioButton
 =head2 searchResults
 =head2 titleBar
 
@@ -222,18 +224,35 @@ sub dropDownTable{
 	my $self=shift;
 	my ($name,$ref,$switch,$switchValue)=@_;
 	my $html="";
+  my $rows="";
 	my %b=("name"=>$name);			# for select Tag
-	my $submit=buttonInput("submit",$switch,$switchValue);
+	my $submit="";
+	my %h=();
 	my $menu=writeDropDow($ref,\%b);
-	my %h=(
-	1 => { content=>$menu, attribute=>$self->{cellLeft}},
-	2 => { content=>$submit, attribute=>$self->{cellLeft}},
-	);
-	my $rows=addRow(\%h);
+	$h{1}= { content=>$menu, attribute=>$self->{cellLeft}};
+	if (defined $switch){
+		$submit.=buttonInput("submit",$switch,$switchValue);
+		$h{2}={ content=>$submit, attribute=>$self->{cellLeft}};
+
+	}
+	$rows.=addRow(\%h);
 	$html.=writeTable($rows);
 	return $html;
 }
 
+#####################
+# Parameters:
+#	type= dataset/project
+# Return: html code sentence
+
+sub existMessage{
+	my $self=shift;
+	my ($type)=@_;
+	my $html="";
+	$html.="<b>This name already exists. Please enter a new name for your ".$type."</b><br>";
+	return $html;
+
+}
 
 #####################
 # Parameters:
@@ -243,6 +262,7 @@ sub dropDownTable{
 #	user = user object if address defined
 #	view= format view button if defined
 # Return: html code format dataset
+
 sub formatDataset{
 	my $self=shift;
 	my ($dataset,$bool,$address,$view,$user)=@_;
@@ -451,7 +471,47 @@ sub formCreate{
 }
 
 
+#####################
+# Parameters:
+#	datasetName= default value
+#	dropDownTable = html code  list of existing dataset (result of dropdowTable)
+#	radio	= ref array(result of radioButton)
+#	nameSubmit = name submit button
+#	valueSubmit = value sbmit button
+# Return: html code table
 
+sub formImport{
+	my $self=shift;
+	my ($datasetName,$dropDownTable,$radio,$nameSubmit,$valueSubmit)=@_;
+	my $rows="";
+	my $html="";
+	my $submit=buttonInput("submit",$nameSubmit,$valueSubmit);
+	my $text=buttonInput("text","newDataset",$datasetName,32);
+
+	my $textarea=buttonArea("description",3,32);
+	my %c=(
+	"border"	=>0,
+	"cellspacing" =>4,
+	"cellpadding"=>0,
+	);
+	my $txt="<nobr>@$radio[0]</nobr>";
+	my %a=(
+	1 =>{ content=>$txt, attribute=>$self->{cellLeft}},
+	2=> { content=>$text, attribute=>$self->{cellLeft}},
+	);
+	my %b=(
+	1 =>{ content=>"Description  ", attribute=>$self->{cellLeft}},
+	2=> { content=>$textarea, attribute=>$self->{cellLeft}},
+	);
+	$rows.=addRow(\%a);
+	$rows.=addRow(\%b);
+	$html.=$submit."<BLOCKQUOTE>";
+	$html.=writeTable($rows,\%c);
+	$html.=@$radio[1]."<br>".$dropDownTable;
+	$html.="</BLOCKQUOTE>";
+	return $html;
+
+}
 ##############################
 # Parameters:
 #	invalid= if defined, try to log again
@@ -662,6 +722,20 @@ sub manager{
 
 }
 
+
+#######################
+# Parameters:
+#	type= dataset/project
+# Return: html code sentence
+
+sub noNameMessage{
+	my $self=shift;
+	my ($type)=@_;
+	my $html="";
+	$html.="<b>Please enter a name for your ".$type."</b><br>";
+	return $html;
+}
+
 ########################
 # Parameters:
 #	ref = ref array of project object
@@ -819,23 +893,25 @@ sub titleBar{
 
 
 
-
-
-
 ###############
-sub radioGroup{	
+# Parameters:
+#	ref =ref hash with value button
+#	defaultRadio = 1/2 to choose with one to check
+#	name	= name input button
+# Return: ref array with html code
+
+sub radioButton{
 	my $self=shift;
-	my ($name,$ref)=@_;
-	my $html="";
+	my ($ref,$defaultRadio,$name)=@_;
 	my @list=();
 	foreach my $k (sort {$a <=> $b}  keys %$ref){
-		my $checked=undef;
 		my $button="";
-		if ($k==1){
-		   $checked="checked";
+		if ($k==$defaultRadio){
+		      $button.=buttonInput("radio",$name,${$ref}{$k}{name},undef,"checked");
+		}else{
+			$button.=buttonInput("radio",$name,${$ref}{$k}{name});
 		}
-		$button.=buttonInput("radio",$name,${$ref}{$b}{content},undef,$checked);
-		$button.=${$ref}{$b}{label};
+		$button.=${$ref}{$k}{text};
 		push(@list,$button);
 	}
 	

@@ -42,6 +42,7 @@ The OME::Web::Helper::JScriptFormat provides a list of methods to write javascri
 =head2 openExistingDataset
 =head2 openExistingProject
 =head2 openInfoDataset
+=head2 openInfoDatasetImport
 =head2 openInfoProject
 =head2 popUpImage
 =head2 popUpDataset
@@ -99,7 +100,15 @@ sub openInfoDataset{
 	return $text;
 }
 
+#########################
+sub openInfoDatasetImport{
+	my $self=shift;
+	my ($id)=@_;
+	my $text;
+	$text=writeFunctionOpen("InfoDatasetImport",$self->{GetInfo},"DatasetID",$id);
+	return $text;
 
+}
 ########################
 sub openInfoProject{
 	my $self=shift;
@@ -153,8 +162,27 @@ return false;
 ENDJS
 
 return $text;
+}
 
+sub writeFunctionOpen{
+	my ($name,$path,$param,$id)=@_;
+	my $file=$path."&Bool=1&".$param."=".$id;
+	my $text="";
+ $text.=<<ENDJS;
+<script language="JavaScript">
+<!--
+var OMEfile=\'$file\';
+$name=window.open(
+OMEfile,
+"$name",
+"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+-->
+</script>
+ENDJS
+
+return $text;
 
 }
+
 
 1;
