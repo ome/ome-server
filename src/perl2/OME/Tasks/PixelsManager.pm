@@ -359,7 +359,7 @@ sub getDisplayOptions {
 	$displayChannelData{ ChannelNumber } = $channelIndex;
 	$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
 	$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
-	$displayChannelData{ Gamma } = 0.0;
+	$displayChannelData{ Gamma } = 1.0;
 	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	$displayData{ RedChannel } = $displayChannel;
 
@@ -373,7 +373,7 @@ sub getDisplayOptions {
 		$displayChannelData{ ChannelNumber } = $channelIndex;
 		$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
 		$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
-		$displayChannelData{ Gamma } = 0.0;
+		$displayChannelData{ Gamma } = 1.0;
 		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	} else {
 		$displayData{GreenChannelOn} = 0;
@@ -388,7 +388,7 @@ sub getDisplayOptions {
 		$displayChannelData{ ChannelNumber } = $channelIndex;
 		$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
 		$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
-		$displayChannelData{ Gamma } = 0.0;
+		$displayChannelData{ Gamma } = 1.0;
 		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	} else {
 		$displayData{BlueChannelOn} = 0;
