@@ -179,6 +179,16 @@ public class OMEModel
     imageInfoCache = new HashMap();
   }
   
+  public Session getSession()
+  {
+    return this.session;
+  }
+  
+  public Factory getFactory()
+  {
+    return this.factory;
+  }
+  
   /**
    * Loads all the image records present in the database (this might not be
    * the smartest thing to do, but it's the dummy thing to do), regardless of
