@@ -103,7 +103,6 @@ struct Image_reader => {
 
 my %readers = (DV       => "OME::ImportExport::DVreader",
 	       TIFF     => "OME::ImportExport::TIFFreader",
-	       UIC      => "OME::ImportExport::UICreader",
 	       STK      => "OME::ImportExport::STKreader");
 
 my %checkers = (TIFF    => \&checkTIFF,
