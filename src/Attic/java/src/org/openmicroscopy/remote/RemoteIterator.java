@@ -61,6 +61,12 @@ public class RemoteIterator
 
     public RemoteIterator() { super(); }
 
+    public RemoteIterator(RemoteSession session, String reference)
+    {
+        super(session,reference);
+        this.perlClass = null;
+    }
+
     public RemoteIterator(String perlClass) 
     { 
         super();
