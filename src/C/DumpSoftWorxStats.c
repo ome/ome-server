@@ -139,6 +139,7 @@ void DumpDVStats (DVstack *theStack, int time, FILE *fp );
 void Calculate_Stack_Stats (DVstack *inStack,int theWave);
 void DumpDVStats_Geo (DVstack *theStack, int time, FILE *fp );
 void Calculate_Stack_Stats_Geo (DVstack *inStack,int theWave);
+PixPtr ReadDVslice (PixPtr theBuf, FILE *fp,DVhead *head,long time,long z,long w);
 
 void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes);
 void BSUtilsSwapHeader(char *cTheHeader);
@@ -314,7 +315,8 @@ DVhead *ReadDVHeader( DVhead *head, FILE *fp )
 
 DVstack *ReadDVstack(FILE *fp,DVhead *head,long time )
 {
-unsigned long Rows,Cols,numZ,num,numWaves,numRead;
+unsigned long Rows,Cols,numZ,num,numWaves,numRead,theZ,theW;
+PixPtr theBuf;
 DVstack *inStack;
 
 	Rows = head->numRow;
@@ -387,36 +389,119 @@ DVstack *inStack;
 	inStack->min_i[4] =	 head->min5;
 	inStack->mean_i[0] = 0;
 
+	theBuf = inStack->stack;
+	for (theW = 0; theW < numWaves; theW++) {
+		for (theZ = 0; theZ < numZ; theZ++) {
+			if (!ReadDVslice (theBuf, fp, head, time, theZ, theW)) {
+				free (inStack->stack);
+				free (inStack);
+				fprintf (stderr,"Number of pixels in file does not match number in header.\n");
+				return (NULL);
+			}
+			theBuf += (Cols * Rows);
+		}
+	}
+
+	return (inStack);
+}
+
+
+
+
+
+
+
+
+
+
+/*#########################*/
+/*#                       #*/
+/*#     ReadDVslice       #*/
+/*#                       #*/
+/*#########################*/
+/*
+* This reads the specified z, section, wavelength and timepoint into memory, returning a block
+* of contiguous memory contianing the pixels (byte-swapped if necessary).
+*/
+
+
+PixPtr ReadDVslice (PixPtr theBuf, FILE *fp,DVhead *head,long time,long z,long w)
+{
+unsigned long Rows,Cols,numZ,num=0,numWaves,numRead;
+PixPtr thePixels;
+
+	Rows = head->numRow;
+	Cols = head->numCol;
+	numWaves = head->NumWaves;
+	if (w < 0 || w > numWaves)
+		return (NULL);
+	numZ = head->numImages / (numWaves * head->numtimes);
+	if (z < 0 || z > numZ)
+		return (NULL);
+
+
+/*
+* Allocate memory for the pixels.
+* To be good citizens, its good to deallocate what was successfully
+* allocated before aborting due to an error.
+*/
+	if (theBuf == NULL) {
+		thePixels = (PixPtr) malloc(Cols*Rows*sizeof(pixel));
+	} else {
+		thePixels = theBuf;
+	}
+
+	if (thePixels == NULL)
+		return (NULL);
+
+
+
 /*
 * This is the number of images before the time-point we want.
 */
-	num = time * numZ * numWaves;
+/* Image sequence. 0=ZTW, 1=WZT, 2=ZWT */
+	if (head->imagesequence == 0)
+		num  = z + (time * numZ) + (w * numZ * head->numtimes);
+	else if (head->imagesequence == 1)
+		num  = w + (z * numWaves) + (time * numWaves * numZ);
+	else if (head->imagesequence == 2)
+		num  = z + (w * numZ) + (time * numZ * numWaves);
 
 /* We set the file pointer to the begining of our timepoint */
-	fseek( fp, 1024+head->next+num*Rows*Cols*2, SEEK_SET );
+	fseek( fp, 1024+head->next+(num*Rows*Cols*2), SEEK_SET );
 
 /* and we suck the file into our structure */
-	numRead = fread( inStack->stack, sizeof(pixel), Cols*Rows*numZ*numWaves, fp );
+	numRead = fread( thePixels, sizeof(pixel), Cols*Rows, fp );
 
 /*
 * If we didn't read enough pixels, then something went wrong.  Deallocate memory and return NULL.
 */
-	if (numRead != Cols*Rows*numWaves*numZ)
+	if (numRead != Cols*Rows)
 		{
-		free (inStack->stack);
-		free (inStack);
+		free (thePixels);
 		fprintf (stderr,"Number of pixels in file does not match number in header.\n");
 		return (NULL);
 		}
 
-
 	/* Swap bytes if needed. */
 	if (head->nDVID == DV_REV_ENDIAN_MAGIC)
-		BSUtilsSwap2Byte ( (char *) (inStack->stack), Cols*Rows*numZ*numWaves);
+		BSUtilsSwap2Byte ( (char *) (thePixels), Cols*Rows);
 
 
-	return (inStack);
+	return (thePixels);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
