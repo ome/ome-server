@@ -146,7 +146,13 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		updateBounds();
 	}
 	
-
+	public void insertIntermediatePoint(int i,float x,float y) {
+		Point2D pt =  new Point2D.Double(x,y);
+		points.add(i,pt);
+		pointCount++;
+		updateBounds();
+	}
+	
 	public void paint(PPaintContext aPaintContext) {
 		Graphics2D g = aPaintContext.getGraphics();
 		
@@ -321,15 +327,13 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	protected GeneralPath drawBezier(Point2D[] pts) {
 			int m = 50, n = pts.length;
-		
+		int i;
 		first = true;		
 		GeneralPath p = new GeneralPath();
 		n = pts.length;
-		System.err.println("drawing bezier...");
-		dumpPoints(pts);
-		int i = 0;
-		for (; i<n-3; i+=3) {
-			//System.err.println("i = "+i); 
+		
+		for (i=0; i<n-3; i+=3) {
+			
 		    getBezierPoints(p,pts[i],pts[i+1],pts[i+2],pts[i+3]);	 
 		}	
 		if (i != n-1) // if we didn't end exactly with right number of points
