@@ -61,7 +61,7 @@ __PACKAGE__->addColumn(semantic_type => 'semantic_type_id',
                        {
                         SQLType => 'integer',
                         NotNull => 1,
-                        ForeignKey => 'module_executions',
+                        ForeignKey => 'semantic_types',
                        });
 
 
