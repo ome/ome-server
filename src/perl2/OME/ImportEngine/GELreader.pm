@@ -273,8 +273,6 @@ sub importGroup {
     }
 
     my $filename = $file->getFilename();
-    my $crtime = OME::ImportEngine::ImportCommon::__getFileSQLTimestamp($filename);
-
     my $base = ($self->{super})->__nameOnly($filename);
 
     ($offsets_arr, $bytesize_arr) = getStrips($tags);
@@ -318,7 +316,7 @@ sub importGroup {
 		unless ($status eq "");
 	}
 
-        $image = ($self->{super})->__newImage($base,$crtime);
+        $image = ($self->{super})->__newImage($base);
 	$self->{image} = $image;
 
 
@@ -331,10 +329,7 @@ sub importGroup {
 				  0, 0,
 				  "Molecular Dynamics GEL");
 
-	# Re-enable this line when system can handle 4 byte data
-	#$self->{inflation} = ($pixel_format == SQUARE_ROOT) ? 2 : 1;
-	$self->{inflation} = 1;
-	my $inflation = 1;
+	$self->{inflation} = ($pixel_format == SQUARE_ROOT) ? 2 : 1;
 	my ($pixels, $pix) = 
 	    ($self->{super})->__createRepositoryFile($image, 
 						     $xref->{'Image.SizeX'},
@@ -346,7 +341,7 @@ sub importGroup {
 	$self->{pix} = $pix;
 	$self->{pixels} = $pixels;
 	my $interpretation = $tags->{TAGS->{PhotometricInterpretation}}->[0];
-	$status = readWritePixels($self, $params, $interpretation, $pix);
+	$status = readWritePixels($self, $params, $interpretation);
     }
     $file->close();
 
@@ -372,13 +367,13 @@ sub readWritePixels {
     my $self = shift;
     my $params = shift;
     my $interpretation = shift;
-    my $pix = shift;
-    my $fih      = $params->fref;
+    my $pix = $$params{pix};
+    my $pixels = $$params{pixels};
+    my $file      = $params->fref;
     my $xref = $params->{xml_hash};
     my $row_size       = $params->row_size;
     my $offsets_arr    = $params->image_offsets;
     my $bytecounts_arr = $params->image_bytecounts;
-    my $theC = 0;
     my $theY = 0;
     my $buf;
     my $sz_read = 0;
@@ -391,35 +386,37 @@ sub readWritePixels {
     for (my $i = 0; $i < $#$bytecounts_arr+1; $i++) {
 	my $sz = $bytecounts_arr->[$i];
 	my $offset = $offsets_arr->[$i];
-	my $status = seek_and_read($fih, \$buf, $offset, $sz);
+	$file->setCurrentPosition($offset,0);
+	$buf = $file->readData($sz);
 	last
 	    unless ($status eq "");
 
 	my $endian   = $params->endian;
 	my $bps      = $params->byte_size;
-	my $cnt = Repacker::repack($buf, $sz, $bps,
-				   $endian eq "little",
-				   $params->{host_endian} eq "little");
 
 	my $newbuf;
-	# Re-enable these lines when we add support for 4 byte data
-	#if ($pixel_format == SQUARE_ROOT) {
+
+	if ($pixel_format == SQUARE_ROOT) {
 	#    print STDERR "scaling $sz bytes of $bps bytes/pixel at scaling $pixel_scale\n";
-	#    $buf = Repacker::gel_scaler($buf, $sz, $bps, $pixel_scale);
-	#    $bps *= $self->{inflation};
-	#}
+	    $buf = Repacker::gel_scaler($buf, $sz, $bps, $pixel_scale);
+	    $bps *= $self->{inflation};
+	}
 	if ($interpretation == WHITE_IS_ZERO) {
 	    my $cnt2 = Repacker::invert($buf, $sz, $bps);
 	}
 	my $nPixOut;
-	eval { $nPixOut = $self->{pix}->SetRows($buf, $rows_per_strip, 
-						$theY, 0, $theC, 0); };
+	eval { $nPixOut = $self->{pix}->setROI($buf, 0, $theY, 0, 0, 0,
+					       $xref->{'Image.SizeX'}-1,
+					       $theY + $rows_per_strip, 
+					       0, 0, 0,
+					       ($params->{endian} eq "big")); };
 	if ($@) {
 	    $status = $@;
 	    last;
 	}
 	if ($self->{plane_size}/$params->byte_size != $nPixOut) {
 	    $status = "Failed to write repository file - $self->{plane_size}/".$params->byte_size." != $nPixOut";
+	    last;
 	}
 	$theY += $rows_per_strip;
     }
