@@ -38,6 +38,7 @@ use Class::Struct;
 use strict;
 use Carp;
 use OME::ImportExport::FileUtils;
+use OME::ImportExport::Import_reader;
 use OME::ImportExport::STKreader;
 use vars qw($VERSION);
 $VERSION = '1.0';
@@ -162,6 +163,10 @@ my %xml_image_from_desc = ('Exposure:' => 'ExpTime',
 			   'Illumination:' => 'Flour'
                            );
 
+my %tag_accumulates = ('StripOffsets' => 1,
+		       'StripByteCounts' => 1
+		       );
+
 
 
 sub new {
@@ -177,12 +182,39 @@ sub new {
 
 
 sub readImage {
+    my $i = 1;
+    my $image_file;
     my $self = shift;     # Ourselves
-    my $parent = $self->{'parent'};   # Caller (must be parent) had to pass in its own '$self'
     croak "Image::TIFFreader must be called from Import-reader or other class"
 	unless ref($self);
+    my $parent = $self->{'parent'};   # Caller (must be parent) had to pass in its own '$self'
+    my $image_group = $parent->Image_reader::image_group();
+    my $k;
 
-    my $status = readTiffIFD($self);
+    foreach $k (keys %tag_accumulates) {
+	$self->{$k} = ();
+    }
+
+    $self->fref($parent->fref);
+    my $status = readTiffIFD($self, $i++);
+
+    # if we were passed a set of files, import them all into the current image
+    if (($status eq "") && (scalar(@$image_group > 1))) {
+	while (defined ($image_file = $$image_group[$i-1])) {
+	    close  $self->fref;
+	    my $last_type = $parent->image_type;
+	    $parent->Image_reader::image_file($image_file);
+	    $parent->check_type;  # opens file & gets offset to IFD & file type
+	    if ($last_type ne $parent->image_type) {
+		$status = "File $image_file is not of type $last_type";
+		last;
+	    }
+	    $self->fref($parent->fref);
+	    $status = readTiffIFD($self, $i++);
+	    last
+		unless $status eq "";
+	}
+    }
 
     return($status);
 }
@@ -196,13 +228,14 @@ sub formatImage {
     my $xml_hash = $parent->Image_reader::xml_hash;
     my ($fih, $foh);      # File handle of input, output files
     my $buf_offset;
-    my $offsets;
     my $start_offset;
+    my $offsets_arr;
+    my $bytecounts_arr;
+    my $offsets;
     my $bytecounts;
     my $status;
     my ($strip_size, $row_size);
     my ($buf, $rowbuf);
-    my $remainder = "";
     my $bps;
     my $endian;
     my (@xy, @xyz, @xyzw, @xyzwt);
@@ -210,6 +243,7 @@ sub formatImage {
     my ($ifmt, $ofmt);
     my ($sz, $ndxi, $ndxo, $ch);
     my $irow;
+    my $i;
     my (@orow, @orow2);
     my (@lstoff, @lstcnt);
 
@@ -219,20 +253,7 @@ sub formatImage {
     $bps = $self->{'BitsPerSample'};
     $bps /= 8;  # convert bits to bytes
     $row_size = $self->{ImageWidth} * $bps;               # bytes per row
-    $offsets = $self->{'StripOffsets'};        # offsets to start of each TIFF image strip
-    $bytecounts = $self->{'StripByteCounts'};  # how long the strip is
-
-    if (ref($offsets) ne 'ARRAY') {
-	push @lstoff, $offsets;
-	push @lstcnt, $bytecounts;
-	$offsets = \@lstoff;
-	$bytecounts = \@lstcnt;
-    }
-    else {
-	@$offsets = reverse(@$offsets);
-	@$bytecounts = reverse(@$bytecounts);
-    }
-
+    ($offsets_arr, $bytecounts_arr) = getStrips($self);
 
     # If this image is a TIFF variant, let the variant class handle it
     if (defined $self->{Variant}) {
@@ -244,77 +265,134 @@ sub formatImage {
 	$self->{endian} = $endian;
 	$self->{bps} = $bps;
 	$self->{row_size} = $row_size;
-	$self->{offsets} = $offsets;
-	$self->{bytecounts} = $bytecounts;
+
+	# +++ Note - needs code mods to handle grouping multiple variant files together
+	$self->{offsets} = $offsets_arr;
+	$self->{bytecounts} = $bytecounts_arr;
 	$self->{obuffer} = $parent->obuffer;
 	$status = $variant_ref->formatImage($self)
     }
     else {
-	my ($key, $val);
-	my $xy_aref = [];
-	my $xref    =  $xml_hash->{'XYinfo.'};   # ref to array built by TIFFreader
-
 	# place image pixels into 5D array
-	while (@$offsets) {
-	    $start_offset = pop(@$offsets);
-	    $strip_size = pop(@$bytecounts);
-	    ($ifmt, $ofmt) = $self->SUPER::get_image_fmt($bps, $row_size, $endian);
-	    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$buf, $start_offset, $strip_size);
-	    last
-		unless $status eq "";
+	for ($i = 0; scalar(@$offsets_arr) > $i; $i++) {
+	    $offsets = @$offsets_arr[$i];
+	    $bytecounts = @$bytecounts_arr[$i];
+	    @$offsets = reverse(@$offsets);
+	    @$bytecounts = reverse(@$bytecounts);
+	    while (@$offsets) {
+		$start_offset = pop(@$offsets);
+		$strip_size = pop(@$bytecounts);
+		($ifmt, $ofmt) = $self->SUPER::get_image_fmt($bps, $row_size, $endian);
+		$status = OME::ImportExport::FileUtils::seek_and_read($fih, \$buf, $start_offset, $strip_size);
+		last
+		    unless $status eq "";
 
-	    # extract rows out of the buffer
-	    for ($buf_offset = 0; $strip_size >= $row_size; $strip_size -= $row_size) {
-		$irow = substr($buf, $buf_offset, $row_size);
-		@orow = unpack($ifmt, $irow);
-		if ($bps == 1) {  # special thuggery for 8-bit input
-		    $sz = scalar @orow;
-		    for ($ndxo = $ndxi = 0; $ndxi < $sz; ) {
-			$ch = $orow[$ndxi++];
-			$orow2[$ndxo++] = $ch;
-			$orow2[$ndxo++] = $ch;
+		# extract rows out of the buffer
+		for ($buf_offset = 0; $strip_size >= $row_size; $strip_size -= $row_size) {
+		    $irow = substr($buf, $buf_offset, $row_size);
+		    @orow = unpack($ifmt, $irow);
+		    if ($bps == 1) {  # special thuggery for 8-bit input
+			$sz = scalar @orow;
+			for ($ndxo = $ndxi = 0; $ndxi < $sz; ) {
+			    $ch = $orow[$ndxi++];
+			    $orow2[$ndxo++] = $ch;
+			    $orow2[$ndxo++] = $ch;
+			}
+			$rowbuf = pack("C*", @orow2);
+			$xml_hash->{'Data.BitsPerPixel'} = 16;
 		    }
-		    $rowbuf = pack("C*", @orow2);
+		    else {
+			$rowbuf = pack($ofmt, @orow);
+		    }
+		    push @xy, $rowbuf;
+		    #print $foh $rowbuf;
+		    $buf_offset += $row_size;
 		}
-		else {
-		    $rowbuf = pack($ofmt, @orow);
-		}
-		push @xy, $rowbuf;
-		#print $foh $rowbuf;
-		$buf_offset += $row_size;
+		
 	    }
-	    
+	    # For now, at least, we don't handle > 1 Z or T dimension
+	    @xyz = \@xy;
+	    push (@xyzw, \@xyz);
 	}
-	# For now, at least, we don't handle > 1 Z or T dimension
-	@xyz = \@xy;
-	@xyzw = \@xyz;
 	#push (@xyzwt, \@xyzw);
 	push (@$obuf, \@xyzw);
 
-	# This next op. done to make output array in same format
-	# as STKreader
-	# Now make the XYinfo elements from previously stored info
-	my $xyhref = {};
-	# N.B. If TIFFReader leaves more than 1 pair of key/value,
-	# the following must be expanded.
-	$key = @$xref->[0]->[0]->[0];  # copy, in proper order, XYinfo
-	$val = @$xref->[0]->[0]->[1];  #    left by TIFFreader
-	$xyhref->{'XYinfo.'.$key} = $val;  # copy
-	push @$xy_aref, $xyhref;
+	# Now store metadata from multiple planes, if any
+	my ($key, $val);
+	my $xy_aref = [];
+	my $wv_aref = [];
 
-	# overwrite info at key 'XYinfo.'
-	$xml_hash->{'XYinfo.'} = $xy_aref;
+	# ref to array built by TIFFreader
+	my $xref    =  $xml_hash->{'XYinfoPlane.'};
+	if (defined @$xref->[0]->[0]->[0]) {       # don't proceed if no data
+	    delete $xml_hash->{'XYinfoPlane.'};
+	    # ref to array built by TIFFreader
+	    my $wref    =  $xml_hash->{'WavelengthInfoPlane.'};
+	    delete $xml_hash->{'WavelengthInfoPlane.'};
+
+	    # This next op. done to make output array in same format
+	    # as STKreader
+	    # Now make the XYinfo elements from previously stored info
+	    my $xyhref = {};
+	    # N.B. If TIFFReader leaves more than 1 pair of key/value,
+	    # the following must be expanded.
+	    $key = @$xref->[0]->[0]->[0];  # copy, in proper order, XYinfo
+	    $val = @$xref->[0]->[0]->[1];  #    left by TIFFreader
+	    $xyhref->{'XYinfo.'.$key} = $val;  # copy
+	    push @$xy_aref, $xyhref;
+
+	    $xml_hash->{'XYinfo.'} = $xy_aref;
+
+	    # Now make the WavelengthInfo elements from previously stored info
+	    my $wvhref = {};
+	    # N.B. If TIFFReader leaves more than 1 pair of key/value,
+	    # the following must be expanded.
+	    $key = @$wref->[0]->[0]->[0];  # copy, in proper order, XYinfo
+	    $val = @$wref->[0]->[0]->[1];  #    left by TIFFreader
+	    $wvhref->{'WavelengthInfo.'.$key} = $val;  # copy
+	    push @$wv_aref, $wvhref;
+
+	    $xml_hash->{'WavelengthInfo.'} = $wv_aref;
+	}
     }
 
     return $status;
 }
+
+
+# Get image strip offsets and bytecounts into passed arrays
+sub getStrips {
+    my $self = shift;
+    my $offsets_aref;
+    my $bytecounts_aref;
+    my (@offs_arr, @counts_arr);
+    my ($offs_arr, $counts_arr);
+    my (@lstoff, @lstcnt);
+
+    @offs_arr = $self->{'StripOffsets'};        # offsets to start of each TIFF image strip
+    @counts_arr = $self->{'StripByteCounts'};  # how long the strip is
+
+    $offsets_aref = $offs_arr[0];
+    $bytecounts_aref = $counts_arr[0];
+
+    # images w/ just 1 offset don't have an array of offsets - make one
+    if (ref($offsets_aref) ne 'ARRAY') {
+	push @lstoff, \@offs_arr;
+	push @lstcnt, \@counts_arr;
+	$offsets_aref = \@lstoff;
+	$bytecounts_aref = \@lstcnt;
+    }
+
+    return($offsets_aref, $bytecounts_aref);
+} 
 
 # Read a Tiff Image File Directory (IFD)
 
 sub readTiffIFD {
     my $self = shift;
     my $parent = $self->{parent};
-    my $fih    = $parent->fref;
+    my $image_plane = shift;
+    my $fih    = $self->fref;
     my $endian = $parent->endian;
     my $offset = $parent->offset;
     my $xml_hash = $parent->Image_reader::xml_hash;
@@ -329,7 +407,7 @@ sub readTiffIFD {
 
     # For TIFF images, some fields are hardcoded. Variants may overwrite these
     $xml_hash->{'Image.SizeZ'} = 1;
-    $xml_hash->{'Image.NumWaves'} = 1;
+    $xml_hash->{'Image.NumWaves'} = $image_plane;
     $xml_hash->{'Image.NumTimes'} = 1;
 
     while ($offset > 0) {    # read every Tiff IFD 
@@ -362,27 +440,34 @@ sub readTiffIFD {
     }
 
     # Put relevant pieces of metadata into xml_elements for later DB storage
+
+    # Only do this once per image
+    if ($image_plane == 1) {
     #   The Image top level element
-    foreach $k (keys %xml_image_entries) {
-	$xel = $xml_image_entries{$k};
-	$value = $self->{$k};
-	if (!defined $value) {
-	    $value = "";
+	foreach $k (keys %xml_image_entries) {
+	    $xel = $xml_image_entries{$k};
+	    $value = $self->{$k};
+	    if (!defined $value) {
+		$value = "";
+	    }
+	    $xml_hash->{"Image.".$xel} = $value;
 	}
-	$xml_hash->{"Image.".$xel} = $value;
     }
 
-    #   The Data top level element
-    foreach $k (keys %xml_data_entries) {
-	$xel = $xml_data_entries{$k};
-	$value = $self->{$k};
-	if (!defined $value) {
-	    $value = "";
+    # Only do this once per image
+    if ($image_plane == 1) {
+	#   The Data top level element
+	foreach $k (keys %xml_data_entries) {
+	    $xel = $xml_data_entries{$k};
+	    $value = $self->{$k};
+	    if (!defined $value) {
+		$value = "";
+	    }
+	    $xml_hash->{"Data.".$xel} = $value;
 	}
-	$xml_hash->{"Data.".$xel} = $value;
     }
 
-    parseImageDescription($self, $xml_hash);
+    parseImageDescription($self, $xml_hash, $image_plane);
 
 
     return $status;
@@ -391,10 +476,13 @@ sub readTiffIFD {
 
 # The ImageDescription field contains subfields. Each subfield,
 # except a text descriptor line, is composed as "subkey : subvalue".
-# Parse out each subfiled, and if its of interest, save as metadata.
+# Parse out each subfield, and if it's of interest, save as metadata.
+# Note - only XYInfo & Wavelenght info should be stored for each
+# image plane. All info from other categories gets stored once/image.
 sub parseImageDescription {
     my $self = shift;
     my $xml_hash = shift;
+    my $image_plane = shift;
     my $buf;
     my @val;
     my ($k, $ky, $subfld, $elem);
@@ -427,17 +515,21 @@ sub parseImageDescription {
 			    push @$wref, [$ky, $val[0]];
 			}
 		    }
-		    else {
+		    elsif ($image_plane == 1) {         # Only record once/image
 			$xml_hash->{$elem.$ky} = $val[0];
 		    }
 		}
 	    }
-	    # now chop off any line that has an embeded ":"
-	    $buf =~ s/.*:.*//g;
-	    # if there's a non-empty line, take it as the Description fld
-	    @val = ($buf =~ m/^(.+)/gm);
-	    if (defined $val[0]) {
-		$xml_hash->{'Image.Description'} = $val[0];
+	    push @$wref, ['WaveNumber', $image_plane];   
+
+	    if ($image_plane == 1) {         # Only record once/image
+		# now chop off any line that has an embeded ":"
+		$buf =~ s/.*:.*//g;
+		# if there's a non-empty line, take it as the Description fld
+		@val = ($buf =~ m/^(.+)/gm);
+		if (defined $val[0]) {
+		    $xml_hash->{'Image.Description'} = $val[0];
+		}
 	    }
 
 	    last;
@@ -445,10 +537,10 @@ sub parseImageDescription {
     }
 
     if (scalar(@$xyref) != 0) {
-	push @{ $xml_hash->{'XYinfo.'}}, $xyref;
+	push @{ $xml_hash->{'XYinfoPlane.'}}, $xyref;
     }
     if (scalar(@$wref) != 0) {
-	push @{ $xml_hash->{'WavelengthInfo.'}}, $wref;
+	push @{ $xml_hash->{'WavelengthInfoPlane.'}}, $wref;
     }
 }
 
@@ -464,7 +556,8 @@ sub readTiffTag {
     my $format;
     my @fmts;
     my @tagflds;
-    my ($tag_name, $tag_type, $tag_cnt, $tag_offset);
+    my ($tag_id, $tag_type, $tag_cnt, $tag_offset);
+    my $tag_name;
     my $buf;
     my $len;
     my $cnt;
@@ -473,6 +566,7 @@ sub readTiffTag {
     my $is_list = 0;
     my @vallist;
     my @revlist;
+    my @tmparr;
     my ($variant_ref, $variant_name);
     my ($value, $val1, $val2, $quot);
     my %Type = (1=>'Byte', 2=>'ASCII', 3=>'Short', 4=>'Long', 5=>'Rational');
@@ -483,7 +577,7 @@ sub readTiffTag {
 
     $format = $endian eq "little" ? "vvVV" : "nnNN";
     @tagflds = unpack ($format, $buf);
-    $tag_name = $tagflds[0];
+    $tag_id = $tagflds[0];
     $tag_type = $tagflds[1];
     $tag_cnt = $tagflds[2];
     $tag_offset = $tagflds[3];
@@ -497,15 +591,15 @@ sub readTiffTag {
     # by the name $variant_name.reader . Eg., the STK variant of TIFF is handled
     # by the STKreader class.
 
-    if (exists($Variants{$tag_name})) {
+    if (exists($Variants{$tag_id})) {
 	my $variant_handler;
-	my $variant_name = $Variants{$tag_name}[0];
+	my $variant_name = $Variants{$tag_id}[0];
         # handle case where only a part of a variant's code is in a file
         # e.g., when UI writes a TIF file they stick in the UIC1 tag (?why?)
-	if ($Variants{$tag_name}[2] == 1) {
+	if ($Variants{$tag_id}[2] == 1) {
 	    $self->{Variant} = $variant_name;
 	}
-	my $tag_name = $Variants{$tag_name}[1];
+	$tag_name = $Variants{$tag_id}[1];
 	#print "Detected TIFF variant $variant_name: $tag_name\n";
 	#print "\ttype = $Type{$tag_type}, count = $tag_cnt\n";
 
@@ -527,10 +621,12 @@ sub readTiffTag {
 	return $status;;
     }
 
+    # simple TIFF tags have their value in the offset field
+    $tag_name = $Tagnames{$tag_id};
     if ((($tag_type == 1) || ($tag_type == 3) || ($tag_type == 4)) && $tag_cnt == 1) {
 	$value = $tag_offset;
     }
-    else {
+    else {   # the other tags have value lists located at 'offset'
 	# remember where we are
 	$cur_loc = tell($fih);
 	# & go read the values
@@ -557,14 +653,14 @@ sub readTiffTag {
 	    $is_list = 1;
 	    @vallist = ();
 	}
-	while($tag_cnt) {
+	while($tag_cnt) {    # read each value in the value list
 	    $status = OME::ImportExport::FileUtils::read_it($fih, \$buf, $cnt);
 	    return $status
 		unless $status eq "";
 
 	    if ($tag_type == 2) {                 # the string type
 		$value = $buf;
-		if ($Tagnames{$tag_name} eq "DocumentName") {
+		if ($tag_name eq "DocumentName") {
 		    $value =~ s\.*/\\g;           # strip path from document name
 		}
 	    }
@@ -581,17 +677,31 @@ sub readTiffTag {
 	    $tag_cnt--;
 	}
 	$status = OME::ImportExport::FileUtils::seek_it($fih, $cur_loc);
-    }	
-    if (defined $Tagnames{$tag_name}) {
-	$fld_name = $Tagnames{$tag_name};
-	if (!$is_list) {
-	    $self->{$fld_name} = $value;
-	    #print "$fld_name = $value\n";
+    }
+
+    if (defined $tag_name) {
+	if ($tag_name eq 'BitsPerSample') {
+	    if ($value < 8) {
+		$status = "Pixle size too small - cannot process file";
+	    }
+	    elsif ($is_list) {
+		$status = "More than one color per file - cannot process";
+	    }
 	}
-	else {
-	    #@revlist = reverse @vallist;
-	    #$self->{$fld_name} = \@revlist;
-	    $self->{$fld_name} = \@vallist;
+	if ($status eq "") {
+	    if (!$is_list) {
+		$self->{$tag_name} = $value;
+		#print "$tag_name = $value\n";
+	    }
+	    # some tag contents accumulate across multi-file images
+	    else {    # accumulate via array of array references
+		if (defined($tag_accumulates{$tag_name})) {
+		    push @{ $self->{$tag_name} }, \@vallist;
+		}
+		else {
+		    $self->{$tag_name} = \@vallist;
+		}
+	    }
 	}
     }
     

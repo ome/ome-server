@@ -68,6 +68,7 @@ use Config;
 
 struct Image_reader => {
         image_file => '$',                    # input image file
+        image_group => '$',                   # input image file group
 	host_endian => '$',                   # endain-ness of host machine
         endian => '$',                        # endian-ness of the image file
         obuffer => '$',
@@ -111,7 +112,9 @@ my %checkers = (TIFF    => \&checkTIFF,
 sub new {
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
-    my $image_file = shift;
+    #my $image_file = shift;
+    my $image_group = shift;
+    my $image_file = $$image_group[0];
     croak "No image file to import"
 	unless defined $image_file;
     my $image_buf = shift;           # reference to buffer to fill w/ image
@@ -125,7 +128,8 @@ sub new {
     my $byteorder = $Config{byteorder};
     $our_endian = (($byteorder == 1234) || ($byteorder == 12345678)) ? "little" : "big";
     $self->host_endian($our_endian);
-    $self->image_file($image_file);
+    $self->image_file($image_file);      # save 1st file for those readers that
+    $self->image_group($image_group);   #    don't do groups
     $self->offset(0);
     $self->obuffer($image_buf);
     $self->xml_hash($xml_elements);
@@ -146,6 +150,7 @@ sub DESTROY {
 sub check_type {
     my $endian;
     my $offset;
+    my $can_do_stacks;
     my $typ; 
     my $type = "Unknown";
     my $subref;
@@ -171,6 +176,10 @@ sub check_type {
 	if ($check_result[0] ne "") {
 	    $endian = $check_result[0];
 	    $offset = $check_result[1];
+	    $can_do_stacks = 0;
+	    if (defined $check_result[2]) {
+		$can_do_stacks = $check_result[2];
+	    }
 	    $type = $typ;
 	    last;
 	}
@@ -203,10 +212,10 @@ sub readFile {
     {
 	$status = $type_handler->readImage($self);      # let child know its parent;
 	last unless $status eq "";
-
-	$bp = $self->obuffer;
 	$status = $type_handler->formatImage($self);
-	$sz = scalar(@$bp);
+
+	#$bp = $self->obuffer;
+	#$sz = scalar(@$bp);
 	#print "Buffer is $sz\n";
 	#close_repository($self);
     }
@@ -386,6 +395,7 @@ sub checkTIFF
     my $buf;
     my $endian = "";
     my $offset;
+    my $can_do_stacks = 1;
     my $Template;
     my $littleTemplate="CCvV";  #decode format if TIFF in little Endian order
     my $bigTemplate="CCnN";     #decode format if TIFF in big Endian order
@@ -412,7 +422,7 @@ sub checkTIFF
 	}
     }
 
-    return($endian, $offset);
+    return($endian, $offset, $can_do_stacks);
 }
 
 
