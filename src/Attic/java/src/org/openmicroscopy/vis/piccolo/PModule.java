@@ -250,7 +250,7 @@ public class PModule extends PPath implements PBufferedNode {
 		float maxOutputWidth =0;
 		
 		// for each row.
-		System.err.println("module name is "+module.getName());
+	//	System.err.println("module name is "+module.getName());
 		for (int i = 0; i < rows; i++) {
 			if (i < inSize) {
 				// as long as I have more inputs, create them, 
