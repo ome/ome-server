@@ -395,10 +395,9 @@ sub processDOM {
 
             my $cols = $factory->
               findObject("OME::DataTable::Column",
-                         {
                           data_table_id => $newTable->id(),
                           column_name   => $cName
-                         });
+                         );
 
             my $newColumn;
 
