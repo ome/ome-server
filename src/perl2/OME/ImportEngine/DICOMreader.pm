@@ -134,9 +134,39 @@ sub getGroups {
     my $fref = shift;
     my @outlist;
 
+    # Group files with recognized patterns together
+    my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
+
+	# process grouped DICOM images first
+    foreach my $name (keys (%$groups)) {
+    	next unless defined($name);
+    	my @groupList;
+    	my $maxZ = $infoHash->{$name}->{maxZ};
+
+		for (my $z = 0; $z <= $maxZ; $z++) {
+			my $file = $groups->{$name}[$z][0][0];
+			next unless ( defined($file) );
+
+			$file->open('r');
+			$file->setCurrentPosition(128,0);
+			my $buf = $file->readData(4);
+			$file->close();
+			
+			next unless ($buf eq 'DICM');  
+      	
+			push (@groupList, $file);
+			
+			# delete the file from the hash, so it's not processed by other importers
+			delete $fref->{ $file };
+		}
+		push (@groupList, $name); # last elment of list is just a name
+    	push (@outlist, \@groupList);
+    }
+    
     foreach my $key (keys %$fref) {
     	my $file = $fref->{$key};
-
+		my @groupList;
+		
         $file->open('r');
         $file->setCurrentPosition(128,0);
         my $buf = $file->readData(4);
@@ -146,9 +176,11 @@ sub getGroups {
       	
         # it's in the DICOM format, so remove from input list, put on output list
         delete $fref->{$key};
-        push @outlist, $file;
+        push (@groupList, $file);
+        push (@groupList, $file->getFilename());
+    	push (@outlist, \@groupList);
     }
-
+    
     $self->{groups} = \@outlist;
     return \@outlist;
 }
@@ -176,21 +208,21 @@ database transactions.
 =cut
 
 sub importGroup {
-    my ($self, $file, $callback) = @_;
+    my ($self, $groupList, $callback) = @_;
     
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
+	my $file = $$groupList[0];
 	my $params = $self->{params};
 
-	my $filename = $file->getFilename();
+    # use the file group's basename as the filename for the group
+	my $filename = $$groupList[scalar @$groupList-1];
     ($self->{super})->__nameOnly($filename);
-    $params->fref($file);
-    $params->oname($filename);
     
 	# open file and read DICOM tags
 	my $dicom_tags = OME::ImportEngine::DICOM->new(); 
-	my $debug=1; # make debug true if you want the DICOM's header dumped to screen
-	$dicom_tags->fill($file,$debug);
+	my $debug=0; # make debug true if you want the DICOM's header dumped to screen
+	$dicom_tags->fill($file, $debug);
 	
 	# Use the DICOM tags to populate some info
 	my $bits_stored = $dicom_tags->value('BitsStored');
@@ -230,34 +262,16 @@ sub importGroup {
     $xref->{'Image.ImageType'} = "DICOM";
     $xref->{'Image.SizeX'} = $dicom_tags->value('Columns');
     $xref->{'Image.SizeY'} = $dicom_tags->value('Rows');
-    $xref->{'Image.SizeZ'} = 1;
+	$xref->{'Image.SizeZ'} = scalar @$groupList - 1; # remember, last groupList is base filename
 	$xref->{'Image.NumWaves'} = 1;
-	if ($dicom_tags->value('NumberOfFrames')) {
-	    $xref->{'Image.NumTimes'} = $dicom_tags->value('NumberOfFrames');
-	} else {
-	    $xref->{'Image.NumTimes'} = 1;
-	}
+	$xref->{'Image.NumTimes'} = $dicom_tags->value('NumberOfFrames') or 
+			$xref->{'Image.NumTimes'} = 1;
 	$xref->{'Image.isSigned'} = $dicom_tags->value('PixelRepresentation');
 		
 	# those idiots are trying to kill us with spaces
-	print "file name is ".$file->getFilename()."\n" if $debug;
-	printf "SizeX=%d SizeY=%d SizeZ=%d SizeT=%d SizeC=%d isSigned=%d\n",
-	$xref->{'Image.SizeX'},
-	$xref->{'Image.SizeY'},
-	$xref->{'Image.SizeZ'},
-	$xref->{'Image.NumTimes'},
-	$xref->{'Image.NumWaves'},
-	$xref->{'Image.isSigned'}  if $debug;
-	
-	
-	$xref->{'Image.SizeX'}    =~ s/ //;
-	$xref->{'Image.SizeY'}    =~ s/ //;
-	$xref->{'Image.SizeZ'}    =~ s/ //;
-	$xref->{'Image.NumTimes'} =~ s/ //;
-	$xref->{'Image.NumWaves'} =~ s/ //;
-	$xref->{'Image.isSigned'} =~ s/ //;
-    $xref->{'Data.BitsPerPixel'} = $bits_allocated;
+	$xref->{'Image.SizeX'} =~ s/ //; $xref->{'Image.SizeY'} =~ s/ //; $xref->{'Image.SizeZ'} =~ s/ //; $xref->{'Image.NumTimes'} =~ s/ //; $xref->{'Image.NumWaves'} =~ s/ //; $xref->{'Image.isSigned'} =~ s/ //;
     
+    $xref->{'Data.BitsPerPixel'} = $bits_allocated;
     $params->byte_size($xref->{'Data.BitsPerPixel'}/8);
     $params->row_size($xref->{'Image.SizeX'} * ($params->byte_size));
 
@@ -287,35 +301,58 @@ sub importGroup {
 						 );
     $self->{pixels} = $pixels;
     
-    # FIXME this needs fixing to work with the RE ST.
-    my ($t, $c, $z);
-    my $maxY = $xref->{'Image.SizeY'};
-    my $maxZ = $xref->{'Image.SizeZ'};
-    my $maxC = $xref->{'Image.NumWaves'};
-    my $maxT = $xref->{'Image.NumTimes'};
     my $plane_size = $xref->{'Image.SizeX'} * $xref->{'Image.SizeY'}*$params->byte_size;
     my $offset;
-    my $start_offset = $dicom_tags->value('PixelData');
-    for (my $i = 0, $t = 0; $t < $maxT; $i++, $t++) {
-		for ($c = 0; $c < $maxC; $c++) {
-			for ($z = 0; $z < $maxZ; $z++) {
-				$offset = $start_offset + ($z+$c*$maxZ+$t*$maxZ*$maxC) * $plane_size;
-				$pix->convertPlane($file,$offset,$z,$c,$t,$params->endian);
-				doSliceCallback($callback);
-			}
+    my ($i,$t,$z);
+	my ($sizeX, $sizeY, $sizeT, $isSigned, $new_transfer_syntax);
+	for ($z = 0; $z < $xref->{'Image.SizeZ'}; $z++) {
+		$file = $$groupList[$z];
+		
+		# read DICOM tags of new file
+		$dicom_tags->fill($file,$debug) unless $z == 0;
+		
+		$sizeX = $dicom_tags->value('Columns');
+		$sizeY = $dicom_tags->value('Rows');
+		$sizeT = $dicom_tags->value('NumberOfFrames') or $sizeT = 1;
+		$isSigned = $dicom_tags->value('PixelRepresentation');
+		$new_transfer_syntax = $dicom_tags->value('TransferSyntaxUID');
+		
+		$sizeX =~ s/ //; $sizeY =~ s/ //; $sizeT =~ s/ //; $isSigned =~ s/ //; $new_transfer_syntax =~ s/ //;
+
+		# verfiy that the subsequent DICOM images have compatible dimensions
+		# to the first DICOM image
+		if ($transfer_syntax ne $new_transfer_syntax or
+		    $xref->{'Image.SizeX'}    ne $sizeX or
+   			$xref->{'Image.SizeY'}    ne $sizeY or 
+	   	    $xref->{'Image.NumTimes'} ne $sizeT or
+			$xref->{'Image.isSigned'} ne $isSigned ) {
+			
+			printf STDERR "\nDICOM images in FileName Group are incompatible.\n";
+			printf STDERR "[0] TSUID=%s  [%d] TSUID=%s\n", $transfer_syntax, $z, $new_transfer_syntax;
+			printf STDERR "[0] SizeX=%s  [%d] SizeX=%s\n", $xref->{'Image.SizeX'}, $z, $sizeX;
+			printf STDERR "[0] SizeY=%s  [%d] SizeY=%s\n", $xref->{'Image.SizeY'}, $z, $sizeY;
+			printf STDERR "[0] SizeT=%s  [%d] SizeT=%s\n", $xref->{'Image.NumTimes'}, $z, $sizeT;
+			printf STDERR "[0] isSigned=%s [%d] isSigned='%s'\n", $xref->{'Image.isSigned'}, $z, $isSigned;
+
+ 			return undef;
+ 		}
+
+    	for ($i = 0, $t = 0; $t < $xref->{'Image.NumTimes'}; $i++, $t++) {
+			$offset = $dicom_tags->value('PixelData') + $t*$plane_size;
+			$pix->convertPlane($file,$offset,$z,0,$t,$params->endian);
+			doSliceCallback($callback);
 		}
+	    $file->close();
     }
 
 	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
 	
-
-    $file->close();
-
 	$self->__storeInputFileInfo ($session, \@finfo);
 	
 	# Store info about each input channel (wavelength).
 	$self->__storeChannelInfo ($session);
 	
+	# Set display options
 	my $windowCenter = $dicom_tags->value('WindowCenter');
 	my $windowWidth  = $dicom_tags->value('WindowWidth');
 	my $rescaleIntercept = $dicom_tags->value('RescaleIntercept');
@@ -330,7 +367,6 @@ sub importGroup {
 			{min => $windowCenter - $windowWidth/2 - $rescaleIntercept, 
 			 max => $windowCenter + $windowWidth/2 - $rescaleIntercept });
 	}
-	
 	return $image;
 }
 
@@ -356,9 +392,14 @@ sub storeChannelInfo {
 
 sub getSHA1 {
     my $self = shift;
-    my $file = shift;
-    return $file->getSHA1();
+    my $grp = shift;
+
+    my $fn = $grp->[0];
+    my $sha1 = $fn->getSHA1();
+
+    return $sha1;
 }
+
 =head1 Author
 
 Tom Macura
