@@ -867,33 +867,45 @@ sub configure_module {
 		# BTW, we're just going to ignore anything that goes wrong here.
     	`make realclean 2>&1`;
 
-		print $logfile "USING PERL CONFIGURE SCRIPT -- \"Makefile.pl\"\n\n";
-    	@output = `sudo -u @user perl Makefile.PL @cl_options 2>&1`     if (scalar @user);
-    	@output = `perl Makefile.PL @cl_options 2>&1`               unless (scalar @user);
+		if (scalar @user) {
+			print $logfile "USING PERL CONFIGURE SCRIPT -- 'sudo -u @user perl Makefile.PL @cl_options'\n";
+	    	@output = `sudo -u @user perl Makefile.PL @cl_options 2>&1`     
+    	} else {
+			print $logfile "USING PERL CONFIGURE SCRIPT -- 'perl Makefile.PL @cl_options'\n";
+    		@output = `perl Makefile.PL @cl_options 2>&1`;
+    	}
 	} elsif (-e 'configure') {
-		print $logfile "USING C CONFIGURE SCRIPT -- \"configure\"\n\n";
-
 		`make clean 2>&1`;
-		@output = `sudo -u @user ./configure @cl_options 2>&1`     if (scalar @user);
-		@output = `./configure @cl_options 2>&1`               unless (scalar @user);
-	} elsif (-e 'autogen.sh') {
-		print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- \"autogen.sh\"\n\n";
 		
+		if (scalar @user) {
+			print $logfile "USING C CONFIGURE SCRIPT -- 'sudo -u @user ./configure @cl_options'\n";
+			@output = `sudo -u @user ./configure @cl_options 2>&1`;
+		} else {
+			print $logfile "USING C CONFIGURE SCRIPT -- './configure @cl_options'\n";
+			@output = `./configure @cl_options 2>&1`;
+		}
+	} elsif (-e 'autogen.sh') {
 		`make clean 2>&1`;
-		@output = `sudo -u @user ./autogen.sh @cl_options 2>&1`    if (scalar @user);
-		@output = `./autogen.sh @cl_options 2>&1`              unless (scalar @user);
+		
+		if (scalar @user) {
+			print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- 'sudo -u @user ./autogen.sh @cl_options'\n";
+			@output = `sudo -u @user ./autogen.sh @cl_options 2>&1`;
+		} else {
+			print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- './autogen.sh @cl_options'\n";
+			@output = `./autogen.sh @cl_options 2>&1`;
+		}
 	} else {
 		print $logfile "UNABLE TO LOCATE SUITABLE CONFIGURE SCRIPT\n\n";
 	}
 
 	if ($? == 0) {
-		print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+		print $logfile "SUCCESS -- OUTPUT: \"@output\"\n\n";
 
 		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 		return 1;
 	}
 
-	print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+	print $logfile "FAILURE -- OUTPUT: \"@output\"\n\n";
 	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
 	return 0;
@@ -908,14 +920,15 @@ sub configure_library {
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
-
+    
+	print $logfile "CONFIGURING LIBRARY -- './configure'\n";
     my @output = `./configure 2>&1`;
-
+		print $logfile "SUCCESS CONFIGURING LIBRARY -- OUTPUT: \"@output\"\n\n";
     if ($? == 0) {
-	print $logfile "SUCCESS CONFIGURING LIBRARY -- OUTPUT: \"@output\"\n\n";
-
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
+		print $logfile "SUCCESS CONFIGURING LIBRARY -- OUTPUT: \"@output\"\n\n";
+	
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+		return 1;
     }
 
     print $logfile "FAILURE CONFIGURING LIBRARY -- OUTPUT: \"@output\"\n\n";
@@ -935,16 +948,16 @@ sub compile_module {
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
+	print $logfile "COMPILING MODULE -- 'make'\n";
     my @output = `make 2>&1`;
-
     if ($? == 0) {
-	print $logfile "SUCCESS COMPILING MODULE -- OUTPUT: \"@output\"\n\n";
-
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
-    }
+		print $logfile "SUCCESS -- OUTPUT: \"@output\"\n\n";
+	
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+		return 1;
+	}
     
-    print $logfile "FAILURE COMPILING MODULE -- OUTPUT: \"@output\"\n\n";
+    print $logfile "FAILURE -- OUTPUT: \"@output\"\n\n";
     chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
@@ -969,18 +982,22 @@ sub test_module {
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
     my @output;
-    
-    @output = `sudo -u @user make test 2>&1`  if (scalar @user);
-    @output = `make test 2>&1`            unless (scalar @user);
+    if (scalar @user) {
+	    print $logfile "TESTING MODULE -- 'sudo -u @user make test'\n";
+    	@output = `sudo -u @user make test 2>&1`;
+    } else {
+	    print $logfile "TESTING MODULE -- 'make test'\n";
+	    @output = `make test 2>&1`;
+	}
     
     if ($? == 0) {
-		print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
+		print $logfile "SUCCESS -- OUTPUT: \"@output\"\n\n";
 	
 		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 		return 1;
     }
 
-    print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";
+    print $logfile "FAILURE -- OUTPUT: \"@output\"\n\n";
     chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
@@ -996,16 +1013,18 @@ sub install_module {
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+    
+    print $logfile "INSTALLING MODULE -- 'make install'\n";
     my @output = `make install 2>&1`;
 
     if ($? == 0) {
-	print $logfile "SUCCESS INSTALLING MODULE -- OUTPUT: \"@output\"\n\n";
-
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
+		print $logfile "SUCCESS -- OUTPUT: \"@output\"\n\n";
+	
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+		return 1;
     }
 
-    print $logfile "FAILURE INSTALLING MODULE -- OUTPUT: \"@output\"\n\n";
+    print $logfile "FAILURE -- OUTPUT: \"@output\"\n\n";
     chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
