@@ -190,11 +190,12 @@ sub _takeAction {
 
 =head2 doLayout
 
+shift layout around
 
 =cut
 
 sub doLayout {
-	my ($self,$objDetail, $relations) = @_;
+	my ($self,$objDetail, $relationLists, $relationTables) = @_;
 	my $q = $self->CGI();
 
 	my $html = 
@@ -202,15 +203,19 @@ sub doLayout {
 			$q->Tr( 
 				$q->td( { -width => '50%', -valign => 'top'}, 
 					$objDetail.
-					$relations->{projects}.
-					$relations->{module_executions}
+					$relationLists->{projects}.
+					$relationLists->{module_executions}
 				),
 				
 				$q->td( { -width => '25%', -valign => 'top' }, 
-					$relations->{images} 
+					$relationLists->{images} 
 				)
 			),
-		);
+		).
+		$relationTables->{projects}.
+		$relationTables->{images}.
+		$relationTables->{module_executions};
+		
 	
 	return $html;
 }
