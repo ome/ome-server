@@ -1,0 +1,340 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+   <meta name="generator" content="BBEdit 6.1.2">
+   <meta name="GENERATOR" content="Mozilla/4.77 (Macintosh; U; PPC) [Netscape]">
+   <STYLE TYPE="text/css">
+  <!--
+  .indented
+     {
+     padding-left: 50pt;
+     padding-right: 50pt;
+     }
+  -->
+  </STYLE>
+   <title>OME Setup</title>
+</head>
+<!--<body bgcolor="ddcc00" background="bg_3.gif">-->
+<body bgcolor="ddcc00" >
+
+<TABLE border="0" cellpadding="0" cellspacing="0" width="100%">
+  <TR> <font face="Verdana, Arial, Helvetica, sans-serif" size="5"> </font>
+    <TD class="block" valign="MIDDLE" height="25" width="100%" bgcolor="#00ccdd"><STRONG>
+      <P class="block" align="center"><font size="6" face="Verdana, Arial, Helvetica, sans-serif">OME 
+        Setup</font></P>
+      </STRONG></TD>
+  </TR>
+</TABLE>
+<hr>
+<br>
+<ul>
+  <font face="Verdana, Arial, Helvetica, sans-serif" size="3"> </font>
+</ul>
+<h2> 
+  <ul>
+    <font face="Verdana, Arial, Helvetica, sans-serif" size="3"> 
+    <li><A href="#Requirements">Requirements</A> 
+    <li>&nbsp;&nbsp;<A href="#OS_Requirements"><font size="2">Operating System</font></A> 
+    <li>&nbsp;&nbsp;<A href="#Pkg_Requirements"><font size="2">Packages/Modules</font></A> 
+      <p></p>
+    <li><A href="#Installation">Installation</A> 
+    <li>&nbsp;&nbsp;<A href="#OME_Kit"><font size="2">OME Distribution Kit</font></A> 
+    <li>&nbsp;&nbsp;<A href="#Perl_mods"><font size="2">Other Perl Modules</font></A> 
+    <li>&nbsp;&nbsp;<A href="#Apache_Config"><font size="2">Apache Configuration</font></A> 
+    <li>&nbsp;&nbsp;<A href="#Scripts"><font size="2">Helper Scripts</font></A> 
+    <li>&nbsp;&nbsp;<A href="#OME_DB"><font size="2">OME Database</font></A> 
+    </font> 
+  </ul>
+</h2>
+<hr>
+<H1><A name="Requirements">Requirements</A></H1>
+<p> OME runs as a web server appication. It requires a running Apache server with 
+  some common additional packages, a full Perl installlation, and a Postgres installation. 
+  This document section describes the details of these package requirements If 
+  your system does not yet have some of these packages, you'll find some links 
+  to relevant sites that will aid you in their configuration and installation. 
+</p>
+<h3><A name="OS_Requirements"> OS Requirements:</A></h3>
+<p>Our primary development and testing environment consists of Red Hat Linux 7.x 
+  Intel boxes. OME should run on any Unix system, including Mac OS/X, that supports 
+  the required packages (see below). If you get OME up on another system, or have 
+  problems with other systems, drop us a line.</p>
+<p class=indented> Note: If you decide to install on a RedHat (and probably other) 
+  Linux system, you will have a much easier time if your host has been built as 
+  a server instead of as a workstation. Workstations don't have some libraries 
+  required by OME, such as X11R6. </p>
+<p>In theory, OME should be portable to a Microsoft W2K system using IIS as its 
+  web server. However, this port will likely require a fair bit of hacking or 
+  whacking. We haven't attempted this port, and have no plans to do so. If you 
+  decide to port OME to W2K, please let us know your results.</p>
+<h3><A name="Pkg_Requirements"> Major package requirements:</A></h3>
+<p>OME requires an installation of Perl, Apache with mod_perl, and Postgres on 
+  its host system. These major packages must be installed before OME can be successfully 
+  installed. To see what versions of these packages OME requires, and links to 
+  distribution points for these packages, see the <a href="#Major_Packages"> Major 
+  Packages</a> section, below. </p>
+<p> Perl also requires several other Perl module packages. Both the major and 
+  module packages are listed here. A script (perlCheck.pl) that comes with the 
+  OME distribution can be run to download &amp; install the perl modules - See 
+  the <a href="#Installation">Installation</a> section.<br>
+  <br>
+  Note that you should execute this script from the directory into which you installed 
+  the OME perl scripts - the directory from which they will be served by Apache. 
+  N.B.: This will <B>not</B> install postgres, Apache or mod_perl, nor will it 
+  install XMLRPC.</p>
+<h4><A name="Major_Packages"> Major packages:</A></h4>
+Look in the links here to get these modules. 
+<ul>
+  <li><a href="http://www.perl.com/">Perl</a> &nbsp;&nbsp; Version must be >= 
+    5.6</li>
+  <li><a href="http://www.apache.org/">Apache</a>&nbsp;&nbsp; Version must be 
+    >= 1.3.12 (we haven't tested with Apache v2 yet)</li>
+  <li><a href="http://www.redhat.com/swr/i386/mod_perl-1.24_01-2.i386.html">mod_perl</a>&nbsp;&nbsp; 
+    Version must be >= 1.24</li>
+  <li><a href="http://www3.us.postgresql.org/">PostgreSQL</a> &nbsp;&nbsp; Version 
+    must be >= 7.1 with ODBC support (JDBC and Tcl/Tk optional but recommended)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Note: 
+    This version of OME is incompatible with PostgreSQL 7.2.</li>
+</ul>
+<h4><A name="Mod_Requirements"> Other Perl modules:</A></h4>
+You should use the versions of the necessary Perl modules included in the distribution 
+kit - the version of OME in the distribution has been built and tested with these 
+versions. If you want the latest versions of these modules anyway, use the links 
+below. 
+<ul>
+  <li> Storable&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let 
+    perlCheck.pl get it for you, or get latest from <a href="http://search.cpan.org/search?module=Storable">CPAN</a> 
+  </li>
+  <li> Apache::Session::File&nbsp;&nbsp;&nbsp;let perlCheck.pl get it for you, 
+    or get latest tarball from <a href="http://search.cpan.org/search?module=Apache::Session">CPAN</a> 
+  </li>
+  <li> Image::Magick (PerlMagick) <a href="http://www.imagemagick.org/">ImageMagick+PerlMagick</a></li>
+  <li> Frontier::RPC &nbsp;&nbsp;&nbsp;&nbsp;use version in distribution kit or 
+    get latest from <a href="http://search.cpan.org/search?dist=Frontier-RPC">CPAN</a></li>
+  <li> DBI &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+    use version in distribution kit or get latest from <a href="http://search.cpan.org/search?module=DBI">CPAN</a></li>
+  <li> DBD::Pg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+    use version in distribution kit or get the <a href="http://www.redhat.com/swr/i386/perl-DBD-Pg-0.95-1.i386.html"> 
+    RedHat RPM</a> here<br>
+  </li>
+</ul>
+<h4> ImageMagick</h4>
+<p>To be useful, ImageMagick (and PerlMagick) needs the jpeg-6b library, which 
+  is usually already installed.<br>
+  In the near future, we may also require freetype-2.0.4 (this is latest version, 
+  can probably use an earlier one).<br>
+  The perlCheck.pl script will install ImageMagick if it is missing, but it will 
+  <b>not</b> install these additional libraries. </p>
+<blockquote>
+  <p><font size="-1">Installing required libraries on Mac OS X is greatly simplified 
+    with the use of Christoph Pfisterer's <a href="http://fink.sourceforge.net/">fink</a>.</font> 
+  </p>
+</blockquote>
+<hr>
+<H1><A name="Installation">Installation</A></H1>
+<h3><A name="OME_Kit">OME Distribution Kit:</A><br>
+</h3>
+<h4>Source kit</h4>
+<p>The latest stable OME source distribution kit is available at the OME project 
+  <a href="http://sourceforge.net/projects/ome">homepage</a> on Sourceforge under 
+  the "Latest File Releases" section. When you download the file, it will come 
+  to you as a zipped tarball (OME.xxx.tar.gz). After unzipping and extracting 
+  from this archive file you can then build OME. As an aid to making and maintaining 
+  OME's database directories, you should also download the <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ome/OME/scripts/OMEtouch.sh">OMEtouch.sh</a> 
+  script from Sourceforge.</p>
+<p>To build OME, <i>su</i> to root, and move the parts of the source kit as follows, 
+  creating directories as necessary.</p>
+<ul>
+  <li>src/perl to /OME/src/perl 
+  <li>src/C to /OME/src/C 
+  <li>src/java to /OME/src/java 
+  <li>src/SQL to /OME/src/SQL 
+  <li>src/xml to /OME/src/xml 
+  <li>defer moving the Javascript and html directories until you <a href="#Apache_config">configure 
+    Apache</a> 
+</ul>
+<pre>Finally, go to the /OME/src/C directory, and do (as root):</pre>
+<pre>
+<font face="Courier New, Courier, mono">>make all
+>make install</font>
+</pre>
+<h3><A name="Perl_mods">Perl Modules</A></h3>
+<p>All of the perl dependencies can be downloaded, if necessary, and installed 
+  with the following commands. You need to run as root from the directory into 
+  which the OME perl scripts are installed. 
+<pre>
+	<font face="Courier New, Courier, mono">> su
+	Password: ....
+	> cd /OME/src/perl/
+	> ./perlCheck.pl</font></pre>
+<h3><A name="Apache_Config">Apache Configuration:</A></h3>
+<ul>
+  <li> Refer to your Apache configuration file (httpd.conf) for the value of the 
+    variable <u>DocumentRoot</u>.<br>
+    <br>
+  </li>
+  <li> Copy the contents of the OME/src/perl directory from the distribution to 
+    where your perl CGI scripts live. This will usually be in the directory &lt;DocumentRoot&gt;/perl. 
+    The following examples assume that DocumentRoot is set to /var/www.<br>
+    <br>
+  </li>
+  <li>Make sure Apache-mod-perl is properly configured to execute perl scripts 
+    in this directory (/var/www/perl in this example). A sample perl handler section 
+    (within the Aliases section) of httpd.conf might look like: 
+    <pre><font face="Courier New, Courier, mono">
+  Alias /perl/  "/var/www/perl/"
+    &lt;Location /perl&gt;
+        SetHandler  perl-script
+        PerlHandler Apache::Registry
+        PerlScript 
+        Options +ExecCGI
+    &lt;/Location&gt;
+
+    &lt;Files ~ "\.pl"&gt;
+        SetHandler  perl-script
+        PerlHandler Apache::Registry
+        Options +ExecCGI
+    &lt;/Files&gt;</font>
+</pre>
+  </li>
+  <br>
+  <li> You can check that everything is OK by pointing a browser at the distribution 
+    kit script perl/ShowEnvCGI.pl (http://<i>your_server's_URL</i>/perl/ShowEnvCGI.pl) 
+    and looking at the GATEWAY_INTERFACE variable, which should be set to CGI-Perl/1.1. 
+    <br>
+    <P CLASS="indented"> N.B.: In the Perl handler section of Apache configuration 
+      file, <i>PerlSendHeader</i> must be set to Off, which is the default. PERL_SEND_HEADER 
+      should not appear in the list of variables reported by ShowEnvCGI.pl </p>
+    <br>
+  </li>
+  <li> After Apache is set up and mod_perl is functioning properly, make sure 
+    you have all of the OME perl dependencies by once more, as root, running /OME/perl/perlCheck.pl: 
+    <pre>
+<font face="Courier New, Courier, mono">> cd /OME/perl
+> ./perlCheck.pl</font></pre>
+  </li>
+  <li> At this point, you should completely re-start Apache. Sending HUP to httpd 
+    and its kin is not always sufficient. <br>
+    <br>
+  </li>
+  <li> Move the contents of OME/src/JavaScript and OME/images somewhere where 
+    they will not be executed by a CGI handler. &lt;document-root&gt; could be 
+    arranged something like: 
+    <pre>
+html/
+	JavaScript
+	images
+</pre>
+  </li>
+</ul>
+<h3> PostgreSQL:</h3>
+You can find out what version, if any, you have by typing: 
+<pre><font face="Courier New, Courier, mono">> psql -V
+    or
+>pg_config --version</font>
+</pre>
+<h4> Binary Install</h4>
+<p>OME cannot currently run against Postgres 7.2 - there are incompatibilities 
+  introduced by 7.2's changed treatment of the OID datatype. Version 7.1.3 (the 
+  latest 7.1.x version) works fine with OME. You can get Postgres 7.1.3 as a <a href="http://www.ca.postgresql.org/ftpsite/binary/v7.1.3/RPMS/redhat-7.1/">RPM</a>. 
+  The next release of OME will remove this restriction.</p>
+<h4>Source Build Install</h4>
+<p>In the past, we have had problems using the distributed binary Postgres RPMs. 
+  If you believe that you are having problems with the binary distributions (PostgreSQL 
+  should be able to run for months with no problems), you can build the Postgres 
+  package from sources. You can get the Postgres 7.1.3 <a href="http://www.ca.postgresql.org/ftpsite/binary/v7.1.3/RPMS/SRPMS/"> 
+  source RPM</a> and build the package. <br>
+  To compile PostgreSQL, you will need the following libraries (not strictly required, 
+  but highly recommended): 
+<p class=Indented><a href="http://cnswww.cns.cwru.edu/~chet/readline/rltop.html">readline</a> 
+  (from gnu.org - usually present on Linux distributions, but not always) <br>
+  <a href="http://jakarta.apache.org/ant/">ant</a> (from the jakarta project - 
+  latest stable binary install or RPM from jakarta's <a href="http://jakarta.apache.org/builds/jakarta-ant/release/"> 
+  release area</a> should be fine) </p>
+<p>run the configure script with something like the following command: . 
+<pre><font face="Courier New, Courier, mono">./configure --with-perl --with-tcl --enable-odbc --with-java</font></pre>
+<p>You may also want to set the data directory using with the flag --datadir=DIRECTORY. 
+  Read the <a href="http://www.postgresql.org/idocs/index.php?installation.html"> 
+  INSTALL document</a> before doing anything. 
+<p class=Indented> N.B. If you installed DBD::Pg before building Postgres, you 
+  must install it again (do a 'make clean' first!) so that it is linked against 
+  the proper Postgres libraries. <br>
+  &nbsp; </p>
+<h3><A name="Scripts">OME Scripts:</A></h3>
+<ul>
+  <li>Execute the script OMEtouch.sh from the OME distribution. 
+    <pre>
+> su
+>  password...
+> cd /OME/perl
+> ./OMEtouch.sh
+</pre>
+    This will create the directories needed by OME to support work sessions. These 
+    directories are: /var/tmp/OME, /var/tmp/OME/lock, and /var/tmp/OME/sessions 
+    <p></p>
+  </li>
+  <p> 
+  <li> Then, if you're running under RedHat Linux, move or copy this script into 
+    the /etc/cron.daily directory. For other operating systems, you must put this 
+    script into the directory containing daily cron jobs. By placing this script 
+    under daily cron, you insure that any cleanup scripts on your system will 
+    not inadvertently delete these three needed directories. The cleanup scripts 
+    will still remove obsolete contents from these directories, just not the directories 
+    themselves.</li>
+</ul>
+  <p></p>
+  <h3><A name="OME_DB">OME Database:</A></h3>
+  <ul>
+  <li> Create the 1st OME user by running from the command line the comand:</li>
+  <pre><font face="Courier New, Courier, mono">
+createuser &lt;whoever&gt;
+</font></pre>
+  <li> create the ome database and its schema:</li>
+  <ul>
+    <pre><font face="Courier New, Courier, mono">
+createdb ome
+psql ome
+psql>\i /OME/SQL/createOME.sql
+psql>\q</font>
+</pre>
+  </ul>
+  <li> create a db user for each OME user</li>
+  <ul>
+    <pre><font face="Courier New, Courier, mono">createuser username</font></pre>
+  </ul>
+  <li> put entries into the experimenters table for each user:</li>
+  <ul>
+    <pre>
+<font face="Courier New, Courier, mono">>psql ome
+psql>INSERT INTO experimenters (experimenter_id,ome_name,firstname,lastname,email) 
+     VALUES (&lt;#&gt;,'username','John','Doe','jdoe@nowhere.com');
+psql>\q</font>
+</pre>
+    <p class=Indented> N.B. The experimenter_id field value (shown as &lt;#&gt; 
+      above) must be the next member of a monotonically increasing set of integers 
+      starting at 0. That is, the IDs start at 0 & increase by 1 for every new 
+      entry. Once you have more than a handful of entries this gets tricky. You 
+      can execute the sql query <br>
+    <pre>         <font face="Courier New, Courier, mono">psql> select * from experimenters order by experimenter_id desc limit 1</font>
+</pre>
+    <p class=Indented> to find the greatest ID currently assigned, and then add 
+      1 to this number for the new entry. Adding users via an administrator's 
+      web page will be a feature of a future release.</p>
+  </ul>
+  <li> In this version of OME, user logins are verified against the list of database 
+    users. By default, passwords are not checked even if they are entered into 
+    the login screen. You can enable passwords by modifying the relevant <i>host</i> 
+    entry in ~postgres/data/pg_hba.conf. But note that this version of OME sends 
+    passwords in the clear. That is, they are not encrypted before being sent 
+    from the client's browser to the OME server. Sending sensitive information 
+    over the net in the clear creates a security hole. Future versions of OME 
+    will encrypt such transmissions, and will also divorce username/password verification 
+    from the database's username/password facility. 
+    <p class=Indented>&nbsp;</p>
+    <hr>
+    <hr>
+</ul>
+</body>
+</html>
