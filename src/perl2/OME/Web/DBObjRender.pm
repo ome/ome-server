@@ -246,7 +246,7 @@ sub render {
 	if( $summary_tmpl ) {
 		$tmpl = HTML::Template->new( filename => $summary_tmpl );
 		# load template variable requests
-		my @fields = grep( !m'^_relations$', $tmpl->param() );
+		my @fields = grep( !m/^!/, $tmpl->param() );
 		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode );
 	} else {
 
@@ -263,16 +263,16 @@ sub render {
 			foreach @fields;
 		
 		# load template variable requests
-		@fields = grep( !m'^name_value_pairs$|^_relations$', $tmpl->param() );
+		@fields = grep( !m'^name_value_pairs$|^!relations$', $tmpl->param() );
 		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode );
 		$tmpl_data{ name_value_pairs } = \@name_values;
 	}
 
 	# load magic fields
-	# _relations = iterate over the object's relations
-	if( $tmpl->query( name => '_relations' ) ) {
+	# !relations = iterate over the object's relations
+	if( $tmpl->query( name => '!relations' ) ) {
 		my $relations = $self->getRelations( $obj, $mode );
-		my @tmpl_fields = $tmpl->query( loop => '_relations' );
+		my @tmpl_fields = $tmpl->query( loop => '!relations' );
 		my @a = grep( m/^!/, @tmpl_fields); my $relation_render_mode = $a[0];
 		my @relations_data;
 		foreach my $relation( @$relations ) {
@@ -289,7 +289,7 @@ sub render {
 				)
 			} );
 		}
-		$tmpl_data{ _relations } = \@relations_data;
+		$tmpl_data{ '!relations' } = \@relations_data;
 	}
 
 	# populate template

@@ -45,7 +45,7 @@ OME::Tasks::DatasetManager - manage user's datasets
 =head1 SYNOPSIS
 
 	use OME::Tasks::DatasetManager;
-	my $projectManager=new OME::Tasks::DatasetManager($session);
+	my $datasetManager=new OME::Tasks::DatasetManager;
 	
 
 =head1 DESCRIPTION
