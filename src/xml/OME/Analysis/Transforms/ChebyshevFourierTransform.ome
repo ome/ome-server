@@ -34,13 +34,13 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="ChebyshevFourierCoefficientMatrix" AppliesTo="I">
+		<SemanticType Name="ChebyshevFourierCoefficients" AppliesTo="I">
 			<Description>
 			Nikita, please fill this out.
 			</Description>
 			<Element 
 				Name="Parent" 
-				DBLocation="CHEBYSHEV_FOURIER.COEFFICIENT_MATRIX"   
+				DBLocation="CHEBYSHEV_FOURIER.COEFFICIENTS"   
 				DataType = "reference"
 				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
@@ -62,8 +62,8 @@
 				SemanticTypeName="PixelsPlaneSlice"
 				Count="!"/>
 			<FormalOutput
-				Name="Chebyshev Fourier Coefficient Matrix"
-				SemanticTypeName="ChebyshevFourierCoefficientMatrix"
+				Name="Chebyshev Fourier Coefficients"
+				SemanticTypeName="ChebyshevFourierCoefficients"
 				Count="!"/>
  		  </Declaration>
 		
@@ -72,32 +72,9 @@
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsArray FormalOutput="Chebyshev Fourier Coefficient Matrix" ConvertToDatatype="single"/></Output>
+			  <Output><PixelsArray FormalOutput="Chebyshev Fourier Coefficients" ConvertToDatatype="single"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
-		</AnalysisModule>
-		
-		<!-- Typecaster module for the Chebyshev Fourier Transform -->
-		<AnalysisModule
-		   ModuleName="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice"
-		   Category="Transforms.Typecasts"
-		   ModuleType="OME::Analysis::Modules::PPM::Typecast"
-		   ProgramID=""
-		   ID="urn:lsid:openmicroscopy.org:Module:7801">
-		  <Description>
-			This module allows a Chebyshev Fourier Coefficient Matrix to be used as a 
-			PixelsPlaneSlice.
-		  </Description>
-		  <Declaration>
-			<FormalInput
-				Name="Chebyshev Fourier Coefficient Matrix"
-				SemanticTypeName="ChebyshevFourierCoefficientMatrix"
-				Count="!"/>
-			<FormalOutput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
-				Count="!"/>
-		  </Declaration>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
 </OME>
