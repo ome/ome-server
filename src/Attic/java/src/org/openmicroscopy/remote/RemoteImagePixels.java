@@ -48,6 +48,11 @@ public class RemoteImagePixels
     extends RemoteObject
     implements ImagePixels
 {
+    static
+    {
+        addClass("OME::Image::Pixels",RemoteImagePixels.class);
+    }
+
     public RemoteImagePixels() { super(); }
     public RemoteImagePixels(String reference) { super(reference); }
 

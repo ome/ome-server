@@ -363,7 +363,9 @@ public class RemoteObject
         Object o = getCachedElement(element);
         if (o instanceof String)
         {
-            Attribute a = (Attribute) instantiate(RemoteAttribute.class,(String) o);
+            Attribute a = (Attribute)
+                instantiate(getClass("OME::SemanticType::Superclass"),
+                            (String) o);
             elementCache.put(element,a);
             return a;
         } else if (o instanceof Attribute) {

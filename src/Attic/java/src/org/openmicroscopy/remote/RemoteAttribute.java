@@ -48,6 +48,11 @@ public class RemoteAttribute
     extends RemoteObject
     implements Attribute
 {
+    static
+    {
+        addClass("OME::SemanticType::Superclass",RemoteAttribute.class);
+    }
+
     public RemoteAttribute() { super(); }
     public RemoteAttribute(String reference) { super(reference); }
 
@@ -59,15 +64,19 @@ public class RemoteAttribute
     { caller.dispatch(this,"writeObject"); }
 
     public Session getSession()
-    { return (Session) getRemoteElement(RemoteSession.class,"Session"); }
+    { return (Session)
+            getRemoteElement(getClass("OME::Session"),
+                             "Session"); }
 
     public SemanticType getSemanticType()
     { return (SemanticType)
-            getRemoteElement(RemoteSemanticType.class,"semantic_type"); }
+            getRemoteElement(getClass("OME::SemanticType"),
+                             "semantic_type"); }
 
     public ModuleExecution getModuleExecution()
     { return (ModuleExecution)
-            getRemoteElement(RemoteModuleExecution.class,"module_execution"); }
+            getRemoteElement(getClass("OME::ModuleExecution"),
+                             "module_execution"); }
 
     public OMEObject getTarget()
     {
@@ -77,11 +86,11 @@ public class RemoteAttribute
         if (granularity == Granularity.GLOBAL)
             return null;
         else if (granularity == Granularity.DATASET)
-            remoteClass = RemoteDataset.class;
+            remoteClass = getClass("OME::Dataset");
         else if (granularity == Granularity.IMAGE)
-            remoteClass = RemoteImage.class;
+            remoteClass = getClass("OME::Image");
         else if (granularity == Granularity.FEATURE)
-            remoteClass = RemoteFeature.class;
+            remoteClass = getClass("OME::Feature");
         else
             return null;
         return (OMEObject)

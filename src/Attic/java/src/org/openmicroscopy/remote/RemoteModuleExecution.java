@@ -53,9 +53,9 @@ public class RemoteModuleExecution
 {
     static
     {
-        RemoteObject.addClass("OME::ModuleExecution",RemoteModuleExecution.class);
-        RemoteObject.addClass("OME::ModuleExecution::ActualInput",
-                              RemoteModuleExecution.ActualInput.class);
+        addClass("OME::ModuleExecution",RemoteModuleExecution.class);
+        addClass("OME::ModuleExecution::ActualInput",
+                 RemoteModuleExecution.ActualInput.class);
     }
 
 
@@ -63,12 +63,14 @@ public class RemoteModuleExecution
     public RemoteModuleExecution(String reference) { super(reference); }
 
     public Module getModule()
-    { return (Module) getRemoteElement(RemoteModule.class,"module"); }
+    { return (Module) getRemoteElement(getClass("OME::Module"),
+                                       "module"); }
     public void setModule(Module module)
-    { setRemoteElement("program",module); }
+    { setRemoteElement("module",module); }
 
     public Dataset getDataset()
-    { return (Dataset) getRemoteElement(RemoteDataset.class,"dataset"); }
+    { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
+                                        "dataset"); }
     public void setDataset(Dataset dataset)
     { setRemoteElement("dataset",dataset); }
 
@@ -107,13 +109,14 @@ public class RemoteModuleExecution
     { setStringElement("status",status); }
 
     public List getInputs()
-    { return getRemoteListElement(ActualInput.class,"inputs"); }
+    { return getRemoteListElement(getClass("OME::ModuleExecution::ActualInput"),
+                                  "inputs"); }
     public Iterator iterateInputs()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_inputs");
-        i.setClass(ActualInput.class);
+        i.setClass(getClass("OME::ModuleExecution::ActualInput"));
         return i;
     }
 
@@ -126,17 +129,20 @@ public class RemoteModuleExecution
 
         public ModuleExecution getModuleExecution()
         { return (ModuleExecution)
-              getRemoteElement(RemoteModuleExecution.class,"module_execution"); }
+                getRemoteElement(getClass("OME::ModuleExecution"),
+                                 "module_execution"); }
 
         public ModuleExecution getInputModuleExecution()
         { return (ModuleExecution)
-              getRemoteElement(RemoteModuleExecution.class,"input_module_execution"); }
+                getRemoteElement(getClass("OME::ModuleExecution"),
+                                 "input_module_execution"); }
         public void setInputModuleExecution(ModuleExecution inputModuleExecution)
-        { setRemoteElement("input_analysis",inputModuleExecution); }
+        { setRemoteElement("input_module_execution",inputModuleExecution); }
 
         public Module.FormalInput getFormalInput()
         { return (Module.FormalInput)
-              getRemoteElement(RemoteModule.FormalInput.class,"formal_input"); }
+                getRemoteElement(getClass("OME::Module::FormalInput"),
+                                 "formal_input"); }
         public void setFormalInput(Module.FormalInput formalInput)
         { setRemoteElement("formal_input",formalInput); }
     }

@@ -53,10 +53,10 @@ public class RemoteAnalysisPath
 {
     static
     {
-        RemoteObject.addClass("OME::AnalysisPath",
-                              RemoteAnalysisPath.class);
-        RemoteObject.addClass("OME::AnalysisPath::Map",
-                              RemoteAnalysisPath.Node.class);
+        addClass("OME::AnalysisPath",
+                 RemoteAnalysisPath.class);
+        addClass("OME::AnalysisPath::Map",
+                 RemoteAnalysisPath.Node.class);
     }
 
 
@@ -69,18 +69,21 @@ public class RemoteAnalysisPath
     { setIntElement("path_length",pathLength); }
 
     public Chain getChain()
-    { return (Chain) getRemoteElement(RemoteChain.class,"analysis_view"); }
+    { return (Chain)
+            getRemoteElement(getClass("OME::AnalysisChain"),
+                             "analysis_chain"); }
     public void setChain(Chain chain)
-    { setRemoteElement("analysis_view",chain); }
+    { setRemoteElement("analysis_chain",chain); }
 
     public List getPathNodes()
-    { return getRemoteListElement(Node.class,"path_nodes"); }
+    { return getRemoteListElement(getClass("OME::AnalysisPath::Map"),
+                                  "path_nodes"); }
     public Iterator iteratePathNodes()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_path_nodes");
-        i.setClass(Node.class);
+        i.setClass(getClass("OME::AnalysisPath::Map"));
         return i;
     }
 
@@ -93,7 +96,8 @@ public class RemoteAnalysisPath
 
         public AnalysisPath getAnalysisPath()
         { return (AnalysisPath)
-              getRemoteElement(RemoteAnalysisPath.class,"path"); }
+                getRemoteElement(getClass("OME::AnalysisPath"),
+                                 "path"); }
 
         public int getPathOrder()
         { return getIntElement("path_order"); }
@@ -103,9 +107,10 @@ public class RemoteAnalysisPath
 
         public Chain.Node getChainNode()
         { return (Chain.Node)
-              getRemoteElement(RemoteChain.Node.class,"analysis_view_node"); }
+                getRemoteElement(getClass("OME::AnalysisChain::Node"),
+                                 "analysis_chain_node"); }
         public void setChainNode(Chain.Node chainNode)
-        { setRemoteElement("analysis_view_node",chainNode); }
+        { setRemoteElement("analysis_chain_node",chainNode); }
 
     }
 }

@@ -53,9 +53,8 @@ public class RemoteLookupTable
 {
     static
     {
-        RemoteObject.addClass("OME::LookupTable",RemoteLookupTable.class);
-        RemoteObject.addClass("OME::LookupTable::Entry",
-                              RemoteLookupTable.Entry.class);
+        addClass("OME::LookupTable",RemoteLookupTable.class);
+        addClass("OME::LookupTable::Entry",RemoteLookupTable.Entry.class);
     }
 
     public RemoteLookupTable() { super(); }
@@ -72,14 +71,15 @@ public class RemoteLookupTable
     { setStringElement("description",description); }
 
     public List getEntries()
-    { return getRemoteListElement(Entry.class,"all_features"); }
+    { return getRemoteListElement(getClass("OME::LookupTable::Entry"),
+                                  "all_features"); }
 
     public Iterator iterateEntries()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_all_features");
-        i.setClass(Entry.class);
+        i.setClass(getClass("OME::LookupTable::Entry"));
         return i;
     }
 
@@ -91,8 +91,9 @@ public class RemoteLookupTable
         public Entry(String reference) { super(reference); }
 
         public LookupTable getLookupTable()
-        { return (LookupTable) getRemoteElement(RemoteLookupTable.Entry.class,
-                                                "lookup_table"); }
+        { return (LookupTable)
+                getRemoteElement(getClass("OME::LookupTable"),
+                                 "lookup_table"); }
 
         public String getValue()
         { return getStringElement("value"); }

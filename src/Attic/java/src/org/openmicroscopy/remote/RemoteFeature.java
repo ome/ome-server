@@ -51,7 +51,7 @@ public class RemoteFeature
     extends RemoteOMEObject
     implements Feature
 {
-    static { RemoteObject.addClass("OME::Feature",RemoteFeature.class); }
+    static { addClass("OME::Feature",RemoteFeature.class); }
 
     public RemoteFeature() { super(); }
     public RemoteFeature(String reference) { super(reference); }
@@ -67,24 +67,27 @@ public class RemoteFeature
     { setStringElement("tag",tag); }
 
     public Image getImage()
-    { return (Image) getRemoteElement(RemoteImage.class,"image"); }
+    { return (Image) getRemoteElement(getClass("OME::Image"),
+                                      "image"); }
     public void setImage(Image image)
     { setRemoteElement("image",image); }
 
     public Feature getParentFeature()
-    { return (Feature) getRemoteElement(RemoteFeature.class,"parent_feature"); }
+    { return (Feature) getRemoteElement(getClass("OME::Feature"),
+                                        "parent_feature"); }
     public void setParentFeature(Feature parentFeature)
     { setRemoteElement("parent_feature",parentFeature); }
 
     public List getChildren()
-    { return getRemoteListElement(RemoteFeature.class,"all_features"); }
+    { return getRemoteListElement(getClass("OME::Feature"),
+                                  "all_features"); }
 
     public Iterator iterateChildren()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_all_features");
-        i.setClass(RemoteFeature.class);
+        i.setClass(getClass("OME::Feature"));
         return i;
     }
 

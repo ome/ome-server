@@ -49,6 +49,11 @@ public class RemoteIterator
     extends RemoteObject
     implements Iterator
 {
+    static
+    {
+        addClass("OME::Factory::Iterator",RemoteIterator.class);
+    }
+
     protected Class clazz;
     protected String nextReference;
     protected boolean haveNextReference = false;

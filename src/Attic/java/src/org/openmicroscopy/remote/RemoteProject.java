@@ -53,9 +53,9 @@ public class RemoteProject
 {
     static
     {
-        RemoteObject.addClass("OME::Project",RemoteProject.class);
-        RemoteObject.addClass("OME::Project::DatasetMap",
-                              DatasetLink.class);
+        addClass("OME::Project",RemoteProject.class);
+        addClass("OME::Project::DatasetMap",
+                 DatasetLink.class);
     }
         
 
@@ -79,7 +79,7 @@ public class RemoteProject
 
     public List getDatasets()
     {
-        List linkList = getRemoteListElement(DatasetLink.class,
+        List linkList = getRemoteListElement(getClass("OME::Project::DatasetMap"),
                                              "dataset_links");
         List datasetList = new ArrayList();
         Iterator i = linkList.iterator();
@@ -94,9 +94,9 @@ public class RemoteProject
     public Iterator iterateDatasets()
     {
         final RemoteIterator i = (RemoteIterator) 
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_dataset_links");
-        i.setClass(DatasetLink.class);
+        i.setClass(getClass("OME::Project::DatasetMap"));
         return new Iterator()
             {
                 public boolean hasNext() { return i.hasNext(); }
@@ -116,9 +116,11 @@ public class RemoteProject
         public DatasetLink(String reference) { super(reference); }
 
         Project getProject()
-        { return (Project) getRemoteElement(RemoteProject.class,"project"); }
+        { return (Project) getRemoteElement(getClass("OME::Project"),
+                                            "project"); }
 
         Dataset getDataset()
-        { return (Dataset) getRemoteElement(RemoteDataset.class,"dataset"); }
+        { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
+                                            "dataset"); }
     }
 }

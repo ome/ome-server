@@ -53,8 +53,8 @@ public class RemoteModuleCategory
 {
     static
     {
-        RemoteObject.addClass("OME::Module::Category",
-                              RemoteModuleCategory.class);
+        addClass("OME::Module::Category",
+                 RemoteModuleCategory.class);
     }
 
     public RemoteModuleCategory() { super(); }
@@ -72,29 +72,32 @@ public class RemoteModuleCategory
 
     public ModuleCategory getParentCategory()
     { return (ModuleCategory) 
-            getRemoteElement(RemoteModuleCategory.class,"parent_category"); }
+            getRemoteElement(getClass("OME::Module::Category"),
+                             "parent_category"); }
     public void setParentCategory(ModuleCategory parentCategory)
     { setRemoteElement("parent_category",parentCategory); }
 
     public List getChildren()
-    { return getCachedRemoteListElement(RemoteModuleCategory.class,"children"); }
+    { return getCachedRemoteListElement(getClass("OME::Module::Category"),
+                                        "children"); }
     public Iterator iterateChildren()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_children");
-        i.setClass(RemoteModuleCategory.class);
+        i.setClass(getClass("OME::Module::Category"));
         return i;
     }
 
     public List getModules()
-    { return getRemoteListElement(RemoteModule.class,"modules"); }
+    { return getRemoteListElement(getClass("OME::Module"),
+                                  "modules"); }
     public Iterator iterateModules()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_modules");
-        i.setClass(RemoteModule.class);
+        i.setClass(getClass("OME::Module"));
         return i;
     }
 

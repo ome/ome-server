@@ -52,7 +52,7 @@ public class RemoteSession
     extends RemoteOMEObject
     implements Session
 {
-    static { RemoteObject.addClass("OME::Session",RemoteSession.class); }
+    static { addClass("OME::Session",RemoteSession.class); }
 
     protected void finalize()
     {
@@ -66,18 +66,21 @@ public class RemoteSession
     public RemoteSession(String reference) { super(reference); }
 
     public Factory getFactory()
-    { return (Factory) getRemoteElement(RemoteFactory.class,"Factory"); }
+    { return (Factory) getRemoteElement(getClass("OME::Factory"),
+                                        "Factory"); }
 
     public Attribute getUser()
-    { return (Attribute) getRemoteElement(RemoteAttribute.class,"User"); }
+    { return getAttributeElement("User"); }
 
     public Project getProject()
-    { return (Project) getRemoteElement(RemoteProject.class,"project"); }
+    { return (Project) getRemoteElement(getClass("OME::Project"),
+                                        "project"); }
     public void setProject(Project project)
     { setRemoteElement("project",project); }
 
     public Dataset getDataset()
-    { return (Dataset) getRemoteElement(RemoteDataset.class,"dataset"); }
+    { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
+                                        "dataset"); }
     public void setDataset(Dataset dataset)
     { setRemoteElement("dataset",dataset); }
 

@@ -56,7 +56,7 @@ public class RemoteFactory
     extends RemoteObject
     implements Factory
 {
-    static { RemoteObject.addClass("OME::Factory",RemoteFactory.class); }
+    static { addClass("OME::Factory",RemoteFactory.class); }
 
     protected void finalize()
     {
@@ -153,8 +153,8 @@ public class RemoteFactory
 
     public Iterator iterateObjects(String className, Map criteria)
     {
-        RemoteIterator i = (RemoteIterator) RemoteObject.
-            instantiate(RemoteIterator.class,
+        RemoteIterator i = (RemoteIterator) 
+            instantiate(getClass("OME::Factory::Iterator"),
                         caller.dispatch(this,"iterateObjects",
                                         fixCriteria(className,criteria)));
         i.setClass(getClass(className));
@@ -186,8 +186,8 @@ public class RemoteFactory
 
     public Iterator iterateObjectsLike(String className, Map criteria)
     {
-        RemoteIterator i = (RemoteIterator) RemoteObject.
-            instantiate(RemoteIterator.class,
+        RemoteIterator i = (RemoteIterator) 
+            instantiate(getClass("OME::Factory::Iterator"),
                         caller.dispatch(this,"iterateObjectsLike",
                                         fixCriteria(className,criteria)));
         i.setClass(getClass(className));
@@ -209,7 +209,9 @@ public class RemoteFactory
         if (newRef == null)
             return null;
         else
-            return (Attribute) instantiate(RemoteAttribute.class,newRef);
+            return (Attribute)
+                instantiate(getClass("OME::SemanticType::Superclass"),
+                            newRef);
     }
 
     public Attribute loadAttribute(String className, int id)
@@ -222,7 +224,9 @@ public class RemoteFactory
         if (newRef == null)
             return null;
         else
-            return (Attribute) instantiate(RemoteAttribute.class,newRef);
+            return (Attribute)
+                instantiate(getClass("OME::SemanticType::Superclass"),
+                            newRef);
     }
 
     public List findAttributes(String typeName, OMEObject target)
@@ -237,7 +241,7 @@ public class RemoteFactory
         {
             Iterator i = refList.iterator();
             while (i.hasNext())
-                objList.add(instantiate(RemoteAttribute.class,
+                objList.add(instantiate(getClass("OME::SemanticType::Superclass"),
                                         (String) i.next()));
         }
         return objList;

@@ -53,10 +53,10 @@ public class RemoteSemanticType
 {
     static
     {
-        RemoteObject.addClass("OME::SemanticType",
-                              RemoteSemanticType.class);
-        RemoteObject.addClass("OME::SemanticType::Element",
-                              RemoteSemanticType.Element.class);
+        addClass("OME::SemanticType",
+                 RemoteSemanticType.class);
+        addClass("OME::SemanticType::Element",
+                 RemoteSemanticType.Element.class);
     }
 
 
@@ -102,14 +102,15 @@ public class RemoteSemanticType
     }
 
     public List getElements()
-    { return getRemoteListElement(Element.class,"semantic_elements"); }
+    { return getRemoteListElement(getClass("OME::SemanticType::Element"),
+                                  "semantic_elements"); }
 
     public Iterator iterateElements()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_semantic_elements");
-        i.setClass(Element.class);
+        i.setClass(getClass("OME::SemanticType::Element"));
         return i;
     }
 
@@ -122,8 +123,8 @@ public class RemoteSemanticType
 
         public SemanticType getSemanticType()
         { return (SemanticType)
-              getRemoteElement(RemoteSemanticType.Element.class,
-                               "semantic_element"); }
+                getRemoteElement(getClass("OME::SemanticType"),
+                                 "semantic_type"); }
 
         public String getElementName()
         { return getStringElement("name"); }
@@ -137,8 +138,8 @@ public class RemoteSemanticType
 
         public DataTable.Column getDataColumn()
         { return (DataTable.Column) 
-              getRemoteElement(RemoteDataTable.Column.class,
-                               "data_column"); }
+                getRemoteElement(getClass("OME::DataTable::Column"),
+                                 "data_column"); }
         public void setDataColumn(DataTable.Column dataColumn)
         { setRemoteElement("data_column",dataColumn); }
     }

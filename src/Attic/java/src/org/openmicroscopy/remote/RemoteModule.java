@@ -53,11 +53,9 @@ public class RemoteModule
 {
     static
     {
-        RemoteObject.addClass("OME::Module",RemoteModule.class);
-        RemoteObject.addClass("OME::Module::FormalInput",
-                              RemoteModule.FormalInput.class);
-        RemoteObject.addClass("OME::Module::FormalOutput",
-                              RemoteModule.FormalOutput.class);
+        addClass("OME::Module",RemoteModule.class);
+        addClass("OME::Module::FormalInput",RemoteModule.FormalInput.class);
+        addClass("OME::Module::FormalOutput",RemoteModule.FormalOutput.class);
     }
 
     public RemoteModule() { super(); }
@@ -83,10 +81,12 @@ public class RemoteModule
     public void setModuleType(String moduleType)
     { setStringElement("module_type",moduleType); }
 
-    public String getCategory()
-    { return getStringElement("category"); }
-    public void setCategory(String category)
-    { setStringElement("category",category); }
+    public ModuleCategory getCategory()
+    { return (ModuleCategory)
+            getRemoteElement(getClass("OME::Module::Category"),
+                             "category"); }
+    public void setCategory(ModuleCategory category)
+    { setRemoteElement("category",category); }
 
     public String getDefaultIterator()
     { return getStringElement("default_iterator"); }
@@ -104,35 +104,38 @@ public class RemoteModule
     { setStringElement("execution_instructions",executionInstructions); }
 
     public List getInputs()
-    { return getCachedRemoteListElement(FormalInput.class,"inputs"); }
+    { return getCachedRemoteListElement(getClass("OME::Module::FormalInput"),
+                                        "inputs"); }
     public Iterator iterateInputs()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_inputs");
-        i.setClass(FormalInput.class);
+        i.setClass(getClass("OME::Module::FormalInput"));
         return i;
     }
 
     public List getOutputs()
-    { return getCachedRemoteListElement(FormalOutput.class,"outputs"); }
+    { return getCachedRemoteListElement(getClass("OME::Module::FormalOutput"),
+                                        "outputs"); }
     public Iterator iterateOutputs()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
+            getRemoteElement(getClass("OME::Factory::Iterator"),
                              "iterate_outputs");
-        i.setClass(FormalOutput.class);
+        i.setClass(getClass("OME::Module::FormalOutput"));
         return i;
     }
 
-    public List getAnalyses()
-    { return getRemoteListElement(RemoteModuleExecution.class,"analyses"); }
-    public Iterator iterateAnalyses()
+    public List getExecutions()
+    { return getRemoteListElement(getClass("OME::ModuleExecution"),
+                                  "module_executions"); }
+    public Iterator iterateExecutions()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(RemoteIterator.class,
-                             "iterate_analyses");
-        i.setClass(RemoteModuleExecution.class);
+            getRemoteElement(getClass("OME::Factory::Iterator"),
+                             "iterate_module_executions");
+        i.setClass(getClass("OME::ModuleExecution"));
         return i;
     }
 
@@ -147,8 +150,8 @@ public class RemoteModule
 
         public Module getModule()
         { return (Module)
-              getRemoteElement(RemoteModule.class,
-                               "program"); }
+                getRemoteElement(getClass("OME::Module"),
+                                 "module"); }
 
         public String getParameterName()
         { return getStringElement("name"); }
@@ -162,8 +165,8 @@ public class RemoteModule
 
         public SemanticType getSemanticType()
         { return (SemanticType) 
-              getRemoteElement(RemoteSemanticType.class,"semantic_type"); }
-               // was attribute_type
+                getRemoteElement(getClass("OME::SemanticType"),
+                                 "semantic_type"); }
         public void setSemanticType(SemanticType attributeType)
         { setRemoteElement("semantic_type",attributeType); }
 
@@ -187,7 +190,8 @@ public class RemoteModule
 
         public LookupTable getLookupTable()
         { return (LookupTable) 
-              getRemoteElement(RemoteLookupTable.class,"lookup_table"); }
+                getRemoteElement(getClass("OME::LookupTable"),
+                                 "lookup_table"); }
         public void setLookupTable(LookupTable lookupTable)
         { setRemoteElement("lookup_table",lookupTable); }
 
