@@ -25,6 +25,13 @@ $VERSION = '1.20';
 
 use OMEpl;
 use OMEhtml;
+use OMEhtml::Form;
+use OMEhtml::Section;
+use OMEhtml::Control;
+use OMEhtml::Control::TextField;
+use OMEhtml::Control::RadioGroup;
+use OMEhtml::Control::Group;
+use OMEhtml::Control::Popup;
 use OMEAnalysis;
 
 @ISA = ("OMEAnalysis");
@@ -260,6 +267,91 @@ sub OutputHTMLForm {
     my $self = shift;
     my $OME  = $self->{OME};
     my $CGI  = $OME->cgi();
+
+    my ($form, $section, $control, $subcontrol, $group);
+    my $space = "&nbsp;&nbsp;";
+
+    $form = new OMEhtml::Form("FindSpots parameters");
+
+    $section = new OMEhtml::Section("Time");
+    $form->add($section);
+
+    $control = new OMEhtml::Control::RadioGroup("startTime");
+    $control->prefix("From:");
+    $control->separator("<br>\n");
+    $control->addButton("Beginning","Beginning");
+    $subcontrol = new OMEhtml::Control::TextField("Start",{-size => 4});
+    $subcontrol->prefix($space);
+    $control->addButton("timePoint","Timepoint",$subcontrol);			
+    $section->add($control);
+
+    $control = new OMEhtml::Control::RadioGroup("stopTime");
+    $control->prefix("To:");
+    $control->addButton("End","End");
+    $subcontrol = new OMEhtml::Control::TextField("Stop",{-size => 4});
+    $subcontrol->prefix($space);
+    $control->addButton("timePoint","Timepoint",$subcontrol);
+    $section->add($control);
+
+    $section = new OMEhtml::Section("Wavelength");
+    $form->add($section);
+
+    my $wavelengths = $OME->GetSelectedDatasetsWavelengths();
+    $control = new OMEhtml::Control::Popup("wavelengths");
+    foreach my $wl (@$wavelengths) {
+	$control->addButton($wl,$wl);
+    }
+    $section->add($control);
+
+    $section = new OMEhtml::Section("Threshold");
+    $form->add($section);
+
+    $control = new OMEhtml::Control::RadioGroup("threshold");
+    $control->orientation("vertical");
+    $subcontrol = new OMEhtml::Control::TextField("Absolute",{-size => 4});
+    $subcontrol->prefix($space);
+    $control->addButton("Absolute","Absolute",$subcontrol);
+    $group = new OMEhtml::Control::Group();
+    #$group->separator("<br>");
+    #$group->prefix("<br>");
+    $subcontrol = new OMEhtml::Control::Popup("means");
+    $subcontrol->prefix($space);
+    foreach my $choice (["Mean","Geometric Mean"]) {
+	$subcontrol->addChoice($choice,$choice);
+    }
+    $group->add($subcontrol);
+    $subcontrol = new OMEhtml::Control::TextField("nSigmas",{-size => 4});
+    $subcontrol->prefix("$space +/- ");
+    $subcontrol->suffix(" std devs");
+    $group->add($subcontrol);
+    $control->addButton("Relative to","Relative to",$group);
+    $subcontrol = new OMEhtml::Control::Popup("autoThresh");
+    $subcontrol->prefix($space);
+    foreach my $choice (['Maximum Entropy','Kittler\'s minimum error',
+			 'Moment-Preservation','Otsu\'s moment preservation']) {
+	$subcontrol->addChoice($choice,$choice);
+    }
+    $control->addButton("Automatic","Automatic",$subcontrol);
+    $section->add($control);
+
+    $section = new OMEhtml::Section("Minimum volume");
+    $form->add($section);
+
+    $control = new OMEhtml::Control::TextField("minPix",{-size => 4});
+    $control->suffix(" pixels");
+    $section->add($control);
+    
+    print $OME->CGIheader (-type=>'text/html');
+    print $CGI->start_html(-title=>'Run FindSpots');
+    print $CGI->startform;
+    print $form->getHTML();
+    print $CGI->endform;
+}
+
+sub old_OutputHTMLForm {
+    my $self = shift;
+    my $OME  = $self->{OME};
+    my $CGI  = $OME->cgi();
     my @radioGrp;
     my $html = new OMEhtml($OME);
 
@@ -267,15 +359,11 @@ sub OutputHTMLForm {
 
     my $debug = 0;
     
-    print STDERR "*** $debug\n"; $debug++;
-
     $header = $html->tableHeaders({},{colspan => 5},'FindSpots parameters');
     $sidebar = $html->tableCell({rowspan => 9, bgcolor => 'BLACK', width => 2},$html->spacer(1,1));
     $title = $html->tableCell({colspan => 3, bgcolor => '#a0a0a0', align => 'center'},
 			      $html->font({color=>'WHITE'},"Time"));
     push @rows, $html->tableRow({},$sidebar,$title,$sidebar);
-
-    print STDERR "*** $debug\n"; $debug++;
 
     @radioGrp = $CGI->radio_group(-name     => 'startTime',
 				  -values   => ['Beginning','timePoint'],
@@ -287,8 +375,6 @@ sub OutputHTMLForm {
 			   $radioGrp[1]." Timepoint ".$CGI->textfield(-name=>'Start',-size=>4));
     push @rows, $html->tableRow({},$c1,$c2,$c3);
 
-    print STDERR "*** $debug\n"; $debug++;
-
     @radioGrp = $CGI->radio_group(-name     => 'stopTime',
 				  -values   => ['End','timePoint'],
 				  -default  => 'End',
@@ -299,13 +385,9 @@ sub OutputHTMLForm {
 			   $radioGrp[1]." Timepoint ".$CGI->textfield(-name=>'Stop',-size=>4));
     push @rows, $html->tableRow({},$c1,$c2,$c3);
 
-    print STDERR "*** $debug\n"; $debug++;
-
     $title = $html->tableCell({bgcolor => '#a0a0a0', colspan => 3, align => 'center'},
 			      $html->font({color=>'WHITE'},"Wavelength"));
     push @rows, $html->tableRow({},$title);
-
-    print STDERR "*** $debug\n"; $debug++;
 
     my $wavelengths = $OME->GetSelectedDatasetsWavelengths();
     $c1 = $html->tableCell({bgcolor => '#e0e0e0',colspan => 3,align=>'CENTER'},
@@ -313,31 +395,23 @@ sub OutputHTMLForm {
 					    -values => $wavelengths));
     push @rows, $html->tableRow({},$c1);
 
-    print STDERR "*** $debug\n"; $debug++;
-
     $title = $html->tableCell({bgcolor => '#a0a0a0', colspan => 3, align => 'center'},
 			      $html->font({color=>'WHITE'},"Threshold"));
     push @rows, $html->tableRow({},$title);
-
-    print STDERR "*** $debug\n"; $debug++;
 
     @radioGrp = $CGI->radio_group(-name     => 'threshold',
 				  -values   => ['Absolute','Relative','Automatic'],
 				  -default  => 'Relative',
 				  -nolabels => 1);
-    print STDERR "*** $debug ab!\n"; $debug++;
     my $popup = $CGI->popup_menu(-name    => 'means',
 				 -values  => ['Mean', 'Geometric Mean'],
 				 -default => 'Geometric Mean');
-    print STDERR "*** $debug\n"; $debug++;
     $c1 = $html->tableCell({bgcolor => '#e0e0e0'},
 			   $radioGrp[0]." Absolute ".$CGI->textfield(-name=>'Absolute',-size=>4));
-    print STDERR "*** $debug\n"; $debug++;
     $c2 = $html->tableCell({bgcolor => '#e0e0e0'},
 			   $radioGrp[1]." Relative to ".$popup.
 			   "<BR>+/- ".$CGI->textfield(-name=>'nSigmas',-size=>4).
 			   " std devs");
-    print STDERR "*** $debug\n"; $debug++;
     $c3 = $html->tableCell({bgcolor => '#e0e0e0'},
 			   $radioGrp[2]." Automatic ".
 			   $CGI->popup_menu(-name    => 'autoThresh',
@@ -348,13 +422,9 @@ sub OutputHTMLForm {
 					    -default => 'Maximum Entropy'));
     push @rows, $html->tableRow({},$c1,$c2,$c3);
 
-    print STDERR "*** $debug\n"; $debug++;
-
     $title = $html->tableCell({bgcolor => '#a0a0a0', colspan => 3, align => 'center'},
 			      $html->font({color=>'WHITE'},"Minimum volume"));
     push @rows, $html->tableRow({},$title);
-
-    print STDERR "*** $debug\n"; $debug++;
 
     $c1 = $html->tableCell({bgcolor => '#e0e0e0',colspan => 3,align=>'CENTER'},
 			   $CGI->textfield(-name    => 'minPix',
@@ -363,7 +433,6 @@ sub OutputHTMLForm {
 			   " pixels");
     push @rows, $html->tableRow({},$c1);
 
-    print STDERR "*** $debug\n"; $debug++;
 
 
     print $OME->CGIheader (-type=>'text/html');
@@ -378,3 +447,4 @@ sub OutputHTMLForm {
     print "<CENTER>", $CGI->submit(-name=>'Execute',-value=>'Run findSpots'), "</CENTER>";
     print $CGI->endform;
 }
+
