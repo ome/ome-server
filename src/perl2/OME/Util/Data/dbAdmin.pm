@@ -1,4 +1,4 @@
-# OME/Util/UserAdmin.pm
+# OME/Util/dbAdmin.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -45,6 +45,7 @@ use English;
 use Getopt::Long;
 use File::Path; # for rmtree
 use File::Copy;
+use Term::ANSIColor qw(:constants);
 
 use OME::SessionManager;
 use OME::Session;
@@ -63,9 +64,10 @@ my $dbAdmin_version = "2.2.1";
 sub getCommands {
     return
       {
-       'backup'  => 'backup',
-       'restore' => 'restore',
-       'delete'  => ['OME::Util::Delete'],
+       'backup'      => 'backup',
+       'connection'  => 'connection',
+       'restore'     => 'restore',
+       'delete'      => ['OME::Util::Delete'],
       };
 }
 
@@ -84,6 +86,7 @@ Available OME database related commands are:
     backup      Backup OME data to an .tar.bz2 archive.
     restore     Restore OME data from an .tar.bz2 archive.
     delete      Delete things in the OME DB.
+    connection  Configure database connection.
 CMDS
 }
 
@@ -153,7 +156,7 @@ sub backup {
  	move ("/tmp/omeDB_backup", "./omeDB_backup") or die "Couldn't move /tmp/omeDB_backup" ;
  	
 	# log version of backup
-	open (FILEOUT, ">> OMEmaint");
+	open (FILEOUT, "> OMEmaint");
 	print FILEOUT "version=$dbAdmin_version\n";
 	close (FILEOUT);
 	
@@ -161,14 +164,14 @@ sub backup {
 	if (not $quick) {
 	    print "    \\_ Backing up OMEIS from $omeis_base_dir \n";
 	    print "    \\_ Compressing archive \n";
-		system ($prog_path{'tar'}." --bzip2 -cf $backup_file.tar.bz2 $omeis_base_dir OMEMaint omeDB_backup");
+		system ($prog_path{'tar'}." --bzip2 -cf $backup_file.tar.bz2 $omeis_base_dir OMEmaint omeDB_backup");
 	} else {
 		print "    \\_ Compressing archive \n";
-		system ($prog_path{'tar'}." --bzip2 -cf $backup_file.tar.bz2 OMEMaint omeDB_backup");
+		system ($prog_path{'tar'}." --bzip2 -cf $backup_file.tar.bz2 OMEmaint omeDB_backup");
 	}
 	
 	# clean up any residual files
-	unlink("OMEMaint");
+	unlink("OMEmaint");
 	unlink("omeDB_backup");
 }
 
@@ -292,8 +295,6 @@ sub restore {
 	print "    \\_ Restoring postgress database ome\n";
 	
 	my $iwd = getcwd();
-	chdir("/");
-    euid (scalar(getpwnam $environment->user() ));
     my $db_version = eval ("OME::Install::CoreDatabaseTablesTask::get_db_version()");
     my @outputs;
     my ($success, $dropdb, $dropdb_path);
@@ -306,7 +307,7 @@ sub restore {
 		}
 
 		while ($dropdb == 1) {
-			@outputs = `$dropdb_path ome 2>&1`;
+			@outputs = `su $postgress_user -c '$dropdb_path ome 2>&1'`;
 			$success = 1;
 
 			foreach (@outputs) {
@@ -327,7 +328,6 @@ sub restore {
 		
 		if ($dropdb == 0) {
 			# user doesn't want to overwrite database, so we cleanup and exit
-			euid(0);
 			unlink("$iwd/omeDB_backup");
 			return;
 		}
@@ -335,13 +335,12 @@ sub restore {
 	
 	# need to move omeDB_backup up to /tmp since postgress might not have
 	# access permissions in current directory
-	euid (0);
 	move("$iwd/omeDB_backup","/tmp/omeDB_backup") or croak "ERROR: Could not copy omeDB_backup to /tmp";
 	
 	euid (scalar(getpwnam $postgress_user));
-	system ($prog_path{'createuser'}." --adduser --createdb  ome");
-	system ($prog_path{'createdb'}." ome");
-	system ($prog_path{'pg_restore'}." -d ome /tmp/omeDB_backup");
+	system ("su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'");
+	system ("su $postgress_user -c '".$prog_path{'createdb'}." ome'");
+	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." -d ome /tmp/omeDB_backup'");
 }
 
 sub restore_help {
@@ -365,6 +364,113 @@ Options:
 		"/etc/ome-install.store"
      -q, --quick 
 		If set, only OME's postgress db (and not OMEIS) is restored.
+CMDS
+}
+
+sub connection {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+	my $env_file = "/etc/ome-install.store";
+
+	# idiot nets
+	croak "You must run $script $command_name with uid=0 (root). " if (euid() ne 0);
+	croak "Environment file '$env_file' does not exist.\n".
+		  "Call $script $command_name with the -f flag to specify it. " if (not -e $env_file);
+	
+	# Parse our command line options
+	my ($db,$user,$host,$port,$class);
+	GetOptions('d|database=s' => \$db,
+						 'u|user=s'     => \$user,
+						 'h|host=s'     => \$host,
+						 'p|port=i'     => \$port,
+						 'c|class=s'    => \$class,
+	);
+	
+	# Get the environment and defaults
+	my $environment = initialize OME::Install::Environment;
+	my $defaultDBconf = {
+		Delegate => $class ? $class : 'OME::Database::PostgresDelegate',
+		User     => $user,
+		Password => undef,
+		Host     => $host,
+		Port     => $port,
+		Name     => $db ? $db : 'ome',
+	};
+	
+	my $dbConf = $environment->DB_conf();
+	$dbConf = $defaultDBconf unless $dbConf;
+    my $confirm_all;
+
+    while (1) {
+        if ($dbConf or $confirm_all) {
+            print "   Database Delegate Class: ", BOLD, $dbConf->{Delegate}, RESET, "\n";
+            print "             Database Name: ", BOLD, $dbConf->{Name}, RESET, "\n";
+            print "                      Host: ", BOLD, $dbConf->{Host} ? $dbConf->{Host} : 'undefined (local)', RESET, "\n";
+            print "                      Port: ", BOLD, $dbConf->{Port} ? $dbConf->{Port} : 'undefined (default)', RESET, "\n";
+            print "Username for DB connection: ", BOLD, $dbConf->{User} ? $dbConf->{User} : 'undefined (process owner)', RESET, "\n";
+#            print "                  Password: ", BOLD, $dbConf->{Password} ? $dbConf->{Password}:'undefined (not set)', RESET, "\n";
+    
+            print "\n";  # Spacing
+            
+            # Don't be interactive if we got any parameters
+			last if ($db or $user or $host or $port or $class);
+			if (y_or_n ("Are these values correct ?","y")) {
+				last;
+			} 
+        }
+
+        $confirm_all = 0;
+        print "Enter '\\' to set to ",BOLD,'undefined',RESET,"\n";
+		$dbConf->{Delegate} = confirm_default ("   Database Delegate Class: ", $dbConf->{Delegate});
+		$dbConf->{Name}     = confirm_default ("             Database Name: ", $dbConf->{Name});
+		$dbConf->{Host}     = confirm_default ("                      Host: ", $dbConf->{Host});
+		$dbConf->{Host} = undef if $dbConf->{Host} and $dbConf->{Host} eq '\\';
+		$dbConf->{Port}     = confirm_default ("                      Port: ", $dbConf->{Port});
+		$dbConf->{Port} = undef if $dbConf->{Port} and $dbConf->{Port} eq '\\';
+		$dbConf->{User}     = confirm_default ("Username for DB connection: ", $dbConf->{User});
+		$dbConf->{User} = undef if $dbConf->{User} and $dbConf->{User} eq '\\';
+#		$dbConf->{Password} = confirm_default ("                  Password: ", $dbConf->{Password});
+		$dbConf->{Password} = undef if $dbConf->{Password} and $dbConf->{Password} eq '\\';
+        
+        print "\n";  # Spacing
+
+        $confirm_all = 1;
+    }
+
+
+
+$environment->DB_conf($dbConf);
+$environment->store_to ();
+	
+
+
+
+}
+
+sub connection_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"CMDS";
+Usage:
+    $script $command_name [<options>]
+
+Configure the database connection.
+
+Options:
+     -d, --database
+        Database name.
+     -u, --user    
+        User name to connect as.
+     -h, --host 
+        Host name of the database server.
+     -p, --port 
+        port number to use for connection.
+     -c, --class 
+        Delegate class to use for connection (default OME::Database::PostgresDelegate).
 CMDS
 }
 
