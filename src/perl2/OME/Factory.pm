@@ -24,7 +24,7 @@ our $VERSION = '1.00';
 use strict;
 use Ima::DBI;
 use Class::Accessor;
-require OME::SessionManager;
+use OME::SessionManager;
 
 use base qw(Ima::DBI Class::Accessor);
 

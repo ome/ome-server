@@ -26,14 +26,12 @@ our $VERSION = '1.0';
 use strict;
 use Ima::DBI;
 use Class::Accessor;
-require OME::SessionManager;
+use OME::SessionManager;
 
 use base qw(Class::DBI Class::Accessor Class::Data::Inheritable);
-use fields qw(Factory);
 
 __PACKAGE__->mk_classdata('AccessorNames');
 __PACKAGE__->AccessorNames({});
-__PACKAGE__->mk_ro_accessors(qw(Factory));
 __PACKAGE__->set_db('Main',
                   OME::SessionManager->DataSource(),
                   OME::SessionManager->DBUser(),
@@ -77,6 +75,7 @@ sub Field {
 sub writeObject {
     my $self = shift;
     $self->commit();
+    $self->dbi_commit();
 }
 
 1;

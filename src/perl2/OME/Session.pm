@@ -23,107 +23,36 @@ our $VERSION = '1.00';
 
 use strict;
 
-use Ima::DBI;
-use Class::Accessor;
-use OME::Factory;
-require OME::SessionManager;
-
-use base qw(Ima::DBI Class::Accessor);
-
-use fields qw(Manager Username UserID User Factory);
-__PACKAGE__->mk_ro_accessors(qw(Manager Username UserID User Factory));
-__PACKAGE__->set_db('Main',
-                  OME::SessionManager->DataSource(),
-                  OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword(), 
-                  { RaiseError => 1 });
-
-__PACKAGE__->set_sql('find_user',<<"SQL",'Main');
-      select experimenter_id, password
-        from experimenters
-       where ome_name = ?
-SQL
+use OME::DBObject;
+use base qw(OME::DBObject);
 
 
 
-# createWithPassword
-# ------------------
+use fields qw(Factory Manager DBH ApacheSession SessionKey);
+__PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH ApacheSession SessionKey));
+__PACKAGE__->AccessorNames({
+    experimenter_id => 'experimenter',
+    dataset_id      => 'dataset',
+    project_id      => 'project',
+    analysis_id     => 'analysis',
+});
 
-sub createWithPassword {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my ($manager,$username,$password) = @_;
+__PACKAGE__->table('ome_sessions');
+__PACKAGE__->sequence('session_seq');
+__PACKAGE__->columns(Primary => qw(session_id));
+__PACKAGE__->columns(Essential => qw(experimenter_id dataset_id project_id last_access));
+__PACKAGE__->columns(Others => qw(host image_view feature_view display_settings analysis_id started));
+__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
+__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
+__PACKAGE__->hasa('OME::Project' => qw(project_id));
+__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 
-    my $self = $class->SUPER::new();
-
-    my $sth = $self->sql_find_user();
-    return undef unless $sth->execute($username);
-
-    my $results = $sth->fetch();
-    my ($experimenterID,$dbpass) = @$results;
-    
-    return undef unless defined $dbpass;
-    return undef if (crypt($password,$dbpass) ne $dbpass);
-
-    $self->{Manager} = $manager;
-    $self->{Username} = $username;
-    $self->{UserID} = $experimenterID;
-    $self->{User} = undef;
-    $self->{Factory} = OME::Factory->new($self);
-
-    return $self;
-}
 
 
 # Accessors
 # ---------
-
-# this is a stub. It needs to be hooked up to db
-# it should return the dataset id of this session
-sub Dataset {
-	return 1;
-}
-
-# this is a stub. It needs to be hooked up to db
-# it should return the project_id of this session
-sub Project {
-	return 1;
-}
-
-sub DBH { my $self = shift; return $self->db_Main(); }
-
-sub User {
-    my $self = shift;
-    my $value = $self->{User};
-    
-    if (!defined $value) {
-        $value = $self->Factory()->loadObject("OME::Experimenter",$self->UserID());
-        $self->{User} = $value;
-    }
-    
-    return $value;
-}
-
-# take this out. it's contents should be moved to OME::Session in the style of OME::Image
-#package OME::Session::OME_Sessions;
-
-#use strict;
-#our $VERSION = '1.0';
-
-#use OME::DBObject;
-#use base qw(OME::DBObject);
-
-#__PACKAGE__->AccessorNames({
-#    session_key => 'key',
-#    experimenter_id     => 'experimenter'
-#    });
-
-#__PACKAGE__->table('ome_sessions');
-#__PACKAGE__->columns(Primary => qw(session_id));
-#__PACKAGE__->columns(Essential => qw(session_key experimenter_id host project_id
-#				     dataset_id image_view feature_view analysis display_settings 
-#				     last_access started));
-
+sub DBH { my $self = shift; return $self->{Manager}->DBH(); }
+sub User { my $self = shift; return $self->experimenter(); }
 
 
 
