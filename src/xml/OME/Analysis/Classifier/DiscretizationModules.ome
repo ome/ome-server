@@ -101,7 +101,7 @@
 <AnalysisModule ModuleName = "Make Discretization Bands" 
     Category="Classifier"
 	ModuleType = "OME::Analysis::Handlers::MatlabHandler"
-	ProgramID = "some_matlab_function" 
+	ProgramID = "faux_discretization_bands" 
     ID="urn:lsid:openmicroscopy.org:Module:7201">
 	<Description>
 	A development stub. The name (and description) of this module should
@@ -136,16 +136,16 @@
 		</FunctionInputs>
 
 		<FunctionOutputs>
-		  <Output><Array DecodeWith = "Bands"/></Output>
+		  <Output><Struct DecodeWith = "Bands"/></Output>
 		</FunctionOutputs>
 		
-		<ArrayDecoder ID="Bands">
-			<StoreRowIndexAs  OutputLocation = "DiscretizationBand.DiscreteValue"/>
-			<Column Index="1" OutputLocation = "DiscretizationBand.LowerBound"/>
-			<Column Index="1" OutputLocation = "DiscretizationBand.UpperBound"/>
+		<StructDecoder ID="Bands">
+			<Field MatlabName="Value" OutputLocation = "DiscretizationBand.DiscreteValue"/>
+			<Field MatlabName="LowEnd"  OutputLocation = "DiscretizationBand.LowerBound"/>
+			<Field MatlabName="HighEnd"  OutputLocation = "DiscretizationBand.UpperBound"/>
 			<AlsoStoreReferenceToInput Input          = "SignatureVectorLegend" 
 			                           OutputLocation = "DiscretizationBand.Legend"/>
-		</ArrayDecoder>
+		</StructDecoder>
     </ExecutionInstructions>
 </AnalysisModule>
 
