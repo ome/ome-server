@@ -117,14 +117,23 @@ sub getPageBody {
 
 	# get objects
 	my @objects;
+	my $typeAttr;
 	if( $type =~ /^@/ ) {
-		@objects = $factory->findAttributes( substr($type,1), %searchParams );
+		my $stName = substr($type,1);
+		@objects = $factory->findAttributesLike( $stName, %searchParams );
+		$typeAttr = $factory->findObject( "OME::SemanticType", name => $stName);
 	} else {
 		@objects = $factory->findObjectsLike( $type, %searchParams );
 	}
 
 	my $type_name = _getTypeName($type);
 	my $table_name = $type_name."_TABLE";
+	my $table_label = ( $typeAttr ?
+		$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$typeAttr->id() },
+		       $type_name ) :
+		$type_name
+	);
+		
 
 	my $html;
 
@@ -147,7 +156,7 @@ sub getPageBody {
 		$q->startform({-name => $table_name}).
 		$q->table( { class => 'ome_table' },
 			# Table title
-			$q->caption( $type_name ),
+			$q->caption( $table_label ),
 			$q->Tr( [
 				# Table headers
 				$q->td( { class => 'ome_td' },
