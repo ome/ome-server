@@ -645,8 +645,8 @@ sub findModuleHandler {
         logcroak "Malformed class name $handler"
           unless $handler =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $handler";
-        my $module = $handler->new($location,$session,$module,$curr_node);
-        $node_modules{$curr_nodeID} = $module;
+        my $module_instance = $handler->new($location,$session,$module,$curr_node);
+        $node_modules{$curr_nodeID} = $module_instance;
 
         $node_states{$curr_nodeID} = INPUT_STATE;
     }
