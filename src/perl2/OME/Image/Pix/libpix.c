@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h> 
 #include <tiffio.h>
 
 #include "./libpix.h"
@@ -33,6 +35,12 @@ Pix *NewPix      (char* path,
 	pPix->dw = dw;
 	pPix->dt = dt;
 	pPix->bp = bp;
+	pPix->num_pixels = dx*dy*dz*dw*dt;
+
+	pPix->rep_file = NULL;
+	pPix->rep_write = 0;
+	pPix->num_write = 0;
+	
 	pPix->inFile.fp = NULL;
 	strcpy (pPix->inFile.path,"");
 
@@ -42,9 +50,10 @@ Pix *NewPix      (char* path,
 void FreePix  (Pix *pPix)
 {
 	convertFinish (pPix);
+	pixFinish (pPix);
+
 	free (pPix);
 }
-
 
 /*
 * This returns a file pointer to a file ready for update.
@@ -56,6 +65,12 @@ FILE *GetPixFileUpdate (Pix *pPix)
 {
 FILE *fp;
 size_t imgSize = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt * pPix->bp;
+
+	if (pPix->rep_file && pPix->rep_write)
+		return (pPix->rep_file);
+
+	if (pPix->rep_file)
+		pixFinish(pPix);
 
 	fp = fopen (pPix->path,"r+");
 	if (!fp) {
@@ -77,10 +92,37 @@ size_t imgSize = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt * pPix->bp
 			imgSize--;
 		}
 	}
-	
+
 	fseek (fp,0,SEEK_SET);
+	pPix->rep_file  = fp;
+	pPix->rep_write = 1;
 	return (fp);
 }
+
+
+FILE *GetPixFile (Pix *pPix)
+{
+FILE *fp;
+
+	if (pPix->rep_file && !pPix->rep_write)
+		return (pPix->rep_file);
+
+	if (pPix->rep_file && pPix->rep_write)
+		pixFinish (pPix);
+		
+		
+
+	fp = fopen (pPix->path,"r");
+	if (!fp) {
+		fprintf (stderr,"Pix->GetPixFile:  Could not open '%s' for reading.\n",pPix->path);
+		return (NULL);
+	}
+
+	pPix->rep_file  = fp;
+	pPix->rep_write = 0;
+	return (fp);
+}
+
 
 
 
@@ -103,11 +145,11 @@ size_t thePixOff;
 size_t sizeX;
 char *theBuf;
 
-	if (x0 > x1 || x1 > pPix->dx || x0 < 0 ||
-		y0 > y1 || y1 > pPix->dy || y0 < 0 ||
-		z0 > z1 || z1 > pPix->dz || z0 < 0 ||
-		w0 > w1 || w1 > pPix->dw || w0 < 0 ||
-		t0 > t1 || t1 > pPix->dt || t0 < 0 ) {
+	if (x0 > x1 || x1 > dx || x0 < 0 ||
+		y0 > y1 || y1 > dy || y0 < 0 ||
+		z0 > z1 || z1 > dz || z0 < 0 ||
+		w0 > w1 || w1 > dw || w0 < 0 ||
+		t0 > t1 || t1 > dt || t0 < 0 ) {
 		fprintf (stderr,"Pix->GetROI:  ROI misconfigured.\n");
 		return (NULL);
 	}
@@ -118,7 +160,7 @@ char *theBuf;
 		return (NULL);
 	}
 
-	fp = fopen (pPix->path,"r");
+	fp = GetPixFile (pPix);
 	if (!fp) {
 		fprintf (stderr,"Pix->GetROI:  Could not open '%s' for reading.\n",pPix->path);
 		free (theBuf);
@@ -135,7 +177,7 @@ char *theBuf;
 					if (fseek (fp, (((((t*dw) + w)*dz + z)*dy + y)*dx + x)*bp, SEEK_SET)) {
 						fprintf (stderr,"Pix->GetROI:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
 							x,y,z,w,t,pPix->path);
-						fclose (fp);
+						pixFinish (pPix);
 						free (theBuf);
 						return (NULL);
 					}
@@ -143,8 +185,8 @@ char *theBuf;
 					thePixOff += nIn*bp;
 					if (nIn < sizeX) {
 						fprintf (stderr,"Pix->GetROI:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to read %d pixels, got %d\n",
-							x,y,z,w,t,pPix->path,sizeX,nIn);
-						fclose (fp);
+							x,y,z,w,t,pPix->path,(int)sizeX,(int)nIn);
+						pixFinish (pPix);
 						free (theBuf);
 						return (NULL);
 					}
@@ -152,7 +194,6 @@ char *theBuf;
 			}
 		}
 	}
-	fclose (fp);
 
 	return (theBuf);
 }  
@@ -172,9 +213,9 @@ FILE *fp;
 size_t nIn;
 char *theBuf;
 
-	if (theZ >= pPix->dz || theZ < 0 ||
-		theW >= pPix->dw || theW < 0 ||
-		theT >= pPix->dt || theT < 0 ) {
+	if (theZ >= dz || theZ < 0 ||
+		theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->GetPlane:  Plane selection out of range.\n");
 		return (NULL);
 	}
@@ -186,7 +227,7 @@ char *theBuf;
 		return (NULL);
 	}
 
-	fp = fopen (pPix->path,"r");
+	fp = GetPixFile (pPix);
 	if (!fp) {
 		fprintf (stderr,"Pix->GetPlane:  Could not open '%s' for reading.\n",pPix->path);
 		free (theBuf);
@@ -196,7 +237,7 @@ char *theBuf;
 	if (fseek (fp, (((theT*dw) + theW)*dz + theZ)*dy*dx*bp, SEEK_SET)) {
 		fprintf (stderr,"Pix->GetPlane:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
 			0,0,theZ,theW,theT,pPix->path);
-		fclose (fp);
+		pixFinish (pPix);
 		free (theBuf);
 		return (NULL);
 	}
@@ -204,13 +245,12 @@ char *theBuf;
 	nIn = fread (theBuf,bp,nPix,fp);
 	if (nIn < nPix) {
 		fprintf (stderr,"Pix->GetPlane:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to read %d pixels, got %d\n",
-			0,0,theZ,theW,theT,pPix->path,nPix,nIn);
-		fclose (fp);
+			0,0,theZ,theW,theT,pPix->path,(int)nPix,(int)nIn);
+		pixFinish (pPix);
 		free (theBuf);
 		return (NULL);
 	}
 
-	fclose (fp);
 	return (theBuf);
 }  
 
@@ -289,14 +329,12 @@ int thePix;
 
 size_t Buff2Tiff (char *buf, char *path, size_t dx, size_t dy, size_t bpp)
 {
-size_t nPix;
 TIFF* tiff;
 uint32 row,nrow;
 uint32 rowsperstrip = (uint32)-1;
 tsize_t scanline;
 tstrip_t strip;
 int err;
-char TiffVers[255];
 
 	tiff = TIFFOpen(path,"w");
 	if (!tiff ) {
@@ -334,7 +372,8 @@ char TiffVers[255];
 		strip = TIFFComputeStrip(tiff, row, 0);
 		err = TIFFWriteEncodedStrip(tiff, strip, buf, nrow*scanline);
 		if (err < 0) {
-			fprintf (stderr,"Pix->Buff2Tiff:  Error writing tiff file libtiff error: %d strip: %d scanline: %d rowsperstrip: %d (device full?)\n",err,strip,scanline,rowsperstrip);
+			fprintf (stderr,"Pix->Buff2Tiff:  Error writing tiff file libtiff error: %d strip: %d scanline: %d rowsperstrip: %d (device full?)\n",
+				err,(int)strip,(int)scanline,(int)rowsperstrip);
 			TIFFClose (tiff);
 			unlink (path);
 			return (NULL);
@@ -367,8 +406,8 @@ FILE *fp;
 size_t nIn;
 char *theBuf;
 
-	if (theW >= pPix->dw || theW < 0 ||
-		theT >= pPix->dt || theT < 0 ) {
+	if (theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->GetStack:  Stack selection out of range.\n");
 		return (NULL);
 	}
@@ -380,7 +419,7 @@ char *theBuf;
 		return (NULL);
 	}
 
-	fp = fopen (pPix->path,"r");
+	fp = GetPixFile (pPix);
 	if (!fp) {
 		fprintf (stderr,"Pix->GetStack:  Could not open '%s' for reading.\n",pPix->path);
 		free (theBuf);
@@ -390,20 +429,19 @@ char *theBuf;
 	if (fseek (fp, ((theT*dw) + theW)*dz*dy*dx*bp, SEEK_SET)) {
 		fprintf (stderr,"Pix->GetStack:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
 			0,0,0,theW,theT,pPix->path);
-		fclose (fp);
+		pixFinish (pPix);
 		free (theBuf);
 		return (NULL);
 	}
 	nIn = fread (theBuf,bp,nPix,fp);
 	if (nIn < nPix) {
 		fprintf (stderr,"Pix->GetStack:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to read %d pixels, got %d\n",
-			0,0,0,theW,theT,pPix->path,nPix,nIn);
-		fclose (fp);
+			0,0,0,theW,theT,pPix->path,(int)nPix,(int)nIn);
+		pixFinish (pPix);
 		free (theBuf);
 		return (NULL);
 	}
 
-	fclose (fp);
 	return (theBuf);
 }  
 
@@ -412,8 +450,6 @@ char *GetPixels (Pix *pPix)
 {
 size_t size;
 char *theBuf;
-unsigned char *theBuf8;
-unsigned short *theBuf16;
 int bp = pPix->bp;
 FILE *fp;
 size_t nIn;
@@ -425,7 +461,7 @@ size_t nIn;
 		return (NULL);
 	}
 
-	fp = fopen (pPix->path,"r");
+	fp = GetPixFile (pPix);
 	if (!fp) {
 		fprintf (stderr,"Pix->GetPixels:  Could not open '%s' for reading.\n",pPix->path);
 		free (theBuf);
@@ -433,18 +469,50 @@ size_t nIn;
 	}
 
 	nIn = fread (theBuf,bp,size,fp);
-	fclose (fp);
+	pixFinish (pPix);
 
 	if (nIn == size)
 		return (theBuf);
 	else {
-		fprintf (stderr,"Pix->GetPixels:  Premature end of file - expecting %d pixels, got %d.\n",size,nIn);
-		fclose (fp);
+		fprintf (stderr,"Pix->GetPixels:  Premature end of file - expecting %d pixels, got %d.\n",(int)size,(int)nIn);
+		pixFinish (pPix);
 		free (theBuf);
 		return (NULL);
 	}
 }
 
+size_t WriteRepFile (Pix *pPix, char *thePix, size_t offset, size_t nPix)
+{
+FILE *fp;
+size_t nOut;
+
+	fp = GetPixFileUpdate (pPix);
+	if (!fp) {
+		fprintf (stderr,"Pix->WriteRepFile:  Could not open '%s' for writing.\n",pPix->path);
+		return (NULL);
+	}
+
+	if (fseek (fp, offset, SEEK_SET)) {
+		fprintf (stderr,"Pix->WriteRepFile:  Could not seek to %d in file %s.\n",
+			(int)offset, pPix->path);
+		pixFinish (pPix);
+		return (NULL);
+	}
+
+	nOut = fwrite (thePix,pPix->bp,nPix,fp);
+	if (nOut < nPix) {
+		fprintf (stderr,"Pix->WriteRepFile:  Error at %d in file %s.  Tried to write %d pixels, actually wrote %d\n",
+			(int)offset,pPix->path,(int)nPix,(int)nOut);
+		pixFinish (pPix);
+	}
+
+	pPix->num_write += nOut;
+	if (pPix->num_write >= pPix->num_pixels)
+		pixFinish (pPix);
+
+	return (nOut);
+
+}
 
 
 size_t SetRow (Pix *pPix, char *thePix, int theY, int theZ, int theW, int theT)
@@ -456,7 +524,6 @@ int dz = pPix->dz;
 int dw = pPix->dw;
 int dt = pPix->dt;
 int bp = pPix->bp;
-FILE *fp;
 size_t nOut;
 
 	if (theY >= dy || theY < 0 ||
@@ -469,28 +536,14 @@ size_t nOut;
 
 	nPix = dx;
 
-	fp = GetPixFileUpdate (pPix);
-	if (!fp) {
-		fprintf (stderr,"Pix->SetRow:  Could not open '%s' for writing.\n",pPix->path);
-		return (NULL);
-	}
-
-	if (fseek (fp, ((((theT*dw) + theW)*dz + theZ)*dy + theY)*dx*bp, SEEK_SET)) {
-		fprintf (stderr,"Pix->SetRow:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
-			0,theY,theZ,theW,theT,pPix->path);
-		fclose (fp);
-		return (NULL);
-	}
-
-	nOut = fwrite (thePix,bp,nPix,fp);
+	nOut = WriteRepFile (pPix, thePix, ((((theT*dw) + theW)*dz + theZ)*dy + theY)*dx*bp, nPix);
 	if (nOut < nPix) {
 		fprintf (stderr,"Pix->SetRow:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
-			0,theY,theZ,theW,theT,pPix->path,nPix,nOut);
-		fclose (fp);
+			0,theY,theZ,theW,theT,pPix->path,(int)nPix,(int)nOut);
+		pixFinish (pPix);
 		return (nOut);
 	}
 
-	fclose (fp);
 	return (nOut);
 }  
 
@@ -505,7 +558,6 @@ int dz = pPix->dz;
 int dw = pPix->dw;
 int dt = pPix->dt;
 int bp = pPix->bp;
-FILE *fp;
 size_t nOut;
 
 	if (nRows + theY >  dy || nRows < 0 ||
@@ -519,28 +571,14 @@ size_t nOut;
 
 	nPix = dx*nRows;
 
-	fp = GetPixFileUpdate (pPix);
-	if (!fp) {
-		fprintf (stderr,"Pix->SetRows:  Could not open '%s' for writing.\n",pPix->path);
-		return (NULL);
-	}
-
-	if (fseek (fp, ((((theT*dw) + theW)*dz + theZ)*dy + theY)*dx*bp, SEEK_SET)) {
-		fprintf (stderr,"Pix->SetRows:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
-			0,theY,theZ,theW,theT,pPix->path);
-		fclose (fp);
-		return (NULL);
-	}
-
-	nOut = fwrite (thePix,bp,nPix,fp);
+	nOut = WriteRepFile (pPix, thePix, ((((theT*dw) + theW)*dz + theZ)*dy + theY)*dx*bp, nPix);
 	if (nOut < nPix) {
 		fprintf (stderr,"Pix->SetRows:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
-			0,theY,theZ,theW,theT,pPix->path,nPix,nOut);
-		fclose (fp);
+			0,theY,theZ,theW,theT,pPix->path,(int)nPix,(int)nOut);
+		pixFinish (pPix);
 		return (nOut);
 	}
 
-	fclose (fp);
 	return (nOut);
 }  
 
@@ -555,7 +593,6 @@ int dz = pPix->dz;
 int dw = pPix->dw;
 int dt = pPix->dt;
 int bp = pPix->bp;
-FILE *fp;
 size_t nOut;
 
 	if (theZ >= dz || theZ < 0 ||
@@ -567,28 +604,14 @@ size_t nOut;
 
 	nPix = dx * dy;
 
-	fp = GetPixFileUpdate (pPix);
-	if (!fp) {
-		fprintf (stderr,"Pix->SetPlane:  Could not open '%s' for writing.\n",pPix->path);
-		return (NULL);
-	}
-
-	if (fseek (fp, (((theT*dw) + theW)*dz + theZ)*dy*dx*bp, SEEK_SET)) {
-		fprintf (stderr,"Pix->SetPlane:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
-			0,0,theZ,theW,theT,pPix->path);
-		fclose (fp);
-		return (NULL);
-	}
-
-	nOut = fwrite (thePix,bp,nPix,fp);
+	nOut = WriteRepFile (pPix, thePix, (((theT*dw) + theW)*dz + theZ)*dy*dx*bp, nPix);
 	if (nOut < nPix) {
 		fprintf (stderr,"Pix->SetPlane:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
-			0,0,theZ,theW,theT,pPix->path,nPix,nOut);
-		fclose (fp);
+			0,0,theZ,theW,theT,pPix->path,(int)nPix,(int)nOut);
+		pixFinish (pPix);
 		return (nOut);
 	}
 
-	fclose (fp);
 	return (nOut);
 }  
 
@@ -603,7 +626,6 @@ int dz = pPix->dz;
 int dw = pPix->dw;
 int dt = pPix->dt;
 int bp = pPix->bp;
-FILE *fp;
 size_t nOut;
 
 	if (theW >= dw || theW < 0 ||
@@ -614,28 +636,14 @@ size_t nOut;
 
 	nPix = dx * dy * dz;
 
-	fp = GetPixFileUpdate (pPix);
-	if (!fp) {
-		fprintf (stderr,"Pix->SetStack:  Could not open '%s' for writing.\n",pPix->path);
-		return (NULL);
-	}
-
-	if (fseek (fp, ((theT*dw) + theW)*dz*dy*dx*bp, SEEK_SET)) {
-		fprintf (stderr,"Pix->SetStack:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
-			0,0,0,theW,theT,pPix->path);
-		fclose (fp);
-		return (NULL);
-	}
-
-	nOut = fwrite (thePix,bp,nPix,fp);
+	nOut = WriteRepFile (pPix, thePix, ((theT*dw) + theW)*dz*dy*dx*bp, nPix);
 	if (nOut < nPix) {
 		fprintf (stderr,"Pix->SetStack:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
-			0,0,0,theW,theT,pPix->path,nPix,nOut);
-		fclose (fp);
+			0,0,0,theW,theT,pPix->path,(int)nPix,(int)nOut);
+		pixFinish (pPix);
 		return (nOut);
 	}
 
-	fclose (fp);
 	return (nOut);
 }  
 
@@ -654,26 +662,19 @@ int dw = pPix->dw;
 int dt = pPix->dt;
 int bp = pPix->bp;
 int x,y,z,w,t;
-FILE *fp;
 size_t nOut;
 size_t thePixOff;
 size_t sizeX;
 
-	if (x0 > x1 || x1 > pPix->dx || x0 < 0 ||
-		y0 > y1 || y1 > pPix->dy || y0 < 0 ||
-		z0 > z1 || z1 > pPix->dz || z0 < 0 ||
-		w0 > w1 || w1 > pPix->dw || w0 < 0 ||
-		t0 > t1 || t1 > pPix->dt || t0 < 0 ) {
+	if (x0 > x1 || x1 > dx || x0 < 0 ||
+		y0 > y1 || y1 > dy || y0 < 0 ||
+		z0 > z1 || z1 > dz || z0 < 0 ||
+		w0 > w1 || w1 > dw || w0 < 0 ||
+		t0 > t1 || t1 > dt || t0 < 0 ) {
 		fprintf (stderr,"Pix->SetROI:  ROI misconfigured.\n");
 		return (NULL);
 	}
 	nPix = (x1-x0) * (y1-y0) * (z1-z0) * (w1-w0) * (t1-t0);
-
-	fp = GetPixFileUpdate (pPix);
-	if (!fp) {
-		fprintf (stderr,"Pix->SetROI:  Could not open '%s' for writing.\n",pPix->path);
-		return (NULL);
-	}
 
 	thePixOff = 0;
 	sizeX = x1-x0;
@@ -682,25 +683,19 @@ size_t sizeX;
 		for (w=w0;w < w1; w++) {
 			for (z=z0;z < z1; z++) {
 				for (y=y0;y < y1; y++) {
-					if (fseek (fp, (((((t*dw) + w)*dz + z)*dy + y)*dx + x)*bp, SEEK_SET)) {
-						fprintf (stderr,"Pix->SetROI:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
-							x,y,z,w,t,pPix->path);
-						fclose (fp);
-						return (thePixOff/bp);
-					}
-					nOut = fwrite (thePix+thePixOff,bp,sizeX,fp);
+					nOut = WriteRepFile (pPix, thePix+thePixOff, (((((t*dw) + w)*dz + z)*dy + y)*dx + x)*bp, sizeX);
 					thePixOff += nOut*bp;
 					if (nOut < sizeX) {
 						fprintf (stderr,"Pix->SetROI:  Error at (%d,%d,%d,%d,%d).  Tried to write %d pixels, wrote %d\n",
-							x,y,z,w,t,sizeX,nOut);
-						fclose (fp);
+							x,y,z,w,t,(int)sizeX,(int)nOut);
+						pixFinish (pPix);
 						return (thePixOff/bp);
 					}
 				}
 			}
 		}
 	}
-	fclose (fp);
+
 	return (thePixOff/bp);
 }  
 
@@ -708,18 +703,12 @@ size_t sizeX;
 
 size_t SetPixels (Pix *pPix, char *thePix)
 {
-size_t nPix = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt;
-FILE *fp;
 size_t nOut;
 
-	fp = fopen (pPix->path,"w");
-	if (!fp) {
-		fprintf (stderr,"Pix->SetPixels:  Could not open '%s' for writing.\n",pPix->path);
-		return (NULL);
-	}
 
-	nOut = fwrite (thePix,pPix->bp,nPix,fp);
-	fclose (fp);
+	nOut = WriteRepFile (pPix, thePix, 0, pPix->num_pixels);
+
+	pixFinish (pPix);
 	return (nOut);
 }
 
@@ -825,7 +814,7 @@ int bp = pPix->bp;
 	}
 
 	if (fseek (fp, offset, SEEK_SET ) ) {
-		fprintf (stderr,"Pix->convertRow:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		fprintf (stderr,"Pix->convertRow:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
 		return (NULL);
 	}
 
@@ -874,7 +863,7 @@ int bp = pPix->inFile.bp;
 	}
 	
 	if (fseek (fp, offset, SEEK_SET ) ) {
-		fprintf (stderr,"Pix->convertRows:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		fprintf (stderr,"Pix->convertRows:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
 		return (NULL);
 	}
 
@@ -922,7 +911,7 @@ int bp = pPix->inFile.bp;
 	}
 	
 	if (fseek (fp, offset, SEEK_SET ) ) {
-		fprintf (stderr,"Pix->convertPlane:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		fprintf (stderr,"Pix->convertPlane:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
 		return (NULL);
 	}
 
@@ -971,7 +960,7 @@ int bp = pPix->inFile.bp;
 	}
 	
 	if (fseek (fp, offset, SEEK_SET ) ) {
-		fprintf (stderr,"Pix->convertStack:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		fprintf (stderr,"Pix->convertStack:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
 		return (NULL);
 	}
 
@@ -1018,5 +1007,17 @@ void convertFinish (Pix *pPix)
 	}
 	
 	strcpy (pPix->inFile.path,"");
+	pixFinish(pPix);
+}
+
+
+
+void pixFinish (Pix *pPix)
+{
+	if (pPix->rep_file) {
+		fclose (pPix->rep_file);
+		pPix->rep_file = NULL;
+		pPix->rep_write = 0;
+	}
 }
 

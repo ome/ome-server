@@ -255,3 +255,7 @@ convertStack (pPix,offset,theW,theT)
 void
 convertFinish (pPix)
 	OME::Image::Pix pPix
+
+void
+pixFinish (pPix)
+	OME::Image::Pix pPix
