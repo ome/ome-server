@@ -93,12 +93,16 @@ Widget.prototype.addEventListeners = function() {
 *
 *****/
 Widget.prototype.setLabel = function(x, y, content) {
-	this.nodes.label = svgDocument.createElementNS( "http://www.w3.org/2000/svg", "text" );
-	this.nodes.label.setAttributeNS( null, "x", x+this.x );
-	this.nodes.label.setAttributeNS( null, "y", y+this.y );
-	this.nodes.label.appendChild( svgDocument.createTextNode(content) );
-    if( this.nodes.parent )
-    	this.nodes.parent.appendChild( this.nodes.label );
+	if(!this.nodes.label) {
+		this.nodes.label = svgDocument.createElementNS( "http://www.w3.org/2000/svg", "text" );
+		this.nodes.label.appendChild( svgDocument.createTextNode(content) );
+    	if( this.nodes.parent )
+    		this.nodes.parent.appendChild( this.nodes.label );
+    }
+    else
+    	this.nodes.label.firstChild.data = content;
+	if(x!=null) this.nodes.label.setAttribute( "x", x+this.x );
+	if(y!=null) this.nodes.label.setAttribute( "y", y+this.y );
 }
 
 /*****
