@@ -79,13 +79,20 @@ __PACKAGE__->_allFieldNames( [
 	'new_feature_tag',
 ] ) ;
 
+=head2 getObjectLabel
+
+returns module name & formatted timestamp
+
+=cut
+
 sub getObjectLabel {
-	my ($proto,$obj,$format) = @_;
+	my ($proto,$obj) = @_;
 
 	if( $obj->module() ) {
 		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)\..*$/
 			or die "Could not parse timestamp ".$obj->timestamp();
 		my ( $yr, $mo, $dy, $hr, $min, $sec ) = ($1, $2, $3, $4, $5, $6);
+		( $mo, $dy, $hr ) = map( int( $_ ), ( $mo, $dy, $hr ) );
 		my %month_abbr = (
 			1  => 'Jan',
 			2  => 'Feb',
@@ -100,11 +107,46 @@ sub getObjectLabel {
 			11 => 'Nov',
 			12 => 'Dec'
 		);
-		return $obj->module()->name()." ($yr ".$month_abbr{ int($mo) }." ".int($dy).")";
+		return $obj->module()->name()." ($yr ".$month_abbr{ $mo }." $dy $hr:$min:$sec)";
 	}
 
 	return $obj->id();
 }
+
+#=head2 renderSingle
+#
+#Module links to MEX
+#
+#=cut
+#
+#sub renderSingle {
+#	my ($proto,$obj,$format,$fieldnames) = @_;
+#	
+#	my $factory = $obj->Session()->Factory();
+#	my $q       = new CGI;
+#	my @filtered_field_names = grep( !m/^module$/, @$fieldnames);
+#	my $record  = $proto->SUPER::renderSingle($obj,$format,\@filtered_field_names);
+#
+#	# override module field to link to MEX detail
+#	if( scalar( @filtered_field_names ) ne scalar( @$fieldnames ) and $obj->module()) {
+#		my $module_name = $obj->module()->name();
+#		my $detail_url = "serve.pl?Page=OME::Web::DBObjDetail&Type=OME::ModuleExecution&ID=".$obj->id();
+#		$record->{ 'module' } = $q->a( 
+#			{ 
+#				href  => $detail_url,
+#				title => "More information about this Module Execution",
+#				class => 'ome_detail'
+#			},
+#			$module_name
+#		) if( $format eq 'html' );
+#		$record->{ 'module' } = $module_name
+#			if( $format eq 'txt' );
+#	}
+#	
+#	return %$record if wantarray;
+#	return $record;
+#}
+
 =head1 Author
 
 Josiah Johnston <siah@nih.gov>
