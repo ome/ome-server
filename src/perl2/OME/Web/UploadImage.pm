@@ -101,7 +101,8 @@ sub getPageBody {
 # spooling (see below)."
 
 #			OME::Tasks::ImageTasks::forkedImportFiles($dataset, [ $path_to_file ] );
-			return( 'HTML', "Sorry, we have not implemented import for this page yet.");
+#			return( 'REDIRECT', 'serve.pl?Page=OME::Web::TaskProgress');
+			return( 'HTML', "<h1><blink>No import for you!</blink></h1>");
 		}
 	}
 
