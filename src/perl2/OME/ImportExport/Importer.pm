@@ -94,6 +94,7 @@ sub import_image {
     my $self = shift;
     my $dsr = shift;    # reference to Dataset object;
     my $image_group_ref = shift;
+    my $switch = shift; # optional switch passed at end of args
 
     $self->{dataset} =$dsr;
     $image_file = $$image_group_ref[0];
@@ -106,6 +107,19 @@ sub import_image {
     $import_reader->check_type;
 
     $self->{did_import} = 0;
+
+    if ($switch !~ /^--dupl/) {
+	my $sha1 = getSha1($image_file);
+	my $session = $self->{session};
+	my $factory = $session->Factory();
+	my $view = $factory->findObject("OME::Image::ImageFilesXYZWT",
+					file_sha1 => $sha1);
+	if (defined $view) {
+	    carp "\nThe source image $image_file has already been imported into OME.";
+	    return "";
+	}
+    }
+
     if ($import_reader->image_type eq "Unknown") {
 	carp "File $image_file has an unknown type";
     }
@@ -414,7 +428,7 @@ sub store_image_pixels {
     my $status = "";
     my $handle = IO::File->new();
     my $image;
-    my ($cmd, $sh, $sha1);
+    my $sha1;
 
     print STDERR "output to $realpath\n";
     my $image_out = ">".$realpath;
@@ -441,11 +455,7 @@ sub store_image_pixels {
     }
     close $handle;
 
-    $cmd = 'openssl sha1 '. $realpath .' |';
-    open (STDOUT_PIPE,$cmd) || die("can't open $cmd\n");
-    chomp ($sh = <STDOUT_PIPE>);
-    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
-    $sha1 = $1;
+    $sha1 = getSha1($realpath);
 
     $image = $self->{'image'};
     $image->file_sha1($sha1);
@@ -606,17 +616,11 @@ sub store_image_files_xyzwt {
     my ($z, $w, $t);
 
     foreach $file (@$image_group_ref) {
-	my $sh;
 	my $sha1;
 	my $endian;
 	my @col;
 
-	my $cmd = 'openssl sha1 '. $file .' |';
-	open (STDOUT_PIPE,$cmd);
-	chomp ($sh = <STDOUT_PIPE>);
-	$sh =~ m/^.+= +([a-fA-F0-9]*)$/;
-	$sha1 = $1;
-	close (STDOUT_PIPE);
+	$sha1 = getSha1($file);
 	
 	$endian = $href->{'Image_files_xyzwt.Endian'};
 	$endian = ($endian eq "big") ? 't' : 'f' ;
@@ -671,6 +675,21 @@ sub map_image_to_dataset {
     return $status;
 }
 
+
+sub getSha1 {
+    my $file = shift;
+    my $cmd = 'openssl sha1 '. $file .' |';
+    my $sh;
+    my $sha1;
+
+    open (STDOUT_PIPE,$cmd);
+    chomp ($sh = <STDOUT_PIPE>);
+    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
+    $sha1 = $1;
+    close (STDOUT_PIPE);
+
+    return $sha1;
+}
 
 
 
