@@ -283,7 +283,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	FILE *inFile;
 	unsigned char *bin, *enc;
 	size_t file_read_len;
-
+	
 	/* mark that the last open element has content, namely this element */
 	if( state->elementInfo != NULL ) {
 		state->elementInfo->hasContent = 1;
@@ -364,6 +364,11 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
 		else if ( strcmp(compression, "zlib") == 0 )
 			strm = b64z_new_stream( NULL, 0,  NULL, 0, zlib );
+		else {
+			strm = NULL; /* keep the compiler from spitting warning msg. */
+			fprintf( stderr, "'%s' is not a supported compression library", compression);
+			exit(-1);
+		}
 
 		/**********************************************************************
 		*
@@ -505,6 +510,10 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 						state->pixelInfo->T,
 						state->pixelInfo->Z
 					);
+				} else {
+					indexesRC = 0; /* keep the compiler from spitting warning msg. */
+					fprintf( stderr, "Invalid dimOrder '%s'\n", state->pixelInfo->dimOrder );
+					exit(-1);
 				}
 			
 			} while( !indexesRC );
