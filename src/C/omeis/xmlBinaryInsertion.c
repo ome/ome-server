@@ -123,12 +123,10 @@ void _print_element(const xmlChar *name, const xmlChar **attrs);
 
 
 int xmlInsertBinaryData(const char *filename, char bigEndian) {
-    ParserState state;
-    state.bigEndian = bigEndian;
-    
+    ParserState state;    
     /* The source of xmlSAXHandler and all the function prefixes I'm using are
-    / in <libxml/parser.h> Use `xml2-config --cflags` to find the location of
-    / that file.
+      in <libxml/parser.h> Use `xml2-config --cflags` to find the location of
+      that file.
     */
 	xmlSAXHandler extractBinDataSAXParser = {
 		0, /* internalSubset */
@@ -156,6 +154,8 @@ int xmlInsertBinaryData(const char *filename, char bigEndian) {
 		(errorSAXFunc)BinDataError, /* error */
 		(fatalErrorSAXFunc)BinDataFatalError, /* fatalError */
 	};
+
+    state.bigEndian = bigEndian;
 
 	return xmlSAXUserParseFile(&extractBinDataSAXParser, &state, filename);
 }
