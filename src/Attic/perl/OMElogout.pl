@@ -41,14 +41,14 @@ if (defined $sessionKey and $sessionKey) {
 print STDERR "OMElogout:  attempting to delete sessionKey $sessionKey.\n";
 	eval {
 		tie %session, 'Apache::Session::File', $sessionKey, {
-			Directory => '/var/tmp/OME/sessions'
+			Directory => '/var/tmp/OME/sessions',
+			LockDirectory   => '/var/tmp/OME/lock'
 		};
-		tied(%session)->delete;
+		tied(%session)->delete unless ($@);
+		untie %session;
 	}
 }
 
 print STDERR "OMElogout:  ***************  DONE ***************\n";
 undef $cgi;
 undef $sessionKey;
-undef %session;
-

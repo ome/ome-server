@@ -99,6 +99,12 @@ install:
 	install -c findSpotsOME ../bin/findSpots/findSpots
 	install -d ../bin/BinarizeGlobal
 	install -c BinarizeGlobal ../bin/BinarizeGlobal/BinarizeGlobal
+	install -c DumpTIFFheader ../bin/DumpTIFFheader
+	install -c DumpTIFFstats ../bin/DumpTIFFstats
+	install -c SoftWorxSlice ../bin/SoftWorxSlice
+	install -c DumpSoftWorxHeader ../bin/DumpSoftWorxHeader
+	install -c DumpSoftWorxExHeader ../bin/DumpSoftWorxExHeader
+	install -c DumpSoftWorxStats ../bin/DumpSoftWorxStats
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
 	$(MAKE) -C cgrayce install

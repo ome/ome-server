@@ -148,8 +148,9 @@ my $tempFileNameErr = $OME->GetTempName ('CCCP','err') or die "Couldn't get a na
 		$tiff1 = $datasetArray->[1]->Path.$datasetArray->[1]->Name;
 		$tiff2 = '';
 		if (defined $binWave) {
+		# Get the latest binary image for this dataset
 			($binName,$binPath) = $OME->DBIhandle->selectrow_array (
-				'SELECT name,path FROM binary_image WHERE dataset_id_in = '.$datasetArray->[$binWave]->ID);
+				'SELECT name,path FROM binary_image WHERE dataset_id_in = '.$datasetArray->[$binWave]->ID.'ORDER BY analysis_id DESC LIMIT 1');
 			$tiff2 = $binPath.$binName;
 		}
 	

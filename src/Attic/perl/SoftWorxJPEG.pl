@@ -355,24 +355,35 @@ $datasetJS
 	push (@tableRows,$row);
 
 	my $JS = '';
+#	my $table;
 	DrawControls ('Grey',\@tableRows,\$JS);
 	$col=qq /<hr align="center" noshade size="3">/;
 	$row = $cgi->td({nowrap=>undef,height=>'3'},$col);
 	push (@tableRows,$row);
+#	$table = $cgi->Tr(\@tableRows);
+#	@tableRows = ();
 
 	DrawControls ('Red',\@tableRows,\$JS);
+#	$table .= $cgi->Tr({bgcolor=>"#FF6666"},\@tableRows);
 	$col=qq /<hr align="center" noshade size="3">/;
 	$row = $cgi->td({nowrap=>undef,height=>'3'},$col);
 	push (@tableRows,$row);
+#	$table .= $cgi->Tr($row);
+#	@tableRows = ();
 
 	DrawControls ('Green',\@tableRows,\$JS);
+#	$table .= $cgi->Tr({bgcolor=>"#00FF66"},\@tableRows);
 	$col=qq /<hr align="center" noshade size="3">/;
 	$row = $cgi->td({nowrap=>undef,height=>'3'},$col);
 	push (@tableRows,$row);
+#	$table .= $cgi->Tr($row);
+#	@tableRows = ();
 
 	DrawControls ('Blue',\@tableRows,\$JS);
+#	$table .= $cgi->Tr({bgcolor=>"#0066FF"},\@tableRows);
 
 	print $cgi->table({-border=>0,-cellspacing=>0,-cellpadding=>0,-align=>'left'},
+#		$table
 		$cgi->Tr(\@tableRows)
 		);
 

@@ -89,7 +89,7 @@ my $DefaultDBI        =   "dbi:Pg:";
 
 my $tempDirectory     =   '/var/tmp/OME/';
 my $datasetDirectory  =   '/OME/Datasets/';
-my $binPath           =   '/OME/dev/';
+my $binPath           =   '/OME/bin/';
 
 my $DefaultDatasetView = "SELECT name FROM datasets WHERE";
 my $DefaultFeatureView = "location.attribute_of location.x location.y location.z";
@@ -113,6 +113,15 @@ my %SQLtypes_Postgres = (
 
 my $DATASETSDISPLAYLIMIT = 250;
 my $SQLLISTLIMIT = 1000;
+
+
+
+$SIG{'USR2'} = sub { 
+#	die "Analysis aborted";
+	exit (1);
+};
+
+
 
 # new ()
 #	If this is a local call (no web browser or other user agent), get connection info from the user's ~/.OMErc
@@ -232,7 +241,8 @@ sub initialize ()
 	# Calling VerifySession with an invalid or undefined session is fatal.  We don't want to give up yet if we're in a browser.
 		if (defined $self->{sessionKey} and $self->{sessionKey}) {
 			eval {$self->VerifySession ();};
-			$self->{errorMessage} = $@;
+			undef $self->{sessionKey} if $@;
+#			$self->{errorMessage} = $@;
 			print STDERR "initialize:  Session verified.\n";
 		}
 
@@ -285,20 +295,10 @@ sub initialize ()
 sub VerifySession {
 my $self = shift;
 my $sessionKey = $self->{sessionKey};
-my %session;
-
 	die "Need a valid session ID for access." unless defined $sessionKey and $sessionKey;
-#	print STDERR "VerifySession:  Retreiving sessionKey=",$sessionKey," from Apache::Session::File\n";
-	eval {tie %session, 'Apache::Session::File', $sessionKey, {
-			Directory => $tempDirectory.'sessions',
-			LockDirectory   => $tempDirectory.'lock'
-		};
-	};
-	if ($@) {
-		$self->{sessionKey} = undef;
-		$self->{dbHandle} = undef;
-		die "Could not retreive session: $@";
-	}
+my $session = $self->Session();
+
+	print STDERR "VerifySession:  Retreiving sessionKey=",$sessionKey," from Apache::Session::File\n";
 # FIXME:  This is kind of messy:
 #	if ( ($self->inWebServer() and ($session{remoteAddr} ne $ENV{REMOTE_ADDR} ) ) or
 #		(not $self->inWebServer() and ($session{remoteAddr} ne "127.0.0.1" )) ){
@@ -307,16 +307,14 @@ my %session;
 #			die "Could not validate session:  Session registered for a different client."
 #	}
 	
-	$self->{dataSource} = $session{dataSource};
-	$self->{remoteAddr} = $session{remoteAddr};
-	$self->{user} = $session{user};
-	$self->{password} = $session{password};
-	$self->{sessionID} = $session{sessionID};
-	$self->{sessionKey} = $session{_session_id};
+	$self->{dataSource} = $session->{dataSource};
+	$self->{remoteAddr} = $session->{remoteAddr};
+	$self->{user} = $session->{user};
+	$self->{password} = $session->{password};
+	$self->{sessionID} = $session->{sessionID};
+	$self->{sessionKey} = $session->{_session_id};
 #	print STDERR "VerifySession:  Retreived sessionKey=",$sessionKey,"  User =",$self->{user}," Session ID=",$self->{sessionID},"\n";
 #	print STDERR "VerifySession:  Calling Connect\n";
-	untie %session;
-	undef %session;
 	$self->{sessionKey} = $self->Connect();
 #	print STDERR "VerifySession:  Finished\n";
 	return $self->{sessionKey};
@@ -331,7 +329,7 @@ my %session;
 # Some decision has to be made to decide where a certificate should be checked - in Connect or Login.
 sub Connect {
 	my $self = shift;
-	my %session;
+	my $session;
 	my $id;
 	my $dbHandle = $self->{dbHandle};
 
@@ -348,35 +346,26 @@ sub Connect {
 		{ RaiseError => 1, AutoCommit => 1, InactiveDestroy => 1})
                    || die "Could not connect to the database: ".$DBI::errstr;
 	}
-#	DBI->trace(2);
-#	print STDERR "Connect:  Re-tying session\n";
-	tie %session, 'Apache::Session::File', $self->{sessionKey}, {
-			Directory => $tempDirectory.'sessions',
-			LockDirectory   => $tempDirectory.'lock'
-		};
-
-	die "Could not get a session ID." unless defined $session{_session_id};
-#	print STDERR "Connect:  Re-tied session\n";
-
+	$self->{dbHandle} = $dbHandle;
 	if ($self->gotBrowser()) { $self->{remoteAddr} = $self->{cgi}->remote_host(); }
 	elsif ($self->inWebServer() and not $self->gotBrowser()) { $self->{remoteAddr} = $ENV{REMOTE_ADDR}; }
 	else { $self->{remoteAddr} = '127.0.0.1'; }
 
-	$self->{sessionKey} = $session{_session_id};
-	$self->{dbHandle} = $dbHandle;
+#	DBI->trace(2);
+	if (not exists $self->{sessionKey} or not defined $self->{sessionKey}) {
+	print STDERR "Connect:  Getting new session\n";
+		$session = $self->Session();
+		$self->{sessionKey} = $session->{_session_id};
+		$session->{user} = $self->{user};
+		$session->{password} = $self->{password};
+		$session->{dataSource} = $self->{dataSource};
+		$session->{remoteAddr} = $self->{remoteAddr};
+		$session->{sessionID} = $self->{sessionID};
+		$self->Session($session);
+	}
+print STDERR "Connect:  SessionKey = ".$self->{sessionKey}.".  Calling SetSID\n";
 	$self->SetSID();
 
-	$session{user} = $self->{user};
-	$session{password} = $self->{password};
-	$session{dataSource} = $self->{dataSource};
-	$session{remoteAddr} = $self->{remoteAddr};
-	$session{sessionID} = $self->{sessionID};
-
-
-#	print STDERR "Connect:  Untying session\n";
-	untie %session;
-#	print STDERR "Connect:  dumping session\n";
-	undef %session;
 # FIXME:  This should be done in a daemon.
 	CleanupSessions();
 	print STDERR "Connect:  Finished.  Initiating transactions\n";
@@ -386,23 +375,40 @@ sub Connect {
 	
 }
 
+# Gets a new session if there is no parameter and $self->sessionKey is undef.
+# Gets a new session if there is a prameter hash reference, but the _session_id key doesn't exist or is undef.
+# Gets an existing session if not making a new session - _session_id key in the parameter hash ref overrides $self->sessionKey.
+# Calls die if tries to fetch an existing session but it doesn't exist.
+# Copies keys and values in the passed hash ref (if any) to the tied session hash.
+# unties the session
+# returns a reference to the untied hash.
 sub Session {
 my $self = shift;
+my $param = shift;
 my %session;
+my $returnSession;
+my $ID;
+my ($key,$value);
 
-	return undef unless defined $self->{sessionKey} and $self->{sessionKey};
-	eval {tie %session, 'Apache::Session::File', $self->{sessionKey}, {
+	$ID = $self->{sessionKey} if exists $self->{sessionKey} and defined $self->{sessionKey};
+	$ID = $param->{_session_id} if defined $param and exists $param->{_session_id} and defined $param->{_session_id};
+	eval {tie %session, 'Apache::Session::File', $ID, {
 			Directory => $tempDirectory.'sessions',
 			LockDirectory   => $tempDirectory.'lock'
 		};
 	};
-	return undef unless %session;
-	return (tied %session);
+	die "Could not retreive session: $@" if ($@);
+	while ( ($key,$value) = each (%$param) ) {
+		$session{$key} = $value;
+	}
+	$returnSession = {%session};
+	untie %session;
+	undef %session;
+	return ($returnSession);
 }
 
 #
 # I suppose we can just erase the old files, but we're going to use Apache::Session to do it.
-# FIXME:  The age of the session is hard-coded at 30 min (last file access).
 # We avoid death in Apache::Session by using eval - ignoring any errors.
 sub CleanupSessions {
 my $self = shift;
@@ -414,17 +420,20 @@ use File::Find;
 
 
 sub DeleteOMEsession {
-my $sessionKey;
+my $sessionKey = shift;
 my %session;
 
-my $age = time - (stat($_))[8];
+return unless defined $sessionKey;
+my $created = (stat($sessionKey))[8];
+return unless defined $created;
+my $age = time - $created;
 return unless $age > $sessionLifetime;
-
-		eval {tie %session, 'Apache::Session::File', $_, {
+print STDERR "trying to delete session '$sessionKey'\n";
+		eval {tie %session, 'Apache::Session::File', $sessionKey, {
 				Directory => $tempDirectory.'sessions',
 				LockDirectory   => $tempDirectory.'lock'
 			};
-			tied(%session)->delete;
+			tied(%session)->delete unless ($@);
 		};
 }
 
@@ -903,6 +912,17 @@ sub StartAnalysis()
 #	die "Attempt to start an analysis without selecting datasets." unless defined $self->{SelectedDatasets};
 
 	$self->Commit();
+	
+	my $session = $self->Session;
+	$session->{ProgramPID} = $$;
+	$session->{ProgramStarted} = time;
+	$session->{ProgramName} = $0;
+	$session->{Status} = 'Executing';
+	$session->{Message} = '';
+	$session->{Error} = '';
+	$session->{NumSelectedDatasets} = $self->NumSelectedDatasets();
+	print STDERR "Number of selected datasets: ".$self->NumSelectedDatasets()."\n";
+	$self->Session ($session);
 
 #	my %Analysis_Data = (
 #		AnalysisID => undef,
@@ -1506,6 +1526,7 @@ sub ExpireAnalysis {
 sub UnlinkExpiredFiles {
 my $self = shift;
 
+	$self->{dbHandle}->do("DELETE FROM expired_files WHERE fullpath=NULL");
 	my $paths = $self->{dbHandle}->selectcol_arrayref("SELECT fullpath FROM expired_files");
 	my $file;
 	my $deleted;
@@ -2357,7 +2378,7 @@ my $viewName = shift;
 sub SetReferer ()
 {
 	my $self = shift;
-	$self->{referer} = $self->{cgi}->url();
+	$self->{referer} = $self->{OMEhomePageURL};
 	print STDERR "SetReferer:  setting self->{referer} to <",$self->{referer},">\n";
 }
 
@@ -2591,7 +2612,12 @@ sub RefererCookie {
 
 sub NumSelectedDatasets {
 	my $self = shift;
-	return    $#{$self->{SelectedDatasets}};
+	if (exists $self->{SelectedDatasets} and defined $self->{SelectedDatasets} and scalar @{$self->{SelectedDatasets}} > 0) {
+		return scalar @{$self->{SelectedDatasets}};
+	} else {
+		return ($self->{dbHandle}->selectrow_array ('SELECT count(*) FROM ome_sessions_datasets WHERE SESSION_ID='.$self->{sessionID}));
+	}
+
 }
 
 
