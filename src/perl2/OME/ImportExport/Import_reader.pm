@@ -191,6 +191,7 @@ sub check_type {
     $self->endian($endian);
     $xml_ref = $self->Image_reader::xml_hash;
     $$xml_ref{'Image.ImageType'} = $type;
+    $$xml_ref{'Image_files_xyzwt.Endian'} = $endian;
 }
 
 
@@ -209,14 +210,13 @@ sub readFile {
     $readerref = $readers{$self->image_type};
     $type_handler = $readerref->new($self);
     {
-	$status = $type_handler->readImage($self);      # let child know its parent;
+	$status = $type_handler->readImage;
 	last unless $status eq "";
-	$status = $type_handler->formatImage($self);
-
-	#$bp = $self->obuffer;
-	#$sz = scalar(@$bp);
-	#print "Buffer is $sz\n";
-	#close_repository($self);
+	$status = $type_handler->formatImage;
+	if ($status eq "") {
+	    my $xml_ref = $self->Image_reader::xml_hash;
+	    $xml_ref->{'Image.BitsPerPixel'} = $self->{'pixel_size'};
+	}
     }
 
     return $status;
@@ -352,7 +352,7 @@ sub get_image_fmt {
     }
 
     $ofmt = $ifmt;
-    $ofmt =~ tr/nNvV/SSSS/;      # convert either endian short/long to our endian short/long
+    $ofmt =~ tr/nNvV/SLSL/;      # convert either endian short/long to our endian short/long
 
     return ($ifmt, $ofmt);
 }
@@ -400,7 +400,7 @@ sub checkTIFF
     my $bigTemplate="CCnN";     #decode format if TIFF in big Endian order
     my @hdr;
 
-    $len = -s IMG;
+    $len = -s $fref;
 
     if ($len >= 8) {
 	read $fref, $buf, 8;
