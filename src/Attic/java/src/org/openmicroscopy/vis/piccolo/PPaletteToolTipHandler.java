@@ -39,11 +39,17 @@
  
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.Module.FormalParameter;
+import org.openmicroscopy.SemanticType;
+import org.openmicroscopy.SemanticType.Element;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PText;
+import edu.umd.cs.piccolo.nodes.PPath;
 import java.awt.Font;
+import java.util.Iterator;
+import java.util.List;
 
 /** 
  *
@@ -57,6 +63,7 @@ import java.awt.Font;
 public class PPaletteToolTipHandler extends PToolTipHandler {
 	
 	protected Font font = new Font("Helvetica",Font.PLAIN,12);
+	protected Font stfont = new Font("Helvetica",Font.PLAIN,10);
 	
 	public PPaletteToolTipHandler(PCamera camera) {
 		super(camera);
@@ -72,23 +79,65 @@ public class PPaletteToolTipHandler extends PToolTipHandler {
 	 */
 	public PNode setToolTipNode(PInputEvent event) {
 		PNode p = (PNode) null;
-		String s = "";
 		PNode n = event.getInputManager().getMouseOver().getPickedNode();
 		double scale = camera.getViewScale();
 		if (scale < PToolTipHandler.SCALE_THRESHOLD) {
-			if (n instanceof PModule)
-				s=((PModule) n).getModule().getName(); 
-			else if (n instanceof PFormalParameter) {
-				s= ((PFormalParameter) n).getPModule().
-					getModule().getName();
+			if (n instanceof PModule)  {
+				String s = ((PModule) n).getModule().getName();
+				if (s.compareTo("") != 0) {
+					PText pt = new PText(s);
+					pt.setFont(font);
+					p = pt;
+				}
 			}
+			return p;
 		}
-		if (s.compareTo("") != 0) {
-			PText pt = new PText(s);
-			pt.setFont(font);
-			p = pt;
+		else if (n instanceof PFormalParameter)
+			return getParameterToolTip((PFormalParameter) n);
+		else 
+			return p;
+	}
+	
+	private PNode getParameterToolTip(PFormalParameter param) {
+		PPath node = new PPath();
+		//	s= ((PFormalParameter) n).getPModule().
+		//getModule().getName();
+		FormalParameter fp = param.getParameter();
+		PText p = new PText(fp.getParameterName());
+		node.addChild(p);
+		double y=0;
+		p.setOffset(0,y);
+		p.setFont(font);
+		y += p.getHeight();
+		SemanticType st = fp.getSemanticType();
+		if (st != null) {
+			p = new PText("Type: "+st.getName());
+			node.addChild(p);
+			p.setFont(font);
+			p.setOffset(0,y);
+			y+=p.getHeight();
+			// add elements
+	//		Iterator iter = st.iterateElements();
+			List elts = st.getElements();
+			Iterator iter = elts.iterator();
+			while (iter.hasNext()) {
+				Element elt = (Element) iter.next();
+				// fail gracefully if I can't get the name of an ST?
+				try {
+						p = new PText(" "+elt.getElementName());
+						node.addChild(p);
+						p.setFont(font);
+						p.setOffset(0,y);
+						y+=p.getHeight();
+				} catch (Exception e) {
+				}
+			}		
 		}
-		return p;
+		node.setBounds(node.getUnionOfChildrenBounds(null));
+		node.setStrokePaint(PToolTipHandler.BORDER_COLOR);
+		node.setPaint(PToolTipHandler.FILL_COLOR);
+		
+		return node;	
 	}
 	
 }
