@@ -76,20 +76,9 @@ sub startImport {
         $dataset = $factory->loadObject("OME::Dataset",$datasetID);
         die "Dataset #${datasetID} does not exist"
           unless defined $dataset;
-    } else {
-        $dataset = $factory->
-          newObject("OME::Dataset",
-                    {
-                     name => "ImportFacade Dummy Dataset",
-                     description => "Images imported by Remote Importer",
-                     locked => 0,
-                     owner_id => $session->experimenter_id(),
-                    });
-        die "Cannot create import dataset"
-          unless defined $dataset;
     }
 
-    my $files_mex = $importer->startImport($dataset);
+    my $files_mex = $importer->startImport();
     my $session_key = $session->SessionKey();
 
     # Fork off the child process
@@ -166,14 +155,40 @@ sub importChild ($$$$) {
     }
 
     print STDERR "  Importing\n";
-    $importer->importFiles(\@files);
+    my $image_list = $importer->importFiles(\@files);
     $importer->finishImport();
+    
+    if( scalar( @$image_list ) > 0 ) {
+	    if( not defined $dataset ) {
+		    print STDERR "  dataset does not exists. creating Import dataset\n";
+			$dataset = $factory->
+			  newObject("OME::Dataset",
+						{
+						 name => "ImportFacade Dummy Dataset",
+						 description => "Images imported by Remote Importer",
+						 locked => 0,
+						 owner_id => $session->experimenter_id(),
+						})
+			or die "Cannot create import dataset";
+		}
 
-    print STDERR "  Executing chain\n";
-    my $chain = $session->Configuration()->import_chain();
-    if (defined $chain) {
-        $OME::Analysis::Engine::DEBUG = 0;
-        OME::Analysis::Engine->executeChain($chain,$dataset,{});
+	    print STDERR "  adding images to dataset\n";
+		foreach $image (@$image_list) {
+			$factory->newObject("OME::Image::DatasetMap",
+						{
+						 image_id   => $image->id(),
+						 dataset_id => $dataset->id(),
+						});
+		}
+
+		print STDERR "  Executing chain\n";
+		my $chain = $session->Configuration()->import_chain();
+		if (defined $chain) {
+			$OME::Analysis::Engine::DEBUG = 0;
+			OME::Analysis::Engine->executeChain($chain,$dataset,{});
+		}
+    } else {
+		print STDERR "  No images imported. Skipping dataset check and Import Chain execution.\n";
     }
 
     return;

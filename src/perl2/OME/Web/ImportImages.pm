@@ -278,7 +278,7 @@ sub __getImportBody {
 	# IMPORT
 	while ($self->OME::Web::ImportFiles::__resolveQueue(\@import_q)) {};
 
-	OME::Tasks::ImageTasks::forkedImportImages($import_d, \@import_q);
+	OME::Tasks::ImageTasks::forkedImportFiles($import_d, \@import_q);
 
 	return '';
 }

@@ -102,6 +102,9 @@ sub addImagesToDataset ($$$) {
 	my $image_list = importFiles($dataset, \@filenames, \%options);
 
 images described by @filenames will be imported into $dataset
+$dataset is optional. It is completely unnecessary for ome files that do
+	not contain images. When left unspecified, an Import Dataset will be
+	automatically created iff images are returned by the ImportEngine.
 %options is optional. currently recognized options are {AllowDuplicates => 0|1}
 
 Imports the selected files into OME and executes the import analysis chain on them.
@@ -124,28 +127,51 @@ sub importFiles {
 	}
 	$progress->finish();
 	
-	my $image_list = OME::ImportEngine::ImportEngine->importFiles(%$options, $dataset, \@files );
+	my $image_list = OME::ImportEngine::ImportEngine->importFiles(%$options, \@files );
 	
-	my $chain = $session->Configuration()->import_chain();
-	OME::Analysis::Engine->executeChain($chain,$dataset,{});
+	if( scalar( @$image_list ) > 0 ) {
+		$dataset = $factory->newObject("OME::Dataset",
+			{
+			 name => "Import Dataset",
+			 description => "Images imported without a user specified dataset",
+			 locked => 0,
+			 owner_id => $session->experimenter_id(),
+			})
+			unless defined $dataset;
 
-	logdbg "debug", "Successfully imported images:";
-    logdbg "debug", "\t Image(".$_->id()."): ".$_->name()
-    	foreach (@$image_list);
-    
- 	# save default display options to omeis as thumbnail settings.
-	foreach my $image (@$image_list) {
-		foreach my $pixels ($image->pixels()) {
-			OME::Tasks::PixelsManager->saveThumb( $pixels );
+		# Add the new images to the dataset.
+		foreach $image (@$image_list) {
+			$factory->newObject("OME::Image::DatasetMap",
+								{
+								 image_id   => $image->id(),
+								 dataset_id => $dataset->id(),
+								});
 		}
+	
+		my $chain = $session->Configuration()->import_chain();
+		OME::Analysis::Engine->executeChain($chain,$dataset,{});
+
+		logdbg "debug", "Successfully imported images:";
+		logdbg "debug", "\t Image(".$_->id()."): ".$_->name()
+			foreach (@$image_list);
+
+		# save default display options to omeis as thumbnail settings.
+		foreach my $image (@$image_list) {
+			foreach my $pixels ($image->pixels()) {
+				OME::Tasks::PixelsManager->saveThumb( $pixels );
+			}
+		}
+		# save any newly created displayOptions.
+		$session->commitTransaction();
 	}
+    
     return $image_list;
 }
 
 
-=head2 forkedImportImages
+=head2 forkedImportFiles
 
-	my $task = forkedImportImages($dataset,\@filenames,\%options);
+	my $task = forkedImportFiles($dataset,\@filenames,\%options);
 
 Performs the same operation as importFiles, but forks off a new
 process first.  An OME::Task object is created to track the import's
@@ -153,7 +179,7 @@ progress.
 
 =cut
 
-sub forkedImportImages {
+sub forkedImportFiles {
 	my ($dataset, $filenames, $options) = @_;
 
     my $task = OME::Tasks::NotificationManager->
@@ -161,20 +187,8 @@ sub forkedImportImages {
 
     my $importer = OME::ImportEngine::ImportEngine->new(%$options);
     my $session = OME::Session->instance();
-    my $factory = $session->Factory();
 
-    if (!defined $dataset) {
-        $dataset = $factory->
-          newObject("OME::Dataset",
-                    {
-                     name => "Forked import Dummy Dataset",
-                     description => "Images imported by Remote Importer",
-                     locked => 0,
-                     owner_id => $session->experimenter_id(),
-                    });
-    }
-
-    my $files_mex = $importer->startImport($dataset);
+    my $files_mex = $importer->startImport();
     my $session_key = $session->SessionKey();
 
     my $parent_pid = $$;
@@ -213,13 +227,40 @@ sub forkedImportImages {
             my $image_list = $importer->importFiles(\@files);
             $importer->finishImport();
 
-            $task->step();
-            $task->setMessage('Executing import chain');
-            my $chain = $session->Configuration()->import_chain();
-            if (defined $chain) {
-                $OME::Analysis::Engine::DEBUG = 0;
-                OME::Analysis::Engine->executeChain($chain,$dataset,{});
-            }
+			if( scalar( @$image_list ) > 0 ) {
+				my $factory = $session->Factory();
+				if( not defined $dataset ) {
+					$dataset = $factory->
+					  newObject("OME::Dataset",
+								{
+								 name => "Forked import Dummy Dataset",
+								 description => "Images imported by Remote Importer",
+								 locked => 0,
+								 owner_id => $session->experimenter_id(),
+								})
+					or die "Couldn't make a new dataset";
+				}
+	
+				# Add the new images to the dataset.
+				foreach $image (@$image_list) {
+					$factory->newObject("OME::Image::DatasetMap",
+										{
+										 image_id   => $image->id(),
+										 dataset_id => $dataset->id(),
+										});
+				}
+		
+				$task->step();
+				$task->setMessage('Executing import chain');
+				my $chain = $session->Configuration()->import_chain();
+				if (defined $chain) {
+					$OME::Analysis::Engine::DEBUG = 0;
+					OME::Analysis::Engine->executeChain($chain,$dataset,{});
+				}
+			} else {
+				$task->step();
+				$task->setMessage('No Images imported. Skipping execution of import chain');
+			}
         };
 
         if ($@) {
