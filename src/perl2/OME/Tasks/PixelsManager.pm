@@ -327,14 +327,14 @@ sub getDisplayOptions {
     my ($proto, $pixels_attr) = @_;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
-    my $image   = $pixels_attr->image();
     my $theT    = 0;
-    my $pixels_data = $proto->loadPixels( $pixels_attr );
 
-	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', {
-		Pixels => $pixels_attr } )]->[0];
+	my $displayOptions    = $factory->findAttribute( 'DisplayOptions', {
+		Pixels => $pixels_attr } );
 	return $displayOptions if $displayOptions;
 	
+    my $image   = $pixels_attr->image();
+    my $pixels_data = $proto->loadPixels( $pixels_attr );
 	my %displayData = (
 		Pixels => $pixels_attr,
 		ZStart => sprintf( "%d", $pixels_attr->SizeZ() / 2 ),
