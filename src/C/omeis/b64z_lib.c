@@ -660,7 +660,7 @@ int b64z_encode_init( b64z_stream *strm ) {
 		rC = BZ2_bzCompressInit( bzip_stream, BLOCK_SIZE_100K, 0, 30 );
 		if( rC != BZ_OK ) {
 #ifndef NO_VERBIAGE
-			fprintf( stderr, "Error! Could not initialize bzip2 decompression!\n" );
+			fprintf( stderr, "Error! Could not initialize bzip2 compression! return code was %i\n", rC );
 #endif
 			exit(-1);
 			/* for more error messages: ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC19 */
