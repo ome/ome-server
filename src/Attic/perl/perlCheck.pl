@@ -92,8 +92,15 @@ my @modules = ({
 	Name => 'Ima::DBI',
 	repositoryFile => 'Ima-DBI-0.27.tar.gz',
 	},{
+	Name => 'Exporter::Lite',
+	repositoryFile => 'Exporter-Lite-0.01.tar.gz',
+	},{
+	Name => 'UNIVERSAL::exports',
+	repositoryFile => 'UNIVERSAL-exports-0.03.tar.gz',
+	},{
 	Name => 'Class::DBI',
-	repositoryFile => 'Class-DBI-0.89.tar.gz',
+	repositoryFile => 'Class-DBI-0.90.tar.gz',
+	checkVersion => \&Class_DBI_VersionOK,
 	},{
 	Name => 'GD',
 	repositoryFile => 'GD-1.33.tar.gz',
@@ -161,6 +168,13 @@ my $version = shift;
 	return (1) if $version > 2.03;
 	return (0);
 }
+
+sub Class_DBI_VersionOK {
+my $version = shift;
+	return (1) if $version > 0.90;
+	return (0);
+}
+
 
 ############################
 # Special installation subs:
