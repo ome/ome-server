@@ -844,11 +844,12 @@ sub configure_module {
     my ($path, $logfile, $options) = @_;
     my $iwd = getcwd ();  # Initial working directory
     
-    my (@user, @cl_options);
+    my $user = '';
+    my $cl_options = '';
     if (defined $options) {
 	    croak ("command-line module/user hashref required.") unless ref($options) eq 'HASH';
-    	@user       = "$options->{user}"    if exists ($options->{user});
-    	@cl_options = "$options->{options}" if exists ($options->{options});
+    	$user       = $options->{user}    if exists $options->{user};
+    	$cl_options = $options->{options} if exists $options->{options};
     }
     
     # Expand our relative path to an absolute one
@@ -867,32 +868,32 @@ sub configure_module {
 		# BTW, we're just going to ignore anything that goes wrong here.
     	`make realclean 2>&1`;
 
-		if (scalar @user) {
-			print $logfile "USING PERL CONFIGURE SCRIPT -- 'sudo -u @user perl Makefile.PL @cl_options'\n";
-	    	@output = `sudo -u @user perl Makefile.PL @cl_options 2>&1`     
+		if ($user) {
+			print $logfile "USING PERL CONFIGURE SCRIPT -- 'sudo -u $user perl Makefile.PL $cl_options'\n";
+	    	@output = `sudo -u $user perl Makefile.PL $cl_options 2>&1`     
     	} else {
-			print $logfile "USING PERL CONFIGURE SCRIPT -- 'perl Makefile.PL @cl_options'\n";
-    		@output = `perl Makefile.PL @cl_options 2>&1`;
+			print $logfile "USING PERL CONFIGURE SCRIPT -- 'perl Makefile.PL $cl_options'\n";
+    		@output = `perl Makefile.PL $cl_options 2>&1`;
     	}
 	} elsif (-e 'configure') {
 		`make clean 2>&1`;
 		
-		if (scalar @user) {
-			print $logfile "USING C CONFIGURE SCRIPT -- 'sudo -u @user ./configure @cl_options'\n";
-			@output = `sudo -u @user ./configure @cl_options 2>&1`;
+		if ($user) {
+			print $logfile "USING C CONFIGURE SCRIPT -- 'sudo -u $user ./configure $cl_options'\n";
+			@output = `sudo -u $user ./configure $cl_options 2>&1`;
 		} else {
-			print $logfile "USING C CONFIGURE SCRIPT -- './configure @cl_options'\n";
-			@output = `./configure @cl_options 2>&1`;
+			print $logfile "USING C CONFIGURE SCRIPT -- './configure $cl_options'\n";
+			@output = `./configure $cl_options 2>&1`;
 		}
 	} elsif (-e 'autogen.sh') {
 		`make clean 2>&1`;
 		
-		if (scalar @user) {
-			print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- 'sudo -u @user ./autogen.sh @cl_options'\n";
-			@output = `sudo -u @user ./autogen.sh @cl_options 2>&1`;
+		if ($user) {
+			print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- 'sudo -u $user ./autogen.sh $cl_options'\n";
+			@output = `sudo -u $user ./autogen.sh $cl_options 2>&1`;
 		} else {
-			print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- './autogen.sh @cl_options'\n";
-			@output = `./autogen.sh @cl_options 2>&1`;
+			print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- './autogen.sh $cl_options'\n";
+			@output = `./autogen.sh $cl_options 2>&1`;
 		}
 	} else {
 		print $logfile "UNABLE TO LOCATE SUITABLE CONFIGURE SCRIPT\n\n";
@@ -967,11 +968,12 @@ sub test_module {
     my ($path, $logfile, $options) = @_;
     my $iwd = getcwd ();  # Initial working directory
     
-    my (@user, @cl_options);
+    my $user = '';
+    my $cl_options = '';
     if (defined $options) {
 	    croak ("command-line module/user hashref required.") unless ref($options) eq 'HASH';
-    	@user       = "$options->{user}"    if exists ($options->{user});
-    	@cl_options = "$options->{options}" if exists ($options->{options});
+    	$user       = $options->{user}    if exists $options->{user};
+    	$cl_options = $options->{options} if exists $options->{options};
     }
     
     # Expand our relative path to an absolute one
@@ -982,9 +984,9 @@ sub test_module {
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
     my @output;
-    if (scalar @user) {
-	    print $logfile "TESTING MODULE -- 'sudo -u @user make test'\n";
-    	@output = `sudo -u @user make test 2>&1`;
+    if ($user) {
+	    print $logfile "TESTING MODULE -- 'sudo -u $user make test $cl_options'\n";
+    	@output = `sudo -u $user make test $cl_options 2>&1`;
     } else {
 	    print $logfile "TESTING MODULE -- 'make test'\n";
 	    @output = `make test 2>&1`;
