@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.browser.layout.LayoutMethod
+ * org.openmicroscopy.browser.layout.CoordinateLayoutMethod
  *
  *------------------------------------------------------------------------------
  *
@@ -39,23 +39,73 @@
 package org.openmicroscopy.browser.layout;
 
 import java.awt.geom.Point2D;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.openmicroscopy.browser.images.Thumbnail;
 
 /**
- * Interface for a method that lays out thumbnails.
+ * Specifies a layout method to arbitarily layout images by a set of
+ * coordinates.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
  * @version 2.2
  * @since 2.2
  */
-public interface LayoutMethod
+public class CoordinateLayoutMethod implements LayoutMethod
 {
+  private Map positionMap;
+  
+  public CoordinateLayoutMethod()
+  {
+    positionMap = new HashMap();
+  }
+  
   /**
-   * Returns the position of the thumbnail in its relative container.
-   * @param t The thumbnail for which to determine the position.
-   * @return The assigned position of the thumbnail.
+   * Returns the assigned/saved coordinate of the specified thumbnail.  Returns
+   * nothing if the thumbnail does not have a specified coordinate.
+   * 
+   * @see org.openmicroscopy.browser.layout.LayoutMethod#getAnchorPoint(org.openmicroscopy.browser.images.Thumbnail)
    */
-  public Point2D getAnchorPoint(Thumbnail t);
+  public Point2D getAnchorPoint(Thumbnail t)
+  {
+    if(!positionMap.containsKey(t))
+    {
+      return null;
+    }
+    else
+    {
+      return (Point2D)positionMap.get(t);
+    }
+  }
+  
+  /**
+   * Sets the anchor (upper-left) coordinate of the specified thumbnail.
+   * 
+   * @param t The thumbnail to anchor.
+   * @param point The desired anchor (upper-left) point of the thumbnail.
+   */
+  public void setAnchorPoint(Thumbnail t, Point2D point)
+  {
+    if(t != null && point != null)
+    {
+      positionMap.put(t,point);
+    }
+  }
+  
+  /**
+   * Removes the thumbnail from the method and unloads its coordinate.
+   * @param t The thumbnail to remove.
+   */
+  public void removeThumbnail(Thumbnail t)
+  {
+    if(t != null)
+    {
+      positionMap.remove(t);
+    }
+  }
+  
+  
+
 }
