@@ -24,7 +24,7 @@
             xlink:href="../../../src/JavaScript/SVG_GUI/AntiZoomAndPan.js" />
     <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
 		var multiToolBox;
-		var layerPopupList
+		var panePopupList
 		var azap = new AntiZoomAndPan();
 
 		function init(e) {
@@ -34,62 +34,58 @@
             var controls  = svgDocument.getElementById("controls");
 
 			multiToolBox = new multipaneToolBox(
-				160, 30, 180, 150, null, null, "<g/>"
+				160, 30, 180, 0, null, null,
+				'<g>' +
+				'	<rect width="{$width}" height="2000" fill="ghostwhite" opacity="0.8"/>' +
+				'</g>'
 			);
 			multiToolBox.setLabel(90,12," ");
-			multiToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
+			multiToolBox.getLabel().setAttribute( "text-anchor", "middle");
+			multiToolBox.getLabel().setAttribute( "fill", "white");
 			multiToolBox.realize(controls);
 			multiToolBox.updateLabel(true);
 
-			var layerNames = new Array("Info", "Foo")
-			for(i in layerNames )
-				multiToolBox.addLayerText(
-					svgDocument.getElementById( "text"+layerNames[i] ).firstChild.data,
-					layerNames[i]
+			var paneNames = new Array("Info", "Foo")
+			for(i in paneNames )
+				multiToolBox.addPaneText(
+					svgDocument.getElementById( "text"+paneNames[i] ).firstChild.data,
+					paneNames[i]
 				);
 
-			multiToolBox.addLayerText(
+			multiToolBox.addPaneText(
 				svgDocument.getElementById( "textBar" ).firstChild.data,
 				"Bar" 
 			);
 			
-			multiToolBox.addLayer( null, "Blank" );
+			multiToolBox.addPane( null, "Blank" );
 		
-			var layerIndex = multiToolBox.getLayerIndexes();
+			var paneIndex = multiToolBox.getPaneIndexes();
 			
-			layerPopupList = new popupList(
-				0, 0, layerIndex, updateLayer );
-			layerPopupList.realize( multiToolBox.getMenuBar() );
-			setTimeout( "layerPopupList.setSelection(0)", 0);
+			panePopupList = new popupList(
+				0, 0, paneIndex, updatePane );
+			panePopupList.realize( multiToolBox.getMenuBar() );
+			setTimeout( "panePopupList.setSelection(0)", 0);
 			
             azap.appendNode(controls);
         }
-		function updateLayer(item) {
-			var itemList = layerPopupList.getItemList();
-			multiToolBox.changeLayer( itemList[item] );
+		function updatePane(item) {
+			var itemList = panePopupList.getItemList();
+			multiToolBox.changePane( itemList[item] );
 		}		
     ]]></script>
 	<defs>
 		<text id="textInfo"><![CDATA[
 			<g>
-				<rect width="200" height="50" fill="none" stroke="black"	stroke-width="2"/>
-				<rect width="200" height="50" fill="ghostwhite" opacity="0.5"/>
-				<text y="1em">Information:</text>
+				<text x="2" y="1em">Information:</text>
 				<text id="zLabel" x="30" y="2em">z-value is ?</text>
 				<text id="tLabel" x="30" y="3em">t-value is ?</text>
 			</g>
 		]]></text>
 		<text id="textFoo"><![CDATA[
-			<g>
-				<rect width="270" height="15" fill="magenta" opacity="0.5"/>
-				<text x="5" y="1em">This is Pane Foo. It is very long and very narrow.</text>
-			</g>
+			<text x="5" y="1em">This is Pane Foo.</text>
 		]]></text>
 		<text id="textBar"><![CDATA[
-			<g>
-				<rect width="100" height="20" fill="forestgreen" opacity="0.5"/>
-				<text x="5" y="12">This is Pane Bar</text>
-			</g>
+			<text x="5" y="12">This is Pane Bar</text>
 		]]></text>
 	</defs>
     <g id="controls">
