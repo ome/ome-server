@@ -39,7 +39,7 @@ my $FREEBSD = 5;
 my $WINDOWS = 6;
 # ... and so on
 
-# The ID of the platform we're running on (set in getInstance).
+# The ID of the platform we're running on (set in initialize ()).
 my $platform = 0;
 
 # The singleton instance.
@@ -134,9 +134,9 @@ my $new = sub {
 # Class method to return the singleton instance that deals with the platform
 # we're running on.
 #
-# my $env = OME::Install::Environment->getInstance();
+# my $env = OME::Install::Environment->initialize();
 #
-sub getInstance {
+sub initialize {
     my $class = shift;
     if( !$soleInstance ) { # first time we're called
         $platform = $UNKNOWN;
