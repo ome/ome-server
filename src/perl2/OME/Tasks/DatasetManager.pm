@@ -453,19 +453,32 @@ sub addImages{
 # Parameters
 #	datasetID
 #	imageID
-
+# Return 
+#   1 = image newly added to Dataset
+#   0 = image already exists in Dataset
 sub addToDataset{
     my $self=shift;
     my ($datasetID,$imageID)=@_;
     my $session=$self->Session();
     my $factory=$session->Factory();
-    $factory->maybeNewObject("OME::Image::DatasetMap",
-                             {
-                              dataset_id => $datasetID,
-                              image_id   => $imageID,
-                             });
-    $session->commitTransaction();
+    my $map = $factory->findObject("OME::Image::DatasetMap",
+    					{
+						'dataset_id' => $datasetID,
+						'image_id'   => $imageID,
+						});
+	if (not defined $map) {    
+		$map = $factory->newObject("OME::Image::DatasetMap",
+								{
+								  dataset_id => $datasetID,
+								  image_id   => $imageID,
+								 });
+        $map->storeObject();
+    	$session->commitTransaction();
+    	return 1;
+    }
+    return 0;
 }
+
 #################
 # Parameters
 #	description = dataset's description 

@@ -90,6 +90,7 @@ use OME::Web::DefaultHeaderBuilder;
 use OME::Web::DefaultMenuBuilder;
 use OME::Web::DBObjRender;
 use OME::Web::Util::Category;
+use OME::Web::Util::Dataset;
 use OME::Web::Search;
 
 use base qw(Class::Data::Inheritable);
@@ -174,6 +175,11 @@ sub CategoryUtil {
 	my $self = shift; 
 	return $self->{ category_util } if $self->{ category_util };
 	return ( $self->{ category_util } = OME::Web::Util::Category->new( CGI => $self->CGI() ) );
+}
+sub DatasetUtil {
+	my $self = shift; 
+	return $self->{ dataset_util } if $self->{ dataset_util };
+	return ( $self->{ dataset_util } = OME::Web::Util::Dataset->new( CGI => $self->CGI() ) );
 }
 
 # Because we no longer need any sort of Session reference store this is just a macro now
