@@ -53,23 +53,25 @@ public class RemoteModuleExecution
 {
     static
     {
-        addClass("OME::ModuleExecution",RemoteModuleExecution.class);
-        addClass("OME::ModuleExecution::ActualInput",
-                 RemoteModuleExecution.ActualInput.class);
+        RemoteObjectCache.addClass("OME::ModuleExecution",
+                                   RemoteModuleExecution.class);
+        RemoteObjectCache.addClass("OME::ModuleExecution::ActualInput",
+                                   RemoteModuleExecution.ActualInput.class);
     }
 
 
     public RemoteModuleExecution() { super(); }
-    public RemoteModuleExecution(String reference) { super(reference); }
+    public RemoteModuleExecution(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public Module getModule()
-    { return (Module) getRemoteElement(getClass("OME::Module"),
+    { return (Module) getRemoteElement("OME::Module",
                                        "module"); }
     public void setModule(Module module)
     { setRemoteElement("module",module); }
 
     public Dataset getDataset()
-    { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
+    { return (Dataset) getRemoteElement("OME::Dataset",
                                         "dataset"); }
     public void setDataset(Dataset dataset)
     { setRemoteElement("dataset",dataset); }
@@ -109,14 +111,14 @@ public class RemoteModuleExecution
     { setStringElement("status",status); }
 
     public List getInputs()
-    { return getRemoteListElement(getClass("OME::ModuleExecution::ActualInput"),
+    { return getRemoteListElement("OME::ModuleExecution::ActualInput",
                                   "inputs"); }
     public Iterator iterateInputs()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_inputs");
-        i.setClass(getClass("OME::ModuleExecution::ActualInput"));
+        i.setClass("OME::ModuleExecution::ActualInput");
         return i;
     }
 
@@ -125,23 +127,24 @@ public class RemoteModuleExecution
         implements ModuleExecution.ActualInput
     {
         public ActualInput() { super(); }
-        public ActualInput(String reference) { super(reference); }
+        public ActualInput(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public ModuleExecution getModuleExecution()
         { return (ModuleExecution)
-                getRemoteElement(getClass("OME::ModuleExecution"),
+                getRemoteElement("OME::ModuleExecution",
                                  "module_execution"); }
 
         public ModuleExecution getInputModuleExecution()
         { return (ModuleExecution)
-                getRemoteElement(getClass("OME::ModuleExecution"),
+                getRemoteElement("OME::ModuleExecution",
                                  "input_module_execution"); }
         public void setInputModuleExecution(ModuleExecution inputModuleExecution)
         { setRemoteElement("input_module_execution",inputModuleExecution); }
 
         public Module.FormalInput getFormalInput()
         { return (Module.FormalInput)
-                getRemoteElement(getClass("OME::Module::FormalInput"),
+                getRemoteElement("OME::Module::FormalInput",
                                  "formal_input"); }
         public void setFormalInput(Module.FormalInput formalInput)
         { setRemoteElement("formal_input",formalInput); }

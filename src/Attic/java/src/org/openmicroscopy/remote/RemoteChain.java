@@ -53,14 +53,17 @@ public class RemoteChain
 {
     static
     { 
-        addClass("OME::AnalysisChain",RemoteChain.class);
-        addClass("OME::AnalysisChain::Node",RemoteChain.Node.class);
-        addClass("OME::AnalysisChain::Link",RemoteChain.Link.class);
+        RemoteObjectCache.addClass("OME::AnalysisChain",RemoteChain.class);
+        RemoteObjectCache.addClass("OME::AnalysisChain::Node",
+                                   RemoteChain.Node.class);
+        RemoteObjectCache.addClass("OME::AnalysisChain::Link",
+                                   RemoteChain.Link.class);
     }
 
 
     public RemoteChain() { super(); }
-    public RemoteChain(String reference) { super(reference); }
+    public RemoteChain(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public Attribute getOwner()
     { return getAttributeElement("owner"); }
@@ -83,38 +86,38 @@ public class RemoteChain
     { setBooleanElement("locked",locked); }
 
     public List getNodes()
-    { return getRemoteListElement(getClass("OME::AnalysisChain::Node"),
+    { return getRemoteListElement("OME::AnalysisChain::Node",
                                   "nodes"); }
     public Iterator iterateNodes()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_nodes");
-        i.setClass(getClass("OME::AnalysisChain::Node"));
+        i.setClass("OME::AnalysisChain::Node");
         return i;
     }
 
     public List getLinks()
-    { return getRemoteListElement(getClass("OME::AnalysisChain::Link"),
+    { return getRemoteListElement("OME::AnalysisChain::Link",
                                   "links"); }
     public Iterator iterateLinks()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_links");
-        i.setClass(getClass("OME::AnalysisChain::Link"));
+        i.setClass("OME::AnalysisChain::Link");
         return i;
     }
 
     public List getPaths()
-    { return getRemoteListElement(getClass("OME::AnalysisPath"),
+    { return getRemoteListElement("OME::AnalysisPath",
                                   "paths"); }
     public Iterator iteratePaths()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_paths");
-        i.setClass(getClass("OME::AnalysisPath"));
+        i.setClass("OME::AnalysisPath");
         return i;
     }
 
@@ -123,16 +126,17 @@ public class RemoteChain
         implements Chain.Node
     {
         public Node() { super(); }
-        public Node(String reference) { super(reference); }
+        public Node(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public Chain getChain()
         { return (Chain)
-                getRemoteElement(getClass("OME::AnalysisChain"),
+                getRemoteElement("OME::AnalysisChain",
                                  "analysis_chain"); }
 
         public Module getModule()
         { return (Module)
-                getRemoteElement(getClass("OME::Module"),
+                getRemoteElement("OME::Module",
                                  "module"); }
         public void setModule(Module module)
         { setRemoteElement("module",module); }
@@ -148,26 +152,26 @@ public class RemoteChain
         { setStringElement("new_feature_tag",newFeatureTag); }
 
         public List getInputLinks()
-        { return getRemoteListElement(getClass("OME::AnalysisChain::Link"),
+        { return getRemoteListElement("OME::AnalysisChain::Link",
                                       "input_links"); }
         public Iterator iterateInputLinks()
         {
             RemoteIterator i = (RemoteIterator)
-                getRemoteElement(getClass("OME::Factory::Iterator"),
+                getRemoteElement("OME::Factory::Iterator",
                                  "iterate_input_links");
-            i.setClass(getClass("OME::AnalysisChain::Link"));
+            i.setClass("OME::AnalysisChain::Link");
             return i;
         }
 
         public List getOutputLinks()
-        { return getRemoteListElement(getClass("OME::AnalysisChain::Link"),
+        { return getRemoteListElement("OME::AnalysisChain::Link",
                                       "output_links"); }
         public Iterator iterateOutputLinks()
         {
             RemoteIterator i = (RemoteIterator)
-                getRemoteElement(getClass("OME::Factory::Iterator"),
+                getRemoteElement("OME::Factory::Iterator",
                                  "iterate_output_links");
-            i.setClass(getClass("OME::AnalysisClass:Link"));
+            i.setClass("OME::AnalysisClass:Link");
             return i;
         }
     }
@@ -177,37 +181,38 @@ public class RemoteChain
         implements Chain.Link
     {
         public Link() { super(); }
-        public Link(String reference) { super(reference); }
+        public Link(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public Chain getChain()
         { return (Chain)
-                getRemoteElement(getClass("OME::AnalysisChain"),
+                getRemoteElement("OME::AnalysisChain",
                                  "analysis_chain"); }
 
         public Chain.Node getFromNode()
         { return (Chain.Node)
-                getRemoteElement(getClass("OME::AnalysisChain::Node"),
+                getRemoteElement("OME::AnalysisChain::Node",
                                  "from_node"); }
         public void setFromNode(Chain.Node fromNode)
         { setRemoteElement("from_node",fromNode); }
 
         public Module.FormalOutput getFromOutput()
         { return (Module.FormalOutput)
-                getRemoteElement(getClass("OME::Module::FormalOutput"),
+                getRemoteElement("OME::Module::FormalOutput",
                                  "from_output"); }
         public void setFromOutput(Module.FormalOutput fromOutput)
         { setRemoteElement("from_output",fromOutput); }
 
         public Chain.Node getToNode()
         { return (Chain.Node)
-                getRemoteElement(getClass("OME::AnalysisChain::Node"),
+                getRemoteElement("OME::AnalysisChain::Node",
                                  "to_node"); }
         public void setToNode(Chain.Node toNode)
         { setRemoteElement("to_node",toNode); }
 
         public Module.FormalInput getToInput()
         { return (Module.FormalInput)
-                getRemoteElement(getClass("OME::Module::FormalInput"),
+                getRemoteElement("OME::Module::FormalInput",
                                  "to_input"); }
         public void setToInput(Module.FormalInput toInput)
         { setRemoteElement("to_input",toInput); }

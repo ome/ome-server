@@ -51,28 +51,30 @@ public class RemoteIterator
 {
     static
     {
-        addClass("OME::Factory::Iterator",RemoteIterator.class);
+        RemoteObjectCache.addClass("OME::Factory::Iterator",RemoteIterator.class);
     }
 
-    protected Class clazz;
+    protected String perlClass;
     protected String nextReference;
     protected boolean haveNextReference = false;
 
     public RemoteIterator() { super(); }
 
-    public RemoteIterator(Class clazz) 
+    public RemoteIterator(String perlClass) 
     { 
         super();
-        this.clazz = clazz;
+        this.perlClass = perlClass;
     }
 
-    public RemoteIterator(Class clazz, String reference)
+    public RemoteIterator(String perlClass,
+                          RemoteSession session,
+                          String reference)
     {
-        super(reference);
-        this.clazz = clazz;
+        super(session,reference);
+        this.perlClass = perlClass;
     }
 
-    public void setClass(Class clazz) { this.clazz = clazz; }
+    public void setClass(String perlClass) { this.perlClass = perlClass; }
 
     protected void cacheNextReference()
     {
@@ -92,7 +94,8 @@ public class RemoteIterator
     public Object next()
     {
         cacheNextReference();
-        RemoteObject retval = instantiate(clazz,nextReference);
+        RemoteObject retval = getRemoteSession().getObjectCache().
+            getObject(perlClass,nextReference);
         nextReference = null;
         haveNextReference = false;
         return retval;

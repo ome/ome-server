@@ -50,11 +50,13 @@ public class RemoteAttribute
 {
     static
     {
-        addClass("OME::SemanticType::Superclass",RemoteAttribute.class);
+        RemoteObjectCache.addClass("OME::SemanticType::Superclass",
+                                   RemoteAttribute.class);
     }
 
     public RemoteAttribute() { super(); }
-    public RemoteAttribute(String reference) { super(reference); }
+    public RemoteAttribute(RemoteSession session, String reference)
+    { super(session,reference); }
 
 
     public int getID()
@@ -65,32 +67,32 @@ public class RemoteAttribute
 
     public Session getSession()
     { return (Session)
-            getRemoteElement(getClass("OME::Session"),
+            getRemoteElement("OME::Session",
                              "Session"); }
 
     public SemanticType getSemanticType()
     { return (SemanticType)
-            getRemoteElement(getClass("OME::SemanticType"),
+            getRemoteElement("OME::SemanticType",
                              "semantic_type"); }
 
     public ModuleExecution getModuleExecution()
     { return (ModuleExecution)
-            getRemoteElement(getClass("OME::ModuleExecution"),
+            getRemoteElement("OME::ModuleExecution",
                              "module_execution"); }
 
     public OMEObject getTarget()
     {
         SemanticType type = getSemanticType();
         int granularity = type.getGranularity();
-        Class remoteClass = null;
+        String remoteClass = null;
         if (granularity == Granularity.GLOBAL)
             return null;
         else if (granularity == Granularity.DATASET)
-            remoteClass = getClass("OME::Dataset");
+            remoteClass = "OME::Dataset";
         else if (granularity == Granularity.IMAGE)
-            remoteClass = getClass("OME::Image");
+            remoteClass = "OME::Image";
         else if (granularity == Granularity.FEATURE)
-            remoteClass = getClass("OME::Feature");
+            remoteClass = "OME::Feature";
         else
             return null;
         return (OMEObject)

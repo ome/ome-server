@@ -52,7 +52,7 @@ public class RemoteSession
     extends RemoteOMEObject
     implements Session
 {
-    static { addClass("OME::Session",RemoteSession.class); }
+    static { RemoteObjectCache.addClass("OME::Session",RemoteSession.class); }
 
     protected void finalize()
     {
@@ -62,24 +62,40 @@ public class RemoteSession
         // finalize to do nothing.
     }
 
-    public RemoteSession() { super(); }
-    public RemoteSession(String reference) { super(reference); }
+    protected RemoteObjectCache  objectCache;
+
+    public RemoteSession()
+    {
+        super();
+        this.objectCache = new RemoteObjectCache(this);
+    }
+
+    public RemoteSession(String reference)
+    {
+        super(null, reference);
+        this.objectCache = new RemoteObjectCache(this);
+    }
+
+    public RemoteSession getRemoteSession() { return this; }
+    public void setRemoteSession(RemoteSession session) {}
+
+    public RemoteObjectCache getObjectCache() { return objectCache; }
 
     public Factory getFactory()
-    { return (Factory) getRemoteElement(getClass("OME::Factory"),
+    { return (Factory) getRemoteElement("OME::Factory",
                                         "Factory"); }
 
     public Attribute getUser()
     { return getAttributeElement("User"); }
 
     public Project getProject()
-    { return (Project) getRemoteElement(getClass("OME::Project"),
+    { return (Project) getRemoteElement("OME::Project",
                                         "project"); }
     public void setProject(Project project)
     { setRemoteElement("project",project); }
 
     public Dataset getDataset()
-    { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
+    { return (Dataset) getRemoteElement("OME::Dataset",
                                         "dataset"); }
     public void setDataset(Dataset dataset)
     { setRemoteElement("dataset",dataset); }

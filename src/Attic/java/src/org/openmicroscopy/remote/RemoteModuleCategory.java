@@ -53,12 +53,13 @@ public class RemoteModuleCategory
 {
     static
     {
-        addClass("OME::Module::Category",
-                 RemoteModuleCategory.class);
+        RemoteObjectCache.addClass("OME::Module::Category",
+                                   RemoteModuleCategory.class);
     }
 
     public RemoteModuleCategory() { super(); }
-    public RemoteModuleCategory(String reference) { super(reference); }
+    public RemoteModuleCategory(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -72,32 +73,32 @@ public class RemoteModuleCategory
 
     public ModuleCategory getParentCategory()
     { return (ModuleCategory) 
-            getRemoteElement(getClass("OME::Module::Category"),
+            getRemoteElement("OME::Module::Category",
                              "parent_category"); }
     public void setParentCategory(ModuleCategory parentCategory)
     { setRemoteElement("parent_category",parentCategory); }
 
     public List getChildren()
-    { return getCachedRemoteListElement(getClass("OME::Module::Category"),
+    { return getCachedRemoteListElement("OME::Module::Category",
                                         "children"); }
     public Iterator iterateChildren()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_children");
-        i.setClass(getClass("OME::Module::Category"));
+        i.setClass("OME::Module::Category");
         return i;
     }
 
     public List getModules()
-    { return getRemoteListElement(getClass("OME::Module"),
+    { return getRemoteListElement("OME::Module",
                                   "modules"); }
     public Iterator iterateModules()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_modules");
-        i.setClass(getClass("OME::Module"));
+        i.setClass("OME::Module");
         return i;
     }
 

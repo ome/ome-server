@@ -53,14 +53,15 @@ public class RemoteProject
 {
     static
     {
-        addClass("OME::Project",RemoteProject.class);
-        addClass("OME::Project::DatasetMap",
-                 DatasetLink.class);
+        RemoteObjectCache.addClass("OME::Project",RemoteProject.class);
+        RemoteObjectCache.addClass("OME::Project::DatasetMap",
+                                   DatasetLink.class);
     }
         
 
     public RemoteProject() { super(); }
-    public RemoteProject(String reference) { super(reference); }
+    public RemoteProject(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -79,7 +80,7 @@ public class RemoteProject
 
     public List getDatasets()
     {
-        List linkList = getRemoteListElement(getClass("OME::Project::DatasetMap"),
+        List linkList = getRemoteListElement("OME::Project::DatasetMap",
                                              "dataset_links");
         List datasetList = new ArrayList();
         Iterator i = linkList.iterator();
@@ -94,9 +95,9 @@ public class RemoteProject
     public Iterator iterateDatasets()
     {
         final RemoteIterator i = (RemoteIterator) 
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_dataset_links");
-        i.setClass(getClass("OME::Project::DatasetMap"));
+        i.setClass("OME::Project::DatasetMap");
         return new Iterator()
             {
                 public boolean hasNext() { return i.hasNext(); }
@@ -113,14 +114,13 @@ public class RemoteProject
         extends RemoteOMEObject
     {
         public DatasetLink() { super(); }
-        public DatasetLink(String reference) { super(reference); }
+        public DatasetLink(RemoteSession session, String reference)
+        { super(session,reference); }
 
         Project getProject()
-        { return (Project) getRemoteElement(getClass("OME::Project"),
-                                            "project"); }
+        { return (Project) getRemoteElement("OME::Project","project"); }
 
         Dataset getDataset()
-        { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
-                                            "dataset"); }
+        { return (Dataset) getRemoteElement("OME::Dataset","dataset"); }
     }
 }

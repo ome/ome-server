@@ -56,7 +56,7 @@ public class RemoteFactory
     extends RemoteObject
     implements Factory
 {
-    static { addClass("OME::Factory",RemoteFactory.class); }
+    static { RemoteObjectCache.addClass("OME::Factory",RemoteFactory.class); }
 
     protected void finalize()
     {
@@ -67,7 +67,8 @@ public class RemoteFactory
     }
 
     public RemoteFactory() { super(); }
-    public RemoteFactory(String reference) { super(reference); }
+    public RemoteFactory(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public OMEObject newObject(String className, Map data)
     {
@@ -76,7 +77,8 @@ public class RemoteFactory
                                                      className,
                                                      data
                                                  });
-        return (OMEObject) instantiate(getClass(className),newRef);
+        return (OMEObject) getRemoteSession().getObjectCache().
+            getObject(className,newRef);
     }
 
     public OMEObject maybeNewObject(String className, Map data)
@@ -86,7 +88,8 @@ public class RemoteFactory
                                                      className,
                                                      data
                                                  });
-        return (OMEObject) instantiate(getClass(className),newRef);
+        return (OMEObject) getRemoteSession().getObjectCache().
+            getObject(className,newRef);
     }
 
     public OMEObject loadObject(String className, int id)
@@ -96,7 +99,8 @@ public class RemoteFactory
                                                      className, 
                                                      new Integer(id) 
                                                  });
-        return (OMEObject) instantiate(getClass(className),newRef);
+        return (OMEObject) getRemoteSession().getObjectCache().
+            getObject(className,newRef);
     }
 
     private Object[] fixCriteria(String className, Map criteria)
@@ -124,8 +128,8 @@ public class RemoteFactory
     public boolean objectExists(String className, Map criteria)
     {
         return (caller.dispatch(this,"objectExists",
-				fixCriteria(className,criteria)).toString()
-		.equals("1"));
+                                fixCriteria(className,criteria)).toString()
+                .equals("1"));
     }
 
     public OMEObject findObject(String className, Map criteria)
@@ -133,7 +137,8 @@ public class RemoteFactory
         String newRef = caller.dispatch(this,"findObject",
                                         fixCriteria(className,criteria))
             .toString();
-        return (OMEObject) instantiate(getClass(className),newRef);
+        return (OMEObject) getRemoteSession().getObjectCache().
+            getObject(className,newRef);
     }
 
     public List findObjects(String className, Map criteria)
@@ -143,10 +148,10 @@ public class RemoteFactory
         List objList = new ArrayList();
         if (refList != null)
         {
+            RemoteObjectCache  cache = getRemoteSession().getObjectCache();
             Iterator i = refList.iterator();
             while (i.hasNext())
-                objList.add(instantiate(getClass(className),
-                                        (String) i.next()));
+                objList.add(cache.getObject(className,(String) i.next()));
         }
         return objList;
     }
@@ -154,10 +159,12 @@ public class RemoteFactory
     public Iterator iterateObjects(String className, Map criteria)
     {
         RemoteIterator i = (RemoteIterator) 
-            instantiate(getClass("OME::Factory::Iterator"),
-                        caller.dispatch(this,"iterateObjects",
-                                        fixCriteria(className,criteria)));
-        i.setClass(getClass(className));
+            getRemoteSession().getObjectCache().
+            getObject("OME::Factory::Iterator",
+                      (String) caller.dispatch(this,"iterateObjects",
+                                               fixCriteria(className,
+                                                           criteria)));
+        i.setClass(className);
         return i;
     }
 
@@ -166,7 +173,8 @@ public class RemoteFactory
         String newRef = caller.dispatch(this,"findObjectLike",
                                         fixCriteria(className,criteria))
             .toString();
-        return (OMEObject) instantiate(getClass(className),newRef);
+        return (OMEObject) getRemoteSession().getObjectCache().
+            getObject(className,newRef);
     }
 
     public List findObjectsLike(String className, Map criteria)
@@ -176,10 +184,10 @@ public class RemoteFactory
         List objList = new ArrayList();
         if (refList != null)
         {
+            RemoteObjectCache  cache = getRemoteSession().getObjectCache();
             Iterator i = refList.iterator();
             while (i.hasNext())
-                objList.add(instantiate(getClass(className),
-                                        (String) i.next()));
+                objList.add(cache.getObject(className,(String) i.next()));
         }
         return objList;
     }
@@ -187,10 +195,12 @@ public class RemoteFactory
     public Iterator iterateObjectsLike(String className, Map criteria)
     {
         RemoteIterator i = (RemoteIterator) 
-            instantiate(getClass("OME::Factory::Iterator"),
-                        caller.dispatch(this,"iterateObjectsLike",
-                                        fixCriteria(className,criteria)));
-        i.setClass(getClass(className));
+            getRemoteSession().getObjectCache().
+            getObject("OME::Factory::Iterator",
+                      (String) caller.dispatch(this,"iterateObjectsLike",
+                                               fixCriteria(className,
+                                                           criteria)));
+        i.setClass(className);
         return i;
     }
 
@@ -210,8 +220,9 @@ public class RemoteFactory
             return null;
         else
             return (Attribute)
-                instantiate(getClass("OME::SemanticType::Superclass"),
-                            newRef);
+                getRemoteSession().getObjectCache().
+                getObject("OME::SemanticType::Superclass",
+                          newRef);
     }
 
     public Attribute loadAttribute(String className, int id)
@@ -225,8 +236,9 @@ public class RemoteFactory
             return null;
         else
             return (Attribute)
-                instantiate(getClass("OME::SemanticType::Superclass"),
-                            newRef);
+                getRemoteSession().getObjectCache().
+                getObject("OME::SemanticType::Superclass",
+                          newRef);
     }
 
     public List findAttributes(String typeName, OMEObject target)
@@ -239,10 +251,11 @@ public class RemoteFactory
         List objList = new ArrayList();
         if (refList != null)
         {
+            RemoteObjectCache  cache = getRemoteSession().getObjectCache();
             Iterator i = refList.iterator();
             while (i.hasNext())
-                objList.add(instantiate(getClass("OME::SemanticType::Superclass"),
-                                        (String) i.next()));
+                objList.add(cache.getObject("OME::SemanticType::Superclass",
+                                            (String) i.next()));
         }
         return objList;
     }

@@ -51,10 +51,11 @@ public class RemoteDataset
     extends RemoteOMEObject
     implements Dataset
 {
-    static { addClass("OME::Dataset",RemoteDataset.class); }
+    static { RemoteObjectCache.addClass("OME::Dataset",RemoteDataset.class); }
 
     public RemoteDataset() { super(); }
-    public RemoteDataset(String reference) { super(reference); }
+    public RemoteDataset(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -78,7 +79,7 @@ public class RemoteDataset
 
     public List getProjects()
     {
-        List linkList = getRemoteListElement(getClass("OME::Project::DatasetLink"),
+        List linkList = getRemoteListElement("OME::Project::DatasetLink",
                                              "project_links");
         List projectList = new ArrayList();
         Iterator i = linkList.iterator();
@@ -93,9 +94,9 @@ public class RemoteDataset
     public Iterator iterateProjects()
     {
         final RemoteIterator i = (RemoteIterator) 
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_project_links");
-        i.setClass(getClass("OME::Project::DatasetLink"));
+        i.setClass("OME::Project::DatasetLink");
         return new Iterator()
             {
                 public boolean hasNext() { return i.hasNext(); }
@@ -111,7 +112,7 @@ public class RemoteDataset
 
     public List getImages()
     {
-        List linkList = getRemoteListElement(getClass("OME::Image::DatasetLink"),
+        List linkList = getRemoteListElement("OME::Image::DatasetLink",
                                              "image_links");
         List imageList = new ArrayList();
         Iterator i = linkList.iterator();
@@ -126,9 +127,9 @@ public class RemoteDataset
     public Iterator iterateImages()
     {
         final RemoteIterator i = (RemoteIterator) 
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_image_links");
-        i.setClass(getClass("OME::Image::DatasetLink"));
+        i.setClass("OME::Image::DatasetLink");
         return new Iterator()
             {
                 public boolean hasNext() { return i.hasNext(); }

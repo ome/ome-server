@@ -53,15 +53,16 @@ public class RemoteSemanticType
 {
     static
     {
-        addClass("OME::SemanticType",
-                 RemoteSemanticType.class);
-        addClass("OME::SemanticType::Element",
-                 RemoteSemanticType.Element.class);
+        RemoteObjectCache.addClass("OME::SemanticType",
+                                   RemoteSemanticType.class);
+        RemoteObjectCache.addClass("OME::SemanticType::Element",
+                                   RemoteSemanticType.Element.class);
     }
 
 
     public RemoteSemanticType() { super(); }
-    public RemoteSemanticType(String reference) { super(reference); }
+    public RemoteSemanticType(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -102,15 +103,15 @@ public class RemoteSemanticType
     }
 
     public List getElements()
-    { return getRemoteListElement(getClass("OME::SemanticType::Element"),
+    { return getRemoteListElement("OME::SemanticType::Element",
                                   "semantic_elements"); }
 
     public Iterator iterateElements()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_semantic_elements");
-        i.setClass(getClass("OME::SemanticType::Element"));
+        i.setClass("OME::SemanticType::Element");
         return i;
     }
 
@@ -119,11 +120,12 @@ public class RemoteSemanticType
         implements SemanticType.Element
     {
         public Element() { super(); }
-        public Element(String reference) { super(reference); }
+        public Element(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public SemanticType getSemanticType()
         { return (SemanticType)
-                getRemoteElement(getClass("OME::SemanticType"),
+                getRemoteElement("OME::SemanticType",
                                  "semantic_type"); }
 
         public String getElementName()
@@ -138,7 +140,7 @@ public class RemoteSemanticType
 
         public DataTable.Column getDataColumn()
         { return (DataTable.Column) 
-                getRemoteElement(getClass("OME::DataTable::Column"),
+                getRemoteElement("OME::DataTable::Column",
                                  "data_column"); }
         public void setDataColumn(DataTable.Column dataColumn)
         { setRemoteElement("data_column",dataColumn); }

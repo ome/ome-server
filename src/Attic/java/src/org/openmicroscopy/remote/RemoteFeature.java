@@ -51,10 +51,11 @@ public class RemoteFeature
     extends RemoteOMEObject
     implements Feature
 {
-    static { addClass("OME::Feature",RemoteFeature.class); }
+    static { RemoteObjectCache.addClass("OME::Feature",RemoteFeature.class); }
 
     public RemoteFeature() { super(); }
-    public RemoteFeature(String reference) { super(reference); }
+    public RemoteFeature(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -67,27 +68,27 @@ public class RemoteFeature
     { setStringElement("tag",tag); }
 
     public Image getImage()
-    { return (Image) getRemoteElement(getClass("OME::Image"),
+    { return (Image) getRemoteElement("OME::Image",
                                       "image"); }
     public void setImage(Image image)
     { setRemoteElement("image",image); }
 
     public Feature getParentFeature()
-    { return (Feature) getRemoteElement(getClass("OME::Feature"),
+    { return (Feature) getRemoteElement("OME::Feature",
                                         "parent_feature"); }
     public void setParentFeature(Feature parentFeature)
     { setRemoteElement("parent_feature",parentFeature); }
 
     public List getChildren()
-    { return getRemoteListElement(getClass("OME::Feature"),
+    { return getRemoteListElement("OME::Feature",
                                   "all_features"); }
 
     public Iterator iterateChildren()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_all_features");
-        i.setClass(getClass("OME::Feature"));
+        i.setClass("OME::Feature");
         return i;
     }
 

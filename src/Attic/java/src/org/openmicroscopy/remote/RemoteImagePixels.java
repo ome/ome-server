@@ -50,11 +50,12 @@ public class RemoteImagePixels
 {
     static
     {
-        addClass("OME::Image::Pixels",RemoteImagePixels.class);
+        RemoteObjectCache.addClass("OME::Image::Pixels",RemoteImagePixels.class);
     }
 
     public RemoteImagePixels() { super(); }
-    public RemoteImagePixels(String reference) { super(reference); }
+    public RemoteImagePixels(RemoteSession session, String reference)
+    { super(session,reference); }
 
     private Attribute pixels;
 

@@ -55,13 +55,14 @@ public class RemoteDataTable
 {
     static
     {
-        addClass("OME::DataTable",RemoteDataTable.class);
-        addClass("OME::DataTable::Column",
-                 RemoteDataTable.Column.class);
+        RemoteObjectCache.addClass("OME::DataTable",RemoteDataTable.class);
+        RemoteObjectCache.addClass("OME::DataTable::Column",
+                                   RemoteDataTable.Column.class);
     }
 
     public RemoteDataTable() { super(); }
-    public RemoteDataTable(String reference) { super(reference); }
+    public RemoteDataTable(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getTableName()
     { return getStringElement("table_name"); }
@@ -102,15 +103,15 @@ public class RemoteDataTable
     }
 
     public List getColumns()
-    { return getRemoteListElement(getClass("OME::DataTable::Column"),
+    { return getRemoteListElement("OME::DataTable::Column",
                                   "data_columns"); }
 
     public Iterator iterateColumns()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_data_columns");
-        i.setClass(getClass("OME::DataTable::Column"));
+        i.setClass("OME::DataTable::Column");
         return i;
     }
 
@@ -119,10 +120,11 @@ public class RemoteDataTable
         implements DataTable.Column
     {
         public Column() { super(); }
-        public Column(String reference) { super(reference); }
+        public Column(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public DataTable getDataTable()
-        { return (DataTable) getRemoteElement(getClass("OME::Dataset"),
+        { return (DataTable) getRemoteElement("OME::Dataset",
                                               "data_table"); }
 
         public String getColumnName()

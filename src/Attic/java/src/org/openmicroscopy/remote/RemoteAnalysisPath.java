@@ -53,15 +53,16 @@ public class RemoteAnalysisPath
 {
     static
     {
-        addClass("OME::AnalysisPath",
+        RemoteObjectCache.addClass("OME::AnalysisPath",
                  RemoteAnalysisPath.class);
-        addClass("OME::AnalysisPath::Map",
+        RemoteObjectCache.addClass("OME::AnalysisPath::Map",
                  RemoteAnalysisPath.Node.class);
     }
 
 
     public RemoteAnalysisPath() { super(); }
-    public RemoteAnalysisPath(String reference) { super(reference); }
+    public RemoteAnalysisPath(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public int getPathLength()
     { return getIntElement("path_length"); }
@@ -70,20 +71,20 @@ public class RemoteAnalysisPath
 
     public Chain getChain()
     { return (Chain)
-            getRemoteElement(getClass("OME::AnalysisChain"),
+            getRemoteElement("OME::AnalysisChain",
                              "analysis_chain"); }
     public void setChain(Chain chain)
     { setRemoteElement("analysis_chain",chain); }
 
     public List getPathNodes()
-    { return getRemoteListElement(getClass("OME::AnalysisPath::Map"),
+    { return getRemoteListElement("OME::AnalysisPath::Map",
                                   "path_nodes"); }
     public Iterator iteratePathNodes()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_path_nodes");
-        i.setClass(getClass("OME::AnalysisPath::Map"));
+        i.setClass("OME::AnalysisPath::Map");
         return i;
     }
 
@@ -92,11 +93,12 @@ public class RemoteAnalysisPath
         implements AnalysisPath.Node
     {
         public Node() { super(); }
-        public Node(String reference) { super(reference); }
+        public Node(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public AnalysisPath getAnalysisPath()
         { return (AnalysisPath)
-                getRemoteElement(getClass("OME::AnalysisPath"),
+                getRemoteElement("OME::AnalysisPath",
                                  "path"); }
 
         public int getPathOrder()
@@ -107,7 +109,7 @@ public class RemoteAnalysisPath
 
         public Chain.Node getChainNode()
         { return (Chain.Node)
-                getRemoteElement(getClass("OME::AnalysisChain::Node"),
+                getRemoteElement("OME::AnalysisChain::Node",
                                  "analysis_chain_node"); }
         public void setChainNode(Chain.Node chainNode)
         { setRemoteElement("analysis_chain_node",chainNode); }

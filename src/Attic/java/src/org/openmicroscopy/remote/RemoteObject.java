@@ -50,27 +50,81 @@ import java.util.Iterator;
 
 import org.openmicroscopy.*;
 
+/**
+ * <p>Represents any remote object returned from a remote method call.
+ * Most of its state is maintained as a remote object reference.
+ * There are accessor helper methods which subclasses can use to
+ * implement the necessary accessor methods defined by their
+ * interfaces.</p>
+ *
+ * @author Douglas Creager
+ * @version 2.0
+ * @since OME2.0
+ */
+
 public class RemoteObject
 {
+    /**
+     * The delegate used to make remote procedure calls.
+     */
     protected static RemoteCaller caller = null;
 
+    /**
+     * The {@link Session} that created this object.
+     */
+    protected static RemoteSession session = null;
+
+    /**
+     * Sets the delegate used to make remote procedure calls.
+     * Currently only one implementation of {@link RemoteCaller} is
+     * provided -- {@link XmlRpcCaller}.
+     * @param caller the RPC delegate to use
+     */
     public static void setRemoteCaller(RemoteCaller caller)
     { RemoteObject.caller = caller; }
 
-    protected static Map classes = new HashMap();
-
-    protected static void addClass(String className, Class clazz)
-    { classes.put(className,clazz); }
-
-    protected static Class getClass(String className)
-    { return (Class) classes.get(className); }
-
+    /**
+     * The remote object reference that this <code>RemoteObject</code>
+     * represents.
+     */
     protected String reference;
-    public RemoteObject() { this.reference = null; }
-    public RemoteObject(String reference) { this.reference = reference; }
 
+    /**
+     * Creates a new <code>RemoteObject</code> instance with no
+     * reference.  This is provided so that calls to {@link
+     * Class#newInstance} succeed; the {@link #setReference} should
+     * immediately be called on the instance which is returned..
+     */
+    public RemoteObject() { this.reference = null; }
+
+    /**
+     * Creates a new <code>RemoteObject</code> instance with the given
+     * reference.
+     * @param reference the remote reference for this object
+     */
+    public RemoteObject(RemoteSession session, String reference)
+    {
+        this.reference = reference;
+        this.session = session;
+    }
+
+    /**
+     * Caches the fields of this object, to eliminate unnecessary
+     * remote calls.
+     */
     protected Map elementCache = new HashMap();
 
+    /**
+     * Empties the local element cache for this object.  The next time
+     * each accessor method is called, it will make an RPC call.
+     */
+    public void refresh() { elementCache.clear(); }
+
+    /**
+     * Removes the object from the remote server cache when the
+     * garbage collector determines that this object is no longer in
+     * scope.
+     */
     protected void finalize()
     {
         //System.err.println("finalize "+getClass()+"."+reference);
@@ -78,42 +132,47 @@ public class RemoteObject
             caller.freeObject(this);
     }
 
+    /**
+     * Returns the {@link RemoteSession} that created this object.
+     * @return the {@link RemoteSession} that created this object
+     */
+    public RemoteSession getRemoteSession() { return session; }
+
+    /**
+     * Sets this object's session.  This should almost never be called
+     * -- its main purpose is to finish setting the object's state
+     * after calling the no-parameter constructor (usually via {@link
+     * Class#newInstance}).
+     * @param reference this object's session
+     */
+    public void setRemoteSession(RemoteSession session)
+    { this.session = session; }
+
+    /**
+     * Returns this object's remote reference.
+     * @return this object's remote reference
+     */
     public String getReference() { return reference; }
+
+    /**
+     * Sets this object's remote reference.  This should almost never
+     * be called -- its main purpose is to finish setting the object's
+     * state after calling the no-parameter constructor (usually via
+     * {@link Class#newInstance}).
+     * @param reference this object's remote reference
+     */
     public void setReference(String reference) { this.reference = reference; }
 
     public String toString() { return reference; }
 
-    static RemoteObject instantiate(Class clazz, Object reference)
-    {
-        return instantiate(clazz,(String) reference);
-    }
-
-    static RemoteObject instantiate(Class clazz, String reference)
-    {
-        if (clazz == null)
-            throw new IllegalArgumentException("Cannot find class!");
-
-        if ((reference != null) && (!reference.equals("")))
-        {
-            RemoteObject newObj = null;
-            try
-            {
-                newObj = (RemoteObject) clazz.newInstance();
-            } catch (InstantiationException e) {
-                System.err.println(e);
-                return null;
-            } catch (IllegalAccessException e) {
-                System.err.println(e);
-                return null;
-            }
-            newObj.setReference(reference);
-            //System.err.println(newObj);
-            return newObj;
-        } else {
-            return null;
-        }
-    }
-
+    /**
+     * Returns the result of calling the <code>element</code> method
+     * on this remote object.  The first time this element is loaded,
+     * the actual RPC call is made, and its result is cached.  On
+     * subsequent invocations, the cached value is returned without
+     * making the RPC call.
+     * @param element the element to return
+     */
     protected Object getCachedElement(String element)
     {
         if (elementCache.containsKey(element))
@@ -128,35 +187,23 @@ public class RemoteObject
         }
     }
 
-	protected Object getCachedListElement(Class clazz,String element) {
-   		if (elementCache.containsKey(element)) {
-       	  return elementCache.get(element);
-       }
-       else {
-	   	Object o = caller.dispatch(this,element);
-	   	if (o instanceof List)
-	   	{
-		   List refList = (List) o;
-		   List objList = new ArrayList();
-		   Iterator i = refList.iterator();
-		   while (i.hasNext())
-		   	objList.add(instantiate(clazz,(String) i.next()));
-			return objList;
-		 } else if (o == null) {
-			 return null;
-		 } else {
-			 if (o == null) o = "null";
-			 throw new RemoteException(element+": expect List (of "+clazz+"), got "+o.getClass());
-		 }
-       }
-	 }
-	   
+    /**
+     * Calls the <code>element</code> method as a mutator, and updates
+     * the local element cache to reflect this new value.
+     * @param element the element whose value is to be set and cache
+     * @param value the element's value
+     */
     private void saveElement(String element, Object value)
     {
         elementCache.put(element,value);
         caller.dispatch(this,element,value);
     }
 
+    /**
+     * An accessor helper method to retrieve <code>boolean</code>
+     * values with caching.
+     * @param element the element to retrieve
+     */
     protected boolean getBooleanElement(String element)
     {
         Object o = getCachedElement(element);
@@ -180,9 +227,21 @@ public class RemoteObject
             throw new RemoteException(element+": expect boolean, got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set <code>boolean</code> values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setBooleanElement(String element, boolean value)
     { saveElement(element,new Boolean(value)); }
 
+    /**
+     * An accessor helper method to retrieve <code>int</code> values
+     * with caching.
+     * @param element the element to retrieve
+     */
     protected int getIntElement(String element)
     {
         Object o = getCachedElement(element);
@@ -199,9 +258,21 @@ public class RemoteObject
             throw new RemoteException(element+": expect int, got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set <code>int</code> values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setIntElement(String element, int value)
     { saveElement(element,new Integer(value)); }
 
+    /**
+     * An accessor helper method to retrieve <code>long</code> values
+     * with caching.
+     * @param element the element to retrieve
+     */
     protected long getLongElement(String element)
     {
         // XML-RPC's only integer type is Integer
@@ -219,9 +290,21 @@ public class RemoteObject
             throw new RemoteException(element+": expect long, got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set <code>long</code> values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setLongElement(String element, long value)
     { saveElement(element,new Integer((int) value)); }
 
+    /**
+     * An accessor helper method to retrieve <code>float</code> values
+     * with caching.
+     * @param element the element to retrieve
+     */
     protected float getFloatElement(String element)
     {
         // XML-RPC's only floating-point type is Double
@@ -239,9 +322,21 @@ public class RemoteObject
             throw new RemoteException(element+": expect float, got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set <code>float</code> values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setFloatElement(String element, float value)
     { saveElement(element,new Double(value)); }
 
+    /**
+     * An accessor helper method to retrieve <code>double</code>
+     * values with caching.
+     * @param element the element to retrieve
+     */
     protected double getDoubleElement(String element)
     {
         Object o = getCachedElement(element);
@@ -258,9 +353,21 @@ public class RemoteObject
             throw new RemoteException(element+": expect double, got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set <code>double</code> values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setDoubleElement(String element, double value)
     { saveElement(element,new Double(value)); }
 
+    /**
+     * An accessor helper method to retrieve {@link String} values
+     * with caching.
+     * @param element the element to retrieve
+     */
     protected String getStringElement(String element)
     {
         Object o = getCachedElement(element);
@@ -274,98 +381,142 @@ public class RemoteObject
             throw new RemoteException(element+": expect String, got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set {@link String} values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setStringElement(String element, String value)
     { saveElement(element,value); }
 
+    /**
+     * An accessor helper method to retrieve {@link Object} values
+     * with caching.  This method does not try to resolve the object
+     * into a more restrictive class -- it returns whatever is
+     * returned by the RPC caller.
+     * @param element the element to retrieve
+     */
     protected Object getObjectElement(String element)
     { return getCachedElement(element); }
+
+    /**
+     * A mutator helper method to set {@link Object} values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setObjectElement(String element, Object value)
     { saveElement(element,value); }
 
-    protected RemoteObject getRemoteElement(Class clazz,
+    /**
+     * An accessor helper method to retrieve remote object values with
+     * caching.  The value is assumed to be an instance of the
+     * <code>perlClass</code> remote class.  The session's object
+     * cache is used to ensure that only one Java instance is created
+     * for each remote object reference.
+     * @param perlClass the remote class of the return value
+     * @param element the element to retrieve
+     */
+    protected RemoteObject getRemoteElement(String perlClass,
                                             String element)
     {
         Object o = getCachedElement(element);
         if (o instanceof String)
         {
-            RemoteObject ro =  instantiate(clazz,(String) o);
-            elementCache.put(element,ro);
-            return ro;
+            RemoteObject object =
+                getRemoteSession().getObjectCache().
+                getObject(perlClass,(String) o);
+            elementCache.put(element,object);
+            return object;
         } else if (o instanceof RemoteObject) {
             return (RemoteObject) o;
         } else if (o == null) {
             return null;
         } else {
             if (o == null) o = "null";
-            throw new RemoteException(element+": expect String (ref "+clazz+"), got "+o.getClass());
+            throw new RemoteException(element+": expect String (ref "+perlClass+"), got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set remote object values with
+     * caching.  This is effectively the same as calling {@link
+     * #setStringElement} with <code>value</code>'s object reference
+     * as the value.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setRemoteElement(String element, Object value)
     { saveElement(element,value); }
 
-	/**
-	 * getRemoteListElement
-	 * <p>This is the uncached version. See {@link #getCachedRemoteListElement 
-	 * getCachedRemoteListElement} for the cached version.<p> 
-	 * <p>The choice between the cached and uncached will be made as 
-	 * appropriate by the subclass of RemoteObject. 
-	 * @param clazz - the java class that is the tpe of the element.
-	 * @param element - the name of the element
-	 * @return List - list of objects of the given class, from the given name.
-	 */
-    protected List getRemoteListElement(Class clazz,
+    /**
+     * Returns the result of calling the <code>element</code> method
+     * on this remote object, and assumes that the result is a list of
+     * <code>perlClass</code> objects.  No caching is done.
+     * @param perlClass the name of the Perl class that the list
+     * should contain
+     * @param element the name of the element to retrieve
+     */
+    protected List getRemoteListElement(String perlClass,
                                         String element)
     {
-    
-    	Object o = caller.dispatch(this,element);
-        if (o instanceof List)
-        {
+	   	Object o = caller.dispatch(this,element);
+	   	if (o instanceof List)
+	   	{
             List refList = (List) o;
             List objList = new ArrayList();
             Iterator i = refList.iterator();
+            RemoteObjectCache cache = getRemoteSession().getObjectCache();
             while (i.hasNext())
-                objList.add(instantiate(clazz,(String) i.next()));
-            return objList;
+                objList.add(cache.getObject(perlClass,(String) i.next()));
+			return objList;
         } else if (o == null) {
             return null;
         } else {
             if (o == null) o = "null";
-            throw new RemoteException(element+": expect List (of "+clazz+"), got "+o.getClass());
+            throw new RemoteException(element+": expect List (of "+perlClass+"), got "+o.getClass());
         }
     }
-    
+
     /**
-     * getCachedRemoteListElement
-     * <p> The cached version of getRemoteListElement
-     * 
-     * @param clazz
-     * @param element
-     * @return List
+     * Returns the result of calling the <code>element</code> method
+     * on this remote object, and assumes that the result is a list of
+     * <code>perlClass</code> objects.  The first time this element is
+     * loaded, the actual RPC call is made, and its result is cached.
+     * On subsequent invocations, the cached value is returned without
+     * making the RPC call.
+     * @param perlClass the name of the Perl class that the list
+     * should contain
+     * @param element the name of the element to retrieve
      */
-     protected List getCachedRemoteListElement(Class clazz,String element) {
-    	
-    	Object o = getCachedListElement(clazz,element);
-    	if (o instanceof List) {
-    		return (List) o;
-    	}
-    	else if (o == null) {
-    		return null;
-    	}
-    	else {
-    		if (o == null)
-    			o=null;
-    		throw new RemoteException(element+": expect List, got "+o.getClass());
-    	}
+    protected List getCachedRemoteListElement(String perlClass,
+                                              String element)
+    {
+   		if (elementCache.containsKey(element))
+        {
+            return (List) elementCache.get(element);
+        } else {
+            List list = getRemoteListElement(perlClass,element);
+            elementCache.put(element,list);
+            return list;
+        }
      }
 
+    /**
+     * An accessor helper method to retrieve {@link Attribute} values
+     * with caching.
+     * @param element the element to retrieve
+     */
     protected Attribute getAttributeElement(String element)
     {
         Object o = getCachedElement(element);
         if (o instanceof String)
         {
             Attribute a = (Attribute)
-                instantiate(getClass("OME::SemanticType::Superclass"),
-                            (String) o);
+                getRemoteSession().getObjectCache().
+                getObject("OME::SemanticType::Superclass",(String) o);
             elementCache.put(element,a);
             return a;
         } else if (o instanceof Attribute) {
@@ -377,6 +528,13 @@ public class RemoteObject
             throw new RemoteException(element+": expect String (Attribute), got "+o.getClass());
         }
     }
+
+    /**
+     * A mutator helper method to set {@link Attribute} values with
+     * caching.
+     * @param element the element to set
+     * @param value the new value
+     */
     protected void setAttributeElement(String element, Attribute value)
     { saveElement(element,value); }
 }

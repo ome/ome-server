@@ -53,15 +53,16 @@ public class RemoteChainExecution
 {
     static
     {
-        addClass("OME::AnalysisChainExecution",
-                 RemoteChainExecution.class);
-        addClass("OME::AnalysisChainExecution::NodeExecution",
-                 RemoteChainExecution.Node.class);
+        RemoteObjectCache.addClass("OME::AnalysisChainExecution",
+                                   RemoteChainExecution.class);
+        RemoteObjectCache.addClass("OME::AnalysisChainExecution::NodeExecution",
+                                   RemoteChainExecution.Node.class);
     }
 
 
     public RemoteChainExecution() { super(); }
-    public RemoteChainExecution(String reference) { super(reference); }
+    public RemoteChainExecution(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getTimestamp()
     { return getStringElement("timestamp"); }
@@ -69,13 +70,13 @@ public class RemoteChainExecution
     { setStringElement("timestamp",timestamp); }
 
     public Chain getChain()
-    { return (Chain) getRemoteElement(getClass("OME::AnalysisChain"),
+    { return (Chain) getRemoteElement("OME::AnalysisChain",
                                       "analysis_chain"); }
     public void setChain(Chain chain)
     { setRemoteElement("analysis_chain",chain); }
 
     public Dataset getDataset()
-    { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
+    { return (Dataset) getRemoteElement("OME::Dataset",
                                         "dataset"); }
     public void setDataset(Dataset dataset)
     { setRemoteElement("dataset",dataset); }
@@ -86,14 +87,14 @@ public class RemoteChainExecution
     { setAttributeElement("experimenter",experimenter); }
 
     public List getNodes()
-    { return getRemoteListElement(getClass("OME::AnalysisChainExecution::NodeExecution"),
+    { return getRemoteListElement("OME::AnalysisChainExecution::NodeExecution",
                                   "node_executions"); }
     public Iterator iterateNodes()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_node_executions");
-        i.setClass(getClass("OME::AnalysisChainExecution::NodeExecution"));
+        i.setClass("OME::AnalysisChainExecution::NodeExecution");
         return i;
     }
 
@@ -102,23 +103,24 @@ public class RemoteChainExecution
         implements ChainExecution.Node
     {
         public Node() { super(); }
-        public Node(String reference) { super(reference); }
+        public Node(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public ChainExecution getChainExecution()
         { return (ChainExecution)
-                getRemoteElement(getClass("OME::AnalysisChainExecution"),
+                getRemoteElement("OME::AnalysisChainExecution",
                                  "analysis_execution"); }
 
         public Chain.Node getChainNode()
         { return (Chain.Node)
-                getRemoteElement(getClass("OME::AnalysisChain::Node"),
+                getRemoteElement("OME::AnalysisChain::Node",
                                  "analysis_chain_node"); }
         public void setChainNode(Chain.Node chainNode)
         { setRemoteElement("analysis_chain_node",chainNode); }
 
         public ModuleExecution getModuleExecution()
         { return (ModuleExecution)
-                getRemoteElement(getClass("OME::ModuleExecution"),
+                getRemoteElement("OME::ModuleExecution",
                                  "module_execution"); }
         public void setModuleExecution(ModuleExecution moduleExecution)
         { setRemoteElement("module_execution",moduleExecution); }

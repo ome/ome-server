@@ -53,13 +53,16 @@ public class RemoteModule
 {
     static
     {
-        addClass("OME::Module",RemoteModule.class);
-        addClass("OME::Module::FormalInput",RemoteModule.FormalInput.class);
-        addClass("OME::Module::FormalOutput",RemoteModule.FormalOutput.class);
+        RemoteObjectCache.addClass("OME::Module",RemoteModule.class);
+        RemoteObjectCache.addClass("OME::Module::FormalInput",
+                                   RemoteModule.FormalInput.class);
+        RemoteObjectCache.addClass("OME::Module::FormalOutput",
+                                   RemoteModule.FormalOutput.class);
     }
 
     public RemoteModule() { super(); }
-    public RemoteModule(String reference) { super(reference); }
+    public RemoteModule(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -83,7 +86,7 @@ public class RemoteModule
 
     public ModuleCategory getCategory()
     { return (ModuleCategory)
-            getRemoteElement(getClass("OME::Module::Category"),
+            getRemoteElement("OME::Module::Category",
                              "category"); }
     public void setCategory(ModuleCategory category)
     { setRemoteElement("category",category); }
@@ -104,38 +107,38 @@ public class RemoteModule
     { setStringElement("execution_instructions",executionInstructions); }
 
     public List getInputs()
-    { return getCachedRemoteListElement(getClass("OME::Module::FormalInput"),
+    { return getCachedRemoteListElement("OME::Module::FormalInput",
                                         "inputs"); }
     public Iterator iterateInputs()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_inputs");
-        i.setClass(getClass("OME::Module::FormalInput"));
+        i.setClass("OME::Module::FormalInput");
         return i;
     }
 
     public List getOutputs()
-    { return getCachedRemoteListElement(getClass("OME::Module::FormalOutput"),
+    { return getCachedRemoteListElement("OME::Module::FormalOutput",
                                         "outputs"); }
     public Iterator iterateOutputs()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_outputs");
-        i.setClass(getClass("OME::Module::FormalOutput"));
+        i.setClass("OME::Module::FormalOutput");
         return i;
     }
 
     public List getExecutions()
-    { return getRemoteListElement(getClass("OME::ModuleExecution"),
+    { return getRemoteListElement("OME::ModuleExecution",
                                   "module_executions"); }
     public Iterator iterateExecutions()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_module_executions");
-        i.setClass(getClass("OME::ModuleExecution"));
+        i.setClass("OME::ModuleExecution");
         return i;
     }
 
@@ -146,11 +149,12 @@ public class RemoteModule
         implements Module.FormalParameter
     {
         public FormalParameter() { super(); }
-        public FormalParameter(String reference) { super(reference); }
+        public FormalParameter(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public Module getModule()
         { return (Module)
-                getRemoteElement(getClass("OME::Module"),
+                getRemoteElement("OME::Module",
                                  "module"); }
 
         public String getParameterName()
@@ -165,7 +169,7 @@ public class RemoteModule
 
         public SemanticType getSemanticType()
         { return (SemanticType) 
-                getRemoteElement(getClass("OME::SemanticType"),
+                getRemoteElement("OME::SemanticType",
                                  "semantic_type"); }
         public void setSemanticType(SemanticType attributeType)
         { setRemoteElement("semantic_type",attributeType); }
@@ -186,11 +190,12 @@ public class RemoteModule
         implements Module.FormalInput
     {
         public FormalInput() { super(); }
-        public FormalInput(String reference) { super(reference); }
+        public FormalInput(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public LookupTable getLookupTable()
         { return (LookupTable) 
-                getRemoteElement(getClass("OME::LookupTable"),
+                getRemoteElement("OME::LookupTable",
                                  "lookup_table"); }
         public void setLookupTable(LookupTable lookupTable)
         { setRemoteElement("lookup_table",lookupTable); }
@@ -206,7 +211,8 @@ public class RemoteModule
         implements Module.FormalOutput
     {
         public FormalOutput() { super(); } 
-        public FormalOutput(String reference) { super(reference); }
+        public FormalOutput(RemoteSession session, String reference)
+        { super(session,reference); }
 
         public String getFeatureTag()
         { return getStringElement("feature_tag"); }

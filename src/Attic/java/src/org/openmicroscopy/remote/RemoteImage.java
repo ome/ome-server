@@ -53,12 +53,13 @@ public class RemoteImage
 {
     static
     {
-        addClass("OME::Image",RemoteImage.class);
-        addClass("OME::Image::DatasetMap",DatasetLink.class);
+        RemoteObjectCache.addClass("OME::Image",RemoteImage.class);
+        RemoteObjectCache.addClass("OME::Image::DatasetMap",DatasetLink.class);
     }
         
     public RemoteImage() { super(); }
-    public RemoteImage(String reference) { super(reference); }
+    public RemoteImage(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -97,7 +98,7 @@ public class RemoteImage
 
     public List getDatasets()
     {
-        List linkList = getRemoteListElement(getClass("OME::Image::DatasetLink"),
+        List linkList = getRemoteListElement("OME::Image::DatasetLink",
                                              "dataset_links");
         List datasetList = new ArrayList();
         Iterator i = linkList.iterator();
@@ -112,9 +113,9 @@ public class RemoteImage
     public Iterator iterateDatasets()
     {
         final RemoteIterator i = (RemoteIterator) 
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_dataset_links");
-        i.setClass(getClass("OME::Image::DatasetLink"));
+        i.setClass("OME::Image::DatasetLink");
         return new Iterator()
             {
                 public boolean hasNext() { return i.hasNext(); }
@@ -128,15 +129,15 @@ public class RemoteImage
     }
 
     public List getAllFeatures()
-    { return getRemoteListElement(getClass("OME::Feature"),
+    { return getRemoteListElement("OME::Feature",
                                   "all_features"); }
 
     public Iterator iterateAllFeatures()
     {
         RemoteIterator i = (RemoteIterator)
-            getRemoteElement(getClass("OME::Factory::Iterator"),
+            getRemoteElement("OME::Factory::Iterator",
                              "iterate_all_features");
-        i.setClass(getClass("OME::Feature"));
+        i.setClass("OME::Feature");
         return i;
     }
 
@@ -157,8 +158,8 @@ public class RemoteImage
                                        new Object[] { pixels });
             if (o == null) return null;
             RemoteImagePixels pix = (RemoteImagePixels)
-                instantiate(getClass("OME::Image::Pixels"),
-                            (String) o);
+                getRemoteSession().getObjectCache().
+                getObject("OME::Image::Pixels",(String) o);
             pix.setPixelsAttribute(pixels);
             return pix;
         }
@@ -168,14 +169,13 @@ public class RemoteImage
         extends RemoteOMEObject
     {
         public DatasetLink() { super(); }
-        public DatasetLink(String reference) { super(reference); }
+        public DatasetLink(RemoteSession session, String reference)
+        { super(session,reference); }
 
         Image getImage()
-        { return (Image) getRemoteElement(getClass("OME::Image"),
-                                          "image"); }
+        { return (Image) getRemoteElement("OME::Image","image"); }
 
         Dataset getDataset()
-        { return (Dataset) getRemoteElement(getClass("OME::Dataset"),
-                                            "dataset"); }
+        { return (Dataset) getRemoteElement("OME::Dataset","dataset"); }
     }
 }

@@ -49,10 +49,14 @@ public class RemoteOMEObject
     extends RemoteObject
     implements OMEObject
 {
-    static { addClass("OME::DBObject",RemoteOMEObject.class); }
+    static
+    {
+        RemoteObjectCache.addClass("OME::DBObject",RemoteOMEObject.class);
+    }
 
     public RemoteOMEObject() { super(); }
-    public RemoteOMEObject(String reference) { super(reference); }
+    public RemoteOMEObject(RemoteSession session, String reference)
+    { super(session,reference); }
 
     public int getID()
     { return getIntElement("id"); }
@@ -61,9 +65,7 @@ public class RemoteOMEObject
     { caller.dispatch(this,"writeObject"); }
 
     public Session getSession()
-    { return (Session)
-            getRemoteElement(getClass("OME::Session"),
-                             "Session"); }
+    { return getRemoteSession(); }
 
     public boolean equals(OMEObject o)
     {
