@@ -416,7 +416,8 @@ sub createOMEPage {
 
 	my $head = $CGI->start_html(
 		-title => $title,
-		-style => {'src' => '/html/ome2.css'}
+		-style => {'src' => '/html/ome2.css'},
+		-script => {-language => 'JAVASCRIPT', -src => '/JavaScript/ome2.js'},
 	);
 		 		 
 	my $tail = $CGI->end_html;
