@@ -30,10 +30,7 @@
 % This module produces binary images from intensity images by normalizing the 
 % image's pixel intensities to the [0,1] range and thresholding at the user-specified level
 %
-function [outPixels] = GlobalThreshold(inPixels, theC, level)
-
-% select the Channel from the XYZCT pixels
-inPixels = inPixels(:,:,:,theC,:);
+function [outPixels] = GlobalThreshold(inPixels, level)
 
 outPixels = im2bw (inPixels, level);
 
