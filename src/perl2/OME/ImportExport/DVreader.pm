@@ -154,7 +154,7 @@ sub new {
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
     my $self = {};
-    $self->{parent} = shift;
+    $self->{params} = shift;
 
     return bless $self, $class;
 
@@ -164,8 +164,8 @@ sub new {
 # Read in the DeltaVision image metadata
 sub readImage {
     my $self = shift;     # Ourselves
-    my $parent = $self->{parent};
-    my $fh    = $parent->fref;
+    my $params = $self->{params};
+    my $fh    = $params->fref;
     my $sz;
     my $len;
     my $img_len;
@@ -182,14 +182,16 @@ sub readImage {
 
     # Read the DeltaVision fixed header
     my $status = readUIHdr($self, $fh,
-			   $parent->{endian},
-			   $parent->{offset});
+			   $params->{endian},
+			   $params->{offset});
     return($status)
 	unless ($status eq "");
 
     # check that PixelType has a valid value
-    foreach $sz (keys %pix_size) {
-	if ($sz == $self->{"PixelType"}) {
+    foreach my $ky (keys %pix_size) {
+	if ($ky == $self->{"PixelType"}) {
+	    my $xref = $params->{xml_hash};
+	    $xref->{'Data.BitsPerPixel'} = $pix_size{$ky}*8;
 	    $pix_OK = 1;
 	    last;
 	}
@@ -217,7 +219,7 @@ sub readImage {
     # Read in the extended header segments
     $numsecs = $self->{NumSections};                   # number of planes in image
     $numflds = $self->{NumInts} + $self->{NumFloats};  # number of fields per plane
-    $status = readUIExtHdrs($self, $fh, $parent->{endian}, $numsecs, $numflds, 1024);
+    $status = readUIExtHdrs($self, $fh, $params->{endian}, $numsecs, $numflds, 1024);
 
     return $status;
 
@@ -227,20 +229,21 @@ sub readImage {
 
 sub formatImage {
     my $self = shift;     # Ourselves
-    my $parent = $self->{parent};
+    my $pixWrap = shift;
+    my $params = $self->{params};
 
-    my $fih    = $parent->fref;
-    my $foh    = $parent->fouf;
-    my $xyzwt  = $parent->obuffer;
-    my $endian = $parent->endian;
-    my $xml_hash = $parent->xml_hash;
+    my $fih    = $params->fref;
+    my $xyzwt  = $params->obuffer;
+    my $endian = $params->endian;
+    my $xml_hash = $params->xml_hash;
     my @obuf;
     my ($ibuf, $rowbuf);
-    my ($i, $j, $k, $row);
+    my ($theT, $theC, $theZ, $row);
     my $status;
     my $start_offset;
+    my $nPix;
     my ($row_size, $plane_size);
-    my $pixsz = $pix_size{$self->{"PixelType"}};
+    my $bps = $pix_size{$self->{"PixelType"}};
     my ($t_jump, $w_jump, $z_jump);
     my ($offset, $t_offset, $w_offset, $z_offset);
     my $order = $self->{ImgSeq};                 # 0 = XYZTW 1 = XYWZT, 2 = XYZWT
@@ -251,11 +254,12 @@ sub formatImage {
     my $sections = $self->{NumSections};
     my $zs = ($sections/$waves)/$times;         # number of Z steps in a stack
 
-    $parent->{pixel_size} = $pixsz * 8;
-    $row_size   = $cols * $pixsz;               # size of an X vector (row)
+    $params->byte_size($bps);
+    $params->pixel_size($bps * 8);
+    $row_size   = $cols * $bps;               # size of an X vector (row)
     $plane_size = $rows * $row_size;            # size of 1 XY plane
 
-    print STDERR "Times: $times, waves:$waves, zs: $zs, rows: $rows, cols: $cols, sections: $sections\n";
+    #print STDERR "Times: $times, waves:$waves, zs: $zs, rows: $rows, cols: $cols, sections: $sections\n";
     # Start at begining of image data
     $start_offset = 1024 + $self->{next};
 
@@ -267,32 +271,45 @@ sub formatImage {
     # Read image out of the input file & arrange it in
     # our canonical XYZWT order.
     #print "   DVreader start read loop: ".localtime."\n";
-    for ($i = 0; $i < $times; $i++) {
-	$t_offset = $start_offset + $i * $t_jump;
+    for ($theT = 0; $theT < $times; $theT++) {
+	$t_offset = $start_offset + $theT * $t_jump;
 	my @xyzw;
-	for ($j = 0; $j < $waves; $j++) {
-	    $w_offset = $t_offset + $j * $w_jump;
+	for ($theC = 0; $theC < $waves; $theC++) {
+	    $w_offset = $t_offset + $theC * $w_jump;
 	    my @xyz;
-	    for ($k = 0; $k < $zs; $k++) {
-		$offset = $w_offset + $k * $z_jump;
+	    for ($theZ = 0; $theZ < $zs; $theZ++) {
+		my $plane_size = 0;
+		$offset = $w_offset + $theZ * $z_jump;
 		my @xy;
+		my $num_rows = 0;
+		my $plane_rows = "";
 		for ($row = 0; $row < $rows; $row++) {
 		    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
 		    last
 			unless $status eq "";
 
 		    my $cnt = Repacker::repack($ibuf, $row_size, 
-				     $pix_size{$self->{"PixelType"}},
+				     $params->byte_size,
 				     $endian eq "little",
-				     $parent->{host_endian} eq "little");
-		    push @xy, $ibuf;
+				     $params->{host_endian} eq "little");
+		    substr($plane_rows, length($plane_rows), 0, $ibuf);
+		    $num_rows++;
+		    $plane_size += $row_size/$bps;
 		    $offset += $row_size;
 		}
-		push @xyz, \@xy;
+		last
+		    unless $status eq "";
+		my $nPixOut = $pixWrap->SetRows ($plane_rows, $num_rows);
+		if ($plane_size != $nPixOut) {
+		    $status = "Failed to write repository file - $plane_size != $nPixOut";
+		    last;
+		}
 	    }
-	    push @xyzw, \@xyz;
+	    last
+		unless $status eq "";
 	}
-	push @$xyzwt, \@xyzw;
+	last
+	    unless $status eq "";
     }
     #print "   DVreader end read loop: ".localtime."\n";
 
@@ -309,8 +326,8 @@ sub readUIHdr {
     my $fh = shift;
     my $endian = shift;
     my $offset = shift;
-    my $parent = $self->{parent};
-    my $xml_hash = $parent->xml_hash;
+    my $params = $self->{params};
+    my $xml_hash = $params->xml_hash;
     my $i;
     my $len;
     my $typ;
@@ -354,7 +371,6 @@ sub readUIHdr {
 	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};
 	# IGG 10/06/02:  The wavenumbers start at 0 in OME.
 	$whref->{'WavelengthInfo.WaveNumber'} = $i-1;
-	#print "WavelengthInfo."."$xel = ". $whref->{'WavelengthInfo.'.$xel}."\n";
 	push @$w_aref, $whref;
 	$i++;
     }
@@ -376,7 +392,7 @@ sub readUIExtHdrs {
     my $numsecs = shift;
     my $numflds = shift;
     my $offset = shift;
-    my $parent = $self->{parent};
+    my $params = $self->{params};
     my $numInts;
     my $numFlts;
     my $i;
@@ -393,13 +409,12 @@ sub readUIExtHdrs {
     $numFlts = $self->{NumFloats};
     $status = "File read error";
     $numsecs = $self->{NumSections};
-    $len = 4;                                  # Every field in the ext. hdr is 4 bytes long
+    $len = 4;                 # Every field in the ext. hdr is 4 bytes long
     $curpos = tell $fh;
     while ($numsecs--) {
 	#skip over the integers in the Ext hdr (they're always 0)
 	last
 	   unless (seek($fh, $numInts * $len, 1));
-	#print "\n";
 
 	$status = "File read error";
 	for ($i = 0; $i < $numFlts; $i++) {
@@ -407,8 +422,8 @@ sub readUIExtHdrs {
 	    last
 		unless ($status eq "");
 	    $val = unpack("f", $buf);
-	    if ($endian ne $parent->host_endian) {
-		$val = $parent->SUPER::flip_float($val);
+	    if ($endian ne $params->host_endian) {
+		$val = $self->SUPER::flip_float($val);
 	    }
 	    if ($i < 13) {  # only the 1st 13 floats are interesting
 		#printf("flt: %g, ", $val);

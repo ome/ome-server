@@ -32,8 +32,8 @@
 # slice_sorter()
 # do_uic1()
 # do_uic2()
-# do_uic4()
-# get-value()
+# do_uic3()
+# get_value()
 # get_long()
 # go_there()
 # get_string()
@@ -46,6 +46,8 @@ our @ISA = ("OME::ImportExport::Import_reader", "OME::ImportExport::TIFFreader")
 use strict;
 use Carp;
 use OME::ImportExport::FileUtils;
+use OME::ImportExport::Params;
+use OME::ImportExport::PixWrapper;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -128,7 +130,7 @@ sub new {
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
     my $self = {};
-    $self->{parent} = shift;
+    $self->{params} = shift;
 
     return bless $self, $class;
 }
@@ -137,10 +139,9 @@ sub new {
 # This method reads a STK specific tag and loads its contents into $self
 sub readTag {
     my ($self, $tagname, $type, $cnt, $offset) = @_;
-    my $parent = $self->{parent};
-    my $ancestor = $parent->{parent};
-    my $endian = $ancestor->endian;
-    my $fih    = $ancestor->fref;
+    my $params = $self->{params};
+    my $endian = $params->endian;
+    my $fih    = $params->fref;
     my $cur_offset;
     my $status;
 
@@ -179,14 +180,14 @@ sub readTag {
 
 sub formatImage {
     my $self = shift;;
-    my $parent = $self->{parent};
-    my $gparent = $parent->{parent};
-    my $xml_hash = $gparent->xml_hash;
-    my $row_size = $parent->{row_size};
-    my $offsets_arr = $parent->{offsets};
+    my $pixWrap = shift;
+    my $params = $self->{params};
+    my $xml_hash       = $params->xml_hash;
+    my $row_size       = $params->row_size;
+    my $offsets_arr    = $params->image_offsets;
+    my $bytecounts_arr = $params->image_bytecounts;
+    my $xyzwt          = $params->obuffer;
     my ($offs_arr, $bytes_arr);
-    my $bytecounts_arr = $parent->{bytecounts};
-    my $xyzwt = $parent->{obuffer};
     my (@xy_arr, @xyz, @xyzw);
     my $start_offset;
     my $end_offset;
@@ -232,22 +233,36 @@ sub formatImage {
     # partition into clumps, and subsort the clumps
     # Will put image data, in XYZWT order, into 5D array for return to caller
     my @indeces = qw(Z_val W_ave Cr_dt);
-    $status = partition_and_sort($parent, $gparent, \@xy_arr, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
+    $status = partition_and_sort($params, \@xy_arr, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
 
     # now have list of all the XY planes. Arrange them in their 5D order
     #reverse @xy_arr;
     my ($t, $w, $z);
+    my $maxY = $xml_hash->{'Image.SizeY'};
     my $maxZ = $xml_hash->{'Image.SizeZ'};
     my $maxW = $xml_hash->{'Image.NumWaves'};
     my $maxT = $xml_hash->{'Image.NumTimes'};
     for ($t = 0; $t < $maxT; $t++) {
 	for ($w = 0; $w < $maxW; $w++) {
 	    for ($z = 0; $z < $maxZ; $z++) {
-		push (@xyz, pop (@xy_arr));
+		my $num_rows = 0;
+		my $plane = pop(@xy_arr);
+		my $rows = "";
+		my $row;
+		# flatten plane into string of rows
+		for (my $y = 0; $y < $maxY; $y++) {
+		    $row = $$plane[$y];
+		    substr($rows, length($rows), 0, $row);
+		    $num_rows++;
+		}
+		my $nPixOut = $pixWrap->SetRows ($rows, $num_rows);
+		if ($plane_size/$params->byte_size != $nPixOut) {
+		    $status = "Failed to write repository file - $plane_size/$params->byte_size != $nPixOut";
+		    last;
+		}
+		
 	    }
-	    push (@xyzw, \@xyz);
 	}
-	push (@$xyzwt, \@xyzw);
     }
 
 
@@ -328,13 +343,12 @@ sub formatImage {
 
 
 sub partition_and_sort {
-    my ($parent, $gparent, $oarray, $st_offset, $st_plane, $end_plane, $plane_size, $num_rows, $u2, $planes, @ndx_keys) = @_;
-    my $fih = $parent->{fih};
-    my $foh = $parent->{foh};
-    my $endian = $parent->{endian};
-    my $bps = $parent->{bps};
+    my ($params, $oarray, $st_offset, $st_plane, $end_plane, $plane_size, $num_rows, $u2, $planes, @ndx_keys) = @_;
+    my $fih      = $params->fref;
+    my $endian   = $params->endian;
+    my $bps      = $params->byte_size;
+    my $row_size = $params->row_size;
     my $row;
-    my $row_size = $parent->{row_size};
     my @obuf;
     my ($ibuf, $rowbuf);
     my ($pl, $i);
@@ -369,14 +383,12 @@ sub partition_and_sort {
 	if ((scalar @ndx_keys > 0) && ($st_slice != $end_slice)) {
 	    slice_sorter($u2, $planes, $st_slice, $end_slice, @ndx_keys);
 	    # now partition & sort this clump on next sort attribute in list
-	    partition_and_sort($parent, $oarray, $st_offset, $st_slice, $end_slice, $plane_size, $num_rows, $u2, $planes, @ndx_keys);
+	    partition_and_sort($params, \@subarray, $st_offset, $st_slice, $end_slice, $plane_size, $num_rows, $u2, $planes, @ndx_keys);
 	    push @$oarray, \@subarray;
 	    #print "  ++ $depth: got back an array with ", scalar @subarray, " entries\n";
 	}
 	else {   # we have descended from XYZWT to XY hierarchy, or have only 1 plane
 	         # so it's time to actually read bits
-	    #$offset = $st_offset + $st_plane * $plane_size;
-	    #my @xyz;
 	    $depth = 3 - scalar @ndx_keys;
 	    for ($i = $st_slice; $i <= $end_slice; $i++) {
 		my @xy;
@@ -388,11 +400,10 @@ sub partition_and_sort {
 		    my $cnt = Repacker::repack($ibuf, $row_size, 
 				     $bps,
 				     $endian eq "little",
-				     $gparent->{host_endian} eq "little");
+				     $params->{host_endian} eq "little");
 		    push @xy, $ibuf;
 		    $offset += $row_size;
 		}
-		#print "wrote plane # ", $planes->{$i}, ", containing $num_rows rows, of size $row_size\n";
 		push @$oarray, \@xy;
 	    }
 	    $pl += ($end_slice - $st_slice);  # account for extra planes written here
@@ -404,7 +415,7 @@ sub partition_and_sort {
 
 
 
-# Sort passed slice. value to sort on is at array index $ndx_key
+# Sort passed slice. Value to sort on is at array index $ndx_key
 
 sub slice_sorter {
     my ($u2, $planes, $st_slice, $end_slice, @ndx_keys) = @_;
@@ -450,7 +461,7 @@ sub slice_sorter {
 # ID/pairs will be put into the %uic4 hash.
 #
 # Nothing is actually done yet with any data from the UIC1 or UIC4 tags. It
-# is parsedsþÞHcase a use is ever found for it (or the UIC4 data gets reliable)
+# is parseds in case a use is ever found for it (or the UIC4 data gets reliable)
 
 sub do_uic1 {
     my ($caller, $endian, $fih, $type, $tag_cnt) = @_;
@@ -535,10 +546,8 @@ sub do_uic1 {
 
 sub do_uic2 {
     my ($self, $endian, $fih, $type, $num_planes) = @_;
-    my $parent = $self->{parent};
-    # should inherit this in a less fragile way
-    my $gparent = $parent->{parent};
-    my $xml_hash = $gparent->xml_hash;
+    my $params = $self->{params};
+    my $xml_hash = $params->xml_hash;
     my $status = "";
     my $i;
     my $k;
@@ -600,10 +609,8 @@ sub do_uic2 {
 sub do_uic3 {
     my ($self, $endian, $fih, $type, $num_planes) = @_;
     my $fmt = ($endian eq "little") ? "V2" : "N2";
-    my $parent = $self->{parent};
-    # should inherit this in a less fragile way
-    my $gparent = $parent->{parent};
-    my $xml_hash = $gparent->xml_hash;
+    my $params = $self->{params};
+    my $xml_hash = $params->xml_hash;
     my $status = "";
     my ($denom, $numer);
     my $W_val;

@@ -40,6 +40,7 @@ use Carp;
 use OME::ImportExport::FileUtils;
 use OME::ImportExport::Import_reader;
 use OME::ImportExport::STKreader;
+use OME::ImportExport::PixWrapper;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -175,7 +176,7 @@ sub new {
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
     my $self = {};
-    $self->{parent} = shift;
+    $self->{params} = shift;
 
     return bless $self, $class;
 }
@@ -188,31 +189,33 @@ sub readImage {
 
     croak "Image::TIFFreader must be called from Import-reader or other class"
 	unless ref($self);
-    my $parent = $self->{'parent'};   # Caller had to pass reference
-                                      # to class instance that
-                                      # holds data about this image
-    my $image_group = $parent->image_group();
+    my $params = $self->{params};   # Caller had to pass reference to
+                                    # hash that holds image data
+    my $image_group = $params->image_group();
     my $k;
 
     foreach $k (keys %tag_accumulates) {
 	$self->{$k} = ();
     }
 
-    $self->fref($parent->fref);
+    $params->fref($params->fref);
     my $status = readTiffIFD($self, $i++);
+    my $bps = $self->{'BitsPerSample'};
+    $params->pixel_size($bps);
+    $params->byte_size($bps/8);
 
     # if we were passed a set of files, import them all into the current image
     if (($status eq "") && (scalar(@$image_group > 1))) {
 	while (defined ($image_file = $$image_group[$i-1])) {
-	    close  $self->fref;
-	    my $last_type = $parent->image_type;
-	    $self->image_file($image_file);
+	    close  $params->fref;
+	    my $last_type = $params->image_type;
+	    $params->image_file($image_file);
 	    $self->check_type();  # opens file & gets offset to IFD & file type
-	    if ($last_type ne $parent->image_type) {
+	    if ($last_type ne $params->image_type) {
 		$status = "File $image_file is not of type $last_type";
 		last;
 	    }
-	    $self->fref($parent->fref);
+	    $params->fref($params->fref);
 	    $status = readTiffIFD($self, $i++);
 	    last
 		unless $status eq "";
@@ -226,9 +229,10 @@ sub readImage {
 
 sub formatImage {
     my $self = shift;     # Ourselves
-    my $parent = $self->{parent};
-    my $xml_hash = $parent->xml_hash;
-    my ($fih, $foh);      # File handle of input, output files
+    my $pixWrap = shift;
+    my $params = $self->{params};
+    my $xml_hash = $params->xml_hash;
+    my $fih;      # File handle of input files
     my $buf_offset;
     my $start_offset;
     my $offsets_arr;
@@ -238,47 +242,45 @@ sub formatImage {
     my $status;
     my ($strip_size, $row_size);
     my $buf;
-    my $bps;
     my $endian;
+    my $theC = 0;
     my (@xy, @xyz, @xyzw, @xyzwt);
-    my $obuf = $parent->obuffer;
+    my $obuf = $params->obuffer;
     my ($sz, $ndxi, $ndxo, $ch);
     my $irow;
     my $i;
 
-    $fih = $parent->fref;
-    $foh = $parent->fouf;
-    $endian = $parent->endian;
-    $bps = $self->{'BitsPerSample'};
-    $parent->pixel_size($bps);
-    $bps /= 8;  # convert bits to bytes
+    $fih = $params->fref;
+    $endian = $params->endian;
+    my $bps = $params->byte_size;  # bytes per sample (1 channel of a pixel)
     $row_size = $self->{ImageWidth} * $bps;               # bytes per row
     ($offsets_arr, $bytecounts_arr) = getStrips($self);
 
     # If this image is a TIFF variant, let the variant class handle it
     if (defined $self->{Variant}) {
-	my $variant_name = $self->{Variant};
-#	my $variant_ref = $variant_name."reader";
-	my $variant_ref = $self->{$variant_name};
-	$self->{fih} = $fih;
-	$self->{foh} = $foh;
-	$self->{endian} = $endian;
-	$self->{bps} = $bps;
-	$self->{row_size} = $row_size;
+	my $variant_ref = $self->{$self->{Variant}};
+	#$self->{fih} = $fih;
+	#$self->{endian} = $endian;
+	#$self->{bps} = $bps;
+	$params->row_size($row_size);
 
 	# +++ Note - needs code mods to handle grouping multiple variant files together
-	$self->{offsets} = $offsets_arr;
-	$self->{bytecounts} = $bytecounts_arr;
-	$self->{obuffer} = $parent->obuffer;
-	$status = $variant_ref->formatImage($self)
+	$params->image_offsets($offsets_arr);
+	$params->image_bytecounts($bytecounts_arr);
+	#$self->{obuffer} = $params->obuffer;
+	$status = $variant_ref->formatImage($pixWrap)
     }
     else {
-	# place image pixels into 5D array
+	# send pixels to repository file via a PixWrapper
+	# TODO  -  fix so it will handle more than 1 strip per TIFF file
 	for ($i = 0; scalar(@$offsets_arr) > $i; $i++) {
+	    my $plane_size = 0;
 	    $offsets = @$offsets_arr[$i];
 	    $bytecounts = @$bytecounts_arr[$i];
 	    @$offsets = reverse(@$offsets);
 	    @$bytecounts = reverse(@$bytecounts);
+	    my $num_rows = 0;
+	    my $rows = "";
 	    while (@$offsets) {
 		$start_offset = pop(@$offsets);
 		$strip_size = pop(@$bytecounts);
@@ -292,18 +294,22 @@ sub formatImage {
 		    my $cnt = Repacker::repack($irow, $row_size, 
 					       $bps,
 					       $endian eq "little",
-					       $parent->{host_endian} eq "little");
-		    push @xy, $irow;
+					       $params->{host_endian} eq "little");
+		    substr($rows, length($rows), 0, $irow);
+		    $num_rows++;
 		    $buf_offset += $row_size;
+		    $plane_size += $row_size;
 		}
 		
 	    }
 	    # For now, at least, we don't handle > 1 Z or T dimension
-	    @xyz = \@xy;
-	    push (@xyzw, \@xyz);
+	    my $nPixOut = $pixWrap->SetRows ($rows, $num_rows);
+	    if ($plane_size != $nPixOut) {
+		$status = "Failed to write repository file - $plane_size != $nPixOut";
+		last;
+	    }
+
 	}
-	#push (@xyzwt, \@xyzw);
-	push (@$obuf, \@xyzw);
 
 	# Now store metadata from multiple planes, if any
 	my ($key, $val);
@@ -377,12 +383,12 @@ sub getStrips {
 
 sub readTiffIFD {
     my $self = shift;
-    my $parent = $self->{parent};
+    my $params = $self->{params};
     my $image_plane = shift;
-    my $fih    = $self->fref;
-    my $endian = $parent->endian;
-    my $offset = $parent->offset;
-    my $xml_hash = $parent->xml_hash;
+    my $fih    = $params->fref;
+    my $endian = $params->endian;
+    my $offset = $params->offset;
+    my $xml_hash = $params->xml_hash;
     my $xel;
     my $buf;
     my $cnt;
@@ -525,7 +531,6 @@ sub readTiffTag {
     my $self = shift;
     my $fih = shift;
     my $endian = shift;
-    my $parent = $self->{parent};
     my $status;
     my $cur_loc;
     my $format;
@@ -575,7 +580,7 @@ sub readTiffTag {
 	# create instance of the variant handler class if not yet created
 	if (!defined $self->{$variant_name}) {
 	    my $variant_ref = "OME::ImportExport::".$variant_name."reader";
-	    $self->{$variant_name} = $variant_ref->new($self);
+	    $self->{$variant_name} = $variant_ref->new($self->{params});
 	    if (!defined $self->{$variant_name}) {
 		return ($status = "Couldn\'t create instance of the $variant_ref class");
 	    }
@@ -661,6 +666,7 @@ sub readTiffTag {
 	    }
 	}
 	if ($status eq "") {
+
 	    if (!$is_list) {
 		$self->{$tag_name} = $value;
 		#print "$tag_name = $value\n";
