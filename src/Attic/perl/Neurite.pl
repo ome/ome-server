@@ -27,7 +27,7 @@ $OME = new OMEpl;
 
 
 $programName = "Neurite";
-$executable = 'matlab -nosplash -nodisplay -nojvm';
+$executable = '/usr/local/bin/matlab -nosplash -nodisplay -nojvm';
 
 
 
@@ -180,6 +180,8 @@ my $tempFileNameErr = $OME->GetTempName ('Neurite','err') or die "Couldn't get a
 
 # Open the matlab input file
 	open (MATLABIN,"> $tempFileNameIn");
+# Write a cwd directive to go to the matlab code
+	print MATLABIN "cd /OME/matlab\n";
 #
 # Run through our hash of RasterIDs
 	while ( ($key,$datasetArray) = each %datasets) {
@@ -191,6 +193,7 @@ my $tempFileNameErr = $OME->GetTempName ('Neurite','err') or die "Couldn't get a
 		
 		print MATLABIN "neurite ('$neuriteTiff','$nucleiTiff',$tempDisk,$peakThresh,$dialRadius,$closeDisk,$wienerFilter)\n";
 	}
+	print MATLABIN "exit\n";
 	close (MATLABIN);
 
 
@@ -200,24 +203,17 @@ my $resultCount=0;
 
 #
 # Execute the matlab by opening a pipe to its output
-#	my $cmd = "$executable < $tempFileNameIn 2> $tempFileNameErr |";
-	my $cmd = "$executable 2> $tempFileNameErr |";
+	my $cmd = "$executable < $tempFileNameIn 2> $tempFileNameErr |";
 	open (MATLABOUT, $cmd) or die "Couldn't execute '$cmd':$!\n";
-# Ignore everything until a line begining with '>>'
-	while (<MATLABOUT>) {
-		chomp;
-		last if $_ =~ /^>>/;
-	}
-	
-	die "Couldn't find any matlab output:\n".`cat $tempFileNameErr`  unless $_ =~ /^>>/;
-	($key,$datasetArray) = each %datasets;
+
 
 # Go through the matlab output as it comes in.
 	while (<MATLABOUT>) {
 		chomp;
-		if ($_ =~ /^>>/) {
+		if ($_ eq 'ratio =') {
 			$resultCount++;
 			($key,$datasetArray) = each %datasets;
+			next;
 		}
 		$ratio = $_;
 	# Trim leading and trailing whitespace.
