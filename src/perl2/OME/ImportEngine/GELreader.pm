@@ -199,33 +199,29 @@ has the GEL format.
 sub getGroups {
     my $self = shift;
     my $fref = shift;
-    my $nmlen = scalar(@$fref);
+    my $nmlen = scalar(keys %$fref);
     my @inlist = @$fref;
     my @outlist;
 
-    for(my $i = 0, my $ndx = 0; $i < $nmlen; $i++, $ndx++) {
-	my $fn = $$fref[$ndx];
-	open IMG, $fn
-	    or die "Can't open $fn - $@\n";
-	binmode(IMG);
-	my $fh = *IMG;
+    foreach my $key (keys %$fref) {
+        my $file = $fref->{$key};
+
+        $file->open('r');
 
 	my $len;
 	my $buf;
 	
-	my $tags = readTiffIFD($fh);
+	my $tags = readTiffIFD($file);
+	$file->close();
+
 	my $customTag = MD_FILETAG;
 	if (!defined($tags->{$customTag})) {
-	    close IMG;
 	    next;
 	}
 
 	# it's GEL format, so remove from input list, put on output list
-	splice(@$fref, $ndx, 1);
-	$ndx--;
-	push @outlist, $fn;
-
-	close IMG;
+        delete $fref->{$key};
+        push @outlist, $file;
     }
 
     $self->{groups} = \@outlist;
@@ -236,7 +232,7 @@ sub getGroups {
 
 =head2 importGroup
 
-    my $image = $importer->importGroup(\@filenames)
+    my $image = $importer->importGroup(\@files)
 
 This method imports individual GEL format files into OME
 5D images. The caller passes a set of input files by
@@ -262,19 +258,16 @@ database transactions.
 
 sub importGroup {
     my $self = shift;
-    my $fn   = shift;
+    my $file = shift;
     my $status;
 
 
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
 
-    open IMG, $fn
-	or die "Can't open GEL file $fn\n";
-    binmode(IMG);
-    my $fh = *IMG;
+    $file->open('r');
 
-    my $tags = readTiffIFD($fh);
+    my $tags = readTiffIFD($file);
     return undef
 	unless defined($tags);
 
@@ -284,8 +277,8 @@ sub importGroup {
     $params->image_offsets($offsets_arr);
     $params->image_bytecounts($bytesize_arr);
     
-    $params->fref(*IMG);
-    $params->oname($self->__nameOnly($fn));
+    $params->fref($file);
+    $params->oname($file->getFilename());
     $params->endian($tags->{__Endian});
     my $xref = $params->{xml_hash};
     $xref->{'RowsPerStrip'} = $tags->{TAGS->{RowsPerStrip}}->[0];
@@ -314,13 +307,13 @@ sub importGroup {
 			      $t_hash->{current_offset});
     }
 
-    my $image = ($self->{super})->__newImage(($self->{super})->__nameOnly($fn));
+    my $image = ($self->{super})->__newImage($file->getFilename());
     $self->{image} = $image;
 
 
     # pack together & store info on input file
     my @finfo;
-    $self->__storeOneFileInfo(\@finfo, $fn, $params, $image,
+    $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
 			      0, $xref->{'Image.SizeX'}-1,
 			      0, $xref->{'Image.SizeY'}-1,
 			      0, 0,
@@ -345,14 +338,14 @@ sub importGroup {
     my $interpretation = $tags->{TAGS->{PhotometricInterpretation}}->[0];
     $status = readWritePixels($self, $params, $interpretation, $pix);
 
-    close(IMG);
+    $file->close();
 
     if ($status eq "") {
 	$self->__storeInputFileInfo($session, \@finfo);
 	# Store info about each input channel (wavelength).
 	storeChannelInfo($self, $session);
     } else {
-	print STDERR "status: $status\n";
+	logwarn "status: $status";
 	return;
     }
 
@@ -376,11 +369,9 @@ sub readWritePixels {
     my $row_size       = $params->row_size;
     my $offsets_arr    = $params->image_offsets;
     my $bytecounts_arr = $params->image_bytecounts;
-   #my $tags = ;
     my $theC = 0;
     my $theY = 0;
     my $buf;
-   #my $params  = $self->{params};
     my $sz_read = 0;
     my $status = "";
     my $rows_per_strip = $xref->{'RowsPerStrip'};
@@ -445,9 +436,7 @@ sub readTag {
     my $status;
 
 
-    $status = seek_it($fih, $curr_offset);
-    return $status
-	unless $status eq "";
+    $fih->setCurrentPosition($curr_offset,0);
 
     my %byNumber = reverse %tagnameHash;
     my $funcName = $byNumber{$tagname}; 
