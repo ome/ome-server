@@ -610,11 +610,11 @@ sub name_only {
 # input file if it's already been imported.
 sub check_for_duplicates {
     my ($self, $switch, $image_file) = @_;
-    my ($is_dupl, $sha1) = is_duplicate($self, $image_file);
+    my ($dupl_name, $image_id, $sha1) = is_duplicate($self, $image_file);
     # the stealth switch '--dupl' allows duplicate input files
     if ($switch !~ /^--dupl/) {
-	if ($is_dupl) {
-	    return "\nThe source image $image_file has already been imported into OME.";
+	if ($dupl_name) {
+	    return "\nThe source image $image_file is already in OME named $dupl_name, image_id = $image_id\n";
 	}
     }
     return ("", $sha1);
@@ -659,9 +659,11 @@ sub is_duplicate {
     my $view = $factory->findObject("OME::Image::ImageFilesXYZWT",
 				    file_sha1 => $sha1);
     if (defined $view) {
-	return (1, $sha1);
+	my $id = $view->{image_id};
+	$view = $factory->findObject("OME::Image", image_id => $id);
+	return ($view->{name}, $id, $sha1);
     } else {
-	return (0, $sha1);
+	return ("", 0, $sha1);
     }
 }
 
