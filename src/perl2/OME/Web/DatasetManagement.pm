@@ -49,6 +49,9 @@ use OME::Web::Helper::HTMLFormat;
 use OME::Web::Helper::JScriptFormat;
 use OME::Web::Table;
 
+
+use Data::Dumper;
+
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -60,14 +63,20 @@ sub getPageBody {
 
 	my $cgi     = $self->CGI();
 	my $session = $self->Session();
+	my $factory = $session->Factory();
+	my $dataset = $session->dataset();
 
 	my $datasetManager      = OME::Tasks::DatasetManager->new($session);
+	my $imageManager        = OME::Tasks::ImageManager->new($session);
 	$self->{datasetManager} = $datasetManager;
 	$self->{htmlFormat}     = OME::Web::Helper::HTMLFormat->new();
 	my $jscriptFormat       = OME::Web::Helper::JScriptFormat->new();
 
 	my $body;
 	$body .= $jscriptFormat->popUpImage();    	     
+	$body .= $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
+
+	my @selected = $cgi->param('selected');
 	
 	# determine action
 	if( $cgi->param('save')) {
@@ -86,7 +95,35 @@ sub getPageBody {
 		$datasetManager->change($cgi->param('description'),$cgi->param('name'));
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		$body .= "Save successful<br>";
-	} 
+	} elsif ($cgi->param('Add')) {
+		if ($dataset->locked()) {
+			# Data
+			$body .= $cgi->p({class => 'ome_error'},
+				"WARNING: Images not being removed from locked dataset.");
+		} else {
+			# Action
+			my $image = $factory->findObject("OME::Image", name => $selected[0]);
+			$datasetManager->addImages([$image->id()]);
+			$body .= $cgi->p({-class => 'ome_info'},
+				"Added image ", $image->name(), " to the dataset.");
+		}
+	} elsif ($cgi->param('Remove')) {
+		# Action
+		my $to_remove = {};
+		foreach (@selected) { $to_remove->{$_} = [$dataset->id()] }
+
+		print STDERR Dumper($to_remove);
+
+		# Make sure we're not operating on a locked dataset
+		if ($dataset->locked()) {
+			$body .= $cgi->p({class => 'ome_error'},
+				"WARNING: Images not being removed from locked dataset.");
+		} else {
+			$imageManager->remove($to_remove);
+			$body .= $cgi->p({-class => 'ome_info'},
+				"Removed image(s) @selected from dataset ", $dataset->name(), ".");
+		}
+	}
 	
 	# print form
 	$body .= $self->print_form();
@@ -112,9 +149,8 @@ sub print_form {
 	my $text = '';
 
 	$text .= $cgi->startform;
-	$text .= "<center><h2>Dataset ".$dataset->name()." properties</h2></center>";
 	$text .= $htmlFormat->formChange("dataset",$session->dataset(),$user);
-	$text .= "<center><h2>Images</h2></center>";
+	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, 'Images');
 	$text .= $self->makeImageListings($dataset);
 	$text .= $cgi->endform;
 	
@@ -131,8 +167,6 @@ sub makeImageListings {
 	my $in_project;
 	foreach ($dataset->images()) { push (@$in_project, $_->id()) }
 
-	print STDERR "**** Dataset contains @$in_project\n";
-	
 	# Gen our "Images in Project" table
 	my $html = $t_generator->getTable( {
 			type => 'images',
@@ -147,11 +181,11 @@ sub makeImageListings {
 	foreach my $image ($factory->findObjects("OME::Image")) {
 		my $add_this_id = 1;
 		foreach my $id_in_project (@$in_project) {
-			if ($dataset->id() == $id_in_project) {
+			if ($image->id() == $id_in_project) {
 				$add_this_id = 0;
 			};
 		}
-		push(@additional_images, $dataset->name()) if $add_this_id;
+		push(@additional_images, $image->name()) if $add_this_id;
 	}
 
 	# Add a null to the beginning
@@ -169,7 +203,7 @@ sub makeImageListings {
 					 $cgi->startform(),
 					 $cgi->td(
 						 '&nbsp',
-						 $cgi->span("Add dataset: "),
+						 $cgi->span("Add images: "),
 						 $cgi->popup_menu( {
 								 -name => 'selected',
 								 -values => [@additional_images],
