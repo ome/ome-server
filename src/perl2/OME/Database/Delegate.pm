@@ -179,6 +179,7 @@ sub connectToDatabase {
 
 # after these methods are implemented and used, the boolean hack in
 # DBObject->addcolumn should be taken out
+
 =head2 datatypeNeedsTranslation
 
 	if( $delegate->datatypeNeedsTranslation($SQLType) ) {
@@ -211,6 +212,29 @@ Used in DBObject __make*SQL methods
 Inverse of translateDatatypesToDB.
 
 Used in DBObject __fillInstance method
+
+=cut
+
+=head2 translateQueryClause
+
+	my ($join_clause,\@values) = $delegate->
+	    translateQueryClause($SQLType,$location,$operator,\@data);
+
+Formats a query properly for a SELECT statement.  Usually this just
+involves concatenating the location, operator, and a question mark.
+However, in the case of array values, it is necessary to turn =
+operators into IN operators.  Also, the = operator does not usually
+work on floats, and must be turned into an appropriate comparison
+against an epsilon value.
+
+Anyway, given the location, operator, and data array, this method
+should generate a single SQL expression ($join_clause) which tests the
+location against the data array with the operator.  If the data array
+and operator are not compatible (e.g., multiple values with =), an
+error should be thrown.  The join clause should involve bind variables
+as much as possible, and the values to be substituted for the bind
+variables should be returned as the @values array.  Most of the time,
+it will be identical to the @data array.
 
 =cut
 
