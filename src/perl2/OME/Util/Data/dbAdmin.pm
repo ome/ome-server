@@ -116,8 +116,7 @@ sub backup {
 	$backup_file  =~ s/\.tar//; $backup_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
-	my @progs = ('tar', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
-				'dropdb','createdb', 'createuser');
+	my @progs = ('tar', 'pg_dump', 'touch');
 	my %prog_path;
 	
 	foreach my $prog (@progs) {
@@ -150,7 +149,13 @@ sub backup {
 	
 	# ome db 
 	print "    \\_ Backing up postgress database ome\n";
-	system($prog_path{'sudo'}." -u $postgress_user ".$prog_path{'pg_dump'}." -Fc ome > omeDB_backup");
+	my $iwd = getcwd();
+	chdir("/");
+	euid(scalar getpwnam($postgress_user));
+	system($prog_path{'pg_dump'}." -Fc ome > /tmp/omeDB_backup");
+ 	euid(0);
+ 	chdir($iwd);
+ 	move ("/tmp/omeDB_backup", "./omeDB_backup");
  	
 	# log version of backup
 	open (FILEOUT, ">> OMEmaint");
@@ -169,7 +174,7 @@ sub backup {
 	
 	# clean up any residual files
 	unlink("OMEMaint");
-	unlink("omeDB_backup");
+	unlink("/tmp/omeDB_backup");
 }
 
 sub backup_help {
@@ -226,8 +231,7 @@ sub restore {
 	$restore_file  =~ s/\.tar//; $restore_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
-	my @progs = ('tar', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
-				'dropdb','createdb', 'createuser');
+	my @progs = ('tar', 'pg_restore', 'dropdb','createdb', 'createuser');
 	my %prog_path;
 	
 	foreach my $prog (@progs) {
@@ -270,21 +274,21 @@ sub restore {
 	unlink "OMEmaint";
 	
 	# OMEIS
+	print "    \\_ Restoring OMEIS from $omeis_base_dir \n";
 	my $semaphore = 1;
-	if (not $quick and -d './OME/OMEIS') {
-	    print "    \\_ Restoring OMEIS from $omeis_base_dir \n";
+	if (not $quick and -d './$omeis_base_dir') {
 	    if (-d $omeis_base_dir) {
 	     	if (y_or_n ("Restoring OMEIS from archive will delete all current files in ".
 	   		  		"$omeis_base_dir. Continue ?")) {
 	   		  	rmtree($omeis_base_dir);
 	   		} else {
 	   			$semaphore = 0;
+	   			rmdir ("./$omeis_base_dir");
 			}	     	
 	    }
 	    
 	    if ($semaphore eq 1){
-			system ($prog_path{'mv'}. " ./OME/OMEIS ". $base_dir);
-			rmdir ("OME");
+			move  ("./$omeis_base_dir", "$omeis_base_dir");
 	    }
 	}
 	
