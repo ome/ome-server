@@ -268,14 +268,14 @@ my $blurb = <<BLURB;
                       OME Install Successful!
 
 Thank you for installing OME, you may now proceed to use your system through
-either the web interface or the supplied Java client. For more information
-please visit:
+either the web interface or the supplied Java client. For more information,
+developer and user documentation please visit:
 
 	http://www.openmicroscopy.org
 
-for documentation resources:
+to download some example images to test your new OME install:
 
-	http://docs.openmicroscopy.org.uk
+	http://www.openmicroscopy.org/TestImages/
 
 to report bugs:
 
