@@ -296,6 +296,9 @@ sub _create {
  		} elsif( $ST->granularity() eq 'I' ) {
  			$dependence = 'I';
  			$target = $data_hash{ image };
+ 		} elsif( $ST->granularity() eq 'G' ) {
+ 			$dependence = 'G';
+ 			$target = undef;
  		}
  		my $annotation_module = $factory->loadObject(
  			'OME::Module', $session->Configuration()->annotation_module_id() );
