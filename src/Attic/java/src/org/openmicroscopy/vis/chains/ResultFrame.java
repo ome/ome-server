@@ -123,6 +123,7 @@ public class ResultFrame extends ChainFrameBase {
 	
 	public void updateExecutionChoices(CChain chain) {
 		toolbar.updateExecutionChoices(chain);
+		setTitle("OME Analysis Results: "+chain.getName());
 	}
 	
 	public void setExecution(CChainExecution exec) {
