@@ -259,14 +259,6 @@ my @modules = (
 	repository_file => "$REPOSITORY/XML-SAX-0.12.tar.gz",
 	# XML::SAX v0.12 doesn't report a $VERSION
 	# However, XML::SAX::ParserFactory loads OK and reports properly
-	get_module_version => sub {
-	    my $version;
-	    my $eval = 'use XML::SAX::ParserFactory; $version = $XML::SAX::ParserFactory::VERSION;';
-
-	    eval($eval);
-
-	    return $version ? $version : undef;
-	},
 	configure_module => sub {
 	    # Since XML::Sax has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
@@ -290,7 +282,16 @@ my @modules = (
 	repository_file => "$REPOSITORY/XML-LibXML-Common-0.12.tar.gz"
     },{
 	name => 'XML::LibXML',
-	repository_file => "$REPOSITORY/XML-LibXML-1.53.tar.gz",
+	repository_file => "$REPOSITORY/XML-LibXML-1.56.tar.gz",
+	get_module_version => sub {
+	    my $version;
+	    my $eval = 'use XML::LibXML; $version = $XML::LibXML::VERSION;';
+
+	    eval($eval);
+
+	    return $version ? $version : undef;
+	},
+	valid_versions => ['eq "1.56"']
     },{
 	name => 'XML::LibXSLT',
 	repository_file => "$REPOSITORY/XML-LibXSLT-1.53.tar.gz",
