@@ -97,6 +97,7 @@ our $IMPORT_FORMATS = join (' ',qw/
     OME::ImportEngine::BioradReader
     OME::ImportEngine::LSMreader
     OME::ImportEngine::TIFFreader
+    OME::ImportEngine::DICOMreader
     OME::ImportEngine::XMLreader
 /);
 
