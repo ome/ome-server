@@ -124,7 +124,7 @@ public class RemoteDataTable
         { super(session,reference); }
 
         public DataTable getDataTable()
-        { return (DataTable) getRemoteElement("OME::Dataset",
+        { return (DataTable) getRemoteElement("OME::DataTable",
                                               "data_table"); }
 
         public String getColumnName()
