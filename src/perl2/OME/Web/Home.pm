@@ -100,27 +100,14 @@ sub __getQuickViewImageData {
 		$d->name() . ' Preview ');
 		$i_header .= $q->span({class => 'ome_quiet'}, "[$d_icount image(s)]");
 
-		my $i = 0;
-
 		# Content
-		if ($d_icount == 0) {
-			$i_content .= $q->span({class => 'ome_quiet'}, 'No images in this dataset. Click <i>\'Import Files\'</i> below to import some.');
-		} else {
-			$i_content .= $q->span({class => 'ome_quiet'}, 'Click upper left quadrant of a thumbnail for image info; click elsewhere to open image viewer.');
-			$i_content .= '<br>';
-			foreach ($d->images()) {
-				my $img_id = $_->id();
-				my $img_nm = $_->name();
-				$i_content .= $q->img({src => OME::Tasks::ImageManager->getThumbURL($_), border => 1, usemap => "#ImgMap$img_id"});
-				$i_content .= '<map name="ImgMap'.$img_id.'">';
-				$i_content .= '<area shape="rect" coords="0,0,25,25" Title="Info for '.$img_nm.'" href="serve.pl?Page=OME::Web::DBObjDetail&ID='.$img_id.'&Type=OME::Image">';
-				$i_content .= '<area shape="rect" coords="0,0,50,50" Title="View '.$img_nm.'" href="javascript:openPopUpImage('.$img_id.');">';
-				$i_content .= '</map>';
-				$i_content .= '&nbsp';  # Spacing
-				++$i;	
-				$i_content .= $q->a({href => $self->getObjDetailURL( $d ), class => 'ome_quiet'}, "...") and last if ($i == MAX_PREVIEW_THUMBS);
+		$i_content = $self->Renderer()->renderArray( 
+			[ $d, 'images' ], 'bare_ref_mass', 
+			{ paging_limit  => MAX_PREVIEW_THUMBS, 
+			  type          => 'OME::Image', 
+			  more_info_url => $self->getObjDetailURL( $d ) 
 			}
-		}
+		);
 	} else {
 		$i_header .= $q->span({style => 'font-weight: bold;'}, 'No Dataset');
 		$i_content .= $q->span({class => 'ome_quiet'}, 'No dataset is available for preview. Click <i>\'New Dataset\'</i> below to create one.');
