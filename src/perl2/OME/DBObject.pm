@@ -648,9 +648,9 @@ sub addColumn {
     return;
 }
 
-=head2 getColumn
+=head2 getColumnDef
 
-	my $column_def = $class->getColumn($alias);
+	my $column_def = $class->getColumnDef($alias);
 
 Returns the definition of the logical column with the specified alias.
 This is mostly for internal purposes, and is used to generate the
@@ -669,13 +669,27 @@ the time the addColumn method was called.
 
 =cut
 
-sub getColumn {
+sub getColumnDef {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
     my $alias = shift;
 
     return $class->__columns()->{$alias};
+}
+
+=head2 getColumns
+
+	my @columns = $class->getColumns();
+
+Returns a list of column aliases:
+
+=cut
+
+sub getColumns {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    return keys %{ $class->__columns()};
 }
 
 =head2 getColumnType
@@ -951,7 +965,7 @@ sub getPackageReference {
 	if( $accessorType =~ /^has-many$/ ) {
 		 $returnedClass = $class->__hasManys()->{$alias};
 	} elsif( $accessorType =~ /^(has-one|normal)$/ ) {
-		$returnedClass = $class->getColumn( $alias )->[2];
+		$returnedClass = $class->getColumnDef( $alias )->[2];
 	} else {
 		die "$alias has unknown accessor type ('$accessorType') or is not known";
 	}
@@ -1228,7 +1242,7 @@ sub __activateSTColumn ($) {
     my $class = ref($proto) || $proto;
 
     my $alias = shift;
-    my $def = $class->getColumn($alias);
+    my $def = $class->getColumnDef($alias);
 
     return
       unless defined $def->[2]
