@@ -19,7 +19,9 @@ sub new {
 	id          => ['DATASETS','DATASET_ID',{sequence => 'DATASET_SEQ'}],
 	name        => ['DATASETS','NAME'],
 	description => ['DATASETS','DESCRIPTION'],
-	locked      => ['DATASETS','LOCKED']
+	locked      => ['DATASETS','LOCKED'],
+	images      => ['DATASET_IMAGE_MAP','IMAGE_ID',{map       => 'DATASET_ID',
+							reference => 'OME::Image'}]
     };
 
     return $self;

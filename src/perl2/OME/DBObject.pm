@@ -6,7 +6,6 @@ package OME::DBObject;
 use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
-use CGI;
 
 # new
 # ---
@@ -29,7 +28,12 @@ sub new {
 # Accessors
 # ---------
 
-sub ID { my $self = shift; return $self->{_fieldValues}->{id} = shift if @_; return $self->{_fieldValues}->{id}; }
+sub ID {
+    my $self = shift;
+    return $self->{_fieldValues}->{id} = shift if @_;
+    return $self->{_fieldValues}->{id};
+}
+
 sub DBH { my $self = shift; return $self->{_factory}->DBH(); }
 
 
@@ -253,6 +257,7 @@ sub readObject {
 	    push @{$tables{$tableName}->[0]}, $columnName;
 	    push @{$tables{$tableName}->[1]}, $fieldName;
 	    push @{$tables{$tableName}->[2]}, (exists $options->{map});
+	    $tables{$tableName}->[3] = $options->{order} if exists $options->{order};
 	}
     }
 
@@ -263,10 +268,13 @@ sub readObject {
 	my $columnNames = $tables{$tableName}->[0];
 	my $fieldNames = $tables{$tableName}->[1];
 	my $mappedList = $tables{$tableName}->[2];
+	my $orderBy = $tables{$tableName}->[3];
 	my ($dbh,$sth,$sql,$rs);
 
 	$sql = "select " . join(',',@$columnNames) . " from $tableName ".
 	    "where $idFieldName = $self->{_fieldValues}->{id}";
+	$sql .= " order by $orderBy" if defined $orderBy;
+	#print STDERR "$sql\n";
 	$dbh = $self->DBH();
 	$sth = $dbh->prepare($sql);
 	if ($sth->execute()) {

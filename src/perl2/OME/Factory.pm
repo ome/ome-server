@@ -38,16 +38,22 @@ sub DBH { my $self = shift; return $self->{session}->DBH(); }
 sub loadObject {
     my ($self, $class, $id) = @_;
 
-    my $classCache = $self->{cache}->{$class};
+    return undef unless defined $id;
 
-    return $classCache->{$id} if (exists $classCache->{$id});
+    my $classCache = $self->{cache}->{$class};
+    if (exists $classCache->{$id}) {
+	print STDERR "loading cache $class $id\n";
+	return $classCache->{$id};
+    } else {
+	print STDERR "loading  new  $class $id\n";
+    }
 
     eval "require $class";
     my $object = $class->new($self);
     $object->ID($id);
 
     if ($object->readObject()) {
-	$classCache->{$id} = $object;
+	$self->{cache}->{$class}->{$id} = $object;
 	return $object;
     }
     return undef;

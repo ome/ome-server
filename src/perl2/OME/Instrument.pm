@@ -3,7 +3,6 @@ package OME::Instrument;
 use strict;
 use vars qw($VERSION @ISA);
 $VERSION = '1.0';
-use CGI;
 use OME::DBObject;
 @ISA = ("OME::DBObject");
 
