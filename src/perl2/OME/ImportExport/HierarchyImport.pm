@@ -42,7 +42,7 @@ package OME::ImportExport::HierarchyImport;
 
 =head1 NAME
 
-OME::ImportExport::HierarchyImport - Import a list of objects from an OME XML.
+OME::ImportExport::HierarchyImport - Import the OME ontology from XML.
 
 =head1 SYNOPSIS
 
@@ -58,7 +58,7 @@ OME::ImportExport::HierarchyImport - Import a list of objects from an OME XML.
 
 =head1 DESCRIPTION
 
-This class is responsible for importing the OME hierarchy from an XML file, DOM or string.  The OME hierarchy
+This class is responsible for importing the OME ontology from an XML file, DOM or string.  The OME ontology
 consists of the Project, Dataset, Image, and Feature elements as specified in the OME-CA schema.  Each level of the
 hierarchy has an optional CustomAttributes element which may containn one or more CustomAttributes (instances of
 a Semantic Type).
