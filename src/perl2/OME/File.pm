@@ -216,6 +216,34 @@ taking place at all.
 
 sub readData { abstract }
 
+=head2 readLine
+
+	my $line = $file->readLine();
+
+Reads data from the file from the current position (as set by the
+C<setCurrentPosition> method) up to the first occurrence of the C<$/>
+variable.  If C<$/> is set to "", C<\n> will be used as the line
+terminator.
+
+=cut
+
+sub readLine {
+    my ($self) = @_;
+
+    my $line;
+    my $eol = $/ || "\n";
+    my $eolre = qr($eol$);
+
+  CHARACTER:
+    until (defined $line && $line =~ $eol) {
+        my ($char,$read) = $self->readData(1);
+        last CHARACTER unless $read;
+        $line .= $char;
+    }
+
+    return $line;
+}
+
 =head2 writeData
 
 	$file->writeData($data);

@@ -122,10 +122,10 @@ sub open {
 
 	my $filename = $file->getFilename();
 
-Returns the full filename of the file object.  The result must look
-like a legal filename.  However, tis filename does not necessarily
-correspond to a file in the local filesystem; it should be used for
-informational and display purposes only.
+Returns the full filename of the file object.  For OME::LocalFile,
+this is the location of the file in the local filesystem; this
+filename can be passed to the standard file-I/O routines to access the
+file without going through the OME::File interface.
 
 =cut
 
@@ -313,6 +313,26 @@ sub readData {
           unless $bytesRead == $length;
         return $buf;
     }
+}
+
+=head2 readLine
+
+	my $line = $file->readLine();
+
+Reads data from the file from the current position (as set by the
+C<setCurrentPosition> method) up to the first occurrence of the C<$/>
+variable.  If C<$/> is set to "", C<\n> will be used as the line
+terminator.
+
+=cut
+
+sub readLine {
+    my ($self) = @_;
+
+    my $fh = $self->[HANDLE];
+    die "File not open!" unless defined $fh;
+
+    return <$fh>;
 }
 
 =head2 writeData
