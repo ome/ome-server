@@ -1,0 +1,37 @@
+<table align="center">
+	<caption>
+		<font class="ome_header_title">AnalysisChainExecution</font> 
+	</caption>
+	<tr>
+		<td valign="top">
+			<table border="1">
+				<tr>
+					<td align="left">
+						<nobr>
+							Id: <TMPL_VAR Name='id'>.
+						</nobr><br>
+						<nobr>
+							Analysis Chain <TMPL_VAR NAME=analysis_chain>
+						</nobr>
+						<nobr>
+							was executed against Dataset <TMPL_VAR NAME=dataset>
+						</nobr>
+						<nobr>
+							on <TMPL_VAR NAME=timestamp>
+						</nobr>
+						<nobr>
+							by <TMPL_VAR NAME=experimenter>.
+						</nobr>
+					</td>
+				</tr>
+			</table>
+		</td>
+<!--
+		<td align="right" valign="top">
+			<font class="ome_relation_title">Chain nodes. Click on one to see its executions.</font>
+				<TMPL_VAR NAME=node_executions/render-ref_list>
+		</td>
+-->
+	</tr>
+</table>
+<TMPL_VAR NAME=breakdown_by_node>
