@@ -690,6 +690,7 @@ sub processDOM {
     ###############################################################################
 
     $_->storeObject() foreach @commitOnSuccessfulImport;
+    $session->DBH()->commit();
     @commitOnSuccessfulImport = ();
 
     $self->{semanticTypes} = $semanticTypes;
