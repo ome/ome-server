@@ -42,4 +42,13 @@ public class RemoteOMEObject
     public Session getSession()
     { return (Session) getRemoteElement(RemoteSession.class,"Session"); }
 
+    public boolean equals(OMEObject o)
+    {
+        return getID() == o.getID();
+    }
+
+    public boolean equals(Object o)
+    {
+        return equals((OMEObject) o);
+    }
 }
