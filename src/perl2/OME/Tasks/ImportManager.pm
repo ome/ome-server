@@ -98,6 +98,8 @@ restriction.
 =cut
 
 use strict;
+use Carp;
+
 use OME;
 our $VERSION = $OME::VERSION;
 
@@ -359,6 +361,8 @@ sub getImageImportMEX {
     return undef unless $self->{valid_modules};
 
     my ($image,$files) = @_;
+    confess "getImageImportMEX was passed an undef image!" unless $image;
+    
     my $image_id = ref($image)? $image->id(): $image;
 
     # Don't create a image import MEX until it's needed

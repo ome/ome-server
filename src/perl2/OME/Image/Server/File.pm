@@ -299,7 +299,7 @@ sub setCurrentPosition {
         die "Illegal whence value";
     }
 
-    die "Illegal position value"
+    die "Illegal position value: $newpos in file ".$self->[FILENAME].", length = $length"
       unless ($newpos >= 0) && ($newpos < $length);
     $self->[3] = $newpos;
 }

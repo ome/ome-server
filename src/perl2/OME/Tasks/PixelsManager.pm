@@ -49,6 +49,7 @@ use OME::Session;
 use OME::Image;
 use OME::ModuleExecution;
 use Log::Agent;
+use Carp;
 
 use OME::File;
 use OME::Image::Pixels;
@@ -259,7 +260,7 @@ sub finishPixels {
 sub loadPixels {
     my $proto = shift;
     my ($attr) = @_;
-    die "loadPixels needs a Pixels attribute"
+    confess "loadPixels needs a Pixels attribute"
       unless UNIVERSAL::isa($attr,'OME::SemanticType::Superclass')
         && $attr->verifyType('Pixels');
 
