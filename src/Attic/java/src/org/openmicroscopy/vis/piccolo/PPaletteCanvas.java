@@ -231,7 +231,6 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 				layer.setVisible(true);
 				getCamera().animateViewToCenterBounds(layer.getGlobalFullBounds(),
 					true,PConstants.ANIMATION_DELAY);
-				System.err.println("finishing module palette");
 				controller.finishInitThread();
 			}
 		};
@@ -544,8 +543,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 
 		
 		PBounds b = getBufferedBounds();
-		getCamera().animateViewToCenterBounds(b,true,0);
-					
+		getCamera().animateViewToCenterBounds(b,true,0);			
 	}
 
 
