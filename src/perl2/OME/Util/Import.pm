@@ -86,15 +86,16 @@ USAGE
 }
 
 sub handleCommand {
-	my ($self,$help,$supercommands) = @_;
+	my ($self,$help,$commands) = @_;
 	if ($help) {
-		import_help($self,$supercommands);
+		import_help($self,$commands);
 	} else {
-		import();
+		import($self,$commands);
 	}
 }
 
 sub import {
+ 	my ($self,$commands) = @_;
 	my $reuse;
 	my $help;
 	my $datasetName;
@@ -103,7 +104,7 @@ sub import {
                'help|h' => \$help,
                'd=i' => \$datasetName);
     if (not defined $datasetName) {
-    	import_help();
+    	import_help($self,$commands);
     	print STDERR "\n *** dataset not specified\n";
     }
     my @file_names = @ARGV;
