@@ -35,13 +35,16 @@ use OME::Graphics::GD::Vectors;
 use OME::Graphics::GD::Centroids;
 use Benchmark;
 
+# initial draft of pod added by Josiah Johnston, siah@nih.gov
 =pod
 
 =head1 GetGraphics.pm
 
 =head1 Package information
 
-L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function calls to OME Modules">, L<"Data references to OME Modules">
+L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, 
+L<"Function calls to OME Modules">, L<"Data references to OME Modules">
+L<"ome database tables accessed">
 
 =head2 Description
 
@@ -135,25 +138,34 @@ image
 
 =back
 
+=head2 ome database tables accessed
+
+attributes_image_xyzwt
+
 =head1 Externally referenced functions
 
-C<new()>, C<createOMEPage()>, C<getPageTitle()>, C<contentType>
+C<new()>, C<createOMEPage()>, C<getPageTitle()>, C<contentType()>
+
+=head2 new()
 
 =over 4
 
-X<new()>
+=item Description
 
-=item new()
+constructor
 
- 
-Description:
-	constructor
-Returns:
-	$self 
-		$self is a OME::Web::GetGraphics object
-Overrides function in OME::Web
-Uses functions:
-	OME::Web -> new
+=item Returns
+
+I<$self>
+	$self is a OME::Web::GetGraphics object
+
+=item Overrides function in L<OME::Web/"new()">
+
+=item Uses functions
+
+L<OME::Web/"new()">
+
+=back
 
 =cut
 
@@ -169,25 +181,42 @@ sub new {
 
 =pod
 
-X<createOMEPage()>
+=head2 createOMEPage()
 
-=item createOMEPage()
+=over 4
 
- 
-Description:
-	uses url_parameters to call appropriate content generation functions
-Returns:
-	contentType, content
-		contentType is a string. either "HTML" or "IMAGE"
-		content is either an HTML file or an image object from GD::image
-Overrides function in OME::Web
-Uses functions:
-	OME::Web -> CGI
-	CGI -> url_param
-	CGI -> url
-	DrawLayersControls
-	DrawGraphics
-	DrawMainWindow
+=item Description
+
+uses url_parameters to call appropriate content generation functions
+
+=item Returns
+
+contentType, content
+
+	contentType is a string. either "HTML" or "IMAGE"
+	content is either an HTML file or an image object from GD::image
+
+=item Overrides function in L<OME::Web/"createOMEPage()">
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">
+
+=item CGI->url_param()
+
+=item CGI->url()
+
+=item L<"DrawLayersControls()">
+
+=item L<"DrawGraphics()">
+
+=item L<"DrawMainWindow()">
+
+=back
+
+=back
 
 =cut
 
@@ -208,17 +237,23 @@ sub createOMEPage {
 
 =pod
 
-X<getPageTitle()>
+=head2 getPageTitle()
 
-=item getPageTitle()
+=over 4
 
- 
-Description:
-	Displays page title
-Returns:
-	hard-coded string: "Open Microscopy Environment"
-Overrides function in OME::Web
-Uses No functions
+=item Description
+
+Displays page title
+
+=item Returns
+
+hard-coded string: "Open Microscopy Environment"
+
+=item Overrides function in L<OME::Web/"getPageTitle()">
+
+=item Uses No functions
+
+=back
 
 =cut
 
@@ -228,17 +263,21 @@ sub getPageTitle {
 
 =pod
 
-X<contentType()>
+=head2 contentType()
 
-=item contentType()
+=over 4
 
- 
-Description:
-	returns contentType
-Returns:
-	$self->contentType
-Overrides function in OME::Web
-Uses No functions
+=item Description
+
+returns contentType
+
+=item Returns
+
+I<$self->{contentType}>
+
+=item Overrides function in L<OME::Web/"contentType()">
+
+=item Uses No functions
 
 =back
 
@@ -257,27 +296,46 @@ C<DrawMainWindow()>, C<DrawGraphics()>, C<DrawLayersControls()>, C<getJSgraphics
 
 =over 4
 
-X<DrawMainWindow()>
+=head2 DrawMainWindow()
 
-=item DrawMainWindow()
+=over 4
 
- 
-Description:
-	Generates an HTML file housing the most commonly used controls
-Returns:
-	an HTML file
-Uses functions:
-	OME::Web -> CGI
-	getJSgraphics
-	CGI -> start_html
-	OME::Graphics::JavaScript -> JSobjectDefs
-	OME::Graphics::JavaScript -> JSinstance
-	CGI -> end_html
-Accesses external data:
-	OME::Graphics::JavaScript -> {JSref}
-Generated Javascript will reference:
-	OME::Web::GetGraphics via serve.pl, eventually calling
-		DrawLayersControls and DrawGraphics
+=item Description
+
+Generates an HTML file housing the most commonly used controls
+
+=item Returns
+
+an HTML file
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">
+
+=item getJSgraphics()
+
+=item CGI->start_html()
+
+=item CGI->end_html()
+
+=item L<OME::Graphics::JavaScript/"JSobjectDefs()">
+
+=item L<OME::Graphics::JavaScript/"JSinstance()">
+
+=back
+
+=item Accesses external data
+
+L<OME::Graphics::JavaScript/"{JSref}">
+
+=item Generated Javascript will reference
+
+OME::Web::GetGraphics via serve.pl, eventually calling 
+L<"DrawLayersControls()" and L<"DrawGraphics()">
+
+=back
 
 =cut
 
@@ -318,30 +376,51 @@ ENDJS
 
 =pod
 
-X<DrawGraphics()>
+=head2 DrawGraphics()
 
-=item DrawGraphics()
+=over 4
 
- 
-Description:
-	Generates an image object using classes inherited from OME::Graphics::GD
-Returns:
-	An image object of type GD::Image
-Uses functions:
-	OME::Web -> CGI
-	CGI -> url_param
-	OME::Graphics::GD::* -> new
-		this dynamically instantiates a new object of unknown type.
-		Type is specified in parameters and is not subject to prior checks.
-		It is supposed to be of type specified above.
-	OME::Graphics::GD::* ->	Draw
-	OME::Graphics::GD::* -> getImage
-	OME::Graphics::GD::* -> imageType
-	GD::Image -> colorResolve
-	GD::Image -> string
-Accesses external data:
-	OME::Graphics::JavaScript::Layer -> X11Colors
-	OME::Graphics::GD::* -> image
+=item Description
+
+Generates an image object using classes inherited from OME::Graphics::GD
+
+=item Returns
+
+An image object of type GD::Image
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">
+
+=item CGI->url_param()
+
+=item OME::Graphics::GD::*->new()
+
+this dynamically instantiates a new object of unknown type.
+Type is specified in parameters and is not subject to prior checks.
+It is supposed to be a subclass of L<OME::Graphics::GD>.
+
+=item OME::Graphics::GD::*->Draw()
+
+=item OME::Graphics::GD::*->getImage()
+
+=item OME::Graphics::GD::*->imageType()
+
+=item L<OME::Graphics::JavaScript::Layer/"X11Colors()">
+
+=item GD::Image->colorResolve()
+
+=item GD::Image->string()
+
+=back
+
+=item Accesses external data
+
+OME::Graphics::GD::* -> image
+
+=back
 
 =cut
 
@@ -389,19 +468,31 @@ my @string;
 
 =pod
 
-X<DrawLayersControls()>
+=head2 DrawLayersControls()
 
-=item DrawLayersControls()
+=over 4
 
- 
-Description:
-	Generates an html file housing the rest of the controls
-Returns:
-	An html file
-Uses functions:
-	OME::Web -> CGI
-	getJSgraphics
-	OME::Graphics::JavaScript -> Form
+=item Description
+
+Generates an html file housing the rest of the controls
+
+=item Returns
+
+An html file
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">
+
+=item L<"getJSgraphics()">
+
+=item L<OME::Graphics::JavaScript/"Form()">
+
+=back
+
+=back
 
 =cut
 
@@ -416,33 +507,59 @@ my $JSgraphics = $self->getJSgraphics() ;
 
 =pod
 
-X<getJSgraphics()>
+=head2 getJSgraphics()
 
-=item getJSgraphics()
+=over 4
 
- 
-Description:
-	Generates a OME::Graphics::JavaScript object for internal use
-Returns:
-	an object of type OME::Graphics::JavaScript
-Uses functions:
-	OME::Web->CGI()		(via self)
-	CGI->url_param()
-	OME::Web->Factory()
-	OME::Factory->loadObject()	(via OME::Session, OME::Factory)
-	OME::Web->Session()
-	OME::Session->DBH()
-	DBI->prepare()
-		?->execute()
-		?->fetchrow_array()
-	OME::Graphics::JavaScript->new()
-	OME::Graphics::JavaScript::Layer::*->new()
-		Object type declared dynamically at runtime.
-	OME::Graphics::JavaScript->AddLayer()
-Generated Javascript will reference:
-	OME::Web::GetGraphics via serve.pl, eventually calling
-		DrawGraphics()
-	../cgi-bin/OME_JPEG
+=item Description
+
+Generates a OME::Graphics::JavaScript object for internal use
+
+=item Returns
+
+an object of type L<OME::Graphics::JavaScript>
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">	(via self)
+
+=item CGI->url_param()
+
+=item L<OME::Web/"Factory()">
+
+=item L<OME::Factory/"loadObject()">	(via OME::Session, OME::Factory)
+
+=item L<OME::Web/"Session()">
+
+=item L<OME::Session/"DBH()">
+
+=item DBI->prepare()
+
+	$sth->execute()
+	$sth->fetchrow_array()
+
+=item L<OME::Graphics::JavaScript/"new()">
+
+=item L<OME::Graphics::JavaScript/"AddLayer()">
+
+=item OME::Graphics::JavaScript::Layer::*->new()
+
+Object type declared dynamically at runtime.
+
+=back
+
+=item Accesses ome database tables
+
+attributes_image_xyzwt
+
+=item Generated Javascript will reference
+
+OME::Web::GetGraphics via serve.pl, eventually calling
+	L<"DrawGraphics()">
+
+../cgi-bin/OME_JPEG
 
 =back
 
