@@ -392,7 +392,30 @@ sub getScalar {
 }
 
 
-# FIXME: add functions canConvertToScalar, canConvertToList, and convertToList
+=head2 convertToList
+
+	my $list_of_values = $array->convertToList();
+
+Converts an Array into a perl list.
+
+=cut
+
+sub convertToList {
+	my $self = shift;
+	
+	if ($self->is_numeric() || $self->is_logical()) {
+		die "Cannot treat as a List. It is not one dimensional."
+			if( grep( $_ != 1, @{$self->dimensions()}) > 1 );
+		return $self->getAll();
+	} elsif ($self->is_char()){
+		die "Character classes are not supported at this time.";
+	} else {
+		die ref( $self)." is of unknown class (".$self->class_name.")";
+	}
+}
+
+
+# FIXME: add functions canConvertToScalar, canConvertToList
 
 =head2 canConvertToListOfHashes
 
