@@ -86,6 +86,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "GetLocalPath") == 0) return M_GETLOCALPATH;
 	if (strcmp(m_name, "Convert") == 0) return M_CONVERT;
 	if (strcmp(m_name, "ImportOMEfile") == 0) return M_IMPORTOMEFILE;
+	if (strcmp(m_name, "ExportOMEfile") == 0) return M_EXPORTOMEFILE;
 	if (strcmp(m_name, "ConvertStack") == 0) return M_CONVERTSTACK;
 	if (strcmp(m_name, "ConvertPlane") == 0) return M_CONVERTPLANE;
 	if (strcmp(m_name, "ConvertTIFF") == 0) return M_CONVERTTIFF;

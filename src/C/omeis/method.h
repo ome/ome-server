@@ -84,4 +84,5 @@ get_method_by_name(char * m_name);
 #define M_COMPOSITE     57
 #define M_GETTHUMB      58
 #define M_ISOMEXML      59
+#define M_EXPORTOMEFILE 60
 
