@@ -1,6 +1,10 @@
 CC     = gcc
 CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99
 LIBS   =-lm
+ifndef OME_ROOT
+OME_ROOT=/OME
+endif
+
 ifdef OME_ROOT
 DEFINES=-DOMEIS_ROOT=\"$(OME_ROOT)/OMEIS\"
 else
@@ -17,4 +21,4 @@ clean:
 	/bin/rm -f *.o *~ core omeis
 
 install:
-	install -c omeis /OME/bin/omeis
+	install -c omeis $(OME_ROOT)/bin/omeis

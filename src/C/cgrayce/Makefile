@@ -56,6 +56,11 @@ LDFLAGS  = -L$(LIBDIR) $(XTRALIBS) $(STDLIBS)
 TARNAME  = $(NAME).tar.gz
 TARFILE  = README Makefile $(CSRC) $(HEADERS) $(IHEADERS)
 
+ifndef OME_ROOT
+OME_ROOT=/OME
+endif
+
+
 all: $(LIB) helpers ome_cccp ome_tmcp
 
 $(LIB): $(OBJS) $(HEADERS)
@@ -96,8 +101,8 @@ clean:
 distclean: clean
 
 install:
-	install -c ome_cccp /OME/bin/ome_cccp
-	install -c ome_tmcp /OME/bin/ome_tmcp
+	install -c ome_cccp $(OME_ROOT)/bin/ome_cccp
+	install -c ome_tmcp $(OME_ROOT)/bin/ome_tmcp
 
 
 tarfile:
