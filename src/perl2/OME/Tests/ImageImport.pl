@@ -44,13 +44,16 @@ use OME::Session;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::ImageTasks;
 
+use Log::Agent;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
 my $reuse = '';
+my $debug = 0;
 my $help = 0;
 
 GetOptions('reimport|r!' => \$reuse,
+		   'verbose|v' => \$debug,
            'help|h' => \$help);
 
 sub usage {
@@ -62,10 +65,12 @@ Imports some proprietary image files into an OME database, and runs
 the import analysis chain against those images.
 
 Options:
-  -r  Reimports images which are already in the database.  This should
-      only be used for testing purposes.
+  -r, --reimport   Reimports images which are already in the database.  This should
+                   only be used for testing purposes.
+      
+  -v, --verbose    Debugging information is printed.
 
-  -h  Print this help message.
+  -h, --help       Print this help message.
   
 USAGE
     CORE::exit(1);
@@ -118,6 +123,12 @@ $session->commitTransaction();
 
 my %opts;
 $opts{AllowDuplicates} = 1 if $reuse;
+if ( $debug or (exists $ENV{OME_DEBUG} and $ENV{OME_DEBUG} > 0)) {
+	logconfig(
+		-prefix => "$0",
+		-level => 'debug'
+	);
+}
 
 print "Importing files\n";
 my $images = OME::Tasks::ImageTasks::importFiles($dataset, \@file_names, \%opts);
