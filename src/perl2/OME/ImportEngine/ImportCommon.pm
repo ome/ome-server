@@ -210,8 +210,6 @@ sub __storeInputFileInfo {
     for (my $i = 0; $i < scalar @$inarr; $i++) {
 	$session->Factory()->newObject("OME::Image::ImageFilesXYZWT",
 				       $inarr->[$i]);
-es
-
     }
 
 }
