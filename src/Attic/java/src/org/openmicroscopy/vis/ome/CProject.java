@@ -84,4 +84,19 @@ public class CProject extends RemoteProject {
 	public HashSet getDatasetSet() {
 		return new HashSet(datasetHash);
 	}
+	
+	public boolean hasDatasets() {
+		return (datasetHash.size() >0);
+	}
+	
+	public boolean sharesDatasetsWith(CProject p) {
+		if (p == null)
+			return false;
+		HashSet mine = getDatasetSet();
+		HashSet others = p.getDatasetSet();
+		mine.retainAll(others);
+		return (mine.size() > 0);
+		
+	}
+	
 }
