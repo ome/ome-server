@@ -562,6 +562,13 @@ sub rollbackTransaction {
 sub loadObject {
     my ($self, $class, $id, $columns_wanted) = @_;
 
+	# If the class is a ST, use findAttributes
+	return $self->loadAttribute( $class, $id, $columns_wanted )
+		if( ( $class ne "OME::SemanticType" and 
+		      UNIVERSAL::isa( $class, "OME::SemanticType" ) ) );
+	return $self->loadAttribute( substr( $class, 1 ), $id, $columns_wanted )
+		if( substr( $class, 0, 1 ) eq '@' );
+
     return undef unless defined $class && defined $id;
 
     __checkClass($class);
