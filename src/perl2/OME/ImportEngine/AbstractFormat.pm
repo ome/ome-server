@@ -404,9 +404,9 @@ sub __createRepositoryFile {
     my $factory = $session->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
-    my $pixelType = 
-      OME::Tasks::PixelsManager->getPixelType($bitsPerPixel/8,
-					      $isSigned,$isFloat);
+    my $bytesPerPixel = OME::ImportEngine::TIFFreader::bitsPerPixel2bytesPerPixel($bitsPerPixel);
+	my $pixelType = 
+      OME::Tasks::PixelsManager->getPixelType($bytesPerPixel,$isSigned,$isFloat);
 
     my %image_hash = (SizeX => $sizeX,
 		      SizeY => $sizeY,

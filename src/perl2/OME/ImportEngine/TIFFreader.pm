@@ -304,7 +304,7 @@ sub importGroup {
     $xref->{'Image.SizeX'} = $tags->{TAGS->{ImageWidth}}->[0];
     $xref->{'Image.SizeY'} = $tags->{TAGS->{ImageLength}}->[0];
     $xref->{'Data.BitsPerPixel'} = $tags->{TAGS->{BitsPerSample}}->[0];
-    $params->byte_size($xref->{'Data.BitsPerPixel'}/8);
+    $params->byte_size( bitsPerPixel2bytesPerPixel($xref->{'Data.BitsPerPixel'}));
     $self->{plane_size} = $xref->{'Image.SizeX'} * $xref->{'Image.SizeY'};
 
     # This assumes that a group has multiple wavelengths, but only 1 T & 1 Z
@@ -421,6 +421,23 @@ sub getSHA1 {
     return $sha1;
 }
 
+# logic figures out the correct byte size based on bits.  
+# this allows for TIFF files with un-natural pixel depth (i.e. 12bits per pixel)
+# use this instead of bytesPerPixel = bitsPerPixel/8
+
+sub bitsPerPixel2bytesPerPixel {
+	my $bitsPerPixel = shift;
+	my $bytesPerPixel;
+	
+    if ($bitsPerPixel<=8 ){
+	    $bytesPerPixel = 1;     
+	}elsif ( $bitsPerPixel>8 && $bitsPerPixel<=16 ){
+		$bytesPerPixel = 2;
+	}else{
+		$bytesPerPixel = 4;
+    }
+	return $bytesPerPixel;
+}
 
 =head1 Author
 
