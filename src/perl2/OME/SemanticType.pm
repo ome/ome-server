@@ -231,7 +231,7 @@ use OME;
             my $reference_pkg =
               (defined $reference_type)?
                 $reference_type->requireAttributeTypePackage():
-                $self->__formPackageName($reference_type);
+                $self->__formPackageName($reference_type_name);
 
             $pkg->addColumn($name,"${table_name}.${column_name}",
                             $reference_pkg,
