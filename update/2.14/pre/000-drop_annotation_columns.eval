@@ -1,0 +1,16 @@
+foreach my $mod_st ('ImageAnnotation', 'DatasetAnnotation') {
+	my $st = $factory->findObject("OME::SemanticType", name => $mod_st);
+	my @ses = $st->semantic_elements();
+
+	while (my $se = shift(@ses)) {
+		if ($se->name eq 'Experimenter' or $se->name eq 'Timestamp') {
+			my $table_name = $se->data_column()->data_table()->table_name();
+			my $column_name = $se->data_column()->column_name();
+
+			$delegate->dropColumn($dbh, $table_name, $column_name);
+		}
+	}
+}
+
+OME::DBObject->clearAllCaches();
+1;
