@@ -369,9 +369,6 @@ sub importGroup {
     my $site_name =
       defined $site? " Site ".$site->[0]: "";
 
-    my $user_group = $session->User()->Group();
-    my $group_id = defined $user_group? $user_group->id(): undef;
-
     my $image_name = $group->{description}." Well $address$site_name";
     print STDERR "Name $image_name\n";
 
@@ -380,15 +377,7 @@ sub importGroup {
     my $our_endian = (($byteorder == 1234) ||
 		      ($byteorder == 12345678)) ? LITTLE_ENDIAN : BIG_ENDIAN;
 
-    my $image = $factory->
-      newObject('OME::Image',
-                {
-                 name            => $image_name,
-                 experimenter_id => $session->User()->id(),
-                 group_id        => $group_id,
-                 created         => 'now',
-                 inserted        => 'now',
-                });
+    my $image = $self->__newImage($image_name);
 
     # We can't create the pixels attribute until we know the dimensions.
     my $pixels_created = 0;
