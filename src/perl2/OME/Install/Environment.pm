@@ -284,13 +284,13 @@ sub apache_conf {
     return;
 }
 
-sub matlab_installation{
+sub matlab_conf{
     my ($self, $dir) = @_;
 
     if($dir) {
-		$self->{matlab_installation} = $dir;
+		$self->{matlab_conf} = $dir;
     } else {
-		return $self->{matlab_installation} unless not exists $self->{matlab_installation};
+		return $self->{matlab_conf} unless not exists $self->{matlab_conf};
     }
 
     return;

@@ -646,6 +646,15 @@ sub execute {
 		#
 		# MATLAB PERL MODULES
 		#
+		my $MATLAB_CONF_DEF = {
+			INSTALL     => 0,
+			USER        => undef,
+			MATLAB_INST => undef,
+			AS_DEV      => 0,
+			MATLAB_SRC  => undef,		
+		};
+		my $MATLAB = defined $environment->matlab_conf()  ? $environment->matlab_conf()  : $MATLAB_CONF_DEF;
+		
 		print "\n";
 		print_header ("Optional Perl Module Setup");
 		
@@ -663,35 +672,60 @@ sub execute {
 	
 				# Ask user to confirm his/her original entries
 				print BOLD,"MATLAB Perl API configuration:\n",RESET;
-				print " Install MATLAB Perl API?: ", BOLD, $environment->matlab_installation() ?'yes':'no', RESET, "\n";
-				print "             MATLAB Path: ", BOLD, $environment->matlab_installation(), RESET, "\n" if $environment->matlab_installation() ;
-	
+				print " Install MATLAB Perl API?: ", BOLD, $MATLAB->{INSTALL} ? 'yes':'no', RESET, "\n";
+				print "              MATLAB User: ", BOLD, $MATLAB->{USER}, RESET, "\n" if $MATLAB->{INSTALL} ;
+				print "              MATLAB Path: ", BOLD, $MATLAB->{MATLAB_INST}, RESET, "\n" if $MATLAB->{INSTALL} ;
+				print "   Config MATLAB for dev?: ", BOLD, $MATLAB->{AS_DEV} ? 'yes':'no', RESET, "\n";
+				print "     MATLAB .m files Path: ", BOLD, $MATLAB->{MATLAB_SRC},  RESET, "\n" if $MATLAB->{INSTALL} ;
 				print "\n";  # Spacing
 	
 				y_or_n ("Are these values correct ?",'y') and last;
 			}
 			
 			if (y_or_n ("Install analysis engine interface to MATLAB ?")) {
+				$MATLAB->{INSTALL} = 1;
+				
+				if ($environment->admin_user()) {
+					$MATLAB->{USER} = $environment->admin_user();
+				} elsif ($environment->user()) {
+					$MATLAB->{USER} = $environment->user();
+				} else {
+					$MATLAB->{USER} = "matlab";			
+				}
+				
+				$MATLAB->{USER}  = confirm_default ("The user which MATLAB should be run under", $MATLAB->{USER});
+				
 				# how to guess the Matlab directory. Option 1: whereis matlab, Option 2: 
 				# ls -1 / (looking for Applications). ls -1 /Applications (looking for MATLAB**)
 				# we can also look in /usr/local/matlab* and /usr/local/bin/matlab* 
-				if ($environment->get_flag("UPDATE")) {
-					$matlab_directory = $environment->matlab_installation();
-				} else {
-					$matlab_directory = '/Applications/MATLAB6p5/';
+				if (! $MATLAB->{MATLAB_INST}) {
+					$MATLAB->{MATLAB_INST} = '/Applications/MATLAB6p5/';
 				}
-				$matlab_directory = confirm_path ("Path to MATLAB installation", $matlab_directory);
-				$environment->matlab_installation($matlab_directory);
+				$MATLAB->{MATLAB_INST} = confirm_path ("Path to MATLAB installation", $MATLAB->{MATLAB_INST});
+				
+				if (y_or_n ("Configure MATLAB Perl API for developers?")){
+					$MATLAB->{AS_DEV} = 1;
+					my $src_dir;
+					chomp($src_dir=`pwd`);
+					$MATLAB->{MATLAB_SRC} = $src_dir."/src/matlab";
+				} else {
+					$MATLAB->{AS_DEV} = 0;
+					$MATLAB->{MATLAB_SRC} = "$OME_BASE_DIR/matlab";
+				}
+				$MATLAB->{MATLAB_SRC} = confirm_path ("Path to OME's matlab src files", $MATLAB->{MATLAB_SRC} );
+			} else {
+				$MATLAB->{INSTALL} = 0;
 			}
 			
 			$confirm_all = 1;
 		}
 		
-		if ($matlab_directory = $environment->matlab_installation()) {
+		if ($MATLAB->{INSTALL}) {
 			print "Installing MATLAB modules\n";
+			
 			# Configure
 			print "  \\_ Configuring ";
-			$retval = configure_module ("src/perl2/OME/Matlab/", $LOGFILE, "$matlab_directory");
+			$retval = configure_module ("src/perl2/OME/Matlab/", $LOGFILE, "$MATLAB->{MATLAB_INST}");
 			print BOLD, "[FAILURE]", RESET, ".\n"
 				and croak "Unable to configure module, see $LOGFILE_NAME for details."
 				unless $retval;
@@ -706,6 +740,15 @@ sub execute {
 				unless $retval;
 			print BOLD, "[SUCCESS]", RESET, ".\n";
 	
+			# Testing
+			print "  \\_ Testing ";
+			$retval = test_module_as_user ("src/perl2/OME/Matlab/", $LOGFILE, "$MATLAB->{USER}");
+	
+			print BOLD, "[FAILURE]", RESET, ".\n"
+				and croak "Tests failed, see $LOGFILE_NAME for details."
+				unless $retval;
+			print BOLD, "[SUCCESS]", RESET, ".\n";
+			
 			# Install
 			print "  \\_ Installing ";
 			$retval = install_module ("src/perl2/OME/Matlab/", $LOGFILE);
