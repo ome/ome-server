@@ -37,6 +37,7 @@ use warnings;
 use Carp;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
+use OME::Install::Util;
 
 require Exporter;
 
@@ -45,7 +46,7 @@ require Exporter;
 #*********
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(confirm confirm_path print_header question confirm_default y_or_n);
+our @EXPORT = qw(confirm confirm_path print_header question confirm_default y_or_n whereis);
 
 #*********
 #********* EXPORTED SUBROUTINES
@@ -119,6 +120,19 @@ sub question {
 	if (lc($y_or_n) eq "y") { return $input };
     }
 }
+
+sub whereis {
+    my $binary = shift;
+
+    while (1) {
+	print "Please specify the location of the \"$binary\" binary [q to quit]: ";
+	my $input = ReadLine 0;
+	chomp $input;
+	if (lc($input) eq 'q') { return 0 }
+	which ($input) and return $input or print "Unable to locate \"$input\", try again.\n" and next;
+    }
+}
+
 
 sub y_or_n {
     my $text = shift;
