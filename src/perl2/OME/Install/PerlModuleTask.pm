@@ -452,7 +452,7 @@ sub execute {
 
     print_header ("Core Perl Module Setup");
     
-    print "(All verbose information logged in $OME_TMP_DIR/$LOGFILE_NAME)\n\n";
+    print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
 
     my $retval = 0;
 
