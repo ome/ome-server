@@ -135,6 +135,12 @@ function openInfoDatasetImport (dataset_id) {
 	);
 }
 
+// openInfoImage()
+
+function openInfoImage (id) {
+	document.location.href = DetailPage + '&Type=OME::Image&ID=' + id;
+}
+
 // openPopUpImageAs()
 
 function openPopUpImageAs(field_name) {
@@ -148,6 +154,18 @@ function openPopUpImageAs(field_name) {
 		if( mode ) { openPopUpImageAs.mode = mode; }
 		else { return openPopUpImageAs.mode; }
 	}
+}
+
+// openImage()
+
+function openImage (id) {
+
+	var mode = openPopUpImageAs();
+	if ( mode == 'image_detail' ) {
+		openInfoImage(id)
+	} else {
+		openPopUpImage( id );
+	} 
 }
 
 // openPopUpImage()
