@@ -135,22 +135,25 @@ sub getPageBody {
 	# Actual Outputs Tables
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 	$html .= $q->h1( 'Outputs' );
+	my @table_data;
 	foreach my $fo ( @formal_outputs ) {
 		next unless $fo->semantic_type;
 		my $attributes = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX($mex,$fo->semantic_type);
-		$html .= 
-			$q->a( { -name => $fo->name() }, ' ' ).
-			$tableMaker->getTable( 
-				{
-					excludeFields    => { module_execution => undef },
-					embedded_in_form => $self->{ form_name },
-					title            => $fo->name(),
-				},
-				$self->_STformalName( $fo->semantic_type() ),
-				$attributes
-			);
+		push @table_data, {
+			title   => $fo->name(),
+			type    => $self->_STformalName( $fo->semantic_type() ),
+			objects => $attributes
+		};
 	}
+	my @tables = $tableMaker->getJoinTable( 
+		{
+			excludeFields    => { module_execution => undef },
+			embedded_in_form => $self->{ form_name },
+		},
+		\@table_data
+	);
+	$html .= join( '<br>', @tables );
 
 	# Untyped Outputs Tables
 	$html .= $q->h1( 'Untyped Outputs' );
