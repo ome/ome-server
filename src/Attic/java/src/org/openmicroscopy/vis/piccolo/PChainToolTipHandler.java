@@ -48,13 +48,14 @@ import java.awt.Font;
 
 /** 
  *
- * An event handler for tooltips on the {@link PChainCanvas}.
+ * An event handler for tooltips on the {@link PChainCanvas} and
+ * {@link PResultCanvas}.
  *  
  * @author Harry Hochheiser
  * @version 2.1
  * @since OME2.1
  */
-public class PChainToolTipHandler extends PToolTipHandler {
+public class PChainToolTipHandler extends PPaletteToolTipHandler {
 	
 	protected Font font = new Font("Helvetica",Font.PLAIN,12);
 	
@@ -70,29 +71,26 @@ public class PChainToolTipHandler extends PToolTipHandler {
 	 * @param event the event that caused the update of the tool tip 
 	 */
 	public PNode setToolTipNode(PInputEvent event) {
-		String s="";
-		PNode n = event.getInputManager().getMouseOver().getPickedNode();
+		
 		double scale = camera.getViewScale();
-		if (scale < PToolTipHandler.SCALE_THRESHOLD) {
-			if (n instanceof PModule) 
-				s = ((PModule) n).getModule().getName();
-			else if (n instanceof PFormalParameter) {
-				String t = ((PFormalParameter) n).getPModule().
-					getModule().getName();
-				s = t;
-			}
-			else if (n instanceof PParamLink) {
-				PFormalInput in = ((PParamLink) n).getInput();
-				PFormalOutput out = ((PParamLink) n).getOutput();
-				s = in.getName()+"-"+out.getName();
-			}
-		}
-		if (s.compareTo("") == 0)
+		if (scale >= PToolTipHandler.SCALE_THRESHOLD)
 			return (PNode) null;
-		else {
-			PText p = new PText(s);
-			p.setFont(font);
-			return p;
+		
+		PNode n = event.getInputManager().getMouseOver().getPickedNode();
+			
+		if (n instanceof PParamLink) {
+			PFormalInput in = ((PParamLink) n).getInput();
+			PFormalOutput out = ((PParamLink) n).getOutput();
+			String s = in.getName()+"-"+out.getName();
+			if (s.compareTo("") == 0)
+				return (PNode) null;
+			else {
+				PText p = new PText(s);
+				p.setFont(font);
+				return p;
+			}
 		}
+		else
+			return super.setToolTipNode(event);
 	}
 }
