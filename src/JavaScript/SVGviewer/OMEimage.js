@@ -409,31 +409,19 @@ OMEimage.prototype.busyWith = function( activity, isBusy ) {
 OMEimage.prototype.theZ = function( newZ ) {
 	if( newZ !== undefined ) {
 		this.busyWith( 'theZ', true );
-		var inc = newZ - this._theZ;
-		if( Math.round( inc ) == 0 ) {
-			if( inc < 0 ) { this._theZ -= 1; }
-			if( inc > 0 ) {	this._theZ += 1; }
-		} else {
-			this._theZ = Math.round( newZ );
-		}
+		this._theZ = Math.round( newZ );
 		this.broadcast( 'theZ' );
+		this.busyWith( 'theZ', false );
 	}
-	this.busyWith( 'theZ', false );
 	return this._theZ;
 }
 OMEimage.prototype.theT = function( newT ) {
 	if( newT !== undefined ) {
 		this.busyWith( 'theT', true );
-		var inc = newT - this._theT;
-		if( Math.round( inc ) == 0 ) {
-			if( inc < 0 ) { this._theT -= 1; }
-			if( inc > 0 ) {	this._theT += 1; }
-		} else {
-			this._theT = Math.round( newT );
-		}
+		this._theT = Math.round( newT );
 		this.broadcast( 'theT' );
+		this.busyWith( 'theT', false );
 	}
-	this.busyWith( 'theT', false );
 	return this._theT;
 }
 
