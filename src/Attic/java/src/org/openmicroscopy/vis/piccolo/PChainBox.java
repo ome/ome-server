@@ -43,11 +43,12 @@ import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.ControlPanel;
 import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
 import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
-import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
-//import edu.umd.cs.piccolo.util.PPaintContext;
+
 import java.awt.Color;
 import java.awt.BasicStroke;
+import java.awt.Font;
 
 
 /** 
@@ -80,7 +81,12 @@ public class PChainBox extends PCategoryBox implements
 	private CChain chain;
 	
 	private static final BasicStroke VIEWABLE_STROKE = new BasicStroke(5);
-	private static final Color VIEWABLE_COLOR =Color.BLUE;	
+	private static final Color EXECUTED_COLOR = new Color(204,204,255,200);
+	
+	private static final Font LOCKED_FONT = new Font(null,Font.BOLD,18);
+	
+	private static final float VGAP=10;
+	private static final float HGAP=20;
 	
 	public PChainBox(ControlPanel controlPanel,CChain chain, float x, float y) {
 		super(x,y);
@@ -109,15 +115,29 @@ public class PChainBox extends PCategoryBox implements
 		super.setExtent(width,height);
 		// add a triangle in the corner.
 		if (chain.getLocked()) {
-			PBounds b = getFullBoundsReference();
-			addLockIcon((float) (b.getX()+width),(float) b.getY());
+			addLockedIndicator();
+			//PBounds b = getFullBoundsReference();
+			
 		}
 	}
+	
+	private void addLockedIndicator() {
+		PBounds b = getFullBoundsReference();
+		PText locked = new PText("Locked");
+		locked.setFont(LOCKED_FONT);
+		locked.setPaint(Color.RED);
+		locked.setScale(2);
+		addChild(locked);
+		PBounds lockedBounds = locked.getGlobalFullBounds();
+		float x = (float) (b.getX()+b.getWidth()-lockedBounds.getWidth()-HGAP);
+		locked.setOffset(x,b.getY()+VGAP);
+	}
 		
+	/*
 	/**
 	 * Add the icon indicating that the chain is locked
 	 */
-	private void addLockIcon(float x,float y) {
+	/*private void addLockIcon(float x,float y) {
 		PPath lock = new PPath();
 		lock.setPaint(LOCK_ICON_COLOR);
 		lock.moveTo(x,y);
@@ -125,29 +145,18 @@ public class PChainBox extends PCategoryBox implements
 		lock.lineTo(x,y+SIZE_LENGTH);
 		lock.lineTo(x,y);
 		addChild(lock);
-	}
-	
-	/*public void paint(PPaintContext aPaintContext)  {
-		if (chain.hasExecutionsInCurrentDataset() == true) {
-			setStroke(VIEWABLE_STROKE);
-			setStrokePaint(VIEWABLE_COLOR);
-		}
-		else {
-			setStroke(null);
-			setStrokePaint(null);
-		}
-		super.paint(aPaintContext);
 	}*/
+	
+	
 	
 	public void datasetSelectionChanged(DatasetSelectionEvent e) {
 		if (chain.hasExecutionsInDatasets(e.getDatasets(),
 			e.getSelectedDataset())) {
-			setStroke(VIEWABLE_STROKE);
-			setStrokePaint(VIEWABLE_COLOR);
+			setPaint(EXECUTED_COLOR);
+			
 		}
 		else {
-			setStroke(null);
-			setStrokePaint(null);	
+			setPaint(PCategoryBox.CATEGORY_COLOR);
 		}
 		repaint();
 	}
