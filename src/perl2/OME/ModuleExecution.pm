@@ -147,7 +147,12 @@ __PACKAGE__->hasMany('untypedOutputs','OME::ModuleExecution::SemanticTypeOutput'
                      'module_execution');
 __PACKAGE__->hasMany('parentalOutputs','OME::ModuleExecution::ParentalOutput' =>
                      'module_execution');
-
+__PACKAGE__->addACL ({
+        	user    => 'experimenter_id',
+        	group   => 'acl.group_id',
+        	froms   => ['experimenters acl'],
+        	wheres  => ["acl.attribute_id = experimenter_id"],
+        	});
 =head1 METHODS (C<module_execution>)
 
 The following methods are available to C<module_execution> in addition to

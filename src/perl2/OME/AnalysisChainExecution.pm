@@ -98,7 +98,12 @@ __PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
 __PACKAGE__->hasMany('node_executions',
                      'OME::AnalysisChainExecution::NodeExecution' =>
                      'analysis_chain_execution');
-
+__PACKAGE__->addACL ({
+        	user    => 'experimenter_id',
+        	group   => 'acl.group_id',
+        	froms   => ['experimenters acl'],
+        	wheres  => ["acl.attribute_id = experimenter_id"],
+        	});
 =head1 METHODS (C<AnalysisChainExecution>)
 
 The following methods are available to C<AnalysisChainExecution> in
