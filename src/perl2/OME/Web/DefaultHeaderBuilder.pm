@@ -56,8 +56,8 @@ use OME;
 
 $VERSION = $OME::VERSION;
 
-my $PM_LOCATION   = 'serve.pl?Page=OME::Web::ProjectManagement';
-my $DM_LOCATION   = 'serve.pl?Page=OME::Web::DatasetManagement';
+my $PM_LOCATION   = 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Project';
+my $DM_LOCATION   = 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Dataset';
 my $HOME_LOCATION = 'serve.pl?Page=OME::Web::Home';
 
 #*********
@@ -113,12 +113,12 @@ sub getPageHeader {
 	# Recent project/dataset links
 	my $recent_links =
 		$q->span({class => 'ome_quiet'}, 'Most recent project: ') .
-		$q->a({href => $PM_LOCATION . '&ProjectID=' . $recent_project_id, class => 'ome_quiet'}, $recent_project_name) .
+		$q->a({href => $PM_LOCATION . '&ID=' . $recent_project_id, class => 'ome_quiet'}, $recent_project_name) .
 		' ' .  # Spacing
 		$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $recent_project_id .');'}, '(Popup)') .
 		$q->br() .
 		$q->span({class => 'ome_quiet'}, 'Most recent dataset: ') .
-		$q->a({href => $DM_LOCATION . '&DatasetID=' . $recent_dataset_id, class => 'ome_quiet'}, $recent_dataset_name) .
+		$q->a({href => $DM_LOCATION . '&ID=' . $recent_dataset_id, class => 'ome_quiet'}, $recent_dataset_name) .
 		' ' .  # Spacing
 		$q->a({class => 'ome_popup', href => 'javascript:openInfoDataset(' . $recent_dataset_id .');'}, '(Popup)');
 
