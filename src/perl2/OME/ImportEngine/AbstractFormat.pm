@@ -408,7 +408,7 @@ sub __createRepositoryFile {
     my $factory = $session->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
-    my $bytesPerPixel = OME::ImportEngine::TIFFreader::bitsPerPixel2bytesPerPixel($bitsPerPixel);
+    my $bytesPerPixel = $self->__bitsPerPixel2bytesPerPixel($bitsPerPixel);
 	my $pixelType = 
       OME::Tasks::PixelsManager->getPixelType($bytesPerPixel,$isSigned,$isFloat);
 
@@ -427,6 +427,33 @@ sub __createRepositoryFile {
     return ($attr,$pixels);
 }
 
+
+
+
+
+=head2  __bitsPerPixel2bytesPerPixel
+
+        __bitsPerPixel2bytesPerPixel($bitsPerPixel)
+
+logic figures out the correct byte size based on bits.  
+this allows for TIFF files with un-natural pixel depth (i.e. 12bits per pixel)
+use this instead of bytesPerPixel = bitsPerPixel/8
+
+=cut
+
+sub __bitsPerPixel2bytesPerPixel {
+	my ($self,$bitsPerPixel) = @_;
+	my $bytesPerPixel;
+	
+    if ($bitsPerPixel<=8 ){
+	    $bytesPerPixel = 1;     
+	}elsif ( $bitsPerPixel>8 && $bitsPerPixel<=16 ){
+		$bytesPerPixel = 2;
+	}else{
+		$bytesPerPixel = 4;
+    }
+	return $bytesPerPixel;
+}
 
 
 =head2  __destroyRepositoryFile
