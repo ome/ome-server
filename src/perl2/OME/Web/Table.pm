@@ -72,22 +72,10 @@ sub __datasetTable {
 	my $factory = $self->Session()->Factory();
 	my $table_data;
 	my @columns = qw(ID Status Name Owner Group Description);
-	my @datasets;
+	my @datasets = $self->__filterObjects({filter_object => 'OME::Dataset',
+			                               filter_field => $options->{filter_field},
+										   filter_string => $options->{filter_string}});
 
-	# Filter the dataset objects if needed
-	if ($options->{filter_field} and $options->{filter_text}) {
-		carp "Filtering ", $options->{filter_field}, " by ", $options->{filter_text};
-		# Get an OME::Dataset cursor for our search with a forced lowercase field
-		my $cursor =
-			$factory->findObjectsLike("OME::Dataset", {lc($options->{filter_field}) => $options->{filter_text}});  
-		# Iterate and populate list
-		while (my $dataset = $cursor->next()) {
-			push (@datasets, $dataset);
-		}
-	} else {
-		@datasets = $factory->findObjects("OME::Dataset");
-	}
-	
 	foreach my $dataset (@datasets) {
 		my $id = $dataset->id();
 		my $name = $dataset->name();
@@ -138,22 +126,10 @@ sub __projectTable {
 	my $q = $self->CGI();
 	my $table_data;
 	my @columns = qw(ID Name Owner Group Description);
-	my @projects;
+	my @projects = $self->__filterObjects({filter_object => 'OME::Project',
+			                               filter_field => $options->{filter_field},
+										   filter_string => $options->{filter_string}});
 
-	# Filter the dataset objects if needed
-	if ($options->{filter_field} and $options->{filter_text}) {
-		carp "Filtering ", $options->{filter_field}, " by ", $options->{filter_text};
-		# Get an OME::Dataset cursor for our search with a forced lowercase field
-		my $cursor =
-			$factory->findObjectsLike("OME::Project", {lc($options->{filter_field}) => $options->{filter_text}});  
-		# Iterate and populate list
-		while (my $project = $cursor->next()) {
-			push (@projects, $project);
-		}
-	} else {
-		@projects = $factory->findObjects("OME::Project");
-	}
-	
 	foreach my $project (@projects) {
 		my $id = $project->id();
 		my $name = $project->name();
@@ -202,22 +178,9 @@ sub __imageTable {
 	my $q = $self->CGI();
 	my $table_data;
 	my @columns = qw(ID Name Preview Owner Group Description);
-	my @images;
-
-	# Filter the dataset objects if needed
-	if ($options->{filter_field} and $options->{filter_text}) {
-		carp "Filtering ", $options->{filter_field}, " by ", $options->{filter_text};
-		# Get a cursor for our search with a forced lowercase field
-		my $cursor =
-			$factory->findObjectsLike("OME::Image", {lc($options->{filter_field}) => $options->{filter_text}});  
-		# Iterate and populate list
-		while (my $image = $cursor->next()) {
-			push (@images, $image);
-		}
-	} else {
-		@images = $factory->findObjects("OME::Image");
-	}
-
+	my @images = $self->__filterObjects({filter_object => 'OME::Image',
+			                             filter_field => $options->{filter_field},
+										 filter_string => $options->{filter_string}});
 	
 	foreach my $image (@images) {
 		my $id = $image->id();
@@ -310,13 +273,35 @@ sub __filterForm {
 			   $q->popup_menu({-name => 'filter_field',
 					           -values => [@columns],
 							   -default => $columns[0],}) .
-			    " Text: " .
-		        $q->textfield({-name => 'filter_text', -default => '', -size => 15}) .
+			    " String: " .
+		        $q->textfield({-name => 'filter_string', -default => '', -size => 15}) .
 		        "&nbsp" .  # Spacing
 		        $q->submit({-name => 'data_filter', -value => 'Go'});
 		        $q->endform();
 
 	return $form;
+}
+
+sub __filterObjects {
+	my $self = shift;
+	my $options = shift;
+
+	my $factory = $self->Session()->Factory();
+	my @objects;
+
+	# Filter the dataset objects if needed
+	if ($options->{filter_field} and $options->{filter_string}) {
+		# Get a cursor for our search with a forced lowercase field
+		my $cursor = $factory->findObjectsLike($options->{filter_object},
+			                                   {lc($options->{filter_field}) => $options->{filter_string}});  
+
+		# Iterate and populate list
+		while (my $object = $cursor->next()) { push (@objects, $object) }
+	} else {
+		@objects = $factory->findObjects($options->{filter_object});
+	}
+
+	return @objects;
 }
 
 #*********
@@ -335,23 +320,23 @@ sub getPageBody {
 
 	my $type = $q->param('type') || 'projects';  # Projects is the default display
 	my $filter_field = $q->param('filter_field') || '';
-	my $filter_text = $q->param('filter_text') || '';
+	my $filter_string = $q->param('filter_string') || '';
 	
 	# Cleanup so we don't get superfluous propogation
-	$q->delete('filter_field', 'filter_text');
+	$q->delete('filter_field', 'filter_string');
 
 	if (lc($type) eq 'datasets') {
 		$header = $self->__genericHeader("Datasets");
 		$tables = $self->__datasetTable({filter_field => $filter_field,
-			                             filter_text  => $filter_text});
+			                             filter_string  => $filter_string});
 	} elsif (lc($type) eq 'projects') {
 		$header = $self->__genericHeader("Projects");
 		$tables = $self->__projectTable({filter_field => $filter_field,
-			                             filter_text  => $filter_text});
+			                             filter_string  => $filter_string});
 	} elsif (lc($type) eq 'images') {
 		$header = $self->__genericHeader("Images");
 		$tables = $self->__imageTable({filter_field => $filter_field,
-			                           filter_text  => $filter_text});
+			                           filter_string  => $filter_string});
 	}
 
 	# XXX Hidden form to store the "Page" parameter for serve.pl
