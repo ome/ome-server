@@ -2043,6 +2043,7 @@ uint16 chans = 0,pc,is_rgb;
 uint16 read_bitspp, write_bytespp;
 tsize_t stripSize;
 char doSwap;
+int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read */
 
 	if (!myFile || !myPixels) return (0);
 
@@ -2098,8 +2099,8 @@ char doSwap;
 		write_bytespp = 4;
 		
 	/* sanity check */
-	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || (chans > 1 && is_rgb !=PHOTOMETRIC_RGB) || write_bytespp != (uint16)(head->bp) ||
-		pc != PLANARCONFIG_CONTIG ) {
+	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || (chans > 1 && is_rgb != PHOTOMETRIC_RGB) || write_bytespp != (uint16)(head->bp) ||
+		(is_rgb != PHOTOMETRIC_RGB && pc != PLANARCONFIG_CONTIG ) ){
 			int nc=0;
 			
 			TIFFClose(tiff);
@@ -2119,7 +2120,7 @@ char doSwap;
 		return (0);
 	}
 
-	/* allocate a write buffer if neccessary */
+	/* allocate a scratch buffer for bit-unpacking if neccessary */
 	if (read_bitspp%8 != 0)
 		if (! (write_buf_unpack = (uint16*) malloc(TIFFStripSize(tiff)*8/read_bitspp * write_bytespp)) ) {
 			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary bit-unpacking, buffer.",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
@@ -2128,7 +2129,8 @@ char doSwap;
 		return (0);
 	}
 	
-	if (is_rgb == PHOTOMETRIC_RGB)
+	/* allocate a scratch buffer for channel unpacking if neccessary */
+	if (is_rgb == PHOTOMETRIC_RGB && pc == PLANARCONFIG_CONTIG)
 		if (! (write_buf_rgb = (uint8*) malloc(TIFFStripSize(tiff)/3) )) {
 			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary channel buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
 		_TIFFfree(read_buf);
@@ -2138,16 +2140,16 @@ char doSwap;
 	myPixels->IO_buf_off = 0;
 	doSwap = myPixels->doSwap;
 	myPixels->doSwap = 0;
-		
-	/* is this an rgb image ? */
-	if (is_rgb == PHOTOMETRIC_RGB){
+	
+	/* is this an rgb image with packed channels */
+	if (is_rgb == PHOTOMETRIC_RGB && pc == PLANARCONFIG_CONTIG){
 		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, 0, theT);
 		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, 1, theT);
 		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, 2, theT);
 		myPixels->IO_buf = write_buf_rgb;
 		pix_offset = 0;
 		
-		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && nIO<(head->dx)*(head->dy); strip++) {
 			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);
 			nPix = (8*stripSize) / read_bitspp / 3;
 			
@@ -2168,26 +2170,86 @@ char doSwap;
 			nIO += nOut;
 		}
 		free(write_buf_rgb); 
+	
+	
+	} else if (is_rgb == PHOTOMETRIC_RGB && pc == PLANARCONFIG_SEPARATE) {
+		int red_nOut = 0;
+		int green_nOut = 0;
+		int blue_nOut = 0;
 
-	/* do we need to do bit unpacking or not ? */
-	} else if (read_bitspp % 8 == 0){
+		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, 0, theT);
+		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, 1, theT);
+		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, 2, theT);
+		
 		myPixels->IO_buf = read_buf;
 		myPixels->IO_buf_off = 0;
-		pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
-		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+		
+		/* red channels */
+		pix_offset = red_offset;
+		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && red_nOut<(head->dx)*(head->dy); strip++) {
 			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
 			nPix = (8*stripSize) / read_bitspp;
 			myPixels->IO_buf_off = 0;
 			
-		nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-		pix_offset += stripSize;
-		nIO += nOut;
+			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+			pix_offset += stripSize;
+			red_nOut += nOut;
 		}
+		
+		/* green channels */
+		pix_offset = green_offset;
+		for (; strip<TIFFNumberOfStrips(tiff) && green_nOut<(head->dx)*(head->dy); strip++) {
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+			nPix = (8*stripSize) / read_bitspp;
+			myPixels->IO_buf_off = 0;
+			
+			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+			pix_offset += stripSize;
+			green_nOut += nOut;
+		}
+		
+		/* blue channels */
+		pix_offset = blue_offset;
+		for (; strip<TIFFNumberOfStrips(tiff) && blue_nOut<(head->dx)*(head->dy); strip++) {
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+			nPix = (8*stripSize) / read_bitspp;
+			myPixels->IO_buf_off = 0;
+			
+			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+			pix_offset += stripSize;
+			blue_nOut += nOut;
+		}
+		
+		if ((red_nOut != green_nOut) || (blue_nOut != green_nOut)) {
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Number of Red (%d) Green (%d) and Blue (%d) pixels is non equal.\n",
+							red_nOut,green_nOut, blue_nOut);
+			_TIFFfree(read_buf);
+			TIFFClose(tiff);
+			return (0);		
+		}
+		
+		nIO = red_nOut;
+		
+	/* do we need to do bit unpacking */
+	} else if (read_bitspp % 8 == 0) {
+		myPixels->IO_buf = read_buf;
+		myPixels->IO_buf_off = 0;
+		pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
+		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && nIO<(head->dx)*(head->dy); strip++) {
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+			nPix = (8*stripSize) / read_bitspp;
+			myPixels->IO_buf_off = 0;
+			
+			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+			pix_offset += stripSize;
+			nIO += nOut;
+		}
+	/* its a standard one channel tiff */
 	} else {
 		myPixels->IO_buf = write_buf_unpack;
 		myPixels->IO_buf_off = 0;
 		pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
-		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && nIO<(head->dx)*(head->dy); strip++) {
 			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
 			nPix = (stripSize*8) / read_bitspp;
 			myPixels->IO_buf_off = 0;
