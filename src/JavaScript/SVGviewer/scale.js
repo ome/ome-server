@@ -123,8 +123,10 @@ Scale.prototype.setLogicalChannel = function(logicalChannelIndex) {
 	this.logicalChannelPopupList.setSelectionByValue( itemList[logicalChannelIndex], true);
 	if( this.tiedLogicalChannelPopupLists ) {
 		for( var i in this.tiedLogicalChannelPopupLists ) {
-			itemList = this.tiedLogicalChannelPopupLists[i].getItemList();
-			this.tiedLogicalChannelPopupLists[i].setSelectionByValue( itemList[logicalChannelIndex], true);
+			var tiedPopupList = this.tiedLogicalChannelPopupLists[i]['PopupList'];
+			itemList = tiedPopupList.getItemList();
+			var noCallback = this.tiedLogicalChannelPopupLists[i]['NoCallback']
+			tiedPopupList.setSelectionByValue( itemList[logicalChannelIndex], noCallback);
 		}
 	}
 	this.updateScaleDisplay();
@@ -222,11 +224,15 @@ Scale.prototype.updateScaleDisplay = function() {
 /*****
 	tieLogicalChannelPopupList ()
 		popupList - popupList to synchronize logical Channel with.
-	allows a second control to be synchonized with the logical Channel map popup List.
+		noCallback - set to false to have synchronized popuplist engage
+		its callback function. careful to avoid infinite loops if you
+		use this.
+	allows multiple control to be synchonized with the logical Channel map popup List.
 *****/
-Scale.prototype.tieLogicalChannelPopupList = function(logicalChannelPopupList) {
+Scale.prototype.tieLogicalChannelPopupList = function(logicalChannelPopupList, noCallback) {
+	if( noCallback !== false ) { noCallback = true; }
 	if( ! this.tiedLogicalChannelPopupLists ) { this.tiedLogicalChannelPopupLists = new Array(); }
-	this.tiedLogicalChannelPopupLists.push( logicalChannelPopupList );
+	this.tiedLogicalChannelPopupLists.push( { PopupList: logicalChannelPopupList, NoCallback: noCallback } );
 };
 
 
