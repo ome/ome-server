@@ -183,6 +183,8 @@ They are registered in new() under the hash:
 They are responsible for collecting their inputs from the DB and translating 
 them to matlab global variables whose name are given by:
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
+Additionally, they need to record the number of inputs they find:
+	$xmlInstr->setAttribute( 'ActualArity', scalar( @input_attr_list ) );
 placeInputs() coordinates all this output processing activity.
 
 =head2 placeInputs
@@ -222,46 +224,56 @@ sub Pixels_to_MatlabArray {
 	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) )
 		or die "Could not find FormalInput referenced by ".$xmlInstr->toString();
 	my @input_attr_list = $self->getCurrentInputAttributes( $formal_input );
-	die "The OME-Matlab interface does not support Formal inputs of arity greater than 1 at this time.\n"
+	die "The OME-Matlab interface does not support Formal inputs of arity greater than 1 at this time. Found ".scalar(@input_attr_list)." inputs. Error when processing\n".$xmlInstr->toString()
 		if ( scalar @input_attr_list > 1);
+
+	# ActualArity is needed to cope with optional inputs.
+	$xmlInstr->setAttribute( 'ActualArity', scalar( @input_attr_list ) );
+	return if scalar( @input_attr_list ) eq 0;
 	my $input = $input_attr_list[0];
 
-	# Traverse the line of ascent (if one exists)
-	# Get $pixels, dimensions for matlab array, and possibly a Slice's ROI.
+	# Find the pixels, the extents, and the dimensions of this Pixels derivative.
+	my (@ROI, @Dims);
 	my $pixels;
-	my (@ROI, @ML_Array_Dims);
-	do {
-		# Record ROI & Array Dimensions if PixelsSlice is encountered
-		if( $input->semantic_type()->name() eq 'PixelsSlice' ) {
-			@ROI = (
-				$input->StartX(), $input->EndX(),
-				$input->StartY(), $input->EndY(),
-				$input->StartZ(), $input->EndZ(),
-				$input->StartC(), $input->EndC(),
-				$input->StartT(), $input->EndT()
-			);
-			@ML_Array_Dims = (
-				$input->EndX - $input->StartX + 1,
-				$input->EndY - $input->StartY + 1,
-				$input->EndZ - $input->StartZ + 1,
-				$input->EndC - $input->StartC + 1,
-				$input->EndT - $input->StartT + 1
-			);
-		} elsif( $input->semantic_type()->name() eq 'Pixels' ) {
-			$pixels = $input;
-			# Set array dimensions unless a PixelsSlice in the line of ascent 
-			# already set them.
-			@ML_Array_Dims = (
+	my $ascender = $input;
+	FIND_PIXELS: while( 1 ) {
+		if( $ascender->semantic_type->name eq 'Pixels' ) {
+			$pixels = $ascender;
+			# if the derivation path did not include PixelsSlice, then Dims needs to be populated.
+			@Dims = (
 				$pixels->SizeX,
 				$pixels->SizeY,
 				$pixels->SizeZ,
 				$pixels->SizeC,
-				$pixels->SizeT,
-			) unless @ML_Array_Dims;
+				$pixels->SizeT
+			) unless( @Dims );
+			last FIND_PIXELS;
+		} elsif ( $ascender->semantic_type->name eq 'PixelsSlice' ) {
+			@Dims = (
+				$ascender->EndX - $ascender->StartX + 1,
+				$ascender->EndY - $ascender->StartY + 1,
+				$ascender->EndZ - $ascender->StartZ + 1,
+				$ascender->EndC - $ascender->StartC + 1,
+				$ascender->EndT - $ascender->StartT + 1,
+			) unless( @Dims );
+			@ROI = (
+				$ascender->StartX, 
+				$ascender->StartY, 
+				$ascender->StartZ, 
+				$ascender->StartC, 
+				$ascender->StartT, 
+				$ascender->EndX, 
+				$ascender->EndY, 
+				$ascender->EndZ, 
+				$ascender->EndC, 
+				$ascender->EndT, 
+			);
 		}
-	} while( $input->can( 'Parent' ) && not defined $pixels);
-	die "input ".$input_attr_list[0]." does not inherit from Pixels."
-		unless $pixels;
+		# if we are here, we have not found the pixels yet. die if the ascent can go no further.
+		die "Input ".$input->semantic_type->name." (id=".$input->id.") does not inherit from Pixels."
+		    unless $ascender->can( 'Parent' );
+		$ascender = $ascender->Parent();
+	}
 	
 	# Ensure PixelType is supported.
 	my $pixelType = $pixels->PixelType();
@@ -287,7 +299,7 @@ sub Pixels_to_MatlabArray {
 	my $matlab_pixels = OME::Matlab::Array->newNumericArray(
 		$class,
 		$mxREAL,
-		@ML_Array_Dims
+		@Dims
 	) or die "Could not make an array in matlab for Pixels";
 	$matlab_pixels->makePersistent();
 	$self->{__engine}->eval("global $matlab_var_name");
@@ -315,9 +327,13 @@ sub Attr_to_MatlabScalar {
 	my ( $formal_input_name, $SEforScalar ) = split( /\./, $input_location )
 		or die "input_location '$input_location' could not be parsed.";
 	my $input_attr = $self->getCurrentInputAttributes( $formal_input_name );
+
+	# ActualArity is needed to cope with optional inputs.
+	$xmlInstr->setAttribute( 'ActualArity', scalar( @$input_attr ) );
+	return if scalar( @$input_attr ) eq 0;
 	die scalar( @$input_attr )." attributes found for input '$formal_input_name'. ".
-		'Cannot use scalar for input that has count other than 1. Error when processing \''.$xmlInstr->toString()."'"
-		unless scalar( @$input_attr ) eq 1;
+		'Cannot use scalar for input that has count greater than 1. '.scalar( @$input_attr ).' Inputs found. Error when processing \''.$xmlInstr->toString()."'"
+		if scalar( @$input_attr ) > 1;
 	my $value = $input_attr->[0]->$SEforScalar();
 
 	# Place value into matlab
@@ -637,7 +653,7 @@ Hopefully they will serve to isolate xml syntax
 
 =cut
 
-sub _functionInputs { return shift->{ execution_instructions }->findnodes( "MLI:FunctionInputs/MLI:Input/*" ); }
+sub _functionInputs { return shift->{ execution_instructions }->findnodes( 'MLI:FunctionInputs/MLI:Input/*[not( @ActualArity ) or (@ActualArity != 0)]' ); }
 
 =head2 _functionOutputs
 
