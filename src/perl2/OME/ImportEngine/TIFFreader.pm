@@ -312,7 +312,7 @@ sub importGroup {
 
     my $fn = $grp->[0];
 
-    my $image = $self->newImage($session, $ofn);
+    my $image = ($self->{super})->__newImage($ofn);
     $self->{image} = $image;
     
     my $zs = ($xref->{'Image.SizeZ'} > 0) ? $xref->{'Image.SizeZ'} : 1;

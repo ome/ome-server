@@ -316,7 +316,7 @@ sub importGroup {
     $params->oname($self->__nameOnly($fn));
     $params->endian(getEndian());
 
-    my $image = $self->newImage($session, ($self->{super})->__nameOnly($fn));
+    my $image = ($self->{super})->__newImage(($self->{super})->__nameOnly($fn));
     $self->{image} = $image;
 
     # Softworx records many pieces of metadata in the file header and

@@ -332,7 +332,7 @@ sub importGroup {
 			    $t_hash->{value_count}, $t_hash->{value_offset});
     }
 
-    my $image = $self->newImage($session, ($self->{super})->__nameOnly($fn));
+    my $image = ($self->{super})->__newImage(($self->{super})->__nameOnly($fn));
     $self->{image} = $image;
 
 
