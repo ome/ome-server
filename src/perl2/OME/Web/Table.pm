@@ -85,7 +85,11 @@ sub __datasetTable {
 		}
 	);
 
+
 	my @column_headers = qw(ID Status Name Owner Group Description);
+
+	# If we're showing relations
+	if ($options->{relations}) { push(@column_headers, 'Projects Related') }
 
 	# Generate our table data
 	foreach my $dataset (@datasets) {
@@ -96,7 +100,23 @@ sub __datasetTable {
 		my $owner = $dataset->owner()->FirstName() . " " . $dataset->owner()->LastName();
 		my $status = $dataset->locked() ? "Locked" : " - ";
 		my $group = $dataset->group() ? $dataset->group()->Name() : " - ";
-
+		my $relations;
+		
+		# Gen our relationship checkboxes
+		if ($options->{relations}) {
+			my @project_relations = $dataset->projects();
+			foreach (@project_relations) {
+				$relations .= $q->checkbox(
+					-name => 'rel_selected',
+					-value => $dataset->id . "," . $_->id(),
+					-label => $_->name()
+				);
+				$relations .= $q->br();
+			}
+			# Yes, this is variable saving :)
+			$relations = $q->td({-align => 'left', -bgcolor => '#EFEFEF'}, $relations || '');
+		}
+		
 		unless ($name eq 'Dummy import dataset') {  # XXX Man I hate this...
 			$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
 				$q->td({-align => 'center'}, [
@@ -108,7 +128,8 @@ sub __datasetTable {
 					$group,
 					$description,
 					]
-				)
+				),
+				$relations || '',
 			);
 		}
 	}
@@ -140,7 +161,7 @@ sub __datasetTable {
 		$q->startform(),
 		$q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers]),  # Space for the checkbox field
 		$table_data,
-		$options_row,
+		$options_row || '',
 		$q->endform()
 	);
 
@@ -176,7 +197,7 @@ sub __projectTable {
 			$q->td({-align => 'center'}, [
 				$checkbox,
 				$id,
-				$q->a({-href => "javascript:openInfoProject($id);"}, $name),
+				$q->a({-href => 'javascript:window.open("/perl2/serve.pl?Page=OME::Web::GetInfo&ProjectID=1");'}, $name),
 				$owner,
 				$group,
 				$description,
@@ -212,7 +233,7 @@ sub __projectTable {
 		$q->startform(),
 		$q->Tr($q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers])),
 		$table_data,
-		$options_row,
+		$options_row || '',
 		$q->endform(),
 	);
 
@@ -235,6 +256,9 @@ sub __imageTable {
 
 	my @column_headers = qw(ID Name Preview Owner Group Description);
 
+	# If we're showing relations
+	if ($options->{relations}) { push(@column_headers, 'Datasets Related') }
+
 	# Generate our table data
 	foreach my $image (@images) {
 		my $id = $image->id();
@@ -251,6 +275,25 @@ sub __imageTable {
 		my $owner = $experimenter->FirstName() . " " . $experimenter->LastName();
 		my $group = $image->group() ? $image->group()->Name() : " - ";
 		my $description = $image->description() ? $image->description() : " - ";
+		my $relations;
+
+		# Gen our relationship checkboxes
+		if ($options->{relations}) {
+			my @dataset_relations = $image->datasets();
+			foreach (@dataset_relations) {  # Yet more Dummy joy
+				unless($_->name() eq 'Dummy import dataset') {
+					$relations .= $q->checkbox(
+						-name => 'rel_selected',
+						-value => $image->id . "," . $_->id(),
+						-label => $_->name()
+					);
+				}
+				$relations .= $q->br();
+			}
+			# Yes, this is variable saving :)
+			$relations = $q->td({-align => 'left', -bgcolor => '#EFEFEF'}, $relations || '');
+		}
+
 
 		$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
 			$q->td({-align => 'center'}, [
@@ -260,9 +303,10 @@ sub __imageTable {
 				$q->a({-href => "javascript:openPopUpImage($id);"}, $thumbnail),
 				$owner,
 				$group,
-				$description
-				]
-			)
+				$description,
+				],
+			),
+			$relations || '',
 		);
 	}
 
@@ -293,7 +337,7 @@ sub __imageTable {
 		$q->startform(),
 		$q->Tr($q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers])),
 		$table_data,
-		$options_row,
+		$options_row || '',
 		$q->endform()
 	);
 
@@ -441,10 +485,6 @@ sub __filterObjects {
 		$filter{$_->[0]} = $_->[1];
 	}
 
-	print STDERR "**** FILTERING OBJECTS ****\n";
-	print STDERR "**** NO FILTER ****\n" unless %filter;
-	print STDERR Dumper(%filter);
-
 	# Filter the dataset objects if needed
 	if ($options->{filters}) { 
 		# Get a cursor for our search with a forced lowercase field
@@ -495,6 +535,7 @@ sub getPageBody {
 		$main_table = $self->__datasetTable( {
 				filters => $filterset,
 				options_row => [@options_row],
+				relations => $q->param('relations') || 0,
 			}
 		);
 		$filter_table = $self->__genericTableFooter(@column_aliases);
@@ -515,6 +556,7 @@ sub getPageBody {
 		$main_table = $self->__imageTable( {
 				filters => $filterset,
 				options_row => [@options_row],
+				relations => $q->param('relations') || 0,
 			}
 		);
 		$filter_table = $self->__genericTableFooter(@column_aliases);
@@ -548,20 +590,22 @@ sub getTable {
 	# Based on our options, gen our table
 	if ($options->{type} =~ /dataset/) {
 		$table = $self->__datasetTable( {
-				filters => $options->{filters},
-				options_row   => $options->{options_row},
+				filters     => $options->{filters},
+				options_row => $options->{options_row},
+				relations   => $options->{relations},
 			}
 		);
 	} elsif ($options->{type} =~ /project/) {
 		$table = $self->__projectTable( {
-				filters => $options->{filters},
-				options_row   => $options->{options_row},
+				filters     => $options->{filters},
+				options_row => $options->{options_row},
 			}
 		);
-	} elsif ($options->{type} =~ /images/) {
+	} elsif ($options->{type} =~ /image/) {
 		$table = $self->__imageTable( {
-				filters => $options->{filters},
-				options_row   => $options->{options_row},
+				filters     => $options->{filters},
+				options_row => $options->{options_row},
+				relations   => $options->{relations},
 			}
 		);
 	}
