@@ -750,8 +750,22 @@ public class ImageCache
   
     /**
      * Invariant: cXX will be CHANNEL_OFF if xOn = false.  This maintains
-     * consistency for likewise images, and speeds things up a bit.
+     * consistency for likewise images, and speeds things up a bit.  Also
+     * saves disk space for the cache.  Two parameter groups will be
+     * equivalent if the image is perceived the same; that is-- cRed can be
+     * 0 or 1, but if rOn is false, if all other parameters (for active
+     * channels) are equivalent, the parameter groups will be equal.
      *
+     * @param imageName The name of the image (reflected in the DB)
+     * @param pixelsID The ID of the pixels (in the DB)
+     * @param z The z index into the 5D image.
+     * @param t The t inded into the 5D image.
+     * @param cRed The ID of the red channel (irrelevant if rOn is false).
+     * @param cGreen The ID of the green channel (irrelevant if gOn is false).
+     * @param cBlue The ID of the blue channel (irrelevant if bOn is false).
+     * @param rOn Whether or not the image uses the red filter.
+     * @param gOn Whether or not the image uses the green filter.
+     * @param bOn Whether or not the image uses the blue filter.
      */
     public ParameterGroup(String imageName, int pixelsID,
                           int z, int t, int cRed, int cGreen, int cBlue,
