@@ -52,14 +52,15 @@ public class PPaletteToolTipHandler extends PToolTipHandler {
 	public void setToolTipString(PInputEvent event) {
 			PNode n = event.getInputManager().getMouseOver().getPickedNode();
 			double scale = camera.getViewScale();
-			tooltipNode.setText("");
+			setToolTipText("");
 			if (scale < PToolTipHandler.SCALE_THRESHOLD) {
-				if (n instanceof PModule) 
-					tooltipNode.setText(((PModule) n).getModule().getName());
+				if (n instanceof PModule)
+					setToolTipText(((PModule) n).getModule().getName()); 
 				else if (n instanceof PFormalParameter) {
 					String t = ((PFormalParameter) n).getPModule().
 					getModule().getName();
-					tooltipNode.setText(t);
+					setToolTipText(t);
+
 				}
 			}
 		}

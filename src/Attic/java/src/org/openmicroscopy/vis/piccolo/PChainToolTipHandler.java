@@ -52,20 +52,20 @@ public class PChainToolTipHandler extends PToolTipHandler {
 	public void setToolTipString(PInputEvent event) {
 		PNode n = event.getInputManager().getMouseOver().getPickedNode();
 		double scale = camera.getViewScale();
-		tooltipNode.setText("");
+		setToolTipText("");
 		if (scale < PToolTipHandler.SCALE_THRESHOLD) {
 			if (n instanceof PModule) 
-				tooltipNode.setText(((PModule) n).getModule().getName());
+				setToolTipText(((PModule) n).getModule().getName());
 			else if (n instanceof PFormalParameter) {
 				String t = ((PFormalParameter) n).getPModule().
 				getModule().getName();
-				tooltipNode.setText(t);
+				setToolTipText(t);
 			}
 			else if (n instanceof PParamLink) {
 				PFormalInput in = ((PParamLink) n).getInput();
 				PFormalOutput out = ((PParamLink) n).getOutput();
 				String s = in.getName()+"-"+out.getName();
-				tooltipNode.setText(s);
+				setToolTipText(s);
 			}
 		}
 	}
