@@ -441,6 +441,74 @@ sub __addJoins {
     return ($first_table,$first_key);
 }
 
+# Returns [$table_alias, $column]
+sub __addForeignJoin {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($foreign_key_number,$aliases,
+        $foreign_tables,$foreign_aliases,$join_clauses) = @_;
+
+    if (scalar(@$aliases) < 1) {
+        confess "Cannot create foreign key joins if there aren't any dereferences";
+    } elsif (scalar(@$aliases) == 1) {
+        # Base case - no dereferences
+        my $alias = $aliases->[0];
+
+        if (!exists $foreign_aliases->{$alias}) {
+            my $columns = $class->__columns();
+            my $column = $columns->{$alias};
+            $foreign_aliases->{$alias} = $column;
+        }
+        return $alias;
+    } else {
+        my $target_alias = pop(@$aliases);
+        my $local_alias = $class->
+          __addForeignJoin($foreign_key_number,$aliases,
+                           $foreign_tables,$foreign_aliases,
+                           $join_clauses);
+        my $full_alias = "${local_alias}.${target_alias}";
+
+        if (!exists $foreign_aliases->{$full_alias}) {
+            my $column = $foreign_aliases->{$local_alias};
+            #print STDERR "$column ",join(',',@$column),"\n";
+
+            confess "$local_alias is not a reference -- cannot add a foreign key table"
+              unless defined $column->[2];
+            my $local_table_alias = $column->[0];
+            my $local_column_name = $column->[1];
+            my $fkey_class = $column->[2];
+
+            my $target_columns = $fkey_class->__columns();
+            my $target_column = $target_columns->{$target_alias};
+            my $target_table_name = $target_column->[0];
+            my $target_column_name = $target_column->[1];
+            my $target_pkeys = $fkey_class->__primaryKeys();
+            die "Cannot create foreign join -- target table has no primary key"
+              unless exists $target_pkeys->{$target_table_name};
+            my $target_pkey = $target_pkeys->{$target_table_name};
+            my $number = $$foreign_key_number++;
+            my $target_table_alias = "fkey${number}_${target_table_name}";
+
+            push @$foreign_tables, "$target_table_name $target_table_alias";
+            #print STDERR "$target_table_name $target_table_alias $target_column_name\n";
+
+            # Make a copy of the old column entry, so that we can
+            # replace the table name with its SQL alias.
+            my $new_column = [@$target_column];
+            $new_column->[0] = $target_table_alias;
+            $foreign_aliases->{$full_alias} = $new_column;
+
+            push @$join_clauses,
+              "${target_table_alias}.${target_pkey} = ".
+              "${local_table_alias}.${local_column_name}";
+        }
+
+        return $full_alias;
+    }
+
+}
+
 sub __makeSelectSQL {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -456,7 +524,10 @@ sub __makeSelectSQL {
     # and the WHERE clause.
     my @columns_needed;
     my %tables_used;
+    my @foreign_tables;
+    my %foreign_aliases;
     my @join_clauses;
+    my @values;
 
     my $columns = $class->__columns();
 
@@ -476,7 +547,15 @@ sub __makeSelectSQL {
         $tables_used{$column->[0]} = undef;
     }
 
+    # Set to one if any of the criteria refers to the primary key,
+    # whose column name isn't known until we've figured out which
+    # tables we have to include.
     my $id_criteria = 0;
+
+    # A counter used to construct unique table aliases for any foreign
+    # tables we join with.  (We can't just use the foreign table name,
+    # because each table might occur in the query more than once.)
+    my $foreign_key_number = 0;
 
     # Look through the criteria, if there are any.  Add the criteria
     # entries to the WHERE clause list, and also make sure that the
@@ -489,6 +568,18 @@ sub __makeSelectSQL {
             # it will always refer to the primary key field.
             if ($column_alias eq 'id') {
                 $location = "id";
+            } elsif ($column_alias =~ /\./) {
+                # If there's a period, then we'll need to do some
+                # foreign joins.
+
+                my @aliases = split(/\./,$column_alias);
+                my $foreign_alias = $class->
+                  __addForeignJoin(\$foreign_key_number,\@aliases,
+                                   \@foreign_tables,\%foreign_aliases,
+                                   \@join_clauses);
+                my $foreign_column = $foreign_aliases{$foreign_alias};
+
+                $location = $foreign_column->[0].".".$foreign_column->[1];
             } else {
                 my $column = $columns->{$column_alias};
                 confess "Column $column_alias does not exist"
@@ -500,23 +591,43 @@ sub __makeSelectSQL {
             my $criterion = $criteria->{$column_alias};
             my ($operation,$value);
 
-            if (ref($criterion) eq 'ARRAY') {
-                $value = $criterion->[1];
-                $operation = defined $value? $criterion->[0]: "is";
-            } else {
-                $value = $criterion;
-                $operation = defined $value? "=": "is";
-            }
+            my $question = '?';
 
             # If the value is an object, assume that it has an id
             # method, and use that in the SQL query.
-            $value = $value->id() if UNIVERSAL::isa($value,"OME::DBObject");
+
+            if (ref($criterion) eq 'ARRAY') {
+                $value = $criterion->[1];
+                if (ref($value) eq 'ARRAY') {
+                    my @questions;
+                    foreach my $arrayval (@$value) {
+                        if (defined $arrayval) {
+                            push @questions, '?';
+                            $arrayval = $arrayval->id()
+                              if UNIVERSAL::isa($arrayval,"OME::DBObject");
+                            push @values, $arrayval;
+                        }
+                    }
+                    $question = '('.join(',',@questions).')';
+                } else {
+                    $value = $value->id()
+                      if UNIVERSAL::isa($value,"OME::DBObject");
+                    push @values, $value;
+                }
+                $operation = defined $value? $criterion->[0]: "is";
+            } else {
+                $value = $criterion;
+                $value = $value->id()
+                  if UNIVERSAL::isa($value,"OME::DBObject");
+                push @values, $value;
+                $operation = defined $value? "=": "is";
+            }
 
             if ($location eq 'id') {
-                push @join_clauses, [$operation];
+                push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
             } else {
-                push @join_clauses, "$location $operation ?";
+                push @join_clauses, "$location $operation $question";
             }
         }
     }
@@ -533,16 +644,19 @@ sub __makeSelectSQL {
     if ($id_criteria) {
         die "Cannot search for an ID; none is in the SQL statement!"
           unless defined $first_key;
-        map { $_ = "$first_key ".$_->[0]." ?" if ref($_); } @join_clauses;
+        map { $_ = "$first_key ".$_->[0]." ".$_->[1] if ref($_); } @join_clauses;
     }
 
     my $sql = "select ". join(", ",@columns_needed). " from ".
-      join(", ",keys(%tables_used));
+      join(", ",
+           keys(%tables_used),
+           @foreign_tables
+          );
 
     $sql .= " where ". join(" and ",@join_clauses)
       if scalar(@join_clauses) > 0;
 
-    return ($sql,defined $first_key);
+    return ($sql,defined $first_key,\@values);
 }
 
 sub __makeInsertSQLs {
@@ -713,6 +827,7 @@ sub __writeToDatabase {
 
     # FIXME: Just like in __createNewInstance, we don't handle
     # atomicity very well.
+    my $i = 1;
     foreach my $sql_entry (@$sqls) {
         my ($sql,$values) = @$sql_entry;
         my $sth = $dbh->prepare($sql);
@@ -722,6 +837,25 @@ sub __writeToDatabase {
     $self->{__changedFields} = {};
 
     return;
+}
+
+sub __fillInstance {
+    my ($self,$i,$columns_wanted,$sth_vals) = @_;
+
+    # Place the values returned from the database into the __fields
+    # instance variable.  This will set the entries for a NULL field
+    # to be undef.  This means that when the accessor tries to
+    # retrieve a value, exists will return true, while defined will
+    # return false.
+    my $columns = $self->__columns();
+    foreach my $alias (@$columns_wanted) {
+        my $entry = $columns->{$alias};
+        my $table = $entry->[0];
+        my $column = $entry->[1];
+        $self->{__fields}->{$table}->{$column} = $sth_vals->[$i++];
+    }
+
+    $self->{__changedFields} = {};
 }
 
 sub __newInstance {
@@ -759,24 +893,36 @@ sub __newInstance {
                 __changedFields => {},
                };
 
-    # Place the values returned from the database into the __fields
-    # instance variable.  This will set the entries for a NULL field
-    # to be undef.  This means that when the accessor tries to
-    # retrieve a value, exists will return true, while defined will
-    # return false.
-    my $columns = $class->__columns();
-    foreach my $alias (@$columns_wanted) {
-        my $entry = $columns->{$alias};
-        my $table = $entry->[0];
-        my $column = $entry->[1];
-        $fields{$table}->{$column} = $sth_vals->[$i++];
-    }
-
     bless $self, $class;
+
+    $self->__fillInstance($i,$columns_wanted,$sth_vals);
 
     $self->__storeCachedObject();
 
     return $self;
+}
+
+sub refresh {
+    my ($self) = @_;
+    my $id = $self->{__id};
+    my $factory = $self->{__session}->Factory();
+
+    my $columns_wanted = [keys %{$self->__columns()}];
+
+    my ($sql,$id_available,$values) = $self->
+      __makeSelectSQL($columns_wanted,{id => $id});
+
+    my $dbh = $factory->obtainDBH();
+    eval {
+        my $sth = $dbh->prepare($sql) or die "Could not prepare";
+        $sth->execute(@$values) or die "Could not execute";
+        my $sth_vals = $sth->fetch() or die "Could not fetch";
+        my $i = 0;
+        $i++ if $id_available;
+        $self->__fillInstance($i,$columns_wanted,$sth_vals);
+    };
+    $factory->releaseDBH($dbh);
+    confess $@ if $@;
 }
 
 sub __newByID {
@@ -791,8 +937,8 @@ sub __newByID {
 
     $columns_wanted = [keys %{$class->__columns()}]
       unless defined $columns_wanted && scalar(@$columns_wanted) > 0;
-    my ($sql,$id_available) = $class->__makeSelectSQL($columns_wanted,
-                                                      {id => $id});
+    my ($sql,$id_available,$values) = $class->
+      __makeSelectSQL($columns_wanted,{id => $id});
 
     die "ID not available"
       unless $id_available;
@@ -801,7 +947,7 @@ sub __newByID {
 
     my $sth = $dbh->prepare($sql);
     eval {
-        $sth->execute($id);
+        $sth->execute(@$values);
     };
     confess $@ if $@;
 
