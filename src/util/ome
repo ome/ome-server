@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# src/util/omeadmin
+# src/util/ome
 
 #-------------------------------------------------------------------------------
 #
@@ -69,7 +69,7 @@ package OME::Util::Output;
 
 use OME;
 
-sub scriptName { return "omeadmin"; }
+sub scriptName { return "ome"; }
 
 sub printVersion {
     print "OME commander, version $OME::VERSION_STRING\n";
