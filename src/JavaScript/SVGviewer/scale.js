@@ -1,7 +1,7 @@
 /*****
 
 	scale.js
-		external file dependencies: widget.js, slider.js, button.js, popupList.js
+		external file dependencies: widget.js, slider.js, button.js, popupList.js, skinLibrary.js
 		
 		Author: Josiah Johnston
 		email: siah@nih.gov
@@ -28,8 +28,9 @@ Scale.prototype.scaleWidth = 180;
 
 	constructor
 		image = OMEimage
-		
-		make instance in viewer to be scale
+		updateBlack = function for black slider to call
+		updateWhite = function for white slider to call
+		waveChagne = function for wave popuplist to call
 		
 	tested
 
@@ -42,29 +43,11 @@ function Scale(image, updateBlack, updateWhite, waveChange) {
 }
 
 /*****
-
-	setChannelWavelength
-		channel = R | G | B | Gray
-		waveNum
-	purpose:
-		Adjusts WBS and sets it in image		
-	returns:
-		nothing
-		
-	untested
-
-*****/
-Scale.prototype.setChannelWavelength = function( channel, waveNum ) {
-}
-
-/*****
 	
 	buildSVG
 	
 	returns:
 		SVG chunk describing Scale pane
-	notes:
-		for use in conjuction with multipaneToolBox
 		
 	tested
 		
@@ -95,14 +78,17 @@ Scale.prototype.buildSVG = function() {
 		'<rect x="-2" width="4" height="10" fill="white"/>'
 	);
 	this.wavePopupList = new popupList(
-		10, 100, this.fluors, this.waveChange
+		10, 100, this.fluors, this.waveChange, null,
+		skinLibrary["popupListAnchorLightslategray"],
+		skinLibrary["popupListBackgroundLightskyblue"],
+		skinLibrary["popupListHighlightAquamarine"]
 	);
 	
 	// build background
 	this.root.appendChild( this.whiteSlider.textToSVG(
 '<g transform="translate(10,80)">\
-	<line x2="'+ this.scaleWidth +'" stroke-width="2" stroke="blue"/>\
-	<line y1="-10" y2="10" stroke-width="2" stroke="blue"/>\
+	<line x2="'+ this.scaleWidth +'" stroke-width="2" stroke="midnightblue"/>\
+	<line y1="-10" y2="10" stroke-width="2" stroke="midnightblue"/>\
 </g>'
 	));
 	this.geomeanTick = this.root.lastChild.lastChild;
@@ -140,9 +126,10 @@ Scale.prototype.buildSVG = function() {
 		t = theT
 	
 	purpose:
-		update scale based on info particular to W & T
+		Update scale based on info particular to W & T. Specifically, move
+		geomean tick mark, update positions of sliders
 
-	untested
+	tested
 	
 *****/
 
@@ -175,6 +162,11 @@ Scale.prototype.updateScale = function(t) {
 /*****
 	
 	updateWBS
+		channel = R|G|B|Gray
+		wavenum
+		
+		If both channel and wavenum are specified, the WBS will be updated to make
+		that channel display that wavelength.
 	
 	purpose:
 		update image.WBS
@@ -189,6 +181,7 @@ Scale.prototype.updateWBS = function( channel, wavenum) {
 	channelMap['Gray'] = 9;
 	var WBS = this.image.getWBS();
 	var changed = false;
+	
 	if(channel != null && wavenum != null)
 		if(channelMap[channel] != null) {
 			WBS[channelMap[channel]] = wavenum;
