@@ -43,6 +43,8 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Util::Commands);
 
 use Carp;
+use File::Find;
+use File::Spec::Functions qw(rel2abs);
 use Getopt::Long;
 
 use OME::SessionManager;
@@ -64,16 +66,22 @@ Usage:
     $script $command_name [<options>] [<list of files>]
 
 This utility imports files into OME database and runs the import analysis 
-chain against them.
+chain against them. The list of files can include directories. All files in 
+the specified directory are imported.
 
 The files can be proprietary format image files or OME XML files that define 
-OME objects.
+OME objects. 
+
 
 Options:
       
   -d  Use this to specify the dataset name. If you are importing images, you 
       must specify a dataset. If you are importing OME Semantic Type 
       Definitions, Analysis Modules, or Chains this parameter is unnecessary.
+      
+  -m  Use this to specify the manifest file. A manifest file is a file 
+      containing file or directory paths one per line. Each line beginning  
+      with the hash symbol (#) is considered a comment and is ignored. 
       
   -r  Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
@@ -82,13 +90,13 @@ Options:
   -h  Print this help message.
   
 USAGE
-    CORE::exit(1);
 }
 
 sub handleCommand {
 	my ($self,$help,$commands) = @_;
 	if ($help) {
 		$self->import_help($commands);
+	    CORE::exit(1);
 	} else {
 		$self->import($commands);
 	}
@@ -99,18 +107,48 @@ sub import {
 	my $reuse;
 	my $help;
 	my $datasetName;
+	my $manifestName;
 	
 	GetOptions('reimport|r!' => \$reuse,
                'help|h' => \$help,
+               'm=s' => \$manifestName,
+               
                'd=i' => \$datasetName);
     if (not defined $datasetName) {
     	import_help($self,$commands);
     	print STDERR "\n *** dataset not specified\n";
+	    CORE::exit(1);
     }
-    my @file_names = @ARGV;
     
-    # preliminary idiot traps
+    # create the list of files
+    my @file_names;
     
+    # first get all the files from the manifest 
+    if ($manifestName) {
+		open (MANIFEST, "<", $manifestName )
+		or croak "Could not open manifest file $manifestName\n";
+	
+		while (<MANIFEST>) { 
+			chomp;
+	
+			# skip lines that begin with a hash sign.
+			if ($_ !~ m/^\#+.*/) {
+				$_ = rel2abs ("$_");
+				push (@ARGV, $_);
+			}
+		}
+    }
+
+	# get all the files from files/directories specified in @ARGV
+    foreach (@ARGV) {
+		if (-d $_) {
+    		find sub{ push @file_names, $File::Find::name if -e and not -d;}, $_;
+    	} elsif (-e $_) {
+    		push @file_names, $_;
+    	} else {
+    		print STDERR "WARNING: $_ does not exist. Not Imported.\n";
+    	}
+    }
     
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->TTYlogin();
