@@ -122,7 +122,6 @@ public class ModuleNode extends PPath {
 		setPaint(DEFAULT_FILL);
 		setStroke(DEFAULT_STROKE);
 		setOffset(x,y);
-		addInputEventListener(new ModuleNodeDragHandler(this));
 	}
 	
 	private void addParameterLabels(ChainCanvas canvas) {

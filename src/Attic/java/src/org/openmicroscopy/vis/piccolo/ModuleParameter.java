@@ -4,7 +4,7 @@
  *------------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 Open Microscopy Environment
- *      Massachusetts Institue of Technology,
+ *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee
  *
@@ -43,8 +43,9 @@ import edu.umd.cs.piccolox.util.PBoundsLocator;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import java.awt.Color;
+import java.util.ArrayList;
 
-public class ModuleParameter extends PText {
+public abstract class ModuleParameter extends PText {
 	
 	protected static final Color NORMAL_COLOR = Color.black;
 	protected static final Color HIGHLIGHT_COLOR = Color.magenta;
@@ -103,4 +104,5 @@ public class ModuleParameter extends PText {
 		return linkable;
 	}
 	
+	public abstract ArrayList getCorresponding();
 }

@@ -4,7 +4,7 @@
  *------------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 Open Microscopy Environment
- *      Massachusetts Institue of Technology,
+ *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee
  *
@@ -39,7 +39,9 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+import org.openmicroscopy.SemanticType;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
+import java.util.ArrayList;
 
 public class ModuleOutput extends ModuleParameter {
 	
@@ -48,7 +50,14 @@ public class ModuleOutput extends ModuleParameter {
 		//System.err.println("adding output "+param.getParameterName());
 		if (param.getSemanticType() != null)
 			canvas.addOutput(param.getSemanticType(),this);
-		addInputEventListener(new ModuleOutputEventHandler(this));
 		locator = PBoundsLocator.createEastLocator(this);
 	}
+	
+	//for outputs, the correpsonding items are inputs.
+ 	public ArrayList getCorresponding() {
+		SemanticType type = param.getSemanticType();
+		if (type == null)
+			return null;
+		return canvas.getInputs(type);
+ 	}
 }
