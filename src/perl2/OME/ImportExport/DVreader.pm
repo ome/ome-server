@@ -139,6 +139,13 @@ our %xml_image_entries = (NumCol => 'SizeX',
                           mz       => 'PixelSizeZ'
 			  );
 
+my %xml_wavelength_entries = (wave1  => 'EmWave',
+			       wave2  => 'EmWave',
+			       wave3  => 'EmWave',
+			       wave4  => 'EmWave',
+			       wave5  => 'EmWave'
+			       );
+
 sub new {
 
     my $invoker = shift;
@@ -225,6 +232,7 @@ sub formatImage {
     my $foh    = $parent->fouf;
     my $xyzwt  = $parent->obuffer;
     my $endian = $parent->endian;
+    my $xml_hash = $parent->Image_reader::xml_hash;
     my @obuf;
     my ($ibuf, $rowbuf);
     my ($ifmt, $ofmt);
@@ -284,7 +292,11 @@ sub formatImage {
 	}
 	push @$xyzwt, \@xyzw;
     }
+
+    if ($status eq "") {
 	
+    }
+
     return $status;
 }
 
@@ -306,6 +318,8 @@ sub readUIHdr {
     my $fmt;
     my $val;
     my $status;
+    my $whref = {};
+    my $w_aref = [];
 
     $status = OME::ImportExport::FileUtils::seek_it($fh, $offset);
     return ($status)
@@ -328,6 +342,14 @@ sub readUIHdr {
 	$xel = $xml_image_entries{$k};
 	$xml_hash->{"Image.".$xel} = $self->{$k};
     }
+    # assumes one wavelength key per plane, so can immediately push hash on stack
+    foreach $k (sort keys %xml_wavelength_entries) {
+	$xel = $xml_wavelength_entries{$k};
+	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};  # copy
+	push @$w_aref, $whref;
+    }
+    $xml_hash->{'WavelengthInfo.'} = $w_aref;
+
     $i = $self->{NumSections}/$self->{NumWaves};
     $i /= $self->{NumTimes};
     $xml_hash->{'Image.SizeZ'} = $i;
