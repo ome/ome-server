@@ -195,13 +195,8 @@ sub _loadObject {
 		or die "ID not specified";
 
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-	if( $ST ) {
-		$self->{__object} = $factory->loadAttribute( $ST, $id )
-			or die "Could not load Attribute $common_name, id=$id";
-	} else {
-		$self->{__object} = $factory->loadObject( $type, $id )
-			or die "Could not load DBObject $type, id=$id";
-	}
+	$self->{__object} = $factory->loadObject( $formal_name, $id )
+		or die "Could not load DBObject $type, id=$id";
 	return $self->{__object};
 }
 

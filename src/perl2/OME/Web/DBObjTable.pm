@@ -77,7 +77,7 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self  = $class->SUPER::new(@_);
 	
-	$self->{ _default_table_length } = 7;
+	$self->{ _default_table_length } = 10;
 	
 	return $self;
 }
@@ -173,13 +173,8 @@ sub getTable {
 
 	# get objects
 	if( $mode eq 'cgi' or $mode eq 'search' ) {
-		if( $ST ) {
-			@objects      = $factory->findAttributesLike( $ST, %searchParams, __limit => $table_options->{ table_length } );
-			$object_count = $factory->countAttributesLike( $ST, %searchParams );
-		} else {
-			@objects = $factory->findObjectsLike( $package_name, %searchParams, __limit => $table_options->{ table_length } );
-			$object_count = $factory->countObjectsLike( $package_name, %searchParams );
-		}
+		@objects = $factory->findObjectsLike( $formal_name, %searchParams, __limit => $table_options->{ table_length } );
+		$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
 	} else {
 		$object_count = scalar( @objects );
 		@objects = splice( @objects, $searchParams{ __offset }, $table_options->{ table_length } );
@@ -188,28 +183,17 @@ sub getTable {
 	# build table
 	my $html;
 
-	# make form name & table label
-	my $form_name = ( $table_options->{ embedded_in_form } or $common_name."_TABLE" );
-	my $table_label;
-	if( $table_options->{ title } ) {
-		my $common_name_text = $q->font( { class => 'ome_header_label' }, $common_name);
-		$table_label = $q->font( { class => 'ome_header_title' }, " ".$table_options->{ title });
-		$table_label .= 
-		" (".
+	# make form name, table label, table type
+	my $form_name   = ( $table_options->{ embedded_in_form } or $common_name."_TABLE" );
+	my $title       = ( $table_options->{ title } or $common_name );
+	my $table_type  =
+		"This is a ".
 		( $ST ?
 			$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id() },
-				   $common_name_text ) :
-			$common_name_text
+				   $common_name ) :
+			$common_name
 		).
-		")";
-	} else {
-		my $common_name_text = $q->font( { class => 'ome_header_title' }, $common_name);
-		$table_label = ( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id() },
-				   $common_name_text ) :
-			$common_name_text
-		);
-	}
+		" table.";
 
 	# paging
 	my $pagingText;
@@ -258,32 +242,36 @@ sub getTable {
 		);
 
 	# allow paging ?
-	my $allowPaging = 1;
+	my $allowPaging = ( $pagingText ? 1 : 0 );
 		
 	$html = $q->startform( { -name => $form_name })
 		unless $table_options->{ embedded_in_form };
 	$html .=
-		$q->table( { class => 'ome_table', width => $table_options->{table_width} },
+		$q->table( { -class => 'ome_table', width => $table_options->{table_width} },
 			# Table title
-			$q->caption( $table_label ),
+			$q->caption( $title ),
 			$q->Tr( [
-				# Table headers
-				$q->td( { class => 'ome_td' },
+				# table descriptor
+				$q->td( { -class => 'ome_td', -colspan => scalar( @fieldNames ), -align => 'right' }, 
+					$q->span( { -class => 'ome_widget' }, join( " | ", (
+						$table_type, 
+						( $allowPaging ? $pagingText : ()), 
+						( $allowSearch ? $self->__getActionButton( 'Search', $form_name ) : () )
+					) ) )
+				), 
+				# Column headers
+				$q->td( { -class => 'ome_td' },
 					[ map( $labels{ $_ }, @fieldNames ) ]
 				),
 				# Search fields
 				( $allowSearch ? 
-					$q->td( { class => 'ome_td' },
+					$q->td( { -class => 'ome_td' },
 						[ map( $searches{ $_ }, @fieldNames ) ]
 					) :
 					()
 				),
 				# Table data
 				@table_data,
-				( $allowSearch ?
-					$self->__getOptionsTD( [ 'Search' ], scalar( @fieldNames ), $form_name ) :
-					()
-				)
 			]
 			)
 		);
@@ -306,15 +294,7 @@ sub __getOptionsTD {
 
 	# Build our buttons
 	my $option_buttons = join( ' | ', 
-	 	map( 
-			$q->a( {
-				-href => "#",
-				-onClick => "document.forms['$form_name'].action.value='$_'; document.forms['$form_name'].submit(); return false",
-				-class => 'ome_widget'
-			}, $_ ),
-			@$options
-		)
-	);
+		map( $self->__getActionButton( $_, $form_name ), @$options ) );
 
 	# Build our table and return it
 	if ($option_buttons) {
@@ -329,6 +309,20 @@ sub __getOptionsTD {
 	}
 
 	return;
+}
+
+sub __getActionButton {
+	my ($self, $action, $form_name) = @_;
+	my $q = $self->CGI();
+	return 
+		$q->a( 
+			{
+				-href => "#",
+				-onClick => "document.forms['$form_name'].action.value='$action'; document.forms['$form_name'].submit(); return false",
+				-class => 'ome_widget'
+			}, 
+			$action 
+		);
 }
 
 =head1 Author
