@@ -787,14 +787,15 @@ sub _loadTypeAndGetInfo {
 		my $session = OME::Session->instance();
 		$common_name = substr( $formal_name, 1 );
 		$ST = $session->Factory->findObject("OME::SemanticType", name => $common_name);
-		$ST->requireAttributeTypePackage();
+		$ST->requireAttributeTypePackage()
+			unless ref($type); # unless type is already loaded
 		$package_name = $ST->getAttributeTypePackage();
 
 	# DBObject: load info and package
 	} else {
 		$package_name = $formal_name;
 		$package_name->require()
-			or die "Error loading package $package_name.";
+			or confess "Error loading package $package_name.";
 		$common_name = $package_name;
 		$common_name =~ s/OME:://;
 		$common_name =~ s/::/ /g;
