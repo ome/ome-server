@@ -330,7 +330,7 @@ addPrototype("OME::SemanticType::Superclass","semantic_type",
 addPrototype("OME::SemanticType::Superclass","module_execution",
              [],["OME::ModuleExecution"]);
 addPrototype("OME::SemanticType::Superclass","target",
-             [],["OME::ModuleExecution"]);
+             [],["OME::DBObject"]);
 
 addPrototype("OME::Session","commitTransaction",[],[]);
 addPrototype("OME::Session","rollbackTransaction",[],[]);
