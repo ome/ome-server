@@ -421,7 +421,7 @@ sub _pagerControl {
 	# make controls
 	if( $numPages > 1 ) {
 		$pagingText = "<input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
-		$pagingText = "<input type='hidden' name='page_action'>";
+		$pagingText .= "<input type='hidden' name='page_action'>";
 		$pagingText .= $q->a( {
 				-title => "First Page",
 				-href => "javascript: document.forms[0].page_action.value='FirstPage_$control_name'; document.forms[0].submit();",
