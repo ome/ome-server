@@ -44,7 +44,7 @@
  * A placeholder class that is used during GraphLayout as the direct node-node 
  * components that get combined to build a {@link  CLink} object that can be 
  * stored directly in the database. During layout, these links connect either 
- * {@link CNode} objects or {@link CLayoutNode} dummy nodes. Unlike {@link CLink} 
+ * {@link GraphLayoutNode} objects or {@link DummyNode} dummy nodes. Unlike {@link CLink} 
  * objects, these objects can only connect adjacent layers in the graph. Once 
  * the graph is laid out, CLayoutLink objects are no longer needed.
  * 
@@ -54,8 +54,8 @@
  */
  public class CLayoutLink {
 	
-	private CNode toNode;
-	private CNode fromNode;
+	private GraphLayoutNode toNode;
+	private GraphLayoutNode fromNode;
 	
 	/**
 	 * the actual graph link that this dummy link is really part of.
@@ -66,15 +66,15 @@
 		super();
 	}
 	
-	public CLayoutLink(CLink semanticLink,CNode fromNode,CNode toNode) {
+	public CLayoutLink(CLink semanticLink,GraphLayoutNode fromNode,GraphLayoutNode toNode) {
 		this.semanticLink = (CLink) semanticLink;
 		this.fromNode = fromNode;
 		this.toNode = toNode;
 	}
 	
 	public CLayoutLink(CLink link) {
-		this.fromNode = (CNode) link.getFromNode();
-		this.toNode = (CNode) link.getToNode();
+		this.fromNode = (GraphLayoutNode) link.getFromNode();
+		this.toNode = (GraphLayoutNode) link.getToNode();
 		this.semanticLink = (CLink) link;
 	}
  	
@@ -82,21 +82,21 @@
  		return semanticLink;
  	}
  	
-	public CNode getToNode() {
+	public GraphLayoutNode getToNode() {
 		return toNode;
 	}
 	
-	public CNode getFromNode() {
+	public GraphLayoutNode getFromNode() {
 		return fromNode;
 	}
 	
 	// we want this to throw an exception if we're ever setting it
-	// to anything that can't be cast to be a CNode.
-	public void setToNode(CNode node) {
+	// to anything that can't be cast to be a GraphLayoutNode.
+	public void setToNode(GraphLayoutNode node) {
 		toNode =  node;
 	}
 	
-	public void setFromNode(CNode node) {
+	public void setFromNode(GraphLayoutNode node) {
 		fromNode = node;
 	}
 }

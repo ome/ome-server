@@ -88,12 +88,12 @@ public class CLink extends Link {
 	 * @param prior the new node should be inserted immediately after this node
 	 * @param newNode the node to be inserted.
 	 */
-	public void addIntermediate(CNode prior,CNode newNode) {
-		int index = nodes.indexOf(prior);	
+	public void addIntermediate(GraphLayoutNode prior,GraphLayoutNode newNode) {
+		int index = nodes.indexOf(prior);
 		nodes.insertElementAt(newNode,index+1);
 	}
 	
-	public CNode getIntermediateNode(int i) {
-		return (CNode) nodes.elementAt(i);
+	public GraphLayoutNode getIntermediateNode(int i) {
+		return (GraphLayoutNode) nodes.elementAt(i);
 	}
  }
