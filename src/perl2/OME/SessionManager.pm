@@ -239,6 +239,7 @@ sub createWithKey {
 	my $dbh = $bootstrap_factory->obtainDBH();
 	eval {
 		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
+		$dbh->commit ();
 	};
 
 	$sessionKey = $self->validateSessionKey($sessionKey) or return undef;
@@ -291,6 +292,7 @@ sub createWithPassword {
 	my $dbh = $bootstrap_factory->obtainDBH();
 	eval {
 		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
+		$dbh->commit ();
 	};
 
 	my ($experimenterID,$dbpass);
