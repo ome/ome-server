@@ -262,15 +262,21 @@ END_HTML
 		my $select = ( $q->param( 'select' ) or $q->url_param( 'select' ) );
 		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
 			{ pager_text => $paging_text, type => $type, 
-				( $select eq 'many' ?
+				( $select && $select eq 'many' ?
 					( draw_checkboxes => 1 ) :
-				( $select eq 'one' ?
+				( $select && $select eq 'one' ?
 					( draw_radiobuttons => 1 ) :
 					()
 				) )
 			} );
 
 		# Select button
+		$tmpl_data{do_select} = 
+			'<span class="ome_quiet">'.
+			'<a href="javascript:selectAllCheckboxes( \'selected_objects\' );">Select All</a> | '.
+			'<a href="javascript:deselectAllCheckboxes( \'selected_objects\' );">Reset</a><br>'.
+			'</span>'
+			if( $select && $select eq 'many' );
 		$tmpl_data{do_select} .= 
 			$q->submit( { 
 				-name => 'do_select',
