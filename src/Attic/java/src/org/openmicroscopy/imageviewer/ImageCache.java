@@ -122,6 +122,7 @@ public class ImageCache
    * <li><b>IN_MEMORY</b>: The image resides in memory.</li>
    * <li><b>WRITING_TO_DISK</b>: The image is being flushed out of memory onto disk.</li>
    * <li><b>WRITTEN_TO_DISK</b>: The image is stored on disk.
+   * </ul>
    * 
    * @param imageName The name of the image to find.
    * @param pixelsID The ID of the pixels of that image to find.
@@ -158,6 +159,27 @@ public class ImageCache
     }
   }
   
+  /**
+   * Loads an image slice with the specified parameters from the cache, if
+   * it exists in the cache.  If it doesn't (this can be determined ahead of
+   * time by calling <code>getImageStatus()</code>), this function will return
+   * null.
+   * 
+   * @param imageName The name of the image to load.
+   * @param pixelsID The ID of the pixels of that image (in the DB) to load.
+   * @param z The z-level of the image slice to load.
+   * @param t The t-index of the image slice to load.
+   * @param cRed The ID of the red channel of the target image slice.
+   * @param cGreen The ID of the green channel of the target image slice.
+   * @param cBlue The ID of the blue channel of the target image slice.
+   * @param rOn Whether or not the red filter is on.
+   * @param gOn Whether or not the green filter is on.
+   * @param bOn Whether or not the blue filter is on.
+   * @return The image corresponding to that parameters, or null if it is not
+   *         in the cache.
+   * 
+   * @throws IOException If the cache cannot read from disk.
+   */
   public BufferedImage load(String imageName, int pixelsID, int z, int t,
                             int cRed, int cGreen, int cBlue,
                             boolean rOn, boolean gOn, boolean bOn)
@@ -168,6 +190,7 @@ public class ImageCache
                                            rOn,gOn,bOn);
     if(memoryCache.isInCache(pg))
     {
+      // easy, return from memory
       return memoryCache.load(pg);
     }
     else if(diskCache.getImageStatus(pg) == ImageDiskCache.STORED)
@@ -176,6 +199,7 @@ public class ImageCache
       BufferedImage image = diskCache.load(pg);
       // store this in memory
       memoryCache.store(image,pg);
+      // now return
       return image;
     }
     // this would be *real* hard to reach... just calls back after it got
@@ -196,6 +220,7 @@ public class ImageCache
         }
         else
         {
+          // wait until image write is done
           try
           {
             Thread.sleep(200);
@@ -213,6 +238,27 @@ public class ImageCache
     else return null;
   }
   
+  /**
+   * Stores the 2D image with the corresponding parameters into the cache.  The
+   * image will be simultaneously written to memory and onto disk, although a
+   * thread will take care of the disk write (this function will exit as soon
+   * as the image is stored into memory).  Exits immediately if the image is
+   * null.
+   * 
+   * @param image The 2D image to store.
+   * @param imageName The name of the image (qualified in the DB).
+   * @param pixelsID The ID of the pixels of that image (in the DB).
+   * @param z The z-level of the image slice.
+   * @param t The t-index of the image slice.
+   * @param cRed The ID of the red channel of the 2D image.
+   * @param cGreen The ID of the green channel of the 2D image.
+   * @param cBlue The ID of the blue channel of the 2D image.
+   * @param rOn Whether or not the red filter is on.
+   * @param gOn Whether or not the green filter is on.
+   * @param bOn Whether or not the blue filter is on.
+   * 
+   * @throws IOException If the image cannot be written to disk.
+   */
   public void store(BufferedImage image, String imageName, int pixelsID,
                     int z, int t, int cRed, int cGreen, int cBlue,
                     boolean rOn, boolean gOn, boolean bOn)
@@ -225,26 +271,52 @@ public class ImageCache
     ParameterGroup pg = new ParameterGroup(imageName,pixelsID,z,t,cRed,
                                            cGreen,cBlue,rOn,gOn,bOn);
     
-    memoryCache.store(image,pg);
+    memoryCache.store(image,pg); // store in memory immediately
     diskCache.store(image,pg); // write to disk immediately in case of mem error.
   }
   
   /**
+   * The disk portion of the cache, which includes functions to name and
+   * retrieve the images from and to disk.
+   * 
    * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
-   * @version $ Revision: $ $ Date: $
+   * @version $Revision$ $Date$
    */
   private class ImageDiskCache
   {
     private Set imageSliceSet;
     private Map statusMap;
-  
+    
+    /**
+     * Error status (IOException)
+     */
     public static final int ERROR = -1;
+    
+    /**
+     * Not stored on disk status.
+     */
     public static final int NOT_STORED = 0;
+    
+    /**
+     * Storing to disk status.
+     */
     public static final int STORING = 1;
+    
+    /**
+     * Stored on disk status.
+     */
     public static final int STORED = 2;
   
+    /**
+     * A shortcut.
+     */
     public static final String JPEG = "jpg";
-  
+    
+    /**
+     * Constructs a new disk cache, initializing records for the cache.
+     * Package private, so ha ha ha-- too bad for you.
+     *
+     */
     ImageDiskCache()
     {
       imageSliceSet = new HashSet();
@@ -252,6 +324,22 @@ public class ImageCache
       // possibly load if already on disk
     }
   
+    /**
+     * Gets the status of an image on disk, given a group of parameters
+     * specifying which 2D slice of the the target image, and the image and
+     * pixels ID of the target image.
+     * 
+     * Possible return values:
+     * <ul>
+     * <li><b>ERROR</b>: If pg is null.</li>
+     * <li><b>NOT_STORED</b>: If the image is not on disk.</li>
+     * <li><b>STORING</b>: If the image is being written to disk.</li>
+     * <li><b>STORED</b>: If the image is stored on disk.</li>
+     * </ul>
+     * 
+     * @param pg The ParameterGroup that corresponds to the desired 2D image.
+     * @return See above return values.
+     */
     public int getImageStatus(ParameterGroup pg)
     {
       if(pg == null)
@@ -277,6 +365,17 @@ public class ImageCache
       }
     }
   
+    /**
+     * Loads a stored image corresponding to the specified ParameterGroup
+     * from disk.  Will return null if pg is null or if the image is not
+     * cached on disk.  If the image is being written to disk, this method
+     * will not block-- it will just return null.
+     * 
+     * @param pg The parameter group containing all the image slice information,
+     *           which will determine which 2D image slice to load.
+     * @return The 2D image corresponding to the specified parameters, or null
+     * @throws IOException If the image cannot be read from disk.
+     */
     public BufferedImage load(ParameterGroup pg)
       throws IOException
     {
@@ -302,10 +401,17 @@ public class ImageCache
       }
     }
   
+    /**
+     * Stores an image corresponding to the specified ParameterGroup
+     * to disk.  Does nothing if either parameter is null.
+     * @param image The image to store.
+     * @param pg The parameters of the image.
+     * @throws IOException If the image cannot be written to disk.
+     */
     public void store(BufferedImage image, ParameterGroup pg)
       throws IOException
     {
-      if(pg == null)
+      if(image == null || pg == null)
       {
         return;
       }
@@ -326,11 +432,14 @@ public class ImageCache
       new ImageCacheThread(this,image,"jpg",file).start();
     }
   
+    // updates status.
     private void updateStatus(String fileName, int status)
     {
       statusMap.put(fileName,new Integer(status));
     }
   
+    // provides a consistent mechanism to name image files on disk,
+    // based on the parameters of the image.
     private String nameFile(String imageName, int pixelsID,
                             int z, int t, int cRed, int cGreen,
                             int cBlue, String fileType)
@@ -367,8 +476,11 @@ public class ImageCache
   }
   
   /**
+   * A thread that stores images to disk (an expensive operation) in the
+   * background.
+   * 
    * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
-   * @version $ Revision: $ $ Date: $
+   * @version $Revision$ $Date$
    */
   private class ImageCacheThread extends Thread
   {
@@ -377,6 +489,17 @@ public class ImageCache
     private String fileType;
     private File fileTarget;
 
+    /**
+     * Constructs a thread which interacts with the disk cache (to let it
+     * know that it has completed).  Stores the specified image in the runtime
+     * folder with the specified file extension.  Relies on the javax.imageio
+     * package to correctly write to disk in the specified format.
+     * 
+     * @param callback The disk cache to notify on write completion.
+     * @param imageToSave The image to write to disk.
+     * @param fileType The file format to save as.
+     * @param fileTarget The file (handle) to write to.
+     */
     public ImageCacheThread(ImageDiskCache callback,
                             BufferedImage imageToSave,
                             String fileType,
@@ -388,14 +511,21 @@ public class ImageCache
       this.callback = callback;
     }
   
+    /**
+     * Start writing to disk, updating the disk cache.
+     */
     public void start()
     {
       callback.updateStatus(fileTarget.getName(),
                             ImageDiskCache.STORING);
       super.start();
     }
-    /* (non-Javadoc)
+    
+    /**
+     * Write to disk.
+     * 
      * @see java.lang.Runnable#run()
+     * @throws IOException If the disk write fails somehow.
      */
     public void run()
     {
@@ -418,23 +548,46 @@ public class ImageCache
    * (works well for movies)  Cache management works through soft references.
    * 
    * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
-   * @version $ Revision: $ $ Date: $
+   * @version $Revision$ $Date$
    */
   private class ImageMemoryCache
   {
+    /**
+     * Indicates that the image is in memory.
+     */
     public static final int IN_MEMORY = 1;
+    
+    /**
+     * Indicates that the image is not in memory.
+     */
     public static final int NOT_IN_MEMORY = 0;
   
+    /**
+     * Indicates that the cache is using a least-recently-used cache
+     * flush strategy.
+     */
     public static final int STRATEGY_LRU = 0;
+    
+    /**
+     * Indicates that the cache is using a first in-first out cache
+     * flush strategy.
+     */
     public static final int STRATEGY_FIFO = 1;
   
-    public long approximateMemoryUsage = 0;
-  
+    // selected strategy
     private int strategy;
   
+    // internal data structures
     private List cacheList;
     private Map cacheMap;
-  
+    
+    /**
+     * Constructs a memory cache that uses the specified strategy to flush
+     * images when the cache is full.
+     * 
+     * @param strategy The strategy to use.
+     * @throws IllegalArgumentException If the specified strategy is invalid.
+     */
     ImageMemoryCache(int strategy)
       throws IllegalArgumentException
     {
@@ -447,11 +600,21 @@ public class ImageCache
       this.cacheMap = new HashMap();
     }
   
+    /**
+     * Returns which strategy this cache is using to flush images.
+     * @return The used strategy.
+     */
     public int getStrategy()
     {
       return strategy;
     }
   
+    /**
+     * Sets this cache's strategy to the specified strategy.  Does nothing
+     * if the strategy parameter is invalid.
+     * 
+     * @param strategy The strategy to use.
+     */
     public void setStrategy(int strategy)
     {
       if(isValidStrategy(strategy))
@@ -460,6 +623,7 @@ public class ImageCache
       }
     }
   
+    // simple check for validation
     private boolean isValidStrategy(int strategy)
     {
       if(strategy == STRATEGY_FIFO ||
@@ -470,6 +634,13 @@ public class ImageCache
       else return false;
     }
   
+    /**
+     * Returns whether or not the image corresponding to the specified
+     * parameters is in memory.
+     * 
+     * @param pg The parameters of the image to check.
+     * @return Whether the image is loaded in memory.
+     */
     public boolean isInCache(ParameterGroup pg)
     {
       if(pg == null)
@@ -493,6 +664,14 @@ public class ImageCache
       else return false;
     }
   
+    /**
+     * Loads the image corresponding to the specified parameters from memory,
+     * if it resides in memory.  Otherwise returns null.
+     * 
+     * @param pg The parameters of the image to load.
+     * @return Null if pg is null or the desired image in the cache, otherwise
+     *         the desired 2D image slice.
+     */
     public BufferedImage load(ParameterGroup pg)
     {
       if(pg == null)
@@ -525,11 +704,11 @@ public class ImageCache
     }
   
     /**
-     * Rewrite this.
+     * Stores the 2D image slice with the corresponding parameters into
+     * memory.  Does nothing if image or pg is null.
      * 
-     * @param image
-     * @param pg
-     * @return
+     * @param image The image to store.
+     * @param pg The corresponding parameters of the image (key)
      */
     public void store(BufferedImage image, ParameterGroup pg)
       throws IOException
@@ -540,9 +719,11 @@ public class ImageCache
       }
       
       cacheList.add(0,pg); // LRU/FIFO scheme
+      // use soft references for automatic memory freeing on out-of-memory
       cacheMap.put(pg,new SoftReference(image));
     }
     
+    // remove method
     private void remove(ParameterGroup pg)
     {
       cacheList.remove(pg);
@@ -550,7 +731,13 @@ public class ImageCache
     }
   }
   
-  //  leaving this in for legacy purposes-- may be useful in memory cache
+  /**
+   * A simple data structure which encapsulates all the parameters used to
+   * identify images and extract 2D information from a 5D image.
+   * 
+   * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
+   * @version $Revision$ $Date$
+   */
   private class ParameterGroup
   {
     private String imageName;
