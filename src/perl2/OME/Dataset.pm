@@ -99,6 +99,9 @@ __PACKAGE__->manyToMany('projects',
                         'OME::Project::DatasetMap','dataset','project');
 __PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'dataset');
 
+__PACKAGE__->addACL({user => 'owner_id',group => 'group_id'});
+
+
 =head1 METHODS (C<Dataset>)
 
 The following methods are available to C<Dataset> in addition to those
