@@ -72,38 +72,33 @@ references to arrays and hashes.
 
 =head1 Synopsis
 
-	# All methods work with Object Prototypes, SemanticTypes,
-	# attributes, and dbobject instances.
-	# If using with a Semantic Type, prefix the ST name with '@'
-	# (i.e. '@Pixels')
-
 	use OME::Web::RenderData;
 
 	# get field names for a DBObject  ( field_name, ... )
-	my @fieldNames = OME::Web::RenderData->getFieldNames( "OME::Image" );
+	my @fieldNames = OME::Web::RenderData->getFieldNames( $type );
 
 	# get all field names for a DBObject  ( field_name, ... )
-	my @fieldNames = OME::Web::RenderData->getAllFieldNames( "OME::Image" );
+	my @fieldNames = OME::Web::RenderData->getAllFieldNames( $type );
 
 	# get field types { field_name => field_type, ... }
-	my %fieldTypes = OME::Web::RenderData->getFieldTypes( "OME::Image" );
+	my %fieldTypes = OME::Web::RenderData->getFieldTypes( $type );
 
 	# get field labels { field_name => field_label, ... }
-	my %fieldLabels = OME::Web::RenderData->getFieldLabels( "OME::Image" );
+	my %fieldLabels = OME::Web::RenderData->getFieldLabels( $type );
 
 	# get search form elements keyed by field names (html only) { field_name => search_field, ... }
-	my %searchFields = OME::Web::RenderData->getSearchFields( "OME::Image" );
+	my %searchFields = OME::Web::RenderData->getSearchFields( $type );
 
 	# get an html reference to this object "<a href=...>"
-	my $renderedRef = OME::Web::RenderData->getRefToObject( $image, 'html' );
+	my $renderedRef = OME::Web::RenderData->getRefToObject( $object, 'html' );
 
 	# render object data to html format ( { field_name => rendered_field, ... }, ... )
-	my @records = OME::Web::RenderData->render( \@images, 'html' );
+	my @records = OME::Web::RenderData->render( \@objects, 'html' );
  	# or txt format
- 	my @records = OME::Web::RenderData->render( \@images, 'txt' );
+ 	my @records = OME::Web::RenderData->render( \@objects, 'txt' );
 
 	# obtain a specialized rendering class
-	my $specializedRenderer = ( OME::Web::RenderData->_getSpecializedRenderer("OME::Image") || OME::Web::RenderData )
+	my $specializedRenderer = ( OME::Web::RenderData->_getSpecializedRenderer($type) || OME::Web::RenderData )
 
 
 =head1 Methods
@@ -156,12 +151,7 @@ sub getAllFieldNames {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
 		    not $doNotSpecialize);
 
-	$type = $proto->_getProto( $type );
-	my @fieldNames = $type->getColumns( );
-	push @fieldNames, 'semantic_type' if $proto->_typeIsST( $type );
-	@fieldNames = ('id', sort( grep( (!/_id$/ and !/^target$/), @fieldNames) ) );
-	return @fieldNames if wantarray;
-	return \@fieldNames;
+	return $proto->getFieldNames($type, $doNotSpecialize);
 }
 
 =head2 getFieldTypes
@@ -350,7 +340,7 @@ sub getSearchFields {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
 		    not $doNotSpecialize);
 
-	$type = $proto->_getProto( $type );
+	$type = $proto->_getType( $type );
 
 	my %searchFields;
 	my $q = new CGI;
