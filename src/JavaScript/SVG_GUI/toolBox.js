@@ -52,7 +52,7 @@ toolBox.prototype.padding = toolBox.padding;
 
 
 toolBox.prototype.menuBarText = 
-'<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>';
+'<rect width="{$width}" height="15" fill="lightslategrey" opacity="0.9"/>';
 
 toolBox.prototype.hideControlText = 
 '<g>' +
@@ -70,7 +70,7 @@ toolBox.prototype.hideControlText =
 
 toolBox.prototype.GUIboxText = 
 '<g>' +
-'	<rect width="{$width}" height="{$height}" fill="black" opacity="0.2"/>' +
+'	<rect width="{$width}" height="{$height}" fill="darkgrey" opacity="0.8"/>' +
 '</g>';
 toolBox.prototype.fadeInText = 
 '<animate attributeName="opacity" from="0" to="1" dur="0.1s" fill="freeze"' +
