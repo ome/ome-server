@@ -201,6 +201,43 @@ my @libraries = ( {
 		),
 		valid_versions => ['ge "1.1.4"'],
 		repository_file => "$REPOSITORY/zlib-1.1.4.tar.gz",
+	}, {
+		name => 'libdb_B-Tree',
+		pre_install => sub {
+			my $library = shift;
+			my @inc_paths = (
+				'/usr/include/db_185.h'           , 'db_185.h',
+				'/usr/local/include/db_185.h'     , 'db_185.h',
+				'/usr/include/db4/db_185.h'       , 'db4/db_185.h',
+				'/usr/local/include/db4/db_185.h' , 'db4/db_185.h',
+				'/usr/include/db3/db_185.h'       , 'db3/db_185.h',
+				'/usr/local/include/db3/db_185.h' , 'db3/db_185.h',
+				'/usr/include/db2/db_185.h'       , 'db2/db_185.h',
+				'/usr/local/include/db2/db_185.h' , 'db2/db_185.h',
+				'/usr/include/db.h'               , 'db.h',
+				'/usr/local/include/db.h'         , 'db.h',
+			);
+			my ($path,$include);
+			for (my $i=0; $i < @inc_paths; $i+=2) {
+				$include = $inc_paths[$i+1];
+				last if -e $inc_paths[$i];
+			}
+			$include = 'db_185.h' unless $include;
+			$library->{include_h} = $include;
+			$library->{get_library_version} = "#include <$include>\n";
+			$library->{get_library_version} .= q(
+				int main () {
+				#ifdef DB_VERSION_MAJOR
+					printf ("%d", -BTREEVERSION);
+				#else
+					printf ("%d", BTREEVERSION);
+				#endif
+					return (0);
+				}
+			);
+		},
+		valid_versions => ['>= 3'],
+		repository_file => "$REPOSITORY/db-4.2.52.tar.gz",
     }, {
 		name => 'libxml2',
 		get_library_version => sub {
