@@ -114,7 +114,7 @@ char *theParam;
 char setThumb=0;
 char defaultFormat[] = "jpeg", *theFormat = defaultFormat;
 levelBasisType levelBasis=FIXED_BASIS;
-char isRGB=0;
+char isRGB=0, doSave=0;
 channelSpecType *theChannel;
 int i;
 double sizeRatio;
@@ -248,6 +248,7 @@ Pic *ome_pic, *out_pic;
 char out_name[256], mime_type[256];
 char *xfiltname = FILTER_DEFAULT, *yfiltname = 0;
 char *xwindowname = 0, *ywindowname = 0;
+char *fileName;
 int  square=1, intscale=0;
 double xsupp = -1., ysupp = -1.;
 double xblur = -1., yblur = -1.;
@@ -261,9 +262,8 @@ ThumbnailHeader  thumbHeader;
 Continuous coordinates aren't implemented
 Mapping m;
 */
-    memset(&thumbHeader, 0, sizeof(ThumbnailHeader));
 
-	param = NULL;
+    memset(&thumbHeader, 0, sizeof(ThumbnailHeader));
 
     ome_win.x0 = out_win.x0 = PIC_UNDEFINED;
     ome_win.x1 = out_win.x1 = PIC_UNDEFINED;
@@ -317,9 +317,15 @@ Mapping m;
 		}
 	}
 	
-	strcpy (mime_type,"image/");
-	strncat (mime_type,myComposite->format,200);
-	HTTP_ResultType (mime_type);
+	if ( (fileName = get_param (param,"Save")) && getenv("REQUEST_METHOD") ) {
+		fprintf (stdout,"Content-Disposition: attachment; filename=\"%s.%s\"\r\n",fileName,myComposite->format);
+		HTTP_ResultType ("application/octet-stream");
+	} else {
+		strcpy (mime_type,"image/");
+		strncat (mime_type,myComposite->format,200);
+		HTTP_ResultType (mime_type);
+	}
+
 	
 	if (myComposite->isRGB) pic_set_nchan (out_pic,3);
 	else pic_set_nchan (out_pic,1);
