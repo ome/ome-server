@@ -56,5 +56,9 @@ __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                        });
 __PACKAGE__->addColumn(toolbox_scale => 'toolbox_scale',{SQLType => 'real'});
 
+sub DefaultScale {
+	return 1;
+}
+
 1;
 
