@@ -90,7 +90,7 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final float NAME_SPACING=15.0f;
 	public static final float PARAMETER_SPACING=3.0f;
 	private static final float HORIZONTAL_GAP =50.0f;
-	private static final float SCALE_THRESHOLD=.5f;
+	
 	
 	private static final Color DEFAULT_COLOR=Color.black;
 	private static final Color DEFAULT_FILL = Color.lightGray;
@@ -219,7 +219,7 @@ public class PModule extends PPath implements PBufferedNode {
 	 */
 	private void addParameterLabels(Module module,Connection connection) {
 		
-		System.err.println("building a PModule for "+module.getName());
+//		System.err.println("building a PModule for "+module.getName());
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
 		int inSize = inputs.size();
@@ -244,31 +244,20 @@ public class PModule extends PPath implements PBufferedNode {
 				// as long as I have more inputs, create them, 
 				// add them to label nodes, 
 				// and store max width
-				Object obj = inputs.get(i);
-				System.err.println("trying to get a formal input: "+obj.getClass().getName());
-				param = (FormalParameter) obj;
-				System.err.println("got ..."+param.getParameterName());
+				param = (FormalParameter) inputs.get(i);
 				ins[i]= new PFormalInput(this,param,connection);
 				labelNodes.addChild(ins[i]);
 				if (ins[i].getLabelWidth() > maxInputWidth)
 					maxInputWidth = ins[i].getLabelWidth();
-				//if (ins[i].getFullBoundsReference().getWidth() > maxInputWidth)
-					//maxInputWidth = (float) ins[i].getFullBoundsReference().getWidth();
+				
 			}
 			if (i < outSize) {
-				// do the same for outputs.
-				Object obj = outputs.get(i);
-				System.err.println("trying to get a formal output: "+obj.getClass().getName());
-				param = (FormalParameter) obj;
-				System.err.println("got ..."+param.getParameterName());
+				param = (FormalParameter) outputs.get(i);
 				outs[i]= new PFormalOutput(this,param,connection);
 				labelNodes.addChild(outs[i]);
 				if (outs[i].getLabelWidth() > maxOutputWidth)
 					maxOutputWidth = outs[i].getLabelWidth();
-				//if (outs[i].getFullBoundsReference().getWidth() > maxOutputWidth)
-				//	maxOutputWidth = (float) outs[i].getFullBoundsReference().getWidth();
 			}
-			
 		}
 		
 		// find maximum width of the whole thing.
@@ -319,7 +308,7 @@ public class PModule extends PPath implements PBufferedNode {
 	public void paint(PPaintContext aPaintContext) {
 		double s = aPaintContext.getScale();
 	
-		if (s < SCALE_THRESHOLD) {
+		if (s < PConstants.SCALE_THRESHOLD) {
 			labelNodes.setVisible(false);
 			name.setVisible(false);
 			zoomName.setVisible(true);
@@ -489,6 +478,12 @@ public class PModule extends PPath implements PBufferedNode {
 		// should never reach her.
 		return null;
 	}
+
+	public PLinkTarget getInputLinkTarget() {
+		return inputLinkTarget;
+	}
 	
-	
+	public PLinkTarget getOutputLinkTarget() {
+		return outputLinkTarget;
+	}
 }
