@@ -58,7 +58,7 @@ import java.util.List;
 	private static final double DELTA=0.1;
 	private Vector layers = new Vector();
 	private boolean orderChanged = false;
-	
+	private Layering layering  = new Layering();
 	
 	public CChain() {
 		super();
@@ -387,5 +387,16 @@ import java.util.List;
 					node.getPosInLayer());
 			} 
 		}
+	}
+}
+
+class Layering {
+	private Vector layers = new Vector();
+	
+	Layering() {
+	}
+	
+	private void addLayer(Vector layer) {
+		layers.addElement(layer);		
 	}
 }
