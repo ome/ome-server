@@ -199,11 +199,11 @@ sub __collectSQLOptions ($$) {
             $sql_type = $sql_options->{SQLType};
         }
 
-        if (defined $sql_options->{DefaultValue}) {
+        if (defined $sql_options->{Default}) {
             die "Default values mismatch"
               if defined $default &&
-                $sql_options->{DefaultValue} ne $default;
-            $default = $sql_options->{DefaultValue};
+                $sql_options->{Default} ne $default;
+            $default = $sql_options->{Default};
         }
 
         if (defined $sql_options->{NotNull}) {
@@ -397,7 +397,7 @@ sub addClassToDatabase {
                       " REFERENCES $references DEFERRABLE INITIALLY DEFERRED"
                         if defined $references;
 
-                    #print "$sql\n(",join(',',@bind_vals),")\n";
+                    #print STDERR "$sql\n(",join(',',@bind_vals),")\n";
                     $dbh->do($sql,{},@bind_vals)
                       or die "Could not add column $column to $table!";
                 }
@@ -454,7 +454,8 @@ sub addClassToDatabase {
               join(", ",@column_sqls).")";
 
             #print "$create_sql\n(",join(", ",@bind_vals),")\n";
-            $dbh->do($create_sql) or die "Could not create table $table";
+            $dbh->do($create_sql,{},@bind_vals)
+              or die "Could not create table $table";
         }
     }
 }
