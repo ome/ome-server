@@ -83,7 +83,7 @@ public class SelectionState {
 		return singletonState;
 	}
 	
-	public SelectionState() {
+	private SelectionState() {
 		
 	}
 	
@@ -107,6 +107,8 @@ public class SelectionState {
 		}
 			
 		currentChain = newChain;
+		// if we clear chain, clear everything.
+		
 		if (currentChain == null) {
 			activeDatasets =null;
 			currentDataset = null;
@@ -115,20 +117,21 @@ public class SelectionState {
 		}
 		else {
 			System.err.println("setting chain to .."+currentChain.getName());
+			// select datasets for this chain
 			activeDatasets = newChain.getDatasetsWithExecutions();
-			activeProjects = null;
+
+			// current dataset null if not contained.
 			if (currentDataset!= null) {
 				if (!activeDatasets.contains(currentDataset))
 					currentDataset = null;
 			}
-			if (currentDataset == null)  { // current dataset is null
+			
+		    // update projects.
+			activeProjects = null;
+			if (currentDataset == null)  { // no project if no dataset
 				currentProject = null;
-			} else { //current dataset is not null..
-				if (currentProject != null &&
-						!currentProject.getDatasets().contains(currentDataset)) {
-					currentProject = null;
-				}
-			}
+			} else if (currentProject == null)
+				activeProjects = currentDataset.getProjects();
 		}
 		fireSelectionEvent();	
 	}
@@ -141,16 +144,23 @@ public class SelectionState {
 	
 	
 	public void setSelectedProject(Project current) {
+		
 		currentProject = current;
-		if (currentProject != null) {
+		
+		if (currentProject == null)
+			// no datasets active if no project is selected.
+			activeDatasets=null; // however, we don't have to clear 
+											//selected dataset & chain.
+		else {
+			// set active projects
 			activeDatasets = currentProject.getDatasets(); 
 			if (!activeDatasets.contains(currentDataset)) {
+				//only one project is active if the active datasets 
+				// don't contain the current dataset.
 				currentDataset = null;
 				activeProjects =null;
 			}
 		}
-		else 
-			activeDatasets=null;
 		fireSelectionEvent();
 	}
 	
@@ -172,16 +182,17 @@ public class SelectionState {
 	
 	private void doSetSelectedDataset(CDataset current) {
 		currentDataset = current;
-		if (currentDataset != null) {
+		
+		if (currentDataset == null) {
+			activeProjects = null;
+	    	currentChain = null;
+		}
+		else  {
 			activeProjects = currentDataset.getProjects();
 			if (!activeProjects.contains(currentProject))
 				currentProject = null;
 		}
-	    else {
-	    	activeProjects = null;
-	    	currentChain = null;
-	    	
-	    }
+	     
     	if (currentProject!=null) {
     		if (currentDataset != null && 
     				!currentProject.getDatasets().contains(currentDataset)) {
