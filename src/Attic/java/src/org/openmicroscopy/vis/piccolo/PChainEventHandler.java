@@ -143,7 +143,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	protected void drag(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		
-		//System.err.println("PChainEventHandler.drag()");
+		System.err.println("PChainEventHandler.drag()");
 		// module nodes simply get translated.
 		System.err.println("in chain handler drag");
 		if (linkState == NOT_LINKING)
@@ -244,9 +244,9 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	
 	public void mouseDragged(PInputEvent e) {
-		//System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
+		System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
 		mouseMoved(e);
-		super.mouseDragged(e);	
+		super.mouseDragged(e);
 	}
 	
 	public void mouseMoved(PInputEvent e) {
