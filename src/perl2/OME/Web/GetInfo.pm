@@ -106,7 +106,7 @@ sub getprojectinfo{
   if (scalar(@datasetsused)==0){
 	$text.="<b>No dataset associated to this project</b>.<br>";
   }else{
-	my %list=map { $_->dataset_id()=>$_} @datasetsused;
+	my %list=map { $_->id()=>$_} @datasetsused;
 	$text.=$htmlFormat->datasetList(\%list);
   }
    return $text;
