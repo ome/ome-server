@@ -82,10 +82,11 @@
 			<FilterRef ID = "urn:lsid:foo.bar.com:Filter:123456"/>
 			<ChannelComponent Pixels="urn:lsid:foo.bar.com:Pixels:123456" Index = "0" ColorDomain="foo"/>
 		</ChannelInfo>
-		<DisplayOptions ID = "urn:lsid:foo.bar.com:DisplayOptions:123456" Zoom = "1.0">
-			<RedChannel ChannelNumber = "1" BlackLevel = "100" WhiteLevel = "2019" Gamma = "1.0"/>
-			<GreenChannel ChannelNumber = "2" BlackLevel = "120" WhiteLevel = "2020" Gamma = "1.0"/>
-			<BlueChannel ChannelNumber = "3" BlackLevel = "130" WhiteLevel = "2021" Gamma = "1.0"/>
+		<DisplayOptions ID = "urn:lsid:foo.bar.com:DisplayOptions:123456" Zoom = "1.0" Display = "RGB">
+			<RedChannel ChannelNumber = "0" BlackLevel = "144" WhiteLevel = "338" isOn = "true"/>
+			<GreenChannel ChannelNumber = "0" BlackLevel = "144" WhiteLevel = "338" isOn = "true"/>
+			<BlueChannel ChannelNumber = "0" BlackLevel = "144" WhiteLevel = "338" isOn = "true"/>
+			<GreyChannel ChannelNumber = "0" BlackLevel = "144" WhiteLevel = "338"/>
 			<Projection Zstart = "5" Zstop = "10"/>
 			<Time Tstart = "1" Tstop = "3"/>
 			<ROI X0 = "0" X1 = "512" Y0 = "0" Y1 = "512" Z0 = "0" Z1 = "0" T0 = "0" T1 = "0"/>
