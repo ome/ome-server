@@ -1,3 +1,22 @@
+# OME/Tasks/ProgramImport.pm
+
+# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Author:  Josiah Johnston <siah@nih.gov>
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 package OME::Tasks::ProgramImport;
 
 use XML::LibXML;
@@ -57,18 +76,18 @@ sub new {
 	my $self = {
 		session => $params{session},
 		debug   => $params{debug} || 0,
-                _parser => $params{_parser},
+		_parser => $params{_parser},
 	};
 	
-        if (!defined $self->{_parser}) {
-            my $parser = XML::LibXML->new();
-            die "Cannot create XML parser"
-              unless defined $parser;
-            
-            $parser->validation(exists $params{ValidateXML}?
-                                $params{ValidateXML}: 0);
-            $self->{_parser} = $parser;
-        }
+	if (!defined $self->{_parser}) {
+		my $parser = XML::LibXML->new();
+		die "Cannot create XML parser"
+		  unless defined $parser;
+		
+		$parser->validation(exists $params{ValidateXML}?
+							$params{ValidateXML}: 0);
+		$self->{_parser} = $parser;
+	}
 
 	bless($self,$class);
 	print STDERR ref ($self) . "->new returning successfully\n" 
@@ -103,24 +122,17 @@ sub importXMLFile {
 
 	print STDERR ref ($self) . "->importXMLFile called with parameters:\n\t[filePath=] $filePath\n"
 		if $debug > 0;
-	#my $parser     = XML::LibXML->new();
-        my $parser = $self->{_parser};
+	my $parser = $self->{_parser};
 #	print STDERR ref ($self) . "->importXMLFile about to validate file\n"
 #		if $debug > 1;
-	#Validate file against Schema
-	{
+	#FIXME: Validate file against Schema
 	# insert code here
-	};
 #	print STDERR ref ($self) . "->importXMLFile has validated file\n"
 #		if $debug > 1;
 
 	#Parse
-	print STDERR ref ($self) . "->importXMLFile about to parse file\n"
-		if $debug > 1;
 	my $tree = $parser->parse_file( $filePath )
 		or die ref($self) . " Could not parse file ($filePath)";
-	print STDERR ref ($self) . "->importXMLFile parsed file\n"
-		if $debug > 1;
 
 	#process tree
 	print STDERR ref ($self) . "->importXMLFile about to process DOM (parsed file)\n"
