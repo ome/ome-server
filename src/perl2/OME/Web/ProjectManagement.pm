@@ -46,7 +46,7 @@ use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Table;
+use OME::Web::DatasetTable;
 
 use base qw{ OME::Web };
 
@@ -62,8 +62,8 @@ sub getPageBody {
 
 	my $project = $self->Session()->project()
 		or die "Project is not defined for the session.\n";
-	my $projectManager = new OME::Tasks::ProjectManager;
-	my $datasetManager = new OME::Tasks::DatasetManager;
+	my $p_manager = new OME::Tasks::ProjectManager;
+	my $d_manager = new OME::Tasks::DatasetManager;
 
 	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, $project->name() . " Properties");
 	
@@ -71,22 +71,22 @@ sub getPageBody {
 	my @selected = $cgi->param('selected');
 
 	# determine action
-	if( $cgi->param('save')) {
+	if($cgi->param('save')) {
 		my $new_name = $cgi->param('name');
 		my $new_description = $cgi->param('description');
 
 		# Error or Action
-		if (not $new_name) {
+		unless ($new_name) {
 			# Error
 			$body .= $cgi->p({-class => 'ome_error'}, 'ERROR: Name is a required field.');
-		} elsif (($project->name() ne $new_name) and (not $projectManager->exist($new_name))) {
+		} elsif (($project->name() ne $new_name) and ($p_manager->nameExists($new_name))) {
 			# Error
 			$body .= $cgi->p({-class => 'ome_error'},
 				'ERROR: This name is already used, please choose another.'
 			);
 		} else { 
 			# Action
-			$projectManager->change($new_description, $new_name);
+			$p_manager->change($new_description, $new_name);
 
 			# Data
 			$body = $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
@@ -100,7 +100,7 @@ sub getPageBody {
 	} elsif ($cgi->param('Remove')) {
 		# Action
 		foreach (@selected) {
-			$datasetManager->remove( {
+			$d_manager->remove( {
 					$_ => [$project->id()]
 				}
 			)
@@ -115,7 +115,7 @@ sub getPageBody {
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
 	} elsif ($cgi->param('Delete')) {
 		# Action
-		foreach (@selected) { $datasetManager->delete($_) }
+		foreach (@selected) { $d_manager->delete($_) }
 		
 		# Data
 		$body = $cgi->p({-class => 'ome_info'}, "Deleted dataset(s) @selected from OME.");
@@ -134,7 +134,7 @@ sub getPageBody {
 		}
 		
 		# Action
-		$datasetManager->switch($selected[0]);
+		$d_manager->switch($selected[0]);
 		
 		# Data
 		$body .= $cgi->p({-class => 'ome_info'}, "Selected dataset $selected[0] from the project.");
@@ -145,7 +145,7 @@ sub getPageBody {
 	elsif (defined $cgi->param('Add')) {
 		# Action
 		my @datasets = $factory->findObjects("OME::Dataset", name => $selected[0]);
-		$projectManager->add($datasets[0]->id());
+		$p_manager->add($datasets[0]->id());
 		
 		# Data
 		$body .= $cgi->p({-class => 'ome_info'}, "Added dataset $selected[0] to the project.");
@@ -185,7 +185,7 @@ sub print_form {
 
 sub makeDatasetListings {
 	my ($self, $project) = @_;
-	my $t_generator = new OME::Web::Table;
+	my $t_generator = new OME::Web::DatasetTable;
 	my $cgi = $self->CGI();;
 	my $factory = $self->Session()->Factory();
 	
@@ -195,10 +195,9 @@ sub makeDatasetListings {
 	
 	# Gen our "Datasets in Project" table
 	my $html = $t_generator->getTable( {
-			type => 'dataset',
-			filters => [ ["id", ['in', $in_project] ] ],
 			options_row => ["Switch To", "Remove", "Delete"],
-		}
+		},
+		$project->datasets()
 	);
 
 	my @additional_datasets;

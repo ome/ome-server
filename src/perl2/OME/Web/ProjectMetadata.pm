@@ -70,7 +70,7 @@ sub getPageBody {
 	  my $projectname=cleaning($cgi->param('name'));
 	  return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
 	  if ($project->name() ne $cgi->param('name')){
-         my $ref=$projectManager->exist($cgi->param('name'));
+         my $ref=$projectManager->nameExists($cgi->param('name'));
 	   return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless (defined $ref);
         }
 

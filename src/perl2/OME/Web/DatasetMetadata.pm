@@ -75,7 +75,7 @@ sub getPageBody {
 		$body.=print_form($session,$htmlFormat,$cgi);
 		return ('HTML',$body) unless $datasetname;
 		if ($session->dataset()->name() ne $cgi->param('name')){
-         		my $ref=$datasetManager->exist($datasetname);
+         		my $ref=$datasetManager->nameExists($datasetname);
 			$body="";
 			$body.="<b>This name is already used. Please enter a new name for your dataset.</b>";
 			$body.=print_form($session,$htmlFormat,$cgi);

@@ -76,7 +76,7 @@ sub getPageBody {
          my $datasetName=cleaning($cgi->param('name'));
          my @addImages=$cgi->param('ListImage');
 	   return ('HTML',$htmlFormat->noNameMessage("dataset")) unless $datasetName;
-	   my $rep=$datasetManager->exist($datasetName);
+	   my $rep=$datasetManager->nameExists($datasetName);
          return ('HTML',$htmlFormat->existMessage("dataset")) unless (defined $rep);
 	   return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
 	   my $result=$datasetManager->create($datasetName,$cgi->param('description'),$userID,$usergpID,$project->id(),\@addImages); 

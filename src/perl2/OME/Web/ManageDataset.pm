@@ -45,7 +45,7 @@ use CGI;
 use Data::Dumper;
 
 use OME::Tasks::DatasetManager;
-use OME::Web::Table;
+use OME::Web::DatasetTable;
 
 use base qw{ OME::Web };
 sub getPageTitle {
@@ -105,7 +105,7 @@ sub getPageBody {
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	}
 
-	$body .= $self->displayDatasets();
+	$body .= $self->displayDatasets($datasetManager);
 
 	return ('HTML',$body);
 }
@@ -116,18 +116,17 @@ sub getPageBody {
 #------------------
 
 sub displayDatasets {
-	my $self = shift;
-	my $t_generator = new OME::Web::Table;
+	my ($self, $d_manager) = @_;
+	my $t_generator = new OME::Web::DatasetTable;
 	my $cgi = $self->CGI();;
 	my $factory = $self->Session()->Factory();
 	
 	# Gen our "Datasets in Project" table
 	my $html = $t_generator->getTable( {
-			type => 'dataset',
-			filters => [ ["owner_id", $self->Session()->User()->id()] ],
 			options_row => ["Switch To", "Remove", "Delete"],
 			relations => 1,
-		}
+		},
+		$d_manager->getUserDatasets()
 	);
 
 	return $html;

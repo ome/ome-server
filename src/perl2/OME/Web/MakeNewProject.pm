@@ -68,7 +68,7 @@ sub getPageBody {
 			return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
 	
 			# $projectname exists??
-			my $ref=$manager->exist($projectname);
+			my $ref=$manager->nameExists($projectname);
 			return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless (defined $ref);
 		
 			my $data = {name => $cgi->param('name'),

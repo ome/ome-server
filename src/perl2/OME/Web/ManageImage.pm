@@ -43,7 +43,7 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::ImageManager;
-use OME::Web::Table;
+use OME::Web::ImageTable;
 
 use Data::Dumper;
 
@@ -105,7 +105,7 @@ sub getPageBody {
 		$body .= $cgi->p({-class => 'ome_info'}, "Deleted image(s) @selected.");
 	}  
 
-	$body .= $self->printImages();
+	$body .= $self->printImages($imageManager);
 	
 	return ('HTML',$body);
 }
@@ -115,18 +115,17 @@ sub getPageBody {
 #---------------------------
 
 sub printImages {
-	my $self = shift;
-	my $t_generator = new OME::Web::Table;
+	my ($self, $i_manager) = @_;
+	my $t_generator = new OME::Web::ImageTable;
 	my $cgi = $self->CGI();;
 	my $factory = $self->Session()->Factory();
 	
 	# Gen our images table
 	my $html = $t_generator->getTable( {
-			type => 'image',
-			filters => [ ["experimenter_id", $self->Session()->User()->id()] ],
 			options_row => ["Delete", "Remove"],
 			relations => 1,
-		}
+		},
+		$i_manager->getUserImages()
 	);
 
 	return $html;

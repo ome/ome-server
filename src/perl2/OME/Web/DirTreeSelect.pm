@@ -106,7 +106,7 @@ sub getPageBody {
 				return ('HTML',$text) unless $datasetname;
          			
  			  #name already exists
-				my $rep=$datasetManager->exist($datasetname);
+				my $rep=$datasetManager->nameExists($datasetname);
 
 				my $txt="";
 				$txt=$htmlFormat->existMessage("dataset");

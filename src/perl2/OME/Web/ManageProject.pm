@@ -46,7 +46,7 @@ use CGI;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Table;
+use OME::Web::ProjectTable;
 
 
 use base qw{ OME::Web };
@@ -61,8 +61,8 @@ sub getPageBody {
 	
 	my $session = $self->Session();
 	my $currentproject=$session->project();
-	my $projectManager=new OME::Tasks::ProjectManager($session);
-	my $datasetManager= new OME::Tasks::DatasetManager($session);
+	my $projectManager=new OME::Tasks::ProjectManager();
+	my $datasetManager= new OME::Tasks::DatasetManager();
 	my $htmlFormat= new OME::Web::Helper::HTMLFormat;
 
 	my $body .= $cgi->p({class => 'ome_title'}, 'My projects');
@@ -84,7 +84,7 @@ sub getPageBody {
 		$body .= $cgi->p({-class => 'ome_info'}, "Selected project $selected[0]."); 
 
 		# Data
-		$body .= $self->print_form();
+		$body .= $self->print_form($projectManager);
 		
 		# Top frame refresh
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
@@ -97,7 +97,7 @@ sub getPageBody {
 
 		# Data
 		if ($session->project()) {  # We didn't delete our only project right ? :)
-			$body .= $self->print_form();
+			$body .= $self->print_form($projectManager);
 		} else {
 			# Main frame refresh
 			$body .= "<script>top.location.href = top.location.href;</script>";
@@ -115,32 +115,23 @@ sub getPageBody {
 	   $body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		
 	} else {
-		$body .= $self->print_form();
+		$body .= $self->print_form($projectManager);
 	}
     return ('HTML',$body);
 }
-
-
-
-
-
-
-
 
 #####################
 # PRIVATE METHODS	#
 #####################
 
 sub print_form {
-	my $self = shift;
-	my $t_generator = new OME::Web::Table;
+	my ($self, $p_manager) = @_;
+	my $t_generator = new OME::Web::ProjectTable;
 
 	my $html = $t_generator->getTable( {
-			type => 'project',
-			filter_field => 'owner_id',
-			filter_string => $self->Session()->User()->id(),
 			options_row => ["Switch To", "Delete"],
-		}
+		},
+		$p_manager->getUserProjects()
 	);
 
 	return $html;

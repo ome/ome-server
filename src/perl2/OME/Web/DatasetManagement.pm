@@ -46,7 +46,7 @@ use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Table;
+use OME::Web::ImageTable;
 
 
 use Data::Dumper;
@@ -82,7 +82,7 @@ sub getPageBody {
 				"<b>Please enter a name for your dataset.</b>".$self->print_form() 
 			);
 		if ($session->dataset()->name() ne $cgi->param('name')){
-			my $ref=$datasetManager->exist($datasetname)
+			my $ref=$datasetManager->nameExists($datasetname)
 				or return (
 					'HTML',
 					"<b>This name is already used. Please enter a new name for your dataset.</b>".$self->print_form()
@@ -155,7 +155,7 @@ sub print_form {
 
 sub makeImageListings {
 	my ($self, $dataset) = @_;
-	my $t_generator = new OME::Web::Table;
+	my $t_generator = new OME::Web::ImageTable;
 	my $cgi = $self->CGI();;
 	my $factory = $self->Session()->Factory();
 	
@@ -165,10 +165,9 @@ sub makeImageListings {
 
 	# Gen our "Images in Project" table
 	my $html = $t_generator->getTable( {
-			type => 'images',
-			filters => [ ["id", ['in', $in_project] ] ],
 			options_row => ["Remove"],
-		}
+		},
+		$dataset->images()
 	);
 
 	my @additional_images;
