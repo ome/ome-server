@@ -109,32 +109,47 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;
-	return ('HTML', 
-		$self->getTable( {
-			actions       => ['Search'],
-			width         => '100%',
-		})
-	);
+	my $q    = $self->CGI();
+	
+	if( $q->param( "Format" ) eq 'TXT' ) {
+		return ('TXT', 
+			$self->getTextTable( {
+			})
+		);	
+	} else {
+		return ('HTML', 
+			$self->getTable( {
+				actions       => ['Search'],
+				width         => '100%',
+			})
+		);
+	}
 }
 
 =head2 getTable
 
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
 
-	# make a table from CGI parameters 'Type' and search params with the format $type.'_'.$searchKey
+	# make a table from CGI parameters 'Type' and search params. CGI
+	# search parameters shoulf follow the format $type.'_'.$searchKey
 	my $table      = $tableMaker->getTable( \%options );
 
-	# or use search options to make a table (not tested, but might work ;)
+	# or use search options to make a table
 	my $table      = $tableMaker->getTable( \%options, $type, \%search_options );
 
 	# or use a list of objects to make a table
 	my $table      = $tableMaker->getTable( \%options, $type, \@obj_array );
 
+If a search key is 'accessor', the objects retrieved will be from a
+DBObject accessor method. The value for the 'accessor' search key is
+exepected to be a reference to an array of the form [ $typeToAccessFrom,
+$idToAccessFrom, $accessorMethod ].
+
 recognized %options are:
 	noSearch         => 1|0                          # 1 disables searches
 	select_column    => 1|0                          # 1 inserts a select column. 
-	                                                 # name will be 'Selected_'.$formal_name
-	select_name      => $select_column_name          # overrides default name. if specified
+	                                                 # name will default to 'Selected_'.$formal_name
+	select_name      => $select_column_name          # overrides default name. if specified,
 	                                                 # select_column is set to 1.
 	Length           => $num_items_per_table
 	embedded_in_form => $form_name
@@ -142,6 +157,9 @@ recognized %options are:
 	width            => 'table_width'
 	actions          => [ action_button_name, ... ]
 	excludefields    => { field_name => undef, ... }
+
+a Length of 0 or less is considered to be 'no limit'. an undef Length is
+assumed to be the default Length of 10.
 
 =cut
 
@@ -234,6 +252,11 @@ sub getTable {
 				$q->td( { -class => 'ome_td', -colspan => scalar( @columnHeaders ), -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
 						$display_type, 
+						$q->a( { -href => 
+							$self->pageURL('OME::Web::DBObjTable', { 
+								%{ $self->{__params} },
+								Format => 'TXT',
+							} ) }, "Download as txt" ),
 						( $allowPaging ? $pagingText : ()), 
 						( $allowSearch ? $self->__getActionButton( 'Search', $form_name ) : () )
 					) ) )
@@ -248,16 +271,80 @@ sub getTable {
 			)
 		);
 	$html .= 
-		$pagingText.
+		'<nobr>'.$pagingText.'</nobr>'.
 		$q->hidden({-name => "PageNum_$formal_name", -default => $q->param( "PageNum_$formal_name" ) })
 		if( $allowPaging );
 	$html .= 
 		$q->hidden({-name => 'action', -default => ''}).
-		$q->hidden({-name => 'Type', -default => $q->param( "Type" ) }).
+		join( "\n", map( 
+			$q->hidden({-name => $_, -default => $self->{__params}->{$_} }),
+			keys %{ $self->{__params} } )
+		).
 		$q->endform()
 		unless $options->{ embedded_in_form };
 
 	return $html;
+}
+
+=head2 getTextTable
+
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
+
+	# make a table from CGI parameters 'Type' and search params with the format $type.'_'.$searchKey
+	my $textTable      = $tableMaker->getTextTable( \%options );
+
+	# or use search options to make a table
+	my $textTable      = $tableMaker->getTextTable( \%options, $type, \%search_options );
+
+	# or use a list of objects to make a table
+	my $textTable      = $tableMaker->getTextTable( \%options, $type, \@obj_array );
+
+If a search key is 'accessor', the objects retrieved will be from a
+DBObject accessor method. The value for the 'accessor' search key is
+exepected to be a reference to an array of the form [ $typeToAccessFrom,
+$idToAccessFrom, $accessorMethod ].
+
+The __limit and __offset search parameters will be ignored.
+
+recognized %options are:
+	title            => 'table_title'
+	excludefields    => { field_name => undef, ... }
+	delimiter        => $field_delimiter
+
+=cut
+
+sub getTextTable {
+	my $self = shift;
+	my $q       = $self->CGI();
+	my @params = @_;
+	$params[0]->{ Length } = -1;
+	my ( $objects, $object_count, $options, 
+	     $pagingText, $form_name, $title, $display_type,
+	     $common_name, $formal_name, $ST ) =
+		$self->__parseParams( @params );
+	
+	$options->{delimiter} = "\t" unless $options->{delimiter};
+	
+	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
+	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
+		if exists $options->{excludeFields};
+	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
+	my @records    = OME::Web::DBObjRender->render( $objects, 'txt', \@fieldNames );
+
+	# column headers
+	my @columnHeaders = map( $labels{ $_ }, @fieldNames );
+	
+	# Build the table
+	my $table = 
+		$title."\n".
+		join( $options->{delimiter}, @columnHeaders )."\n";
+
+	# table data
+	foreach my $record ( @records ) {
+		$table .= join( $options->{delimiter}, map( $record->{$_}, @fieldNames ) )."\n";
+	}
+	
+	return $table;
 }
 
 =head2 getList
@@ -267,7 +354,7 @@ sub getTable {
 	# make a list from CGI parameters 'Type' and search params with the format $type.'_'.$searchKey
 	my $list      = $tableMaker->getList( \%options );
 
-	# or use search options to make a list (not tested, but might work ;)
+	# or use search options to make a list
 	my $list      = $tableMaker->getList( \%options, $type, \%search_options );
 
 	# or use a list of objects to make a list
@@ -275,11 +362,18 @@ sub getTable {
 
 produces a summary list
 
+If a search key is 'accessor', the objects retrieved will be from a
+DBObject accessor method. The value for the 'accessor' search key is
+exepected to be a reference to an array of the form [ $typeToAccessFrom,
+$idToAccessFrom, $accessorMethod ].
+
 recognized %options are:
 	Length           => $num_items_per_list
 	embedded_in_form => $form_name
 	title            => 'table_title'
 	width            => 'table_width'
+
+a Length of 0 or less is considered to be 'no limit'. an undef Length is assumed to be the default Length of 10.
 
 =cut
 
@@ -310,7 +404,8 @@ sub getList {
 				$q->td( { -class => 'ome_td', -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
 						$display_type, 
-						( $allowPaging ? $pagingText : ()), 
+						( $allowPaging ? '<nobr>'.$pagingText.'</nobr>' : ()),
+						$q->a( { href => $self->pageURL( "OME::Web::DBObjTable", $self->{__params} ) }, "More details" )
 					) ) )
 				), 
 				# Table data
@@ -364,6 +459,8 @@ sub __parseParams {
 	} elsif( $mode eq 'cgi' ) {
 		$type = $q->param( 'Type' )
 			or die "url parameter Type not specified";
+		$options->{ Length } = $q->param( $type."___limit" ) 
+			unless $options->{ Length };
 
 		# collect search params
 		%searchParams = map{ $_ => $q->param( $_ ) } grep( m/^($type)_/o, $q->param( ) );
@@ -375,36 +472,84 @@ sub __parseParams {
 				unless not defined $searchParams{ $key } or $searchParams{ $key } eq '';
 			# delete the old key
 			delete $searchParams{ $key };
+			if ( $searchParams{ $newkey } =~ m/,/) {
+				if( $newkey ne 'accessor' ) {
+					$searchParams{ $newkey } = [ 'in', [ split( m/,/, $searchParams{ $newkey } ) ] ];
+				} else {
+					$searchParams{ $newkey } = [ split( m/,/, $searchParams{ $newkey } ) ];
+				}
+			}
 		}
 	}
 
 	# PAGING: prepare offset & limit
-	$options->{ Length } = $self->{ _default_Length }
-		unless $options->{ Length };
-	$searchParams{ __offset } = ( $q->param( "PageNum_$type" ) ? $q->param( "PageNum_$type" ) : 0 );
-	$searchParams{ __offset } += 1
-		if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageForward_$type" );
-	$searchParams{ __offset } -= 1
-		if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageBack_$type" );
-	$q->param( -name => "PageNum_$type", -value => $searchParams{ __offset } );
-	$searchParams{ __offset } *= $options->{ Length };
+	$searchParams{ __limit } = ( $options->{ Length } or $self->{ _default_Length } );
+	if( $searchParams{ __limit } > 0 ) {
+		$searchParams{ __offset } = ( $q->param( "PageNum_$type" ) ? $q->param( "PageNum_$type" ) : 0 );
+		$searchParams{ __offset } += 1
+			if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageForward_$type" );
+		$searchParams{ __offset } -= 1
+			if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageBack_$type" );
+		$q->param( -name => "PageNum_$type", -value => $searchParams{ __offset } );
+		$searchParams{ __offset } *= $searchParams{ __limit };
+	} else {
+		delete $searchParams{ __limit };
+		delete $searchParams{ __offset };
+	}
 
 	# load type
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 
 	# collect SortOn
-	my $orderBy = 'id';
+	my $orderBy = ( $package_name->getColumnType( 'id' ) ? 'id' : undef );
 	if( $q->param( 'action' ) and $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
 		($orderBy = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
 	}
 
 	# get objects
 	if( $mode eq 'cgi' or $mode eq 'search' ) {
-		@objects = $factory->findObjectsLike( $formal_name, %searchParams, __limit => $options->{ Length }, __order => $orderBy );
-		$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
+		# use an accessor from another object.
+		if( exists( $searchParams{ 'accessor' } ) ) {
+			my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = @{ $searchParams{ 'accessor' } };
+			my $objectTaAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
+				or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
+			$typeToAccessFrom->getColumnType( $accessorMethod )
+				or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
+			@objects = $objectTaAccessFrom->$accessorMethod(
+				( $searchParams{ __limit } ? 
+					(__limit => $searchParams{ __limit }) : 
+					()
+				),
+				( $searchParams{ __offset } ?
+					( __offset => $searchParams{ __offset } ) :
+					()
+				)
+			);
+			my $countAccessor = "count_".$accessorMethod;
+			$object_count = $objectTaAccessFrom->$countAccessor();
+			$self->{__params} = { 
+				Type               => $formal_name,
+				$formal_name."_accessor" => join( ',', ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) )
+			};
+		# use the search parameters
+		} else {
+			@objects = $factory->findObjectsLike( 
+				$formal_name, %searchParams, 
+				__order => $orderBy );
+			$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
+			$self->{__params} = { 
+				Type               => $formal_name,
+				( map{ $formal_name."_".$_ => $searchParams{ $_ } } keys %searchParams )
+			};
+		}
 	} else {
+		$self->{__params} = { 
+			Type               => $formal_name,
+			$formal_name.'_id' => join( ',', map( $_->id, @objects ) )
+		} if $package_name->getColumnType( 'id' );
 		$object_count = scalar( @objects );
-		@objects = splice( @objects, $searchParams{ __offset }, $options->{ Length } );
+		@objects = splice( @objects, $searchParams{ __offset }, $searchParams{ __limit } )
+			if( $searchParams{ __limit } );
 	}
 	
 	# make form name, title, display type
@@ -420,25 +565,36 @@ sub __parseParams {
 	
 	# paging
 	my $pagingText;
-	my $currentPage = ( defined $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) + 1 : 1 );
-	my $numPages = POSIX::ceil( $object_count / $options->{ Length });
-	if( $object_count and $numPages > 1) {
-		$pagingText  = sprintf( "%u of %u ", $currentPage, $numPages);
-		$pagingText .= $q->a( {
-				-href => "#",
-				-onClick => "document.forms['$form_name'].action.value='PageBack_$formal_name'; document.forms['$form_name'].submit(); return false",
-				}, 
-				'<'
-			)." "
-			if $currentPage > 1;
-		$pagingText .= "\n".$q->a( {
-				-href => "#",
-				-onClick => "document.forms['$form_name'].action.value='PageForward_$formal_name'; document.forms['$form_name'].submit(); return false",
-				}, 
-				'>'
-			)
-			if $currentPage < $numPages;
+	if( $searchParams{ __limit } ) {
+		my $currentPage = ( defined $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) + 1 : 1 );
+		my $numPages = POSIX::ceil( $object_count / $searchParams{ __limit });
+		if( $object_count and $numPages > 1) {
+			$pagingText  = sprintf( "%u of %u ", $currentPage, $numPages);
+			$pagingText .= $q->a( {
+					-href => "#",
+					-onClick => "document.forms['$form_name'].action.value='PageBack_$formal_name'; document.forms['$form_name'].submit(); return false",
+					}, 
+					'<'
+				)." "
+				if $currentPage > 1;
+			$pagingText .= "\n".$q->a( {
+					-href => "#",
+					-onClick => "document.forms['$form_name'].action.value='PageForward_$formal_name'; document.forms['$form_name'].submit(); return false",
+					}, 
+					'>'
+				)
+				if $currentPage < $numPages;
+		}
 	}
+	
+	$self->{mode}         = $mode;
+	$self->{pagingText}   = $pagingText;
+	$self->{form_name}    = $form_name;
+	$self->{title}        = $title;
+	$self->{display_type} = $display_type;
+	$self->{common_name}  = $common_name;
+	$self->{formal_name}  = $formal_name;
+	$self->{ST}           = $ST;
 	
 	return ( \@objects, $object_count, $options, 
 	         $pagingText, $form_name, $title, $display_type,
