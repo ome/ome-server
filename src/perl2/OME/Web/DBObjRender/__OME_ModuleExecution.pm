@@ -65,7 +65,7 @@ sub _renderData {
 	# thumbnail url
 	if( exists $field_requests->{ '/name' } ) {
 		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
-			my $request_string = $request->{ 'request' };
+			my $request_string = $request->{ 'request_string' };
 			if( $obj->module() ) {
 				$record{ $request_string } = $self->_trim( $obj->module()->name(),  $request );
 			} else {

@@ -68,7 +68,7 @@ sub _renderData {
 	my %record;
 	if( exists $field_requests->{ 'path_url' } ) {
 		foreach my $request ( @{ $field_requests->{ 'path_url' } } ) {
-			my $request_string = $request->{ 'request' };
+			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
 		}
 	}

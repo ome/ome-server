@@ -76,14 +76,14 @@ sub _renderData {
 	# thumbnail url
 	if( exists $field_requests->{ 'thumb_url' } ) {
 		foreach my $request ( @{ $field_requests->{ 'thumb_url' } } ) {
-			my $request_string = $request->{ 'request' };
+			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = OME::Tasks::ImageManager->getThumbURL( $obj );
 		}
 	}
 	# original file
 	if( exists $field_requests->{ 'original_file' } ) {
 		foreach my $request ( @{ $field_requests->{ 'original_file' } } ) {
-			my $request_string = $request->{ 'request' };
+			my $request_string = $request->{ 'request_string' };
 			# Find the original file (this code should really live in ImageManager)
 			my $import_mex = $factory->findObject( "OME::ModuleExecution", 
 				'module.name' => 'Image import', 
