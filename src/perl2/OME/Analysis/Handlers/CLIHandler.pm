@@ -611,7 +611,10 @@ sub _execute {
 					foreach my $outputTo ($output->getElementsByTagName( "OutputTo" ) ) {
 						# This use of eval is not a security hole. ExecutionInstructions has been validated against XML schema.
 						# XML schema dictates AccessBy attribute must be an integer.
+						# ...but I'm paranoid, so I'm going to check anyway
 						my $accessBy               = $output->getAttribute( "AccessBy" );
+						die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->{_program}->name()." are corrupted. Alert system admin!" 
+							if( $accessBy =~ m/\D/ );
 						my $formalOutputColumnName = $outputTo->getAttribute( "FormalOutputColumnName" );
 						my $formalOutputName       = $outputTo->getAttribute( "FormalOutputName" );
 						my $cmd                    = '$outputs{ $formalOutputName }->{$formalOutputColumnName} = $' . $accessBy . ';';
