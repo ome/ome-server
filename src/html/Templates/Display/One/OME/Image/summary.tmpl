@@ -12,9 +12,11 @@
 </TR>
 <TR>
 	<TD WIDTH="50">
-		<A TITLE="View this image" HREF="javascript: openPopUpImage(<TMPL_VAR NAME=id>);">
-			<IMG SRC="<TMPL_VAR NAME=thumb_url>">
-		</A>
+		<img src="<TMPL_VAR NAME=thumb_url>" Usemap="#Image<TMPL_VAR NAME=id>">
+		<map name="Image<TMPL_VAR NAME=id>">
+			<area shape="rect" coords="0,0,25,25" Title="Info for <TMPL_VAR NAME=name>" href="<TMPL_VAR NAME='/obj_detail_url'>">
+			<area shape="rect" coords="0,0,50,50" Title="View <TMPL_VAR NAME=name>" href="javascript: openPopUpImage(<TMPL_VAR NAME=id>);">
+		</map>
 	</TD>
 	<TD ALIGN="left">
 		<TMPL_VAR NAME=owner>
