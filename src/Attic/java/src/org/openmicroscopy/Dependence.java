@@ -22,8 +22,8 @@
 package org.openmicroscopy;
 
 /**
- * The <code>Dependence</code> interface declares constants to
- * represent the possible values for an analysis's dependence.
+ * Declares constants to represent the possible values for a module
+ * executions's dependence.
  *
  * @author Douglas Creager
  * @version 2.0
@@ -34,20 +34,31 @@ package org.openmicroscopy;
 public interface Dependence
 {
     /**
-     * The analysis generates only global attributes, so its
+     * The module execution generated only global attributes, so its
      * dependence is not important.
      */
     public static final int GLOBAL  = 0;
 
     /**
-     * The results of this analysis depend on the dataset it was
-     * executed against.
+     * The results of this module execution depend on the dataset it
+     * was executed against.
      */
     public static final int DATASET = 1;
 
     /**
-     * The results of this analysis are independent for each image in
-     * the dataset.
+     * The results of this module execution are independent for each
+     * image in the dataset.
      */
     public static final int IMAGE   = 2;
+
+    /**
+     * {@link String} labels for each of the possible
+     * <code>Dependence</code> values.  Useful for populating lists
+     * and combo boxes; ensures that the selected index will
+     * correspond to the correct <code>Dependence</code> value,
+     * assuming that the list or combo box does not rearrange the
+     * items.
+     */
+    public static final String[]  LABELS =
+    {"Global","Dataset","Image"};
 }
