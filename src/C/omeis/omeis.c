@@ -87,6 +87,9 @@ dispatch (char **param)
 	/* Co-ordinates */
 	ome_coord theC = -1, theT = -1, theZ = -1, theY = -1;
 
+    /* Dimensions */
+    ome_dim sizeX = -1, sizeY = -1;
+
 /*
 char **cgivars=param;
 	while (*cgivars) {
@@ -612,6 +615,14 @@ char **cgivars=param;
 		break;
 		
 		case M_GETTHUMB:
+            if ( (theParam = get_param (param,"Size")) ) {
+                sscanf (theParam,"%d,%d",&sizeX,&sizeY);
+                if (sizeX <= 0 || sizeY <= 0) {
+                    HTTP_DoError (method,"Thumbnail size cannot be zero or negative for PixelsID=%llu",ID);
+                    return (-1);
+                }
+            }
+	
 			strcpy (file_path,"Pixels/");
 			if (! getRepPath (ID,file_path,0)) {
 				HTTP_DoError (method,"Could not get repository path for PixelsID=%llu",ID);
@@ -629,9 +640,8 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			HTTP_ResultType ("image/jpeg");
-			while ((nIO = fread(buf,1,sizeof(buf),file)) > 0)
-				if ( fwrite(buf,nIO,1,stdout ) != 1) break;
+            DoThumb(ID,file,sizeX,sizeY);
+
 			fclose(file); 
 
 		break;

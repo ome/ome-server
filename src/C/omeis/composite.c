@@ -35,17 +35,75 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/errno.h>
 #include <string.h> 
 #include <pic.h>
 #include <filt.h>
 #include <zoom.h>
 #include "composite.h"
+#include "Pixels.h"
 #include "cgi.h"
 
 #define THUMBNAIL_SIZE 50
 
 int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param);
 
+int DoThumb (OID ID, FILE *thumbnail, ome_dim sizeX, ome_dim sizeY) {
+    size_t  nIO;
+    char    buf[4096];
+
+    ThumbnailHeader  header;
+    CompositeSpec    composite;
+
+    if (!fread(&header,sizeof(ThumbnailHeader),1,thumbnail)) {
+        HTTP_DoError ("DoThumb","Could not read thumbnail header");
+        return (-1);
+    }
+
+    if (header.signature != OMEIS_THUMB_SIGNATURE) {
+        HTTP_DoError ("DoThumb","Invalid thumbnail file");
+        return (-1);
+    }
+
+    if (sizeX > 0 && sizeY > 0) {
+        memset(&composite, 0, sizeof(CompositeSpec));
+
+        if (!(composite.thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
+            if (errno) HTTP_DoError ("DoThumb",strerror( errno ) );
+            else  HTTP_DoError ("DoThumb","Access control error - check error log for details" );
+            return (-1);
+        }
+
+        switch (header.version) {
+        case OMEIS_THUMB_SIMPLE_COMPOSITING:
+            composite.theZ = header.composite.simple.theZ;
+            composite.theT = header.composite.simple.theT;
+            composite.sizeX = sizeX;
+            composite.sizeY = sizeY;
+            composite.isRGB = header.composite.simple.isRGB;
+            memcpy(composite.RGBAGr,
+                   header.composite.simple.RGBAGr,
+                   sizeof(channelSpecType)*5);
+            strcpy (composite.format,"jpeg");
+            composite.stream = stdout;
+        }
+
+        DoCompositeZoom(&composite, 0, NULL);
+
+        return 0;
+    } else {
+        if (fseek(thumbnail,header.thumbnail_offset,SEEK_SET)) {
+            HTTP_DoError ("DoThumb","Could not seek to thumbnail data");
+            return (-1);
+        }
+
+        HTTP_ResultType ("image/jpeg");
+        while ((nIO = fread(buf,1,sizeof(buf),thumbnail)) > 0)
+            if ( fwrite(buf,nIO,1,stdout ) != 1) break;
+
+        return 0;
+    }
+}
 
 int DoComposite (PixelsRep *myPixels, int theZ, int theT, char **param) {
 char *theParam;
@@ -191,10 +249,16 @@ double xsupp = -1., ysupp = -1.;
 double xblur = -1., yblur = -1.;
 Window_box ome_win, out_win;
 Filt *xfilt, *yfilt, xf, yf;
+
+FILE *thumbnail;
+ThumbnailHeader  thumbHeader;
+
 /*
 Continuous coordinates aren't implemented
 Mapping m;
 */
+    memset(&thumbHeader, 0, sizeof(ThumbnailHeader));
+
 	param = NULL;
 
     ome_win.x0 = out_win.x0 = PIC_UNDEFINED;
@@ -211,7 +275,32 @@ Mapping m;
 	if (setThumb) {
 		strcat (out_name,"thumb");
 		strcpy (myComposite->format,"jpeg");
-		if ( !(out_pic = pic_open_dev ("jpeg", out_name, "w")) ) {
+
+        thumbHeader.signature = OMEIS_THUMB_SIGNATURE;
+        thumbHeader.version = OMEIS_THUMB_SIMPLE_COMPOSITING;
+        thumbHeader.thumbnail_offset = sizeof(ThumbnailHeader);
+        thumbHeader.composite.simple.theZ = myComposite->theZ;
+        thumbHeader.composite.simple.theT = myComposite->theT;
+        thumbHeader.composite.simple.sizeX = myComposite->sizeX;
+        thumbHeader.composite.simple.sizeY = myComposite->sizeY;
+        thumbHeader.composite.simple.isRGB = myComposite->isRGB;
+
+        memcpy(thumbHeader.composite.simple.RGBAGr,
+               myComposite->RGBAGr,
+               sizeof(channelSpecType)*5);
+
+        if (!(thumbnail = fopen(out_name,"w"))) {
+			HTTP_DoError ("DoCompositeZoom","Could not open output Pic for thumbnail (%s)",out_name);
+			return (-1);
+        }
+
+        if (!fwrite(&thumbHeader,sizeof(ThumbnailHeader),1,thumbnail)) {
+            fclose(thumbnail);
+			HTTP_DoError ("DoCompositeZoom","Could not write thumbnail header (%s)",out_name);
+			return (-1);
+        }
+
+		if ( !(out_pic = pic_open_stream ("jpeg", thumbnail, out_name, "w")) ) {
 			HTTP_DoError ("DoCompositeZoom","Could not open output Pic for thumbnail (%s)",out_name);
 			return (-1);
 		}
