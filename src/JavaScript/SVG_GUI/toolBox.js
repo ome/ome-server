@@ -31,9 +31,7 @@ toolBox.superclass = Widget.prototype;
 toolBox.VERSION = 1.0;
 
 toolBox.prototype.menuBarText = 
-'<g>' +
-'	<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>' +
-'</g>';
+'<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>';
 
 toolBox.prototype.hideControlText = 
 '<g>' +
@@ -85,9 +83,8 @@ toolBox.prototype.GUIboxHideDelay = 1;
 *		If you do not specify animations for GUIbox, it will fade in and out.
 *		If you specify animations for GUIbox they will be called in the same
 *		fashion	as hideControl's.
-*		GUIbox may have elements placed inside it. So you should use a g as
-*		the root node.
-*		The same goes with menuBar. 'Cept it WILL have elements placed in it.
+*		GUIbox may have elements placed inside it. Use a g or something similar
+*		for the root node if you plan on doing that.
 *
 *****/
 function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText) {
@@ -118,6 +115,22 @@ toolBox.prototype.init = function( x, y, width, height, menuBarText,
 
 /*****
 *
+*   realize
+*		overrides method in widget for purposes of putting label in proper position
+*
+*****/
+toolBox.prototype.realize = function(svgParentNode) {
+    this.nodes.parent = svgParentNode;
+
+    this.buildSVG();
+    this.addEventListeners();
+    if( this.nodes.label )
+    	this.nodes.menuBar.appendChild( this.nodes.label );
+};
+
+
+/*****
+*
 *   buildSVG
 *
 *****/
@@ -142,23 +155,16 @@ toolBox.prototype.buildSVG = function() {
 	this.nodes.GUIboxContainer = GUIboxContainer;
 	this.nodes.GUIboxBorder = GUIboxBorder;
 
-	box.appendChild( this.textToSVG(this.menuBarText) );
-	this.nodes.menuBar = box.lastChild;
+	// create menuBar. I'm putting stuff in it, so I'm making sure it has a g
+	// for a root node.
+	this.nodes.menuBar = svgDocument.createElementNS(svgns, 'g');
+	this.nodes.menuBar.appendChild( this.textToSVG(this.menuBarText) );
+	box.appendChild( this.nodes.menuBar );
 	var menuHeight = this.nodes.menuBar.getBBox().height;
 	
 	// create hideControl, move into position, & append to menuBar
 	this.nodes.menuBar.appendChild( this.textToSVG(this.hideControlText) );
 	this.nodes.hideControl = this.nodes.menuBar.lastChild;
-
-	// draw the label on top of everything else
-	if(this.nodes.label) {
-		this.nodes.label.getParentNode().removeChild( this.nodes.label );
-		box.appendChild(this.nodes.label);
-		labelx = this.nodes.label.getAttributeNS(null, "x");
-		labely = this.nodes.label.getAttributeNS(null, "y");
-		this.nodes.label.setAttributeNS(null, "x", labelx - this.x);
-		this.nodes.label.setAttributeNS(null, "y", labely - this.y);
-	}
 
 	// Find the animation controls.
 	var hideControlAnimations = findAnimationsInNode( this.nodes.hideControl );
@@ -212,6 +218,27 @@ toolBox.prototype.getGUIbox = function(){
 *****/
 toolBox.prototype.getMenuBar = function() {
 	return this.nodes.menuBar;
+}
+
+/****************   Set functions   **********************/
+
+/*****
+*
+*   setLabel
+*      overrides function in Widget
+*
+*****/
+toolBox.prototype.setLabel = function(x, y, content) {
+	if(!this.nodes.label) {
+		this.nodes.label = svgDocument.createElementNS( "http://www.w3.org/2000/svg", "text" );
+		this.nodes.label.appendChild( svgDocument.createTextNode(content) );
+    	if( this.nodes.menuBar )
+    		this.nodes.menuBar.appendChild( this.nodes.label );
+    }
+    else
+    	this.nodes.label.firstChild.data = content;
+	if(x!=null) this.nodes.label.setAttribute( "x", x );
+	if(y!=null) this.nodes.label.setAttribute( "y", y );
 }
 
 /****************   Visual functions   *******************/
