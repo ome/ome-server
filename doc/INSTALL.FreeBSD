@@ -4,22 +4,10 @@ FreeBSD 4.8 OME INSTALL NOTES
 __________
 Postgresql
 
-Build a new kernel from GENERIC with the following Semaphore additions:
+Build a new kernel or update the configuration from GENERIC as specified by the
+PostgreSQL documentation here:
 
-options         SYSVSHM                 #SYSV-style shared memory
-options         SHMMAXPGS=4096
-options         SHMSEG=256
-
-options         SYSVSEM                 #SYSV-style semaphores
-options         SEMMNI=256
-options         SEMMNS=512
-options         SEMMNU=256
-options         SEMMAP=256
-
-Build and install Postgres-7.2.4 from the ports tree:
-
-/usr/ports/databases/postgres72
-
+http://developer.postgresql.org/docs/postgres/kernel-resources.html
 ____
 Perl
 

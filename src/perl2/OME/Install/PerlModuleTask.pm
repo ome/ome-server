@@ -106,7 +106,11 @@ my @modules = (
     {
 	name => 'DBI',
 	repository_file => "$REPOSITORY/DBI-1.30.tar.gz",
-	valid_versions => ['eq "1.30"', 'eq "1.32"', 'eq "1.35"']
+	# XXX DBI has never been a problem. In general the problem child is DBD::Pg
+	# so in the collective interest of Sys-admin sanity I'm commenting the
+	# version requirement out. If we have problems we can re-institute it.
+	# - Chris <callan@blackcat.ca>
+	#valid_versions => ['eq "1.30"', 'eq "1.32"', 'eq "1.35"']
     },{
 	name => 'Digest::MD5',
 	repository_file => "$REPOSITORY/Digest-MD5-2.13.tar.gz"
@@ -362,7 +366,7 @@ my @modules = (
 
 	    return $version ? $version : undef;
 	},
-	valid_versions => ['eq "1.56"']
+	valid_versions => ['ge "1.56"']
     },{
 	name => 'XML::LibXSLT',
 	repository_file => "$REPOSITORY/XML-LibXSLT-1.53.tar.gz",

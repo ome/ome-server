@@ -122,7 +122,7 @@ Options:
   -a, --check-all   Run all our sanity checks
   -h, --help        This message
 
-Report bugs to <ome-devel\@mit.edu>.
+Report bugs to <ome-devel\@lists.openmicroscopy.org.uk>.
 USAGE
 
     print STDERR $usage;
