@@ -104,7 +104,7 @@ my @os_specific = ();
 };
 
 # Sun-specific stuff.
-@os_specific[$SOLARIS] = { family => "SUN", name => "UNKNOWN" };
+@os_specific[$SOLARIS] = { family => "SOLARIS", name => "UNKNOWN" };
 @os_specific[$SOLARIS] = { getMAC =>
     sub {
         my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
@@ -144,7 +144,7 @@ sub getInstance {
         if 	($^O eq "linux") 	{ $platform = $LINUX }
 	elsif 	($^O eq "darwin") 	{ $platform = $DARWIN }
 	elsif 	($^O eq "hpux") 	{ $platform = $HPUX }
-	elsif 	($^O eq "sunos") 	{ $platform = $SUN }
+	elsif 	($^O eq "sunos") 	{ $platform = $SOLARIS }
 	elsif 	($^O eq "freebsd") 	{ $platform = $DARWIN }
 
         @os_specific[$platform]->{name} = $^O;
