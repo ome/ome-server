@@ -75,7 +75,7 @@ function OMEimage( imageID, pixelsID, Stats, Dims, CGI_URL, CGI_optionStr,
 OMEimage.prototype.realize = function(SVGparentNode) {
 	this.SVGparentNode = SVGparentNode;
 	this.buildSVG();
-}
+};
 
 /*****
 	saveState()
@@ -108,7 +108,7 @@ OMEimage.prototype.saveState = function() {
 		calls a CGI to save current view settings to the thumbnail
 *****/
 OMEimage.prototype.saveStateThumb = function() {
-	if( ! this.use_omeis ) return;
+	if( ! this.use_omeis ) { return; }
 	// color or RGB?
 	var colorStr = '';
 	if( this.inColor == 1 ) {
@@ -147,11 +147,12 @@ OMEimage.prototype.saveStateThumb = function() {
 		returns the SVG image node if successful
 *****/
 OMEimage.prototype.updatePic = function(theZ, theT) {
-	if(this.Dims == null) return null;
+	if(this.Dims == null) { return null; }
 
 	// turn off display of currently displayed pic
-	if(this.oldZ !== undefined && this.oldT !== undefined && this.SVGimages[this.oldZ][this.oldT])
+	if(this.oldZ !== undefined && this.oldT !== undefined && this.SVGimages[this.oldZ][this.oldT]) {
 		this.SVGimages[this.oldZ][this.oldT].setAttribute("display","none");
+	}
 	
 	// update indexes
 	this.oldZ = theZ; this.oldT = theT;
@@ -161,12 +162,23 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 		this.SVGimages[theZ][theT].setAttribute("display","inline");
 	}
 	else {	// load the plane
-		return this.loadPlane(theZ, theT);
+		this.loadPlane(theZ, theT);
 	}
 	
-	return this.SVGimages[theZ][theT];
+	if( this.triggers['updatePic'] ) {
+		var triggers = this.triggers['updatePic'];
+		for( var i=0; i < triggers.length; i+=2 ) {
+			var obj    = triggers[i];
+			var method = triggers[i+1];
+			eval( "obj." + method + "()" );
+		}
+	}
 };
 
+OMEimage.prototype.registerTrigger = function(func, obj, method) {
+	if( ! this.triggers[ func ] ) { this.triggers[ func ] = new Array(); }
+	this.triggers[ func ].push( obj, method );
+};
 
 /*****
 	setCBW(CBW)
@@ -176,11 +188,12 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 OMEimage.prototype.setCBW = function(CBW) {
 	// check new CBW for change
 	var changeFlag=0; // 0 means no change
-	for(i=0;i<12;i++)
+	for(i=0;i<12;i++) {
 		if(CBW[i]!=this.CBW[i]) {
 			changeFlag=1;
 			break;
 		}
+	}
 
 	if(changeFlag) {
 		this.CBW = CBW;
@@ -205,14 +218,14 @@ OMEimage.prototype.setDisplayRGB_BW = function(val) {
 		if(!this.inColor) {
 			this.inColor = 1;
 			// check if initialization has occured before calling wipe
-			if(this.Dims != null) this.wipe();
+			if(this.initialized) { this.wipe(); }
 		}
 	}
 	else {	// mode = BW
 		if(this.inColor) {
 			this.inColor = 0;
 			// check if initialzation has occured before calling wipe
-			if(this.Dims != null) this.wipe();
+			if(this.initialized) { this.wipe(); }
 		}
 	}
 }
@@ -225,7 +238,7 @@ OMEimage.prototype.setPreload = function(preloadOn) {
 	if(preloadOn) {
 		this.preload = true;
 		// check if initialzation has occured before calling loadAllPics
-		if(this.Dims != null) this.loadAllPics();
+		if(this.initialized) { this.loadAllPics(); }
 	}
 	else {
 		this.preload = false;
@@ -245,17 +258,17 @@ OMEimage.prototype.prefetchImages = function() {
 }
 
 OMEimage.prototype.setRedOn = function(val) {
-	if(!this.initialized) return;
+	if(!this.initialized) { return; }
 	this.RGBon[0] = (val ? 1 : 0);
 	this.wipe();
 }
 OMEimage.prototype.setGreenOn = function(val) {
-	if(!this.initialized) return;
+	if(!this.initialized) { return; }
 	this.RGBon[1] = (val ? 1 : 0);
 	this.wipe();
 }
 OMEimage.prototype.setBlueOn = function(val) {
-	if(!this.initialized) return;
+	if(!this.initialized) { return; }
 	this.RGBon[2] = (val ? 1 : 0);
 	this.wipe();
 }
@@ -297,13 +310,14 @@ OMEimage.prototype.getCBS = function(theT) {
 		var lci = this.CBW[i*3]; // logical channel index
 		CBS.push( lci );
 		B = this.CBW[i*3+1];
-		if( B < this.Stats[lci][theT]["min"] )
+		if( B < this.Stats[lci][theT]["min"] ) {
 			B = this.Stats[lci][theT]["min"];
+		}
 // is this rounding necessary?
 		B = Math.round( B );
 		CBS.push( B );
 		var delta_B_W = this.CBW[i*3+2] - B;
-		if ( delta_B_W == 0 ) delta_B_W = 0.00001;
+		if ( delta_B_W == 0 ) { delta_B_W = 0.00001; }
 		S = 255 / delta_B_W;
 		S = Math.round( S*100000 ) / 100000;
 		CBS.push( S );		
@@ -362,25 +376,26 @@ OMEimage.prototype.init = function( imageID, pixelsID, Stats, Dims,  CGI_URL, CG
 	this.CBW = default_CBW;
 	this.inColor = default_isRGB;
 	this.RGBon = default_RGBon;
+	this.triggers           = new Array();
 	
 	this.use_omeis = use_omeis;
-	if( use_omeis ) {
-		this.loadPlane = this.loadPlaneOMEIS;
-	} else {
-		this.loadPlane = this.loadPlaneNoOMEIS;
-	}
 
 	// make SVGimages array. It is indexable by [z][t]
 	this.SVGimages = new Array(this.Dims['Z']);
-	for(var i=0;i<this.SVGimages.length;i++)
+	this.imageURLs = new Array(this.Dims['Z']);
+	for(var i=0;i<this.SVGimages.length;i++) {
 		this.SVGimages[i] = new Array(this.Dims['T']);
+		this.imageURLs[i] = new Array(this.Dims['T']);
+	}
 
 	for(var c in Stats) {
 		for( var t in Stats[c] ) {
-			if( this._gMin != null || this._gMin > Stats[c][t]['min'] )
+			if( this._gMin != null || this._gMin > Stats[c][t]['min'] ) {
 				this._gMin = Stats[c][t]['min'];
-			if( this._gMax != null || this._gMax < Stats[c][t]['max'] )
+			}
+			if( this._gMax != null || this._gMax < Stats[c][t]['max'] ) {
 				this._gMax = Stats[c][t]['max'];
+			}
 		}
 	}
 
@@ -401,35 +416,7 @@ OMEimage.prototype.buildSVG = function() {
 
 }
 
-OMEimage.prototype.loadPlaneNoOMEIS = function(theZ, theT, invisible) {
-	// color or RGB?
-	var colorStr;
-	var CBS = this.getCBS(theT);
-	if( this.inColor == 1 )
-		colorStr = "&RGB=" + CBS.slice(0,9).join(',');
-	else
-		colorStr = "&Gray=" + CBS.slice(9,12).join(',');
-	
-	// switch from Dims associative array to typical array so join() will work
-	var d=new Array();
-	for(i in this.Dims) d.push(this.Dims[i]);
-	
-	this.imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
-		theT + '&Dims=' + d.join(',') + colorStr + "&RGBon=" + this.RGBon +
-		'&'+this.CGI_optionStr;
-
-	this.SVGimages[theZ][theT] = Util.createElementSVG( 'image', {
-		width: this.Dims['X'],
-		height: this.Dims['Y'],
-		display: (invisible ? 'none' : 'inline')
-	});
-	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",this.imageURL);
-	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
-	return this.imageURL;
-};
-
-// this function is the transition to omeis
-OMEimage.prototype.loadPlaneOMEIS = function(theZ, theT, invisible) {
+OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
 	// color or RGB?
 	var colorStr = '';
 	if( this.inColor == 1 ) {
@@ -450,7 +437,7 @@ OMEimage.prototype.loadPlaneOMEIS = function(theZ, theT, invisible) {
 		theT + colorStr + this.CGI_optionStr + '&Format=JPEG' +
 		'&PixelsID='+this.imageServerID+'&Method=Composite';
 	//imageURL used to load high quality image. that means TIFF format
-	this.imageURL = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
+	this.imageURLs[theZ][theT] = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
 		theT + colorStr + this.CGI_optionStr + '&Format=TIFF' +
 		'&PixelsID='+this.imageServerID+'&Method=Composite';
 
@@ -461,12 +448,12 @@ OMEimage.prototype.loadPlaneOMEIS = function(theZ, theT, invisible) {
 	});
 	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href", imageURL);
 	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
-	return this.imageURL;
+	return this.imageURLs[theZ][theT];
 };
 
 
 OMEimage.prototype.getImageURL = function() {
-	return this.imageURL;
+	return this.imageURLs[ this.oldZ ][ this.oldT ];
 }
 
 /*****
@@ -500,5 +487,5 @@ OMEimage.prototype.wipe = function() {
 		
 	// redraw
 	this.updatePic(this.oldZ,this.oldT);
-	if(this.preload) this.loadAllPics();
+	if(this.preload) { this.loadAllPics(); }
 }
