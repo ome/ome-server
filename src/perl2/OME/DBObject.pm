@@ -855,7 +855,7 @@ sub getColumnType {
         return "many-to-many";
     } elsif (exists $class->__pseudo_columns()->{$alias}) {
         return "pseudo-column";
-    } Else {
+    } else {
         return undef;
     }
 }
