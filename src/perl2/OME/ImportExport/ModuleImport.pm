@@ -34,9 +34,9 @@ add any custom tables & columns (to the DB) that the module requires
 
 =head1 IMPROVEMENTS/2do
 
-Attribute Type processing, currently performed 2 places in the processDOM function, should be moved to a separate function. 
+Attribute Type processing, currently performed 2 places in the processDOM function, should be merged and moved to a separate function. 
 
-Make a example xml file that demonstrates all functionality
+Should verify that they are using every table and column they declare. 
 
 =cut
 
@@ -231,7 +231,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 				my $statement = "
 					CREATE TABLE ".$newTable->table_name()." (
 						ATTRIBUTE_ID	 OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,
-						ACTUAL_OUTPUT_ID OID REFERENCES ACTUAL_OUTPUTS DEFERRABLE INITIALLY DEFERRED,";
+						ANALYSIS_ID      OID REFERENCES ACTUAL_OUTPUTS DEFERRABLE INITIALLY DEFERRED,";
 # I believe ACTUAL_OUTPUT_ID will not stick around much longer. After analysisEngine no longer needs it, it should be removed.
 				if( $newTable->granularity() eq 'I' ) {
 					$statement .= "IMAGE_ID      OID NOT NULL REFERENCES IMAGES DEFERRABLE INITIALLY DEFERRED";
@@ -689,12 +689,21 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		else { 
 			my @attrColumns = $existingAttrType->attribute_columns();
+			my $granularity;
 			die ref ($self) . " While processing formal output (name=".$formalOutputXML->getAttribute('Name')."), found existing AttributeType with same AttributeTypeName (".$formalOutputXML->getAttribute('AttributeTypeName').") but differing number of columns. Existing AttributeType has ".scalar(@attrColumns)." columns, new AttributeType of same name has ".scalar(@$formalOutputXML->getElementsByTagName( "FormalOutputColumn") )."columns."
 				unless( scalar(@attrColumns) eq scalar(@{$formalOutputXML->getElementsByTagName( "FormalOutputColumn")}) );
 			foreach my $attrColumnXML ($formalOutputXML->getElementsByTagName( "FormalOutputColumn") ) {
 				#check ColumnID
 				die ref ($self) . " While processing formal output (name=".$formalOutputXML->getAttribute('Name')."), could not find entry for columnID '".$attrColumnXML->getAttribute('ColumnID')."'\n"
 					unless exists $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') };
+
+				#check granularity
+				my $attrColumnGranularity =
+					$column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->data_table->granularity();
+				$granularity = $attrColumnGranularity
+					if (not defined $granularity);
+				die ref ($self) . " Formal Output (name=".$formalOutputXML->getAttribute('Name').") has columns of multiple granularities. Died on column (Name=".$attrColumnXML->getAttribute('name').", ColumnID=".$attrColumnXML->getAttribute('ColumnID').") with granularity '$attrColumnGranularity'"
+					unless $granularity eq $attrColumnGranularity;
 
 				#find OME::AttributeType::Column matched by OME::DataTable::Column
 				map {
@@ -705,6 +714,8 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 				die ref ($self) . " While processing FormalOutput (name=".$formalOutputXML->getAttribute('Name')."), found existing AttributeType of same AttributeTypeName (".$formalOutputXML->getAttribute('AttributeTypeName')."). Could not find matching column in existing AttributeType for new column (Name=".$attrColumnXML->getAttribute('Name').",ColumnID=".$attrColumnXML->getAttribute('ColumnID').")."
 					unless exists $formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) };
 			}
+			die ref ($self) . " While processing formal output (name=".$formalOutputXML->getAttribute('Name')."), found an existing AttributeType with same AttributeTypeName (".$formalOutputXML->getAttribute('AttributeTypeName').") and different granularities."
+				unless( $existingAttrType->granularity() eq $granularity );
 			$newAttrType = $existingAttrType;
 		}
 		#
