@@ -58,6 +58,7 @@ our $VERSION = $OME::VERSION;
 
 use OME::Image;
 use OME::Project;
+use OME::Tasks::ImageImport;
 use base qw(OME::DBObject);
 
 __PACKAGE__->newClass();
