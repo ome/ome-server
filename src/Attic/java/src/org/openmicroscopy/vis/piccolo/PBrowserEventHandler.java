@@ -106,15 +106,12 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	public void mouseExited(PInputEvent e) {
 	
 		PNode n = e.getPickedNode();
-		System.err.println("browser canvas exited..."+n);
 		if (n instanceof PThumbnail) {
-			System.err.println("exited thumbnail");
 			PThumbnail pt = (PThumbnail) n;
 			pt.setHighlighted(false);
 			e.setHandled(true);
 		}
 		else if (n instanceof PSelectableText) {
-			System.err.println("exited selectable text");
 			((PSelectableText)n).setHighlighted(false);
 			e.setHandled(true);
 		} 
