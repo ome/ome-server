@@ -45,14 +45,14 @@ use strict;
 #*********
 
 use Getopt::Long;
-use OME::Install::FileSystemTask;
+use OME::Install::CoreSystemTask;
 
 #*********
 #********* GLOBALS AND DEFINES
 #*********
 
 # Tasks
-my @tasks = ("OME::Install::FileSystemTask");
+my @tasks = ("OME::Install::CoreSystemTask");
 #my @tasks = ("OME::Install::PreInstall",
 #             "OME::Install::FileSystemTask",
 #             "OME::Install::PerlModuleTask" );
@@ -115,7 +115,7 @@ if ($help) { usage() }
 # Run our tasks
 foreach my $task (@tasks) {
     $task .= "::execute";
-    eval $task;
+    eval ($task);
 }
 
 print "Errors: $@\n";
