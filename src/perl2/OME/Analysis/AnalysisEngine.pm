@@ -33,6 +33,7 @@ use OME::AnalysisView;
 use OME::AnalysisPath;
 use OME::AnalysisExecution;
 use OME::SessionManager;
+use OME::DBConnection;
 use Ima::DBI;
 
 use Benchmark qw(timediff timesum timestr);
