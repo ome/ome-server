@@ -1,2 +1,2 @@
-Class-Path: org.openmicroscopy.jar  xmlrpc-1.2-b1.jar
+Class-Path: org.openmicroscopy.jar  org.openmicroscopy.managers.jar xmlrpc-1.2-b1.jar
 
