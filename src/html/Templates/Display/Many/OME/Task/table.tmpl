@@ -17,18 +17,18 @@
 		<td class="ome_td">N steps</td>
 		<td class="ome_td">PID</td>
 	</tr>
-	<!-- TMPL_LOOP NAME=/obj_loop -->
+	<TMPL_LOOP NAME=/obj_loop>
 	<tr>
 		<td align="center" class="ome_td">
-			<input type="checkbox" name="selected" value="<!-- TMPL_VAR NAME=id -->" />
+			<input type="checkbox" name="selected" value="<TMPL_VAR NAME=id>" />
 		</td>
-		<td class="ome_td"><!-- TMPL_VAR NAME=name --></td>
-		<td class="ome_td"><!-- TMPL_VAR NAME=state --></td>
-		<td class="ome_td"><!-- TMPL_VAR NAME=message --></td>
-		<td class="ome_td"><!-- TMPL_VAR NAME=error --></td>
-		<td class="ome_td"><!-- TMPL_VAR NAME=last_step --></td>
-		<td class="ome_td"><!-- TMPL_VAR NAME=n_steps --></td>
-		<td class="ome_td"><!-- TMPL_VAR NAME=process_id --></td>
+		<td class="ome_td"><TMPL_VAR NAME=name></td>
+		<td class="ome_td"><TMPL_VAR NAME=state></td>
+		<td class="ome_td"><TMPL_VAR NAME=message></td>
+		<td class="ome_td"><TMPL_VAR NAME=error></td>
+		<td class="ome_td"><TMPL_VAR NAME=last_step></td>
+		<td class="ome_td"><TMPL_VAR NAME=n_steps></td>
+		<td class="ome_td"><TMPL_VAR NAME=process_id></td>
 	</tr>
-	<!-- /TMPL_LOOP -->
+	</TMPL_LOOP>
 </table>

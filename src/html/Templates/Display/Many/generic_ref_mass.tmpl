@@ -1,10 +1,10 @@
-<!-- TMPL_IF NAME=/obj_loop -->
-	<!-- TMPL_IF NAME=/more_info_url -->
-		<a href="<!-- TMPL_VAR NAME=/more_info_url -->">More info...</a><br>
-	<!-- /TMPL_IF -->
-	<!-- TMPL_LOOP NAME=/obj_loop -->
-		<!-- TMPL_VAR NAME=/object/render-ref -->
-	<!-- /TMPL_LOOP -->
-<!-- TMPL_ELSE -->
+<TMPL_IF NAME=/obj_loop>
+	<TMPL_IF NAME=/more_info_url>
+		<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a><br>
+	</TMPL_IF>
+	<TMPL_LOOP NAME=/obj_loop>
+		<TMPL_VAR NAME=/object/render-ref>
+	</TMPL_LOOP>
+<TMPL_ELSE>
 <b>(none)</b>
-<!-- /TMPL_IF -->
+</TMPL_IF>

@@ -1,15 +1,15 @@
 <TMPL_INCLUDE NAME="Create_header.tmpl">
-<!-- TMPL_IF NAME=/type -->
+<TMPL_IF NAME=/type>
 <table cellpadding="3" cellspacing="1" class="ome_table" width="100%">
-	<!-- TMPL_LOOP NAME=/field_loop/exclude-module_execution,target -->
+	<TMPL_LOOP NAME=/field_loop/exclude-module_execution,target>
 		<tr bgcolor="#FFFFFF"><td valign="top">
-			<!-- TMPL_VAR NAME=/name -->: <!-- TMPL_VAR NAME=/field_input -->
+			<TMPL_VAR NAME=/name>: <TMPL_VAR NAME=/field_input>
 		</td></tr>
-	<!-- /TMPL_LOOP -->
+	</TMPL_LOOP>
 </table>
 <table cellpadding="3" cellspacing="0" width="100%"><tr bgcolor="#E0E0E0">
 	<td align="right">
-		<button type="submit" id="create" value="create" name="create">Create <!-- TMPL_VAR NAME=/common_name --></button>
+		<button type="submit" id="create" value="create" name="create">Create <TMPL_VAR NAME=/common_name></button>
 	</td>
 </tr></table>
-<!-- /TMPL_IF -->
+</TMPL_IF>

@@ -1,17 +1,17 @@
-<!-- TMPL_IF NAME=_obj_loop -->
+<TMPL_IF NAME=_obj_loop>
 	<table class="ome_table">
-		<!-- TMPL_IF NAME=_more_info_url -->
+		<TMPL_IF NAME=_more_info_url>
 			<tr>
 				<td class="ome_td" align="right">
-					<a href="<!-- TMPL_VAR NAME=_more_info_url-->">More info...</a>
+					<a href="<TMPL_VAR NAME=_more_info_url>">More info...</a>
 				</td>
-		<!-- /TMPL_IF -->
-		<!-- TMPL_LOOP NAME=_obj_loop -->
+		</TMPL_IF>
+		<TMPL_LOOP NAME=_obj_loop>
 			<tr>
-				<td class="ome_td"><!-- TMPL_VAR NAME=!summary --></td>
+				<td class="ome_td"><TMPL_VAR NAME=!summary></td>
 			</tr>
-		<!-- /TMPL_LOOP -->
+		</TMPL_LOOP>
 	</table>
-<!-- TMPL_ELSE -->
+<TMPL_ELSE>
 <b>(none)</b>
-<!-- /TMPL_IF -->
+</TMPL_IF>

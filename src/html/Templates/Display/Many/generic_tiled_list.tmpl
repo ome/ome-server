@@ -1,18 +1,18 @@
-<!-- TMPL_IF NAME=/tile_loop/width-3 -->
-	<!-- TMPL_VAR NAME=/pager_text -->
-	<!-- TMPL_IF NAME=/more_info_url -->
-		<!-- TMPL_IF NAME=/pager_text -->|<!-- /TMPL_IF -->
-		<a href="<!-- TMPL_VAR NAME=/more_info_url -->">More info...</a>
-	<!-- /TMPL_IF -->
+<TMPL_IF NAME=/tile_loop/width-3>
+	<TMPL_VAR NAME=/pager_text>
+	<TMPL_IF NAME=/more_info_url>
+		<TMPL_IF NAME=/pager_text>|</TMPL_IF>
+		<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a>
+	</TMPL_IF>
 	<table class="ome_table">
-		<!-- TMPL_LOOP NAME=/tile_loop/width-3 -->
+		<TMPL_LOOP NAME=/tile_loop/width-3>
 			<tr>
-				<!-- TMPL_LOOP NAME=/obj_loop -->
-					<td class="ome_td" valign="top"><!-- TMPL_VAR NAME=/object/render-summary --></td>
-				<!-- /TMPL_LOOP -->
+				<TMPL_LOOP NAME=/obj_loop>
+					<td class="ome_td" valign="top"><TMPL_VAR NAME=/object/render-summary></td>
+				</TMPL_LOOP>
 			</tr>
-		<!-- /TMPL_LOOP -->
+		</TMPL_LOOP>
 	</table>
-<!-- TMPL_ELSE -->
+<TMPL_ELSE>
 <b>(none)</b>
-<!-- /TMPL_IF -->
+</TMPL_IF>

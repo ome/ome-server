@@ -1,18 +1,18 @@
 <table>
 	<tr>
 		<td valign=top>
-			<a title="Detailed information about this <!-- TMPL_VAR NAME=/common_name -->" href="<!-- TMPL_VAR NAME=/obj_detail_url -->" class="ome_detail">
-				<!-- TMPL_VAR NAME="/name" -->
+			<a title="Detailed information about this <TMPL_VAR NAME=/common_name>" href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail">
+				<TMPL_VAR NAME="/name">
 			</a>
 		</td>
 		<td align=right>
-			<!-- TMPL_VAR NAME=/selector -->
+			<TMPL_VAR NAME=/selector>
 		</td>
 	</tr>
-	<!-- TMPL_LOOP NAME="/datum" -->
+	<TMPL_LOOP NAME="/datum">
 	<tr>
-		<td valign=top><!-- TMPL_VAR NAME="name" --></td>
-		<td valign=top><!-- TMPL_VAR NAME="value" --></td>
+		<td valign=top><TMPL_VAR NAME="name"></td>
+		<td valign=top><TMPL_VAR NAME="value"></td>
 	</tr>
-	<!-- /TMPL_LOOP -->
+	</TMPL_LOOP>
 </table>
