@@ -107,7 +107,7 @@ extern char *mapkit_error_msg[5];
 /* sizes, signed to accomodate MAPKIT_KEYNOTFOUND */
 #define mapkit_size_t long
 /* hash values, must be unsigned (for index, decrement) */
-#define mapkit_hash_t unsigned long
+#define mapkit_hash_t long
 
 /* find the lowest number in mapkit_primes greater than n */
 extern mapkit_size_t mapkit_nextprime(const mapkit_size_t n);
@@ -119,7 +119,7 @@ extern mapkit_hash_t mapkit_strhash(const char *string);
 extern mapkit_hash_t mapkit_memhash(const void *data, const size_t len);
 
 /* integer hash function */
-static inline mapkit_hash_t mapkit_hash(mapkit_hash_t key);
+static mapkit_hash_t mapkit_hash(mapkit_hash_t key);
 
 /* Thomas Wang's integer hash function */
 #if LONG_MAX <= 0x7fffffff

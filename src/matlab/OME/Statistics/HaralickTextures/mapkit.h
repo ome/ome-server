@@ -38,11 +38,6 @@
 
 #include "mapkit_generic.h"
 
-/* MS Visual C does not recognize 'inline' */
-#if defined(_MSC_VER) && ! defined(__cplusplus) && ! defined(inline)
-#define inline __inline
-#endif
-
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -138,28 +133,28 @@ extern mapkit_size_t map_ii_shrinksize(map_ii *spm, mapkit_size_t used);
 extern mapkit_size_t map_ii_meansize(map_ii *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline int *map_ii_insertptr(map_ii *spm, int key);
+static   int *map_ii_insertptr(map_ii *spm, int key);
 
 /* pointer to the value at key or NULL */
-static inline int *map_ii_ptr(map_ii *spm, int key);
+static   int *map_ii_ptr(map_ii *spm, int key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_ii_removeptr(map_ii *spm, int *ptr);
+static   mapkit_error map_ii_removeptr(map_ii *spm, int *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_ii_set(map_ii *spm,
+static   mapkit_error map_ii_set(map_ii *spm,
   int key, int value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline int map_ii_value(map_ii *spm,
+static   int map_ii_value(map_ii *spm,
   int key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_ii_get(map_ii *spm, int key,
+static   mapkit_error map_ii_get(map_ii *spm, int key,
   int *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_ii_remove(map_ii *spm,
+static   mapkit_error map_ii_remove(map_ii *spm,
   int key);
 
 /*
@@ -214,7 +209,7 @@ extern int *map_ii_ptr_s(map_ii *spm, int key);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_ii_remove(map_ii *spm, int key)
 {
   map_ii_storage *contents;
@@ -505,28 +500,28 @@ extern mapkit_size_t map_id_shrinksize(map_id *spm, mapkit_size_t used);
 extern mapkit_size_t map_id_meansize(map_id *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline double *map_id_insertptr(map_id *spm, int key);
+static   double *map_id_insertptr(map_id *spm, int key);
 
 /* pointer to the value at key or NULL */
-static inline double *map_id_ptr(map_id *spm, int key);
+static   double *map_id_ptr(map_id *spm, int key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_id_removeptr(map_id *spm, double *ptr);
+static   mapkit_error map_id_removeptr(map_id *spm, double *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_id_set(map_id *spm,
+static   mapkit_error map_id_set(map_id *spm,
   int key, double value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline double map_id_value(map_id *spm,
+static   double map_id_value(map_id *spm,
   int key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_id_get(map_id *spm, int key,
+static   mapkit_error map_id_get(map_id *spm, int key,
   double *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_id_remove(map_id *spm,
+static   mapkit_error map_id_remove(map_id *spm,
   int key);
 
 /*
@@ -581,7 +576,7 @@ extern double *map_id_ptr_s(map_id *spm, int key);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_id_remove(map_id *spm, int key)
 {
   map_id_storage *contents;
@@ -872,28 +867,28 @@ extern mapkit_size_t map_ivp_shrinksize(map_ivp *spm, mapkit_size_t used);
 extern mapkit_size_t map_ivp_meansize(map_ivp *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline void* *map_ivp_insertptr(map_ivp *spm, int key);
+static   void* *map_ivp_insertptr(map_ivp *spm, int key);
 
 /* pointer to the value at key or NULL */
-static inline void* *map_ivp_ptr(map_ivp *spm, int key);
+static   void* *map_ivp_ptr(map_ivp *spm, int key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_ivp_removeptr(map_ivp *spm, void* *ptr);
+static   mapkit_error map_ivp_removeptr(map_ivp *spm, void* *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_ivp_set(map_ivp *spm,
+static   mapkit_error map_ivp_set(map_ivp *spm,
   int key, void* value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline void* map_ivp_value(map_ivp *spm,
+static   void* map_ivp_value(map_ivp *spm,
   int key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_ivp_get(map_ivp *spm, int key,
+static   mapkit_error map_ivp_get(map_ivp *spm, int key,
   void* *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_ivp_remove(map_ivp *spm,
+static   mapkit_error map_ivp_remove(map_ivp *spm,
   int key);
 
 /*
@@ -948,7 +943,7 @@ extern void* *map_ivp_ptr_s(map_ivp *spm, int key);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_ivp_remove(map_ivp *spm, int key)
 {
   map_ivp_storage *contents;
@@ -1240,28 +1235,28 @@ extern mapkit_size_t map_h_ii_shrinksize(map_h_ii *spm, mapkit_size_t used);
 extern mapkit_size_t map_h_ii_meansize(map_h_ii *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline int *map_h_ii_insertptr(map_h_ii *spm, int key);
+static   int *map_h_ii_insertptr(map_h_ii *spm, int key);
 
 /* pointer to the value at key or NULL */
-static inline int *map_h_ii_ptr(map_h_ii *spm, int key);
+static   int *map_h_ii_ptr(map_h_ii *spm, int key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_h_ii_removeptr(map_h_ii *spm, int *ptr);
+static   mapkit_error map_h_ii_removeptr(map_h_ii *spm, int *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_h_ii_set(map_h_ii *spm,
+static   mapkit_error map_h_ii_set(map_h_ii *spm,
   int key, int value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline int map_h_ii_value(map_h_ii *spm,
+static   int map_h_ii_value(map_h_ii *spm,
   int key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_h_ii_get(map_h_ii *spm, int key,
+static   mapkit_error map_h_ii_get(map_h_ii *spm, int key,
   int *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_h_ii_remove(map_h_ii *spm,
+static   mapkit_error map_h_ii_remove(map_h_ii *spm,
   int key);
 
 /*
@@ -1316,7 +1311,7 @@ extern int *map_h_ii_ptr_s(map_h_ii *spm, int key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_h_ii_remove(map_h_ii *spm, int key)
 {
  mapkit_hash_t hash;
@@ -1613,28 +1608,28 @@ extern mapkit_size_t map_h_id_shrinksize(map_h_id *spm, mapkit_size_t used);
 extern mapkit_size_t map_h_id_meansize(map_h_id *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline double *map_h_id_insertptr(map_h_id *spm, int key);
+static   double *map_h_id_insertptr(map_h_id *spm, int key);
 
 /* pointer to the value at key or NULL */
-static inline double *map_h_id_ptr(map_h_id *spm, int key);
+static   double *map_h_id_ptr(map_h_id *spm, int key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_h_id_removeptr(map_h_id *spm, double *ptr);
+static   mapkit_error map_h_id_removeptr(map_h_id *spm, double *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_h_id_set(map_h_id *spm,
+static   mapkit_error map_h_id_set(map_h_id *spm,
   int key, double value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline double map_h_id_value(map_h_id *spm,
+static   double map_h_id_value(map_h_id *spm,
   int key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_h_id_get(map_h_id *spm, int key,
+static   mapkit_error map_h_id_get(map_h_id *spm, int key,
   double *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_h_id_remove(map_h_id *spm,
+static   mapkit_error map_h_id_remove(map_h_id *spm,
   int key);
 
 /*
@@ -1689,7 +1684,7 @@ extern double *map_h_id_ptr_s(map_h_id *spm, int key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_h_id_remove(map_h_id *spm, int key)
 {
  mapkit_hash_t hash;
@@ -1986,28 +1981,28 @@ extern mapkit_size_t map_h_ivp_shrinksize(map_h_ivp *spm, mapkit_size_t used);
 extern mapkit_size_t map_h_ivp_meansize(map_h_ivp *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline void* *map_h_ivp_insertptr(map_h_ivp *spm, int key);
+static   void* *map_h_ivp_insertptr(map_h_ivp *spm, int key);
 
 /* pointer to the value at key or NULL */
-static inline void* *map_h_ivp_ptr(map_h_ivp *spm, int key);
+static   void* *map_h_ivp_ptr(map_h_ivp *spm, int key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_h_ivp_removeptr(map_h_ivp *spm, void* *ptr);
+static   mapkit_error map_h_ivp_removeptr(map_h_ivp *spm, void* *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_h_ivp_set(map_h_ivp *spm,
+static   mapkit_error map_h_ivp_set(map_h_ivp *spm,
   int key, void* value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline void* map_h_ivp_value(map_h_ivp *spm,
+static   void* map_h_ivp_value(map_h_ivp *spm,
   int key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_h_ivp_get(map_h_ivp *spm, int key,
+static   mapkit_error map_h_ivp_get(map_h_ivp *spm, int key,
   void* *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_h_ivp_remove(map_h_ivp *spm,
+static   mapkit_error map_h_ivp_remove(map_h_ivp *spm,
   int key);
 
 /*
@@ -2062,7 +2057,7 @@ extern void* *map_h_ivp_ptr_s(map_h_ivp *spm, int key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_h_ivp_remove(map_h_ivp *spm, int key)
 {
  mapkit_hash_t hash;
@@ -2360,28 +2355,28 @@ extern mapkit_size_t map_vpi_shrinksize(map_vpi *spm, mapkit_size_t used);
 extern mapkit_size_t map_vpi_meansize(map_vpi *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline int *map_vpi_insertptr(map_vpi *spm, void* key);
+static   int *map_vpi_insertptr(map_vpi *spm, void* key);
 
 /* pointer to the value at key or NULL */
-static inline int *map_vpi_ptr(map_vpi *spm, void* key);
+static   int *map_vpi_ptr(map_vpi *spm, void* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_vpi_removeptr(map_vpi *spm, int *ptr);
+static   mapkit_error map_vpi_removeptr(map_vpi *spm, int *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_vpi_set(map_vpi *spm,
+static   mapkit_error map_vpi_set(map_vpi *spm,
   void* key, int value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline int map_vpi_value(map_vpi *spm,
+static   int map_vpi_value(map_vpi *spm,
   void* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_vpi_get(map_vpi *spm, void* key,
+static   mapkit_error map_vpi_get(map_vpi *spm, void* key,
   int *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_vpi_remove(map_vpi *spm,
+static   mapkit_error map_vpi_remove(map_vpi *spm,
   void* key);
 
 /*
@@ -2436,7 +2431,7 @@ extern int *map_vpi_ptr_s(map_vpi *spm, void* key);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_vpi_remove(map_vpi *spm, void* key)
 {
   map_vpi_storage *contents;
@@ -2727,28 +2722,28 @@ extern mapkit_size_t map_vpd_shrinksize(map_vpd *spm, mapkit_size_t used);
 extern mapkit_size_t map_vpd_meansize(map_vpd *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline double *map_vpd_insertptr(map_vpd *spm, void* key);
+static   double *map_vpd_insertptr(map_vpd *spm, void* key);
 
 /* pointer to the value at key or NULL */
-static inline double *map_vpd_ptr(map_vpd *spm, void* key);
+static   double *map_vpd_ptr(map_vpd *spm, void* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_vpd_removeptr(map_vpd *spm, double *ptr);
+static   mapkit_error map_vpd_removeptr(map_vpd *spm, double *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_vpd_set(map_vpd *spm,
+static   mapkit_error map_vpd_set(map_vpd *spm,
   void* key, double value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline double map_vpd_value(map_vpd *spm,
+static   double map_vpd_value(map_vpd *spm,
   void* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_vpd_get(map_vpd *spm, void* key,
+static   mapkit_error map_vpd_get(map_vpd *spm, void* key,
   double *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_vpd_remove(map_vpd *spm,
+static   mapkit_error map_vpd_remove(map_vpd *spm,
   void* key);
 
 /*
@@ -2803,7 +2798,7 @@ extern double *map_vpd_ptr_s(map_vpd *spm, void* key);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_vpd_remove(map_vpd *spm, void* key)
 {
   map_vpd_storage *contents;
@@ -3094,28 +3089,28 @@ extern mapkit_size_t map_vpvp_shrinksize(map_vpvp *spm, mapkit_size_t used);
 extern mapkit_size_t map_vpvp_meansize(map_vpvp *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline void* *map_vpvp_insertptr(map_vpvp *spm, void* key);
+static   void* *map_vpvp_insertptr(map_vpvp *spm, void* key);
 
 /* pointer to the value at key or NULL */
-static inline void* *map_vpvp_ptr(map_vpvp *spm, void* key);
+static   void* *map_vpvp_ptr(map_vpvp *spm, void* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_vpvp_removeptr(map_vpvp *spm, void* *ptr);
+static   mapkit_error map_vpvp_removeptr(map_vpvp *spm, void* *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_vpvp_set(map_vpvp *spm,
+static   mapkit_error map_vpvp_set(map_vpvp *spm,
   void* key, void* value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline void* map_vpvp_value(map_vpvp *spm,
+static   void* map_vpvp_value(map_vpvp *spm,
   void* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_vpvp_get(map_vpvp *spm, void* key,
+static   mapkit_error map_vpvp_get(map_vpvp *spm, void* key,
   void* *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_vpvp_remove(map_vpvp *spm,
+static   mapkit_error map_vpvp_remove(map_vpvp *spm,
   void* key);
 
 /*
@@ -3170,7 +3165,7 @@ extern void* *map_vpvp_ptr_s(map_vpvp *spm, void* key);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_vpvp_remove(map_vpvp *spm, void* key)
 {
   map_vpvp_storage *contents;
@@ -3462,28 +3457,28 @@ extern mapkit_size_t map_h_vpi_shrinksize(map_h_vpi *spm, mapkit_size_t used);
 extern mapkit_size_t map_h_vpi_meansize(map_h_vpi *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline int *map_h_vpi_insertptr(map_h_vpi *spm, void* key);
+static   int *map_h_vpi_insertptr(map_h_vpi *spm, void* key);
 
 /* pointer to the value at key or NULL */
-static inline int *map_h_vpi_ptr(map_h_vpi *spm, void* key);
+static   int *map_h_vpi_ptr(map_h_vpi *spm, void* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_h_vpi_removeptr(map_h_vpi *spm, int *ptr);
+static   mapkit_error map_h_vpi_removeptr(map_h_vpi *spm, int *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_h_vpi_set(map_h_vpi *spm,
+static   mapkit_error map_h_vpi_set(map_h_vpi *spm,
   void* key, int value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline int map_h_vpi_value(map_h_vpi *spm,
+static   int map_h_vpi_value(map_h_vpi *spm,
   void* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_h_vpi_get(map_h_vpi *spm, void* key,
+static   mapkit_error map_h_vpi_get(map_h_vpi *spm, void* key,
   int *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_h_vpi_remove(map_h_vpi *spm,
+static   mapkit_error map_h_vpi_remove(map_h_vpi *spm,
   void* key);
 
 /*
@@ -3538,7 +3533,7 @@ extern int *map_h_vpi_ptr_s(map_h_vpi *spm, void* key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_h_vpi_remove(map_h_vpi *spm, void* key)
 {
  mapkit_hash_t hash;
@@ -3835,28 +3830,28 @@ extern mapkit_size_t map_h_vpd_shrinksize(map_h_vpd *spm, mapkit_size_t used);
 extern mapkit_size_t map_h_vpd_meansize(map_h_vpd *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline double *map_h_vpd_insertptr(map_h_vpd *spm, void* key);
+static   double *map_h_vpd_insertptr(map_h_vpd *spm, void* key);
 
 /* pointer to the value at key or NULL */
-static inline double *map_h_vpd_ptr(map_h_vpd *spm, void* key);
+static   double *map_h_vpd_ptr(map_h_vpd *spm, void* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_h_vpd_removeptr(map_h_vpd *spm, double *ptr);
+static   mapkit_error map_h_vpd_removeptr(map_h_vpd *spm, double *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_h_vpd_set(map_h_vpd *spm,
+static   mapkit_error map_h_vpd_set(map_h_vpd *spm,
   void* key, double value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline double map_h_vpd_value(map_h_vpd *spm,
+static   double map_h_vpd_value(map_h_vpd *spm,
   void* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_h_vpd_get(map_h_vpd *spm, void* key,
+static   mapkit_error map_h_vpd_get(map_h_vpd *spm, void* key,
   double *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_h_vpd_remove(map_h_vpd *spm,
+static   mapkit_error map_h_vpd_remove(map_h_vpd *spm,
   void* key);
 
 /*
@@ -3911,7 +3906,7 @@ extern double *map_h_vpd_ptr_s(map_h_vpd *spm, void* key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_h_vpd_remove(map_h_vpd *spm, void* key)
 {
  mapkit_hash_t hash;
@@ -4208,28 +4203,28 @@ extern mapkit_size_t map_h_vpvp_shrinksize(map_h_vpvp *spm, mapkit_size_t used);
 extern mapkit_size_t map_h_vpvp_meansize(map_h_vpvp *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline void* *map_h_vpvp_insertptr(map_h_vpvp *spm, void* key);
+static   void* *map_h_vpvp_insertptr(map_h_vpvp *spm, void* key);
 
 /* pointer to the value at key or NULL */
-static inline void* *map_h_vpvp_ptr(map_h_vpvp *spm, void* key);
+static   void* *map_h_vpvp_ptr(map_h_vpvp *spm, void* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_h_vpvp_removeptr(map_h_vpvp *spm, void* *ptr);
+static   mapkit_error map_h_vpvp_removeptr(map_h_vpvp *spm, void* *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_h_vpvp_set(map_h_vpvp *spm,
+static   mapkit_error map_h_vpvp_set(map_h_vpvp *spm,
   void* key, void* value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline void* map_h_vpvp_value(map_h_vpvp *spm,
+static   void* map_h_vpvp_value(map_h_vpvp *spm,
   void* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_h_vpvp_get(map_h_vpvp *spm, void* key,
+static   mapkit_error map_h_vpvp_get(map_h_vpvp *spm, void* key,
   void* *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_h_vpvp_remove(map_h_vpvp *spm,
+static   mapkit_error map_h_vpvp_remove(map_h_vpvp *spm,
   void* key);
 
 /*
@@ -4284,7 +4279,7 @@ extern void* *map_h_vpvp_ptr_s(map_h_vpvp *spm, void* key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_h_vpvp_remove(map_h_vpvp *spm, void* key)
 {
  mapkit_hash_t hash;
@@ -4582,28 +4577,28 @@ extern mapkit_size_t map_stri_shrinksize(map_stri *spm, mapkit_size_t used);
 extern mapkit_size_t map_stri_meansize(map_stri *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline int *map_stri_insertptr(map_stri *spm, char* key);
+static   int *map_stri_insertptr(map_stri *spm, char* key);
 
 /* pointer to the value at key or NULL */
-static inline int *map_stri_ptr(map_stri *spm, char* key);
+static   int *map_stri_ptr(map_stri *spm, char* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_stri_removeptr(map_stri *spm, int *ptr);
+static   mapkit_error map_stri_removeptr(map_stri *spm, int *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_stri_set(map_stri *spm,
+static   mapkit_error map_stri_set(map_stri *spm,
   char* key, int value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline int map_stri_value(map_stri *spm,
+static   int map_stri_value(map_stri *spm,
   char* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_stri_get(map_stri *spm, char* key,
+static   mapkit_error map_stri_get(map_stri *spm, char* key,
   int *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_stri_remove(map_stri *spm,
+static   mapkit_error map_stri_remove(map_stri *spm,
   char* key);
 
 /*
@@ -4658,7 +4653,7 @@ extern int *map_stri_ptr_s(map_stri *spm, char* key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_stri_remove(map_stri *spm, char* key)
 {
  mapkit_hash_t hash;
@@ -4955,28 +4950,28 @@ extern mapkit_size_t map_strd_shrinksize(map_strd *spm, mapkit_size_t used);
 extern mapkit_size_t map_strd_meansize(map_strd *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline double *map_strd_insertptr(map_strd *spm, char* key);
+static   double *map_strd_insertptr(map_strd *spm, char* key);
 
 /* pointer to the value at key or NULL */
-static inline double *map_strd_ptr(map_strd *spm, char* key);
+static   double *map_strd_ptr(map_strd *spm, char* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_strd_removeptr(map_strd *spm, double *ptr);
+static   mapkit_error map_strd_removeptr(map_strd *spm, double *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_strd_set(map_strd *spm,
+static   mapkit_error map_strd_set(map_strd *spm,
   char* key, double value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline double map_strd_value(map_strd *spm,
+static   double map_strd_value(map_strd *spm,
   char* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_strd_get(map_strd *spm, char* key,
+static   mapkit_error map_strd_get(map_strd *spm, char* key,
   double *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_strd_remove(map_strd *spm,
+static   mapkit_error map_strd_remove(map_strd *spm,
   char* key);
 
 /*
@@ -5031,7 +5026,7 @@ extern double *map_strd_ptr_s(map_strd *spm, char* key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_strd_remove(map_strd *spm, char* key)
 {
  mapkit_hash_t hash;
@@ -5328,28 +5323,28 @@ extern mapkit_size_t map_strvp_shrinksize(map_strvp *spm, mapkit_size_t used);
 extern mapkit_size_t map_strvp_meansize(map_strvp *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline void* *map_strvp_insertptr(map_strvp *spm, char* key);
+static   void* *map_strvp_insertptr(map_strvp *spm, char* key);
 
 /* pointer to the value at key or NULL */
-static inline void* *map_strvp_ptr(map_strvp *spm, char* key);
+static   void* *map_strvp_ptr(map_strvp *spm, char* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_strvp_removeptr(map_strvp *spm, void* *ptr);
+static   mapkit_error map_strvp_removeptr(map_strvp *spm, void* *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_strvp_set(map_strvp *spm,
+static   mapkit_error map_strvp_set(map_strvp *spm,
   char* key, void* value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline void* map_strvp_value(map_strvp *spm,
+static   void* map_strvp_value(map_strvp *spm,
   char* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_strvp_get(map_strvp *spm, char* key,
+static   mapkit_error map_strvp_get(map_strvp *spm, char* key,
   void* *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_strvp_remove(map_strvp *spm,
+static   mapkit_error map_strvp_remove(map_strvp *spm,
   char* key);
 
 /*
@@ -5404,7 +5399,7 @@ extern void* *map_strvp_ptr_s(map_strvp *spm, char* key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_strvp_remove(map_strvp *spm, char* key)
 {
  mapkit_hash_t hash;
@@ -5701,28 +5696,28 @@ extern mapkit_size_t map_strstr_shrinksize(map_strstr *spm, mapkit_size_t used);
 extern mapkit_size_t map_strstr_meansize(map_strstr *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline char* *map_strstr_insertptr(map_strstr *spm, char* key);
+static   char* *map_strstr_insertptr(map_strstr *spm, char* key);
 
 /* pointer to the value at key or NULL */
-static inline char* *map_strstr_ptr(map_strstr *spm, char* key);
+static   char* *map_strstr_ptr(map_strstr *spm, char* key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error map_strstr_removeptr(map_strstr *spm, char* *ptr);
+static   mapkit_error map_strstr_removeptr(map_strstr *spm, char* *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error map_strstr_set(map_strstr *spm,
+static   mapkit_error map_strstr_set(map_strstr *spm,
   char* key, char* value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline char* map_strstr_value(map_strstr *spm,
+static   char* map_strstr_value(map_strstr *spm,
   char* key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error map_strstr_get(map_strstr *spm, char* key,
+static   mapkit_error map_strstr_get(map_strstr *spm, char* key,
   char* *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error map_strstr_remove(map_strstr *spm,
+static   mapkit_error map_strstr_remove(map_strstr *spm,
   char* key);
 
 /*
@@ -5777,7 +5772,7 @@ extern char* *map_strstr_ptr_s(map_strstr *spm, char* key, mapkit_hash_t hash);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error map_strstr_remove(map_strstr *spm, char* key)
 {
  mapkit_hash_t hash;
@@ -6070,28 +6065,28 @@ extern mapkit_size_t spvector_shrinksize(spvector *spm, mapkit_size_t used);
 extern mapkit_size_t spvector_meansize(spvector *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline double *spvector_insertptr(spvector *spm, int key);
+static   double *spvector_insertptr(spvector *spm, int key);
 
 /* pointer to the value at key or NULL */
-static inline double *spvector_ptr(spvector *spm, int key);
+static   double *spvector_ptr(spvector *spm, int key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error spvector_removeptr(spvector *spm, double *ptr);
+static   mapkit_error spvector_removeptr(spvector *spm, double *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error spvector_set(spvector *spm,
+static   mapkit_error spvector_set(spvector *spm,
   int key, double value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline double spvector_value(spvector *spm,
+static   double spvector_value(spvector *spm,
   int key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error spvector_get(spvector *spm, int key,
+static   mapkit_error spvector_get(spvector *spm, int key,
   double *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error spvector_remove(spvector *spm,
+static   mapkit_error spvector_remove(spvector *spm,
   int key);
 
 /*
@@ -6146,7 +6141,7 @@ extern double *spvector_ptr_s(spvector *spm, int key);
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error spvector_remove(spvector *spm, int key)
 {
   spvector_storage *contents;
@@ -6471,28 +6466,28 @@ extern mapkit_size_t _spmatrix_shrinksize(_spmatrix *spm, mapkit_size_t used);
 extern mapkit_size_t _spmatrix_meansize(_spmatrix *spm, mapkit_size_t used);
 
 /* pointer to the value at key (insert as needed) */
-static inline double *_spmatrix_insertptr(_spmatrix *spm, spmatrix_key_pair key);
+static   double *_spmatrix_insertptr(_spmatrix *spm, spmatrix_key_pair key);
 
 /* pointer to the value at key or NULL */
-static inline double *_spmatrix_ptr(_spmatrix *spm, spmatrix_key_pair key);
+static   double *_spmatrix_ptr(_spmatrix *spm, spmatrix_key_pair key);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error _spmatrix_removeptr(_spmatrix *spm, double *ptr);
+static   mapkit_error _spmatrix_removeptr(_spmatrix *spm, double *ptr);
 
 /* set the value at key (insert as needed) */
-static inline mapkit_error _spmatrix_set(_spmatrix *spm,
+static   mapkit_error _spmatrix_set(_spmatrix *spm,
   spmatrix_key_pair key, double value);
 
 /* return the value at key (key must exists if alwaysdefaultvalue is not set) */
-static inline double _spmatrix_value(_spmatrix *spm,
+static   double _spmatrix_value(_spmatrix *spm,
   spmatrix_key_pair key);
 
 /* get the value at key (return an error code) */
-static inline mapkit_error _spmatrix_get(_spmatrix *spm, spmatrix_key_pair key,
+static   mapkit_error _spmatrix_get(_spmatrix *spm, spmatrix_key_pair key,
   double *value);
 
 /* remove key (key must exists) */
-static inline mapkit_error _spmatrix_remove(_spmatrix *spm,
+static   mapkit_error _spmatrix_remove(_spmatrix *spm,
   spmatrix_key_pair key);
 
 /*
@@ -6547,7 +6542,7 @@ extern double *_spmatrix_ptr_s(_spmatrix *spm, spmatrix_key_pair key, mapkit_has
 
 /* Implementation */
 
-/* static inlined functions */
+/* static  d functions */
 mapkit_error _spmatrix_remove(_spmatrix *spm, spmatrix_key_pair key)
 {
  mapkit_hash_t hash;
@@ -6811,30 +6806,30 @@ extern mapkit_error spmatrix_adjustcapacity(spmatrix *spm);
 /* Matrix functions */
 
 /* return a pointer to the value at (key1,key2) (insert as needed) */
-static inline double *spmatrix_insertptr(spmatrix *spm,
+static   double *spmatrix_insertptr(spmatrix *spm,
   int key1, int key2);
 
 /* return a pointer to thevalue at (key1,key2) or NULL */
-static inline double *spmatrix_ptr(spmatrix *spm,
+static   double *spmatrix_ptr(spmatrix *spm,
   int key1, int key2);
 
 /* remove the key pointing to the value *ptr. No checking is done */
-static inline mapkit_error spmatrix_removeptr(spmatrix *spm, double *ptr);
+static   mapkit_error spmatrix_removeptr(spmatrix *spm, double *ptr);
 
 /* return the value at (key1,key2) */
-static inline double spmatrix_value(spmatrix *spm,
+static   double spmatrix_value(spmatrix *spm,
   int key1, int key2);
 
 /* get the value at (key1,key2), return an error code */
-static inline mapkit_error spmatrix_get(spmatrix *spm,
+static   mapkit_error spmatrix_get(spmatrix *spm,
   int key1, int key2, double *value);
 
 /* set the value at (key1,key2) */
-static inline mapkit_error spmatrix_set(spmatrix *spm,
+static   mapkit_error spmatrix_set(spmatrix *spm,
   int key1, int key2, double value);
 
 /* remove the value at (key1,key2) */
-static inline mapkit_error spmatrix_remove(spmatrix *spm,
+static   mapkit_error spmatrix_remove(spmatrix *spm,
   int key1, int key2);
 
 /*
@@ -6844,7 +6839,7 @@ static inline mapkit_error spmatrix_remove(spmatrix *spm,
  * spm->contents[index].value
  * the key, of type spmatrix_key_pair contains the key pair.
  */
-static inline mapkit_size_t spmatrix_next(spmatrix *spm, mapkit_size_t index);
+static   mapkit_size_t spmatrix_next(spmatrix *spm, mapkit_size_t index);
 
 /*
  * return the next ptr to a full slot of the map, or NULL if none
@@ -6853,7 +6848,7 @@ static inline mapkit_size_t spmatrix_next(spmatrix *spm, mapkit_size_t index);
  * pos_contents->value
  * the key, of type spmatrix_key_pair contains the key pair.
  */
-static inline spmatrix_storage *spmatrix_nextptr(spmatrix *spm, spmatrix_storage *pos_contents);
+static   spmatrix_storage *spmatrix_nextptr(spmatrix *spm, spmatrix_storage *pos_contents);
 
 /* allocate an array of spmatrix_element with all
   (key1, key2, value) triplets */
@@ -6886,7 +6881,7 @@ extern void spmatrix_printstats(spmatrix *spm);
 
 /* Implementation */
 
-/* Inlined functions */
+/*  d functions */
 
 double spmatrix_value(spmatrix *spm,
   int key1, int key2)

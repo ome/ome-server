@@ -11556,10 +11556,10 @@ void _spmatrix_printstats(_spmatrix *spm)
 /* Prototypes */
 
 /* compare the key of two spmatrix_element (for qsort) key1 then key2 */
-static inline int spmatrix_compare1(const void *e1, const void *e2);
+static int spmatrix_compare1(const void *e1, const void *e2);
 
 /* compare the key of two spmatrix_element (for qsort) key2 then key1 */
-static inline int spmatrix_compare2(const void *e1, const void *e2);
+static int spmatrix_compare2(const void *e1, const void *e2);
 
 /* Implementation */
 
