@@ -34,8 +34,7 @@ OME::LSID - Generate LSIDs for OME objects
 
 =head1 DESCRIPTION
 
-This class is used to convert objects to LSIDs and LSIDs into objects.
-
+This class is used to convert objects to LSIDs and LSIDs into objects. LSIDs are used as GUIDs at the moment, but are URNs and will be supported as such in the future. For more info on LSIDs and URNs, google it up. An explanation of them is out of scope of this manual.
 =cut
 
 use strict;
