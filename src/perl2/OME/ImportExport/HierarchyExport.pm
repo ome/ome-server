@@ -77,7 +77,7 @@ use Carp;
 use Log::Agent;
 use XML::LibXML;
 use OME::Tasks::OMEExport;
-use OME::LSID;
+use OME::Tasks::LSIDManager;
 
 =head1 METHODS
 
@@ -102,7 +102,7 @@ sub new {
 	my @fieldsILike = qw(session _doc _lsidResolver);
 	@$self{@fieldsILike} = @params{@fieldsILike};
 
-	logdie "I need a session"
+	logdie $class."->new needs a session"
 	  unless exists $self->{session} &&
 			 UNIVERSAL::isa($self->{session},'OME::Session');
 
@@ -113,7 +113,7 @@ sub new {
 	}
 	
 	if (!defined $self->{_lsidResolver}) {
-		$self->{_lsidResolver} = new OME::LSID (session => $self->{session});
+		$self->{_lsidResolver} = new OME::Tasks::LSIDManager (session => $self->{session});
 	}
 
 	$self->{_GlobalCAs} = {};
