@@ -102,7 +102,7 @@ sub fix_httpd_conf {
 	while (<FILEIN>) {
 		s/#\s*LoadModule\s+perl_module/LoadModule perl_module/;
 		s/#\s*AddModule\s+mod_perl\.c/AddModule mod_perl.c/;
-		s/Include\s+(\/.*)*\/httpd\.ome(.dev)?\.conf.*\n//;
+		s/Include\s+(\/.*)*\/httpd(2)?\.ome(\.dev)?\.conf.*\n//;
 		print FILEOUT;
 	};
 	print FILEOUT "Include $omeConf\n";
