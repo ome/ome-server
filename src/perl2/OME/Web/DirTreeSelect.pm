@@ -74,44 +74,57 @@ sub getPageBody {
 			if (not defined $radioSelect or $radioSelect eq 'addNewDataset') {
 				$reloadTitleBar = 1;
 
-				# Add control if No name, name already exists ???
-				# Added JM 13-03
+				# No name
 				my $datasetname=$cgi->param('newDataset');
-				return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetname;
-         			my @namedatasets=OME::Dataset->search(name=>$datasetname);
-	   			return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless scalar(@namedatasets)==0;
-				#
+				my $text="";
+				$text.="<b>Please enter a name for your dataset</b><br>";
+				$text.=$self->print_form($selections[0]);
+				$text .= $cgi->h4 ('Selected Files and Folders:');
+				$text .= join ("<BR>",@selections);
+				return ('HTML',$text) unless $datasetname;
+         			
+        			#name already exists
+				my @namedatasets=OME::Dataset->search(name=>$datasetname);
+				my $txt="";
+				$txt.="<b>This name already exists. Please enter a new name for your dataset</b><br>";
+				$txt.=$self->print_form($selections[0]);
+				$txt .= $cgi->h4 ('Selected Files and Folders:');
+				$txt .= join ("<BR>",@selections);
+
+	   			return ('HTML',$txt) unless scalar(@namedatasets)==0;
+				
 				$dataset = $project->newDataset($cgi->param('newDataset'), $cgi->param('description') );
 				die ref($self)."->import:  Could not create dataset '".$cgi->param('newDataset')."'\n" unless defined $dataset;
 				
 				# comments? not here 
-				$session->dataset($dataset);
+				#$session->dataset($dataset);
+
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
 				$dataset = $project->addDatasetID ($cgi->param('addDataset'));
 				die ref($self)."->import:  Could not load dataset '".$cgi->param('addDataset')."'\n" unless defined $dataset;
+				
 			}
 
 			my $errorMessage = '';
 			if ($dataset) {
-				$dataset->writeObject(); #OK
-				# FILTER 
-				# must be here
-				# At this point need a filter: control file to import into current dataset
+				$dataset->writeObject(); 
+				$session->dataset($dataset);
 
 			      $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
 				#die $errorMessage if $errorMessage;
-				# At this point Delete entry in table dataset+ map if errormessage
-		
-				$dataset->writeObject();
-				$project->writeObject();
-				$session->dataset($dataset);
-				$session->writeObject();
+						
+				#$dataset->writeObject();
+				#$project->writeObject();
+				#$session->dataset($dataset);
+				#$session->writeObject();
 			} else {
 				$errorMessage = "No Dataset to import into.\n";
 			}
 			# Import messed up. Display error message & let them try again.
-			if ($errorMessage) {  # Error message when no dataset defined
+			if ($errorMessage) { 
+				#Delete $dataset 
+				# +link.
 				$body .= $cgi->h3($errorMessage);
 				$body .= $self->print_form($selections[0]);
 				$body .= $cgi->h4 ('Selected Files and Folders:');
@@ -119,13 +132,20 @@ sub getPageBody {
 			} else {
 				# import successful. Reload titlebar & display success message.
 				# javascript to reload titlebar
+				$dataset->writeObject();
+				$project->writeObject();
+				$session->dataset($dataset);
+				$session->writeObject();
+
+				
+				# javascript to reload titlebar
+				#$body .= "<script>top.location.href = top.location.href;</script>";
+				#if defined $reloadPage;
+				$body.=format_text($session->dataset()->dataset_id());
+				$body .= "<script>top.location.href = top.location.href;</script>";
 				$body .= "<script>top.title.location.href = top.title.location.href;</script>"
 					if defined $reloadTitleBar;
-				# javascript to reload titlebar
-				$body .= "<script>top.location.href = top.location.href;</script>"
-					if defined $reloadPage;
-				
-				$body .= q`Import successful. This should display more info. But that's not implemented. What would you like to see? <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov">email</a> the developers w/ your comments.`;
+				#$body .= q`Import successful. This should display more info. But that's not implemented. What would you like to see? <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov">email</a> the developers w/ your comments.`;
 			}
 		}
 		# If we have a selection, but import button wasn't clicked, print the form:
@@ -205,10 +225,25 @@ sub print_form {
 }
 
 
+sub format_text{
+  my ($txt)=@_;
+  my $text="";
+ $text.=<<ENDJS;
+<script language="JavaScript">
+<!--
+var text=\"$txt\";
+//var OMEfile='/perl2/serve.pl?Page=OME::Web::ImportResult&DatasetID='+text;
+var OMEfile='/perl2/serve.pl?Page=OME::Web::GetInfo&DatasetID='+text+'&Bool=1';
 
+var newWindow = window.open(OMEfile,"new","toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
 
+-->
+</script>
+ENDJS
 
+return $text;
 
+}
 
 
 
