@@ -215,17 +215,18 @@ public class ControlPanel extends JFrame implements ActionListener {
 		List datasets = curProject.getDatasets();
 		Object[] a = new Object[0];
 		a = datasets.toArray(a);
+		Object dataset = a[0];
 		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
 		datasetList.setModel(model);
-		curDataset = (CDataset) a[0];
-		curDataset.loadImages(connection);
-		updateDatasetChoice(curDataset);
+		if (dataset != null)
+			updateDatasetChoice(dataset);
 	}
 	
 	public void updateDatasetChoice(Object item) {
-		
-		System.err.println("getting execution list");
 		curDataset = (CDataset) item;
+		System.err.println("loading images for data set"+curDataset.getID());
+		curDataset.loadImages(connection);
+		System.err.println("getting execution list");
 		// update the list of executions
 		connection.setDataset(curDataset);	
 	}
