@@ -762,8 +762,6 @@ $SVG .= <<ENDSVG;
 			multiToolBox.addPane( scale.buildSVG(), "Scale");
 			overlay = new Overlay();
 			multiToolBox.addPane( overlay.buildSVG(), "Overlay");
-			multiToolBox.addPane( overlay.buildSVG2(), "Overlay 2");
-			multiToolBox.takePaneSizeSnapshot()
 
 			// finish setup & make controller
 			multiToolBox.closeOnMinimize(true);
