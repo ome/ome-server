@@ -94,7 +94,8 @@ USAGE
     CORE::exit(1);
 }
 
-sub top {	
+sub top {
+	my $self = shift;
     my $session = $self->getSession();
 	my $install_date = "UNKNOWN";
 	
