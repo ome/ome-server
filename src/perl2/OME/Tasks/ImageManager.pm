@@ -38,34 +38,22 @@
 package OME::Tasks::ImageManager;
 
 use OME;
+use OME::Session;
 our $VERSION = $OME::VERSION;
 
 =head 1 NAME
 
-OME::Tasks::ImageManager - manage images used by a user
+OME::Tasks::ImageManager - utility methods to manage images
 
 =head 1 SYNOPSIS
 
 	use OME::Tasks::ImageManager;
-	my $imageManager=new OME::Tasks::ImageManager($session);
+	my $imageManager = OME::Tasks::ImageManager->new();
 	
 
 =head 1 DESCRIPTION
 
-The OME::Tasks::ImageManager provides a list of methods to manage images used by a user
-
-
-=head 1 OBTAINING AN IMAGEMANAGER
-
-To retrieve an OME::Tasks::ImageManager to use for managing images, the
-user must log in to OME.  This is done via the
-L<OME::SessionManager|OME::SessionManager> class.  Logging in via
-OME::SessionManager yields an L<OME::Session|OME::Session> object.
-
-	my $manager = OME::SessionManager->new();
-	my $session = $manager->createSession($username,$password);
-	my $imageManager = new OME::Tasks::ImageManager($session);
-
+OME::Tasks::ImageManager provides utility methods to manage images
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
@@ -276,6 +264,31 @@ sub load{
 	return $image;
 
 
+}
+
+
+=head2 getThumbURL
+
+usage:
+	# retrieve the URL for the thumbnail of the default pixels of a given image
+	my $thumbnailURL = $imageManager->getThumbURL($image);
+	
+	# retrieve the URL for the thumbnail of the specified pixels attribute
+	my $thumbnailURL = $imageManager->getThumbURL($pixels);
+	
+=cut
+sub getThumbURL{
+	my $self=shift;
+	my $session=$self->__Session();
+	my $param = shift;
+	my $pixels;
+	$pixels = $param->default_pixels()
+		if( $param->isa( "OME::Image" ) );
+	$pixels = $param
+		unless $pixels;
+	my $rep = $pixels->Repository();
+	return undef if($rep->IsLocal());
+	return $rep->ImageServerURL()."?Method=GetThumb&PixelsID=".$pixels->ImageServerID();
 }
 
 
@@ -564,11 +577,11 @@ sub getDisplayOptions{
 			if $cbw[ $counter*3 + 2] > $channelMax{$channelIndex};
 		}
 		%h=(
-			'theZ' => $theZ,
-			'theT' => $theT,
-			'isRGB' => $isRGB,
-			'CBW' => \@cbw,
-			'RGBon' =>\@rgbOn
+			theZ  => $theZ,
+			theT  => $theT,
+			isRGB => $isRGB,
+			CBW   => \@cbw,
+			RGBon =>\@rgbOn
 			);
 	}
 	return \%h;
