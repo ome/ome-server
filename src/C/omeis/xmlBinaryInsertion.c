@@ -157,10 +157,7 @@ int xmlInsertBinaryData(const char *filename, char bigEndian) {
 		(fatalErrorSAXFunc)BinDataFatalError, /* fatalError */
 	};
 
-	if (xmlSAXUserParseFile(&extractBinDataSAXParser, &state, filename) < 0) {
-		return -1;
-	} else
-		return 0;
+	return xmlSAXUserParseFile(&extractBinDataSAXParser, &state, filename);
 }
 
 void _print_element(const xmlChar *name, const xmlChar **attrs) {
