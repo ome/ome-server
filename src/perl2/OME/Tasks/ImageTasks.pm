@@ -25,6 +25,7 @@ use OME::Dataset;
 use OME::Image;
 use OME::ImportExport::Importer;
 use OME::ImportExport::Exporter;
+use OME::Project;
 use IO::File;
 use Carp;
 
@@ -142,6 +143,30 @@ sub importFiles {
 	}
     } else {
 	$ds = $session->Factory->newObject("OME::Dataset", $data);
+    }
+
+    # see if a project/dataset map entry (row) already exists
+    # for this project & this dataset. If not, create it.
+    my $pid = $project->id();
+    my $dsid = $ds->id();
+    #my $pdMap = OME::Project::DatasetMap->project_and_dataset($pid, $dsid);
+    my $pdMaps = OME::Project::DatasetMap->search(dataset_id => $dsid);
+    $found = 0;
+    while (my $pdMap = $pdMaps->next) {
+	if ($pdMap->project_id()->{project_id} == $pid) {
+	    $found = 1;
+	    last;
+	}
+    }
+
+    if ($found == 0) {
+	$data = {project_id => $project,
+		 dataset_id => $ds};
+	$pdMap = $session->Factory->newObject("OME::Project::DatasetMap", $data);
+	if (! $pdMap) {
+	    $status = "Failed to create Project<->Dataset map entry";
+	    return $status;
+	}
     }
 
     $importer = OME::ImportExport::Importer->new($filenames, $session);
