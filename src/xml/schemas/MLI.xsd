@@ -235,7 +235,7 @@ The contents of this element should follow CustomAttribute syntax and convention
 		</annotation>
 		<complexType>
 			<sequence>
-				<element name = "Element">
+				<element name = "Element" maxOccurs = "unbounded">
 					<annotation>
 						<documentation>Maps a location on the Vector to an output data location. Can be used in conjuction with Templates.</documentation>
 					</annotation>
@@ -265,6 +265,13 @@ In the future, can be used to stitch together data from different function outpu
 					</complexType>
 				</element>
 			</sequence>
+			<attribute name = "ID" use = "required" type = "ID">
+				<annotation>
+					<documentation>An output ID. 
+In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
+					</documentation>
+				</annotation>
+			</attribute>
 		</complexType>
 	</element>
 </schema>
