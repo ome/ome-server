@@ -284,6 +284,18 @@ sub apache_conf {
     return;
 }
 
+sub cron_conf {
+    my ($self, $cron_conf) = @_;
+
+    if($cron_conf) {
+	$self->{cron_conf} = $cron_conf;
+    } else {
+	return $self->{cron_conf} unless not exists $self->{cron_conf};
+    }
+
+    return;
+}
+
 sub matlab_conf{
     my ($self, $dir) = @_;
 
