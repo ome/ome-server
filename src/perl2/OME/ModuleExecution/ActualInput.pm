@@ -59,7 +59,7 @@ our $VERSION = $OME::VERSION;
 use OME::DBObject;
 require OME::Module;
 use base qw(OME::DBObject);
-
+use Carp;
 use fields qw(_attribute);
 
 __PACKAGE__->newClass();
@@ -94,6 +94,12 @@ __PACKAGE__->addColumn(input_module_execution => 'input_module_execution_id',
                         ForeignKey => 'module_executions',
                        });
 
+
+__PACKAGE__->addPseudoColumn('formal_output','has-one',
+			     'OME::Module::FormalOutput');
+
+
+
 =head1 METHODS (C<ActualInput>)
 
 The following methods are available to C<ActualInput> in addition to
@@ -120,7 +126,66 @@ Returns the module_execution that provides this actual input with data.
 
 Returns the formal input that this actual input provides data for.
 
+=head2 formal_output
+
+        my $formal_output = $input->formal_output();
+
+Returns the formal output of the input module (ie., the module that
+was executed to produce input_module_execution) that provided the
+input to the formal_input.
+
+Note that this procedure does not have a "setter" mode. 
 =cut
+
+
+sub  formal_output {
+    my $self = shift;
+
+
+    # first, look, at the outputs of the input module, 
+    # if there is one with a semantic type that matches the
+    # semantic_type of the formal input, that's the one we're looking
+    # for.
+
+    my $st = $self->formal_input()->semantic_type();
+    my $inputModule = $self->input_module_execution()->module();
+    my @outputs = $inputModule->outputs();
+    my $outst;
+    foreach my $output (@outputs) {
+	$outst = $output->semantic_type();
+        next unless (defined $outst);
+	return $output if ($outst->ID() == $st->ID()); # sts are the same
+    }
+
+    # if we've gotten to this point, there is no direct st output
+    # that corresponds. Try to find a semantic_type_output
+
+
+    
+    # first, look for an untyped output of input module
+    # if we don't have one, we've got a problem. complain.
+    my @semanticTypeOutputs = $self->input_module_execution()->untypedOutputs();
+    #confess "Actual input " . $self->ID() . 
+    #"has no direct  predecessors, and no possible untyped outs.\n"
+	#unless (scalar(@semanticTypeOutputs) > 0); 
+    return undef unless (scalar(@semanticTypeOutputs) > 0); 
+
+    # then, of all of those, look for an entry of the right type.
+    foreach my $semanticTypeOutput (@semanticTypeOutputs) {
+	$outst = $semanticTypeOutput->semantic_type();
+	next unless (defined $outst);
+	if ($outst->ID() == $st->ID()) {
+	    # got the right st. now, find the right output. of the module.
+	    my @outputs = $inputModule->outputs();
+	    foreach my $output (@outputs) {
+		return $output if (!(defined $output->semantic_type_id()));
+	    }
+	}
+    }
+    return undef;
+    #   confess "No discernible output that leading to actual_input " 
+	#. $self->ID .", semantic type " . $st->name() . "\n";
+}
 
 1;
 
