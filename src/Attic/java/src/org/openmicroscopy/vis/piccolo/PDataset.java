@@ -86,13 +86,11 @@ public class PDataset extends PGenericBox {
 	private void layoutImages() {
 		
 		//	draw label
-		System.err.println("laying out dataset "+dataset.getName());
+		//System.err.println("laying out dataset "+dataset.getName());
 		 nameLabel = new PText(dataset.getName());
 		 addChild(nameLabel);
-		 System.err.println("time is "+System.currentTimeMillis());
 		 int sz = dataset.getImageCount();
 
-		System.err.println("got dataset sz. time is "+System.currentTimeMillis());
 		if (sz > 20) {
 			System.err.println("too many ..images..");
 			displayDatasetSizeText(sz);
