@@ -20,7 +20,7 @@
 
 package OME::Tasks::ImageManager;
 
-our $VERSION = 2.000_000;
+our $VERSION = '1.0';
 
 =head 1 NAME
 
@@ -97,6 +97,10 @@ Remove image from datasets
 use strict;
 use OME::SetDB;
 use OME::Tasks::Thumbnails;
+use OME::DBObject;
+OME::DBObject->Caching(0);
+
+
 sub new{
 	my $class=shift;
 	my $self={};
@@ -116,10 +120,12 @@ sub delete{
 	my $session=$self->{session};
 	my ($id)=@_;
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());
+	
 	my $result=deleteInMap($session,$id,$db);
-	my $rep=deleteImage($id,$db) if defined $result;
+	#my $rep=deleteImage($id,$db) if defined $result;
 	$db->Off();
-	return $rep;
+	#return $rep;
+	return $result;
 	
 }
 
@@ -179,9 +185,20 @@ sub listImages{
 		@projects=$session->Factory()->findObjects("OME::Project",'project_id'=> $projectID);
 	}
 	foreach my $p (@projects){
-		my @datasets=$p->datasets();
+		my @datasets=();#$p->datasets();
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$p->project_id() );
+     		foreach my $d (@dMaps){
+      		 push(@datasets,$d->dataset());
+    		}
+
 		foreach my $d (@datasets){
-			push(@listImages,$d->images()); 
+			my @images=();
+     			my @iMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$d->dataset_id() );
+     			foreach my $i (@iMaps){
+      		 push(@images,$i->image());
+    			}
+
+			push(@listImages,@images); 
 	   	}
 	}
 	
@@ -217,7 +234,7 @@ sub manage{
 	my $session=$self->{session};
 	my ($result,$projects)=notMyProject($session,$ref);
 	my ($gpImages,$userImages)=usedDatasetImage($session,$result,$projects);
-	return ($gpImages,$userImages);
+   	return ($gpImages,$userImages);
 	
 }
 
@@ -302,7 +319,8 @@ sub deleteInMap{
       my @tablesDynamic=$session->Factory()->findObjects("OME::DataTable",'granularity'=>'I');
   	my @dynamic=();
   	foreach (@tablesDynamic){
-  	 push(@dynamic,lc($_->table_name()));
+		my $tablename=lc($_->table_name());
+  	 push(@dynamic,$tablename) unless $tablename="image_pixels";
   	}
   	push(@tables,@dynamic);
  	foreach (@tables){
@@ -311,6 +329,8 @@ sub deleteInMap{
      		$result=do_delete($_,$condition,$db);
      		return undef unless (defined $result);
 	}
+	# must add a delete cascade 
+	# table images + image_pixels.
 	return 1;
 }
 
@@ -319,10 +339,10 @@ sub notMyProject{
 	my @groupProjects=();
 	if (defined $ref){
 		foreach (@$ref){
-			@groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $_);
+		   push(@groupProjects,$session->Factory()->findObjects("OME::Project",'group_id'=> $_));
 		}
  	}else{
-		@groupProjects=$session->Factory()->findObjects("OME::Project");
+	     @groupProjects=$session->Factory()->findObjects("OME::Project");
 	}
 	my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $session->User()->id());
 	my $result=notUsed(\@groupProjects,\@myProjects);
@@ -374,10 +394,20 @@ sub usedDatasetImage{
 	my %userImages=();
 	if (defined $result){
 	  foreach (@$result){
-	    my @datasets=$_->datasets();
+	    my @datasets=();#$_->datasets();
+	    my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->project_id() );
+     	    foreach my $d (@dMaps){
+      	push(@datasets,$d->dataset());
+    	    }
 	    foreach my $obj (@datasets){
 		$gpDatasets{$obj->dataset_id()}=$obj unless (exists $gpDatasets{$obj->dataset_id()});
-		my @images=$obj->images();
+		my @images=();
+		my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$obj->dataset_id() );
+     	    	foreach my $d (@dMaps){
+      	   push(@images,$d->image());
+    	      }
+
+		#my @images=$obj->images();
 		foreach my $i (@images){
 		  $gpImages{$i->image_id()}=$i->name() unless (exists $gpImages{$i->image_id()});
 		}
@@ -386,18 +416,29 @@ sub usedDatasetImage{
 	}
 	
 	foreach (@$projects){
-	  my @datasets=$_->datasets();
-	  foreach my $dataset (@datasets){
-		my %datasetInfo=();
-       	my %remove=();
-		$datasetInfo{$dataset->dataset_id()}=$dataset;
-	 	if (exists $gpDatasets{$dataset->dataset_id()} || $dataset->locked()){
+     		my @datasets=();
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->project_id() );
+     		foreach my $d (@dMaps){
+      		 push(@datasets,$d->dataset());
+    		}
+ 
+	 	# my @datasets=$_->datasets();
+	 	  foreach my $dataset (@datasets){
+		    my %datasetInfo=();
+       	    my %remove=();
+		    $datasetInfo{$dataset->dataset_id()}=$dataset;
+	 	    if (exists $gpDatasets{$dataset->dataset_id()} || $dataset->locked()){
          		$remove{$dataset->dataset_id()}=undef ;
-	 	}else{
+	 	   }else{
 	   		$remove{$dataset->dataset_id()}=1 ;
-       	}
-		my @images=$dataset->images();
-		foreach my $i (@images){
+       	   }
+
+               my @list=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$dataset->dataset_id() );
+               my @images=();
+   		   foreach my $l (@list){
+		     push(@images,$l->image());
+    		   }
+		   foreach my $i (@images){
 			if (exists($userImages{$i->image_id()})){
 	  		  my $list=$userImages{$i->image_id()}->{list};
             	  my %fusion=();
@@ -413,8 +454,8 @@ sub usedDatasetImage{
 			  $userImages{$i->image_id()}->{image}=$i;
 			}
 
-		}
-	  }
+		 }
+	    }
 	}
 	return (\%gpImages,\%userImages);
 }

@@ -21,7 +21,7 @@
 package OME::Tasks::ProjectManager;
 
 
-our $VERSION = 2.000_000;
+our $VERSION = '1.0';
 
 
 =head 1 NAME
@@ -109,8 +109,8 @@ Switch project
 
 use strict;
 use OME::SetDB;
-
-
+use OME::DBObject;
+OME::DBObject->Caching(0);
 
 sub new{
 	my $class=shift;
@@ -210,6 +210,8 @@ sub create{
 		 $session->dissociateObject('dataset');
 	}
 	$session->writeObject();
+	
+
 
 	return 1;
 
@@ -229,7 +231,19 @@ sub delete{
 	my $deleteProject=$session->Factory()->loadObject("OME::Project",$id);
 	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
 	 
-	my @datasets=$deleteProject->datasets();
+	#my @datasets=$deleteProject->datasets();
+	my @datasets=();
+     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$deleteProject->project_id() );
+     	foreach my $d (@dMaps){
+      	push(@datasets,$d->dataset());
+    	}
+
+
+
+
+
+
+
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  	
 	if (scalar(@datasets)>0){
 	  $result=deleteProjectDatasetMap($deleteProject,\@datasets,$db);
@@ -262,6 +276,8 @@ sub exist{
 	my @list=$session->Factory()->findObjects("OME::Project",'name'=>$name);
 	return scalar(@list)==0?1:undef;
 }
+
+
 
 ###############
 # Parameters: 
@@ -316,7 +332,15 @@ sub switch{
 	my $project=$session->Factory()->loadObject("OME::Project",$id);
 	$session->project($project);
 	if (not defined $bool){
-	  my @datasets=$project->datasets();
+	    my @datasets=();
+     	    my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->project_id() );
+     	    foreach my $d (@dMaps){
+      		 push(@datasets,$d->dataset());
+    	    }
+
+
+
+	  #my @datasets=$project->datasets();
 	  if (scalar(@datasets)==0){
 	   $session->dissociateObject('dataset'); 		
 	  }else{
@@ -368,7 +392,14 @@ sub reorganizeSession{
         push(@new,$_) unless $_->project_id()==$deleteProject->project_id();
 	}
 	my $newproject=$new[0];
-	my @newdataset=$newproject->datasets();
+	my @newdataset=();
+     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$newproject->project_id() );
+     	foreach my $d (@dMaps){
+      	push(@newdataset,$d->dataset());
+    	}
+
+
+	#my @newdataset=$newproject->datasets();
 	$session->project($newproject);
 	if (scalar(@newdataset)==0){
 		$session->dissociateObject('dataset');	
