@@ -46,7 +46,7 @@ import org.openmicroscopy.vis.piccolo.PModule;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-
+ 
  
  public class CNode extends Node {
 	
