@@ -953,45 +953,6 @@
 		</xsl:if>
 	</xsl:template>
 
-	<!-- Convert PixelTypes to BitsPerPixel -->
-	<xsl:template name = "PixelType2BitsPerPixel">
-		<xsl:param name = "PixelType" select = "string()"/>
-		<xsl:choose>
-			<xsl:when test = "$PixelType = 'bit'">
-				<xsl:text>1</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'int8'">
-				<xsl:text>8</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'int16'">
-				<xsl:text>16</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'int32'">
-				<xsl:text>32</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'Uint8'">
-				<xsl:text>8</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'Uint16'">
-				<xsl:text>16</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'Uint32'">
-				<xsl:text>32</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'float'">
-				<xsl:text>32</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'double'">
-				<xsl:text>64</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'complex'">
-				<xsl:text>64</xsl:text>
-			</xsl:when>
-			<xsl:when test = "$PixelType = 'double-complex'">
-				<xsl:text>128</xsl:text>
-			</xsl:when>
-		</xsl:choose>
-	</xsl:template>
 	<!-- This just prints out the names of whatever nodes it gets -->
 	<xsl:template match = "*" mode = "print">
 		<xsl:value-of select = "name()"/>
