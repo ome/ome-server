@@ -18,9 +18,6 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-# 2do: Add verify_form function that checks to see if they have entered required data in appropriate format.
-# 2do: Add smart links that appear after project creation. This is elaborated on in the code below.
-
 package OME::Web::Validation;
 
 use strict;
