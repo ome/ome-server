@@ -92,6 +92,7 @@ sub restore_env {
     	'/etc/ome-install.store',
     	'/OME/conf/environment.store',
     );
+    $env_file = undef;
     foreach (@search_paths) {
 	    if (-e $_) {
 			$env_file = $_;
