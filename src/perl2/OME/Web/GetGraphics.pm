@@ -1359,6 +1359,8 @@ sub SVGgetDataJS {
 
 	# get stats from image & make them JavaScript readable
 	my @s = $image->XYZ_info;
+	die ref ($self) . "->SVGgetDataJS: No stack statistics found for image! (id=".$image->id().")"
+		if( scalar(@s) == 0 );
 	my ($stats, @JS_Stats_Waves, $JSstats);
 	foreach (@s) {
 		$stats->[$_->wavenumber()][$_->timepoint()] = 
