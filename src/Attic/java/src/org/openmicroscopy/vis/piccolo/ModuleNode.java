@@ -88,7 +88,6 @@ public class ModuleNode extends PPath {
 	
 	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(1.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,14);
-	private static final Font PARAM_FONT = new Font("Helvetica",Font.PLAIN,8);
 
 	private RemoteModule module;
 	

@@ -70,6 +70,7 @@ public abstract class ModuleParameter extends PText {
 	protected static final Color NORMAL_COLOR = Color.black;
 	protected static final Color HIGHLIGHT_COLOR = Color.magenta;
 	
+	
 	protected FormalParameter param;
 	protected ChainCanvas canvas=null;
 	
@@ -123,7 +124,8 @@ public abstract class ModuleParameter extends PText {
 	public boolean isLinkable() {
 		return linkable;
 	}
-
+	
+	
 	public SemanticType getSemanticType() {
 		return param.getSemanticType();
 	}
