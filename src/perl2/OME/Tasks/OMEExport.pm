@@ -101,8 +101,6 @@ sub buildDOM {
 	logdbg "debug", ref ($self).'->buildDOM:  Exporting Hierarchy to DOM';
 	$hierarchyExporter->buildDOM($objects,%flags);
 
-#	$hierarchyExporter->buildDOM($objects,%flags);
-
 	# Export semantic type definitions only if ExportSTDs is set
 	if ($flags{ExportSTDs}) {
 		logdbg "debug", ref ($self).'->buildDOM:  Getting a STD Exporter';
