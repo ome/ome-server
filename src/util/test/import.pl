@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use Expect;
 
-my $timeout = 1800;
+my $timeout = 3600;
 my $time_limit_reached;
 
 print "Importing images.  Command line:\n$0 ";
