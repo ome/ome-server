@@ -753,70 +753,6 @@ $SVG .= <<ENDSVG;
 //			image.setPreload(1);
 		}
 	
-	// Scale stuff
-		function updateBlackLevel(val) {
-			// has scale been initialized?
-			if(scale.image == null ) return;
-
-			// set up constants
-			var wavenum = scale.wavePopupList.getSelection();
-			var min = scale.Stats[wavenum][theT]['min'];
-			var max = scale.Stats[wavenum][theT]['max'];
-			var range = max-min;
-			var geomean = scale.Stats[wavenum][theT]['geomean'];
-			var sigma = scale.Stats[wavenum][theT]['sigma'];
-			
-			// correct val, crunch numbers
-			if(val >= scale.whiteSlider.getValue())
-				val = scale.whiteSlider.getValue() - 0.00001;
-			var cBlackLevel = Math.round(val/scale.scaleWidth * range + min);
-			val = (cBlackLevel-min)/range * scale.scaleWidth;
-
-			// update display
-			scale.blackSlider.setValue(val);
-			scale.blackLabel.firstChild.data = "Black level: " + cBlackLevel;
-			scale.blackBar.setAttribute("width", Math.round(val) );
-
-			// update backend
-			var nBlackLevel = (cBlackLevel - geomean)/sigma;
-			scale.BS[wavenum]['B'] = nBlackLevel;
-			scale.updateWBS();
-		}
-		function updateWhiteLevel(val) {
-			// has scale been initialized?
-			if(scale.image == null ) return;
-
-			// set up constants
-			var wavenum = scale.wavePopupList.getSelection();
-			var min = scale.Stats[wavenum][theT]['min'];
-			var max = scale.Stats[wavenum][theT]['max'];
-			var range = max-min;
-			var geomean = scale.Stats[wavenum][theT]['geomean'];
-			var sigma = scale.Stats[wavenum][theT]['sigma'];
-			
-			// correct val, crunch numbers
-			if(val >= scale.whiteSlider.getValue())
-				val = scale.whiteSlider.getValue() - 0.00001;
-			var cWhiteLevel = Math.round(val/scale.scaleWidth * range + min);
-			if(cWhiteLevel == geomean)
-				cWhiteLevel -= 0.00001;
-			val = (cWhiteLevel-min)/range * scale.scaleWidth;
-
-			// update display
-			scale.whiteSlider.setValue(val);
-			scale.whiteLabel.firstChild.data = "White level: " + cWhiteLevel;
-			scale.whiteBar.setAttribute("width", scale.scaleWidth - Math.round(val) );
-			scale.whiteBar.setAttribute("x", Math.round(val) );
-
-			// update backend
-			var nScale = (cWhiteLevel - geomean)/sigma;
-			scale.BS[wavenum]['S'] = nScale;
-			scale.updateWBS();
-
-		}
-		function scaleWaveChange(val) {
-			scale.updateScale();
-		}
 
 ENDSVG
 
@@ -852,6 +788,7 @@ $SVG .= <<'ENDSVG';
 			tSlider.setLabel(null, null, "time (" + theT + "/" + (T-1) +")" );
 			
 			image.updatePic(theZ,theT);
+			scale.updateScale(theT);
 		}
 		function tUp() {
 			var data = (theT< T-1 ? theT+1 : theT)
@@ -864,31 +801,26 @@ $SVG .= <<'ENDSVG';
 			updateTheT(sliderVal);
 		}
 
-		// reflect changes made to popupLists controlling wavelength to RGB channels
+		// popupLists controlling channels
 		function updateRedWavelength(item) {
-			WBS = image.getWBS();
-			WBS[0]=item;
-			image.setWBS(WBS);
+			scale.updateWBS('R', item);
 		}
 		function updateGreenWavelength(item) {
-			WBS = image.getWBS();
-			WBS[3]=item;
-			image.setWBS(WBS);
+			scale.updateWBS('G', item);
 		}
 		function updateBlueWavelength(item) {
-			WBS = image.getWBS();
-			WBS[6]=item;
-			image.setWBS(WBS);
+			scale.updateWBS('B', item);
 		}
 		function updateBWWavelength(item) {
-			WBS = image.getWBS();
-			WBS[9]=item;
-			image.setWBS(WBS);
+			scale.updateWBS('Gray', item);
 		}
+
 		function updatePane(item) {
 			var itemList = panePopupList.getItemList();
 			multiToolBox.changePane( itemList[item] );
 		}
+		
+		// buttons controlling channels
 		function turnRedOnOff(val) {
 			RGBon = image.getRGBon();
 			RGBon[0] = (val ? 1 : 0);
@@ -915,6 +847,74 @@ $SVG .= <<'ENDSVG';
 				RGBpopupListBox.setAttribute( "display", "none" );
 			}
 			image.setDisplayRGB_BW(val);
+		}
+		
+		// Scale stuff
+		function updateBlackLevel(val) {
+			// has scale been initialized?
+			if(scale.image == null ) return;
+			if(Math.round(val) == scale.blackBar.getAttribute("width")) return;
+
+			// set up constants
+			var wavenum = scale.wavePopupList.getSelection();
+			var min = scale.Stats[wavenum][theT]['min'];
+			var max = scale.Stats[wavenum][theT]['max'];
+			var range = max-min;
+			var geomean = scale.Stats[wavenum][theT]['geomean'];
+			var sigma = scale.Stats[wavenum][theT]['sigma'];
+			
+			// correct val, crunch numbers
+			if(val >= scale.whiteSlider.getValue())
+				val = scale.whiteSlider.getValue() - 0.00001;
+			var cBlackLevel = Math.round(val/scale.scaleWidth * range + min);
+			val = (cBlackLevel-min)/range * scale.scaleWidth;
+
+			// update backend
+			var nBlackLevel = (cBlackLevel - geomean)/sigma;
+			nBlackLevel = Math.round(nBlackLevel * 10) / 10;
+			scale.BS[wavenum]['B'] = nBlackLevel;
+			scale.updateWBS();
+
+			// update display
+			scale.blackSlider.setValue(val);
+			scale.blackLabel.firstChild.data = "geomean + SD * " + nBlackLevel;
+			scale.blackBar.setAttribute("width", Math.round(val) );
+		}
+		function updateWhiteLevel(val) {
+			// has scale been initialized?
+			if(scale.image == null ) return;
+			if(Math.round(val) == scale.whiteBar.getAttribute("x")) return;
+
+			// set up constants
+			var wavenum = scale.wavePopupList.getSelection();
+			var min = scale.Stats[wavenum][theT]['min'];
+			var max = scale.Stats[wavenum][theT]['max'];
+			var range = max-min;
+			var geomean = scale.Stats[wavenum][theT]['geomean'];
+			var sigma = scale.Stats[wavenum][theT]['sigma'];
+			
+			// correct val, crunch numbers
+			if(val <= scale.blackSlider.getValue())
+				val = scale.BlackSlider.getValue() + 0.00001;
+			var cWhiteLevel = Math.round(val/scale.scaleWidth * range + min);
+			if(cWhiteLevel == geomean)
+				cWhiteLevel -= 0.00001;
+			val = (cWhiteLevel-min)/range * scale.scaleWidth;
+
+			// update backend
+			var nScale = (cWhiteLevel - geomean)/sigma;
+			nScale = Math.round(nScale*10)/10;
+			scale.BS[wavenum]['S'] = nScale;
+			scale.updateWBS();
+
+			// update display
+			scale.whiteSlider.setValue(val);
+			scale.whiteLabel.firstChild.data = "geomean + SD * " + nScale;
+			scale.whiteBar.setAttribute("width", scale.scaleWidth - Math.round(val) );
+			scale.whiteBar.setAttribute("x", Math.round(val) );
+		}
+		function scaleWaveChange(val) {
+			scale.updateScale(theT);
 		}
 		
     ]]></script>
