@@ -83,18 +83,17 @@ sub new {
 	return $self;
 }
 
-{
-
-my $menuText = "DB Browser";
 sub getMenuText {
 	my $self = shift;
+	my $menuText = "DB Browser";
 	return $menuText unless ref($self);
+
 	my $type = $self->CGI()->param( 'Type' )
 		or die "Type not specified";
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 	return "$common_name Browser";
 }
-}
+
 #sub getMenuBuilder { return undef }  # No menu
 
 #sub getHeaderBuilder { return undef }  # No header
@@ -112,8 +111,8 @@ sub getPageBody {
 	my $self = shift;
 	return ('HTML', 
 		$self->getTable( {
-			actions     => ['Search'],
-			width => '100%',
+			actions       => ['Search'],
+			width         => '100%',
 		})
 	);
 }
@@ -133,7 +132,11 @@ sub getPageBody {
 
 recognized %options are:
 	noSearch         => 1|0                          # 1 disables searches
-	Length           => $num_items_per_page
+	select_column    => 1|0                          # 1 inserts a select column. 
+	                                                 # name will be 'Selected_'.$formal_name
+	select_name      => $select_column_name          # overrides default name. if specified
+	                                                 # select_column is set to 1.
+	Length           => $num_items_per_table
 	embedded_in_form => $form_name
 	title            => 'table_title'
 	width            => 'table_width'
@@ -159,49 +162,67 @@ sub getTable {
 	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
 	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames );
 	my @records    = OME::Web::DBObjRender->render( $objects, 'html', \@fieldNames );
-	
+
 	# table data
 	my @table_data;
 	foreach my $record ( @records ) {
-		push( @table_data, 
-			$q->td( { class => 'ome_td' }, 
-				[ map( $record->{$_}, @fieldNames ) ] 
+		my $table_cells;
+		$table_cells = 
+			$q->td( { -class => 'ome_td', -align => 'center'},
+				$q->checkbox( {
+					-name    => $options->{ select_name } or 'Selected_'.$formal_name, 
+					-value   => $record->{_id}, 
+					-checked => ''} )
 			)
+			if( $options->{ select_column } );
+		$table_cells .= 
+			$q->td( { -class => 'ome_td' }, 
+				[ map( $record->{$_}, @fieldNames ) ] 
+			);
+		push( @table_data, $table_cells );
+	}
+
+	# allow searches ?
+	my ( $allowSearch, $searchFieldRow );
+	if( defined $options->{ actions } and 
+		scalar( grep( m/^Search$/o, @{ $options->{ actions } }) ) > 0 ) {
+		$allowSearch = 1;
+		$searchFieldRow = $q->td( { -class => 'ome_td' }, '' )
+			if( $options->{ select_column } );
+		$searchFieldRow .= $q->td( { -class => 'ome_td' },
+			[ map( $searches{ $_ }, @fieldNames ) ]
 		);
 	}
-	
-	# allow searches ?
-	my $allowSearch;
-	$allowSearch = 1
-		if( defined $options->{ actions } and 
-		    scalar( grep( m/^Search$/o, @{ $options->{ actions } }) ) > 0
-		);
-
 	# allow paging ?
 	my $allowPaging = ( $pagingText ? 1 : 0 );
 	
 	# column headers
 	my @columnHeaders;
+	# do not enable column sorting
 	if( $options->{ embedded_in_form } ) {
 		@columnHeaders = map( $labels{ $_ }, @fieldNames );
+		unshift( @columnHeaders, 'Select' )
+			if( $options->{ select_column } );
+	# enable column sorting. make the column that records are currently sorted on inactive.
 	} else {
-		my $skipColumn;
+		my $inactiveColumn;
 		if( $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
-			($skipColumn = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
+			($inactiveColumn = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
 		} else {
-			$skipColumn = 'id';
+			$inactiveColumn = 'id';
 		}
-		@columnHeaders = map( ($_ ne $skipColumn ? 
-			$q->a( {
-				-href => "#",
-				-onClick => "document.forms['$form_name'].action.value='OrderBy_$formal_name".$_."'; document.forms['$form_name'].submit(); return false",
-				},
+		@columnHeaders = map( ($_ ne $inactiveColumn ? 
+			$q->a( 
+				{ -href => "#", -onClick => "document.forms['$form_name'].action.value='OrderBy_$formal_name".$_."'; document.forms['$form_name'].submit(); return false", },
 				$labels{ $_ }
 			) : 
 			$labels{ $_ } )
 		, @fieldNames );
+		unshift( @columnHeaders, 'Select' )
+			if( $options->{ select_column } );
 	}
-		
+	
+	# Build the table
 	$html = $q->startform( { -name => $form_name })
 		unless $options->{ embedded_in_form };
 	$html .=
@@ -210,7 +231,7 @@ sub getTable {
 			$q->caption( $title ),
 			$q->Tr( [
 				# table descriptor
-				$q->td( { -class => 'ome_td', -colspan => scalar( @fieldNames ), -align => 'right' }, 
+				$q->td( { -class => 'ome_td', -colspan => scalar( @columnHeaders ), -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
 						$display_type, 
 						( $allowPaging ? $pagingText : ()), 
@@ -220,12 +241,7 @@ sub getTable {
 				# Column headers
 				$q->td( { -class => 'ome_td' }, \@columnHeaders ),
 				# Search fields
-				( $allowSearch ? 
-					$q->td( { -class => 'ome_td' },
-						[ map( $searches{ $_ }, @fieldNames ) ]
-					) :
-					()
-				),
+				( $allowSearch ? $searchFieldRow : () ),
 				# Table data
 				@table_data,
 			]
@@ -256,6 +272,14 @@ sub getTable {
 
 	# or use a list of objects to make a list
 	my $list      = $tableMaker->getList( \%options, $type, \@obj_array );
+
+produces a summary list
+
+recognized %options are:
+	Length           => $num_items_per_list
+	embedded_in_form => $form_name
+	title            => 'table_title'
+	width            => 'table_width'
 
 =cut
 
@@ -315,6 +339,9 @@ sub __parseParams {
 	my $q       = $self->CGI();
 	my $factory = $self->Session()->Factory();
 	my $mode;
+	
+	# determine parameter style: cgi parameters, search parameters pass
+	# in, or objects passed in
 	if( not defined $type ){
 		$mode = 'cgi';
 	} elsif( ref($param3) eq 'ARRAY' ){
@@ -325,6 +352,8 @@ sub __parseParams {
 	die "function called in unknown mode" 
 		unless defined $mode;
 	my (%searchParams, @objects, $object_count);
+
+	$options->{ select_column } = 1 if $options->{ select_name };
 
 	# retrieve mode specific parameters
 	if( $mode eq 'search' ) {
