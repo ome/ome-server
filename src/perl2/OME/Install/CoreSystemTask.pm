@@ -89,6 +89,7 @@ our @core_dirs = (
 		children => ["Files", "Pixels"],
 		owner => \$APACHE_USER,
 		group => \$OME_GROUP,
+		recurse => 0,
 		mode => 02700,
 	},
 	# Temporary directories
@@ -365,7 +366,10 @@ sub execute {
 				owner => ${$directory->{owner}},
 				group => ${$directory->{group}},
 			}, $directory->{path});
-		fix_permissions($mode, $directory->{path});
+		fix_permissions( {
+				mode => $mode,
+				recurse => $directory->{recurse} || 1,
+			}, $directory->{path});
     }
 
     print "\n";  # Spacing

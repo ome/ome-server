@@ -553,7 +553,7 @@ sub fix_ownership {
 # RETURNS
 #	1 on success, dies on failure.
 sub fix_permissions {
-    my ($mode, @items) = @_;
+    my ($options, @items) = @_;
 
 	# No point traversing any further unless we actually have something to do
 	return 1 if (scalar(@items) < 1);
@@ -562,10 +562,15 @@ sub fix_permissions {
 		# Just do a full chown, no harm in doing both if we only need one or
 		# not at all.
 		# XXX We're not following symlinks.
-		fix_permissions($mode, glob ("$item/*")) if (-d $item);
+		if (-d $item and $options->{'recurse'}) {
+			fix_permissions( {
+					mode => $options->{'mode'},
+					recurse => 1,
+				}, glob ("$item/*"));
+		}
 		
-		chmod ($mode, $item)
-			or croak "Unable to change permissions ($mode) of $item, $!";
+		chmod ($options->{'mode'}, $item)
+			or croak "Unable to change permissions (", $options->{'mode'}, "of $item, $!";
 	}
 
 	return 1;
