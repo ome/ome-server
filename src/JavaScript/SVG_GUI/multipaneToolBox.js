@@ -173,6 +173,8 @@ multipaneToolBox.prototype.addPanesText = function( paneTextArray ) {
 *****/
 multipaneToolBox.prototype.changePane = function(paneIndex) {
 	if(this.panes[paneIndex]) {
+		if(this.hidden)
+			this.unhide();
 		// switch panes, update pointer to displayed pane
 		if(this.currentDisplay) {
 			this.panes[ this.currentDisplay ].setAttribute("display","none");
