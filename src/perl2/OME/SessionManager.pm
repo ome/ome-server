@@ -320,7 +320,6 @@ sub getOMESession {
 
     my $session = OME::Session->new($userState);
     
-    $self->{_session} = $session;
     $userState->{__session} = $session;
 
     logdbg "debug", "getOMESession: updating userState";
@@ -331,21 +330,22 @@ sub getOMESession {
     return $session;
 }
 
+
 #
 # logout
 # ------
 
 =head2 logout
 
-	$manager->logout ();
+	$manager->logout ($session);
 
-Unregisters the session from this $manager.
+Unregisters the $session from this $manager.
 
 =cut
 
 sub logout {
     my $self = shift;
-    my $session = $self->{_session};
+    my $session = shift;
     return undef unless defined $session;
     logdbg "debug", ref($self)."->logout: logging out";
     $self->deleteApacheSession ($session->{ApacheSession});
@@ -420,8 +420,8 @@ sub getApacheSession {
 
     untie %tiedApacheSession;
     
-    logdbg "debug", "getApacheSession: username=".$apacheSession->{username};
-    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey};
+    logdbg "debug", "getApacheSession: username=".$apacheSession->{username} || "";
+    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey} || "";
     return $apacheSession;
 }
 
