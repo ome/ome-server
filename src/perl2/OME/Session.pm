@@ -78,6 +78,18 @@ sub createWithPassword {
 # Accessors
 # ---------
 
+# this is a stub. It needs to be hooked up to db
+# it should return the dataset id of this session
+sub Dataset {
+	return 1;
+}
+
+# this is a stub. It needs to be hooked up to db
+# it should return the project_id of this session
+sub Project {
+	return 1;
+}
+
 sub DBH { my $self = shift; return $self->db_Main(); }
 
 sub User {
@@ -91,6 +103,28 @@ sub User {
     
     return $value;
 }
+
+# take this out. it's contents should be moved to OME::Session in the style of OME::Image
+package OME::Session::OME_Sessions;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    session_key => 'key',
+    experimenter_id     => 'experimenter'
+    });
+
+__PACKAGE__->table('ome_sessions');
+__PACKAGE__->columns(Primary => qw(session_id));
+__PACKAGE__->columns(Essential => qw(session_key experimenter_id host project_id
+				     dataset_id image_view feature_view analysis display_settings 
+				     last_access started));
+
+
 
 
 1;
