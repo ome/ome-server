@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.browser.images.PaintMethods
+ * org.openmicroscopy.browser.UIConstants
  *
  *------------------------------------------------------------------------------
  *
@@ -36,54 +36,38 @@
  *
  *------------------------------------------------------------------------------
  */
-package org.openmicroscopy.browser.images;
+package org.openmicroscopy.browser;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.Color;
+import java.awt.Font;
 
 /**
+ * Specifies UI constants for the browser.
+ * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
  * @version 2.2
  * @since 2.2
  */
-public class PaintMethods
+public interface UIConstants
 {
-  private Map methodMap;
-  private static PaintMethods methods;
+  /**
+   * The default background color for the entire browser.
+   */
+  public static Color BUI_BACKGROUND_COLOR = new Color(224,224,224);
   
-  private PaintMethods()
-  {
-    methodMap = new HashMap();
-  }
+  /**
+   * The default background color for each group/region.
+   */
+  public static Color BUI_GROUPAREA_COLOR = new Color(224,224,224);
   
-  public static PaintMethods getInstance()
-  {
-    if(methods == null)
-    {
-      methods = new PaintMethods();
-    }
-    return methods;
-  }
+  /**
+   * The default foreground/text color for each group/region.
+   */
+  public static Color BUI_GROUPTEXT_COLOR = new Color(51,51,51);
   
-  public void put(String key, PaintMethod method)
-  {
-    if(key == null || method == null)
-    {
-      return;
-    }
-    methodMap.put(key,method);
-  }
-  
-  public PaintMethod get(String key)
-  {
-    return (PaintMethod)methodMap.get(key);
-  }
-  
-  public PaintMethod remove(String key)
-  {
-    PaintMethod method = get(key);
-    methodMap.remove(key);
-    return method;
-  }
+  /**
+   * The default text font for the group/region to display the group name.
+   */
+  public static Font BUI_GROUPTEXT_FONT = new Font(null,Font.BOLD,14);
 }

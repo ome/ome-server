@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.browser.images.PaintMethods
+ * org.openmicroscopy.browser.layout.GroupModel
  *
  *------------------------------------------------------------------------------
  *
@@ -36,54 +36,95 @@
  *
  *------------------------------------------------------------------------------
  */
-package org.openmicroscopy.browser.images;
+package org.openmicroscopy.browser.layout;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import org.openmicroscopy.browser.images.Thumbnail;
 
 /**
+ * Specifies a region that is a subspace of the canvas, and contains a
+ * certain number of thumbnails that correspond to a particular category or
+ * criteria.
+ * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
  * @version 2.2
  * @since 2.2
  */
-public class PaintMethods
+public class GroupModel
 {
-  private Map methodMap;
-  private static PaintMethods methods;
+  private Set thumbnails;
+  private String groupName;
   
-  private PaintMethods()
+  private void init()
   {
-    methodMap = new HashMap();
+    thumbnails = new HashSet();
   }
   
-  public static PaintMethods getInstance()
+  /**
+   * Creates a group model with the specified name.
+   * @param name The name of the group.
+   */
+  public GroupModel(String name)
   {
-    if(methods == null)
+    init();
+    // set default layout method
+    this.groupName = name;
+  }
+  
+  /**
+   * Adds a thumbnail to the group.
+   * 
+   * @param t The thumbnail to add.
+   */
+  public void addThumbnail(Thumbnail t)
+  {
+    if(t != null)
     {
-      methods = new PaintMethods();
+      thumbnails.add(t);
     }
-    return methods;
   }
   
-  public void put(String key, PaintMethod method)
+  /**
+   * Removes a thumbnail from the group.
+   * 
+   * @param t The thumbnail to remove.
+   */
+  public void removeThumbnail(Thumbnail t)
   {
-    if(key == null || method == null)
+    if(thumbnails.contains(t))
     {
-      return;
+      thumbnails.remove(t);
     }
-    methodMap.put(key,method);
   }
   
-  public PaintMethod get(String key)
+  /**
+   * Gets the name of the group.
+   * 
+   * @return The name of the group.
+   */
+  public String getName()
   {
-    return (PaintMethod)methodMap.get(key);
+    return groupName;
   }
   
-  public PaintMethod remove(String key)
+  /**
+   * Sets the name of the group to the specified name.
+   * 
+   * @param name The new name of the group.
+   */
+  public void setName(String name)
   {
-    PaintMethod method = get(key);
-    methodMap.remove(key);
-    return method;
+    this.groupName = name;
+  }
+  
+  /**
+   * Gets an unmodifiable set of thumbnails from this group.
+   * @return
+   */
+  public Set getThumbnails()
+  {
+    return Collections.unmodifiableSet(thumbnails);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.browser.images.PaintMethods
+ * org.openmicroscopy.browser.layout.LayoutMethod
  *
  *------------------------------------------------------------------------------
  *
@@ -36,54 +36,17 @@
  *
  *------------------------------------------------------------------------------
  */
-package org.openmicroscopy.browser.images;
-
-import java.util.HashMap;
-import java.util.Map;
+package org.openmicroscopy.browser.layout;
 
 /**
+ * Interface for a method that lays out thumbnails.
+ * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
  * @version 2.2
  * @since 2.2
  */
-public class PaintMethods
+public interface LayoutMethod
 {
-  private Map methodMap;
-  private static PaintMethods methods;
-  
-  private PaintMethods()
-  {
-    methodMap = new HashMap();
-  }
-  
-  public static PaintMethods getInstance()
-  {
-    if(methods == null)
-    {
-      methods = new PaintMethods();
-    }
-    return methods;
-  }
-  
-  public void put(String key, PaintMethod method)
-  {
-    if(key == null || method == null)
-    {
-      return;
-    }
-    methodMap.put(key,method);
-  }
-  
-  public PaintMethod get(String key)
-  {
-    return (PaintMethod)methodMap.get(key);
-  }
-  
-  public PaintMethod remove(String key)
-  {
-    PaintMethod method = get(key);
-    methodMap.remove(key);
-    return method;
-  }
+  // hmm... I forgot how this was going to work.
 }
