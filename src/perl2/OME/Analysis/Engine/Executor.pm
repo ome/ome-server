@@ -75,16 +75,14 @@ Returns the default executor.
 
 sub getDefaultExecutor {
     my $class = shift;
-    if ($ENV{OME_THREADED}) {
-        OME::Analysis::Engine::ForkedPerlExecutor->require();
-        return OME::Analysis::Engine::ForkedPerlExecutor->new();
-    } elsif ($ENV{OME_DISTRIBUTED}) {
-        OME::Analysis::Engine::SimpleWorkerExecutor->require();
-        return OME::Analysis::Engine::SimpleWorkerExecutor->new();
-    } else {
-        OME::Analysis::Engine::UnthreadedPerlExecutor->require();
-        return OME::Analysis::Engine::UnthreadedPerlExecutor->new();
-    }
+
+    my $executor = eval {
+    	OME::Session->instance()->Configuration()->executor();
+    };
+    $executor = 'OME::Analysis::Engine::UnthreadedPerlExecutor' unless $executor;
+    
+    $executor->require();
+    return ($executor->new());
 }
 
 =head1 INTERFACE METHODS
