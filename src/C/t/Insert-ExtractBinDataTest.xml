@@ -1,19 +1,19 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 <test>
 	<Pixels DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "true" PixelsID = "123.456.31.123.456"
-		SizeX = "20" SizeY = "20" SizeZ = "5" NumChannels="1" NumTimes="6">
+		SizeX = "20" SizeY = "20" SizeZ = "5" SizeC="1" SizeT="6">
 		<Bin:External href = "../../perl2/t/tinyTest-BE.raw" Compression = "bzip2"/>
 	</Pixels>
 	<Pixels DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "true" PixelsID = "123.456.31.123.456"
-		SizeX = "20" SizeY = "20" SizeZ = "5" NumChannels="1" NumTimes="6">
+		SizeX = "20" SizeY = "20" SizeZ = "5" SizeC="1" SizeT="6">
 		<Bin:External href = "../../perl2/t/tinyTest-BE.raw" Compression = "zlib"/>
 	</Pixels>
 	<Pixels DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "false" PixelsID = "123.456.31.123.456"
-		SizeX = "20" SizeY = "20" SizeZ = "5" NumChannels="1" NumTimes="6">
+		SizeX = "20" SizeY = "20" SizeZ = "5" SizeC="1" SizeT="6">
 		<Bin:External href = "../../perl2/t/tinyTest-LE.raw" Compression = "bzip2"/>
 	</Pixels>
 	<Pixels DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "false" PixelsID = "123.456.31.123.456"
-		SizeX = "20" SizeY = "20" SizeZ = "5" NumChannels="1" NumTimes="6">
+		SizeX = "20" SizeY = "20" SizeZ = "5" SizeC="1" SizeT="6">
 		<Bin:External href = "../../perl2/t/tinyTest-LE.raw" Compression = "zlib"/>
 	</Pixels>
 </test>
