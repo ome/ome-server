@@ -43,7 +43,7 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::OMEXMLImportExport;
-use OME::Web::ImageTable;
+use OME::Web::DBObjTable;
 use OME::Tasks::OMEXMLImportExport;
 use OME::Tasks::ImageManager;
 
@@ -69,7 +69,7 @@ sub getPageBody {
 	my $action = $cgi->param('action');
 	my @selected = $cgi->param('selected');
  
-	my $body = $cgi->p({class => 'ome_title', align => 'center'}, 'Export images to an XML file');
+	my $body;# = $cgi->p({class => 'ome_title', align => 'center'}, 'Export images to an XML file');
 	
 	if ($action eq 'Export'){
 		my $filename = $session->getTemporaryFilename('XMLFileExport','ome')
@@ -114,13 +114,18 @@ sub __printForm {
 	my $self = shift;
 	my $session = $self->Session();
 	my $q = $self->CGI();
-	my $t_generator = new OME::Web::ImageTable;
-  	my @images=$session->dataset()->images();
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 
-	my $html .= $t_generator->getTable( {
-			select_column => 1,
-			options_row => ['Export'],
-		}, @images);
+	my $html = $tableMaker->getTable(  
+		{
+			title         => 'Export images to an XML file',
+			actions       => ['Export'],
+			select_column   => 'selected',
+			noTxtDownload => 1
+		}, 
+		"OME::Image", 
+		{ accessor => [ 'OME::Dataset', $session->dataset()->id(), 'images' ] }
+	);
 
 	return $html;
 }
