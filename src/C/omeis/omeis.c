@@ -151,7 +151,7 @@ char **cgivars=param;
 		sscanf (theParam,"%d",&theT);
 	
 	if ( (theParam = get_param (param,"theY")) )
-		sscanf (theParam,"%d",&theZ);
+		sscanf (theParam,"%d",&theY);
 
 	if ( (theParam = get_lc_param (param,"BigEndian")) ) {
 		if (!strcmp (theParam,"0") || !strcmp (theParam,"false") ) iam_BigEndian=0;
@@ -803,6 +803,7 @@ char **cgivars=param;
 	/* ----------------------- */
 	/* COMPLEX METHOD DISPATCH */
 	if (m_val == M_SETPIXELS || m_val == M_GETPIXELS ||
+		m_val == M_SETROWS   || m_val == M_GETROWS  ||
 		m_val == M_SETPLANE  || m_val == M_GETPLANE  ||
 		m_val == M_SETSTACK  || m_val == M_GETSTACK) {
 		char *filename = NULL;
@@ -852,6 +853,30 @@ char **cgivars=param;
 				return (-1);
 			}
 			offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
+		} else if (strstr (method,"Rows")) {
+			long nRows=1;
+			if ( (theParam = get_param (param,"nRows")) )
+				sscanf (theParam,"%ld",&nRows);
+			if (theY < 0 || theZ < 0 || theC < 0 || theT < 0) {
+				freePixelsRep (thePixels);
+				HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
+				return (-1);
+			}
+			if (!CheckCoords (thePixels, 0, theY, theZ, theC, theT)){
+				freePixelsRep (thePixels);
+				HTTP_DoError (method,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
+					theY,theZ,theC,theT,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
+				return (-1);
+			}
+			if (!CheckCoords (thePixels, 0, theY+nRows-1, theZ, theC, theT)){
+				freePixelsRep (thePixels);
+				HTTP_DoError (method,"Number of rows (%d) and theY (%d) exceed maximum Y (%d).",
+					nRows,theY,head->dy-1);
+				return (-1);
+			}
+			
+			nPix = head->dx*nRows;
+			offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
 		}
 
 		if (rorw == 'w')

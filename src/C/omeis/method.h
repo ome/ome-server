@@ -49,40 +49,44 @@ get_method_by_name(char * m_name);
 #define M_SETPIXELS     5
 #define M_GETPIXELS     6
 #define M_FINISHPIXELS  7
+#define M_CONVERT       8
+
+	/* ROW METHODS */
+#define M_SETROWS       10
+#define M_GETROWS       11
+#define M_CONVERTROWS   12
 
 	/* PLANE METHODS */
-#define M_PLANE         10
-#define M_SETPLANE      11
-#define M_GETPLANE      12
-#define M_GETPLANESTATS 13
-#define M_GETSTACKSTATS 14
+#define M_PLANE         20
+#define M_SETPLANE      21
+#define M_GETPLANE      22
+#define M_GETPLANESTATS 23
+#define M_CONVERTPLANE  24
+#define M_CONVERTTIFF   25
 
 	/* STACK METHODS */
-#define M_STACK         20
-#define M_SETSTACK      21
-#define M_GETSTACK      22
+#define M_STACK         30
+#define M_SETSTACK      31
+#define M_GETSTACK      32
+#define M_GETSTACKSTATS 33
+#define M_CONVERTSTACK  34
 
 	/* ROI METHODS */
-#define M_SETROI        30
-#define M_GETROI        31
+#define M_SETROI        40
+#define M_GETROI        41
 
 	/* FILE METHODS */
-#define M_FILEINFO      40
-#define M_FILESHA1      41 
-#define M_UPLOADFILE    42
-#define M_READFILE      43
-#define M_DELETEFILE    44
+#define M_FILEINFO      50
+#define M_FILESHA1      51 
+#define M_UPLOADFILE    52
+#define M_READFILE      53
+#define M_DELETEFILE    54
 
 	/* OTHER/UTILITY METHODS */
-#define M_GETLOCALPATH  50
-#define M_CONVERT       51
-#define M_IMPORTOMEFILE 52
-#define M_CONVERTSTACK  53
-#define M_CONVERTPLANE  54
-#define M_CONVERTTIFF   55
-#define M_CONVERTROWS   56
-#define M_COMPOSITE     57
-#define M_GETTHUMB      58
-#define M_ISOMEXML      59
-#define M_EXPORTOMEFILE 60
+#define M_GETLOCALPATH  60
+#define M_IMPORTOMEFILE 61
+#define M_EXPORTOMEFILE 62
+#define M_COMPOSITE     63
+#define M_GETTHUMB      64
+#define M_ISOMEXML      65
 
