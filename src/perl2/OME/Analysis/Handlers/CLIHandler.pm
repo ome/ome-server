@@ -307,7 +307,7 @@ sub _execute {
 	my %outputs;
 	my (%tmpFileFullPathHash, %tmpFileRelativePathHash);
 	my $executionInstructions = $module->execution_instructions();
-	my $debug                 = 2;
+	my $debug                 = 0;
 	my $session               = $self->Session();
 	my $imagePix;
 	my $CLIns = 'http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd';
