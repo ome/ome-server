@@ -2196,6 +2196,7 @@ no warnings "uninitialized";
             my ($operation,$value);
 
             my $question = '?';
+			my $have_values = 1;
 
             # If the value is an object, assume that it has an id
             # method, and use that in the SQL query.
@@ -2254,11 +2255,17 @@ no warnings "uninitialized";
                 # If the column is a float, = won't work.
                 push @join_clauses, "abs($location - $question) < ?";
                 push @new_values, $EPSILON;
+			} elsif (lc($operation) eq 'is not' && lc($value) eq 'null') {
+ 				push @join_clauses, "$location $operation $value";
+ 				$have_values = 0;
+ 			} elsif (lc($operation) eq 'is' && lc($value) eq 'null') {
+ 				push @join_clauses, "$location $operation $value";
+ 				$have_values = 0;
             } else {
                 push @join_clauses, "$location $operation $question";
             }
 
-            push @values, @new_values;
+            push @values, @new_values if $have_values;
         }
     }
 
