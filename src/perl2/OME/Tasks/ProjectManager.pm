@@ -365,7 +365,8 @@ sub switch{
 	   $session->dataset($datasets[0]);
 	  }
 	}
-	$session->writeObject();
+	$session->storeObject();
+	$session->commitTransaction();
 	return 1;
 
 }
