@@ -392,15 +392,15 @@ sub createOMEPage {
 		-onLoad => $self->getOnLoadJS() || '',
 	);
 
-	# Header TD creation, shown only if !undef
-	my $header_td;
+	# Header TR, shown and generated only if !undef
+	my $header_tr;
 
 	if (my $header_builder = $self->getHeaderBuilder()) {
-		$header_td =
-			$CGI->td( {
+		$header_tr =
+			$CGI->Tr($CGI->td( {
 					colspan => '2',
 					class => 'ome_header_td',
-				}, $header_builder->getPageHeader());
+				}, $header_builder->getPageHeader()));
 	}
 
 	# Menu TD and Menu Location TD, shown only if !undef
@@ -419,15 +419,30 @@ sub createOMEPage {
 				}, $menu_builder->getPageLocationMenu());
 	}
 
-	# Body / Menu Location Table
-	my $body_table = $CGI->table({width => '100%'}, $CGI->Tr( [
-		$menu_location_td,
-		$CGI->td({valign => 'top'}, $body),
-		])
-	);
+	# Body / Menu Location Table and TD generated only if menu_location
+	my ($body_table, $body_td);
 
-	# Body TD, always shown
-	my $body_td = $CGI->td({valign => 'top'}, $body_table);
+	if ($menu_location_td) { 
+		$body_table = $CGI->table({width => '100%'},
+			$CGI->Tr( [
+				$menu_location_td,
+				$CGI->td({valign => 'top', width => '100%'}, $body),
+				])
+		);
+		
+		$body_td = $CGI->td({valign => 'top'}, $body_table);
+	} else {
+		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
+	}
+
+	# Main TR for the menu and body
+	my $main_tr;
+
+	if ($menu_td) {
+		$main_tr = $CGI->Tr($menu_td . $body_td);
+	} else {
+		$main_tr = $CGI->Tr($body_td);
+	}
 
 	# Packing table for the entire page
 	$body = $CGI->table( {
@@ -435,11 +450,8 @@ sub createOMEPage {
 			cellspacing => '0',
 			cellpadding => '3',
 		},
-		$CGI->Tr( [
-			$header_td || '',
-			($menu_td  || '') . $body_td,
-			]
-		),
+		$header_tr || '',
+		$main_tr,
 	);
 		 		 
 	my $tail = $CGI->end_html;
