@@ -317,6 +317,8 @@ sub importGroup {
 	my $t_hash = $$t_arr[0];
 	my $status = readTag ($self, $t_hash->{tag_id}, $t_hash->{tag_type},
 			    $t_hash->{value_count}, $t_hash->{value_offset});
+	die $status
+	    unless ($status eq "");
     }
 
     my $image = ($self->{super})->__newImage($file->getFilename());
@@ -892,13 +894,14 @@ sub get_long {
     my $fmt;
 
     if (ref($value) eq "") {
-	confess "Need to be passed a reference to a variable";
+	$status =  "Need to be passed a reference to a variable";
+    } else {
+	$buf = $fih->readData(4);
+	return $status
+	    unless $status eq "";
+	$fmt = ($endian == LITTLE_ENDIAN) ? "V" : "N";
+	$$value = unpack($fmt, $buf);
     }
-    $buf = $fih->readData(4);
-    return $status
-	unless $status eq "";
-    $fmt = ($endian == LITTLE_ENDIAN) ? "V" : "N";
-    $$value = unpack($fmt, $buf);
 
     return $status;
 }
