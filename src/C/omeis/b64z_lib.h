@@ -118,5 +118,5 @@ int b64z_encode( b64z_stream *strm, int action );
 int b64z_encode_end( b64z_stream* strm );
 
 // tests the library. Also the code is a working example of the library.
-int test(int verbosity);
+int test(char debug);
 
