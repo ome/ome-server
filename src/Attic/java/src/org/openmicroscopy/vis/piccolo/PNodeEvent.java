@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.NodeEvent
+ * org.openmicroscopy.vis.piccolo.PNodeEvent
  *
  *------------------------------------------------------------------------------
  *
@@ -54,11 +54,11 @@ import  java.awt.AWTEvent;
  * @since OME2.0
  */
 
-public class NodeEvent extends AWTEvent {
+public class PNodeEvent extends AWTEvent {
 	
 	private PNode node;
 	
-	public NodeEvent(PNode node) {
+	public PNodeEvent(PNode node) {
 		super(node,0);
 		this.node = node;	
 	}

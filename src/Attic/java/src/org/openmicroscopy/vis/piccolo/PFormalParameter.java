@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.ModuleParameter
+ * org.openmicroscopy.vis.piccolo.PFormalParameter
  *
  *------------------------------------------------------------------------------
  *
@@ -69,16 +69,16 @@ import java.awt.Graphics2D;
  */
 
 
-public abstract class ModuleParameter extends PNode implements 
-	NodeEventListener{
+public abstract class PFormalParameter extends PNode implements 
+	PNodeEventListener{
 	
 	protected static final Color NORMAL_COLOR = Color.black;
 	protected static final Color HIGHLIGHT_COLOR = Color.magenta;
 	
 	
 	protected FormalParameter param;
-	protected ChainCanvas canvas=null;
-	protected ModuleNode node;
+	protected PChainCanvas canvas=null;
+	protected PModule node;
 	private  Vector linkedTo = new Vector(); 
 	
 	
@@ -86,18 +86,18 @@ public abstract class ModuleParameter extends PNode implements
 	// the left and outputs on the right. Thus, for inputs, the locator
 	// will be on the west, and outputs will have the locator on the east.
 	
-	protected ParameterLocator locator;
+	protected PParameterLocator locator;
 	protected boolean linkable;
 	
 	private PText textNode;
 	
 	private boolean isLinkStart;
 	
-	public ModuleParameter() {
+	public PFormalParameter() {
 		super();
 	}
 	
-	public ModuleParameter(FormalParameter param) {
+	public PFormalParameter(FormalParameter param) {
 		super();
 		textNode = new PText(param.getParameterName());
 		addChild(textNode);
@@ -107,8 +107,8 @@ public abstract class ModuleParameter extends PNode implements
 		this.param = param;
 	}
 	
-	public ModuleParameter(ModuleNode node,FormalParameter param,
-			ChainCanvas canvas) {
+	public PFormalParameter(PModule node,FormalParameter param,
+			PChainCanvas canvas) {
 		textNode = new PText(param.getParameterName());
 		addChild(textNode);
 		setChildrenPickable(false);
@@ -150,11 +150,11 @@ public abstract class ModuleParameter extends PNode implements
 		return param.getSemanticType();
 	}
 	
-	public ChainCanvas getCanvas() {
+	public PChainCanvas getCanvas() {
 		return canvas;
 	}
 	
-	public ParameterLocator getLocator() {
+	public PParameterLocator getLocator() {
 		return locator;
 	}
 	
@@ -172,7 +172,7 @@ public abstract class ModuleParameter extends PNode implements
 	/**
 	 * some event handling code
 	 */
-	public void nodeChanged(NodeEvent e) {
+	public void nodeChanged(PNodeEvent e) {
 		
 		// if I'm listening to a node, and it's a parent, pass 
 		// it along to whomever is listening to me.
@@ -186,37 +186,37 @@ public abstract class ModuleParameter extends PNode implements
 	private EventListenerList listenerList =
 		new EventListenerList();
 	
-	public void addNodeEventListener(NodeEventListener nel) {
-		listenerList.add(NodeEventListener.class,nel);
+	public void addNodeEventListener(PNodeEventListener nel) {
+		listenerList.add(PNodeEventListener.class,nel);
 	}
 
-	public void removeNodeEventListener(NodeEventListener nel) {
-		listenerList.remove(NodeEventListener.class,nel);
+	public void removeNodeEventListener(PNodeEventListener nel) {
+		listenerList.remove(PNodeEventListener.class,nel);
 	}
 		
 	public void fireStateChanged() {
 		Object[] listeners  = listenerList.getListenerList();
 		for (int i = listeners.length-2; i >=0; i -=2) {
-			if (listeners[i]==NodeEventListener.class) {
-				((NodeEventListener)listeners[i+1]).nodeChanged(
-					new NodeEvent(this));
+			if (listeners[i]==PNodeEventListener.class) {
+				((PNodeEventListener)listeners[i+1]).nodeChanged(
+					new PNodeEvent(this));
 			}
 		}
 	}
 
-	public ModuleNode getModuleNode() {
+	public PModule getModuleNode() {
 		return node;
 	}
 	
-	public void setLinkedTo(ModuleParameter param) {
+	public void setLinkedTo(PFormalParameter param) {
 		linkedTo.add(param);
 	}
 	
-	public void clearLinkedTo(ModuleParameter param) {
+	public void clearLinkedTo(PFormalParameter param) {
 		linkedTo.remove(param);
 	}
 	
-	public boolean isLinkedTo(ModuleParameter param) {
+	public boolean isLinkedTo(PFormalParameter param) {
 		return (linkedTo.indexOf(param)!=-1);
  	}
  	

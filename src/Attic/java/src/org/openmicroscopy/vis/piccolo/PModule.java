@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.ModuleNode
+ * org.openmicroscopy.vis.piccolo.PModule
  *
  *------------------------------------------------------------------------------
  *
@@ -63,7 +63,7 @@ import java.lang.Object;
  * rounded rectangle, which is a border. This node will have two children:
  * a node with the name of the Module, and a second child which will itself
  * have multiple children - one for each input and output of the module. These 
- * children will be instances of ModuleInput and ModuleOutput (or appropriate
+ * children will be instances of PFormalInput and PFormalOutput (or appropriate
  * subclasses thereof).  
  * 
  * @author Harry Hochheiser
@@ -71,7 +71,7 @@ import java.lang.Object;
  * @since OME2.0
  */
 
-public class ModuleNode extends PPath {
+public class PModule extends PPath {
 	
 	// Some static constants for convenience.
 	
@@ -113,7 +113,7 @@ public class ModuleNode extends PPath {
 	 * @param x Initial x coordinate (global)
 	 * @param y Initial y coordinate
 	 */
-	public ModuleNode(ChainCanvas canvas,RemoteModule module,float x,float y) {
+	public PModule(PChainCanvas canvas,RemoteModule module,float x,float y) {
 		super();
 		this.module=module;
 		
@@ -162,7 +162,7 @@ public class ModuleNode extends PPath {
 	 *
 	 * @param canvas
 	 */
-	private void addParameterLabels(ChainCanvas canvas) {
+	private void addParameterLabels(PChainCanvas canvas) {
 		
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
@@ -175,8 +175,8 @@ public class ModuleNode extends PPath {
 		int 	rows = inSize > outSize? inSize: outSize;
 		
 		FormalParameter param;
-		ModuleInput  inTexts[] = new ModuleInput [inSize];
-		ModuleOutput  outTexts[] = new ModuleOutput [outSize];
+		PFormalInput  inTexts[] = new PFormalInput [inSize];
+		PFormalOutput  outTexts[] = new PFormalOutput [outSize];
 		
 		// get input nodes and find max input width
 		float maxInputWidth =0;
@@ -189,7 +189,7 @@ public class ModuleNode extends PPath {
 				// add them to label nodes, 
 				// and store max width
 				param = (FormalParameter) inputs.get(i);
-				inTexts[i]= new ModuleInput(this,param,canvas);
+				inTexts[i]= new PFormalInput(this,param,canvas);
 				labelNodes.addChild(inTexts[i]);
 				if (inTexts[i].getFullBoundsReference().getWidth() > maxInputWidth)
 					maxInputWidth = (float) inTexts[i].getFullBoundsReference().getWidth();
@@ -197,7 +197,7 @@ public class ModuleNode extends PPath {
 			if (i < outSize) {
 				// do the same for outputs.
 				param = (FormalParameter) outputs.get(i);
-				outTexts[i]= new ModuleOutput(this,param,canvas);
+				outTexts[i]= new PFormalOutput(this,param,canvas);
 				labelNodes.addChild(outTexts[i]);
 				if (outTexts[i].getFullBoundsReference().getWidth() > maxOutputWidth)
 					maxOutputWidth = (float) outTexts[i].getFullBoundsReference().getWidth();
@@ -266,20 +266,20 @@ public class ModuleNode extends PPath {
 	private EventListenerList listenerList =
 		new EventListenerList();
 	
-	public void addNodeEventListener(NodeEventListener nel) {
-		listenerList.add(NodeEventListener.class,nel);
+	public void addNodeEventListener(PNodeEventListener nel) {
+		listenerList.add(PNodeEventListener.class,nel);
 	}
 
-	public void removeNodeEventListener(NodeEventListener nel) {
-		listenerList.remove(NodeEventListener.class,nel);
+	public void removeNodeEventListener(PNodeEventListener nel) {
+		listenerList.remove(PNodeEventListener.class,nel);
 	}
 		
 	public void fireStateChanged() {
 		Object[] listeners  = listenerList.getListenerList();
 		for (int i = listeners.length-2; i >=0; i -=2) {
-			if (listeners[i]==NodeEventListener.class) {
-				((NodeEventListener)listeners[i+1]).nodeChanged(
-					new NodeEvent(this));
+			if (listeners[i]==PNodeEventListener.class) {
+				((PNodeEventListener)listeners[i+1]).nodeChanged(
+					new PNodeEvent(this));
 			}
 		}
 	}

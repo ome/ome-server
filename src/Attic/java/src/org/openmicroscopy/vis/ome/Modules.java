@@ -31,6 +31,7 @@ import org.openmicroscopy.Factory;
 import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.remote.RemoteModule;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+//import org.openmicroscopy.remote.RemoteModuleCategory;
 
 /** 
  * <p>A wrapper class to handle discussion with the OME Database.<p>
@@ -89,6 +90,9 @@ public class Modules extends ArrayList {
 		params = mod.getOutputs();
 		//System.err.println("...Outputs..");
 		populateParameters(params);
+		//System.err.println("category is "+mod.getCategory());
+		//RemoteModuleCategory category = mod.getCategory();
+		
 	}
 	
 	/**

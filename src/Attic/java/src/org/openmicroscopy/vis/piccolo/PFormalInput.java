@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.ModuleOutput
+ * org.openmicroscopy.vis.piccolo.PFormalInput
  *
  *------------------------------------------------------------------------------
  *
@@ -43,34 +43,43 @@ import org.openmicroscopy.SemanticType;
 import javax.swing.SwingConstants;
 import java.util.ArrayList;
 
-/** 
- * Nodes for displaying module outputs.<p>
+/**
+ * Nodes for displaying module inputs<p>
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class ModuleOutput extends ModuleParameter {
+
+public class PFormalInput extends PFormalParameter {
 	
-	public ModuleOutput(ModuleNode node,FormalParameter param,ChainCanvas canvas) {
+	
+	public PFormalInput(PModule node,FormalParameter param, PChainCanvas canvas) {
 		super(node,param,canvas);
-		if (param.getSemanticType() != null)
-			canvas.addOutput(param.getSemanticType(),this);
-		locator = new ParameterLocator(this,SwingConstants.EAST);
+		
+		// if I have a semantic type, add it to the lists of inputs with
+		// this semantic type.
+		
+		if (param.getSemanticType()!=null)
+			canvas.addInput(param.getSemanticType(),this);
+		
+		// create locator
+		locator = new PParameterLocator(this,SwingConstants.WEST);
 	}
 	
 	/**
-	 * For outputs, the corresponding list is a list of ModuleInputs.
+	 * For inputs, the corresponding list is a list of ModuleOutputs.
 	 * Find the semantic type of the parameter associated with this widget,
-	 * and then ask the canvas for the list of inputs with that semantic type.
+	 * and then ask the canvas for the list of outputs with that semantic type.
 	 * 
-	 * @return a list of ModuleInputs with the same semantic type as param.  
+	 * @return a list of ModuleOutputs with the same semantic type as param.  
 	 */
- 	public ArrayList getCorresponding() {
+	public ArrayList getCorresponding() {
 		SemanticType type = param.getSemanticType();
-		if (type == null)
+		if (type == null) 
 			return null;
-		return canvas.getInputs(type);
- 	}
+		
+		return canvas.getOutputs(type);
+	}
 }

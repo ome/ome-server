@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.ParameterLocator
+ * org.openmicroscopy.vis.piccolo.PNodeEventListener
  *
  *------------------------------------------------------------------------------
  *
@@ -29,6 +29,7 @@
 
 
 
+
 /*------------------------------------------------------------------------------
  *
  * Written by:    Harry Hochheiser <hsh@nih.gov>
@@ -36,44 +37,20 @@
  *------------------------------------------------------------------------------
  */
 
-package org.openmicroscopy.vis.piccolo;
-import edu.umd.cs.piccolox.util.PLocator;
-import javax.swing.SwingConstants;
-import java.awt.geom.Rectangle2D;
 
-/**
- * Locating of linkage points on module parameters<p>
+package org.openmicroscopy.vis.piccolo;
+import  java.util.EventListener;
+
+
+/** 
+ * An interface for listeners to node events
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
+public interface PNodeEventListener extends EventListener {
 
-public class ParameterLocator extends PLocator {
-
-	private ModuleParameter param;
-	private int side;
-	
-	public ParameterLocator(ModuleParameter param,int side) {
-		super();
-		this.param = param;
-		this.side = side;	
-	}
-	
-	public double locateY() {
-		Rectangle2D aBounds = param.getBoundsReference();
-		return aBounds.getY()+aBounds.getHeight()/2;	
-	}
-	
-	public double locateX() {
-		Rectangle2D aBounds = param.getBoundsReference();
-		if (side == SwingConstants.EAST) {
-			return aBounds.getX()+aBounds.getWidth()+Link.END_BULB_RADIUS;
-		}
-		else { // must be WEST
-			return aBounds.getX()-Link.END_BULB;
-		}
-	}
+	public 	void nodeChanged(PNodeEvent e);
 }
-	
