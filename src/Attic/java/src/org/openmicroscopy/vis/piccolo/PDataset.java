@@ -56,7 +56,7 @@ import java.util.Iterator;
  * @since OME2.1
  */
 
-public class PDataset extends PCategoryBox {
+public class PDataset extends PGenericBox {
 	
 	private CDataset dataset;
 	private Connection connection;
@@ -84,14 +84,26 @@ public class PDataset extends PCategoryBox {
 	}
 
 	private void layoutImages() {
+		
+		//	draw label
+		System.err.println("laying out dataset "+dataset.getName());
+		 nameLabel = new PText(dataset.getName());
+		 addChild(nameLabel);
+		 System.err.println("time is "+System.currentTimeMillis());
+		 int sz = dataset.getImageCount();
+
+		System.err.println("got dataset sz. time is "+System.currentTimeMillis());
+		if (sz > 20) {
+			System.err.println("too many ..images..");
+			displayDatasetSizeText(sz);
+			return;
+		}
 		List images = dataset.getCachedImages(connection);
 		Iterator iter = images.iterator();
 		maxHeight = 0;
 		float maxWidth = 0;
 		Vector nodes = new Vector();
-		// draw label
-		nameLabel = new PText(dataset.getName());
-		addChild(nameLabel);
+		
 		nameLabel.setOffset(x,y);
 		y+= nameLabel.getHeight()+VGAP;
 		float height=0;
@@ -127,12 +139,15 @@ public class PDataset extends PCategoryBox {
 			x += maxWidth;
 			if (x > maxRowWidth)
 				maxRowWidth = x;
+			
 			if (i++ >= rowSz) {
+				// if we're at the end of the row by count and it's longer
+				// than previous rows (don't want to stop a row
+				// if it's got lots of narrow ones..
 				y += maxHeight; 
 				x = HGAP;
-				i = 0;
-				
-			}			
+				i = 0;	
+			}						
 		}	
 		// roll back y if we were just about to start a new row
 		if (x== HGAP)
@@ -145,5 +160,17 @@ public class PDataset extends PCategoryBox {
 			maxRowWidth = nameLabel.getWidth();
 		setExtent(maxRowWidth+PConstants.SMALL_BORDER,
 			height+PConstants.SMALL_BORDER);
+	}
+	
+	private void displayDatasetSizeText(int size) {
+		PText text = new PText(size +" Images");
+		addChild(text);
+		text.setOffset(HGAP,y);
+		y+= text.getHeight()+VGAP;
+		double width =text.getWidth();
+		if (nameLabel.getWidth() > width) {
+			width = nameLabel.getWidth();
+		}
+		setExtent(width+2*HGAP,y);
 	}
 }
