@@ -80,11 +80,19 @@ while (1) {
     }
 
     eval {
-        my $result = $soap->
+        my @result = $soap->
           call('dispatch',$session,$object,$method,@params)->
-            result();
+          paramsall();
 
-        print "  Got '$result'...\n\n";
+        map { $_ = '<undef>' unless defined $_; } @result;
+
+        if (scalar(@result) == 0) {
+            print "  Got void...\n\n";
+        } elsif (scalar(@result) == 1) {
+            print "  Got '$result[0]'...\n\n";
+        } else {
+            print "  Got [",join(',',@result),"]...\n\n";
+        }
     };
 
     print "  Error: $@\n\n" if ($@);
