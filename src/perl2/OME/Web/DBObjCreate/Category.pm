@@ -73,13 +73,8 @@ sub _create {
 		return( $returnType, $body );
 	}
 	
-#FIXME: remove the dataset loading line to transition this to Global Categories
-my $dataset = $factory->loadObject( "OME::Dataset", $q->param( 'dataset' ) ) 
-or die "Couldn't load dataset id=".$data_hash{ dataset };
 	my ($mex, $objs) = OME::Tasks::AnnotationManager->
-#FIXME: remove annotateDataset and uncomment the annotateGlobal line to transition this to Global Categories
-annotateDataset( $dataset, "Category", \%data_hash );
-#		annotateGlobal( "Category", \%data_hash );
+		annotateGlobal( "Category", \%data_hash );
  	$session->commitTransaction();
  	my $obj = $objs->[0];
  	
