@@ -235,10 +235,6 @@ sub execute {
 		   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
 		}
 
-		# Make sure the rest of the installation knows where the core directories are
-		$environment->base_dir($$OME_BASE_DIR);
-		$environment->tmp_dir($$OME_TMP_DIR);
-		$ENV{OME_ROOT} = $$OME_BASE_DIR;
     
 		# Confirm and/or update our group information
 		$OME_GROUP = confirm_default("The group which OME should be run under", $OME_GROUP);
@@ -267,8 +263,61 @@ sub execute {
 
 		print "\n";  # Spacing
     }
+    # Make sure the rest of the installation knows where the core directories are
+    $environment->base_dir($$OME_BASE_DIR);
+    $environment->tmp_dir($$OME_TMP_DIR);
+    $ENV{OME_ROOT} = $$OME_BASE_DIR;
+    
 
     print "\nBuilding the core system\n";
+
+    print_header ("Core Binary Setup");
+    
+    my $INSTALL_HOME = $$OME_TMP_DIR;
+    my $LOGFILE_NAME = "BinaryBuilds.log";
+    my $LOGFILE;
+
+    # Get our logfile and open it for writing
+    open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
+		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\". $!";
+
+    print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
+    
+    my $retval = 0;
+
+    print "Installing core binaries\n";
+    
+    # XXX: Unneeded at the moment
+    # Configure
+    # print "  \\_ Configuring ";
+    # $retval = configure_module ("src/C/", $LOGFILE);
+    # 
+    #print BOLD, "[FAILURE]", RESET, ".\n"
+    #    and croak "Unable to configure module, see $LOGFILE_NAME for details."
+    #    unless $retval;
+    #print BOLD, "[SUCCESS]", RESET, ".\n";
+    
+    # Compile
+    print "  \\_ Compiling ";
+    $retval = compile_module ("src/C/", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+	and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
+	    unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+    
+    # Install
+    print "  \\_ Installing ";
+    $retval = install_module ("src/C/", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+	and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
+	    unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    close ($LOGFILE);
+    
+    print "\n";  # Spacing
 
     #********
     #******** Set up our Unix users/groups
