@@ -12,7 +12,7 @@
 original file:
 	http://kevlindev.com/gui/widgets/slider/Slider.js
 
-seriously hacked by Josiah Johnston <siah@nih.gov>
+hacked by Josiah Johnston <siah@nih.gov>
 
 *****/
 
