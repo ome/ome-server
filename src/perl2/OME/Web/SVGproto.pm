@@ -483,7 +483,7 @@ my $Dims = '['.join (',', @$pDims).']';
 my $image = $self->Factory()->loadObject("OME::Image",$ImageID);
 my $Path = $image->getFullPath();
 my $CGI_URL = '/cgi-bin/OME_JPEG';
-my $CGI_optionStr  = '';
+my $CGI_optionStr  = '&Path='.$Path;
 
 	$self->{contentType} = "image/svg+xml";
 	$SVG = <<'ENDSVG';
@@ -507,9 +507,15 @@ my $CGI_optionStr  = '';
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVG_GUI/toolBox.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/multipaneToolBox.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/multipaneToolBox.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVG_GUI/slider.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVG_GUI/popupList.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/button.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVG_GUI/AntiZoomAndPan.js" />
 	<!--            Backend classes         -->
@@ -520,9 +526,12 @@ ENDSVG
 
 # dynamic initialization of JS objects goes here:
 $SVG .= <<ENDSVG;
-        var controlsToolBox;
+        var controlsToolBox, multiToolBox;
 		var zSlider, tSlider;
-		var redPopupList, bluePopupList, greenPopupList;
+		var redPopupList, bluePopupList, greenPopupList, bwPopupList;
+		var panePopupList;
+		var RGBpopupListBox, BWpopupListBox;
+		var redButton, blueButton, greenButton, RGB_BWbutton;
         var azap = new AntiZoomAndPan();
         var image;
         var Z = $pDims->[2];
@@ -551,6 +560,13 @@ $SVG .= <<ENDSVG;
 			controlToolBox.setLabel(90,12,"Controls")
 			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
 			
+			multiToolBox = new multipaneToolBox(
+				55, 265, 200, 100,
+				svgDocument.getElementById("menuBar").firstChild.data,
+				svgDocument.getElementById("hideControl").firstChild.data,
+				"<g/>"
+			);
+			
 			// set up z and t cross section selector sliders
 			zSlider = new Slider(
 				30, 120, 100, -90,
@@ -566,53 +582,108 @@ $SVG .= <<ENDSVG;
 
 			// set up wavelength to RGB channel popupLists
 			redPopupList = new popupList(
-				0, 0, fluors, showRedWavelength, 1,
+				-50, 0, fluors, updateRedWavelength, 1,
 				svgDocument.getElementById("redAnchorText").firstChild.data,
 				svgDocument.getElementById("redItemBackgroundText").firstChild.data,
 				svgDocument.getElementById("redItemHighlightText").firstChild.data
 			);
 
 			greenPopupList = new popupList(
-				50, 0, fluors, showGreenWavelength, 0,
+				0, 0, fluors, updateGreenWavelength, 0,
 				svgDocument.getElementById("greenAnchorText").firstChild.data,
 				svgDocument.getElementById("greenItemBackgroundText").firstChild.data,
 				svgDocument.getElementById("greenItemHighlightText").firstChild.data
 			);
 
 			bluePopupList = new popupList(
-				100, 0, fluors, showBlueWavelength, 0,
+				50, 0, fluors, updateBlueWavelength, 0,
 				svgDocument.getElementById("blueAnchorText").firstChild.data,
 				svgDocument.getElementById("blueItemBackgroundText").firstChild.data,
 				svgDocument.getElementById("blueItemHighlightText").firstChild.data
 			);
-
+			
+			bwPopupList = new popupList(
+				0, 0, fluors, updateBWWavelength
+			);
+			
+			// set up channel on/off buttons
+			redButton = new button( 
+				Math.round(redPopupList.x + redPopupList.width/2), -13, turnRedOnOff,
+				svgDocument.getElementById("redButtonOn").firstChild.data,
+				svgDocument.getElementById("redButtonOff").firstChild.data
+			);
+			greenButton = new button( 
+				Math.round(greenPopupList.x + greenPopupList.width/2), -13, turnGreenOnOff,
+				svgDocument.getElementById("greenButtonOn").firstChild.data,
+				svgDocument.getElementById("greenButtonOff").firstChild.data
+			);
+			blueButton = new button(
+				Math.round(bluePopupList.x + bluePopupList.width/2), -13, turnBlueOnOff,
+				svgDocument.getElementById("blueButtonOn").firstChild.data,
+				svgDocument.getElementById("blueButtonOff").firstChild.data
+			);
+			RGB_BWbutton = new button(
+				110, 115, switchRGB_BW,
+				svgDocument.getElementById("RGB_BWButtonOn").firstChild.data,
+				svgDocument.getElementById("RGB_BWButtonOff").firstChild.data,
+				svgDocument.getElementById("blankButtonRadius13Highlight").firstChild.data
+			);
+				
 			// realize the GUI elements in the appropriate elements
             var controls  = svgDocument.getElementById("controls");
             controlToolBox.realize(controls);
 			zSlider.realize(controlToolBox.getGUIbox());
 			tSlider.realize(controlToolBox.getGUIbox());
+			RGB_BWbutton.realize(controlToolBox.getGUIbox());
 			RGBpopupListBox = svgDocument.createElementNS( svgns, "g" );
-			RGBpopupListBox.setAttributeNS( null, "transform", "translate( 45, 70 )" );
+			RGBpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
+			redButton.realize( RGBpopupListBox );
+			greenButton.realize( RGBpopupListBox );
+			blueButton.realize( RGBpopupListBox );
 			redPopupList.realize( RGBpopupListBox );
 			greenPopupList.realize( RGBpopupListBox );
 			bluePopupList.realize( RGBpopupListBox );
 			controlToolBox.getGUIbox().appendChild( RGBpopupListBox );
+			BWpopupListBox = svgDocument.createElementNS( svgns, "g" );
+			BWpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
+			BWpopupListBox.setAttribute( "display", "none" );
+			bwPopupList.realize( BWpopupListBox );
+			controlToolBox.getGUIbox().appendChild( BWpopupListBox );
+			
+			multiToolBox.realize(controls);
+			//	These layers to come from DB eventually
+			multiToolBox.addLayerText(
+				svgDocument.getElementById("info").firstChild.data, "Info" );
+			multiToolBox.addLayer( null, "Scale");
+			multiToolBox.addLayer( null, "Other");
+			// set up multiToolBox pane control popupList
+			panePopupList = new popupList(
+				0, 0, multiToolBox.getLayerIndexes(), updatePane );
+
+			panePopupList.realize( multiToolBox.getMenuBar() );
+
 
             azap.appendNode(controls); 
             
             // initialize back end
-			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$Path","$CGI_URL","$CGI_optionStr");
-			image.realize(
-				svgDocument.getElementById("image")
-			);
+			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr");
+			image.realize( svgDocument.getElementById("image") );
 			
-			theZ=Math.round(Z/2);
-			theT=0;
-			updateZLabel(50);
-			updateTLabel(0);
-			showRedWavelength(1);
-			showGreenWavelength(0);
-			showBlueWavelength(0);
+			// Set up display. These values should come from DB eventually.
+			setTimeout( "redPopupList.setSelection(0)", 0 );
+			setTimeout( "greenPopupList.setSelection(1)", 0 );
+			setTimeout( "bluePopupList.setSelection(1)", 0 );
+			setTimeout( "bwPopupList.setSelection(0)", 0 );
+			setTimeout( "panePopupList.setSelection(0)", 0 );
+			setTimeout( "redButton.setState(true)", 0 );
+			setTimeout( "greenButton.setState(false)", 0 );
+			setTimeout( "blueButton.setState(true)", 0 );
+			setTimeout( "RGB_BWbutton.setState(true)", 0 );
+
+			zSlider.setValue(50,true);	// 50% of z range
+			tSlider.setValue(0,true);	// 0% of t range
+
+//			image.setPreload(1);
 
 ENDSVG
 
@@ -623,8 +694,8 @@ $SVG .= <<'ENDSVG';
 		
 		// reflect changes made to sliders controlling z and t cross-sections
 		function updateZLabel(data) {
-			data=Math.round(data/100*Z);
-			var sliderVal = Math.round(data/Z*100);
+			data=Math.round(data/100*(Z-1));
+			var sliderVal = (Z==1 ? 0 : Math.round(data/(Z-1)*100) );
 			zSlider.setValue(sliderVal);
 			svgDocument.getElementById("zLabel").firstChild.data =
 				"z-value is " + data;
@@ -633,8 +704,8 @@ $SVG .= <<'ENDSVG';
 			image.updatePic(theZ,theT);
 		}
 		function updateTLabel(data) {
-			data=Math.round(data/100*T);
-			var sliderVal = Math.round(data/T*100);
+			data=Math.round(data/100*(T-1));
+			var sliderVal = ( T==1 ? 0 : Math.round(data/(T-1)*100) );
 			tSlider.setValue(sliderVal);
 			svgDocument.getElementById("tLabel").firstChild.data =
 				"t-value is " + data;
@@ -644,26 +715,56 @@ $SVG .= <<'ENDSVG';
 		}
 
 		// reflect changes made to popupLists controlling wavelength to RGB channels
-		function showRedWavelength(item) {
-			svgDocument.getElementById("redWavelength").firstChild.data =
-				"Red wavelength is " + wavelengths[item];
+		function updateRedWavelength(item) {
 			WBS = image.getWBS();
 			WBS[0]=item;
 			image.setWBS(WBS);
 		}
-		function showGreenWavelength(item) {
-			svgDocument.getElementById("greenWavelength").firstChild.data =
-				"Green wavelength is " + wavelengths[item];
+		function updateGreenWavelength(item) {
 			WBS = image.getWBS();
 			WBS[3]=item;
 			image.setWBS(WBS);
 		}
-		function showBlueWavelength(item) {
-			svgDocument.getElementById("blueWavelength").firstChild.data =
-				"Blue wavelength is " + wavelengths[item];
+		function updateBlueWavelength(item) {
 			WBS = image.getWBS();
 			WBS[6]=item;
 			image.setWBS(WBS);
+		}
+		function updateBWWavelength(item) {
+			WBS = image.getWBS();
+			WBS[9]=item;
+			image.setWBS(WBS);
+		}
+		function updatePane(item) {
+			var itemList = panePopupList.getItemList();
+			multiToolBox.changeLayer( itemList[item] );
+		}
+		function turnRedOnOff(val) {
+			RGBon = image.getRGBon();
+			RGBon[0] = (val ? 1 : 0);
+			image.setRGBon(RGBon);
+		}
+		function turnGreenOnOff(val) {
+			RGBon = image.getRGBon();
+			RGBon[1] = (val ? 1 : 0);
+			image.setRGBon(RGBon);
+		}
+		function turnBlueOnOff(val) {
+			RGBon = image.getRGBon();
+			RGBon[2] = (val ? 1 : 0);
+			image.setRGBon(RGBon);
+		}
+		function switchRGB_BW(val) {
+			//	decide which way to flip
+			if(val) {	// val == true means mode = RGB
+				BWpopupListBox.setAttribute( "display", "none" );
+				RGBpopupListBox.setAttribute( "display", "inline" );
+			}
+			else {	// mode = BW
+				BWpopupListBox.setAttribute( "display", "inline" );
+				RGBpopupListBox.setAttribute( "display", "none" );
+			}
+			image.setDisplayRGB_BW(val);
 		}
     ]]></script>
 	<defs>
@@ -775,21 +876,54 @@ $SVG .= <<'ENDSVG';
 			<rect x="-2" width="{$width + 4}" height="{$height}" fill="aqua"
 				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
 		]]></text>
+		<text id="redButtonOn"><![CDATA[
+			<circle cy="5" r="5" fill="pink" stroke="black" stroke-width="1"/>
+		]]></text>
+		<text id="redButtonOff"><![CDATA[
+			<circle cy="5" r="5" fill="darkred"/>
+		]]></text>
+		<text id="greenButtonOn"><![CDATA[
+			<circle cy="5" r="5" fill="lightgreen" stroke="black" stroke-width="1"/>
+		]]></text>
+		<text id="greenButtonOff"><![CDATA[
+			<circle cy="5" r="5" fill="darkgreen"/>
+		]]></text>
+		<text id="blueButtonOn"><![CDATA[
+			<circle cy="5" r="5" fill="lightblue" stroke="black" stroke-width="1"/>
+		]]></text>
+		<text id="blueButtonOff"><![CDATA[
+			<circle cy="5" r="5" fill="darkblue"/>
+		]]></text>
+		<text id="RGB_BWButtonOn"><![CDATA[
+			<g>
+				<circle cy="13" r="13" fill="white" stroke="black" stroke-width="1"/>
+				<text fill="black" text-anchor="middle" dominant-baseline="middle" 
+					y="17">B/W</text>
+			</g>
+		]]></text>
+		<text id="RGB_BWButtonOff"><![CDATA[
+			<g>
+				<circle cy="13" r="13" fill="white" stroke="black" stroke-width="1"/>
+				<text fill="black" text-anchor="middle" dominant-baseline="middle" 
+					y="17">RGB</text>
+			</g>
+		]]></text>
+		<text id="blankButtonRadius13Highlight"><![CDATA[
+			<circle cy="13" r="13" fill="white" stroke="none" opacity="0"/>
+		]]></text>
+		<text id="info"><![CDATA[
+			<g>
+				<rect width="200" height="50" fill="none" stroke="black"	stroke-width="2"/>
+				<rect width="200" height="50" fill="ghostwhite" opacity="0.5"/>
+				<text y="1em">Information:</text>
+				<text id="zLabel" x="30" y="2em">z-value is ?</text>
+				<text id="tLabel" x="30" y="3em">t-value is ?</text>
+			</g>
+		]]></text>
 	</defs>
 	<g id="image">
 	</g>
 	<g id="overlays">
-	</g>
-	<g id="info" transform="translate(55,265) scale(1)">
-		<rect x="-5" y="-15" width="200" height="100" fill="none" stroke="black"
-		stroke-width="2"/>
-		<rect x="-5" y="-15" width="200" height="100" fill="ghostwhite" opacity="0.5"/>
-		<text>Information:</text>
-		<text id="zLabel" x="30" y="1em">z-value is 0</text>
-		<text id="tLabel" x="30" y="2em">t-value is 0</text>
-		<text id="redWavelength" x="30" y="4em" fill="red">Red wavelength is 200nm</text>
-		<text id="greenWavelength" x="30" y="5em" fill="green">Green wavelength is 400nm</text>
-		<text id="blueWavelength" x="30" y="6em" fill="blue">Blue wavelength is 100nm</text>
 	</g>
 	<g id="controls">
 	</g>
