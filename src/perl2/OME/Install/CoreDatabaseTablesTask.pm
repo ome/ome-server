@@ -763,6 +763,8 @@ sub execute {
         update_configuration ($session) or croak "Unable to initialize the configuration object.";
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
         print_header "Finalizing Database";
+		# Back to UID 0
+		$EUID = 0;
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         load_analysis_core ($session, $LOGFILE)
         or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
@@ -777,6 +779,8 @@ sub execute {
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
         print_header "Finalizing Database";
         make_repository( $session );
+		# Back to UID 0
+		$EUID = 0;
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         commit_experimenter ($session) or croak "Unable to load commit experimenter.";
         load_analysis_core ($session, $LOGFILE)
@@ -834,8 +838,6 @@ sub execute {
     
     $manager->logout($session);
 
-    # Back to UID 0
-    $EUID = 0;
 
     close ($LOGFILE);
 
