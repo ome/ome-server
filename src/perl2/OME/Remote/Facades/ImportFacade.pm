@@ -68,7 +68,8 @@ sub startImport {
     # global import MEX among other things).
 
     my $importer = OME::ImportEngine::ImportEngine->new(AllowDuplicates => 1);
-    my $factory = OME::Session->instance()->Factory();
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
     my $dataset;
 
     if (defined $datasetID) {
@@ -89,7 +90,7 @@ sub startImport {
     }
 
     my $files_mex = $importer->startImport($dataset);
-    my $session_key = OME::Session->instance()->SessionKey();
+    my $session_key = $session->SessionKey();
 
     # Fork off the child process
 
