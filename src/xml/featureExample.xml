@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<AnalysisModuleLibrary xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find cells"
+    ModuleType="OME::Analysis::FindBounds"
+    ProgramID=""
+    Description="Find cells"
+    NewFeatureName="CELL">
+
+  <Declaration>
+    <Table
+        Granularity="F" TableName="BOUNDS"
+        Description="">
+      <Column
+          ColumnID="boundsX" ColumnName="X"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsY" ColumnName="Y"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsWidth" ColumnName="WIDTH"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsHeight" ColumnName="HEIGHT"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <FormalOutput
+        Name="Output bounds" AttributeTypeName="Bounds"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="X" FormalOutputColumnID="CellBounds.X"
+          ColumnID="boundsX" Description=""/>
+      <FormalOutputColumn
+          Name="Y" FormalOutputColumnID="CellBounds.Y"
+          ColumnID="boundsY" Description=""/>
+      <FormalOutputColumn
+          Name="WIDTH" FormalOutputColumnID="CellWidth.Width"
+          ColumnID="boundsWidth" Description=""/>
+      <FormalOutputColumn
+          Name="HEIGHT" FormalOutputColumnID="CellHeight.Height"
+          ColumnID="boundsHeight" Description=""/>
+    </FormalOutput>
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find mito"
+    ModuleType="OME::Analysis::FindBounds"
+    ProgramID=""
+    Description="Find mito"
+    FeatureIterator="CELL"
+    NewFeatureName="MITOCHONDRIA">
+
+  <Declaration>
+    <Table
+        Granularity="F" TableName="BOUNDS"
+        Description="">
+      <Column
+          ColumnID="boundsX" ColumnName="X"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsY" ColumnName="Y"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsWidth" ColumnName="WIDTH"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsHeight" ColumnName="HEIGHT"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <FormalInput
+        Name="Input bounds" AttributeTypeName="Bounds"
+        Description="">
+      <FormalInputColumn
+          Name="X" FormalInputColumnID="CellBounds.X"
+          ColumnID="boundsX" Description=""/>
+      <FormalInputColumn
+          Name="Y" FormalInputColumnID="CellBounds.Y"
+          ColumnID="boundsY" Description=""/>
+      <FormalInputColumn
+          Name="WIDTH" FormalInputColumnID="CellWidth.Width"
+          ColumnID="boundsWidth" Description=""/>
+      <FormalInputColumn
+          Name="HEIGHT" FormalInputColumnID="CellHeight.Height"
+          ColumnID="boundsHeight" Description=""/>
+    </FormalInput>
+
+    <FormalOutput
+        Name="Output bounds" AttributeTypeName="Bounds"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="X" FormalOutputColumnID="MitoBounds.X"
+          ColumnID="boundsX" Description=""/>
+      <FormalOutputColumn
+          Name="Y" FormalOutputColumnID="MitoBounds.Y"
+          ColumnID="boundsY" Description=""/>
+      <FormalOutputColumn
+          Name="WIDTH" FormalOutputColumnID="MitoWidth.Width"
+          ColumnID="boundsWidth" Description=""/>
+      <FormalOutputColumn
+          Name="HEIGHT" FormalOutputColumnID="MitoHeight.Height"
+          ColumnID="boundsHeight" Description=""/>
+    </FormalOutput>
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find golgi"
+    ModuleType="OME::Analysis::FindBounds"
+    ProgramID=""
+    Description="Find golgi"
+    FeatureIterator="CELL"
+    NewFeatureName="GOLGI">
+
+  <Declaration>
+    <Table
+        Granularity="F" TableName="BOUNDS"
+        Description="">
+      <Column
+          ColumnID="boundsX" ColumnName="X"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsY" ColumnName="Y"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsWidth" ColumnName="WIDTH"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsHeight" ColumnName="HEIGHT"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <FormalInput
+        Name="Input bounds" AttributeTypeName="Bounds"
+        Description="">
+      <FormalInputColumn
+          Name="X" FormalInputColumnID="CellBounds.X"
+          ColumnID="boundsX" Description=""/>
+      <FormalInputColumn
+          Name="Y" FormalInputColumnID="CellBounds.Y"
+          ColumnID="boundsY" Description=""/>
+      <FormalInputColumn
+          Name="WIDTH" FormalInputColumnID="CellWidth.Width"
+          ColumnID="boundsWidth" Description=""/>
+      <FormalInputColumn
+          Name="HEIGHT" FormalInputColumnID="CellHeight.Height"
+          ColumnID="boundsHeight" Description=""/>
+    </FormalInput>
+
+    <FormalOutput
+        Name="Output bounds" AttributeTypeName="Bounds"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="X" FormalOutputColumnID="GolgiBounds.X"
+          ColumnID="boundsX" Description=""/>
+      <FormalOutputColumn
+          Name="Y" FormalOutputColumnID="GolgiBounds.Y"
+          ColumnID="boundsY" Description=""/>
+      <FormalOutputColumn
+          Name="WIDTH" FormalOutputColumnID="GolgiWidth.Width"
+          ColumnID="boundsWidth" Description=""/>
+      <FormalOutputColumn
+          Name="HEIGHT" FormalOutputColumnID="GolgiHeight.Height"
+          ColumnID="boundsHeight" Description=""/>
+    </FormalOutput>
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find ratio"
+    ModuleType="OME::Analysis::FindRatio"
+    ProgramID=""
+    Description="Find ratio"
+    FeatureIterator="CELL">
+
+  <Declaration>
+    <Table
+        Granularity="F" TableName="BOUNDS"
+        Description="">
+      <Column
+          ColumnID="boundsX" ColumnName="X"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsY" ColumnName="Y"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsWidth" ColumnName="WIDTH"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="boundsHeight" ColumnName="HEIGHT"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="RATIO"
+        Description="">
+      <Column
+          ColumnID="ratio" ColumnName="RATIO"
+          SQL_DataType="float" Description=""/>
+    </Table>
+
+    <FormalInput
+        Name="Mito bounds" AttributeTypeName="Bounds"
+        Description="">
+      <FormalInputColumn
+          Name="X" FormalInputColumnID="MitoBounds.X"
+          ColumnID="boundsX" Description=""/>
+      <FormalInputColumn
+          Name="Y" FormalInputColumnID="MitoBounds.Y"
+          ColumnID="boundsY" Description=""/>
+      <FormalInputColumn
+          Name="WIDTH" FormalInputColumnID="MitoWidth.Width"
+          ColumnID="boundsWidth" Description=""/>
+      <FormalInputColumn
+          Name="HEIGHT" FormalInputColumnID="MitoHeight.Height"
+          ColumnID="boundsHeight" Description=""/>
+    </FormalInput>
+
+    <FormalInput
+        Name="Golgi bounds" AttributeTypeName="Bounds"
+        Description="">
+      <FormalInputColumn
+          Name="X" FormalInputColumnID="GolgiBounds.X"
+          ColumnID="boundsX" Description=""/>
+      <FormalInputColumn
+          Name="Y" FormalInputColumnID="GolgiBounds.Y"
+          ColumnID="boundsY" Description=""/>
+      <FormalInputColumn
+          Name="WIDTH" FormalInputColumnID="GolgiWidth.Width"
+          ColumnID="boundsWidth" Description=""/>
+      <FormalInputColumn
+          Name="HEIGHT" FormalInputColumnID="GolgiHeight.Height"
+          ColumnID="boundsHeight" Description=""/>
+    </FormalInput>
+
+    <FormalOutput
+        Name="Golgi-mito ratio" AttributeTypeName="Ratio"
+        Description="" IBelongTo="[Iterator]">
+      <FormalOutputColumn
+          Name="RATIO" FormalOutputColumnID="Ratio.Ratio"
+          ColumnID="ratio" Description=""/>
+    </FormalOutput>
+
+  </Declaration>
+</AnalysisModule>
+
+</AnalysisModuleLibrary>

@@ -181,6 +181,8 @@ sub postcalculateImage {
     #foreach my $attribute (@attributes) {
     #    $attribute->commit();
     #}
+
+    close $output;
 }
 
 

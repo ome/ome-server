@@ -50,6 +50,7 @@ our $VERSION = '1.0';
 
 use OME::DataTable;
 use OME::AttributeType;
+use Benchmark qw(timediff timesum timestr);
 
 use fields qw(_location _session _node
               _program _formal_inputs _formal_outputs _analysis
@@ -96,6 +97,10 @@ sub new {
 
     bless $self, $class;
     return $self;
+}
+
+sub __debug {
+    #print STDERR @_;
 }
 
 =head2 Session and Factory
@@ -309,11 +314,14 @@ not, an error is raised and no attributes are created.
 sub newAttributes {
     my ($self,%attribute_info) = @_;
 
+    my $t0 = new Benchmark;
+
     # These hashes are keyed by table name.
     my %data_tables;
     my %data;
-    my %granularities;
     my %targets;
+    my %granularities;
+    my %feature_tags;
 
     # These hashes are keyed by attribute type ID.
     my %attribute_tables;
@@ -321,7 +329,7 @@ sub newAttributes {
     # Merge the attribute data hashes into hashes for each data table.
     # Also, mark which data tables belong to each attribute.
 
-    print STDERR "\nMerging attributes\n";
+    __debug("\nMerging attributes\n");
 
     foreach my $formal_output_name (keys %attribute_info) {
         my $formal_output = $self->{_formal_outputs}->{$formal_output_name};
@@ -330,7 +338,7 @@ sub newAttributes {
         my $granularity = $attribute_type->granularity();
         my $data_hash = $attribute_info{$formal_output_name};
 
-        print STDERR "  $formal_output_name (".scalar(@attribute_columns)." columns)\n";
+        __debug("  $formal_output_name (".scalar(@attribute_columns)." columns)\n");
 
         my $feature_tag;
 
@@ -360,7 +368,7 @@ sub newAttributes {
             die "Attribute granularity and data table granularity don't match!"
                 if ($granularity ne $data_granularity);
 
-            print STDERR "    $attribute_column_name -> ${table_name}.$column_name";
+            __debug("    $attribute_column_name -> ${table_name}.$column_name");
 
             # Mark that $attribute_type resides in $table_name.
             $attribute_tables{$attribute_type->id()}->{$table_name} = 1;
@@ -368,63 +376,32 @@ sub newAttributes {
             # Save the data table for later.
             $data_tables{$table_name} = $data_table;
 
-            #$data->{actual_output_id} = $self->{_actual_outputs}->{$output_name};
-
-            # Build the data hash for this data table.  This includes
-            # the required implicit fields: analysis_id and
-            # [dataset/image/feature]_id.  (Target is the
-            # dataset/image/feature that an attribute describes.)
-
-            $data{$table_name}->{analysis_id} = $self->{_analysis};
-            if ($granularity eq 'D') {
-                $targets{$table_name} = $self->{_current_dataset};
-                $data{$table_name}->{dataset_id} = $self->{_current_dataset};
-            } elsif ($granularity eq 'I') {
-                $targets{$table_name} = $self->{_current_image};
-                $data{$table_name}->{image_id} = $self->{_current_image};
-            } elsif ($granularity eq 'F') {
-                my $feature;
-
-                # The special tags are used to specify which feature a
-                # new attribute belongs to.  All of the possibilites
-                # have been stored in local fields, so we just have to
-                # pick out the right one.
-
-                if ($feature_tag eq '[Iterator]') {
-                    $feature = $self->{_current_feature};
-                } elsif ($feature_tag eq '[Feature]') {
-                    $feature = $self->{_last_new_feature};
-                } elsif ($feature_tag eq '[Parent]') {
-                    my $last_new = $self->{_last_new_feature};
-                    $feature = $last_new->parent_feature() if (defined $last_new);
-                } else {
-                    die "Invalid feature tag for new feature attribute: $feature_tag\n";
-                }
-
-                # Every feature attribute must refer to a some feature.
-
-                die "Desired feature ($feature_tag) does not exist"
-                    unless defined $feature;
-
-                if (exists $granularities{$table_name}) {
-                    # If we've already messed with table, make sure
-                    # the feature_id field dosn't clash.
-
-                    my $previous_feature = $targets{$table_name};
-                    die "Attribute feature targets clash"
-                        if ($previous_feature->id() ne $feature->id());
-                }
-
-                $targets{$table_name} = $feature;
-                $data{$table_name}->{feature_id} = $feature;
+            if (exists $granularities{$table_name}) {
+                die "Granularities clash!"
+                    if ($granularity ne $granularities{$table_name});
+            } else {
+                $granularities{$table_name} = $granularity;
             }
 
-            $granularities{$table_name} = $granularity;
+            if ($granularity eq 'F') {
+                if (exists $feature_tags{$table_name}) {
+                    die "Feature tags clash!"
+                        if ($feature_tag ne $feature_tags{$table_name});
+                } else {
+                    $feature_tags{$table_name} = $feature_tag;
+                }
+            }
+
+            # Build the data hash for this data table.  The required
+            # implicit fields, analysis_id and
+            # [dataset/image/feature]_id, are not added until the
+            # per-table loop.  (Target is the dataset/image/feature
+            # that an attribute describes.)
 
             # Pull out the datum from the attribute hash.
             my $new_data = $data_hash->{$attribute_column_name};
 
-            print STDERR " = $new_data";
+            __debug(" = $new_data");
 
             # If we've already filled in this column in the data table
             # hash, ensure it doesn't clash with this new piece of
@@ -432,12 +409,12 @@ sub newAttributes {
 
             if (exists $data{$table_name}->{$column_name}) {
                 my $old_data = $data{$table_name}->{$column_name};
-                print STDERR " ?= $old_data ";
+                __debug(" ?= $old_data ");
                 die "Attribute values clash"
                     if ($new_data ne $old_data);
             }
 
-            print STDERR "\n";
+            __debug("\n");
 
             # Store the datum into the data table hash.
             $data{$table_name}->{$column_name} = $new_data;
@@ -450,18 +427,57 @@ sub newAttributes {
     my %data_rows;
     my $factory = $self->Factory();
 
-    print STDERR "Creating data rows\n";
+    __debug("Creating data rows\n");
 
     foreach my $table_name (keys %data_tables) {
         my $data_table = $data_tables{$table_name};
         my $data_pkg = $data_table->requireDataTablePackage();
         my $data = $data{$table_name};
+        my $granularity = $granularities{$table_name};
+        my $feature_tag = $feature_tags{$table_name};
 
-        print STDERR "  Table $table_name (Package $data_pkg)\n";
+        __debug("  Table $table_name (Package $data_pkg)\n");
 
-        foreach my $column_name (sort keys %$data) {
-            print STDERR "    $column_name = ".$data->{$column_name}."\n";
+        # Add the implicit fields to the data hash.
+
+        $data{$table_name}->{analysis_id} = $self->{_analysis};
+        if ($granularity eq 'D') {
+            $targets{$table_name} = $self->{_current_dataset};
+            $data{$table_name}->{dataset_id} = $self->{_current_dataset};
+        } elsif ($granularity eq 'I') {
+            $targets{$table_name} = $self->{_current_image};
+            $data{$table_name}->{image_id} = $self->{_current_image};
+        } elsif ($granularity eq 'F') {
+            my $feature;
+
+            # The special tags are used to specify which feature a
+            # new attribute belongs to.  All of the possibilites
+            # have been stored in local fields, so we just have to
+            # pick out the right one.
+
+            if ($feature_tag eq '[Iterator]') {
+                $feature = $self->{_current_feature};
+            } elsif ($feature_tag eq '[Feature]') {
+                $feature = $self->{_last_new_feature};
+            } elsif ($feature_tag eq '[Parent]') {
+                my $last_new = $self->{_last_new_feature};
+                $feature = $last_new->parent_feature() if (defined $last_new);
+            } else {
+                die "Invalid feature tag for new feature attribute: $feature_tag\n";
+            }
+
+            # Every feature attribute must refer to a some feature.
+
+            die "Desired feature ($feature_tag) does not exist"
+                unless defined $feature;
+
+            $targets{$table_name} = $feature;
+            $data{$table_name}->{feature_id} = $feature;
         }
+
+        #foreach my $column_name (sort keys %$data) {
+        #    __debug("    $column_name = ".$data->{$column_name}."\n");
+        #}
 
         # We've already created the correct data hash, so just create
         # the object.
@@ -485,7 +501,7 @@ sub newAttributes {
         my $attribute_tables = $attribute_tables{$attribute_type->id()};
         my $rows = {};
         my $target;
-        my $granularity;
+        my $granularity = $attribute_type->granularity();
 
         # Collect all of the data rows needed for this attribute.
 
@@ -493,7 +509,6 @@ sub newAttributes {
             my $data_table = $data_tables{$table_name};
             $rows->{$data_table->id()} = $data_rows{$table_name};
             $target = $targets{$table_name};
-            $granularity = $targets{$table_name};
         }
 
         # Create the attribute object.  (Note, this is basically just
@@ -519,6 +534,15 @@ sub newAttributes {
         }
 
         push @attributes, $attribute;
+    }
+
+    my $t1 = new Benchmark;
+    my $td = timediff($t1,$t0);
+
+    if (exists $self->{_timing}) {
+        $self->{_timing} = timesum($self->{_timing},$td);
+    } else {
+        $self->{_timing} = $td;
     }
 
     return \@attributes;
@@ -661,7 +685,20 @@ sub finishDataset {
     $self->{_current_dataset} = undef;
     $self->{_dataset_inputs} = undef;
     $self->{_dataset_outputs} = undef;
+
+    print STDERR "newAttributes:\n".timestr($self->{_timing})."\n"
+        if exists $self->{_timing};
 }
 
+
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
+=head1 SEE ALSO
+
+L<OME::Tasks::AnalysisEngine|OME::Tasks::AnalysisEngine>
+
+=cut
 
 1;

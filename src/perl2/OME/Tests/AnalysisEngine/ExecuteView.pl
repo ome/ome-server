@@ -78,10 +78,26 @@ my $engine = OME::Tasks::AnalysisEngine->new();
 
 foreach my $flag_string (@ARGV) {
     my ($flag,$value) = split(/=/,$flag_string,2);
-    $engine->Flag($flag,$value);
+    if ($flag eq "Cached") {
+        OME::DBObject->Cached($value);
+    } else {
+        $engine->Flag($flag,$value);
+    }
 }
 
 $engine->executeAnalysisView($session,$view,{},$dataset);
 
+my $cache = OME::DBObject->__cache();
+my $numClasses = scalar(keys %$cache);
+my $numObjects = 0;
+
+foreach my $class (keys %$cache) {
+    my $classCache = $cache->{$class};
+    my $numClassObjects = scalar(keys %$classCache);
+    printf STDERR "%5d %s\n", $numClassObjects, $class;
+    $numObjects += $numClassObjects;
+}
+
+printf STDERR "\n%5d TOTAL\n", $numObjects;
 
 1;

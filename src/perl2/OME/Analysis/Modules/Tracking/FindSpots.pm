@@ -101,9 +101,9 @@ sub precalculateImage {
         foreach @$geomean_list;
     $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Sigma} = $_->SIGMA()
         foreach @$sigma_list;
-    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Min} = $_->MIN()
+    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Min} = $_->MINIMUM()
         foreach @$min_list;
-    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Max} = $_->MAX()
+    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Max} = $_->MAXIMUM()
         foreach @$max_list;
 
     foreach my $time (sort {$a <=> $b} (keys %wave_stats)) {
@@ -198,7 +198,7 @@ sub calculateFeature {
 	    } elsif ($header eq "Surf. Area") {
 		$extentData->{SURFACE_AREA} = $datum;
 	    } elsif ($header eq "perimiter") {
-		$extentData->{PERIMITER} = $datum;
+		$extentData->{PERIMETER} = $datum;
 	    } elsif ($header eq "Form Factor") {
 		$extentData->{FORM_FACTOR} = $datum;
 	    } elsif ($header =~ /$wavelength_rex/) {

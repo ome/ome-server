@@ -28,6 +28,8 @@ use OME::Tasks::ImageTasks;
 use OME::Project;
 use Term::ReadKey;
 
+use Benchmark qw(timediff timestr);
+
 print "\nOME Test Case - Image Import\n";
 print "----------------------------\n";
 
@@ -120,8 +122,13 @@ $session->project($project);
 $session->dataset($dataset);
 $session->writeObject();
 	print "- Importing files into $age project '$projectName'... ";
+my $t0 = new Benchmark;
 	OME::Tasks::ImageTasks::importFiles($session, $dataset, \@ARGV);
+my $t1 = new Benchmark;
 	print "done.\n";
+
+my $td = timediff($t1,$t0);
+print "\nTiming:\n".timestr($td)."\n";
 
 exit 0;
 

@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<AnalysisModuleLibrary xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
+
+<AnalysisModule
+    Category="Segmentation" ModuleName="Find spots"
+    ModuleType="OME::Analysis::FindSpotsHandler"
+    ProgramID="/OME/bin/findSpotsOME"
+    Description="Find spots in the image"
+    NewFeatureName="SPOT">
+
+  <Declaration>
+    <Table
+        Granularity="I" TableName="XYZ_IMAGE_INFO"
+        Description="General pixel statistics across stacks">
+      <Column 
+          ColumnID="stackW" ColumnName="THE_W"
+          SQL_DataType="integer" Description="W coordinate"/>
+      <Column 
+          ColumnID="stackT" ColumnName="THE_T"
+          SQL_DataType="integer" Description="T coordinate"/>
+      <Column 
+          ColumnID="stackMinimum" ColumnName="MINIMUM"
+          SQL_DataType="integer" Description="Minimum intensity"/>
+      <Column 
+          ColumnID="stackMaximum" ColumnName="MAXIMUM"
+          SQL_DataType="integer" Description="Maximum intensity"/>
+      <Column 
+          ColumnID="stackMean" ColumnName="MEAN"
+          SQL_DataType="float" Description="Mean intensity"/>
+      <Column 
+          ColumnID="stackGeomean" ColumnName="GEOMEAN"
+          SQL_DataType="float" Description="Geometric mean intensity"/>
+      <Column 
+          ColumnID="stackSigma" ColumnName="SIGMA"
+          SQL_DataType="float" Description="Standard deviation of intensity"/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="TIMEPOINT"
+        Description="">
+      <Column
+          ColumnID="timepoint" ColumnName="TIMEPOINT"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="THRESHOLD"
+        Description="">
+      <Column
+          ColumnID="threshold" ColumnName="THRESHOLD"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="LOCATION"
+        Description="">
+      <Column
+          ColumnID="locationX" ColumnName="X"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="locationY" ColumnName="Y"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="locationZ" ColumnName="Z"
+          SQL_DataType="float" Description=""/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="EXTENT"
+        Description="">
+      <Column
+          ColumnID="extentVolume" ColumnName="VOLUME"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="extentSurfaceArea" ColumnName="SURFACE_AREA"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="extentPerimeter" ColumnName="PERIMETER"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="extentFormFactor" ColumnName="FORM_FACTOR"
+          SQL_DataType="float" Description=""/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="SIGNAL"
+        Description="">
+      <Column
+          ColumnID="signalWavelength" ColumnName="WAVELENGTH"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnID="signalCentroidX" ColumnName="CENTROID_X"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="signalCentroidY" ColumnName="CENTROID_Y"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="signalCentroidZ" ColumnName="CENTROID_Z"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="signalIntegral" ColumnName="INTEGRAL"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="signalMean" ColumnName="MEAN"
+          SQL_DataType="float" Description=""/>
+      <Column
+          ColumnID="signalGeomean" ColumnName="GEOMEAN"
+          SQL_DataType="float" Description=""/>
+    </Table>
+
+    <FormalInput
+        Name="Stack mean" AttributeTypeName="Stack mean" Description="">
+      <FormalInputColumn
+          Name="TIMEPOINT" FormalInputColumnID="StackMean.Time"
+          ColumnID="stackT" Description=""/>
+      <FormalInputColumn
+          Name="WAVELENGTH" FormalInputColumnID="StackMean.Wave"
+          ColumnID="stackW" Description=""/>
+      <FormalInputColumn
+          Name="MEAN" FormalInputColumnID="StackMean.Mean"
+          ColumnID="stackMean" Description=""/>
+    </FormalInput>
+
+    <FormalInput
+        Name="Stack geomean" AttributeTypeName="Stack geomean" Description="">
+      <FormalInputColumn
+          Name="TIMEPOINT" FormalInputColumnID="StackGeomean.Time"
+          ColumnID="stackT" Description=""/>
+      <FormalInputColumn
+          Name="WAVELENGTH" FormalInputColumnID="StackGeomean.Wave"
+          ColumnID="stackW" Description=""/>
+      <FormalInputColumn
+          Name="GEOMEAN" FormalInputColumnID="StackGeomean.Geomean"
+          ColumnID="stackGeomean" Description=""/>
+    </FormalInput>
+
+    <FormalInput
+        Name="Stack sigma" AttributeTypeName="Stack sigma" Description="">
+      <FormalInputColumn
+          Name="TIMEPOINT" FormalInputColumnID="StackSigma.Time"
+          ColumnID="stackT" Description=""/>
+      <FormalInputColumn
+          Name="WAVELENGTH" FormalInputColumnID="StackSigma.Wave"
+          ColumnID="stackW" Description=""/>
+      <FormalInputColumn
+          Name="SIGMA" FormalInputColumnID="StackSigma.Sigma"
+          ColumnID="stackSigma" Description=""/>
+    </FormalInput>
+
+    <FormalInput
+        Name="Stack minimum" AttributeTypeName="Stack minimum" Description="">
+      <FormalInputColumn
+          Name="TIMEPOINT" FormalInputColumnID="StackMinimum.Time"
+          ColumnID="stackT" Description=""/>
+      <FormalInputColumn
+          Name="WAVELENGTH" FormalInputColumnID="StackMinimum.Wave"
+          ColumnID="stackW" Description=""/>
+      <FormalInputColumn
+          Name="MINIMUM" FormalInputColumnID="StackMinimum.Minimum"
+          ColumnID="stackMinimum" Description=""/>
+    </FormalInput>
+
+    <FormalInput
+        Name="Stack maximum" AttributeTypeName="Stack maximum" Description="">
+      <FormalInputColumn
+          Name="TIMEPOINT" FormalInputColumnID="StackMaximum.Time"
+          ColumnID="stackT" Description=""/>
+      <FormalInputColumn
+          Name="WAVELENGTH" FormalInputColumnID="StackMaximum.Wave"
+          ColumnID="stackW" Description=""/>
+      <FormalInputColumn
+          Name="MAXIMUM" FormalInputColumnID="StackMaximum.Maximum"
+          ColumnID="stackMaximum" Description=""/>
+    </FormalInput>
+
+    <FormalOutput
+        Name="Timepoint" AttributeTypeName="Timepoint"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="TIMEPOINT" FormalOutputColumnID="Timepoint.Timepoint"
+          ColumnID="timepoint" Description=""/>
+    </FormalOutput>
+
+    <FormalOutput
+        Name="Threshold" AttributeTypeName="Threshold"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="THRESHOLD" FormalOutputColumnID="Threshold.Threshold"
+          ColumnID="threshold" Description=""/>
+    </FormalOutput>
+
+    <FormalOutput
+        Name="Location" AttributeTypeName="Location"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="X" FormalOutputColumnID="Location.X"
+          ColumnID="locationX" Description=""/>
+      <FormalOutputColumn
+          Name="Y" FormalOutputColumnID="Location.Y"
+          ColumnID="locationY" Description=""/>
+      <FormalOutputColumn
+          Name="Z" FormalOutputColumnID="Location.Z"
+          ColumnID="locationZ" Description=""/>
+    </FormalOutput>
+
+    <FormalOutput
+        Name="Extent" AttributeTypeName="Extent"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="VOLUME" FormalOutputColumnID="Extent.Volume"
+          ColumnID="extentVolume" Description=""/>
+      <FormalOutputColumn
+          Name="SURFACE_AREA" FormalOutputColumnID="Extent.SurfaceArea"
+          ColumnID="extentSurfaceArea" Description=""/>
+      <FormalOutputColumn
+          Name="PERIMETER" FormalOutputColumnID="Extent.Perimeter"
+          ColumnID="extentPerimeter" Description=""/>
+      <FormalOutputColumn
+          Name="FORM_FACTOR" FormalOutputColumnID="Extent.FormFactor"
+          ColumnID="extentFormFactor" Description=""/>
+    </FormalOutput>
+
+    <FormalOutput
+        Name="Signal" AttributeTypeName="Signal"
+        Description="" IBelongTo="[Feature]">
+      <FormalOutputColumn
+          Name="WAVELENGTH" FormalOutputColumnID="Signal.Wavelength"
+          ColumnID="signalWavelength" Description=""/>
+      <FormalOutputColumn
+          Name="CENTROID_X" FormalOutputColumnID="Signal.CentroidX"
+          ColumnID="signalCentroidX" Description=""/>
+      <FormalOutputColumn
+          Name="CENTROID_Y" FormalOutputColumnID="Signal.CentroidY"
+          ColumnID="signalCentroidY" Description=""/>
+      <FormalOutputColumn
+          Name="CENTROID_Z" FormalOutputColumnID="Signal.CentroidZ"
+          ColumnID="signalCentroidZ" Description=""/>
+      <FormalOutputColumn
+          Name="INTEGRAL" FormalOutputColumnID="Signal.Integral"
+          ColumnID="signalIntegral" Description=""/>
+      <FormalOutputColumn
+          Name="MEAN" FormalOutputColumnID="Signal.Mean"
+          ColumnID="signalMean" Description=""/>
+      <FormalOutputColumn
+          Name="GEOMEAN" FormalOutputColumnID="Signal.Geomean"
+          ColumnID="signalGeomean" Description=""/>
+    </FormalOutput>
+
+  </Declaration>
+</AnalysisModule>
+
+</AnalysisModuleLibrary>

@@ -463,7 +463,9 @@ sub new {
 
     my $self = {
                 _flags => {
-                           ReuseResults => 1
+                           ReuseResults => 1,
+                           DebugDefault => 1,
+                           DebugTiming  => 1
                           },
                };
     return bless $self, $class;
@@ -581,6 +583,14 @@ sub findModuleHandler {
     my $t0 = new Benchmark;
     my $t1 = new Benchmark;
 
+    # A debug routine
+    sub __debug {
+        my ($message,$group) = @_;
+        $group = defined $group? $group: "Default";
+
+        print STDERR "$message" if $self->Flag("Debug$group");
+    }
+
     # Some helpful database routines
 
     # Returns the first column of the first row of an executed DBI
@@ -651,9 +661,9 @@ sub findModuleHandler {
 
         $nodes{$curr_nodeID} = $curr_node;
 
-        print STDERR "  ".$program->program_name()."\n";
+        __debug("  ".$program->program_name()."\n");
 
-        print STDERR "    Loading module $location via handler $module_type\n";
+        __debug("    Loading module $location via handler $module_type\n");
         my $handler = findModuleHandler($module_type);
         eval "require $handler";
         my $module = $handler->new($location,$session,$program,$curr_node);
@@ -673,7 +683,7 @@ sub findModuleHandler {
 
     # Builds the data paths for an analysis chain.
     sub __buildDataPaths {
-        print STDERR "  Building data paths\n";
+        __debug("  Building data paths\n");
 
         # A data path is represented by a list of node ID's, starting
         # with a root node and ending with a leaf node.
@@ -684,7 +694,7 @@ sub findModuleHandler {
         $sth = $self->sql_get_root_nodes();
         $sth->execute($analysis_view->id());
         while (my $row = $sth->fetch) {
-            print STDERR "    Found root node ".$row->[0]."\n";
+            __debug("    Found root node ".$row->[0]."\n");
             my $path = [$row->[0]];
             push @data_paths, $path;
         }
@@ -704,9 +714,9 @@ sub findModuleHandler {
                 if ($num_successors == 0) {
                     push @new_paths,$data_path;
                 } elsif ($num_successors == 1) {
-                    print STDERR "    Extending ".
+                    __debug("    Extending ".
                       join(':',@$data_path)." with ".
-                        $successors->[0]."\n";
+                        $successors->[0]."\n");
                     push @$data_path, $successors->[0];
                     push @new_paths,$data_path;
                     $continue = 1;
@@ -714,9 +724,9 @@ sub findModuleHandler {
                     foreach my $successor (@$successors) {
                         # make a copy
                         my $new_path = [@$data_path];
-                        print STDERR "    Extending ".
+                        __debug("    Extending ".
                           join(':',@$new_path)." with ".
-                            $successor."\n";
+                            $successor."\n");
                         push @$new_path, $successor;
                         push @new_paths, $new_path;
                     }
@@ -756,7 +766,7 @@ sub findModuleHandler {
     # Loads the data paths for an analysis chain which has already had
     # them built.
     sub __loadDataPaths {
-        print STDERR "  Loading data paths\n";
+        __debug("  Loading data paths\n");
 
         my @db_paths = $analysis_view->paths();
         foreach my $db_path (@db_paths) {
@@ -929,7 +939,7 @@ sub findModuleHandler {
                 $paramString .= ") ";
                 next;
             } else {
-                #print STDERR "** $input_link\n";
+                #__debug("** $input_link\n");
             }
 
             my $formal_input = $factory->
@@ -1151,20 +1161,20 @@ sub findModuleHandler {
 
         my %actual_inputs;
 
-        #print STDERR "**** actual inputs\n";
+        #__debug("**** actual inputs\n");
 
         foreach my $input_link (@curr_dataset_inputs,@curr_image_inputs,@curr_feature_inputs) {
             my $formal_input = $input_link->to_input();
 
-            #print STDERR "****   ".$formal_input->name()."\n";
+            #__debug("****   ".$formal_input->name()."\n");
 
             my $formal_output = $input_link->from_output();
             my $pred_node = $input_link->from_node();
             my $pred_analysis = __getAnalysis($pred_node->id());
 
-            #print STDERR "****   ".$pred_node->id()."\n";
+            #__debug("****   ".$pred_node->id()."\n");
 
-            #print STDERR "****     $actual_outputID\n";
+            #__debug("****     $actual_outputID\n");
 
             my $actual_input = $factory->
               newObject("OME::Analysis::ActualInput",
@@ -1174,7 +1184,7 @@ sub findModuleHandler {
                          input_analysis_id => $pred_analysis->id()
                         });
 
-            #print STDERR "****     ".$actual_input->id()."\n";
+            #__debug("****     ".$actual_input->id()."\n");
         }
     }
 
@@ -1232,7 +1242,7 @@ sub findModuleHandler {
 
         my $paramString = __calculateCurrentInputTag();
         my $space = ($dependence{$curr_nodeID} eq 'D')? '': '  ';
-        print STDERR "$space  Param $paramString\n";
+        __debug("$space  Param $paramString\n");
 
         my $match = 0;
         my $matched_analysis;
@@ -1244,14 +1254,14 @@ sub findModuleHandler {
 
       FIND_MATCH:
         foreach my $past_analysis (@past_analyses) {
-            print STDERR "$space    Checking analysis ".$past_analysis->id()."...";
+            __debug("$space    Checking analysis ".$past_analysis->id()."...");
             if ($past_analysis->status() ne 'FINISHED') {
-                print STDERR "unfinished.\n";
+                __debug("unfinished.\n");
                 next FIND_MATCH;
             }
             if (defined $this_analysisID &&
                 $past_analysis->id() eq $this_analysisID) {
-                print STDERR "current analysis.\n";
+                __debug("current analysis.\n");
                 next FIND_MATCH;
             }
             my $image_map = $factory->
@@ -1259,25 +1269,25 @@ sub findModuleHandler {
                            image_id   => $curr_imageID,
                            dataset_id => $past_analysis->dataset()->id());
             if (!defined $image_map) {
-                print STDERR "didn't execute against this image.\n";
+                __debug("didn't execute against this image.\n");
                 next FIND_MATCH;
             }
 
             my $past_paramString = __calculatePastInputTag($past_analysis);
-            print STDERR "\n$space    Found $past_paramString ";
+            __debug("\n$space    Found $past_paramString ");
 
             if ($past_paramString eq $paramString) {
                 $match = 1;
                 $matched_analysis = $past_analysis;
-                print STDERR "match!\n";
+                __debug("match!\n");
                 last FIND_MATCH;
             }
 
-            print STDERR "mismatch.\n";
+            __debug("mismatch.\n");
         }
 
         if ($match) {
-            print STDERR "$space    Found reusable analysis ".$matched_analysis->id()."\n";
+            __debug("$space    Found reusable analysis ".$matched_analysis->id()."\n");
             __addAnalysisToPaths($matched_analysis);
             __assignAnalysis($matched_analysis,1);
         }
@@ -1301,11 +1311,11 @@ sub findModuleHandler {
             my ($prefix,$tag) = @_;
 
             if (exists $tags_found{$tag}) {
-                print STDERR "${prefix}ERROR!  '$tag' found twice!\n";
+                __debug("${prefix}ERROR!  '$tag' found twice!\n");
                 die "$tag found twice in feature hierarchy";
             }
 
-            print STDERR "${prefix}'${tag}'\n";
+            __debug("${prefix}'${tag}'\n");
             $tags_found{$tag} = 1;
 
             foreach (keys %{$hierarchy_children{$tag}}) {
@@ -1313,7 +1323,7 @@ sub findModuleHandler {
             }
         };
 
-        print STDERR "$prefix<Image>\n";
+        __debug("$prefix<Image>\n");
         &$print_tag("$prefix  ",$_) foreach keys %hierarchy_roots;
     }
 
@@ -1369,18 +1379,18 @@ sub findModuleHandler {
                         # node, or b) must be a child of the
                         # predecessor iterator.
 
-                        #print STDERR "          Found tag $tag\n";
+                        #__debug("          Found tag $tag\n");
 
                         if ($pred_iterator eq '[Image]') {
-                            #print STDERR "            $tag is a child of <Image>\n";
+                            #__debug("            $tag is a child of <Image>\n");
                             $hierarchy_parent{$tag} = undef;
                             $hierarchy_roots{$tag} = 1;
                         } elsif ($tag eq $pred_iterator) {
-                            #print STDERR "            $tag is propagating\n";
+                            #__debug("            $tag is propagating\n");
                             # No more parents can be determined at
                             # this point.
                         } else {
-                            #print STDERR "            $tag is a parent of $pred_iterator\n";
+                            #__debug("            $tag is a parent of $pred_iterator\n");
                             $hierarchy_parent{$tag} = $pred_iterator;
                             $hierarchy_children{$pred_iterator}->{$tag} = 1;
                         }
@@ -1404,7 +1414,7 @@ sub findModuleHandler {
         # Tries to build an SQL statement that finds the iterator
         # features that correspond to a given tag feature.
 
-        #print STDERR "Building SQL for iterator $iterator and tag $tag\n";
+        #__debug("Building SQL for iterator $iterator and tag $tag\n");
 
 
         # Quickly handle the trivial case.
@@ -1419,7 +1429,7 @@ sub findModuleHandler {
                 __PACKAGE__->set_sql($filter_method,$sql,'Main');
                 $sqls_defined{$filter_method} = 1;
 
-                #print STDERR "$sql\n";
+                #__debug("$sql\n");
             }
 
             return "sql_${filter_method}";
@@ -1484,7 +1494,7 @@ sub findModuleHandler {
                 join(", ",@tables)." WHERE ".
                   join(" AND ",@joins);
 
-            print STDERR "$sql\n";
+            __debug("$sql\n");
 
             __PACKAGE__->set_sql($filter_method,$sql,'Main');
             $sqls_defined{$filter_method} = 1;
@@ -1511,7 +1521,7 @@ sub findModuleHandler {
 
                 while (my $row = $sth->fetch) {
                     my ($featureID,$tag) = @$row;
-                    #print STDERR "--- $featureID $tag\n";
+                    #__debug("--- $featureID $tag\n");
                     $input_features{$tag}->{$featureID} = 1;
                 }
             }
@@ -1533,14 +1543,14 @@ sub findModuleHandler {
                 my $features = __fetchall($sth);
 
                 foreach (@$features) {
-                    #print STDERR "$_ !\n";
+                    #__debug("$_ !\n");
                     $iterator_features{$_} = 1;
                 }
             }
         }
 
         my @feature_IDs = keys %iterator_features;
-        #print STDERR join(',',@feature_IDs)."\n";
+        #__debug(join(',',@feature_IDs)."\n");
         return \@feature_IDs;
     }
 
@@ -1571,11 +1581,11 @@ sub findModuleHandler {
         my %input_features;
 
         foreach my $tag (keys %tags) {
-            #print STDERR "$tag!!!!!\n";
+            #__debug("$tag!!!!!\n");
             my $sql = __buildIteratorSQL($tag,$iterator);
-            #print STDERR "  $sql\n";
+            #__debug("  $sql\n");
             my $snippet = "= $curr_featureID";
-            #print STDERR "  '$snippet'\n";
+            #__debug("  '$snippet'\n");
             $sth = $self->$sql($snippet);
 
             #print "****** '$curr_featureID'\n";
@@ -1586,7 +1596,7 @@ sub findModuleHandler {
 
         my @feature_IDs = keys %input_features;
         my $feature_IDs = join(",",keys %input_features);
-        #print STDERR " $feature_IDs\n";
+        #__debug(" $feature_IDs\n");
 
         my %attributes;
 
@@ -1607,31 +1617,32 @@ sub findModuleHandler {
     sub __processAllFeatures {
         $curr_module->startFeature(undef);
 
-        print STDERR "      Feature inputs\n";
+        __debug("      Feature inputs\n");
         my %feature_hash;
-        $feature_hash{$_->to_input()->name()} =
-          __findInputAttributes($_,
-                                "         ",
-                                "sql_get_input_feature_attributes",
-                                $curr_imageID)
-            foreach @curr_feature_inputs;
+        foreach my $input (@curr_feature_inputs) {
+            $feature_hash{$input->to_input()->name()} =
+                __findInputAttributes($input,
+                                      "         ",
+                                      "sql_get_input_feature_attributes",
+                                      $curr_imageID);
+        }
         $curr_module->featureInputs(\%feature_hash);
 
-        print STDERR "      Calculate feature\n";
+        __debug("      Calculate feature\n");
         $curr_module->calculateFeature();
 
         # Collect and process the feature outputs
 
         my $feature_attributes = $curr_module->collectFeatureOutputs();
 
-        print STDERR "      Feature outputs\n";
+        __debug("      Feature outputs\n");
         foreach my $formal_output (@curr_feature_outputs) {
             my $attribute_list = $feature_attributes->{$formal_output->name()};
             if (ref($attribute_list) ne 'ARRAY') {
                 $attribute_list = [$attribute_list];
             }
-            print STDERR "        ".$formal_output->name()." (".
-              scalar(@$attribute_list).")\n";
+            __debug("        ".$formal_output->name()." (".
+              scalar(@$attribute_list).")\n");
             #__createActualOutputs($formal_output,$big_list);
         }
 
@@ -1639,50 +1650,47 @@ sub findModuleHandler {
     }
 
     sub __processOneFeature {
-        print STDERR "        startFeature ".$curr_featureID."\n";
+        __debug("        startFeature ".$curr_featureID."\n");
         $curr_module->startFeature($curr_feature);
 
-        print STDERR "          Feature inputs\n";
+        __debug("          Feature inputs\n");
         my %feature_hash;
 
         foreach my $input_link (@curr_feature_inputs) {
             my $formal_input = $input_link->to_input();
-            #print STDERR "  Link ".$input_link." ".$formal_input->name()."\n";
+            #__debug("  Link ".$input_link." ".$formal_input->name()."\n");
             my $attr_type_name = $formal_input->attribute_type()->name();
             my @attributes = @{__findFeatureAttributes($input_link)};
 
             # Turn the attribute ID's into attribute objects.
-            foreach (@attributes) {
-                #print " -- $_ \n";
-                $_ = $factory->loadAttribute($attr_type_name,$_);
-                #print " -- $_ \n";
-            }
+            $_ = $factory->loadAttribute($attr_type_name,$_)
+                foreach (@attributes);
 
-            print STDERR "            ".$formal_input->name()." (".
-              scalar(@attributes).")\n";
+            __debug("            ".$formal_input->name()." (".
+              scalar(@attributes).")\n");
 
             $feature_hash{$formal_input->name()} = \@attributes;
         }
 
         $curr_module->featureInputs(\%feature_hash);
 
-        print STDERR "          Calculate feature\n";
+        __debug("          Calculate feature\n");
         $curr_module->calculateFeature();
 
         # Collect and process the feature outputs
 
         my $feature_attributes = $curr_module->collectFeatureOutputs();
 
-        print STDERR "          Feature outputs\n";
-        foreach my $formal_output (@curr_feature_outputs) {
-            my $attribute_list = 
-              $feature_attributes->{$formal_output->name()};
-            if (ref($attribute_list) ne 'ARRAY') {
-                $attribute_list = [$attribute_list];
-            }
-            print STDERR "            ".$formal_output->name().
-              " (".scalar(@$attribute_list).")\n";
-        }
+        __debug("          Feature outputs\n");
+        #foreach my $formal_output (@curr_feature_outputs) {
+        #    my $attribute_list = 
+        #      $feature_attributes->{$formal_output->name()};
+        #    if (ref($attribute_list) ne 'ARRAY') {
+        #        $attribute_list = [$attribute_list];
+        #    }
+        #    __debug("            ".$formal_output->name().
+        #      " (".scalar(@$attribute_list).")\n");
+        #}
 
         $curr_module->finishFeature();
     }
@@ -1706,19 +1714,17 @@ sub findModuleHandler {
 
         my @attribute_list;
         if ($no_load) {
-            while (my $row = $sth->fetch()) {
-                push @attribute_list, $row->[0];
-            }
+            push @attribute_list, $_->[0]
+                while ($_ = $sth->fetch());
         } else {
-            while (my $row = $sth->fetch()) {
-                push @attribute_list, $factory->
-                    loadAttribute($attr_type_name,
-                                  $row->[0]);
-            }
+            push @attribute_list, $factory->
+                loadAttribute($attr_type_name,
+                              $_->[0])
+                    while ($_ = $sth->fetch());
         }
 
-        print STDERR $prefix.$formal_input->name()." (".
-          scalar(@attribute_list).")\n";
+        __debug($prefix.$formal_input->name()." (".
+          scalar(@attribute_list).")\n");
 
 
         return \@attribute_list;
@@ -1736,9 +1742,9 @@ sub findModuleHandler {
         # all nodes
         @nodes = $analysis_view->nodes();
 
-        print STDERR "Setup\n";
+        __debug("Setup\n");
 
-        print STDERR "  Locking the dataset\n";
+        __debug("  Locking the dataset\n");
         $dataset->locked('true');
         $dataset->commit();
 
@@ -1748,20 +1754,20 @@ sub findModuleHandler {
         # that an unlocked view has not had paths calculated, whereas
         # a locked one has.
         if (!$analysis_view->locked()) {
-            print STDERR "  Chain has not been locked yet\n";
+            __debug("  Chain has not been locked yet\n");
 
             __buildDataPaths();
 
-            print STDERR "  Locking the chain\n";
+            __debug("  Locking the chain\n");
             $analysis_view->locked('true');
             $analysis_view->commit();
         } else {
-            print STDERR "  Chain has already been locked\n";
+            __debug("  Chain has already been locked\n");
 
             __loadDataPaths();
         }
 
-        print STDERR "  Creating ANALYSIS_EXECUTION table entry\n";
+        __debug("  Creating ANALYSIS_EXECUTION table entry\n");
 
         $analysis_execution = $factory->
           newObject("OME::AnalysisExecution",
@@ -1788,7 +1794,7 @@ sub findModuleHandler {
         while ($continue) {
             $continue = 0;
             $round++;
-            print STDERR "Round $round...\n";
+            __debug("Round $round...\n");
 
             # Look for input_nodes that are ready to run (i.e., whose
             # predecessor nodes have been completed).
@@ -1799,8 +1805,8 @@ sub findModuleHandler {
 
                 # Go ahead and skip if we've completed this module.
                 if ($node_states{$curr_nodeID} > INPUT_STATE) {
-                    print STDERR "  ".$curr_node->program()->
-                      program_name()." already completed\n";
+                    __debug("  ".$curr_node->program()->
+                      program_name()." already completed\n");
                     next ANALYSIS_LOOP;
                 }
 
@@ -1810,8 +1816,8 @@ sub findModuleHandler {
 
 
                 if (!__testModulePredecessors()) {
-                    print STDERR "  Skipping ".$curr_node->program()->
-                      program_name()."\n";
+                    __debug("  Skipping ".$curr_node->program()->
+                      program_name()."\n");
                     next ANALYSIS_LOOP;
                 }
 
@@ -1855,7 +1861,7 @@ sub findModuleHandler {
 
                 if ($dependence{$curr_nodeID} eq 'D') {
                     if (__checkPastResults()) {
-                        print STDERR "    Marking state\n";
+                        __debug("    Marking state\n");
                         $node_states{$curr_nodeID} = FINISHED_STATE;
                         $continue = 1;
                         next ANALYSIS_LOOP;
@@ -1864,12 +1870,12 @@ sub findModuleHandler {
 
                 my $new_analysis;
 
-                print STDERR "  Executing ".$curr_node->program()->
-                  program_name()." (".$dependence{$curr_nodeID}.")\n";
+                __debug("  Executing ".$curr_node->program()->
+                  program_name()." (".$dependence{$curr_nodeID}.")\n");
 
                 # Execute away.
                 if ($dependence{$curr_nodeID} eq 'D') {
-                    print STDERR "    Creating ANALYSIS entry";
+                    __debug("    Creating ANALYSIS entry");
                     $new_analysis = 
                       __createAnalysis({
                                         program    => $curr_node->program(),
@@ -1879,27 +1885,27 @@ sub findModuleHandler {
                                         status     => 'RUNNING'
                                        });
                     __assignAnalysis($new_analysis,0);
-                    print STDERR " (".$new_analysis->id().")\n";
+                    __debug(" (".$new_analysis->id().")\n");
                     __createActualInputs($new_analysis);
                     my $actual_outputs = __createActualOutputs($new_analysis);
                     $curr_module->startAnalysis($new_analysis);
                 }
 
-                print STDERR "    startDataset\n";
+                __debug("    startDataset\n");
                 $curr_module->startDataset($dataset);
 
                 # Collect and present the dataset inputs
 
-                print STDERR "    Dataset inputs\n";
+                __debug("    Dataset inputs\n");
                 my %dataset_hash;
-                $dataset_hash{$_->to_input()->name()} =
-                  __findInputAttributes($_,
-                                        "      ",
-                                        "sql_get_input_attributes")
-                    foreach @curr_dataset_inputs;
-                $curr_module->datasetInputs(\%dataset_hash);
+                foreach my $input (@curr_dataset_inputs) {
+                    $dataset_hash{$input->to_input()->name()} =
+                        __findInputAttributes($input,
+                                              "      ",
+                                              "sql_get_input_attributes");
+                }
 
-                print STDERR "    Precalculate dataset\n";
+                __debug("    Precalculate dataset\n");
                 $curr_module->precalculateDataset();
 
                 my $image_maps = $dataset->image_links();
@@ -1909,13 +1915,13 @@ sub findModuleHandler {
                     $curr_image = $image_map->image();
                     $curr_imageID = $curr_image->id();
 
-                    print STDERR "    Image ".$curr_image->name()."\n";
+                    __debug("    Image ".$curr_image->name()."\n");
 
                     if ($dependence{$curr_nodeID} eq 'I') {
                         if (__checkPastResults()) {
                             next IMAGE_LOOP;
                         } elsif (!defined $new_analysis) {
-                            print STDERR "    Creating ANALYSIS entry";
+                            __debug("    Creating ANALYSIS entry");
                             $new_analysis =
                               __createAnalysis({
                                                 program    => $curr_node->program(),
@@ -1925,7 +1931,7 @@ sub findModuleHandler {
                                                 status     => 'RUNNING'
                                                });
                             __assignAnalysis($new_analysis,0);
-                            print STDERR " (".$new_analysis->id().")\n";
+                            __debug(" (".$new_analysis->id().")\n");
                             __createActualInputs($new_analysis);
                             my $actual_outputs = __createActualOutputs($new_analysis);
                             $curr_module->startAnalysis($new_analysis);
@@ -1934,23 +1940,24 @@ sub findModuleHandler {
                         }
                     }
 
-                    print STDERR "    startImage\n";
+                    __debug("    startImage\n");
                     $curr_module->startImage($curr_image);
 
-                    print STDERR "    Image inputs\n";
+                    __debug("    Image inputs\n");
                     my %image_hash;
-                    $image_hash{$_->to_input()->name()} =
-                      __findInputAttributes($_,
-                                            "      ",
-                                            "sql_get_input_image_attributes",
-                                            $curr_imageID)
-                        foreach @curr_image_inputs;
+                    foreach my $input (@curr_image_inputs) {
+                        $image_hash{$input->to_input()->name()} =
+                            __findInputAttributes($input,
+                                                  "      ",
+                                                  "sql_get_input_image_attributes",
+                                                  $curr_imageID);
+                    }
                     $curr_module->imageInputs(\%image_hash);
 
-                    print STDERR "    Precalculate image\n";
+                    __debug("    Precalculate image\n");
                     $curr_module->precalculateImage();
 
-                    print STDERR "      Calculating feature hierarchy\n";
+                    __debug("      Calculating feature hierarchy\n");
                     __calculateHierarchy();
                     __printHierarchy("        ");
 
@@ -1961,7 +1968,7 @@ sub findModuleHandler {
                         # present the feature inputs grouped by
                         # iterator feature.
 
-                        print STDERR "      Iterating over ".$curr_node->iterator_tag()." tag\n";
+                        __debug("      Iterating over ".$curr_node->iterator_tag()." tag\n");
 
                         my $iterator_features = __findIteratorFeatures();
 
@@ -1979,41 +1986,41 @@ sub findModuleHandler {
                     }
 
                     # Collect and process the image outputs
-                    print STDERR "    Postcalculate image\n";
+                    __debug("    Postcalculate image\n");
                     $curr_module->postcalculateImage();
 
                     my $image_attributes = $curr_module->collectImageOutputs();
 
-                    print STDERR "    Image outputs\n";
-                    foreach my $formal_output (@curr_image_outputs) {
-                        my $attribute_list = $image_attributes->{$formal_output->name()};
-                        if (ref($attribute_list) ne 'ARRAY') {
-                            $attribute_list = [$attribute_list];
-                        }
-                        print STDERR "      ".$formal_output->name().
-                          " (".scalar(@$attribute_list).")\n";
-                    }
+                    __debug("    Image outputs\n");
+                    #foreach my $formal_output (@curr_image_outputs) {
+                    #    my $attribute_list = $image_attributes->{$formal_output->name()};
+                    #    if (ref($attribute_list) ne 'ARRAY') {
+                    #        $attribute_list = [$attribute_list];
+                    #    }
+                    #    __debug("      ".$formal_output->name().
+                    #      " (".scalar(@$attribute_list).")\n");
+                    #}
 
                     $curr_module->finishImage($curr_image);
                 }               # foreach $curr_image
 
                 # Collect and process the dataset outputs
-                print STDERR "    Postcalculate dataset\n";
+                __debug("    Postcalculate dataset\n");
                 $curr_module->postcalculateDataset();
 
                 my $dataset_attributes = $curr_module->collectDatasetOutputs();
 
-                print STDERR "    Dataset outputs\n";
-                foreach my $output (@curr_dataset_outputs) {
-                    my $formal_output = $output->from_output();
-                    my $attribute_list =
-                      $dataset_attributes->{$formal_output->name()};
-                    if (ref($attribute_list) ne 'ARRAY') {
-                        $attribute_list = [$attribute_list];
-                    }
-                    print STDERR "      ".$formal_output->name().
-                      " (".scalar(@$attribute_list).")\n";
-                }
+                __debug("    Dataset outputs\n");
+                #foreach my $output (@curr_dataset_outputs) {
+                #    my $formal_output = $output->from_output();
+                #    my $attribute_list =
+                #      $dataset_attributes->{$formal_output->name()};
+                #    if (ref($attribute_list) ne 'ARRAY') {
+                #        $attribute_list = [$attribute_list];
+                #    }
+                #    __debug("      ".$formal_output->name().
+                #      " (".scalar(@$attribute_list).")\n");
+                #}
 
                 $curr_module->finishDataset($dataset);
 
@@ -2021,14 +2028,14 @@ sub findModuleHandler {
                 # another fixed point iteration.
 
                 if (defined $new_analysis) {
-                    print STDERR "    Marking database state\n";
+                    __debug("    Marking database state\n");
                     $new_analysis->status('FINISHED');
                     $new_analysis->commit();
                 }
 
                 $analysis_execution->dbi_commit();
 
-                print STDERR "    Marking state\n";
+                __debug("    Marking state\n");
                 $node_states{$curr_nodeID} = FINISHED_STATE;
                 $continue = 1;
             }                   # ANALYSIS_LOOP - foreach $curr_node
@@ -2040,8 +2047,8 @@ sub findModuleHandler {
 
         my $total_time = timediff($end_time,$start_time);
 
-        print STDERR "\nTiming:\n";
-        print STDERR "  Total: ".timestr($total_time)."\n";
+        __debug("\nTiming:\n",'Timing');
+        __debug("  Total: ".timestr($total_time)."\n",'Timing');
 
     }
 }

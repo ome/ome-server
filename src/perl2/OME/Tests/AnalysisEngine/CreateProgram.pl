@@ -138,12 +138,12 @@ my $atXYZMinimum = __createType
     (['Stack minimum','I',''],
      [['WAVENUMBER',$xyzImageInfo,'WAVENUMBER',''],
       ['TIMEPOINT',$xyzImageInfo,'TIMEPOINT',''],
-      ['MIN',$xyzImageInfo,'MIN','']]);
+      ['MINIMUM',$xyzImageInfo,'MIN','']]);
 my $atXYZMaximum = __createType
     (['Stack maximum','I',''],
      [['WAVENUMBER',$xyzImageInfo,'WAVENUMBER',''],
       ['TIMEPOINT',$xyzImageInfo,'TIMEPOINT',''],
-      ['MAX',$xyzImageInfo,'MAX','']]);
+      ['MAXIMUM',$xyzImageInfo,'MAX','']]);
 my $atXYZCentroid = __createType
     (['Stack centroid','I',''],
      [['WAVENUMBER',$xyzImageInfo,'WAVENUMBER',''],
@@ -175,13 +175,13 @@ my $atXYMinimum = __createType
      [['WAVENUMBER',$xyImageInfo,'WAVENUMBER',''],
       ['TIMEPOINT',$xyImageInfo,'TIMEPOINT',''],
       ['ZSECTION',$xyImageInfo,'ZSECTION',''],
-      ['MIN',$xyImageInfo,'MIN','']]);
+      ['MINIMUM',$xyImageInfo,'MIN','']]);
 my $atXYMaximum = __createType
     (['Plane maximum','I',''],
      [['WAVENUMBER',$xyImageInfo,'WAVENUMBER',''],
       ['TIMEPOINT',$xyImageInfo,'TIMEPOINT',''],
       ['ZSECTION',$xyImageInfo,'ZSECTION',''],
-      ['MAX',$xyImageInfo,'MAX','']]);
+      ['MAXIMUM',$xyImageInfo,'MAX','']]);
 my $atXYCentroid = __createType
     (['Plane centroid','I',''],
      [['WAVENUMBER',$xyImageInfo,'WAVENUMBER',''],
@@ -217,7 +217,7 @@ my $atExtent = __createType
       ['SIGMA_Y',$extent,'SIGMA_Y',''],
       ['SIGMA_Z',$extent,'SIGMA_Z',''],
       ['SURFACE_AREA',$extent,'SURFACE_AREA',''],
-      ['PERIMITER',$extent,'PERIMITER',''],
+      ['PERIMETER',$extent,'PERIMITER',''],
       ['FORM_FACTOR',$extent,'FORM_FACTOR','']]);
 
 my $atSignal = __createType
@@ -291,7 +291,7 @@ my $calcXYZInfo = __createProgram
     (['Stack statistics',
       'Calculate pixel statistics for each XYZ stack',
       'Statistics',
-      'OME::Analysis::CLIHandler',
+      'OME::Analysis::StopgapCLIHandler',
       '/OME/bin/OME_Image_XYZ_stats'],
      [],
      [['Stack mean',$atXYZMean],
@@ -305,7 +305,7 @@ my $calcXYInfo = __createProgram
     (['Plane statistics',
       'Calculate pixel statistics for each XY plane',
       'Statistics',
-      'OME::Analysis::CLIHandler',
+      'OME::Analysis::StopgapCLIHandler',
       '/OME/bin/OME_Image_XY_stats'],
      [],
      [['Plane mean',$atXYMean],
