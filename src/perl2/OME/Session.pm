@@ -35,7 +35,8 @@ __PACKAGE__->mk_ro_accessors(qw(Manager Username UserID User Factory));
 __PACKAGE__->set_db('Main',
                   OME::SessionManager->DataSource(),
                   OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword());
+                  OME::SessionManager->DBPassword(), 
+                  { RaiseError => 1 });
 
 __PACKAGE__->set_sql('find_user',<<"SQL",'Main');
       select experimenter_id, password

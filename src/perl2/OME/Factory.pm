@@ -34,7 +34,8 @@ __PACKAGE__->mk_accessors(qw(Debug));
 __PACKAGE__->set_db('Main',
                   OME::SessionManager->DataSource(),
                   OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword());
+                  OME::SessionManager->DBPassword(), 
+                  { RaiseError => 1 });
 
 
 

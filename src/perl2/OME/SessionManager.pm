@@ -40,7 +40,8 @@ __PACKAGE__->DBPassword(undef);
 __PACKAGE__->set_db('Main',
                   OME::SessionManager->DataSource(),
                   OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword());
+                  OME::SessionManager->DBPassword(), 
+                  { RaiseError => 1 });
 
 require OME::Session;
 
