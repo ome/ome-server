@@ -323,7 +323,7 @@ void
 DESTROY(pArray)
         OME::Matlab::Array pArray
         CODE:
-                printf("OME::Matlab::Array::DESTROY\n");
+                /* printf("OME::Matlab::Array::DESTROY\n"); */
                 mxDestroyArray(pArray);
         OUTPUT:
 
