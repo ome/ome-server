@@ -72,7 +72,6 @@ public class SelectionState {
 	private ChainExecution currentExecution = null;
 	private CProject currentProject = null;
 	private CProject rolloverProject = null;
-	private Collection activeProjects = null;
 	
 	// listener lists
 	private ArrayList selectionListeners = new ArrayList();
@@ -117,7 +116,6 @@ public class SelectionState {
 		if (currentChain == null) {
 			activeDatasets =null;
 			currentDataset = null;
-			activeProjects = null;
 			currentProject = null;
 		}
 		else {
@@ -131,11 +129,9 @@ public class SelectionState {
 			}
 			
 		    // update projects.
-			activeProjects = null;
 			if (currentDataset == null)  { // no project if no dataset
 				currentProject = null;
-			} else if (currentProject == null)
-				activeProjects = currentDataset.getProjects();
+			} 
 		}
 
 		fireSelectionEvent(
@@ -164,7 +160,6 @@ public class SelectionState {
 				//only one project is active if the active datasets 
 				// don't contain the current dataset.
 				currentDataset = null;
-				activeProjects =null;
 			}
 		}
 		fireSelectionEvent(
@@ -172,28 +167,20 @@ public class SelectionState {
 	}
 	
 
-	public Collection getActiveProjects() {
-		return activeProjects;
-	}
+	
 	
 	public CProject getSelectedProject() {
 		return currentProject;
 	}
-	
-	public boolean isActiveProject(CProject p) {
-		if (activeProjects == null)
-			return false;
-		else return activeProjects.contains(p);
-	}
-	
+
 	public void setRolloverProject(CProject p) {
 		
 		// we don't change the rollover if there is a selected project
-		if (currentProject == null) {
+		//if (currentProject != null) {
 			rolloverProject =p;
 			fireSelectionEvent(
 				new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_PROJECT));
-		}
+		//}
 	}
 	
 	public CProject getRolloverProject() {
@@ -212,18 +199,16 @@ public class SelectionState {
 		currentDataset = current;
 		
 		if (currentDataset == null) {
-			activeProjects = null;
 	    	currentChain = null;
 		}
 		else  {
-			activeProjects = currentDataset.getProjects();
-			if (!activeProjects.contains(currentProject))
+			if (!currentDataset.hasProject(currentProject))
 				currentProject = null;
 		}
 	     
     	if (currentProject!=null) {
     		if (currentDataset != null && 
-    				!currentProject.getDatasets().contains(currentDataset)) {
+    				!currentProject.hasDataset(currentDataset)) {
     			currentProject =null;
     		}
     		else {
