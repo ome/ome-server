@@ -49,11 +49,12 @@
 #include <sys/param.h>
 
 #include "Pixels.h"
+#include "OMEIS_Error.h"
+#include "omeis.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
 #endif
-
 
 
 int main (int argc, char **argv) {

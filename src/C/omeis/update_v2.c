@@ -50,6 +50,8 @@
 
 #include "Pixels.h"
 #include "File.h"
+#include "OMEIS_Error.h"
+#include "omeis.h"
 
 
 /* driver that updates pixels from vers 2 to vers 3 */

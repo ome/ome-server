@@ -43,36 +43,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h> 
+#include <errno.h>
 
 #include "cgi.h"
 
 
-
-void HTTP_DoError (char *method, const char *template, ...) {
-va_list ap;
-/*
-403 Forbidden Authorization failure
-500 Server Error 
-*/
-	if (getenv("REQUEST_METHOD")) {
-		fprintf (stdout,"Status: 500 %s\r\n","Server Error");
-		fprintf (stdout,"Content-Type: text/plain\r\n\r\n");
-		fprintf (stdout,"Error calling %s: ", method);
-		fprintf (stderr,"Error calling %s: ", method);
-		va_start (ap, template);
-		vfprintf (stdout, template, ap);
-		vfprintf (stderr, template, ap);
-		va_end (ap);
-		fprintf (stdout,"\n");
-		fprintf (stderr,"\n");
-	} else {
-		fprintf (stderr,"Error calling %s: ", method);
-		va_start (ap, template);
-		vfprintf (stderr, template, ap);
-		va_end (ap);
-		fprintf (stderr,"\n");
-	}
-}
 
 void HTTP_ResultType (char *mimeType) {
 

@@ -46,6 +46,7 @@
 #include <zoom.h>
 #include "composite.h"
 #include "Pixels.h"
+#include "OMEIS_Error.h"
 #include "cgi.h"
 
 #define THUMBNAIL_SIZE 50
@@ -60,12 +61,12 @@ int DoThumb (OID ID, FILE *thumbnail, ome_dim sizeX, ome_dim sizeY) {
     CompositeSpec    composite;
 
     if (!fread(&header,sizeof(ThumbnailHeader),1,thumbnail)) {
-        HTTP_DoError ("DoThumb","Could not read thumbnail header");
+        OMEIS_DoError ("Could not read thumbnail header: %s", strerror (errno));
         return (-1);
     }
 
     if (header.signature != OMEIS_THUMB_SIGNATURE) {
-        HTTP_DoError ("DoThumb","Invalid thumbnail file");
+        OMEIS_DoError ("Thumb signature is invalid.");
         return (-1);
     }
 
@@ -73,8 +74,7 @@ int DoThumb (OID ID, FILE *thumbnail, ome_dim sizeX, ome_dim sizeY) {
         memset(&composite, 0, sizeof(CompositeSpec));
 
         if (!(composite.thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-            if (errno) HTTP_DoError ("DoThumb", "%s", strerror( errno ) );
-            else  HTTP_DoError ("DoThumb","Access control error - check error log for details" );
+            OMEIS_DoError ("GetPixelsRep failed");
             return (-1);
         }
 
@@ -92,12 +92,10 @@ int DoThumb (OID ID, FILE *thumbnail, ome_dim sizeX, ome_dim sizeY) {
             composite.stream = stdout;
         }
 
-        DoCompositeZoom(&composite, 0, NULL);
-
-        return 0;
+        return (DoCompositeZoom(&composite, 0, NULL));
     } else {
         if (fseek(thumbnail,header.thumbnail_offset,SEEK_SET)) {
-            HTTP_DoError ("DoThumb","Could not seek to thumbnail data");
+  	        OMEIS_DoError ("Could not seek to thumbnail data: %s", strerror (errno));
             return (-1);
         }
 
@@ -123,11 +121,17 @@ CompositeSpec theComposite;
 
 	memset(&theComposite, 0, sizeof(CompositeSpec));
 
-	/* the negative returned values are interpreted upstream to create informative error msgs */
-	if (! myPixels) return (-1);
-	if (theZ < 0 || theT < 0) return (-2);
-	if (theZ >= myPixels->head->dz ) return (-3);
-	if (theT >= myPixels->head->dt ) return (-4);
+	if (! myPixels) {
+		OMEIS_DoError ("Uh, passing NULL for myPixels?");
+		return (-1);
+	}
+	if ( (theZ < 0 || theT < 0) ||
+		(theZ >= myPixels->head->dz ) ||
+		(theT >= myPixels->head->dt ) ) {
+			OMEIS_DoError ("Malformed coordinates (Z,T).  (%d,%d) must be >= (0,0) and < (%d,%d)",
+				theZ,theT,myPixels->head->dz,myPixels->head->dt);
+			return (-1);
+	}
 	theComposite.theZ = theZ;
 	theComposite.theT = theT;
 	
@@ -208,7 +212,7 @@ CompositeSpec theComposite;
 	for (i=0;i<5;i++) {
 		fixChannelSpec (myPixels, &(theComposite.RGBAGr[i]) );
 		if (! theComposite.RGBAGr[i].isFixed) {
-			fprintf (stderr,"*** NOT FIXED ***\n");
+			OMEIS_DoError ("Could not fix ChannelSpec!");
 			return (-1);
 		}
 	}
@@ -226,9 +230,8 @@ CompositeSpec theComposite;
 		theComposite.sizeX = ( sizeRatio > 1 ? THUMBNAIL_SIZE : THUMBNAIL_SIZE * sizeRatio );
 		theComposite.sizeY = ( sizeRatio < 1 ? THUMBNAIL_SIZE : THUMBNAIL_SIZE / sizeRatio );
 	}
-	DoCompositeZoom (&theComposite, setThumb, param);
 	
-	return (0);
+	return (DoCompositeZoom (&theComposite, setThumb, param));
 }
 
 
@@ -273,7 +276,7 @@ Mapping m;
 	strcat (out_name,".");
 
 	if ( !(ome_pic = pic_open_dev ("omeis",(char *)myComposite, "r")) ) {
-		HTTP_DoError ("DoCompositeZoom","Could not open input Pic (%s)",myComposite->thePixels->path_rep);
+		OMEIS_DoError ("Could not open input Pic (%s)",myComposite->thePixels->path_rep);
 		return (-1);
 	}
 
@@ -295,38 +298,26 @@ Mapping m;
                sizeof(channelSpecType)*5);
 
         if (!(thumbnail = fopen(out_name,"w"))) {
-			HTTP_DoError ("DoCompositeZoom","Could not open output Pic for thumbnail (%s)",out_name);
+			OMEIS_DoError ("Could not open output Pic for thumbnail %s: %s",out_name, strerror (errno));
 			return (-1);
         }
 
         if (!fwrite(&thumbHeader,sizeof(ThumbnailHeader),1,thumbnail)) {
             fclose(thumbnail);
-			HTTP_DoError ("DoCompositeZoom","Could not write thumbnail header (%s)",out_name);
+			OMEIS_DoError ("Could not write thumbnail header %s: %s",out_name, strerror (errno));
 			return (-1);
         }
 
 		if ( !(out_pic = pic_open_stream ("jpeg", thumbnail, out_name, "w")) ) {
-			HTTP_DoError ("DoCompositeZoom","Could not open output Pic for thumbnail (%s)",out_name);
+			OMEIS_DoError ("Could not open output Pic for thumbnail %s",out_name);
 			return (-1);
 		}
 	} else {
 		strcat (out_name,myComposite->format);
 		if ( !(out_pic = pic_open_stream (myComposite->format, stdout, out_name, "w")) ) {
-			HTTP_DoError ("DoCompositeZoom",
-				"Could not open output Pic for streaming (%s format)",myComposite->format);
+			OMEIS_DoError ("Could not open output Pic for streaming (%s format)",myComposite->format);
 			return (-1);
 		}
-	}
-	
-	if ( param != NULL && (fileName = get_param (param,"Save")) && getenv("REQUEST_METHOD") && !setThumb) {
-		fprintf (stdout,"Content-Disposition: attachment; filename=\"%s.%s\"\r\n",fileName,myComposite->format);
-		HTTP_ResultType ("application/octet-stream");
-	} else if (!setThumb){
-		strcpy (mime_type,"image/");
-		strncat (mime_type,myComposite->format,200);
-		HTTP_ResultType (mime_type);
-	} else if (setThumb){
-		HTTP_ResultType ("text/plain");
 	}
 
 	
@@ -349,10 +340,11 @@ Mapping m;
 	xfilt = filt_find(xfiltname);
 	yfilt = filt_find(yfiltname);
 	if (!xfilt || !yfilt) {
-	fprintf(stderr, "can't find filters %s and %s\n",
+		OMEIS_DoError ("can't find filters %s and %s\n",
 		xfiltname, yfiltname);
-	exit(1);
+		return (-1);
 	}
+
 	/* copy the filters before modifying them */
 	xf = *xfilt; xfilt = &xf;
 	yf = *yfilt; yfilt = &yf;
@@ -371,6 +363,17 @@ Mapping m;
 	if (ywindowname || yfilt->windowme) {
 		if (!ywindowname) ywindowname = WINDOW_DEFAULT;
 			yfilt = filt_window(yfilt, ywindowname);
+	}
+
+	if ( param != NULL && (fileName = get_param (param,"Save")) && getenv("REQUEST_METHOD") && !setThumb) {
+		fprintf (stdout,"Content-Disposition: attachment; filename=\"%s.%s\"\r\n",fileName,myComposite->format);
+		HTTP_ResultType ("application/octet-stream");
+	} else if (!setThumb){
+		strcpy (mime_type,"image/");
+		strncat (mime_type,myComposite->format,200);
+		HTTP_ResultType (mime_type);
+	} else if (setThumb){
+		HTTP_ResultType ("text/plain");
 	}
 
 	zoom_opt(ome_pic, &ome_win, out_pic, &out_win, xfilt, yfilt, square, intscale);

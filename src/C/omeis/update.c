@@ -49,6 +49,7 @@
 #include <sys/param.h>
 
 #include "Pixels.h"
+#include "OMEIS_Error.h"
 #include "update.h"
 
 #ifndef OMEIS_ROOT
@@ -56,6 +57,7 @@
 #endif
 
 
+/*
 
 pixHeader* update_header_v1(pixHeader_v1* v1Head)
 {
@@ -87,6 +89,7 @@ pixHeader* v2Head;
 
 	return v2Head;
 }
+*/
 
 /* planeInfo_v2* update_planeInfos_v1(planeInfo_v1* v1Plane, int nPlanes) */
 /* { */

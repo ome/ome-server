@@ -107,10 +107,12 @@ typedef struct {
 	char reserved[11];            /* buffer assuming OME_DIGEST_LENGTH=20 */
 } pixHeader_v1;
 
+/*
 pixHeader* update_header_v1(pixHeader_v1* v1Head);
+int fix_header (OID ID);
+int fix_v1_header (PixelsRep *myPixels, FILE *headFP);
+*/
 void update_planeInfos_v2(planeInfo_v2* v2Plane, planeInfo* v3Plane, int nPlanes);
 void update_stackInfos_v2(stackInfo_v2* v2Stack, stackInfo* v3Stack, int nStacks);
 
-int fix_header (OID ID);
-int fix_v1_header (PixelsRep *myPixels, FILE *headFP);
 #endif

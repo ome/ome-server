@@ -49,6 +49,8 @@
 #include <sys/param.h>
 
 #include "Pixels.h"
+#include "OMEIS_Error.h"
+#include "omeis.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
@@ -216,8 +218,7 @@ int fix_header (OID ID) {
 		myPixels = GetPixelsRep (ID, 'i', iamBigEndian);
 		if (myPixels) {
 			if (!isConvertVerified (myPixels)) {
-				if (recoverPixels (myPixels, 0, 0, 1) < 0)
-					fprintf (stderr,"%s\n",myPixels->error_str);
+				recoverPixels (myPixels, 0, 0, 1);
 			}
 			freePixelsRep (myPixels);
 		}

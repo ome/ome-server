@@ -37,6 +37,8 @@
 #ifndef cgi_h
 #define cgi_h
 
+#include "repository.h"
+
 /* ------------------- */
 /* External Prototypes */
 /* ------------------- */
@@ -51,10 +53,6 @@ get_param (char **cgivars, char *param);
 
 char *
 get_lc_param (char **cgivars, char *param);
-
-void
-HTTP_DoError (char *method, const char *template, ...)
-	__attribute__ ((format (printf, 2, 3)));
 
 void
 HTTP_ResultType (char *mimeType);

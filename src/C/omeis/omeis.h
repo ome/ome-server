@@ -37,5 +37,4 @@
 #ifndef omeis_h
 #define omeis_h
 
-
 #endif /* omeis_h */

@@ -67,7 +67,7 @@
 #include "base64.h"
 #include "b64z_lib.h"
 #include "Pixels.h"
-#include "cgi.h"
+#include "OMEIS_Error.h"
 
 /******************************************************************************
 *
@@ -260,8 +260,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		
 		/* load Pixels Rep */
 		if (! (thePixels = GetPixelsRep (PixelsID,'r',state->bigEndian)) ) {
-			if (errno) HTTP_DoError ("xml binary data Insertion", "%s", strerror( errno ) );
-			else HTTP_DoError ("xml binary data Insertion","Access control error - check error log for details" );
+			OMEIS_ReportError ("xmlBinaryInsertion", "PixelsID",PixelsID,"GetPixelsRep failed");
 			assert( thePixels != NULL);
 		}
 		fprintf( stdout, "DimensionOrder=\"XYZCT\" BigEndian=\"%c\">\n", ( state->bigEndian ? 't' : 'f') );
@@ -282,7 +281,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		do {
 			/* get plane */
 			if( !getPixelPlane( thePixels, (void *) bin, theZ, theC, theT ) ) {
-				HTTP_DoError ("xml binary data Insertion","trouble reading a pixels plane. getPixelPlane returned 0." );
+				OMEIS_ReportError ("xmlBinaryInsertion", "PixelsID",thePixels->ID,"getPixelPlane returned NULL.");
 				exit(-1);
 			}				 
 			

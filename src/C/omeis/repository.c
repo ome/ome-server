@@ -39,6 +39,7 @@
 #endif  /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h> 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -49,6 +50,7 @@
 
 
 #include "repository.h"
+#include "OMEIS_Error.h"
 
 /*
   Private prototypes
@@ -200,10 +202,12 @@ char *getRepPath (OID theID, char *path, char makePath) {
 	for (i=nChunks-1;i>0;i--) {
 		sprintf (chunk,"Dir-%03d/",chunks[i]);
 		strcat (path,chunk);
-		if (makePath)
+		if (makePath) {
 			if (mkdir(path, 0700) != 0)
 				if (errno != EEXIST) /* Exist errors are OK, but return on anything else (files should get ENOTDIR) */
 					return (NULL);
+			chmod (path, 0700); /* override the umask */
+		}
 	}
 
 	sprintf (pixIDstr,"%llu",(unsigned long long)theID);
@@ -263,6 +267,7 @@ int newRepFile (OID theID, char *path, size_t size, char *suffix) {
 	if ( (fd = open (path, O_CREAT|O_EXCL|O_RDWR, 0600)) < 0) {
 		return (-2);
 	}
+	chmod (path, 0600); /* Override the umask */
 	
 	lockRepFile (fd,'w',0LL,0LL);
 	
@@ -478,7 +483,7 @@ FILE *openInputFile(char *filename, unsigned char isLocalFile) {
 
     if (isLocalFile) {
         if (!(infile = fopen(filename,"r"))) {
-            fprintf(stderr,"Could not open local input file %s",filename);
+            OMEIS_DoError ("Could not open local input file %s",filename);
             return NULL;
         }
     } else {

@@ -51,6 +51,8 @@
 
 #include "Pixels.h"
 #include "File.h"
+#include "OMEIS_Error.h"
+#include "omeis.h"
 #include "cgi.h"
 #include "method.h"
 #include "composite.h"
@@ -61,6 +63,7 @@
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
 #endif
+
 
 static
 int
@@ -111,14 +114,14 @@ char **cgivars=param;
 
 
 	if (! (method = get_param (param,"Method")) ) {
-		HTTP_DoError (method,"%s", "Method parameter missing");
+		OMEIS_ReportError ("OMEIS", NULL, ID, "Method parameter missing");
 		return (-1);
 	}
 	
 	m_val = get_method_by_name(method);
 	/* Trap for inputed method name strings that don't correspond to implemented methods */
 	if (m_val == 0){
-			HTTP_DoError (method,"Method %s doesnt' exist", method);
+			OMEIS_ReportError (method, NULL, ID, "Method doesn't exist");
 			return (-1);
 	}
 	
@@ -138,7 +141,7 @@ char **cgivars=param;
 			 m_val != M_ISOMEXML      &&
 			 m_val != M_DELETEFILE    &&
 			 m_val != M_GETLOCALPATH) {
-			HTTP_DoError (method,"%s", "PixelsID Parameter missing");
+			OMEIS_ReportError (method, NULL, ID, "PixelsID Parameter missing");
 			return (-1);
 	}
 
@@ -172,12 +175,13 @@ char **cgivars=param;
 			isFloat = 0;
 		
 			if (! (dims = get_param (param,"Dims")) ) {
-				HTTP_DoError (method,"Dims Parameter missing");
+				OMEIS_ReportError (method, NULL, ID, "Dims Parameter missing");
 				return (-1);
 			}
 			numInts = sscanf (dims,"%d,%d,%d,%d,%d,%d",&numX,&numY,&numZ,&numC,&numT,&numB);
 			if (numInts < 6 || numX < 1 || numY < 1 || numZ < 1 || numC < 1 || numT < 1 || numB < 1) {
-				HTTP_DoError (method,"Dims improperly formed.  Expecting numX,numY,numZ,numC,numT,numB.  All positive integers.");
+				OMEIS_ReportError (method, NULL, ID,
+					"Dims improperly formed.  Expecting numX,numY,numZ,numC,numT,numB.  All positive integers.");
 				return (-1);
 			}
 
@@ -190,17 +194,17 @@ char **cgivars=param;
 			}
 			
 			if ( !(numB == 1 || numB == 2 || numB == 4) ) {
-				HTTP_DoError (method,"Bytes per pixel must be 1, 2 or 4, not %d", numB);
+				OMEIS_ReportError (method, NULL, ID,"Bytes per pixel must be 1, 2 or 4, not %d", numB);
 				return (-1);
 			}
 			
 			if ( numB != 4 && isFloat ) {
-				HTTP_DoError (method,"Bytes per pixel must be 4 for floating-point pixels, not %d", numB);
+				OMEIS_ReportError (method, NULL, ID,"Bytes per pixel must be 4 for floating-point pixels, not %d", numB);
 				return (-1);
 			}
 
 			if (! (thePixels = NewPixels (numX,numY,numZ,numC,numT,numB,isSigned,isFloat)) ) {
-				HTTP_DoError (method, "%s", strerror( errno ) );
+				OMEIS_ReportError (method, NULL, ID, "NewPixels failed.");
 				return (-1);
 			}
 
@@ -213,8 +217,7 @@ char **cgivars=param;
         	if (!ID) return (-1);
 
 			if (! (thePixels = GetPixelsRep (ID,'i',1)) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method, "%s", "Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 
@@ -237,8 +240,7 @@ char **cgivars=param;
         	if (!ID) return (-1);
 
 			if (! (thePixels = GetPixelsRep (ID,'i',1)) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 
@@ -261,17 +263,14 @@ char **cgivars=param;
 				sscanf (theParam,"%d",&force);
 
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 	
 			resultID = FinishPixels (thePixels,force);
 		
 			if ( resultID == 0) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "FinishPixels failed.");
 				freePixelsRep (thePixels);
 				return (-1);
 			} else {
@@ -285,15 +284,12 @@ char **cgivars=param;
 			if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 
 			if (! (planeInfoP = thePixels->planeInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "planeInfos are NULL");
 				freePixelsRep (thePixels);
 				return (-1);
 			}
@@ -325,15 +321,12 @@ char **cgivars=param;
 			if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 
 			if (! (planeInfoP = thePixels->planeInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "planeInfos are NULL");
 				freePixelsRep (thePixels);
 				return (-1);
 			}
@@ -361,15 +354,12 @@ char **cgivars=param;
 			if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 
 			if (! (stackInfoP = thePixels->stackInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "stackInfos are NULL");
 				freePixelsRep (thePixels);
 				return (-1);
 			}
@@ -399,15 +389,12 @@ char **cgivars=param;
 		if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 
 			if (! (stackInfoP = thePixels->stackInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "stackInfos are NULL");
 				freePixelsRep (thePixels);
 				return (-1);
 			}
@@ -437,12 +424,11 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_length);
 				uploadSize = (unsigned long)scan_length;
 			} else {
-				HTTP_DoError (method,"UploadSize must be specified!");
+				OMEIS_ReportError (method, NULL, ID,"UploadSize must be specified!");
 				return (-1);
 			}
 			if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) == 0) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, NULL, ID, "UploadFile failed.");
 				return (-1);
 			} else {
 				HTTP_ResultType ("text/plain");
@@ -460,8 +446,7 @@ char **cgivars=param;
 			
 			if (ID) {
 				if (! (thePixels = GetPixelsRep (ID,'i',bigEndian())) ) {
-					if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-					else  HTTP_DoError (method,"Access control error - check error log for details" );
+					OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 					return (-1);
 				}
 				strcpy (file_path,thePixels->path_rep);
@@ -469,8 +454,7 @@ char **cgivars=param;
 			} else if (fileID) {
 				strcpy (file_path,"Files/");
 				if (! getRepPath (fileID,file_path,0)) {
-					HTTP_DoError (method,"Could not get repository path for FileID=%llu",
-						(unsigned long long)fileID);
+					OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed");
 					return (-1);
 				}		
 			} else strcpy (file_path,"");
@@ -484,13 +468,12 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			} else {
-				HTTP_DoError (method,"FileID must be specified!");
+				OMEIS_ReportError (method, NULL, fileID,"FileID must be specified!");
 				return (-1);
 			}
 
 			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",
-					(unsigned long long)fileID);
+				OMEIS_ReportError (method, "FileID", fileID, "GetFileRep failed.");
 				return (-1);
 			}
 
@@ -506,22 +489,36 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			} else {
-				HTTP_DoError (method,"FileID must be specified!");
+				OMEIS_ReportError (method, NULL, ID,"FileID must be specified!");
 				return (-1);
 			}
 
-			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",
-					(unsigned long long)fileID);
+			if ( !(theFile = newFileRep (fileID)) ) {
+				OMEIS_ReportError (method, "FileID", fileID, "Could not make new repository file");
 				return (-1);
 			}
 			
 			if (GetFileInfo (theFile) < 0) {
 				freeFileRep (theFile);
-				HTTP_DoError (method,"Could not get info for FileID=%llu!",
-					(unsigned long long)fileID);
+				OMEIS_ReportError (method, "FileID", fileID,"Could not get file info");
 				return (-1);
 			}
+			
+			if (GetFileAliases (theFile) < 0) {
+				freeFileRep (theFile);
+				OMEIS_ReportError (method, "FileID", fileID,"Could not get aliases");
+				return (-1);
+			}
+			
+			if (stat (theFile->path_rep, &fStat) < 0) {
+				OMEIS_ReportError (method, "FileID", fileID,"Could not get size of file");
+				freeFileRep (theFile);
+				return (-1);			
+			}
+			theFile->size_rep = fStat.st_size;
+
+			
+
 
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"Name=%s\nLength=%lu\nSHA1=",theFile->file_info.name,(unsigned long)theFile->size_rep);
@@ -529,6 +526,21 @@ char **cgivars=param;
 			/* Print our lovely and useful SHA1. */
 			print_md(theFile->file_info.sha1);  /* Convenience provided by digest.c */
 			printf("\n");
+
+			/* Indicate the original if we're an alias */
+			if (theFile->file_info.isAlias) {
+				fprintf (stdout,"IsAlias=%llu\n",theFile->file_info.isAlias);
+			}
+
+			/* Print out any aliases */
+			if (theFile->file_info.nAliases) {
+				fprintf (stdout,"HasAliases=");
+				for (i=0; i<theFile->file_info.nAliases; i++) {
+					fprintf (stdout,"%llu",(unsigned long long) (theFile->aliases[i].ID) );
+					if (i < theFile->file_info.nAliases-1) fprintf (stdout,"\t");
+				}
+				fprintf (stdout,"\n");
+			}
 			freeFileRep (theFile);
 
 			break;
@@ -537,19 +549,18 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			} else {
-				HTTP_DoError (method,"FileID must be specified!");
+				OMEIS_ReportError (method, NULL, fileID,"FileID must be specified!");
 				return (-1);
 			}
 
 			if ( !(theFile = newFileRep (fileID)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",(unsigned long long)fileID);
+				OMEIS_ReportError (method, "FileID", fileID,"newFileRep failed");
 				return (-1);
 			}
 			
 			if (GetFileInfo (theFile) < 0) {
-				HTTP_DoError (method,"Could not get info for FileID=%llu!",
-					(unsigned long long)fileID);
 				freeFileRep (theFile);
+				OMEIS_ReportError (method, "FileID", fileID,"Could not get info for repository file");
 				return (-1);
 			}
 
@@ -570,13 +581,12 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			} else {
-				HTTP_DoError (method,"FileID must be specified!");
+				OMEIS_ReportError (method, NULL, ID,"FileID must be specified!");
 				return (-1);
 			}
 
 			if ( !(theFile = GetFileRep (fileID,offset,length)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",
-					(unsigned long long)fileID);
+				OMEIS_ReportError (method, "FileID", fileID, "GetFileRep failed.");
 				return (-1);
 			}
 
@@ -595,8 +605,7 @@ char **cgivars=param;
 
 			if (offset == 0 && length == theFile->size_rep && getenv("REQUEST_METHOD") ) {
 				if (GetFileInfo (theFile) < 0) {
-					HTTP_DoError (method,"Could not get info for FileID=%llu!",
-						(unsigned long long)fileID);
+					OMEIS_ReportError (method, "FileID", fileID, "GetFileInfo failed.");
 					freeFileRep (theFile);
 					return (-1);
 				}
@@ -613,14 +622,13 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			} else {
-				HTTP_DoError (method,"FileID must be specified!");
+				OMEIS_ReportError (method, NULL, ID,"FileID must be specified!");
 				return (-1);
 			}
 	
 			strcpy (file_path,"Files/");
 			if (! getRepPath (fileID,file_path,0)) {
-				HTTP_DoError (method,"Could not get repository path for FileID=%llu",
-					(unsigned long long)fileID);
+				OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed.");
 				return (-1);
 			}
 	
@@ -633,8 +641,7 @@ char **cgivars=param;
 				strcat (file_path2,".gz");
 				if ( stat (file_path2,&fStat) != 0 ) {
 					if ( (fd = openRepFile (file_path, O_RDONLY)) < 0) {
-						HTTP_DoError (method,"Could not open FileID=%llu: %s",
-							(unsigned long long)fileID, strerror (errno));
+						OMEIS_ReportError (method, "FileID", fileID, "openRepFile failed.");
 						return (-1);
 					}
 					close (fd);
@@ -652,20 +659,18 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_length);
 				uploadSize = (unsigned long)scan_length;
 			} else {
-				HTTP_DoError (method,"UploadSize must be specified!");
+				OMEIS_ReportError (method, NULL, ID,"UploadSize must be specified!");
 				return (-1);
 			}
 			if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) == 0) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, NULL, (OID)0, "UploadFile failed.");
 				return (-1);
 			}
 
 			HTTP_ResultType ("text/plain");
 			strcpy (file_path,"Files/");
 			if (! getRepPath (ID,file_path,0)) {
-				HTTP_DoError (method,"Could not get repository path for FileID=%llu",
-					(unsigned long long)ID);
+				OMEIS_ReportError (method, "FileID", ID, "getRepPath failed.");
 				return (-1);
 			}
 	
@@ -677,8 +682,7 @@ char **cgivars=param;
 			xmlInsertBinaryData( "-", iam_BigEndian );*/
 
 			if ( !(theFile = GetFileRep (ID,0,0)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",
-					(unsigned long long)ID);
+				OMEIS_ReportError (method, "FileID", ID, "GetFileRep failed.");
 				return (-1);
 			}
 			ExpungeFile (theFile);
@@ -691,14 +695,13 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			} else {
-				HTTP_DoError (method,"FileID must be specified!");
+				OMEIS_ReportError (method, NULL, ID,"FileID must be specified!");
 				return (-1);
 			}
 	
 			strcpy (file_path,"Files/");
 			if (! getRepPath (fileID,file_path,0)) {
-				HTTP_DoError (method,"Could not get repository path for FileID=%llu",
-					(unsigned long long)fileID);
+				OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed.");
 				return (-1);
 			}
 
@@ -707,8 +710,7 @@ char **cgivars=param;
 				strcat (file_path2,".gz");
 				if ( stat (file_path2,&fStat) != 0 ) {
 					if ( (fd = openRepFile (file_path, O_RDONLY)) < 0) {
-						HTTP_DoError (method,"Could not open FileID=%llu: %s",
-							(unsigned long long)fileID, strerror (errno));
+						OMEIS_ReportError (method, "FileID", fileID, "openRepFile failed.");
 						return (-1);
 					}
 					close (fd);
@@ -730,7 +732,7 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			} else {
-				HTTP_DoError (method,"FileID must be specified!");
+				OMEIS_ReportError (method, "PixelsID", ID,"FileID must be specified!");
 				return (-1);
 			}
 
@@ -745,8 +747,7 @@ char **cgivars=param;
 			}
 		
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 			head = thePixels->head;
@@ -755,27 +756,27 @@ char **cgivars=param;
 
 			if (m_val == M_CONVERTSTACK) {
 				if (theC < 0 || theT < 0) {
-					HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
+					OMEIS_ReportError (method, "PixelsID", ID,"Parameters theC and theT must be specified to do operations on stacks." );
 					freePixelsRep (thePixels);
 					return (-1);
 				}
 				nPix = head->dx*head->dy*head->dz;
 				if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
-					HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
+					OMEIS_ReportError (method, "PixelsID", ID,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
 					freePixelsRep (thePixels);
 					return (-1);
 				}
 				offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
 			} else if (m_val == M_CONVERTPLANE || m_val == M_CONVERTTIFF) {
 				if (theZ < 0 || theC < 0 || theT < 0) {
-					HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
+					OMEIS_ReportError (method, "PixelsID", ID,"Parameters theZ, theC and theT must be specified to do operations on planes." );
 					freePixelsRep (thePixels);
 					return (-1);
 				}
 				
 				nPix = head->dx*head->dy;
 				if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
-					HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
+					OMEIS_ReportError (method, "PixelsID", ID,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
 					freePixelsRep (thePixels);
 					return (-1);
 				}
@@ -788,20 +789,20 @@ char **cgivars=param;
 				if ( (theParam = get_param (param,"nRows")) )
 					sscanf (theParam,"%ld",&nRows);
 				if (theY < 0 ||theZ < 0 || theC < 0 || theT < 0) {
-					HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
+					OMEIS_ReportError (method, "PixelsID", ID,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
 					freePixelsRep (thePixels);
 					return (-1);
 				}
 
 				nPix = nRows*head->dy;
 				if (!CheckCoords (thePixels, 0, theY, theZ, theC, theT)){
-					HTTP_DoError (method,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
+					OMEIS_ReportError (method, "PixelsID", ID,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
 						theY,theZ,theC,theT,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
 					freePixelsRep (thePixels);
 					return (-1);
 				}
 				if (theY+nRows-1 >= head->dy) {
-					HTTP_DoError (method,"theY + nRows (%d + %ld = %ld) must be less than dY (%d).",
+					OMEIS_ReportError (method, "PixelsID", ID,"theY + nRows (%d + %ld = %ld) must be less than dY (%d).",
 						theY,nRows,theY+nRows,head->dy);
 					freePixelsRep (thePixels);
 					return (-1);
@@ -810,8 +811,7 @@ char **cgivars=param;
 			}
 
 			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",
-					(unsigned long long)fileID);
+				OMEIS_ReportError (method, "FileID", fileID, "GetFileRep failed.");
 				return (-1);
 			}
 
@@ -820,9 +820,9 @@ char **cgivars=param;
 			else
 				nIO = ConvertFile (thePixels, theFile, file_offset, offset, nPix, 1);
 			if (nIO != nPix) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID,
+					"Did not convert correct number of pixels.  Expected %llu, got %llu",
+					(unsigned long long)nPix, (unsigned long long)nIO);
 				freePixelsRep (thePixels);
 				freeFileRep   (theFile);
 				return (-1);
@@ -850,60 +850,56 @@ char **cgivars=param;
 			break;
 			
 		case M_COMPOSITE:
+			if (theZ < 0 || theT < 0) {
+				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theZ, and theT must be specified for the composite method." );
+				return (-1);
+			}
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
 			
-			i = DoComposite (thePixels, theZ, theT, param);
-			
-			if (i == -1){
-				HTTP_DoError (method,"thePixels parameter passed to DoComposite in omeis.c is null." );
-				return (-1);
-			} else if (i == -2) {
-				HTTP_DoError (method,"Parameters theZ, and theT must be specified and nonnegative for the composite method." );
-				return (-1);
-			} else if (i == -3) {
-				HTTP_DoError (method,"Parameter theZ is too large." );
-				return (-1);
-			} else if (i == -4) {
-				HTTP_DoError (method,"Parameter theT is too large." );
+			if (DoComposite (thePixels, theZ, theT, param) < 0) {
+				OMEIS_ReportError (method, "PixelsID", ID, "Could not generate composite.");
+				freePixelsRep (thePixels);
 				return (-1);
 			}
-			
+			freePixelsRep (thePixels);
 			break;
 		
 		case M_GETTHUMB:
 			if ( (theParam = get_param (param,"Size")) ) {
 				sscanf (theParam,"%d,%d",&sizeX,&sizeY);
 				if (sizeX <= 0 || sizeY <= 0) {
-					HTTP_DoError (method,"Thumbnail size cannot be zero or negative for PixelsID=%llu",ID);
+					OMEIS_ReportError (method, "PixelsID", ID,"Thumbnail size cannot be zero or negative.");
 					return (-1);
 				}
 			}
 	
 			strcpy (file_path,"Pixels/");
 			if (! getRepPath (ID,file_path,0)) {
-				HTTP_DoError (method,"Could not get repository path for PixelsID=%llu",
-					(unsigned long long)ID);
+				OMEIS_ReportError (method, "PixelsID", ID, "Could not get repository path");
 				return (-1);
 			}
 			strcat (file_path,".thumb");
 
 			if ( stat (file_path,&fStat) != 0 ) {
-				HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
+				OMEIS_ReportError (method, "PixelsID", ID,"Could not get information for thumbnail at %s",file_path);
 				return (-1);
 			}
 
 			if ( !(file=fopen(file_path, "r")) ) {
-				HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
+				OMEIS_ReportError (method, "PixelsID", ID,"Could not open thumbnail at %s",file_path);
 				return (-1);
 			}
 
-			DoThumb(ID,file,sizeX,sizeY);
-
+			if ( DoThumb(ID,file,sizeX,sizeY) < 0 ) {
+				OMEIS_ReportError (method, "PixelsID", ID,"Could not get thumbnail at %s",file_path);
+				fclose(file); 
+				return (-1);
+			}
 			fclose(file); 
+
 
 			break;
 	} /* END case (method) */
@@ -921,13 +917,12 @@ char **cgivars=param;
 		if (strstr (method,"Set")) {
 			rorw = 'w';
 			if (!(filename = get_param(param,"Pixels"))) {
-				HTTP_DoError(method,"No pixels filename specified");
+				OMEIS_ReportError(method, "PixelsID", ID,"No pixels specified");
 			}
 		} else rorw = 'r';
 
 		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
-			if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-			else HTTP_DoError (method,"Access control error - check error log for details" );
+			OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 			return (-1);
 		}
 
@@ -937,26 +932,26 @@ char **cgivars=param;
 			offset = 0;
 		} else if (strstr (method,"Stack")) {
 			if (theC < 0 || theT < 0) {
-				HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
+				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theC and theT must be specified to do operations on stacks." );
 				freePixelsRep (thePixels);
 				return (-1);
 			}
 			nPix = head->dx*head->dy*head->dz;
 			if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
-				HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
+				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
 				freePixelsRep (thePixels);
 				return (-1);
 			}
 			offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
 		} else if (strstr (method,"Plane")) {
 			if (theZ < 0 || theC < 0 || theT < 0) {
-				HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
+				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theZ, theC and theT must be specified to do operations on planes." );
 				freePixelsRep (thePixels);
 				return (-1);
 			}
 			nPix = head->dx*head->dy;
 			if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
-				HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
+				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
 				freePixelsRep (thePixels);
 				return (-1);
 			}
@@ -966,18 +961,18 @@ char **cgivars=param;
 			if ( (theParam = get_param (param,"nRows")) )
 				sscanf (theParam,"%ld",&nRows);
 			if (theY < 0 || theZ < 0 || theC < 0 || theT < 0) {
-				HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
+				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
 				freePixelsRep (thePixels);
 				return (-1);
 			}
 			if (!CheckCoords (thePixels, 0, theY, theZ, theC, theT)){
-				HTTP_DoError (method,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
+				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
 					theY,theZ,theC,theT,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
 				freePixelsRep (thePixels);
 				return (-1);
 			}
 			if (!CheckCoords (thePixels, 0, theY+nRows-1, theZ, theC, theT)){
-				HTTP_DoError (method,"Number of rows (%d) and theY (%d) exceed maximum Y (%d).",
+				OMEIS_ReportError (method, "PixelsID", ID,"Number of rows (%d) and theY (%d) exceed maximum Y (%d).",
 					nRows,theY,head->dy-1);
 				freePixelsRep (thePixels);
 				return (-1);
@@ -1018,24 +1013,23 @@ char **cgivars=param;
 		if (m_val == M_SETROI) {
 			rorw = 'w';
 			if (!(filename = get_param(param,"Pixels"))) {
-				HTTP_DoError(method,"No pixels filename specified");
+				OMEIS_ReportError(method, "PixelsID", ID,"No pixels specified");
 			}
 		} else rorw = 'r';
 
 		if ( !(ROI = get_param (param,"ROI")) ) {
-			HTTP_DoError (method,"ROI Parameter required for the %s method",method);
+			OMEIS_ReportError (method, "PixelsID", ID,"ROI Parameter required for the %s method",method);
 			return (-1);
 		}
 
 		numInts = sscanf (ROI,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&x0,&y0,&z0,&c0,&t0,&x1,&y1,&z1,&c1,&t1);
 		if (numInts < 10) {
-			HTTP_DoError (method,"ROI improperly formed.  Expected x0,y0,z0,c0,t0,x1,y1,z1,c1,t1");
+			OMEIS_ReportError (method, "PixelsID", ID,"ROI improperly formed.  Expected x0,y0,z0,c0,t0,x1,y1,z1,c1,t1");
 			return (-1);
 		}
 
 		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
-			if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-			else HTTP_DoError (method,"Access control error - check error log for details" );
+			OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 			return (-1);
 		}
 
@@ -1062,15 +1056,14 @@ char **cgivars=param;
 static
 void usage (void) {
 
-	fprintf (stderr,"Bad usage.  Missing parameters.\n");
+	OMEIS_ReportError ("Initialization",NULL, (OID)0, "Bad usage.  Missing parameters.");
 }
-
 int main (int argc,char **argv) {
 char isCGI=0;
 char **in_params;
 
 	if (chdir (OMEIS_ROOT)) {
-		HTTP_DoError ("Initialization","Could not change working directory to %s: %s",
+		OMEIS_ReportError ("Initialization",NULL, (OID)0, "Could not change working directory to %s: %s",
 			OMEIS_ROOT,strerror (errno));
 		exit (-1);
 	}

@@ -118,7 +118,6 @@ typedef struct
 	char doSwap;
 	size_t num_pixels;
 	size_t num_write;  /* number of pixels written */
-	char error_str[OMEIS_ERROR_SIZE];
 	char is_mmapped;
 	/* The rest is just like in the file */
 	pixHeader *head;

@@ -55,6 +55,7 @@
 
 #include "Pixels.h"
 #include "File.h"
+#include "OMEIS_Error.h"
 #include "update.h"
 
 /* Private prototypes */
@@ -64,13 +65,10 @@ static int
 openConvertFile (PixelsRep *myPixels, char rorw);
 static void
 closeConvertFile (PixelsRep *myPixels);
-static void
+static int
 unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp, int nlength);
 static void 
 extractRGBChannels(uint8* read_buf, int nPix, int chan, uint8* write_buf);
-
-/* public prototypes */
-int FinishStats (PixelsRep *myPixels, char force);
 
 
 
@@ -124,7 +122,7 @@ char *sha1DBfile="Pixels/sha1DB.idx";
 	/* If we got an ID, set the paths */
 	if (ID) {
 		if (! getRepPath (ID,myPixels->path_rep,0)) {
-			fprintf (stderr,"Could not get path to pixels file.\n");
+			OMEIS_DoError ("Could not get path to pixels file.");
 			freePixelsRep (myPixels);
 			return (NULL);
 		}
@@ -163,6 +161,7 @@ int vers;
 int i;
 int t,c,z;
 planeInfo* planeInfoP;
+char nullByte=0;
 	
 	/*  figure out from the old header how many planes and stacks there are
 		to predict the size of the new header */
@@ -175,31 +174,38 @@ planeInfo* planeInfoP;
 			sizeof(stackInfo) * nStacks;
 
 	/* close read only file and open it again with exclusive write access*/
-	munmap (myPixels->head, myPixels->size_info);
+	if (myPixels->is_mmapped) munmap (myPixels->head, myPixels->size_info);
 	close(myPixels->fd_info);
 	myPixels->size_info = new_size;
-	lockRepFile (myPixels->fd_info,'w',0LL,sizeof (pixHeader));
 	chmod (myPixels->path_info,0600);
-	myPixels->fd_info = open (myPixels->path_info, O_EXCL|O_RDWR, 0600);
+	if ( (myPixels->fd_info = open (myPixels->path_info, O_RDWR, 0600)) < 0) {
+		return (-1);
+	}
+	lockRepFile (myPixels->fd_info,'w',0LL,0LL);
 
 
 	/* expand the header file so the new header will fit and then mmap */
-	lseek(myPixels->fd_info, myPixels->size_info,SEEK_SET);
-	if (write(myPixels->fd_info, &ret, 1) < 1){
-		fprintf(stderr, "During update, header file resize failed\n");
+	if (lseek(myPixels->fd_info, myPixels->size_info-1, SEEK_SET) < 0) {
+		OMEIS_DoError ("During update, header file resize failed");
 		close(myPixels->fd_info);
 		return (-2);
 	}
+	if (write(myPixels->fd_info, &nullByte, 1) < 1){
+		OMEIS_DoError ("During update, header file resize failed");
+		close(myPixels->fd_info);
+		return (-2);
+	}
+
+	/* Go back to the beginning, and mmap the whole thing */
 	lseek(myPixels->fd_info, 0LL, SEEK_SET);
 	if ((mmap_info = mmap (NULL, myPixels->size_info, mmap_flags, MAP_SHARED, 
 							myPixels->fd_info, 0LL)) == (void *) -1)
 		return (-3);
 	myPixels->is_mmapped = 1;
-		chmod (myPixels->path_conv,0400);
 	/* try to update based on version */
 	switch(vers){
 		case 1:
-fprintf(stderr, "Upgrade from vers 1 doesn't work\n");
+			OMEIS_DoError ("Upgrade from vers 1 doesn't work (PixelsID=%llu)", (unsigned long long)myPixels->ID);
 		/*
 			myPixels->head = update_header_v1( (pixHeader_v1 *) mmap_info );
 			
@@ -258,8 +264,7 @@ fprintf(stderr, "Upgrade from vers 1 doesn't work\n");
 			break;
 				
 		default:
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Incompatible file type.\n");
+			OMEIS_DoError ("Incompatible file type.");
 			return (-10);
 			break;
 	}
@@ -279,23 +284,26 @@ struct stat fStat;
 int open_flags=0, mmap_flags=0;
 int ret=3 /* variable stores the pixel files original version */;
 
+
 	if (rorw == 'r' || rorw == 'i') {
 		open_flags = O_RDONLY;
 		mmap_flags = PROT_READ;
 	} else if (rorw == 'w' || rorw == 'n') {
 		open_flags = O_RDWR;
 		mmap_flags = PROT_READ|PROT_WRITE;
+	} else {
+		return (-1);
 	}
 	
 	/* open the info file (header) */
-	if (myPixels->fd_info < 0)
+	if (myPixels->fd_info < 0) {
 		if ( (myPixels->fd_info = open (myPixels->path_info, open_flags, 0600)) < 0)
 				return (-2);
-	
+		}
 	if (rorw != 'n') {
 	/* wait until we can get a read lock on the header */
-		if (lockRepFile (myPixels->fd_info,'r',0LL,sizeof (pixHeader)) < 0){
-			fprintf(stderr, "lockRepFile failed at openHeaderFile\n");
+		if (lockRepFile (myPixels->fd_info,'r',0LL,0LL) < 0){
+			OMEIS_DoError ("lockRepFile failed at openHeaderFile");
 		}
 	} else {
 	/*
@@ -305,7 +313,7 @@ int ret=3 /* variable stores the pixel files original version */;
 	*/
 		if (myPixels->fd_rep < 0) {
 			if ( (myPixels->fd_rep = open (myPixels->path_rep, open_flags, 0600)) < 0) {
-				lockRepFile (myPixels->fd_info,'w',0LL,sizeof (pixHeader));
+				lockRepFile (myPixels->fd_info,'w',0LL,0LL); /* lock the whole thing */
 			}
 		}
 	}
@@ -326,14 +334,12 @@ int ret=3 /* variable stores the pixel files original version */;
 	myPixels->is_mmapped = 1;
 	
 	if (!head->isFinished && rorw == 'r') {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Attempt to read a write-only file\n");
+			OMEIS_DoError ("Attempt to read a write-only file");
 			return (-4);
 	}
 
 	if (head->isFinished && rorw == 'w') {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Attempt to write to a read-only file\n");
+			OMEIS_DoError ("Attempt to write to a read-only file");
 			return (-5);
 	}
 
@@ -354,14 +360,13 @@ int ret=3 /* variable stores the pixel files original version */;
 		head->vers  != OME_IS_PIXL_VER){
 			
 		/* release the read lock for the file, we will need to upgrade to write */
-		lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
+		lockRepFile (myPixels->fd_info,'u',0LL,0LL);
 		if ( (ret=updateHeaderFile(myPixels, head->vers)) < 0){	
-				sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Incompatible file type. Update fail failed.\n");
+				OMEIS_DoError ("Incompatible file type. Update failed.");
 			return (-10);
 		}
 		/* all write updates were done to the file */
-		lockRepFile (myPixels->fd_info,'r',0LL,sizeof (pixHeader));
+		lockRepFile (myPixels->fd_info,'r',0LL,0LL);
 		return ret;	
 	}
 	/* if we get here we are opening an already updated pixels header file */
@@ -390,8 +395,7 @@ int pixel_file_vers;
 	}
 	
 	if ( (pixel_file_vers = openHeaderFile(myPixels, rorw)) < 0){
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Unable to open Header File \n");
+		OMEIS_DoError ("Unable to open Header File ");
 		return (-1);
 	}
 
@@ -431,8 +435,7 @@ int pixel_file_vers;
 			/* we might need to recompute the statistics after an update */	
 			lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
 		if (FinishStats (myPixels, (char) 0) < 0){
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Unable to compute statistics while updating pixel file\n");
+			OMEIS_DoError ("Unable to compute statistics while updating pixel file");
 			return (-1);
 		}
 	}
@@ -459,8 +462,7 @@ int myAccess, myOpen, myMode = 0600;
 	if (myFlags < 0 || ((myFlags & O_ACCMODE) != myAccess)) {
 		if (myPixels->fd_conv >= 0) close (myPixels->fd_conv);
 		if ( (myPixels->fd_conv = open (myPixels->path_conv, myOpen, myMode)) < 0) {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"openConvertFile (PixelsID=%llu). Couldn't open convert file=%s (%c): %s\n",
+			OMEIS_DoError ("openConvertFile (PixelsID=%llu). Couldn't open convert file=%s (%c): %s",
 					(unsigned long long)myPixels->ID,myPixels->path_conv,
 					rorw,strerror (errno));
 			return (0);
@@ -490,8 +492,7 @@ char done = 0;
 	memset(&conv0Rec, 0, sizeof(convertFileRec));
 
 	if ( !openConvertFile (myPixels, 'r') ) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"Could not open %s: %s\n",myPixels->path_conv,strerror( errno ));
+		OMEIS_DoError ("Could not open %s: %s",myPixels->path_conv,strerror( errno ));
 		return (0);
 	}
 	convFD = myPixels->fd_conv;
@@ -503,8 +504,7 @@ char done = 0;
 			break;
 		}
 		if (nIO != sizeof (convertFileRec) ) {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Error reading convert record from %s: %s\n",
+			OMEIS_DoError ("Error reading convert record from %s: %s",
 				myPixels->path_conv,strerror( errno ));
 			break;
 		}
@@ -571,8 +571,7 @@ char done=0;
 	}
 
 	if ( !openConvertFile (myPixels, 'r') ) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"Could not open %s: %s\n",myPixels->path_conv,strerror( errno ));
+		OMEIS_DoError ("Could not open %s: %s",myPixels->path_conv,strerror( errno ));
 		if (verify) return (0);
 		else return (-101);
 	}
@@ -581,14 +580,12 @@ char done=0;
 	strcpy (myPixels->path_rep,path_root);
 	myPixels->fd_rep = newRepFile (myPixels->ID, myPixels->path_rep, myPixels->size_rep, doVerify);
 	if (myPixels->fd_rep < 0) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"Could not make new repository file %s: %s\n",myPixels->path_rep,strerror( errno ));
+		OMEIS_DoError ("Could not make new repository file %s: %s",myPixels->path_rep,strerror( errno ));
 		return (-102);
 	}
 
 	if ( (mmap_rep = mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE, MAP_SHARED, myPixels->fd_rep, 0LL)) == (void *) -1) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"Could not mmap new repository file %s: %s\n",myPixels->path_rep,strerror( errno ));
+		OMEIS_DoError ("Could not mmap new repository file %s: %s",myPixels->path_rep,strerror( errno ));
 		closeConvertFile (myPixels);
 		close (myPixels->fd_rep);
 		myPixels->fd_rep = -1;
@@ -608,8 +605,7 @@ char done=0;
 			break;
 		}
 		if (nIO != sizeof (convertFileRec) ) {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"Error reading convert record from %s: %s\n",
+			OMEIS_DoError ("Error reading convert record from %s: %s",
 				myPixels->path_conv,strerror( errno ));
 			break;
 		}
@@ -621,8 +617,7 @@ char done=0;
 		if (convRec.FileID && (!myFile || myFile->ID != convRec.FileID)) {
 			if (myFile) freeFileRep (myFile);
 			if ( !(myFile = GetFileRep (convRec.FileID,0,0)) ) {
-				sprintf (myPixels->error_str+strlen(myPixels->error_str),
-					"Error opening FileID=%llu for conversion: %s\n",
+				OMEIS_DoError ("Error opening FileID=%llu for conversion: %s",
 					(unsigned long long)convRec.FileID,strerror( errno ));
 				break;
 			}
@@ -632,8 +627,7 @@ char done=0;
 			nIO = ConvertTIFF (myPixels, myFile,
 				convRec.spec.tiff.theZ, convRec.spec.tiff.theC, convRec.spec.tiff.theT, convRec.spec.tiff.dir_index, 0);
 			if (nIO != nPixPlane) {
-				sprintf (myPixels->error_str+strlen(myPixels->error_str),
-					"Error recovering %s: %s. Expected to read %llu pixels, but got only %llu.\n",
+				OMEIS_DoError ("Error recovering %s: %s. Expected to read %llu pixels, but got only %llu.",
 					myPixels->path_rep, strerror( errno ), (unsigned long long)nPixPlane, (unsigned long long)nIO);
 				break;
 			}
@@ -643,8 +637,7 @@ char done=0;
 			nIO = ConvertFile (myPixels, myFile,
 				(size_t)convRec.spec.file.file_offset, (size_t)convRec.spec.file.pix_offset, (size_t)convRec.spec.file.nPix, 0);
 			if (nIO != (size_t)convRec.spec.file.nPix) {
-				sprintf (myPixels->error_str+strlen(myPixels->error_str),
-					"Error recovering %s: %s. Expected to read %llu pixels, but got only %llu.\n",
+				OMEIS_DoError ("Error recovering %s: %s. Expected to read %llu pixels, but got only %llu.",
 					myPixels->path_rep, strerror( errno ), (unsigned long long)convRec.spec.file.nPix, (unsigned long long)nIO);
 				break;
 			}
@@ -672,7 +665,7 @@ char done=0;
 	if (!isVerified) {
 	/* Calculate the SHA1 for the file we generated, and compare to the one in the header */
 		if (get_md_from_buffer (myPixels->pixels, (size_t)myPixels->size_rep, (unsigned char *)sha1) < 0) {
-			sprintf(myPixels->error_str+strlen(myPixels->error_str), "Unable to retrieve SHA1 for Pixels file during verification.\n");
+			OMEIS_DoError ("Unable to retrieve SHA1 for Pixels file during verification.");
 			closeConvertFile (myPixels);
 			munmap (mmap_rep, myPixels->size_rep);
 			myPixels->pixels = NULL;
@@ -690,22 +683,19 @@ char done=0;
 			close (myPixels->fd_rep);
 			myPixels->fd_rep = -1;
 			unlink (myPixels->path_rep);
-			sprintf(myPixels->error_str+strlen(myPixels->error_str),
-				"Verification failed - %s file deleted.\n",myPixels->path_conv);
+			OMEIS_DoError ("Verification failed - %s file deleted.",myPixels->path_conv);
 			strncpy (myPixels->path_rep,oldRepPath,OMEIS_PATH_SIZE-1);
 			return (-108);
 		} else {
 		/* Mark the convert file as verified */
 		/* since we opened it read-only above, we have to reopen it for writing now */
 			if ( !openConvertFile (myPixels, 'w') ) {
-				sprintf (myPixels->error_str+strlen(myPixels->error_str),
-					"Could not open %s for writing (marking as verified): %s\n",myPixels->path_conv,
+				OMEIS_DoError ("Could not open %s for writing (marking as verified): %s",myPixels->path_conv,
 					strerror( errno ));
 			} else {
 				nIO = write (myPixels->fd_conv, (const void *)&conv0Rec, sizeof (convertFileRec));
 				if (nIO != sizeof (convertFileRec))
-					sprintf (myPixels->error_str+strlen(myPixels->error_str),
-						"Could not write verification to convert file %s: %s\n",myPixels->path_conv,
+					OMEIS_DoError ("Could not write verification to convert file %s: %s",myPixels->path_conv,
 						strerror( errno ));
 				else
 				/* This hasn't been verified before, but it is now, so make it read-only. */
@@ -734,16 +724,14 @@ char done=0;
 		fchmod (myPixels->fd_rep,0400);	
 		if ( (myPixels->fd_rep = openRepFile (myPixels->path_rep, open_flags)) < 0 ) {
 			unlink (myPixels->path_rep);
-			sprintf(myPixels->error_str+strlen(myPixels->error_str),
-				"Couldn't open reconstituted Pixels file - %s deleted.\n",myPixels->path_rep);
+			OMEIS_DoError ("Couldn't open reconstituted Pixels file - %s deleted.",myPixels->path_rep);
 			return (-109);
 		}	
 	/* mmap it the way it was requested */
 		if ( (mmap_rep = mmap (NULL, myPixels->size_rep, mmap_flags, MAP_SHARED, myPixels->fd_rep, 0LL)) == (void *) -1) {
 			close (myPixels->fd_rep);
 			unlink (myPixels->path_rep);
-			sprintf(myPixels->error_str+strlen(myPixels->error_str),
-				"Couldn't mmap reconstituted Pixels file - %s deleted.\n",myPixels->path_rep);
+			OMEIS_DoError ("Couldn't mmap reconstituted Pixels file - %s deleted.",myPixels->path_rep);
 			return (-110);
 		}
 		myPixels->pixels = mmap_rep;
@@ -784,16 +772,16 @@ size_t size;
 int result;
 
 	if (! (myPixels = newPixelsRep (0LL)) ) {
-		perror ("BAH!");
+		OMEIS_DoError ("BAH! - no memory");
 		return (NULL);
 	}
 	myPixels->ID = nextID(myPixels->path_ID);
 	if (myPixels->ID <= 0 && errno) {
-		fprintf (stderr,"Couldn't get next Pixels ID: %s",strerror (errno));
+		OMEIS_DoError ("Couldn't get next Pixels ID: %s",strerror (errno));
 		freePixelsRep (myPixels);
 		return (NULL);
 	} else if (myPixels->ID <= 0){
-		fprintf (stderr,"Happy New Year !!!\n");
+		OMEIS_DoError ("Happy New Year !!!");
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -805,8 +793,7 @@ int result;
 	myPixels->size_info = size;
 	myPixels->fd_info = newRepFile (myPixels->ID, myPixels->path_info, size, "info");
 	if (myPixels->fd_info < 0) {
-		sprintf (error,"Couldn't open repository info file for PixelsID %llu (%s).",(unsigned long long)myPixels->ID,myPixels->path_info);
-		perror (error);
+		OMEIS_DoError ("Couldn't open repository info file for PixelsID %llu (%s).",(unsigned long long)myPixels->ID,myPixels->path_info);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -817,14 +804,13 @@ int result;
 	myPixels->fd_rep = newRepFile (myPixels->ID, myPixels->path_rep, size, NULL);
 
 	if (myPixels->fd_rep < 0) {
-		sprintf (error,"Couldn't open repository file for PixelsID %llu (%s).",(unsigned long long)myPixels->ID,myPixels->path_rep);
-		perror (error);
+		OMEIS_DoError ("Couldn't open repository file for PixelsID %llu (%s).",(unsigned long long)myPixels->ID,myPixels->path_rep);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
 	
 	if ( (result = openPixelsFile (myPixels, 'n')) < 0) {
-		fprintf(stderr, "FAILED \n");
+		OMEIS_DoError ("openPixelsFile failed.");
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -874,20 +860,20 @@ int result;
 	if (!ID) return (NULL);
 
 	if (! (myPixels = newPixelsRep (ID))) {
-		fprintf (stderr,"Could not get a Pixels object.\n");
+		OMEIS_DoError ("Could not get a Pixels object.");
 		return (NULL);
 	}
 
 
 	if ( (result = openPixelsFile (myPixels,rorw)) < 0) {
-		fprintf (stderr,"Could not open pixels file (ID=%llu). Result=%d\n%s", \
-				(unsigned long long) ID,result, myPixels->error_str);
+		OMEIS_DoError ("Could not open pixels file (ID=%llu). Result=%d",
+				(unsigned long long) ID,result);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
 
 	if (! (head = myPixels->head) ) {
-		fprintf (stderr,"Pixels header is undefined.\n");
+		OMEIS_DoError ("Pixels header is undefined.");
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -919,23 +905,16 @@ char iamBigEndian, path_rep[OMEIS_PATH_SIZE];
 	if (myID != 0) {
 		myPixels = GetPixelsRep (myID, 'i', iamBigEndian);
 		if (myPixels) {
-fprintf (stderr,"Pixels ID %20llu: ",myID);
 			if (!isConvertVerified(myPixels)) {
-fprintf (stderr,"Not verified - recovering...");
 				recoverPixels (myPixels, 0, 0, 1);
-fprintf (stderr,"done ");
 			}
 			if (isConvertVerified(myPixels)) {
-fprintf (stderr,"verified ");
 				strncpy (path_rep,myPixels->path_rep,OMEIS_PATH_SIZE-1);
 				freePixelsRep (myPixels);
-fprintf (stderr,"deleting %s",path_rep);
 				unlink (path_rep);
 			} else {
-fprintf (stderr,"not recoverable: %s",myPixels->error_str);
 				freePixelsRep (myPixels);
 			}
-fprintf (stderr,"\n");
 		}
 	} else {
 		myPixels = newPixelsRep (0LL);
@@ -944,23 +923,16 @@ fprintf (stderr,"\n");
 		while (theID) {
 			myPixels = GetPixelsRep (theID, 'i', iamBigEndian);
 			if (myPixels) {
-fprintf (stderr,"Pixels ID %20llu: ",theID);
 				if (!isConvertVerified(myPixels)) {
-fprintf (stderr,"Not verified - recovering...");
 					recoverPixels (myPixels, 0, 0, 1);
-fprintf (stderr,"done ");
 				}
 				if (isConvertVerified(myPixels)) {
-fprintf (stderr,"verified ");
 					strncpy (path_rep,myPixels->path_rep,OMEIS_PATH_SIZE-1);
 					freePixelsRep (myPixels);
-fprintf (stderr,"deleting %s",path_rep);
 					unlink (path_rep);
 				} else {
-fprintf (stderr,"not recoverable");
 					freePixelsRep (myPixels);
 				}
-fprintf (stderr,"\n");
 			}
 			theID--;
 		}
@@ -985,8 +957,7 @@ CheckCoords (PixelsRep * myPixels,
         theZ >= head->dz || theZ < 0 ||
         theC >= head->dc || theC < 0 ||
         theT >= head->dt || theT < 0 ) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"Pix->CheckCoords:  Coordinates out of range.\n");
+		OMEIS_DoError ("Pix->CheckCoords:  Coordinates out of range.");
 		return (0);
 	}
 	return (1);
@@ -1023,6 +994,7 @@ char *IO_buf;
 unsigned char *swap_buf;
 unsigned long chunk_size;
 unsigned long written=0;
+
 	if (!myPixels) return (0);
 	if (! (head = myPixels->head) ) return (0);
 	if (! (pixels = myPixels->pixels) ) return (0);
@@ -1409,8 +1381,7 @@ size_t file_off,plane_offset;
 	file_off  = ((char *)myPixels->planeInfos - (char *)myPixels->head) + (plane_offset*nBytes);
 
 	if (lockRepFile (myPixels->fd_info,rorw,file_off,nBytes) < 0) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"Could't get file lock\n");
+		OMEIS_DoError ("Could't get file lock");
 		return (0);
 	}
 
@@ -1860,23 +1831,20 @@ OID existOID;
 	
 	/* Make sure all the stats are up to date */
 	if (!FinishStats (myPixels,force)) {
-		sprintf(myPixels->error_str+strlen(myPixels->error_str),
-			"Unable to finish stats.\n");
+		OMEIS_DoError ("Unable to finish stats.");
 		return (0);
 	}
 
 	/* Get the SHA1 message digest */
 	if (get_md_from_buffer (myPixels->pixels, myPixels->size_rep, myPixels->head->sha1) < 0) {
-		sprintf(myPixels->error_str+strlen(myPixels->error_str),
-			"Unable to retrieve SHA1.\n");
+		OMEIS_DoError ("Unable to retrieve SHA1.");
 		return(0);
 	}
 
 	/* Open the DB file if necessary */
 	if (! myPixels->DB)
 		if (! (myPixels->DB = sha1DB_open (myPixels->path_DB)) ) {
-			sprintf(myPixels->error_str+strlen(myPixels->error_str),
-				"Unable to open sha1DB.\n");
+			OMEIS_DoError ("Unable to open sha1DB.");
 			return(0);
 		}
 
@@ -1893,14 +1861,12 @@ OID existOID;
 
 	if (myPixels->is_mmapped) {
 		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) {
-			sprintf(myPixels->error_str+strlen(myPixels->error_str),
-				"Unable to msync header.\n");
+			OMEIS_DoError ("Unable to msync header: %s.", strerror (errno));
 			return (0);
 		}
 
 		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) {
-			sprintf(myPixels->error_str+strlen(myPixels->error_str),
-				"Unable to msync pixels.\n");
+			OMEIS_DoError ("Unable to msync pixels: %s.", strerror (errno));
 			return (0);
 		}
 	}
@@ -1910,8 +1876,7 @@ OID existOID;
 	if ( sha1DB_put (myPixels->DB, myPixels->head->sha1, myPixels->ID) ) {
 		sha1DB_close (myPixels->DB);
 		myPixels->DB = NULL;
-		sprintf(myPixels->error_str+strlen(myPixels->error_str),
-			"Unable to put sha1 into sha1DB.\n");
+		OMEIS_DoError ("Unable to put sha1 into sha1DB.");
 		return (0);
 	}
 
@@ -1944,15 +1909,13 @@ char isBigEndian=1,bp;
 
 	if (!myFile || !myPixels) return (0);
 	if (! (head = myPixels->head) ) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertFile(PixelsID=%llu). Pixels header is not set.\n",(unsigned long long)myPixels->ID);
+		OMEIS_DoError ("ConvertFile(PixelsID=%llu). Pixels header is not set.",(unsigned long long)myPixels->ID);
 		return (0);
 	}
 	bp = head->bp;
 
 	if ( myFile->size_rep < file_offset + (nPix*bp)) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertFile(PixelsID=%llu). Attempt to read past end of file ID=%llu.  File size=%lu,  Offset=%lu, # pixels=%lu (%lu bytes)\n",
+		OMEIS_DoError ("ConvertFile(PixelsID=%llu). Attempt to read past end of file ID=%llu.  File size=%lu,  Offset=%lu, # pixels=%lu (%lu bytes)",
 			(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID,
 			(unsigned long)(myFile->size_rep), (unsigned long)file_offset,
 			(unsigned long)nPix, (unsigned long)(nPix*bp));
@@ -1960,8 +1923,7 @@ char isBigEndian=1,bp;
 	}
 
 	if ( pix_offset + (nPix*bp) > myPixels->size_rep) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertFile(PixelsID=%llu). Attempt to write past end of pixels.  Pixels size=%lu,  Pix offset=%lu, # pixels=%lu (%lu bytes)\n",
+		OMEIS_DoError ("ConvertFile(PixelsID=%llu). Attempt to write past end of pixels.  Pixels size=%lu,  Pix offset=%lu, # pixels=%lu (%lu bytes)",
 			(unsigned long long)myPixels->ID, (unsigned long)(myPixels->size_rep), (unsigned long)pix_offset,
 			(unsigned long)nPix, (unsigned long)(nPix*bp));
 		return (0);
@@ -1971,8 +1933,7 @@ char isBigEndian=1,bp;
 	myPixels->IO_buf_off = 0;
 	nIO = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 	if (nIO != nPix) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)\n",
+		OMEIS_DoError ("ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)",
 			nIO, (unsigned long)nPix);
 		return (nIO);
 	}
@@ -1988,8 +1949,7 @@ char isBigEndian=1,bp;
 		convRec.spec.file.nPix        = (u_int64_t) nPix;
 
 		if (!openConvertFile (myPixels, 'w'))
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.\n",
+			OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
 				(unsigned long long)myPixels->ID,myPixels->path_conv);
 		else
 			write (myPixels->fd_conv, (const void *)&convRec, sizeof (convertFileRec));
@@ -2031,8 +1991,7 @@ char doSwap;
 	if (!myFile || !myPixels) return (0);
 
 	if (! (head = myPixels->head) ) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertTIFF (PixelsID=%llu). Pixels header is not set.\n",
+		OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). Pixels header is not set.",
 				(unsigned long long)myPixels->ID);
 		return (0);
 	}
@@ -2040,15 +1999,13 @@ char doSwap;
 	bp = head->bp;
 
 	if (!CheckCoords (myPixels, 0, 0, theZ, theC, theT)){
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertTIFF (PixelsID=%llu). Coordinates theZ=%d, theC=%d, theT=%d are out of range (%d,%d,%d)\n",
+		OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). Coordinates theZ=%d, theC=%d, theT=%d are out of range (%d,%d,%d)",
 			(unsigned long long)myPixels->ID, theZ, theC, theT, head->dz, head->dc, head->dt);
 		return (0);
 	}
 	if (myFile->fd_rep < 0) {
 		if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu.\n",
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu.",
 					(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID);
 			return (0);
 		}
@@ -2058,15 +2015,13 @@ char doSwap;
 	lockRepFile (myFile->fd_rep, 'r', 0LL, 0LL);	
 	
     if (! (tiff = TIFFFdOpen(myFile->fd_rep, myFile->path_rep, "r")) ) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.\n",
+		OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.",
 			(unsigned long long)myPixels->ID,
 			(unsigned long long)myFile->ID);
     	return (0);
     }
     if (TIFFSetDirectory(tiff, (tdir_t)tiffDir) != 1) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertTIFF (PixelsID=%llu). Couldn't set TIFF directory to %lu.\n",(unsigned long long)myPixels->ID,tiffDir);
+		OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). Couldn't set TIFF directory to %lu.",(unsigned long long)myPixels->ID,tiffDir);
 		TIFFClose(tiff);
     	return (0);
     }
@@ -2092,27 +2047,26 @@ char doSwap;
 			int nc=0;
 			
 			TIFFClose(tiff);
-			nc += sprintf (myPixels->error_str+nc,"ConvertTIFF (PixelsID=%llu). TIFF (ID=%llu) <-> Pixels mismatch.\n",
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). TIFF (ID=%llu) <-> Pixels mismatch.",
 				(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID);
-			nc += sprintf (myPixels->error_str+nc,"\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)\n",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
-			nc += sprintf (myPixels->error_str+nc,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)head->dc,(int)chans);
-			nc += sprintf (myPixels->error_str+nc,"\tBits per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp*8,(int)read_bitspp);
-			nc += sprintf (myPixels->error_str+nc,"\tPlanar Config:     Pixels (%d) TIFF (%d)\n",(int)PLANARCONFIG_CONTIG,(int)pc);
+			OMEIS_DoError ("\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
+			OMEIS_DoError ("\tSamples per pixel: Pixels (%d) TIFF (%d)",(int)1,(int)chans);
+			OMEIS_DoError ("\tBits per sample:   Pixels (%d) TIFF (%d)",(int)head->bp*8,(int)read_bitspp);
+			OMEIS_DoError ("\tPlanar Config:     Pixels (%d) TIFF (%d)",(int)PLANARCONFIG_CONTIG,(int)pc);
 			return (0);
 	}
 	
 	/* allocate read and write buffer if neccessary */
 	if (! (read_buf = _TIFFmalloc(TIFFStripSize(tiff))) ) {
-		sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF strip buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff));
+		OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF strip buffer.",(unsigned long long)myPixels->ID,TIFFStripSize(tiff));
 		TIFFClose(tiff);
 		return (0);
 	}
-	
+
+	/* allocate a write buffer if neccessary */
 	if (read_bitspp%8 != 0)
 		if (! (write_buf_unpack = (uint16*) malloc(TIFFStripSize(tiff)*8/read_bitspp * write_bytespp)) ) {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary bit-unpacking, buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary bit-unpacking, buffer.",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
 		_TIFFfree(read_buf);
 		TIFFClose(tiff);
 		return (0);
@@ -2120,8 +2074,7 @@ char doSwap;
 	
 	if (is_rgb == PHOTOMETRIC_RGB)
 		if (! (write_buf_rgb = (uint8*) malloc(TIFFStripSize(tiff)/3) )) {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary channel buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary channel buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
 		_TIFFfree(read_buf);
 		TIFFClose(tiff);
 		return (0);
@@ -2206,19 +2159,17 @@ char doSwap;
 		convRec.spec.tiff.dir_index = (u_int32_t) tiffDir;
 	
 		if (!openConvertFile (myPixels, 'w')) {
-			sprintf (myPixels->error_str+strlen(myPixels->error_str),
-				"ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.\n",
+			OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
 				(unsigned long long)myPixels->ID,myPixels->path_conv);
 		} else {
 			write (myPixels->fd_conv, (const void *)&convRec, sizeof (convertFileRec));
 		}
 	}
-	
 	return (nIO);
 }
 
 /* warning. this function is a mine field. contact me (Tom) if you are thinking of changing it*/
-static void
+static int
 unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp, int nlength)
 {
 	int i,j;
@@ -2234,7 +2185,7 @@ unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp,
 	w_byte2 = malloc(sizeof(uint8) * write_bytespp);
 	
 	if (read_bitspp != 12){
-		fprintf(stderr,"HALT! un_pack_bits in Pixels.c was incorrectly called. Currently read_bitspp can only equal 12 \n");
+		OMEIS_DoError ("HALT! un_pack_bits in Pixels.c was incorrectly called. Currently read_bitspp can only equal 12 ");
 		return;
 	}
 	
@@ -2243,7 +2194,6 @@ unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp,
 		r_byte2 = (uint16) *( (uint8*) read_buf + sizeof(uint8)*(i+1) );
 		r_byte3 = (uint16) *( (uint8*) read_buf + sizeof(uint8)*(i+2) );
 		
-//		fprintf(stderr, "r_byte1 = %x, r_byte2 = %x, r_byte3 = %x\n", r_byte1,r_byte2,r_byte3);
 		
 		*w_byte1 =  (uint16) ( (r_byte1<<4) + ((r_byte2 & mask1)>>4) );
 		*w_byte2 =  (uint16) ( ((r_byte2 & mask2) << 8) + r_byte3 );
@@ -2251,8 +2201,6 @@ unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp,
 		memcpy ( (uint16*) (write_buf + sizeof(uint8)*write_bytespp*j),     w_byte1, sizeof(uint16) );
 		memcpy ( (uint16*) (write_buf + sizeof(uint8)*write_bytespp*(j+1)), w_byte2, sizeof(uint16) );
 		
-//		fprintf(stderr, "w_byte1 = %x, w_byte2 = %x\n", (uint16) *w_byte1, (uint16) *w_byte2);		
-//		fprintf(stderr, "w_byte1 = %d, w_byte2 = %d\n", (uint16) *w_byte1, (uint16) *w_byte2);
 	}
 	
 	free (w_byte1);
@@ -2278,3 +2226,4 @@ int GetArchive (PixelsRep myPixels, char *format) {
 	return (0);
 }
 */
+

@@ -45,8 +45,10 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <openssl/evp.h>
+#include <errno.h>
 
 #include "digest.h"
+#include "OMEIS_Error.h"
 
 int
 get_md_from_file (char * filename, unsigned char * md_value)
@@ -58,14 +60,13 @@ get_md_from_file (char * filename, unsigned char * md_value)
 	assert(md_value != NULL);
 
 	if ((fd = (open(filename, O_RDONLY))) == -1) {
-		perror(filename);
+		OMEIS_DoError ("Error opening %s: %s",filename,strerror(errno));
 		return (-1);
 	}
 
 	if (get_md_from_fd (fd, md_value) < 0) {
-		fprintf(stderr, "Problem retrieving SHA1.\n");
+		OMEIS_DoError ("Problem retrieving SHA1.");
 		close(fd);
-
 		return (-1);
 	}
 
@@ -89,7 +90,7 @@ get_md_from_buffer (void * buf, size_t buf_len, unsigned char * md_value)
 	md = EVP_get_digestbyname(OME_DIGEST);
 	
 	if (!md) {
-		fprintf(stderr, "Failure during digest lookup for: '%s'\n", OME_DIGEST);
+		OMEIS_DoError ("Failure during digest lookup for: '%s'", OME_DIGEST);
 		return(-1);  /* Failure in namelookup */
 	}
 	
@@ -122,7 +123,7 @@ get_md_from_fd (int fd, unsigned char * md_value)
 	md = EVP_get_digestbyname(OME_DIGEST);
 	
 	if (!md) {
-		fprintf(stderr, "Failure during digest lookup for: '%s'\n", OME_DIGEST);
+		OMEIS_DoError ("Failure during digest lookup for: '%s'", OME_DIGEST);
 		return(-1);  /* Failure in namelookup */
 	}
 	
@@ -134,7 +135,7 @@ get_md_from_fd (int fd, unsigned char * md_value)
 	} while (rlen > 0);
 
 	if (rlen < 0) {
-		perror("fd_read");	
+		OMEIS_DoError ("Error reading from fd: %s",strerror(errno));
 		return(-1);  /* Error reading from fd */
 	}
 
