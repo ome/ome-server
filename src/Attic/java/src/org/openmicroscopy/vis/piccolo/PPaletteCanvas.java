@@ -96,7 +96,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	private DragSourceAdapter dragListener;
 	private DragSource dragSource;
 
-	private float VGAP=20f;
+	private float VGAP=10f;
 	private float NAME_INSET=20;
 	
 	
@@ -107,13 +107,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	private PLayer layer;
 
 	private PModule selected;
-	
-	// max mod.  width and height let me establish a common size for all modules
-	private float maxModWidth =0;
-	private float maxModHeight = 0;
-	private float rowHeight = 0;
-	private float rowWidth = 0;
-	
+		
 	public PPaletteCanvas() {
 		super();
 		removeInputEventListener(getPanEventHandler());
@@ -154,6 +148,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		Iterator iter = modules.rootCategoryIterator();
 		while (iter.hasNext()) {
 			ModuleCategory cat = (ModuleCategory) iter.next();
+			connection.setStatusLabel("Arranging Modules.."+cat.getName());
 			//System.err.pr(" Arranging modules in category..."+cat.getName());
 			displayModulesByCategory(layer,cat);			
 		}
@@ -162,10 +157,10 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 		PCategoryBox  box = decorateCategory(layer);
 		displayCategoryName(box,"Uncategorized");
+		connection.setStatusLabel("Arranging Modules.. Uncategorized");
 		iter = modules.uncategorizedModuleIterator();
 		
 		//System.err.pr("arranging uncategorized modules");
-		maxModHeight = maxModWidth =0;
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
 			displayModule(box,mod);
@@ -195,8 +190,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		
 		PCategoryBox box = decorateCategory(parent);
 		displayCategoryName(box,cat.getName());
-		
-		maxModHeight = maxModWidth = 0;
+		//System.err.println("displaying category..."+cat.getName());
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
 			displayModule(box,mod);
@@ -253,12 +247,6 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		mod.addModuleWidget(mNode);
 		box.addChild(mNode);
 		mNode.setOffset(0,0);
-		//System.err.println(" new module. height is "+mNode.getHeight()+
-		//	", width is "+mNode.getWidth());
-		if (mNode.getHeight() > maxModHeight)
-			maxModHeight = (float) mNode.getHeight();
-		if (mNode.getWidth() > maxModWidth)
-			maxModWidth = (float) mNode.getWidth();
 	}	
 
 
@@ -306,7 +294,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			//add the next element in the list to a vector
 			box = (PBufferedNode) obj;
 			curStrip.add(box);
-			
+			//System.err.println("adding box...");
 			// place the items in the current strip.
 			
 			Point2D pt = placeChildren(node,curStrip,y);
@@ -314,12 +302,18 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			
 		
 			// find out how high and wide the strip is.
-			float ytemp = (float)pt.getY()+VGAP;// was y+(float)..  
-			if (ytemp-y > height) // was -TOP
+			
+			float ytemp = (float)pt.getY()+VGAP;// was y+(float)..
+			//System.err.println("children placed. y is "+y+", ytemp is "+ytemp);
+			//System.err.println("height is "+height);  
+			if (ytemp-y > height) {// was -TOP
 				height = ytemp-y; // height of whole thing  - was TOP
+				//System.err.println("setting height to "+height);
+			}
 			if (pt.getX() > width)
 				width = (float)pt.getX();
 			newAspectRatio = calcAspectRatio(width,height);
+			//System.err.println("new aspect ratio is "+newAspectRatio);
 			// if we've increased the aspect ratio, that's no good.
 			
 			if (curStrip.size()>1 && newAspectRatio > stripAspectRatio) {
@@ -332,10 +326,11 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 				//create a new strip and add curent box to it.
 				curStrip.clear();
 				// move onto the next line.
-				y+= pt.getY()+VGAP;
-				if (pt.getX() > width) {
+				y= (float)pt.getY()+VGAP;
+				/*if (pt.getX() > width) {
 					width = (float) pt.getX();
-				}
+				}*/
+				width =0;
 			}	
 			else { // it fits. move on.
 				stripAspectRatio = newAspectRatio;
@@ -352,7 +347,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			b = node.getUnionOfChildrenBounds(b);
 			//System.err.println("finished with children. width is "+b.getWidth()
 			//	+", height is "+b.getHeight());
-			((PCategoryBox) node).setExtent(b.getWidth()+2*HGAP,b.getHeight()+2*VGAP);
+			((PCategoryBox) node).setExtent(b.getWidth()+2*HGAP,b.getHeight()+4*VGAP);
 		}
 	} 
 	
@@ -368,29 +363,27 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		while (iter.hasNext()) {
 			node = (PBufferedNode) iter.next();
 		//	System.err.println("placing something at "+x+","+y);
+			//System.err.println("placing "+node);
+			//System.err.println("at x="+x+", y="+y);
 			node.setOffset(x,y);
-			if (node instanceof PModule) {
-				// use quantized dimensions for modules
-		//		System.err.println("... it's a module..");
-				childHeight = maxModHeight;
-				childWidth = maxModWidth;
-			}
-			else {  
-				// category box
-		//		System.err.println("it's a category box...");
-				PBounds b = ((PNode) node).getBounds();
-				childHeight = (float) b.getHeight();
-				childWidth = (float) b.getWidth();
-			}
+		
+			PBounds b = ((PNode) node).getBounds();
+			//System.err.println("child height is "+childHeight);
+			childHeight = (float) b.getHeight();
+			childWidth = (float) b.getWidth();
+		
 			x += childWidth+HGAP;
 			if (childHeight > maxHeight)
 				maxHeight = childHeight;
 		} 
-		return new Point2D.Float(x-(LEFT+HGAP),maxHeight);
+		//System.err.println("max height is "+maxHeight);
+		return new Point2D.Float(x-(LEFT+HGAP),y+maxHeight);
 	}
 	
 
 	private double calcAspectRatio(float width,float height) {
+		//System.err.println("calculating aspect ratio");
+		//System.err.println("widht is "+width+", height is "+height);
 		if (width > height) 
 			return (double) width/height;
 		else
@@ -398,8 +391,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	}
 	
 	public void scaleToSize() {
-		
-		double scale;
+
 		
 		PBounds b = getBufferedBounds();
 		getCamera().animateViewToCenterBounds(b,true,0);
@@ -409,8 +401,9 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
-		return new PBounds(b.getX(),b.getY(),b.getWidth()+4*PConstants.BORDER,
-			b.getHeight()+4*PConstants.BORDER); 
+		return new PBounds(b.getX()-PConstants.BORDER,
+			b.getY()-PConstants.BORDER,b.getWidth()+2*PConstants.BORDER,
+			b.getHeight()+2*PConstants.BORDER); 
 	}
 		
 			
