@@ -75,7 +75,7 @@ Util.err = function( msg ) {
 	var date = new Date();
 	var unique   = date.getSeconds() + '' + date.getUTCMilliseconds();
 	var imageURL = "/perl2/SVGcatchMsg.pl?msg=" + msg + "&unique=" + unique;
-	tmpImg.setAttributeNS(xlinkns, "href",imageURL);
+	tmpImg.setAttributeNS(Util.xlinkns, "href",imageURL);
 	var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
 	toolboxLayer.appendChild(tmpImg);
 	toolboxLayer.removeChild(tmpImg);
