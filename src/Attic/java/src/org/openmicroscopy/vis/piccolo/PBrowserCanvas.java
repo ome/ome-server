@@ -76,6 +76,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	 * The initial magnification of the  canvas
 	 */
 	private static float INIT_SCALE=1.0f;
+	private static final int MIN_STRIP_HEIGHT=200;
 	
 	/**
 	 * Database connection 
@@ -133,7 +134,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 			// setup tool tips.
 		final PCamera camera = getCamera();
-		camera.addInputEventListener(new PImageToolTipHandler(camera));
+		camera.addInputEventListener(new PBrowserCanvasToolTipHandler(camera));
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
 	
 		allDatasets = connection.getDatasetsForUser();
@@ -187,8 +188,10 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		while (iter.hasNext()) {
 			CDataset d = (CDataset) iter.next();
 			double area = getArea(d);
+			//System.err.println("dataset "+d.getName()+" area is "+area);
 			totalArea += area;
 		}
+		System.err.println("total area is "+totalArea);
 		
 		screenHeight = getHeight();
 		screenWidth = getWidth();
@@ -240,6 +243,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private double oldAspectRatio =0;
 	private double newAspectRatio = 0;
+	private double stripHeight = 0;
+	private double oldHeight = 0;
 
 	private Vector doTreeMap(Collection datasets) {
 	
@@ -253,6 +258,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 		PDataset node=null;
 		
+		System.err.println("***** DOING TREEMAP ****");
 		while (iter.hasNext())  {
 			d = (CDataset) iter.next();
 			node = (PDataset) datasetWidgets.get(d);
@@ -263,24 +269,42 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			// calc,update stats.
 			getTreemapStripHeight(strip);
 			
-		
-			
+			System.err.println("STRIP: new aspect ratio is "+newAspectRatio);
+			System.err.println(" old aspect ratio is "+oldAspectRatio);
 			if (strip.size()>1 &&  newAspectRatio > oldAspectRatio) {
 				// move it to next strip.
+				System.err.println("-------");
+				System.err.println("moving on to next strip");
 				strip.remove(node);
+				System.err.println("strip heiight is "+stripHeight);
+				System.err.println("reverting to "+oldHeight);
 				Iterator iter2 = strip.iterator();
 				while (iter2.hasNext()) {
 					PDataset ds = (PDataset) iter2.next();
 					ds.revertWidth();
+					ds.setHeight(oldHeight);
+					System.err.println("dataset .."+ds.getDataset().getName()+", width is "+ds.getWidth());
+					System.err.println("# of things in dataset..."+ds.getContentsArea());
+					double ratio  = ds.getContentsArea()/totalArea;
+					System.err.println("ratio of stuff ..."+ratio);
 				}
 				strips.add(strip);
 				strip = new Vector();
 				newAspectRatio = oldAspectRatio = 0;
 				strip.add(node);
+				oldHeight = 0;
 				getTreemapStripHeight(strip);
 			}
 			// otherwise, keep what I've calculated.
 				oldAspectRatio = newAspectRatio;
+			System.err.println("-------");
+		}
+		System.err.println("last strip height is "+stripHeight);
+		// set height of nodes in last strip
+		iter = strip.iterator();
+		while (iter.hasNext()) {
+			PDataset ds  =(PDataset) iter.next();
+			ds.setHeight(stripHeight);
 		}
 		strips.add(strip);
 		return strips;
@@ -293,12 +317,21 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		Iterator iter = strip.iterator();
 		while (iter.hasNext()) {
 			PDataset node = (PDataset) iter.next();
-			double area = node.getContentsArea()*scaleFactor;
+			System.err.println("dataset .."+node.getDataset().getName()+" area "	
+				+node.getContentsArea());
+			double area = node.getContentsArea();
 			stripArea += area;
 		}
 		
-		double ratio = stripArea/screenArea;
-		double height = ratio * getHeight();
+		System.err.println("strip area is "+stripArea);
+		
+		double ratio = stripArea/totalArea;
+		System.err.println("ratio is "+ratio);
+		oldHeight = stripHeight;
+		stripHeight = Math.ceil(ratio * getHeight());
+		if (stripHeight < MIN_STRIP_HEIGHT)
+			stripHeight = MIN_STRIP_HEIGHT;
+		System.err.println("strip height is "+stripHeight);
 		// get width of each and update ratios;
 		double width;
 		int i =0;
@@ -306,13 +339,18 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		iter = strip.iterator();
 		while (iter.hasNext()) {
 			PDataset node = (PDataset) iter.next();
-			double area  =node.getContentsArea()*scaleFactor;
-			width = area/height;
+			//double area  =node.getContentsArea()*scaleFactor;
+			//width = Math.ceil(area/stripHeight);
+			double area = node.getContentsArea()/stripArea;
+			width = area*screenWidth;
+			System.err.println("dataset ..."+node.getDataset().getName()+", width "+width);
+			System.err.println("strip height is "+stripHeight);
+			System.err.println("..contents "+node.getContentsArea()+", scale factor "+scaleFactor);
 			node.setWidth(width);
-			if (width > height) 
-				newAspectRatio += width/height;
+			if (width > stripHeight) 
+				newAspectRatio += width/stripHeight;
 			else 
-				newAspectRatio += height/width;
+				newAspectRatio += stripHeight/width;
 			i++;
 		}
 		newAspectRatio = newAspectRatio/i;
