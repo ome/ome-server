@@ -59,7 +59,7 @@ sub getPageBody {
 			$session->project($project);
 			$session->writeObject();
 			$body .= "Project Creation successfull.";
-			$body .= "Click ".$cgi->a({href=>'/JavaScript/DirTree/index.htm'},'here')." to continue on to import images."
+			$body .= " Click ".$cgi->a({href=>'javascript: parent.location.href = parent.location.href'},'here')." to continue on to import images."
 				if defined $redirect;
 		}
 
