@@ -92,6 +92,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use Carp;
+use Log::Agent;
 
 use OME::Session;
 use OME::Module;
@@ -444,9 +445,9 @@ sub getAttributesForMEX {
         my @maps = $factory->
           findObjects('OME::ModuleExecution::VirtualMEXMap',
                       { module_execution => ['in',\@virtual_mexes] });
-        print STDERR "\n\n**** maps ",scalar(@maps),"\n";
+        logdbg ("debug", "\n\n**** maps ",scalar(@maps),"\n");
         my @attr_ids = map { $_->attribute_id() } @maps;
-        print STDERR "**** attr ",scalar(@attr_ids),"\n";
+        logdbg ("debug","**** attr ",scalar(@attr_ids),"\n");
 
         $criteria->{id} = ['in',\@attr_ids];
 
@@ -579,7 +580,7 @@ sub getInputTag {
 
             unless (scalar(@actual_inputs) > 0) {
                 $input_tag .= "none) ";
-                next FORMAL_INPUT;
+                return undef;
             }
 
             # Retrieve the MEX(es) that satisfied this formal input
@@ -652,6 +653,7 @@ sub getInputTag {
             $input_tag .= $formal_inputID."(";
 
             my $input_mexes = $get_input_mexes->($formal_input);
+            next FORMAL_INPUT unless defined $input_mexes;
 
             # Get the attributes that satisfied this formal input
 
