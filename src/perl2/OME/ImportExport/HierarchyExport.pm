@@ -473,10 +473,10 @@ my $factory = $self->{session}->Factory();
 	$Images->{$imageID}->{object} = $image;
 
 	if (not exists $self->{_docIDs}->{$experimenterID}) {
-		$self->{_unresolvedRefs}->{$experimenterID} = $image->experimenter_id();
+		$self->{_unresolvedRefs}->{$experimenterID} = $image->experimenter();
 	}
 	if (not exists $self->{_docIDs}->{$groupID}) {
-		$self->{_unresolvedRefs}->{$groupID} = $image->group_id();
+		$self->{_unresolvedRefs}->{$groupID} = $image->group();
 	}
 	if (not exists $self->{_docIDs}->{$pixelsID}) {
 		$self->{_unresolvedRefs}->{$pixelsID} = $image->DefaultPixels();
