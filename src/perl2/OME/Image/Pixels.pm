@@ -463,6 +463,44 @@ sub getTemporaryLocalPlane {
     return $filename;
 }
 
+=head2 getTemporaryLocalROI
+
+	my $filename = $self->
+	    getTemporaryLocalROI($x0,$y0,$z0,$c0,$t0,
+	                         $x1,$y1,$z1,$c1,$t1,
+	                         $big_endian);
+
+This method should be used for legacy code which must read the pixels
+from a local file.  Returns the filename of a local file, copying the
+specified ROI from wherever they might be.  This local file can be
+opened for reading.  When the file is no longer needed, it should be
+closed, and the finishLocalPixels method should be called.
+
+The $big_endian parameter can be specified to the get the pixels file
+in a certian endianness.  If it is omitted, then the pixels will be
+returned in the endianness of the local machine.
+
+=cut
+
+sub getTemporaryLocalROI {
+    my ($self,$x0,$y0,$z0,$c0,$t0,$x1,$y1,$z1,$c1,$t1,$big_endian) = @_;
+    my $session = OME::Session->instance();
+    my $filename = $session->getTemporaryFilename("pixels","raw");
+    $big_endian = OME->BIG_ENDIAN() unless defined $big_endian;
+
+    open my $pix, ">", $filename
+      or die "Could not open local pixels file";
+
+    my $buf = $self->getROI($x0,$y0,$z0,$c0,$t0,
+                            $x1,$y1,$z1,$c1,$t1,
+                            $big_endian);
+    print $pix $buf;
+
+    close $pix;
+
+    return $filename;
+}
+
 =head2 finishLocalPixels
 
 	$self->finishLocalPixels($filename);
