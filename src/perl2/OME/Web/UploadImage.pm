@@ -44,6 +44,7 @@ use Carp;
 
 use OME;
 use OME::Tasks::ImageTasks;
+use HTML::Template;
 
 $VERSION = $OME::VERSION;
 use base qw(OME::Web);
