@@ -243,244 +243,220 @@ sub addClassToDatabase {
     die "addClassToDatabase: $class is not a subclass of OME::DBObject"
       unless UNIVERSAL::isa($class,"OME::DBObject");
 
-    # Haha!  I've finally figured out how to get rid of the annoying
-    # Postgres notices.  I DON'T CARE IF YOU'RE CREATING TRIGGERS FOR
-    # MY FOREIGN KEYS!
+    my $columns   = $class->__columns();
+    my $locations = $class->__locations();
+    my $primaries = $class->__primaryKeys();
+    my $sequence  = $class->__sequence();
 
-    open my $olderr, ">&STDERR";
-    open STDERR, ">/dev/null";
+    # Prepare all of the SQL statements we might need
+    my $find_relation = $dbh->prepare_cached(FIND_RELATION_SQL);
+    my $find_column_by_number = $dbh->prepare_cached(FIND_COLUMN_BY_NUMBER_SQL);
+    my $find_column_by_name = $dbh->prepare_cached(FIND_COLUMN_BY_NAME_SQL);
+    my $find_primary_key = $dbh->prepare_cached(FIND_PRIMARY_KEY_SQL);
 
-    # Do all of our database stuff inside of an eval.  That way, if
-    # anything goes wrong, we can clean up after ourselves before we
-    # actually die.
+    # Create the primary key sequence if needed
+    if (defined $sequence) {
+        #print "\n$sequence\n------------------\n";
 
-    eval {
-        my $columns   = $class->__columns();
-        my $locations = $class->__locations();
-        my $primaries = $class->__primaryKeys();
-        my $sequence  = $class->__sequence();
+        my ($reloid,$relkind) =
+          $dbh->selectrow_array($find_relation,{},$sequence);
+        die "Database contains object named $sequence which is not a sequence!"
+          if defined $relkind && $relkind ne 'S';
 
-        # Prepare all of the SQL statements we might need
-        my $find_relation = $dbh->prepare(FIND_RELATION_SQL);
-        my $find_column_by_number = $dbh->prepare(FIND_COLUMN_BY_NUMBER_SQL);
-        my $find_column_by_name = $dbh->prepare(FIND_COLUMN_BY_NAME_SQL);
-        my $find_primary_key = $dbh->prepare(FIND_PRIMARY_KEY_SQL);
-
-        # Create the primary key sequence if needed
-        if (defined $sequence) {
-            #print "\n$sequence\n------------------\n";
-
-            my ($reloid,$relkind) =
-              $dbh->selectrow_array($find_relation,{},$sequence);
-            die "Database contains object named $sequence which is not a sequence!"
-              if defined $relkind && $relkind ne 'S';
-
-            if (defined $relkind) {
-                #print "Exists!\n";
-            } else {
-                #print "New sequence!\n";
-                my $sql = "CREATE SEQUENCE $sequence";
-                $dbh->do($sql)
-                  or die "Could not create sequence $sequence";
-            }
+        if (defined $relkind) {
+            #print "Exists!\n";
+        } else {
+            #print "New sequence!\n";
+            my $sql = "CREATE SEQUENCE $sequence";
+            $dbh->do($sql)
+              or die "Could not create sequence $sequence";
         }
+    }
 
-        # Ensure that each table exists
-      TABLE:
-        foreach my $table (keys %{$class->__tables()}) {
-            #print "\n$table\n------------------\n";
+    # Ensure that each table exists
+  TABLE:
+    foreach my $table (keys %{$class->__tables()}) {
+        #print "\n$table\n------------------\n";
 
-            my ($reloid,$relkind) =
-              $dbh->selectrow_array($find_relation,{},$table);
-            die "Database contains object named $table which is not a table!"
-              if defined $relkind && $relkind ne 'r';
+        my ($reloid,$relkind) =
+          $dbh->selectrow_array($find_relation,{},$table);
+        die "Database contains object named $table which is not a table!"
+          if defined $relkind && $relkind ne 'r';
 
-            if (defined $relkind) {
-                # The table already exists, issue ALTER TABLE statements
-                #print "Exists!\n";
+        if (defined $relkind) {
+            # The table already exists, issue ALTER TABLE statements
+            #print "Exists!\n";
 
-                # Check the primary key
-                if (defined $primaries->{$table}) {
-                    # This is the name of the column that the DBObject
-                    # says should be primary
-                    my $dbo_primary_column = $primaries->{$table};
+            # Check the primary key
+            if (defined $primaries->{$table}) {
+                # This is the name of the column that the DBObject
+                # says should be primary
+                my $dbo_primary_column = $primaries->{$table};
 
-                    # Find out if there is already a primary key defined
-                    # for this table.  Here's the kicker: The primary key
-                    # might very well be multi-column.  PostgreSQL will
-                    # store this as an integer array, which seems to show
-                    # up in Perl as a string of integers separated by
-                    # spaces.
-                    my ($pk_nums) =
-                      $dbh->selectrow_array($find_primary_key,{},$reloid);
-                    my @pk_nums = split(' ',$pk_nums);
+                # Find out if there is already a primary key defined
+                # for this table.  Here's the kicker: The primary key
+                # might very well be multi-column.  PostgreSQL will
+                # store this as an integer array, which seems to show
+                # up in Perl as a string of integers separated by
+                # spaces.
+                my ($pk_nums) =
+                  $dbh->selectrow_array($find_primary_key,{},$reloid);
+                my @pk_nums = split(' ',$pk_nums);
 
-                    # DBObjects can also declare single-column primary
-                    # keys.  So, if the primary key, according to the
-                    # database, is multi-column, then we know right away
-                    # that is conflicts with what the DBObject is asking
-                    # for.
-                    die "Table $table has a multi-column primary key!"
-                      if (scalar(@pk_nums) > 1);
+                # DBObjects can also declare single-column primary
+                # keys.  So, if the primary key, according to the
+                # database, is multi-column, then we know right away
+                # that is conflicts with what the DBObject is asking
+                # for.
+                die "Table $table has a multi-column primary key!"
+                  if (scalar(@pk_nums) > 1);
 
-                    if (scalar(@pk_nums) == 1) {
-                        # If there is a single-column primary key in the
-                        # database, verify that it's the same column that
-                        # the DBObject wants to be the primary key.
-                        my ($pk_name) =
-                          $dbh->selectrow_array($find_column_by_number,{},
-                                                $reloid,$pk_nums[0]);
+                if (scalar(@pk_nums) == 1) {
+                    # If there is a single-column primary key in the
+                    # database, verify that it's the same column that
+                    # the DBObject wants to be the primary key.
+                    my ($pk_name) =
+                      $dbh->selectrow_array($find_column_by_number,{},
+                                            $reloid,$pk_nums[0]);
 
-                        die "Table $table already has a primary key ($pk_name)!"
-                          if ($pk_name ne $dbo_primary_column);
+                    die "Table $table already has a primary key ($pk_name)!"
+                      if ($pk_name ne $dbo_primary_column);
 
-                        #print "Primary key exists!\n";
-                    } else {
-                        # At this point, there is no primary key defined
-                        # in the database.  First, we must check whether
-                        # the primary key column exists.  If so, we issue
-                        # an ALTER TABLE statement to make it the primary
-                        # key.  If not, we issue a different ALTER TABLE
-                        # statement to add the column.
+                    #print "Primary key exists!\n";
+                } else {
+                    # At this point, there is no primary key defined
+                    # in the database.  First, we must check whether
+                    # the primary key column exists.  If so, we issue
+                    # an ALTER TABLE statement to make it the primary
+                    # key.  If not, we issue a different ALTER TABLE
+                    # statement to add the column.
 
-                        my ($pk_num) =
-                          $dbh->selectrow_array($find_column_by_name,{},
-                                                $reloid,$dbo_primary_column);
-
-                        my $sql;
-                        my @bind_vals;
-                        if (defined $pk_num) {
-                            $sql =
-                              "ALTER TABLE $table ADD CONSTRAINT PRIMARY KEY(".
-                                "$dbo_primary_column)";
-                        } else {
-                            $sql =
-                              "ALTER TABLE $table ADD COLUMN ".
-                                "$dbo_primary_column INTEGER";
-                            if (defined $sequence) {
-                                $sql .= " DEFAULT NEXTVAL(?)";
-                                push @bind_vals, $sequence;
-                            }
-                            $sql .= " PRIMARY KEY";
-                        }
-
-                        #print "$sql\n(",join(',',@bind_vals),")\n";
-                        $dbh->do($sql,{},@bind_vals)
-                          or die "Could not add primary key to existing table!";
-                    }
-                }
-
-                # Now, check each of the columns defined by DBObject aliases.
-
-                my $table_hash = $locations->{$table};
-              COLUMN:
-                foreach my $column (keys %$table_hash) {
-                    my $aliases = $table_hash->{$column};
-                    my ($sql_type,$default,$not_null,$unique,$references) =
-                      __collectSQLOptions($columns,$aliases);
-
-                    next COLUMN
-                      unless defined $sql_type;
-
-                    # See if the column exists already
-                    my ($col_num) =
+                    my ($pk_num) =
                       $dbh->selectrow_array($find_column_by_name,{},
-                                            $reloid,$column);
+                                            $reloid,$dbo_primary_column);
 
-                    if (defined $col_num) {
-                        #print "$column exists!\n";
-
-                        # FIXME: We should try to verify the type and
-                        # other SQL options.
+                    my $sql;
+                    my @bind_vals;
+                    if (defined $pk_num) {
+                        $sql =
+                          "ALTER TABLE $table ADD CONSTRAINT PRIMARY KEY(".
+                            "$dbo_primary_column)";
                     } else {
-                        #print "New column ($column)!\n";
-
-                        my $sql = "ALTER TABLE $table ADD COLUMN $column $sql_type";
-                        my @bind_vals;
-
-                        if (defined $default) {
-                            $sql .= " DEFAULT ?";
-                            push @bind_vals, $default;
+                        $sql =
+                          "ALTER TABLE $table ADD COLUMN ".
+                            "$dbo_primary_column INTEGER";
+                        if (defined $sequence) {
+                            $sql .= " DEFAULT NEXTVAL(?)";
+                            push @bind_vals, $sequence;
                         }
-
-                        $sql .= " NOT NULL" if $not_null;
-                        $sql .= " UNIQUE" if $unique;
-                        $sql .=
-                          " REFERENCES $references DEFERRABLE INITIALLY DEFERRED"
-                            if defined $references;
-
-                        #print "$sql\n(",join(',',@bind_vals),")\n";
-                        $dbh->do($sql,{},@bind_vals)
-                          or die "Could not add column $column to $table!";
+                        $sql .= " PRIMARY KEY";
                     }
+
+                    #print "$sql\n(",join(',',@bind_vals),")\n";
+                    $dbh->do($sql,{},@bind_vals)
+                      or die "Could not add primary key to existing table!";
                 }
-            } else {
-                # The table does not exists, issue one big CREATE TABLE statement.
-                #print "New table!\n";
-                my @column_sqls;
-                my @bind_vals;
+            }
 
-                # First, add the primary key for this table (if any).
-                if (defined $primaries->{$table}) {
-                    my $key_sql = $primaries->{$table}." INTEGER";
-                    if (defined $sequence) {
-                        $key_sql .= " DEFAULT NEXTVAL(?)";
-                        push @bind_vals, $sequence;
-                    }
-                    $key_sql .= " PRIMARY KEY";
-                    push @column_sqls, $key_sql;
-                }
+            # Now, check each of the columns defined by DBObject aliases.
 
-                # Now, add all of the columns defined by DBObject aliases.
+            my $table_hash = $locations->{$table};
+          COLUMN:
+            foreach my $column (keys %$table_hash) {
+                my $aliases = $table_hash->{$column};
+                my ($sql_type,$default,$not_null,$unique,$references) =
+                  __collectSQLOptions($columns,$aliases);
 
-                my $table_hash = $locations->{$table};
-                foreach my $column (keys %$table_hash) {
-                    #print "  $column\n";
-                    my $aliases = $table_hash->{$column};
-                    my ($sql_type,$default,$not_null,$unique,$references) =
-                      __collectSQLOptions($columns,$aliases);
+                next COLUMN
+                  unless defined $sql_type;
 
-                    die "$column does not have an SQL type!"
-                      unless defined $sql_type;
+                # See if the column exists already
+                my ($col_num) =
+                  $dbh->selectrow_array($find_column_by_name,{},
+                                        $reloid,$column);
 
-                    my $column_sql = "$column $sql_type";
+                if (defined $col_num) {
+                    #print "$column exists!\n";
+
+                    # FIXME: We should try to verify the type and
+                    # other SQL options.
+                } else {
+                    #print "New column ($column)!\n";
+
+                    my $sql = "ALTER TABLE $table ADD COLUMN $column $sql_type";
+                    my @bind_vals;
 
                     if (defined $default) {
-                        $column_sql .= " DEFAULT ?";
+                        $sql .= " DEFAULT ?";
                         push @bind_vals, $default;
                     }
 
-                    $column_sql .= " NOT NULL" if $not_null;
-                    $column_sql .= " UNIQUE" if $unique;
-                    $column_sql .=
+                    $sql .= " NOT NULL" if $not_null;
+                    $sql .= " UNIQUE" if $unique;
+                    $sql .=
                       " REFERENCES $references DEFERRABLE INITIALLY DEFERRED"
                         if defined $references;
 
-                    push @column_sqls, $column_sql;
+                    #print "$sql\n(",join(',',@bind_vals),")\n";
+                    $dbh->do($sql,{},@bind_vals)
+                      or die "Could not add column $column to $table!";
+                }
+            }
+        } else {
+            # The table does not exists, issue one big CREATE TABLE statement.
+            #print "New table!\n";
+            my @column_sqls;
+            my @bind_vals;
+
+            # First, add the primary key for this table (if any).
+            if (defined $primaries->{$table}) {
+                my $key_sql = $primaries->{$table}." INTEGER";
+                if (defined $sequence) {
+                    $key_sql .= " DEFAULT NEXTVAL(?)";
+                    push @bind_vals, $sequence;
+                }
+                $key_sql .= " PRIMARY KEY";
+                push @column_sqls, $key_sql;
+            }
+
+            # Now, add all of the columns defined by DBObject aliases.
+
+            my $table_hash = $locations->{$table};
+            foreach my $column (keys %$table_hash) {
+                #print "  $column\n";
+                my $aliases = $table_hash->{$column};
+                my ($sql_type,$default,$not_null,$unique,$references) =
+                  __collectSQLOptions($columns,$aliases);
+
+                die "$column does not have an SQL type!"
+                  unless defined $sql_type;
+
+                my $column_sql = "$column $sql_type";
+
+                if (defined $default) {
+                    $column_sql .= " DEFAULT ?";
+                    push @bind_vals, $default;
                 }
 
-                # Join all of the column definitions together into a
-                # CREATE TABLE statement, and execute it.
+                $column_sql .= " NOT NULL" if $not_null;
+                $column_sql .= " UNIQUE" if $unique;
+                $column_sql .=
+                  " REFERENCES $references DEFERRABLE INITIALLY DEFERRED"
+                    if defined $references;
 
-                my $create_sql = "CREATE TABLE $table (".
-                  join(", ",@column_sqls).")";
-
-                #print "$create_sql\n(",join(", ",@bind_vals),")\n";
-                $dbh->do($create_sql) or die "Could not create table $table";
+                push @column_sqls, $column_sql;
             }
+
+            # Join all of the column definitions together into a
+            # CREATE TABLE statement, and execute it.
+
+            my $create_sql = "CREATE TABLE $table (".
+              join(", ",@column_sqls).")";
+
+            #print "$create_sql\n(",join(", ",@bind_vals),")\n";
+            $dbh->do($create_sql) or die "Could not create table $table";
         }
-    };
-
-    # Save any error message so that the close/open below doesn't
-    # clobber it.
-    my $err = $@;
-
-    # Restore standard error
-    close STDERR;
-    open STDERR, ">&", $olderr;
-
-    # Rethrow any error that might have occurred
-    die $err if $@;
+    }
 }
 
 
