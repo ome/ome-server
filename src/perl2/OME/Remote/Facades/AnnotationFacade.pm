@@ -50,7 +50,7 @@ facade methods pertaining to annotation attributes
 
 =cut
 
-my %TARGET_CLASSES =>
+my %TARGET_CLASSES =
   (
    'D' => 'OME::Dataset',
    'I' => 'OME::Image',
