@@ -40,6 +40,8 @@ package OME::Tasks::ImageTasks;
 use OME::Session;
 use OME::Dataset;
 use OME::Image;
+use OME::ImportExport::Importer;
+use OME::ImportExport::Exporter;
 use OME::Analysis::Engine;
 use OME::ImportEngine::ImportEngine;
 use OME::Tasks::PixelsManager;
@@ -113,104 +115,24 @@ Returns a reference to an array of images imported.
 
 =cut
 sub importFiles {
-	my ($dataset, $filenames, $options) = @_;
-	my $session = OME::Session->instance();
-	my $factory = $session->Factory();
-	my $repository = $session->findRepository(); # make sure there is one, and its activated.
+	my ($dataset, $filenames, $options, $task) = @_;
 
-	my @files;
-    my $progress = 
-    	OME::Tasks::NotificationManager->new ('Uploading files to omeis',scalar @$filenames);
-	
-	foreach ( @$filenames ) {
-		push( @files, OME::Image::Server::File->upload($_) );
-		$progress->step();
+	unless ($task) {
+		$task = OME::Tasks::NotificationManager->
+			new('Importing images',3+scalar(@$filenames))
+				unless defined $task;
+		
+		$task->setPID($$);
+		$task->step();
+		$task->setMessage('Starting import');
 	}
-	$progress->finish();
-	
-	my $image_list = OME::ImportEngine::ImportEngine->importFiles(%$options, \@files );
-	
-	if( scalar( @$image_list ) > 0 ) {
-		$dataset = $factory->newObject("OME::Dataset",
-			{
-			 name => "Import Dataset",
-			 description => "Images imported without a user specified dataset",
-			 locked => 0,
-			 owner_id => $session->experimenter_id(),
-			})
-			unless defined $dataset;
-
-		# Add the new images to the dataset.
-		foreach $image (@$image_list) {
-			$factory->newObject("OME::Image::DatasetMap",
-								{
-								 image_id   => $image->id(),
-								 dataset_id => $dataset->id(),
-								});
-		}
-	
-		my $chain = $session->Configuration()->import_chain();
-		OME::Analysis::Engine->executeChain($chain,$dataset,{});
-
-		logdbg "debug", "Successfully imported images:";
-		logdbg "debug", "\t Image(".$_->id()."): ".$_->name()
-			foreach (@$image_list);
-
-		# save default display options to omeis as thumbnail settings.
-		foreach my $image (@$image_list) {
-			foreach my $pixels ($image->pixels()) {
-				OME::Tasks::PixelsManager->saveThumb( $pixels );
-			}
-		}
-		# save any newly created displayOptions.
-		$session->commitTransaction();
-	}
-    
-    return $image_list;
-}
-
-
-=head2 forkedImportFiles
-
-	my $task = forkedImportFiles($dataset,\@filenames,\%options);
-
-Performs the same operation as importFiles, but forks off a new
-process first.  An OME::Task object is created to track the import's
-progress.
-
-=cut
-
-sub forkedImportFiles {
-	my ($dataset, $filenames, $options) = @_;
-
-    my $task = OME::Tasks::NotificationManager->
-      new('Importing images',3+scalar(@$filenames));
 
     my $importer = OME::ImportEngine::ImportEngine->new(%$options);
     my $session = OME::Session->instance();
 
     my $files_mex = $importer->startImport();
-    my $session_key = $session->SessionKey();
 
-    my $parent_pid = $$;
-    my $pid = OME::Fork->fork();
-
-    if (!defined $pid) {
-        die "Could not fork off process to perform the import";
-    } elsif ($pid) {
-        # Parent process
-
-        return $task;
-    } else {
-        # Child process
-
-        my $session = OME::Session->instance();
-
-        eval {
-            POSIX::setsid() or die "Can't start a new session. $!";
-			$task->setPID ($$);
-            $task->step();
-            $task->setMessage('Starting import');
+	eval {
 
             my @files;
 
@@ -282,10 +204,61 @@ sub forkedImportFiles {
 
             logwarn "Could not close task - $@" if $@;
         }
-
-        CORE::exit(0);
-    }
 }
+
+
+=head2 forkedImportFiles
+
+	my $task = forkedImportFiles($dataset,\@filenames,\%options);
+
+Performs the same operation as importFiles, but defers the task
+until later.
+
+=cut
+
+sub forkedImportFiles {
+	my ($dataset, $filenames, $options) = @_;
+    my $task = OME::Tasks::NotificationManager->
+      new('Importing images',3+scalar(@$filenames));
+	$task->setPID($$);
+	$task->step();
+	$task->setMessage('Starting import');
+
+	OME::Fork->doLater ( sub {
+		OME::Tasks::ImageTasks::importFiles($dataset, $filenames, $options, $task);
+	});
+}
+
+# exportFiles(session,images)
+# --------------------------------------
+# Exports the selected images out of OME.  The session is used to
+# interact with the database.
+
+
+sub exportFiles {
+	my ($i, $sz, $type);
+	my $image_list;
+	my ($session, $argref) = @_;
+
+	return unless
+		(defined $session) &&
+		(defined $argref);
+
+	$type = $$argref[0];
+	$sz = scalar(@$argref);
+	for ($i = 1; $i < $sz; $i++) {
+	push @image_list, $$argref[$i];
+	}
+
+	# FIXME:
+	# Need to determine how to locate repository for given image IDs\
+	# when we go to more than 1 repository.
+	my $repository = $session->findRepository();
+
+	my $xporter = OME::ImportExport::Exporter->new($session, $type, \@image_list, $repository);
+
+}
+
 
 
 1;
