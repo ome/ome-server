@@ -39,12 +39,16 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Util::Commands);
 
-use Cwd;
+use Cwd qw(cwd abs_path);
 use Carp;
-use Term::ANSIColor qw(:constants);
+use Config;
 use English;
 use Getopt::Long;
 use File::Path; # for rmtree
+use File::Spec;
+use File::Find;
+use Term::ANSIColor qw(:constants);
+
 
 use OME::SessionManager;
 use OME::Session;
@@ -112,7 +116,7 @@ sub uninstall {
 	
 	if ($all) {
 		exit 1 unless y_or_n ("You have elected to completely remove your OME installation.".
-						"Your data will be destroyed.\n Continue?");
+						" Your data will be destroyed. Continue?");
 	}
 	
 	# find all the neccessary programs we will run
@@ -181,22 +185,49 @@ sub uninstall {
 	}
 	euid(0);
 	
-	# OME perl files
-	my $perl_dir = "/Library/Perl/5.8.1/OME";
-	if ( -d $perl_dir) {
-		if ($all or y_or_n ("Uninstall OME perl packages including ome admin tool ?")) {
-			print "    \\_ Removing $perl_dir \n";
-			rmtree($perl_dir);
-			
-			# uninstall ome amdin tool
-			if ($environment->cron_conf->{omeadmin}) {		
-				my $file_path = $environment->cron_conf()->{omeadmin_path}."/ome";
-				print "    \\_ Removing $file_path \n";
-				unlink($file_path);
+	# remove Perl Library Files
+	if ($all or y_or_n ("Uninstall OME perl packages including ome admin tool ?")) {
+		uninstall_perl_libs();
+		
+		# uninstall ome amdin tool
+		if ($environment->cron_conf->{omeadmin}) {		
+			my $file_path = $environment->cron_conf()->{omeadmin_path}."/ome";
+			print "    \\_ Removing $file_path \n";
+			unlink($file_path);
+		}
+	}
+}
+
+# This is harsh and probably dangerous, it also misses the 'man' directories,
+# Other than the .packlist, this should things sqeaky clean, though.
+
+# WARNING there is exact same code in src/perl2/Makefile.PL. If you change this
+# change that as well.
+
+sub uninstall_perl_libs {
+	my %searchdirs;
+
+	foreach (@INC) {
+		if ( $_ ne '.' and -d $_ ) {
+			$searchdirs{$_} = 1;
+		}
+	}
+
+	File::Find::find( sub {
+		my @dirs = File::Spec->splitdir($File::Find::name);
+	    if ($dirs[$#dirs] eq 'OME') {
+	    	if ($dirs[0] eq 'home' or $dirs[0] eq 'Users'){
+				print "    \\_ Ignoring ",$File::Find::name,"\n";
+	    	} else {
+				print "    \\_ Removing ",$File::Find::name,"\n";
+				system ('rm -rf '.$File::Find::name);
+				$File::Find::prune = 1;
 			}
 		}
-	} 
+	}, keys %searchdirs);
+
 }
+
 
 __END__
 
