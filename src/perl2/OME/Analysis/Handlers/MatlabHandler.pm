@@ -382,8 +382,8 @@ sub Pixels_to_MatlabArray {
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
 	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) );
 	my @pixel_attr_list = $self->getCurrentInputAttributes( $formal_input );
-	
-	if ( scalar @pixel_attr_list >= 1) {
+		
+	if ( scalar @pixel_attr_list > 1) {
 		print STDERR "The OME-Matlab interface does not support Formal inputs".
 		             " of arity greater than 1 at this time.\n";
 		return;
@@ -437,7 +437,7 @@ sub PixelsSlice_to_MatlabArray {
 	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) );
 	my @pixels_slice_attr_list = $self->getCurrentInputAttributes( $formal_input );
 
-	if ( scalar @pixels_slice_attr_list >= 1) {
+	if ( scalar @pixels_slice_attr_list > 1) {
 		print STDERR "The OME-Matlab interface does not support Formal inputs".
 		             " of arity greater than 1 at this time.\n";
 		return;
