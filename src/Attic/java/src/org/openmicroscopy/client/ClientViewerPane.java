@@ -253,7 +253,7 @@ public class ClientViewerPane  extends JPanel {
      * @param name name of entity being displayed
      * @param description textual description of entity
      * @param experimenter name of owner
-     * @param experimenter name of owner's group
+     * @param group name of owner's group
      */
     protected void DrawCommon(Graphics2D g, String name, String description,
 			      String experimenter, String group) {
@@ -264,7 +264,8 @@ public class ClientViewerPane  extends JPanel {
 
 	// Needs to be internationalized !
 	String labels [] = new String [] {"Name", "Description", "Experimenter", "Group"};
-	String names [] = new String [] {name, description, experimenter, "Sorger"};
+	//String names [] = new String [] {name, description, experimenter, "Sorger"};
+	String names [] = new String [] {name, description, experimenter, group};
 
 	startY += 40;
 	startX += leftMargin;
@@ -348,6 +349,7 @@ class ProjectViewer extends ClientViewerPane {
 	//owner = new String(ownerAttr.getStringElement("FirstName") + " " +
 	//ownerAttr.getStringElement("LastName"));
 	owner = "me";
+	group = "Sorger";
 
 	List dsList = project.getDatasets();
 	//System.err.println("dataset: "+dataset+"imageList: "+imageList);
@@ -406,12 +408,9 @@ class DatasetViewer extends ClientViewerPane {
 			   ownerAttr.getStringElement("LastName"));
 
 
-	//HashMap criteria = new HashMap();
-	//criteria.put(new String("group_id"), 
-	//OMEObject grpObj= accessor.Lookup("groups",criteria);
-
 	//Attribute groupAttr = dataset.getGroup();
-	//group = groupAttr.GetStringElement("Group");
+	//group = new String(groupAttr.getStringElement("Name"));
+	group = "Sorger";
 	locked = dataset.isLocked();
 
 	List imageList = dataset.getImages();
@@ -469,6 +468,8 @@ class ImageViewer extends ClientViewerPane {
 	Attribute ownerAttr = image.getExperimenter();
 	owner = new String(ownerAttr.getStringElement("FirstName") + " " +
 			   ownerAttr.getStringElement("LastName"));
+	Attribute groupAttr = image.getGroup();
+	group = new String(groupAttr.getStringElement("Name"));
 	created = image.getCreated();
 	inserted = image.getInserted();
 
