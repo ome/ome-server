@@ -127,7 +127,7 @@ public class Chains {
 	 * the current dataset
 	 * 
 	 * @param chain a collection of chains that have executions in the
-	 *   current dataset.
+	 *   current dataset(s).
 	 */
 	 public void setExecutedChains(Collection chains) {
 	 	Iterator iter = iterator();
@@ -140,4 +140,14 @@ public class Chains {
 	 		chain.setExecutedInCurrentDataset(hasExecution);
 	 	}
 	 }
+	 
+	public void clearExecutedChains() {
+		Iterator iter = iterator();
+		CChain chain;
+		
+		while (iter.hasNext()) {
+			chain = (CChain) iter.next();
+			chain.setExecutedInCurrentDataset(false);
+		}
+	}
 }
