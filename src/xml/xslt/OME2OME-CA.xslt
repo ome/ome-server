@@ -728,7 +728,7 @@
 	</xsl:template>
 	<!-- Instrument - OTF -->
 	<xsl:template match = "OME:Instrument/OME:OTF">
-		<xsl:element name = "OpticalTransferFunction">
+		<xsl:element name = "OTF">
 			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
