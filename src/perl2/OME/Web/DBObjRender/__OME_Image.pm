@@ -54,8 +54,8 @@ Provides custom behavior for rendering an OME::Image
 use strict;
 use vars qw($VERSION);
 use OME;
-use OME::Session;
 use OME::Tasks::ImageManager;
+use OME::Tasks::ModuleExecutionManager;
 use base qw(OME::Web::DBObjRender);
 
 # Class data
@@ -71,7 +71,8 @@ __PACKAGE__->_fieldNames( [
 	'description',
 	'owner',
 	'group',
-	'created'
+	'created',
+	'original_file'
 ] ) ;
 __PACKAGE__->_allFieldNames( [
 	@{__PACKAGE__->_fieldNames() },
@@ -104,6 +105,48 @@ sub getRefToObject {
 			return $ref;
 		}
 	}
+}
+
+=head2 renderSingle
+
+adds link to original file
+
+=cut
+
+sub renderSingle {
+	my ($proto,$obj,$format,$fieldnames) = @_;
+	my $factory = $obj->Session()->Factory();
+	my $q = new CGI;
+
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $obj );
+
+	$fieldnames = $proto->getFieldNames( $obj ) unless $fieldnames;
+	my $id   = $obj->id();
+	my %record;
+	foreach my $field( @$fieldnames ) {
+		if( $field eq 'id') {
+			$record{ $field } = $q->a( 
+				{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
+				$id
+			);
+		} elsif( $field eq 'original_file' ) {
+			my $import_mex = $factory->findObject( "OME::ModuleExecution", 'module.name' => 'Image import', image => $obj, __order => 'timestamp' );
+			my @ais = $import_mex->inputs();
+			my $ai = $ais[0];
+			my $original_file = OME::Tasks::ModuleExecutionManager->
+				getAttributesForMEX($ai->input_module_execution,$ai->formal_input()->semantic_type)->[0];
+			my $originalFile_url = $original_file->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$original_file->FileID();
+			$record{ $field } = $q->a( { -href => $originalFile_url }, $original_file->Path() );
+		} else {
+			$record{ $field } = $obj->$field;
+			$record{ $field } = OME::Web::DBObjRender->getRefToObject( $record{ $field }, $format )
+				if( ref( $record{ $field } ) );
+		}
+	}
+	
+	return %record if wantarray;
+	return \%record;
 }
 
 =head1 Author
