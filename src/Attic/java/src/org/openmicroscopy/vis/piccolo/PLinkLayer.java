@@ -42,6 +42,7 @@ import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import java.util.Iterator;
+import java.util.Vector;
 
 /** 
  * A Layer specifically designed to hold PLink objects - both PParamLinks and 
@@ -86,7 +87,7 @@ public class PLinkLayer extends PLayer {
 	
 		PModuleLink lnk = findModuleLink(start,end);
 		if (lnk == null) {// if there is no link
-			lnk = new PModuleLink(start,end);
+			lnk = new PModuleLink(this,start,end);
 			modules.addChild(lnk);
 		}
 	}
@@ -103,10 +104,7 @@ public class PLinkLayer extends PLayer {
 		}
 	}
 	
-	protected void removeLink(PLink link) {
-		if (link instanceof PParamLink) 
-			removeModuleLinks((PParamLink) link);
-	}
+	
 	
 	public void removeModuleLinks(PParamLink link) {
 		PModule start = link.getOutput().getPModule();
@@ -158,30 +156,32 @@ public class PLinkLayer extends PLayer {
 		}
 		return null;
 	}
-				
-					
 	
 	public void removeParamLinks(PModuleLink link) {
 		PModule start = link.getStart();
-		PModule end = link.getEnd();
+		PModule end= link.getEnd();
 		
-		PParamLink lnk;
-		PModule s;
-		PModule e;
-		
-		Iterator iter = params.getChildrenIterator();
+		Vector toRemove = new Vector();
+		Iterator iter=params.getChildrenIterator();
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (obj instanceof PParamLink) {
-				lnk = (PParamLink) obj;
-				s = lnk.getOutput().getPModule();
-				e = lnk.getInput().getPModule();
-					// if same thing, we're done. don't clobber.
-				if (s == start && e == end)
-					return;
+				PParamLink lnk = (PParamLink) obj;
+				PModule s = lnk.getOutput().getPModule();
+				PModule e = lnk.getInput().getPModule();
+				// if it's a link betweenn our two places, kill it.
+				// but we don't call lnk.remove(), as this would do bad 
+				// recursive things, as it would try to remove the
+				// associated modules.. 
+				// actually, the recursive call might work, but
+				// inefficiently. this will be quicker
+				if (s == start && e == end) {
+					toRemove.add(lnk);
+					lnk.clearLinks();
+				}
 			}
-			else
-				System.err.println("*** removeModuleLinks(). Shouldn't get here");
-		}	
+		}
+		params.removeChildren(toRemove);
 	}
+				
 }
