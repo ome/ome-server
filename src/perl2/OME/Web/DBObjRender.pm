@@ -54,8 +54,15 @@ sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
 	my $self  = $class->SUPER::new(@_);
-	my %params = @_;
-		
+	
+	$self->{ page_limits } = {
+		list  => 10,
+		popup => 0,
+		ref_list => 10,
+		tiled_list => 24,
+		tiled_ref_list => 24
+	};
+	
 	return $self;
 }
 
@@ -264,25 +271,25 @@ sub render {
 	# load magic fields
 	# _relations = iterate over the object's relations
 	if( $tmpl->query( name => '_relations' ) ) {
-		my ($relations, $names) = $self->getRelations( $obj, $mode );
+		my $relations = $self->getRelations( $obj, $mode );
 		my @tmpl_fields = $tmpl->query( loop => '_relations' );
 		my @a = grep( m/^!/, @tmpl_fields); my $relation_render_mode = $a[0];
 		my @relations_data;
 		foreach my $relation( @$relations ) {
-			my $name = shift @$names;
-# FIXME: clean up paging logic here! in fact, clean up this whole hack
-			my $tableMaker = $self->Tablemaker();
-			my ( $objects, $options, $title, $formal_name ) =
-				$tableMaker->__parseParams( @$relation );
-			my $_options = {
-				more_info_url => ( 
-					$tableMaker->pageURL( "OME::Web::DBObjTable", $tableMaker->{__params} ) or
-					$options->{ URLtoMoreInfo }
-				)
-			};
+			my( $title, $method, $relation_type ) = @$relation;
+
+			# set up url to additional info
+			my $more_info_url = $self->pageURL( "OME::Web::DBObjTable", {
+				Type => $relation_type,
+				$relation_type.'_accessor' => join( ',', $obj->getFormalName(), $obj->id(), $method )
+			} );
 			push( @relations_data, { 
-				name => $name, 
-				$relation_render_mode => $self->renderArray( \@$objects, substr( $relation_render_mode, 1 ), $_options ) 
+				name => $title, 
+				$relation_render_mode => $self->renderArray( 
+					[ $obj, $method ], 
+					substr( $relation_render_mode, 1 ), 
+					{ _more_info_url => $more_info_url }
+				)
 			} );
 		}
 		$tmpl_data{ _relations } = \@relations_data;
@@ -297,6 +304,33 @@ sub renderArray {
 	my ($self, $objs, $mode, $options) = @_;
 	$options = {} unless $options; # don't have to do undef error checks this way
 	
+	# deal with method calling style
+	if( ref( $objs ) eq 'ARRAY' && scalar( @$objs ) eq 2 && !ref($objs->[1]) ) {
+		my ($obj, $method) = @$objs;
+		my ( @relation_objects, $pager_text );
+		
+		# try to get paging controls
+		my ($offset, $limit);
+		$limit = $self->{ page_limits }->{ $mode };
+		my $count_method = 'count_'.$method;
+		( $offset, $pager_text ) = $self->_pagerControl( 
+			$method,
+			$obj->$count_method,
+			$limit
+		);
+
+		# set up paging if there is a limit for this type and if pagerControl returned ok
+		if( $limit and $pager_text ) {
+			@relation_objects = $obj->$method( __limit => $limit, __offset => $offset );
+			$options->{_pager_text} = $pager_text;
+		
+		# get objs w/o paging
+		} else {
+			@relation_objects = $obj->$method();
+		}
+		$objs = \@relation_objects
+	}
+	
 	# use generic template
 	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
 	my $tmpl = HTML::Template->new( filename => 'generic_'.$mode.'.tmpl',
@@ -309,10 +343,10 @@ sub renderArray {
 		
 		# populate magic fields
 		if( $tmpl->query( name => '_more_info_url' ) ) {
-			$tmpl_data{ _more_info_url } = $options->{more_info_url};
+			$tmpl_data{ _more_info_url } = $options->{ _more_info_url };
 		}
-		if( $tmpl->query( name => '_paging_text' ) ) {
-			$tmpl_data{ _paging_text } = $options->{_paging_text};
+		if( $tmpl->query( name => '_pager_text' ) ) {
+			$tmpl_data{ _pager_text } = $options->{ _pager_text };
 		}
 		if( $tmpl->query( name => '_formal_name' ) ) {
 			$tmpl_data{ _formal_name } = $formal_name;
@@ -356,6 +390,69 @@ sub renderArray {
 	# populate template
 	$tmpl->param( %tmpl_data );
 	return $tmpl->output();
+}
+
+sub _pagerControl {
+	my ( $self, $control_name, $obj_count, $limit ) = @_;
+	return () unless ( $obj_count and $limit );
+
+	# setup
+	my $q = $self->CGI();
+	my $offset = ($q->param( $control_name.'___offset' ) or 0);
+	my $pagingText;
+	my $numPages = POSIX::ceil( $obj_count / $limit );
+
+	# Turn the page
+	my $action = $q->param( 'action' ) ;
+	if( $action ) {
+		if( $action eq 'FirstPage_'.$control_name ) {
+			$offset = 0;
+		} elsif( $action eq 'PrevPage_'.$control_name ) {
+			$offset -= $limit;
+		} elsif( $action eq 'NextPage_'.$control_name ) {
+			$offset += $limit;
+		} elsif( $action eq 'LastPage_'.$control_name ) {
+			$offset = ($numPages - 1)*$limit;
+		}
+	}
+	my $currentPage = int( $offset / $limit ) + 1;
+
+
+	# make controls
+	if( $numPages > 1 ) {
+		$pagingText = "<input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
+		$pagingText .= $q->a( {
+				-title => "First Page",
+				-href => "javascript: document.forms[0].action.value='FirstPage_$control_name'; document.forms[0].submit();",
+				}, 
+				'<<'
+			)." "
+			if ( $currentPage > 1 and $numPages > 2 );
+		$pagingText .= $q->a( {
+				-title => "Previous Page",
+				-href => "javascript: document.forms[0].action.value='PrevPage_$control_name'; document.forms[0].submit();",
+				}, 
+				'<'
+			)." "
+			if $currentPage > 1;
+		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
+		$pagingText .= "\n".$q->a( {
+				-title => "Next Page",
+				-href  => "javascript: document.forms[0].action.value='NextPage_$control_name'; document.forms[0].submit();",
+				}, 
+				'>'
+			)." "
+			if $currentPage < $numPages;
+		$pagingText .= "\n".$q->a( {
+				-title => "Last Page",
+				-href  => "javascript: document.forms[0].action.value='LastPage_$control_name'; document.forms[0].submit();",
+				}, 
+				'>>'
+			)
+			if( $currentPage < $numPages and $numPages > 2 );
+	}
+
+	return ( $offset, $pagingText );
 }
 
 =head2 renderData
@@ -443,8 +540,7 @@ sub renderData {
 		# populate has many aliases
 		} elsif( $field =~ m/^(.+)!(.+)$/ ) {
 			my ($method, $render_mode) = ($1, $2);
-# FIXME: add paging logic here! FIX these hacks too!
-			my @list = $obj->$method();
+# FIXME: clean up this hack!
 			my $returnedClass;
 			my $accessorType = $obj->getColumnType( $method );
 			if( $accessorType eq 'has-many' ) {
@@ -456,8 +552,8 @@ sub renderData {
 					Type => $returnedClass,
 					$returnedClass.'_accessor' => join( ',', $formal_name, $id, $method )
 				} );
-			my $options = { more_info_url => $url };
-			$record{ $field } = $self->renderArray( \@list, $render_mode, $options );
+			my $options = { _more_info_url => $url };
+			$record{ $field } = $self->renderArray( [$obj, $method], $render_mode, $options );
 
 		# populate mode render requests
 		} elsif( $field =~ m/^!(.+)$/ ) {
@@ -627,28 +723,13 @@ sub getFieldTitles {
 
 =head2 getRelations
 
-	my ($relations, $names) = OME::Web::DBObjRender->getRelations( $object );
-	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-	foreach( @$relations ) {
-		$table_hash{ shift @$names } = $tableMaker->getTable( @$_ );
-		...
-	}
+	my $relations = OME::Web::DBObjRender->getRelations( $object );
 
 $object is an instance of a DBObject or an Attribute.
-$relations is an array reference. For convenienve, its members are formatted for DBObjTable
-getTable and getList methods. That is, 
-[
-	{ title => $title },
-	$relation_accessors->{ $method },
-	( { accessor => [ $formal_name, $obj->id, $method ] } OR
-	  /@objects )
-]
-$names is an array reference. It holds the names of the relations. Each name will be
-composed of alphanumeric characters, underscores, and dashes.
+$relations is an array reference. It is formatted like so:
+	[ $title, $method, $relation_type ]
 
-This method gets an object's has many relations. This may include relations that are
-convenient but to avoid redundancy in the DB, have not defined with DBObject methods. (i.e.
-Module Execution's inputs and outputs)
+This method gets an object's has many relations.
 
 =cut
 
@@ -667,14 +748,13 @@ sub getRelations {
 		(my $title = $method) =~ s/_/ /g;
 		$title = ucfirst( $title );
 		push( @relations, [
-			{ title => $title },
+			$title,
+			$method,
 			$relation_accessors->{ $method },
-			{ accessor => [ $formal_name, $obj->id, $method ] }
 		] );
-		push @names, $method;
 	}
 	
-	return (\@relations, \@names);
+	return \@relations;
 }
 
 =head2 getSearchFields
