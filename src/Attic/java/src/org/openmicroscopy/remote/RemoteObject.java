@@ -107,6 +107,29 @@ public class RemoteObject
         }
     }
 
+	protected Object getCachedListElement(Class clazz,String element) {
+   		if (elementCache.containsKey(element)) {
+       	  return elementCache.get(element);
+       }
+       else {
+	   	Object o = caller.dispatch(this,element);
+	   	if (o instanceof List)
+	   	{
+		   List refList = (List) o;
+		   List objList = new ArrayList();
+		   Iterator i = refList.iterator();
+		   while (i.hasNext())
+		   	objList.add(instantiate(clazz,(String) i.next()));
+			return objList;
+		 } else if (o == null) {
+			 return null;
+		 } else {
+			 if (o == null) o = "null";
+			 throw new RemoteException(element+": expect List (of "+clazz+"), got "+o.getClass());
+		 }
+       }
+	 }
+	   
     private void saveElement(String element, Object value)
     {
         elementCache.put(element,value);
@@ -259,12 +282,21 @@ public class RemoteObject
     protected void setRemoteElement(String element, Object value)
     { saveElement(element,value); }
 
+	/**
+	 * getRemoteListElement
+	 * <p>This is the uncached version. See {@link #getCachedRemoteListElement 
+	 * getCachedRemoteListElement} for the cached version.<p> 
+	 * <p>The choice between the cached and uncached will be made as 
+	 * appropriate by the subclass of RemoteObject. 
+	 * @param clazz - the java class that is the tpe of the element.
+	 * @param element - the name of the element
+	 * @return List - list of objects of the given class, from the given name.
+	 */
     protected List getRemoteListElement(Class clazz,
                                         String element)
     {
-        // lists should not be cached - why not?
-        //Object o = getCachedElement(element);
-        Object o = caller.dispatch(this,element);
+    
+    	Object o = caller.dispatch(this,element);
         if (o instanceof List)
         {
             List refList = (List) o;
@@ -280,6 +312,30 @@ public class RemoteObject
             throw new RemoteException(element+": expect List (of "+clazz+"), got "+o.getClass());
         }
     }
+    
+    /**
+     * getCachedRemoteListElement
+     * <p> The cached version of getRemoteListElement
+     * 
+     * @param clazz
+     * @param element
+     * @return List
+     */
+     protected List getCachedRemoteListElement(Class clazz,String element) {
+    	
+    	Object o = getCachedListElement(clazz,element);
+    	if (o instanceof List) {
+    		return (List) o;
+    	}
+    	else if (o == null) {
+    		return null;
+    	}
+    	else {
+    		if (o == null)
+    			o=null;
+    		throw new RemoteException(element+": expect List, got "+o.getClass());
+    	}
+     }
 
     protected Attribute getAttributeElement(String element)
     {

@@ -83,7 +83,7 @@ public class RemoteModule
     { setStringElement("execution_instructions",executionInstructions); }
 
     public List getInputs()
-    { return getRemoteListElement(FormalInput.class,"inputs"); }
+    { return getCachedRemoteListElement(FormalInput.class,"inputs"); }
     public Iterator iterateInputs()
     {
         RemoteIterator i = (RemoteIterator)
@@ -94,7 +94,7 @@ public class RemoteModule
     }
 
     public List getOutputs()
-    { return getRemoteListElement(FormalOutput.class,"outputs"); }
+    { return getCachedRemoteListElement(FormalOutput.class,"outputs"); }
     public Iterator iterateOutputs()
     {
         RemoteIterator i = (RemoteIterator)
@@ -141,9 +141,10 @@ public class RemoteModule
 
         public SemanticType getSemanticType()
         { return (SemanticType) 
-              getRemoteElement(RemoteSemanticType.class,"attribute_type"); }
+              getRemoteElement(RemoteSemanticType.class,"semantic_type"); }
+               // was attribute_type
         public void setSemanticType(SemanticType attributeType)
-        { setRemoteElement("attribute_type",attributeType); }
+        { setRemoteElement("semantic_type",attributeType); }
 
         public boolean getOptional()
         { return getBooleanElement("optional"); }
@@ -179,7 +180,7 @@ public class RemoteModule
         extends FormalParameter
         implements Module.FormalOutput
     {
-        public FormalOutput() { super(); }
+        public FormalOutput() { super(); } 
         public FormalOutput(String reference) { super(reference); }
 
         public String getFeatureTag()

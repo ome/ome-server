@@ -1,7 +1,11 @@
 /*
  * org.openmicroscopy.vis.chains.Chains
  *
- * Copyright (C) 2003 Open Microscopy Environment, MIT
+ * Copyright (C) 2003 Open Microscopy Environment
+ * 		Massachusetts Institute of Technology,
+ * 		National Institutes of Health,
+ * 		University of Dundee
+ * 
  * Author:  Harry Hochheiser <hsh@nih.gov>
  *
  *    This library is free software; you can redistribute it and/or
@@ -39,6 +43,13 @@ public class Chains {
     public static void main(String[] args) {
 		System.out.println("OME Chains, Version "+VERSION+", "+TIMESTAMP);
 		
+		// These property calls should fail silently if the given things aren't there.
+		
+		System.setProperty("com.apple.mrj.application.apple.menu.about.name",
+								  "OME Chains");
+		System.setProperty("com.apple.mrj.application.live-resize","true");
+		System.setProperty("com.apple.mrj.application.growbox.intrudes","true");
+		System.setProperty("apple.laf.useScreenMenuBar","true");
 		Controller controller = new Controller();
 
 		MainFrame mainFrame = new MainFrame(controller);

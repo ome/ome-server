@@ -1,7 +1,10 @@
 /*
  * org.openmicroscopy.vis.chains.ome.Connection
  *
- * Copyright (C) 2003 Open Microscopy Environment, MIT
+ * Copyright (C) 2003 Open Microscopy Environment
+ * 		Massachusetts Institute of Technology,
+ * 		National Institutes of Health,
+ * 		University of Dundee
  * Author:  Harry Hochheiser <hsh@nih.gov>
  *
  *    This library is free software; you can redistribute it and/or
