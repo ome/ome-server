@@ -60,10 +60,11 @@ print "Great, you're in.\n\n";
 
 my $projectName = "ImportTest2 project";
 my $projectDesc = "This project was created by the ImportTest test case.";
-my $projectUser;
+my $projectUser = $session->User();
 my $projectGroup;
 my $status = 1;
 my $age;
+my $data;
 my $project;
 my $project_id;
 my @projects;
@@ -83,9 +84,8 @@ else {             # otherwise create it
     print STDERR "- Creating a new project...";
     print STDERR " using ";
     $age = "new";
-    $projectUser = $session->User();
     $projectGroup = $projectUser->group();
-    my $data = {name => $projectName,
+    $data = {name => $projectName,
 		description => $projectDesc,
 	        owner_id => $projectUser,
 	        group_id => $projectGroup};
@@ -100,11 +100,24 @@ else {             # otherwise create it
 }
 
 if ($status) {
-    $session->commit;
-    print "- Importing files into $age project... ";
-    my $datasetName = shift;
-  OME::Tasks::ImageTasks::importFiles($session, $project, $datasetName, \@ARGV);
-    print "done.\n";
+    $data = {experimenter_id => $projectUser,
+	     started => now,
+	     last_access => now,
+	     host => `hostname`,
+	     project_id => $project};
+    my $session_obj = $session->Factory()->newObject("OME::Session::Attributes", $data);
+    if (!defined $session_obj) {
+	$status = 0;
+	print "failed to create new session entry.\n";
+    }
+    else {
+	$session_obj->writeObject();
+	$session->commit;
+	print "- Importing files into $age project... ";
+	my $datasetName = shift;
+      OME::Tasks::ImageTasks::importFiles($session, $project, $datasetName, \@ARGV);
+	print "done.\n";
+    }
 }
 
 exit $status == 1 ? 0 : 1;
