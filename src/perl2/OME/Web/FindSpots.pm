@@ -43,7 +43,6 @@ use Log::Agent;
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Helper::HTMLFormat;
 use OME::Analysis::Engine;
 use OME::Tasks::AnnotationManager;
 use OME::Tasks::ChainManager;
@@ -70,7 +69,6 @@ sub getPageBody {
 	my	$session=$self->Session();
     my  $factory = $session->Factory();
 	my 	$body="" ;	
-	my 	$HTMLFormat=new OME::Web::Helper::HTMLFormat;
 	
 
 	if ($cgi->param('Execute')){
