@@ -277,12 +277,7 @@ sub processDOM {
 		foreach $CA ( @CAs ) {
 			my $imgAttr = $self->importObject ($CA,'I',$objectID,undef);
 # This is a hack to rename the pixels repository file to the standard naming convention
-# added by josiah Friday 13, June, 2003
-# Modified by IGG 06/27/03 to also assign the proper repository ID to the pixels.
-# Modified DC 08/12/2003 to only normalize the "name" portion of the
-# filename, not the id or punctuation.  (It was turned 5-abc.ori into
-# 5_abc_ori -- not ideal.)
-# Modified by IGG 09/26/03 to use rename instead of system (mv...).
+# this block will execute even if the pixels already exist in the db. ..not ideal behavior, but it doesn't break anything.
 			if( $CA->tagName() eq 'Pixels' ) {
 				# Get the Repository object from the LSID
 				my $repository = $lsid->getLocalObject ($CA->getAttribute('Repository'))
