@@ -322,17 +322,14 @@ addPrototype("OME::DBObject","id",['$'],['$']);
 addPrototype("OME::DBObject","writeObject",[],[]);
 addPrototype("OME::DBObject","Session",[],['OME::Session']);
 addPrototype("OME::DBObject","populate",[],['%']);
+addPrototype("OME::DBObject","populate_list",['@'],['@']);
 
-addPrototype("OME::SemanticType::Superclass","id",['$'],['$']);
-addPrototype("OME::SemanticType::Superclass","writeObject",[],[]);
-addPrototype("OME::SemanticType::Superclass","Session",[],['OME::Session']);
 addPrototype("OME::SemanticType::Superclass","semantic_type",
              [],["OME::SemanticType"]);
 addPrototype("OME::SemanticType::Superclass","module_execution",
              [],["OME::ModuleExecution"]);
-addPrototype("OME::SemanticType::Superclass","_getTarget",
-             [],["OME::ModuleExecution"],
-             publishedName => "target");
+addPrototype("OME::SemanticType::Superclass","target",
+             [],["OME::ModuleExecution"]);
 
 addPrototype("OME::Session","commitTransaction",[],[]);
 addPrototype("OME::Session","rollbackTransaction",[],[]);
@@ -824,25 +821,54 @@ sub __verifyOneValue {
 
     if ($type eq '@') {
         # Function expects an array reference
-        return $ref eq "ARRAY";
+        return 0 if $ref ne "ARRAY";
+
+        #print "  Checking array\n";
+
+        # Check the values of the array -- if any is an object, array,
+        # or hash, use this method recursively to turn it into an object
+        # reference.
+        foreach my $value (@$param) {
+            #print "    Value $value\n";
+            if (ref($value) eq 'ARRAY') {
+                my $good = __verifyOneValue($which,$value,'@',
+                                            $subroutine,@subInputs);
+                return 0 unless $good;
+            } elsif (ref($value) eq 'HASH') {
+                my $good = __verifyOneValue($which,$value,'%',
+                                            $subroutine,@subInputs);
+                return 0 unless $good;
+            } elsif (ref($value) || $value =~ /^(>|&gt;)(>|&gt;)OBJ:/) {
+                my $good = __verifyOneValue($which,$value,'UNIVERSAL',
+                                            $subroutine,@subInputs);
+                return 0 unless $good;
+            }
+        }
+
+        return 1;
     }
 
     if ($type eq '%') {
         # Function expects a hash reference
-        return 0 if  $ref ne "HASH";
+        return 0 if $ref ne "HASH";
 
         #print "   Checking hash\n";
 
-        # Check the values of the hash -- if any is an object, use this
-        # method recursively to turn it into an object reference.
+        # Check the values of the hash -- if any is an object, array, or
+        # hash, use this method recursively to turn it into an object
+        # reference.
         foreach my $key (keys %$param) {
             my $value = $param->{$key};
             #print "   $key = $value =>";
             if (ref($value) eq 'ARRAY') {
-                # Possibly handle recursive data structures in the future
+                my $good = __verifyOneValue($which,$param->{$key},'@',
+                                            $subroutine,@subInputs);
+                return 0 unless $good;
             } elsif (ref($value) eq 'HASH') {
-                # Possibly handle recursive data structures in the future
-            } elsif (ref($value)) {
+                my $good = __verifyOneValue($which,$param->{$key},'%',
+                                            $subroutine,@subInputs);
+                return 0 unless $good;
+            } elsif (ref($value) || $value =~ /^(>|&gt;)(>|&gt;)OBJ:/) {
                 my $good = __verifyOneValue($which,$param->{$key},'UNIVERSAL',
                                             $subroutine,@subInputs);
                 return 0 unless $good;
