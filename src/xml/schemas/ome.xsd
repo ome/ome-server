@@ -65,6 +65,7 @@
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref = "CreationDate"/>
+				<xs:element ref = "ExperimenterRef"/>
 				<xs:element ref = "Description" minOccurs = "0"/>
 				<xs:element ref = "ExperimentRef" minOccurs = "0"/>
 				<xs:element ref = "GroupRef" minOccurs = "0"/>
@@ -350,6 +351,7 @@
 				<xs:element ref = "ROI" minOccurs = "0" maxOccurs = "unbounded"/>
 			</xs:sequence>
 			<xs:attribute name = "Zoom" type = "xs:float"/>
+			<xs:attribute name = "ID" use = "required" type = "DisplayOptionsID"/>
 		</xs:complexType>
 	</xs:element>
 	<xs:element name = "RedChannel" type = "ChannelScaleType">
@@ -929,6 +931,11 @@
 			<xs:pattern value = "(urn:lsid:)?(\S+\.\S+)+(:Plate)(:\S+)"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name = "DisplayOptionsID">
+		<xs:restriction base = "LSID">
+			<xs:pattern value = "(urn:lsid:)?(\S+\.\S+)+(:DisplayOptions)(:\S+)"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name = "ScreenID">
 		<xs:restriction base = "LSID">
 			<xs:pattern value = "(urn:lsid:)?(\S+\.\S+)+(:Screen)(:\S+)"/>
@@ -1230,8 +1237,10 @@
 		<xs:complexType>
 			<xs:attribute name = "ColorDomain" type = "xs:string">
 				<xs:annotation>
-					<xs:documentation>Specifies which component of Photometric Interpretation to map a channel component to. i.e. w/ RGB this could be 'R', 'G', 'B'
-This can be null if a channel maps to a logical channel but is not included in the photometric interpretation. If this was null then the channel specified would normally be ignored.
+					<xs:documentation>
+						Specifies which component of Photometric Interpretation to map a channel component to. i.e. w/ RGB this could be 'R', 'G', 'B'
+						This can be null if a channel maps to a logical channel but is not included in the photometric interpretation.
+						If this was null then the channel specified would normally be ignored.
 					</xs:documentation>
 				</xs:annotation>
 			</xs:attribute>
