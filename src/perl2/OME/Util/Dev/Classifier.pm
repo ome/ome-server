@@ -255,7 +255,7 @@ sub compile_sigs {
 		analysis_chain_node      => $sig_stitch_node
 	) or die "Could not load a chain node execution for the signature stitcher node (id=".$sig_stitch_node->id."), chain execution (id=".$chex->id.").";
 	my $stitcher_mex = $stitcher_nex->module_execution;
-	die "signature stitcher module execution has 'ERROR' status!"
+	die "signature stitcher (".$stitcher_mex->module->name.") module execution (id=".$stitcher_mex->id.") has 'ERROR' status!"
 		if $stitcher_mex->status() eq 'ERROR';
 	logdbg "debug", "found signature stitcher module execution (mex=".$stitcher_mex->id().").";
 	
@@ -269,29 +269,23 @@ sub compile_sigs {
 	$signature_array->makePersistent();
 	
 	# load the signature outputs for each image
-	my $row = 0;
+	my $image_number = 0;
+	my @sig_array;
 	foreach my $image ( @images ) {
 		my $signature_entry_iterator = $factory->findAttributes( "SignatureVectorEntry", 
 			module_execution => $stitcher_mex,
 			image            => $image
 		) or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
-		$row += 1;
 		# set the image category
-		$signature_array->set( 
-			$row, 
-			1, 
-			$category_numbers{
-				$classifications{ $image->id }->Category->id
-			}
-		);
+		$sig_array[$image_number][0] = 
+			$category_numbers{ $classifications{ $image->id }->Category->id };
 		# set the image's signature vector
 		while (my $sig_entry = $signature_entry_iterator->next()) {
-			$signature_array->set( 
-				$row, 
-				($sig_entry->Legend->VectorPosition() + 1),
-				$sig_entry->Value()
-			);
+			$sig_array[$image_number][$sig_entry->Legend->VectorPosition()] = 
+				$sig_entry->Value();
 		}
+		$signature_array->setAll( @sig_array );
+		$image_number += 1;
 	}
 
 	# save the array to disk
