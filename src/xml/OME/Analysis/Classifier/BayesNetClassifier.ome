@@ -49,6 +49,7 @@
 			<Declaration>
 				<FormalInput  Name="SignatureVectors" SemanticTypeName="SignatureVectorEntry" Count="+"/>		  
 				<FormalInput  Name="Classifier"       SemanticTypeName="BayesNetClassifier"   Count="!"/>
+				<FormalInput  Name="CategoriesUsed"   SemanticTypeName="CategoriesUsed"       Count="+"/>
 				<FormalInput  Name="SignaturesUsed"   SemanticTypeName="SignaturesUsed"       Count="+"/>
 				
 				<FormalOutput Name="Classifications"  SemanticTypeName="Classification"       Count="+"/>				

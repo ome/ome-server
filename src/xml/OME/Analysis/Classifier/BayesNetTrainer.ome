@@ -64,6 +64,18 @@
 				DataType="reference"
 				RefersTo="SignatureVectorLegend"/>
 		</SemanticType>
+		
+		<SemanticType Name="CategoriesUsed" AppliesTo="D">
+			<Description>
+			Records which categories images could possilbly be assigned to 
+			using the trained classifier.
+			</Description>
+			<Element
+				Name="Category"
+				DBLocation="BAYES_NET_CLASSIFIER.CATEGORY"
+				DataType="reference"
+				RefersTo="Category"/>
+		</SemanticType>	
 	</SemanticTypeDefinitions>
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -81,13 +93,16 @@
 				<FormalInput  Name="Classifications"  SemanticTypeName="Classification"       Count="+"/>
 				
 				<FormalOutput Name="Classifier"       SemanticTypeName="BayesNetClassifier"   Count="!"/>
+				
+				<FormalOutput Name="CategoriesUsed"   SemanticTypeName="CategoriesUsed"       Count="+"/>
 				<FormalOutput Name="SignaturesUsed"   SemanticTypeName="SignaturesUsed"       Count="+"/>
 				
-				<FormalOutput Name="ConfusionMatrixEntries"  SemanticTypeName="ConfusionMatrixEntries" Count="+">
-					<Description>
+				<FormalOutput Name="ConfusionMatrix"         SemanticTypeName="ConfusionMatrix"        Count="+">
+				<Description>
 					Performance characteristics of the trained classifier.
 					</Description>
 				</FormalOutput>
+				<FormalOutput Name="ConfusionMatrixEntries"  SemanticTypeName="ConfusionMatrixEntries" Count="+"/>
 			</Declaration>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
