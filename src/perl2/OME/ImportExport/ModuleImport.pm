@@ -369,10 +369,14 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		if( $count ) {
 			$optional = ( $count eq '*' || $count eq '?' ? 't' : 'f' );
 			$list     = ( $count eq '*' || $count eq '+' ? 't' : 'f' );
-		} else {
-                    $optional = 'f';
-                    $list = 't';
-                }
+		} 
+		# FIXME: this is the wrong place to set default values. the default values for these columns are specified
+		# in OME::Module::FormalInput, but something is broken. if I don't specify them here, then those columns
+		# come up blank.
+		else {
+			$optional = 'f';
+			$list = 't';
+		}
 
 		my $descriptions = $formalInputXML->getElementsByLocalName('Description');
 		my $description = [$descriptions->[0]->childNodes()]->[0]->data()
