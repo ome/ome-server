@@ -93,8 +93,8 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 		  35    => ['min4', 4, 'f'],         # float - min intensity of 4th wavelength image
 		  36    => ['max4', 4, 'f'],         # float - max intensity of 4th wavelength image
 		  37    => ['type', 2, 's'],         # image type  0 - normal, 1 - tilt-series
-		                                   # 2- stereo tilt series, 3 - averaged images
-		                                   # 4 - averagede stereo pairs
+		                                       # 2- stereo tilt series, 3 - averaged images
+		                                       # 4 - average stereo pairs
 		  38    => ['lensnum', 2, 's'],      # Lens ID number
 		  39    => ['n1', 2, 's'],           # depends on image type
 		  40    => ['n2', 2, 's'],           # depends on image type
@@ -318,7 +318,6 @@ sub readUIHdr {
     my $fmt;
     my $val;
     my $status;
-    my $whref = {};
     my $w_aref = [];
 
     $status = OME::ImportExport::FileUtils::seek_it($fh, $offset);
@@ -337,16 +336,23 @@ sub readUIHdr {
 	$self->{$k} = $val;
 	#print "$k = $val\n";
     }
-    # Put relevant peices of metadata into xml_elements for later DB storage
+    # Put relevant pieces of metadata into xml_elements for later DB storage
     foreach $k (keys %xml_image_entries) {
 	$xel = $xml_image_entries{$k};
 	$xml_hash->{"Image.".$xel} = $self->{$k};
     }
     # assumes one wavelength key per plane, so can immediately push hash on stack
+    $i = 1;
     foreach $k (sort keys %xml_wavelength_entries) {
+	if ($i > $self->{'NumWaves'}) {
+	    last;
+	}
+	my $whref = {};
 	$xel = $xml_wavelength_entries{$k};
 	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};  # copy
+	#print "WavelengthInfo."."$xel = ". $whref->{'WavelengthInfo.'.$xel}."\n";
 	push @$w_aref, $whref;
+	$i++;
     }
     $xml_hash->{'WavelengthInfo.'} = $w_aref;
 
