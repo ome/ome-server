@@ -93,7 +93,7 @@ our $IMPORT_FORMATS = join (' ',qw/
     OME::ImportEngine::STKreader
     OME::ImportEngine::TIFFreader
     OME::ImportEngine::XMLreader
-Ê Ê OME::ImportEngine::BioradReader 
+    OME::ImportEngine::BioradReader 
 /);
 
 # Database version
