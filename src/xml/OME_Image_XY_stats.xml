@@ -1,0 +1,96 @@
+<AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
+	<Declaration>
+		<TableDefinition AttributeType = "I" TableName = "XY_IMAGE_INFO" 
+			Description = "General image XY slice attributes. Produced from XML.">
+			<Column ColumnID = "theZ" ColumnName = "THE_Z" SQL_DataType = "integer" Description = "Specifies Z spatial dimension"/>
+			<Column ColumnID = "theW" ColumnName = "THE_W" SQL_DataType = "integer" Description = "Specifies Wavelength"/>
+			<Column ColumnID = "theT" ColumnName = "THE_T" SQL_DataType = "integer" Description = "Specifies Timepoint"/>
+			<Column ColumnID = "Min" ColumnName = "MIN" SQL_DataType = "integer" Description = "Minimum value"/>
+			<Column ColumnID = "Max" ColumnName = "MAX" SQL_DataType = "integer" Description = "Maximum value"/>
+			<Column ColumnID = "Mean" ColumnName = "MEAN" SQL_DataType = "float" Description = "Arithmetic Mean"/>
+			<Column ColumnID = "Geomean" ColumnName = "GEOMEAN" SQL_DataType = "float" Description = "Geometric Mean"/>
+			<Column ColumnID = "Sigma" ColumnName = "SIGMA" SQL_DataType = "float" Description = "Standard Deviation"/>
+		</TableDefinition>
+		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
+		<FormalOutput Name = "XYPlaneMin" Description = "Minimum pixel intensity in an XY plane">
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.Min" ColumnID = "Min" Description = "Minimum pixel intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.theZ" ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYPlaneMax" Description = "Maximum pixel intensity in an XY plane">
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.Max" ColumnID = "Max" Description = "Maximum pixel intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYPlaneMean" Description = "Mean of pixel intensities in an XY plane">
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.Mean" ColumnID = "Mean" Description = "Mean of pixel intensities"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYPlaneGeoMean" Description = "Geometric mean of pixel intensities in an XY plane">
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.Geomean" ColumnID = "Geomean" Description = "Geometric mean of pixel intensities"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYPlaneSigma" Description = "Standard deviation of pixel intensities in an XY plane">
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.Sigma" ColumnID = "Sigma" Description = "Standard Deviation of pixel intensities"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		</FormalOutput>
+	</Declaration>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false">
+		<CommandLine>Path=<RawImageFilePath/> Dims=<sizeX/>,<sizeY/>,<sizeZ/>,<sizeT/>,<sizeW/>,<BytesPerPixel/></CommandLine>
+		<STDOUT>
+			<!-- This exact setup for STDOUT completely works on the output of this program. -->
+			<OutputRecord RepeatCount= "1">
+				<pat>^.*?\n</pat>
+			</OutputRecord>
+			<!-- That eats a line. The first line of the output is column headers -->
+			<OutputRecord>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<Output AccessBy = "1">
+					<OutputTo FormalOutputColumnID = "XYPlaneMin.theW"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneMax.theW"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneMean.theW"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.theW"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneSigma.theW"/>
+				</Output>
+				<Output AccessBy = "2">
+					<OutputTo FormalOutputColumnID = "XYPlaneMin.theT"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneMax.theT"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneMean.theT"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.theT"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneSigma.theT"/>
+				</Output>
+				<Output AccessBy = "3">
+					<OutputTo FormalOutputColumnID = "XYPlaneMin.theZ"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneMax.theZ"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneMean.theZ"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.theZ"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneSigma.theZ"/>
+				</Output>
+				<Output AccessBy = "4">
+					<OutputTo FormalOutputColumnID = "XYPlaneMin.Min"/>
+				</Output>
+				<Output AccessBy = "5">
+					<OutputTo FormalOutputColumnID = "XYPlaneMax.Max"/>
+				</Output>
+				<Output AccessBy = "6">
+					<OutputTo FormalOutputColumnID = "XYPlaneMean.Mean"/>
+				</Output>
+				<Output AccessBy = "7">
+					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.Geomean"/>
+				</Output>
+				<Output AccessBy = "8">
+					<OutputTo FormalOutputColumnID = "XYPlaneSigma.Sigma"/>
+				</Output>
+			</OutputRecord>
+			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
+		</STDOUT>
+	</ExecutionInstructions>
+</AnalysisModule>
