@@ -10,85 +10,28 @@
 
 
 
-Contents
-
-   * Introduction
-   * Dependencies
-   * Building and deploying OME
-   * License
-   * Copyright
-	
-   
-
-
-
-Introduction
-
-    This README file shortly sums up the contents of the Software Build
-    and Deployment Document (SBDD) that is located in the OME/doc/SBDD 
-    directory. 
-
-    The SBDD describes how to build and deploy the Open Microscopy 
-    Environment (OME) software. 
-
-    All the information that is necessary and strictly related to the 
-    build and deployment process is unfolded: a description of the 
-    project repository and its organization, directions on how to 
-    retrieve the files needed for a given build as well as how to 
-    retrieve the latest developed source code, a list of constraints 
-    that your system must satisfy if you want to build and deploy OME, 
-    and, of course, detailed build and deployment instructions.
-
-
-
-
-Dependencies
-
-    The system is being developed and tested on Linux and Mac OS X.
-    We're making use of Apache Web Server, mod_perl and PostgreSQL. 
-    The system is being mainly developed in Perl and partially in C.
-    Several Perl libraries and a few C libraries are required.
-    
-    These dependencies are detailed in Section III of the SBDD.
-
+    This README file shortly sums up where to find additional information about
+	the install, deployment, administration and development of OME.
 
 
 
 Building and deploying OME
 
-    OME is built from scratch with a few standard make commands.
-    In the current deployment configuration, OME is running within 
-    mod_perl. This process is created by the Apache httpd process in 
-    order to take care of execution of HTTP requests that are handled 
-    by Perl scripts via CGI. Apache and mod_perl are configured so that 
-    they have access to the OME Perl scripts and modules. Apache is also 
-    made aware of some HTML static pages and JavaScript libraries that 
-    are needed to support dynamic content provided through mod_perl.
+	The system is being developed and tested on Linux and Mac OS X.  We're
+	making use of Apache Web Server, mod_perl and PostgreSQL.  The system is
+	being mainly developed in Perl and partially in C.  Several Perl libraries
+	and a few C libraries are required.
     
-    Please refer to Section IV of the SBDD for detailed build and 
-    deployment instructions.
+	Additional information can be found in:
+
+	doc/INSTALL
 
 
 
+License, Copyright and Development
 
-License
+    OME is distributed with the GNU Lesser General Public License (LGPL).
 
-    OME is distributed with the GNU Lesser General Public License (LGPL). You
-    should be aware that any code submitted to the OME project will also fall
-    under this license. If you have issues relating to licensing, want to sub
-    license parts of the OME source code, or wish to discuss the licensing
-    scheme please contact the OME core developers (ome-devel@mit.edu).
+	Additional information can be found in:
 
-
-
-
-Copyright
-
-    The OME source code, specification, documentation and database schema are,
-    in their entirety Copyright (C) 2003 Open Microscopy Environment,
-    Massachusetts Institute of Technology, National Institutes of Health,
-    University of Dundee. As with the OME license, any questions related to the
-    copyright, copyright holders or copyright scheme should be directed to the
-    OME core developers (ome-devel@mit.edu).
-
-
+	doc/HACKING
