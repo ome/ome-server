@@ -88,19 +88,19 @@ my @MENU = (
 		web_class => 'OME::Web::DBObjTable',
 		type => 'link',
 		url_param => { Type => 'OME::Project' },
-		text => 'Project',
+		text => 'Projects',
 	},
 	{
 		web_class => 'OME::Web::DBObjTable',
 		type => 'link',
 		url_param => { Type => 'OME::Dataset' },
-		text => 'Dataset',
+		text => 'Datasets',
 	},
 	{
 		web_class => 'OME::Web::DBObjTable',
 		type => 'link',
 		url_param => { Type => 'OME::Image' },
-		text => 'Image',
+		text => 'Images',
 	},
 	{
 		web_class => 'OME::Web::DBObjTable',
