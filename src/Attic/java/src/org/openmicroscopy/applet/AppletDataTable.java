@@ -31,6 +31,7 @@ public class AppletDataTable
     {
         super();
 
+        id = ap.getIntParameter(param+"/ID",true,-1);
         setTableName(ap.getStringParameter(param+"/TableName",false));
         setDescription(ap.getStringParameter(param+"/Description",true));
 
@@ -53,13 +54,14 @@ public class AppletDataTable
         for (int i = 0; i < numColumns; i++)
         {
             String colParam = param+"/Column"+i;
+            int id = ap.getIntParameter(colParam+"/ID",true,-1);
             String name = ap.getStringParameter(colParam+"/Name",false);
             String description = ap.getStringParameter(colParam+"/Description",
                                                        true);
             String sqlType = ap.getStringParameter(colParam+"/SQLType",
                                                    true);
 
-            columns[i] = addColumn(name,description,sqlType);
+            columns[i] = addColumn(id,name,description,sqlType);
         }
 
         ap.saveObject("DataTable",param,this);

@@ -220,7 +220,8 @@ public class PlaygroundController
                     {
                         unselectAttributeType("Already linked!");
                     } else {
-                        chain.addLink(fromNode,
+                        chain.addLink(-1,
+                                      fromNode,
                                       (Module.FormalOutput) fromParam,
                                       toNode,
                                       (Module.FormalInput) toParam);

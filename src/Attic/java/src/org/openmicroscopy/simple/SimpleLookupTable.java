@@ -30,17 +30,21 @@ import org.openmicroscopy.*;
 public class SimpleLookupTable
     implements LookupTable
 {
+    protected int     id;
     protected String  name, description;
     protected List    entries;
 
     public SimpleLookupTable() {}
 
-    public SimpleLookupTable(String name, String description)
+    public SimpleLookupTable(int id, String name, String description)
     {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.entries = new ArrayList();
     }
+
+    public int getID() { return id; }
 
     public String getName() 
     { return name; }
@@ -61,11 +65,11 @@ public class SimpleLookupTable
     { return entries.iterator(); }
     public List getEntries() { return entries; }
 
-    public Entry addEntry(String value,String label)
+    public Entry addEntry(int id,String value,String label)
     {
         Entry entry;
 
-        entries.add(entry = new SimpleEntry(value,label));
+        entries.add(entry = new SimpleEntry(id,value,label));
         return entry;
     }
 
@@ -73,17 +77,21 @@ public class SimpleLookupTable
     public class SimpleEntry
         implements LookupTable.Entry
     {
+        protected int     id;
         protected String  value, label;
 
         public SimpleEntry() {}
 
-        public SimpleEntry(String value, String label)
+        public SimpleEntry(int id, String value, String label)
         {
+            this.id = id;
             this.value = value;
             this.label = label;
         }
 
         public LookupTable getLookupTable() { return SimpleLookupTable.this; }
+
+        public int getID() { return id; }
 
         public String getValue() 
         { return value; }

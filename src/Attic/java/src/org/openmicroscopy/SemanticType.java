@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 public interface AttributeType
 {
+    public int getID();
+
     public String getName();
     public void setName(String name);
 
@@ -40,13 +42,16 @@ public interface AttributeType
     public Iterator getColumnIterator();
     public List getColumns();
 
-    public Column addColumn(String           columnName,
+    public Column addColumn(int              id,
+                            String           columnName,
                             String           columnDescription,
                             DataTable.Column dataColumn);
 
     public interface Column
     {
         public AttributeType getAttributeType();
+
+        public int getID();
 
         public String getColumnName();
         public void setColumnName(String columnName);

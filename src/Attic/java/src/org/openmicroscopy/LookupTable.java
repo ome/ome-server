@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 public interface LookupTable
 {
+    public int getID();
+
     public String getName();
     public void setName(String name);
 
@@ -38,13 +40,15 @@ public interface LookupTable
     public Iterator getEntryIterator();
     public List getEntries();
 
-    public Entry addEntry(String value,String label);
+    public Entry addEntry(int id,String value,String label);
 
 
     public interface Entry
         extends Comparable
     {
         public LookupTable getLookupTable();
+
+        public int getID();
 
         public String getValue();
         public void setValue(String value);

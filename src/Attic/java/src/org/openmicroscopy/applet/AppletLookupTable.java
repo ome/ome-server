@@ -31,6 +31,7 @@ public class AppletLookupTable
     {
         super();
 
+        id = ap.getIntParameter(param+"/ID",true,-1);
         setName(ap.getStringParameter(param+"/Name",false));
         setDescription(ap.getStringParameter(param+"/Description",true));
 
@@ -39,10 +40,11 @@ public class AppletLookupTable
         for (int i = 0; i < numEntries; i++)
         {
             String entryParam = param+"/Entry"+i;
+            int id = ap.getIntParameter(entryParam+"/ID",true,-1);
             String value = ap.getStringParameter(entryParam+"/Value",false);
             String label = ap.getStringParameter(entryParam+"/Label",false);
 
-            entries[i] = addEntry(value,label);
+            entries[i] = addEntry(id,value,label);
         }
 
         ap.saveObject("LookupTable",param,this);

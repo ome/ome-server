@@ -27,6 +27,8 @@ import java.util.Iterator;
 public interface Module
     extends Comparable
 {
+    public int getID();
+
     public String getName();
     public void setName(String name);
 
@@ -54,7 +56,8 @@ public interface Module
     public Iterator getInputIterator();
     public List getInputs();
 
-    public FormalInput addInput(String        name,
+    public FormalInput addInput(int           id,
+                                String        name,
                                 String        description,
                                 AttributeType attributeType);
 
@@ -64,7 +67,8 @@ public interface Module
     public Iterator getOutputIterator();
     public List getOutputs();
 
-    public FormalOutput addOutput(String        name,
+    public FormalOutput addOutput(int           id,
+                                  String        name,
                                   String        description,
                                   AttributeType attributeType,
                                   String        featureTag);
@@ -73,7 +77,9 @@ public interface Module
     public interface FormalParameter
     {
         public Module getModule();
-        
+
+        public int getID();
+
         public String getParameterName();
         public void setParameterName(String parameterName);
 

@@ -31,6 +31,8 @@ public class AppletAttributeType
     {
         super();
 
+        id = ap.getIntParameter(param+"/ID",true,-1);
+
         setName(ap.getStringParameter(param+"/Name",false));
         setDescription(ap.getStringParameter(param+"/Description",true));
 
@@ -53,6 +55,7 @@ public class AppletAttributeType
         for (int i = 0; i < numColumns; i++)
         {
             String colParam = param+"/Column"+i;
+            int    id = ap.getIntParameter(colParam+"/ID",true,-1);
             String name = ap.getStringParameter(colParam+"/Name",false);
             String description = ap.getStringParameter(colParam+"/Description",
                                                        true);
@@ -61,7 +64,7 @@ public class AppletAttributeType
                                       colParam+"/DataColumn",
                                       false);
 
-            columns[i] = addColumn(name,description,dColumn);
+            columns[i] = addColumn(id,name,description,dColumn);
         }
 
         ap.saveObject("AttributeType",param,this);

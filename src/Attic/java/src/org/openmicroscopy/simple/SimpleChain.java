@@ -30,6 +30,7 @@ import org.openmicroscopy.*;
 public class SimpleChain
     implements Chain
 {
+    protected int      id;
     protected String   owner;  // will change to an Owner class eventually
     protected String   name;
     protected boolean  locked;
@@ -41,14 +42,17 @@ public class SimpleChain
         this.links = new ArrayList();
     }
 
-    public SimpleChain(String owner, String name, boolean locked)
+    public SimpleChain(int id, String owner, String name, boolean locked)
     {
+        this.id = id;
         this.owner = owner;
         this.name = name;
         this.locked = locked;
         this.nodes = new ArrayList();
         this.links = new ArrayList();
     }
+
+    public int getID() { return id; }
 
     public String getOwner() 
     { return owner; }
@@ -74,13 +78,14 @@ public class SimpleChain
     { return nodes.iterator(); }
     public List getNodes() { return nodes; }
 
-    public Node addNode(Module module,
+    public Node addNode(int    id,
+                        Module module,
                         String iteratorTag,
                         String newFeatureTag)
     {
         Node node;
 
-        nodes.add(node = new SimpleNode(module,iteratorTag,newFeatureTag));
+        nodes.add(node = new SimpleNode(id,module,iteratorTag,newFeatureTag));
         return node;
     }
 
@@ -93,14 +98,15 @@ public class SimpleChain
     { return links.iterator(); }
     public List getLinks() { return links; }
 
-    public Link addLink(Node                fromNode,
+    public Link addLink(int                 id,
+                        Node                fromNode,
                         Module.FormalOutput fromOutput,
                         Node                toNode,
                         Module.FormalInput  toInput)
     {
         Link link;
 
-        links.add(link = new SimpleLink(fromNode,fromOutput,toNode,toInput));
+        links.add(link = new SimpleLink(id,fromNode,fromOutput,toNode,toInput));
         return link;
     }
 
@@ -108,21 +114,26 @@ public class SimpleChain
     public class SimpleNode
         implements Chain.Node
     {
+        protected int     id;
         protected Module  module;
         protected String  iteratorTag, newFeatureTag;
 
         public SimpleNode() {}
 
-        public SimpleNode(Module module,
+        public SimpleNode(int    id,
+                          Module module,
                           String iteratorTag,
                           String newFeatureTag)
         {
+            this.id = id;
             this.module = module;
             this.iteratorTag = iteratorTag;
             this.newFeatureTag = newFeatureTag;
         }
 
         public Chain getChain() { return SimpleChain.this; }
+
+        public int getID() { return id; }
 
         public Module getModule() 
         { return module; }
@@ -144,6 +155,7 @@ public class SimpleChain
     public class SimpleLink
         implements Chain.Link
     {
+        protected int                  id;
         protected Node                 fromNode;
         protected Module.FormalOutput  fromOutput;
         protected Node                 toNode;
@@ -151,11 +163,13 @@ public class SimpleChain
 
         public SimpleLink() {}
 
-        public SimpleLink(Node                fromNode,
+        public SimpleLink(int                 id,
+                          Node                fromNode,
                           Module.FormalOutput fromOutput,
                           Node                toNode,
                           Module.FormalInput  toInput)
         {
+            this.id = id;
             this.fromNode = fromNode;
             this.fromOutput = fromOutput;
             this.toNode = toNode;
@@ -163,6 +177,8 @@ public class SimpleChain
         }
 
         public Chain getChain() { return SimpleChain.this; }
+
+        public int getID() { return id; }
 
         public Node getFromNode() 
         { return fromNode; }

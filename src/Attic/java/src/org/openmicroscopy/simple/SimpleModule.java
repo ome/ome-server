@@ -30,6 +30,7 @@ import org.openmicroscopy.*;
 public class SimpleModule
     implements Module
 {
+    protected int     id;
     protected List    inputs, outputs;
     protected String  name, description, location, moduleType;
     protected String  category, defaultIterator, newFeatureTag;
@@ -40,7 +41,8 @@ public class SimpleModule
         this.outputs = new ArrayList();
     }
 
-    public SimpleModule(String name,
+    public SimpleModule(int    id,
+                        String name,
                         String description,
                         String location,
                         String moduleType,
@@ -48,6 +50,7 @@ public class SimpleModule
                         String defaultIterator,
                         String newFeatureTag)
     {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.location = location;
@@ -60,6 +63,8 @@ public class SimpleModule
 
         CategorizedModules.addModule(this);
     }
+
+    public int getID() { return id; }
 
     public String getName() 
     { return name; }
@@ -113,13 +118,15 @@ public class SimpleModule
     { return inputs.iterator(); }
     public List getInputs() { return inputs; }
 
-    public FormalInput addInput(String        name,
+    public FormalInput addInput(int           id,
+                                String        name,
                                 String        description,
                                 AttributeType attributeType)
     {
         FormalInput input;
 
-        inputs.add(input = new SimpleFormalInput(name,
+        inputs.add(input = new SimpleFormalInput(id,
+                                                 name,
                                                  description,
                                                  attributeType));
         return input;
@@ -134,14 +141,16 @@ public class SimpleModule
     { return outputs.iterator(); }
     public List getOutputs() { return outputs; }
 
-    public FormalOutput addOutput(String        name,
+    public FormalOutput addOutput(int           id,
+                                  String        name,
                                   String        description,
                                   AttributeType attributeType,
                                   String        featureTag)
     {
         FormalOutput output;
 
-        outputs.add(output = new SimpleFormalOutput(name,
+        outputs.add(output = new SimpleFormalOutput(id,
+                                                    name,
                                                     description,
                                                     attributeType,
                                                     featureTag));
@@ -165,6 +174,7 @@ public class SimpleModule
     public class SimpleFormalParameter
         implements Module.FormalParameter
     {
+        protected int            id;
         protected String         parameterName, parameterDescription;
         protected AttributeType  attributeType;
         
@@ -172,16 +182,20 @@ public class SimpleModule
         {
         }
         
-        private SimpleFormalParameter(String        parameterName,
+        private SimpleFormalParameter(int           id,
+                                      String        parameterName,
                                       String        parameterDescription,
                                       AttributeType attributeType)
         {
+            this.id = id;
             this.parameterName = parameterName;
             this.parameterDescription = parameterDescription;
             this.attributeType = attributeType;
         }
 
         public Module getModule() { return SimpleModule.this; }
+
+        public int getID() { return id; }
         
         public String getParameterName()
         { return parameterName; }
@@ -208,11 +222,12 @@ public class SimpleModule
 
         public SimpleFormalInput() { super(); }
 
-        public SimpleFormalInput(String        name,
+        public SimpleFormalInput(int           id,
+                                 String        name,
                                  String        description,
                                  AttributeType attributeType)
         {
-            super(name,description,attributeType);
+            super(id,name,description,attributeType);
         }
     }
 
@@ -225,12 +240,13 @@ public class SimpleModule
 
         public SimpleFormalOutput() { super(); }
 
-        public SimpleFormalOutput(String        name,
+        public SimpleFormalOutput(int           id,
+                                  String        name,
                                   String        description,
                                   AttributeType attributeType,
-                            String        featureTag)
+                                  String        featureTag)
         {
-            super(name,description,attributeType);
+            super(id,name,description,attributeType);
             this.featureTag = featureTag;
         }
 

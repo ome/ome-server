@@ -61,10 +61,17 @@ public class AppletParameters
 
     public String getStringParameter(String name, boolean allowNull)
     {
+        return getStringParameter(name,allowNull,"");
+    }
+
+    public String getStringParameter(String  name,
+                                     boolean allowNull,
+                                     String  def)
+    {
         String param = getParam(name,allowNull);
 
         if (param == null)
-            return "";
+            return def;
 
         return param;
     }
@@ -76,10 +83,15 @@ public class AppletParameters
 
     public int getIntParameter(String name, boolean allowNull)
     {
+        return getIntParameter(name,allowNull,0);
+    }
+
+    public int getIntParameter(String name, boolean allowNull, int def)
+    {
         String param = getParam(name,allowNull);
 
         if (param == null)
-            return 0;
+            return def;
 
         return Integer.parseInt(param);
     }
@@ -91,10 +103,17 @@ public class AppletParameters
 
     public boolean getBooleanParameter(String name, boolean allowNull)
     {
+        return getBooleanParameter(name,allowNull,false);
+    }
+
+    public boolean getBooleanParameter(String  name,
+                                       boolean allowNull,
+                                       boolean def)
+    {
         String param = getParam(name,allowNull);
 
         if (param == null)
-            return false;
+            return def;
 
         return 
             param.equalsIgnoreCase("true") ||
@@ -111,10 +130,18 @@ public class AppletParameters
 
     public Object getObjectParameter(String type, String name, boolean allowNull)
     {
+        return getObjectParameter(type,name,allowNull,null);
+    }
+
+    public Object getObjectParameter(String  type,
+                                     String  name,
+                                     boolean allowNull,
+                                     Object  def)
+    {
         String param = getParam(name,allowNull);
 
         if (param == null)
-            return null;
+            return def;
 
         Object object = getSavedObject(type,param);
         if ((object == null) && (!allowNull))

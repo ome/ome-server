@@ -31,6 +31,7 @@ public class AppletModule
     {
         super();
 
+        id = ap.getIntParameter(param+"/ID",true,-1);
         setName(ap.getStringParameter(param+"/Name",false));
         setDescription(ap.getStringParameter(param+"/Description",true));
         setLocation(ap.getStringParameter(param+"/Location",false));
@@ -44,6 +45,7 @@ public class AppletModule
         for (int i = 0; i < numInputs; i++)
         {
             String inputParam = param+"/FormalInput"+i;
+            int id = ap.getIntParameter(inputParam+"/ID",true,-1);
             String name = ap.getStringParameter(inputParam+"/Name",false);
             String description = ap.getStringParameter(inputParam+"/Description",
                                                        true);
@@ -52,7 +54,7 @@ public class AppletModule
                                       inputParam+"/AttributeType",
                                       false);
 
-            inputs[i] = addInput(name,description,atype);
+            inputs[i] = addInput(id,name,description,atype);
         }
 
         int numOutputs = ap.getIntParameter(param+"/FormalOutputs",false);
@@ -60,6 +62,7 @@ public class AppletModule
         for (int i = 0; i < numOutputs; i++)
         {
             String outputParam = param+"/FormalOutput"+i;
+            int id = ap.getIntParameter(outputParam+"/ID",true,-1);
             String name = ap.getStringParameter(outputParam+"/Name",false);
             String description = ap.getStringParameter(outputParam+"/Description",
                                                        true);
@@ -70,7 +73,7 @@ public class AppletModule
             String featureTag = ap.getStringParameter(outputParam+"/FeatureTag",
                                                       true);
 
-            outputs[i] = addOutput(name,description,atype,featureTag);
+            outputs[i] = addOutput(id,name,description,atype,featureTag);
         }
 
         ap.saveObject("Module",param,this);

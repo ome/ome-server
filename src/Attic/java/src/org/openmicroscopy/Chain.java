@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 public interface Chain
 {
+    public int getID();
+
     public String getOwner();
     public void setOwner(String owner);
 
@@ -41,7 +43,8 @@ public interface Chain
     public Iterator getNodeIterator();
     public List getNodes();
 
-    public Node addNode(Module module,
+    public Node addNode(int    id,
+                        Module module,
                         String iteratorTag,
                         String newFeatureTag);
 
@@ -51,7 +54,8 @@ public interface Chain
     public Iterator getLinkIterator();
     public List getLinks();
 
-    public Link addLink(Node                fromNode,
+    public Link addLink(int                 id,
+                        Node                fromNode,
                         Module.FormalOutput fromOutput,
                         Node                toNode,
                         Module.FormalInput  toInput);
@@ -60,6 +64,8 @@ public interface Chain
     public interface Node
     {
         public Chain getChain();
+
+        public int getID();
 
         public Module getModule(); 
         public void setModule(Module module);
@@ -75,6 +81,8 @@ public interface Chain
     public interface Link
     {
         public Chain getChain();
+
+        public int getID();
 
         public Node getFromNode(); 
         public void setFromNode(Node fromNode);

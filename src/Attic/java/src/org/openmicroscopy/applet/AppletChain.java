@@ -31,6 +31,7 @@ public class AppletChain
     {
         super();
 
+        id = ap.getIntParameter(param+"/ID",true,-1);
         setName(ap.getStringParameter(param+"/Name",false));
         setOwner(ap.getStringParameter(param+"/Owner",true));
         setLocked(ap.getBooleanParameter(param+"/Locked",false));
@@ -40,6 +41,7 @@ public class AppletChain
         for (int i = 0; i < numNodes; i++)
         {
             String nodeParam = param+"/Node"+i;
+            int id = ap.getIntParameter(nodeParam+"/ID",true,-1);
             Module module = (Module)
                 ap.getObjectParameter("Module",
                                       nodeParam+"/Module",
@@ -49,7 +51,7 @@ public class AppletChain
             String newFeatureTag = ap.getStringParameter(nodeParam+"/NewFeatureTag",
                                                          true);
 
-            nodes[i] = addNode(module,iteratorTag,newFeatureTag);
+            nodes[i] = addNode(id,module,iteratorTag,newFeatureTag);
         }
 
         int numLinks = ap.getIntParameter(param+"/Links",false);
@@ -57,6 +59,7 @@ public class AppletChain
         for (int i = 0; i < numLinks; i++)
         {
             String linkParam = param+"/Link"+i;
+            int id = ap.getIntParameter(linkParam+"/ID",true,-1);
             Chain.Node fromNode = nodes[ap.getIntParameter(linkParam+"/FromNode",
                                                            false)];
             Module.FormalOutput  fromOutput = (Module.FormalOutput)
@@ -70,7 +73,7 @@ public class AppletChain
                                       linkParam+"/ToInput",
                                       false);
 
-            links[i] = addLink(fromNode,fromOutput,toNode,toInput);
+            links[i] = addLink(id,fromNode,fromOutput,toNode,toInput);
         }
 
         ap.saveObject("Chain",param,this);

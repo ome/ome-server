@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 public interface DataTable
 {
+    public int getID();
+
     public String getTableName();
     public void setTableName(String tableName);
 
@@ -40,13 +42,16 @@ public interface DataTable
     public Iterator getColumnIterator();
     public List getColumns();
 
-    public Column addColumn(String columnName,
+    public Column addColumn(int    id,
+                            String columnName,
                             String columnDescription,
                             String sqlType);
 
     public interface Column
     {
         public DataTable getDataTable();
+
+        public int getID();
 
         public String getColumnName();
         public void setColumnName(String columnName);

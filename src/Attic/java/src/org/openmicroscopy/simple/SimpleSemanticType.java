@@ -30,6 +30,7 @@ import org.openmicroscopy.*;
 public class SimpleAttributeType
     implements AttributeType
 {
+    protected int     id;
     protected String  name, description;
     protected int     granularity;
     protected List    columns;
@@ -39,16 +40,20 @@ public class SimpleAttributeType
         this.columns = new ArrayList();
     }
 
-    public SimpleAttributeType(String name,
+    public SimpleAttributeType(int    id,
+                               String name,
                                String description,
                                int    granularity)
     {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.granularity = granularity;
         this.columns = new ArrayList();
     }
-        
+
+    public int getID() { return id; }
+
     public String getName()
     { return name; }
     public void setName(String name)
@@ -72,13 +77,15 @@ public class SimpleAttributeType
     { return columns.iterator(); }
     public List getColumns() { return columns; }
 
-    public Column addColumn(String           columnName,
+    public Column addColumn(int              id,
+                            String           columnName,
                             String           columnDescription,
                             DataTable.Column dataColumn)
     {
         Column column;
 
-        columns.add(column = new SimpleColumn(columnName,
+        columns.add(column = new SimpleColumn(id,
+                                              columnName,
                                               columnDescription,
                                               dataColumn));
         return column;
@@ -87,21 +94,26 @@ public class SimpleAttributeType
     public class SimpleColumn
         implements AttributeType.Column
     {
+        protected int               id;
         protected String            columnName, columnDescription;
         protected DataTable.Column  dataColumn;
 
         public SimpleColumn() {}
 
-        public SimpleColumn(String           columnName,
+        public SimpleColumn(int              id,
+                            String           columnName,
                             String           columnDescription,
                             DataTable.Column dataColumn)
         {
+            this.id = id;
             this.columnName = columnName;
             this.columnDescription = columnDescription;
             this.dataColumn = dataColumn;
         }
 
         public AttributeType getAttributeType() { return SimpleAttributeType.this; }
+
+        public int getID() { return id; }
 
         public String getColumnName()
         { return columnName; }
