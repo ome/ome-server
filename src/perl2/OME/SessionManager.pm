@@ -33,6 +33,7 @@ use Class::Data::Inheritable;
 use Apache::Session::File;
 use OME::DBConnection;
 use Term::ReadKey;
+use POSIX;
 
 use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
@@ -47,8 +48,8 @@ __PACKAGE__->set_sql('find_user',<<"SQL",'Main');
        where ome_name = ?
 SQL
 
-
-#use OME::Session;
+# The lifetime of server-side session keys in seconds
+our $APACHE_SESSION_LIFETIME = 1800;  # 30 minutes
 
 # new
 # ---
@@ -174,7 +175,7 @@ sub createWithKey {
     logdbg "debug", "createWithKey: key=".$apacheSession->{SessionKey};
     my ($username, $password) = ($apacheSession->{username},$apacheSession->{password});
 	
-    my $session = $self->getOMESession ($username,$password,'check for stale key');
+    my $session = $self->getOMESession ($username,$password);
     return undef unless $session;
 
     $session->{ApacheSession} = $apacheSession;
@@ -192,7 +193,7 @@ sub createWithKey {
 
 sub getOMESession {
     my $self = shift;
-    my ($username,$password,$staleCheck) = @_;
+    my ($username,$password) = @_;
     my @row		= ();
     my $rows	= 0;
     my @tab		= ();
@@ -253,43 +254,6 @@ sub getOMESession {
     }
     logdie ref($self)."->getOMESession:  Could not create session object"
       unless defined $session;
-
-
-	###########################
-	# code block to check for stale key
-	#
-	if( defined $staleCheck ) {
-		my $maxMin = 30;
-		my $timeStamp = $session->last_access();
-	
-		# c is for current
-		my ($csec,$cmin,$chour,$cday,$cmonth,$cyear) = localtime(time);
-		$cmonth++; # cmonth is in range of 0-11
-		$cyear+=1900; # cyear is years since 1900
-
-		my $diffMinutes;
-
-		if( $timeStamp =~ m/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+).+$/ ) {
-			my ($year, $month, $day, $hr, $min, $sec) = ($1, $2, $3, $4, $5, $6);
-			if( $year != $cyear or $month != $cmonth or $day != $cday ) {
-				$diffMinutes = $maxMin + 1; # if the date doesn't match up, the session is over limit
-			} else {
-				$min += $hr*60;
-				$cmin += $chour*60;
-				$diffMinutes = $cmin - $min;
-			}
-		} else {
-			die "Could not parse session->last_access time stamp '$timeStamp' with".
-				"regex ".'m/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)-\d+$/'."\n";
-		}
-
-		if ($diffMinutes > $maxMin) {
-			print STDERR "It has been $diffMinutes minutes since the last transaction. Session key has expired.\n";
-			return undef;
-		}
-	}
-	# end stale key codeblock
-	############################
 
 
     $session->last_access('now');
@@ -360,6 +324,22 @@ sub getApacheSession {
         };
     };
     return undef if $@;
+    
+    #
+    # Check for a stale session key.  If its stale, delete it and return undef.
+    if (defined $sessionKey) {
+    	my $sessionAge = POSIX::difftime(time(),$tiedApacheSession{timestamp});
+		logdbg "debug", "getApacheSession: timestamp = ".$tiedApacheSession{timestamp}.".  Session is ".$sessionAge / 60." minutes old";
+		if ($sessionAge > $APACHE_SESSION_LIFETIME) {
+			logdbg "debug", "Deleting session";
+			tied (%tiedApacheSession)->delete();
+			print STDERR "Session is ".$sessionAge/60." minutes long - expired.\n";
+			return undef;
+		}
+    }
+    
+    $tiedApacheSession{timestamp} = time();
+
     while ( ($key,$value) = each %tiedApacheSession ) {
         if ($key eq '_session_id') {
             $apacheSession->{SessionKey} = $value;
@@ -367,26 +347,14 @@ sub getApacheSession {
             $apacheSession->{$key} = $value;
         }
     }
+
     untie %tiedApacheSession;
     
-    $self->refreshApacheSession ($apacheSession);
-
     logdbg "debug", "getApacheSession: username=".$apacheSession->{username};
     logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey};
     return $apacheSession;
 }
 
-
-#
-# refreshApacheSession
-# --------------------
-
-sub refreshApacheSession {
-my $self = shift;
-my $apacheSession = shift;
-# FIXME:  Need some code here to expire stale sessions, calling tied(%apacheSession)->delete;
-    
-}
 
 
 #
