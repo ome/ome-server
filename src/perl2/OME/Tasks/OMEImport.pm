@@ -239,12 +239,12 @@ sub processDOM {
 			OME::Analysis::Engine->
                 executeChain($chain,$importDataset,{});
 		}
-	}
 
-	# set default thumbnail for all imported pixels
-	foreach my $image ( $importDataset->images() ) {
-		foreach my $pixels ($image->pixels() ) {
-			OME::Tasks::PixelsManager->saveThumb( $pixels );
+		# set default thumbnail for all imported pixels
+		foreach my $image ( $importDataset->images() ) {
+			foreach my $pixels ($image->pixels() ) {
+				OME::Tasks::PixelsManager->saveThumb( $pixels );
+			}
 		}
 	}
 
