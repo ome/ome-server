@@ -77,7 +77,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 	public static final double MAX_NAME_SCALE=6;
 	
-	public static final double LABEL_SCALE=4;
+
 	/**
 	 * 
 	 * The ID of the chain being stored
@@ -87,9 +87,9 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	private CChain chain;
 	
 	private static final BasicStroke VIEWABLE_STROKE = new BasicStroke(5);
-	private static final Color SELECTED_COLOR = new Color(50,100,255,150); 
+	private static final Color SELECTED_COLOR = new Color(30,60,255,100); 
 
-	private static final Color EXECUTED_COLOR = new Color(85,135,205,150);
+	private static final Color EXECUTED_COLOR = new Color(55,105,155,100);
 	
 	private static final Font LOCKED_FONT = new Font(null,Font.BOLD,18);
 	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,18);
@@ -156,9 +156,15 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 		// build the chain..
 		PChain p = new PChain(connection,chain,false);
 		
+		chainLayer.addChild(p);
+		p.setOffset(HGAP*2,y);
+		y += p.getHeight()+VGAP; 
+
 		//		 find width. use it in layout of datasets/executions..
 		if (p.getWidth() > width)
 			width = p.getWidth();
+		
+		
 		
 		// if executions, add them here...
 		Collection datasets = chain.getDatasetsWithExecutions();
@@ -168,7 +174,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 			datasetLabel.setFont(PConstants.LABEL_FONT);
 			datasetLabel.setOffset(x+HGAP,y);
 			datasetLabel.setPickable(false);
-			datasetLabel.setScale(LABEL_SCALE);
+			datasetLabel.setScale(PConstants.FIELD_LABEL_SCALE);
 			chainLayer.addChild(datasetLabel);
 			PBounds dlbounds = datasetLabel.getGlobalFullBounds();
 			//y+=dlbounds.getHeight()+VGAP;
@@ -180,7 +186,8 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 			
 			// adjust size
 			chainLayer.addChild(datasetLabels);
-			double ratio = PDatasetLabelText.LABEL_SCALE/LABEL_SCALE;
+			double ratio = PConstants.ITEM_LABEL_SCALE/
+				PConstants.FIELD_LABEL_SCALE;
 			y += (1-ratio)*dlbounds.getHeight()-VGAP;
 			datasetLabels.setOffset(x+dlbounds.getWidth()+2*HGAP,y);
 			PBounds b2 = datasetLabels.getGlobalFullBounds();
@@ -190,20 +197,9 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 			y+= datasetHeight+VGAP;
 			// add indications of executions
 			
-			PText execs = new PText("Executions");
-			execs.setFont(NAME_FONT);
-			execs.setOffset(x+HGAP,y);
-			execs.setPickable(false);
-			execs.setScale(LABEL_SCALE);
-			chainLayer.addChild(execs);
 			
 			/// add the individual labels;
 		}
-		
-		
-		chainLayer.addChild(p);
-		p.setOffset(HGAP*2,y);
-		y += p.getHeight()+VGAP;
 		
 		setExtent(width+HGAP*2,y);
 	}
