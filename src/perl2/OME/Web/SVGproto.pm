@@ -453,13 +453,23 @@ sub DrawMainWindowSVG {
 my $self = shift;
 my $cgi   = $self->CGI();
 my $ImageID = $cgi->url_param("ImageID")  || die "\nImage id not supplied to GetGraphics.pm ";
-my $HTML;
+my $HTML='';
 
 	$self->{contentType} = 'text/html';
-	$HTML = $cgi->start_html(-title=>'OME SVG 2D Viewer');
+#	$HTML = $cgi->start_html(-title=>'OME SVG 2D Viewer');
 # Add controls to change the displayed image. e.g. switch to previous or next image in a set.
-	$HTML .= qq '\n<embed width="100%" height="100%" src="$URLRoot&BuildSVGviewer=1&ImageID=$ImageID">\n';
-	$HTML .= $cgi->end_html;
+# Embedding in frames instead of object allows Mozilla > v1 to run it. Keep if no problems w/ it.
+	$HTML .= <<ENDHTML;
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<title>OME SVG 2D Viewer</title>
+	<frameset rows="*">
+		<frame src="$URLRoot&BuildSVGviewer=1&ImageID=$ImageID">
+	</frameset>
+</html>
+ENDHTML
+#	$HTML .= qq '\n<embed width="100%" height="100%" src="$URLRoot&BuildSVGviewer=1&ImageID=$ImageID">\n';
+#	$HTML .= $cgi->end_html;
 
 	return ($HTML);
 }
@@ -642,49 +652,53 @@ $SVG .= <<ENDSVG;
 			// z & t increment buttons
 			tUpButton = new button(
 				182, 30, tUp,
-				svgDocument.getElementById("triangleRight").firstChild.data,
 				svgDocument.getElementById("triangleRight").firstChild.data
 			)
 			tDownButton = new button(
 				178, 30, tDown,
-				svgDocument.getElementById("triangleLeft").firstChild.data,
 				svgDocument.getElementById("triangleLeft").firstChild.data
 			)
 			zUpButton = new button(
 				15, 106, zUp,
-				svgDocument.getElementById("triangleUp").firstChild.data,
 				svgDocument.getElementById("triangleUp").firstChild.data
 			)
 			zDownButton = new button(
 				15, 110, zDown,
-				svgDocument.getElementById("triangleDown").firstChild.data,
 				svgDocument.getElementById("triangleDown").firstChild.data
 			)
 				
-			// realize the GUI elements in the appropriate elements
+			// realize the GUI elements in the appropriate containers
             var controls  = svgDocument.getElementById("controls");
             controlToolBox.realize(controls);
+            
+            // Z & T controls
 			zSlider.realize(controlToolBox.getGUIbox());
 			tSlider.realize(controlToolBox.getGUIbox());
 			tUpButton.realize(controlToolBox.getGUIbox());
 			tDownButton.realize(controlToolBox.getGUIbox());
 			zUpButton.realize(controlToolBox.getGUIbox());
 			zDownButton.realize(controlToolBox.getGUIbox());
+
+			// RGB & BW switcheroo
 			RGB_BWbutton.realize(controlToolBox.getGUIbox());
+
+			// RGB channel controls
 			RGBpopupListBox = svgDocument.createElementNS( svgns, "g" );
 			RGBpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
+			controlToolBox.getGUIbox().appendChild( RGBpopupListBox );
 			redButton.realize( RGBpopupListBox );
 			greenButton.realize( RGBpopupListBox );
 			blueButton.realize( RGBpopupListBox );
 			redPopupList.realize( RGBpopupListBox );
 			greenPopupList.realize( RGBpopupListBox );
 			bluePopupList.realize( RGBpopupListBox );
-			controlToolBox.getGUIbox().appendChild( RGBpopupListBox );
+
+			// Grayscale controls
 			BWpopupListBox = svgDocument.createElementNS( svgns, "g" );
 			BWpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
 			BWpopupListBox.setAttribute( "display", "none" );
-			bwPopupList.realize( BWpopupListBox );
 			controlToolBox.getGUIbox().appendChild( BWpopupListBox );
+			bwPopupList.realize( BWpopupListBox );
 			
 			multiToolBox.realize(controls);
 			//	These panes to come from DB eventually
