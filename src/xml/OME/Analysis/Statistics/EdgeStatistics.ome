@@ -126,7 +126,7 @@
 			<Description>Variance of edge directions.</Description>
 			 <Element
 				Name="DirecVar"
-				DBLocation="EDGE_STATISTICS7.DIREC_VAR"
+				DBLocation="EDGE_STATISTICS8.DIREC_VAR"
 				DataType="float"/>
 		</SemanticType>
 	
@@ -134,31 +134,31 @@
 			<Description>Histogram of edge directions binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN0"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN1"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN2"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN3"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN3"
 				DataType="integer"/>
 			<Element
 				Name="Bin4"
-				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN4"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN4"
 				DataType="integer"/>
 			<Element
 				Name="Bin5"
-				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN5"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN5"
 				DataType="integer"/>
 			<Element
 				Name="Bin6"
-				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN6"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN6"
 				DataType="integer"/>
 			<Element
 				Name="Bin7"
@@ -184,7 +184,7 @@
 			<Description>fill this in later</Description>
 			 <Element
 				Name="DirecHomo"
-				DBLocation="EDGE_STATISTICS9.DIREC_HOMO"
+				DBLocation="EDGE_STATISTICS10.DIREC_HOMO"
 				DataType="float"/>
 		</SemanticType>
 	
@@ -193,19 +193,19 @@
 			angle and angle+PI.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN0"
+				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN0"
 				DataType="float"/>
 			<Element
 				Name="Bin1"
-				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN1"
+				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN1"
 				DataType="float"/>
 			<Element
 				Name="Bin2"
-				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN2"
+				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN2"
 				DataType="float"/>
 			<Element
 				Name="Bin3"
-				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN3"
+				DBLocation="EDGE_STATISTICS11.DIF_DIREC_HIST_BIN3"
 				DataType="float"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
