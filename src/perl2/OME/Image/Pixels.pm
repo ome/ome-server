@@ -210,6 +210,33 @@ are in.  If not specified, it defaults to network order (big-endian).
 
 sub setROI { abstract }
 
+=head2 convert
+
+	$pixels->convert($fileID,$offset,$bigEndian);
+
+Copies pixels from an original file into a new pixels file.  The $file
+parameter should be an instance of the OME::File interface.  
+
+The Pixels in this file are in XYZCT order, which matches the order in
+Pixels files. Otherwise, you would call ConvertRows, ConvertPlane,
+ConvertTIFF or ConvertStack. The optional Offset parameter is used to
+skip headers. It is the number of bytes from the begining of the file to
+begin reading.
+
+The $bigEndian parameter should specify the endian-ness of the pixels
+to be copied out of the $file object.  If it isn't specified, it
+defaults to network order (big-endian).
+
+=cut
+
+sub convert {
+    my ($self,$file,$offset,$bigEndian) = @_;
+    my ($xx,$yy,$zz,$cc,$tt,$bbp) = $self->getDimensions();
+    my $size = $xx * $yy * $zz * $cc * $tt * $bbp;
+    my $buf = $file->readData($offset,$size);
+    $self->setPixels($buf,$bigEndian);
+}
+
 =head2 convertStack
 
 	$pixels->convertStack($file,$offset,$c,$t,$bigEndian);
