@@ -38,6 +38,9 @@
  */
 package org.openmicroscopy.vis.chains;
 import javax.swing.tree.DefaultMutableTreeNode;
+import org.openmicroscopy.OMEObject;
+import org.openmicroscopy.remote.RemoteModule;
+import org.openmicroscopy.remote.RemoteModuleCategory;
 
 /* A node in the {@link JTree} list of nodes that we put in the 
  * {@link ModulePaletteFrame}.
@@ -51,25 +54,64 @@ public class ModuleTreeNode extends DefaultMutableTreeNode {
 	
 	
 	/**
+	 * the name of the node
+	 * 
+	 */
+	private String name;
+	
+	/**
 	 * It's also got an ID. - defaults to -1, meaning not an ome object
 	 */
 	private int id=-1;
 	
+	
+	/**
+	 * The OME Object for which we are building this.
+	 *
+	 */
+	
+	private OMEObject object = null;
 	
 	public ModuleTreeNode() {
 		super();
 	}
 	
 	public ModuleTreeNode(String s,int id) {
-		super(s);
+		super();
+		name = s;
 		this.id = id;
 	}
 	
 	public ModuleTreeNode(String s) {
-		super(s);
+		super();
+		name = s;
+	}
+	
+	public ModuleTreeNode(OMEObject object) {
+		this.object = object;
 	}
 	
 	public int getID() {
-		return id;
+		if (object != null)
+			return object.getID();
+		else
+			return -1;
+	}
+	
+	public String toString() {
+		if (object != null) {
+			if (object instanceof RemoteModule)
+				return ((RemoteModule) object).getName();
+			else if (object instanceof RemoteModuleCategory)
+				return ((RemoteModuleCategory) object).getName();
+			else
+				return name;
+		}
+		else
+			return name;
+	}
+	
+	public OMEObject getObject() {
+		return object;
 	}
 }
