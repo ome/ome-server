@@ -150,8 +150,8 @@ sub importFiles {
 			unless $display_options->{isRGB};
 		OME::Image::Server->setThumb(
 			$image->default_pixels()->ImageServerID(),
-			$display_options->{theZ},
 			$display_options->{theT},
+			$display_options->{theZ},
 			$channels
 		);
 			
