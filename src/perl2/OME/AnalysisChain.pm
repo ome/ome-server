@@ -53,7 +53,6 @@ __PACKAGE__->sequence('analysis_chain_seq');
 __PACKAGE__->columns(Primary => qw(analysis_chain_id));
 __PACKAGE__->columns(Essential => qw(owner name locked));
 __PACKAGE__->columns(Description => qw(description));
-#__PACKAGE__->hasa('OME::Experimenter' => qw(owner));
 __PACKAGE__->has_many('nodes',
                       'OME::AnalysisChain::Node' => qw(analysis_chain_id));
 __PACKAGE__->has_many('links',
