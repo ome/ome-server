@@ -1,5 +1,9 @@
-<font class="ome_header_title">Category: 
-	<a href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail"><TMPL_VAR NAME='Name'></a>
-</font><br>
+<table width="100%"><tr><td>
+	<font class="ome_header_title">Category: 
+		<a href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail"><TMPL_VAR NAME='Name'></a>
+	</font>
+</td><td align="right">
+<TMPL_VAR NAME=/selector>
+</td></tr></table>
 <font class="ome_relation_title">Images in this category:</font>
 <TMPL_VAR NAME=Images/render-ref_mass>
