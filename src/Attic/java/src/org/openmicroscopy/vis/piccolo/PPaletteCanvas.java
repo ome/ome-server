@@ -214,10 +214,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 					displayModule(box,mod,uncatNode);
 				} 
 	
-				// arrange the uncategorized modules
-				arrangeChildren(box);
-	
-				// arrange all of the categories
+				
 				arrangeChildren(layer);		
 				return null;		
 			}
@@ -268,8 +265,6 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 			displayModulesByCategory(box,child,catNode);
 						
 		}
-		// arrnange everything.
-		arrangeChildren(box);
 	}
 	
 	/**
@@ -391,22 +386,17 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 	 */
 	private void arrangeChildren(PNode node) {
 	
-		float height = 0;
+
 		float width = 0;
 		
 		List children = node.getChildrenReference();
 		TreeSet childrenTree = new TreeSet(children);
 		Iterator iter = childrenTree.iterator();
-		// as opposed to Iterator iter = node.getChildrenIterator();
 		
 		float y =TOP;
 		Vector curStrip = new Vector();
 		PBufferedNode box;
-		//double stripAspectRatio = 0;
-		//double newAspectRatio = 0;
 		float x = LEFT;
-		float maxHeight = 0;
-		float maxWidth =0;
 		Object obj=null;
 		PBounds b;
 		double childrenCountRoot = Math.sqrt(node.getChildrenCount());
@@ -438,21 +428,9 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 			// place the items in the current strip.
 			Point2D pt = placeChildren(curStrip,y);
 			
-			
-		
-			// find out how high and wide the strip is.
-			float ytemp = (float)pt.getY();  
-			if (ytemp-y > height) {
-				height = ytemp-y; 
-			}
 			if (pt.getX() > width)
 				width = (float)pt.getX();
-			// calculate the aspect ratio
-		//	newAspectRatio = calcAspectRatio(width,height);
-			//System.err.println("new aspect ratio is "+newAspectRatio);
-			//System.err.println("old was "+stripAspectRatio);
-			// if we've increased the aspect ratio, that's no good.
-			if (curStrip.size()>childrenCountRoot )  {  
+			if (curStrip.size()>childrenCountRoot )  {
 				// remove the last item from the strip.
 				curStrip.remove(box);
 				// do rest of strip without that last box
@@ -465,7 +443,6 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 				width =0;
 			}	
 			else { // it fits. move on.
-		//		stripAspectRatio = newAspectRatio;
 				obj = null;
 			}
 		}
@@ -501,6 +478,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 		// iterate through, placing nodes as need be.	
 		while (iter.hasNext()) {
 			node = (PBufferedNode) iter.next();
+			if (node instanceof PCategoryBox)
+				arrangeChildren((PNode) node);
 			node.setOffset(x,y);
 		
 			PBounds b = ((PNode) node).getBounds();
@@ -519,19 +498,6 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 		return new Point2D.Float(x-(LEFT),y+maxHeight);
 	}
 	
-	/**
-	 * 
-	 * @param width
-	 * @param height
-	 * @return the aspect ratio: the larger of width/height and height/width
-	 */
-	private double calcAspectRatio(float width,float height) {
-
-		if (width > height) 
-			return (double) width/height;
-		else 
-			return (double) height/width; 
-	}
 	
 	public void scaleToSize() {
 
