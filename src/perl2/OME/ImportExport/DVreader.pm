@@ -34,25 +34,17 @@
 # get_fmt()
 
 package OME::ImportExport::DVreader;
+our @ISA = ("OME::ImportExport::Import_reader");
 use strict;
 use Carp;
-use OME::Image::Pix;
-use OME::ImportEngine::AbstractFormat;
-use OME::ImportExport::Params;
 use OME::ImportExport::FileUtils;
 use OME::ImportExport::Repacker::Repacker;
-use base qw(OME::ImportEngine::AbstractFormat);
 use vars qw($VERSION);
 $VERSION = 2.000_000;
 
 
 my %pix_size = (0=>1, 1=>2, 2=>4, 3=>2, 4=>4);
 my @seq_types = (0, 1, 2);
-
-my $DVID = -16224;
-my $DVhdrlen = 1024;
-my $DVIbigTemplate    = "NNNx84n";
-my $DVIlittleTemplate = "VVVx84v";
 
 
 # This hash lists all the DeltaVision fields - their names, types, and lengths
@@ -156,153 +148,23 @@ my %xml_wavelength_entries = (wave1  => 'EmWave',
 			       wave5  => 'EmWave'
 			       );
 
-my %params;
-
 sub new {
 
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
     my $self = {};
-    my $session = shift;
-    my $module_execution = shift;
+    $self->{params} = shift;
 
-
-    bless $self, $class;
-    $self->{super} = $self->SUPER::new($session, $module_execution);
-    my %paramHash;
-    $self->{params} = new OME::ImportExport::Params(\%paramHash);
-    return $self;
+    return bless $self, $class;
 
     };
 
 
-# Discover which files in input file list are DV format files.
-# Remove these names from the input file list and add them to a 
-# new list. Output the new list. DV files don't group, so each
-# identified file will be a separate group.
-
-sub getGroups {
-    my $self = shift;
-    my $fref = shift;
-    my $nmlen = scalar(@$fref);
-    my @inlist = @$fref;
-    my @outlist;
-
-    for(my $i = 0, my $ndx = 0; $i < $nmlen; $i++, $ndx++) {
-	my $fn = $$fref[$ndx];
-	open IMG, $fn
-	    or die "Can't open $fn - $@\n";
-	binmode(IMG);
-	my $fh = *IMG;
-
-	my $len;
-	my $buf;
-	my $dvid;
-	my $endian = "";
-	
-	$len = -s IMG;
-	if ($len >= $DVhdrlen) {
-	    $endian = getEndian();
-	    # if it's DV format, remove from input list, put on output list
-	    if (defined($endian)){
-		splice(@$fref, $ndx, 1);
-		$ndx--;
-		push @outlist, $fn;
-	    }
-	}
-	close IMG;
-    }
-
-    $self->{groups} = \@outlist;
-
-    return \@outlist;
-}
-
-
-# Get the SHA1 digest of the passed group. The group should contain only
-# one file, since a single SoftWorx file contains all the 5D data of an image.
-
-sub getSHA1 {
-    my ($self,$group) = @_;
-    return $self->__getFileSHA1($group);
-}
-
-
-
-# Read in the image & metadata
-
-sub importGroup {
-    my ($self,$fn) = @_;
-
-    my $sha1 = $self->__getFileSHA1($fn);
-
-    my $session = ($self->{super})->Session();
-    my $factory = $session->Factory();
-
-    open IMG, $fn
-	or die "Can't open $fn - $@\n";
-    binmode(IMG);
-
-    my $params = $self->getParams();
-    $params->fref(*IMG);
-    $params->oname($self->__nameOnly($fn));
-    $params->endian(getEndian());
-
-    my $image = $self->newImage($session, ($self->{super})->__nameOnly($fn));
-    $self->{image} = $image;
-
-    # Softworx records many pieces of metadata in the file header and
-    # extended headers. Read it and store it.
-    $params->offset(0);
-    my $status = readHeaders($self, $params);
-
-    # Create repository file, and fill it in from the input file pixels.
-    my $xref = $params->{xml_hash};
-    if ($status == "") {
-	my ($pixels, $pix) = 
-	    ($self->{super})->__createRepositoryFile($image, 
-					  $xref->{'Image.SizeX'},
-					  $xref->{'Image.SizeY'},
-					  $xref->{'Image.SizeZ'},
-					  $xref->{'Image.NumWaves'},
-					  $xref->{'Image.NumTimes'},
-					  $xref->{'Data.BitsPerPixel'});
-	$self->{pixels} = $pixels;
-	$status = readPixels($self, $params, $pix);
-    }
-
-    # pack together info on input file
-    my @finfo;
-    $self->{in_files} = { path => $fn,
-			  file_sha1 => ($self->getSHA1($fn)),
-			  bigendian => ($params->{endian} eq "big") ? 't':'f',
-			  image_id => $image->id(),
-			  x_start => 0,
-			  x_stop => $xref->{'Image.SizeX'},
-			  y_start => 0,
-			  y_stop => $xref->{'Image.SizeY'},
-			  z_start => 0,
-			  z_stop => $xref->{'Image.SizeZ'},
-			  w_start => 0,
-			  w_stop => $xref->{'Image.NumWaves'},
-			  t_start => 0,
-			  t_stop => $xref->{'Image.NumTimes'} };
-
-    close(IMG);
-
-    storeMetadata($self, $session, $params);
-
-    return $image;
-
-}
-
-
-
 # Read in the DeltaVision image metadata
-sub readHeaders {
+sub readImage {
     my $self = shift;     # Ourselves
-    my $params = shift;
+    my $params = $self->{params};
     my $fh    = $params->fref;
     my $sz;
     my $len;
@@ -334,7 +196,7 @@ sub readHeaders {
 	    last;
 	}
     }
-    return ($status = "Bad pixel type: ".$self->{"PixelType"})
+    return ($status = "Bad pixel type")
 	unless $pix_OK == 1;
 
     # check that ImgSeq has a value this module supports
@@ -350,14 +212,14 @@ sub readHeaders {
     # Calculate & verify image length & total file size;
     $img_len = $self->{NumCol} * $self->{NumRows} * $self->{NumSections};
     $img_len *= $pix_size{$self->{"PixelType"}};   # Calculate size of image
-    $calc_len = $DVhdrlen + $self->{next} + $img_len;   # + hdr + extended hdrs = file size
+    $calc_len = 1024 + $self->{next} + $img_len;   # + hdr + extended hdrs = file size
     return ($status = "File wrong size")
 	unless $len == $calc_len;
 
     # Read in the extended header segments
     $numsecs = $self->{NumSections};                   # number of planes in image
     $numflds = $self->{NumInts} + $self->{NumFloats};  # number of fields per plane
-    $status = readUIExtHdrs($self, $fh, $params->{endian}, $numsecs, $numflds, $DVhdrlen);
+    $status = readUIExtHdrs($self, $fh, $params->{endian}, $numsecs, $numflds, 1024);
 
     return $status;
 
@@ -365,15 +227,17 @@ sub readHeaders {
 
 
 
-sub readPixels {
+sub formatImage {
     my $self = shift;     # Ourselves
-    my $params = shift;
-    my $pix  = shift;
+    my $pixWrap = shift;
+    my $params = $self->{params};
 
     my $fih    = $params->fref;
+    my $xyzwt  = $params->obuffer;
     my $endian = $params->endian;
     my $xml_hash = $params->xml_hash;
-    my $ibuf;
+    my @obuf;
+    my ($ibuf, $rowbuf);
     my ($theT, $theC, $theZ, $row);
     my $status;
     my $start_offset;
@@ -397,7 +261,7 @@ sub readPixels {
 
     #print STDERR "Times: $times, waves:$waves, zs: $zs, rows: $rows, cols: $cols, sections: $sections\n";
     # Start at begining of image data
-    $start_offset = $DVhdrlen + $self->{next};
+    $start_offset = 1024 + $self->{next};
 
     # get offsets between consequtive time, wave, and Z sections in the file
     ($status, $t_jump, $w_jump, $z_jump) = get_jumps($times, $waves, $zs, $plane_size, $order);
@@ -406,7 +270,7 @@ sub readPixels {
     
     # Read image out of the input file & arrange it in
     # our canonical XYZWT order.
-    #print STDERR "   DVreader start read loop: ".localtime."\n";
+    #print "   DVreader start read loop: ".localtime."\n";
     for ($theT = 0; $theT < $times; $theT++) {
 	$t_offset = $start_offset + $theT * $t_jump;
 	my @xyzw;
@@ -436,8 +300,7 @@ sub readPixels {
 		}
 		last
 		    unless $status eq "";
-		my $nPixOut = $pix->SetPlane ($plane_rows, 
-					      $theZ, $theC, $theT);
+		my $nPixOut = $pixWrap->SetRows ($plane_rows, $num_rows);
 		if ($plane_size != $nPixOut) {
 		    $status = "Failed to write repository file - $plane_size != $nPixOut";
 		    last;
@@ -449,7 +312,7 @@ sub readPixels {
 	last
 	    unless $status eq "";
     }
-    #print STDERR "   DVreader end read loop: ".localtime."\n";
+    #print "   DVreader end read loop: ".localtime."\n";
 
     if ($status eq "") {
 	
@@ -459,62 +322,13 @@ sub readPixels {
 }
 
 
-
-sub storeMetadata {
-    my ($self, $session, $params) = @_;
-
-    # store channel (wavelength) metadata
-    storeChannelInfo($self, $session, $params);
-
-    # run post-import analysis (statistics)
-    #doImportAnalysis($self, $params);
-
-    # store info about the input files
-    storeInputFileInfo($self, $session);
-
-}
-
-
-# Make array of per wavelength info.
-# Feed it to helper routine to be put in DB
-sub storeChannelInfo {
-    my ($self, $session, $params) = @_;
-    my $xml_hash = $params->xml_hash();
-    my @channelInfo;
-    my $numWaves = $self->{NumWaves};
-    my $wv = $xml_hash->{'WavelengthInfo.'};
-    for (my $i = 0; $i < $numWaves; $i++) {
-	my $wvh = $wv->[$i];
-	push @channelInfo, {chnlNumber => $i,
-			    ExWave     => undef,
-			    EmWave     => $wvh->{'WavelengthInfo.EmWave'},
-			    Fluor      => undef,
-			    NDfilter   => undef};
-    }
-
-    $self->__storeChannelInfo($session, $numWaves, @channelInfo);
-}
-
-
-# Make array of info on input files. Feed it to helper
-# routine to be put in DB tbl for image files XYZWT.
-sub storeInputFileInfo {
-    my ($self, $session) = @_;
-
-    push my @finfo, $self->{in_files};
-    $self->__storeInputFileInfo($session, @finfo);
-}
-
-
-# Read in the main Softworx file header & store the many pieces of
-# metadata contained therein.
 sub readUIHdr {
     my $self = shift;
     my $fh = shift;
     my $endian = shift;
     my $offset = shift;
-    my $params = $self->getParams();
-    my $xml_hash = $params->xml_hash();
+    my $params = $self->{params};
+    my $xml_hash = $params->xml_hash;
     my $i;
     my $len;
     my $typ;
@@ -548,15 +362,16 @@ sub readUIHdr {
     }
 
     # Make one WavelengthInfo element per wavelength in image
-    $i = 0;
+    $i = 1;
     foreach $k (sort keys %xml_wavelength_entries) {
-	if ($i >= $self->{'NumWaves'}) {
+	if ($i > $self->{'NumWaves'}) {
 	    last;
 	}
 	my $whref = {};
 	$xel = $xml_wavelength_entries{$k};
 	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};
-	$whref->{'WavelengthInfo.WaveNumber'} = $i;
+	# IGG 10/06/02:  The wavenumbers start at 0 in OME.
+	$whref->{'WavelengthInfo.WaveNumber'} = $i-1;
 	push @$w_aref, $whref;
 	$i++;
     }
@@ -571,10 +386,6 @@ sub readUIHdr {
 
 
 
-# Read in each of the extended headers - 1 per 'section'. A section is
-# an instance of an XY plane. An imaages contains Z*W*T sections, where
-# Z is the number of z slices, W is the number of wavelengths, and T
-# is the number of time points.
 sub readUIExtHdrs {
     my $self = shift;
     my $fh = shift;
@@ -582,7 +393,7 @@ sub readUIExtHdrs {
     my $numsecs = shift;
     my $numflds = shift;
     my $offset = shift;
-    my $params = $self->getParams();
+    my $params = $self->{params};
     my $numInts;
     my $numFlts;
     my $i;
@@ -613,7 +424,7 @@ sub readUIExtHdrs {
 		unless ($status eq "");
 	    $val = unpack("f", $buf);
 	    if ($endian ne $params->host_endian) {
-		#$val = $self->SUPER::flip_float($val);
+		$val = $self->SUPER::flip_float($val);
 	    }
 	    if ($i < 13) {  # only the 1st 13 floats are interesting
 		#printf("flt: %g, ", $val);
@@ -684,47 +495,6 @@ sub get_fmt {
     return $fmt;              # no error checking
 }
 
-
-
-# Get this file's endianness. Also serves to decide if file is
-# a DV format file or not.
-sub getEndian {
-    my $buf;
-    my $endian = "";
-
-    read IMG, $buf, $DVhdrlen;  # read enough for main DV header
-    
-    if (GetDVID($DVIlittleTemplate, $buf) == $DVID) {
-	$endian = "little";
-    } elsif (GetDVID($DVIbigTemplate, $buf) == $DVID) {
-	$endian = "big";
-    }
-
-    return $endian;
-}
-
-
-# Get what might be the DeltaVision ID & convert to signed
-sub GetDVID {
-    my $template = shift;
-    my $buf = shift;
-    my $dvid;
-    my @hdr;
-
-    @hdr = unpack($template, $buf); 
-    $dvid = $hdr[3];
-    # it unpacked as unsigned, so 1st convert to signed
-    $dvid = $dvid >= 32768 ? $dvid-65536 : $dvid;
-
-    return $dvid;
-}
-
-
-# Get %params hash reference
-sub getParams {
-    my $self = shift;
-    return $self->{params};
-}
 
 
 1;
