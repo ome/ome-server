@@ -116,6 +116,7 @@ chain.
 package OME::Configuration;
 
 use strict;
+use Carp qw (confess cluck);
 use OME;
 our $VERSION = $OME::VERSION;
 
@@ -158,16 +159,16 @@ sub new {
 
 	die "new OME::Configuration called without required factory parameter."
 		unless $factory;
-	$self->{Factory} = $factory;
 
-	my @vars = $factory->findObjects('OME::Configuration::Variable',
+	my $vars = $factory->findObjects('OME::Configuration::Variable',
 		configuration_id => 1);
+	my $var = $vars->next();
 
 	# only pay attention to the params if we don't have any
         # variables stored in the DB yet.
 	# The set of variables is write once.
 
-	if (not scalar @vars) {
+	if (not $var) {
         my ($name,$value);
         while (($name,$value) = each %$params) {
 
@@ -228,9 +229,10 @@ sub new {
         # they've been set.
 
         # Assign the variables read from the DB into the $self hash.
-        foreach my $var (@vars) {
+        do {
             $self->{$var->name()} = $var->value();
-        }
+            print STDERR "Configuration ".$var->name().' = '.$var->value()."\n";
+        } while ($var = $vars->next());
 
         # Instantiate any foreign key variables we found.
         foreach my $fk_name (keys %FOREIGN_KEY_VARS) {
