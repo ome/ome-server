@@ -120,6 +120,11 @@ sub execute {
     my $session = $self->getSession();	
 	my $factory = $session->Factory();
 	
+	# idiot traps
+	if (not defined $datasetStr or not defined $chainStr) {
+		die "The Dataset and Analysis Chain Names must be specified.\n"; 
+	}
+	
 	# get a dataset
 	my $dataset;
 
