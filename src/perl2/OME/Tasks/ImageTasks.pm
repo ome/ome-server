@@ -45,6 +45,7 @@ use OME::ImportExport::Exporter;
 use OME::Analysis::Engine;
 use OME::ImportEngine::ImportEngine;
 use OME::Tasks::PixelsManager;
+use OME::Tasks::ImageManager;
 use OME::Image::Server::File;
 
 use OME::Project;
@@ -118,7 +119,7 @@ sub importFiles {
 	# FIXME: split @files into two groups: xml files & proprietary
 
 	my %opts;
-	$opts{AllowDuplicates} = 1;
+#	$opts{AllowDuplicates} = 1;
 	
 	my $chain = $factory->findObject('OME::AnalysisChain', name => 'Image server stats');
 
@@ -133,6 +134,29 @@ sub importFiles {
     logdbg "debug", $_->id(),": ",$_->name(),"\n"
     	foreach (@$image_list);
     
+ 	# save default display options to omeis as thumbnail settings.
+	my $imageManager = new OME::Tasks::ImageManager($session);
+	foreach my $image (@$image_list) {
+		my $display_options = $imageManager->getDisplayOptions($image);
+		my ($channels,@CBW);
+		@CBW = @{ $display_options->{CBW} };
+		$channels->{red} = [ splice(@CBW, 0, 3), 1.0] 
+			if $display_options->{isRGB} and $display_options->{RGBon}->[0];
+		$channels->{green} = [ splice(@CBW, 3, 3), 1.0] 
+			if $display_options->{isRGB} and $display_options->{RGBon}->[1];
+		$channels->{blue} = [ splice(@CBW, 6, 3), 1.0] 
+			if $display_options->{isRGB} and $display_options->{RGBon}->[2];
+		$channels->{gray} = [ splice(@CBW, 9, 3), 1.0] 
+			unless $display_options->{isRGB};
+		OME::Image::Server->setThumb(
+			$image->default_pixels()->PixelsID(),
+			$display_options->{theZ},
+			$display_options->{theT},
+			$channels
+		);
+			
+	}
+ 
     return $image_list;
 }
 
