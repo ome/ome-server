@@ -71,7 +71,7 @@ sub startImport {
     my $dataset = $factory->
       newObject("OME::Dataset",
                 {
-                 name => "ImportSet",
+                 name => "ImportFacade Dummy Dataset",
                  description => "Images imported by OME::Remote::Facades::ImportFacade",
                  locked => 0,
                  owner_id => $session->experimenter_id(),
