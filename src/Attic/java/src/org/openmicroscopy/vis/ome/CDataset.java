@@ -73,10 +73,16 @@ public class CDataset extends RemoteDataset {
 	Vector images = new Vector();
 	
 	public void loadImages(Connection connection) {
+		System.err.println("Dataset "+getID()+", loading images");
+		if (images.size() > 0)  {
+			System.err.println("images already loaded...");
+			return;
+		}
 		List i = getImages();
 		Iterator iter = i.iterator();
 		while (iter.hasNext()) {
 			CImage image = (CImage) iter.next();
+			System.err.println("loading image "+image.getID());
 			image.loadImageData(connection);
 			images.add(image);		
 		}
