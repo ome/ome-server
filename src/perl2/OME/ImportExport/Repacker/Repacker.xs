@@ -1,7 +1,6 @@
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-#include <byteswap.h>
 
 
 MODULE = Repacker		PACKAGE = Repacker		
@@ -34,47 +33,38 @@ repack(s, cnt, bpp, src_is_little, host_is_little)
 	int host_is_little
     CODE:
 	STRLEN len;
-	char *ptr, *newp;
-	short int *ship, *shop;
-	long int  *lnip, *lnop;
-	int i, vals;
-	short int sh;
-	short int outsh;
-	long int ln;
-	long int outln;
 
-	ptr = SvPV(s, len);
-	if (!((bpp == 1) || (bpp == 2) || (bpp == 4))) {
-	    len = 0;
-	} else if ((src_is_little != host_is_little) && (bpp != 1)) {
-	    newp = (char *)(calloc(1, len+1));
-	    if (!newp) {
-		len = 0;
-            } else {
-		vals = cnt/bpp;
-		if (bpp == 2) {
-		    ship = (short int *)ptr;
-		    shop = (short int *)newp;
-		    for (i = 0; i < vals; i++) {
-			sh = *ship++;
-			*shop++ = bswap_16(sh);
-		    }
-		} else {
-		    lnip = (long int *)ptr;
-		    lnop = (long int *)newp;
-		    for (i = 0; i < vals; i++) {
-			ln = *lnip++;
-			*lnop++ = bswap_32(ln);
-		    }
+	if ((bpp == 2) && (src_is_little != host_is_little)) {
+		char *ptr = SvPV(s, len);
+		char holder;
+		char *maxBuf = ptr+cnt;
+
+		while (ptr < maxBuf)
+		{
+			holder = *ptr++;
+			*(ptr-1) = *ptr;
+			*ptr++ = holder;
 		}
-	    }
-
-	    sv_setpvn(s, newp, len);
-	    free(newp);
+  		len = cnt;
+	} else if ((bpp == 4) && (src_is_little != host_is_little)) {
+		unsigned long holder;
+		long *longPtr = (long *)SvPV(s, len);
+		long *maxLongBuf = longPtr+(cnt/bpp);
+		
+		while (longPtr < maxLongBuf)
+		{
+		holder = *longPtr;
+		*longPtr++ =  ((holder >> 24) & 0x000000FF) | 
+			((holder >> 8)  & 0x0000FF00) |
+			((holder << 8)  & 0x00FF0000) |
+			((holder << 24) & 0xFF000000);
+  		}
+  		len = cnt;
+	} else if ( (bpp == 1) || (bpp == 2) || (bpp == 4) ) {
+		len = cnt;
+	} else {
+		len = 0;
 	}
-					
 	RETVAL = len;
     OUTPUT:
 	RETVAL
-
-
