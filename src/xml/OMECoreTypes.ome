@@ -648,12 +648,17 @@
 		</SemanticType>
 
 		<SemanticType
-			Name= "ChannelComponent"
+			Name= "PixelChannelComponent"
 			AppliesTo = "I"
-			Description = "Each logical channel may consist of one or more ChannelComponents.  The Index refers to the order that this channel occurs in the pixel array. Index=0 is the first channel.">
+			Description = "This describes how each channel in the pixel array relates to LogicalChannels">
+			<Element
+				Name= "Pixels"
+				DBLocation = "CHANNEL_COMPONENTS.PIXELS_ID"
+				DataType = "reference"
+				RefersTo = "Pixels"/>
 			<Element
 				Name= "Index"
-				DBLocation = "CHANNEL_COMPONENTS.NUMBER"
+				DBLocation = "CHANNEL_COMPONENTS.INDEX"
 				DataType = "integer"/>
 			<Element
 				Name= "ColorDomain"
