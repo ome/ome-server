@@ -64,15 +64,14 @@ $opts{AllowDuplicates} = 1 if $reuse;
 
 my @files;
 
-my $chain;
+my $chain = $session->Configuration()->import_chain();
 
 if ($repository->IsLocal()) {
     @files = map { OME::LocalFile->new($_) } @ARGV;
-    $chain = $session->Configuration()->import_chain();
-} else {
     $chain = $factory->
       findObject('OME::AnalysisChain',
-                 name => 'Image server stats');
+                 name => 'Image import analyses');
+} else {
     $OME::Image::Server::SHOW_CALLS = 1 if $verbose > 0;
     $OME::Image::Server::SHOW_READS = 1 if $verbose > 1;
     OME::Tasks::PixelsManager->activateRepository($repository);

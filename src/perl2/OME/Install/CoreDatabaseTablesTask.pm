@@ -846,7 +846,7 @@ sub execute {
 
     # Grab our import chain and assign it to the configuration object
     my $importChain = $factory->
-	findObject("OME::AnalysisChain",name => 'Image import analyses');
+	findObject("OME::AnalysisChain",name => 'Image server stats');
     $configuration->import_chain($importChain);
 
     $session->commitTransaction();
