@@ -49,7 +49,7 @@ print STDERR "OMEwebLogin:  Calling Connect.\n";
 		if (not $@)
 		{
 print STDERR "OMEwebLogin:  Connected successfully.\n";
-			return ($self->{sessionID});
+			return ($self->{sessionKey});
 		}
 		else {$self->PrintLoginForm()};
 	}

@@ -520,7 +520,7 @@ sub Connect {
 	else { $self->{remoteAddr} = '127.0.0.1'; }
 
 #	DBI->trace(2);
-	if (not exists $self->{sessionKey} or not defined $self->{sessionKey}) {
+	if (not exists $self->{sessionKey} or not defined $self->{sessionKey} or not $self->{sessionKey}) {
 	print STDERR "Connect:  Getting new session\n";
 		$session = $self->Session();
 		$self->{sessionKey} = $session->{_session_id};
