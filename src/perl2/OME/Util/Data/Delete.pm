@@ -131,7 +131,7 @@ sub DeleteMEX {
 		   );
 
 	if (scalar(@ARGV) <= 0 and not defined $module_in) {
-		$self->MEX_help();
+		$self->DeleteMEX_help();
 	}
 	$keep_files  = 1 if $noop;
 	$keep_pixels = 1 if $noop;
