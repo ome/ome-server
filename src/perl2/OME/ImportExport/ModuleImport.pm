@@ -235,7 +235,7 @@ sub processDOM {
 		my $categoryPath = $categoryXML->getAttribute('Path');
 		my $categoryDescriptions = $categoryXML->getElementsByLocalName('Description');
 		my $categoryDescription = [$categoryDescriptions->[0]->childNodes()]->[0]->data()
-			if $categoryDescriptions;
+			if $categoryDescriptions and [$categoryDescriptions->[0]->childNodes()]->[0];
 
 		my $category = $self->__getCategory($categoryPath,$categoryDescription);
 	}
