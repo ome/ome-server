@@ -240,6 +240,7 @@ sub __newImage {
 		      'description' => "",
 		      'experimenter_id' => $experimenter_id,
 		      'group_id' => $group_id,
+			  'created' => "now",
 		      'inserted' => "now",
               };
 
