@@ -11,6 +11,9 @@
 			<documentation>Defines a field</documentation>
 		</annotation>
 		<complexType>
+			<sequence>
+				<element ref = "STD:Description" minOccurs = "0"/>
+			</sequence>
 			<attribute name = "Name" use = "required">
 				<simpleType>
 					<restriction base = "string">
@@ -29,8 +32,7 @@
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute name = "Description" type = "string"/>
-			<attribute name = "FieldID" use = "required" type = "NMTOKEN"/>
+			<attribute name = "FieldID" use = "required" type = "string"/>
 		</complexType>
 	</element>
 	<element name = "Record">
@@ -39,6 +41,7 @@
 		</annotation>
 		<complexType>
 			<sequence>
+				<element ref = "STD:Description" minOccurs = "0"/>
 				<element ref = "STD:Field" maxOccurs = "unbounded"/>
 			</sequence>
 			<attribute name = "Name" use = "required">
@@ -51,10 +54,6 @@
 			<attribute name = "AppliesTo" use = "required">
 				<annotation>
 					<documentation>This specifies what this record is an attribute of. The options are Global, Dataset, Image, or Feature.
-					
-					
-					
-					
 					</documentation>
 				</annotation>
 				<simpleType>
@@ -67,7 +66,6 @@
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute name = "Description" type = "string"/>
 		</complexType>
 		<unique name = "Field">
 			<selector xpath = "STD:Field"/>
@@ -79,15 +77,12 @@
 			<documentation>Describes a field of a SemanticType</documentation>
 		</annotation>
 		<complexType>
-			<attribute name = "Description" type = "string"/>
-			<attribute name = "FieldID" use = "required" type = "NMTOKEN">
+			<sequence>
+				<element ref = "STD:Description" minOccurs = "0"/>
+			</sequence>
+			<attribute name = "FieldID" use = "required" type = "string">
 				<annotation>
 					<documentation>References a Field.					
-					
-					
-					
-					
-					
 					</documentation>
 				</annotation>
 			</attribute>
@@ -110,9 +105,9 @@
 		</annotation>
 		<complexType>
 			<sequence>
+				<element ref = "STD:Description" minOccurs = "0"/>
 				<element ref = "STD:SemanticElement" maxOccurs = "unbounded"/>
 			</sequence>
-			<attribute name = "Description" type = "string"/>
 			<attribute ref = "STD:SemanticTypeName" use = "required"/>
 		</complexType>
 		<unique name = "SemanticElement">
@@ -164,4 +159,12 @@
 			</restriction>
 		</simpleType>
 	</attribute>
+	<element name = "Description">
+		<annotation>
+			<documentation>
+				Just some free-form text to describe Images, Screens and Projects.
+				The content model is ANY, which means that en entire XML sub-document can be placed here.
+			</documentation>
+		</annotation>
+	</element>
 </schema>
