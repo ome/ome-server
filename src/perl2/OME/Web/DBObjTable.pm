@@ -130,6 +130,15 @@ sub getPageBody {
 	# or use a list of objects to make a table
 	my $table      = $tableMaker->getTable( \%options, $type, \@obj_array );
 
+recognized %options are:
+	noSearch
+	Length
+	embedded_in_form => $form_name
+	title
+	width
+	actions
+	excludefields => { field_name => undef }
+
 =cut
 
 sub getTable {
@@ -144,6 +153,8 @@ sub getTable {
 	my $html;
 	
 	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
+	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
+		if exists $options->{excludeFields};
 	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames );
 	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames );
 	my @records    = OME::Web::DBObjRender->render( $objects, 'html', \@fieldNames );
@@ -353,7 +364,7 @@ sub __parseParams {
 
 	# collect SortOn
 	my $orderBy = 'id';
-	if( $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
+	if( $q->param( 'action' ) and $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
 		($orderBy = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
 	}
 
@@ -379,7 +390,7 @@ sub __parseParams {
 	
 	# paging
 	my $pagingText;
-	my $currentPage = $q->param( "PageNum_$formal_name" ) + 1;
+	my $currentPage = ( defined $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) + 1 : 1 );
 	my $numPages = POSIX::ceil( $object_count / $options->{ Length });
 	if( $object_count and $numPages > 1) {
 		$pagingText  = sprintf( "%u of %u ", $currentPage, $numPages);
