@@ -58,6 +58,14 @@ use base qw{ OME::Web };
 #********* PUBLIC METHODS
 #*********
 
+{
+	my $menu_text = 'Manage Dataset';
+
+	sub getMenuText {
+		return $menu_text;
+	}
+}
+
 sub getPageTitle {
 	return "Open Microscopy Environment - Dataset Management";
 }

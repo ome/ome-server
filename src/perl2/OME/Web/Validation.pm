@@ -210,7 +210,8 @@ sub datasetNotDefined {
 	#if( scalar @datasets == 1 ) {
 	#	$text .= $self->ReloadHomeScript();
 	#	$session->dataset( $datasets[0] );
-	#	$session->writeObject();
+	#	$session->storeObject();
+	#	$session->commitTransaction();
 	#	return $text;
 	#}
 

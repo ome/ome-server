@@ -81,7 +81,7 @@ sub getPageBody {
 	if (scalar (@selections) > 0) {
 
 		if ($cgi->param('Import')) {
-			my $importer= OME::Tasks::OMEXMLImportExport->new($session);
+			my $importer= OMEXMLImportExport->new($session);
 			$importer->importXMLfile(\@paths);
 
 	 	}else {

@@ -52,6 +52,12 @@ sub getPageTitle {
 	return "Open Microscopy Environment - Execute Analysis Chain";
 }
 
+{
+	my $menu_text = "Execute Chain";
+
+	sub getMenuText { return $menu_text }
+}
+
 sub getPageBody {
 	my $self = shift;
 	my $body = "";

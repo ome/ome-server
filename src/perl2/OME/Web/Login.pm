@@ -56,6 +56,10 @@ sub new {
     return $self;
 }
 
+sub getMenuBuilder { return undef }  # No menu
+
+sub getHeaderBuilder { return undef }  # No header
+
 sub getPageTitle {
     return "Open Microscopy Environment - Login";
 }
@@ -82,7 +86,6 @@ sub getPageBody {
 		}
     } else { return ('HTML', $self->__loginForm()) }
 }
-
 
 
 #----------------

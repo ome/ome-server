@@ -39,6 +39,7 @@ package OME::Web::FindSpots;
 
 use strict;
 use vars qw($VERSION);
+use Log::Agent;
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
@@ -47,6 +48,7 @@ use OME::Analysis::Engine;
 use OME::Tasks::AnnotationManager;
 use OME::Tasks::ChainManager;
 use OME::Tasks::AEFacade;
+use OME::Tasks::ImageManager;
 
 
 use base qw(OME::Web);
@@ -54,6 +56,12 @@ use base qw(OME::Web);
 sub getPageTitle {
 	return "Open Microscopy Environment - FindSpots" ;
 
+}
+
+{
+	my $menu_text = "Find Spots";
+
+	sub getMenuText { return $menu_text }
 }
 
 sub getPageBody {
@@ -75,7 +83,7 @@ sub getPageBody {
 		#if (($h{ThresholdValue}<0.6) and ($h{ThresholdType} eq 'RelativeToGeometricMean')){
 
 		#	$body.="<b>The ThresholdValue must be > 0.6 if the type is the GeometricMean.</b><br>";
-		#	$body.=print_form($cgi); 
+		#	$body.=$self->print_form($cgi); 
 		#	return ('HTML',$body);
 
 		#}
@@ -123,7 +131,7 @@ sub getPageBody {
 			$body.="The selected dataset contains no images";
 			return ('HTML',$body);
 		}
-		$body.=print_form($cgi); 
+		$body.=$self->print_form($cgi); 
 	}
 	return ('HTML',$body);
 	
@@ -134,7 +142,7 @@ sub getPageBody {
 
 ############
 sub print_form{
-	my ($cgi)=@_;
+	my ($self, $cgi)=@_;
 	my $html="";
 	my @tableRows=();
 	my @tableColumns=();
@@ -185,7 +193,22 @@ sub print_form{
 	
 	# channel
 	$tableColumns[0] = $cgi->th ('Channel');
-	$tableColumns[1] = $cgi->textfield(-name=>'Channel',-size=>4,default=>'0');
+
+	my $session = $self->Session();
+	my $imageManager = OME::Tasks::ImageManager->new($session); 
+	my @image_list = $session->dataset()->images();
+	my $image = $image_list[0];
+	my $channelLabels= $imageManager->getImageWavelengths($image);
+	my %labels = map{ $_->{WaveNum} => $_->{Label} } @$channelLabels ;
+	$tableColumns[1] = $cgi->popup_menu( 
+		-name	=> 'Channel',
+		-values => map( $_->{WaveNum}, @$channelLabels ),
+		-default => $cgi->param('Channel') || undef,
+		-labels	 => \%labels
+	);
+#	$tableColumns[1] = $cgi->textfield(-name=>'Channel',-size=>4,default=>'0');
+
+
 	@tableColumns = $cgi->td (\@tableColumns);
 	push (@tableRows,@tableColumns);
 	@tableColumns = ();

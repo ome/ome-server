@@ -54,6 +54,13 @@ sub getPageTitle {
 	return "Open Microscopy Environment - Project Manager";
 }
 
+{
+	my $menu_text = "Projects";
+
+	sub getMenuText { return $menu_text }
+}
+
+
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();

@@ -30,12 +30,17 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Jean-Marie Burel <j.burel@dundee.ac.uk>
+# Original by:    Jean-Marie Burel <j.burel@dundee.ac.uk>
+# New version:    Chris Allan <callan@blackcat.ca>
 #
 #-------------------------------------------------------------------------------
 
 
 package OME::Web::ProjectDatasetImage;
+
+#*********
+#********* INCLUDES
+#*********
 
 use strict;
 use vars qw($VERSION);
@@ -44,11 +49,14 @@ $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ImageManager;
+use OME::Web::ImageTable;
 use OME::Web::Helper::HTMLFormat;
 
-use OME::Web::Validation;
-
 use base qw{ OME::Web };
+
+#*********
+#********* PUBLIC METHODS
+#*********
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Make Dataset from existing images";
@@ -57,73 +65,160 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
-	my $session = $self->Session();
-	my $datasetManager=new OME::Tasks::DatasetManager($session);
-	my $imageManager=new OME::Tasks::ImageManager($session);
-	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+	my $user = $self->Session()->User();
 
+	# Managers
+	my $d_manager = new OME::Tasks::DatasetManager;
+	
+	# Header
+	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, 'Make New Dataset');
+	
+	# The action that was "clicked"
+	my $action = $cgi->param('action') || '';
+	
+	# Image objects that were selected
+	my @selected = $cgi->param('selected');
 
-	my $body = "";
-	my $project =$session->project();
-	my $userID=$session->User()->id();
-	my $usergpID=$session->User()->Group()->id();
-	if( not defined $project ) {
-		$body .= OME::Web::Validation->ReloadHomeScript();
-		return ("HTML",$body);
-     }
+	if ($action eq 'create') {
+		my $name = cleaning($cgi->param('name'));
+		my $description = $cgi->param('description') || '';
 
-     if ($cgi->param('create')){
-         my $datasetName=cleaning($cgi->param('name'));
-         my @addImages=$cgi->param('ListImage');
-	   return ('HTML',$htmlFormat->noNameMessage("dataset")) unless $datasetName;
-	   my $rep=$datasetManager->nameExists($datasetName);
-         return ('HTML',$htmlFormat->existMessage("dataset")) unless (defined $rep);
-	   return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
-	   my $result=$datasetManager->create($datasetName,$cgi->param('description'),$userID,$usergpID,$project->id(),\@addImages); 
-		
+		unless ($name) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'},
+				'ERROR: Name is a required field.');
+		} elsif ($d_manager->nameExists($name)) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'},
+				'ERROR: This name is already used, please choose another.');
+		} else {
+			# Action
+			# XXX SYNTAX DIFFERENT!!!
+			$d_manager->create( {
+					name => $name,
+					description => $description,
+					owner_id => $user->id(),
+					group_id => $user->Group()->id(),
+				}
+			);
+			
+			# Info
+			$body .= $cgi->p({-class => 'ome_info'},
+				'Creation of dataset successful.');
 
+			# Reload top-frame
+			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+		}
+	}
+	
+	# Input-form
+	$body .= $self->__printForm();
 
-	  # my $result=$datasetManager->create($cgi->param('name'), $cgi->param('description'),\@addImages); 
-	 if (defined $result){
-         $body .= "<script>top.location.href = top.location.href;</script>";
-         $body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	 }else{
-	   $body .= print_form($usergpID,$imageManager,$htmlFormat,$cgi);
-	 }			
-    }else{
-	   $body .= print_form($usergpID,$imageManager,$htmlFormat,$cgi);
-    }
     return ('HTML',$body);	
 }
 
+#*********
+#********* PRIVATE METHODS
+#*********
+
+sub __printForm {
+	my $self = shift;
+	my $q = $self->CGI();
+	my $group_id = $self->User()->Group()->id();
+
+	# Managers
+	my $i_manager = new OME::Tasks::ImageManager;
+	
+	# Table generator	
+	my $t_generator = new OME::Web::ImageTable;
+
+	my $metadata = $q->Tr({-bgcolor => '#FFFFFF'}, [
+		$q->td( [
+			$q->span("Name *"),
+			$q->textfield( {
+					-name => 'name',
+					-size => 40
+				}
+			)
+			]
+		),
+		$q->td( [
+			$q->span("Description"),
+			$q->textarea( {
+					-name => 'description',
+					-rows => 3,
+					-columns => 50,
+				}
+			)
+			]
+		),
+		]
+	);
+
+	my $footer_table = $q->table( {
+			-width => '100%',
+			-cellspacing => 0,
+			-cellpadding => 3,
+		},
+		$q->Tr( {-bgcolor => '#E0E0E0'},
+			$q->td({-align => 'left'},
+				$q->span( {
+						-class => 'ome_info',
+						-style => 'font-size: 10px;',
+					}, "Items marked with a * are required unless otherwise specified"
+				),
+			),
+			$q->td({-align => 'right'},
+				$q->a( {
+						-href => "#",
+						-onClick => "openExistingDataset($group_id); return false",
+						-class => 'ome_widget'
+					}, "Existing Datasets"
+				),
+				"|",
+				$q->a( {
+						-href => "#",
+						-onClick => "document.forms['metadata'].action.value='create'; document.forms['metadata'].submit(); return false",
+						-class => 'ome_widget'
+					}, "Create Dataset"
+				),
+			),
+		),
+	);
 
 
+	my $border_table = $q->table( {
+			-class => 'ome_table',
+			-width => '100%',
+			-cellspacing => 1,
+			-cellpadding => 3,
+		},
+		$q->startform({-name => 'metadata'}),
+		$q->hidden(-name => 'action', -default => ''),
+		$metadata,
+	);	
 
-#--------------------
-#
-sub print_form {
-	my ($usergpID,$imageManager,$htmlFormat,$cgi)=@_;
-	my $text="";
-	my $images=$imageManager->listMatching();
- 	if (scalar(@$images)>0){
-	   my %list=map { $_->id() => $_} @$images;
-         $text.=$cgi->startform;
-  	   $text.=$htmlFormat->formCreate("dataset",$usergpID,\%list);
-	   $text.$cgi->endform;
- 	}else{
-	   $text.="no images in your Research group";
- 	}
- 	return $text;
+	# Gen our images table
+	my $image_list = $t_generator->getTable( {
+			select_column => 1,
+		},
+		$i_manager->getUserImages()
+	);
+
+	return $border_table .
+	       $footer_table .
+		   $q->endform() .
+		   $q->p({-class => 'ome_title', -align => 'center'}, 'Select Image(s)') .
+		   $image_list;
 }
 
+sub cleaning {
+	my ($string)=@_;
 
+	chomp($string);
+	$string=~ s/^\s*(.*\S)\s*/$1/;
 
-sub cleaning{
- my ($string)=@_;
- chomp($string);
- $string=~ s/^\s*(.*\S)\s*/$1/;
- return $string;
-
+	return $string;
 }
 
 

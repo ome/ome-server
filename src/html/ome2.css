@@ -1,7 +1,7 @@
 /* Default theme for OME Version 2+ */
 
 body {
-	background-color: #CCCC99;
+	background-color: #FFFFFF;
 }
 
 /* General font families for common tags */
@@ -22,6 +22,8 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_info { color: blue; } 
 
+.ome_info_strong { color: blue; font-weight: bold; }
+
 .ome_error { color: red; }
 
 .ome_footer { font-size: 10px; color: #444444; }
@@ -34,18 +36,50 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_menu_td { background-color: #E0E0E0; }
 
-/* OME Widgets for submit buttons and menu controls (usually grey on grey) */
-/* Classes for <a> and <input> tags */
-a.ome_widget {
+.ome_menu_title { font-size: 24px; font-weight: bold; }
+
+/* QUIET */
+.ome_quiet { font-size: 10px; color: #444444; }
+
+a.ome_quiet { text-decoration: none; color : #444444; }
+
+a.ome_quiet:hover { text-decoration: none; color : #FF0000; }  /* Red is temporary */
+
+/* MAIN LAYOUT TABLE AND TD's */
+
+.ome_page_table { width: 100%; }
+
+.ome_header_td { border: #000000; border-style: solid; border-width: 0px 0px 2px 0px; }
+
+.ome_main_menu_td { border: #000000; border-style: solid; border-width: 0px 2px 0px 0px; }
+
+.ome_location_menu_td { background-color: #D1D7DC; }
+
+/* MAIN MENU STUFF */
+
+td.ome_main_menu_heading { background-color: #6E8489; }
+.ome_main_menu_heading { color: #D1D7DC; font-size: 11px; font-weight: bold; }
+
+a.ome_main_menu_link { text-decoration: none; color: #444444; font-size: 10px; }
+a.ome_main_menu_link:hover { text-decoration: none; color : #FF0000; }  /* Red is temporary */
+
+td.ome_main_menu_link_active { background-color: #444444; }
+a.ome_main_menu_link_active { text-decoration: none; color: #D1D7DC; font-size: 10px; }
+a.ome_main_menu_link_active:hover { text-decoration: none; color : #FF0000; }  /* Red is temporary */
+
+.ome_main_menu { background-color: #D1D7DC }
+
+/* OME WIDGETS */
+.ome_widget {
 	text-decoration: none;
 	color: #353535;
 	font-size: 10px;
 	font-weight: bold;
 }
 
-a.ome_widget:visited { text-decoration: none; color: #353535 }
+.ome_widget:visited { text-decoration: none; color: #353535 }
 
-a.ome_widget:hover { text-decoration: none; color: #006699; }
+.ome_widget:hover { text-decoration: none; color: #006699; }
 
 input.ome_widget {
 	font-size: 10px;
@@ -62,9 +96,8 @@ input.ome_widget:hover {
 	color: #006699;
 }
 
-/* Image based links */
+/* IMAGE LINKS */
 a.ome_imagelink:hover { color: #FF0000; border-width: 2px; }
 
-/* Popup links */
-
+/* POPUP LINKS */
 a.ome_popup { font-size: smaller; font-weight: normal; } 

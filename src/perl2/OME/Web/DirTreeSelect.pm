@@ -50,6 +50,9 @@ use OME::Tasks::ProjectManager;
 use OME::Web::Helper::HTMLFormat;
 use base qw{ OME::Web };
 
+sub getMenuBuilder { return undef }  # No menu
+
+sub getHeaderBuilder { return undef }  # No header
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Select Images";
@@ -149,10 +152,11 @@ sub getPageBody {
 			} else {
 				# import successful. Reload titlebar & display success message.
 				# javascript to reload titlebar
-				#$dataset->writeObject();
-				#$project->writeObject();
+				#$dataset->storeObject();
+				#$project->storeObject();
 				#$session->dataset($dataset);
-				#$session->writeObject();
+				#$session->storeObject();
+				#$session->commitTransaction();
 				
 				$body .= '<script>openInfoDatasetImport(' . $session->dataset()->id() . ');</script>';
 				$body .= '<script>top.location.href = top.location.href;</script>';

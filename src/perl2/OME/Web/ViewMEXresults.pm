@@ -49,6 +49,12 @@ sub getPageTitle {
 	return "Open Microscopy Environment - MEX results";
 }
 
+{
+	my $menu_text = "View MEX Results";
+
+	sub getMenuText { return $menu_text }
+}
+
 sub getPageBody {
 	my $self = shift;
 	my $session = $self->Session();

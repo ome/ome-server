@@ -49,6 +49,21 @@ sub getPageTitle {
     return "Open Microscopy Environment";
 }
 
+sub getPageBody {
+	my $body = 'Temporary text for OME::Web::Home.';
+
+	return ('HTML', $body);
+}
+
+{
+	my $menu_text = "Home";
+
+	sub getMenuText {
+		return $menu_text;
+	}
+}
+
+=head
 sub createOMEPage {
 	my $self = shift;
 	my $cgi  = $self->CGI();
@@ -105,6 +120,8 @@ ENDHTML
 	return ('HTML', $HTML);
 
 }
+
+=cut
 
 
 1;

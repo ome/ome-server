@@ -64,6 +64,12 @@ use base qw(OME::Web::Table);
 #********* PRIVATE METHODS
 #*********
 
+{
+	my $menu_text = "MEX's";
+
+	sub getMenuText { return $menu_text }
+}
+
 sub __getColumnAliases {
 	my $self = shift;
 

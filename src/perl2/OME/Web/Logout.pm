@@ -49,6 +49,12 @@ sub getPageTitle {
     return "Open Microscopy Environment";
 }
 
+{
+	my $menu_text = "Logout";
+
+	sub getMenuText { return $menu_text }
+}
+
 sub getPageBody {
     my $self = shift;
 print STDERR "\nLogging out...\n\n";

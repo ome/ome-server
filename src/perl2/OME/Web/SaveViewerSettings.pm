@@ -95,8 +95,9 @@ sub SavePreferences {
 		$viewerPreferences = $factory->newObject( 'OME::ViewerPreferences', $data )
 			or die "Could not create new ViewerPreferences object";
 	}
-	$viewerPreferences->writeObject()
+	$viewerPreferences->storeObject()
 		or die "Could not write ViewerPreferences object";
+	$session->commitTransaction();
 	return $viewerPreferences;	
 }
 

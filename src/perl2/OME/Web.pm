@@ -86,6 +86,8 @@ use CGI;
 use Carp;
 use OME::SessionManager;
 use Apache::Session::File;
+use OME::Web::DefaultHeaderBuilder;
+use OME::Web::DefaultMenuBuilder;
 
 use base qw(Class::Data::Inheritable);
 
@@ -126,40 +128,10 @@ sub new {
 	CGI => $CGI
 	};
 
-	$self->{fontDefaults} = {
-	face => 'Verdana,Arial,Helvetica'
-	};
-
-	$self->{tableDefaults} = {
-	cellspacing => 1,
-	cellpadding => 2,
-	border		=> 0
-	};
-
-	$self->{tableHeaderRowDefaults} = {
-	bgcolor => '#000000'
-	};
-
-	$self->{tableHeaderDefaults} = {
-	align => 'CENTER',
-	bgcolor => '#000000'
-	};
-
-	$self->{tableFormRowDefaults} = {
-	bgcolor => '#e0e0e0'
-	};
-
-	$self->{tableRowColors} = ['#ffffd0','#d0d0d0'];
-	$self->{nextRowColor} = 0;
-
-	$self->{tableRowDefaults} = {
-	};
-
-	$self->{tableCellDefaults} = {
-	align => 'LEFT'
-	};
-
-	$self->{OMEbgcolor} = '#FFFFFF';
+	# Popup info
+	$self->{_popup} = 1 if $CGI->param('Popup');
+	$self->{_nomenu} = 1 if $CGI->param('NoMenu');
+	$self->{_noheader} = 1 if $CGI->param('NoHeader');
 
 	$self->{RequireLogin} = 1;
 
@@ -234,7 +206,7 @@ print STDERR "\nSetting cookie: $sessionKey\n";
 			$cgi->cookie( -name	   => 'SESSION_KEY',
 						  -value   => $sessionKey,
 						  -path    => '/',
-						  -expires => '30m'
+						  -expires => '+30m'
 						  );
 	} else {
 print STDERR "\nLogging out - resetting cookie\n";
@@ -242,7 +214,8 @@ print STDERR "\nLogging out - resetting cookie\n";
 			$cgi->cookie( -name	   => 'SESSION_KEY',
 						  -value   => '',
 						  -path    => '/',
-						  -expires => '-1d');
+						  -expires => '-1d'
+						  );
 	}
 }
 
@@ -350,19 +323,17 @@ sub sendFile {
 }
 
 sub redirect {
-my $self = shift;
-my $URL = shift;
+	my $self = shift;
+	my $URL = shift;
 
 	print $self->CGI()->header (-type=>'text/html', -cookie => [values %{$self->{_cookies}}]);
 	print qq {
-		<script language="JavaScript">
-			<!--
-				location = "$URL";
-			//-->
-		</script>
-		};
-	#exit (0);
-
+		<script language="JavaScript"> 	 
+			<!-- 	 
+				window.location = "$URL"; 	 
+			//--> 	 
+		</script> 	 
+	};
 }
 
 
@@ -418,6 +389,57 @@ sub createOMEPage {
 		-title => $title,
 		-style => {'src' => '/html/ome2.css'},
 		-script => {-language => 'JAVASCRIPT', -src => '/JavaScript/ome2.js'},
+		-onLoad => $self->getOnLoadJS() || '',
+	);
+
+	# Header TD creation, shown only if !undef
+	my $header_td;
+
+	if (my $header_builder = $self->getHeaderBuilder()) {
+		$header_td =
+			$CGI->td( {
+					colspan => '2',
+					class => 'ome_header_td',
+				}, $header_builder->getPageHeader());
+	}
+
+	# Menu TD and Menu Location TD, shown only if !undef
+	my ($menu_td, $menu_location_td);
+
+	if (my $menu_builder = $self->getMenuBuilder()) {
+		$menu_td =
+			$CGI->td( {
+					width => '200px',
+					valign => 'top',
+					class => 'ome_main_menu_td',
+				}, $menu_builder->getPageMenu());
+		$menu_location_td =
+			$CGI->td( {
+					class => 'ome_location_menu_td',
+				}, $menu_builder->getPageLocationMenu());
+	}
+
+	# Body / Menu Location Table
+	my $body_table = $CGI->table({width => '100%'}, $CGI->Tr( [
+		$menu_location_td,
+		$CGI->td({valign => 'top'}, $body),
+		])
+	);
+
+	# Body TD, always shown
+	my $body_td = $CGI->td({valign => 'top'}, $body_table);
+
+	# Packing table for the entire page
+	$body = $CGI->table( {
+			class       => 'ome_page_table',
+			cellspacing => '0',
+			cellpadding => '3',
+		},
+		$CGI->Tr( [
+			$header_td || '',
+			($menu_td  || '') . $body_td,
+			]
+		),
 	);
 		 		 
 	my $tail = $CGI->end_html;
@@ -501,6 +523,32 @@ The script can generate the same effect by calling
 
 sub getPageBody {
 	return ('ERROR',undef);
+}
+
+sub getOnLoadJS { return undef };  # Default
+
+sub getMenuBuilder {
+	my $self = shift;
+
+	my $menu_builder;
+	
+	unless ($self->{_popup} or $self->{_nomenu}) {
+		$menu_builder = new OME::Web::DefaultMenuBuilder ($self);
+	}
+
+	return $menu_builder;
+}
+
+sub getHeaderBuilder {
+	my $self = shift;
+
+	my $header_builder;
+	
+	unless ($self->{_popup} or $self->{_noheader}) {
+		$header_builder = new OME::Web::DefaultHeaderBuilder;
+	}
+
+	return $header_builder;
 }
 
 

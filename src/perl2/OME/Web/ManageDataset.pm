@@ -48,8 +48,15 @@ use OME::Tasks::DatasetManager;
 use OME::Web::DatasetTable;
 
 use base qw{ OME::Web };
+
 sub getPageTitle {
 	return "Open Microscopy Environment - Dataset Manager";
+}
+
+{
+	my $menu_text = "Datasets";
+
+	sub getMenuText { return $menu_text }
 }
 
 sub getPageBody {

@@ -55,6 +55,11 @@ sub getPageTitle {
 	return "Open Microscopy Environment - Export OME XML to browser" ;
 }
 
+{
+	my $menu_text = "Export Image(s)";
+
+	sub getMenuText { return $menu_text }
+}
 
 sub getPageBody {
 	my	$self = shift ;
