@@ -193,7 +193,7 @@ sub getTable {
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
 	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
-	my %searches   = $self->Renderer()->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
+	my ($searches, $search_on)  = $self->Renderer()->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
 	my @records    = $self->Renderer()->renderData( $objects, [@fieldNames, '_id'], 'html', 'summary' );
 
 	# table data
@@ -225,7 +225,7 @@ sub getTable {
 		$searchFieldRow = $q->td( { -class => 'ome_td' }, '' )
 			if( $options->{ select_column } );
 		$searchFieldRow .= $q->td( { -class => 'ome_td' },
-			[ map( $searches{ $_ }, @fieldNames ) ]
+			[ map( $searches->{ $_ }, @fieldNames ) ]
 		);
 	}
 	# allow paging ?
@@ -305,14 +305,17 @@ sub getTable {
 		'<nobr>'.$pagingText.'</nobr>'.
 		$q->hidden({-name => "PageNum_$formal_name", -default => ( $q->param( "PageNum_$formal_name" ) or undef ) })
 		if( $allowPaging );
-	$html .= 
-		$q->hidden({-name => 'action', -default => ''}).
-		join( "\n", map( 
-			$q->hidden({-name => $_, -default => $self->{__params}->{$_} }),
-			keys %{ $self->{__params} } )
-		).
-		$q->endform()
-		unless $options->{ embedded_in_form };
+	unless( $options->{ embedded_in_form } ){
+		$q->param( 'search_names', values %$search_on ) if $q->param( 'search_names' );
+		$html .= 
+			$q->hidden({-name => 'action', -default => ''}).
+			join( "\n", map( 
+				$q->hidden({-name => $_, -default => $self->{__params}->{$_} }),
+				keys %{ $self->{__params} } )
+			).
+			$q->hidden( {-name => 'search_names', -default => [ values %$search_on ] } ).
+			$q->endform();
+	}
 
 	return $html;
 }
@@ -869,21 +872,17 @@ sub __get_CGI_search_params {
 	my ( $q, $type ) = @_;
 
 	# collect search params
-	my %searchParams = map{ $_ => ( $q->param( $_ ) or undef ) } grep( m/^($type)_/, $q->param( ) );
-	foreach my $key (keys %searchParams) {
-		# get the key's Real name
-		(my $newkey = $key) =~ s/^($type)_//;
-		# copy the key into the real name unless the value is blank
-		$searchParams{ $newkey } = $searchParams{ $key }
-			unless (not defined $searchParams{ $key } or $searchParams{ $key } eq '');
-		# delete the old key
-		delete $searchParams{ $key };
+	my @search_names = $q->param( 'search_names' );
+	my %searchParams;
+	foreach my $key (@search_names) {
+		next unless ( $q->param( $key ) && $q->param( $key ) ne '');
+		$searchParams{ $key } = $q->param( $key );
 		# split the newkey into a list if it contains commas and was populated 2 lines above
-		if( exists $searchParams{ $newkey } and $searchParams{ $newkey } =~ m/,/) {
-			if( $newkey ne 'accessor' ) {
-				$searchParams{ $newkey } = [ 'in', [ split( m/,/, $searchParams{ $newkey } ) ] ];
+		if( exists $searchParams{ $key } and $searchParams{ $key } =~ m/,/) {
+			if( $key ne 'accessor' ) {
+				$searchParams{ $key } = [ 'in', [ split( m/,/, $searchParams{ $key } ) ] ];
 			} else {
-				$searchParams{ $newkey } = [ split( m/,/, $searchParams{ $newkey } ) ];
+				$searchParams{ $key } = [ split( m/,/, $searchParams{ $key } ) ];
 			}
 		}
 	}
