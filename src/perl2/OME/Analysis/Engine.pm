@@ -649,7 +649,7 @@ sub isNodeReady {
 
 =head2 executeChain
 
-	my $chain_execution = OME::Analysis::Engine->executeChain($chain,$dataset,$user_inputs,
+	my $chain_execution = OME::Analysis::Engine->executeChain($chain,$dataset,$user_inputs, $task
 	                                    [ReuseResults => 1]);
 
 The $user_inputs parameter must be a hash, with formal input ID's for
@@ -659,7 +659,7 @@ keys and MEX objects for values.
 
 sub executeChain {
     my $class = shift;
-    my ($chain,$dataset,$user_inputs,%flags) = @_;
+    my ($chain,$dataset,$user_inputs,$task,%flags) = @_;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
@@ -740,10 +740,17 @@ sub executeChain {
 			$count_steps += scalar(@imgs);
 		}
 	}
-        
-	my $task = OME::Tasks::NotificationManager->
-		new("Executing `".$chain->name()."`", $count_steps);
-	$task->setMessage('Start Execution of Analysis Chain');
+    
+    # the notfication manager task could have been created somewhere else
+    # e.g. by the chain execution command line tool
+    unless ($task) {
+		$task = OME::Tasks::NotificationManager->
+			new("Executing `".$chain->name()."`", $count_steps);
+		$task->setMessage('Start Execution of Analysis Chain');
+	}
+	$task->n_steps($count_steps); # always set the number of steps because the
+	                              # AE knows best
+	
     $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
     my $continue = 1;
