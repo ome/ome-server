@@ -41,7 +41,7 @@ use Cwd;
 use File::Basename;
 use Term::ANSIColor qw(:constants);
 
-use base qw(OME::Install::InstallationTask);
+#use base qw(OME::Install::InstallationTask);
 use OME::Install::Util;
 
 #*********
@@ -51,8 +51,16 @@ use OME::Install::Util;
 # Installation home for the pre-install
 my $INSTALL_HOME = "/tmp";
 
-# Repository for the modules
-my $REPOSITORY = "http://openmicroscopy.org/packages/perl/";
+# Modules that need to be pre-installed
+my @modules = (
+    {
+	name => 'Term::ReadKey',
+	repository_file => 'http://openmicroscopy.org/packages/perl/TermReadKey-2.21.tar.gz'
+    }
+);
+
+# Log filehandle for the task (right now we're using /dev/null)
+my $LOGFILE = "";
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -71,53 +79,47 @@ sub print_header {
 }
 
 # Simplified version of the OME::Install::PerlModuleTask subroutines
-sub install_readkey {
-    my $downloader;
-    my $module_url = "http://openmicroscopy.org/packages/perl2/TermReadKey-2.21.tar.gz";
-    my $cwd = getcwd;
+sub install {
+    my $module = shift;
+    my $filename = basename ($module->{repository_file});  # Yes, it works on URL's too *cheer*
+    my $dir = basename ($filename, ".tar.gz");
+    my $iwd = getcwd;  # Initial working directory
 
-    # If ReadKey is installed we'll just return
-    my $version = get_module_version ("Term::ReadKey"); 
+    chdir ("$INSTALL_HOME") or croak "Unable to chdir to \"$INSTALL_HOME\". $!";
+
+    # If the module is installed we'll just print the version and return
+    my $version = get_module_version ("$module->{name}"); 
     if ($version) {
 	print "Version $version ";
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 	return 1;
-    }
-   
-    # Find a useable download app (curl|wget)
-    if (system ("which wget 2>&1 >/dev/null") == 0) {
-	$downloader = "wget -N";
-    } elsif (system ("which curl 2>&1 >/dev/null") == 0) {
-	$downloader = "curl -O";
-    } else {
-	croak "Unable to find a valid downloader for Term::ReadKey install.";
     }
 
     # Download
-    (system ("$downloader $module_url 2>&1 >/dev/null") == 0)
-	or croak "Unable to download \"$module_url\" using \"$downloader\".";
+    download_module ($module, $LOGFILE)
+	or croak "Unable to download \"$module->{name}\".";
 
     # Extract
-    (system ("tar zxf TermReadKey-2.21.tar.gz 2>&1 >/dev/null") == 0)
-	or croak "Unable to extract \"$INSTALL_HOME/TermReadKey-2.21.tar.gz\".";
-
-    # Go inside the build directory
-    chdir ("TermReadKey-2.2.1") or croak "Unable to chdir into \"TermReadKey-2.2.1\". $!";
+    unpack_archive ("$filename", $LOGFILE)
+	or croak "Unable to extract \"$filename\".";
 
     # Configure
-    (system ("perl Makefile.PL") == 0)
-	or croak "Unable to configure Term::ReadKey.";
+    configure_module ($dir, $LOGFILE)
+	or croak "Unable to configure \"$module.";
 
     # Make
-    (system ("make") == 0)
-	or croak "Unable to compile Term::ReadKey.";
+    compile_module ($dir, $LOGFILE)
+	or croak "Unable to compile \"$module.";
     
     # Test
-    (system ("make test") == 0)
-	or croak "Unable to test Term::ReadKey.";
+    test_module ($dir, $LOGFILE)
+	or croak "Unable to test \"$module.";
     
     # Install
-    (system ("make install") == 0)
-	or croak "Unable to install Term::ReadKey.";
+    install_module ($dir, $LOGFILE)
+	or croak "Unable to install \"$module.";
+
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 1;
 }
@@ -129,19 +131,24 @@ sub install_readkey {
 
 sub execute {
     print_header ("Pre-Installation");
+    
+#    open ($LOGFILE, ">", "/dev/null");
 
     print "Installing Term::ReadKey if needed. ";
-    my $retval = install_readkey ();
+    my $retval = install ($modules[0]);
 
     print BOLD, "[INSTALLED]", RESET, ".\n" if $retval;
 
     print "\n";  # Spacing
 
-    return;
+#   close ($LOGFILE);
+
 }
 
 sub rollback {
     print "Rollback.\n";
 
-    return;
 }
+
+
+1;
