@@ -113,7 +113,61 @@ Widget.prototype.setLabel = function(x, y, content) {
 *****/
 Widget.prototype.getLabel = function() {
 	return this.nodes.label;
-}
+};
+
+/*****
+*
+*   alignUpperRight
+*      added by Josiah Johnston 2/4/04
+*
+*****/
+Widget.prototype.alignUpperRight = function() {
+	this.move( this.x - this.width, this.y );
+};
+
+/*****
+*
+*   alignUpperLeft
+*      added by Josiah Johnston 2/4/04
+*
+*****/
+Widget.prototype.alignUpperLeft = function() {
+	this.move( this.x, this.y );
+};
+
+/*****
+*
+*   alignLowerRight
+*      added by Josiah Johnston 2/4/04
+*
+*****/
+Widget.prototype.alignLowerRight = function() {
+	this.move( this.x - this.width, this.y - this.height );
+};
+
+/*****
+*
+*   alignLowerLeft
+*      added by Josiah Johnston 2/4/04
+*
+*****/
+Widget.prototype.alignLowerLeft = function() {
+	this.move( this.x, this.y - this.height );
+};
+
+/*****
+*
+*   move
+*      added by Josiah Johnston 2/4/04
+*
+*****/
+Widget.prototype.move = function(x,y) {
+	if( !x && x !== 0 ) { x = this.x; }
+	if( !y && y !== 0 ) { y = this.y; }
+	var transform = "translate(" + x + "," + y  + ")";
+	this.nodes.root.setAttributeNS(null, "transform", transform);
+};
+
 
 /*****
 *
