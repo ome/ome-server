@@ -608,5 +608,9 @@ sub importGroup {
 
 }
 
+sub cleanup {
+	# clear out the TIFF tag cache
+	OME::ImportEngine::TIFFUtils::cleanup();
+}
 
 1;

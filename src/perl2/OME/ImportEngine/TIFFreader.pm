@@ -195,8 +195,8 @@ sub getGroups {
     while (my $fn = shift @inlist) {
         my $file = $fref->{$fn};
 
-        next
-          unless (defined(is_tiff($file)));
+		# skip this image unless its a tiff
+        next unless (defined(verifyTiff($file)));
 
         my $bn = basename($fn);
         my $matched = 0;
@@ -422,21 +422,7 @@ sub readWritePixels {
     doSliceCallback($callback);
 
     return $status;
-
 }
-
-
-
-sub is_tiff {
-    my $file = shift;
-
-    $file->open('r');
-    my $tags =  readTiffIFD($file);
-    $file->close();
-
-    return $tags;
-}
-
 
 sub getSHA1 {
     my $self = shift;
@@ -446,6 +432,11 @@ sub getSHA1 {
     my $sha1 = $fn->getSHA1();
 
     return $sha1;
+}
+
+sub cleanup {
+	# clear out the TIFF tag cache
+	OME::ImportEngine::TIFFUtils::cleanup();
 }
 
 =head1 Author

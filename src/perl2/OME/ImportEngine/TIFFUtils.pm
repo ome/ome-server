@@ -57,7 +57,7 @@ our $VERSION = $OME::VERSION;
 use Exporter;
 use base qw(Exporter);
 
-our @EXPORT = qw(readTiffIFD getStrips TAGS LITTLE_ENDIAN BIG_ENDIAN);
+our @EXPORT = qw(readTiffIFD verifyTiff getStrips TAGS LITTLE_ENDIAN BIG_ENDIAN);
 
 use constant LITTLE_ENDIAN => 0;
 use constant BIG_ENDIAN    => 1;
@@ -170,7 +170,7 @@ use constant MAX_TIFF_TAG => 33342;
 my $tagHash = TAGS;
 my %tagnames = reverse %$tagHash;
 my $dumpHeader = 0;
-
+my $tag_hash;
 
 # Derived from Import_read->checkTIFF, TIFFreader->readTiffIFD, and
 # TIFFreader->readTiffTag
@@ -200,7 +200,7 @@ the return tag hash it has been accumulating.
 sub readTiffIFD ($) {
     my ($file) = shift;
     my ($buf,$endian,@buf,$offset);
-
+    
     # Read the TIFF header to determine endianness and to locate the
     # first IFD.
 
@@ -208,6 +208,21 @@ sub readTiffIFD ($) {
     return undef unless defined($endian);
 
     my @IFDs;
+    
+    # CACHING: check if we ever read-in this file's TIFF tags before.
+    # If so, don't read the tags again, but return the pre-computed IFD tag array
+    my $sha1 = $file->getSHA1();
+    if (exists $tag_hash->{$sha1}) {
+  		my $IFD_ref =  $tag_hash->{$file->getSHA1()};
+  		@IFDs = @$IFD_ref;
+  		
+		if (wantarray) {
+			return (@IFDs);
+		} else {
+			return ($IFDs[0]);
+		}
+	}
+	
     # Read in each IFD
 
     while ($offset > 0) {
@@ -298,6 +313,9 @@ sub readTiffIFD ($) {
         }
     }
 
+
+	# CACHING: log this image's IFD tag array.
+    $tag_hash->{$sha1} = \@IFDs;
     if (wantarray) {
         return (@IFDs);
     } else {
@@ -482,6 +500,19 @@ sub getStrips {
 
 sub initDump {
     $dumpHeader = 1;
+}
+
+=head2 cleanup
+This function frees all the memory allocated for TIFF IFD tag caching
+=cut
+sub cleanup {
+	my ($file) = shift;
+	
+	if (defined $file) {
+		    delete ($tag_hash->{$file->getSHA1()});
+	} else {
+		$tag_hash = undef;
+	}
 }
 
 

@@ -568,7 +568,10 @@ sub getSHA1 {
 }
 
 
-
+sub cleanup {
+	# clear out the TIFF tag cache
+	OME::ImportEngine::TIFFUtils::cleanup();
+}
 =head1 Author
 
 Brian S. Hughes

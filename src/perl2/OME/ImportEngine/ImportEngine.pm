@@ -418,12 +418,7 @@ sub finishImport {
     my $factory = $session->Factory();
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
-    # Let all of the format classes perform their cleanup steps.
     my $formats = $self->{_formatInstances};
-    foreach my $format_class (keys %$formats) {
-        my $format = $formats->{$format_class};
-        $format->cleanup() if defined $format;
-    }
     $self->{_formatInstances} = undef;
 
     # Wrap up things in the database.
