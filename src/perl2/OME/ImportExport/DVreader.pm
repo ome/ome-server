@@ -38,6 +38,7 @@ our @ISA = ("OME::ImportExport::Import_reader");
 use strict;
 use Carp;
 use OME::ImportExport::FileUtils;
+use OME::ImportExport::Repacker::Repacker;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -131,7 +132,7 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 	      );
 
 our %xml_image_entries = (NumCol => 'SizeX',
-                          NumRows => 'SizeY',
+                          NumRows => 'SizeY',     # SizeZ calculated separately
                           NumWaves =>'NumWaves',
                           NumTimes => 'NumTimes',
 			  lensnum  => 'LensID',
@@ -236,7 +237,6 @@ sub formatImage {
     my $xml_hash = $parent->Image_reader::xml_hash;
     my @obuf;
     my ($ibuf, $rowbuf);
-    my ($ifmt, $ofmt);
     my ($i, $j, $k, $row);
     my $status;
     my $start_offset;
@@ -260,8 +260,6 @@ sub formatImage {
     # Start at begining of image data
     $start_offset = 1024 + $self->{next};
 
-    ($ifmt,$ofmt) = $self->SUPER::get_image_fmt ($pixsz, $row_size, $endian);
-
     # get offsets between consequtive time, wave, and Z sections in the file
     ($status, $t_jump, $w_jump, $z_jump) = get_jumps($times, $waves, $zs, $plane_size, $order);
     return $status
@@ -269,6 +267,7 @@ sub formatImage {
     
     # Read image out of the input file & arrange it in
     # our canonical XYZWT order.
+    #print "   DVreader start read loop: ".localtime."\n";
     for ($i = 0; $i < $times; $i++) {
 	$t_offset = $start_offset + $i * $t_jump;
 	my @xyzw;
@@ -282,9 +281,12 @@ sub formatImage {
 		    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
 		    last
 			unless $status eq "";
-		    @obuf = unpack($ifmt, $ibuf);
-		    $rowbuf = pack($ofmt, @obuf);
-		    push @xy, $rowbuf;
+
+		    my $cnt = Repacker::repack($ibuf, $row_size, 
+				     $pix_size{$self->{"PixelType"}},
+				     $endian eq "little",
+				     $parent->{host_endian} eq "little");
+		    push @xy, $ibuf;
 		    $offset += $row_size;
 		}
 		push @xyz, \@xy;
@@ -293,6 +295,7 @@ sub formatImage {
 	}
 	push @$xyzwt, \@xyzw;
     }
+    #print "   DVreader end read loop: ".localtime."\n";
 
     if ($status eq "") {
 	
@@ -335,7 +338,6 @@ sub readUIHdr {
 	$fmt =~ s/^(.)$/$1$len/;
 	$val = unpack($fmt, $buf);
 	$self->{$k} = $val;
-	#print "$k = $val\n";
     }
     # Put relevant pieces of metadata into xml_elements for later DB storage
     foreach $k (keys %xml_image_entries) {

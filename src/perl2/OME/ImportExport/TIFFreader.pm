@@ -240,7 +240,6 @@ sub formatImage {
     my $endian;
     my (@xy, @xyz, @xyzw, @xyzwt);
     my $obuf = $parent->obuffer;
-    my ($ifmt, $ofmt);
     my ($sz, $ndxi, $ndxo, $ch);
     my $irow;
     my $i;
@@ -283,7 +282,6 @@ sub formatImage {
 	    while (@$offsets) {
 		$start_offset = pop(@$offsets);
 		$strip_size = pop(@$bytecounts);
-		($ifmt, $ofmt) = $self->SUPER::get_image_fmt($bps, $row_size, $endian);
 		$status = OME::ImportExport::FileUtils::seek_and_read($fih, \$buf, $start_offset, $strip_size);
 		last
 		    unless $status eq "";
@@ -291,10 +289,11 @@ sub formatImage {
 		# extract rows out of the buffer
 		for ($buf_offset = 0; $strip_size >= $row_size; $strip_size -= $row_size) {
 		    $irow = substr($buf, $buf_offset, $row_size);
-		    @orow = unpack($ifmt, $irow);
-		    $rowbuf = pack($ofmt, @orow);
-		    push @xy, $rowbuf;
-		    #print $foh $rowbuf;
+		    my $cnt = Repacker::repack($irow, $row_size, 
+					       $bps,
+					       $endian eq "little",
+					       $parent->{host_endian} eq "little");
+		    push @xy, $irow;
 		    $buf_offset += $row_size;
 		}
 		

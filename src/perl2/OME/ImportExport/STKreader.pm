@@ -237,8 +237,8 @@ sub formatImage {
     # partition into clumps, and subsort the clumps
     # Will put image data, in XYZWT order, into 5D array for return to caller
     my @indeces = qw(Z_val W_ave Cr_dt);
-    #$status = partition_and_sort($parent, $xyzwt, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
-    $status = partition_and_sort($parent, \@xy_arr, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
+    $status = partition_and_sort($parent, $gparent, \@xy_arr, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
+
     # now have list of all the XY planes. Arrange them in their 5D order
     reverse @xy_arr;
     my ($t, $w, $z);
@@ -330,7 +330,7 @@ sub formatImage {
 
 
 sub partition_and_sort {
-    my ($parent, $oarray, $st_offset, $st_plane, $end_plane, $plane_size, $num_rows, $u2, $planes, @ndx_keys) = @_;
+    my ($parent, $gparent, $oarray, $st_offset, $st_plane, $end_plane, $plane_size, $num_rows, $u2, $planes, @ndx_keys) = @_;
     my $fih = $parent->{fih};
     my $foh = $parent->{foh};
     my $endian = $parent->{endian};
@@ -339,7 +339,6 @@ sub partition_and_sort {
     my $row_size = $parent->{row_size};
     my @obuf;
     my ($ibuf, $rowbuf);
-    my ($ifmt, $ofmt);
     my ($pl, $i);
     my $status = "";
     my $offset;
@@ -348,8 +347,6 @@ sub partition_and_sort {
     my ($st_slice, $end_slice);
     my $ndx_key = pop @ndx_keys;
     my $ndx = $uic2_ndxs{$ndx_key}; # partition on 1st index in list
-
-    ($ifmt,$ofmt) = $parent->SUPER::get_image_fmt ($bps, $row_size, $endian);
 
     $depth = 3 - scalar @ndx_keys;
     #print "  ++ $depth: 1st plane: $st_plane  last plane: $end_plane\n";
@@ -374,7 +371,6 @@ sub partition_and_sort {
 	if ((scalar @ndx_keys > 0) && ($st_slice != $end_slice)) {
 	    slice_sorter($u2, $planes, $st_slice, $end_slice, @ndx_keys);
 	    # now partition & sort this clump on next sort attribute in list
-	    #partition_and_sort($parent, \@subarray, $st_offset, $st_slice, $end_slice, $plane_size, $num_rows, $u2, $planes, @ndx_keys);
 	    partition_and_sort($parent, $oarray, $st_offset, $st_slice, $end_slice, $plane_size, $num_rows, $u2, $planes, @ndx_keys);
 	    push @$oarray, \@subarray;
 	    #print "  ++ $depth: got back an array with ", scalar @subarray, " entries\n";
@@ -391,10 +387,11 @@ sub partition_and_sort {
 		    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
 		    last
 			unless $status eq "";
-		    @obuf = unpack($ifmt, $ibuf);
-		    $rowbuf = pack($ofmt, @obuf);
-		    push @xy, $rowbuf;
-		    #print $foh  $ibuf;              # write to repository file
+		    my $cnt = Repacker::repack($ibuf, $row_size, 
+				     $bps,
+				     $endian eq "little",
+				     $gparent->{host_endian} eq "little");
+		    push @xy, $ibuf;
 		    $offset += $row_size;
 		}
 		#print "wrote plane # ", $planes->{$i}, ", containing $num_rows rows, of size $row_size\n";
