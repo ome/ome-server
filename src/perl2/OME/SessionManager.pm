@@ -19,6 +19,8 @@
 
 # Ilya's add
 # JM 14-03
+# JM 14-05 fix bug when log in with wrong username/password
+
 package OME::SessionManager;
 our $VERSION = '1.00';
 
@@ -76,9 +78,11 @@ sub createSession {
     } elsif (defined $key) {
         $session = $self->createWithKey($key);
     }
-
-    $self->storeApacheSession($session);
-    $session->Session($session);
+     # 14-05
+    if (defined $session){
+     $self->storeApacheSession($session);
+     $session->Session($session);
+    }
     return $session;
 }
 
@@ -169,12 +173,14 @@ sub createWithKey {
     logdbg "debug", "createWithKey: username=".$apacheSession->{username};
     logdbg "debug", "createWithKey: key=".$apacheSession->{SessionKey};
     my ($username, $password) = ($apacheSession->{username},$apacheSession->{password});
+	
     my $session = $self->getOMESession ($username,$password);
     return undef unless $session;
     $session->{ApacheSession} = $apacheSession;
     $session->{SessionKey} = $apacheSession->{SessionKey};
     logdbg "debug", "createWithKey: {SessionKey}=".$session->{SessionKey};
     logdbg "debug", "createWithKey: SessionKey()=".$session->SessionKey();
+	$session->writeObject();
     return $session;
 }
 
