@@ -385,14 +385,13 @@ sub __checkOutputParameters {
 	$handler->finishDataset();
 
 These are the methods defined by the Module interface.  Handler
-subclasses should override the precalculateGlobal,
-precalculateDataset, precalculateImage, calculateFeature,
-postcalculateImage, postcalculateDataset, and postcalculateGlobal
-methods to delegate to the module in question.  The other methods
-maintain the internal state of the Handler superclass, and should not
-be overridden.  Subclasses can use the accessors and methods described
-above to access the current state of the module and to create outputs
-as it progresses through these interface methods.
+subclasses should override the executeGlobal, startDataset, startImage,
+startFeature, finishFeature, finishImage, finishDataset methods to
+delegate to the module in question.  The other methods maintain the
+internal state of the Handler superclass, and should not be overridden. 
+Subclasses can use the accessors and methods described above to access
+the current state of the module and to create outputs as it progresses
+through these interface methods.
 
 =cut
 
