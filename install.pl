@@ -45,8 +45,8 @@ use Carp;
 # Tasks
 my @tasks = (
     "OME::Install::CoreSystemTask",
-    "OME::Install::PerlModuleTask",
     "OME::Install::LibraryTask",
+    "OME::Install::PerlModuleTask",
     "OME::Install::CoreDatabaseTablesTask"
 );
 
