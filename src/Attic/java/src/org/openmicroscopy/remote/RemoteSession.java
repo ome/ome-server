@@ -77,7 +77,7 @@ public class RemoteSession
     }
 
     public RemoteSession getRemoteSession() { return this; }
-    public void setRemoteSession(RemoteSession session) {}
+ //   public void setRemoteSession(RemoteSession session) {}
 
     public RemoteObjectCache getObjectCache() { return objectCache; }
 

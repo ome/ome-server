@@ -46,8 +46,7 @@ import java.net.URL;
 import java.util.*;
 import java.io.*;
 import org.apache.xmlrpc.XmlRpc;
-import org.apache.xmlrpc.XmlRpcClient;
-//import org.apache.xmlrpc.XmlRpcClientLite;
+import org.apache.xmlrpc.XmlRpcClientLite;
 import org.openmicroscopy.Session;
 
 public class XmlRpcCaller
@@ -55,8 +54,7 @@ public class XmlRpcCaller
 {
     public static boolean TRACE_CALLS = false;
 
-   // private XmlRpcClientLite  xmlrpc;
-    private XmlRpcClient xmlrpc;
+    private XmlRpcClientLite  xmlrpc;
     private Vector        vparams = new Vector();
     private String        sessionReference = null;
     private Session       session = null;
@@ -68,8 +66,7 @@ public class XmlRpcCaller
     {
         try
         {
-            //xmlrpc = new XmlRpcClientLite(url);
-			xmlrpc = new XmlRpcClient(url);
+            xmlrpc = new XmlRpcClientLite(url);
             XmlRpc.setKeepAlive(false);
         } catch (Exception e) {
             xmlrpc = null;

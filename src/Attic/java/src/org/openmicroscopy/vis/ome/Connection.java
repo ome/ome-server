@@ -104,6 +104,7 @@ public class Connection {
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
 				try {
+					XmlRpcCaller.TRACE_CALLS=true;
 					remote = new RemoteBindings();
 					remote.loginXMLRPC(URL,userName,passWord);
 				} catch (Exception e) {

@@ -145,8 +145,8 @@ public class RemoteObject
      * Class#newInstance}).
      * @param reference this object's session
      */
-    public void setRemoteSession(RemoteSession session)
-    { this.session = session; }
+    public static void setRemoteSession(RemoteSession session)
+    { RemoteObject.session = session; }
 
     /**
      * Returns this object's remote reference.
