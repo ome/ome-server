@@ -135,7 +135,7 @@ Repository can't be used as an input at the moment. So I'll use the reference fr
 					<RawText>InPath=</RawText>
 				</InputSubString>
 				<InputSubString>
-					<PixelsInput Location = "Pixels" SubstituteWith = "path"/>
+					<PixelsInput Location = "ChannelIndex.Pixels" SubstituteWith = "path"/>
 				</InputSubString>
 			</Parameter>
 			<Parameter>
