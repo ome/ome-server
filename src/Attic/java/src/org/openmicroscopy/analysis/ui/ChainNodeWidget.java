@@ -114,7 +114,9 @@ public class ChainNodeWidget
             {
                 if (e.getClickCount() == 1)
                 {
-                    controller.selectAttributeType(param,node,input);
+                    controller.selectAttributeType(param,
+                                                   ChainNodeWidget.this,
+                                                   input);
                     e.consume();
                 }
             }
@@ -135,8 +137,8 @@ public class ChainNodeWidget
         initialize();
     }
 
-    private Font   unhighlightedFont, highlightedFont;
-    private Color  unhighlightedColor, highlightedColor;
+    private Font   unhighlightedFont, highlightedFont, italicFont;
+    private Color  unhighlightedColor, highlightedColor, italicColor;
 
     private void initialize()
     {
@@ -152,7 +154,7 @@ public class ChainNodeWidget
 	add(lbl0,BorderLayout.NORTH);
 	lblName = lbl0;
 
-	labelPanel = new JPanel(new GridLayout(0,2));
+	labelPanel = new JPanel(new GridLayout(0,2,0,0));
 	labelPanel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 
 	int  numInputs = module.getNumInputs();
@@ -167,6 +169,8 @@ public class ChainNodeWidget
         unhighlightedColor = Color.black;
         highlightedFont = font.deriveFont(Font.BOLD);
         highlightedColor = lbl0.getForeground();
+        italicFont = font.deriveFont(Font.ITALIC);
+        italicColor = Color.black;
 
         LabelMouseListener  inputListener = new LabelMouseListener(true);
         LabelMouseListener  outputListener = new LabelMouseListener(false);
@@ -188,7 +192,6 @@ public class ChainNodeWidget
             }
 
             highlightLabel(param);
-	    //lbl0.setBorder(BorderFactory.createEmptyBorder(
 	    labelPanel.add(lbl0);
 
             if (i < numOutputs)
@@ -234,6 +237,15 @@ public class ChainNodeWidget
         }
     }
 
+    public void italicLabel(JLabel lbl0)
+    {
+        if (lbl0 != null)
+        {
+	    lbl0.setFont(italicFont);
+	    lbl0.setForeground(italicColor);
+        }
+    }
+
     public void highlightLabel(Module.FormalParameter param)
     {
         highlightLabel((JLabel) labels.get(param));
@@ -242,6 +254,11 @@ public class ChainNodeWidget
     public void unhighlightLabel(Module.FormalParameter param)
     {
         unhighlightLabel((JLabel) labels.get(param));
+    }
+
+    public void italicLabel(Module.FormalParameter param)
+    {
+        italicLabel((JLabel) labels.get(param));
     }
 
     public void highlightInputsByType(AttributeType type)

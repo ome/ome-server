@@ -112,10 +112,11 @@ public class PlaygroundController
     }
 
     public void selectAttributeType(Module.FormalParameter param, 
-                                    Chain.Node node,
+                                    ChainNodeWidget widget,
                                     boolean input)
     {
         AttributeType  type = param.getAttributeType();
+        Chain.Node     node = widget.getChainNode();
 
         if (lastParameter != null)
             displayNothing();
@@ -131,7 +132,12 @@ public class PlaygroundController
                                   param.getModule().getName()+"."+
                                   param.getParameterName());
                 while (i.hasNext())
-                    ((ChainNodeWidget) i.next()).highlightOutputsByType(type);
+                {
+                    ChainNodeWidget nw = (ChainNodeWidget) i.next();
+                    if (!nw.getChainNode().equals(node))
+                        nw.highlightOutputsByType(type);
+                }
+                widget.italicLabel(param);
             } else {
                 displayStatusText("Adding link ("+
                                   type.getName()+
@@ -139,7 +145,12 @@ public class PlaygroundController
                                   param.getModule().getName()+"."+
                                   param.getParameterName()+" to ***");
                 while (i.hasNext())
-                    ((ChainNodeWidget) i.next()).highlightInputsByType(type);
+                {
+                    ChainNodeWidget nw = (ChainNodeWidget) i.next();
+                    if (!nw.getChainNode().equals(node))
+                        nw.highlightInputsByType(type);
+                }
+                widget.italicLabel(param);
             }
 
             lastSelectedParam = param;
@@ -173,35 +184,40 @@ public class PlaygroundController
                     toParam   = lastSelectedParam;
                     toNode    = lastNode;
                 }
-                
-                Chain  chain = playgroundPane.getChain();
 
-                Iterator  links = chain.getLinkIterator();
-                while (links.hasNext())
+                if (fromNode.equals(toNode))
                 {
-                    Chain.Link  link = (Chain.Link) links.next();
-
-                    // An input cannot have more than one link
-                    // providing it with data.
-
-                    if (link.getToNode().equals(toNode) &&
-                        link.getToInput().equals(toParam))
-                    {
-                        linkedAlready = true;
-                        break;
-                    }
-                }
-
-                if (linkedAlready)
-                {
-                    unselectAttributeType("Already linked!");
+                    unselectAttributeType("Cannot link a node to itself!");
                 } else {
-                    chain.addLink(fromNode,
-                                  (Module.FormalOutput) fromParam,
-                                  toNode,
-                                  (Module.FormalInput) toParam);
-                    playgroundPane.repaint();
-                    unselectAttributeType("Link created");
+                    Chain  chain = playgroundPane.getChain();
+
+                    Iterator  links = chain.getLinkIterator();
+                    while (links.hasNext())
+                    {
+                        Chain.Link  link = (Chain.Link) links.next();
+
+                        // An input cannot have more than one link
+                        // providing it with data.
+
+                        if (link.getToNode().equals(toNode) &&
+                            link.getToInput().equals(toParam))
+                        {
+                            linkedAlready = true;
+                            break;
+                        }
+                    }
+
+                    if (linkedAlready)
+                    {
+                        unselectAttributeType("Already linked!");
+                    } else {
+                        chain.addLink(fromNode,
+                                      (Module.FormalOutput) fromParam,
+                                      toNode,
+                                      (Module.FormalInput) toParam);
+                        playgroundPane.repaint();
+                        unselectAttributeType("Link created");
+                    }
                 }
             }
         }
