@@ -27,11 +27,11 @@
 
 
 #-------------------------------------------------------------------------------
-# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+# Written by:   Tom Macura <tmacura@nih.gov>
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::OMEAdmin;
+package OME::Util::OMEcommander;
 
 use strict;
 use OME;
@@ -39,16 +39,23 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Util::Commands);
 
+use OME::Util::OMEAdmin;
 use OME::Util::UserAdmin;
 use OME::Util::GroupAdmin;
 use OME::Util::dbAdmin;
 
+use OME::SessionManager;
+use OME::Session;
+use OME::Tasks::ProjectManager;
+use OME::Tasks::ImageTasks;
+
 sub getCommands {
     return
       {
-       'users' => ['OME::Util::UserAdmin'],
-       'groups' => ['OME::Util::GroupAdmin'],
-       'data' => ['OME::Util::dbAdmin'],
+       'admin'   => ['OME::Util::OMEAdmin'],
+       'import'  => ['OME::Util::Import'],
+       'execute' => ['OME::Util::ExecuteChain'],
+       'top'     => ['OME::Util::Top'],
       };
 }
 
@@ -62,10 +69,11 @@ sub listCommands {
 Usage:
     $script $command_name <command> [<options>]
 
-omeadmin commands are:
-    users            Commands for administering OME users
-    groups           Commands for administering OME groups
-    data             Commands for administering OME data
+ome commands are:
+    admin            Commands for administering OME.
+    import           Command for importing files to OME
+    execute          Command for executing OME analysis chains
+    top              Command for displaying progress info about OME tasks
     help <command>   Display help information about a specific command
 
 Note that most of these commands will require you to log in as an
