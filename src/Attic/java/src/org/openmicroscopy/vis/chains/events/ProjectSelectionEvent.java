@@ -39,8 +39,8 @@
 
 
 package org.openmicroscopy.vis.chains.events;
-import org.openmicroscopy.vis.ome.CProject;
 import org.openmicroscopy.vis.chains.SelectionState;
+import org.openmicroscopy.Project;
 import java.util.Collection;
 
 /** 
@@ -57,11 +57,11 @@ public class ProjectSelectionEvent extends SelectionEvent {
 	public static final int DESELECTED=2;
 	
 	private Collection active;
-	private CProject project=null;
+	private Project project=null;
 
 	// store state so this event always has a source that is non-null	
 	public ProjectSelectionEvent(SelectionState state,
-			Collection active,CProject selected) {
+			Collection active,Project selected) {
 		super(state);
 		this.project = selected;
 		this.active = active;
@@ -71,7 +71,7 @@ public class ProjectSelectionEvent extends SelectionEvent {
 		return active;
 		
 	}
-	public CProject getSelectedProject() {
+	public Project getSelectedProject() {
 		return project;
 	} 		
 }
