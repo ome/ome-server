@@ -104,6 +104,10 @@ sub __genericDTO {
         my $type = $object->getColumnType($column);
         # __makeHash will have already ensured that each column exists
 
+        # If this is an attribute reference, load the appropriate
+        # ST class
+        $object->__activateSTColumn($column);
+
         if ($type eq 'has-one') {
             my $ref_object = $dto->{$column};
             $dto->{$column} = __genericDTO("${prefix}.${column}",

@@ -110,7 +110,7 @@ sub __makeHash ($$$) {
         }
 
         my $type = $object->getColumnType($object_name);
-        die "Unknown column $type"
+        die "Unknown column $object_name"
           unless defined $type;
 
         if ($type eq 'has-many') {
