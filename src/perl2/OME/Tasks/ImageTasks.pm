@@ -135,28 +135,8 @@ sub importFiles {
     	foreach (@$image_list);
     
  	# save default display options to omeis as thumbnail settings.
-	my $imageManager = new OME::Tasks::ImageManager($session);
-	foreach my $image (@$image_list) {
-		my $display_options = $imageManager->getDisplayOptions($image);
-		my ($channels,@CBW);
-		@CBW = @{ $display_options->{CBW} };
-		$channels->{red} = [ splice(@CBW, 0, 3), 1.0] 
-			if $display_options->{isRGB} and $display_options->{RGBon}->[0];
-		$channels->{green} = [ splice(@CBW, 3, 3), 1.0] 
-			if $display_options->{isRGB} and $display_options->{RGBon}->[1];
-		$channels->{blue} = [ splice(@CBW, 6, 3), 1.0] 
-			if $display_options->{isRGB} and $display_options->{RGBon}->[2];
-		$channels->{gray} = [ splice(@CBW, 9, 3), 1.0] 
-			unless $display_options->{isRGB};
-		OME::Image::Server->setThumb(
-			$image->default_pixels()->ImageServerID(),
-			$display_options->{theT},
-			$display_options->{theZ},
-			$channels
-		);
-			
-	}
- 
+	OME::Tasks::PixelsManager->saveThumb( $_->default_pixels() )
+		foreach (@$image_list);
     return $image_list;
 }
 
