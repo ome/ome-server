@@ -112,8 +112,14 @@ sub importFiles {
 	my $repository = $session->findRepository(); # make sure there is one, and its activated.
 
 	my @files;
-	push( @files, OME::Image::Server::File->upload($_) )
-		foreach ( @$filenames );
+    my $progress = 
+    	OME::Tasks::NotificationManager->new ('Uploading files to omeis',scalar @$filenames);
+	
+	foreach ( @$filenames ) {
+		push( @files, OME::Image::Server::File->upload($_) );
+		$progress->step();
+	}
+	$progress->finish();
 	
 	my $image_list = OME::ImportEngine::ImportEngine->importFiles(%$options, $dataset, \@files );
 	
