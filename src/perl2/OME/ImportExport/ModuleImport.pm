@@ -113,7 +113,7 @@ sub importXMLFile {
 		if $debug > 1;
 
 	#process tree
-	print STDERR ref ($self) . "->importXMLFile about to process DOM\n"
+	print STDERR ref ($self) . "->importXMLFile about to process DOM (parsed file)\n"
 		if $debug > 1;
 	my $newPrograms = $self->processDOM( $tree->getDocumentElement() );
 	print STDERR ref ($self) . "->importXMLFile processed DOM\n"
@@ -248,7 +248,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 					or die "Table create statement failed when making table ".$newTable->table_name()."\n";
 				$sth->execute()
 					or die "Unable to create table ".$newTable->table_name()."\n";
-				print STDERR ref ($self) . "->processDOM created table in DB\n".$statement."\n"
+				print STDERR ref ($self) . "->processDOM successfully created table\n"
 					if $debug > 1;
 				#
 				#
@@ -455,6 +455,8 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 			###################################################################
 
 			$newAttrType->granularity( $granularity );
+			print STDERR ref ($self) . "->processDOM determined granularity. Setting granularity to '$granularity'. \n"
+				if $debug > 1;
 			push(@commitOnSuccessfulImport, $newAttrType);
 		}
 		#
@@ -751,7 +753,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		# replace FormalInputID's with ID's from DB
 		#
-		print STDERR ref ($self) . "->processDOM replacing FormalInputID's w/ ID's from DB\n"
+		print STDERR ref ($self) . "->processDOM replacing FormalInputColumnID's w/ ID's from DB\n"
 			if $debug > 1;
 		my @inputTypes = ( "Input", "UseValue", "End", "Start" );
 		my @inputs;
@@ -760,10 +762,18 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		} @inputTypes;
 
 		foreach my $input (@inputs) {
+			die ref ($self) . "->processDOM When processing ExecutionInstructions, could not find a matching FormalInputColumnID '".$input->getAttribute( "FormalInputColumnID" )."'. You probably made a typo. Is there a FormalInputColumn with that FormalInputColumnID?\n"
+				unless exists $formalInputColumn_xmlID_dbObject { $input->getAttribute( "FormalInputColumnID" )};
+			print STDERR ref ($self) . "->processDOM is altering FormalInputColumnID in element type ".$input->tagName()."\n".$input->getAttribute( "FormalInputColumnID" )." -> "
+				if $debug > 1;
+			print STDERR $formalInputColumn_xmlID_dbObject { $input->getAttribute( "FormalInputColumnID" )}->id()."\n"
+				if $debug > 1;
 			$input->setAttribute( "FormalInputColumnID",
 								  $formalInputColumn_xmlID_dbObject {
 									  $input->getAttribute( "FormalInputColumnID" )}->id());
 		}
+		print STDERR ref ($self) . "->processDOM finished replacing FormalInputColumnID's\n"
+			if $debug > 1;
 		#
 		#######################################################################
 	
@@ -771,7 +781,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		# replace FormalOutputID's with ID's from DB
 		#
-		print STDERR ref ($self) . "->processDOM replacing FormalOutputID's w/ ID's from DB\n"
+		print STDERR ref ($self) . "->processDOM replacing FormalOutputColumnID's w/ ID's from DB\n"
 			if $debug > 1;
 		my @outputTypes = ( "OutputTo", "AutoIterate", "IterateRange" );
 		my @outputs;
@@ -780,9 +790,9 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		} @outputTypes;
 
 		foreach my $output (@outputs) {
-			die ref ($self) . "->processDOM could not find formal output column referenced in executionInstructions as '".$output->getAttribute( "FormalOutputColumnID" )."'\n"
+			die ref ($self) . "->processDOM When processing ExecutionInstructions, could not find a matching FormalOutputColumnID '".$output->getAttribute( "FormalOutputColumnID" )."'. You probably made a typo. Is there a FormalOutputColumn with that FormalOutputColumnID?\n"
 				unless exists $formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )};
-			print STDERR ref ($self) . "->processDOM replacing FormalOutputID\n".$output->getAttribute( "FormalOutputColumnID" )."->"
+			print STDERR ref ($self) . "->processDOM is altering FormalOutputColumnID in element type ".$output->tagName()."\n".$output->getAttribute( "FormalOutputColumnID" )." -> "
 				if $debug > 1;
 			print STDERR $formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )}->id()."\n"
 				if $debug > 1;
@@ -790,6 +800,8 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 				$formalOutputColumn_xmlID_dbObject {
 					  $output->getAttribute( "FormalOutputColumnID" )}->id());
 		}
+		print STDERR ref ($self) . "->processDOM finished replacing FormalOutputColumnID's\n"
+			if $debug > 1;
 		#
 		#######################################################################
 
@@ -806,17 +818,26 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 			$currentID++;
 			die ref ($self) . " Two planes found with same ID (".$plane->getAttribute('XYPlaneID').")"
 				if ( defined defined $plane->getAttribute('XYPlaneID') ) and ( exists $idMap{ $plane->getAttribute('XYPlaneID') } );
+			print STDERR ref ($self) . "->processDOM is altering XYPlaneID in element type XYPlane\n" .
+				(defined $plane->getAttribute('XYPlaneID') ? $plane->getAttribute('XYPlaneID') : '[No value]') .
+				" -> " . $currentID . "\n"
+				if $debug > 1;
 			$idMap{ $plane->getAttribute('XYPlaneID') } = $currentID
 				if defined $plane->getAttribute('XYPlaneID');
 			$plane->setAttribute('XYPlaneID', $currentID);
 		}
 		# second run: clean up references to XYPlanes
 		foreach my $match($executionInstructionXML->getElementsByTagName( "Match" ) ) {
-			die ref ($self) . " 'Match' element's reference plane not found. XYPlaneID=".$match->getAttribute('XYPlaneID')
+			die ref ($self) . " 'Match' element's reference plane not found. XYPlaneID=".$match->getAttribute('XYPlaneID').". Did you make a typo?"
 				unless exists $idMap{ $match->getAttribute('XYPlaneID') };
+			print STDERR ref ($self) . "->processDOM is altering XYPlaneID in element type Match\n" .
+				$match->getAttribute('XYPlaneID') .	" -> " . $idMap{ $match->getAttribute('XYPlaneID') } . "\n"
+				if $debug > 1;
 			$match->setAttribute('XYPlaneID',
 				$idMap{ $match->getAttribute('XYPlaneID') } );
 		}
+		print STDERR ref ($self) . "->processDOM finished normalizing XYPlaneID's\n"
+			if $debug > 1;
 		#
 		#######################################################################
 		
@@ -829,16 +850,20 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		my @pats =  $executionInstructionXML->getElementsByTagName( "pat" );
 		foreach (@pats) {
 			my $pat = $_->getFirstChild->getData();
+			print STDERR ref ($self) . "->processDOM inspecting pattern:\n$pat\n"
+				if $debug > 1;
 			eval { "" =~ /$pat/; };
 			die "Invalid regular expression pattern: $pat in program ".$newProgram->program_name()
 				if $@;
 		}
+		print STDERR ref ($self) . "->processDOM finished checking regular expression patterns\n"
+			if $debug > 1;
 		#
 		#######################################################################
 		
 		# save executionInstructions
 		$newProgram->execution_instructions( $executionInstructionXML->toString() );
-		print STDERR ref ($self) . "->processDOM finished processing ExecutionInstructions\n"
+		print STDERR ref ($self) . "->processDOM finished processing ExecutionInstructions. ExecutionInstructions saved to DB.\n"
 			if $debug > 1;
 	}
 	#
@@ -848,10 +873,14 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	###########################################################################
 	# commit this module. It's been successfully imported
 	#
+	print STDERR ref ($self) . "->processDOM imported module '".$newProgram->program_name."' sucessfully. Committing to DB...\n"
+		if $debug > 0;
 	while( my $DBObjectInstance = pop (@commitOnSuccessfulImport) ){
 		$DBObjectInstance->writeObject;
 	}                             # commits all DBObjects
 	$session->DBH()->commit();    # new tables & columns written w/ this handle
+	print STDERR ref ($self) . "->processDOM commit successful\n"
+		if $debug > 0;
 	#
 	###########################################################################
 	
