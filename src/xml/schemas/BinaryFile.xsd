@@ -23,8 +23,8 @@
 -->
 	<element name = "External">
 		<annotation>
-			<documentation>Describes a file location.  Can optionally specify an Offset and a ReadLength, both in bytes.
-The SHA1 digest of the file is required.  If the file is compressed, the SHA1 digest is of the compressed file.
+			<documentation>Describes a file location.  Can optionally specify a portion of a file using Offset and a ReadLength.
+If Offset and ReadLength are specified, Compression may not be specified..
 			</documentation>
 		</annotation>
 		<complexType>
@@ -33,10 +33,14 @@ The SHA1 digest of the file is required.  If the file is compressed, the SHA1 di
 					<documentation>file location</documentation>
 				</annotation>
 			</attribute>
-			<attribute name = "SHA1" use = "required" type = "Bin:Hex40"/>
+			<attribute name = "SHA1" use = "required" type = "Bin:Hex40">
+				<annotation>
+					<documentation>The digest of the file specified in href.</documentation>
+				</annotation>
+			</attribute>
 			<attribute name = "Compression" default = "none">
 				<annotation>
-					<documentation>Specifies the compression scheme used to encode the data.</documentation>
+					<documentation>Specifies the compression scheme used to encode the data. May NOT be used in conjuction with Offset and ReadLength.</documentation>
 				</annotation>
 				<simpleType>
 					<restriction base = "string">
@@ -46,8 +50,16 @@ The SHA1 digest of the file is required.  If the file is compressed, the SHA1 di
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute name = "Offset" type = "positiveInteger"/>
-			<attribute name = "ReadLength" type = "positiveInteger"/>
+			<attribute name = "Offset" type = "positiveInteger">
+				<annotation>
+					<documentation>May NOT be used in conjuction with Compression.</documentation>
+				</annotation>
+			</attribute>
+			<attribute name = "ReadLength" type = "positiveInteger">
+				<annotation>
+					<documentation>May NOT be used in conjuction with Compression.</documentation>
+				</annotation>
+			</attribute>
 		</complexType>
 	</element>
 	<element name = "BinData">
@@ -82,14 +94,14 @@ The SHA1 digest of the file is required.  If the file is compressed, the SHA1 di
 				<element ref = "Bin:External"/>
 				<element ref = "Bin:BinData"/>
 			</sequence>
-			<attribute name = "FileName">
+			<attribute name = "FileName" use = "required">
 				<simpleType>
 					<restriction base = "string">
 						<maxLength value = "64"/>
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute name = "Size" type = "string">
+			<attribute name = "Size" use = "required" type = "integer">
 				<annotation>
 					<documentation>Size (in bytes) of the uncompressed file.</documentation>
 				</annotation>
