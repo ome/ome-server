@@ -158,7 +158,7 @@ sub new {
 	align => 'LEFT'
 	};
 
-	$self->{OMEbgcolor} = '#CCCC99';
+	$self->{OMEbgcolor} = '#FFFFFF';
 
 	$self->{RequireLogin} = 1;
 
@@ -311,9 +311,6 @@ sub serve {
 		print "You shouldn't be accessing the $class page.";
 		print "<br>Here's the error message:<br>$content" unless !(defined $content);
 	}
-	
-	$self->Session()->closeSession()
-		if defined $self->Session();
 }
 
 sub headers {
@@ -419,9 +416,11 @@ sub createOMEPage {
 	return ('ERROR',undef) if (!defined $title || !defined $body);
 	return ($result,$body) if ($result ne 'HTML');
 
-	my $head = $CGI->start_html({title => $title,
-				 bgcolor => $self->{OMEbgcolor},
-				 text => 'BLACK'});
+	my $head = $CGI->start_html(
+		-title => $title,
+		-style => {'src' => '/html/ome2.css'}
+	);
+		 		 
 	my $tail = $CGI->end_html;
 
 	return ('HTML', $head . $body . $tail);

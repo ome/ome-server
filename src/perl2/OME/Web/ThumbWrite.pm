@@ -85,8 +85,6 @@ sub serve {
 		my $thumbnail=$generator->generateOMEthumbnail($out);
 		print $thumbnail;
 	}
-
-	$session->closeSession();
 }
 
 1;
