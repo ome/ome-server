@@ -1,5 +1,4 @@
-# OME/MyPackage/MyPackage.pm
-# This module is used for packaging my packages.
+# OME.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -40,6 +39,7 @@ use strict;
 our $VERSION = 2.001_000;
 
 use Config;
+use Log::Agent;
 our $THREADS_AVAILABLE = 0;
 our $BIG_ENDIAN;
 
@@ -48,6 +48,13 @@ BEGIN {
     $BIG_ENDIAN =
       ($Config{byteorder} == 1234) ||
       ($Config{byteorder} == 12345678);
+}
+
+if ($ENV{OME_DEBUG} > 0) {	
+	logconfig(
+		-prefix      => "$0",
+		-level    => 'debug'
+	);
 }
 
 =head1 NAME
