@@ -84,7 +84,11 @@ sub executeModule {
 
     if ($@) {
         $mex->status('ERROR');
-        $mex->error_message($mex->error_message."\n".$@);
+        if (defined($mex->error_message)) {
+	        $mex->error_message($mex->error_message."\n".$@);
+	    } else {
+	        $mex->error_message($@);
+	    }
         logdbg ("debug", "      Error during execution: $@\n");
     } else {
         $mex->status('FINISHED');
