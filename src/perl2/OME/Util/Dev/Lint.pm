@@ -61,7 +61,8 @@ Getopt::Long::Configure("bundling");
 sub getCommands {
     return
       {
-       'untangle_chains'     => 'untangle_chains',
+       'untangle_chains' => 'untangle_chains',
+       'uc'              => 'untangle_chains',
       };
 }
 
@@ -88,7 +89,8 @@ Options:
       to STDOUT
       
   -v  Verbose. Print out a topologically sorted view of the chain nodes.
-
+  
+  -c  Compress the output file. 
   -h  Print this help message.
   
 USAGE
@@ -98,9 +100,10 @@ USAGE
 
 sub untangle_chains {
 	my ($self,$commands) = @_;
-	my ($infile, $outfile, $verbose );
+	my ($infile, $outfile, $verbose, $compression );
 	
-	GetOptions('f=s' => \$infile, 'o=s' => \$outfile, 'v' => \$verbose);
+	GetOptions('f=s' => \$infile, 'o=s' => \$outfile, 'v' => \$verbose, 'c' => \$compression );
+	$compression = ( $compression ? 7 : 0 );
 	
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
@@ -152,7 +155,7 @@ sub untangle_chains {
 	$chainExport->buildDOM (\@chains_to_save);
 	# ATM, $outfile is guaranteed to be defined. That's cuz I'm lazy about parsing inputs
 	if ($outfile) {
-		$chainExport->exportFile ($outfile);
+		$chainExport->exportFile ($outfile, compression => $compression );
 	} else {
 		print $chainExport->exportXML();
 	}
@@ -232,11 +235,8 @@ sub __untangle {
 	}
 	
 	# el fin
-	unless( $chain_was_tangled ) {
-		$session->rollbackTransaction();
-		return undef;
-	}
 	return $untangled_chain
+		if( $chain_was_tangled );
 }
 
 sub __topological_sort {
