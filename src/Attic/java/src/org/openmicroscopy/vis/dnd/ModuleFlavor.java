@@ -39,8 +39,9 @@ package org.openmicroscopy.vis.dnd;
  
 import java.awt.datatransfer.DataFlavor;
 
+
 /**
- * A DataTransfer Flavor for {@link Module} objects. This one encodes the 
+ * A DataTransfer Flavor for {@link CModule} objects. This one encodes the 
  * module id as a string, rather than as an Integer. It's a bit of a hack,
  * but it seems necessary if we're going to allow drag/drop of both chains and
  * modules based on a single id - they must have separate class names in the 
@@ -55,10 +56,13 @@ import java.awt.datatransfer.DataFlavor;
  */ 
 public class ModuleFlavor extends DataFlavor{
  	
- 	public ModuleFlavor() {
- 		super(java.lang.String.class, "Unicode String");
- 	}
  	
+
+	public ModuleFlavor() {
+		super(java.lang.String.class, "Unicode String");
+	}
+		
+	
  	public static final ModuleFlavor moduleFlavor = new ModuleFlavor();
  }
  		
