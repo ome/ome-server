@@ -121,7 +121,7 @@ my $server_path = DEFAULT_REMOTE_URL;
 my $user_agent;
 
 # Cached data for the readFile method
-use constant MINIMUM_READ_TO_USE_CACHE => 2048;
+use constant MAXIMUM_READ_TO_USE_CACHE => 2048;
 use constant CACHE_SIZE => 4096;
 my $cache_filled = 0;
 my $cache_data;
@@ -988,7 +988,7 @@ sub readFile {
     my $proto = shift;
     my ($fileID,$offset,$length) = @_;
 
-    if ($length <= MINIMUM_READ_TO_USE_CACHE) {
+    if ($length <= MAXIMUM_READ_TO_USE_CACHE) {
         # Check and see if we have a cache which contains the requested
         # data.  If not, load in an appropriate cache.
 
@@ -1008,8 +1008,8 @@ sub readFile {
             }
 
             # Calculate the bounds of a cache block, centered on the
-            # requested region.  Ensure that is does not go past the end of
-            # the file.
+            # requested region.  Ensure that it does not go past the
+            # end of the file.
             use integer;
             my $extra = CACHE_SIZE-$length;
             my $real_offset = $offset-($extra/2);
@@ -1052,7 +1052,7 @@ sub readFile {
 
 	my $pixelsWritten = OME::Image::Server->
 	    convertStack($pixelsID,$theC,$theT,
-	                 $filesID,$offset,$bigEndian);
+	                 $fileID,$offset,$bigEndian);
 
 Copies pixels from an original file into a new pixels file.  The
 original file should have been previously uploaded via the uploadFile
@@ -1066,8 +1066,8 @@ original file should be in XYZ order, and should match the storage
 type declared for the new pixels file.  The stack is specified by its
 C and T coordinates, which have 0-based indices.  The endian-ness of
 the uploaded file should be specified; if this differs from the
-declared endian-ness of the new pixels file, byte swapping will be
-performed by the server.
+endian-ness of the new pixels file, byte swapping will be performed by
+the server.
 
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
@@ -1112,7 +1112,7 @@ This method copies a single XY plane of pixels.  The pixels in the
 original file should be in XY order, and should match the storage type
 declared for the new pixels file.  The plane is specified by its Z, C
 and T coordinates, which have 0-based indices.  The endian-ness of the
-uploaded file should be specified; if this differs from the declared
+uploaded file should be specified; if this differs from the
 endian-ness of the new pixels file, byte swapping will be performed by
 the server.
 
@@ -1162,8 +1162,8 @@ the storage type declared for the new pixels file.  The rows are
 specified by their Z, C and T coordinates, and by an initial Y
 coordinate and number of rows to copy.  All of the coordinates have
 0-based indices.  The endian-ness of the uploaded file should be
-specified; if this differs from the declared endian-ness of the new
-pixels file, byte swapping will be performed by the server.
+specified; if this differs from the endian-ness of the new pixels
+file, byte swapping will be performed by the server.
 
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
