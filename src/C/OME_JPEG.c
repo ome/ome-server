@@ -4,7 +4,7 @@
 #include <jpeglib.h>
 
 
-char *get_param (char **cgivars, char*param);
+char *get_param (char **cgivars, char *param);
 int inList(char **cgivars, char *str);
 char x2c(char *what);
 void unescape_url(char *url);
@@ -16,6 +16,57 @@ void make_Gray_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *t
 void scale_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale);
 void scale_Gray_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale);
 
+
+
+/** 
+ * This program will generate a JPEG image from a repository file.
+ * In order to generate the image, you'll have to supply the following
+ * parameters (name/value pairs):
+ *
+ * 	Path=/path/to/file
+ * 	Dims=X,Y,Z,W,T,BytesPerPix
+ * 	theZ=Z
+ *	theT=T
+ *	
+ * In addition to the above, you need specify the gray channel, if you
+ * want a gray JPEG:
+ * 
+ *	Gray=GrayWave,BlckLevel,Scale
+ *
+ * or, alternatively, the RGB channels, if you want an RGB JPEG:
+ *
+ *	RGB=RedWave,BlckLevel,Scale,GrnWave,BlckLvl,Scale,BluWave,BlckLvl,Scale 
+ *
+ * The resulting JPEG file is spewed on stdout. 
+ * This program can also be used as CGI. In this case the input has to be 
+ * passed as CGI-encoded name/value pairs through the CGI interface (you can
+ * either use a GET or a POST). The resulting JPEG file is still spewed on 
+ * stdout, but is prefixed by the string:
+ *	"Content-type: image/jpeg\n\n"
+ * so that the image can be correctly returned to the browser.
+ *
+ *
+ *
+ *
+ * --------------------------------------------------------------------------
+ * NOTE: This program used to do the following:
+ *	+ Check REQUEST_METHOD environment variable
+ *	+ If set, parse CGI input
+ *	+ If not, parse command line input
+ *	+ Generate JPEG according to input values
+ * 
+ * The problem with the above is that when you invoke the program from a CGI 
+ * script (actually using it as from the command line), the REQUEST_METHOD 
+ * environment variable is set. As a result, the program will try to parse the 
+ * CGI input, ignoring the parameters that you passed on the command line. 
+ * In order to take this into account, the behavior has been modified as 
+ * follows:
+ *	+ Check command line input
+ *	+ If input, parse
+ *	+ If not, parse CGI input
+ *	+ Generate JPEG according to input values
+ *
+*/
 int main (int argc, char **argv)
 {
 	int i;
@@ -25,9 +76,14 @@ int main (int argc, char **argv)
 	char *type,*RGBon;
 	char isRGB=0;
 	char isCGI=0;
-	char **cgivars;
-
-	cgivars = getcgivars();
+	
+	/* OLD CODE:	char **cgivars;	
+	 * REPLACED BY:
+	*/
+	char	**in_params ;
+	
+/* OLD CODE:
+	cgivars = getcgivars() ;
 	if (!cgivars) {
 		cgivars = getCLIvars(argc,argv);
 		if (!cgivars) {
@@ -35,38 +91,53 @@ int main (int argc, char **argv)
 			exit (-1);
 		} else isCGI=0;
 	} else isCGI = 1;
-	
-	path = get_param (cgivars,"Path");
+ *
+ * REPLACED BY:
+*/		
+	in_params = getCLIvars(argc,argv) ;
+	if( !in_params ) {
+		in_params = getcgivars() ;
+		if( !in_params ) {
+			usage(argc,argv) ;
+			exit (-1) ;
+		} else	isCGI = 1 ;
+	} else	isCGI = 0 ;
+
+
+/* REPLACED every occurence of cgivars (OLD CODE) in main 
+ * with in_params. 
+*/
+	path = get_param (in_params,"Path");
 	if (!path) {
 		fprintf (stderr,"Path parameter not set.\n");
 		usage(argc,argv);
 		exit (-1);
 	}
 	
-	dims = get_param (cgivars,"Dims");
+	dims = get_param (in_params,"Dims");
 	if (!dims) {
 		fprintf (stderr,"Dims parameter not set.\n");
 		usage(argc,argv);
 		exit (-1);
 	}
 	
-	theZ = get_param (cgivars,"theZ");
+	theZ = get_param (in_params,"theZ");
 	if (!theZ) {
 		fprintf (stderr,"theZ parameter not set.\n");
 		usage(argc,argv);
 		exit (-1);
 	}
 	
-	theT = get_param (cgivars,"theT");
+	theT = get_param (in_params,"theT");
 	if (!theT) {
 		fprintf (stderr,"theT parameter not set.\n");
 		usage(argc,argv);
 		exit (-1);
 	}
 	
-	type = get_param (cgivars,"RGB");
+	type = get_param (in_params,"RGB");
 	if (!type) {
-		type = get_param (cgivars,"Gray");
+		type = get_param (in_params,"Gray");
 		if (!type) {
 			fprintf (stderr,"Neither RGB nor Gray parameter was set.\n");
 			usage(argc,argv);
@@ -75,7 +146,7 @@ int main (int argc, char **argv)
 	} else isRGB = 1;
 	
 	if (isRGB)
-		RGBon = get_param (cgivars,"RGBon");
+		RGBon = get_param (in_params,"RGBon");
 
 /*
 	for(i=0; cgivars[i]; i += 2){
@@ -92,10 +163,10 @@ int main (int argc, char **argv)
 	else
 		make_Gray_JPEG (path,dims,theZ,theT,type);
 
-	for(i=0; cgivars[i]; i++){
-		free (cgivars[i]);
+	for(i=0; in_params[i]; i++){
+		free (in_params[i]);
 	}
-	free (cgivars);
+	free (in_params);
 	
 	return (0);
 }
