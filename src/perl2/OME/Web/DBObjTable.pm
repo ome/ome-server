@@ -54,11 +54,12 @@ Build a table with information about any DBObject or attribute.
 #*********
 
 use strict;
-use vars qw($VERSION);
+use OME;
+our $VERSION = $OME::VERSION;
+
 use CGI;
 use Log::Agent;
 
-use OME;
 use OME::Web::DBObjRender;
 
 #*********
@@ -131,13 +132,13 @@ sub getPageBody {
 	my $table      = $tableMaker->getTable( \%options, $type, \@obj_array );
 
 recognized %options are:
-	noSearch
-	Length
+	noSearch         => 1|0                          # 1 disables searches
+	Length           => $num_items_per_page
 	embedded_in_form => $form_name
-	title
-	width
-	actions
-	excludefields => { field_name => undef }
+	title            => 'table_title'
+	width            => 'table_width'
+	actions          => [ action_button_name, ... ]
+	excludefields    => { field_name => undef, ... }
 
 =cut
 
@@ -173,7 +174,7 @@ sub getTable {
 	my $allowSearch;
 	$allowSearch = 1
 		if( defined $options->{ actions } and 
-		    scalar( grep( m/Search/o, @{ $options->{ actions } }) ) > 0
+		    scalar( grep( m/^Search$/o, @{ $options->{ actions } }) ) > 0
 		);
 
 	# allow paging ?
