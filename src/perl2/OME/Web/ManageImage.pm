@@ -122,7 +122,6 @@ sub printImages {
 	my $html = $t_generator->getTable( {
 			options_row => ["Remove from Dataset"],
 			relations => 1,
-			select_column => 1,
 		},
 		$i_manager->getUserImages()
 	);
