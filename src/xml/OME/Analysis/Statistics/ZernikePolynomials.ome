@@ -38,11 +38,294 @@
 			<Description>
 			Nikita, please fill this out.
 			</Description>
-			<Element 
-				Name="Parent" 
-				DBLocation="ZERNIKE.MOMENTS"   
-				DataType = "reference"
-				RefersTo = "PixelsSlice"/>
+			<Element
+				Name="Z_0_0"
+				DBLocation="ZERNIKE.Z_0_0"
+				DataType="float"/>
+			<Element
+				Name="Z_1_1"
+				DBLocation="ZERNIKE.Z_1_1"
+				DataType="float"/>
+			<Element
+				Name="Z_2_0"
+				DBLocation="ZERNIKE.Z_2_0"
+				DataType="float"/>
+			<Element
+				Name="Z_2_2"
+				DBLocation="ZERNIKE.Z_2_2"
+				DataType="float"/>
+			<Element
+				Name="Z_3_1"
+				DBLocation="ZERNIKE.Z_3_1"
+				DataType="float"/>
+			<Element
+				Name="Z_3_3"
+				DBLocation="ZERNIKE.Z_3_3"
+				DataType="float"/>
+			<Element
+				Name="Z_4_0"
+				DBLocation="ZERNIKE.Z_4_0"
+				DataType="float"/>
+			<Element
+				Name="Z_4_2"
+				DBLocation="ZERNIKE.Z_4_2"
+				DataType="float"/>
+			<Element
+				Name="Z_4_4"
+				DBLocation="ZERNIKE.Z_4_4"
+				DataType="float"/>
+			<Element
+				Name="Z_5_1"
+				DBLocation="ZERNIKE.Z_5_1"
+				DataType="float"/>
+			<Element
+				Name="Z_5_3"
+				DBLocation="ZERNIKE.Z_5_3"
+				DataType="float"/>
+			<Element
+				Name="Z_5_5"
+				DBLocation="ZERNIKE.Z_5_5"
+				DataType="float"/>
+			<Element
+				Name="Z_6_0"
+				DBLocation="ZERNIKE.Z_6_0"
+				DataType="float"/>
+			<Element
+				Name="Z_6_2"
+				DBLocation="ZERNIKE.Z_6_2"
+				DataType="float"/>
+			<Element
+				Name="Z_6_4"
+				DBLocation="ZERNIKE.Z_6_4"
+				DataType="float"/>
+			<Element
+				Name="Z_6_6"
+				DBLocation="ZERNIKE.Z_6_6"
+				DataType="float"/>
+			<Element
+				Name="Z_7_1"
+				DBLocation="ZERNIKE.Z_7_1"
+				DataType="float"/>
+			<Element
+				Name="Z_7_3"
+				DBLocation="ZERNIKE.Z_7_3"
+				DataType="float"/>
+			<Element
+				Name="Z_7_5"
+				DBLocation="ZERNIKE.Z_7_5"
+				DataType="float"/>
+			<Element
+				Name="Z_7_7"
+				DBLocation="ZERNIKE.Z_7_7"
+				DataType="float"/>
+			<Element
+				Name="Z_8_0"
+				DBLocation="ZERNIKE.Z_8_0"
+				DataType="float"/>
+			<Element
+				Name="Z_8_2"
+				DBLocation="ZERNIKE.Z_8_2"
+				DataType="float"/>
+			<Element
+				Name="Z_8_4"
+				DBLocation="ZERNIKE.Z_8_4"
+				DataType="float"/>
+			<Element
+				Name="Z_8_6"
+				DBLocation="ZERNIKE.Z_8_6"
+				DataType="float"/>
+			<Element
+				Name="Z_8_8"
+				DBLocation="ZERNIKE.Z_8_8"
+				DataType="float"/>
+			<Element
+				Name="Z_9_1"
+				DBLocation="ZERNIKE.Z_9_1"
+				DataType="float"/>
+			<Element
+				Name="Z_9_3"
+				DBLocation="ZERNIKE.Z_9_3"
+				DataType="float"/>
+			<Element
+				Name="Z_9_5"
+				DBLocation="ZERNIKE.Z_9_5"
+				DataType="float"/>
+			<Element
+				Name="Z_9_7"
+				DBLocation="ZERNIKE.Z_9_7"
+				DataType="float"/>
+			<Element
+				Name="Z_9_9"
+				DBLocation="ZERNIKE.Z_9_9"
+				DataType="float"/>
+			<Element
+				Name="Z_10_0"
+				DBLocation="ZERNIKE.Z_10_0"
+				DataType="float"/>
+			<Element
+				Name="Z_10_2"
+				DBLocation="ZERNIKE.Z_10_2"
+				DataType="float"/>
+			<Element
+				Name="Z_10_4"
+				DBLocation="ZERNIKE.Z_10_4"
+				DataType="float"/>
+			<Element
+				Name="Z_10_6"
+				DBLocation="ZERNIKE.Z_10_6"
+				DataType="float"/>
+			<Element
+				Name="Z_10_8"
+				DBLocation="ZERNIKE.Z_10_8"
+				DataType="float"/>
+			<Element
+				Name="Z_10_10"
+				DBLocation="ZERNIKE.Z_10_10"
+				DataType="float"/>
+			<Element
+				Name="Z_11_1"
+				DBLocation="ZERNIKE.Z_11_1"
+				DataType="float"/>
+			<Element
+				Name="Z_11_3"
+				DBLocation="ZERNIKE.Z_11_3"
+				DataType="float"/>
+			<Element
+				Name="Z_11_5"
+				DBLocation="ZERNIKE.Z_11_5"
+				DataType="float"/>
+			<Element
+				Name="Z_11_7"
+				DBLocation="ZERNIKE.Z_11_7"
+				DataType="float"/>
+			<Element
+				Name="Z_11_9"
+				DBLocation="ZERNIKE.Z_11_9"
+				DataType="float"/>
+			<Element
+				Name="Z_11_11"
+				DBLocation="ZERNIKE.Z_11_11"
+				DataType="float"/>
+			<Element
+				Name="Z_12_0"
+				DBLocation="ZERNIKE.Z_12_0"
+				DataType="float"/>
+			<Element
+				Name="Z_12_2"
+				DBLocation="ZERNIKE.Z_12_2"
+				DataType="float"/>
+			<Element
+				Name="Z_12_4"
+				DBLocation="ZERNIKE.Z_12_4"
+				DataType="float"/>
+			<Element
+				Name="Z_12_6"
+				DBLocation="ZERNIKE.Z_12_6"
+				DataType="float"/>
+			<Element
+				Name="Z_12_8"
+				DBLocation="ZERNIKE.Z_12_8"
+				DataType="float"/>
+			<Element
+				Name="Z_12_10"
+				DBLocation="ZERNIKE.Z_12_10"
+				DataType="float"/>
+			<Element
+				Name="Z_12_12"
+				DBLocation="ZERNIKE.Z_12_12"
+				DataType="float"/>
+			<Element
+				Name="Z_13_1"
+				DBLocation="ZERNIKE.Z_13_1"
+				DataType="float"/>
+			<Element
+				Name="Z_13_3"
+				DBLocation="ZERNIKE.Z_13_3"
+				DataType="float"/>
+			<Element
+				Name="Z_13_5"
+				DBLocation="ZERNIKE.Z_13_5"
+				DataType="float"/>
+			<Element
+				Name="Z_13_7"
+				DBLocation="ZERNIKE.Z_13_7"
+				DataType="float"/>
+			<Element
+				Name="Z_13_9"
+				DBLocation="ZERNIKE.Z_13_9"
+				DataType="float"/>
+			<Element
+				Name="Z_13_11"
+				DBLocation="ZERNIKE.Z_13_11"
+				DataType="float"/>
+			<Element
+				Name="Z_13_13"
+				DBLocation="ZERNIKE.Z_13_13"
+				DataType="float"/>
+			<Element
+				Name="Z_14_0"
+				DBLocation="ZERNIKE.Z_14_0"
+				DataType="float"/>
+			<Element
+				Name="Z_14_2"
+				DBLocation="ZERNIKE.Z_14_2"
+				DataType="float"/>
+			<Element
+				Name="Z_14_4"
+				DBLocation="ZERNIKE.Z_14_4"
+				DataType="float"/>
+			<Element
+				Name="Z_14_6"
+				DBLocation="ZERNIKE.Z_14_6"
+				DataType="float"/>
+			<Element
+				Name="Z_14_8"
+				DBLocation="ZERNIKE.Z_14_8"
+				DataType="float"/>
+			<Element
+				Name="Z_14_10"
+				DBLocation="ZERNIKE.Z_14_10"
+				DataType="float"/>
+			<Element
+				Name="Z_14_12"
+				DBLocation="ZERNIKE.Z_14_12"
+				DataType="float"/>
+			<Element
+				Name="Z_14_14"
+				DBLocation="ZERNIKE.Z_14_14"
+				DataType="float"/>
+			<Element
+				Name="Z_15_1"
+				DBLocation="ZERNIKE.Z_15_1"
+				DataType="float"/>
+			<Element
+				Name="Z_15_3"
+				DBLocation="ZERNIKE.Z_15_3"
+				DataType="float"/>
+			<Element
+				Name="Z_15_5"
+				DBLocation="ZERNIKE.Z_15_5"
+				DataType="float"/>
+			<Element
+				Name="Z_15_7"
+				DBLocation="ZERNIKE.Z_15_7"
+				DataType="float"/>
+			<Element
+				Name="Z_15_9"
+				DBLocation="ZERNIKE.Z_15_9"
+				DataType="float"/>
+			<Element
+				Name="Z_15_11"
+				DBLocation="ZERNIKE.Z_15_11"
+				DataType="float"/>
+			<Element
+				Name="Z_15_13"
+				DBLocation="ZERNIKE.Z_15_13"
+				DataType="float"/>
+			<Element
+				Name="Z_15_15"
+				DBLocation="ZERNIKE.Z_15_15"
+				DataType="float"/>
 		</SemanticType>
 		
 		<SemanticType Name="MaxZernikePolynomialDegree" AppliesTo="I">
@@ -87,8 +370,83 @@
 			  <Input><Scalar InputLocation="Max degree of Zernike Polynomials.MaxDegree"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsArray FormalOutput="Zernike Moments" ConvertToDatatype="single"/></Output>
+			  <Output><Vector DecodeWith="Zernike_Output_Vector"/></Output>
 			</FunctionOutputs>
+			
+			<VectorDecoder ID="Zernike_Output_Vector">
+				<Element Index="1"  OutputLocation="Zernike Moments.Z_0_0"/>
+				<Element Index="2"  OutputLocation="Zernike Moments.Z_1_1"/>
+				<Element Index="3"  OutputLocation="Zernike Moments.Z_2_0"/>
+				<Element Index="4"  OutputLocation="Zernike Moments.Z_2_2"/>
+				<Element Index="5"  OutputLocation="Zernike Moments.Z_3_1"/>
+				<Element Index="6"  OutputLocation="Zernike Moments.Z_3_3"/>
+				<Element Index="7"  OutputLocation="Zernike Moments.Z_4_0"/>
+				<Element Index="8"  OutputLocation="Zernike Moments.Z_4_2"/>
+				<Element Index="9"  OutputLocation="Zernike Moments.Z_4_4"/>
+				<Element Index="10" OutputLocation="Zernike Moments.Z_5_1"/>
+				<Element Index="11" OutputLocation="Zernike Moments.Z_5_3"/>
+				<Element Index="12" OutputLocation="Zernike Moments.Z_5_5"/>
+				<Element Index="13" OutputLocation="Zernike Moments.Z_6_0"/>
+				<Element Index="14" OutputLocation="Zernike Moments.Z_6_2"/>
+				<Element Index="15" OutputLocation="Zernike Moments.Z_6_4"/>
+				<Element Index="16" OutputLocation="Zernike Moments.Z_6_6"/>
+				<Element Index="17" OutputLocation="Zernike Moments.Z_7_1"/>
+				<Element Index="18" OutputLocation="Zernike Moments.Z_7_3"/>
+				<Element Index="19" OutputLocation="Zernike Moments.Z_7_5"/>
+				<Element Index="20" OutputLocation="Zernike Moments.Z_7_7"/>
+				<Element Index="21" OutputLocation="Zernike Moments.Z_8_0"/>
+				<Element Index="22" OutputLocation="Zernike Moments.Z_8_2"/>
+				<Element Index="23" OutputLocation="Zernike Moments.Z_8_4"/>
+				<Element Index="24" OutputLocation="Zernike Moments.Z_8_6"/>
+				<Element Index="25" OutputLocation="Zernike Moments.Z_8_8"/>
+				<Element Index="26" OutputLocation="Zernike Moments.Z_9_1"/>
+				<Element Index="27" OutputLocation="Zernike Moments.Z_9_3"/>
+				<Element Index="28" OutputLocation="Zernike Moments.Z_9_5"/>
+				<Element Index="29" OutputLocation="Zernike Moments.Z_9_7"/>
+				<Element Index="30" OutputLocation="Zernike Moments.Z_9_9"/>
+				<Element Index="31" OutputLocation="Zernike Moments.Z_10_0"/>
+				<Element Index="32" OutputLocation="Zernike Moments.Z_10_2"/>
+				<Element Index="33" OutputLocation="Zernike Moments.Z_10_4"/>
+				<Element Index="34" OutputLocation="Zernike Moments.Z_10_6"/>
+				<Element Index="35" OutputLocation="Zernike Moments.Z_10_8"/>
+				<Element Index="36" OutputLocation="Zernike Moments.Z_10_10"/>
+				<Element Index="37" OutputLocation="Zernike Moments.Z_11_1"/>
+				<Element Index="38" OutputLocation="Zernike Moments.Z_11_3"/>
+				<Element Index="39" OutputLocation="Zernike Moments.Z_11_5"/>
+				<Element Index="40" OutputLocation="Zernike Moments.Z_11_7"/>
+				<Element Index="41" OutputLocation="Zernike Moments.Z_11_9"/>
+				<Element Index="42" OutputLocation="Zernike Moments.Z_11_11"/>
+				<Element Index="43" OutputLocation="Zernike Moments.Z_12_0"/>
+				<Element Index="44" OutputLocation="Zernike Moments.Z_12_2"/>
+				<Element Index="45" OutputLocation="Zernike Moments.Z_12_4"/>
+				<Element Index="46" OutputLocation="Zernike Moments.Z_12_6"/>
+				<Element Index="47" OutputLocation="Zernike Moments.Z_12_8"/>
+				<Element Index="48" OutputLocation="Zernike Moments.Z_12_10"/>
+				<Element Index="49" OutputLocation="Zernike Moments.Z_12_12"/>
+				<Element Index="50" OutputLocation="Zernike Moments.Z_13_1"/>
+				<Element Index="51" OutputLocation="Zernike Moments.Z_13_3"/>
+				<Element Index="52" OutputLocation="Zernike Moments.Z_13_5"/>
+				<Element Index="53" OutputLocation="Zernike Moments.Z_13_7"/>
+				<Element Index="54" OutputLocation="Zernike Moments.Z_13_9"/>
+				<Element Index="55" OutputLocation="Zernike Moments.Z_13_11"/>
+				<Element Index="56" OutputLocation="Zernike Moments.Z_13_13"/>
+				<Element Index="57" OutputLocation="Zernike Moments.Z_14_0"/>
+				<Element Index="58" OutputLocation="Zernike Moments.Z_14_2"/>
+				<Element Index="59" OutputLocation="Zernike Moments.Z_14_4"/>
+				<Element Index="60" OutputLocation="Zernike Moments.Z_14_6"/>
+				<Element Index="61" OutputLocation="Zernike Moments.Z_14_8"/>
+				<Element Index="62" OutputLocation="Zernike Moments.Z_14_10"/>
+				<Element Index="63" OutputLocation="Zernike Moments.Z_14_12"/>
+				<Element Index="64" OutputLocation="Zernike Moments.Z_14_14"/>
+				<Element Index="65" OutputLocation="Zernike Moments.Z_15_1"/>
+				<Element Index="66" OutputLocation="Zernike Moments.Z_15_3"/>
+				<Element Index="67" OutputLocation="Zernike Moments.Z_15_5"/>
+				<Element Index="68" OutputLocation="Zernike Moments.Z_15_7"/>
+				<Element Index="69" OutputLocation="Zernike Moments.Z_15_9"/>
+				<Element Index="70" OutputLocation="Zernike Moments.Z_15_11"/>
+				<Element Index="71" OutputLocation="Zernike Moments.Z_15_13"/>
+				<Element Index="72" OutputLocation="Zernike Moments.Z_15_15"/>
+			</VectorDecoder>
 		  </ExecutionInstructions>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
