@@ -41,47 +41,43 @@ sub createBounds {
 
     $feature = $self->newFeature(lc($location)." 1");
     $output_bounds = $self->
-      newAttribute("Output bounds",
-                   {
-                    x          => $x1,
-                    y          => $y1,
-                    width      => $xw,
-                    height     => $yh,
-                    feature_id => $feature->id()
-                   });
+        newAttributes("Output bounds",
+                      {
+                       X          => $x1,
+                       Y          => $y1,
+                       WIDTH      => $xw,
+                       HEIGHT     => $yh,
+                      });
 
     $feature = $self->newFeature(lc($location)." 2");
     $output_bounds = $self->
-      newAttribute("Output bounds",
-                   {
-                    x          => $x1+$xw,
-                    y          => $y1,
-                    width      => $xw,
-                    height     => $yh,
-                    feature_id => $feature->id()
-                   });
+        newAttributes("Output bounds",
+                      {
+                       X          => $x1+$xw,
+                       Y          => $y1,
+                       WIDTH      => $xw,
+                       HEIGHT     => $yh
+                      });
 
     $feature = $self->newFeature(lc($location)." 3");
     $output_bounds = $self->
-      newAttribute("Output bounds",
-                   {
-                    x          => $x1,
-                    y          => $y1+$yh,
-                    width      => $xw,
-                    height     => $yh,
-                    feature_id => $feature->id()
-                   });
+        newAttributes("Output bounds",
+                      {
+                       X          => $x1,
+                       Y          => $y1+$yh,
+                       WIDTH      => $xw,
+                       HEIGHT     => $yh
+                      });
 
     $feature = $self->newFeature(lc($location)." 4");
     $output_bounds = $self->
-      newAttribute("Output bounds",
-                   {
-                    x          => $x1+$xw,
-                    y          => $y1+$yh,
-                    width      => $xw,
-                    height     => $yh,
-                    feature_id => $feature->id()
-                   });
+        newAttributes("Output bounds",
+                      {
+                       X          => $x1+$xw,
+                       Y          => $y1+$yh,
+                       WIDTH      => $xw,
+                       HEIGHT     => $yh
+                      });
 }
 
 
@@ -90,8 +86,8 @@ sub calculateFeature {
 
     if (defined $self->{_node}->iterator_tag()) {
         my $input_bounds = $self->getFeatureInputs('Input bounds')->[0];
-        $self->createBounds($input_bounds->x(),$input_bounds->y(),
-                            $input_bounds->width(),$input_bounds->height());
+        $self->createBounds($input_bounds->X(),$input_bounds->Y(),
+                            $input_bounds->WIDTH(),$input_bounds->HEIGHT());
     } else {
         my $image = $self->getCurrentImage();
         my $dims = $image->Dimensions();

@@ -86,7 +86,7 @@ int main (int argc, char **argv)
 	if (isCGI)
 		fprintf (stdout,"Content-type: text/plain\n\n");
 
-	fprintf (stdout,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\n");
+	fprintf (stdout,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_X\tCentroid_Y\n");
 	/* This dumps stuff directly on stdout */
 	Get_Image_Stats (path, dims);
 
@@ -191,7 +191,7 @@ unsigned short *shortPtr = (unsigned short *)fileBuf, *shortPtrLast = (unsigned 
 float theVal, logOffset=1.0,min=theStats->min,max=theStats->max;
 float sum_i=theStats->sum_i,sum_i2=theStats->sum_i2,sum_log_i=theStats->sum_log_i;
 float sum_xi=theStats->sum_xi,sum_yi=theStats->sum_yi;
-int x=0,y=theY,z=theZ;
+int x=0,y=theY;
 
 	if (numB == 1) {
 		while (charPtr < charPtrLast) {

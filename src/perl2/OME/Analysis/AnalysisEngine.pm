@@ -144,13 +144,20 @@ formal output of an analysis.
 
 =cut
 
+# __PACKAGE__->set_sql('get_input_attributes',<<'SQL;','Main');
+#   SELECT attr.attribute_id
+#     FROM actual_outputs ao, %s attr
+#    WHERE ao.analysis_id = ?
+#      AND ao.formal_output_id = ?
+#      AND attr.actual_output_id = ao.actual_output_id
+# ORDER BY attr.attribute_id
+# SQL;
+
 __PACKAGE__->set_sql('get_input_attributes',<<'SQL;','Main');
-  SELECT attr.attribute_id
-    FROM actual_outputs ao, %s attr
-   WHERE ao.analysis_id = ?
-     AND ao.formal_output_id = ?
-     AND attr.actual_output_id = ao.actual_output_id
-ORDER BY attr.attribute_id
+  SELECT dt.attribute_id
+    FROM %s dt
+   WHERE dt.analysis_id = ?
+ORDER BY dt.attribute_id
 SQL;
 
 =head2 sql_get_input_image_attributes
@@ -165,14 +172,22 @@ keyed to a specific image.
 
 =cut
 
+# __PACKAGE__->set_sql('get_input_image_attributes',<<'SQL;','Main');
+#   SELECT attr.attribute_id
+#     FROM actual_outputs ao, %s attr
+#    WHERE ao.analysis_id = ?
+#      AND ao.formal_output_id = ?
+#      AND attr.image_id = ?
+#      AND attr.actual_output_id = ao.actual_output_id
+# ORDER BY attr.attribute_id
+# SQL;
+
 __PACKAGE__->set_sql('get_input_image_attributes',<<'SQL;','Main');
-  SELECT attr.attribute_id
-    FROM actual_outputs ao, %s attr
-   WHERE ao.analysis_id = ?
-     AND ao.formal_output_id = ?
-     AND attr.image_id = ?
-     AND attr.actual_output_id = ao.actual_output_id
-ORDER BY attr.attribute_id
+  SELECT dt.attribute_id
+    FROM %s dt
+   WHERE dt.analysis_id = ?
+     AND dt.image_id = ?
+ORDER BY dt.attribute_id
 SQL;
 
 =head2 sql_get_input_feature_attributes
@@ -188,15 +203,24 @@ each attribute belongs to.)
 
 =cut
 
+# __PACKAGE__->set_sql('get_input_feature_attributes',<<'SQL;','Main');
+#   SELECT attr.attribute_id
+#     FROM actual_outputs ao, features f, %s attr
+#    WHERE ao.analysis_id = ?
+#      AND ao.formal_output_id = ?
+#      AND f.image_id = ?
+#      AND attr.feature_id = f.feature_id
+#      AND attr.actual_output_id = ao.actual_output_id
+# ORDER BY attr.attribute_id
+# SQL;
+
 __PACKAGE__->set_sql('get_input_feature_attributes',<<'SQL;','Main');
-  SELECT attr.attribute_id
-    FROM actual_outputs ao, features f, %s attr
-   WHERE ao.analysis_id = ?
-     AND ao.formal_output_id = ?
+  SELECT dt.attribute_id
+    FROM %s dt, features f
+   WHERE dt.analysis_id = ?
+     AND dt.feature_id = f.feature_id
      AND f.image_id = ?
-     AND attr.feature_id = f.feature_id
-     AND attr.actual_output_id = ao.actual_output_id
-ORDER BY attr.attribute_id
+ORDER BY dt.attribute_id
 SQL;
 
 =head2 sql_get_input_feature_attributes_by_feature
@@ -212,15 +236,23 @@ each attribute belongs to.)
 
 =cut
 
+# __PACKAGE__->set_sql('get_input_feature_attributes_by_feature',<<'SQL;','Main');
+#   SELECT attr.attribute_id
+#     FROM actual_outputs ao, features f, %s attr
+#    WHERE ao.analysis_id = ?
+#      AND ao.formal_output_id = ?
+#      AND f.feature_id in %s
+#      AND attr.feature_id = f.feature_id
+#      AND attr.actual_output_id = ao.actual_output_id
+# ORDER BY attr.attribute_id
+# SQL;
+
 __PACKAGE__->set_sql('get_input_feature_attributes_by_feature',<<'SQL;','Main');
-  SELECT attr.attribute_id
-    FROM actual_outputs ao, features f, %s attr
-   WHERE ao.analysis_id = ?
-     AND ao.formal_output_id = ?
-     AND f.feature_id in %s
-     AND attr.feature_id = f.feature_id
-     AND attr.actual_output_id = ao.actual_output_id
-ORDER BY attr.attribute_id
+  SELECT dt.attribute_id
+    FROM %s dt
+   WHERE dt.analysis_id = ?
+     AND dt.feature_id in %s
+ORDER BY dt.attribute_id
 SQL;
 
 =head2 sql_get_input_feature_tags
@@ -235,14 +267,22 @@ to those keyed to a specific image.
 
 =cut
 
+# __PACKAGE__->set_sql('get_input_feature_tags',<<'SQL;','Main');
+#   SELECT DISTINCT f.tag
+#     FROM actual_outputs ao, features f, %s attr
+#    WHERE ao.analysis_id = ?
+#      AND ao.formal_output_id = ?
+#      AND f.image_id = ?
+#      AND attr.feature_id = f.feature_id
+#      AND attr.actual_output_id = ao.actual_output_id
+# SQL;
+
 __PACKAGE__->set_sql('get_input_feature_tags',<<'SQL;','Main');
   SELECT DISTINCT f.tag
-    FROM actual_outputs ao, features f, %s attr
-   WHERE ao.analysis_id = ?
-     AND ao.formal_output_id = ?
+    FROM %s dt, features f
+   WHERE dt.analysis_id = ?
      AND f.image_id = ?
-     AND attr.feature_id = f.feature_id
-     AND attr.actual_output_id = ao.actual_output_id
+     AND dt.feature_id = f.feature_id
 SQL;
 
 =head2 sql_get_input_features
@@ -257,14 +297,22 @@ attributes returned to those keyed to a specific image.
 
 =cut
 
+# __PACKAGE__->set_sql('get_input_features',<<'SQL;','Main');
+#   SELECT DISTINCT f.feature_id, f.tag
+#     FROM actual_outputs ao, features f, %s attr
+#    WHERE ao.analysis_id = ?
+#      AND ao.formal_output_id = ?
+#      AND f.image_id = ?
+#      AND attr.feature_id = f.feature_id
+#      AND attr.actual_output_id = ao.actual_output_id
+# SQL;
+
 __PACKAGE__->set_sql('get_input_features',<<'SQL;','Main');
   SELECT DISTINCT f.feature_id, f.tag
-    FROM actual_outputs ao, features f, %s attr
-   WHERE ao.analysis_id = ?
-     AND ao.formal_output_id = ?
+    FROM %s dt, features f
+   WHERE dt.analysis_id = ?
      AND f.image_id = ?
-     AND attr.feature_id = f.feature_id
-     AND attr.actual_output_id = ao.actual_output_id
+     AND dt.feature_id = f.feature_id
 SQL;
 
 =head2 sql_get_input_link
@@ -294,11 +342,18 @@ analysis node.
 
 =cut
 
-__PACKAGE__->set_sql('get_actual_output_from_input',<<'SQL;','Main');
-SELECT ai.actual_output_id
-  FROM actual_inputs ai
- WHERE ai.analysis_id = ?
-   AND ai.formal_input_id = ?
+# __PACKAGE__->set_sql('get_actual_output_from_input',<<'SQL;','Main');
+# SELECT ai.actual_output_id
+#   FROM actual_inputs ai
+#  WHERE ai.analysis_id = ?
+#    AND ai.formal_input_id = ?
+# SQL;
+
+__PACKAGE__->set_sql('get_analysis_from_input',<<'SQL;','Main');
+  SELECT ai.input_analysis_id
+    FROM actual_inputs ai
+   WHERE ai.analysis_id = ?
+     AND ai.formal_input_id = ?
 SQL;
 
 =head2 sql_get_actual_output
@@ -311,12 +366,12 @@ analysis run.
 
 =cut
 
-__PACKAGE__->set_sql('get_actual_output',<<'SQL;','Main');
-SELECT ao.actual_output_id
-  FROM actual_outputs ao
- WHERE ao.analysis_id = ?
-   AND ao.formal_output_id = ?
-SQL;
+# __PACKAGE__->set_sql('get_actual_output',<<'SQL;','Main');
+# SELECT ao.actual_output_id
+#   FROM actual_outputs ao
+#  WHERE ao.analysis_id = ?
+#    AND ao.formal_output_id = ?
+# SQL;
 
 =head2 sql_get_formal_inputs_by_node
 
@@ -330,11 +385,11 @@ Returns all of the formal inputs of a given granularity for a node.
 __PACKAGE__->set_sql('get_formal_inputs_by_node',<<'SQL;','Main');
   SELECT fi.formal_input_id
     FROM analysis_view_nodes avn,
-         formal_inputs fi, datatypes dt
+         formal_inputs fi, attribute_types at
    WHERE avn.analysis_view_node_id = ?
-     AND dt.attribute_type = ?
+     AND at.granularity = ?
      AND avn.program_id = fi.program_id
-     AND fi.datatype_id = dt.datatype_id
+     AND fi.attribute_type_id = at.attribute_type_id
 ORDER BY fi.formal_input_id
 SQL;
 
@@ -350,11 +405,11 @@ Returns all of the formal outputs of a given granularity for a node.
 __PACKAGE__->set_sql('get_formal_outputs_by_node',<<'SQL;','Main');
   SELECT fo.formal_output_id
     FROM analysis_view_nodes avn,
-         formal_outputs fo, datatypes dt
+         formal_outputs fo, attribute_types at
    WHERE avn.analysis_view_node_id = ?
-     AND dt.attribute_type = ?
+     AND at.granularity = ?
      AND avn.program_id = fo.program_id
-     AND fo.datatype_id = dt.datatype_id
+     AND fo.attribute_type_id = at.attribute_type_id
 ORDER BY fo.formal_output_id
 SQL;
 
@@ -371,11 +426,11 @@ execution.
 __PACKAGE__->set_sql('get_formal_inputs_by_analysis',<<'SQL;','Main');
   SELECT fi.formal_input_id
     FROM analyses a,
-         formal_inputs fi, datatypes dt
+         formal_inputs fi, attribute_types at
    WHERE a.analysis_id = ?
-     AND dt.attribute_type = ?
+     AND at.granularity = ?
      AND a.program_id = fi.program_id
-     AND fi.datatype_id = dt.datatype_id
+     AND fi.attribute_type_id = at.attribute_type_id
 ORDER BY fi.formal_input_id
 SQL;
 
@@ -391,11 +446,11 @@ Returns all of the data links of a given granularity for a node.
 __PACKAGE__->set_sql('get_input_links_by_node',<<'SQL;','Main');
   SELECT avl.analysis_view_link_id
     FROM analysis_view_links avl,
-         datatypes dt, formal_inputs fi
+         attribute_types at, formal_inputs fi
    WHERE avl.to_node = ?
-     AND dt.attribute_type = ?
+     AND at.granularity = ?
      AND avl.to_input = fi.formal_input_id
-     AND fi.datatype_id = dt.datatype_id
+     AND fi.attribute_type_id = at.attribute_type_id
 ORDER BY fi.formal_input_id
 SQL;
 
@@ -765,6 +820,22 @@ sub findModuleHandler {
         $dependence{$curr_nodeID} = 'I';
     }
 
+    sub __getDataTables {
+        my ($formal_input) = @_;
+
+        my $attr_type = $formal_input->attribute_type();
+
+        my %data_tables;
+        foreach my $attr_column ($attr_type->attribute_columns()) {
+            my $data_column = $attr_column->data_column();
+            my $data_table = $data_column->data_table();
+            my $table_name = $data_table->table_name();
+            $data_tables{$table_name} = $data_table;
+        }
+
+        return keys %data_tables;
+    }
+
     # The following routines are used to check to see if we need to
     # execute the current module, or if it can be reused.
     #
@@ -810,18 +881,20 @@ sub findModuleHandler {
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
-            my $attr_table = $formal_input->datatype()->table_name();
 
-            my $formal_output = $input_link->from_output();
-            my $pred_node = $input_link->from_node();
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                my $pred_node = $input_link->from_node();
 
-            $sth = $self->sql_get_input_attributes($attr_table);
-            $sth->execute(__getAnalysis($pred_node->id())->id(),
-                          $formal_output->id());
+                $sth = $self->sql_get_input_attributes($table_name);
+                $sth->execute(__getAnalysis($pred_node->id())->id());
 
-            while (my $row = $sth->fetch) {
-                $paramString .= $row->[0]." ";
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
             }
+
+            $paramString .= "$_ "
+                foreach sort keys %attributes;
             $paramString .= ") ";
         }
 
@@ -847,25 +920,26 @@ sub findModuleHandler {
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
-            my $attr_table = $formal_input->datatype()->table_name();
 
-            my $formal_output = $input_link->from_output();
-            my $pred_node = $input_link->from_node();
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                my $pred_node = $input_link->from_node();
 
-            if ($dependence{$curr_nodeID} eq 'D') {
-                $sth = $self->sql_get_input_attributes($attr_table);
-                $sth->execute(__getAnalysis($pred_node->id())->id(),
-                              $formal_output->id());
-            } else {
-                $sth = $self->sql_get_input_image_attributes($attr_table);
-                $sth->execute(__getAnalysis($pred_node->id())->id(),
-                              $formal_output->id(),
-                              $curr_imageID);
+                if ($dependence{$curr_nodeID} eq 'D') {
+                    $sth = $self->sql_get_input_attributes($table_name);
+                    $sth->execute(__getAnalysis($pred_node->id())->id());
+                } else {
+                    $sth = $self->sql_get_input_image_attributes($table_name);
+                    $sth->execute(__getAnalysis($pred_node->id())->id(),
+                                  $curr_imageID);
+                }
+
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
             }
 
-            while (my $row = $sth->fetch) {
-                $paramString .= $row->[0]." ";
-            }
+            $paramString .= "$_ "
+                foreach sort keys %attributes;
             $paramString .= ") ";
         }
 
@@ -888,25 +962,26 @@ sub findModuleHandler {
 
             my $formal_input = $factory->loadObject("OME::Program::FormalInput",
                                                     $formal_inputID);
-            my $attr_table = $formal_input->datatype()->table_name();
 
-            my $formal_output = $input_link->from_output();
-            my $pred_node = $input_link->from_node();
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                my $pred_node = $input_link->from_node();
 
-            if ($dependence{$curr_nodeID} eq 'D') {
-                $sth = $self->sql_get_input_attributes($attr_table);
-                $sth->execute(__getAnalysis($pred_node->id())->id(),
-                              $formal_output->id());
-            } else {
-                $sth = $self->sql_get_input_feature_attributes($attr_table);
-                $sth->execute(__getAnalysis($pred_node->id())->id(),
-                              $formal_output->id(),
-                              $curr_imageID);
+                if ($dependence{$curr_nodeID} eq 'D') {
+                    $sth = $self->sql_get_input_attributes($table_name);
+                    $sth->execute(__getAnalysis($pred_node->id())->id());
+                } else {
+                    $sth = $self->sql_get_input_feature_attributes($table_name);
+                    $sth->execute(__getAnalysis($pred_node->id())->id(),
+                                  $curr_imageID);
+                }
+
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
             }
 
-            while (my $row = $sth->fetch) {
-                $paramString .= $row->[0]." ";
-            }
+            $paramString .= "$_ "
+                foreach sort keys %attributes;
             $paramString .= ") ";
         }
 
@@ -935,11 +1010,11 @@ sub findModuleHandler {
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
 
-            $sth = $self->sql_get_actual_output_from_input();
+            $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
-            my $actual_output = __fetchobj("OME::Analysis::ActualOutput",$sth);
+            my $input_analysis = __fetchobj("OME::Analysis",$sth);
 
-            if (!defined $actual_output) {
+            if (!defined $input_analysis) {
                 $past_paramString .= ") ";
                 next;
             }
@@ -947,15 +1022,18 @@ sub findModuleHandler {
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
-            my $attr_table = $formal_input->datatype()->table_name();
 
-            $sth = $self->sql_get_input_attributes($attr_table);
-            $sth->execute($actual_output->analysis()->id(),
-                          $actual_output->formal_output()->id());
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                $sth = $self->sql_get_input_attributes($table_name);
+                $sth->execute($input_analysis->id());
 
-            while (my $row = $sth->fetch) {
-                $past_paramString .= $row->[0]." ";
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
             }
+
+            $past_paramString .= "$_ "
+                foreach sort keys %attributes;
             $past_paramString .= ") ";
         }
 
@@ -967,11 +1045,11 @@ sub findModuleHandler {
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
 
-            $sth = $self->sql_get_actual_output_from_input();
+            $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
-            my $actual_output = __fetchobj("OME::Analysis::ActualOutput",$sth);
+            my $input_analysis = __fetchobj("OME::Analysis",$sth);
 
-            if (!defined $actual_output) {
+            if (!defined $input_analysis) {
                 $past_paramString .= ") ";
                 next;
             }
@@ -979,22 +1057,24 @@ sub findModuleHandler {
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
-            my $attr_table = $formal_input->datatype()->table_name();
 
-            if ($dependence{$curr_nodeID} eq 'D') {
-                $sth = $self->sql_get_input_attributes($attr_table);
-                $sth->execute($actual_output->analysis()->id(),
-                              $actual_output->formal_output()->id());
-            } else {
-                $sth = $self->sql_get_input_image_attributes($attr_table);
-                $sth->execute($actual_output->analysis()->id(),
-                              $actual_output->formal_output()->id(),
-                              $curr_imageID);
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                if ($dependence{$curr_nodeID} eq 'D') {
+                    $sth = $self->sql_get_input_attributes($table_name);
+                    $sth->execute($input_analysis->id());
+                } else {
+                    $sth = $self->sql_get_input_image_attributes($table_name);
+                    $sth->execute($input_analysis->id(),
+                                  $curr_imageID);
+                }
+
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
             }
 
-            while (my $row = $sth->fetch) {
-                $past_paramString .= $row->[0]." ";
-            }
+            $past_paramString .= "$_ "
+                foreach sort keys %attributes;
             $past_paramString .= ") ";
         }
 
@@ -1006,33 +1086,35 @@ sub findModuleHandler {
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
 
-            $sth = $self->sql_get_actual_output_from_input();
+            $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
-            my $actual_output = __fetchobj("OME::Analysis::ActualOutput",$sth);
+            my $input_analysis = __fetchobj("OME::Analysis",$sth);
 
-            if (!defined $actual_output) {
+            if (!defined $input_analysis) {
                 $past_paramString .= ") ";
                 next;
             }
 
             my $formal_input = $factory->loadObject("OME::Program::FormalInput",
                                                     $formal_inputID);
-            my $attr_table = $formal_input->datatype()->table_name();
 
-            if ($dependence{$curr_nodeID} eq 'D') {
-                $sth = $self->sql_get_input_attributes($attr_table);
-                $sth->execute($actual_output->analysis()->id(),
-                              $actual_output->formal_output()->id());
-            } else {
-                $sth = $self->sql_get_input_feature_attributes($attr_table);
-                $sth->execute($actual_output->analysis()->id(),
-                              $actual_output->formal_output()->id(),
-                              $curr_imageID);
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                if ($dependence{$curr_nodeID} eq 'D') {
+                    $sth = $self->sql_get_input_attributes($table_name);
+                    $sth->execute($input_analysis->id());
+                } else {
+                    $sth = $self->sql_get_input_feature_attributes($table_name);
+                    $sth->execute($input_analysis->id(),
+                                  $curr_imageID);
+                }
+
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
             }
 
-            while (my $row = $sth->fetch) {
-                $past_paramString .= $row->[0]." ";
-            }
+            $past_paramString .= "$_ "
+                foreach sort keys %attributes;
             $past_paramString .= ") ";
         }
 
@@ -1058,28 +1140,23 @@ sub findModuleHandler {
 
         foreach my $input_link (@curr_dataset_inputs,@curr_image_inputs,@curr_feature_inputs) {
             my $formal_input = $input_link->to_input();
-            my $attr_table = $formal_input->datatype()->table_name();
 
             #print STDERR "****   ".$formal_input->name()."\n";
 
             my $formal_output = $input_link->from_output();
             my $pred_node = $input_link->from_node();
+            my $pred_analysis = __getAnalysis($pred_node->id());
 
             #print STDERR "****   ".$pred_node->id()."\n";
-
-            my $sth = $self->sql_get_actual_output();
-            $sth->execute(__getAnalysis($pred_node->id())->id(),
-                          $formal_output->id());
-            my $actual_outputID = __fetchone($sth);
 
             #print STDERR "****     $actual_outputID\n";
 
             my $actual_input = $factory->
               newObject("OME::Analysis::ActualInput",
                         {
-                         analysis         => $analysis,
-                         formal_input_id  => $formal_input->id(),
-                         actual_output_id => $actual_outputID
+                         analysis          => $analysis,
+                         formal_input_id   => $formal_input->id(),
+                         input_analysis_id => $pred_analysis->id()
                         });
 
             #print STDERR "****     ".$actual_input->id()."\n";
@@ -1091,16 +1168,16 @@ sub findModuleHandler {
 
         my %actual_outputs;
 
-        my $formal_outputs = $analysis->program()->outputs();
-        while (my $formal_output = $formal_outputs->next()) {
-            my $actual_output = $factory->
-              newObject("OME::Analysis::ActualOutput",
-                        {
-                         analysis      => $analysis,
-                         formal_output => $formal_output
-                        });
-            $actual_outputs{$formal_output->name()} = $actual_output;
-        }
+#         my $formal_outputs = $analysis->program()->outputs();
+#         while (my $formal_output = $formal_outputs->next()) {
+#             my $actual_output = $factory->
+#               newObject("OME::Analysis::ActualOutput",
+#                         {
+#                          analysis      => $analysis,
+#                          formal_output => $formal_output
+#                         });
+#             $actual_outputs{$formal_output->name()} = $actual_output;
+#         }
 
         return \%actual_outputs;
     }
@@ -1153,14 +1230,22 @@ sub findModuleHandler {
                 print STDERR "unfinished.\n";
                 next FIND_MATCH;
             }
-            if (defined $this_analysisID && 
+            if (defined $this_analysisID &&
                 $past_analysis->id() eq $this_analysisID) {
                 print STDERR "current analysis.\n";
                 next FIND_MATCH;
             }
+            my $image_map = $factory->
+                findObject("OME::Image::DatasetMap",
+                           image_id   => $curr_imageID,
+                           dataset_id => $past_analysis->dataset()->id());
+            if (!defined $image_map) {
+                print STDERR "didn't execute against this image.\n";
+                next FIND_MATCH;
+            }
 
             my $past_paramString = __calculatePastInputTag($past_analysis);
-            #print STDERR "$space    Found $past_paramString\n";
+            print STDERR "\n$space    Found $past_paramString ";
 
             if ($past_paramString eq $paramString) {
                 $match = 1;
@@ -1241,22 +1326,25 @@ sub findModuleHandler {
                 $sth->execute($this_nodeID,'F');
                 foreach my $input_link (@{__fetchobjs("OME::AnalysisView::Link",$sth)}) {
                     my $formal_input = $input_link->to_input();
-                    my $attr_table = $formal_input->datatype()->table_name();
+                    #my $attr_table = $formal_input->datatype()->table_name();
 
+                    my %tags;
                     my $formal_output = $input_link->from_output();
                     my $pred_node = $input_link->from_node();
                     my $pred_nodeID = $pred_node->id();
                     my $pred_iterator = $pred_node->iterator_tag();
 
-                    $sth = $self->sql_get_input_feature_tags($attr_table);
-                    $sth->execute(__getAnalysis($pred_node->id())->id(),
-                                  $formal_output->id(),
-                                  $curr_imageID);
-                    my $tags = __fetchall($sth);
+                    foreach my $attr_table (__getDataTables($formal_input)) {
+                        $sth = $self->sql_get_input_feature_tags($attr_table);
+                        $sth->execute(__getAnalysis($pred_node->id())->id(),
+                                      $curr_imageID);
+                        $tags{$_} = 1
+                            foreach @{__fetchall($sth)};
+                    }
 
                     $pred_iterator = '[Image]' unless (defined $pred_iterator);
 
-                    foreach my $tag (@$tags) {
+                    foreach my $tag (keys %tags) {
                         # Each of the tags that were found must either
                         # a) match the iterator tag of the predecessor
                         # node, or b) must be a child of the
@@ -1377,7 +1465,7 @@ sub findModuleHandler {
                 join(", ",@tables)." WHERE ".
                   join(" AND ",@joins);
 
-            #print STDERR "$sql\n";
+            print STDERR "$sql\n";
 
             __PACKAGE__->set_sql($filter_method,$sql,'Main');
             $sqls_defined{$filter_method} = 1;
@@ -1392,19 +1480,21 @@ sub findModuleHandler {
 
         foreach my $input_link (@curr_feature_inputs) {
             my $formal_input = $input_link->to_input();
-            my $attr_table = $formal_input->datatype()->table_name();
+            #my $attr_table = $formal_input->datatype()->table_name();
 
             my $formal_output = $input_link->from_output();
             my $pred_node = $input_link->from_node();
 
-            my $sth = $self->sql_get_input_features($attr_table);
-            $sth->execute(__getAnalysis($pred_node->id())->id(),
-                          $formal_output->id(),
-                          $curr_imageID);
+            foreach my $attr_table (__getDataTables($formal_input)) {
+                my $sth = $self->sql_get_input_features($attr_table);
+                $sth->execute(__getAnalysis($pred_node->id())->id(),
+                              $curr_imageID);
 
-            while (my $row = $sth->fetch) {
-                my ($featureID,$tag) = @$row;
-                push @{$input_features{$tag}}, $featureID;
+                while (my $row = $sth->fetch) {
+                    my ($featureID,$tag) = @$row;
+                    #print STDERR "--- $featureID $tag\n";
+                    $input_features{$tag}->{$featureID} = 1;
+                }
             }
         }
 
@@ -1413,12 +1503,13 @@ sub findModuleHandler {
 
         foreach my $tag (keys %input_features) {
             my $features = $input_features{$tag};
+            my @features = keys %$features;
 
-            if (scalar(@$features) > 0) {
+            if (scalar(@features) > 0) {
                 # Build up the SQL statement to find the iterator tags.
                 my $sql = __buildIteratorSQL($iterator,$tag);
 
-                my $sth = $self->$sql("in (".join(",",@$features).")");
+                my $sth = $self->$sql("in (".join(",",@features).")");
                 $sth->execute();
                 my $features = __fetchall($sth);
 
@@ -1441,20 +1532,26 @@ sub findModuleHandler {
 
         # the curr_feature is the iterator feature
         my $formal_input = $input_link->to_input();
-        my $attr_table = $formal_input->datatype()->table_name();
+        #my $attr_table = $formal_input->datatype()->table_name();
 
         my $formal_output = $input_link->from_output();
         my $pred_node = $input_link->from_node();
 
-        my $sth = $self->sql_get_input_feature_tags($attr_table);
-        $sth->execute(__getAnalysis($pred_node->id())->id(),
-                      $formal_output->id(),
-                      $curr_imageID);
-        my $tags = __fetchall($sth);
+        my %tags;
+        my $sth;
+
+        foreach my $attr_table (__getDataTables($formal_input)) {
+            my $sth = $self->sql_get_input_feature_tags($attr_table);
+            $sth->execute(__getAnalysis($pred_node->id())->id(),
+                          $curr_imageID);
+
+            $tags{$_} = 1
+                foreach @{__fetchall($sth)};
+        }
 
         my %input_features;
 
-        foreach my $tag (@$tags) {
+        foreach my $tag (keys %tags) {
             #print STDERR "$tag!!!!!\n";
             my $sql = __buildIteratorSQL($tag,$iterator);
             #print STDERR "  $sql\n";
@@ -1474,13 +1571,18 @@ sub findModuleHandler {
 
         my %attributes;
 
-        $sth = $self->
-          sql_get_input_feature_attributes_by_feature($attr_table,
-                                                      "($feature_IDs)");
-        $sth->execute(__getAnalysis($pred_node->id())->id(),
-                     $formal_output->id());
+        foreach my $attr_table (__getDataTables($formal_input)) {
+            $sth = $self->
+                sql_get_input_feature_attributes_by_feature($attr_table,
+                                                            "($feature_IDs)");
+            $sth->execute(__getAnalysis($pred_node->id())->id());
 
-        return __fetchall($sth);
+            $attributes{$_} = 1
+                foreach @{__fetchall($sth)};
+        }
+        my @result = keys %attributes;
+
+        return \@result;
     }
 
     sub __processAllFeatures {
@@ -1527,13 +1629,13 @@ sub findModuleHandler {
         foreach my $input_link (@curr_feature_inputs) {
             my $formal_input = $input_link->to_input();
             #print STDERR "  Link ".$input_link." ".$formal_input->name()."\n";
-            my $attr_table = $formal_input->datatype()->table_name();
+            my $attr_type_name = $formal_input->attribute_type()->name();
             my @attributes = @{__findFeatureAttributes($input_link)};
 
             # Turn the attribute ID's into attribute objects.
             foreach (@attributes) {
                 #print " -- $_ \n";
-                $_ = $factory->loadAttribute($attr_table,$_);
+                $_ = $factory->loadAttribute($attr_type_name,$_);
                 #print " -- $_ \n";
             }
 
@@ -1567,25 +1669,33 @@ sub findModuleHandler {
     }
 
     sub __findInputAttributes {
-        my ($input_link,$prefix,$sql_method,$extra_input) = @_;
+        my ($input_link,$prefix,$sql_method,$extra_input,$no_load) = @_;
 
         my $formal_input = $input_link->to_input();
-        my $attr_table = $formal_input->datatype()->table_name();
+        my $attr_type_name = $formal_input->attribute_type()->name();
 
         my $formal_output = $input_link->from_output();
         my $pred_node = $input_link->from_node();
+        my $sth;
 
-        my $sth = $self->$sql_method($attr_table);
-        $sth->execute(__getAnalysis($pred_node->id())->id(),
-                      $formal_output->id(),
-                      $extra_input);
+        foreach my $attr_table (__getDataTables($formal_input)) {
+            $sth = $self->$sql_method($attr_table);
+            $sth->execute(__getAnalysis($pred_node->id())->id(),
+                          $extra_input);
+        }
 
 
         my @attribute_list;
-        while (my $row = $sth->fetch()) {
-            push @attribute_list, $factory->
-              loadAttribute($attr_table,
-                            $row->[0]);
+        if ($no_load) {
+            while (my $row = $sth->fetch()) {
+                push @attribute_list, $row->[0];
+            }
+        } else {
+            while (my $row = $sth->fetch()) {
+                push @attribute_list, $factory->
+                    loadAttribute($attr_type_name,
+                                  $row->[0]);
+            }
         }
 
         print STDERR $prefix.$formal_input->name()." (".
@@ -1753,7 +1863,7 @@ sub findModuleHandler {
                     print STDERR " (".$new_analysis->id().")\n";
                     __createActualInputs($new_analysis);
                     my $actual_outputs = __createActualOutputs($new_analysis);
-                    $curr_module->startAnalysis($actual_outputs);
+                    $curr_module->startAnalysis($new_analysis);
                 }
 
                 print STDERR "    startDataset\n";
@@ -1799,7 +1909,7 @@ sub findModuleHandler {
                             print STDERR " (".$new_analysis->id().")\n";
                             __createActualInputs($new_analysis);
                             my $actual_outputs = __createActualOutputs($new_analysis);
-                            $curr_module->startAnalysis($actual_outputs);
+                            $curr_module->startAnalysis($new_analysis);
                         } else {
                             __assignAnalysis($new_analysis,0);
                         }
@@ -1891,13 +2001,13 @@ sub findModuleHandler {
                 # Mark this node as finished, and flag that we need
                 # another fixed point iteration.
 
-                $analysis_execution->dbi_commit();
-
                 if (defined $new_analysis) {
                     print STDERR "    Marking database state\n";
                     $new_analysis->status('FINISHED');
                     $new_analysis->commit();
                 }
+
+                $analysis_execution->dbi_commit();
 
                 print STDERR "    Marking state\n";
                 $node_states{$curr_nodeID} = FINISHED_STATE;

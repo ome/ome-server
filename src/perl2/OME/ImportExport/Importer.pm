@@ -47,6 +47,9 @@ use strict;
 use OME::ImportExport::Import_reader;
 use Carp;
 use File::Basename;
+use OME::Tasks::AnalysisEngine;
+use OME::Image;
+use OME::Dataset;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -522,6 +525,42 @@ sub store_wavelength_info {
 # image_id | wavenumber | timepoint | deltatime | min | max | mean | geomean | sigma | centroid_x | centroid_y | centroid_z
 
 sub store_xyz_info {
+    my ($self,$session,$href) = @_;
+
+    my $factory = $session->Factory();
+    my $view = $factory->findObject("OME::AnalysisView",name => 'Image import analyses');
+    if (!defined $view) {
+        carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+        return "";
+    }
+
+    # Right now this creates one new dataset for each image loaded in.
+    # This is a horrible idea, and should be changed.
+    my $image = $self->{'image'};
+    my $dataset = $factory->
+        newObject("OME::Dataset",
+                  {
+                   name => 'Dummy import dataset',
+                   description => '',
+                   locked => 'true',
+                   owner => $session->User(),
+                   group => undef
+                  });
+    my $image_map = $factory->
+        newObject("OME::Image::DatasetMap",
+                  {
+                   image => $image,
+                   dataset => $dataset
+                  });
+
+    my $engine = OME::Tasks::AnalysisEngine->new();
+    eval {
+        $engine->executeAnalysisView($session,$view,{},$dataset);
+    };
+    return $@? $@ : "";
+}
+
+sub store_xyz_info_old {
     my ($self, $session, $href) = @_;
     return "";
     my $image = $self->{'image'};

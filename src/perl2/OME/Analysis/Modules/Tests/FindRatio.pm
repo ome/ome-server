@@ -41,9 +41,8 @@ sub calculateFeature {
     use integer;
 
     my $ratio_attribute = $self->
-      newAttribute("Golgi-mito ratio",
-                   {
-                    feature_id => $self->getCurrentFeature(),
-                    ratio      => $ratio
-                   });
+      newAttributes("Golgi-mito ratio",
+                    {
+                     RATIO => $ratio
+                    });
 }

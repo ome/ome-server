@@ -56,18 +56,18 @@ use base qw(OME::DBObject);
 use fields qw(_attribute);
 
 __PACKAGE__->AccessorNames({
-    analysis_id      => 'analysis',
-    formal_input_id  => 'formal_input',
-    actual_output_id => 'actual_output'
+    analysis_id       => 'analysis',
+    formal_input_id   => 'formal_input',
+    input_analysis_id => 'input_analysis'
     });
 
 __PACKAGE__->table('actual_inputs');
 __PACKAGE__->sequence('actual_input_seq');
 __PACKAGE__->columns(Primary => qw(actual_input_id));
-__PACKAGE__->columns(Essential => qw(actual_output_id analysis_id formal_input_id));
+__PACKAGE__->columns(Essential => qw(input_analysis_id analysis_id formal_input_id));
 __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 __PACKAGE__->hasa('OME::Program::FormalInput' => qw(formal_input_id));
-__PACKAGE__->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
+__PACKAGE__->hasa('OME::Analysis' => qw(input_analysis_id));
 
 
 
@@ -103,26 +103,26 @@ sub attribute {
 }
 
 
-package OME::Analysis::ActualOutput;
+# package OME::Analysis::ActualOutput;
 
-use strict;
-our $VERSION = '1.0';
+# use strict;
+# our $VERSION = '1.0';
 
-use OME::DBObject;
-require OME::Program;
-use base qw(OME::DBObject);
+# use OME::DBObject;
+# require OME::Program;
+# use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    analysis_id      => 'analysis',
-    formal_output_id => 'formal_output'
-    });
+# __PACKAGE__->AccessorNames({
+#     analysis_id      => 'analysis',
+#     formal_output_id => 'formal_output'
+#     });
 
-__PACKAGE__->table('actual_outputs');
-__PACKAGE__->sequence('actual_output_seq');
-__PACKAGE__->columns(Primary => qw(actual_output_id));
-__PACKAGE__->columns(Essential => qw(analysis_id formal_output_id));
-__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
-__PACKAGE__->hasa('OME::Program::FormalOutput' => qw(formal_output_id));
+# __PACKAGE__->table('actual_outputs');
+# __PACKAGE__->sequence('actual_output_seq');
+# __PACKAGE__->columns(Primary => qw(actual_output_id));
+# __PACKAGE__->columns(Essential => qw(analysis_id formal_output_id));
+# __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
+# __PACKAGE__->hasa('OME::Program::FormalOutput' => qw(formal_output_id));
 
 
 

@@ -80,27 +80,44 @@ sub precalculateImage {
 
     print $input "$dimString\nWaveStats=\n";
 
-    my $attribute_list = $self->getImageInputs('Stack info');
+    my $mean_list = $self->getImageInputs('Stack mean');
+    my $geomean_list = $self->getImageInputs('Stack geomean');
+    my $sigma_list = $self->getImageInputs('Stack sigma');
+    my $min_list = $self->getImageInputs('Stack minimum');
+    my $max_list = $self->getImageInputs('Stack maximum');
+
+    die "Bad input lists"
+        if (scalar(@$mean_list) != scalar(@$geomean_list))
+            || (scalar(@$mean_list) != scalar(@$sigma_list))
+            || (scalar(@$mean_list) != scalar(@$min_list))
+            || (scalar(@$mean_list) != scalar(@$max_list));
+
+
     my %wave_stats;
-    foreach my $attribute (@$attribute_list) {
-	my @stats = ($attribute->wavenumber(),
-		     $attribute->wavenumber(),
-		     $attribute->timepoint(),
-		     $attribute->min(),
-		     $attribute->max(),
-		     $attribute->mean(),
-		     $attribute->geomean(),
-		     $attribute->sigma());
-	my $wave_stat = join(',',@stats);
-        $wave_stats{$attribute->timepoint()}->{$attribute->wavenumber()} = $wave_stat;
-	#print STDERR "        $wave_stat\n";
-	#print $input "$wave_stat\n";
-    }
+
+    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Mean} = $_->MEAN()
+        foreach @$mean_list;
+    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Geomean} = $_->GEOMEAN()
+        foreach @$geomean_list;
+    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Sigma} = $_->SIGMA()
+        foreach @$sigma_list;
+    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Min} = $_->MIN()
+        foreach @$min_list;
+    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Max} = $_->MAX()
+        foreach @$max_list;
 
     foreach my $time (sort {$a <=> $b} (keys %wave_stats)) {
         my $stats = $wave_stats{$time};
         foreach my $wave (sort {$a <=> $b} (keys %$stats)) {
-            my $wave_stat = $stats->{$wave};
+            my @stats = ($wave,
+                         $wave,
+                         $time,
+                         $wave_stats{$time}->{$wave}->{Min},
+                         $wave_stats{$time}->{$wave}->{Max},
+                         $wave_stats{$time}->{$wave}->{Mean},
+                         $wave_stats{$time}->{$wave}->{Geomean},
+                         $wave_stats{$time}->{$wave}->{Sigma});
+            my $wave_stat = join(',',@stats);
             #print STDERR "        $wave_stat\n";
             print $input "$wave_stat\n";
         }
@@ -167,23 +184,23 @@ sub calculateFeature {
 	    my $header = $headers[$i++];
 	    $datum = undef if ($datum eq 'inf');
 	    if ($header eq "t") {
-		$timepointData->{timepoint} = $datum;
+		$timepointData->{TIMEPOINT} = $datum;
 	    } elsif ($header eq "Thresh.") {
-		$thresholdData->{threshold} = $datum;
+		$thresholdData->{THRESHOLD} = $datum;
 	    } elsif ($header eq "mean X") {
-		$locationData->{x} = $datum;
+		$locationData->{X} = $datum;
 	    } elsif ($header eq "mean Y") {
-		$locationData->{y} = $datum;
+		$locationData->{Y} = $datum;
 	    } elsif ($header eq "mean Z") {
-		$locationData->{z} = $datum;
+		$locationData->{Z} = $datum;
 	    } elsif ($header eq "volume") {
-		$extentData->{volume} = $datum;
+		$extentData->{VOLUME} = $datum;
 	    } elsif ($header eq "Surf. Area") {
-		$extentData->{surface_area} = $datum;
+		$extentData->{SURFACE_AREA} = $datum;
 	    } elsif ($header eq "perimiter") {
-		$extentData->{perimiter} = $datum;
+		$extentData->{PERIMITER} = $datum;
 	    } elsif ($header eq "Form Factor") {
-		$extentData->{form_factor} = $datum;
+		$extentData->{FORM_FACTOR} = $datum;
 	    } elsif ($header =~ /$wavelength_rex/) {
 		my $c1 = $1;
 		my $wavelength = $2;
@@ -192,8 +209,7 @@ sub calculateFeature {
 		my $signalData;
 		if (!exists $signalData{$wavelength}) {
 		    $signalData = {
-			#feature_id => $featureID,
-			wavelength => $wavelength
+			WAVELENGTH => $wavelength
 			};
                     $signalData{$wavelength} = $signalData;
 		} else {
@@ -201,31 +217,30 @@ sub calculateFeature {
 		}
 
 		if (($c1 eq "c") && ($c2 eq "X")) {
-		    $signalData->{centroid_x} = $datum;
+		    $signalData->{CENTROID_X} = $datum;
 		} elsif (($c1 eq "c") && ($c2 eq "Y")) {
-		    $signalData->{centroid_y} = $datum;
+		    $signalData->{CENTROID_Y} = $datum;
 		} elsif (($c1 eq "c") && ($c2 eq "Z")) {
-		    $signalData->{centroid_z} = $datum;
+		    $signalData->{CENTROID_Z} = $datum;
 		} elsif ($c1 eq "i") {
-		    $signalData->{integral} = $datum;
+		    $signalData->{INTEGRAL} = $datum;
 		} elsif ($c1 eq "m") {
-		    $signalData->{mean} = $datum;
+		    $signalData->{MEAN} = $datum;
 		} elsif ($c1 eq "g") {
-		    $signalData->{geomean} = $datum;
+		    $signalData->{GEOMEAN} = $datum;
 		}
 	    } else {
 		#print STDERR "?";
 	    }
         }  # foreach datum
 
-	my $timepoint = $self->newAttribute('Timepoint',$timepointData);
-	my $threshold = $self->newAttribute('Threshold',$thresholdData);
-	my $location = $self->newAttribute('Location',$locationData);
-	my $extent = $self->newAttribute('Extent',$extentData);
+        $self->newAttributes('Timepoint',$timepointData,
+                             'Threshold',$thresholdData,
+                             'Location',$locationData,
+                             'Extent',$extentData);
 
-        my @signals;
         foreach my $signalData (values %signalData) {
-            push @signals, $self->newAttribute('Signals',$signalData);
+            $self->newAttributes('Signals',$signalData);
         }
     }
 

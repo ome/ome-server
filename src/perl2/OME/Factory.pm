@@ -90,7 +90,7 @@ sub loadAttribute {
                                  name => $attribute_type_name);
     die "Cannot find attribute type $attribute_type_name"
         unless defined $type;
-    my $pkg = $type->requireAttributePackage();
+    my $pkg = $type->requireAttributeTypePackage();
 
     return $pkg->load($id);
 }
@@ -102,7 +102,7 @@ sub loadAttribute {
 sub findObject {
     my ($self, $class, @criteria) = @_;
     my $objects = $self->findObjects($class,@criteria);
-    return $objects->next();
+    return $objects? $objects->next(): undef;
 }
 
 
@@ -137,7 +137,7 @@ sub newAttribute {
                                  name => $attribute_type_name);
     die "Cannot find attribute type $attribute_type_name"
         unless defined $type;
-    my $pkg = $type->requireAttributePackage();
+    my $pkg = $type->requireAttributeTypePackage();
 
     return $pkg->new($target, $rows);
 }

@@ -73,7 +73,7 @@ sub requireAttributeTypePackage {
         my $name = $attribute_column->name();
         *{$pkg."::".$name} = sub {
             my ($self) = shift;
-            return $self->getField($name);
+            return $self->_getField($name);
         };
     }
 
@@ -137,7 +137,7 @@ sub new {
     my $class = ref($proto) || $proto;
 
     my ($target,$rows) = @_;
-    
+
     my $self = {};
     $self->{_data_table_rows} = $rows;
     $self->{_target} = $target;
@@ -160,10 +160,11 @@ sub load {
     while (my $attribute_column = $attribute_columns->next()) {
         my $data_column = $attribute_column->data_column();
         my $data_table = $data_column->data_table();
+        my $data_table_pkg = $data_table->requireDataTablePackage();
         my $data_tableID = $data_table->id();
         next if exists $rows->{$data_tableID};
 
-        my $data_row = $data_table->retrieve($id);
+        my $data_row = $data_table_pkg->retrieve($id);
         $rows->{$data_tableID} = $data_row;
 
         if (!defined $target) {
@@ -196,7 +197,7 @@ sub _getField {
     my $attribute_column = $attribute_columns->next() or return undef;
 
     my $data_column = $attribute_column->data_column();
-    my $column_name = $data_column->column_name();
+    my $column_name = lc($data_column->column_name());
     my $data_table = $data_column->data_table();
     my $data_row = $rows->{$data_table->id()};
 

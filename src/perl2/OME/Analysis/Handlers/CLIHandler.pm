@@ -25,6 +25,7 @@ our $VERSION = '1.0';
 
 use IO::File;
 
+use OME::Analysis::Handler;
 use base qw(OME::Analysis::Handler);
 
 use fields qw(_outputHandle);
@@ -97,8 +98,8 @@ sub postcalculateImage {
                    'Mean'       => ['mean',['Plane mean']],
                    'GeoMean'    => ['geomean',['Plane geomean']],
                    'Sigma'      => ['sigma',['Plane sigma']],
-                   'Centroid_X' => ['centroid_x',['Plane centroid']],
-                   'Centroid_Y' => ['centroid_y'['Plane centroid']],
+                   'Centroid_X' => ['x',['Plane centroid']],
+                   'Centroid_Y' => ['y',['Plane centroid']]
         );
 
     my %xyz_hash = (
@@ -115,9 +116,9 @@ sub postcalculateImage {
                     'Mean'       => ['mean',['Stack mean']],
                     'GeoMean'    => ['geomean',['Stack geomean']],
                     'Sigma'      => ['sigma',['Stack sigma']],
-                    'Centroid_x' => ['centroid_x',['Stack centroid']],
-                    'Centroid_y' => ['centroid_y',['Stack centroid']],
-                    'Centroid_z' => ['centroid_z'['Stack centroid']],
+                    'Centroid_x' => ['x',['Stack centroid']],
+                    'Centroid_y' => ['y',['Stack centroid']],
+                    'Centroid_z' => ['z',['Stack centroid']]
                    );
 
     my %hashes = (
@@ -131,10 +132,9 @@ sub postcalculateImage {
 #                         );
 
     my $useful_hash = $hashes{$program->program_name()};
+    my %attribute_data;
 
     while (my $input = <$output>) {
-        my $attribute_data = {};
-
         chomp $input;
         my @data = split("\t",$input);
         my $count = 0;
@@ -149,11 +149,11 @@ sub postcalculateImage {
             #my $datatype = $formal_output->datatype();
 
             my $column_info = $useful_hash->{$output_name};
-            my $column_name = $column_info->[0];
+            my $column_name = uc($column_info->[0]);
             my $output_list = $column_info->[1];
 
             foreach my $formal_output_name (@$output_list) {
-                $attribute_data->{$formal_output_name}->{$column_name} = $datum;
+                $attribute_data{$formal_output_name}->{$column_name} = $datum;
             }
 
             #print STDERR "      $column_name\n";

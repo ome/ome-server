@@ -110,12 +110,13 @@ sub requireDataTablePackage {
     $pkg->columns(Primary => qw(attribute_id));
 
     my $columns = $self->data_columns();
-    my @column_defs = ('actual_output_id');
+    my @column_defs = ('analysis_id');
     while (my $column = $columns->next()) {
 	push @column_defs, lc($column->column_name());
     }
 
-    $pkg->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
+    #$pkg->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
+    $pkg->hasa('OME::Analysis' => qw(analysis_id));
 
     my $type = $self->granularity();
     my $accessors = {};
@@ -131,7 +132,7 @@ sub requireDataTablePackage {
 
     # Make accessors for actual output, dataset, image, and feature.
     no strict 'refs';
-    *{$pkg."::actual_output"} = \&{$pkg."::actual_output_id"};
+    *{$pkg."::analysis"} = \&{$pkg."::analysis_id"};
     if ($type eq 'D') {
         *{$pkg."::dataset"} = \&{$pkg."::dataset_id"};
     } elsif ($type eq 'I') {
