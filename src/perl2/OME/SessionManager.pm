@@ -27,21 +27,14 @@ use Ima::DBI;
 use Class::Accessor;
 use Class::Data::Inheritable;
 use Apache::Session::File;
+use OME::DBConnection;
 
 use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
-__PACKAGE__->mk_classdata('DataSource');
-__PACKAGE__->mk_classdata('DBUser');
-__PACKAGE__->mk_classdata('DBPassword');
-
-__PACKAGE__->DataSource("dbi:Pg:dbname=ome");
-__PACKAGE__->DBUser(undef);
-__PACKAGE__->DBPassword(undef);
-
 __PACKAGE__->set_db('Main',
-                  OME::SessionManager->DataSource(),
-                  OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword(), 
+                  OME::DBConnection->DataSource(),
+                  OME::DBConnection->DBUser(),
+                  OME::DBConnection->DBPassword(), 
                   { RaiseError => 1 });
 __PACKAGE__->set_sql('find_user',<<"SQL",'Main');
       select experimenter_id, password
@@ -146,6 +139,7 @@ sub getOMESession {
 
     require OME::Session;
     require OME::Factory;
+    require OME::DBObject;
     my $session;
 print STDERR "getOMESession: looking for session, experimenter_id=$experimenterID.\n";
     my @sessions = OME::Session->search ('experimenter_id' => $experimenterID);
@@ -170,9 +164,9 @@ print STDERR "getOMESession: created new session.\n";
     $session->last_access('now');
     $session->host($host);
     
+    OME::DBObject->Session($session);
     $session->{Factory} = OME::Factory->new();
     $session->{Manager} = $self;
-	OME->Session($session);
 
 print STDERR "getOMESession: updating session.\n";
     $session->writeObject();
