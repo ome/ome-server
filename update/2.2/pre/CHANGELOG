@@ -1,0 +1,12 @@
+Changes from DB version 2.2 to 2.3
+==================================
+
+Repository semantic type:
+  - Added IsLocal element
+  - Added ImageServerURL element
+
+OriginalFile semantic type:
+  - Added FileID element
+
+Pixels semantic type:
+  - Added PixelsID element

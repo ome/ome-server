@@ -1,0 +1,17 @@
+# Update existing Repository attributes
+
+print "     \\_ Updating existing repositories ";
+
+# Load in the existing OriginalFile ST, and its database table
+
+my @repositories = $factory->findAttributes('Repository');
+
+foreach my $repository (@repositories) {
+    $repository->IsLocal('true');
+    $repository->storeObject();
+}
+
+# Signal success
+
+print BOLD, "[SUCCESS]", RESET, ".\n";
+1;
