@@ -144,7 +144,6 @@ public class RemoteFactory
 
     public Iterator iterateObjects(String className, Map criteria)
     {
-	System.err.println("    Getting a remote iterator");
         RemoteIterator i = (RemoteIterator) 
             getRemoteSession().getObjectCache().
             getObject("OME::Factory::Iterator",
@@ -152,11 +151,6 @@ public class RemoteFactory
                                                fixCriteria(className,
                                                            criteria)));
         i.setClass(className);
-	if (i.hasNext()) {
-	    System.err.println("Class "+className+ "has a next");
-	} else {
-	    System.err.println("Class "+className+ "has no next");
-	}
         return i;
     }
 
