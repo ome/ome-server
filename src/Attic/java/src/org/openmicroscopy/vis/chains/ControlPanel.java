@@ -99,7 +99,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	
 	protected CProject curProject;
-	protected CDataset curDataset;
+	protected CDataset curDataset=null;
 	
 	private Controller controller;
 	
@@ -113,8 +113,8 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private EventListenerList datasetListeners  =
 		new EventListenerList();
 		
-	private HashSet activeDatasets;
-	private HashSet activeProjects;
+	private HashSet activeDatasets = new HashSet();
+	private HashSet activeProjects = new HashSet();
 	
 		
 	/**
@@ -208,6 +208,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 		setResizable(false);
 		addDatasetSelectionEventListener(browser);
+		fireEvents();
 	}
 	
 	private JToolBar buildToolBar() {
@@ -226,7 +227,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		viewResultsButton = new JButton("View Results");
 		viewResultsButton.addActionListener(
 			 controller.getCmdTable().lookupActionListener("view results"));
-		viewResultsButton.setEnabled(false);
+		viewResultsButton.setEnabled(true);
 		tool.add(viewResultsButton);
 		tool.add(Box.createRigidArea(new Dimension(10,0)));
 		//Logout
@@ -256,10 +257,10 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		statusLabel.setText(s);
 	}
 	
-	public void setViewResultsEnabled(boolean v) {
+	/*public void setViewResultsEnabled(boolean v) {
 		viewResultsButton.setEnabled(v);
-	}
-	
+	} */
+		
 	public void getProjects(Connection connection) {
 		
 		List p  = connection.getProjectsForUser();
@@ -277,10 +278,10 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	public void valueChanged(ListSelectionEvent e) {
 		
-		System.err.println("value changed, event "+e);
+		//System.err.println("value changed, event "+e);
 		if (reentrant == true) 
 			return;
-		System.err.println("value changed is being processed");
+		//System.err.println("value changed is being processed");
 		if (e.getValueIsAdjusting() == true) 
 			return;
 		Object obj = e.getSource();
@@ -297,7 +298,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	} 
 		
 	public void  updateProjectChoice(Object item) {
-		System.err.println("in update project choice");
+		//System.err.println("in update project choice");
 		activeDatasets = new HashSet();
 		activeProjects = new HashSet();
 		
@@ -318,7 +319,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			curDataset = null;
 		}
 		if (curDataset == null)
-			setViewResultsEnabled(false);
+			//setViewResultsEnabled(false);
 		reentrant =false;
 		datasetList.repaint();
 		projList.repaint();
@@ -327,19 +328,19 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	}
 	
 	public void updateDatasetChoice(Object item) {
-		System.err.println("in update dataset choice");
+		//System.err.println("in update dataset choice");
 		activeDatasets = new HashSet();
 		activeProjects = new HashSet();
 		int pos = -1;
 
 			
 		curDataset = null;
-		setViewResultsEnabled(false);
+	//	//setViewResultsEnabled(false);
 		if (item != null)  {
 			//setCurDataset((CDataset) item);
 			curDataset = (CDataset) item;
 			activeDatasets.add(curDataset);
-			setViewResultsEnabled(true);
+			//setViewResultsEnabled(true);
 			setCurDatasetProjectsActive();
 			pos = datasets.indexOf(curDataset);
 		}
@@ -454,10 +455,9 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	}
 		
 	private void fireEvents() {
-		// if no active datasets, do them all.
 		DatasetSelectionEvent e =
 			 new DatasetSelectionEvent(activeDatasets,curDataset);
-		System.err.println("firing events. curDataset is "+curDataset);
+		//////System.err.println("firing events. curDataset is "+curDataset);
 		fireDatasetSelectionEvent(e);	
 	}
 	
@@ -552,7 +552,7 @@ class DatasetRenderer  extends JLabel implements ListCellRenderer {
 			else 
 				setText("None");
 			if (isSelected) {
-				System.err.println("in selected dataset");
+				//System.err.println("in selected dataset");
 				setBackground(list.getSelectionBackground());
 				setForeground(list.getSelectionForeground());
 				setFont(activeFont);
