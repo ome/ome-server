@@ -214,7 +214,8 @@ sub _getJSData {
 		$JSinfo->{ use_omeis }     = 'false';
 	} else {
 		$JSinfo->{ CGI_URL }       = '"'.$pixels->Repository()->ImageServerURL().'"';
-		$JSinfo->{ CGI_optionStr } = '"&Method=Composite&PixelsID='.$pixels->ImageServerID().'"';
+		$JSinfo->{ CGI_optionStr } = 'null';
+		$JSinfo->{ ImageServerID } = $pixels->ImageServerID();
 		$JSinfo->{ use_omeis }     = 'true';
 	}
 
@@ -257,6 +258,7 @@ sub BuildSVGviewer {
 	my $DatasetID          = $cgi->url_param('DatasetID') || 'null';
 	my $imageID            = $JSinfo->{ imageID };
 	my $pixelsID           = $JSinfo->{ pixelsID };
+	my $imageServerID      = $JSinfo->{ ImageServerID };
 	my $imageInfo          = $JSinfo->{ ImageInfo };
 	my $pixelList          = $JSinfo->{ PixelList };
 	my $Stats              = $JSinfo->{ Stats };
@@ -368,7 +370,8 @@ $SVG .= <<ENDSVG;
 			var windowControllers	 = new Array();
 
 			image = new OMEimage($imageID,$pixelsID,Stats,$Dims,$CGI_URL,$CGI_optionStr, 
-			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB, $use_omeis);
+			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB, $use_omeis,
+			                     $imageServerID);
 			image.realize( svgDocument.getElementById("image") );
 			
 			var actions = new Array();
