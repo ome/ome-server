@@ -283,16 +283,21 @@ sub compile_sigs {
 			image            => $image
 		) or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
 		# set the image category
-		$sig_array[scalar( @vector_legends )][$image_number] = 
-			$category_numbers{ $classifications{ $image->id }->Category->id };
+		$signature_array->set( 
+			scalar( @vector_legends ), 
+			$image_number, 
+			$category_numbers{ $classifications{ $image->id }->Category->id }
+		);
 		# set the image's signature vector
 		while (my $sig_entry = $signature_entry_iterator->next()) {
 			# VectorPosition is numbered 1 to n.
 			# Array positions should be 0 to (n-1).
-			$sig_array[$sig_entry->Legend->VectorPosition() - 1][$image_number] = 
-				$sig_entry->Value();
+			$signature_array->set( 
+				$sig_entry->Legend->VectorPosition() - 1, 
+				$image_number, 
+				$sig_entry->Value()
+			);
 		}
-		$signature_array->setAll( \@sig_array );
 		$image_number += 1;
 	}
 
