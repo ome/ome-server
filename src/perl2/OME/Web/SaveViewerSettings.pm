@@ -55,8 +55,8 @@ sub getPageBody {
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 
-	if( $cgi->param('WBS') ) {
-		my @WBS     = split( ',' , $cgi->param('WBS') );
+	if( $cgi->param('CBW') ) {
+		my @WBS     = split( ',' , $cgi->param('CBW') );
 		my @RGBon   = split( ',' , $cgi->param('RGBon') );
 
 		my $isRGB     = $cgi->param('isRGB');
