@@ -59,6 +59,7 @@ public class PDatasetLabelText extends PRemoteObjectLabelText {
 		
 		if (selectionState != null) 
 			selectionState.addSelectionEventListener(this);
+		setActive(false);
 		setColor();
 	}
 	
@@ -68,22 +69,15 @@ public class PDatasetLabelText extends PRemoteObjectLabelText {
 	
 	
 	public void selectionChanged(SelectionEvent e) {
-		System.err.println("selection event in dataset label");
 		SelectionState selectionState = e.getSelectionState();
-		System.err.println("dataset is "+dataset.getID());
-		if (selectionState.getSelectedDataset() != null) 
-			System.err.println("selected is "+selectionState.getSelectedDataset().getID());
 		Collection sets = selectionState.getActiveDatasets();
 		if (selectionState.getSelectedDataset() == dataset) {
-			setActive(false);
 			setSelected(true);
 		}
 		else if (sets != null && sets.contains(dataset)) {
-			setActive(true);
 			setSelected(false);
 		}
 		else {
-			setActive(false);
 			setSelected(false);
 		}
 		setColor();
