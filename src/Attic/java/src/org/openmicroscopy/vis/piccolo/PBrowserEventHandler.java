@@ -187,35 +187,4 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		}
 		e.setHandled(true);
 	}
-	
-	private void zoomToHalo(PThumbnail pt) {
-		
-		PDatasetImagesNode pin = pt.getDatasetImagesNode();
-		
-		if (pin == null) 
-			return;
-		
-		if (pin.hasVisibleHalo() ==false)
-			animateToNode(pt);
-		else
-			animateToNode(pin.getHalo());
-	}
-	
-	private void zoomOut(PThumbnail pt) {
-	
-		if (zoomLevel <= 0) 
-			return;
-		
-		zoomLevel--;
-		System.err.println("changing level to "+zoomLevel);
-		if (zoomLevel ==  0) {
-			PBufferedNode b = pt.getBufferedParentNode();
-			animateToBufferedNode(b);
-		}
-		else { 
-			System.err.println("going to new halo...");
-			pt.setHighlightedWithHalo(true,zoomLevel);
-			zoomToHalo(pt);
-		}
-	}
 }
