@@ -307,7 +307,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 # Do we need to store column_sql in the database?
 # What if two modules declare a column in the same table with the same name, but the
 # columns have different types? We need to check for that and die if it happens.
-# How can we check it if it isn't stored?
+# Can we check for this if the data type isn't explicetly stored?
 					};
 					print STDERR ref ($self) . "->processDOM OME::DataTable::Column DBObject parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
 						if $debug > 1;
@@ -366,8 +366,10 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	#
 	# process formalInputs 
 	#
-	my %formalInputColumn_xmlID_dbObject;
 	# this hash is keyed by xml id, valued by DBobjects
+	my %formalInputColumn_xmlID_dbObject;
+	# this hash is keyed by FormalInputColumn's xml id, valued by FormalInput.Name corrosponding to this FormalInputColumn
+	my %formalInputColumn_xmlID_FormalInput;
 
 	print STDERR ref ($self) . "->processDOM about to process formal inputs\n"
 		if $debug > 1;
@@ -446,6 +448,14 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 				
 				$formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) } =
 					$newAttrColumn;
+				print STDERR ref ($self) . "->processDOM added entry to formalInputColumn_xmlID_dbObject.\n\t".$attrColumnXML->getAttribute( 'FormalInputColumnID' )."=>".$formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) }."\n"
+					if $debug > 1;
+
+#				$formalInputColumn_xmlID_FormalInput{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) } =
+#					$formalInputXML->getAttribute( 'Name' );
+#				print STDERR ref ($self) . "->processDOM added entry to formalInputColumn_xmlID_FormalInput.\n\t".$attrColumnXML->getAttribute( 'FormalInputColumnID' )."=>".$formalInputColumn_xmlID_FormalInput{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) }."\n"
+#					if $debug > 1;
+					
 				push(@commitOnSuccessfulImport, $newAttrColumn);
 				print STDERR ref ($self) . "->processDOM finished processing attribute column\n"
 					if $debug > 1;
@@ -481,12 +491,19 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 				die ref ($self) . " While processing formal input (name=".$formalInputXML->getAttribute('Name')."), could not find entry for columnID '".$attrColumnXML->getAttribute('ColumnID')."'\n"
 					unless exists $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') };
 
-				#find OME::AttributeType::Column matched by OME::DataTable::Column
+				#find existing AttributeType::Column object corrosponding to attrColumnXML
 				map {
 					$formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) } = $_
 						if $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->id() eq $_->data_column()->id();
 				} @attrColumns;
-				
+				print STDERR ref ($self) . "->processDOM added entry to formalInputColumn_xmlID_dbObject.\n\t".$attrColumnXML->getAttribute( 'FormalInputColumnID' )."=>".$formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) }."\n"
+					if $debug > 1;
+
+#				$formalInputColumn_xmlID_FormalInput{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) } =
+#					$formalInputXML->getAttribute( 'Name' );
+#				print STDERR ref ($self) . "->processDOM added entry to formalInputColumn_xmlID_FormalInput.\n\t".$attrColumnXML->getAttribute( 'FormalInputColumnID' )."=>".$formalInputColumn_xmlID_FormalInput{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) }."\n"
+#					if $debug > 1;
+
 				die ref ($self) . " While processing FormalInput (name=".$formalInputXML->getAttribute('Name')."), found existing AttributeType of same AttributeTypeName (".$formalInputXML->getAttribute('AttributeTypeName')."). Could not find matching column in existing AttributeType for new column (Name=".$attrColumnXML->getAttribute('Name').",ColumnID=".$attrColumnXML->getAttribute('ColumnID').")."
 					unless exists $formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) };
 			}
@@ -563,10 +580,23 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		};
 		my $newFormalInput = $factory->newObject( "OME::Program::FormalInput", $data )
 			or die ref ($self) . " could not create OME::Program::FormalInput object (name=".$formalInputXML->getAttribute( 'Name' ).")\n";
+
+		map{
+			$formalInputColumn_xmlID_FormalInput{ $_->getAttribute("FormalInputColumnID") } = $newFormalInput
+		} @{$formalInputXML->getElementsByTagName( "FormalInputColumn")};
+		print STDERR ref ($self) . "->processDOM added entries to formalInputColumn_xmlID_FormalInput.\n\t".
+			join( "\n\t", 
+				map{
+					$_->getAttribute("FormalInputColumnID")." => ".$formalInputColumn_xmlID_FormalInput{$_->getAttribute("FormalInputColumnID")}
+				} @{$formalInputXML->getElementsByTagName( "FormalInputColumn")}
+			)."\n"
+			if $debug > 1;
+
 		push(@commitOnSuccessfulImport, $newFormalInput);
 		#
 		#
 		#######################################################################
+
 		print STDERR ref ($self) . "->processDOM finished processing formal input, ".$newFormalInput->name()."\n"
 			if $debug > 1;
 	}
@@ -581,12 +611,16 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	#
 	# process formalOutputs
 	#
+	# this hash is keyed by xml id, valued by DBobjects
+	my %formalOutputColumn_xmlID_dbObject;
+	# this hash is keyed by FormalOutputColumn's xml id, valued by Name of the FormalIOutput that contains this FormalOutputColumn
+	my %formalOutputColumn_xmlID_FormalOutput;
+
 	print STDERR ref ($self) . "->processDOM about to process formal outputs\n"
 		if $debug > 1;
-	my %formalOutputColumn_xmlID_dbObject;
 	foreach my $formalOutputXML ( $moduleXML->getElementsByTagName( "FormalOutput" ) ) {
 
-		print STDERR ref ($self) . "->processDOM is processing formal input, ".$formalOutputXML->getAttribute('Name')."\n"
+		print STDERR ref ($self) . "->processDOM is processing formal output, ".$formalOutputXML->getAttribute('Name')."\n"
 			if $debug > 1;
 		# look for existing AttributeType
 		print STDERR ref ($self) . "->processDOM is looking for an OME::AttributeType object\n\t[name=]".$formalOutputXML->getAttribute( 'AttributeTypeName' )."\n"
@@ -661,8 +695,14 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 				
 				$formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) } =
 					$newAttrColumn;
-				print STDERR ref ($self) . "->processDOM added entry to formalOutputColumn_xmlID_dbObject.\n\t".$attrColumnXML->getAttribute( 'FormalOutputColumnID' )."=>".$newAttrColumn."\n"
+				print STDERR ref ($self) . "->processDOM added entry to formalOutputColumn_xmlID_dbObject.\n\t".$attrColumnXML->getAttribute( 'FormalOutputColumnID' )."=>".$formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) }."\n"
 					if $debug > 1;
+
+#				$formalOutputColumn_xmlID_FormalOutput{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) } =
+#					$formalOutputXML->getAttribute( 'Name' );
+#				print STDERR ref ($self) . "->processDOM added entry to formalOutputColumn_xmlID_FormalOutput.\n\t".$attrColumnXML->getAttribute( 'FormalOutputColumnID' )."=>".$formalOutputColumn_xmlID_FormalOutput{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) }."\n"
+#					if $debug > 1;
+
 				push(@commitOnSuccessfulImport, $newAttrColumn);
 				print STDERR ref ($self) . "->processDOM finished processing attribute column\n"
 					if $debug > 1;
@@ -710,6 +750,13 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 					$formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) } = $_
 						if $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->id() eq $_->data_column()->id();
 				} @attrColumns;
+				print STDERR ref ($self) . "->processDOM added entry to formalOutputColumn_xmlID_dbObject.\n\t".$attrColumnXML->getAttribute( 'FormalOutputColumnID' )."=>".$formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) }."\n"
+					if $debug > 1;
+
+#				$formalOutputColumn_xmlID_FormalOutput{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) } =
+#					$formalOutputXML->getAttribute( 'Name' );
+#				print STDERR ref ($self) . "->processDOM added entry to formalOutputColumn_xmlID_FormalOutput.\n\t".$attrColumnXML->getAttribute( 'FormalOutputColumnID' )."=>".$formalOutputColumn_xmlID_FormalOutput{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) }."\n"
+#					if $debug > 1;
 				
 				die ref ($self) . " While processing FormalOutput (name=".$formalOutputXML->getAttribute('Name')."), found existing AttributeType of same AttributeTypeName (".$formalOutputXML->getAttribute('AttributeTypeName')."). Could not find matching column in existing AttributeType for new column (Name=".$attrColumnXML->getAttribute('Name').",ColumnID=".$attrColumnXML->getAttribute('ColumnID').")."
 					unless exists $formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) };
@@ -736,9 +783,24 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		};
 		my $newFormalOutput = $factory->newObject( "OME::Program::FormalOutput", $data )
 			or die "Could not create OME::Program::FormalOutput object\n";
+
+		map{
+			$formalOutputColumn_xmlID_FormalOutput{ $_->getAttribute("FormalOutputColumnID") } = $newFormalOutput
+		} @{$formalOutputXML->getElementsByTagName( "FormalOutputColumn")};
+		print STDERR ref ($self) . "->processDOM added entries to formalOutputColumn_xmlID_FormalOutput.\n\t".
+			join( "\n\t", 
+				map{
+					$_->getAttribute("FormalOutputColumnID")." => ".$formalOutputColumn_xmlID_FormalOutput{$_->getAttribute("FormalOutputColumnID")}
+				} @{$formalOutputXML->getElementsByTagName( "FormalOutputColumnID")}
+			)."\n"
+			if $debug > 1;
+
 		push(@commitOnSuccessfulImport, $newFormalOutput);
 		#
 		###################################################################
+
+		print STDERR ref ($self) . "->processDOM finished processing formal output, ".$newFormalOutput->name()."\n"
+			if $debug > 1;
 	}
 	print STDERR ref ($self) . "->processDOM finished processing formal outputs\n"
 		if $debug > 1;
@@ -749,7 +811,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	
 	###########################################################################
 	#
-	# process executionInstructions 
+	# process executionInstructions (CLI handler specific)
 	#
 	print STDERR ref ($self) . "->processDOM about to process ExecutionInstructions\n"
 		if $debug > 1;
@@ -758,13 +820,19 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	
 	# XML schema & DBdesign currently allow at most one execution point per module
 	if(scalar(@executionInstructions) == 1) {
+		#######################################################################
+		#
+		# CLI Handler specific execution Instructions
+		#
 		my $executionInstructionXML = $executionInstructions[0];
 
 		#######################################################################
 		#
 		# replace FormalInputID's with ID's from DB
 		#
-		print STDERR ref ($self) . "->processDOM replacing FormalInputColumnID's w/ ID's from DB\n"
+		#	Right now, using names instead of IDs
+		#
+		print STDERR ref ($self) . "->processDOM replacing FormalInputColumnID's w/ ID's from DB and is creating other attributes\n"
 			if $debug > 1;
 		my @inputTypes = ( "Input", "UseValue", "End", "Start" );
 		my @inputs;
@@ -775,13 +843,33 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		foreach my $input (@inputs) {
 			die ref ($self) . "->processDOM When processing ExecutionInstructions, could not find a matching FormalInputColumnID '".$input->getAttribute( "FormalInputColumnID" )."'. You probably made a typo. Is there a FormalInputColumn with that FormalInputColumnID?\n"
 				unless exists $formalInputColumn_xmlID_dbObject { $input->getAttribute( "FormalInputColumnID" )};
-			print STDERR ref ($self) . "->processDOM is altering FormalInputColumnID in element type ".$input->tagName()."\n".$input->getAttribute( "FormalInputColumnID" )." -> "
+
+			# Create attributes FormalInputID and FormalInputName to store NAME and FORMAL_INPUT_ID of the FORMAL_INPUT that contains the ATTRIBUTE_COLUMN/FormalInputColumn referenced by this element's FormalInputColumnID.
+			print STDERR ref ($self) . "->processDOM is creating FormalInputName attribute in element type ".$input->tagName()."\n\tValue is ".
+				$formalInputColumn_xmlID_FormalInput { $input->getAttribute( "FormalInputColumnID" )}->name()."\n"
 				if $debug > 1;
-			print STDERR $formalInputColumn_xmlID_dbObject { $input->getAttribute( "FormalInputColumnID" )}->id()."\n"
+			$input->setAttribute ( "FormalInputName",
+				$formalInputColumn_xmlID_FormalInput{$input->getAttribute( "FormalInputColumnID" )}->name()
+			);
+			print STDERR ref ($self) . "->processDOM is creating FormalInputID attribute in element type ".$input->tagName()."\n\tValue is ".
+				$formalInputColumn_xmlID_FormalInput { $input->getAttribute( "FormalInputColumnID" )}->id()."\n"
+				if $debug > 1;
+			$input->setAttribute ( "FormalInputID",
+				$formalInputColumn_xmlID_FormalInput{$input->getAttribute( "FormalInputColumnID" )}->id()
+			);
+
+			print STDERR ref ($self) . "->processDOM is creating FormalInputColumnName in element type ".$input->tagName()."\n".$input->getAttribute( "FormalInputColumnID" )." -> ".
+				$formalInputColumn_xmlID_dbObject { $input->getAttribute( "FormalInputColumnID" )}->name()."\n"
+				if $debug > 1;
+			$input->setAttribute( "FormalInputColumnName",
+				$formalInputColumn_xmlID_dbObject {
+					$input->getAttribute( "FormalInputColumnID" )}->name());
+			print STDERR ref ($self) . "->processDOM is altering FormalInputColumnID in element type ".$input->tagName()."\n".$input->getAttribute( "FormalInputColumnID" )." -> ".
+				$formalInputColumn_xmlID_dbObject { $input->getAttribute( "FormalInputColumnID" )}->id()."\n"
 				if $debug > 1;
 			$input->setAttribute( "FormalInputColumnID",
-								  $formalInputColumn_xmlID_dbObject {
-									  $input->getAttribute( "FormalInputColumnID" )}->id());
+				$formalInputColumn_xmlID_dbObject {
+					$input->getAttribute( "FormalInputColumnID" )}->id());
 		}
 		print STDERR ref ($self) . "->processDOM finished replacing FormalInputColumnID's\n"
 			if $debug > 1;
@@ -792,7 +880,9 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		# replace FormalOutputID's with ID's from DB
 		#
-		print STDERR ref ($self) . "->processDOM replacing FormalOutputColumnID's w/ ID's from DB\n"
+		#	Right now, using names instead of IDs
+		#
+		print STDERR ref ($self) . "->processDOM replacing FormalOutputColumnID's w/ ID's from DB and is creating other attributes\n"
 			if $debug > 1;
 		my @outputTypes = ( "OutputTo", "AutoIterate", "IterateRange" );
 		my @outputs;
@@ -803,13 +893,36 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		foreach my $output (@outputs) {
 			die ref ($self) . "->processDOM When processing ExecutionInstructions, could not find a matching FormalOutputColumnID '".$output->getAttribute( "FormalOutputColumnID" )."'. You probably made a typo. Is there a FormalOutputColumn with that FormalOutputColumnID?\n"
 				unless exists $formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )};
-			print STDERR ref ($self) . "->processDOM is altering FormalOutputColumnID in element type ".$output->tagName()."\n".$output->getAttribute( "FormalOutputColumnID" )." -> "
+
+			# Create attributes FormalOutputID and FormalOutputName to store NAME and FORMAL_OUTPUT_ID of the FORMAL_OUTPUT that contains the ATTRIBUTE_COLUMN/FormalOutputColumn referenced by this element's FormalOutputColumnID.
+			print STDERR ref ($self) . "->processDOM is creating FormalOutputName attribute in element type ".$output->tagName()."\n\tValue is ".
+				$formalOutputColumn_xmlID_FormalOutput{ $output->getAttribute( "FormalOutputColumnID" )}->name()."\n"
 				if $debug > 1;
-			print STDERR $formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )}->id()."\n"
+			$output->setAttribute ( "FormalOutputName",
+				$formalOutputColumn_xmlID_FormalOutput{$output->getAttribute( "FormalOutputColumnID" )}->name()
+			);
+			print STDERR ref ($self) . "->processDOM is creating FormalOutputID attribute in element type ".$output->tagName()."\n\tValue is ".
+				$formalOutputColumn_xmlID_FormalOutput{ $output->getAttribute( "FormalOutputColumnID" )}->id()."\n"
+				if $debug > 1;
+			$output->setAttribute ( "FormalOutputID",
+				$formalOutputColumn_xmlID_FormalOutput{$output->getAttribute( "FormalOutputColumnID" )}->id()
+			);
+
+
+			print STDERR ref ($self) . "->processDOM is creating FormalOutputColumnName in element type ".$output->tagName()."\n\tValue is ".
+				$formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )}->name()."\n"
+				if $debug > 1;
+			$output->setAttribute( "FormalOutputColumnName",
+				$formalOutputColumn_xmlID_dbObject {
+					$output->getAttribute( "FormalOutputColumnID" )}->name()
+			);
+			print STDERR ref ($self) . "->processDOM is altering FormalOutputColumnID in element type ".$output->tagName()."\n".$output->getAttribute( "FormalOutputColumnID" )." -> ".
+				$formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )}->id()."\n"
 				if $debug > 1;
 			$output->setAttribute( "FormalOutputColumnID",
 				$formalOutputColumn_xmlID_dbObject {
-					  $output->getAttribute( "FormalOutputColumnID" )}->id());
+					$output->getAttribute( "FormalOutputColumnID" )}->id()
+			);
 		}
 		print STDERR ref ($self) . "->processDOM finished replacing FormalOutputColumnID's\n"
 			if $debug > 1;
@@ -871,7 +984,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 			if $debug > 1;
 		#
 		#######################################################################
-		
+
 		# save executionInstructions
 		$newProgram->execution_instructions( $executionInstructionXML->toString() );
 		print STDERR ref ($self) . "->processDOM finished processing ExecutionInstructions. ExecutionInstructions saved to DB.\n"
