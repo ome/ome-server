@@ -116,6 +116,50 @@ public class DataElementType
   }
   
   /**
+   * Overrides the toString() so these values can be ordered in a Swing
+   * view data model.
+   */
+  public String toString()
+  {
+    if(this == INT)
+    {
+      return "int";
+    }
+    else if(this == FLOAT)
+    {
+      return "float";
+    }
+    else if(this == LONG)
+    {
+      return "long";
+    }
+    else if(this == DOUBLE)
+    {
+      return "double";
+    }
+    else if(this == BOOLEAN)
+    {
+      return "boolean";
+    }
+    else if(this == STRING)
+    {
+      return "string";
+    }
+    else if(this == OBJECT)
+    {
+      return "object";
+    }
+    else if(this == ATTRIBUTE)
+    {
+      return "attribute";
+    }
+    else
+    {
+      return super.toString();
+    }
+  }
+  
+  /**
    * Maintains the equals()/hashCode() contract.
    */
   public int hashCode()

@@ -39,13 +39,16 @@
 package org.openmicroscopy.browser.images;
 
 import java.awt.image.BufferedImage;
+import java.util.Set;
 
+import org.openmicroscopy.browser.datamodel.ThumbnailDataModel;
 import org.openmicroscopy.browser.events.MEHChangeListener;
+import org.openmicroscopy.browser.events.ModularEventHandler;
 
 import edu.umd.cs.piccolo.nodes.PImage;
 
 /**
- * A thumbnail/small image within the browser framework.
+ * A view of a thumbnail/small image within the browser framework.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
@@ -54,8 +57,60 @@ import edu.umd.cs.piccolo.nodes.PImage;
  */
 public class Thumbnail extends PImage implements MEHChangeListener
 {
+  /**
+   * The base model of the thumbnail.
+   */
+  protected ThumbnailDataModel model;
+  
+  /**
+   * The current image inside (actually, PImage has one... maybe eliminate)
+   */
   protected BufferedImage viewImage;
   
+  /**
+   * The current render method.
+   */
+  protected RenderMethod renderMethod;
+  
+  /**
+   * The ID of the thumbnail.
+   */
+  protected int ID;
+  
+  /**
+   * Defines the set of paint methods in a self-organizing list
+   * (impl: TreeSet)
+   */
+  protected Set paintMethods;
+  
+  /**
+   * Defines the union of UI gestures for this thumbnail.
+   */
+  protected ModularEventHandler eventHandler;
+  
+  /**
+   * Defines if this thumbnail is mip-mapped.
+   */
+  protected boolean usesImageSet;
+  
+  /**
+   * Constructs a thumbnail around this model (no renderer specified yet)
+   * @param tdm The data model.
+   */
+  public Thumbnail(ThumbnailDataModel tdm) // TODO: fix
+  {
+    this.model = tdm;
+  }
+  
+  /**
+   * Constructs a thumbnail around this model and specifies a first
+   * renderer for it.
+   */
+  public Thumbnail(ThumbnailDataModel tdm, RenderMethod method)
+  {
+    this.model = tdm;
+    this.renderMethod = method;
+  }
   // TODO: complete this code skeleton
   
   /* (non-Javadoc)
@@ -66,5 +121,4 @@ public class Thumbnail extends PImage implements MEHChangeListener
     // TODO: rework event handler
   }
 
-  
 }
