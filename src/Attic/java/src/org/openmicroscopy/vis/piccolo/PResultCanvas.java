@@ -50,6 +50,8 @@ import org.openmicroscopy.vis.chains.ResultFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.ome.CDataset;
+import org.openmicroscopy.vis.ome.CImage;
 import org.openmicroscopy.vis.dnd.ChainFlavor;
 import java.awt.dnd.DropTargetListener;
 import java.awt.dnd.DropTargetDragEvent;
@@ -59,6 +61,8 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DnDConstants;
 import java.awt.datatransfer.Transferable;
 import java.awt.geom.Point2D;
+import java.util.List;
+import java.util.Iterator;
 
 /** 
  * A {@link PCanvas} for viewing chain results
@@ -83,16 +87,32 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	
 	
 	/**
-	 * The layer for the canvas 
+	 * The layer for the canvas. 
 	 */
 	private PLayer layer;
 	
+	/** 
+	 * Under layer, we have a layer for the chain
+	 * below this will be two layers, one for the chain nodes (nodeLayer)
+	 * and the other for the link.
+	 * 
+	 * This will allow us to scale the chain only by scaling chainLayer
+	 * 
+	 */
+	private PLayer nodeLayer = new PLayer();
+	private PLayer chainLayer = new PLayer();
 	
 	/**
 	 * The layer for the links. Links are stored in a different layer because 
 	 * they must be drawn last if they are to avoid being obscured by modules. 
 	 */
 	private PLinkLayer linkLayer;
+	
+	/**
+	 * A layer for the {@link PImage} instances - image thumbnails
+	 * 
+	 */
+	private PLayer imageLayer = new PLayer();
 	
 	/**
 	 * The event handler for this canvas
@@ -116,11 +136,18 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	
 	private CChainExecution exec;
 	
+	private boolean hasChain = false;
+	
+	private static float VGAP=10;
+	
 	public PResultCanvas(Connection c) {
 		super();
 		this.connection  = c;
 		layer = getLayer();
 		
+		layer.addChild(chainLayer);
+		layer.addChild(imageLayer);
+		chainLayer.addChild(nodeLayer);
 		// set rendering details.
 		
 		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -138,7 +165,8 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 			
 		// set up link layer
 		linkLayer = new PLinkLayer();
-		getCamera().addLayer(linkLayer);
+		//getCamera().addLayer(linkLayer);
+		chainLayer.addChild(linkLayer);
 		linkLayer.setPickable(false);
 		
 		// data transfer support
@@ -151,6 +179,8 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 			// setup tool tips.
 		camera.addInputEventListener(new PChainToolTipHandler(camera));
 		
+		drawImages();
+		
 		
 	}
 	
@@ -158,12 +188,30 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		this.frame = frame;
 	}
 	
+	
+	private void drawImages() {
+		double x = 0;
+		double y = 0;
+		CDataset curDataset = connection.getDataset();
+		List images = curDataset.getCachedImages();
+		Iterator iter = images.iterator();	
+		while (iter.hasNext()) {
+			CImage image = (CImage) iter.next();
+			PThumbnail thumb = new PThumbnail(image);
+			imageLayer.addChild(thumb);
+			thumb.setOffset(x,y);
+			y +=thumb.getHeight()+VGAP;
+		}
+	}
+		
+	
+	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
-		return new PBounds(b.getX()-2*PConstants.BORDER,
-			b.getY()-2*PConstants.BORDER,
-			b.getWidth()+4*PConstants.BORDER,
-			b.getHeight()+4*PConstants.BORDER); 
+		return new PBounds(b.getX()-6*PConstants.BORDER,
+			b.getY()-6*PConstants.BORDER,
+			b.getWidth()+12*PConstants.BORDER,
+			b.getHeight()+12*PConstants.BORDER); 
 	}
 	
 
@@ -172,9 +220,12 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	 * doing the transfer
 	 */
 	public void dragEnter(DropTargetDragEvent e) {
-		removeInputEventListener(handler);
-		e.acceptDrag (DnDConstants.ACTION_MOVE);
-	
+		if (hasChain == false) {
+			removeInputEventListener(handler);
+			e.acceptDrag (DnDConstants.ACTION_MOVE);
+		}
+		else 
+			e.rejectDrag();
 	}
 	
 	/**
@@ -185,7 +236,8 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		System.err.println("getting a drop...");
 		try {
 			Transferable transferable =  e.getTransferable();
-			if (transferable.isDataFlavorSupported(ChainFlavor.chainFlavor)) {
+			if (transferable.isDataFlavorSupported(ChainFlavor.chainFlavor) &&
+				!hasChain) {
 				e.acceptDrop(DnDConstants.ACTION_MOVE);
 				Integer i = (Integer)transferable.
 					getTransferData(ChainFlavor.chainFlavor); 
@@ -197,7 +249,8 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 				addInputEventListener(handler);
 				getCamera().animateViewToCenterBounds(getBufferedBounds(),
 					true,PConstants.ANIMATION_DELAY);
-				frame.updateExecutionChoices(chain);			
+				frame.updateExecutionChoices(chain);
+				hasChain = true;		
 			} 
 		}
 		catch(Exception exc ) {
@@ -231,7 +284,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		getCamera().localToView(location);
 		float x = (float) location.getX();
 		float y = (float) location.getY();
-		PChain p = new PChain(connection,chain,layer,linkLayer,x,y);
+		PChain p = new PChain(connection,chain,nodeLayer,linkLayer,x,y);
 	}
 	
 	public void setLibraryCanvas(PChainLibraryCanvas libraryCanvas) {
