@@ -40,6 +40,7 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.geom.Rectangle2D;
 import java.awt.Color;
@@ -49,8 +50,18 @@ public class PCategoryBox extends PPath implements PBufferedNode {
 	
 	private static final Color CATEGORY_COLOR= new Color(204,204,255,100);
 	
+	private PText label = null;
+	public PCategoryBox() {
+		this(0,0,0,0);
+	}
+	
+	public PCategoryBox(float x,float y) {
+		this(x,y,0f,0f);
+	}
+	
 	public PCategoryBox(float x,float y,float w,float h) {
-		super(new Rectangle2D.Float(x,y,w,h));
+		super();
+		setPathTo(new Rectangle2D.Float(x,y,w,h));
 		setStrokePaint(null);
 		setPaint(CATEGORY_COLOR);
 	}
@@ -61,5 +72,24 @@ public class PCategoryBox extends PPath implements PBufferedNode {
 			b.getY()-PConstants.BORDER,
 			b.getWidth()+2*PConstants.BORDER,
 			b.getHeight()+2*PConstants.BORDER);
+	}
+	
+	public void setExtent(double width,double height) {
+		PBounds b = getFullBoundsReference();
+		reset();
+		setPathTo(new PBounds(b.getX(),b.getY(),width,height));
+	}
+	
+	public void addLabel(PText label) {
+		addChild(label);
+		this.label = label;
+	
+	}
+	
+	public  float getLabelHeight() {
+		if (label != null)
+			return (float)label.getFullBoundsReference().getHeight();
+		else
+			return 0f;		
 	}
 } 
