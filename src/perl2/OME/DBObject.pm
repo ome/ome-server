@@ -91,7 +91,7 @@ __PACKAGE__->mk_classdata('Caching');
 __PACKAGE__->mk_classdata('__cache'); 
 __PACKAGE__->__cache({}); 
 
-__PACKAGE__->Caching(0);
+__PACKAGE__->Caching(1);
 __PACKAGE__->__classDefined(0);
 
 
@@ -311,7 +311,8 @@ sub addColumn {
             # unacceptable, so we define the accessor method to always
             # return 1 or 0.
 
-            if ($sql_options->{SQLType} eq 'boolean') {
+            if (defined $sql_options->{SQLType} &&
+                $sql_options->{SQLType} eq 'boolean') {
                 $accessor = sub {
                     my $self = shift;
                     die "This instance did not load in $alias"
@@ -433,10 +434,14 @@ sub __getCachedObject {
 
     # Don't look for a cached object if caching is not enabled for
     # this object's class.
-    return undef unless $class->Caching();
+    unless ($class->Caching()) {
+        #print STDERR "Not caching $class\n";
+        return undef;
+    }
 
-    #print STDERR "### Looking in cache $class $id\n";
+    #print STDERR "### Looking in cache $class $id -- ";
     my $cache = $class->__cache()->{$class};
+    #print STDERR defined $cache->{$id}? "FOUND\n": "NOT FOUND\n";
     return $cache->{$id};
 }
 
