@@ -8,7 +8,7 @@ DB_LIBS = -lpq
 MATH_LIBS = -lm
 LIBS = $(DB_LIBS) $(MATH_LIBS) -L. -lOME
 DEFINES = -DDEBUG
-COMPILER_FLAGS = -fstrict-prototypes -Wall -O2
+COMPILER_FLAGS = -Wall -O2
 MAKEFILES = cgrayce
 OME_LIB = libOME.a
 
