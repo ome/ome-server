@@ -137,6 +137,7 @@ sub SaveDisplaySettings {
 	my ( $redChannel, $greenChannel, $blueChannel, $greyChannel );
 
 	if( $displayOptions->[0] ) {
+print STDERR $self->CGI()->url(-query=>1)."\nfound display options to modify\n\n\n";
 		die "More than one DisplayOptions attribute found for this image. That is invalid.\n"
 			if( scalar( @$displayOptions ) > 1 );
 		$displayOptions = $displayOptions->[0];
@@ -194,7 +195,6 @@ sub SaveDisplaySettings {
 		$greyChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
 			or die "Could not create new DisplayChannel attribute\n";
 		$data = {
-			image_id       => $imageID,
 			RedChannel     => $redChannel->id(),
 			GreenChannel   => $greenChannel->id(),
 			BlueChannel    => $blueChannel->id(),
