@@ -430,7 +430,10 @@ sub __verifyTiff {
         }
     };
 
-    return undef if $@;
+    if ($@) {
+        warn $@;
+        return undef;
+    }
     return ($endian, $offset);
 }
 
