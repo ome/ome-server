@@ -96,14 +96,15 @@ signature, and the last row is the image class.
 The original signature chain must already be imported into the database. 
 
 Options:
+  -a  Signature analysis chain name or ID.
 
-  -d  dataset id
+  -d  Dataset name or ID.
+
+  -o  Output filename.
   
-  -c  signature chain id
-  
-  -o  name of output file
-  
-  -f  force re-execution of chain
+  -f, --force
+    Force re-execution of chain (i.e. do not reuse previous module execution 
+    results).
   
   -h  Print this help message.
   
@@ -130,13 +131,12 @@ to the database and saved to disk.
 The original signature chain must already be imported into the database. 
 
 Options:
+  -a  the name of the signature chain to stitch
 
   -x  path of xml source directory
   
   -o  output directory
-  
-  -c  the name of the signature chain to stitch
-      
+        
   -compress  Compress the output file. 
 
   -h  Print this help message.
@@ -193,27 +193,58 @@ END_STDS
 
 sub compile_sigs {
 	my ($self,$commands) = @_;
-	my ($dataset_id, $chain_id, $output_file_name, $show_help, $force_new_chex );
+	my ($datasetStr, $chainStr, $output_file_name, $show_help, $force_new_chex );
 	
-	GetOptions('d=i' => \$dataset_id, 'c=i' => \$chain_id, 'o=s' => \$output_file_name, 'h' => \$show_help, 'f' => \$force_new_chex );
+	GetOptions ('d=s' => \$datasetStr,
+	            'a=s' => \$chainStr,
+	            'o=s' => \$output_file_name,
+	            'h' => \$show_help,
+	            'f|force' => \$force_new_chex );
+	            
 	return $self->compile_sigs_help($commands) if $show_help;
 	die "one or more options not specified"
-		unless $dataset_id and $chain_id and $output_file_name;
+		unless $datasetStr and $chainStr and $output_file_name;
 	
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
 	
-	# load objects
 	logdbg "debug", "loading chain, dataset, and signature stitcher chain node";
-	my $chain = $factory->loadObject( "OME::AnalysisChain", $chain_id )
-		or die "Cannot find an analysis chain with id = $chain_id";
+	
+	# get chain	
+	my $chain;
+	if ($chainStr =~ /^([0-9]+)$/) {
+		$chain= $factory->loadObject( "OME::AnalysisChain", $chainStr )
+			or die "Cannot find an analysis chain with id = $chainStr";
+	} else {
+		my $chainData = {name => $chainStr};
+		$chain = $factory->findObject( "OME::AnalysisChain", $chainData)
+			or die "Cannot find an analysis chain with name = $chainStr";
+	}
+	
+	# get signature module
 	my $sig_stitch_node = $factory->findObject( "OME::AnalysisChain::Node",
 		analysis_chain  => $chain,
 		'module.name'   => [ 'like', 'Signature Stitcher%' ]
-	) or die "Could not find a signature stitcher module in chain (id = $chain_id, name = '".$chain->name."')";
+	) or die "Could not find a signature stitcher module in chain (id = $chainStr, name = '".$chain->name."')";
 	logdbg "debug", "found signature stitcher module (name=".$sig_stitch_node->module->name()."), node (id=".$sig_stitch_node->id.".";
-	my $dataset = $factory->loadObject( "OME::Dataset", $dataset_id )
-		or die "Cannot find a dataset with id = $dataset_id";
+	
+	
+	# get a dataset
+	my $dataset;
+
+	if ($datasetStr =~ /^([0-9]+)$/) {
+		my $datasetID = $1;
+		$dataset = $factory->loadObject ("OME::Dataset", $datasetID);
+		die "Dataset with ID $datasetStr doesn't exist!" unless $dataset;
+	} else {
+		my $datasetData = {
+							name   => $datasetStr,
+							owner  => $session->User(),
+						  };
+		$dataset = $factory->findObject( "OME::Dataset", $datasetData);
+		die "Dataset with name $datasetStr doesn't exist!" unless $dataset;
+	}
+	
 	my @images = $dataset->images;
 	@images = sort {$a->id <=> $b->id} @images;
 	
@@ -254,7 +285,7 @@ sub compile_sigs {
 			$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
 		}
 	} else {
-		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, ReuseResults => 0);
+		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, undef, ReuseResults => 0);
 	}
 	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
 		analysis_chain_execution => $chex,
