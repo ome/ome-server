@@ -105,6 +105,8 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
+		
 		removeInputEventListener(getZoomEventHandler());
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);

@@ -101,6 +101,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	public PChainLibraryCanvas(Connection c) {
 		super();
 		this.connection  = c;
+		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
 		layer = getLayer();
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
