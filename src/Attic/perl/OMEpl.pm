@@ -106,7 +106,8 @@ my $tempDirectory     =   '/var/tmp/OME/';
 my $datasetDirectory  =   '/OME/Datasets/';
 my $binPath           =   '/OME/bin/';
 
-my $DefaultDatasetView = "SELECT name,path FROM datasets WHERE";
+#my $DefaultDatasetView = "SELECT name,path FROM datasets WHERE";
+my $DefaultDatasetView = "select d.name, df.path from datasets d, dataset_files_xyzwt df where d.dataset_id = df.dataset_id and";
 my $DefaultFeatureView = "location.attribute_of location.x location.y location.z";
 
 my $OMEpreInited = undef;
@@ -1090,16 +1091,16 @@ sub GetSelectedDatasetsWavelengths () {
 	my $sth;
 	my @wavelengths;
 
-	$sth = $self->{dbHandle}->prepare (
-		"SELECT DISTINCT attributes_iccb_tiff.wave ".
-			"FROM attributes_iccb_tiff,ome_sessions_datasets ".
-			"WHERE attributes_iccb_tiff.dataset_id = ome_sessions_datasets.dataset_id ".
-			"AND ome_sessions_datasets.SESSION_ID=".$self->{sessionID});
-	$sth->execute();
-	$sth->bind_columns(\$row);
-	while ( $sth->fetch ) {
-		push (@wavelengths,$row);
-	}
+	#$sth = $self->{dbHandle}->prepare (
+	#	"SELECT DISTINCT attributes_iccb_tiff.wave ".
+	#		"FROM attributes_iccb_tiff,ome_sessions_datasets ".
+	#		"WHERE attributes_iccb_tiff.dataset_id = ome_sessions_datasets.dataset_id ".
+	#		"AND ome_sessions_datasets.SESSION_ID=".$self->{sessionID});
+	#$sth->execute();
+	#$sth->bind_columns(\$row);
+	#while ( $sth->fetch ) {
+	#	push (@wavelengths,$row);
+	##}
 
 
 	$sth = $self->{dbHandle}->prepare (
@@ -1264,6 +1265,7 @@ my $viewDatasetsURL = $self->ViewDatasetsURL().'?ID=';
 my $datasetView = $dbh->selectrow_array("SELECT dataset_view FROM ome_sessions WHERE session_id=".$self->SID);
 my $dropTable;
 
+#print "<pre>$datasetView</pre>\n";
 	die "Could not determine Dataset view from database\n" unless defined $datasetView and $datasetView;
 	$datasetView =~ s/FROM/, datasets.dataset_id AS link_id FROM/i;
 
@@ -1289,6 +1291,7 @@ my $dropTable;
 	}
 	
 print STDERR "OME:DatasetsTableHTML:Executing <$datasetViewSQL>\n";
+#print "<pre>$datasetViewSQL</pre>\n";
 	my $sth = $dbh->prepare($datasetViewSQL);
 	$sth->execute();
 	my @tuple;

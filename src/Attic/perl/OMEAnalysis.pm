@@ -95,7 +95,7 @@ sub GetHTMLParams {
 }
 
 # GetSelectedDatasets()
-# ---------------------------------
+# ---------------------
 # Retrieves the selected datasets from the OME system.  Override this
 # to filter the list if the user can specify extra constraints.
 
@@ -134,8 +134,8 @@ sub FinishAnalysis {
 }
 
 
-# PerformAnalysis(Input parameters)
-# ---------------------------------
+# PerformAnalysis(Input parameters, [Dataset objects])
+# ----------------------------------------------------
 # Performs the entire analysis process, including setup and cleanup.
 # The analysis is performed on whichever datasets are returned by
 # GetSelectedDatasets.  (By default, the datasets selected by the
@@ -144,12 +144,15 @@ sub FinishAnalysis {
 sub PerformAnalysis {
     my $self       = shift;
     my $params     = shift;
+    my $datasets   = shift;
     my $OME        = $self->{OME};
     
     $self->StartAnalysis($params);
 
     my $dataset;
-    my $datasets = $self->GetSelectedDatasets();
+    if (!defined $datasets) {
+	$datasets = $self->GetSelectedDatasets();
+    }
 
     foreach $dataset (@$datasets) {
 	$self->Execute($dataset);
