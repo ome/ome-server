@@ -385,6 +385,8 @@ sub new {
 sub DESTROY {
     my $self = shift;
     $self->__disconnectAll();
+	$self->{__session} = undef;
+	$self->SUPER::DESTROY if $self->can("SUPER::DESTROY");
 }
 
 sub Session { my $self = shift; return $self->{_session}; }
