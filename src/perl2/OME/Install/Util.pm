@@ -55,9 +55,10 @@ our @EXPORT = qw(add_user
 		 delete_tree
 		 copy_tree
 		 get_module_version
-		 download_module
+		 download_package
 		 unpack_archive
 		 configure_module
+		 configure_library
 		 compile_module
 		 test_module
 		 install_module
@@ -452,7 +453,7 @@ sub get_module_version {
     return $version ? $version : undef;
 }
 
-sub download_module {
+sub download_package {
     my ($module, $logfile) = @_;
     my $module_url = $module->{repository_file};
     my $downloader;
@@ -460,6 +461,7 @@ sub download_module {
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     # Find a useable download app (curl|wget)
+    print $logfile "PATH: '$ENV{PATH}'\n";
     $downloader = "wget -nv -N" if which ("wget");
     $downloader = "curl -O" if which ("curl");
     croak "Unable to find a valid downloader for module \"$module->{name}\"."
@@ -469,7 +471,7 @@ sub download_module {
     my @output = `$downloader $module_url 2>&1`;
     
     if ($? == 0) {
-	print $logfile "SUCCESS DOWNLOADING MODULE -- OUTPUT FROM DOWNLOADER \"$downloader\": \"@output\"\n\n";
+	print $logfile "SUCCESS DOWNLOADING PACKAGE -- OUTPUT FROM DOWNLOADER \"$downloader\": \"@output\"\n\n";
 
 	return 1;
     }
@@ -514,6 +516,8 @@ sub configure_module {
     my ($path, $logfile) = @_;
     my $iwd = getcwd;  # Initial working directory
 
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
     my @output = `perl Makefile.PL 2>&1`;
@@ -531,9 +535,34 @@ sub configure_module {
     return 0;
 }
 
+sub configure_library {
+    my ($path, $logfile) = @_;
+    my $iwd = getcwd;  # Initial working directory
+
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+    my @output = `./configure 2>&1`;
+
+    if ($? == 0) {
+	print $logfile "SUCCESS CONFIGURING LIBRARY -- OUTPUT: \"@output\"\n\n";
+
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+	return 1;
+    }
+
+    print $logfile "FAILURE CONFIGURING LIBRARY -- OUTPUT: \"@output\"\n\n";
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+
+    return 0;
+}
+
 sub compile_module {
     my ($path, $logfile) = @_;
     my $iwd = getcwd;  # Initial working directory
+
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
@@ -556,6 +585,8 @@ sub test_module {
     my ($path, $logfile) = @_;
     my $iwd = getcwd;  # Initial working directory
 
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
     my @output = `make test 2>&1`;
@@ -576,6 +607,8 @@ sub test_module {
 sub install_module {
     my ($path, $logfile) = @_;
     my $iwd = getcwd;  # Initial working directory
+
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
