@@ -64,6 +64,7 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use Carp;
 use Log::Agent;
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -151,7 +152,7 @@ my %dataTypeConversion = (
 sub getSQLType {
     my ($class,$type) = @_;
 
-    die "Invalid SQL type!"
+    confess "$type is an invalid SQL type!"
       unless exists $dataTypeConversion{$type};
     return $dataTypeConversion{$type};
 }
