@@ -278,26 +278,28 @@ my $numSelections;
 	}
 	$OME->TrackProgress (scalar @$selections);
 	$OME->UpdateProgress (ProgramName => 'Dataset Import');
+	my $datasetName;
 	foreach (@$selections) {
-#		print STDERR "DirTreeSelect:  Importing $_\n";
-		my $dataset = eval {$OME->ImportDataset (Name => $_);};
+		$datasetName = $_;
+#		print STDERR "DirTreeSelect:  Importing $datasetName\n";
+		my $dataset = eval {$OME->ImportDataset (Name => $datasetName);};
 		if (defined $dataset) {
 			push (@datasetIDs,$dataset->{ID});
 			$OME->IncrementProgress();
 #			if ($reportEvery eq 1) {
-#				ReportDocStatus ('<font size=-1>'.$dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B></font><BR>");
+#				ReportDocStatus ($dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B><BR>");
 #			} elsif (scalar (@datasetIDs) % $reportEvery eq 0) {
-#				ReportDocStatus ("<font size=-1><B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.</font><BR>");
+#				ReportDocStatus ("<B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.<BR>");
 #				$OME->Commit();			
 #			}
 		} elsif ($@) {
 			$OME->UpdateProgress (Error => $@);
-			ReportDocStatus ('<B><font size=-1 color="#FF0000">Error!</font><font size=-1></B>'."  $_ is corrupt!</font><BR>");
+			ReportDocStatus ('<B><font color=\"#FF0000\">Error!</font></B>'."  $datasetName is corrupt!<BR>");
 		} else {
-			ReportDocStatus ('<font size=-1>'.$_.":  <B>Ignored</B> - file type not supprted.</font><BR>");
+			ReportDocStatus ("<font size=-1>$datasetName:  <B>Ignored</B> - file type not supprted.<BR>");
 		}
 	}
-	ReportDocStatus ("<font size=-1>Total: <B>".scalar @datasetIDs."</B> Datasets imported.</font><BR>");
+	ReportDocStatus ("<font size=-1>Total: <B>".scalar @datasetIDs."</B> Datasets imported.<BR>");
 	$OME->StopProgress();
 	return \@datasetIDs;
 }
@@ -308,7 +310,7 @@ my $message = shift;
 print qq {
 	<script language="JavaScript">
 		<!--
-			importStatWin.document.writeln ("$message");
+			importStatWin.document.writeln ("<font size=-1>$message</font>");
 		//-->
 	</script>
 	}
