@@ -58,5 +58,29 @@ sub initialize {
     return $soleInstance;
 }
 
+sub base_dir {
+    my ($self, $base_dir) = @_;
+
+    if ($base_dir) {
+	$self->{base_dir} = $base_dir;
+    } else {
+	return $self->{base_dir} unless not exists $self->{base_dir};
+    }
+
+    return undef;
+}
+
+sub tmp_dir {
+    my ($self, $temp_dir) = @_;
+
+    if ($temp_dir) {
+	$self->{temp_dir} = $temp_dir;
+    } else {
+	return $self->{temp_dir} unless not exists $self->{base_dir};
+    }
+
+    return undef;
+}
+
 
 1;
