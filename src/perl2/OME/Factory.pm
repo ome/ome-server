@@ -428,7 +428,6 @@ The *Like methods are provided as a convenience.
 =cut
 
 use strict;
-use OME::DBConnection;
 use OME::Database::Delegate;
 use DBI;
 use Carp qw(cluck croak confess);

@@ -45,10 +45,10 @@ use DBI;
 use OME::Database::Delegate;
 use base qw(OME::Database::Delegate);
 
-use OME::DBConnection;
-
 use UNIVERSAL::require;
 use IO::Select;
+use Sys::Hostname;
+
 
 =head1 NAME
 
@@ -97,7 +97,11 @@ sub createDatabase {
 		DBPassword => $password,
 		AutoCommit => 1,
 		InactiveDestroy => 1,
-	} ) or die "Could not connect to the database";
+	} );
+	unless ($dbh) {
+    	$self->errorStr($DBI::errstr);
+		die "Could not connect to the database";
+	}
 	
 	my $find_database = $dbh->prepare(FIND_DATABASE_SQL);
 	my ($db_oid) = $dbh->selectrow_array($find_database,{},$dbName);
@@ -173,7 +177,11 @@ sub createUser {
 		InactiveDestroy => 1,
         RaiseError => 0,
         PrintError => 0
-    } ) or return 0;
+    } );
+    unless ($dbh) {
+    	$self->errorStr($DBI::errstr);
+		return 0;
+    }
 
     my $find_user = $dbh->prepare(FIND_USER_SQL);
     my ($db_name,$db_create,$db_super) = $dbh->selectrow_array($find_user,{},$username);
@@ -189,6 +197,7 @@ sub createUser {
         my $sql = "CREATE USER $username";
         $sql .= ' CREATEUSER CREATEDB' if ($isSuperuser);
         $dbh->do($sql);
+		$self->errorStr($dbh->errstr());
     }
     ($db_name,$db_create,$db_super) = $dbh->selectrow_array($find_user,{},$username);
     $dbh->disconnect();
@@ -213,6 +222,16 @@ sub getDSN {
     my $host_str = $dbConf->{Host} ? ';host='.$dbConf->{Host} : '';
     my $port_str = $dbConf->{Port} ? ';port='.$dbConf->{Port} : '';
     return 'dbi:Pg:dbname='.$dbConf->{Name}.$host_str.$port_str;
+}
+
+sub getRemoteDSN {
+    my ($self) = @_;
+	my $dsn = $self->getDSN();
+	$dsn .= ';host='.hostname()
+			unless $dsn =~ /;host=\S+/
+			and not $dsn =~ /;host=localhost/
+			and not $dsn =~ /;host=127.0.0.1/;
+	return ($dsn);
 }
 
 # The SQL statement to retrieve a sequence value from the DB.

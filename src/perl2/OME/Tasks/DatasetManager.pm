@@ -504,7 +504,9 @@ sub delete{
 	my $session=$self->Session();
 	my ($id)=@_;
 	my $currentDataset=$session->dataset();
-	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
+	
+	my $db=$session->Factory()->obtainDBH();
+	new OME::SetDB();  
 	my $dataset = $session->Factory()->loadObject("OME::Dataset",$id);
 
 	
@@ -682,7 +684,7 @@ sub lockUnlock{
 	my $session=$self->Session();
 	my ($id,$bool)=@_;
 	my ($table,$condition,$result);
-	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword()); 
+	my $db=new OME::SetDB(); 
       $table="datasets";
       $condition="dataset_id=".$id;
       my %h=(locked =>"'".$bool."'");
@@ -792,7 +794,7 @@ sub remove{
 	my $result=undef;
 	my $project=$session->project();
 	my $currentDataset=$session->dataset();
-	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
+	my $db=new OME::SetDB();  
 	
 	foreach my $id (keys %$ref){
 	  my $dataset = $session->Factory()->loadObject("OME::Dataset",$id);

@@ -78,7 +78,6 @@ use OME::AnalysisChain;
 use OME::AnalysisPath;
 use OME::AnalysisChainExecution;
 use OME::SessionManager;
-use OME::DBConnection;
 use OME::Analysis::Engine::ForkedPerlExecutor;
 use OME::Analysis::Engine::UnthreadedPerlExecutor;
 

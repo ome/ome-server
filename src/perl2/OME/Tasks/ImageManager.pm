@@ -160,7 +160,7 @@ sub delete{
 	my $self=shift;
 	my $session=$self->__Session();
 	my ($id)=@_;
-	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());
+	my $db=new OME::SetDB();
 	
 	my $result=deleteInMap($session,$id,$db);
 	#my $rep=deleteImage($id,$db) if defined $result;
@@ -365,7 +365,7 @@ sub remove{
 	my $self=shift;
 	my $session=$self->__Session();
 	my ($ref)=@_;
-	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());
+	my $db=new OME::SetDB();
 	my $result;
 	foreach my $id (keys %$ref){
 	  my $list=${$ref}{$id};

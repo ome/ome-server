@@ -44,7 +44,6 @@ use strict;
 
 #use Class::Accessor;
 #use Class::Data::Inheritable;
-use OME::DBConnection;
 #use OME::DBObject;
 use OME::Research::AnalyseText;
 use OME::Research::SetStatement;
@@ -92,7 +91,7 @@ sub searchEngine{
   my $condition;
   if (defined $cd){
    # ILike: Postgres ! not used
-    my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
+    my $db=new OME::SetDB();  
     $condition=$cd->Prepare_Request_Like(\%h,$sepvalue,$htime);
     $results=&_do_Request($self,$condition,$db);
     $db->Off();	

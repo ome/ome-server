@@ -942,18 +942,26 @@ BLURB
 
     # Make sure our OME_USER is also a Postgres user
     print "Creating OME PostgreSQL SUPERUSER ($OME_USER)";
+    print $LOGFILE "Creating OME PostgreSQL SUPERUSER ($OME_USER)\n";
     $retval = $db_delegate->createUser ($OME_USER,1);
+    print $LOGFILE "Result for creating OME_USER $OME_USER:\n".$db_delegate->errorStr()."\n"
+    	unless $retval;
     while (not $retval) {
 		$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
 		last if $retval;
+	    print $LOGFILE "Result for creating OME_USER $OME_USER as $POSTGRES_USER:\n"
+	    	.$db_delegate->errorStr()."\n";
 
 		my $old_euid = euid (scalar getpwnam ($POSTGRES_USER));
 		$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
 		euid ($old_euid);
+	    print $LOGFILE "Result for creating OME_USER $OME_USER as $POSTGRES_USER "
+	    	."After euid()\n".$db_delegate->errorStr()."\n" unless $retval;
 		last;
     }
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to create PostgreSQL superuser '$OME_USER', see $LOGFILE_NAME for details."
+        and croak "Unable to create PostgreSQL superuser '$OME_USER', see $LOGFILE_NAME for details.\n".
+        "Database error: ".$db_delegate->errorStr()."\n"
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -962,6 +970,8 @@ BLURB
     $retval = $db_delegate->createUser ($APACHE_USER,1);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
+    	and print $LOGFILE "Unable to create PostgreSQL superuser '$APACHE_USER'\n".
+    		$db_delegate->errorStr()."\n"
         and croak "Unable to create PostgreSQL superuser '$APACHE_USER', see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
@@ -972,6 +982,8 @@ BLURB
 	    $retval = $db_delegate->createUser ($ADMIN_USER,1);
         
         print BOLD, "[FAILURE]", RESET, ".\n"
+			and print $LOGFILE "Unable to create admin superuser '$ADMIN_USER'\n".
+				$db_delegate->errorStr()."\n"
             and croak "Unable to create PostgreSQL superuser '$ADMIN_USER', see $LOGFILE_NAME for details."
             unless $retval;
         print BOLD, "[SUCCESS]", RESET, ".\n";
@@ -984,11 +996,15 @@ BLURB
     if ($db_db_version) {
         print "From DB, got DB_Version = '$db_db_version'\n";
     }
-    croak "Found an existing ome database, but it appears to be too old to be updated.\n".
+	print $LOGFILE "Found an existing ome database, but it appears to be too old to be updated\n".
+		$db_delegate->errorStr()."\n"
+    and croak "Found an existing ome database, but it appears to be too old to be updated.\n".
         "You will have to upgrade it manually.  Sorry\n"
         if defined $db_db_version and $db_db_version eq '0';
 
-    croak "Found an existing ome database, but apprently installation failed before it was complete.\n".
+	print $LOGFILE "Found an existing ome database in the middle of being updated\n".
+		$db_delegate->errorStr()."\n"
+    and croak "Found an existing ome database, but apprently installation failed before it was complete.\n".
         "You will have to drop the existing ome database before continuing.\n".
         "WARNING:  Do not do this if you have an existing functional database\n".
         "          especially if you don't have a current backup!!!\n".

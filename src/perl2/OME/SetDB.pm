@@ -45,28 +45,21 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use OME::Session;
+
 sub new {
    my $class = shift;
 
    my $self = {};
-   $self->{dbname}=shift;
-   $self->{dbuser}=shift;
-   $self->{dbpasswd}=shift;	 
-   my $dbd  = undef; 
-	 
-   unless ($dbd = DBI->connect($self->{dbname},$self->{dbuser},$self->{dbpasswd}),{ RaiseError => 1 }) { 
-          return undef;
-   }
 
-   $self->{obj} 	= $dbd;
    return bless $self;
 }
 
 sub Off {
 
-   my $self      = shift;    	
-   my $val=$self->{obj};
-   $val->disconnect;
+#   my $self      = shift;    	
+#   my $val=$self->{obj};
+#   $val->disconnect;
 
 }
 
@@ -77,7 +70,7 @@ sub GetRecords{
 
 
   my $self      = shift;
-  my $dbd       = $self->{obj};          
+  my $dbd       = OME::Session->instance()->Factory()->obtainDBH() or return undef;
   my ($table,$cond,$selectedcols, $key, $value,$trierpar, $join_table) = @_;
 
   my $sth		= undef;	
@@ -127,7 +120,7 @@ sub DeleteRecord{
 
 
   my $self      = shift;
-  my $dbd       = $self->{obj}; 
+  my $dbd       = OME::Session->instance()->Factory()->obtainDBH() or return undef;
 
   my ($table,$cond)=@_;	
   my $sth	= undef;	
@@ -158,7 +151,7 @@ sub DeleteRecord{
 sub UpdateRecord{
 
   my $self      = shift;
-  my $dbd       = $self->{obj}; 
+  my $dbd       = OME::Session->instance()->Factory()->obtainDBH() or return undef;; 
 
   my ($table,$row,$condition,$key,$value)=@_;
 

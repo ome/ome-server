@@ -527,11 +527,7 @@ sub delete{
       		push(@datasets,$d->dataset());
     	} 
 
-	my $db=new OME::SetDB(
-		OME::DBConnection->DataSource(),
-		OME::DBConnection->DBUser(),
-		OME::DBConnection->DBPassword()
-	);
+	my $db=new OME::SetDB();
 
 	if (scalar(@datasets)>0){
 	  $result=deleteProjectDatasetMap($deleteProject,\@datasets,$db);

@@ -58,6 +58,7 @@ use Sys::Hostname;
 use OME::Session;
 use OME::Analysis::Engine::Worker;
 use OME::Tasks::NotificationManager;
+use OME::Database::Delegate;
 
 use constant SERVER_BUSY     => 503;
 our $DATA_SOURCE;
@@ -68,10 +69,7 @@ sub new {
 	my $class = ref($proto) || $proto;
 	
 	unless ($DATA_SOURCE) {
-		$DATA_SOURCE = OME::DBConnection->DataSource();
-		$DATA_SOURCE .= ';host='.hostname()
-			unless $DATA_SOURCE =~ /;host=\S+/
-			and not $DATA_SOURCE =~ /;host=localhost/;
+		$DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getRemoteDSN();
 	}
 
 	my $self = {
