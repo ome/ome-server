@@ -614,7 +614,6 @@ This list will be constructed in one of three ways.
 
 sub getFields {
 	my ($self, $type, $mode) = @_;
-	print STDERR "hello world\n";
 	my $specializedRenderer = ( $self->_getSpecializedRenderer( $type ) or {} );
 
 	# default: return all fields (insensitive to mode)
