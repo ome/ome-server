@@ -27,7 +27,7 @@ import java.awt.geom.*;
 import javax.swing.*;
 import java.util.*;
 
-import org.openmicroscopy.analysis.*;
+import org.openmicroscopy.*;
 
 public class PlaygroundPane
     extends JPanel
@@ -46,16 +46,118 @@ public class PlaygroundPane
     protected Map             instanceWidgets;
     protected WidgetListener  widgetListener;
 
+    protected class ResizingDesktopPane
+        extends JDesktopPane
+    {
+        public Dimension getPreferredSize()
+        {
+            int  width = 0, height = 0;
+            Iterator  i = instanceWidgets.values().iterator();
+            Rectangle bounds = new Rectangle();
+            while (i.hasNext())
+            {
+                ChainNodeWidget widget = (ChainNodeWidget) i.next();
+                widget.getBounds(bounds);
+
+                int x2 = bounds.x+bounds.width;
+                if (x2 > width) width = x2;
+
+                int y2 = bounds.y+bounds.height;
+                if (y2 > height) height = y2;
+            }
+
+            return new Dimension(width,height);
+        }
+
+        public void paintChildren(Graphics g) 
+        {
+            super.paintChildren(g);
+
+            Graphics2D g2 = (Graphics2D) g;
+            Iterator   i = chain.getLinkIterator();
+
+            g2.setPaint(Color.black);
+
+            //Point playgroundLocation = playgroundPane.getLocation();
+            Point playgroundLocation = new Point(0,0);
+            AffineTransform  defaultTransform = g2.getTransform();
+
+            while (i.hasNext())
+            {
+                Chain.Link  link = (Chain.Link) i.next();
+
+                //System.err.println("*** "+link);
+
+                ChainNodeWidget  fromWidget = (ChainNodeWidget) instanceWidgets.get(link.getFromNode());
+                ChainNodeWidget  toWidget = (ChainNodeWidget) instanceWidgets.get(link.getToNode());
+
+                if ((fromWidget == null) || (toWidget == null))
+                {
+                    System.err.println("Parameter link for a node that has no widget.");
+                    continue;
+                }
+            
+                Point  fromPoint = null, toPoint = null;
+
+                try
+                {
+                    fromPoint = fromWidget.getOutputNubLocation(link.getFromOutput());
+                    toPoint = toWidget.getInputNubLocation(link.getToInput());
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.err.println("Parameter link to invalid input/output.");
+                    continue;
+                }
+
+                fromPoint.translate(playgroundLocation.x,playgroundLocation.y);
+                toPoint.translate(playgroundLocation.x,playgroundLocation.y);
+            
+                //System.err.println("  "+fromPoint.x+","+fromPoint.y+" "+toPoint.x+","+toPoint.y);
+
+                double  x1 = fromPoint.getX();
+                double  y1 = fromPoint.getY();
+                double  x2 = toPoint.getX();
+                double  y2 = toPoint.getY();
+                double  dX = x2-x1;
+                double  xM = x1+(dX/2);
+                double  xT = x2-(ARROW_WIDTH*2);
+                double  xS = x1+(ARROW_WIDTH);
+
+                /*            
+                              g2.draw(new Line2D.Double(x1,y1,xM,y1));
+                              g2.draw(new Line2D.Double(xM,y1,xM,y2));
+                              g2.draw(new Line2D.Double(xM,y2,x2,y2));
+                */
+
+                g2.setStroke(s1);
+                g2.draw(new Line2D.Double(xS,y1,xT,y2));
+
+                g2.setStroke(s2);
+                g2.draw(new Line2D.Double(x1,y1,xS,y1));
+                g2.draw(new Line2D.Double(xT+1,y2,x2-1,y2));
+
+                g2.transform(AffineTransform.getTranslateInstance(toPoint.x,toPoint.y));
+                g2.fill(ARROWHEAD);
+                g2.setTransform(defaultTransform);
+            }
+
+        }
+    }
+
     public PlaygroundPane(Chain chain)
     {
-	super(new BorderLayout());
+        super(new BorderLayout());
 
         this.chain = chain;
         this.instanceWidgets = new HashMap();
 
-	playground = new JDesktopPane();
+        playground = new ResizingDesktopPane();
         playground.setOpaque(false);
-	add(playground,BorderLayout.CENTER);
+        JScrollPane  scroll = 
+            new JScrollPane(playground,
+                            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        //scroll.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
+        add(scroll,BorderLayout.CENTER);
         setOpaque(false);
 
         widgetListener = new WidgetListener();
@@ -89,86 +191,14 @@ public class PlaygroundPane
         }
 
         cnWidget.addComponentListener(widgetListener);
-	playground.add(cnWidget);
+        playground.add(cnWidget);
         instanceWidgets.put(node,cnWidget);
-	cnWidget.setLocation(new Point(x,y));
-	cnWidget.setSize(cnWidget.getPreferredSize());
+        cnWidget.setLocation(new Point(x,y));
+        cnWidget.setSize(cnWidget.getPreferredSize());
         cnWidget.unhighlightAllLabels();
     }
 
     private static Stroke s1 = new BasicStroke(1.0f);
     private static Stroke s2 = new BasicStroke(2.0f);
 
-    public void paintChildren(Graphics g) 
-    {
-        super.paintChildren(g);
-
-        Graphics2D g2 = (Graphics2D) g;
-        Iterator   i = chain.getLinkIterator();
-
-        g2.setPaint(Color.black);
-
-        //Point playgroundLocation = playgroundPane.getLocation();
-        Point playgroundLocation = new Point(0,0);
-        AffineTransform  defaultTransform = g2.getTransform();
-
-        while (i.hasNext())
-        {
-            Chain.Link  link = (Chain.Link) i.next();
-
-            //System.err.println("*** "+link);
-
-            ChainNodeWidget  fromWidget = (ChainNodeWidget) instanceWidgets.get(link.getFromNode());
-            ChainNodeWidget  toWidget = (ChainNodeWidget) instanceWidgets.get(link.getToNode());
-
-            if ((fromWidget == null) || (toWidget == null))
-            {
-                System.err.println("Parameter link for a node that has no widget.");
-                continue;
-            }
-            
-            Point  fromPoint = null, toPoint = null;
-
-            try
-            {
-                fromPoint = fromWidget.getOutputNubLocation(link.getFromOutput());
-                toPoint = toWidget.getInputNubLocation(link.getToInput());
-            } catch (ArrayIndexOutOfBoundsException e) {
-                System.err.println("Parameter link to invalid input/output.");
-                continue;
-            }
-
-            fromPoint.translate(playgroundLocation.x,playgroundLocation.y);
-            toPoint.translate(playgroundLocation.x,playgroundLocation.y);
-            
-            //System.err.println("  "+fromPoint.x+","+fromPoint.y+" "+toPoint.x+","+toPoint.y);
-
-            double  x1 = fromPoint.getX();
-            double  y1 = fromPoint.getY();
-            double  x2 = toPoint.getX();
-            double  y2 = toPoint.getY();
-            double  dX = x2-x1;
-            double  xM = x1+(dX/2);
-            double  xT = x2-(ARROW_WIDTH*2);
-            double  xS = x1+(ARROW_WIDTH);
-
-            /*            
-            g2.draw(new Line2D.Double(x1,y1,xM,y1));
-            g2.draw(new Line2D.Double(xM,y1,xM,y2));
-            g2.draw(new Line2D.Double(xM,y2,x2,y2));
-            */
-
-            g2.setStroke(s1);
-            g2.draw(new Line2D.Double(xS,y1,xT,y2));
-
-            g2.setStroke(s2);
-            g2.draw(new Line2D.Double(x1,y1,xS,y1));
-            g2.draw(new Line2D.Double(xT+1,y2,x2-1,y2));
-
-            g2.transform(AffineTransform.getTranslateInstance(toPoint.x,toPoint.y));
-            g2.fill(ARROWHEAD);
-            g2.setTransform(defaultTransform);
-        }
-
-    }
 }

@@ -32,7 +32,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeModelEvent;
 
-import org.openmicroscopy.analysis.Module;
+import org.openmicroscopy.*;
 
 public class ModuleTreeModel
     implements TreeModel
@@ -48,7 +48,7 @@ public class ModuleTreeModel
 
     public void updateCategories()
     {
-        SortedMap  categoryMap = Module.getCategories();
+        SortedMap  categoryMap = CategorizedModules.getCategories();
         Set        keys = categoryMap.keySet();
 
         categories = new ArrayList(keys);
@@ -80,7 +80,7 @@ public class ModuleTreeModel
             return categories.get(index);
         } else if (parent instanceof String) {
             // SOOO SLOW
-            SortedSet categorySet = (SortedSet) Module.getCategories().get(parent);
+            SortedSet categorySet = (SortedSet) CategorizedModules.getCategories().get(parent);
             List      categoryList = new ArrayList(categorySet);
             return categoryList.get(index);
         } else {
@@ -95,7 +95,7 @@ public class ModuleTreeModel
             return categories.size();
         } else if (parent instanceof String) {
             // SOOO SLOW
-            SortedSet categorySet = (SortedSet) Module.getCategories().get(parent);
+            SortedSet categorySet = (SortedSet) CategorizedModules.getCategories().get(parent);
             List      categoryList = new ArrayList(categorySet);
             return categoryList.size();
         } else {
@@ -110,7 +110,7 @@ public class ModuleTreeModel
             return categories.indexOf(child);
         } else if (parent instanceof String) {
             // SOOO SLOW
-            SortedSet categorySet = (SortedSet) Module.getCategories().get(parent);
+            SortedSet categorySet = (SortedSet) CategorizedModules.getCategories().get(parent);
             List      categoryList = new ArrayList(categorySet);
             return categoryList.indexOf(child);
         } else {

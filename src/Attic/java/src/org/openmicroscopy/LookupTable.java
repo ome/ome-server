@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.analysis.Granularity
+ * org.openmicroscopy.LookupTable
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -19,11 +19,37 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy.analysis;
+package org.openmicroscopy;
 
-public interface Granularity
+import java.util.List;
+import java.util.Iterator;
+
+public interface LookupTable
 {
-    public static final int DATASET = 0;
-    public static final int IMAGE   = 1;
-    public static final int FEATURE = 2;
+    public String getName();
+    public void setName(String name);
+
+    public String getDescription();
+    public void setDescription(String description);
+
+
+    public int getNumEntries();
+    public Entry getEntry(int index);
+    public Iterator getEntryIterator();
+    public List getEntries();
+
+    public Entry addEntry(String value,String label);
+
+
+    public interface Entry
+        extends Comparable
+    {
+        public LookupTable getLookupTable();
+
+        public String getValue();
+        public void setValue(String value);
+
+        public String getLabel();
+        public void setLabel(String label);
+    }
 }

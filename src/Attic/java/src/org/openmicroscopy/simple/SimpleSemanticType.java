@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.analysis.DataTable
+ * org.openmicroscopy.simple.SimpleAttributeType
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -19,37 +19,40 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy.analysis;
+package org.openmicroscopy.simple;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class DataTable
+import org.openmicroscopy.*;
+
+public class SimpleAttributeType
+    implements AttributeType
 {
-    protected String  tableName, description;
+    protected String  name, description;
     protected int     granularity;
     protected List    columns;
 
-    public DataTable() 
+    public SimpleAttributeType() 
     {
         this.columns = new ArrayList();
     }
 
-    public DataTable(String tableName,
-                     String description,
-                     int    granularity)
+    public SimpleAttributeType(String name,
+                               String description,
+                               int    granularity)
     {
-        this.tableName = tableName;
+        this.name = name;
         this.description = description;
         this.granularity = granularity;
         this.columns = new ArrayList();
     }
         
-    public String getTableName()
-    { return tableName; }
-    public void setTableName(String tableName)
-    { this.tableName = tableName; }
+    public String getName()
+    { return name; }
+    public void setName(String name)
+    { this.name = name; }
 
     public String getDescription()
     { return description; }
@@ -69,34 +72,36 @@ public class DataTable
     { return columns.iterator(); }
     public List getColumns() { return columns; }
 
-    public Column addColumn(String columnName,
-                            String columnDescription,
-                            String sqlType)
+    public Column addColumn(String           columnName,
+                            String           columnDescription,
+                            DataTable.Column dataColumn)
     {
         Column column;
 
-        columns.add(column = new Column(columnName,
-                                        columnDescription,
-                                        sqlType));
+        columns.add(column = new SimpleColumn(columnName,
+                                              columnDescription,
+                                              dataColumn));
         return column;
     }
 
-    public class Column
+    public class SimpleColumn
+        implements AttributeType.Column
     {
-        protected String columnName, columnDescription, sqlType;
+        protected String            columnName, columnDescription;
+        protected DataTable.Column  dataColumn;
 
-        public Column() {}
+        public SimpleColumn() {}
 
-        public Column(String columnName,
-                      String columnDescription,
-                      String sqlType)
+        public SimpleColumn(String           columnName,
+                            String           columnDescription,
+                            DataTable.Column dataColumn)
         {
             this.columnName = columnName;
             this.columnDescription = columnDescription;
-            this.sqlType = sqlType;
+            this.dataColumn = dataColumn;
         }
 
-        public DataTable getDataTable() { return DataTable.this; }
+        public AttributeType getAttributeType() { return SimpleAttributeType.this; }
 
         public String getColumnName()
         { return columnName; }
@@ -108,9 +113,9 @@ public class DataTable
         public void setColumnDescription(String columnDescription)
         { this.columnDescription = columnDescription; }
 
-        public String getSqlType()
-        { return sqlType; }
-        public void setSqlType(String sqlType)
-        { this.sqlType = sqlType; }
+        public DataTable.Column getDataColumn()
+        { return dataColumn; }
+        public void setDataColumn(DataTable.Column dataColumn)
+        { this.dataColumn = dataColumn; }
     }
 }

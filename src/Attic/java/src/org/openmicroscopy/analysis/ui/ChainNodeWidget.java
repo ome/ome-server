@@ -28,10 +28,10 @@ import javax.swing.event.*;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.openmicroscopy.analysis.*;
+import org.openmicroscopy.*;
 
 public class ChainNodeWidget
-  extends JPanel
+    extends JPanel
 {
     protected Chain.Node  node;
     protected JLabel      lblName, lblDescription, inputLabels[], outputLabels[];
@@ -40,38 +40,32 @@ public class ChainNodeWidget
 
     protected PlaygroundController  controller;
 
-    private class DragMouseListener extends MouseInputAdapter
-    {
-	int lastX = -1, lastY = -1;
-	boolean  good = false;
-    
-	public void mousePressed(MouseEvent e)
-	{
-	    Component  c = e.getComponent();
-
-	    lastX = c.getX()+e.getX();
-	    lastY = c.getY()+e.getY();
-
-	    good = lblName.getBounds().contains(e.getPoint());
-	}
-    
-	public void mouseDragged(MouseEvent e)
-	{
-	    Component  c = e.getComponent();
-	    int thisX = c.getX()+e.getX(), thisY = c.getY()+e.getY();
-      
-	    if (good)
-            {
-		c.setLocation(c.getX()+thisX-lastX,c.getY()+thisY-lastY);
-                c.getParent().invalidate();
-            }
-	    lastX = thisX;
-	    lastY = thisY;
-	}
-    }
-
     private class TitleMouseListener extends MouseInputAdapter
     {
+        int lastX = -1, lastY = -1;
+    
+        public void mousePressed(MouseEvent e)
+        {
+            Component  c = e.getComponent();
+            Component  p = c.getParent();
+
+            lastX = p.getX()+e.getX();
+            lastY = p.getY()+e.getY();
+        }
+    
+        public void mouseDragged(MouseEvent e)
+        {
+            Component  c = e.getComponent();
+            Component  p = c.getParent();
+            int thisX = p.getX()+e.getX(), thisY = p.getY()+e.getY();
+      
+            p.setLocation(p.getX()+thisX-lastX,p.getY()+thisY-lastY);
+            p.getParent().invalidate();
+
+            lastX = thisX;
+            lastY = thisY;
+        }
+
         public void mouseEntered(MouseEvent e)
         {
             controller.displayMessage("Drag to move this module");
@@ -138,9 +132,9 @@ public class ChainNodeWidget
 
     public ChainNodeWidget(Chain.Node node, PlaygroundController controller)
     {
-	super();
+        super();
 
-	this.node = node;
+        this.node = node;
         this.controller = controller;
         this.parameters = new HashMap();
         this.labels = new HashMap();
@@ -155,31 +149,33 @@ public class ChainNodeWidget
 
     private void initialize()
     {
-	//setSize(new Dimension(60,60));
-	setLayout(new BorderLayout());
-	setBorder(BorderFactory.createRaisedBevelBorder());
+        //setSize(new Dimension(60,60));
+        setLayout(new BorderLayout());
+        setBorder(BorderFactory.createRaisedBevelBorder());
     
-	JLabel  lbl0;
-	Module    module = node.getModule();
+        JLabel  lbl0;
+        Module    module = node.getModule();
 
-	lbl0 = new JLabel(module.getName(),SwingConstants.CENTER);
+        lbl0 = new JLabel(module.getName(),SwingConstants.CENTER);
         lbl0.setBorder(BorderFactory.createEmptyBorder(0,6,0,6));
-	add(lbl0,BorderLayout.NORTH);
-	lblName = lbl0;
-        lblName.addMouseListener(new TitleMouseListener());
+        add(lbl0,BorderLayout.NORTH);
+        lblName = lbl0;
+        TitleMouseListener ml = new TitleMouseListener();
+        lblName.addMouseListener(ml);
+        lblName.addMouseMotionListener(ml);
 
-	labelPanel = new JPanel(new GridLayout(0,2,0,0));
-	labelPanel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
+        labelPanel = new JPanel(new GridLayout(0,2,0,0));
+        labelPanel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 
-	int  numInputs = module.getNumInputs();
-	int  numOutputs = module.getNumOutputs();
-	int  max = (numInputs > numOutputs)? numInputs: numOutputs;
+        int  numInputs = module.getNumInputs();
+        int  numOutputs = module.getNumOutputs();
+        int  max = (numInputs > numOutputs)? numInputs: numOutputs;
 
-	inputLabels = new JLabel[numInputs];
-	outputLabels = new JLabel[numOutputs];
+        inputLabels = new JLabel[numInputs];
+        outputLabels = new JLabel[numOutputs];
 
-	Font font = lbl0.getFont();
-	unhighlightedFont = font.deriveFont(Font.PLAIN);
+        Font font = lbl0.getFont();
+        unhighlightedFont = font.deriveFont(Font.PLAIN);
         unhighlightedColor = Color.black;
         highlightedFont = font.deriveFont(Font.BOLD);
         highlightedColor = lbl0.getForeground();
@@ -189,8 +185,8 @@ public class ChainNodeWidget
         LabelMouseListener  inputListener = new LabelMouseListener(true);
         LabelMouseListener  outputListener = new LabelMouseListener(false);
 
-	for (int i = 0; i < max; i++)
-	{
+        for (int i = 0; i < max; i++)
+        {
             Module.FormalParameter  param = null;
 
             if (i < numInputs)
@@ -206,7 +202,7 @@ public class ChainNodeWidget
             }
 
             highlightLabel(param);
-	    labelPanel.add(lbl0);
+            labelPanel.add(lbl0);
 
             if (i < numOutputs)
             {
@@ -221,14 +217,10 @@ public class ChainNodeWidget
             }
 
             highlightLabel(param);
-	    labelPanel.add(lbl0);
-	}
+            labelPanel.add(lbl0);
+        }
 
-	add(labelPanel,BorderLayout.CENTER);
-  
-	DragMouseListener ml = new DragMouseListener();
-	addMouseListener(ml);
-	addMouseMotionListener(ml);
+        add(labelPanel,BorderLayout.CENTER);
     }
 
     public Chain.Node getChainNode() { return node; }
@@ -237,8 +229,8 @@ public class ChainNodeWidget
     {
         if (lbl0 != null)
         {
-	    lbl0.setFont(highlightedFont);
-	    lbl0.setForeground(highlightedColor);
+            lbl0.setFont(highlightedFont);
+            lbl0.setForeground(highlightedColor);
         }
     }
 
@@ -246,8 +238,8 @@ public class ChainNodeWidget
     {
         if (lbl0 != null)
         {
-	    lbl0.setFont(unhighlightedFont);
-	    lbl0.setForeground(unhighlightedColor);
+            lbl0.setFont(unhighlightedFont);
+            lbl0.setForeground(unhighlightedColor);
         }
     }
 
@@ -255,8 +247,8 @@ public class ChainNodeWidget
     {
         if (lbl0 != null)
         {
-	    lbl0.setFont(italicFont);
-	    lbl0.setForeground(italicColor);
+            lbl0.setFont(italicFont);
+            lbl0.setForeground(italicColor);
         }
     }
 

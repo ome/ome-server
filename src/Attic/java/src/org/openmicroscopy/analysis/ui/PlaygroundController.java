@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.openmicroscopy.analysis.*;
+import org.openmicroscopy.*;
 
 public class PlaygroundController
 {

@@ -1,0 +1,129 @@
+<html>
+<head>
+<title>Chain Builder Test</title>
+</head>
+
+<body>
+<h3>Chain builder test</h3>
+<hr>
+<applet
+  code="org/openmicroscopy/analysis/ui/ChainBuilderApplet.class"
+  codebase="build/"
+  width=800
+  height=600>
+
+<param name="DataTables" value="2">
+
+<param name="DataTable0/TableName" value="PLANE_STATISTICS">
+<param name="DataTable0/Granularity" value="I">
+<param name="DataTable0/Columns" value="6">
+<param name="DataTable0/Column0/Name" value="THE_Z">
+<param name="DataTable0/Column1/Name" value="THE_C">
+<param name="DataTable0/Column2/Name" value="THE_T">
+<param name="DataTable0/Column3/Name" value="MINIMUM">
+<param name="DataTable0/Column4/Name" value="CENTROID_X">
+<param name="DataTable0/Column5/Name" value="CENTROID_Y">
+
+<param name="DataTable1/TableName" value="STACK_STATISTICS">
+<param name="DataTable1/Granularity" value="I">
+<param name="DataTable1/Columns" value="6">
+<param name="DataTable1/Column0/Name" value="THE_C">
+<param name="DataTable1/Column1/Name" value="THE_T">
+<param name="DataTable1/Column2/Name" value="MINIMUM">
+<param name="DataTable1/Column3/Name" value="CENTROID_X">
+<param name="DataTable1/Column4/Name" value="CENTROID_Y">
+<param name="DataTable1/Column5/Name" value="CENTROID_Z">
+
+<param name="AttributeTypes" value="4">
+
+<param name="AttributeType0/Name" value="PlaneMinimum">
+<param name="AttributeType0/Granularity" value="I">
+<param name="AttributeType0/Columns" value="4">
+<param name="AttributeType0/Column0/Name" value="TheZ">
+<param name="AttributeType0/Column0/DataColumn" value="DataTable0/Column0">
+<param name="AttributeType0/Column1/Name" value="TheC">
+<param name="AttributeType0/Column1/DataColumn" value="DataTable0/Column1">
+<param name="AttributeType0/Column2/Name" value="TheT">
+<param name="AttributeType0/Column2/DataColumn" value="DataTable0/Column2">
+<param name="AttributeType0/Column3/Name" value="Minimum">
+<param name="AttributeType0/Column3/DataColumn" value="DataTable0/Column3">
+
+<param name="AttributeType1/Name" value="PlaneCentroid">
+<param name="AttributeType1/Granularity" value="I">
+<param name="AttributeType1/Columns" value="5">
+<param name="AttributeType1/Column0/Name" value="TheZ">
+<param name="AttributeType1/Column0/DataColumn" value="DataTable0/Column0">
+<param name="AttributeType1/Column1/Name" value="TheC">
+<param name="AttributeType1/Column1/DataColumn" value="DataTable0/Column1">
+<param name="AttributeType1/Column2/Name" value="TheT">
+<param name="AttributeType1/Column2/DataColumn" value="DataTable0/Column2">
+<param name="AttributeType1/Column3/Name" value="X">
+<param name="AttributeType1/Column3/DataColumn" value="DataTable0/Column5">
+<param name="AttributeType1/Column4/Name" value="Y">
+<param name="AttributeType1/Column4/DataColumn" value="DataTable0/Column5">
+
+<param name="AttributeType2/Name" value="StackMinimum">
+<param name="AttributeType2/Granularity" value="I">
+<param name="AttributeType2/Columns" value="3">
+<param name="AttributeType2/Column0/Name" value="TheC">
+<param name="AttributeType2/Column0/DataColumn" value="DataTable1/Column0">
+<param name="AttributeType2/Column1/Name" value="TheT">
+<param name="AttributeType2/Column1/DataColumn" value="DataTable1/Column1">
+<param name="AttributeType2/Column2/Name" value="Minimum">
+<param name="AttributeType2/Column2/DataColumn" value="DataTable1/Column2">
+
+<param name="AttributeType3/Name" value="StackCentroid">
+<param name="AttributeType3/Granularity" value="I">
+<param name="AttributeType3/Columns" value="4">
+<param name="AttributeType3/Column0/Name" value="TheC">
+<param name="AttributeType3/Column0/DataColumn" value="DataTable1/Column0">
+<param name="AttributeType3/Column1/Name" value="TheT">
+<param name="AttributeType3/Column1/DataColumn" value="DataTable1/Column1">
+<param name="AttributeType3/Column2/Name" value="X">
+<param name="AttributeType3/Column2/DataColumn" value="DataTable1/Column3">
+<param name="AttributeType3/Column3/Name" value="Y">
+<param name="AttributeType3/Column3/DataColumn" value="DataTable1/Column4">
+<param name="AttributeType3/Column4/Name" value="Z">
+<param name="AttributeType3/Column4/DataColumn" value="DataTable1/Column5">
+
+<param name="Modules" value="2">
+
+<param name="Module0/Name" value="Plane statistics">
+<param name="Module0/Category" value="Statistics">
+<param name="Module0/Location" value="/OME/bin/OME_Image_XY_stats">
+<param name="Module0/ModuleType" value="OME::Analysis::CLIHandler">
+<param name="Module0/FormalInputs" value="0">
+<param name="Module0/FormalOutputs" value="2">
+<param name="Module0/FormalOutput0/Name" value="Minima">
+<param name="Module0/FormalOutput0/AttributeType" value="AttributeType0">
+<param name="Module0/FormalOutput1/Name" value="Centroids">
+<param name="Module0/FormalOutput1/AttributeType" value="AttributeType1">
+
+<param name="Module1/Name" value="Stack statistics">
+<param name="Module1/Category" value="Statistics">
+<param name="Module1/Location" value="/OME/bin/OME_Image_XYZ_stats">
+<param name="Module1/ModuleType" value="OME::Analysis::CLIHandler">
+<param name="Module1/FormalInputs" value="0">
+<param name="Module1/FormalOutputs" value="2">
+<param name="Module1/FormalOutput0/Name" value="Minima">
+<param name="Module1/FormalOutput0/AttributeType" value="AttributeType2">
+<param name="Module1/FormalOutput1/Name" value="Centroids">
+<param name="Module1/FormalOutput1/AttributeType" value="AttributeType3">
+
+<param name="ImportChain/Name" value="Test chain">
+<param name="ImportChain/Locked" value="false">
+<param name="ImportChain/Nodes" value="2">
+<param name="ImportChain/Node0/Module" value="Module0">
+<param name="ImportChain/Node0/X" value="50">
+<param name="ImportChain/Node0/Y" value="150">
+<param name="ImportChain/Node1/Module" value="Module1">
+<param name="ImportChain/Node1/X" value="50">
+<param name="ImportChain/Node1/Y" value="350">
+<param name="ImportChain/Links" value="0">
+
+<param name="Chain" value="ImportChain">
+
+</applet>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.analysis.LookupTable
+ * org.openmicroscopy.simple.SimpleLookupTable
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -19,20 +19,23 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy.analysis;
+package org.openmicroscopy.simple;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class LookupTable
+import org.openmicroscopy.*;
+
+public class SimpleLookupTable
+    implements LookupTable
 {
     protected String  name, description;
     protected List    entries;
 
-    public LookupTable() {}
+    public SimpleLookupTable() {}
 
-    public LookupTable(String name, String description)
+    public SimpleLookupTable(String name, String description)
     {
         this.name = name;
         this.description = description;
@@ -62,25 +65,25 @@ public class LookupTable
     {
         Entry entry;
 
-        entries.add(entry = new Entry(value,label));
+        entries.add(entry = new SimpleEntry(value,label));
         return entry;
     }
 
 
-    public class Entry
-        implements Comparable
+    public class SimpleEntry
+        implements LookupTable.Entry
     {
         protected String  value, label;
 
-        public Entry() {}
+        public SimpleEntry() {}
 
-        public Entry(String value, String label)
+        public SimpleEntry(String value, String label)
         {
             this.value = value;
             this.label = label;
         }
 
-        public LookupTable getLookupTable() { return LookupTable.this; }
+        public LookupTable getLookupTable() { return SimpleLookupTable.this; }
 
         public String getValue() 
         { return value; }
@@ -94,9 +97,9 @@ public class LookupTable
 
         public int compareTo(Object o)
         {
-            Entry e = (Entry) o;
+            LookupTable.Entry e = (LookupTable.Entry) o;
 
-            return this.label.compareTo(e.label);
+            return this.label.compareTo(e.getLabel());
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.analysis.Module
+ * org.openmicroscopy.simple.SimpleModule
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -19,43 +19,34 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy.analysis;
+package org.openmicroscopy.simple;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.Iterator;
 
-public class Module
-    implements Comparable
+import org.openmicroscopy.*;
+
+public class SimpleModule
+    implements Module
 {
     protected List    inputs, outputs;
     protected String  name, description, location, moduleType;
     protected String  category, defaultIterator, newFeatureTag;
 
-    protected static SortedMap  categories = new TreeMap();
-
-    public static SortedMap getCategories()
-    { return categories; }
-    public static SortedSet getCategory(String category)
-    { return (SortedSet) categories.get(category); }
-
-    public Module()
+    public SimpleModule()
     {
-	this.inputs = new ArrayList();
-	this.outputs = new ArrayList();
+        this.inputs = new ArrayList();
+        this.outputs = new ArrayList();
     }
 
-    public Module(String name,
-                  String description,
-                  String location,
-                  String moduleType,
-                  String category,
-                  String defaultIterator,
-                  String newFeatureTag)
+    public SimpleModule(String name,
+                        String description,
+                        String location,
+                        String moduleType,
+                        String category,
+                        String defaultIterator,
+                        String newFeatureTag)
     {
         this.name = name;
         this.description = description;
@@ -64,16 +55,10 @@ public class Module
         this.category = category;
         this.defaultIterator = defaultIterator;
         this.newFeatureTag = newFeatureTag;
-	this.inputs = new ArrayList();
-	this.outputs = new ArrayList();
+        this.inputs = new ArrayList();
+        this.outputs = new ArrayList();
 
-        SortedSet categoryList = (SortedSet) categories.get(category);
-        if (categoryList == null)
-        {
-            categoryList = new TreeSet();
-            categories.put(category,categoryList);
-        }
-        categoryList.add(this);
+        CategorizedModules.addModule(this);
     }
 
     public String getName() 
@@ -101,20 +86,12 @@ public class Module
     public void setCategory(String category) 
     { 
         if (this.category != null)
-        {
-            SortedSet  categoryList = (SortedSet) categories.get(this.category);
-            if (categoryList != null)
-                categoryList.remove(this);
-        }
+            CategorizedModules.removeModule(this);
 
         this.category = category; 
-        SortedSet  categoryList = (SortedSet) categories.get(category);
-        if (categoryList == null)
-        {
-            categoryList = new TreeSet();
-            categories.put(category,categoryList);
-        }
-        categoryList.add(this);
+
+        if (this.category != null)
+            CategorizedModules.addModule(this);
     }
 
     public String getDefaultIterator() 
@@ -142,9 +119,9 @@ public class Module
     {
         FormalInput input;
 
-        inputs.add(input = new FormalInput(name,
-                                           description,
-                                           attributeType));
+        inputs.add(input = new SimpleFormalInput(name,
+                                                 description,
+                                                 attributeType));
         return input;
     }
 
@@ -164,10 +141,10 @@ public class Module
     {
         FormalOutput output;
 
-        outputs.add(output = new FormalOutput(name,
-                                              description,
-                                              attributeType,
-                                              featureTag));
+        outputs.add(output = new SimpleFormalOutput(name,
+                                                    description,
+                                                    attributeType,
+                                                    featureTag));
         return output;
     }
 
@@ -181,29 +158,30 @@ public class Module
     {
         Module m = (Module) o;
 
-        return this.name.compareTo(m.name);
+        return this.name.compareTo(m.getName());
     }
 
 
-    public class FormalParameter
+    public class SimpleFormalParameter
+        implements Module.FormalParameter
     {
         protected String         parameterName, parameterDescription;
         protected AttributeType  attributeType;
         
-        private FormalParameter()
+        private SimpleFormalParameter()
         {
         }
         
-        private FormalParameter(String        parameterName,
-                                String        parameterDescription,
-                                AttributeType attributeType)
+        private SimpleFormalParameter(String        parameterName,
+                                      String        parameterDescription,
+                                      AttributeType attributeType)
         {
             this.parameterName = parameterName;
             this.parameterDescription = parameterDescription;
             this.attributeType = attributeType;
         }
 
-        public Module getModule() { return Module.this; }
+        public Module getModule() { return SimpleModule.this; }
         
         public String getParameterName()
         { return parameterName; }
@@ -222,30 +200,34 @@ public class Module
     }
         
 
-    public class FormalInput extends FormalParameter
+    public class SimpleFormalInput
+        extends SimpleFormalParameter
+        implements Module.FormalInput
     {
         //protected Something lookupTable;
 
-        public FormalInput() { super(); }
+        public SimpleFormalInput() { super(); }
 
-        public FormalInput(String        name,
-                           String        description,
-                           AttributeType attributeType)
+        public SimpleFormalInput(String        name,
+                                 String        description,
+                                 AttributeType attributeType)
         {
             super(name,description,attributeType);
         }
     }
 
 
-    public class FormalOutput extends FormalParameter
+    public class SimpleFormalOutput
+        extends SimpleFormalParameter
+        implements Module.FormalOutput
     {
         protected String  featureTag;
 
-        public FormalOutput() { super(); }
+        public SimpleFormalOutput() { super(); }
 
-        public FormalOutput(String        name,
-                            String        description,
-                            AttributeType attributeType,
+        public SimpleFormalOutput(String        name,
+                                  String        description,
+                                  AttributeType attributeType,
                             String        featureTag)
         {
             super(name,description,attributeType);

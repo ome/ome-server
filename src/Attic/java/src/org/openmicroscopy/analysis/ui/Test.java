@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
+import org.openmicroscopy.*;
 import org.openmicroscopy.analysis.*;
 
 public class Test
@@ -36,8 +37,8 @@ public class Test
 
         chain = (args.length > 0)? args[0]: "IMAGE_IMPORT";
 
-	Test  test = new Test(chain);
-	test.setVisible(true);
+        Test  test = new Test(chain);
+        test.setVisible(true);
     }
 
     protected PlaygroundPane        playgroundPane;
@@ -45,20 +46,20 @@ public class Test
    
     protected Test(String chain)
     {
-	super("Analysis Engine");
+        super("Analysis Engine");
 
-	Container  cp = getContentPane();
-	cp.setLayout(new BorderLayout());
+        Container  cp = getContentPane();
+        cp.setLayout(new BorderLayout());
 
-	setSize(800,600);
+        setSize(800,600);
 
-	addWindowListener(new WindowAdapter()
-	    {
-		public void windowClosing(WindowEvent e)
-		{
-		    System.exit(0);
-		}
-	    });
+        addWindowListener(new WindowAdapter()
+            {
+                public void windowClosing(WindowEvent e)
+                {
+                    System.exit(0);
+                }
+            });
 
         JPanel p1;
         controller = new PlaygroundController();
@@ -108,8 +109,8 @@ public class Test
         p1.add(lbl0,BorderLayout.SOUTH);
         controller.setStatusLabel(lbl0);
 
-	p1 = new JPanel(new BorderLayout());
-	p1.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        p1 = new JPanel(new BorderLayout());
+        p1.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
         cp.add(p1,BorderLayout.WEST);
 
         JTree tree = new JTree(new ModuleTreeModel());

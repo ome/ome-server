@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.analysis.Chain
+ * org.openmicroscopy.simple.SimpleChain
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -19,26 +19,29 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy.analysis;
+package org.openmicroscopy.simple;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class Chain
+import org.openmicroscopy.*;
+
+public class SimpleChain
+    implements Chain
 {
     protected String   owner;  // will change to an Owner class eventually
     protected String   name;
     protected boolean  locked;
     protected List     nodes, links;
 
-    public Chain()
+    public SimpleChain()
     {
         this.nodes = new ArrayList();
         this.links = new ArrayList();
     }
 
-    public Chain(String owner, String name, boolean locked)
+    public SimpleChain(String owner, String name, boolean locked)
     {
         this.owner = owner;
         this.name = name;
@@ -77,7 +80,7 @@ public class Chain
     {
         Node node;
 
-        nodes.add(node = new Node(module,iteratorTag,newFeatureTag));
+        nodes.add(node = new SimpleNode(module,iteratorTag,newFeatureTag));
         return node;
     }
 
@@ -97,28 +100,29 @@ public class Chain
     {
         Link link;
 
-        links.add(link = new Link(fromNode,fromOutput,toNode,toInput));
+        links.add(link = new SimpleLink(fromNode,fromOutput,toNode,toInput));
         return link;
     }
 
     
-    public class Node
+    public class SimpleNode
+        implements Chain.Node
     {
         protected Module  module;
         protected String  iteratorTag, newFeatureTag;
 
-        public Node() {}
+        public SimpleNode() {}
 
-        public Node(Module module,
-                    String iteratorTag,
-                    String newFeatureTag)
+        public SimpleNode(Module module,
+                          String iteratorTag,
+                          String newFeatureTag)
         {
             this.module = module;
             this.iteratorTag = iteratorTag;
             this.newFeatureTag = newFeatureTag;
         }
 
-        public Chain getChain() { return Chain.this; }
+        public Chain getChain() { return SimpleChain.this; }
 
         public Module getModule() 
         { return module; }
@@ -137,19 +141,20 @@ public class Chain
     }
 
 
-    public class Link
+    public class SimpleLink
+        implements Chain.Link
     {
         protected Node                 fromNode;
         protected Module.FormalOutput  fromOutput;
         protected Node                 toNode;
         protected Module.FormalInput   toInput;
 
-        public Link() {}
+        public SimpleLink() {}
 
-        public Link(Node                fromNode,
-                    Module.FormalOutput fromOutput,
-                    Node                toNode,
-                    Module.FormalInput  toInput)
+        public SimpleLink(Node                fromNode,
+                          Module.FormalOutput fromOutput,
+                          Node                toNode,
+                          Module.FormalInput  toInput)
         {
             this.fromNode = fromNode;
             this.fromOutput = fromOutput;
@@ -157,7 +162,7 @@ public class Chain
             this.toInput = toInput;
         }
 
-        public Chain getChain() { return Chain.this; }
+        public Chain getChain() { return SimpleChain.this; }
 
         public Node getFromNode() 
         { return fromNode; }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.analysis.AttributeType
+ * org.openmicroscopy.simple.SimpleDataTable
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -19,37 +19,40 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy.analysis;
+package org.openmicroscopy.simple;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class AttributeType
+import org.openmicroscopy.*;
+
+public class SimpleDataTable
+    implements DataTable
 {
-    protected String  name, description;
+    protected String  tableName, description;
     protected int     granularity;
     protected List    columns;
 
-    public AttributeType() 
+    public SimpleDataTable() 
     {
         this.columns = new ArrayList();
     }
 
-    public AttributeType(String name,
-                         String description,
-                         int    granularity)
+    public SimpleDataTable(String tableName,
+                           String description,
+                           int    granularity)
     {
-        this.name = name;
+        this.tableName = tableName;
         this.description = description;
         this.granularity = granularity;
         this.columns = new ArrayList();
     }
         
-    public String getName()
-    { return name; }
-    public void setName(String name)
-    { this.name = name; }
+    public String getTableName()
+    { return tableName; }
+    public void setTableName(String tableName)
+    { this.tableName = tableName; }
 
     public String getDescription()
     { return description; }
@@ -69,35 +72,35 @@ public class AttributeType
     { return columns.iterator(); }
     public List getColumns() { return columns; }
 
-    public Column addColumn(String           columnName,
-                            String           columnDescription,
-                            DataTable.Column dataColumn)
+    public Column addColumn(String columnName,
+                            String columnDescription,
+                            String sqlType)
     {
         Column column;
 
-        columns.add(column = new Column(columnName,
-                                        columnDescription,
-                                        dataColumn));
+        columns.add(column = new SimpleColumn(columnName,
+                                              columnDescription,
+                                              sqlType));
         return column;
     }
 
-    public class Column
+    public class SimpleColumn
+        implements DataTable.Column
     {
-        protected String            columnName, columnDescription;
-        protected DataTable.Column  dataColumn;
+        protected String columnName, columnDescription, sqlType;
 
-        public Column() {}
+        public SimpleColumn() {}
 
-        public Column(String           columnName,
-                      String           columnDescription,
-                      DataTable.Column dataColumn)
+        public SimpleColumn(String columnName,
+                            String columnDescription,
+                            String sqlType)
         {
             this.columnName = columnName;
             this.columnDescription = columnDescription;
-            this.dataColumn = dataColumn;
+            this.sqlType = sqlType;
         }
 
-        public AttributeType getAttributeType() { return AttributeType.this; }
+        public DataTable getDataTable() { return SimpleDataTable.this; }
 
         public String getColumnName()
         { return columnName; }
@@ -109,9 +112,9 @@ public class AttributeType
         public void setColumnDescription(String columnDescription)
         { this.columnDescription = columnDescription; }
 
-        public DataTable.Column getDataColumn()
-        { return dataColumn; }
-        public void setDataColumn(DataTable.Column dataColumn)
-        { this.dataColumn = dataColumn; }
+        public String getSQLType()
+        { return sqlType; }
+        public void setSQLType(String sqlType)
+        { this.sqlType = sqlType; }
     }
 }

@@ -25,14 +25,17 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.openmicroscopy.*;
+import org.openmicroscopy.simple.*;
+
 public class TestInstances
 {
     // XYZ_IMAGE_INFO data table
 
     public static DataTable  xyzImageInfo =
-    new DataTable("XYZ_IMAGE_INFO",
-                  "General image XYZ stack attributes.  Produced from XML.",
-                  Granularity.IMAGE);
+    new SimpleDataTable("XYZ_IMAGE_INFO",
+                        "General image XYZ stack attributes.  Produced from XML.",
+                        Granularity.IMAGE);
 
     public static DataTable.Column  xyzImageInfo_theW =
     xyzImageInfo.addColumn("THE_W","Wavelength","integer");
@@ -58,9 +61,9 @@ public class TestInstances
     // XYZ_IMAGE_INFO attribute types
 
     public static AttributeType  stackMin =
-    new AttributeType("Stack minimum",
-                      "Minimum pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Stack minimum",
+                            "Minimum pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  stackMin_theW =
     stackMin.addColumn("Wavepoint","Wavepoint",xyzImageInfo_theW);
     public static AttributeType.Column  stackMin_theT =
@@ -69,9 +72,9 @@ public class TestInstances
     stackMin.addColumn("Minimum","Minimum",xyzImageInfo_min);
 
     public static AttributeType  stackMax =
-    new AttributeType("Stack maximum",
-                      "Maximum pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Stack maximum",
+                            "Maximum pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  stackMax_theW =
     stackMax.addColumn("Wavepoint","Wavepoint",xyzImageInfo_theW);
     public static AttributeType.Column  stackMax_theT =
@@ -80,9 +83,9 @@ public class TestInstances
     stackMax.addColumn("Maximum","Maximum",xyzImageInfo_max);
 
     public static AttributeType  stackMean =
-    new AttributeType("Stack mean",
-                      "Mean pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Stack mean",
+                            "Mean pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  stackMean_theW =
     stackMean.addColumn("Wavepoint","Wavepoint",xyzImageInfo_theW);
     public static AttributeType.Column  stackMean_theT =
@@ -91,9 +94,9 @@ public class TestInstances
     stackMean.addColumn("Mean","Mean",xyzImageInfo_mean);
 
     public static AttributeType  stackGeomean =
-    new AttributeType("Stack geomean",
-                      "Geomean pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Stack geomean",
+                            "Geomean pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  stackGeomean_theW =
     stackGeomean.addColumn("Wavepoint","Wavepoint",xyzImageInfo_theW);
     public static AttributeType.Column  stackGeomean_theT =
@@ -102,9 +105,9 @@ public class TestInstances
     stackGeomean.addColumn("Geomean","Geomean",xyzImageInfo_geomean);
 
     public static AttributeType  stackSigma =
-    new AttributeType("Stack sigma",
-                      "Sigma pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Stack sigma",
+                            "Sigma pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  stackSigma_theW =
     stackSigma.addColumn("Wavepoint","Wavepoint",xyzImageInfo_theW);
     public static AttributeType.Column  stackSigma_theT =
@@ -113,9 +116,9 @@ public class TestInstances
     stackSigma.addColumn("Sigma","Sigma",xyzImageInfo_sigma);
 
     public static AttributeType  stackCentroid =
-    new AttributeType("Stack centroid",
-                      "Centroid pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Stack centroid",
+                            "Centroid pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  stackCentroid_theW =
     stackCentroid.addColumn("Wavepoint","Wavepoint",xyzImageInfo_theW);
     public static AttributeType.Column  stackCentroid_theT =
@@ -130,9 +133,9 @@ public class TestInstances
     // XY_IMAGE_INFO data table
 
     public static DataTable  xyImageInfo =
-    new DataTable("XY_IMAGE_INFO",
-                  "General image XY plane attributes.  Produced from XML.",
-                  Granularity.IMAGE);
+    new SimpleDataTable("XY_IMAGE_INFO",
+                        "General image XY plane attributes.  Produced from XML.",
+                        Granularity.IMAGE);
 
     public static DataTable.Column  xyImageInfo_theW =
     xyImageInfo.addColumn("THE_W","Wavelength","integer");
@@ -158,9 +161,9 @@ public class TestInstances
     // XY_IMAGE_INFO attribute types
 
     public static AttributeType  planeMin =
-    new AttributeType("Plane minimum",
-                      "Minimum pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Plane minimum",
+                            "Minimum pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  planeMin_theW =
     planeMin.addColumn("Wavepoint","Wavepoint",xyImageInfo_theW);
     public static AttributeType.Column  planeMin_theT =
@@ -171,9 +174,9 @@ public class TestInstances
     planeMin.addColumn("Minimum","Minimum",xyImageInfo_min);
 
     public static AttributeType  planeMax =
-    new AttributeType("Plane maximum",
-                      "Maximum pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Plane maximum",
+                            "Maximum pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  planeMax_theW =
     planeMax.addColumn("Wavepoint","Wavepoint",xyImageInfo_theW);
     public static AttributeType.Column  planeMax_theT =
@@ -184,9 +187,9 @@ public class TestInstances
     planeMax.addColumn("Maximum","Maximum",xyImageInfo_max);
 
     public static AttributeType  planeMean =
-    new AttributeType("Plane mean",
-                      "Mean pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Plane mean",
+                            "Mean pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  planeMean_theW =
     planeMean.addColumn("Wavepoint","Wavepoint",xyImageInfo_theW);
     public static AttributeType.Column  planeMean_theT =
@@ -197,9 +200,9 @@ public class TestInstances
     planeMean.addColumn("Mean","Mean",xyImageInfo_mean);
 
     public static AttributeType  planeGeomean =
-    new AttributeType("Plane geomean",
-                      "Geomean pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Plane geomean",
+                            "Geomean pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  planeGeomean_theW =
     planeGeomean.addColumn("Wavepoint","Wavepoint",xyImageInfo_theW);
     public static AttributeType.Column  planeGeomean_theT =
@@ -210,9 +213,9 @@ public class TestInstances
     planeGeomean.addColumn("Geomean","Geomean",xyImageInfo_geomean);
 
     public static AttributeType  planeSigma =
-    new AttributeType("Plane sigma",
-                      "Sigma pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Plane sigma",
+                            "Sigma pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  planeSigma_theW =
     planeSigma.addColumn("Wavepoint","Wavepoint",xyImageInfo_theW);
     public static AttributeType.Column  planeSigma_theT =
@@ -223,9 +226,9 @@ public class TestInstances
     planeSigma.addColumn("Sigma","Sigma",xyImageInfo_sigma);
 
     public static AttributeType  planeCentroid =
-    new AttributeType("Plane centroid",
-                      "Centroid pixel intensity",
-                      Granularity.IMAGE);
+    new SimpleAttributeType("Plane centroid",
+                            "Centroid pixel intensity",
+                            Granularity.IMAGE);
     public static AttributeType.Column  planeCentroid_theW =
     planeCentroid.addColumn("Wavepoint","Wavepoint",xyImageInfo_theW);
     public static AttributeType.Column  planeCentroid_theT =
@@ -240,9 +243,9 @@ public class TestInstances
     // LOCATION_5 data table
 
     public static DataTable  location5table =
-    new DataTable("LOCATION_5",
-                  "5D coordinate",
-                  Granularity.FEATURE);
+    new SimpleDataTable("LOCATION_5",
+                        "5D coordinate",
+                        Granularity.FEATURE);
 
     public static DataTable.Column  location5table_X =
     location5table.addColumn("X","X coordinate","float");
@@ -258,7 +261,7 @@ public class TestInstances
     // LOCATION_5 attributes
 
     public static AttributeType  location5 =
-    new AttributeType("5D location","5D location",Granularity.FEATURE);
+    new SimpleAttributeType("5D location","5D location",Granularity.FEATURE);
     public static AttributeType.Column  location5_X =
     location5.addColumn("X","X",location5table_X);
     public static AttributeType.Column  location5_Y =
@@ -273,13 +276,13 @@ public class TestInstances
     // Stack statistics module
 
     public static Module  stackStats =
-    new Module("Stack statistics",
-               "Calculate pixel statitics per XYZ stack",
-               "/OME/bin/OME_Image_XYZ_stats",
-               "OME::Analysis::CLIHandler",
-               "Statistics",
-               null,
-               null);
+    new SimpleModule("Stack statistics",
+                     "Calculate pixel statitics per XYZ stack",
+                     "/OME/bin/OME_Image_XYZ_stats",
+                     "OME::Analysis::CLIHandler",
+                     "Statistics",
+                     null,
+                     null);
     public static Module.FormalOutput stackStats_min =
     stackStats.addOutput("Minima","Minima",stackMin,null);
     public static Module.FormalOutput stackStats_max =
@@ -296,13 +299,13 @@ public class TestInstances
     // Plane statistics module
 
     public static Module  planeStats =
-    new Module("Plane statistics",
-               "Calculate pixel statitics per XY plane",
-               "/OME/bin/OME_Image_XY_stats",
-               "OME::Analysis::CLIHandler",
-               "Statistics",
-               null,
-               null);
+    new SimpleModule("Plane statistics",
+                     "Calculate pixel statitics per XY plane",
+                     "/OME/bin/OME_Image_XY_stats",
+                     "OME::Analysis::CLIHandler",
+                     "Statistics",
+                     null,
+                     null);
     public static Module.FormalOutput planeStats_min =
     planeStats.addOutput("Minima","Minima",planeMin,null);
     public static Module.FormalOutput planeStats_max =
@@ -319,13 +322,13 @@ public class TestInstances
     // Find spots module
 
     public static Module  findSpots =
-    new Module("Find spots",
-               "Finds spots in the image",
-               "/OME/bin/findSpotsOME",
-               "OME::Analysis::FindSpotsHandler",
-               "Segmentation",
-               null,
-               "SPOT");
+    new SimpleModule("Find spots",
+                     "Finds spots in the image",
+                     "/OME/bin/findSpotsOME",
+                     "OME::Analysis::FindSpotsHandler",
+                     "Segmentation",
+                     null,
+                     "SPOT");
     public static Module.FormalInput findSpots_min =
     findSpots.addInput("Stack minima","Stack minima",stackMin);
     public static Module.FormalInput findSpots_max =
@@ -342,7 +345,7 @@ public class TestInstances
     // Image import chain
 
     public static Chain  imageImportChain = 
-    new Chain("Douglas Creager","Image import chain",true);
+    new SimpleChain("Douglas Creager","Image import chain",true);
     public static Chain.Node  imageImport_stackStats =
     imageImportChain.addNode(stackStats,null,null);
     public static Chain.Node  imageImport_planeStats =
@@ -351,7 +354,7 @@ public class TestInstances
     // Find spots chain
 
     public static Chain  findSpotsChain = 
-    new Chain("Douglas Creager","Image import chain",true);
+    new SimpleChain("Douglas Creager","Image import chain",true);
     public static Chain.Node  findSpots_stackStats =
     findSpotsChain.addNode(stackStats,null,null);
     public static Chain.Node  findSpots_findSpots =
@@ -375,7 +378,7 @@ public class TestInstances
     // No-links find spots chain
 
     public static Chain  testFindSpotsChain = 
-    new Chain("Douglas Creager","Image import chain",true);
+    new SimpleChain("Douglas Creager","Image import chain",true);
     public static Chain.Node  testFindSpots_stackStats =
     testFindSpotsChain.addNode(stackStats,null,null);
     public static Chain.Node  testFindSpots_findSpots =
