@@ -56,7 +56,8 @@ OMEimage.VERSION = 0.5;
 *****/
 
 
-function OMEimage( imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, default_WBS ) {
+function OMEimage( imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, 
+	SaveDisplayCGI_URL, default_WBS, default_RGBon, default_isRGB, DatasetID ) {
 
 	// A mild test for valid input
 	var goodInput = 1; 
@@ -72,7 +73,8 @@ function OMEimage( imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, de
 
 	// Test over. Did you pass?
 	if(goodInput == 1)
-		this.init(imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, default_WBS )
+		this.init(imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, 
+			SaveDisplayCGI_URL, default_WBS, default_RGBon, default_isRGB, DatasetID )
 	else
 		alert("Bad initialization parameters given to OMEimage.");
 }
@@ -99,16 +101,57 @@ OMEimage.prototype.realize = function(SVGparentNode) {
 /*****
 
 	saveState()
-		calls a CGI to save current WBS to OME DB
+		calls a CGI to save current view settings for this image to the DB
 
-	need2do
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.saveState = function() {
-	// determine if settings differ from defaults. (Do we need to save?)
-	// call a CGI via a image load to save current WBS, isRGB, and RGBon
-	// is the CGI's URL hardcoded or passed as a param?
+	var tmpImg;
+	tmpImg = svgDocument.createElementNS(svgns,"image");
+	tmpImg.setAttribute("width",0);
+	tmpImg.setAttribute("height",0);
+	var d = new Array();
+	for(i in this.Dims) d.push(this.Dims[i]);
+	// The purpose of unique is to bypass any image caching
+	var unique   = Math.random();
+	var imageURL = this.SaveDisplayCGI_URL + '&ImageID=' + this.imageID + 
+		'&theZ=' + theZ + '&theT=' + theT + "&RGBon=" + this.RGBon.join() +
+		'&WBS=' + this.WBS.join() + "&isRGB=" + this.inColor + "&Unique=" + unique;
+	tmpImg.setAttributeNS(xlinkns, "xlink:href",imageURL);
+
+	this.SVGimageContainer.appendChild(tmpImg);
+	this.SVGimageContainer.removeChild(tmpImg);
+
+	return 1;
+}
+
+/*****
+
+	saveStateDataset()
+		calls a CGI to apply current view settings to all images in dataset
+
+	comprehensively tested
+
+*****/
+OMEimage.prototype.saveStateDataset = function() {
+	var tmpImg;
+	tmpImg = svgDocument.createElementNS(svgns,"image");
+	tmpImg.setAttribute("width",0);
+	tmpImg.setAttribute("height",0);
+	var d = new Array();
+	for(i in this.Dims) d.push(this.Dims[i]);
+	// The purpose of unique is to bypass any image caching
+	var unique   = Math.random();
+	var imageURL = this.SaveDisplayCGI_URL + '&DatasetID=' + this.DatasetID + 
+		'&theZ=' + theZ + '&theT=' + theT + "&RGBon=" + this.RGBon.join() +
+		'&WBS=' + this.WBS.join() + "&isRGB=" + this.inColor + "&Unique=" + unique;
+	tmpImg.setAttributeNS(xlinkns, "xlink:href",imageURL);
+
+	this.SVGimageContainer.appendChild(tmpImg);
+	this.SVGimageContainer.removeChild(tmpImg);
+
+	return 1;
 }
 
 /*****
@@ -448,6 +491,18 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 	return cWBS;
 }
 
+/*****
+
+	getDisplayRGB_BW()
+		returns 1 if display is color, 0 if display is b/w
+		
+	comprehensively tested
+		
+*****/
+OMEimage.prototype.getDisplayRGB_BW = function() {
+	return this.inColor;
+}
+
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -464,20 +519,23 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 	comprehensively tested
 
 *****/
-OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims,  CGI_URL, CGI_optionStr, default_WBS ) {
+OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims,  CGI_URL, CGI_optionStr,
+	SaveDisplayCGI_URL, default_WBS, default_RGBon, default_isRGB, DatasetID ) {
 	// set variables
-	this.imageID = imageID;
-	this.Wavelengths = Wavelengths;
-	this.Stats = Stats;
-	this.CGI_URL = CGI_URL;
-	this.CGI_optionStr = CGI_optionStr;
-	this.Dims = new Array();
-	this.Dims['X'] = Dims[0];
-	this.Dims['Y'] = Dims[1];
-	this.Dims['Z'] = Dims[2];
-	this.Dims['W'] = Dims[3];
-	this.Dims['T'] = Dims[4];
-	this.Dims['bpp'] = Dims[5];
+	this.DatasetID          = DatasetID
+	this.imageID            = imageID;
+	this.Wavelengths        = Wavelengths;
+	this.Stats              = Stats;
+	this.CGI_URL            = CGI_URL;
+	this.CGI_optionStr      = CGI_optionStr;
+	this.SaveDisplayCGI_URL = SaveDisplayCGI_URL;
+	this.Dims               = new Array();
+	this.Dims['X']          = Dims[0];
+	this.Dims['Y']          = Dims[1];
+	this.Dims['Z']          = Dims[2];
+	this.Dims['W']          = Dims[3];
+	this.Dims['T']          = Dims[4];
+	this.Dims['bpp']        = Dims[5];
 	
 	// set optional variable
 	if( default_WBS != null )
@@ -490,14 +548,17 @@ OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims,  CGI_URL,
 	for(var i=0;i<this.SVGimages.length;i++)
 		this.SVGimages[i] = new Array(this.Dims['T']);
 
-	this.inColor = 1;
-	this.RGBon = new Array();
-	for(i=0;i<3;i++)
-		if(i<this.Dims['W'])
-			this.RGBon.push(1);
-		else
-			this.RGBon.push(0);
-			
+	this.inColor = (default_isRGB != null ? default_isRGB : 1 );
+	if( default_RGBon != null )
+		this.RGBon = default_RGBon;
+	else {
+		this.RGBon = new Array();
+		for(i=0;i<3;i++)
+			if(i<this.Dims['W'])
+				this.RGBon.push(1);
+			else
+				this.RGBon.push(0);
+	}			
 }
 
 /*****
