@@ -4,4 +4,3 @@ mxComplexity            T_IV
 mxLogical               T_BOOL
 mxChar                  T_U_SHORT
 mxClassID               T_IV
-const char *            T_PV
