@@ -145,7 +145,9 @@ LANGUAGE 'plpgsql';
 SQL
 	$dbh->{RaiseError} = 0;
 	$dbh->do ($sql);
-	die ($dbh->errstr) unless $dbh->errstr() =~ /already exists/;
+	if ($dbh->errstr()) {
+		die ($dbh->errstr) unless $dbh->errstr() =~ /already exists/;
+	}
 	$dbh->disconnect();
 	print "\t\033[1m[Done.]\033[0m\n";
 
