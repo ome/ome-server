@@ -61,9 +61,9 @@ public class PChainToolTipHandler extends PToolTipHandler {
 				getModule().getName();
 				tooltipNode.setText(t);
 			}
-			else if (n instanceof PLink) {
-				PFormalInput in = ((PLink) n).getInput();
-				PFormalOutput out = ((PLink) n).getOutput();
+			else if (n instanceof PParamLink) {
+				PFormalInput in = ((PParamLink) n).getInput();
+				PFormalOutput out = ((PParamLink) n).getOutput();
 				String s = in.getName()+"-"+out.getName();
 				tooltipNode.setText(s);
 			}
