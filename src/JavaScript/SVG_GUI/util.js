@@ -76,9 +76,8 @@ Util.err = function( msg ) {
 	var unique   = date.getSeconds() + '' + date.getUTCMilliseconds();
 	var imageURL = "/perl2/SVGcatchMsg.pl?msg=" + msg + "&unique=" + unique;
 	tmpImg.setAttributeNS(Util.xlinkns, "href",imageURL);
-	var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
-	toolboxLayer.appendChild(tmpImg);
-	toolboxLayer.removeChild(tmpImg);
+	svgDocument.documentElement.appendChild(tmpImg);
+	svgDocument.documentElement.removeChild(tmpImg);
 
 	// scrolling error messages if there's a text element w/ id "_util_text_err"
 	if( !this.err_text ) {
@@ -90,7 +89,7 @@ Util.err = function( msg ) {
 			var old_line = this.err_lines.shift();
 			this.err_text.removeChild( old_line );
 		}
-		var newLine = this.createElementSVG( "tspan", { 'x': 0, 'dy': '1em' } );
+		var newLine = this.createElementSVG( "tspan", { 'x': 440, 'dy': '1em' } );
 		newLine.appendChild( svgDocument.createTextNode( msg ) );
 		this.err_lines.push( newLine );
 		this.err_text.appendChild( newLine );
