@@ -212,6 +212,7 @@ print   "---------------------------------------------------------\n";
 #  Version checks:
 sub DBI_VersionOK {
 my $version = shift;
+	return (1) if $version == 1.35;
 	return (1) if $version == 1.30;
 	return (1) if $version == 1.32;
 	return (0);
@@ -223,6 +224,7 @@ my $version = shift;
 	return (1) if $version == 1.01;
 	return (1) if $version == 1.20;
 	return (1) if $version == 1.21;
+	return (1) if $version == 1.22;
 	return (0);
 }
 
