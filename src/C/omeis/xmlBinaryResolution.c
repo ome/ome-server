@@ -461,14 +461,21 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 		/* error check: verify we have all needed attributes */
 		if( state->pixelInfo->X == 0 || state->pixelInfo->Y == 0 ||
 		    state->pixelInfo->Z == 0 || state->pixelInfo->C == 0 ||
-		    state->pixelInfo->T == 0 || state->pixelInfo->dimOrder == NULL ||
-		    state->pixelInfo->pixelType == NULL || state->pixelInfo->bigEndian == -1 ) {
-			fprintf( stderr, "Error! Pixels element does not have all required attributes!\n" );
+		    state->pixelInfo->T == 0 ) {
+			fprintf( stderr, "Error! Pixels element does not have all required dimension size attributes!\n" );
 			assert( state->pixelInfo->X != 0 && state->pixelInfo->Y != 0 &&
 			        state->pixelInfo->Z != 0 && state->pixelInfo->C != 0 &&
-		            state->pixelInfo->T != 0 && state->pixelInfo->dimOrder != NULL &&
-		            state->pixelInfo->pixelType != NULL && state->pixelInfo->bigEndian != -1
-			);
+		            state->pixelInfo->T != 0
+		    );
+		} else if (state->pixelInfo->dimOrder == NULL) {
+			fprintf( stderr, "Error! Pixels element does not have required DimensionOrder attribute!\n" );
+			assert( state->pixelInfo->dimOrder != NULL );
+		} else if (state->pixelInfo->pixelType == NULL) {
+			fprintf( stderr, "Error! Pixels element does not have required PixelType attribute!\n" );
+			assert( state->pixelInfo->pixelType != NULL );
+		} else if (state->pixelInfo->bigEndian == -1 ) {
+			fprintf( stderr, "Error! Pixels element does not have all required BigEndian attribute!\n" );
+			assert( state->pixelInfo->bigEndian != -1 );
 		}
 		
 		/* look up info for this pixel type */
