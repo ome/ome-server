@@ -61,7 +61,7 @@ if (scalar(@ARGV) <= 0) {
     $help = 0;
 }
 
-OME::Util::OMEcommander->handleCommand($help);
+OME::Util::OMECommander->handleCommand($help);
 
 
 
