@@ -46,7 +46,7 @@ into OME
 
 	use OME::ImportEngine::ImportEngine;
 	my $importer = OME::ImportEngine::ImportEngine->new(%flags);
-	my $images = $importer->importFiles(\@filenames);
+	my $images = $importer->importFiles($dataset, \@filenames);
 
 =head1 DESCRIPTION
 
@@ -140,13 +140,16 @@ sub __getFormats {
 
 =head2 importFiles
 
-	my $images = $importer->importFiles($files);
+	my $images = $importer->importFiles($dataset, $files);
 
-Imports a list of image files.  Note that there is no implicit mapping
-between filenames and images; in several image formats, an image is
-split across several files.  The import classes for those formats will
-correctly group the filenames by image, and import the grouped files
-accordingly.
+Imports a list of image files into a dataset.  Note that there is no
+implicit mapping between filenames and images; in several image formats,
+an image is split across several files.  The import classes for those
+formats will correctly group the filenames by image, and import the
+grouped files accordingly.
+
+If the $dataset provided is locked, a fatal error will be thrown. The
+dataset may already contain images as long as it is not locked.
 
 The $files parameter is given as an array reference to allow it to
 be modified by the import engine.  Any files which are successfully
@@ -154,20 +157,18 @@ imported into some image will be removed from the list.  After the
 call to C<importFiles> returns, none of the files left in the array
 were recognized by any of the import formats.
 
-The list of images imported is returned as an array reference.  If you
-want these newly imported images to be added to a dataset for the
-user, this must be done separately.
+The list of images imported is returned as an array reference.
 
 Note that if you are only going to make a single call to importFiles,
 there is a shorter, alternative syntax that combines the calls to new
 and importFiles into a single method call:
 
 	my $importer = OME::ImportEngine::ImportEngine->new(%flags);
-	$importer->importFiles($filenames);
+	$importer->importFiles($dataset, $filenames);
 
 would become
 
-	OME::ImportEngine::ImportEngine->importFiles(%flags,$filenames);
+	OME::ImportEngine::ImportEngine->importFiles(%flags, $dataset, $filenames);
 
 The two syntaxes are identical in behavior.  All of the rules
 governing the parameters to C<new> are also in effect in the
@@ -180,18 +181,6 @@ sub startImport {
     my $self = shift;
 
     my $session = OME::Session->instance();
-    my $factory = $session->Factory();
-
-    # Create the new dummy dataset.
-
-    my $dataset = $factory->
-      newObject("OME::Dataset",
-                {
-                 name => "ImportSet",
-                 description => "Images imported by OME::ImportEngine",
-                 locked => 1,
-                 owner_id => $session->experimenter_id(),
-                });
 
     # Have the manager officially start the import process, and create
     # the MEX (module execution record) that represents the act of
@@ -200,30 +189,32 @@ sub startImport {
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
     $session->commitTransaction();
 
-    $self->{_dataset} = $dataset;
-
-    return ($dataset,$files_mex);
+    return $files_mex;
 }
 
 sub importFiles {
     my $self = shift;
-    my $files;
+    my ($dataset, $files);
 
     my $called_as_class = 0;
 
     # Allows this to be called as a class method.
     if (!ref($self)) {
         $files = pop;
+        $dataset = pop;
         $self = $self->new(@_);
         $self->startImport();
         $called_as_class = 1;
     } else {
-        $files = shift;
+        ($dataset, $files) = @_;
     }
+
+	# error check
+	die "Cannot import into a locked dataset"
+		if $dataset->locked();
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
-    my $dataset = $self->{_dataset};
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
     my %files;
@@ -360,7 +351,7 @@ sub importFiles {
 			}
 			
 			foreach $image (@$import_images) {
-				# Add the new image to the dummy dataset.
+				# Add the new image to the dataset.
 				$factory->newObject("OME::Image::DatasetMap",
 									{
 									 image_id   => $image->id(),
@@ -392,7 +383,6 @@ sub finishImport {
     my $self = shift;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
-    my $dataset = $self->{_dataset};
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
     # Wrap up things in the database.
