@@ -319,7 +319,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	}
 	
 	private void zoomToChain(PChainBox cb) {
-		System.err.println("zooming in on chain.");
+		//System.err.println("zooming in on chain.");
 		PBufferedNode cBox = (PBufferedNode) cb;				
 		PBounds b = cBox.getBufferedBounds();
 		PCamera camera = getCamera();
