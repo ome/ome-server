@@ -1836,7 +1836,7 @@ sub __makeSelectSQL {
 
         foreach my $column_alias (@$columns_wanted) {
             my $column = $columns->{$column_alias};
-            confess "Column $column_alias does not exist"
+            confess "Column $column_alias does not exist in class $class"
               unless defined $column;
 
             push @columns_needed, $column->[0].".".$column->[1];
