@@ -1,0 +1,59 @@
+
+my $rename_tables = {
+	CATEGORY => 'CATEGORIES',
+	CATEGORY_GROUP => 'CATEGORY_GROUPS',
+};
+
+my $mod_tables = {};
+
+foreach my $mod_st (('CategoryGroup','Category')) {
+	my $ST = $factory->findObject("OME::SemanticType", name => $mod_st);
+	next unless $ST;
+
+	my @SEs = $ST->semantic_elements();
+
+	foreach my $SE (@SEs) {
+		my $table = $SE->data_column()->data_table();
+		my $tName = uc ($table->table_name());
+	# Rename the table
+		if (exists $rename_tables->{$tName}) {
+			$dbh->do ("ALTER TABLE $tName RENAME TO ".$rename_tables->{$tName})
+					or die "Could not rename table $tName to ".$rename_tables->{$tName};
+			$table->table_name($rename_tables->{$tName});
+			$table->storeObject();
+			delete $rename_tables->{$tName};
+		}
+
+	# Change granularity
+		if ($ST->granularity() eq 'D') {
+			$ST->granularity('G');
+			$ST->storeObject();
+		}
+
+		unless (exists $mod_tables->{$tName}) {
+			$delegate->dropColumn ($dbh, $tName,'dataset_id');
+			$mod_tables->{$tName} = 1;
+		}
+	}
+	
+# Get all attributes of this ST
+	my $attrs = $factory->findAttributes($ST);
+	while (my $attr = $attrs->next()) {
+	# set the MEX dependence to 'G'
+		my $mex = $attr->module_execution();
+		if ($mex and $mex->dependence () eq 'D') {
+			$mex->dependence ('G');
+			$mex->dataset_id (undef);
+			$mex->storeObject();
+		}
+	}
+	
+	
+}
+
+# for each mex: Set the dataset_id column for each mex to null
+#               Set the dependence to G
+# rename the data tables (category->categories, category_group->category_groups)
+# rename DB tables
+
+1;
