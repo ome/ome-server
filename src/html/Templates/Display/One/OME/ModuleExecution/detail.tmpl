@@ -3,27 +3,51 @@
 		<font class="ome_header_title">Module Execution: <TMPL_VAR NAME='/name'></font> 
 	</caption>
 	<tr>
-		<td valign=top class="ome_td">id</td>
+		<td valign=top class="ome_td">ID</td>
 		<td valign=top class="ome_td"><TMPL_VAR NAME="id"></td>
 	</tr>
 	<tr>
-		<td valign=top class="ome_td">module</td>
+		<td valign=top class="ome_td">Module</td>
 		<td valign=top class="ome_td"><TMPL_VAR NAME="module"></td>
 	</tr>
 	<tr>
-		<td valign=top class="ome_td">timestamp</td>
+		<td valign=top class="ome_td">Start Timestamp</td>
 		<td valign=top class="ome_td"><TMPL_VAR NAME="timestamp"></td>
 	</tr>
 	<tr>
-		<td valign=top class="ome_td">dataset</td>
+		<td valign=top class="ome_td">Elapsed Time (R)</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="attribute_db_time"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">Elapsed Time (X)</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="total_time"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">Elapsed Time (W)</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="attribute_create_time"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">Elapsed Time (T)</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="attribute_sort_time"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">Dataset</td>
 		<td valign=top class="ome_td"><TMPL_VAR NAME="dataset"></td>
 	</tr>
 	<tr>
-		<td valign=top class="ome_td">image</td>
+		<td valign=top class="ome_td">Image</td>
 		<td valign=top class="ome_td"><TMPL_VAR NAME="image"></td>
 	</tr>
 	<tr>
-		<td valign=top class="ome_td">experimenter</td>
+		<td valign=top class="ome_td">Experimenter</td>
 		<td valign=top class="ome_td"><TMPL_VAR NAME="experimenter"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">Status</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="status"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">Error Message</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="error_message"></td>
 	</tr>
 </table>
