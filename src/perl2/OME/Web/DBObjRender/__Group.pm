@@ -70,7 +70,7 @@ returns a dropdown list of Group names valued by id.
 =cut
 
 sub getRefSearchField {
-	my ($proto, $from_type, $to_type, $accessor_to_type) = @_;
+	my ($proto, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
 	my $factory = OME::Session->instance()->Factory();
 	
@@ -85,9 +85,10 @@ sub getRefSearchField {
 	my $q = new CGI;
 
 	return $q->popup_menu( 
-		-name	=> $from_formal_name."_".$accessor_to_type,
+		-name	  => $from_formal_name."_".$accessor_to_type,
 		'-values' => $group_order,
-		-labels	 => \%group_names
+		-labels	  => \%group_names, 
+		-default  => $default
 	);
 
 }

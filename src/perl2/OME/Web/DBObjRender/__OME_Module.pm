@@ -60,12 +60,12 @@ use base qw(OME::Web::DBObjRender);
 
 =head2 getRefSearchField
 
-returns a dropdown list of Experimenter names valued by id.
+returns a dropdown list of Module names valued by id.
 
 =cut
 
 sub getRefSearchField {
-	my ($proto, $from_type, $to_type, $accessor_to_type) = @_;
+	my ($proto, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
 	my $factory = OME::Session->instance()->Factory();
 
@@ -80,7 +80,8 @@ sub getRefSearchField {
 	return $q->popup_menu( 
 		-name	=> $from_formal_name."_".$accessor_to_type,
 		'-values' => $module_order,
-		-labels	 => \%module_names
+		-labels	 => \%module_names,
+		-default  => $default
 	);
 
 }

@@ -115,7 +115,7 @@ No search field to Pixels
 =cut
 
 sub getRefSearchField {
-	my ($proto, $from_type, $to_type, $accessor_to_type) = @_;
+	my ($proto, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
 	return undef;
 }

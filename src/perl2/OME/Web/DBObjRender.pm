@@ -528,19 +528,20 @@ sub __gather_PublishedManyRefs {
 =head2 getSearchFields
 
 	# get html form elements keyed by field names 
-	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type, @fieldNames );
+	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type, \@fieldNames, \%default_search_values );
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
-$fieldNames is optional. It is used to populate the returned hash.
+@fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
+%default_search_values is also optional. If given, it is used to populate the search form fields.
 
 returns a hash { field_name => form_input, ... }
 
 =cut
 
 sub getSearchFields {
-	my ($proto,$type, $fieldNames) = @_;
+	my ($proto,$type, $fieldNames, $defaults) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getSearchFields( $type, $fieldNames )
@@ -557,11 +558,15 @@ sub getSearchFields {
 	my $size;
 	foreach my $accessor ( @$fieldNames ) {
 		if( $fieldRefs{ $accessor } ) {
-			$searchFields{ $accessor } = $proto->getRefSearchField( $formal_name, $fieldRefs{ $accessor }, $accessor );
+			$searchFields{ $accessor } = $proto->getRefSearchField( $formal_name, $fieldRefs{ $accessor }, $accessor, $defaults->{ $accessor } );
 		} else {
 			if( $accessor eq 'id' ) { $size = 5; }
 			else { $size = 8; }
-			$searchFields{ $accessor } = $q->textfield( -name => $formal_name."_".$accessor , -size => $size );
+			$searchFields{ $accessor } = $q->textfield( 
+				-name    => $formal_name."_".$accessor , 
+				-size    => $size, 
+				-default => $defaults->{ $accessor } 
+			);
 		}
 	}
 
