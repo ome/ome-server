@@ -76,7 +76,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	 * The initial magnification of the  canvas
 	 */
 	private static float INIT_SCALE=1.0f;
-	private static final int MIN_STRIP_HEIGHT=200;
 	
 	/**
 	 * Database connection 
@@ -197,7 +196,12 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		screenWidth = getWidth();
 		screenArea = screenHeight*screenWidth;
 		
-		scaleFactor = screenArea/totalArea;
+		scaleFactor = Math.sqrt(screenArea/totalArea);
+		System.err.println("scale factor is" +scaleFactor);
+		screenHeight /= scaleFactor;
+		screenWidth /= scaleFactor;
+		System.err.println("scaled height is "+screenHeight);
+		System.err.println("scaeld width is "+screenWidth);
 		strips = doTreeMap(datasets);
 	}
 
@@ -307,6 +311,17 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			ds.setHeight(stripHeight);
 		}
 		strips.add(strip);
+		// rescale
+		
+		iter = strips.iterator();
+		while (iter.hasNext()) {
+			Vector v = (Vector) iter.next();
+			Iterator iter2= v.iterator();
+			while (iter2.hasNext()) {
+				PDataset p = (PDataset) iter2.next();
+				p.scaleArea(scaleFactor);
+			}
+		}
 		return strips;
 	}
 	
@@ -325,12 +340,10 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 		System.err.println("strip area is "+stripArea);
 		
-		double ratio = stripArea/totalArea;
-		System.err.println("ratio is "+ratio);
+		//double ratio = stripArea/screenWidth;
 		oldHeight = stripHeight;
-		stripHeight = Math.ceil(ratio * getHeight());
-		if (stripHeight < MIN_STRIP_HEIGHT)
-			stripHeight = MIN_STRIP_HEIGHT;
+		//stripHeight = Math.ceil(ratio * screenHeight); // was getHeight());
+		stripHeight = stripArea/screenWidth;
 		System.err.println("strip height is "+stripHeight);
 		// get width of each and update ratios;
 		double width;
@@ -339,13 +352,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		iter = strip.iterator();
 		while (iter.hasNext()) {
 			PDataset node = (PDataset) iter.next();
-			//double area  =node.getContentsArea()*scaleFactor;
-			//width = Math.ceil(area/stripHeight);
-			double area = node.getContentsArea()/stripArea;
-			width = area*screenWidth;
-			System.err.println("dataset ..."+node.getDataset().getName()+", width "+width);
-			System.err.println("strip height is "+stripHeight);
-			System.err.println("..contents "+node.getContentsArea()+", scale factor "+scaleFactor);
+			width = node.getContentsArea()/stripHeight;
 			node.setWidth(width);
 			if (width > stripHeight) 
 				newAspectRatio += width/stripHeight;

@@ -110,10 +110,10 @@ public class PDataset extends PGenericBox {
 		//iter = getChildrenIterator();
 		Iterator iter  = dataset.getCachedImages(connection).iterator();
 	
-		System.err.println("layting out "+dataset.getName() +"...");
+	/*	System.err.println("layting out "+dataset.getName() +"...");
 		System.err.println("# of images is "+dataset.getImageCount());
 		System.err.println("height is "+height+", width is "+width);
-		
+	*/	
 		
 		while (iter.hasNext() && y < height) {
 			CImage image = (CImage) iter.next();
@@ -126,14 +126,14 @@ public class PDataset extends PGenericBox {
 		
 			b =  thumb.getGlobalFullBounds();
 	
-			System.err.println("dataset height is "+height);
+	/*		System.err.println("dataset height is "+height);
 			System.err.println("dataset width is "+width);
 			System.err.println("thumb width is "+b.getWidth()+", height "+b.getHeight());
-			System.err.println("starting x is "+x+", starting y is "+y);
+			System.err.println("starting x is "+x+", starting y is "+y);*/
 			double thumbWidth = b.getWidth();
 			if (x+thumbWidth  < width && y+b.getHeight() < height) {
 				thumb.setOffset(x,y);
-				System.err.println("same row. offset is "+x+","+y);
+				//System.err.println("same row. offset is "+x+","+y);
 			}
 			else {
 				if (y+ maxHeight+b.getHeight() +VGAP< height) {
@@ -141,11 +141,11 @@ public class PDataset extends PGenericBox {
 					x = HGAP;
 					thumb.setOffset(x,y);
 					
-					System.err.println("new row. offset is "+x+","+y);
+				//	System.err.println("new row. offset is "+x+","+y);
 					maxHeight = 0;
 				}
 				else {
-					System.err.println("wouldn't fit. removing");
+				//	System.err.println("wouldn't fit. removing");
 					removeChild(thumb);
 					//removeChild(lastThumb);
 					break;
@@ -155,7 +155,7 @@ public class PDataset extends PGenericBox {
 			if (thumb.getGlobalFullBounds().getHeight() > maxHeight) 
 				maxHeight = (float)thumb.getGlobalFullBounds().getHeight();
 		 	x+= thumbWidth;
-		 	System.err.println("new x is "+x+", new maxHeight is "+maxHeight);
+		 	//System.err.println("new x is "+x+", new maxHeight is "+maxHeight);
 		 	if (x > maxWidth) 
 		 		maxWidth =  x;
 		 	x+= HGAP;
@@ -202,11 +202,12 @@ public class PDataset extends PGenericBox {
 			y += maxHeight;
 		//System.err.println("calculated max widith of dataset.."+maxWidth);
 		//System.err.println("original width was "+width);
-		if (y < height) 
-			height = y;
+		System.err.println("height of dataset..."+y);
+	//if (y < height) 
+	//		height = y;
 		if (maxWidth < width)
 			nameLabel.resetWidth(maxWidth);		
-		setExtent(maxWidth+PConstants.SMALL_BORDER,
+		setExtent(width+PConstants.SMALL_BORDER,
 			height+PConstants.SMALL_BORDER); // was maxWidth
 	}
 	
@@ -270,5 +271,10 @@ public class PDataset extends PGenericBox {
 	
 	public void setHeight(double height) {
 		this.height = height;
+	}
+	
+	public void scaleArea(double scale) {
+		width *=scale;
+		height *=scale;
 	}
 }
