@@ -47,17 +47,35 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('analysis_chains');
-__PACKAGE__->sequence('analysis_chain_seq');
-__PACKAGE__->columns(Primary => qw(analysis_chain_id));
-__PACKAGE__->columns(Essential => qw(owner name locked));
-__PACKAGE__->columns(Description => qw(description));
-__PACKAGE__->has_many('nodes',
-                      'OME::AnalysisChain::Node' => qw(analysis_chain_id));
-__PACKAGE__->has_many('links',
-                      'OME::AnalysisChain::Link' => qw(analysis_chain_id));
-__PACKAGE__->has_many('paths',
-                      'OME::AnalysisPath' => qw(analysis_chain_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('analysis_chains');
+__PACKAGE__->setSequence('analysis_chain_seq');
+__PACKAGE__->addPrimaryKey('analysis_chain_id');
+__PACKAGE__->addColumn(owner_id => 'owner',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'experimenters',
+                       });
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(locked => 'locked',
+                       {
+                        SQLType => 'boolean',
+                        NotNull => 1,
+                        Default => 'false',
+                       });
+__PACKAGE__->hasMany('nodes',
+                     'OME::AnalysisChain::Node' => 'analysis_chain');
+__PACKAGE__->hasMany('links',
+                     'OME::AnalysisChain::Link' => 'analysis_chain');
+__PACKAGE__->hasMany('paths',
+                     'OME::AnalysisPath' => 'analysis_chain');
 
 =head1 METHODS (C<AnalysisView>)
 
@@ -122,13 +140,12 @@ sub owner {
     my $self = shift;
     if (@_) {
         my $attribute = shift;
-        die "Owner must be an Experimenter"
-          unless $attribute->semantic_type()->name() eq "Experimenter";
-        $self->_owner_accessor($attribute->id());
+        $attribute->verifyType('Experimenter');
+        $self->owner_id($attribute->id());
         return undef;
     } else {
         return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                          $self->_owner_accessor());
+                                                          $self->owner_id());
     }
 }
 
@@ -142,22 +159,36 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    analysis_chain_id => 'analysis_chain',
-    module_id       => 'module'
-    });
-
-__PACKAGE__->table('analysis_chain_nodes');
-__PACKAGE__->sequence('analysis_chain_nodes_seq');
-__PACKAGE__->columns(Primary => qw(analysis_chain_node_id));
-__PACKAGE__->columns(Essential => qw(analysis_chain_id module_id
-                                     iterator_tag new_feature_tag));
-__PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
-__PACKAGE__->hasa('OME::Module' => qw(module_id));
-__PACKAGE__->has_many('input_links',
-                      'OME::AnalysisChain::Link' => qw(to_node));
-__PACKAGE__->has_many('output_links',
-                      'OME::AnalysisChain::Link' => qw(from_node));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('analysis_chain_nodes');
+__PACKAGE__->setSequence('analysis_chain_nodes_seq');
+__PACKAGE__->addPrimaryKey('analysis_chain_node_id');
+__PACKAGE__->addColumn(analysis_chain_id => 'analysis_chain_id');
+__PACKAGE__->addColumn(analysis_chain => 'analysis_chain_id',
+                       'OME::AnalysisChain',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'analysis_chains',
+                       });
+__PACKAGE__->addColumn(module_id => 'module_id');
+__PACKAGE__->addColumn(module => 'module_id',
+                       'OME::Module',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'modules',
+                       });
+__PACKAGE__->addColumn(iterator_tag => 'iterator_tag',
+                       {SQLType => 'varchar(128)'});
+__PACKAGE__->addColumn(new_feature_tag => 'new_feature_tag',
+                       {SQLType => 'varchar(128)'});
+__PACKAGE__->hasMany('input_links',
+                     'OME::AnalysisChain::Link' => 'to_node');
+__PACKAGE__->hasMany('output_links',
+                     'OME::AnalysisChain::Link' => 'from_node');
 
 =head1 METHODS (C<AnalysisView::Node>)
 
@@ -219,21 +250,55 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    analysis_chain_id => 'analysis_chain'
-    });
-
-__PACKAGE__->table('analysis_chain_links');
-__PACKAGE__->sequence('analysis_chain_links_seq');
-__PACKAGE__->columns(Primary => qw(analysis_chain_link_id));
-__PACKAGE__->columns(Essential => qw(analysis_chain_id
-                                     from_node from_output
-                                     to_node to_input));
-__PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
-__PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(from_node));
-__PACKAGE__->hasa('OME::Module::FormalOutput' => qw(from_output));
-__PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(to_node));
-__PACKAGE__->hasa('OME::Module::FormalInput' => qw(to_input));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('analysis_chain_links');
+__PACKAGE__->setSequence('analysis_chain_links_seq');
+__PACKAGE__->addPrimaryKey('analysis_chain_link_id');
+__PACKAGE__->addColumn(analysis_chain_id => 'analysis_chain_id');
+__PACKAGE__->addColumn(analysis_chain => 'analysis_chain_id',
+                       'OME::AnalysisChain',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'analysis_chains',
+                       });
+__PACKAGE__->addColumn(from_node_id => 'from_node');
+__PACKAGE__->addColumn(from_node => 'from_node',
+                       'OME::AnalysisChain::Node',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'analysis_chain_nodes',
+                       });
+__PACKAGE__->addColumn(from_output_id => 'from_output');
+__PACKAGE__->addColumn(from_output => 'from_output',
+                       'OME::Module::FormalOutput',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'formal_outputs',
+                       });
+__PACKAGE__->addColumn(to_node_id => 'to_node');
+__PACKAGE__->addColumn(to_node => 'to_node',
+                       'OME::AnalysisChain::Node',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'analysis_chain_nodes',
+                       });
+__PACKAGE__->addColumn(to_input_id => 'to_input');
+__PACKAGE__->addColumn(to_input => 'to_input',
+                       'OME::Module::FormalInput',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'formal_inputs',
+                       });
 
 =head1 METHODS (C<AnalysisView::Link>)
 

@@ -42,12 +42,35 @@ use OME::Image;
 use OME::Project;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('datasets');
-__PACKAGE__->sequence('dataset_seq');
-__PACKAGE__->columns(Primary => qw(dataset_id));
-__PACKAGE__->columns(Essential => qw(name description locked owner_id group_id));
-__PACKAGE__->has_many('image_links','OME::Image::DatasetMap' => qw(dataset_id));
-__PACKAGE__->has_many('project_links','OME::Project::DatasetMap' => qw(dataset_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('datasets');
+__PACKAGE__->setSequence('dataset_seq');
+__PACKAGE__->addPrimaryKey('dataset_id');
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(256)',
+                        NotNull => 1,
+                       });
+__PACKAGE__->addColumn(owner_id => 'owner_id',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        ForeignKey => 'experimenters',
+                       });
+__PACKAGE__->addColumn(group_id => 'group_id',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'groups',
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(locked => 'locked',
+                       {
+                        SQLType => 'boolean',
+                        NotNull => 1,
+                        Default => 'false',
+                       });
+__PACKAGE__->hasMany('image_links','OME::Image::DatasetMap' => 'dataset');
+__PACKAGE__->hasMany('project_links','OME::Project::DatasetMap' => 'dataset');
 
 =head1 METHODS (C<Dataset>)
 
@@ -116,8 +139,7 @@ sub owner {
     my $self = shift;
     if (@_) {
         my $attribute = shift;
-        die "Owner must be an Experimenter"
-          unless $attribute->semantic_type()->name() eq "Experimenter";
+        $attribute->verifyType('Experimenter');
         $self->owner_id($attribute->id());
         return undef;
     } else {
@@ -130,8 +152,7 @@ sub group {
     my $self = shift;
     if (@_) {
         my $attribute = shift;
-        die "group must be of Group semantic type"
-          unless $attribute->semantic_type()->name() eq "Group";
+        $attribute->verifyType('Group');
         $self->group_id($attribute->id());
         return undef;
     } else {

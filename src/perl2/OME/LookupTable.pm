@@ -26,11 +26,18 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('lookup_tables');
-__PACKAGE__->sequence('lookup_table_seq');
-__PACKAGE__->columns(Primary => qw(lookup_table_id));
-__PACKAGE__->columns(Essential => qw(name description));
-__PACKAGE__->has_many('entries','OME::LookupTable::Entry' => qw(lookup_table_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('lookup_tables');
+__PACKAGE__->setSequence('lookup_table_seq');
+__PACKAGE__->addPrimaryKey('lookup_table_id');
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->hasMany('entries','OME::LookupTable::Entry' => 'lookup_table');
 
 
 
@@ -42,17 +49,20 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-
-__PACKAGE__->AccessorNames({
-    lookup_table_id => 'lookup_table'
-    });
-
-__PACKAGE__->table('lookup_table_entries');
-__PACKAGE__->sequence('lookup_table_entry_seq');
-__PACKAGE__->columns(Primary => qw(lookup_table_entry_id));
-__PACKAGE__->columns(Essential => qw(value label lookup_table_id));
-__PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
-
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('lookup_table_entries');
+__PACKAGE__->setSequence('lookup_table_entry_seq');
+__PACKAGE__->addPrimaryKey('lookup_table_entry_id');
+__PACKAGE__->addColumn(value => 'value',{SQLType => 'text',NotNull => 1});
+__PACKAGE__->addColumn(label => 'label',{SQLType => 'text'});
+__PACKAGE__->addColumn(lookup_table_id => 'lookup_table_id');
+__PACKAGE__->addColumn(lookup_table => 'lookup_table_id','OME::LookupTable',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'lookup_tables',
+                       });
 
 
 1;

@@ -51,29 +51,55 @@ our $VERSION = 2.000_000;
 
 use strict;
 
+use Carp;
 use OME::DBObject;
-use base qw(OME::DBObject);
+use base qw(OME::DBObject Class::Accessor);
 use POSIX;
 
+#use Benchmark::Timer;
 
 use fields qw(Factory Manager DBH ApacheSession SessionKey);
 __PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH ApacheSession SessionKey));
-__PACKAGE__->AccessorNames({
-    dataset_id      => 'dataset',
-    project_id      => 'project',
-    module_execution_id     => 'module_execution',
-});
 
-__PACKAGE__->table('ome_sessions');
-__PACKAGE__->sequence('session_seq');
-__PACKAGE__->columns(Primary => qw(session_id));
-__PACKAGE__->columns(Essential => qw(experimenter_id dataset_id project_id last_access));
-__PACKAGE__->columns(Others => qw(host image_view feature_view display_settings module_execution_id started));
-#__PACKAGE__->has_a(experimenter_id => 'OME::SemanticType::__Experimenter',
-#b                   inflate => 'load', deflate => 'id');
-__PACKAGE__->has_a(dataset_id => 'OME::Dataset');
-__PACKAGE__->has_a(project_id => 'OME::Project');
-__PACKAGE__->has_a(module_execution_id => 'OME::ModuleExecution');
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('ome_sessions');
+__PACKAGE__->setSequence('session_seq');
+__PACKAGE__->addPrimaryKey('session_id');
+__PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'experimenters',
+                        NotNull => 1
+                       });
+__PACKAGE__->addColumn(host => 'host',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(project_id => 'project_id');
+__PACKAGE__->addColumn(project => 'project_id','OME::Project',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'projects',
+                       });
+__PACKAGE__->addColumn(dataset_id => 'dataset_id');
+__PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'datasets',
+                       });
+__PACKAGE__->addColumn(module_execution_id => 'module_execution_id');
+__PACKAGE__->addColumn(module_execution => 'module_execution_id',
+                       {SQLType => 'integer'});
+__PACKAGE__->addColumn(image_view => 'image_view',{SQLType => 'text'});
+__PACKAGE__->addColumn(feature_view => 'feature_view',{SQLType => 'text'});
+__PACKAGE__->addColumn(last_access => 'last_access',
+                       {
+                        SQLType => 'timestamp',
+                        Default => 'now',
+                       });
+__PACKAGE__->addColumn(started => 'started',
+                       {
+                        SQLType => 'timestamp',
+                        Default => 'now',
+                       });
+
 
 
 =head1 METHODS
@@ -95,7 +121,8 @@ sub closeSession {
 
 # Accessors
 # ---------
-sub DBH { my $self = shift; return $self->{Manager}->DBH(); }
+sub DBH { carp "Noo!!!!!"; return shift->{Factory}->obtainDBH(); }
+#sub DBH { my $self = shift; return $self->{Manager}->DBH(); }
 sub User {
     my $self = shift;
     return $self->Factory()->loadAttribute("Experimenter",
@@ -120,9 +147,10 @@ transaction.
 =cut
 
 # We explicitly return to throw away any return values.
+# These methods delegate to their implementations in OME::Factory.
 
-sub commitTransaction { shift->dbi_commit(); return; }
-sub rollbackTransaction { shift->dbi_rollback(); return; }
+sub commitTransaction { shift->{Factory}->commitTransaction(); return; }
+sub rollbackTransaction { shift->{Factory}->rollbackTransaction(); return; }
 
 sub getTemporaryFilename {
     my $self = shift;
@@ -202,6 +230,14 @@ sub Configuration {
 	return $self->Factory->loadObject("OME::Configuration", 1);
 }
 
+
+# added by IGG for benchmarking
+#sub BenchmarkTimer {
+#	my $self = shift;
+#	return $self->{__BenchmarkTimer} if exists $self->{__BenchmarkTimer};
+#	$self->{__BenchmarkTimer} = Benchmark::Timer->new();
+#	return $self->{__BenchmarkTimer};
+#}
 1;
 
 __END__

@@ -1,6 +1,6 @@
 # OME/Project.pm
 
-# Copyright (C) 2003 Open Microscopy Environment
+# Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
 #    This library is free software; you can redistribute it and/or
@@ -26,47 +26,32 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    });
+__PACKAGE__->newClass();
+__PACKAGE__->setSequence('project_seq');
+__PACKAGE__->setDefaultTable('projects');
+__PACKAGE__->addPrimaryKey('project_id');
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                       });
+__PACKAGE__->addColumn(['owner','owner_id'] => 'owner_id',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        ForeignKey => 'experimenters',
+                       });
+__PACKAGE__->addColumn(['group','group_id'] => 'group_id',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'groups',
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(view => 'view',{SQLType => 'varchar(64)'});
 
-__PACKAGE__->table('projects');
-__PACKAGE__->sequence('project_seq');
-__PACKAGE__->columns(Primary => qw(project_id));
-__PACKAGE__->columns(Essential => qw(name description owner_id group_id));
-__PACKAGE__->has_many('dataset_links','OME::Project::DatasetMap' => qw(project_id));
+# Has-manys don't do anything yet, but this is what they'd look like.
+__PACKAGE__->hasMany('dataset_links','OME::Project::DatasetMap','project');
 
-sub owner {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        die "Owner must be an Experimenter"
-          unless $attribute->semantic_type()->name() eq "Experimenter";
-        $self->owner_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                          $self->owner_id());
-    }
-}
-
-sub group {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        die "group must be a Group attribute"
-          unless $attribute->semantic_type()->name() eq "Group";
-        $self->group_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Group",
-                                                          $self->group_id());
-    }
-}
-
-sub datasets {
-my $self = shift;
-	return map $_->dataset(), $self->dataset_links();
-}
 
 sub unlockedDatasets {
 	my $self = shift;
@@ -192,24 +177,32 @@ sub newDataset {
 
 
 
+
 package OME::Project::DatasetMap;
 
 use strict;
 our $VERSION = 2.000_000;
 
 use OME::DBObject;
-use OME::Dataset;
+#use OME::Dataset;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    project_id   => 'project',
-    dataset_id => 'dataset'
-    });
-
-__PACKAGE__->table('project_dataset_map');
-__PACKAGE__->columns(Essential => qw(project_id dataset_id));
-__PACKAGE__->hasa('OME::Project' => qw(project_id));
-__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('project_dataset_map');
+__PACKAGE__->addColumn('project_id','project_id');
+__PACKAGE__->addColumn('project','project_id','OME::Project',
+                      {
+                       SQLType => 'integer',
+                       NotNull => 1,
+                       ForeignKey => 'projects',
+                      });
+__PACKAGE__->addColumn('dataset_id','dataset_id');
+__PACKAGE__->addColumn('dataset','dataset_id','OME::Dataset',
+                      {
+                       SQLType => 'integer',
+                       NotNull => 1,
+                       ForeignKey => 'datasets',
+                      });
 
 
 # Our current caching implements breaks when there is not a single
@@ -218,5 +211,5 @@ __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 
 __PACKAGE__->Caching(0);
 
-1;
 
+1;

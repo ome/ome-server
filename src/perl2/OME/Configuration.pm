@@ -26,14 +26,33 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('configuration');
-__PACKAGE__->columns(Primary => qw(configuration_id));
-__PACKAGE__->columns(All => qw(mac_address db_instance lsid_authority
-                               ome_root tmp_dir xml_dir bin_dir
-                               import_formats
-                               display_settings import_module import_chain));
-__PACKAGE__->hasa('OME::Module' => qw(import_module));
-__PACKAGE__->hasa('OME::AnalysisChain' => qw(import_chain));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('configuration');
+__PACKAGE__->addPrimaryKey('configuration_id');
+__PACKAGE__->addColumn(mac_address => 'mac_address',{SQLType => 'varchar(20)'});
+__PACKAGE__->addColumn(db_instance => 'db_instance',{SQLType => 'char(6)'});
+__PACKAGE__->addColumn(lsid_authority => 'lsid_authority',
+                       {SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(tmp_dir => 'tmp_dir',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(xml_dir => 'xml_dir',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(bin_dir => 'bin_dir',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(ome_root => 'ome_root',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(import_formats => 'import_formats',
+                       {SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(import_module_id => 'import_module');
+__PACKAGE__->addColumn(import_module => 'import_module',
+                       'OME::Module',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'modules',
+                       });
+__PACKAGE__->addColumn(import_chain_id => 'import_chain');
+__PACKAGE__->addColumn(import_chain => 'import_chain',
+                       'OME::AnalysisChain',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'analysis_chains',
+                       });
 
 
 1;

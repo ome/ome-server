@@ -45,16 +45,24 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    analysis_chain_id => 'analysis_chain'
-    });
-
-__PACKAGE__->table('analysis_paths');
-__PACKAGE__->sequence('analysis_path_seq');
-__PACKAGE__->columns(Primary => qw(path_id));
-__PACKAGE__->columns(Essential => qw(path_length analysis_chain_id));
-__PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
-__PACKAGE__->has_many('path_nodes', 'OME::AnalysisPath::Map' => qw(path_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('analysis_paths');
+__PACKAGE__->setSequence('analysis_path_seq');
+__PACKAGE__->addPrimaryKey('path_id');
+__PACKAGE__->addColumn(analysis_chain_id => 'analysis_chain_id');
+__PACKAGE__->addColumn(analysis_chain => 'analysis_chain_id',
+                       'OME::AnalysisChain',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        ForeignKey => 'analysis_chains',
+                       });
+__PACKAGE__->addColumn(path_length => 'path_length',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                       });
+__PACKAGE__->hasMany('path_nodes', 'OME::AnalysisPath::Map' => 'path');
 
 =head1 METHODS (C<AnalysisPath>)
 
@@ -95,16 +103,31 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    analysis_chain_node_id => 'analysis_chain_node',
-    path_id               => 'path'
-    });
-
-__PACKAGE__->table('analysis_path_map');
-__PACKAGE__->columns(Essential => qw(path_id path_order
-				     analysis_chain_node_id));
-__PACKAGE__->hasa('OME::AnalysisPath' => qw(path_id));
-__PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(analysis_chain_node_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('analysis_path_map');
+__PACKAGE__->addColumn(path_id => 'path_id');
+__PACKAGE__->addColumn(path => 'path_id',
+                       'OME::AnalysisPath',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'analysis_paths',
+                       });
+__PACKAGE__->addColumn(path_order => 'path_order',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                       });
+__PACKAGE__->addColumn(analysis_chain_node_id => 'analysis_chain_node_id');
+__PACKAGE__->addColumn(analysis_chain_node => 'analysis_chain_node_id',
+                       'OME::AnalysisChain::Node',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'analysis_chain_nodes',
+                       });
 
 =head1 METHODS (C<AnalysisPath::Map>)
 

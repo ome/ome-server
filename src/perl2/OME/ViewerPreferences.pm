@@ -26,10 +26,17 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('viewer_preferences');
-__PACKAGE__->sequence('attribute_seq');
-__PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(experimenter_id toolbox_scale));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('viewer_preferences');
+__PACKAGE__->setSequence('attribute_seq');
+__PACKAGE__->addPrimaryKey('attribute_id');
+__PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        ForeignKey => 'experimenters',
+                       });
+__PACKAGE__->addColumn(toolbox_scale => 'toolbox_scale',{SQLType => 'real'});
 
 1;
 

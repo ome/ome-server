@@ -26,23 +26,27 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->
-  AccessorNames({
-                 parent_category_id => 'parent_category'
-                });
-
-
-__PACKAGE__->table('module_categories');
-__PACKAGE__->sequence('module_category_seq');
-__PACKAGE__->columns(Primary => qw(category_id));
-__PACKAGE__->columns(Essential => qw(name description parent_category_id));
-__PACKAGE__->hasa('OME::Module::Category' => qw(parent_category_id));
-__PACKAGE__->has_many('children','OME::Module::Category' =>
-                      qw(parent_category_id),
-                      {sort => 'name'});
-__PACKAGE__->has_many('modules','OME::Module' =>
-                      qw(category),
-                      {sort => 'name'});
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('module_categories');
+__PACKAGE__->setSequence('module_category_seq');
+__PACKAGE__->addPrimaryKey('category_id');
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                       });
+__PACKAGE__->addColumn(parent_category_id => 'parent_category_id');
+__PACKAGE__->addColumn(parent_category => 'parent_category_id',
+                       'OME::Module::Category',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'module_categories',
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->hasMany('children','OME::Module::Category' =>
+                     'parent_category');
+__PACKAGE__->hasMany('modules','OME::Module' => 'category');
 
 
 1;

@@ -74,22 +74,47 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    module_id => 'module',
-    dataset_id => 'dataset'
-    });
-
-__PACKAGE__->table('module_executions');
-__PACKAGE__->sequence('module_execution_seq');
-__PACKAGE__->columns(Primary => qw(module_execution_id));
-__PACKAGE__->columns(Essential => qw(module_id dependence
-				     dataset_id));
-__PACKAGE__->columns(Timing => qw(timestamp status total_time
-                                  attribute_create_time attribute_db_time
-                                  attribute_sort_time));
-__PACKAGE__->hasa('OME::Module' => qw(module_id));
-__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
-__PACKAGE__->has_many('inputs','OME::ModuleExecution::ActualInput' => qw(module_execution_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('module_executions');
+__PACKAGE__->setSequence('module_execution_seq');
+__PACKAGE__->addPrimaryKey('module_execution_id');
+__PACKAGE__->addColumn(module_id => 'module_id');
+__PACKAGE__->addColumn(module => 'module_id','OME::Module',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'modules',
+                       });
+__PACKAGE__->addColumn(dependence => 'dependence',
+                       {
+                        SQLType => 'char(1)',
+                        NotNull => 1,
+                        Check   => "(dependence in ('G','D','I'))",
+                       });
+__PACKAGE__->addColumn(dataset_id => 'dataset_id');
+__PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'datasets',
+                       });
+__PACKAGE__->addColumn(timestamp => 'timestamp',
+                       {
+                        SQLType => 'timestamp',
+                        Default => 'now',
+                       });
+__PACKAGE__->addColumn(total_time => 'total_time',
+                       {SQLType => 'float'});
+__PACKAGE__->addColumn(attribute_sort_time => 'attribute_sort_time',
+                       {SQLType => 'float'});
+__PACKAGE__->addColumn(attribute_db_time => 'attribute_db_time',
+                       {SQLType => 'float'});
+__PACKAGE__->addColumn(attribute_create_time => 'attribute_create_time',
+                       {SQLType => 'float'});
+__PACKAGE__->addColumn(status => 'status',{SQLType => 'varchar(16)'});
+__PACKAGE__->hasMany('inputs','OME::ModuleExecution::ActualInput' =>
+                     'module_execution');
 
 =head1 METHODS (C<module_execution>)
 
@@ -171,19 +196,37 @@ use base qw(OME::DBObject);
 
 use fields qw(_attribute);
 
-__PACKAGE__->AccessorNames({
-    module_execution_id       => 'module_execution',
-    formal_input_id   => 'formal_input',
-    input_module_execution_id => 'input_module_execution'
-    });
-
-__PACKAGE__->table('actual_inputs');
-__PACKAGE__->sequence('actual_input_seq');
-__PACKAGE__->columns(Primary => qw(actual_input_id));
-__PACKAGE__->columns(Essential => qw(input_module_execution_id module_execution_id formal_input_id));
-__PACKAGE__->hasa('OME::ModuleExecution' => qw(module_execution_id));
-__PACKAGE__->hasa('OME::Module::FormalInput' => qw(formal_input_id));
-__PACKAGE__->hasa('OME::ModuleExecution' => qw(input_module_execution_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('actual_inputs');
+__PACKAGE__->setSequence('actual_input_seq');
+__PACKAGE__->addPrimaryKey('actual_input_id');
+__PACKAGE__->addColumn(module_execution_id => 'module_execution_id');
+__PACKAGE__->addColumn(module_execution => 'module_execution_id',
+                       'OME::ModuleExecution',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'module_executions',
+                       });
+__PACKAGE__->addColumn(formal_input_id => 'formal_input_id');
+__PACKAGE__->addColumn(formal_input => 'formal_input_id',
+                       'OME::Module::FormalInput',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'formal_inputs',
+                       });
+__PACKAGE__->addColumn(input_module_execution_id => 'input_module_execution_id');
+__PACKAGE__->addColumn(input_module_execution => 'input_module_execution_id',
+                       'OME::ModuleExecution',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'module_executions',
+                       });
 
 =head1 METHODS (C<ActualInput>)
 
@@ -213,36 +256,6 @@ Returns the formal input that this actual input provides data for.
 
 =cut
 
-sub attribute {
-    my $self = shift;
-    my $formalInput = $self->formal_input();
-    my $columnType = $formalInput->column_type();
-    my $dataType = $columnType->datatype();
-    my $attributePackage = $dataType->getAttributePackage();
-
-    if (@_) {
-       	# We are setting the attribute; make sure it is of the
-	# appropriate data type, and that it has an ID.
-
-	my $result = $self->{_attribute};
-	my $attribute = shift;
-	die "This attribute is not of the correct type."
-	    unless ($attribute->isa($attributePackage));
-	die "This attribute does not have an ID."
-	    unless (defined $attribute->ID());
-	$self->attribute_id($attribute->ID());
-	$self->{_attribute} = $attribute;
-	return $result;
-    } else {
-	my $attribute = $self->{_attribute};
-	if (!defined $attribute) {
-	  $attribute = $self->Session()->Factory()->loadObject($attributePackage,
-						    $self->attribute_id());
-	  $self->{_attribute} = $attribute;
-	}
-	return $attribute;
-    }
-}
 
 package OME::ModuleExecution::SemanticTypeOutput;
 
@@ -250,22 +263,28 @@ use strict;
 our $VERSION = 2.000_000;
 
 use OME::DBObject;
-use OME::SemanticType;
-require OME::Module;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames
-  ({
-    module_execution_id  => 'module_execution',
-    semantic_type_id     => 'formal_input',
-   });
-
-__PACKAGE__->table('semantic_type_outputs');
-__PACKAGE__->sequence('semantic_type_output_seq');
-__PACKAGE__->columns(Primary => qw(semantic_type_output_id));
-__PACKAGE__->columns(Essential => qw(module_execution_id semantic_type_id));
-__PACKAGE__->hasa('OME::ModuleExecution' => qw(module_execution_id));
-__PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('semantic_type_outputs');
+__PACKAGE__->setSequence('semantic_type_output_seq');
+__PACKAGE__->addPrimaryKey('semantic_type_output_id');
+__PACKAGE__->addColumn(module_execution_id => 'module_execution_id');
+__PACKAGE__->addColumn(module_execution => 'module_execution_id',
+                       'OME::ModuleExecution',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        ForeignKey => 'module_executions',
+                       });
+__PACKAGE__->addColumn(semantic_type_id => 'semantic_type_id');
+__PACKAGE__->addColumn(semantic_type => 'semantic_type_id',
+                       'OME::SemanticType',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        ForeignKey => 'module_executions',
+                       });
 
 
 1;

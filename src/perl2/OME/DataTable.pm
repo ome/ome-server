@@ -53,13 +53,25 @@ use base qw(OME::DBObject);
 __PACKAGE__->mk_classdata('_dataTablePackages');
 __PACKAGE__->_dataTablePackages({});
 
-__PACKAGE__->table('data_tables');
-__PACKAGE__->sequence('data_table_seq');
-__PACKAGE__->columns(Primary => qw(data_table_id));
-__PACKAGE__->columns(Essential => qw(granularity table_name description));
-__PACKAGE__->has_many('data_columns',
-                      'OME::DataTable::Column' => qw(data_table_id),
-                      {sort => 'data_column_id'});
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('data_tables');
+__PACKAGE__->setSequence('data_table_seq');
+__PACKAGE__->addPrimaryKey('data_table_id');
+__PACKAGE__->addColumn(granularity => 'granularity',
+                       {
+                        SQLType => 'char(1)',
+                        NotNull => 1,
+                        Check   => "(granularity in ('G','D','I','F'))",
+                       });
+__PACKAGE__->addColumn(table_name => 'table_name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->hasMany('data_columns',
+                     'OME::DataTable::Column','data_table');
 
 # These triggers should ensure that the appropriate DBObject subclass
 # definition is evaluated when a data type is loaded from the
@@ -105,30 +117,35 @@ data table.
 
 =cut
 
-__PACKAGE__->set_sql('get_attributes',<<'SQL;','Main');
-  SELECT attr.attribute_id
-    FROM %s attr
-   WHERE %s = ?
-ORDER BY attr.attribute_id
-SQL;
+my %dataTypeConversion = (
+                          # XMLType  => SQL_Type
+                          integer   => 'integer',
+                          double    => 'double precision',
+                          float     => 'real',
+                          boolean   => 'boolean',
+                          string    => 'text',
+                          dateTime  => 'timestamp',
+                          reference => 'integer'
+                         );
 
-sub findAttributesByTarget {
-    my ($self, $targetID) = @_;
-    my $granularity = $self->semantic_type();
-    my $attr_table = $self->table_name();
+sub getSQLType {
+    my ($class,$type) = @_;
 
-    my %columns = ('D' => 'dataset_id','I' => 'image_id','F' => 'feature_id');
-    my $sth = $self->sql_get_attributes($attr_table,$columns{$granularity});
-    $sth->execute($targetID);
+    die "Invalid SQL type!"
+      unless exists $dataTypeConversion{$type};
+    return $dataTypeConversion{$type};
+}
 
-    return $sth;
+sub __formPackageName {
+    my ($self,$name) = @_;
+    $name =~ s/[^\w\d]/_/g;
+    $name = uc($name);
+    return "OME::DataTable::__$name";
 }
 
 sub getDataTablePackage {
     my $self = shift;
-    my $table = $self->table_name();
-    $table =~ s/[^\w\d]/_/g;
-    return "OME::DataTable::__$table";
+    return $self->__formPackageName($self->table_name());
 }
 
 sub requireDataTablePackage {
@@ -139,7 +156,7 @@ sub requireDataTablePackage {
     logdbg "debug", "Loading data table package $pkg";
 
     logcroak "Malformed class name $pkg"
-      unless $pkg =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+      unless $pkg =~ /^\w+(\:\:\w+)*$/;
 
     my $def = "package $pkg;\n";
     $def .= q{
@@ -154,88 +171,61 @@ sub requireDataTablePackage {
 
     $pkg->mk_classdata('_data_table');
     $pkg->_data_table($self);
+    $pkg->newClass();
 
     my $table = $self->table_name();
-    $pkg->table($table);
-    $pkg->sequence('attribute_seq');
-    $pkg->columns(Primary => qw(attribute_id module_execution_id));
+    $pkg->setDefaultTable($table);
+    $pkg->setSequence('attribute_seq');
+    $pkg->addPrimaryKey('attribute_id');
+    $pkg->addColumn(module_execution => 'module_execution_id',
+                    'OME::ModuleExecution',
+                    {
+                     SQLType => 'integer',
+                     Indexed => 1,
+                     ForeignKey => 'module_executions',
+                    });
 
     my $columns = $self->data_columns();
-    my @column_defs = ('module_execution_id');
     while (my $column = $columns->next()) {
-        push @column_defs, lc($column->column_name());
-        #print STDERR "   $table.".lc($column->column_name())."\n";
+        my $name = lc($column->column_name());
+        my $type = $column->sql_type();
+        my $sql_type = $self->getSQLType($type);
+
+        $pkg->addColumn($name,$name,{SQLType => $sql_type});
     }
 
     my $type = $self->granularity();
     if ($type eq 'D') {
-        push @column_defs, 'dataset_id';
+        $pkg->addColumn(['dataset','target'] => 'dataset_id','OME::Dataset',
+                        {
+                         SQLType => 'integer',
+                         NotNull => 1,
+                         Indexed => 1,
+                         ForeignKey => 'datasets',
+                        });
     } elsif ($type eq 'I') {
-        push @column_defs, 'image_id';
+        $pkg->addColumn(['image','target'] => 'image_id','OME::Image',
+                        {
+                         SQLType => 'integer',
+                         NotNull => 1,
+                         Indexed => 1,
+                         ForeignKey => 'images',
+                        });
     } elsif ($type eq 'F') {
-        push @column_defs, 'feature_id';
+        $pkg->addColumn(['feature','target'] => 'feature_id','OME::Feature',
+                        {
+                         SQLType => 'integer',
+                         NotNull => 1,
+                         Indexed => 1,
+                         ForeignKey => 'features',
+                        });
     }
-
-    $pkg->columns(Essential => @column_defs);
-
-    $pkg->has_a(module_execution_id => 'OME::ModuleExecution');
-
-    no strict 'refs';
-    *{$pkg."::module_execution"} = \&{$pkg."::module_execution_id"};
-    use strict 'refs';
-
-    # Make accessors for actual output, dataset, image, and feature.
-
-    my $accessors = {};
-    if ($type eq 'D') {
-        $pkg->has_a(dataset_id => 'OME::Dataset');
-
-        no strict 'refs';
-        *{$pkg."::dataset"} = \&{$pkg."::dataset_id"};
-        use strict 'refs';
-    } elsif ($type eq 'I') {
-        $pkg->has_a(image_id => 'OME::Image');
-
-        no strict 'refs';
-        *{$pkg."::image"}   = \&{$pkg."::image_id"};
-        use strict 'refs';
-    } elsif ($type eq 'F') {
-        $pkg->has_a(feature_id => 'OME::Feature');
-
-        no strict 'refs';
-        *{$pkg."::feature"} = \&{$pkg."::feature_id"};
-        use strict 'refs';
-    } elsif ($type eq 'G') {
-        # No target column
-    }
-
 
     $self->_dataTablePackages()->{$pkg} = 1;
 
     return $pkg;
 }
 
-
-sub loadRow {
-    my ($self,$id) = @_;
-    my $pkg = $self->requireDataTablePackage();
-    return $self->Session()->Factory()->loadObject($pkg,$id);
-}
-
-sub newRow {
-    my ($self,$module_execution,$target,$data) = @_;
-    my $pkg = $self->requireDataTablePackage();
-    my $granularity = $self->granularity();
-    $data->{module_execution_id} = $module_execution;
-    if ($granularity eq 'D') {
-        $data->{dataset_id} = ref ($target) ? $target->id() : $target;
-    } elsif ($granularity eq 'I') {
-        $data->{image_id} = ref ($target) ? $target->id() : $target;
-    } elsif ($granularity eq 'F') {
-        $data->{feature_id} = ref ($target) ? $target->id() : $target;
-    }
-    return $self->Session()->Factory()->newObject($pkg,$data);
-}
 
 package OME::DataTable::Column;
 
@@ -246,18 +236,32 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 
-__PACKAGE__->AccessorNames({
-    data_table_id => 'data_table'
-    });
-
-__PACKAGE__->table('data_columns');
-__PACKAGE__->sequence('data_column_seq');
-__PACKAGE__->columns(Primary => qw(data_column_id));
-__PACKAGE__->columns(Essential => qw(data_table_id column_name description
-                                     sql_type reference_type));
-__PACKAGE__->hasa('OME::DataTable' => qw(data_table_id));
-
-__PACKAGE__->make_filter('__type_column' => 'data_table_id = ? and column_name = ?');
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('data_columns');
+__PACKAGE__->setSequence('data_column_seq');
+__PACKAGE__->addPrimaryKey('data_column_id');
+__PACKAGE__->addColumn(data_table_id => 'data_table_id');
+__PACKAGE__->addColumn(data_table => 'data_table_id','OME::DataTable',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'data_tables',
+                       });
+__PACKAGE__->addColumn(column_name => 'column_name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(sql_type => 'sql_type',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                       });
+__PACKAGE__->addColumn(reference_type => 'reference_type',
+                       {SQLType => 'varchar(64)'});
 
 =head1 METHODS (C<DataTable::Column>)
 

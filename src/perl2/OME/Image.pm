@@ -74,20 +74,45 @@ use OME::Feature;
 
 use fields qw(_fileOpen _fileHandle Pix _dimensions);
 
-__PACKAGE__->AccessorNames({
-});
-
-__PACKAGE__->table('images');
-__PACKAGE__->sequence('image_seq');
-__PACKAGE__->columns(Primary => qw(image_id));
-__PACKAGE__->columns(Essential => qw(image_guid name));
-__PACKAGE__->columns(Others => qw(created inserted description
-                                  experimenter_id group_id pixels_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('images');
+__PACKAGE__->setSequence('image_seq');
+__PACKAGE__->addPrimaryKey('image_id');
+__PACKAGE__->addColumn(image_guid => 'image_guid',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(256)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        ForeignKey => 'experimenters',
+                       });
+__PACKAGE__->addColumn(group_id => 'group_id',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'groups',
+                       });
+__PACKAGE__->addColumn(created => 'created',
+                       {
+                        SQLType => 'timestamp',
+                        NotNull => 1,
+                       });
+__PACKAGE__->addColumn(inserted => 'inserted',
+                       {
+                        SQLType => 'timestamp',
+                        NotNull => 1,
+                       });
 # pixels_id is part of a hack added by josiah <siah@nih.gov> on 6/9/03
 # it references the "primary" set of pixels. 
+__PACKAGE__->addColumn(pixels_id => 'pixels_id',{SQLType => 'integer'});
 
-__PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
-__PACKAGE__->has_many('all_features','OME::Feature' => qw(image_id));
+__PACKAGE__->hasMany('dataset_links','OME::Image::DatasetMap' => 'image');
+__PACKAGE__->hasMany('all_features','OME::Feature' => 'image');
 
 =head2 experimenter
 
@@ -99,8 +124,7 @@ sub experimenter {
     my $self = shift;
     if (@_) {
         my $attribute = shift;
-        die "Owner must be an Experimenter"
-          unless $attribute->semantic_type()->name() eq "Experimenter";
+        $attribute->verifyType('Experimenter');
         $self->experimenter_id($attribute->id());
         return undef;
     } else {
@@ -119,8 +143,7 @@ sub group {
     my $self = shift;
     if (@_) {
         my $attribute = shift;
-        die "Group must be a Group"
-          unless $attribute->semantic_type()->name() eq "Group";
+        $attribute->verifyType('group');
         $self->group_id($attribute->id());
         return undef;
     } else {
@@ -136,7 +159,12 @@ sub group {
 
 sub features {
     my ($self) = @_;
-    return OME::Feature->__image_roots(image_id => $self->id());
+    return $self->Session()->Factory()->
+      findObjects(
+                  "OME::Feature",
+                  image          => $self,
+                  parent_feature => undef
+                 );
 }
 
 =head2 datasets
@@ -150,17 +178,6 @@ returns all datasets that the image belongs to
 sub datasets {
 	my $self = shift;
 	return map $_->dataset(), $self->dataset_links();
-}
-
-sub _init {
-    my $class = shift;
-    my $self = $class->SUPER::_init();
-
-    $self->{_fileOpen} = 0;
-    $self->{_fileHandle} = undef;
-    $self->{thePix} = undef;
-    $self->{_dimensions} = undef;
-    return $self;
 }
 
 =head2 GetPix
@@ -260,31 +277,6 @@ sub getFullPath {
     return $repository->Path() . $path;
 }
 
-# WARNING: USES DEPRICATED LOGIC!
-sub openFile {
-    my $self = shift;
-
-    return if ($self->{fileOpen});
-    my $fullpath = $self->getFullPath( $self->DefaultPixels() );
-
-    my $handle = new IO::File;
-    open $handle, $fullpath or die "Cannot open image file!";
-
-    $self->{_fileOpen} = 1;
-    $self->{_fileHandle} = $handle;
-}
-
-# WARNING: USES DEPRICATED LOGIC!
-sub closeFile {
-    my $self = shift;
-
-    return unless ($self->{_fileOpen});
-    close $self->{_fileHandle};
-    $self->{_fileOpen} = 0;
-    $self->{_fileHandle} = undef;
-}
-
-
 # for now, a very simple implementation
 # WARNING: USES DEPRICATED LOGIC!
 sub GetPixels {
@@ -320,15 +312,28 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    file_sha1 => 'sha1',
-    });
-
-__PACKAGE__->table('image_files_xyzwt');
-__PACKAGE__->columns(Essential => qw(image_id file_sha1 bigendian
-				     path host url x_start x_stop
-				     y_start y_stop z_start z_stop
-				     w_start w_stop t_start t_stop));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('image_files_xyzwt');
+__PACKAGE__->addColumn(image_id => 'image_id',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'images',
+                       });
+__PACKAGE__->addColumn(['file_sha1','sha1'] => 'file_sha1',{SQLType => 'char(40)'});
+__PACKAGE__->addColumn(bigendian => 'bigendian',{SQLType => 'boolean'});
+__PACKAGE__->addColumn(path => 'path',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(host => 'host',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(url => 'url',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(x_start => 'x_start',{SQLType => 'smallint'});
+__PACKAGE__->addColumn(x_stop  => 'x_stop', {SQLType => 'smallint'});
+__PACKAGE__->addColumn('y_start' => 'y_start',{SQLType => 'smallint'});
+__PACKAGE__->addColumn('y_stop'  => 'y_stop', {SQLType => 'smallint'});
+__PACKAGE__->addColumn(z_start => 'z_start',{SQLType => 'smallint'});
+__PACKAGE__->addColumn(z_stop  => 'z_stop', {SQLType => 'smallint'});
+__PACKAGE__->addColumn(w_start => 'w_start',{SQLType => 'smallint'});
+__PACKAGE__->addColumn(w_stop  => 'w_stop', {SQLType => 'smallint'});
+__PACKAGE__->addColumn(t_start => 't_start',{SQLType => 'smallint'});
+__PACKAGE__->addColumn(t_stop  => 't_stop', {SQLType => 'smallint'});
 
 
 package OME::Image::DatasetMap;
@@ -339,22 +344,31 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    image_id   => 'image',
-    dataset_id => 'dataset'
-    });
-
-__PACKAGE__->table('image_dataset_map');
-__PACKAGE__->columns(Essential => qw(image_id dataset_id));
-__PACKAGE__->hasa('OME::Image' => qw(image_id));
-__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
-
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('image_dataset_map');
+__PACKAGE__->addColumn(image_id => 'image_id');
+__PACKAGE__->addColumn(image => 'image_id','OME::Image',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'images',
+                       });
+__PACKAGE__->addColumn(dataset_id => 'dataset_id');
+__PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'datasets',
+                       });
 
 # Our current caching implements breaks when there is not a single
 # primary key column for the table.  As this is the case for this
 # table, turn off caching (just for this class).
 
 __PACKAGE__->Caching(0);
+
 
 
 1;

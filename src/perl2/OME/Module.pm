@@ -1,4 +1,4 @@
-# OME/module.pm
+# OME/Module.pm
 
 # Copyright (C) 2003 Open Microscopy Environment
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -26,17 +26,52 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('modules');
-__PACKAGE__->sequence('module_seq');
-__PACKAGE__->columns(Primary => qw(module_id));
-__PACKAGE__->columns(Essential => qw(name description category));
-__PACKAGE__->columns(Definition => qw(module_type location category
-                                      default_iterator new_feature_tag
-                                      execution_instructions ));
-__PACKAGE__->hasa('OME::Module::Category' => qw(category));
-__PACKAGE__->has_many('inputs','OME::Module::FormalInput' => qw(module_id));
-__PACKAGE__->has_many('outputs','OME::Module::FormalOutput' => qw(module_id));
-__PACKAGE__->has_many('analyses','OME::ModuleExecution' => qw(module_id));
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('modules');
+__PACKAGE__->setSequence('module_seq');
+__PACKAGE__->addPrimaryKey('module_id');
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(location => 'location',
+                       {
+                        SQLType => 'varchar(128)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(module_type => 'module_type',
+                       {
+                        SQLType => 'varchar(128)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(category_id => 'category');
+__PACKAGE__->addColumn(category => 'category',
+                       'OME::Module::Category',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'module_categories',
+                       });
+__PACKAGE__->addColumn(default_iterator => 'default_iterator',
+                       {
+                        SQLType => 'varchar(128)',
+                       });
+__PACKAGE__->addColumn(new_feature_tag => 'new_feature_tag',
+                       {
+                        SQLType => 'varchar(128)',
+                       });
+__PACKAGE__->addColumn(execution_instructions => 'execution_instructions',
+                       {
+                        SQLType => 'text',
+                       });
+__PACKAGE__->hasMany('inputs','OME::Module::FormalInput' => 'module');
+__PACKAGE__->hasMany('outputs','OME::Module::FormalOutput' => 'module');
+__PACKAGE__->hasMany('analyses','OME::ModuleExecution' => 'module');
 
 
 
@@ -48,28 +83,59 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-require OME::ModuleExecution;
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('formal_inputs');
+__PACKAGE__->setSequence('formal_input_seq');
+__PACKAGE__->addPrimaryKey('formal_input_id');
+__PACKAGE__->addColumn(module_id => 'module_id');
+__PACKAGE__->addColumn(module => 'module_id','OME::Module',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'modules',
+                       });
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(optional => 'optional',
+                       {
+                        SQLType => 'boolean',
+                        Default => 'false',
+                       });
+__PACKAGE__->addColumn(list => 'list',
+                       {
+                        SQLType => 'boolean',
+                        Default => 'true',
+                       });
+__PACKAGE__->addColumn(semantic_type_id => 'semantic_type_id');
+__PACKAGE__->addColumn(semantic_type => 'semantic_type_id',
+                       'OME::SemanticType',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'semantic_types',
+                       });
+__PACKAGE__->addColumn(lookup_table_id => 'lookup_table_id');
+__PACKAGE__->addColumn(lookup_table => 'lookup_table_id',
+                       'OME::LookupTable',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'lookup_tables',
+                       });
+__PACKAGE__->addColumn(user_defined => 'user_defined',
+                       {
+                        SQLType => 'boolean',
+                        Default => 'false',
+                       });
 
-__PACKAGE__->AccessorNames({
-    module_id        => 'module',
-    lookup_table_id   => 'lookup_table',
-    semantic_type_id => 'semantic_type'
-    });
-
-__PACKAGE__->table('formal_inputs');
-__PACKAGE__->sequence('formal_input_seq');
-__PACKAGE__->columns(Primary => qw(formal_input_id));
-__PACKAGE__->columns(Essential => qw(module_id name semantic_type_id
-                                     optional list user_defined));
-__PACKAGE__->columns(Other => qw(lookup_table_id description));
-__PACKAGE__->hasa('OME::Module' => qw(module_id));
-__PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
-__PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
-
-__PACKAGE__->has_many('actual_inputs','OME::ModuleExecution::ActualInput' =>
-		      qw(formal_input_id));
-                     
-__PACKAGE__->make_filter('__module_name' => 'module_id = ? and name = ?');
+__PACKAGE__->hasMany('actual_inputs','OME::ModuleExecution::ActualInput' =>
+                     'formal_input');
 
 package OME::Module::FormalOutput;
 
@@ -79,23 +145,44 @@ our $VERSION = 2.000_000;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-require OME::ModuleExecution;
-
-__PACKAGE__->AccessorNames({
-    module_id        => 'module',
-    semantic_type_id => 'semantic_type'
-    });
-
-__PACKAGE__->table('formal_outputs');
-__PACKAGE__->sequence('formal_output_seq');
-__PACKAGE__->columns(Primary => qw(formal_output_id));
-__PACKAGE__->columns(Essential => qw(module_id name semantic_type_id
-                                     feature_tag optional list));
-__PACKAGE__->columns(Other => qw(description));
-__PACKAGE__->hasa('OME::Module' => qw(module_id));
-__PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
-
-__PACKAGE__->make_filter('__module_name' => 'module_id = ? and name = ?');
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('formal_outputs');
+__PACKAGE__->setSequence('formal_output_seq');
+__PACKAGE__->addPrimaryKey('formal_output_id');
+__PACKAGE__->addColumn(module_id => 'module_id');
+__PACKAGE__->addColumn(module => 'module_id','OME::Module',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'modules',
+                       });
+__PACKAGE__->addColumn(name => 'name',
+                       {
+                        SQLType => 'varchar(64)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
+__PACKAGE__->addColumn(optional => 'optional',
+                       {
+                        SQLType => 'boolean',
+                        Default => 'false',
+                       });
+__PACKAGE__->addColumn(list => 'list',
+                       {
+                        SQLType => 'boolean',
+                        Default => 'true',
+                       });
+__PACKAGE__->addColumn(semantic_type_id => 'semantic_type_id');
+__PACKAGE__->addColumn(semantic_type => 'semantic_type_id',
+                       'OME::SemanticType',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'semantic_types',
+                       });
+__PACKAGE__->addColumn(feature_tag => 'feature_tag',{SQLType => 'varchar(128)'});
 
 1;
 

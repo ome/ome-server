@@ -62,21 +62,35 @@ use OME::DBObject;
 use OME::Image;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    image_id          => 'image',
-    parent_feature_id => 'parent_feature'
-    });
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('features');
+__PACKAGE__->setSequence('feature_seq');
+__PACKAGE__->addPrimaryKey('feature_id');
+__PACKAGE__->addColumn(image_id => 'image_id');
+__PACKAGE__->addColumn(image => 'image_id','OME::Image',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'images',
+                       });
+__PACKAGE__->addColumn(parent_feature_id => 'parent_feature_id');
+__PACKAGE__->addColumn(parent_feature => 'parent_feature_id',
+                       'OME::Feature',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'features',
+                       });
+__PACKAGE__->addColumn(tag => 'tag',
+                       {
+                        SQLType => 'varchar(128)',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
+__PACKAGE__->addColumn(name => 'name',{SQLType => 'varchar(128)'});
+__PACKAGE__->hasMany('children','OME::Feature' => 'parent_feature');
 
-__PACKAGE__->table('features');
-__PACKAGE__->sequence('feature_seq');
-__PACKAGE__->columns(Primary => qw(feature_id));
-__PACKAGE__->columns(Essential => qw(parent_feature_id image_id tag name));
-__PACKAGE__->hasa('OME::Image' => qw(image_id));
-__PACKAGE__->hasa('OME::Feature' => qw(parent_feature_id));
-__PACKAGE__->has_many('children','OME::Feature' => qw(parent_feature_id),
-                     {sort => 'feature_id'});
-
-__PACKAGE__->make_filter('__image_roots' => 'image_id = ? and parent_feature_id is null order by tag, feature_id');
 
 =head1 METHODS (C<Feature>)
 
