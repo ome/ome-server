@@ -47,6 +47,8 @@ a:hover { text-decoration: underline; color: #006699}
 
 a.ome_quiet { text-decoration: none; color : #444444; }
 
+a.ome_quiet:visited, a.ome_quiet:active { text-decoration: none; color: #444444 }
+
 a.ome_quiet:hover { text-decoration: none; color : #FF0000; }  /* Red is temporary */
 
 /* MAIN LAYOUT TABLE AND TD's */
