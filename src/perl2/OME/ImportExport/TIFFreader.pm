@@ -220,6 +220,9 @@ sub readImage {
 	    last
 		unless $status eq "";
 	}
+	if ($status eq "") {
+	    $params->xml_hash->{'Image.NumWaves'} = scalar(@$image_group);
+	}
     }
 
     return($status);
