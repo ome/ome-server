@@ -496,7 +496,8 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 		<xs:annotation>
 			<xs:documentation>
 				The presence of this element indicates the user wants to view the Image as a maximum intensity projection.
-				The Zstart and Zstop attributes are optional.  If they are not specified, then the entire Z stack will be projected.
+				The Zstart and Zstop attributes are optional.  If they are not specified, then the entire Z stack will be pro
+ 				z values are index from 0 to maxZ - 1
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -511,6 +512,7 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 				If they are not specified, the movie is to include all timepoints.
 				If the Time attributes point to a single time-point, that is the timepoint to be initially displayed.
 				If the entire element is missing, the first time-point  will be displayed
+				t values are index from 0 to maxT - 1
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1047,6 +1049,11 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 			<xs:enumeration value = "double"/>
 			<xs:enumeration value = "complex"/>
 			<xs:enumeration value = "double-complex"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name = "ModuleID">
+		<xs:restriction base = "LSID">
+			<xs:pattern value = "(urn:lsid:)?(\S+\.\S+)+(:Module)(:\S+)"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:element name = "ProjectRef">
