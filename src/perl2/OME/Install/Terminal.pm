@@ -37,6 +37,7 @@ use warnings;
 use Carp;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
+use Text::Wrap;
 use OME::Install::Util;
 
 require Exporter;
@@ -172,7 +173,7 @@ sub get_password {
 sub y_or_n {
     my $text = shift;
 
-    print "$text [y/", BOLD, "n", RESET, "]: ";
+    print wrap("", "", $text), " [y/", BOLD, "n", RESET, "]: ";
     my $y_or_n = ReadLine 0;
     chomp $y_or_n;
 
