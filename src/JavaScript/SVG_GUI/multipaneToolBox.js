@@ -87,7 +87,8 @@ multipaneToolBox.prototype.updateLabel = function(val) {
 /*****
 
 	addPane( newPane, name )
-		adds a single pane
+		adds a single pane to GUIboxContainer, a grand parent of GUIbox that is not subject
+		to clipping
 		newPane is a single SVG node
 		name is optional. If given, you may refer to the pane by name instead of number.
 		if called without any parameters, it will make a new empty pane
@@ -102,7 +103,7 @@ multipaneToolBox.prototype.addPane = function(newPane, name) {
 	//	make a new pane, turn its display off
 	this.panes[i] = svgDocument.createElementNS(svgns, 'g');
 	this.panes[i].setAttribute("display","none");
-	this.getGUIbox().appendChild(this.panes[i]);
+	this.getGUIboxNoClip().appendChild(this.panes[i]);
 
 	//	add pane content
 	if(newPane)
@@ -173,30 +174,59 @@ multipaneToolBox.prototype.addPanesText = function( paneTextArray ) {
 *****/
 multipaneToolBox.prototype.changePane = function(paneIndex) {
 	if(this.panes[paneIndex]) {
+		// make the toolBox visible
 		if(this.hidden)
 			this.unhide();
-		// switch panes, update pointer to displayed pane
-		if(this.currentDisplay) {
+
+		// switch panes
+		if(this.currentDisplay)
 			this.panes[ this.currentDisplay ].setAttribute("display","none");
-			var Obbox = this.panes[ this.currentDisplay ].getBBox();
-		}
 		this.panes[paneIndex].setAttribute("display","inline");
-		this.currentDisplay = paneIndex;
 
 		// update label
 		if(this.UPDATE_LABEL)
 			this.setLabel(null, null, paneIndex);
+		
 		// change size to match size of new pane
-		if(Obbox)
-			if(Obbox.height>=1)
-				this.shrinkGUIboxHeight.setAttribute("from", Obbox.height + 2*Obbox.y);
-		var Nbbox = this.panes[paneIndex].getBBox();
-		if(Nbbox.height>=1) {
-			this.shrinkGUIboxHeight.setAttribute("to", Nbbox.height + 2*Nbbox.y);
-			this.shrinkGUIboxHeight.beginElement();
+		// find size:
+		var oHeight, Obbox, nHeight, Nbbox;
+		if( this.panes[ this.currentDisplay ] )
+			if(this.panes[this.currentDisplay].height)
+				oHeight = this.panes[this.currentDisplay].height;
+			else {
+				Obbox = this.panes[ this.currentDisplay ].getBBox();
+				oHeight = Math.max( Obbox.height + Obbox.y*2, 1 );
+			}
+		else
+			oHeight = 1;
+		if(this.panes[paneIndex].height)
+			nHeight = this.panes[paneIndex].height;
+		else {
+			Nbbox = this.panes[paneIndex].getBBox();
+			nHeight = Math.max( Nbbox.height + Nbbox.y*2, 1 );
 		}
+
+		this.shrinkGUIboxHeight.setAttribute("from", oHeight);
+		this.shrinkGUIboxHeight.setAttribute("to", nHeight);
+		this.shrinkGUIboxHeight.beginElement();
 	}
+	this.currentDisplay = paneIndex;
 	return this.panes[paneIndex];
+}
+
+/*****
+	
+	takePaneSizeSnapshot
+	
+	purpose
+		find height for animation purposes. animation will move to the height found here.
+	
+*****/
+multipaneToolBox.prototype.takePaneSizeSnapshot = function() {
+	for(i in this.panes) {
+		bbox = this.panes[i].getBBox();
+		this.panes[i].height = Math.max(bbox.height + 2*bbox.y, 1);
+	}
 }
 
 /*****
@@ -264,5 +294,5 @@ multipaneToolBox.prototype.buildSVG = function() {
 	this.shrinkGUIboxHeight.setAttributeNS(null, "begin", "indefinite");
 	this.shrinkGUIboxHeight.setAttributeNS(null, "repeatCount", 0);
 
-	this.nodes.GUIboxBorder.appendChild(this.shrinkGUIboxHeight);
+	this.nodes.GUIboxClip.appendChild(this.shrinkGUIboxHeight);
 }
