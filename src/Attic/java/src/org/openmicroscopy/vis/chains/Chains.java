@@ -37,7 +37,7 @@
  *------------------------------------------------------------------------------
  */
 package org.openmicroscopy.vis.chains;
-
+//import edu.umd.cs.piccolo.util.PDebug;
 
 /** 
  * <p>The main class for the Chain-building application. This class
@@ -73,6 +73,7 @@ public class Chains {
 
 		ModulePaletteFrame mainFrame = new ModulePaletteFrame(controller);
 		mainFrame.setVisible(true);
+	//	PDebug.debugFullBounds= true;
 		controller.setMainFrame(mainFrame);
     }
     
