@@ -85,6 +85,7 @@ package OME::ImportEngine::TIFFreader;
 use Class::Struct;
 use strict;
 use File::Basename;
+use File::stat;
 use Carp;
 use OME::ImportEngine::Params;
 use OME::ImportEngine::ImportCommon;
@@ -295,10 +296,13 @@ sub importGroup {
     # getGroups has left the output image file name at the end of @$grp
     my $ofn = pop @$grp;
 
-    # Use the 1st file's parameters to get the X, Y, & pixel size 
+    # Use the 1st file's parameters to get the X, Y, pixel size,
+    # and creation time
     $file = $grp->[0];
     $file->open('r');
     my $tags =  readTiffIFD($file);
+    my $filename = $file->getFilename();
+    my $crtime = OME::ImportEngine::ImportCommon::__getFileSQLTimestamp($filename);
     $file->close();
     $params->endian($tags->{__Endian});
     my $xref = $params->{xml_hash};
@@ -314,7 +318,7 @@ sub importGroup {
     $params->xml_hash->{'Image.NumTimes'} = 0;
     $params->xml_hash->{'Image.NumWaves'} = scalar(@$grp);
 
-    my $image = ($self->{super})->__newImage($ofn);
+    my $image = ($self->{super})->__newImage($ofn, $crtime);
     $self->{image} = $image;
     
     my $zs = ($xref->{'Image.SizeZ'} > 0) ? $xref->{'Image.SizeZ'} : 1;
@@ -340,8 +344,10 @@ sub importGroup {
         $tags =  readTiffIFD($file)
           unless ($c == 0);     # 1st file's tags already read
         $status = readWritePixels($self, $tags, $c);
-        last
-          unless ($status eq "");
+	if ($status ne "") {
+	    $file->close();
+	    last;
+	}
         # Store summary info about each input file
         $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
                                   0, $xref->{'Image.SizeX'}-1,

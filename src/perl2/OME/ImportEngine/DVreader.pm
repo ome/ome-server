@@ -303,6 +303,8 @@ sub importGroup {
     $file->open('r');
 
     my $filename = $file->getFilename();
+    my $crtime = OME::ImportEngine::ImportCommon::__getFileSQLTimestamp($filename);
+    
     my $base = ($self->{super})->__nameOnly($filename);
 
     my $params = $self->getParams();
@@ -310,14 +312,21 @@ sub importGroup {
     $params->oname($base);
     $params->endian(getEndian($file));
 
-    my $image = ($self->{super})->__newImage($base);
+    my $image = ($self->{super})->__newImage($base, $crtime);
     $self->{image} = $image;
+    if (!defined($image)) {
+	$file->close();
+	die "Failed to open image" ;
+    }
 
     # Softworx records many pieces of metadata in the file header and
     # extended headers. Read it and store it.
     $params->offset(0);
     my $status = readHeaders($self, $params);
-    die $status if $status ne '';
+    if ($status ne '') {
+	$file->close();
+	die $status ;
+    }
 
     # Create repository file, and fill it in from the input file pixels.
     my $xref = $params->{xml_hash};
@@ -331,7 +340,10 @@ sub importGroup {
                              $xref->{'Data.BitsPerPixel'});
 	$self->{pixels} = $pixels;
 	$status = readPixels($self, $params, $pix);
-    die $status if $status ne '';
+    if ($status ne '') {
+	$file->close();
+	die $status ;
+    }
 
     # pack together info on input file
     my @finfo;
