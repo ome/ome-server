@@ -64,6 +64,10 @@ our %ACS_DELETED_NODES;
 our %DELETED_PIXELS;
 # Deleted omeis Files.  Keys are DB OriginalFile IDs, values are 'Repository' and 'FileID'.
 our %DELETED_ORIGINAL_FILES;
+# The GraphViz object
+our $GRAPH;
+# URL for serve.pl used for links in GraphViz
+our $WEB_UI;
 
 sub getCommands {
     return
@@ -111,7 +115,8 @@ Options:
   -d, --delete      Actually delete the MEX(es).  Nothing will happen unless -n or -d is specified.  
   -m, --module      Delete all MEXes for the specified module (ID if numeric, otherwise by name).  
   -f, --keep-files  Keep orphaned OMEIS Files.  
-  -p, --keep-pixels Keep orphaned OMEIS Pixels.  
+  -p, --keep-pixels Keep orphaned OMEIS Pixels.
+  -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
 CMDS
 }
 
@@ -120,7 +125,7 @@ sub DeleteMEX {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
 	my $command_name = $self->commandName($commands);
-	my ($noop,$delete,$module_in,$keep_files,$keep_pixels);
+	my ($noop,$delete,$module_in,$keep_files,$keep_pixels,$make_graph);
 
 	# Parse our command line options
 	GetOptions('noop|n!' => \$noop,
@@ -128,6 +133,7 @@ sub DeleteMEX {
 		   'module|m=s' => \$module_in,
 		   'keep-files|f' => \$keep_files,
 		   'keep-pixels|p' => \$keep_pixels,
+		   'graph|g=s' => \$make_graph,
 		   );
 
 	if (scalar(@ARGV) <= 0 and not defined $module_in) {
@@ -135,7 +141,6 @@ sub DeleteMEX {
 	}
 	$keep_files  = 1 if $noop;
 	$keep_pixels = 1 if $noop;
-	
 	my $manager = OME::SessionManager->new();
     my $session = $self->getSession();
 	$FACTORY = $session->Factory();
@@ -144,6 +149,14 @@ sub DeleteMEX {
 	#$FACTORY->obtainDBH()->{AutoCommit} = 1;
 
 	$IMAGE_IMPORT_MODULE_ID = $session->Configuration()->image_import_module()->id();
+	
+	if ($make_graph) {
+		GraphViz->require()
+			or die "The Perl package GraphViz needs to be installed to use the -g flag.";
+		$GRAPH = GraphViz->new(rankdir  => 1);
+		# This should maybe be its own configuration variable	
+		$WEB_UI = 'http://'.$session->Configuration()->lsid_authority().'/perl2/serve.pl';
+	}
 
 	# Get the MEX(es)
 	my @MEXes;
@@ -190,10 +203,16 @@ sub DeleteMEX {
 			exit;
 		}
 	
-		$self->delete_mex ($MEX,$delete);
+		$self->delete_mex ($MEX,$delete,undef);
 	}
 
 	$session->commitTransaction() if $delete;
+	
+	if ($make_graph) {
+		my $frmt;
+		$frmt = "as_$1" if $make_graph =~ /.+\.(\w+)$/;
+		$GRAPH->$frmt ($make_graph);
+	}
 	
 	# We can't combine a DB transaction with an OMEIS transaction,
 	# So we do this only if the DB transaction succeeds
@@ -212,6 +231,7 @@ sub delete_mex {
 my $self = shift;
 my $mex = shift;
 my $delete = shift;
+my $from_mex = shift;
 my $mex_id;
 
 	$mex_id = $mex->id();
@@ -229,6 +249,18 @@ my $mex_id;
 
 	print $recurs_indent,"++MEX $mex_id: ",$mex->module()->name(),"\n";
 
+	# Add this node to the graph
+	if ($GRAPH) {
+		my $label = $mex->module()->name()."\\n[$mex_id]";
+		$label .= ' V' if $mex->virtual_mex();
+		$GRAPH->add_node ($mex_id,
+			label => $label,
+			URL =>"$WEB_UI?Page=OME::Web::DBObjDetail&ID=$mex_id&Type=OME::ModuleExecution",
+		);
+		$GRAPH->add_edge ($from_mex->id() => $mex_id) if $from_mex;
+	}
+
+
 	my $input;
 	my @actual_inputs = $FACTORY->
 		findObjects("OME::ModuleExecution::ActualInput",
@@ -236,7 +268,7 @@ my $mex_id;
 			input_module_execution => $mex,
 			});
 	foreach $input (@actual_inputs) {
-		$self->delete_mex ($input->module_execution(),$delete);
+		$self->delete_mex ($input->module_execution(),$delete,$mex);
 	}
 
 	
@@ -315,7 +347,7 @@ my $mex_id;
 		foreach my $image_mex (@image_mexes) {
 			next if $image_mex->id() == $mex_id;
 			print $recurs_indent,"  Image MEX ",$image_mex->id(),"\n";
-			$self->delete_mex ($image_mex,$delete);
+			$self->delete_mex ($image_mex,$delete,$mex);
 		}
 		
 		# Next, delete any left-over image attributes that don't have this image as the target.
@@ -345,7 +377,7 @@ my $mex_id;
 			foreach my $dataset_mex (@dataset_mexes) {
 				next if $dataset_mex->id() == $mex_id;
 				print $recurs_indent,"      Dataset MEX ",$dataset_mex->id(),"\n";
-				$self->delete_mex ($dataset_mex,$delete);
+				$self->delete_mex ($dataset_mex,$delete,$mex);
 			}
 			
 			# Since there are no dataset mexes for this dataset, unlock it.
@@ -480,7 +512,7 @@ my $delete = shift;
 	my $vMEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($attr);
 	foreach my $vMex (@$vMEXes) {
 		next unless $vMex;
-		$self->delete_mex ($vMex,$delete) unless $vMex->id() == $mex_id;		
+		$self->delete_mex ($vMex,$delete,$mex) unless $vMex->id() == $mex_id;		
 	}
 	
 	# Once we're back, we delete the vMEXes for this attribute.
@@ -503,7 +535,7 @@ my $delete = shift;
 		my $ref_MEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($ref_attr);
 		foreach my $ref_MEX (@$ref_MEXes) {
 			next unless $ref_MEX;
-			$self->delete_mex ($ref_MEX,$delete) unless $ref_MEX->id() == $mex_id;
+			$self->delete_mex ($ref_MEX,$delete,$mex) unless $ref_MEX->id() == $mex_id;
 		}
 		$self->delete_attribute_object ($ref_attr,$delete,$recurs_indent."      Reference from ");
 	}
