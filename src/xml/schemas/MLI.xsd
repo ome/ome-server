@@ -17,6 +17,8 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
+	
+	
 	<!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Josiah Johnston <siah@nih.gov>
@@ -72,14 +74,8 @@
 		<complexType>
 			<choice>
 				<element name = "PixelsArray">
-					<complexType>
-						<attribute name = "FormalInput" use = "required" type = "string"/>
-						<attribute name = "ID" type = "ID"/>
-					</complexType>
-				</element>
-				<element name = "PixelsSlice">
 					<annotation>
-						<documentation>Present a Pixels numeric Array to the Function. The FormalInput should be a PixelsSlice ST or something that has implementn psuedo polymorphism of the PixelsSlice ST.</documentation>
+						<documentation>Will translate a Formal Input of Semantic Type Pixels (or any psuedo subclass of Pixels) into a numeric array. PixelsSlices and variants may limit the extents of the array.</documentation>
 					</annotation>
 					<complexType>
 						<attribute name = "FormalInput" use = "required" type = "string"/>
@@ -98,6 +94,9 @@
 		<complexType>
 			<choice>
 				<element name = "PixelsArray">
+					<annotation>
+						<documentation>Will translate a numeric array to a Formal Output of Semantic Type Pixels (or any psuedo subclass of Pixels). If PixelsSlice appears in the pseudo inheritance chain, the extents will be set to the extents of the Pixels.</documentation>
+					</annotation>
 					<complexType>
 						<attribute name = "FormalOutput" use = "required" type = "string"/>
 						<attribute name = "ID" type = "ID"/>
