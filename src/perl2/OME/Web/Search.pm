@@ -262,6 +262,13 @@ END_HTML
 			}
 		}
 		
+		# Reset fields if the search type was just switched.
+ 		unless( !$search_type || $type eq $search_type ) {
+ 			$q->param( '__order', '' );
+ 			$q->param( '__offset', '' );
+ 			$q->param( 'search_type', $type );
+ 		}
+ 		
 		# Get Objects & Render them
 		my ($objects, $paging_text ) = $self->search();
 		my $allow_action = ( $q->param( 'allow_action' ) or $q->url_param( 'allow_action' ) );
@@ -284,13 +291,6 @@ END_HTML
 				} );
 		}
 
-		# Reset fields if the search type was just switched.
- 		unless( !$search_type || $type eq $search_type ) {
- 			$q->param( '__order', '' );
- 			$q->param( '__offset', '' );
- 			$q->param( 'search_type', $type );
- 		}
- 		
 		# gotta have hidden fields
 		$html .= "\n".
 			# tell the form what search fields are on it and what type they are for.
