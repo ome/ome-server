@@ -91,4 +91,7 @@ auth_ctx_free (auth_ctx *ctx);
 unsigned char *
 user_data_auth (auth_ctx *ctx, unsigned char *username, unsigned char *password);
 
+int
+sid_auth (auth_ctx *ctx, unsigned char *sid);
+
 #endif /* __OME_AUTH_H__ */
