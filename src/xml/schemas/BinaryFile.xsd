@@ -34,10 +34,27 @@ The SHA1 digest of the file is required.  If the file is compressed, the SHA1 di
 			<attribute name = "ReadLength" type = "positiveInteger"/>
 		</complexType>
 	</element>
-	<element name = "BinData" type = "base64Binary">
+	<element name = "BinData">
 		<annotation>
 			<documentation>The contents of this element are base64-encoded.  These are not CDATA sections, just a base64 stream.</documentation>
 		</annotation>
+		<complexType>
+			<simpleContent>
+				<extension base = "base64Binary">
+					<attribute name = "Compression">
+						<annotation>
+							<documentation>Only necessary if file is compressed.</documentation>
+						</annotation>
+						<simpleType>
+							<restriction base = "string">
+								<enumeration value = "gzip"/>
+								<enumeration value = "bzip2"/>
+							</restriction>
+						</simpleType>
+					</attribute>
+				</extension>
+			</simpleContent>
+		</complexType>
 	</element>
 	<element name = "BinaryFile">
 		<annotation>
