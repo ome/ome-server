@@ -218,4 +218,37 @@ unless ($@) {
 	carp "Unable to load the Storable module, continuing without a stored OME::Install::Environment!";
 }
 
+# OME installed successfully blurb
+my $blurb = <<BLURB;
+******************************************************************************
+                      OME Install Successful!
+
+Thank you for installing OME, you may now proceed to use your system through
+either the web interface or the supplied Java client. For more information
+please visit:
+
+	http://www.openmicroscopy.org
+
+for documentation resources:
+
+	http://docs.openmicroscopy.org.uk
+
+to report bugs:
+
+	http://bugs.openmicroscopy.org.uk
+
+to download further releases and get client bundles:
+
+	http://cvs.openmicroscopy.org.uk
+
+******************************************************************************
+BLURB
+
+# There's a reason it's only that long, this blurb *should* fit in a 24-line
+# terminal in its entirety.
+#
+# -Chris <callan@blackcat.ca>
+
+print $blurb;
+
 exit (0);
