@@ -88,6 +88,9 @@ public class CChain extends RemoteChain  {
 	
 	public void loadExecutions(Connection connection) {
 		chainExecutions = connection.getChainExecutions(this);
+		// when I first load executions, not datasets indicated,
+		// so all executions are current.
+		currentDatasetExecutions = new Vector(chainExecutions);
 	}
 	
 	
@@ -618,7 +621,9 @@ public class CChain extends RemoteChain  {
 		boolean res = false;
 		Iterator iter = chainExecutions.iterator();
 		CChainExecution exec;
-		currentDatasetExecutions = new Vector();
+		if (selected != null) // reset currentdataset executions if 
+			//something selected...
+			currentDatasetExecutions = new Vector();
 		
 		eligibleExecutions =false;
 		
