@@ -81,9 +81,11 @@ sub new {
 sub exportFile {
 	my ($self, $filename, %flags) = @_;
 	my $doc = $self->doc();
+	$flags{ compression } = 7 
+		unless exists $flags{ compression } and defined $flags{ compression };
 	logdie ref ($self)."->exportFile:  Need a filename parameter to export a file."
 		unless defined $filename;
-#	$doc->setCompression(7);
+	$doc->setCompression($flags{ compression });
 	logdie ref ($self)."->exportFile:  File could not be written."
 		unless $doc->toFile($filename, 1); 
 }
