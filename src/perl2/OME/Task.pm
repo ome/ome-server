@@ -88,7 +88,7 @@ Acessor for getting the task's process ID (i.e., the operating system's PID).
 =head2 state ()
 
 Acessor for getting the task's state.  This is a controlled
-vocabulary, so state is supposed to be 'IN PROGRESS', 'FINISHED', and 'DIED'.
+vocabulary, so state is supposed to be 'IN PROGRESS', 'FINISHED', and 'ABORTED'.
 Do not modify the state directly.
 
 =head2 message ()
@@ -233,28 +233,6 @@ sub finish {
 	$self->storeObject();
 }
 
-=head2 died()
-
-Signal to kill the task.  The optional parameter is stored in the error message.
-
-=cut
-
-sub kill {
-	my $self = shift;
-	my $error;
-	kill 9, $self->process_id();
-	
-	$self->t_stop('now');
-	$self->state ('DIED');
-	
-	if (@_) {
-		$error = shift;
-		$self->error($error);
-	}
-	$self->storeObject();
-}
-
-
 =head2 setMessage()
 
 Set the message for the task.  Unlike the C<message()> field, this will immediately
@@ -335,6 +313,8 @@ sub died {
 	$self->storeObject();
 }
 
+
+
 =head2 setnSteps()
 
 Set (or re-set) the number of steps in the task.
@@ -351,6 +331,29 @@ sub setnSteps {
 		$self->storeObject();
 	}
 	return $nSteps;
+}
+
+
+=head2 DESTROY()
+
+If the task object gets to the DESTROY method without being finished,
+the died() method is called with the $! and $@ messages
+
+=cut
+
+sub DESTROY {
+	my $self = shift;
+	my @errors;
+	push (@errors, "Task terminated in an unfinished state.");
+	push (@errors, "System error: $!") if $!;
+	push (@errors, "Uncaught exception: $@") if $@;
+	push (@errors, "Unknown error") unless scalar (@errors) > 1;
+	
+	$self->died (join ("\n",@errors))
+		unless ($self->state() eq 'FINISHED'
+		or $self->state() eq 'DIED');
+	
+	
 }
 
 
