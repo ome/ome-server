@@ -126,20 +126,20 @@ Useful for constructing an object summary.
 =cut
 
 sub getFieldNames {
-	my ($proto,$type, $doNotSpecialize) = @_;
+	my ($proto,$type) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getFieldNames( $type )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
 	
-	# We don't need no *_id aliases or target
+	# We don't need no target
 	my $fieldNames = ( 
 		$proto->_fieldNames() or
-		['id', sort( grep( (!/_id$/ and !/^target$/), $package_name->getColumns()) ) ] 
+		['id', sort( grep( ( !m/^target$/o ), $package_name->getPublishedCols()) ) ] 
 	);
 	return @$fieldNames if wantarray;
 	return $fieldNames;
@@ -149,7 +149,8 @@ sub getFieldNames {
 
 	my @fieldNames = OME::Web::RenderData->getAllFieldNames($type);
 
-$type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance of either
+$type can be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
 
 Returns an ordered list of all relevant field names for the specified object or object type.
 e.g. For OME::Image, this will include all time stamps but will exclude id accessors.
@@ -159,16 +160,16 @@ Useful for a detailed object representation.
 =cut
 
 sub getAllFieldNames { 
-	my ( $proto, $type, $doNotSpecialize ) = @_;
-	
+	my ( $proto, $type ) = @_;
+
 	my $specializedRenderer;
 	return $specializedRenderer->getAllFieldNames( $type )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 
 	my $fieldNames = (
 		$proto->_allFieldNames() or
-		$proto->getFieldNames($type, $doNotSpecialize)
+		$proto->getFieldNames($type)
 	);
 	
 	return @$fieldNames if wantarray;
@@ -193,7 +194,7 @@ sub getFieldTypes {
 	my $specializedRenderer;
 	return $specializedRenderer->getFieldTypes( $type,$fieldNames )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
 	my ($package_name, $common_name, $formal_name, $ST) =
@@ -219,12 +220,12 @@ returns a hash { field_name => field_Label }
 =cut
 
 sub getFieldLabels {
-	my ($proto,$type,$fieldNames, $doNotSpecialize) = @_;
+	my ($proto,$type,$fieldNames) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getFieldLabels( $type,$fieldNames )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 	
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
 
@@ -264,14 +265,14 @@ need to implement this.
 =cut
 
 sub render {
-	my ($proto,$objects,$format,$fieldnames, $doNotSpecialize) = @_;
+	my ($proto,$objects,$format,$fieldnames) = @_;
 
-	return $proto->renderSingle( $objects, $format,$fieldnames, $doNotSpecialize )
+	return $proto->renderSingle( $objects, $format,$fieldnames )
 		unless ref( $objects ) eq 'ARRAY';
 
 	my @records;
 	foreach ( @$objects ) {
-		my $record = $proto->renderSingle( $_, $format, $fieldnames, $doNotSpecialize );
+		my $record = $proto->renderSingle( $_, $format, $fieldnames );
 		push( @records, $record );
 	}
 	return @records if wantarray;
@@ -291,12 +292,12 @@ same as render, but works with an individual instance instead of arrays.
 =cut
 
 sub renderSingle {
-	my ($proto,$obj,$format,$fieldNames, $doNotSpecialize) = @_;
+	my ($proto,$obj,$format,$fieldNames) = @_;
 
 	my $specializedRenderer;
 	return $specializedRenderer->renderSingle( $obj, $format, $fieldNames )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 
 	my $q = new CGI;
 	my ($package_name, $common_name, $formal_name, $ST) =
@@ -323,7 +324,7 @@ sub renderSingle {
 
 =head2 getObjectLabel
 
-	my $object_label = OME::Web::RenderData->getObjectLabel( $object, $format );
+	my $object_label = OME::Web::RenderData->getObjectLabel( $object  );
 
 Gets a name for this object. Subclasses may override this method.
 If a 'name' or a 'Name' method exists for this object, it will be returned.
@@ -332,12 +333,12 @@ Otherwise, 'id' will be returned.
 =cut
 
 sub getObjectLabel {
-	my ($proto,$obj,$format, $doNotSpecialize) = @_;
+	my ($proto,$obj) = @_;
 
 	my $specializedRenderer;
-	return $specializedRenderer->getObjectLabel( $obj, $format )
+	return $specializedRenderer->getObjectLabel( $obj )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 
 	return $obj->id().". ".$obj->name() if( $obj->getColumnType( 'name' ) );
 	return $obj->id().". ".$obj->Name() if( $obj->getColumnType( 'Name' ) );
@@ -359,11 +360,11 @@ detailed display of the object.
 =cut
 
 sub getRefToObject {
-	my ($proto,$obj,$format, $doNotSpecialize) = @_;
+	my ($proto,$obj,$format) = @_;
 	my $specializedRenderer;
 	return $specializedRenderer->getRefToObject( $obj, $format )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 	
 	my $q = new CGI;
 	for( $format ) {
@@ -399,12 +400,12 @@ returns a hash { field_name => search_field, ... }
 =cut
 
 sub getSearchFields {
-	my ($proto,$type, $fieldNames, $doNotSpecialize) = @_;
+	my ($proto,$type, $fieldNames) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getSearchFields( $type, $fieldNames )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    not $doNotSpecialize);
+		    $proto eq __PACKAGE__);
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
