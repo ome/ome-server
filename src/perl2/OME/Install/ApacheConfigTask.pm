@@ -896,6 +896,16 @@ BLURB
 
 	my $httpdConf = $apache_info->{conf} or croak "Could not find httpd.conf\n";
 	print $LOGFILE "httpd.conf is $httpdConf\n";
+	
+	if ($APACHE->{DEV_CONF}) {
+		if ( not  check_permissions ({user => $APACHE_USER, r => 1, x => 1}, cwd()."src/perl2") ) {
+			print STDERR "\nYou have chosen a developer configuration, yet Apache does not have access into the\n".
+						 "distribution directory (".cwd().").\n".
+						 "Please re-set your permissions to give Apache access and try the install again.\n".
+						 "Alternatively, you can choose to not use the developer configuration.";
+			die;
+		}
+	}
 
 
 	#********
