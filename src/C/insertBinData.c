@@ -443,7 +443,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 					fwrite( enc, 1, SIZEOF_BUFS - strm->avail_out, stdout );
 				} while( rC != B64Z_STREAM_END );
 				fprintf( stdout, "</BinData>\n" );
-				b64z_decode_end( strm );
+				b64z_encode_end( strm );
 				/*
 				**************************************************************/
 				
