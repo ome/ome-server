@@ -224,6 +224,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				if (layoutDatasets == true) {
 					node.setOffset(0,0);
 					node.layoutImages();
+					node.setHandler(eventHandler);
 				}
 				
 				if (datasets.contains(node.getDataset())) {
