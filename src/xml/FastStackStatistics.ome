@@ -107,7 +107,6 @@
       <Element Name="Sum_Zi" DBLocation="PLANE_STATISTICS.SUM_ZI" DataType="float"/>
     </SemanticType>
 
-
 </STD:SemanticTypeDefinitions>
 
 <AML:AnalysisModuleLibrary
@@ -178,6 +177,58 @@
 				<Input AML:FormalInputName = "Pixels" SemanticElementName = "BitsPerPixel" DivideBy = "8"/>
 			</InputSubString>
 		</CommandLine>
+		<STDIN>
+			<InputRecord>
+				<InputSubstring>
+					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "Minimum"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubstring>
+					<Input AML:FormalInputName = "PlaneMaximum" SemanticElementName = "Maximum"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubstring>
+					<Input AML:FormalInputName = "PlaneSum_i" SemanticElementName = "Sum_i"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubstring>
+					<Input AML:FormalInputName = "PlaneSum_i2" SemanticElementName = "Sum_i2"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubstring>
+					<Input AML:FormalInputName = "PlaneSum_log_i" SemanticElementName = "Sum_log_i"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubstring>
+					<Input AML:FormalInputName = "Sum_Xi" SemanticElementName = "Sum_Xi"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubstring>
+					<Input AML:FormalInputName = "Sum_Yi" SemanticElementName = "Sum_Yi"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubstring>
+					<Input AML:FormalInputName = "Sum_Zi" SemanticElementName = "Sum_Zi"/>
+				</InputSubstring>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+			</InputRecord>
+		</STDIN>
 		<STDOUT>
 			<OutputRecord RepeatCount = "1">
 				<pat>^.*?\n</pat>
