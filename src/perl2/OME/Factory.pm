@@ -1003,13 +1003,29 @@ sub newAttribute {
 
 	# Add the SEMANTIC_TYPE_OUTPUT entry
 	#     if there is a mex defined and
+	#        the attribute is not marked a Parental Output
 	#        there is neither a module defined for this mex nor 
 	#                         a formal output of this type
 	$self->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
 		module_execution => $module_execution,
 		semantic_type    => $type,
-	}) if (defined $module_execution and
-	      not $isParentalOutput and 
+	}) if (defined $module_execution &&
+	      not $isParentalOutput && 
+		  ( not $module_execution->module() or
+			not $self->findObject("OME::Module::FormalOutput",
+					module        => $module_execution->module,
+					semantic_type => $type ) ) );
+
+	# Add the PARENTAL_OUTPUT entry
+	#     if there is a mex defined and
+	#        the attribute is marked a Parental Output
+	#        there is neither a module defined for this mex nor 
+	#                         a formal output of this type
+	$self->maybeNewObject("OME::ModuleExecution::ParentalOutput", {
+		module_execution => $module_execution,
+		semantic_type    => $type,
+	}) if (defined $module_execution &&
+	      $isParentalOutput && 
 		  ( not $module_execution->module() or
 			not $self->findObject("OME::Module::FormalOutput",
 					module        => $module_execution->module,
