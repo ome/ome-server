@@ -472,6 +472,24 @@ sub __callOMEIS {
     }
 }
 
+=head2 __setBoolean
+
+	$params{BigEndian} = __setBoolean($bigEndian);
+
+Converts a boolean parameter into something understandable by OMEIS.
+Booleans in perl can interpreted as false if they are undefined or defined
+and == 0.  OMEIS booleans are false if they are eq '0' or 'false'.  This
+little method will return 'true' if the parameter evaluates to true in perl
+and 'false' otherwise.
+
+=cut
+
+sub __setBoolean {
+	shift; # don't need your steenkin object;
+    return 'true' if shift;
+    return 'false';
+}
+
 =head2 newPixels
 
 	my $pixelsID = OME::Image::Server->
@@ -628,7 +646,7 @@ sub getPixels {
     my %params = (Method   => 'GetPixels',
                   PixelsID => $pixelsID,
                   __file   => $output_file);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -666,7 +684,7 @@ sub getStack {
                   theC     => $theC,
                   theT     => $theT,
                   __file   => $output_file);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -704,7 +722,7 @@ sub getPlane {
                   theC     => $theC,
                   theT     => $theT,
                   __file   => $output_file);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -748,7 +766,7 @@ sub getROI {
                   PixelsID => $pixelsID,
                   ROI      => $ROI,
                   __file   => $output_file);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -826,7 +844,7 @@ sub setPixels {
     my %params = (Method   => 'SetPixels',
                   PixelsID => $pixelsID,
                   Pixels   => $filename);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -863,7 +881,7 @@ sub setStack {
                   Pixels   => $filename,
                   theC     => $theC,
                   theT     => $theT);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -901,7 +919,7 @@ sub setPlane {
                   theZ     => $theZ,
                   theC     => $theC,
                   theT     => $theT);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -949,7 +967,7 @@ sub setROI {
                   PixelsID => $pixelsID,
                   Pixels   => $filename,
                   ROI      => $ROI);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -1195,7 +1213,7 @@ sub convertStack {
                   theT     => $theT,
                   FileID   => $fileID,
                   Offset   => $offset);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
@@ -1243,7 +1261,7 @@ sub convertPlane {
                   theT     => $theT,
                   FileID   => $fileID,
                   Offset   => $offset);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
@@ -1335,7 +1353,7 @@ sub convertRows {
                   theT     => $theT,
                   FileID   => $fileID,
                   Offset   => $offset);
-    $params{BigEndian} = $bigEndian if defined $bigEndian;
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
