@@ -454,6 +454,7 @@ sub new {
     my $self = {__ourDBH           => $dbh,
                 __handlesAvailable => {},
                 __allHandles       => {},
+                __configurations   => {},
                };
 
     return bless $self, $class;
@@ -470,6 +471,17 @@ sub closeFactory {
 }
 
 sub Session { return OME::Session->instance() }
+
+# Configurations are specific to databases we may be connected to
+sub Configuration {
+	my $self = shift;
+	my $dbh = $self->{__ourDBH};
+	return undef unless $dbh;
+	return $self->{__configurations}->{$dbh} if exists $self->{__configurations}->{$dbh};
+	
+	$self->{__configurations}->{$dbh} = OME::Configuration->new( $self );
+	return $self->{__configurations}->{$dbh};
+}
 
 sub __checkClass {
     my $class = shift;
