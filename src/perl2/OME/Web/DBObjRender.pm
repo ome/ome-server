@@ -549,7 +549,11 @@ sub renderData {
 			# populate field requests
 			} else {
 				my $type = $obj->getColumnType( $field );
-				next unless $type;
+				
+				if (not defined $type) {
+					$record{ $request_string } = $obj->{"__fields"}->{tasks}->{$field};
+					next;
+				}
 				
 				# data fields
 				if( $type eq 'normal' ) {
