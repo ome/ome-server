@@ -827,23 +827,39 @@ char *tmp1,*tmp2;
 int nBack=0;
 
 	strcpy (pathBuf,"");
+	
+	/* Skip identical path components until we get to the last '/' */
+	/* Keep track of the last path component before we see a difference. */
 	tmp1 = strrchr (toPath,'/');
+	tmp2 = toPath; /* The first non-identical path component initialized to start of toPath */
 	if (tmp1) tmp1++;
 	while (*toPath && *fromPath && *toPath == *fromPath && toPath != tmp1) {
+		if (*toPath == '/') tmp2 = toPath; /* update last identical path component pointer */
 		toPath++;
 		fromPath++;
 	}
+	
+	/*
+	  if tmp2 points at '/', andvance it by one.
+	*/
+	if (*tmp2 == '/') tmp2++;
+	
+	/* rewind toPath to point at the first character of the first non-identical path component (tmp2) */
+	toPath = tmp2;
 
+	/* Get the number of '../' we need to put in by counting remaining '/' in fromPath */
 	while (*fromPath) {
 		if (*fromPath++ == '/') nBack++;
 	}
-	tmp2 = pathBuf + (nBack*3);
 
+	/* use tmp2 to point at the end (NULL) of pathBuf after we add all the '../' */
+	tmp2 = pathBuf + (nBack*3);
 	while (nBack) {
 		strcat (pathBuf,"../");
 		nBack--;
 	}
 	
+	/* Copy the non-identical path components after the last '../' */
 	while (*toPath) {
 		*tmp2++ = *toPath++;
 	}
