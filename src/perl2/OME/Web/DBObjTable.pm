@@ -56,10 +56,9 @@ Build a table with information about any DBObject or attribute.
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-
 use CGI;
 use Log::Agent;
-
+use Carp;
 use OME::Web::DBObjRender;
 
 #*********
@@ -88,10 +87,12 @@ sub getMenuText {
 	my $menuText = "DB Browser";
 	return $menuText unless ref($self);
 
-	my $type = $self->CGI()->param( 'Type' )
-		or die "Type not specified";
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-	return "$common_name Browser";
+	my $type = $self->CGI()->param( 'Type' );
+	if( $type ) {
+		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+		return "$common_name Browser";
+    }
+	return $menuText;
 }
 
 #sub getMenuBuilder { return undef }  # No menu
@@ -101,28 +102,46 @@ sub getMenuText {
 sub getPageTitle {
 	my $self = shift;
 	my $q    = $self->CGI();
-	my $type = $q->param( 'Type' )
-		or die "Type not specified";
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-    return "$common_name Table";
+	my $type = $q->param( 'Type' );
+	if( $type ) {
+		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+    	return "$common_name Table";
+    }
+    return "Joined Table";
 }
 
 sub getPageBody {
 	my $self = shift;
 	my $q    = $self->CGI();
 	
-	if( $q->param( "Format" ) eq 'TXT' ) {
-		return ('TXT', 
-			$self->getTextTable( {
-			})
-		);	
-	} else {
-		return ('HTML', 
-			$self->getTable( {
-				actions       => ['Search'],
-				width         => '100%',
-			})
-		);
+	if( $q->param( "Type" ) ) {
+		if( $q->param( "Format" ) eq 'txt' ) {
+			return ('TXT', 
+				$self->getTextTable( {
+				})
+			);
+		} else {
+			return ('HTML', 
+				$self->getTable( {
+					actions       => ['Search'],
+					width         => '100%',
+				})
+			);
+		}
+	} elsif( $q->param( "Types" ) ) {
+		if( $q->param( "Format" ) eq 'txt' ) {
+			return ('TXT', 
+				$self->getJoinTextTable( {
+				})
+			);	
+		} else {
+			return ('HTML', 
+				$self->getJoinTable( {
+#					actions       => ['Search'],
+#					width         => '100%',
+				})
+			);
+		}
 	}
 }
 
@@ -140,10 +159,12 @@ sub getPageBody {
 	# or use a list of objects to make a table
 	my $table      = $tableMaker->getTable( \%options, $type, \@obj_array );
 
-If a search key is 'accessor', the objects retrieved will be from a
-DBObject accessor method. The value for the 'accessor' search key is
-exepected to be a reference to an array of the form [ $typeToAccessFrom,
-$idToAccessFrom, $accessorMethod ].
+Table content can be retrieved from DBObject accessor methods. To do
+this, add a search parameter {'accessor' => [ $typeToAccessFrom,
+$idToAccessFrom, $accessorMethod ] }. $typeToAccessFrom and
+$idToAccessFrom will be used to load a DBObject that $accessorMethod
+will be called from. The advantage to using this feature is only content
+being displayed is loaded.
 
 recognized %options are:
 	noSearch         => 1|0                          # 1 disables searches
@@ -262,7 +283,7 @@ sub getTable {
 						$q->a( { -href => 
 							$self->pageURL('OME::Web::DBObjTable', { 
 								%{ $self->{__params} },
-								Format => 'TXT',
+								Format => 'txt',
 							} ) }, "Download as txt" ),
 						( $allowPaging ? $pagingText : ()), 
 						( $allowSearch ? $self->__getActionButton( 'Search', $form_name ) : () )
@@ -291,6 +312,163 @@ sub getTable {
 		unless $options->{ embedded_in_form };
 
 	return $html;
+}
+
+=head2 getJoinTable
+
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
+
+	# or use a list of objects to make a table
+	my $table      = $tableMaker->getTable( \%options, { $type => \@obj_array, ... } );
+
+
+
+recognized %options are:
+#	select_column    => 1|0                          # 1 inserts a select column. 
+	                                                 # name will default to 'Selected_'.$formal_name
+#	select_name      => $select_column_name          # overrides default name. if specified,
+	                                                 # select_column is set to 1.
+#	Length           => $num_items_per_table
+#	embedded_in_form => $form_name
+	title            => 'table_title'
+#	width            => 'table_width'
+#	actions          => [ action_button_name, ... ]
+	excludefields    => { field_name => undef, ... }
+
+a Length of 0 or less is considered to be 'no limit'. an undef Length is
+assumed to be the default Length of 10.
+
+=cut
+
+sub getJoinTable {
+	my $self = shift;
+	my $q       = $self->CGI();
+	
+	my ( $options, %joined_groups ) = $self->__getJoinedGroups( @_ );
+	# { joining_group_id => {
+	#	field_names => [...], # doubles as column order
+	#	records     => { joining_record_id => { field_name => value, ... }, ... }, # joined records
+	#	common_names => [...], 
+	#	formal_names => [...],
+	# }, ... }
+
+	# build tables
+	my @tables;
+	foreach my $j_group ( values( %joined_groups ) ) {
+		my $table;
+		
+		# table content
+		my @records = values( %{ $j_group->{records} } );
+		my @fieldNames = @{ $j_group->{ field_names } };
+		my %labels = %{ $j_group->{ field_labels } };
+		my @headers = @{ $j_group->{ col_header } };		
+		my $title = "Displaying ".join( ', ', @{ $j_group->{ titles } } ).
+			join( '', map( $q->a( { -name => $_ }, ' ' ), @{ $j_group->{ titles } } ) );
+		
+		# translate to html
+		my @table_data;
+		foreach my $record ( @records ) {
+			my $table_cells = 
+				$q->td( { -class => 'ome_td' }, 
+					[ map( $record->{$_}, @fieldNames ) ] 
+				);
+			push( @table_data, $table_cells );
+		}
+	
+		# column descriptors
+		my @columnHeaders;
+		foreach my $entry( @headers ) {
+			my ($name, $colspan) = @$entry;
+			push( @columnHeaders, $q->td( { -class => 'ome_td', -colspan => $colspan, -align => 'center' }, $name ) );
+		}
+		my @columnLabels = map( $q->td( { -class => 'ome_td' }, $labels{ $_ } ), @fieldNames );
+		
+		# link to text table
+		my $txt_table_link = 
+			$q->a( { -href => 
+				$self->pageURL('OME::Web::DBObjTable', { 
+					%{ $self->{__params} },
+					Format => 'txt',
+				} ) }, "Download as txt"
+			);
+		
+		
+		# Build the table
+		$table .=
+			$txt_table_link.
+			$q->table( { -class => 'ome_table', width => $options->{width} },
+				# Table title
+				$q->caption( $title ),
+				$q->Tr( [
+					# Column headers
+					join( '', @columnHeaders ),
+					join( '', @columnLabels ),
+					# Table data
+					@table_data,
+				]
+				)
+			);
+		push( @tables, $table );
+	}
+	
+	return @tables;
+}
+
+=head2 getJoinTextTable
+
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
+
+	# use CGI parameters to make a table.
+	my $table      = $tableMaker->getJoinTextTable( \%options );
+
+	# or use a list of objects to make a table
+	my $table      = $tableMaker->getJoinTextTable( \%options, [ { type => $type, title => $title, objects => \@obj_array }, ... ] );
+
+recognized %options are:
+	title            => 'table_title'
+	excludefields    => { field_name => undef, ... }
+	delimiter        => $field_delimiter
+
+=cut
+
+sub getJoinTextTable {
+	my $self = shift;
+	my $q       = $self->CGI();	
+	my %joined_groups;
+	my ( $options, $entries ) = @_;
+	$options->{Format} = 'txt';
+	( $options, %joined_groups ) = $self->__getJoinedGroups( $options, $entries );
+	# { joining_group_id => {
+	#	field_names => [...], # doubles as column order
+	#	records     => { joining_record_id => { field_name => value, ... }, ... }, # joined records
+	#	common_names => [...], 
+	#	formal_names => [...],
+	# }, ... }
+
+	# build tables
+	my @tables;
+	$options->{delimiter} = "\t" unless $options->{delimiter};
+	foreach my $j_group ( values( %joined_groups ) ) {
+		my @records = values( %{ $j_group->{records} } );
+		my @fieldNames = @{ $j_group->{ field_names } };
+		my %labels = %{ $j_group->{ field_labels } };
+#		my $title = "Displaying ".join( ', ', @{ $j_group->{ titles } } );
+		
+		# column labels
+		my @columnLabels = map( $labels{ $_ }, @fieldNames );
+		
+		# Build the table
+		my $table = join( $options->{delimiter}, @columnLabels )."\n";
+	
+		# table data
+		foreach my $record ( @records ) {
+			$table .= join( $options->{delimiter}, map( $record->{$_}, @fieldNames ) )."\n";
+		}
+		
+		push( @tables, $table );
+	}
+	
+	return @tables;
 }
 
 =head2 getTextTable
@@ -435,6 +613,148 @@ sub getList {
 	return $html;
 }
 
+# { joining_group_id => {
+#	field_names => [...], # doubles as column order
+#	records     => { joining_record_id => { field_name => value, ... }, ... }, # joined records
+#	common_names => [...], 
+#	formal_names => [...],
+# }, ... }
+sub __getJoinedGroups {
+	my $self = shift;
+	my $q       = $self->CGI();
+	my ( $options, $entries ) = @_;
+	my %standard_index_fields = (
+		feature          => undef,
+		image            => undef,
+		module_execution => undef,
+	);
+	my %image_index_fields = (
+		TheZ             => undef,
+		TheC             => undef,
+		TheT             => undef,
+	);
+	
+	$options->{Format} = 'html' unless $options->{Format};
+	
+	my %joined_groups; 
+	# { joining_group_id => {
+	#	field_names => [...], # doubles as column order
+	#	records     => { joining_record_id => { field_name => value, ... }, ... }, # joined records
+	#	common_names => [...], 
+	#	formal_names => [...],
+	# }, ... }
+
+	# gather input from cgi params if inputs were not given
+	unless( defined $entries ) {
+		my @types = split( m',', $q->param( 'Types' ) );
+		$self->{__params}->{Types} = join( ',', @types );
+		foreach my $type( @types ) {
+			my %searchParams = __get_CGI_search_params( $q, $type );
+			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+			my ( $objects, $object_count, $minimalParams ) = __load_objects( $self->Session()->Factory(), $formal_name, \%searchParams );
+			while( my( $param, $value ) = each %$minimalParams ) {
+				next if $param eq 'Type';
+				$self->{__params}->{ $param } = ( ref($value) ? join( ',', @$value ) : $value );
+			}
+			my $title = ( $q->param( "Title_$type" ) or $common_name);
+			push( @$entries, {
+				title   => $title,
+				type    => $formal_name,
+				objects => $objects
+			});
+		}
+	} else {
+		my @types;
+		foreach my $entry ( @$entries ) {
+			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $entry->{ type } );
+			push( @types, $formal_name );
+			$self->{__params}->{$formal_name.'_id'} = join( ',',  map( $_->id, @{ $entry->{ objects } } ));
+		}
+		$self->{__params}->{Types} = join( ',', @types );
+	}
+
+	foreach my $entry ( @$entries ) {
+		my $title = $entry->{ title };
+		my $type  = $entry->{ type };
+		my $objects  = $entry->{ objects };
+
+		# load type
+		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+
+		# collect records & such for objects
+		my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
+		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
+			if exists $options->{excludeFields};
+		my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
+		my @records    = OME::Web::DBObjRender->render( $objects, $options->{Format}, \@fieldNames );
+
+		# Determine what known indexes this record contains.
+		my @index_fields = sort( grep( exists( $standard_index_fields{$_} ), @fieldNames ) );
+		push( @index_fields, sort( grep( exists( $image_index_fields{$_} ), @fieldNames ) ) )
+			if( scalar( grep( $_ eq 'image', @index_fields ) ) > 0 );
+		
+		# merge_records will be used for merging the other records
+		my @merge_records = OME::Web::DBObjRender->render( $objects, 'txt', \@index_fields );
+
+		# identifies which joining group these records belong to
+		my $j_group_id = join( '.',  @index_fields);
+		
+		# instantiate the joining group if neccessary.
+		$joined_groups{ $j_group_id } = { 
+			field_names       => \@index_fields,
+			field_name_lookup => { map { $_ => undef } @index_fields },
+			col_header        => [ [ ( (scalar @index_fields gt 1) ? 'Indexes' : 'Index' ), scalar( @index_fields ) ] ],
+		} unless exists( $joined_groups{ $j_group_id } );
+
+		# join the records
+		my $j_group = $joined_groups{ $j_group_id };
+		$j_group->{records} = {} unless exists $j_group->{records};
+		my $j_records = $j_group->{records};
+		for my $i ( 0..( scalar( @records ) - 1 ) ) {
+			my $merge_index = join( '.', map( $merge_records[ $i ]->{$_}, @index_fields ) );
+			$j_records->{ $merge_index } = {}
+				unless exists $j_records->{ $merge_index };
+			my $j_record = $j_records->{ $merge_index };
+
+			foreach (@fieldNames) {
+				next if $_ eq 'id';
+				$j_record->{ $_ } = $records[ $i ]->{ $_ };
+			}
+			$j_record->{ $formal_name."_id" } = $records[ $i ]->{ id }
+				if( exists $records[ $i ]->{ id } );
+		}
+		
+		# record field names.
+		my $colspan = 0;
+		foreach( @fieldNames ) {
+			if ($_ eq 'id') {
+				$j_group->{ field_labels }->{ $formal_name."_id" } = $common_name." id";
+				$j_group->{ field_name_lookup }->{ $formal_name."_id" } = undef;
+#				push( @{ $j_group->{ field_names } }, $formal_name."_id" );
+			} else {
+				$j_group->{ field_labels }->{ $_ } = $labels{ $_ };
+				next if exists $j_group->{ field_name_lookup }->{ $_ };
+				$colspan++;
+				$j_group->{ field_name_lookup }->{ $_ } = undef;
+				push( @{ $j_group->{ field_names } }, $_ );
+			}
+		}
+		
+		# record meta data
+		push( @{ $j_group->{ common_names } }, $common_name );
+		push( @{ $j_group->{ formal_names } }, $formal_name );
+		push( @{ $j_group->{ col_header } }, [ ( 
+			$ST ?
+				$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
+					   $common_name ) :
+				$common_name
+			), $colspan ] );
+		push( @{ $j_group->{ titles } }, $title );
+	}
+	
+	return ( $options, %joined_groups );
+}
+
 sub __parseParams {
 	my ($self, $options, $type, $param3 ) = @_;
 	my $q       = $self->CGI();
@@ -464,28 +784,10 @@ sub __parseParams {
 		$options->{ noSearch } = 1;
 	} elsif( $mode eq 'cgi' ) {
 		$type = $q->param( 'Type' )
-			or die "url parameter Type not specified";
+			or confess "url parameter Type not specified";
 		$options->{ Length } = $q->param( $type."___limit" ) 
 			unless $options->{ Length };
-
-		# collect search params
-		%searchParams = map{ $_ => $q->param( $_ ) } grep( m/^($type)_/o, $q->param( ) );
-		foreach my $key (keys %searchParams) {
-			# get the key's Real name
-			(my $newkey = $key) =~ s/^($type)_//;
-			# copy the key into the real name unless the value is blank
-			$searchParams{ $newkey } = $searchParams{ $key }
-				unless not defined $searchParams{ $key } or $searchParams{ $key } eq '';
-			# delete the old key
-			delete $searchParams{ $key };
-			if ( $searchParams{ $newkey } =~ m/,/) {
-				if( $newkey ne 'accessor' ) {
-					$searchParams{ $newkey } = [ 'in', [ split( m/,/, $searchParams{ $newkey } ) ] ];
-				} else {
-					$searchParams{ $newkey } = [ split( m/,/, $searchParams{ $newkey } ) ];
-				}
-			}
-		}
+		%searchParams = __get_CGI_search_params( $q, $type );
 	}
 
 	# PAGING: prepare offset & limit
@@ -514,40 +816,10 @@ sub __parseParams {
 
 	# get objects
 	if( $mode eq 'cgi' or $mode eq 'search' ) {
-		# use an accessor from another object.
-		if( exists( $searchParams{ 'accessor' } ) ) {
-			my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = @{ $searchParams{ 'accessor' } };
-			my $objectTaAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
-				or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
-			$typeToAccessFrom->getColumnType( $accessorMethod )
-				or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
-			@objects = $objectTaAccessFrom->$accessorMethod(
-				( $searchParams{ __limit } ? 
-					(__limit => $searchParams{ __limit }) : 
-					()
-				),
-				( $searchParams{ __offset } ?
-					( __offset => $searchParams{ __offset } ) :
-					()
-				)
-			);
-			my $countAccessor = "count_".$accessorMethod;
-			$object_count = $objectTaAccessFrom->$countAccessor();
-			$self->{__params} = { 
-				Type               => $formal_name,
-				$formal_name."_accessor" => join( ',', ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) )
-			};
-		# use the search parameters
-		} else {
-			@objects = $factory->findObjectsLike( 
-				$formal_name, %searchParams, 
-				__order => $orderBy );
-			$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
-			$self->{__params} = { 
-				Type               => $formal_name,
-				( map{ $formal_name."_".$_ => $searchParams{ $_ } } keys %searchParams )
-			};
-		}
+		my ( $objects, $minimalParams );
+		( $objects, $object_count, $minimalParams ) = __load_objects( $factory, $formal_name, \%searchParams, $orderBy );
+		$self->{__params} = $minimalParams;
+		@objects = @$objects;
 	} else {
 		$self->{__params} = { 
 			Type               => $formal_name,
@@ -605,29 +877,6 @@ sub __parseParams {
 	return ( \@objects, $options, $title, $formal_name );
 }
 
-sub __getOptionsTD {
-	my ($self, $options, $span, $form_name) = @_;
-	my $q = $self->CGI();
-
-	# Build our buttons
-	my $option_buttons = join( ' | ', 
-		map( $self->__getActionButton( $_, $form_name ), @$options ) );
-
-	# Build our table and return it
-	if ($option_buttons) {
-    	return $q->td( {
-				-colspan => $span,
-				-align => 'right',
-				-bgcolor => '#EFEFEF',
-				-class => 'ome_menu_td',
-			},
-			$option_buttons,
-		);
-	}
-
-	return;
-}
-
 sub __getActionButton {
 	my ($self, $action, $form_name) = @_;
 	my $q = $self->CGI();
@@ -640,6 +889,76 @@ sub __getActionButton {
 			}, 
 			$action 
 		);
+}
+
+sub __get_CGI_search_params {
+	my ( $q, $type ) = @_;
+
+	# collect search params
+	my %searchParams = map{ $_ => $q->param( $_ ) } grep( m/^($type)_/, $q->param( ) );
+	foreach my $key (keys %searchParams) {
+		# get the key's Real name
+		(my $newkey = $key) =~ s/^($type)_//;
+		# copy the key into the real name unless the value is blank
+		$searchParams{ $newkey } = $searchParams{ $key }
+			unless not defined $searchParams{ $key } or $searchParams{ $key } eq '';
+		# delete the old key
+		delete $searchParams{ $key };
+		if ( $searchParams{ $newkey } =~ m/,/) {
+			if( $newkey ne 'accessor' ) {
+				$searchParams{ $newkey } = [ 'in', [ split( m/,/, $searchParams{ $newkey } ) ] ];
+			} else {
+				$searchParams{ $newkey } = [ split( m/,/, $searchParams{ $newkey } ) ];
+			}
+		}
+	}
+	
+	return %searchParams;
+}
+
+sub __load_objects {
+	my ( $factory, $formal_name, $searchParams, $orderBy ) = @_;
+	my ( @objects, $object_count, $minimalParams );
+
+	# use an accessor from another object.
+	if( exists( $searchParams->{ 'accessor' } ) ) {
+		my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = @{ $searchParams->{ 'accessor' } };
+		my $objectTaAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
+			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
+		$typeToAccessFrom->getColumnType( $accessorMethod )
+			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
+		@objects = $objectTaAccessFrom->$accessorMethod(
+			( $searchParams->{ __limit } ? 
+				(__limit => $searchParams->{ __limit }) : 
+				()
+			),
+			( $searchParams->{ __offset } ?
+				( __offset => $searchParams->{ __offset } ) :
+				()
+			)
+		);
+		my $countAccessor = "count_".$accessorMethod;
+		$object_count = $objectTaAccessFrom->$countAccessor();
+		$minimalParams = { 
+			Type               => $formal_name,
+			$formal_name."_accessor" => join( ',', ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) )
+		};
+
+
+	# use the search parameters
+	} else {
+		@objects = $factory->findObjectsLike( 
+			$formal_name, %$searchParams, 
+			( $orderBy ? ( __order => $orderBy ) : () )
+		);
+		$object_count = $factory->countObjectsLike( $formal_name, %$searchParams );
+		$minimalParams = { 
+			Type               => $formal_name,
+			( map{ $formal_name."_".$_ => $searchParams->{ $_ } } keys %$searchParams )
+		};
+	}
+	
+	return ( \@objects, $object_count, $minimalParams );
 }
 
 =head1 Author
