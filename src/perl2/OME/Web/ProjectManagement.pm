@@ -1,4 +1,4 @@
-# OME/Web/ProjectMetadata.pm
+# OME/Web/ProjectManagement.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Josiah Johnston <siah@nih.gov>
@@ -141,10 +141,10 @@ sub print_form {
 	my $text = '';
 
 	$text .= $cgi->startform;
-	$text .= "<center><h2>Properties</h2></center>";
-	$text .= $htmlFormat->formChange("project",$project,$user);
 	$text .= $htmlFormat->dropDownTable("newProject",\%projectList,"Switch","Switch Project")
 		if( scalar keys %projectList > 0 );
+	$text .= "<center><h2>Project ".$project->name()." Properties</h2></center>";
+	$text .= $htmlFormat->formChange("project",$project,$user);
 	$text .= "<center><h2>Datasets</h2></center>";
 	$text .= $self->makeDatasetListings();
 	$text .= $cgi->endform;
