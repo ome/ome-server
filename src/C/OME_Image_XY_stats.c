@@ -24,7 +24,7 @@
 typedef struct stats {
 	unsigned int min,max;
 	float mean,geomean,sigma;
-	float centroid_x,centroid_y,centroid_z;
+	float centroid_x,centroid_y;
 	float sum_i, sum_i2,sum_log_i;
 	float sum_xi,sum_yi;
 	float numSamples;
@@ -174,7 +174,6 @@ void Zero_Accumulators (statsPtr theStats)
 	theStats->sigma      =     0.0;
 	theStats->centroid_x =     0.0;
 	theStats->centroid_y =     0.0;
-	theStats->centroid_z =     0.0;
 	theStats->sum_i      =     0.0;
 	theStats->sum_i2     =     0.0;
 	theStats->sum_log_i  =     0.0;
@@ -261,12 +260,11 @@ float sd,logOffset = 1.0;
 	sd = sqrt ( (theStats->sum_i2	 - (theStats->sum_i * theStats->sum_i) / theStats->numSamples) /  (theStats->numSamples - 1.0) );
 	theStats->sigma = (float) fabs (sd);
 
-	/*
 	theStats->centroid_x = theStats->sum_xi / theStats->sum_i;
 	theStats->centroid_y = theStats->sum_yi / theStats->sum_i;
-        */
-	fprintf (stdout,"%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
-		theW,theT,theZ,theStats->min,theStats->max,theStats->mean,theStats->geomean,theStats->sigma
+	fprintf (stdout,"%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\n",
+                 theW,theT,theZ,theStats->min,theStats->max,theStats->mean,theStats->geomean,theStats->sigma,
+                 theStats->centroid_x, theStats->centroid_y
 	);
 
 }
@@ -279,7 +277,7 @@ void usage(int argc, char **argv)
 	fprintf (stderr,
 		"%s Path=/path/to/file Dims=X,Y,Z,W,T,BytesPerPix\n",argv[0]);
 	fprintf (stderr,"The column headings will be first line on standard out:\n");
-	fprintf (stderr,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\n");
+	fprintf (stderr,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_X\tCentroid_Y\n");
 }
 
 

@@ -83,28 +83,30 @@ sub postcalculateImage {
     # are row-based instead of column-based.
 
     my %xy_hash = (
-        'Wave'       => 'wavenumber',
-        'Time'       => 'timepoint',
-        'Z'          => 'zsection',
-        'Min'        => 'min',
-        'Max'        => 'max',
-        'Mean'       => 'mean',
-        'GeoMean'    => 'geomean',
-        'Sigma'      => 'sigma',
+                   'Wave'       => 'wavenumber',
+                   'Time'       => 'timepoint',
+                   'Z'          => 'zsection',
+                   'Min'        => 'min',
+                   'Max'        => 'max',
+                   'Mean'       => 'mean',
+                   'GeoMean'    => 'geomean',
+                   'Sigma'      => 'sigma',
+                   'Centroid_X' => 'centroid_x',
+                   'Centroid_Y' => 'centroid_y'
         );
 
     my %xyz_hash = (
-        'Wave'       => 'wavenumber',
-        'Time'       => 'timepoint',
-        'Min'        => 'min',
-        'Max'        => 'max',
-        'Mean'       => 'mean',
-        'GeoMean'    => 'geomean',
-        'Sigma'      => 'sigma',
-        'Centroid_x' => 'centroid_x',
-        'Centroid_y' => 'centroid_y',
-        'Centroid_z' => 'centroid_z'
-        );
+                    'Wave'       => 'wavenumber',
+                    'Time'       => 'timepoint',
+                    'Min'        => 'min',
+                    'Max'        => 'max',
+                    'Mean'       => 'mean',
+                    'GeoMean'    => 'geomean',
+                    'Sigma'      => 'sigma',
+                    'Centroid_x' => 'centroid_x',
+                    'Centroid_y' => 'centroid_y',
+                    'Centroid_z' => 'centroid_z'
+                   );
 
     my %hashes = (
                   'Plane statistics' => \%xy_hash,
