@@ -38,6 +38,7 @@
  */
 
 package org.openmicroscopy.vis.piccolo;
+import java.lang.Comparable;
 
 
 /** 
@@ -49,10 +50,11 @@ package org.openmicroscopy.vis.piccolo;
  */
 
 
-public interface PBufferedNode extends PBufferedObject {
+public interface PBufferedNode extends PBufferedObject, Comparable  {
 	
 	
 	public void setOffset(double x,double y);
-	
+		
+	public int compareTo(Object o);
 	
 }

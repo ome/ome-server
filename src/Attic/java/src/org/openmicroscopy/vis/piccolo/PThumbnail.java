@@ -106,4 +106,17 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		imageNode = new PBufferedImage(image.getImageData());
 		addChild(imageNode);
 	}
+	
+	public int compareTo(Object o) {
+		if (o instanceof PBufferedNode) {
+			PBufferedNode node = (PBufferedNode) o;
+			double myArea = getHeight()*getWidth();
+			PBounds bounds = node.getBufferedBounds();
+			double nodeArea = bounds.getHeight()*bounds.getWidth();
+			int res =(int) (myArea-nodeArea);
+			return res;
+		}
+		else
+			return -1;
+	}
 }

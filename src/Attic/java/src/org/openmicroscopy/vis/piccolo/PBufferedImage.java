@@ -67,4 +67,18 @@ public class PBufferedImage extends PImage implements PBufferedNode {
 				b.getWidth()+2*PConstants.BORDER,
 				b.getHeight()+2*PConstants.BORDER);
 	}
+	
+	
+	public int compareTo(Object o) {
+		if (o instanceof PBufferedNode) {
+			PBufferedNode node = (PBufferedNode) o;
+			double myArea = getHeight()*getWidth();
+			PBounds bounds = node.getBufferedBounds();
+			double nodeArea = bounds.getHeight()*bounds.getWidth();
+			int res =(int) (myArea-nodeArea);
+			return res;
+		}
+		else
+			return -1;
+	}
 }
