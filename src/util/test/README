@@ -17,6 +17,7 @@ ome-smoke-test.sh
     $e->{ome_user}->{OMEName}=$OME_ADMIN
   This script requires the following parameters to run:
   OME_ADMIN SOURCE_DIR IMAGE_DIR EXPECT_IMAGES [MAIL_TO] [MAIL_PROGRAM]
+
   OME_ADMIN:
     This is a unix user, postgres user and ome experimenter, commonly known as
     the ome admin user.  This username will be used (with "su -") to run the ome
