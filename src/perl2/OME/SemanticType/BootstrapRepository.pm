@@ -62,6 +62,16 @@ __PACKAGE__->addColumn(Path => 'path',
                         #NotNull => 1,
                         Unique  => 1,
                        });
+__PACKAGE__->addColumn(ImageServerURL => 'image_server_url',
+                       {
+                        SQLType => 'text',
+                        NotNull => 1,
+                        Unique  => 1,
+                       });
+__PACKAGE__->addColumn(IsLocal => 'is_local',
+                       {
+                        SQLType => 'boolean',
+                       });
 
 
 1;
