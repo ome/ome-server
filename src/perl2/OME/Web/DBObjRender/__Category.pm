@@ -76,14 +76,13 @@ sub _renderData {
 	if( exists $field_requests->{ 'Images' } ) {
 		foreach my $request ( @{ $field_requests->{ 'Images' } } ) {
 			my $request_string = $request->{ 'request_string' };
-			my @classifications = $factory->findObjects( '@Classification', { 
-				Category => $obj,
-# for some unknown reason, this next parameter consistently fails with
+			my @classifications = $obj->ClassificationList( );
+# for some unknown reason, using 
+#	Valid    => [ "is not", 0 ]
+# as a filtering parameter consistently fails with the message
 # "DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 1069."
-# so i'll ignore it and grep it out at the next step
-#				Valid    => [ "is not", 0 ],
-			} );
-			@classifications = grep( (not defined $_->Valid || $_->Valid != 0 ), @classifications );
+# so i'll just filter the list with grep
+			@classifications = grep( ( ( not defined $_->Valid ) || $_->Valid ne 0 ), @classifications );
 			my @images = map( $_->image, @classifications );
 			my $render_mode = ( $request->{ render } or 'ref_list' );
 			$record{ $request_string } = $self->Renderer()->renderArray( 
