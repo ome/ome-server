@@ -41,8 +41,15 @@ __PACKAGE__->has_many('dataset_links','OME::Project::DatasetMap' => qw(project_i
 
 sub owner {
     my $self = shift;
-    return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                      $self->owner_id());
+    if (@_) {
+        my $attribute = shift;
+        die "Owner must be an Experimenter"
+          unless $attribute->attribute_type()->name() eq "Experimenter";
+        return $self->owner_id($attribute->id());
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                          $self->owner_id());
+    }
 }
 
 sub datasets {

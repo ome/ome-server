@@ -41,8 +41,15 @@ __PACKAGE__->has_many('paths',
 
 sub owner {
     my $self = shift;
-    return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                      $self->_owner_accessor());
+    if (@_) {
+        my $attribute = shift;
+        die "Owner must be an Experimenter"
+          unless $attribute->attribute_type()->name() eq "Experimenter";
+        return $self->_owner_accessor($attribute->id());
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                          $self->_owner_accessor());
+    }
 }
 
 

@@ -46,8 +46,15 @@ __PACKAGE__->has_many('node_executions',
 
 sub experimenter {
     my $self = shift;
-    return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                      $self->experimenter_id());
+    if (@_) {
+        my $attribute = shift;
+        die "Owner must be an Experimenter"
+          unless $attribute->attribute_type()->name() eq "Experimenter";
+        return $self->experimenter_id($attribute->id());
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                          $self->experimenter_id());
+    }
 }
 
 
