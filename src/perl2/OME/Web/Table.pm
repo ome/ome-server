@@ -237,8 +237,8 @@ sub __imageTable {
 		$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
 			$q->td({-align => 'center'}, [
 				$id,
-				$q->a({-href => "javascript:openPopUpImage($id);"}, $name),
-				$thumbnail,
+				$name,
+				$q->a({-href => "javascript:openPopUpImage($id);"}, $thumbnail),
 				$owner,
 				$group,
 				$description
