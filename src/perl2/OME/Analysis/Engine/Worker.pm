@@ -93,7 +93,7 @@ __PACKAGE__->newClass();
 __PACKAGE__->setSequence('analysis_worker_seq');
 __PACKAGE__->setDefaultTable('analysis_workers');
 __PACKAGE__->addPrimaryKey('worker_id');
-__PACKAGE__->addColumn(url => 'url',
+__PACKAGE__->addColumn(URL => 'url',
                        {
                         SQLType => 'varchar(255)',
                         NotNull => 1,
@@ -103,6 +103,17 @@ __PACKAGE__->addColumn(status => 'status',
                         SQLType => 'varchar(16)',
                         NotNull => 1,
                         Indexed => 1,
+                       });
+__PACKAGE__->addColumn(last_used => 'last_used',
+                       {
+                        SQLType => 'timestamp',
+                        NotNull => 1,
+                        Indexed => 1,
+                        Default => 'now()',
+                       });
+__PACKAGE__->addColumn(PID => 'pid',
+                       {
+                        SQLType => 'integer',
                        });
 
 # These objects should never be cached to make sure that their status is always current.
