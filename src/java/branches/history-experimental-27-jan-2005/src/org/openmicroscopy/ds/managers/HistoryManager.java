@@ -36,15 +36,16 @@
 
 package org.openmicroscopy.ds.managers;
 
+import java.util.List;
 
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.DataException;
 import org.openmicroscopy.ds.DataServices;
+import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.Instantiator;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.dto.ModuleExecution;
-import org.openmicroscopy.ds.dto.History;
 
 
 /**
@@ -83,7 +84,7 @@ public class HistoryManager
         instantiator = icaller.getInstantiator();
     }
 
-    public History getDataHistory(ModuleExecution mex) 
+    public List getDataHistory(ModuleExecution mex) 
     {
         if (mex == null)
             throw new IllegalArgumentException("Module execution cannot be null");
@@ -97,11 +98,41 @@ public class HistoryManager
             throw new IllegalArgumentException("Module execution must be in the database");
         }
         
-        return (History) 
-			icaller.dispatch(History.class,"getDataHistory",
-                        new Object[] {
-                            mexID
-                        });
+        return getDataHistory(mexID);
+    }
+    
+    public List getDataHistory(Integer mexID) {
+        return icaller.dispatchList(ModuleExecution.class,"getDataHistory",
+                    new Object[] {
+                        mexID
+                    });
+    }
+    
+    
+    public List getDataHistory(ModuleExecution mex,
+    			FieldsSpecification spec) 
+    {
+        if (mex == null)
+            throw new IllegalArgumentException("Module execution cannot be null");
+        
+        Integer mexID = null;
+
+        try
+        {
+            mexID = new Integer(mex.getID());
+        } catch (DataException e) {
+            throw new IllegalArgumentException("Module execution must be in the database");
+        }
+        
+        return getDataHistory(mexID,spec);
+    }
+    
+    public List getDataHistory(Integer mexID,FieldsSpecification spec) {
+        return icaller.dispatchList(ModuleExecution.class,"getDataHistory",
+                    new Object[] {
+                        mexID,
+					   spec
+                    });
     }
 
 }
