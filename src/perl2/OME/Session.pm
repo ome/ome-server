@@ -247,7 +247,43 @@ sub getTemporaryFilename {
     }
 }
 
-# get a scratch directory under a repository
+=head2 getTemporaryFilenameRepository
+
+	$session->getTemporaryFilenameRepository(repository => $repository, progName => 'Foo', extension => 'bar');
+
+Returns a relative path to a temporary file within the repository directory.
+This is useful when a copy between filesystems is undesireable when reading or writing repository files.
+The repository parameter is an L<C<OME::Repository>|OME::Repository> object.
+The progName parameter will be used as a prefix followed by a number, followed by a '.' and the extension.
+
+=cut
+
+sub getTemporaryFilenameRepository {
+    my $self = shift;
+    my %params = @_;
+    my ($progName, $extension, $repository) = ($params{progName}, $params{extension}, $params{repository} );
+    my $count=-1;
+
+    my $base_name;
+	my $tmpRoot = $repository->Path();
+	
+	local *FH;
+    until (defined(fileno(FH)) || $count++ > 999)
+    {
+	$base_name = sprintf("%s-%03d.%s", 
+			     $progName,$count,$extension);
+    my $fullPath = $tmpRoot."/".$base_name;
+	sysopen(FH, $fullPath, O_WRONLY|O_EXCL|O_CREAT);
+    }
+    if (defined(fileno(FH)) )
+    {
+	close (FH);
+	return ($base_name);
+    } else {
+	return ();
+    }
+}
+
 
 =head2 getScratchDirRepository
 
