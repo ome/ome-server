@@ -130,7 +130,7 @@ public abstract class PFormalParameter extends PNode implements
 	/**
 	 * The {@link PLinkTarget} associated with this parameter
 	 */
-	protected PLinkTarget target;
+	protected PLinkTarget target = null;
 	
 	/**
 	 * A node containing the textual labels for the name 
@@ -194,6 +194,8 @@ public abstract class PFormalParameter extends PNode implements
 		PBounds b = labelNode.getFullBoundsReference();
 		float x = getLinkTargetX();
 		float y = (float) b.getY()+PLinkTarget.LINK_TARGET_BUFFER;
+		if (target == null)
+			addTarget();
 		target.setOffset(x,y);
 	}
 	
