@@ -439,6 +439,8 @@ my $delete = shift;
 
 	return unless $attr;
 	return if exists $DELETED_ATTRS{$attr->id()};
+	# Block infinite recursion
+	$DELETED_ATTRS{$attr->id()} = 0;
 			
 	my $recurs_indent='';
 	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
