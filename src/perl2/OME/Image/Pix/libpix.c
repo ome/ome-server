@@ -43,7 +43,7 @@
 #include <unistd.h> 
 #include <tiffio.h>
 
-#include "./libpix.h"
+#include "libpix.h"
 
 
 
@@ -256,7 +256,7 @@ size_t nIn;
 		theW >= dw || theW < 0 ||
 		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->_GetRow:  Row selection out of range.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nPix = dx;
@@ -421,7 +421,7 @@ char *theBuf;
 	theBuf = GetPlane (pPix,theZ,theW,theT);
 	if (theBuf == NULL) {
 		fprintf (stderr,"Pix->Plane2TIFF:  Could not read repository file\n");
-		return (NULL);
+		return (0);
 	}
 	
 	nPix = Buff2Tiff (theBuf, path, pPix->dx, pPix->dy, pPix->bp*8);
@@ -440,7 +440,7 @@ char *scaledBuf;
 	theBuf = GetPlane (pPix,theZ,theW,theT);
 	if (theBuf == NULL) {
 		fprintf (stderr,"Pix->Plane2TIFF8:  Could not read repository file\n");
-		return (NULL);
+		return (0);
 	}
 
 	if (pPix->bp != 1) {
@@ -448,7 +448,7 @@ char *scaledBuf;
 		free (theBuf);
 		if (!scaledBuf) {
 			fprintf (stderr,"Pix->Plane2TIFF8:  Could not scale buffer\n");
-			return (NULL);
+			return (0);
 		}
 		theBuf = scaledBuf;
 	}
@@ -476,7 +476,7 @@ tsize_t scanline;
 	tiff = TIFFOpen(path,"r");
 	if (!tiff ) {
 		fprintf (stderr,"Pix->TIFF2Plane:  Could not open '%s' for reading\n",path);
-		return NULL;
+		return 0;
 	}
 
 /*
@@ -485,7 +485,7 @@ tsize_t scanline;
 	if (TIFFIsTiled(tiff)) {
 		fprintf (stderr,"Pix->TIFF2Plane:  Cannot deal with tiled TIFFs.\n");
 		TIFFClose (tiff);
-		return (NULL);
+		return (0);
 	}
 
 /*
@@ -496,7 +496,7 @@ tsize_t scanline;
 	if (tiffBP != bp) {
 		fprintf (stderr,"Pix->TIFF2Plane:  Tiff bytes per pixel (%d, bits=%u) does not match OME Image bytes per pixel (%d).\n",  tiffBP,tiffBits, bp);
 		TIFFClose (tiff);
-		return (NULL);
+		return (0);
 	}
 
 
@@ -508,7 +508,7 @@ tsize_t scanline;
 	if (config != PLANARCONFIG_CONTIG) {
 		fprintf (stderr,"Pix->TIFF2Plane:  Cannot deal with non-contiguous data: samples per pixel should be 1.\n");
 		TIFFClose (tiff);
-		return (NULL);
+		return (0);
 	}
 
 /*
@@ -520,7 +520,7 @@ tsize_t scanline;
 		fprintf (stderr,"Pix->TIFF2Plane:  Tiff file dimensions (%d x %d) don't match OME Image dimensions (%d x %d).\n",
 			tiffWidth,tiffHeight,pPix->dx,pPix->dy);
 		TIFFClose (tiff);
-		return (NULL);
+		return (0);
 	}
 
 
@@ -531,7 +531,7 @@ tsize_t scanline;
 	if (!theBuf) {
 		fprintf (stderr,"Pix->TIFF2Plane:  Could not allocate buffer.\n");
 		TIFFClose (tiff);
-		return (NULL);
+		return (0);
 	}
 
 /*
@@ -547,7 +547,7 @@ tsize_t scanline;
 		if (TIFFReadEncodedStrip(tiff, strip, buf, nrow*scanline) < 0) {
 			fprintf (stderr,"Pix->TIFF2Plane:  Could not read strip starting at row %d.\n",row);
 			TIFFClose (tiff);
-			return (NULL);
+			return (0);
 		}
 		buf += (nrow * scanline);
 	}
@@ -557,7 +557,7 @@ tsize_t scanline;
 	free (theBuf);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertPlane:  Could not write enough pixels to %s.\n",pPix->path);
-		return (NULL);
+		return (0);
 	}
 
 
@@ -607,7 +607,7 @@ int err;
 	tiff = TIFFOpen(path,"w");
 	if (!tiff ) {
 		fprintf (stderr,"Pix->Buff2Tiff:  Could not open '%s' for writing\n",path);
-		return NULL;
+		return 0;
 	}
 	
 	TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
@@ -644,7 +644,7 @@ int err;
 				err,(int)strip,(int)scanline,(int)rowsperstrip);
 			TIFFClose (tiff);
 			unlink (path);
-			return (NULL);
+			return (0);
 		}
 		buf += (nrow * scanline);
 	}
@@ -757,14 +757,14 @@ size_t nOut;
 	fp = GetPixFileUpdate (pPix);
 	if (!fp) {
 		fprintf (stderr,"Pix->WriteRepFile:  Could not open '%s' for writing.\n",pPix->path);
-		return (NULL);
+		return (0);
 	}
 
 	if (fseek (fp, offset, SEEK_SET)) {
 		fprintf (stderr,"Pix->WriteRepFile:  Could not seek to %d in file %s.\n",
 			(int)offset, pPix->path);
 		pixFinish (pPix);
-		return (NULL);
+		return (0);
 	}
 
 	nOut = fwrite (thePix,pPix->bp,nPix,fp);
@@ -799,7 +799,7 @@ size_t nOut;
 		theW >= dw || theW < 0 ||
 		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->SetRow:  Row selection out of range.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nPix = dx;
@@ -834,7 +834,7 @@ size_t nOut;
 		theW         >= dw || theW  < 0 ||
 		theT         >= dt || theT  < 0 ) {
 		fprintf (stderr,"Pix->SetRows:  Row selection out of range.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nPix = dx*nRows;
@@ -867,7 +867,7 @@ size_t nOut;
 		theW >= dw || theW < 0 ||
 		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->SetPlane:  Plane selection out of range.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nPix = dx * dy;
@@ -899,7 +899,7 @@ size_t nOut;
 	if (theW >= dw || theW < 0 ||
 		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->SetStack:  Plane selection out of range.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nPix = dx * dy * dz;
@@ -940,7 +940,7 @@ size_t sizeX;
 		w0 > w1 || w1 > dw || w0 < 0 ||
 		t0 > t1 || t1 > dt || t0 < 0 ) {
 		fprintf (stderr,"Pix->SetROI:  ROI misconfigured.\n");
-		return (NULL);
+		return (0);
 	}
 	nPix = (x1-x0) * (y1-y0) * (z1-z0) * (w1-w0) * (t1-t0);
 
@@ -1002,7 +1002,7 @@ int setConvertFile (Pix *pPix, char *inPath, int bp, int fileBigEndian)
 	pPix->inFile.fp = fopen (pPix->inFile.path,"r");
 	if (!pPix->inFile.fp) {
 		fprintf (stderr,"Pix->setConvertFile:  Could not open '%s' for reading.\n",pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 	if ( pPix->bp > 1 && ((bigEndian() && !fileBigEndian) || (!bigEndian() && fileBigEndian)) )
 		pPix->inFile.swapBytes = 1;
@@ -1148,25 +1148,25 @@ int bp = pPix->bp;
 
 	if (!fp) {
 		fprintf (stderr,"Pix->convertRow:  file '%s' not open for reading.\n",pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 
 	if (fseek (fp, offset, SEEK_SET ) ) {
 		fprintf (stderr,"Pix->convertRow:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 
 	theBuf = malloc (nPix * bp);
 	if (!theBuf) {
 		fprintf (stderr,"Pix->convertRow:  Could not allocate buffer.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nIO = fread (theBuf,bp,nPix,fp);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertRow:  Could not read enough pixels from %s.\n",pPix->inFile.path);
 		free (theBuf);
-		return (NULL);
+		return (0);
 	}
 	
 	/* flip bytes */
@@ -1177,7 +1177,7 @@ int bp = pPix->bp;
 	free (theBuf);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertRow:  Could not write enough pixels to %s.\n",pPix->path);
-		return (NULL);
+		return (0);
 	}
 	
 	return (nIO);
@@ -1197,25 +1197,25 @@ int bp = pPix->inFile.bp;
 
 	if (!fp) {
 		fprintf (stderr,"Pix->convertRows:  file '%s' not open for reading.\n",pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 	
 	if (fseek (fp, offset, SEEK_SET ) ) {
 		fprintf (stderr,"Pix->convertRows:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 
 	theBuf = malloc (nPix * bp);
 	if (!theBuf) {
 		fprintf (stderr,"Pix->convertRows:  Could not allocate buffer.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nIO = fread (theBuf,bp,nPix,fp);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertRows:  Could not read enough pixels from %s.\n",pPix->inFile.path);
 		free (theBuf);
-		return (NULL);
+		return (0);
 	}
 
 	/* flip bytes */
@@ -1226,7 +1226,7 @@ int bp = pPix->inFile.bp;
 	free (theBuf);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertRows:  Could not write enough pixels to %s.\n",pPix->path);
-		return (NULL);
+		return (0);
 	}
 	
 	return (nIO);
@@ -1245,25 +1245,25 @@ int bp = pPix->inFile.bp;
 
 	if (!fp) {
 		fprintf (stderr,"Pix->convertPlane:  file '%s' not open for reading.\n",pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 	
 	if (fseek (fp, offset, SEEK_SET ) ) {
 		fprintf (stderr,"Pix->convertPlane:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 
 	theBuf = malloc (nPix * bp);
 	if (!theBuf) {
 		fprintf (stderr,"Pix->convertPlane:  Could not allocate buffer.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nIO = fread (theBuf,bp,nPix,fp);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertPlane:  Could not read enough pixels from %s.\n",pPix->inFile.path);
 		free (theBuf);
-		return (NULL);
+		return (0);
 	}
 
 	/* flip bytes */
@@ -1274,7 +1274,7 @@ int bp = pPix->inFile.bp;
 	free (theBuf);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertPlane:  Could not write enough pixels to %s.\n",pPix->path);
-		return (NULL);
+		return (0);
 	}
 	
 	return (nIO);
@@ -1294,25 +1294,25 @@ int bp = pPix->inFile.bp;
 
 	if (!fp) {
 		fprintf (stderr,"Pix->convertStack:  file '%s' not open for reading.\n",pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 	
 	if (fseek (fp, offset, SEEK_SET ) ) {
 		fprintf (stderr,"Pix->convertStack:  could not seek to %d in file '%s'.\n",(int)offset, pPix->inFile.path);
-		return (NULL);
+		return (0);
 	}
 
 	theBuf = malloc (nPix * bp);
 	if (!theBuf) {
 		fprintf (stderr,"Pix->convertStack:  Could not allocate buffer.\n");
-		return (NULL);
+		return (0);
 	}
 
 	nIO = fread (theBuf,bp,nPix,fp);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertStack:  Could not read enough pixels from %s.\n",pPix->inFile.path);
 		free (theBuf);
-		return (NULL);
+		return (0);
 	}
 
 	/* flip bytes */
@@ -1323,7 +1323,7 @@ int bp = pPix->inFile.bp;
 	free (theBuf);
 	if (nIO != nPix) {
 		fprintf (stderr,"Pix->convertStack:  Could not write enough pixels to %s.\n",pPix->path);
-		return (NULL);
+		return (0);
 	}
 	
 	return (nIO);
