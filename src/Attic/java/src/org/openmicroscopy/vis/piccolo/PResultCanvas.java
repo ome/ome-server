@@ -46,7 +46,6 @@ import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
-import org.openmicroscopy.ChainExecution;
 import org.openmicroscopy.vis.chains.ResultFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChainExecution;
@@ -242,5 +241,9 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	public void setExecution(CChainExecution exec) {
 		this.exec=exec;
 		System.err.println("setting execution to "+exec);
+	}
+	
+	public CChainExecution getChainExecution() {
+		return exec;
 	}
  }
