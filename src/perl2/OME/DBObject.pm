@@ -653,7 +653,9 @@ sub getColumnType {
 
     my $alias = shift;
 
-    if (defined $class->__columns()->{$alias}) {
+    if ($alias eq 'id') {
+        return "normal";
+    } elsif (defined $class->__columns()->{$alias}) {
         return defined $class->__columns()->{$alias}->[2]?
           "has-one":
           "normal";
