@@ -35,8 +35,7 @@
 use warnings;
 use strict;
 use Getopt::Long;
-use OME::Install::CoreSystemTask;
-use OME::Install::PerlModuleTask;
+require OME::Install::PreInstallTask;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -103,8 +102,12 @@ if ($fast) { $skipPasswordCheck 	= 1;
 	     $defaultUserDetails	= 1; }
 if ($help) { usage() }
 
+# PreInstall
+eval ("OME::Install::PreInstallTask::execute");
+
 # Run our tasks
 foreach my $task (@tasks) {
+    eval ("require $task");
     $task .= "::execute";
     eval ($task);
 }
