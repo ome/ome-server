@@ -3,6 +3,7 @@
 package OME::SessionManager;
 use strict;
 use vars qw($VERSION);
+use DBI;
 use OME::Session;
 $VERSION = '1.00';
 
