@@ -156,15 +156,17 @@ sub _getJSData {
 	$JSinfo->{ pixelsID }  = $pixelsID;
 
 	#######################
-	# get Dimensions from image and make them readable
-	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp,$path)=$imageManager->getImageDim($image);
-	my @dims = ( $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp);
-	$JSinfo->{ Dims } = '['.join (',', @dims).']';
+	# get Dimensions
+	my ($bytesPerPixel, $isSigned, $isFloat) = 
+		OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType );
+	$JSinfo->{ Dims } = '['.join( ', ', (
+		$pixels->SizeX, $pixels->SizeY, $pixels->SizeZ, $pixels->SizeC, $pixels->SizeT, $bytesPerPixel
+		) ).']';
 	
 	#######################
 	# get channelLabels from image and make them JavaScript readable
 	my @JSchannelLabels;
-	my $channelLabels= $imageManager->getImageWavelengths($image);
+	my $channelLabels= $imageManager->getImageWavelengths($image, $pixels);
 	foreach my $channel (@$channelLabels){
 		push @JSchannelLabels, "${$channel}{WaveNum}:\"${$channel}{Label}\"";
 	}
@@ -173,8 +175,8 @@ sub _getJSData {
 	#######################
 	# Get Stack Statistics, convert to string representation of JS 3d associative array
 	my $sh; # stats hash
-	$sh = $imageManager->getImageStats($image)
-		or die "Could not find Stack Statistics for image (id=$imageID).\n";
+	$sh = $imageManager->getImageStats($image, $pixels)
+		or die "Could not find Stack Statistics for image ($imageID), pixels ($pixelsID).\n";
 	my @ar1; # array 1
 	for( my $c = 0;$c<scalar(@$sh);$c++) {
 		my @ar2; # array 2
