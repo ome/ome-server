@@ -63,7 +63,7 @@ B<I<(as-yet-unwritten)>> OME Database Introduction.
 
 =cut
 
-use Carp;
+use Carp qw(cluck confess);
 use Log::Agent;
 use Class::Data::Inheritable;
 use UNIVERSAL::require;
@@ -78,6 +78,9 @@ __PACKAGE__->mk_classdata('__columns');
 
 # The pseudo-columns known about each class.
 __PACKAGE__->mk_classdata('__pseudo_columns');
+
+# Locations for user and group ACL.
+__PACKAGE__->mk_classdata('__ACL_locations');
 
 # The locations known about each class.
 # __locations()->{$table}->{$column} = \@aliases
@@ -245,6 +248,7 @@ sub newClass {
     $class->__classDefined(1);
     $class->__columns({});
     $class->__pseudo_columns({});
+    $class->__ACL_locations({});
     $class->__locations({});
     $class->__defaultTable(undef);
     $class->__tables({});
@@ -722,6 +726,26 @@ sub addPseudoColumn {
     }
 }
 
+#addColumn (owner => 'experimeter_id',{Join => ['images','image_id']});
+
+sub addACL {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $ACLhash = shift;
+    
+    die "DBObject->addACL(): ".
+    	"Parameter must be a hash reference with 'owner' and 'group' keys"
+    	unless defined $ACLhash and ref ($ACLhash) eq 'HASH' and
+    	exists $ACLhash->{user} and exists $ACLhash->{group};
+    
+    
+    
+	$class->__ACL_locations ($ACLhash);
+    
+
+}
+
+
 =head2 getColumnDef
 
 	my $column_def = $class->getColumnDef($alias);
@@ -1042,11 +1066,13 @@ sub manyToMany {
                               $map_alias => $self->{__id},
                               %params);
 
+                my @objects;
                 foreach my $link (@links) {
                     $link = $link->$map_linker_alias();
+                    push (@objects,$link) if $link;
                 }
 
-                return @links;
+                return @objects;
             } else {
                 my $links = $factory->
                   findObjects($map_class,
@@ -2097,7 +2123,15 @@ no warnings "uninitialized";
     }
 
     my $sql;
+    my $ACL_locs = $class->__ACL_locations();
+    my $ACL_vis = $class->Session()->ACL() if OME::Session->hasInstance;
 
+    if (exists $ACL_locs->{user} and exists $ACL_locs->{group} and $ACL_vis) {
+        push (@foreign_tables,@{$ACL_locs->{froms}}) if exists $ACL_locs->{froms};
+        push (@columns_needed,$ACL_locs->{user}) if exists $ACL_locs->{user};
+        push (@columns_needed,$ACL_locs->{group}) if exists $ACL_locs->{group};
+        push (@join_clauses,@{$ACL_locs->{wheres}}) if exists $ACL_locs->{wheres};
+    }
     if ($count_only) {
         $sql = "select count(*) from ".
           join(", ",
@@ -2110,6 +2144,17 @@ no warnings "uninitialized";
                keys(%tables_used),
                @foreign_tables
               );
+    }
+    
+    # Now would be a good time to add ACL clauses.
+
+    if (exists $ACL_locs->{user} and exists $ACL_locs->{group} and $ACL_vis) {
+        my ($u_location,$g_location) = ($ACL_locs->{user},$ACL_locs->{group});
+        my $u_list = join (',', @{$ACL_vis->{users}} );
+        my $g_list = join (',', @{$ACL_vis->{groups}} );
+        push (@join_clauses,
+            "($u_location IN ($u_list) OR $g_location IN ($g_list))");
+#        logdbg "debug", "$class ACL clause : ($u_location IN ($u_list) OR $g_location IN ($g_list))\n";
     }
 
     $sql .= " where ". join(" and ",@join_clauses)
