@@ -524,6 +524,10 @@ sub renderData {
 				my $render_mode = ( $request->{ render } or 'ref' );
 				$record{ $request_string } = $self->render( $obj, $render_mode, $options );
 						
+			# /LSID = Object's LSID
+			} elsif( $field eq '/LSID' ) {
+				$record{ $request_string } = $self->_getLSIDmanager()->getLSID( $obj );
+
 			# /checkbox = Checkbox w/ LSID
 			} elsif( $field eq '/selector' ) {
 				my $lsid = $self->_getLSIDmanager()->getLSID( $obj );
@@ -1012,7 +1016,11 @@ Magic fields for individual objects
 		allows a maximum length to be specified a la: _name!MaxLength:23
 	/common_name: the commonly used name of this object type
 	/obj_detail_url: a url to a detailed description of the given object
-	/checkbox: a form checkbox named 'selected_objects' and valued with the objects' LSID
+	/selector: a form checkbox (or radio button) named 'selected_objects' and valued with the objects' LSID
+		Will be a checkbox if $options->{ draw_checkboxes }, 
+		a radio button if  $options->{ draw_radiobuttons },
+		and blank if neither option is specified.
+	/LSID: the object's LSID
 	/object/render-mode: render the current object in the mode given. evaluates to a render() call.
 
 Magic fields for lists of objects (templates picked up by renderArray().)
