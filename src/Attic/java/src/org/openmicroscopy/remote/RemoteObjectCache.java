@@ -46,7 +46,6 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.openmicroscopy.*;
 
 /**
  * <p>Maintains a cache of remote objects returned over an XML-RPC

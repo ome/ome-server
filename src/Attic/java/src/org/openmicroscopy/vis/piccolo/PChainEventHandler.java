@@ -42,7 +42,6 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.vis.ome.ModuleInfo;
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
@@ -51,8 +50,6 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.handles.PBoundsHandle;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
-import java.util.Iterator;
-import java.util.ArrayList;
 import java.awt.event.KeyEvent;
 
 
@@ -147,8 +144,15 @@ public class PChainEventHandler extends  PPanEventHandler {
 		//	System.err.println("mouse entered last entered.."+
 			//	lastParameterEntered.getName());
 			if (linkState == NOT_LINKING) {
-				setParamsHighlighted(lastParameterEntered,true);	
+				lastParameterEntered.setParamsHighlighted(true);
+				PModule mod = lastParameterEntered.getPModule();
+				mod.setModulesHighlighted(true);	
 			}
+			e.setHandled(true);
+		}
+		else if (node instanceof PModule) {
+			PModule mod = (PModule) node;
+			mod.setModulesHighlighted(true);
 			e.setHandled(true);
 		}
 		else {
@@ -164,9 +168,19 @@ public class PChainEventHandler extends  PPanEventHandler {
 		PNode node = e.getPickedNode();
 	
 		lastParameterEntered = null;
-		if (node instanceof PFormalParameter && linkState == NOT_LINKING) {
-			setParamsHighlighted((PFormalParameter) node,false);			
-			//lastParameterEntered = null;
+		if (node instanceof PFormalParameter) {
+			PFormalParameter param = (PFormalParameter) node;
+			if (linkState == NOT_LINKING) {	
+				param.setParamsHighlighted(false);
+				PModule mod = param.getPModule();
+				mod.setModulesHighlighted(false);
+			}			
+			e.setHandled(true);
+		}
+		else if (node instanceof PModule) {
+			PModule mod = (PModule) node;
+			mod.setModulesHighlighted(false);
+			e.setHandled(true);
 		}
 		else
 			super.mouseExited(e);
@@ -268,47 +282,14 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 	
 	private void cleanUpLink() {
-		setParamsHighlighted(linkOrigin,false);
+		linkOrigin.setParamsHighlighted(false);
 		linkOrigin.decorateAsLinkStart(false);
 		linkOrigin = null;
 		lastParameterEntered = null;
 	}
 	
 	
-	/** 
-	 * To highlight link targets for a given PFormalParameter, get
-	 * the list of "corresponding" ModuleParameters, and set each of those 
-	 * to be linkable<p>
-	 * @param param
-	 * @param v
-	 */
-		
-	private void setParamsHighlighted(PFormalParameter param, boolean v) {
-			
-		ArrayList list = param.getCorresponding();
 	
-		if (list == null)
-			return;
-		
-		ModuleInfo source = param.getModuleInfo();
-		
-		PFormalParameter p;
-		Iterator iter = list.iterator();
-		
-		PModule destModule;
-		while (iter.hasNext()) {
-			p = (PFormalParameter) iter.next();
-			
-			if (v == true) {// when making things linkable
-				// only make it linkable if we're not linked already
-				// and we're not in the same module.
-				if (!param.isLinkedTo(p) && source != p.getModuleInfo())
-					p.setLinkable(v);
-			}
-			else // always want to clear linkable
-				p.setLinkable(v);		
-		}
-	}
 	
 	public void keyPressed(PInputEvent e) {
 		System.err.println("a key was pressed ");

@@ -65,11 +65,11 @@ public class PLink extends  PPath implements PNodeEventListener {
 
 	Point2D point = new Point2D.Float();
 	
-	private static final int HANDLE_SIZE=8;
-	private static final int HANDLE_RADIUS= (int) (HANDLE_SIZE/2);
+	private static final int HIGHLIGHT_SIZE=8;
+	private static final int HIGHLIGHT_RADIUS=HIGHLIGHT_SIZE/2;
 	
 	public static final Color DEFAULT_COLOR=Color.black;
-	public static final Color HIGHLIGHT_COLOR=Color.red;
+	public static final Color HIGHLIGHT_COLOR=Color.WHITE;
 	
 	public static final float END_BULB=12;
 	public static final float END_BULB_RADIUS = END_BULB/2;
@@ -177,13 +177,24 @@ public class PLink extends  PPath implements PNodeEventListener {
 	
 	public void setSelected(boolean v) {
 		if (v == true) {
-			setStrokePaint(HIGHLIGHT_COLOR);
-			setPaint(HIGHLIGHT_COLOR);
+			PPath path1 =PPath.createEllipse(xstart-END_BULB_RADIUS,
+				ystart-HIGHLIGHT_RADIUS,HIGHLIGHT_SIZE,HIGHLIGHT_SIZE);
+			addChild(path1);
+			PPath path2 = PPath.createEllipse(xend-HIGHLIGHT_RADIUS, 
+				yend-HIGHLIGHT_RADIUS,HIGHLIGHT_SIZE,HIGHLIGHT_SIZE);
+			addChild(path2);
+			path1.setStrokePaint(DEFAULT_COLOR);
+			path2.setStrokePaint(DEFAULT_COLOR);
+			path1.setPaint(HIGHLIGHT_COLOR);
+			path2.setPaint(HIGHLIGHT_COLOR);
+			//setStrokePaint(HIGHLIGHT_COLOR);
+			//setPaint(HIGHLIGHT_COLOR);
 			moveToFront();
 		}
 		else {
-			setStrokePaint(DEFAULT_COLOR);
-			setPaint(DEFAULT_COLOR);
+			removeAllChildren();
+			//setStrokePaint(DEFAULT_COLOR);
+			//setPaint(DEFAULT_COLOR);
 		}
 		repaint();
 	}

@@ -42,12 +42,9 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.vis.ome.ModuleInfo;
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /** 
  * An event handler for the PPaletteCanvas. Generally works like 
@@ -76,7 +73,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 				p = ((PFormalParameter) node).getPModule();
 			else
 			 	p = (PModule) node;
-			canvas.setSelected(p.getModule());
+			canvas.setSelected(p);
 			selected = true;
 			System.err.println("pressed a mouse and selected a module");
 		}
@@ -108,10 +105,17 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	public void mouseEntered(PInputEvent e) {
 		PNode node = e.getPickedNode();
-		
+		System.err.println(" palette canvas. entering... "+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
-			setParamsHighlighted(param,true);
+			param.setParamsHighlighted(true);
+			PModule pmod = param.getPModule();
+			pmod.setModulesHighlighted(true);
+			e.setHandled(true);
+		}
+		else if (node instanceof PModule) {
+			PModule pmod = (PModule) node;
+			pmod.setModulesHighlighted(true);
 			e.setHandled(true);
 		}
 		else {
@@ -126,48 +130,20 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	public void mouseExited(PInputEvent e) {
 		PNode node = e.getPickedNode();
 
+		System.err.println(" palette canvas. exiting... "+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
-			setParamsHighlighted((PFormalParameter) param,false);
+			param.setParamsHighlighted(false);
+			PModule pmod = param.getPModule();
+			pmod.setModulesHighlighted(false);
 			e.setHandled(true);			
+		}
+		else if (node instanceof PModule) {
+			PModule pmod = (PModule) node;
+			pmod.setModulesHighlighted(false);
+			e.setHandled(true);
 		}
 		else
 			super.mouseExited(e);
 	}
-		
-	/** 
-	 * To highlight link targets for a given PFormalParameter, get
-	 * the list of "corresponding" ModuleParameters, and set each of those 
-	 * to be linkable<p>
-	 * @param param
-	 * @param v
-	 */
-		
-	private void setParamsHighlighted(PFormalParameter param, boolean v) {
-			
-		ArrayList list = param.getCorresponding();
-	
-		if (list == null)
-			return;
-		
-		ModuleInfo source = param.getModuleInfo();
-		
-		PFormalParameter p;
-		Iterator iter = list.iterator();
-		
-		PModule destModule;
-		while (iter.hasNext()) {
-			p = (PFormalParameter) iter.next();
-			
-			if (v == true) {// when making things linkable
-				// only make it linkable if we're not linked already
-				// and we're not in the same module.
-				if (!param.isLinkedTo(p) && source != p.getModuleInfo())
-					p.setLinkable(v);
-			}
-			else // always want to clear linkable
-				p.setLinkable(v);		
-		}
-	}
-	
  }

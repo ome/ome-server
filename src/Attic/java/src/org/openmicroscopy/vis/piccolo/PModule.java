@@ -53,11 +53,11 @@ import java.awt.geom.RoundRectangle2D;
 import javax.swing.event.EventListenerList;
 import java.awt.BasicStroke;
 import java.awt.Font;
-import java.awt.Paint;
 import java.awt.Color;
 import java.util.List;
 import java.lang.Object;
 import java.util.Iterator;
+import java.util.ArrayList;
 
 /** 
  * A Piccolo widget for a module. This widget will consist of a 
@@ -86,8 +86,9 @@ public class PModule extends PPath {
 	private static final float HORIZONTAL_GAP =50.0f;
 	private static final float SCALE_THRESHOLD=0.5f;
 	
-	private static final Paint DEFAULT_PAINT=Color.black;
-	private static final Paint DEFAULT_FILL = Color.lightGray;
+	private static final Color DEFAULT_COLOR=Color.black;
+	private static final Color DEFAULT_FILL = Color.lightGray;
+	public static final Color HIGHLIGHT_COLOR=Color.magenta;
 	
 	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(1.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,14);
@@ -133,6 +134,7 @@ public class PModule extends PPath {
 		name = new PText(module.getName());
 		name.setFont(NAME_FONT);
 		addChild(name);
+		name.setPickable(false);
 		name.setOffset(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET);
 		
 		// calculate starting height for parameters.
@@ -153,6 +155,7 @@ public class PModule extends PPath {
 					DEFAULT_ARC_WIDTH,DEFAULT_ARC_HEIGHT);
 		setPathTo(rect);
 		setPaint(DEFAULT_FILL);
+		setStrokePaint(DEFAULT_COLOR);
 		setStroke(DEFAULT_STROKE);
 		setOffset(x,y);
 	}
@@ -265,6 +268,14 @@ public class PModule extends PPath {
 		super.paint(aPaintContext);
 	} 
 	
+	public void setHighlighted(boolean v) {
+		if (v == true)
+			setStrokePaint(HIGHLIGHT_COLOR);
+		else
+			setStrokePaint(DEFAULT_COLOR);
+		repaint();
+	}
+	
 	
 	public RemoteModule getModule() {
 		return info.getModule();
@@ -321,5 +332,24 @@ public class PModule extends PPath {
 		super.translate(dx,dy);
 		fireStateChanged();
 	}
-	
+
+	public void setModulesHighlighted(boolean v) {
+		
+		PModule m;
+		
+		ModuleInfo info =  getModuleInfo();
+		ArrayList widgets = info.getModuleWidgets();
+		
+		System.err.println("setting highlighting for "+
+			info.getModule().getName());
+		if (v == true)
+			System.err.println("highlighting on..");
+		else 
+			System.err.println("highlighting off..");
+		
+		for  (int i = 0; i < widgets.size(); i++) {
+			m = (PModule) widgets.get(i);
+			m.setHighlighted(v);
+		}
+	}	
 }

@@ -76,8 +76,8 @@ import java.awt.Graphics2D;
 public abstract class PFormalParameter extends PNode implements 
 	PNodeEventListener{
 	
-	protected static final Color NORMAL_COLOR = Color.black;
-	protected static final Color HIGHLIGHT_COLOR = Color.magenta;
+	public static final Color NORMAL_COLOR = Color.black;
+	public  static final Color HIGHLIGHT_COLOR = PModule.HIGHLIGHT_COLOR;
 	
 	
 	protected FormalParameter param;
@@ -252,4 +252,40 @@ public abstract class PFormalParameter extends PNode implements
  		links = new Vector();
  		linkedTo = new Vector();
  	}
+ 	
+	/** 
+	 * To highlight link targets for a given PFormalParameter, get
+	 * the list of "corresponding" ModuleParameters, and set each of those 
+	 * to be linkable<p>
+	 *
+	 * @param v
+	 */
+		
+	public void setParamsHighlighted(boolean v) {
+			
+		ArrayList list = getCorresponding();
+	
+		if (list == null)
+			return;
+		
+		System.err.println("got the corresponding inputs for a parameter..");
+	 	ModuleInfo source = getModuleInfo();
+		
+		PFormalParameter p;
+		Iterator iter = list.iterator();
+		
+		PModule destModule;
+		while (iter.hasNext()) {
+			p = (PFormalParameter) iter.next();
+			
+			if (v == true) {// when making things linkable
+				// only make it linkable if we're not linked already
+				// and we're not in the same module.
+				if (!isLinkedTo(p) && source != p.getModuleInfo())
+						p.setLinkable(v);
+			}
+			else // always want to clear linkable
+				p.setLinkable(v);		
+		}
+	}
 }

@@ -47,7 +47,6 @@ import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
-import org.openmicroscopy.remote.RemoteModule;
 import java.util.Iterator;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceEvent;
@@ -85,7 +84,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 	private PLayer layer;
 	
-	private RemoteModule selected;
+	private PModule selected;
 	
 	public PPaletteCanvas(Connection connection) {
 		super();	
@@ -173,7 +172,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		return (int) maxHeight+BORDER;
 	}
 	
-	public void setSelected(RemoteModule module) {
+	public void setSelected(PModule module) {
 		selected = module;
 	}
 	
@@ -188,7 +187,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 */
 	public void dragGestureRecognized(DragGestureEvent event) {
 		if (selected != null) {
-			int id = selected.getID();
+			selected.setModulesHighlighted(false);
+			int id = selected.getModule().getID();
 			String s = Integer.toString(id);
 			StringSelection text = new StringSelection(s);
 			System.err.println("dragging..."+s);
