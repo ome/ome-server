@@ -47,7 +47,7 @@ OME::Analysis::Modules::PPM::Typecast
 
 =cut
 
-use base qw(OME::Analysis::Handlers);
+use base qw(OME::Analysis::Handler);
 
 sub new {
     my $proto = shift;
