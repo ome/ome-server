@@ -1223,6 +1223,7 @@ $SVG .= <<'ENDSVG';
 		}
 		function updateBWWavelength(item) {
 			scale.updateWBS('Gray', item);
+			stats.changeWavenumber( item );
 		}
 
 		function updatePane(item) {
