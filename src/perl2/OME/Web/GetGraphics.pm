@@ -222,7 +222,7 @@ ENDSQL
 	$bpp /= 8;
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
-    my $theZ = $cgi->url_param('theZ') || ( defined $sizeZ ? $sizeZ / 2 : 0 );
+    my $theZ = $cgi->url_param('theZ') || ( defined $sizeZ ? sprintf "%d",$sizeZ / 2 : 0 );
     my $theT = $cgi->url_param('theT') || 0;
 
     my $JSgraphics = new OME::Graphics::JavaScript (
