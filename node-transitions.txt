@@ -1,0 +1,16 @@
+Node FSM
+
+1. Waiting for dataset inputs
+2. Waiting for image inputs (i.e., all images)
+3. Waiting for feature inputs (i.e., all features)
+4. Done
+
+
+- Initialize each node (ie, load the program)
+- Repeat until fixed point:
+  - For each node:
+    - If in stage 1, 2, or 3, and inputs are available, advance to
+      next stage, retrieving any outputs generated.
+- If every node is in stage 4, the analysis succeeded.  Otherwise,
+  some data dependency error occurred (e.g., badly connected graph,
+  modules didn't generate the outputs they promised).

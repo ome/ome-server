@@ -179,6 +179,8 @@ use OME::DBObject;
 use OME::Program;
 use base qw(OME::DBObject);
 
+use fields qw(_attribute);
+
 __PACKAGE__->AccessorNames({
     analysis_id     => 'analysis',
     formal_input_id => 'formal_input'
@@ -193,38 +195,39 @@ __PACKAGE__->hasa(OME::Program::FormalInput => qw(formal_input_id));
 
 
 
-sub Attribute {
+sub attribute {
     my $self = shift;
-    my $formalInput = $self->Field("formalInput");
-    my $dataType = $formalInput->Field("dataType");
+    my $formalInput = $self->formal_input();
+    my $columnType = $formalInput->column_type();
+    my $dataType = $columnType->datatype();
+    my $attributePackage = $dataType->getAttributePackage();
 
     if (@_) {
        	# We are setting the attribute; make sure it is of the
 	# appropriate data type, and that it has an ID.
 
-	my $result = $self->{attribute};
+	my $result = $self->{_attribute};
 	my $attribute = shift;
 	die "This attribute is not of the correct type."
-	    if ($attribute->DataType() != $dataType);
+	    unless ($attribute->isa($attributePackage));
 	die "This attribute does not have an ID."
 	    unless (defined $attribute->ID());
-	$self->Field("attributeID",$attribute->ID());
-	$self->{attribute} = $attribute;
+	$self->attribute_id($attribute->ID());
+	$self->{_attribute} = $attribute;
 	return $result;
     } else {
-	my $attribute = $self->{attribute};
+	my $attribute = $self->{_attribute};
 	if (!defined $attribute) {
-	  $attribute = OME::Attribute->new($datatype);
-	  $attribute->ID($self->Field("attributeID"));
-	  $attribute->loadObject();
-	  $self->{attribute} = $attribute;
+	  $attribute = $self->Factory()->loadObject($attributePackage,
+						    $self->attribute_id());
+	  $self->{_attribute} = $attribute;
 	}
 	return $attribute;
     }
 }
 
 
-package OME::Analysis::ActualInput;
+package OME::Analysis::ActualOutput;
 
 use strict;
 our $VERSION = '1.0';
@@ -245,56 +248,37 @@ __PACKAGE__->columns(Essential => qw(attribute_id));
 __PACKAGE__->hasa(OME::Analysis => qw(analysis_id));
 __PACKAGE__->hasa(OME::Program::FormalOutput => qw(formal_output_id));
 
-# new
-# ---
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
-
-    $self->{_fields} = {
-	id           => ['ACTUAL_OUTPUTS','ACTUAL_OUTPUT_ID',
-			 {sequence => 'ACTUAL_OUTPUT_SEQ'}],
-	analysis     => ['ACTUAL_OUTPUTS','ANALYSIS_ID',
-			 {reference => 'OME::Analysis'}],
-	formalOutput => ['ACTUAL_OUTPUTS','FORMAL_OUTPUT_ID',
-			 {reference => 'OME::Program::FormalOutput'}],
-	image        => ['ACTUAL_OUTPUTS','IMAGE_ID',
-			 {reference => 'OME::Image'}],
-	attributeID  => ['ACTUAL_OUTPUTS','ATTRIBUTE_ID']
-    };
-
-    return $self;
-}
-
-
-sub Attribute {
+sub attribute {
     my $self = shift;
     my $formalOutput = $self->formal_output();
-    my $dataType = $formalOutput->column_type();
+    my $columnType = $formalOutput->column_type();
+    my $dataType = $columnType->datatype();
+    my $attributePackage = $dataType->getAttributePackage();
 
     if (@_) {
        	# We are setting the attribute; make sure it is of the
 	# appropriate data type, and that it has an ID.
 
-	my $result = $self->{attribute};
+	my $result = $self->{_attribute};
 	my $attribute = shift;
 	die "This attribute is not of the correct type."
-	    if ($attribute->DataType() != $dataType);
+	    unless ($attribute->isa($attributePackage));
 	die "This attribute does not have an ID."
 	    unless (defined $attribute->ID());
-	$self->Field("attributeID",$attribute->ID());
-	$self->{attribute} = $attribute;
+	$self->attribute_id($attribute->ID());
+	$self->{_attribute} = $attribute;
 	return $result;
     } else {
-	my $attribute = $self->{attribute};
+	my $attribute = $self->{_attribute};
 	if (!defined $attribute) {
-	  $attribute = OME::Attribute->new($datatype);
-	  $attribute->ID($self->Field("attributeID"));
-	  $attribute->loadObject();
-	  $self->{attribute} = $attribute;
+	  $attribute = $self->Factory()->loadObject($attributePackage,
+						    $self->attribute_id());
+	  $self->{_attribute} = $attribute;
 	}
 	return $attribute;
     }
 }
+
+
+1;

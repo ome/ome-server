@@ -85,6 +85,7 @@ __PACKAGE__->columns(Primary => qw(formal_input_id));
 __PACKAGE__->columns(Essential => qw(program_id name column_type));
 __PACKAGE__->hasa(OME::Program => qw(program_id));
 __PACKAGE__->hasa(OME::LookupTable => qw(lookup_table_id));
+__PACKAGE__->hasa(OME::DataType::Column => qw(column_type));
                      
 
 

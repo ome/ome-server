@@ -27,6 +27,47 @@ use OME::ImportExport::Exporter;
 use IO::File;
 
 
+# addImagesToDataset(dataset, images)
+# -----------------------------------
+# Adds the given images to a dataset.  The images parameter can be
+# specified either as a Class::DBI iterator or as a reference to an
+# array of DBObjects.
+
+sub __addOneImageToDataset ($$$) {
+    my ($factory, $dataset, $image) = @_;
+
+    eval {
+	my $link = $factory->newObject("OME::Image::DatasetMap",
+				       {image   => $image,
+					dataset => $dataset});
+    }
+    
+    # This should be a better error check - right now we
+    # assume that any error represents an attempt to create a
+    # duplicate map entry, which we silently ignore.
+}
+
+sub addImagesToDataset ($$$) {
+    my ($factory, $dataset, $images) = @_;
+
+    if (ref($images) eq 'ARRAY') {
+	# We have an array of image objects
+
+        foreach my $image (@$images) {
+	    __addOneImageToDataset($factory,$dataset,$image);
+	}
+    } else {
+	# We should have an iterator
+	
+	while (my $image = $images->next()) {
+	    __addOneImageToDataset($factory,$dataset,$image);
+	}
+    }
+
+    $factory->dbi_commit();
+}
+
+
 # removeWeirdCharacter(hash)
 # --------------------------
 # By weird, I mean the null character currently.  Ensures that the
