@@ -72,7 +72,7 @@ my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
 my ($APACHE_USER);
 
 # Default import formats
-my $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader";
+my $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -548,9 +548,14 @@ sub execute {
     
     # Login to OME and get our session
     my $manager = OME::SessionManager->new();
-    my $session = $manager->createSession($username,$password);
+    my $session = $manager->createSession($username, $password);
 
     my $configuration = init_configuration ($session) or croak "Unable to initialize the configuration object.";
+
+    # FIXME: Temporarily we need to logout/backin for the configuration variable to be initialized
+    $manager->logout($session);
+    $session = $manager->createSession($username, $password);
+    # END
 
     #*********
     #********* Finalize the DB
@@ -582,9 +587,7 @@ sub execute {
 	findObject("OME::AnalysisChain",name => 'Image import analyses');
     $configuration->import_chain($importChain);
 
-    $configuration->storeObject();
     $session->commitTransaction();
-
     
     #*********
     #********* Logout and cleanup
