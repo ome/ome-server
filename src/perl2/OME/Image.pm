@@ -44,7 +44,7 @@ __PACKAGE__->table('images');
 __PACKAGE__->sequence('image_seq');
 __PACKAGE__->columns(Primary => qw(image_id));
 __PACKAGE__->columns(Essential => qw(image_guid file_sha1 name path image_type));
-__PACKAGE__->columns(Others => qw(created inserted description));
+__PACKAGE__->columns(Others => qw(lens_id created inserted description));
 __PACKAGE__->hasa('OME::Instrument' => qw(instrument_id));
 __PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
 __PACKAGE__->hasa('OME::Repository' => qw(repository_id));
