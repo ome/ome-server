@@ -123,7 +123,7 @@ No search field to Pixels
 sub getRefSearchField {
 	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
-	return undef;
+	return ();
 }
 
 
