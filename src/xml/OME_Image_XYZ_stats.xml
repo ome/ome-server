@@ -56,9 +56,9 @@
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidY.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
 		<FormalOutput Name = "XYZStackCentroidZ" AttributeTypeName = "XYZStackCentroidZ" Description = "z, in pixels, of center of intensity for the stack">
-			<FormalOutputColumn Name = "CentroidZ" FormalOutputColumnID = "XYZStacCentroidZ.CentroidZ" ColumnID = "CentroidZ" Description = "z, in pixels, of center of intensity"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStacCentroidZ.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStacCentroidZ.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
+			<FormalOutputColumn Name = "CentroidZ" FormalOutputColumnID = "XYZStackCentroidZ.CentroidZ" ColumnID = "CentroidZ" Description = "z, in pixels, of center of intensity"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackCentroidZ.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidZ.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
@@ -123,7 +123,7 @@
 					<OutputTo FormalOutputColumnID = "XYZStackSigma.theW"/>
 					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.theW"/>
 					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStacCentroidZ.theW"/>
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidZ.theW"/>
 				</Output>
 				<Output AccessBy = "2">
 					<OutputTo FormalOutputColumnID = "XYZStackMin.theT"/>
@@ -133,7 +133,7 @@
 					<OutputTo FormalOutputColumnID = "XYZStackSigma.theT"/>
 					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.theT"/>
 					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStacCentroidZ.theT"/>
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidZ.theT"/>
 				</Output>
 				<Output AccessBy = "3">
 					<OutputTo FormalOutputColumnID = "XYZStackMin.Min"/>
@@ -157,7 +157,7 @@
 					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.CentroidY"/>
 				</Output>
 				<Output AccessBy = "10">
-					<OutputTo FormalOutputColumnID = "XYZStacCentroidZ.CentroidZ"/>
+					<OutputTo FormalOutputColumnID = "XYZStackCentroidZ.CentroidZ"/>
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
