@@ -30,7 +30,7 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Ilya Goldberg <igg@nih.gov>
+# Written by:    Douglas Creager <dcreager@alum.mit.edu>
 #
 #-------------------------------------------------------------------------------
 
@@ -170,24 +170,35 @@ sub import {
 	$task->step();
 	$task->setMessage('Starting import');
 
+# Get our signos
+    use Config;
+    my %signo;
+    defined $Config{sig_name} || die "No sigs?";
+    my $signum=0;
+    foreach my $name (split(' ', $Config{sig_name})) {
+        $signo{$name} = $signum;
+        $signum++;
+    }
+
+
 	my $pid = OME::Fork->fork();
 
 	if (!defined $pid) {
 		die "Could not fork off process to perform the import";
 	} elsif ($pid) {
 		# Parent process
-		$SIG{INT}= sub {
-			print "Caught SIGINT - killing child ($pid) and myself ($$)\n";
-			$task->kill("User killed import process");
+		$SIG{INT}=sub {
+			print "\nCaught SIGINT - killing child ($pid) and myself ($$)\n";
+			kill $signo{INT},$pid;
 			CORE::exit;
 		};
 
 
 		my $lastStep = -1;
 		my $status = $task->state();
-		$task->setPID($pid);
 		while ($status eq 'IN PROGRESS') {
 			$task->refresh();
+		
 			my $step = $task->last_step();
 			my $message = $task->message();
 			defined $message or $message = "";
@@ -212,8 +223,12 @@ sub import {
 		
 		print "\n\nDone.\n";
 		
+		#foreach my $image (@$images) {
+		#	 print $image->id(),": ",$image->name(),"\n";
+		#}
 	} else {
 		# Child process
+        $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
 		my $session = OME::Session->instance();
 		POSIX::setsid() or die "Can't start a new session. $!";
