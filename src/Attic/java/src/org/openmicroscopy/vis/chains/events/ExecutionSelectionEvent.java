@@ -39,8 +39,8 @@
 
 
 package org.openmicroscopy.vis.chains.events;
-import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.chains.SelectionState;
+import org.openmicroscopy.ChainExecution;
 
 /** 
  * An event that indicates that a chain execution has been selected or deselected
@@ -55,16 +55,16 @@ public class ExecutionSelectionEvent extends SelectionEvent {
 	public static final int SELECTED = 1;
 	public static final int DESELECTED=2;
 	
-	private CChainExecution execution=null;
+	private ChainExecution execution=null;
 
 	// store state so this event always has a source that is non-null	
 	public ExecutionSelectionEvent(SelectionState state,
-			CChainExecution execution) {
+			ChainExecution execution) {
 		super(state);
 		this.execution = execution;
 	}
 	
-	public CChainExecution getSelectedExecution() {
+	public ChainExecution getSelectedExecution() {
 		return execution;
 	} 		
 }
