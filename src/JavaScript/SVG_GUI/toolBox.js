@@ -184,12 +184,17 @@ toolBox.prototype.buildSVG = function() {
 		this.GUIboxAnimate2 = this.nodes.GUIbox.lastChild;
 	}
 	
-	// Add on and off switches to control GUIbox display
+	// Add on and off switches to control GUIbox display & root
 	this.nodes.GUIbox.appendChild( this.textToSVG( this.onSwitchText ));
 	this.GUIboxOn = this.nodes.GUIbox.lastChild;
 	this.nodes.GUIbox.appendChild( this.textToSVG( this.offSwitchText ));
 	this.GUIboxOff = this.nodes.GUIbox.lastChild;
 	this.GUIboxHideDelay = this.GUIboxAnimate2.getAttributeNS( null, "dur" );
+	this.nodes.root.appendChild( this.textToSVG( this.onSwitchText ));
+	this.rootOn = this.nodes.root.lastChild;
+	this.nodes.root.appendChild( this.textToSVG( this.offSwitchText ));
+	this.rootOff = this.nodes.root.lastChild;
+
 	
 	// Move hideControl and GUIbox to proper position
 	var hideY = Math.round( menuHeight/2 );
@@ -199,12 +204,23 @@ toolBox.prototype.buildSVG = function() {
 	GUIboxContainer.setAttributeNS(null, "transform", "translate(0,"+ menuHeight +")");
 }
 
+/*****
+*
+*	closeOnMinimize(val)
+*
+*****/
+toolBox.prototype.closeOnMinimize = function(val) {
+	if(val) 
+		this.CLOSE_ON_MINIMIZE = true;
+	else
+		this.CLOSE_ON_MINIMIZE = false;
+}
 
 /****************   Get functions   **********************/
 
 /*****
 *
-*   get GUIbox
+*   getGUIbox
 *
 *****/
 toolBox.prototype.getGUIbox = function(){
@@ -252,9 +268,12 @@ toolBox.prototype.hide = function() {
 	this.hidden = true;
 	
 	// begin animations
-	this.hideControlAnimate1.beginElement();
+	if(this.hideControlAnimate1)
+		this.hideControlAnimate1.beginElement();
 	this.GUIboxAnimate1.beginElement();
 	this.GUIboxOff.beginElementAt(this.GUIboxHideDelay);
+	if(this.CLOSE_ON_MINIMIZE)
+		this.rootOff.beginElementAt(this.GUIboxHideDelay);
 	
 }
 
@@ -268,34 +287,12 @@ toolBox.prototype.unhide = function() {
 	this.hidden = false;
 	
 	// begin animations
+	if(this.hideControlAnimate2)
+		this.hideControlAnimate2.beginElement();
 	this.GUIboxOn.beginElement();
-	this.hideControlAnimate2.beginElement();
 	this.GUIboxAnimate2.beginElement();
-}
-
-/*****
-*
-*   close
-*
-*	untested
-*
-*****/
-toolBox.prototype.close = function() {
-	if(this.nodes.root)
-		this.nodes.root.setAtribute("display", "none");
-}
-
-
-/*****
-*
-*   open
-*
-*	untested
-*
-*****/
-toolBox.prototype.open = function() {
-	if(this.nodes.root)
-		this.nodes.root.setAtribute("display", "inline");
+	if(this.CLOSE_ON_MINIMIZE)
+		this.rootOn.beginElement();
 }
 
 /*****
