@@ -79,11 +79,6 @@ my @modules = ({
 	Name => 'Tie::IxHash',
 	repositoryFile => 'Tie-IxHash-1.21.tar.gz'
 	},{
-	Name => 'DBD::Pg',
-	repositoryFile => 'DBD-Pg-1.21.tar.gz',
-	checkVersion => \&DBD_Pg_VersionOK,
-	installModule => \&DBD_Pg_Install
-	},{
 	Name => 'Sort::Array',
 	repositoryFile => 'Sort-Array-0.26.tar.gz',
 	},{
@@ -93,6 +88,11 @@ my @modules = ({
 	},{
 	Name => 'Test::Simple',
 	repositoryFile => 'Test-Simple-0.47.tar.gz',
+	},{
+	Name => 'DBD::Pg',
+	repositoryFile => 'DBD-Pg-1.21.tar.gz',
+	checkVersion => \&DBD_Pg_VersionOK,
+	installModule => \&DBD_Pg_Install
 	},{
 	Name => 'Term::ReadKey',
 	repositoryFile => 'TermReadKey-2.21.tar.gz',
