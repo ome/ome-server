@@ -5,6 +5,7 @@ use Cwd;
 my $cwd = getcwd;
 my $libDir = $Config{installprivlib};
 use File::Spec;
+use Getopt::Std;
 
 my $moduleRepository = 'http://openmicroscopy.org/packages/perl';
 my $DEFAULT_badTestsFatal = 0;
@@ -140,6 +141,16 @@ my @modules = ({
 #####################
 # Da 'main' program:
 
+# Grab command line options (POSIX)
+my %options;
+getopts('ihfc', \%options);	# -i (Interactive) [Default]
+				# -h (Help)
+				# -f (Force module installs from OME repository)
+				# -c (Only perform version checks)
+
+if ($options{h}) { die "Usage: perl perlcheck.pl [OPTIONS]\nPerforms version checks and installs for OME's required libraries.\n\nMain options:\n-i,\tInteractive installation mode [default]\n-h\tHelp (This screen)\n-f\tForce module installs for missing or incompatible modules\n-c\tPerform *only* version checks (no installs are performed, even if needed)\n\nReport bugs to <ome-devel\@mit.edu>." }
+
+
 # Make sure there is a modules directory, and cwd into it.
 if ( -e 'modules' and not -d 'modules' ) {
 	unlink ('modules') or die "Couldn't delete file 'modules': $!\n";
@@ -183,6 +194,7 @@ print   "---------------------------------------------------------\n";
 sub DBI_VersionOK {
 my $version = shift;
 	return (1) if $version == 1.30;
+	return (1) if $version == 1.32;
 	return (0);
 }
 
@@ -190,6 +202,7 @@ sub DBD_Pg_VersionOK {
 my $version = shift;
 	return (1) if $version == 0.95;
 	return (1) if $version == 1.01;
+	return (1) if $version == 1.20;
 	return (0);
 }
 
@@ -202,7 +215,8 @@ my $version = shift;
 
 sub Class_DBI_VersionOK {
 my $version = shift;
-	return (1) if $version >= 0.90;
+	return (1) if $version == 0.91;
+	return (0) if $version > 0.90;
 	return (0);
 }
 
@@ -370,17 +384,36 @@ my $installModule;
 	$moduleVersion = &{$getVersion} ($module);
 
 	if (not defined $moduleVersion) {
-		print "Couldn't find a functioning $moduleName\n";
-		$module->{installDir} = DownloadModule ($repositoryFile);
-		&{$installModule}($module);
+		print "Couldn't find a functioning $moduleName.\n";
+		if ($options{f}) {	# If we've been ARGV forced Just Do It(tm)
+			$module->{installDir} = DownloadModule ($repositoryFile);
+			&{$installModule}($module);
+		} elsif (!$options{c}) {		# Else just do things interactively
+			print "Would you like to install from the OME repository? (Y/[N]):";
+			my $yorn = <STDIN>;
+			chomp $yorn;
+			$yorn = uc($yorn);
+			if ($yorn eq 'Y' || $yorn eq 'YES') {
+				$module->{installDir} = DownloadModule ($repositoryFile);
+				&{$installModule}($module);
+			} else { print "**** WARNING: Not installing required and missing module $moduleName from repository.\n"; }
+		}
 	} elsif (defined $checkVersion and not &{$checkVersion}($moduleVersion)) {
-		print "$moduleName version is $moduleVersion - not supported\n";
-		$module->{installDir} = DownloadModule ($repositoryFile);
-		&{$installModule}($module);
-	} else {
-		print "$moduleName version is $moduleVersion - OK\n";
-	}
-
+		print "$moduleName version is $moduleVersion - *NOT SUPPORTED*.\n";
+		if ($options{f}) {	# If we've been ARGV forced Just Do It(tm)
+			$module->{installDir} = DownloadModule ($repositoryFile);
+			&{$installModule}($module);
+		} elsif (!$options{c}) {		# Else just do things interactively
+			print "Would you like to install from the OME repository? (Y/[N]):";
+			my $yorn = <STDIN>;
+			chomp $yorn;
+			$yorn = uc($yorn);
+			if ($yorn eq 'Y' || $yorn eq 'YES') {
+				$module->{installDir} = DownloadModule ($repositoryFile);
+				&{$installModule}($module);
+			} else { print "**** WARNING: Not installing compatible missing module $moduleName from repository.\n"; }
+		}
+	} else { print "$moduleName version is $moduleVersion - OK\n"; }
 }
 
 sub GetModuleVersion {
