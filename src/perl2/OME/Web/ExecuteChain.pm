@@ -82,7 +82,7 @@ sub getPageBody {
 			or die "Could not execute analysis chain";
 			
 		# display results	
-		return( 'REDIRECT', $self->OME::Web::getObjDetailURL($analysis_chain_execution));
+		return( 'REDIRECT', $self->getObjDetailURL($analysis_chain_execution));
 
 	} else {
 		$body .= $self->printForm();
