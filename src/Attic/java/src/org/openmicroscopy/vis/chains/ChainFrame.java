@@ -42,6 +42,7 @@ package org.openmicroscopy.vis.chains;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.piccolo.PChainCanvas;
 import edu.umd.cs.piccolo.PCanvas;
+import javax.swing.BoxLayout;
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
@@ -58,15 +59,28 @@ import java.awt.event.WindowAdapter;
 
 public class ChainFrame extends ChainFrameBase {
 	
+	private ChainToolBar toolBar;
+	
 	public ChainFrame(Controller controller,Connection connection,int i) {
-		super(controller,connection,new String("OME Chains: "+i));
+		super(controller,connection,new String("OME Chain: "+i));
+		
+		PChainCanvas chainCanvas = (PChainCanvas) canvas;
+		chainCanvas.setFrame(this);
+
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
 				ChainFrame c = (ChainFrame) e.getWindow();
 				Controller control = c.getController();
 				control.disposeChainCanvas(c);
 			}
+			public void windowActivated(WindowEvent e) {
+				ChainFrame c = (ChainFrame) e. getWindow();
+				Controller control = c.getController();
+				control.setCurrentChain(c);				
+			}
 		});
+	
+		
 	}
 	
 	public PCanvas createCanvas(Connection connection) {
@@ -76,4 +90,31 @@ public class ChainFrame extends ChainFrameBase {
 	public Rectangle getInitialBounds() {
 		return new Rectangle(410,10,400,400);
 	}
+	
+	protected void layoutFrame() {
+		contentPane.setLayout(new BoxLayout(contentPane,BoxLayout.Y_AXIS));
+		toolBar = new ChainToolBar(controller.getCmdTable());
+		contentPane.add(toolBar);	
+		contentPane.add(canvas);
+	}
+	
+	public void save() {
+		ChainSaveFrame saveFrame  = new ChainSaveFrame(this);
+		saveFrame.show();
+		
+		// put up a dialog
+		// get a name and description from it.
+	}
+	
+	public void completeSave(String name,String desc) {
+		System.err.println("finishing save.. "+name+","+desc);		
+		PChainCanvas chainCanvas = (PChainCanvas) canvas;
+		chainCanvas.save(name,desc);
+	}
+	
+	public void setSaveEnabled(boolean v) {
+		if (toolBar != null)
+			toolBar.setSaveEnabled(v);
+	}
+
 }
