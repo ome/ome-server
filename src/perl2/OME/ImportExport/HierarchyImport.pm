@@ -120,6 +120,10 @@ This will read the XML sub-tree under the $root element, creating objects in the
 of objects in the sub-tree will be returned.
 The objects will be written to the DB at the end of the import, and the Session's database handle committed.
 All images will be imported into a dummy dataset and the standard analysis chain will be executed on them.
+N.B.:  In the present implementation, if the LSIDs in XML are resolved to objects in the DB, 
+the object is not re-imported - but only for components of the hierarchy above <Image>.  The <Image> elements 
+and everything below them in the hierarchy are always re-imported.  In a subsequent release, we will be able to 
+merge attributes for all objects.
 
 =cut
 
@@ -136,6 +140,11 @@ sub processDOM {
 	my $session = $self->{session};
 	my $factory = $self->{factory};
 	my $lsid = $self->{_lsidResolver};
+	
+	# Turn on row guessing if its off - make the factory figure out how to put attributes together into DB rows.
+	my $oldRowGuessing = OME::SemanticType->GuessRows();
+	OME::SemanticType->GuessRows(1);
+
 	
 	###########################################################################
 	# These hashes store the IDs we've found so far in the document
@@ -179,12 +188,10 @@ sub processDOM {
 			if (exists $docIDs->{$refID}) {
 				$refObjectID = $docIDs->{$refID};
 			}
-#			else {
-#				$refObject = $lsid->getLocalObject ($refID);
-#				$refObjectID = $refObject ? $refObject->id() : undef
-#			}
-# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
-#
+			else {
+				$refObject = $lsid->getLocalObject ($refID);
+				$refObjectID = $refObject ? $refObject->id() : undef
+			}
 			logdie ref ($self) . "->processDOM: Could not resolve Project ID '$refID'"
 				unless defined $refObjectID;
 			$self->addObject ($factory->maybeNewObject('OME::Project::DatasetMap',
@@ -215,12 +222,10 @@ sub processDOM {
 			if (exists $docIDs->{$refID}) {
 				$refObjectID = $docIDs->{$refID};
 			}
-#			else {
-#				$refObject = $lsid->getLocalObject ($refID);
-#				$refObjectID = $refObject ? $refObject->id() : undef
-#			}
-# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
-#
+			else {
+				$refObject = $lsid->getLocalObject ($refID);
+				$refObjectID = $refObject ? $refObject->id() : undef
+			}
 			logdie ref ($self) . "->processDOM: Could not resolve Dataset ID '$refID'"
 				unless defined $refObjectID;
 			$self->addObject ($factory->maybeNewObject('OME::Image::DatasetMap',
@@ -267,6 +272,9 @@ sub processDOM {
 		$self->importFeatures ($imageID, undef, $importAnalysis, $node);
 	}
 	
+	# Turn row gessing back to what it was before.
+	OME::SemanticType->GuessRows($oldRowGuessing);
+
 	# Commit everything we've got so far.
 	logdbg "debug", ref ($self)."->processDOM: Committing DBObjects";
 	$self->commitObjects ();
@@ -383,15 +391,18 @@ sub importObject ($$$$) {
 	my $theObject;
 	my $lsid = $self->{_lsidResolver};
 	my $LSID = $node->getAttribute('ID');
-#	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
-#	$theObject = $lsid->getLocalObject ($LSID);
-#	if (defined $theObject) {
-#		$docIDs->{$LSID} = $theObject->id();
-#		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
-#		return $theObject;
-#	}
-# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
+	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
+	$theObject = $lsid->getLocalObject ($LSID);
 #
+# FIXME (IGG):  Only allow previously seen objects to be resolved if there is
+# no module_execution associated with the object.
+# This is because we have no way of merging attributes from different module executions.
+	if (defined $theObject and not defined $module_execution) {
+		$docIDs->{$LSID} = $theObject->id();
+		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
+		return $theObject;
+	}
+
 	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 	$parentDBID = undef if $granularity eq 'G';
 	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
@@ -419,12 +430,10 @@ sub importObject ($$$$) {
 			$objectData->{$objField} = $docIDs->{$theRef};
 			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
 				$objectData->{$objField}." in document.";
-#		} elsif ($theObject = $lsid->getLocalObject ($theRef)) {
-#			$objectData->{$objField} = $theObject->id();
-#			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
-#				$objectData->{$objField}." in DB.";
-# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
-#
+		} elsif ($theObject = $lsid->getLocalObject ($theRef)) {
+			$objectData->{$objField} = $theObject->id();
+			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
+				$objectData->{$objField}." in DB.";
 		} else {
 			$objectData->{$objField} = undef;
 			$unresolvedRefs{$objField} = $theRef;
