@@ -98,6 +98,7 @@ __PACKAGE__->hasMany('project_links','OME::Project::DatasetMap','dataset');
 __PACKAGE__->manyToMany('projects',
                         'OME::Project::DatasetMap','dataset','project');
 __PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'dataset');
+__PACKAGE__->hasMany('chain_executions','OME::AnalysisChainExecution' => 'dataset');
 
 __PACKAGE__->addACL({user => 'owner_id',group => 'group_id'});
 
