@@ -1,5 +1,8 @@
 <!-- TMPL_IF NAME=_obj_loop -->
 	<!-- TMPL_IF NAME=_more_info_url -->
+		<!-- TMPL_IF NAME=_pager_text -->
+			<!-- TMPL_VAR NAME=_pager_text --> |
+		<!-- /TMPL_IF -->
 		<a href="<!-- TMPL_VAR NAME=_more_info_url -->">More info...</a>
 	<!-- /TMPL_IF -->
 	<span class='ome_quiet'>Clicking a thumbnail will open:
