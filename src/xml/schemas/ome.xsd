@@ -192,7 +192,7 @@
 		<xs:annotation>
 			<xs:documentation>This element describes the type of experiment.  The required Type attribute must contain one or more entries from the following list:
 "xFP" "FRET" "Time-lapse" "4-D+" "Screen" "Immunocytochemistry" "FISH" "Electrophysiology"  "Ion-Imaging" "Colocalization" "PGI/Documentation" "Other"
-The otional Description element may contain free text to further describe the experiment.
+The optional Description element may contain free text to further describe the experiment.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -342,7 +342,7 @@ The otional Description element may contain free text to further describe the ex
 				Elements of type ChannelScaleType specify the scaling of pixel values (up to 16 bit) to colorspace values (8 bit).
 				These elements have three required attributes:  the ChannelNumber, BlackLevel, and WhiteLevel.
 				The fourth Gamma attribute is optional.
-				The ChannelNumber specifies the wave number in the pixel dump.  Chennels are numbered from 0.
+				The ChannelNumber specifies the wave number in the pixel dump.  Channels are numbered from 0.
 				Pixel values between BlackLevel and WhiteLevel will be assigned values 0-255, respectively.  
 				Values below BlackLevel or above WhiteLevel will be assigned 0 and 255 respectively.
 				Either the GreyChannel or one or more of RedChannel, GreenChannel, BlueChannel must be specified.
@@ -437,7 +437,7 @@ The otional Description element may contain free text to further describe the ex
 	<xs:element name = "Time">
 		<xs:annotation>
 			<xs:documentation>
-				The time range the user is interested in in the initial viewer display.  A range of timepoints indicates a movie
+				The time range the user is interested in the initial viewer display.  A range of timepoints indicates a movie
 				If they are not specified, the movie is to include all timepoints.
 				If the Time attributes point to a single time-point, that is the timepoint to be initially displayed.
 				If the entire element is missing, the first time-point  will be displayed
@@ -461,7 +461,7 @@ The otional Description element may contain free text to further describe the ex
 				The OTF element contains an optical transfer function.
 				The same OTF can be used for all wavelengths, or there may be one per wavelength.
 				There may be multiple light sources, cameras and filters on a microscope.
-				Each of these has their own ID attribute, which can be refered to from ChannelInfo.
+				Each of these has their own ID attribute, which can be referred to from ChannelInfo.
 				It is understood that the light path configuration can be different for each wavelength,
 				but cannot be different for each timepoint or each plane of an XYZ stack.
 			</xs:documentation>
@@ -495,7 +495,7 @@ The otional Description element may contain free text to further describe the ex
 		<xs:annotation>
 			<xs:documentation>
 				The PlateInfo element associates the image with a microtiter plate.
-				This element must contain a Well element to to specify what well this image belongs to.
+				This element must contain a Well element to specify what well this image belongs to.
 				When several images are acquired within a single well, they are differentiated by using the optional Sample element.
 			</xs:documentation>
 		</xs:annotation>
@@ -548,7 +548,7 @@ The otional Description element may contain free text to further describe the ex
 				The Screen element may contain an ExternalRef attribute that refers to an external database.
 				A description of the screen may be specified in the Description element.
 				Screens may contain overlapping sets of Plates i.e.  Screens and Plates have a many-to-many relationship.
-				Plates contain one or more ScreenRef elemnts to specify what screens they belong to.
+				Plates contain one or more ScreenRef elements to specify what screens they belong to.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -687,7 +687,7 @@ The otional Description element may contain free text to further describe the ex
 	</xs:element>
 	<xs:element name = "LensNA" type = "xs:float">
 		<xs:annotation>
-			<xs:documentation>The numerical aperture of the lens expressed as a ploating point (real) number.</xs:documentation>
+			<xs:documentation>The numerical aperture of the lens expressed as a floating point (real) number.</xs:documentation>
 		</xs:annotation>
 	</xs:element>
 	<xs:element name = "ExFilter">
@@ -996,7 +996,7 @@ The otional Description element may contain free text to further describe the ex
 			<xs:documentation>
 				A three dimensional 'Region of Interest'.  The Z coordinates are optional.
 				If they are not used, and the Image has more than one plane,
-				the enire set of planes is assumed to be included in the ROI.
+				the entire set of planes is assumed to be included in the ROI.
 				Multiple ROIs may be specified - these are meant to be displayed somehow.
 			</xs:documentation>
 		</xs:annotation>
@@ -1015,7 +1015,7 @@ The otional Description element may contain free text to further describe the ex
 		<xs:annotation>
 			<xs:documentation>
 				An element type specifying a filter specification.
-				Unlike the ManufactSpec, filters are refered to by lot number rather than serial number.
+				Unlike the ManufactSpec, filters are referred to by lot number rather than serial number.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:attribute name = "Manufacturer" use = "required" type = "xs:string"/>
@@ -1026,11 +1026,11 @@ The otional Description element may contain free text to further describe the ex
 		<xs:annotation>
 			<xs:documentation>
 				The lightsource for the instrument.  An instrument may have several light sources.
-				The type of lightsource is specified by one of the child-elements which are 'Laser', 'Fillament' or 'Arc'.
+				The type of lightsource is specified by one of the child-elements which are 'Laser', 'Filament' or 'Arc'.
 				Each of the light source types has its own Type attribute to further differentiate the light source
 				(eg, Nd-YAG for Laser or Hg for Arc).
 				A LightSourceID must be specified for each light source,
-				and the individual lightsources can be refered to by their LightSourceIDs (eg from ChannelInfo).
+				and the individual light sources can be referred to by their LightSourceIDs (eg from ChannelInfo).
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1152,7 +1152,7 @@ The otional Description element may contain free text to further describe the ex
 	</xs:element>
 	<xs:element name = "DocumentRef">
 		<xs:annotation>
-			<xs:documentation>The DocumentRef element referes to an external OME XML document using the href and SHA1 attributes.</xs:documentation>
+			<xs:documentation>The DocumentRef element refers to an external OME XML document using the href and SHA1 attributes.</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:attribute name = "href" use = "required" type = "xs:anyURI"/>
@@ -1161,12 +1161,12 @@ The otional Description element may contain free text to further describe the ex
 	</xs:element>
 	<xs:element name = "CustomAttributes">
 		<xs:annotation>
-			<xs:documentation>Any custom image attributes belong here. Data definitions for these attributes belong in DataDefinitions. Custom Attributes are stored in a record based format where one element corrosponds to one record. Attributes of an element corrospond to fields of the record.</xs:documentation>
+			<xs:documentation>Any custom image attributes belong here. Data definitions for these attributes belong in DataDefinitions. Custom Attributes are stored in a record based format where one element corresponds to one record. Attributes of an element correspond to fields of the record.</xs:documentation>
 		</xs:annotation>
 	</xs:element>
 	<xs:element name = "ImagingEnvironment">
 		<xs:annotation>
-			<xs:documentation>The Temperature is in Celcius, AirPressure is in millibars, Humidity and CO2Percent are percent-fractions from 0.0 to 1.0.</xs:documentation>
+			<xs:documentation>The Temperature is in Celsius, AirPressure is in millibars, Humidity and CO2Percent are percent-fractions from 0.0 to 1.0.</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:attribute name = "Temperature" type = "xs:float"/>
@@ -1262,7 +1262,7 @@ This can be null if a channel maps to a logical channel but is not included in t
 						<xs:enumeration value = "Nd-Glass"/>
 						<xs:enumeration value = "F-Center"/>
 						<xs:enumeration value = "Alexandrite"/>
-						<xs:enumeration value = "Ti-Saphire"/>
+						<xs:enumeration value = "Ti-Sapphire"/>
 						<xs:enumeration value = "Diode"/>
 						<xs:enumeration value = "Free-Electron"/>
 						<xs:enumeration value = "Dye"/>
