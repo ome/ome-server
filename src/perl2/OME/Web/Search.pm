@@ -426,7 +426,7 @@ sub getSearchCriteria {
 	my @search_fields;
 	if( $tmpl->query( name => '/search_fields_loop' ) ) {
 	# Query the object for its fields
-		@search_fields = $render->getFields( $type, 'summary' );
+		@search_fields = ( $render->getFields( $type, 'summary' ), 'id' );
 	} else {
 	# Otherwise, the search fields are in the template.
 		@search_fields = grep( (!m/^\//), $tmpl->param() ); # Screen out special field requests that start with '/'
@@ -501,7 +501,11 @@ sub search {
 		my $value = $q->param( $search_on );
 		# search string parsing
 		$value =~ s/\*/\%/g;
-		$searchParams{ $search_on } = [ 'ilike', $value ];
+		unless( $value =~ m/,/ ) {
+			$searchParams{ $search_on } = [ 'ilike', $value ];
+		} else {
+			$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
+		}
 	}
 
 	# load type

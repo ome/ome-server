@@ -91,22 +91,38 @@ sub _renderData {
 				__order => 'timestamp' );
 			my $ai = $factory->findObject( 
 				"OME::ModuleExecution::ActualInput", 
-				module_execution => $import_mex
+				module_execution => $import_mex,
+				'formal_input.semantic_type.name' => 'OriginalFile'
 			);
 			my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
 				$ai->input_module_execution,
-				$ai->formal_input()->semantic_type
-			) if $ai;
-			# Try to guess which file was the original one
-			my $img_name = $obj->name();
-			$original_files = [ grep( $_->Path() =~ m/^$img_name/, @$original_files ) ]
-				if( $original_files and scalar( @$original_files ) > 1);
+				'OriginalFile'
+			);
 			
+			if( scalar( @$original_files ) > 1 ) {
+				my $more_info_url = 
+ 					$self->pageURL( 'OME::Web::Search', {
+ 						Type => '@OriginalFile',
+ 						id   => join( ',', map( $_->id, @$original_files ) ),
+ 					} );
+				$record{ $request_string } = 
+					scalar( @$original_files )." files found. ".
+					"<a href='$more_info_url'>See individual listings</a> or ".
+					"<a href='javascript:alert(\"Ilya is gonna do this part\");'>download them all at once</a>";
+			} elsif( scalar( @$original_files ) == 1 ) {
+				$record{ $request_string } = 
+					$self->render( 
+						$original_files->[0], 
+						( $request->{ render } or 'ref' ), 
+						$request 
+					);
+			} else {
+				$record{ $request_string } = "No original files found";
+			}
 			my @original_file_links = map( 
 				$self->render( $_, ( $request->{ render } or 'ref' ), $request ),
 				@$original_files
 			);
-			$record{ $request_string } = join( ', ', @original_file_links );
 		}
 	}
 	

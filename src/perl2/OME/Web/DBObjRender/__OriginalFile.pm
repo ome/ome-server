@@ -72,6 +72,13 @@ sub _renderData {
 			$record{ $request_string } = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
 		}
 	}
+	if( exists $field_requests->{ 'Path' } ) {
+		foreach my $request ( @{ $field_requests->{ 'Path' } } ) {
+			my $url = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = "<a href='$url' title='Download this file'>".$obj->Path."</a>";
+		}
+	}
 	return %record;
 }
 
