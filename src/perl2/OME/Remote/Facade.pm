@@ -182,7 +182,7 @@ sub closeSession {
     my $session = OME::SessionManager->createSession($sessionKey);
     return 0 unless defined $session;
 
-    OME::SessionManager->deleteApacheSession($session->{ApacheSession});
+    OME::SessionManager->logout($session->{ApacheSession});
 
     $session->deleteInstance(1);
     OME::DBObject->clearAllCaches();
