@@ -86,12 +86,11 @@ public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 	}
 	
 	public PBounds getBufferedBounds() {
-			PBounds b = getGlobalFullBounds();
-			System.err.println("thumbnail global scale is "+getGlobalScale());
-			return new PBounds(b.getX()-PConstants.SMALL_BORDER*getGlobalScale(),
-				b.getY()-PConstants.SMALL_BORDER*getGlobalScale(),
-				b.getWidth()+2*PConstants.SMALL_BORDER*getGlobalScale(),
-				b.getHeight()+2*PConstants.SMALL_BORDER*getGlobalScale());
+		PBounds b = getGlobalFullBounds();
+		return new PBounds(b.getX()-PConstants.SMALL_BORDER*getGlobalScale(),
+			b.getY()-PConstants.SMALL_BORDER*getGlobalScale(),
+			b.getWidth()+2*PConstants.SMALL_BORDER*getGlobalScale(),
+			b.getHeight()+2*PConstants.SMALL_BORDER*getGlobalScale());
 	}
 	
 
