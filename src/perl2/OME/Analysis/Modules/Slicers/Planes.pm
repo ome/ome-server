@@ -96,7 +96,7 @@ sub startImage {
                 next INDEX if ($t < $t0 || $t > $t1);
 
                 my $parent = $factory->
-                  newAttribute('PixelsSlice',$image,$mex,
+                  newParentAttribute('PixelsSlice',$image,$mex,
                                {
                                 Parent => $slice->Parent(),
                                 StartX => $slice->StartX(),
@@ -126,7 +126,7 @@ sub startImage {
                 for (my $c = $c0; $c <= $c1; $c++) {
                     for (my $t = $t0; $t <= $t1; $t++) {
                         my $parent = $factory->
-                          newAttribute('PixelsSlice',$image,$mex,
+                          newParentAttribute('PixelsSlice',$image,$mex,
                                        {
                                         Parent => $slice->Parent(),
                                         StartX => $slice->StartX(),
