@@ -40,9 +40,12 @@ package OME::Tasks::NotificationManager;
 use OME;
 use OME::Session;
 use Log::Agent;
+use IO::Select;
 our $VERSION = $OME::VERSION;
 
 our $__soleFactory = undef;
+
+
 
 
 =head1 NAME
@@ -150,6 +153,69 @@ sub clear {
     foreach (@tasks) {
     	$_->deleteObject();
     }
+}
+
+=head2 wait ('condition',$timeout)
+
+This method can be called to wait for a certain named condition.  Anybody connected
+to the DB (locally or remotely) can issue the condition by calling:
+
+ OME::Tasks::NotificationManager->notify ('condition');
+
+The $timeout parameter is specified in seconds (can be fractional).  An undef $timeout
+is forever.  The condition string can be any "normal" kind of string.  What's a normal
+kind of string, you may ask?  Well, it shouldn't have any "funny stuff" in it.
+
+Note that this method can return for various reasons, but if the specified
+event didn't occur, it will return undef.
+
+=cut
+
+sub wait {
+	my ($proto,$condition,$timeout) = @_;
+    my $class = ref($proto) || $proto;
+
+	my $DBH = $class->taskFactory()->obtainDBH();
+	$DBH->do (qq/LISTEN "$condition"/);
+	my $fd = $DBH->func ('getfd') or
+		die "Unable to get PostgreSQL back-end FD";
+	my $sel = IO::Select->new ($fd);
+	# Block
+	if (defined $timeout) {
+		$sel->can_read ($timeout);
+	} else {
+		$sel->can_read ();
+	}
+	# We're not listening anymore...
+	$DBH->do ("UNLISTEN $condition");
+	my $notice = $DBH->func ('pg_notifies');
+	return undef unless $notice and $notice->[0] eq $condition;
+	return 1;
+}
+
+=head2 notify ('condition')
+
+This method can be called to notify listeners of a specified condition.  Listeners can
+be notified of the specified condition by calling:
+
+ OME::Tasks::NotificationManager->wait ('condition',$timeout);
+
+The same restrictions on the condition string as specified for wait() apply here.
+
+N.B.:  Unlike the other methods in this class, this method does not use a separate handle
+for the notification, which means that the notification will not be sent until the
+session's transaction is comitted.
+
+=cut
+
+sub notify {
+	my ($proto,$condition) = @_;
+    my $class = ref($proto) || $proto;
+
+	# We're just going to use the session's factory for this
+	my $DBH = OME::Session->instance()->Factory()->obtainDBH();
+	$DBH->do (qq/NOTIFY "$condition"/);
+	return (1);
 }
 
 # This is a semi-private method.  Besides this class, it should only be used by OME::Task.
