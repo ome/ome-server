@@ -87,6 +87,7 @@ sub SavePreferences {
 	my $viewerPreferences = $factory->findObject( 'OME::ViewerPreferences', experimenter_id => $session->User()->id() );
 	if( $viewerPreferences) {
 		$viewerPreferences->toolbox_scale( $toolBoxScale );
+		$viewerPreferences->storeObject();
 	} else {
 		my $data = {
 			experimenter_id  => $session->User()->id(),
@@ -95,8 +96,6 @@ sub SavePreferences {
 		$viewerPreferences = $factory->newObject( 'OME::ViewerPreferences', $data )
 			or die "Could not create new ViewerPreferences object";
 	}
-	$viewerPreferences->storeObject()
-		or die "Could not write ViewerPreferences object";
 	$session->commitTransaction();
 	return $viewerPreferences;	
 }
