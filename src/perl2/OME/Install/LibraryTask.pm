@@ -425,9 +425,9 @@ sub execute {
 	    	close ($CHECK_C);
 
 	    	$CC = whereis ("compiler") unless which ("$CC");
-	    	my $finkIncs;
+	    	my $finkIncs = '';
 	    	$finkIncs = '-I/sw/include'
-	    		if( $ENV{OSTYPE} eq "darwin" and -e '/sw/include/' );
+	    		if( $OSNAME eq "darwin" and -e '/sw/include/' );
 			@error = `$CC $finkIncs $source_file -o $binary 2>&1`;
 
 	    	if ($? == 0) {
