@@ -86,7 +86,7 @@ public class RemoteChain
     { setBooleanElement("locked",locked); }
 
     public List getNodes()
-    { return getRemoteListElement("OME::AnalysisChain::Node",
+    { return getCachedRemoteListElement("OME::AnalysisChain::Node",
                                   "nodes"); }
     public Iterator iterateNodes()
     {
@@ -152,7 +152,7 @@ public class RemoteChain
         { setStringElement("new_feature_tag",newFeatureTag); }
 
         public List getInputLinks()
-        { return getRemoteListElement("OME::AnalysisChain::Link",
+        { return getCachedRemoteListElement("OME::AnalysisChain::Link",
                                       "input_links"); }
         public Iterator iterateInputLinks()
         {
@@ -164,7 +164,7 @@ public class RemoteChain
         }
 
         public List getOutputLinks()
-        { return getRemoteListElement("OME::AnalysisChain::Link",
+        { return getCachedRemoteListElement("OME::AnalysisChain::Link",
                                       "output_links"); }
         public Iterator iterateOutputLinks()
         {
