@@ -6,8 +6,8 @@
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
 	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification.">
 	<Declaration>
-		<FormalInput Name = "Wavenumber 1" SemanticTypeName = "Wavenumber" Description = "" UserDefined = "true"/>
-		<FormalInput Name = "Wavenumber 2" SemanticTypeName = "Wavenumber" Description = "" UserDefined = "true"/>
+		<FormalInput Name = "ChannelNumber 1" SemanticTypeName = "ChannelNumber" Description = "" UserDefined = "true"/>
+		<FormalInput Name = "ChannelNumber 2" SemanticTypeName = "ChannelNumber" Description = "" UserDefined = "true"/>
 		<FormalOutput Name = "XYPlaneCrossCorrelation" SemanticTypeName = "XYPlaneCrossCorrelation" 
 			Description = "Cross Correlation for an XY plane"/>
 	</Declaration>
@@ -28,7 +28,7 @@
 						</AutoIterate>
 					</theT>
 					<theW>
-						<UseValue SemanticElementName = "theW" FormalInputName = "Wavenumber 1"/>
+						<UseValue SemanticElementName = "theW" FormalInputName = "ChannelNumber 1"/>
 					</theW>
 				</XYPlane>
 			</InputSubString>
@@ -44,7 +44,7 @@
 						<Match XYPlaneID = "Plane1"/>
 					</theT>
 					<theW>
-						<UseValue SemanticElementName = "theW" FormalInputName = "Wavenumber 2"/>
+						<UseValue SemanticElementName = "theW" FormalInputName = "ChannelNumber 2"/>
 					</theW>
 				</XYPlane>
 			</InputSubString>
@@ -60,29 +60,25 @@
 	</ExecutionInstructions>
 </AnalysisModule>
 
-<SemanticTypeDefinitions>
-	<DataTypes>
-		<Table Granularity = "I" TableName = "XY_CROSS_CORRELATION"
-			Description = "Cross correlation values for a plane">
-			<Column ColumnName = "THE_Z" SQL_DataType = "integer"/>
-			<Column ColumnName = "THE_T" SQL_DataType = "integer"/>
-			<Column ColumnName = "CROSS_CORRELATION" SQL_DataType = "float" Description = "Cross Correlation"/>
-		</Table>
-		<Table Granularity = "I" TableName = "WAVENUMBER" Description = "Wavenumbers">
-			<Column ColumnName = "THE_W" SQL_DataType = "integer"/>
-		</Table>
-	</DataTypes>
-	<SemanticType Name = "Wavenumber" Description = "">
-		<SemanticElement Name = "theW" TableName = "WAVENUMBER" ColumnName = "THE_W"/>
+<STD:SemanticTypeDefinitions 
+  xmlns=
+	"http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+	http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+	  http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+	<SemanticType Name="ChannelNumber" AppliesTo="I" Description="A Channel Index">
+        <Element Name="theW" DBLocation="CHANNELNUMBER.THE_W" DataType="integer"/>
 	</SemanticType>
-	<SemanticType Name = "XYPlaneCrossCorrelation" Description = "Cross Correlation for an XY plane">
-		<SemanticElement Name = "theZ" TableName = "XY_CROSS_CORRELATION" ColumnName = "THE_Z" 
+	<SemanticType Name="XYPlaneCrossCorrelation" AppliesTo="F" Description="Cross Correlation for an XY plane">
+        <Element Name="theZ" DBLocation="XY_CROSS_CORRELATION.THE_Z"			 DataType="integer"
 			Description = "Z coordinate describing the XY Plane"/>
-		<SemanticElement Name = "theT" TableName = "XY_CROSS_CORRELATION" ColumnName = "THE_T" 
+        <Element Name="theT" DBLocation="XY_CROSS_CORRELATION.THE_T"			 DataType="integer"
 			Description = "Timepoint describing the XY Plane"/>
-		<SemanticElement Name = "CC" TableName = "XY_CROSS_CORRELATION" ColumnName = "CROSS_CORRELATION" 
-			Description = "Cross Correlation Value"/>
+        <Element Name="CC"   DBLocation="XY_CROSS_CORRELATION.CROSS_CORRELATION" DataType="float"
+			Description = "Cross Correlation Coefficient"/>
 	</SemanticType>
-</SemanticTypeDefinitions>
+</STD:SemanticTypeDefinitions>
 
 </AnalysisModuleLibrary>

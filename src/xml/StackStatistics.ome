@@ -2,205 +2,61 @@
 
 <OME
   xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:AML=
     "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
     http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
       http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 <STD:SemanticTypeDefinitions 
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-<SemanticType
-  STD:SemanticTypeName="StackMean"
-  Description="">
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="STACK_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="STACK_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Mean"
-      FieldID="STACK_STATISTICS.MEAN"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="StackGeometricMean"
-  Description="">
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="STACK_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="STACK_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="GeometricMean"
-      FieldID="STACK_STATISTICS.GEOMEAN"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="StackSigma"
-  Description="">
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="STACK_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="STACK_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Sigma"
-      FieldID="STACK_STATISTICS.SIGMA"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="StackMinimum"
-  Description="">
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="STACK_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="STACK_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Minimum"
-      FieldID="STACK_STATISTICS.MINIMUM"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="StackMaximum"
-  Description="">
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="STACK_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="STACK_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Maximum"
-      FieldID="STACK_STATISTICS.MAXIMUM"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="StackCentroid"
-  Description="">
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="STACK_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="STACK_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="X"
-      FieldID="STACK_STATISTICS.CENTROID_X"/>
-
-    <SemanticElement
-      Name="Y"
-      FieldID="STACK_STATISTICS.CENTROID_Y"/>
-
-    <SemanticElement
-      Name="Z"
-      FieldID="STACK_STATISTICS.CENTROID_Z"/>
-
-</SemanticType>
-
-<DataDefinitions>
-
-<Record
-  AppliesTo="I"
-  Name="STACK_STATISTICS">
-
-    <Field
-      FieldID="STACK_STATISTICS.THE_C"
-      Name="THE_C"
-      DataType="integer"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.THE_T"
-      Name="THE_T"
-      DataType="integer"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.MINIMUM"
-      Name="MINIMUM"
-      DataType="integer"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.MAXIMUM"
-      Name="MAXIMUM"
-      DataType="integer"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.MEAN"
-      Name="MEAN"
-      DataType="float"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.GEOMEAN"
-      Name="GEOMEAN"
-      DataType="float"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.SIGMA"
-      Name="SIGMA"
-      DataType="float"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.CENTROID_X"
-      Name="CENTROID_X"
-      DataType="float"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.CENTROID_Y"
-      Name="CENTROID_Y"
-      DataType="float"/>
-
-    <Field
-      FieldID="STACK_STATISTICS.CENTROID_Z"
-      Name="CENTROID_Z"
-      DataType="float"/>
-
-</Record>
-
-</DataDefinitions>
-
+    <SemanticType Name="StackMean" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Mean" DBLocation="STACK_STATISTICS.MEAN" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="StackGeometricMean" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="GeometricMean" DBLocation="STACK_STATISTICS.GEOMEAN" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="StackSigma" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sigma" DBLocation="STACK_STATISTICS.SIGMA" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="StackMinimum" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Minimum" DBLocation="STACK_STATISTICS.MINIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="StackMaximum" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Maximum" DBLocation="STACK_STATISTICS.MAXIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="StackCentroid" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="X" DBLocation="STACK_STATISTICS.CENTROID_X" DataType="float"/>
+      <Element Name="Y" DBLocation="STACK_STATISTICS.CENTROID_Y" DataType="float"/>
+      <Element Name="Z" DBLocation="STACK_STATISTICS.CENTROID_Z" DataType="float"/>
+    </SemanticType>
 </STD:SemanticTypeDefinitions>
 
 <AML:AnalysisModuleLibrary

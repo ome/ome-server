@@ -2,89 +2,38 @@
 
 <OME
   xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:AML=
     "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
     http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
       http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 <STD:SemanticTypeDefinitions 
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-  <SemanticType
-      STD:SemanticTypeName="Bounds"
-      Description="Bounds of a feature">
-    <SemanticElement
-        Name="X" FieldID="BOUNDS.X"
-        Description=""/>
-    <SemanticElement
-        Name="Y" FieldID="BOUNDS.Y"
-        Description=""/>
-    <SemanticElement
-        Name="Width" FieldID="BOUNDS.WIDTH"
-        Description=""/>
-    <SemanticElement
-        Name="Height" FieldID="BOUNDS.HEIGHT"
-        Description=""/>
-  </SemanticType>
-
-  <SemanticType
-      STD:SemanticTypeName="Ratio"
-      Description="Ratio">
-    <SemanticElement
-        Name="Ratio" FieldID="RATIO.RATIO"
-        Description=""/>
-  </SemanticType>
-
-<DataDefinitions>
-
-    <Record
-        AppliesTo="F" Name="BOUNDS"
-        Description="">
-      <Field
-          FieldID="BOUNDS.X"
-          Name="X"
-          DataType="integer" Description=""/>
-      <Field
-          FieldID="BOUNDS.Y"
-          Name="Y"
-          DataType="integer" Description=""/>
-      <Field
-          FieldID="BOUNDS.WIDTH"
-          Name="WIDTH"
-          DataType="integer" Description=""/>
-      <Field
-          FieldID="BOUNDS.HEIGHT"
-          Name="HEIGHT"
-          DataType="integer" Description=""/>
-    </Record>
-
-    <Record
-        AppliesTo="F" Name="RATIO"
-        Description="">
-      <Field
-          FieldID="RATIO.RATIO"
-          Name="RATIO"
-          DataType="float" Description=""/>
-    </Record>
-
-
-</DataDefinitions>
-
+    <SemanticType Name="Bounds" AppliesTo="F" Description="Bounds of a feature">
+      <Element Name="X" DBLocation="BOUNDS.X" DataType="integer"/>
+      <Element Name="Y" DBLocation="BOUNDS.Y" DataType="integer"/>
+      <Element Name="Width" DBLocation="BOUNDS.WIDTH" DataType="integer"/>
+      <Element Name="Height" DBLocation="BOUNDS.HEIGHT" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="Ratio" AppliesTo="F" Description="Ratio">
+      <Element Name="Ratio" DBLocation="RATIO.RATIO" DataType="float"/>
+    </SemanticType>
 </STD:SemanticTypeDefinitions>
 
 <AML:AnalysisModuleLibrary

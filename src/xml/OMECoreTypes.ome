@@ -1,2006 +1,1005 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
+<?xml version = "1.0" encoding = "UTF-8"?>
 <OME
   xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:AML=
-    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
-    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 <STD:SemanticTypeDefinitions 
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
-
-
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 <!-- TODO: (DC-04/14/2003)
        - Lookup tables (from XML spec)
-       - n:n maps (plate-screen)
 -->
 
-
-<!-- Semantic types -->
-
-<SemanticType
-  STD:SemanticTypeName="Repository"
-  Description="A repository is a portion of the server-side file system devoted to OME.  It is used primarily to store the pixels of OME images.">
-
-    <SemanticElement
-      Name="Path"
-      FieldID="REPOSITORY.PATH"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Experimenter"
-  Description="Defines the people who perform imaging experimenters.  Each experimenter may belong to one group.">
-
-    <SemanticElement
-      Name="FirstName"
-      FieldID="EXPERIMENTER.FIRST_NAME"/>
-
-    <SemanticElement
-      Name="LastName"
-      FieldID="EXPERIMENTER.LAST_NAME"/>
-
-    <SemanticElement
-      Name="Email"
-      FieldID="EXPERIMENTER.EMAIL"/>
-
-    <SemanticElement
-      Name="Institution"
-      FieldID="EXPERIMENTER.INSTITUTION"/>
-
-    <SemanticElement
-      Name="OMEName"
-      FieldID="EXPERIMENTER.OME_NAME"/>
-
-    <SemanticElement
-      Name="Password"
-      FieldID="EXPERIMENTER.PASSWORD"/>
-
-    <SemanticElement
-      Name="DataDirectory"
-      FieldID="EXPERIMENTER.DATA_DIRECTORY"/>
-
-    <SemanticElement
-      Name="Group"
-      FieldID="EXPERIMENTER.GROUP"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Group"
-  Description="Defines groups of experimenters.  This can be a lab or a project group.  It is not meant to represent an institution or a company.">
-
-    <SemanticElement
-      Name="Name"
-      FieldID="GROUP.NAME"/>
-
-    <SemanticElement
-      Name="Leader"
-      FieldID="GROUP.LEADER"/>
-
-    <SemanticElement
-      Name="Contact"
-      FieldID="GROUP.CONTACT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Plate"
-  Description="Stores information about the plates that make up a high-throughput screen.  Plates may belong to more than one screen, and have a many-to-many relationship to screens.">
-
-    <SemanticElement
-      Name="Name"
-      FieldID="PLATE.NAME"/>
-
-    <SemanticElement
-      Name="ExternalReference"
-      FieldID="PLATE.EXTERNAL_REFERENCE"/>
-    
-    <SemanticElement
-      Name="Screen"
-      FieldID="PLATE.SCREEN"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Screen"
-  Description="Stores information about a high-throughput screen.">
-
-    <SemanticElement
-      Name="Name"
-      FieldID="SCREEN.NAME"/>
-
-    <SemanticElement
-      Name="Description"
-      FieldID="SCREEN.DESCRIPTION"/>
-
-    <SemanticElement
-      Name="ExternalReference"
-      FieldID="SCREEN.EXTERNAL_REFERENCE"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Experiment"
-  Description="">
-
-    <SemanticElement
-      Name="Type"
-      FieldID="EXPERIMENT.TYPE"/>
-
-    <SemanticElement
-      Name="Description"
-      FieldID="EXPERIMENT.DESCRIPTION"/>
-
-    <SemanticElement
-      Name="Experimenter"
-      FieldID="EXPERIMENT.EXPERIMENTER"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Instrument"
-  Description="Describes a microscope.  Mainly acts as a container for the components that constitute it - e.g., Objectives, Filters, etc.">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="INSTRUMENT.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="INSTRUMENT.MODEL"/>
-
-    <SemanticElement
-      Name="SerialNumber"
-      FieldID="INSTRUMENT.SERIAL_NUMBER"/>
-
-    <SemanticElement
-      Name="Type"
-      FieldID="INSTRUMENT.TYPE"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="LightSource"
-  Description="">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="LIGHT_SOURCE.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="LIGHT_SOURCE.MODEL"/>
-
-    <SemanticElement
-      Name="SerialNumber"
-      FieldID="LIGHT_SOURCE.SERIAL_NUMBER"/>
-
-    <SemanticElement
-      Name="Instrument"
-      FieldID="LIGHT_SOURCE.INSTRUMENT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Laser"
-  Description="">
-
-    <SemanticElement
-      Name="Type"
-      FieldID="LASER.TYPE"/>
-
-    <SemanticElement
-      Name="Medium"
-      FieldID="LASER.MEDIUM"/>
-
-    <SemanticElement
-      Name="Wavelength"
-      FieldID="LASER.WAVELENGTH"/>
-
-    <SemanticElement
-      Name="FrequencyDoubled"
-      FieldID="LASER.FREQ_DBLD"/>
-
-    <SemanticElement
-      Name="Tunable"
-      FieldID="LASER.TUNABLE"/>
-
-    <SemanticElement
-      Name="Pulse"
-      FieldID="LASER.PULSE"/>
-
-    <SemanticElement
-      Name="Power"
-      FieldID="LASER.POWER"/>
-
-    <SemanticElement
-      Name="LightSource"
-      FieldID="LASER.LIGHT_SOURCE"/>
-
-    <SemanticElement
-      Name="Pump"
-      FieldID="LASER.PUMP"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Filament"
-  Description="">
-
-    <SemanticElement
-      Name="Type"
-      FieldID="FILAMENT.TYPE"/>
-
-    <SemanticElement
-      Name="Power"
-      FieldID="FILAMENT.POWER"/>
-
-    <SemanticElement
-      Name="LightSource"
-      FieldID="FILAMENT.LIGHT_SOURCE"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Arc"
-  Description="">
-
-    <SemanticElement
-      Name="Type"
-      FieldID="ARC.TYPE"/>
-
-    <SemanticElement
-      Name="Power"
-      FieldID="ARC.POWER"/>
-
-    <SemanticElement
-      Name="LightSource"
-      FieldID="ARC.LIGHT_SOURCE"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Detector"
-  Description="">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="DETECTOR.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="DETECTOR.MODEL"/>
-
-    <SemanticElement
-      Name="SerialNumber"
-      FieldID="DETECTOR.SERIAL_NUMBER"/>
-
-    <SemanticElement
-      Name="Type"
-      FieldID="DETECTOR.TYPE"/>
-
-    <SemanticElement
-      Name="Gain"
-      FieldID="DETECTOR.GAIN"/>
-
-    <SemanticElement
-      Name="Voltage"
-      FieldID="DETECTOR.VOLTAGE"/>
-
-    <SemanticElement
-      Name="Offset"
-      FieldID="DETECTOR.OFFSET"/>
-
-    <SemanticElement
-      Name="Instrument"
-      FieldID="DETECTOR.INSTRUMENT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Objective"
-  Description="">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="OBJECTIVE.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="OBJECTIVE.MODEL"/>
-
-    <SemanticElement
-      Name="SerialNumber"
-      FieldID="OBJECTIVE.SERIAL_NUMBER"/>
-
-    <SemanticElement
-      Name="LensNA"
-      FieldID="OBJECTIVE.LENS_NA"/>
-
-    <SemanticElement
-      Name="Magnification"
-      FieldID="OBJECTIVE.MAGNIFICATION"/>
-
-    <SemanticElement
-      Name="Instrument"
-      FieldID="OBJECTIVE.INSTRUMENT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Filter"
-  Description="">
-
-    <SemanticElement
-      Name="Instrument"
-      FieldID="FILTER.INSTRUMENT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ExcitationFilter"
-  Description="">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="EXCITATION_FILTER.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="EXCITATION_FILTER.MODEL"/>
-
-    <SemanticElement
-      Name="LotNumber"
-      FieldID="EXCITATION_FILTER.LOT_NUMBER"/>
-
-    <SemanticElement
-      Name="Type"
-      FieldID="EXCITATION_FILTER.TYPE"/>
-
-    <SemanticElement
-      Name="Filter"
-      FieldID="EXCITATION_FILTER.FILTER"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Dichroic"
-  Description="">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="DICHROIC.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="DICHROIC.MODEL"/>
-
-    <SemanticElement
-      Name="LotNumber"
-      FieldID="DICHROIC.LOT_NUMBER"/>
-
-    <SemanticElement
-      Name="Filter"
-      FieldID="DICHROIC.FILTER"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="EmissionFilter"
-  Description="">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="EMISSION_FILTER.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="EMISSION_FILTER.MODEL"/>
-
-    <SemanticElement
-      Name="LotNumber"
-      FieldID="EMISSION_FILTER.LOT_NUMBER"/>
-
-    <SemanticElement
-      Name="Type"
-      FieldID="EMISSION_FILTER.TYPE"/>
-
-    <SemanticElement
-      Name="Filter"
-      FieldID="EMISSION_FILTER.FILTER"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="FilterSet"
-  Description="">
-
-    <SemanticElement
-      Name="Manufacturer"
-      FieldID="FILTER_SET.MANUFACTURER"/>
-
-    <SemanticElement
-      Name="Model"
-      FieldID="FILTER_SET.MODEL"/>
-
-    <SemanticElement
-      Name="LotNumber"
-      FieldID="FILTER_SET.LOT_NUMBER"/>
-
-    <SemanticElement
-      Name="Filter"
-      FieldID="FILTER_SET.FILTER"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="OpticalTransferFunction"
-  Description="">
-
-    <SemanticElement
-      Name="Objective"
-      FieldID="OTF.OBJECTIVE"/>
-
-    <SemanticElement
-      Name="Filter"
-      FieldID="OTF.FILTER"/>
-
-    <SemanticElement
-      Name="SizeX"
-      FieldID="OTF.SIZE_X"/>
-
-    <SemanticElement
-      Name="SizeY"
-      FieldID="OTF.SIZE_Y"/>
-
-    <SemanticElement
-      Name="PixelType"
-      FieldID="OTF.PIXEL_TYPE"/>
-
-    <SemanticElement
-      Name="Repository"
-      FieldID="OTF.REPOSITORY"/>
-
-    <SemanticElement
-      Name="Path"
-      FieldID="OTF.PATH"/>
-
-    <SemanticElement
-      Name="OpticalAxisAverage"
-      FieldID="OTF.OPTICAL_AXIS_AVERAGE"/>
-
-    <SemanticElement
-      Name="Instrument"
-      FieldID="OTF.INSTRUMENT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Dimensions"
-  Description="Describes the extents of each dimension of the image -- both in the number of pixels and in the physical size of each pixel">
-
-    <SemanticElement
-      Name="SizeX"
-      FieldID="DIMENSIONS.SIZE_X"/>
-
-    <SemanticElement
-      Name="SizeY"
-      FieldID="DIMENSIONS.SIZE_Y"/>
-
-    <SemanticElement
-      Name="SizeZ"
-      FieldID="DIMENSIONS.SIZE_Z"/>
-
-    <SemanticElement
-      Name="SizeC"
-      FieldID="DIMENSIONS.SIZE_C"/>
-
-    <SemanticElement
-      Name="SizeT"
-      FieldID="DIMENSIONS.SIZE_T"/>
-
-    <SemanticElement
-      Name="BitsPerPixel"
-      FieldID="DIMENSIONS.BITS_PER_PIXEL"/>
-
-    <SemanticElement
-      Name="PixelSizeX"
-      FieldID="DIMENSIONS.PIXEL_SIZE_X"/>
-      Description="in microns"/>
-
-    <SemanticElement
-      Name="PixelSizeY"
-      FieldID="DIMENSIONS.PIXEL_SIZE_Y"/>
-      Description="in microns"/>
-
-    <SemanticElement
-      Name="PixelSizeZ"
-      FieldID="DIMENSIONS.PIXEL_SIZE_Z"/>
-      Description="in microns"/>
-
-    <SemanticElement
-      Name="PixelSizeC"
-      FieldID="DIMENSIONS.PIXEL_SIZE_C"/>
-      Description="in nanometers"/>
-
-    <SemanticElement
-      Name="PixelSizeT"
-      FieldID="DIMENSIONS.PIXEL_SIZE_T"/>
-      Description="in seconds"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ImageExperiment"
-  Description="">
-
-    <SemanticElement
-      Name="Experiment"
-      FieldID="IMAGE_INFO.EXPERIMENT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ImageExperimenter"
-  Description="">
-
-    <SemanticElement
-      Name="Experimenter"
-      FieldID="IMAGE_INFO.EXPERIMENTER"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ImageGroup"
-  Description="">
-
-    <SemanticElement
-      Name="Group"
-      FieldID="IMAGE_INFO.GROUP"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ImageInstrument"
-  Description="">
-
-    <SemanticElement
-      Name="Instrument"
-      FieldID="IMAGE_INFO.INSTRUMENT"/>
-
-    <SemanticElement
-      Name="Objective"
-      FieldID="IMAGE_INFO.OBJECTIVE"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ImagingEnvironment"
-  Description="">
-
-    <SemanticElement
-      Name="Temperature"
-      FieldID="IMAGING_ENVIRONMENT.TEMPERATURE"/>
-
-    <SemanticElement
-      Name="AirPressure"
-      FieldID="IMAGING_ENVIRONMENT.AIR_PRESSURE"/>
-
-    <SemanticElement
-      Name="Humidity"
-      FieldID="IMAGING_ENVIRONMENT.HUMIDITY"/>
-
-    <SemanticElement
-      Name="CO2Percent"
-      FieldID="IMAGING_ENVIRONMENT.CO2_PERCENT"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Thumbnail"
-  Description="">
-
-    <SemanticElement
-      Name="MimeType"
-      FieldID="THUMBNAIL.MIME_TYPE"/>
-
-    <SemanticElement
-      Name="Repository"
-      FieldID="THUMBNAIL.REPOSITORY"/>
-
-    <SemanticElement
-      Name="Path"
-      FieldID="THUMBNAIL.PATH"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ChannelComponent"
-  Description="">
-
-    <SemanticElement
-      Name="Index"
-      FieldID="CHANNEL_COMPONENT.NUMBER"/>
-
-    <SemanticElement
-      Name="ColorDomain"
-      FieldID="CHANNEL_COMPONENT.COLOR_DOMAIN"/>
-
-    <SemanticElement
-      Name="LogicalChannel"
-      FieldID="CHANNEL_COMPONENT.LOGICAL_CHANNEL"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="LogicalChannel"
-  Description="">
-
-    <SemanticElement
-      Name="Name"
-      FieldID="LOGICAL_CHANNEL.NAME"/>
-
-    <SemanticElement
-      Name="SamplesPerPixel"
-      FieldID="LOGICAL_CHANNEL.SAMPLES_PER_PIXEL"/>
-
-    <SemanticElement
-      Name="Filter"
-      FieldID="LOGICAL_CHANNEL.FILTER"/>
-
-    <SemanticElement
-      Name="LightSource"
-      FieldID="LOGICAL_CHANNEL.LIGHT_SOURCE"/>
-
-    <SemanticElement
-      Name="LightAttenuation"
-      FieldID="LOGICAL_CHANNEL.LIGHT_ATTENUATION"/>
-
-    <SemanticElement
-      Name="LightWavelength"
-      FieldID="LOGICAL_CHANNEL.LIGHT_WAVELENGTH"/>
-
-    <SemanticElement
-      Name="OTF"
-      FieldID="LOGICAL_CHANNEL.OTF"/>
-
-    <SemanticElement
-      Name="Detector"
-      FieldID="LOGICAL_CHANNEL.DETECTOR"/>
-
-    <SemanticElement
-      Name="DetectorOffset"
-      FieldID="LOGICAL_CHANNEL.DETECTOR_OFFSET"/>
-
-    <SemanticElement
-      Name="DetectorGain"
-      FieldID="LOGICAL_CHANNEL.DETECTOR_GAIN"/>
-
-    <SemanticElement
-      Name="IlluminationType"
-      FieldID="LOGICAL_CHANNEL.ILLUMINATION_TYPE"/>
-
-    <SemanticElement
-      Name="PinholeSize"
-      FieldID="LOGICAL_CHANNEL.PINHOLE_SIZE"/>
-
-    <SemanticElement
-      Name="PhotometricInterpretation"
-      FieldID="LOGICAL_CHANNEL.PHOTOMETRIC_INTERPRETATION"/>
-
-    <SemanticElement
-      Name="Mode"
-      FieldID="LOGICAL_CHANNEL.MODE"/>
-
-    <SemanticElement
-      Name="ContrastMethod"
-      FieldID="LOGICAL_CHANNEL.CONTRAST_METHOD"/>
-
-    <SemanticElement
-      Name="AuxLightSource"
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_SOURCE"/>
-
-    <SemanticElement
-      Name="AuxLightAttenuation"
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_ATTENUATION"/>
-
-    <SemanticElement
-      Name="AuxTechnique"
-      FieldID="LOGICAL_CHANNEL.AUX_TECHNIQUE"/>
-      
-    <SemanticElement
-      Name="AuxLightWavelength"
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_WAVELENGTH"/>
-      
-    <SemanticElement
-      Name="ExcitationWavelength"
-      FieldID="LOGICAL_CHANNEL.EX_WAVE"/>
-
-    <SemanticElement
-      Name="EmissionWavelength"
-      FieldID="LOGICAL_CHANNEL.EM_WAVE"/>
-
-    <SemanticElement
-      Name="Fluor"
-      FieldID="LOGICAL_CHANNEL.FLUOR"/>
-
-    <SemanticElement
-      Name="NDFilter"
-      FieldID="LOGICAL_CHANNEL.ND_FILTER"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="DisplayChannel"
-  Description="">
-
-    <SemanticElement
-      Name="ChannelNumber"
-      FieldID="DISPLAY_CHANNEL.CHANNEL_NUMBER"/>
-
-    <SemanticElement
-      Name="BlackLevel"
-      FieldID="DISPLAY_CHANNEL.BLACK_LEVEL"/>
-
-    <SemanticElement
-      Name="WhiteLevel"
-      FieldID="DISPLAY_CHANNEL.WHITE_LEVEL"/>
-
-    <SemanticElement
-      Name="Gamma"
-      FieldID="DISPLAY_CHANNEL.GAMMA"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="DisplayOptions"
-  Description="">
-
-    <SemanticElement
-      Name="Zoom"
-      FieldID="DISPLAY_OPTIONS.ZOOM"/>
-
-    <SemanticElement
-      Name="RedChannel"
-      FieldID="DISPLAY_OPTIONS.RED_CHANNEL"/>
-
-    <SemanticElement
-      Name="GreenChannel"
-      FieldID="DISPLAY_OPTIONS.GREEN_CHANNEL"/>
-
-    <SemanticElement
-      Name="BlueChannel"
-      FieldID="DISPLAY_OPTIONS.BLUE_CHANNEL"/>
-
-    <SemanticElement
-      Name="GreyChannel"
-      FieldID="DISPLAY_OPTIONS.GREY_CHANNEL"/>
-
-    <SemanticElement
-      Name="ColorMap"
-      FieldID="DISPLAY_OPTIONS.COLOR_MAP"/>
-
-    <SemanticElement
-      Name="ZStart"
-      FieldID="DISPLAY_OPTIONS.Z_START"/>
-
-    <SemanticElement
-      Name="ZStop"
-      FieldID="DISPLAY_OPTIONS.Z_STOP"/>
-
-    <SemanticElement
-      Name="TStart"
-      FieldID="DISPLAY_OPTIONS.T_START"/>
-
-    <SemanticElement
-      Name="TStop"
-      FieldID="DISPLAY_OPTIONS.T_STOP"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="DisplayROI"
-  Description="">
-
-    <SemanticElement
-      Name="X0"
-      FieldID="DISPLAY_ROI.X0"/>
-
-    <SemanticElement
-      Name="Y0"
-      FieldID="DISPLAY_ROI.Y0"/>
-
-    <SemanticElement
-      Name="Z0"
-      FieldID="DISPLAY_ROI.Z0"/>
-
-    <SemanticElement
-      Name="X1"
-      FieldID="DISPLAY_ROI.X1"/>
-
-    <SemanticElement
-      Name="Y1"
-      FieldID="DISPLAY_ROI.Y1"/>
-
-    <SemanticElement
-      Name="Z1"
-      FieldID="DISPLAY_ROI.Z1"/>
-
-    <SemanticElement
-      Name="T0"
-      FieldID="DISPLAY_ROI.T0"/>
-
-    <SemanticElement
-      Name="T1"
-      FieldID="DISPLAY_ROI.T1"/>
-
-    <SemanticElement
-      Name="DisplayOptions"
-      FieldID="DISPLAY_ROI.DISPLAY_OPTIONS"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="StageLabel"
-  Description="">
-
-    <SemanticElement
-      Name="Name"
-      FieldID="STAGE_LABEL.NAME"/>
-
-    <SemanticElement
-      Name="X"
-      FieldID="STAGE_LABEL.X"/>
-
-    <SemanticElement
-      Name="Y"
-      FieldID="STAGE_LABEL.Y"/>
-
-    <SemanticElement
-      Name="Z"
-      FieldID="STAGE_LABEL.Z"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="ImagePlate"
-  Description="">
-
-    <SemanticElement
-      Name="Plate"
-      FieldID="IMAGE_PLATE.PLATE"/>
-
-    <SemanticElement
-      Name="Sample"
-      FieldID="IMAGE_PLATE.SAMPLE"/>
-
-    <SemanticElement
-      Name="Well"
-      FieldID="IMAGE_PLATE.WELL"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="Pixels"
-  Description="">
-
-    <SemanticElement
-      Name="PixelType"
-      FieldID="IMAGE_PIXELS.PIXEL_TYPE"/>
-
-    <SemanticElement
-      Name="FileSHA1"
-      FieldID="IMAGE_PIXELS.FILE_SHA1"/>
-
-    <SemanticElement
-      Name="Repository"
-      FieldID="IMAGE_PIXELS.REPOSITORY"/>
-
-    <SemanticElement
-      Name="Path"
-      FieldID="IMAGE_PIXELS.PATH"/>
-
-</SemanticType>
-
-<!-- Data definitions -->
-
-<DataDefinitions>
-
-<Record
-  AppliesTo="G"
-  Name="REPOSITORIES">
-
-    <Field
-      FieldID="REPOSITORY.PATH"
-      Name="PATH"
-      DataType="string"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="EXPERIMENTERS">
-
-    <Field
-      FieldID="EXPERIMENTER.FIRST_NAME"
-      Name="FIRSTNAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENTER.LAST_NAME"
-      Name="LASTNAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENTER.OME_NAME"
-      Name="OME_NAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENTER.EMAIL"
-      Name="EMAIL"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENTER.INSTITUTION"
-      Name="INSTITUTION"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENTER.PASSWORD"
-      Name="PASSWORD"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENTER.DATA_DIRECTORY"
-      Name="DATA_DIR"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENTER.GROUP"
-      Name="GROUP_ID"
-      DataType="reference"
-      ReferenceType="Group"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="GROUPS">
-
-    <Field
-      FieldID="GROUP.NAME"
-      Name="NAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="GROUP.LEADER"
-      Name="LEADER"
-      DataType="reference"
-      ReferenceType="Experimenter"/>
-
-    <Field
-      FieldID="GROUP.CONTACT"
-      Name="CONTACT"
-      DataType="reference"
-      ReferenceType="Experimenter"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="PLATES">
-
-    <Field
-      FieldID="PLATE.NAME"
-      Name="NAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="PLATE.EXTERNAL_REFERENCE"
-      Name="EXTERNAL_REFERENCE"
-      DataType="string"/>
-      
-    <Field
-      FieldID="PLATE.SCREEN"
-      Name="SCREEN"
-      DataType="reference"
-      ReferenceType="Screen"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="SCREENS">
-
-    <Field
-      FieldID="SCREEN.NAME"
-      Name="NAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="SCREEN.DESCRIPTION"
-      Name="DESCRIPTION"
-      DataType="string"/>
-
-    <Field
-      FieldID="SCREEN.EXTERNAL_REFERENCE"
-      Name="EXTERNAL_REFERENCE"
-      DataType="string"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="EXPERIMENTS">
-
-    <Field
-      FieldID="EXPERIMENT.TYPE"
-      Name="TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENT.DESCRIPTION"
-      Name="DESCRIPTION"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXPERIMENT.EXPERIMENTER"
-      Name="EXPERIMENTER"
-      DataType="reference"
-      ReferenceType="Experimenter"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="INSTRUMENTS">
-
-    <Field
-      FieldID="INSTRUMENT.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="INSTRUMENT.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="INSTRUMENT.SERIAL_NUMBER"
-      Name="SERIAL_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="INSTRUMENT.TYPE"
-      Name="ORIENTATION"
-      DataType="string"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="LIGHT_SOURCES">
-
-    <Field
-      FieldID="LIGHT_SOURCE.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="LIGHT_SOURCE.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="LIGHT_SOURCE.SERIAL_NUMBER"
-      Name="SERIAL_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="LIGHT_SOURCE.INSTRUMENT"
-      Name="INSTRUMENT"
-      DataType="reference"
-      ReferenceType="Instrument"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="LASERS">
-
-    <Field
-      FieldID="LASER.TYPE"
-      Name="TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="LASER.MEDIUM"
-      Name="MEDIUM"
-      DataType="string"/>
-
-    <Field
-      FieldID="LASER.WAVELENGTH"
-      Name="WAVELENGTH"
-      DataType="integer"/>
-
-    <Field
-      FieldID="LASER.FREQ_DBLD"
-      Name="FREQ_DBLD"
-      DataType="boolean"/>
-
-    <Field
-      FieldID="LASER.TUNABLE"
-      Name="TUNABLE"
-      DataType="boolean"/>
-
-    <Field
-      FieldID="LASER.PULSE"
-      Name="PULSE"
-      DataType="string"/>
-
-    <Field
-      FieldID="LASER.POWER"
-      Name="POWER"
-      DataType="float"/>
-
-    <Field
-      FieldID="LASER.LIGHT_SOURCE"
-      Name="LIGHT_SOURCE"
-      DataType="reference"
-      ReferenceType="LightSource"/>
-
-    <Field
-      FieldID="LASER.PUMP"
-      Name="PUMP"
-      DataType="reference"
-      ReferenceType="LightSource"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="FILAMENTS">
-
-    <Field
-      FieldID="FILAMENT.TYPE"
-      Name="TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="FILAMENT.POWER"
-      Name="POWER"
-      DataType="float"/>
-
-    <Field
-      FieldID="FILAMENT.LIGHT_SOURCE"
-      Name="LIGHT_SOURCE"
-      DataType="reference"
-      ReferenceType="LightSource"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="ARCS">
-
-    <Field
-      FieldID="ARC.TYPE"
-      Name="TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="ARC.POWER"
-      Name="POWER"
-      DataType="float"/>
-
-    <Field
-      FieldID="ARC.LIGHT_SOURCE"
-      Name="LIGHT_SOURCE"
-      DataType="reference"
-      ReferenceType="LightSource"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="DETECTORS">
-
-    <Field
-      FieldID="DETECTOR.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="DETECTOR.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="DETECTOR.SERIAL_NUMBER"
-      Name="SERIAL_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="DETECTOR.TYPE"
-      Name="TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="DETECTOR.GAIN"
-      Name="GAIN"
-      DataType="float"/>
-
-    <Field
-      FieldID="DETECTOR.VOLTAGE"
-      Name="VOLTAGE"
-      DataType="float"/>
-
-    <Field
-      FieldID="DETECTOR.OFFSET"
-      Name="D_OFFSET"
-      DataType="float"/>
-
-    <Field
-      FieldID="DETECTOR.INSTRUMENT"
-      Name="INSTRUMENT"
-      DataType="reference"
-      ReferenceType="Instrument"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="OBJECTIVES">
-
-    <Field
-      FieldID="OBJECTIVE.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="OBJECTIVE.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="OBJECTIVE.SERIAL_NUMBER"
-      Name="SERIAL_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="OBJECTIVE.LENS_NA"
-      Name="LENS_NA"
-      DataType="float"/>
-
-    <Field
-      FieldID="OBJECTIVE.MAGNIFICATION"
-      Name="MAGNIFICATION"
-      DataType="float"/>
-
-    <Field
-      FieldID="OBJECTIVE.INSTRUMENT"
-      Name="INSTRUMENT"
-      DataType="reference"
-      ReferenceType="Instrument"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="FILTER">
-
-    <Field
-      FieldID="FILTER.INSTRUMENT"
-      Name="INSTRUMENT"
-      DataType="reference"
-      ReferenceType="Instrument"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="EXCITATION_FILTERS">
-
-    <Field
-      FieldID="EXCITATION_FILTER.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXCITATION_FILTER.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXCITATION_FILTER.LOT_NUMBER"
-      Name="LOT_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXCITATION_FILTER.TYPE"
-      Name="TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="EXCITATION_FILTER.FILTER"
-      Name="FILTER"
-      DataType="reference"
-      ReferenceType="Filter"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="DICHROICS">
-
-    <Field
-      FieldID="DICHROIC.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="DICHROIC.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="DICHROIC.LOT_NUMBER"
-      Name="LOT_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="DICHROIC.FILTER"
-      Name="FILTER"
-      DataType="reference"
-      ReferenceType="Filter"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="EMISSION_FILTERS">
-
-    <Field
-      FieldID="EMISSION_FILTER.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="EMISSION_FILTER.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="EMISSION_FILTER.LOT_NUMBER"
-      Name="LOT_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="EMISSION_FILTER.TYPE"
-      Name="TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="EMISSION_FILTER.FILTER"
-      Name="FILTER"
-      DataType="reference"
-      ReferenceType="Filter"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="FILTER_SETS">
-
-    <Field
-      FieldID="FILTER_SET.MANUFACTURER"
-      Name="MANUFACTURER"
-      DataType="string"/>
-
-    <Field
-      FieldID="FILTER_SET.MODEL"
-      Name="MODEL"
-      DataType="string"/>
-
-    <Field
-      FieldID="FILTER_SET.LOT_NUMBER"
-      Name="LOT_NUMBER"
-      DataType="string"/>
-
-    <Field
-      FieldID="FILTER_SET.FILTER"
-      Name="FILTER"
-      DataType="reference"
-      ReferenceType="Filter"/>
-
-</Record>
-
-<Record
-  AppliesTo="G"
-  Name="OTFS">
-
-    <Field
-      FieldID="OTF.OBJECTIVE"
-      Name="OBJECTIVE"
-      DataType="reference"
-      ReferenceType="Objective"/>
-
-    <Field
-      FieldID="OTF.FILTER"
-      Name="FILTER"
-      DataType="reference"
-      ReferenceType="Filter"/>
-
-    <Field
-      FieldID="OTF.SIZE_X"
-      Name="SIZE_X"
-      DataType="integer"/>
-
-    <Field
-      FieldID="OTF.SIZE_Y"
-      Name="SIZE_Y"
-      DataType="integer"/>
-
-    <Field
-      FieldID="OTF.PIXEL_TYPE"
-      Name="PIXEL_TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="OTF.REPOSITORY"
-      Name="REPOSITORY"
-      DataType="reference"
-      ReferenceType="Repository"/>
-
-    <Field
-      FieldID="OTF.PATH"
-      Name="PATH"
-      DataType="string"/>
-
-    <Field
-      FieldID="OTF.OPTICAL_AXIS_AVERAGE"
-      Name="OPTICAL_AXIS_AVERAGE"
-      DataType="boolean"/>
-
-    <Field
-      FieldID="OTF.INSTRUMENT"
-      Name="Instrument"
-      DataType="reference"
-      ReferenceType="Instrument"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="IMAGE_DIMENSIONS">
-
-    <Field
-      FieldID="DIMENSIONS.SIZE_X"
-      Name="SIZE_X"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DIMENSIONS.SIZE_Y"
-      Name="SIZE_Y"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DIMENSIONS.SIZE_Z"
-      Name="SIZE_Z"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DIMENSIONS.SIZE_C"
-      Name="SIZE_C"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DIMENSIONS.SIZE_T"
-      Name="SIZE_T"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DIMENSIONS.BITS_PER_PIXEL"
-      Name="BITS_PER_PIXEL"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DIMENSIONS.PIXEL_SIZE_X"
-      Name="PIXEL_SIZE_X"
-      DataType="float"/>
-
-    <Field
-      FieldID="DIMENSIONS.PIXEL_SIZE_Y"
-      Name="PIXEL_SIZE_Y"
-      DataType="float"/>
-
-    <Field
-      FieldID="DIMENSIONS.PIXEL_SIZE_Z"
-      Name="PIXEL_SIZE_Z"
-      DataType="float"/>
-
-    <Field
-      FieldID="DIMENSIONS.PIXEL_SIZE_C"
-      Name="PIXEL_SIZE_C"
-      DataType="float"/>
-
-    <Field
-      FieldID="DIMENSIONS.PIXEL_SIZE_T"
-      Name="PIXEL_SIZE_T"
-      DataType="float"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="IMAGE_INFO">
-
-    <Field
-      FieldID="IMAGE_INFO.EXPERIMENT"
-      Name="EXPERIMENT"
-      DataType="reference"
-      ReferenceType="Experiment"/>
-
-    <Field
-      FieldID="IMAGE_INFO.EXPERIMENTER"
-      Name="EXPERIMENTER"
-      DataType="reference"
-      ReferenceType="Experimenter"/>
-
-    <Field
-      FieldID="IMAGE_INFO.GROUP"
-      Name="GROUP_ID"
-      DataType="reference"
-      ReferenceType="Group"/>
-
-    <Field
-      FieldID="IMAGE_INFO.INSTRUMENT"
-      Name="INSTRUMENT"
-      DataType="reference"
-      ReferenceType="Instrument"/>
-
-    <Field
-      FieldID="IMAGE_INFO.OBJECTIVE"
-      Name="OBJECTIVE"
-      DataType="reference"
-      ReferenceType="Objective"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="IMAGING_ENVIRONMENTS">
-
-    <Field
-      FieldID="IMAGING_ENVIRONMENT.TEMPERATURE"
-      Name="TEMPERATURE"
-      DataType="float"/>
-
-    <Field
-      FieldID="IMAGING_ENVIRONMENT.AIR_PRESSURE"
-      Name="AIR_PRESSURE"
-      DataType="float"/>
-
-    <Field
-      FieldID="IMAGING_ENVIRONMENT.HUMIDITY"
-      Name="HUMIDITY"
-      DataType="float"/>
-
-    <Field
-      FieldID="IMAGING_ENVIRONMENT.CO2_PERCENT"
-      Name="CO2_PERCENT"
-      DataType="float"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="THUMBNAILS">
-
-    <Field
-      FieldID="THUMBNAIL.MIME_TYPE"
-      Name="MIME_TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="THUMBNAIL.REPOSITORY"
-      Name="REPOSITORY"
-      DataType="reference"
-      ReferenceType="Repository"/>
-
-    <Field
-      FieldID="THUMBNAIL.PATH"
-      Name="PATH"
-      DataType="string"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="CHANNEL_COMPONENTS">
-
-    <Field
-      FieldID="CHANNEL_COMPONENT.NUMBER"
-      Name="NUMBER"
-      DataType="integer"/>
-
-    <Field
-      FieldID="CHANNEL_COMPONENT.COLOR_DOMAIN"
-      Name="COLOR_DOMAIN"
-      DataType="string"/>
-
-    <Field
-      FieldID="CHANNEL_COMPONENT.LOGICAL_CHANNEL"
-      Name="LOGICAL_CHANNEL"
-      DataType="reference"
-      ReferenceType="LogicalChannel"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="LOGICAL_CHANNELS">
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.NAME"
-      Name="NAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.SAMPLES_PER_PIXEL"
-      Name="SAMPLES_PER_PIXEL"
-      DataType="integer"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.FILTER"
-      Name="FILTER"
-      DataType="reference"
-      ReferenceType="Filter"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.LIGHT_SOURCE"
-      Name="LIGHT_SOURCE"
-      DataType="reference"
-      ReferenceType="LightSource"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.LIGHT_ATTENUATION"
-      Name="LIGHT_ATTENUATION"
-      DataType="float"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.LIGHT_WAVELENGTH"
-      Name="LIGHT_WAVELENGTH"
-      DataType="integer"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.OTF"
-      Name="OTF"
-      DataType="reference"
-      ReferenceType="OpticalTransferFunction"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.DETECTOR"
-      Name="DETECTOR"
-      DataType="reference"
-      ReferenceType="Detector"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.DETECTOR_OFFSET"
-      Name="DETECTOR_OFFSET"
-      DataType="float"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.DETECTOR_GAIN"
-      Name="DETECTOR_GAIN"
-      DataType="float"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.ILLUMINATION_TYPE"
-      Name="ILLUMINATION_TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.PINHOLE_SIZE"
-      Name="PINHOLE_SIZE"
-      DataType="integer"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.PHOTOMETRIC_INTERPRETATION"
-      Name="PHOTOMETRIC_INTERPRETATION"
-      DataType="string"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.MODE"
-      Name="MODE"
-      DataType="string"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.CONTRAST_METHOD"
-      Name="CONTRAST_METHOD"
-      DataType="string"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_SOURCE"
-      Name="AUX_LIGHT_SOURCE"
-      DataType="reference"
-      ReferenceType="LightSource"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_ATTENUATION"
-      Name="AUX_LIGHT_ATTENUATION"
-      DataType="float"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_POWER"
-      Name="AUX_LIGHT_POWER"
-      DataType="float"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.AUX_TECHNIQUE"
-      Name="AUX_TECHNIQUE"
-      DataType="string"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_WAVELENGTH"
-      Name="AUX_LIGHT_WAVELENGTH"
-      DataType="integer"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.EX_WAVE"
-      Name="EX_WAVE"
-      DataType="integer"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.EM_WAVE"
-      Name="EM_WAVE"
-      DataType="integer"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.FLUOR"
-      Name="FLUOR"
-      DataType="string"/>
-
-    <Field
-      FieldID="LOGICAL_CHANNEL.ND_FILTER"
-      Name="ND_FILTER"
-      DataType="float"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="DISPLAY_CHANNELS">
-
-    <Field
-      FieldID="DISPLAY_CHANNEL.CHANNEL_NUMBER"
-      Name="CHANNEL_NUMBER"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_CHANNEL.BLACK_LEVEL"
-      Name="BLACK_LEVEL"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_CHANNEL.WHITE_LEVEL"
-      Name="WHITE_LEVEL"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_CHANNEL.GAMMA"
-      Name="GAMMA"
-      DataType="float"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="DISPLAY_OPTIONS">
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.ZOOM"
-      Name="ZOOM"
-      DataType="float"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.RED_CHANNEL"
-      Name="RED_CHANNEL"
-      DataType="reference"
-      ReferenceType="DisplayChannel"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.GREEN_CHANNEL"
-      Name="GREEN_CHANNEL"
-      DataType="reference"
-      ReferenceType="DisplayChannel"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.BLUE_CHANNEL"
-      Name="BLUE_CHANNEL"
-      DataType="reference"
-      ReferenceType="DisplayChannel"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.GREY_CHANNEL"
-      Name="GREY_CHANNEL"
-      DataType="reference"
-      ReferenceType="DisplayChannel"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.COLOR_MAP"
-      Name="COLOR_MAP"
-      DataType="string"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.Z_START"
-      Name="Z_START"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.Z_STOP"
-      Name="Z_STOP"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.T_START"
-      Name="T_START"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_OPTIONS.T_STOP"
-      Name="T_STOP"
-      DataType="integer"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="DISPLAY_ROI">
-
-    <Field
-      FieldID="DISPLAY_ROI.X0"
-      Name="X0"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.Y0"
-      Name="Y0"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.Z0"
-      Name="Z0"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.X1"
-      Name="X1"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.Y1"
-      Name="Y1"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.Z1"
-      Name="Z1"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.T0"
-      Name="T0"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.T1"
-      Name="T1"
-      DataType="integer"/>
-
-    <Field
-      FieldID="DISPLAY_ROI.DISPLAY_OPTIONS"
-      Name="DISPLAY_OPTIONS"
-      DataType="reference"
-      ReferenceType="DisplayOptions"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="STAGE_LABELS">
-
-    <Field
-      FieldID="STAGE_LABEL.NAME"
-      Name="NAME"
-      DataType="string"/>
-
-    <Field
-      FieldID="STAGE_LABEL.X"
-      Name="X"
-      DataType="float"/>
-
-    <Field
-      FieldID="STAGE_LABEL.Y"
-      Name="Y"
-      DataType="float"/>
-
-    <Field
-      FieldID="STAGE_LABEL.Z"
-      Name="Z"
-      DataType="float"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="IMAGE_PLATES">
-
-    <Field
-      FieldID="IMAGE_PLATE.PLATE"
-      Name="PLATE"
-      DataType="reference"
-      ReferenceType="Plate"/>
-
-    <Field
-      FieldID="IMAGE_PLATE.SAMPLE"
-      Name="SAMPLE"
-      DataType="integer"/>
-
-    <Field
-      FieldID="IMAGE_PLATE.WELL"
-      Name="WELL"
-      DataType="string"/>
-
-</Record>
-
-<Record
-  AppliesTo="I"
-  Name="IMAGE_PIXELS">
-
-    <Field
-      FieldID="IMAGE_PIXELS.PIXEL_TYPE"
-      Name="PIXEL_TYPE"
-      DataType="string"/>
-
-    <Field
-      FieldID="IMAGE_PIXELS.FILE_SHA1"
-      Name="FILE_SHA1"
-      DataType="string"/>
-
-    <Field
-      FieldID="IMAGE_PIXELS.REPOSITORY"
-      Name="REPOSITORY"
-      DataType="reference"
-      ReferenceType="Repository"/>
-
-    <Field
-      FieldID="IMAGE_PIXELS.PATH"
-      Name="PATH"
-      DataType="string"/>
-
-</Record>
-
-</DataDefinitions>
-
-</STD:SemanticTypeDefinitions>
-
+		<SemanticType
+			Name = "Repository"
+			AppliesTo = "G"
+			Description = "A repository is a portion of the server-side file system devoted to OME.  It is used primarily to store the pixels of OME images.">
+
+			<Element
+				Name = "Path"
+				DBLocation = "REPOSITORIES.PATH"
+				DataType = "string"/>
+
+		</SemanticType>
+
+		<SemanticType
+			Name= "Experimenter"
+			AppliesTo = "G"
+			Description = "Defines the people who perform imaging experimenters.  Each experimenter may belong to one or more groups.  The ExperimenterGroup ST defines the relationships between Groups and Experimenters">
+			<Element
+				Name= "FirstName"
+				DBLocation = "EXPERIMENTERS.FIRSTNAME"
+				DataType = "string"/>
+			<Element
+				Name= "LastName"
+				DBLocation = "EXPERIMENTERS.LASTNAME"
+				DataType = "string"/>
+			<Element
+				Name= "Email"
+				DBLocation = "EXPERIMENTERS.EMAIL"
+				DataType = "string"/>
+			<Element
+				Name= "Institution"
+				DBLocation = "EXPERIMENTERS.INSTITUTION"
+				DataType = "string"/>
+			<Element
+				Name= "OMEName"
+				DBLocation = "EXPERIMENTERS.OME_NAME"
+				DataType = "string"/>
+			<Element
+				Name= "Password"
+				DBLocation = "EXPERIMENTERS.PASSWORD"
+				DataType = "string"/>
+			<Element
+				Name= "DataDirectory"
+				DBLocation = "EXPERIMENTERS.DATA_DIR"
+				DataType = "string"/>
+			<!-- This is a reversion to the old one group per experimenter
+				until we get the rest of the code to deal with multiple groups per experimenter.
+				The ExperimenterGroup map is commented out for now also.
+			-->
+			<Element
+				Name= "Group"
+				DBLocation = "EXPERIMENTERS.GROUP_ID"
+				DataType = "reference"
+				RefersTo = "Group"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Group"
+			AppliesTo = "G"
+			Description = "Defines groups of experimenters.  This can be a lab or a project group.  It is not meant to represent an institution or a company.">
+			<Element
+				Name= "Name"
+				DBLocation = "GROUPS.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "Leader"
+				DBLocation = "GROUPS.LEADER"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+			<Element
+				Name= "Contact"
+				DBLocation = "GROUPS.CONTACT"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+		</SemanticType>
+
+		<!-- This is a reversion to the old one group per experimenter
+			until we get the rest of the code to deal with multiple groups per experimenter.
+		<SemanticType
+			Name= "ExperimenterGroup"
+			AppliesTo = "G"
+			Description = "Defines the relationship between Experimenters and Groups.">
+			<Element
+				Name= "Experimenter"
+				DBLocation = "EXPERIMENTER_GROUP_MAP.EXPERIMENTER"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+			<Element
+				Name= "Group"
+				DBLocation = "EXPERIMENTER_GROUP_MAP.GROUP"
+				DataType = "reference"
+				RefersTo = "Group"/>
+		</SemanticType>
+		-->
+
+		<SemanticType
+			Name= "Plate"
+			AppliesTo = "G"
+			Description = "Stores information about the plates that make up a high-throughput screen.  Plates may belong to more than one screen, and have a many-to-many relationship to screens.">
+			<Element
+				Name= "Name"
+				DBLocation = "PLATES.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "ExternalReference"
+				DBLocation = "PLATES.EXTERNAL_REFERENCE"
+				DataType = "string"/>
+			<Element
+				Name= "Screen"
+				DBLocation = "PLATES.SCREEN"
+				DataType = "reference"
+				RefersTo = "Screen"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Screen"
+			AppliesTo = "G"
+			Description = "Stores information about a high-throughput screen.">
+			<Element
+				Name= "Name"
+				DBLocation = "SCREENS.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "Description"
+				DBLocation = "SCREENS.DESCRIPTION"
+				DataType = "string"/>
+			<Element
+				Name= "ExternalReference"
+				DBLocation = "SCREENS.EXTERNAL_REFERENCE"
+				DataType = "string"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "PlateScreen"
+			AppliesTo = "G"
+			Description = "Defines the relationship between Plates and Screens.">
+			<Element
+				Name= "Plate"
+				DBLocation = "PLATE_SCREEN_MAP.PLATE"
+				DataType = "reference"
+				RefersTo = "Plate"/>
+			<Element
+				Name= "Screen"
+				DBLocation = "PLATE_SCREEN_MAP.SCREEN"
+				DataType = "reference"
+				RefersTo = "Screen"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Experiment"
+			AppliesTo = "G">
+			<Element
+				Name= "Type"
+				DBLocation = "EXPERIMENTS.TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Description"
+				DBLocation = "EXPERIMENTS.DESCRIPTION"
+				DataType = "string"/>
+			<Element
+				Name= "Experimenter"
+				DBLocation = "EXPERIMENTS.EXPERIMENTER"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Instrument"
+			AppliesTo = "G"
+			Description = "Describes a microscope.  Mainly acts as a container for the components that constitute it - e.g., Objectives, Filters, etc.">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "INSTRUMENTS.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "INSTRUMENTS.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "SerialNumber"
+				DBLocation = "INSTRUMENTS.SERIAL_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "Type"
+				DBLocation = "INSTRUMENTS.ORIENTATION"
+				DataType = "string"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "LightSource"
+			AppliesTo = "G">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "LIGHT_SOURCES.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "LIGHT_SOURCES.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "SerialNumber"
+				DBLocation = "LIGHT_SOURCES.SERIAL_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "Instrument"
+				DBLocation = "LIGHT_SOURCES.INSTRUMENT"
+				DataType = "reference"
+				RefersTo = "Instrument"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Laser"
+			AppliesTo = "G">
+			<Element
+				Name= "Type"
+				DBLocation = "LASERS.TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Medium"
+				DBLocation = "LASERS.MEDIUM"
+				DataType = "string"/>
+			<Element
+				Name= "Wavelength"
+				DBLocation = "LASERS.WAVELENGTH"
+				DataType = "integer"/>
+			<Element
+				Name= "FrequencyDoubled"
+				DBLocation = "LASERS.FREQ_DBLD"
+				DataType = "boolean"/>
+			<Element
+				Name= "Tunable"
+				DBLocation = "LASERS.TUNABLE"
+				DataType = "boolean"/>
+			<Element
+				Name= "Pulse"
+				DBLocation = "LASERS.PULSE"
+				DataType = "string"/>
+			<Element
+				Name= "Power"
+				DBLocation = "LASERS.POWER"
+				DataType = "float"/>
+			<Element
+				Name= "LightSource"
+				DBLocation = "LASERS.LIGHT_SOURCE"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+			<Element
+				Name= "Pump"
+				DBLocation = "LASERS.PUMP"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Filament"
+			AppliesTo = "G">
+			<Element
+				Name= "Type"
+				DBLocation = "FILAMENTS.TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Power"
+				DBLocation = "FILAMENTS.POWER"
+				DataType = "float"/>
+			<Element
+				Name= "LightSource"
+				DBLocation = "FILAMENTS.LIGHT_SOURCE"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Arc"
+			AppliesTo = "G">
+			<Element
+				Name= "Type"
+				DBLocation = "ARCS.TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Power"
+				DBLocation = "ARCS.POWER"
+				DataType = "float"/>
+			<Element
+				Name= "LightSource"
+				DBLocation = "ARCS.LIGHT_SOURCE"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Detector"
+			AppliesTo = "G">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "DETECTORS.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "DETECTORS.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "SerialNumber"
+				DBLocation = "DETECTORS.SERIAL_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "Type"
+				DBLocation = "DETECTORS.TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Gain"
+				DBLocation = "DETECTORS.GAIN"
+				DataType = "float"/>
+			<Element
+				Name= "Voltage"
+				DBLocation = "DETECTORS.VOLTAGE"
+				DataType = "float"/>
+			<Element
+				Name= "Offset"
+				DBLocation = "DETECTORS.D_OFFSET"
+				DataType = "float"/>
+			<Element
+				Name= "Instrument"
+				DBLocation = "DETECTORS.INSTRUMENT"
+				DataType = "reference"
+				RefersTo = "Instrument"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Objective"
+			AppliesTo = "G">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "OBJECTIVES.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "OBJECTIVES.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "SerialNumber"
+				DBLocation = "OBJECTIVES.SERIAL_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "LensNA"
+				DBLocation = "OBJECTIVES.LENS_NA"
+				DataType = "float"/>
+			<Element
+				Name= "Magnification"
+				DBLocation = "OBJECTIVES.MAGNIFICATION"
+				DataType = "float"/>
+			<Element
+				Name= "Instrument"
+				DBLocation = "OBJECTIVES.INSTRUMENT"
+				DataType = "reference"
+				RefersTo = "Instrument"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Filter"
+			AppliesTo = "G">
+			<Element
+				Name= "Instrument"
+				DBLocation = "FILTER.INSTRUMENT"
+				DataType = "reference"
+				RefersTo = "Instrument"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ExcitationFilter"
+			AppliesTo = "G">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "EXCITATION_FILTERS.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "EXCITATION_FILTERS.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "LotNumber"
+				DBLocation = "EXCITATION_FILTERS.LOT_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "Type"
+				DBLocation = "EXCITATION_FILTERS.TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Filter"
+				DBLocation = "EXCITATION_FILTERS.FILTER"
+				DataType = "reference"
+				RefersTo = "Filter"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Dichroic"
+			AppliesTo = "G">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "DICHROICS.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "DICHROICS.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "LotNumber"
+				DBLocation = "DICHROICS.LOT_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "Filter"
+				DBLocation = "DICHROICS.FILTER"
+				DataType = "reference"
+				RefersTo = "Filter"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "EmissionFilter"
+			AppliesTo = "G">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "EMISSION_FILTERS.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "EMISSION_FILTERS.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "LotNumber"
+				DBLocation = "EMISSION_FILTERS.LOT_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "Type"
+				DBLocation = "EMISSION_FILTERS.TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Filter"
+				DBLocation = "EMISSION_FILTERS.FILTER"
+				DataType = "reference"
+				RefersTo = "Filter"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "FilterSet"
+			AppliesTo = "G">
+			<Element
+				Name= "Manufacturer"
+				DBLocation = "FILTER_SETS.MANUFACTURER"
+				DataType = "string"/>
+			<Element
+				Name= "Model"
+				DBLocation = "FILTER_SETS.MODEL"
+				DataType = "string"/>
+			<Element
+				Name= "LotNumber"
+				DBLocation = "FILTER_SETS.LOT_NUMBER"
+				DataType = "string"/>
+			<Element
+				Name= "Filter"
+				DBLocation = "FILTER_SETS.FILTER"
+				DataType = "reference"
+				RefersTo = "Filter"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "OpticalTransferFunction"
+			AppliesTo = "G">
+			<Element
+				Name= "Objective"
+				DBLocation = "OTFS.OBJECTIVE"
+				DataType = "reference"
+				RefersTo = "Objective"/>
+			<Element
+				Name= "Filter"
+				DBLocation = "OTFS.FILTER"
+				DataType = "reference"
+				RefersTo = "Filter"/>
+			<Element
+				Name= "SizeX"
+				DBLocation = "OTFS.SIZE_X"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeY"
+				DBLocation = "OTFS.SIZE_Y"
+				DataType = "integer"/>
+			<Element
+				Name= "PixelType"
+				DBLocation = "OTFS.PIXEL_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "OTFS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+			<Element
+				Name= "Path"
+				DBLocation = "OTFS.PATH"
+				DataType = "string"/>
+			<Element
+				Name= "OpticalAxisAverage"
+				DBLocation = "OTFS.OPTICAL_AXIS_AVERAGE"
+				DataType = "boolean"/>
+			<Element
+				Name= "Instrument"
+				DBLocation = "OTFS.Instrument"
+				DataType = "reference"
+				RefersTo = "Instrument"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Dimensions"
+			AppliesTo = "I"
+			Description = "Describes the physical size of each dimension of the pixels in an image in microns">
+
+		<!-- These 6 elements are here temporarily until we make the code changes to move them to the Pixels ST. -->
+			<Element
+				Name= "SizeX"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_X"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeY"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_Y"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeZ"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_Z"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeC"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_C"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeT"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_T"
+				DataType = "integer"/>
+			<Element
+				Name= "BitsPerPixel"
+				DBLocation = "IMAGE_DIMENSIONS.BITS_PER_PIXEL"
+				DataType = "integer"/>
+		<!-- The rest of these elements will be left in Dimensions, which will then mean 'Physical Pixel Dimmensions'. -->
+
+			<Element
+				Name= "PixelSizeX"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_X"
+				DataType = "float"
+				Description="in microns"/>
+			<Element
+				Name= "PixelSizeY"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Y"
+				DataType = "float"
+				Description="in microns"/>
+			<Element
+				Name= "PixelSizeZ"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Z"
+				DataType = "float"
+				Description="in microns"/>
+			<Element
+				Name= "PixelSizeC"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_C"
+				DataType = "float"
+				Description="in nanometers"/>
+			<Element
+				Name= "PixelSizeT"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_T"
+				DataType = "float"
+				Description="in seconds"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ImageExperiment"
+			AppliesTo = "I"
+			Description = "This specifies the Experiment an Image belongs to">
+			<Element
+				Name= "Experiment"
+				DBLocation = "IMAGE_INFO.EXPERIMENT"
+				DataType = "reference"
+				RefersTo = "Experiment"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ImageExperimenter"
+			AppliesTo = "I"
+			Description = "This specifies the Experimenter an Image belongs to">
+			<Element
+				Name= "Experimenter"
+				DBLocation = "IMAGE_INFO.EXPERIMENTER"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ImageGroup"
+			AppliesTo = "I"
+			Description = "This specifies the Group that the Image belongs to (these are Groups of Experimenters)">
+			<Element
+				Name= "Group"
+				DBLocation = "IMAGE_INFO.GROUP_ID"
+				DataType = "reference"
+				RefersTo = "Group"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ImageInstrument"
+			AppliesTo = "I"
+			Description = "This specifies the Instrument associated with an Image">
+			<Element
+				Name= "Instrument"
+				DBLocation = "IMAGE_INFO.INSTRUMENT"
+				DataType = "reference"
+				RefersTo = "Instrument"/>
+			<Element
+				Name= "Objective"
+				DBLocation = "IMAGE_INFO.OBJECTIVE"
+				DataType = "reference"
+				RefersTo = "Objective"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ImagingEnvironment"
+			AppliesTo = "I"
+			Description = "Various environmental conditions at the time of image acquisition.">
+			<Element
+				Name= "Temperature"
+				DBLocation = "IMAGING_ENVIRONMENTS.TEMPERATURE"
+				DataType = "float"/>
+			<Element
+				Name= "AirPressure"
+				DBLocation = "IMAGING_ENVIRONMENTS.AIR_PRESSURE"
+				DataType = "float"/>
+			<Element
+				Name= "Humidity"
+				DBLocation = "IMAGING_ENVIRONMENTS.HUMIDITY"
+				DataType = "float"/>
+			<Element
+				Name= "CO2Percent"
+				DBLocation = "IMAGING_ENVIRONMENTS.CO2_PERCENT"
+				DataType = "float"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Thumbnail"
+			AppliesTo = "I"
+			Description = "A thumbnail is used to display a quick small representation of the image to the user.">
+			<Element
+				Name= "MimeType"
+				DBLocation = "THUMBNAILS.MIME_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "THUMBNAILS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+			<Element
+				Name= "Path"
+				DBLocation = "THUMBNAILS.PATH"
+				DataType = "string"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ChannelComponent"
+			AppliesTo = "I"
+			Description = "Each logical channel may consist of one or more ChannelComponents.  The Index refers to the order that this channel occurs in the pixel array. Index=0 is the first channel.">
+			<Element
+				Name= "Index"
+				DBLocation = "CHANNEL_COMPONENTS.NUMBER"
+				DataType = "integer"/>
+			<Element
+				Name= "ColorDomain"
+				DBLocation = "CHANNEL_COMPONENTS.COLOR_DOMAIN"
+				DataType = "string"/>
+			<Element
+				Name= "LogicalChannel"
+				DBLocation = "CHANNEL_COMPONENTS.LOGICAL_CHANNEL"
+				DataType = "reference"
+				RefersTo = "LogicalChannel"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "LogicalChannel"
+			AppliesTo = "I"
+			Description = "Various pieces of information pertaining to each logical channel in an image">
+			<Element
+				Name= "Name"
+				DBLocation = "LOGICAL_CHANNELS.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "SamplesPerPixel"
+				DBLocation = "LOGICAL_CHANNELS.SAMPLES_PER_PIXEL"
+				DataType = "integer"/>
+			<Element
+				Name= "Filter"
+				DBLocation = "LOGICAL_CHANNELS.FILTER"
+				DataType = "reference"
+				RefersTo = "Filter"/>
+			<Element
+				Name= "LightSource"
+				DBLocation = "LOGICAL_CHANNELS.LIGHT_SOURCE"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+			<Element
+				Name= "LightAttenuation"
+				DBLocation = "LOGICAL_CHANNELS.LIGHT_ATTENUATION"
+				DataType = "float"/>
+			<Element
+				Name= "LightWavelength"
+				DBLocation = "LOGICAL_CHANNELS.LIGHT_WAVELENGTH"
+				DataType = "integer"/>
+			<Element
+				Name= "OTF"
+				DBLocation = "LOGICAL_CHANNELS.OTF"
+				DataType = "reference"
+				RefersTo = "OpticalTransferFunction"/>
+			<Element
+				Name= "Detector"
+				DBLocation = "LOGICAL_CHANNELS.DETECTOR"
+				DataType = "reference"
+				RefersTo = "Detector"/>
+			<Element
+				Name= "DetectorOffset"
+				DBLocation = "LOGICAL_CHANNELS.DETECTOR_OFFSET"
+				DataType = "float"/>
+			<Element
+				Name= "DetectorGain"
+				DBLocation = "LOGICAL_CHANNELS.DETECTOR_GAIN"
+				DataType = "float"/>
+			<Element
+				Name= "IlluminationType"
+				DBLocation = "LOGICAL_CHANNELS.ILLUMINATION_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "PinholeSize"
+				DBLocation = "LOGICAL_CHANNELS.PINHOLE_SIZE"
+				DataType = "integer"/>
+			<Element
+				Name= "PhotometricInterpretation"
+				DBLocation = "LOGICAL_CHANNELS.PHOTOMETRIC_INTERPRETATION"
+				DataType = "string"/>
+			<Element
+				Name= "Mode"
+				DBLocation = "LOGICAL_CHANNELS.MODE"
+				DataType = "string"/>
+			<Element
+				Name= "ContrastMethod"
+				DBLocation = "LOGICAL_CHANNELS.CONTRAST_METHOD"
+				DataType = "string"/>
+			<Element
+				Name= "AuxLightSource"
+				DBLocation = "LOGICAL_CHANNELS.AUX_LIGHT_SOURCE"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+			<Element
+				Name= "AuxLightAttenuation"
+				DBLocation = "LOGICAL_CHANNELS.AUX_LIGHT_ATTENUATION"
+				DataType = "float"/>
+			<Element
+				Name= "AuxTechnique"
+				DBLocation = "LOGICAL_CHANNELS.AUX_TECHNIQUE"
+				DataType = "string"/>
+			<Element
+				Name= "AuxLightWavelength"
+				DBLocation = "LOGICAL_CHANNELS.AUX_LIGHT_WAVELENGTH"
+				DataType = "integer"/>
+			<Element
+				Name= "ExcitationWavelength"
+				DBLocation = "LOGICAL_CHANNELS.EX_WAVE"
+				DataType = "integer"/>
+			<Element
+				Name= "EmissionWavelength"
+				DBLocation = "LOGICAL_CHANNELS.EM_WAVE"
+				DataType = "integer"/>
+			<Element
+				Name= "Fluor"
+				DBLocation = "LOGICAL_CHANNELS.FLUOR"
+				DataType = "string"/>
+			<Element
+				Name= "NDFilter"
+				DBLocation = "LOGICAL_CHANNELS.ND_FILTER"
+				DataType = "float"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "DisplayChannel"
+			AppliesTo = "I"
+			Description = "A specification for displaying a logical channel">
+			<Element
+				Name= "ChannelNumber"
+				DBLocation = "DISPLAY_CHANNELS.CHANNEL_NUMBER"
+				DataType = "integer"/>
+			<Element
+				Name= "BlackLevel"
+				DBLocation = "DISPLAY_CHANNELS.BLACK_LEVEL"
+				DataType = "integer"/>
+			<Element
+				Name= "WhiteLevel"
+				DBLocation = "DISPLAY_CHANNELS.WHITE_LEVEL"
+				DataType = "integer"/>
+			<Element
+				Name= "Gamma"
+				DBLocation = "DISPLAY_CHANNELS.GAMMA"
+				DataType = "float"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "DisplayOptions"
+			AppliesTo = "I"
+			Description = "Parameters for viewers to optimally display an image">
+			<Element
+				Name= "Zoom"
+				DBLocation = "DISPLAY_OPTIONS.ZOOM"
+				DataType = "float"/>
+			<Element
+				Name= "RedChannel"
+				DBLocation = "DISPLAY_OPTIONS.RED_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "GreenChannel"
+				DBLocation = "DISPLAY_OPTIONS.GREEN_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "BlueChannel"
+				DBLocation = "DISPLAY_OPTIONS.BLUE_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "GreyChannel"
+				DBLocation = "DISPLAY_OPTIONS.GREY_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "ColorMap"
+				DBLocation = "DISPLAY_OPTIONS.COLOR_MAP"
+				DataType = "string"/>
+			<Element
+				Name= "ZStart"
+				DBLocation = "DISPLAY_OPTIONS.Z_START"
+				DataType = "integer"/>
+			<Element
+				Name= "ZStop"
+				DBLocation = "DISPLAY_OPTIONS.Z_STOP"
+				DataType = "integer"/>
+			<Element
+				Name= "TStart"
+				DBLocation = "DISPLAY_OPTIONS.T_START"
+				DataType = "integer"/>
+			<Element
+				Name= "TStop"
+				DBLocation = "DISPLAY_OPTIONS.T_STOP"
+				DataType = "integer"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "DisplayROI"
+			AppliesTo = "I"
+			Description = "A region of interest within the image for display purposes">
+			<Element
+				Name= "X0"
+				DBLocation = "DISPLAY_ROI.X0"
+				DataType = "integer"/>
+			<Element
+				Name= "Y0"
+				DBLocation = "DISPLAY_ROI.Y0"
+				DataType = "integer"/>
+			<Element
+				Name= "Z0"
+				DBLocation = "DISPLAY_ROI.Z0"
+				DataType = "integer"/>
+			<Element
+				Name= "X1"
+				DBLocation = "DISPLAY_ROI.X1"
+				DataType = "integer"/>
+			<Element
+				Name= "Y1"
+				DBLocation = "DISPLAY_ROI.Y1"
+				DataType = "integer"/>
+			<Element
+				Name= "Z1"
+				DBLocation = "DISPLAY_ROI.Z1"
+				DataType = "integer"/>
+			<Element
+				Name= "T0"
+				DBLocation = "DISPLAY_ROI.T0"
+				DataType = "integer"/>
+			<Element
+				Name= "T1"
+				DBLocation = "DISPLAY_ROI.T1"
+				DataType = "integer"/>
+			<Element
+				Name= "DisplayOptions"
+				DBLocation = "DISPLAY_ROI.DISPLAY_OPTIONS"
+				DataType = "reference"
+				RefersTo = "DisplayOptions"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "StageLabel"
+			AppliesTo = "I"
+			Description = "Stage labels are stage coordinates and a label to recall a microscope stage location">
+			<Element
+				Name= "Name"
+				DBLocation = "STAGE_LABELS.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "X"
+				DBLocation = "STAGE_LABELS.X"
+				DataType = "float"/>
+			<Element
+				Name= "Y"
+				DBLocation = "STAGE_LABELS.Y"
+				DataType = "float"/>
+			<Element
+				Name= "Z"
+				DBLocation = "STAGE_LABELS.Z"
+				DataType = "float"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ImagePlate"
+			AppliesTo = "I">
+			<Element
+				Name= "Plate"
+				DBLocation = "IMAGE_PLATES.PLATE"
+				DataType = "reference"
+				RefersTo = "Plate"/>
+			<Element
+				Name= "Sample"
+				DBLocation = "IMAGE_PLATES.SAMPLE"
+				DataType = "integer"/>
+			<Element
+				Name= "Well"
+				DBLocation = "IMAGE_PLATES.WELL"
+				DataType = "string"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Pixels"
+			AppliesTo = "I"
+			Description = "Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.">
+		<!-- This is commented out for now and moved back into the Image STD until the code catches up with this new setup.
+		
+			<Element
+				Name= "SizeX"
+				DBLocation = "IMAGE_PIXELS.SIZE_X"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeY"
+				DBLocation = "IMAGE_PIXELS.SIZE_Y"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeZ"
+				DBLocation = "IMAGE_PIXELS.SIZE_Z"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeC"
+				DBLocation = "IMAGE_PIXELS.SIZE_C"
+				DataType = "integer"/>
+			<Element
+				Name= "SizeT"
+				DBLocation = "IMAGE_PIXELS.SIZE_T"
+				DataType = "integer"/>
+			<Element
+				Name= "BitsPerPixel"
+				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
+				DataType = "integer"/>
+		 -->
+			<Element
+				Name= "PixelType"
+				DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "FileSHA1"
+				DBLocation = "IMAGE_PIXELS.FILE_SHA1"
+				DataType = "string"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "IMAGE_PIXELS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+			<Element
+				Name= "Path"
+				DBLocation = "IMAGE_PIXELS.PATH"
+				DataType = "string"/>
+		</SemanticType>
+	</STD:SemanticTypeDefinitions>
 </OME>

@@ -2,197 +2,59 @@
 
 <OME
   xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:AML=
     "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
     http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
       http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 <STD:SemanticTypeDefinitions 
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 
   <!-- DISPLAY_SETTINGS semantic types -->
 
-  <SemanticType
-      STD:SemanticTypeName="JosiahRed"
-      Description="Viewer settings">
-    <SemanticElement
-        Name="TheW"
-        FieldID="DISPLAY_SETTINGS.RED_WAVENUM"
-        Description=""/>
-    <SemanticElement
-        Name="BlackLevel"
-        FieldID="DISPLAY_SETTINGS.RED_BLACK_LEVEL"
-        Description=""/>
-    <SemanticElement
-        Name="Scale"
-        FieldID="DISPLAY_SETTINGS.RED_SCALE"
-        Description=""/>
-    <SemanticElement
-        Name="Display"
-        FieldID="DISPLAY_SETTINGS.DISPLAY_RED"
-        Description=""/>
-  </SemanticType>
-
-  <SemanticType
-      STD:SemanticTypeName="JosiahGreen"
-      Description="Viewer settings">
-    <SemanticElement
-        Name="TheW"
-        FieldID="DISPLAY_SETTINGS.GREEN_WAVENUM"
-        Description=""/>
-    <SemanticElement
-        Name="BlackLevel"
-        FieldID="DISPLAY_SETTINGS.GREEN_BLACK_LEVEL"
-        Description=""/>
-    <SemanticElement
-        Name="Scale"
-        FieldID="DISPLAY_SETTINGS.GREEN_SCALE"
-        Description=""/>
-    <SemanticElement
-        Name="Display"
-        FieldID="DISPLAY_SETTINGS.DISPLAY_GREEN"
-        Description=""/>
-  </SemanticType>
-
-  <SemanticType
-      STD:SemanticTypeName="JosiahBlue"
-      Description="Viewer settings">
-    <SemanticElement
-        Name="TheW"
-        FieldID="DISPLAY_SETTINGS.BLUE_WAVENUM"
-        Description=""/>
-    <SemanticElement
-        Name="BlackLevel"
-        FieldID="DISPLAY_SETTINGS.BLUE_BLACK_LEVEL"
-        Description=""/>
-    <SemanticElement
-        Name="Scale"
-        FieldID="DISPLAY_SETTINGS.BLUE_SCALE"
-        Description=""/>
-    <SemanticElement
-        Name="Display"
-        FieldID="DISPLAY_SETTINGS.DISPLAY_BLUE"
-        Description=""/>
-  </SemanticType>
-
-  <SemanticType
-      STD:SemanticTypeName="JosiahGrey"
-      Description="Viewer settings">
-    <SemanticElement
-        Name="TheW"
-        FieldID="DISPLAY_SETTINGS.GREY_WAVENUM"
-        Description=""/>
-    <SemanticElement
-        Name="BlackLevel"
-        FieldID="DISPLAY_SETTINGS.GREY_BLACK_LEVEL"
-        Description=""/>
-    <SemanticElement
-        Name="Scale"
-        FieldID="DISPLAY_SETTINGS.GREY_SCALE"
-        Description=""/>
-  </SemanticType>
-
-  <SemanticType
-      STD:SemanticTypeName="JosiahGeneral"
-      Description="Viewer settings">
-    <SemanticElement
-        Name="TheZ"
-        FieldID="DISPLAY_SETTINGS.THE_Z"
-        Description=""/>
-    <SemanticElement
-        Name="TheT"
-        FieldID="DISPLAY_SETTINGS.THE_T"
-        Description=""/>
-    <SemanticElement
-        Name="IsRGB"
-        FieldID="DISPLAY_SETTINGS.IS_RGB"
-        Description=""/>
-  </SemanticType>
-
-<DataDefinitions>
-
-  <!-- DISPLAY_SETTINGS table -->
-
-  <Record 
-      AppliesTo="I" Name="DISPLAY_SETTINGS"
-      Description="Viewer settings">
-    <Field FieldID="DISPLAY_SETTINGS.RED_WAVENUM"
-        Name="RED_WAVENUM" DataType="integer"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.RED_BLACK_LEVEL"
-        Name="RED_BLACK_LEVEL" DataType="float"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.RED_SCALE"
-        Name="RED_SCALE" DataType="float"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.DISPLAY_RED"
-        Name="DISPLAY_RED" DataType="boolean"
-        Description=""/>
-
-    <Field FieldID="DISPLAY_SETTINGS.GREEN_WAVENUM"
-        Name="GREEN_WAVENUM" DataType="integer"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.GREEN_BLACK_LEVEL"
-        Name="GREEN_BLACK_LEVEL" DataType="float"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.GREEN_SCALE"
-        Name="GREEN_SCALE" DataType="float"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.DISPLAY_GREEN"
-        Name="DISPLAY_GREEN" DataType="boolean"
-        Description=""/>
-
-    <Field FieldID="DISPLAY_SETTINGS.BLUE_WAVENUM"
-        Name="BLUE_WAVENUM" DataType="integer"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.BLUE_BLACK_LEVEL"
-        Name="BLUE_BLACK_LEVEL" DataType="float"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.BLUE_SCALE"
-        Name="BLUE_SCALE" DataType="float"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.DISPLAY_BLUE"
-        Name="DISPLAY_BLUE" DataType="boolean"
-        Description=""/>
-
-    <Field FieldID="DISPLAY_SETTINGS.GREY_WAVENUM"
-        Name="GREY_WAVENUM" DataType="integer"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.GREY_BLACK_LEVEL"
-        Name="GREY_BLACK_LEVEL" DataType="float"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.GREY_SCALE"
-        Name="GREY_SCALE" DataType="float"
-        Description=""/>
-
-    <Field FieldID="DISPLAY_SETTINGS.THE_Z"
-        Name="THE_Z" DataType="integer"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.THE_T"
-        Name="THE_T" DataType="integer"
-        Description=""/>
-    <Field FieldID="DISPLAY_SETTINGS.IS_RGB"
-        Name="IS_RGB" DataType="boolean"
-        Description=""/>
-  </Record>
-
-</DataDefinitions>
+    <SemanticType Name="JosiahRed" AppliesTo="I" Description="Viewer settings">
+      <Element Name="TheW" DBLocation="DISPLAY_SETTINGS.RED_WAVENUM" DataType="integer"/>
+      <Element Name="BlackLevel" DBLocation="DISPLAY_SETTINGS.RED_BLACK_LEVEL" DataType="float"/>
+      <Element Name="Scale" DBLocation="DISPLAY_SETTINGS.RED_SCALE" DataType="float"/>
+      <Element Name="Display" DBLocation="DISPLAY_SETTINGS.DISPLAY_RED" DataType="boolean"/>
+    </SemanticType>
+    <SemanticType Name="JosiahGreen" AppliesTo="I" Description="Viewer settings">
+      <Element Name="TheW" DBLocation="DISPLAY_SETTINGS.GREEN_WAVENUM" DataType="integer"/>
+      <Element Name="BlackLevel" DBLocation="DISPLAY_SETTINGS.GREEN_BLACK_LEVEL" DataType="float"/>
+      <Element Name="Scale" DBLocation="DISPLAY_SETTINGS.GREEN_SCALE" DataType="float"/>
+      <Element Name="Display" DBLocation="DISPLAY_SETTINGS.DISPLAY_GREEN" DataType="boolean"/>
+    </SemanticType>
+    <SemanticType Name="JosiahBlue" AppliesTo="I" Description="Viewer settings">
+      <Element Name="TheW" DBLocation="DISPLAY_SETTINGS.BLUE_WAVENUM" DataType="integer"/>
+      <Element Name="BlackLevel" DBLocation="DISPLAY_SETTINGS.BLUE_BLACK_LEVEL" DataType="float"/>
+      <Element Name="Scale" DBLocation="DISPLAY_SETTINGS.BLUE_SCALE" DataType="float"/>
+      <Element Name="Display" DBLocation="DISPLAY_SETTINGS.DISPLAY_BLUE" DataType="boolean"/>
+    </SemanticType>
+    <SemanticType Name="JosiahGrey" AppliesTo="I" Description="Viewer settings">
+      <Element Name="TheW" DBLocation="DISPLAY_SETTINGS.GREY_WAVENUM" DataType="integer"/>
+      <Element Name="BlackLevel" DBLocation="DISPLAY_SETTINGS.GREY_BLACK_LEVEL" DataType="float"/>
+      <Element Name="Scale" DBLocation="DISPLAY_SETTINGS.GREY_SCALE" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="JosiahGeneral" AppliesTo="I" Description="Viewer settings">
+      <Element Name="TheZ" DBLocation="DISPLAY_SETTINGS.THE_Z" DataType="integer"/>
+      <Element Name="TheT" DBLocation="DISPLAY_SETTINGS.THE_T" DataType="integer"/>
+      <Element Name="IsRGB" DBLocation="DISPLAY_SETTINGS.IS_RGB" DataType="boolean"/>
+    </SemanticType>
 
 </STD:SemanticTypeDefinitions>
 

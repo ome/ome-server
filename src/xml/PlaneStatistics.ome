@@ -1,226 +1,67 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <OME
   xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:AML=
     "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
     http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
       http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 <STD:SemanticTypeDefinitions 
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-<SemanticType
-  STD:SemanticTypeName="PlaneMean"
-  Description="">
-
-    <SemanticElement
-      Name="TheZ"
-      FieldID="PLANE_STATISTICS.THE_Z"/>
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="PLANE_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="PLANE_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Mean"
-      FieldID="PLANE_STATISTICS.MEAN"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="PlaneGeometricMean"
-  Description="">
-
-    <SemanticElement
-      Name="TheZ"
-      FieldID="PLANE_STATISTICS.THE_Z"/>
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="PLANE_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="PLANE_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="GeometricMean"
-      FieldID="PLANE_STATISTICS.GEOMEAN"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="PlaneSigma"
-  Description="">
-
-    <SemanticElement
-      Name="TheZ"
-      FieldID="PLANE_STATISTICS.THE_Z"/>
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="PLANE_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="PLANE_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Sigma"
-      FieldID="PLANE_STATISTICS.SIGMA"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="PlaneMinimum"
-  Description="">
-
-    <SemanticElement
-      Name="TheZ"
-      FieldID="PLANE_STATISTICS.THE_Z"/>
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="PLANE_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="PLANE_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Minimum"
-      FieldID="PLANE_STATISTICS.MINIMUM"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="PlaneMaximum"
-  Description="">
-
-    <SemanticElement
-      Name="TheZ"
-      FieldID="PLANE_STATISTICS.THE_Z"/>
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="PLANE_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="PLANE_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="Maximum"
-      FieldID="PLANE_STATISTICS.MAXIMUM"/>
-
-</SemanticType>
-
-<SemanticType
-  STD:SemanticTypeName="PlaneCentroid"
-  Description="">
-
-    <SemanticElement
-      Name="TheZ"
-      FieldID="PLANE_STATISTICS.THE_Z"/>
-
-    <SemanticElement
-      Name="TheC"
-      FieldID="PLANE_STATISTICS.THE_C"/>
-
-    <SemanticElement
-      Name="TheT"
-      FieldID="PLANE_STATISTICS.THE_T"/>
-
-    <SemanticElement
-      Name="X"
-      FieldID="PLANE_STATISTICS.CENTROID_X"/>
-
-    <SemanticElement
-      Name="Y"
-      FieldID="PLANE_STATISTICS.CENTROID_Y"/>
-
-</SemanticType>
-
-<DataDefinitions>
-
-<Record
-  AppliesTo="I"
-  Name="PLANE_STATISTICS">
-
-    <Field
-      FieldID="PLANE_STATISTICS.THE_Z"
-      Name="THE_Z"
-      DataType="integer"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.THE_C"
-      Name="THE_C"
-      DataType="integer"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.THE_T"
-      Name="THE_T"
-      DataType="integer"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.MINIMUM"
-      Name="MINIMUM"
-      DataType="integer"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.MAXIMUM"
-      Name="MAXIMUM"
-      DataType="integer"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.MEAN"
-      Name="MEAN"
-      DataType="float"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.GEOMEAN"
-      Name="GEOMEAN"
-      DataType="float"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.SIGMA"
-      Name="SIGMA"
-      DataType="float"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.CENTROID_X"
-      Name="CENTROID_X"
-      DataType="float"/>
-
-    <Field
-      FieldID="PLANE_STATISTICS.CENTROID_Y"
-      Name="CENTROID_Y"
-      DataType="float"/>
-
-</Record>
-
-</DataDefinitions>
-
+    <SemanticType Name="PlaneMean" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Mean" DBLocation="PLANE_STATISTICS.MEAN" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneGeometricMean" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="GeometricMean" DBLocation="PLANE_STATISTICS.GEOMEAN" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneSigma" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sigma" DBLocation="PLANE_STATISTICS.SIGMA" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneMinimum" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Minimum" DBLocation="PLANE_STATISTICS.MINIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="PlaneMaximum" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Maximum" DBLocation="PLANE_STATISTICS.MAXIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="PlaneCentroid" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="X" DBLocation="PLANE_STATISTICS.CENTROID_X" DataType="float"/>
+      <Element Name="Y" DBLocation="PLANE_STATISTICS.CENTROID_Y" DataType="float"/>
+    </SemanticType>
 </STD:SemanticTypeDefinitions>
 
 <AML:AnalysisModuleLibrary
