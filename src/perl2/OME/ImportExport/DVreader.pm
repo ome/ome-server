@@ -256,7 +256,7 @@ sub formatImage {
     $row_size   = $cols * $pixsz;               # size of an X vector (row)
     $plane_size = $rows * $row_size;            # size of 1 XY plane
 
-    print "Times: $times, waves:$waves, zs: $zs, rows: $rows, cols: $cols, sections: $sections\n";
+    print STDERR "Times: $times, waves:$waves, zs: $zs, rows: $rows, cols: $cols, sections: $sections\n";
     # Start at begining of image data
     $start_offset = 1024 + $self->{next};
 

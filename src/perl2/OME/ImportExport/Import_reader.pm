@@ -184,7 +184,7 @@ sub check_type {
 	}
     }
 
-    print "Image is $type format\n";
+    print STDERR "Image is $type format\n";
     
     $self->offset($offset);
     $self->image_type($type);
