@@ -97,6 +97,16 @@ our @__nonGlobalCaches;
 __PACKAGE__->Caching(1);
 __PACKAGE__->__classDefined(0);
 
+our $SHOW_SQL = 0;
+our $EPSILON = 1e-6;
+
+my %realTypes = (
+                 'float'            => 1,
+                 'double'           => 1,
+                 'real'             => 1,
+                 'double precision' => 1,
+                );
+
 
 =head1 METHODS - Caching
 
@@ -169,6 +179,13 @@ sub clearAllCaches {
 	$_->clearCache() foreach @__nonGlobalCaches;
 	
 }
+
+sub isRealType {
+    my ($class,$type) = @_;
+    return 0 unless defined $type;
+    return $realTypes{$type} || 0;
+}
+
 
 sub newClass {
     my $proto = shift;
@@ -556,7 +573,7 @@ sub __addForeignJoin {
             my $target_table_name = $target_column->[0];
             my $target_column_name = $target_column->[1];
             my $target_pkeys = $fkey_class->__primaryKeys();
-            die "Cannot create foreign join -- target table has no primary key"
+            confess "Cannot create foreign join -- $fkey_class has no primary key"
               unless exists $target_pkeys->{$target_table_name};
             my $target_pkey = $target_pkeys->{$target_table_name};
             my $number = $$foreign_key_number++;
@@ -730,9 +747,16 @@ sub __makeSelectSQL {
                 $operation = defined $value? "=": "is";
             }
 
+            # If the column is a float, = won't work.
+            my $sql_type = $columns->{$column_alias}->[3]->{SQLType}
+              if exists $columns->{$column_alias};
+
             if ($location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
+            } elsif ($class->isRealType($sql_type) && $operation eq '=') {
+                push @join_clauses, "abs($location - $question) < ?";
+                push @values, $EPSILON;
             } else {
                 push @join_clauses, "$location $operation $question";
             }
@@ -772,7 +796,8 @@ sub __makeSelectSQL {
     $sql .= " order by ". join(", ",@order_by)
       if scalar(@order_by) > 0;
 
-    #print STDERR "\n$sql\n";
+    print STDERR "\n$sql\n" if $SHOW_SQL;
+    print STDERR join(',',@values),"\n" if $SHOW_SQL;
 
     return ($sql,defined $first_key,\@values);
 }
@@ -846,6 +871,7 @@ sub __makeInsertSQLs {
         push @sqls, [$sql,$values];
     }
 
+    print STDERR "\n",join("\n",map {$_->[0]} @sqls),"\n" if $SHOW_SQL;
     return (\@sqls, $key_val);
 }
 
@@ -1062,6 +1088,7 @@ sub __newByID {
       unless $id_available;
 
     #print "\n$sql\n";
+    #print join(',',@$columns_wanted),"\n";
 
     my $sth = $dbh->prepare($sql);
     eval {
