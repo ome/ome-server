@@ -471,17 +471,17 @@ sub create_experimenter {
             	'" does not exist. Do you want to create it ?', 'y');
     }
     
-    if (not check_permissions ($OME_EXPER->{DataDirectory},$APACHE_USER,'rx')) {
+    if (not check_permissions ({user => $APACHE_USER, r => 1, w => 1}, $OME_EXPER->{DataDirectory})) {
     	print <<PRINT;
 The directory $OME_EXPER->{DataDirectory} cannot be accessed by the Apache user "$APACHE_USER".
 This directory and its contents should either be owned by the OME group "$OME_GROUP" or,
 This directory and its contents need to be world-readable.
 The recommended course of action is to change group ownership to "$OME_GROUP".
 PRINT
-        if (y_or_n ("OK to change group ownership of $OME_EXPER->{DataDirectory} to \"$OME_GROUP\"", 'n')) {
-        	fix_ownership ({group => $OME_GROUP},[$OME_EXPER->{DataDirectory}]);
+		if (y_or_n ("OK to change group ownership of $OME_EXPER->{DataDirectory} to \"$OME_GROUP\"", 'n')) {
+        	fix_ownership ({group => $OME_GROUP, recurse => 0}, $OME_EXPER->{DataDirectory});
         	print <<PRINT;
-Directory ownership successfullt fixed.
+Directory ownership successfully fixed.
 You will still need to make sure that the files in this directory are either owned by the OME group "$OME_GROUP" or,
 That the files are group-readable.
 PRINT
@@ -489,7 +489,7 @@ PRINT
     }
 
     my $password;
-    ($password, $OME_EXPER->{Password}) = get_password ("Password: ", 6);
+    ($password, $OME_EXPER->{Password}) = get_password ("Enter Password to configure OME user ".$OME_EXPER->{OMEName}.": ", 6);
 
     print "\n";  # Spacing
 
