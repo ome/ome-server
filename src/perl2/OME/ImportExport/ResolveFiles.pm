@@ -58,6 +58,7 @@ document.
 use strict;
 use XML::LibXML;
 use OME::Tasks::LSIDManager;
+use OME::Image::Server;
 use Log::Agent;
 
 # package constants
@@ -110,153 +111,60 @@ sub new {
 #
 sub importFile() {
 	# parameters
-	my $self       = shift;
-	my $inputFile  = shift;
+	my ($self, $omeisFileID, $repository) = @_;
 
 	# resources
 	my $session       = $self->{session};
 	my $factory       = $session->Factory();
-	my $debug         = $self->{debug};
-	my $configuration = $session->Configuration();
 	my $parser        = $self->{_parser};
 	my $LSIDresolver  = OME::Tasks::LSIDManager->new( session => $session );
 
 	# storage
 	my @cdataFiles;
 	my %fileInfo;
-	my $tmpDir;
 
-	###########################################################################
-	#
-	# Extract embedded files, decrease the size of the xml document
-	#
-	###########################################################################
-		# call extractBinData
-		#
-		my $executionPath   = $configuration->bin_dir() . '/extractBinData';
-		$tmpDir             = $session->getScratchDir('ResolveFiles');
-		my ($pixelDir, $repository);
-		# eval because if this is running in bootstrap, there is no Repository
-		# attributes or even a Repository ST
-		eval {
-			my @repositories    = $factory->findAttributes( "Repository", IsLocal => 't' );
-			$repository         = $repositories[0];
-			$pixelDir           = $session->getScratchDirRepository(repository => $repository, progName => 'ResolveFiles');
-		};
-		$pixelDir = $tmpDir unless defined $pixelDir;
+	my $xmlString = OME::Image::Server->importOMEfile( $omeisFileID );
+	my $doc  = $parser->parse_string( $xmlString );
+	my $root = $doc->getDocumentElement();
 		
-		die "Could not get a temporary directory for pixels." unless $pixelDir;
-		die "Could not get a temporary directory for files." unless $tmpDir;
-		
-		my $fh;
-		open( $fh, "$executionPath $pixelDir $tmpDir $inputFile |" )
-			or die "While importing $inputFile, Could not open '$executionPath $pixelDir $tmpDir $inputFile' for piping in: $!\n";
-		
-		# parse extractBinData output
-		my $doc  = $parser->parse_fh( $fh );
-		close( $fh );
-		my $root = $doc->getDocumentElement();
-		
-		# 2do
-		# resolve external links
-
-		#######################################################################
-		# Process the Pixels:
-		# rewrite <Pixels> to ST format
-		#
-		# if there is no $repository, then there can be no image importing.
-		# the only valid case that has no $repository is during bootstrap
-		if( $repository ) {
-			foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
-				my @caXML_list = $imageXML->getChildrenByTagNameNS( $OMENS, "CustomAttributes" );
-				my $caXML = $caXML_list[0] if scalar @caXML_list > 0;
-				if( ! $caXML ) {
-					$caXML = $doc->createElementNS( $OMENS, "CustomAttributes" )	
-						or die "Could not make <CustomAttributes>!";
-					$imageXML->appendChild( $caXML );
-				}
-
-				foreach my $pixelsXML( $imageXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
-					my $externalXML = @{ $pixelsXML->getElementsByTagNameNS( $BinNS, "External" ) }[0];
-					my $href = $externalXML->getAttribute( "href" );
-					my $sha1 = getSha1( $href );
-					my $tmpFile = $session->getTemporaryFilenameRepository( repository => $repository );
-					rename ($href,$repository->Path().$tmpFile)
-						or die "Could not move Pixels file ($href) to repository file ($tmpFile)\n$!\n";
-	
-					$href = $tmpFile;
-					$pixelsXML->setAttribute( "Path", $href );
-					$pixelsXML->setAttribute( "FileSHA1", $sha1 );
-	
-					$pixelsXML->setAttribute( "SizeX", $imageXML->getAttribute( "SizeX" ) )
-						unless $pixelsXML->getAttribute( "SizeX" );
-					$pixelsXML->setAttribute( "SizeY", $imageXML->getAttribute( "SizeY" ) )
-						unless $pixelsXML->getAttribute( "SizeY" );
-					$pixelsXML->setAttribute( "SizeZ", $imageXML->getAttribute( "SizeZ" ) )
-						unless $pixelsXML->getAttribute( "SizeZ" );
-					$pixelsXML->setAttribute( "SizeC", $imageXML->getAttribute( "NumChannels" ) )
-						unless $pixelsXML->getAttribute( "SizeC" );
-					$pixelsXML->setAttribute( "SizeT", $imageXML->getAttribute( "NumTimes" ) )
-						unless $pixelsXML->getAttribute( "SizeT" );
-	
-					die "When importing <Pixels>, Pixel type '".$pixelsXML->getAttribute("PixelType")."' was not recognized!\n"
-						unless exists $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
-					my $pixelSize = $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
-					$pixelsXML->setAttribute( "BitsPerPixel", $pixelSize );
-					
-					$pixelsXML->setAttribute( "Repository", $LSIDresolver->getLSID( $repository ) );
-	
-					$pixelsXML->removeAttribute( "DimensionOrder" );
-					$pixelsXML->removeAttribute( "BigEndian" );
-	
-					$pixelsXML->removeChild( $externalXML );
-					
-					#strip out comments inside of <Pixels>
-					foreach( $pixelsXML->childNodes() ) {
-						$pixelsXML->removeChild( $_ );
-					}
-					
-					$imageXML->removeChild( $pixelsXML );
-					$caXML->appendChild( $pixelsXML );
-					
-				}
-			}
+	foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
+		my @caXML_list = $imageXML->getChildrenByTagNameNS( $OMENS, "CustomAttributes" );
+		my $caXML = $caXML_list[0] if scalar @caXML_list > 0;
+		if( ! $caXML ) {
+			$caXML = $doc->createElementNS( $OMENS, "CustomAttributes" )	
+				or die "Could not make <CustomAttributes>!";
+			$imageXML->appendChild( $caXML );
 		}
-		#
-		# END 'Process the Pixels'
-		#
-		#######################################################################
-		
-	# cleanup
-	if($pixelDir ne $tmpDir) {
-		die "Couldn't remove directory $_: $!\n" unless rmdir ($pixelDir);
+
+		foreach my $pixelsXML( $imageXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
+
+			$pixelsXML->setAttribute( "SizeX", $imageXML->getAttribute( "SizeX" ) )
+				unless $pixelsXML->getAttribute( "SizeX" );
+			$pixelsXML->setAttribute( "SizeY", $imageXML->getAttribute( "SizeY" ) )
+				unless $pixelsXML->getAttribute( "SizeY" );
+			$pixelsXML->setAttribute( "SizeZ", $imageXML->getAttribute( "SizeZ" ) )
+				unless $pixelsXML->getAttribute( "SizeZ" );
+			$pixelsXML->setAttribute( "SizeC", $imageXML->getAttribute( "NumChannels" ) )
+				unless $pixelsXML->getAttribute( "SizeC" );
+			$pixelsXML->setAttribute( "SizeT", $imageXML->getAttribute( "NumTimes" ) )
+				unless $pixelsXML->getAttribute( "SizeT" );
+
+			die "When importing <Pixels>, Pixel type '".$pixelsXML->getAttribute("PixelType")."' was not recognized!\n"
+				unless exists $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
+			my $pixelSize = $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
+			$pixelsXML->setAttribute( "BitsPerPixel", $pixelSize );
+			
+			$pixelsXML->setAttribute( "Repository", $LSIDresolver->getLSID( $repository ) );
+
+			$pixelsXML->removeAttribute( "DimensionOrder" );
+			$pixelsXML->removeAttribute( "BigEndian" );
+
+			$imageXML->removeChild( $pixelsXML );
+			$caXML->appendChild( $pixelsXML );
+		}
 	}
-	die "Couldn't remove directory $_: $!\n" unless rmdir ($tmpDir);
 
 	return $doc;
-}
-#
-# END sub resolveFiles
-#
-###############################################################################
-
-
-# this function nabbed from OME::ImportExport::Importer
-# i don't know if that package is stable and i don't want to introduce a new
-# dependency to an unstable package.
-sub getSha1 {
-    my $file = shift;
-    my $cmd = 'openssl sha1 '. $file .' |';
-    my $sh;
-    my $sha1;
-
-    open (STDOUT_PIPE,$cmd);
-    chomp ($sh = <STDOUT_PIPE>);
-    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
-    $sha1 = $1;
-    close (STDOUT_PIPE);
-
-    return $sha1;
 }
 
 
