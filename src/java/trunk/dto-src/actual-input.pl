@@ -48,5 +48,6 @@
                        FormalInput     => ['FormalInput','formal_input'],
                        InputMEX        => ['ModuleExecution',
                                            'input_module_execution'],
+                       FormalOutput     => ['FormalOutput','formal_output']
                       ],
                      );

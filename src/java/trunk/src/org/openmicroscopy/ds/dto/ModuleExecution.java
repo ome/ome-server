@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Wed Jan 12 16:51:20 2005
+ * Created by hochheiserha via omejava on Mon Feb 21 16:02:08 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -106,5 +106,25 @@ public interface ModuleExecution
     public List getInputs();
     /** Criteria field name: <code>#inputs</code> or <code>inputs</code> */
     public int countInputs();
+
+    /** Criteria field name: <code>predecessors</code> */
+    public List getPredecessors();
+    /** Criteria field name: <code>#predecessors</code> or <code>predecessors</code> */
+    public int countPredecessors();
+
+    /** Criteria field name: <code>successors</code> */
+    public List getSuccessors();
+    /** Criteria field name: <code>#successors</code> or <code>successors</code> */
+    public int countSuccessors();
+
+    /** Criteria field name: <code>chain_executions</code> */
+    public List getChainExecutions();
+    /** Criteria field name: <code>#chain_executions</code> or <code>chain_executions</code> */
+    public int countChainExecutions();
+
+    /** Criteria field name: <code>actual_outputs</code> */
+    public List getActualOutputs();
+    /** Criteria field name: <code>#actual_outputs</code> or <code>actual_outputs</code> */
+    public int countActualOutputs();
 
 }
