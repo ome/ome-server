@@ -39,7 +39,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.PNode;
 import org.openmicroscopy.vis.ome.CNode; // was NodeInfo
 import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Connection;
@@ -121,7 +121,7 @@ public class PChain {
 	 * @param x			horizontal for upper-left corner
 	 * @param y			vertical for upper-left corner
 	 */
-	public PChain(Connection connection,CChain chain, PLayer layer,
+	public PChain(Connection connection,CChain chain,PNode layer,
 			PLinkLayer linkLayer,float x,float y) {
 		
 		
@@ -138,6 +138,7 @@ public class PChain {
 		drawLinks(linkLayer);	
 		//clear it out so it can be garbage-collected
 		nodeLayers = null;
+		
 	}
 	
 	/**
@@ -148,7 +149,7 @@ public class PChain {
 	 * @param connection
 	 * @param layer
 	 */
-	private void drawNodes(Connection connection,PLayer layer) {
+	private void drawNodes(Connection connection,PNode layer) {
 		
 		int layers = layering.getLayerCount(); 
 		nodeLayers = new NodeLayers(layers);
@@ -170,7 +171,7 @@ public class PChain {
 	 * @param layerNumber
 	 * @return a list containing the nodes in the layer
 	 */
-	private Vector drawLayer(Connection connection,PLayer layer,
+	private Vector drawLayer(Connection connection,PNode layer,
 						int layerNumber) {
 		
 		Vector v = new Vector();
@@ -202,7 +203,7 @@ public class PChain {
 	 * @param layer
 	 * @return
 	 */
-	private Object drawNode(Connection connection,CNode node,PLayer layer) {
+	private Object drawNode(Connection connection,CNode node,PNode layer) {
 		
 		PModule mNode = null;
 		if (node instanceof CLayoutNode)  {
