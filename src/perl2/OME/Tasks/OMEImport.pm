@@ -78,7 +78,8 @@ sub importFile {
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
 	my $CA_doc = $stylesheet->transform($doc);
 
-    return $self->processDOM($CA_doc->getDocumentElement(),%flags);
+#    return $self->processDOM($CA_doc->getDocumentElement(),%flags);
+	return $self->processDOM($doc->getDocumentElement(),%flags);
 }
 
 # importXML commented out by josiah 6/10/03
