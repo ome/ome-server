@@ -54,6 +54,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.*;
 import org.openmicroscopy.*;
+import org.openmicroscopy.remote.*;
 
 /** Handles workstation select boxes -- creates them with proper fields,
  * populates them from remote data, and gets user selections. Workstation
@@ -80,7 +81,7 @@ public class ClientSelect extends JDialog implements ActionListener {
   private GridBagLayout gridBag = new GridBagLayout();
   private GridBagConstraints c = new GridBagConstraints();
   private String myself;
-  private String group;
+  private String mygroup;
   ClientContents ourClient;
   DataAccess  Accessor;
   HashMap selectDT;
@@ -114,7 +115,7 @@ public class ClientSelect extends JDialog implements ActionListener {
     selectType = selectEntity;
     Accessor = ourClient.ourLogin.getAccessor();
     myself = ourClient.ourLogin.getExperimenter();
-    group = ourClient.ourLogin.getGroup();
+    mygroup = ourClient.ourLogin.getGroup();
     setupDTMap();
     setupFNMap();
     try {
@@ -132,7 +133,6 @@ public class ClientSelect extends JDialog implements ActionListener {
 
     Selection = "";
     selectBox = new JDialog((Frame)(null), selectEntity+" Selector", true);
-    //selectBox = new JDialog((JFrame)null, selectEntity+" Selector", true);
 
     //this.setBorder(BorderFactory.createLineBorder(Color.black));
     //this.setPreferredSize(new Dimension(400, 300));
@@ -198,16 +198,8 @@ public class ClientSelect extends JDialog implements ActionListener {
     gridBag.setConstraints(label, c);
     contentPane.add(label);
 
-    //String experimenters [] = Finder.FindSet("Experimenters");
-    String experimenters [] = new String[3];
-    experimenters[0] = myself;
-    experimenters[1] = "you";
-    experimenters[2] = "her";
-
+    Vector experimenters = getExperimenters();
     jComboe = new JComboBox(experimenters);
-    //Vector exps = new Vector(getEntityList("Experimenters")[0]);
-    //System.err.println("  experimenter vector: "+ exps.firstElement().toString());
-    //jComboe = new JComboBox(exps);
     jComboe.setEditable(true);
     c.gridx = 0;
     c.gridy = 3;
@@ -215,13 +207,14 @@ public class ClientSelect extends JDialog implements ActionListener {
     c.insets = new Insets(5,5,0,0);  //top padding
     gridBag.setConstraints(jComboe, c);
     jComboe.insertItemAt("all",0);
-    arrIndex = findInArray(experimenters, myself);
+    arrIndex = experimenters.indexOf(myself);
+    System.err.println("Index of "+myself+" is: "+arrIndex);
     //arrIndex = exps.indexOf(myself);
     if (arrIndex++ == -1) {
 	arrIndex = 0;
     }
     arrIndex = 0;
-    jComboe.setSelectedIndex(arrIndex);
+    //jComboe.setSelectedIndex(arrIndex);
 
     contentPane.add(jComboe);
 
@@ -233,12 +226,8 @@ public class ClientSelect extends JDialog implements ActionListener {
     gridBag.setConstraints(label, c);
     contentPane.add(label);
 
-    //String groups [] = Finder.FindSet("Groups");
-    String groups [] = new String[3];
-    groups[0] = group;
-    groups[1] = "us";
-    groups[2] = "them";
 
+    Vector groups = getGroups();
     jCombog = new JComboBox(groups);
     jCombog.setEditable(true);
     c.gridx = 0;
@@ -248,11 +237,11 @@ public class ClientSelect extends JDialog implements ActionListener {
     c.insets = new Insets(5,5,40,0);  //bottom padding
     gridBag.setConstraints(jCombog, c);
     jCombog.insertItemAt("all",0);
-    arrIndex = findInArray(groups, group);
+    arrIndex = experimenters.indexOf(mygroup);
     if (arrIndex == -1) {
-	jComboe.setSelectedIndex(0);
+	jCombog.setSelectedIndex(0);
     } else {
-	jComboe.setSelectedIndex(arrIndex+1);
+	jCombog.setSelectedIndex(arrIndex);
     }
     contentPane.add(jCombog);
 
@@ -411,6 +400,56 @@ public class ClientSelect extends JDialog implements ActionListener {
 	selectFN.put("Datasets", "name");
 	selectFN.put("Images"  , "name");
 	selectFN.put("Analyses", "name");
+    }
+
+
+    private Vector getExperimenters() throws Exception {
+	Vector names = 	getAttributePair("Experimenter", "FirstName", "LastName");
+	return names;
+    }
+
+    private Vector getGroups() {
+	return(getAttributes("Group", "Name" ));
+    }
+
+    private Vector getAttributes(String attrType, String attrElement) {
+	List attrList;
+	Vector names = new Vector();
+	int tries = 3;
+
+	while (tries-- > 0) {
+	    try {
+		attrList = Accessor.bindings.getFactory().findAttributes(attrType, (java.util.Map)null);
+	    } catch (RemoteException re) {
+		continue;
+	    }
+	    Iterator i = attrList.iterator();
+	    while (i.hasNext()) {
+		names.add(((RemoteAttribute)i.next()).getStringElement(attrElement));
+	    }
+	    break;
+	}
+	if (tries == 0) {
+	    System.err.println("Failed to find "+attrType+" in remote server");
+	}
+
+	return(names);
+    }
+
+    private Vector getAttributePair(String attrType, String attrElement1,
+				     String attrElement2) {
+	List attrList;
+	Vector names = new Vector();
+	attrList = Accessor.bindings.getFactory().findAttributes(attrType, (java.util.Map)null);
+	Iterator i = attrList.iterator();
+	while (i.hasNext()) {
+	    RemoteAttribute ra = (RemoteAttribute)i.next();
+	    String el1 = ra.getStringElement(attrElement1);
+	    String el2 = ra.getStringElement(attrElement2);
+	    String pair = new String(el1+" "+el2);
+	    names.add(pair);
+	}
+	return(names);	
     }
 
 
