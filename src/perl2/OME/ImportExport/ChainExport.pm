@@ -83,7 +83,7 @@ sub exportFile {
 	my $doc = $self->doc();
 	logdie ref ($self)."->exportFile:  Need a filename parameter to export a file."
 		unless defined $filename;
-	$doc->setCompression(7);
+#	$doc->setCompression(7);
 	logdie ref ($self)."->exportFile:  File could not be written."
 		unless $doc->toFile($filename, 1); 
 }
