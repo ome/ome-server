@@ -38,7 +38,7 @@
 		   ModuleName="PixelsSlice -> Pixels"
 		   Category="Tests"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="PixelsSlice2Pixels"
+		   ProgramID="ome_pixelsTest"
 		   ID="urn:lsid:openmicroscopy.org:Module:3221">
 		  <Description>Creates new pixels for each pixel slice.</Description>
 		  <Declaration>
@@ -55,7 +55,7 @@
 		  	xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 			  <Input>
-			  	<PixelsSlice FormalInput="Pixels" ID="In_Pixels"/>
+			  	<PixelsSlice FormalInput="Slices" ID="In_Pixels"/>
 			  </Input>
 			</FunctionInputs>
 			<FunctionOutputs>

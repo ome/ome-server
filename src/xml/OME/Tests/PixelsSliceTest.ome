@@ -41,8 +41,8 @@
 		<Node NodeID = "CreateChannelSlices"  ProgramName = "Create channel slices"/>
 		<Node NodeID = "CreateStackSlices"    ProgramName = "Create stack slices"/>
 		<Node NodeID = "CreatePlaneSlices"    ProgramName = "Create plane slices"/>
+
 		<Node NodeID = "PixelsSlice->Pixels"  ProgramName = "PixelsSlice -> Pixels"/>
-		
 		<Node NodeID = "PixelsChannelSlice->PixelsSlice" ProgramName = "PixelsChannelSlice -> PixelsSlice"/>
 		<Node NodeID = "PixelsStackSlice->PixelsSlice"   ProgramName = "PixelsStackSlice -> PixelsSlice"/>
 		<Node NodeID = "PixelsPlaneSlice->PixelsSlice"   ProgramName = "PixelsPlaneSlice -> PixelsSlice"/>
@@ -50,15 +50,13 @@
     <Links>
 		<Link FromNodeID="Files"  FromOutputName="Files"  ToNodeID="Import" ToInputName="Files"/>
 		<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="CreatePixelsSlices" ToInputName="Pixels"/>
-		<!-- <Link FromNodeID="CreatePixelsSlices" FromOutputName="Slices" ToNodeID="CreateChannelSlices" ToInputName="Slices"/>
+		<Link FromNodeID="CreatePixelsSlices" FromOutputName="Slices" ToNodeID="CreateChannelSlices" ToInputName="Slices"/>
 		<Link FromNodeID="CreateChannelSlices" FromOutputName="Channel slices" ToNodeID="PixelsChannelSlice->PixelsSlice" ToInputName="Channel slices"/>
 		<Link FromNodeID="PixelsChannelSlice->PixelsSlice" FromOutputName="Slices" ToNodeID="CreateStackSlices" ToInputName="Slices"/>
 		<Link FromNodeID="CreateStackSlices" FromOutputName="Stack slices" ToNodeID="PixelsStackSlice->PixelsSlice" ToInputName="Stack slices"/>
 		<Link FromNodeID="PixelsStackSlice->PixelsSlice" FromOutputName="Slices" ToNodeID="CreatePlaneSlices" ToInputName="Slices"/>
 		<Link FromNodeID="CreatePlaneSlices" FromOutputName="Plane slices" ToNodeID="PixelsPlaneSlice->PixelsSlice" ToInputName="Plane slices"/>
 		<Link FromNodeID="PixelsPlaneSlice->PixelsSlice" FromOutputName="Slices" ToNodeID="PixelsSlice->Pixels" ToInputName="Slices"/>
-		-->
-		<Link FromNodeID="CreatePixelsSlices" FromOutputName="Slices" ToNodeID="PixelsSlice->Pixels" ToInputName="Slices"/>
     </Links>
   </AnalysisChain>
 </AnalysisChains>
