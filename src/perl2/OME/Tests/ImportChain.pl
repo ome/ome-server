@@ -20,7 +20,7 @@
 
 
 use strict;
-use OME::Tasks::ChainImport;
+use OME::ImportExport::ChainImport;
 use OME::SessionManager;
 
 print "\nOME Test Case - Chain Import\n";
@@ -34,7 +34,7 @@ if (scalar(@ARGV) < 1) {
 my $manager = OME::SessionManager->new();
 my $session = $manager->TTYlogin();
 
-my $chainImporter = OME::Tasks::ChainImport->
+my $chainImporter = OME::ImportExport::ChainImport->
   new(session => $session);
 
 my $totalChains = 0;
