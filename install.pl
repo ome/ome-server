@@ -40,7 +40,10 @@ use English;
 use Text::Wrap;
 
 # OME Modules
-require OME::Install::PreInstallTask;
+#
+# This requires Storable in an eval , so its always safe unless we call
+# store_to() or restore_from()
+use OME::Install::Environment;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -48,6 +51,7 @@ require OME::Install::PreInstallTask;
 
 # Main task queue
 my @tasks = qw(
+    OME::Install::PreInstallTask
     OME::Install::LibraryTask
     OME::Install::CoreSystemTask
     OME::Install::PerlModuleTask
@@ -63,15 +67,6 @@ my @tasks_done = ();
 #*********
 
 sub run_tasks {
-	print wrap("", "", "\nThe OME installation system requires the Storable and Term::ReadKey modules (both included in Perl versions 5.8.0 and higher). The system will now check for the existance of those packages and install them if needed. \n\nWould you like to continue ? [y/n]: ");
-	my $y_or_n = <STDIN>;
-	chomp $y_or_n;
-	exit (0) unless (lc($y_or_n) eq 'y');
-
-	print "\n";  # Spacing
-
-    # PreInstall
-    OME::Install::PreInstallTask::execute();
 
     # Run each task and fill our done stack
     while (my $task = shift @tasks) {
@@ -88,7 +83,6 @@ sub run_tasks {
 
 sub restore_env {
     my $env_file = shift;
-	require OME::Install::Environment;
 
     ($env_file and -e $env_file) or usage ("Unable to locate Environment file \"$env_file\".");
 
@@ -120,6 +114,7 @@ Options:
                     environment
   -i, --install     Default execution
   -a, --check-all   Run all our sanity checks
+  -y, --yes         Answer 'y' to all the questions (implies -u)
   -h, --help        This message
 
 Report bugs to <ome-devel\@lists.openmicroscopy.org.uk>.
@@ -141,7 +136,7 @@ my $checks_to_run = 0;
 my $env_file = ('/OME/conf/environment.store');
 
 # Command line options
-my ($update, $perl_check, $lib_check, $check_all, $usage, $install);
+my ($update, $perl_check, $lib_check, $check_all, $usage, $install, $answer_y);
 
 # Parse our command line options
 GetOptions ("u|update" => \$update,         # update
@@ -150,6 +145,7 @@ GetOptions ("u|update" => \$update,         # update
 			"l|lib-check" => \$lib_check,   # Just run the library task
 			"a|check-all" => \$check_all,   # Set $perl_check, $lib_check
 			"i|install" => \$install,       # Default (unused at the moment)
+			"y|yes" => \$answer_y,          # Always answer 'y', set $update
 			"h|help" => \$usage,            # Display help
 		);
 
@@ -159,6 +155,9 @@ usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
 usage () if $usage;
 
 if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
+
+# Answer Y flag implies update flag
+$update = 1 if $answer_y;
 
 # These need a restored environment
 if ($perl_check or $update) {
@@ -170,9 +169,12 @@ if ($update) {
     $environment->set_flag ("UPDATE");
 }
 
-if ($lib_check) {
-	require OME::Install::Environment;
+if ($answer_y) {
+    my $environment = initialize OME::Install::Environment;
+    $environment->set_flag ("ANSWER_Y");
+}
 
+if ($lib_check) {
     # Initialize our environment and set the LIB_CHECK flag
 	my $environment = initialize OME::Install::Environment;
     $environment->set_flag ("LIB_CHECK");
@@ -208,11 +210,15 @@ if ($perl_check) {
 run_tasks ();
 
 # Store environment
-eval "require Storable; require OME::Install::Environment";
+eval "require Storable;";
 
 unless ($@) {
 	my $environment = initialize OME::Install::Environment;
 	my $conf_dir = $environment->base_dir () . "/conf";
+	# Don't save these flags:
+	$environment->unset_flag ('LIB_CHECK');
+	$environment->unset_flag ('PERL_CHECK');
+	$environment->unset_flag ('ANSWER_Y');
 	$environment->store_to ("$conf_dir/environment.store");
 } else {
 	carp "Unable to load the Storable module, continuing without a stored OME::Install::Environment!";

@@ -36,7 +36,6 @@ package OME::Install::Environment;
 use warnings;
 use strict;
 use Carp;
-use Storable;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -61,8 +60,11 @@ my $new = sub {
 #
 sub restore_from {
     my $env_file = shift;
-
-    $sole_instance = retrieve ($env_file);
+    
+    eval "require Storable;";
+    croak "Called OME::Install::Environment->restore_from(), but Storable could not be loaded."
+    	if $@;
+    $sole_instance = Storable::retrieve ($env_file);
 
     return $sole_instance;
 }
@@ -89,9 +91,14 @@ sub initialize {
 #
 sub store_to {
     my ($self, $env_file) = @_;
+
+    eval "require Storable;";
+    croak "Called OME::Install::Environment->store_to(), but Storable could not be loaded."
+    	if $@;
+
     print "Storing OME::Install::Environment in \"$env_file\"\n";
 
-    store ($sole_instance, $env_file) or croak "Unable to store instance in \"$env_file\". $!";
+    Storable::store ($sole_instance, $env_file) or croak "Unable to store instance in \"$env_file\". $!";
 
     return 1;
 }
@@ -105,6 +112,17 @@ sub set_flag {
     return unless $flag;
 
     $self->{flags}->{$flag} = 1;
+    return;
+}
+
+sub unset_flag {
+    my ($self, $flag) = @_;
+
+    return unless $flag;
+    return unless exists $self->{flags};
+    return unless exists $self->{flags}->{$flag};
+
+    $self->{flags}->{$flag} = 0;
     return;
 }
 
@@ -266,15 +284,5 @@ sub apache_conf {
     return;
 }
 
-sub matlab_installation{
-    my ($self, $dir) = @_;
 
-    if($dir) {
-		$self->{matlab_installation} = $dir;
-    } else {
-		return $self->{matlab_installation} unless not exists $self->{matlab_installation};
-    }
-
-    return;
-}
 1;

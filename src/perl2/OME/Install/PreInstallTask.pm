@@ -40,9 +40,11 @@ use Carp;
 use Cwd;
 use File::Basename;
 use Term::ANSIColor qw(:constants);
+use Text::Wrap;
 
 #use base qw(OME::Install::InstallationTask);
 use OME::Install::Util;
+use OME::Install::Environment;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -84,6 +86,30 @@ sub print_header {
     print RESET;
 }
 
+sub y_or_n {
+    my $text = shift;
+    my $def_yorn = shift;
+    my $y_or_n;
+    my $environment = initialize OME::Install::Environment;
+    return 1 if ($environment->get_flag ("ANSWER_Y"));
+
+    $def_yorn = 'n' unless defined $def_yorn;
+	if ($def_yorn eq 'n') {
+   	    print wrap("", "", $text), " [y/", BOLD, "n", RESET, "]: ";
+        $y_or_n = <STDIN>;
+        chomp $y_or_n;
+        if (lc($y_or_n) eq "y") { return 1 };
+        return 0;
+   	} else {
+   	    print wrap("", "", $text), " [", BOLD, "y", RESET, "/n]: ";
+        $y_or_n = <STDIN>;
+        chomp $y_or_n;
+        if (lc($y_or_n) eq "n") { return 0 };
+        return 1;
+   	}
+}
+
+
 # Simplified version of the OME::Install::PerlModuleTask subroutines
 sub install {
     my $module = shift;
@@ -92,14 +118,6 @@ sub install {
     my $iwd = getcwd;  # Initial working directory
 
     chdir ("$INSTALL_HOME") or croak "Unable to chdir to \"$INSTALL_HOME\". $!";
-
-    # If the module is installed we'll just print the version and return
-    my $version = get_module_version ("$module->{name}"); 
-    if ($version) {
-	print "Version $version ";
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
-    }
 
     # Download
     download_package ($module, $LOGFILE)
@@ -137,22 +155,34 @@ sub install {
 
 sub execute {
     print_header ("Pre-Installation");
-    
-	croak "Unable to locate a suitable compiler." unless which("cc");
-	croak "Unable to locate a suitable make binary." unless which("make");
 
     open ($LOGFILE, ">", "/dev/null");
 
-    print "Installing Term::ReadKey if needed. ";
-    my $retval = install ($modules[0]);
-    
-    print BOLD, "[INSTALLED]", RESET, ".\n" if $retval;
+    my @install_mods;
+    my $module;
 
-	print "Installing Storable if needed. ";
-    $retval = install ($modules[1]);
+    # If the module is installed we'll just print the version and return
+    foreach $module (@modules) {
+        my $version = get_module_version ($module->{name}); 
+        if ($version) {
+            print $module->{name}." - Version $version \n";
+        } else {
+            print $module->{name}." - Not Installed!\n";
+            push (@install_mods,$module);
+        }
+    }
 
-    print BOLD, "[INSTALLED]", RESET, ".\n" if $retval;
-
+    if (scalar @install_mods) {
+        print wrap("", "", "\nThe OME installation system requires the Storable and Term::ReadKey modules (both included in Perl versions 5.8.0 and higher). One or more of these is missing on your system.  This installer will now install these packages for you.");
+        print "\n\n";
+        y_or_n ("Would you like to continue ?",'n') or die
+            "Installer could not proceed without required Perl modules.\nPlease install these manually and run the installer again\n";
+        print "\n";  # Spacing
+        foreach (@install_mods) {
+            print "Installing ".$_->{name}." ";
+            print BOLD, "[INSTALLED]", RESET, ".\n" if install ($_);
+        }
+    }
     print "\n";  # Spacing
 
    close ($LOGFILE);

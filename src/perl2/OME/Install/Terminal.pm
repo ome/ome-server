@@ -39,6 +39,7 @@ use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 use Text::Wrap;
 use OME::Install::Util;
+use OME::Install::Environment;
 
 require Exporter;
 
@@ -74,6 +75,8 @@ sub print_header {
 
 sub confirm {
     my $text = shift;
+    my $environment = initialize OME::Install::Environment;
+    return 1 if ($environment->get_flag ("ANSWER_Y"));
 
     print "Using \"$text\", are you sure ? [y/", BOLD, "n", RESET, "]: ";
     my $y_or_n = ReadLine 0;
@@ -174,6 +177,8 @@ sub y_or_n {
     my $text = shift;
     my $def_yorn = shift;
     my $y_or_n;
+    my $environment = initialize OME::Install::Environment;
+    return 1 if ($environment->get_flag ("ANSWER_Y"));
 
     $def_yorn = 'n' unless defined $def_yorn;
 	if ($def_yorn eq 'n') {

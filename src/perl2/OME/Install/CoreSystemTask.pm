@@ -256,7 +256,7 @@ sub execute {
 		$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
 
 		# Get and/or update our "special" Unix user information
-		if (y_or_n ("Set up a separate admin user for OME (i.e. your account)?") ) {
+		if (y_or_n ("Set up a separate admin user for OME (i.e. your unix account)?",'y') ) {
 			my $admin_def = $ADMIN_USER;
 			if (not defined $admin_def or not $admin_def) {
 			# Who owns the cwd?

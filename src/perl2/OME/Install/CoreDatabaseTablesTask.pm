@@ -460,12 +460,9 @@ sub create_experimenter {
     }
     
     if (not -d $OME_EXPER->{DataDirectory}) {
-        my $y_or_n = confirm_default ('Directory "'.$OME_EXPER->{DataDirectory}.
-            '" does not exist. Do you want to create it ?', "no");
-
-        if ((lc ($y_or_n) eq 'y') or (lc ($y_or_n) eq 'yes')) {
-            mkpath ($OME_EXPER->{DataDirectory}, 0, 0755);  # Internal croak
-        }
+        mkpath ($OME_EXPER->{DataDirectory}, 0, 0755)  # Internal croak
+        	if y_or_n ('Directory "'.$OME_EXPER->{DataDirectory}.
+            	'" does not exist. Do you want to create it ?', 'y');
     }
 
     my $password;
@@ -489,6 +486,49 @@ sub create_experimenter {
     print "Called commitTransaction.  returning\n";
     return ($session);
 }
+
+# This little gem gets a session without logging in.
+# This should only really be done if we're running this non-interactive.
+sub bootstrap_session {
+    my $factory = OME::Factory->new();
+    croak "Couldn't create a new factory" unless $factory;
+	croak '$OME_EXPER is undefined' unless $OME_EXPER;
+
+	print "  \\__ Finding Experimenter ".$OME_EXPER->{OMEName}."\n";
+	my $experimenterObj = $factory->
+		findObject('OME::SemanticType::BootstrapExperimenter',OMEName => $OME_EXPER->{OMEName});
+	croak "Couldn't find Experimenter ".$OME_EXPER->{OMEName}." in DB" unless $experimenterObj;
+
+    print "  \\__ Getting user state for ".$experimenterObj->OMEName()."\n";
+    my $userState = $factory->findObject('OME::UserState',experimenter_id => $experimenterObj->id());
+    if (!defined $userState) {
+        $userState = $factory->
+          newObject('OME::UserState',
+                    {
+                     experimenter_id => $experimenterObj->id(),
+                     started         => 'now',
+                     last_access     => 'now',
+                     host            => hostname()
+                    });
+        $factory->commitTransaction();
+    } else {
+        $userState->last_access('now');
+        $userState->host(hostname());
+    }
+    croak "Could not create userState object" unless $userState;
+
+    print "  \\__ Getting session for user state ID=".$userState->id()."\n";    
+    my $session = OME::Session->instance($userState, $factory);
+
+    croak "Could not create session from userState" unless defined $session;
+
+    $userState->storeObject();
+    $session->commitTransaction();
+
+    return $session;
+}
+
+
 
 sub init_configuration {
     my $factory = OME::Factory->new();
@@ -848,8 +888,15 @@ sub execute {
             print "  Database is current.\n";
         }
         load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
+		print "Getting a session manager\n";
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
-        $session = $manager->TTYlogin() or croak "Unable to create an initial experimenter.";
+        # If we're answering 'y' to everything, we don't want to be interactive here
+        if ($ENVIRONMENT->get_flag ('ANSWER_Y')) {
+		    print "Getting a non-interactive session\n";
+        	$session = bootstrap_session();
+        } else {
+        	$session = $manager->TTYlogin() or croak "Unable to create an initial experimenter.";
+       	}
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
         print_header "Finalizing Database";
         # Back to UID 0

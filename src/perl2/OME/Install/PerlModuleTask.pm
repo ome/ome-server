@@ -539,7 +539,7 @@ sub execute {
 
     # Get our logfile and open it for reading
     open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
-		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\".$!";
+		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\", $!";
 
     #*********
     #********* Check each module (exceptions then version)
@@ -604,10 +604,6 @@ sub execute {
 
     # Only if we're not just running a Perl check
     unless ($environment->get_flag ("PERL_CHECK")) {
-    
-    	#
-		# CORE PERL MODULES
-		#
 		print_header ("Core Perl Module Setup");
     
 		print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
@@ -642,79 +638,6 @@ sub execute {
 		    and croak "Unable to install module, see $LOGFILE_NAME for details."
 		    unless $retval;
 		print BOLD, "[SUCCESS]", RESET, ".\n";
-		
-		#
-		# MATLAB PERL MODULES
-		#
-		print "\n";
-		print_header ("Optional Perl Module Setup");
-		
-		print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
-
-		my $matlab_directory; 
-		
-		
-		# Confirm all flag
-		my $confirm_all;
-	
-		while (1) {
-			if ($environment->get_flag("UPDATE") or $confirm_all) {
-				print "\n";  # Spacing
-	
-				# Ask user to confirm his/her original entries
-				print BOLD,"MATLAB Perl API configuration:\n",RESET;
-				print " Install MATLAB Perl API?: ", BOLD, $environment->matlab_installation() ?'yes':'no', RESET, "\n";
-				print "             MATLAB Path: ", BOLD, $environment->matlab_installation(), RESET, "\n" if $environment->matlab_installation() ;
-	
-				print "\n";  # Spacing
-	
-				y_or_n ("Are these values correct ?",'y') and last;
-			}
-			
-			if (y_or_n ("Install analysis engine interface to MATLAB ?")) {
-				# how to guess the Matlab directory. Option 1: whereis matlab, Option 2: 
-				# ls -1 / (looking for Applications). ls -1 /Applications (looking for MATLAB**)
-				# we can also look in /usr/local/matlab* and /usr/local/bin/matlab* 
-				if ($environment->get_flag("UPDATE")) {
-					$matlab_directory = $environment->matlab_installation();
-				} else {
-					$matlab_directory = '/Applications/MATLAB6p5/';
-				}
-				$matlab_directory = confirm_path ("Path to MATLAB installation", $matlab_directory);
-				$environment->matlab_installation($matlab_directory);
-			}
-			
-			$confirm_all = 1;
-		}
-		
-		if ($matlab_directory = $environment->matlab_installation()) {
-			print "Installing MATLAB modules\n";
-			# Configure
-			print "  \\_ Configuring ";
-			$retval = configure_module ("src/perl2/OME/Matlab/", $LOGFILE, "$matlab_directory");
-			print BOLD, "[FAILURE]", RESET, ".\n"
-				and croak "Unable to configure module, see $LOGFILE_NAME for details."
-				unless $retval;
-			print BOLD, "[SUCCESS]", RESET, ".\n";
-	
-			# Compile
-			print "  \\_ Compiling ";
-			$retval = compile_module ("src/perl2/OME/Matlab/", $LOGFILE);
-		
-			print BOLD, "[FAILURE]", RESET, ".\n"
-				and croak "Unable to compile module, see $LOGFILE_NAME for details."
-				unless $retval;
-			print BOLD, "[SUCCESS]", RESET, ".\n";
-	
-			# Install
-			print "  \\_ Installing ";
-			$retval = install_module ("src/perl2/OME/Matlab/", $LOGFILE);
-	
-			print BOLD, "[FAILURE]", RESET, ".\n"
-				and croak "Unable to install module, see $LOGFILE_NAME for details."
-				unless $retval;
-			print BOLD, "[SUCCESS]", RESET, ".\n";
-		}
 	}
 
     return 1;
