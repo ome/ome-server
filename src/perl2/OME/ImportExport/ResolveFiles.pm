@@ -126,7 +126,8 @@ sub importFile() {
 		} or $pixelDir = $tmpDir;
 		
 		my $fh;
-		open( $fh, "$executionPath $pixelDir $tmpDir $inputFile |" );
+		open( $fh, "$executionPath $pixelDir $tmpDir $inputFile |" )
+			or die "While importing $inputFile, Could not open '$executionPath $pixelDir $tmpDir $inputFile' for piping in\n";
 		
 		# parse extractBinData output
 		my $doc  = $parser->parse_fh( $fh );
