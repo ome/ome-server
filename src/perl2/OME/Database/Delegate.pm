@@ -271,4 +271,64 @@ sub addClassToDatabase {
 }
 
 
+
+
+=head2 registerListener
+
+	$delegate->registerListener($dbh,$condition);
+
+This method registers a listener for a named condition (a string).
+Note that this doesn't involve a callback - for not the implementation
+should include a blocking call until the condition occurs.
+
+=cut
+
+sub registerListener {
+    die "OME::Database::Delegate->registerListener is abstract";
+}
+
+
+=head2 waitCondition
+
+	$delegate->waitCondition($dbh,$condition,$timeout);
+
+This method should block until the specified condition occurs or the
+timeout is reached.  $timeout is in seconds and can be fractional.
+
+=cut
+
+sub waitCondition {
+    die "OME::Database::Delegate->waitCondition is abstract";
+}
+
+
+
+=head2 unregisterListener
+
+	$delegate->unregisterListener($dbh,$condition);
+
+Un-does a call to registerListener.  The $dbh should no loger respond
+to the specified condition.
+
+=cut
+
+sub unregisterListener {
+    die "OME::Database::Delegate->unregisterListener is abstract";
+}
+
+
+=head2 notifyListeners
+
+	$delegate->notifyListeners($dbh,$condition);
+
+Sends an asynchronous notification to all listeners of the specified condition.
+
+=cut
+
+sub notifyListeners {
+    die "OME::Database::Delegate->notifyListeners is abstract";
+}
+
+
+
 1;
