@@ -1,0 +1,41 @@
+OME Java Library, Installation instructions
+===========================================
+
+If you have downloaded a pre-compiled copy of this library,
+installation is as simple as placing all of the contained JAR files
+into your classpath.  The ome-java.jar file contains appropriate
+manifest information to encode its dependencies on the remaining
+JAR's.
+
+If you have downloaded a source version of the library, you must
+compile the code into a JAR before using it.  This requires the Apache
+Ant tool (available at http://ant.apache.org/).  Ant is a Java-based
+"make" equivalent, and is very easy to install.
+
+Once Ant is installed, the following commands can be run from the base
+OME Java directory:
+
+
+   ant
+
+   Compiles all of the .java files in the /src directory into the
+   /build directory.  There must be a valid "javac" compiler in your
+   path for this to work.  (For advanced Ant users, you can use the
+   standard command-line options to change certain aspects of the
+   compilation process, such as the specific compiler used.)
+
+
+   ant jar
+
+   Assembles all of the compiled .class files into a JAR file.  Copies
+   this file, plus all of its dependent libraries, into the /jar
+   directory.  If the .java files have not been compiled yet, they are
+   compiled just as if you ran the previous command.
+
+
+   ant apidocs
+
+   Creates your own local copy of the library's Javadoc documentation
+   and places it in the /docs/api directory.  This directory can then
+   be moved to a web server content directory, or viewed in a browser
+   directly from the filesystem.
