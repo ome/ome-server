@@ -84,7 +84,7 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 	 * A flag that is set immediately after a popup event
 	 * 
 	 */
-	private boolean postPopup = false;
+	protected boolean postPopup = false;
 
 	/** 
 	 * The last ome module that was highlighted (from the jTree
