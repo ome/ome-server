@@ -404,11 +404,19 @@ sub __createRepositoryFile {
     my $factory = $session->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
+	my $pixelType = OME::Tasks::PixelsManager->getPixelType(
+		$bitsPerPixel/8,$isSigned,$isFloat);
 
     my ($pixels,$attr) = OME::Tasks::PixelsManager->
-      createPixels($image,$module_execution,
-                   $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,
-                   $bitsPerPixel/8,$isSigned,$isFloat);
+      createPixels($image,$module_execution, {
+        SizeX        => $sizeX,
+        SizeY        => $sizeY,
+        SizeZ        => $sizeZ,
+        SizeC        => $sizeC,
+        SizeT        => $sizeT,
+        BitsPerPixel => $bitsPerPixel,
+        PixelType    => $pixelType
+      } );
 
     $image->pixels_id( $attr->id() ); # Josiah's viewer hack
     $image->storeObject();
