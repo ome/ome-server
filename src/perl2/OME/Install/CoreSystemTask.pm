@@ -146,6 +146,9 @@ sub get_apache_user {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
+
+	# A special Unix user to be added to the OME group if needed
+	my $SPECIAL_USER = "";
     
     print_header ("Core System Setup");
 
@@ -176,6 +179,9 @@ sub execute {
 	# Get and/or update our apache user information
 	$APACHE_USER = get_apache_user ($APACHE_USER);
 
+	# Get and/or update our "special" Unix user information
+	$SPECIAL_USER = confirm_default ("Unix user which should be a member of the OME group (optional)", $SPECIAL_USER);
+
 	# Make sure the rest of the installation knows who the apache and ome users are
 	$environment->user($OME_USER);
 	$environment->apache_user($APACHE_USER);
@@ -190,6 +196,7 @@ sub execute {
 	print "OME groupname: $OME_GROUP\n";
 	print "OME Unix username: $OME_USER\n";
 	print "Apache Unix username: $APACHE_USER\n";
+	print "Special Unix username: $SPECIAL_USER\n";
 
 	print "\n";  # Spacing
 
@@ -206,34 +213,42 @@ sub execute {
 
     # Group creation if needed
     if (not $OME_GID = getgrnam($OME_GROUP)) {
-	print "  \\_ Adding group ", BOLD, "\"$OME_GROUP\"", RESET, ".\n", ;
-	add_group ($OME_GROUP) or croak "Failure creating group \"$OME_GROUP\"";
-	$OME_GID = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
+		print "  \\_ Adding group ", BOLD, "\"$OME_GROUP\"", RESET, ".\n", ;
+		add_group ($OME_GROUP) or croak "Failure creating group \"$OME_GROUP\"";
+		$OME_GID = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
     }
 
     # User creation if needed
     if (not $OME_UID = getpwnam($OME_USER)) {
-	print "  \\_ Adding user ", BOLD, "\"$OME_USER\"", RESET, ".\n", ;
-	add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP) or croak "Failure creating user \"$OME_GROUP\"";
-	$OME_UID = getpwnam($OME_USER) or croak "Failure retrieving UID for \"$OME_USER\"";
+		print "  \\_ Adding user ", BOLD, "\"$OME_USER\"", RESET, ".\n", ;
+		add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP) or croak "Failure creating user \"$OME_GROUP\"";
+		$OME_UID = getpwnam($OME_USER) or croak "Failure retrieving UID for \"$OME_USER\"";
     }
 
     # Add the apache and OME user to the OME group if needed
-    my $member_string = (getgrgid($OME_GID))[3];
-    my @members = split (/,/, $member_string) if $member_string or undef;
+    my @members = split (/\s/, (getgrgid($OME_GID))[3]);  # Split group members on whitespace
+
     my $need_to_add_apache = 1;
     my $need_to_add_user = 1;
+	my $need_to_add_special_user = 1;
 
     if (@members) {
 	    foreach my $member (@members) {
-		    $need_to_add_apache = 0 if $member eq $APACHE_USER;
-		    $need_to_add_user = 0 if $member eq $OME_USER;
+		    $need_to_add_apache = 1 if $member eq $APACHE_USER;
+		    $need_to_add_user = 1 if $member eq $OME_USER;
+			$need_to_add_special_user = 1 if $member eq $SPECIAL_USER;
 	    };
     }
-    add_user_to_group ($APACHE_USER, $OME_GROUP) or croak "Failure adding \"$APACHE_USER\" to \"$OME_GROUP\""
-	if $need_to_add_apache;
-    add_user_to_group ($OME_USER, $OME_GROUP) or croak "Failure adding \"$OME_USER\" to \"$OME_GROUP\""
-	if $need_to_add_user;
+
+    add_user_to_group ($APACHE_USER, $OME_GROUP)
+		or croak "Failure adding user \"$APACHE_USER\" to group \"$OME_GROUP\""
+		if $need_to_add_apache;
+    add_user_to_group ($OME_USER, $OME_GROUP)
+		or croak "Failure adding user \"$OME_USER\" to group \"$OME_GROUP\""
+		if $need_to_add_user;
+    add_user_to_group ($SPECIAL_USER, $OME_GROUP)
+		or croak "Failure adding user \"$SPECIAL_USER\" to group \"$OME_GROUP\""
+		if $need_to_add_special_user;
     
     #********
     #******** Build our core directory structure
