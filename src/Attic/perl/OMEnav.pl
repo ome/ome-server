@@ -35,6 +35,7 @@ my $OMEmanageProjectsURL = $OMEbaseURL."OMEmanageProjects.pl";
 my $OMEcreateViewsURL = $OMEbaseURL."OMEcreateViews.pl";
 my $OMEviewViewsURL = $OMEbaseURL."OMEviewViews.pl";
 my $OMErunfindSpotsURL = $OMEbaseURL."OMErunfindSpots.pl";
+my $OMErunfindSpotsOOURL = $OMEbaseURL."OMErunfindSpotsOO.pl";
 my $OMEruntrackSpotsURL = $OMEbaseURL."OMEtrackSpots.pl";
 my $OMErunSpawnSpotsURL = $OMEbaseURL."OMErunSpawnSpots.pl";
 my $OMEgetNearestNeighborsURL = $OMEbaseURL."OMEgetNearestNeighbors.pl";
@@ -59,7 +60,7 @@ print <<EOF
 <A href="$OMEcreateViewsURL" target="MainFrame">Create Data Views</A><br>
 <A href="$OMEviewViewsURL" target="MainFrame">Database Views</A><br>
 <br>
-<A href="$OMErunfindSpotsURL" target="MainFrame">Run findSpots</A><br>
+<A href="$OMErunfindSpotsOOURL" target="MainFrame">Run findSpots</A><br>
 <A href="$OMEruntrackSpotsURL" target="MainFrame">Run trackSpots</A><br>
 <A href="$OMErunSpawnSpotsURL" target="MainFrame">Run spawnSpots</A><br>
 <A href="$OMEgetNearestNeighborsURL" target="MainFrame">Get Nearest Neighbors</A><br>
