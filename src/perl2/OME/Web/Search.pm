@@ -161,15 +161,16 @@ sub getPageBody {
 		# convert LSIDs into objs.
 		my $resolver = new OME::Tasks::LSIDManager();
 		@selection = map( $resolver->getObject($_), @selection );
+
 		# close this window after action is complete if it's a popup
 		my $return_to = ( $q->url_param( 'return_to' ) || $q->param( 'return_to' ) );
 		my $ids = join( ',', map( $_->id, @selection ) );
 		$html = <<END_HTML;
-<script language="Javascript" type="text/javascript">
-	window.opener.document.forms[0].$return_to.value = '$ids';
-	window.opener.document.forms[0].submit();
-	window.close();
-</script>
+			<script language="Javascript" type="text/javascript">
+				window.opener.document.forms[0].${return_to}.value = '$ids';
+				window.opener.document.forms[0].submit();
+				window.close();
+			</script>
 END_HTML
 		return( 'HTML', $html );
 	}
@@ -219,54 +220,7 @@ END_HTML
 			$q->delete( $_ ) foreach( @cgi_search_names );
 		}
 		
-		# accessor mode
-		if( grep( /^accessor$/, @cgi_search_names ) ) {
-			my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = split( /,/, $q->param( 'accessor' ) );
-			my $objectToAccessFrom = $self->Session()->Factory()->loadObject( $typeToAccessFrom, $idToAccessFrom )
-				or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
-			$tmpl_data{ accessor_descriptor } = "Showing $common_name(s) associated with ".$render->render( $objectToAccessFrom, 'ref' ).".";
-			# The next four lines are a kludge to get stuff working. It's definitely not good design.
-			# Get an order by, so that paging will work. __sort_field will set the cgi param appropriately.
-			my @fields = $render->getFields( $type, 'summary' );
-			my ($form_fields, $search_paths) = $render->getSearchFields( $type, \@fields );
-			my $order = $self->__sort_field( $search_paths, $search_paths->{ $fields[0] });
-		# search mode
-		} else {
-			my @fields = $render->getFields( $type, 'summary' );
-			my ($form_fields, $search_paths) = $render->getSearchFields( $type, \@fields );
-			my %field_titles = $render->getFieldTitles( $type, \@fields );
- 			$q->param( 'search_names', values %$search_paths);
-			
-			# add search fields & sort buttons to template data
-			my $order = $self->__sort_field( $search_paths, $search_paths->{ $fields[0] });
-			foreach my $field( @fields ) {
-				# a button for ascending sort
-				my $sort_up = "<a href='javascript: document.forms[0].elements[\"__order\"].value = \"".
-					$search_paths->{ $field }.
-					"\"; document.forms[0].submit();' title='Sort results by ".
-					$field_titles{ $field }." in increasing order'".
-					( $order && $order eq $search_paths->{ $field } ?
-						" class = 'ome_active_sort_arrow'" : ''
-					).'>';
-				# a button for descending sort
-				my $sort_down = "<a href='javascript: ".
-						"document.forms[0].elements[\"__order\"].value = ".
-						"\"!".$search_paths->{ $field }."\";".
-						"document.forms[0].submit();' title='Sort results by ".
-					$field_titles{ $field }." in decreasing order'".
-					# $order is prefixed by a ! for descending sort. that explains substr().
-					( $order && substr( $order, 1 ) eq $search_paths->{ $field } ?
-						" class = 'ome_active_sort_arrow'" : ''
-					).'>';
-	
-				push( @{ $tmpl_data{search_fields_loop} }, {
-					field_label  => $field_titles{ $field },
-					form_field   => $form_fields->{ $field },
-					sort_up      => $sort_up, 
-					sort_down    => $sort_down,
-				} ) if $form_fields->{ $field };
-			}
-		}
+		$tmpl_data{ criteria_controls } = $self->getSearchCriteria( $type );
 		
 		# Reset fields if the search type was just switched.
  		unless( !$search_type || $type eq $search_type ) {
@@ -312,6 +266,7 @@ END_HTML
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
 			$q->hidden( -name => 'page_action' ).
+			$q->hidden( -name => 'accessor_id' ).
 			# This is used to retain selected objects across pages.
 			$q->hidden( -name => 'selected_objects' );
 		
@@ -328,6 +283,200 @@ END_HTML
 	return ( 'HTML', $html );	
 }
 
+=head2 getSearchFields
+
+	# get html form elements keyed by field names 
+	my ($form_fields, $search_paths) = OME::Web::DBObjRender->getSearchFields( $type, \@field_names, \%default_search_values );
+
+$type can be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
+@field_names is used to populate the returned hash.
+%default_search_values is also optional. If given, it is used to populate the search form fields.
+
+$form_fields is a hash reference of html form inputs { field_name => form_input, ... }
+$search_paths is also a hash reference keyed by field names. It's values
+are search paths. In most cases the search path will be the same as
+the field name. For reference fields, the path will specify a field in the referent. 
+For example, a reference field named 'dataset' would have a search path 'dataset.name'
+
+=cut
+
+sub getSearchFields {
+	my ($self, $type, $field_names, $defaults) = @_;
+	my ($form_fields, $search_paths);
+	
+	my $specializedSearch = $self->_specialize( $type );
+	($form_fields, $search_paths) = $specializedSearch->_getSearchFields( $type, $field_names, $defaults )
+		if( $specializedSearch and $specializedSearch->can('_getSearchFields') );
+
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
+
+	my $q = $self->CGI();
+	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$field_names;
+	foreach my $field ( @$field_names ) {
+		next if exists $form_fields->{ $field };
+		if( $fieldRefs{ $field } ) {
+			( $form_fields->{ $field }, $search_paths->{ $field } ) = 
+				$self->getRefSearchField( $formal_name, $fieldRefs{ $field }, $field, $defaults->{ $field } );
+		} else {
+			$q->param( $field, $defaults->{ $field }  ) 
+				unless defined $q->param( $field );
+			$form_fields->{ $field } = $q->textfield( 
+				-name    => $field , 
+				-size    => 17, 
+				-default => $defaults->{ $field } 
+			);
+			$search_paths->{ $field } = $field;
+		}
+	}
+
+	return ( $form_fields, $search_paths );
+}
+
+=head2 getRefSearchField
+
+	# get an html form element that will allow searches to $to_type
+	my ( $searchField, $search_path ) = 
+		$self->getRefSearchField( $from_type, $to_type, $accessor_to_type, $default_obj );
+
+the types may be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
+$from_type is the type you are searching from
+$accessor_to_type is an accessor of $from_type that returns an instance of $to_type
+$to_type is the type the accessor returns
+
+returns a form input and a search path for that input. The search path
+for a module_execution's module field is module.name
+
+=cut
+
+sub getRefSearchField {
+	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
+	
+	my $specializedSearch = $self->_specialize( $to_type );
+	return $specializedSearch->_getRefSearchField( $from_type, $to_type, $accessor_to_type, $default )
+		if( $specializedSearch and $specializedSearch->can('_getRefSearchField') );
+
+	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
+	my ($to_package) = OME::Web->_loadTypeAndGetInfo( $to_type );
+	my $searchOn = '';
+	if( $to_package->getColumnType( 'name' ) ) {
+		$searchOn = '.name';
+		$default = $default->name() if $default;
+	} elsif( $to_package->getColumnType( 'Name' ) ) {
+		$searchOn = '.Name';
+		$default = $default->Name() if $default;
+	} else {
+		$default = $default->id() if $default;
+	}
+
+	my $q = $self->CGI();
+	$q->param( $accessor_to_type.$searchOn, $default  ) 
+		unless defined $q->param($accessor_to_type.$searchOn );
+	return ( 
+		$q->textfield( -name => $accessor_to_type.$searchOn , -size => 17, -default => $default ),
+		$accessor_to_type.$searchOn,
+		$default
+	);
+}
+
+=head1 Internal Methods
+
+These methods should not be accessed from outside the class
+
+=cut 
+
+sub getSearchCriteria {
+	my ($self, $type)    = @_;
+	my $q                = $self->CGI();
+	my @cgi_search_names = $q->param( 'search_names' );
+	my $render = $self->Renderer();
+	my $factory = $self->Session()->Factory();
+	my %tmpl_data;
+	my ($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $type );
+
+	my $tmpl_path = $self->_findTemplate( $type );
+	my $tmpl = HTML::Template->new( filename => $tmpl_path );
+
+	# accessor stuff. 
+	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne '' ) {
+	# We are working in accessor mode. Set object reference
+		my $typeToAccessFrom = $q->param( 'accessor_type' );
+		my $idToAccessFrom   = $q->param( 'accessor_id' );
+		my $accessorMethod   = $q->param( 'accessor_method' );
+		my $objectToAccessFrom = $factory->
+			loadObject( $typeToAccessFrom, $idToAccessFrom )
+			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
+		$tmpl_data{ '/accessor_object_ref' } = $render->render( $objectToAccessFrom, 'ref' ).
+			"(<a href='javascript: document.forms[0].elements[\"accessor_id\"].value = \"\"; ".
+			                     "document.forms[0].submit();'".
+			   "title='Stop searching from this object'/>X</a> ".
+			"<a href='javascript: selectOne( \"$typeToAccessFrom\", \"accessor_id\" );'".
+			   "title='Change selection'/>C</a>)";
+	}
+	
+	# Acquire search fields
+	my @search_fields;
+	if( $tmpl->query( name => '/search_fields_loop' ) ) {
+	# Query the object for its fields
+		@search_fields = $render->getFields( $type, 'summary' );
+	} else {
+	# Otherwise, the search fields are in the template.
+		@search_fields = grep( (!m/^\//), $tmpl->param() ); # Screen out special field requests that start with '/'
+	}
+
+	my ($form_fields, $search_paths) = $self->getSearchFields( $type, \@search_fields );
+	my %field_titles = $render->getFieldTitles( $type, \@search_fields );
+	$q->param( 'search_names', values %$search_paths); # explicitly record what fields we are searching on.
+	my $order = $self->__sort_field( $search_paths, $search_paths->{ $search_fields[0] });
+	
+	# Render search fields
+	my $search_field_tmpl = HTML::Template->new( 
+		filename => $self->Session()->Configuration()->template_dir().'/search_field.tmpl'
+	);
+	foreach my $field( @search_fields ) {
+		# a button for ascending sort
+		my $sort_up = "<a href='javascript: document.forms[0].elements[\"__order\"].value = \"".
+			$search_paths->{ $field }.
+			"\"; document.forms[0].submit();' title='Sort results by ".
+			$field_titles{ $field }." in increasing order'".
+			( $order && $order eq $search_paths->{ $field } ?
+				" class = 'ome_active_sort_arrow'" : ''
+			).'>';
+		# a button for descending sort
+		my $sort_down = "<a href='javascript: ".
+				"document.forms[0].elements[\"__order\"].value = ".
+				"\"!".$search_paths->{ $field }."\";".
+				"document.forms[0].submit();' title='Sort results by ".
+			$field_titles{ $field }." in decreasing order'".
+			# $order is prefixed by a ! for descending sort. that explains substr().
+			( $order && substr( $order, 1 ) eq $search_paths->{ $field } ?
+				" class = 'ome_active_sort_arrow'" : ''
+			).'>';
+
+		$search_field_tmpl->param(
+			field_label  => $field_titles{ $field },
+			form_field   => $form_fields->{ $field },
+			sort_up      => $sort_up, 
+			sort_down    => $sort_down,
+		);
+		if( $tmpl->query( name => '/search_fields_loop' ) ) {
+			push( 
+				@{ $tmpl_data{ '/search_fields_loop' } }, 
+				{ search_field => $search_field_tmpl->output() }
+			) if $form_fields->{ $field };
+		} else {
+			$tmpl_data{$field} = $search_field_tmpl->output();
+		} 
+		$search_field_tmpl->clear_params();
+	}
+	
+	$tmpl->param( %tmpl_data );
+	return $tmpl->output();
+}
+
 sub search {
 	my ($self ) = @_;
 	my $q       = $self->CGI();
@@ -339,16 +488,11 @@ sub search {
 	$type = $q->param( 'Locked_Type' ) unless $type;
 	my @search_names = $q->param( 'search_names' );
 	foreach my $search_on ( @search_names ) {
-	if( $q->param( $search_on ) && $q->param( $search_on ) ne '') {
-			$searchParams{ $search_on } = $q->param( $search_on );
-			if( $searchParams{ $search_on } =~ m/,/) {
-				if( $search_on ne 'accessor' ) {
-					$searchParams{ $search_on } = [ 'in', [ split( m/,/, $searchParams{ $search_on } ) ] ];
-				} else {
-					$searchParams{ $search_on } = [ split( m/,/, $searchParams{ $search_on } ) ];
-				}
-			}
-		}
+		next unless ( $q->param( $search_on ) && $q->param( $search_on ) ne '');
+		my $value = $q->param( $search_on );
+		# search string parsing
+		$value =~ s/\*/\%/g;
+		$searchParams{ $search_on } = [ 'ilike', $value ];
 	}
 
 	# load type
@@ -356,17 +500,18 @@ sub search {
 	my ($objectToAccessFrom, $accessorMethod);
 
 	# count Objects
- 	if( $searchParams{ 'accessor' } ) {
- 		my ( $typeToAccessFrom, $idToAccessFrom);
- 		( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = @{ $searchParams{ 'accessor' } };
+ 	if( $q->param( 'accessor_id' ) ) {
+		my $typeToAccessFrom = $q->param( 'accessor_type' );
+		my $idToAccessFrom   = $q->param( 'accessor_id' );
+		$accessorMethod   = $q->param( 'accessor_method' );
  		$objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
  			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
  		$typeToAccessFrom->getColumnType( $accessorMethod )
  			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
  		my $countAccessor = "count_".$accessorMethod;
- 		$object_count = $objectToAccessFrom->$countAccessor();
+ 		$object_count = $objectToAccessFrom->$countAccessor( %searchParams );
  	} else {
-		$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
+		$object_count = $factory->countObjects( $formal_name, %searchParams );
 	}
 
 	# PAGING: prepare limit, offset, and order_by
@@ -383,14 +528,6 @@ sub search {
 	}
 
 	# Turn pages
-	( 
-		$searchParams{ __limit } ? 
-		'__limit => '.$searchParams{ __limit }.', ' : 
-		''
-	).( $searchParams{ __offset } ?
-		'__offset => '.$searchParams{ __offset } :
-		''
-	)." )";
 	my $currentPage = int( $searchParams{ __offset } / $searchParams{ __limit } );
 	my $action = $q->param( 'page_action' ) ;
 	if( $action ) {
@@ -413,36 +550,14 @@ sub search {
 	# update the __offset parameter
 	$q->param( "__offset", $searchParams{ __offset } );
 
-
-	# get objects
-	# Use accessor
- 	if( $searchParams{ 'accessor' } ) {
- 		logdbg "debug", "Retrieving object from an accessor method:\n\t".
- 			$objectToAccessFrom->getFormalName()."(id=".$objectToAccessFrom->id.")->".
- 			"$accessorMethod ( ".( 
- 				$searchParams{ __limit } ? 
- 				'__limit => '.$searchParams{ __limit }.', ' : 
- 				''
- 			).( $searchParams{ __offset } ?
- 				'__offset => '.$searchParams{ __offset } :
- 				''
- 			)." )";
- 		@objects = $objectToAccessFrom->$accessorMethod(
- 			( $searchParams{ __limit } ? 
- 				(__limit => $searchParams{ __limit }) : 
- 				()
- 			),
- 			( $searchParams{ __offset } ?
- 				( __offset => $searchParams{ __offset } ) :
- 				()
- 			)
- 		);
- 	# use the search parameters
+	# get objects: from an accessor method
+ 	if( $objectToAccessFrom ) {
+		logdbg "debug", "Retrieving object from an accessor method:\n\t". $objectToAccessFrom->getFormalName()."(id=".$objectToAccessFrom->id.")->$accessorMethod ( ". join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
+ 		@objects = $objectToAccessFrom->$accessorMethod( %searchParams );
+ 	# or with factory
  	} else {
- 		logdbg "debug", "Retrieving object from search parameters:\n\t".
- 			"factory->findObjectsLike( $formal_name, ".
- 			join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
-		@objects = $factory->findObjectsLike( $formal_name, %searchParams );
+ 		logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
+		@objects = $factory->findObjects( $formal_name, %searchParams );
 	}
 		
 	# paging controls
@@ -503,7 +618,7 @@ sub search {
 	there is no 'Name' or 'name' field in $search_paths
 	$search_paths is a hash that is keyed by available search field
 	names. It's values are search paths for each of those fields. see
-	OME::Web::DBObjRender->getSearchFields()
+	getSearchFields()
 
 =cut
 
@@ -525,6 +640,75 @@ sub __sort_field {
 		$q->param( '__order', $default );
 		return $default;
 	}
+}
+
+=head2 _findTemplate
+
+	my $template_path = $self->_findTemplate( $obj );
+
+returns a path to a custom template (see HTML::Template) for this $obj
+and $mode - OR - undef if no matching template can be found
+
+=cut
+
+sub _findTemplate {
+	my ( $self, $obj ) = @_;
+	my $mode = 'search';
+	return undef unless $obj;
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my ($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $obj );
+	my $tmpl_path = $formal_name; 
+	$tmpl_path =~ s/@//g; 
+	$tmpl_path =~ s/::/_/g; 
+	$tmpl_path .= "_".$mode.".tmpl";
+	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
+	return $tmpl_path if -e $tmpl_path;
+	$tmpl_path = $tmpl_dir.'/generic_search.tmpl';
+	die "could not find a search template"
+		unless -e $tmpl_path;
+	return $tmpl_path;
+}
+
+=head2 _specialize
+
+	my $specializedClass = $self->_specialize($type);
+	
+$type can be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
+
+returns a specialized prototype (if one exists) for rendering a
+particular type of data.
+returns undef if a specialized prototype does not exist or if it was
+called from a specialized prototype.
+
+=cut
+
+sub _specialize {
+	my ($self,$type) = @_;
+	
+	# get DBObject prototype or ST name from instance
+	my ($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $type );
+	
+	# construct specialized package name
+	my $specializedPackage = $formal_name;
+	($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
+	$specializedPackage = "OME::Web::Search::".$specializedPackage;
+
+	return $self if( ref( $self ) eq $specializedPackage );
+	# return cached renderer
+	return $self->{ $specializedPackage } if $self->{ $specializedPackage };
+
+	# load specialized package
+	eval( "use $specializedPackage" );
+	unless( $@ ) {
+		$self->{ $specializedPackage } = $specializedPackage->new( CGI => $self->CGI() );
+		return $self->{ $specializedPackage };
+	}
+	
+	# couldn't load the special package? return undef
+	return undef;
 }
 
 =head1 Author
