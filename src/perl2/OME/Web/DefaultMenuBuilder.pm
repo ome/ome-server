@@ -384,6 +384,7 @@ sub getPageLocationMenu {
 			"Home");
 	}
 
+	$class_header = '' unless $class_header;
 	return $q->span({class => 'ome_quiet'},
 		"Home -> $class_header -> " . $menu_text);
 }
