@@ -65,11 +65,14 @@ makes virtual field path_url: a url to download the original file from image ser
 
 sub _renderData {
 	my ($proto, $obj, $field_requests, $options) = @_;
-	if( exists $field_requests->{ 'path_url' }  ) {
-		my $originalFile_url = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
-		return ( 'path_url' => $originalFile_url );
+	my %record;
+	if( exists $field_requests->{ 'path_url' } ) {
+		foreach my $request ( @{ $field_requests->{ 'path_url' } } ) {
+			my $request_string = $request->{ 'request' };
+			$record{ $request_string } = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
+		}
 	}
-	return ();
+	return %record;
 }
 
 

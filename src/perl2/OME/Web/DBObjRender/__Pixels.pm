@@ -65,9 +65,14 @@ makes virtual fields thumb_url
 
 sub _renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
-	return ( 'thumb_url' => OME::Tasks::PixelsManager->getThumbURL( $obj ) ) 
-		if( exists $field_requests->{ 'thumb_url' } );
-	return ();
+	my %record;
+	if( exists $field_requests->{ 'thumb_url' } ) {
+		foreach my $request ( @{ $field_requests->{ 'thumb_url' } } ) {
+			my $request_string = $request->{ 'request' };
+			$record{ $request_string } = OME::Tasks::PixelsManager->getThumbURL( $obj );
+		}
+	}
+	return %record;
 }
 
 =head1 Author

@@ -64,10 +64,13 @@ sub _renderData {
 	my %record;
 	# thumbnail url
 	if( exists $field_requests->{ '/name' } ) {
-		if( $obj->module() ) {
-			$record{ '/name' } = $self->_trim( $obj->module()->name(),  $field_requests->{ '/name' } );
-		} else {
-			$record{ '/name' } = 'Virtual MEX '.$obj->id();
+		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
+			my $request_string = $request->{ 'request' };
+			if( $obj->module() ) {
+				$record{ $request_string } = $self->_trim( $obj->module()->name(),  $request );
+			} else {
+				$record{ $request_string } = 'Virtual MEX '.$obj->id();
+			}
 		}
 	}
 	return %record;

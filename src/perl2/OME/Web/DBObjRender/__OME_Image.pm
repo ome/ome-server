@@ -75,36 +75,42 @@ sub _renderData {
 
 	# thumbnail url
 	if( exists $field_requests->{ 'thumb_url' } ) {
-		$record{ 'thumb_url' } = OME::Tasks::ImageManager->getThumbURL( $obj );
+		foreach my $request ( @{ $field_requests->{ 'thumb_url' } } ) {
+			my $request_string = $request->{ 'request' };
+			$record{ $request_string } = OME::Tasks::ImageManager->getThumbURL( $obj );
+		}
 	}
 	# original file
 	if( exists $field_requests->{ 'original_file' } ) {
-		# Find the original file (this code should really live in ImageManager)
-		my $import_mex = $factory->findObject( "OME::ModuleExecution", 
-			'module.name' => 'Image import', 
-			image => $obj, 
-			__order => 'timestamp' );
-		my $ai = $factory->findObject( 
-			"OME::ModuleExecution::ActualInput", 
-			module_execution => $import_mex
-		);
-		my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
-			$ai->input_module_execution,
-			$ai->formal_input()->semantic_type
-		) if $ai;
-		# Try to guess which file was the original one
-		my $img_name = $obj->name();
-		$original_files = [ grep( $_->Path() =~ m/^$img_name/, @$original_files ) ]
-			if( $original_files and scalar( @$original_files ) > 1);
-		my $original_file = $original_files->[0];
-		if( scalar( @$original_files) eq 1 && $original_file && $original_file->Repository() ) { 
-			$record{ 'original_file' } = $self->render( 
-				$original_file, 
-				( $field_requests->{ original_file }->{ render } or 'ref' ), 
-				$field_requests->{ original_file } 
+		foreach my $request ( @{ $field_requests->{ 'original_file' } } ) {
+			my $request_string = $request->{ 'request' };
+			# Find the original file (this code should really live in ImageManager)
+			my $import_mex = $factory->findObject( "OME::ModuleExecution", 
+				'module.name' => 'Image import', 
+				image => $obj, 
+				__order => 'timestamp' );
+			my $ai = $factory->findObject( 
+				"OME::ModuleExecution::ActualInput", 
+				module_execution => $import_mex
 			);
-		} else {
-			$record{ 'original_file' } = undef;
+			my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
+				$ai->input_module_execution,
+				$ai->formal_input()->semantic_type
+			) if $ai;
+			# Try to guess which file was the original one
+			my $img_name = $obj->name();
+			$original_files = [ grep( $_->Path() =~ m/^$img_name/, @$original_files ) ]
+				if( $original_files and scalar( @$original_files ) > 1);
+			my $original_file = $original_files->[0];
+			if( scalar( @$original_files) eq 1 && $original_file && $original_file->Repository() ) { 
+				$record{ $request_string } = $self->render( 
+					$original_file, 
+					( $request->{ render } or 'ref' ), 
+					$request 
+				);
+			} else {
+				$record{ $request_string } = undef;
+			}
 		}
 	}
 	

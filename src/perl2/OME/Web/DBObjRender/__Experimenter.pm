@@ -66,10 +66,12 @@ sets '/name' to FirstName LastName
 sub _renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
 	my %record;
-	# thumbnail url
 	if( exists $field_requests->{ '/name' } ) {
-		$record{ '/name' } = $obj->FirstName." ".$obj->LastName;
-		$record{ '/name' } = $self->_trim( $record{ '/name' }, $field_requests->{ '/name' } );
+		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
+			my $request_string = $request->{ 'request' };
+			my $name = $obj->FirstName." ".$obj->LastName;
+			$record{ $request_string } = $self->_trim( $name, $request );
+		}
 	}
 	return %record;
 }

@@ -121,7 +121,7 @@ sub new {
 
 Gets a name for this object. Subclasses may override this by implementing a _getName method.
 
-Convenient shortcut to $self->renderData( $obj, { '/name' => $options } );
+Convenient shortcut to get renderData() to render '/name' with %options.
 the most common option is max_text_length => 25
 
 See Also renderData()
@@ -132,7 +132,7 @@ sub getName {
 	my ($self, $obj, $options) = @_;
 	
 	$options->{ 'request' } = '/name';
-	my %record = $self->renderData( $obj, { '/name' => $options } );
+	my %record = $self->renderData( $obj, { '/name' => [$options] } );
 	return $record{ '/name' };
 }
 
@@ -458,13 +458,11 @@ $field_requests is used to populate the returned hash.
 
 When called in plural context, returns an array of hashes.
 When called in singular context, returns a single hash.
-The hashes will be of the form { field_name => rendered_field, ... }
+The hashes will be of the form { field_request => rendered_field, ... }
 
 Magic field names:
 	/name: will be populated by whichever field is found: 'name', 'Name', or 'id'
 	/common_name: the commonly used name of this object type
-
-Other behaviors:
 
 =cut
 
@@ -479,15 +477,19 @@ sub renderData {
 	# magic fields will be distinguished from object fields by being prefixed my '/' i.e. "/magic_field"
 	
 	# parse field requests into fields & options. store in hash formatted like so:
-	#	$hash{ $field }{ $option_name } = $option_value;
-	# also, the actual request is stored in:  $hash{ $field }{ 'request' }
+	#	$parsed_field_requests{ $field_named_foo } = \@requests_for_field_named_foo
+	#	\@requests_for_field_named_foo is a bunch of hashes formated like so:
+	#	$request{ $option_name } = $option_value;
+	# also, the orgininal request is stored in:  $request{ 'request' }
 	if( ref( $field_requests ) eq 'ARRAY' ) {
 		my %parsed_field_requests;
 		foreach my $request ( @$field_requests ) {
-			my $field = undef;
-			$field = "magic" if( $request =~ m/^\// );
-			my @items = split( m/\//, $request );
-			if( $field && $field eq 'magic' ) {
+			my $field;
+			my %parsed_request;
+			my @items = split( m'/', $request );
+			# the first item will be blank for magic fields because magic fields
+			# are prefixed with the delimeter
+			if( $items[0] eq '' ) {
 				shift( @items );
 				$field = '/'.shift( @items );
 			} else {
@@ -495,13 +497,14 @@ sub renderData {
 			}
 			foreach my $option ( @items ) {
 				my ($name,$val) = split( m/-/, $option );
-				$parsed_field_requests{ $field }{ $name } = $val;
+				$parsed_request{ $name } = $val;
 			}
-			$parsed_field_requests{ $field }{ 'request' } = $request;
+			$parsed_request{ 'request' } = $request;
+			push( @{ $parsed_field_requests{ $field } }, \%parsed_request );
 		}
 		$field_requests = \%parsed_field_requests;
 	}
-	
+
 	# handle plural calling style
 	if( ref( $obj ) eq 'ARRAY' ) {
 		my @records;
@@ -514,95 +517,84 @@ sub renderData {
 	$specializedRenderer = $self->_getSpecializedRenderer( $obj );
 	%record = $specializedRenderer->_renderData( $obj, $field_requests, $options )
 		if $specializedRenderer and $specializedRenderer->can('_renderData');
-	# fix the record to key by requests intead of fields. 
-	# This makes life a little easier for the specialized renderers.
-	foreach my $field ( keys %record ) {
-		# don't bother rekeying if the subclass already did it
-		next unless exists $field_requests->{ $field };
-		my $request = $field_requests->{ $field }->{ 'request' };
-		# don't need to rekey this if the keys are identical
-		next if $request eq $field;
-		$record{ $request } = $record{ $field };
-		delete $record{ $field };
-	}
 
 	# default rendering
 	my $q = $self->CGI();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
 	foreach my $field ( keys %$field_requests ) {
-		my $request = $field_requests->{ $field }->{ 'request' };
-		
-		# don't override specialized renderings
-		next if exists $record{ $request };
-		
-		my $field_options = $field_requests->{ $field };
-		
-		# /common_name = object's commone name
-		if( $field eq '/common_name' ) {
-			$record{ $request } = $common_name;
-		
-		# /name = object name
-		} elsif( $field eq '/name' ) {
-			my $name;
-			$name = $obj->name() if( $obj->getColumnType( 'name' ) );
-			$name = $obj->Name() if( $obj->getColumnType( 'Name' ) );
-			$name = $obj->id() unless $name;
-			$name = $self->_trim( $name, $field_options );
-			$record{ $request } = $name;
-
-		# /object = render the object itself. default render mode is ref
-		} elsif( $field eq '/object' ) {
-			my $render_mode = ( $field_options->{ render } or 'ref' );
-			$record{ $request } = $self->render( $obj, $render_mode, $field_options );
+		foreach my $request ( @{ $field_requests->{ $field } } ) {
+			my $request_string = $request->{ 'request' };
+			
+			# don't override specialized renderings
+			next if exists $record{ $request_string };
 					
-		# /checkbox = Checkbox w/ LSID
-		} elsif( $field eq '/checkbox' ) {
-			$record{ $request } = $q->checkbox( 
-				-name => "selected_objects",
-				-value => $self->_getLSIDmanager()->getLSID( $obj ),
-				-label => '',
-			) if( $options->{ draw_checkboxes } );
+			# /common_name = object's commone name
+			if( $field eq '/common_name' ) {
+				$record{ $request_string } = $common_name;
+			
+			# /name = object name
+			} elsif( $field eq '/name' ) {
+				my $name;
+				$name = $obj->name() if( $obj->getColumnType( 'name' ) );
+				$name = $obj->Name() if( $obj->getColumnType( 'Name' ) );
+				$name = $obj->id() unless $name;
+				$name = $self->_trim( $name, $request );
+				$record{ $request_string } = $name;
+	
+			# /object = render the object itself. default render mode is ref
+			} elsif( $field eq '/object' ) {
+				my $render_mode = ( $request->{ render } or 'ref' );
+				$record{ $request_string } = $self->render( $obj, $render_mode, $options );
+						
+			# /checkbox = Checkbox w/ LSID
+			} elsif( $field eq '/checkbox' ) {
+				$record{ $request_string } = $q->checkbox( 
+					-name => "selected_objects",
+					-value => $self->_getLSIDmanager()->getLSID( $obj ),
+					-label => '',
+				) if( $options->{ draw_checkboxes } );
+						
+			# /obj_detail_url = url to detailed description of object
+			} elsif( $field eq '/obj_detail_url' ) {
+				$record{ $request_string } = $self->getObjDetailURL( $obj );
 					
-		# /obj_detail_url = url to detailed description of object
-		} elsif( $field eq '/obj_detail_url' ) {
-			$record{ $request } = $self->getObjDetailURL( $obj );
+			# populate field requests
+			} else {
+				my $type = $obj->getColumnType( $field );
+				next unless $type;
 				
-		# populate field requests
-		} else {
-			my $type = $obj->getColumnType( $field );
-			next unless $type;
-			
-			# data fields
-			if( $type eq 'normal' ) {
-				my $SQLtype = $obj->getColumnSQLType( $field );
-				$record{ $request } = $obj->$field;
-				my %booleanConvert = ( 0 => 'False', 1 => 'True' );
-				$record{ $request } =~ s/^([^:]+(:\d+){2}).*$/$1/
-					if $SQLtype eq 'timestamp';
-				$record{ $request } = $booleanConvert{ $record{ $request } }
-					if $SQLtype eq 'boolean';
-				$record{ $request } = $self->_trim( $record{ $request }, $field_options )
-					if( $SQLtype =~ m/^varchar|text/ ); 
-			}
-			
-			# reference field
-			if( $type eq 'has-one' ) {
-				my $render_mode = ( $field_options->{ render } or 'ref' );
-				$record{ $request } = $self->render( $obj->$field(), $render_mode, $field_options );
- 			}
-
-			# *many reference accessor
-			if( $type eq "has-many" || $type eq 'many-to-many' ) {
-				# ref_list if no field specified in command
-				my $render_mode = ( $field_options->{ render } or 'ref_list' );
-				$record{ $request } = $self->renderArray( 
-					[$obj, $field], 
-					$render_mode, 
-					{ more_info_url => $self->getSearchAccessorURL( $obj, $field ),
-					  type => $obj->getAccessorReferenceType( $field )->getFormalName()
-					}
-				);
+				# data fields
+				if( $type eq 'normal' ) {
+					my $SQLtype = $obj->getColumnSQLType( $field );
+					$record{ $request_string } = $obj->$field;
+					my %booleanConvert = ( 0 => 'False', 1 => 'True' );
+					$record{ $request_string } =~ s/^([^:]+(:\d+){2}).*$/$1/
+						if $SQLtype eq 'timestamp';
+					$record{ $request_string } = $booleanConvert{ $record{ $request_string } }
+						if $SQLtype eq 'boolean';
+					$record{ $request_string } = $self->_trim( $record{ $request_string }, $request )
+						if( $SQLtype =~ m/^varchar|text/ ); 
+				}
+				
+				# reference field
+				if( $type eq 'has-one' ) {
+					my $render_mode = ( $request->{ render } or 'ref' );
+					$record{ $request_string } = $self->render( $obj->$field(), $render_mode, $request );
+				}
+	
+				# *many reference accessor
+				if( $type eq "has-many" || $type eq 'many-to-many' ) {
+					# ref_list if no field specified in command
+					my $render_mode = ( $request->{ render } or 'ref_list' );
+					$record{ $request_string } = $self->renderArray( 
+						[$obj, $field], 
+						$render_mode, 
+						{ more_info_url => $self->getSearchAccessorURL( $obj, $field ),
+						  type => $obj->getAccessorReferenceType( $field )->getFormalName()
+						}
+					);
+				}
 			}
 		}
 	}
@@ -1017,11 +1009,22 @@ Subclasses should implement one or more of these
 
 =head2 _renderData
 
-	%partial_record = $specializedRenderer->_renderData( $obj, \%field_requests, \%options );
+	%record = $specializedRenderer->_renderData( $obj, \%field_requests, \%options );
 
 Implement this to do custom rendering of certain fields or to implement
 fields not implemented in DBObject. Examples of this are:
 	OME::Web::DBObjRender::__OME_Image.pm implementing 'original_file' and 'thumb_url' fields for Images.
+	OME::Web::DBObjRender::__OME_ModuleExecution.pm implementing a '/name' field.
+Also see:
+	OME/src/html/Templates/OME_Image_ref.tmpl
+	OME/src/html/Templates/OME_ModuleExecution_ref.tmpl
+
+%field_requests is formated like so:
+	$field_requests{ $field_named_foo } = \@requests_for_field_named_foo
+\@requests_for_field_named_foo is a bunch of hashes formated like so:
+	$request{ $option_name } = $option_value;
+additionally, the orgininal request is stored in:  $request{ 'request' }
+the record returned needs to be keyed by the original request.
 
 Subclasses need only populate fields they are overriding.
 
