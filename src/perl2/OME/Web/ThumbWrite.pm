@@ -86,7 +86,7 @@ sub serve {
 		print $thumbnail;
 	}
 
-
+	$session->closeSession();
 }
 
 1;
