@@ -1339,6 +1339,7 @@ char **cgivars=param;
 	else if (strcmp (method,"NewPixels") &&
 		strcmp (method,"FileInfo") &&
 		strcmp (method,"ReadFile") &&
+		strcmp (method,"GetLocalPath") &&
 		strcmp (method,"UploadFile")) {
 			HTTP_DoError (method,"pixelsID Parameter missing");
 			return (-1);
@@ -1575,6 +1576,34 @@ char **cgivars=param;
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%llu\n",ID);
 		}
+	}
+
+	else if (! strcmp (method,"GetLocalPath") ) {
+		OID fileID=0;
+		char file_path[256];
+
+		if ( (theParam = get_param (param,"FileID")) )
+			sscanf (theParam,"%llu",&fileID);
+
+		if (ID) {
+			if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+			strcpy (file_path,thePixels->path_rep);
+			freePixelsRep (thePixels);
+		} else if (fileID) {
+			strcpy (file_path,"Files/");
+			if (! getRepPath (fileID,file_path,0)) {
+				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);
+			}		
+		} else strcpy (file_path,"");
+
+		HTTP_ResultType ("text/plain");
+		fprintf (stdout,"%s\n",file_path);
 	}
 
 	else if (! strcmp (method,"FileInfo") ) {
