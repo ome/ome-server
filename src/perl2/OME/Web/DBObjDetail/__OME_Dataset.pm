@@ -185,7 +185,7 @@ sub getPageBody {
 			);
 			unshift( @{ $tmpl_data{ CategoryList } }, {
 				CategoryRef => 'Unclassified',
-				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
+				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass_no_map', { type => 'OME::Image' } ),
 			} );
 		}
 	}
