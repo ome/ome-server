@@ -75,20 +75,21 @@ public class CImage extends RemoteImage {
 	
 	public void loadImageData(Connection connection) {
 		int id = getID();
-		System.err.println("getting image data for image "+id);
+		//System.err.println("getting image data for image "+id);
 		//imageData = connection.getThumbnail(id);
 		if (imageData == null) {
-			System.err.println("retrieving...");
+		//	System.err.println("retrieving...");
 			connection.getThumbnail(this);
-		}
-		else 
-			System.err.println("cached...");		
+		}	
 	}
 	
 	public void setImageData(Image i) {
+		//System.err.println("getting image data for image "+getID());
 		imageData = i;
-		if (thumbnail != null) 
+		if (thumbnail != null) { 
+			//System.err.println("notifying of image completion");
 			thumbnail.notifyImageComplete();
+		}
 	}
 	
 	public void setThumbnail(PThumbnail thumb) {
@@ -96,10 +97,10 @@ public class CImage extends RemoteImage {
 	}
 	
 	public Image getImageData() {
-		System.err.println("retrieving image data.."+getID());
+		/*System.err.println("getting image data from CImage"+getID());
 		if (imageData == null) {
 			System.err.println("it's null..");
-		}
+		}*/
 		return imageData;
 	}
 }
