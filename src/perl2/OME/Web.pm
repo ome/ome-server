@@ -746,6 +746,59 @@ sub tableLine {
 				 $self->spacer(1,1))) . "\n";
 }
 
+=head2 _loadTypeAndGetInfo
+
+	my ($package_name, $common_name, $formal_name, $ST) = 
+		$self->_loadTypeAndGetInfo( $type );
+
+$type can be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
+
+Loads the package appropriately and returns descriptive information.
+
+$package_name is the name of the DBObject package
+$common_name is a name suitable for display
+$formal_name is the name suitable for passing as a parameter or to functions
+	(package name for standard DBObjects, @AttrName for Attributes)
+$ST is the Semantic Type if $type is a ST or attribute. Otherwise it's undef.
+
+=cut
+
+sub _loadTypeAndGetInfo {
+	my ($proto, $type) = @_;
+
+	my ($package_name, $common_name, $formal_name, $ST);
+	
+	# Set formal_name
+	if( ref($type) ) {
+		$formal_name = ref( $type );
+	} else {
+		$formal_name = $type;
+	}
+	$formal_name =~ s/^OME::SemanticType::__/@/;
+	
+	# Attribute: load Info and package
+	if( $formal_name =~ /^@/ ) {
+		my $session = OME::Session->instance();
+		$common_name = substr( $formal_name, 1 );
+		$ST = $session->Factory->findObject("OME::SemanticType", name => $common_name);
+		$ST->requireAttributeTypePackage();
+		$package_name = $ST->getAttributeTypePackage();
+
+	# DBObject: load info and package
+	} else {
+		$package_name = $formal_name;
+		eval( "use $package_name" ) ;
+		die "Error loading package $package_name. Error msg is:\n$@"
+			if $@;
+		$common_name = $package_name;
+		$common_name =~ s/OME:://;
+		$common_name =~ s/::/ /g;
+	}
+	
+	return ($package_name, $common_name, $formal_name, $ST);	
+}
+
 1;
 
 =head1 AUTHOR
