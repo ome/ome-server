@@ -123,7 +123,6 @@ Acessor for getting the timestamp when the previous step in the task finished.
 
 =cut
 
-use OME::Tasks::NotificationManager;
 
 __PACKAGE__->newClass();
 __PACKAGE__->setSequence('task_seq');
@@ -134,52 +133,54 @@ __PACKAGE__->addColumn(name => 'name',
                         SQLType => 'varchar(64)',
                         NotNull => 1,
                        });
-__PACKAGE__->addColumn(name => 'process_id',
+__PACKAGE__->addColumn(process_id => 'process_id',
                        {
                         SQLType => 'integer',
                         NotNull => 1,
                        });
-__PACKAGE__->addColumn('session_id' => 'session_id',
+__PACKAGE__->addColumn(session_id => 'session_id',
                        {
                         SQLType => 'integer',
                         NotNull => 1,
                         ForeignKey => 'ome_sessions',
                        });
-__PACKAGE__->addColumn('session' => 'session_id','OME::UserState');
-__PACKAGE__->addColumn(name => 'state',
+__PACKAGE__->addColumn(session => 'session_id','OME::UserState');
+__PACKAGE__->addColumn(state => 'state',
                        {
                         SQLType => 'varchar(64)',
                         NotNull => 1,
                        });
-__PACKAGE__->addColumn(name => 'message',
+__PACKAGE__->addColumn(message => 'message',
                        {
                         SQLType => 'text',
                        });
-__PACKAGE__->addColumn(name => 'error',
+__PACKAGE__->addColumn(error => 'error',
                        {
                         SQLType => 'text',
                        });
-__PACKAGE__->addColumn(name => 'n_steps',
+__PACKAGE__->addColumn(n_steps => 'n_steps',
                        {
                         SQLType => 'integer',
                        });
-__PACKAGE__->addColumn(name => 'last_step',
+__PACKAGE__->addColumn(last_step => 'last_step',
                        {
                         SQLType => 'integer',
                        });
-__PACKAGE__->addColumn(name => 't_start',
+__PACKAGE__->addColumn(t_start => 't_start',
                        {
                         SQLType => 'timestamp',
                         NotNull => 1,
                        });
-__PACKAGE__->addColumn(name => 't_stop',
+__PACKAGE__->addColumn(t_stop => 't_stop',
                        {
                         SQLType => 'timestamp',
                        });
-__PACKAGE__->addColumn(name => 't_last',
+__PACKAGE__->addColumn(t_last => 't_last',
                        {
                         SQLType => 'timestamp',
                        });
+
+use OME::Tasks::NotificationManager;
 
 
 # Over-ride the DBObject->getFactory() method.
@@ -270,6 +271,27 @@ sub setError {
 		$self->storeObject();
 	}
 	return $error;
+}
+
+
+
+=head2 setnSteps()
+
+Set the error message for the task.  Unlike the C<error()> field, this will immediately
+write the object to the DB, making the error message available to other processes.
+
+=cut
+
+sub setnSteps {
+	my $self = shift;
+	my $nSteps;
+	
+	if (@_) {
+		$nSteps = shift;
+		$self->n_steps($nSteps);
+		$self->storeObject();
+	}
+	return $nSteps;
 }
 
 
