@@ -60,7 +60,8 @@ Statistics.toolboxApperance = {
 	x: 130,
 	y: 130,
 	width: 165,
-	height: 55
+	height: 55,
+	noclip: true
 };
 
 
@@ -78,6 +79,20 @@ Statistics.prototype.buildToolBox = function( controlLayer ) {
 	this.displayPane = this.toolBox.getGUIbox();
 	this.displayPane.appendChild( this.displayContent );
 	
+	
+	this.labels['theT'] = Util.createTextSVG( "theT: ", {
+		"dominant-baseline": 'hanging',
+		"x":                 70,
+		"y":                 2
+	} );
+	this.fields['theT'] = Util.createTextSVG( this.image.theT(), {
+		"dominant-baseline": 'hanging',
+		"x":                 100,
+		"y":                 2,
+		"font-weight":       "bold"
+	} );
+	this.toolBox.getMenuBar().appendChild( this.labels['theT'] );
+	this.toolBox.getMenuBar().appendChild( this.fields['theT'] );
 };
 
 
@@ -90,60 +105,70 @@ Statistics.prototype.buildToolBox = function( controlLayer ) {
 		
 *****/
 Statistics.prototype.buildDisplay = function() {
-	if( !this.initialized) { return null; }
+	var theT = this.image.theT();
+	
+	var colWidth = 50;
 
 	this.displayContent = svgDocument.createElementNS(svgns, "g");
-
-	// set up GUI
-	this.logicalChannelPopupList = new popupList(
-		70, 0, this.waveLabels, 
-		{ obj: this, method: 'updateChannelStats'},
-		null,
-		skinLibrary["popupListAnchorLightslategray"],
-		skinLibrary["popupListBackgroundLightskyblue"],
-		skinLibrary["popupListHighlightAquamarine"]
-	);
-	this.logicalChannelPopupList.setLabel(-2, 12, "Channel: ");
-	this.logicalChannelPopupList.getLabel().setAttribute("text-anchor", "end");
-	this.logicalChannelPopupList.realize( this.displayContent );
 	
 	// build displays
 	this.labels = new Array();
 	this.fields = new Array();
-	this.displayContent.appendChild( this.logicalChannelPopupList.textToSVG(
-		'<text x="0" y="2em" dominant-baseline="hanging">theT: </text>'
-	));
-	this.labels['theT'] = this.displayContent.lastChild;
-	this.displayContent.appendChild( this.logicalChannelPopupList.textToSVG(
-		'<text x="160" y="2em" text-anchor="end" dominant-baseline="hanging">.</text>'
-	));
-	this.fields['theT'] = this.displayContent.lastChild;
 
+	// get c and t indexes into stats
 	for( var c in this.stats ) {
 		for( var t in this.stats[c] ) {
 			break;
 		}
+		break;
 	}
-	var lineCount = 3;
-	for( var statType in this.stats[c][t] ) {
-		var newLabel = svgDocument.createElementNS( svgns, "text" );
-		newLabel.setAttribute( "dominant-baseline", 'hanging' );
-		newLabel.setAttribute( "y", lineCount + 'em' );
-		newLabel.appendChild( svgDocument.createTextNode( statType ) );
-		this.labels[ statType ] = newLabel;
-		
-		var newField = svgDocument.createElementNS( svgns, "text" );
-		newField.setAttribute( "x", 160 );
-		newField.setAttribute( "y", lineCount + 'em' );
-		newField.setAttribute( "text-anchor", 'end' );
-		newField.setAttribute( "dominant-baseline", 'hanging' );
-		newField.appendChild( svgDocument.createTextNode( '.' ) );
-		this.fields[ statType ] = newField;
-
-		this.displayContent.appendChild( newLabel );
+	
+	var lineCount = 0;
+	var colCount = 0;
+	// Make Channel row
+	this.labels[ 'channel' ] = Util.createTextSVG( "Channel", {
+		"dominant-baseline": 'hanging',
+		"y":                 lineCount + 'em'
+	} );
+	this.displayContent.appendChild( this.labels[ 'channel' ] );
+	this.fields[ 'channel' ] = new Array();
+	for( var ch_i in this.waveLabels ) {
+		var newField = Util.createTextSVG( this.waveLabels[ ch_i ], {
+			"text-anchor":       'end',
+			"dominant-baseline": 'hanging',
+			"x":                 110 + ( colCount * colWidth ),
+			"y":                 lineCount + 'em'
+		} );
+		this.fields[ 'channel' ][ ch_i ] = newField;
 		this.displayContent.appendChild( newField );
+		++colCount;
+	}
+	
+	
+	++lineCount;
+	for( var statType in this.stats[c][t] ) {
+		var newLabel = Util.createTextSVG( statType, {
+			"dominant-baseline": 'hanging',
+			"y":                 lineCount + 'em'
+		} );
+		this.labels[ statType ] = newLabel;
+		this.displayContent.appendChild( newLabel );
+		
+		colCount = 0;
+		this.fields[ statType ] = new Array();
+		for( var ch_i in this.waveLabels ) {
+			var newField = Util.createTextSVG( this.stats[ ch_i ][ theT ][statType], {
+				"text-anchor":       'end',
+				"dominant-baseline": 'hanging',
+				"x":                 110 + ( colCount * colWidth ),
+				"y":                 lineCount + 'em'
+			} );
+			this.fields[ statType ][ ch_i ] = newField;
+			this.displayContent.appendChild( newField );
+			++colCount;
+		}
 
-		lineCount++;
+		++lineCount;
 	}
 
 	var translate = 'translate( '+ toolBox.prototype.padding + ', ' + toolBox.prototype.padding + ')';
@@ -152,15 +177,6 @@ Statistics.prototype.buildDisplay = function() {
 	return this.displayContent;
 };
 
-/*****
-
-	updateStats
-		t = theT
-	
-	purpose:
-		update stack stats
-	
-*****/
 Statistics.prototype.updateChannelStats = function () {
 	this.updateStats( this.fields['theT'].firstChild.data );
 };
@@ -168,18 +184,14 @@ Statistics.prototype.updateChannelStats = function () {
 Statistics.prototype.updateStats = function() {
 	// update fields
 	var t = this.image.theT();
-	var c = this.logicalChannelPopupList.getSelection();
+//	var c = this.logicalChannelPopupList.getSelection();
 	this.fields['theT'].firstChild.data = t + 1;
-	for( var statType in this.stats[c][t] ) {
-		this.fields[statType].firstChild.data = this.stats[c][t][statType];
+	for( var c in this.stats ) {
+		for( var statType in this.stats[c][t] ) {
+			this.fields[statType][c].firstChild.data = this.stats[c][t][statType];
+		}
 	}
 };
-
-/********************************************************************************************/
-/********************************************************************************************/
-/************************** Functions without safety nets ***********************************/
-/********************************************************************************************/
-/********************************************************************************************/
 
 /*****
 
