@@ -150,6 +150,53 @@ public class DatasetManager
     }
 
     /**
+     * Adds a {@link Image} to a {@link List} of {@link Dataset}s.
+     * No error is thrown if the image already belongs to any of the
+     * datasets.
+     */
+    public void addImageToDatasets(List datasets, Image image)
+    {
+        if (datasets == null)
+            throw new IllegalArgumentException("Dataset cannot be null");
+        if (image == null)
+            throw new IllegalArgumentException("Images cannot be null");
+
+        List list = new ArrayList(datasets.size());
+        Iterator it = datasets.iterator();
+        while (it.hasNext())
+        {
+            Object o = it.next();
+            if (o instanceof Dataset)
+                list.add(new Integer(((Dataset) o).getID()));
+            else
+                throw new IllegalArgumentException("List must contain Datasets");
+        }
+ 
+        caller.dispatch("addImageToDatasets",
+                        new Object[] {
+                            list,
+                            new Integer(image.getID())
+                        });
+    }
+
+    /**
+     * Adds a {@link Image} to a {@link List} of {@link Dataset}s.
+     * No error is thrown if the image already belongs to any of the
+     * datasets.
+     */
+    public void addImageToDatasets(List datasetIDs, int imageID)
+    {
+        if (datasetIDs == null)
+            throw new IllegalArgumentException("Dataset IDs cannot be null");
+
+        caller.dispatch("addImageToDatasets",
+                        new Object[] {
+                            datasetIDs,
+                            new Integer(imageID),
+                        });
+    }
+
+    /**
      * Removes a {@link Image} from a {@link Dataset}.  If the image
      * doesn't belongs to that dataset, nothing happens.
      */
