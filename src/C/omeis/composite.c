@@ -1,0 +1,249 @@
+/*------------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2003 Open Microscopy Environment
+ *      Massachusetts Institute of Technology,
+ *      National Institutes of Health,
+ *      University of Dundee
+ *
+ *
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *------------------------------------------------------------------------------
+ */
+
+
+
+
+/*------------------------------------------------------------------------------
+ *
+ * Written by:	Ilya G. Goldberg <igg@nih.gov>   1/2004
+ * 
+ *------------------------------------------------------------------------------
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> 
+#include "omeis.h"
+#include <pic.h>
+#include <filt.h>
+#include <zoom.h>
+#include "composite.h"
+
+
+int DoComposite (PixelsRep *myPixels, int theZ, int theT, char **param) {
+char *theParam;
+char error_str[256];
+char setThumb=0;
+char defaultFormat[] = "JPEG", *theFormat = defaultFormat;
+levelBasisType levelBasis=FIXED_BASIS;
+char isRGB=0;
+channelSpecType *theChannel;
+int i;
+
+CompositeSpec theComposite;
+
+	memset(&theComposite, 0, sizeof(CompositeSpec));
+
+	error_str[0]=0;
+	if (! myPixels) return (-1);
+	if (theZ < 0 || theT < 0) return (-1);
+	if (theZ >= myPixels->head->dz ) return (-1);
+	if (theT >= myPixels->head->dt ) return (-1);
+	theComposite.theZ = theZ;
+	theComposite.theT = theT;
+	
+	if ( (theParam = get_param (param,"SetThumbnail")) ) {
+		setThumb=1;
+	}
+	if ( (theParam = get_lc_param (param,"Format")) && strlen (theParam) )
+		theFormat = theParam;
+
+	theComposite.sizeX = myPixels->head->dx;
+	theComposite.sizeY = myPixels->head->dy;
+	/*
+	 Channel specification goes like so:
+	 RedChannel = channel,blkLevel,whtLevel,gamma
+	 ...
+	 GrayChannel = channel,blkLevel,whtLevel,gamma
+	 note that gamma is not implemented as of 1/04 (== 0).
+	 LevelBasis is a separate parameter with the following values:
+	 geomean, mean, fixed.  fixed is the default if LevelBasis is not specified.
+	 which means that the blkLevel and whtLevel values are either 
+	 i.e.  geosigma + blkLevel*geosigma or sigma + blkLevel*sigma or just blkLevel.
+	*/
+	if ( (theParam = get_lc_param (param,"LevelBasis")) ) {
+		if (! strcmp (theParam,"geosigma")) levelBasis=GEOSIGMA_BASIS;
+		else if (! strcmp (theParam,"sigma")) levelBasis=SIGMA_BASIS;
+		else levelBasis=FIXED_BASIS;
+	}
+
+	if ( (theParam = get_param (param,"RedChannel")) ) {
+		theChannel = &(theComposite.RGBAGr[0]);
+		sscanf (theParam,"%d,%f,%f,%f",
+			&(theChannel->channel),&(theChannel->black),&(theChannel->white),&(theChannel->gamma));
+		theChannel->isOn = isRGB = 1;
+		theChannel->basis = levelBasis;
+		theChannel->time = theT;
+	}	
+
+	if ( (theParam = get_param (param,"GreenChannel")) ) {
+		theChannel = &(theComposite.RGBAGr[1]);
+		sscanf (theParam,"%d,%f,%f,%f",
+			&(theChannel->channel),&(theChannel->black),&(theChannel->white),&(theChannel->gamma));
+		theChannel->isOn = isRGB = 1;
+		theChannel->basis = levelBasis;
+		theChannel->time = theT;
+	}	
+
+	if ( (theParam = get_param (param,"BlueChannel")) ) {
+		theChannel = &(theComposite.RGBAGr[2]);
+		sscanf (theParam,"%d,%f,%f,%f",
+			&(theChannel->channel),&(theChannel->black),&(theChannel->white),&(theChannel->gamma));
+		theChannel->isOn = isRGB = 1;
+		theChannel->basis = levelBasis;
+		theChannel->time = theT;
+	}	
+
+	if ( (theParam = get_param (param,"AlphaChannel")) ) {
+		theChannel = &(theComposite.RGBAGr[3]);
+		sscanf (theParam,"%d,%f,%f,%f",
+			&(theChannel->channel),&(theChannel->black),&(theChannel->white),&(theChannel->gamma));
+		theChannel->basis = levelBasis;
+		theChannel->time = theT;
+	}
+
+	if ( (theParam = get_param (param,"GrayChannel")) ) {
+		theChannel = &(theComposite.RGBAGr[4]);
+		sscanf (theParam,"%d,%f,%f,%f",
+			&(theChannel->channel),&(theChannel->black),&(theChannel->white),&(theChannel->gamma));
+		theChannel->isOn = 1;
+		theChannel->basis = levelBasis;
+		theChannel->time = theT;
+	}
+
+	if ( (theParam = get_param (param,"Size")) ) {
+		sscanf (theParam,"%d,%d",&(theComposite.sizeX),&(theComposite.sizeY));
+	}
+	
+	theComposite.isRGB = isRGB;
+
+	for (i=0;i<5;i++) {
+		fixChannelSpec (myPixels, &(theComposite.RGBAGr[i]) );
+		if (! theComposite.RGBAGr[i].isFixed) {
+			fprintf (stderr,"*** NOT FIXED ***\n");
+			return (-1);
+		}
+	}
+
+	theComposite.thePixels = myPixels;
+	theComposite.stream = stdout;
+	strncpy (theComposite.format, theFormat, 32);
+/*
+	This isn't working, and the left-over code is in compositeIM.c
+	DoCompositeIM   (&theComposite, param);
+*/
+	DoCompositeZoom (&theComposite, param);
+	
+	return (0);
+}
+
+
+/*
+  Might try implementing this with native libjpeg calls if not doing zooming.
+  Or just let DoCompositeZoom take care of it all.
+*/
+int DoCompositeJPEG (CompositeSpec *myComposite, char **param) {
+	return (0);
+}
+
+#define FILTER_DEFAULT "triangle"
+#define WINDOW_DEFAULT "blackman"
+
+int DoCompositeZoom (CompositeSpec *myComposite, char **param) {
+Pic *ome_pic, *out_pic;
+char out_name[256];
+char *xfiltname = FILTER_DEFAULT, *yfiltname = 0;
+char *xwindowname = 0, *ywindowname = 0;
+int  square, intscale=0;
+double xsupp = -1., ysupp = -1.;
+double xblur = -1., yblur = -1.;
+Window_box ome_win, out_win;
+Filt *xfilt, *yfilt, xf, yf;
+/*
+Continuous coordinates aren't implemented
+Mapping m;
+*/
+
+    ome_win.x0 = out_win.x0 = PIC_UNDEFINED;
+    ome_win.x1 = out_win.x1 = PIC_UNDEFINED;
+
+	strncpy (out_name,myComposite->thePixels->path_ID,256-strlen(myComposite->format)-2);
+	strcat (out_name,".");
+	strcat (out_name,myComposite->format);
+
+	ome_pic = pic_open_dev ("omeis",(char *)myComposite, "r");
+	out_pic = pic_open_stream (myComposite->format, stdout, out_name, "w");
+	
+	if (myComposite->isRGB) pic_set_nchan (out_pic,3);
+	else pic_set_nchan (out_pic,1);
+	
+	out_win.x0 = 0;
+	out_win.y0 = 0;
+	out_win.x1 = out_win.x0 + myComposite->sizeX - 1;
+	out_win.y1 = out_win.y0 + myComposite->sizeY - 1;
+
+	/*
+	  The following is pretty much straight out of zoom_main.c
+	*/
+	if (ome_win.x0==PIC_UNDEFINED) pic_get_window(ome_pic, (Window_box *)&ome_win);
+	/*
+	 * nx and ny uninitialized at this point
+	 */
+	if (!yfiltname) yfiltname = xfiltname;
+	xfilt = filt_find(xfiltname);
+	yfilt = filt_find(yfiltname);
+	if (!xfilt || !yfilt) {
+	fprintf(stderr, "can't find filters %s and %s\n",
+		xfiltname, yfiltname);
+	exit(1);
+	}
+	/* copy the filters before modifying them */
+	xf = *xfilt; xfilt = &xf;
+	yf = *yfilt; yfilt = &yf;
+	if (xsupp>=0.) xfilt->supp = xsupp;
+	if (xsupp>=0. && ysupp<0.) ysupp = xsupp;
+	if (ysupp>=0.) yfilt->supp = ysupp;
+	if (xblur>=0.) xfilt->blur = xblur;
+	if (xblur>=0. && yblur<0.) yblur = xblur;
+	if (yblur>=0.) yfilt->blur = yblur;
+	
+	if (!ywindowname) ywindowname = xwindowname;
+	if (xwindowname || xfilt->windowme) {
+		if (!xwindowname) xwindowname = WINDOW_DEFAULT;
+			xfilt = filt_window(xfilt, xwindowname);
+	}
+	if (ywindowname || yfilt->windowme) {
+		if (!ywindowname) ywindowname = WINDOW_DEFAULT;
+			yfilt = filt_window(yfilt, ywindowname);
+	}
+
+	zoom_opt(ome_pic, &ome_win, out_pic, &out_win, xfilt, yfilt, 1, intscale);
+
+    pic_close(ome_pic);
+    pic_close(out_pic);
+
+	return (0);
+}
