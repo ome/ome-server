@@ -294,6 +294,7 @@ JAVA
     }
 
     print $int_fh <<"JAVA";
+    /** Criteria field name: <code>${element_name}</code> */
     public ${java_type} ${prefix}${field_name}();
 JAVA
 
@@ -310,6 +311,16 @@ JAVA
         print $dto_fh <<"JAVA";
     public void set${field_name}(${java_type} value)
     { setElement("${element_name}",${value}); }
+JAVA
+    } else {
+    print $int_fh <<"JAVA";
+    /** Criteria field name: <code>#${element_name}</code> */
+    public int count${field_name}();
+JAVA
+
+        print $dto_fh <<"JAVA";
+    public int count${field_name}()
+    { return countListElement("${element_name}"); }
 JAVA
     }
 
@@ -369,25 +380,27 @@ sub writeOneClass ($$) {
     # Output the interface specification
 
     print $int_fh <<"JAVA";
+import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
 
 public interface ${int_class}
 JAVA
 
+    my @superinterfaces = qw(DataInterface);
+
     if (defined $class->{Superinterfaces}) {
         my $extends = $class->{Superinterfaces};
-        my $extend_string;
         if (ref($extends) eq 'ARRAY') {
-            $extend_string = join(', ',@$extends);
+            push @superinterfaces, @$extends;
         } elsif (!ref($extends)) {
-            $extend_string = $extends;
+            push @superinterfaces, $extends;
         }
 
-        print $int_fh "    extends $extend_string\n";
     }
 
-    print $int_fh "{\n";
+    my $extend_string = join(', ',@superinterfaces);
+    print $int_fh "    extends $extend_string\n{\n";
 
     if (!defined $class->{Superclass}) {
         print $dto_fh <<"JAVA";
@@ -401,6 +414,9 @@ public class ${dto_class}
 {
     public ${dto_class}() { super(); }
     public ${dto_class}(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "${int_class}"; }
+    public Class getDTOType() { return ${int_class}.class; }
 
 JAVA
     } else {
@@ -441,7 +457,7 @@ JAVA
 
     if ($map_code ne "") {
         print $dto_fh <<"JAVA";
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
 $map_code    }
