@@ -78,7 +78,6 @@ use OME::Tasks::PixelsManager;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::Params;
 use OME::ImportEngine::ImportCommon;
-use OME::ImportEngine::FileUtils qw(/^.*/);
 use OME::ImportExport::Repacker::Repacker;
 use base qw(OME::ImportEngine::AbstractFormat);
 use vars qw($VERSION);

@@ -76,7 +76,6 @@ use strict;
 use File::Basename;
 use Log::Agent;
 use Carp;
-use OME::ImportEngine::FileUtils qw(/^.*/);
 use OME::ImportEngine::Params;
 use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::TIFFUtils;
