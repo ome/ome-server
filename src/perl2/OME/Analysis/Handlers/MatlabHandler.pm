@@ -119,10 +119,32 @@ sub new {
 	
 	# Mapping from matlab classes to Matlab convert function name
 	$self->{ _matlab_class_to_convert} = {
-		$mxUINT8_CLASS  => 'uint8' ,
-		$mxUINT16_CLASS => 'uint16',
-		$mxUINT32_CLASS => 'uint32',
-		$mxSINGLE_CLASS => 'single' ,
+		$mxLOGICAL_CLASS   => 'logical',
+		$mxDOUBLE_CLASS    => 'double',
+		$mxSINGLE_CLASS    => 'single',
+		$mxINT8_CLASS      => 'int8',
+		$mxUINT8_CLASS     => 'uint8',
+		$mxINT16_CLASS     => 'int16',
+		$mxUINT16_CLASS    => 'uint16',
+		$mxINT32_CLASS     => 'int32',
+		$mxUINT32_CLASS    => 'uint32',
+		$mxINT64_CLASS     => 'int64',
+		$mxUINT64_CLASS    => 'uint64',
+	};
+	
+	# Mapping from convert function names to matlab classes
+	$self->{ _convert_to_matlab_class} = {
+		'logical' => $mxLOGICAL_CLASS, 
+		'double'  => $mxDOUBLE_CLASS,
+		'single'  => $mxSINGLE_CLASS, 
+		'int8'    => $mxINT8_CLASS, 
+		'uint8'   => $mxUINT8_CLASS, 
+		'int16'   => $mxINT16_CLASS,
+		'uint16'  => $mxUINT16_CLASS,
+		'int32'   => $mxINT32_CLASS, 
+		'uint32'  => $mxUINT32_CLASS, 
+		'int64'   => $mxINT64_CLASS,
+		'uint64'  => $mxUINT64_CLASS, 
 	};
 	
 	# Mapping from matlab classes to strings for display purposes
@@ -234,22 +256,20 @@ sub __execute {
 	} else {
 		$output_cmd = "[".join(',',@output_names)."] = ";
 	}
-
 	my $command = "${output_cmd}${location}${input_cmd};";
 	logdbg "debug", "***** Command to Matlab: $command\n";
-	my $outBuffer      = " " x 2048;
-	my $blankOutBuffer = " " x 2048;
-	$self->{__engine}->setOutputBuffer($outBuffer, length($outBuffer));
-	my $start_time = [gettimeofday()];
+	my $outBuffer  = " " x 2048;
+	$self->{__engine}->setOutputBuffer($outBuffer, length($outBuffer));	
 	
+	my $start_time = [gettimeofday()];
 	$self->{__engine}->eval($command);
-	$outBuffer =~ s/(\0.*)$//;
 	$mex->total_time(tv_interval($start_time));
-	if ($outBuffer ne $blankOutBuffer) {
-		$mex->error_message("$outBuffer");
-		logdbg "debug", "***** Output from Matlab:\n $outBuffer\n";
-	} else {
+	$outBuffer =~ s/(\0.*)$//;
+	if ($outBuffer =~ m/^\s*$/) {
 		logdbg "debug", "***** Output from Matlab:\n";
+	} else {
+		$mex->error_message("$outBuffer");
+		logdbg "debug", "***** Output from Matlab:\n $outBuffer\n";		
 	}
 }
 
@@ -285,6 +305,59 @@ sub placeInputs {
 		my $translation_function = $self->{ _translate_to_matlab }->{ $input->tagName() };
 		$self->$translation_function( $input );
 	}
+}
+
+=head2 _putScalarToMatlab
+	Puts a scalar of a particular name, value, and class into the Matlab Engine 
+	workspace
+	
+	$array = $self->_putScalarToMatlab("matlab_var_name", 13, $mxDOUBLE_CLASS);
+=cut
+sub _putScalarToMatlab {
+	my ($self, $name, $value, $class) = @_;
+	my $array;
+	
+	$class = $mxDOUBLE_CLASS unless defined $class;
+	
+	# Place value into matlab
+	if ($class == $mxCHAR_CLASS) {
+		$array = OME::Matlab::Array->newStringScalar($value);
+	} elsif ($class == $mxLOGICAL_CLASS) {
+		$array = OME::Matlab::Array->newLogicalScalar($value);
+	} else {
+		$array = OME::Matlab::Array->newNumericScalar($value, $class);
+	}
+	
+	$array->makePersistent();
+	$self->{__engine}->eval("global $name;");
+	$self->{__engine}->putVariable($name,$array);
+	
+	return $array;
+}
+
+=head2 _getScalarFromMatlab
+	Gets a scalar of a particular name from the Matlab Engine workspace.
+	$class is an optional parameter that signals what is the 
+	desired output Matlab type.
+	
+	$array = $self->_getScalarFromMatlab("matlab_var_name", $mxDOUBLE_CLASS);
+	$array->value();
+	$array->class();
+=cut
+sub _getScalarFromMatlab {
+	my ($self, $name, $class) = @_;
+	my $array;
+	
+	# Convert array datatype if requested	
+	$self->{__engine}->eval("$name = ".$self->{_matlab_class_to_convert}->{$class}.
+	                        "($name);") if defined $class;
+	
+	# Get value from matlab
+	$array = $self->{__engine}->getVariable( $name )
+		or die "Couldn't retrieve $name";
+	$array->makePersistent();
+	
+	return $array;
 }
 
 =head2 Pixels_to_MatlabArray
@@ -400,6 +473,7 @@ sub Pixels_to_MatlabArray {
 		die "Could not read Pixels into Matlab. Read $nPix, expected $expectedPix."
 	}
 	$self->{__engine}->eval("$matlab_var_name = reshape($matlab_var_name"."_serialized, size($matlab_var_name))");
+	# Reshape has converted the pixels array to double
 	$self->{__engine}->eval("$matlab_var_name = ".$self->{_matlab_class_to_convert}->{$class}."($matlab_var_name)");
 	
 	# Convert array datatype if requested
@@ -425,6 +499,7 @@ Uses <Scalar>
 
 sub Attr_to_MatlabScalar {
 	my ( $self, $xmlInstr ) = @_;
+	my $factory = OME::Session->instance()->Factory();
 
 	# get input value
 	my $input_location = $xmlInstr->getAttribute( 'InputLocation' )
@@ -441,36 +516,21 @@ sub Attr_to_MatlabScalar {
 		if scalar( @$input_attr ) > 1;
 	my $value = $input_attr->[0]->$SEforScalar();
 
-	# get input class type
+	# Convert array datatype if requested
 	my $class;
-	my $formal_input = $self->getFormalInput( $formal_input_name );
-	foreach ($formal_input->semantic_type()->semantic_elements()) {
-		if ($_->name() eq "$SEforScalar") {
-			$class = $_->data_column()->sql_type();
-			last;
-		}
+	if (my $convertToDatatype = $xmlInstr->getAttribute('ConvertToDatatype')) {
+		$class = $self->{ _convert_to_matlab_class}->{ $convertToDatatype };
+	} else {
+		my $se = $factory->findObject( "OME::SemanticType::Element", {
+			semantic_type => $self->getFormalInput( $formal_input_name )->semantic_type(),
+			name          => "$SEforScalar"
+		} );
+		$class = $self->{ _ome_datatype_to_matlab_class}->
+		   { $se->data_column()->sql_type() };
 	}
-	$class = $self->{ _ome_datatype_to_matlab_class}->{$class};
 	
 	# Place value into matlab
-	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
-	my $array;
-	if ($class == $mxCHAR_CLASS) {
-		$array = OME::Matlab::Array->newStringScalar($value);
-	} elsif ($class == $mxLOGICAL_CLASS) {
-		$array = OME::Matlab::Array->newLogicalScalar($value);
-	} else {
-		$array = OME::Matlab::Array->newNumericScalar($value, $class);
-	}
-	
-	$array->makePersistent();
-	$self->{__engine}->eval("global $matlab_var_name;");
-	$self->{__engine}->putVariable($matlab_var_name,$array);
-	
-	# Convert array datatype if requested
-	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
-	}
+	$self->_putScalarToMatlab($self->_inputVarName($xmlInstr), $value, $class);
 }
 
 =head2 Constant_to_MatlabScalar
@@ -487,18 +547,15 @@ sub Constant_to_MatlabScalar {
 	my $value = $xmlInstr->getAttribute( 'Value' );
 	die "Could not find Value in input ".$xmlInstr->toString()
 		if not defined $value;
-
-	# Place value into matlab
-	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
-	my $array = OME::Matlab::Array->newDoubleScalar($value);
-	$array->makePersistent();
-	$self->{__engine}->eval("global $matlab_var_name");
-	$self->{__engine}->putVariable($matlab_var_name,$array);
-	
+		
 	# Convert array datatype if requested
-	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
+	my $class = $mxDOUBLE_CLASS;
+	if (my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype')) {
+		$class = $self->{ _convert_to_matlab_class}->{ $convertToDatatype };
 	}
+	
+	# Place value into matlab
+	$self->_putScalarToMatlab($self->_inputVarName($xmlInstr), $value, $class);
 }
 
 =head1 Output processing
@@ -678,7 +735,8 @@ Operates on vector matlab outputs. Uses <Vector> in conjuction with
 
 sub MatlabVector_to_Attrs {
 	my ( $self, $xmlInstr ) = @_;
-	
+	my $factory = OME::Session->instance()->Factory();
+
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
 	
 	# get Vector Decoding
@@ -706,28 +764,28 @@ sub MatlabVector_to_Attrs {
 
 
 		# Convert array datatype if requested
+		my $class;
 		if( my $convertToDatatype = $element->getAttribute( 'ConvertToDatatype' ) ) {
-			$self->{__engine}->eval("$matlab_var_name"."_index_val_$index = $convertToDatatype($matlab_var_name"."_index_val_$index);");
+			$class = $self->{_convert_to_matlab_class}->{$convertToDatatype};
 		}
-	
+		
 		# retrieve value from matlab
-		my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name."_index_val_$index" )
-			or die "Couldn't retrieve $matlab_var_name Index = $index\n";
-		$matlab_output->makePersistent();
+		my $matlab_output = $self->_getScalarFromMatlab($matlab_var_name."_index_val_$index", $class);
 		my $value = $matlab_output->getScalar();
-		my $class = $matlab_output->class();
+		$class = $matlab_output->class();
 		
 		# make sure declared (OME-XML) and actual (MATLAB) data-types are the same
-		foreach ($formal_output->semantic_type()->semantic_elements()) {
-			if ($_->name() eq "$SE_name") {
-				die "Semantic Element ($SE_name) of Semantic Type (".$formal_output->semantic_type()->name().") is of declared type (".$_->data_column()->sql_type().
-					") but is of actual type (".$self->{ _matlab_class_to_string }->{$class}."). \n"
-					if ( not defined($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
-						 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $_->data_column()->sql_type()) ;
-				last;
-			}
-		}
+		my $se = $factory->findObject( "OME::SemanticType::Element", {
+				semantic_type => $formal_output->semantic_type(),
+				name          => "$SE_name"
+			} );
 		
+		die "Semantic Element ($SE_name) of Semantic Type (".$formal_output->semantic_type()->name().
+			") is of declared type (".$se->data_column()->sql_type().") but is of actual type (".
+			$self->{ _matlab_class_to_string }->{$class}."). \n"
+			if ( not exists($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
+				 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $se->data_column()->sql_type());
+			
 		# Make a data hash
 		my $template_id = $xmlInstr->getAttribute( 'UseTemplate' )
 			and die "UseTemplate is not supported ATM for ".$xmlInstr->tagName().". ask Josiah <siah\@nih.gov> to fix this.";
@@ -779,29 +837,26 @@ sub MatlabScalar_to_Attr {
 	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location );
 	my $formal_output = $self->getFormalOutput( $formal_output_name );
 
-	# Convert array datatype if requested
-	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
-	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
+	# Retrieve value from matlab
+	my $class;
+	if (my $convertToDatatype = $xmlInstr->getAttribute('ConvertToDatatype') ) {
+		$class = $self->{_convert_to_matlab_class}->{$convertToDatatype};
 	}
 	
-	# Retrieve value from matlab
-	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
-		or die "Couldn't retrieve $matlab_var_name";
-	$matlab_output->makePersistent();
+	my $matlab_output = $self->_getScalarFromMatlab($self->_outputVarName($xmlInstr), $class);
 	my $value = $matlab_output->getScalar();
-	my $class = $matlab_output->class();
-
+	   $class = $matlab_output->class();
+	
 	# make sure declared (OME-XML) and actual (MATLAB) data-types are the same
-	foreach ($formal_output->semantic_type()->semantic_elements()) {
-		if ($_->name() eq "$SEforScalar") {
-			die "Semantic Element ($SEforScalar) of Semantic Type (".$formal_output->semantic_type()->name().") is of declared type (".$_->data_column()->sql_type().
-				") but is of actual type (".$self->{ _matlab_class_to_string }->{$class}."). \n"
-				if ( not defined($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
-					 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $_->data_column()->sql_type());
-			last;
-		}
-	}
+	my $se = $factory->findObject( "OME::SemanticType::Element", {
+			semantic_type => $formal_output->semantic_type(),
+			name          => "$SEforScalar"
+		} );
+	die "Semantic Element ($SEforScalar) of Semantic Type (".$formal_output->semantic_type()->name().
+	    ") is of declared type (".$se->data_column()->sql_type().") but is of actual type (".
+	    $self->{ _matlab_class_to_string }->{$class}."). \n"
+		if ( not exists($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
+			 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $se->data_column()->sql_type());
 	
 	# Make a data hash
 	my $template_id = $xmlInstr->getAttribute( 'UseTemplate' );
@@ -1148,8 +1203,8 @@ sub validateAndProcessExecutionInstructions {
 		my @vector_decoders = $executionInstructionsXML->findnodes( 
 			'.//MLI:VectorDecoder[@ID="'.$vectorDecodeID.'"]' )
 			or die "Can't find VectorDecoder referenced by Vector output ".$vector->toString;
-	}		
-
+	}
+	
     return $executionInstructionsXML;
 }
 
