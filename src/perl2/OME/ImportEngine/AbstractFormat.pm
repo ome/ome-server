@@ -471,6 +471,9 @@ sub __createRepositoryFile {
     $pixels->Path($path);
     $pixels->storeObject();
 
+    $image->pixels_id( $pixels->id() ); # Josiah's viewer hack
+    $image->storeObject();
+
     # Create an OME::Image::Pix instance to correspond to this new
     # Pixels attribute.
 
