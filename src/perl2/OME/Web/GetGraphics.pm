@@ -51,7 +51,7 @@ sub createOMEPage {
 	my $self  = shift;
 	my $cgi   = $self->CGI();
 	my @params = $cgi->url_param();
-print STDERR ref($self)."->createOMEPage()\nURL='".$cgi->url(-query=>1)."\n";
+#print STDERR ref($self)."->createOMEPage()\nURL='".$cgi->url(-query=>1)."\n";
 	if ( $cgi->url_param('DrawLayersControls') ) {
 		return ('HTML',$self->DrawLayersControls());
 	} elsif ( $cgi->url_param('name') ) {
@@ -124,12 +124,13 @@ my @string;
 	}
 
 	$params{allZ} = $params{allZ} eq 'true' ? 1 : 0;
-	$params{allZ} = $params{allT} eq 'true' ? 1 : 0;
+	$params{allT} = $params{allT} eq 'true' ? 1 : 0;
 	$params{width} = 782;
 	$params{height} = 854;
 	$params{color} = OME::Graphics::JavaScript::Layer->X11Colors->{ $params{color} };
 	$type = delete $params{layerType};
 	
+	# $type should be something under OME::Graphics::GD
 	$layer = eval ("new $type (%params)") || die "Layer of type '$type' is not supported\n";
 	$layer->Draw ();
 
