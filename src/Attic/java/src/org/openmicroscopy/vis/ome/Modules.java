@@ -68,7 +68,7 @@ public class Modules {
 	
 	private ArrayList rootCategories = new ArrayList();
 		
-	public Modules(ConnectionWorker worker,Factory factory) {
+	public Modules(Connection connection,Factory factory) {
 		Module mod;
 		Integer id;
 		ModuleCategory cat;
@@ -82,7 +82,7 @@ public class Modules {
 			mod = (Module) iter.next();
 			populateModule(mod);
 			id = new Integer(mod.getID());
-			worker.setStatusLabel("Module.."+mod.getName());
+			connection.setStatusLabel("Module.."+mod.getName());
 			byId.put(id,mod);
 
 			cat = mod.getCategory();
@@ -95,7 +95,7 @@ public class Modules {
 		iter = cats.iterator();
 		while (iter.hasNext()) {
 			cat = (ModuleCategory) iter.next();
-			worker.setStatusLabel("Category... "+cat.getName());
+			connection.setStatusLabel("Category... "+cat.getName());
 			if (cat.getParentCategory() == null) {
 				rootCategories.add(cat);
 			}
