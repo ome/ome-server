@@ -68,20 +68,20 @@ print $calcXYZInfo->program_name()." (".$calcXYZInfo->id().")\n";
 my $calcXYInfo = OME::Program->findByName('Plane statistics');
 print $calcXYInfo->program_name()." (".$calcXYInfo->id().")\n";
 
-my $findSpots = OME::Program->findByName('Find spots');
-print $findSpots->program_name()." (".$findSpots->id().")\n";
+# my $findSpots = OME::Program->findByName('Find spots');
+# print $findSpots->program_name()." (".$findSpots->id().")\n";
 
-my $findCells = OME::Program->findByName('Find cells');
-print $findCells->program_name()." (".$findCells->id().")\n";
+# my $findCells = OME::Program->findByName('Find cells');
+# print $findCells->program_name()." (".$findCells->id().")\n";
 
-my $findGolgi = OME::Program->findByName('Find golgi');
-print $findGolgi->program_name()." (".$findGolgi->id().")\n";
+# my $findGolgi = OME::Program->findByName('Find golgi');
+# print $findGolgi->program_name()." (".$findGolgi->id().")\n";
 
-my $findMito = OME::Program->findByName('Find mito');
-print $findMito->program_name()." (".$findMito->id().")\n";
+# my $findMito = OME::Program->findByName('Find mito');
+# print $findMito->program_name()." (".$findMito->id().")\n";
 
-my $findRatio = OME::Program->findByName('Find ratio');
-print $findRatio->program_name()." (".$findRatio->id().")\n";
+# my $findRatio = OME::Program->findByName('Find ratio');
+# print $findRatio->program_name()." (".$findRatio->id().")\n";
 
 
 sub __createChain {
@@ -141,29 +141,29 @@ my $importChain = __createChain
       [$calcXYInfo]],
      []);
 
-print "Find spots chain...\n";
-my $findSpotsChain = __createChain
-    (['Find spots'],
-     [[$calcXYZInfo],
-      [$findSpots,undef,'SPOT']],
-     [[0,'Stack mean',1,'Stack mean'],
-      [0,'Stack geomean',1,'Stack geomean'],
-      [0,'Stack sigma',1,'Stack sigma'],
-      [0,'Stack minimum',1,'Stack minimum'],
-      [0,'Stack maximum',1,'Stack maximum']]);
+# print "Find spots chain...\n";
+# my $findSpotsChain = __createChain
+#     (['Find spots'],
+#      [[$calcXYZInfo],
+#       [$findSpots,undef,'SPOT']],
+#      [[0,'Stack mean',1,'Stack mean'],
+#       [0,'Stack geomean',1,'Stack geomean'],
+#       [0,'Stack sigma',1,'Stack sigma'],
+#       [0,'Stack minimum',1,'Stack minimum'],
+#       [0,'Stack maximum',1,'Stack maximum']]);
 
 
-print "Feature test chain...\n";
-my $featureTestChain = __createChain
-    (["Find lots o' stuff"],
-     [[$findCells,undef,'CELL'],
-      [$findGolgi,'CELL','GOLGI'],
-      [$findMito,'CELL','MITOCHONDRIA'],
-      [$findRatio,'CELL',undef]],
-     [[0,'Output bounds',1,'Input bounds'],
-      [0,'Output bounds',2,'Input bounds'],
-      [1,'Output bounds',3,'Golgi bounds'],
-      [2,'Output bounds',3,'Mito bounds']]);
+# print "Feature test chain...\n";
+# my $featureTestChain = __createChain
+#     (["Find lots o' stuff"],
+#      [[$findCells,undef,'CELL'],
+#       [$findGolgi,'CELL','GOLGI'],
+#       [$findMito,'CELL','MITOCHONDRIA'],
+#       [$findRatio,'CELL',undef]],
+#      [[0,'Output bounds',1,'Input bounds'],
+#       [0,'Output bounds',2,'Input bounds'],
+#       [1,'Output bounds',3,'Golgi bounds'],
+#       [2,'Output bounds',3,'Mito bounds']]);
 
 
 $importChain->dbi_commit();

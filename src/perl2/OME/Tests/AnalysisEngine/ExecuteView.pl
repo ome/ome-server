@@ -35,13 +35,13 @@ use strict 'refs';
 print "\nOME Test Case - Execute view\n";
 print "----------------------------\n";
 
-if (scalar(@ARGV) != 2) {
-    print "Usage:  ExecuteView <view id> <dataset id>\n\n";
+if (scalar(@ARGV) < 2) {
+    print "Usage:  ExecuteView <view id> <dataset id> <flags>\n\n";
     exit -1;
 }
 
-my $viewID = $ARGV[0];
-my $datasetID = $ARGV[1];
+my $viewID = shift(@ARGV);
+my $datasetID = shift(@ARGV);
 
 print "Please login to OME:\n";
 
@@ -75,6 +75,12 @@ my $view = $factory->loadObject("OME::AnalysisView",$viewID);
 my $dataset = $factory->loadObject("OME::Dataset",$datasetID);
 
 my $engine = OME::Tasks::AnalysisEngine->new();
+
+foreach my $flag_string (@ARGV) {
+    my ($flag,$value) = split(/=/,$flag_string,2);
+    $engine->Flag($flag,$value);
+}
+
 $engine->executeAnalysisView($session,$view,{},$dataset);
 
 

@@ -71,6 +71,8 @@ __PACKAGE__->set_db('Main',
                   OME::DBConnection->DBPassword(), 
                   { RaiseError => 1 });
 
+use fields qw(_flags);
+
 =head1 SQL Statements
 
 Very little internal state is maintained during the execution
@@ -459,8 +461,21 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $self = {};
+    my $self = {
+                _flags => {
+                           ReuseResults => 1
+                          },
+               };
     return bless $self, $class;
+}
+
+
+sub Flag {
+    my ($self,$flag,$value) = @_;
+
+    return (defined $value)? 
+        $self->{_flags}->{$flag} = $value:
+        $self->{_flags}->{$flag};
 }
 
 
@@ -1211,6 +1226,10 @@ sub findModuleHandler {
     # This routine performs the check that determines whether results
     # can be reused, using the methods described above.
     sub __checkPastResults {
+        # Allow the user to skip analysis reuse.  This should really
+        # only be used for testing.
+        return 0 if (!$self->Flag('ReuseResults'));
+
         my $paramString = __calculateCurrentInputTag();
         my $space = ($dependence{$curr_nodeID} eq 'D')? '': '  ';
         print STDERR "$space  Param $paramString\n";
