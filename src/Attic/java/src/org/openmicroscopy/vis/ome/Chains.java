@@ -94,4 +94,8 @@ public class Chains {
 		Collection values = chains.values();
 		return values.iterator();
 	}
+	
+	public ChainInfo getChainInfo(int i) {
+		return (ChainInfo) chains.get(new Integer(i));
+	}
 }

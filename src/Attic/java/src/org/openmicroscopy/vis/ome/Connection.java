@@ -168,6 +168,11 @@ public class Connection {
 	public void setModuleInfo(int i,ModuleInfo info) {
 		modules.setModuleInfo(i,info);
 	}
+	
+	public ChainInfo getChainInfo(int i) {
+		return chains.getChainInfo(i);
+	}
+	
 	/**
 	 * The inputs and outputs lists are hashes of lists, keyed by
 	 * SemanticType. The entries in those lists are PFormalParameter 
