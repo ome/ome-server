@@ -38,6 +38,7 @@
 #define omeis_h
 
 #include <sys/types.h>
+#include "digest.h"
 
 
 /* ----------- */
@@ -89,7 +90,8 @@ typedef struct {
 	unsigned char bp;             /* bytes per pixel */
 	unsigned char isSigned;       /* signed integers or not */
 	unsigned char isFloat;        /* floating point or not */
-	char reserved[31];            /* extra stuff to fill out to 64 bytes */
+	unsigned char sha1[OME_DIGEST_LENGTH]; /* SHA1 digest */
+	char reserved[11];            /* buffer assuming OME_DIGEST_LENGTH=20 */
 } pixHeader;
 
 typedef struct
