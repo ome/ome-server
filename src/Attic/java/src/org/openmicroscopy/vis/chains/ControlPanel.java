@@ -49,6 +49,7 @@ import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
+import org.openmicroscopy.vis.piccolo.PProjectSelectionCanvas;
 import org.openmicroscopy.Project;
 //import org.openmicroscopy.ChainExecution;
 import java.util.List;
@@ -60,6 +61,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.ListCellRenderer;
 import javax.swing.JList;
+import javax.swing.ListModel;
 import javax.swing.JToolBar;
 import javax.swing.BoxLayout;
 import javax.swing.ListSelectionModel;
@@ -71,6 +73,7 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
 import java.awt.Component;
 import java.awt.Font;
@@ -84,8 +87,9 @@ import java.util.Collection;
  * @since OME2.1
  */
 public class ControlPanel extends JFrame implements ListSelectionListener, 
-	MouseListener, SelectionEventListener {
+	MouseListener, MouseMotionListener, SelectionEventListener {
 	
+	private static final int BROWSER_SIDE=400;
 	protected JLabel statusLabel;
 	
 	protected JPanel panel;
@@ -117,7 +121,9 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private Project curProject;
 	private CDataset curDataset=null;
 		
+	private Project mousedOverProject;
 	
+	private PProjectSelectionCanvas projCanvas = null;
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
@@ -133,6 +139,8 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		
 		content.add(toolBar);
 		
+		
+		
 		JPanel topPanel = new JPanel();
 		
 		topPanel.setLayout(new BoxLayout(topPanel,BoxLayout.X_AXIS));
@@ -142,6 +150,9 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		// projects
 		getProjects(connection);
 		if (projects.size() > 0) {
+			//add project list right here.
+			projCanvas =  new PProjectSelectionCanvas(projects);
+			content.add(projCanvas);
 			JPanel projectPanel = new JPanel();
 		
 			projectPanel.setLayout(new BoxLayout(projectPanel,BoxLayout.Y_AXIS));
@@ -161,6 +172,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			projList.setCellRenderer(new ProjectRenderer());
 			projList.addListSelectionListener(this);
 			projList.addMouseListener(this);
+			projList.addMouseMotionListener(this);
 			JScrollPane projScroller = new JScrollPane(projList);
 			projScroller.setMinimumSize(new Dimension(100,200));
 			projScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -205,13 +217,16 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		imagePanel.add(browserLabel);
 		imagePanel.add(Box.createRigidArea(new Dimension(0,3)));
 		browser = new PBrowserCanvas(connection);
-		browser.setPreferredSize(new Dimension(400,400));
+		browser.setPreferredSize(new Dimension(BROWSER_SIDE,BROWSER_SIDE));
 		imagePanel.add(browser);
 		topPanel.add(imagePanel);
 		content.add(topPanel);
+		
 		pack();
 		show();
 	
+		if (projCanvas != null) 
+			projCanvas.layout(BROWSER_SIDE+200);// projlist, dataset list
 		
 		//setResizable(false);
 
@@ -257,6 +272,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		statusLabel.setMinimumSize(new Dimension(150,30));
 		statusLabel.setPreferredSize(new Dimension(150,30));
+		tool.add(Box.createHorizontalGlue());
 		tool.add(statusLabel);
 	
 		
@@ -292,20 +308,20 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	public void valueChanged(ListSelectionEvent e) {
 		
-		System.err.println("got an event with value changed..");
+	/*	System.err.println("got an event with value changed..");
 		System.err.println("reentrant is "+ reentrant);
-		System.err.println("value adjusting is "+e.getValueIsAdjusting()); 
+		System.err.println("value adjusting is "+e.getValueIsAdjusting());*/ 
 		if ( e.getValueIsAdjusting() == true) // or reentrant == true 
 			return;
 		Object obj = e.getSource();
-		System.err.println("value changed source is "+obj);
+		//System.err.println("value changed source is "+obj);
 		if (!(obj instanceof JList)) 
 			return;
 		JList list = (JList) obj;
 		
 		Object item = list.getSelectedValue();
-		System.err.println("selected item is "+item);
-		System.err.println("selected index is "+list.getSelectedIndex());
+//		System.err.println("selected item is "+item);
+//		System.err.println("selected index is "+list.getSelectedIndex());
 		
 		SelectionState selectionState = SelectionState.getState();
 		if (list == projList)
@@ -347,11 +363,39 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	
 	public void mouseEntered(MouseEvent e) {
+		
+		mouseMoved(e);
+	}
+	
+	
+	
+	private void clearMouseOverProjectHighlights() {
+		mousedOverProject = null;
+		browser.highlightDatasetsForProject(mousedOverProject);
+		
 	}
 	
 	public void mouseExited(MouseEvent e) {
+		clearMouseOverProjectHighlights();
 	}
 	
+	
+	public void mouseMoved(MouseEvent e) {
+	
+		int index = projList.locationToIndex(e.getPoint());
+		if (index == -1)
+			clearMouseOverProjectHighlights();
+		ListModel  projModel = projList.getModel();
+		Project p = (Project) projModel.getElementAt(index);
+		if (p != mousedOverProject) {
+			mousedOverProject = p;
+			browser.highlightDatasetsForProject(mousedOverProject);
+		}
+	}
+	
+	public void mouseDragged(MouseEvent e) {
+		
+	}
 	public void mousePressed(MouseEvent e) {
 	}
 	
@@ -365,20 +409,17 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	public void selectionChanged(SelectionEvent e) {
 
 		SelectionState selectionState = SelectionState.getState();
-		System.err.println("selection changed...");
 		selectionState.removeSelectionEventListener(this);
 		datasetList.removeListSelectionListener(this);
 		projList.removeListSelectionListener(this);
 		datasetList.removeMouseListener(this);
 		projList.removeMouseListener(this);
 		int pos = datasets.indexOf(selectionState.getSelectedDataset());
-		System.err.println("dataset pos is "+pos);
 		if (pos >=0)
 			datasetList.setSelectedIndex(pos);
 		else
 			datasetList.clearSelection();
 		pos= projects.indexOf(selectionState.getSelectedProject());
-		System.err.println("project pos is "+pos);
 		if (pos >=0)
 			projList.setSelectedIndex(pos);
 		else
