@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.ome.CNode
+ * org.openmicroscopy.vis.chains.ome.CModule
  *
  *------------------------------------------------------------------------------
  *
@@ -39,30 +39,32 @@
  
  package org.openmicroscopy.vis.ome;
  
- import org.openmicroscopy.remote.RemoteChain;
- import org.openmicroscopy.remote.RemoteObjectCache;
- 
- public class CNode extends RemoteChain.Node {
+import org.openmicroscopy.remote.RemoteModule;
+import org.openmicroscopy.remote.RemoteObjectCache;
+import org.openmicroscopy.vis.piccolo.PModule;
+import java.util.ArrayList;
+
+ public class CModule extends RemoteModule {
 	
 	static {
-		RemoteObjectCache.addClass("OME::AnalysisChain::Node",CNode.class);
-	}
-	private int layer = -1;
-	
- 	public CNode() {
- 		super();
- 	}
- 	
-	public void setLayer(int layer) {
-		this.layer = layer;
+		RemoteObjectCache.addClass("OME::Module",CModule.class);
 	}
 	
-	public int getLayer() {
-		return layer;
+	private ArrayList pModules = new ArrayList();
+	
+	public CModule() {
+		super();
 	}
 	
-	public boolean hasLayer() {
-		return (!(layer == -1));
-	} 
- }
- 
+	public void addModuleWidget(PModule pMod) {
+		pModules.add(pMod);
+	}
+	
+	public ArrayList getModuleWidgets() {
+		return pModules;
+	}
+	
+	public void removeModuleWidget(PModule mod) {
+		pModules.remove(mod);
+	}
+}

@@ -62,7 +62,6 @@ public class Modules {
 	
 	
 	private HashMap byId = new HashMap();
-	private HashMap byModule = new HashMap();
 
 	// all of the modules that don't have categories
 	private ArrayList uncategorizedModules = new ArrayList();
@@ -72,7 +71,6 @@ public class Modules {
 	public Modules(ConnectionWorker worker,Factory factory) {
 		Module mod;
 		Integer id;
-		ModuleInfo info;
 		ModuleCategory cat;
 		
 		// Get all of the modules that are avialable.
@@ -84,14 +82,12 @@ public class Modules {
 			mod = (Module) iter.next();
 			populateModule(mod);
 			id = new Integer(mod.getID());
-			info = new ModuleInfo(mod);
 			worker.setStatusLabel("Module.."+mod.getName());
-			byId.put(id,info);
-			byModule.put(mod,info);
+			byId.put(id,mod);
+
 			cat = mod.getCategory();
 			if (cat == null) {
-				System.err.println("uncategorized module "+mod.getName());
-				uncategorizedModules.add(info);
+				uncategorizedModules.add(mod);
 			}
 		}
 		
@@ -99,10 +95,8 @@ public class Modules {
 		iter = cats.iterator();
 		while (iter.hasNext()) {
 			cat = (ModuleCategory) iter.next();
-			System.err.println("category .."+cat.getName());
 			worker.setStatusLabel("Category... "+cat.getName());
 			if (cat.getParentCategory() == null) {
-				System.err.println("adding root category "+cat.getName());
 				rootCategories.add(cat);
 			}
 				
@@ -130,8 +124,7 @@ public class Modules {
 	public void dump() {
 		Iterator iter = iterator();
 		while (iter.hasNext()) {
-			ModuleInfo modinf = (ModuleInfo) iter.next();
-			Module mod = modinf.getModule();
+			Module mod = (Module) iter.next();
 			dumpModule(mod);
 		}
 	}
@@ -151,17 +144,11 @@ public class Modules {
 	private void populateModule(Module mod) {
 				
 		mod.populate();
-		System.err.println("Loading Module..."+mod.getName());
-		/*mod.getName();
-		mod.getDescription();
-		mod.getLocation();
-		mod.getNewFeatureTag(); */  
+		//System.err.println("Loading Module..."+mod.getName());
 		// get inputs & outputs?
 		List params = mod.getInputs();
-		//System.err.println("...Inputs...");
 		//populateParameters(params);
 		params = mod.getOutputs();
-		//System.err.println("...Outputs..");
 		//populateParameters(params);
 	}
 	
@@ -186,7 +173,7 @@ public class Modules {
 			param.getList();
 			param.getOptional();
 			SemanticType semType = param.getSemanticType();
-			System.err.println("semantic type is "+semType);
+			//System.err.println("semantic type is "+semType);
 			if (semType != null &&
 				semType.toString().compareTo(">>OBJ:NULL") !=0 )
 				semType.getName();
@@ -195,19 +182,12 @@ public class Modules {
 		}
 	}
 	
-	public ModuleInfo getModuleInfo(int i) {
-		return (ModuleInfo) byId.get(new Integer(i));
+	public CModule getModule(int i) {
+		return (CModule) byId.get(new Integer(i));
 	}
 	
-	public ModuleInfo getModuleInfo(Module mod) {
-		return (ModuleInfo) byModule.get(mod);
-	}
 	
-	public void setModuleInfo(int i,ModuleInfo info) {
-		Integer id = new Integer(i);
-		byId.remove(id);
-		byId.put(id,info);	
-	}
+
 	/**
 	 * Utility procedures for dumping a module and its contents to stderr.<p>
 	 * 
@@ -240,7 +220,7 @@ public class Modules {
 				sName = semType.getName();
 			else 
 				sName = "";
-			System.err.println((i++)+") Parameter Name: "+pName+", Semantic Type: "+sName);
+		//	System.err.println((i++)+") Parameter Name: "+pName+", Semantic Type: "+sName);
 		}
 	}
 	

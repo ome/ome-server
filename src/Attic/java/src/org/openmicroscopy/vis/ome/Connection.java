@@ -150,13 +150,11 @@ public class Connection {
 	 * @param i
 	 * @return
 	 */
+
+
 	
-	public ModuleInfo getModuleInfo(int i) {
-		return modules.getModuleInfo(i);	
-	}
-	
-	public void setModuleInfo(int i,ModuleInfo info) {
-		modules.setModuleInfo(i,info);
+	public CModule getModule(int id) {
+		return modules.getModule(id);
 	}
 	
 	public Chain getChain(int i) {

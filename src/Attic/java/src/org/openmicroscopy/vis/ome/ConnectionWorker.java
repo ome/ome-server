@@ -110,14 +110,12 @@ public class ConnectionWorker extends SwingWorker {
 			//	XmlRpcCaller.TRACE_CALLS=true;
 				remote = new RemoteBindings();
 				if (remote != null) {
-
 					Class.forName("org.openmicroscopy.vis.ome.CNode");
-					
+					Class.forName("org.openmicroscopy.vis.ome.CModule");
 					remote.loginXMLRPC(URL,userName,passWord);
 					session = remote.getSession();
 					factory = remote.getFactory();
 					if (session != null && factory != null) {
-						System.err.println("factory is "+factory);
 						modules  = new Modules(this,factory);
 						chains = new Chains(this,factory);
 						setStatusLabel("Palette and Library");

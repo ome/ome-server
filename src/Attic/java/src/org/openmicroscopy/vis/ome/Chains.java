@@ -67,7 +67,6 @@ public class Chains {
 		
 		while (iter.hasNext()) {
 			c = (Chain) iter.next();
-			System.err.println("Chain: "+c.getName());
 			worker.setStatusLabel("Chain.."+c.getName());
 			populateChain(c);
 			id = new Integer(c.getID());
