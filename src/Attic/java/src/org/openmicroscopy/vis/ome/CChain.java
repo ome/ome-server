@@ -66,7 +66,7 @@ public class CChain extends RemoteChain  {
 		RemoteObjectCache.addClass("OME::AnalysisChain",CChain.class);
 	}
 	
-	private static final int CROSSING_ITERATIONS=5;
+	private static final int CROSSING_ITERATIONS=2;
 	private static final double DELTA=0.1;
 	private boolean orderChanged = false;
 	
@@ -529,7 +529,7 @@ public class CChain extends RemoteChain  {
 	
 	public boolean hasExecutionsInSelectedDatasets(
 			SelectionState selectionState) {
-		CDataset selected = selectionState.getCurrentDataset();
+		CDataset selected = selectionState.getSelectedDataset();
 		Collection datasets = selectionState.getActiveDatasets();
 		
 		// if no active datasets and nothing selected,
@@ -567,10 +567,10 @@ public class CChain extends RemoteChain  {
 	public Collection getCurrentDatasetExecutions(
 			SelectionState selectionState) {
 		Collection active = selectionState.getActiveDatasets();
-		CDataset selected = selectionState.getCurrentDataset();
+		CDataset selected = selectionState.getSelectedDataset();
 		Vector v;
 		CDataset d;
-		CDataset current = selectionState.getCurrentDataset();
+		CDataset current = selectionState.getSelectedDataset();
 		
 		
 		if ((active == null ||active.size() ==0) && selected == null) 
