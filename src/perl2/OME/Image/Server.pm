@@ -1573,6 +1573,44 @@ sub getPlaneStatistics {
     return \%hash;
 }
 
+=head2 getPlaneHistogram
+
+	my $statsHash = OME::Image::Server->getPlaneHistogram($pixelsID);
+
+This method returns a hash containing histogram vector of pixel intensities 
+for the specified pixels file.  The hash is of the form:
+	
+	$statsHash->{$z}->{$c}->{$t} = ($LowBound, $UppBound, @histBins);
+
+where $z, $c, and $t are the coordinates of a plane. $LowBound and $UppBound 
+are the lower and upper bounds that were @histBins is the histogram
+vector.
+
+If the specified pixel file isn't in read-only mode on the image
+server, an error will be thrown.
+
+=cut
+sub getPlaneHistogram{
+    my $proto = shift;
+    my ($pixelsID) = @_;
+	
+	# we need the result of GetPlaneStats for LowBound and UppBOund
+	my $statsHash = getPlaneStatistics(($proto,$pixelsID));
+    my $result = $proto->__callOMEIS(Method   => 'GetPlaneHist',
+									 PixelsID => $pixelsID);
+    die "Error retrieving histogram" unless defined $result;
+    my %hash;
+
+    my @rows = split(/\015?\012/,$result);
+    foreach my $row (@rows) {
+        my ($c,$t,$z,@hist) = split(/\t/,$row);
+        $hash{$z}{$c}{$t} = [$statsHash->{$z}{$c}{$t}{Minimum},
+							 $statsHash->{$z}{$c}{$t}{Maximum}, @hist];
+    }
+    return \%hash;
+}
+
+
 =head2 getStackStatistics
 
 	my $statsHash = OME::Image::Server->getStackStatistics($pixelsID);
@@ -1629,6 +1667,42 @@ sub getStackStatistics {
     return \%hash;
 }
 
+=head2 getStackHistogram
+
+	my $statsHash = OME::Image::Server->getStackHistogram($pixelsID);
+
+This method returns a hash containing histogram vector of pixel intensities 
+for the specified pixels file.  The hash is of the form:
+	
+	$statsHash->{$c}->{$t} = ($LowBound, $UppBound, @histBins);
+
+where $c, and $t are the coordinates of a stack. $LowBound and $UppBound 
+are the lower and upper bounds that were @histBins is the histogram
+vector.
+
+If the specified pixel file isn't in read-only mode on the image
+server, an error will be thrown.
+
+=cut
+sub getStackHistogram{
+    my $proto = shift;
+    my ($pixelsID) = @_;
+	
+	# we need the result of GetPlaneStats for LowBound and UppBOund
+	my $statsHash = getStackStatistics(($proto,$pixelsID));
+    my $result = $proto->__callOMEIS(Method   => 'GetStackHist',
+									 PixelsID => $pixelsID);
+    die "Error retrieving histogram" unless defined $result;
+    my %hash;
+
+    my @rows = split(/\015?\012/,$result);
+    foreach my $row (@rows) {
+        my ($c,$t,@hist) = split(/\t/,$row);
+        $hash{$c}{$t} = [$statsHash->{$c}{$t}{Minimum},
+						 $statsHash->{$c}{$t}{Maximum}, @hist];
+    }
+    return \%hash;
+}
 1;
 
 __END__
@@ -1652,5 +1726,3 @@ Douglas Creager <dcreager@alum.mit.edu>
 L<OME>, http://www.openmicroscopy.org/
 
 =cut
-
-
