@@ -64,7 +64,7 @@ my %_fieldLabels = (
 	'image'            => "Image",
 	'module_execution' => "Module Execution (MEX)"
 );
-my @_fieldNames = ('id', 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType', 'BitsPerPixel', 'image', 'module_execution');
+my @_fieldNames = ('id', 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType', 'BitsPerPixel', 'image', 'module_execution', 'semantic_type');
 my @_allFieldNames = (@_fieldNames, 'FileSHA1', 'ImageServerID', 'Repository' );
 
 
@@ -79,12 +79,14 @@ Overrides default behavior, uses class data to return labels
 sub getAllFieldNames { return @_allFieldNames if wantarray; return \@_allFieldNames; }
 
 =head2 getFieldLabels
-Overrides default behavior, uses class data to return labels
+Overrides some field labels
 =cut
 sub getFieldLabels {
 	my ($proto,$type,$fieldNames) = @_;
 	$fieldNames = $proto->getFieldNames() unless $fieldNames;
-	my %fieldLabels = map{ $_ => ( $_fieldLabels{$_} or $_ ) } @$fieldNames;
+	my %fieldLabels = $proto->SUPER::getFieldLabels( $type, $fieldNames, 1 );
+	( exists $_fieldLabels{$_} and $fieldLabels{ $_ } = $_fieldLabels{$_} )
+		foreach( @$fieldNames );
 	return %fieldLabels if wantarray;
 	return \%fieldLabels;
 }
@@ -99,12 +101,14 @@ sub getRefToObject {
 		if( /^txt$/ ) {
 			return $obj->id();
 		}
-		# FIXME
 		if( /^html$/ ) {
 			my $type = $proto->_getType( $obj );
 			my $id   = $obj->id();
+			my $image_id = $obj->image()->id();
 			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
-			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'><table style='background-image:url(\"$thumbURL\")' width='50' height='50' cellpadding='0'><tr valign='bottom'><td align='right'><font class='ome_text_over_thumbnail'>P($id)</font></td></tr></table></a>";
+			my $ref = "<a href='serve.pl?Page=OME::Web::GetGraphics&ImageID=$image_id'><img src='$thumbURL'></a>";
+			$ref .= "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'>P($id)</a>";
+			return $ref;
 		}
 	}
 }
