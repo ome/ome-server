@@ -154,18 +154,11 @@ typedef struct {
 	Pix *pixWriter;
 } PixelInfo;
 
-/* <Image> info */
-typedef struct {
-	/* dimensions of pixel array. This may be overridden by dimensions in <Pixels> */
-	int X,Y,Z,C,T,bpp;
-} ImageInfo;	
-
 /* Contains all the information about the parser's state */
 typedef struct {
 	PossibleParserStates state;
 	int nOutputFiles;
 	PixelInfo *pixelInfo;
-	ImageInfo imageInfo;
 	StructElementInfo* elementInfo;
 	BinDataInfo *binDataInfo;
 } ParserState;
@@ -435,39 +428,6 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	**************************************************************************/
 
 
-	/**************************************************************************
-	*
-	* Image:
-	* 	nab the pixel array dimensions from Image. That is the default size 
-	* 	of <Pixels>.
-	*/
-	else if( strcmp( ImageLocal, localName ) == 0 ) {
-		state->imageInfo.X = state->imageInfo.Y = state->imageInfo.Z = state->imageInfo.C = state->imageInfo.T = 0;
-		for( i=0; attrs[i] != NULL; i+=2 ) {
-			if( strcmp( attrs[i], "SizeX" ) == 0 ) {
-				state->imageInfo.X = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "SizeY" ) == 0 ) {
-				state->imageInfo.Y = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "SizeZ" ) == 0 ) {
-				state->imageInfo.Z = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "NumChannels" ) == 0 ) {
-				state->imageInfo.C = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "NumTimes" ) == 0 ) {
-				state->imageInfo.T = atoi( attrs[i+1] );
-			}
-		}
-		
-		/* error check: verify we have all needed attributes */
-		if( state->imageInfo.X == 0 || state->imageInfo.Y == 0 ||
-		    state->imageInfo.Z == 0 || state->imageInfo.C == 0 ||
-		    state->imageInfo.T == 0 ) {
-			fprintf( stderr, "Error! <Image> does not have all required attributes!\n" );
-			exit(-1);
-		}
-	}
-	/*
-	**************************************************************************/
-
 
 	/**************************************************************************
 	*
@@ -507,11 +467,11 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			fprintf( stderr, "Error! Pixels element has no attributes!\n" );
 			exit(-1);
 		}
-		state->pixelInfo->X = state->imageInfo.X;
-		state->pixelInfo->Y = state->imageInfo.Y;
-		state->pixelInfo->Z = state->imageInfo.Z;
-		state->pixelInfo->C = state->imageInfo.C;
-		state->pixelInfo->T = state->imageInfo.T;
+		state->pixelInfo->X = 0;
+		state->pixelInfo->Y = 0;
+		state->pixelInfo->Z = 0;
+		state->pixelInfo->C = 0;
+		state->pixelInfo->T = 0;
 		state->pixelInfo->bigEndian = -1;
 		state->pixelInfo->dimOrder = state->pixelInfo->pixelType = NULL;
 		for( i=0; attrs[i] != NULL; i+=2 ) {
@@ -656,7 +616,6 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 	/ stack.
 	*/
 	StructElementInfo *elementInfo;
-	char *localName;
 
 	switch( state->state ) {
 	
@@ -838,32 +797,6 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 		}
 	}
 	
-
-	/**************************************************************************
-	*
-	* Image:
-	* 	Reset indexes
-	*/
-	/**************************************************************************
-	*
-	* Getting the namespace for an element is tricky. I haven't figured out 
-	* how to do it yet, so I'm using the local name (BinData) to identify the
-	* element.
-	* I think http://cvs.gnome.org/lxr/source/gnorpm/find/search.c might have
-	* some code that will do it.
-	* Find the local name of the element: strip the prefix if one exists.
-	*/
-	localName = strchr( name, ':' );
-	if( localName != NULL )
-		localName++;
-	else
-		localName = (char *)name;
-
-	if( strcmp( ImageLocal, localName ) == 0 )
-		state->imageInfo.X = state->imageInfo.Y = state->imageInfo.Z = state->imageInfo.C = state->imageInfo.T = 0;
-	/*
-	**************************************************************************/
-
 
 } /* END extractBinDataEndElement */
 
