@@ -215,8 +215,8 @@ sub fix_cron_scripts {
 		print FILE $config;
 		close (FILE);
 		chmod (0775,$file) or
-			print $LOGFILE "Could not chmod $script_path: $!\n" and
-			croak "Could not chmod $script_path: $!";
+			print $LOGFILE "Could not chmod $file: $!\n" and
+			croak "Could not chmod $file: $!";
 
 	}
 	return (1);
