@@ -43,6 +43,7 @@ use OME::Session;
 use OME::SessionManager;
 use OME::Tasks::ImageTasks;
 use OME::Project;
+use OME::Tasks::DatasetManager;
 
 use Benchmark qw(timediff timestr);
 
@@ -129,9 +130,12 @@ $session->project($project);
 $session->dataset($dataset);
 $session->storeObject();
 $session->commitTransaction();
-	print "- Importing files into $age project '$projectName'... ";
+	print "- Importing files into $age project '$projectName'... \n";
 my $t0 = new Benchmark;
-	OME::Tasks::ImageTasks::importFiles($session, $dataset, \@ARGV, $switch);
+	my $datasetManager = new OME::Tasks::DatasetManager;
+	my $images = OME::Tasks::ImageTasks::importFiles(@ARGV);
+	my @image_ids = map($_->id(), @$images);
+	$datasetManager->addImages( \@image_ids, $dataset->id());
 my $t1 = new Benchmark;
 	print "done.\n";
 
