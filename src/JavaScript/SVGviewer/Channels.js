@@ -65,7 +65,8 @@ Channels.prototype.toolboxApperance = {
 	<text y="2" x="{$width - 50}" dominant-baseline="hanging" font-style="italic" text-anchor="end">Black<tspan x="{$width - 50}" dy="1em">Level</tspan></text>\
 	<text y="2" x="{$width - 2}" dominant-baseline="hanging" font-style="italic" text-anchor="end">White<tspan x="{$width - 2}" dy="1em">Level</tspan></text>\
 </g>\
-'
+',
+	noclip: true
 };
 // map display channel names to status bar colors
 Channels.prototype.disp_channel_colors = {
@@ -94,14 +95,26 @@ Channels.prototype.build_toolbox = function( rendering_layer ) {
 	this.W_bars = new Array();
 	this.B_labels = new Array();
 	this.W_labels = new Array();
-	this.disp_cntls = new Array();
+	
+	var panes = {
+		r: this.colorPane,
+		g: this.colorPane,
+		b: this.colorPane,
+		grey: this.greyscalePane	
+	};
+	var pane_offset = {
+		r: 30,
+		g: 65,
+		b: 100,
+		grey: 30	
+	};
 
 	/* make a set of controls for each display channel */
 	for( var disp_ch in this.disp_channel_colors ) {
-		this.disp_cntls[ disp_ch ] =  Util.createElementSVG( 'g' );
 		// colored bar
-		this.disp_cntls[ disp_ch ].appendChild( 
+		panes[ disp_ch ].appendChild( 
 			Util.createElementSVG( 'rect', {
+				y: pane_offset[ disp_ch ],
 				width: Channels.scaleWidth,
 				height: 15,
 				fill: this.disp_channel_colors[ disp_ch ]
@@ -110,25 +123,26 @@ Channels.prototype.build_toolbox = function( rendering_layer ) {
 		
 		// channel label. doubles as control to switch channels
 		this.ch_lists[ disp_ch ] = new popupList(
-			0, 0, this.channel_labels, 
+			0, pane_offset[ disp_ch ], this.channel_labels, 
 			{ method: disp_ch+'_ch', obj: this.image },
 			undefined,
 			skinLibrary["transparentBox"],
 			undefined, 
 			skinLibrary["whiteTranslucentBox"]
 		);
-		this.ch_lists[ disp_ch ].realize( this.disp_cntls[ disp_ch ] );
+		this.ch_lists[ disp_ch ].realize( panes[ disp_ch ] );
 		
 		// button to turn display channel off and on
 		if( disp_ch != 'grey' ) {
 			this.ch_on_off[ disp_ch ] = new button( {
 				x: this.ch_lists[ disp_ch ].width, 
+				y: pane_offset[ disp_ch ],
 				callback: { obj: this.image, method: disp_ch+'_on' },
 				onText: '<text y="2" x="4" dominant-baseline="hanging" font-weight="bold" text-decoration="underline" fill="black">On</text>',
 				offText: '<text y="2" x="4" dominant-baseline="hanging" font-weight="bold" text-decoration="underline" fill="black">Off</text>',
 				highlightText: '<rect width="26" height="15" fill="white"/>'
 			} );
-			this.ch_on_off[ disp_ch ].realize( this.disp_cntls[ disp_ch ] );
+			this.ch_on_off[ disp_ch ].realize( panes[ disp_ch ] );
 		}
 	
 		// black level label
@@ -136,24 +150,24 @@ Channels.prototype.build_toolbox = function( rendering_layer ) {
 			'dominant-baseline': 'hanging',
 			'text-anchor': 'end', 
 			x: (Channels.scaleWidth - 50),
-			y: 2,
+			y: 2 + pane_offset[ disp_ch ],
 			fill: 'black'
 		} );
-		this.disp_cntls[ disp_ch ].appendChild( this.B_labels[ disp_ch ] );
+		panes[ disp_ch ].appendChild( this.B_labels[ disp_ch ] );
 		
 		// white level label
 		this.W_labels[ disp_ch ] = Util.createTextSVG( ' ', {
 			'dominant-baseline': 'hanging',
 			'text-anchor': 'end', 
-			y: 2,
+			y: 2 + pane_offset[ disp_ch ],
 			x: Channels.scaleWidth,
 			fill: 'white'
 		} );
-		this.disp_cntls[ disp_ch ].appendChild( this.W_labels[ disp_ch ] );
+		panes[ disp_ch ].appendChild( this.W_labels[ disp_ch ] );
 		
 		// white scale slider
 		this.W_sliders[disp_ch] = new Slider( 
-			0, 15, Channels.scaleWidth, 0, 
+			0, ( 15 + pane_offset[ disp_ch ] ), Channels.scaleWidth, 0, 
 			{ method: disp_ch+'_W', obj: this.image },
 			'<rect width="'+Channels.scaleWidth+'" height="10" opacity="0"/>',
 			'<rect x="-2" width="4" height="10" fill="white"/>'
@@ -161,43 +175,33 @@ Channels.prototype.build_toolbox = function( rendering_layer ) {
 		// white translucent bar
 		this.W_bars[disp_ch] = Util.createElementSVG( 'rect', {
 			x: 0,
-			y: 15,
+			y: (15 + pane_offset[ disp_ch ]),
 			width: 1,
 			height: 10,
 			fill: 'white',
 			opacity: 0.3
 		});
-		this.disp_cntls[ disp_ch ].appendChild( this.W_bars[disp_ch] );
-		this.W_sliders[disp_ch].realize( this.disp_cntls[ disp_ch ] );
+		panes[ disp_ch ].appendChild( this.W_bars[disp_ch] );
+		this.W_sliders[disp_ch].realize( panes[ disp_ch ] );
 		
 		// black scale slider
 		this.B_sliders[ disp_ch ] = new Slider( 
-			0, 25, Channels.scaleWidth, 0, 
+			0, ( 25 + pane_offset[ disp_ch ] ), Channels.scaleWidth, 0, 
 			{ method: disp_ch + '_B', obj: this.image },
 			'<rect width="'+Channels.scaleWidth+'" height="10" opacity="0"/>',
 			'<rect x="-2" width="4" height="10" fill="black"/>'
 		);
 		// black translucent bar
 		this.B_bars[disp_ch] = Util.createElementSVG( 'rect', {
-			y: 25,
+			y: ( 25 + pane_offset[ disp_ch ] ),
 			width: 1,
 			height: 10,
 			fill: 'black',
 			opacity: 0.3
 		});
-		this.disp_cntls[ disp_ch ].appendChild( this.B_bars[disp_ch] );
-		this.B_sliders[ disp_ch ].realize( this.disp_cntls[ disp_ch ] );
+		panes[ disp_ch ].appendChild( this.B_bars[disp_ch] );
+		this.B_sliders[ disp_ch ].realize( panes[ disp_ch ] );
 	}
-	
-	// divide the display controls into two layers for color and greyscale
-	this.disp_cntls[ 'r' ].setAttribute( 'transform', 'translate( 0, 30 )' );
-	this.disp_cntls[ 'g' ].setAttribute( 'transform', 'translate( 0, 65 )' );
-	this.disp_cntls[ 'b' ].setAttribute( 'transform', 'translate( 0, 100 )' );
-	this.disp_cntls[ 'grey' ].setAttribute( 'transform', 'translate( 0, 30 )' );
-	this.colorPane.appendChild( this.disp_cntls[ 'r' ] );
-	this.colorPane.appendChild( this.disp_cntls[ 'g' ] );
-	this.colorPane.appendChild( this.disp_cntls[ 'b' ] );
-	this.greyscalePane.appendChild( this.disp_cntls[ 'grey' ] );
 
 	// make the toolbox to house these controls
 	var bbox = this.colorPane.getBBox();
