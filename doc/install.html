@@ -18,9 +18,25 @@ Copy the contents of the src/perl directory to where your perl CGI scripts
 live.</li>
 
 <br>Make sure Apache-mod-perl is properly configured to execute perl scripts
-in this directory.
-<br>You can check that by going to the script perl/ShowEnvCGI.pl, and looking
+in this directory.  A sample perl handler section (within the Aliases section) might look like:<pre>
+  Alias /perl/  "/OME/perl/"
+    &lt;Location /perl&gt;
+        SetHandler  perl-script
+        PerlHandler Apache::Registry
+        PerlScript 
+        Options +ExecCGI
+    &lt;/Location&gt;
+
+    &lt;Files ~ "\.pl"&gt;
+        SetHandler  perl-script
+        PerlHandler Apache::Registry
+        Options +ExecCGI
+    &lt;/Files&gt;
+</pre>
+<br>You can check that everything is OK by pointing a browser at the script perl/ShowEnvCGI.pl, and looking
 at the GATEWAY_INTERFACE variable, which should be set to CGI-Perl/1.1.
+<br>N.B.:  In the Perl handler section of Apache config, PerlSendHeader must be set to Off, which is the default.  
+PERL_SEND_HEADER should not appear in the list of variables reported by http://my.ome.server/perl/ShowEnvCGI.pl
 <li>
 Copy the contents to src/JavaScript somewhere where they will not be executed
 by a CGI handler.</li>
