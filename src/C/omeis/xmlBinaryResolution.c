@@ -767,7 +767,7 @@ static void OME_EndElement(ParserState *state, const xmlChar *name) {
 		fprintf( stdout,  "\"" );
 		
 		/* close pixelsRep object & clean it up */
-		if ( (result = FinishPixels( state->pixelInfo->pixWriter, 0 )) < 0 ) {
+		if ( (result = FinishPixels( state->pixelInfo->pixWriter, 0 )) == 0 ) {
 			fprintf(stderr, "Error calling FinishPixels: result = %d\n",result);
 			if (errno) fprintf (stderr,"%s\n",strerror( errno ) );
 			assert(0);
