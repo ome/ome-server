@@ -118,7 +118,10 @@ sub MY::test {
 	my $str = shift->SUPER::test(@_);
 	if ($matlab_arch eq "mac") {
 		print "Adding DYLD_LIBRARY_PATH to Make Test ...\n"
-			if $str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 DYLD_LIBRARY_PATH=$matlab_lib#m;
+			if $str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 DYLD_LIBRARY_PATH=$matlab_lib#;
+	} else {
+		print "Adding LD_LIBRARY_PATH to Make Test ...\n"
+			if $str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 LD_LIBRARY_PATH=$matlab_lib#;
 	}
 	return $str;
 }
@@ -128,9 +131,10 @@ sub MY::const_loadlibs {
 	my $str = shift->SUPER::const_loadlibs(@_);
 	if ($matlab_arch ne "mac") {
 		print "Modifying LD_RUN_PATH...\n"
-			if $str =~ s#^(LD_RUN_PATH.+)$#$1:$matlab_dir/bin/$matlab_arch:$matlab_dir/sys/os/$matlab_arch#m;
+			if $str =~ s#^(LD_RUN_PATH.+)$#$1:$matlab_lib#m;
 		print "Modifying LD_LIBRARY_PATH...\n";
-		$str = $str."LD_LIBRARY_PATH = $matlab_dir/bin/$matlab_arch:$matlab_dir/sys/os/$matlab_arch";
+		$str = $str."LD_LIBRARY_PATH = $matlab_lib";
+		
 	}
 	return $str;
 }
