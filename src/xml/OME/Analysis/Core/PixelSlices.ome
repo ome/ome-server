@@ -28,62 +28,82 @@
 
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by:  Tom Macura <tmacura@nih.gov>
+# Written by:  Douglas Creager <dcreager@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
   <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="PixelsChannelIndex" AppliesTo="I">
+		<SemanticType Name="PixelsChannelSlice" AppliesTo="I">
 			<Description>
-			 Index points to a single channel of a Pixels attribute.
+			 Specifies a single channel slice of a Pixels attribute.
 			</Description>
 			<Element
 				Name="TheC"
-				DBLocation="CHANNEL_INDEX.THE_C"
+				DBLocation="CHANNEL_SLICE.THE_C"
 				DataType="integer"/>
+			<Element 
+				Name="Pixels"
+				DBLocation="CHANNEL_SLICE.PIXELS"
+				DataType="reference"
+				RefersTo = "Pixels"/>
 		</SemanticType>
 		
-		<SemanticType Name="PixelsTimeIndex" AppliesTo="I">
+		<SemanticType Name="PixelsTimeSlice" AppliesTo="I">
 		  <Description>
-			 Index points to a single timepoint of a Pixels attribute.
+            Specifies a single timepoint in a Pixels attribute.
           </Description>
 		  <Element
 			 Name="TheT"
-			 DBLocation="TIME_INDEX.THE_T"
+			 DBLocation="TIME_SLICE.THE_T"
 			 DataType="integer"/>
+		  <Element 
+			 Name="Pixels"
+			 DBLocation="TIME_SLICE.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
 		</SemanticType>
 
-		<SemanticType Name="PixelsStackIndex" AppliesTo="I">
+		<SemanticType Name="PixelsStackSlice" AppliesTo="I">
 		  <Description>
-			 Index points to a single XYZ stack of a Pixels attribute.
+            Specifies a single XYZ stack in a Pixels attribute.
           </Description>
 		  <Element
 			 Name="TheC"
-			 DBLocation="STACK_INDEX.THE_C"
+			 DBLocation="STACK_SLICE.THE_C"
 			 DataType="integer"/>
 		  <Element
 			 Name="TheT"
-			 DBLocation="STACK_INDEX.THE_T"
+			 DBLocation="STACK_SLICE.THE_T"
 			 DataType="integer"/>
+		  <Element 
+			 Name="Pixels"
+			 DBLocation="STACK_SLICE.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
 		</SemanticType>
 
 		<SemanticType Name="PixelsPlaneSlice" AppliesTo="I">
 		  <Description>
-			 Index points to a single XY plane of a Pixels attribute.
+            Specifies a single XY plane in a Pixels attribute.
           </Description>
 		  <Element
 			 Name="TheZ"
-			 DBLocation="PLANE_INDEX.THE_Z"
+			 DBLocation="PLANE_SLICE.THE_Z"
 			 DataType="integer"/>
 		  <Element
 			 Name="TheC"
-			 DBLocation="PLANE_INDEX.THE_C"
+			 DBLocation="PLANE_SLICE.THE_C"
 			 DataType="integer"/>
 		  <Element
 			 Name="TheT"
-			 DBLocation="PLANE_INDEX.THE_T"
+			 DBLocation="PLANE_SLICE.THE_T"
 			 DataType="integer"/>
+		  <Element 
+			 Name="Pixels"
+			 DBLocation="PLANE_SLICE.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>
 </OME>
