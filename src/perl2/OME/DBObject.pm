@@ -2511,6 +2511,10 @@ sub __makeUpdateSQLs {
 
         my $sql = "update $table set ". join(", ",@$columns).
           " where $table.$key = ?";
+
+        print STDERR "\n$sql\n" if $SHOW_SQL;
+        print STDERR join(',',@$values),"\n" if $SHOW_SQL;
+
         push @sqls, [$sql,$values];
     }
 
