@@ -296,15 +296,18 @@ sub dropColumn {
 
 	# Postgres > 7.3 implements drop column in SQL
 	if ($db_version ge '7.3') {
-		$dbh->do("ALTER TABLE $table DROP COLUMN $column") or die $dbh->errstr();
+		$dbh->do("ALTER TABLE $table DROP COLUMN $column CASCADE") or die $dbh->errstr();
 
 	# In Postgres < 7.3 we have to do stuff manually.
 	} else {
 		# remove triggers
-		my ($trigger)  = $dbh->selectrow_array(
-			"SELECT tgname FROM pg_trigger WHERE tgrelid=$reloid and tgargs like '%$column%'"
-		) or die $dbh->errstr();
-		$dbh->do("DROP TRIGGER \"$trigger\" ON $table") if $trigger;
+		my $trigger;
+		do {
+			($trigger)  = $dbh->selectrow_array(
+				"SELECT tgname FROM pg_trigger WHERE tgrelid=$reloid and tgargs like '%$column%'"
+			);
+			$dbh->do("DROP TRIGGER \"$trigger\" ON $table") if $trigger;
+		} while $trigger;
 
 		# Determine a new name for the dropped column (dropped_column##)
 		my $sth = $dbh->prepare ("SELECT * from $table LIMIT 1");
