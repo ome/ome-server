@@ -596,6 +596,11 @@ sub configure_module {
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
+	# IGG 12/12/03:  Doing a make realclean in case there's old stuff hidden away in there
+	# was getting occasional mysterious errors with OME's modules when re-installing.
+	# Not sure why, but they seemed to be related to 'use' statements for other OME modules
+	# BTW, we're just going to ignore anything that goes wrong here.
+    `make realclean 2>&1`;
     my @output = `perl Makefile.PL 2>&1`;
 
     if ($? == 0) {
