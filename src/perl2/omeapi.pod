@@ -53,6 +53,10 @@ in the OME::Tasks:: package should be used.  This allows client code
 to be written independent of how particular workflow tasks are
 implemented.
 
+See L<C<OME::Tasks::ProjectManager>|OME::Tasks::ProjectManager>, 
+L<C<OME::Tasks::DatasetManager>|OME::Tasks::DatasetManager> and
+L<C<OME::Tasks::ImageManager>|OME::Tasks::ImageManager> for more information.
+
 =head2 Remote Framework
 
 The OME Remote Framework provides access to the OME API to other
@@ -65,7 +69,7 @@ to implement its underlying functionality.
 The Remote Framework is designed independent of the actual RPC
 protocol used.  (This means that no features specific to any RPC
 protocol are used.)  SOAP and XML-RPC are the currently supported
-protocols.
+protocols.  See L<C<OME::Remote>|OME::Remote> for more information.
 
 =head1 Database object classes
 
