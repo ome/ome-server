@@ -328,15 +328,20 @@
 				DataType="double"/>
 		</SemanticType>
 		
-		<SemanticType Name="MaxZernikePolynomialDegree" AppliesTo="I">
+		<SemanticType Name="ZernikePolynomialOrder" AppliesTo="I">
 			<Description>
-			Nikita, please fill this out.
+			Order of the Zernike polynomial that is used to approximate the
+			image.
 			</Description>
 			<Element 
-				Name="MaxDegree" 
-				DBLocation="ZERNIKE_PARAMETERS.DEGREE"   
+				Name="Order" 
+				DBLocation="ZERNIKE_PARAMETERS.ORDERX"   
 				DataType = "integer"/>
 		</SemanticType>	
+		<!--
+		N.B: DBLocation is .ORDERX because .ORDER conflicts with SQL/POSTGRESS
+		reserve words. BUG 457		
+		-->
 	</SemanticTypeDefinitions>	
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -355,8 +360,8 @@
 				SemanticTypeName="PixelsPlaneSlice"
 				Count="!"/>
 			<FormalInput
-				Name="Max degree of Zernike Polynomials"
-				SemanticTypeName="MaxZernikePolynomialDegree"
+				Name="Order of Approximate Zernike Polynomial"
+				SemanticTypeName="ZernikePolynomialOrder"
 				Count="?"/>		
 			<FormalOutput
 				Name="Zernike Moments"
@@ -367,7 +372,7 @@
 		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
-			  <Input><Scalar InputLocation="Max degree of Zernike Polynomials.MaxDegree"/></Input>
+			  <Input><Scalar InputLocation="Order of Approximate Zernike Polynomial.Order"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><Vector DecodeWith="Zernike_Output_Vector"/></Output>

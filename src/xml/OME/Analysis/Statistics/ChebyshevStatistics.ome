@@ -187,8 +187,8 @@
 				SemanticTypeName="PixelsPlaneSlice"
 				Count="!"/>
 			<FormalInput
-				Name="Max degree of Chebyshev Polynomials"
-				SemanticTypeName="MaxChebyshevPolynomialDegree"
+				Name="Order of Approximate Chebyshev Polynomial"
+				SemanticTypeName="ChebyshevPolynomialOrder"
 				Count="?"/>
 			<FormalOutput
 				Name="Chebyshev Coefficient Histogram"
@@ -199,7 +199,7 @@
 		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
-			  <Input><Scalar InputLocation="Max degree of Chebyshev Polynomials.MaxDegree"/></Input>
+			  <Input><Scalar InputLocation="Order of Approximate Chebyshev Polynomial.Order"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><Vector DecodeWith="Chebyshev Coefficient Histogram"/></Output>

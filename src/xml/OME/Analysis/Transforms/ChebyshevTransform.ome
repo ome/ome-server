@@ -45,15 +45,20 @@
 				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
 		
-		<SemanticType Name="MaxChebyshevPolynomialDegree" AppliesTo="G">
+		<SemanticType Name="ChebyshevPolynomialOrder" AppliesTo="G">
 			<Description>
-			Nikita, please fill this out.
+			Order of the Chebyshev polynomial that is used to approximate the
+			image.
 			</Description>
 			<Element 
-				Name="MaxDegree" 
-				DBLocation="CHEBYSHEV_PARAMETERS.DEGREE"   
+				Name="Order" 
+				DBLocation="CHEBYSHEV_PARAMETERS.ORDERX"   
 				DataType = "integer"/>
 		</SemanticType>	
+		<!--
+		N.B: DBLocation is .ORDERX because .ORDER conflicts with SQL/POSTGRESS
+		reserve words. BUG 457		
+		-->
 	</SemanticTypeDefinitions>	
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -72,8 +77,8 @@
 				SemanticTypeName="PixelsPlaneSlice"
 				Count="!"/>
 			<FormalInput
-				Name="Max degree of Chebyshev Polynomials"
-				SemanticTypeName="MaxChebyshevPolynomialDegree"
+				Name="Order of Approximate Chebyshev Polynomial"
+				SemanticTypeName="ChebyshevPolynomialOrder"
 				Count="?"/>
 			<FormalOutput
 				Name="Chebyshev Coefficient Matrix"
@@ -84,7 +89,7 @@
 		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
-			  <Input><Scalar InputLocation="Max degree of Chebyshev Polynomials.MaxDegree"/></Input>
+			  <Input><Scalar InputLocation="Order of Approximate Chebyshev Polynomial.Order"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><PixelsArray FormalOutput="Chebyshev Coefficient Matrix" ConvertToDatatype="single"/></Output>
