@@ -98,7 +98,11 @@ if ($pageClass) {
 	if ($@) {
 		print $CGI->header(-type => 'text/html',-status => "500 Internal Error");
 		print "<pre>Error serving $pageClass.\n";
-		print "Error message is\n$@\n" if $@ ne '';
+		if( not defined $@ or $@ eq '') {
+			print "No error message available\n";
+		} else {
+			print "Error message is\n$@\n";
+		}
 		print "</pre>";
 		print STDERR "Error serving $pageClass.\n";
 		print STDERR "Error message is\n$@\n" if $@ ne '';
