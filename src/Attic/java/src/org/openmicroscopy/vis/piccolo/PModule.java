@@ -44,10 +44,12 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolox.util.PBoundsLocator;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import java.awt.geom.RoundRectangle2D;
@@ -85,7 +87,7 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final float NAME_SPACING=15.0f;
 	private static final float PARAMETER_SPACING=3.0f;
 	private static final float HORIZONTAL_GAP =50.0f;
-	private static final float SCALE_THRESHOLD=1.0f;
+	private static final float SCALE_THRESHOLD=.3f;
 	
 	private static final Color DEFAULT_COLOR=Color.black;
 	private static final Color DEFAULT_FILL = Color.lightGray;
@@ -387,5 +389,29 @@ public class PModule extends PPath implements PBufferedNode {
 			b.getY()-PConstants.BORDER,
 			b.getWidth()+2*PConstants.BORDER,
 			b.getHeight()+2*PConstants.BORDER);
+	}
+	
+	// handles
+	
+	public void addHandles() {
+		addChild(new PModuleHandles(PBoundsLocator.createEastLocator(this)));
+		addChild(new PModuleHandles(PBoundsLocator.createWestLocator(this)));
+		addChild(new PModuleHandles(PBoundsLocator.createNorthLocator(this)));
+		addChild(new PModuleHandles(PBoundsLocator.createSouthLocator(this)));
+		addChild(new PModuleHandles(PBoundsLocator.createNorthEastLocator(this)));
+		addChild(new PModuleHandles(PBoundsLocator.createNorthWestLocator(this)));
+		addChild(new PModuleHandles(PBoundsLocator.createSouthEastLocator(this)));
+		addChild(new PModuleHandles(PBoundsLocator.createSouthWestLocator(this)));
+	}
+	
+	public void removeHandles() {
+		ArrayList handles = new ArrayList();
+		Iterator i = getChildrenIterator();
+		while (i.hasNext()) {
+			PNode each = (PNode) i.next();
+			if (each instanceof PModuleHandles) 
+				handles.add(each);
+		}
+		removeChildren(handles);
 	}
 }
