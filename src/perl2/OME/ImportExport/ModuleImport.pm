@@ -1,6 +1,6 @@
 # OME/Tasks/ProgramImport.pm
 
-# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Copyright (C) 2003 Open Microscopy Environment, MIT
 # Author:  Josiah Johnston <siah@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@ use strict;
 
 =head1 NAME
 
-OME::Tasks::ProgramImport - Import an module_execution Module XML specification.
+OME::Tasks::ProgramImport - Import an Analysis Module XML specification.
 
 =head1 SYNOPSIS
 
@@ -252,7 +252,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#visual_design => $moduleXML->getAttribute( 'VisualDesign' )
 		# visual design is not implemented in the api. I think it is depricated.
 	};
-	print STDERR "module parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
+	print STDERR "OME::Module parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
 		if $debug > 1;
 	my $newProgram = $factory->newObject("OME::Module",$data)
 		or die "Could not create OME::Module object\n";
@@ -467,7 +467,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
 			my $sen = $input->getAttribute( "SemanticElementName" );
 			$sen =~ s/^(.*?)\..*$/$1/;
-			my $semanticElement = $factory->findObject( "OME::SemanticType::Column", semantic_type_id => $semanticType->id(), name => $sen )
+			my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
 				or die "Could not find semantic column referenced by element ".$input->tagName()." with SemanticElementName ".$input->getAttribute( "SemanticElementName" );
 		
 			# Create attributes FormalInputID and SemanticElementID to store FORMAL_INPUT_ID and semantic_element_id.
@@ -502,7 +502,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 			my $formalOutput    = $formalOutputs{ $output->getAttribute( "FormalOutputName" ) }
 				or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
 			my $semanticType   = $formalOutput->semantic_type();
-			my $semanticElement = $factory->findObject( "OME::SemanticType::Column", semantic_type_id => $semanticType->id(), name => $output->getAttribute( "SemanticElementName" ) )
+			my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $output->getAttribute( "SemanticElementName" ) )
 				or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
 
 			# Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
@@ -577,7 +577,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#
 		#######################################################################
 
-		print STDERR ref ($self) . "->processDOM: finished processing ExecutionInstructions. Writing them to DBObject module\n"
+		print STDERR ref ($self) . "->processDOM: finished processing ExecutionInstructions. Writing them to DB\n"
 			if $debug > 1;
 		$newProgram->execution_instructions( $executionInstructionXML->toString() );
 	}
