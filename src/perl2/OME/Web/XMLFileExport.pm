@@ -94,6 +94,7 @@ sub getPageBody {
 			downloadFilename => $downloadFilename}) ;
 
 	}else{
+		$self->contentType('text/html');
 	 	$body .= print_form($session,$htmlformat,$cgi) ;
 	}
 	return ('HTML',$body) ;
