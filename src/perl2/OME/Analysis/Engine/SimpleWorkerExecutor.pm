@@ -51,12 +51,16 @@ our $VERSION = $OME::VERSION;
 
 use Carp;
 use LWP::UserAgent;
+use HTTP::Response;
 use Log::Agent;
 
 
 use OME::Session;
 use OME::Analysis::Engine::Worker;
 use OME::Tasks::NotificationManager;
+
+use constant SERVER_BUSY     => 503;
+
 
 sub new {
 	my $proto = shift;
@@ -106,13 +110,13 @@ sub new {
 # Get an idle worker
 sub getWorker {
 	my ($self) = @_;
-	return (
-		OME::Session->instance()->Factory()->findObject (
-			'OME::Analysis::Engine::Worker',{
-				status	=> 'IDLE',
-				__limit => 1,
-		})
-	);
+	my @workers = OME::Session->instance()->Factory()->findObjects (
+		'OME::Analysis::Engine::Worker',{
+			status	=> 'IDLE',
+			__order => 'last_used',
+			__limit => 1,
+		});
+	return ($workers[0]);
 }
 
 #
@@ -130,10 +134,17 @@ sub pressWorker {
 	$params .= "&Notice=".$self->{OurWorker};
 	$params .= "&Notice=".$self->{AnyWorker};
 
-	logdbg "debug", "pressWorker: Calling ".$worker->url().'?'.$params;
-	my $response = $self->{UA}->get($worker->url().'?'.$params);
+	logdbg "debug", "pressWorker: Calling ".$worker->URL().'?'.$params;
+	my $response = $self->{UA}->get($worker->URL().'?'.$params);
 
 	return 1 if $response->is_success();
+	
+	# Update last_used if the responce was an error
+	# Maybe it will fix itself?
+	# This is mostly used to retry 503 - SERVER_BUSY responces at a later time.
+	$worker->last_used ('now()');
+	$worker->storeObject();
+	
 	return undef;
 	
 }
@@ -228,6 +239,7 @@ sub waitForAllModules {
 }
 
 sub DESTROY {
+	my ($self) = @_;
 	OME::Tasks::NotificationManager->unregisterListener ($self->{OurWorker});
 	OME::Tasks::NotificationManager->unregisterListener ($self->{AnyWorker});
 }
