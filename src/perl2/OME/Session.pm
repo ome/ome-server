@@ -176,8 +176,7 @@ sub closeSession {
 
     # When we log out, break any circular links between the Session
     # and other objects, to allow them all to get garbage-collected.
-	$self->{Factory}->DESTROY();
-	$self->{Configuration}->DESTROY();
+	$self->{Factory}->closeFactory();
 	$self->{__session} = undef;
     $self->{Manager} = undef;
 }
