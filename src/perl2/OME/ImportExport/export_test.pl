@@ -24,23 +24,76 @@
 #
 
 use strict;
-use OME::ImportExport::Exporter;
-use OME::ImportExport::TIFFwriter;
-use Carp;
+use OME::Image;
+use OME::SessionManager;
 use vars qw($VERSION);
 $VERSION = 2.000_000;
 
-my @image_list;
-my $export_type = "TIFF";
+#collect input
+my ($param_imageIDs, $param_outputDirectory) = @ARGV;
 
-# replace these with your own OME DB image ids
-if (scalar @ARGV == 0) {
-    push @image_list, "5";
-    print "passing @image_list\n";
+#extract input
+my @imageIDs = split( ',', $2 ) if $param_imageIDs =~ /(-i|-image_ids)=([\d,]+)/;
+(my $output_directory = $param_outputDirectory) =~ s/(-o|-output_directory)=//;
+$output_directory .= '/' unless $output_directory =~ m/\/$/;
+
+
+#verify input
+if( scalar @imageIDs eq 0 ) {
+	printUsage();
+	die "\nNo imageIDs given\n";
 }
-else {
-    @image_list = @ARGV;
+if( not defined $output_directory ) {
+	printUsage();
+	die "\nNo Output directory given\n";
 }
 
-my $writer = OME::ImportExport::Exporter->new(\@image_list, $export_type);
+#login
+my $manager = OME::SessionManager->new();
+my $session = $manager->TTYlogin();
+my $factory = $session->Factory();
 
+# OME::ImportExport::Exporter has heavy reliance on depricated code and logic.
+# Also the architecture of the Exporter does not follow any models used by the rest of the code base.
+# In all actuality, it is depricated code until someone brings it up to speed.
+# Anywho, this was the line that was supposed to do the work of the following loop.
+# I renamed image_list to imageIDs because that is more descriptive. Also, $export_type
+# was defined as 'TIFF'. These are the wrong parameters to Exporter->new(), but that's
+# what I found. 
+#use OME::ImportExport::Exporter;
+#my $writer = OME::ImportExport::Exporter->new(\@image_list, $export_type);
+
+
+#export images
+foreach my $imageID (@imageIDs) {
+	my $image = $factory->loadObject( "OME::Image", $imageID )
+		or die "Could not load image with id ($imageID)";
+
+	my $pixels = $image->DefaultPixels()
+		or die "Could not load default pixels (image_id=$imageID)";
+	my $pix = $image->GetPix($pixels);
+	my ($sizeX, $sizeY) = ($pixels->SizeX(), $pixels->SizeY() );
+	for(my $theZ = 0; $theZ < $pixels->SizeZ(); $theZ++) {
+		for( my $theC = 0; $theC < $pixels->SizeC(); $theC++) {
+			for( my $theT = 0; $theT < $pixels->SizeT(); $theT++) {
+				my $path = $output_directory.$image->name()."-$theZ.$theC.$theT.tiff";
+				
+				# Plane2TIFF produces black images. I don't know what's up with that.
+				# Till that problem is solved, Plane2TIFF8 will have to do.
+				#my $nPixOut = $pix->Plane2TIFF ($theZ,$theC,$theT,$path);
+				
+				my $nPixOut = $pix->Plane2TIFF8 ($theZ,$theC,$theT,$path,1,0);
+				die "Tried to write ".$sizeX*$sizeY." pixels to $path, actually wrote $nPixOut.\n"
+					unless $sizeX*$sizeY eq $nPixOut;
+			}
+		}
+	}
+	undef $pix;
+	undef $pixels;
+}
+
+sub printUsage {
+	print "Usage is:\n\tperl ExportTiff.pl -image_ids=1,2,3 -output_directory=[path]\n\n";
+	print "\t-image_ids or -i\n\t\tcomma separated list of image ids to export. default Pixels of each image will be exported.\n";
+	print "\t-output_directory or -o\n\t\tdirectory to output images.\n";
+}
