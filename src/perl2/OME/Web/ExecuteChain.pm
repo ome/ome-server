@@ -78,8 +78,8 @@ sub getPageBody {
           executeChain($chain,$session->dataset,{})
 			or die "Could not execute analysis chain";
 			
-		# display results
-		return( 'REDIRECT', 'serve.pl?Page=OME::Web::ViewExecutedChain&chain_execution_id='.$analysis_chain_execution->id );
+		# display results	
+		return( 'REDIRECT', $self->OME::Web::getObjDetailURL($analysis_chain_execution));
 
 	} else {
 		$body .= $self->printForm();

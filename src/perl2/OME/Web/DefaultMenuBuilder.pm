@@ -103,6 +103,12 @@ my @MENU = (
 		url_param => { Type => 'OME::ModuleExecution' },
 		text => 'Module Executions',
 	},
+	{
+		web_class => 'OME::Web::Search',
+		type => 'link',
+		url_param => { Type => 'OME::AnalysisChainExecution' },
+		text => 'Chain Executions',
+	},
 	# ** Images **
 	{
 		web_class => undef,
@@ -146,9 +152,10 @@ my @MENU = (
 		text => undef,
 	},
 	{
-		web_class => 'OME::Web::ViewMEXresults',
+		web_class => 'OME::Web::Search',
 		type => 'link',
-		text => undef,
+		url_param => { Type => 'OME::AnalysisChainExecution' },
+		text => 'View Chain Results',
 	},
 	# ** OPTIONS **
 	{
