@@ -66,11 +66,10 @@ sub startImage {
     my $session = OME::Session->instance();
 
     my @pixelses = $self->getCurrentInputAttributes("Pixels");
-
   PIXELS:
     foreach my $pixels (@pixelses) {
         my $new_slice = $self->
-          newAttributes('Pixels slices',
+          newAttributes('Slices',
                         {
                          Pixels => $pixels,
                          StartX => 0,
