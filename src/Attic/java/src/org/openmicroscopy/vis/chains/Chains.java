@@ -36,11 +36,8 @@
  *
  *------------------------------------------------------------------------------
  */
-
-
-
-
 package org.openmicroscopy.vis.chains;
+
 
 /** 
  * <p>The main class for the Chain-building application. This class
@@ -56,9 +53,13 @@ public class Chains {
 
     public static String VERSION="0.1";
     public static String TIMESTAMP="094304082003";
+    
+    public static String INFO = "OME Chains, Version "+VERSION+", "+TIMESTAMP;
+
 
     public static void main(String[] args) {
-		System.out.println("OME Chains, Version "+VERSION+", "+TIMESTAMP);
+		//System.out.println("OME Chains, Version "+VERSION+", "+TIMESTAMP);
+		System.out.println(INFO);
 		
 		// These property calls should fail silently if the given things aren't there.
 		
@@ -76,6 +77,5 @@ public class Chains {
     }
     
    
-
 }
     
