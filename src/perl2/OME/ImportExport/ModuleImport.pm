@@ -21,15 +21,6 @@ install the module onto the local system
 register the module with the database
 add any custom tables & columns (to the DB) that the module requires
 
-
-=head1 AUTHOR
-
-Josiah Johnston (siah@nih.gov)
-
-=head1 SEE ALSO
-
-AnalysisModule.xsd
-
 =cut
 
 
@@ -61,7 +52,17 @@ my $dbhQ = DBI->connect( OME::DBConnection->DataSource(),
 #
 #####################################################
 
+=pod
 
+=head2 importXMLFile
+
+Input Parameters:
+	session - an active OME::Session object
+	filePath - path to xml file to import
+
+Description:
+
+=cut
 
 ######################################################
 #
@@ -84,29 +85,31 @@ sub importXMLFile {
 	my $tree = $parser->parse_file( $filePath );
 
 	#process tree
-	processDOM( $session, $tree->getDocumentElement() );
+	my $newPrograms = processDOM( $session, $tree->getDocumentElement() );
 
-	#return ...what?
-	# maybe list of all new OME::Programs objects
+	#return a list of imported programs (OME::Programs objects)
+	return $newPrograms;
 }
 #
 #
 ######################################################
-my $commitNow =undef;
 
 
 ######################################################
 #
 # Process DOM tree
-# parameter(s):
+# parameters:
 #	$session - an OME::Session object
 #	$root element (DOM model)
+# returns:
+#	list of imported programs
 #
 sub processDOM {
 	my $session = shift;
 	my $root    = shift;
 	my $factory = $session->Factory();
 	my @commitOnSuccessfulImport;
+	my $newPrograms;
 
 my @modules = $root->getElementsByTagName( "AnalysisModule" );
 foreach my $module (@modules) {
@@ -115,7 +118,7 @@ foreach my $module (@modules) {
 	#
 	# make OME::Programs object
 	#
-# use find_or_create instead ? ? ? ?
+# À use find_or_create instead ?
 	my @programs = $factory->findObjects( "OME::Program", 
 		'program_name', $module->getAttribute( 'ModuleName' ) );
 	die "\nCannot add module ". $module->getAttribute( 'ModuleName' ) . ". A module of the same name already exists.\n"
@@ -390,6 +393,20 @@ foreach my $module (@modules) {
 		#
 		##############################################
 		
+		##############################################
+		#
+		# check regular expressions for validity
+		#
+		my @pats =  $executionInstruction->getElementsByTagName( "pat" );
+		foreach (@pats) {
+			my $pat = $_->getFirstChild->getData();
+			eval { "" =~ /$pat/; };
+			die "Invalid regular expression pattern: $pat in program ".$program->getAttribute( "ModuleName" )
+				if $@;
+		}
+		#
+		##############################################
+		
 		# save executionInstructions to DB
 		$program->execution_instructions( $executionInstruction->toString() );
 	}
@@ -397,20 +414,37 @@ foreach my $module (@modules) {
 	#
 	##################################################
 
+	##################################################
 	# commit this module. It's been successfully imported
-	foreach my $DBObjectInstance (@commitOnSuccessfulImport) {
+	#
+	while( my $DBObjectInstance = pop (@commitOnSuccessfulImport) ){
 		$DBObjectInstance->writeObject;
 	} # commits all DBObjects
-
 	$session->DBH()->commit(); # new tables & columns written w/ this handle
+	#
+	##################################################
+	
+	push(@$newPrograms, $program)
 
 } # END foreach my $module( @modules )
-
+	
+	return $newPrograms;
+	
 } # END sub processDOM
 #
 #
 ######################################################
 
+
+
+######################################################
+#
+# make DataType Column
+# parameter(s):
+#	$session - an OME::Session object
+#	$dbLocation - XML element, DOM model
+#	$table_xmlID_object - a hash of Datatype objects keyed by xml ID's
+#
 sub makeDataTypeColumn {
 	my ($session, $dbLocation, $table_xmlID_object) = @_;
 	my $factory = $session->Factory();
@@ -483,5 +517,22 @@ sub makeDataTypeColumn {
 	}
 	return $DataTypeColumn;
 }
+#
+#
+######################################################
+
+
+=pod
+
+=head1 AUTHOR
+
+Josiah Johnston (siah@nih.gov)
+
+=head1 SEE ALSO
+
+OME/src/xml/AnalysisModule.xsd - XML specification documents should conform to.
+
+=cut
+
 
 1;
