@@ -101,4 +101,13 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	public void mousePressed(PInputEvent e) {
 		mouseReleased(e);
 	}
+	
+	public void mouseClicked(PInputEvent e) {
+		super.mouseClicked(e);
+		if (e.getPickedNode() instanceof PDataset) { 
+			System.err.println("zooming in on dataset");
+			PDataset d = (PDataset) e.getPickedNode();
+			((PBrowserCanvas) canvas).setSelectedDataset(d.getDataset());
+		}
+	}
 }
