@@ -93,6 +93,7 @@ sub executeModule {
     if ($@) {
         $module_execution->status('ERROR');
         $module_execution->error_message($@);
+        print STDERR "      Error during execution: $@\n";
     } else {
         $module_execution->status('FINISHED');
     }

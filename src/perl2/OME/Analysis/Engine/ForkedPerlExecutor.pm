@@ -250,6 +250,7 @@ sub childProcess {
         print STDERR "    **** $pid - Error - $@\n";
         $module_execution->status('ERROR');
         $module_execution->error_message($@);
+        print STDERR "      Error during execution: $@\n";
     } else {
         print STDERR "    **** $pid - Success\n";
         $module_execution->status('FINISHED');
