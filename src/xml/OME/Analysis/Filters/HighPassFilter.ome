@@ -43,17 +43,21 @@
 		  <Description>Returns a high passed version of the image.</Description>
 		  <Declaration>
 			<FormalInput
-			   Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice" Count="!"/>
+			   Name="Pixels Plane Slice"
+			   SemanticTypeName="PixelsPlaneSlice"
+			   Count="!"/>
 			<FormalOutput
-			   Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice" Count="!"/>
+			   Name="Pixels Plane Slice"
+			   SemanticTypeName="PixelsPlaneSlice"
+			   Count="!"/>
 		  </Declaration>
 	
 		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsInput FormalInput="Pixels" ID="In_Pixels"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsOutput FormalOutput="Pixels" ID="Out_Pixels"/></Output>
+			  <Output><PixelsArray FormalOutput="Pixels"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>

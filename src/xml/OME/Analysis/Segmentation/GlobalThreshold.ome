@@ -83,18 +83,14 @@
 				Count="!"/>
 		   </Declaration>
 		
-		  <ExecutionInstructions ExecutionPoint="startImage"
-			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
-			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
-			<Inputs>
-			  <Input Name="Pixels"/>
-			  <Input Name="Channel Index.theC"/>
-			  <Input Name="Threshold Level.ThresholdLevel"/>
-			</Inputs>
-			<Outputs>
-			  <Output Name="BinaryPixels"/>
-			</Outputs>
+		   <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels Slice"/></Input>
+			  <Input><Scalar InputLocation="Threshold Level.ThresholdLevel"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><PixelsArray FormalOutput="Binary Mask"/></Output>
+			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>

@@ -40,7 +40,7 @@
 			<Description>Number of image pixels that are edge pixels. Edge pixels are pixels that are on after Otsu's method is used to threshold gradient magnitudes.</Description>
 			<Element 
 				Name="EdgeArea" 
-				DBLocation="EDGE_STATISTICS.EDGE_AREA"  
+				DBLocation="EDGE_STATISTICS1.EDGE_AREA"  
 				DataType="integer"/>
 		</SemanticType>
 		
@@ -49,7 +49,7 @@
 			<Description>Mean edge magnitude.</Description>
 			 <Element
 				Name="MagMean"
-				DBLocation="EDGE_STATISTICS.MAG_MEAN"
+				DBLocation="EDGE_STATISTICS2.MAG_MEAN"
 				DataType="float"/>
 		</SemanticType>
 		
@@ -57,7 +57,7 @@
 			<Description>Median edge magnitude.</Description>
 			 <Element
 				Name="MagMedian"
-				DBLocation="EDGE_STATISTICS.MAG_MEDIAN"
+				DBLocation="EDGE_STATISTICS3.MAG_MEDIAN"
 				DataType="float"/>
 		</SemanticType>
 		
@@ -65,7 +65,7 @@
 			<Description>Variance of edge magnitudes.</Description>
 			 <Element
 				Name="MagVar"
-				DBLocation="EDGE_STATISTICS.MAG_VAR"
+				DBLocation="EDGE_STATISTICS4.MAG_VAR"
 				DataType="float"/>
 		</SemanticType>
 	
@@ -73,35 +73,35 @@
 			<Description>Histogram of edge magnitudes binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN0"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN1"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN2"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN3"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN3"
 				DataType="integer"/>
 			<Element
 				Name="Bin4"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN4"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN4"
 				DataType="integer"/>
 			<Element
 				Name="Bin5"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN5"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN5"
 				DataType="integer"/>
 			<Element
 				Name="Bin6"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN6"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN6"
 				DataType="integer"/>
 			<Element
 				Name="Bin7"
-				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN7"
+				DBLocation="EDGE_STATISTICS5.MAG_HIST_BIN7"
 				DataType="integer"/>
 		</SemanticType>
 		
@@ -110,7 +110,7 @@
 			<Description>Mean edge direction.</Description>
 			 <Element
 				Name="DirecMean"
-				DBLocation="EDGE_STATISTICS.DIREC_MEAN"
+				DBLocation="EDGE_STATISTICS6.DIREC_MEAN"
 				DataType="float"/>
 		</SemanticType>
 		
@@ -118,7 +118,7 @@
 			<Description>Median edge direction.</Description>
 			 <Element
 				Name="DirecMedian"
-				DBLocation="EDGE_STATISTICS.DIREC_MEDIAN"
+				DBLocation="EDGE_STATISTICS7.DIREC_MEDIAN"
 				DataType="float"/>
 		</SemanticType>
 		
@@ -126,7 +126,7 @@
 			<Description>Variance of edge directions.</Description>
 			 <Element
 				Name="DirecVar"
-				DBLocation="EDGE_STATISTICS.DIREC_VAR"
+				DBLocation="EDGE_STATISTICS7.DIREC_VAR"
 				DataType="float"/>
 		</SemanticType>
 	
@@ -134,35 +134,35 @@
 			<Description>Histogram of edge directions binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN0"
+				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN1"
+				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN2"
+				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN3"
+				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN3"
 				DataType="integer"/>
 			<Element
 				Name="Bin4"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN4"
+				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN4"
 				DataType="integer"/>
 			<Element
 				Name="Bin5"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN5"
+				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN5"
 				DataType="integer"/>
 			<Element
 				Name="Bin6"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN6"
+				DBLocation="EDGE_STATISTICS8.DIREC_HIST_BIN6"
 				DataType="integer"/>
 			<Element
 				Name="Bin7"
-				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN7"
+				DBLocation="EDGE_STATISTICS9.DIREC_HIST_BIN7"
 				DataType="integer"/>
 		</SemanticType>
 		
@@ -173,7 +173,7 @@
 			<Description>fill this in later</Description>
 			 <Element
 				Name="DirecHomo"
-				DBLocation="EDGE_STATISTICS.DIREC_HOMO"
+				DBLocation="EDGE_STATISTICS9.DIREC_HOMO"
 				DataType="float"/>
 		</SemanticType>
 	
@@ -182,19 +182,19 @@
 			angle and angle+PI.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN0"
+				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN1"
+				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN2"
+				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN3"
+				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN3"
 				DataType="integer"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
@@ -222,7 +222,7 @@
 			
 			<!-- Statistics about Edge Directions -->
 			<FormalOutput Name="Direction Mean"      SemanticTypeName="EdgeDirecMean"   Count="!"/>
-			<FormalOutput Name="Magnitude Median"    SemanticTypeName="EdgeDirecMedian" Count="!"/>	
+			<FormalOutput Name="Direction Median"    SemanticTypeName="EdgeDirecMedian" Count="!"/>	
 			<FormalOutput Name="Direction Variance"  SemanticTypeName="EdgeDirecVar"    Count="!"/>	
 			<FormalOutput Name="Direction Histogram" SemanticTypeName="EdgeDirecHist"   Count="!"/>
 			
@@ -231,17 +231,55 @@
 			<FormalOutput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionPoint="startImage"
-			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
-			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
-			<Inputs>
-			  <Input Name="Pixels"/>
-			</Inputs>
-			<Outputs>
-			  <Output Name="RegularBlobNum"/>
-			  <!-- Fill it out later. -->
-			</Outputs>
+	     <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+				<Input><PixelsArray FormalInput="Gradient"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+				<Output><Scalar OutputLocation="Edge Area.EdgeArea"/></Output>
+
+				<Output><Scalar OutputLocation="Magnitude Mean.MagMean"/></Output>
+				<Output><Scalar OutputLocation="Magnitude Median.MagMedian"/></Output>
+				<Output><Scalar OutputLocation="Magnitude Variance.MagVar"/></Output>
+				<Output><Vector DecodeWith="Magnitude Histogram"/></Output>
+				
+				<Output><Scalar OutputLocation="Direction Mean.FeatureDistMin"/></Output>
+				<Output><Scalar OutputLocation="Direction Median.FeatureDistMax"/></Output>
+				<Output><Scalar OutputLocation="Direction Variance.FeatureDistMean"/></Output>
+				<Output><Vector DecodeWith="Direction Histogram"/></Output>
+				
+				<Output><Scalar OutputLocation="Direction Homogeneity.FeatureDistMean"/></Output>
+				<Output><Vector DecodeWith="Diff Direction Histogram"/></Output>
+			</FunctionOutputs>
+			
+			<VectorDecoder ID="Magnitude Histogram">
+				<Element Index="1"  OutputLocation="EdgeMagHist.Bin0"/>
+				<Element Index="2"  OutputLocation="EdgeMagHist.Bin1"/>
+				<Element Index="3"  OutputLocation="EdgeMagHist.Bin2"/>
+				<Element Index="4"  OutputLocation="EdgeMagHist.Bin3"/>
+				<Element Index="5"  OutputLocation="EdgeMagHist.Bin4"/>
+				<Element Index="6"  OutputLocation="EdgeMagHist.Bin5"/>
+				<Element Index="7"  OutputLocation="EdgeMagHist.Bin6"/>
+				<Element Index="8"  OutputLocation="EdgeMagHist.Bin7"/>
+			</VectorDecoder>
+			<VectorDecoder ID="Dist Hist">
+				<Element Index="1"  OutputLocation="FeatureDistHist.Bin0"/>
+				<Element Index="2"  OutputLocation="FeatureDistHist.Bin1"/>
+				<Element Index="3"  OutputLocation="FeatureDistHist.Bin2"/>
+				<Element Index="4"  OutputLocation="FeatureDistHist.Bin3"/>
+				<Element Index="5"  OutputLocation="FeatureDistHist.Bin4"/>
+				<Element Index="6"  OutputLocation="FeatureDistHist.Bin5"/>
+				<Element Index="7"  OutputLocation="FeatureDistHist.Bin6"/>
+				<Element Index="8"  OutputLocation="FeatureDistHist.Bin7"/>
+				<Element Index="9"  OutputLocation="FeatureDistHist.Bin8"/>
+				<Element Index="10" OutputLocation="FeatureDistHist.Bin9"/>
+			</VectorDecoder>
+			<VectorDecoder ID="Diff Direction Histogram">
+				<Element Index="1"  OutputLocation="EdgeDiffDirecHist.Bin0"/>
+				<Element Index="2"  OutputLocation="EdgeDiffDirecHist.Bin1"/>
+				<Element Index="3"  OutputLocation="EdgeDiffDirecHist.Bin2"/>
+				<Element Index="4"  OutputLocation="EdgeDiffDirecHist.Bin3"/>
+			</VectorDecoder>	
 		  </ExecutionInstructions>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>

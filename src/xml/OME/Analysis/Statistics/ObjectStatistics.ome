@@ -41,7 +41,7 @@
 			<Description>Number of contigious regions (features) there are in the image after thresholding.</Description>
 			<Element 
 				Name="FeatureNum" 
-				DBLocation="FEATURE_STATISTICS.COUNT"  
+				DBLocation="FEATURE_STATISTICS15.COUNT"  
 				DataType="integer"/>
 		</SemanticType>
 		
@@ -49,7 +49,7 @@
 			<Description>Euler Number is a topological invariant that equals the number of features in the region minus the number of holes in the features.</Description>
 			 <Element
 				Name="FeatureEuler"
-				DBLocation="FEATURE_STATISTICS.EULER"
+				DBLocation="FEATURE_STATISTICS1.EULER"
 				DataType="integer"/>
 		</SemanticType>
 		
@@ -57,11 +57,11 @@
 			<Description>Centroid of the image's features.</Description>
 			 <Element
 				Name="X"
-				DBLocation="FEATURE_STATISTICS.CENTROID_X"
+				DBLocation="FEATURE_STATISTICS2.CENTROID_X"
 				DataType="integer"/>
 			 <Element
 				Name="Y"
-				DBLocation="FEATURE_STATISTICS.CENTROID_Y"
+				DBLocation="FEATURE_STATISTICS2.CENTROID_Y"
 				DataType="integer"/>
 		</SemanticType>
 		
@@ -70,7 +70,7 @@
 			<Description>Minimum area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMin"
-				DBLocation="FEATURE_STATISTICS.AREA_MIN"
+				DBLocation="FEATURE_STATISTICS4.AREA_MIN"
 				DataType="float"/>
 		</SemanticType> 
 		
@@ -78,7 +78,7 @@
 			<Description>Maximum area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMax"
-				DBLocation="FEATURE_STATISTICS.AREA_MAX"
+				DBLocation="FEATURE_STATISTICS5.AREA_MAX"
 				DataType="float"/>
 		</SemanticType>
 		
@@ -86,7 +86,7 @@
 			<Description>Average area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMean"
-				DBLocation="FEATURE_STATISTICS.AREA_MEAN"
+				DBLocation="FEATURE_STATISTICS6.AREA_MEAN"
 				DataType="float"/>
 		</SemanticType> 
 
@@ -94,7 +94,7 @@
 			<Description>Median area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMean"
-				DBLocation="FEATURE_STATISTICS.AREA_MEDIAN"
+				DBLocation="FEATURE_STATISTICS7.AREA_MEDIAN"
 				DataType="float"/>
 		</SemanticType> 
 		
@@ -102,7 +102,7 @@
 			<Description>Variance of feature areas.</Description>
 			<Element
 				Name="FeatureAreaVar"
-				DBLocation="FEATURE_STATISTICS.AREA_VAR"
+				DBLocation="FEATURE_STATISTICS3.AREA_VAR"
 				DataType="float"/>
 		</SemanticType> 
 
@@ -110,43 +110,43 @@
 			<Description>Histogram of feature areas binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN0"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN1"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN2"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN3"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN3"
 				DataType="integer"/>
 			<Element
 				Name="Bin4"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN4"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN4"
 				DataType="integer"/>
 			<Element
 				Name="Bin5"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN5"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN5"
 				DataType="integer"/>
 			<Element
 				Name="Bin6"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN6"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN6"
 				DataType="integer"/>
 			<Element
 				Name="Bin7"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN7"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN7"
 				DataType="integer"/>
 			<Element
 				Name="Bin8"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN8"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN8"
 				DataType="integer"/>
 			<Element
 				Name="Bin9"
-				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN9"
+				DBLocation="FEATURE_STATISTICS8.AREA_HIST_BIN9"
 				DataType="integer"/>
 		</SemanticType>
 		
@@ -155,7 +155,7 @@
 			<Description>Minimum distance between the features and the feature centroid.</Description>
 			<Element
 				Name="FeatureDistMin"
-				DBLocation="FEATURE_STATISTICS.DIST_MIN"
+				DBLocation="FEATURE_STATISTICS9.DIST_MIN"
 				DataType="float"/>
 		</SemanticType> 
 	
@@ -163,7 +163,7 @@
 			<Description>Maximum distance between the features and the feature centroid.</Description>
 			<Element
 				Name="FeatureDistMax"
-				DBLocation="FEATURE_STATISTICS.DIST_MAX"
+				DBLocation="FEATURE_STATISTICS11.DIST_MAX"
 				DataType="float"/>
 		</SemanticType> 
 		
@@ -171,15 +171,15 @@
 			<Description>Average distance between the features and the feature centroid.</Description>
 			<Element
 				Name="FeatureDistMean"
-				DBLocation="FEATURE_STATISTICS.DIST_MEAN"
+				DBLocation="FEATURE_STATISTICS12.DIST_MEAN"
 				DataType="float"/>
 		</SemanticType> 
 		
 		<SemanticType Name="FeatureDistMedian" AppliesTo="I">
 			<Description>Median distance between the features and the feature centroid.</Description>
 			<Element
-				Name="FeatureDistMean"
-				DBLocation="FEATURE_STATISTICS.DIST_MEDIAN"
+				Name="FeatureDistMedian"
+				DBLocation="FEATURE_STATISTICS13.DIST_MEDIAN"
 				DataType="float"/>
 		</SemanticType> 
 		
@@ -187,7 +187,7 @@
 			<Description>Variance of feature distances.</Description>
 			<Element
 				Name="FeatureDistVar"
-				DBLocation="FEATURE_STATISTICS.DIST_VAR"
+				DBLocation="FEATURE_STATISTICS14.DIST_VAR"
 				DataType="float"/>
 		</SemanticType> 
 		
@@ -195,43 +195,43 @@
 			<Description>Histogram of feature distances binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN0"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN1"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN2"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN3"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN3"
 				DataType="integer"/>
 			<Element
 				Name="Bin4"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN4"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN4"
 				DataType="integer"/>
 			<Element
 				Name="Bin5"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN5"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN5"
 				DataType="integer"/>
 			<Element
 				Name="Bin6"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN6"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN6"
 				DataType="integer"/>
 			<Element
 				Name="Bin7"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN7"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN7"
 				DataType="integer"/>
 			<Element
 				Name="Bin8"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN8"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN8"
 				DataType="integer"/>
 			<Element
 				Name="Bin9"
-				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN9"
+				DBLocation="FEATURE_STATISTICS0.DIST_HIST_BIN9"
 				DataType="integer"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
@@ -270,17 +270,58 @@
 			<FormalOutput Name="Dist Hist"     SemanticTypeName="FeatureDistHist"   Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionPoint="startImage"
-			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
-			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
-			<Inputs>
-			  <Input Name="Pixels"/>
-			</Inputs>
-			<Outputs>
-			  <Output Name="RegularFeatureNum"/>
-			  <!-- Fill it out later. -->
-			</Outputs>
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+				<Input><PixelsArray FormalInput="Binary Mask"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+				<Output><Scalar OutputLocation="Count.FeatureNum"/></Output>
+				<Output><Scalar OutputLocation="Euler.FeatureEuler"/></Output>
+				<Output><Vector DecodeWith="Centroid"/></Output>
+				
+				<Output><Scalar OutputLocation="Area Min.FeatureAreaMin"/></Output>
+				<Output><Scalar OutputLocation="Area Max.FeatureAreaMax"/></Output>
+				<Output><Scalar OutputLocation="Area Mean.FeatureAreaMean"/></Output>
+				<Output><Scalar OutputLocation="Area Median.FeatureAreaMedian"/></Output>
+				<Output><Scalar OutputLocation="Area Variance.FeatureAreaVar"/></Output>
+				<Output><Vector DecodeWith="Area Hist"/></Output>
+				
+				<Output><Scalar OutputLocation="Dist Min.FeatureDistMin"/></Output>
+				<Output><Scalar OutputLocation="Dist Max.FeatureDistMax"/></Output>
+				<Output><Scalar OutputLocation="Dist Mean.FeatureDistMean"/></Output>
+				<Output><Scalar OutputLocation="Dist Median.FeatureDistMedian"/></Output>
+				<Output><Scalar OutputLocation="Dist Variance.FeatureDistVar"/></Output>
+				<Output><Vector DecodeWith="Dist Hist"/></Output>
+			</FunctionOutputs>
+			
+			<VectorDecoder ID="Centroid">
+				<Element Index="1" OutputLocation="FeatureCentroid.X"/>
+				<Element Index="2" OutputLocation="FeatureCentroid.Y"/>
+			</VectorDecoder>
+			<VectorDecoder ID="Area Hist">
+				<Element Index="1"  OutputLocation="FeatureAreaHist.Bin0"/>
+				<Element Index="2"  OutputLocation="FeatureAreaHist.Bin1"/>
+				<Element Index="3"  OutputLocation="FeatureAreaHist.Bin2"/>
+				<Element Index="4"  OutputLocation="FeatureAreaHist.Bin3"/>
+				<Element Index="5"  OutputLocation="FeatureAreaHist.Bin4"/>
+				<Element Index="6"  OutputLocation="FeatureAreaHist.Bin5"/>
+				<Element Index="7"  OutputLocation="FeatureAreaHist.Bin6"/>
+				<Element Index="8"  OutputLocation="FeatureAreaHist.Bin7"/>
+				<Element Index="9"  OutputLocation="FeatureAreaHist.Bin8"/>
+				<Element Index="10" OutputLocation="FeatureAreaHist.Bin9"/>
+			</VectorDecoder>
+			<VectorDecoder ID="Dist Hist">
+				<Element Index="1"  OutputLocation="FeatureDistHist.Bin0"/>
+				<Element Index="2"  OutputLocation="FeatureDistHist.Bin1"/>
+				<Element Index="3"  OutputLocation="FeatureDistHist.Bin2"/>
+				<Element Index="4"  OutputLocation="FeatureDistHist.Bin3"/>
+				<Element Index="5"  OutputLocation="FeatureDistHist.Bin4"/>
+				<Element Index="6"  OutputLocation="FeatureDistHist.Bin5"/>
+				<Element Index="7"  OutputLocation="FeatureDistHist.Bin6"/>
+				<Element Index="8"  OutputLocation="FeatureDistHist.Bin7"/>
+				<Element Index="9"  OutputLocation="FeatureDistHist.Bin8"/>
+				<Element Index="10" OutputLocation="FeatureDistHist.Bin9"/>
+			</VectorDecoder>
 		  </ExecutionInstructions>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
