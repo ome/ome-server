@@ -1,69 +1,59 @@
-Debian (Unstable) OME INSTALL NOTES
------------------------------------
+Open Microscopy Environment - Install Notes (Debian)
+----------------------------------------------------
 
-__________
-Postgresql
+*NOTE* This is a platform specific addendum to the main set of install notes
+(INSTALL), please refer to that first.
 
-Debian unstable contains the Postgresql 7.3 release tree which is unsupported by OME. Install Postgres from the Stable tree and put the subsequent packages in a "hold" state as follows:
+________
+Preamble
 
-/etc/apt/sources.list:
+This addendum is based on package names from Debian Unstable (Sid), if you're
+running Debian Stable most if not all of the package names will be the same.
+You may need to search for some using apt-cache. Some packages will change
+names over time and we will attempt to keep this list as update as possible.
 
-deb http://ftp.uk.debian.org/debian stable main contrib non-free
+Binaries:
 
-/etc/apt/preferences:
+	apt-cache search apache
 
-Package: postgresql
-Pin: version stable
-Pin-Priority: 1001
+Libraries:
 
-Package: postgresql-client
-Pin: version stable
-Pin-Priority: 1001
+	apt-cache search libxml2
 
-Package: postgresql-dev
-Pin: version stable
-Pin-Priority: 1001
+Perl Modules:
 
-Install using the Stable tree:
+	apt-cache search DBD::Pg
+	apt-cache search dbd pg
 
-apt-get -t stable install postgresql postgresql-dev postgresql-client
+It is recommended that you use Debian's package manager to install the
+libraries and Perl modules that OME requries.
 
-_______________
-Debian Packages
-libdbi-perl libmd5-perl libmime-base64-perl libapache-session-perl liblog-agent-perl libtie-ixhash-perl libdbd-pg-perl libtest-simple-perl libterm-readkey-perl libcarp-assert-perl libio-stringy-perl libclass-trigger-perl perl-modules libtext-csv-perl libsql-statement-perl libdbd-csv-perl libclass-whitehole-perl libexporter-lite-perl libuniversal-exports-perl libgd-perl perlmagick libxml-namespacesupport-perl libxml-sax-perl libxml2 libxml2-dev libxml-libxml-perl libjpeg62 libjpeg62-dev libtiff3g libtiff3g-dev libclass-data-inheritable-perl libxml-libxml-common-perl libima-dbi-perl libclass-accessor-perl libbz2-dev libxml-libxslt-perl xsltproc
+____________________
+Core Package Install
 
-____
-CPAN
-Sort-Array-0.26.tar.gz
-Class-Fields-0.14.tar.gz
-Date-Simple-2.04.tar.gz
-Class-DBI-0.90.tar.gz
+To install all the OME prerequisites execute the following as root:
 
-_________
-OME build
+apt-get install perl perl-doc apache apache-doc gcc postgresql \
+postgresql-client postgresql-dev postgresql-doc 
 
-perl, C and SQL build (More detailed docs in the SBDD [/doc/SBDD/])
-___________________________
-Apache VirtualHost creation
+_________________
+C Library Install
 
-<VirtualHost *>
-        ServerName necromancer.openmicroscopy.org.uk
-        ServerAdmin webmaster@openmicroscopy.org.uk
-        DocumentRoot /usr/local/OME/src/html
-        Alias /JavaScript/ /usr/local/OME/src/JavaScript/
-        Alias /images/ /usr/local/OME/images/
-        Alias /html/ /usr/local/OME/src/html/
-        <IfModule mod_perl.c>
-                PerlModule Apache::StatINC
-                PerlSetEnv PERL5LIB /usr/local/OME/src/perl2/
-                Alias /perl2/ /usr/local/OME/src/perl2/
-                <Location /perl2>
-                        PerlInitHandler Apache::StatINC
-                        PerlSetVar StatINC_Debug 1
-                        SetHandler perl-script
-                        PerlHandler Apache::Registry
-                        Options +ExecCGI
-                </Location>
-        PerlFreshRestart On
-        </IfModule>
-</VirtualHost>
+To install all the OME prerequisites execute the following (the development
+packages are *important* and required):
+
+apt-get install openssl libssl-dev libpng2 libpng2-dev libtiff3g \
+libtiff3g-dev libgd2 libgd-gd2-perl libgd2-dev libxml2 libxml2-dev libxslt1 \
+libxslt1-dev libbz2 libbz2-dev zlib1g zlib1g-dev
+
+___________________
+Perl Module Install
+
+To install all the OME prerequisites execute the following:
+
+apt-get install libdbi-perl libapache-sessionx-perl liblog-agent-perl \
+libdbd-pg-perl libterm-readkey-perl libipc-run-perl libclass-accessor-perl \
+libexporter-lite-perl libuniversal-exports-perl liburi-perl \
+libhtml-tagset-perl libhtml-parser-perl libwww-perl \
+libclass-data-inheritable-perl libxml-namespacesupport-perl libxml-sax-perl \
+libxml-libxml-common-perl libxml-libxslt-perl

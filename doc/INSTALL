@@ -73,7 +73,7 @@ exhaustive list of them:
  * Apache::Session
  * Log::Agent
  * DBD::Pg
- * Test::Harness
+ * Test::Harness (included in Perl 5.8.0 and later)
  * Test::Simple (included in Perl 5.8.0 and later)
  * Term::ReadKey
  * IPC::Run
