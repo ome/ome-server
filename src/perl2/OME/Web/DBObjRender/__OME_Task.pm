@@ -38,17 +38,71 @@
 package OME::Web::DBObjRender::__OME_Task;
 use base qw(OME::Web::DBObjRender);
 
+use strict;
+use OME;
+our $VERSION = $OME::VERSION;
+
+use base qw(OME::Web::DBObjRender);
+
+
 =pod
 
 =head1 NAME
 
-OME::Web::DBObjRender::__OME_Task - nada!
+OME::Web::DBObjRender::__OME_Task
 
-needs deprication!
+=head2 _renderData
+
+makes virtual fields thumb_url and original_file
+original file doesn't make sense for images with multiple source files
+
+=cut
+
+sub _renderData {
+	my ($self, $obj, $field_requests, $options) = @_;
+	my %record;
+
+	# start time
+	if( exists $field_requests->{ 't_elapsed' } ) {
+		foreach my $request ( @{ $field_requests->{ 't_elapsed' } } ) {
+			my $request_string = $request->{ 'request_string' };
+
+			# create a virtual column "t_elapsed" in the table
+			my ($t6, $t5, $t4, $t3, $t2, $year, $wday, $yday, $isdst) = localtime(time);
+			$t2 += 1; # month range is from 0 to 11 not 1 to 12
+		
+			my $t_start = $obj->t_start();
+			my $t_stop  = $obj->{"__fields"}->{tasks}->{"t_stop"};
+			
+			use integer;
+			$t_start =~ m/^(\d*)-(\d*)-(\d*) (\d*):(\d*):(\d*)/;
+			my $sec_start = ((($2 * 30 + $3) * 24 + $4) * 60 + $5) * 60 + $6;
+	
+			my $sec_stop;
+			if (defined($t_stop) and $t_stop ne 'now') {
+				$t_stop =~ m/^(\d*)-(\d*)-(\d*) (\d*):(\d*):(\d*)/;
+				$sec_stop  = ((($2 * 30 + $3) * 24 + $4) * 60 + $5) * 60 + $6;
+			} else {
+				$sec_stop  = ((($t2 * 30 + $t3) * 24 + $t4) * 60 + $t5) * 60 + $t6;
+			}
+			
+			my $remain_sec = $sec_stop - $sec_start;
+			my $hrs  = $remain_sec / (60*60);
+			$remain_sec -= $hrs * (60*60);
+			my $mins = $remain_sec / 60;
+			$remain_sec -= $mins * 60;
+			
+			$record{ $request_string }
+				= sprintf("%02d:%02d:%02d", $hrs, $mins, $remain_sec);		
+		}
+	}
+	
+	return %record;
+}
 
 =head1 Author
 
-Ilya Goldberg <igg@nih.gov>
+Josiah Johnston <siah@nih.gov>
 
 =cut
 

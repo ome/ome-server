@@ -550,11 +550,6 @@ sub renderData {
 			} else {
 				my $type = $obj->getColumnType( $field );
 				
-				if (not defined $type) {
-					$record{ $request_string } = $obj->{"__fields"}->{tasks}->{$field};
-					next;
-				}
-				
 				# data fields
 				if( $type eq 'normal' ) {
 					my $SQLtype = $obj->getColumnSQLType( $field );

@@ -91,36 +91,6 @@ sub getPageBody {
 	# reload the tasks after 'action' if any.
 	@tasks = OME::Tasks::NotificationManager->list() if scalar (@selected);
 	
-	# create a virtual column "t_elapsed" in the table
-	my ($t6, $t5, $t4, $t3, $t2, $year, $wday, $yday, $isdst) = localtime(time);
-	$t2 += 1; # month range is from 0 to 11 not 1 to 12
-
-	foreach (@tasks) {
-		my $t_start = $_->{"__fields"}->{tasks}->{"t_start"};
-		my $t_stop  = $_->{"__fields"}->{tasks}->{"t_stop"};
-		
-		use integer;
-		$t_start =~ m/^(\d*)-(\d*)-(\d*) (\d*):(\d*):(\d*)/;
-		my $sec_start = ((($2 * 30 + $3) * 24 + $4) * 60 + $5) * 60 + $6;
-
-		my $sec_stop;
-		if (defined($t_stop) and $t_stop ne 'now') {
-			$t_stop =~ m/^(\d*)-(\d*)-(\d*) (\d*):(\d*):(\d*)/;
-			$sec_stop  = ((($2 * 30 + $3) * 24 + $4) * 60 + $5) * 60 + $6;
-		} else {
-			$sec_stop  = ((($t2 * 30 + $t3) * 24 + $t4) * 60 + $t5) * 60 + $t6;
-		}
-		
-		my $remain_sec = $sec_stop - $sec_start;
-		my $hrs  = $remain_sec / (60*60);
-		$remain_sec -= $hrs * (60*60);
-		my $mins = $remain_sec / 60;
-		$remain_sec -= $mins * 60;
-		
-		$_->{"__fields"}->{tasks}->{"t_elapsed"} 
-			= sprintf("%02d:%02d:%02d", $hrs, $mins, $remain_sec);		
-    }
-
 	my $body;
 	if (scalar @tasks) {
 		$body = 
