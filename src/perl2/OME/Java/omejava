@@ -38,6 +38,7 @@
 
 use OME::Session;
 use OME::SessionManager;
+use OME::Java::DTOInterface;
 use OME::Java::SemanticTypeInterface;
 
 use Getopt::Long;
@@ -52,6 +53,7 @@ Usage:
 
 Available commands:
   help      Print this help message.
+  dto       Creates Java interfaces for core OME database objects
   st        Creates Java interfaces for semantic types in the OME database
 
 USAGE
@@ -62,11 +64,13 @@ USAGE
 
 my %COMMANDS = (
                 help => \&help,
+                dto  => \&dto,
                 st   => \&semantic_types,
                );
 
 my %HELPS = (
-             st => \&semantic_type_usage,
+             dto => \&dto_usage,
+             st  => \&semantic_type_usage,
             );
 
 my $command = shift || '';
@@ -148,3 +152,70 @@ sub semantic_types {
 
     OME::Java::SemanticTypeInterface->writeInterfaces(\@types,%options);
 }
+
+sub dto_usage {
+    print <<"USAGE";
+
+omejava - utilities for writing Java-based OME programs
+
+Usage:
+  omejava dto [-d output-directory] dto-files
+
+The st command creates a set of Java interfaces for the DTO descriptor
+files specified on the command line.  Each DTO file should be a Perl
+script whose contents will be "eval"-ed.  It should set the value of a
+pre-existing %class_description variable with the description of a
+single DTO class.
+
+If the -d option is specified, a Java source tree will be created in
+that directory, and the interface files will be placed there.  If the
+-d option is not specified, the interfaces will be printed to the
+console, and no files will be created.  The --output-directory option
+is a synonym for the -d option.
+
+USAGE
+
+    exit 1;
+}
+
+sub dto {
+    my ($help,$output_directory,$username,$password);
+    GetOptions('help|h|?' => \$help,
+               'output-directory|d=s' => \$output_directory)
+      or dto_usage();
+
+    dto_usage() if $help || !@ARGV;
+
+    my %options;
+    $options{OutputDirectory} = $output_directory
+      if defined $output_directory;
+
+  DTO:
+    while (my $dto_file = shift(@ARGV)) {
+        my %class_description = ();
+
+        unless (open DTO_FILE, $dto_file) {
+            warn "Could not open $dto_file, skipping.";
+            next DTO;
+        }
+
+        my $script;
+        {
+            local $/;
+            $script = <DTO_FILE>;
+        }
+
+        close DTO_FILE;
+
+        eval $script;
+
+        if ($@) {
+            warn "Error executing $dto_file, skipping.\n  $@";
+            next DTO;
+        }
+
+        OME::Java::DTOInterface::writeOneClass(\%class_description,\%options);
+    }
+
+}
+
