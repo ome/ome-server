@@ -1058,6 +1058,27 @@ size_t nPix, nIO=0;
 }
 
 
+/* This is a high level interface to get a pixel plane from a memory buffer. */
+size_t getPixelPlane (PixelsRep *thePixels, void *buf , ome_coord theZ, ome_coord theC, ome_coord theT ) {
+size_t offset=0;
+size_t nPix, nIO=0;
+
+	nPix = thePixels->head->dx * thePixels->head->dy;
+	if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
+		return (0);
+	}
+
+	offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
+	thePixels->IO_stream = NULL;
+	thePixels->IO_buf = buf;
+	thePixels->IO_buf_off = 0;
+
+	nIO = DoPixelIO(thePixels, offset, nPix, 'r');
+	return( nIO );
+
+}
+
+
 size_t DoROI (PixelsRep *myPixels,
 	ome_coord X0, ome_coord Y0, ome_coord Z0, ome_coord W0, ome_coord T0,
 	ome_coord X1, ome_coord Y1, ome_coord Z1, ome_coord W1, ome_coord T1, char rorw

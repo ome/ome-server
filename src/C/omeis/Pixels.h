@@ -171,6 +171,13 @@ setPixelPlane (PixelsRep * thePixels,
 			   int theC,
 			   int theT);
 
+size_t
+getPixelPlane (PixelsRep * thePixels,
+		       void * buf,
+			   int theZ,
+			   int theC,
+			   int theT);
+
 OID
 FinishPixels (PixelsRep * myPixels,
 		      char force);
