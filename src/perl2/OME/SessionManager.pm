@@ -179,38 +179,34 @@ sub TTYlogin {
         }
     }
 
-	while (1) {
-    if (!defined $session) {
-	print "Please login to OME:\n";
+    until (defined $session) {
+        print "Please login to OME:\n";
 
-	print "Username? ";
-	ReadMode(1);
-	my $username = ReadLine(0);
-	chomp($username);
+        print "Username? ";
+        ReadMode(1);
+        my $username = ReadLine(0);
+        chomp($username);
 
-	print "Password? ";
-	ReadMode(2);
-	my $password = ReadLine(0);
-	chomp($password);
-	print "\n";
-	ReadMode(1);
+        print "Password? ";
+        ReadMode(2);
+        my $password = ReadLine(0);
+        chomp($password);
+        print "\n";
+        ReadMode(1);
 
-	$session = $self->createSession($username,$password);
+        $session = $self->createSession($username,$password);
 
-	if (!defined $session) {
-            print "That username/password is not valid. Please try again.\n\n";
-			next;
-        } else {
+        if (defined $session) {
             my $created = open LOGINFILE, "> $loginFile";
             if ($created) {
                 print LOGINFILE $session->{SessionKey}, "\n";
                 close LOGINFILE;
             }
-			last;
-	}
 
-	print "Great, you're in.\n\n";
-    }
+            print "Great, you're in.\n\n";
+        } else {
+            print "That username/password is not valid. Please try again.\n\n";
+        }
 	}
 
     return $session;
@@ -479,7 +475,6 @@ my ($key,$value);
         };
     };
     return undef if $@;
-    
     while ( ($key,$value) = each %$apacheSessionRef ) {
         $tiedApacheSession{$key} = $value unless $key eq '_session_id';
     }
