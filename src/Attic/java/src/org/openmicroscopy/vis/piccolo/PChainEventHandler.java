@@ -349,7 +349,6 @@ public class PChainEventHandler extends  PPanEventHandler
 	 */
 	public void mouseMoved(PInputEvent e) {
 		Point2D pos = e.getPosition();
-		//System.err.println("mouse move on canvas..."+pos.getX()+","+pos.getY());
 		if (linkState == LINKING_PARAMS) {
 			link.setEndCoords((float) pos.getX(),(float) pos.getY());
 		}
