@@ -41,12 +41,11 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PLayer;
 import org.openmicroscopy.vis.ome.CNode; // was NodeInfo
-import org.openmicroscopy.vis.ome.ModuleInfo;
+import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.Chain;
 import org.openmicroscopy.Chain.Link;
 import org.openmicroscopy.Chain.Node;
-import org.openmicroscopy.Module;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
 import java.util.HashMap;
@@ -102,10 +101,10 @@ public class PChain {
 	}
 	
 	private void drawNode(Connection connection,CNode node,PLayer layer,float y) {
-		Module mod = node.getModule();
-		ModuleInfo modInfo = connection.getModules().getModuleInfo(mod);
-		PModule mNode = new PModule(connection,modInfo,x,y);
-		modInfo.addModuleWidget(mNode);
+		CModule mod = (CModule) node.getModule();
+
+		PModule mNode = new PModule(connection,mod,x,y);
+		mod.addModuleWidget(mNode);
 		float w = (float) mNode.getBounds().getWidth();
 		x += w+HGAP;
 		layer.addChild(mNode);
