@@ -159,7 +159,6 @@ unsorted:
 	OME::LSID
 	OME::Project::DatasetMap
 	OME::Remote
-	OME::SOAP::Exports
 	OME::Tasks::OMEXMLImportExport
 	OME::Tasks::AEFacade
 	OME::Tasks::ChainManager
