@@ -41,7 +41,6 @@ OME Modules - Table of Contents
 
 =item Deprecated
 
-    OME::Experimenter
     OME::Repository
 
 =back
