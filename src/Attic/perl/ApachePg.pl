@@ -1,7 +1,5 @@
 #!/usr/bin/perl -w
 
-
-
 # $Id: ApachePg.pl,v 1.1.1.1 2001/01/17 21:07:30 root Exp $
 
 # demo script, tested with:
