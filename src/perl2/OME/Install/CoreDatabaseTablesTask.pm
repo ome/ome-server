@@ -135,6 +135,7 @@ our @core_classes =
    'OME::ModuleExecution::VirtualMEXMap',
    'OME::AnalysisChainExecution',
    'OME::AnalysisChainExecution::NodeExecution',
+   'OME::Task',
    # Make sure this next one is last
    'OME::Configuration::Variable',
   );
