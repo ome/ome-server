@@ -109,12 +109,12 @@ sub _renderData {
 
 =head2 _getName
 
-returns module name & abbreviated timestamp 
+returns module name
 
 =cut
 
 sub _getName {
-	my ($proto, $obj, $options) = @_;
+	my ($self, $obj, $options) = @_;
 
 	if( $obj->module() ) {
 		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)/
@@ -136,6 +136,7 @@ sub _getName {
 			12 => 'Dec'
 		);
 		my $name = $obj->module()->name();
+return $self->_trim( $name, $options );
 		# don't add the date if there is not plenth of room for it and the name
 		if( exists $options->{max_text_length} && $options->{max_text_length} < 30 ) {
 			my $len = $options->{max_text_length};
@@ -148,7 +149,36 @@ sub _getName {
 		return $name." ".$month_abbr{$mo}." $dy, $yr $hr:$min";
 	}
 
-	return $obj->id();
+	return 'Virtual MEX '.$obj->id();
+}
+
+=head2 _getRef
+
+returns "[ref to MEX] ran against [ref to target]"
+
+=cut
+
+sub _getRef {
+	my ($self, $obj, $format, $options) = @_;
+
+	my $q = $self->CGI();
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $obj );
+	return  $q->a( 
+		{ 
+			href => $self->getObjDetailURL( $obj ),
+			title => "Detailed info about this $common_name",
+			class => 'ome_detail'
+		},
+		$self->getName( $obj )
+	) . 
+	( $obj->image || $obj->dataset ? 
+		' ran against ' .
+		$self->getRef( $obj->image(), 'html' ) .
+		$self->getRef( $obj->dataset(), 'html' ) 
+	:
+		' execution '. $obj->id
+	);
 }
 
 =head1 Author
