@@ -15,7 +15,7 @@ endif
 CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wmissing-noreturn -Wundef -std=c99
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_LIB)
 INCS   = $(FINK_INCLUDE) -I..
-OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.c ../b64z_lib.c
+OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.o ../b64z_lib.o
 
 ifndef OME_ROOT
 OME_ROOT=/OME
@@ -40,12 +40,6 @@ digest.o: digest.c digest.h
 
 method.o: method.c method.h
 	$(CC) $(CFLAGS) -c method.c
-
-#../base64.o: ../base64.c ../base64.h
-#	$(CC) $(CFLAGS) -c ../base64.c -o ../base64.o
-
-#../b64z_lib.o: ../b64z_lib.c ../b64z_lib.h
-#	$(CC) $(CFLAGS) -c ../b64z_lib.c -o ../b64z_lib.o
 
 xmlBinaryResolution.o: xmlBinaryResolution.c
 	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(INCS) $(XML2_CFLAGS)
