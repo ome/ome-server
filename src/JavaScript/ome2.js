@@ -44,17 +44,28 @@
  *
  */
 
-GetGraphicsPage = '/perl2/serve.pl?Page=OME::Web::GetGraphics&Popup=1';
-ProjectInfoPage = '/perl2/serve.pl?Page=OME::Web::ProjectManagement&Popup=1';
-DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DatasetManagement&Popup=1';
-InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::ManageProject&Popup=1';
-InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::ManageDataset&Popup=1';
+ GetGraphicsPage = '/perl2/serve.pl?Page=OME::Web::GetGraphics&Popup=1';
+ ProjectInfoPage = '/perl2/serve.pl?Page=OME::Web::ProjectManagement&Popup=1';
+ DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DatasetManagement&Popup=1';
+ InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::ManageProject&Popup=1';
+ InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::ManageDataset&Popup=1';
+RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
 
 /*
  *
  * FUNCTIONS
  *
  */
+
+// openRelationships()
+
+function openRelationships (o_type, r_type, oid) {
+	window.open(
+		RelationshipPage + '&o_type=' + o_type + '&r_type=' + r_type + '&oid=' + oid,
+		'_blank',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
+	);
+}
 
 // openExistingDataset()
 	
