@@ -59,20 +59,23 @@ use OME::Tasks::OMEImport;
 #*********
 
 # Global logfile filehandle and name
-my $LOGFILE_NAME = "CoreDatabaseTablesTask.log";
-my $LOGFILE;
+our $LOGFILE_NAME = "CoreDatabaseTablesTask.log";
+our $LOGFILE;
 
 # Installation home
-my $INSTALL_HOME;
+our $INSTALL_HOME;
 
 # Our basedirs and user which we grab from the environment
-my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
+our ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
 
 # Our Apache user & Postgres admin we'll grab from the environment
-my ($APACHE_USER, $POSTGRES_USER);
+our ($APACHE_USER, $POSTGRES_USER);
 
 # Default import formats
-my $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
+our $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
+
+# Database version
+our $DB_VERSION = "2.2";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -167,6 +170,60 @@ sub create_superuser {
     # Log and return failure
     print $logfile "CREATION OF USER $username FAILED -- OUTPUT: \n".join ("\n",@outputs)."\n";
     return 0;
+}
+
+
+
+sub get_db_version {
+    my $dbh;
+    my $sql;
+    my $retval;
+    my $createlang = "createlang";
+
+    print "Checking database\n";
+
+    $dbh = DBI->connect("dbi:Pg:dbname=ome")
+      or return undef;
+
+    # Shush!
+    $dbh->{PrintError} = '0';
+
+    # Check for DB existance
+    my $db_version = $dbh->selectrow_array(q{SELECT value FROM configuration WHERE name = 'db_version'});
+
+    
+    # If we're still here, that means there is an ome DB.
+    # if $db_version is undef, our version is before 2.2, which introduced versioning.
+    # Let's see if its 2.1 (after alpha, but before 2.2)
+    if (not defined $db_version) {
+        my $test = $dbh->selectrow_array(q{SELECT value FROM configuration WHERE name = 'db_instance'});
+        $db_version = '2.1' if $test;
+    }
+    
+    # Still nothing?  See if its alpha
+    if (not defined $db_version) {
+        my $test = $dbh->selectrow_array(q{SELECT DB_INSTANCE FROM configuration});
+        $db_version = '2.0' if $test;
+    }
+    
+    # if its still not defined, it's pre-alpha, so return '0'.
+    $db_version = '0' unless defined $db_version;
+
+    $dbh->disconnect();
+    return ($db_version);
+}
+
+sub update_database {
+my $version = shift;
+    my @files = glob ("update/$version/pre/*");
+    foreach my $file (@files) {
+        if ($file =~ /\.sql$/) {
+            `psql -f $file ome`;
+        } elsif ($file =~ /\.eval$/) {
+            scalar (eval `cat $file`) or croak "eval of file $file did not return true";
+        }
+    }
+    return (1);
 }
 
 # Create our OME database
@@ -276,6 +333,7 @@ sub load_schema {
 }
 
 sub create_experimenter {
+    my $manager = shift;
     my $first_name = "";
     my $last_name = "";
     my $username;
@@ -284,7 +342,6 @@ sub create_experimenter {
 
     print_header "Initial user creation";
     
-    my $factory = OME::Factory->new();
 
     while (1) {
 	$first_name = confirm_default ("First name", $first_name);
@@ -318,6 +375,10 @@ sub create_experimenter {
 
     print "\n";  # Spacing
 
+    # IGG 12/10/03:  Refactored this a wee bit to work with updates
+    # Since we may be updating, see if there's an experimenter with the same OMEName.
+    my $factory = OME::Factory->new();
+    
     my $experimenter = $factory->
 	newObject('OME::SemanticType::BootstrapExperimenter',
             {
@@ -330,13 +391,15 @@ sub create_experimenter {
             });
 
     $factory->commitTransaction();
+	$factory->closeFactory();
+    my $session = $manager->createSession($username, $password);
 
-    return ($username, $password);
+    print "Called commitTransaction.  returning\n";
+    return ($session);
 }
 
 sub init_configuration {
-    my $session = shift;
-    my $factory = $session->Factory();
+    my $factory = OME::Factory->new();
 
     print_header "Initializing configuration";
 
@@ -358,6 +421,7 @@ sub init_configuration {
             {
              mac_address      => $mac,
              db_instance      => $db_instance,
+             db_version       => $DB_VERSION,
              lsid_authority   => $lsid_authority,
              tmp_dir          => $OME_TMP_DIR,
              xml_dir          => $OME_BASE_DIR."/xml",
@@ -366,9 +430,10 @@ sub init_configuration {
              ome_root         => $OME_BASE_DIR
             });
 
-    $session->commitTransaction();
-
-    return $configuration;
+    $factory->commitTransaction();
+#    $session->commitTransaction();
+    $factory->closeFactory();
+    return 1;
 }
 
 sub load_xml_core {
@@ -513,6 +578,14 @@ sub load_analysis_core {
 #*********
 
 sub execute {
+use Log::Agent;
+if ($ENV{OME_DEBUG} > 0) {	
+	logconfig(
+		-prefix      => "$0",
+		-level    => 'debug'
+	);
+	print STDERR "Debugging on\n";
+}
     my $retval;
 
     print_header "Database Bootstrap";
@@ -568,33 +641,55 @@ sub execute {
     # Drop our UID to the OME_USER
     $EUID = $OME_UID;
 
-    # Create our database
-    create_database ("DEBIAN") or croak "Unable to create database!";
-    load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
-    my ($username, $password) = create_experimenter () or croak "Unable to create an initial experimenter.";
-    
-    # Login to OME and get our session
-    my $manager = OME::SessionManager->new();
-    my $session = $manager->createSession($username, $password);
+    my ($configuration,$manager,$session);
 
-    my $configuration = init_configuration ($session) or croak "Unable to initialize the configuration object.";
+    # Check the DB version
+    my $db_db_version = get_db_version();
+    print "Form DB, got DB_Version = '$db_db_version'\n";
+    croak "Found existing database, but its too old to be updated.\n".
+        "You will have to upgrade it manually.  Sorry\n"
+        if defined $db_db_version and $db_db_version eq '0';
 
-    # FIXME: Temporarily we need to logout/backin for the configuration variable to be initialized
-	$session->Factory->closeFactory();
-    $manager->logout($session);
-	OME::Session::->deleteInstance();
-    $session = $manager->createSession($username, $password);
-    # END
+    if (defined $db_db_version) {
+        print "Found existing database version $db_db_version.";
+        if ($db_db_version ne $DB_VERSION) {
+            print "  Updating to $DB_VERSION.\n";
+            $retval = update_database($db_db_version);
+            print BOLD, "[FAILURE]", RESET, ".\n"
+                and croak "Unable to update existing database, see $LOGFILE_NAME for details."
+                unless $retval;
+            print BOLD, "[SUCCESS]", RESET, ".\n";
+        } else {
+            print "  Database is current.\n";
+        }
+        load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
+        $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
+        $session = $manager->TTYlogin() or croak "Unable to create an initial experimenter.";
+        $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
+        print_header "Finalizing Database";
+        load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
+        load_analysis_core ($session, $LOGFILE)
+        or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
+        $session->commitTransaction();
+    } elsif (not defined $db_db_version) {
+        # Create our database
+        create_database ("DEBIAN") or croak "Unable to create database!";
+        load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
+        init_configuration () or croak "Unable to initialize the configuration object.";
+        $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
+        $session = create_experimenter ($manager) or croak "Unable to create an initial experimenter.";
+        $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
+        print_header "Finalizing Database";
+        load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
+        commit_experimenter ($session) or croak "Unable to load commit experimenter.";
+        load_analysis_core ($session, $LOGFILE)
+        or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
+    }
 
     #*********
     #********* Finalize the DB
     #*********
 
-    print_header "Finalizing Database";
-    load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
-    commit_experimenter ($session) or croak "Unable to load commit experimenter.";
-    load_analysis_core ($session, $LOGFILE)
-	or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
 
     print "Finding image import module and chain.\n";
 
