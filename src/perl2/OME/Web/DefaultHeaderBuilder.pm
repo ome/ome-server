@@ -49,6 +49,8 @@ use Carp;
 
 # OME Modules
 use OME;
+use OME::Task;
+use OME::Tasks::NotificationManager;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -124,16 +126,32 @@ sub getPageHeader {
 
 
 	# Logo image link
-	my $logo_link =
-		$q->a({href => $HOME_LOCATION},
-			$q->img( {
-					alt => 'Cell in mitosis',
-					src => '/images/logo_smaller.gif',
-					border => '0'
-				}
-			)
-		);
-
+	my $logo_link;
+	my @tasks = OME::Tasks::NotificationManager->list(state=>'IN PROGRESS');
+	
+	# check if the logo 
+	if (scalar @tasks) { 
+		$logo_link =
+			$q->a({href => $HOME_LOCATION},
+				$q->img( {
+						alt => 'OME Logo',
+						src => '/images/logo-sauron.gif',
+						border => '0'
+					}
+				)
+			);
+	} else {
+			$logo_link =
+			$q->a({href => $HOME_LOCATION},
+				$q->img( {
+						alt => 'OME Logo',
+						src => '/images/logo_smaller.gif',
+						border => '0'
+					}
+				)
+			);
+	}
+	
 	# Our glorious header table
 	my $header_table = $q->table( {
 			width => '100%',
