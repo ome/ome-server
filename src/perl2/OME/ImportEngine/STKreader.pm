@@ -344,7 +344,7 @@ sub importGroup {
 			      0, $xref->{'Image.SizeZ'}-1,
 			      0, $xref->{'Image.NumWaves'}-1,
 			      0, $xref->{'Image.NumTimes'}-1,
-                  "UI STK");
+                  "Metamorph STK");
 
     my ($pixels, $pix) = 
 	($self->{super})->__createRepositoryFile($image, 
