@@ -11,9 +11,6 @@ my $moduleRepository = 'http://openmicroscopy.org/packages/perl';
 my $DEFAULT_badTestsFatal = 0;
 my $installCommand = 'make install';
 
-$installCommand = 'sudo make install'
-    if (lc($ARGV[0]) eq 'sudo');
-
 $ENV{PATH} .= ':/usr/local/bin';
 
 # Add module specs here:
@@ -143,12 +140,16 @@ my @modules = ({
 
 # Grab command line options (POSIX)
 my %options;
-getopts('ihfc', \%options);	# -i (Interactive) [Default]
+getopts('ihfcs', \%options);	# -i (Interactive) [Default]
 				# -h (Help)
 				# -f (Force module installs from OME repository)
 				# -c (Only perform version checks)
+                                # -s (Install via the sudo command)
 
-if ($options{h}) { die "Usage: perl perlcheck.pl [OPTIONS]\nPerforms version checks and installs for OME's required libraries.\n\nMain options:\n-i,\tInteractive installation mode [default]\n-h\tHelp (This screen)\n-f\tForce module installs for missing or incompatible modules\n-c\tPerform *only* version checks (no installs are performed, even if needed)\n\nReport bugs to <ome-devel\@mit.edu>." }
+if ($options{h}) { die "Usage: perl perlcheck.pl [OPTIONS]\nPerforms version checks and installs for OME's required libraries.\n\nMain options:\n-i,\tInteractive installation mode [default]\n-h\tHelp (This screen)\n-f\tForce module installs for missing or incompatible modules\n-c\tPerform *only* version checks (no installs are performed, even if needed)\n-f\tUse the sudo command to perform any installations\n\nReport bugs to <ome-devel\@mit.edu>." }
+
+$installCommand = 'sudo make install'
+    if ($options{s});
 
 
 # Make sure there is a modules directory, and cwd into it.
