@@ -213,11 +213,14 @@ sub processDOM {
 		if $debug > 0;
 
 
-    foreach my $categoryXML ($root->getElementsByLocalName('Category')) {
-        my $categoryPath = $categoryXML->getAttribute('FullName');
-        my $categoryDescription = $categoryXML->getAttribute('Description');
-        my $category = $self->__getCategory($categoryPath,$categoryDescription);
-    }
+	foreach my $categoryXML ($root->getElementsByLocalName('Category')) {
+		my $categoryPath = $categoryXML->getAttribute('Path');
+		my $categoryDescriptions = $categoryXML->getElementsByLocalName('Description');
+		my $categoryDescription = [$categoryDescriptions->[0]->childNodes()]->[0]->data()
+			if $categoryDescriptions;
+
+		my $category = $self->__getCategory($categoryPath,$categoryDescription);
+	}
 
 
 foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
@@ -238,9 +241,13 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
             my $category = $self->__getCategory($categoryPath);
             $categoryID = $category->id();
         }
+
+	my $descriptions = $moduleXML->getElementsByLocalName('Description');
+	my $description = [$descriptions->[0]->childNodes()]->[0]->data()
+		if $descriptions;
 	my $data = {
 		name     => $moduleXML->getAttribute( 'ModuleName' ),
-		description      => $moduleXML->getAttribute( 'Description' ),
+		description      => $description,
 		category         => $categoryID,
 		module_type      => $moduleXML->getAttribute( 'ModuleType' ),
 		# location using ProgramID attribute is a temporary hack
@@ -289,9 +296,13 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 			# make OME::LookupTable object
 			#
 			my $lookupTableXML = $lookupTables[0];
+			my $descriptions = $lookupTableXML->getElementsByLocalName('Description');
+			my $description = [$descriptions->[0]->childNodes()]->[0]->data()
+				if $descriptions;
+
 			my $data = {
 				name        => $lookupTableXML->getAttribute( 'Name' ),
-				description => $lookupTableXML->getAttribute( 'Description' )
+				description => $description
 			};
 			$newLookupTable = $factory->newObject( "OME::LookupTable", $data )
 				or die "Could not create OME::LookupTable object\n";
@@ -337,9 +348,14 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
                     $optional = 'f';
                     $list = 't';
                 }
+
+		my $descriptions = $formalInputXML->getElementsByLocalName('Description');
+		my $description = [$descriptions->[0]->childNodes()]->[0]->data()
+			if $descriptions;
+
 		my $data = {
 			name               => $formalInputXML->getAttribute( 'Name' ),
-			description        => $formalInputXML->getAttribute( 'Description' ),
+			description        => $description,
 			module_id         => $newProgram,
 			semantic_type_id  => $semanticType->id(),
 			lookup_table_id    => $newLookupTable,
@@ -400,9 +416,13 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
                     $optional = 'f';
                     $list = 't';
                 }
+
+		my $descriptions = $formalOutputXML->getElementsByLocalName('Description');
+		my $description = [$descriptions->[0]->childNodes()]->[0]->data()
+			if $descriptions;
 		my $data = {
 			name               => $formalOutputXML->getAttribute( 'Name' ),
-			description        => $formalOutputXML->getAttribute( 'Description' ),
+			description        => $description,
 			module_id         => $newProgram,
 			semantic_type_id  => $semanticType,
 			feature_tag        => $formalOutputXML->getAttribute( 'IBelongTo' ),

@@ -155,7 +155,9 @@ sub processDOM {
     #
         my $stName = $ST_XML->getAttribute('Name');
         $semanticTypes->{ $stName } = undef;
-        my $stDescription = $ST_XML->getAttribute('Description');
+		my $stDescriptions = $ST_XML->getElementsByLocalName('Description');
+		my $stDescription = [$stDescriptions->[0]->childNodes()]->[0]->data()
+			if $stDescriptions;
         my @SEs_XML = $ST_XML->getElementsByLocalName ('Element');
 
         # look for existing AttributeType
@@ -260,12 +262,16 @@ sub processDOM {
                   "->processDOM: internally conflicting column datatypes for $DBLocation\n!Declared as ".
                   $dataType.', Previously declared as '.$tables->{$tName}->{columns}->{$cName}->{datatype};
             }
-            my $cDescription  = $SE_XML->getAttribute('Description');
+			my $cDescriptions = $SE_XML->getElementsByLocalName('Description');
+			my $cDescription = [$cDescriptions->[0]->childNodes()]->[0]->data()
+				if $cDescriptions;
             push (@{$tables->{$tName}->{columns}->{$cName}->{description}},$cDescription)
                 if defined $cDescription and length ($cDescription) > 0;
         }
         $tables->{$tName}->{granularity} = $ST_XML->getAttribute('AppliesTo');
-        my $tDescription = $ST_XML->getAttribute('Description');
+		my $tDescriptions = $ST_XML->getElementsByLocalName('Description');
+		my $tDescription = [$tDescriptions->[0]->childNodes()]->[0]->data()
+			if $tDescriptions;
         push (@{$tables->{$tName}->{description}},$tDescription)
            if defined $tDescription and length ($tDescription) > 0;
     }
@@ -567,7 +573,9 @@ sub processDOM {
     foreach my $ST_XML (@STDs) {
         my $stName = $ST_XML->getAttribute('Name');
         my $stGranularity = $ST_XML->getAttribute('AppliesTo');
-        my $stDescription = $ST_XML->getAttribute('Description');
+		my $stDescriptions = $ST_XML->getElementsByLocalName('Description');
+		my $stDescription = [$stDescriptions->[0]->childNodes()]->[0]->data()
+			if $stDescriptions;
 
         # look for existing AttributeType
         # If the AttributeType exists, we already know it doesn't conflict from the first pass.
@@ -617,7 +625,9 @@ sub processDOM {
             foreach my $SemanticElementXML ($ST_XML->getElementsByLocalName( "Element") ) {
                 my $seName = $SemanticElementXML->getAttribute('Name');
                 my $seDBloc = $SemanticElementXML->getAttribute('DBLocation');
-                my $seDescription = $SemanticElementXML->getAttribute('Description');
+				my $seDescriptions = $SemanticElementXML->getElementsByLocalName('Description');
+				my $seDescription = [$seDescriptions->[0]->childNodes()]->[0]->data()
+					if $seDescriptions;
 
                 logdbg "debug", ref ($self) .
                   "->processDOM: processing attribute column,\n\tname=$seName\n";
