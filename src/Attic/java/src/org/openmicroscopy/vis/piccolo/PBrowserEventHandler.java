@@ -42,6 +42,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.vis.chains.SelectionState;
+import org.openmicroscopy.vis.ome.CDataset;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import java.awt.event.MouseEvent;
@@ -76,13 +77,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	//	System.err.println("got mouse entered in browser");
 		PNode n = e.getPickedNode();
 	//	System.err.println("node is "+n);
-		if (n instanceof PThumbnail) {
-			canvas.clearExecutionList();
-			PThumbnail pt = (PThumbnail) n;
-			pt.setHighlighted(true);
-			e.setHandled(true);
-		} 
-		else if (n instanceof PSelectableText) {
+		if (n instanceof PSelectableText) {
 			((PSelectableText) n).setHighlighted(true);
 			if (n instanceof PChainLabelText) {
 				PChainLabelText clt = (PChainLabelText) n;
@@ -92,12 +87,24 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		} 
 		else {
 			canvas.clearExecutionList();
-			super.mouseEntered(e);
+			if (n instanceof PThumbnail)  {
+				PThumbnail pt = (PThumbnail) n;
+				pt.setHighlighted(true);
+				e.setHandled(true);
+			}
+			else if (n instanceof PDataset) {
+				PDataset dn = (PDataset) n;
+				CDataset c = dn.getDataset();
+				SelectionState.getState().setRolloverDataset(c);
+			}
+			else 
+				super.mouseEntered(e);
 		}
 	}
 	
 	public void mouseExited(PInputEvent e) {
 		PNode n = e.getPickedNode();
+		//System.err.println("browser canvas exited "+n);
 		if (n instanceof PThumbnail) {
 			PThumbnail pt = (PThumbnail) n;
 			pt.setHighlighted(false);
@@ -106,7 +113,8 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		else if (n instanceof PSelectableText) {
 			((PSelectableText)n).setHighlighted(false);
 			e.setHandled(true);
-		}
+		} else if (n instanceof PDataset)
+			SelectionState.getState().setRolloverDataset(null);
 	}	
 	
 	public void mouseReleased(PInputEvent e) {
@@ -139,7 +147,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		SelectionState selectionState = SelectionState.getState();
 		
 		if (node instanceof PDataset) { 
-			System.err.println("zooming in on dataset");
+			//System.err.println("zooming in on dataset");
 			PDataset d = (PDataset) node;
 			selectionState.setSelectedDataset(d.getDataset());
 			e.setHandled(true);
@@ -148,7 +156,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			
 			try {
 				PChainLabelText label = (PChainLabelText) node;
-				System.err.println("clicked on a chain label..."+label.getChain().getName());
+				//System.err.println("clicked on a chain label..."+label.getChain().getName());
 				label.doSelection();
 			}
 			catch(Exception exc) {
@@ -157,7 +165,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			e.setHandled(true);
 		}
 		else if (node instanceof PExecutionText) {
-			System.err.println("clicked on execution text!");
+			//System.err.println("clicked on execution text!");
 			e.setHandled(true);
 		}
 		else 
