@@ -93,7 +93,7 @@
 						Description = "Produced from XML" SQL_DataType = "dateTime"/>
 			</FormalOutput>
 			<TableDefinition TableID = "bar" AttributeType = "D" 
-				TableName = "ITS_OFF_TO_WORK" Description = "foo's outputs. Produced from XML."/>
+				TableName = "OFF_TO_WORK_WE_GO" Description = "foo's outputs. Produced from XML."/>
 			<TableDefinition TableID = "baz" AttributeType = "F" 
 				TableName = "HI_HO" Description = "foo's inputs. Produced from XML."/>
 		</Declaration>
