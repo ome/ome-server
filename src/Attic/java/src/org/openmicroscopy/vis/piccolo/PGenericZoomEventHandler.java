@@ -184,7 +184,6 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 			param.setParamsHighlighted(true);
 			PModule pmod = param.getPModule();
 			pmod.setModulesHighlighted(true);
-			//canvas.setTreeSelection((CModule)pmod.getModule());
 			e.setHandled(true);
 		}
 		
@@ -193,7 +192,6 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 			pmod.setAllHighlights(true);
 			e.setHandled(true);
 			lastEntered = pmod;
-			//canvas.setTreeSelection((CModule)pmod.getModule());
 		}
 		else {
 			super.mouseEntered(e);
@@ -235,20 +233,16 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 	 * Zoom out to the parent of the current node when we get a popup
 	 */
 	protected void handlePopup(PInputEvent e) {
-	//	System.err.println("got a popup in generic handler...");
 		postPopup = true;
 		PNode node = e.getPickedNode();
 		PNode p = node.getParent();
-	//	System.err.println("node is "+p);
 		if (p instanceof PBufferedNode) {
-	//		System.err.println("zooming to parent.");
 			PBufferedNode bn=(PBufferedNode) p;
 			PBounds b = bn.getBufferedBounds();
 			PCamera camera = ((PCanvas) canvas).getCamera();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);		
 		} else if (p instanceof PCamera || p == ((PCanvas) canvas).getLayer() ||
 					node instanceof PCamera || node == ((PCanvas) canvas).getLayer()) {
-	//		System.err.println("zooming to camera leavel");
 			PBounds b = canvas.getBufferedBounds();
 			PCamera camera = ((PCanvas) canvas).getCamera();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
