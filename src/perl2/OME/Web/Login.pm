@@ -109,22 +109,19 @@ sub __loginForm {
 
 	my $login_table .= $q->startform .
 	                   $q->table({-border => 0, -align => 'center'},
-						   $q->Tr( [
-							   $q->td({-align => 'right'}, [
-						       $q->b("Username:"),
-						       $q->textfield(-name => 'username', -default => '', -size => 25)
-						       ]),
-					       $q->td({-align => 'right'}, [
-						       $q->b("Password:"),
-						       $q->password_field(-name => 'password', -default => '', -size => 25)
-						       ]),
-						   $q->td($q->br()),  # Spacing
-					       $q->td({-align => 'center', -colspan => 2}, [
-						       $q->submit(-name => 'execute', -value => 'Log in')
-						       ])
-					       ])
-				   ) .
-				   $q->endform;
+						   $q->Tr(
+							   $q->td({-align => 'right'}, $q->b("Username:")),
+							   $q->td($q->textfield(-name => 'username', -default => '', -size => 25))
+						   ), $q->Tr(
+							   $q->td({-align => 'right'}, $q->b("Password:")),
+							   $q->td($q->password_field(-name => 'password', -default => '', -size => 25))
+						   ), $q->Tr(
+							   $q->td($q->br()),  # Spacing
+							   $q->td({-align => 'center', -colspan => 2},
+							   		$q->submit(-name => 'execute', -value => 'Log in'))
+						   )
+					   ) .
+					   $q->endform;
 
 	my $generic_footer =
 		$q->hr() .
