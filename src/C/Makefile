@@ -1,5 +1,5 @@
 OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
-TARGETS = OMEimportDVfile DumpDV SetDVwave findSpotsOME BinarizeGlobal \
+TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats \
 		cgrayce2
@@ -10,12 +10,12 @@ LIBS = $(DB_LIBS) $(MATH_LIBS) -L. -lOME
 DEFINES = -DDEBUG
 COMPILER_FLAGS = -fstrict-prototypes -Wall -O2
 MAKEFILES = cgrayce
-OME_LIB = libOME.so
+OME_LIB = libOME.a
 
 CFLAGS = $(DEFINES) $(DB_INCLUDES) $(COMPILER_FLAGS)
 CC = gcc
 
-all: $(OME_LIB)
+all: $(TARGETS)
 
 trackSpotsOMEwrpr : $(OBJECTS) trackSpotsOMEwrpr.o
 	gcc -o trackSpotsOMEwrpr trackSpotsOMEwrpr.o $(LIBS)
@@ -72,7 +72,8 @@ SetDVwave: SetDVwave.o  BSUtils.o
 	gcc  -o SetDVwave SetDVwave.o  BSUtils.o
 
 $(OME_LIB): $(OBJECTS)
-	ld -shared -warn-once -o $@ $(OBJECTS) 
+	ar cr $@ $(OBJECTS)
+	ranlib $@
 
 cgrayce2:
 	$(MAKE) -C cgrayce
@@ -86,46 +87,19 @@ OMEimportDVfile.o : OMEdb.h
 
 .PHONY : clean
 clean :
-	-rm $(OBJECTS)
-	-rm $(TARGETS)
-	rm -f trackSpotsOMEwrpr ../bin/trackSpots/trackSpotsOMEwrpr
-	rm -f ../bin/trackSpots/trackspotsOMEcolumns
-	rm -f trackSpotsDB ../bin/trackSpots/trackSpotsDB
-	rm -f ../bin/trackSpots/trackSpots
-	rm -f findSpotsOMEwrpr ../bin/findSpots/findSpotsOMEwrpr
-	rm -f ../bin/findSpots/findspotsOMEcolumns
-	rm -f findSpotsDB ../bin/findSpots/findSpotsDB
-	rm -f findSpotsOME ../bin/findSpots/findSpotsOME
-	rm -f ../bin/findSpots/findSpots
-	rm -f BinarizeGlobal ../bin/BinarizeGlobal/BinarizeGlobal
-	rm -f spawnSpots ../bin/spawnSpots/spawnSpots
-	rm -f /usr/sbin/OMEimportDV
-	rm -f OMEimportDVfile /usr/bin/OMEimportDVfile
-	rm -f /usr/bin/DumpDV
-	rm -f /usr/bin/SetDVwave
+	rm -f *.o
+	rm -f $(TARGETS)
+	
 	$(MAKE) -C cgrayce clean
 
 install:
 	install -d ../bin
-#	install -d ../bin/trackSpots
-#	cp -f trackSpotsOMEwrpr ../bin/trackSpots/
-#	cp -f trackspotsOMEcolumns ../bin/trackSpots/
-#	cp -f trackSpotsDB ../bin/trackSpots/
-#	ln -fs trackSpotsOMEwrpr ../bin/trackSpots/trackSpots
 	install -d ../bin/findSpots
-#	cp -f findSpotsOMEwrpr ../bin/findSpots/
-#	cp -f findspotsOMEcolumns ../bin/findSpots/
-#	cp -f findSpotsDB ../bin/findSpots/
-	cp -f findSpotsOME ../bin/findSpots/findSpotsOME
-	ln -fs findSpotsOME ../bin/findSpots/findSpots
+	install -c findSpotsOME ../bin/findSpots/findSpotsOME
+	install -c findSpotsOME ../bin/findSpots/findSpots
 	install -d ../bin/BinarizeGlobal
-	cp -f BinarizeGlobal ../bin/BinarizeGlobal/BinarizeGlobal
-#	install -d ../bin/spawnSpots
-#	cp -f spawnSpots ../bin/spawnSpots/
-	cp -f OMEimportDV /usr/local/bin/
-	cp -f OMEimportDVfile /usr/local/bin/
-	cp -f DumpDV /usr/local/bin/DumpDV
-	cp -f SetDVwave /usr/local/bin/SetDVwave
+	install -c BinarizeGlobal ../bin/BinarizeGlobal/BinarizeGlobal
+	install -c DumpDV /usr/local/bin/DumpDV
+	install -c SetDVwave /usr/local/bin/SetDVwave
 	$(MAKE) -C cgrayce install
 
-all: $(TARGETS)

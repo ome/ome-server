@@ -53,7 +53,8 @@ TARFILE  = README Makefile $(CSRC) $(HEADERS) $(IHEADERS)
 all: $(LIB) helpers ome_cccp ome_tmcp
 
 $(LIB): $(OBJS) $(HEADERS)
-	ar csr $@ $(OBJS)
+	ar cr $@ $(OBJS)
+	ranlib $@
 
 helpers: $(LIB) $(HELPERS)
 
@@ -97,6 +98,6 @@ tarfile:
 
 install:
 	install -d ../../bin
-	install ome_cccp ../../bin/ome_cccp
-	install ome_tmcp ../../bin/ome_tmcp
+	install -c ome_cccp ../../bin/ome_cccp
+	install -c ome_tmcp ../../bin/ome_tmcp
 
