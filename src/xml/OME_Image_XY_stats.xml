@@ -1,7 +1,9 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 <AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
-	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
+	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification."
+	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/cvs/OME/src/xml/AnalysisModule.xsd">
 	<Declaration>
 		<Table AttributeType = "I" TableName = "XY_IMAGE_INFO" 
 			Description = "General image XY slice attributes. Produced from XML.">
@@ -60,7 +62,9 @@
 			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
 	</Declaration>
-	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/SourceForge/OME/src/xml/CLIExecutionInstructions.xsd">
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
+		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/cvs/OME/src/xml/CLIExecutionInstructions.xsd">
 		<CommandLine>
 			<InputSubString>
 				<RawText>Path=</RawText>
