@@ -273,6 +273,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				
 				if (datasets.contains(node.getDataset())) {
 					// position it if it's being displayed
+					if (node.getParent() != layer)
+						layer.addChild(node);
 					node.setOffset(x,y);
 					
 					//move to next horizontal position. Adjust height of row.
@@ -478,6 +480,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		else if (e.isEventOfType(SelectionEvent.SET_SELECTED_PROJECT)
 			|| e.isEventOfType(SelectionEvent.SET_SELECTED_DATASET)) {
 			// if we select a project or dataset, update their state.
+			System.err.println("project selection changed...");
 			updateProjectDatasetSelection(state);	
 		}
 	  
@@ -490,22 +493,19 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	private void updateProjectDatasetSelection(SelectionState state) {
 		CDataset selected = state.getSelectedDataset();
 		
-		TreeSet datasets;
 		// if there is no selected project, don't higlight any datasets
 		if (state.getSelectedProject() != null) 
 			highlightDatasets(null);
+			
 		if (selected == null){
 			// display the active datasets, or all of them (if none active).
+			Collection datasets = allDatasets;		
 			Collection selections = state.getActiveDatasets();
 			if (selections != null && selections.size() > 0) {
-				datasets = new TreeSet(selections);
-			}
-			else {
-				datasets = new TreeSet(allDatasets);
+				datasets = selections;
 			}
 			displayDatasets(datasets);
-		}	
-		
+		}
 	}
 
 	/**
