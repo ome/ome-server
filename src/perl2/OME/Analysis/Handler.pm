@@ -55,6 +55,7 @@ use Benchmark qw(timediff timesum timestr);
 
 use fields qw(_location _session _node _output_types _untyped_output
               _program _formal_inputs _formal_outputs _analysis
+              _inputs_by_granularity
               _current_dataset _current_image _current_feature
               _global_inputs _dataset_inputs _image_inputs _feature_inputs
               _global_outputs _dataset_outputs _image_outputs _feature_outputs
@@ -85,21 +86,36 @@ sub new {
     $self->{_program} = $program;
     $self->{_node} = $node;
 
+    # Hash the formal inputs by name and by granularity, so they can
+    # be accessed quickly.  At the same time, determine whether or not
+    # this module can create global outputs.  (It can as long as all of
+    # its input are of global granularity.)
+
     my $globalOutputsAllowed = 1;
 
     my $inputs = {};
+    my $granularity_inputs = {};
+
     foreach my $formal_input ($program->inputs()) {
         $inputs->{$formal_input->name()} = $formal_input;
-        if ($formal_input->attribute_type()->granularity() ne 'G') {
+        my $granularity = $formal_input->attribute_type()->granularity();
+        push @{$granularity_inputs->{$granularity}}, $formal_input;
+        if ($granularity ne 'G') {
             $globalOutputsAllowed = 0;
         }
     }
     $self->{_formal_inputs} = $inputs;
     $self->{_global_outputs_allowed} = $globalOutputsAllowed;
+    $self->{_inputs_by_granularity} = $granularity_inputs;
+
+    # Hash the formal outputs by name, and by attribute type.  If there
+    # is an untyped formal output, save it.
 
     my %outputs;
     my %types;
     my $untyped_output;
+    my $granularity_outputs = {};
+
     foreach my $formal_output ($program->outputs()) {
         $outputs{$formal_output->name()} = $formal_output;
         my $attribute_type = $formal_output->attribute_type();
@@ -111,11 +127,14 @@ sub new {
             die "Cannot have two outputs of the same type!"
               if exists $types{$attribute_type->id()};
             $types{$attribute_type->id()} = $formal_output;
+            my $granularity = $attribute_type->granularity();
+            push @{$granularity_outputs->{$granularity}}, $formal_output;
         }
     }
     $self->{_formal_outputs} = \%outputs;
     $self->{_output_types} = \%types;
     $self->{_untyped_output} = $untyped_output;
+    $self->{_outputs_by_granularity} = $granularity_outputs;
 
     bless $self, $class;
     return $self;
@@ -269,7 +288,7 @@ newAttribute method.
 =cut
 
 sub newFeature {
-    my ($self,$name) = @_;
+    my ($self,$name,$parent) = @_;
 
     # Find the tag for the new feature.  If this tag is undefined,
     # then the module declares that it won't create features, causing
@@ -277,7 +296,7 @@ sub newFeature {
 
     my $new_feature_tag = $self->{_node}->new_feature_tag();
     die "This module says it won't create features!"
-      unless (defined $new_feature_tag);
+      unless (defined $new_feature_tag && $new_feature_tag ne "");
 
     # Find the feature that will be the new feature's parent.  If the
     # module is iterating over features, then the new feature will be
@@ -286,13 +305,33 @@ sub newFeature {
 
     my $parent_feature = undef;
 
-    if (defined $self->{_node}->iterator_tag()) {
-        # _current_feature should be undefined if the iterator tag is
-        # undefined, since we won't be looping through features.  That
-        # would make the if test above unnecessary, but for now, I'll
-        # be overly cautious.
+    # Four possibilities:
+    #   [Child:TAG]   - create a new feature of tag TAG, as a
+    #                   child of the current feature
+    #   [Sibling:TAG] - create a new feature of tag TAG, as a
+    #                   sibling of the current feature
+    #   [Root:TAG]    - create a new feature of tag TAG, as a
+    #                   child of the image
+    #   TAG           - shorthand for [Child:TAG]
 
+    my $tag;
+    if ($new_feature_tag =~ /^\[Child\:([^:\[\]]+)\]$/) {
+        $tag = $1;
         $parent_feature = $self->{_current_feature};
+    } elsif ($new_feature_tag =~ /^\[Sibling\:([^:\[\]]+)\]$/) {
+        $tag = $1;
+        my $current = $self->{_current_feature};
+        die "Cannot create a feature which is a sibling of the image"
+          unless defined $current;
+        $parent_feature = $current->parent_feature();
+    } elsif ($new_feature_tag =~ /^\[Root\:([^:\[\]]+)\]$/) {
+        $tag = $1;
+        $parent_feature = undef;
+    } elsif ($new_feature_tag =~ /^([^:\[\]]+)$/) {
+        $tag = $1;
+        $parent_feature = $self->{_current_feature};
+    } else {
+        die "Invalid feature tag";
     }
 
     # Create the feature object
@@ -300,7 +339,7 @@ sub newFeature {
     my $data =
       {
        image          => $self->{_current_image},
-       tag            => $new_feature_tag,
+       tag            => $tag,
        name           => $name,
        parent_feature => $parent_feature
       };
@@ -324,12 +363,12 @@ sub newFeature {
 	    newAttributes($self,[$formal_output_name,$data]...);
 
 Creates a set of new attributes as outputs of the current module.  The
-formal output and attribute data is specified for each attribute to be
-created.  The data is specified by a hash mapping attribute column
-names to values.  The target of the attribute is determined
-automatically.  In the case of dataset and image outputs, the new
-attribute is automatically targeted to the currently analyzed dataset
-and image.  In the case of feature outputs, there are three
+formal output or attribute type and attribute data is specified for
+each attribute to be created.  The data is specified by a hash mapping
+attribute column names to values.  The target of the attribute is
+determined automatically.  In the case of dataset and image outputs,
+the new attribute is automatically targeted to the currently analyzed
+dataset and image.  In the case of feature outputs, there are three
 possibilities.  The new attribute can be targeted to the current
 feature, the current feature's parent, or a new feature created by the
 module.  The feature actually used is determined by the analysis chain
@@ -351,15 +390,12 @@ not, an error is raised and no attributes are created.
 sub newAttributes {
     my ($self,@attribute_info) = @_;
 
-    my $t0 = new Benchmark;
-
     # These hashes are keyed by table name.
     my %data_tables;
     my %data;
     my %targets;
     my %granularities;
     my %feature_tags;
-    my %formal_outputs;
 
     # These hashes are keyed by attribute type ID.
     my %attribute_tables;
@@ -410,7 +446,6 @@ sub newAttributes {
         }
 
         __debug("  $formal_output_name");
-        $formal_outputs{$attribute_type->id()} = $formal_output;
         my $granularity = $attribute_type->granularity();
 
         if ($granularity eq 'G') {
@@ -458,10 +493,152 @@ sub newAttributes {
                                                        $self->{_analysis},
                                                        @new_attribute_info);
 
+    $self->__saveAttributes($attributes);
+    return $attributes;
+}
+
+=head2 newAttributesWithTargets
+
+	my $attribute = $handler->
+	    newAttributesWithTargets($self,[$attribute_type,$data]...);
+
+	# or
+
+	my $attribute = $handler->
+	    newAttributesWithTargets($self,[$formal_output_name,$data]...);
+
+Creates a set of new attributes as outputs of the current module.  The
+formal output or attribute type and attribute data is specified for
+each attribute to be created.  The data is specified by a hash mapping
+attribute column names to values.  The target of the attributes must
+be specified in the data hashes.
+
+Any attributes created via this method will automatically be returned
+to the analysis engine when the collectFeatureOutputs,
+collectImageOutputs, and collectDatasetOutputs methods are called.
+Subclasses need not reimplement this functionality.
+
+If more than one attribute is specified in the call to newAttributes,
+then the attributes in question will be stored in a single row in each
+of the data tables.  If two attributes refer to the same column in a
+data table, then the values in each attribute must be the same.  If
+not, an error is raised and no attributes are created.
+
+=cut
+
+sub newAttributesWithTargets {
+    my ($self,@attribute_info) = @_;
+
+    # These hashes are keyed by table name.
+    my %data_tables;
+    my %data;
+    my %targets;
+    my %granularities;
+    my %feature_tags;
+
+    # These hashes are keyed by attribute type ID.
+    my %attribute_tables;
+
+    # Merge the attribute data hashes into hashes for each data table.
+    # Also, mark which data tables belong to each attribute.
+
+    my @new_attribute_info;
+    my %granularityColumns = 
+      (
+       'G' => undef,
+       'D' => 'dataset_id',
+       'I' => 'image_id',
+       'F' => 'feature_id'
+      );
+
+    my $output_types = $self->{_output_types};
+    my $i;
+    my $length = scalar(@attribute_info);
+
+    for ($i = 0; $i < $length; $i += 2) {
+        my $key = $attribute_info[$i];
+        my $data_hash = $attribute_info[$i+1];
+        my ($attribute_type,$formal_output,$formal_output_name);
+
+        if (!ref($key)) {
+            # This is a string, treat it as a formal input name.
+            $formal_output_name = $key;
+            $formal_output = $self->{_formal_outputs}->{$formal_output_name};
+            $attribute_type = $formal_output->attribute_type();
+        } elsif (UNIVERSAL::isa($key,"OME::AttributeType")) {
+            # This is an attribute type
+            $attribute_type = $key;
+
+            $formal_output =
+              (exists $output_types->{$attribute_type->id()})?
+                $output_types->{$attribute_type->id()}:
+                $self->{_untyped_output};
+
+            die "Cannot find a formal output for semantic type ".
+              $attribute_type->name()
+                unless defined $formal_output;
+
+            $formal_output_name = $formal_output->name();
+        } else {
+            # We don't know how to handle this
+            die "Illegal argument; must be formal input name or attribute type";
+        }
+
+        __debug("  $formal_output_name");
+        my $granularity = $attribute_type->granularity();
+
+        if ($granularity eq 'G') {
+            die "This module is not allowed to create global attributes"
+              unless $self->{_global_outputs_allowed};
+        } elsif ($granularity eq 'D') {
+            die "Need a dataset for this attribute"
+              unless defined $data_hash->{target};
+            $data_hash->{dataset_id} = $data_hash->{target};
+            delete $data_hash->{target};
+        } elsif ($granularity eq 'I') {
+            die "Need an image for this attribute"
+              unless defined $data_hash->{target};
+            $data_hash->{image_id} = $data_hash->{target};
+            delete $data_hash->{target};
+        } elsif ($granularity eq 'F') {
+            die "Need a feature for this attribute"
+              unless defined $data_hash->{target};
+            $data_hash->{feature_id} = $data_hash->{target};
+            delete $data_hash->{target};
+        }
+
+        push @new_attribute_info, $attribute_type, $data_hash;
+    }
+
+    my $attributes = OME::AttributeType->newAttributes($self->Session(),
+                                                       $self->{_analysis},
+                                                       @new_attribute_info);
+
+    $self->__saveAttributes($attributes);
+    return $attributes;
+}
+
+# A helper method used to save any attributes created by the analysis.
+
+sub __saveAttributes {
+    my ($self,$attributes) = @_;
+    my $formal_outputs = $self->{_output_types};
+
     foreach my $attribute (@$attributes) {
         my $attribute_type = $attribute->_attribute_type();
-        my $formal_output = $formal_outputs{$attribute_type->id()};
-        my $formal_output_name = $formal_output->name();
+        my $formal_output = $formal_outputs->{$attribute_type->id()};
+        if (!defined $formal_output) {
+            # There is no typed formal output for this attribute type,
+            # so we must use the untyped formal output.  If there is no
+            # untyped formal output, this is an error.  This error
+            # should have been caught by now, so this is would be a
+            # double-secret-bad error.
+            $formal_output = $self->{_untyped_output};
+            die "Can't find formal output in __saveAttributes"
+              unless defined $formal_output;
+        }
+        my $foID = $formal_output->id();
+        my $foName = $formal_output->name();
         my $granularity = $attribute_type->granularity();
 
         # Save this new attribute as an actual output of the
@@ -472,55 +649,101 @@ sub newAttributes {
 
         #print STDERR "--- $formal_output_name $granularity\n";
 
+        my $target = $attribute->_getTarget();
+
         if ($granularity eq 'G') {
-            push @{$self->{_global_outputs}->{$formal_output_name}}, $attribute;
+            $self->{_global_outputs}->{$foName}++;
         } elsif ($granularity eq 'D') {
-            push @{$self->{_dataset_outputs}->{$formal_output_name}}, $attribute;
+            $self->{_dataset_outputs}->{$foName}->{$target->id()}++;
         } elsif ($granularity eq 'I') {
-            push @{$self->{_image_outputs}->{$formal_output_name}}, $attribute;
+            $self->{_image_outputs}->{$foName}->{$target->id()}++;
         } elsif ($granularity eq 'F') {
-            push @{$self->{_feature_outputs}->{$formal_output_name}}, $attribute;
+            $self->{_feature_outputs}->{$foName}->{$target->id()}++;
         }
     }
-
-    my $t1 = new Benchmark;
-    my $td = timediff($t1,$t0);
-
-    if (exists $self->{_timing}) {
-        $self->{_timing} = timesum($self->{_timing},$td);
-    } else {
-        $self->{_timing} = $td;
-    }
-
-    return $attributes;
 }
 
 
 # Checks a hash of inputs to make sure that they match the cardinality
 # constraints specified by the appropriate formal input.
 
-sub __checkParameters {
-    my ($self, $params, $inputOrOutput, $granularity) = @_;
+sub __checkInputParameters {
+    my ($self, $params, $granularity) = @_;
 
-    foreach my $param_name (keys %{$self->{$inputOrOutput}}) {
-        my $param = $self->{$inputOrOutput}->{$param_name};
+    foreach my $param (@{$self->{_inputs_by_granularity}->{$granularity}}) {
+        my $formal_input_name = $param->name();
         my $attribute_type = $param->attribute_type();
-        # We don't check untyped outputs.  They can be anything.
-        next if
-          (!defined $attribute_type)
-          || $attribute_type->granularity() ne $granularity;
+
         my $optional = $param->optional();
         my $list = $param->list();
-        my $values = $params->{$param_name};
+
+        # Don't bother checking if there are no constraints.
+        next if ($optional && $list);
+
+        my $values = $params->{$formal_input_name};
         my $cardinality = (defined $values)? scalar(@$values): 0;
 
-        #print STDERR "*** $param_name - opt $optional list $list - $cardinality\n";
-
-        die "$param_name is not optional"
+        die "$formal_input_name is not optional"
           if (($cardinality == 0) && (!$optional));
 
-        die "$param_name cannot be a list"
+        die "$formal_input_name cannot be a list"
           if (($cardinality > 1) && (!$list));
+    }
+}
+
+# Checks a hash of outputs to make sure that they match the cardinality
+# constraints specified by the appropriate formal output.  Note that the
+# output attributes are not actually saved, just a count of them.
+
+sub __checkOutputParameters {
+    my ($self, $params, $granularity) = @_;
+
+    foreach my $param (@{$self->{_outputs_by_granularity}->{$granularity}}) {
+        my $formal_output_name = $param->name();
+        my $attribute_type = $param->attribute_type();
+
+        # We don't check untyped outputs.  They can be anything.
+        next if
+          (!defined $attribute_type);
+
+        my $optional = $param->optional();
+        my $list = $param->list();
+
+        # Don't bother checking if there are no constraints.
+        next if ($optional && $list);
+
+        my $values = $params->{$formal_output_name};
+
+        if ($granularity eq 'G') {
+            # For global outputs, the $params input is a hash a la:
+            # $params->{$formal_output_name} => $cardinality
+
+            my $cardinality = $values || 0;
+
+            #print STDERR "      $formal_output_name ($cardinality)\n";
+
+            die "$formal_output_name is not optional"
+              if (($cardinality == 0) && (!$optional));
+
+            die "$formal_output_name cannot be a list"
+              if (($cardinality > 1) && (!$list));
+        } else {
+            # For all other outputs, the $params input is a hash a la:
+            # $params->{$formal_output_name}->{$target_id} => $cardinality
+
+            foreach my $target_id (keys %$values) {
+                my $cardinality = $values->{$target_id} || 0;
+
+                #print STDERR "      $formal_output_name $granularity$target_id ($cardinality)\n";
+
+                die "$formal_output_name is not optional"
+                  if (($cardinality == 0) && (!$optional));
+
+                die "$formal_output_name cannot be a list"
+                  if (($cardinality > 1) && (!$list));
+            }
+        }
+
     }
 }
 
@@ -548,6 +771,7 @@ sub __checkParameters {
 	$handler->finishDataset();
 	$handler->postcalculateGlobal();
 	my $global_output_hash = $handler->collectGlobalOutputs();
+	$handler->finishAnalysis();
 
 These are the methods defined by the Module interface.  Handler
 subclasses should override the precalculateGlobal,
@@ -568,7 +792,7 @@ sub startAnalysis {
 
 sub globalInputs {
     my ($self,$inputHash) = @_;
-    $self->__checkParameters($inputHash,'_formal_inputs','G');
+    $self->__checkInputParameters($inputHash,'G');
     $self->{_global_inputs} = $inputHash;
 }
 
@@ -584,7 +808,7 @@ sub startDataset {
 
 sub datasetInputs {
     my ($self,$inputHash) = @_;
-    $self->__checkParameters($inputHash,'_formal_inputs','D');
+    $self->__checkInputParameters($inputHash,'D');
     $self->{_dataset_inputs} = $inputHash;
 }
 
@@ -602,7 +826,7 @@ sub startImage {
 
 sub imageInputs {
     my ($self,$inputHash) = @_;
-    $self->__checkParameters($inputHash,'_formal_inputs','I');
+    $self->__checkInputParameters($inputHash,'I');
     $self->{_image_inputs} = $inputHash;
 }
 
@@ -619,7 +843,7 @@ sub startFeature {
 
 sub featureInputs {
     my ($self,$inputHash) = @_;
-    $self->__checkParameters($inputHash,'_formal_inputs','F');
+    $self->__checkInputParameters($inputHash,'F');
     $self->{_feature_inputs} = $inputHash;
 }
 
@@ -632,8 +856,8 @@ sub calculateFeature {
 sub collectFeatureOutputs {
     my ($self) = @_;
     my $hash = $self->{_feature_outputs};
-    $self->__checkParameters($hash,'_formal_outputs','F');
-    return $hash;
+    $self->__checkOutputParameters($hash,'F');
+    return 1;
 }
 
 
@@ -641,7 +865,6 @@ sub finishFeature {
     my ($self) = @_;
     $self->{_current_feature} = undef;
     $self->{_feature_inputs} = undef;
-    $self->{_feature_outputs} = undef;
 }
 
 
@@ -653,8 +876,8 @@ sub postcalculateImage {
 sub collectImageOutputs {
     my ($self) = @_;
     my $hash = $self->{_image_outputs};
-    $self->__checkParameters($hash,'_formal_outputs','I');
-    return $hash;
+    $self->__checkOutputParameters($hash,'I');
+    return 1;
 }
 
 
@@ -662,7 +885,7 @@ sub finishImage {
     my ($self) = @_;
     $self->{_current_image} = undef;
     $self->{_image_inputs} = undef;
-    $self->{_image_outputs} = undef;
+    $self->{_feature_outputs} = undef;
 }
 
 
@@ -674,8 +897,8 @@ sub postcalculateDataset {
 sub collectDatasetOutputs {
     my ($self) = @_;
     my $hash = $self->{_dataset_outputs};
-    $self->__checkParameters($hash,'_formal_outputs','D');
-    return $hash;
+    $self->__checkOutputParameters($hash,'D');
+    return 1;
 }
 
 
@@ -683,7 +906,7 @@ sub finishDataset {
     my ($self) = @_;
     $self->{_current_dataset} = undef;
     $self->{_dataset_inputs} = undef;
-    $self->{_dataset_outputs} = undef;
+    $self->{_image_outputs} = undef;
 
     #print STDERR "newAttributes:\n".timestr($self->{_timing})."\n"
     #    if exists $self->{_timing};
@@ -697,10 +920,15 @@ sub postcalculateGlobal {
 sub collectGlobalOutputs {
     my ($self) = @_;
     my $hash = $self->{_global_outputs};
-    $self->__checkParameters($hash,'_formal_outputs','G');
-    return $hash;
+    $self->__checkOutputParameters($hash,'G');
+    return 1;
 }
 
+sub finishAnalysis {
+    my ($self) = @_;
+    $self->{_dataset_outputs} = undef;
+    $self->{_global_outputs} = undef;
+}
 
 
 =head1 AUTHOR
