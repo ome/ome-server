@@ -133,7 +133,7 @@ sub getGroups {
     my $self = shift;
     my $fref = shift;
     my @outlist;
-
+	
     # Group files with recognized patterns together
     my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
 
@@ -144,9 +144,9 @@ sub getGroups {
     	my @groupList;
     	my $maxZ = $infoHash->{$name}->{maxZ};
 
-		for (my $z = 0; $z <= $maxZ; $z++) {
-			$file = $group->[$z][$c][$t]->{File};
-			die "Uh, file is not defined at (z,c,t)=($z,$c,$t)!\n"
+		for (my $z = 0; $z < $maxZ; $z++) {
+			my $file = $group->[$z][0][0]->{File};
+			die "Uh, file is not defined at (z,c,t)=($z,0,0)!\n"
 				unless ( defined($file) );
 			
 			# The other keys of this hash give access to the actual
@@ -406,10 +406,8 @@ sub storeChannelInfo {
 sub getSHA1 {
     my $self = shift;
     my $grp = shift;
-
-    my $fn = $grp->[0];
-    my $sha1 = $fn->getSHA1();
-
+    my $file = $grp->{Files}->[0]; 
+    my $sha1 = $file->getSHA1(); 
     return $sha1;
 }
 
