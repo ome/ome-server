@@ -77,10 +77,10 @@ OMEimage.prototype._dispCh_RGB_onOff = {
 				being displayed
 
 *****/
-function OMEimage( imageID, pixelsID, Stats, Dims, CGI_URL, 
+function OMEimage( imageID, imageName, pixelsID, Stats, Dims, CGI_URL, 
                    SaveDisplayCGI_URL, CBW, RGBon, isRGB,
                    imageServerID, theZ, theT ) {
-	this.init( imageID, pixelsID, Stats, Dims, CGI_URL, SaveDisplayCGI_URL, CBW, RGBon, isRGB, imageServerID, theZ, theT );
+	this.init( imageID, imageName, pixelsID, Stats, Dims, CGI_URL, SaveDisplayCGI_URL, CBW, RGBon, isRGB, imageServerID, theZ, theT );
 }
 
 /*****
@@ -110,7 +110,6 @@ OMEimage.prototype.saveState = function() {
 		'&CBW=' + this.getCBW().join() + "&isRGB=" + ( this.colorDisplay() ? 1 : 0 ) + "&Unique=" + unique + 
 		'&PixelsID=' + this.pixelsID;
 	tmpImg.setAttributeNS(xlinkns, "href",imageURL);
-Util.err( imageURL.replace( /&/g, '@' ) );
 
 	this.SVGimageContainer.appendChild(tmpImg);
 	this.SVGimageContainer.removeChild(tmpImg);
@@ -447,16 +446,25 @@ OMEimage.prototype.prefetchImages = function() {
 	}
 }
 
+/*****
+	moveImageLayer( x, y )
+		changes the X,Y position of the image layer
+*****/
+OMEimage.prototype.moveImageLayer = function( x, y ) {
+	this.SVGimageContainer.setAttribute( 'transform', 'translate( '+x+', '+y+')' );
+}
+
 
 /********************************************************************************************
                                  Private Functions
 ********************************************************************************************/
 
-OMEimage.prototype.init = function( imageID, pixelsID, Stats, Dims,  CGI_URL, 
+OMEimage.prototype.init = function( imageID, imageName, pixelsID, Stats, Dims,  CGI_URL, 
 	SaveDisplayCGI_URL, CBW, default_RGBon, default_isRGB, imageServerID, theZ, theT ) {
 	this.initialized        = true;
 	// set variables
 	this.imageID            = imageID;
+	this.imageName          = imageName;
 	this.pixelsID           = pixelsID;
 	this.imageServerID      = imageServerID;
 	this.Stats              = Stats;
@@ -540,10 +548,9 @@ OMEimage.prototype.buildSVG = function() {
 OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
 	var imageURL = this.getCompositeURL( theZ, theT ) + '&Format=JPEG';
 	//imageURLs is used to load high quality image. that means TIFF format
-	this.imageURLs[theZ][theT] = this.getCompositeURL( theZ, theT ) + '&Format=TIFF';
+	this.imageURLs[theZ][theT] = this.getCompositeURL( theZ, theT ) + '&Format=TIFF&Save=' + this.imageName;
 
 	this.SVGimages[theZ][theT] = Util.createElementSVG( 'image', {
-		y: 95,
 		width: this.Dims['X'],
 		height: this.Dims['Y'],
 		display: (invisible ? 'none' : 'inline')
