@@ -51,6 +51,7 @@ Usage:
   omejava [command] [options]
 
 Available commands:
+  help      Print this help message.
   st        Creates Java interfaces for semantic types in the OME database
 
 USAGE
@@ -60,12 +61,23 @@ USAGE
 
 
 my %COMMANDS = (
-                st => \&semantic_types,
+                help => \&help,
+                st   => \&semantic_types,
                );
+
+my %HELPS = (
+             st => \&semantic_type_usage,
+            );
 
 my $command = shift || '';
 usage() unless exists $COMMANDS{$command};
 $COMMANDS{$command}();
+
+sub help {
+    my $command = shift(@ARGV) || '';
+    usage() unless exists $HELPS{$command};
+    $HELPS{$command}();
+}
 
 sub semantic_type_usage {
     print <<"USAGE";
