@@ -165,6 +165,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		iter = modules.uncategorizedModuleIterator();
 		
 		System.err.println("arranging uncategorized modules");
+		maxModHeight = maxModWidth =0;
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
 			displayModule(box,mod);
@@ -195,6 +196,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		PCategoryBox box = decorateCategory(parent);
 		displayCategoryName(box,cat.getName());
 		
+		maxModHeight = maxModWidth = 0;
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
 			displayModule(box,mod);
@@ -373,7 +375,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 				childHeight = maxModHeight;
 				childWidth = maxModWidth;
 			}
-			else { 
+			else {  
 				// category box
 				System.err.println("it's a category box...");
 				PBounds b = ((PNode) node).getBounds();
