@@ -140,7 +140,6 @@ OME Modules - Table of Contents
 =begin comment
 
     OME::Image::Pix
-    OME::Session::Attributes
     OME::Research::AnalyseText
     OME::Research::SearchEngine
     OME::Research::SetStatement
