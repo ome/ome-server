@@ -105,18 +105,19 @@ Returns
 
 =cut
 sub importFiles {
-	my ($repository, $options, @filenames) = @_;
+	my ($param1, $param2, @filenames) = @_;
+	my ( $repository, $options );
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	
-	if( ref( $repository ) eq 'HASH' ) {
-		unshift( @filenames, $options);
-		$options = $repository;
+	if( ref( $param1 ) eq 'HASH' ) {
+		unshift( @filenames, $param2);
+		$options = $param1;
 		$repository = $factory->findAttribute('Repository', IsLocal => 0)
 			or die "could not find a remote repository to work with";
-	} elsif( not ref($repository) or not $repository->verifyType('Repository') ) {
-		unshift( @filenames, $options);
-		unshift( @filenames, $repository);
+	} elsif( not ref($param1) or not $param1->verifyType('Repository') ) {
+		unshift( @filenames, $param2) if defined $param2; # don't bother adding an undef
+		unshift( @filenames, $param1);
 		$options = {};
 		$repository = $factory->findAttribute('Repository', IsLocal => 0)
 			or die "could not find a remote repository to work with";
@@ -128,7 +129,7 @@ sub importFiles {
 		foreach ( @filenames );
 	# FIXME: split @files into two groups: xml files & proprietary
 
-#	$options->{AllowDuplicates} = 1;
+	$options->{AllowDuplicates} = 1;
 	
 	my $chain = $factory->findObject('OME::AnalysisChain', name => 'Image server stats');
 
