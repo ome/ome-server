@@ -196,8 +196,7 @@ sub requireDataTablePackage {
 		$pkg->_data_table($self);
 		$pkg->newClass();
 	
-		my $table = $self->table_name();
-		$pkg->setDefaultTable($table);
+		$pkg->setDefaultTable( $self->table_name() );
 		$pkg->setSequence('attribute_seq');
 		$pkg->addPrimaryKey('attribute_id');
 	} else {
@@ -213,7 +212,6 @@ sub requireDataTablePackage {
                     });
 
     my $columns = $self->data_columns();
-    my $table = $self->table_name();
     while (my $column = $columns->next()) {
         my $name = lc($column->column_name());
         my $type = $column->sql_type();
