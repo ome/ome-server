@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
+ * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,6 +47,9 @@ public class ModuleCategoryDTO
 {
     public ModuleCategoryDTO() { super(); }
     public ModuleCategoryDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "ModuleCategory"; }
+    public Class getDTOType() { return ModuleCategory.class; }
 
     public int getID()
     { return getIntElement("id"); }

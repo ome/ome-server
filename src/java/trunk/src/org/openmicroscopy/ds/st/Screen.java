@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
+ * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -40,11 +40,12 @@ package org.openmicroscopy.ds.st;
 import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.Plate;
 import org.openmicroscopy.ds.st.PlateScreen;
+import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
 
 public interface Screen
-    extends Attribute
+    extends DataInterface, Attribute
 {
     /** Criteria field name: <code>Name</code> */
     public String getName();

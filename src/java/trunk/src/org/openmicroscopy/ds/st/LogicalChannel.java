@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
+ * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -43,11 +43,12 @@ import org.openmicroscopy.ds.st.Filter;
 import org.openmicroscopy.ds.st.LightSource;
 import org.openmicroscopy.ds.st.OTF;
 import org.openmicroscopy.ds.st.PixelChannelComponent;
+import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
 
 public interface LogicalChannel
-    extends Attribute
+    extends DataInterface, Attribute
 {
     /** Criteria field name: <code>Name</code> */
     public String getName();

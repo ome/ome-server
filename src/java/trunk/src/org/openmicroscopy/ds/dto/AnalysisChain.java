@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
+ * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -39,10 +39,12 @@ package org.openmicroscopy.ds.dto;
 
 import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.ExperimenterDTO;
+import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
 
 public interface AnalysisChain
+    extends DataInterface
 {
     /** Criteria field name: <code>id</code> */
     public int getID();

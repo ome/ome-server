@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
+ * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -39,11 +39,12 @@ package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.Pixels;
+import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
 
 public interface ChannelIndex
-    extends Attribute
+    extends DataInterface, Attribute
 {
     /** Criteria field name: <code>theC</code> */
     public int gettheC();

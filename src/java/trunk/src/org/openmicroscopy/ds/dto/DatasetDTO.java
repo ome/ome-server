@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
+ * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,6 +49,9 @@ public class DatasetDTO
 {
     public DatasetDTO() { super(); }
     public DatasetDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "Dataset"; }
+    public Class getDTOType() { return Dataset.class; }
 
     public int getID()
     { return getIntElement("id"); }

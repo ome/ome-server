@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
+ * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -41,10 +41,12 @@ import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.ExperimenterDTO;
 import org.openmicroscopy.ds.st.Pixels;
 import org.openmicroscopy.ds.st.PixelsDTO;
+import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
 
 public interface Image
+    extends DataInterface
 {
     /** Criteria field name: <code>id</code> */
     public int getID();
