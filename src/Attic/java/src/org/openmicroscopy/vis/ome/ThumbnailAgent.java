@@ -116,13 +116,13 @@ public class ThumbnailAgent {
 		for(int value=0; (value=response.read()) != -1; ++i) {
 			buf[i] = (byte)(value&0xFF);
 			if( i == buf.length-1 ) {
-				System.err.println("read 4096 bytes. copying..");
+			//	System.err.println("read 4096 bytes. copying..");
 				byte[]  tmp = new byte[buf.length+1024];
 				System.arraycopy(buf, 0, tmp, 0, buf.length);
 				buf = tmp;
 			}
 		}
-		System.err.println("read "+i+" image bytes");
+		//System.err.println("read "+i+" image bytes");
 		response.close();
 		//build image from data (will work for jpeg and gif only)
 		ImageIcon res = new ImageIcon(buf);
