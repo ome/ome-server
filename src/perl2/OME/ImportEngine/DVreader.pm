@@ -74,6 +74,7 @@ package OME::ImportEngine::DVreader;
 use strict;
 use Carp;
 use OME::Image::Pix;
+use OME::Tasks::PixelsManager;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::Params;
 use OME::ImportEngine::ImportCommon;
@@ -334,11 +335,13 @@ sub importGroup {
                              $xref->{'Image.SizeZ'},
                              $xref->{'Image.NumWaves'},
                              $xref->{'Image.NumTimes'},
-                             $xref->{'Data.BitsPerPixel'});
+                             $xref->{'Data.BitsPerPixel'},
+			     0, 0);
     $self->{pixels} = $pixels;
     $status = readPixels($self, $params, $pix, $callback);
     if ($status ne '') {
 	$file->close();
+	($self->{super})->__destroyRepositoryFile($pixels, $pix);
 	die $status ;
     }
 
