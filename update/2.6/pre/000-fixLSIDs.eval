@@ -1,0 +1,14 @@
+	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance,$lsidNew,$lsidOld);
+	my $LSIDs = $dbh->selectcol_arrayref(q{SELECT lsid FROM lsid_object_map});
+	foreach $lsidOld ( @$LSIDs ) {
+		$dbInstance = undef;
+		($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsidOld);
+		if ($dbInstance) {
+			$lsidNew = join (':',$urn,$urnType,$authority,$namespace,$localID);
+			$lsidNew .= "-$dbInstance";
+			$dbh->do ("UPDATE lsid_object_map SET lsid='$lsidNew' WHERE lsid='$lsidOld'");
+		}
+	}
+
+	1;
+
