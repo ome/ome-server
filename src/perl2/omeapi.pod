@@ -20,9 +20,11 @@ semantic types are defined explicitly via SQL.
 
 This dichotomy is visible at the API layer, as well.  Access to rows
 in the core tables not defined as semantic types (or, "database
-objects") is provided by the OME::DBObject class, whereas access to
-instances of semantic types (or, "attributes") is provide by the
-OME::AttributeType::Superclass class.
+objects") is provided by the L<C<OME::DBObject>|OME::DBObject> class,
+whereas access to instances of semantic types (or, "attributes") is
+provide by the
+L<C<OME::AttributeType::Superclass>|OME::AttributeType>
+class.
 
 =head2 Session management and the factory
 
@@ -36,13 +38,14 @@ addition from breaking previous code.
 All database access should be done via database objects and
 attributes.  Arbitrary SQL should not be used except in extreme cases
 where performance is a premium.  Database objects and attributes are
-instantiated via an OME::Factory instance, which is provided by the
+instantiated via an L<C<OME::Factory>|OME::Factory> instance, which is provided by the
 active session.  Since these objects are coupled to the factory that
 created them, they must not be shared among sessions.
 
 =head2 Workflow layer
 
-Although the OME::DBObject and OME::AttributeType::Superclass classes
+Although the L<C<OME::DBObject>|OME::DBObject> and
+L<C<OME::AttributeType::Superclass>|OME::AttributeType> classes
 provide mutator methods, these should not be used in most cases, since
 they provide direct access to the database.  Rather than using these
 objects to modify the underlying database tables, the workflow classes
@@ -73,107 +76,107 @@ The name of the corresponding Perl class is given.
 
 =item *
 
-CONFIGURATION (OME::Configuration)
+C<CONFIGURATION> (L<C<OME::Configuration>|OME::Configuration>)
 
 =item *
 
-OME_SESSIONS (OME::Session)
+C<OME_SESSIONS> (L<C<OME::Session>|OME::Session>)
 
 =item *
 
-PROJECTS (OME::Project)
+C<PROJECTS> (L<C<OME::Project>|OME::Project>)
 
 =item *
 
-DATASETS (OME::Dataset)
+C<DATASETS> (L<C<OME::Dataset>|OME::Dataset>)
 
 =item *
 
-IMAGES (OME::Image)
+C<IMAGES> (L<C<OME::Image>|OME::Image>)
 
 =item *
 
-FEATURES (OME::Feature)
+C<FEATURES> (L<C<OME::Feature>|OME::Feature>)
 
 =item *
 
-LOOKUP_TABLES (OME::LookupTable)
+C<LOOKUP_TABLES> (L<C<OME::LookupTable>|OME::LookupTable>)
 
 =item *
 
-LOOKUP_TABLE_ENTRIES (OME::LookupTable::Entries)
+C<LOOKUP_TABLE_ENTRIES> (L<C<OME::LookupTable::Entries>|OME::LookupTable>)
 
 =item *
 
-DATA_TABLES (OME::DataTable)
+C<DATA_TABLES> (L<C<OME::DataTable>|OME::DataTable>)
 
 =item *
 
-DATA_COLUMNS (OME::DataTable::Column)
+C<DATA_COLUMNS> (L<C<OME::DataTable::Column>|OME::DataTable>)
 
 =item *
 
-ATTRIBUTE_TYPES (OME::AttributeType)
+C<ATTRIBUTE_TYPES> (L<C<OME::AttributeType>|OME::AttributeType>)
 
 =item *
 
-ATTRIBUTE_COLUMNS (OME::AttributeType::Column)
+C<ATTRIBUTE_COLUMNS> (L<C<OME::AttributeType::Column>|OME::AttributeType>)
 
 =item *
 
-PROJECT_DATASET_MAP (OME::Project::DatasetMap)
+C<PROJECT_DATASET_MAP> (L<C<OME::Project::DatasetMap>|OME::Project>)
 
 =item *
 
-IMAGE_DATASET_MAP (OME::Image::DatasetMap)
+C<IMAGE_DATASET_MAP> (L<C<OME::Image::DatasetMap>|OME::Image>)
 
 =item *
 
-PROGRAMS (OME::Program)
+C<PROGRAMS> (L<C<OME::Program>|OME::Program>)
 
 =item *
 
-FORMAL_INPUTS (OME::Program::FormalInput)
+C<FORMAL_INPUTS> (L<C<OME::Program::FormalInput>|OME::Program>)
 
 =item *
 
-FORMAL_OUTPUTS (OME::Program::FormalOutput)
+C<FORMAL_OUTPUTS> (L<C<OME::Program::FormalOutput>|OME::Program>)
 
 =item *
 
-ANALYSES (OME::Analysis)
+C<ANALYSES> (L<C<OME::Analysis>|OME::Analysis>)
 
 =item *
 
-ACTUAL_INPUTS (OME::Analysis::ActualInput)
+C<ACTUAL_INPUTS> (L<C<OME::Analysis::ActualInput>|OME::Analysis>)
 
 =item *
 
-ANALYSIS_VIEWS (OME::AnalysisView)
+C<ANALYSIS_VIEWS> (L<C<OME::AnalysisView>|OME::AnalysisView>)
 
 =item *
 
-ANALYSIS_VIEW_NODES (OME::AnalysisView::Node)
+C<ANALYSIS_VIEW_NODES> (L<C<OME::AnalysisView::Node>|OME::AnalysisView>)
 
 =item *
 
-ANALYSIS_VIEW_LINKS (OME::AnalysisView::Link)
+C<ANALYSIS_VIEW_LINKS> (L<C<OME::AnalysisView::Link>|OME::AnalysisView>)
 
 =item *
 
-ANALYSIS_PATHS (OME::AnalysisPath)
+C<ANALYSIS_PATHS> (L<C<OME::AnalysisPath>|OME::AnalysisPath>)
 
 =item *
 
-ANALYSIS_PATH_MAP (OME::AnalysisPath::Map)
+C<ANALYSIS_PATH_MAP> (L<C<OME::AnalysisPath::Map>|OME::AnalysisPath>)
 
 =item *
 
-ANALYSIS_EXECUTIONS (OME::AnalysisExecution)
+C<ANALYSIS_EXECUTIONS> (L<C<OME::AnalysisExecution>|OME::AnalysisExecution>)
 
 =item *
 
-ANALYSIS_NODE_EXECUTIONS (OME::AnalysisExecution::NodeExecution)
+C<ANALYSIS_NODE_EXECUTIONS> (L<C<OME::AnalysisExecution::NodeExecution>|OME::AnalysisExecution>)
 
 =back
 
@@ -191,7 +194,9 @@ flux.  Ideally, they will deal with instances of the attribute
 classes, in the same way that foreign key columns deal with instances
 of the database object class.  Currently, this is not the case; these
 accessors return an attribute ID.  To get the attribute object itself,
-this ID must be passed to the OME::Factory->loadAttribute method.
+this ID must be passed to the
+L<C<OME::Factory-E<gt>loadAttribute>|OME::Factory/"loadAttribute">
+method.
 
 =back
 
@@ -204,12 +209,13 @@ the ATTRIBUTE_TYPES table (using the database object interfaces
 described in the previous section).  You can then use this
 AttributeType object with the factory object to load attributes of
 that type.  These routines dynamically generate a subclass of
-OME::AttributeType::Superclass for the semantic type, and creates
-accessor/mutator methods for all of the semantic elements.  The
-methods have the exact same name as the semantic elements, including
-case.  If a semantic element is a reference to another semantic type,
-the method will expect values of the corresponding attribute class.
-The method name will remain unchanged.
+L<C<OME::AttributeType::Superclass>|OME::AttributeType> for the
+semantic type, and creates accessor/mutator methods for all of the
+semantic elements.  The methods have the exact same name as the
+semantic elements, including case.  If a semantic element is a
+reference to another semantic type, the method will expect values of
+the corresponding attribute class.  The method name will remain
+unchanged.
 
 The following core semantic types will almost certainly be used by any
 OME client program:
