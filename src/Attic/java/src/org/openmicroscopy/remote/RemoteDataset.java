@@ -45,7 +45,7 @@ public class RemoteDataset
     public void setDescription(String description)
     { setStringElement("description",description); }
 
-    public boolean getLocked()
+    public boolean isLocked()
     { return getBooleanElement("locked"); }
     public void setLocked(boolean locked)
     { setBooleanElement("locked",locked); }
