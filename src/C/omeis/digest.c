@@ -119,6 +119,6 @@ print_md (unsigned char * md_value)
 	assert(md_value != NULL);
 
 	for (i = 0; i < OME_DIGEST_LENGTH; i++)
-		printf("%02x", md_value[i]);
+		printf("%02X", md_value[i]);
 }
 
