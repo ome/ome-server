@@ -32,8 +32,8 @@ skinLibrary['TEST'] = true;
 skinLibrary["roundGreenMenuBar"] =
 '<g>' +
 '	<g opacity="0.8">' +
-'		<rect width="{$width}" height="15" fill="lawngreen" rx="10" ry="5"/>' +
-'		<rect y="5" width="{$width}" height="10" fill="lawngreen"/>' +
+'		<rect width="{$width}" height="15" fill="goldenrod" rx="10" ry="5"/>' +
+'		<rect y="5" width="{$width}" height="10" fill="goldenrod"/>' +
 '	</g>' +
 '</g>';
 skinLibrary["ovalSquishHideControl"] =
@@ -43,17 +43,24 @@ skinLibrary["ovalSquishHideControl"] =
 '		<animate attributeName="ry" from="2" to="5" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '	</ellipse>' +
 '</g>';
+/*
+		<stop offset="0%" stop-color="rosybrown" />\
+		<stop offset="85%" stop-color="rosybrown" /> \
+		<stop offset="100%" stop-color="purple" />\
+
+*/
 skinLibrary["greenGradientGUIbox"] =
-'<g style="font-size:10;">' +
-'	<linearGradient id="GUIboxBackground" x1="0" y1="0" x2="0" y2="100%">' +
-'		<stop offset="5%" stop-color="green" />' +
-'		<stop offset="95%" stop-color="palegreen" />' +
-'	</linearGradient>' +
-'	<rect width="{$width}" height="{$height}" fill="url(#GUIboxBackground)" opacity="0.9"/>' +
-'	<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="1" opacity="1"/>' +
-'	<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
-'	<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
-'</g>';
+'<g>\
+	<linearGradient id="GUIboxBackground" x1="0" y1="0" x2="0" y2="100%">\
+		<stop offset="0%" stop-color="khaki" />\
+		<stop offset="85%" stop-color="khaki" /> \
+		<stop offset="100%" stop-color="gold" />\
+	</linearGradient>\
+	<rect width="{$width}" height="{$height}" fill="url(#GUIboxBackground)" opacity="0.9"/>\
+	<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="1" opacity="1"/>\
+	<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>\
+	<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>\
+</g>';
 skinLibrary["redGUIboxBG"] =
 '<g>' +
 '	<linearGradient id="redLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
@@ -106,9 +113,7 @@ skinLibrary["greyGUIboxBG"] =
 '</g>';
 skinLibrary["greyMenubar"] =
 '<g>' +
-'	<g opacity="0.8">' +
-'		<rect width="{$width}" height="15" fill="lightgrey"/>' +
-'	</g>' +
+'	<rect width="{$width}" height="15" fill="lightgrey" opacity="0.8"/>' +
 '</g>';
 
 skinLibrary["menuBar17"] =
@@ -134,6 +139,20 @@ skinLibrary["popupListBackgroundLightskyblue"] =
 '<rect width="{$width}" height="{$height}" fill="lightskyblue" opacity="0.5"/>';
 skinLibrary["popupListHighlightAquamarine"] = 
 '<rect width="{$width}" height="{$height}" fill="aquamarine" opacity="0.5">';
+skinLibrary["thinSliderBody"] =
+'<g>' +
+'	<line x1="0" x2="180" y1="7" y2="7" stroke="rgb(80,80,80)"/>' +
+'	<line x1="0" x2="0" y2="14" stroke="rgb(80,80,80)"/>' +
+'	<line x1="180" x2="180" y2="14" stroke="rgb(80,80,80)"/>' +
+'	<rect height="14" width="180" opacity="0"/>' +
+'</g>';
+skinLibrary["thinSliderThumb"] =
+'<g>' +
+'	<rect width="2" height="14" fill="black"/>' +
+'	<rect x="-2" width="6" height="14" fill="red" opacity="0">' +
+'		<set attributeName="opacity" to="0.4" begin="mouseover" end="mouseout"/>' +
+'	</rect>' +
+'</g>';
 skinLibrary["zSliderBody"] =
 '<g stroke="rgb(80,80,80)" transform="rotate(90)">' +
 '	<g id="xyPlane" transform="scale(.6) skewX(-45)">' +
@@ -205,21 +224,21 @@ skinLibrary["blankButtonRadius13Highlight"] =
 skinLibrary["blankButtonRadius5Highlight"] =
 '<circle cy="5" r="5" fill="white" stroke="none" opacity="0"/>';
 skinLibrary["triangleRightWhite"] =
-'<path d="M 0,4 l 6,-4 l -6,-4 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
+'<path d="M 0,6 l 8,-6 l -8,-6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
 skinLibrary["triangleLeftWhite"] =
-'<path d="M 0,4 l -6,-4 l 6,-4 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
+'<path d="M 0,6 l -8,-6 l 8,-6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
 skinLibrary["triangleDownWhite"] =
-'<path d="M 4,0 l -4,6 l -4,-6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
+'<path d="M 6,0 l -6,8 l -6,-8 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
 skinLibrary["triangleUpWhite"] =
-'<path d="M 4,0 l -4,-6 l -4,6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
+'<path d="M 6,0 l -6,-8 l -6,8 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
 skinLibrary["triangleRightRed"] =
-'<path d="M 0,4 l 6,-4 l -6,-4 Z" fill="coral" stroke="black" stroke-width="1"/>';
+'<path d="M 0,6 l 8,-6 l -8,-6 Z" fill="coral" stroke="black" stroke-width="1"/>';
 skinLibrary["triangleLeftRed"] =
-'<path d="M 0,4 l -6,-4 l 6,-4 Z" fill="coral" stroke="black" stroke-width="1"/>';
+'<path d="M 0,6 l -8,-6 l 8,-6 Z" fill="coral" stroke="black" stroke-width="1"/>';
 skinLibrary["triangleDownRed"] =
-'<path d="M 4,0 l -4,6 l -4,-6 Z" fill="coral" stroke="black" stroke-width="1"/>';
+'<path d="M 6,0 l -6,8 l -6,-8 Z" fill="coral" stroke="black" stroke-width="1"/>';
 skinLibrary["triangleUpRed"] =
-'<path d="M 4,0 l -4,-6 l -4,6 Z" fill="coral" stroke="black" stroke-width="1"/>';
+'<path d="M 6,0 l -6,-8 l -6,8 Z" fill="coral" stroke="black" stroke-width="1"/>';
 skinLibrary["hiddenButton"] =
 '<circle r="1" fill=black/>';
 skinLibrary["hiddenButtonHighlight"] =
