@@ -29,7 +29,7 @@
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}"
 	   classpath="${lib}/piccolo.jar;${lib}/piccolox.jar;${lib}/xmlrpc-1.2-b1.jar" 
-	   destdir="${build}" deprecation="Yes"/>
+	   destdir="${build}" deprecation="yes"/>
   </target>
 
   <target name="apidocs">
