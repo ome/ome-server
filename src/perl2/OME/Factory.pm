@@ -69,10 +69,10 @@ sub loadObject {
 }
 
 
-# findObject
-# ----------
+# findObjects
+# -----------
 
-sub findObject {
+sub findObjects {
     my ($self, $class, $key, $value) = @_;
 
     return undef unless (defined $key) && (defined $value);

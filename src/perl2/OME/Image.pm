@@ -42,9 +42,9 @@ sub _init {
 
 sub ImageAttributes {
     my $self = shift;
-    my @attributes = $self->Factory()->findObject("OME::Image::Attributes",
-                                                  "image_id",
-                                                  $self->id());
+    my @attributes = $self->Factory()->findObjects("OME::Image::Attributes",
+                                                   "image_id",
+                                                   $self->id());
     
     die "Image has multiple attribute entries" if (scalar(@attributes) > 1);
     return $attributes[0];
