@@ -542,4 +542,15 @@ sub newAttribute {
     return $type->newAttribute($target, $rows);
 }
 
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
+=head1 SEE ALSO
+
+L<OME::DBObject|OME::DBObject>,
+L<OME::AttributeType|OME::AttributeType>
+
+=cut
+
 1;

@@ -134,7 +134,7 @@ sub Factory {
 These methods can be used by Handler subclasses during the execution
 of the analysis module.  They return the dataset, image, and feature
 that is currently being analyzed by the module.  As the module
-progresses through th e methods defined by the Module interface, the
+progresses through the methods defined by the Module interface, the
 values these methods return are automatically updated.
 
 =cut
