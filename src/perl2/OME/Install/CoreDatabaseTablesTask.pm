@@ -45,6 +45,10 @@ use OME::Install::Environment;
 use OME::Install::Terminal;
 use base qw(OME::Install::InstallationTask);
 
+# Packages needed from OME for the bootstrap
+use OME::Database::Delegate;
+use OME::Factory;
+
 #*********
 #********* GLOBALS AND DEFINES
 #*********
@@ -58,14 +62,6 @@ my $INSTALL_HOME;
 # Our basedirs and user which we grab from the environment
 my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
 
-# Installation Packages
-use OME::Install::Util;
-use OME::Install::Environment;
-use OME::Install::Terminal;
-use base qw(OME::Install::InstallationTask);
-
-# Packages needed from OME for the bootstrap
-use OME::Database::Delegate;
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -76,7 +72,7 @@ use OME::Database::Delegate;
 # that some files declare multiple DBObject subclasses; only the
 # package corresponding to the filename should be "required".
 
-our @coreClasses =
+our @core_classes =
   (
    ['OME::LookupTable',       'OME::LookupTable'],
    [undef,                    'OME::LookupTable::Entry'],
@@ -125,6 +121,8 @@ sub create_superuser {
     my ($username, $logfile) = @_;
     my $pg_uid = getpwnam ("postgres") or croak "Unable to retrieve PostgreSQL user UID";
     my $output;
+    my $retval;
+    my $createuser = "createuser";
 
     # Make sure we're not croaking on a silly logfile print
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
@@ -133,9 +131,12 @@ sub create_superuser {
     $EUID = $pg_uid;
 
     # Make sure we can see the Postgres command
-    which ("createuser") or croak "Couldn't execute createuser (a postgres utility)! Is createuser in your \$PATH?\n";
+    $retval = which ("$createuser");
+   
+    $createuser = whereis ("createuser") or croak "Unable to locate creatuser binary." unless $retval;
+
     # Create the user using the command line tools
-    $output = `createuser -d -a $username 2>&1`;
+    $output = `$createuser -d -a $username 2>&1`;
 
     # Back to UID 0
     $EUID = 0;
@@ -151,57 +152,115 @@ sub create_superuser {
     return 0;
 }
 
+# Create our OME database
+#
+# RETURNS	1 on success
+# 		0 if the DB exists
+# 		0 on failure
+
 sub create_database {
-    my $platform = shift;
     my $dbh;
     my $sql;
+    my $retval;
+    my $createlang = "createlang";
+
+    print "Creating database\n";
 
     $dbh = DBI->connect("dbi:Pg:dbname=template1")
       or croak "Error: $dbh->errstr()";
 
-    $sql = <<SQL;
-SELECT oid FROM pg_database WHERE lower(datname) = lower(?)
-SQL
+    # Find database SQL
 
-    my $find_database = $dbh->prepare($sql);
+    # Check for DB existance
+    my $find_database = $dbh->prepare(q{
+	SELECT oid FROM pg_database WHERE lower(datname) = lower(?)
+    }) or croak $dbh->errstr;
+
     my ($db_oid) = $dbh->selectrow_array($find_database,{},'ome');
 
     # This will be NULL if the database does not exist
     if (defined $db_oid) {
+	print "  \\__ Exists\n";
         $dbh->disconnect();
-        return 1;
+        return 0;
     }
 
-    $dbh->do('CREATE DATABASE ome')
-      or die $dbh->errstr();
+    # Create an empty DB
+    print "  \\__ Initialization\n";
+    $dbh->do(q{
+	CREATE DATABASE ome
+    }) or croak $dbh->errstr();
+
     $dbh->disconnect();
 
-    # Debian does this by default using Debconf, everything else needs it.
-    # Atleast as far as I know. (Chris)
-    if ($platform ne "DEBIAN") {
-        print "Adding PL-PGSQL language...\n";
-        my $CMD_OUT = `createlang plpgsql ome 2>&1`;
-        die $CMD_OUT if $? != 0;
-	print BOLD "[Done.]", RESET, "\n";
-    }
+    # Set the PGSQL lang
+    $retval = which ("$createlang");
+   
+    $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
 
-    print "Fixing OID/INTEGER compatability bug...\n";
+    print "  \\__ Adding PL-PGSQL language\n";
+    my $CMD_OUT = `$createlang plpgsql ome 2>&1`;
+    die $CMD_OUT if $? != 0;
+
+    # Fix our little object ID bug
+    print "  \\__ Fixing OID/INTEGER compatability bug\n";
     $dbh = DBI->connect("dbi:Pg:dbname=ome")
-      or die $dbh->errstr();
-    $sql = <<SQL;
-CREATE FUNCTION OID(INT8) RETURNS OID AS '
-declare
-  i8 alias for \$1;
-begin
-  return int4(i8);
-end;'
-LANGUAGE 'plpgsql';
-SQL
-    $dbh->do($sql) or die ($dbh->errstr);
+      or croak $dbh->errstr();
+    $dbh->do(q{
+	CREATE FUNCTION OID(INT8) RETURNS OID AS '
+	declare
+	    i8 alias for $1;
+	begin
+	    return int4(i8);
+	end;'
+	LANGUAGE 'plpgsql';
+    }) or croak $dbh->errstr;
+    
     $dbh->disconnect();
-    print BOLD "[Done.]", RESET, "\n";
 
-    return 0;
+    return 1;
+}
+
+sub load_schema {
+    my $logfile = shift;
+    my $retval;
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+
+    my $bootstrap_factory = OME::Factory->new();
+    my $dbh = $bootstrap_factory->obtainDBH();
+
+    print "Loading the database schema\n";
+
+    foreach my $class (@core_classes) {
+	my ($require_class, $instantiate_class) = @$class;
+	my $message;
+
+	# Gen our message for each class
+	$message .= "  \\__ ";
+	$message .= $require_class || "";
+	$message .= " $instantiate_class";
+	print "$message\n";
+	
+	$require_class->require() if defined $require_class;
+
+	# Add our class to the DB
+	eval {
+	    $delegate->addClassToDatabase($dbh,$instantiate_class);
+	};
+    
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and print $logfile "ERROR LOADING CLASS \"$instantiate_class\" -- OUTPUT: \"$@\"\n"
+	    and croak "Error loading class \"$instantiate_class\", see CoreDatabaseTablesTask.log for details."
+        unless not $@;
+
+
+	print BOLD, "[SUCCESS]", RESET, ".\n"
+	    and print $logfile "SUCCESS LOADING CLASS \"$instantiate_class\"\n";
+    }
+
+    $bootstrap_factory->commitTransaction();
+
+    return 1;
 }
 
 
@@ -253,12 +312,14 @@ sub execute {
     $EUID = $OME_UID;
 
     # Create our database
-    my $exists = create_database ("DEBIAN");
+    create_database ("DEBIAN") or croak "Unable to create database!";
+    load_schema ($LOGFILE) or croak "Unable to load the schema, see CoreDatabaseTablesTask.log for detauls.";
     
+
     # Back to UID 0
     $EUID = 0;
 
-    croak "Database already exists!" if $exists;
+    close ($LOGFILE);
 
     return 1;
 }
