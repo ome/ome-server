@@ -123,6 +123,7 @@ sub display_MEX{
 	my @Input_list = $MEX->inputs();
 	my @FI_list = $module->inputs();
 	my @FO_list = $module->outputs();
+	my @UO_list = $MEX->untypedOutputs();
 
 	my $html;
 	$html .= "<a name='top'><center><h2>Displaying Module EXecution (MEX) results.</h2>";
@@ -196,30 +197,37 @@ sub display_MEX{
 		"<tr><td width='100'></td><td>"
 		if( scalar( @FO_list ) > 0 );
 	foreach my $FO( @FO_list ) {
-		my $ST = $FO->semantic_type()
-			or die "Formal Output ".$FO->name()." does not have a ST.";
-		my @SE_list = $ST->semantic_elements();
-		my @attr_list = $factory->findAttributes( $ST, module_execution => $MEX );
-
+		my @ST_list;
+		if( $FO->semantic_type() ){
+			push @ST_list, $FO->semantic_type();
+		} else {
+			@ST_list = map($_->semantic_type, @UO_list);
+		}
 	 	$html .= "<a name='Output_".$FO->name()."'>"; 
 	 	$html .= "<a href='top'>Top</a><br>"; 
 		$html .= "Formal Output: <b>".$FO->name()."</b><br>";
-		$html .= "Semantic Type: <b>".$ST->name()."</b><br>";
-# add link to as yet unwritten ViewST page
-# add link 'click to download as tab delimited table'
 
-		$html .= $cgi->start_table({-border => 1, -cellspacing => 4, -cellpadding => 5});
-		$html .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-			map( $cgi->td( $cgi->b( $_->name() ) ), @SE_list )
-				);
-		foreach my $attr ( @attr_list ) {
-			my $data_hash = $attr->getDataHash();
-			$html .= $cgi->TR( 
-				map( $cgi->td( $data_hash->{$_->name()} ), @SE_list )
-			);			
+		foreach my $ST (@ST_list) {
+			my @SE_list = $ST->semantic_elements();
+			my @attr_list = $factory->findAttributes( $ST, module_execution => $MEX );
+	
+			$html .= "Semantic Type: <b>".$ST->name()."</b><br>";
+	# add link to as yet unwritten ViewST page
+	# add link 'click to download as tab delimited table'
+	
+			$html .= $cgi->start_table({-border => 1, -cellspacing => 4, -cellpadding => 5});
+			$html .= $cgi->Tr({-align => 'left', -valign => 'middle'},
+				map( $cgi->td( $cgi->b( $_->name() ) ), @SE_list )
+					);
+			foreach my $attr ( @attr_list ) {
+				my $data_hash = $attr->getDataHash();
+				$html .= $cgi->TR( 
+					map( $cgi->td( $data_hash->{$_->name()} ), @SE_list )
+				);			
+			}
+			$html .= $cgi->end_table;
+			$html .= "<br><br>";
 		}
-		$html .= $cgi->end_table;
-		$html .= "<br><br>";
 	}
 	$html .= "</td></tr></table>";
 
