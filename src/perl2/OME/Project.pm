@@ -58,23 +58,37 @@ my $self = shift;
 }
 
 sub unlockedDatasets {
-my $self = shift;
+	my $self = shift;
 	return grep {not $_->locked()} $self->datasets();
 }
 
 sub addDataset {
-my $self = shift;
-my $dataset = shift;
+	my $self = shift;
+	my $dataset = shift;
 
 	return undef unless defined $dataset;
-	my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
-	my $pdMap = $pdMapIter->next() if defined $pdMapIter;
+	my $factory=$self->Session()->Factory();
+	my $pdMap = $factory->findObject("OME::Project::DatasetMap",{
+		 dataset_id => $dataset->ID(),
+		 project_id => $self->ID()
+	});
+	
+
+	#my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
+	#my $pdMap = $pdMapIter->next() if defined $pdMapIter;
+
 	if (not defined $pdMap) {
-		$pdMap = OME::Project::DatasetMap->create ( {
+		$pdMap=$factory->newObject("OME::Project::DatasetMap",{
 			project_id => $self->ID(),
 			dataset_id => $dataset->ID()
-		} )
-			or die ref($self)."->addDataset:  Could not create a new Project::DatasetMap entry.\n";
+
+			} );
+
+		#$pdMap = OME::Project::DatasetMap->create ( {
+		#	project_id => $self->ID(),
+		#	dataset_id => $dataset->ID()
+		#} )
+		#	or die ref($self)."->addDataset:  Could not create a new Project::DatasetMap entry.\n";
 
 	}
 
@@ -82,10 +96,12 @@ my $dataset = shift;
 }
 
 sub addDatasetID {
-my $self = shift;
-my $datasetID = shift;
-
-	my $dataset = OME::Dataset->retrieve ($datasetID);	
+	
+	my $self = shift;
+	my $datasetID = shift;
+	my $factory=$self->Session()->Factory();
+	#my $dataset = OME::Dataset->retrieve ($datasetID);
+	my $dataset	=$factory->loadObject("OME::Dataset",$datasetID);
 	return $self->addDataset($dataset);
 }
 
@@ -113,9 +129,16 @@ sub removeDatasetID {
 sub doesDatasetBelong {
 	my $self = shift;
 	my $dataset = shift;
-	
+	my $factory=$self->Session()->Factory();
 	return undef unless defined $dataset;
-	my @datasets = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
+	my @datasets =$factory->findObjects("OME::Project::DatasetMap",{
+				 dataset_id => $dataset->ID(), 
+				 project_id => $self->ID()
+				});
+
+
+
+	#my @datasets = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
 	return 1 if scalar @datasets > 0;
 	return undef;
 }
@@ -136,15 +159,22 @@ sub newDataset {
     my $factory = $self->Session()->Factory();
     my $owner = $factory->loadAttribute("Experimenter",$self->owner_id());
     my $group = $owner->Group();
-
-	my $dataset = OME::Dataset->create ( {
+    my $dataset=$factory->newObject("OME::Dataset",{
 		name        => $datasetName,
 		description => $datasetDescription,
 		locked      => 'false',
 		owner_id    => $owner->id(),
 		group_id    => $group->id(),
-	} )
-		or die ref($self)."->newDataset:  Could not create a new dataset.\n";
+	} );
+
+	#my $dataset = OME::Dataset->create ( {
+	#	name        => $datasetName,
+	#	description => $datasetDescription,
+	#	locked      => 'false',
+	#	owner_id    => $owner->id(),
+	#	group_id    => $group->id(),
+	#} )
+	#	or die ref($self)."->newDataset:  Could not create a new dataset.\n";
 	
 	return $self->addDataset($dataset);
 }

@@ -31,7 +31,7 @@ __PACKAGE__->AccessorNames({
     project_id => 'project',
  #   owner_id   => 'owner',		
     group_id   => 'group',
-    image_id => 'image',		#jm
+    image_id => 'image',		
     });
 
 __PACKAGE__->table('datasets');
@@ -57,13 +57,12 @@ sub owner {
 }
 
 sub projects {
-my $self = shift;
+	my $self = shift;
 	return map $_->project(), $self->project_links();
 }
-# Added JM 08-03
 
 sub images{
-  my $self = shift;
+  	my $self = shift;
 	return map $_->image(), $self->image_links();
 
 }
@@ -72,14 +71,30 @@ sub addImage{
   my $self=shift;
   my $image=shift;
   return undef unless defined $image;
-  my $pdMapIter = OME::Image::DatasetMap->search( image_id => $image->ID(), dataset_id => $self->ID() );
-  my $pdMap = $pdMapIter->next() if defined $pdMapIter;
+  my $factory=$self->Session()->Factory();
+  my $pdMap = $factory->findObject("OME::Image::DatasetMap",{
+		 dataset_id => $self->ID(),
+		 image_id => $image->ID()
+	});
+  # my $pdMapIter = OME::Image::DatasetMap->search( image_id => $image->ID(), dataset_id => $self->ID() );
+
+  #my $pdMap = $pdMapIter->next() if defined $pdMapIter;
+
+
 	if (not defined $pdMap) {
-		$pdMap = OME::Image::DatasetMap->create ( {
+		$pdMap=$factory->newObject("OME::Image::DatasetMap",{
 			dataset_id => $self->ID(),
 			image_id => $image->ID()
-		} )
-			or die ref($self)."->addExisting:  Could not create a new Image::DatasetMap entry.\n";
+
+			} );
+
+
+
+		#$pdMap = OME::Image::DatasetMap->create ( {
+		#	dataset_id => $self->ID(),
+		#	image_id => $image->ID()
+		#} )
+		#or die ref($self)."->addExisting:  Could not create a new Image::DatasetMap entry.\n";
 
 	}
 
@@ -90,8 +105,9 @@ sub addImage{
 sub addImageID{
   my $self = shift;
   my $imageID = shift;
-
-  my $image = OME::Image->retrieve($imageID);	
+  my $factory=$self->Session()->Factory();
+  my $image =$factory->loadObject("OME::Image",$imageID);
+ # my $image = OME::Image->retrieve($imageID);	
   return $self->addImage($image);
 
 
