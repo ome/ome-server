@@ -145,13 +145,13 @@ my @modules = (
 	    chomp $ENV{POSTGRES_INCLUDE};
 	    $ENV{POSTGRES_LIB} = `pg_config --libdir` or croak "Unable to retrieve PostgreSQL library dir.";
 	    chomp $ENV{POSTGRES_LIB};
-	    $ENV{POSTGRES_LIB} .= " -lssl";
 
 	    if ($OSNAME eq 'darwin') {
-		print "*** Running $RANLIB on $ENV{POSTGRES_LIB}/libpq.a\n";
 		(system ("$RANLIB $ENV{POSTGRES_LIB}/libpq.a") == 0)
 		    or croak "Couldn't run $RANLIB on $ENV{POSTGRES_LIB}/libpq.a";
 	    }
+	    
+	    $ENV{POSTGRES_LIB} .= " -lssl";
 	}
     },{
 	name => 'Sort::Array',
@@ -220,17 +220,35 @@ my @modules = (
 	valid_versions => ['eq "0.90"']
     },{
 	name => 'GD',
-	repository_file => "$REPOSITORY/GD-1.33.tar.gz"
+	repository_file => "$REPOSITORY/GD-1.33.tar.gz",
+	configure_module => sub {
+	    # Since GD has an interactive configure script we need to
+	    # implement a custom configure_module () subroutine that allows
+	    # for an interactive install
+
+	    my ($path, $logfile) = @_;
+	    my $iwd = getcwd;  # Initial working directory
+
+	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+	    system ("perl Makefile.pl 2>&1");
+
+	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
+
+	    return 1;
+	}
     },{
 	name => 'Image::Magick',
-	repository_file => "$REPOSITORY-5.3.6-OSX.tar.gz"
+	repository_file => "$REPOSITORY/ImageMagick-5.5.6.tar.gz"
 	#installModule => \&ImageMagickInstall
     },{
 	name => 'XML::NamespaceSupport',
-	repository_file => "$REPOSITORY-NamespaceSupport-1.08.tar.gz"
+	repository_file => "$REPOSITORY/XML-NamespaceSupport-1.08.tar.gz"
     },{
 	name => 'XML::Sax',
-	repository_file => "$REPOSITORY-SAX-0.12.tar.gz",
+	repository_file => "$REPOSITORY/XML-SAX-0.12.tar.gz",
 	# XML::SAX v0.12 doesn't report a $VERSION
 	# However, XML::SAX::ParserFactory loads OK and reports properly
 	get_module_version => sub {
@@ -240,16 +258,34 @@ my @modules = (
 	    eval($eval);
 
 	    return $version ? $version : undef;
+	},
+	configure_module => sub {
+	    # Since GD has an interactive configure script we need to
+	    # implement a custom configure_module () subroutine that allows
+	    # for an interactive install
+
+	    my ($path, $logfile) = @_;
+	    my $iwd = getcwd;  # Initial working directory
+
+	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+	    system ("perl Makefile.pl 2>&1");
+
+	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
+
+	    return 1;
 	}
     },{
 	name => 'XML::LibXML::Common',
-	repository_file => "$REPOSITORY-LibXML-Common-0.12.tar.gz"
+	repository_file => "$REPOSITORY/XML-LibXML-Common-0.12.tar.gz"
     },{
 	name => 'XML::LibXML',
-	repository_file => "$REPOSITORY-LibXML-1.53.tar.gz",
+	repository_file => "$REPOSITORY/XML-LibXML-1.53.tar.gz",
     },{
 	name => 'XML::LibXSLT',
-	repository_file => "$REPOSITORY-LibXSLT-1.53.tar.gz",
+	repository_file => "$REPOSITORY/XML-LibXSLT-1.53.tar.gz",
     }
 );
 
@@ -316,7 +352,8 @@ sub install {
 
     # Configure
     print "    \\_ Configuring ";
-    $retval = configure_module ($wd, $LOGFILE);
+    $retval = &{$module->{configure_module}}($wd) if exists $module->{configure_module};
+    $retval = configure_module ($wd, $LOGFILE) unless exists $module->{configure_module};
     
     print BOLD, "[FAILURE]", RESET, ".\n"
         and croak "Unable to configure module, see $LOGFILE_NAME for details."
@@ -337,9 +374,12 @@ sub install {
     $retval = test_module ($wd, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to test module, see $LOGFILE_NAME for details."
+        and carp "Unable to test module, see $LOGFILE_NAME for details."
         unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n";
+    print BOLD, "[SUCCESS]", RESET, ".\n" if $retval;
+
+    y_or_n ("Some tests failed, would you like to continue anyway ?")
+	or croak "Stopping at user request" unless $retval;    
 
     # Install
     print "    \\_ Installing ";
@@ -349,6 +389,8 @@ sub install {
         and croak "Unable to install module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    print "\n";  # Spacing
 
     return;
 }
@@ -396,8 +438,6 @@ sub execute {
     print "Checking modules\n";
     foreach my $module (@modules) {
 	print "  \\_ $module->{name}";
-
-	&{$module->{pre_install}} if exists $module->{pre_install};
 
 	if (exists $module->{exception} and &{$module->{exception}}) {
 	    print BOLD, " [OK]", RESET, ".\n";
