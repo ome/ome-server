@@ -222,8 +222,11 @@ sub __salvageSession {
 
 sub deleteInstance {
 	my $self = shift;
+    my $force = shift;
 
-	carp "WARNING: Explicit deletion of OME::Session";
+	carp "WARNING: Explicit deletion of OME::Session"
+      unless $force;
+
 	$__soleInstance = undef;
 
 	return 1;
