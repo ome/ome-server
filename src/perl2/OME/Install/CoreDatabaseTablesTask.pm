@@ -369,7 +369,6 @@ sub init_configuration {
 
     $session->commitTransaction();
 
-
     return $configuration;
 }
 
@@ -377,6 +376,7 @@ sub load_xml_core {
     my ($session, $logfile) = @_;
     my @core_xml;
 
+	system("id");
     my $omeImport = OME::Tasks::OMEImport->
 	new(
 	    session => $session,
@@ -389,11 +389,11 @@ sub load_xml_core {
 	or croak "Could not open file \"src/SQL/CoreXML\". $!";
 
     while (<CORE_XML>) { 
-	chomp;
+		chomp;
 
-	# Put the ABS paths in the array
-	$_ = rel2abs ("src/xml/$_");
-	push (@core_xml, $_) if /^[^#]/;
+		# Put the ABS paths in the array
+		$_ = rel2abs ("src/xml/$_");
+		push (@core_xml, $_) if /^[^#]/;
     }
 
     close (CORE_XML);
@@ -447,17 +447,18 @@ sub commit_experimenter {
 
     print "  \\__ Adding experimenter to group\n";
     $experimenter->Group($group->id());
+
     $experimenter->storeObject();
 
-    print "  \\__ Creating repository object\n";
-    my $repository = $factory->
+	print "  \\__ Creating repository object\n";
+    my $repository = $factory->newAttribute("Repository",undef,undef,
     # FIXME: Yes there's a trailing slash, yes it needs to be there and no
     # I don't know why the importer doesn't detect its existance or abscence.
-    newAttribute("Repository",undef,undef,
                {
                 Path => $OME_BASE_DIR."/repository/"
                });
 
+	$repository->storeObject;
 
     $session->commitTransaction();
 
@@ -580,6 +581,7 @@ sub execute {
 
     # FIXME: Temporarily we need to logout/backin for the configuration variable to be initialized
     $manager->logout($session);
+	$OME::Session::__soleInstance = undef;
     $session = $manager->createSession($username, $password);
     # END
 
