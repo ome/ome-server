@@ -12,7 +12,7 @@
 svgns = "http://www.w3.org/2000/svg";
 xlinkns  = "http://www.w3.org/1999/xlink";
 
-OMEimage.VERSION = 0.1;
+OMEimage.VERSION = 0.5;
 
 /* My development vocabulary:
 	untested: the function has not been run
@@ -44,8 +44,6 @@ OMEimage.VERSION = 0.1;
 			Dims is a 6 member array representing dimensions of the 5d image. Members are:
 				X,Y,Z,W,T,bpp
 				bpp is bits per pixel
-			Path is the full path to the OMEimage. This will be removed if a perl wrapper to
-				OME_JPEG is ever written.
 			CGI_URL is the url to call to generate a 2d image
 			CGI_optionStr will be added to the options passed to the CGI
 			default_WBS is optional. If found, it will set the WBS for the image display.
@@ -58,12 +56,12 @@ OMEimage.VERSION = 0.1;
 *****/
 
 
-function OMEimage( imageID, Wavelengths, Stats, Dims, Path, CGI_URL, CGI_optionStr, default_WBS ) {
+function OMEimage( imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, default_WBS ) {
 
 	// A mild test for valid input
 	var goodInput = 1; 
-	if( arguments.length < 7 )
-		goodInput = 0;
+	if( arguments.length < 6 ) 
+		goodInput = 0; 
 	else {
 		if(Dims.length != 6)
 			goodInput = 0;
@@ -74,7 +72,7 @@ function OMEimage( imageID, Wavelengths, Stats, Dims, Path, CGI_URL, CGI_optionS
 
 	// Test over. Did you pass?
 	if(goodInput == 1)
-		this.init(imageID, Wavelengths, Stats, Dims, Path, CGI_URL, CGI_optionStr, default_WBS )
+		this.init(imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, default_WBS )
 	else
 		alert("Bad initialization parameters given to OMEimage.");
 }
@@ -110,6 +108,7 @@ OMEimage.prototype.realize = function(SVGparentNode) {
 OMEimage.prototype.saveState = function() {
 	// determine if settings differ from defaults. (Do we need to save?)
 	// call a CGI via a image load to save current WBS, isRGB, and RGBon
+	// is the CGI's URL hardcoded or passed as a param?
 }
 
 /*****
@@ -119,7 +118,7 @@ OMEimage.prototype.saveState = function() {
 		returns null if unsuccesful for any reason
 		returns the SVG image node if successful
 		
-	untested
+	tested
 
 *****/
 OMEimage.prototype.updatePic = function(theZ, theT) {
@@ -145,9 +144,10 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 	this.oldT = theT;
 	
 	// check for availibility of new pic
-	if(this.SVGimages[theZ][theT] != null)
+	if(this.SVGimages[theZ][theT] != null) {
 		// turn on the image
 		this.SVGimages[theZ][theT].setAttribute("display","inline");
+	}
 	else {	// create the image
 		// I've never had trouble w/ svgDocument not existing. but just in case...
 		if(svgDocument == null)
@@ -170,7 +170,7 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 		for(i in this.Dims) d.push(this.Dims[i]);
 
 		var imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
-			theT + '&Dims=' + d.join() + '&Path=' + this.Path + color + "&RGBon=" + this.RGBon +
+			theT + '&Dims=' + d.join() + color + "&RGBon=" + this.RGBon +
 			'&'+this.CGI_optionStr;
 		this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "xlink:href",imageURL);
 
@@ -179,6 +179,7 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 	
 	return this.SVGimages[theZ][theT];
 }
+
 
 /*****
 
@@ -231,7 +232,7 @@ OMEimage.prototype.setWBS = function(newWBS) {
 	for(i=0;i<4;i++) {
 		var C = new Array("red", "green", "blue", "gray");
 		if(newWBS[i*3] != Math.round(newWBS[i*3]) ) {
-			alert("Now that's just stupid. You just gave me a wavenumber that's not a whole number. It's gotta be a whole number, not "+newWBS[i*3]+". BTW, it was on channel "+C[i]+".");
+			alert("OMEimage.setWBS called with a WBS containing a wavenumber that's not a whole number. It's gotta be a whole number, not "+newWBS[i*3]+". BTW, it was on channel "+C[i]+".");
 			return 0;
 		}
 		if(newWBS[i*3]<0 || newWBS[i*3]>=this.Dims['W']) {
@@ -241,49 +242,66 @@ OMEimage.prototype.setWBS = function(newWBS) {
 	}
 	
 	// check new WBS for change
-	var changeFlag=1; // 0 means no change
-/*	for(i=0;i<12;i++)
+	var changeFlag=0; // 0 means no change
+	for(i=0;i<12;i++)
 		if(newWBS[i]!=this.WBS[i]) {
 			changeFlag=1;
 			break;
-		}*/
+		}
 
 	if(changeFlag) {
 		this.WBS = newWBS;
 		// erase all images from image array. They must be redrawn with the new WBS.
-		this.wipe();
+		// check if initialzation has occured before calling wipe
+		if(this.Dims != null) this.wipe();
 	}
 	return 1;
 }
 
 /*****
 
-	setDisplayColor()
-		Makes the image display in color
+	setDisplayRGB_BW(val)
+		Makes the image display in color or grayscale
+		val = true ? RGB : BW
 		
-	untested
+	comprehensively tested
 		
 *****/
-OMEimage.prototype.setDisplayColor = function() {
-	if(this.isColor != 1) {
-		this.isColor = 1;
-		this.wipe();
+OMEimage.prototype.setDisplayRGB_BW = function(val) {
+	if(val) {	// mode = RGB
+		if(!this.inColor) {
+			this.inColor = 1;
+			// check if initialzation has occured before calling wipe
+			if(this.Dims != null) this.wipe();
+		}
+	}
+	else {	// mode = BW
+		if(this.inColor) {
+			this.inColor = 0;
+			// check if initialzation has occured before calling wipe
+			if(this.Dims != null) this.wipe();
+		}
 	}
 }
 
 /*****
 
-	setDisplayGrayscale()
-		Makes the image display in grayscale
+	setPreload(a)
+		turns on and off preload option
+		call it with 0 to turn off
+		call it with 1 to turn on
 		
-	untested
-		
+	tested
+
 *****/
-OMEimage.prototype.setDisplayGrayscale = function() {
-	if(this.isColor != 0) {
-		this.isColor = 0;
-		this.wipe();
+OMEimage.prototype.setPreload = function(a) {
+	if(a) {
+		this.preload = 1;
+		// check if initialzation has occured before calling loadAllPics
+		if(this.Dims != null) this.loadAllPics();
 	}
+	else
+		this.preload = 0;
 }
 
 /*****
@@ -307,10 +325,11 @@ OMEimage.prototype.setRGBon = function(RGBon) {
 			changeFlag=1;
 			break;
 		}
-	alert(changeFlag);
+
 	if(changeFlag) {
 		this.RGBon = RGBon;
-		this.wipe();
+		// check if initialzation has occured before calling wipe
+		if(this.Dims != null) this.wipe();
 	}
 }
 
@@ -325,7 +344,8 @@ OMEimage.prototype.setRGBon = function(RGBon) {
 	
 *****/
 OMEimage.prototype.getRGBon = function() {
-	return this.RGBon;
+	// return a COPY
+	return this.RGBon.join().split(',');
 }
 
 
@@ -337,7 +357,8 @@ OMEimage.prototype.getRGBon = function() {
 
 *****/
 OMEimage.prototype.getWavelengths = function() {
-	return this.Wavelengths;
+	// return a COPY
+	return this.Wavelengths.join().split(',');
 }
 
 /*****
@@ -351,7 +372,8 @@ OMEimage.prototype.getWavelengths = function() {
 OMEimage.prototype.getWBS = function() {
 	if(this.WBS == null)
 		this.WBS = this.makeWBS();
-	return this.WBS;
+	// return a COPY of the WBS array
+	return this.WBS.join().split(',');
 }
 
 /*****
@@ -399,7 +421,7 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 /************************** Functions without safety nets ***********************************/
 /********************************************************************************************/
 /********************************************************************************************/
-/*	init(...), buildSVG(), makeWBS(), wipe() */
+/*	init(...), buildSVG(), loadAllPics(), makeWBS(), wipe() */
 
 /*****
 
@@ -409,14 +431,13 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 	comprehensively tested
 
 *****/
-OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims, Path, CGI_URL, CGI_optionStr, default_WBS ) {
+OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims,  CGI_URL, CGI_optionStr, default_WBS ) {
 	// set variables
 	this.imageID = imageID;
 	this.Wavelengths = Wavelengths;
 	this.Stats = Stats;
 	this.CGI_URL = CGI_URL;
 	this.CGI_optionStr = CGI_optionStr;
-	this.Path = Path;
 	this.Dims = new Array();
 	this.Dims['X'] = Dims[0];
 	this.Dims['Y'] = Dims[1];
@@ -468,6 +489,49 @@ OMEimage.prototype.buildSVG = function() {
 
 /*****
 
+	loadAllPics()
+		preloads the pics
+		
+	comprehensively tested
+	
+*****/
+
+OMEimage.prototype.loadAllPics = function() {
+	for(var theZ=0;theZ<this.Dims['Z'];theZ++)
+		for(var theT=0;theT<this.Dims['T'];theT++)
+			if(this.SVGimages[theZ][theT] == null) { // if the image is not loaded yet...
+				// I've never had trouble w/ svgDocument not existing. but just in case...
+				if(svgDocument == null)
+					alert("Big trouble! svgDocument doesn't exist in OMEimage.updatePic! Why is this happening? Alert siah in the OME group at http://sourceforge.net/projects/OME and he'll try to figure out something");
+				this.SVGimages[theZ][theT] = svgDocument.createElementNS(svgns,"image");
+				this.SVGimages[theZ][theT].setAttribute("width",this.Dims['X']);
+				this.SVGimages[theZ][theT].setAttribute("height",this.Dims['Y']);
+				this.SVGimages[theZ][theT].setAttribute("display","none");
+		
+				// prepare image URL string
+				
+				// color or RGB?
+				var color;
+				var WBS = this.getConvertedWBS(theT);
+				if( this.inColor == 1 )
+					color = "&RGB=" + WBS.slice(0,9).join();
+				else
+					color = "&Gray=" + WBS.slice(9,12).join();
+				
+				var d=new Array();
+				for(i in this.Dims) d.push(this.Dims[i]);
+		
+				var imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
+					theT + '&Dims=' + d.join() + color + "&RGBon=" + this.RGBon +
+					'&'+this.CGI_optionStr;
+				this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "xlink:href",imageURL);
+
+				this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
+			}
+}
+
+/*****
+
 	makeWBS()
 		makes WBS array to default parameters 
 		
@@ -499,7 +563,7 @@ OMEimage.prototype.makeWBS = function() {
 	wipe()
 		erases all cached images and redraws current image
 		
-	untested
+	tested
 
 *****/
 
@@ -515,4 +579,5 @@ OMEimage.prototype.wipe = function() {
 		
 	// redraw
 	this.updatePic(this.oldZ,this.oldT);
+	if(this.preload) this.loadAllPics();
 }
