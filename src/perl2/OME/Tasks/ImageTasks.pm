@@ -106,24 +106,20 @@ Returns
 =cut
 sub importFiles {
 	my ($param1, $param2, @filenames) = @_;
-	my ( $repository, $options );
+	my $options;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
-	
+	my $repository = $session->findRepository(); # make sure there is one, and its activated.
+
 	if( ref( $param1 ) eq 'HASH' ) {
 		unshift( @filenames, $param2);
 		$options = $param1;
-		$repository = $factory->findAttribute('Repository', IsLocal => 0)
-			or die "could not find a remote repository to work with";
-	} elsif( not ref($param1) or not $param1->verifyType('Repository') ) {
+	} elsif( not ref($param1) ) {
 		unshift( @filenames, $param2) if defined $param2; # don't bother adding an undef
 		unshift( @filenames, $param1) if defined $param1; # don't bother adding an undef
 		$options = {};
-		$repository = $factory->findAttribute('Repository', IsLocal => 0)
-			or die "could not find a remote repository to work with";
 	}
 
-    OME::Tasks::PixelsManager->activateRepository($repository);
 	my @files;
 	push( @files, OME::Image::Server::File->upload($_) )
 		foreach ( @filenames );
@@ -178,32 +174,12 @@ sub exportFiles {
 	# FIXME:
 	# Need to determine how to locate repository for given image IDs\
 	# when we go to more than 1 repository.
-	my $repository = findRepository($session, 0);
+	my $repository = $session->findRepository();
 
 	my $xporter = OME::ImportExport::Exporter->new($session, $type, \@image_list, $repository);
 
 }
 
-
-
-# findRepository(session,pixel array)
-# -----------------------------------
-# This function should determine, based on (currently) the size of the
-# pixel array, which repository an image should be stored in.  For now
-# we assume that there is only one repository, with an ID of 1.
-# (Which, if the bootstrap script worked properly, will be the case.)
-
-my $onlyRepository;
-
-sub findRepository {
-	return $onlyRepository if defined $onlyRepository;
-	
-	my ($session, $aref) = @_;
-	my @repositories = $session->Factory()->findAttributes("Repository");
-        $onlyRepository = $repositories[0];
-	return $onlyRepository if defined $onlyRepository;
-	die "Cannot find repository #1.";
-}
 
 
 1;

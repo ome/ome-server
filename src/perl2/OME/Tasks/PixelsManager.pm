@@ -92,7 +92,8 @@ Provides methods to accomplish common Pixel tasks.
 sub createOriginalFileAttribute {
     my $proto = shift;
     my ($file,$format,$mex) = @_;
-    my $factory = OME::Session->instance()->Factory();
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
 
     if (UNIVERSAL::isa($file,'OME::LocalFile')) {
         my $filename = $file->getFilename();
@@ -124,18 +125,7 @@ sub createOriginalFileAttribute {
           unless defined $attr;
         return $attr;
     } elsif (UNIVERSAL::isa($file,'OME::Image::Server::File')) {
-        my $server_path = OME::Image::Server->getServerPath();
-        $server_path = $server_path->as_string()
-          if UNIVERSAL::isa($server_path,'URI');
-
-        my $repository = $factory->
-          findAttribute('Repository',
-                        {
-                         IsLocal        => 0,
-                         ImageServerURL => $server_path,
-                        });
-        die "Cannot find a repository entry for the active image server"
-          unless defined $repository;
+        my $repository = $session->findRepository();
         my $fileID = $file->getFileID();
 
         # See if we've already created an attribute for this file with
@@ -179,25 +169,9 @@ sub loadOriginalFile {
     if ($repository->IsLocal()) {
         return OME::LocalFile->new($attr->Path());
     } else {
-        $proto->activateRepository($repository);
+        OME::Session->instance()->activateRepository($repository);
         return OME::Image::Server::File->new($attr->FileID());
     }
-}
-
-=head2 findRepository
-
-Usage: my $repository = OME::Tasks::PixelsManager->findRepository();
-
-get a repository
-
-=cut
-sub findRepository {
-    my $proto = shift;
-    my $factory = OME::Session->instance()->Factory();
-    my $repository = $factory->findAttribute('Repository');
-    die "Are there really no repositories in the system?  Why not?"
-      unless defined $repository;
-    return $repository;
 }
 
 =head2 getPixelType
@@ -254,8 +228,8 @@ called after the data has been written.
 =cut
 sub createPixels {
     my $proto = shift;
+    my $repository = OME::Session->instance()->findRepository();
 
-    my $repository = $proto->findRepository();
     return $repository->IsLocal()?
       $proto->localCreatePixels($repository,@_):
       $proto->serverCreatePixels($repository,@_);
@@ -426,26 +400,14 @@ sub getDisplayOptions {
 	return $displayOptions;
 }
 
-sub findLocalRepository {
-    my $proto = shift;
-    my $factory = OME::Session->instance()->Factory();
-    my $repository = $factory->
-      findAttribute('Repository',
-                    {
-                     IsLocal => 1,
-                    });
-    die "Are there really no repositories in the system?  Why not?"
-      unless defined $repository;
-    return $repository;
-}
-
 sub localCreatePixels {
     my $proto = shift;
     my ($repository,$image,$mex,$data_hash) = @_;
-    my $factory = OME::Session->instance()->Factory();
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
 
     # Find a local repository to store this pixels file in.
-    $repository = $proto->findLocalRepository()
+    $repository = $session->findLocalRepository()
       unless defined $repository;
     my $path = $repository->Path();
 
@@ -490,62 +452,14 @@ sub localLoadPixels {
     return OME::Image::LocalPixels->open($pathname);
 }
 
-=head2 activateRepository
-
-Usage: my $repository = OME::Tasks::PixelsManager->activateRepository( $repository );
-
-prepare OME::Image::Server to operate on a remote repository.
-
-=cut
-my $active_repository = undef;
-
-sub activateRepository {
-    my $proto = shift;
-    my ($repository) = @_;
-    die "Cannot activate a local repository"
-      if $repository->IsLocal();
-
-    # If we've already activated this repository, there's nothing to do.
-    return if (defined $active_repository &&
-               $repository->id() == $active_repository->id());
-
-    my $url = $repository->ImageServerURL();
-    if ($url =~ m,^/,) {
-        # This looks vaguely like a local path
-        OME::Image::Server->useLocalServer($url);
-    } elsif ($url =~ m,^http://,) {
-        # This looks vaguely like an HTTP URL
-        OME::Image::Server->useRemoteServer($url);
-    } else {
-        # This looks weird
-        die "I don't think I support an image server URL of $url";
-    }
-
-    $active_repository = $repository;
-    return;
-}
-
-sub findServerRepository {
-    my $proto = shift;
-    my $factory = OME::Session->instance()->Factory();
-    my $repository = $factory->
-      findAttribute('Repository',
-                    {
-                     IsLocal => 0,
-                    });
-    die "Are there really no repositories in the system?  Why not?"
-      unless defined $repository;
-    return $repository;
-}
-
 sub serverCreatePixels {
     my $proto = shift;
     my ($repository,$image,$mex,$data_hash) = @_;
-    my $factory = OME::Session->instance()->Factory();
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
 
-    $repository = $proto->findServerRepository()
+    $repository = $session->findRepository()
       unless defined $repository;
-    $proto->activateRepository($repository);
 
     my $pixels = OME::Image::Server::Pixels->new(
       	$data_hash->{SizeX},
@@ -568,7 +482,7 @@ sub serverLoadPixels {
     my ($attr) = @_;
 
     my $repository = $attr->Repository();
-    $proto->activateRepository($repository);
+    OME::Session->instance()->activateRepository ($repository);
     return OME::Image::Server::Pixels->open($attr->ImageServerID());
 }
 
