@@ -53,6 +53,7 @@ use strict;
 use vars qw($VERSION);
 use OME;
 use OME::Session;
+use OME::Tasks::ModuleExecutionManager;
 use base qw(OME::Web::DBObjRender);
 
 # Class data
@@ -86,11 +87,26 @@ DBObject methods + attributes
 sub getRelationAccessors {
 	my ($proto,$obj) = @_;
 
-	my $relation_accessors = $obj->getPublishedManyRefs();
-	my ($package_name, $common_name, $formal_name, $ST) = OME::Web->_loadTypeAndGetInfo( $obj->formal_input()->semantic_type );
-	$relation_accessors->{attributes} = $formal_name;
-	return %$relation_accessors if wantarray;
-	return $relation_accessors;
+	my ($objects, $methods, $params, $return_types, $names, $call_as_scalar )
+		= $proto->__gather_PublishedManyRefs( $obj );
+
+	my $object      = 'OME::Tasks::ModuleExecutionManager';
+	my $method      = 'getAttributesForMEX';
+	my $return_type = $obj->formal_input()->semantic_type();
+	my $mex         = $obj->input_module_execution();
+	my $param       = [$mex,$return_type];
+	my $name        = 'Attributes';
+
+	push( @$objects,        \$object);
+	push( @$methods,        $method);
+	push( @$params,         $param);
+	push( @$return_types,   $return_type);
+	push( @$names,          $name);
+	push( @$call_as_scalar, 1);
+
+	my $iterator = OME::Web::DBObjRender::Iterator->new( 
+		$objects, $methods, $params, $return_types, $names, $call_as_scalar );
+	return $iterator;
 }
 
 =head1 Author
