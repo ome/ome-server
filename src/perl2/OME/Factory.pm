@@ -21,6 +21,347 @@
 package OME::Factory;
 our $VERSION = '1.00';
 
+=head1 NAME
+
+OME::Factory - database access class
+
+=head1 SYNOPSIS
+
+	use OME::Factory;
+	my $factory = $session->Factory();
+
+	my $project = $factory->loadObject("OME::Project",1);
+	my $dataset = $factory->newObject("OME::Dataset",
+	                                  {
+	                                   name  => "New dataset",
+	                                   owner => $user
+	                                  });
+	my @images = $factory->findObjects("OME::Image",
+	                                   name => "Image 4");
+
+=head1 DESCRIPTION
+
+The OME::Factory class provides a single interface through which the
+rest of OME interacts with the database.  Most of the OME::Factory
+methods delegate to Class::DBI, which OME uses to implement object
+persistence.  However, I<no code other than OME::Factory should make
+calls to Class::DBI methods>!  If you know which Class::DBI method you
+want to call, please see the L<Class::DBI EQUIVALENTS|/"Class::DBI
+EQUIVALENTS"> section for the OME::Factory method to use instead.
+
+All of the methods which can take in DBObjects as parameters will work
+properly whether passed in an actual DBObject or an integer database
+ID.  This includes search criteria in the findObject and findObjects
+methods, and the data hash used to create new objects in newObject and
+newAttribute.
+
+OME implements some extensions to Class::DBI.  Please see the
+L<OME::DBObject|OME::DBObject> module for more details.
+
+=head1 OBJECTS VS. ATTRIBUTES
+
+Several of the OME::Factory methods make a distinction between
+"objects" and "attributes".  In this convention, an "object" is
+defined by an OME::DBObject subclass included in the OME source tree.
+All of the core OME database tables (EXPERIMENTERS, PROJECTS,
+DATASETS, IMAGES, etc.) are "objects", and have predefined
+OME::DBObject subclasses (OME::Experimenter, OME::Project,
+OME::Dataset, OME::Image, etc.).  Methods such as newObject and
+loadObject operate on these core tables, and identify the specific
+OME::DBObject subclass by name.
+
+Attribute tables, however, cannot have predefined OME::DBObject
+subclasses, since the attribute types available in OME can vary from
+time to time.  However, OME stores enough information about each
+attribute type to construct OME::DBObject subclasses at runtime.  (The
+real situation is slightly more complex than this because of the
+distinction between data tables and attribute types.  See the
+L<OME::DataTable|OME::DataTable> and
+L<OME::AttributeType|OME::AttributeType> modules for more details.)
+Methods such as newAttribute and loadAttribute operate on these
+user-defined attribute types, and identify the specific OME::DBObject
+subclass by the attribute type.
+
+=head1 OBTAINING A FACTORY
+
+To retrieve an OME::Factory to use for accessing the database, the
+user must log in to OME.  This is done via the
+L<OME::SessionManager|OME::SessionManager> class.  Logging in via
+OME::SessionManager yields an L<OME::Session|OME::Session> object.
+Each OME::Session object has an associated OME::Factory, which can be
+retrieved with the Factory method.  The full process is summarized
+below:
+
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->createSession($username,$password);
+	my $factory = $session->Factory();
+
+=head1 METHODS
+
+=head2 DBH
+
+	my $dbh = $factory->DBH();
+
+This method returns the DBI database handle associated with this
+OME::Factory.  You can use it to run arbitrary SQL commands.  Note
+that this is not the preferred method for executing arbitrary SQL.
+The OME code uses the Ima::DBI module, which provides a much more
+centralized and consistent way to incorporate SQL into Perl.
+
+=over
+
+B<TODO>: Add a real description of the Ima::DBI idiom for arbitrary
+SQL.  For now, just look at how it's done in
+OME::Tasks::AnalysisEngine.
+
+=back
+
+=head2 newObject
+
+	my $object = $factory->newObject($className,$dataHash);
+
+Creates a new object with initial values specified by $dataHash.  The
+keys of $dataHash should be columns in the corresponding database
+table.  (By convention, foreign key fields should be referred to
+without any "_id" suffix.)  The values of $dataHash should be the
+initial values for the respective columns.  The $dataHash should not
+contain a value for the primary key if the underlying table has a
+corresponding sequence; Class::DBI will fill in the primary key.  Note
+that this method creates a row in the database corresponding to the
+new object, so any columns defined to be NOT NULL I<must> be specified
+in $dataHash, or DBI will throw an error.
+
+=head2 maybeNewObject
+
+	my $object = $factory->maybeNewObject($className,$dataHash);
+
+This works exactly like newObject, except that if an object in the
+database already exists with the given contents, it will be returned,
+and new object will be created.  This is extremely useful for adding
+items to a many-to-many map.  For instance,
+
+	# Add $image to $dataset
+	my $map = $factory->
+	    maybeNewObject("OME::Image::DatasetMap",
+	                   {
+	                    dataset => $dataset,
+	                    image   => $image
+	                   });
+
+=head2 newAttribute
+
+	my $attribute = $factory->
+	    newAttribute($attributeType,$target,$dataHash);
+
+Creates a new attribute object.  Note that this is not technically a
+DBObject subclass, since attributes can (conceivably) live in multiple
+data tables.  Each attribute is associated with one DBObject per data
+table is resides in.  (For more information on this, see
+L<OME::AttributeType|OME::AttributeType>.
+
+The target of the attribute (dataset, image, or feature) should not be
+specified in $dataHash.  Rather, is should be passed in the $target
+parameter.  The appropriate key will be added to the $dataHash
+depending on the granularity of the attribute type.
+
+Since attribute type packages are created dynamically, attribute types
+are not referred to by class name, like objects are.  The
+$attributeType parameter should be either an instance of
+OME::AttributeType (which I<is> an OME::DBObject, and can be obtaining
+via any of the *Object methods), or the name of an attribute type.
+Note that:
+
+	my $attribute = $factory->
+	    newAttribute("Stack mean",$image,$hash);
+
+is exactly equivalent to:
+
+	my $type = $factory->
+	    findObject("OME::AttributeType",
+	               name => "Stack mean");
+	my $attribute = $factory->
+	    newAttribute($type,$image,$hash);
+
+=head2 loadObject
+
+	my $object = $factory->loadObject($className,$id);
+
+Returns a DBObject instance corresponding to the row in $className's
+table with $id for its primary key.  Returns B<undef> if there is now
+row with that primary key.
+
+=head2 loadAttribute
+
+	my $attribute = $factory->loadAttribute($attributeType,$id);
+
+Loads in the attribute with the specified primary key.  As in the case
+of newAttribute, $attributeType can be either an attribute type name
+or an instance of OME::AttributeType.  Since all of the data rows that
+make up an attribute are required to have the same primary key value,
+this method works by calling loadObject on all of the data table
+classes that make up the given attribute type, and then creating a new
+attribute type instance with those data rows.
+
+=head2 objectExists
+
+	my $boolean = $factory->objectExists($className,%criteria);
+
+Returns true if there is at least one row in $className's database
+table which matches the given search criteria.
+
+=head2 findObject
+
+	my $object = $factory->findObject($className,%criteria);
+
+Returns the object in $className's table which matches the search
+criteria.  Returns B<undef> if no object matches.  If more than one
+object matches, one of them will be returned; it is undefined which
+one it will be.
+
+=head2 findObjects
+
+	my $iterator = $factory->findObjects($className,%criteria);
+	while (my $object = $iterator->next()) {
+	    # Do something with the objects one at a time
+	}
+
+	my @objects = $factory->findObjects($className,%criteria);
+	# Do something with the objects all at once
+
+In list context, returns all of the objects in $className's table
+matching the search criteria.  In scalar context, returns an iterator
+whose next() method will return those objects one at a time.  This
+iterator is provided by the Class::DBI module.
+
+=head2 objectExistsLike
+
+	my $object = $factory->objectExistsLike($className,%criteria);
+
+Works exactly like the objectExists method, but uses the SQL LIKE
+operator for comparison, rather than the = operator.
+
+=head2 findObjectLike
+
+	my $object = $factory->findObjectLike($className,%criteria);
+
+Works exactly like the findObject method, but uses the SQL LIKE
+operator for comparison, rather than the = operator.
+
+=head2 findObjectsLike
+
+	my $iterator = $factory->findObjectsLike($className,%criteria);
+	while (my $object = $iterator->next()) {
+	    # Do something with the objects one at a time
+	}
+
+	my @objects = $factory->findObjectsLike($className,%criteria);
+	# Do something with the objects all at once
+
+Works exactly like the findObjects method, but uses the SQL LIKE
+operator for comparison, rather than the = operator.
+
+=head1 SEARCH CRITERIA
+
+The objectExists, findObject, findObjects, findObjectLike, and
+findObjectsLike methods all take in search criteria as their last
+parameters.  These criteria are used to build the WHERE clause of the
+SQL statement used to retrieve the objects in question.  You can think
+of these criteria as similar to the data hash used to create objects:
+The keys should be column names (without the "_id" suffix for foreign
+keys), the values should be the search criteria values.  When calling
+the methods, these criteria should be passed in directly in the
+parameter list, not as a hash reference.  For instance:
+
+	my @programs = $factory->
+	    findObjects("OME::Programs",
+	                module_type => "OME::Analysis::CLIHandler",
+	                category    => "Statistics");
+
+Also note that these methods are not intended to support arbitrarily
+complex SQL; that's what SQL is for.  As such, all of the criteria
+will be ANDed together in the WHERE clause.
+
+=head1 Class::DBI EQUIVALENTS
+
+This section describes the OME::Factory analogues to the most common
+Class::DBI methods.
+
+=head2 create
+
+	# Through Class::DBI
+	my $program = OME::Program->create($data_hash);
+
+	# Through OME::Factory
+	my $program = $factory->newObject("OME::Program",$data_hash);
+
+=head2 find_or_create
+
+	# Through Class::DBI
+	my $program = OME::Program->find_or_create($data_hash);
+
+	# Through OME::Factory
+	my $program = $factory->
+	    maybeNewObject("OME::Program",$data_hash);
+
+=head2 retrieve
+
+	# Through Class::DBI
+	my $program = OME::Program->retrieve($id);
+
+	# Through OME::Factory
+	my $program = $factory->loadObject("OME::Program",$id);
+
+=head2 search
+
+	# Through Class::DBI
+	my @programs = OME::Program->
+	    search(name        => $name,
+	           module_type => $module_type);
+	my $programIterator = OME::Program->
+	    search(name        => $name,
+	           module_type => $module_type);
+
+	# Through OME::Factory
+	my $oneProgram = $factory->
+	    findObject("OME::Program",
+	               name        => $name,
+	               module_type => $module_type);
+	my @manyPrograms = $factory->
+	    findObjects("OME::Program",
+	                name        => $name,
+	                module_type => $module_type);
+	my $programIterator = $factory->
+	    findObjects("OME::Program",
+	                name        => $name,
+	                module_type => $module_type);
+
+=head2 search_like
+
+	# Through Class::DBI
+	my @programs = OME::Program->
+	    search_like(name        => $name,
+	                module_type => $module_type);
+	my $programIterator = OME::Program->
+	    search_like(name        => $name,
+	                module_type => $module_type);
+
+	# Through OME::Factory
+	my $oneProgram = $factory->
+	    findObjectLike("OME::Program",
+	                   name        => $name,
+	                   module_type => $module_type);
+	my @manyPrograms = $factory->
+	    findObjectsLike("OME::Program",
+	                    name        => $name,
+	                    module_type => $module_type);
+	my $programIterator = $factory->
+	    findObjectsLike("OME::Program",
+	                    name        => $name,
+	                    module_type => $module_type);
+
+=cut
+
+
 use strict;
 use Ima::DBI;
 use Class::Accessor;
@@ -82,19 +423,31 @@ sub loadObject {
     eval "require $class";
     my $object = $class->retrieve($id) or return undef;
 
-    $self->{_cache}->{$class}->{$id} = $object;
+    #$self->{_cache}->{$class}->{$id} = $object;
     return $object;
 }
 
 sub loadAttribute {
-    my ($self, $attribute_type_name, $id) = @_;
+    my ($self, $attribute_type, $id) = @_;
 
-    my $type = $self->findObject("OME::AttributeType",
-                                 name => $attribute_type_name);
+    my $type =
+      ref($attribute_type) eq "OME::AttributeType"?
+        $attribute_type:
+        $self->findObject("OME::AttributeType",
+                          name => $attribute_type);
     die "Cannot find attribute type $attribute_type_name"
         unless defined $type;
 
     return $type->loadAttribute($id);
+}
+
+
+# objectExists
+# ------------
+
+sub objectExists {
+    my ($self, $class, @criteria) = @_;
+    return defined $self->findObject($class,@criteria);
 }
 
 
@@ -121,6 +474,38 @@ sub findObjects {
 }
 
 
+# objectExists
+# ------------
+
+sub objectExistsLike {
+    my ($self, $class, @criteria) = @_;
+    return defined $self->findObjectLike($class,@criteria);
+}
+
+
+# findObject
+# ----------
+
+sub findObjectLike {
+    my ($self, $class, @criteria) = @_;
+    my $objects = $self->findObjectsLike($class,@criteria);
+    return $objects? $objects->next(): undef;
+}
+
+
+# findObjects
+# -----------
+
+sub findObjectsLike {
+    my ($self, $class, @criteria) = @_;
+
+    return undef unless (scalar(@criteria) > 0) && ((scalar(@criteria) % 2) == 0);
+
+    eval "require $class";
+    return $class->search_like(@criteria);
+}
+
+
 # newObject
 # ---------
 
@@ -130,15 +515,28 @@ sub newObject {
     logcroak "Malformed class name $class"
       unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
     eval "require $class";
-    my $object = $class->create($data) or return undef;
+    my $object = $class->create($data);
+    return $object;
+}
+
+sub maybeNewObject {
+    my ($self, $class, $data) = @_;
+
+    logcroak "Malformed class name $class"
+      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+    eval "require $class";
+    my $object = $class->find_or_create($data);
     return $object;
 }
 
 sub newAttribute {
-    my ($self, $attribute_type_name, $target, $rows) = @_;
+    my ($self, $attribute_type, $target, $rows) = @_;
 
-    my $type = $self->findObject("OME::AttributeType",
-                                 name => $attribute_type_name);
+    my $type =
+      ref($attribute_type) eq "OME::AttributeType"?
+        $attribute_type:
+        $self->findObject("OME::AttributeType",
+                          name => $attribute_type);
     die "Cannot find attribute type $attribute_type_name"
         unless defined $type;
     return $type->newAttribute($target, $rows);

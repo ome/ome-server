@@ -32,11 +32,27 @@ OME - The Open Microscopy Environment
 More information about the Perl OME API can be obtained by looking at
 documentation for the individual classes:
 
+=over
+
+=item OME::Factory
+
+Database access layer
+
+=item OME::Analysis
+
+Analysis engine
+
+=item OME::Remote
+
+(Highly experimental) remote access API
+
+=back
+
 =head1 AUTHORS
 
-	Ilya Goldberg, Doug Creager, Brian Hughes, Josiah Johnston
-	igg@nih,gov, dcreager@alum.mit.edu, bshughes@mit.edu, siah@nih.gov
-	http://openmicroscopy.org
+Ilya Goldberg (igg@nih.gov), Doug Creager (dcreager@alum.mit.edu), Brian Hughes (bshughes@mit.edu), Josiah Johnston (siah@nih.gov), Andrea Falconi (a.falconi@dundee.ac.uk), Jean-Marie Burel (j.burel@dundee.ac.uk), Chris Allan (callan@blackcat.ca)
+
+http://openmicroscopy.org/
 
 =head1 COPYRIGHT
 
