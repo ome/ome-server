@@ -262,8 +262,8 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
 	my $descriptions = $moduleXML->getElementsByLocalName('Description');
 	my $description = [$descriptions->[0]->childNodes()]->[0]->data()
-		if $descriptions;
-        my $module_type = $moduleXML->getAttribute( 'ModuleType' );
+		if $descriptions and $descriptions->[0]->childNodes()->size() > 0;
+	my $module_type = $moduleXML->getAttribute( 'ModuleType' );
 	my $data = {
 		name     => $moduleXML->getAttribute( 'ModuleName' ),
 		description      => $description,
