@@ -60,8 +60,8 @@ public interface Module
     public String getModuleType();
     public void setModuleType(String moduleType);
 
-    public String getCategory();
-    public void setCategory(String category);
+    public ModuleCategory getCategory();
+    public void setCategory(ModuleCategory category);
 
     public String getDefaultIterator();
     public void setDefaultIterator(String defaultIterator);
@@ -78,8 +78,8 @@ public interface Module
     public List getOutputs();
     public Iterator iterateOutputs();
 
-    public List getAnalyses();
-    public Iterator iterateAnalyses();
+    public List getExecutions();
+    public Iterator iterateExecutions();
 
     public interface FormalParameter
         extends OMEObject
