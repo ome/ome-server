@@ -68,7 +68,7 @@ su -l $OME_ADMIN -c "dropdb $DB_NAME" > /dev/null 2>&1
 #
 cp -f /etc/ome-install.store /etc/ome-install.store-bak
 # FIXME: this line should go away once the matlab installer works:
-perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{matlab_conf}->{INSTALL}=0;Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
+# perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{matlab_conf}->{INSTALL}=1;Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
 perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{DB_conf}->{Name}="'$TEST_DB'";Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
 perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{admin_user}="'$OME_ADMIN'";Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
 perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{ome_user}->{OMEName}="'$OME_ADMIN'";Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
@@ -109,11 +109,14 @@ su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/
 IMPORT_IMAGES=`su -l $OME_ADMIN -c "psql -qtc 'select count(name) from images' $TEST_DB"` 2> /dev/null
 IMPORT_IMAGES=${IMPORT_IMAGES:='0'}
 if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
-	then mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
+	then echo "`date` Smoke Test Failed. Imported $IMPORT_IMAGES images, expected $EXPECT_IMAGES " >> $LOG_FILE ;
+	echo "Tasks table:" ;
+	echo "------------" ;
+	su -l $OME_ADMIN -c "psql -qc 'select * from tasks' -d $TEST_DB" >> $LOG_FILE ;
+	mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
 	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
 	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
-	echo "`date` Smoke Test Failed. Imported $IMPORT_IMAGES images, expected $EXPECT_IMAGES " >> $LOG_FILE ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` OME Install failed" $MAIL_TO < $LOG_FILE ;
 	fi;
