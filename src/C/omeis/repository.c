@@ -62,7 +62,7 @@ OID nextID (char *idFile)
 	fl.l_type = F_WRLCK;
 	fl.l_whence = SEEK_SET;
 
-	if ((fd = open(idFile, O_CREAT|O_RDWR, 0660)) < 0) {
+	if ((fd = open(idFile, O_CREAT|O_RDWR, 0600)) < 0) {
 		return (0);
 	}
 
@@ -151,7 +151,7 @@ char *getRepPath (OID theID, char *path, char makePath) {
 		sprintf (chunk,"Dir-%03d/",chunks[i]);
 		strcat (path,chunk);
 		if (makePath)
-			if (mkdir(path, 0770) != 0)
+			if (mkdir(path, 0700) != 0)
 				if (errno != EEXIST) /* Exist errors are OK, but return on anything else (files should get ENOTDIR) */
 					return (NULL);
 	}
@@ -210,7 +210,7 @@ int newRepFile (OID theID, char *path, size_t size, char *suffix) {
 		strcat (path,suffix);
 	}
 
-	if ( (fd = open (path, O_CREAT|O_EXCL|O_RDWR, 0660)) < 0) {
+	if ( (fd = open (path, O_CREAT|O_EXCL|O_RDWR, 0600)) < 0) {
 		return (-2);
 	}
 	
