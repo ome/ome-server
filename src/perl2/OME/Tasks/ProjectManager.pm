@@ -52,14 +52,11 @@ The OME::Tasks::ProjectManager provides a list of methods to manage user's proje
 
 =head1 OBTAINING A PROJECTMANAGER
 
-To retrieve an OME::Tasks::ProjectManager to use for managing the project, the
-user must log in to OME.  This is done via the
-L<OME::SessionManager|OME::SessionManager> class.  Logging in via
-OME::SessionManager yields an L<OME::Session|OME::Session> object.
+To retrieve an OME::Tasks::ProjectManager to use for managing the project, the user must log in to OME.  This is done via the L<OME::SessionManager|OME::SessionManager> class.  Logging in via OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->createSession($username,$password);
-	my $projectManager = new OME::Tasks::ProjectManager($session);
+	my $projectManager = new OME::Tasks::ProjectManager;
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
@@ -258,7 +255,7 @@ sub change{
 	$project->name($name) if defined $name;
 	$project->description($description) if defined $description;
 	$project->storeObject();
-	$project->commitTransaction();
+	$session->commitTransaction();
 	return 1;
 
 
