@@ -1,84 +1,79 @@
-<?xml version = "1.0"?>
-<OME xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd" 
-	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
-	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
-	 xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-	 xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+<?xml version = "1.0" encoding = "UTF-8"?>
+<OME xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
 	<DocumentGroup>
-		<Include DocumentID = "123" href = "File2.ome" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456">string</Include>
+		<Include DocumentID = "123.456.70.123.123" href = "File2.ome" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456"/>
 	</DocumentGroup>
-	<Project Name = "Stress Response Pathway" ProjectID = "123">
-		<ExperimenterRef ExperimenterID = "123"/>
-		<GroupRef GroupID = "123"/>
+	<Project Name = "Stress Response Pathway" ProjectID = "123.456.1.123.123">
+		<ExperimenterRef ExperimenterID = "123.456.71.123.123"/>
+		<GroupRef GroupID = "123.456.73.123.123"/>
 	</Project>
-	<Dataset Name = "Controls" DatasetID = "123" Locked = "true">
-		<ExperimenterRef ExperimenterID = "123"/>
-		<GroupRef GroupID = "123"/>
-		<ProjectRef ProjectID = "123"/>
-		<CustomAttributes></CustomAttributes>
+	<Dataset Name = "Controls" DatasetID = "123.456.2.123.123" Locked = "true">
+		<ExperimenterRef ExperimenterID = "123.456.71.123.123"/>
+		<GroupRef GroupID = "123.456.73.123.123"/>
+		<ProjectRef ProjectID = "123.456.1.123.123"/>
+		<CustomAttributes/>
 	</Dataset>
-	<Experiment Type = "Time-lapse" ExperimentID = "123">
-		<Description>This was an experiment.
-		</Description>
-		<ExperimenterRef ExperimenterID = "123"/>
+	<Experiment Type = "Time-lapse" ExperimentID = "123.456.72.123.123">
+		<Description>This was an experiment.</Description>
+		<ExperimenterRef ExperimenterID = "123.456.71.123.123"/>
 	</Experiment>
-	<Plate PlateID = "123" Name = "SRP001" ExternRef = "PID.SRP001">
-		<ScreenRef ScreenID = "123"/>
+	<Plate PlateID = "123.456.75.123.123" Name = "SRP001" ExternRef = "PID.SRP001">
+		<ScreenRef ScreenID = "123.456.76.123.123"/>
 	</Plate>
-	<Screen ScreenID = "123" Name = "Stress Response Pathway Controls" ExternRef = "SID.SRPC001">
+	<Screen ScreenID = "123.456.76.123.123" Name = "Stress Response Pathway Controls" ExternRef = "SID.SRPC001">
 		<Description/>
 	</Screen>
-	<Experimenter ExperimenterID = "123">
+	<Experimenter ExperimenterID = "123.456.71.123.123">
 		<FirstName>Nicola</FirstName>
 		<LastName>Sacco</LastName>
 		<email>Nicola.Sacco@justice.net</email>
-		<Institution></Institution>
+		<Institution/>
 		<OMEname>nico</OMEname>
-		<GroupRef GroupID = "123"/>
+		<GroupRef GroupID = "123.456.73.123.123"/>
 	</Experimenter>
-	<Group GroupID = "123" Name = "IICBU">
+	<Group GroupID = "123.456.73.123.123" Name = "IICBU">
 		<Leader>
-			<ExperimenterRef ExperimenterID = "123"/>
+			<ExperimenterRef ExperimenterID = "123.456.71.123.123"/>
 		</Leader>
 		<Contact>
-			<ExperimenterRef ExperimenterID = "123"/>
+			<ExperimenterRef ExperimenterID = "123.456.71.123.123"/>
 		</Contact>
 	</Group>
-	<Instrument InstrumentID = "123">
+	<Instrument InstrumentID = "123.456.74.123.123">
 		<Microscope Manufacturer = "Zeiss" Model = "foo" SerialNumber = "bar" Type = "Upright"/>
-		<LightSource LightSourceID = "123" Manufacturer = "Olympus" Model = "Realy Bright Lite" SerialNumber = "123skdjhf1234">
+		<LightSource LightSourceID = "123.456.742.123.123" Manufacturer = "Olympus" Model = "Realy Bright Lite" SerialNumber = "123skdjhf1234">
 			<Laser Type = "Semiconductor" Medium = "GaAs"/>
 		</LightSource>
-		<Detector DetectorID = "123" Type = "CCD" Manufacturer = "Kodak" Model = "Instamatic" SerialNumber = "fnuiprf89uh123498" />
-		<Objective ObjectiveID = "456" Manufacturer = "Olympus" Model = "SPlanL" SerialNumber = "456anxcoas123">
+		<Detector DetectorID = "123.456.744.123.123" Type = "CCD" Manufacturer = "Kodak" Model = "Instamatic" SerialNumber = "fnuiprf89uh123498"/>
+		<Objective ObjectiveID = "123.456.741.123.123" Manufacturer = "Olympus" Model = "SPlanL" SerialNumber = "456anxcoas123">
 			<LensNA>2.4</LensNA>
 			<Magnification>40.0</Magnification>
 		</Objective>
-		<Filter FilterID = "123">
+		<Filter FilterID = "123.456.743.123.123">
 			<FilterSet Manufacturer = "Omega" Model = "SuperGFP" LotNumber = "123LJKHG123"/>
 		</Filter>
-		<OTF OTFID = "123" ObjectiveID = "456" FilterID = "123" PixelType = "int8" OpticalAxisAvrg = "true" SizeX = "512" SizeY = "512">
+		<OTF OTFID = "123.456.745.123.123" ObjectiveID = "123.456.741.123.123" FilterID = "123.456.743.123.123" PixelType = "int8" OpticalAxisAvrg = "true" SizeX = "512" SizeY = "512">
 			<Bin:External Compression = "bzip2" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456" Offset = "0" href = "OTF123.otf"/>
 		</OTF>
 	</Instrument>
-	<Image GUID = "01234567890ABCDEF0123456789ABCDEF0123456" ImageType = "OME" Name = "P1W1S1" SizeX = "512" SizeY = "512" SizeZ = "1" NumChannels = "1" NumTimes = "1" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2">
+	<Image Name = "P1W1S1" SizeX = "512" SizeY = "512" SizeZ = "1" NumChannels = "1" NumTimes = "1" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" ImageID = "123.456.3.123.123" Type = "OME">
 		<CreationDate>1988-04-07T18:39:09</CreationDate>
 		<Description/>
-		<ExperimentRef ExperimentID = "123"/>
-		<GroupRef GroupID = "123"/>
-		<DatasetRef DatasetID = "123"/>
-		<InstrumentRef InstrumentID = "123" ObjectiveID = "123"/>
+		<ExperimentRef ExperimentID = "123.456.72.123.123"/>
+		<GroupRef GroupID = "123.456.73.123.123"/>
+		<DatasetRef DatasetID = "123.456.2.123.123"/>
+		<InstrumentRef InstrumentID = "123.456.74.123.123" ObjectiveID = "123.456.741.123.123"/>
 		<ImagingEnvironment Temperature = ".1" AirPressure = ".1" Humidity = ".2" CO2Percent = ".3"/>
 		<Thumbnail href = "http://ome.nia.gov/GetThumbnail?GUID=01234567890ABCDEF0123456789ABCDEF0123456" MIMEtype = "image/jpeg"/>
 		<ChannelInfo Name = "Channel 1" ExWave = "490" EmWave = "528" Fluor = "GFP" NDfilter = "0.0">
-			<LightSourceRef LightSourceID = "123"/>
-			<OTFRef OTFID = "123"/>
-			<DetectorRef DetectorID = "123"/>
-			<FilterRef FilterID = "123"/>
+			<LightSourceRef LightSourceID = "123.456.742.123.123"/>
+			<OTFRef OTFID = "123.456.745.123.123"/>
+			<DetectorRef DetectorID = "123.456.744.123.123"/>
+			<FilterRef FilterID = "123.456.743.123.123"/>
 			<ChannelComponent ChannelComponentNumber = "1"/>
 		</ChannelInfo>
-		<Data DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "t">
-			<Bin:External href="foo.bar" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456"/>
+		<Data DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "true">
+			<Bin:External href = "foo.bar" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456"/>
 		</Data>
 	</Image>
 	<!--
