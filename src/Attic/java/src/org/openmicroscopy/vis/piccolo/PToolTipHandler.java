@@ -88,6 +88,7 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 		tooltip = new PPath();
 		tooltip.setPaint(FILL_COLOR);
 		tooltip.setStrokePaint(BORDER_COLOR);
+		tooltip.setPickable(false);
 	}
 	
 	
