@@ -57,7 +57,8 @@ public class AppletModule
         setDescription(ap.getStringParameter(param+"/Description",true));
         setLocation(ap.getStringParameter(param+"/Location",false));
         setModuleType(ap.getStringParameter(param+"/ModuleType",false));
-        setCategory(ap.getStringParameter(param+"/Category",true));
+        // Fix category if needed
+        //setCategory(ap.getStriNgparameter(param+"/Category",true));
         setDefaultIterator(ap.getStringParameter(param+"/DefaultIterator",true));
         setNewFeatureTag(ap.getStringParameter(param+"/NewFeatureTag",true));
         

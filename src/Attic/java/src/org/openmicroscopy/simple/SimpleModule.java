@@ -54,7 +54,7 @@ public class SimpleModule
 {
     protected List    inputs, outputs;
     protected String  name, description, location, moduleType;
-    protected String  category, defaultIterator, newFeatureTag;
+    protected String  defaultIterator, newFeatureTag;
 
     public SimpleModule()
     {
@@ -77,13 +77,10 @@ public class SimpleModule
         this.description = description;
         this.location = location;
         this.moduleType = moduleType;
-        this.category = category;
         this.defaultIterator = defaultIterator;
         this.newFeatureTag = newFeatureTag;
         this.inputs = new ArrayList();
         this.outputs = new ArrayList();
-
-        CategorizedModules.addModule(this);
     }
 
     public String getName() 
@@ -109,18 +106,10 @@ public class SimpleModule
     public void setModuleType(String moduleType) 
     { this.moduleType = moduleType; }
 
-    public String getCategory() 
-    { return category; }
-    public void setCategory(String category) 
-    { 
-        if (this.category != null)
-            CategorizedModules.removeModule(this);
-
-        this.category = category; 
-
-        if (this.category != null)
-            CategorizedModules.addModule(this);
-    }
+    public ModuleCategory getCategory() 
+    { return null; }
+    public void setCategory(ModuleCategory category) 
+    { }
 
     public String getDefaultIterator() 
     { return defaultIterator; }
@@ -180,8 +169,8 @@ public class SimpleModule
         return output;
     }
 
-    public List getAnalyses() { return null; }
-    public Iterator iterateAnalyses() { return null; }
+    public List getExecutions() { return null; }
+    public Iterator iterateExecutions() { return null; }
 
     public String toString()
     {
