@@ -8,9 +8,7 @@
 		</Nodes>
 		<Links>
 			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Stack" ToInputName="Pixels"/>
-			<Link FromNodeID="Import" FromOutputName="Dimensions" ToNodeID="Stack" ToInputName="Dimensions"/>
 			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Plane" ToInputName="Pixels"/>
-			<Link FromNodeID="Import" FromOutputName="Dimensions" ToNodeID="Plane" ToInputName="Dimensions"/>
 		</Links>
 	</AnalysisChain>
 </AnalysisChains>
