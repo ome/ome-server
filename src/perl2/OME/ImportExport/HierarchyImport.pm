@@ -264,8 +264,8 @@ sub processDOM {
 		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
 		return $self->{_DBObjects};
 	}
-	logdbg "debug", ref ($self)."->processDOM: Running Analysis tasks";
-	my $engine = OME::Tasks::AnalysisEngine->new();
+	logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
+	my $engine = OME::Analysis::AnalysisEngine->new();
 	eval {
 		$engine->executeAnalysisView($session,$view,{},$importDataset);
 	};
