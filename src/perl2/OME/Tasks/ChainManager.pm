@@ -22,7 +22,7 @@ package OME::Tasks::ChainManager;
 
 =head1 NAME
 
-OME::Tasks::ChainManager - Workflow methods for handling module_execution chains
+OME::Tasks::ChainManager - Workflow methods for handling analysis chains
 
 =head1 SYNOPSIS
 
@@ -82,7 +82,7 @@ sub Session { return shift->{session}; }
 
 	my $chain = $manager->createChain($name,$description,[$owner]);
 
-Creates a new module_execution chain with the given name and description.  If
+Creates a new analysis chain with the given name and description.  If
 $owner is specified, it must be an Experimenter attribute.  This
 Experimenter will own the created chain.  If $owner is not specified,
 the chain will be owned by the user running the session.
@@ -113,7 +113,7 @@ sub createChain {
 
 	my $newChain = $manager->cloneChain($oldChain,[$owner]);
 
-Creates a new module_execution chain which is a clone of $oldChain.  If $owner
+Creates a new analysis chain which is a clone of $oldChain.  If $owner
 is specified, it must be an Experimenter attribute.  This Experimenter
 will own the created chain.  If $owner is not specified, the chain
 will be owned by the user running the session.  The new chain will be
@@ -126,7 +126,7 @@ sub cloneChain {
     my $session = $self->Session();
     my $factory = $session->Factory();
 
-    die "cloneChain needs an module_execution chain!"
+    die "cloneChain needs an analysis chain!"
       unless
         defined $old_chain &&
         UNIVERSAL::isa($old_chain,"OME::AnalysisChain");
@@ -149,9 +149,9 @@ sub cloneChain {
           newObject("OME::AnalysisChain::Node",
                     {
                      analysis_chain_id => $new_chain->id(),
-                     module_id       => $node->module()->id(),
-                     iterator_tag     => $node->iterator_tag(),
-                     new_feature_tag  => $node->new_feature_tag(),
+                     module_id         => $node->module()->id(),
+                     iterator_tag      => $node->iterator_tag(),
+                     new_feature_tag   => $node->new_feature_tag(),
                     });
         $new_nodes{$node->id()} = $new_node;
     }
@@ -164,10 +164,10 @@ sub cloneChain {
           newObject("OME::AnalysisChain::Link",
                     {
                      analysis_chain_id => $new_chain->id(),
-                     from_node        => $from_node->id(),
-                     from_output      => $link->from_output()->id(),
-                     to_node          => $to_node->id(),
-                     to_input         => $link->to_input()->id(),
+                     from_node         => $from_node->id(),
+                     from_output       => $link->from_output()->id(),
+                     to_node           => $to_node->id(),
+                     to_input          => $link->to_input()->id(),
                     });
     }
 
@@ -295,7 +295,7 @@ sub removeNode {
 	my $node = $manager->getNode($chain,$name);
 
 Returns the node representing the module of the given name in the
-specified module_execution chain.
+specified analysis chain.
 
 =cut
 
@@ -330,7 +330,7 @@ sub getNode {
 	my $input = $manager->getFormalInput($chain,$node,$input_name);
 
 Returns the formal input of the specified name in the node of the
-specified module_execution chain.
+specified analysis chain.
 
 =cut
 
