@@ -1261,7 +1261,8 @@ sub getAccessorReferenceType {
     if (defined $returnedClass && $returnedClass =~ /^@/) {
 		my $st_name = substr($returnedClass,1);
 		my $factory = $class->getFactory();
-		my $ST = $factory->findObject("OME::SemanticType",name => $st_name);
+		my $ST = $factory->findObject("OME::SemanticType",name => $st_name)
+			or die "Cannot find Semantic type named $st_name";
 		$returnedClass = $ST->getAttributeTypePackage($st_name);
 	}
 
