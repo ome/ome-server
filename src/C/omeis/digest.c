@@ -42,7 +42,35 @@
 #include "digest.h"
 
 int
-get_md (int fd, unsigned char * md_value)
+get_md_from_file (char * filename, unsigned char * md_value)
+{
+	int fd;
+
+	/* Sanity check (FATAL) */
+	if (filename == NULL || md_value == NULL) {
+		fprintf(stderr, "FATAL: NULL filename to get_md_from_file().\n");
+		return(-255);
+	}
+
+	if ((fd = (open(filename, O_RDONLY))) == -1) {
+		perror(filename);
+		return (-1);
+	}
+
+	if (get_md_from_fd (fd, md_value) < 0) {
+		fprintf(stderr, "Problem retrieving SHA1.\n");
+		close(fd);
+
+		return (-1);
+	}
+
+	close(fd);
+	return(1);
+
+}
+
+int
+get_md_from_fd (int fd, unsigned char * md_value)
 {
 	EVP_MD_CTX mdctx;  /* Message digest context */
 	const EVP_MD *md;  /* Message digest */
@@ -51,14 +79,19 @@ get_md (int fd, unsigned char * md_value)
 	unsigned int md_len;
 
 	/* Sanity check (FATAL) */
-	if (fd < 0 || md_value == NULL)
-		return (-255);
+	if (fd < 0 || md_value == NULL) {
+		fprintf(stderr, "FATAL: NULL fd or md_vale to get_md_from_fd().\n");
+		return(-255);
+	}
 
 	OpenSSL_add_all_digests();
 
 	md = EVP_get_digestbyname(OME_DIGEST);
 	
-	if (!md) return (-1);  /* Failure in namelookup */
+	if (!md) {
+		fprintf(stderr, "Failure during digest lookup for: '%s'\n", OME_DIGEST);
+		return(-1);  /* Failure in namelookup */
+	}
 	
 	EVP_DigestInit(&mdctx, md);
 
@@ -67,7 +100,10 @@ get_md (int fd, unsigned char * md_value)
 		EVP_DigestUpdate(&mdctx, buf, rlen);
 	} while (rlen > 0);
 
-	if (rlen < 0) return (-2);  /* Error reading from fd */
+	if (rlen < 0) {
+		perror("fd_read");	
+		return(-1);  /* Error reading from fd */
+	}
 
 	EVP_DigestFinal(&mdctx, md_value, &md_len);
 
@@ -81,5 +117,5 @@ print_md (unsigned char *md_value)
 
 	for (i = 0; i < OME_DIGEST_LENGTH; i++)
 		printf("%02x", md_value[i]);
-	printf("\n");
 }
+

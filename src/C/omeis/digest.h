@@ -41,7 +41,10 @@
 #define MD_BUFSIZE 16384
 
 int
-get_md (int fd, unsigned char * md_value);
+get_md_from_file (char * filename, unsigned char * md_value);
+
+int
+get_md_from_fd (int fd, unsigned char * md_value);
 
 void 
 print_md (unsigned char *md_value);
