@@ -160,10 +160,10 @@ If successfull, it will cache the SessionKey in the user's ~/.omelogin file.
 =cut
 
 sub TTYlogin {
+    my $self = shift;
     my $homeDir = $ENV{"HOME"} || ".";
     my $loginFile = "$homeDir/.omelogin";
 
-    my $manager = OME::SessionManager->new();
     my $session;
 
     my $loginFound = open LOGINFILE, "< $loginFile";
@@ -171,7 +171,7 @@ sub TTYlogin {
     if ($loginFound) {
         my $key = <LOGINFILE>;
         chomp($key);
-        $session = $manager->createSession($key);
+        $session = $self->createSession($key);
         close LOGINFILE;
 
         if (!defined $session) {
@@ -194,7 +194,7 @@ sub TTYlogin {
 	print "\n";
 	ReadMode(1);
 
-	$session = $manager->createSession($username,$password);
+	$session = $self->createSession($username,$password);
 
 	if (!defined $session) {
             print "That username/password does not seem to be valid.\nBye.\n\n";
@@ -318,13 +318,10 @@ sub getOMESession {
     logdie ref($self)."->getOMESession:  Could not create userState object"
       unless defined $userState;
 
-    my $session = OME::Session->new();
-
+    my $session = OME::Session->new($userState);
+    
+    $self->{_session} = $session;
     $userState->{__session} = $session;
-    $session->{UserState} = $userState;
-    $session->{Factory} = OME::Factory->new($session);
-    $session->{Manager} = $self;
-    $session->{Configuration} = OME::Configuration->new($session->{Factory});;
 
     logdbg "debug", "getOMESession: updating userState";
     $userState->storeObject();
@@ -334,22 +331,21 @@ sub getOMESession {
     return $session;
 }
 
-
 #
 # logout
 # ------
 
 =head2 logout
 
-	$manager->logout ($session);
+	$manager->logout ();
 
-Unregisters the $session from this $manager.
+Unregisters the session from this $manager.
 
 =cut
 
 sub logout {
     my $self = shift;
-    my $session = shift;
+    my $session = $self->{_session};
     return undef unless defined $session;
     logdbg "debug", ref($self)."->logout: logging out";
     $self->deleteApacheSession ($session->{ApacheSession});
@@ -424,8 +420,8 @@ sub getApacheSession {
 
     untie %tiedApacheSession;
     
-    logdbg "debug", "getApacheSession: username=".$apacheSession->{username} || "";
-    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey} || "";
+    logdbg "debug", "getApacheSession: username=".$apacheSession->{username};
+    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey};
     return $apacheSession;
 }
 
