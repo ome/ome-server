@@ -235,7 +235,7 @@ This method is called from an importer and is passed a reference to a hash
 whose values are OME files.  This method will look for a Semantic Type that
 specifies a regular expression.  If any are found, it compares the filenames
 to the regular expression.  If there's a match, the method will group these
-elements together in a 4-element array, @groups.
+elements together by basename in a hash, %groups.
 
 A FilenamePattern Semantic Type is specified in src/xml/OME/Import/FilenamePattern.ome.
 An example of how to specify your own regular expression can be found in this file
@@ -252,13 +252,11 @@ my $FileNameGroups = {
 	Z         => 3,
 	C		  => 4
 
-A hash of the number of patterns, Z's, C's and T's found is also created during the method
+A hash of the number of Z's, C's and T's found is created during the method
 call:
 		my $maxZ = $infoHash->{ $pattern }->{ maxZ };
-		my $numPatterns = $infoHash->{ numPatterns };
 
-To get a file out of @groups, use my $file = $$groups[$pattern][$z][$t][$c]; where
-$pattern is an integer.
+To get a file out of @groups, use my $file = $groups{$basename}[$z][$t][$c];
 
 Usage:
 my ($groups, $infoHash) = $self->__getRegexGroups(\%file_list);
@@ -272,15 +270,13 @@ sub __getRegexGroups {
 
     my $session = $self->Session();
     my $factory = $session->Factory();
-    my @groups;
-    my $numFilenamePatterns;
+    my %groups;
     my $maxZ;
     my $maxT;
     my $maxC;
     
     # A hash containing the number of patterns, as well as numZ, C, T, for each pattern
     my $infoHash;
-    my $whichPattern = 0;
     
     # make a copy of the list so we can delete elements without screwing with the original list
     my %file_list_copy = %$read_only_file_list;
@@ -291,7 +287,6 @@ sub __getRegexGroups {
     	'@FilenamePattern',
     	{ Format => $format }
     );
-    $numFilenamePatterns = scalar(@filenamePatternList);
     
     # apply regular expressions to group %file_list_copy
     # store results in @groups
@@ -311,7 +306,8 @@ sub __getRegexGroups {
 		#
 		#
     	
-    	# There has to be a name in the file.  Otherwise, die!
+    	# There has to be a name in the file or you won't be able to group.
+    	# Die if there isn't a name!
 		die "No name in filePattern!" unless $filenamePattern->BaseName() and $filenamePattern->BaseName() > 0;
 		
 		# Each file represents at least one Z, T, and C.
@@ -319,22 +315,22 @@ sub __getRegexGroups {
     	$maxT = 1;
     	$maxC = 1;
     	# Arrays of the Z's, T's, and C's already taken from this batch of files.
-    	# Each element is unique, i.e. there aren't 2 elements that have the same value.
+    	# Each element is unique (there aren't 2 elements that have the same value).
     	# This provides a way to count how many z's, t's and c's there are in this group.
     	my (@z_list, @t_list, @c_list);
-    	
+
 		foreach my $file ( values %file_list_copy )
 		{
 			my $filename = $file->getFilename();
 			if( $filename =~ m/$regexp/ )
-			{
-				my $name = 0;
+			{	
+				my $name = "";
 				my $z = 0;
 				my $t = 0;
 				my $c = 0;
 				eval ('$name = $'.$filenamePattern->BaseName());
 				die "When grouping files, Name capture failed with error: $@\n" if $@;
-
+			
 				if ( defined($filenamePattern->TheZ()) && $filenamePattern->TheZ() > 0 )
 				{
 					# Grab the Z from the file based on the regular expression
@@ -399,25 +395,26 @@ sub __getRegexGroups {
 					$maxC = scalar(@c_list);					
 				}
 				
-				# Add the file to @groups
-				$groups[$whichPattern][$z][$t][$c] = $file;
+				# Add the file to %groups
+				$groups{ $name }[$z][$t][$c] = $file;
+
+				# Add the maxZ, C, and T to the infoHash, specified by the basename of the image
+				$infoHash->{ $name }->{ maxZ } = $maxZ;
+				$infoHash->{ $name }->{ maxC } = $maxC;
+				$infoHash->{ $name }->{ maxT } = $maxT;
 
 				# Remove $file from %file_list_copy to prevent it from being picked up by other filenamePatterns
 				delete $file_list_copy{ $file };
 			} # end outer if
 		}
 		
-		# Add the maxZ, C, and T to the hash, specified by integer $whichPattern.
-		$infoHash->{ $whichPattern }->{ maxZ } = $maxZ;
-		$infoHash->{ $whichPattern }->{ maxC } = $maxC;
-		$infoHash->{ $whichPattern }->{ maxT } = $maxT;
-		$whichPattern++;
+		
 	}
-	$infoHash->{ numPatterns } = $numFilenamePatterns;
+	#$infoHash->{ numPatterns } = $numFilenamePatterns;
 	
 	# TODO: Check to make sure the files are in series.
 	
-    return (\@groups, $infoHash);
+    return (\%groups, $infoHash);
 }
 
 

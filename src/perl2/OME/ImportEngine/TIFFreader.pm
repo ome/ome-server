@@ -105,14 +105,8 @@ a TIFF group that has images of the same plate well taken at 2 different
 illumination wavelengths could have files named "plate4_well54_w1.tiff"
 and "plate4_well54_w2.tiff".
 
-Currently, this module only scans for 2 filename patterns:
-    <name>_w<n>.tif{f} and <name>_w<n><name2>.tif{f}
-where <name> and <name2> means any set of valid filename characters,
-and <n> represents any digit between 1 and 9.
-
-These patterns should be dynamically expandable by per site or per user
-configuration records.
-
+To group related files together, a call to __getRegexGroups() in the superclass
+is used, followed by sorting and verification that files are indeed tiffs.
 
 =cut
 
@@ -186,21 +180,22 @@ sub getGroups {
     # Group files with recognized patterns together
     # Sort them by channels, z's, then timepoints
     my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
-    my $numPatterns = $infoHash->{ numPatterns };
 
-    for (my $pattern = 0; $pattern < $numPatterns; $pattern++)
+    foreach my $name ( keys (%$groups) )
     {
+    	next unless defined($name);
     	my @groupList;
-    	my $maxZ = $infoHash->{ $pattern }->{ maxZ };
-		my $maxT = $infoHash->{ $pattern }->{ maxT };
-		my $maxC = $infoHash->{ $pattern }->{ maxC };
+    	my $maxZ = $infoHash->{ $name }->{ maxZ };
+		my $maxT = $infoHash->{ $name }->{ maxT };
+		my $maxC = $infoHash->{ $name }->{ maxC };
+
 		for (my $t = 0; $t <= $maxT; $t++)
     	{
     		for (my $z = 0; $z <= $maxZ; $z++)
     		{
     			for (my $c = 0; $c <= $maxC; $c++)
     			{
-    				my $file = $$groups[$pattern][$z][$t][$c];
+    				my $file = $groups->{ $name }[$z][$t][$c];
 #     				my $status = ( defined($file) ) ? "File is $file\n" : "No file at $pattern $z $t $c\n";
 #     				print $status;
     				next unless ( defined($file) );
@@ -218,6 +213,7 @@ sub getGroups {
     			}
     		}
     	}
+    	push (@groupList, $name);
     	push (@outlist, \@groupList) if ( scalar(@groupList) > 0 );
     }
     # Now look at the rest of the files in the list to see if you have any other tiffs.
@@ -228,13 +224,26 @@ sub getGroups {
     	# skip this image unless it's a tiff
     	next unless (defined(verifyTiff($file)));
     	
+    	my $filename = $file->getFilename();
+    	my $basename = ($self -> {super}) -> __nameOnly( $filename );
+    	
     	push (@groupList, $file);
+    	push (@groupList, $basename);
     	$xref->{ $file }->{ 'Image.SizeZ' } = 1;
     	$xref->{ $file }->{ 'Image.NumTimes' } = 1;
     	$xref->{ $file }->{ 'Image.NumWaves' } = 1;
     	push (@outlist, \@groupList);
     	delete $fref->{ $file };
     }
+    
+#     foreach my $element ( @outlist )
+# 	{
+# 		print "Loop: \n";
+# 		foreach my $temp ( @$element )
+# 		{
+# 			print "\t$temp\n";
+# 		}
+# 	}
     
     # Store the xml hash for later use in importGroup.
     $self->{ params }->{ xml_hash } = $xref;
@@ -249,9 +258,10 @@ sub getGroups {
 
 This method imports a group of related TIFF files into a single
 OME 5D image. The caller passes the ordered set of input files 
-comprising the group by reference. This method opens each file in turn,
-extracting its metadata and pixels, and adding them to the accumulating
-OME pixels and metadata.
+comprising the group  (plus the name of the output file to create)
+by reference. This method opens each file in turn, extracting its
+metadata and pixels, and adding them to the accumulating OME pixels
+and metadata.
 
 TIFF files carry metadata in one or more sections called IFDs. Each IFD
 holds a set of information fields called tag fields. These fields hold
@@ -306,8 +316,8 @@ sub importGroup {
 	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
 		$xref->{ $file }->{'Image.NumWaves'} = 3;
 	}
-	my $filename = $file->getFilename();
-	my $basename = ($self -> {super}) -> __nameOnly( $filename );
+	
+	my $basename = pop @$groupList;
 	my $image = ($self->{super})->__newImage($basename);
 	$self->{image} = $image;
 
@@ -336,7 +346,6 @@ sub importGroup {
 	my $maxZ = $xref->{ $file }->{'Image.SizeZ'};
 	my $maxT = $xref->{ $file }->{'Image.NumTimes'};
 	my $maxC = $xref->{ $file }->{'Image.NumWaves'};
-	my $c = 0;
 	my @channelInfo;
 	
 	# Do a check for RGB.  If it's RGB, each file has 3 channels.
@@ -346,7 +355,11 @@ sub importGroup {
 		{
 			for (my $c = 0; $c < 3; $c++)
 			{
-				$pix->convertPlaneFromTIFF($file, 0, $c, 0);
+				eval
+				{
+					$pix->convertPlaneFromTIFF($file, 0, $c, 0);
+				};
+				die "RGB convertPlaneFromTIFF failed: $@\n" if $@;
 				doSliceCallback($callback);
 			}
 		}
