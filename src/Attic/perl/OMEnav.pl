@@ -35,8 +35,9 @@ my $OMEmanageProjectsURL = $OMEbaseURL."OMEmanageProjects.pl";
 my $OMEcreateViewsURL = $OMEbaseURL."OMEcreateViews.pl";
 my $OMEviewViewsURL = $OMEbaseURL."OMEviewViews.pl";
 my $OMErunfindSpotsURL = $OMEbaseURL."OMErunfindSpots.pl";
-my $OMErunfindSpotsOOURL = $OMEbaseURL."OMErunfindSpotsOO.pl";
+my $OMErunfindSpotsOOURL = $OMEbaseURL."OMErunanalysis.pl?analysis=OMEAnalysis::FindSpots";
 my $OMEruntrackSpotsURL = $OMEbaseURL."OMEtrackSpots.pl";
+my $OMEruntrackSpotsOOURL = $OMEbaseURL."OMErunanalysis.pl?analysis=OMEAnalysis::TrackSpots";
 my $OMErunSpawnSpotsURL = $OMEbaseURL."OMErunSpawnSpots.pl";
 my $OMEgetNearestNeighborsURL = $OMEbaseURL."OMEgetNearestNeighbors.pl";
 my $OMEclusterURL = $OMEbaseURL."OMEcluster.pl";
@@ -61,7 +62,7 @@ print <<EOF
 <A href="$OMEviewViewsURL" target="MainFrame">Database Views</A><br>
 <br>
 <A href="$OMErunfindSpotsOOURL" target="MainFrame">Run findSpots</A><br>
-<A href="$OMEruntrackSpotsURL" target="MainFrame">Run trackSpots</A><br>
+<A href="$OMEruntrackSpotsOOURL" target="MainFrame">Run trackSpots</A><br>
 <A href="$OMErunSpawnSpotsURL" target="MainFrame">Run spawnSpots</A><br>
 <A href="$OMEgetNearestNeighborsURL" target="MainFrame">Get Nearest Neighbors</A><br>
 <A href="$OMEclusterURL" target="MainFrame">Run cluster</A><br>

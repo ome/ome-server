@@ -101,7 +101,12 @@ sub GetHTMLParams {
 
 sub GetSelectedDatasets {
     my $self = shift;
-    return $self->{OME}->GetSelectedDatasetObjects();
+    my $ids = $self->{OME}->GetSelectedDatasetIDs();
+    if (defined $ids) {
+	return $self->{OME}->GetDatasetObjects($ids);
+    } else {
+	return [];
+    }
 }
 
 # StartAnalysis(Parameter hash)

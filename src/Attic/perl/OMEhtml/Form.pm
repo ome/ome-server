@@ -139,3 +139,20 @@ sub getHTML {
     return $button;
 }
  
+
+# outputHTML
+# ----------
+
+sub outputHTML {
+    my $self  = shift;
+    my $OME   = shift;
+    my $CGI   = $self->{CGI};
+    my $title = shift;
+    
+    print $OME->CGIheader (-type=>'text/html');
+    print $CGI->start_html(-title=>$title);
+    print $CGI->startform;
+    print $self->getHTML();
+    print $CGI->endform;
+    print $CGI->end_html;
+}

@@ -106,13 +106,18 @@ sub getHTML {
     my $cgi = $self->{CGI};
 
     my $face = "Verdana,Arial,Helvetica";
+    my $html;
 
-    my $html = $cgi->Tr({-bgcolor => "a0a0a0"},
-			$cgi->td({-bgcolor => "#a0a0a0",
-				  -align   => "CENTER"},
-				 $cgi->font({-color => "WHITE",
-					     -face => $face},
-					    "<small><b>$self->{title}</b></small>")));
+    if ($self->{title}) {
+	$html = $cgi->Tr({-bgcolor => "a0a0a0"},
+			 $cgi->td({-bgcolor => "#a0a0a0",
+				   -align   => "CENTER"},
+				  $cgi->font({-color => "WHITE",
+					      -face => $face},
+					     "<small><b>$self->{title}</b></small>")));
+    } else {
+	$html = "";
+    }
     
     my $tr = "";
 

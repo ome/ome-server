@@ -340,12 +340,9 @@ sub OutputHTMLForm {
     $control = new OMEhtml::Control::TextField("minPix",{-size => 4});
     $control->suffix(" pixels");
     $section->add($control);
-    
-    print $OME->CGIheader (-type=>'text/html');
-    print $CGI->start_html(-title=>'Run FindSpots');
-    print $CGI->startform;
-    print $form->getHTML();
-    print $CGI->endform;
+
+
+    $form->outputHTML($OME,"Run FindSpots");
 }
 
 sub old_OutputHTMLForm {

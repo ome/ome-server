@@ -21,6 +21,13 @@
 
 
 use OMEpl;
+use OMEhtml::Form;
+use OMEhtml::Section;
+use OMEhtml::Control;
+use OMEhtml::Control::TextField;
+use OMEhtml::Control::Popup;
+use OMEhtml::Control::RadioGroup;
+use OMEhtml::Control::CheckBox;
 use strict;
 
 use vars qw ($OME @threshNames @threshTypes);
@@ -50,13 +57,13 @@ $OME->StartAnalysis();
 
 
 if ($OME->gotBrowser) {
-	print $OME->CGIheader(-title=>'Global thresholding');
+	#print $OME->CGIheader(-title=>'Global thresholding');
 	print_form ();
 	if ($OME->cgi->param('Execute')) {
 		Execute ();
-		print '<H2> Finished </H2>';
+		#print '<H2> Finished </H2>';
 	}
-	print $OME->cgi->end_html;
+	#print $OME->cgi->end_html;
 } else {
 	Do_Analysis();
 }
@@ -67,6 +74,67 @@ undef $OME;
 #####################################
 
 sub print_form {
+    my $cgi = $OME->cgi;
+    my ($form, $section, $control, $subcontrol);
+    my $space = "&nbsp;&nbsp;";
+
+    $form = new OMEhtml::Form("Global Thresholding and Binary Images");
+
+    $section = new OMEhtml::Section("Threshold");
+    $form->add($section);
+
+    $control = new OMEhtml::Control::RadioGroup("Method");
+    $control->orientation("vertical");
+    my $index = 0;
+    foreach my $button (@threshNames) {
+	my $buttonType = $threshTypes[$index];
+
+	if ($buttonType eq 'ABS') {
+	    $subcontrol = new OMEhtml::Control::TextField($buttonType.'_Arg',
+							  {-default => 2048,
+							   -size => 4,
+							   -maxlength => 4});
+	    $subcontrol->prefix($space);
+	} elsif ($buttonType eq 'MEAN' or $buttonType eq 'GEO') {
+	    $subcontrol = new OMEhtml::Control::TextField($buttonType.'_Arg',
+							  {-default => '5.0',
+							   -size => 4,
+							   -maxlength => 4});
+	    $subcontrol->prefix("$space +/- ");
+	    $subcontrol->suffix(" sigma");
+	} else {
+	    $subcontrol = undef;
+	}
+
+	$control->addButton($buttonType,$button,$subcontrol);
+
+	$index++;
+    }
+
+    $section->add($control);
+
+    $section = new OMEhtml::Section("Wavelength");
+    $form->add($section);
+
+    my $wavelengths = $OME->GetSelectedDatasetsWavelengths();
+    $control = new OMEhtml::Control::Popup("wavelengths");
+    #$control->prefix("Wavelength$space");
+    foreach my $wl (@$wavelengths) { $control->addButton($wl,$wl); }
+    $section->add($control);
+
+    $section = new OMEhtml::Section("Options");
+    $form->add($section);
+
+    $control = new OMEhtml::Control::CheckBox("makeBinary",
+					      "  Create binary images",
+					      {-checked => 'checked',
+					       -value => '1'});
+    $section->add($control);
+
+    $form->outputHTML($OME,"Global Thresholding");
+}
+
+sub old_print_form {
 my $cgi = $OME->cgi;
 my @buttons;
 my @cutoffSelect;
