@@ -64,32 +64,31 @@ sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $session = $self->Session();
+	my $factory = $session->Factory();
 
 	my $action = $cgi->param('action');
-	my @selected = $cgi->param('selected');
- 
+	my $image_ids = $cgi->param('images_to_export');
+	my @images = map( $factory->loadObject( 'OME::Image', $_ ), split( m',', $image_ids ) );
+
 	my $body;# = $cgi->p({class => 'ome_title', align => 'center'}, 'Export images to an XML file');
 	
 	if ($action eq 'Export'){
 		my $filename = $session->getTemporaryFilename('XMLFileExport','ome')
 			or die "OME::Web::XMLFileExport could not obtain temporary filename\n";
 
-		if (@selected) {
-			my $imageManager= OME::Tasks::ImageManager->new($session);
-			my @list=();
-			foreach (@selected){
-				push(@list,$imageManager->load($_));
-			}
+		if (@images) {
 			my $exporter= OME::Tasks::OMEXMLImportExport->new($session);
-			$exporter->exportToXMLFile(\@list,$filename);
+			$exporter->exportToXMLFile(\@images,$filename);
 		
-			my $downloadFilename;
-			if (scalar @list > 1) {
-				$downloadFilename = $session->dataset()->name();
-			} else {
-				$downloadFilename = $list[0]->name();
+			my $downloadFilename = $cgi->param( 'filename' );
+			if( not defined $downloadFilename || $downloadFilename eq '' ) {
+				if (scalar @images > 1) {
+					$downloadFilename = $session->dataset()->name();
+				} else {
+					$downloadFilename = $images[0]->name();
+				}
 			}
-			$downloadFilename .= '.ome';
+			$downloadFilename =~ s/(\.ome)?$/\.ome/;
 
 			$self->contentType('application/ome+xml');
 			return ('FILE',{
@@ -102,7 +101,18 @@ sub getPageBody {
 	}
 
 	$self->contentType('text/html');
-	$body .= $self->__printForm();
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
+	$tmpl->param( selected_images => $self->Renderer()->renderArray( \@images, 'ref_mass' ) )
+		if( @images );
+	$body .= 
+		$cgi->startform( -action => $self->pageURL( 'OME::Web::XMLFileExport' ) ).
+		$tmpl->output().
+		$cgi->hidden( -name => 'images_to_export' ).
+		$cgi->endform();		
+#	return $html;
+
+#	$body .= $self->__printForm();
 
 	return ('HTML',$body);
 }
@@ -113,6 +123,19 @@ sub __printForm {
 	my $self = shift;
 	my $session = $self->Session();
 	my $q = $self->CGI();
+
+
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
+#	$tmpl->param( %tmpl_data );
+	my $html = 
+		$q->startform( -action => $self->pageURL( 'OME::Web::XMLFileExport' ) ).
+		$tmpl->output().
+		$q->hidden( -name => 'images_to_export' ).
+		$q->endform();		
+	return $html;
+
+
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 
 	my $html = $tableMaker->getTable(  
