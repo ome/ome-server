@@ -254,7 +254,9 @@
 			<xsl:apply-templates select = "OME:AuxLightSourceRef/@Attenuation" mode = "OptionalAttribute">
 				<xsl:with-param name = "Name">AuxLightAttenuation</xsl:with-param>
 			</xsl:apply-templates>
-			<xsl:apply-templates select = "OME:AuxLightSourceRef/@AuxTechnique" mode = "OptionalAttribute"/>
+			<xsl:apply-templates select = "OME:AuxLightSourceRef/@Technique" mode = "OptionalAttribute">
+				<xsl:with-param name = "Name">AuxTechnique</xsl:with-param>
+			</xsl:apply-templates>
 			<xsl:apply-templates select = "OME:AuxLightSourceRef/@Wavelength" mode = "OptionalAttribute">
 				<xsl:with-param name = "Name">AuxLightWavelength</xsl:with-param>
 			</xsl:apply-templates>
