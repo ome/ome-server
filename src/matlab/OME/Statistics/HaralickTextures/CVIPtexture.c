@@ -109,10 +109,11 @@ TEXTURE * Extract_Texture_Features(int distance, int angle,
 {
 	map_ii tone; /* hash DataStructure from mapkit.c/h key=int value=int */
 	map_ii_element* tone_array;
-	int row, col;
+	int row, col, i;
 	double **P_matrix;
+	double sum_entropy;
 	TEXTURE *Texture;
-	int i;
+
 	mapkit_size_t tones = 1024;
 	Texture = (TEXTURE *) calloc(1,sizeof(TEXTURE));
 	if (!Texture) {
@@ -160,8 +161,12 @@ TEXTURE * Extract_Texture_Features(int distance, int angle,
   	Texture->variance      = f4_var       (P_matrix, tone.used);
   	Texture->IDM           = f5_idm       (P_matrix, tone.used);
   	Texture->sum_avg       = f6_savg      (P_matrix, tone.used);
-  	Texture->sum_entropy   = f8_sentropy  (P_matrix, tone.used);
-	Texture->sum_var       = f7_svar      (P_matrix, tone.used, Texture->sum_entropy);
+  	
+  	/* T.J.M watch below the cast from float to double */ 
+  	sum_entropy            = f8_sentropy  (P_matrix, tone.used); 
+  	Texture->sum_entropy   = sum_entropy;
+	Texture->sum_var       = f7_svar      (P_matrix, tone.used, sum_entropy);
+	
   	Texture->entropy       = f9_entropy   (P_matrix, tone.used);
   	Texture->diff_var      = f10_dvar     (P_matrix, tone.used);
   	Texture->diff_entropy  = f11_dentropy (P_matrix, tone.used);
