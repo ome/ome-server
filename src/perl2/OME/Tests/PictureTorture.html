@@ -11,27 +11,27 @@ function Do_Form()
 {
 	var myImage = document.images["theImg"];
 	var myForm = document.forms[0];
-	var maxIter = myForm.Iterations.value || 100;
+	var maxIter = parseInt(myForm.Iterations.value) || 100;
 	var URLconst = myForm.URL.value+"?Path="+myForm.Path.value+"&Dims="+myForm.Dims.value;
-	var Rwav = myForm.RedWave.value || 0;
-	var Rblk0 = myForm.RedBlckLvl0.value || 300;
-	var Rblk1 = myForm.RedBlckLvl1.value || 400;
-	var Rscl0 = myForm.RedScale0.value || 0.0625;
-	var Rscl1 = myForm.RedScale1.value || 0.0625;
-	var Gwav = myForm.GrnWave.value || 1;
-	var Gblk0 = myForm.GrnBlckLvl0.value || 300;
-	var Gblk1 = myForm.GrnBlckLvl1.value || 400;
-	var Gscl0 = myForm.GrnScale0.value || 0.0625;
-	var Gscl1 = myForm.GrnScale1.value || 0.0625;
-	var Bwav = myForm.BluWave.value || 1;
-	var Bblk0 = myForm.BluBlckLvl0.value || 300;
-	var Bblk1 = myForm.BluBlckLvl1.value || 400;
-	var Bscl0 = myForm.BluScale0.value || 0.0625;
-	var Bscl1 = myForm.BluScale1.value || 0.0625;
-	var theZ0 = myForm.theZ0.value || 0;
-	var theZ1 = myForm.theZ1.value || 0;
-	var theT0 = myForm.theT0.value || 0;
-	var theT1 = myForm.theT1.value || 0;
+	var Rwav  = parseInt   (myForm.RedWave.value)     || 0;
+	var Rblk0 = parseInt   (myForm.RedBlckLvl0.value) || 300;
+	var Rblk1 = parseInt   (myForm.RedBlckLvl1.value) || 400;
+	var Rscl0 = parseFloat (myForm.RedScale0.value)   || 0.0625;
+	var Rscl1 = parseFloat (myForm.RedScale1.value)   || 0.0625;
+	var Gwav  = parseInt   (myForm.GrnWave.value)     || 1;
+	var Gblk0 = parseInt   (myForm.GrnBlckLvl0.value) || 300;
+	var Gblk1 = parseInt   (myForm.GrnBlckLvl1.value) || 400;
+	var Gscl0 = parseFloat (myForm.GrnScale0.value)   || 0.0625;
+	var Gscl1 = parseFloat (myForm.GrnScale1.value)   || 0.0625;
+	var Bwav  = parseInt   (myForm.BluWave.value)     || 1;
+	var Bblk0 = parseInt   (myForm.BluBlckLvl0.value) || 300;
+	var Bblk1 = parseInt   (myForm.BluBlckLvl1.value) || 400;
+	var Bscl0 = parseFloat (myForm.BluScale0.value)   || 0.0625;
+	var Bscl1 = parseFloat (myForm.BluScale1.value)   || 0.0625;
+	var theZ0 = parseInt   (myForm.theZ0.value)       || 0;
+	var theZ1 = parseInt   (myForm.theZ1.value)       || 0;
+	var theT0 = parseInt   (myForm.theT0.value)       || 0;
+	var theT1 = parseInt   (myForm.theT1.value)       || 0;
 	myImage.iter=0;
 	myImage.maxIter = maxIter;
 	myImage.URLs = [];
@@ -44,17 +44,17 @@ function Do_Form()
 	while (myIter < maxIter) {
 		URLfrag = URLconst+"&theZ="+theZ0+"&theT="+theT0+"&RGB=";
 		URLarray = [Rwav,Rblk0,Rscl0,Gwav,Gblk0,Gscl0,Bwav,Bblk0,Bscl0];
-		for (i=Rblk0; i<Rblk1 && myIter < maxIter;i++) {
+		for (i=Rblk0; i<Rblk1 && myIter < maxIter;i+=20) {
 			URLarray[1] = i;
 			myImage.URLs.push (URLfrag+URLarray.join(","));
 			myIter++;
 		}
-		for (i=Gblk0; i<Gblk1 && myIter < maxIter;i++) {
+		for (i=Gblk0; i<Gblk1 && myIter < maxIter;i+=20) {
 			URLarray[4] = i;
 			myImage.URLs.push (URLfrag+URLarray.join(","));
 			myIter++;
 		}
-		for (i=Bblk0; i<Bblk1 && myIter < maxIter;i++) {
+		for (i=Bblk0; i<Bblk1 && myIter < maxIter;i+=20) {
 			URLarray[7] = i;
 			myImage.URLs.push (URLfrag+URLarray.join(","));
 			myIter++;
@@ -85,7 +85,7 @@ function Load_Next(image)
 			Stop_Loading();
 			return true;
 		} else {
-			image.theURL.value = image.URLs[image.iter];
+//			image.theURL.value = image.URLs[image.iter];
 			image.src = image.URLs[image.iter];
 			image.iter++;
 		}

@@ -383,12 +383,12 @@ int thePix,i;
 
 void scale_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale)
 {
-unsigned char *charPtr = (unsigned char *)fileBuf;
-unsigned short *shortPtr = (unsigned short *)fileBuf;
-int thePix,i;
+unsigned char *charPtr = (unsigned char *)fileBuf, *charPtrEnd = charPtr + numSamples;
+unsigned short *shortPtr = (unsigned short *)fileBuf, *shortPtrEnd = shortPtr + numSamples;
+int thePix;
 
 	if (numB == 1) {
-		for (i=0;i<numSamples;i++) {
+		while (charPtr < charPtrEnd) {
 			thePix = *charPtr++ - blck;
 			if (thePix < 0) thePix = 0;
 			thePix *= scale;
@@ -397,7 +397,7 @@ int thePix,i;
 			imageBuf += 3;
 		}
 	} else if (numB == 2) {
-		for (i=0;i<numSamples;i++) {
+		while (shortPtr < shortPtrEnd) {
 			thePix = *shortPtr++ - blck;
 			if (thePix < 0) thePix = 0;
 			thePix *= scale;
