@@ -164,8 +164,12 @@ my $tempFileNameErr = $OME->GetTempName ('Neurite','err') or die "Couldn't get a
 	{
 		$key = $image->{RasterID};
 		if (not exists $datasets{$key}) {
-			$datasets{$key} = $image->GetWavelengthDatasets();
-			$numDatasets++;
+			$datasetArray = $image->GetWavelengthDatasets();
+		# Only put in the key if *both* necessary wavelengths exist.
+			if (defined $datasetArray->[$nueriteWave] and defined $datasetArray->[$nucleiWave]) {
+				$datasets{$key} = $datasetArray;
+				$numDatasets++;
+			}
 		}
 	}
 
@@ -185,8 +189,6 @@ my $tempFileNameErr = $OME->GetTempName ('Neurite','err') or die "Couldn't get a
 #
 # Run through our hash of RasterIDs
 	while ( ($key,$datasetArray) = each %datasets) {
-	# Make sure we have the necessary waves.
-		next unless defined $datasetArray->[$nueriteWave] and defined $datasetArray->[$nucleiWave];
 
 		$neuriteTiff = $datasetArray->[$nueriteWave]->Path.$datasetArray->[$nueriteWave]->Name;
 		$nucleiTiff  = $datasetArray->[$nucleiWave]->Path.$datasetArray->[$nucleiWave]->Name;

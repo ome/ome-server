@@ -103,9 +103,15 @@ my $value;
 	if ($action eq 'Abort') {
 		kill ($signal{'USR2'},$PID);
 	} elsif (defined $action and $action and defined $PID and $PID) {
-		my $session = $OME->Session;
-		delete $session->{Analyses}->{$PID};
-		$OME->Session ($session);
+		my $userSessions = $OME->GetUserSessions();
+		my $session;
+		foreach (@$userSessions) {
+			$session = $OME->Session ({_session_id => $_});
+			if (exists $session->{Analyses}->{$PID}) {
+				delete $session->{Analyses}->{$PID};
+				$OME->Session ($session);
+			}
+		}
 	}
 
 }
