@@ -121,7 +121,7 @@ my $error;
 	$ENV{POSTGRES_LIB} = $libDir;
 	
 	if ($^O eq 'darwin') {
-		print "ranlib2 $libDir/libpq.a","\n";
+		print "\nranlib $libDir/libpq.a","\n";
 		die "Couldn't run ranlib on $libDir/libpq.a\n" if system ("ranlib $libDir/libpq.a");
 	}
 	
@@ -142,10 +142,6 @@ my @configFlags = (
 	'--prefix=/usr'
 	);
 
-	print "Installing $installTarBall\n";
-	if (not -e $installDir) {
-		die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall");
-	}
 	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
 	
 	if ($^O eq 'darwin') {
@@ -153,12 +149,20 @@ my @configFlags = (
 		}
 
 	if (not -e 'Makefile' ) {
+		print "\nRunning configure script...\n";
 		die "Couldn't execute configure script\n" if system ('./configure '.join (' ',@configFlags) );
 	}
 	
+	print "\nRunning make...\n";
 	die "Compilation errors - script aborted.\n" if system ('make');
 #	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
+	print "\nInstalling...\n";
 	die "Install errors - script aborted.\n" if system ('make install');
+	if ($^O eq 'darwin') {
+		print "\nFixing library links...\n";
+		die "Install errors - couldn't fix library links:\n$@.\n"
+			if system ('cd /usr/lib;ln -s libMagick.5.0.36.dylib libMagick.5.dylib');
+		}
 	chdir '..';
 
 }
@@ -180,15 +184,16 @@ $installModule = $module->{installModule} if exists $module->{installModule}
 $installModule = \&InstallModule unless defined $installModule;
 
 
-	eval qq /require $moduleName;\$moduleVersion = \$$moduleName/.qq/::VERSION;/;
 	
-	if ($@) {
-		print "$@\n";
-		DownloadModule ("$moduleRepository/$repositoryFile");
+	$moduleVersion = GetModuleVersion ($moduleName);
+
+	if (not (defined $moduleVersion and $moduleVersion)) {
+		print "Couldn't find a functioning $moduleName\n";
+		DownloadModule ($repositoryFile);
 		&{$installModule}($module);
 	} elsif (defined $checkVersion and not &{$checkVersion}($moduleVersion)) {
 		print "$moduleName version is $moduleVersion - not supported\n";
-		DownloadModule ("$moduleRepository/$repositoryFile");
+		DownloadModule ($repositoryFile);
 		&{$installModule}($module);
 	} else {
 		print "$moduleName version is $moduleVersion - OK\n";
@@ -196,31 +201,55 @@ $installModule = \&InstallModule unless defined $installModule;
 
 }
 
+sub GetModuleVersion {
+my $moduleName = shift;
+my $moduleVersion;
+my $command = "perl -e 'require $moduleName;print \$$moduleName"."::VERSION'";
+	
+	$moduleVersion = `$command`;
+	return $moduleVersion;
+}
 
-
+# This results in an unpacked module directory or death.
+# If the module's directory doesn't exist, the tar file is unpacked
+# if the tar file doesn't exist, it is downloaded.
 sub DownloadModule {
-my $module = shift;
+my $installTarBall = shift;
 my $wget;
 my $error;
+my $moduleURL = "$moduleRepository/$installTarBall";
+my $installDir;
+	if ($installTarBall =~ /(.*)\.tar\.gz/) {$installDir = $1};
 
-	
-	$wget = 'curl';
-	$error = `$wget -V 2>&1 1>/dev/null`;
-	if (not $error) {
-		print "Downloading $module using $wget...\n";
-		$error = system ("$wget -O $module 2>&1 1>/dev/null");
-	}
-	return unless $error;
+	if (not -e $installDir) {
+		if (not -e $installTarBall) {
+			$wget = 'curl';
+			$error = `$wget -V 2>&1 1>/dev/null`;
+			if (not $error) {
+				print "\nDownloading $moduleURL using $wget...\n";
+				$error = system ("$wget -O $moduleURL 2>&1 1>/dev/null");
+			} else {
+				$wget = 'wget';
+				$error = `$wget -V 2>&1 1>/dev/null`;
+				if (not $error) {
+					print "\nDownloading $moduleURL using $wget...\n";
+					$error = system ("$wget -nv $moduleURL 2>&1 1>/dev/null");
+				}
+			}
+			die "Couldn't download $moduleURL" if $error;
 
-	$wget = 'wget';
-	$error = `$wget -V 2>&1 1>/dev/null`;
-	if (not $error) {
-		print "Downloading $module using $wget...\n";
-		$error = system ("$wget -nv $module 2>&1 1>/dev/null");
+			if (not -e $installTarBall) {die "Couldn't find $installTarBall.\n";}
+		}
+
+		print "\nUnpacking $installTarBall\n";
+		die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall");
 	}
-	return unless $error;
-	
-	print STDERR "Could not download $module.\n";
+
+	if (not -e $installDir) {die "Couldn't find $installDir.\n";}
+
+
+	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+	chdir '..';
 }
 
 
@@ -231,8 +260,7 @@ my $installDir;
 	if ($installTarBall =~ /(.*)\.tar\.gz/) {$installDir = $1};
 my $error;
 
-	print "Installing $installTarBall\n";
-	die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall");
+	print "\nInstalling $installDir\n";
 	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
 
 	die "Couldn't execute perl script 'Makefile.PL'.\n" if system ('perl Makefile.PL');
