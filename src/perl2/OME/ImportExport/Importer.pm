@@ -115,7 +115,15 @@ sub import_image {
 	my $view = $factory->findObject("OME::Image::ImageFilesXYZWT",
 					file_sha1 => $sha1);
 	if (defined $view) {
-	    carp "\nThe source image $image_file has already been imported into OME.";
+	    my $img_name = "";
+	    my $img_id = $view->{image_id};
+	    $view = $factory->findObject("OME::Image", image_id => $img_id);
+	    if (defined $view) {
+		$img_name = $view->{name};
+	    } else {
+		carp "\ncan\'t find image record for image_id: $img_id\n";
+	    }
+	    carp "\nThe source image $image_file has already been imported into OME image $img_name";
 	    return "";
 	}
     }
