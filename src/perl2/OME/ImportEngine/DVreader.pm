@@ -197,7 +197,6 @@ my %xml_wavelength_entries = (wave1  => 'EmWave',
 
 
 sub new {
-
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
@@ -534,6 +533,9 @@ sub storeMetadata {
     # store info about the input files
     storeInputFileInfo($self, $session);
 
+    # store input file dimension info
+    storeInputPixelDimension($self, $session, $params);
+
 }
 
 
@@ -565,6 +567,17 @@ sub storeInputFileInfo {
 
     push my @finfo, $self->{in_files};
     $self->__storeInputFileInfo($session, \@finfo);
+}
+
+# Make an array of input file's pizel size. Feed it to helper
+# routine to be put in image file pixel dimension DB table.
+sub storeInputPixelDimension {
+    my ($self, $session, $params) = @_;
+    my $xml_hash = $params->xml_hash();
+    my $pixelInfo = [$xml_hash->{'Image.PixelSizeX'},
+		       $xml_hash->{'Image.PixelSizeY'},
+		       $xml_hash->{'Image.PixelSizeZ'}];
+    $self->__storePixelDimensionInfo($session, $pixelInfo);
 }
 
 
