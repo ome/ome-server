@@ -762,6 +762,8 @@ $SVG .= <<ENDSVG;
 			multiToolBox.addPane( scale.buildSVG(), "Scale");
 			overlay = new Overlay();
 			multiToolBox.addPane( overlay.buildSVG(), "Overlay");
+			multiToolBox.addPane( overlay.buildSVG2(), "Overlay 2");
+			multiToolBox.takePaneSizeSnapshot()
 
 			// finish setup & make controller
 			multiToolBox.closeOnMinimize(true);
@@ -772,6 +774,11 @@ $SVG .= <<ENDSVG;
 				skinLibrary["popupListHighlightAquamarine"]
 			);
 			panePopupList.realize( multiToolBox.getMenuBar() );
+			
+			// voodoo to switch which component is rendered on top
+			//  this makes the popupList be drawn on top 
+			multiToolBox.nodes.GUIboxContainer.setAttribute( "onmouseover", 'multiToolBox.drawGUITop()' );
+			multiToolBox.getMenuBar().setAttribute( "onmouseover", 'multiToolBox.drawMenuTop()' );
 
 
             azap.appendNode(controls); 
