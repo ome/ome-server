@@ -60,8 +60,8 @@ import java.awt.Font;
 
 public class PThumbnail extends PNode implements PBufferedNode {
 
-	private final static String DEFAULT_LABEL="Thumbnail Unavailable";
-	private final static Font LABEL_FONT = new Font("HELVETICA",Font.BOLD,18);
+	private final static String DEFAULT_LABEL="No Thumbnail";
+	private final static Font LABEL_FONT = new Font("HELVETICA",Font.BOLD,10);
 	private CImage image;	
 	private PImage imageNode=null;
 	private Image imageData;
@@ -73,10 +73,11 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		this.image=image;
 		imageData = image.getImageData();
 		if (imageData != null) {
-			imageNode = new PBufferedImage(image.getImageData());
+			imageNode = new PBufferedImage(imageData);
 			addChild(imageNode);
 		}
 		else {
+//			System.err.println("thumbnail for image "+image.getID()+", data not ready");
 			label = new PText(DEFAULT_LABEL);
 			label.setFont(LABEL_FONT);
 			addChild(label);
@@ -90,6 +91,16 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		return image;
 	}
 	
+	public PBounds getGlobalFullBounds() {
+		PBounds b  = super.getGlobalFullBounds();
+		
+		if (label != null) {
+			return new PBounds(b.getX(),b.getY(),75,75);
+		}
+		else 
+			return b;
+	}
+	
 	public PBounds getBufferedBounds() {
 			PBounds b = getGlobalFullBounds();
 			return new PBounds(b.getX()-PConstants.BORDER,
@@ -101,10 +112,11 @@ public class PThumbnail extends PNode implements PBufferedNode {
 	// note that this only gets called when the imageData was initially null,
 	// so we know that we don't have to check if label is null, etc.
 	public void notifyImageComplete() {
-		removeChild(label);
+//		System.err.println("image "+image.getID()+", is complete");
+		removeAllChildren();
 		imageData = image.getImageData();
-		imageNode = new PBufferedImage(image.getImageData());
-		addChild(imageNode);
+		imageNode = new PBufferedImage(imageData);
+		addChild(imageNode); 
 	}
 	
 	public int compareTo(Object o) {
