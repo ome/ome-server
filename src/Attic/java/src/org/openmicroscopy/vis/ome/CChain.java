@@ -42,8 +42,11 @@
 import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.remote.RemoteChain;
 import org.openmicroscopy.remote.RemoteSession;
+import org.openmicroscopy.vis.chains.SelectionState;
+
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.Iterator;
 import java.util.List;
@@ -68,15 +71,13 @@ public class CChain extends RemoteChain  {
 	private boolean orderChanged = false;
 	
 	private List chainExecutions;
-	private Vector currentDatasetExecutions = null;
+	private HashMap datasetExecutions = new HashMap();
 	 
 	/** 
 	 * A subsidiary object used to encapsulate information about the layering
 	 */
 	private Layering layering  = new Layering();
 	
-	private boolean eligibleExecutions=false;
-
 	public CChain() {
 		super();
 	}
@@ -88,9 +89,22 @@ public class CChain extends RemoteChain  {
 	
 	public void loadExecutions(Connection connection) {
 		chainExecutions = connection.getChainExecutions(this);
-		// when I first load executions, not datasets indicated,
-		// so all executions are current.
-		currentDatasetExecutions = new Vector(chainExecutions);
+		Iterator iter = chainExecutions.iterator();
+		CChainExecution exec;
+		CDataset ds;
+		Vector v;
+		
+		while (iter.hasNext()) {
+			exec = (CChainExecution) iter.next();
+			ds = (CDataset) exec.getDataset();
+			Object obj = datasetExecutions.get(ds);
+			if (obj == null)  // no list
+				v = new Vector();
+			else // already an existing list
+				v = (Vector) obj;
+			v.add(exec);
+			datasetExecutions.put(ds,v);
+		}
 	}
 	
 	
@@ -503,8 +517,90 @@ public class CChain extends RemoteChain  {
 				node.getPosInLayer());
 		} 
 	}
- 
+	
+	
+	public boolean hasExecutionsInSelectedDatasets(
+			SelectionState selectionState) {
+		CDataset selected = selectionState.getCurrentDataset();
+		Collection datasets = selectionState.getActiveDatasets();
+		
+		// if no active datasets and nothing selected,
+		//it's got an execution that's active if it's got any executions.
+		boolean noSelections = (datasets == null || datasets.size() ==0)
+			 && selected == null;
+		if (noSelections == true && chainExecutions.size()>0) {
+			return true;
+		}
+		
+		// two possibilites: 
+		// 1) selected is not null. Then I must have an entry for it.
+		// 2) selected is null. Then, I must have an entry for some dataset
+		// that is in datasets.
+	
+		Collection datasetsWithExecutions =  
+			new HashSet(datasetExecutions.keySet());
+		
+		// BEGIN DEBUG STUFF
+		System.err.println("chain is "+getName());
+		Iterator i = datasetsWithExecutions.iterator();
+		while(i.hasNext()) {
+			CDataset d = (CDataset) i.next();
+			System.err.println("dataset "+d.getName());
+		}
+		//END DEBUG STUFF
+		if (selected != null) {
+			return datasetsWithExecutions.contains(selected);
+		} else { // selected is null
+			// retain only things in the executions set that are in my
+			// active set
+			datasetsWithExecutions.retainAll(datasets);
+			// true if anything is left.
+			return (datasetsWithExecutions.size() >0);
+		}
+	}
+	
+	
+	
+	public Collection getCurrentDatasetExecutions(
+			SelectionState selectionState) {
+		Collection active = selectionState.getActiveDatasets();
+		CDataset selected = selectionState.getCurrentDataset();
+		Vector v;
+		CDataset d;
+		CDataset current = selectionState.getCurrentDataset();
+		
+		
+		if ((active == null ||active.size() ==0) && selected == null) 
+			return chainExecutions;	
+		
+		// two possibilities:
+		//1) if selected != null, get executions for selected.
+		if (selected != null) {
+			v = (Vector) datasetExecutions.get(selected);
+		}
+		else { // 2) get executions for all things in active
+			Collection keySet = datasetExecutions.keySet();
+			keySet.retainAll(active);
+			// now keysets is the set of datasets in active with executions.
+			Iterator iter = keySet.iterator();
+			v = new Vector();
+			while (iter.hasNext()) {
+				d = (CDataset) iter.next();
+				Vector execs = (Vector) datasetExecutions.get(d);
+				v.addAll(execs);
+			}	
+		}
+		 
+		return v;
+	}
+	
+	
 
+	public Collection getDatasetsWithExecutions() {
+		return datasetExecutions.keySet();
+	}
+	
+	
 	/**
 	 * An auxiliary class to hold layering information
 	 * 
@@ -615,70 +711,5 @@ public class CChain extends RemoteChain  {
 		}
 	}
 
-	
-	public boolean hasExecutionsInDatasets(Collection datasets,
-			CDataset selected) {
-		boolean res = false;
-		Iterator iter = chainExecutions.iterator();
-		CChainExecution exec;
-		if (selected != null) // reset currentdataset executions if 
-			//something selected...
-			currentDatasetExecutions = new Vector();
-		
-		eligibleExecutions =false;
-		
-		// if nothing is selected, it's got an execution if it's 
-		// got any execution
-		boolean noSelections = (datasets.size() ==0 && selected == null);
-		if (noSelections == true && chainExecutions.size()>0) {
-			eligibleExecutions = true;
-			return true;
-		}
-		
-		
-		while (iter.hasNext()) {
-			exec = (CChainExecution) iter.next();
-			CDataset d = (CDataset)exec.getDataset();
-			if (datasets.contains(d)) {
-				if (selected == null) {//return true for all things
-					// if i have one dataset in the list when nothing 
-					// is selected, that works.
-					eligibleExecutions = true; 
-					return true;
-				}
-				else if (selected == d) {
-					// otherwise, return true only for selected
-					eligibleExecutions=true;
-					currentDatasetExecutions.add(exec);
-					res = true;
-				}
-			}		
-		}
-		return res;
-	}
-	
-	
-	public List getCurrentDatasetExecutions() {
-		return currentDatasetExecutions;
-	}
 
-	
-	/**
-	 * @return
-	 */
-	public boolean hasEligibleExecutions() {
-		return eligibleExecutions;
-	}
-
-	public Collection getDatasetsWithExecutions() {
-		HashSet datasets = new HashSet();
-		Iterator iter = chainExecutions.iterator();
-		CChainExecution exec;
-		
-		while (iter.hasNext()) {
-			exec = (CChainExecution) iter.next();
-			datasets.add(exec.getDataset());
-		}
-		return datasets;		
-	}
  }
