@@ -1,0 +1,11 @@
+<TMPL_VAR NAME=/selector>
+<a title="<TMPL_VAR NAME=name>" href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail">
+	<TMPL_VAR NAME=name/max_text_length-25>
+</a>
+has <TMPL_VAR NAME=count_images> images, and is owned by <TMPL_VAR NAME=owner>
+<TMPL_IF NAME=group>
+	in the <TMPL_VAR NAME=group> group.
+<TMPL_ELSE>.
+</TMPL_IF>
+<br>
+It's description is, "<TMPL_VAR NAME=description/max_text_length-60>"
