@@ -486,7 +486,9 @@ sub __check_output_arity {
 	my $factory        = $self->Factory();
 	
 	foreach my $output ( @formal_outputs ) {
-		my $count = $factory->countAttributes( $output->semantic_type, module_execution => $mex );
+		my @outputs = OME::Tasks::ModuleExecutionManager->
+			getAttributesForMEX( $mex, $output->semantic_type );
+		my $count = scalar( @outputs );
 		die "Module '".$module->name()."' (execution ".$mex->id.") did not produce any outputs for ".$output->name.", and that output is not declared optional."
 			if( $count eq 0 && not $output->optional() );
 		die "Module '".$module->name()."' (execution ".$mex->id.") produced more than one output for ".$output->name.", and that output is declared to have arity 1."
