@@ -32,7 +32,7 @@ use Benchmark qw(timediff timestr);
 print "\nOME Test Case - Image Import\n";
 print "----------------------------\n";
 
-if (scalar(@ARGV) == 0) {
+if ((scalar(@ARGV) == 0) || (($ARGV[0] =~ m/^-*/) && (scalar(@ARGV) == 1))) {
     print "Usage:  ImportTest dataset_name [file list]\n\n";
     exit -1;
 }
@@ -89,6 +89,10 @@ die "Project undefined\n" unless defined $project;
 # or is the name of a new dataset.
 # Either way, we must associate the dataset with the current project.
 
+my $switch;
+if (($ARGV[0]) =~ m/^-/) {
+    $switch = shift;  # if 1st arg in ARGV starts w/ a "-" it's a switch
+}
 my $datasetName = shift; # from @ARGV
 my $datasetIter = OME::Dataset->search3(name => $datasetName, owner_id => $projectUser->ID(), locked => 'false');
 my $dataset = $project->addDataset ($datasetIter->next()) if defined $datasetIter;
@@ -102,7 +106,7 @@ $session->dataset($dataset);
 $session->writeObject();
 	print "- Importing files into $age project '$projectName'... ";
 my $t0 = new Benchmark;
-	OME::Tasks::ImageTasks::importFiles($session, $dataset, \@ARGV);
+	OME::Tasks::ImageTasks::importFiles($session, $dataset, \@ARGV, $switch);
 my $t1 = new Benchmark;
 	print "done.\n";
 
