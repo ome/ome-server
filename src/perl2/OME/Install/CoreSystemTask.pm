@@ -39,6 +39,7 @@ use English;
 use Carp;
 use File::Copy;
 use File::Path;
+use File::Spec::Functions qw(rel2abs rootdir updir canonpath splitpath splitdir catdir catpath);
 use File::Basename;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
@@ -228,7 +229,7 @@ sub execute {
 			print "       OME Unix  username: ", BOLD, $OME_USER      , RESET, "\n";
 			print "    Apache Unix  username: ", BOLD, $APACHE_USER   , RESET, "\n";
 			print " Postgres admin  username: ", BOLD, $POSTGRES_USER , RESET, "\n";
-			print "  Administrator  username: ", BOLD, $ADMIN_USER    , RESET, "\n";
+			print " OME Unix admin  username: ", BOLD, $ADMIN_USER    , RESET, "\n";
 
 			print "\n";  # Spacing
 
@@ -240,14 +241,9 @@ sub execute {
 		print "\n";  # Spacing
 		# Confirm and/or update all our installation dirs
 		foreach my $directory (@core_dirs) {
-		   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
+			$directory->{path} = normalize_path (confirm_path ($directory->{description}, $directory->{path}));			
 		}
-		
-	    # Make sure the rest of the installation knows where the core directories are
-    	$environment->base_dir($$OME_BASE_DIR);
-    	$environment->tmp_dir($$OME_TMP_DIR);
-		$environment->omeis_base_dir($$OMEIS_BASE_DIR);
-		
+
 		# Confirm and/or update our group information
 		$OME_GROUP = confirm_default("The group which OME should be run under", $OME_GROUP);
 
@@ -261,7 +257,7 @@ sub execute {
 		$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
 
 		# Get and/or update our "special" Unix user information
-		if (y_or_n ("Set up a separate admin user for OME (i.e. your unix account)?",'y') ) {
+		if (y_or_n ("Set up a separate unix admin user for OME (i.e. your unix account)?",'y') ) {
 			my $admin_def = $ADMIN_USER;
 			if (not defined $admin_def or not $admin_def) {
 			# Who owns the cwd?
@@ -285,11 +281,23 @@ sub execute {
 		$environment->apache_user($APACHE_USER);
 		$environment->postgres_user($POSTGRES_USER);
 		$environment->admin_user($ADMIN_USER);
-		
+
+    	# Make sure the rest of the installation knows where the core directories are
+    	$environment->base_dir($$OME_BASE_DIR);
+    	$environment->tmp_dir($$OME_TMP_DIR);
+		$environment->omeis_base_dir($$OMEIS_BASE_DIR);
+
 		$confirm_all = 1;
 
 		print "\n";  # Spacing
     }
+
+	# If the user is installing from somewhere within OME_BASE_DIR, exit.
+	croak <<CROAK if path_in_tree ($$OME_BASE_DIR,getcwd ());
+The installer cannot be run from a directory that is anywhere within the base OME directory.
+Please move the unpacked OME distribution to your home directory and run the installer again.
+The OME base directory should be completely independent of the distribution's directory.
+CROAK
 
     print "\nBuilding the core system\n";
 

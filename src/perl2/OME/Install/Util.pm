@@ -40,7 +40,7 @@ use Carp;
 use File::Copy;
 use File::Basename;
 use Cwd;
-use File::Spec::Functions qw(rel2abs);
+use File::Spec::Functions qw(rel2abs rootdir updir canonpath splitpath splitdir catdir catpath);
 
 require Exporter;
 
@@ -65,8 +65,9 @@ our @EXPORT = qw(
 		configure_library
 		compile_module
 		test_module
-		test_module_as_user
 		install_module
+		normalize_path
+		path_in_tree
 		which
 		get_mac
 		);
@@ -365,6 +366,7 @@ sub scan_dir {
 			
 	return @contents;
 }
+
 
 #*********
 #********* EXPORTED SUBROUTINES
@@ -776,32 +778,6 @@ sub test_module {
     return 0;
 }
 
-sub test_module_as_user {
-    my ($path, $logfile, @user_name) = @_;
-    my $iwd = getcwd ();  # Initial working directory
-    
-    # Expand our relative path to an absolute one
-    $path = rel2abs ($path);
-    
-    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
-
-    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
-
-    my @output = `sudo -u @user_name make test 2>&1`;
-
-    if ($? == 0) {
-	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
-    }
-
-    print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-
-    return 0;
-}
-
 sub install_module {
     my ($path, $logfile) = @_;
     my $iwd = getcwd ();  # Initial working directory
@@ -825,6 +801,50 @@ sub install_module {
     chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
+}
+
+# This sub normalizes a path.  It is made absolute, cleaned using File::Spec::canonpath()
+# then all of the ../ are collapsed.
+# Its assumed that the path does not terminate with a file, but this only makes
+# a difference on non-unix systems.
+sub normalize_path {
+	my $path;
+
+	$path = rel2abs (shift);
+
+	my ($vol,$dir,undef) = splitpath ($path,1);
+	my @dirs = splitdir($dir);
+	my $i;
+	for ($i=0; $i < scalar (@dirs); $i++) {
+		if ($i+1 < scalar (@dirs) and $dirs[$i+1] eq '..') {
+			splice (@dirs,$i,2) if $dirs[$i+1] eq '..';
+			$i-=2;
+			if ($i < -1) {
+				$dirs[0] = rootdir();
+				$i = -1;
+			}
+		}
+	}
+	return catpath ($vol,catdir (@dirs));
+
+}
+
+# path_in_tree ($tree,$path)
+# This sub returns true if $path exists anywhere within the directory tree
+# specified by $tree.  This is done with path manipulation - not an actual
+# file system check.
+sub path_in_tree {
+	my ($tree,$path) = @_;
+	my $iwd = $path;
+	while ($iwd ne rootdir()) {
+		return 1 if $iwd eq $tree;
+		my ($vol,$dir,undef) = splitpath ($iwd,1);
+		my @dirs = splitdir($dir);
+		pop (@dirs);
+		$iwd = catpath ($vol,catdir (@dirs));
+	}
+	
+	return 0;
 }
 
 # Ported from FreeBSD's /usr/bin/which
