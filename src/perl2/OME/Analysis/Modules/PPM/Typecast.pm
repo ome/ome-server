@@ -115,7 +115,6 @@ sub execute {
         # virtual MEX outputs for these parents.
 
         my @values = $self->getInputAttributes($formal_input);
-        my @parents = map { $_->Parent() } @values;
 
         foreach my $value (@values) {
             my $parent = $value->Parent();
