@@ -41,7 +41,7 @@ package OME::DataTable;
 
 OME::DataTable - a database table to store attributes
 
-OME::DataTable::Column - a column in a data table
+L<OME::DataTable::Column> - a column in a data table
 
 =head1 DESCRIPTION
 
@@ -248,86 +248,6 @@ use OME;
     return $pkg;
 }
 
-
-package OME::DataTable::Column;
-
-use strict;
-use OME;
-our $VERSION = $OME::VERSION;
-
-use OME::DBObject;
-use base qw(OME::DBObject);
-
-
-__PACKAGE__->newClass();
-__PACKAGE__->setDefaultTable('data_columns');
-__PACKAGE__->setSequence('data_column_seq');
-__PACKAGE__->addPrimaryKey('data_column_id');
-__PACKAGE__->addColumn(data_table_id => 'data_table_id');
-__PACKAGE__->addColumn(data_table => 'data_table_id','OME::DataTable',
-                       {
-                        SQLType => 'integer',
-                        NotNull => 1,
-                        Indexed => 1,
-                        ForeignKey => 'data_tables',
-                       });
-__PACKAGE__->addColumn(column_name => 'column_name',
-                       {
-                        SQLType => 'varchar(64)',
-                        NotNull => 1,
-                        Indexed => 1,
-                       });
-__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
-__PACKAGE__->addColumn(sql_type => 'sql_type',
-                       {
-                        SQLType => 'varchar(64)',
-                        NotNull => 1,
-                       });
-__PACKAGE__->addColumn(reference_type => 'reference_type',
-                       {SQLType => 'varchar(64)'});
-
-=head1 METHODS (C<DataTable::Column>)
-
-The following methods are available to C<DataTable::Column> in addition to
-those defined by L<OME::DBObject>.
-
-=head2 data_table
-
-	my $tn = $column->tn();
-	$column->tn($tn);
-
-Returns or sets the data table that this column belongs to.
-
-=head2 column_name
-
-	my $column_name = $column->column_name();
-	$column->column_name($column_name);
-
-Returns or sets the name of the underlying database column.
-
-=head2 description
-
-	my $description = $column->description();
-	$column->description($description);
-
-Returns or sets the description of the data column.
-
-=head2 sql_type
-
-	my $sql_type = $column->sql_type();
-	$column->sql_type($sql_type);
-
-Returns or sets the storage type of this data column.
-
-=head2 reference_type
-
-	my $reference_type = $column->reference_type();
-	$column->reference_type($reference_type);
-
-Returns or sets the semantic type that this data column refers to,
-assuming that the storage type is "reference".
-
-=cut
 
 1;
 
