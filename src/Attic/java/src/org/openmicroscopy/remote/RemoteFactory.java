@@ -274,4 +274,34 @@ public class RemoteFactory
         i.setClass("OME::SemanticType::Superclass");
         return i;
     }
+
+    public void populateList(List list)
+    {
+        Object result = caller.dispatch("OME::DBObject","populate_list",list);
+
+        if (result instanceof List)
+        {
+            List resultList = (List) result;
+            if (list.size() != resultList.size())
+            {
+                System.err.println("Return list not of same length!");
+            } else {
+                for (int i = 0; i < list.size(); i++) 
+                {
+                    Object obj = list.get(i);
+                    Object cache = resultList.get(i);
+                    if (!(obj instanceof RemoteOMEObject))
+                    {
+                        System.err.println("Input not a RemoteOMEObject");
+                    } else if (!(cache instanceof Map)) {
+                        System.err.println("Output not a Map");
+                    } else {
+                        ((RemoteOMEObject) obj).setElementCache((Map) cache);
+                    }
+                }
+            }
+        } else {
+            System.err.println("Unknown result type: "+result.getClass());
+        }
+    }
 }

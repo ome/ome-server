@@ -324,4 +324,12 @@ public interface Factory
      * criteria
      */
     public Iterator iterateAttributes(String typeName, Map criteria);
+
+    /**
+     * Retrieves all of the data for each object in the {@link List},
+     * in a single call.
+     * @param list a list of objects to populate
+     */
+
+    public void populateList(List list);
 }
