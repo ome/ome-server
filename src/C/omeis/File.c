@@ -139,7 +139,7 @@ struct stat fStat;
 
     myFile->size_buf = length;
 
-	if ( (myFile->file_buf = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, myFile->fd_rep, offset)) == (char *) -1 ) {
+	if ( (myFile->file_buf = (char *)mmap (NULL, myFile->size_rep, PROT_READ, MAP_SHARED, myFile->fd_rep, 0LL)) == (char *) -1 ) {
 		fprintf (stderr,"Could not mmap FileID=%llu",myFile->ID);
 		freeFileRep (myFile);
 		return (NULL);			
