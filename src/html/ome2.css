@@ -17,4 +17,4 @@ hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
 
 .ome_footer { font-size: 10px; color: #444444; }
 
-.ome_table { border: 1px #000000 solid; }
+.ome_table { border: 1px #000000 solid; background-color: #000000; }
