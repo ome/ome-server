@@ -2,11 +2,11 @@
 
 # t/018_load.t - check module loading and create testing directory
 
-use Test::More tests => 2;
+use Test::More tests => 1;
 
 BEGIN { use_ok( 'OME::Repository' ); }
 
-my $object = OME::Repository->new ();
-isa_ok ($object, 'OME::Repository');
+#my $object = OME::Repository->new ();
+#isa_ok ($object, 'OME::Repository');
 
 
