@@ -33,11 +33,11 @@
 # get_jumps()
 # get_fmt()
 
-package DVreader;
-our @ISA = ("Import_reader");
+package OME::ImportExport::DVreader;
+our @ISA = ("OME::ImportExport::Import_reader");
 use strict;
 use Carp;
-use FileUtils;
+use OME::ImportExport::FileUtils;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -269,7 +269,7 @@ sub formatImage {
 		$offset = $w_offset + $k * $z_jump;
 		my @xy;
 		for ($row = 0; $row < $rows; $row++) {
-		    $status = FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
+		    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
 		    last
 			unless $status eq "";
 		    @obuf = unpack($ifmt, $ibuf);
@@ -307,7 +307,7 @@ sub readUIHdr {
     my $val;
     my $status;
 
-    $status = FileUtils::seek_it($fh, $offset);
+    $status = OME::ImportExport::FileUtils::seek_it($fh, $offset);
     return ($status)
 	unless $status eq "";
 
@@ -359,7 +359,7 @@ sub readUIExtHdrs {
     my ($c0, $c1, $c2, $c3);
     my @cs;
 
-    $status = FileUtils::seek_it($fh, $offset);
+    $status = OME::ImportExport::FileUtils::seek_it($fh, $offset);
     return ($status)
 	unless $status eq "";
     $numInts = $self->{NumInts};
@@ -376,7 +376,7 @@ sub readUIExtHdrs {
 
 	$status = "File read error";
 	for ($i = 0; $i < $numFlts; $i++) {
-	    $status = FileUtils::read_it($fh, \$buf, $len);
+	    $status = OME::ImportExport::FileUtils::read_it($fh, \$buf, $len);
 	    last
 		unless ($status eq "");
 	    $val = unpack("f", $buf);

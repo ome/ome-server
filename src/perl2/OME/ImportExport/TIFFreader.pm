@@ -32,13 +32,13 @@
 # readTiffIFD()
 # readTiffTag()
 
-package TIFFreader;
-our @ISA = ("Import_reader");
+package OME::ImportExport::TIFFreader;
+our @ISA = ("OME::ImportExport::Import_reader");
 use Class::Struct;
 use strict;
 use Carp;
-use FileUtils;
-use STKreader;
+use OME::ImportExport::FileUtils;
+use OME::ImportExport::STKreader;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -491,7 +491,7 @@ sub readTiffTag {
 
 	# create instance of the variant handler class if not yet created
 	if (!defined $self->{$variant_name}) {
-	    my $variant_ref = $variant_name."reader";
+	    my $variant_ref = "OME::ImportExport::".$variant_name."reader";
 	    $self->{$variant_name} = $variant_ref->new($self);
 	    if (!defined $self->{$variant_name}) {
 		return ($status = "Couldn\'t create instance of the $variant_ref class");

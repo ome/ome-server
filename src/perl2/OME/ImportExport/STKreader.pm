@@ -41,11 +41,11 @@
 # JulianToYTD()
 # TimeOfDay()
 
-package STKreader;
-our @ISA = ("Import_reader", "TIFFreader");
+package OME::ImportExport::STKreader;
+our @ISA = ("OME::ImportExport::Import_reader", "OME::ImportExport::TIFFreader");
 use strict;
 use Carp;
-use FileUtils;
+use OME::ImportExport::FileUtils;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -145,7 +145,7 @@ sub readTag {
     my $status;
 
 
-    $status = FileUtils::seek_it($fih, $offset);
+    $status = OME::ImportExport::FileUtils::seek_it($fih, $offset);
     return $status
 	unless $status eq "";
 
@@ -361,7 +361,7 @@ sub partition_and_sort {
 		my @xy;
 		for ($row = 0; $row < $num_rows; $row++) {
 		    $offset = $st_offset + ($planes->{$i}) * $plane_size;
-		    $status = FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
+		    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
 		    last
 			unless $status eq "";
 		    @obuf = unpack($ifmt, $ibuf);
@@ -455,7 +455,7 @@ sub do_uic1 {
     }
 
     for ($i = 0; $i < $tag_cnt; $i++) {
-	$status = FileUtils::read_it($fih, \$buf, $id_len);   # Get ID of next field
+	$status = OME::ImportExport::FileUtils::read_it($fih, \$buf, $id_len);   # Get ID of next field
 	last
 	    unless $status eq "";
 	$id = unpack($fmt, $buf);
@@ -469,12 +469,12 @@ sub do_uic1 {
 	    #print "*** $name: ";
 
 	if ($caller =~ /UIC4/) {
-	  FileUtils::skip($fih, 2);
+	  OME::ImportExport::FileUtils::skip($fih, 2);
 	}
 
 	$read_it = $codes{$id}[$readit_loc];    # Each ID is only valid in one of UIC1 or UIC4
 	if ($read_it == 0) {
-	    FileUtils::skip($fih, 4);    # ignore this field, so skip over it
+	    OME::ImportExport::FileUtils::skip($fih, 4);    # ignore this field, so skip over it
 	    next;
 	}
 
@@ -533,7 +533,7 @@ sub do_uic2 {
 
     # read in a 6-tuple set of values for each of the $num_planes planes in the stack
     for ($i = 0; $i < $num_planes; $i++) {
-	$status = FileUtils::read_it($fih, \$buf, 6*4);
+	$status = OME::ImportExport::FileUtils::read_it($fih, \$buf, 6*4);
 	last
 	    unless ($status eq "");
 	($Z_num, $Z_denom, $cdate, $ctime, $mdate, $mtime) = unpack($fmt, $buf);
@@ -609,7 +609,7 @@ sub do_uic3 {
     my %uic3;
 
     for ($i = 0; $i < $num_planes; $i++) {
-	$status = FileUtils::read_it($fih, \$buf, 2*4);
+	$status = OME::ImportExport::FileUtils::read_it($fih, \$buf, 2*4);
 	last
 	    unless ($status eq "");
 	($numer, $denom) = unpack($fmt, $buf);
@@ -762,13 +762,13 @@ sub get_value {
 
     if ($status eq "") {
 	# restore file pntr to end of tag
-	$status = FileUtils::seek_it($fih, $cur_offset);
+	$status = OME::ImportExport::FileUtils::seek_it($fih, $cur_offset);
     }
 
 }
 
     if ($status eq "Skip") {
-	$status = FileUtils::seek_it($fih, $cur_offset);
+	$status = OME::ImportExport::FileUtils::seek_it($fih, $cur_offset);
     }
     return $status;
 }
@@ -783,7 +783,7 @@ sub get_long {
     if (ref($value) eq "") {
 	confess "Need to be passed a reference to a variable";
     }
-    $status = FileUtils::read_it($fih, \$buf, 4);
+    $status = OME::ImportExport::FileUtils::read_it($fih, \$buf, 4);
     return $status
 	unless $status eq "";
     $fmt = ($endian eq "little") ? "V" : "N";
@@ -806,7 +806,7 @@ sub go_there {
     }
     if ($status eq "") {
 	#print " offset= $offset ";
-	$status = FileUtils::seek_it($fih, $offset);
+	$status = OME::ImportExport::FileUtils::seek_it($fih, $offset);
     }
     return ($cur_offset, $status);
 }
@@ -821,7 +821,7 @@ sub get_string {
     $status = get_long($fih, $endian, \$len);     # string length precedes characters
     #print "   string is $len long\n";
     if ($status eq "") {
-	$status = FileUtils::read_it($fih, \$buf2, $len);  # read 'length' characters
+	$status = OME::ImportExport::FileUtils::read_it($fih, \$buf2, $len);  # read 'length' characters
 	$$buf = $buf2;
     }
     if ($len == 0) {

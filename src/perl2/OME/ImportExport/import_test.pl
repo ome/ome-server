@@ -24,7 +24,7 @@
 #
 
 use strict;
-use Importer;
+use OME::ImportExport::Importer;
 use Carp;
 use vars qw($VERSION);
 $VERSION = '1.0';
@@ -45,7 +45,7 @@ else {
 # The image data will be in an array, and the metadata will be in a hash.
 # Both the hash and the array will be passed to the callback by reference.
 
-my $reader = Importer->new(\@flist, "myproj", \&retriever);
+my $reader = OME::ImportExport::Importer->new(\@flist, "myproj", \&retriever);
 
 #print "Importer returned a buffer with ", scalar(@imported_image), " entries\n";
 

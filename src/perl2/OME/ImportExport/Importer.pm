@@ -30,9 +30,9 @@
 # ---- Private routines ------
 # get_base_name()
 
-package Importer;
+package OME::ImportExport::Importer;
 use strict;
-use Import_reader;
+use OME::ImportExport::Import_reader;
 use Carp;
 use vars qw($VERSION);
 $VERSION = '1.0';
@@ -59,7 +59,7 @@ sub new {
 	@image_buf = ();     # clear out any old images
 	%xml_elements = ();  # clear out any old metadata
 	$xml_elements{'Image.Name'} = get_base_name($image_file);
-	$import_reader = new Import_reader($image_file, \@image_buf, $project, \%xml_elements);
+	$import_reader = new OME::ImportExport::Import_reader($image_file, \@image_buf, $project, \%xml_elements);
 	my $fn = $import_reader->Image_reader::image_file;
 	$import_reader->check_type;
 

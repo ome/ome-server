@@ -29,7 +29,7 @@
 
 # ---- Private routines ------
 
-package FileUtils;
+package OME::ImportExport::FileUtils;
 use strict;
 use Carp;
 use vars qw($VERSION);

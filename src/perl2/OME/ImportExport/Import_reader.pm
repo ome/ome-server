@@ -56,11 +56,11 @@
 # getDVID()
 
 
-package Import_reader;
+package OME::ImportExport::Import_reader;
 use Class::Struct;
 use strict;
-use TIFFreader;
-use DVreader;
+use OME::ImportExport::TIFFreader;
+use OME::ImportExport::DVreader;
 use Carp;
 use vars qw($VERSION);
 $VERSION = '1.0';
