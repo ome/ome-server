@@ -66,8 +66,8 @@ It is controlled by url parameters of ImageID,
 	http://localhost/perl2/serve.pl?Page=GetGraphics&ImageID=57
 or by Pixels Attribute ID.
 http://localhost/perl2/serve.pl?Page=OME::Web::GetGraphics&PixelsID=48
-Optionally, a MEX ID can be provided to display overlays
-http://localhost/perl2/serve.pl?Page=OME::Web::GetGraphics&PixelsID=48&MEX_ID=123
+Alternatively, a MEX ID can be provided to display overlays
+http://localhost/perl2/serve.pl?Page=OME::Web::GetGraphics&MEX_ID=123
 
 =head1 Author
 
@@ -178,6 +178,13 @@ sub getImageAndPixels {
 	return ( $self->{image}, $self->{pixels} )
 		if $self->{image};
 	
+	if ( $cgi->url_param('MEX_ID') ) {
+		my $mex = $self->Session()->Factory()->loadObject("OME::ModuleExecution",$cgi->url_param('MEX_ID'))
+			or die "Could not retreive ModuleExecution from MEX_ID (".$cgi->url_param('MEX_ID').")";
+		$self->{image} = $mex->image();
+		$self->{pixels} = $mex->image()->default_pixels() if $self->{image};
+	}
+
 	if( $cgi->url_param('PixelsID') ) {
 		$self->{pixels} = $self->Session()->Factory()->loadAttribute( 'Pixels', $cgi->url_param('PixelsID') )
 			or die "Could not retreive Pixels attribute from PixelsID (".$cgi->url_param('PixelsID').")";
@@ -186,8 +193,13 @@ sub getImageAndPixels {
 		$self->{image} = $self->Session()->Factory()->loadObject("OME::Image",$cgi->url_param('ImageID'))
 			or die "Could not retreive Image from ImageID (".$cgi->url_param('ImageID').")";
 		$self->{pixels} = $self->{image}->default_pixels();
-	} else {
-		die (ref $self)."->createOMEpage() needs ImageID or PixelsID as a url parameters.";	
+	}
+
+	unless ($self->{image} and $self->{pixels}) {
+		die "Supplied MEX_ID (".$cgi->url_param('MEX_ID').") is not an image MEX, ".
+			"and no ImageID or PixelsID parameters were supplied"
+			if $cgi->url_param('MEX_ID');
+		die "Failed to retreive an Image and a set of Pixels from supplied parameters.";
 	}
 	return ( $self->{image}, $self->{pixels} );
 }
