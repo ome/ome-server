@@ -42,6 +42,7 @@
 
 package org.openmicroscopy.remote;
 
+import java.util.Map;
 import org.openmicroscopy.OMEObject;
 import org.openmicroscopy.Session;
 
@@ -63,6 +64,18 @@ public class RemoteOMEObject
 
     public void writeObject() 
     { caller.dispatch(this,"writeObject"); }
+
+    public void populate()
+    {
+        Object result = caller.dispatch(this,"populate");
+
+        if (result instanceof Map)
+        {
+            elementCache = (Map) result;
+        } else {
+            System.err.println("Unknown result type: "+result.getClass());
+        }
+    }
 
     public Session getSession()
     { return getRemoteSession(); }

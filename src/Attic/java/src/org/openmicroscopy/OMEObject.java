@@ -66,6 +66,11 @@ public interface OMEObject
     public void refresh();
 
     /**
+     * Retrieves all of the data for this object in a single call.
+     */
+    public void populate();
+
+    /**
      * Saves this object's state to the OME database and commits any
      * active database transaction.
      */
