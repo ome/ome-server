@@ -110,6 +110,7 @@ install:
 	install -c DumpSoftWorxHeader /OME/bin/DumpSoftWorxHeader
 	install -c DumpSoftWorxExHeader /OME/bin/DumpSoftWorxExHeader
 	install -c DumpSoftWorxStats /OME/bin/DumpSoftWorxStats
+	install -d /usr/local/bin
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
 	$(MAKE) -C cgrayce install

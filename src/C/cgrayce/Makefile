@@ -59,7 +59,7 @@ TARFILE  = README Makefile $(CSRC) $(HEADERS) $(IHEADERS)
 all: $(LIB) helpers ome_cccp ome_tmcp
 
 $(LIB): $(OBJS) $(HEADERS)
-	ar csr $@ $(OBJS)
+	ar cr $@ $(OBJS)
 
 helpers: $(LIB) $(HELPERS)
 
