@@ -42,7 +42,7 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_menu_title { font-size: 24px; font-weight: bold; }
 
-.ome_summary_title { font-size: 13px; font-weight: bold; }
+.ome_relation_title { font-size: 14px; }
 
 /* QUIET */
 .ome_quiet { font-size: 10px; color: #444444; }
