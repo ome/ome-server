@@ -217,7 +217,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	private PCategoryBox decorateCategory(PNode parent) {
 		
 		PCategoryBox box = new PCategoryBox();
-		System.err.println("creating category box "+box);
+		//System.err.println("creating category box "+box);
 		//categoryLayer.addChild(box);
 		parent.addChild(box);
 		box.moveToBack();
@@ -226,7 +226,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 	private void displayCategoryName(PCategoryBox box,String name) {
 		if (name.compareTo("") !=0) {// if there is a name
-			System.err.println("next category at "+VGAP); //was y
+		//System.err.println("next category at "+VGAP); //was y
 			PText nameText = new PText(name);
 			nameText.setFont(NAME_FONT);
 			nameText.setPickable(false);
@@ -253,8 +253,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		mod.addModuleWidget(mNode);
 		box.addChild(mNode);
 		mNode.setOffset(0,0);
-		System.err.println(" new module. height is "+mNode.getHeight()+
-			", width is "+mNode.getWidth());
+		//System.err.println(" new module. height is "+mNode.getHeight()+
+		//	", width is "+mNode.getWidth());
 		if (mNode.getHeight() > maxModHeight)
 			maxModHeight = (float) mNode.getHeight();
 		if (mNode.getWidth() > maxModWidth)
@@ -323,7 +323,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			// if we've increased the aspect ratio, that's no good.
 			
 			if (curStrip.size()>1 && newAspectRatio > stripAspectRatio) {
-				System.err.println("increased aspect ratio. Backing out...");
+				//System.err.println("increased aspect ratio. Backing out...");
 				
 				// remove the last item from the strip.
 				curStrip.remove(box);
@@ -350,8 +350,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			// adjust the size of the category box
 			b = new PBounds();
 			b = node.getUnionOfChildrenBounds(b);
-			System.err.println("finished with children. width is "+b.getWidth()
-				+", height is "+b.getHeight());
+			//System.err.println("finished with children. width is "+b.getWidth()
+			//	+", height is "+b.getHeight());
 			((PCategoryBox) node).setExtent(b.getWidth()+2*HGAP,b.getHeight()+2*VGAP);
 		}
 	} 
@@ -367,17 +367,17 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		// iterate through, placing nodes as need be.	
 		while (iter.hasNext()) {
 			node = (PBufferedNode) iter.next();
-			System.err.println("placing something at "+x+","+y);
+		//	System.err.println("placing something at "+x+","+y);
 			node.setOffset(x,y);
 			if (node instanceof PModule) {
 				// use quantized dimensions for modules
-				System.err.println("... it's a module..");
+		//		System.err.println("... it's a module..");
 				childHeight = maxModHeight;
 				childWidth = maxModWidth;
 			}
 			else {  
 				// category box
-				System.err.println("it's a category box...");
+		//		System.err.println("it's a category box...");
 				PBounds b = ((PNode) node).getBounds();
 				childHeight = (float) b.getHeight();
 				childWidth = (float) b.getWidth();

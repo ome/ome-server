@@ -102,10 +102,10 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			e.getClickCount() == 2) {
 			if (node instanceof PBufferedNode) {
 				PBufferedNode cBox = (PBufferedNode) node;
-				System.err.println("zooming into .."+cBox);
+				//System.err.println("zooming into .."+cBox);
 				if (cBox instanceof PModule) {
 					PModule mod = (PModule)cBox;
-					System.err.println("...."+mod.getModule().getName());
+					//System.err.println("...."+mod.getModule().getName());
 				}
 				PBounds b = cBox.getBufferedBounds();
 				
