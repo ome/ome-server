@@ -28,34 +28,25 @@
 #
 #-------------------------------------------------------------------------------
 
-
-
-
-#-------------------------------------------------------------------------------
-#
-# Written by:  
-#-------------------------------------------------------------------------------
-
-
-use warnings;
-use strict;
-
 #*********
 #********* INCLUDES
 #*********
 
+use warnings;
+use strict;
 use Getopt::Long;
 use OME::Install::CoreSystemTask;
+use OME::Install::PerlModuleTask;
 
 #*********
 #********* GLOBALS AND DEFINES
 #*********
 
 # Tasks
-my @tasks = ("OME::Install::CoreSystemTask");
-#my @tasks = ("OME::Install::PreInstall",
-#             "OME::Install::FileSystemTask",
-#             "OME::Install::PerlModuleTask" );
+my @tasks = (
+    "OME::Install::CoreSystemTask",
+    "OME::Install::PerlModuleTask"
+);
 
 # Main task queues
 my (@tasks_todo, @tasks_done);
