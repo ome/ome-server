@@ -138,24 +138,16 @@ sub getPageBody {
 #-----------------
 
 sub format_form{
-      my ($htmlFormat,$cgi) = @_ ;
-	my $form="";
-	$form .= $cgi->startform;
-	$form .= $htmlFormat->formSearch("Projects");
-	$form .=$cgi->endform;
-	return $form ;
+    my ($htmlFormat,$cgi) = @_ ;
+    return $cgi->startform . $htmlFormat->formSearch("Projects") . $cgi->endform;
 
 }
 
 
 
 sub format_output{
-	my ($htmlFormat,$ref,$userID,$cgi)=@_;
-	my $text="";
-	$text.= $cgi->startform;
-	$text.=$htmlFormat->searchResults($ref,$userID,"Project(s)","project");
-	$text .= $cgi->endform;
-	return $text;
+	my ($htmlFormat,$ref,$userID,$cgi) = @_;
+	return $cgi->startform . $htmlFormat->searchResults($ref,$userID,"Project(s)","project") . $cgi->endform;
 }
 
 
