@@ -50,31 +50,47 @@ package org.openmicroscopy.vis.chains;
  * @since OME2.0
  */
 
+import javax.swing.Box;
 import javax.swing.JToolBar;
+import javax.swing.JButton;
 import javax.swing.JLabel;
+import java.awt.Dimension;
 
 public class ToolBar extends JToolBar{
 	
 	protected JLabel statusLabel;
 	
 	protected CmdTable cmd;
+	protected JButton newChainButton;
 	
 	public ToolBar(CmdTable cmd) {
 		super();
 		this.cmd=cmd;
 		
-		//setAlignmentX(Component.RIGHT_ALIGNMENT);
+		add(Box.createRigidArea(new Dimension(5,0)));
+		
+		newChainButton = new JButton("New Chain");
+		newChainButton.addActionListener(cmd.lookupActionListener("new chain"));
+		newChainButton.setEnabled(false);
+		add(newChainButton);
+		add(Box.createHorizontalGlue());
+		
 		statusLabel = new JLabel();
 		add(statusLabel);
-		clearStatus();
+		
+		setLoggedOut();
+		add(Box.createRigidArea(new Dimension(5,0)));
+		
 	}
 	
-	public void clearStatus() {
+	public void setLoggedOut() {
 		statusLabel.setText("Not Logged In");
+		newChainButton.setEnabled(false);
 	}
 	
-	public void setUserName(String s) {
+	public void setLoggedIn(String s) {
 		statusLabel.setText(s);
+		newChainButton.setEnabled(true);
 	}
 	
 }
