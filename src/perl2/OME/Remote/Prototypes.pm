@@ -174,6 +174,12 @@ if the prototype is empty ([]), the method is called in void context.
 If it has one element, it is called in scalar context.  Otherwise, it
 is called in list context.
 
+Note that almost all RPC protocols require a method to return exactly
+one return value.  To support Perl methods that return lists, the
+Dispatcher will automatically wrap the results of a list-context
+function into an array, and return that array as its single return
+value.
+
 =head2 Method overloading and renaming
 
 Many Perl methods are overloaded, either by parameter list or by
