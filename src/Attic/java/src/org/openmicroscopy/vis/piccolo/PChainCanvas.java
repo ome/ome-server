@@ -97,6 +97,8 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		final PCamera camera = getCamera();
 	       
 		camera.addInputEventListener(new PChainToolTipHandler(camera));
+		
+		
 	}
 	
 
