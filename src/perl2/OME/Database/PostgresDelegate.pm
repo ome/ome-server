@@ -143,8 +143,10 @@ begin
 end;'
 LANGUAGE 'plpgsql';
 SQL
-	$dbh->do ($sql) or die ($dbh->errstr);
+	$dbh->{RaiseError} = 0;
+	$dbh->do ($sql);
 	$dbh->disconnect();
+	die ($dbh->errstr) unless $dbh->errstr() =~ /already exists/;
 	print "\t\033[1m[Done.]\033[0m\n";
 
 	return 1;
