@@ -1,4 +1,4 @@
-# OME/Install/CoreSystemTask.pm
+# OME/Install/ApacheConfigTask.pm
 # This task initializes the core OME system which currently consists of the 
 # OME_BASE directory structure and ome user/group.
 
@@ -96,12 +96,12 @@ sub fix_httpd_conf {
 	my $httpdConfBak = $apache_info->{conf_bak};
 
 	if (not -e $httpdConf) {
-		warn "Cannot fix httpd.conf:  httpd.conf ($httpdConf) does not exist.\n";
+		print STDERR "Cannot fix httpd.conf:  httpd.conf ($httpdConf) does not exist.\n";
 		return undef;
 	}
 
 	if (not -e $omeConf) {
-		warn "Cannot fix httpd.conf:  ome.conf ($omeConf) does not exist.\n";
+		print STDERR  "Cannot fix httpd.conf:  ome.conf ($omeConf) does not exist.\n";
 		return undef;
 	}
 
@@ -150,7 +150,7 @@ sub getApacheBin {
 #		}
 #	}
 
-	warn "Could not find httpd executable\n" if not -x $httpdBin;
+	print STDERR "Could not find httpd executable\n" if not -x $httpdBin;
 	confirm_path ('Apache (httpd) executable', $httpdBin);
 	croak "Could not find an executable httpd\n" unless -x $httpdBin;
 
@@ -179,12 +179,12 @@ sub getApacheInfo {
 			$httpdConf = File::Spec->canonpath( $httpdConf ); 
 		}
 	} else {
-		warn "httpd ($httpdBin) is not executable\n";
+		print STDERR  "httpd ($httpdBin) is not executable\n";
 		return undef;
 	}
 
-	warn "Apache configuration file (httpd.conf) does not exist\n" unless -e $httpdConf;
-	warn "Apache configuration file (httpd.conf) is not readable\n" unless -r $httpdConf;
+	print STDERR  "Apache configuration file (httpd.conf) does not exist\n" unless -e $httpdConf;
+	print STDERR  "Apache configuration file (httpd.conf) is not readable\n" unless -r $httpdConf;
 	confirm_path ('Apache configuration file (httpd.conf)', $httpdConf);
 	croak "Could not find Apache configuration file\n" unless -e $httpdConf;
 	croak "Could not read Apache configuration file\n" unless -r $httpdConf;
@@ -208,7 +208,7 @@ sub getApacheInfo {
 			$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
 			$apache_info->{mod_perl_off} = 1 if ($mod_loaded_off or $mod_added_off);
 		} else {
-			warn "Could not open httpd.conf ($httpdConf) for reading: $!\n";
+			print STDERR  "Could not open httpd.conf ($httpdConf) for reading: $!\n";
 		}
 	}
 
@@ -265,8 +265,8 @@ sub execute {
     #********
     #******** Attempt to fix httpd.conf
     #********
-	warn "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" if not $apache_info->{hasOMEinc};
-	warn "Apache's mod_perl seems to be turned off in httpd.conf\n" if $apache_info->{mod_perl_off};
+	print STDERR  "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" if not $apache_info->{hasOMEinc};
+	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf\n" if $apache_info->{mod_perl_off};
 	if (not $apache_info->{hasOMEinc} or $apache_info->{mod_perl_off}) {
 		if (not -w $httpdConf) {
 			print "  You do not have write permissions for \"$httpdConf\".\nApache is not properly configured.";
