@@ -47,6 +47,7 @@ import org.openmicroscopy.Factory;
 import org.openmicroscopy.Project;
 import org.openmicroscopy.Dataset;
 import org.openmicroscopy.Attribute;
+import org.openmicroscopy.managers.ChainManager;
 
 public class RemoteSession
     extends RemoteOMEObject
@@ -110,4 +111,21 @@ public class RemoteSession
     public void setDataset(Dataset dataset)
     { setRemoteElement("dataset",dataset); }
 
+    protected boolean chainManagerLoaded = false;
+    protected ChainManager cachedChainManager = null;
+
+    public ChainManager getChainManager()
+    {
+        if (!chainManagerLoaded)
+        {
+            Object reference = caller.dispatch("OME::Tasks::ChainManager",
+                                               "new",
+                                               this);
+
+            cachedChainManager = (ChainManager)
+                getObjectCache().getObject("OME::Tasks::ChainManager",
+                                           (String) reference);
+        }
+        return cachedChainManager;
+    }
 }
