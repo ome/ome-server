@@ -52,7 +52,11 @@ use base qw(OME::Install::InstallationTask);
 #*********
 
 # Our basedir which we grab from the environment
-my $OME_BASE_DIR;
+our $OME_BASE_DIR;
+our $APACHE_USER;
+our $APACHE_UID;
+our $OME_GROUP;
+our $OME_GID;
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -235,6 +239,10 @@ sub execute {
 	# Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
     $OME_BASE_DIR = $environment->base_dir() or croak "Could not get base installation environment\n";
+	$APACHE_USER  = $environment->apache_user() or croak "Apache user is not set!\n";
+    $APACHE_UID   = getpwnam ($APACHE_USER) or croak "Unable to retrive APACHE_USER UID!";
+	$OME_GROUP    = $environment->group() or croak "OME group is not set!\n";
+	$OME_GID      = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
 
 	# The configuration directory
 	my $OME_CONF_DIR = $OME_BASE_DIR . '/conf';
@@ -298,8 +306,8 @@ sub execute {
 	croak "Apache httpd.conf does not have a cgi-bin directory" if not $cgiBin;
 	my $OME_JPEG = 'src/C/OME_JPEG';
 	copy ($OME_JPEG,$cgiBin) or croak "Could not copy $OME_JPEG to $cgiBin:\n$!\n";
-	chmod (0755,"$cgiBin/OME_JPEG");
-
+	chmod (0755,"$cgiBin/OME_JPEG") or croak "Could not chmod $cgiBin/OME_JPEG:\n$!\n";
+	chown ($APACHE_UID,$OME_GID,"$cgiBin/OME_JPEG") or croak "Could not chown $cgiBin/OME_JPEG:\n$!\n";
     
     
     #********
