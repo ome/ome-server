@@ -202,6 +202,192 @@ sub readTiffIFD (*) {
     # Read the TIFF header to determine endianness and to locate the
     # first IFD.
 
+    ($endian, $offset) = __verifyTiff($fh);
+    return $endian
+	unless defined($endian);
+    my %ifd;
+    $ifd{__Endian} = $endian;
+
+    # Read in each IFD
+
+    while ($offset > 0) {
+        seek($fh,$offset,0) or return undef;
+
+        # Read the number of tags in this IFD
+        read($fh,$buf,2) or return undef;
+        my $tag_count = unpack(_x->[$endian],$buf);
+        while ($tag_count) {
+            # Read the tag
+	    my $tell = tell($fh);
+            read($fh,$buf,12) or return undef;
+
+            my ($tag_id,$tag_type,$value_count,$value_offset) =
+              unpack(_xxXX->[$endian],$buf);
+	    if ($dumpHeader) {
+		my $tagname = $tagnames{$tag_id};
+		$tagname = "unknown tag"
+		    unless defined($tagname);
+		print STDERR "tag: $tag_id = $tagname: ";
+	    }
+	    # Single short values are stored, left justified,
+	    # in the tag's value_offset field
+	    if (($tag_type == TAG_SHORT) && ($value_count == 1)) {
+		($tag_id,$tag_type,$value_count,$value_offset) =
+		    unpack(_xxXXshort->[$endian],$buf);
+	    }
+
+
+            my @values;
+
+	    # if tag is > max TIFF tag, the file may
+	    # still be a TIFF variant. Save tag info for
+	    # variant handlers to chew on. Depending upon
+	    # the definition of the tag, the variant handler
+	    # may just call one of these utility decoder
+	    # routines (see GELreader.pm), or execute a
+	    # special decoding routine (see STKreader.pm).
+	    if ($tag_id > MAX_TIFF_TAG) {
+		push @{$ifd{$tag_id}}, {'tag_id' => $tag_id,
+					'tag_type' => $tag_type,
+					'value_count' => $value_count,
+					'value_offset' => $value_offset,
+				        'current_offset' => tell($fh)};
+		if ($dumpHeader) {
+		    print STDERR " type: $tag_type, count: $value_count, offset: $value_offset\n";
+		    print STDERR "\t\t";
+		    @values = getTagValue($fh, $tag_type, $value_count,
+					$value_offset, $endian);
+		}
+	    }
+	    else {
+		return undef
+		    if ($tag_type != TAG_BYTE &&
+			$tag_type != TAG_ASCII &&
+			$tag_type != TAG_SHORT &&
+			$tag_type != TAG_LONG &&
+			$tag_type != TAG_RATIONAL);
+
+		@values = getTagValue($fh, $tag_type, $value_count,
+					$value_offset, $endian);
+		push @{$ifd{$tag_id}}, @values;
+	    }
+            $tag_count--;
+        }
+
+        # Read the offset to the next IFD.
+        read($fh,$buf,4) or return undef;
+        $offset = unpack(_X->[$endian],$buf);
+    }
+
+    return \%ifd;
+}
+
+
+
+=head2 getTagValue
+
+Routine to extract & return value(s) from one tag
+=cut
+
+sub getTagValue {
+    my ($fh, $tag_type, $value_count, $value_offset, $endian) = @_;
+    my $buf;
+    my @vals;
+
+    if ($tag_type == TAG_ASCII) {
+	$buf = readASCIITag($fh, $value_count, $value_offset);
+	push @vals, $buf;
+    }
+    # If values are few enough & short enough, they are placed
+    # directly in the offset field, per the TIFF spec.
+    elsif ((($tag_type == TAG_BYTE) && ($value_count <= 4)) ||
+	(($tag_type == TAG_SHORT) && ($value_count <= 2)) ||
+	(($tag_type == TAG_LONG) && ($value_count == 1))) {
+	seek($fh,-4,1) or return undef;
+	read($fh,$buf,4) or return undef;
+	my $fmt = TAG_FORMATS->[$tag_type]->[$endian].$value_count;
+	my ($v1, $v2, $v3, $v4) = unpack($fmt, $buf);
+	foreach my $v ($v1, $v2, $v3, $v4) {
+	    if (defined $v) {
+		push @vals, $v
+		}
+	    else {
+		last;
+	    }
+	}
+    }
+    else { #else, the tag's values form a list starting at 'offset'.
+	my $tell = tell($fh);
+	while ($value_count--) {
+	    seek($fh,$value_offset,0) or return undef;
+	    read($fh,$buf,TAG_SIZES->[$tag_type]) or return undef;
+	    $value_offset += TAG_SIZES->[$tag_type];
+	    my ($val1,$val2) =
+		unpack(TAG_FORMATS->[$tag_type]->[$endian],$buf);
+	    my $value =
+		($tag_type == TAG_RATIONAL)? $val1/$val2: $val1;
+
+	    push @vals, $value;
+	}
+	seek($fh, $tell, 0);
+    }
+    if ($dumpHeader) {
+	print "@vals\n";
+    }
+    return @vals;
+}
+
+
+=head2 readASCIITag
+
+Routine to extract and return the value from a tag marked as ASCII type.
+=cut
+
+sub readASCIITag {
+    my ($fh, $count, $offset) = @_;
+    my $buf;
+
+    # <= 4 bytes stored directly in offset field, per TIFF specs
+    if ($count <= 4) {
+	seek($fh,-4,1) or return undef;
+	read($fh,$buf,4) or return undef;
+    }
+    else {
+	my $tell = tell($fh);
+	seek($fh,$offset,0) or return undef;
+	read($fh,$buf,$count) or return undef;
+	seek($fh,$tell,0) or return undef;
+    }
+
+    return $buf;
+}
+
+
+
+=head2 verifyTiff
+
+This routine reads the first bytes of a file, and verify that
+they adhere to the TIFF specs for the first 14 bytes of a file.
+If they don't, this routine returns undef, else it returns
+the endianess of the file -- big or little.
+
+=cut
+
+sub verifyTiff {
+    my $fh = shift;
+    my ($endian) = __verifyTiff($fh);
+    return $endian;
+}
+
+
+
+sub __verifyTiff {
+    my $fh = shift;
+        my ($buf,$endian,@buf,$offset);
+
+    # Read the TIFF header to determine endianness and to locate the
+    # first IFD.
+
     seek($fh,0,0) or return undef;
     read($fh,$buf,8) or return undef;
     @buf = unpack('CCvV',$buf);
@@ -221,116 +407,9 @@ sub readTiffIFD (*) {
         return undef;
     }
 
-    my %ifd;
-    $ifd{__Endian} = $endian;
-
-    # Read in each IFD
-
-    while ($offset > 0) {
-        seek($fh,$offset,0) or return undef;
-
-        # Read the number of tags in this IFD
-        read($fh,$buf,2) or return undef;
-        my $tag_count = unpack(_x->[$endian],$buf);
-
-
-        while ($tag_count) {
-            # Read the tag
-	    my $tell = tell($fh);
-            read($fh,$buf,12) or return undef;
-
-            my ($tag_id,$tag_type,$value_count,$value_offset) =
-              unpack(_xxXX->[$endian],$buf);
-	    if ($dumpHeader) {
-		print STDERR "tag: $tag_id: ".$tagnames{$tag_id}.": ";
-	    }
-	    # Single short values are stored, left justified,
-	    # in the tag's value_count field
-	    if (($tag_type == TAG_SHORT) && ($value_count == 1)) {
-		($tag_id,$tag_type,$value_count,$value_offset) =
-		    unpack(_xxXXshort->[$endian],$buf);
-	    }
-
-
-            my @value;
-
-	    # if tag is > max TIFF tag, the file may
-	    # still be a TIFF variant
-	    if ($tag_id > MAX_TIFF_TAG) {
-		push @{$ifd{$tag_id}}, {'tag_id' => $tag_id,
-					'tag_type' => $tag_type,
-					'value_count' => $value_count,
-					'value_offset' => $value_offset};
-		if ($dumpHeader) {
-		    print STDERR "\n";
-		}
-	    }
-	    else {
-		return undef
-		    if ($tag_type != TAG_BYTE &&
-			$tag_type != TAG_ASCII &&
-			$tag_type != TAG_SHORT &&
-			$tag_type != TAG_LONG &&
-			$tag_type != TAG_RATIONAL);
-
-
-
-		if ($tag_type == TAG_ASCII) {
-		    # If this is an ASCII string, read $value_count bytes
-		    # from the offset directly into the value.
-		    
-		    $tell = tell($fh);
-		    seek($fh,$value_offset,0) or return undef;
-		    read($fh,$buf,$value_count) or return undef;
-		    seek($fh,$tell,0) or return undef;
-
-		    push @{$ifd{$tag_id}}, $buf;
-		    if ($dumpHeader) {
-			print STDERR unpack('C*', $buf);
-			print STDERR "\n";
-		    }
-		} elsif ($value_count == 1 && $tag_type != TAG_RATIONAL) {
-		    # If this is a simple type, with only a single value,
-		    # that value is stored directly in the offset field.
-		    push @{$ifd{$tag_id}}, $value_offset;
-		    if ($dumpHeader) {
-			print STDERR "$value_offset\n";
-		    }
-		} else {
-		    # Otherwise read a list of values
-		    my $tell = tell($fh);
-		    seek($fh,$value_offset,0) or return undef;
-		    
-		    while ($value_count) {
-			read($fh,$buf,TAG_SIZES->[$tag_type]) or return undef;
-			my ($val1,$val2) =
-			    unpack(TAG_FORMATS->[$tag_type]->[$endian],$buf);
-			my $value =
-			    ($tag_type == TAG_RATIONAL)? $val1/$val2: $val1;
-
-			push @{$ifd{$tag_id}}, $value;
-			if ($dumpHeader) {
-			    print STDERR "$value";
-			}
-			$value_count--;
-		    }
-		    if ($dumpHeader) {
-			print STDERR "\n";
-		    }
-		    
-		    seek($fh,$tell,0);
-		}
-	    }
-            $tag_count--;
-        }
-
-        # Read the offset to the next IFD.
-        read($fh,$buf,4) or return undef;
-        $offset = unpack(_X->[$endian],$buf);
-    }
-
-    return \%ifd;
+    return ($endian, $offset);
 }
+
 
 =head2 getStrips
 
