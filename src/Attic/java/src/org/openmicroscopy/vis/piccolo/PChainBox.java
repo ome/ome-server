@@ -51,6 +51,7 @@ import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.Color;
 import java.awt.BasicStroke;
 import java.awt.Font;
+import java.util.Collection;
 
 
 /** 
@@ -76,6 +77,8 @@ public class PChainBox extends PGenericBox implements
 	public static final int SIZE_LENGTH=50;
 	
 	public static final double MAX_NAME_SCALE=6;
+	
+	public static final double LABEL_SCALE=3;
 	/**
 	 * 
 	 * The ID of the chain being stored
@@ -85,8 +88,9 @@ public class PChainBox extends PGenericBox implements
 	private CChain chain;
 	
 	private static final BasicStroke VIEWABLE_STROKE = new BasicStroke(5);
-	private static final Color EXECUTED_COLOR = new Color(154,154,255,200);
-	private static final Color SELECTED_COLOR = new Color(80,80,255,250);
+	private static final Color SELECTED_COLOR = new Color(50,100,255,150); 
+
+	private static final Color EXECUTED_COLOR = new Color(85,135,205,150);
 	
 	private static final Font LOCKED_FONT = new Font(null,Font.BOLD,18);
 	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,18);
@@ -126,10 +130,7 @@ public class PChainBox extends PGenericBox implements
 		chainLayer = new PLayer();
 		addChild(chainLayer);
 		
-		PLinkLayer linkLayer = new PLinkLayer();
-		linkLayer.setPickable(false);
-		chainLayer.addChild(linkLayer);
-		linkLayer.moveToFront();
+	
 		// add name
 		name = new PText(chain.getName());
 		name.setFont(NAME_FONT);
@@ -137,7 +138,11 @@ public class PChainBox extends PGenericBox implements
 		name.setScale(MAX_NAME_SCALE);
 		chainLayer.addChild(name);
 		name.setOffset(HGAP,VGAP*3);
-		y = (float) (name.getGlobalFullBounds().getHeight()+VGAP*3); // one VGAP below + 3 above
+		
+		double width = name.getGlobalFullBounds().getWidth();
+		//		 one VGAP below + 3 above
+		y = (float) (name.getGlobalFullBounds().getHeight()+VGAP*3); 
+		
 		
 		// add ower name
 		PText owner = new PText(connection.getOwnerName(chain));
@@ -148,10 +153,46 @@ public class PChainBox extends PGenericBox implements
 		chainLayer.addChild(owner);
 		owner.setOffset(x+HGAP,y+VGAP);
 		y += owner.getHeight()+VGAP;
-		// add chain itself
-		PChain p = new PChain(connection,chain,chainLayer,linkLayer,HGAP*2,y);
+		
+		// build the chain..
+		PChain p = new PChain(connection,chain,false);
+		
+		//		 find width. use it in layout of datasets/executions..
+		if (p.getWidth() > width)
+			width = p.getWidth();
+		
+		// if executions, add them here...
+		Collection datasets = chain.getDatasetsWithExecutions();
+		if (datasets.size() > 0) {
+			// add indication of datasets
+			PText datasetLabel = new PText("Datasets: ");
+			datasetLabel.setFont(NAME_FONT);
+			datasetLabel.setOffset(x+HGAP,y+VGAP);
+			datasetLabel.setPickable(false);
+			datasetLabel.setScale(LABEL_SCALE);
+			chainLayer.addChild(datasetLabel);
+			y+=datasetLabel.getGlobalFullBounds().getHeight()+VGAP;
+			double datasetsWidth = width - (datasetLabel.getWidth()+HGAP);
+			
+			// add individual datasets
+			PDatasetLabels datasetLabels = new 
+				PDatasetLabels(datasets,datasetsWidth,selectionState);
+			
+			// adjust size
+			chainLayer.addChild(datasetLabels);
+			datasetLabels.setOffset(x+HGAP+datasetLabel.getWidth()+HGAP,y);
+			y+= datasetLabels.getHeight()+VGAP;
+			// add indications of executions
+			
+			// adjust size
+		}
+		
+		
+		chainLayer.addChild(p);
+		p.setOffset(HGAP*2,y);
 		y += p.getHeight()+VGAP;
-		setExtent(p.getWidth()+HGAP*2,y);
+		
+		setExtent(width+HGAP*2,y);
 	}
 	
 	/**
@@ -194,7 +235,7 @@ public class PChainBox extends PGenericBox implements
 			
 	
 	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		repaint();
+		
 		SelectionState selectionState = e.getSelectionState();
 		boolean selected = 
 			chain.hasExecutionsInSelectedDatasets(selectionState);
