@@ -106,13 +106,14 @@ __PACKAGE__->addColumn(name => 'name',
                         Indexed => 1,
                        });
 __PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
-__PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
+__PACKAGE__->addColumn(['experimenter_id','owner_id'] => 'experimenter_id',
                        {
                         SQLType => 'integer',
                         NotNull => 1,
                         ForeignKey => 'experimenters',
                        });
-__PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
+__PACKAGE__->addColumn(['experimenter','owner'] => 'experimenter_id',
+                       '@Experimenter');
 __PACKAGE__->addColumn(group_id => 'group_id',
                        {
                         SQLType => 'integer',
