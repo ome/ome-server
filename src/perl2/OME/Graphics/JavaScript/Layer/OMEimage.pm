@@ -92,6 +92,77 @@ $JStype.prototype = new Layer;
 
 ENDJSOBJECT
 ;
+
+# initial draft of pod added by Josiah Johnston, siah@nih.gov
+=pod
+
+=head1 OMEimage.pm
+
+=head1 Package information
+
+L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function calls to OME Modules">, L<"Data references to OME Modules">
+
+=head2 Description
+
+A subclass of L<OME::Graphics::JavaScript::Layer> that handles OME images. 
+
+=head2 Path
+
+src/perl2/OME/Graphics/JavaScript/Layer/OMEimage.pm
+
+=head2 Package name
+
+OME::Graphics::JavaScript::Layer::OMEimage
+
+=head2 Dependencies
+
+B<inherits from>
+	L<OME::Graphics::JavaScript::Layer>
+B<OME Modules>
+	L<OME::Session>
+
+=head2 Function calls to OME Modules
+
+=over 4
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_visible()">
+
+=back
+
+=head2 Data references to OME Modules
+
+none
+
+=head1 Externally referenced Functions
+
+=head2 new()
+
+=over 4
+
+=item Description
+
+constructor
+
+=item Parameters
+
+The parameters specified in its parent class: L<OME::Graphics::JavaScript::Layer>.
+
+=item Returns
+
+I<$self>
+
+=item Overrides function in L<OME::Graphics::JavaScript::Layer/"new()">
+
+=item Uses functions
+
+L<OME::Graphics::JavaScript::Layer/"new()">
+
+=back
+
+=cut
+
+
+
 # new
 # ---
 
@@ -112,6 +183,115 @@ print STDERR ref($self)."->new()\n";
 }
 
 
+=pod
+
+=head2 Form()
+
+=over 4
+
+=item Description
+
+Makes html form elements to control the javascript object associated with this layer.
+The form elements are inside of table rows.
+
+=item Parameters
+
+none
+
+=item Returns
+
+An HTML snippet.
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_visible()">
+
+=item L<"RGBon()">
+
+=item L<"MakeWaveMenu()">
+
+=back
+
+=back
+
+=cut
+
+#
+sub Form {
+my $self = shift;
+my ($RGBchecked,$GSchecked) = ('','');
+my $objRef = $self->{ObjectRef};
+my @RGBon = split (',',$self->RGBon());
+my ($rOn,$gOn,$bOn);
+
+	$rOn = 'checked' if $RGBon[0];
+	$gOn = 'checked' if $RGBon[1];
+	$bOn = 'checked' if $RGBon[2];
+
+	$RGBchecked = 'checked' if $self->{isRGB};
+	$GSchecked = 'checked' if not $self->{isRGB};
+
+	return
+		'<TR><TD>'.$self->Form_visible()."</TD><TD>$self->{name}</TD></TR>\n".
+		qq '<TR><TD></TD><TD><input type="radio" name="RGBradio" $RGBchecked onclick="$objRef.setType(this.checked)">RGB</TD>'.
+		qq '<TD colspan="3"><input type="radio" name="RGBradio" $GSchecked onclick="$objRef.setType(!this.checked)">Grayscale&nbsp;\n'.$self->MakeWaveMenu(9)."</TD></TR>\n".
+		qq '<TR><TD></TD><TD><input type="checkbox" name="RedCheckBox" $rOn onclick="$objRef.setRGBon(0,this.checked)">Red</TD><TD>&nbsp;\n'.$self->MakeWaveMenu(0)."</TD></TR>\n".
+		qq '<TR><TD></TD><TD><input type="checkbox" name="GrnCheckBox" $gOn onclick="$objRef.setRGBon(1,this.checked)">Green</TD><TD>&nbsp;\n'.$self->MakeWaveMenu(3)."</TD></TR>\n".
+		qq '<TR><TD></TD><TD><input type="checkbox" name="BluCheckBox" $bOn onclick="$objRef.setRGBon(2,this.checked)">Blue</TD><TD>&nbsp;\n'.$self->MakeWaveMenu(6)."</TD></TR>\n";
+
+}
+
+=pod
+
+=head2 JSinstance()
+
+=over 4
+
+=item Description
+
+Makes a javascript command to instantiate the javascript object OMEimage.
+
+=item Parameters
+
+none
+
+=item Returns
+
+A line of javascript.
+
+=item Overrides function in L<OME::Graphics::JavaScript::Layer/"JSinstance()">
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Factory/"loadObject()">
+
+=item L<OME::Image/"getFullPath()">
+
+=item L<"WBS()">
+
+=item L<"RGBon()">
+
+=back
+
+=item Accesses external data
+
+=over 4
+
+=item OME::Graphics::JavaScript->{Dims}
+
+=item OME::Graphics::JavaScript->{Session}
+
+=item OME::Session->{Factory}
+
+=back
+
+=back
+
+=cut
 
 sub JSinstance {
 my $self = shift;
@@ -144,12 +324,76 @@ var $objName = new $JStype ("$LayerCGI","$objName","$self->{JS_Dims}","$self->{P
 ENDJS
 }
 
+=pod
+
+=head1 Internally referenced functions
+
+=head2 Wavelengths()
+
+=over 4
+
+=item Description
+
+Issues a direct SQL query to get wavelengths and statistics for the image. It uses these results to fill the variables
+I<$self-E<gt>{Wavelengths}> and I<$self-E<gt>{JS_Wavelengths}>.
+
+I<$self-E<gt>{Wavelengths}> is a reference to a list of wavelengths. These wavelengths are a list of wavenumber, 
+emission wavelength, and flour.
+I<$self-E<gt>{JS_Wavelengths}> is a string to be interpretted in Javascript. In javascript it is an array of hashtables. It
+contains the same information as I<$self-E<gt>{Wavelengths}>.
+
+=item Parameters
+
+none
+
+=item Returns
+
+I<$self->{Wavelengths}>
+
+See Description above for explanation of this variable.
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Session/"DBH()">
+
+=item DBI->prepare();
+
+=item $sth->execute()
+
+=item $sth->fetchrow_array()
+
+=item L<"GetFluorsWaves">
+
+=item L<"GetWavesFluors">
+
+=back
+
+=item Accesses external data
+
+=over 4
+
+=item OME::Graphics::JavaScript->{Session}
+
+=item OME::Graphics::JavaScript->{ImageID}
+
+=back
+
+=item Accesses database table
+
+image_wavelengths
+
+=back
+
+=cut
+
 # FIXME: This is a direct SQL query to get wavelengths and statistics for the image.
 sub Wavelengths {
 	my $self = shift;
 	return $self->{Wavelengths} if exists $self->{Wavelengths} and defined $self->{Wavelengths};
 	
-	my $DBH = $self->{Parent}->{Session}->DBH() || die "MakeWaves called without a session object\n";
+	my $DBH = $self->{Parent}->{Session}->DBH() || die "Wavelengths called without a session object\n";
 	my $ImageID = $self->{Parent}->{ImageID};
 	my $fluors = $self->GetFluorsWaves;
 	my $waveFluors = $self->GetWavesFluors;
@@ -187,6 +431,39 @@ sub Wavelengths {
 	return $self->{Wavelengths};
 }
 
+=pod
+
+=head2 JS_Wavelengths()
+
+=over 4
+
+=item Description
+
+Returns I<$self-E<gt>{JS_Wavelengths}>. It calls a function to generate it if it doesn't exist. See L<"Wavelengths()">
+for a description of this varaible.
+
+=item Parameters
+
+none
+
+=item Returns
+
+I<$self-E<gt>{JS_Wavelengths}>. 
+
+See L<"Wavelengths()"> for a description of this varaible.
+
+=item Uses functions
+
+=over 4
+
+=item L<"Wavelengths()">
+
+=back
+
+=back
+
+=cut
+
 sub JS_Wavelengths {
 	my $self = shift;
 	return $self->{JS_Wavelengths} if exists $self->{JS_Wavelengths} and defined $self->{JS_Wavelengths};
@@ -194,14 +471,47 @@ sub JS_Wavelengths {
 	return $self->{JS_Wavelengths};
 }
 
+=pod
+
+=head2 RGBon()
+
+=over 4
+
+=item Description
+
+Generates a string representing a javascript three member array of 0|1 specifying which of the three RGB channels are on. 
+This is stored in I<$self-E<gt>RGBon>.
+
+=item Parameters
+
+none
+
+=item Returns
+
+A string that, in javascript, is a three member array of 0|1.
+
+=item Uses functions
+
+=over 4
+
+=item L<"Wavelengths()">
+
+=item L<"GetFluorsColors()">
+
+=back
+
+=back
+
+=cut
+
 #
-# RGBon is a 3-member array of 0|1 specifying which of the three RGB channels are on
+# RGBon is a javascript 3-member array of 0|1 specifying which of the three RGB channels are on
 sub RGBon {
 	my $self = shift;
 	return $self->{RGBon} if exists $self->{RGBon} and defined $self->{RGBon};
 
 	my $Wavelengths = $self->Wavelengths();
-	my $fluorsColors = $self->GetFLuorsColors();
+	my $fluorsColors = $self->GetFluorsColors();
 	
 	if (scalar (@$Wavelengths) > 2) {
 		$self->{RGBon} = '1,1,1';
@@ -227,6 +537,62 @@ sub RGBon {
 	
 	
 }
+
+=pod
+
+=head2 Stats()
+
+=over 4
+
+=item Description
+
+This is a direct SQL query to get wavelengths and statistics for the image. This data is stored in I<$self-E<gt>{Stats}>
+and I<$self-E<gt>{JS_Stats}>.
+
+I<$self-E<gt>{Stats}> is a two dimensional array indexed by [wavenumber][timepoint]. Each element in the array is a hash
+with the keys of: min, max, mean, geomean, and sigma.
+
+I<$self-E<gt>{JS_Stats}> contains the same information and structure. But it is converted into a string for use in javascript.
+
+=item Parameters
+
+none
+
+=item Returns
+
+I<$self-E<gt>{Stats}>
+
+See Description above for explanation of this variable.
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Session/"DBH()">
+
+=item DBI->prepare()
+
+=item $sth->execute()
+
+=item $sth->fetchrow_array()
+
+=back
+
+=item Accesses external data
+
+=over 4
+
+=item OME::Graphics::JavaScript->{Session}
+
+=back
+
+=item Accesses database table
+
+xyz_image_info
+
+=back
+
+=cut
 
 # FIXME: This is a direct SQL query to get wavelengths and statistics for the image.
 sub Stats {
@@ -260,6 +626,55 @@ sub Stats {
 	return $self->{Stats};
 }
 
+=pod
+
+=head2 WBS()
+
+=over 4
+
+=item Description
+
+Constructs the WBS array with defaults. This information is stored in I<$self-E<gt>{WBS}> and I<$self-E<gt>{JS_WBS}>.
+
+I<$self-E<gt>{WBS}> is a one dimensional array of 12 elements. Data is stored in four groups of three. Each of the
+four groups represented a channel. The order of the channels is Red, Green, Blue, and Grey. The data in each of
+the groups is wavenumber, black level, and scale. Go somewhere else if you need these explained.
+
+I<$self-E<gt>{JS_WBS}> contains the same data and structure converted to a string for use in javascript.
+
+=item Parameters
+
+none
+
+=item Returns
+
+I<$self-E<gt>{WBS}>
+
+see Description above for explanation of this variable.
+
+=item Uses functions
+
+=over 4
+
+=item L<"Wavelengths()">
+
+=item L<"Stats()">
+
+=back
+
+=item Accesses external data
+
+=over 4
+
+=item OME::Graphics::JavaScript->{Dims}
+
+=item OME::Graphics::JavaScript->{theT}
+
+=back
+
+=back
+
+=cut
 
 # This method gets called to set up the WBS array with defaults.
 # Because the defaults are 'intelligent', we need to consult the DB.
@@ -308,6 +723,42 @@ sub WBS {
 	return $self->{WBS};
 }
 
+=pod
+
+=head2 MakeWaveMenu()
+
+=over 4
+
+=item Description
+
+This generates a html comboBox (AKA SELECT) form control that lists all the wavelengths. Depending on available information,
+wavelengths will be represented by fluors, physical wavelengths, or wavenumbers.
+
+=item Parameters
+
+I<$WBSidx>
+
+valid values of I<$WBSidx> are 0, 3, 6, and 9. Respectively, these will represent the wavenumbers assigned to the
+Red, Green, Blue, and Grey channels by L<"WBS()">. Basically, use the number that corrosponds with the channel the generated
+combo box will control.
+
+=item Returns
+
+An HTML SELECT element
+
+=item Uses functions
+
+=over 4
+
+=item L<"WBS()">
+
+=item L<"Wavelengths()">
+
+=back
+
+=back
+
+=cut
 
 sub MakeWaveMenu {
 my $self = shift;
@@ -332,32 +783,33 @@ my $Wavelengths = $self->Wavelengths;
 	return $JS;
 }
 
-#
-sub Form {
-my $self = shift;
-my ($RGBchecked,$GSchecked) = ('','');
-my $objRef = $self->{ObjectRef};
-my @RGBon = split (',',$self->RGBon());
-my ($rOn,$gOn,$bOn);
 
-	$rOn = 'checked' if $RGBon[0];
-	$gOn = 'checked' if $RGBon[1];
-	$bOn = 'checked' if $RGBon[2];
+=pod
 
-	$RGBchecked = 'checked' if $self->{isRGB};
-	$GSchecked = 'checked' if not $self->{isRGB};
+=head2 Fluors()
 
-	return
-		'<TR><TD>'.$self->Form_visible()."</TD><TD>$self->{name}</TD></TR>\n".
-		qq '<TR><TD></TD><TD><input type="radio" name="RGBradio" $RGBchecked onclick="$objRef.setType(this.checked)">RGB</TD>'.
-		qq '<TD colspan="3"><input type="radio" name="RGBradio" $GSchecked onclick="$objRef.setType(!this.checked)">Grayscale&nbsp;\n'.$self->MakeWaveMenu(9)."</TD></TR>\n".
-		qq '<TR><TD></TD><TD><input type="checkbox" name="RedCheckBox" $rOn onclick="$objRef.setRGBon(0,this.checked)">Red</TD><TD>&nbsp;\n'.$self->MakeWaveMenu(0)."</TD></TR>\n".
-		qq '<TR><TD></TD><TD><input type="checkbox" name="GrnCheckBox" $gOn onclick="$objRef.setRGBon(1,this.checked)">Green</TD><TD>&nbsp;\n'.$self->MakeWaveMenu(3)."</TD></TR>\n".
-		qq '<TR><TD></TD><TD><input type="checkbox" name="BluCheckBox" $bOn onclick="$objRef.setRGBon(2,this.checked)">Blue</TD><TD>&nbsp;\n'.$self->MakeWaveMenu(6)."</TD></TR>\n";
+=over 4
 
-}
+=item Description
 
+Returns a hash. The keys are the names of fluors. The elements are a list of [wavelength, R|G|B]. wavelength is an integer.
+The second element of the table indicates the approximate color of the fluor.
 
+=item Parameters
+
+none
+
+=item Returns
+
+A hash table. See Description above for details.
+
+=item Uses NO functions
+
+=back
+
+=cut
+
+# FIXME: This should get its info from the database.
 sub Fluors {
 my $fluors = {
 		FITC   => [528,'G'],
@@ -368,7 +820,37 @@ my $fluors = {
 return 	$fluors;
 }
 
-sub GetFLuorsColors {
+=pod
+
+=head2 GetFluorsColors()
+
+=over 4
+
+=item Description
+
+Generates a hash. The keys are fluor names. The elements are the color of the fluor (R|G|B).
+
+=item Parameters
+
+none
+
+=item Returns
+
+A hash. See Description above for details.
+
+=item Uses functions
+
+=over 4
+
+=item L<"Fluors()">
+
+=back
+
+=back
+
+=cut
+
+sub GetFluorsColors {
 my $self = shift;
 my $fluors = $self->Fluors();
 my $fluorsColors;
@@ -379,6 +861,36 @@ my $fluorsColors;
 
 	return $fluorsColors;
 }
+
+=pod
+
+=head2 GetFluorsWaves()
+
+=over 4
+
+=item Description
+
+Generates a hash. The keys are fluor names. The elements are physical wavelengths.
+
+=item Parameters
+
+none
+
+=item Returns
+
+A hash. See Description above for explanation.
+
+=item Uses functions
+
+=over 4
+
+=item L<"Fluors()">
+
+=back
+
+=back
+
+=cut
 
 sub GetFluorsWaves {
 my $self = shift;
@@ -392,6 +904,36 @@ my $fluorsWaves;
 	return $fluorsWaves;
 }
 
+=pod
+
+=head2 GetWavesFluors()
+
+=over 4
+
+=item Description
+
+Generates a hash with information on known fluors. Keys are wavelengths. Elements are fluor names.
+
+=item Parameters
+
+none
+
+=item Returns
+
+A hash. See Description above for explanation.
+
+=item Uses functions
+
+=over 4
+
+=item L<"Fluors()">
+
+=back
+
+=back
+
+=cut
+
 sub GetWavesFluors {
 my $self = shift;
 my $fluors = $self->Fluors();
@@ -404,4 +946,3 @@ my $waveFluors;
 	return $waveFluors;
 }
 1;
-
