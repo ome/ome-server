@@ -27,12 +27,13 @@
 % Written by:  Nikita Orlov <norlov@nih.gov>
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%% Function computes wavelet transform for image and its fft counterpart
+%% Function computes wavelet transform for image
 %% sym5 wavelet family was used, with 2 levels being computed
-%% Signatures are wavelet coefficients -- horizontal, vertical, and diagonal combined alltogether.
+%% Signatures are wavelet coefficients -- horizontal, vertical, and diagonal 
+%% combined alltogether.
 %%
 %% output: 
-%%  det1      WL signatures for level 1 (image);
+%%  det1      WL signatures for level 1
 %%  det2      WL signatures for level 2 
 %%
 %% input:
@@ -47,5 +48,7 @@ L = 2;
 % Perform decomposition at level 2 of 'img' using sym5. 
 [c,s]   = wavedec2(img,L,'sym5');
 [chd1,cvd1,cdd1] = detcoef2('all',c,s,1); [chd2,cvd2,cdd2] = detcoef2('all',c,s,2); 
-det1 = chd1+cvd1+cdd1; det2 = chd2+cvd2+cdd2;
+det1 = chd1+cvd1+cdd1; 
+det2 = chd2+cvd2+cdd2;
+
 return;

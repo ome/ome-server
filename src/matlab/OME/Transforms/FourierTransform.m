@@ -34,10 +34,7 @@
 %  Phase(F) = atan(imag(F)/real(F)). The magnitude is encoded as channel 0 and the 
 %  phase is channel 1 of the output pixels set.
 %
-function [outPixels] = FourierTransform(inPixels, theC)
-
-% select the Channel from the XYZCT pixels
-inPixels = inPixels(:,:,:,theC,:);
+function [outPixels] = FourierTransform(inPixels)
 
 % fftshift shifts the zero-frequency component of the Fourier transform to center
 % of spectrum
@@ -46,7 +43,7 @@ inPixels = fftshift(fft2(inPixels));
 outPixels(:,:,:,1,:) = abs(inPixels);
 outPixels(:,:,:,2,:) = angle(inPixels);
 
-outPixels = double(outPixels);
+outPixels = single(outPixels);
 
 % Use the following Matlab code to visualize the Fourier Space frequency
 % imshow( mat2gray(log(1+angle(inPixels))) )

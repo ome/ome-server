@@ -47,7 +47,7 @@
 %% For future use on 32bit machines the threshold must rather be under 2Gb, so it'll need some refinement.
 
 function [coeff_packed] = ChebyshevFourierTransform(Im,N)
-
+N=5;
 recYes=0; packingOrder = 40;
 
 [m,n] = size(Im); nLast = n*m;

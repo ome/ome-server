@@ -41,7 +41,9 @@
 %% [cc2] = ChebyshevTransform(Im,170);
 %% [cc2] = ChebyshevTransform(Im,20); 
 %%
-function [cc2] = ChebyshevTransform(Im,N)
+function [cc2] = ChebyshevTransform(Im,N);
+if nargin < 2 N = min(size(Im)); end
+
 packYes=0; recYes=0;
 [m,n]=size(Im);x=1:n;y=1:m;
 x=2.*x./max(x)-1;  y=2.*y./max(y)-1;
