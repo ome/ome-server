@@ -185,7 +185,8 @@ sub findRepository {
 	return $onlyRepository if defined $onlyRepository;
 	
 	my ($session, $aref) = @_;
-	$onlyRepository = $session->Factory()->loadObject("OME::Repository",1);
+	my @repositories = $session->Factory()->findAttributes("Repository");
+        $onlyRepository = $repositories[0];
 	return $onlyRepository if defined $onlyRepository;
 	die "Cannot find repository #1.";
 }
