@@ -610,15 +610,22 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		die "When processing Formal Input (name=".$formalInputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalInputXML->getAttribute( 'SemanticTypeName' )."\n"
 			unless exists $semanticTypes{ $formalInputXML->getAttribute( 'SemanticTypeName' ) };
+
+		my ($optional, $list, $count);
+		$count = $formalInputXML->getAttribute( 'Count' );
+		if( $count ) {
+			$optional = ( $count eq '*' || $count eq '?' ? 't' : 'f' );
+			$list     = ( $count eq '*' || $count eq '+' ? 't' : 'f' );
+		}
 		my $data = {
 			name               => $formalInputXML->getAttribute( 'Name' ),
 			description        => $formalInputXML->getAttribute( 'Description' ),
 			program_id         => $newProgram,
 			attribute_type_id  => $semanticTypes{ $formalInputXML->getAttribute( 'SemanticTypeName' ) },
 			lookup_table_id    => $newLookupTable,
-			#user_defined => $formalInputXML->getAttribute( 'UserDefined' )
-			# this exists in the schema, and only in the schema.
-			# we need to add it to the DB or remove from schema.
+			optional           => $optional,
+			list               => $list,
+			user_defined       => $formalInputXML->getAttribute( 'UserDefined' )
 		};
 		my $newFormalInput = $factory->newObject( "OME::Program::FormalInput", $data )
 			or die ref ($self) . " could not create OME::Program::FormalInput object (name=".$formalInputXML->getAttribute( 'Name' ).")\n";
@@ -659,12 +666,20 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		die "When processing Formal Output (name=".$formalOutputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalOutputXML->getAttribute( 'SemanticTypeName' )."\n"
 			unless exists $semanticTypes{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) };
+		my ($optional, $list, $count);
+		$count = $formalOutputXML->getAttribute( 'Count' );
+		if( $count ) {
+			$optional = ( $count eq '*' || $count eq '?' ? 't' : 'f' );
+			$list     = ( $count eq '*' || $count eq '+' ? 't' : 'f' );
+		}
 		my $data = {
 			name               => $formalOutputXML->getAttribute( 'Name' ),
 			description        => $formalOutputXML->getAttribute( 'Description' ),
 			program_id         => $newProgram,
 			attribute_type_id  => $semanticTypes{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) },
-			feature_tag        => $formalOutputXML->getAttribute( 'IBelongTo' )
+			feature_tag        => $formalOutputXML->getAttribute( 'IBelongTo' ),
+			optional           => $optional,
+			list               => $list
 		};
 		my $newFormalOutput = $factory->newObject( "OME::Program::FormalOutput", $data )
 			or die "Could not create OME::Program::FormalOutput object\n";
