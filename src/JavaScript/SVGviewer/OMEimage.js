@@ -10,15 +10,24 @@
 *****/
 
 svgns = "http://www.w3.org/2000/svg";
+xlinkns  = "http://www.w3.org/1999/xlink";
 
 OMEimage.VERSION = 0.1;
+
+/* My development vocabulary:
+	untested: the function has not been run
+	tested: the function runs and appears to works as advertised
+	comprehensively tested: i've checked the output and side effects fairly throughly
+*/
 
 /********************************************************************************************/
 /********************************************************************************************/
 /*************************** Functions open to the world ************************************/
 /********************************************************************************************/
 /********************************************************************************************/
-
+/*	OMEimage(...), realize(SVGparentNode), saveState(), updatePic(theZ, theT)
+	makeWBSnative(WBS,theT), setWBS(newWBS), setDisplayColor(), setDisplayGrayscale()
+	setRGBon(RGBon), getRGBon(), getWavelengths(), getWBS(), getConvertedWBS(theT) */
 
 /************************** Setup Functions ***********************************/
 
@@ -35,7 +44,8 @@ OMEimage.VERSION = 0.1;
 			Dims is a 6 member array representing dimensions of the 5d image. Members are:
 				X,Y,Z,W,T,bpp
 				bpp is bits per pixel
-			Path is the full path of the OMEimage
+			Path is the full path to the OMEimage. This will be removed if a perl wrapper to
+				OME_JPEG is ever written.
 			CGI_URL is the url to call to generate a 2d image
 			CGI_optionStr will be added to the options passed to the CGI
 			default_WBS is optional. If found, it will set the WBS for the image display.
@@ -43,7 +53,7 @@ OMEimage.VERSION = 0.1;
 				B & S of WBS are in terms of constants to functions of geomean and standard dev,
 				not hard numbers. See getConvertWBS(...) for more information.
 		
-	untested
+	comprehensively tested
 
 *****/
 
@@ -51,8 +61,8 @@ OMEimage.VERSION = 0.1;
 function OMEimage( imageID, Wavelengths, Stats, Dims, Path, CGI_URL, CGI_optionStr, default_WBS ) {
 
 	// A mild test for valid input
-	var goodInput = 1;
-	if( arguments.length < 6 )
+	var goodInput = 1; 
+	if( arguments.length < 7 )
 		goodInput = 0;
 	else {
 		if(Dims.length != 6)
@@ -73,7 +83,7 @@ function OMEimage( imageID, Wavelengths, Stats, Dims, Path, CGI_URL, CGI_optionS
 
 	realize(SVGparentNode)
 		
-	untested
+	comprehensively tested
 
 *****/
 
@@ -86,19 +96,20 @@ OMEimage.prototype.realize = function(SVGparentNode) {
 	}
 }
 
-/************************** General Functions ***********************************/
+/********************* Functions for Interactivity & Utilities ****************************/
 
 /*****
 
-	saveWBS()
+	saveState()
 		calls a CGI to save current WBS to OME DB
 
 	need2do
 	untested
 
 *****/
-OMEimage.prototype.saveWBS = function() {
-	// call a CGI via a image load to save current WBS
+OMEimage.prototype.saveState = function() {
+	// determine if settings differ from defaults. (Do we need to save?)
+	// call a CGI via a image load to save current WBS, isRGB, and RGBon
 }
 
 /*****
@@ -136,7 +147,7 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 	// check for availibility of new pic
 	if(this.SVGimages[theZ][theT] != null)
 		// turn on the image
-		this.SVGimages[theZ][theT].setAttributeA("display","inline");
+		this.SVGimages[theZ][theT].setAttribute("display","inline");
 	else {	// create the image
 		// I've never had trouble w/ svgDocument not existing. but just in case...
 		if(svgDocument == null)
@@ -146,16 +157,24 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 		this.SVGimages[theZ][theT].setAttribute("height",this.Dims['Y']);
 
 		// prepare image URL string
+		
+		// color or RGB?
 		var color;
+		var WBS = this.getConvertedWBS(theT);
 		if( this.inColor == 1 )
-			color = "&RBG=" + WBS.slice(0,9).join();
+			color = "&RGB=" + WBS.slice(0,9).join();
 		else
 			color = "&Gray=" + WBS.slice(9,12).join();
-		var imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
-			theT + '&Dims=' + this.Dims + '&Path=' + this.Path + color + "&RGBon=" + this.RGBon +
-			'&'+optionsStr;
 		
-		this.SVGimages[theZ][theT].setAttribute("xlink:href",imageURL);
+		var d=new Array();
+		for(i in this.Dims) d.push(this.Dims[i]);
+
+		var imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
+			theT + '&Dims=' + d.join() + '&Path=' + this.Path + color + "&RGBon=" + this.RGBon +
+			'&'+this.CGI_optionStr;
+		this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "xlink:href",imageURL);
+
+		this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
 	}
 	
 	return this.SVGimages[theZ][theT];
@@ -165,10 +184,12 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 
 	makeWBSnative(WBS,theT)
 		utility to convert WBS from hard numbers to native format
+		This and getConvertWBS(theT) are the two functions that do conversion between
+			native format and hard numbers.
 		returns WBS in native format if successful
 		returns null if unsuccessfull
 		
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.makeWBSnative = function(WBS,theT) {
@@ -182,7 +203,9 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 		var wavenum = WBS[i*3];
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
 		WBS[i*3+1] /= this.Stats[wavenum][theT]['geomean'];
-		WBS[i*3+2] /= this.Stats[wavenum][theT]['sigma'];
+		WBS[i*3+1] = Math.round(WBS[i*3+1]);//*100000)/100000;
+		WBS[i*3+2] = 255/( this.Stats[wavenum][theT]['sigma'] * WBS[i*3+2] );
+		WBS[i*3+2] = Math.round(WBS[i*3+2]*100000)/100000;
 	}
 	return WBS;
 }
@@ -196,7 +219,7 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 		returns 1 if newWBS is accepted
 		returns 0 if newWBS is rejected
 		
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.setWBS = function(newWBS) {
@@ -205,17 +228,31 @@ OMEimage.prototype.setWBS = function(newWBS) {
 		alert("In OMEimage.setWBS, newWBS is incorrect size. Should be 12. Is " + newWBS.length);
 		return 0;
 	}
-	for(i=0;i<4;i++)
-		if(newWBS[i*3]<0 || newWBS[i*3]>=this.Dims['W']) {
-			var C = new Array("red", "green", "blue", "gray");
-			alert("In OMEimage.setWBS, newWBS has a wavenum outside of range. wavenum refers to "+C[i]+" channel. Wavenum is "+newWBS[i*3]+". Max wavenum is "+this.Dims['W']);
+	for(i=0;i<4;i++) {
+		var C = new Array("red", "green", "blue", "gray");
+		if(newWBS[i*3] != Math.round(newWBS[i*3]) ) {
+			alert("Now that's just stupid. You just gave me a wavenumber that's not a whole number. It's gotta be a whole number, not "+newWBS[i*3]+". BTW, it was on channel "+C[i]+".");
 			return 0;
 		}
+		if(newWBS[i*3]<0 || newWBS[i*3]>=this.Dims['W']) {
+			alert("In OMEimage.setWBS, newWBS has a wavenum outside of range. wavenum refers to "+C[i]+" channel. Wavenum is "+newWBS[i*3]+". According to the dimensions of this image, the valid range is 0 to "+(this.Dims['W']-1)+".");
+			return 0;
+		}
+	}
 	
-	// erase all images from image array. They must be redrawn from the server with the new WBS.
-	this.wipe();
-	
-	this.WBS = newWBS;
+	// check new WBS for change
+	var changeFlag=1; // 0 means no change
+/*	for(i=0;i<12;i++)
+		if(newWBS[i]!=this.WBS[i]) {
+			changeFlag=1;
+			break;
+		}*/
+
+	if(changeFlag) {
+		this.WBS = newWBS;
+		// erase all images from image array. They must be redrawn with the new WBS.
+		this.wipe();
+	}
 	return 1;
 }
 
@@ -254,7 +291,7 @@ OMEimage.prototype.setDisplayGrayscale = function() {
 	setRGBon(RGBon)
 		turns RGB channels on and off
 		
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.setRGBon = function(RGBon) {
@@ -262,19 +299,41 @@ OMEimage.prototype.setRGBon = function(RGBon) {
 	if(RGBon.length != 3) return;
 	for(i in RGBon)
 		if(RGBon[i] != 0 && RGBon[i] != 1) return;
-	
+
 	// input looks good
-	this.RGBon = RGBon;
+	var changeFlag = 0;
+	for(i in this.RGBon)
+		if(this.RGBon[i] != RGBon[i]) {
+			changeFlag=1;
+			break;
+		}
+	alert(changeFlag);
+	if(changeFlag) {
+		this.RGBon = RGBon;
+		this.wipe();
+	}
 }
 
 /************************** Get Functions ***********************************/
+
+/*****
+
+	getRGBon()
+		returns on/off states of the RGB channels
+	
+	comprehensively tested
+	
+*****/
+OMEimage.prototype.getRGBon = function() {
+	return this.RGBon;
+}
 
 
 /*****
 
 	getWavelengths()
 		
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.getWavelengths = function() {
@@ -283,13 +342,13 @@ OMEimage.prototype.getWavelengths = function() {
 
 /*****
 
-	getNativeWBS()
+	getWBS()
 		returns WBS in native format
 		
-	untested
+	comprehensively tested
 
 *****/
-OMEimage.prototype.getNativeWBS = function() {
+OMEimage.prototype.getWBS = function() {
 	if(this.WBS == null)
 		this.WBS = this.makeWBS();
 	return this.WBS;
@@ -299,7 +358,9 @@ OMEimage.prototype.getNativeWBS = function() {
 
 	getConvertedWBS(theT)
 		converts WBS from native format to hard numbers
-		Currently this uses these functions.
+		This and makeWBSnative(WBS,theT) are the two functions that do conversion between
+			native format and hard numbers.
+		Currently it uses these functions.
 		c indicates converted, n indicates native
 			cB = geomean * nB
 			cS = 255 / ( sigma * nS )
@@ -307,7 +368,7 @@ OMEimage.prototype.getNativeWBS = function() {
 		returns null if unsuccessful
 		returns converted WBS if successful
 		
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.getConvertedWBS = function(theT) {
@@ -321,8 +382,12 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 	for(var i=0;i<4;i++) {
 		var wavenum = this.WBS[i*3];
 		cWBS.push( wavenum );
-		cWBS.push( this.Stats[wavenum][theT]["geomean"] * this.WBS[i*3+1] );
-		cWBS.push( 255/ ( this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2] ) );		
+		B = this.Stats[wavenum][theT]["geomean"] * this.WBS[i*3+1];
+		B = Math.round( B);//*100000 ) / 100000;
+		cWBS.push( B );
+		S = 255/ ( this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2] );
+		S = Math.round( S*100000 ) / 100000;
+		cWBS.push( S );		
 	}
 	
 	return cWBS;
@@ -334,23 +399,23 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 /************************** Functions without safety nets ***********************************/
 /********************************************************************************************/
 /********************************************************************************************/
-
+/*	init(...), buildSVG(), makeWBS(), wipe() */
 
 /*****
 
 	init(...)
+		see constructor for more information
 		
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims, Path, CGI_URL, CGI_optionStr, default_WBS ) {
-	
 	// set variables
 	this.imageID = imageID;
 	this.Wavelengths = Wavelengths;
 	this.Stats = Stats;
 	this.CGI_URL = CGI_URL;
-	this.CGI_optionSTR = CGI_optionSTR;
+	this.CGI_optionStr = CGI_optionStr;
 	this.Path = Path;
 	this.Dims = new Array();
 	this.Dims['X'] = Dims[0];
@@ -368,9 +433,9 @@ OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims, Path, CGI
 	
 	// make SVGimages array. It is indexable by [z][t]
 	this.SVGimages = new Array(this.Dims['Z']);
-	for(var i=0;i<this.images.length;i++)
+	for(var i=0;i<this.SVGimages.length;i++)
 		this.SVGimages[i] = new Array(this.Dims['T']);
-		
+
 	this.inColor = 1;
 	this.RGBon = new Array();
 	for(i=0;i<3;i++)
@@ -378,6 +443,7 @@ OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims, Path, CGI
 			this.RGBon.push(1);
 		else
 			this.RGBon.push(0);
+			
 }
 
 /*****
@@ -385,7 +451,7 @@ OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims, Path, CGI
 	buildSVG()
 		Creates SVG elements and all that junk
 
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.buildSVG = function() {
@@ -397,6 +463,7 @@ OMEimage.prototype.buildSVG = function() {
 
 	// put image container in this.SVGparentNode
 	this.SVGparentNode.appendChild(this.SVGimageContainer);
+
 }
 
 /*****
@@ -404,12 +471,13 @@ OMEimage.prototype.buildSVG = function() {
 	makeWBS()
 		makes WBS array to default parameters 
 		
-	untested
+	comprehensively tested
 
 *****/
 OMEimage.prototype.makeWBS = function() {
 	var i, WBS, waves, L;
 	WBS = new Array();
+	waves = new Array();
 	
 	L = this.Wavelengths.length;
 	waves.push( this.Wavelengths[0]["WaveNum"] ); // red
@@ -430,6 +498,8 @@ OMEimage.prototype.makeWBS = function() {
 
 	wipe()
 		erases all cached images and redraws current image
+		
+	untested
 
 *****/
 
@@ -437,7 +507,7 @@ OMEimage.prototype.wipe = function() {
 	// erase all images from image array.
 	for(i in this.SVGimages)
 		for(j in this.SVGimages[i]) {
-			if(this.SVGimage[i][j]!= null) {
+			if(this.SVGimages[i][j]!= null) {
 				this.SVGimageContainer.removeChild(this.SVGimages[i][j]);
 				this.SVGimages[i][j] = null;
 			}
