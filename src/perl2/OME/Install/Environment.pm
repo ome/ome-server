@@ -70,10 +70,12 @@ $os_specific[LINUX] = (
 	    chomp($macAddr);
 
 	    return $macAddr;
-	}
+	},
 	adduser => sub {
-	    return undef;
-	    #my @out = `/usr/sbin/useradd -d /tmp -s /bin/false`;
+	    my ($user, $homedir) = @_;
+
+	    my @out = `/usr/sbin/useradd -d $homedir -s /bin/false -c \"Open Microscopy Environment User\" $user`;
+	    return $? ? 0 : 1;
 	}
     }
 );
@@ -86,7 +88,7 @@ $os_specific[DARWIN] = (
 	getMAC => sub {
 	    my @ifinfo = `/sbin/ifconfig`;
 	    @ifinfo = grep(/ether/, @ifinfo);
-	    chomp($ifinfo[0]);s /bin/false
+	    chomp($ifinfo[0]);
 	    my ($macAddr) = ($ifinfo[0] =~ /^.*ether\s(.*[^\s]).*/);
 	    chomp($macAddr);
 
@@ -375,17 +377,19 @@ sub apacheUser {
 }
 
 sub OMEUser {
-    my $self = shift;
+    my ($self, $user) = @_;
 
-    if (! $self->{user}) {
-	$self->{user} = confirm_default ("What username do you want OME to run under ?", "ome");
-	if (not getpwnam($self->{user})) {
-	    print "User does not exist, adding \"$self->{user}\".";
-	    my $adduser = $os_specific[$platform]->{adduser};
-	    $self->{user} = &$adduser ();
-	}
-    }
-    
-    return $self->{user};
+    if ($user) { $self->{OMEUser} = $user }
+
+    return $self->{OMEUser} or undef;
 }
+
+sub adduser {
+    my ($self, $user, $homedir) = @_;
+    my $adduser = $os_specific[$platform]->{adduser};
+
+    return &$adduser($user, $homedir);
+}
+
+
 1;
