@@ -90,10 +90,7 @@ get_md_from_buffer (void * buf, size_t buf_len, unsigned char * md_value)
 	
 	EVP_DigestInit(&mdctx, md);
 	
-	if (EVP_DigestUpdate(&mdctx, buf, buf_len) == 0) {
-		fprintf(stderr, "Failure during digest update.");
-		return(-1);
-	}
+	EVP_DigestUpdate(&mdctx, buf, buf_len);
 
 	EVP_DigestFinal(&mdctx, md_value, &md_len);
 
