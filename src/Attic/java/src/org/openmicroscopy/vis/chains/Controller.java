@@ -92,7 +92,7 @@ public class Controller  implements LoginResponder {
 	private Connection connection = null;
 	private ChainFrame currentChainFrame;
 	
-	ArrayList resultFrames = new ArrayList();
+	private ArrayList resultFrames = new ArrayList();
 	
 	private JWindow status;
 	private JLabel statusLabel;
@@ -102,6 +102,8 @@ public class Controller  implements LoginResponder {
 	private ControlPanel controlPanel;
 	
 	private ResultFrame currentResultFrame;
+	
+	private BrowserFrame browserFrame;
 
 	public Controller() {
 		cmd = new CmdTable(this);
@@ -284,6 +286,11 @@ public class Controller  implements LoginResponder {
 				moduleFrame.dispose();
 				moduleFrame = null;
 			}
+			if (browserFrame !=null) {
+				browserFrame.dispose();
+				browserFrame = null; 
+			}
+				
 			removeFrames();
 			closeStatusWindow();
 			doLogin();	
@@ -373,6 +380,8 @@ public class Controller  implements LoginResponder {
 				new ResultFrame(this,connection,resultFrames.size(),
 								library.getCanvas());
 			resultFrames.add(res);
+			if (browserFrame == null)
+				browserFrame = new BrowserFrame(this,connection);
 		}
 	}
 	
@@ -386,6 +395,13 @@ public class Controller  implements LoginResponder {
 	
 	public void disposeResultFrame(ResultFrame f) {
 		resultFrames.remove(f);
+	}
+	
+	public void disposeBrowserFrame() {
+		if (browserFrame != null) {
+			browserFrame.dispose();
+			browserFrame = null;
+		}
 	}
 	
 	public void saveChain() {
