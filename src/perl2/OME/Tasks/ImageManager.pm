@@ -300,6 +300,168 @@ sub createThumbnail{
 
 }
 
+
+
+
+
+####################
+# Parameters:
+#	image = image object
+
+sub getImageDim{
+	my ($self,$image)=@_ ;
+	my $pixels = $image->DefaultPixels();
+	my $path=$image->getFullPath($pixels);
+
+	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
+	$sizeX = $pixels->SizeX;
+	$sizeY = $pixels->SizeY;
+	$sizeZ = $pixels->SizeZ;	
+	$numW  = $pixels->SizeC;
+	$numT  = $pixels->SizeT,
+  	$bpp   = $pixels->BitsPerPixel;	
+	$bpp /= 8;
+	return ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path);
+}
+
+
+
+############################
+# Parameters:
+#	image = image object
+
+sub getImageStats{
+	my ($self,$image)=@_;
+  	# new version
+	my $session=$self->{session};
+	my $factory=$session->Factory();
+  	my $pixels = $image->DefaultPixels();
+  	my $stackStats = $factory->findObject( "OME::Module", name => 'Fast Stack statistics' )
+		or die "Stack statistics must be installed for this viewer to work!\n";
+	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput",
+		module_id => $stackStats->id(),
+		name       => 'Pixels' )
+		or die "Cannot find 'Pixels' formal input for Program 'Fast Stack Statistics'.\n";
+	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
+		formal_input_id   => $pixelsFI->id(),
+		input_module_execution_id => $pixels->module_execution()->id() )
+		or die "Fast Stack Statistics has not been run on the Pixels to be displayed.\n";
+	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
+
+	my @mins   = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackMinimum", $image ) );
+	my @maxes  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackMaximum", $image ) );
+	my @means  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackMean", $image ) );
+	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackGeometricMean", $image ) );
+	my @geosigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackGeometricSigma", $image ) );
+	
+	my $sh; # stats hash
+	foreach( @mins ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
+	foreach( @maxes ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum(); }
+	foreach( @means ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
+	foreach( @gmeans ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
+	foreach( @geosigma ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geosigma} = $_->GeometricSigma(); }
+	return $sh;
+}
+
+####################
+
+########################
+# Parameters:
+# 	image = image object
+
+
+sub getImageWavelengths{
+	my ($self,$image)=@_;
+	my $session=$self->{session};
+	my $factory=$session->Factory();
+
+	my @Wavelengths;
+
+	my $pixels = $image->DefaultPixels()
+		or die "Could not a primary set of Pixels for this image\n";
+	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
+		or die "Image has no PixelChannelComponent attributes! Cannot display!\n";
+	my @channelComponents = grep{ $_->Pixels()->id() eq $pixels->id() } @ccs;
+	die "Image has no channel components for default Pixels!" if( scalar(@channelComponents)==0 );
+	foreach my $cc (@channelComponents) {
+		my $ChannelNum = $cc->Index();
+		my $Label;
+    		my @overlap=();
+		$Label = $cc->LogicalChannel()->Name()  || 
+		         $cc->LogicalChannel()->Fluor() || 
+		         $cc->LogicalChannel()->EmissionWavelength();
+
+		#@overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
+		#$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq undef );
+    		 $Label .= $cc->Index() if( not defined $Label || scalar( @overlap ) > 1);
+		my %h=();
+		$h{WaveNum}=$ChannelNum;
+		$h{Label}=$Label;
+		push (@Wavelengths,\%h);
+	}
+	return \@Wavelengths;
+}
+
+
+
+
+
+####################
+
+sub getDisplayOptions{
+	my ($self,$image)=@_;
+	my $session=$self->{session};
+	my $factory=$session->Factory();
+	my ($theZ,$theT,$isRGB);
+	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
+	if (defined $displayOptions){
+		$theZ=($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2;
+		$theT=($displayOptions->TStart() + $displayOptions->TStop() ) / 2;
+		$isRGB= $displayOptions->DisplayRGB();
+		my @cbw=();
+		@cbw=(
+			$displayOptions->RedChannel()->ChannelNumber(),
+			$displayOptions->RedChannel()->BlackLevel(),
+			$displayOptions->RedChannel()->WhiteLevel(),
+			$displayOptions->GreenChannel()->ChannelNumber(),
+			$displayOptions->GreenChannel()->BlackLevel(),
+			$displayOptions->GreenChannel()->WhiteLevel(),
+			$displayOptions->BlueChannel()->ChannelNumber(),
+			$displayOptions->BlueChannel()->BlackLevel(),
+			$displayOptions->BlueChannel()->WhiteLevel(),
+			$displayOptions->GreyChannel()->ChannelNumber(),
+			$displayOptions->GreyChannel()->BlackLevel(),
+			$displayOptions->GreyChannel()->WhiteLevel(),
+			);
+		my @rgbon=();
+		push (@rgbon,$displayOptions->RedChannelOn(),$displayOptions->GreenChannelOn(),$displayOptions->BlueChannelOn());	
+		my %h=(
+			'theZ' => $theZ,
+			'theT' => $theT,
+			'isRGB' => $isRGB,
+			'CBW' => \@cbw,
+			'RGBon' =>\@rgbon
+			);
+		return \%h;
+
+	}else{
+		return undef;
+
+	}
+
+
+
+}
 ####################
 # PRIVATE METHODS  #
 ####################
