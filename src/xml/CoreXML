@@ -1,6 +1,7 @@
 /OME/Core/OMECoreTypes.ome
 /OME/Import/ImportModule.ome
 /OME/Import/ImageServerStatistics.ome
+/OME/Import/FilenamePattern.ome
 /OME/Annotations/AnnotationModule.ome
 /OME/Annotations/annotations.ome
 /OME/Annotations/classification.ome

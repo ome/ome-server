@@ -97,7 +97,20 @@
                DataType="integer">
             <Description>The position of the the C in the regular expression (i.e. 4).</Description>
             </Element>
-            
-		</SemanticType>
+	</SemanticType>
 	</SemanticTypeDefinitions>
+	<CustomAttributes>
+	<FilenamePattern ID="urn:lsid:openmicroscopy.org:FilenamePattern:10"
+		Format="OME::ImportEngine::TIFFreader"
+		RegEx="^(.+)(_w)(\d+)"
+		Name="default_one"
+		TheC="3"
+		BaseName="1"/>
+	<FilenamePattern ID="urn:lsid:openmicroscopy.org:FilenamePattern:11"
+		Format="OME::ImportEngine::TIFFreader"
+		RegEx="^(.+)(_w)(\d+)(.+)"
+		Name="default_two"
+		TheC="3"
+		BaseName="1"/>
+	</CustomAttributes>
 </OME>
