@@ -77,38 +77,40 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	
 	public void mouseEntered(PInputEvent e) {
 		PNode n = e.getPickedNode();
+		System.err.println("browser event mouse entered "+n);
+		canvas.clearExecutionList();
 		if (n instanceof PSelectableText) {
 			((PSelectableText) n).setHighlighted(true);
 			if (n instanceof PChainLabelText) {
 				PChainLabelText clt = (PChainLabelText) n;
 				canvas.showExecutionList(clt);
+
 			}
 			e.setHandled(true);
 		} 
-		else {
-			canvas.clearExecutionList();
-			if (n instanceof PThumbnail)  {
-				PThumbnail pt = (PThumbnail) n;
-				pt.setHighlighted(true);
-				e.setHandled(true);
-			}
-			else if (n instanceof PDataset) {
-				PDataset dn = (PDataset) n;
-				CDataset c = dn.getDataset();
-				SelectionState.getState().setRolloverDataset(c);
-			}
-			else  {// entering anything else means setting selected datset is null
-				SelectionState.getState().setRolloverDataset(null);	 
-			}
+		else if (n instanceof PThumbnail)  {
+			PThumbnail pt = (PThumbnail) n;
+			pt.setHighlighted(true);
+			pt.setZoomingHalo(true);
+			e.setHandled(true);
+		}
+		else if (n instanceof PDataset) {
+			PDataset dn = (PDataset) n;
+			CDataset c = dn.getDataset();
+			SelectionState.getState().setRolloverDataset(c);
+		}
+		else if (!(n instanceof PThumbnailSelectionHalo))  {// entering anything else means setting selected datset is null
+			SelectionState.getState().setRolloverDataset(null);	 
 		}
 	}
 	
 	public void mouseExited(PInputEvent e) {
-	
 		PNode n = e.getPickedNode();
+		System.err.println("browser event exited.."+n);
 		if (n instanceof PThumbnail) {
 			PThumbnail pt = (PThumbnail) n;
 			pt.setHighlighted(false);
+			pt.setZoomingHalo(false);
 			e.setHandled(true);
 		}
 		else if (n instanceof PSelectableText) {
@@ -131,16 +133,21 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	public void handlePopup(PInputEvent e) {
 		postPopup = true;
 		PNode node = e.getPickedNode();
+		System.err.println("popup..."+node);
 		if (node instanceof PDataset) {
 			//zooming out, so...
 			SelectionState selectionState = SelectionState.getState();	
 			selectionState.setSelectedDataset(null);
+			((PDataset) node).enableHalo();
 		}
 		else if (node instanceof PThumbnail) {
 			PBufferedNode bn = ((PThumbnail) node).getBufferedParentNode();
 			PBounds b = bn.getBufferedBounds();
 			PCamera camera = ((PCanvas) canvas).getCamera();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+			PDatasetImagesNode pin = ((PThumbnail) node).getDatasetImagesNode();
+			if (pin != null) 
+				pin.enableHalo();
 		}
 		else
 			super.handlePopup(e);
@@ -162,6 +169,9 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				//System.err.println("zooming in on dataset");
 				PDataset d = (PDataset) node;
 				selectionState.setSelectedDataset(d.getDataset());
+				PBounds b = d.getBufferedBounds();
+				PCamera camera = ((PCanvas) canvas).getCamera();
+				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 				e.setHandled(true);
 			}
 		
@@ -173,12 +183,24 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				((PCanvas) canvas).getLayer()) {
 				selectionState.setSelectedDataset(null);
 				e.setHandled(true);
+			} else if (node instanceof PThumbnail) {
+				PThumbnail thumb = (PThumbnail)node;
+				if (thumb.isZoomable())
+					super.mouseClicked(e);
+				else { // zoom to halo?
+					System.err.println("zooming in to halo?");
+					PDatasetImagesNode pin = thumb.getDatasetImagesNode();
+					if (pin != null)
+						pin.zoomToHalo(((PCanvas) canvas).getCamera());
+				}
+				e.setHandled(true);
 			}
 			else 
 				super.mouseClicked(e);
 		}
 		else if (e.isControlDown() || ((e.getModifiers() & MouseEvent.BUTTON3_MASK) 
 			== MouseEvent.BUTTON3_MASK)) {
+			System.err.println("right button clicked on "+node);
 		  // right button.
 		  	if (node instanceof PDataset) {
 		  		selectionState.setSelectedDataset(null);
