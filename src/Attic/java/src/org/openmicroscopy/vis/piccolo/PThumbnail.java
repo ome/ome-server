@@ -48,6 +48,7 @@ import edu.umd.cs.piccolo.nodes.PImage;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.nodes.PPath;
 import org.openmicroscopy.vis.ome.CImage;
+import java.awt.image.BufferedImage;
 import java.awt.Image;
 import java.awt.Font;
 import java.awt.BasicStroke;
@@ -71,7 +72,7 @@ public class PThumbnail extends PNode implements PBufferedNode {
 			= new Font("HELVETICA",Font.PLAIN,8);
 	private CImage image;	
 	private PImage imageNode=null;
-	private Image imageData;
+	private BufferedImage imageData;
 	private PText label=null;
 	
 	private PPath highlightRect;
