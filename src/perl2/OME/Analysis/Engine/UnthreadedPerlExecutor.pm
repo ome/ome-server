@@ -48,10 +48,10 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use OME::Session;
 use Carp;
 use UNIVERSAL::require;
-
-use OME::Session;
+use Log::Agent;
 
 sub new {
     my $proto = shift;
@@ -85,7 +85,7 @@ sub executeModule {
     if ($@) {
         $mex->status('ERROR');
         $mex->error_message($@);
-        print STDERR "      Error during execution: $@\n";
+        logdbg ("debug", "      Error during execution: $@\n");
     } else {
         $mex->status('FINISHED');
     }

@@ -50,6 +50,7 @@ our $VERSION = $OME::VERSION;
 
 use Carp;
 use UNIVERSAL::require;
+use Log::Agent;
 
 use OME::SessionManager;
 use OME::Session;
@@ -88,7 +89,7 @@ sub childCallback {
     $executor_processes{$$}->{$child_pid} = 0;
     # and that there is one fewer child process out there.
     $executor_processes_out{$$}--;
-    print STDERR "    **** Reaped $child_pid\n";
+    logdbg "debug", "    **** Reaped $child_pid\n";
 }
 
 sub executeModule {
@@ -114,7 +115,7 @@ sub executeModule {
         $pid_executors{$pid} = $self;
         $executor_processes_out{$$}++;
         $executor_processes{$$}->{$pid} = 1;
-        print STDERR "    **** Forked child $pid\n";
+       	logdbg "debug", "    **** Forked child $pid\n";
         return;
     } else {
         # Child process
@@ -157,17 +158,17 @@ sub childProcess {
     croak "Malformed class name $handler_class"
       unless $handler_class =~ /^\w+(\:\:\w+)*$/;
     $handler_class->require();
-    print STDERR "    **** $pid - new handler $handler_class\n";
+    logdbg "debug", "    **** $pid - new handler $handler_class\n";
     my $handler = $handler_class->new($mex);
 
     # And try to execute it.
 
     eval {
-        print STDERR "    **** $pid - startAnalysis\n";
+        logdbg "debug", "    **** $pid - startAnalysis\n";
         $handler->startAnalysis();
-        print STDERR "    **** $pid - execute\n";
+        logdbg "debug", "    **** $pid - execute\n";
         $handler->execute($dependence,$target);
-        print STDERR "    **** $pid - finishAnalysis\n";
+        logdbg "debug", "    **** $pid - finishAnalysis\n";
         $handler->finishAnalysis();
     };
 
@@ -175,12 +176,12 @@ sub childProcess {
     # succesfully, or barfed with in error.
 
     if ($@) {
-        print STDERR "    **** $pid - Error - $@\n";
+        logdbg "debug", "    **** $pid - Error - $@\n";
         $mex->status('ERROR');
         $mex->error_message($@);
-        print STDERR "      Error during execution: $@\n";
+        logdbg "debug", "      Error during execution: $@\n";
     } else {
-        print STDERR "    **** $pid - Success\n";
+        logdbg "debug", "    **** $pid - Success\n";
         $mex->status('FINISHED');
     }
 

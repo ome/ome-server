@@ -44,8 +44,7 @@ use OME::Session;
 use OME::Tasks::ChainManager;
 
 use Carp;
-
-sub __debug { print STDERR @_, "\n"; }
+use Log::Agent;
 
 =head1 NAME
 
@@ -59,7 +58,7 @@ sub createDataPaths {
     my ($chain) = @_;
     my $factory = OME::Session->instance()->Factory();
 
-    __debug("  Building data paths");
+	logdbg ("debug", "  Building data paths");
 
     # A data path is represented by a list of node ID's, starting
     # with a root node and ending with a leaf node.
@@ -70,7 +69,7 @@ sub createDataPaths {
 
     my $root_nodes = OME::Tasks::ChainManager->getRootNodes($chain);
     foreach my $node (@$root_nodes) {
-        __debug("    Found root node ".$node->id());
+        logdbg ("debug", "    Found root node ".$node->id());
         my $path = [$node];
         push @data_paths, $path;
     }
@@ -100,7 +99,7 @@ sub createDataPaths {
                       if $_->id() eq $successors->[0]->id();
                 }
 
-                __debug("    Extending ".
+                logdbg ("debug", "    Extending ".
                         join(':',
                              map {$_->id()} @$data_path).
                         " with ".
@@ -121,7 +120,7 @@ sub createDataPaths {
 
                     # make a copy
                     my $new_path = [@$data_path];
-                    __debug("    Extending ".
+                    logdbg ("debug", "    Extending ".
                             join(':',
                                  map {$_->id()} @$new_path)." with ".
                             $successor->id());
