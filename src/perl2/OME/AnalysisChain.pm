@@ -39,6 +39,12 @@ __PACKAGE__->has_many('links',
 __PACKAGE__->has_many('paths',
                       'OME::AnalysisPath' => qw(analysis_view_id));
 
+sub owner {
+    my $self = shift;
+    return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                      $self->_owner_accessor());
+}
+
 
 
 package OME::AnalysisView::Node;
