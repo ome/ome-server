@@ -266,9 +266,20 @@ sub forkedImportAnalysisModules {
 	
         my $session = OME::SessionManager->createSession($session_key);
 		my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
-		my @file_list = @$filenames;
+		my @file_list;
 		
         $task->setMessage('Starting import');
+		# import the ome modules before the xml chains
+		foreach (@$filenames) {
+			if ($_ =~ m/\.ome$/) {
+				push (@file_list, $_);
+			}
+		}
+		foreach (@$filenames) {
+			if ($_ =~ m/\.xml$/) {
+				push (@file_list, $_);
+			}
+		}	
 		
 		foreach my $path (@$filenames){
 			$task->setMessage ("Importing $path");
