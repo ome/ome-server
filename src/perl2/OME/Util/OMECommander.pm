@@ -54,6 +54,7 @@ sub getCommands {
       {
        'admin'   => ['OME::Util::OMEAdmin'],
        'import'  => ['OME::Util::Import'],
+       'export'  => ['OME::Util::Export'],
        'execute' => ['OME::Util::ExecuteChain'],
        'top'     => ['OME::Util::Top'],
       };
