@@ -41,12 +41,12 @@ Apache::Session::File</li>
 Image::Magick (PerlMagick)</li>
 
 <li>
-Frontier::XMLRPC (patched version in src/perl/modules)</li>
+Frontier::XMLRPC (patched version <a href="packages/perl/Frontier-RPC-0.06.tar.gz">here</a>).</li>
 
 <li>
-DBI (problems with 1.20. RH 7.1 ships with 1.14 which is too old - use the one in src/perl/modules)</li>
+DBI (problems with 1.20. RH 7.1 ships with 1.14 which is too old - use the one <a href="packages/perl/DBI-1.19.tar.gz">here</a>)</li>
 <li>
-DBD::Pg (problems with many versions - use the one in src/perl/modules)</li>
+DBD::Pg (problems with many versions - use the one <a href="packages/perl/DBD-Pg-0.95.tar.gz">here</a>)</li>
 </ul>
 <p><br> The versions of perl modules can be determined from the command prompt.  For example the DBI version is:
 <pre>> perl -MDBI -e 'print "$DBI::VERSION\n";'</pre> DBI versions 1.15 to 1.19 are OK.  
@@ -65,7 +65,7 @@ do this from an account other than root.
 <pre>CPAN>install Apache::Session::File</pre>
 ...etc. You can install Frontier::XMLRPC and DBD::Pg using this mechanism
 to take care of the dependencies, and then install those modules from the
-distro on top of them. If you start getting lots of questions about your
+distro on top of them.  If you start getting lots of questions about your
 system, your processor, or your perl installation, it is trying to install
 a new version of perl! Abort this process immediately by hitting ^C.
 <p>Generally, installing Perl packages from a .tar.gz archive is done like so (assuming MyPackage-1.0.tar.gz, for example):
@@ -106,7 +106,7 @@ following libraries (not strictly required, but highly recommended):
 <br><a href="http://cnswww.cns.cwru.edu/~chet/readline/rltop.html">readline</a>
 (from gnu.org - usually present on Linux distros, but not always)
 <br><a href="http://jakarta.apache.org/ant/">ant</a> (from the jakarta
-project - binary install or <a fref="packages/RedHat/ant-1.4-2.noarch.rpm">RPM</a> is fine)
+project - binary install or <a href="packages/RedHat/ant-1.4-2.noarch.rpm">RPM</a> is fine)
 <p>run the configure script with something like the following command:
 .
 <pre>./configure --with-perl --with-tcl --enable-odbc --with-java</pre>
