@@ -42,6 +42,7 @@ use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::Params;
 use OME::Tasks::PixelsManager;
+use OME::Tasks::ImportManager;
 use Carp;
 use base qw(OME::ImportEngine::AbstractFormat);
 use vars qw($VERSION);
@@ -254,6 +255,15 @@ sub importGroup
     		}
     		$sizeT = scalar(@$fileList);
     		$xref -> { 'SizeT' } = $sizeT;
+    		
+    		my $image_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
+			my $factory = $session->Factory();
+			$factory->newAttribute( 'Dimensions', $image, $image_mex, {
+				PixelSizeX => $xref->{ 'PixelSizeX' },
+				PixelSizeY => $xref->{ 'PixelSizeY' },
+				PixelSizeZ => $xref->{ 'PixelSizeZ' },
+				}
+			) or die "Couldn't make Dimensions attribute";
    
     		$self->__storeOneFileInfo( \@finfo, $file, $params, $image,
 			0, $sizeX-1,
@@ -288,6 +298,15 @@ sub importGroup
 				$file -> close();
 				die "Failed to open image";
     		}
+    		
+    		my $image_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
+			my $factory = $session->Factory();
+			$factory->newAttribute( 'Dimensions', $image, $image_mex, {
+				PixelSizeX => $xref->{ 'Image.PixelSizeX' },
+				PixelSizeY => $xref->{ 'Image.PixelSizeY' },
+				PixelSizeZ => $xref->{ 'Image.PixelSizeZ' },
+				}
+			) or die "Couldn't make Dimensions attribute";
 
     		$self->__storeOneFileInfo( \@finfo, $file, $params, $image,
 			0, $sizeX-1,
@@ -847,3 +866,5 @@ sub dumpHash
 	my %hash = @_;
 	return "\t".join( "\n\t", map ( $_.' -> '.$hash{$_}, keys %hash ) )."\n";
 }
+
+1;
