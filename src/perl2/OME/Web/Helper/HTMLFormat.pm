@@ -394,7 +394,7 @@ sub formChange{
 	my $text="";
 	my $textarea="";
 
-	my $type=lc($type);
+	$type=lc($type);
 	my ($id,$name,$description,$owner,$group);
 	my $lock=undef;
 	$name=$object->name();
