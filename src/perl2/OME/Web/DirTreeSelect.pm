@@ -32,7 +32,7 @@ use OME::DBObject;
 use OME::Tasks::ImageTasks;
 
 sub getPageTitle {
-	return "Select Images (created by OME::Web::DirTreeSelect)";
+	return "Open Microscopy Environment - Select Images";
 }
 
 sub getPageBody {
@@ -62,13 +62,21 @@ sub getPageBody {
 			my $session = $self->Session();
 			my $project = $session->project();
 			my $radioSelect = $cgi->param('DoDatasetType');
-			# radio's are not drawn on the form if there are no datasets
+			my ($reloadTitleBar, $reloadPage);
+			
+			# If there is no dataset defined, then whole page will need 
+			# to be reloaded so Web::Home will display menubar
+			$reloadPage = 1
+				if( not defined $session->dataset);
+			# radios are not drawn on the form if there are no datasets
 			# in the project. In this case, 'addNewDataset' is implicitly chosen
 			if (not defined $radioSelect or $radioSelect eq 'addNewDataset') {
+				$reloadTitleBar = 1;
 				$dataset = $project->newDataset($cgi->param('newDataset'), $cgi->param('description') );
 				die ref($self)."->import:  Could not create dataset '".$cgi->param('newDataset')."'\n" unless defined $dataset;
+				$session->dataset($dataset);
 			} elsif ($radioSelect eq 'addExistDataset') {
-				$dataset = $session->Factory()->loadObject ("OME::Dataset",$cgi->param('addDataset'));
+				$dataset = $project->addDatasetID ($cgi->param('addDataset'));
 				die ref($self)."->import:  Could not load dataset '".$cgi->param('addDataset')."'\n" unless defined $dataset;
 			}
 
@@ -84,11 +92,21 @@ sub getPageBody {
 			} else {
 				$errorMessage = "No Dataset to import into.\n";
 			}
+			# Import messed up. Display error message & let them try again.
 			if ($errorMessage) {
 				$body .= $cgi->h3($errorMessage);
 				$body .= $self->print_form($selections[0]);
 				$body .= $cgi->h4 ('Selected Files and Folders:');
 				$body .= join ("<BR>",@selections);
+			} else {
+			# import successful. Reload titlebar & display success message.
+				# javascript to reload titlebar
+				$body .= "<script>top.title.location.href = top.title.location.href;</script>"
+					if defined $reloadTitleBar;
+				# javascript to reload titlebar
+				$body .= "<script>top.location.href = top.location.href;</script>"
+					if defined $reloadPage;
+				$body .= q`Import successful. This should display more info. But that's not implemented. What would you like to see? <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov,a_falconi_jobs@hotmail.com">email</a> the developers w/ your comments.`;
 			}
 		}
 		# If we have a selection, but import button wasn't clicked, print the form:
