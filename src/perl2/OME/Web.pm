@@ -834,7 +834,10 @@ returns a url to a detailed view of the object
 sub getObjDetailURL {
 	my ($self, $obj) = @_;
 	my $formal_name = $obj->getFormalName();
-	return "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=".$obj->id();
+	return $self->pageURL( 'OME::Web::DBObjDetail', { 
+		Type => $formal_name,
+		ID   => $obj->id()
+	} );
 }
 
 =head2 getSearchAccessorURL
