@@ -470,7 +470,8 @@ LOOP:
 			# Trim leading and trailing whitespace.
 				$column =~ s/^\s+//;
 				$column =~ s/\s+$//;
-			# use the feature object's data member method to set the value
+			# Numeric columns ONLY.  Set undef if not like a C float.
+				$column = undef unless ($column =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);			# use the feature object's data member method to set the value
 				$dataMember = $dataMembers[$k];
 				$feature->$dataMember($column);
 			}

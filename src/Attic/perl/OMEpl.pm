@@ -106,7 +106,7 @@ my $tempDirectory     =   '/var/tmp/OME/';
 my $datasetDirectory  =   '/OME/Datasets/';
 my $binPath           =   '/OME/bin/';
 
-my $DefaultDatasetView = "SELECT name FROM datasets WHERE";
+my $DefaultDatasetView = "SELECT name,path FROM datasets WHERE";
 my $DefaultFeatureView = "location.attribute_of location.x location.y location.z";
 
 my $OMEpreInited = undef;
@@ -1773,6 +1773,7 @@ sub WriteFeatures ()
 	}
 
 	$self->{dbHandle}->do ("INSERT INTO features (feature_id,analysis_id) SELECT feature_id,analysis_id FROM foobar");
+
 	while ( ($table,$tableHash) = each (%tableNames) )
 	{
 		if (exists $tableHash->{subTables}) {
@@ -2924,7 +2925,7 @@ sub CGIheader ()
 	my %params = @_;
 	
 	$params{-cookie} = [$self->SIDcookie,$self->RefererCookie];
-	$params{-expires} = 'now';
+	$params{-expires} = '-1d';
 	return ($self->{cgi}->header(%params));
 }
 
