@@ -242,7 +242,12 @@ sub execute {
 		foreach my $directory (@core_dirs) {
 		   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
 		}
-
+		
+	    # Make sure the rest of the installation knows where the core directories are
+    	$environment->base_dir($$OME_BASE_DIR);
+    	$environment->tmp_dir($$OME_TMP_DIR);
+		$environment->omeis_base_dir($$OMEIS_BASE_DIR);
+		
 		# Confirm and/or update our group information
 		$OME_GROUP = confirm_default("The group which OME should be run under", $OME_GROUP);
 
@@ -280,12 +285,7 @@ sub execute {
 		$environment->apache_user($APACHE_USER);
 		$environment->postgres_user($POSTGRES_USER);
 		$environment->admin_user($ADMIN_USER);
-
-    	# Make sure the rest of the installation knows where the core directories are
-    	$environment->base_dir($$OME_BASE_DIR);
-    	$environment->tmp_dir($$OME_TMP_DIR);
-		$environment->omeis_base_dir($$OMEIS_BASE_DIR);
-
+		
 		$confirm_all = 1;
 
 		print "\n";  # Spacing
