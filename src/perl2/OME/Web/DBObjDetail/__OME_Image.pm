@@ -95,17 +95,15 @@ sub _takeAction {
 }
 
 
-sub _tableDescriptor {
+sub TableHeader {
 	my ($self, $object) = @_;
-	my $tableDescriptor = $self->SUPER::_tableDescriptor( $object );
 	my $q = $self->CGI();
-	return $tableDescriptor.' | '.
-		$q->a( {
-			-href => "#",
-			-onClick => "document.forms['".$self->{ form_name }."'].action.value='SaveChanges'; document.forms['".$self->{ form_name }."'].submit(); return false",
-			}, 
-			'Save Changes'
-		);
+	return $q->a( {
+		-href => "#",
+		-onClick => "document.forms['".$self->{ form_name }."'].action.value='SaveChanges'; document.forms['".$self->{ form_name }."'].submit(); return false",
+		}, 
+		'Save Changes'
+	);
 }
 
 sub _overrideRecord {
