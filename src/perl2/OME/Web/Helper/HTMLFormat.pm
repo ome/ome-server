@@ -394,7 +394,7 @@ sub formChange{
 	my $text="";
 	my $textarea="";
 
-	my $typ=lc($type);
+	my $type=lc($type);
 	my ($id,$name,$description,$owner,$group);
 	my $lock=undef;
 	$name=$object->name();
@@ -402,11 +402,11 @@ sub formChange{
 
 	#####
 	
-	$owner=$user->FirstName()." ".$user->LastName()." <a href='mailto:".$user->Email()."'>".$user->Email()."</a>";
+	$owner="<a href=mailto:\"" . $user->Email() . "\">" . $user->FirstName() . " " . $user->LastName() . "</a>";
 	$group=$user->Group()->Name();
 	
 	my ($components, $componentCount );
-	if ($typ eq "dataset"){
+	if ($type eq "dataset"){
 		$id=$object->id();
 		if ($object->locked()){
 		  $lock="locked";
@@ -435,7 +435,7 @@ sub formChange{
 	"Owner"	=>$owner,
 	"Group"	=>$group,
 	"ID"    =>$id,
-	"Number of $components in $typ" =>$componentCount
+	"Number of $components in $type" =>$componentCount
 	);
 	$c{"Locked/Unlocked"}=$lock if (defined $lock);
 	$rows.=addRow(\%a);
@@ -459,8 +459,6 @@ sub formChange{
 	$html .= "<br><font size=-1>An asterick (*) denotes a required field</font>";
 
 	return $html;
-
-
 }
 
 
