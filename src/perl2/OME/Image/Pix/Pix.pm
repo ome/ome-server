@@ -43,41 +43,66 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   	|| die "Could not instantiate OME::Image::Pix object";
 
   # Get the entire 5-D image
-  my $pixels = $pix->GetPix () || die "Could not allocate buffer\n";
-
-  # The returned scalar can be unpacked into an array.  This is probably never a good idea:
-  my @pixArray = unpack ("S*",$pixels);
+  my $pixels = $pix->GetPixels () || die "Could not allocate buffer\n";
 
   # Get an XY plane of pixels by specifying theZ, theW, and theT
-  my $plane = $pix->GetPixPlane (4,1,1) || die "Could not allocate buffer\n";
+  my $plane = $pix->GetPlane (4,1,1) || die "Could not allocate buffer\n";
+
+  # The returned scalar can be unpacked into an array.  This is probably never a good idea:
+  my @pixArray = unpack ("S*",$plane);
+
+  # It can also be manipulated by Perl's vec() function:
+  # Note that these changes will not be permanent (i.e. written to the image file)
+  # unless $pix->SetPlane() (or another Set method) is called.
+  vec ($plane, $sizeX * $x + $y, 16) = 3;
 
   # Get an XYZ stack of pixels by specifying theW, and theT
-  my $stack = $pix->GetPixStack (3,4) || die "Could not allocate buffer\n";
+  my $stack = $pix->GetStack (3,4) || die "Could not allocate buffer\n";
 
-  # Get a 5D ROI by specifying x0,y0,z0,w0,t0,x1,y1,z1,w1,t1
-  my $ROI = $pix->GetPixROI (1,1,1,1,1,3,3,3,3,3) || die "Could not allocate buffer\n";
+  # Get a 5D ROI:
+  my $ROI = $pix->GetROI ($x0,$y0,$z0,$w0,$t0,$x1,$y1,$z1,$w1,$t1) || die "Could not allocate buffer\n";
 
 
   # Set the entire 5-D image.
-  # $nPixOut is the number of pixels written to the file.  This value should be checked.
-  my $nPixOut = $pix->SetPix ($pixels);
+  # $nPixOut is the number of pixels (not bytes) written to the file.  This value should be checked.
+  my $nPixOut = $pix->SetPixels ($pixels);
 
   # Set an XY plane of pixels by specifying theZ, theW, and theT
-  my $nPixOut = $pix->SetPixPlane ($plane,4,1,2) || die "Could not allocate buffer\n";
+  my $nPixOut = $pix->SetPlane ($plane,4,1,2);
 
   # Set an XYZ stack of pixels by specifying theW, and theT
-  my $nPixOut = $pix->SetPixStack ($stack,0,4) || die "Could not allocate buffer\n";
+  my $nPixOut = $pix->SetStack ($stack,0,4);
 
-  # Set a 5D ROI by specifying x0,y0,z0,w0,t0,x1,y1,z1,w1,t1
-  my $nPixOut = $pix->SetPixROI ($ROI,3,3,3,3,3,5,5,5,5,5) || die "Could not allocate buffer\n";
+  # Set a 5D ROI:
+  my $nPixOut = $pix->SetROI ($ROI,$x0,$y0,$z0,$w0,$t0,$x1,$y1,$z1,$w1,$t1);
 
 
 =head1 DESCRIPTION
 
-This is implemented by blessing the C struct used in libpix (returned by libpix->new())
+This is implemented by blessing the C struct pointer used in libpix (returned by libpix->NewPix())
 into the Perl class OME::Image::Pix.
 The purpose of this class is to provide some pixel get/set and manipulation methods implemented in C.
-This package should really only be used by OME::Image.  It is fully independent of it, but not very useful without it.
+This class is meant to be used by OME::Image.  It is fully independent of it, but not very useful without it.
+
+Usually, access to Pix is handled through OME::Image:
+
+
+  my $image = #However you got your OME::Image
+  my $plane = $image->Pix->GetPlane ($theZ, $theT, $theW);
+
+There is nothing special to do with the memory allocated in OME::Image::Pix.  All memory is safely passed to Perl and
+is managed by Perl's garbage collection.  In other words, move along, nothing to see here, don't mind the man behind the curtain.
+There are some more memory allocation/deallocation details for the pathologically curious:
+
+The memory allocated in C by NewPix is returned to Perl as an object blessed into the OME::Image::Pix package (a reference to a scalar).
+The memory is de-allocated during the regular Perl garbage collection process through the DESTROY Perl class call, 
+which in-turn calls libpix->FreePix().
+
+Memory allocated in C by the Get methods return that memory as a regular Perl 'string', which is not NULL-terminated and
+which may have embedded NULLs.  This can be manipulated in Perl using vec() and unpack().
+This string is also targeted for regular Perl garbage collection just like regular strings.
+For efficiency, the memory allocated is not copied to the Perl string.  The pointer to Perl's string memory is simply re-assigned to what was
+allocated in libpix.  You can dig around Pix.xs and PERLGUTS to figure out how that's done.
 
 =head2 EXPORT
 
