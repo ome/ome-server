@@ -844,7 +844,7 @@
       FieldID="DISPLAY_ROI.T1"/>
 
     <SemanticElement
-      Name="DISPLAY_OPTIONS"
+      Name="DisplayOptions"
       FieldID="DISPLAY_ROI.DISPLAY_OPTIONS"/>
 
 </SemanticType>
