@@ -197,11 +197,12 @@ sub getPageBody {
 		
 		# SEARCH & RENDER 		
 		my ($objects, $paging_text ) = $self->search();
-		my $rendering = $render->renderArray( $objects, $display_mode, { _pager_text => $paging_text } );
+		my $rendering = $render->renderArray( $objects, $display_mode, 
+			{ _pager_text => $paging_text, type => $type } );
 		# render & print results
 		$tmpl_data{ results } = $rendering;
 
-		# Reset fielse if the search type was just switched.
+		# Reset fields if the search type was just switched.
  		unless( !$search_type || $type eq $search_type ) {
  			$q->param( '__order', '' );
  			$q->param( '__offset', '' );
