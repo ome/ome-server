@@ -1,0 +1,8 @@
+<h2>Export Images to OME XML</h2>
+File Name:<input type="text" id="filename" name="filename" size="30"><br>
+<a href="javascript:selectMany('OME::Image', 'images_to_export');">Select Images to export</a>
+<button type="submit" id="action" name="action" value="Export">Export</button>
+<a href='javascript: document.forms[0].elements["images_to_export"].value = ""; document.forms[0].submit();' "title='Clear Images'/>Reset Image selection</a>
+<hr>
+<h3>Selected Images</h3>
+<TMPL_VAR NAME="selected_images">
