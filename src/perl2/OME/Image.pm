@@ -98,13 +98,10 @@ sub Dimensions {
     my ($x, $y, $z, $w, $t, $BitsPerPixel) = @_;
     
    	# look for dimensions
-    my @dimensions = OME::Image::Dimensions->search (image_id => $self->id());
+    my @dimensions = $self->Session()->Factory()->findObject( "OME::Image::Dimensions", image_id => $self->id());
 
     # if they gave us some parameters to mutate with, let's mutate!
     if( defined $BitsPerPixel ) {
-    	# the lack of $self->{_dimensions} merely indicates this function
-    	# has not been called previously on this object. The image could 
-    	# have dimensions tucked away in the DB.
     	die ref ($self) . "->Dimensions() does not allow mutator behavior once dimensions have been set!\n"
     		if ( scalar(@dimensions) > 0 );
     	my $recordData = { image_id       => $self->id(),
