@@ -59,7 +59,7 @@ if ($pageClass) {
 	};
 	
 	if ($@) {
-		print $CGI->header(-type => 'text/html');
+		print $CGI->header(-type => 'text/html',-status => "500 Internal Error");
 		print "<pre>Error serving $pageClass.\n";
 		print "Error message is\n$@\n" if $@ ne '';
 		print "</pre>";
