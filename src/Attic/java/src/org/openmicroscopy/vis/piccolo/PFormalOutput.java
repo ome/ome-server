@@ -63,7 +63,7 @@ public class PFormalOutput extends PFormalParameter {
 		if (param.getSemanticType() != null)
 			connection.addOutput(param.getSemanticType(),this);
 		locator = new PParameterLocator(this,SwingConstants.EAST);
-		addCircle();
+		addTarget();
 		updateBounds();  
 	}
 		

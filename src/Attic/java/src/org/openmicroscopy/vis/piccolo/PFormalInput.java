@@ -74,7 +74,7 @@ public class PFormalInput extends PFormalParameter {
 				PFormalParameter.TYPE_NODE_VERTICAL_OFFSET);	
 		// create locator
 		locator = new PParameterLocator(this,SwingConstants.WEST);
-		addCircle();
+		addTarget();
 		updateBounds();
 	}
 	

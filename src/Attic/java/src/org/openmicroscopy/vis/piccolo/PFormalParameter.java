@@ -140,7 +140,7 @@ public abstract class PFormalParameter extends PNode implements
 		
 	}
 	
-	protected void addCircle() {
+	protected void addTarget() {
 		PBounds b = labelNode.getFullBoundsReference();
 		//Point2D point = new Point2D.Float();
 		//getLocator().locatePoint(point);
@@ -150,6 +150,7 @@ public abstract class PFormalParameter extends PNode implements
 		//float y = (float) b.getY()+CIRC_BUFFER;
 		target = new PLinkTarget();
 		addChild(target);
+		target.setPickable(false);
 		setCirclePosition();
 	}
 	
