@@ -77,6 +77,34 @@ sub addImagesToDataset {
     return;
 }
 
+sub addImageToDatasets {
+    my ($proto,$dataset_ids,$image_id) = @_;
+
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+    my @datasets;
+    $dataset_ids = [$dataset_ids] unless ref($dataset_ids);
+    foreach my $dataset_id (@$dataset_ids) {
+        my $dataset = $factory->loadObject('OME::Dataset',$dataset_id);
+        die "Dataset does not exist" unless defined $dataset;
+        push @datasets, $dataset;
+    }
+
+    my $image = $factory->loadObject('OME::Image',$image_id);
+    die "Image does not exist" unless defined $image;
+
+    foreach my $dataset (@datasets) {
+        $factory->maybeNewObject('OME::Image::DatasetMap',
+                                 {
+                                  dataset => $dataset,
+                                  image => $image,
+                                 });
+    }
+
+    return;
+}
+
 sub removeImagesFromDataset {
     my ($proto,$dataset_id,$image_ids) = @_;
 
