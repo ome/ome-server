@@ -296,7 +296,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			selected.setModulesHighlighted(false);
 			int id = selected.getModule().getID();
 			ModuleSelection text = new ModuleSelection(id);
-			System.err.println("dragging..."+id);
+			System.err.println("dragging.module set module selection.."+id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,text,dragListener);
 		}
 	}

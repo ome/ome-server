@@ -116,7 +116,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 			};
 		dragSource = new DragSource();
 		dragSource.createDefaultDragGestureRecognizer(this,
-			DnDConstants.ACTION_MOVE,this);
+			DnDConstants.ACTION_COPY,this);
 		PCamera camera = getCamera();
 		camera.addInputEventListener(new PPaletteToolTipHandler(camera));
 		populate();		
@@ -206,7 +206,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		if (chainSelected == true) {
 			Integer id = new Integer(selectedChainID);
 			ChainSelection c = new ChainSelection(id);
-			System.err.println("dragging..."+id);
+			System.err.println("dragging.chain.. chain selection."+id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);
 		}
 	}
