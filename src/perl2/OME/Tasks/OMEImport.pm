@@ -238,7 +238,6 @@ sub detectAndMarkDuplicateObjects {
 	my ($self, $hierarchyImporter) = @_;
 	
 	my $factory	= $self->{session}->Factory();
-	my @dupObjs;
 	
 	logdbg "debug", ref ($self)."->detectDuplicateObjects: Looking for objects in the DB identical to imported objects with malformed LSIDs";
 
@@ -254,10 +253,12 @@ sub detectAndMarkDuplicateObjects {
 			#   given in the file.
 			$criteria->{ module_execution_id } = $object->module_execution_id
 				unless $hierarchyImporter->createdMEXduringImport( $object->module_execution_id );
-			logdbg "debug", ref ($self)."->detectDuplicateObjects: searching with criteria\n\t".join( "\n\t", map ( $_." => ".$criteria->{$_}, keys %$criteria ) );
+#			logdbg "debug", ref ($self)."->detectDuplicateObjects: searching with criteria\n\t".join( "\n\t", map ( $_." => ".$criteria->{$_}, keys %$criteria ) );
 			my @matches = $factory->findAttributes( $object->semantic_type, $criteria);
 			@matches = grep( $_->id ne $object->id, @matches);
-			if( scalar @matches > 0 ) {  # duplicate object found
+			#####################
+			# duplicate object found
+			if( scalar @matches > 0 ) {  
 				my $new_referent = $matches[0];
 				logdbg "debug", ref ($self)."->detectDuplicateObjects: found matching object ($new_referent, ".$new_referent->id.")";
 				# We found an existing attr that matches. Change references to the duplicate obj to the existing db object.
@@ -266,12 +267,11 @@ sub detectAndMarkDuplicateObjects {
 					$obj->$field( $new_referent );
 					$obj->storeObject()
 				}
+# FIXME: need to delete duplicate objects or mark them for hierarchy import to delete
+# FIXME: need to map duplicate objects' recent import MEX to pre-existing objects via virtual MEX once Imports are recorded as virtual MEXs
 			}
-			push(@dupObjs, $object);
 		}
 	}
-	# FIXME: need to map duplicated objects' recent import MEX to pre-existing objects via virtual MEX once Imports are recorded as virtual MEXs
-	$hierarchyImporter->doNotStoreTheseObjects( @dupObjs );
 }
 
 1;
