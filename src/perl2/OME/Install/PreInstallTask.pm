@@ -132,7 +132,7 @@ sub install {
 sub execute {
     print_header ("Pre-Installation");
     
-#    open ($LOGFILE, ">", "/dev/null");
+    open ($LOGFILE, ">", "/dev/null");
 
     print "Installing Term::ReadKey if needed. ";
     my $retval = install ($modules[0]);
@@ -141,7 +141,7 @@ sub execute {
 
     print "\n";  # Spacing
 
-#   close ($LOGFILE);
+   close ($LOGFILE);
 
 }
 
