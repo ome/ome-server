@@ -41,6 +41,8 @@ use strict;
 
 
 use OME;
+use OME::Session;
+use OME::Tasks::ImageManager;
 our $VERSION = $OME::VERSION;
 
 =head 1 NAME
@@ -359,14 +361,14 @@ sub formatProject{
 #	imageID
 sub formatThumbnail{
 	my $self=shift;
-	my ($object)=@_;
-	my $imageName=$object->name();
-	my $imageID=$object->id();
+	my ($image)=@_;
+	my $imageID=$image->id();
 	my $rows="";
 	my $html="";
 	my ($name,$imageTag);
-	$name="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\">".$imageName."</a>";
-	$imageTag="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$imageID align=\"bottom\" border=0></a>";
+	my $image_manager = OME::Tasks::ImageManager->new();
+	$name="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\">".$image->name()."</a>";
+	$imageTag="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\"><img src=".$image_manager->getThumbURL($image)." alt='N/A' align=\"bottom\" border=0></a>";
 	my %h=(
 	1=>{ content=>$imageTag, attribute=>$self->{cellLeft}}
 	);
@@ -848,6 +850,10 @@ sub imageInDataset{
 	my $rows="";
 	my $html="";
 
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+	my $image_manager = OME::Tasks::ImageManager->new();
+
 	my %H=(
 	1	=> { content=>"<b>Name</b>",attribute=>$self->{cellLeft}},
 	2	=>{ content=>"<b>ID</b>",attribute=>$self->{cellLeft}},
@@ -865,7 +871,9 @@ sub imageInDataset{
 			$name=$k->name();
 			$id=$k->id();
 		}
-		$view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$id align=\"bottom\" border=0></a>";
+		my $image = $factory->loadObject('OME::Image', $id)
+			or die "couldn't load an image from id ($id)";
+		$view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=\"".$image_manager->getThumbURL($image)."\" alt='N/A' align=\"bottom\" border=0></a>";
 
 		#$view=buttonPopUp($id,"View","openPopUpImage");
 	
@@ -1352,17 +1360,23 @@ sub writeCheckBox{
 sub writeCheckBoxImage{
 	my $self=shift;
 	my ($ref)=@_;
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+	my $image_manager = OME::Tasks::ImageManager->new();
 	my @list=();
 	my $html="";
-	foreach my $i (keys %$ref){
-	 	my $val="";
-		my $view="<a href=\"#\" onClick=\"return openPopUpImage($i)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$i." align=\"bottom\" border=0></a>";
+	foreach my $id (keys %$ref){
+		my $image = $factory->loadObject('OME::Image', $id)
+			or die "couldn't load an image from id ($id)";
 
-		#my $view=buttonPopUp($i,"View","openPopUpImage");
+	 	my $val="";
+		my $view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=\"".$image_manager->getThumbURL($image)."\" alt='N/A' align=\"bottom\" border=0></a>";
+
+		#my $view=buttonPopUp($id,"View","openPopUpImage");
 		#$val.=$view."&nbsp;&nbsp;";
 		$val.=$view."<br>";
-	 	$val.=buttonInput("checkbox","ListImage",$i);
-	 	$val.=${$ref}{$i}->name();
+	 	$val.=buttonInput("checkbox","ListImage",$id);
+	 	$val.=${$ref}{$id}->name();
 		push(@list,$val);
 	}
 	$html.=$self->gallery(\@list);

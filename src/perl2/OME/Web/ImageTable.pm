@@ -51,6 +51,7 @@ use Data::Dumper;
 # OME Modules
 use OME;
 use OME::Image;
+use OME::Tasks::ImageManager;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -139,6 +140,7 @@ sub getTable {
 	# Method variables
 	my $factory = $self->Session()->Factory();
 	my $q = $self->CGI();
+	my $image_manager = OME::Tasks::ImageManager->new();
 	my $table_data;
 
 	$self->{allow_search} = 0 if( @images );
@@ -179,7 +181,7 @@ sub getTable {
 		my $thumbnail = $q->img( {
 				-align => 'bottom',
 				-border => 1,
-				-src => "/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$id",
+				-src => $image_manager->getThumbURL($image),
 				-alt => 'N/A',
 			}
 		);
