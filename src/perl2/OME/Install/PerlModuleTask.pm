@@ -370,25 +370,10 @@ my @modules = (
     },{
 	name => 'XML::Parser',
 	repository_file => "$REPOSITORY/XML-Parser-2.34.tar.gz",
-	get_module_version => sub {
-	    my $version;
-	    my $eval = 'use XML::Parser; $version = $XML::Parser::VERSION;';
-
-	    eval($eval);
-
-	    return $version ? $version : undef;
-	}
     },{
 	name => 'SOAP::Lite',
 	repository_file => "$REPOSITORY/SOAP-Lite-0.55.tar.gz",
-	get_module_version => sub {
-	    my $version;
-	    my $eval = 'use SOAP::Lite; $version = $SOAP::Lite::VERSION;';
-
-	    eval($eval);
-
-	    return $version ? $version : undef;
-	},
+	valid_versions => ['eq 0.55'],
 	configure_module => sub {
 	    # Since SOAP::Lite has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
