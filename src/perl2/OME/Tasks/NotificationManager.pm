@@ -190,7 +190,7 @@ sub wait {
 =head2 notify ('condition')
 
 This method can be called to notify listeners of a specified condition.  Listeners can
-be notified of the specified condition by calling:
+wait for a specified condition to occur by calling:
 
  OME::Tasks::NotificationManager->wait ('condition',$timeout);
 
