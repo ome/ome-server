@@ -164,38 +164,54 @@ sub import {
 	$opts{AllowDuplicates} = 1 if $reuse;
 	
 	print "Importing files\n";
-	my $task = OME::Tasks::ImageTasks::forkedImportFiles ($dataset, \@file_names, \%opts);
-	
-	my $lastStep = -1;
-	my $status = $task->state();
-	while ($status eq 'IN PROGRESS') {
-		$task->refresh();
-	
-		my $step = $task->last_step();
-		my $message = $task->message();
-		defined $message or $message = "";
+	my $task = OME::Tasks::NotificationManager->
+        new('Importing images',3+scalar(@file_names));
+	$task->setPID($$);
+	$task->step();
+	$task->setMessage('Starting import');
+	my $pid = OME::Fork->fork();
+
+	if (!defined $pid) {
+		die "Could not fork off process to perform the import";
+	} elsif ($pid) {
+		# Parent process
+		my $lastStep = -1;
+		my $status = $task->state();
+		while ($status eq 'IN PROGRESS') {
+			$task->refresh();
 		
-		if ($step != $lastStep ) {
-			print "  $step/",$task->n_steps(),": [",
-			  $task->state(),"] ",
-			  $message,"\n";
-			$lastStep = $step;
+			my $step = $task->last_step();
+			my $message = $task->message();
+			defined $message or $message = "";
+			
+			if ($step != $lastStep ) {
+				print "	 $step/",$task->n_steps(),": [",
+				  $task->state(),"] ",
+				  $message,"\n";
+				$lastStep = $step;
+			}
+		
+			$status = $task->state();
+		
+			sleep 2;
 		}
-	
-		$status = $task->state();
-	
-		sleep 2;
+		
+		$task->refresh();
+		my $step = $task->last_step();
+		print "	 $step/",$task->n_steps(),": [",
+		  $task->state(),"] ",
+		  $task->message(),"\n";
+		
+		print "\n\nDone.\n";
+		
+		#foreach my $image (@$images) {
+		#	 print $image->id(),": ",$image->name(),"\n";
+		#}
+	} else {
+		# Child process
+
+		my $session = OME::Session->instance();
+		POSIX::setsid() or die "Can't start a new session. $!";
+		OME::Tasks::ImageTasks::importFiles ($dataset, \@file_names, \%opts, $task);
 	}
-	
-	$task->refresh();
-	my $step = $task->last_step();
-	print "  $step/",$task->n_steps(),": [",
-	  $task->state(),"] ",
-	  $task->message(),"\n";
-	
-	print "\n\nDone.\n";
-	
-	#foreach my $image (@$images) {
-	#    print $image->id(),": ",$image->name(),"\n";
-	#}
 }
