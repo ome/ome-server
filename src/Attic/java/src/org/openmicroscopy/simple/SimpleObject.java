@@ -59,6 +59,7 @@ public class SimpleObject
 
     public int getID() { return id; }
     public void writeObject() {}
+    public void refresh() {}
     public Session getSession()
     {
         throw new UnsupportedOperationException("There is no SimpleSession");

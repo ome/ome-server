@@ -61,6 +61,11 @@ public interface OMEObject
     public int getID();
 
     /**
+     * Empties any local element cache in this object.
+     */
+    public void refresh();
+
+    /**
      * Saves this object's state to the OME database and commits any
      * active database transaction.
      */
