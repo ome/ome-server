@@ -26,21 +26,18 @@
 			b1 = new button( 
 				20, 20, showB1,
 				svgDocument.getElementById("redButtonOn").firstChild.data,
-				svgDocument.getElementById("redButtonOff").firstChild.data,
-				svgDocument.getElementById("blankButtonHighlight").firstChild.data
+				svgDocument.getElementById("redButtonOff").firstChild.data
 			);
 			b2 = new button( 
 				40, 20, showB2,
 				svgDocument.getElementById("greenButtonOn").firstChild.data,
-				svgDocument.getElementById("greenButtonOff").firstChild.data,
-				svgDocument.getElementById("blankButtonHighlight").firstChild.data
+				svgDocument.getElementById("greenButtonOff").firstChild.data
 			);
 			b2.setLabel(2, -5, "2");
 			b3 = new button(
 				60, 20, showB3,
 				svgDocument.getElementById("blueButtonOn").firstChild.data,
-				svgDocument.getElementById("blueButtonOff").firstChild.data,
-				svgDocument.getElementById("blankButtonHighlight").firstChild.data
+				svgDocument.getElementById("blueButtonOff").firstChild.data
 			);
 			b4 = new button( 40, 50, showB4 );
 
@@ -101,9 +98,6 @@
 		]]></text>
 		<text id="blueButtonOff"><![CDATA[
 			<circle cx="5" cy="5" r="5" fill="darkblue"/>
-		]]></text>
-		<text id="blankButtonHighlight"><![CDATA[
-			<circle cx="5" cy="5" r="5" fill="white" stroke="none" opacity="0"/>
 		]]></text>
 	</defs>
 	<g id="controls">
