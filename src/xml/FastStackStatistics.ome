@@ -1,0 +1,236 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+    <SemanticType Name="StackMean" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Mean" DBLocation="STACK_STATISTICS.MEAN" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="StackGeometricMean" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="GeometricMean" DBLocation="STACK_STATISTICS.GEOMEAN" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="StackSigma" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sigma" DBLocation="STACK_STATISTICS.SIGMA" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="StackMinimum" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Minimum" DBLocation="STACK_STATISTICS.MINIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="StackMaximum" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Maximum" DBLocation="STACK_STATISTICS.MAXIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="StackCentroid" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="X" DBLocation="STACK_STATISTICS.CENTROID_X" DataType="float"/>
+      <Element Name="Y" DBLocation="STACK_STATISTICS.CENTROID_Y" DataType="float"/>
+      <Element Name="Z" DBLocation="STACK_STATISTICS.CENTROID_Z" DataType="float"/>
+    </SemanticType>
+
+    <SemanticType Name="PlaneMinimum" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Minimum" DBLocation="PLANE_STATISTICS.MINIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="PlaneMaximum" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Maximum" DBLocation="PLANE_STATISTICS.MAXIMUM" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="PlaneSum_i" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sum_i" DBLocation="PLANE_STATISTICS.SUM_I" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneSum_i2" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sum_i2" DBLocation="PLANE_STATISTICS.SUM_I2" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneSum_log_i" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sum_log_i" DBLocation="PLANE_STATISTICS.SUM_LOG_I" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneSum_Xi" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sum_Xi" DBLocation="PLANE_STATISTICS.SUM_XI" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneSum_Yi" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sum_Yi" DBLocation="PLANE_STATISTICS.SUM_YI" DataType="float"/>
+    </SemanticType>
+    <SemanticType Name="PlaneSum_Zi" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="Sum_Zi" DBLocation="PLANE_STATISTICS.SUM_ZI" DataType="float"/>
+    </SemanticType>
+
+
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule ModuleName = "Stack statistics" 
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
+	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
+	<Declaration>
+		<FormalInput Name = "PlaneMinimum" SemanticTypeName = "PlaneMinimum" Description = "" Count="!"/>
+		<FormalInput Name = "PlaneMaximum" SemanticTypeName = "PlaneMaximum" Description = "" Count="!"/>
+		<FormalInput Name = "PlaneSum_i" SemanticTypeName = "PlaneSum_i" Description = "" Count="!"/>
+		<FormalInput Name = "PlaneSum_i2" SemanticTypeName = "PlaneSum_i2" Description = "" Count="!"/>
+		<FormalInput Name = "PlaneSum_log_i" SemanticTypeName = "PlaneSum_log_i" Description = "" Count="!"/>
+		<FormalInput Name = "PlaneSum_Xi" SemanticTypeName = "PlaneSum_Xi" Description = "" Count="!"/>
+		<FormalInput Name = "PlaneSum_Yi" SemanticTypeName = "PlaneSum_Yi" Description = "" Count="!"/>
+		<FormalInput Name = "PlaneSum_Zi" SemanticTypeName = "PlaneSum_Zi" Description = "" Count="!"/>
+		<FormalOutput Name = "Stack minima"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack maxima"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack means"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack geomeans"   SemanticTypeName = "StackGeometricMean"   Description = "Geometric mean of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack sigmas"     SemanticTypeName = "StackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack centroids" SemanticTypeName = "StackCentroid" Description = "x, in pixels, of center of intensity for the stack" Count="+"/>
+	</Declaration>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
+		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
+		<CommandLine>
+			<InputSubString>
+				<RawText> Dims=</RawText>
+			</InputSubString>
+			<InputSubString>
+				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeX"/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeY"/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeZ"/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeC"/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeT"/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<Input AML:FormalInputName = "Pixels" SemanticElementName = "BitsPerPixel" DivideBy = "8"/>
+			</InputSubString>
+		</CommandLine>
+		<STDOUT>
+			<OutputRecord RepeatCount = "1">
+				<pat>^.*?\n</pat>
+			</OutputRecord>
+			<!-- That eats a line. The first line of the output is column headers -->
+			<OutputRecord>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<Output AccessBy = "1">
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack minima"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack maxima"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack means"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack geomeans"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack sigmas"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack centroids"/>
+				</Output>
+				<Output AccessBy = "2">
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack minima"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack maxima"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack means"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack geomeans"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack sigmas"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack centroids"/>
+				</Output>
+				<Output AccessBy = "3">
+					<OutputTo SemanticElementName = "Minimum"       FormalOutputName = "Stack minima"/>
+				</Output>
+				<Output AccessBy = "4">
+					<OutputTo SemanticElementName = "Maximum"       FormalOutputName = "Stack maxima"/>
+				</Output>
+				<Output AccessBy = "5">
+					<OutputTo SemanticElementName = "Mean"      FormalOutputName = "Stack means"/>
+				</Output>
+				<Output AccessBy = "6">
+					<OutputTo SemanticElementName = "GeometricMean"   FormalOutputName = "Stack geomeans"/>
+				</Output>
+				<Output AccessBy = "7">
+					<OutputTo SemanticElementName = "Sigma"     FormalOutputName = "Stack sigmas"/>
+				</Output>
+				<Output AccessBy = "8">
+					<OutputTo SemanticElementName = "X" FormalOutputName = "Stack centroids"/>
+				</Output>
+				<Output AccessBy = "9">
+					<OutputTo SemanticElementName = "Y" FormalOutputName = "Stack centroids"/>
+				</Output>
+				<Output AccessBy = "10">
+					<OutputTo SemanticElementName = "Z" FormalOutputName = "Stack centroids"/>
+				</Output>
+			</OutputRecord>
+			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
+		</STDOUT>
+	</ExecutionInstructions>
+</AnalysisModule>
+
+</AML:AnalysisModuleLibrary>
+
+</OME>
