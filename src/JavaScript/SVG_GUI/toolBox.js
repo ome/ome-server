@@ -188,6 +188,7 @@ toolBox.prototype.buildSVG = function() {
 		GUIboxClip.appendChild( this.textToSVG(this.GUIboxText) );
 		this.nodes.GUIbox = GUIboxClip.lastChild;
 	}
+	this.nodes.GUIbox.setAttribute( 'name', 'GUIbox' );
 	GUIboxContainer.appendChild( GUIboxClip );
 	GUIboxContainer.appendChild( GUIboxNoClip );
 	box.appendChild( GUIboxContainer );
@@ -199,6 +200,7 @@ toolBox.prototype.buildSVG = function() {
 	// for a root node.
 	this.nodes.menuBar = svgDocument.createElementNS(svgns, 'g');
 	this.nodes.menuBar.appendChild( this.textToSVG(this.menuBarText) );
+	this.nodes.menuBar.setAttribute( 'name', 'menuBar' );
 	box.appendChild( this.nodes.menuBar );
 	var menuHeight = this.nodes.menuBar.getBBox().height;
 	
@@ -428,6 +430,11 @@ toolBox.prototype.addEventListeners = function() {
 	this.nodes.menuBar.addEventListener("mousedown", this, false);
 	this.nodes.menuBar.addEventListener("mouseup", this, false);
 	this.nodes.hideControl.addEventListener("click", this, false);
+	// these mouseover events are to render either the menu bar or gui box on top.
+	// this keeps expanding menus from one from being rendered behind the other
+	this.nodes.menuBar.addEventListener("mouseover", this, false);
+	this.nodes.GUIbox.addEventListener("mouseover", this, false);
+//	this.nodes.GUIbox.addEventListener("DOMFocusIn", this, false);
 };
 
 
@@ -449,9 +456,20 @@ toolBox.prototype.mousemove = function(e) {
 	this.move(e);
 };
 
+toolBox.prototype.mouseover = function(e) {
+	if( e.currentTarget.getAttribute('name') == 'menuBar' ) {
+		this.drawMenuTop();
+	} else if( e.currentTarget.getAttribute('name') == 'GUIbox' ) {
+		this.drawGUITop();
+	}
+};
+
 
 toolBox.prototype.click = function(e) {
 	this.toggle();
+};
+toolBox.prototype.DOMFocusIn = function(e) {
+//	Util.err( 'FocusIn: { target: ' + e.target + ', currentTarget: ' + e.currentTarget + ' }');
 };
 
 /***************** Functions not part of the class ******************/
