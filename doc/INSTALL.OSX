@@ -19,7 +19,7 @@ tar -zxvf libxml2-2.5.10.tar.gz ; cd libxml2-2.5.10
 ./configure
 make ; sudo make install
 
-* Install libxslt.  Download this:
+* Install libxslt:
 curl -O http://openmicroscopy.org/packages/source/libxslt-1.0.32.tar.gz
 tar -zxvf libxslt-1.0.32.tar.gz ; cd libxslt-1.0.32.tar.gz
 ./configure
@@ -27,8 +27,8 @@ make ; sudo make install
 
 * Download and Install fink (http://fink.sourceforge.net/)
 * Use fink to install gd:
-	fink install gd
-* Install PostgreSQL.
+apt-get install gd
+* Install PostgreSQL:
 Create a user on your system with the unix name 'postgres'.
 Download this:
 http://openmicroscopy.org/packages/OSX/Postgres-7.2.2-OSX-bin.tar.gz
