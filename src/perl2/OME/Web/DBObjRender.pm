@@ -98,12 +98,12 @@ use HTML::Template;
 use base qw(OME::Web);
 
 my $VALIDATION_INCS = <<END;
-<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.config.js"></script>
-<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.core.js"></script>
-<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.numbers.js"></script>
-<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.special.js"></script>
-<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.lang-enUS.js"></script>
-<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.validators.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate/fValidate.config.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate/fValidate.core.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate/fValidate.numbers.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate/fValidate.special.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate/fValidate.lang-enUS.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate/fValidate.validators.js"></script>
 END
 
 # set up class constants
