@@ -119,7 +119,7 @@
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
-<AnalysisModule Category = "Statistics" ModuleName = "Stack statistics" 
+<AnalysisModule ModuleName = "Stack statistics" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
 	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
 	<Declaration>

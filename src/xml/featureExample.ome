@@ -45,7 +45,7 @@
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule
-    Category="Testing" ModuleName="Find cells"
+    ModuleName="Find cells"
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
     Description="Find cells"
@@ -60,7 +60,7 @@
 </AnalysisModule>
 
 <AnalysisModule
-    Category="Testing" ModuleName="Find mito"
+    ModuleName="Find mito"
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
     Description="Find mito"
@@ -80,7 +80,7 @@
 </AnalysisModule>
 
 <AnalysisModule
-    Category="Testing" ModuleName="Find golgi"
+    ModuleName="Find golgi"
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
     Description="Find golgi"
@@ -100,7 +100,7 @@
 </AnalysisModule>
 
 <AnalysisModule
-    Category="Testing" ModuleName="Find ratio"
+    ModuleName="Find ratio"
     ModuleType="OME::Analysis::FindRatio"
     ProgramID=""
     Description="Find ratio"

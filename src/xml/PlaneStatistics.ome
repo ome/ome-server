@@ -125,7 +125,7 @@
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
-<AnalysisModule Category = "Statistics" ModuleName = "Plane statistics" 
+<AnalysisModule ModuleName = "Plane statistics" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
 	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
 	<Declaration>

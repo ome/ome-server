@@ -226,14 +226,13 @@
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
   <AnalysisModule 
-     Category="Tracking" ModuleName="Find spots" 
+     ModuleName="Find spots" 
      ModuleType="OME::Analysis::FindSpotsHandler"
      ProgramID="/OME/bin/findSpots/findSpotsOME"
      NewFeatureName="SPOT">
 
     <Declaration>
       <FormalInput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
-      <FormalInput Name="Dimensions" SemanticTypeName="Dimensions" Count="!"/>
       <FormalInput Name="Stack means" SemanticTypeName="StackMean" Count="+"/>
       <FormalInput Name="Stack geomeans" SemanticTypeName="StackGeometricMean" Count="+"/>
       <FormalInput Name="Stack sigmas" SemanticTypeName="StackSigma" Count="+"/>
@@ -253,7 +252,7 @@
   </AnalysisModule>
 
   <AnalysisModule
-     Category="Tracking" ModuleName="Track spots" 
+     ModuleName="Track spots" 
      ModuleType="OME::Analysis::TrackSpotsHandler"
      ProgramID=""
      FeatureIterator="SPOT"

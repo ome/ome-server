@@ -119,7 +119,6 @@
   ModuleName="Importer"
   Description="Placeholder module which represents the act of importing an image into OME."
   ModuleType="OME::Analysis::NoopHandler"
-  Category="General"
   ProgramID="">
 
     <Declaration>
