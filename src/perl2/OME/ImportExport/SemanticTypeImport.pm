@@ -431,7 +431,7 @@ sub processDOM {
 # Believe it or not, setting sql_type to $dataType fails in $factory->newObject for some (but not all) 'integer's with:
 #   Failure while doing 'MakeNewObj' with 'New OME::DataTable::Column'
 #   DBD::Pg::st execute failed: ERROR:  Attribute 'integer' not found at /Library/Perl/Ima/DBI.pm line 733.
-#   at /Library/Perl/OME/ImportExport/SemanticTypeImport.pm line 428
+#   at /Library/Perl/OME/Tasks/SemanticTypeImport.pm line 428
 # The only hope is to set it to a literal string.  Yes, the offending 'integer's are 'eq' and '==' to 'integer' string literals,
 # and $sqlDataType gets set properly, so there are no hidden gremlins in there.
 # If you know why and have a better fix, please have at it.
@@ -603,7 +603,7 @@ sub processDOM {
 
             #######################################################################
             #
-            # make OME::SemanticType::Column objects
+            # make OME::SemanticType::Element objects
             #
             logdbg "debug", ref ($self) .
               "->processDOM: about to make AttributeColumns from SemanticElements for $stName";
@@ -626,7 +626,7 @@ sub processDOM {
                 #Create object
 
                 my $newAttrColumn = $factory->
-                  newObject( "OME::SemanticType::Column",
+                  newObject( "OME::SemanticType::Element",
                              {
                               semantic_type => $newAttrType,
                               name           => $seName,
@@ -634,7 +634,7 @@ sub processDOM {
                               description    => $seDescription,
                              })
                   or logdie ref ($self) . 
-                    " could not create new OME::SemanticType::Column object, ".
+                    " could not create new OME::SemanticType::Element object, ".
                     "name = $seName";
 
                 $semanticColumns->{$stName}->{ $seName } =
