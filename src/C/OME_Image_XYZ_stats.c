@@ -55,15 +55,17 @@ int main (int argc, char **argv)
 	char isCGI=0;
 	char **cgivars;
 
-	cgivars = getcgivars();
-	if (!cgivars) {
-		cgivars = getCLIvars(argc,argv);
-		if (!cgivars) {
-			usage(argc,argv);
-			exit (-1);
-		} else isCGI=0;
-	} else isCGI = 1;
 
+	if (argc > 1) {
+		cgivars = getCLIvars(argc,argv);
+	} else {
+		cgivars = getcgivars();
+		if (cgivars) isCGI = 1;
+	}
+	if (!cgivars) {
+		usage(argc,argv);
+		exit (-1);
+	}
 	
 	path = get_param (cgivars,"Path");
 	if (!path) {
