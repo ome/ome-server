@@ -655,7 +655,7 @@ sub getFieldTitles {
 		OME::Web->_loadTypeAndGetInfo( $type );
 	
 	# _fieldTitles allows specialized renderers to overide titles
-	my $pkg_titles = $self->{ _fieldTitles };
+	my $pkg_titles = $specializedRenderer->{ _fieldTitles } if $specializedRenderer;
 	foreach( @$field_names ) {
 		my ($alias,$title) = ($_,$_);
 		$title =~ s/_/ /g;
