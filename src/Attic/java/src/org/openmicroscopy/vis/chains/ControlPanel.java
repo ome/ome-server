@@ -46,10 +46,10 @@ import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CProject;
 import org.openmicroscopy.vis.ome.CChain;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
-import org.openmicroscopy.vis.ome.events.ChainSelectionEvent;
-import org.openmicroscopy.vis.ome.events.ChainSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
+import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
 import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
 import java.util.List;
 import java.util.Vector;
@@ -156,6 +156,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		
 		projList.setCellRenderer(new ProjectRenderer(this));
 		projList.addListSelectionListener(this);
+		projList.addMouseListener(this);
 		JScrollPane projScroller = new JScrollPane(projList);
 		projScroller.setMinimumSize(new Dimension(100,200));
 		projScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -408,18 +409,39 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	// and reselected, but anything else is too complicated. 
 	public void mouseClicked(MouseEvent e) {
 		if (e.getClickCount() == 2) {
-			int index =datasetList.locationToIndex(e.getPoint());
-			if (index == datasetList.getSelectedIndex()) {
-				//deselect dataset 
-				CProject tmp = curProject;
-				reentrant = true;
-				datasetList.clearSelection();
-				curDataset = null;
-				reentrant = false;
-				updateProjectChoice(tmp);
-			}
+			if (e.getSource() == datasetList)
+				doDatasetDoubleClick(e);
+			else if (e.getSource() == projList)
+				doProjectDoubleClick(e);
 		}
 	}
+	
+	private void doDatasetDoubleClick(MouseEvent e) {
+		int index =datasetList.locationToIndex(e.getPoint());
+		if (index == datasetList.getSelectedIndex()) {
+			//deselect dataset 
+			CProject tmp = curProject;
+			reentrant = true;
+			datasetList.clearSelection();
+			curDataset = null;
+			reentrant = false;
+			updateProjectChoice(tmp);
+		}
+	}
+
+	private void doProjectDoubleClick(MouseEvent e) {
+		int index = projList.locationToIndex(e.getPoint());	
+		if (index == projList.getSelectedIndex()) {
+			CDataset tmp = curDataset;
+			reentrant = true;
+			projList.clearSelection();
+			curProject = null;
+			reentrant = false;
+			updateDatasetChoice(tmp);
+		}
+	}
+	
+	
 	public void mouseEntered(MouseEvent e) {
 	}
 	
@@ -473,10 +495,18 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			datasetList.clearSelection();
 			projList.clearSelection();
 			curDataset = null;
-			reentrant = false;
 			projList.clearSelection();
 			activeProjects =null;
 			activeDatasets=new HashSet(chain.getDatasetsWithExecutions());
+			if (activeDatasets.size() ==1) {
+				Object objs[] = activeDatasets.toArray();
+				curDataset = (CDataset) objs[0]; 
+				int pos = datasets.indexOf(curDataset);
+				datasetList.setSelectedIndex(pos);
+			}
+			reentrant = false;
+			
+			fireEvents();
 		}
 		datasetList.repaint();
 		projList.repaint();
