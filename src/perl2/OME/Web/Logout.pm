@@ -21,11 +21,11 @@
 package OME::Web::Logout;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
-@ISA = ("OME::Web");
+use OME;
+use base qw{ OME::Web };
 
 sub getPageTitle {
     return "Open Microscopy Environment";
@@ -33,8 +33,8 @@ sub getPageTitle {
 
 sub getPageBody {
     my $self = shift;
-
-	$self->Session( undef );
+print STDERR "\nLogging out...\n\n";
+	OME->Session( undef );
 	$self->setSessionCookie();
 
     return ('REDIRECT',$self->pageURL('OME::Web::Login'));
