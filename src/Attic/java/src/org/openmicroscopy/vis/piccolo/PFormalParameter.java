@@ -200,7 +200,7 @@ public abstract class PFormalParameter extends PNode implements
 			typeNode.setPaint(NORMAL_COLOR);
 			textNode.setPaint(NORMAL_COLOR);
 		}
-		getPModule().setHighlighted(v);
+		getPModule().setLinkableHighlighted(v);
 		repaint();
 	}
 	
@@ -332,7 +332,6 @@ public abstract class PFormalParameter extends PNode implements
 		PFormalParameter p;
 		Iterator iter = list.iterator();
 		
-		PModule destModule;
 		while (iter.hasNext()) {
 			p = (PFormalParameter) iter.next();
 			
