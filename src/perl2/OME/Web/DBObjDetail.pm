@@ -37,6 +37,15 @@
 
 package OME::Web::DBObjDetail;
 
+use strict;
+use OME;
+our $VERSION = $OME::VERSION;
+use CGI;
+use Log::Agent;
+use OME::Web::DBObjRender;
+use OME::Web::DBObjTable;
+use base qw(OME::Web);
+
 =pod
 
 =head1 NAME
@@ -45,34 +54,21 @@ OME::Web::DBObjDetail - Show detailed information on an object
 
 =head1 DESCRIPTION
 
-Displays detailed information on any DBObject or attribute.
+DBObjDetail displays detailed information on any DBObject or attribute.
+It's default behaviors can be overridden by writing subclasses.
+
+Important!! Subclasses should not be accessed directly. All access 
+should go through DBObjDetail. Specialization is completely
+transparent.
+
+Subclasses follow the naming convention implemented in __specialize.
+Subclasses may override one or more of the functions
+getMenuText, getPageTitle, getPageBody, _takeAction, getFooter,
+_getDBObjDetail, _tableDescriptor, _overrideRecord, _getManyRelations
+
+=head1 METHODS
 
 =cut
-
-#*********
-#********* INCLUDES
-#*********
-
-use strict;
-use OME;
-our $VERSION = $OME::VERSION;
-
-use CGI;
-use Log::Agent;
-
-use OME::Web::DBObjRender;
-use OME::Web::DBObjTable;
-
-#*********
-#********* GLOBALS AND DEFINES
-#*********
-
-$VERSION = $OME::VERSION;
-use base qw(OME::Web);
-
-#*********
-#********* PUBLIC METHODS
-#*********
 
 sub new {
 	my $proto = shift;
@@ -82,11 +78,18 @@ sub new {
 	return $self;
 }
 
-{
+=head2 getMenuText
 
-my $menuText = "DB Detail";
+If called from the Package, will return "DB Detail"
+Otherwise, will return the common name of the object type followed by ' Detail'
+
+Overridable.
+
+=cut
+
 sub getMenuText {
 	my $self = shift;
+	my $menuText = "DB Detail";
 	return $menuText unless ref($self);
 
 	my $specializedDetail;
@@ -98,11 +101,18 @@ sub getMenuText {
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
 	return "$common_name Detail";
 }
-}
 
 #sub getMenuBuilder { return undef }  # No menu
 
 #sub getHeaderBuilder { return undef }  # No header
+
+=head2 getPageTitle
+
+Return the common name of the object type followed by that object's DBObjRender label
+
+Overridable.
+
+=cut
 
 sub getPageTitle {
 	my $self = shift;
@@ -115,6 +125,27 @@ sub getPageTitle {
     return "$common_name: ".OME::Web::DBObjRender->getObjectLabel($object);
 }
 
+=head2 getPageBody
+
+calls _takeAction()
+prints results of _getDBObjDetail(), _getManyRelations_getManyRelations(
+$object ), and getFooter(). All this stuff gets embedded in a form.
+
+If the formatting is acceptable, consider overriding the methods
+getPageBody uses instead of getPageBody. It could save you some work and
+reduces the possibility of bugs creeping in.
+
+Any subclass that overrides this method is expected to insert the
+following lines inside a form in whatever they spit out. (If whatever
+they spit out has forms)
+
+	$q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
+	$q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
+	$q->hidden({-name => 'action', -default => ''});
+
+Overridable
+
+=cut
 
 sub getPageBody {
 	my $self = shift;
@@ -169,13 +200,45 @@ sub getPageBody {
 	return ('HTML', $html);
 }
 
+=head2 _takeAction
+
+virtual method. called by getPageBody before anything else. no
+parameters (other than $self) are passed in. Override for custom
+actions.
+
+Overridable
+
+=cut
+
 sub _takeAction { 
 # virtual method
 }
 
+=head2 getFooter
+
+virtual method. Override to put a footer on the resultant page. Called
+by getPageBody.
+
+Overridable
+
+=cut
+
 sub getFooter { 
 # virtual method
 }
+
+=head2 _getDBObjDetail
+
+Called by getPageBody. uses OME::Web::DBObjRender services to construct
+a detailed object description. Returns a table.
+
+Uses _tableDescriptor() to make a table header. Specifically, it inserts
+what is returned from _tableDescriptor in the first row of the table.
+This row spans every column in the table.
+
+Overridable
+
+=cut
 
 sub _getDBObjDetail {
 	my ($self, $object) = @_;
@@ -218,6 +281,16 @@ sub _getDBObjDetail {
 	return $obj_table;
 }
 
+=head2 _tableDescriptor
+
+Called by _getDBObjDetail. Indicates the type of object being displayed.
+If the object is a SemanticType, includes a link to the definition of
+the Semantic Type
+
+Overridable
+
+=cut
+
 sub _tableDescriptor {
 	my ($self, $object) = @_;
 	my $q = $self->CGI();
@@ -234,11 +307,45 @@ sub _tableDescriptor {
 	return $q->span( { -class => 'ome_widget' }, $display_type )
 }
 
+=head2 _overrideRecord
+
+	%record = %{ $self->_overrideRecord( \%record ) };
+
+virtual method used by _getDBObjDetail to allow easy overriding of
+select portion of records. This should *NOT* be used instead of of
+DBObjRender methods.
+
+If you want to do something like make an email field into an active
+link, override OME::Web::DBObjRender->renderSingle. Changes there will
+be reflected in everything that displays a given type.
+
+If you want to do something like make a field editable by inserting a
+text input box, use this method. Changes here will be reflected only in
+this OME::Web::DBObjDetail.
+
+Overridable
+
+=cut
+
 sub _overrideRecord { 
 	my ($self, $record) = @_;
 	return $record;
 }
 
+
+=head2 _getManyRelations
+
+	my @relations = $self->_getManyRelations( $object );
+
+returns an array of html entities, each describing a has-many or
+many-to-many relationship the given object has.
+
+Unless overridden, uses OME::Web::DBObjRender->getRelationAccessors to
+get data and OME::Web::DBObjTable->getList to make lists.
+
+Overridable
+
+=cut
 
 sub _getManyRelations {
 	my ($self, $object) = @_;
@@ -274,6 +381,17 @@ sub _getManyRelations {
 	return @relations;
 }
 
+=head2 _loadObject
+
+	my $object = $self->_loadObject();
+
+loads an object from CGI params. Should be used in favor of accessing
+the CGI params directly.
+
+DO NOT Override
+
+=cut
+
 sub _loadObject {
 	my $self = shift;
 	return $self->{__object} if $self->{__object};
@@ -300,6 +418,8 @@ returns a specialized package (if one exists) for displaying a
 DBObject or Attribute in detail.
 returns undef if a specialized prototype does not exist or if it was
 called with with a specialized prototype.
+
+DO NOT Override
 
 =cut
 
