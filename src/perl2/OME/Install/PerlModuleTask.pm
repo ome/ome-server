@@ -126,9 +126,10 @@ my @modules = (
 	name => 'Log::Agent',
 	repository_file => "$REPOSITORY/Log-Agent-0.208.tar.gz"
     },{
-	name => 'Tie::IxHash',
-	repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
-    },{
+	# XXX DEPRECATED
+	#name => 'Tie::IxHash',
+	#repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
+	#},{
 	name => 'DBD::Pg',
 	repository_file => "$REPOSITORY/DBD-Pg-1.21.tar.gz",
 	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'eq 1.21', 'ne 1.22'],
@@ -151,9 +152,10 @@ my @modules = (
 	    $ENV{POSTGRES_LIB} .= " -lssl";
 	}
     },{
-	name => 'Sort::Array',
-	repository_file => "$REPOSITORY/Sort-Array-0.26.tar.gz",
-    },{
+	# XXX DEPRECATED
+	#name => 'Sort::Array',
+	#repository_file => "$REPOSITORY/Sort-Array-0.26.tar.gz",
+	#},{
 	name => 'Test::Harness',
 	repository_file => "$REPOSITORY/Test-Harness-2.26.tar.gz",
 	valid_versions => ['gt 2.03']
@@ -163,59 +165,68 @@ my @modules = (
     },{
 	name => 'IPC::Run',
 	repository_file => "$REPOSITORY/IPC-Run-0.75.tar.gz"
-    },{
-	name => 'Term::ReadKey',
-	repository_file => "$REPOSITORY/TermReadKey-2.21.tar.gz"
-    },{
-	name => 'Carp::Assert',
-	repository_file => "$REPOSITORY/Carp-Assert-0.17.tar.gz"
-    },{
+	},{
+	# XXX DEPRECATED
+	#name => 'Carp::Assert',
+	#repository_file => "$REPOSITORY/Carp-Assert-0.17.tar.gz"
+	#},{
 	name => 'Class::Accessor',
 	repository_file => "$REPOSITORY/Class-Accessor-0.17.tar.gz"
     },{
 	name => 'Class::Data::Inheritable',
 	repository_file => "$REPOSITORY/Class-Data-Inheritable-0.02.tar.gz"
     },{
-	name => 'IO::Scalar',
-	repository_file => "$REPOSITORY/IO-stringy-2.108.tar.gz"
-    },{
-	name => 'Class::Trigger',
-	repository_file => "$REPOSITORY/Class-Trigger-0.05.tar.gz"
-    },{
+	# XXX DEPRECATED
+	#name => 'IO::Scalar',
+	#repository_file => "$REPOSITORY/IO-stringy-2.108.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'Class::Trigger',
+	#repository_file => "$REPOSITORY/Class-Trigger-0.05.tar.gz"
+	#},{
 	name => 'File::Temp',
 	repository_file => "$REPOSITORY/File-Temp-0.12.tar.gz"
     },{
-	name => 'Text::CSV_XS',
-	repository_file => "$REPOSITORY/Text-CSV_XS-0.23.tar.gz"
-    },{
-	name => 'SQL::Statement',
-	repository_file => "$REPOSITORY/SQL-Statement-1.004.tar.gz"
-    },{
-	name => 'DBD::CSV',
-	repository_file => "$REPOSITORY/DBD-CSV-0.2002.tar.gz"
-    },{
-	name => 'Class::Fields',
-	repository_file => "$REPOSITORY/Class-Fields-0.14.tar.gz"
-    },{
-	name => 'Class::WhiteHole',
-	repository_file => "$REPOSITORY/Class-WhiteHole-0.03.tar.gz"
-    },{
-	name => 'Ima::DBI',
-	repository_file => "$REPOSITORY/Ima-DBI-0.27.tar.gz"
-    },{
-	name => 'Exporter::Lite',
-	repository_file => "$REPOSITORY/Exporter-Lite-0.01.tar.gz"
-    },{
+	# XXX DEPRECATED
+	#name => 'Text::CSV_XS',
+	#repository_file => "$REPOSITORY/Text-CSV_XS-0.23.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'SQL::Statement',
+	#repository_file => "$REPOSITORY/SQL-Statement-1.004.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'DBD::CSV',
+	#repository_file => "$REPOSITORY/DBD-CSV-0.2002.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'Class::Fields',
+	#repository_file => "$REPOSITORY/Class-Fields-0.14.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'Class::WhiteHole',
+	#repository_file => "$REPOSITORY/Class-WhiteHole-0.03.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'Ima::DBI',
+	#repository_file => "$REPOSITORY/Ima-DBI-0.27.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'Exporter::Lite',
+	#repository_file => "$REPOSITORY/Exporter-Lite-0.01.tar.gz"
+	#},{
 	name => 'UNIVERSAL::exports',
 	repository_file => "$REPOSITORY/UNIVERSAL-exports-0.03.tar.gz"
-    },{
-	name => 'Date::Simple',
-	repository_file => "$REPOSITORY/Date-Simple-2.04.tar.gz"
-    },{
-	name => 'Class::DBI',
-	repository_file => "$REPOSITORY/Class-DBI-0.90.tar.gz",
-	valid_versions => ['eq "0.90"']
-    },{
+	},{
+	# XXX DEPRECATED
+	#name => 'Date::Simple',
+	#repository_file => "$REPOSITORY/Date-Simple-2.04.tar.gz"
+	#},{
+	# XXX DEPRECATED
+	#name => 'Class::DBI',
+	#repository_file => "$REPOSITORY/Class-DBI-0.90.tar.gz",
+	#valid_versions => ['eq "0.90"']
+	#},{
 	name => 'GD',
 	repository_file => "$REPOSITORY/GD-1.33.tar.gz",
 	configure_module => sub {
@@ -297,10 +308,10 @@ sub check_module {
     return 1 unless exists $module->{valid_versions};
 
     foreach my $valid_version (@{$module->{valid_versions}}) {
-	my $eval = 'if ("$module->{version}" '.$valid_version.') { $retval = 1 }';
+		my $eval = 'if ("$module->{version}" '.$valid_version.') { $retval = 1 }';
 
-	eval $eval;
-	last if $retval;
+		eval $eval;
+		last if $retval;
     }
 
     return $retval ? 1 : 0;
@@ -318,9 +329,9 @@ sub install {
 
     # Pre-install
     if (exists $module->{pre_install}) {
-	print "    \\_ Pre-install ";
-	&{$module->{pre_install}};
-	print BOLD, "[SUCCESS]", RESET, ".\n";
+		print "    \\_ Pre-install ";
+		&{$module->{pre_install}};
+		print BOLD, "[SUCCESS]", RESET, ".\n";
     }
 
     # Download
@@ -402,11 +413,11 @@ sub execute {
 
     # Set our globals
     $OME_BASE_DIR = $environment->base_dir()
-	or croak "Unable to retrieve OME_BASE_DIR!";
+		or croak "Unable to retrieve OME_BASE_DIR!";
     $OME_TMP_DIR = $environment->tmp_dir()
-	or croak "Unable to retrieve OME_TMP_DIR!";
+		or croak "Unable to retrieve OME_TMP_DIR!";
     $OME_USER = $environment->user()
-	or croak "Unable to retrieve OME_USER!";
+		or croak "Unable to retrieve OME_USER!";
     
     # Store our IWD so we can get back to it later
     my $iwd = getcwd ();
@@ -426,7 +437,7 @@ sub execute {
 
     # Get our logfile and open it for reading
     open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
-	or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\", $!";
+		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\", $!";
 
     #*********
     #********* Check each module (exceptions then version)
@@ -434,49 +445,51 @@ sub execute {
 
     print "Checking modules\n";
     foreach my $module (@modules) {
-	print "  \\_ $module->{name}";
+		print "  \\_ $module->{name}";
 
-	if (exists $module->{exception} and &{$module->{exception}}) {
-	    print BOLD, " [OK]", RESET, ".\n";
-	    next;
-	}
+		if (exists $module->{exception} and &{$module->{exception}}) {
+			print BOLD, " [OK]", RESET, ".\n";
+			next;
+		}
 
-	# If we've got a get_module_version() override in the module definition use it,
-	# otherwise just use the default function.
-	$module->{version} = &{$module->{get_module_version}} if exists $module->{get_module_version};
-	$module->{version} = get_module_version($module->{name}) unless $module->{version}; 
+		# If we've got a get_module_version() override in the module definition use it,
+		# otherwise just use the default function.
+		$module->{version} = &{$module->{get_module_version}}
+			if exists $module->{get_module_version};
+		$module->{version} = get_module_version($module->{name})
+			unless $module->{version}; 
 
-	if (not $module->{version}) {
-	    # Log the error returned by get_module_version()
-	    print $LOGFILE "ERRORS LOADING MODULE \"$module->{name}\" -- OUTPUT FROM EVAL: \"$@\"\n\n";
+		if (not $module->{version}) {
+			# Log the error returned by get_module_version()
+			print $LOGFILE "ERRORS LOADING MODULE \"$module->{name}\" -- OUTPUT FROM EVAL: \"$@\"\n\n";
 
-	    print BOLD, " [NOT INSTALLED]", RESET;
-	    my $retval = y_or_n("\n\nWould you like to install $module->{name} from the repository ?");
+			print BOLD, " [NOT INSTALLED]", RESET;
+			my $retval = y_or_n("\n\nWould you like to install $module->{name} from the repository ?");
 
-	    if ($retval) {
-		install ($module);
-		next;
-	    } else { 
-		print "**** Warning: Not installing module $module->{name}.\n\n"; 
-		next;
-	    }
-	}
+			if ($retval) {
+				install ($module);
+				next;
+	    	} else { 
+				print "**** Warning: Not installing module $module->{name}.\n\n"; 
+				next;
+	    	}
+		}
 
-	if (check_module($module)) {
-	    print " $module->{version} ", BOLD, "[OK]", RESET, ".\n";
-	    next;
-	} else {
-	    print " $module->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
-	    my $retval = y_or_n("\nWould you like to install the module from the OME repository ?");
+		if (check_module($module)) {
+			print " $module->{version} ", BOLD, "[OK]", RESET, ".\n";
+			next;
+		} else {
+			print " $module->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
+			my $retval = y_or_n("\nWould you like to install the module from the OME repository ?");
 
-	    if ($retval) {
-		install ($module);
-		next;
-	    } else { 
-		print "**** Warning: Not installing known compatible version of $module->{name}.\n\n"; 
-		next;
-	    }
-	}
+			if ($retval) {
+				install ($module);
+				next;
+			} else { 
+				print "**** Warning: Not installing known compatible version of $module->{name}.\n\n"; 
+				next;
+	    	}
+		}
     }
 
     print "\n";  # Spacing
@@ -489,41 +502,41 @@ sub execute {
 
     # Only if we're not just running a Perl check
     unless ($environment->flag ("PERL_CHECK")) {
-	print_header ("Core Perl Module Setup");
+		print_header ("Core Perl Module Setup");
     
-	print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
+		print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
 
-	my $retval = 0;
+		my $retval = 0;
 
-	print "Installing modules\n";
+		print "Installing modules\n";
 
-	# Configure
-	print "  \\_ Configuring ";
-	$retval = configure_module ("src/perl2/", $LOGFILE);
+		# Configure
+		print "  \\_ Configuring ";
+		$retval = configure_module ("src/perl2/", $LOGFILE);
     
-	print BOLD, "[FAILURE]", RESET, ".\n"
-	    and croak "Unable to configure module, see $LOGFILE_NAME for details."
-	    unless $retval;
-	print BOLD, "[SUCCESS]", RESET, ".\n";
+		print BOLD, "[FAILURE]", RESET, ".\n"
+		    and croak "Unable to configure module, see $LOGFILE_NAME for details."
+		    unless $retval;
+		print BOLD, "[SUCCESS]", RESET, ".\n";
 
-	# Compile
-	print "  \\_ Compiling ";
-	$retval = compile_module ("src/perl2/", $LOGFILE);
+		# Compile
+		print "  \\_ Compiling ";
+		$retval = compile_module ("src/perl2/", $LOGFILE);
     
-	print BOLD, "[FAILURE]", RESET, ".\n"
-	    and croak "Unable to compile module, see $LOGFILE_NAME for details."
-	    unless $retval;
-	print BOLD, "[SUCCESS]", RESET, ".\n";
+		print BOLD, "[FAILURE]", RESET, ".\n"
+		    and croak "Unable to compile module, see $LOGFILE_NAME for details."
+		    unless $retval;
+		print BOLD, "[SUCCESS]", RESET, ".\n";
 
-	# Install
-	print "  \\_ Installing ";
-	$retval = install_module ("src/perl2", $LOGFILE);
+		# Install
+		print "  \\_ Installing ";
+		$retval = install_module ("src/perl2", $LOGFILE);
 
-	print BOLD, "[FAILURE]", RESET, ".\n"
-	    and croak "Unable to install module, see $LOGFILE_NAME for details."
-	    unless $retval;
-	print BOLD, "[SUCCESS]", RESET, ".\n";
-    }
+		print BOLD, "[FAILURE]", RESET, ".\n"
+		    and croak "Unable to install module, see $LOGFILE_NAME for details."
+		    unless $retval;
+		print BOLD, "[SUCCESS]", RESET, ".\n";
+	}
 
     return 1;
 }
