@@ -141,11 +141,15 @@ sub importFile() {
 			my @repositories    = $factory->findAttributes( "Repository" );
 			$repository         = $repositories[0];
 			$pixelDir           = $session->getScratchDirRepository(repository => $repository, progName => 'ResolveFiles');
-		} or $pixelDir = $tmpDir;
+		};
+		$pixelDir = $tmpDir unless defined $pixelDir;
+		
+		die "Could not get a temporary directory for pixels." unless $pixelDir;
+		die "Could not get a temporary directory for files." unless $tmpDir;
 		
 		my $fh;
 		open( $fh, "$executionPath $pixelDir $tmpDir $inputFile |" )
-			or die "While importing $inputFile, Could not open '$executionPath $pixelDir $tmpDir $inputFile' for piping in\n";
+			or die "While importing $inputFile, Could not open '$executionPath $pixelDir $tmpDir $inputFile' for piping in: $!\n";
 		
 		# parse extractBinData output
 		my $doc  = $parser->parse_fh( $fh );
