@@ -213,6 +213,8 @@ sub execute {
 				push @data_hashes, $semantic_type, $data_hash;
 			}
 	
+			# data_hashes has pairs of entries. first item is an ST
+			# second one is a hash that maps column names to input values.
 			$mex = OME::Tasks::AnnotationManager->
 			  annotateGlobal(@data_hashes);
 		} elsif( $new eq 'E' ) {
@@ -250,7 +252,8 @@ sub execute {
 			$mex = OME::Tasks::ModuleExecutionManager->
 			  coalateInputs(\@attributes);
 		}
-	
+
+		# hash of mexes corresponding to formal inputid.	
 		$user_inputs{$formal_input->id()} = $mex;
 	}
 	
