@@ -32,15 +32,6 @@ export OME_ROOT
 
 all: $(TARGETS)
 
-OMEimportDVfile : $(OBJECTS) OMEimportDVfile.o
-	$(CC) $(CFLAGS) -o OMEimportDVfile OMEimportDVfile.o $(LIBS)
-
-trackSpotsDB :  BSUtils.o trackSpotsDB.o
-	$(CC) $(CFLAGS) -o trackSpotsDB trackSpotsDB.o $(LIBS)
-
-findSpotsDB : findSpotsDB.o
-	$(CC) $(CFLAGS) findSpotsDB.o -o findSpotsDB ${MATH_LIBS} 
-
 findSpotsOME : findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
 	$(CC) $(CFLAGS) findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
 
