@@ -286,6 +286,10 @@ the external program.)  If the class has been configured to use a
 remote copy of the image server (with the C<useRemoteServer> method),
 the call will be made via an HTTP connection.
 
+If there is a C<__file> parameter set, then the result of the call
+will be saved into the file named by the parameter.  Otherwise, it
+will be returned as a scalar value.
+
 The parameters to the image server are specified in the %params hash.
 The "Method" parameter is always required; other parameters might also
 be needed, depending on the particular image server method being
@@ -317,6 +321,11 @@ sub __callOMEIS {
     my $proto = shift;
     my %params = @_;
 
+    my $to_filename = $params{__file};
+    delete $params{__file};
+
+    my $session = OME::Session->instance();
+
     if ($local_server) {
         # If there is a File or Pixels parameter, pull it out of the
         # %params hash, and save the filename.  We also calculate the
@@ -329,19 +338,19 @@ sub __callOMEIS {
 
         my $stdin_filename;
         my $stdin_param;
-        my $delete_file = 0;
+        my @temp_files;
 
         foreach my $param ('File','Pixels') {
             if (exists $params{$param}) {
                 if (ref($params{$param})) {
-                    $stdin_filename = OME::Session->instance()->
+                    $stdin_filename = $session->
                       getTemporaryFilename("omeis","stdin");
                     $stdin_param = $param;
                     open INFILE, "> $stdin_filename"
                       or die "Could not write stdin to a temp file: $!";
                     print INFILE ${$params{$param}};
                     close INFILE;
-                    $delete_file = 1;
+                    push @temp_files, $stdin_filename;
                 } else {
                     $stdin_filename = $params{$param};
                     $stdin_param = $param;
@@ -379,32 +388,46 @@ sub __callOMEIS {
             Carp::confess "Error code $status calling image server";
         }
 
-        unlink $stdin_filename if $delete_file;
+        $session->finishTemporaryFile($_) foreach @temp_files;
 
-        return $result;
+        if (defined $to_filename) {
+            open my $to_file, "<", $to_filename
+              or die "Could not open output file $to_filename";
+            print $to_file $result;
+            close $to_file
+              or die "Could not close output file $to_filename";
+            return;
+        } else {
+            return $result;
+        }
     } else {
         # The File and/or Pixels parameters should be transformed into
         # the appropriate filename reference for the POST request.
 
         my $stdin_filename;
         my $stdin_param;
-        my $delete_file = 0;
+        my @temp_files;
 
         foreach my $param ('File','Pixels') {
             if (exists $params{$param}) {
                 if (ref($params{$param})) {
-                    $stdin_filename = OME::Session->instance()->
+                    $stdin_filename = $session->
                       getTemporaryFilename("omeis","stdin");
                     $stdin_param = $param;
                     open INFILE, "> $stdin_filename"
                       or die "Could not write stdin to a temp file: $!";
                     print INFILE ${$params{$param}};
                     close INFILE;
-                    $delete_file = 1;
+                    push @temp_files, $stdin_filename;
                 } else {
                     $stdin_filename = $params{$param};
                     $stdin_param = $param;
                 }
+
+                # The image server wants the Files and/or Pixels
+                # parameters to be last, so we'll delete it from the
+                # hash now and add it back in a couple of lines.
+
                 delete $params{$param};
             }
         }
@@ -437,9 +460,9 @@ sub __callOMEIS {
         }
 
         $proto->__createUserAgent() unless defined $user_agent;
-        my $response = $user_agent->request($request);
+        my $response = $user_agent->request($request,$to_filename);
 
-        unlink $stdin_filename if $delete_file;
+        $session->finishTemporaryFile($_) foreach @temp_files;
 
         if ($response->is_success()) {
             return $response->content();
@@ -579,7 +602,8 @@ sub isPixelsFinished {
 
 =head2 getPixels
 
-	my $pixels = OME::Image::Server->getPixels($pixelsID,$bigEndian);
+	my $pixels = OME::Image::Server->getPixels($pixelsID,$bigEndian,
+	                                           $output_file);
 
 This method returns the entire pixel file for the given pixel ID.  Be
 very careful, these can easily be friggin-huge in size.  You probably
@@ -600,9 +624,10 @@ server, an error will be thrown.
 
 sub getPixels {
     my $proto = shift;
-    my ($pixelsID,$bigEndian) = @_;
+    my ($pixelsID,$bigEndian,$output_file) = @_;
     my %params = (Method   => 'GetPixels',
-                  PixelsID => $pixelsID);
+                  PixelsID => $pixelsID,
+                  __file   => $output_file);
     $params{BigEndian} = $bigEndian if defined $bigEndian;
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
@@ -612,7 +637,8 @@ sub getPixels {
 =head2 getStack
 
 	my $pixels = OME::Image::Server->
-	    getStack($pixelsID,$theC,$theT,$bigEndian);
+	    getStack($pixelsID,$theC,$theT,$bigEndian,
+	             $output_file);
 
 This method returns a pixel array of the specified stack.  The stack
 is specified by its C and T coordinates, which have 0-based indices.
@@ -634,11 +660,12 @@ server, an error will be thrown.
 
 sub getStack {
     my $proto = shift;
-    my ($pixelsID,$theC,$theT,$bigEndian) = @_;
+    my ($pixelsID,$theC,$theT,$bigEndian,$output_file) = @_;
     my %params = (Method   => 'GetStack',
                   PixelsID => $pixelsID,
                   theC     => $theC,
-                  theT     => $theT);
+                  theT     => $theT,
+                  __file   => $output_file);
     $params{BigEndian} = $bigEndian if defined $bigEndian;
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
@@ -648,7 +675,8 @@ sub getStack {
 =head2 getPlane
 
 	my $pixels = OME::Image::Server->
-	    getPlane($pixelsID,$theZ,$theC,$theT,$bigEndian);
+	    getPlane($pixelsID,$theZ,$theC,$theT,$bigEndian,
+	             $output_file);
 
 This method returns a pixel array of the specified plane.  The plane
 is specified by its Z, C and T coordinates, which have 0-based
@@ -669,12 +697,13 @@ server, an error will be thrown.
 
 sub getPlane {
     my $proto = shift;
-    my ($pixelsID,$theZ,$theC,$theT,$bigEndian) = @_;
+    my ($pixelsID,$theZ,$theC,$theT,$bigEndian,$output_file) = @_;
     my %params = (Method   => 'GetPlane',
                   PixelsID => $pixelsID,
                   theZ     => $theZ,
                   theC     => $theC,
-                  theT     => $theT);
+                  theT     => $theT,
+                  __file   => $output_file);
     $params{BigEndian} = $bigEndian if defined $bigEndian;
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
@@ -687,7 +716,8 @@ sub getPlane {
 	    getROI($pixelsID,
 	           $x0,$y0,$z0,$c0,$t0,
 	           $x1,$y1,$z1,$c1,$t1,
-	           $bigEndian);
+	           $bigEndian,
+	           $output_file);
 
 This method returns a pixel array of an arbitrary hyper-rectangular
 region of an image.  The region is specified by two coordinate
@@ -712,11 +742,12 @@ sub getROI {
     my ($pixelsID,
         $x0,$y0,$z0,$c0,$t0,
         $x1,$y1,$z1,$c1,$t1,
-        $bigEndian) = @_;
+        $bigEndian,$output_file) = @_;
     my $ROI = "$x0,$y0,$z0,$c0,$t0,$x1,$y1,$z1,$c1,$t1";
     my %params = (Method   => 'GetROI',
                   PixelsID => $pixelsID,
-                  ROI      => $ROI);
+                  ROI      => $ROI,
+                  __file   => $output_file);
     $params{BigEndian} = $bigEndian if defined $bigEndian;
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
