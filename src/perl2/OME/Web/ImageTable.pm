@@ -73,9 +73,65 @@ sub __getColumnAliases {
 # Table header macro
 sub __genericTableHeader { shift->SUPER::__genericTableHeader("Images"); }
 
+sub __search_row {
+	my ($self, $options) = @_;
+	my $q	 = $self->CGI();
+	my $factory = $self->Session()->Factory();
+	my $filters = $options->{filters} || {};
+
+	# Owner list
+	my @owners = $factory->findAttributes( "Experimenter" );
+	my %owner_names = map{ $_->id() => $_->FirstName().' '.$_->LastName() } @owners;
+	my $owner_order = [ '', sort( { $owner_names{$a} cmp $owner_names{$b} } keys( %owner_names ) ) ];
+	$owner_names{''} = "Select an Owner";
+
+	# Group list
+	my @groups = $factory->findAttributes( "Group" );
+	my %group_names = map{ $_->id() => $_->Name() } @groups;
+	my $group_order = [ '', sort( { $group_names{$a} cmp $group_names{$b} } keys( %group_names ) ) ];
+	$group_names{''} = "Select a Group";
+	
+	my $rows = [
+		$q->textfield( -name => 'id', -default => $filters->{id} || undef, -size => 5 ),
+		$q->textfield( -name => 'name', -default => $filters->{name} || undef, -size => 20 ),
+		undef,
+		$q->popup_menu( 
+			-name	=> 'owner_id',
+			-values => $owner_order,
+			-default => $filters->{owner_id},
+			-labels	 => \%owner_names
+		),
+		$q->popup_menu( 
+			-name	=> 'group_id',
+			-values => $group_order,
+			-default => $filters->{group_id} || undef,
+			-labels	 => \%group_names
+		),
+		$q->textfield( -name => 'description', -default => $filters->{description} || undef, -size => 30 ),
+	];
+	unshift @$rows, undef if $options->{select_column};
+	
+	return $q->Tr({-class => 'ome_td'},
+		$q->td({-align => 'center'}, $rows )
+	);
+
+}
+
+
 #*********
 #********* PUBLIC METHODS
 #*********
+
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+
+	$self->{search_params} = ['id', 'name', 'owner_id', 'group_id', 'description'];
+	$self->{allow_search} = 1;
+
+	return $self;
+}
 
 sub getTable {
 	my ($self, $options, @images) = @_;
@@ -85,13 +141,20 @@ sub getTable {
 	my $q = $self->CGI();
 	my $table_data;
 
-	unless (@images) {
-		@images = $self->__filterObjects( {
-				filters => $options->{filters},
-				filter_object => 'OME::Image'
-			}
-		);
+	$self->{allow_search} = 0 if( @images );
+	if( $self->{allow_search} ) {
+		push @{ $options->{options_row} }, "Search";
+		# add search parameters to filter
+		foreach ( @{ $self->{search_params} } ) {
+			$options->{filters}->{$_} = $q->param($_)
+				if $q->param($_) and $q->param($_) ne '' and not $options->{filters}->{$_};
+		}
 	}
+	@images = $self->__filterObjects( {
+			filters => $options->{filters},
+			filter_object => 'OME::Image'
+		}
+	) unless (@images);
 	
 	my @column_headers = qw(ID Name Preview Owner Group Description);
 
@@ -170,6 +233,7 @@ sub getTable {
 		},
 		$q->startform({-name => 'datatable'}),
 		$q->Tr($q->th({-class => 'ome_td'}, [@column_headers])),
+		( $self->{allow_search} ? $self->__search_row( $options ) : '' ),
 		$table_data,
 		$q->hidden({-name => 'action', -default => ''}),
 		$q->endform()
