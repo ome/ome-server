@@ -138,10 +138,23 @@ sub startImport {
     my $factory = $session->Factory();
     my $config = $session->Configuration();
 
-    # Create the original files module
+    # Load the original files module
     my $original_files_module = $config->original_files_module();
+
+    # If it doesn't exist, then this should be the first import
+    # (performed by bootstrap).  We can do nothing to help this
+    # import.
+
+    if (!defined $original_files_module) {
+        $self = {valid_modules => 0};
+        bless $self, $class;
+        return;
+    }
+
+    # If it does exist, go ahead and create a MEX for it.
+
     my $original_files = OME::Tasks::ModuleExecutionManager->
-      createMEX($original_files_module,'G',undef);
+      createMEX($original_files_module,'G',undef,undef,undef);
 
     # Create a universal execution for this module, so that the analysis
     # engine never tries to execute it.
@@ -149,6 +162,7 @@ sub startImport {
         createNEX($original_files,undef,undef);
 
     $self = {
+             valid_modules  => 1,
              original_files => $original_files,
              global_import  => undef,
              dataset_import => {},
@@ -174,8 +188,6 @@ sub finishImport {
     my $class = shift;
     die "No active import!" unless defined $self;
 
-    #
-
     $self = undef;
 }
 
@@ -193,6 +205,7 @@ be keyed to this MEX.
 sub getOriginalFilesMEX {
     my $class = shift;
     die "No active import!" unless defined $self;
+    return undef unless $self->{valid_modules};
     return $self->{original_files};
 }
 
@@ -210,6 +223,7 @@ should be keyed to this MEX.
 sub getGlobalImportMEX {
     my $class = shift;
     die "No active import!" unless defined $self;
+    return undef unless $self->{valid_modules};
 
     # Don't create a global import MEX until it's needed
 
@@ -257,6 +271,7 @@ Import MEX is created for a single dataset.
 sub getDatasetImportMEX {
     my $class = shift;
     die "No active import!" unless defined $self;
+    return undef unless $self->{valid_modules};
 
     my ($dataset) = @_;
     my $dataset_id = ref($dataset)? $dataset->id(): $dataset;
@@ -308,6 +323,7 @@ is created for a single image.
 sub getImageImportMEX {
     my $class = shift;
     die "No active import!" unless defined $self;
+    return undef unless $self->{valid_modules};
 
     my ($image) = @_;
     my $image_id = ref($image)? $image->id(): $image;
