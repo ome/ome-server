@@ -214,7 +214,7 @@ sub _getJSData {
 		$JSinfo->{ use_omeis }     = 'false';
 	} else {
 		$JSinfo->{ CGI_URL }       = '"'.$pixels->Repository()->ImageServerURL().'"';
-		$JSinfo->{ CGI_optionStr } = '"&Method=Composite&PixelsID='.$pixels->PixelsID().'"';
+		$JSinfo->{ CGI_optionStr } = '"&Method=Composite&PixelsID='.$pixels->ImageServerID().'"';
 		$JSinfo->{ use_omeis }     = 'true';
 	}
 
