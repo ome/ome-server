@@ -49,6 +49,7 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 
 /** 
  * An event handler for the PPaletteCanvas. Generally works like 
@@ -91,13 +92,22 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	}
 	
 	public void mouseClicked(PInputEvent e) {
+		Point2D pos = e.getPosition();
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
 		if (mask == MouseEvent.BUTTON1_MASK &&
 			e.getClickCount() == 2) {
 			if (node instanceof PBufferedNode) {
 				PBufferedNode cBox = (PBufferedNode) node;
+				System.err.println("zooming into .."+cBox);
+				if (cBox instanceof PModule) {
+					PModule mod = (PModule)cBox;
+					System.err.println("...."+mod.getModule().getName());
+				}
 				PBounds b = cBox.getBufferedBounds();
+				
+				System.err.println("bounds are ..."+b.getX()+","+b.getY()+
+					", width="+b.getWidth()+", height="+b.getHeight());
 				PCamera camera = canvas.getCamera();
 				// animate
 				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
