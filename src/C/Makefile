@@ -3,7 +3,7 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
-		cgrayce2 extractBinData insertBinData
+		cgrayce2 extractBinData insertBinData maxIntensity
 DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql -I/usr/local/include -I/sw/include
 DB_LIBS = -lpq
 MATH_LIBS = -lm
@@ -114,6 +114,9 @@ extractBinData: extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_l
 insertBinData: insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
 	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
 
+maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
+	$(CC) $(CFLAGS) $(LIBPATHS) -ltiff maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -o maxIntensity
+
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
 trackSpotsOMEwrpr.o : OMEdb.h
@@ -148,6 +151,7 @@ install:
 	install -c DumpSoftWorxStats /OME/bin/DumpSoftWorxStats
 	install -c extractBinData /OME/bin/extractBinData
 	install -c insertBinData /OME/bin/insertBinData
+	install -c maxIntensity /OME/bin/maxIntensity
 	install -d /usr/local/bin
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
