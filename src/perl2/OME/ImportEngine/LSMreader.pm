@@ -264,6 +264,7 @@ sub readPrivateTags
 
 	my $valueOffset = $offsetHash->{ value_offset };
 	$file -> setCurrentPosition( $valueOffset + 16 );
+	
 	$buffer = $file -> readData(12);
 	@data = unpack($template, $buffer);
 	
@@ -272,25 +273,23 @@ sub readPrivateTags
 	$xref->{ 'Image.NumTimes' } = $data[2];
 	
 	$template = "d";
-	
+
 	# Pixel sizes start 40 bytes away from valueOffset
 	$file -> setCurrentPosition( $valueOffset + 40 );
 	$buffer = $file -> readData(8);	
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
 	$xref->{ 'Image.PixelSizeX' } = ($data[0] * 1000000); # convert meters to microns
-	
+
 	$buffer = $file -> readData(8);
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
 	$xref->{ 'Image.PixelSizeY' } = ($data[0] * 1000000); # convert meters to microns
-	#print "PixelSizeY is ", $xref->{ 'Image.PixelSizeY' }, "\n";
 
 	$buffer = $file -> readData(8);	
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
 	$xref->{ 'Image.PixelSizeZ' } = ($data[0] * 1000000); # convert meters to microns
-	#print "PixelSizeZ is ", $xref->{ 'Image.PixelSizeZ' }, "\n";
 
 	$template = ($endian == 0) ? "Vx12Vx4Vx70V" : "Nx12Vx4Nx70N";
 	$file -> setCurrentPosition( $valueOffset + 108 );
@@ -329,25 +328,24 @@ sub swapper
 {
 	my ($buffer, $endian) = @_;
 	my $cpu_big_endian = getCPUBigEndian();
+	my $template = "H2H2H2H2H2H2H2H2";
 	
-	if ( ($endian == 0 && $cpu_big_endian == 1) || ($endian == 1 && $cpu_big_endian == 0) )
-	{
-		my $pos = 7;
-		my $template = "H2H2H2H2H2H2H2H2";
-		
-		# Grab the 8 bytes of the buffer in hexadecimal and put them in @data, 1 byte per element
-		my @data = unpack($template, $buffer);
-		
-		# Reverse the elements in @data (element 8 will now be 1, element 7 will be 2, etc.)
+	# Grab the 8 bytes of the buffer in hexadecimal and put them in @data, 1 byte per element
+	my @data = unpack($template, $buffer);
+	
+	# Reverse the elements in @data (element 8 will now be 1, element 7 will be 2, etc.)
+	if ( ($endian == 0 && $cpu_big_endian == 1) or
+	     ($endian == 1 && $cpu_big_endian == 0) ) {
 		@data = reverse(@data);
-		$buffer = "";
-
-		# Rebuild the buffer using the newly ordered bytes
-		foreach my $byte (@data)
-		{
-			$buffer .= $byte;
-		}
 	}
+	
+	$buffer = "";
+	
+	# Rebuild the buffer using the newly ordered bytes
+	foreach my $byte (@data) {
+		$buffer .= $byte;
+	}
+	
 	# Pack the buffer into a single hexadecimal number
 	$buffer = pack("H16", $buffer);
 	return $buffer;
