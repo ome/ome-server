@@ -41,7 +41,6 @@ public class AbstractService
 {
     protected RemoteServices services = null;
     protected RemoteCaller   caller = null;
-    protected String         sessionKey = null;
 
     public AbstractService()
     {
@@ -52,13 +51,12 @@ public class AbstractService
     {
         this.services = services;
         this.caller = services.getRemoteCaller();
-        this.sessionKey = services.getSessionKey();
     }
 
     public RemoteServices getRemoteServices() { return services; }
 
     public RemoteCaller getRemoteCaller() { return caller; }
 
-    public String getSessionKey() { return sessionKey; }
+    public String getSessionKey() { return caller.getSessionKey(); }
 
 }
