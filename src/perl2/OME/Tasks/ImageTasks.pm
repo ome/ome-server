@@ -40,7 +40,6 @@ package OME::Tasks::ImageTasks;
 use OME::Session;
 use OME::Dataset;
 use OME::Image;
-use OME::ImportExport::Importer;
 use OME::ImportExport::Exporter;
 use OME::Analysis::Engine;
 use OME::ImportEngine::ImportEngine;
@@ -276,88 +275,6 @@ sub forkedImportFiles {
                 $task->finish();
                 $task->setMessage('Successfully imported '.scalar(@$image_list).
                                   ' images');
-            };
-
-            logwarn "Could not close task - $@" if $@;
-        }
-
-        CORE::exit(0);
-    }
-}
-
-=head2 forkedImportAnalysisModules
-
-	my $task = forkedImportAnalysisModules(\@filenames,\%options);
-
-Imports the xml (or ome) files given by @filenames into OME.
-
-=cut
-
-sub forkedImportAnalysisModules {
-	my ($filenames, $options) = @_;
-
-	my $task = OME::Tasks::NotificationManager->
-      new('Importing analysis modules',scalar(@$filenames));
-	
-	my $session = OME::Session->instance();
-    my $OMEimporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
-    my $factory = $session->Factory();
-	
-    my $session_key = $session->SessionKey();
-
-    my $parent_pid = $$;
-    my $pid = fork;
-
-    if (!defined $pid) {
-        die "Could not fork off process to perform the import";
-    } elsif ($pid) {
-        # Parent process
-        # do nothing
-        return $task;
-    } else {
-        # Child process
-
-        eval {
-            POSIX::setsid() or die "Can't start a new session. $!";
-            OME::Session->forgetInstance();
-            OME::Tasks::NotificationManager->forget();
-
-            my $session = OME::SessionManager->createSession($session_key);
-            my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
-            my @file_list;
-
-            $task->setMessage('Starting import');
-            # import the ome modules before the xml chains
-            foreach (@$filenames) {
-                if ($_ =~ m/\.ome$/) {
-                    push (@file_list, $_);
-                }
-            }
-            foreach (@$filenames) {
-                if ($_ =~ m/\.xml$/) {
-                    push (@file_list, $_);
-                }
-            }
-
-            foreach my $path (@file_list) {
-                $task->setMessage ("Importing $path");
-                $OMEImporter->importFile( $path );
-                $task->step();
-            }
-		};
-
-        if ($@) {
-            my $error = $@;
-            eval {
-                $task->died($error);
-            };
-
-            logwarn "Could not close task - $@" if $@;
-        } else {
-            eval {
-                $task->finish();
-                $task->setMessage('Successfully imported '.scalar(@$filenames).
-                                  ' analysis modules');
             };
 
             logwarn "Could not close task - $@" if $@;
