@@ -1858,9 +1858,10 @@ void deletePixels (PixelsRep *myPixels) {
 		if (myPixels->head) free (myPixels->head);
 		if (myPixels->pixels) free (myPixels->pixels);
 	} else {
-		munmap (myPixels->head, myPixels->size_info);
-		munmap (myPixels->pixels, myPixels->size_rep);
+		if (myPixels->head) munmap (myPixels->head, myPixels->size_info);
+		if (myPixels->pixels) munmap (myPixels->pixels, myPixels->size_rep);
 	}
+
 	myPixels->is_mmapped = 0;
 	myPixels->planeInfos = NULL;
 	myPixels->stackInfos = NULL;
