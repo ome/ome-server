@@ -80,6 +80,9 @@ import java.util.Map;
 public abstract class MappedDTO
     implements DataInterface
 {
+	
+	public static final String  NULL_REFERENCE = "*([-NULL-])*";
+	 
     /**
      * This is the {@link Map} used to back the DTO.  All of the data
      * fields of the DTO are stored in the map.  The helper accessor
@@ -530,7 +533,14 @@ public abstract class MappedDTO
     protected String getStringElement(String key)
     {
         Object o = elements.get(key);
-        return o == null ? null : o.toString();
+        if (o == null)
+        		return null;
+        String s = o.toString();
+        
+        if (s.compareTo(NULL_REFERENCE) == 0) 
+        		return null;
+        return s;
+        //return o == null ? null : o.toString();
     }
 
     /**

@@ -91,9 +91,9 @@ public class XmlRpcCaller
     public static final String  NULL_REFERENCE = "*([-NULL-])*";
 
     public static boolean TRACE_CALLS = false;
-    public static boolean USE_LITE_CLIENT = true;
+    public static boolean USE_LITE_CLIENT = false;
 
-    private boolean profileCalls = false;
+    private boolean profileCalls = true;
     private long profilerTime = 0L;
 
     private XmlRpcClient  xmlrpc;
@@ -271,7 +271,8 @@ public class XmlRpcCaller
                     System.err.println("Profiler: "+thisTime);
                 }
 
-                return decodeObject(retval);
+               // return decodeObject(retval);
+               return retval;
             } catch (IOException e) {
                 throw new RemoteConnectionException(e.getMessage());
             } catch (Exception e) {
@@ -407,22 +408,9 @@ public class XmlRpcCaller
     }
 
     public String getSessionKey() { return sessionKey; }
-
-    public Object invoke(String method, Object[] params)
-    {
-        synchronized(this)
-        {
-            if (sessionKey == null)
-                throw new IllegalArgumentException("Have not logged in");
-
-            addParameter(sessionKey);
-            if (params != null)
-            {
-                for (int i = 0; i < params.length; i++)
-                    addParameter(params[i]);
-            }
-            return invoke(method);
-        }
+    
+    public Object invoke(String method,Object[] params) {
+    		return dispatch(method,params);
     }
 
     public Object dispatch(String method, Object[] params)
