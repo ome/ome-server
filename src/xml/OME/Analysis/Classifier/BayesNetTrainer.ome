@@ -65,7 +65,7 @@
 				RefersTo="SignatureVectorLegend"/>
 		</SemanticType>
 	
-		<SemanticType Name="SignaturesExcluded" AppliesTo="D">
+		<SemanticType Name="SignaturesNotDiscretized" AppliesTo="D">
 			<Description>
 			Records which signatures were excluded from optimal feature subset
 			selection because they could not be succesfully discretized by the
@@ -74,7 +74,7 @@
 			</Description>
 			<Element
 				Name="Legend"
-				DBLocation="SIGNATURES_EXCLUDED.LEGEND"
+				DBLocation="SIGNATURES_NOT_DISCRETIZED.LEGEND"
 				DataType="reference"
 				RefersTo="SignatureVectorLegend"/>
 		</SemanticType>
@@ -95,27 +95,42 @@
 			<Description>
 			Records the signatures' estimated individual and cumulative
 			predictive abilities of the classifier achieved during training.
-			CumScore records performance the classifier achieved using all the
-			features upto and including this one (based on the Index). 
-			
 			</Description>
 			<Element
 				Name="IndScore"
 				DBLocation="SIGNATURES_SCORES.IND_SCORE"
-				DataType="float"/>
+				DataType="float">
+				<Description>
+				IndScore summarizes performance the classifier achieved using
+				this feature individually.
+				</Description>
+			</Element>
 			<Element
 				Name="CumScore"
 				DBLocation="SIGNATURES_SCORES.CUM_SCORE"
-				DataType="float"/>
+				DataType="float">
+				<Description>
+				CumScore summarizes performance the classifier achieved using
+				all the features upto and including this one (based on SE Rank).
+				</Description>
+			</Element>
+			<Element
+				Name="Rank"
+				DBLocation="SIGNATURES_SCORES.RANK"
+				DataType="integer">
+				<Description>
+				During the classifier training phase, signatures are ranked
+				according to their discriminating power. Signatures with Rank
+				1 are the best, so forth.
+				</Description>
+			</Element>
 			<Element
 				Name="Legend"
 				DBLocation="SIGNATURES_SCORES.LEGEND"
 				DataType="reference"
-				RefersTo="SignatureVectorLegend"/>
-			<Element
-				Name="Index"
-				DBLocation="SIGNATURES_SCORES.INDEX"
-				DataType="integer"/>
+				RefersTo="SignatureVectorLegend">
+			</Element>
+				
 		</SemanticType>
 	</SemanticTypeDefinitions>
 
@@ -137,7 +152,7 @@
 				
 				<FormalOutput Name="Categories Used"     SemanticTypeName="CategoriesUsed"       Count="+"/>
 				<FormalOutput Name="Signatures Used"     SemanticTypeName="SignaturesUsed"       Count="+"/>
-				<FormalOutput Name="Signatures Excluded" SemanticTypeName="SignaturesExcluded"   Count="+"/>
+				<FormalOutput Name="Signatures Not Discretized" SemanticTypeName="SignaturesNotDiscretized"   Count="+"/>
 				<FormalOutput Name="Signatures Scores"   SemanticTypeName="SignaturesScores"     Count="+"/>
 				
 				<FormalOutput Name="Confusion Matrix"    SemanticTypeName="ConfusionMatrix"      Count="!">
