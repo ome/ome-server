@@ -992,6 +992,7 @@ function initialise() {
 	//Analysis
 	level1ID = theMenu.addEntry(-1, "Folder", "Analysis", "", "Analysis Commands");
 	level2ID = theMenu.addChild (level1ID, "Document", "Find Spots", "/perl2/serve.pl?Page=OME::Web::FindSpots", "Find spots");
+	level2ID = theMenu.addEntry (level2ID, "Document", "View MEX Results", "/perl2/serve.pl?Page=OME::Web::ViewMEXresults", "View the results of a Module EXecution");
 	//level2ID = theMenu.addEntry (level2ID, "Document", "Status of Run", "noOp.html", "Run Status");
 	//level2ID = theMenu.addEntry (level2ID, "Folder", "Node", "", "Node Controls");
 
