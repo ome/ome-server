@@ -22,7 +22,7 @@ use OME::Session;
 use OME::SessionManager;
 use OME::AnalysisChain;
 use OME::Dataset;
-use OME::Tasks::AnalysisEngine;
+use OME::Analysis::AnalysisEngine;
 use OME::Tasks::ChainManager;
 use Term::ReadKey;
 
@@ -55,7 +55,7 @@ $factory->Debug(0);
 my $chain = $factory->loadObject("OME::AnalysisChain",$chainID);
 my $dataset = $factory->loadObject("OME::Dataset",$datasetID);
 
-my $engine = OME::Tasks::AnalysisEngine->new();
+my $engine = OME::Analysis::AnalysisEngine->new();
 
 foreach my $flag_string (@ARGV) {
     my ($flag,$value) = split(/=/,$flag_string,2);

@@ -51,7 +51,7 @@ OME Modules - Table of Contents
     OME::Analysis::TrackSpotsHandler
     OME::Analysis::Handler
     OME::Analysis::NoopHandler
-    OME::Tasks::AnalysisEngine
+    OME::Analysis::AnalysisEngine
 
 =head2 OME XML file format
 

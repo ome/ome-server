@@ -18,16 +18,16 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::Tasks::AnalysisEngine;
+package OME::Analysis::AnalysisEngine;
 
 =head1 NAME
 
-OME::Tasks::AnalysisEngine - OME module_execution subsystem
+OME::Analysis::AnalysisEngine - OME module_execution subsystem
 
 =head1 SYNOPSIS
 
-	use OME::Tasks::AnalysisEngine;
-	my $engine = new OME::Tasks::AnalysisEngine();
+	use OME::Analysis::AnalysisEngine;
+	my $engine = new OME::Analysis::AnalysisEngine();
 
 	# login to OME, load/create an module_execution view and dataset
 	$engine->executeAnalysisView($session,$view,$free_inputs,$dataset);
@@ -36,7 +36,7 @@ OME::Tasks::AnalysisEngine - OME module_execution subsystem
 
 =head1 DESCRIPTION
 
-OME::Tasks::AnalysisEngine is implements the execution algorithm of
+OME::Analysis::AnalysisEngine is implements the execution algorithm of
 the OME module_execution subsystem.  Given an module_execution chain, which is a
 directed acylic graph of module_execution nodes, and a dataset, which is a
 collection of OME images, the engine will execute each node in the

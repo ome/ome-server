@@ -55,7 +55,7 @@ use Log::Agent;
 use XML::LibXML;
 
 use OME::LSID;
-use OME::Tasks::AnalysisEngine;
+use OME::Analysis::AnalysisEngine;
 
 =head1 METHODS
 
@@ -265,7 +265,7 @@ sub processDOM {
 		return $self->{_DBObjects};
 	}
 	logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
-	my $engine = OME::Tasks::AnalysisEngine->new();
+	my $engine = OME::Analysis::AnalysisEngine->new();
 	eval {
 		$engine->executeAnalysisView($session,$view,{},$importDataset);
 	};

@@ -111,7 +111,7 @@ centralized and consistent way to incorporate SQL into Perl.
 
 B<TODO>: Add a real description of the Ima::DBI idiom for arbitrary
 SQL.  For now, just look at how it's done in
-OME::Tasks::AnalysisEngine.
+OME::Analysis::AnalysisEngine.
 
 =back
 
