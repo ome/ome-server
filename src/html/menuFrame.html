@@ -993,7 +993,7 @@ function initialise() {
 	//Dataset
 	level2ID = theMenu.addChild(level1ID, "Folder", "Dataset", "", "Current dataset");
 	level3ID = theMenu.addChild (level2ID, "Document", "Properties", "/perl2/serve.pl?Page=OME::Web::DatasetMetadata", "View & Edit metadata of current dataset");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Components", "/perl2/serve.pl?Page=OME::Web::DatasetComponents", "View & Edit components of current dataset");
+	level3ID = theMenu.addEntry (level3ID, "Document", "Images", "/perl2/serve.pl?Page=OME::Web::DatasetComponents", "View & Edit components of current dataset");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Switch", "/perl2/serve.pl?Page=OME::Web::DatasetSwitch", "Switch current dataset");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Viewer", "/perl2/serve.pl?Page=OME::Web::Viewer", "Open viewer on this dataset");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Thumbnails", "/perl2/serve.pl?Page=OME::Web::ThumbCurrentDataset", "Thumbnails/Current Dataset");
