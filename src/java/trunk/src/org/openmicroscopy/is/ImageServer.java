@@ -944,6 +944,82 @@ public abstract class ImageServer
      * The original file should have been previously uploaded via the
      * {@link #uploadFile} method.  The pixels file should have been
      * previously created via the {@link #newPixels} method.  The
+     * original file should be in the TIFF format, and should contain
+     * exactly one plane of pixel data.  This plane should have the
+     * same size as an XY plane in the pixels file.</p>
+     *
+     * <p>This method copies a single XY plane of pixels.  The plane
+     * is specified by its Z, C and T coordinates, which have 0-based
+     * indices.  The endian-ness of the uploaded file is encoded in
+     * the TIFF header, and does not need to be specified.  If this
+     * differs from the endian-ness of the new pixels file, byte
+     * swapping will be performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param theZ the Z index of the desired plane
+     * @param theC the C index of the desired plane
+     * @param theT the T index of the desired plane
+     * @param fileID the ID of the previously uploaded file
+     */
+    public abstract long convertPlaneFromTIFF(long pixelsID,
+                                              int theZ, int theC, int theT,
+                                              long fileID)
+        throws ImageServerException;
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
+     * original file should be in the TIFF format, and can contain
+     * multiple planes of pixel data.  These planes should be stored
+     * as separate entries in the TIFF file's directory.  The plane to
+     * be copied is specified by the <code>directory</code> parameter,
+     * which is a 0-based index into the TIFF directory.  The plane
+     * should have the same size as an XY plane in the pixels
+     * file.</p>
+     *
+     * <p>This method copies a single XY plane of pixels.  The plane
+     * is specified by its Z, C and T coordinates, which have 0-based
+     * indices.  The endian-ness of the uploaded file is encoded in
+     * the TIFF header, and does not need to be specified.  If this
+     * differs from the endian-ness of the new pixels file, byte
+     * swapping will be performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param theZ the Z index of the desired plane
+     * @param theC the C index of the desired plane
+     * @param theT the T index of the desired plane
+     * @param fileID the ID of the previously uploaded file
+     * @param directory the index into the TIFF directory of the plane
+     * to copy
+     */
+    public abstract long convertPlaneFromTIFF(long pixelsID,
+                                              int theZ, int theC, int theT,
+                                              long fileID, int directory)
+        throws ImageServerException;
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
      * server will start reading the pixels from the specified offset,
      * which should be expressed as bytes from the beginning of the
      * file.</p>

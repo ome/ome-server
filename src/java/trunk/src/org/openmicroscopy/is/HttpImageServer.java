@@ -952,6 +952,56 @@ public class HttpImageServer
         }
     }
 
+    public long convertPlaneFromTIFF(final long pixelsID,
+                                     final int theZ,
+                                     final int theC,
+                                     final int theT,
+                                     final long fileID)
+        throws ImageServerException
+    {
+        MultipartPostMethod post = startCall();
+        try
+        {
+            post.addParameter("Method","ConvertTIFF");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("theZ",Integer.toString(theZ));
+            post.addParameter("theC",Integer.toString(theC));
+            post.addParameter("theT",Integer.toString(theT));
+            post.addParameter("FileID",Long.toString(fileID));
+            executeCall(post);
+
+            return Long.parseLong(post.getResponseBodyAsString().trim());
+        } finally {
+            finishCall(post);
+        }
+    }
+
+    public long convertPlaneFromTIFF(final long pixelsID,
+                                     final int theZ,
+                                     final int theC,
+                                     final int theT,
+                                     final long fileID,
+                                     final int directory)
+        throws ImageServerException
+    {
+        MultipartPostMethod post = startCall();
+        try
+        {
+            post.addParameter("Method","ConvertTIFF");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("theZ",Integer.toString(theZ));
+            post.addParameter("theC",Integer.toString(theC));
+            post.addParameter("theT",Integer.toString(theT));
+            post.addParameter("FileID",Long.toString(fileID));
+            post.addParameter("TIFFDirIndex",Integer.toString(directory));
+            executeCall(post);
+
+            return Long.parseLong(post.getResponseBodyAsString().trim());
+        } finally {
+            finishCall(post);
+        }
+    }
+
     public long convertRows(final long pixelsID,
                             final int theY, final int numRows,
                             final int theZ, final int theC, final int theT,
