@@ -133,7 +133,7 @@ picomeis_read_row(void *vp, int y, int x0, int nx, Pixel1 *buf)
 CompositeSpec *theOMEisPic = (CompositeSpec *)vp;
 PixelsRep *thePixels = theOMEisPic->thePixels;
 int theZ = theOMEisPic->theZ;
-int theT = theOMEisPic->theZ;
+int theT = theOMEisPic->theT;
 channelSpecType *theCh = &(theOMEisPic->RGBAGr[4]);
 size_t offset;
 
