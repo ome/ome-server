@@ -54,8 +54,9 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
-=head2 add ($id)
+=head2 add ($datasetID,$projectID)
 
+projectID = optional if not defined, add dataset to current project
 Add an existing dataset to a project.
 
 =head2 change ($description,$name)
@@ -116,22 +117,29 @@ sub new{
 
 ###############################
 # Parameters:
-# 	id = dataset_id to add
+# 	datasetID = dataset_id to add
+#	projectID = if not defined, add current project
 
 sub add{
 	my $self=shift;
 	my $session=$self->{session};
-	my ($id)=@_;
-	my $project=$session->project();
-	my $dataset=$project->addDatasetID($id);
-	#my $object=$session->Factory()->loadObject("OME::Dataset",$dataset->dataset_id());
+	my ($datasetID,$projectID)=@_;
+	my $project;
+	if (defined $projectID){
+	    $project=$session->Factory()->loadObject("OME::Project",$projectID);
+	}else{
+		$project=$session->project();
+
+	}
+	my $dataset=$project->addDatasetID($datasetID);
 	$session->dataset($dataset);
 	$project->writeObject();
 	$session->writeObject();
 
-	return 1;
+	return $dataset;
 
 }
+
 
 
 ###############################

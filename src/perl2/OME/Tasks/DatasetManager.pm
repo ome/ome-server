@@ -85,19 +85,6 @@ Check images not used in the current dataset
 if userID defined: check dataset owned by a given user
 $ref optional: ref array list of group_id
 
-=head2 listAll (deprecated)
-
-Given a user, Check datasets used in user's projects 
-
-Return ref hash of datasets used in projects of a given user
-
-Return: ref array of project objects owned by a given user.
-
-=head2 listGroup (deprecated)
-
-List datasets used in a given Research group
-Return : ref array of  dataset objects in a given research group.
-
 =head2 load ($datasetID)
 
 Load a dataset object 
@@ -184,6 +171,7 @@ sub addImages{
 	if (scalar(@$ref)>0){
 	  foreach (@$ref){
 		$dataset->addImageID($_);
+  	  
 	  }
 	  $session->dataset($dataset);
 	  $session->writeObject();
@@ -238,7 +226,7 @@ sub create{
 	   $session->dataset($dataset);
 	   $session->writeObject();
 	}
-	return 1;
+	return $dataset;
 
 }
 
@@ -337,14 +325,14 @@ sub listMatching{
 	my $session=$self->{session};
 	my ($userID,$ref)=@_;
 	my @list=();
-	my $ref;
+	my $refGene;
 
 	if (defined $userID){
 		my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$userID);
 	   	foreach (@projects){
 	        push(@list,$_->datasets());
 	     }
-	     $ref=checkDuplicate(\@list);
+	     $refGene=checkDuplicate(\@list);
 	}else{
 	    my @datasets=();
 	    my @keep;
@@ -352,19 +340,19 @@ sub listMatching{
 		foreach (@$ref){
 		      push(@datasets,$session->Factory()->findObjects("OME::Dataset",'group_id'=>$_));
 	      }
-		    $ref=\@datasets;
+		    $refGene=\@datasets;
 
 	   }else{
  		   @datasets=$session->Factory()->findObjects("OME::Dataset");
-		    $ref=\@datasets;
+		    $refGene=\@datasets;
 	   }
 	   # for necessary now
 	   foreach (@datasets){
 		push(@keep,$_) unless ($_->name() eq "Dummy import dataset");
 	   }
-	   $ref=\@keep;
+	   $refGene=\@keep;
 	}
-	return $ref;
+	return $refGene;
 }
 
 ################

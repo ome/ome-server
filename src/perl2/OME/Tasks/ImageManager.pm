@@ -165,35 +165,7 @@ sub listMatching{
 	}
 	return $result;
 }
-###############
-# Parameters: 
-#	usergp = group_id (future) ?
-# Return: ref array with image objects
 
-#sub listGroup{
-#	my $self=shift;
-#	my $session=$self->{session};
-#	#my ($usergpID)=@_;
-#	my @images = $session->Factory()->findObjects("OME::Image", 'group_id' => $session->User()->Group()->id());
-#	
-#	return \@images;
-#
-#}
-
-
-###############
-# Parameters: no
-# Return: ref array with image object
-
-#sub listNotUsed{
-#	my $self=shift;
-#	my $session=$self->{session};
-#	my @gpImages = $session->Factory()->findObjects("OME::Image", 'group_id' => $session->User()->Group()->id() );
-#	my @usedImages=$session->dataset()->images();
-#	my $result=notUsedImages(\@gpImages,\@usedImages);
-# 	return $result;
-
-#}
 
 
 #############
@@ -266,7 +238,10 @@ sub deleteImage{
 sub deleteInMap{
 	my ($id,$db)=@_;
 	# MUST FIND OTHER SOLUTION
-	my @tables=qw(image_dataset_map image_dimensions image_files_xyzwt image_screen_info image_stage_info image_wavelengths xy_image_info xy_softworx_info xyz_image_info features ome_sessions_images);
+	my @tables=qw(image_dataset_map image_dimensions stack_statistics plane_statistics image_files_xyzwt image_info image_pixels image_plates imaging_environments logical_channels channel_components);
+
+
+	# my @tables=qw(image_dataset_map image_dimensions image_files_xyzwt image_screen_info image_stage_info image_wavelengths xy_image_info xy_softworx_info xyz_image_info features ome_sessions_images);
  	foreach (@tables){
 		my ($condition,$result);
      		$condition="image_id=".$id;
