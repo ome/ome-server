@@ -43,6 +43,8 @@ import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.vis.piccolo.PThumbnail;
 import java.awt.Image;
+import java.util.Vector;
+import java.util.Iterator;
 
  
 /** 
@@ -62,7 +64,7 @@ public class CImage extends RemoteImage {
 	}
 	
 	private Image imageData;
-	private PThumbnail thumbnail;
+	private Vector thumbnails = new Vector();
 	
 	public CImage() {
 		super();
@@ -86,14 +88,18 @@ public class CImage extends RemoteImage {
 	public void setImageData(Image i) {
 		//System.err.println("getting image data for image "+getID());
 		imageData = i;
-		if (thumbnail != null) { 
-			//System.err.println("notifying of image completion");
-			thumbnail.notifyImageComplete();
+		if (thumbnails.size() >0) { 
+			PThumbnail thumbnail;
+			Iterator iter = thumbnails.iterator();
+			while (iter.hasNext()) {
+				thumbnail = (PThumbnail) iter.next();
+				thumbnail.notifyImageComplete();
+			}
 		}
 	}
 	
-	public void setThumbnail(PThumbnail thumb) {
-		thumbnail = thumb;
+	public void addThumbnail(PThumbnail thumb) {
+		thumbnails.add(thumb);
 	}
 	
 	public Image getImageData() {
@@ -102,5 +108,24 @@ public class CImage extends RemoteImage {
 			System.err.println("it's null..");
 		}*/
 		return imageData;
+	}
+	
+	// to prevent re-entrant loops
+	private boolean reentrant=false;
+	
+	public void highlightThumbnails(boolean v) {
+		if (reentrant == true)
+			return;
+		// so each of the setHighlighted() calls don't lead to a call back here
+		System.err.println("in highlight thumbnails");
+		reentrant = true;
+		Iterator iter = thumbnails.iterator();
+		PThumbnail thumb;
+		while (iter.hasNext()) {
+			System.err.println("highlighting a sibling...");
+			thumb = (PThumbnail) iter.next();
+			thumb.setHighlighted(v);
+		}
+		reentrant = false;
 	}
 }
