@@ -82,6 +82,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private static final int NOT_LINKING=1;
 	private static final int LINKING_PARAMS=2;
 	private static final int LINKING_MODULES=3;
+	private static final int LINKING_CANCELLATION=4;
 	
 	private static final double SCALE_FACTOR=1.2;
 	private int linkState = NOT_LINKING;
@@ -139,17 +140,22 @@ public class PChainEventHandler extends  PPanEventHandler {
 		
 		//System.err.println("PChainEventHandler.drag()");
 		// module nodes simply get translated.
-		//System.err.println("in chain handler drag");
+		System.err.println("in chain handler drag");
+		if (linkState == NOT_LINKING)
+			System.err.println("not linking");
+		else
+			System.err.println("some linking state..");
 		if (node instanceof PModule) {
 			if (linkState != LINKING_MODULES) {
-				//System.err.println("translating a node");
+				System.err.println("translating a node");
 				PModule mn = (PModule) node;
 				Dimension2D delta = e.getDeltaRelativeTo(node);
 				node.translate(delta.getWidth(),delta.getHeight());
 				e.setHandled(true);
 			}
 		}
-		else if (!(node instanceof PFormalParameter)){
+		else if (!(node instanceof PFormalParameter) 
+			&& linkState == NOT_LINKING){
 			super.drag(e);
 			e.setHandled(true);
 		}
@@ -246,11 +252,15 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	public void mouseClicked(PInputEvent e) {
 		
+		System.err.println("trying to zoom on mouse click");
 		// we only scale if we're not drawing a link.
 		if (linkState != NOT_LINKING) {
+			if (linkState == LINKING_CANCELLATION)
+				linkState = NOT_LINKING;
 			e.setHandled(true);
 			return;
 		}
+		System.err.println("zooming on mouse click");
 		
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
@@ -298,14 +308,23 @@ public class PChainEventHandler extends  PPanEventHandler {
 			selectedModule = null;
 		}
 		
-		if (node instanceof PFormalParameter && linkState == LINKING_MODULES 
-				&& e.getClickCount() == 2) {
-		//	System.err.println("finishing links because I clicked on a formal param");
-			PFormalParameter p = (PFormalParameter) node;
-			PModule mod = p.getPModule();
-			finishModuleLinks(mod);
-		}		
-		else if (node instanceof PFormalParameter 
+		//first do things based on types of nodes
+		// then do based on state
+		if (node instanceof PLink)
+			mousePressedLink(node);
+		else if (node instanceof PModule)
+			mousePressedModule(node);
+
+		if (linkState == LINKING_PARAMS)
+			mousePressedLinkingParams(node,e);
+		else if (linkState == LINKING_MODULES)
+			mousePressedLinkingModules(node,e);
+		else if (linkState == NOT_LINKING) {
+			mousePressedNotLinking(node,e);		
+		}
+		else 
+			linkState = NOT_LINKING;
+		/*else if (node instanceof PFormalParameter 
 				&& linkState == NOT_LINKING) {
 		//	System.err.println("starting a new param link");
 			if (lastParameterEntered == null)
@@ -316,49 +335,72 @@ public class PChainEventHandler extends  PPanEventHandler {
 			e.setHandled(true);
 		}
 		
-		else if (node instanceof PLink) { 
-		//	System.err.println("pressed on a link ");
-			
-			selectedLink = (PLink) node;
-			selectedLink.setSelected(true);
-			linkState = NOT_LINKING;	
-		}
+		
 		else if (node instanceof PModule) {
-		//	System.err.println("clicked on  a module");
-			selectedModule = (PModule) node;
-			selectedModule.addHandles();
 			if (e.getClickCount() ==2) {
 				if (linkState == NOT_LINKING)
 					startModuleLinks(e);
-				else if (linkState == LINKING_MODULES)
-					finishModuleLinks((PModule) node);
 			} 
 		}
-		else if (linkState == LINKING_MODULES) {
-		//	System.err.println("linking modules. pressed.");
-		 	if (e.getClickCount() ==2)
-				cancelModuleLinks();
-		
-		}
-		else if (linkState == LINKING_PARAMS) {
-		//	System.err.println("mouse pressed in linking params");
-			if (e.getClickCount() ==2) {
-				cancelParamLink();
-			}
-			else if (lastParameterEntered != null)
-				finishParamLink();
-			/*else { assume all links have one end point and one start point
-				System.err.println("extending link");
-				Point2D pos = e.getPosition();
-				link.addIntermediate((float) pos.getX(),(float) pos.getY());
-			}*/
-			e.setHandled(true);
-		}
+
 		else
 			linkState =  NOT_LINKING;
-		//	super.mousePressed(e);
+		//	super.mousePressed(e); */
 	}
+	
+	private void mousePressedLink(PNode node) {
+		selectedLink = (PLink) node;
+		selectedLink.setSelected(true);
+		linkState = NOT_LINKING;
+	}
+	
+	private void mousePressedModule(PNode node) {
+		selectedModule = (PModule) node;
+		selectedModule.addHandles();
+	}
+	
+	private void mousePressedLinkingParams(PNode node,PInputEvent e) {
+		if (e.getClickCount() ==2) {
+			System.err.println("double clicking to cancel link");
+			cancelParamLink();
+			linkState = LINKING_CANCELLATION;
+		}
+		else if (lastParameterEntered != null)
+			finishParamLink();
+		e.setHandled(true);
+	}
+	
+	private void mousePressedLinkingModules(PNode node,PInputEvent e) {
+		int count = e.getClickCount();
 		
+		if (count ==2) {
+			if (node instanceof PFormalParameter) {
+				PFormalParameter p = (PFormalParameter) node;
+				PModule mod = p.getPModule();
+				finishModuleLinks(mod);
+			}
+			else if (node instanceof PModule) {
+				finishModuleLinks((PModule) node);
+			}
+			else
+				cancelModuleLinks();
+		}
+		e.setHandled(true);
+	}
+	
+	private void mousePressedNotLinking(PNode node,PInputEvent e) {
+		if (node instanceof PFormalParameter) {
+			if (lastParameterEntered == null) 
+				mouseEntered(e);
+			PFormalParameter param = (PFormalParameter) node;
+			if (param.canBeLinkOrigin())
+				startParamLink(param);
+		}
+		else if (node instanceof PModule && e.getClickCount() ==2)
+			startModuleLinks(e);
+		e.setHandled(true);
+	}
+	
  	private void startParamLink(PFormalParameter param) {
 		//System.err.println("mouse pressing and starting link");
 		linkOrigin = param;
@@ -389,7 +431,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private void cancelParamLink() {
 		//System.err.println("canceling link");
 		link.removeFromParent();
-		linkState = NOT_LINKING;
 		link =null;
 		cleanUpParamLink();
 	}
