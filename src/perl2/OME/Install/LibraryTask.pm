@@ -426,7 +426,7 @@ sub execute {
 	    my $CC = "gcc";
 
 	    open (my $CHECK_C, ">", $source_file)
-			or croak "Unable to create version check source file for $library->{name} $!";
+			or croak "Unable to create version check source file for \"$library->{name}\" $!";
 		print $CHECK_C ($library->{get_library_version}, "\n"); 
 	    close ($CHECK_C);
 
@@ -445,15 +445,9 @@ sub execute {
 	    print $LOGFILE "ERRORS LOADING LIBRARY \"$library->{name}\" -- OUTPUT: \"", $@ || @error, "\"\n\n";
 
 	    print BOLD, " [NOT INSTALLED]", RESET;
-	    my $retval = y_or_n("\n\nWould you like to install $library->{name} from the repository ?");
 
-	    if ($retval) {
-		install ($library);
-		next;
-	    } else { 
-		print "**** Warning: Not installing library $library->{name}.\n\n"; 
-		next;
-	    }
+		print STDERR "\n\nPlease install \"$library->{name}\" and re-run install.pl\n";
+		exit(1);
 	}
 
 	if (check_library($library)) {
@@ -461,15 +455,9 @@ sub execute {
 	    next;
 	} else {
 	    print " $library->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
-	    my $retval = y_or_n("\nWould you like to install the library from the OME repository ?");
 
-	    if ($retval) {
-		install ($library);
-		next;
-	    } else { 
-		print "**** Warning: Not installing known compatible version of $library->{name}.\n\n"; 
-		next;
-	    }
+		print STDERR "\n\nUnsupported version \($library->{version}\) of \"$library->{name}\", \"$library->{valid_versions}\" required.\n";
+		exit(1);
 	}
     }
     
