@@ -88,9 +88,9 @@ USAGE
 sub handleCommand {
 	my ($self,$help,$commands) = @_;
 	if ($help) {
-		import_help($self,$commands);
+		$self->import_help($commands);
 	} else {
-		import($self,$commands);
+		$self->import($commands);
 	}
 }
 
@@ -165,9 +165,15 @@ sub import {
 	$opts{AllowDuplicates} = 1 if $reuse;
 	
 	print "Importing files\n";
+    my $task = OME::Tasks::NotificationManager->
+      new('Importing images',3+scalar(@file_names));
+	$task->setPID($$);
+	$task->step();
+	$task->setMessage('Starting import');
+
 	# don't use forkedimportFiles so users can always control c
-	my $task = OME::Tasks::ImageTasks::importFiles
-	  ($dataset, \@file_names, \%opts);
+	OME::Tasks::ImageTasks::importFiles
+	  ($dataset, \@file_names, \%opts, $task);
 	
 	my $lastStep = -1;
 	my $status = $task->state();
