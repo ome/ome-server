@@ -67,15 +67,9 @@ skinLibrary["popupListAnchorUpperLeftRoundedLightslategray"] =
 skinLibrary["popupListAnchorLightslategray"] = 
 '<rect width="{$width}" height="{$height}" fill="lightslategray"/>';
 skinLibrary["popupListBackgroundLightskyblue"] = 
-'<rect width="{$width}" height="{$height}" fill="lightskyblue" opacity="0">' +
-'	<animate attributeName="opacity" from="0" to="0.5" dur="0.1s" fill="freeze" repeatCount="0" begin="indefinite"/>' +
-'	<animate attributeName="opacity" from="0.5" to="0" dur="0.1s" fill="freeze" repeatCount="0" begin="indefinite"/>' +
-'</rect>';
+'<rect width="{$width}" height="{$height}" fill="lightskyblue" opacity="0.5"/>';
 skinLibrary["popupListHighlightAquamarine"] = 
-'<rect width="{$width}" height="{$height}" fill="aquamarine" opacity="0">' +
-'	<animate attributeName="opacity" from="0" to="0.5" dur="0.1s" fill="freeze" repeatCount="0" begin="indefinite"/>' +
-'	<animate attributeName="opacity" from="0.5" to="0" dur="0.1s" fill="freeze" repeatCount="0" begin="indefinite"/>' +
-'</rect>';
+'<rect width="{$width}" height="{$height}" fill="aquamarine" opacity="0.5">';
 skinLibrary["zSliderBody"] =
 '<g stroke="rgb(80,80,80)" transform="rotate(90)">' +
 '	<g id="xyPlane" transform="scale(.6) skewX(-45)">' +
@@ -100,28 +94,19 @@ skinLibrary["zSliderThumb"] =
 skinLibrary["redAnchorText"] =
 '<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,70,70)" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["redItemBackgroundText"] =
-'<rect x="-2" width="{$width + 4}" height="0" fill="rgb(255,70,70)"	rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">' +
-'	<animate attributeName="height" from="0" to="{$height}" dur="0.1s" fill="freeze" begin="indefinite"/>' +
-'	<animate attributeName="height" from="{$height}" to="0" dur="0.1s" fill="freeze" begin="indefinite"/>' +
-'</rect>';
+'<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,70,70)"	rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
 skinLibrary["redItemHighlightText"] =
 '<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,130,130)" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["greenAnchorText"] =
 '<rect x="-2" width="{$width + 4}" height="{$height}" fill="mediumseagreen" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["greenItemBackgroundText"] =
-'<rect x="-2" width="{$width + 4}" height="0" fill="mediumseagreen" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">' +
-'	<animate attributeName="height" from="0" to="{$height}" dur="0.1s" fill="freeze" begin="indefinite"/>' +
-'	<animate attributeName="height" from="{$height}" to="0" dur="0.1s" fill="freeze" begin="indefinite"/>' +
-'</rect>';
+'<rect x="-2" width="{$width + 4}" height="{$height}" fill="mediumseagreen" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
 skinLibrary["greenItemHighlightText"] =
 '<rect x="-2" width="{$width + 4}" height="{$height}" fill="lime" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["blueAnchorText"] =
 '<rect x="-2" width="{$width + 4}" height="{$height}" fill="cornflowerblue" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["blueItemBackgroundText"] =
-'<rect x="-2" width="{$width + 4}" height="0" fill="cornflowerblue" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">' +
-'	<animate attributeName="height" from="0" to="{$height}" dur="0.1s" fill="freeze" begin="indefinite"/>' +
-'	<animate attributeName="height" from="{$height}" to="0" dur="0.1s" fill="freeze" begin="indefinite"/>' +
-'</rect>';
+'<rect x="-2" width="{$width + 4}" height="{$height}" fill="cornflowerblue" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
 skinLibrary["blueItemHighlightText"] =
 '<rect x="-2" width="{$width + 4}" height="{$height}" fill="aqua" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["redButtonOn"] =
