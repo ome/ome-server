@@ -235,7 +235,7 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 	popupList.superclass.init.call(this, x, y);
 
 	// record initialization params...
-	if( !callback || isFunction(callback) ) {
+	if( !callback || Util.isFunction(callback) ) {
 		this.callback = callback;
 	} else {
 		this.callback = callback['method'];

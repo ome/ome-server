@@ -180,7 +180,7 @@ button.prototype.init = function(x, y, callback, onText, offText, highlightText)
 	button.superclass.init.call(this, x, y);
 
 	// record initialization params...
-	if( !callback || isFunction(callback) ) {
+	if( !callback || Util.isFunction(callback) ) {
 		this.callback = callback;
 	} else {
 		this.callback = callback['method'];
