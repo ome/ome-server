@@ -45,6 +45,7 @@
 #include <math.h>
 #include <float.h>
 #include "omeis.h"
+#include "digest.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
@@ -1324,6 +1325,8 @@ int theZ=-1,theC=-1,theT=-1;
 off_t offset=0;
 char error_str[256];
 unsigned char isLocalFile;
+unsigned char file_md[OME_DIGEST_LENGTH];
+int fd, retval;
 
 /*
 char **cgivars=param;
@@ -1422,11 +1425,6 @@ char **cgivars=param;
     else if (!strcmp(method,"PixelsSHA1")) {
         if (!ID) return (-1);
 
-        /*
-         * FIXME: We should actually calculate a SHA-1 here, rather
-         * than just returning the filename.
-         */
-
         if (! (thePixels = GetPixels(ID,'r',1))) {
             if (errno) HTTP_DoError(method,strerror(errno));
             else HTTP_DoError(method,"Access control error - check log for details");
@@ -1434,9 +1432,31 @@ char **cgivars=param;
         }
 
         HTTP_ResultType("text/plain");
-        fprintf(stdout,"%s\n",thePixels->path_rep);
 
+		/* First get a filehandle of the Pixels in the repository */
+		if ((fd = open(thePixels->path_rep, O_RDONLY)) == -1) {
+			perror(thePixels->path_rep);
+        	freePixelsRep(thePixels);
+			return (-1);
+		}
+
+		/* Get the SHA1 message digest */
+		if ((retval = get_md (fd, file_md)) < 0) {
+			fprintf(stderr, "Problem retrieving SHA1 return code: %d\n", retval);
+			close(fd);
+        	freePixelsRep(thePixels);
+			return (-1);
+		}
+
+		/* Free and close */
         freePixelsRep(thePixels);
+		close(fd);
+
+		/* Print our lovely and useful SHA1. */
+		print_md(file_md);  /* Convenience provided by digest.c */
+		printf("\n");
+	
+		return (0);
     }
 
 	else if (!strcmp (method,"SetPixels") || !strcmp (method,"GetPixels") ||
@@ -1705,11 +1725,6 @@ char **cgivars=param;
 			return (-1);
 		}
 
-        /*
-         * FIXME: We should actually calculate a SHA-1 here, rather
-         * than just returning the filename.
-         */
-
 		strcpy (file_path,"Files/");
 		if (! getRepPath (fileID,file_path,0)) {
 			sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
@@ -1730,10 +1745,28 @@ char **cgivars=param;
 			fclose (fInfo);
 			if (nIO) file_name[nIO]=0;
 		}
-
-
+		
 		HTTP_ResultType ("text/plain");
-		fprintf (stdout,"%s\n",file_name);
+
+		/* First get a filehandle of the file */
+		if ((fd = open(file_name, O_RDONLY)) == -1) {
+			perror(file_name);
+			return (-1);
+		}
+
+		/* Get the SHA1 message digest */
+		if ((retval = get_md (fd, file_md)) < 0) {
+			fprintf(stderr, "Problem retrieving SHA1 return code: %d\n", retval);
+			close(fd);
+			return (-1);
+		}
+
+		/* Close */
+		close(fd);
+
+		/* Print our lovely and useful SHA1. */
+		print_md(file_md);  /* Convenience provided by digest.c */
+		printf("\n");
 	}
 
 	else if (! strcmp (method,"ReadFile") ) {
