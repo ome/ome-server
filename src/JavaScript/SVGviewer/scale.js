@@ -83,24 +83,24 @@ Scale.prototype.buildSVG = function() {
 
 	// set up GUI
 	this.blackSlider = new Slider( 
-		10, 60, this.scaleWidth, 0, 
+		10, 70, this.scaleWidth, 0, 
 		this.updateBlack,
 		'<rect width="'+this.scaleWidth+'" height="10" opacity="0"/>',
 		'<rect x="-2" width="4" height="10" fill="black"/>'
 	);
 	this.whiteSlider = new Slider( 
-		10, 70, this.scaleWidth, 0, 
+		10, 80, this.scaleWidth, 0, 
 		this.updateWhite,
 		'<rect width="'+this.scaleWidth+'" height="10" opacity="0"/>',
 		'<rect x="-2" width="4" height="10" fill="white"/>'
 	);
 	this.wavePopupList = new popupList(
-		10, 90, this.fluors, this.waveChange
+		10, 100, this.fluors, this.waveChange
 	);
 	
 	// build background
 	this.root.appendChild( this.whiteSlider.textToSVG(
-'<g transform="translate(10,70)">\
+'<g transform="translate(10,80)">\
 	<line x2="'+ this.scaleWidth +'" stroke-width="2" stroke="blue"/>\
 	<line y1="-10" y2="10" stroke-width="2" stroke="blue"/>\
 </g>'
@@ -117,10 +117,14 @@ Scale.prototype.buildSVG = function() {
 	
 	// build displays
 	this.root.appendChild( this.whiteSlider.textToSVG(
-		'<text x="20" y="2em">Black level: </text>' ));
+		'<text x="20" y="2em">Black level: </text>'));
+	this.root.appendChild( this.whiteSlider.textToSVG(
+		'<text x="40" y="3em"> </text>'));
 	this.blackLabel = this.root.lastChild;
 	this.root.appendChild( this.whiteSlider.textToSVG(
-		'<text x="20" y="3em">White level: </text>' ));
+		'<text x="20" y="4em">White level: </text>'));
+	this.root.appendChild( this.whiteSlider.textToSVG(
+		'<text x="40" y="5em"> </text>'));
 	this.whiteLabel = this.root.lastChild;
 
 	this.blackSlider.realize( this.root );
@@ -161,8 +165,10 @@ Scale.prototype.updateScale = function(t) {
 	this.geomeanTick.setAttribute("transform", "translate("+this.geomeanX+",0)");
 	// set B&W sliderVals to correct positions
 	var wSliderVal = (this.getCWhiteLevel(wavenum, this.theT) - min)/range * this.scaleWidth;
+	wSliderVal = Math.round(wSliderVal*100)/100;
 	this.whiteSlider.setValue(wSliderVal, true);
 	var bSliderVal = (this.getCBlackLevel(wavenum, this.theT) - min)/range * this.scaleWidth;
+	bSliderVal = Math.round(bSliderVal*100)/100;
 	this.blackSlider.setValue(bSliderVal, true);
 }
 
@@ -174,10 +180,21 @@ Scale.prototype.updateScale = function(t) {
 		update image.WBS
 
 *****/
-Scale.prototype.updateWBS = function() {
+Scale.prototype.updateWBS = function( channel, wavenum) {
 	if(scale.image == null) return null;
+	var channelMap = new Array();
+	channelMap['R'] = 0;
+	channelMap['G'] = 3;
+	channelMap['B'] = 6;
+	channelMap['Gray'] = 9;
 	var WBS = this.image.getWBS();
 	var changed = false;
+	if(channel != null && wavenum != null)
+		if(channelMap[channel] != null) {
+			WBS[channelMap[channel]] = wavenum;
+			changed = true;
+		}
+
 	for(i=0;i<4;i++) {
 		var wavenum = WBS[i*3];
 		if(WBS[i*3+1] != this.BS[wavenum]['B']) {
