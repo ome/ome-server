@@ -576,8 +576,9 @@ sub execute {
     my $configuration = init_configuration ($session) or croak "Unable to initialize the configuration object.";
 
     # FIXME: Temporarily we need to logout/backin for the configuration variable to be initialized
+	$session->Factory->closeFactory();
     $manager->logout($session);
-	$OME::Session::__soleInstance = undef;
+	OME::Session::->deleteInstance();
     $session = $manager->createSession($username, $password);
     # END
 
