@@ -1036,8 +1036,10 @@ sub getOverlayJS {
 		push ( @featureData, "{ ID: '$id', Tag: '$tag', Name: '$name' }" );
 	}
 	
-	$featureDataJS  = '['.join( ',', @featureData ).']';
-	$centroidDataJS = '['.join( ',', @centroidData ).']';
+	$featureDataJS  = '['.join( ',', @featureData ).']'
+		if @featureData;
+	$centroidDataJS = '['.join( ',', @centroidData ).']'
+		if @centroidData;
 	
 	return { centroids => $centroidDataJS, features => $featureDataJS };
 
