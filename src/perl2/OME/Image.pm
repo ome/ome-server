@@ -116,8 +116,6 @@ sub Dimensions {
     	                   bits_per_pixel => $BitsPerPixel };
     	my $dims = $self->Session()->Factory()->newObject( "OME::Image::Dimensions", $recordData )
     		or die ref ($self) . "->Dimensions() could not create a new object of type OME::Image::Dimensions. Parameters used were: ". values (%$recordData) . "\n";
-    	$dims->writeObject();
-    	# I don't think it's appropriate to commit here. If I am wrong, add a line to commit
     	$self->{_dimensions} = $dims;
     	return $self->{_dimensions};
     }
