@@ -44,6 +44,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.openmicroscopy.ds.dto.MappedDTO;
+
 /**
  * <p>Defines search criteria for use with the {@link DataFactory}
  * class.  These two classes provide the ability to retrieve arbitrary
@@ -75,6 +77,14 @@ public class Criteria
     int getLimit() { return limit; }
     int getOffset() { return offset; }
 
+    private Object normalizeValue(Object value)
+    {
+        if (value instanceof MappedDTO)
+            return ((MappedDTO) value).getMap().get("id");
+        else
+            return value;
+    }
+
     /**
      * Adds a <code>WHERE</code> clause to this criteria; only objects
      * which have the specified value for the specified column will
@@ -82,7 +92,7 @@ public class Criteria
      */
     public void addFilter(String column, Object value)
     {
-        criteria.put(column,value);
+        criteria.put(column,normalizeValue(value));
     }
 
     /**
@@ -94,7 +104,7 @@ public class Criteria
     {
         List list = new ArrayList(2);
         list.add(operator);
-        list.add(value);
+        list.add(normalizeValue(value));
         criteria.put(column,list);
     }
 
