@@ -41,7 +41,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use OME::Analysis::Handler;
-use OME::Analysis::FeatureHierarchy;
+use OME::Analysis::Engine::FeatureHierarchy;
 
 use base qw(OME::Analysis::Handler);
 
@@ -389,7 +389,10 @@ sub __feedImageInputs {
 
     my %image_hash;
     foreach my $input (@$curr_image_inputs) {
-        my $input_execution = $inputs->{$input->id()};
+        my $executions = $inputs->{$input->id()};
+        my $input_execution = ref($executions) eq 'HASH'?
+          $executions->{$image->id()}:
+          $executions;
         $image_hash{$input->name()} = $self->
           __getInputs($input,$input_execution,$image);
     }
@@ -401,13 +404,21 @@ sub __feedFeatureInputs {
     my ($self,$inputs,$target) = @_;
 
     my $curr_feature_inputs = $self->{_inputs_by_granularity}->{F};
-    my $target_name =
-      UNIVERSAL::isa($target,"OME::Image")?
-        "target.image": "target";
+    my ($target_name,$image);
+    if (UNIVERSAL::isa($target,"OME::Image")) {
+        $target_name = "target.image";
+        $image = $target;
+    } else {
+        $target_name = "target";
+        $image = $target->image();
+    }
 
     my %feature_hash;
     foreach my $input (@$curr_feature_inputs) {
-        my $input_execution = $inputs->{$input->id()};
+        my $executions = $inputs->{$input->id()};
+        my $input_execution = ref($executions) eq 'HASH'?
+          $executions->{$image->id()}:
+          $executions;
         $feature_hash{$input->name()} = $self->
           __getInputs($input,$input_execution,$target,$target_name);
     }
@@ -426,7 +437,7 @@ sub __imageLoop {
     $self->precalculateImage();
 
     if (defined $node->iterator_tag()) {
-        my $hierarchy = OME::Analysis::FeatureHierarchy->
+        my $hierarchy = OME::Analysis::Engine::FeatureHierarchy->
           new($session,$chain_execution,$node,$image);
         my $iterator_features = $hierarchy->
           findIteratorFeatures($node->iterator_tag());
