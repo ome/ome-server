@@ -1,7 +1,7 @@
 # OME/Web/ProjectMetadata.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
-# Author:  J-M Burel <j.burel@dundee.ac.uk>
+# Author:  Josiah Johnston <siah@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
