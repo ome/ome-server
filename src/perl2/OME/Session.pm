@@ -149,6 +149,9 @@ sub new {
     	or die "Session cannot be initialized without a user state";
     die "User State parameter is not of class OME::UserState"
     	unless ( ref($userState) eq "OME::UserState") ;
+    
+    # use a passed-in factory if we got one
+    my $factory = shift;
 
 	# Same user wants a session. Give them the previously defined one if possible.
 	return $__session 
@@ -161,8 +164,14 @@ sub new {
 
     my $self = $class->SUPER::new();
     
-    $self->{UserState} = $userState; 
-    $self->{Factory} = OME::Factory->new($self);
+    $self->{UserState} = $userState;
+    
+    if ($factory) {
+    	$factory->swapSessions($self);
+    } else {
+    	$factory = OME::Factory->new($self);
+    }
+    $self->{Factory} = $factory;
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
     
     $__session = $self;
