@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.openmicroscopy.ds.dto.DataInterface;
+import org.openmicroscopy.ds.dto.UserState;
 import org.openmicroscopy.ds.dto.MappedDTO;
 
 /**
@@ -115,6 +116,9 @@ public class DataFactory
      */
     private MappedDTO instantiateDTO(Class dtoClass, Map result)
     {
+        if (result == null)
+            return null;
+
         try
         {
             MappedDTO dto = (MappedDTO) dtoClass.newInstance();
@@ -146,6 +150,9 @@ public class DataFactory
      */
     private void instantiateDTOList(Class dtoClass, List list)
     {
+        if (list == null)
+            return;
+
         try
         {
             for (int i = 0; i < list.size(); i++)
@@ -156,6 +163,29 @@ public class DataFactory
         } catch (ClassCastException e) {
             throw new RemoteException("Remote result can only contain Maps");
         }
+    }
+
+    /**
+     * Returns a {@link UserState} object for the current session's
+     * active user.  The <code>fieldSpec</code> parameter is used to
+     * specify which fields in the {@link UserState} object are filled
+     * in.
+     *
+     * @param fieldSpec the fields specification for the returned DTO
+     * object
+     */
+    public UserState getUserState(FieldsSpecification fieldSpec)
+    {
+        Map fields = fieldSpec.getFieldsWanted();
+
+        Object result = caller.dispatch("getUserState",fields);
+        if (result instanceof Map)
+        {
+            Class dtoClass = RemoteTypes.getDTOClass(UserState.class);
+            Map map = (Map) result;
+            return (UserState) instantiateDTO(dtoClass,map);
+        } else
+            throw new RemoteException("Invalid result type "+result.getClass());
     }
 
     /**
@@ -192,23 +222,23 @@ public class DataFactory
      * core data types; the data type desired should be specified by
      * the <code>targetClass</code> parameter.  It should correspond
      * to one of the data interfaces in the
-     * <code>org.openmicroscopy.ds.dto</code> package.  Since at most
-     * one object is ever returned, the filter, order-by, limit, and
-     * offset portions of the <code>criteria</code> are ignored.  The
-     * fields-wanted portion is used to fill in the values for the DTO
-     * object which is returned.  If the fields-wanted section
-     * instructs the server to return has-ony and has-many references,
-     * a tree of objects will be returned.
+     * <code>org.openmicroscopy.ds.dto</code> package.  The
+     * <code>fieldSpec</code> parameter is used to specifiy which
+     * values in the returned DTO object should be filled in.  If the
+     * specification instructs the server to return has-ony and
+     * has-many references, a tree of objects will be returned.
      *
      * @param targetClass the core data type to count
      * @param id the primary key ID value to retrieve
-     * @param criteria the search criteria to use
+     * @param fieldSpec the fields specification for the returned DTO
+     * object
      * @return the DTO object matching with the given primary key ID
      */
-    public DataInterface load(Class targetClass, int id, Criteria criteria)
+    public DataInterface load(Class targetClass, int id,
+                              FieldsSpecification fieldSpec)
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
-        Map fields = criteria.getFieldsWanted();
+        Map fields = fieldSpec.getFieldsWanted();
 
         Object result = caller.dispatch("loadObject",
                                         new Object[] {
@@ -216,13 +246,16 @@ public class DataFactory
                                             new Integer(id),
                                             fields
                                         });
-        if (result instanceof Map)
+        if (result == null)
         {
+            return null;
+        } else if (result instanceof Map) {
             Class dtoClass = RemoteTypes.getDTOClass(targetClass);
             Map map = (Map) result;
             return instantiateDTO(dtoClass,map);
-        } else
+        } else {
             throw new RemoteException("Invalid result type "+result.getClass());
+        }
     }
 
     /**
@@ -252,13 +285,16 @@ public class DataFactory
 
         Object result = caller.dispatch("retrieveObject",
                                         new Object[] {remoteType,crit,fields});
-        if (result instanceof Map)
+        if (result == null)
         {
+            return null;
+        } else if (result instanceof Map) {
             Class dtoClass = RemoteTypes.getDTOClass(targetClass);
             Map map = (Map) result;
             return instantiateDTO(dtoClass,map);
-        } else
+        } else {
             throw new RemoteException("Invalid result type "+result.getClass());
+        }
     }
 
     /**
@@ -287,31 +323,95 @@ public class DataFactory
 
         Object result = caller.dispatch("retrieveObjects",
                                         new Object[] {remoteType,crit,fields});
-        if (result instanceof List)
+        if (result == null)
         {
+            return null;
+        } else if (result instanceof List) {
             Class dtoClass = RemoteTypes.getDTOClass(targetClass);
             List list = (List) result;
             instantiateDTOList(dtoClass,list);
             return list;
-        } else
+        } else {
             throw new RemoteException("Invalid result type "+result.getClass());
+        }
     }
 
     /**
-     * <b>Coming soon</b>: Sends a DTO back to the data server to be
-     * stored in the database.
+     * Creates an empty instance of the specified data interface.
+     * This method is used to create new data objects; after receiving
+     * the empty instance, the object's mutators should be used to
+     * fill in its fields.  After this, calling the {@link #update}
+     * method with this object will save it to the database.
      */
-    public void update(Class targetClass, DataInterface object)
+    public DataInterface createNew(Class targetClass)
     {
-        String remoteType = RemoteTypes.getRemoteType(targetClass);
+        Class dtoClass = RemoteTypes.getDTOClass(targetClass);
+        Map emptyMap = new HashMap();
+        return instantiateDTO(dtoClass,emptyMap);
+    }
+
+    /**
+     * <p>Sends a DTO back to the data server to be saved.  The DTO
+     * must have been instantiated by the {@link #createNew}, {@link
+     * #retrieve}, or {@link #retrieveList} methods.  If not, an
+     * {@link IllegalArgumentException} is thrown.  If the DTO was
+     * created by {@link #createNew}, then the update will cause a
+     * database <code>INSERT</code>; otherwise it will cause a
+     * database <code>UPDATE</code>.</p>
+     *
+     * <p>The DTO objects do not have to ability for their {@link
+     * List} accessor to be modified, so those has-many relationships
+     * cannot be modified by this method.  One-to-many relationships
+     * can be modified by editing and updating the DTO on the inverse
+     * side of the relationship.  Many-to-many relationships must be
+     * updated by one of the specialized methods in the {@link
+     * ProjectManager}, {@link DatasetManager}, or {@link
+     * ImageManager} classes.</p>
+     *
+     * <p>Note that this is not a deep update.  If any of the DTO's
+     * fields are references to another DTO, then the reference is
+     * updated.  If the referent DTO has also been modified or is new,
+     * <i>it is not saved</i>.</p>
+     *
+     * <p>After the object is saved to the database, the database
+     * transaction is committed.  If multiple objects needs to be
+     * saved atomically, use the {@link #updateList} method.</p>
+     *
+     * @param object the data object to save to the database
+     * @throws IllegalArgumentException if the object was not created
+     * by the {@link #createNew}, {@link #retrieve}, or {@link
+     * #retrieveList} method
+     */
+    public void update(DataInterface object)
+    {
+        if (object == null)
+            return;
+
+        if (!(object instanceof MappedDTO))
+            throw new IllegalArgumentException("That DTO was not created by createNew or retrieve");
+
+        String remoteType = object.getDTOTypeName();
+
+        Map serialized = new HashMap();
+        Map elements = ((MappedDTO) object).getMap();
+        Iterator keys = elements.keySet().iterator();
+        while (keys.hasNext())
+        {
+            Object key = keys.next();
+            Object element = elements.get(key);
+
+            if (element == null)
+            {
+            }
+        }
     }
 
     /**
      * <b>Coming soon</b>: Sends a list of DTO's back to the data
      * server to be stored in the database.
      */
-    public void updateList(Class targetClass, List list)
+    public void updateList(List list)
     {
-        String remoteType = RemoteTypes.getRemoteType(targetClass);
+        //String remoteType = RemoteTypes.getRemoteType(targetClass);
     }
 }
