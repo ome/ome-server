@@ -67,8 +67,8 @@ __PACKAGE__->has_many('attribute_columns',
                       'OME::AttributeType::Column' => qw(attribute_type_id),
                       {sort => 'attribute_column_id'});
 
-__PACKAGE__->add_trigger(after_create => \&requireAttributeTypePackage);
-__PACKAGE__->add_trigger(select => \&requireAttributeTypePackage);
+#__PACKAGE__->add_trigger(after_create => \&requireAttributeTypePackage);
+#__PACKAGE__->add_trigger(select => \&requireAttributeTypePackage);
 
 
 =head1

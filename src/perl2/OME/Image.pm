@@ -131,7 +131,7 @@ sub Dimensions {
 
 	# nab mutator parameters if they exist
     my ($x, $y, $z, $w, $t, $BitsPerPixel) = @_;
-    Carp::cluck "image->dimensions";
+    #Carp::cluck "image->dimensions";
     my $factory = $self->Session()->Factory();
 
    	# look for dimensions

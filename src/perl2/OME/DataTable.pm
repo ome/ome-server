@@ -41,8 +41,8 @@ __PACKAGE__->has_many('data_columns',
 # These triggers should ensure that the appropriate DBObject subclass
 # definition is evaluated when a data type is loaded from the
 # database.
-__PACKAGE__->add_trigger(after_create => \&requireDataTablePackage);
-__PACKAGE__->add_trigger(select => \&requireDataTablePackage);
+#__PACKAGE__->add_trigger(after_create => \&requireDataTablePackage);
+#__PACKAGE__->add_trigger(select => \&requireDataTablePackage);
 
 
 __PACKAGE__->set_sql('get_attributes',<<'SQL;','Main');
