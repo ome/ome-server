@@ -368,9 +368,9 @@ sub __parseHasManyAccessor {
 	my $class = ref( $proto ) || $proto;
 	my $factory = $proto->getFactory();
 
-	if( $alias =~ m/^(\w+)List(By)?(\w+)?$/ ) {
-		my $foreign_key_class = $1;
-		my $foreign_key_alias = $2;
+	if( $alias =~ m/^(count_)?(\w+)List(By)?(\w+)?$/ ) {
+		my $foreign_key_class = $2;
+		my $foreign_key_alias = $4;
 		my $st = $factory->findObject( 'OME::SemanticType', name => $foreign_key_class )
 			or return undef;
 		# foreign key alias is optional if there is only one appropriate alias

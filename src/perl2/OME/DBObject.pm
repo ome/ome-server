@@ -1323,8 +1323,8 @@ sub __parseHasManyAccessor {
 	# The only package defined DBObjects that will have inferred 
 	# has-many-accessors are D,I,F,MEX
 	return undef unless exists $foreign_key_names{ $class };
-	if( $alias =~ m/^(\w+)List$/ ) {
-		my $foreign_key_class = $1;
+	if( $alias =~ m/^(count_)?(\w+)List$/ ) {
+		my $foreign_key_class = $2;
 		my $factory = $proto->getFactory();
 		my $st = $factory->findObject( 'OME::SemanticType', name => $foreign_key_class )
 			or return undef;
@@ -1335,7 +1335,7 @@ sub __parseHasManyAccessor {
 
 =head2 getManyToMany
 
-	__PACKAGE__->getManyToMany();
+	my $many_to_many_hash = __PACKAGE__->getManyToMany();
 
 Returns a hash of many-to-many accessors this packages contains.
 
