@@ -41,11 +41,11 @@ package OME::Web::DBObjRender::__OME_Project;
 
 =head1 NAME
 
-OME::Web::DBObjRender::__OME_Project - Specialized rendering for OME::Project
+OME::Web::DBObjRender::__OME_Project - spell out the summary fields
 
 =head1 DESCRIPTION
 
-Provides custom behavior for rendering an OME::Project. Orders Project fields
+Orders Project fields
 
 =head1 METHODS
 
@@ -57,23 +57,29 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use OME::Tasks::ImageManager;
-use OME::Tasks::ModuleExecutionManager;
 use base qw(OME::Web::DBObjRender);
 
-# Class data
-__PACKAGE__->_fieldLabels( {
-});
-__PACKAGE__->_fieldNames( [
-	'id',
-	'name',
-	'description',
-	'owner',
-	'group',
-] ) ;
-__PACKAGE__->_allFieldNames( [
-	@{__PACKAGE__->_fieldNames() },
-] ) ;
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	
+	$self->{ _summaryFields } = [
+		'name',
+		'description',
+		'owner',
+		'group',
+	];
+	$self->{ _allFields } = [
+		'id',
+		'name',
+		'description',
+		'owner',
+		'group',
+	];
+	
+	return $self;
+}
 
 =head1 Author
 
