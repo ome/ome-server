@@ -1,0 +1,12 @@
+<TMPL_IF NAME=Dataset>
+	Your image will be imported into <TMPL_VAR NAME=Dataset>. If you'd like, you may 
+	<a href="javascript: selectOne( 'OME::Dataset', 'Dataset' );">choose a different dataset</a> or
+	<a href="javascript: creationPopup( 'OME::Dataset', 'Dataset' );">create a new one</a>.
+<TMPL_ELSE>
+	You need to either
+	<a href="javascript: selectOne( 'OME::Dataset', 'Dataset' );">Choose</a> or
+	<a href="javascript: creationPopup( 'OME::Dataset', 'Dataset' );">Create</a>
+	a dataset to import into.
+</TMPL_IF><br>
+Pick a file to upload. <TMPL_VAR NAME=file_field> <br>
+<button type="submit">Upload & Import Image</button>
