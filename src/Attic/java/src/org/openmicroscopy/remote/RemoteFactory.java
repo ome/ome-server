@@ -58,6 +58,16 @@ public class RemoteFactory
         return (OMEObject) instantiate(getClass(className),newRef);
     }
 
+    public OMEObject maybeNewObject(String className, Map data)
+    {
+        String newRef = (String) caller.dispatch(this,"maybeNewObject",
+                                                 new Object[] {
+                                                     className,
+                                                     data
+                                                 });
+        return (OMEObject) instantiate(getClass(className),newRef);
+    }
+
     public OMEObject loadObject(String className, int id)
     {
         String newRef = (String) caller.dispatch(this,"loadObject",
