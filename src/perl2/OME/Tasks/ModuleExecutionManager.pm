@@ -188,7 +188,7 @@ sub addActualInput {
     my $input;
     if (UNIVERSAL::isa($input_name,"OME::Module::FormalInput")) {
         die "Specified formal input does not belong to input MEX's module"
-          unless $input->module()->id() == $input_module->id();
+          unless $input_name->module()->id() == $input_module->id();
         $input = $input_name;
         $input_name = $input->name();
     } else {
