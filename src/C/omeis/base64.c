@@ -1,5 +1,5 @@
 // acquired from http://www.episec.com/people/edelkind/c.html
-
+#include "base64.h"
 #include <string.h>
 
 char b64string[] =
