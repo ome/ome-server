@@ -86,21 +86,27 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 	private PModule selected;
 	
-	public PPaletteCanvas(Connection connection) {
-		super();	
+	public PPaletteCanvas() {
+		super();
 		removeInputEventListener(getPanEventHandler());
 		addInputEventListener(new PPaletteEventHandler(this));
 		layer = getLayer();
-		this.connection = connection;
-		// this draglistener doesn't do anything, but is needed to 
-		// satisfy API.
 		dragListener = new DragSourceAdapter() {
 			public void dragExit(DragSourceEvent dse) {
 			}
 		};
 		dragSource = new DragSource();
-		dragSource.createDefaultDragGestureRecognizer(this,
-			DnDConstants.ACTION_MOVE,this);
+				dragSource.createDefaultDragGestureRecognizer(this,
+					DnDConstants.ACTION_MOVE,this);
+		
+	}
+	
+	public void setConnection(Connection connection) {
+			
+		
+		this.connection = connection;
+		// this draglistener doesn't do anything, but is needed to 
+		// satisfy API.
 		populate();
 	}
 	

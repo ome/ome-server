@@ -70,7 +70,7 @@ public class Chains {
 		
 		Controller controller = new Controller();
 
-		CanvasFrame mainFrame = new CanvasFrame(controller);
+		ModulePaletteFrame mainFrame = new ModulePaletteFrame(controller);
 		mainFrame.setVisible(true);
 		controller.setMainFrame(mainFrame);
     }

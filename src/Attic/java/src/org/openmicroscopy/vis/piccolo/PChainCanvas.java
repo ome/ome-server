@@ -79,8 +79,9 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	private PChainEventHandler handler;
 	private DropTarget dropTarget = null;
 	
-	public PChainCanvas() {
+	public PChainCanvas(Connection c) {
 		super();
+		this.connection  = c;
 		layer = getLayer();
 	
 		removeInputEventListener(getPanEventHandler());
@@ -92,10 +93,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		dropTarget = new DropTarget(this,this);
 	}
 	
-	public  void setConnection(Connection connection) { 
-		this.connection = connection;
-	}	
-	
+
 	
 	public void dragEnter(DropTargetDragEvent e) {
 		System.err.println("drag enter canvas");
