@@ -260,6 +260,24 @@ operator for comparison, rather than the = operator.
 Works exactly like the findObjects method, but uses the SQL LIKE
 operator for comparison, rather than the = operator.
 
+=head2 findAttributes
+
+	my $iterator = $factory->findAttributes($attributeType,$target);
+	while (my $attribute = $iterator->next()) {
+	    # Do something with the attributes one at a time
+	}
+
+	my @attributes = $factory->findAttributes($attributeType,$target);
+	# Do something with the attributes all at once
+
+Finds the attribute of a given type referring to a given target.  As
+in the case of newAttribute, $attributeType can be either an attribute
+type name or an instance of OME::AttributeType.  The target must be an
+OME::Dataset, OME::Image, or OME::Feature object, depending on the
+granularity of the type.  Note that arbitrary search criteria is not
+currently supported in this method.  If you need this functionality,
+email Doug (dcreager@mit.edu).
+
 =head1 SEARCH CRITERIA
 
 The objectExists, findObject, findObjects, findObjectLike, and
