@@ -69,7 +69,7 @@ import org.openmicroscopy.*;
  *  Sets up main workstation window, and maintains much of the top level
  * context for the workstation.
  *
- * @author  Brian S. Hughes 
+ * @author  Brian S. Hughes
  * @version 2.0
  * @since   2.0.3
  */
@@ -78,6 +78,8 @@ public class ClientContents extends JFrame {
     boolean datasetSet = false;
     boolean imageSet   = false;
     boolean chainSet   = false;
+    String         userName;
+    String         groupName;
     StringBuffer   projectName = new StringBuffer();
     StringBuffer   datasetName = new StringBuffer();
     StringBuffer   imageName = new StringBuffer();
@@ -86,8 +88,9 @@ public class ClientContents extends JFrame {
     DatasetViewer  dsV;
     ImageViewer    imV;
     ChainViewer    chV;
-    ImagePanel     pixPanel = new ImagePanel();
-    JScrollPane    holdsImage = new JScrollPane();
+    ImageController imC;
+    ImagePanel     pixPanel;
+    JScrollPane    holdsImage;
     JPanel         workstationPanel;
     JSplitPane     Viewers;
     JSplitPane     mainContents;
@@ -96,7 +99,6 @@ public class ClientContents extends JFrame {
     ClientStatusBar statusBar;
     ClientTabs     tabPanel;
     ClientViewPane viewPane;
-    OMEUserGroup   omeGuy;
     DataAccess     Accessor;
 
 
@@ -114,12 +116,14 @@ public class ClientContents extends JFrame {
         workstationPanel = clientPanel;
 	ourLogin = login;
 	Accessor = ourLogin.getAccessor();
-
+	userName = new String(ourLogin.getExperimenter());
+	groupName = new String(ourLogin.getGroup());
+	pixPanel = new ImagePanel(Accessor.bindings);
+	holdsImage = new JScrollPane(pixPanel);
+	imC = ImageController.getInstance(Accessor.bindings);
         statusBar = new ClientStatusBar(this);
         tabPanel  = new ClientTabs(this, Accessor);
         viewPane  = new ClientViewPane(this, Accessor);
-
-        omeGuy    = new OMEUserGroup();
 
         // Add menu bar to client's window
         menu = new ClientMenu(this, ourLogin, statusBar);
@@ -129,9 +133,8 @@ public class ClientContents extends JFrame {
         mainConstrain.gridwidth = 1;
         mainConstrain.gridheight = 2;
         mainConstrain.anchor = GridBagConstraints.NORTHWEST;
-        //mainConstrain.fill = GridBagConstraints.HORIZONTAL;
         mainConstrain.fill = GridBagConstraints.BOTH;
-        mainConstrain.weightx = 0;
+        mainConstrain.weightx = 1;
         mainConstrain.weighty = 0;
 
 	// Put up our favorite image on corner of window
@@ -139,10 +142,9 @@ public class ClientContents extends JFrame {
 	Class c = ClientContents.class;
 	try {
 	    java.net.URL u = c.getResource("AnimalCellicon.gif");
-	    System.err.println("icon URL: "+u);
 	    decalIcon = Toolkit.getDefaultToolkit().getImage(u);
 	} catch(Exception e){
-	    System.err.println(e);
+	    System.err.println("Failed to load icon: "+e);
 	}
 	if (decalIcon != null) {
 	    MediaTracker mt = new MediaTracker(this);
@@ -153,10 +155,11 @@ public class ClientContents extends JFrame {
 		System.err.println(e);
 		System.exit(1);
 	    }
+	    mainConstrain.weightx = 0;
 	    workstationPanel.add(new DecalPanel(decalIcon), mainConstrain);
 	}
 
-	mainConstrain.ipadx = 60;
+	//mainConstrain.ipadx = 60;
         mainConstrain.weightx = 1;
 	mainConstrain.gridheight = 1;
 	mainConstrain.gridx=1;
@@ -174,7 +177,8 @@ public class ClientContents extends JFrame {
 
 	// make a split pane that will hold the detail of a selected entity
 	// and its picture, if an image, or its chain diagram, if a chain.
-	//Viewers = new JSplitPane(JSplitPane.VERTICAL_SPLIT, viewPane, pixPanel);
+	Dimension pdim = new Dimension(100,100);
+	holdsImage.setPreferredSize(pdim);
 	Viewers = new JSplitPane(JSplitPane.VERTICAL_SPLIT, viewPane, holdsImage);
 	Viewers.setOneTouchExpandable(true);
 	Viewers.setResizeWeight(0.4);
@@ -220,6 +224,21 @@ public class ClientContents extends JFrame {
 	public void paint(Graphics g) {
 	    g.drawImage(image,0,0,this);
 	}
+    }
+
+
+    /**
+     *  Helper method to get this user's OME name
+     */
+    public String getUserName() {
+	return(userName);
+    }
+
+    /**
+     *  Helper method to get this user's OME group's name
+     */
+    public String getGroupName() {
+	return(groupName);
     }
 
     /**
@@ -383,6 +402,7 @@ public class ClientContents extends JFrame {
     public void SummarizeImage(Image image) {
       imV = new ImageViewer(image);
       SummarizeEntity(imV);
+      imC.doLoadImageObject(image);
     }
 
 
@@ -441,7 +461,6 @@ public class ClientContents extends JFrame {
      *  Add a selected dataset to the active project, recording
      * the association permanently in the server's database.
      */
-    //public void addDatasetToProject(int projID, int dID) {
     public void addDatasetToProject() {
 	Project p = Accessor.getActiveProject();
 	int pID = p.getID();
@@ -458,9 +477,11 @@ public class ClientContents extends JFrame {
 	String className = new String("OME::Project::DatasetMap");
 	if (!f.objectExists(className, p2dMap)) {
 	    System.err.println("mapping ds "+dID+" to project "+pID);
-	    OMEObject obj = f.newObject("OME::Project::DatasetMap", p2dMap);
+	    OMEObject obj = f.newObject(className, p2dMap);
 	    if (obj != null) {
-		obj.writeObject();
+		//obj.writeObject();
+		obj.storeObject();
+		Accessor.bindings.getSession().commitTransaction();
 	    }
 	}
     }
@@ -483,15 +504,4 @@ public class ClientContents extends JFrame {
 }
 
 
-
-class OMEUserGroup {
-  StringBuffer user = new StringBuffer();
-  StringBuffer group = new StringBuffer();
-
-  public OMEUserGroup() {
-    user.append("me");
-    group.append("us");
-  }
-
-}
 
