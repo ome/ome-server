@@ -290,9 +290,9 @@ my $numSelections;
 #				ReportDocStatus ("<B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.<BR>");
 #				$OME->Commit();			
 #			}
-		} else if $@ {
+		} elsif ($@) {
 			$OME->UpdateProgress (Error => $@);
-			ReportDocStatus ($_.":  <B><font color="#FF0000">Error!</font></B> - file is corrupt!<BR>");
+			ReportDocStatus ($_.':  <B><font color="#FF0000">Error!</font></B> - file is corrupt!<BR>');
 		} else {
 			ReportDocStatus ($_.":  <B>Ignored</B> - file type not supprted.<BR>");
 		}
