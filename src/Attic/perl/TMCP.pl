@@ -107,7 +107,7 @@ my $TMCP;
 my $retVal;
 my $cgi = $OME->cgi;
 my ($refWave,$trackWave,$cutoff,$flag);
-my ($datasetID,$refWaveID,$trackWaveID,$tiff0,$tiff1);
+my ($datasetID,$refWaveID,$trackWaveID,$tiff0,$tiff1,$threshold);
 my ($binName,$binPath);
 my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a name for a temporary file $!\n";
 
@@ -164,34 +164,43 @@ my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a na
 	# Skip this round if we don't have a second wave
 		next unless defined $datasetArray->[1];
 	# Get the latest binary image for this dataset
+	# This gets the latest binary image for the reference dataset.
 		($binName,$binPath) = $OME->DBIhandle->selectrow_array (
-			'SELECT name,path FROM binary_image WHERE dataset_id_in = '.$datasetArray->[$refWave]->ID.'ORDER BY analysis_id DESC LIMIT 1');
+			'SELECT name,path FROM binary_image WHERE dataset_id_in = '.$datasetArray->[$refWave]->ID.' ORDER BY analysis_id DESC LIMIT 1');
 		$tiff1 = $binPath.$binName;
-#			$weight = $OME->DBIhandle->selectrow_array (
-#				'SELECT threshold FROM threshold,analyses WHERE threshold.analysis_id=analyses.analysis_id '.
-#				' AND analyses.status = \'ACTIVE\' AND analyses.dataset_id = '.$datasetArray->[$trackWave]->ID);
-#			$features1 = $OME->GetFeatures ({
-#					DatasetID     => $datasetArray->[$refWave]->ID,
-#					BinName       => undef,
-#					BinPath       => undef,
-#					},{
-#						BinName      => ['BINARY_IMAGE', 'NAME'],
-#						BinPath      => ['BINARY_IMAGE', 'PATH'],
-#					});
-#			$features2 = $OME->GetFeatures ({
-#					DatasetID     => $datasetArray->[$trackWave]->ID,
-#					Threshold     => undef
-#					},{
-#						Threshold    => ['THRESHOLD', 'THRESHOLD']
-#					});
+	# Get the threshold for the tracked image (test image).
+	# This gets the latest threshold for the test image.
+		$threshold = $OME->DBIhandle->selectrow_array (
+			'SELECT threshold FROM threshold,analyses WHERE threshold.analysis_id=analyses.analysis_id '.
+			' AND analyses.status = \'ACTIVE\' AND analyses.dataset_id = '.$datasetArray->[$trackWave]->ID.' ORDER BY analysis_id DESC LIMIT 1');
+# This is the traditional way of getting computed 'Features'.
+# We did a direct query because it seems a little faster, though by how much wasn't determined recently.
+# We should probably eventually go back to doing things this way because its more general + robust.
+# The first hash describes what kind of objects we want in the result,
+# and the second hash describes where to get the desired fields.
+#		$features1 = $OME->GetFeatures ({
+#				DatasetID     => $datasetArray->[$refWave]->ID,
+#				BinName       => undef,
+#				BinPath       => undef,
+#				},{
+#					BinName      => ['BINARY_IMAGE', 'NAME'],
+#					BinPath      => ['BINARY_IMAGE', 'PATH'],
+#				});
+#		$features2 = $OME->GetFeatures ({
+#				DatasetID     => $datasetArray->[$trackWave]->ID,
+#				Threshold     => undef
+#				},{
+#					Threshold    => ['THRESHOLD', 'THRESHOLD']
+#				});
 #
-#			$tiff0 = $features1->[0]->{BinPath}.$features1->[0]->{BinName};
-#			$weight = $features2->[0]->{Threshold};
-#			$weight = 0 unless defined $weight;
+#		$tiff0 = $features1->[0]->{BinPath}.$features1->[0]->{BinName};
+#		$threshold = $features2->[0]->{Threshold};
+
+		$threshold = 0 unless defined $threshold;
 		my $tiff0 = $datasetArray->[$trackWave]->{Path}.$datasetArray->[$trackWave]->{Name};
 
 	# Execute the TMCP program, capturing its output in $TMCP, and sending stderr to $tempFileNameErr
-		$TMCP = $retVal = `$executable -v 2 $tiff0 $tiff1 2> $tempFileNameErr`;
+		$TMCP = $retVal = `$executable -t $threshold -v 2 $tiff0 $tiff1 2> $tempFileNameErr`;
 	# Trim leading and trailing whitespace, set $TMCP to undef if not like a C float.
 		$TMCP =~ s/^\s+//;$TMCP =~ s/\s+$//;$TMCP = undef unless ($TMCP =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
 		if (defined $TMCP and $TMCP) {

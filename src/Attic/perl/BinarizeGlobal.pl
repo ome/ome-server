@@ -172,8 +172,8 @@ my $errFile = $OME->GetTempName ('BinGlob','err') or die "Couldn't get a name fo
 
 	foreach $image (@$images)
 	{
-		next if exists $image->{Wave} and $image->Wave ne $wavelength;
-		my $cmd = $cmdBase." '".$image->Path.$image->Name."' -type=$method";
+		next if exists $image->{Wave} and $image->{Wave} ne $wavelength;
+		my $cmd = $cmdBase." '".$image->{Path}.$image->{Name}."' -type=$method";
 		my $makeBinaryBool = 'false';
 		my ($tempFilePath,$tempFileName);
 		my $datasetID = $image->ID;
@@ -196,11 +196,13 @@ my $errFile = $OME->GetTempName ('BinGlob','err') or die "Couldn't get a name fo
 
 		$cmd .= " -wave=$wavelength";
 
-		my $thresh = sprintf ("%g",`$cmd 2> $errFile`);
+		my ($thresh,$retVal);
+		$thresh = $retVal = sprintf ("%g",`$cmd 2> $errFile`);
+		$thresh =~ s/^\s+//;$thresh =~ s/\s+$//;$thresh = undef unless ($thresh =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
 #print STDERR "$programName:  Executing $cmd\n";
 		my $error = `cat $errFile`;
 		unlink ($errFile);
-		die "Error executing $cmd:\n$error\n" unless defined $thresh and $thresh;
+		die "Executing '$cmd' resulted in '$retVal' - was expecting a number.  Error:\n$error\n" unless defined $thresh and $thresh;
 		my $analysisID = $OME->RegisterAnalysis(
 			datasetID     => $datasetID,
 			programName   => $programName,
