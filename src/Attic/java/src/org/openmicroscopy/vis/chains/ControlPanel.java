@@ -55,6 +55,7 @@ import javax.swing.SwingConstants;
 import javax.swing.JToolBar;
 import javax.swing.BoxLayout;
 import javax.swing.Box;
+import javax.swing.JSplitPane;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Component;
@@ -102,47 +103,34 @@ public class ControlPanel extends JFrame  {
 		
 		content.add(toolBar);
 		
-		
-		
-		JPanel topPanel = new JPanel();
-		
-		topPanel.setLayout(new BoxLayout(topPanel,BoxLayout.X_AXIS));
-	
-		
-		
 		// projects
 		getProjects(connection);
 		if (projects.size() > 0) {
 			//add project list right here.
 			projCanvas =  new PProjectSelectionCanvas(projects);
-			content.add(projCanvas);
+			//content.add(projCanvas);
 		}
-		topPanel.add(Box.createRigidArea(new Dimension(5,0)));
-		
-	
-			
-		topPanel.add(Box.createRigidArea(new Dimension(5,0)));
-		
-		JPanel imagePanel = new JPanel();
-		imagePanel.setLayout(new BoxLayout(imagePanel,BoxLayout.Y_AXIS));
-		JLabel browserLabel = new JLabel("Datasets...");
-		browserLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		imagePanel.add(browserLabel);
-		imagePanel.add(Box.createRigidArea(new Dimension(0,3)));
+		System.err.println("tool bar width is "+toolBar.getWidth());
 		browser = new PBrowserCanvas(connection);
 		browser.setPreferredSize(new Dimension(BROWSER_SIDE,BROWSER_SIDE));
-		imagePanel.add(browser);
-		topPanel.add(imagePanel);
-		content.add(topPanel);
+		//content.add(browser);
 		
+		if (projCanvas == null)
+			content.add(browser);
+		else {
+			JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+				projCanvas,browser);
+				
+			split.setOneTouchExpandable(true);
+			split.setResizeWeight(0.33);
+			split.setAlignmentX(Component.CENTER_ALIGNMENT);
+			content.add(split);
+		}
 		pack();
 		show();
 	
 		if (projCanvas != null) 
-			projCanvas.layout(BROWSER_SIDE);// projlist, dataset list
-		
-		//setResizable(false);
-
+			projCanvas.layoutLabels();// projlist, dataset list
 	}
 
 
