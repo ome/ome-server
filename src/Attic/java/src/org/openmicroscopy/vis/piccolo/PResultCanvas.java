@@ -221,7 +221,9 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 				e.getDropTargetContext().dropComplete(true);
 				int id = i.intValue(); 
 				CChain chain = connection.getChain(id); 
-				if (chain.hasExecutionsInCurrentDataset()) {
+				System.err.println("dropped "+chain.getName()+" on result canvas");
+				if (chain.isExecutedInSelectedDataset() == true) {
+					System.err.println("creating dropped chains");
 					Point2D loc = e.getLocation();
 					createDroppedChain(chain,loc);
 					addInputEventListener(handler);
@@ -230,8 +232,10 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 					frame.updateExecutionChoices(chain);
 					hasChain = true;
 				}
-				else
-					clearDrop(e);		
+				else {
+					clearDrop(e);
+					System.err.println("not creating dropped chain");
+				}		
 			} 
 		}
 		catch(Exception exc ) {
