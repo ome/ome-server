@@ -1,8 +1,8 @@
 /******************************************************************************
 /*
-/*	extractBinData.c
+/*	insertBinData.c
 /*	
-/*	Originally written: May 16, 2003
+/*	Originally written: 
 /*	Standard licence blurb:
 
  Copyright (C) 2003 Open Microscopy Environment, MIT
@@ -24,9 +24,8 @@
 
 /****
 
-	Intent: The intent of this program is to extract the contents of <BinData>
-	from an xml document following the OME schema AND replace the 
-	<BinData>...</BinData> element with an <External .../> element.
+	Intent: The intent of this program is to process an OME xml document,
+	replacing <External .../> elements with <BinData>...</BinData> elements.
 
 	Usage: Execute the program with no parameters to see the usage message.
 
@@ -35,28 +34,37 @@
 	YOU MUST INSTALL libxml2 BEFORE THIS WILL COMPILE.
 	Memory usage on initial tests was the same for a 100 Meg and a 1 Gig file.
 
-	Behavior: The modified xml document will be spewed to stdout. <BinData>s 
-	under <Pixels> will be coalated into a repository style pixel dump and put
-	in the pixels directory. All other <BinData>s will be spewed to the scratch
-	directory. The extracted BinData contents will be spewed to 
-	separate files (1 per BinData) in that directory. See Usage for more 
-	information about the directory. The path to the extracted file will be
-	specified in the href attribute of the <External> element that replaces the
-	<BinData> element. The <External> tag will look like this:
-		<External xmlns="BinNS" href="path/to/local/file" SHA1=""/>
-	Notice it is missing the SHA1 attribute. That will distiguish these 
-	converted BinData elements from normal <External> elements. The path 
-	specified in href will be an absolute path iff this program is passed
-	an absolute path to a scratch space. I highly recommend using an absolute
-	path. The namespace, "BinNS" is a #defined constant. Look in the define 
+	Behavior: The modified xml document will be spewed to stdout. <External>s 
+	to be replaced are flagged by an empty SHA1 attribute. To target an
+	<External> under <Pixels>, place exactly ONE <External> inside <Pixels>.
+	This <External> will be replaced with <BinData>s, one per plane.
+	So, 
+		<Pixels...>...
+			<External xmlns="BinNS" href="/path/to/repository/file" SHA1=""/>
+		</Pixels>
+	becomes
+		<Pixels...>...
+			<BinData xmlns="BinNS" ...>...</BinData>
+			<BinData xmlns="BinNS" ...>...</BinData>
+			<BinData xmlns="BinNS" ...>...</BinData>
+			...
+		</Pixels>
+	If the Compression attribute is specified in <External>, then that 
+	Compression will be used by the <BinData>(s) that replaces it. If 
+	Compression is not specified, the default behavior is no compression.
+	The namespace, "BinNS" is a #defined constant. Look in the define 
 	section below to see what it will evaluate to.
+	The <BinData>s that are implanted will be converted (if necessary) to the
+	endian specified in <Pixels>. 
 
 	Compilation notes: Use the xml2-config utility to find the location of the
 	libxml2 libraries. The flags --libs and --cflags cause xml2-config to 
 	produce the proper flags to pass to the compiler. The one line compilation
 	command is:
 
-		gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
+		gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lbz2 \
+		-ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c \
+		b64z_lib.c -o insertBinData
 
 /*
 /*****************************************************************************/
@@ -77,11 +85,11 @@
 /*	Data structures & Constants
 /*
 /*****************************************************************************/
-#define BinDataLocal "BinData"
+#define ExternalLocal "External"
 #define PixelLocal "Pixels"
 #define CompressionAttr "Compression"
 #define BinNS "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
-#define SIZEOF_FILE_OUT_BUF 1048576
+#define SIZEOF_BUFS 10//48576
 const char *pixelTypes[] = { "bit", "int8", "int16", "int32", "Uint8", "Uint16", "Uint32", "float", "double", "complex", "double-complex", NULL };
 const int bitsPerPixel[] = {  1,      8,     16,      32,      8,       16,       32,       32,      64,       64,        128            , NULL };
 
@@ -95,46 +103,29 @@ typedef struct _elementInfo {
 	struct _elementInfo *prev;
 } StructElementInfo;
 
-// <BinData> stuff
-typedef struct {
-	FILE *BinDataOut;
-	char *compression;
-	b64z_stream *strm;
-} BinDataInfo;
-
 // Possible states
 typedef enum {
 	PARSER_START,
-	IN_BINDATA,
+	IN_FLAGGED_EXTERNAL,
 	IN_PIXELS,
-	IN_BINDATA_UNDER_PIXELS,
+	IN_FLAGGED_EXTERNAL_UNDER_PIXELS,
 } PossibleParserStates;
 
 // <Pixels> info
 typedef struct {
 	// dimensions of pixel array. C is channels. bpp is "bits per pixel"
 	int X,Y,Z,C,T,bpp;
-	// indexes to store current plane
-	int theZ, theC, theT;
 	int bigEndian;
 	char *dimOrder;
 	// pixelType is not strictly needed. maybe it will come in handy in a later incarnation of this code
 	char *pixelType;
-	// outputPath stores the path the coallated <BinData>s will reside.
-	char *outputPath;
-	int hitBinData;
-	unsigned char *binDataBuf;
-	unsigned int planeSize;
-	Pix *pixWriter;
 } PixelInfo;
 
 // Contains all the information about the parser's state
 typedef struct {
 	PossibleParserStates state;
-	int nOutputFiles;
 	PixelInfo *pixelInfo;
 	StructElementInfo* elementInfo;
-	BinDataInfo *binDataInfo;
 } ParserState;
 
 /******************************************************************************
@@ -171,16 +162,12 @@ int main(int ARGC, char **ARGV) {
 	char *filePath;
 	
 	// program called with improper usage. print usage message.
-	if( ARGC != 4 ) {
-		fprintf( stdout, "Usage is:\n\t./extractBinData [pixel scratch directory] [scratch directory] [OME XML document to process]\n" );
-		fprintf( stdout, "\n\n\t[pixel scratch directory] is an absolute path to a directory to output pixel files in repository format. For good performance, that scratch space should be on the same file system as the repository. This program will NOT clean up after itself, so clean its sandbox after use.\n\t[scratch directory]: Files extracted from <BinData>s not belonging to <Pixels> will be written here. This also needs to be an absolute path.\n" );
+	if( ARGC != 2 ) {
+		fprintf( stdout, "Usage is:\n\t./insertBinData [OME XML document to process]\n" );
 		return -1;
 	}
 
-	
-	pixelDirPath = ARGV[1];
-	dirPath      = ARGV[2];
-	filePath     = ARGV[3];
+	filePath     = ARGV[1];
 	parse_xml_file(filePath);
 	
 	return 0;
@@ -196,7 +183,7 @@ int main(int ARGC, char **ARGV) {
 
 
 int parse_xml_file(const char *filename) {
-    ParserState my_state;
+    ParserState state;
     // The source of xmlSAXHandler and all the function prefixes I'm using are
     // in <libxml/parser.h> Use `xml2-config --cflags` to find the location of
     // that file.
@@ -227,10 +214,10 @@ int parse_xml_file(const char *filename) {
 		(fatalErrorSAXFunc)BinDataFatalError, /* fatalError */
 	};
 
-	if (xmlSAXUserParseFile(&extractBinDataSAXParser, &my_state, filename) < 0) {
-		return NULL;
+	if (xmlSAXUserParseFile(&extractBinDataSAXParser, &state, filename) < 0) {
+		return -1;
 	} else
-		return my_state.nOutputFiles;
+		return 0;
 }
 
 void print_element(const xmlChar *name, const xmlChar **attrs) {
@@ -273,26 +260,26 @@ void mem_error( char*msg ) {
 static void extractBinDataStartDocument(ParserState *state) {
 
 	state->state	               = PARSER_START;
-	state->nOutputFiles            = 0;
 	state->elementInfo             = NULL;
-	state->binDataInfo             = (BinDataInfo *) malloc( sizeof( BinDataInfo ) );
-	if( !( state->binDataInfo ) ) mem_error( "" );
-
-	state->binDataInfo->BinDataOut    = NULL;
-	state->binDataInfo->strm = NULL;
 	
 }
 
 static void extractBinDataEndDocument( ParserState *state ) {
-	free( state->binDataInfo );
 }
 
 
 static void extractBinDataStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
-	char *localName, *binDataOutPath;
-	int i, freeLocalName, pathLength;
+	char *localName, *compression, *href, *b;
+	int i, freeLocalName, externalFlag, rC, p, indexesRC;
+	long int offset, readLength;
 	StructElementInfo* elementInfo;
-	size_t bufferSize;
+	b64z_stream *strm;
+	// plane indexes
+	int theZ, theC, theT;
+	Pix *pixReader;
+	FILE *inFile;
+	unsigned char *bin, *enc;
+	size_t file_read_len;
 
 	// mark that the last open element has content, namely this element
 	if( state->elementInfo != NULL ) {
@@ -307,8 +294,8 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	/**************************************************************************
 	/*
 	/* Getting the namespace for an element is tricky. I haven't figured out 
-	/* how to do it yet, so I'm using the local name (BinData) to identify the
-	/* element.
+	/* a good way to do it, so I'm using the local name (BinData) to identify 
+	/* the element.
 	/* I think http://cvs.gnome.org/lxr/source/gnorpm/find/search.c might have
 	/* some code that will do it.
 	/* Find the local name of the element: strip the prefix if one exists.
@@ -318,8 +305,8 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		localName++;
 		freeLocalName = 0;
 	} else {
-		localName = malloc( strlen(name) +1 );
-		if( !localName) mem_error( "" );
+		localName = malloc( strlen(name) + 1);
+		if( !(localName) ) mem_error("");
 		strcpy( localName, name );
 		freeLocalName = 1;
 	}
@@ -330,78 +317,331 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 
 	/**************************************************************************
 	/*
-	/* BinData
-	/* 	Change state, get compression scheme, open output file as necessary
+	/* Flagged <External>
+	/* 	replace w/ <BinData>(s) & change state
 	*/
-	if( strcmp( BinDataLocal, localName ) == 0 ) {
-
-		// take note of compression
-		state->binDataInfo->compression = NULL;
+	// look for flag
+	externalFlag = 0;
+	if( strcmp( ExternalLocal, localName ) == 0 ) {
+		externalFlag = 1;
 		if( attrs != NULL ) {
 			for( i=0; attrs[i] != NULL; i+=2) {
-				if( strcmp( attrs[i], CompressionAttr ) == 0 ) {
-//					if( strcmp(attrs[i+1], "none") == 0 ) {
-//						state->binDataInfo->compression = NULL;
-//					} else {
-						state->binDataInfo->compression = (char *) malloc( strlen(attrs[i+1]) + 1);
-						if( !(state->binDataInfo->compression) ) mem_error("");
-						strcpy( state->binDataInfo->compression, attrs[i+1] );
-//					}
+				if( strcmp( attrs[i], "SHA1" ) == 0 ) {
+					if( *(attrs[i+1]) != 0 ) externalFlag = 0;
 					break;
 				}
 			}
 		}
+	}
+		
+	if( externalFlag ) {
+		// Extract data from xml attributes.
+		compression = href = NULL;
+		offset = 0;
+		readLength = -1;
+		if( attrs != NULL ) {
+			for( i=0; attrs[i] != NULL; i+=2) {
+				if( strcmp( attrs[i], CompressionAttr ) == 0 ) {
+//					if( !strcmp( attrs[i+1], "none" ) )
+//						compression = NULL;
+//					else
+						compression = (char *) attrs[i+1];
+				} else if( strcmp( attrs[i], "href" ) == 0 )
+					href = (char *) attrs[i+1];
+				else if( strcmp( attrs[i], "Offset" ) == 0 )
+					offset = atoi( attrs[i+1] );
+				else if( strcmp( attrs[i], "ReadLength" ) == 0 )
+					readLength = atoi( attrs[i+1] );
+			}
+		}
+		if( href == NULL ) {
+		    fprintf( stderr, "Error! A flagged <External> is missing required attribute 'href'!\n" );
+		    exit(-1);
+		}
 
-		// set up decoding stream
-		if( ! (state->binDataInfo->compression ) ) /* no compression */
-//			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
-			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
-		else if( strcmp(state->binDataInfo->compression, "bzip2") == 0 )
-			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
-		else if( strcmp(state->binDataInfo->compression, "none") == 0 )
-			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
-		else if ( strcmp(state->binDataInfo->compression, "zlib") == 0 )
-			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, zlib );
-		b64z_decode_init ( state->binDataInfo->strm );
+		
+		// set up encoding stream
+		if( !compression ) // no compression 
+//			strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
+strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
+		else if( strcmp(compression, "bzip2") == 0 )
+			strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
+		else if( strcmp(compression, "none") == 0 )
+			strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
+		else if ( strcmp(compression, "zlib") == 0 )
+			strm = b64z_new_stream( NULL, 0,  NULL, 0, zlib );
 
-		// This <BinData> is under <Pixels>
+		/**********************************************************************
+		/*
+		/* Flagged <External> under Pixels
+		*/
 		if( state->state == IN_PIXELS ) {
-			state->state = IN_BINDATA_UNDER_PIXELS;
-			state->pixelInfo->hitBinData = 1;
+			state->state = IN_FLAGGED_EXTERNAL_UNDER_PIXELS;
 			
-			state->binDataInfo->strm->avail_out = state->pixelInfo->planeSize + 2;
-			state->binDataInfo->strm->next_out  = state->pixelInfo->binDataBuf;
-		} 
+			/******************************************************************
+			/*
+			/* init
+			*/
+			pixReader = NewPix( 
+				href, 
+				state->pixelInfo->X,
+				state->pixelInfo->Y,
+				state->pixelInfo->Z,
+				state->pixelInfo->C,
+				state->pixelInfo->T,
+				state->pixelInfo->bpp / 8
+			);
+			if( !pixReader ) mem_error("");
+			theZ = theC = theT = 0;
+			enc = (unsigned char *) malloc( SIZEOF_BUFS );
+			if( !enc ) mem_error("");
+			/*
+			/*****************************************************************/
+			
+			/******************************************************************
+			/*
+			/* Encode & print out a plane at a time
+			*/
+			do {
+				//get plane
+				bin = (unsigned char*) GetPlane( pixReader, theZ, theC, theT );
+				if( state->pixelInfo->bigEndian != bigEndian() )
+					switch( state->pixelInfo->bpp ) {
+					 case 8:
+						break;
+					 case 16:
+						byteSwap2( bin, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
+						break;
+					 case 32:
+						byteSwap4( bin, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
+						break;
+					 case 64:
+						byteSwap8( bin, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
+						break;
+					 case 128:
+						byteSwap16( bin, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
+						break;
+					}
+					 
+				
+				/**************************************************************
+				/*
+				/* encode buffer & write out
+				*/
+				b64z_encode_init ( strm );
+				strm->next_in  = bin;
+				strm->avail_in = state->pixelInfo->X * state->pixelInfo->Y * ( state->pixelInfo->bpp / 8 );
+				if( compression == NULL )
+					fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"bzip2\">", BinNS );
+				else
+					fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"%s\">", BinNS, compression );
+				do {
+					// encode buffer
+					strm->next_out  = enc;
+					strm->avail_out = SIZEOF_BUFS;
 
-		// This <BinData> is not under <Pixels>
-		// 	It needs to be piped to a file & replaced with an <External>
-		// 	This data needs to be converted from base64 & possibly
-		// 	decompressed. 
-		else {
-			state->state      = IN_BINDATA;
-			state->nOutputFiles++;
+					rC = b64z_encode( strm, B64Z_FINISH );
+
+					// write encoded data to stdout
+					fwrite( enc, 1, SIZEOF_BUFS - strm->avail_out, stdout );
+				} while( rC != B64Z_STREAM_END );
+				fprintf( stdout, "</BinData>\n" );
+				b64z_decode_end( strm );
+				/*
+				/*************************************************************/
+				
+				free( bin );
+
+				// logic to increment indexes based on dimOrder
+				if( strcmp( state->pixelInfo->dimOrder, "XYZCT" ) == 0 ) {
+					indexesRC = increment_plane_indexes( 
+						&( theZ ), 
+						&( theC ), 
+						&( theT ),
+						state->pixelInfo->Z, 
+						state->pixelInfo->C, 
+						state->pixelInfo->T 
+					);
+				} else if( strcmp( state->pixelInfo->dimOrder, "XYZTC" ) == 0 ) {
+					indexesRC = increment_plane_indexes( 
+						&( theZ ),
+						&( theT ),
+						&( theC ),
+						state->pixelInfo->Z,
+						state->pixelInfo->T,
+						state->pixelInfo->C
+					);
+				} else if( strcmp( state->pixelInfo->dimOrder, "XYTZC" ) == 0 ) {
+					indexesRC = increment_plane_indexes( 
+						&( theT ),
+						&( theZ ),
+						&( theC ),
+						state->pixelInfo->T,
+						state->pixelInfo->Z,
+						state->pixelInfo->C
+					);
+				} else if( strcmp( state->pixelInfo->dimOrder, "XYTCZ" ) == 0 ) {
+					indexesRC = increment_plane_indexes( 
+						&( theT ),
+						&( theC ),
+						&( theZ ),
+						state->pixelInfo->T,
+						state->pixelInfo->C,
+						state->pixelInfo->Z
+					);
+				} else if( strcmp( state->pixelInfo->dimOrder, "XYCZT" ) == 0 ) {
+					indexesRC = increment_plane_indexes( 
+						&( theC ),
+						&( theZ ),
+						&( theT ),
+						state->pixelInfo->C,
+						state->pixelInfo->Z,
+						state->pixelInfo->T
+					);
+				} else if( strcmp( state->pixelInfo->dimOrder, "XYCTZ" ) == 0 ) {
+					indexesRC = increment_plane_indexes( 
+						&( theC ),
+						&( theT ),
+						&( theZ ),
+						state->pixelInfo->C,
+						state->pixelInfo->T,
+						state->pixelInfo->Z
+					);
+				}
 			
-			// open the output file for the BinData contents
-			binDataOutPath = (char *) malloc( 
-				strlen( dirPath ) + 
-				strlen( "/" ) +
-				( (int) state->nOutputFiles % 10 ) + 1 +
-				strlen( ".out" ) +
-				1 );
-			if( !binDataOutPath ) mem_error("");
-			sprintf( binDataOutPath, "%s/%i.out", dirPath, state->nOutputFiles );
-			state->binDataInfo->BinDataOut = fopen( binDataOutPath, "w" );
-			if( state->binDataInfo->BinDataOut == NULL ) {
-				fprintf( stderr, "Error! Could not open file for output. Path is\n%s\n", binDataOutPath );
+			} while( !indexesRC );
+			/*
+			/* END 'Encode & print out a plane at a time'
+			/*
+			/*****************************************************************/
+						
+			// cleanup
+			free( strm );
+			free( enc );
+			strm = NULL;
+			enc  = NULL;
+		}
+		/*
+		/* END 'Flagged <External> under Pixels'
+		/*
+		/*********************************************************************/
+
+
+		
+		/**********************************************************************
+		/*
+		/* Flagged <External>
+		*/
+		else {
+			state->state = IN_FLAGGED_EXTERNAL;
+
+			/******************************************************************
+			/*
+			/* init
+			*/
+			inFile = fopen( href, "rb" );
+			if( !inFile ) {
+				fprintf( stderr, "Error! Could not open file (path='%s')!\n", href );
 				exit(-1);
 			}
-	
-			// convert BinData to External
-			fprintf( stdout, "<External xmlns=\"%s\" href=\"%s\" SHA1=\"\"/>", BinNS, binDataOutPath );
+			bin = (unsigned char *) malloc( SIZEOF_BUFS );
+			enc = (unsigned char *) malloc( SIZEOF_BUFS );
+			if( !bin || !enc ) mem_error("");
+			if( fseek( inFile, offset, SEEK_SET ) ) {
+				fprintf( stderr, "Error! Could not seek to location specified by offset!\n" );
+				exit(-1);
+			}
+			b64z_encode_init( strm );
+			/*
+			/*****************************************************************/
 			
-			free( binDataOutPath );
+			// print <BinData>
+			if( !compression )
+				fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"bzip2\" >", BinNS );
+			else
+				fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"%s\" >", BinNS, compression );
+			
+			while( readLength != 0 ) {
+				/**************************************************************
+				/*
+				/* read from file into buffer
+				*/
+				if( readLength == -1 ) { // read entire file
+					file_read_len = -1;
+					strm->avail_in = fread( bin, 1, SIZEOF_BUFS, inFile );
+				} else if( readLength > SIZEOF_BUFS ) {
+					file_read_len = SIZEOF_BUFS;
+					strm->avail_in = fread( bin, 1, file_read_len, inFile );
+					readLength -= file_read_len;
+				} else {
+					file_read_len = readLength;
+					strm->avail_in = fread( bin, 1, file_read_len, inFile );
+					readLength -= file_read_len;
+				}
+
+				if( readLength > 0 && strm->avail_in != file_read_len ) {
+					if( ferror( inFile ) ) {
+						fprintf( stderr, "Error! Encountered error while reading file (path='%s').\n", href );
+						exit(-1);
+					} else {
+						fprintf( stderr, "Error! Encountered premature end of file while reading file (path='%s').\n", href );
+						exit(-1);
+					}
+				}
+				
+				if( readLength == -1 && strm->avail_in == 0 ) {
+					if( ferror( inFile )) {
+						fprintf( stderr, "Error! Encountered error while reading file (path='%s').\n", href );
+						exit(-1);
+					}
+					else
+						break;
+				}
+				/*
+				/*************************************************************/
+				
+				/**************************************************************
+				/*
+				/* encode buffer & write out
+				*/
+				strm->next_in = bin;
+				p = B64Z_RUN;
+				do {
+					// encode buffer
+					strm->next_out  = enc;
+					strm->avail_out = SIZEOF_BUFS;
+					if( feof( inFile ) || readLength == 0 )
+						p = B64Z_FINISH;
+
+					rC = b64z_encode( strm, p );
+
+					// write encoded data to stdout
+					fwrite( enc, 1, SIZEOF_BUFS - strm->avail_out, stdout );
+				} while( (strm->avail_in > 0 || p == B64Z_FINISH) && rC != B64Z_STREAM_END );
+				/*
+				/*************************************************************/
+			}
+			
+			// print </BinData>
+			fprintf( stdout, "</BinData>\n" );
+			
+			// cleanup
+			b64z_encode_end( strm );
+			fclose( inFile );
+			free( bin );
+			free( enc );
 		}
+		/*
+		/* END 'Flagged <External>'
+		/*
+		/*********************************************************************/
+
+		// cleanup
+		free( strm );
+		
 	}
+	/*
+	/* END 'Flagged <External>'
 	/*
 	/*************************************************************************/
 
@@ -409,23 +649,8 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 
 	/**************************************************************************
 	/*
-	/* Pixels:
-	/* 	The <BinData>s under Pixels are treated differently than other 
-	/* 	<BinData>s. If <BinData>s are used under <Pixels>, then the contents 
-	/* 	should be processed and coalated into the full pixel dump. We might as
-	/* 	well do this while it is already loaded in memory.
-	/*
-	/* 	The contents of each <BinData> section is buffered into a big chunk.
-	/* 	When the <BinData> closes, that chunk is converted from base 64,
-	/* 	uncompressed, and sent through libpix to be written to disk.
-	/*
-	/* 	After every <BinData> under <Pixels> is processed like that, they
-	/* 	are replaced with a single <External>. This <External> is 
-	/* 	distiguishable from other <External>s by having a null value for the 
-	/* 	SHA1 attribute. When one of these <External>s is encountered in later
-	/* 	processing, the DimensionOrder attribute should be ignored. It describe
-	/* 	how the <BinData>s were ordered, but the pixels were reordered to
-	/* 	standard repository format (XYZCT) when they were sent through libpix.
+	/* Pixels
+	/* 	
 	*/
 	else if( strcmp( PixelLocal, localName ) == 0 ) {
 
@@ -444,9 +669,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		/*
 		/* Extract data from xml attributes.
 		/*
-		/*
 		*/
-		// data extraction
 		state->pixelInfo = (PixelInfo *) malloc( sizeof( PixelInfo ) );
 		if( !(state->pixelInfo) ) mem_error("");
 		if(attrs == NULL) {
@@ -516,47 +739,6 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		/*
 		/*********************************************************************/
 		
-		/**********************************************************************
-		/*
-		/* Initialization for <BinData> processing.
-		/* 	remember that we do not know if this <Pixels> contains <BinData>s
-		/* 	or <External>s. We will not use any of this if the <Pixels> 
-		/* 	contains <External>s.
-		/*
-		*/
-		// initialize variables
-		state->pixelInfo->theZ = state->pixelInfo->theC = state->pixelInfo->theT = 0;
-		state->pixelInfo->hitBinData = 0;
-		
-		// 2do
-		// initialize libpix object - DON'T FORGET BIG ENDIAN!
-		state->nOutputFiles++;
-		state->pixelInfo->outputPath = (char *) malloc( 
-			strlen( pixelDirPath ) + 
-			strlen( "/" ) +
-			( (int) state->nOutputFiles % 10 ) + 1 +
-			strlen( ".out" ) +
-			1 );
-		if( !(state->pixelInfo->outputPath) ) mem_error("");
-		sprintf( state->pixelInfo->outputPath, "%s/%i.out", pixelDirPath, state->nOutputFiles );
-		state->pixelInfo->pixWriter = NewPix(
-			state->pixelInfo->outputPath,
-			state->pixelInfo->X,
-			state->pixelInfo->Y,
-			state->pixelInfo->Z,
-			state->pixelInfo->C,
-			state->pixelInfo->T,
-			state->pixelInfo->bpp / 8
-		);
-
-		state->pixelInfo->planeSize = state->pixelInfo->X * state->pixelInfo->Y * (int) (state->pixelInfo->bpp / 8 );
-		state->pixelInfo->binDataBuf = (unsigned char *) malloc( state->pixelInfo->planeSize + 2);
-		if( !(state->pixelInfo->binDataBuf) ) mem_error("");
-		/*
-		/* END "Initialization for <BinData> processing."
-		/*
-		/*********************************************************************/
-
 		// print out <Pixels>
 		print_element( name, attrs );
 	}
@@ -569,7 +751,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 
 	/**************************************************************************
 	/*
-	/* This isn't a <BinData> or <Pixels>, pipe it through.
+	/* This isn't a flagged <External> or <Pixels>, pipe it through.
 	*/
 	else {
 		// Stack maintence. Necessary for closing tags properly.
@@ -598,167 +780,29 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 	// content, then we need to print "/>". I'm using a stack to keep track
 	// of element's content, so I gotta check the stack and do stack 
 	// maintence.
-	// Iff we are ending a BinData section, then we don't have to touch the
-	// stack.
+	// Iff we are ending an <External>, then we don't have to touch the stack.
 	StructElementInfo *elementInfo;
 
 	switch( state->state ) {
 	
 	
-	/**************************************************************************
-	/*
-	/* Process <BinData>
-	/* 	write <BinData> contents to file & replace <BinData> with an
-	/* 	<External> that points to the file
-	*/
-	 case IN_BINDATA:
-		state->state = PARSER_START;
-		
-		//cleanup
-		b64z_decode_end ( state->binDataInfo->strm );
-		free( state->binDataInfo->strm );
-		state->binDataInfo->strm = NULL;
-		
-		if( state->binDataInfo->compression ) free( state->binDataInfo->compression );
-		state->binDataInfo->compression = NULL;
-		fclose( state->binDataInfo->BinDataOut );
-		state->binDataInfo->BinDataOut = NULL;
-
-		break;
-
-	/*
-	/* END 'Process <BinData>'
-	/*
-	/*************************************************************************/
-
-
-
-	/**************************************************************************
-	/*
-	/* Process <BinData> inside of <Pixels>
-	/*
-	*/
-	  case IN_BINDATA_UNDER_PIXELS:
+	// <External> : Do nothing. Everything necessary has already been done.
+	 case IN_FLAGGED_EXTERNAL_UNDER_PIXELS:
 		state->state = IN_PIXELS;
-		
-		// Endian check
-		if( state->pixelInfo->bigEndian != bigEndian() )
-			switch( state->pixelInfo->bpp ) {
-			 case 8:
-				break;
-			 case 16:
-				byteSwap2( state->pixelInfo->binDataBuf, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
-				break;
-			 case 32:
-				byteSwap4( state->pixelInfo->binDataBuf, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
-				break;
-			 case 64:
-				byteSwap8( state->pixelInfo->binDataBuf, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
-				break;
-			 case 128:
-				byteSwap16( state->pixelInfo->binDataBuf, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
-				break;
-			}
-
-		// output buffered BinData through libpix
-		SetPlane( 
-			state->pixelInfo->pixWriter, 
-			state->pixelInfo->binDataBuf, 
-			state->pixelInfo->theZ, 
-			state->pixelInfo->theC, 
-			state->pixelInfo->theT );
-
-	 	// logic to increment indexes based on dimOrder
-	 	if( strcmp( state->pixelInfo->dimOrder, "XYZCT" ) == 0 ) {
-			increment_plane_indexes( 
-				&( state->pixelInfo->theZ ), 
-				&( state->pixelInfo->theC ), 
-				&( state->pixelInfo->theT ),
-				state->pixelInfo->Z, 
-				state->pixelInfo->C, 
-				state->pixelInfo->T 
-			);
-		} else if( strcmp( state->pixelInfo->dimOrder, "XYZTC" ) == 0 ) {
-			increment_plane_indexes(
-				&( state->pixelInfo->theZ ),
-				&( state->pixelInfo->theT ),
-				&( state->pixelInfo->theC ),
-				state->pixelInfo->Z,
-				state->pixelInfo->T,
-				state->pixelInfo->C
-			);
-		} else if( strcmp( state->pixelInfo->dimOrder, "XYTZC" ) == 0 ) {
-			increment_plane_indexes(
-				&( state->pixelInfo->theT ),
-				&( state->pixelInfo->theZ ),
-				&( state->pixelInfo->theC ),
-				state->pixelInfo->T,
-				state->pixelInfo->Z,
-				state->pixelInfo->C
-			);
-		} else if( strcmp( state->pixelInfo->dimOrder, "XYTCZ" ) == 0 ) {
-			increment_plane_indexes(
-				&( state->pixelInfo->theT ),
-				&( state->pixelInfo->theC ),
-				&( state->pixelInfo->theZ ),
-				state->pixelInfo->T,
-				state->pixelInfo->C,
-				state->pixelInfo->Z
-			);
-		} else if( strcmp( state->pixelInfo->dimOrder, "XYCZT" ) == 0 ) {
-			increment_plane_indexes(
-				&( state->pixelInfo->theC ),
-				&( state->pixelInfo->theZ ),
-				&( state->pixelInfo->theT ),
-				state->pixelInfo->C,
-				state->pixelInfo->Z,
-				state->pixelInfo->T
-			);
-		} else if( strcmp( state->pixelInfo->dimOrder, "XYCTZ" ) == 0 ) {
-			increment_plane_indexes(
-				&( state->pixelInfo->theC ),
-				&( state->pixelInfo->theT ),
-				&( state->pixelInfo->theZ ),
-				state->pixelInfo->C,
-				state->pixelInfo->T,
-				state->pixelInfo->Z
-			);
-		}
-				
-
-		// cleanup
-		b64z_decode_end( state->binDataInfo->strm );
-		free( state->binDataInfo->strm );
-		state->binDataInfo->strm = NULL;
-
-		if( state->binDataInfo->compression ) free( state->binDataInfo->compression );
-		state->binDataInfo->compression = NULL;
-
-	 	break;
-	/*
-	/* END 'Process <BinData> inside of <Pixels>'
-	/*
-	/*************************************************************************/
+		break;
+	 case IN_FLAGGED_EXTERNAL:
+		state->state = PARSER_START;
+		break;
 
 
 	 case IN_PIXELS:
 		state->state = PARSER_START;
 
-	 	// print the <External> element if we extracted <BinData>s
-		if( state->pixelInfo->hitBinData == 1 )
-			fprintf( stdout, "<External xmlns=\"%s\" href=\"%s\" SHA1=\"\"/>", BinNS, state->pixelInfo->outputPath );
-
-		// close libpix object, clean it up
-		FreePix( state->pixelInfo->pixWriter );
-
 	 	// cleanup
-		free( state->pixelInfo->binDataBuf );
 		free( state->pixelInfo->dimOrder );
 		free( state->pixelInfo->pixelType );
-		free( state->pixelInfo->outputPath );
 		free( state->pixelInfo );
 		state->pixelInfo = NULL;
-
 	 	// DO NOT "break;" Go on to default action of stack cleanup and
 	 	// element closure.
 
@@ -805,45 +849,6 @@ static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int 
 	 case PARSER_START:
 		fwrite( ch, 1, len, stdout );
 		fflush( stdout );
-		break;
-	 case IN_BINDATA:
-	 	state->binDataInfo->strm->next_in   = (unsigned char *)ch;
-	 	state->binDataInfo->strm->avail_in  = len;
-
-		buf = (unsigned char *) malloc( SIZEOF_FILE_OUT_BUF );
-		if( !buf ) mem_error("");
-		
-	 	state->binDataInfo->strm->next_out  = buf;
-	 	state->binDataInfo->strm->avail_out = SIZEOF_FILE_OUT_BUF;
-	 	
-	 	do {
-		 	rC = b64z_decode( state->binDataInfo->strm );
-			//write out to file & reset output buffers
-			outLen = SIZEOF_FILE_OUT_BUF - state->binDataInfo->strm->avail_out;
-			if( fwrite( buf, 1, outLen, state->binDataInfo->BinDataOut ) != outLen ) {
-				fprintf( stderr, "Error! Could not write full output to file!\n" );
-				exit(-1);
-			}
-	
-			state->binDataInfo->strm->avail_out = SIZEOF_FILE_OUT_BUF;
-			state->binDataInfo->strm->next_out  = buf;
-		} while( rC != B64Z_STREAM_END );
-		free( buf );
-		
-		break;
-	 	
-	 case IN_BINDATA_UNDER_PIXELS:
-	 	state->binDataInfo->strm->next_in   = (unsigned char *)ch;
-	 	state->binDataInfo->strm->avail_in  = len;
-
-	 	do {
-		 	rC = b64z_decode( state->binDataInfo->strm );
-		 	if( state->binDataInfo->strm->avail_out == 0 && rC != B64Z_STREAM_END ) {
-		 		fprintf( stderr, "Error! Uncompressed contents of a <BinData> under <Pixels> are larger than the size of a plane.\n" );
-		 		exit(-1);
-		 	}
-		} while( rC != B64Z_STREAM_END );
-		
 		break;
 	} // switch( state->state )
 }
