@@ -1,0 +1,50 @@
+--
+-- view multi-wavelength signal attributes as columns
+select a2.timepoint,w1.centroid_x as "cx[1234]",w2.centroid_x as "cx[12345]", w3.centroid_x as "cx[528]"
+	from signal w1, signal w2, signal w3, timepoint a2
+	where w1.wavelength=1234 and w2.wavelength=12345 and w3.wavelength=528
+	and w1.attribute_of=w2.attribute_of and w2.attribute_of=w3.attribute_of
+	and w3.attribute_of=a2.attribute_of and a2.attribute_of=2363;
+
+-- timepoint|cx[1234]|cx[12345]|cx[528]
+-- ---------+--------+---------+-------
+--         0|    5678|     6789|   89.3
+-- (1 row)
+
+
+-- A sub-select to get the maximum analysis IDs for datasets given a programID, project_ID and experimenter_ID
+(select max (analysis_id)
+FROM analyses
+WHERE  program_id=8
+AND dataset_id = datasets.dataset_id AND datasets.project_id=1
+AND analyses.experimenter_id=2
+GROUP BY dataset_id)
+
+-- A summary for a project with aggregate functions on datasets.
+SELECT datasets.dataset_id, avg(extent.form_factor) as "Avg of FFs", (4.0*PI()*sum(extent.surface_area))/sum (extent.perimiter^2) as "Avg. FF"
+FROM extent,analyses,datasets
+WHERE extent.analysis_id = analyses.analysis_id AND analyses.dataset_id = datasets.dataset_id AND datasets.project_id=5
+GROUP BY datasets.dataset_id;
+
+
+SELECT datasets.dataset_id AS "Dataset-ID",
+	attributes_iccb_tiff.well AS "Well",
+	attributes_iccb_tiff.compound_id AS "Compound-ID",
+	datasets.name AS "Dataset-Name",
+	count(extent.analysis_id) AS "Num. Objects",
+	avg(extent.form_factor) AS "Avg of FFs",
+	(((4 * pi()) * sum(extent.surface_area)) / sum((extent.perimiter ^ 2))) AS "Avg. FF",
+	cccp.correlation as "CCCP"
+FROM extent, analyses a1, analyses a2, datasets, attributes_iccb_tiff, cccp
+WHERE extent.analysis_id = a1.analysis_id
+	AND cccp.analysis_id = a2.analysis_id
+	AND a1.status = 'ACTIVE'
+	AND a2.status = 'ACTIVE'
+	AND a1.experimenter_id = $(ExperimenterID)
+	AND a2.experimenter_id = $(ExperimenterID)
+	AND a1.dataset_id = a2.dataset_id
+	AND a2.dataset_id = datasets.dataset_id
+	AND attributes_iccb_tiff.dataset_id = datasets.dataset_id
+	AND datasets.project_id = $(ProjectID)
+GROUP BY datasets.dataset_id, datasets.name,
+	attributes_iccb_tiff.well, attributes_iccb_tiff.compound_id, cccp.correlation

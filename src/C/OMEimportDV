@@ -1,0 +1,5 @@
+#!/bin/tcsh -f
+foreach f ($*)
+	OMEimportDVfile $f
+end
+

@@ -1,0 +1,57 @@
+#!/usr/bin/perl -w
+
+# The TCI filenames are on the command line following the script's name - including wild-cards
+#use Pg;
+#use OMEpl;
+use strict;
+
+#use vars qw ($OME);
+#$OME = new OMEpl;
+
+#
+my $i=0;
+my $fileName;
+my $wave;
+my $sample;
+my $well;
+my $plate;
+my $base;
+my $frag;
+my $fragRe;
+my $extension;
+
+printf "%-40s\t%-40s\tPlate\tWell\tSample\twave\n","Base name";
+foreach $fileName (@ARGV)
+{
+	# reset our variables
+	$wave = $sample = $well = $plate = "";
+	# Get the extension, print error if it isn't TIF (convert to upper-case before check)
+	if ($fileName =~ /\.(.*)/) {$extension = $1;}
+	if (uc ($extension) ne "TIF")
+	{
+	}
+
+	# Build frag from the end to the begining.
+	# eventually it will contain all the stuff after the base name.
+	$frag = ".".$extension;
+
+	# Get the well,sample,and wave
+	# if we find matches, set the variable, and prepend the format to frag
+	if ($fileName =~ /_w([0-9]+)/){ $wave = $1; $frag = "_w".$wave.$frag; }
+	if ($fileName =~ /_s([0-9]+)/){ $sample = $1; $frag = "_s".$sample.$frag; }
+	if ($fileName =~ /_([A-P][0-2][0-9])/){ $well = $1; $frag = "_".$well.$frag;}
+
+	# Make frag a regular expression and use it to find the plate number.
+	# Prepend the plate number to frag so we can find the basename.
+	# N.B.: If the base name ends in a digit, then we cannot determine the plate number!
+	$fragRe = qr/$frag/;
+	if ($fileName =~ /([0-9]+)${fragRe}/){ $plate = $1; $frag = $plate.$frag }
+
+	# The base name is everything before $frag.
+	$fragRe = qr/$frag/;
+	if ($fileName =~ /(.*)${fragRe}/){ $base = $1;}
+	
+	#print what we found
+	printf "%-40s\t%-40s\t%5s\t%4s\t%6s\t%4s\n",$filename,$base,$plate,$well,$sample,$wave;
+	
+}

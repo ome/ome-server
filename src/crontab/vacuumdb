@@ -1,0 +1,7 @@
+#!/bin/bash
+TIME=`date`
+su postgres -c "echo '$TIME - vacuumdb started.' >> ~postgres/logs/vacuumdb.log"
+su postgres -c "vacuumdb ome >> ~postgres/logs/vacuumdb.log"
+su postgres -c "vacuumdb --analyze ome >> ~postgres/logs/vacuumdb.log"
+TIME=`date`
+su postgres -c "echo '$TIME - vacuumdb finished.' >> ~postgres/logs/vacuumdb.log"
