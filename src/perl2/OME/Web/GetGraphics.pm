@@ -374,14 +374,14 @@ sub SVGgetDataJS {
 			if( not defined $cgi->url_param('theT') );
 		$JSinfo->{ isRGB }     = $displayOptions->DisplayRGB();
 		
-		my @CBW;
+		my @CBW; # CBW means Channel-BlackLevel-WhiteLevel
 		@CBW = (
 			$displayOptions->RedChannel()->ChannelNumber(),
 			$displayOptions->RedChannel()->BlackLevel(),
 			$displayOptions->RedChannel()->WhiteLevel(),
-                        $displayOptions->GreenChannel()->ChannelNumber(),
-                        $displayOptions->GreenChannel()->BlackLevel(),
-                        $displayOptions->GreenChannel()->WhiteLevel(),
+			$displayOptions->GreenChannel()->ChannelNumber(),
+			$displayOptions->GreenChannel()->BlackLevel(),
+			$displayOptions->GreenChannel()->WhiteLevel(),
 			$displayOptions->BlueChannel()->ChannelNumber(),
 			$displayOptions->BlueChannel()->BlackLevel(),
 			$displayOptions->BlueChannel()->WhiteLevel(),
