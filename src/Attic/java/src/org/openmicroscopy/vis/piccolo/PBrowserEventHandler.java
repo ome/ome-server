@@ -45,6 +45,8 @@ import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.ome.CDataset;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PCamera;
 import java.awt.event.MouseEvent;
 
 /** 
@@ -58,7 +60,6 @@ import java.awt.event.MouseEvent;
 
 public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	
-	private int allButtonMask = MouseEvent.BUTTON1_MASK;
 	
 	/**
 	 * A flag indicating that the previous event was a popup
@@ -127,46 +128,59 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	}
 	
 	public void handlePopup(PInputEvent e) {
+		postPopup = true;
 		PNode node = e.getPickedNode();
 		if (node instanceof PDataset) {
 			//zooming out, so...
 			SelectionState selectionState = SelectionState.getState();	
 			selectionState.setSelectedDataset(null);
 		}
-		else
-			super.handlePopup(e);
+		super.handlePopup(e);
 	}
 	public void mouseClicked(PInputEvent e) {
-		//
-		if ((e.getModifiers() & allButtonMask) !=
-			allButtonMask)
-			return;
+		// left button.
+		if (postPopup == true ) {
+			postPopup = false;
+			e.setHandled(true);
+			return; 
+		}
 		PNode node = e.getPickedNode();
 		SelectionState selectionState = SelectionState.getState();
-		
-		if (node instanceof PDataset) { 
-			//System.err.println("zooming in on dataset");
-			PDataset d = (PDataset) node;
-			selectionState.setSelectedDataset(d.getDataset());
-			e.setHandled(true);
-		}
-		/*else if (node instanceof PChainLabelText) {
+		if ((e.getModifiers() & MouseEvent.BUTTON1_MASK) 
+			== MouseEvent.BUTTON1_MASK) {
 			
-			try {
-				PChainLabelText label = (PChainLabelText) node;
-				//System.err.println("clicked on a chain label..."+label.getChain().getName());
-				label.doSelection();
+			
+		
+			if (node instanceof PDataset) { 
+				//System.err.println("zooming in on dataset");
+				PDataset d = (PDataset) node;
+				selectionState.setSelectedDataset(d.getDataset());
+				e.setHandled(true);
 			}
-			catch(Exception exc) {
-				
+		
+			else if (node instanceof PExecutionText) {
+				//System.err.println("clicked on execution text!");
+				e.setHandled(true);
 			}
-			e.setHandled(true);
-		}*/
-		else if (node instanceof PExecutionText) {
-			//System.err.println("clicked on execution text!");
-			e.setHandled(true);
+			else if (node instanceof PCamera || node == 
+				((PCanvas) canvas).getLayer()) {
+				selectionState.setSelectedDataset(null);
+				e.setHandled(true);
+			}
+			else 
+				super.mouseClicked(e);
+		}
+		else if (e.isControlDown() || ((e.getModifiers() & MouseEvent.BUTTON3_MASK) 
+			== MouseEvent.BUTTON3_MASK)) {
+		  // right button.
+		  	if (node instanceof PDataset) {
+		  		selectionState.setSelectedDataset(null);
+		  		e.setHandled(true);
+		  	}
+		  	else 
+		  		super.mouseClicked(e);
 		}
 		else 
-			super.mouseClicked(e);
+			e.setHandled(true);
 	}
 }

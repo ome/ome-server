@@ -120,7 +120,6 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		if ((e.getModifiers() & allButtonMask) !=
 				allButtonMask)
 			return;
-		System.err.println("got a mouse clicked on canvas library "+e);
 		if (timer.isRunning()) {// it's a double click
 			timer.stop();
 			mouseDoubleClicked(e);
@@ -148,19 +147,13 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	} 
 	
 	private void doMouseClicked(PInputEvent e) {
-		System.err.println("doing a single click "+e);
-		if (e.isPopupTrigger()) {
-			System.err.println("popup...");
+		if (postPopup == true) {
+			postPopup = false;
+			e.setHandled(true);
+			return;
 		}
 		
 		PNode node  = e.getPickedNode();
-		/*if (node instanceof PDatasetLabelText) {
-			// on a label.
-			PDatasetLabelText label = (PDatasetLabelText) node;
-			label.doSelection();
-
-			e.setHandled(true);
-		} next if  was "else if "*/
 		if (node instanceof PExecutionText) {
 			System.err.println("clicked on execution text!");
 			e.setHandled(true);
@@ -194,7 +187,6 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		if (e.isPopupTrigger()) {
-			System.err.println("popup press event "+e);
 			handlePopup(e);
 		}
 		else if (node instanceof PChainBox) {
@@ -209,7 +201,6 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	 */
 	public void mouseReleased(PInputEvent e) {
 		if (e.isPopupTrigger()) {
-			System.err.println("popup release event "+e);
 			handlePopup(e);
 		}
 		else
@@ -254,8 +245,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	
 	public void handlePopup(PInputEvent e) {
 		PNode node = e.getPickedNode();
-		
-		System.err.println("chain library popup on "+node);
+		postPopup = true;
 		if (node instanceof PModule) {
 			PModule m = (PModule) node;
 			PBufferedNode bn= m.getEnclosingBufferedNode();
@@ -267,7 +257,6 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			e.setHandled(true);
 		}
 		else if (node instanceof PChainBox) {
-			System.err.println("clearing chain box..");
 			SelectionState selectionState = SelectionState.getState();
 			selectionState.setSelectedChain(null);		
 			e.setHandled(true);	

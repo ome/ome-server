@@ -427,7 +427,7 @@ public class PChainEventHandler extends  PPanEventHandler
 					PConstants.ANIMATION_DELAY);
 			}
 			else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK)==1) {
-				//System.err.println("canvas right click..");
+				System.err.println("canvas right click..");
 				evaluatePopup(e);					
 			}
 		}
@@ -891,7 +891,7 @@ public class PChainEventHandler extends  PPanEventHandler
 	 * @param e
 	 */
 	private void evaluatePopup(PInputEvent e) {
-		System.err.println("chain canvas popup...");
+		postPopup=true;
 		PNode n = e.getPickedNode();
 		PNode p = n.getParent();
 		if (p instanceof PBufferedNode) {
@@ -909,9 +909,9 @@ public class PChainEventHandler extends  PPanEventHandler
 		else {
 			double scaleFactor = 1/PConstants.SCALE_FACTOR;
 			zoom(scaleFactor,e);
-			e.setHandled(true);
-			postPopup=true;
+			
 		}
+		e.setHandled(true);
 	}
 	
 	/** 
