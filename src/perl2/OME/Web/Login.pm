@@ -129,7 +129,7 @@ sub __loginForm {
 	my $generic_footer =
 		$q->hr() .
 		$q->p({-align => 'center', -class => 'ome_footer'},
-			  'Powered by OME technology &copy 2003 ',
+			  'Powered by OME technology &copy 2005 ',
 			  $q->a({-href => 'http://www.openmicroscopy.org/', -class => 'ome_footer', -target => '_ome'},
 				  'Open Microscopy Environment')
 		  );
