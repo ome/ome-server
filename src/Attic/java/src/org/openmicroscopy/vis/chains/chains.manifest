@@ -1,4 +1,5 @@
 Main-Class: org.openmicroscopy.vis.chains.Chains
 Class-Path: piccolox.jar org.openmicroscopy.alligator.jar 
- org.openmicroscopy.remote.jar org.openmicroscopy.util.jar
+ org.openmicroscopy.remote.jar org.openmicroscopy.util.jar 
+ commons-httpclient-2.0-rc2.jar commons-logging.jar
 
