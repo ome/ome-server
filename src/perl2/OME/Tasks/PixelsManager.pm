@@ -321,100 +321,16 @@ sub getThumbURL{
 
 Usage: 
 	my $displayOptions = OME::Tasks::PixelsManager->getDisplayOptions( $pixels_attr );
-
-	will load a displayOptions or make default if none exist
+	will load displayOptions
 
 =cut
 sub getDisplayOptions {
     my ($proto, $pixels_attr) = @_;
     my $session = OME::Session->instance();
-    my $factory = $session->Factory();
-    my $theT    = 0;
-
+    
 	# Try to load display options
-	my $displayOptions    = $factory->findAttribute( 'DisplayOptions', {
-		Pixels => $pixels_attr } );
-	return $displayOptions if $displayOptions;
-	
-	
-	# None were found. Make default
-    my $image   = $pixels_attr->image();
-    my $pixels_data = $proto->loadPixels( $pixels_attr );
-	my %displayData = (
-		Pixels => $pixels_attr,
-		ZStart => sprintf( "%d", $pixels_attr->SizeZ() / 2 ),
-		ZStop  => sprintf( "%d", $pixels_attr->SizeZ() / 2 ),
-		TStart => $theT,
-		TStop  => $theT,
-		DisplayRGB => 1,
-		ColorMap   => 'RGB',
-	);
-	
-	# set display channels
-	my (%displayChannelData, $channelIndex, @channelOrder);
-	my $statsHash = $pixels_data->getStackStatistics();
-
-	# set up red shift channel ordering
-	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", {
-	Pixels => $pixels_attr } );
-	if( @channelComponents ) {
-		@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() }
-		@channelComponents;
-		@channelOrder = map( $_->Index(), @channelComponents );
-	
-	# There's no basis to do redshift ordering. This pixels is lacking channelComponents, which probably means it was computationally derived.
-	} else {
-		@channelOrder = (0..($pixels_attr->SizeC - 1));
-	}
-
-	# Red Channel
-	$displayData{RedChannelOn} = 1;
-	$channelIndex = $channelOrder[0];
-	$displayChannelData{ ChannelNumber } = $channelIndex;
-	( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-		__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
-	$displayChannelData{ Gamma } = 1.0;
-	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
-	$displayData{ RedChannel } = $displayChannel;
-
-	# Gray Channel
-	$displayData{ GreyChannel } = $displayChannel;
-	if( $pixels_attr->SizeC == 1 ) {
-		$displayData{ DisplayRGB } = 0;
-	}
-	
-	# Green Channel
-	if( $pixels_attr->SizeC > 1 ) {
-		$displayData{GreenChannelOn} = 1;
-		$channelIndex = $channelOrder[1];
-		$displayChannelData{ ChannelNumber } = $channelIndex;
-		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
-		$displayChannelData{ Gamma } = 1.0;
-		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
-	} else {
-		$displayData{GreenChannelOn} = 0;
-	}
-	$displayData{ GreenChannel } = $displayChannel;
-
-
-	# Blue Channel
-	if( $pixels_attr->SizeC > 2 ) {
-		$displayData{BlueChannelOn} = 1;
-		$channelIndex = $channelOrder[2];
-		$displayChannelData{ ChannelNumber } = $channelIndex;
-		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
-		$displayChannelData{ Gamma } = 1.0;
-		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
-	} else {
-		$displayData{BlueChannelOn} = 0;
-	}
-	$displayData{ BlueChannel } = $displayChannel;
-
-	# Make DisplayOptions
-	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, undef, \%displayData )
-		or die "Couldn't make a new DisplayOptions";
+	my $displayOptions = $session->Factory()->findAttribute( 'DisplayOptions', 
+		{Pixels => $pixels_attr } );
 	return $displayOptions;
 }
 
