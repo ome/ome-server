@@ -127,9 +127,15 @@ use OME::Factory;
 
 use OME::Remote::Prototypes ();  # don't import anything
 
+our $SHOW_CALLS = 1;
+our $SHOW_RESULTS = 0;
+our $SHOW_CACHING = 0;
 
 sub versionInfo {
     my ($proto) = @_;
+
+    print "versionInfo(",join(',',map {$_ = OME::Remote::Utils::xmlEscape('P',$_);} @_[1..$#_]),")\n"
+      if $SHOW_CALLS;
 
     return {
             Version => '1.0',
@@ -139,6 +145,9 @@ sub versionInfo {
 
 sub createSession {
     my ($proto, $username, $password) = @_;
+
+    print "createSession(",join(',',map {$_ = OME::Remote::Utils::xmlEscape('P',$_);} @_[1..$#_]),")\n"
+      if $SHOW_CALLS;
 
     my $session = OME::SessionManager->createSession($username,$password);
     die "Cannot create session"
@@ -159,6 +168,9 @@ sub closeSession {
     my $session = OME::Remote::Utils::getObject(">>SESSIONS",$sessionRef);
     my $sessionKey = $session->{SessionKey};
 
+    print "closeSession(",join(',',map {$_ = OME::Remote::Utils::xmlEscape('P',$_);} @_[1..$#_]),")\n"
+      if $SHOW_CALLS;
+
     OME::SessionManager->deleteApacheSession($session->{ApacheSession});
     OME::Remote::Utils::deleteSessionObjects($sessionKey);
 
@@ -170,6 +182,9 @@ sub dispatch {
     my ($proto,$sessionRef,$objectRef,$method,@params) = @_;
     my $session = OME::Remote::Utils::getObject(">>SESSIONS",$sessionRef);
     my $sessionKey = $session->{SessionKey};
+
+    print "dispatch(",join(',',map {$_ = OME::Remote::Utils::xmlEscape('P',$_);} @_[1..$#_]),")\n"
+      if $SHOW_CALLS;
 
     my ($objectProto,$objectClass);
 
@@ -187,8 +202,6 @@ sub dispatch {
     }
 
     $method = OME::Remote::Utils::xmlEscape('P',$method);
-
-    print "Calling ${objectProto}->${method}\n";
 
     # Lookup the method's prototype
     my $prototype =
@@ -228,7 +241,12 @@ sub dispatch {
                                                             \&OME::Remote::Utils::outputMarshaller,
                                                             $sessionKey);
 
-    print "  (",join(",",@result),")\n";
+    print "  (",join(",",@result),")\n"
+      if $SHOW_RESULTS;
+
+    # RPC protocols usually require a method to return exactly one
+    # return value, so any list-context methods should have their
+    # results returned as an array.
 
     if ($context eq 'list') {
         return \@result;
@@ -243,7 +261,10 @@ sub freeObject {
     my $session = OME::Remote::Utils::getObject(">>SESSIONS",$sessionRef);
     my $sessionKey = $session->{SessionKey};
 
-    $objectRef = OME::Remote::Utils::xmlEscape('P',$objectRef);
+    print "freeObject(",join(',',map {$_ = OME::Remote::Utils::xmlEscape('P',$_);} @_[1..$#_]),")\n"
+      if $SHOW_CALLS;
+
+    #$objectRef = OME::Remote::Utils::xmlEscape('P',$objectRef);
 
     # Try to load it in the specified object, just to make sure it
     # exists.  (getObject will throw an error if it doesn't.)
@@ -272,15 +293,23 @@ sub saveObject {
 
     # Only store the object if it's not already there.
     if (!exists $remoteObjects{$sessionKey}->{$reference}) {
-        print "  Saving object ",ref($object)," $sessionKey/$reference\n";
+        print "  Saving object ",ref($object)," $sessionKey/$reference\n"
+          if $OME::Remote::Dispatcher::SHOW_CACHING;
         $remoteObjects{$sessionKey}->{$reference} = $object;
     }
 }
 
 sub deleteObject {
     my ($sessionKey,$reference) = @_;
-    print "  Deleting object $reference\n";
-    delete $remoteObjects{$sessionKey}->{$reference};
+    $reference = xmlEscape('P',$reference);
+    if (exists $remoteObjects{$sessionKey}->{$reference}) {
+        print "  Deleting object $reference, ",ref($remoteObjects{$sessionKey}->{$reference}),"\n"
+          if $OME::Remote::Dispatcher::SHOW_CACHING;
+        delete $remoteObjects{$sessionKey}->{$reference};
+    } else {
+        print "  Already deleted $reference!\n"
+          if $OME::Remote::Dispatcher::SHOW_CACHING;
+    }
 }
 
 sub getObject {
@@ -348,12 +377,7 @@ sub getObjectReference {
 sub deleteSessionObjects {
     my ($sessionKey) = @_;
 
-    foreach my $reference (keys %{$remoteReferences{$sessionKey}}) {
-        my $cryptRef = $remoteReferences{$sessionKey}->{$reference};
-        deleteObject($sessionKey,$cryptRef);
-    }
-
-    $remoteReferences{$sessionKey} = {};
+    $remoteReferences{$sessionKey} = undef;
 }
 
 
