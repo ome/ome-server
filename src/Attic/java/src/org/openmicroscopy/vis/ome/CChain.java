@@ -43,7 +43,6 @@ import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.remote.RemoteChain;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.ChainExecution;
-import org.openmicroscopy.vis.chains.SelectionState;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -531,76 +530,19 @@ public class CChain extends RemoteChain  {
 	}
 	
 	
-	public boolean hasExecutionsInSelectedDatasets(
-			SelectionState selectionState) {
-		CDataset selected = selectionState.getSelectedDataset();
-		Collection datasets = selectionState.getActiveDatasets();
+	public boolean hasExecutionsInSelectedDatasets(Collection activeDatasets) {
 		
-		// if no active datasets and nothing selected,
-		//it's got an execution that's active if it's got any executions.
-		boolean noSelections = (datasets == null || datasets.size() ==0)
-			 && selected == null;
-
-		// if nothing is selected, I have no executions
-		if (noSelections == true)
+		if (activeDatasets == null)
 			return false;
-			//return (datasetExecutions.size() > 0);
-	
-		
-		// two possibilites: 
-		// 1) selected is not null. Then I must have an entry for it.
-		// 2) selected is null. Then, I must have an entry for some dataset
-		// that is in datasets.
 	
 		Collection datasetsWithExecutions =  
 			new HashSet(datasetExecutions.keySet());
-		
-		if (selected != null) {
-			return datasetsWithExecutions.contains(selected);
-		} else { // selected is null
-			// retain only things in the executions set that are in my
-			// active set
-			datasetsWithExecutions.retainAll(datasets);
+	
+	
+		datasetsWithExecutions.retainAll(activeDatasets);
 			// true if anything is left.
-			return (datasetsWithExecutions.size() >0);
-		}
+		return (datasetsWithExecutions.size() >0);
 	}
-	
-	
-	
-	public Collection getCurrentDatasetExecutions(
-			SelectionState selectionState) {
-		Collection active = selectionState.getActiveDatasets();
-		CDataset selected = selectionState.getSelectedDataset();
-		Vector v;
-		CDataset d;
-		CDataset current = selectionState.getSelectedDataset();
-		
-		
-		if ((active == null ||active.size() ==0) && selected == null) 
-			return chainExecutions;	
-		
-		// two possibilities:
-		//1) if selected != null, get executions for selected.
-		if (selected != null) {
-			v = (Vector) datasetExecutions.get(selected);
-		}
-		else { // 2) get executions for all things in active
-			Collection keySet = datasetExecutions.keySet();
-			keySet.retainAll(active);
-			// now keysets is the set of datasets in active with executions.
-			Iterator iter = keySet.iterator();
-			v = new Vector();
-			while (iter.hasNext()) {
-				d = (CDataset) iter.next();
-				Vector execs = (Vector) datasetExecutions.get(d);
-				v.addAll(execs);
-			}	
-		}
-		 
-		return v;
-	}
-	
 	
 
 	public Collection getDatasetsWithExecutions() {
