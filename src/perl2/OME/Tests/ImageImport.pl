@@ -82,8 +82,7 @@ if (scalar @projects > 0) {
     $age = "old";
 }
 else {             # otherwise create it
-    print STDERR "- Creating a new project...";
-    print STDERR " using ";
+    print STDERR "- Creating a new project...\n";
     $age = "new";
     $projectGroup = $projectUser->group()->ID();
     $data = {name => $projectName,
@@ -109,9 +108,8 @@ die "Project undefined\n" unless defined $project;
 # Either way, we must associate the dataset with the current project.
 
 my $datasetName = shift; # from @ARGV
-my $datasetIter = OME::Dataset->search(name => $datasetName, owner_id => $projectUser->ID(), locked => 'false')
-	or die "Could not perform a simple search on the Dataset table!\n";
-my $dataset = $project->addDataset ($datasetIter->next());
+my $datasetIter = OME::Dataset->search(name => $datasetName, owner_id => $projectUser->ID(), locked => 'false');
+my $dataset = $project->addDataset ($datasetIter->next()) if defined $datasetIter;
 $dataset = $project->newDataset ($datasetName) unless defined $dataset;
 
 # die if we still don't have a dataset object.
