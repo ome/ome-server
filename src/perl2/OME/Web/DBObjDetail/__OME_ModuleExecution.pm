@@ -124,7 +124,7 @@ sub getPageBody {
 	$html .= $q->table( {-cellpadding => 10 },
 		$q->Tr(
 			$q->td(  { -width => '50%', -valign => 'top', -align => 'center'}, 
-				$self->_getDBObjDetail( $mex )
+				$self->getObjDetail( $mex )
 			),
 			$q->td(  { -width => '50%', -valign => 'top', -align => 'center'}, 
 				$ioTable
