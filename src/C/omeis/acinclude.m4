@@ -263,3 +263,47 @@ myDB = dbopen ("/tmp/foo",O_CREAT|O_RDWR, 0600, DB_BTREE, NULL);
 
 ])
 
+dnl
+dnl @synopsis CHECK_TIFF_LZW ()
+dnl
+dnl This macro checks for the existence of libtiff LZW encoding. Decoding is
+dnl supported by default so we're not overly worried about that.
+dnl
+dnl Thanks to Jan Prikryl <prikryl@cg.tuwien.ac.at> who wrote an original but
+dnl antiquated macro in 2000. This is based on his work.
+dnl
+dnl When libtiff's LZW encoding is enabled:
+dnl #ifdef HAVE_TIFF_LZW
+dnl
+dnl When libtiff's LZW encoding is disabled:
+dnl #ifndef HAVE_TIFF_LZW
+dnl
+dnl @version 0.1
+dnl @author Chris Allan <callan@blackcat.ca>
+dnl
+AC_DEFUN(CHECK_TIFF_LZW, [
+	AC_MSG_CHECKING([for LZW encoder in -ltiff])
+	AC_TRY_RUN([
+#include <tiffio.h>
+int main(void)
+{
+	TIFF *tif = TIFFOpen("conftest.tif", "w");
+
+	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, 1);
+	TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, 1);
+	TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+	TIFFInitLZW(tif, COMPRESSION_LZW);
+	
+	if (TIFFWriteScanline(tif, "a", 0, 0) < 0)
+		return -1;
+
+	return 0;
+}
+], [ lzwenc=yes ], [ lzwenc=no ])
+ 
+	AC_MSG_RESULT([$lzwenc])
+	if test x_$lzwenc = x_yes
+	then
+		AC_DEFINE(HAVE_TIFF_LZW, [1], [Define 1 when we want OMEIS to use LZW compression with TIFFs])
+	fi
+])

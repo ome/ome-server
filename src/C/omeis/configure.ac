@@ -44,6 +44,9 @@ AC_ARG_WITH(omeis-root,
 		OMEIS_ROOT=$prefix/OMEIS;
 ])
 
+# Make OMEIS_ROOT available to all our makefiles
+AC_SUBST(OMEIS_ROOT)
+
 dnl Allow variable JPEG qualities
 AC_ARG_WITH(jpeg-quality,
 			AC_HELP_STRING([--with-jpeg-quality],
@@ -57,23 +60,6 @@ AC_ARG_WITH(jpeg-quality,
  	AC_MSG_NOTICE(using OMEIS JPEG quality [default]... 80)
 	AC_DEFINE(OMEIS_JPEG_QUALITY, [80])
 ])
-
-dnl Allow disabling of TIFF LZW compression
-AC_MSG_CHECKING(if TIFF LZW compression wanted)
-AC_ARG_ENABLE(tiff-lzw,
-			AC_HELP_STRING([--disable-tiff-lzw],
-						   [removes TIFF LZW compression from OMEIS]),
-[
- 	AC_MSG_RESULT(no)
-], [
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(USE_TIFF_LZW, [1], [Define 1 when we want OMEIS to use LZW compression with TIFFs])
-])
-
-
-
-# Put the OMEIS_ROOT in all our makefiles
-AC_SUBST(OMEIS_ROOT)
 
 dnl Do it early just in case any weird checks require it...
 dnl ----------------------------------------------------------
@@ -143,6 +129,9 @@ CHECK_ZLIB
 
 dnl Check for Berkeley DB using our M4 func
 CHECK_BDB_COMPAT
+
+dnl Check for LZW encoder in libtiff
+CHECK_TIFF_LZW
 
 dnl Checks for header files.
 AC_HEADER_STDC
