@@ -83,10 +83,8 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   # if $pix8 is outside of the range 0-255, it is clipped.
   my $nPixOut = $pix->Plane2TIFF8 ($theZ,$theW,$theT,'testTIFF8.tiff',$scale,$offset);
 
-  # Convert a plane of pixels to an 8 bit per pixel TIFF file
-  # $pix8 = ($pix16 - $offset) * $scale;
-  # if $pix8 is outside of the range 0-255, it is clipped.
-  my $nPixOut = $pix->Plane2TIFF8 ($theZ,$theW,$theT,'testTIFF8.tiff',$scale,$offset);
+  # Convert a TIFF file to a plane of pixels
+  my $nPixOut = $pix->TIFF2Plane ('testTIFF.tiff',$theZ,$theW,$theT);
   
   # Set an arbitrary file for conversion to OME format - $bigEndian is 1 for big endian files, 0 otherwise
   # byte swapping will be accomplished automatically.  This function returns 1 if the file could be opened, 0 otherwise.
