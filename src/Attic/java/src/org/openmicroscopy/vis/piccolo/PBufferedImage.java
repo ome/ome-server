@@ -55,7 +55,10 @@ import java.awt.Image;
 
 public class PBufferedImage extends PImage implements PBufferedNode {
 
-	
+	public PBufferedImage() {
+		super();
+		setAccelerated(false);
+	}
 	public PBufferedImage(Image image) {
 		super(image,false);
 	}
