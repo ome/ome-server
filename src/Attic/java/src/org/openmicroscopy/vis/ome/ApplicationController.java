@@ -24,6 +24,8 @@
  
 package org.openmicroscopy.vis.ome;
 
+import javax.swing.JFrame;
+
 
 /** 
  * <p>Applications that interfact with the OME databse must
@@ -64,4 +66,6 @@ public interface ApplicationController {
 	public void cancelLogin();
 	
 	public void updateDatabase();
+	
+	public JFrame getMainFrame();
 }
