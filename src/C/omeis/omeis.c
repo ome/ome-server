@@ -319,14 +319,14 @@ char *pixIDfile="Pixels/lastPix";
 
 /*
   This opens the repository file used by PixelsRep for reading or writing.
-  rorw may be set to 'w' (write), 'r' (read), or 'n' (new file).
+  rorw may be set to 'w' (write), 'r' (read), 'i' (info), or 'n' (new file).
 */
 int openPixelsFile (PixelsRep *myPixels, char rorw) {
 char *mmap_info=NULL,*mmap_rep=NULL;
 pixHeader *head;
 struct stat fStat;
 	
-	if (rorw == 'r') {
+	if (rorw == 'r' || rorw == 'i') {
 		if (myPixels->fd_rep < 0)
 			if ( (myPixels->fd_rep = open (myPixels->path_rep, O_RDONLY, 0600)) < 0)
 				return (-1);
@@ -1507,7 +1507,7 @@ char **cgivars=param;
 		case M_PIXELSINFO:
         	if (!ID) return (-1);
 
-			if (! (thePixels = GetPixels (ID,'r',1)) ) {
+			if (! (thePixels = GetPixels (ID,'i',1)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
