@@ -249,14 +249,14 @@ sub scan_dir {
 
 sub add_user {
     my ($user, $homedir, $group) = @_;
-    my $add_user = $os_specific{$^O}->{add_user};
+    my $add_user = $os_specific{$OSNAME}->{add_user};
 
     return &$add_user($user, $homedir, $group);
 }
 
 sub add_group {
     my ($group) = shift;
-    my $add_group = $os_specific{$^O}->{add_group};
+    my $add_group = $os_specific{$OSNAME}->{add_group};
 
     return &$add_group($group);
 }
@@ -374,5 +374,16 @@ sub delete_tree {
     return  $total_entries==$deleted ? 1 : 0 ;
 }
 
+
+# Checks a Perl module's existance
+#
+# RETURNS	Undef if the module isn't installed
+# 		1 if the module is installed and it is one of the versions
+#		  supplied 
+# 		0 if the module is installed and it isn't one of the version
+#		  supplied
+sub check_module {
+    my ($module, @versions) = @_;
+}
 
 1;
