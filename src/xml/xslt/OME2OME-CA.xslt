@@ -149,8 +149,11 @@
 					</xsl:attribute>
 				</xsl:element>
 				<xsl:apply-templates select = "OME:ExperimentRef"/>
-				<xsl:apply-templates select = "OME:GroupRef"/>
-				<xsl:apply-templates select = "OME:DatasetRef"/>
+
+				<!-- These do not have semantic types -->
+				<!--xsl:apply-templates select = "OME:GroupRef"/-->
+				<!--xsl:apply-templates select = "OME:DatasetRef"/-->
+
 				<xsl:apply-templates select = "OME:InstrumentRef"/>
 				<xsl:apply-templates select = "OME:ObjectiveRef"/>
 				<xsl:apply-templates select = "OME:ImagingEnvironment"/>
