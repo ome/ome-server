@@ -453,8 +453,8 @@ sub __callOMEIS {
         if ($SHOW_CALLS) {
             print STDERR "Calling remote OMEIS: $server_path\n";
             print STDERR "  Params: \n";
-            foreach my $k (keys %params) {
-                print STDERR "    '$k' = '",$params{$k},"'\n";
+            for (my $i = 0; $i < scalar( @params); $i+=2 ) {
+                print STDERR "    '".$params[$i]."' = '".$params[$i+1]."'\n";
             }
         }
         my $request =
@@ -576,6 +576,28 @@ sub importOMEfile {
                                      FileID   => $fileID);
     die "Error retrieving xml stream" unless defined $xmlString;
     return $xmlString;
+}
+
+=head2 exportOMEFile
+
+	my $xmlStringWithBinData = OME::Image::Server->exportOMEFile($filename, $encodeAsBigEndian);
+
+Finishes the export of an ome file by inserting the Binary Pixel Data
+and returning the resultant document.
+
+=cut
+
+sub exportOMEFile {
+    my $proto = shift;
+    my ($filename, $encodeAsBigEndian) = @_;
+    my $huge_xml_string = $proto->__callOMEIS(Method => 'ExportOMEfile',
+                                     File   => $filename,
+                                     (defined $encodeAsBigEndian ?
+                                     	( BigEndian => $encodeAsBigEndian ) :
+                                     	()
+                                     ));
+    die "Error uploading file" unless defined $huge_xml_string;
+    return $huge_xml_string;
 }
 
 =head2 isOMExml
