@@ -37,6 +37,72 @@
 
 package OME::ImportExport::DataHistoryExport;
 
+=head1 NAME
+
+OME::ImportExport::DataHistoryExport - Export module executions to describe how data was produced
+
+=head1 SYNOPSIS
+
+	# Make a new DataHistory exporter and a new XML document
+	my $exporter = new OME::ImportExport::DataHistoryExport(session => $session);
+
+	# Or - make a new Hierarchy exporter for an existing XML document
+	my $exporter = new OME::Tasks::OMEExport (session => $session);
+	my $doc = $exporter->doc();
+	my $exportH = new OME::ImportExport::DataHistoryExport(session => $session, _doc => $doc);
+
+	# Build a DOM from a list of objects.
+	$exportH->buildDOM (@OMEobjects);
+	
+	# Write an XML file, get the XML as a string, or get the XML document (XML::LibXML), 
+	$exportH->exportFile ();
+	my $xml = $exportH->exportXML ();
+	my $doc = $exportH->doc();
+
+=head1 DESCRIPTION
+
+This class is responsible for exporting the information necessary to reconstruct how data was introduced to the 
+system or derived. The xml produced is tied to the data history schema (http://www.openmicroscopy.org/XMLschemas/DataHistory/IR3/DataHistory.xsd).
+
+=head1 METHODS
+
+=head2 new
+
+	my $exporter = new OME::ImportExport::DataHistoryExport(session => $session, _doc => $doc );
+
+_doc is optional, session is not
+
+=head2 buildDOM
+
+	# builds a data history for objects passed in as parameters.
+	$exporter->buildDOM( [$obj1, $obj2, ...] );
+
+=head2 findDependencies
+
+	# returns objects not in the list that will be referenced when the history of the list is exported
+	$exporter->findDependencies( [$obj1, $obj2, ...] );
+
+=head2 exportFile
+
+	# exports the loaded DOM into a file.
+	$exporter->exportFile( '/path/filename' );
+
+=head2 exportXML
+
+	# returns the DOM as a string of XML.
+	print $exporter->exportXML( );
+
+=head1 AUTHOR
+
+Josiah Johnston <siah@nih.gov>
+
+=head1 SEE ALSO
+
+L<OME::ModuleExecution|OME::ModuleExecution>, L<OME::Module|OME::Module>, L<OME::ModuleExecution::ActualInputs|OME::ModuleExecution::ActualInputs>, 
+
+=cut
+
+
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
@@ -56,7 +122,7 @@ sub new {
 	my ($proto, %params) = @_;
 	my $class = ref($proto) || $proto;
 
-	my @fieldsILike = qw(session _doc debug _STDelement);
+	my @fieldsILike = qw(session _doc);
 
 	my $self;
 
@@ -99,13 +165,39 @@ sub doc {
 	return ($self->{_doc});
 }
 
+sub findDependencies {
+	my ($self, $objects) = @_;
+	logdie ref ($self)."->buildDOM:	 Need a reference to an array of objects."
+		unless ref($objects) eq 'ARRAY';
+
+	my $session = $self->{session};
+	my $factory = $session->Factory();
+	
+	my %dataset_dependencies;
+	my @known_datasets;
+	
+	# Go through the list of objects and export STDs for the ones that inherit from OME::SemanticType::Superclass.
+	foreach (@$objects) {
+		if( ref($_) eq "OME::Dataset") {
+			push( @known_datasets, $_ );
+		} elsif( UNIVERSAL::isa($_,"OME::SemanticType::Superclass") ){
+			my $mex = $_->module_execution();
+			my $dataset; $dataset = $mex->dataset() if $mex;
+			$dataset_dependencies{ $dataset->id } = $dataset
+				if( $dataset and not exists $dataset_dependencies{ $dataset->id } );
+		}
+	}
+	
+	delete $dataset_dependencies{ $_->id() } foreach @known_datasets;
+	
+	return values %dataset_dependencies;
+}
 
 sub buildDOM {
 	my ($self, $objects, %flags) = @_;
 	logdie ref ($self)."->buildDOM:	 Need a reference to an array of objects."
 		unless ref($objects) eq 'ARRAY';
 
-	my $debug	= $self->{debug};
 	my $session = $self->{session};
 	my $factory = $session->Factory();
 	
@@ -160,12 +252,14 @@ sub HistoryElement {
 # Export the History for an OME::SemanticType::Superclass object.
 sub exportHistory {
 	my ($self, $attr) = @_;
-	my $MEX = $attr->module_execution();
+
 	my $factory = $self->{session}->Factory();
-	my $exportedMEXs = $self->{_exportedMEXs};
 	my $LSIDresolver  = $self->{_LSIDresolver};
+
+	my $exportedMEXs = $self->{_exportedMEXs};
 	my $DOM = $self->doc();
 	my $historyElement = $self->HistoryElement();
+	my $MEX = $attr->module_execution();
 	my @MEXs2export;
 
 	if( not defined $MEX) {
@@ -190,6 +284,7 @@ sub exportHistory {
 		# thisMEX is the mex currently being exported.
 		my $thisMEX = pop( @MEXs2export );
 		next if exists $exportedMEXs->{$thisMEX};
+		next unless $thisMEX->module;
 		
 		# add upstream MEXs to export list.
 		push( @MEXs2export, grep { not exists $exportedMEXs->{$_} } map( $_->input_module_execution() , $thisMEX->inputs() ) );
