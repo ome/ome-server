@@ -44,17 +44,11 @@ ViewerPreferences.ScaleSliderWidth = 50;
 /********************************************************************************************/
 
 /*****
-
-	constructor
-		image = OMEimage
-		
-		make instance in viewer to be scale
-		
-	tested
-
+	ViewerPreferences
+		constructor
 *****/
-function ViewerPreferences( resizeToolBox, resizeMultiToolBox, savePreferences ) {
-	this.init( resizeToolBox, resizeMultiToolBox, savePreferences );
+function ViewerPreferences( a ) {
+	this.init( a );
 }
 
 ViewerPreferences.prototype.buildToolBox = function( controlLayer ) {
@@ -139,12 +133,10 @@ ViewerPreferences.prototype.setWindowControllers = function(windowControllers) {
 
 ViewerPreferences.prototype.init = function(imageControlToolbox) {
 	this.initialized         = true;
-	this.imageControlToolbox = imageControlToolbox;
 };
 
 ViewerPreferences.prototype.resizeToolboxes = function( scale, applyToAll ) {
 	this.toolBoxSizeSlider.setValue(scale);
-	this.imageControlToolbox.setScale(1 + scale/ViewerPreferences.ScaleSliderWidth );
 	for( i in this.windowControllers ) {
 		if( applyToAll || this.windowControllers[i].toolBox != this.toolBox ) {
 			this.windowControllers[i].toolBox.setScale(1 + scale/ViewerPreferences.ScaleSliderWidth );
