@@ -144,7 +144,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 	 */
 	private ModulePaletteFrame frame;
 	
-		
+	
 	public PPaletteCanvas(ModulePaletteFrame frame) {
 		super();
 		this.frame = frame;
@@ -479,6 +479,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 			childHeight = (float) b.getHeight();
 			childWidth = (float) b.getWidth();
 		
+
 			x += childWidth+HGAP;
 			// track the height of the row
 			if (childHeight > maxHeight)
