@@ -167,20 +167,20 @@ sub serve {
 	    return;
 	}
     }
-    my ($result,$html) = $self->createOMEPage();
+    my ($result,$content) = $self->createOMEPage();
 
-    if ($result eq 'HTML' && defined $html) {
-	#print "***a ".ref($self->CGI())."\n";
-	print $self->CGI()->header();
-	#print "***b\n";
-	print $html;
-	#print "***c\n";
-    } elsif ($result eq 'REDIRECT' && defined $html) {
-	$self->CGI()->redirect($html);
+    if ($result eq 'HTML' && defined $content) {
+		print $self->CGI()->header('text/html');
+		print $content;
+    } elsif ($result eq 'IMAGE' && defined $content) {
+		print $self->CGI()->header($self->contentType());
+		print $content;
+    } elsif ($result eq 'REDIRECT' && defined $content) {
+		$self->CGI()->redirect($content);
     } else {
-	my $class = ref($self);
-	print $self->CGI()->header(-type => 'text/html');
-	print "You shouldn't be accessing the $class page.";
+		my $class = ref($self);
+		print $self->CGI()->header(-type => 'text/html');
+		print "You shouldn't be accessing the $class page.";
     }
 }
 
@@ -375,6 +375,13 @@ sub font {
     my @content = @_;
 
     return $CGI->font(combine($self->{fontDefaults},$params),@content);
+}
+
+
+# contentType
+# -----------------
+sub contentType {
+	return 'text/html';
 }
 
 
