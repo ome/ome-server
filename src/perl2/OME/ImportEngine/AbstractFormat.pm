@@ -259,12 +259,8 @@ sub __newImage {
               };
 
     my $image = $session->Factory->newObject("OME::Image", $recordData);
-    if (!defined $image) {
-	my $status = "Can\'t create new image";
-    }
 
     return $image;
-
 }
 
 
