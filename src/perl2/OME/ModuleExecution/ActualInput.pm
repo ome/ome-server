@@ -93,16 +93,6 @@ __PACKAGE__->addColumn(input_module_execution => 'input_module_execution_id',
                         ForeignKey => 'module_executions',
                        });
 
-sub attributes {
-	my $self    = shift;
-	my $factory = $self->Session()->Factory();
-	return $factory->findObjects( 
-		$self->formal_input()->semantic_type,
-		module_execution_id => $self->input_module_execution_id
-	);
-}
-
-
 =head1 METHODS (C<ActualInput>)
 
 The following methods are available to C<ActualInput> in addition to

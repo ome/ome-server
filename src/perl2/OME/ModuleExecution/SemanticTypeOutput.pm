@@ -64,15 +64,6 @@ __PACKAGE__->addColumn(semantic_type => 'semantic_type_id',
                         ForeignKey => 'semantic_types',
                        });
 
-sub attributes {
-	my $self    = shift;
-	my $factory = $self->Session()->Factory();
-	return $factory->findObjects( 
-		$self->semantic_type,
-		module_execution_id => $self->module_execution_id
-	);
-}
-
 1;
 
 __END__
