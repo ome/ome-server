@@ -284,6 +284,8 @@ OME Modules - Table of Contents
 
 =item L<OME::LSID>
 
+=item L<OME::Tasks::LSIDManager>
+
 =item L<OME::Project::DatasetMap>
 
 =item L<OME::Remote>
