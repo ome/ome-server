@@ -36,7 +36,8 @@
 
 package OME;
 use strict;
-our $VERSION = 2.001_000;
+our $VERSION = 2.003_000;
+our $VERSION_STRING = '2.3.0';
 
 use Config;
 use Log::Agent;
