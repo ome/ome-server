@@ -101,16 +101,12 @@ sub _renderData {
 			my $img_name = $obj->name();
 			$original_files = [ grep( $_->Path() =~ m/^$img_name/, @$original_files ) ]
 				if( $original_files and scalar( @$original_files ) > 1);
-			my $original_file = $original_files->[0];
-			if( scalar( @$original_files) eq 1 && $original_file && $original_file->Repository() ) { 
-				$record{ $request_string } = $self->render( 
-					$original_file, 
-					( $request->{ render } or 'ref' ), 
-					$request 
-				);
-			} else {
-				$record{ $request_string } = undef;
-			}
+			
+			my @original_file_links = map( 
+				$self->render( $_, ( $request->{ render } or 'ref' ), $request ),
+				@$original_files
+			);
+			$record{ $request_string } = join( ', ', @original_file_links );
 		}
 	}
 	
