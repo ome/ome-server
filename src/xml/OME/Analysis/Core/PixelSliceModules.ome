@@ -68,7 +68,7 @@
         </FormalInput>
 
         <FormalOutput
-           Name="Pixels slices"
+           Name="Slices"
            SemanticTypeName="PixelsSlice"
            Count="+">
           <Description>
