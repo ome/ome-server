@@ -39,6 +39,12 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.vis.ome.CChain;
+import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.util.PBounds;
+import java.awt.Color;
+
+
 /** 
  * A subclass of {@link PCategoryBox} that is used to provide a colored 
  * background for {@link PChain} widgets in the {@link PChainLibraryCannvas}
@@ -51,14 +57,27 @@ package org.openmicroscopy.vis.piccolo;
 public class PChainBox extends PCategoryBox {
 	
 	/**
+	 * The color for display of the lock icon
+	 */
+	private static final Color LOCK_ICON_COLOR= new Color(255,0,0,100);
+	
+	/**
+	 * The size of an orthogonal side of the lock icon
+	 */
+	public static final int SIZE_LENGTH=50;
+	
+	/**
 	 * The ID of the chain being stored
 	 */
 	private int chainID=0;
 	
-	public PChainBox(int id, float x, float y,float w,float h) {
-		super(x,y,w,h);
-		chainID = id;
-	}	
+	private CChain chain;
+	
+	public PChainBox(CChain chain, float x, float y) {
+		super(x,y);
+		this.chain = chain;
+		chainID = chain.getID();
+	}
 	
 	/**
 	 * 
@@ -66,5 +85,28 @@ public class PChainBox extends PCategoryBox {
 	 */
 	public int getChainID() {
 		return chainID;
+	}
+	
+	
+	public void setExtent(double width,double height) {
+		super.setExtent(width,height);
+		// add a triangle in the corner.
+		if (chain.getLocked()) {
+			PBounds b = getFullBoundsReference();
+			addLockIcon((float) (b.getX()+width),(float) b.getY());
+		}
+	}
+		
+	/**
+	 * Add the icon indicating that the chain is locked
+	 */
+	private void addLockIcon(float x,float y) {
+		PPath lock = new PPath();
+		lock.setPaint(LOCK_ICON_COLOR);
+		lock.moveTo(x,y);
+		lock.lineTo(x-SIZE_LENGTH,y);
+		lock.lineTo(x,y+SIZE_LENGTH);
+		lock.lineTo(x,y);
+		addChild(lock);
 	}
 }
