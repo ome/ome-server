@@ -284,7 +284,7 @@ sub processDOM {
               "->processDOM: table not found. creating it.\n";
             my $data = {
                         table_name  => $tName,
-                        description => join("  ",@{$table->{description}}),
+                        description => $table->{description}->[0],
                         granularity => $table->{granularity},
                        };
             logdbg "debug", ref ($self) . 
@@ -373,8 +373,6 @@ sub processDOM {
             logdbg "debug", ref ($self) .
               "->processDOM: found table. using existing table.\n";
             $newTable = $DT_tables[0];
-            $newTable->description ($newTable->description().join("  ",@{$table->{description}}));
-            push(@commitOnSuccessfulImport, $newTable);
         }
         #
         # END 'Process a Table'
@@ -425,7 +423,7 @@ sub processDOM {
                 my $data     = {
                                 'data_table_id'  => $newTable->id(),
                                 'column_name'    => $cName,
-                                'description'    => join ('  ',@{$column->{description}}),
+                                'description'    => $column->{description}->[0],
                                 'sql_type'       => 'foo',
 #                                'sql_type'       => $dataType,
 #                                'sql_type'       => $sqlDataType,  # NOT!
@@ -526,8 +524,6 @@ sub processDOM {
                 logdbg "debug", ref ($self) . 
                   "->processDOM: found column. using existing column.\n";
                 $newColumn = $cols;
-                $newColumn->description ($newColumn->description().join ('  ',@{$column->{description}}));
-                push(@commitOnSuccessfulImport, $newColumn);
             }
             
             $dataColumns{$tName.'.'.$cName} = $newColumn;
