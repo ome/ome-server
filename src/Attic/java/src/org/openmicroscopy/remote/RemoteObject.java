@@ -143,7 +143,7 @@ public class RemoteObject
     {
         //System.err.println("finalize "+getClass()+"."+reference);
         if ((caller != null) && (session.isActive()))
-            caller.freeObject(this);
+            caller.freeObject(getReference());
     }
 
     /**
@@ -502,16 +502,19 @@ public class RemoteObject
     protected List getRemoteListElement(String perlClass,
                                         String element)
     {
-	   	Object o = caller.dispatch(this,element);
-	   	if (o instanceof List)
-	   	{
+        Object o = caller.dispatch(this,element);
+        if (o instanceof List)
+        {
             List refList = (List) o;
             List objList = new ArrayList();
             Iterator i = refList.iterator();
             RemoteObjectCache cache = getRemoteSession().getObjectCache();
             while (i.hasNext())
-                objList.add(cache.getObject(perlClass,(String) i.next()));
-			return objList;
+            {
+                Object obj = cache.getObject(perlClass,(String) i.next());
+                objList.add(obj);
+            }
+            return objList;
         } else if (o == null) {
             return null;
         } else {
