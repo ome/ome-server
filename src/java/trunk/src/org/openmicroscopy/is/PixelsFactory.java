@@ -27,9 +27,6 @@
  *------------------------------------------------------------------------------
  */
 
-
-
-
 /*------------------------------------------------------------------------------
  *
  * Written by:    Douglas Creager <dcreager@alum.mit.edu>
@@ -37,22 +34,25 @@
  *------------------------------------------------------------------------------
  */
 
-
-
-
 package org.openmicroscopy.is;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 
 import java.util.Map;
 import java.util.HashMap;
 
-import org.openmicroscopy.ds.RemoteCaller;
+import org.openmicroscopy.ds.RemoteServices;
+import org.openmicroscopy.ds.AbstractService;
+import org.openmicroscopy.ds.DataFactory;
 import org.openmicroscopy.ds.DataException;
+import org.openmicroscopy.ds.Criteria;
+import org.openmicroscopy.ds.dto.Image;
+import org.openmicroscopy.ds.dto.ModuleExecution;
 import org.openmicroscopy.ds.st.Pixels;
+import org.openmicroscopy.ds.st.OriginalFile;
 import org.openmicroscopy.ds.st.Repository;
 
 /**
@@ -73,6 +73,7 @@ import org.openmicroscopy.ds.st.Repository;
  */
 
 public class PixelsFactory
+    extends AbstractService
 {
     /**
      * Stores all of the previously seen image servers.  It is
@@ -85,20 +86,30 @@ public class PixelsFactory
     private Map imageServers;
 
     /**
-     * The {@link RemoteCaller} object used to authenticate with the
+     * The {@link DataFactory} object used to authenticate with the
      * image servers.
      */
-    private RemoteCaller remoteCaller;
+    private DataFactory factory;
+
+    public PixelsFactory() { super(); }
 
     /**
      * Creates a new <code>PixelsFactory</code> which uses the
-     * connection information in the given {@link RemoteCaller} to
+     * connection information in the given {@link DataFactory} to
      * authenticate with each image server.
      */
-    public PixelsFactory(RemoteCaller caller)
+    public PixelsFactory(DataFactory factory)
     {
         super();
-        this.remoteCaller = caller;
+        initializeService(RemoteServices.
+                          getInstance(factory.getRemoteCaller()));
+    }
+
+    public void initializeService(RemoteServices services)
+    {
+        super.initializeService(services);
+        this.factory = (DataFactory)
+            services.getService(DataFactory.class);
         this.imageServers = new HashMap();
     }
 
@@ -120,7 +131,7 @@ public class PixelsFactory
                 throw new ImageServerException("Repository contains a null image server URL");
 
             is = ImageServer.
-                getHTTPImageServer(url,remoteCaller.getSessionKey());
+                getHTTPImageServer(url,factory.getSessionKey());
             imageServers.put(id,is);
         }
 
@@ -145,6 +156,27 @@ public class PixelsFactory
             return activateRepository(rep);
         } catch (DataException e) {
             throw new ImageServerException("Pixels did not contain enough connection information to connect to image server");
+        }
+    }
+
+    /**
+     * Retrieves or creates an {@link ImageServer} object for
+     * retrieving information about the given OriginalFile attribute.
+     */
+
+    private ImageServer activateOriginalFile(OriginalFile file)
+        throws ImageServerException
+    {
+        try
+        {
+            Number fileID = file.getFileID();
+            if (fileID == null)
+                throw new ImageServerException("OriginalFile contains a null file ID");
+
+            Repository rep = file.getRepository();
+            return activateRepository(rep);
+        } catch (DataException e) {
+            throw new ImageServerException("OriginalFile did not contain enough connection information to connect to image server");
         }
     }
 
@@ -188,7 +220,10 @@ public class PixelsFactory
      * @throws ImageServerException if there was an error connecting
      * to the image server or creating the pixels file
      */
-    public Pixels newPixels(int sizeX,
+    public Pixels newPixels(Repository repository,
+                            Image image,
+                            ModuleExecution mex,
+                            int sizeX,
                             int sizeY,
                             int sizeZ,
                             int sizeC,
@@ -197,7 +232,36 @@ public class PixelsFactory
                             boolean isSigned,
                             boolean isFloat)
         throws ImageServerException
-    { return null; }
+    {
+        if (repository == null)
+            throw new IllegalArgumentException("Repository cannot be null");
+        if (image == null)
+            throw new IllegalArgumentException("Image cannot be null");
+        if (mex == null)
+            throw new IllegalArgumentException("MEX cannot be null");
+
+        ImageServer is = activateRepository(repository);
+        long pixelsID = is.newPixels(sizeX,sizeY,sizeZ,sizeC,sizeT,
+                                     bytesPerPixel,isSigned,isFloat);
+
+        Pixels pixels = (Pixels) factory.createNew("Pixels");
+        pixels.setRepository(repository);
+        pixels.setImage(image);
+        pixels.setModuleExecution(mex);
+        pixels.setImageServerID(new Long(pixelsID));
+        pixels.setSizeX(new Integer(sizeX));
+        pixels.setSizeY(new Integer(sizeY));
+        pixels.setSizeZ(new Integer(sizeZ));
+        pixels.setSizeC(new Integer(sizeC));
+        pixels.setSizeT(new Integer(sizeT));
+        pixels.setBitsPerPixel(new Integer(bytesPerPixel/8));
+        pixels.setPixelType(PixelTypes.getPixelType(bytesPerPixel,
+                                                    isSigned,
+                                                    isFloat));
+        factory.markForUpdate(pixels);
+
+        return pixels;
+    }
 
     /**
      * <p>Creates a new pixels file on the image server.  The
@@ -227,9 +291,24 @@ public class PixelsFactory
      * @throws ImageServerException if there was an error connecting
      * to the image server or creating the pixels file
      */
-    public Pixels newPixels(final PixelsFileFormat format)
+    public Pixels newPixels(Repository repository,
+                            Image image,
+                            ModuleExecution mex,
+                            PixelsFileFormat format)
         throws ImageServerException
-    { return null; }
+    {
+        return newPixels(repository,
+                         image,
+                         mex,
+                         format.getSizeX(),
+                         format.getSizeY(),
+                         format.getSizeZ(),
+                         format.getSizeC(),
+                         format.getSizeT(),
+                         format.getBytesPerPixel(),
+                         format.isSigned(),
+                         format.isFloat());
+    }
 
     /**
      * Returns the properties of a previously created pixels file.
@@ -677,7 +756,12 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        is.finishPixels(pixels.getImageServerID().longValue());
+        long oldID = pixels.getImageServerID().longValue();
+        long newID = is.finishPixels(oldID);
+        if (oldID != newID)
+            pixels.setImageServerID(new Long(newID));
+        String sha1 = is.getPixelsSHA1(newID);
+        pixels.setFileSHA1(sha1);
     }
 
     /**
@@ -714,10 +798,10 @@ public class PixelsFactory
      * @param pixels a {@link Pixels} attribute
      * @param settings a {@link CompositingSettings} object describing
      * the compositing which should be performed
-     * @return an AWT {@link Image} suitable for display
+     * @return an AWT {@link BufferedImage} suitable for display
      */
-    public Image getComposite(Pixels pixels,
-                              CompositingSettings settings)
+    public BufferedImage getComposite(Pixels pixels,
+                                      CompositingSettings settings)
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
@@ -735,7 +819,7 @@ public class PixelsFactory
      * the compositing which should be saved
      */
     public void setThumbnail(Pixels pixels,
-                                      CompositingSettings settings)
+                             CompositingSettings settings)
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
@@ -749,10 +833,327 @@ public class PixelsFactory
      *
      * @param pixels a {@link Pixels} attribute
      */
-    public Image getThumbnail(Pixels pixels)
+    public BufferedImage getThumbnail(Pixels pixels)
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
         return is.getThumbnail(pixels.getImageServerID().longValue());
     }
+
+    /**
+     */
+    public Repository findRepository(long fileSize)
+        throws ImageServerException
+    {
+        Criteria crit = new Criteria();
+        crit.addWantedField("id");
+        crit.addWantedField("ImageServerURL");
+        crit.addFilter("IsLocal",Boolean.FALSE);
+
+        Repository result = (Repository) factory.retrieve("Repository",crit);
+        if (result == null)
+            throw new ImageServerException("Could not find a repository");
+        return result;
+    }
+
+    /**
+     * <p>Transfers the specified file to the image server, returning
+     * an {@link OriginalFile} attribute.  This object can then be
+     * used in calls to the <code>convert*</code> methods, allowing a
+     * new pixels file to be created from the contents of the original
+     * file.</p>
+     *
+     * @param repository the repository to upload to
+     * @param file the file to upload
+     * @return an {@link OriginalFile} attribute
+     * @throws ImageServerException if there was an error contacting
+     * the image server or uploading the file
+     * @throws FileNotFoundException if the specified file cannot be
+     * read
+     */
+    public OriginalFile uploadFile(Repository repository,
+                                   ModuleExecution mex,
+                                   File file)
+        throws ImageServerException, FileNotFoundException
+    {
+        if (repository == null)
+            throw new IllegalArgumentException("Repository cannot be null");
+
+        ImageServer is = activateRepository(repository);
+        long fileID = is.uploadFile(file);
+        String sha1 = is.getFileSHA1(fileID);
+
+        OriginalFile fileAttr = (OriginalFile) factory.createNew("OriginalFile");
+        fileAttr.setRepository(repository);
+        fileAttr.setModuleExecution(mex);
+        fileAttr.setFileID(new Long(fileID));
+        fileAttr.setSHA1(sha1);
+        factory.markForUpdate(fileAttr);
+
+        return fileAttr;
+    }
+
+    /**
+     * Returns the original filename and length of a previously
+     * uploaded file.
+     *
+     * @param file an {@link OriginalFile} attribute
+     * @return a {@link FileInfo} object describing the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or retrieving the file
+     */
+    public FileInfo getFileInfo(OriginalFile file)
+        throws ImageServerException
+    {
+        ImageServer is = activateOriginalFile(file);
+        return is.getFileInfo(file.getFileID().longValue());
+    }
+
+    /**
+     * Returns the SHA-1 digest of a previously uploaded file.  This
+     * SHA-1 is also cached in the <code>SHA1</code> element of the
+     * OriginalFile attribute, so this method will rarely need to be
+     * called.
+     *
+     * @param file an {@link OriginalFile} attribute
+     * @return the SHA-1 digest of the pixels file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public String getFileSHA1(OriginalFile file)
+        throws ImageServerException
+    {
+        ImageServer is = activateOriginalFile(file);
+        return is.getFileSHA1(file.getFileID().longValue());
+    }
+
+    /**
+     * Returns the location of the specified file in the image
+     * server's filesystem.
+     * @param file an {@link OriginalFile} attribute
+     * @return the image-server-local path to the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public String getFileServerPath(OriginalFile file)
+        throws ImageServerException
+    {
+        ImageServer is = activateOriginalFile(file);
+        return is.getFileServerPath(file.getFileID().longValue());
+    }
+
+    /**
+     * Reads a portion of an uploaded file, without using any caching.
+     * This is usually not the method you should use to read from an
+     * image server file; the {@link #readFile} method implements a
+     * limited form of caching and can be much more efficient.
+     *
+     * @see #readFile
+     * @param file an {@link OriginalFile} attribute
+     * @param offset the offset into the file to start reading from
+     * @param length the number of bytes to read from the file
+     * @return the data read from the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public byte[] readFileWithoutCaching(OriginalFile file,
+                                         long offset,
+                                         int  length)
+        throws ImageServerException
+    {
+        ImageServer is = activateOriginalFile(file);
+        return is.readFileWithoutCaching(file.getFileID().longValue(),
+                                         offset,length);
+    }
+
+    /**
+     * <p>Reads a portion of an uploaded file.  The method implements
+     * a limited form of caching, so that client code can read small,
+     * spatially related portions of the file without generating too
+     * many I/O calls to the image server.</p>
+     *
+     * <p>The caching is implemented entirely by the {@link
+     * ImageServer} instance of the OriginalFile's repository.  Please
+     * see the {@link ImageServer#readFile} method for more
+     * information.</p>
+     *
+     * <p><b>This method is not thread-safe</b>; it is up to the
+     * caller to perform any necessary synchronization.  If multiple
+     * threads try to call this method simultaneously, Bad Things
+     * could happen.</p>
+     *
+     * @see ImageServer#readFile
+     * @param file an {@link OriginalFile} attribute
+     * @param offset the offset into the file to start reading from
+     * @param length the number of bytes to read from the file
+     * @return the data read from the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public byte[] readFile(OriginalFile file,
+                           long offset, int length)
+        throws ImageServerException
+    {
+        ImageServer is = activateOriginalFile(file);
+        return is.readFile(file.getFileID().longValue(),
+                           offset,length);
+    }
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
+     * server will start reading the pixels from the specified offset,
+     * which should be expressed as bytes from the beginning of the
+     * file.</p>
+     *
+     * <p>This method copies a single XYZ stack of pixels.  The pixels
+     * in the original file should be in XYZ order, and should match
+     * the storage type declared for the new pixels file.  The stack
+     * is specified by its C and T coordinates, which have 0-based
+     * indices.  The endian-ness of the uploaded file should be
+     * specified; if this differs from the endian-ness of the new
+     * pixels file, byte swapping will be performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixels a {@link Pixels} attribute
+     * @param theC the C index of the desired stack
+     * @param theT the T index of the desired stack
+     * @param file an {@link OriginalFile} attribute
+     * @param offset the offset into the file to start reading from
+     * @param bigEndian the endianness of the pixels in the uploaded
+     * file
+     */
+    public long convertStack(Pixels pixels,
+                             int theC, int theT,
+                             OriginalFile file, long offset,
+                             boolean bigEndian)
+        throws ImageServerException
+    {
+        ImageServer pis = activatePixels(pixels);
+        ImageServer fis = activateOriginalFile(file);
+
+        if (!pis.equals(fis))
+            throw new ImageServerException("Original file and pixels file must be on same image server");
+
+        return pis.convertStack(pixels.getImageServerID().longValue(),
+                                theC,theT,
+                                file.getFileID().longValue(),
+                                offset,bigEndian);
+    }
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
+     * server will start reading the pixels from the specified offset,
+     * which should be expressed as bytes from the beginning of the
+     * file.</p>
+     *
+     * <p>This method copies a single XY plane of pixels.  The pixels
+     * in the original file should be in XY order, and should match
+     * the storage type declared for the new pixels file.  The plane
+     * is specified by its Z, C and T coordinates, which have 0-based
+     * indices.  The endian-ness of the uploaded file should be
+     * specified; if this differs from the endian-ness of the new
+     * pixels file, byte swapping will be performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixels a {@link Pixels} attribute
+     * @param theZ the Z index of the desired plane
+     * @param theC the C index of the desired plane
+     * @param theT the T index of the desired plane
+     * @param file an {@link OriginalFile} attribute
+     * @param offset the offset into the file to start reading from
+     * @param bigEndian the endianness of the pixels in the uploaded
+     * file
+     */
+    public long convertPlane(Pixels pixels,
+                             int theZ, int theC, int theT,
+                             OriginalFile file, long offset,
+                             boolean bigEndian)
+        throws ImageServerException
+    {
+        ImageServer pis = activatePixels(pixels);
+        ImageServer fis = activateOriginalFile(file);
+
+        if (!pis.equals(fis))
+            throw new ImageServerException("Original file and pixels file must be on same image server");
+
+        return pis.convertPlane(pixels.getImageServerID().longValue(),
+                                theZ,theC,theT,
+                                file.getFileID().longValue(),
+                                offset,bigEndian);
+    }
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
+     * server will start reading the pixels from the specified offset,
+     * which should be expressed as bytes from the beginning of the
+     * file.</p>
+     *
+     * <p>This method copies a subset of rows of a single plane of
+     * pixels.  The pixels in the original file should be in XY order,
+     * and should match the storage type declared for the new pixels
+     * file.  The rows are specified by their Z, C and T coordinates,
+     * and by an initial Y coordinate and number of rows to copy.  All
+     * of the coordinates have 0-based indices.  The endian-ness of
+     * the uploaded file should be specified; if this differs from the
+     * endian-ness of the new pixels file, byte swapping will be
+     * performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixels a {@link Pixels} attribute
+     * @param theY the first row of the desired region
+     * @param numRows the number of rows in the desired region
+     * @param theZ the Z index of the desired region
+     * @param theC the C index of the desired region
+     * @param theT the T index of the desired region
+     * @param file an {@link OriginalFile} attribute
+     * @param offset the offset into the file to start reading from
+     * @param bigEndian the endianness of the pixels in the uploaded
+     * file
+     */
+    public long convertRows(Pixels pixels,
+                            int theY, int numRows,
+                            int theZ, int theC, int theT,
+                            OriginalFile file, long offset,
+                            boolean bigEndian)
+        throws ImageServerException
+    {
+        ImageServer pis = activatePixels(pixels);
+        ImageServer fis = activateOriginalFile(file);
+
+        if (!pis.equals(fis))
+            throw new ImageServerException("Original file and pixels file must be on same image server");
+
+        return pis.convertRows(pixels.getImageServerID().longValue(),
+                               theY,numRows,theZ,theC,theT,
+                               file.getFileID().longValue(),
+                               offset,bigEndian);
+    }
+
 }
