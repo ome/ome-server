@@ -1,0 +1,8 @@
+Changes
+MANIFEST
+Makefile.PL
+Pix.pm
+Pix.xs
+test.pl
+libpix.c
+libpix.h

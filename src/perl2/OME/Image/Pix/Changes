@@ -1,0 +1,6 @@
+Revision history for Perl extension OME::Image::Pix.
+
+0.01  Thu Nov  7 21:34:28 2002
+	- original version; created by h2xs 1.2 with options
+		-A -n OME::Image::Pix ../libpix.h
+
