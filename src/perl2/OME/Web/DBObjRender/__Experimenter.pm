@@ -57,13 +57,13 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Web::DBObjRender);
 
-=head2 getName
+=head2 _getName
 
 FirstName LastName
 
 =cut
 
-sub getName {
+sub _getName {
 	my ($self, $obj, $options) = @_;
 
 	my $name = $obj->FirstName." ".$obj->LastName;
@@ -97,10 +97,12 @@ returns a dropdown list of Experimenter names valued by id.
 
 =cut
 
-sub getRefSearchField {
+sub _getRefSearchField {
 	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
 	my $factory = $self->Session()->Factory();
+	$default = $self->Session()->experimenter_id()
+		unless $default;
 	
 	my (undef, undef, $from_formal_name) = $self->_loadTypeAndGetInfo( $from_type );
 
@@ -111,6 +113,7 @@ sub getRefSearchField {
 	$experimenter_names{''} = 'All';
 
 	my $q = $self->CGI();
+	$q->param( $accessor_to_type, $default ) unless defined $q->param( $accessor_to_type );
 	return (
 		$q->popup_menu( 
 			-name     => $accessor_to_type,
