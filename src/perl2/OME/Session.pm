@@ -50,6 +50,7 @@ OME::Session - a user's login session with OME
 	my $session = $manager->createSession($username,$password);
 
 	my $factory = $session->Factory();
+	my $config = $session->Configuration();
 
 	# Create and edit several DBObject's via the factory
 	$session->commitTransaction();
@@ -60,7 +61,12 @@ OME::Session - a user's login session with OME
 
 =head1 DESCRIPTION
 
-To come.
+All interaction with OME is done in the context of a session object.
+This object is created by L<C<OME::SessionManager>|OME::SessionManager>
+depending on the method by which OME is used - Web browser (L<C<OME::Web>|OME::Web>), L<C<OME::Remote>|OME::Remote> client or command-line tool.
+The session object maintains the user's state regardless of the client used for access.
+A user's session never expires.  A session key (a string token) is exchanged between the client and the server
+to refer to a session object.  This token is very short lived, and must be periodically refreshed.
 
 =cut
 
@@ -125,6 +131,37 @@ __PACKAGE__->addColumn(started => 'started',
 The following methods are available in addition to those defined by
 L<OME::DBObject>.
 
+=head2 Factory
+
+Returns the session's L<C<OME::Factory>|OME::Factory> object.
+
+=head2 Manager
+
+Returns the session's L<C<OME::SessionManager>|OME::SessionManager> object.
+
+=head2 Configuration
+
+Returns the session's L<C<OME::Configuration>|OME::Configuration> object.
+
+=head2 User
+
+Returns the session's Experimenter attribute.
+
+=head2 dataset
+
+Returns the session's L<C<OME::Dataset>|OME::Dataset> object.
+
+=head2 project
+
+Returns the session's L<C<OME::Project>|OME::Project> object.
+
+=head2 closeSession
+
+	$session->closeSession();
+
+This method breaks any circular dependencies when logging out.
+This is normally called by L<C<OME::SessionManager>|OME::SessionManager>C<-E<gt>logout()>;
+
 =cut
 
 sub closeSession {
@@ -170,6 +207,15 @@ transaction.
 sub commitTransaction { shift->{Factory}->commitTransaction(); return; }
 sub rollbackTransaction { shift->{Factory}->rollbackTransaction(); return; }
 
+=head2 getTemporaryFilename
+
+	$session->getTemporaryFilename($progName,$extension);
+
+returns an absolute path to a temporary file.  The file must be opened for use, and it must be deleted prior
+to exit.
+
+=cut
+
 sub getTemporaryFilename {
     my $self = shift;
     my $progName = shift;
@@ -197,6 +243,18 @@ sub getTemporaryFilename {
 }
 
 # get a scratch directory under a repository
+
+=head2 getScratchDirRepository
+
+	$session->getScratchDirRepository(repository => $repository, progName => 'Foo', extension => 'foo');
+
+Returns an absolute path to a temporary directory within the repository directory.
+This is useful when a copy between filesystems is undesireable when reading or writing repository files.
+The repository parameter is an L<C<OME::Repository>|OME::Repository> object.
+The progName parameter will be used as a prefix followed by a number, followed by a '.' and the extension.
+
+=cut
+
 sub getScratchDirRepository {
     my $self = shift;
     my %params = @_;
@@ -206,6 +264,16 @@ sub getScratchDirRepository {
 	return $self->getScratchDir( $params{progName}, $params{extension}, $repository->Path() );
 
 }
+
+
+=head2 getScratchDir
+
+	$session->getScratchDir($progName, $extension);
+
+Returns an absolute path to a temporary directory within OME's temp directory.
+The progName parameter will be used as a prefix followed by a number, followed by a '.' and the extension.
+
+=cut
 
 # get a scratch directory under OME's tmp dir
 sub getScratchDir {
