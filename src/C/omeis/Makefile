@@ -33,13 +33,16 @@ endif
 # BSD / OS-X 64-bit portability and large file support (>4GB)
 DEFINES += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 
-all: omeis make_zoom
+all: make_zoom omeis
 
 make_zoom:
 	$(MAKE) -C zoom install
 
-omeis: omeis.c omeis.h $(OBJS)
-	$(CC) $(CFLAGS) $(IM_CFLAGS) $(LIBS) $(INCS) $(XML2_CFLAGS) $(DEFINES) -o omeis omeis.c $(OBJS)
+omeis: omeis.o $(OBJS)
+	$(CC) $(LIBS) $(OBJS) -o omeis omeis.o
+
+omeis.o: omeis.c omeis.h
+	$(CC) $(CFLAGS) $(IM_CFLAGS) $(XML2_CFLAGS) $(INCS) $(DEFINES) -c omeis.c
 
 digest.o: digest.c digest.h
 	$(CC) $(CFLAGS) -c digest.c
@@ -48,7 +51,6 @@ method.o: method.c method.h
 	$(CC) $(CFLAGS) -c method.c
 
 composite.o: composite.c composite.h
-	$(MAKE) -C zoom install
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c composite.c
 
 xmlBinaryResolution.o: xmlBinaryResolution.c
