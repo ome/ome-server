@@ -211,7 +211,7 @@ sub addImageID{
 sub importImages {
   my $self = shift;
   my $file = shift;
-  OME::Tasks::ImageTasks::importFiles($file);
+  OME::Tasks::ImageTasks::importFiles($self, $file);
   return $file;
 
 }
