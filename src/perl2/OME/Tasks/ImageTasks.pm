@@ -136,7 +136,7 @@ sub importFiles {
 
             foreach my $filename (@$filenames) {
                 push @files, OME::Image::Server::File->upload($filename)
-                	if -f $filename and -s $filename;
+                	if -f $filename and -r $filename and -s $filename;
                 $task->step();
                 $task->setMessage("Uploaded $filename");
             }
