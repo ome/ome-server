@@ -13,7 +13,7 @@ my $pageClass = $CGI->url_param("Page");
 if ($pageClass) {
     my $page;
     {
-	eval "require $pageClass";
+	eval "use $pageClass";
 	$page = $pageClass->new(CGI => $CGI);
     }
     if ($@) {
