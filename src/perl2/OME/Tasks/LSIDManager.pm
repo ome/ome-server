@@ -30,11 +30,12 @@ OME::LSID - Generate LSIDs for OME objects
 	my $resolver = new OME::LSID (session => $session);
 	my $LSID = $resolver->getLSID ($object);
 	my $object = $resolver->getObject ($LSID);
+	my $object = $resolver->getLocalObject ($LSID);
 
 =head1 DESCRIPTION
 
-This class has a single method - new with a single required parameter - an OME object.  If an LSID exists for the object, it is returned.
-If it does not exist, it is created
+This class is used to convert objects to LSIDs and LSIDs into objects.
+
 =cut
 
 use strict;
@@ -43,6 +44,16 @@ use Log::Agent;
 
 our $AUTHORITY;
 our $DB_INSTANCE;
+
+=head1 METHODS
+
+=head2 new
+
+	my $resolver = new OME::LSID (session => $session);
+
+This makes a new LSID resolver.  The session parameter is required.
+
+=cut
 
 sub new {
 	my ($proto, %params) = @_;
@@ -68,6 +79,14 @@ sub new {
 	return bless $self, $class;
 }
 
+=head2 getLSID
+
+	my $LSID = $resolver->getLSID ($object);
+
+This returns an LSID for the given $object.
+
+=cut
+
 sub getLSID ($) {
 my ($self,$object) = @_;
 	my $type;
@@ -89,6 +108,19 @@ my ($self,$object) = @_;
 	return "urn:lsid:$AUTHORITY:$type:".$object->id().":$DB_INSTANCE";
 }
 
+
+
+
+=head2 getObject
+
+	my $object = $resolver->getObject ($LSID);
+
+This returns an OME object with the given $LSID, or undef if there is no object matching that LSID.
+Initially, this method calls C<getLocalObject()> to attempt to resolve this LSID locally.
+If that fails, this method calls C<getRemoteObject()>.  If that fails, undef is returned.
+
+=cut
+
 sub getObject ($) {
 my ($self,$lsid) = @_;
 	return $self->getLocalObject ($lsid) || $self->getRemoteObject ($lsid);
@@ -103,6 +135,15 @@ my ($self,$lsid) = @_;
 	return undef unless defined $localID;
 	return $lsid;
 }
+
+
+=head2 getLocalObject
+
+	my $object = $resolver->getLocalObject ($LSID);
+
+This returns a localy stored OME object with the given $LSID, or undef if there is no object matching that LSID in the DB.
+
+=cut
 
 sub getLocalObject () {
 	my $self = shift;
@@ -126,6 +167,18 @@ sub getLocalObject () {
 		return $self->{session}->Factory()->loadAttribute($namespace, $localID);
 	}
 }
+
+
+
+=head2 getRemoteObject
+
+	my $object = $resolver->getRemoteObject ($LSID);
+
+This returns an OME object with the given $LSID from a remote authority, or undef on failure.
+Note that as of this writing, this method is not implemented.
+
+=cut
+
 
 # FIXME:  This could use a little implementation.
 sub getRemoteObject ($) {
