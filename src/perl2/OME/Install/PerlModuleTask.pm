@@ -380,7 +380,7 @@ my @modules = (
 	}
     },{
 	name => 'SOAP::Lite',
-	repository_file => "$REPOSITORY/SOAP-Lite-0.60.tar.gz",
+	repository_file => "$REPOSITORY/SOAP-Lite-0.55.tar.gz",
 	get_module_version => sub {
 	    my $version;
 	    my $eval = 'use SOAP::Lite; $version = $SOAP::Lite::VERSION;';
