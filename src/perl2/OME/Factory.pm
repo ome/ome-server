@@ -68,13 +68,13 @@ sub loadObject {
 
     return undef unless defined $id;
 
-    my $classCache = $self->{_cache}->{$class};
-    if (exists $classCache->{$id}) {
-	print STDERR "loading cache $class $id\n" if $self->{debug};
-	return $classCache->{$id};
-    } else {
-	print STDERR "loading  new  $class $id\n" if $self->{debug};
-    }
+    #my $classCache = $self->{_cache}->{$class};
+    #if (exists $classCache->{$id}) {
+    #    print STDERR "loading cache $class $id\n" if $self->{debug};
+    #    return $classCache->{$id};
+    #} else {
+    #    print STDERR "loading  new  $class $id\n" if $self->{debug};
+    #}
 
     eval "require $class";
     my $object = $class->retrieve($id) or return undef;
