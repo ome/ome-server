@@ -525,9 +525,9 @@ sub store_wavelength_info {
       newAttribute("LogicalChannel",$image,$self->{module_execution},
                    {
                     ExcitationWavelength   => $wave->{'WavelengthInfo.ExWave'},
-                    EmissionWavelength   => $wave->{'WavelengthInfo.ExWave'},
-                    Fluor    => $wave->{'WavelengthInfo.ExWave'},
-                    NDFilter => $wave->{'WavelengthInfo.ExWave'},
+     			  EmissionWavelength   => $wave->{'WavelengthInfo.EmWave'},
+                   # Fluor    => $wave->{'WavelengthInfo.ExWave'},	
+                   # NDFilter => $wave->{'WavelengthInfo.ExWave'},
                     PhotometricInterpretation => 'monochrome',
                    });
 
