@@ -55,7 +55,7 @@ public class RemoteFactory
                                                      className,
                                                      data
                                                  });
-        return (OMEObject) instantiate(getClass(className),reference);
+        return (OMEObject) instantiate(getClass(className),newRef);
     }
 
     public OMEObject loadObject(String className, int id)
@@ -178,7 +178,7 @@ public class RemoteFactory
         if (newRef == null)
             return null;
         else
-            return (Attribute) instantiate(RemoteAttribute.class,reference);
+            return (Attribute) instantiate(RemoteAttribute.class,newRef);
     }
 
     public Attribute loadAttribute(String className, int id)
