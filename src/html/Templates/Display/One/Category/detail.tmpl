@@ -1,0 +1,30 @@
+<input type="hidden" name="images_to_categorize">
+<table style=" border: 1px #000000 solid;">
+	<caption>
+		<font class="ome_header_title">Category: <TMPL_VAR NAME='Name'></font> 
+	</caption>
+	<tr>
+		<td valign="top">
+			<table style=" border: 1px #000000 groove;">
+				<tr><td align="left" valign="top">
+					Description: <TMPL_VAR NAME=Description><br>
+					Part of Group: <TMPL_VAR Name='CategoryGroup/render-ref'><br>
+				</td></tr>
+			</table>
+				ID: <TMPL_VAR Name='id'><br>
+				Created by: <TMPL_VAR NAME=module_execution><br>
+				Dataset: <TMPL_VAR NAME=dataset>
+		</td>
+	</tr>
+	<tr><td align="right">
+		 <table cellpadding="3" class="ome_table">
+			<tr>
+				<td style="background-color: #D1D7DC">
+<a href="javascript:selectMany('OME::Image', 'images_to_categorize');" class="ome_widget">Add Images</a>
+				</td>
+			</tr>
+		</table>
+	</td></tr>
+</table>
+<font class="ome_relation_title">Images in this category:</font>
+	<TMPL_VAR NAME=Images/render-ref_mass>
