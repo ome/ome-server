@@ -282,6 +282,18 @@ my @libraries = ( {
 		repository_file => "$REPOSITORY/libxslt-1.0.30.tar.gz",
 		valid_versions => ['ge "1.0"'],
     }, {
+		name => 'expat',
+		get_library_version => q(
+			#include "stdio.h"
+	    	#include "expat.h"
+	    	int main () {
+				printf ("%d.%d", XML_MAJOR_VERSION,XML_MINOR_VERSION);
+				return (0);
+	    	}
+		),
+		repository_file => "$REPOSITORY/expat-1.95.7.tar.gz",
+		valid_versions => ['ge "1.0"'],
+    }, {
 		name => 'bzlib',
 		get_library_version => q(
 			#include "stdio.h"
