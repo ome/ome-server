@@ -591,7 +591,7 @@ get(pArray,...)
                         RETVAL = ((double *) pr)[index];
                         break;
                     default:
-                        croak("cannot call set on a non-numeric/non-logical array");
+                        croak("cannot call get on a non-numeric/non-logical array");
                         break;
                 }
         OUTPUT:
