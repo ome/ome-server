@@ -262,8 +262,8 @@ sub addNode {
 
 	$manager->removeNode($chain,$node);
 
-Remove the given node from $chain.  Throws an error if $chain is
-locked.
+Remove the given node and all of its incident links from $chain.
+Throws an error if $chain is locked.
 
 =cut
 
@@ -332,15 +332,11 @@ sub getNode {
         defined $name
         && !ref($name);
 
-    # Man, we should have a better method for searching for things...
-    my @nodes = $chain->nodes();
-
-    foreach my $node (@nodes) {
-        my $module = $node->module();
-        return $node if $module->name() eq $name;
-    }
-
-    return undef;
+    return $factory->findObject("OME::AnalysisChain::Node",
+                                {
+                                 analysis_chain => $chain,
+                                 'module.name'  => $name,
+                                });
 }
 
 =head2 getFormalInput
