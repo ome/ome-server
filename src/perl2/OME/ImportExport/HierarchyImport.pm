@@ -75,7 +75,7 @@ use Log::Agent;
 
 use XML::LibXML;
 
-use OME::LSID;
+use OME::Tasks::LSIDManager;
 use OME::Analysis::AnalysisEngine;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ProjectManager;
@@ -87,7 +87,7 @@ use OME::Tasks::ProjectManager;
 	my $importer = new OME::ImportExport::HierarchyImport (session => $session, _lsidResolver => $lsidRslvr);
 
 This makes a new hierarchy importer.  The session parameter is required, and the _lsidResolver parameter is optional.
-The _lsidResolver is an L<OME::LSID|OME::LSID> object used for resolving LSIDs to local DB IDs.  If one is not passed
+The _lsidResolver is an L<OME::Tasks::LSIDManager|OME::Tasks::LSIDManager> object used for resolving LSIDs to local DB IDs.  If one is not passed
 as a parameter a new resolver for this instance will be generated with this method call.
 
 =cut
@@ -123,7 +123,7 @@ sub new {
 	};
 
 	if (!defined $self->{_lsidResolver}) {
-		$self->{_lsidResolver} = new OME::LSID (session => $self->{session});
+		$self->{_lsidResolver} = new OME::Tasks::LSIDManager (session => $self->{session});
 	}
 
 	$self->{factory} = $self->{session}->Factory()
@@ -321,25 +321,8 @@ sub processDOM {
 	# Commit everything we've got so far.
 	logdbg "debug", ref ($self)."->processDOM: Committing DBObjects";
 	$self->commitObjects ();
-
-	# Run the engine on the dataset.
-    my $view = $factory->
-		findObject("OME::AnalysisChain",name => 'Image import analyses');
 	
-	if (!defined $view or !defined $importAnalysis) {
-		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses..."
-			if !defined $view;
-		return $self->{_DBObjects};
-	}
-	logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
-	my $engine = OME::Analysis::AnalysisEngine->new();
-
-#	eval {
-		$engine->executeAnalysisView($session,$view,{},$importDataset);
-#	};
-	
-#	logcarp "$@" if $@;
-	return $self->{_DBObjects};
+	return { $self->{_importedObjects}, $importDataset } ;
 }
 
 
@@ -412,9 +395,10 @@ sub commitObjects () {
     $self->{_DBObjects} = [];
 }
 
-sub addObject ($) {
-	my ($self,$object) = @_;
+sub addObject ($$) {
+	my ($self,$object,$LSID) = @_;
 	push (@{ $self->{_DBObjects} }, $object) if defined $object;
+	$self->{_importedObjects}->{$LSID} = $object if defined $object and defined $LSID;
 	logdbg "debug", ref ($self)."->addObject: added object #".scalar (@{ $self->{_DBObjects} })." '".ref($object).
 		"' ID = ".$object->id()." for later commit.";
 }
@@ -440,13 +424,13 @@ sub importObject ($$$$) {
 	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
 	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$node->nodeName()};
 
-#
+# FIXED? (siah): I believe data dependency support satisfies this. no?
 # FIXME (IGG):  Only allow previously seen objects to be resolved if there is
 # no module_execution associated with the object.
 # This is because we have no way of merging attributes from different module executions.
-	$theObject = undef if $module_execution;
+#	$theObject = undef if $module_execution;
 # Images get re-imported even though they have no module_execution.
-	$theObject = undef if $node->nodeName() eq 'Image';
+#	$theObject = undef if $node->nodeName() eq 'Image';
 
 	if (defined $theObject) {
 		$docIDs->{$LSID} = $theObject->id();
@@ -525,7 +509,8 @@ sub importObject ($$$$) {
 		delete $docRefs->{$LSID};
 	}
 
-    $self->addObject ($theObject);
+	$lsid->setLSID ($theObject, $LSID) if $lsid->checkLSID($LSID);
+    $self->addObject ($theObject, $LSID);
 	return ($theObject);
 }
 
