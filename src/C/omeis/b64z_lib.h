@@ -43,6 +43,8 @@
 *****************************************************************************/
 
 #include "base64.h"
+#include <zlib.h>
+#include <bzlib.h>
 
 
 // return codes
