@@ -58,6 +58,14 @@ public interface RemoteCaller
     public String getSessionKey();
 
     /**
+     * Returns the version of the server which this
+     * <code>RemoteCaller</code> is connected to.  The {@link
+     * ServerVersion} class can be used to compare two versions,
+     * allowing clients to check for compatible server versions.
+     */
+    public ServerVersion getServerVersion();
+
+    /**
      * Invoke an arbitrary remote procedure.
      */
     public Object invoke(String procedure, Object[] params);

@@ -360,6 +360,50 @@ public class XmlRpcCaller
         }
     }
 
+    public ServerVersion getServerVersion()
+    {
+        synchronized(this)
+        {
+            Object result = null;
+            try
+            {
+                result = invoke("serverVersion");
+            } catch (RemoteServerErrorException e) {
+                String message = e.getMessage();
+
+                if (message.indexOf("Failed to locate method") >= 0)
+                {
+                    /* The server version method does not exist yet.
+                     * Return a null value. */
+                    return null;
+                } else {
+                    /* We can't figure out what this error is, so we
+                     * should propagate it. */
+                    throw e;
+                }
+            }
+            if (result instanceof List)
+            {
+                List version = (List) result;
+                if (version.size() != 3)
+                    throw new RemoteServerErrorException("Server version had the wrong size: "+version.size());
+
+                Integer major = PrimitiveConverters.
+                    convertToInteger(version.get(0));
+                Integer minor = PrimitiveConverters.
+                    convertToInteger(version.get(1));
+                Integer patch = PrimitiveConverters.
+                    convertToInteger(version.get(2));
+
+                return new ServerVersion(major.intValue(),
+                                         minor.intValue(),
+                                         patch.intValue());
+            } else {
+                throw new RemoteServerErrorException("Server version returned was not of the right type: "+result.getClass());
+            }
+        }
+    }
+
     public String getSessionKey() { return sessionKey; }
 
     public Object invoke(String method, Object[] params)
