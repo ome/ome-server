@@ -98,7 +98,7 @@ subclass by the semantic type.
 Methods such as findObject and loadObject may also be used for
 SemanticTypes if $className is a Semantic Type name prefixed by '@'
 ('@Pixels') or an instance of OME::SemanticType. This strategy works for
-all Object method except newObject.
+all Object methods except newObject.
 
 =head1 OBTAINING A FACTORY
 
@@ -354,9 +354,7 @@ Finds the attributes of a given type referring to a given target.  As
 in the case of newAttribute, $semanticType can be either an semantic
 type name or an instance of OME::SemanticType.  The target must be an
 OME::Dataset, OME::Image, or OME::Feature object, depending on the
-granularity of the type.  Note that arbitrary search criteria is not
-currently supported in this method.  If you need this functionality,
-email Doug (dcreager@mit.edu).
+granularity of the type.
 
 =head1 SEARCH CRITERIA
 
