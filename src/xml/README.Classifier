@@ -16,8 +16,7 @@ src/xml/OME/Analysis/Statistics   77..
 src/xml/OME/Analysis/Transforms   78..
 
 Below is the order the modules should be imported into OME
-cut below this line and put it into a tmp file called "sushi_mushi"
-[lappy-toppy:OME/src/xml] tmacur1% bash < sushi_mushi
+copy and paste this into your command line.
 -----
 ome import OME/Analysis/Core/PixelIndicies.ome
 ome import OME/Analysis/Core/PixelSlices.ome
@@ -27,7 +26,6 @@ ome import OME/Analysis/Filters/BandPassFilter.ome
 ome import OME/Analysis/Maths/Gradient.ome
 ome import OME/Analysis/Segmentation/GlobalThreshold.ome
 ome import OME/Analysis/Segmentation/OtsuGlobalThreshold.ome
-ome import OME/Analysis/Transforms/ChebyshevFourierTransform.ome
 ome import OME/Analysis/Transforms/ChebyshevTransform.ome
 ome import OME/Analysis/Transforms/FourierTransform.ome
 ome import OME/Analysis/Transforms/WaveletSignatures.ome
@@ -36,6 +34,7 @@ ome import OME/Analysis/Statistics/FeatureStatistics.ome
 ome import OME/Analysis/Statistics/HaralickFeatures.ome
 ome import OME/Analysis/Statistics/ZernikeMoments.ome
 ome import OME/Analysis/Statistics/ChebyshevStatistics.ome
+ome import OME/Analysis/Statistics/ChebyshevFourierStatistics.ome
 ---
 
 If you want the Signture Chain also import
