@@ -92,15 +92,15 @@ sub getRefToObject {
 		if( /^txt$/ ) {
 			return $obj->id();
 		}
-		# FIXME
 		if( /^html$/ ) {
-			my $type = $proto->_getType( $obj );
+			my ($package_name, $common_name, $formal_name, $ST) =
+				OME::Web->_loadTypeAndGetInfo( $obj );
 			my $id   = $obj->id();
 			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
 			my $ref = "<a href='serve.pl?Page=OME::Web::GetGraphics&ImageID=$id'><img src='$thumbURL'></a>";
-			$ref .= "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'>I($id)</a>";
+			$ref .= "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id'>I($id)</a>";
 			return $ref;
-# 			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'><table style='background-image:url(\"$thumbURL\")' width='50' height='50' cellpadding='0'><tr valign='bottom'><td align='right'><font class='ome_text_over_thumbnail'>I($id)</font></td></tr></table></a>";
+# 			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id'><table style='background-image:url(\"$thumbURL\")' width='50' height='50' cellpadding='0'><tr valign='bottom'><td align='right'><font class='ome_text_over_thumbnail'>I($id)</font></td></tr></table></a>";
 		}
 	}
 }

@@ -89,11 +89,16 @@ sub getPageTitle {
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' )
 		or die "Type not specified";
-	$type = _getTypeName( $type );
-    return "$type Table";
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+    return "$common_name Table";
 }
 
 sub getPageBody {
+	my $self = shift;
+	return ('HTML', $self->getTable());
+}
+
+sub getTable {
 	my $self = shift;
 	my $q    = $self->CGI();
 	my $factory = $self->Session()->Factory();
@@ -117,29 +122,26 @@ sub getPageBody {
 
 	# get objects
 	my @objects;
-	my $typeAttr;
-	if( $type =~ /^@/ ) {
-		my $stName = substr($type,1);
-		@objects = $factory->findAttributesLike( $stName, %searchParams );
-		$typeAttr = $factory->findObject( "OME::SemanticType", name => $stName);
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+	if( $ST ) {
+		@objects = $factory->findAttributesLike( $ST, %searchParams );
 	} else {
-		@objects = $factory->findObjectsLike( $type, %searchParams );
+		@objects = $factory->findObjectsLike( $package_name, %searchParams );
 	}
 
-	my $type_name = _getTypeName($type);
-	my $table_name = $type_name."_TABLE";
-	my $table_label = ( $typeAttr ?
-		$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$typeAttr->id() },
-		       $type_name ) :
-		$type_name
+	my $table_name = $common_name."_TABLE";
+	my $table_label = ( $ST ?
+		$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id() },
+		       $common_name ) :
+		$common_name
 	);
 		
 
 	my $html;
 
-	my @fieldNames = OME::Web::RenderData->getFieldNames( $type );
-	my %labels     = OME::Web::RenderData->getFieldLabels( $type, \@fieldNames );
-	my %searches   = OME::Web::RenderData->getSearchFields( $type, \@fieldNames );
+	my @fieldNames = OME::Web::RenderData->getFieldNames( $formal_name );
+	my %labels     = OME::Web::RenderData->getFieldLabels( $formal_name, \@fieldNames );
+	my %searches   = OME::Web::RenderData->getSearchFields( $formal_name, \@fieldNames );
 	my @records    = OME::Web::RenderData->render( \@objects, 'html', \@fieldNames );
 	
 	# table data
@@ -176,16 +178,6 @@ sub getPageBody {
 		).
 		$q->endform()
 	;
-
-	return ('HTML', $html);
-}
-
-
-sub _getTypeName {
-	my $type = shift;
-	$type =~ s/^@// or
-	( $type =~ s/OME::// and $type =~ s/::/ /g );
-	return $type;
 }
 
 sub __getOptionsTD {

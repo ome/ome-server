@@ -54,6 +54,7 @@ Provides custom behavior for rendering Pixels ST
 use strict;
 use vars qw($VERSION);
 use OME;
+use OME::Web;
 use OME::Session;
 use OME::Tasks::PixelsManager;
 use base qw(OME::Web::RenderData);
@@ -97,12 +98,13 @@ sub getRefToObject {
 			return $obj->id();
 		}
 		if( /^html$/ ) {
-			my $type = $proto->_getType( $obj );
+			my ($package_name, $common_name, $formal_name, $ST) =
+				OME::Web->_loadTypeAndGetInfo( $obj );
 			my $id   = $obj->id();
 			my $image_id = $obj->image()->id();
 			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
 			my $ref = "<a href='serve.pl?Page=OME::Web::GetGraphics&ImageID=$image_id'><img src='$thumbURL'></a>";
-			$ref .= "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'>P($id)</a>";
+			$ref .= "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id'>P($id)</a>";
 			return $ref;
 		}
 	}
