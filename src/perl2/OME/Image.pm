@@ -131,9 +131,11 @@ __PACKAGE__->addColumn(inserted => 'inserted',
                         NotNull => 1,
                        });
 # pixels_id is part of a hack added by josiah <siah@nih.gov> on 6/9/03
-# it references the "primary" set of pixels. 
+# it references the default set of pixels. 
 __PACKAGE__->addColumn(pixels_id => 'pixels_id',{SQLType => 'integer'});
 __PACKAGE__->addColumn(default_pixels => 'pixels_id','@Pixels');
+
+__PACKAGE__->hasMany('pixels','@Pixels' => 'image');
 
 __PACKAGE__->hasMany('dataset_links','OME::Image::DatasetMap' => 'image');
 __PACKAGE__->manyToMany('datasets',
