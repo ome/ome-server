@@ -46,7 +46,7 @@ import edu.umd.cs.piccolo.PNode;
  */
 public class PChainLabelText extends PRemoteObjectLabelText {
 	
-	public static final double LABEL_SCALE=.25;
+	public static final double LABEL_SCALE=.4;
 	
 	
 	private boolean active = false;
