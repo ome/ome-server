@@ -368,6 +368,34 @@ sub getImageDim{
 # Parameters:
 #	image = image object
 
+my @stackStatsModules = (
+                         'Fast Stack statistics',
+                         'Stack statistics (image server)',
+                        );
+sub __tryOneStatsModule ($$) {
+    my ($module_name,$pixels) = @_;
+	my $session = OME::Session->instance();
+	my $factory=$session->Factory();
+
+  	my $stackStats = $factory->findObject( "OME::Module", 
+                                           name => $module_name )
+      or return undef;
+
+	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput",
+		module_id => $stackStats->id(),
+		name       => 'Pixels' )
+      or return undef;
+
+	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
+		formal_input_id   => $pixelsFI->id(),
+		input_module_execution_id => $pixels->module_execution()->id() )
+      or return undef;
+
+	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
+
+    return $stackStatsAnalysisID;
+}
+
 sub getImageStats{
 	my ($self,$image,$pixels)=@_ ;
 	$pixels = $image->DefaultPixels()
@@ -375,17 +403,16 @@ sub getImageStats{
   	# new version
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
-  	my $stackStats = $factory->findObject( "OME::Module", name => 'Fast Stack statistics' )
-		or die "Stack statistics must be installed for this viewer to work!\n";
-	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput",
-		module_id => $stackStats->id(),
-		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for Program 'Fast Stack Statistics'.\n";
-	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
-		formal_input_id   => $pixelsFI->id(),
-		input_module_execution_id => $pixels->module_execution()->id() )
-		or die "Fast Stack Statistics has not been run on the Pixels to be displayed.\n";
-	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
+
+    my $stackStatsAnalysisID;
+  MODULE:
+    foreach my $module_name (@stackStatsModules) {
+        $stackStatsAnalysisID = __tryOneStatsModule($module_name,$pixels);
+        last MODULE if defined $stackStatsAnalysisID;
+    }
+
+    die "Could not find stack statistics for these pixels!"
+      unless defined $stackStatsAnalysisID;
 
 	my @mins = $factory->findAttributes( "StackMinimum", {
 		image            => $image, 
