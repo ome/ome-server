@@ -48,6 +48,19 @@ import javax.swing.*;
 import javax.swing.border.*;
 //import org.openmicroscopy.*;
 
+/**
+ *
+ * A simple JDialog for handling the log-in to the OME Remote Server
+ * 
+ * Layout code may be a bit ugly, as it appears to have been spewed out by 
+ * JBuilder. Perhaps should be replaced by something more straightforward
+ * 
+ * @author Douglas Creager
+ * @version 2.1
+ * @since OME2.1
+ *
+ */
+
 public class LoginDialog
     extends JDialog
     implements ActionListener
@@ -84,7 +97,9 @@ public class LoginDialog
         }
     }
 
-    // From JBuilder
+    /**
+     * Builds the dialog frame 
+     */
     private void jbInit() throws Exception {
         border1 = BorderFactory.createEmptyBorder(8,8,8,8);
         panel1.setLayout(gridBagLayout2);
@@ -126,7 +141,10 @@ public class LoginDialog
         jPanel1.add(jCancelButton, null);
     }
 
-    // UI setup not created by JBuilder
+    /**
+     * Sets the action listeners and defaults
+     *
+     */
     private void initUI()
     {
         jOKButton.addActionListener(this);
@@ -134,24 +152,43 @@ public class LoginDialog
         getRootPane().setDefaultButton(jOKButton);
     }
 
+	/**
+	 * Sets the flag based on the button pressed and hidse the dialog
+	 * @param e The action event to be processed
+	 */
     public void actionPerformed(ActionEvent e)
     {
         okay = e.getActionCommand().equals("OK");
         hide();
     }
     
+	/**
+	 * A query to check the return value of the dialog
+	 * @return true if the user clicked "OK", else false
+	 */
     public boolean isOk() {
     		return okay;
     }
     
+    /**
+     * @return The contents of the URL field
+     */
     public String getURL() {
     	return jURLField.getText();
     }
     
+    /**
+     * 
+     * @return the contents of the user name field
+     */
     public String getUserName() {
     	return jUsernameField.getText();
     }
     
+    /** 
+     *
+     * @return the contents of the password field.
+     */
     public String getPassword() {
 		return new String(jPasswordField.getPassword());
     }

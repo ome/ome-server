@@ -32,17 +32,34 @@
 
 /*------------------------------------------------------------------------------
  *
- * Written by:    Douglas Creager <dcreager@alum.mit.edu>
+ * Written by:    Harry Hochheiser <hsh@nih.gov>
  *
  *------------------------------------------------------------------------------
  */
 
  package org.openmicroscopy.util;
  
- public interface LoginResponder {
+/**
+ * Definition of the callbacks for objecs that use a {@link LoginFrame}.
+ * 
+ * @author Harry Hochheiser 
+ * @version 2.1
+ * @since OME2.1
+ *
+ */
+
+public interface LoginResponder {
  	
+ 	/**
+ 	 * The procedure to be called when the user clicks "Cancel"
+ 	 *
+ 	 */
  	public void loginCancel();
  	
+ 	/**
+ 	 * The procedure to be called when the user clicks "OK"
+ 	 *
+ 	 */
  	public void loginOK();
  	
  }

@@ -32,7 +32,8 @@
 
 /*------------------------------------------------------------------------------
  *
- * Written by:    Douglas Creager <dcreager@alum.mit.edu>
+ * Written by:    Harry Hochheiser <hsh@nih.gov>, based on code by 
+ * 		Douglas Creager
  *
  *------------------------------------------------------------------------------
  */
@@ -45,8 +46,24 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-//import org.openmicroscopy.*;
 
+/**
+ * A simple JFrame for handling the log-in to the OME Remote Server
+ *
+ * This dialog requires the use of {@link LoginResponder} object,
+ * which will calls that will be made when appropriate, based on
+ * the user's selection of the "OK" or "Cancel" buttons. 
+ *
+ * Note that this class contains substantial code from {@ link LoginDialog}. 
+ * This redundancy is necessary to support the separate modes of operation 
+ * (login as dialog and login as frame). If Java supported multiple inheritance,
+ * this redundancy would not be necessary.
+ * 
+ * @author Harry Hochheiser 
+ * @version 2.1
+ * @since OME2.1
+ *
+ */
 public class LoginFrame
 		extends JFrame
 		implements ActionListener
@@ -86,7 +103,10 @@ public class LoginFrame
 			}
 		}
 
-		// From JBuilder
+	/**
+     * Builds the dialog frame
+     */ 
+
 		private void jbInit() throws Exception {
 			border1 = BorderFactory.createEmptyBorder(8,8,8,8);
 			panel1.setLayout(gridBagLayout2);
@@ -127,7 +147,10 @@ public class LoginFrame
 			jPanel1.add(jCancelButton, null);
 		}
 
-		// UI setup not created by JBuilder
+		/**
+		 * Sets the action listeners and defaults
+		 *
+		 */
 		private void initUI()
 		{
 			jOKButton.addActionListener(this);
@@ -135,6 +158,12 @@ public class LoginFrame
 			getRootPane().setDefaultButton(jOKButton);
 		}
 
+	/**
+	 * Calls the appropriate {@link LoginResponder} callback based on the
+	 * user action
+	 *
+	 * @param e The action event to be processed
+	 */
 		public void actionPerformed(ActionEvent e)
 		{
 			boolean	okay = e.getActionCommand().equals("OK");
@@ -145,15 +174,28 @@ public class LoginFrame
 		}
     
 		
+    /**
+     *
+     * @return The contents of the URL field
+     */
     
 		public String getURL() {
 			return jURLField.getText();
 		}
     
+    /**
+     * 
+     * @return the contents of the user name field
+     */
+
 		public String getUserName() {
 			return jUsernameField.getText();
 		}
     
+    /** 
+     *
+     * @return the contents of the password field.
+     */
 		public String getPassword() {
 			return new String(jPasswordField.getPassword());
 		}
