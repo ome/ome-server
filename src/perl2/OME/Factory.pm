@@ -393,7 +393,11 @@ sub closeFactory {
 	$self->{__session} = undef;
 }
 
-sub Session { my $self = shift; return $self->{_session}; }
+# do what is necessary to switch sessions.
+# for reuse of Factories between sessions.m
+sub swapSessions { my $self = shift; return $self->{__session} = shift; }
+
+sub Session { my $self = shift; return $self->{__session}; }
 
 sub __checkClass {
     my $class = shift;
