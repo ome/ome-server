@@ -21,7 +21,8 @@ if ($ENV{OME_DEBUG} > 0) {
 	);
 }
 
-my $session = OME::SessionManager->TTYlogin();
+my $manager = OME::SessionManager->new();
+my $session = $manager->TTYlogin();
 #$session->DBH()->trace(3);
 my $OMEExporter = OME::Tasks::OMEExport->new( session => $session);
 my $file;
