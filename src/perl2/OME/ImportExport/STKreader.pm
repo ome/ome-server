@@ -178,7 +178,8 @@ sub readTag {
 #   Plane n's starting addr is: Offset to 1st plane + n*(plane size)
 
 sub formatImage {
-    my ($self, $parent) = @_;
+    my $self = shift;;
+    my $parent = $self->{parent};
     my $gparent = $parent->{parent};
     my $xml_hash = $gparent->Image_reader::xml_hash;
     my $row_size = $parent->{row_size};

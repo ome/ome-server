@@ -226,7 +226,7 @@ sub readImage {
 
 sub formatImage {
     my $self = shift;     # Ourselves
-    my $parent = shift;   # Caller (must be parent) had to pass in its own '$self'
+    my $parent = $self->{parent};
 
     my $fih    = $parent->fref;
     my $foh    = $parent->fouf;
@@ -251,6 +251,7 @@ sub formatImage {
     my $sections = $self->{NumSections};
     my $zs = ($sections/$waves)/$times;         # number of Z steps in a stack
 
+    $parent->{pixel_size} = $pixsz * 8;
     $row_size   = $cols * $pixsz;               # size of an X vector (row)
     $plane_size = $rows * $row_size;            # size of 1 XY plane
 
