@@ -1461,21 +1461,23 @@ int i;
 				sum_zi    += (theVal*z);
 				sum_i     += theVal;
 				sum_i2    += (theVal*theVal);
-				sum_log_i +=  log (theVal+logOffset);
 				if (theVal < min) min = theVal;
 				if (theVal > max) max = theVal;
 			}
 		}
-		sCharP = thePix;
 
-		/* compute the plane histogram */
+		logOffset = min > 0 ? 0 : 1.0;
+
+		sCharP = thePix;
+		/* Second pass: sum_log_i, plane histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *sCharP++;	
 			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+			sum_log_i +=  log (theVal+logOffset);
 		}
 	} else if (head->bp == 1 && !head->isSigned) {
 		uCharP = (unsigned char *) thePix;
-
+		
 		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
@@ -1485,17 +1487,19 @@ int i;
 				sum_zi    += (theVal*z);
 				sum_i     += theVal;
 				sum_i2    += (theVal*theVal);
-				sum_log_i +=  log (theVal+logOffset);
 				if (theVal < min) min = theVal;
 				if (theVal > max) max = theVal;
 			}
 		}
 
+		logOffset = min > 0 ? 0 : 1.0;
+
 		uCharP = (unsigned char *) thePix;
-		/* compute the plane histogram */
+		/* Second pass: sum_log_i, plane histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *uCharP++;	
 			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+			sum_log_i +=  log (theVal+logOffset);
 		}
 	} else if (head->bp == 2 && head->isSigned) {
 		sShrtP = (short *) thePix;
@@ -1509,19 +1513,20 @@ int i;
 				sum_zi    += (theVal*z);
 				sum_i     += theVal;
 				sum_i2    += (theVal*theVal);
-				sum_log_i +=  log (theVal+logOffset);
 				if (theVal < min) min = theVal;
 				if (theVal > max) max = theVal;
 			}
 		}
 
-		sShrtP = (short *) thePix;		
-		/* compute the stack histogram */
+		logOffset = min > 0 ? 0 : 1.0;
+
+		sShrtP = (short *) thePix;
+		/* Second pass: sum_log_i, plane histogram */
 		for (i=0;i<nPix;i++) {
-			theVal = (float) *sShrtP++;		
+			theVal = (float) *sShrtP++;	
 			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+			sum_log_i +=  log (theVal+logOffset);
 		}
-	
 	} else if (head->bp == 2 && !head->isSigned) {
 		uShrtP = (unsigned short *) thePix;
 		
@@ -1534,17 +1539,19 @@ int i;
 				sum_zi    += (theVal*z);
 				sum_i     += theVal;
 				sum_i2    += (theVal*theVal);
-				sum_log_i +=  log (theVal+logOffset);
 				if (theVal < min) min = theVal;
 				if (theVal > max) max = theVal;
 			}
 		}
-		
+
+		logOffset = min > 0 ? 0 : 1.0;
+
 		uShrtP = (unsigned short *) thePix;
-		/* compute the stack histogram */
+		/* Second pass: sum_log_i, plane histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *uShrtP++;	
 			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+			sum_log_i +=  log (theVal+logOffset);
 		}
 	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
 		sLongP = (long *) thePix;
@@ -1558,17 +1565,19 @@ int i;
 				sum_zi    += (theVal*z);
 				sum_i     += theVal;
 				sum_i2    += (theVal*theVal);
-				sum_log_i +=  log (theVal+logOffset);
 				if (theVal < min) min = theVal;
 				if (theVal > max) max = theVal;
 			}
 		}
-		
-		/* compute the stack histogram */
+
+		logOffset = min > 0 ? 0 : 1.0;
+
 		sLongP = (long *) thePix;
+		/* Second pass: sum_log_i, plane histogram */
 		for (i=0;i<nPix;i++) {
-			theVal = (float) *sLongP++;		
+			theVal = (float) *sLongP++;	
 			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+			sum_log_i +=  log (theVal+logOffset);
 		}
 	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
 		uLongP = (unsigned long *) thePix;
@@ -1582,17 +1591,19 @@ int i;
 				sum_zi    += (theVal*z);
 				sum_i     += theVal;
 				sum_i2    += (theVal*theVal);
-				sum_log_i +=  log (theVal+logOffset);
 				if (theVal < min) min = theVal;
 				if (theVal > max) max = theVal;
 			}
 		}
-		
-		/* compute the stack histogram */
+
+		logOffset = min > 0 ? 0 : 1.0;
+
 		uLongP = (unsigned long *) thePix;
+		/* Second pass: sum_log_i, plane histogram */
 		for (i=0;i<nPix;i++) {
-			theVal = (float) *uLongP++;		
+			theVal = (float) *uLongP++;	
 			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+			sum_log_i +=  log (theVal+logOffset);
 		}
 	} else if (head->bp == 4 && head->isFloat) {
 		floatP = (float *) thePix;
@@ -1600,23 +1611,26 @@ int i;
 		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
-				theVal = (float) *floatP++;
+				theVal =  *floatP++;
 				sum_xi    += (theVal*x);
 				sum_yi    += (theVal*y);
 				sum_zi    += (theVal*z);
 				sum_i     += theVal;
 				sum_i2    += (theVal*theVal);
-				sum_log_i +=  log (theVal+logOffset);
 				if (theVal < min) min = theVal;
 				if (theVal > max) max = theVal;
 			}
 		}
-		
+
+		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
+		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
+
 		floatP = (float *) thePix;
-		/* compute the stack histogram */
+		/* Second pass: sum_log_i, plane histogram */
 		for (i=0;i<nPix;i++) {
-			theVal = (float) *floatP++;		
+			theVal = *floatP++;	
 			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+			sum_log_i +=  log (theVal+logOffset);
 		}
 	}
 	
