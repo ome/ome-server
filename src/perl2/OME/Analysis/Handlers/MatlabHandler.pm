@@ -145,6 +145,8 @@ sub startImage {
 
 sub finishAnalysis {
 	my ($self) = @_;
+	# this insures a check of output arities
+	$self->SUPER::finishAnalysis();
 	$self->__closeEngine();
 }
 
