@@ -26,7 +26,7 @@ use strict;
 our %prototypes =
   (
    'OME::Session' => {
-   		      User    => [['$'].['$']].
+   		      User    => [['$'],['$']],
                       id      => [['$'],['$']],
                       Factory => [[],['OME::Factory']],
                      },
