@@ -1303,8 +1303,8 @@ sub getPlaneStatistics {
 
     my @rows = split(/\015?\012/,$result);
     foreach my $row (@rows) {
-        my ($c,$t,$z,$min,$max,$mean,$geomean,$sigma,
-            $centroidX,$centroidY,$i,$i2,$logI,$xi,$yi,$zi,$geosigma) =
+        my ($c,$t,$z,$min,$max,$mean,$geomean,$sigma,$geosigma,
+            $centroidX,$centroidY,$i,$i2,$logI,$xi,$yi,$zi) =
               split(/\t/,$row);
         $hash{$z}{$c}{$t} = {
                              Minimum   => $min,
@@ -1322,6 +1322,61 @@ sub getPlaneStatistics {
                              SumYI     => $yi,
                              SumZI     => $zi,
                             };
+    }
+
+    return \%hash;
+}
+
+=head2 getStackStatistics
+
+	my $statsHash = OME::Image::Server->getStackStatistics($pixelsID);
+
+This method returns a hash containing basic pixel statistics for the
+specified pixels file.  The hash is of the form:
+
+	$statsHash->{$c}->{$t}->{$stat} = $value;
+
+Where $c and $t are the coordinates of a stack, and $stat has one
+of the following values:
+
+	Minimum, Maximum, Mean, Sigma, Geomean, Geosigma,
+	CentroidX, CentroidY, CentroidZ, SumI, SumI2, SumLogI,
+	SumXI, SumYI, SumZI
+
+If the specified pixel file isn't in read-only mode on the image
+server, an error will be thrown.
+
+=cut
+
+sub getStackStatistics {
+    my $proto = shift;
+    my ($pixelsID) = @_;
+    my $result = $proto->__callOMEIS(Method   => 'GetStackStats',
+                                     PixelsID => $pixelsID);
+    die "Error retrieving statistics" unless defined $result;
+    my %hash;
+
+    my @rows = split(/\015?\012/,$result);
+    foreach my $row (@rows) {
+        my ($c,$t,$min,$max,$mean,$geomean,$sigma,$geosigma,
+            $centroidX,$centroidY,$centroidZ,$i,$i2,$logI,$xi,$yi,$zi) =
+              split(/\t/,$row);
+        $hash{$c}{$t} = {
+                         Minimum   => $min,
+                         Maximum   => $max,
+                         Mean      => $mean,
+                         Sigma     => $sigma,
+                         Geomean   => $geomean,
+                         Geosigma  => $geosigma,
+                         CentroidX => $centroidX,
+                         CentroidY => $centroidY,
+                         SumI      => $i,
+                         SumI2     => $i2,
+                         SumLogI   => $logI,
+                         SumXI     => $xi,
+                         SumYI     => $yi,
+                         SumZI     => $zi,
+                        };
     }
 
     return \%hash;
