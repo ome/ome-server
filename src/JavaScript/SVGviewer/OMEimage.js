@@ -96,6 +96,8 @@ OMEimage.prototype.saveState = function() {
 
 	this.SVGimageContainer.appendChild(tmpImg);
 	this.SVGimageContainer.removeChild(tmpImg);
+	
+	this.saveStateThumb();
 
 	return 1;
 };
