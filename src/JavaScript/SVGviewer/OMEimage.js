@@ -25,11 +25,9 @@ OMEimage.VERSION = 0.5;
 /*************************** Functions open to the world ************************************/
 /********************************************************************************************/
 /********************************************************************************************/
-/*	OMEimage(...), realize(SVGparentNode), saveState(), updatePic(theZ, theT)
-	makeWBSnative(WBS,theT), setWBS(newWBS), setDisplayColor(), setDisplayGrayscale()
-	setRGBon(RGBon), getRGBon(), getWavelengths(), getWBS(), getConvertedWBS(theT) */
 
-/************************** Setup Functions ***********************************/
+
+	/************************** Setup Functions ***********************************/
 
 
 /*****
@@ -57,7 +55,7 @@ OMEimage.VERSION = 0.5;
 
 
 function OMEimage( imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, 
-	SaveDisplayCGI_URL, default_WBS, default_RGBon, default_isRGB, DatasetID ) {
+	SaveDisplayCGI_URL, default_WBW, default_RGBon, default_isRGB, DatasetID ) {
 
 	// A mild test for valid input
 	var goodInput = 1; 
@@ -74,9 +72,9 @@ function OMEimage( imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr,
 	// Test over. Did you pass?
 	if(goodInput == 1)
 		this.init(imageID, Wavelengths, Stats, Dims, CGI_URL, CGI_optionStr, 
-			SaveDisplayCGI_URL, default_WBS, default_RGBon, default_isRGB, DatasetID )
+			SaveDisplayCGI_URL, default_WBW, default_RGBon, default_isRGB, DatasetID );
 	else
-		alert("Bad initialization parameters given to OMEimage.");
+		alert("Bad initialization parameters given to OMEimage.js");
 }
 
 /*****
@@ -103,7 +101,7 @@ OMEimage.prototype.realize = function(SVGparentNode) {
 	saveState()
 		calls a CGI to save current view settings for this image to the DB
 
-	comprehensively tested
+	untested
 
 *****/
 OMEimage.prototype.saveState = function() {
@@ -112,12 +110,13 @@ OMEimage.prototype.saveState = function() {
 	tmpImg.setAttribute("width",0);
 	tmpImg.setAttribute("height",0);
 	var d = new Array();
+	var cWBW = this.getAbsoluteWBWfromWBS( theT );
 	for(i in this.Dims) d.push(this.Dims[i]);
-	// The purpose of unique is to bypass any image caching
+	// The purpose of unique is to bypass any browser image caching
 	var unique   = Math.random();
 	var imageURL = this.SaveDisplayCGI_URL + '&ImageID=' + this.imageID + 
 		'&theZ=' + theZ + '&theT=' + theT + "&RGBon=" + this.RGBon.join() +
-		'&WBS=' + this.WBS.join() + "&isRGB=" + this.inColor + "&Unique=" + unique;
+		'&WBS=' + cWBW.join() + "&isRGB=" + this.inColor + "&Unique=" + unique;
 	tmpImg.setAttributeNS(xlinkns, "xlink:href",imageURL);
 
 	this.SVGimageContainer.appendChild(tmpImg);
@@ -203,7 +202,7 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 	
 		// color or RGB?
 		var color;
-		var cWBS = this.getConvertedWBS(theT);
+		var cWBS = this.getConvertedWBS4OME_JPEG(theT);
 		// make sure Black level and Scale aren't out of range for this time point
 		// This has been tested. It don't crash.
 		for(i=0;i<4;i++) {
@@ -254,10 +253,7 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 
 	makeWBSnative(WBS,theT)
 		utility to convert WBS from hard numbers to native format
-		This and getConvertWBS(theT) are the two functions that do conversion between
-			native format and hard numbers.
 		returns WBS in native format if successful
-		returns null if unsuccessfull
 		
 	comprehensively tested
 
@@ -272,6 +268,7 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 	for(i=0;i<4;i++) {
 		var wavenum = WBS[i*3];
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
+		// set black level
 		WBS[i*3+1] = (WBS[i*3+1] + this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
 		WBS[i*3+1] = Math.round(WBS[i*3+1]);
 		if(WBS[i*3+2] == 0) WBS[i*3+2] = 0.00001;
@@ -279,6 +276,35 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 		WBS[i*3+2] = Math.round(WBS[i*3+2]*100000)/100000;
 	}
 	return WBS;
+}
+
+/*****
+
+	makeWBWnative(WBW,theT)
+		utility to convert an absolute WBW to native WBS format
+		returns WBS in native format if successful
+		
+	comprehensively tested
+
+*****/
+OMEimage.prototype.makeWBWnative = function(WBW,theT) {
+	if(this.Stats == null || this.Dims == null) return null;
+
+	// input validation check
+	if(WBW.length!=12 || theT<0 || theT>this.Dims['T'] || theT != Math.round(theT)) return null;
+
+	// conversion and further validation checks
+	for(i=0;i<4;i++) {
+		var wavenum = WBW[i*3];
+		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
+		// set black level
+		WBW[i*3+1] = (WBW[i*3+1] - this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
+		WBW[i*3+1] = Math.round(WBW[i*3+1]);
+		if(WBW[i*3+2] == 0) WBW[i*3+2] = 0.00001;
+		WBW[i*3+2] = (WBW[i*3+2] - this.Stats[wavenum][theT]['geomean']) / this.Stats[wavenum][theT]['sigma'];
+		WBW[i*3+2] = Math.round(WBW[i*3+2]*100000)/100000;
+	}
+	return WBW;
 }
 
 /************************** Set Functions ***********************************/
@@ -440,6 +466,16 @@ OMEimage.prototype.getWavelengths = function() {
 	getWBS()
 		returns WBS in native format
 		
+		WBS in native format is an array of size 12. It is divided into 4 
+	chunks of 3. Each chunk represents information for a display channel. The
+	chunks correspond to display channels Red, Green, Blue, and Grey, 
+	respectively. The format of each chunk is Wavenumber, Black Level, Scale.
+	Black Level and Scale are relative to the geometric mean and sigma of pixel
+	values for a pixel XYZ stack specified by a Wavenumber and Timepoint. See
+	getConvertedWBS4OME_JPEG for more information on Black Level and Scale.
+		Wavenumber is a depricated name that is now called 'ChannelNumber' by
+	the rest of the OME system)
+		
 	comprehensively tested
 
 *****/
@@ -452,10 +488,8 @@ OMEimage.prototype.getWBS = function() {
 
 /*****
 
-	getConvertedWBS(theT)
-		converts WBS from native format to hard numbers
-		This and makeWBSnative(WBS,theT) are the two functions that do conversion between
-			native format and hard numbers.
+	getConvertedWBS4OME_JPEG(theT)
+		converts WBS from native format to hard numbers suitable for OME_JPEG
 		Currently it uses these functions.
 		c indicates converted, n indicates native
 			cB = geomean * nB
@@ -467,7 +501,7 @@ OMEimage.prototype.getWBS = function() {
 	comprehensively tested
 
 *****/
-OMEimage.prototype.getConvertedWBS = function(theT) {
+OMEimage.prototype.getConvertedWBS4OME_JPEG = function(theT) {
 	if(this.Stats == null || this.Dims == null) return null;
 
 	// input validation check
@@ -489,6 +523,43 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 	}
 	
 	return cWBS;
+}
+
+/*****
+
+	getAbsoluteWBWfromWBS(theT)
+		converts WBS from native format to WBW absolute numbers
+		WBW means Wavenumber, Black Level, White Level. See getWBS for more 
+	info on layout of the array.
+		White level in OME_JPEG is geomean + sigma*nS
+		returns null if unsuccessful
+		returns converted WBS if successful
+		
+	comprehensively tested
+
+*****/
+OMEimage.prototype.getAbsoluteWBWfromWBS = function(theT) {
+	if(this.Stats == null || this.Dims == null) return null;
+
+	// input validation check
+	if(theT<0 || theT>this.Dims['T'] || theT != Math.round(theT)) return null;
+	
+	var cWBW = new Array();
+	
+	for(var i=0;i<4;i++) {
+		var wavenum = this.WBS[i*3];
+		cWBW.push( wavenum );
+		B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+1];
+		B = Math.round( B );
+		cWBW.push( B );
+		if(this.WBS[i*3+2] == 0)
+			this.WBS[i*3+2] = 0.00001;
+		W = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2];
+		W = Math.round( W );
+		cWBW.push( W );		
+	}
+	
+	return cWBW;
 }
 
 /*****
@@ -520,7 +591,7 @@ OMEimage.prototype.getDisplayRGB_BW = function() {
 
 *****/
 OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims,  CGI_URL, CGI_optionStr,
-	SaveDisplayCGI_URL, default_WBS, default_RGBon, default_isRGB, DatasetID ) {
+	SaveDisplayCGI_URL, default_WBW, default_RGBon, default_isRGB, DatasetID ) {
 	// set variables
 	this.DatasetID          = DatasetID
 	this.imageID            = imageID;
@@ -538,11 +609,11 @@ OMEimage.prototype.init = function( imageID, Wavelengths, Stats, Dims,  CGI_URL,
 	this.Dims['bpp']        = Dims[5];
 	
 	// set optional variable
-	if( default_WBS != null )
-		this.WBS = default_WBS;
+	if( default_WBW != null )
+		this.WBS = this.makeWBWnative( default_WBW, theT );
 	else
 		this.WBS = this.makeWBS();
-	
+
 	// make SVGimages array. It is indexable by [z][t]
 	this.SVGimages = new Array(this.Dims['Z']);
 	for(var i=0;i<this.SVGimages.length;i++)
@@ -606,7 +677,7 @@ OMEimage.prototype.loadAllPics = function() {
 				
 				// color or RGB?
 				var color;
-				var WBS = this.getConvertedWBS(theT);
+				var WBS = this.getConvertedWBS4OME_JPEG(theT);
 				if( this.inColor == 1 )
 					color = "&RGB=" + WBS.slice(0,9).join();
 				else
