@@ -195,5 +195,7 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 			node == ((PCanvas) canvas).getLayer());
 	}
 	
-	
+	public PCamera getCamera() {
+		return ((PCanvas) canvas).getCamera();
+	}
  }
