@@ -1500,8 +1500,8 @@ my ($key,$value);
 	return unless exists $session->{Analyses}->{$$};
 	my $analysis = $session->{Analyses}->{$$};
 	while ( ($key,$value) = each %params ) {
-		if ($key eq 'Error') {
-			$analysis->{$key} .= $value;
+		if ($key eq 'Error' and defined $analysis->{Error} and $analysis->{Error}) {
+			$analysis->{$key} .= "\n------------\n$value";
 		} else {
 			$analysis->{$key} = $value;
 		}

@@ -321,8 +321,7 @@ my @columns;
 # file-type which is not readable.
 # For now, we use the OME session info to append the error there.
 	if (not (exists $self->{SizeX} and $self->{SizeX} and exists $self->{SizeY} and $self->{SizeY}) ) {
-		$OME->UpdateProgress (Error => "TIFF file '$datasetPath' is UNREADABLE!!\n".`cat $tempFileNameErr`);
-		return undef;
+		die "TIFF file '$datasetPath' is UNREADABLE!!\n".`cat $tempFileNameErr`;
 	}
 
 
@@ -333,11 +332,7 @@ my @columns;
 # This Import function ignores these values, because this class is for a single-plane dataset.
 # The file will actually be read at this point, and an error reported if its corrupt.
 	$command = "$DumpTIFFstats $datasetPath 2>> $tempFileNameErr |";
-	if (not open (STDOUT_PIPE,$command) ) {
-		$OME->UpdateProgress (Error => "Error executing '$command'\n".`cat $tempFileNameErr`);
-		return undef;
-	}
-
+	open (STDOUT_PIPE,$command) or die "Error executing '$command'\n".`cat $tempFileNameErr`;
 	@columns = split ('\t', <STDOUT_PIPE>);
 	while (<STDOUT_PIPE>) {
 		chomp;

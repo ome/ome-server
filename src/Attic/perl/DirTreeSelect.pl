@@ -280,7 +280,7 @@ my $numSelections;
 	$OME->UpdateProgress (ProgramName => 'Dataset Import');
 	foreach (@$selections) {
 #		print STDERR "DirTreeSelect:  Importing $_\n";
-		my $dataset = $OME->ImportDataset (Name => $_);
+		my $dataset = eval {$OME->ImportDataset (Name => $_);};
 		if (defined $dataset) {
 			push (@datasetIDs,$dataset->{ID});
 			$OME->IncrementProgress();
@@ -290,6 +290,9 @@ my $numSelections;
 #				ReportDocStatus ("<B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.<BR>");
 #				$OME->Commit();			
 #			}
+		} else if $@ {
+			$OME->UpdateProgress (Error => $@);
+			ReportDocStatus ($_.":  <B><font color="#FF0000">Error!</font></B> - file is corrupt!<BR>");
 		} else {
 			ReportDocStatus ($_.":  <B>Ignored</B> - file type not supprted.<BR>");
 		}
