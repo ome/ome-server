@@ -47,7 +47,15 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
+import org.openmicroscopy.Module;
+import org.openmicroscopy.Attribute;
+import org.openmicroscopy.SemanticType;
+import org.openmicroscopy.Module.FormalOutput;
+import org.openmicroscopy.vis.ome.CChainExecution;
 import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.Iterator;
+
 
 /** 
  * An event handler for the result canvas
@@ -136,10 +144,34 @@ public class PResultEventHandler extends  PPanEventHandler {
 			handlePopup(e);
 			return;
 		}
-		else 
-			super.mousePressed(e);
+		else if (e.getPickedNode() instanceof PFormalOutput) {
+			PFormalOutput outputNode = (PFormalOutput) e.getPickedNode();
+			System.err.println("pressed on "+outputNode.getName());
+			PModule modNode = outputNode.getPModule();
+			FormalOutput output= (FormalOutput) 
+				outputNode.getParameter();
+			Module mod = modNode.getModule();
+			System.err.println("Module name is "+mod.getName());
+			CChainExecution exec = canvas.getChainExecution();
+			List results = exec.getResults(mod,output);
+			if (results != null)
+				dumpOutputs(results);
+			e.setHandled(true);
+		}
+		super.mousePressed(e);
 	}
-		
+	
+	private void dumpOutputs(List results) {
+		System.err.println("getting results...");
+		Iterator iter = results.iterator();
+		Attribute att;
+		while (iter.hasNext()) {
+			att = (Attribute) iter.next();
+			SemanticType type = att.getSemanticType();
+			System.err.println(type.getName());	
+			
+		}
+	}
 		
 	/**
 	 * Clear the selection of the current when the mouse is released. 
