@@ -41,7 +41,6 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.nodes.PImage;
 import edu.umd.cs.piccolo.PNode;
 import java.awt.Font;
 
@@ -70,15 +69,18 @@ public class PImageToolTipHandler extends PToolTipHandler {
 	 * @param event the event that caused the update of the tool tip 
 	 */
 	public PNode setToolTipNode(PInputEvent event) {
-		PImage p = null;
+		PNode p = null;
 		PNode n = event.getInputManager().getMouseOver().getPickedNode();
 		double scale = camera.getViewScale();
+		if (!(n instanceof PThumbnail))
+			return null;
+		PThumbnail t = (PThumbnail) n;
+			
 		if (scale < PToolTipHandler.SCALE_THRESHOLD) {
-			if (n instanceof PBufferedImage) {
-				PBufferedImage b = (PBufferedImage) n;
-				p = new PImage(b.getImage(),false);
-			}
+			p = t.getFullTooltip();
 		}
+		else 
+			p = t.getTextToolTip();
 		return p;
 	}
 }
