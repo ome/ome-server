@@ -94,6 +94,11 @@ clean:
 
 distclean: clean
 
+install:
+	install -c ome_cccp /OME/bin/ome_cccp
+	install -c ome_tmcp /OME/bin/ome_tmcp
+
+
 tarfile:
 	mkdir $(NAME)
 	/bin/cp $(TARFILE) $(NAME)
