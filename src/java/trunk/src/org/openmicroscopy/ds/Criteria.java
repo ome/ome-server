@@ -164,7 +164,7 @@ public class Criteria
         if (list == null)
         {
             list = new ArrayList();
-            fieldsWanted.put(".",list);
+            fieldsWanted.put(hasMany,list);
         }
 
         list.add(field);
