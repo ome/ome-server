@@ -122,7 +122,7 @@ sub closeFile {
 sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
  
-    return $self->Pix->GetPixROI ($xx1,$yy1,$zz1,$ww1,$tt1,$xx2,$yy2,$zz2,$ww2,$tt2)
+    return $self->Pix->GetROI ($xx1,$yy1,$zz1,$ww1,$tt1,$xx2,$yy2,$zz2,$ww2,$tt2)
         || die ref($self)."->GetPixels:  Could not read pixels\n";
 }
 
