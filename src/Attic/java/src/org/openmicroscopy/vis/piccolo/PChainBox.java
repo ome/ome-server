@@ -247,4 +247,9 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 			chain.hasExecutionsInSelectedDatasets(selectionState);
 		setSelected(selected);
 	}
+	
+	public int getEventMask() {
+		return SelectionEvent.SET_ACTIVE_DATASETS |
+			SelectionEvent.SET_SELECTED_DATASET;
+	}
 }

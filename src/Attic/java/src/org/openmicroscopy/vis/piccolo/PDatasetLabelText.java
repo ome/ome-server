@@ -83,6 +83,11 @@ public class PDatasetLabelText extends PRemoteObjectLabelText {
 		setColor();
 	} 
 	
+	public int getEventMask() {
+		return SelectionEvent.SET_ACTIVE_DATASETS |
+			SelectionEvent.SET_SELECTED_DATASET;
+	}
+	
 	public  void doSelection() {
 		SelectionState selectionState = SelectionState.getState();
 		System.err.println("dataset ..+ is being selected.."+dataset.getName());

@@ -365,6 +365,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
+		System.err.println(" browser canvas got event");
 		SelectionState state = e.getSelectionState();
 		Collection selections = state.getActiveDatasets();
 		CDataset selected = state.getSelectedDataset();
@@ -383,6 +384,12 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		Project rollover = state.getRolloverProject();
 		highlightDatasetsForProject(rollover);
 		
+	}
+
+	public int getEventMask() {
+		return SelectionEvent.SET_SELECTED_DATASET | 
+			SelectionEvent.SET_ACTIVE_DATASETS | 
+			SelectionEvent.SET_ROLLOVER_PROJECT;
 	}
 		
 	public void clearExecutionList() {

@@ -296,6 +296,11 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		}
 	}
 	
+	public int getEventMask() {
+		return SelectionEvent.SET_SELECTED_CHAIN|
+			SelectionEvent.SET_SELECTED_DATASET;
+	}
+	
 	private PChainBox findChainBox(CChain chain) {
 		ChainBoxFilter filter = new ChainBoxFilter(chain);
 		

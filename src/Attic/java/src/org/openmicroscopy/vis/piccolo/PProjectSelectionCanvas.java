@@ -72,6 +72,8 @@ public class PProjectSelectionCanvas extends PCanvas
 	private static final int MAXWIDTH=1000;
 	private static final double HGAP=5;
 	
+	private static final double INITIAL_SCALE=.7;
+	
 	private PLayer layer;
 	
 	private int columnWidth =0;
@@ -137,12 +139,19 @@ public class PProjectSelectionCanvas extends PCanvas
 		PBounds b = layer.getFullBounds();
 		System.err.println("bounds are "+b);
 		getCamera().animateViewToCenterBounds(b,true,delay);
-		getCamera().setViewScale(0.9);
+		getCamera().setViewScale(INITIAL_SCALE);
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
-		if (e.getSelectionState().getSelectedProject() == null) 
+		
+	//	if (e.getMask() == SelectionEvent.SET_ROLLOVER_PROJECT &&
+	//		  e.getSelectionState().getSelectedProject() == null)
+	 	if (e.getSelectionState().getSelectedProject() == null) 
 			scaleToFit(PConstants.ANIMATION_DELAY);
+	}
+	
+	public int getEventMask() {
+		return SelectionEvent.SET_SELECTED_PROJECT;
 	}
 			
 }
@@ -195,20 +204,10 @@ class ProjectLabel extends PText implements SelectionEventListener {
 			PConstants.ANIMATION_DELAY);
 	}
 	
-	public void setRollover(boolean v) {
-		if (v== true) {
-			previousScale = getScale();
-			previousPaint = getPaint();
-			if (previousScale != SELECTED_SCALE) {
-				// don't make it smaller if already selected
-				setScale(ROLLOVER_SCALE);
-				setPaint(PConstants.PROJECT_ROLLOVER_COLOR);
-			}
-		}
-		/*else {
-			setScale(previousScale);
-			setPaint(previousPaint);
-		}*/
+	public void setRollover(boolean v) {	
+		// don't make it smaller if already selected
+		setScale(ROLLOVER_SCALE);
+		setPaint(PConstants.PROJECT_ROLLOVER_COLOR);
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
@@ -221,6 +220,11 @@ class ProjectLabel extends PText implements SelectionEventListener {
 			setActive();
 		else
 			setNormal();
+	}
+	
+	public int getEventMask() {
+		return SelectionEvent.SET_SELECTED_PROJECT|
+			SelectionEvent.SET_ROLLOVER_PROJECT;
 	}
 }
 
