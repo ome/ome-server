@@ -58,6 +58,8 @@ public class RemoteIterator
     protected String nextReference;
     protected boolean haveNextReference = false;
 
+    public static final String  NULL_REFERENCE = ">>OBJ:NULL";
+
     public RemoteIterator() { super(); }
 
     public RemoteIterator(String perlClass) 
@@ -82,13 +84,15 @@ public class RemoteIterator
             return;
 
         nextReference = ((String) caller.dispatch(this,"next"));
+
         haveNextReference = true;
     }
 
     public boolean hasNext()
     {
         cacheNextReference();
-        return (nextReference != null) && (!nextReference.equals(""));
+        return ((nextReference != null) && (!nextReference.equals("")) &&
+		(!nextReference.equals(NULL_REFERENCE)));
     }
 
     public Object next()
