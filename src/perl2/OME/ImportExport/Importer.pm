@@ -186,12 +186,12 @@ sub store_image {
 	$status = map_image_to_dataset($self);
 	last unless $status eq "";
 
-	# everything went OK - commit all the DB inserts
-	$image->commit;
-        $image->dbi_commit();
-	$self->{pixelsAttr}->writeObject();
-#	$attributes->writeObject();
-	$session->DBH()->commit;
+	# everything went OK -  commit all the DB inserts
+	$image->storeObject();
+	$session->commitTransaction($image);
+	($self->{pixelsAttr})->storeObject();
+	$session->commitTransaction($self->{pixelsAttr});
+	$session->commitTransaction($self);
 
 	last;
     }
@@ -596,7 +596,8 @@ sub store_image_files_xyzwt {
 	}
 	else {
 	    #$xyzwt->path($file);
-	    $xyzwt->commit();
+	    #$xyzwt->commit();
+	    $xyzwt->storeObject();
 	}
     }
     $self->{'xyzwt'} = $xyzwt;
@@ -618,7 +619,8 @@ sub map_image_to_dataset {
 	$status = "Can\'t create new image <-> dataset map";
     }
     else {
-	$i2dMap->commit();
+	#$i2dMap->commit();
+	$i2dMap->storeObject();
     }
     $self->{'i2dMap'} = $i2dMap;
     return $status;
