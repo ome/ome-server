@@ -183,7 +183,6 @@ sub requireAttributeTypePackage {
     } elsif ($type eq 'F') {
         *{$pkg."::feature"} = sub { return shift->_getTarget(); };
         addPrototype($pkg,"feature",[],['OME::Feature'],force => 1);
-        print STDERR "  $pkg\::feature\n";
     } elsif ($type eq 'G') {
         # No global column
     }
@@ -288,7 +287,6 @@ sub __getSeconds {
     my ($self,$name) = @_;
     my $t = $self->$name();
     return 0 unless defined $t;
-    print STDERR "***** ",$t," ",join(',',@$t),"\n";
     return $t->[0];
 }
 
@@ -394,11 +392,16 @@ sub newAttributes {
             # hash, ensure it doesn't clash with this new piece of
             # data.
 
-            if (exists $data{$table_name}->{$column_name}) {
-                my $old_data = $data{$table_name}->{$column_name};
-                #__debug("      ?= $old_data");
+            if (!defined $new_data) {
                 croak "Attribute values clash"
-                    if ($new_data ne $old_data);
+                  if defined $data{$table_name}->{$column_name};
+            } else {
+                if (exists $data{$table_name}->{$column_name}) {
+                    my $old_data = $data{$table_name}->{$column_name};
+                    #__debug("      ?= $old_data");
+                    croak "Attribute values clash"
+                      if ($new_data ne $old_data);
+                }
             }
 
             # Store the datum into the data table hash.
@@ -447,13 +450,17 @@ sub newAttributes {
     }
 
     # Now, create attribute objects from the data rows we just
-    # created.
+    # created.  Also, add appropriate entries to the
+    # SEMANTIC_TYPE_OUTPUTS table if necessary.
 
     my @attributes;
 
     my $t2 = new Benchmark;
 
     __debug("Creating attributes");
+
+    my $module = $module_execution->module()
+      if defined $module_execution;
 
     for ($i = 0; $i < $length; $i += 2) {
         $semantic_type = $attribute_info[$i];
@@ -478,6 +485,28 @@ sub newAttributes {
 
         my $attribute = $semantic_type->newAttribute($target,
                                                       $id,$rows);
+
+        # Add the SEMANTIC_TYPE_OUTPUT entry
+
+        if (defined $module) {
+            my $formal_output = $factory->
+              findObject("OME::Module::FormalOutput",
+                         module_id => $module->id(),
+                         semantic_type_id => $semantic_type->id());
+
+            # Only create the entry if the attribute is for an untyped
+            # output.
+            if (!defined $formal_output) {
+                my $data_hash =
+                  {
+                   module_execution_id => $module_execution->id(),
+                   semantic_type_id    => $semantic_type->id(),
+                  };
+                $factory->
+                  maybeNewObject("OME::ModuleExecution::SemanticTypeOutput",
+                                 $data_hash);
+            }
+        }
 
         push @attributes, $attribute;
     }
