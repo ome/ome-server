@@ -182,4 +182,12 @@ public class PParamLink extends  PLink {
 	public PLinkTarget getEndLinkTarget() {
 		return end.getLinkTarget();
 	}
+	
+	public PFormalParameter getStartParam() {
+		return start;
+	}
+	
+	public PFormalParameter getEndParam() {
+		return end;
+	}
 }
