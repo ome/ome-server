@@ -260,7 +260,7 @@ my @libraries = ( {
 
 	    	return $? == 0 ? $version : undef;
 		},
-		valid_versions => ['ge 2.4.20'],
+		valid_versions => ['ge "2.4.20"'],
 		repository_file => "$REPOSITORY/libxml2-2.5.7.tar.gz",
     }, {
 		name => 'libxslt',
@@ -338,7 +338,6 @@ sub check_library {
 
     foreach my $valid_version (@{$library->{valid_versions}}) {
 		my $eval = 'if ("$library->{version}" '.$valid_version.') { $retval = 1 }';
-
 		eval $eval;
 		last if $retval;
     }
