@@ -16,7 +16,7 @@ sub new {
     my $self = $class->SUPER::new(@_);
 
     $self->{_fields} = {
-	id        => ['EXPERIMENTERS','EXPERIMENTER_ID'],
+	id        => ['EXPERIMENTERS','EXPERIMENTER_ID','SEQUENCE','EXPERIMENTER_SEQ'],
 	omeName   => ['EXPERIMENTERS','OME_NAME'],
 	firstName => ['EXPERIMENTERS','FIRSTNAME'],
 	lastName  => ['EXPERIMENTERS','LASTNAME'],
@@ -25,3 +25,5 @@ sub new {
 
     return $self;
 }
+
+1;

@@ -1,4 +1,4 @@
-package OME::Image;
+package OME::Repository;
 
 use strict;
 use vars qw($VERSION @ISA);
@@ -16,18 +16,11 @@ sub new {
     my $self = $class->SUPER::new(@_);
 
     $self->{_fields} = {
-	id => ['IMAGES','IMAGE_ID'],
-	id        => ['EXPERIMENTERS','EXPERIMENTER_ID'],
-	omeName   => ['EXPERIMENTERS','OME_NAME'],
-	firstName => ['EXPERIMENTERS','FIRSTNAME'],
-	lastName  => ['EXPERIMENTERS','LASTNAME'],
-	email     => ['EXPERIMENTERS','EMAIL']
+	id   => ['REPOSITORIES','REPOSITORY_ID','SEQUENCE','REPOSITORY_SEQ'],
+	path => ['REPOSITORIES','PATH']
     };
 
     return $self;
 }
 
-
-
 1;
-

@@ -17,7 +17,8 @@ sub new {
     my $session = shift;
 
     my $self = {
-	session => $session
+	session => $session,
+	cache   => {}
 	};
 
     bless $self, $class;
@@ -37,11 +38,18 @@ sub DBH { my $self = shift; return $self->{session}->DBH(); }
 sub loadObject {
     my ($self, $class, $id) = @_;
 
+    my $classCache = $self->{cache}->{$class};
+
+    return $classCache->{$id} if (exists $classCache->{$id});
+
     eval "require $class";
     my $object = $class->new($self);
     $object->ID($id);
 
-    return $object if $object->readObject();
+    if ($object->readObject()) {
+	$classCache->{$id} = $object;
+	return $object;
+    }
     return undef;
 }
 

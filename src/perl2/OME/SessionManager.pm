@@ -20,6 +20,7 @@ sub new {
 
     my $self = {};
     $self->{dbh} = DBI->connect($datasource,$dbuser,$dbpass);
+    $self->{dbh}->{AutoCommit} = 0;
     $self->{datasource} = $datasource;
     $self->{dbuser} = $dbuser;
     $self->{dbpass} = $dbpass;
