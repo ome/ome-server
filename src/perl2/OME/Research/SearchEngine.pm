@@ -22,7 +22,7 @@
 package OME::Research::SearchEngine;
 
 
-our $VERSION = 2.000_000;
+our $VERSION = '1.0';
 use strict;
 
 #use Class::Accessor;
@@ -40,7 +40,7 @@ sub new {
    my $class=shift;
    my $self = {};
    $self->{type} = shift;		# projects, datasets, images	: string
-   $self->{string} = shift;		# string to parse			: string
+   #$self->{string} = shift;		# string to parse			: string
    $self->{selectedcol}=shift;	# selected columns 		: string  
    bless($self,$class);
    return $self;
@@ -48,27 +48,35 @@ sub new {
 
 
 #--------------------------------
+# parameters: 
+# 	string = string to search
+#	htime= ref hash with (year,month,day)
 
 sub searchEngine{
 
   my $self=shift;
+  my ($string,$htime)=@_;
   my $results=undef;
   my %words=();
   my $sepvalue;
   my $text=new OME::Research::AnalyseText;
   if (defined $text){
-   $text->analyse($self->{string},1);
+   $text->analyse($string,1);
   }
   %words=$text->unique_words;
   $sepvalue=$text->num_separators;
   my %h=();
-  %h=(name=>\%words);
+  %h=(
+	name=>\%words,
+	description=>\%words
+  );
+
   my $cd= new OME::Research::SetStatement;
   my $condition;
   if (defined $cd){
    # ILike: Postgres ! not used
     my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
-    $condition=$cd->Prepare_Request_Like(\%h,$sepvalue);
+    $condition=$cd->Prepare_Request_Like(\%h,$sepvalue,$htime);
     $results=&_do_Request($self,$condition,$db);
     $db->Off();	
   }

@@ -27,7 +27,7 @@ use Exporter;
 use vars qw (@ISA $VERSION);
 @ISA=qw(Exporter);
 
-$VERSION = 2.000_000;
+$VERSION   = '1.00';
 
 
 
@@ -41,7 +41,7 @@ sub new {
 
    $self->{bool} =" OR ";		# not used				default value
    $self->{separator} =" OR ";	# if no "+" in string parsed		default value
-  
+   $self->{timecreated} ="created";	#default value
    bless($self,$class);
    return $self;
 }
@@ -50,84 +50,86 @@ sub new {
 # description: prepare sql condition
 
 sub Prepare_Request_Like{
-  my $self=shift;		
-  my ($ref,$sepvalue)=@_;
-  my %h=();
-  my $separator=$self->{separator};		
-  my @listgeneral=();
-  my $requestgeneral;
-  my $results;
-  %h=%$ref;
-  foreach (keys %h){
-    my $request;
-    my @list=();
-    my $hash=$h{$_};
-    if($sepvalue>0){
-	$separator=" AND ";
-    }   
-    foreach my $word (keys %$hash){
-      my $temp="Upper(".$_.") LIKE Upper(\'\%".$word."\%\')";	
-      push(@list,$temp);
-    }
-    $request=join($separator,@list);
-    #$request="(".$request.")";
-    push(@listgeneral,$request);
-  }
-  if (scalar(@listgeneral)>1){
-     $requestgeneral=join($self->{bool},@listgeneral);
-  }else{
-	# only one value;
-    $requestgeneral=$listgeneral[0];
-  }
-  return $requestgeneral;
+  	my $self=shift;		
+  	my ($ref,$sepvalue,$htime)=@_;
+  	my %h=();
+  	my $separator=$self->{separator};		
+  	my @listgeneral=();
+  	my $requestgeneral="";
+  	my $results;
+  	%h=%$ref;
+	if (defined $htime){
+		my $date=$self->timeFormat($htime);
+		if (defined $date){
+			my $temp=$self->{timecreated}." LIKE \'\%".$date."\%\' AND ";	
+			$requestgeneral.=$temp;
+		}
+	}
+  	foreach my $column_name (keys %h){
+   	 	my $request;
+    		my @list=();
+    		my $hash=$h{$column_name};
+   		if($sepvalue>0){
+		   $separator=" AND ";
+    		}   
+    		foreach my $word (keys %$hash){
+     		    my $temp="Upper(".$column_name.") LIKE Upper(\'\%".$word."\%\')";	
+      	    push(@list,$temp);
+    		}
+    		$request=join($separator,@list);
+    		#$request="(".$request.")";
+    		push(@listgeneral,$request);
+  	}
+  	if (scalar(@listgeneral)>1){
+     		$requestgeneral.=join($self->{bool},@listgeneral);
+  	}else{
+		# only one value;
+    		$requestgeneral.=$listgeneral[0];
+  	}
+	
+  	return $requestgeneral;
 
 }
 
 
+###############
+# parameters:
+#	htime= ref hash
 
-#----------------
-# METHOD POSTGRES
-#----------------
-# not used 
-sub Prepare_Request_ILike{
-  my $self=shift;		
-  my ($ref,$sepvalue)=@_;
-  my %h=();
-  my $separator=$self->{separator};		
-  my @listgeneral=();
-  my $requestgeneral;
-  my $results;
-  %h=%$ref;
-  foreach (keys %h){
-    my $request;
-    my @list=();
-    my $hash=$h{$_};
-    if($sepvalue >0){
-	$separator=" AND ";
-    }   
-    foreach my $word (keys %$hash){
-      my $temp=$_." ILIKE \'\%".$word."\%\'";	
-      push(@list,$temp);
-    }
-    $request=join($separator,@list);
-    #$request="(".$request.")";
-    push(@listgeneral,$request);
-  }
-  if (scalar(@listgeneral)>1){
-     $requestgeneral=join($self->{bool},@listgeneral);
-  }else{
-	# only one value;
-    $requestgeneral=$listgeneral[0];
-  }
-  return $requestgeneral;
+sub timeFormat{
+	my $self=shift;
+	my ($htime)=@_;
+	my @date=();
+	my $d;
+	if (${$htime}{year} eq "" && ${$htime}{month} eq "" && ${$htime}{day} eq "" ){
+		return undef;
+	}else{
+	  my ($day,$month,$year);
+	  ($day,$month,$year)=(localtime)[3,4,5];
+	  if (${$htime}{year} eq ""){
+		$year=1900+$year;
+	  }else{
+		$year =${$htime}{year};
+	  }
+	  push(@date,$year);
+	  if (${$htime}{month} ne "" || ${$htime}{day} ne ""){
+		if (${$htime}{month} eq ""){
+			$month=$month+1;
+			if ($month<10){
+				$month="0".$month;
+			}
+		}else{	
+		 	$month =${$htime}{month};
+		}
+		push(@date,$month);
+		if (${$htime}{day} ne ""){
+		  push(@date,${$htime}{day});
 
+		}
+	  }
+	}
+	$d=join("-",@date);
+	return $d;
 }
-
-
-
- 
-
-
-
 1;
 

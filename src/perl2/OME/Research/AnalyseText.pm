@@ -28,7 +28,7 @@ use Exporter;
 use vars qw (@ISA $VERSION);
 @ISA=qw(Exporter);
 
-$VERSION = 2.000_000;
+$VERSION   = '1.00';
 
 #------------------------------------------------------------------------------
 # Create a new instance of a text object.
@@ -90,9 +90,7 @@ sub num_separators
 }
 
 #------------------------------------------------------------------------------
-# Return anonymous hash of all the unique words in analysed text. The words
-# occurrence count is stored in the hash value.
-
+# Return anonymous hash of all the unique words in analysed text. 
 sub unique_words
 {
    my $text = shift;
@@ -118,8 +116,9 @@ sub _initialize
 
    return($text);
 }
+
 #------------------------------------------------------------------------------
-# Increment number of text lines, blank lines and paragraphs
+# Increment number of text lines
 
 sub _analyse_line
 {
@@ -134,14 +133,13 @@ sub _analyse_line
    return($text);
 }
 #------------------------------------------------------------------------------
-# Try to detect real words in line. Increment syllable, word, complex word,
-# and sentence counters.
+# Try to detect real words in line. 
 
 sub _analyse_words
 {
    my $text = shift;
    my ($one_line) = @_;
-   # Word found, such as: twice, BOTH, a, I'd, non-plussed ..
+   
   
    #while ( $one_line =~ /\b([a-z0-9][-'a-z0-9]*)\b/ig )
     while ( $one_line =~ /([a-zאהגחיטכךןמצפשüû0-9_][-'a-zאהגחיטכךןמצפשüû0-9_]+)/ig )
@@ -157,7 +155,7 @@ sub _analyse_words
       if ( $one_word =~ /-/ )
       {
          #next unless $one_word =~ /[a-z]{2,}-[a-z]{2,}/i;
-	   next unless $one_word =~ /[a-zאהגיטכךןמצפשüû0-9]{1,}-[a-zאהגיטכךןמצפשüû0-9]{1,}/i;
+	   next unless $one_word =~ /[a-zאהגיטכךןמצפשüû0-9_]{1,}-[a-zאהגיטכךןמצפשüû0-9_]{1,}/i;
 
       }
       
