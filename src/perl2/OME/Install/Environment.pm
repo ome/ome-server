@@ -20,23 +20,21 @@
 
 package OME::Install::Environment;
 
+use warnings;
 use strict;
-use vars qw($VERSION);
-$VERSION = 2.000_000;
 
 use File::Copy;
 use File::Spec;
-
-
+use Carp;
 
 # Internal platform IDs.
-my $UNKNOWN = 0;
-my $LINUX = 1;
-my $DARWIN = 2;
-my $HPUX = 3;
-my $SOLARIS = 4;
-my $FREEBSD = 5;
-my $WINDOWS = 6;
+use constant UNKNOWN => 0;
+use constant LINUX => 1;
+use constant DARWIN => 2;
+use constant HPUX => 3;
+use constant SOLARIS => 4;
+use constant FREEBSD => 5;
+use constant WINDOWS => 6;
 # ... and so on
 
 # The ID of the platform we're running on (set in initialize ()).
@@ -55,17 +53,17 @@ my $soleInstance = undef;
 my @os_specific = ();
 
 # Undetected platform.
-$os_specific[$UNKNOWN] = { family => "UNKNOWN", name => "UNKNOWN" };
-$os_specific[$UNKNOWN] = { getMAC =>
+$os_specific[UNKNOWN] = { family => "UNKNOWN", name => "UNKNOWN" };
+$os_specific[UNKNOWN] = { getMAC =>
     sub {
         return "";
     }
 };
 
 # Linux-specific stuff.
-$os_specific[$LINUX] = { family => "Linux", name => "UNKNOWN",
+$os_specific[LINUX] = { family => "Linux", name => "UNKNOWN",
                             distribution => "" };
-$os_specific[$LINUX] = { getMAC =>
+$os_specific[LINUX] = { getMAC =>
     sub {
         my @ifinfo = `/sbin/ifconfig eth0`;
         my $macAddr = $ifinfo[0];
@@ -76,8 +74,8 @@ $os_specific[$LINUX] = { getMAC =>
 };
 
 # Darwin-specific stuff.
-$os_specific[$DARWIN] = { family => "Darwin", name => "UNKNOWN" };
-$os_specific[$DARWIN] = { getMAC =>
+$os_specific[DARWIN] = { family => "Darwin", name => "UNKNOWN" };
+$os_specific[DARWIN] = { getMAC =>
     sub {
         my @ifinfo = `/sbin/ifconfig`;
 	@ifinfo = grep(/ether/, @ifinfo);
@@ -89,8 +87,8 @@ $os_specific[$DARWIN] = { getMAC =>
 };
 
 # HPUX-specific stuff.
-$os_specific[$HPUX] = { family => "HPUX", name => "UNKNOWN" };
-$os_specific[$HPUX] = { getMAC =>
+$os_specific[HPUX] = { family => "HPUX", name => "UNKNOWN" };
+$os_specific[HPUX] = { getMAC =>
     sub {
         my @ifinfo = `lanscan`;
         my $macAddr = $ifinfo[2];
@@ -101,8 +99,8 @@ $os_specific[$HPUX] = { getMAC =>
 };
 
 # Solaris-specific stuff.
-$os_specific[$SOLARIS] = { family => "Solaris", name => "UNKNOWN" };
-$os_specific[$SOLARIS] = { getMAC =>
+$os_specific[SOLARIS] = { family => "Solaris", name => "UNKNOWN" };
+$os_specific[SOLARIS] = { getMAC =>
     sub {
         my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
         $macAddr =~ s/.*ether: ([^ \t]+)$/$1/; # the colon separated string after 'ether'
@@ -112,8 +110,8 @@ $os_specific[$SOLARIS] = { getMAC =>
 };
 
 # FreeBSD-specific stuff.
-$os_specific[$FREEBSD] = { family => "FreeBSD", name => "UNKNOWN" };
-$os_specific[$FREEBSD] = { getMAC =>
+$os_specific[FREEBSD] = { family => "FreeBSD", name => "UNKNOWN" };
+$os_specific[FREEBSD] = { getMAC =>
     sub {
         my @buf = `dmesg`;
 	@buf = grep(/Ethernet address/, @buf);
@@ -139,13 +137,13 @@ my $new = sub {
 sub initialize {
     my $class = shift;
     if( !$soleInstance ) { # first time we're called
-        $platform = $UNKNOWN;
+        $platform = UNKNOWN;
 
-        if 	($^O eq "linux") 	{ $platform = $LINUX }
-	elsif 	($^O eq "darwin") 	{ $platform = $DARWIN }
-	elsif 	($^O eq "hpux") 	{ $platform = $HPUX }
-	elsif 	($^O eq "sunos") 	{ $platform = $SOLARIS }
-	elsif 	($^O eq "freebsd") 	{ $platform = $DARWIN }
+        if 	($^O eq "linux") 	{ $platform = LINUX }
+	elsif 	($^O eq "darwin") 	{ $platform = DARWIN }
+	elsif 	($^O eq "hpux") 	{ $platform = HPUX }
+	elsif 	($^O eq "sunos") 	{ $platform = SOLARIS }
+	elsif 	($^O eq "freebsd") 	{ $platform = FREEBSD }
 
         $os_specific[$platform]->{name} = $^O;
 
@@ -246,6 +244,9 @@ sub copyTree {
     my ($from,$to,$filter) = @_;
     $from = File::Spec->rel2abs($from);  # does clean up as well
     $to = File::Spec->rel2abs($to);
+    if ( ! -e $to ) {
+	mkdir($to) or die("Couldn't make directory $to. $!.\n");
+    }
     my $paths = $self->scanDir($from,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
     my @entries = keys(%$paths);  # just names, no path
     # the above grabs all files and dirs except . and ..
@@ -324,7 +325,33 @@ sub deleteTree {
     return  $total_entries==$deleted ? 1 : 0 ;
 }
 
+sub apacheUser {
+    my $apacheUser;
+
+    # Grab our Apache user from the password file
+    open (PW_FILE, "<", "/etc/passwd") or croak ("Couldn't open /etc/passwd ", $!, ".\n");
+    while (<PW_FILE>) {
+	chomp;
+	$apacheUser = (split ":")[0];
+	if ($apacheUser =~ /httpd|apache|www-data|www/) {
+	    close (PW_FILE);
+	    return $apacheUser;
+	}
+    }
+
+    # We couldn't get the username from the password file so lets ask for it
+    while (not $apacheUser) {
+	$apacheUser = question ("Could not determine Apache user.\nWhat is the unix name that Apache runs under ?: ");
+	if (not getpwname($apacheUser)) {
+	    print "Invalid user \"$apacheUser\"!.";
+	    $apacheUser = undef;
+	}
+    }
+
+    close (PW_FILE);
+
+    return $apacheUser;
+}
 
 
 1;
-
