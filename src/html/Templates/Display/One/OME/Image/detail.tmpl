@@ -30,7 +30,7 @@
 				</tr>
 				<tr>
 					<td colspan='2'>
-						Description [<a href="javascript: document.forms[0].action.value='SaveDescription'; document.forms[0].submit();" class="ome_widget">Save Changes</a>] <br>
+						Description [<a href="javascript: document.forms[0].action.value='SaveDescription'; document.forms[0].submit();" class="ome_widget">Save</a>] <br>
 						<textarea name="description" rows="5" cols="60"><TMPL_VAR NAME='description'></textarea>
 					</td>
 				</tr>
@@ -44,7 +44,8 @@
 						<TMPL_IF NAME=current_annotation_author>
 							written by <TMPL_VAR NAME=current_annotation_author>
 						</TMPL_IF>
-						[ <a href="javascript: document.forms[0].action.value='SaveAnnotation'; document.forms[0].submit();" class="ome_widget">Save Changes</a> | 
+						[ <a href="javascript: document.forms[0].action.value='SaveAnnotation'; document.forms[0].submit();" class="ome_widget">Save</a> | 
+<!-- Don't draw the delete button unless the user owns this annotation -->
 <TMPL_UNLESS NAME=current_annotation_author>
 						 <a href="javascript: document.forms[0].action.value='DeleteAnnotation'; document.forms[0].submit();" class="ome_widget">Mark Invalid</a> |
 </TMPL_UNLESS>
