@@ -411,7 +411,8 @@ sub formChange{
 	);
 	my %c=(
 	"Owner"	=>$owner,
-	"Group"	=>$group
+	"Group"	=>$group,
+	"ID"    =>$id
 	);
 	$c{"Locked/Unlocked"}=$lock if (defined $lock);
 	$rows.=addRow(\%a);
