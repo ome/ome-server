@@ -36,7 +36,8 @@
   <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		<SemanticType Name="PixelsChannelIndex" AppliesTo="I">
 			<Description>
-			 Index points to a single channel of a Pixels attribute.
+			 Index points to a single channel of a Pixels attribute or
+			 a PixelsSlice.
 			</Description>
 			<Element
 				Name="TheC"
@@ -46,7 +47,8 @@
 		
 		<SemanticType Name="PixelsTimeIndex" AppliesTo="I">
 		  <Description>
-			 Index points to a single timepoint of a Pixels attribute.
+			 Index points to a single timepoint of a Pixels attribute
+			 or a PixelsSlice.
           </Description>
 		  <Element
 			 Name="TheT"
@@ -56,7 +58,8 @@
 
 		<SemanticType Name="PixelsStackIndex" AppliesTo="I">
 		  <Description>
-			 Index points to a single XYZ stack of a Pixels attribute.
+			 Index points to a single XYZ stack of a Pixels attribute
+			 or a PixelsSlice.
           </Description>
 		  <Element
 			 Name="TheC"
@@ -70,7 +73,8 @@
 
 		<SemanticType Name="PixelsPlaneIndex" AppliesTo="I">
 		  <Description>
-			 Index points to a single XY plane of a Pixels attribute.
+			 Index points to a single XY plane of a Pixels attribute
+			 or a PixelsSlice.
           </Description>
 		  <Element
 			 Name="TheZ"

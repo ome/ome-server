@@ -36,7 +36,9 @@
   <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		<SemanticType Name="PixelsSlice" AppliesTo="I">
 		  <Description>
-            Specifies a slice of a Pixels attribute. [PPM superclass for PixelsChannelSlice, PixelsTimeSlice, PixelsStackSlice, and PixelsStackSlice"]
+            Specifies a slice of a Pixels attribute. [PPM superclass
+            for PixelsChannelSlice, PixelsTimeSlice, PixelsStackSlice,
+            and PixelsStackSlice]
           </Description>
           <Element
 			 Name="StartX"
@@ -87,7 +89,8 @@
 
 		<SemanticType Name="PixelsChannelSlice" AppliesTo="I">
 			<Description>
-			 Specifies a single channel in a Pixels attribute. [PPM subclass of PixelsSlice]
+			 Specifies a single channel in a Pixels attribute. [PPM
+			 subclass of PixelsSlice]
 			</Description>
 			<Element 
 				Name="Parent"
@@ -98,7 +101,8 @@
 		
 		<SemanticType Name="PixelsTimeSlice" AppliesTo="I">
 			<Description>
-			 Specifies a single timepoint in a Pixels attribute. [PPM subclass of PixelsSlice]
+			 Specifies a single timepoint in a Pixels attribute. [PPM
+			 subclass of PixelsSlice]
 			</Description>
  			<Element 
 				Name="Parent"
@@ -109,7 +113,8 @@
 
 		<SemanticType Name="PixelsStackSlice" AppliesTo="I">
 			<Description>
- 			 Specifies a single XYZ stack in a Pixels attribute. [PPM subclass of PixelsSlice]
+ 			 Specifies a single XYZ stack in a Pixels attribute. [PPM
+ 			 subclass of PixelsSlice]
 			</Description>
 			<Element 
 				Name="Parent"
@@ -120,7 +125,8 @@
 
 		<SemanticType Name="PixelsPlaneSlice" AppliesTo="I">
 			<Description>
-			Specifies a single XY plane in a Pixels attribute. [PPM subclass of PixelsSlice]
+			Specifies a single XY plane in a Pixels attribute. [PPM
+			subclass of PixelsSlice]
 			</Description>
 			<Element 
 				Name="Parent"

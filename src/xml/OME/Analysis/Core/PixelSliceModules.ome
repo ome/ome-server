@@ -36,157 +36,353 @@
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
   <AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
+    <!-- Initial slicing module -- create a slice from a Pixels -->
+
     <AnalysisModule
-       ModuleName="Pixels Converter"
-       Category="PixelsSlice Converters"
-       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+       ModuleName="Create pixels slices"
+       Category="Pixel slices.Slicers"
+       ModuleType="OME::Analysis::Modules::Slicers::Pixels"
 	   ProgramID=""
        ID="urn:lsid:openmicroscopy.org:Module:2010">
 
       <Description>
-       This module converts a Pixels ST into a PixelsSlice ST.
+        Creates a PixelsSlice to represent the entire range of the
+        input pixels.  This module has two main purposes.  First, it
+        give modules which execute against arbitrary pixel slices a
+        way to execute against the entire pixels.  Second, since the
+        other slicer modules take in pixel slices as input, it
+        provides a starting point for creating a slice which is a
+        subset of the pixels.
       </Description>
 
       <Declaration>
+
         <FormalInput
            Name="Pixels"
            SemanticTypeName="Pixels"
-           Count="+"/>
+           Count="+">
+          <Description>
+            A list of Pixels attributes.  Each one will have a
+            PixelsSlice created for it.
+          </Description>
+        </FormalInput>
+
         <FormalOutput
-           Name="Pixels Slices"
+           Name="Pixels slices"
            SemanticTypeName="PixelsSlice"
-           Count="+"/>
+           Count="+">
+          <Description>
+            A list of PixelsSlice attributes.  There will be one
+            created for each Pixels input.  Each slice will have the
+            same dimensions as its Pixels attribute.
+          </Description>
+        </FormalOutput>
+
       </Declaration>
     </AnalysisModule>
     
-    <!-- Slice Modules Input and Output PixelsSlices ST -->
+    <!-- Slicers that operate on existing slices -->
+
     <AnalysisModule
-       ModuleName="Slice on Channels"
-       Category="PixelsSlice Slicers"
-       ModuleType="OME::Analysis::Modules::Indices::Channels"
+       ModuleName="Create channel slices"
+       Category="Pixel slices.Slicers"
+       ModuleType="OME::Analysis::Modules::Slicers::Channels"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2019">
+       ID="urn:lsid:openmicroscopy.org:Module:2011">
 
       <Description>
-       This module creates separate PixelsSlices for each channel of the input PixelsSlice.
-       The optional Channel Index can be used to limit the outputed PixelSlices. If a
-       particular Channel Index does not correspond to a bona fide channel of a particular 
-       input PixelsSlice, no output PixelsSlice is generated. N.B: If the Channel Index is
-       incorrectly set, this module can have no outputs. 
+        Slices an existing PixelsSlice into separate slices for each
+        of its channels.
       </Description>
 
       <Declaration>
         <FormalInput
            Name="Slices"
            SemanticTypeName="PixelsSlice"
-           Count="+"/>
+           Count="+">
+          <Description>
+            A list of PixelsSlice attributes.  Each one will have
+            channel slices created for the channels that it contains.
+          </Description>
+        </FormalInput>
         <FormalInput
-           Name="Channel Indices"
+           Name="Channel indices"
            SemanticTypeName="PixelsChannelIndex"
-           Count="*"/>
-        <FormalOutput
-           Name="Pixel Slices"
-           SemanticTypeName="PixelsSlice"
            Count="*">
+          <Description>
+            [Optional] If specified, it limits which channels in the
+            input slices are turned into channel slices.  If a
+            specified channel does not exist in an input slice, it is
+            skipped.  If this parameter is not specified, every
+            channel in the inputs becomes a new channel slice.
+          </Description>
+        </FormalInput>
         <FormalOutput
-           Name="Channel Slices"
+           Name="Channel slices"
            SemanticTypeName="PixelsChannelSlice"
            Count="*">
+          <Description>
+            A list of PixelsChannelSlices.  Note that the
+            PixelsChannelSlice type is a PPM subclass of the
+            PixelsSlice type, so you must feed it through the
+            "PixelsChannelSlice -&gt; PixelsSlice" typecast module if
+            you want to feed the channel slice into a module which
+            expects a generic slice.
+          </Description>
         </FormalOutput>
       </Declaration>
     </AnalysisModule>
 
     <AnalysisModule
-       ModuleName="Slice on Timepoints"
-       Category="PixelsSlice Slicers"
-       ModuleType="OME::Analysis::Modules::Indices::Timepoints"
+       ModuleName="Create timepoint slices"
+       Category="Pixel slices.Slicers"
+       ModuleType="OME::Analysis::Modules::Slicers::Timepoints"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2020">
+       ID="urn:lsid:openmicroscopy.org:Module:2012">
 
       <Description>
+        Slices an existing PixelsSlice into separate slices for each
+        of its timepoints.
       </Description>
 
       <Declaration>
         <FormalInput
            Name="Slices"
            SemanticTypeName="PixelsSlice"
-           Count="+"/>
+           Count="+">
+          <Description>
+            A list of PixelsSlice attributes.  Each one will have
+            timepoint slices created for the timepoints that it
+            contains.
+          </Description>
+        </FormalInput>
         <FormalInput
-           Name="Timepoint Indices"
-           SemanticTypeName="PixelsTimeIndex"
-           Count="*"/>
-        <FormalOutput
-           Name="Pixel Slices"
-           SemanticTypeName="PixelsSlice"
+           Name="Timepoint indices"
+           SemanticTypeName="PixelsTimepointIndex"
            Count="*">
+          <Description>
+            [Optional] If specified, it limits which timepoints in the
+            input slices are turned into timepoint slices.  If a
+            specified timepoint does not exist in an input slice, it
+            is skipped.  If this parameter is not specified, every
+            timepoint in the inputs becomes a new timepoint slice.
+          </Description>
+        </FormalInput>
         <FormalOutput
-           Name="Timepoint Slices"
+           Name="Timepoint slices"
            SemanticTypeName="PixelsTimeSlice"
            Count="*">
+          <Description>
+            A list of PixelsTimeSlices.  Note that the PixelsTimeSlice
+            type is a PPM subclass of the PixelsSlice type, so you
+            must feed it through the "PixelsTimeSlice -&gt;
+            PixelsSlice" typecast module if you want to feed the
+            timepoint slice into a module which expects a generic
+            slice.
+          </Description>
         </FormalOutput>
       </Declaration>
     </AnalysisModule>
 
     <AnalysisModule
-       ModuleName="Slice on Stacks"
-       Category="PixelsSlice Slicers"
-       ModuleType="OME::Analysis::Modules::Indices::Stacks"
+       ModuleName="Create stack slices"
+       Category="Pixel slices.Slicers"
+       ModuleType="OME::Analysis::Modules::Slicers::Stacks"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2021">
+       ID="urn:lsid:openmicroscopy.org:Module:2013">
 
       <Description>
+        Slices an existing PixelsSlice into separate slices for each
+        of its stacks.
       </Description>
 
       <Declaration>
         <FormalInput
            Name="Slices"
            SemanticTypeName="PixelsSlice"
-           Count="+"/>
+           Count="+">
+          <Description>
+            A list of PixelsSlice attributes.  Each one will have
+            stack slices created for the stacks that it contains.
+          </Description>
+        </FormalInput>
         <FormalInput
-           Name="Stack Indices"
+           Name="Stack indices"
            SemanticTypeName="PixelsStackIndex"
-           Count="*"/>
-        <FormalOutput
-           Name="Pixel Slices"
-           SemanticTypeName="PixelsSlice"
            Count="*">
+          <Description>
+            [Optional] If specified, it limits which stacks in the
+            input slices are turned into stack slices.  If a specified
+            stack does not exist in an input slice, it is skipped.  If
+            this parameter is not specified, every stack in the inputs
+            becomes a new stack slice.
+          </Description>
+        </FormalInput>
         <FormalOutput
-           Name="Stack Slices"
+           Name="Stack slices"
            SemanticTypeName="PixelsStackSlice"
            Count="*">
+          <Description>
+            A list of PixelsStackSlices.  Note that the
+            PixelsStackSlice type is a PPM subclass of the PixelsSlice
+            type, so you must feed it through the "PixelsStackSlice
+            -&gt; PixelsSlice" typecast module if you want to feed the
+            stack slice into a module which expects a generic slice.
+          </Description>
         </FormalOutput>
       </Declaration>
     </AnalysisModule>
 
     <AnalysisModule
-       ModuleName="Slice on Planes"
-       Category="PixelsSlice Slicers"
-       ModuleType="OME::Analysis::Modules::Indices::Planes"
+       ModuleName="Create plane slices"
+       Category="Pixel slices.Slicers"
+       ModuleType="OME::Analysis::Modules::Slicers::Planes"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2022">
+       ID="urn:lsid:openmicroscopy.org:Module:2014">
 
       <Description>
+        Slices an existing PixelsSlice into separate slices for each
+        of its planes.
       </Description>
 
       <Declaration>
         <FormalInput
            Name="Slices"
            SemanticTypeName="PixelsSlice"
-           Count="+"/>
+           Count="+">
+          <Description>
+            A list of PixelsSlice attributes.  Each one will have
+            plane slices created for the planes that it contains.
+          </Description>
+        </FormalInput>
         <FormalInput
-           Name="Plane Indices"
+           Name="Plane indices"
            SemanticTypeName="PixelsPlaneIndex"
-           Count="*"/>
-        <FormalOutput
-           Name="Pixel Slices"
-           SemanticTypeName="PixelsSlice"
            Count="*">
+          <Description>
+            [Optional] If specified, it limits which planes in the
+            input slices are turned into plane slices.  If a specified
+            plane does not exist in an input slice, it is skipped.  If
+            this parameter is not specified, every plane in the inputs
+            becomes a new plane slice.
+          </Description>
+        </FormalInput>
         <FormalOutput
-           Name="Plane Slices"
+           Name="Plane slices"
            SemanticTypeName="PixelsPlaneSlice"
            Count="*">
+          <Description>
+            A list of PixelsPlaneSlices.  Note that the
+            PixelsPlaneSlice type is a PPM subclass of the PixelsSlice
+            type, so you must feed it through the "PixelsPlaneSlice
+            -&gt; PixelsSlice" typecast module if you want to feed the
+            plane slice into a module which expects a generic slice.
+          </Description>
         </FormalOutput>
       </Declaration>
     </AnalysisModule>
+
+    <!-- Typecaster modules for all of the slice types -->
+
+    <AnalysisModule
+       ModuleName="PixelsChannelSlice -&gt; PixelsSlice"
+       Category="Typecasts.PixelsChannelSlice"
+       ModuleType="OME::Analysis::Modules::PPM::Typecast"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2015">
+
+      <Description>
+        Allows a PixelsChannelSlice attribute to be used as a
+        PixelsSlice attribute.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Channel slices"
+           SemanticTypeName="PixelsChannelSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+
+    </AnalysisModule>
+
+    <AnalysisModule
+       ModuleName="PixelsTimeSlice -&gt; PixelsSlice"
+       Category="Typecasts.PixelsTimeSlice"
+       ModuleType="OME::Analysis::Modules::PPM::Typecast"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2016">
+
+      <Description>
+        Allows a PixelsTimeSlice attribute to be used as a
+        PixelsSlice attribute.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Timepoint slices"
+           SemanticTypeName="PixelsTimeSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+
+    </AnalysisModule>
+
+    <AnalysisModule
+       ModuleName="PixelsStackSlice -&gt; PixelsSlice"
+       Category="Typecasts.PixelsStackSlice"
+       ModuleType="OME::Analysis::Modules::PPM::Typecast"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2017">
+
+      <Description>
+        Allows a PixelsStackSlice attribute to be used as a
+        PixelsSlice attribute.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Stack slices"
+           SemanticTypeName="PixelsStackSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+
+    </AnalysisModule>
+
+    <AnalysisModule
+       ModuleName="PixelsPlaneSlice -&gt; PixelsSlice"
+       Category="Typecasts.PixelsPlaneSlice"
+       ModuleType="OME::Analysis::Modules::PPM::Typecast"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2018">
+
+      <Description>
+        Allows a PixelsPlaneSlice attribute to be used as a
+        PixelsSlice attribute.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Plane slices"
+           SemanticTypeName="PixelsPlaneSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+
+    </AnalysisModule>
+
   </AML:AnalysisModuleLibrary>
 </OME>
