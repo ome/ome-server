@@ -42,6 +42,8 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_menu_title { font-size: 24px; font-weight: bold; }
 
+.ome_summary_title { font-size: 13px; font-weight: bold; }
+
 /* QUIET */
 .ome_quiet { font-size: 10px; color: #444444; }
 
@@ -50,6 +52,8 @@ a.ome_quiet { text-decoration: none; color : #444444; }
 a.ome_quiet:visited, a.ome_quiet:active { text-decoration: none; color: #444444 }
 
 a.ome_quiet:hover { text-decoration: none; color : #FF0000; }  /* Red is temporary */
+
+a.ome_detail { font-weight: normal; color : #2222FF; }
 
 /* MAIN LAYOUT TABLE AND TD's */
 
