@@ -3,7 +3,7 @@
  *
  *------------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 Open Microscopy Environment
+ *  Copyright (C) 2004 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee
@@ -69,18 +69,21 @@ import org.openmicroscopy.ds.dto.AttributeDTO;
  */
 
 public class DataFactory
+    extends AbstractManager
 {
-    private RemoteCaller caller;
+    /**
+     * Creates a new <code>DataFactory</code> which communicates with
+     * a data server using the specified {@link RemoteCaller}.  This
+     * {@link RemoteCaller} is first wrapped in an instance of {@link
+     * InstantiatingCaller}.
+     */
+    public DataFactory(RemoteCaller caller) { super(caller); }
 
     /**
      * Creates a new <code>DataFactory</code> which communicates with
-     * a data server using the specified {@link RemoteCaller}.
+     * a data server using the specified {@link InstantiatingCaller}.
      */
-    public DataFactory(RemoteCaller caller)
-    {
-        super();
-        this.caller = caller;
-    }
+    public DataFactory(InstantiatingCaller caller) { super(caller); }
 
     /**
      * Creates a criteria {@link Map} in the format expected by the
@@ -108,90 +111,6 @@ public class DataFactory
     }
 
     /**
-     * Instantiates a single DTO {@link Map} into an instance of the
-     * specified DTO class.
-     *
-     * @param dtoClass the DTO class to instantiate
-     * @param result the DTO {@link Map} returned from the underlying
-     * {@link RemoteCaller}
-     * @return an instance of the specified DTO class, with its values
-     * filled in from the <code>result</code> map
-     */
-    private MappedDTO instantiateDTO(Class dtoClass, Map result)
-    {
-        if (result == null)
-            return null;
-
-        try
-        {
-            MappedDTO dto = (MappedDTO) dtoClass.newInstance();
-            dto.setMap(result);
-            return dto;
-        } catch (ClassCastException e) {
-            throw new RemoteServerErrorException(dtoClass+" is not a MappedDTO subclass");
-        } catch (InstantiationException e) {
-            throw new RemoteServerErrorException("Could not create DTO instance: "+
-                                      e.getMessage());
-        } catch (IllegalAccessException e) {
-            throw new RemoteServerErrorException("Could not create DTO instance: "+
-                                      e.getMessage());
-        }
-    }
-
-    /**
-     * Instantiates {@link List} of DTO {@link Map}s into a instances
-     * of the specified DTO class.  The list is modified in place,
-     * with the maps being replaced with their corresponding DTO
-     * instances.  If the list contains any objects which are not
-     * {@link Map}s, a {@link RemoteServerErrorException} is thrown.
-     * The instantiation of each map is performed by the {@link
-     * #instantiateDTO} method.
-     *
-     * @param dtoClass the DTO class to instantiate
-     * @param result the DTO {@link Map} returned from the underlying
-     * {@link RemoteCaller}
-     */
-    private void instantiateDTOList(Class dtoClass, List list)
-    {
-        if (list == null)
-            return;
-
-        try
-        {
-            for (int i = 0; i < list.size(); i++)
-            {
-                MappedDTO dto = instantiateDTO(dtoClass,(Map) list.get(i));
-                list.set(i,dto);
-            }
-        } catch (ClassCastException e) {
-            throw new RemoteServerErrorException("Remote result can only contain Maps");
-        }
-    }
-
-    private Map semanticTypeClassCache = new HashMap();
-
-    private Class getSemanticTypeClass(String semanticTypeName)
-    {
-        if (semanticTypeClassCache.containsKey(semanticTypeName))
-            return (Class) semanticTypeClassCache.get(semanticTypeName);
-
-        try
-        {
-            Class clazz = Class.forName("org.openmicroscopy.ds.st."+
-                                        semanticTypeName+"DTO");
-            if (clazz == null)
-                clazz = AttributeDTO.class;
-
-            semanticTypeClassCache.put(semanticTypeName,clazz);
-            return clazz;
-        } catch (ClassNotFoundException e) {
-            Class clazz = AttributeDTO.class;
-            semanticTypeClassCache.put(semanticTypeName,clazz);
-            return clazz;
-        }
-    }
-
-    /**
      * Returns a {@link UserState} object for the current session's
      * active user.  The <code>fieldSpec</code> parameter is used to
      * specify which fields in the {@link UserState} object are filled
@@ -203,16 +122,10 @@ public class DataFactory
     public UserState getUserState(FieldsSpecification fieldSpec)
     {
         Map fields = fieldSpec.getFieldsWanted();
-
-        Object result = caller.dispatch("getUserState",fields);
-        if (result instanceof Map)
-        {
-            Class dtoClass = RemoteTypes.getDTOClass(UserState.class);
-            Map map = (Map) result;
-            return (UserState) instantiateDTO(dtoClass,map);
-        } else
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
+        return (UserState)
+            caller.dispatch(UserState.class,
+                            "getUserState",
+                            new Object[] { fields });
     }
 
     /**
@@ -235,42 +148,74 @@ public class DataFactory
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map crit = createCriteriaMap(criteria);
-
-        Object result = caller.dispatch("countObjects",remoteType,crit);
+        Integer result = getRemoteCaller().
+            dispatchInteger("countObjects",
+                            new Object[] {
+                                remoteType,
+                                crit
+                            });
         if (result == null)
             return 0;
-        else if (result instanceof Integer)
-            return ((Integer) result).intValue();
         else
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-    }
-
-    public int count(SemanticType semanticType, Criteria criteria)
-    {
-        return count(semanticType.getName(),criteria);
-    }
-
-    public int count(String semanticType, Criteria criteria)
-    {
-        Map crit = createCriteriaMap(criteria);
-
-        Object result = caller.dispatch("countObjects","@"+semanticType,crit);
-        if (result == null)
-            return 0;
-        else if (result instanceof Integer)
-            return ((Integer) result).intValue();
-        else
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
+            return result.intValue();
     }
 
     /**
-     * Retrieves the of object in the database with the specified
-     * primary key ID.  This version of the method is used to retrieve
-     * core data types; the data type desired should be specified by
-     * the <code>targetClass</code> parameter.  It should correspond
-     * to one of the data interfaces in the
+     * Returns the number of attributes in the database which match
+     * the given criteria.  This version of the method is used to
+     * count semantically typed attributed; the semantic type desired
+     * should be specified by the <code>semanticType</code> parameter.
+     * The semantic type parameter should have its <code>name</code>
+     * parameter loaded, otherwise a {@link DataException} will be
+     * thrown.  Since no objects are actually retrieved from the
+     * database, the fields-wanted, order-by, limit, and offset
+     * portions of the <code>criteria</code> are ignored.
+     *
+     * @param semanticType the semantic type to count
+     * @param criteria the search criteria to use
+     * @return the number of attributes in the OME database which
+     * match the specified criteria
+     */
+    public int count(SemanticType semanticType, Criteria criteria)
+     {
+        return count(semanticType.getName(),criteria);
+    }
+
+    /**
+     * Returns the number of attributes in the database which match
+     * the given criteria.  This version of the method is used to
+     * count semantically typed attributed; the semantic type desired
+     * should be specified by the <code>semanticType</code> parameter.
+     * Since no objects are actually retrieved from the database, the
+     * fields-wanted, order-by, limit, and offset portions of the
+     * <code>criteria</code> are ignored.
+     *
+     * @param semanticType the semantic type to count
+     * @param criteria the search criteria to use
+     * @return the number of attributes in the OME database which
+     * match the specified criteria
+     */
+    public int count(String semanticType, Criteria criteria)
+    {
+        Map crit = createCriteriaMap(criteria);
+        Integer result = getRemoteCaller().
+            dispatchInteger("countObjects",
+                            new Object[] {
+                                "@"+semanticType,
+                                crit
+                            });
+        if (result == null)
+            return 0;
+        else
+            return result.intValue();
+    }
+
+    /**
+     * Retrieves the object in the database with the specified primary
+     * key ID.  This version of the method is used to retrieve core
+     * data types; the data type desired should be specified by the
+     * <code>targetClass</code> parameter.  It should correspond to
+     * one of the data interfaces in the
      * <code>org.openmicroscopy.ds.dto</code> package.  The
      * <code>fieldSpec</code> parameter is used to specifiy which
      * values in the returned DTO object should be filled in.  If the
@@ -288,54 +233,79 @@ public class DataFactory
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map fields = fieldSpec.getFieldsWanted();
-
-        Object result = caller.dispatch("loadObject",
-                                        new Object[] {
-                                            remoteType,
-                                            new Integer(id),
-                                            fields
-                                        });
-        if (result == null)
-        {
-            return null;
-        } else if (result instanceof Map) {
-            Class dtoClass = RemoteTypes.getDTOClass(targetClass);
-            Map map = (Map) result;
-            return instantiateDTO(dtoClass,map);
-        } else {
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-        }
+        return caller.dispatch(targetClass,
+                               "loadObject",
+                               new Object[] {
+                                   remoteType,
+                                   new Integer(id),
+                                   fields
+                               });
     }
 
+    /**
+     * <p>Retrieves the attribute in the database with the specified
+     * primary key ID.  This version of the method is used to retrieve
+     * semantically typed attributed; the semantic type desired should
+     * be specified by the <code>semanticType</code> parameter.  The
+     * semantic type parameter should have its <code>name</code>
+     * parameter loaded, otherwise a {@link DataException} will be
+     * thrown.  The <code>fieldSpec</code> parameter is used to
+     * specifiy which values in the returned DTO object should be
+     * filled in.  If the specification instructs the server to return
+     * has-ony and has-many references, a tree of objects will be
+     * returned.</p>
+     *
+     * <p>If there is a specific interface defined in the
+     * <code>org.openmicroscopy.ds.st</code> package for the specified
+     * semantic type, the return value will be an instance of that
+     * interface.  If not, it will be an instance of the {@link
+     * Attribute} interface.</p>
+     *
+     * @param semanticType the semantic typo to count
+     * @param id the primary key ID value to retrieve
+     * @param fieldSpec the fields specification for the returned DTO
+     * object
+     * @return the DTO object matching with the given primary key ID
+     */
     public Attribute load(SemanticType semanticType, int id,
-                              FieldsSpecification fieldSpec)
+                          FieldsSpecification fieldSpec)
     {
         return load(semanticType.getName(),id,fieldSpec);
     }
 
+    /**
+     * <p>Retrieves the attribute in the database with the specified
+     * primary key ID.  This version of the method is used to retrieve
+     * semantically typed attributed; the semantic type desired should
+     * be specified by the <code>semanticType</code> parameter.  The
+     * <code>fieldSpec</code> parameter is used to specifiy which
+     * values in the returned DTO object should be filled in.  If the
+     * specification instructs the server to return has-ony and
+     * has-many references, a tree of objects will be returned.</p>
+     *
+     * <p>If there is a specific interface defined in the
+     * <code>org.openmicroscopy.ds.st</code> package for the specified
+     * semantic type, the return value will be an instance of that
+     * interface.  If not, it will be an instance of the {@link
+     * Attribute} interface.</p>
+     *
+     * @param semanticType the semantic typo to count
+     * @param id the primary key ID value to retrieve
+     * @param fieldSpec the fields specification for the returned DTO
+     * object
+     * @return the DTO object matching with the given primary key ID
+     */
     public Attribute load(String semanticType, int id,
-                              FieldsSpecification fieldSpec)
+                          FieldsSpecification fieldSpec)
     {
         Map fields = fieldSpec.getFieldsWanted();
-
-        Object result = caller.dispatch("loadObject",
-                                        new Object[] {
-                                            "@"+semanticType,
-                                            new Integer(id),
-                                            fields
-                                        });
-        if (result == null)
-        {
-            return null;
-        } else if (result instanceof Map) {
-            Class dtoClass = getSemanticTypeClass(semanticType);
-            Map map = (Map) result;
-            return (Attribute) instantiateDTO(dtoClass,map);
-        } else {
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-        }
+        return caller.dispatch(semanticType,
+                               "loadObject",
+                               new Object[] {
+                                   "@"+semanticType,
+                                   new Integer(id),
+                                   fields
+                               });
     }
 
     /**
@@ -362,20 +332,9 @@ public class DataFactory
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-
-        Object result = caller.dispatch("retrieveObject",
-                                        new Object[] {remoteType,crit,fields});
-        if (result == null)
-        {
-            return null;
-        } else if (result instanceof Map) {
-            Class dtoClass = RemoteTypes.getDTOClass(targetClass);
-            Map map = (Map) result;
-            return instantiateDTO(dtoClass,map);
-        } else {
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-        }
+        return caller.dispatch(targetClass,
+                               "retrieveObject",
+                               new Object[] {remoteType,crit,fields});
     }
 
     public Attribute retrieve(SemanticType semanticType, Criteria criteria)
@@ -387,24 +346,13 @@ public class DataFactory
     {
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-
-        Object result = caller.dispatch("retrieveObject",
-                                        new Object[] {
-                                            "@"+semanticType,
-                                            crit,
-                                            fields
-                                        });
-        if (result == null)
-        {
-            return null;
-        } else if (result instanceof Map) {
-            Class dtoClass = getSemanticTypeClass(semanticType);
-            Map map = (Map) result;
-            return (Attribute) instantiateDTO(dtoClass,map);
-        } else {
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-        }
+        return caller.dispatch(semanticType,
+                               "retrieveObject",
+                               new Object[] {
+                                   "@"+semanticType,
+                                   crit,
+                                   fields
+                               });
     }
 
     /**
@@ -430,21 +378,9 @@ public class DataFactory
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-
-        Object result = caller.dispatch("retrieveObjects",
-                                        new Object[] {remoteType,crit,fields});
-        if (result == null)
-        {
-            return null;
-        } else if (result instanceof List) {
-            Class dtoClass = RemoteTypes.getDTOClass(targetClass);
-            List list = (List) result;
-            instantiateDTOList(dtoClass,list);
-            return list;
-        } else {
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-        }
+        return caller.dispatchList(targetClass,
+                                   "retrieveObjects",
+                                   new Object[] {remoteType,crit,fields});
     }
 
     public List retrieveList(SemanticType semanticType, Criteria criteria)
@@ -456,25 +392,13 @@ public class DataFactory
     {
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-
-        Object result = caller.dispatch("retrieveObjects",
-                                        new Object[] {
-                                            "@"+semanticType,
-                                            crit,
-                                            fields
-                                        });
-        if (result == null)
-        {
-            return null;
-        } else if (result instanceof List) {
-            Class dtoClass = getSemanticTypeClass(semanticType);
-            List list = (List) result;
-            instantiateDTOList(dtoClass,list);
-            return list;
-        } else {
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-        }
+        return caller.dispatchList(semanticType,
+                                   "retrieveObjects",
+                                   new Object[] {
+                                       "@"+semanticType,
+                                       crit,
+                                       fields
+                                   });
     }
 
     /**
@@ -486,9 +410,8 @@ public class DataFactory
      */
     public DataInterface createNew(Class targetClass)
     {
-        Class dtoClass = RemoteTypes.getDTOClass(targetClass);
-        Map emptyMap = new HashMap();
-        MappedDTO dto = instantiateDTO(dtoClass,emptyMap);
+        MappedDTO dto = caller.getInstantiator().
+            instantiateDTO(targetClass,new HashMap());
         dto.setNew(true);
         return dto;
     }
@@ -500,9 +423,8 @@ public class DataFactory
 
     public Attribute createNew(String semanticType)
     {
-        Class dtoClass = getSemanticTypeClass(semanticType);
-        Map emptyMap = new HashMap();
-        MappedDTO dto = instantiateDTO(dtoClass,emptyMap);
+        MappedDTO dto = caller.getInstantiator().
+            instantiateDTO(semanticType,new HashMap());
         dto.setNew(true);
         return (Attribute) dto;
     }
@@ -610,8 +532,8 @@ public class DataFactory
      * can be modified by editing and updating the DTO on the inverse
      * side of the relationship.  Many-to-many relationships must be
      * updated by one of the specialized methods in the {@link
-     * ProjectManager}, {@link DatasetManager}, or {@link
-     * ImageManager} classes.</p>
+     * org.openmicroscopy.ds.managers.ProjectManager} and {@link
+     * org.openmicroscopy.ds.managers.DatasetManager}.</p>
      *
      * <p>New objects which are being saved to the database for the
      * first time will have their ID field (<code>id</code>) filled in
@@ -655,7 +577,8 @@ public class DataFactory
         // Make the remote call
 
         String remoteType = object.getDTOTypeName();
-        Object result = caller.dispatch("updateObject",remoteType,serialized);
+        Object result = getRemoteCaller().
+            dispatch("updateObject",new Object[] { remoteType,serialized });
 
         // If this was a new object, we should have gotten back a
         // primary key ID
@@ -701,8 +624,8 @@ public class DataFactory
      * can be modified by editing and updating the DTO on the inverse
      * side of the relationship.  Many-to-many relationships must be
      * updated by one of the specialized methods in the {@link
-     * ProjectManager}, {@link DatasetManager}, or {@link
-     * ImageManager} classes.</p>
+     * org.openmicroscopy.ds.managers.ProjectManager} or {@link
+     * org.openmicroscopy.ds.managers.DatasetManager} classes.
      *
      * <p>New objects which are being saved to the database for the
      * first time will have their ID field (<code>id</code>) filled in
@@ -780,7 +703,8 @@ public class DataFactory
 
         // Make the remote call
 
-        Object result = caller.dispatch("updateObjects",serialized);
+        Object result = getRemoteCaller().
+            dispatch("updateObjects",new Object[] { serialized });
 
         // We should get back a map of the primary key ID's for each
         // of the objects which was new.

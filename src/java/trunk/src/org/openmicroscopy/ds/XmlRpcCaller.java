@@ -80,7 +80,7 @@ import org.apache.xmlrpc.XmlRpcClientLite;
  */
 
 public class XmlRpcCaller
-    implements RemoteCaller
+    extends AbstractRemoteCaller
 {
     /**
      * The String used to represent the null value in an XML-RPC
@@ -107,6 +107,8 @@ public class XmlRpcCaller
      */
     public XmlRpcCaller(URL url)
     {
+        super();
+
         try
         {
             xmlrpc = createClient(url);
@@ -339,21 +341,6 @@ public class XmlRpcCaller
             }
             return invoke(method);
         }
-    }
-
-    public Object dispatch(String method)
-    {
-        return dispatch(method,(Object[]) null);
-    }
-
-    public Object dispatch(String method, Object param1)
-    {
-        return dispatch(method,new Object[] {param1});
-    }
-
-    public Object dispatch(String method, Object param1, Object param2)
-    {
-        return dispatch(method,new Object[] {param1,param2});
     }
 
     public Object dispatch(String method, Object[] params)

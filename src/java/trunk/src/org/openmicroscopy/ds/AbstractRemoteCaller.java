@@ -37,43 +37,37 @@
 package org.openmicroscopy.ds;
 
 /**
- * Provides an interface for making generic RPC calls.  Currently, the
- * only implementation of this interface is the {@link XmlRpcCaller}
- * class.  If, at some point in the future, the transport protocol of
- * the remote framework changes, that should be the only class which
- * needs rewriting.
+ * Provides some base functionality common to most {@link
+ * RemoteCaller} implementations.
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
  * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 
-public interface RemoteCaller
+public abstract class AbstractRemoteCaller
+    implements RemoteCaller
 {
-    public void login(String username, String password);
-
-    public void logout();
-
-    public String getSessionKey();
-
     /**
-     * Invoke an arbitrary remote procedure.
+     * Creates a new <code>AbstractRemoteCaller</code> instance.
      */
-    public Object invoke(String procedure, Object[] params);
+    public AbstractRemoteCaller() { super(); }
 
-    /**
-     * Invoke a remote method via the <code>dispatch</code> procedure.
-     * The method can receive an arbitrary number of parameters.
-     */
-    public Object dispatch(String method, Object[] params);
+    ////////////////////////////////////////////////////////////////////
+    // All of the following methods are implemented in terms of
+    // the abstract dispatch method.
 
-    /**
-     * Invoke a remote method via the <code>dispatch</code> procedure.
-     * The method can receive an arbitrary number of parameters.  The
-     * method is expected to return a result which can be somehow
-     * typecast into an {@link Integer}.  If it can't, a {@link
-     * RemoteServerErrorException} is thrown.
-     */
-    public Integer dispatchInteger(String method, Object[] params);
-
+    // inherited Javadoc
+    public Integer dispatchInteger(String method, Object[] params)
+    {
+        Object result = dispatch(method,params);
+        try
+        {
+            return PrimitiveConverters.convertToInteger(result);
+        } catch (NumberFormatException e) {
+            throw new RemoteServerErrorException("Invalid return type "+
+                                                 e.getMessage());
+        }
+    }
+    
 }

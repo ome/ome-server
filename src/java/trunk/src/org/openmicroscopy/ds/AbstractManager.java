@@ -1,9 +1,9 @@
 /*
- * org.openmicroscopy.ds.RemoteCaller
+ * org.openmicroscopy.ds.managers.AbstractManager
  *
  *------------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 Open Microscopy Environment
+ *  Copyright (C) 2004 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee
@@ -37,43 +37,54 @@
 package org.openmicroscopy.ds;
 
 /**
- * Provides an interface for making generic RPC calls.  Currently, the
- * only implementation of this interface is the {@link XmlRpcCaller}
- * class.  If, at some point in the future, the transport protocol of
- * the remote framework changes, that should be the only class which
- * needs rewriting.
+ * The abstract superclass of all data service classes which perform
+ * medium- to high-level interactions with the remote server.
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
  * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 
-public interface RemoteCaller
+public class AbstractManager
 {
-    public void login(String username, String password);
-
-    public void logout();
-
-    public String getSessionKey();
+    protected InstantiatingCaller caller;
 
     /**
-     * Invoke an arbitrary remote procedure.
+     * Creates a new <code>AbstractManager</code> which communicates
+     * with a data server using the specified {@link RemoteCaller}.
+     * This {@link RemoteCaller} is first wrapped in an instance of
+     * {@link InstantiatingCaller}.
      */
-    public Object invoke(String procedure, Object[] params);
+    public AbstractManager(RemoteCaller caller)
+    {
+        super();
+        this.caller = new InstantiatingCaller(caller);
+    }
 
     /**
-     * Invoke a remote method via the <code>dispatch</code> procedure.
-     * The method can receive an arbitrary number of parameters.
+     * Creates a new <code>AbstractManager</code> which communicates
+     * with a data server using the specified {@link
+     * InstantiatingCaller}.
      */
-    public Object dispatch(String method, Object[] params);
+    public AbstractManager(InstantiatingCaller caller)
+    {
+        super();
+        this.caller = caller;
+    }
 
     /**
-     * Invoke a remote method via the <code>dispatch</code> procedure.
-     * The method can receive an arbitrary number of parameters.  The
-     * method is expected to return a result which can be somehow
-     * typecast into an {@link Integer}.  If it can't, a {@link
-     * RemoteServerErrorException} is thrown.
+     * Returns the {@link RemoteCaller} used by this data factory.
+     * @return the {@link RemoteCaller} used by this data factory.
      */
-    public Integer dispatchInteger(String method, Object[] params);
+    public RemoteCaller getRemoteCaller()
+    { return caller.getRemoteCaller(); }
+
+    /**
+     * Returns the {@link InstantiatingCaller} used by this data
+     * factory.
+     * @return the {@link InstantiatingCaller} used by this data
+     * factory.
+     */
+    public InstantiatingCaller getInstantiatingCaller() { return caller; }
 
 }

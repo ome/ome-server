@@ -67,7 +67,7 @@ public class FieldsSpecification
         super();
     }
 
-    Map getFieldsWanted() { return fieldsWanted; }
+    public Map getFieldsWanted() { return fieldsWanted; }
 
     /**
      * Adds a field which will be accessible in the returned objects.
