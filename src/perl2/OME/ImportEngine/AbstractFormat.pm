@@ -678,8 +678,7 @@ sub __storeDisplayOptions {
 	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", 
 							{ Pixels => $pixels_attr } ); 
 	
-	if( @channelComponents ) { 
-			no warnings "uninitialized";
+	if( @channelComponents && ( ! grep( (not defined $_->LogicalChannel()->EmissionWavelength()), @channelComponents ) ) ) { 
 			@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
 			@channelComponents;
 			@channelOrder = map( $_->Index(), @channelComponents ); 
