@@ -58,6 +58,7 @@ public class ChainLibraryFrame extends ChainFrameBase {
 	
 	public ChainLibraryFrame(Controller controller,Connection connection) {
 		super(controller,connection,new String("OME Chain Library"));
+		show();
 		PChainLibraryCanvas libraryCanvas = (PChainLibraryCanvas) canvas;
 		libraryCanvas.scaleToSize();
 	}
