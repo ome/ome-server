@@ -78,32 +78,32 @@ my @MENU = (
 		type => 'link',
 		text => undef,
 	},
-	# ** BROWSE **
+	# ** Search **
 	{
-		web_class => undef,
+		web_class => 'OME::Web::Search',
 		type => 'heading',
-		text => 'Browse',
+		text => 'Search',
 	},
 	{
-		web_class => 'OME::Web::DBObjTable',
+		web_class => 'OME::Web::Search',
 		type => 'link',
 		url_param => { Type => 'OME::Project' },
 		text => 'Projects',
 	},
 	{
-		web_class => 'OME::Web::DBObjTable',
+		web_class => 'OME::Web::Search',
 		type => 'link',
 		url_param => { Type => 'OME::Dataset' },
 		text => 'Datasets',
 	},
 	{
-		web_class => 'OME::Web::DBObjTable',
+		web_class => 'OME::Web::Search',
 		type => 'link',
 		url_param => { Type => 'OME::Image' },
 		text => 'Images',
 	},
 	{
-		web_class => 'OME::Web::DBObjTable',
+		web_class => 'OME::Web::Search',
 		type => 'link',
 		url_param => { Type => 'OME::ModuleExecution' },
 		text => 'Module Executions',
@@ -231,9 +231,24 @@ sub __processElement {
 	# HEADING
 	if ($menu_element->{'type'} eq 'heading') {
 		# Build TR
+		
+		# If the menu specifies a web_class, make it a link
+		my $a_href;
+		if( $web_class ) {
+			$web_class->require()
+				or die "Could not load package $web_class";
+			$a_href = $q->a({ 
+				href => $web_class->pageURL($web_class, $menu_element->{ url_param } ),
+				}, 
+				$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'}) );
+		};
+		
 		$element_data .= $q->Tr($q->td(
 			{class => $css_class, align => 'center'},
-			$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'})
+			( $web_class ? 
+				$a_href :
+				$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'})
+			)
 		));
 	# LINK
 	} elsif ($menu_element->{'type'} eq 'link') {
