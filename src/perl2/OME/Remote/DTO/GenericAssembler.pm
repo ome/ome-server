@@ -212,11 +212,8 @@ sub __genericDTO {
     return $dto;
 }
 
-
-sub __updateDTO {
-    my ($class_name,$serialized,$id_hash) = @_;
-
-    my $factory = OME::Session->instance()->Factory();
+sub __parseUpdateHash {
+    my ($proto,$serialized,$id_hash) = @_;
 
     die "Cannot update an object with no ID"
       unless defined $serialized->{id};
@@ -245,6 +242,15 @@ sub __updateDTO {
             $serialized->{$key} = $id;  #$object;
         }
     }
+
+    return $id;
+}
+
+sub __updateDTO {
+    my ($proto,$class_name,$serialized,$id_hash) = @_;
+
+    my $factory = OME::Session->instance()->Factory();
+    my $id = $proto->__parseUpdateHash($serialized,$id_hash);
 
     if ($id =~ /^NEW:/) {
         # If the ID of the object to be saved looks like a new ID, then
@@ -292,7 +298,7 @@ sub updateDTO {
 
     my $data_class = $proto->getDataClass($object_type);
 
-    my @result = __updateDTO($data_class,$serialized,{});
+    my @result = $proto->__updateDTO($data_class,$serialized,{});
 
     return $result[1];
 }
@@ -305,7 +311,8 @@ sub updateDTOList {
     while (my ($object_type,$serialized) = splice(@$list,0,2)) {
         my $data_class = $proto->getDataClass($object_type);
 
-        push @result, __updateDTO($data_class,$serialized,$id_hash);
+        push @result,
+          $proto->__updateDTO($data_class,$serialized,$id_hash);
     }
 
     return {@result};
