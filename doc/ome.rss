@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns="http://purl.org/rss/1.0/"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/"
+ xmlns:syn="http://purl.org/rss/1.0/modules/syndication/"
+>
+
+<channel rdf:about="http://openmicroscopy.org">
+<title>OME CVS Log</title>
+<link>http://openmicroscopy.org</link>
+<description>OME CVS Commits RSS Feed</description>
+<items>
+ <rdf:Seq>
+  <rdf:li rdf:resource="http://cvs.openmicroscopy.org.uk/horde/chora/cvs.php/OME/src/perl2/OME/Tests" />
+ </rdf:Seq>
+</items>
+</channel>
+
+<item rdf:about="http://cvs.openmicroscopy.org.uk/horde/chora/cvs.php/OME/src/perl2/OME/Tests">
+<title>OME/src/perl2/OME/Tests</title>
+<link>http://cvs.openmicroscopy.org.uk/horde/chora/cvs.php/OME/src/perl2/OME/Tests</link>
+<description>log testing&lt;BR&gt;&lt;B&gt;Files&lt;/B&gt;&lt;BR&gt;&lt;A HREF=&quot;http://cvs.openmicroscopy.org.uk/horde/chora/diff.php/OME/src/perl2/OME/Tests/ImportEngine.pl?r1=1.2&amp;r2=1.3&amp;ty=h&amp;num=10&quot;&gt;ImportEngine.pl&lt;/A&gt;&lt;BR&gt;&lt;A HREF=&quot;http://cvs.openmicroscopy.org.uk/horde/chora/diff.php/OME/src/perl2/OME/Tests/UberImport.pl?r1=1.3&amp;r2=1.4&amp;ty=h&amp;num=10&quot;&gt;UberImport.pl&lt;/A&gt;&lt;BR&gt;&lt;B&gt;Author: &lt;/B&gt;igg</description>
+<dc:creator>igg</dc:creator>
+<dc:date>1063511838</dc:date>
+</item>
+
+</rdf:RDF>

@@ -1,0 +1,214 @@
+#!/usr/bin/perl
+
+#	This places CVS entries directly into an RSS file
+
+use strict;
+use File::Basename;
+use XML::RSS;
+my $DEBUG = 0;
+my $WEB_FILE_BASE = 'http://cvs.openmicroscopy.org.uk/horde/chora/diff.php/';
+my @WEB_FILE_PARAMS = (
+	'ty=h',
+	'num=10',
+	);
+my $WEB_DIR_BASE = 'http://cvs.openmicroscopy.org.uk/horde/chora/cvs.php/';
+
+
+{
+	
+
+	my ($cvs_arg, $rssFile, $nItems ) =  @ARGV;
+	unless ( $cvs_arg and -f $rssFile ) {
+		die "CVS-arg: [$cvs_arg]\nRSS file: [$rssFile]\nnItems: [$nItems]\nUsage: $0 CVS-arg /path/to/RSSfile [number of RSS items]\n";
+	}
+	$nItems = 30 unless defined $nItems;
+
+	$DEBUG && warn "STARTED COMMIT: ", scalar localtime, "\n";
+
+	my $cvs_info = CvsIncoming->new();
+	$cvs_info->debug( $DEBUG );
+	$cvs_info->parse_command_line_argument( $cvs_arg );
+	$cvs_info->parse_cvs_output();
+
+	$DEBUG && warn "Updated by [", $cvs_info->committer, "]\n",
+				   "Updated on [", $cvs_info->commit_time, "]\n",
+				   "Log message [", $cvs_info->message, "]\n";
+
+	my $rss = new XML::RSS;
+	$rss->parsefile($rssFile);
+	while ($nItems > 0 and @{$rss->{'items'}} >= $nItems) {
+		pop(@{$rss->{'items'}});
+	}
+
+	$rss->add_item(title => entry_title ($cvs_info),
+				link => entry_link ($cvs_info),
+				description => entry_description ($cvs_info),
+				dc => {
+					creator => entry_creator($cvs_info),
+					date => entry_date($cvs_info)
+				},
+				mode  => 'insert'
+				); 
+
+	$rss->save($rssFile); 
+}
+
+sub entry_title {
+	my $cvsInfo = shift;
+	if (entry_is_directory($cvsInfo)) {
+		return $cvsInfo->directory();
+	} else {
+		return $cvsInfo->files()->[0]->{filename};
+	}
+}
+
+sub entry_link {
+	my $cvsInfo = shift;
+	if (entry_is_directory($cvsInfo)) {
+		return $WEB_DIR_BASE.$cvsInfo->directory();
+	} else {
+		return entry_file_link( $cvsInfo );
+	}
+}
+
+sub entry_description {
+	my $cvsInfo = shift;
+	my $description = $cvsInfo->message().'&lt;BR&gt;';
+	if (entry_is_directory($cvsInfo)) {
+		$description .= '&lt;B&gt;Files&lt;/B&gt;&lt;BR&gt;';
+		foreach my $file ( @{$cvsInfo->files()} ) {
+			$description .= '&lt;A HREF=&quot;'.entry_file_link( $cvsInfo, $file ).'&quot;&gt;'.$file->{filename}.'&lt;/A&gt;&lt;BR&gt;';
+		}
+	}
+	
+	$description .= '&lt;B&gt;Author: &lt;/B&gt;'.$cvsInfo->committer();
+	
+	return $description;
+}
+
+sub entry_creator {
+	my $cvsInfo = shift;
+	return $cvsInfo->committer();
+}
+
+sub entry_date {
+	my $cvsInfo = shift;
+	return $cvsInfo->commit_time();
+}
+
+sub entry_is_directory {
+	my $cvsInfo = shift;
+	return 1 if scalar @{$cvsInfo->files()} > 1;
+	return 0;
+}
+
+sub entry_file_link {
+	my ($cvsInfo,$file) = @_;
+	$file = $cvsInfo->files()->[0] unless defined $file;
+	return $WEB_FILE_BASE.$file->{directory}.'/'.$file->{filename}.
+		'?r1='.$file->{version_from}. 
+		'&r2='.$file->{version_to}.'&'.
+		join ('&',@WEB_FILE_PARAMS);
+}
+
+
+
+package CvsIncoming;
+
+use strict;
+
+sub new {
+    my ( $class ) = @_;
+    my $self = bless ( {}, $class );
+    $self->committer( (getpwuid( $< ))[0] );
+    $self->commit_time( time );
+    return $self;
+}
+
+sub parse_command_line_argument {
+    my ( $self, $arg ) = @_;
+    $self->debug && warn "Given command-line argument: [$arg]\n";
+    my ( $dirCommon, @tmp_files ) = split /\s+/, $arg;
+    my $dir = $dirCommon;
+    $self->debug && warn "Command line Directory: [$dirCommon]\n";
+    my @files = ();
+    my $version_or_none = '\d+\.\d+\.\d+\.\d+|\d+\.\d+\.\d+|\d+\.\d+|NONE';
+    for my $item ( @tmp_files ) {
+        if ( $item =~ /^(\S+),($version_or_none),($version_or_none)$/ ) {
+            push @files, { directory    => $dir,
+                           filename     => $1,
+                           version_from => $2,
+                           version_to   => $3 };
+            $self->debug && warn "Found info directory [$dir] filename [$1] version_from [$2] version_to [$3]\n";
+        }
+        else {
+            $dir .= $item;
+        }
+    }
+    $self->files( \@files );
+    $self->debug && warn "Final Directory: [$dir]\n";
+    $self->directory( $dirCommon );
+
+}
+
+sub parse_cvs_output {
+    my ( $self, $cvs_output ) = @_;
+    unless ( $cvs_output ) {
+        $cvs_output = join ( '', <STDIN> );
+    }
+    my ( $log_message ) = $cvs_output =~ /Log Message:\n(.*)$/sm;
+    $log_message =~ s/\n+$//sm;
+    $self->message( $log_message );
+    return $self;
+}
+
+sub files {
+	my $self = shift;
+	if (@_) {
+		$self->{files} = shift;
+	}
+	return $self->{files};
+}
+
+sub directory {
+	my $self = shift;
+	if (@_) {
+		$self->{directory} = shift;
+	}
+	return $self->{directory};
+}
+
+sub message {
+	my $self = shift;
+	if (@_) {
+		$self->{message} = shift;
+	}
+	return $self->{message};
+}
+
+sub committer {
+	my $self = shift;
+	if (@_) {
+		$self->{committer} = shift;
+	}
+	return $self->{committer};
+}
+
+sub commit_time {
+	my $self = shift;
+	if (@_) {
+		$self->{commit_time} = shift;
+	}
+	return $self->{commit_time};
+}
+
+sub debug {
+	my $self = shift;
+	if (@_) {
+		$self->{debug} = shift;
+	}
+	return $self->{debug};
+}
+
+1;
+
