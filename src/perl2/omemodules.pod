@@ -37,14 +37,6 @@ OME Modules - Table of Contents
     OME::AnalysisPath
         OME::AnalysisPath::Map
 
-=over
-
-=item Deprecated
-
-    OME::Repository
-
-=back
-
 =head2 Session management
 
     OME::SessionManager
