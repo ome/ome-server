@@ -60,6 +60,8 @@ logconfig(
 	-level    => 'debug'
 );
 
+use CGI::Carp;
+
 
 # DBObject caching
 OME::DBObject->Caching(1);
@@ -72,46 +74,44 @@ if ($pageClass) {
 	my $page;
 	eval "use $pageClass";
 	if ($@) {
-		print STDERR "Error loading package - $@\n";
-		print $CGI->header(-type => 'text/html',-status => "500 Internal Error" );
-		print "Error loading package - $@\n";
-		exit;
-	}
+		carp "Error loading package - $@.";
+		print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
+		      "Error loading package - $@.";
+
+		exit(1);
+	};
 
 	eval {
 		if (!UNIVERSAL::isa($pageClass,"OME::Web")) {
-			print STDERR "Package $pageClass does not inherit from OME::Web\n";
-			print $CGI->header(-type => 'text/html',-status => "500 Internal Error");
-			print "Package $pageClass does not inherit from OME::Web";
+			carp "Package $pageClass does not inherit from OME::Web.";
+			print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
+			      "Package $pageClass does not inherit from OME::Web.";
 		} else {
 			$page = $pageClass->new(CGI => $CGI);
 			if (!$page) {
-						print STDERR "Error calling package constructor -\n";
-						print $CGI->header(-type => 'text/html',-status => "500 Internal Error" );
-						print "Error calling package constructor -\n";
+				carp "Error calling package constructor $pageClass->new().";
+				print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
+				      "Error calling package constructor $pageClass->new().";
 			} else {
-						$page->serve();
+				$page->serve();
 			}
 		}
 	};
 	
 	if ($@) {
-		print $CGI->header(-type => 'text/html',-status => "500 Internal Error");
-		print "<pre>Error serving $pageClass.\n";
-		if( not defined $@ or $@ eq '') {
-			print "No error message available\n";
-		} else {
-			print "Error message is\n$@\n";
-		}
-		print "</pre>";
-		print STDERR "Error serving $pageClass.\n";
-		print STDERR "Error message is\n$@\n" if $@ ne '';
+		carp "Error serving $pageClass: ", $@ || "no error message available.";
+		print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
+		      "<pre>Error serving $pageClass: ", $@ || "no error message available.", "</pre>";
+
+		exit(1);
 	}
 } else {
-	print STDERR "Class not specified\n";
+	carp "Page not specified.";
 	
-	print $CGI->header(-type => 'text/html',-status => '404 File not found');
-	print "Class not specified\n";
+	print $CGI->header(-type => 'text/html',-status => '404 File not found'),
+	      "Page not specified.";
+
+	exit(1);
 }
 
-undef($CGI);
+#undef($CGI);
