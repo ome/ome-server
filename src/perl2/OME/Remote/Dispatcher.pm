@@ -104,6 +104,8 @@ cache, so that it can be referred to in later dispatch calls.
 
 use strict;
 
+use Carp;
+use Log::Agent;
 use OME::SessionManager;
 use OME::Session;
 use OME::Factory;
@@ -174,11 +176,12 @@ sub dispatch {
     print "Calling ${objectProto}->${method}\n";
 
     # Lookup the method's prototype
-    die "Cannot find method $method in class $objectClass"
-      if (!exists $OME::Remote::Prototypes::prototypes{$objectClass}->{$method});
-
     my $prototypes =
-      $OME::Remote::Prototypes::prototypes{$objectClass}->{$method};
+      OME::Remote::Prototypes::findPrototypes($objectClass,$method);
+      #$OME::Remote::Prototypes::prototypes{$objectClass}->{$method};
+
+    croak "Cannot find method $method in class $objectClass"
+      if (!defined $prototypes);
 
     my ($paramProto,$returnProto) = @$prototypes;
     die "Parameters do not match prototype"

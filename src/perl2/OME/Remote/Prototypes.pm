@@ -37,24 +37,59 @@ our %prototypes =
                       loadAttribute => [['$','$'],
                                         ['OME::AttributeType::Superclass']],
                      },
+   'OME::DBObject' => {
+                       id          => [['$'],['$']],
+                       writeObject => [[],[]],
+                      },
    'OME::Project' => {
-                      id          => [['$'],['$']],
+                      #id          => [['$'],['$']],
                       name        => [['$'],['$']],
                       description => [['$'],['$']],
                       owner       => [['OME::Experimenter'],['OME::Experimenter']],
                       group       => [['OME::Group'],['OME::Group']],
-                      writeObject => [[],[]],
+                      #writeObject => [[],[]],
                      },
    'OME::Experimenter' => {
-                           id        => [['$'],['$']],
-                           ome_name  => [['$'],['$']],
-                           firstname => [['$'],['$']],
-                           lastname  => [['$'],['$']],
-                           email     => [['$'],['$']],
-                           data_dir  => [['$'],['$']],
+                           #id          => [['$'],['$']],
+                           ome_name    => [['$'],['$']],
+                           firstname   => [['$'],['$']],
+                           lastname    => [['$'],['$']],
+                           email       => [['$'],['$']],
+                           data_dir    => [['$'],['$']],
+                           #writeObject => [[],[]],
                           },
+   'OME::Group' => {
+                    #id          => [['$'],['$']],
+                    name        => [['$'],['$']],
+                    leader      => [['OME::Experimenter'],['OME::Experimenter']],
+                    contact     => [['OME::Experimenter'],['OME::Experimenter']],
+                    #writeObject => [[],[]],
+                },
   );
 
 
+sub findPrototypes {
+    my ($class, $method) = @_;
+
+    my @classesToCheck = ($class);
+    my $prototypeFound;
+
+    print STDERR "*** $class ";
+    while (my $nextClass = shift(@classesToCheck)) {
+        if (exists $prototypes{$nextClass}->{$method}) {
+            $prototypeFound = $prototypes{$nextClass}->{$method};
+            last;
+        }
+        my $isaRef = "${nextClass}::ISA";
+        no strict 'refs';
+        print STDERR join(' ',@$isaRef)," ";
+        push @classesToCheck, @$isaRef;
+        use strict 'refs';
+    }
+
+    print STDERR "\n";
+
+    return $prototypeFound;
+}
 
 1;

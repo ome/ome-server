@@ -60,7 +60,8 @@ public class RemoteTest
         Factory  factory = session.getFactory();
         Experimenter experimenter = 
             (Experimenter) factory.loadObject("OME::Experimenter",1);
-        System.out.println(experimenter.getFirstName()+" "+
+        System.out.println(experimenter.getID()+" "+
+                           experimenter.getFirstName()+" "+
                            experimenter.getLastName());
     }
 }
