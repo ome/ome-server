@@ -37,7 +37,20 @@ AnalysisModule.xsd
 #
 #   !!!!!!!!!!------ HACK ALERT -----!!!!!!!!	
 #
-# see explanation in sub importXMLFile
+# Problem is creating tables & columns. Checking for
+# existence of tables & columns with the db handle I'm writing with
+# causes some sort of sticky condition (probably
+# an Error condition) that prevents me from creating tables or inserting columns.
+# The only way I've found out of that is call a rollback. But that screws up the
+# transaction I'm working on.
+# Making another database handle to query for table existence is the only solution
+# I can think of. The way I've done this is most definately a hack.
+#
+# This is ok because the test won't be necessary in the future.
+# Eventually, every table a module can use as an input or output
+# will be registered with DataTypes if it exists. That might be
+# the case at this point for all I know. But it hasn't been discussed,
+# so I'm taking precautions.
 
 require DBI;
 require OME::DBConnection;
@@ -72,28 +85,6 @@ sub importXMLFile {
 
 	#process tree
 	processDOM( $session, $tree->getDocumentElement() );
-	
-	#commit
-	$session->DBH()->commit(); # new tables & columns written w/ this handle
-# HACK ALERT!!!!!!
-	require OME::DBObject;
-	OME::DBObject->DBH()->commit(); # new entries written w/ this handle
-	
-# This is fucked up. All of these changes should go under one transaction
-# that can be rolled back if we hit any snags. Problem is, checking for
-# existence of tables & columns cause some sort of sticky condition (probably
-# an Error condition) that prevents me from creating tables or inserting columns.
-# The only way I've found out of that is call a rollback. But that screws up the
-# transaction I'm working on.
-# Making another database handle to query for table existence is the only solution
-# I can think of. This is most definately a hack.
-# The other part of the hack I've done to solve the transaction problem is grabbing
-# the database handle from DBObject.
-
-# I'm using this rather crufty solution for now. After everything
-# else works, I'll come back and figure out some way of fixing this. Maybe I'll
-# have thought of something by then. Maybe someone else will see this and come
-# up with a good solution.
 
 	#return ...what?
 	# maybe list of all new OME::Programs objects
@@ -186,7 +177,6 @@ foreach my $module (@modules) {
 # are there any other mandatory columns? row based schema wants actual_output_id. 
 					$sth->execute()
 						or die "Unable to create table ".$table->getAttribute( 'TableName' )."\n";
-					$dbh->commit() if $commitNow;
 				}
 			} else {
 				$newTable = $tables[0];
@@ -389,6 +379,10 @@ foreach my $module (@modules) {
 	#
 	##################################################
 
+	# commit this module. It's been successfully imported
+	$program->writeObject();   # *hopefully* reliably commits all DBObjects
+	$session->DBH()->commit(); # new tables & columns written w/ this handle
+
 } # END foreach my $module( @modules )
 
 } # END sub processDOM
@@ -448,7 +442,6 @@ sub makeDataTypeColumn {
 			);
 			$sth->execute()
 				or die "Unable to create column ".$DataTypeColumn->column_name()." in table ".$table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->table_name();
-			$dbh->commit() if $commitNow;
 		}
 		$DataTypeColumn->writeObject() if $commitNow;
 	} else {
