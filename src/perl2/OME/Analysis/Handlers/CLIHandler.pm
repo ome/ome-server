@@ -42,6 +42,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use IPC::Run;
+use Log::Agent;
 
 use OME::Analysis::Handlers::DefaultLoopHandler;
 use XML::LibXML;
@@ -225,17 +226,6 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	my $root = $tree->getDocumentElement();
 	
 	my @elements;
-
-	#####################################################################
-	#
-	# What needs to be done to generalize plane interating from just XY to YZ & XZ
-	#
-	#	change contents of planeIndexTypes
-	#	change method of plane generation
-	#
-	#
-	#####################################################################
-	
 	
 	#####################################################################
 	#
@@ -258,9 +248,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	my @planeIndexTypes   = ( 'theZ', 'theT', 'theW' );
 	
 		#####################################################################
-		#
 		# First run through planes to generate plane indexes
-		#
 		print STDERR "\n" if $debug eq 2;
 		print STDERR "----------------------------------------------\n" if $debug eq 2;
 		print STDERR "First plane run - generating indexes\n" if $debug eq 2;
@@ -271,16 +259,12 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			print STDERR "Processing plane ".$planeID."\n" if $debug eq 2;
 			
 			#################################################################
-			#
 			#	Process indexes with non referential methods.
-			#
 			foreach my $index (@planeIndexTypes) {
 				my $indexXML    = $plane->getElementsByTagNameNS( $CLIns, $index )->[0];
 				print STDERR "\tProcessing index: ".$index."\n" if $debug eq 2;
 				#############################################################
-				#
 				# AutoIterate
-				#
 				if ( $indexXML->getElementsByTagNameNS( $CLIns, 'AutoIterate' ) ) {
 					print STDERR "\t\tUses method: AutoIterate\n" if $debug eq 2;
 					$planeIndexes->{ $planeID }->{$index} = 
@@ -291,12 +275,8 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 						$indexSize{ $index }-1;
 					$planeIndexes->{ $planeID }->{Output}->{$index} = 
 						$indexXML->getElementsByTagNameNS( $CLIns, 'AutoIterate')->[0];
-				#
-				#
 				#############################################################
-				#
 				# UseValue
-				#
 				} elsif ( $indexXML->getElementsByTagNameNS( $CLIns, 'UseValue' ) ) {
 					my $indexMethod = $indexXML->getElementsByTagNameNS( $CLIns, 'UseValue' )->[0];
 					print STDERR "\t\tUses method: UseValue\n" if $debug eq 2;
@@ -307,12 +287,8 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 							}->[0]->{
 								$indexMethod->getAttribute( "SemanticElementName" )
 							} );
-				#
-				#
 				#############################################################
-				#
 				# IterateRange
-				#
 				} elsif ( $indexXML->getElementsByTagNameNS( $CLIns, 'IterateRange' ) ) {
 					print STDERR "\t\tUses method: IterateRange\n" if $debug eq 2;
 					my $indexMethod = $indexXML->getElementsByTagNameNS( $CLIns, 'IterateRange' )->[0];
@@ -346,34 +322,24 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 				print STDERR "\t\tIterateStart Value: ". $planeIndexes->{ $planeID }->{IterateStart}->{$index}. "\n" if ($debug eq 2) and defined $planeIndexes->{ $planeID }->{IterateStart}->{$index};
 				print STDERR "\t\tIterateEnd Value: ". $planeIndexes->{ $planeID }->{IterateEnd}->{$index}. "\n" if ($debug eq 2) and defined $planeIndexes->{ $planeID }->{IterateEnd}->{$index};
 			}
-			#
 			#	END "Process indexes with non referential methods."
-			#
 			#################################################################
 			
 		
 			#################################################################
-			#
 			# helper function - makes a new scalar and returns its reference
-			#
 			sub newScalarRef { 
 				my $tmp = shift;
 				return \$tmp;
 			}
-			#
-			#################################################################
 			
 		}
-		#
 		# End "First run through planes to generate plane indexes"
-		#
 		#####################################################################
 		
 		
 		#####################################################################
-		#
 		# Second run through planes to link references
-		#
 		print STDERR "\n" if $debug eq 2;
 		print STDERR "----------------------------------------------\n" if $debug eq 2;
 		print STDERR "Second plane run - processing index references\n" if $debug eq 2;
@@ -398,10 +364,6 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 				print STDERR "\t\tIterateEnd Value: ". $planeIndexes->{ $planeID }->{IterateEnd}->{$index}. "\n" if ($debug eq 2) and defined $planeIndexes->{ $planeID }->{IterateEnd}->{$index};
 			}
 		}
-		#
-		#
-		#####################################################################
-		
 	#
 	# END "Set up Plane Indexes"
 	#
@@ -464,7 +426,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					$session,
 					$planeIndexes,
 					$imagePix,
-					%dims,
+					\%dims,
 					\%tmpFileFullPathHash,
 					\%tmpFileRelativePathHash,
 				);
@@ -804,7 +766,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
 						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
 					$outputs{ $formalOutputName }->{$SEName} =
-						resolveLocation($se->getAttribute("Location"), %inputs)
+						resolveLocation($se->getAttribute("Location"), \%inputs)
 						if( $se );
 				}
 			}
@@ -816,12 +778,13 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
 						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
 					$outputs{ $formalOutputName }->{$SEName} =
-						resolveLocation($se->getAttribute("Location"), %inputs)
+						resolveLocation($se->getAttribute("Location"), \%inputs)
 						if( $se );
 				}
 			}
 			
-			
+
+#2do: Transition to omeis!
 			# fill out Path and SHA1 of attribute
 			
 			# To retain the naming convention of the repository files, the file specified
@@ -956,7 +919,7 @@ sub resolveSubString {
 		my $location = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('Location')
 			or die "Location attribute not specified in Input element!\n";
 		my $val = resolveLocation( $location, $inputs );
-				
+
 		$val /= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy')
 			if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy');
 		$val *= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy')
@@ -1032,14 +995,13 @@ sub resolveSubString {
 				progName   => 'CLIHandler',
 				extension  => 'ori' );
 			$tmpFilePath = $repository->Path() . $tmpFileRelativePath;
-			} else {
-				$tmpFilePath = $session->getTemporaryFilename( 
-					'CLIHandler','' );
-			}
-				
-			$$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
-			$$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
-			return $tmpFilePath;
+		} else {
+			$tmpFilePath = $session->getTemporaryFilename( 'CLIHandler','' );
+		}
+			
+		$$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
+		$$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
+		return $tmpFilePath;
 	#
 	#
 	#############################################################
