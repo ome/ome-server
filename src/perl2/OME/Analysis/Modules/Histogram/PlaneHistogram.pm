@@ -99,22 +99,22 @@ sub startImage {
     foreach my $z (keys %$hist) {
         foreach my $c (keys %{$hist->{$z}}) {
             foreach my $t (keys %{$hist->{$z}{$c}}) {
+            	my ($lowBound,$uppBound,@histBins) = @{%$hist->{$z}{$c}{$t}}; 
             	$self->newAttributes('PlaneHistNumBins',
             				{
             				 TheZ => $z,
                              TheC => $c,
                              TheT => $t,
             				 NumBins => 128
-							});
-			    my ($lowBound,$uppBound,@histBins) = @{%$hist->{$z}{$c}{$t}}; 
-				$self->newAttributes('PlaneHistLowBound',
+							},
+							'PlaneHistLowBound',
             				{
             				 TheZ => $z,
                              TheC => $c,
                              TheT => $t,
             				 LowBound => $lowBound
-							});
-				$self->newAttributes('PlaneHistUppBound',
+							},
+							'PlaneHistUppBound',
             				{
             				 TheZ => $z,
                              TheC => $c,
