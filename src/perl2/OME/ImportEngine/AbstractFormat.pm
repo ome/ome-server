@@ -1,6 +1,10 @@
 # OME/ImportEngine/AbstractFormat.pm
 
 # Copyright (C) 2003 Open Microscopy Environment
+#    Massachusetts Institute of Technology
+#    National Institute of Health
+#    University of Dundee
+#
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
 #    This library is free software; you can redistribute it and/or
@@ -321,95 +325,6 @@ sub __nameOnly {
     return $basenm;
 }
 
-
-=head2 __storeChannelInfo
-
-    $self->__storeChannelInfo($session, $numWaves, @channelInfo);
-
-Stores metadata about each channel (wavelength) in the image. Each
-channel may have measures for excitation wavelength, emission wavelength,
-flourescense, and filter. Each channel is assigned a number starting at 0,
-corresponding to the sequence in which the channels were illuminated.
-
-The routine takes as input the session, the number of channels being 
-recorded, and an array containg <channel> number of hashes of each 
-channel's measurements. This routine writes this channel information 
-metadata to the database.
-
-Each channel info hash is keyed thusly:
-     chnlNumber
-     ExWave
-     EmWave
-     Flour
-     NDfilter
-
-=cut
-
-sub __storeChannelInfo {
-    my ($self, $session, $numWaves, @channelData) = @_;
-    my $image = $self->{image};
-
-    my @sortedData = ({});
-    @sortedData = sort {$a->{chnlNumber} <=> $b->{chnlNumber}} @channelData;
-
-    my $channel;
-    for (my $w = 0; $w < $numWaves; $w++) {
-	$channel = $channelData[$w];
-	# Clean up hash if it's empty or has incorrect number
-	if ($channel->{chnlNumber} ne $w) {
-	    $channel->{chnlNumber} = $w;
-	    $channel->{ExWave} = undef;
-	    $channel->{EmWave} = undef;
-	    $channel->{Fluor} = undef;
-	    $channel->{NDfilter} = undef;
-
-	}
-	my $logical = $session->Factory()->
-	    newAttribute("LogicalChannel",$image,$self->{module_execution},
-			 {
-			     ExcitationWavelength   => $channel->{'ExWave'},
-			     EmissionWavelength   => $channel->{'EmWave'},
-			     Fluor    => $channel->{'Fluor'},
-			     NDFilter => $channel->{'NDfilter'},
-			     PhotometricInterpretation => 'monochrome',
-			 });
-	
-	my $component = $session->Factory()->
-	    newAttribute("PixelChannelComponent",$image,$self->{module_execution},
-			 {
-			     Pixels         => $self->{pixels}->id(),
-			     Index          => $w,
-			     LogicalChannel => $logical->id(),
-			 });
-    }
-
-}
-
-
-
-=head2 __storeInputFileInfo
-
-    __storeInputFileInfo($session)
-
-Stores metadata about each input file that contributed pixels to the
-OME image. The $self hash has an array of hashes that contain all the
-input file information - one hash per input file. This routine writes
-this input file metadata to the database.
-
-=cut
-
-sub __storeInputFileInfo {
-    my $self = shift;
-    my $session = shift;
-    my @inarr = shift;
-
-    for (my $i = 0; $i < scalar @inarr; $i++) {
-	$session->Factory()->newObject("OME::Image::ImageFilesXYZWT",
-				       $inarr[$i]);
-
-    }
-
-}
 
 
 =head2 __createRepositoryFile
