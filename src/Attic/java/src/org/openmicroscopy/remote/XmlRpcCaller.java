@@ -53,8 +53,10 @@ public class XmlRpcCaller
             {
                 vparams.addElement(username);
                 vparams.addElement(password);
-                sessionReference = invoke("createSession").toString();
-                session = new RemoteSession(sessionReference);
+		sessionReference = invoke("createSession").toString();
+		if (!sessionReference.equals("")) {
+		    session = new RemoteSession(sessionReference);
+		}
             }
         }
     }
@@ -88,6 +90,7 @@ public class XmlRpcCaller
                 vparams.clear();
                 return retval;
             } catch (Exception e) {
+                //System.err.println("execute exception: "+e.getMessage());
                 throw new RemoteException(e.getMessage());
             }
         }
@@ -115,7 +118,7 @@ public class XmlRpcCaller
         return dispatch(target,method,(Object[]) null);
     }
 
-    public Object dispatch(Object target, String method, 
+    public Object dispatch(Object target, String method,
                            Object param1)
     {
         return dispatch(target,method,new Object[] {param1});
