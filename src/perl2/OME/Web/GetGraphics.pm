@@ -633,7 +633,8 @@ $SVG .= <<ENDSVG;
 			setTimeout( "imageControls.greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "imageControls.blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "imageControls.RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
-			setTimeout( "imageControls.loadButton.setState(false)", 0 );
+//	this next line loads every plane in the image
+//			setTimeout( "imageControls.loadButton.setState(false)", 0 );
 			zVal = ( Z == 1 ? 0 : theZ/(Z-1)*100 );
 			imageControls.zSlider.setValue(zVal,true);
 			tVal = ( T == 1 ? 0 : theT/(T-1)*100 );
