@@ -49,7 +49,7 @@ public class PConstants {
 
 	// for a buffered node, we want to get its bounds with some empty space
 	// on each side.  this value gives the amount of buffer space.
-	public static final int BORDER=40;	
+	public static final int BORDER=80;	
 	
 	// magnification at which point we should do our semantic zooming.
 	public static final double SCALE_THRESHOLD=0.5;
@@ -63,7 +63,7 @@ public class PConstants {
 	// scale multiplier for chains and library
 	public static final double SCALE_FACTOR=1.2;
 	
-	public static final Color HIGHLIGHT_COLOR = new Color(204,51,255);
+	public static final Color HIGHLIGHT_COLOR = new Color(104,51,155); // was 204,51,255
 	
 	public static final double CATEGORY_LABEL_OFFSET_X=40;
 	public static final double CATEGORY_LABEL_OFFSET_Y=20;
