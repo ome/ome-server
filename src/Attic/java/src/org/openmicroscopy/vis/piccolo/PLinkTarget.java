@@ -54,15 +54,18 @@ import java.awt.geom.Point2D;
 public class PLinkTarget extends PPath {
 	
 	public static final Color LINK_TARGET_COLOR = new Color(0,225,0);
+	public static final Color LINK_TARGET_LINKED_COLOR = new Color(0,105,0);
 	public static final Color LINK_TARGET_SELECTED_COLOR = Color.WHITE;
  	public static final float LINK_TARGET_SIZE=10;
  	public static final float LINK_TARGET_HALF_SIZE=LINK_TARGET_SIZE/2;
  	public static final float  LINK_TARGET_BUFFER=3;
  	
+ 	private Color currentColor;
  	public PLinkTarget() {
  		super();
  		setPathToRectangle(0,0,LINK_TARGET_SIZE,LINK_TARGET_SIZE);
- 		setPaint(LINK_TARGET_COLOR);
+ 		currentColor = LINK_TARGET_COLOR;
+ 		setPaint(currentColor);
  	}	
  	
  	public Point2D getCenter() {
@@ -77,8 +80,16 @@ public class PLinkTarget extends PPath {
  		if (v == true) 
  			setPaint(LINK_TARGET_SELECTED_COLOR);
  		else
- 			setPaint(LINK_TARGET_COLOR);
+ 			setPaint(currentColor);
  		repaint();
+ 	}
+ 	
+ 	public void setLinked(boolean v) {
+ 		if (v == true)
+ 			currentColor = LINK_TARGET_LINKED_COLOR;
+ 		else
+ 			currentColor = LINK_TARGET_COLOR;
+ 		setPaint(currentColor);
  	}
 }
 
