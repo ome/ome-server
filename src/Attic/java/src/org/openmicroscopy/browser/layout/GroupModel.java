@@ -55,7 +55,6 @@ import org.openmicroscopy.browser.images.Thumbnail;
 public class GroupModel
 {
   private Set thumbnails;
-  private Set subgroups;
   private String groupName;
   
   private void init()
@@ -84,30 +83,6 @@ public class GroupModel
     if(t != null)
     {
       thumbnails.add(t);
-    }
-  }
-  
-  /**
-   * Adds a subgroup to this group.
-   * @param t The subgroup to add.
-   */
-  public void addGroup(GroupModel gm)
-  {
-    if(gm != null)
-    {
-      subgroups.add(gm);
-    }
-  }
-  
-  /**
-   * Removes a subgroup from this group.
-   * @param gm The subgroup to remove.
-   */
-  public void removeGroup(GroupModel gm)
-  {
-    if(subgroups.contains(gm))
-    {
-      subgroups.remove(gm);
     }
   }
   
@@ -151,14 +126,5 @@ public class GroupModel
   public Set getThumbnails()
   {
     return Collections.unmodifiableSet(thumbnails);
-  }
-  
-  /**
-   * Gets an unmodifiable set of the subgroups of this group.
-   * @return See above.
-   */
-  public Set getSubgroups()
-  {
-    return Collections.unmodifiableSet(subgroups);
   }
 }

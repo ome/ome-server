@@ -45,8 +45,8 @@ import org.openmicroscopy.browser.images.Thumbnail;
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
- * @version
- * @since
+ * @version 2.2
+ * @since 2.2
  */
 public interface GroupingMethod
 {
