@@ -40,6 +40,60 @@ __PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
 __PACKAGE__->hasa('OME::Group' => qw(group_id));
 
 
+sub datasets {
+my $self = shift;
+	return map $_->dataset(), $self->dataset_links();
+}
+
+sub unlockedDatasets {
+my $self = shift;
+	return grep {not $_->locked()} $self->datasets();
+}
+
+sub addDataset {
+my $self = shift;
+my $dataset = shift;
+
+	return undef unless defined $dataset;
+	my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
+	my $pdMap = $pdMapIter->next() if defined $pdMapIter;
+	if (not defined $pdMap) {
+		$pdMap = OME::Project::DatasetMap->create ( {
+			project_id => $self->ID(),
+			dataset_id => $dataset->ID()
+		} )
+			or die ref($self)."->addDataset:  Could not create a new Project::DatasetMap entry.\n";
+
+	}
+
+	return $dataset;
+}
+
+sub addDatasetID {
+my $self = shift;
+my $datasetID = shift;
+
+	my $dataset = OME::Dataset->retrieve ($datasetID);	
+	return $self->addDataset($dataset);
+}
+
+sub newDataset {
+my $self = shift;
+my $datasetName = shift;
+
+	my $dataset = OME::Dataset->create ( {
+		name     => $datasetName,
+		locked   => 'false',
+		owner_id => $self->owner()->ID(),
+		group_id => $self->owner()->group()->ID()
+	} )
+		or die ref($self)."->newDataset:  Could not create a new dataset.\n";
+	
+	return $self->addDataset($dataset);
+}
+
+
+
 package OME::Project::DatasetMap;
 
 use strict;
