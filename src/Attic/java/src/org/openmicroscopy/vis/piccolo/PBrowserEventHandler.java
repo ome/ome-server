@@ -70,9 +70,9 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	}
 	
 	public void mouseEntered(PInputEvent e) {
-		System.err.println("got mouse entered in browser");
+	//	System.err.println("got mouse entered in browser");
 		PNode n = e.getPickedNode();
-		System.err.println("node is "+n);
+	//	System.err.println("node is "+n);
 		if (n instanceof PThumbnail) {
 			PThumbnail pt = (PThumbnail) n;
 			pt.setHighlighted(true);
@@ -90,4 +90,15 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		}
 		super.mouseExited(e);
 	}	
+	
+	public void mouseReleased(PInputEvent e) {
+		if (e.isPopupTrigger()) {
+			handlePopup(e);
+			e.setHandled(true);
+		}
+	}
+	
+	public void mousePressed(PInputEvent e) {
+		mouseReleased(e);
+	}
 }
