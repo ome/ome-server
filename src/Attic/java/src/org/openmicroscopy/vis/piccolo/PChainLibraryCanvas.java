@@ -46,6 +46,7 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.vis.ome.Chains;
@@ -116,7 +117,8 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		dragSource = new DragSource();
 		dragSource.createDefaultDragGestureRecognizer(this,
 			DnDConstants.ACTION_MOVE,this);
-
+		PCamera camera = getCamera();
+		camera.addInputEventListener(new PPaletteToolTipHandler(camera));
 		populate();		
 		
 	}
