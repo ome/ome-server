@@ -755,6 +755,7 @@ function setMode(theMode, callerWin) {
 	smCallerWin = (theBrowser.code == 'NS') ? callerWin : self;
 	var okToGo = true;
 	var currentMode = getMode();
+alert("new Mode = "+theMode+". current Mode = "+currentMode);
 	if (theMode != currentMode) {
 		if (currentMode == 'Floating') {
 			if (smSetCookie(theMode)) {self.close();}
@@ -986,7 +987,7 @@ function initialise() {
 	
 	level2ID = theMenu.addChild(level1ID, "Document", "Manage my Images", "noOp.html", "Change other user's read/write permissions");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Search", "noOp.html", "Search through all images");
-	level2ID = theMenu.addEntry (level2ID, "Document", "Import", "noOp.html", "Import images");
+	level2ID = theMenu.addEntry (level2ID, "Document", "Import", "/JavaScript/DirTree/index.htm", "Import images");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Make new Dataset", "noOp.html", "Make a new Dataset");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Metadata", "noOp.html", "View & Edit metadata of current image");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Viewer", "noOp.html", "Open viewer on this image");
