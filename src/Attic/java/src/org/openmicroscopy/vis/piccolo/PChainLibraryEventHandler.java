@@ -42,13 +42,11 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
-import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.Controller;
+import org.openmicroscopy.vis.chains.SelectionState;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
-import javax.swing.event.EventListenerList;
 import javax.swing.Timer;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionListener;
@@ -73,9 +71,6 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	
 	private PModule lastEntered;
 
-	private EventListenerList chainListeners = new EventListenerList();
-	
-	private CChain selectedChain;
 	
 	
 	// needed for handling of double click. basically, two clicks
@@ -84,7 +79,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	
 	private PInputEvent cachedEvent;
 
-			
+	private SelectionState  selectionState;		
 	/**
 	 * A flag indicating that the previous event was a popup
 	 * 
@@ -95,7 +90,8 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		Controller controller) {
 		super(canvas);
 		this.canvas = canvas;
-		this.addChainSelectionEventListener(controller.getControlPanel());
+		selectionState = controller.getControlPanel().getSelectionState();
+		//this.addChainSelectionEventListener(controller.getControlPanel());
 			
 	}
 	
@@ -133,6 +129,9 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	}
 	
 	private void mouseDoubleClicked(PInputEvent e) {
+		
+		CChain selectedChain = null;
+		
 		PNode n = e.getPickedNode();
 		if (n instanceof PChainBox) { 
 			PChainBox cb = (PChainBox) n;
@@ -140,17 +139,13 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			selectedChain=cb.getChain();
 			// this will cause dataset selection to change,
 			// which should cause other chains to be cleared.
-			fireSelectionEvent();
-			
 		}
 		else if (n instanceof PModule) {
 			PChainBox cb = (PChainBox) n.getParent();
 			cb.setSelected(true);
-			selectedChain = cb.getChain();
-			fireSelectionEvent(); 
+			selectedChain = cb.getChain(); 
 		}
-		else 
-			fireDeselectionEvent();
+		selectionState.setCurrentChain(selectedChain);
 	} 
 	
 	/**
@@ -181,44 +176,4 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		else
 			canvas.clearChainSelected();
 	}
-	
-	
-	
-	public void fireSelectionEvent() {
-		ChainSelectionEvent chainEvent = new 
-			ChainSelectionEvent(selectedChain,ChainSelectionEvent.SELECTED);
-		fireChainSelectionEvent(chainEvent);
-	}
-	
-	public void fireDeselectionEvent() {
-		if (selectedChain == null) 
-			return;
-		ChainSelectionEvent chainEvent = new 
-			ChainSelectionEvent(selectedChain,ChainSelectionEvent.DESELECTED);
-		fireChainSelectionEvent(chainEvent);
-		selectedChain = null;
-	}
-	
-		
-	public void addChainSelectionEventListener(ChainSelectionEventListener
-			listener) {
-		chainListeners.add(ChainSelectionEventListener.class,
-				listener);
-	}
-	
-		public void removeChainSelectionEventListener(ChainSelectionEventListener
-			listener) {
-				chainListeners.remove(ChainSelectionEventListener.class,
-					listener);
-		}
-	
-		public void fireChainSelectionEvent(ChainSelectionEvent e) {
-			Object[] listeners=chainListeners.getListenerList();
-			for (int i = listeners.length-2; i >=0; i-=2) {
-				if (listeners[i] == ChainSelectionEventListener.class) {
-					((ChainSelectionEventListener) listeners[i+1]).
-						chainSelectionChanged(e);
-				}
-			}
-		}
 }
