@@ -55,19 +55,19 @@ use OME::SessionManager;
 use OME::Session;
 use OME::Factory;
 
+use OME::Fork;
+
 # $pid_executors{$pid} = $executor -- The ForkedPerlExecutor which
 # created the given child process.
 my %pid_executors;
 
-# $executor_processes_out{$executor} = $count -- The number of
+# $executor_processes_out{$executor_pid} = $count -- The number of
 # outstanding child processes for each ForkedPerlExecutor.
 my %executor_processes_out;
 
-# $executor_processes{$executor}->{$pid} = 1 -- A list of outstanding
-# child processes per ForkedPerlExecutor.
+# $executor_processes{$executor_pid}->{$child_pid} = 1 -- A list of
+# outstanding child processes per ForkedPerlExecutor.
 my %executor_processes;
-
-use POSIX ":sys_wait_h";
 
 sub new {
     my $proto = shift;
@@ -81,6 +81,16 @@ sub new {
     return $self;
 }
 
+sub childCallback {
+    my ($child_pid) = @_;
+
+    # mark that its done
+    $executor_processes{$$}->{$child_pid} = 0;
+    # and that there is one fewer child process out there.
+    $executor_processes_out{$$}--;
+    print STDERR "    **** Reaped $child_pid\n";
+}
+
 sub executeModule {
     my ($self,$mex,$dependence,$target) = @_;
     my $session = OME::Session->instance();
@@ -89,7 +99,7 @@ sub executeModule {
     # Fork off the child process
 
     my $parent_pid = $$;
-    my $pid = fork;
+    my $pid = OME::Fork->fork(\&childCallback);
 
     if (!defined $pid) {
         # Fork failed, record as such in the ModuleExecution and return
@@ -99,55 +109,23 @@ sub executeModule {
     } elsif ($pid) {
         # Parent process
 
-        OME::Session->forgetInstance();
-
-        # We need to add a dummy handler for the SIG_CHLD signal.  On
-        # Linux, the pause function (which we use below) only returns
-        # in response to a signal that "either terminates [the
-        # process] or causes it to call a signal-catching function".
-        # On Mac (and I assume, other BSD's), it returns in response
-        # to any signal.  To make it work on both platforms, we
-        # install a SIG_CHLD handler which does nothing.
-
-        # On second glance, we only need this handler in the parent
-        # process.  If we declare it in the child process, too, then
-        # some system calls could possibly fail in the child process
-        # under Perl 5.8.0, since it does not trap EINTR responses as
-        # previous versions of Perl did.  Since we can assume that all
-        # of the affected system calls will only happen in the child
-        # process, we should be able to safely set the CHLD handler in
-        # the parent process.
-
-        $SIG{CHLD} = sub { return; };
-
         # Record some information about the child process for the
         # wait* methods below
         $pid_executors{$pid} = $self;
-        $executor_processes_out{$self}++;
-        $executor_processes{$self}->{$pid} = 1;
+        $executor_processes_out{$$}++;
+        $executor_processes{$$}->{$pid} = 1;
         print STDERR "    **** Forked child $pid\n";
         return;
     } else {
         # Child process
 
-        $SIG{CHLD} = '';
-
-        # Since we create a new Session and Factory in the
-        # childProcess method, we need to pass in the parameters as
-        # ID's, not objects.
-
-        # If $target isn't an object, don't bother trying to change it.
-        my $target_id =
-          UNIVERSAL::isa($target,"OME::DBObject")?
-              $target->id():
-              $target;
+        #$SIG{CHLD} = '';
 
         # Execute the module in this child process
         $self->childProcess($$,
-                            $session->SessionKey(),
-                            $mex->id(),
+                            $mex,
                             $dependence,
-                            $target_id);
+                            $target);
 
         #kill 'USR1', $parent_pid;
 
@@ -164,29 +142,12 @@ sub executeModule {
 
 sub childProcess {
     my ($self,$pid,
-        $session_key,$mex_id,
-        $dependence,$target_id) = @_;
+        $mex,
+        $dependence,$target) = @_;
 
-    # Create a new session
-    my $manager = OME::SessionManager->new();
-    my $session = $manager->createSession($session_key);
-    my $factory = $session->Factory();
+    my $session = OME::Session->instance();
 
-    # Load in all of the parameters to executeModule
-    my $mex = $factory->loadObject("OME::ModuleExecution",$mex_id);
     my $module = $mex->module();
-
-    # This will only need to be loaded if the module is not globally
-    # dependent.
-    my $target;
-    if ($dependence eq 'I') {
-        $target = $factory->loadObject("OME::Image",$target_id);
-    } elsif ($dependence eq 'D') {
-        $target = $factory->loadObject("OME::Dataset",$target_id);
-    } else {
-        $target = $target_id;
-    }
-
 
     # Create an instance of the module's Handler.
 
@@ -226,39 +187,14 @@ sub childProcess {
     # Store the new module execution and commit the changes.
     $mex->storeObject();
     $session->commitTransaction();
+
+    CORE::exit(0);
 }
 
 sub modulesExecuting {
     my ($self) = @_;
     # It's a good thing we keep track of this
     return $executor_processes_out{$self};
-}
-
-sub reapProcesses {
-    my ($self) = @_;
-
-    # Get the list of child processes which are still out.
-    my $process_list = $executor_processes{$self};
-    my @processes_reaped;
-
-    foreach my $pid (keys %$process_list) {
-        # Check if this child process has finished.
-        my $result_pid = waitpid($pid,WNOHANG);
-
-        # If so,
-        if ($result_pid > 0) {
-            # mark that its done
-            delete $process_list->{$pid};
-            # and that there is one fewer child process out there.
-            $executor_processes_out{$self}--;
-            # and keep track of which ones finished during this method
-            # call.
-            push @processes_reaped, $pid;
-            print STDERR "    **** Reaped $pid\n";
-        }
-    }
-
-    return \@processes_reaped;
 }
 
 sub waitForAnyModules {
@@ -274,8 +210,9 @@ sub waitForAnyModules {
     my $next;
 
     do {
-        # Check if any child processes have finished.
-        $self->reapProcesses();
+        # The childCallback function will get called automatically when
+        # each child process exits.  This function modifies the state
+        # that we're about to check.
 
         # Count how many processes are out there.
         $next = $executor_processes_out{$self};
@@ -289,7 +226,11 @@ sub waitForAnyModules {
         # This waits for a signal.  This allows the engine to process
         # OS events properly while modules are executing.  When a child
         # process finishes, we'll receive a CHLD signal, which will
-        # cause the pause() routine to return.
+        # cause the pause() routine to return.  This signal will cause
+        # the childCallback function to be executed.  If the signal
+        # which causes pause to return is not SIGCHLD, then none of our
+        # state variables will have changed, and we'll quickly fall
+        # back to this line.
         POSIX::pause() if $next >= $original;
 
         # Wait until there's at least one fewer process running now
@@ -302,8 +243,6 @@ sub waitForAllModules {
 
     # As long as there are outstanding processes,
     while ($executor_processes_out{$self} > 0) {
-        # clean up after any that might have just finished,
-        $self->reapProcesses();
         # and wait for some more to finish.
         POSIX::pause();
     }
