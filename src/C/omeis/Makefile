@@ -35,7 +35,7 @@ DEFINES += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 all: omeis make_zoom
 
 make_zoom:
-	$(MAKE) -C zoom
+	$(MAKE) -C zoom install
 
 omeis: omeis.c omeis.h $(OBJS)
 	$(CC) $(CFLAGS) $(LIBS) $(INCS) $(XML2_CFLAGS) $(DEFINES) -o omeis omeis.c $(OBJS)
@@ -47,6 +47,7 @@ method.o: method.c method.h
 	$(CC) $(CFLAGS) -c method.c
 
 composite.o: composite.c composite.h
+	$(MAKE) -C zoom install
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c composite.c
 
 xmlBinaryResolution.o: xmlBinaryResolution.c
