@@ -348,8 +348,8 @@ sub addObject ($$) {
 	my ($self,$object,$LSID) = @_;
 	push (@{ $self->{_DBObjects} }, $object) if defined $object;
 	$self->{_importedObjects}->{$LSID} = $object if defined $object and defined $LSID;
-	logdbg "debug", ref ($self)."->addObject: added object #".scalar (@{ $self->{_DBObjects} })." '".ref($object).
-		"' ID = ".$object->id()." for later commit.";
+#	logdbg "debug", ref ($self)."->addObject: added object #".scalar (@{ $self->{_DBObjects} })." '".ref($object).
+#		"' ID = ".$object->id()." for later commit.";
 }
 
 
@@ -368,7 +368,7 @@ sub importObject ($$$$) {
  
 	logdie ref ($self) . "->importObject: Attempt to import something without an ID.\n".$node->toString()
 		unless $LSID;
-	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
+#	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
 	$theObject = $lsid->getLocalObject ($LSID);
 	$parentDBID = undef if $granularity eq 'G';
     if ($granularity eq 'G') {
@@ -386,11 +386,11 @@ sub importObject ($$$$) {
 
 	if (defined $theObject) {
 		$docIDs->{$LSID} = $theObject->id();
-		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
+	#	logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
 		return $theObject;
 	} 
 
-	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
+#	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 
 	my $session	   = $self->{session};
 	my $factory	   = $self->{factory};
@@ -401,7 +401,7 @@ sub importObject ($$$$) {
 	$docIDs->{$LSID} = undef;
 
 	my ($objectType,$isAttribute,$objectData,$refCols) = $self->getObjectTypeInfo($node,$parentDBID);
-	logdbg "debug", ref ($self)."->importObject:   Got info - object type $objectType.";
+#	logdbg "debug", ref ($self)."->importObject:   Got info - object type $objectType.";
 
 	# Process references in this object.
 	# If the reference was to an object already read from the document, resolve it.
@@ -412,18 +412,18 @@ sub importObject ($$$$) {
 	while ( ($objField,$theRef) = each %$refCols ) {
 		if (exists $docIDs->{$theRef}) {
 			$objectData->{$objField} = $docIDs->{$theRef};
-			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
+		#	logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
 				$objectData->{$objField}." in document.";
 		} else {
 			$refObject = $lsid->getLocalObject ($theRef);
 			if ($refObject) {
 				$objectData->{$objField} = $refObject->id();
-				logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
+			#	logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
 					$objectData->{$objField}." in DB.";
 			} else {
 				$objectData->{$objField} = undef;
 				$unresolvedRefs{$objField} = $theRef;
-				logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef NOT resolved.";
+			#	logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef NOT resolved.";
 			}
 		}
 	}
@@ -432,11 +432,11 @@ sub importObject ($$$$) {
 
 	# Make the object.
 	if ($isAttribute) {
-		logdbg "debug", ref ($self)."->importObject:   Calling newAttribute.\n\t".
+	#	logdbg "debug", ref ($self)."->importObject:   Calling newAttribute.\n\t".
 			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
 		$theObject = $factory->newAttribute($objectType,$parentDBID,$module_execution,$objectData);
 	} else {
-		logdbg "debug", ref ($self)."->importObject:   Calling newObject.".
+	#	logdbg "debug", ref ($self)."->importObject:   Calling newObject.".
 			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
 		$theObject = $factory->newObject($objectType,$objectData);
 	}
@@ -563,7 +563,7 @@ sub getObjectTypeInfo ($$) {
 			} elsif ($sql_type eq 'boolean') {
 				$objectData->{$attrColName} = $objectData->{$attrColName} eq 'true' ? '1' : '0';
 			}
-			logdbg "debug", ref ($self)."->getObjectTypeInfo:   $attrColName = ".$objectData->{$attrColName};
+		#	logdbg "debug", ref ($self)."->getObjectTypeInfo:   $attrColName = ".$objectData->{$attrColName};
 		}
 
                 # (Modified DC - 08/12/2003)  We do not need to set the
