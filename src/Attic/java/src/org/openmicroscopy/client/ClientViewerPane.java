@@ -48,9 +48,10 @@ import java.awt.geom.*;
 import java.awt.font.*;
 import java.awt.event.*;
 import java.awt.Image.*;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.Iterator;
 import javax.swing.border.*;
 import javax.swing.ImageIcon;
 import javax.swing.*;
@@ -123,13 +124,12 @@ public class ClientViewerPane  extends JPanel {
 
 	setPreferredSize(new Dimension(300,400));
 	toolkit = Toolkit.getDefaultToolkit();
-	smallLock = toolkit.getImage(getClass().getResource("lock.png"));
-	System.err.println("  smallLock is "+smallLock);
+	ClassLoader cload = this.getClass().getClassLoader();
+	smallLock = toolkit.getImage(cload.getResource("org/openmicroscopy/client/lock.png"));
 	if (smallLock != null) {
 	    showIcons = true;
 	    smallLockIcon = new ImageIcon(smallLock);
-	    smallUnlock = toolkit.getImage(getClass().getResource("unlock.png"));
-	    System.err.println("  smallUnlock is "+smallUnlock);
+	    smallUnlock = toolkit.getImage(cload.getResource("org/openmicroscopy/client/unlock.png"));
 	    smallUnlockIcon = new ImageIcon(smallUnlock);
 
 	    largeLock = smallLock.getScaledInstance(24, 24, java.awt.Image.SCALE_AREA_AVERAGING);
@@ -178,7 +178,6 @@ public class ClientViewerPane  extends JPanel {
 	    startX = startY = 0;
 	    Graphics2D g2 = (Graphics2D)g;
 	    Rectangle bounds = getBounds();
-	    //setBackground(new Color(50, 100, 150));
 	    
 	    DrawTitle(g2, bounds, titleFont, title);
 	    DrawCommon(g2, name, description, owner, group);
@@ -233,7 +232,7 @@ public class ClientViewerPane  extends JPanel {
       g.setFont(hdrFont);
       FontRenderContext frc = g.getFontRenderContext();
       box = hdrFont.getStringBounds(header, frc);
-      int currY = startY + 40;
+      int currY = startY + 30;
       int currX = startX + bounds.x + bounds.width/2 - (int)(box.getWidth()/2);
 
       g.drawString(header, currX, currY);
@@ -241,8 +240,6 @@ public class ClientViewerPane  extends JPanel {
 
       g.drawLine(currX, currY+4, currX + (int)box.getWidth(), currY+4);
 
-      //startX = 0;
-      //startY = 0;
     }
 
 
@@ -264,7 +261,6 @@ public class ClientViewerPane  extends JPanel {
 
 	// Needs to be internationalized !
 	String labels [] = new String [] {"Name", "Description", "Experimenter", "Group"};
-	//String names [] = new String [] {name, description, experimenter, "Sorger"};
 	String names [] = new String [] {name, description, experimenter, group};
 
 	startY += 40;
@@ -341,18 +337,18 @@ class ProjectViewer extends ClientViewerPane {
      * target project, and displays them.
      * @param project the project to display
      */
-    public ProjectViewer (org.openmicroscopy.Project project) {
+    public ProjectViewer (org.openmicroscopy.Project project, DataAccess accessor) {
+	currPr = project;
 	title = "Project";
 	name = project.getName();
 	description = project.getDescription();
-	//Attribute ownerAttr = project.getOwner();
-	//owner = new String(ownerAttr.getStringElement("FirstName") + " " +
-	//ownerAttr.getStringElement("LastName"));
-	owner = "me";
-	group = "Sorger";
+	Attribute ownerAttr = project.getOwner();
+	owner = new String(ownerAttr.getStringElement("FirstName") + " " +
+	   ownerAttr.getStringElement("LastName"));
+	//owner = "";
+	group = "";
 
 	List dsList = project.getDatasets();
-	//System.err.println("dataset: "+dataset+"imageList: "+imageList);
 	Iterator dsI = dsList.iterator();
 	while (dsI.hasNext()) {
 	  dsNames.add(((org.openmicroscopy.Dataset)dsI.next()).getName());
@@ -370,7 +366,7 @@ class ProjectViewer extends ClientViewerPane {
 	CommonViewerPaint(g2, backgnd, "Datasets", false, false);
 
 	int currX = leftMargin;
-	int currY = startY + 60;
+	int currY = startY + 25;
 	int sz = dsNames.size();
 	for (int i = 0; i < sz; i++) {
 	    g2.drawString((String)dsNames.get(i), currX, currY);
@@ -398,23 +394,17 @@ class DatasetViewer extends ClientViewerPane {
      */
     public DatasetViewer (Dataset dataset) {
 	currDS = dataset;
-	setBorder(BorderFactory.createEtchedBorder());
 	title = "Dataset";
 	name = dataset.getName();
-	System.err.println("  dataset: "+dataset+" name: "+name);
 	description = dataset.getDescription();
 	Attribute ownerAttr = dataset.getOwner();
 	owner = new String(ownerAttr.getStringElement("FirstName") + " " +
 			   ownerAttr.getStringElement("LastName"));
+	group = "";
 
-
-	//Attribute groupAttr = dataset.getGroup();
-	//group = new String(groupAttr.getStringElement("Name"));
-	group = "Sorger";
 	locked = dataset.isLocked();
 
 	List imageList = dataset.getImages();
-	System.err.println("dataset: "+dataset+"imageList: "+imageList);
 	Iterator imI = imageList.iterator();
 	while (imI.hasNext()) {
 	  imageNames.add(((org.openmicroscopy.Image)imI.next()).getName());
@@ -429,17 +419,14 @@ class DatasetViewer extends ClientViewerPane {
 	Graphics2D g2 = (Graphics2D)g;
 
 	CommonViewerPaint(g2, backgnd, "Images", true, locked);
-
 	int currX = leftMargin;
-	int currY = startY + 60;
+	int currY = startY + 25;
 	int sz = imageNames.size();
 	for (int i = 0; i < sz; i++) {
 	    g2.drawString((String)imageNames.get(i), currX, currY);
 	    currY += gap;
 	}
-
     }
-
 }
 
 
@@ -482,7 +469,6 @@ class ImageViewer extends ClientViewerPane {
      * @param g current Graphics context
      */
     public void paint(Graphics g) {
-	System.err.println("  repainting imv");
 	Graphics2D g2 = (Graphics2D)g;
 	CommonViewerPaint(g2, backgnd, null, false, false);
 
@@ -517,10 +503,12 @@ class ChainViewer extends ClientViewerPane {
 	title = "Analysis Chain";
 	name = chain.getName();
 	description = chain.getDescription();
+	System.err.println("Chain name: "+name+" description: "+description);
 	Attribute ownerID = chain.getOwner();
 	Attribute ownerAttr = chain.getOwner();
 	owner = new String(ownerAttr.getStringElement("FirstName") + " " +
 			   ownerAttr.getStringElement("LastName"));
+	group = "";   // so far, chains have no groups
 	locked = chain.getLocked();
 
 
@@ -533,9 +521,8 @@ class ChainViewer extends ClientViewerPane {
      * @param g current Graphics context
      */
     public void paint(Graphics g) {
-	System.err.println("  repainting chv");
 	Graphics2D g2 = (Graphics2D)g;
-	CommonViewerPaint(g2, backgnd, "Chain Diagram", true, locked);
+	CommonViewerPaint(g2, backgnd, null, true, locked);
 	startX += leftMargin;
 	startY += gap;
 
@@ -551,90 +538,6 @@ class ChainViewer extends ClientViewerPane {
 
     private String GetLastComponent(String s, int ch) {
 	return(s.substring(s.lastIndexOf(ch)+1));
-    }
-
-    private void MakePath(Chain chain) {
-	int maxBreadth = 0;
-	int breadth = 0;
-	Iterator chI;
-	Chain.Node nd;
-	Chain.Node parent;
-	Chain.Node child;
-	Vector v = new Vector();
-	Vector path = new Vector();
-	Vector parents = new Vector();
-
-	chI = chain.iterateNodes();
-	while (chI.hasNext()) {
-	    v.add(chI.next());
-	}
-
-	// Get root node of path
-	for (int i = 0; i < v.size(); i++) {
-	    if (((Chain.Node)v.get(i)).getInputLinks().size() == 0) {
-		parent = (Chain.Node)v.get(i);
-		path.add(parent);
-		parents.add(parent);
-		v.remove(i);
-		breadth = 1;
-		System.err.println("Chain start: " + parent.getModule().getName());
-		break;
-	    }
-	}
-	if (breadth > maxBreadth) { maxBreadth = breadth; }
-
-	// Arrange in breadth first order & place in path vector
-	while (v.size() > 0) {
-	    Vector newParents = new Vector();
-	    breadth = 0;
-	    while (parents.size() > 0) {
-		System.err.println("parents size = " + parents.size());
-		parent = (Chain.Node)parents.remove(0);
-		System.err.println("Checking parent: "+ parent.getModule().getName());
-		Iterator children = parent.iterateOutputLinks();
-		while (children.hasNext()) {
-		    child = ((Chain.Link)children.next()).getToNode();
-		    System.err.println("   child link to: "+child.getModule().getName());
-		    for (int i = 0; i < v.size(); i++) {
-			System.err.println("     v.size = "+v.size());
-			if (child.equals(v.get(i))) {
-			    System.err.println("Child "+child.getModule().getName());
-			    breadth++;
-			    path.add(v.get(i));
-			    newParents.add(v.get(i));
-			    v.remove(i);
-			}
-		    }
-		}
-	    }
-	    if (breadth > maxBreadth) { maxBreadth = breadth; }
-	    System.err.println("breadth this level = " + breadth);
-	    parents = newParents;
-	}
-
-	// Scan path array & build visual graph 
-	int i = 0;
-	while (i < path.size()) {
-	    Vector kids = new Vector();
-	    Chain.Node root = (Chain.Node)path.get(i++);
-	    while (i < path.size()) {
-		Chain.Node kid = (Chain.Node)path.get(i);
-		Iterator pLinks = kid.iterateInputLinks();
-		boolean isKid = false;
-		while (pLinks.hasNext()) {
-		    if (pLinks.next().equals(root)) {
-			isKid = true;
-			kids.add(kid);
-			break;
-		    }
-		}
-		if (isKid == false) {
-		    break;
-		}
-		i++;
-	    }
-	}
-
     }
 
 
