@@ -179,6 +179,7 @@ sub TTYlogin {
         }
     }
 
+	while (1) {
     if (!defined $session) {
 	print "Please login to OME:\n";
 
@@ -197,18 +198,20 @@ sub TTYlogin {
 	$session = $self->createSession($username,$password);
 
 	if (!defined $session) {
-            print "That username/password does not seem to be valid.\nBye.\n\n";
-            exit -1;
+            print "That username/password is not valid. Please try again.\n\n";
+			next;
         } else {
             my $created = open LOGINFILE, "> $loginFile";
             if ($created) {
                 print LOGINFILE $session->{SessionKey}, "\n";
                 close LOGINFILE;
             }
+			last;
 	}
 
 	print "Great, you're in.\n\n";
     }
+	}
 
     return $session;
 }
