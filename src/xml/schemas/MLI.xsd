@@ -17,18 +17,14 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-	
-	
 	<!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Josiah Johnston <siah@nih.gov>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-	
 	<element name = "ExecutionInstructions">
 		<annotation>
 			<documentation>Specifies the Instructions for a given module that are specific to the Matlab Handler.	
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -58,7 +54,7 @@
 		</annotation>
 		<complexType>
 			<sequence>
-				<element ref = "MLI:Input" minOccurs = "0" maxOccurs = "unbounded"/>
+				<element ref = "MLI:Input" maxOccurs = "unbounded"/>
 			</sequence>
 		</complexType>
 	</element>
@@ -68,14 +64,14 @@
 		</annotation>
 		<complexType>
 			<sequence>
-				<element ref = "MLI:Output" minOccurs = "0" maxOccurs = "unbounded"/>
+				<element ref = "MLI:Output" maxOccurs = "unbounded"/>
 			</sequence>
 		</complexType>
 	</element>
 	<element name = "Input">
 		<complexType>
 			<choice>
-				<element name = "Pixels">
+				<element name = "PixelsInput">
 					<complexType>
 						<attribute name = "FormalInput" use = "required" type = "string"/>
 						<attribute name = "ID" use = "required" type = "ID"/>
@@ -92,7 +88,7 @@
 	<element name = "Output">
 		<complexType>
 			<choice>
-				<element name = "Pixels">
+				<element name = "PixelsOutput">
 					<complexType>
 						<attribute name = "FormalOutput" use = "required" type = "string"/>
 						<attribute name = "ID" use = "required" type = "ID"/>
