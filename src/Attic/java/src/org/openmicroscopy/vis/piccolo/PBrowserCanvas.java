@@ -45,6 +45,7 @@ package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CProject;
+import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
@@ -97,7 +98,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	private double x,y;
 	private double maxHeight = 0;
 	
-	private TreeSet datasets;
 	private HashMap datasetWidgets = new HashMap();
 	
 	private Collection allDatasets;
@@ -169,10 +169,10 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 	
 	
-	public void displayDatasets(final boolean v) {
+	public void displayDatasets(Collection datasets,final boolean v) {
 		if (v== true)
-			arrangeDisplay();
-		doLayout(v);
+			arrangeDisplay(datasets);
+		doLayout(datasets,v);
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
 				PConstants.ANIMATION_DELAY);
 	
@@ -180,7 +180,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	// the guts of the dataset display thread
 	
-	private void arrangeDisplay() {
+	private void arrangeDisplay(Collection datasets) {
 		layer.removeAllChildren();
 		if (datasets == null)
 			return;
@@ -205,15 +205,15 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 		scaleFactor = screenArea/totalArea;
 		//System.err.println("scale factor is "+scaleFactor);
-		strips = doTreeMap();
+		strips = doTreeMap(datasets);
 		// now, do the calculations
 	}
 
-	private void doLayout(boolean layoutDatasets) {
+	private void doLayout(Collection datasets,boolean layoutDatasets) {
 		if (datasets == null)
 			return;
 		layer.setScale(1.0);
-		//System.err.println("in doLayout..");
+		System.err.println("in doLayout..");
 		x = HGAP;
 		y = 0;
 		Iterator iter = strips.iterator();
@@ -256,7 +256,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	private double oldAspectRatio =0;
 	private double newAspectRatio = 0;
 
-	private Vector doTreeMap() {
+	private Vector doTreeMap(Collection datasets) {
 	
 		//System.err.println("do treemap. dataset size is "+datasets.size());
 		oldAspectRatio = 0;
@@ -358,8 +358,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	
 	public void displayAllDatasets() {
-		datasets= new TreeSet(connection.getDatasetsForUser());
-		displayDatasets(true);
+		TreeSet datasets= new TreeSet(connection.getDatasetsForUser());
+		displayDatasets(datasets,true);
 		
 		// after initial display
 		// revise when resized
@@ -372,45 +372,80 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
+		Collection sets = null;
 		SelectionState state = e.getSelectionState();
-		int mask = e.getMask();
-		if ((mask & SelectionEvent.SET_ROLLOVER_PROJECT)
-			== SelectionEvent.SET_ROLLOVER_PROJECT) {
+		
+		if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_PROJECT)) {
 			CProject rollover = state.getRolloverProject();
-			if (rollover != state.getSelectedProject() || rollover == null)
-			highlightDatasetsForProject(rollover);
+			if (rollover != null)
+				sets = rollover.getDatasetSet();
+			//if (rollover != state.getSelectedProject() || rollover == null)
+			//highlightDatasetsForProject(rollover);
+			highlightDatasets(sets);
 		}
-		else if ((mask & SelectionEvent.SET_ROLLOVER_DATASET) ==
-			SelectionEvent.SET_ROLLOVER_DATASET) {
+		else if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_DATASET)) {
 			CDataset rolled = state.getRolloverDataset();
 			highlightDataset(rolled);	 
 		}
+		else if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_CHAIN)) {
+				CChain chain = state.getRolloverChain();
+				if (chain != null)
+					sets = chain.getDatasetsWithExecutions();
+				highlightDatasets(sets);	 
+			}
+		
+		else if (e.isEventOfType(SelectionEvent.SET_SELECTED_CHAIN)) {
+			// show only those that are for current project
+			// and have executions for this chain
+			System.err.println("browser canvas got selected chain");
+			sets = state.getExecutedDatasets();
+			TreeSet datasets;
+			if (sets != null) {
+				System.err.println("# of datasets..."+sets.size());
+				datasets = new TreeSet(sets);
+			}
+			else
+				datasets = new TreeSet(allDatasets);
+			displayDatasets(datasets,false);
+		}
+		else if (e.isEventOfType(SelectionEvent.SET_SELECTED_PROJECT)
+			|| e.isEventOfType(SelectionEvent.SET_SELECTED_DATASET)) {
+			System.err.println("browser canvas selected dataset/project");
+			updateProjectDatasetSelection(state);	
+		}
+	  
+	}
+	
+	private void updateProjectDatasetSelection(SelectionState state) {
+		CDataset selected = state.getSelectedDataset();
+		TreeSet datasets;
+		if (state.getSelectedProject() != null)
+			//highlightDatasetsForProject(null);
+			highlightDatasets(null);
+		
+		if (selected != null) {
+			datasets = new TreeSet();
+			datasets.add(selected);
+		}
 		else {
 			Collection selections = state.getActiveDatasets();
-			CDataset selected = state.getSelectedDataset();
-			
-			if (state.getSelectedProject() != null)
-				highlightDatasetsForProject(null);
-				
-			if (selected != null) {
-				datasets = new TreeSet();
-				datasets.add(selected);
+			if (selections != null && selections.size() > 0) {
+				datasets = new TreeSet(selections);
 			}
 			else {
-				if (selections != null && selections.size() > 0)
-					datasets = new TreeSet(selections);
-				else
-					datasets = new TreeSet(allDatasets);
-			}	
-			displayDatasets(false);
-		}
+				datasets = new TreeSet(allDatasets);
+			}
+		}	
+		displayDatasets(datasets,false);
 	}
 
 	public int getEventMask() {
 		return SelectionEvent.SET_SELECTED_DATASET | 
-			SelectionEvent.SET_ACTIVE_DATASETS | 
+			SelectionEvent.SET_SELECTED_PROJECT | 
 			SelectionEvent.SET_ROLLOVER_PROJECT |
-			SelectionEvent.SET_ROLLOVER_DATASET;
+			SelectionEvent.SET_ROLLOVER_DATASET | 
+			SelectionEvent.SET_ROLLOVER_CHAIN |
+			SelectionEvent.SET_SELECTED_CHAIN;
 	}
 		
 	public void clearExecutionList() {
@@ -442,6 +477,24 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				PDataset dNode = (PDataset) obj;
 				CDataset d = dNode.getDataset();
 				if (p != null && p.hasDataset(d)) {
+					dNode.setHighlighted(true);
+				}
+				else
+					dNode.setHighlighted(false);
+			}
+			else 
+				System.err.println("browser canvas. child was "+obj);
+		}
+	}
+	
+	public void highlightDatasets(Collection c) {
+		Iterator iter = layer.getChildrenIterator();
+		while (iter.hasNext()) {
+			Object obj = iter.next();
+			if (obj instanceof PDataset) {
+				PDataset dNode = (PDataset) obj;
+				CDataset d = dNode.getDataset();
+				if (c != null && c.contains(d)) {
 					dNode.setHighlighted(true);
 				}
 				else
