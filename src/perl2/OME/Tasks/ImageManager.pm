@@ -459,6 +459,7 @@ sub getDisplayOptions{
 	my $factory=$session->Factory();
 	my ($theZ,$theT,$isRGB,@cbw,@rgbOn);
 	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
+	my %h =();
 	if (defined $displayOptions){
 		$theZ=($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2;
 		$theT=($displayOptions->TStart() + $displayOptions->TStop() ) / 2;
@@ -478,15 +479,13 @@ sub getDisplayOptions{
 			$displayOptions->GreyChannel()->WhiteLevel(),
 			);
 		push (@rgbOn,$displayOptions->RedChannelOn(),$displayOptions->GreenChannelOn(),$displayOptions->BlueChannelOn());	
-		my %h=(
+		%h=(
 			'theZ' => $theZ,
 			'theT' => $theT,
 			'isRGB' => $isRGB,
 			'CBW' => \@cbw,
 			'RGBon' =>\@rgbOn
 			);
-		return \%h;
-
 	}else{
 		my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp,$path) = $self->getImageDim($image);
 		my $statsHash = $self->getImageStats($image)
@@ -519,18 +518,17 @@ sub getDisplayOptions{
 			# set white level to geomean + 4 geosigmas  of this section
 			$cbw[ $counter*3 + 2] = $statsHash->[ $channelIndex ][ $theT ]->{geomean} + 4*$statsHash->[ $channelIndex ][ $theT ]->{geosigma};
 			$cbw[ $counter*3 + 2] = $channelMax{$channelIndex}
-				if $cbw[ $counter*3 + 2] > $channelMax{$channelIndex};
+			if $cbw[ $counter*3 + 2] > $channelMax{$channelIndex};
 		}
-		my %h=(
+		%h=(
 			'theZ' => $theZ,
 			'theT' => $theT,
 			'isRGB' => $isRGB,
 			'CBW' => \@cbw,
 			'RGBon' =>\@rgbOn
 			);
-		return \%h;
 	}
-
+	return \%h;
 
 
 }
