@@ -24,6 +24,7 @@
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -36,6 +37,7 @@
 				<xsd:annotation>
 					<xsd:documentation>Assigns a execution point for the analysis.
 This needs to be mulled over again after Doug finalizes analysis engine &amp; use scenarios for modules dealing with datasets, images, &amp; features are constructed.
+					
 					
 					
 					
@@ -64,6 +66,7 @@ XML specification of the command line parameters is:
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -81,6 +84,7 @@ Not yet supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -92,6 +96,7 @@ Not yet supported.
 	<xsd:element name = "STDOUT">
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to read STDOUT.
+			
 			
 			
 			
@@ -114,10 +119,7 @@ Not yet supported.
 			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a particular column of a FormalInput. It should corrospond to an FormalInputColumnID specified in one of those.
-Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
-					
-					
-					
+Referential integrity is not enforced by this schema. Verification against the schema will not detect an error here if you make a typo.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -195,6 +197,7 @@ Currently, only native image pixels are supported.
 					
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -214,6 +217,7 @@ Currently only TIFF is supported.
 					
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -225,7 +229,7 @@ Currently only TIFF is supported.
 			</xsd:attribute>
 			<xsd:attribute name = "XYPlaneID" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Needed if you need another plane to match indexes. Referenced by the Match element.</xsd:documentation>
+					<xsd:documentation>Needed if you need another plane to match indexes. Referenced by the Match element. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "Return">
@@ -280,6 +284,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -289,6 +294,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			<xsd:documentation>Used with variable substitution. This will be substituted with the binary contents of the repository file.
 
 Not yet supported.
+			
 			
 			
 			
@@ -308,6 +314,7 @@ Not yet supported.
 			<xsd:attribute name = "RepeatCount" type = "xsd:positiveInteger">
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
+					
 					
 					
 					
@@ -332,6 +339,7 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 				
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -339,6 +347,7 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 				<xsd:annotation>
 					<xsd:documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
+					
 					
 					
 					
@@ -371,7 +380,7 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 		<xsd:complexType>
 			<xsd:attribute name = "XYPlaneID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>References another Plane.</xsd:documentation>
+					<xsd:documentation>References another Plane. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -383,7 +392,7 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a particular column of a FormalInput.</xsd:documentation>
+					<xsd:documentation>Used to reference a particular column of a FormalInput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -395,7 +404,7 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 		<xsd:complexType>
 			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>AutoIterate causes the handler to produce an output. This output needs to be stored. FormalOutputColumnID references a storage location.</xsd:documentation>
+					<xsd:documentation>AutoIterate causes the handler to produce an output. This output needs to be stored. FormalOutputColumnID references a storage location. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -411,7 +420,7 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			</xsd:sequence>
 			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>IterateRange causes the handler to produce an output. This output needs to be stored. FormalOutputColumnID references a storage location.</xsd:documentation>
+					<xsd:documentation>IterateRange causes the handler to produce an output. This output needs to be stored. FormalOutputColumnID references a storage location. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -425,12 +434,13 @@ Not currently supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a particular column of a FormalInput.</xsd:documentation>
+					<xsd:documentation>Used to reference a particular column of a FormalInput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -444,12 +454,13 @@ Not currently supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a particular column of a FormalInput.</xsd:documentation>
+					<xsd:documentation>Used to reference a particular column of a FormalInput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -461,7 +472,7 @@ Not currently supported.
 		<xsd:complexType>
 			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>References a specific column in a FormalOutput.</xsd:documentation>
+					<xsd:documentation>References a specific column in a FormalOutput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
