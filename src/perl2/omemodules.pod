@@ -59,7 +59,7 @@ OME Modules - Table of Contents
     OME::Tasks::OMEExport
     OME::ImportExport::SemanticTypeImport
     OME::ImportExport::SemanticTypeExport
-    OME::Tasks::ProgramImport
+    OME::ImportExport::ModuleImport
     OME::ImportExport::ChainImport
     OME::ImportExport::HierarchyImport
     OME::ImportExport::HierarchyExport

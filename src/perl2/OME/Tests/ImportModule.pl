@@ -1,5 +1,5 @@
 use strict;
-use OME::Tasks::ProgramImport;
+use OME::ImportExport::ModuleImport;
 use OME::SessionManager;
 
 if (scalar(@ARGV) < 1 ) {
@@ -8,7 +8,7 @@ if (scalar(@ARGV) < 1 ) {
 }
 
 my $session = OME::SessionManager->TTYlogin();
-my $programImport = OME::Tasks::ProgramImport->new( 
+my $programImport = OME::ImportExport::ModuleImport->new( 
 	session => $session,
 	debug   => 3
 );

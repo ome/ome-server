@@ -29,7 +29,7 @@ use XML::LibXML;
 use XML::LibXSLT;
 
 use OME::ImportExport::SemanticTypeImport;
-use OME::Tasks::ProgramImport;
+use OME::ImportExport::ModuleImport;
 use OME::ImportExport::ChainImport;
 use OME::ImportExport::HierarchyImport;
 use OME::ImportExport::ResolveFiles;
@@ -135,7 +135,7 @@ sub processDOM {
 
     # Parse the modules
 
-    my $moduleImporter = OME::Tasks::ProgramImport->
+    my $moduleImporter = OME::ImportExport::ModuleImport->
       new(session         => $self->{session},
           _parser         => $self->{_parser},
          debug => $self->{debug});
