@@ -333,7 +333,7 @@ sub getPredecessorMEX {
     my $factory = OME::Session->instance()->Factory();
 
     if (defined $self->{user_inputs}->{$to_input->id()}) {
-        logdbg "debug", "  getPredecessorMEX(",$to_input->name(),")";
+        logdbg "debug", "  getPredecessorMEX(".$to_input->name().")";
 
         my $granularity = $to_input->semantic_type()->granularity();
         my $to_dependence = ($granularity eq 'F')? 'I': $granularity;
@@ -341,8 +341,8 @@ sub getPredecessorMEX {
         my $input_mexes = $self->{user_inputs}->{$to_input->id()};
         my @target_mexes;
         foreach my $input_mex (@$input_mexes) {
-            logdbg "debug", "    Checking MEX ",$input_mex->id();
-            logdbg "debug", "      $to_dependence ",$input_mex->dependence();
+            logdbg "debug", "    Checking MEX ".$input_mex->id();
+            logdbg "debug", "      $to_dependence ".$input_mex->dependence();
             next unless ($input_mex->dependence() eq $to_dependence);
 
             logdbg "debug", "      **GOOD!"
@@ -381,10 +381,10 @@ sub getPredecessorMEX {
 
     my $target_column;
 
-    logdbg "debug", "  getPredecessorMEX(",$link->id(),")";
+    logdbg "debug", "  getPredecessorMEX(".$link->id().")";
 
-    logdbg "debug", "    from $from_dependence ",$from_node->id()," ",$from_node->module()->name();
-    logdbg "debug", "    to $to_dependence ",$to_node->id()," ",$to_node->module()->name();
+    logdbg "debug", "    from $from_dependence ".$from_node->id()." ".$from_node->module()->name();
+    logdbg "debug", "    to $to_dependence ".$to_node->id()." ".$to_node->module()->name();
 
     if ($from_dependence eq 'G') {
         push @from_targets, undef;
@@ -653,7 +653,27 @@ sub isNodeReady {
 	                                    [ReuseResults => 1]);
 
 The $user_inputs parameter must be a hash, with formal input ID's for
-keys and MEX objects for values.
+keys and MEX objects for values. Values may also be arrays of MEX
+objects. The format of $user_inputs is known to be problematic (See Bug
+391: http://bugs.openmicroscopy.org.uk/show_bug.cgi?id=391 ) and will be
+modified in the future, from:
+{ 
+	$formal_inputA_id => [ $mex_objectA, $mex_objectB, $mex_objectC ],
+	$formal_inputB_id => $mex_objectD,
+	...
+}
+perhaps to:
+{
+	$nodeA_id => [ 
+		{ $formal_inputA_id => [ $mex_objectA, $mex_objectB, $mex_objectC ] },
+		{ $formal_inputB_id => $mex_objectD },
+	],
+	$nodeB_id => {
+		$formal_inputA_id => [ $mex_objectE, $mex_objectF, $mex_objectG ],
+	},
+	...
+}
+Notice the arrays are optional when they would contain only one element.
 
 =cut
 
