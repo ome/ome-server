@@ -39,6 +39,11 @@ __PACKAGE__->has_many('dataset_links','OME::Project::DatasetMap' => qw(project_i
 #__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
 #__PACKAGE__->hasa('OME::Group' => qw(group_id));
 
+sub owner {
+    my $self = shift;
+    return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                      $self->owner_id());
+}
 
 sub datasets {
 my $self = shift;
