@@ -110,6 +110,9 @@ function getParm(string, parm, delim) {
 function pageFromSearch(def, selIt) {
 	var s = self.location.search;
 	if ((s == null) || (s.length < 1)) {return def;}
+// FIXME: "page" should be "content", but when I do that, it allows a different bug to
+// surface that won't let floating menu close. I don't have time to deal with the \
+// other bug now.
 	var p = getParm(s, 'page', '&');
 	p = (p != '') ? fixPath(p) : def;
 	return p;
@@ -162,7 +165,7 @@ if (top.location != location) {
 }
 
 function updatePage(page) {
-	if(page == null) 
+	if(page == null)
 		page = '/html/noOp.html';
 	var thePage = pageFromSearch(page, true);
 	self.text.location.href = thePage;
