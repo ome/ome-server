@@ -149,13 +149,8 @@ sub backup {
 	
 	# ome db 
 	print "    \\_ Backing up postgress database ome\n";
-	my $iwd = getcwd();
-	chdir("/");
-	euid(scalar getpwnam($postgress_user));
-	system($prog_path{'pg_dump'}." -Fc ome > /tmp/omeDB_backup");
- 	euid(0);
- 	chdir($iwd);
- 	move ("/tmp/omeDB_backup", "./omeDB_backup");
+	system("su $postgress_user -c '".$prog_path{'pg_dump'}." -Fc ome > /tmp/omeDB_backup'");
+ 	move ("/tmp/omeDB_backup", "./omeDB_backup") or die "Couldn't move /tmp/omeDB_backup" ;
  	
 	# log version of backup
 	open (FILEOUT, ">> OMEmaint");
