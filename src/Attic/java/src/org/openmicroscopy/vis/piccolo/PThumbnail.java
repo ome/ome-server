@@ -212,4 +212,11 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 			 }
 		 }
 	} 	
+	
+	public void setHighlightedWithHalo(boolean v) {
+		setHighlighted(v);
+		setZoomingHalo(v);
+	}
+	
+
 }
