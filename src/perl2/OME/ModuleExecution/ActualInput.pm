@@ -149,9 +149,10 @@ sub  formal_output {
 
     my $st = $self->formal_input()->semantic_type();
     my $inputModule = $self->input_module_execution()->module();
-    my @outputs = $inputModule->outputs();
     my $outst;
-    foreach my $output (@outputs) {
+    
+    my $outputs = $inputModule->outputs();
+    while (my $output = $outputs->next()) {
 	$outst = $output->semantic_type();
         next unless (defined $outst);
 	return $output if ($outst->ID() == $st->ID()); # sts are the same
@@ -162,29 +163,26 @@ sub  formal_output {
 
 
     
-    # first, look for an untyped output of input module
-    # if we don't have one, we've got a problem. complain.
-    my @semanticTypeOutputs = $self->input_module_execution()->untypedOutputs();
-    #confess "Actual input " . $self->ID() . 
-    #"has no direct  predecessors, and no possible untyped outs.\n"
-	#unless (scalar(@semanticTypeOutputs) > 0); 
-    return undef unless (scalar(@semanticTypeOutputs) > 0); 
+    # first, look for  untyped outputs of input module
+
+    my $semanticTypeOutputs = $self->input_module_execution()->untypedOutputs();
 
     # then, of all of those, look for an entry of the right type.
-    foreach my $semanticTypeOutput (@semanticTypeOutputs) {
+    while (my $semanticTypeOutput = $semanticTypeOutputs->next()) {
 	$outst = $semanticTypeOutput->semantic_type();
 	next unless (defined $outst);
 	if ($outst->ID() == $st->ID()) {
 	    # got the right st. now, find the right output. of the module.
-	    my @outputs = $inputModule->outputs();
-	    foreach my $output (@outputs) {
+	    my $outputs = $inputModule->outputs();
+	    while (my $output = $outputs->next()) {
 		return $output if (!(defined $output->semantic_type_id()));
 	    }
 	}
     }
+
+    # couldn't find anything.
     return undef;
-    #   confess "No discernible output that leading to actual_input " 
-	#. $self->ID .", semantic type " . $st->name() . "\n";
+
 }
 
 1;
