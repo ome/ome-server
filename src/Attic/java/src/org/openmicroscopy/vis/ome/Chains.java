@@ -55,9 +55,11 @@
 public class Chains {
 	
 	private TreeMap chains = new TreeMap();
+	private Connection connection;
 	
-	public Chains(ConnectionWorker worker,Factory factory) {
+	public Chains(Connection connection,Factory factory) {
 		
+		this.connection = connection;
 		CChain c;
 		Integer id;
 		
@@ -66,7 +68,7 @@ public class Chains {
 		
 		while (iter.hasNext()) {
 			c = (CChain) iter.next();
-			worker.setStatusLabel("Chain.."+c.getName());
+			connection.setStatusLabel("Chain.."+c.getName());
 			id = new Integer(c.getID());
 			chains.put(id,c);
 		}
@@ -78,6 +80,7 @@ public class Chains {
 		Iterator iter = chains.values().iterator();
 		while (iter.hasNext()) {
 			c = (CChain) iter.next();
+			connection.setStatusLabel("Chain Layout.."+c.getName());
 			c.layout();
 		}
 	}
