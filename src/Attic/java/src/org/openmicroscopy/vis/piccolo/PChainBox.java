@@ -41,6 +41,7 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.ControlPanel;
+import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
 import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
 import edu.umd.cs.piccolo.nodes.PText;
@@ -88,11 +89,16 @@ public class PChainBox extends PGenericBox implements
 	private static final float VGAP=10;
 	private static final float HGAP=20;
 	
+	
 	public PChainBox(ControlPanel controlPanel,CChain chain, float x, float y) {
 		super(x,y);
 		this.chain = chain;
 		chainID = chain.getID();
-		controlPanel.addDatasetSelectionEventListener(this);
+		SelectionState selectionState = controlPanel.getSelectionState();
+		selectionState.addDatasetSelectionEventListener(this);
+		
+		boolean selected = chain.hasExecutionsInSelectedDatasets(selectionState);
+		setSelected(selected);
 	}
 	
 	/**
@@ -132,28 +138,14 @@ public class PChainBox extends PGenericBox implements
 		float x = (float) (b.getX()+b.getWidth()-lockedBounds.getWidth()-HGAP);
 		locked.setOffset(x,b.getY()+VGAP);
 	}
-		
-	/*
-	/**
-	 * Add the icon indicating that the chain is locked
-	 */
-	/*private void addLockIcon(float x,float y) {
-		PPath lock = new PPath();
-		lock.setPaint(LOCK_ICON_COLOR);
-		lock.moveTo(x,y);
-		lock.lineTo(x-SIZE_LENGTH,y);
-		lock.lineTo(x,y+SIZE_LENGTH);
-		lock.lineTo(x,y);
-		addChild(lock);
-	}*/
-	
-	
+			
 	
 	public void datasetSelectionChanged(DatasetSelectionEvent e) {
+		repaint();
+		SelectionState selectionState = e.getSelectionState();
 		boolean selected = 
-			chain.hasExecutionsInDatasets(e.getDatasets(),
-			e.getSelectedDataset());
-			setSelected(selected);
+			chain.hasExecutionsInSelectedDatasets(selectionState);
+		setSelected(selected);
 	} 
 	
 	public void setSelected(boolean v) {
@@ -163,4 +155,5 @@ public class PChainBox extends PGenericBox implements
 			setPaint(PGenericBox.CATEGORY_COLOR);
 		repaint();
 	}
+	 
 }
