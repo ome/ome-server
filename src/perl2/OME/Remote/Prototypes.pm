@@ -661,6 +661,24 @@ addPrototype("OME::AnalysisExecution::NodeExecution","analysis_chain_node",
 addPrototype("OME::AnalysisExecution::NodeExecution","module_execution",
              ['OME::ModuleExecution'],['OME::ModuleExecution']);
 
+addPrototype("OME::Tasks::ProjectManager","new",
+             [],['OME::Tasks::ProjectManager']);
+addPrototype("OME::Tasks::ProjectManager","addToProject",
+             ['OME::Dataset','OME::Project'],[],
+             publishedName => "addDatasetToProject");
+addPrototype("OME::Tasks::ProjectManager","addToProject",
+             ['OME::Dataset'],[],
+             publishedName => "addDatasetToCurrentProject");
+
+addPrototype("OME::Tasks::DatasetManager","new",
+             [],['OME::Tasks::DatasetManager']);
+addPrototype("OME::Tasks::DatasetManager","addToDataset",
+             ['OME::Image','OME::Dataset'],[],
+             publishedName => "addImageToDataset");
+addPrototype("OME::Tasks::DatasetManager","addToDataset",
+             ['OME::Image'],[],
+             publishedName => "addImageToCurrentDataset");
+
 addPrototype("OME::Tasks::ChainManager","new",
              ['OME::Session'],['OME::Tasks::ChainManager']);
 addPrototype("OME::Tasks::ChainManager","createChain",
