@@ -757,21 +757,17 @@ static void OME_EndElement(ParserState *state, const xmlChar *name) {
 	 case IN_PIXELS:
 		state->state = PARSER_START;
 
-		/* set SHA1 attribute  */
-		if (get_md_from_fd (state->pixelInfo->pixWriter->fd_rep, state->pixelInfo->pixWriter->head->sha1) < 0) {
-			fprintf(stderr, "Unable to retrieve SHA1.");
-			assert(0);
-		}
-		fprintf( stdout,  " FileSHA1 = \"" );
-		print_md( state->pixelInfo->pixWriter->head->sha1 );
-		fprintf( stdout,  "\"" );
-		
 		/* close pixelsRep object & clean it up */
 		if ( (result = FinishPixels( state->pixelInfo->pixWriter, 0 )) == 0 ) {
 			fprintf(stderr, "Error calling FinishPixels: result = %d\n",result);
 			if (errno) fprintf (stderr,"%s\n",strerror( errno ) );
 			assert(0);
 		}
+
+		fprintf( stdout,  " FileSHA1 = \"" );
+		print_md( state->pixelInfo->pixWriter->head->sha1 );
+		fprintf( stdout,  "\"" );
+		
 
 	 	/* cleanup */
 	 	freePixelsRep (state->pixelInfo->pixWriter);
