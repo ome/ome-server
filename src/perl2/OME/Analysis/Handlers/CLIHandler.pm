@@ -907,11 +907,11 @@ sub resolveLocation {
 	my $FI = shift (@elements);
 
 	die "Attempting to access a formal input ($FI) that does not exist.\n"
-		unless $$inputs{$FI};
+		unless $inputs->{$FI};
 	# so far, all 'Location' attributes are in elements that reference
 	# a FI of arity 1.
-	return $$inputs{$FI}->[0] if( scalar( @elements ) eq 0 );
-	my $str = '$inputs{$FI}->[0]->' . join ('()->',@elements) . '()';
+	return $inputs->{$FI}->[0] if( scalar( @elements ) eq 0 );
+	my $str = '$inputs->{$FI}->[0]->' . join ('()->',@elements) . '()';
 	my $val;
 	# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
 	eval('$val ='. $str);
@@ -941,40 +941,48 @@ sub resolveSubString {
 	my $tmpFileFullPathHash = shift;
 	my $tmpFileRelativePathHash = shift;
 			
-		#############################################################
-		#
-		# plain text - no processing required
-		#		
+	#############################################################
+	#
+	# plain text - no processing required
+	#		
 	if( $subString->getElementsByTagNameNS( $CLIns, 'RawText' ) ) {
-		return $subString->getElementsByTagNameNS( $CLIns, 'RawText' )->[0]->getFirstChild->getData;
-		#
-		#############################################################
-		#
-		# Input request
-		#
+	return $subString->getElementsByTagNameNS( $CLIns, 'RawText' )->[0]->getFirstChild->getData;
+	#
+	#############################################################
+	#
+	# Input request
+	#
 	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'Input' ) ) {
 		my $location = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('Location')
 			or die "Location attribute not specified in Input element!\n";
-		# replace this stuff with a single call to resolveLocation
-		my @elements = split (/\./,$location);
-		my $FI = shift (@elements);
-        my $input = $self->getCurrentInputAttributes($FI)->[0];
-		my $str = '$input->'.join ('()->',@elements).'()';
-		my $val;
-		# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
-		eval('$val ='. $str);
-		die "Could not resolve input call '$str':$@\n" unless defined $val;
+		my $val = resolveLocation( $location, $inputs );
 				
 		$val /= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy')
 			if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy');
 		$val *= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy')
 			if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy');
 		return $val;
-		#
-		#############################################################
-		#
-		# Generate a plane - currently only TIFFs are supported
-		#		
+	#
+	#############################################################
+	#
+	# PixelsInput
+	#
+	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'PixelsInput' ) ) {
+		my $pixelsInput = $subString->getElementsByTagNameNS( $CLIns, 'PixelsInput' )->[0];
+		my $location = $pixelsInput->getAttribute('Location')
+			or die "Location attribute not specified in PixelsInput element!\n";
+		my $substituteWith = $pixelsInput->getAttribute('SubstituteWith')
+			or die "SubstituteWith attribute not specified in PixelsInput element!\n";
+		my $pixels = resolveLocation( $location, $inputs );
+		
+		return $pixels->image()->getFullPath( $pixels )
+			if $substituteWith eq 'path';
+		# FIXME: add support for barfing pixel file contents
+	#
+	#############################################################
+	#
+	# Generate a plane - currently only TIFFs are supported
+	#		
 	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'XYPlane' ) ) {
 		my $planeXML = $subString->getElementsByTagNameNS( $CLIns, 'XYPlane' )->[0];
 		my $planeID = $planeXML->getAttribute( 'XYPlaneID' );
@@ -1006,18 +1014,17 @@ sub resolveSubString {
 		die "Wrong number of pixels written to file. $pixelsWritten of $nPix pixels written"
 		unless ( $pixelsWritten == $nPix);
 		return $planePath;
-		#
-		#############################################################
-		#
-		# Request for a temp file
-		#		
+	#
+	#############################################################
+	#
+	# Request for a temp file
+	#		
 	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'TempFile' ) ) {
 		my $tmpFile = $subString->getElementsByTagNameNS( $CLIns, 'TempFile' )->[0];
 		my $tmpFilePath;
 		my $tmpFileRelativePath;
 		if( $tmpFile->getAttribute( "Repository" ) ) {
 			my $repository  = resolveLocation($tmpFile->getAttribute( "Repository" ), $inputs);
-#			my $repository  = $inputs{ $tmpFile->getAttribute( "Repository" ) }->[0];
 			die "Could not find an input for FormalInputName ".$tmpFile->getAttribute( "Repository" )."\n"
 				if( not defined $repository );
 			$tmpFileRelativePath = $session->getTemporaryFilenameRepository( 
@@ -1033,9 +1040,9 @@ sub resolveSubString {
 			$$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
 			$$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
 			return $tmpFilePath;
-		#
-		#
-		#############################################################
+	#
+	#
+	#############################################################
 	}
 }
 #
