@@ -227,15 +227,20 @@ sub processDOM {
 
 	foreach my $node ( @{ $root->getChildrenByTagName('Image') } ) {
 	
-		# if unspecified, set Image's Experimenter according to the rules:
+		# if unspecified or unresolvable, set Image's Experimenter according to the rules:
 		#	if image does not have a well formed LSID, use the logged in user
 		#	else blow up
-		if( ( not defined $node->getAttribute( "Experimenter" ) ) ||
-			( $node->getAttribute( "Experimenter" ) eq '' ) ) {
+		my $experimenter_ref = $node->getAttribute( "Experimenter" );
+		if( ( not defined $experimenter_ref ) ||
+			( $experimenter_ref eq '' ) ) {
 			my $image_lsid = $node->getAttribute( "ID" );
 			die "An experimenter must be specified for an image with a well formed LSID. This image's LSID ( $image_lsid ) is well formed. See http://lists.openmicroscopy.org.uk/pipermail/ome-devel/2004-July/000065.html for a justification of this rule."
 				if( $lsid->checkLSID( $image_lsid ) );
 			$node->setAttribute( "Experimenter", $lsid->getLSID( $session->User() ) );
+		} elsif( ( not exists $self->{_docIDs}->{ $experimenter_ref } ) ||
+		         ( not defined $lsid->getObject( $experimenter_ref ) ) ) {
+			my $image_lsid = $node->getAttribute( "ID" );
+		    die "The experimenter (id=$experimenter_ref) specified as the owner of image (id=$image_lsid) cannot be resolved. Until LSID resolution is implemented, experimenters should be described in the same file they are referenced from.";
 		}
 		
 		$object = $self->importObject ($node,undef,undef,undef);
