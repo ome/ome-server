@@ -67,10 +67,11 @@ use strict;
 use Carp;
 
 use Exporter;
+use OME;
 use base qw(Exporter);
 
 
-our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeOneFileInfo __storeInputFileInfo );
+our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeOneFileInfo __storeInputFileInfo __storePixelDimensionInfo);
 
 use vars qw($VERSION);
 use OME;
@@ -165,8 +166,7 @@ sub __storeChannelInfo {
 
 Helper method for recording input file information.
 Packs the passed metadata about one input file into the info_array
-that is passed by reference. Calculates the SHA1 digest of the passed
-file & stores that as part of the file info.
+that is passed by reference. 
 
 =cut
 
@@ -175,11 +175,8 @@ sub __storeOneFileInfo {
 	$st_y, $end_y, $st_z, $end_z, $st_c, $end_c,
 	$st_t, $end_t,$format) = @_;
 
-    # Now calculated by __touchOriginalFile
-    #my $sha1 = getCommonSHA1($self, $fn);
 
     push @$info_aref, { path => $fn,
-		      #file_sha1 => $sha1,
 		      bigendian => ($params->{endian} eq "big") ? 't':'f',
 		      image_id => $image->id(),
 		      x_start => $st_x,
@@ -198,7 +195,7 @@ sub __storeOneFileInfo {
 
 =head2 B<__storeInputFileInfo>
 
-    __storeInputFileInfo($session)
+    __storeInputFileInfo($session, \@infoArray)
 
 Stores metadata about each input file that contributed pixels to the
 OME image. The $self hash has an array of hashes that contain all the
@@ -219,6 +216,28 @@ sub __storeInputFileInfo {
 
 }
 
+
+=head2 B<__storePixelDimensionInfo>
+
+    __storePixelDimensionInfo($session, \@pixelInfo)
+
+Stores metadata about the size of the input pixel. The dimensions are
+passed in via an array, which may be partially empty.
+
+=cut
+
+sub __storePixelDimensionInfo {
+    my $self = shift;
+    my ($session, $pixarr) = @_;
+
+    my $image = $self->{image};
+    my $factory = $session->Factory();
+    $factory->newAttribute("Dimensions",$image,$self->{module_execution},
+			   {PixelSizeX => $pixarr->[0],
+			    PixelSizeY => $pixarr->[1],
+			    PixelSizeZ => $pixarr->[2]});
+}
+    
 
 =head1 Author
 
