@@ -132,6 +132,11 @@ our $SHOW_CALLS = 1;
 our $SHOW_RESULTS = 0;
 our $SHOW_CACHING = 0;
 
+sub _die {
+    print "  ",@_,"\n" if $SHOW_CALLS;
+    die @_;
+}
+
 sub versionInfo {
     my ($proto) = @_;
 
@@ -151,7 +156,7 @@ sub createSession {
       if $SHOW_CALLS;
 
     my $session = OME::SessionManager->createSession($username,$password);
-    die "Cannot create session"
+    _die "Cannot create session"
       unless defined $session;
 
     my $reference = OME::Remote::Utils::getObjectReference(">>SESSIONS",$session);
@@ -214,7 +219,7 @@ sub dispatch {
     # Fix XML escape characters
 
     $_ = OME::Remote::Utils::xmlEscape('P',$_) foreach @params;
-    die "Parameters do not match prototype"
+    _die "Parameters do not match prototype"
       unless OME::Remote::Prototypes::verifyInputPrototype($prototype,
                                                            \@params,
                                                            \&OME::Remote::Utils::inputMarshaller,
@@ -226,17 +231,21 @@ sub dispatch {
 
     # Call the method appropriate to the context in the prototype
 
-    if ($context eq 'void') {
-        $objectProto->$realMethod(@params);
-        @result = ();
-    } elsif ($context eq 'scalar') {
-        my $scalar = $objectProto->$realMethod(@params);
-        @result = ($scalar);
-    } else {
-        @result = $objectProto->$realMethod(@params);
-    }
+    eval {
+        if ($context eq 'void') {
+            $objectProto->$realMethod(@params);
+            @result = ();
+        } elsif ($context eq 'scalar') {
+            my $scalar = $objectProto->$realMethod(@params);
+            @result = ($scalar);
+        } else {
+            @result = $objectProto->$realMethod(@params);
+        }
+    };
 
-    die "Return value does not match prototype"
+    _die $@ if $@;
+
+    _die "Return value does not match prototype"
       unless OME::Remote::Prototypes::verifyOutputPrototype($prototype,
                                                             \@result,
                                                             \&OME::Remote::Utils::outputMarshaller,
