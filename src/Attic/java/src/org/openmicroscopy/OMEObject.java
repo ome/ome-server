@@ -21,9 +21,35 @@
 
 package org.openmicroscopy;
 
+/**
+ * The <code>OMEObject</code> interface is the superclass of all
+ * non-attribute OME classes.  It declares the methods available to
+ * all OME-controlled objects.
+ *
+ * @author Douglas Creager
+ * @version 2.0
+ * @since OME2.0
+ * @see Attribute
+ */
+
 public interface OMEObject
 {
+    /**
+     * Returns the primary key ID of this object.
+     * @return the primary key ID of this object.
+     */
     public int getID();
+
+    /**
+     * Saves this object's state to the OME database and commits any
+     * active database transaction.
+     */
     public void writeObject();
+
+    /**
+     * Returns the OME session that generated this object.
+     * @return the OME session that generated this object.
+     * @see Session
+     */
     public Session getSession();
 }

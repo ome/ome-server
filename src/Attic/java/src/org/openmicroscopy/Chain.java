@@ -24,28 +24,131 @@ package org.openmicroscopy;
 import java.util.List;
 import java.util.Iterator;
 
+/**
+ * <p>The <code>Chain</code> interface represents an OME analysis
+ * chain.  An analysis chain consists of a directed acyclic graph
+ * (DAG) representing the series of steps to be performed when
+ * executing the chain.  The nodes of this graph are analysis modules;
+ * the links are data dependencies specifying that the output of a
+ * module should be used as input to another.</p>
+ *
+ * <p>Once an analysis chain has been executed, is must be locked to
+ * prevent the set of nodes and links in its graph from changing.  If
+ * the user wants to modify a chain which has been executed, they must
+ * clone the existing chain and modify the clone.  (This could, of
+ * course, be invisible to the user.)</p>
+ *
+ * <p>Executing an analysis chain generates a new instances of the
+ * {@link ChainExecution} and {@link ChainExecution.Node} interfaces.
+ * Any of the nodes which actually get executed (as opposed to reusing
+ * the results of an existing computation) generate new instances of
+ * the {@link Analysis} interface.</p>
+ *
+ * @author Douglas Creager
+ * @version 2.0
+ * @since OME2.0
+ * @see Module
+ */
+
 public interface Chain
     extends OMEObject
 {
+    /**
+     * Returns the owner of this analysis chain.  The attribute
+     * returned will be of the "Experimenter" semantic type.
+     * @return the owner of this analysis chain.
+     */
     public Attribute getOwner();
+
+    /**
+     * Sets the owner of this analysis chain.  The attribute must be
+     * of the "Experimenter" semantic type.
+     * @param owner the owner of this analysis chain.
+     */
     public void setOwner(Attribute owner);
 
+    /**
+     * Returns the name of this analysis chain.
+     * @return the name of this analysis chain.
+     */
     public String getName();
+
+    /**
+     * Sets the name of this analysis chain.
+     * @param name the name of this analysis chain.
+     */
     public void setName(String name);
 
+    /**
+     * Returns the description of this analysis chain.
+     * @return the description of this analysis chain.
+     */
     public String getDescription();
-    public void setDescription(String name);
 
+    /**
+     * Sets the description of this analysis chain.
+     * @param description the description of this analysis chain.
+     */
+    public void setDescription(String description);
+
+    /**
+     * Returns whether this analysis chain is locked.
+     * @return whether this analysis chain is locked.
+     */
     public boolean getLocked();
+
+    /**
+     * Sets whether this analysis chain is locked.
+     * @param locked whether this analysis chain is locked.
+     */
     public void setLocked(boolean locked);
 
+    /**
+     * Returns a list of {@link Chain.Node Nodes} in this analysis
+     * chain.
+     * @return a {@link List} of {@link Chain.Node Nodes} in this
+     * analysis chain.
+     */
     public List getNodes();
+
+    /**
+     * Returns an iterator of {@link Chain.Node Nodes} in this
+     * analysis chain.
+     * @return an {@link Iterator} of {@link Chain.Node Nodes} in this
+     * analysis chain.
+     */
     public Iterator iterateNodes();
 
+    /**
+     * Returns a list of {@link Chain.Link Links} in this analysis
+     * chain.
+     * @return a {@link List} of {@link Chain.Link Links} in this
+     * analysis chain.
+     */
     public List getLinks();
+
+    /**
+     * Returns an iterator of {@link Chain.Link Links} in this
+     * analysis chain.
+     * @return an {@link Iterator} of {@link Chain.Link Links} in this
+     * analysis chain.
+     */
     public Iterator iterateLinks();
 
+    /**
+     * Returns a list of {@link AnalysisPath Paths} in this analysis
+     * chain.
+     * @return a {@link List} of {@link AnalysisPath Paths} in this
+     * analysis chain.
+     */
     public List getPaths();
+
+    /**
+     * Returns an iterator of {@link AnalysisPath Paths} in this
+     * analysis chain.
+     * @return an {@link Iterator} of {@link AnalysisPath Paths} in this
+     * analysis chain.
+     */
     public Iterator iteratePaths();
     
     public interface Node

@@ -21,9 +21,33 @@
 
 package org.openmicroscopy;
 
+/**
+ * The <code>Dependence</code> interface declares constants to
+ * represent the possible values for an analysis's dependence.
+ *
+ * @author Douglas Creager
+ * @version 2.0
+ * @since OME2.0
+ * @see Analysis
+ */
+
 public interface Dependence
 {
+    /**
+     * The analysis generates only global attributes, so its
+     * dependence is not important.
+     */
     public static final int GLOBAL  = 0;
+
+    /**
+     * The results of this analysis depend on the dataset it was
+     * executed against.
+     */
     public static final int DATASET = 1;
+
+    /**
+     * The results of this analysis are independent for each image in
+     * the dataset.
+     */
     public static final int IMAGE   = 2;
 }

@@ -24,33 +24,148 @@ package org.openmicroscopy;
 import java.util.List;
 import java.util.Iterator;
 
+/**
+ * <p>The <code>AttributeType</code> interface describes the semantic
+ * types known to OME.  A semantic type is similar to a record or
+ * class in standard programming languages, in that is has a list of
+ * columns (or <i>semantic elements</i>) which contain the actual data
+ * of the attribute.  These elements are represented by instance of
+ * {@link AttributeType.Column}.</p>
+ *
+ * <p>Semantic types also define, indirectly, where in the OME
+ * database their data is stored.  This information is represented by
+ * instances of {@link DataTable} and {@link DataTable.Column}
+ * classes, and can be accessed via the {@link
+ * AttributeType.Column#getDataColumn()} method of {@link
+ * AttributeType.Column}.</p>
+ *
+ * @author Douglas Creager
+ * @version 2.0
+ * @since OME2.0
+ * @see DataTable
+ */
+
 public interface AttributeType
     extends OMEObject
 {
+    /**
+     * Returns the name of this semantic type.
+     * @return the name of this semantic type.
+     */
     public String getName();
+
+    /**
+     * Sets the name of this semantic type.
+     * @param name the name of this semantic type.
+     */
     public void setName(String name);
 
+    /**
+     * Returns the description of this semantic type.
+     * @return the description of this semantic type.
+     */
     public String getDescription();
+
+    /**
+     * Sets the description of this semantic type.
+     * @param description the description of this semantic type.
+     */
     public void setDescription(String description);
 
+    /**
+     * Returns the granularity of this semantic type.  Will be one of
+     * the values defined in {@link Granularity}.
+     * @return the granularity of this semantic type.
+     */
     public int getGranularity();
+
+    /**
+     * Sets the granularity of this semantic type.  Must be one of the
+     * values defined in {@link Granularity}.
+     * @param granularity the granularity of this semantic type
+     * @throws IllegalArgumentException if <code>granularity</code> is
+     * not one of the values defined in {@link Granularity}.
+     */
     public void setGranularity(int granularity);
 
+    /**
+     * Returns a list of elements in this semantic type.
+     * @return a {@link List} of {@link AttributeType.Column Columns}
+     */
     public List getColumns();
+
+    /**
+     * Returns an iterator of elements in this semantic type.
+     * @return an {@link Iterator} of {@link AttributeType.Column
+     * Columns}
+     */
     public Iterator iterateColumns();
+
+    /**
+     * <p>This <code>AttributeType.Column</code> interface represents
+     * one element of a semantic type.  The storage type of the
+     * element can be accessed via the element's data column:</p>
+     *
+     * <pre>
+     *    DataTable.Column dataColumn = attributeColumn.getDataColumn();
+     *    String sqlType = dataColumn.getSQLType();
+     * </pre>
+     *
+     * @author Douglas Creager
+     * @version 2.0
+     * @since OME2.0
+     * @see DataTable.Column
+     */
 
     public interface Column
         extends OMEObject
     {
+        /**
+         * Returns the semantic type that this element belongs to.
+         * @return the semantic type that this element belongs to.
+         */
         public AttributeType getAttributeType();
 
+        /**
+         * Returns the name of this semantic element.
+         * @return the name of this semantic element.
+         */
         public String getColumnName();
+
+        /**
+         * Sets the name of this semantic element.
+         * @param columnName the name of this semantic element.
+         */
         public void setColumnName(String columnName);
 
+        /**
+         * Returns the description of this semantic element.
+         * @return the description of this semantic element.
+         */
         public String getColumnDescription();
+
+        /**
+         * Sets the description of this semantic element.
+         * @param columnDescription the description of this semantic
+         * element.
+         */
         public void setColumnDescription(String columnDescription);
 
+        /**
+         * Returns the data column associated with this semantic
+         * element.  The data column specifies where in the OME
+         * database this column is stored, and what its storage type
+         * is.
+         * @return the data column associated with this semantic
+         * element.
+         */
         public DataTable.Column getDataColumn();
+
+        /**
+         * Sets the data column associated with this semantic element.
+         * @param dataColumn the data column associated with this
+         * semantic element.
+         */
         public void setDataColumn(DataTable.Column dataColumn);
     }
 }
