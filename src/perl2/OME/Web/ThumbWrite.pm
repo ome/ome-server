@@ -63,6 +63,8 @@ sub serve {
 	my $cgi=$self->CGI();
 	my $id= $cgi->url_param('ImageID');
 	
+	my $generator= new OME::Tasks::Thumbnails;
+
 	# XXX This is our *only* form of access control to the session object
 	if ($self->{RequireLogin}) {
 		if (!$self->ensureLogin()) {
@@ -70,10 +72,9 @@ sub serve {
 			return;
 		}
 	}
+	
+	my $factory=$self->Session()->Factory();
 
-	my $session=$self->Session();
-	my $factory=$session->Factory();
-	my $generator= new OME::Tasks::Thumbnails($session);
 	my $image=$factory->loadObject("OME::Image",$id);
 	my $out=$generator->generateOMEimage($image);
 	print $self->CGI()->header(-type =>"image/jpeg");
