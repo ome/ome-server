@@ -1,4 +1,4 @@
-# OME/Remote/Facades/ProjectFacade.pm
+# OME/Remote/Facades/DatasetFacade.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,71 +35,71 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Remote::Facades::ProjectFacade;
+package OME::Remote::Facades::DatasetFacade;
 use OME;
 our $VERSION = $OME::VERSION;
 
 use OME::Session;
-use OME::Project;
+use OME::Dataset;
 
 =head1 NAME
 
-OME::Remote::Facades::ProjectFacade - implementation of remote facade
-methods pertaining to project objects
+OME::Remote::Facades::DatasetFacade - implementation of remote facade
+methods pertaining to dataset objects
 
 =cut
 
-sub addDatasetsToProject {
-    my ($proto,$project_id,$dataset_ids) = @_;
+sub addImagesToDataset {
+    my ($proto,$dataset_id,$image_ids) = @_;
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
-    my $project = $factory->loadObject('OME::Project',$project_id);
-    die "Project does not exist" unless defined $project;
+    my $dataset = $factory->loadObject('OME::Dataset',$dataset_id);
+    die "Dataset does not exist" unless defined $dataset;
 
-    my @datasets;
-    $dataset_ids = [$dataset_ids] unless ref($dataset_ids);
-    foreach my $dataset_id (@$dataset_ids) {
-        my $dataset = $factory->loadObject('OME::Dataset',$dataset_id);
-        die "Dataset does not exist" unless defined $dataset;
-        push @datasets, $dataset;
+    my @images;
+    $image_ids = [$image_ids] unless ref($image_ids);
+    foreach my $image_id (@$image_ids) {
+        my $image = $factory->loadObject('OME::Image',$image_id);
+        die "Image does not exist" unless defined $image;
+        push @images, $image;
     }
 
-    foreach my $dataset (@datasets) {
-        $factory->maybeNewObject('OME::Project::DatasetMap',
+    foreach my $image (@images) {
+        $factory->maybeNewObject('OME::Image::DatasetMap',
                                  {
-                                  project => $project,
                                   dataset => $dataset,
+                                  image => $image,
                                  });
     }
 
     return;
 }
 
-sub removeDatasetsFromProject {
-    my ($proto,$project_id,$dataset_ids) = @_;
+sub removeImagesFromDataset {
+    my ($proto,$dataset_id,$image_ids) = @_;
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
-    my $project = $factory->loadObject('OME::Project',$project_id);
-    die "Project does not exist" unless defined $project;
+    my $dataset = $factory->loadObject('OME::Dataset',$dataset_id);
+    die "Dataset does not exist" unless defined $dataset;
 
-    my @datasets;
-    $dataset_ids = [$dataset_ids] unless ref($dataset_ids);
-    foreach my $dataset_id (@$dataset_ids) {
-        my $dataset = $factory->loadObject('OME::Dataset',$dataset_id);
-        die "Dataset does not exist" unless defined $dataset;
-        push @datasets, $dataset;
+    my @images;
+    $image_ids = [$image_ids] unless ref($image_ids);
+    foreach my $image_id (@$image_ids) {
+        my $image = $factory->loadObject('OME::Image',$image_id);
+        die "Image does not exist" unless defined $image;
+        push @images, $image;
     }
 
-    foreach my $dataset (@datasets) {
+    foreach my $image (@images) {
         my $link = $factory->
-          findObject('OME::Project::DatasetMap',
+          findObject('OME::Image::DatasetMap',
                      {
-                      project => $project,
                       dataset => $dataset,
+                      image => $image,
                      });
         $link->deleteObject()
           if defined $link;
