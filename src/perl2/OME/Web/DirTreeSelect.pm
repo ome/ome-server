@@ -74,7 +74,7 @@ sub getPageBody {
 			if ($dataset) {
 				$dataset->writeObject();
 			    $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
-				die $status if $status;
+				die $errorMessage if $errorMessage;
 				$dataset->writeObject();
 				$project->writeObject();
 				$session->dataset($dataset);
