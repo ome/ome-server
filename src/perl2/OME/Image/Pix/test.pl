@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..16\n"; }
+BEGIN { $| = 1; print "1..23\n"; }
 END {print "not ok 1\n" unless $loaded; unlink ('pixTest16');unlink('pixTestROI');unlink('pixTestROI2');}
 use OME::Image::Pix;
 $loaded = 1;
@@ -18,7 +18,6 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
-
 use strict;
 my $nPix = 5*5*5*5*5;
 my $pix;
@@ -28,11 +27,11 @@ print "ok 2\n";
 my @pixArray = (0..$nPix-1);
 my $pix8 = pack("C*",@pixArray);
 my $pix16 = pack("S*",@pixArray);
-my $nOut = $pix->SetPix ($pix16);
+my $nOut = $pix->SetPixels ($pix16);
 die "Expecting to write ".scalar (@pixArray)." pixels, wrote $nOut\n" unless $nOut == @pixArray;
 print "ok 3\n";
 
-my $pixels = $pix->GetPix () || die "Could not allocate buffer\n";
+my $pixels = $pix->GetPixels () || die "Could not allocate buffer\n";
 my @testPix = unpack ("S*",$pixels);
 die "GetPix() returned ".scalar(@testPix)." pixels, expecting ".scalar(@pixArray).".\n" unless @testPix == @pixArray;
 for (my $i = 0; $i < @pixArray; $i++) {
@@ -44,11 +43,11 @@ my $pixROI = new OME::Image::Pix ('pixTestROI',5,5,5,5,5,2) || die "Could not in
 my $nPixROI = 5*5*5*5*5;
 my @pixArrayROI = (0..$nPixROI-1);
 my $pix16ROI = pack("S*",@pixArrayROI);
-my $nOutROI = $pixROI->SetPixROI ($pix16ROI,0,0,0,0,0,5,5,5,5,5);
+my $nOutROI = $pixROI->SetROI ($pix16ROI,0,0,0,0,0,5,5,5,5,5);
 die "Expecting to write ".scalar (@pixArrayROI)." pixels, wrote $nOutROI\n" unless $nOutROI == @pixArrayROI;
 print "ok 5\n";
 
-my $pixelsROI = $pixROI->GetPix () || die "Could not allocate buffer for ROI\n";
+my $pixelsROI = $pixROI->GetPixels () || die "Could not allocate buffer for ROI\n";
 my @testPixROI = unpack ("S*",$pixelsROI);
 die "GetPix() returned ".scalar(@testPixROI)." pixels, expecting ".scalar(@pixArray).".\n" unless @testPixROI == @pixArray;
 for (my $i = 0; $i < @pixArray; $i++) {
@@ -60,11 +59,11 @@ my $pixROI = new OME::Image::Pix ('pixTestROI2',5,5,5,5,5,2) || die "Could not i
 my $nPixROI = 2*2*2*2*2;
 my @pixArrayROI = (0..$nPixROI-1);
 my $pix16ROI = pack("S*",@pixArrayROI);
-my $nOutROI = $pixROI->SetPixROI ($pix16ROI,1,1,1,1,1,3,3,3,3,3);
+my $nOutROI = $pixROI->SetROI ($pix16ROI,1,1,1,1,1,3,3,3,3,3);
 die "Expecting to write ".scalar (@pixArrayROI)." pixels, wrote $nOutROI\n" unless $nOutROI == @pixArrayROI;
 print "ok 7\n";
 
-my $pixelsROI = $pixROI->GetPixROI (1,1,1,1,1,3,3,3,3,3) || die "Could not allocate buffer\n";
+my $pixelsROI = $pixROI->GetROI (1,1,1,1,1,3,3,3,3,3) || die "Could not allocate buffer\n";
 my @testPixROI = unpack ("S*",$pixelsROI);
 die "GetPixROI() returned ".scalar(@testPixROI)." pixels, expecting ".scalar(@pixArrayROI).".\n" unless @testPixROI == @pixArrayROI;
 for (my $i = 0; $i < @pixArrayROI; $i++) {
@@ -75,11 +74,11 @@ print "ok 8\n";
 my $nPixPlane = 5*5;
 my @pixArrayPlane = (0..$nPixPlane-1);
 my $pix16Plane = pack("S*",@pixArrayPlane);
-my $nOutPlane = $pixROI->SetPixROI ($pix16Plane,0,0,4,1,1,5,5,5,2,2);
+my $nOutPlane = $pixROI->SetROI ($pix16Plane,0,0,4,1,1,5,5,5,2,2);
 die "Expecting to write ".scalar (@pixArrayPlane)." pixels, wrote $nOutPlane\n" unless $nOutPlane == @pixArrayPlane;
 print "ok 9\n";
 
-my $pixelsPlane = $pixROI->GetPixPlane (4,1,1) || die "Could not allocate buffer\n";
+my $pixelsPlane = $pixROI->GetPlane (4,1,1) || die "Could not allocate buffer\n";
 my @testPixPlane = unpack ("S*",$pixelsPlane);
 die "GetPixPlane() returned ".scalar(@testPixPlane)." pixels, expecting ".scalar(@pixArrayPlane).".\n" unless @testPixPlane == @pixArrayPlane;
 for (my $i = 0; $i < @pixArrayPlane; $i++) {
@@ -90,11 +89,11 @@ print "ok 10\n";
 my $nPixStack = 5*5*5;
 my @pixArrayStack = (0..$nPixStack-1);
 my $pix16Stack = pack("S*",@pixArrayStack);
-my $nOutStack = $pixROI->SetPixROI ($pix16Stack,0,0,0,2,2,5,5,5,3,3);
+my $nOutStack = $pixROI->SetROI ($pix16Stack,0,0,0,2,2,5,5,5,3,3);
 die "Expecting to write ".scalar (@pixArrayStack)." pixels, wrote $nOutStack\n" unless $nOutStack == @pixArrayStack;
 print "ok 11\n";
 
-my $pixelsStack = $pixROI->GetPixStack (2,2) || die "Could not allocate buffer\n";
+my $pixelsStack = $pixROI->GetStack (2,2) || die "Could not allocate buffer\n";
 my @testPixStack = unpack ("S*",$pixelsStack);
 die "GetPixStack() returned ".scalar(@testPixStack)." pixels, expecting ".scalar(@pixArrayStack).".\n" unless @testPixStack == @pixArrayStack;
 for (my $i = 0; $i < @pixArrayStack; $i++) {
@@ -105,11 +104,11 @@ print "ok 12\n";
 my $nPixPlane = 5*5;
 my @pixArrayPlane = (0..$nPixPlane-1);
 my $pix16Plane = pack("S*",@pixArrayPlane);
-my $nOutPlane = $pixROI->SetPixPlane ($pix16Plane,4,4,3);
+my $nOutPlane = $pixROI->SetPlane ($pix16Plane,4,4,3);
 die "Expecting to write ".scalar (@pixArrayPlane)." pixels, wrote $nOutPlane\n" unless $nOutPlane == @pixArrayPlane;
 print "ok 13\n";
 
-my $pixelsPlane = $pixROI->GetPixROI (0,0,4,4,3,5,5,5,5,4) || die "Could not allocate buffer\n";
+my $pixelsPlane = $pixROI->GetROI (0,0,4,4,3,5,5,5,5,4) || die "Could not allocate buffer\n";
 my @testPixPlane = unpack ("S*",$pixelsPlane);
 die "GetPixPlane() returned ".scalar(@testPixPlane)." pixels, expecting ".scalar(@pixArrayPlane).".\n" unless @testPixPlane == @pixArrayPlane;
 for (my $i = 0; $i < @pixArrayPlane; $i++) {
@@ -120,14 +119,42 @@ print "ok 14\n";
 my $nPixStack = 5*5*5;
 my @pixArrayStack = (0..$nPixStack-1);
 my $pix16Stack = pack("S*",@pixArrayStack);
-my $nOutStack = $pixROI->SetPixStack ($pix16Stack,4,0);
+my $nOutStack = $pixROI->SetStack ($pix16Stack,4,0);
 die "Expecting to write ".scalar (@pixArrayStack)." pixels, wrote $nOutStack\n" unless $nOutStack == @pixArrayStack;
 print "ok 15\n";
 
-my $pixelsStack = $pixROI->GetPixROI (0,0,0,4,0,5,5,5,5,1) || die "Could not allocate buffer\n";
+my $pixelsStack = $pixROI->GetROI (0,0,0,4,0,5,5,5,5,1) || die "Could not allocate buffer\n";
 my @testPixStack = unpack ("S*",$pixelsStack);
 die "GetPixStack() returned ".scalar(@testPixStack)." pixels, expecting ".scalar(@pixArrayStack).".\n" unless @testPixStack == @pixArrayStack;
 for (my $i = 0; $i < @pixArrayStack; $i++) {
 	die "GetPix() returned different pixels than SetPix(). Index=$i\n" unless $testPixStack[$i] == $pixArrayStack[$i];
 }
 print "ok 16\n";
+
+my $pixROI = new OME::Image::Pix ('',5,5,5,5,5,2);
+die "not ok 17:  new() Failed to return undef with no path spec." if $pixROI;
+print "ok 17\n";
+
+my $pix16 = $pix->GetPlane (10,10,10);
+die "not ok 18:  GetPlane Failed to return undef with bogus plane spec." if $pixROI;
+print "ok 18\n";
+
+my $nOut = $pix->SetPlane ($pix16Plane,10,10,10);
+die "not ok 19:  SetPlane Failed to return 0 with bogus plane spec." if $pixROI;
+print "ok 19\n";
+
+my $pix16 = $pix->GetStack (10,10);
+die "not ok 20:  GetStack Failed to return undef with bogus stack spec." if $pixROI;
+print "ok 20\n";
+
+my $nOut = $pix->SetStack ($pix16Stack,10,10);
+die "not ok 21:  SetStack Failed to return 0 with bogus plane spec." if $pixROI;
+print "ok 21\n";
+
+my $pix16 = $pix->GetROI (0,0,0,4,0,5,10,5,5,1);
+die "not ok 22:  GetROI Failed to return 0 with bogus plane spec." if $pixROI;
+print "ok 22\n";
+
+my $nOut = $pix->SetROI ($pix16ROI,0,0,10,4,0,5,5,5,5,1);
+die "not ok 23:  SetROI Failed to return 0 with bogus plane spec." if $pixROI;
+print "ok 23\n";

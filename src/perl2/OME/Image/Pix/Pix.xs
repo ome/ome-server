@@ -24,7 +24,7 @@ new(package,path,dx,dy,dz,dw,dt,bp)
 		int dt
 		int bp
 		CODE:
-		RETVAL = new(path,dx,dy,dz,dw,dt,bp);
+		RETVAL = NewPix (path,dx,dy,dz,dw,dt,bp);
 		OUTPUT:
 		RETVAL
 
@@ -32,17 +32,20 @@ new(package,path,dx,dy,dz,dw,dt,bp)
 void
 DESTROY(pPix)
 		OME::Image::Pix pPix
+		CODE:
+		FreePix (pPix);
+		OUTPUT:
 
 
 
 char*
-GetPix (pPix)
+GetPixels (pPix)
 	OME::Image::Pix pPix
 	PREINIT:
 	size_t size;
 	CODE:
 		size = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt * pPix->bp;
-		RETVAL = (char *) GetPix(pPix);
+		RETVAL = (char *) GetPixels (pPix);
 		if (RETVAL) {
 			ST(0) = sv_newmortal();
 		/*
@@ -58,7 +61,7 @@ GetPix (pPix)
 
 
 char*
-GetPixPlane (pPix,theZ,theW,theT)
+GetPlane (pPix,theZ,theW,theT)
 	OME::Image::Pix pPix
 	int theZ
 	int theW
@@ -67,7 +70,7 @@ GetPixPlane (pPix,theZ,theW,theT)
 	size_t size;
 	CODE:
 		size = pPix->dx * pPix->dy * pPix->bp;
-		RETVAL = (char *) GetPixPlane(pPix,theZ,theW,theT);
+		RETVAL = (char *) GetPlane(pPix,theZ,theW,theT);
 		if (RETVAL) {
 			ST(0) = sv_newmortal();
 		/*
@@ -82,7 +85,7 @@ GetPixPlane (pPix,theZ,theW,theT)
 		}
 
 char*
-GetPixStack (pPix,theW,theT)
+GetStack (pPix,theW,theT)
 	OME::Image::Pix pPix
 	int theW
 	int theT
@@ -90,7 +93,7 @@ GetPixStack (pPix,theW,theT)
 	size_t size;
 	CODE:
 		size = pPix->dx * pPix->dy * pPix->dz * pPix->bp;
-		RETVAL = (char *) GetPixStack(pPix,theW,theT);
+		RETVAL = (char *) GetStack (pPix,theW,theT);
 		if (RETVAL) {
 			ST(0) = sv_newmortal();
 		/*
@@ -105,7 +108,7 @@ GetPixStack (pPix,theW,theT)
 		}
 
 char*
-GetPixROI (pPix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1)
+GetROI (pPix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1)
 	OME::Image::Pix pPix
 	int x0
 	int y0
@@ -121,7 +124,7 @@ GetPixROI (pPix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1)
 	size_t size;
 	CODE:
 		size = (x1-x0) * (y1-y0) * (z1-z0) * (w1-w0) * (t1-t0) * pPix->bp;
-		RETVAL = (char *) GetPixROI(pPix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1);
+		RETVAL = (char *) GetROI (pPix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1);
 		if (RETVAL) {
 			ST(0) = sv_newmortal();
 		/*
@@ -136,12 +139,12 @@ GetPixROI (pPix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1)
 		}
 
 size_t
-SetPix (pPix,thePix)
+SetPixels (pPix,thePix)
 	OME::Image::Pix pPix
 	char *thePix
 
 size_t
-SetPixPlane (pPix,thePix,theZ,theW,theT)
+SetPlane (pPix,thePix,theZ,theW,theT)
 	OME::Image::Pix pPix
 	char *thePix
 	int theZ
@@ -149,7 +152,7 @@ SetPixPlane (pPix,thePix,theZ,theW,theT)
 	int theT
 
 size_t
-SetPixStack (pPix,thePix,theW,theT)
+SetStack (pPix,thePix,theW,theT)
 	OME::Image::Pix pPix
 	char *thePix
 	int theW
@@ -157,7 +160,7 @@ SetPixStack (pPix,thePix,theW,theT)
 
 
 size_t
-SetPixROI (pPix,thePix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1)
+SetROI (pPix,thePix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1)
 	OME::Image::Pix pPix
 	char *thePix
 	int x0

@@ -6,7 +6,7 @@
 
 
 
-Pix *new      (char* path,
+Pix *NewPix      (char* path,
 	int dx, int dy, int dz, int dw, int dt, int bp)
 {
 	Pix *pPix;
@@ -28,7 +28,7 @@ Pix *new      (char* path,
 	return pPix;
 }
 
-void DESTROY  (Pix *pPix)
+void FreePix  (Pix *pPix)
 {
 	free (pPix);
 }
@@ -72,7 +72,7 @@ size_t imgSize = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt * pPix->bp
 
 
 
-char *GetPixROI (Pix *pPix,
+char *GetROI (Pix *pPix,
 	int x0, int y0, int z0, int w0, int t0,
 	int x1, int y1, int z1, int w1, int t1
 )
@@ -143,7 +143,7 @@ char *theBuf;
 
 
 
-char *GetPixPlane (Pix *pPix, int theZ, int theW, int theT)
+char *GetPlane (Pix *pPix, int theZ, int theW, int theT)
 {
 size_t nPix;
 int dx = pPix->dx;
@@ -195,7 +195,7 @@ char *theBuf;
 
 
 
-char *GetPixStack (Pix *pPix, int theW, int theT)
+char *GetStack (Pix *pPix, int theW, int theT)
 {
 size_t nPix;
 int dx = pPix->dx;
@@ -245,7 +245,7 @@ char *theBuf;
 }  
 
 
-char *GetPix (Pix *pPix)
+char *GetPixels (Pix *pPix)
 {
 size_t size;
 char *theBuf;
@@ -282,7 +282,7 @@ size_t nIn;
 
 
 
-size_t SetPixPlane (Pix *pPix, char *thePix, int theZ, int theW, int theT)
+size_t SetPlane (Pix *pPix, char *thePix, int theZ, int theW, int theT)
 {
 size_t nPix;
 int dx = pPix->dx;
@@ -328,7 +328,7 @@ size_t nOut;
 
 
 
-size_t SetPixStack (Pix *pPix, char *thePix, int theW, int theT)
+size_t SetStack (Pix *pPix, char *thePix, int theW, int theT)
 {
 size_t nPix;
 int dx = pPix->dx;
@@ -373,7 +373,7 @@ size_t nOut;
 
 
 
-size_t SetPixROI (Pix *pPix, char *thePix,
+size_t SetROI (Pix *pPix, char *thePix,
 	int x0, int y0, int z0, int w0, int t0,
 	int x1, int y1, int z1, int w1, int t1
 )
@@ -436,7 +436,7 @@ size_t sizeX;
 
 
 
-size_t SetPix (Pix *pPix, char *thePix)
+size_t SetPixels (Pix *pPix, char *thePix)
 {
 size_t nPix = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt;
 FILE *fp;

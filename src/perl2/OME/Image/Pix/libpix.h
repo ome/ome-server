@@ -26,22 +26,22 @@ typedef struct
 	int  dx,dy,dz,dt,dw,bp; /* Image dimensions bp is bytes per pixel */
 } Pix;
 
-Pix *new      (char* path, int dx, int dy, int dz, int dw, int dt, int bp);
+Pix *NewPix      (char* path, int dx, int dy, int dz, int dw, int dt, int bp);
 
-void DESTROY  (Pix *pPix);
+void FreePix  (Pix *pPix);
 
-char *GetPix (Pix *pPix);
-char *GetPixPlane (Pix *pPix, int theZ, int theW, int theT);
-char *GetPixStack (Pix *pPix, int theW, int theT);
-char *GetPixROI (Pix *pPix,
+char *GetPixels (Pix *pPix);
+char *GetPlane (Pix *pPix, int theZ, int theW, int theT);
+char *GetStack (Pix *pPix, int theW, int theT);
+char *GetROI (Pix *pPix,
 	int x0, int y0, int z0, int w0, int t0,
 	int x1, int y1, int z1, int w1, int t1
 );
 
-size_t SetPix (Pix *pPix, char *thePix);
-size_t SetPixPlane (Pix *pPix, char *thePix, int theZ, int theW, int theT);
-size_t SetPixStack (Pix *pPix, char *thePix, int theW, int theT);
-size_t SetPixROI (Pix *pPix, char *thePix,
+size_t SetPixels (Pix *pPix, char *thePix);
+size_t SetPlane (Pix *pPix, char *thePix, int theZ, int theW, int theT);
+size_t SetStack (Pix *pPix, char *thePix, int theW, int theT);
+size_t SetROI (Pix *pPix, char *thePix,
 	int x0, int y0, int z0, int w0, int t0,
 	int x1, int y1, int z1, int w1, int t1
 );
