@@ -20,6 +20,26 @@
 
 package OME::AnalysisExecution;
 
+=head1 NAME
+
+OME::AnalysisExecution - execution of an analysis chain
+
+OME::AnalysisExecution::NodeExecution - execution of one node in an
+analysis chain
+
+=head1 DESCRIPTION
+
+The C<AnalysisExecution> class represents an execution of an OME
+analysis chain against a dataset of images.  The
+C<AnalysisExecution::NodeExecution> class represents an execution of
+each node in the chain.  Each actual execution of the chain is
+represented by exactly one C<AnalysisExecution>, and each execution of
+a node is represented by exactly one
+C<AnalysisExecution::NodeExecution>, even if the results of a module
+execution are reused.
+
+=cut
+
 use strict;
 our $VERSION = '1.0';
 
@@ -43,6 +63,50 @@ __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 __PACKAGE__->has_many('node_executions',
                       'OME::AnalysisExecution::NodeExecution' =>
                       qw(analysis_execution_id));
+
+=head1 METHODS (C<AnalysisExecution>)
+
+The following methods are available to C<AnalysisExecution> in
+addition to those defined by L<OME::DBObject>.
+
+=head2 analysis_view
+
+	my $analysis_view = $execution->analysis_view();
+	$execution->analysis_view($analysis_view);
+
+Returns or sets the analysis chain which was executed.
+
+=head2 dataset
+
+	my $dataset = $execution->dataset();
+	$execution->dataset($dataset);
+
+Returns or sets the dataset that the chain was executed against.
+
+=head2 experimenter
+
+	my $experimenter = $execution->experimenter();
+	$execution->experimenter($experimenter);
+
+Returns or sets the experimenter who performed the execution of the
+chain.
+
+=head2 timestamp
+
+	my $timestamp = $execution->timestamp();
+	$execution->timestamp($timestamp);
+
+Returns or sets when the execution occurred.
+
+=head2 node_executions
+
+	my @nodes = $execution->node_executions();
+	my $node_iterator = $execution->node_executions();
+
+Returns or iterates, depending on context, a list of all of the
+C<AnalysisExecution::NodeExecutions> associated with this analysis.
+
+=cut
 
 sub experimenter {
     my $self = shift;
@@ -83,5 +147,46 @@ __PACKAGE__->hasa('OME::AnalysisExecution' => qw(analysis_execution_id));
 __PACKAGE__->hasa('OME::AnalysisView::Node' => qw(analysis_view_node_id));
 __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 
+=head1 METHODS (C<AnalysisExecution::NodeExecution>)
+
+The following methods are available to
+C<AnalysisExecution::NodeExecution> in addition to those defined by
+L<OME::DBObject>.
+
+=head2 analysis_execution
+
+	my $analysis_execution = $node_execution->analysis_execution();
+	$node_execution->analysis_execution($analysis_execution);
+
+Returns or sets the analysis execution that this node execution
+belongs to.
+
+=head2 analysis_view_node
+
+	my $analysis_view_node = $node_execution->analysis_view_node();
+	$node_execution->analysis_view_node($analysis_view_node);
+
+Returns or sets the analysis chain node that was executed.
+
+=head2 analysis
+
+	my $analysis = $node_execution->analysis();
+	$node_execution->analysis($analysis);
+
+Returns or sets the module execution that satisfied this node
+execution.
+
+=cut
+
 
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=cut
+
