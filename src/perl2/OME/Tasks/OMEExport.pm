@@ -136,9 +136,8 @@ sub exportFile {
 	) or die "$xsltproc_path returned non-zero exit status: $?\n$errorStream" ;
 	$session->finishTemporaryFile( $CA_file );
 
-	open( XML_OUT, "> $filename" );
-	print XML_OUT OME::Image::Server->exportOMEFile( $OME_file_no_pixels );
-	close( XML_OUT );
+	OME::Image::Server->exportOMEFile( $OME_file_no_pixels, undef, $filename );
+
 	$session->finishTemporaryFile( $OME_file_no_pixels );
 }
 
