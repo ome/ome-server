@@ -552,7 +552,10 @@ sub findObjects {
       $class->__makeSelectSQL($columns_wanted,$criteria);
     my $sth = $dbh->prepare($sql);
     my @values = values %$criteria;
-    map { $_ = $_->[1] if ref($_) eq 'ARRAY' } @values;
+    map {
+        $_ = $_->[1] if ref($_) eq 'ARRAY';
+        $_ = $_->id() if UNIVERSAL::isa($_,"OME::DBObject");
+    } @values;
 
     if (wantarray) {
         # __makeSelectSQL should have created the where clause in

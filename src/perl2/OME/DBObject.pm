@@ -470,7 +470,7 @@ sub __makeSelectSQL {
 
             # If the value is an object, assume that it has an id
             # method, and use that in the SQL query.
-            $value = $value->id() if ref($value);
+            $value = $value->id() if UNIVERSAL::isa($value,"OME::DBObject");
 
             if ($location eq 'id') {
                 push @join_clauses, [$operation];
