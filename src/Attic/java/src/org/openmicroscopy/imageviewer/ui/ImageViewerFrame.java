@@ -80,7 +80,7 @@ class ImageViewerPanel extends JPanel
     
     JPanel wholeImagePanel = new JPanel();
     wholeImagePanel.setLayout(new BorderLayout(2,2));
-    ImagePanel imagePanel = new ImagePanel();
+    ZoomImagePanel imagePanel = new ZoomImagePanel();
     wholeImagePanel.add(imagePanel,BorderLayout.CENTER);
     
     ImageControlPanel controlPanel = new ImageControlPanel();
