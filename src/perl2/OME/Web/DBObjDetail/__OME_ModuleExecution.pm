@@ -202,11 +202,15 @@ sub getPageBody {
 	foreach my $fo ( @formal_outputs ) {
 		my $attributes = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX($mex,$fo->semantic_type);		
+		my $more_info_url = $self->pageURL( 'OME::Web::Search', {
+			Type             => $fo->semantic_type()->requireAttributeTypePackage()->getFormalName(),
+			module_execution => $mex->id()
+		} );
 		push( @{ $tmpl_data{ outputs } }, { 
 			output => $tableMaker->getTable( 
 				{
 					noSearch => 1,
-					title    => $fo->name(),
+					title    => $fo->name()." <a href='$more_info_url'>Search within these outputs</a>",
 					embedded_in_form => $self->{ form_name },
 				},
 				$self->_STformalName( $fo->semantic_type() ),
