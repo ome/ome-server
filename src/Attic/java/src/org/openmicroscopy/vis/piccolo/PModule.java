@@ -68,7 +68,7 @@ import java.lang.Object;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.TreeSet;
-import java.util.Collection;
+
 
 /** 
  * A Piccolo widget for a module. This widget will consist of a 
@@ -527,7 +527,7 @@ public class PModule extends PPath implements PBufferedNode {
 		return res;
 	}
 	
-	public Collection getInputParameters() {
+	public TreeSet getInputParameters() {
 		PNodeFilter inputFilter = new PNodeFilter() {
 			public boolean accept(PNode aNode) {
 				// want only those things that are inputs.
@@ -542,10 +542,10 @@ public class PModule extends PPath implements PBufferedNode {
 				return true;
 			}
 		};
-		return labelNodes.getAllNodes(inputFilter,null);
+		return new TreeSet(labelNodes.getAllNodes(inputFilter,null));
 	}
 	
-	public Collection getOutputParameters() {
+	public TreeSet getOutputParameters() {
 		PNodeFilter outputFilter = new PNodeFilter() {
 			public boolean accept(PNode aNode) {
 				return (aNode instanceof PFormalOutput);
@@ -554,7 +554,7 @@ public class PModule extends PPath implements PBufferedNode {
 				return true;
 			}
 		};
-		return labelNodes.getAllNodes(outputFilter,null);
+		return new TreeSet(labelNodes.getAllNodes(outputFilter,null));
 	}
 	
 	public void setNode(Node node) {
