@@ -37,6 +37,10 @@
 
 package OME::Web::ProjectManagement;
 
+#*********
+#********* INCLUDES
+#*********
+
 use strict;
 use vars qw($VERSION);
 use OME;
@@ -45,10 +49,14 @@ use CGI;
 use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
-use OME::Web::Helper::HTMLFormat;
 use OME::Web::DatasetTable;
+use Carp;
 
 use base qw{ OME::Web };
+
+#*********
+#********* PUBLIC METHODS
+#*********
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Project Management";
@@ -59,12 +67,21 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $session = $self->Session();
 	my $factory = $session->Factory();
-
-	my $project = $self->Session()->project()
-		or die "Project is not defined for the session.\n";
+	my $project;
+	
+	# Managers
 	my $p_manager = new OME::Tasks::ProjectManager;
 	my $d_manager = new OME::Tasks::DatasetManager;
 
+	if ($cgi->param('project_id')) {
+		$self->{__project} = $project = $p_manager->load($cgi->param('project_id'));
+	} else {
+		$self->{__project} = $project = $session->project();
+	}
+
+	croak "Project not specified or Project ID not found" unless $project;
+
+	# Header
 	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, $project->name() . " Properties");
 	
 	# Dataset objects that were selected
@@ -86,10 +103,10 @@ sub getPageBody {
 			);
 		} else { 
 			# Action
-			$p_manager->change($new_description, $new_name);
+			$p_manager->change($new_description, $new_name, $project->id());
 
 			# Data
-			$body = $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
+			$body .= $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
 		}
 		
 		# Refresh top frame
@@ -99,12 +116,10 @@ sub getPageBody {
 		$body .= OME::Web::Validation->ReloadHomeScript();
 	} elsif ($cgi->param('Remove')) {
 		# Action
-		foreach (@selected) {
-			$d_manager->remove( {
-					$_ => [$project->id()]
-				}
-			)
-		}
+		$p_manager->removeDatasets( {
+				$project->id() => \@selected
+			}
+		);
 		
 		# Data
 		$body = $cgi->p({-class => 'ome_info'}, "Removed dataset(s) @selected from the project.");
@@ -113,20 +128,7 @@ sub getPageBody {
 		$body .= "<script>top.location.href = top.location.href;</script>"
 			if (scalar($project->datasets())==0);
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
-	} elsif ($cgi->param('Delete')) {
-		# Action
-		foreach (@selected) { $d_manager->delete($_) }
-		
-		# Data
-		$body = $cgi->p({-class => 'ome_info'}, "Deleted dataset(s) @selected from OME.");
-
-		# Refresh current frame and/or top frame
-		$body .= "<script>top.location.href = top.location.href;</script>"
-			if (scalar($project->datasets())==0);
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
-	}
-
-	elsif ($cgi->param('Select')) {
+	} elsif ($cgi->param('Select')) {
 		# Warning
 		if (scalar(@selected) > 1) {
 			$body .= $cgi->p({class => 'ome_error'}, 
@@ -141,11 +143,10 @@ sub getPageBody {
 
 		# Refresh top frame
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	}
-	elsif (defined $cgi->param('Add')) {
+	} elsif (defined $cgi->param('Add')) {
 		# Action
 		my @datasets = $factory->findObjects("OME::Dataset", name => $selected[0]);
-		$p_manager->add($datasets[0]->id());
+		$p_manager->addToProject($datasets[0]->id(), $project->id());
 		
 		# Data
 		$body .= $cgi->p({-class => 'ome_info'}, "Added dataset $selected[0] to the project.");
@@ -156,38 +157,113 @@ sub getPageBody {
 	} 
 	
 	# print form
-	$body .= $self->print_form();
+	$body .= $self->__printForm();
 	
 	return ('HTML',$body);
 }
 
 
+#*********
+#********* PRIVATE METHODS
+#*********
 
-###################
-sub print_form {
-	my $self = shift;
-	my $cgi        = $self->CGI();
-	my $session    = $self->Session();
-	my $project    = $session->project();
-	my $factory    = $session->Factory();
+sub __printForm {
+	my $self       = shift;
+	my $q          = $self->CGI();
+	my $user       = $self->Session()->User();
+	my $project    = $self->{__project};
 	my $htmlFormat = new OME::Web::Helper::HTMLFormat;
 
-	my $user       = $factory->loadAttribute("Experimenter",$session->User()->id());
+	my $header_rows = $q->Tr({-bgcolor => '#FFFFFF'},
+		$q->td({-colspan => 2},
+			$q->span( {
+					-align => 'left',
+					-class => 'ome_info',
+					-style => 'font-size: 10px;',
+				}, "Items marked with a * are required unless otherwise specified"
+			),
+		)
+	);
 
-	my $text = $cgi->startform .
-	           $htmlFormat->formChange("project",$project,$user) .
-			   $cgi->p({-class => 'ome_title', -align => 'center'}, "Datasets") .
-			   $self->makeDatasetListings($project) .
-			   $cgi->endform;
-	
-	return $text;
+	my $metadata = $q->Tr({-bgcolor => '#FFFFFF'}, [
+		$q->td( [
+			$q->span("Name *"),
+			$q->textfield( {
+					-name => 'name',
+					-value => $project->name(),
+					-size => 40
+				}
+			)
+			]
+		),
+		$q->td( [
+			$q->span("Description"),
+			$q->textarea( {
+					-name => 'description',
+					-value => $project->description(),
+					-rows => 3,
+					-columns => 50,
+				}
+			)
+			]
+		),
+		$q->td( [
+			$q->span("Object ID"),
+			$q->span($project->id()),
+			]
+		),
+		$q->td( [
+			$q->span("Owner"),
+			$q->a({-href => "mailto: " . $user->Email()},
+				$user->FirstName . ' ' . $user->LastName
+			),
+			]
+		),
+		$q->td( [
+			$q->span("Group"),
+			$q->span($user->Group()->Name()),
+			]
+		),
+		]
+	);
+
+	my $footer = $q->Tr({-bgcolor => '#E0E0E0'},
+		$q->td({-colspan => 2, -align => 'right'},
+			$q->a( {
+					-href => "#",
+					-onClick => "document.forms['metadata'].save.value='1'; document.forms['metadata'].submit();",
+					-class => 'ome_widget'
+				},
+				"Save Metadata"
+			)
+		)
+	);
+
+	my $border_table = $q->table( {
+			-class => 'ome_table',
+			-width => '100%',
+			-cellspacing => 1,
+			-cellpadding => 3,
+		},
+		$header_rows,
+		$metadata,
+		$footer,
+	);	
+
+	return $q->startform({-name => 'metadata'}) .
+	       $q->hidden(-name => 'save', -default => 0) .
+	       $border_table .
+		   $self->__makeDatasetListings() .
+		   $q->endform;
 }
 
-sub makeDatasetListings {
-	my ($self, $project) = @_;
-	my $t_generator = new OME::Web::DatasetTable;
-	my $cgi = $self->CGI();;
+sub __makeDatasetListings {
+	my $self = shift;
+	my $q = $self->CGI();;
 	my $factory = $self->Session()->Factory();
+	
+	my $project = $self->{__project};
+	my $t_generator = new OME::Web::DatasetTable;
 	
 	# Grab the ID of each of our datasets that's in the project
 	my $in_project;
@@ -195,7 +271,7 @@ sub makeDatasetListings {
 	
 	# Gen our "Datasets in Project" table
 	my $html = $t_generator->getTable( {
-			options_row => ["Switch To", "Remove", "Delete"],
+			options_row => ["Switch To", "Remove"],
 			select_column => 1,
 		},
 		$project->datasets()
@@ -220,35 +296,36 @@ sub makeDatasetListings {
 	unshift(@additional_datasets, 'None');
 
 	# Add dataset table
-	$html .= $cgi->p .
-	         $cgi->table( {
+	$html .= $q->p .
+	         $q->table( {
 					 -class => 'ome_table',
 					 -align => 'center',
 					 -cellspacing => 1,
 					 -cellpadding => 4
 				 },
-				 $cgi->Tr(
-					 $cgi->startform(),
-					 $cgi->td(
+				 $q->Tr(
+					 $q->startform(),
+					 $q->td(
 						 {-class => 'ome_action_td'},
 						 '&nbsp',
-						 $cgi->span("Add dataset: "),
-						 $cgi->popup_menu( {
+						 $q->span("Add dataset: "),
+						 $q->popup_menu( {
 								 -name => 'selected',
 								 -values => [@additional_datasets],
 								 -default => $additional_datasets[0]
 							 }
 						 ),
 						 '&nbsp',
-						 $cgi->submit({-name => 'Add', -value => 'Add'}),
+						 $q->submit({-name => 'Add', -value => 'Add'}),
 						 '&nbsp'
 					 ),
-					 $cgi->endform()
+					 $q->endform()
 				 )
 			 );
 
 
-	return $html;
+	return $q->p({-class => 'ome_title', -align => 'center'}, "Datasets") .
+	       $html;
 }
 
 1;
