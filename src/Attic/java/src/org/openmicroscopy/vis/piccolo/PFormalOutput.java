@@ -45,6 +45,8 @@ import edu.umd.cs.piccolo.util.PBounds;
 import javax.swing.SwingConstants;
 import java.util.ArrayList;
 
+
+
 /** 
  * Nodes for displaying module outputs.<p>
  * 
@@ -61,9 +63,11 @@ public class PFormalOutput extends PFormalParameter {
 		if (param.getSemanticType() != null)
 			connection.addOutput(param.getSemanticType(),this);
 		locator = new PParameterLocator(this,SwingConstants.EAST);
+		addCircle();
 		updateBounds();  
 	}
-	
+		
+		
 	protected void layoutChildren() {
 		if (typeNode != null) {
 			//set type node offset. 
@@ -84,8 +88,14 @@ public class PFormalOutput extends PFormalParameter {
 				textNode.setOffset(left,0);
 				typeNode.setOffset(0,TYPE_NODE_VERTICAL_OFFSET);
 			}
-		}		
-		updateBounds(); 
+		}
+		setCirclePosition();
+		updateBounds();
+	}
+	
+	protected float getLinkTargetX() {
+		PBounds b = labelNode.getFullBoundsReference();
+		return (float) (b.getX()+b.getWidth());
 	}
 	
 	/**
