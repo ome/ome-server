@@ -39,6 +39,24 @@ __PACKAGE__->has_many('outputs','OME::Module::FormalOutput' => qw(module_id));
 __PACKAGE__->has_many('analyses','OME::ModuleExecution' => qw(module_id));
 
 
+sub findInputByName {
+    my ($self, $name) = @_;
+    my $module_id = $self->id();
+    return OME::Module::FormalInput->
+      findByModuleAndName($module_id,
+                           $name);
+}
+
+sub findOutputByName {
+    my ($self, $name) = @_;
+    my $module_id = $self->id();
+    return OME::Module::FormalOutput->
+      findByModuleAndName($module_id,
+                           $name);
+}
+
+
+
 
 package OME::Module::FormalInput;
 
@@ -71,6 +89,13 @@ __PACKAGE__->has_many('actual_inputs','OME::ModuleExecution::ActualInput' =>
                      
 __PACKAGE__->make_filter('__module_name' => 'module_id = ? and name = ?');
 
+sub findByModuleAndName {
+    my ($class, $module_id, $name) = @_;
+    my @inputs = $class->__module_name(module_id => $module_id,
+					name       => $name);
+    die "Multiple matching inputs" if (scalar(@inputs) > 1);
+    return $inputs[0]; 
+}
 
 
 package OME::Module::FormalOutput;
@@ -98,6 +123,14 @@ __PACKAGE__->hasa('OME::Module' => qw(module_id));
 __PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
 
 __PACKAGE__->make_filter('__module_name' => 'module_id = ? and name = ?');
+
+sub findByModuleAndName {
+    my ($class, $module_id, $name) = @_;
+    my @outputs = $class->__module_name(module_id => $module_id,
+					 name       => $name);
+    die "Multiple matching outputs" if (scalar(@outputs) > 1);
+    return $outputs[0]; 
+}
 
 
 1;
