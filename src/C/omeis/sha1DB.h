@@ -53,6 +53,7 @@
 DB *sha1DB_open (const char *file);
 OID sha1DB_get (DB *myDB, unsigned char *md_value);
 int sha1DB_put (DB *myDB, unsigned char *md_value, OID theOID);
+int sha1DB_del (DB *myDB, unsigned char *md_value);
 int sha1DB_close (DB *myDB);
 
 

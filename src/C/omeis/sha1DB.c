@@ -114,4 +114,14 @@ DBT key, value;
 	return ((myDB->put)(myDB, &key, &value, R_NOOVERWRITE));
 }
 
+int sha1DB_del (DB *myDB, unsigned char *md_value) {
+DBT key;
+
+	memset(&key, 0, sizeof(key));
+	key.size = OME_DIGEST_LENGTH;
+	key.data = (void *)md_value;
+
+	return ((myDB->del)(myDB, &key, 0));
+}
+
 
