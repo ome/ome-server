@@ -39,11 +39,12 @@
 
 package org.openmicroscopy.vis.chains;
 
-import org.openmicroscopy.vis.ome.CChainExecution;
+
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.piccolo.PResultCanvas;
 import org.openmicroscopy.vis.piccolo.PChainLibraryCanvas;
+import org.openmicroscopy.ChainExecution;
 import edu.umd.cs.piccolo.PCanvas;
 import javax.swing.BoxLayout;
 import java.awt.Rectangle;
@@ -66,8 +67,8 @@ public class ResultFrame extends ChainFrameBase implements WindowFocusListener {
 	
 	PChainLibraryCanvas libraryCanvas;
 	
-	private static int X = 410;
-	private static int Y=500;
+	private static int X = 610;
+	private static int Y=410;
 	private static int WIDTH=700;
 	private static int HEIGHT=400;
 	
@@ -129,7 +130,7 @@ public class ResultFrame extends ChainFrameBase implements WindowFocusListener {
 		setTitle("OME Analysis Results: "+chain.getName());
 	}
 	
-	public void setExecution(CChainExecution exec) {
+	public void setExecution(ChainExecution exec) {
 		((PResultCanvas) canvas).setExecution(exec);
 	}
 
