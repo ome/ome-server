@@ -75,7 +75,6 @@
 				<xs:element ref = "Description" minOccurs = "0"/>
 				<xs:element ref = "ExperimentRef" minOccurs = "0"/>
 				<xs:element ref = "DerivedImage" minOccurs = "0"/>
-				<xs:element ref = "ExperimenterRef" minOccurs = "0"/>
 				<xs:element ref = "GroupRef" minOccurs = "0"/>
 				<xs:element ref = "DatasetRef" minOccurs = "0" maxOccurs = "unbounded"/>
 				<xs:element ref = "InstrumentRef" minOccurs = "0"/>
