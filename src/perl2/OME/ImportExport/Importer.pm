@@ -50,16 +50,13 @@ sub new {
     my $image_file_list_ref = shift;         # reference list of input files
     croak "No image file to import"
 	unless $image_file_list_ref;
-    my $project = shift;
-    croak "Image files not associated with a project"
-	unless defined $project;
     my $callback = shift;     # ref. to callback routine to which results returned
 
     foreach $image_file (@$image_file_list_ref) {
 	@image_buf = ();     # clear out any old images
 	%xml_elements = ();  # clear out any old metadata
 	$xml_elements{'Image.Name'} = get_base_name($image_file);
-	$import_reader = new OME::ImportExport::Import_reader($image_file, \@image_buf, $project, \%xml_elements);
+	$import_reader = new OME::ImportExport::Import_reader($image_file, \@image_buf, \%xml_elements);
 	my $fn = $import_reader->Image_reader::image_file;
 	$import_reader->check_type;
 
