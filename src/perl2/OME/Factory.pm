@@ -361,7 +361,7 @@ use OME::SessionManager;
 use OME::DBConnection;
 use OME::Database::Delegate;
 use DBI;
-use Carp;
+use Carp qw(cluck croak);
 
 use UNIVERSAL::require;
 
@@ -373,10 +373,21 @@ sub new {
 
     my ($session) = @_;
 
+    my $delegate = OME::Database::Delegate->getDefaultDelegate()
+			or croak "Could not get default DB delegate";
+
+    my $dbh = $delegate->
+      connectToDatabase(OME::DBConnection->DataSource(),
+                        OME::DBConnection->DBUser(),
+                        OME::DBConnection->DBPassword());
+    die "Cannot create database handle"
+      unless defined $dbh;
+
     my $self = {
                 __session          => $session,
-                __handlesAvailable => [],
-                __allHandles       => [],
+                __ourDBH           => $dbh,
+                __handlesAvailable => {},
+                __allHandles       => {},
                };
 
     return bless $self, $class;
@@ -407,27 +418,29 @@ sub __checkClass {
 
 sub obtainDBH {
     my ($self) = @_;
-    my $handles = $self->{__handlesAvailable};
+    return $self->{__ourDBH};
+}
 
-    # If we have an unused handle in the queue, return it
-    if (@$handles) {
-        #carp "--- Obtaining DBH ".
-        #  scalar(@{$self->{__handlesAvailable}})."/".
-        #  scalar(@{$self->{__allHandles}});
-        return shift @$handles if @$handles;
+sub newDBH {
+    my ($self) = @_;
+
+    my @handles = values %{$self->{__handlesAvailable}};
+    my $dbh;
+    $dbh = shift @handles if scalar @handles;
+    
+    if ($dbh) {
+    	delete $self->{__handlesAvailable}->{"$dbh"};
+    } else {
+		my $delegate = OME::Database::Delegate->getDefaultDelegate()
+			or croak "Could not get default DB delegate";
+		$dbh = $delegate->
+		  connectToDatabase(OME::DBConnection->DataSource(),
+							OME::DBConnection->DBUser(),
+							OME::DBConnection->DBPassword());
+		die "Cannot create database handle"
+		  unless defined $dbh;
+		$self->{__allHandles}->{"$dbh"} = $dbh;
     }
-
-    # Otherwise, create a new one and return it.
-    my $delegate = OME::Database::Delegate->getDefaultDelegate();
-    my $dbh = $delegate->
-      connectToDatabase(OME::DBConnection->DataSource(),
-                        OME::DBConnection->DBUser(),
-                        OME::DBConnection->DBPassword());
-    die "Cannot create database handle"
-      unless defined $dbh;
-    push @{$self->{__allHandles}}, $dbh;
-
-    #carp "--- $$ Creating DBH #".scalar(@{$self->{__allHandles}});
 
     return $dbh;
 }
@@ -435,8 +448,20 @@ sub obtainDBH {
 sub releaseDBH {
     my ($self,$dbh) = @_;
 
-    croak "Cannot release a null DBH!" unless defined $dbh;
-    push @{$self->{__handlesAvailable}}, $dbh;
+    croak "Cannot release a null DBH!" unless $dbh;
+    if ($dbh == $self->{__ourDBH}) {
+        cluck "Releasing the Factory's DBH is deprecated.  Nothing happens...";
+        return;
+    }
+    
+    croak "Attempt to release a DBH which is not in the Factory's DBH pool"
+    	unless exists $self->{__allHandles}->{"$dbh"};
+    
+    croak "Attempt to release a DBH which is already released"
+    	if exists $self->{__handlesAvailable}->{"$dbh"};
+    	
+    $dbh->rollback() or croak $dbh->errstr;
+    $self->{__handlesAvailable}->{"$dbh"} = $dbh;
 
     #carp "--- Releasing handle: ".
     #  scalar(@{$self->{__handlesAvailable}})."/".
@@ -448,19 +473,23 @@ sub releaseDBH {
 sub __disconnectAll {
     my ($self) = @_;
     #carp "--- $$ Disconnecting handles\n";
-    defined $_ && $_->disconnect() foreach @{$self->{__allHandles}};
-    $self->{__allHandles} = [];
-    $self->{__handlesAvailable} = [];
+    defined $_ && $_->disconnect() foreach values %{$self->{__allHandles}};
+    $self->{__allHandles} = {};
+    $self->{__handlesAvailable} = {};
+    
+    $self->{__ourDBH}->disconnect() or die $self->{__ourDBH}->errstr;;
+    $self->{__ourDBH} = undef;
+
 }
 
 sub commitTransaction {
     my ($self) = @_;
-    $_->commit() foreach @{$self->{__allHandles}};
+    $self->{__ourDBH}->commit() or die $self->{__ourDBH}->errstr;;
 }
 
 sub rollbackTransaction {
     my ($self) = @_;
-    $_->rollback() foreach @{$self->{__allHandles}};
+    $self->{__ourDBH}->rollback() or die $self->{__ourDBH}->errstr;;
 }
 
 sub loadObject {
@@ -471,15 +500,13 @@ sub loadObject {
     __checkClass($class);
     $class->require();
 
-    my $dbh = $self->obtainDBH();
     my $object;
     eval {
         $object = $class->__newByID($self->{__session},
-                                    $dbh,
+                                    $self->{__ourDBH},
                                     $id,
                                     $columns_wanted);
     };
-    $self->releaseDBH($dbh);
 
     die $@ if $@;
 
@@ -502,15 +529,13 @@ sub loadAttribute {
 
     my $pkg = $type->requireAttributeTypePackage();
 
-    my $dbh = $self->obtainDBH();
     my $attribute;
     eval {
         $attribute = $pkg->__newByID($self->{__session},
-                                     $dbh,
+                                     $self->{__ourDBH},
                                      $id,
                                      $columns_wanted);
     };
-    $self->releaseDBH($dbh);
 
     die $@ if $@;
 
@@ -558,10 +583,9 @@ sub findObjects {
     __checkClass($class);
     $class->require();
 
-    my $dbh = $self->obtainDBH();
     my ($sql,$ids_available,$values) =
       $class->__makeSelectSQL($columns_wanted,$criteria);
-    my $sth = $dbh->prepare($sql);
+    my $sth = $self->{__ourDBH}->prepare($sql);
 
     if (wantarray) {
         # __makeSelectSQL should have created the where clause in
@@ -574,13 +598,12 @@ sub findObjects {
               while $_ = $class->__newInstance($session,$sth,
                                                $ids_available,$columns_wanted);
         };
-        $self->releaseDBH($dbh);
         die $@ if $@;
         return @result;
     } else {
         # looking for a scalar
         my $iterator = OME::Factory::Iterator->
-          new($session,$self,$class,$dbh,$sth,
+          new($session,$class,$sth,
               $values,$ids_available,$columns_wanted);
         return $iterator;
     }
@@ -639,13 +662,11 @@ sub newObject {
     __checkClass($class);
     $class->require();
 
-    my $dbh = $self->obtainDBH();
     my $object;
     eval {
-        $object = $class->__createNewInstance($self->{__session},$dbh,$data);
+        $object = $class->__createNewInstance($self->{__session},$self->{__ourDBH},$data);
     };
-    $dbh->commit();
-    $self->releaseDBH($dbh);
+    $self->{__ourDBH}->commit();
     die $@ if $@;
     return $@? undef: $object;
 }
@@ -722,7 +743,7 @@ use strict;
 
 use Carp;
 
-use fields qw(__session __factory __dbh __sth __values
+use fields qw(__session __sth __values
               __class __ids __columns __open __executed);
 
 sub new {
@@ -730,12 +751,10 @@ sub new {
     my $proto = shift;
     my $pclass = ref($proto) || $proto;
 
-    my ($session,$factory,$class,$dbh,$sth,$values,$ids,$columns) = @_;
+    my ($session,$class,$sth,$values,$ids,$columns) = @_;
     my $self = {
                 __session  => $session,
-                __factory  => $factory,
                 __class    => $class,
-                __dbh      => $dbh,
                 __sth      => $sth,
                 __values   => $values,
                 __ids      => $ids,
@@ -765,7 +784,6 @@ sub __close {
     #carp "*** Iterator close";
 
     if ($self->{__open}) {
-        $self->{__factory}->releaseDBH($self->{__dbh});
         $self->{__open} = 0;
     }
 }
