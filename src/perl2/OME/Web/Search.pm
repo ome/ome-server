@@ -76,13 +76,13 @@ sub new {
 	
 	# _published_search_types gets translated to the 'Look for:' drop-down list
 	$self->{ _published_search_types } = [
-		{ formal_name => 'OME::Project', common_name => 'Projects' },
-		{ formal_name => 'OME::Dataset', common_name => 'Datasets' },
-		{ formal_name => 'OME::Image', common_name => 'Images' },
-		{ formal_name => 'OME::ModuleExecution', common_name => 'Module Executions' },
-		{ formal_name => 'OME::Module', common_name => 'Modules' },
-		{ formal_name => 'OME::AnalysisChain', common_name => 'Analysis Chains' },
-		{ formal_name => 'OME::AnalysisChainExecution', common_name => 'Analysis Chain Executions' },
+		'OME::Project', 
+		'OME::Dataset', 
+		'OME::Image', 
+		'OME::ModuleExecution', 
+		'OME::Module', 
+		'OME::AnalysisChain', 
+		'OME::AnalysisChainExecution',
 	];
 
 	# _display_modes lists formats the results can be displayed in. 
@@ -92,22 +92,7 @@ sub new {
 		{ mode => 'tiled_list', mode_title => 'Summaries' },
 		{ mode => 'tiled_ref_list', mode_title => 'Names' },
 	];
-	
-	# _action_registry is experimental.
-	$self->{ _action_registry } = {
-		'OME::Image' => {
-			'Add Images to this Dataset' => {
-				controller => 'OME::Tasks::DatasetManager',
-				method     => 'addImages',
-			},
-#			{
-#				label      => 'Export Images',
-#				controller => '',
-#				method     => ''
-#			}
-		}
-	};
-	
+		
 	return $self;
 }
 
@@ -116,8 +101,9 @@ sub getMenuText {
 	my $menuText = "Other";
 	return $menuText unless ref($self);
 
-	my $type = $self->CGI()->param( 'Type' );
-	$type = $self->CGI()->param( 'Locked_Type' ) unless $type;
+	my $q    = $self->CGI();
+	my $type = $q->param( 'Type' );
+	$type = $q->param( 'Locked_Type' ) unless $type;
 	if( $type ) {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 		return "$common_name";
@@ -126,8 +112,9 @@ sub getMenuText {
 }
 
 sub getPageTitle {
-	return "Search for something";
 	my $self = shift;
+	my $menuText = "Search for something";
+	return $menuText unless ref($self);
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' );
 	$type = $q->param( 'Locked_Type' ) unless $type;
@@ -135,6 +122,7 @@ sub getPageTitle {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
     	return "Search for $common_name";
     }
+	return $menuText;
 }
 
 sub getPageBody {
@@ -142,70 +130,51 @@ sub getPageBody {
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' );
 	$type = $q->param( 'Locked_Type' ) unless $type;
-	my $html;
+	my $html = $q->startform();
+	my %tmpl_data;
 
-	# Perform an action if the user just clicked one
-	if( $type &&
-	    exists $self->{ _action_registry }->{ $type } &&
-	    $q->param( 'action' ) &&
-	    exists $self->{ _action_registry }->{ $type }->{ $q->param( 'action' ) } ) {
+	# Return results of a select
+	if( $q->param( 'do_select' ) ) {
 		
-		my $action_entry = $self->{ _action_registry }->{ $type }->{ $q->param( 'action' ) };
-		my $controller   = $action_entry->{ controller };
-		eval( "use $controller" );
-		die "Error loading $controller\n$@\n" if $@;
-		
-		my $method       = $action_entry->{ method };
 		my @selection    = $q->param( 'selected_objects' );
 		# weed out blank selections
 		@selection = grep( $_ && $_ ne '', @selection );
 		# convert LSIDs into objs.
 		my $resolver = new OME::Tasks::LSIDManager();
 		@selection = map( $resolver->getObject($_), @selection );
-		$controller->$method( \@selection );
 
 		# close this window after action is complete if it's a popup
-		# if the action messed up, then the code should have died by now.
-		if( $q->param( 'Popup' ) || $q->url_param( 'Popup' )) {
-			$html = <<END_HTML;
+		my $return_to = ( $q->url_param( 'return_to' ) || $q->param( 'return_to' ) );
+		my $ids = join( ',', map( $_->id, @selection ) );
+		$html = <<END_HTML;
 <script language="Javascript" type="text/javascript">
-	window.opener.location.href = window.opener.location.href;
+	window.opener.document.forms[0].$return_to.value = $ids;
+	window.opener.document.forms[0].submit();
 	window.close();
 </script>
 END_HTML
-			return( 'HTML', $html );
-		}
-		
-		$html = $q->p( 'action succeeded' );
-
-#		This code would complete the action by posting to another page
-#		instead of calling a method
-# 		$html = 
-# 			$q->startform( { -action => $self->pageURL( $action_entry->{ postTo } ) } ).
-# 			$q->hidden( $action_entry->{ param }, $q->param( 'selected_objects' ) ).
-# 			$q->endform();
-# 		return( 'POST_FORM', $html );
+		return( 'HTML', $html );
 	}
 
 	# load Types to search on	
-	my $types_data = $self->{ _published_search_types };
-	foreach( @$types_data ) {
-		$_->{ selected } = 'selected'
-			if ($type && $_->{formal_name} eq $type );
+	foreach my $formal_name ( @{ $self->{ _published_search_types } } ) {
+		my ($package_name, $common_name, undef, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
+		my $type_data;
+		$type_data->{ formal_name } = $formal_name;
+		$type_data->{ common_name } = $common_name;
+		$type_data->{ selected } = 'selected'
+			if( $type && $formal_name eq $type );
+		push( @{ $tmpl_data{ types_loop } }, $type_data );
 	}
+	
 	# set up display modes
 	my $current_display_mode = ( $q->param( 'Mode' ) || 'tiled_list' );
-	my $display_modes_data = $self->{ _display_modes };
-	foreach( @$display_modes_data ) {
-		$_->{ checked } = 'checked'
-			if $_->{mode} eq $current_display_mode;
+	foreach my $entry ( @{ $self->{ _display_modes } } ) {
+		my %mode_data = %$entry;
+		$mode_data{ checked } = 'checked'
+			if( $entry->{mode} eq $current_display_mode );
+		push( @{ $tmpl_data{ modes_loop } }, \%mode_data );
 	}
-	my %tmpl_data = ( 
-		types_loop => $types_data, 
-		modes_loop => $display_modes_data
-	);
-	
-	$html = $q->startform();
 	
 	# If a type is selected, write in the search fields.
 	# Also search if search fields are ready.
@@ -286,25 +255,24 @@ END_HTML
  		
 		# Get Objects & Render them
 		my ($objects, $paging_text ) = $self->search();
-		my $allow_action = ( $q->param( 'allow_action' ) or $q->url_param( 'allow_action' ) );
+		my $select = ( $q->param( 'select' ) or $q->url_param( 'select' ) );
 		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
 			{ pager_text => $paging_text, type => $type, 
-				( $allow_action ?
+				( $select eq 'many' ?
 					( draw_checkboxes => 1 ) :
+				( $select eq 'one' ?
+					( draw_radiobuttons => 1 ) :
 					()
-				)
+				) )
 			} );
 
-		# Make action buttons if any are requested
-		if( $allow_action ) {
-			die "Action ".$allow_action." does not exist for $type in registry"
-				unless exists $self->{ _action_registry }->{ $type }->{ $allow_action };
-			$tmpl_data{actions} .= 
-				$q->submit( { 
-					-name => 'action',
-					-value => $allow_action,
-				} );
-		}
+		# Select button
+		$tmpl_data{do_select} .= 
+			$q->submit( { 
+				-name => 'do_select',
+				-value => 'Make Selection',
+			} )
+			if( $select );
 
 		# gotta have hidden fields
 		$html .= "\n".
@@ -328,8 +296,8 @@ END_HTML
 	$html .= 
 		$tmpl->output().
 		$q->endform();
-	return ( 'HTML', $html );
-	
+
+	return ( 'HTML', $html );	
 }
 
 sub search {
