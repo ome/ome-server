@@ -81,10 +81,13 @@ OME objects.
 
 Options:
       
-  -d  Use this to specify the dataset name or ID. Imported images must be associated with a dataset.
-      If you don't own an unlocked Dataset with the specified name, a new one will be created for you.
-      If you are importing OME Semantic Type Definitions, Analysis Modules, or Chains this parameter is unnecessary.
-      If you import images, but don't specify a dataset, a new dataset will be created for you, usually called 'Import Dummy Dataset'
+  -d  Use this to specify the dataset name or ID. Imported images must be
+      associated with a dataset. If you don't own an unlocked dataset with 
+      the specified name, a new one will be created for you. If you are 
+      importing OME Semantic Type Definitions, Analysis Modules, or Chains
+      this parameter is unnecessary. If you import images, but don't 
+      specify a dataset, a new dataset will be created for you
+      called 'Import Dummy Dataset'.
       
   -r  Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
@@ -108,9 +111,8 @@ sub import {
                'd=s' => \$datasetName);
     my @file_names = @ARGV;
     
-    # preliminary idiot traps
-    
-    
+    import_help() if $help;
+
     my $session = $self->getSession();
 	my $factory = $session->Factory();
 	
@@ -129,8 +131,8 @@ sub import {
 		if ($datasetName =~ /^([0-9]+)$/) {
 			my $datasetID = $1;
 			$dataset = $factory->loadObject("OME::Dataset",$datasetID);
-			die "Specified Dataset ID $datasetName doesn't exist!" unless $dataset;
-			die "Specified Dataset ID $datasetName is locked!" unless not $dataset->locked();
+			die "Specified Dataset with ID $datasetName doesn't exist!" unless $dataset;
+			die "Specified Dataset with ID $datasetName is locked!" unless not $dataset->locked();
 		} else {
 			my $dataset_data = {
 								name   => $datasetName,
@@ -170,7 +172,7 @@ sub import {
 	$task->step();
 	$task->setMessage('Starting import');
 
-# Get our signos
+	# Get our signos
     use Config;
     my %signo;
     defined $Config{sig_name} || die "No sigs?";
@@ -192,8 +194,7 @@ sub import {
 			kill $signo{INT},$pid;
 			CORE::exit;
 		};
-
-
+		
 		my $lastStep = -1;
 		my $status = $task->state();
 		while ($status eq 'IN PROGRESS') {
@@ -215,28 +216,28 @@ sub import {
 			sleep 2;
 		}
 		
-		$task->refresh();
-		my $step = $task->last_step();
-		print "	 $step/",$task->n_steps(),": [",
-		  $task->state(),"] ",
-		  $task->message(),"\n";
-		
-		print "\n\nDone.\n";
-		
-		#foreach my $image (@$images) {
-		#	 print $image->id(),": ",$image->name(),"\n";
-		#}
 	} else {
 		# Child process
         $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
 		my $session = OME::Session->instance();
 		POSIX::setsid() or die "Can't start a new session. $!";
-		OME::Tasks::ImageTasks::importFiles ($dataset, \@file_names, \%opts, $task);
+		my $images = OME::Tasks::ImageTasks::importFiles ($dataset, \@file_names, \%opts, $task);
+		
+		# print the final Task Info
+		$task->refresh();
+		my $step = $task->last_step();
+		print "	 $step/",$task->n_steps(),": [",
+		  $task->state(),"] ",
+		  $task->message(),"\n";
+		  
+		print "Successfully Imported:\n";
+		foreach my $image (@$images) {
+			 print $image->id(),": ",$image->name(),"\n";
+		}
 	}
 }
 
 sub END {
-
 	print "Exiting...\n";
 }
