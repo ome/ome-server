@@ -120,7 +120,7 @@ sub _getName {
 		unless exists $options->{max_text_length};
 
 	if( $obj->module() ) {
-		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)\..*$/
+		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)/
 			or die "Could not parse timestamp ".$obj->timestamp();
 		my ( $yr, $mo, $dy, $hr, $min, $sec ) = ($1, $2, $3, $4, $5, $6);
 		( $mo, $dy, $hr ) = map( int( $_ ), ( $mo, $dy, $hr ) );
