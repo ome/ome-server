@@ -68,7 +68,8 @@ public class PConstants {
 	public static final double CATEGORY_LABEL_OFFSET_X=40;
 	public static final double CATEGORY_LABEL_OFFSET_Y=20;
 	
+	// size of a link bulb.
+	public static final float LINK_BULB_SIZE=8;
+	public static final float LINK_BULB_RADIUS = LINK_BULB_SIZE/2;
 	
-	// width of an arrowhead
-	public static final float ARROWHEAD_WIDTH=12;
 }

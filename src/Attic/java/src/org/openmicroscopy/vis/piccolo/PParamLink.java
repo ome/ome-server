@@ -121,9 +121,8 @@ public class PParamLink extends  PLink {
 		Point2D paramCirclePoint = p.getLinkCenter();
 		point.setLocation(paramCirclePoint);
 		if (p instanceof PFormalInput) {
-			// offset for arrowhead
 			Point2D offset = new 
-				Point2D.Double(point.getX()-PConstants.ARROWHEAD_WIDTH,
+				Point2D.Double(point.getX()-PConstants.LINK_BULB_RADIUS,
 								point.getY());
 			point.setLocation(offset);
 		}
@@ -137,7 +136,6 @@ public class PParamLink extends  PLink {
 		
 		if ( start instanceof PFormalInput) {
 			// in this case, we started at the input and drew back to output
-			// arrow should go from point 1-point 0
 		//	System.err.println("went from end to start");
 			first = (Point2D) points.get(1);
 			second = (Point2D) points.get(0);	

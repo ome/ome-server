@@ -79,7 +79,8 @@
  	
 	private void setEndPoint() {
 		Point2D point = getEndLinkTarget().getCenter();
-		setEndCoords((float) point.getX()-PConstants.ARROWHEAD_WIDTH,(float) point.getY());
+		setEndCoords((float) point.getX()-PConstants.LINK_BULB_RADIUS,
+			(float) point.getY());
 	}
 	
 	public void nodeChanged(PNodeEvent e) {
