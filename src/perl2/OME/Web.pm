@@ -833,10 +833,33 @@ returns a url to a detailed view of the object
 =cut
 
 sub getObjDetailURL {
-	my ($proto, $obj) = @_;
-	( my $formal_name = ref( $obj ) ) =~ s/^OME::SemanticType::__/@/;
+	my ($self, $obj) = @_;
+	my $formal_name = $obj->getFormalName();
 	return "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=".$obj->id();
 }
+
+=head2 getSearchAccessorURL
+
+	my $url_to_obj_detail = $self->getSearchAccessorURL( $obj, $method );
+
+$obj should be a DBObject instance. Attributes are fine.
+$method should be a 'has-many' or 'many-to-many' method of $obj
+
+returns a url to a search page for whatever is returned from $obj's $method
+
+=cut
+
+sub getSearchAccessorURL {
+	my ($self, $obj, $method) = @_;
+	$self->_loadTypeAndGetInfo( $obj->getAccessorReferenceType( $method ) );
+	return $self->pageURL( 'OME::Web::Search', {
+		Type         => $obj->getAccessorReferenceType( $method )->getFormalName(),
+		search_names => 'accessor',
+		accessor     => join( ',', $obj->getFormalName(), $obj->id(), $method )
+	} );
+#e	return "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=".$obj->id();
+}
+
 
 1;
 
