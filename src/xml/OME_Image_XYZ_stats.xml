@@ -6,60 +6,14 @@
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
 	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
 	<Declaration>
-		<Table Granularity = "I" TableName = "XYZ_IMAGE_INFO" 
-			Description = "General image XYZ stack attributes. Produced from XML.">
-			<Column ColumnID = "theW" ColumnName = "THE_W" SQL_DataType = "integer" Description = "Specifies Wavelength"/>
-			<Column ColumnID = "theT" ColumnName = "THE_T" SQL_DataType = "integer" Description = "Specifies Timepoint"/>
-			<Column ColumnID = "Min" ColumnName = "MIN" SQL_DataType = "integer" Description = "Minimum value"/>
-			<Column ColumnID = "Max" ColumnName = "MAX" SQL_DataType = "integer" Description = "Maximum value"/>
-			<Column ColumnID = "Mean" ColumnName = "MEAN" SQL_DataType = "float" Description = "Arithmetic Mean"/>
-			<Column ColumnID = "Geomean" ColumnName = "GEOMEAN" SQL_DataType = "float" Description = "Geometric Mean"/>
-			<Column ColumnID = "Sigma" ColumnName = "SIGMA" SQL_DataType = "float" Description = "Standard Deviation"/>
-			<Column ColumnID = "CentroidX" ColumnName = "CENTROID_X" SQL_DataType = "float" Description = ""/>
-			<Column ColumnID = "CentroidY" ColumnName = "CENTROID_Y" SQL_DataType = "float" Description = ""/>
-			<Column ColumnID = "CentroidZ" ColumnName = "CENTROID_Z" SQL_DataType = "float" Description = ""/>
-		</Table>
-		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
-		<FormalOutput Name = "Stack minimum" AttributeTypeName = "XYZStackMin" Description = "Minimum pixel intensity in an XYZ stack">
-			<FormalOutputColumn Name = "Min" FormalOutputColumnID = "XYZStackMin.Min" ColumnID = "Min" Description = "Minimum pixel intensity"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackMin.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackMin.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
-		<FormalOutput Name = "Stack maximum" AttributeTypeName = "XYZStackMax" Description = "Maximum pixel intensity in an XYZ stack">
-			<FormalOutputColumn Name = "Max" FormalOutputColumnID = "XYZStackMax.Max" ColumnID = "Max" Description = "Maximum pixel intensity"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackMax.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackMax.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
-		<FormalOutput Name = "Stack mean" AttributeTypeName = "XYZStackMean" Description = "Mean of pixel intensities in an XYZ stack">
-			<FormalOutputColumn Name = "Mean" FormalOutputColumnID = "XYZStackMean.Mean" ColumnID = "Mean" Description = "Mean of pixel intensities"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackMean.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
-		<FormalOutput Name = "Stack geomean" AttributeTypeName = "XYZStackGeoMean" Description = "Geometric mean of pixel intensities in an XYZ stack">
-			<FormalOutputColumn Name = "Geomean" FormalOutputColumnID = "XYZStackGeoMean.Geomean" ColumnID = "Geomean" Description = "Geometric mean of pixel intensities"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackGeoMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackGeoMean.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
-		<FormalOutput Name = "Stack sigma" AttributeTypeName = "XYZStackSigma" Description = "Standard deviation of pixel intensities in an XYZ stack">
-			<FormalOutputColumn Name = "Sigma" FormalOutputColumnID = "XYZStackSigma.Sigma" ColumnID = "Sigma" Description = "Standard Deviation of pixel intensities"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackSigma.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
-		<FormalOutput Name = "Stack centroidX" AttributeTypeName = "XYZStackCentroidX" Description = "x, in pixels, of center of intensity for the stack">
-			<FormalOutputColumn Name = "CentroidX" FormalOutputColumnID = "XYZStackCentroidX.CentroidX" ColumnID = "CentroidX" Description = "x, in pixels, of center of intensity"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackCentroidX.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidX.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
-		<FormalOutput Name = "Stack centroidY" AttributeTypeName = "XYZStackCentroidY" Description = "y, in pixels, of center of intensity for the stack">
-			<FormalOutputColumn Name = "CentroidY" FormalOutputColumnID = "XYZStackCentroidY.CentroidY" ColumnID = "CentroidY" Description = "y, in pixels, of center of intensity"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackCentroidY.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidY.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
-		<FormalOutput Name = "Stack centroidZ" AttributeTypeName = "XYZStackCentroidZ" Description = "z, in pixels, of center of intensity for the stack">
-			<FormalOutputColumn Name = "CentroidZ" FormalOutputColumnID = "XYZStackCentroidZ.CentroidZ" ColumnID = "CentroidZ" Description = "z, in pixels, of center of intensity"/>
-			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackCentroidZ.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
-			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidZ.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
-		</FormalOutput>
+		<FormalOutput Name = "Stack minimum"   SemanticTypeName = "XYZStackMin"       Description = "Minimum pixel intensity in an XYZ stack"/>
+		<FormalOutput Name = "Stack maximum"   SemanticTypeName = "XYZStackMax"       Description = "Maximum pixel intensity in an XYZ stack"/>
+		<FormalOutput Name = "Stack mean"      SemanticTypeName = "XYZStackMean"      Description = "Mean of pixel intensities in an XYZ stack"/>
+		<FormalOutput Name = "Stack geomean"   SemanticTypeName = "XYZStackGeoMean"   Description = "Geometric mean of pixel intensities in an XYZ stack"/>
+		<FormalOutput Name = "Stack sigma"     SemanticTypeName = "XYZStackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack"/>
+		<FormalOutput Name = "Stack centroidX" SemanticTypeName = "XYZStackCentroidX" Description = "x, in pixels, of center of intensity for the stack"/>
+		<FormalOutput Name = "Stack centroidY" SemanticTypeName = "XYZStackCentroidY" Description = "y, in pixels, of center of intensity for the stack"/>
+		<FormalOutput Name = "Stack centroidZ" SemanticTypeName = "XYZStackCentroidZ" Description = "z, in pixels, of center of intensity for the stack"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
@@ -116,52 +70,109 @@
 			<OutputRecord>
 				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
-					<OutputTo FormalOutputColumnID = "XYZStackMin.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStackMax.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStackMean.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStackGeoMean.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStackSigma.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.theW"/>
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidZ.theW"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack minimum"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack maximum"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack mean"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack geomean"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack sigma"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack centroidX"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack centroidY"/>
+					<OutputTo SemanticElementName = "theW" FormalOutputName = "Stack centroidZ"/>
 				</Output>
 				<Output AccessBy = "2">
-					<OutputTo FormalOutputColumnID = "XYZStackMin.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStackMax.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStackMean.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStackGeoMean.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStackSigma.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.theT"/>
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidZ.theT"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack minimum"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack maximum"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack mean"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack geomean"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack sigma"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack centroidX"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack centroidY"/>
+					<OutputTo SemanticElementName = "theT" FormalOutputName = "Stack centroidZ"/>
 				</Output>
 				<Output AccessBy = "3">
-					<OutputTo FormalOutputColumnID = "XYZStackMin.Min"/>
+					<OutputTo SemanticElementName = "Min"       FormalOutputName = "Stack minimum"/>
 				</Output>
 				<Output AccessBy = "4">
-					<OutputTo FormalOutputColumnID = "XYZStackMax.Max"/>
+					<OutputTo SemanticElementName = "Max"       FormalOutputName = "Stack maximum"/>
 				</Output>
 				<Output AccessBy = "5">
-					<OutputTo FormalOutputColumnID = "XYZStackMean.Mean"/>
+					<OutputTo SemanticElementName = "Mean"      FormalOutputName = "Stack mean"/>
 				</Output>
 				<Output AccessBy = "6">
-					<OutputTo FormalOutputColumnID = "XYZStackGeoMean.Geomean"/>
+					<OutputTo SemanticElementName = "Geomean"   FormalOutputName = "Stack geomean"/>
 				</Output>
 				<Output AccessBy = "7">
-					<OutputTo FormalOutputColumnID = "XYZStackSigma.Sigma"/>
+					<OutputTo SemanticElementName = "Sigma"     FormalOutputName = "Stack sigma"/>
 				</Output>
 				<Output AccessBy = "8">
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidX.CentroidX"/>
+					<OutputTo SemanticElementName = "CentroidX" FormalOutputName = "Stack centroidX"/>
 				</Output>
 				<Output AccessBy = "9">
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidY.CentroidY"/>
+					<OutputTo SemanticElementName = "CentroidY" FormalOutputName = "Stack centroidY"/>
 				</Output>
 				<Output AccessBy = "10">
-					<OutputTo FormalOutputColumnID = "XYZStackCentroidZ.CentroidZ"/>
+					<OutputTo SemanticElementName = "CentroidZ" FormalOutputName = "Stack centroidZ"/>
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
 		</STDOUT>
 	</ExecutionInstructions>
 </AnalysisModule>
+<SemanticTypeDefinitions>
+	<DataTypes>
+		<Table Granularity = "I" TableName = "XYZ_IMAGE_INFO" 
+			Description = "General image XYZ stack attributes. Produced from XML.">
+			<Column ColumnName = "THE_W"      SQL_DataType = "integer" Description = "Specifies Wavelength"/>
+			<Column ColumnName = "THE_T"      SQL_DataType = "integer" Description = "Specifies Timepoint"/>
+			<Column ColumnName = "MIN"        SQL_DataType = "integer" Description = "Minimum value"/>
+			<Column ColumnName = "MAX"        SQL_DataType = "integer" Description = "Maximum value"/>
+			<Column ColumnName = "MEAN"       SQL_DataType = "float"   Description = "Arithmetic Mean"/>
+			<Column ColumnName = "GEOMEAN"    SQL_DataType = "float"   Description = "Geometric Mean"/>
+			<Column ColumnName = "SIGMA"      SQL_DataType = "float"   Description = "Standard Deviation"/>
+			<Column ColumnName = "CENTROID_X" SQL_DataType = "float"   Description = ""/>
+			<Column ColumnName = "CENTROID_Y" SQL_DataType = "float"   Description = ""/>
+			<Column ColumnName = "CENTROID_Z" SQL_DataType = "float"   Description = ""/>
+		</Table>
+	</DataTypes>
+	<SemanticType Name = "XYZStackMin" Description = "Minimum pixel intensity in an XYZ stack">
+		<SemanticElement Name = "Min"       TableName = "XYZ_IMAGE_INFO" ColumnName = "MIN"        Description = "Minimum pixel intensity"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+	<SemanticType Name = "XYZStackMax" Description = "Maximum pixel intensity in an XYZ stack">
+		<SemanticElement Name = "Max"       TableName = "XYZ_IMAGE_INFO" ColumnName = "MAX"        Description = "Maximum pixel intensity"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+	<SemanticType Name = "XYZStackMean" Description = "Mean of pixel intensities in an XYZ stack">
+		<SemanticElement Name = "Mean"      TableName = "XYZ_IMAGE_INFO" ColumnName = "MEAN"       Description = "Mean of pixel intensities"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+	<SemanticType Name = "XYZStackGeoMean" Description = "Geometric mean of pixel intensities in an XYZ stack">
+		<SemanticElement Name = "Geomean"   TableName = "XYZ_IMAGE_INFO" ColumnName = "GEOMEAN"    Description = "Geometric mean of pixel intensities"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+	<SemanticType Name = "XYZStackSigma" Description = "Standard deviation of pixel intensities in an XYZ stack">
+		<SemanticElement Name = "Sigma"     TableName = "XYZ_IMAGE_INFO" ColumnName = "SIGMA"      Description = "Standard Deviation of pixel intensities"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+	<SemanticType Name = "XYZStackCentroidX" Description = "x, in pixels, of center of intensity for the stack">
+		<SemanticElement Name = "CentroidX" TableName = "XYZ_IMAGE_INFO" ColumnName = "CENTROID_X" Description = "x, in pixels, of center of intensity"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+	<SemanticType Name = "XYZStackCentroidY" Description = "y, in pixels, of center of intensity for the stack">
+		<SemanticElement Name = "CentroidY" TableName = "XYZ_IMAGE_INFO" ColumnName = "CENTROID_Y" Description = "y, in pixels, of center of intensity"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+	<SemanticType Name = "XYZStackCentroidZ" Description = "z, in pixels, of center of intensity for the stack">
+		<SemanticElement Name = "CentroidZ" TableName = "XYZ_IMAGE_INFO" ColumnName = "CENTROID_Z" Description = "z, in pixels, of center of intensity"/>
+		<SemanticElement Name = "theW"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_W"      Description = "Wavenumber describing the XYZ stack"/>
+		<SemanticElement Name = "theT"      TableName = "XYZ_IMAGE_INFO" ColumnName = "THE_T"      Description = "Timepoint describing the XYZ stack"/>
+	</SemanticType>
+</SemanticTypeDefinitions>
 </AnalysisModuleLibrary>

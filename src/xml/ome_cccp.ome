@@ -2,44 +2,29 @@
 <AnalysisModuleLibrary
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
-<AnalysisModule Category = "Image comparison" ModuleName = "Cross Correlation" 
+<AnalysisModule Category = "Wavelength comparison" ModuleName = "Cross Correlation" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
 	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification.">
 	<Declaration>
-		<Table Granularity = "I" TableName = "XY_CROSS_CORRELATION" Description = "Cross correlation values for a plane">
-			<Column ColumnID = "theZ" ColumnName = "THE_Z" SQL_DataType = "integer"/>
-			<Column ColumnID = "theT" ColumnName = "THE_T" SQL_DataType = "integer"/>
-			<Column ColumnID = "CC" ColumnName = "CROSS_CORRELATION" SQL_DataType = "float" Description = "Cross Correlation"/>
-		</Table>
-		<Table Granularity = "I" TableName = "WAVENUMBER" Description = "Wavenumbers">
-			<Column ColumnID = "Wavenumber.theW" ColumnName = "THE_W" SQL_DataType = "integer"/>
-		</Table>
-		<FormalInput Name = "Wavenumber 1" AttributeTypeName = "Wavenumber" Description = "" UserDefined = "true">
-			<FormalInputColumn FormalInputColumnID = "wave1" Name = "WAVENUMBER" ColumnID = "Wavenumber.theW"/>
-		</FormalInput>
-		<FormalInput Name = "Wavenumber 2" AttributeTypeName = "Wavenumber" Description = "" UserDefined = "true">
-			<FormalInputColumn FormalInputColumnID = "wave2" Name = "WAVENUMBER" ColumnID = "Wavenumber.theW"/>
-		</FormalInput>
-		<FormalOutput Name = "XYPlaneCrossCorrelation" AttributeTypeName = "XYPlaneCrossCorrelation" Description = "Cross Correlation for an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "theZ" ColumnID = "theZ" Name = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "theT" ColumnID = "theT" Name = "theT" Description = "Timepoint describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "CC" ColumnID = "CC" Name = "Cross Correlation" Description = "Cross Correlation Value"/>
-		</FormalOutput>
+		<FormalInput Name = "Wavenumber 1" SemanticTypeName = "Wavenumber" Description = "" UserDefined = "true"/>
+		<FormalInput Name = "Wavenumber 2" SemanticTypeName = "Wavenumber" Description = "" UserDefined = "true"/>
+		<FormalOutput Name = "XYPlaneCrossCorrelation" SemanticTypeName = "XYPlaneCrossCorrelation" 
+			Description = "Cross Correlation for an XY plane"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 		xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
 		<CommandLine>
 			<InputSubString>
-				<XYPlane XYPlaneID = "PrimaryPlane" Format = "TIFF">
+				<XYPlane XYPlaneID = "Plane1" Format = "TIFF">
 					<theZ>
-						<AutoIterate FormalOutputColumnID = "theZ"/>
+						<AutoIterate SemanticElementName = "theZ" FormalOutputName = "XYPlaneCrossCorrelation"/>
 					</theZ>
 					<theT>
-						<AutoIterate FormalOutputColumnID = "theT"/>
+						<AutoIterate SemanticElementName = "theT" FormalOutputName = "XYPlaneCrossCorrelation"/>
 					</theT>
 					<theW>
-						<UseValue FormalInputColumnID = "wave1"/>
+						<UseValue SemanticElementName = "theW" FormalInputName = "Wavenumber 1"/>
 					</theW>
 				</XYPlane>
 			</InputSubString>
@@ -49,13 +34,13 @@
 			<InputSubString>
 				<XYPlane Format = "TIFF">
 					<theZ>
-						<Match XYPlaneID = "PrimaryPlane"/>
+						<Match XYPlaneID = "Plane1"/>
 					</theZ>
 					<theT>
-						<Match XYPlaneID = "PrimaryPlane"/>
+						<Match XYPlaneID = "Plane1"/>
 					</theT>
 					<theW>
-						<UseValue FormalInputColumnID = "wave2"/>
+						<UseValue SemanticElementName = "theW" FormalInputName = "Wavenumber 2"/>
 					</theW>
 				</XYPlane>
 			</InputSubString>
@@ -64,10 +49,36 @@
 			<OutputRecord>
 				<pat>^(\d+\.?\d*|\.\d+)</pat>
 				<Output AccessBy = "1">
-					<OutputTo FormalOutputColumnID = "CC"/>
+					<OutputTo SemanticElementName = "CC" FormalOutputName = "XYPlaneCrossCorrelation"/>
 				</Output>
 			</OutputRecord>
 		</STDOUT>
 	</ExecutionInstructions>
 </AnalysisModule>
+
+<SemanticTypeDefinitions>
+	<DataTypes>
+		<Table Granularity = "I" TableName = "XY_CROSS_CORRELATION"
+			Description = "Cross correlation values for a plane">
+			<Column ColumnName = "THE_Z" SQL_DataType = "integer"/>
+			<Column ColumnName = "THE_T" SQL_DataType = "integer"/>
+			<Column ColumnName = "CROSS_CORRELATION" SQL_DataType = "float" Description = "Cross Correlation"/>
+		</Table>
+		<Table Granularity = "I" TableName = "WAVENUMBER" Description = "Wavenumbers">
+			<Column ColumnName = "THE_W" SQL_DataType = "integer"/>
+		</Table>
+	</DataTypes>
+	<SemanticType Name = "Wavenumber" Description = "">
+		<SemanticElement Name = "theW" TableName = "WAVENUMBER" ColumnName = "THE_W"/>
+	</SemanticType>
+	<SemanticType Name = "XYPlaneCrossCorrelation" Description = "Cross Correlation for an XY plane">
+		<SemanticElement Name = "theZ" TableName = "XY_CROSS_CORRELATION" ColumnName = "THE_Z" 
+			Description = "Z coordinate describing the XY Plane"/>
+		<SemanticElement Name = "theT" TableName = "XY_CROSS_CORRELATION" ColumnName = "THE_T" 
+			Description = "Timepoint describing the XY Plane"/>
+		<SemanticElement Name = "CC" TableName = "XY_CROSS_CORRELATION" ColumnName = "CROSS_CORRELATION" 
+			Description = "Cross Correlation Value"/>
+	</SemanticType>
+</SemanticTypeDefinitions>
+
 </AnalysisModuleLibrary>
