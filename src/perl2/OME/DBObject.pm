@@ -719,9 +719,9 @@ sub getColumns {
 	my $column_type = $class->getColumnType($alias);
 
 Returns the type of the logical column with the specified alias.  If
-the column exists, the type will be one of three values -- "normal",
-"has-one", or "has-many".  If the column does not exist, the method
-returns undef.
+the column exists, the type will be one of four values -- "normal",
+"has-one", "has-many", or "many-to-many".  If the column does not
+exist, the method returns undef.
 
 =cut
 
