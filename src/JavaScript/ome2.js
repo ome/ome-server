@@ -44,13 +44,15 @@
  *
  */
 
- GetGraphicsPage = '/perl2/serve.pl?Page=OME::Web::GetGraphics&Popup=1';
- ProjectInfoPage = '/perl2/serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Project&Popup=1';
- DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Dataset&Popup=1';
- InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Project&Popup=1';
- InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Dataset&Popup=1';
- DetailPage = '/perl2/serve.pl?Page=OME::Web::DBObjDetail';
+ GetGraphicsPage  = '/perl2/serve.pl?Page=OME::Web::GetGraphics&Popup=1';
+ ProjectInfoPage  = '/perl2/serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Project&Popup=1';
+ DatasetInfoPage  = '/perl2/serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Dataset&Popup=1';
+ InfoProjectPage  = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Project&Popup=1';
+ InfoDatasetPage  = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Dataset&Popup=1';
+ DetailPage       = '/perl2/serve.pl?Page=OME::Web::DBObjDetail';
  RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
+ CreationPage     = '/perl2/serve.pl?Page=OME::Web::DBObjCreate&Popup=1';
+ SearchPage       = '/perl2/serve.pl?Page=OME::Web::Search&Popup=1';
 
 /*
  *
@@ -88,12 +90,31 @@ function openRelationships (o_type, r_type, oid) {
 	);
 }
 
-// addImagesToDataset()
-
-function addImagesToDataset() {
+// creationPopup()
+function creationPopup( type, return_to_field ) {
 	window.open(
-		'/perl2/serve.pl?Page=OME::Web::Search&Popup=1&Locked_Type=OME::Image&allow_action=Add%20Images%20to%20this%20Dataset',
-		'_blank',
+		CreationPage + '&Locked_Type=' + type + '&return_to=' + return_to_field,
+		'_create_'+type+'_for_'+return_to_field,
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
+	);
+}
+
+// selectOne()
+
+function selectOne( type, return_to ) {
+	window.open(
+		SearchPage + '&Locked_Type=' + type + '&select=one&return_to=' + return_to,
+		'_select_'+type+'_for_'+return_to,
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
+	);
+}
+
+// selectMany()
+
+function selectMany( type, return_to ) {
+	window.open(
+		SearchPage + '&Locked_Type=' + type + '&select=many&return_to=' + return_to,
+		'_select_'+type+'_for_'+return_to,
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
 	);
 }
