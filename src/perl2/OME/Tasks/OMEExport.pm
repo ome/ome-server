@@ -45,6 +45,7 @@ our $SCHEMA_LOCATION = $NAMESPACE;
 our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';
 
 use Carp;
+use IPC::Run;
 use Log::Agent;
 use XML::LibXML;
 use XML::LibXSLT;
@@ -101,31 +102,44 @@ sub exportFile {
 		unless defined $filename;
 		
 	my $session = $self->{session};
-	my $parser  = $self->{_parser};
 
  	# Apply Stylesheet
- 	my $xslt = XML::LibXSLT->new();
  	my $style_doc_path = $session->Configuration()->xml_dir() . "/OME-CA2OME.xslt";
- 	my $style_doc = $parser->parse_file( $style_doc_path );
-	my $stylesheet = $xslt->parse_stylesheet($style_doc);
-	my $CA_doc = $stylesheet->transform($doc);
+# 	my $xslt = XML::LibXSLT->new();
+# 	my $stylesheet = $xslt->parse_stylesheet_file( $style_doc_path );
+#	my $CA_doc = $stylesheet->transform($doc);
+#	$stylesheet->output_file( $CA_doc, $filename );
 
 # these hacks were added by josiah <siah@nih.gov>
 
 #	REMOVE THIS HACK WHEN $stylesheet->transform($doc); PRODUCES SOMETHING USEFUL 
-# CA_doc is blank except for <OME>. I haven't yet figured out why. 
-# until I figure out why, I'm applying the stylesheet via command line.
-# this is a hack - CLI application of the style sheet
-	my $tmpFile = $session->getTemporaryFilename();
-	$doc->toFile($tmpFile, 1) 
-		or die "Could not write to temp file ('$tmpFile')\n";
-	`xsltproc $style_doc_path $tmpFile > $filename`;
-	my $huge_xml_string = OME::Image::Server->exportOMEFile( $filename );
-	open( XML_OUT, "> $filename" );
-	print XML_OUT $huge_xml_string;
-	close( XML_OUT );
-	$session->finishTemporaryFile( $tmpFile );
+# CA_doc is blank except for <OME>. It appears to be a bug in XML::LibXSLT.
+# Until a new version rolls out, I'm applying the stylesheet via command line.
 
+	my $CA_file = $session->getTemporaryFilename('ome_export', 'tmp');
+	$doc->toFile($CA_file, 1) 
+		or die "Could not write to temp file ('$CA_file')\n";
+	# find the path to xsltproc
+	my $xsltproc_path;
+	( -e $_ and $xsltproc_path = $_ and last ) 
+		foreach ( '/usr/bin/xsltproc', '/usr/local/bin/xsltproc', '/sw/bin/xsltproc' );
+	die "Could not find xsltproc." unless $xsltproc_path;
+
+	my $OME_file_no_pixels = $session->getTemporaryFilename('ome_export', 'tmp');
+	my $errorStream = '';
+	open( OUT, "> $OME_file_no_pixels" ) or die $!;
+	IPC::Run::run (
+		[$xsltproc_path, $style_doc_path, $CA_file],
+		\undef,
+		\*OUT,
+		\$errorStream
+	) or die "$xsltproc_path returned non-zero exit status: $?\n$errorStream" ;
+	$session->finishTemporaryFile( $CA_file );
+
+	open( XML_OUT, "> $filename" );
+	print XML_OUT OME::Image::Server->exportOMEFile( $OME_file_no_pixels );
+	close( XML_OUT );
+	$session->finishTemporaryFile( $OME_file_no_pixels );
 }
 
 # this method commented out by Josiah, June 17, 2003
