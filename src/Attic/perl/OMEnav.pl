@@ -44,6 +44,7 @@ my $BinarizeGlobalURL = $OMEbaseURL."BinarizeGlobal.pl";
 my $OMECCCPURL = $OMEbaseURL."CCCP.pl";
 my $OMETMCPURL1 = $OMEbaseURL."TMCP-java.pl";
 my $OMETMCPURL2 = $OMEbaseURL."TMCP.pl";
+my $OMENeurite = $OMEbaseURL."Neurite.pl";
 my $ClickySpotsURL = $OMEbaseURL."LA_clickySpots_OME.pl";
 
 
@@ -68,6 +69,7 @@ print <<EOF
 <A href="$OMECCCPURL" target="MainFrame">Run CCCP</A><br>
 <A href="$OMETMCPURL1" target="MainFrame">Run TMCP (Java)</A><br>
 <A href="$OMETMCPURL2" target="MainFrame">Run TMCP (C)</A><br>
+<A href="$OMENeurite" target="MainFrame">Run Neurite (matlab)</A><br>
 <A href="$ClickySpotsURL" target="MainFrame">Run ClickySpots</A><br>
 EOF
 ;
