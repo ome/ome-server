@@ -188,7 +188,8 @@
      ModuleName="Plane statistics (image server)" 
 	 ModuleType="OME::Analysis::Modules::Statistics::PlaneStatistics"
      ProgramID="" 
-	 ID="urn:lsid:openmicroscopy.org:Module:32">
+	 ID="urn:lsid:openmicroscopy.org:Module:32"
+	 Category="Statistics">
 
 	<Description>
       Calculate pixel statistics and sums for each XY plane.
@@ -217,7 +218,8 @@
      ModuleName="Stack statistics (image server)" 
 	 ModuleType="OME::Analysis::Modules::Statistics::StackStatistics"
      ProgramID="" 
-	 ID="urn:lsid:openmicroscopy.org:Module:33">
+	 ID="urn:lsid:openmicroscopy.org:Module:33"
+	 Category="Statistics">
 
 	<Description>
       Calculate pixel statistics and sums for each XYZ stack.
