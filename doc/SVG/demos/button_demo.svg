@@ -23,23 +23,31 @@
 		var azap = new AntiZoomAndPan();
 
 		function init(e) {
+			// red button
 			b1 = new button( 
 				20, 20, showB1,
 				svgDocument.getElementById("redButtonOn").firstChild.data,
 				svgDocument.getElementById("redButtonOff").firstChild.data
 			);
+			
+			// green button
 			b2 = new button( 
 				40, 20, showB2,
 				svgDocument.getElementById("greenButtonOn").firstChild.data,
-				svgDocument.getElementById("greenButtonOff").firstChild.data
+				null,
+				svgDocument.getElementById("greenButtonHighlight").firstChild.data
 			);
-			b2.setLabel(2, -5, "2");
+			
+			// blue button
 			b3 = new button(
 				60, 20, showB3,
-				svgDocument.getElementById("blueButtonOn").firstChild.data,
-				svgDocument.getElementById("blueButtonOff").firstChild.data
+				svgDocument.getElementById("blueButton").firstChild.data
 			);
-			b4 = new button( 40, 50, showB4 );
+			
+			// default button (black & white w/ cyan highlight)
+			b4 = new button( 45, 50, showB4 );
+			b4.setLabel(0, -5, "B/W");
+			b4.getLabel().setAttribute("text-anchor", "middle");
 
 			var controls=svgDocument.getElementById("controls");
 			b1.realize(controls);
@@ -47,35 +55,29 @@
 			b3.realize(controls);
 			b4.realize(controls);
 			
-			// call setState functions to set some buttons to false
-			// and make all buttons issue callbacks to update labels
+			// call setState functions to set some buttons
+			// and make them issue callbacks to update labels
 			setTimeout( "b1.setState(false)", 0 );
-			setTimeout( "b2.setState(true)", 0 );
-			setTimeout( "b3.setState(false)", 0 );
 			setTimeout( "b4.setState(true)", 0 );
-			
-			b1.setHighlight(false);
-			b2.setHighlight(false);
-			b3.setHighlight(false);
 			
 			azap.appendNode(controls);
 		}
 
 		function showB1(val) {
 			svgDocument.getElementById("label1").firstChild.data =
-				"Button 1 is "+val;
+				"Red Button is "+val;
 		}
 		function showB2(val) {
 			svgDocument.getElementById("label2").firstChild.data =
-				"Button 2 is "+val;
+				"Green Button was clicked" + (val ? " again." : ".");
 		}
 		function showB3(val) {
 			svgDocument.getElementById("label3").firstChild.data =
-				"Button 3 is "+val;
+				"Blue Button was clicked" + (val ? " again." : ".");
 		}
 		function showB4(val) {
 			svgDocument.getElementById("label4").firstChild.data =
-				"Button 4 is "+val;
+				"Black and White Button is " + (val ? "white." : "black.");
 		}
 
 
@@ -88,22 +90,19 @@
 			<circle cx="5" cy="5" r="5" fill="darkred"/>
 		]]></text>
 		<text id="greenButtonOn"><![CDATA[
-			<circle cx="5" cy="5" r="5" fill="lightgreen" stroke="black" stroke-width="1"/>
+			<circle cx="5" cy="5" r="5" fill="green" stroke="black" stroke-width="1"/>
 		]]></text>
-		<text id="greenButtonOff"><![CDATA[
-			<circle cx="5" cy="5" r="5" fill="darkgreen"/>
+		<text id="greenButtonHighlight"><![CDATA[
+			<circle cx="5" cy="5" r="5" fill="lightgreen"/>
 		]]></text>
-		<text id="blueButtonOn"><![CDATA[
+		<text id="blueButton"><![CDATA[
 			<circle cx="5" cy="5" r="5" fill="lightblue" stroke="black" stroke-width="1"/>
-		]]></text>
-		<text id="blueButtonOff"><![CDATA[
-			<circle cx="5" cy="5" r="5" fill="darkblue"/>
 		]]></text>
 	</defs>
 	<g id="controls">
 	</g>
 	<g id="labels" transform="translate(23, 120)">
-		<rect x="-3" y="-3" width="100" height="60" fill="white" stroke-width="2"
+		<rect x="-3" y="-3" width="180" height="60" fill="white" stroke-width="2"
 			stroke="black" opacity="0.5"/>
 		<text id="label1" y="1em" fill="red"> </text>
 		<text id="label2" y="2em" fill="green"> </text>
