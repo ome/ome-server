@@ -47,7 +47,6 @@ import org.openmicroscopy.vis.chains.SelectionState;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.PCamera;
 import javax.swing.Timer;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionListener;
@@ -62,7 +61,7 @@ import java.awt.event.ActionEvent;
  * @since OME2.1
  */
 
-public class PChainLibraryEventHandler extends  PGenericZoomEventHandler 
+public class PChainLibraryEventHandler extends  PModuleEventHandler 
 	implements ActionListener
  {
 
@@ -241,6 +240,8 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			SelectionState selectionState = SelectionState.getState();
 			selectionState.setRolloverChain(null);
 		}
+		else 
+			super.mouseExited(e);
 	}
 	
 	public void handlePopup(PInputEvent e) {
@@ -251,8 +252,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			PBufferedNode bn= m.getEnclosingBufferedNode();
 			if (bn  != null) {
 				PBounds b = bn.getBufferedBounds();
-				PCamera camera = canvas.getCamera();
-				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+				animateToBounds(b);
 			}
 			e.setHandled(true);
 		}

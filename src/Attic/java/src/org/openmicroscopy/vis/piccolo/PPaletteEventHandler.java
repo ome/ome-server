@@ -58,7 +58,7 @@ import java.awt.event.MouseEvent;
  * @since OME2.1
  */
 
-public class PPaletteEventHandler extends  PGenericZoomEventHandler {
+public class PPaletteEventHandler extends  PModuleEventHandler {
 	
 	/**
 	 * The Canvas for which we are handling events
