@@ -149,7 +149,7 @@ my @modules = (
 		    or croak "Couldn't run $RANLIB on $ENV{POSTGRES_LIB}/libpq.a";
 	    }
 	    
-	    $ENV{POSTGRES_LIB} .= " -lssl";
+	    $ENV{POSTGRES_LIB} .= " -lssl -lcrypto";
 	}
     },{
 	# XXX DEPRECATED
