@@ -72,7 +72,40 @@ __PACKAGE__->has_many('attribute_columns',
 #__PACKAGE__->add_trigger(select => \&requireAttributeTypePackage);
 
 
-=head1
+=head1 METHODS
+
+The following methods are available in addition to those defined by
+L<OME::DBObject>.
+
+=head2 name
+
+	my $name = $type->name();
+	$type->name($name);
+
+Returns or sets the name of this semantic type.
+
+=head2 description
+
+	my $description = $type->description();
+	$type->description($description);
+
+Returns or sets the description of this semantic type.
+
+=head2 granularity
+
+	my $granularity = $type->granularity();
+	$type->granularity($granularity);
+
+Returns or sets the granularity of this semantic type.  Will be either
+'G', 'D', 'I', or 'F'.
+
+=head2 attribute_columns
+
+	my @columns = $type->attribute_columns();
+	my $column_iterator = $type->attribute_columns();
+
+Returns or iterates, depending on context, a list of all of the
+C<Columns> associated with this analysis.
 
 =cut
 
@@ -409,6 +442,21 @@ sub newAttributes {
 
 package OME::AttributeType::Column;
 
+=head1 NAME
+
+OME::AttributeType::Column
+
+=head1 DESCRIPTION
+
+This C<AttributeType.Column> interface represents one element of a
+semantic type.  The storage type of the element can be accessed via
+the element's data column:
+
+	my $data_column = $attribute_column->data_column();
+	my $sql_type = $data_column->sql_type();
+
+=cut
+
 use strict;
 our $VERSION = '1.0';
 
@@ -429,6 +477,41 @@ __PACKAGE__->columns(Essential => qw(attribute_type_id name data_column_id descr
 __PACKAGE__->hasa('OME::AttributeType' => qw(attribute_type_id));
 __PACKAGE__->hasa('OME::DataTable::Column' => qw(data_column_id));
 
+=head1 METHODS
+
+The following methods are available in addition to those defined by
+L<OME::DBObject>.
+
+=head2 name
+
+	my $name = $type->name();
+	$type->name($name);
+
+Returns or sets the name of this semantic element.
+
+=head2 description
+
+	my $description = $type->description();
+	$type->description($description);
+
+Returns or sets the description of this semantic element.
+
+=head2 attribute_type
+
+	my $attribute_type = $type->attribute_type();
+	$type->attribute_type($attribute_type);
+
+Returns or sets the attribute type that this semantic element belongs
+to.
+
+=head2 data_column
+
+	my $data_column = $type->data_column();
+	$type->data_column($data_column);
+
+Returns or sets the data column associated with this semantic element.
+
+=cut
 
 package OME::AttributeType::Superclass;
 
@@ -443,6 +526,35 @@ __PACKAGE__->mk_classdata('_attribute_type');
 
 use fields qw(_data_table_rows _target _analysis _id _session);
 
+=head1 NAME
+
+OME::AttributeType::Superclass
+
+=head1 DESCRIPTION
+
+The C<AttributeType::Superclass> class is the superclass every piece of
+semantically-typed data in OME.  This includes attributes created by
+the user during image import, and any attributes created as output by
+the execution of analysis modules.
+
+Each attribute has a single semantic type, which is represented by an
+instance of L<AttributeType>.  Based on the semantic type's
+granularity, the attribute will be a property of (or, equivalently,
+has a target of) a dataset, image, or feature, or it will be a global
+attribute (and have a target of C<undef>.)
+
+Most attributes will be generated computationally as the result of an
+analysis module.  The analysis (and by extension, module) which
+generated the attribute can be retrieved with the L<getAnalysis()>
+method.
+
+=head1 METHODS
+
+The following methods are available to all attribute subclasses.  In
+addition, accessor/mutator methods will automatically be created for
+each semantic element in the attribute's semantic type.
+
+=cut
 
 sub new {
     my $proto = shift;
@@ -509,6 +621,16 @@ sub load {
     return $class->new($session,$target,$id,$rows);
 }
 
+=head2 verifyType
+
+	$attribute->verifyType($type_name);
+
+Ensures that this attribute has the given semantic type.  If not, an
+exception is thrown.  The semantic type is specified by name, and is
+retrieved using the factory that created the attribute.
+
+=cut
+
 sub verifyType {
     my ($self, $type_name) = @_;
     die "Object is not an attribute"
@@ -520,11 +642,49 @@ sub verifyType {
     return 1;
 }
 
+=head2 id
+
+	my $id = $attribute->id();
+
+Returns the primary key ID of the attribute.
+
+=head2 Session
+
+	my $session = $attribute->Session();
+
+Returns the OME session used to create this attribute.
+
+=head2 attribute_type
+
+	my $attribute_type = $attribute->attribute_type();
+
+Returns the semantic type of this attribute.
+
+=head2 analysis
+
+	my $analysis = $attribute->analysis();
+
+Returns the analysis that generated this attribute, or undef if it was
+created directly by the user.
+
+=cut
+
 sub id { return shift->{_id}; }
 sub ID { return shift->{_id}; }
 sub Session { return shift->{_session}; }
 sub attribute_type { return shift->_attribute_type(); }
 sub analysis { return shift->{_analysis}; }
+
+=head2 dataset, image, feature
+
+	my $dataset = $attribute->dataset();
+	my $image = $attribute->image();
+	my $feature = $attribute->feature();
+
+Returns the target of this attribute.  Only the method appropriate to
+the granularity of the attribute's semantic type will be defined.
+
+=cut
 
 sub _getTarget {
     my ($self) = @_;
@@ -588,6 +748,15 @@ sub commit {
     $_->commit() foreach (values %$rows);
 }
 
+=head2 writeObject
+
+	$attribute->writeObject();
+
+This instance methods writes any unsaved changes to the database, and
+then commits the database transaction.
+
+=cut
+
 sub writeObject {
     my ($self) = @_;
     my $rows = $self->{_data_table_rows};
@@ -596,3 +765,13 @@ sub writeObject {
 
 
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=cut
+
