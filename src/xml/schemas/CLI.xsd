@@ -3,29 +3,27 @@
 <schema xmlns = "http://www.w3.org/2001/XMLSchema"
 	 targetNamespace = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"
 	 xmlns:CLI = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"
-	 xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
 	 version = "RC1"
 	 elementFormDefault = "qualified">
-	<import namespace = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"/>
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
-	<xs:annotation>
-		<xs:documentation>
+	<annotation>
+		<documentation>
 			Open Microscopy Environment
 			Command Line Interface XML Schema
 			Author:  Josiah Johnston
-		</xs:documentation>
-	</xs:annotation>
-	<attributeGroup name = "OutputLocation">
-		<attribute name = "Location" use = "required" type = "string">
-			<annotation>
-				<documentation>This specifies where to find a piece of data by FormalOutputName and SemanticElementName. i.e. To reference Semantic element 'bar' from Formal Output 'foo', Location="foo.bar"</documentation>
-			</annotation>
-		</attribute>
-	</attributeGroup>
+		</documentation>
+	</annotation>
 	<attributeGroup name = "InputLocation">
 		<attribute name = "Location" use = "required" type = "string">
 			<annotation>
 				<documentation>This specifies where to find a piece of data by FormalInputName and SemanticElementName. i.e. To reference Semantic element 'bar' from Formal Input 'foo', Location="foo.bar" </documentation>
+			</annotation>
+		</attribute>
+	</attributeGroup>
+	<attributeGroup name = "OutputLocation">
+		<attribute name = "Location" use = "required" type = "string">
+			<annotation>
+				<documentation>This specifies where to find a piece of data by FormalOutputName and SemanticElementName. i.e. To reference Semantic element 'bar' from Formal Output 'foo', Location="foo.bar"</documentation>
 			</annotation>
 		</attribute>
 	</attributeGroup>
@@ -505,6 +503,11 @@ The FileSHA1 subelement is automatically calculated for the pixel dump file.
 				</simpleType>
 			</attribute>
 			<attribute name = "FormalOutput" type = "string"/>
+			<attribute name = "UseBase" type = "string">
+				<annotation>
+					<documentation>Unimplemented. Will subsume all subelements except &lt;Repository> and &lt;Path>. This will reference a formal input. That input be used for copying all possible data that has not been filled by other means. </documentation>
+				</annotation>
+			</attribute>
 		</complexType>
 	</element>
 	<element name = "SizeX">
