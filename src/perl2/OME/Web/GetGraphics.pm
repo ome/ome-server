@@ -180,6 +180,9 @@ sub _getJSData {
 	$JSinfo->{ Dims }				= '['.join (',', @$dims).']';
 	$JSinfo->{ CGI_URL }			= '/cgi-bin/OME_JPEG';
 	$JSinfo->{ CGI_optionStr }		= '&Path='.$path;
+# These next two lines mark the transition to the image server
+#$JSinfo->{ CGI_URL }			= '/cgi-bin/omeis';
+#$JSinfo->{ CGI_optionStr }		= '&Format=JPEG&PixelsID='.$image->DefaultPixels()->PixelsID();
 	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
 
 	###############
@@ -275,7 +278,7 @@ sub BuildSVGviewer {
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/scale.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
-			xlink:href="/JavaScript/SVGviewer/imageControls.js" />
+			xlink:href="/JavaScript/SVGviewer/imageControls.js.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/featureInfo.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
@@ -293,35 +296,18 @@ ENDSVG
 
 # dynamic initialization of JS objects goes here:
 $SVG .= <<ENDSVG;
-	// GUI components
-		var controlsToolBox;
-		var infoButton;
+	// global variables
 		var azap = new AntiZoomAndPan();
 
-	// backend components
+		// visualization & logic objects
 		var image;
 		var redScale, blueScale, greenScale, greyScale;
 		var stats;
 		var overlayManager;
 		var viewerPreferences;
-		var imageControls;
+		var xyPlaneControls;
 		var featureInfo;
 		
-	// constants & references
-		var channelLabels      = $channelLabels;
-		var Stats			   = $Stats;
-		var Dims			   = $Dims;
-		var DatasetID		   = $DatasetID;
-		// Z and T are dims of z and t
-		var Z				   = Dims[2];
-		var T				   = Dims[4];
-		var SaveDisplayCGI_URL = "$SaveDisplayCGI_URL";
-		var toolBoxScale	   = $toolBoxScale;
-
-		var supplimentaryWindows = new Array();
-		var windowControllers	 = new Array();
-		
-	// global variables
 		// theZ & theT are current values of z & t
 		var theZ = $theZ;
 		var theT = $theT;
@@ -330,54 +316,28 @@ $SVG .= <<ENDSVG;
 			if ( window.svgDocument == null )
 				svgDocument = e.ownerDocument;
 			
-			// initialize back end
-			image = new OMEimage($ImageID,$Stats,$Dims,"$CGI_URL","$CGI_optionStr", 
-				SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB, DatasetID);
-			image.realize( svgDocument.getElementById("image") );
+			var channelLabels        = $channelLabels;
+			var Stats			     = $Stats;
+			var toolBoxScale	     = $toolBoxScale;
+			var supplimentaryWindows = new Array();
+			var windowControllers	 = new Array();
 
-			// initialize frontend
-			controlToolBox = new toolBox(
-				50, 30, 200, 150,
-				skinLibrary["menuBar"],
-				skinLibrary["hideControl"],
-				skinLibrary["GUIbox"],
-				'noclip'
-			);
-			controlToolBox.setLabel(90,12,"Image Controls")
-			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
+			image = new OMEimage($ImageID,Stats,$Dims,"$CGI_URL","$CGI_optionStr", 
+			                     "$SaveDisplayCGI_URL", $CBW, $RGBon, $isRGB);
+			image.realize( svgDocument.getElementById("image") );
 			
-			
-			// realize the GUI elements in the appropriate containers
-			var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
-			controlToolBox.realize(toolboxLayer);
-			
-			imageControls = new ImageControls(	);
 			var actions = new Array();
-			actions['zSlider']    = updateTheZ;
-			actions['zUp']        = zUp;
-			actions['zDown']      = zDown;
-			actions['zAnimUp']    = zAnimUp;
-			actions['zAnimDown']  = zAnimDown;
-			actions['tSlider']    = updateTheT;
-			actions['tUp']        = tUp;
-			actions['tDown']      = tDown;
-			actions['tAnimUp']    = tAnimUp;
-			actions['tAnimDown']  = tAnimDown;
-			actions['OnOffR']     = { obj: image, method: 'setRedOn' };
-			actions['OnOffG']     = { obj: image, method: 'setGreenOn' };
-			actions['OnOffB']     = { obj: image, method: 'setBlueOn' };
-			actions['Save']       = { obj: image, method: 'saveState' };
-			actions['preload']    = { obj: image, method: 'prefetchImages' };
-			actions['RGB2BW']     = switchRGB_BW;
-			actions['openWindow'] = openWindow;
+			actions['zSlider']    = setTheZ;
+			actions['tSlider']    = setTheT;
 			
-			// set up supplimentary windows
+			// set up windows
+			var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
+
 			stats = new Statistics( Stats, channelLabels );
 			stats.buildToolBox( toolboxLayer );
 			setTimeout( "stats.toolBox.hide()", 200 );
 			supplimentaryWindows.push('Statistics');
 			windowControllers['Statistics'] = stats;
-			
 			
 			Scale.setClassData( image, channelLabels );
 			redScale = new Scale('Red', toolboxLayer);
@@ -396,13 +356,13 @@ $SVG .= <<ENDSVG;
 			actions['setRedLogicalChannel']    = { obj: redScale, method: 'setLogicalChannel'};
 			actions['setBlueLogicalChannel']    = { obj: blueScale, method: 'setLogicalChannel'};
 			actions['setGreenLogicalChannel']    = { obj: greenScale, method: 'setLogicalChannel'};
-			actions['setGreyLogicalChannel'] = setGreyLogicalChannel;
+			actions['setGreyLogicalChannel'] = { obj: greyScale, method: 'setLogicalChannel'};;
 			actions['showRedScale']    = { obj: (redScale.toolBox), method: 'toggle'};
 			actions['showBlueScale']    = { obj: (blueScale.toolBox), method: 'toggle'};
 			actions['showGreenScale']    = { obj: (greenScale.toolBox), method: 'toggle'};
 			actions['showGreyScale']    = { obj: (greyScale.toolBox), method: 'toggle'};
 
-			viewerPreferences = new ViewerPreferences( controlToolBox  );
+			viewerPreferences = new ViewerPreferences( );
 			viewerPreferences.buildToolBox( toolboxLayer );
 			supplimentaryWindows.push('Preferences');			 
 			windowControllers['Preferences'] = viewerPreferences;
@@ -446,13 +406,19 @@ ENDSVG
 
 
 $SVG .= <<ENDSVG;
+
+			xyPlaneControls = new XYPlaneControls( actions, supplimentaryWindows,channelLabels, image );
+			xyPlaneControls.buildToolBox( toolboxLayer );
+			windowControllers['xyPlaneControls'] = xyPlaneControls;
+
+			xyPlaneControls.setWindowControllers( windowControllers );
 			viewerPreferences.setWindowControllers( windowControllers );
 
-			controlToolBox.getGUIbox().appendChild( imageControls.buildControls( actions, supplimentaryWindows,channelLabels ) );
-			redScale.tieLogicalChannelPopupList( imageControls.redPopupList );
-			blueScale.tieLogicalChannelPopupList( imageControls.bluePopupList );
-			greenScale.tieLogicalChannelPopupList( imageControls.greenPopupList );
-			greyScale.tieLogicalChannelPopupList( imageControls.greyPopupList );
+			redScale.tieLogicalChannelPopupList( xyPlaneControls.redPopupList );
+			blueScale.tieLogicalChannelPopupList( xyPlaneControls.bluePopupList );
+			greenScale.tieLogicalChannelPopupList( xyPlaneControls.greenPopupList );
+			greyScale.tieLogicalChannelPopupList( xyPlaneControls.greyPopupList );
+			greyScale.tieLogicalChannelPopupList( stats.logicalChannelPopupList );
 
 			// finish setup & make controller
 			azap.appendNode(toolboxLayer);
@@ -460,137 +426,51 @@ $SVG .= <<ENDSVG;
 			azap.appendNode(mouseTrap); 
 
 			var CBW = image.getCBW();
-			setTimeout( "imageControls.redPopupList.setSelectionByValue('"+ 
-				imageControls.redPopupList.getItemList()[ CBW[0] ]
+			setTimeout( "xyPlaneControls.redPopupList.setSelectionByValue('"+ 
+				xyPlaneControls.redPopupList.getItemList()[ CBW[0] ]
 				+"')", 0 );
-			setTimeout( "imageControls.greenPopupList.setSelectionByValue('"+ 
-				imageControls.greenPopupList.getItemList()[ CBW[3] ]
+			setTimeout( "xyPlaneControls.greenPopupList.setSelectionByValue('"+ 
+				xyPlaneControls.greenPopupList.getItemList()[ CBW[3] ]
 				+"')", 0 );
-			setTimeout( "imageControls.bluePopupList.setSelectionByValue('"+ 
-				imageControls.bluePopupList.getItemList()[ CBW[6] ]
+			setTimeout( "xyPlaneControls.bluePopupList.setSelectionByValue('"+ 
+				xyPlaneControls.bluePopupList.getItemList()[ CBW[6] ]
 				+"')", 0 );
-			setTimeout( "imageControls.greyPopupList.setSelectionByValue('"+ 
-				imageControls.greyPopupList.getItemList()[ CBW[9] ]
+			setTimeout( "xyPlaneControls.greyPopupList.setSelectionByValue('"+ 
+				xyPlaneControls.greyPopupList.getItemList()[ CBW[9] ]
 				+"')", 0 );
 			setTimeout( "viewerPreferences.resizeToolboxes("+(toolBoxScale-1)+")", 500);
-			setTimeout( "imageControls.redButton.setState(" + (image.isRedOn() ? true : false) + ", true)", 200 );
-			setTimeout( "imageControls.greenButton.setState(" + (image.isGreenOn() ? true : false) + ", true)", 200 );
-			setTimeout( "imageControls.blueButton.setState(" + (image.isBlueOn() ? true : false) + ", true)", 200 );
-			setTimeout( "imageControls.RGB_BWbutton.setState("+image.isInColor()+", true)", 200 );
+			setTimeout( "xyPlaneControls.redButton.setState(" + (image.isRedOn() ? true : false) + ", true)", 200 );
+			setTimeout( "xyPlaneControls.greenButton.setState(" + (image.isGreenOn() ? true : false) + ", true)", 200 );
+			setTimeout( "xyPlaneControls.blueButton.setState(" + (image.isBlueOn() ? true : false) + ", true)", 200 );
+			setTimeout( "xyPlaneControls.RGB_BWbutton.setState("+image.isInColor()+", true)", 200 );
 //	this next line loads every plane in the image
 //			setTimeout( "image.prefetchImages()", 0 );
-			zVal = ( Z == 1 ? 0 : theZ/(Z-1)*100 );
-			imageControls.zSlider.setValue(zVal,true);
-			tVal = ( T == 1 ? 0 : theT/(T-1)*100 );
-			imageControls.tSlider.setValue(tVal,true);
 
 		}
 		
 
-	// these actions connect GUI with backend
+	// these methods glue widgets to doing stuff
 		// newZ has range of 0 to Z-1
 		function setTheZ( newZ ) {
-			if( Z > 1 )
-				updateTheZ( newZ / (Z-1) *100 );
-		}
-		// this accepts a percentage (0-100)
-		function updateTheZ(data) {
-			data=Math.round(data/100*(Z-1));
-			var sliderVal = (Z==1 ? 0 : Math.round(data/(Z-1)*100) );
-			imageControls.zSlider.setValue(sliderVal);
-			imageControls.zSlider.setLabel(null, null, (data + 1) + "/" + Z );
-			theZ=data;
-			
+			theZ = Math.round(newZ);
+			xyPlaneControls.zSlider.setValue(theZ);
+			xyPlaneControls.zSlider.setLabel(null, null, (theZ + 1) + "/" + image.getDimZ() );
 			if( overlayManager ) overlayManager.updateIndex( theZ, theT );
 			image.updatePic(theZ,theT);
 		}
-		function zUp() {
-			var newZ = (theZ< Z-1 ? theZ + 1 : theZ)
-			var sliderVal = ( Z==1 ? 0 : Math.round( newZ/(Z-1)*100 ) );
-			updateTheZ(sliderVal);
-		
-		}
-		function zDown() {
-			var data = (theZ> 0 ? theZ - 1 : theZ)
-			var sliderVal = ( Z==1 ? 0 : Math.round( data/(Z-1)*100 ) );
-			updateTheZ(sliderVal);
-		}
-		function zAnimUp() {
-			if(Z > 1) {
-				for(i=theZ;i<Z;i++)
-					setTimeout("updateTheZ(" + (i/(Z-1)) + "*100)", (i-theZ)*100);
-			}
-		}
-		function zAnimDown() {
-			if(Z > 1) {
-				for(i=theZ;i>=0;i--)
-					setTimeout("updateTheZ(" + (i/(Z-1)) + "*100)", (theZ-i)*100);
-			}
-		}
 
-		// newT has range of 0 to Z-1
+		// newT has range of 0 to T-1
 		function setTheT( newT ) {
-			if( T > 1 ) 
-				updateTheT( newT / (T-1) *100 );
-		}
-		// this accepts a percentage (0-100)
-		function updateTheT(data) {
-			theT=Math.round(data/100*(T-1));
-			var sliderVal = ( T==1 ? 0 : Math.round(theT/(T-1)*100) );
-			imageControls.tSlider.setValue(sliderVal);
-			imageControls.tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + T +")" );
+			theT = Math.round(newT);
+			xyPlaneControls.tSlider.setValue(theT);
+			xyPlaneControls.tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + image.getDimT() +")" );
 			
 			if( overlayManager) overlayManager.updateIndex( theZ, theT );
 			image.updatePic(theZ,theT);
 			Scale.updateScaleDisplay(theT);
 			stats.updateStats(theT);
 		}
-		function tUp() {
-			var data = (theT< T-1 ? theT+1 : theT)
-			var sliderVal = ( T==1 ? 0 : Math.round( data/(T-1)*100 ) );
-			updateTheT(sliderVal);
-		}
-		function tDown() {
-			var data = (theT> 0 ? theT -1 : theT)
-			var sliderVal = ( T==1 ? 0 : Math.round( data/(T-1)*100 ) );
-			updateTheT(sliderVal);
-		}
-		function tAnimUp() {
-			if(T>1) {
-				for(i=theT;i<T;i++)
-					setTimeout("updateTheT(" + (i/(T-1)) + "*100)", (i-theT)*100);
-			}
-		}
-		function tAnimDown() {
-			if(T>1) {
-				for(i=theT;i>=0;i--)
-					setTimeout("updateTheT(" + (i/(T-1)) + "*100)", (theT-i)*100);
-			}
-		}
-
-		// popupLists controlling channels
-		function setGreyLogicalChannel(item) {
-			greyScale.setLogicalChannel(item);
-			stats.changeWavenumber( item );
-		}
-		
-		function switchRGB_BW(val) {
-			//	decide which way to flip
-			if(val) {	// val == true means mode = RGB
-				imageControls.BWpopupListBox.setAttribute( "display", "none" );
-				imageControls.RGBpopupListBox.setAttribute( "display", "inline" );
-			}
-			else {	// mode = BW
-				imageControls.BWpopupListBox.setAttribute( "display", "inline" );
-				imageControls.RGBpopupListBox.setAttribute( "display", "none" );
-			}
-			image.setDisplayRGB_BW(val);
-		}
-		
-		function openWindow(x) {
-			windowControllers[ supplimentaryWindows[ x ] ].toolBox.unhide();
-		}
-		
+				
 	]]></script>
 	<g id="mouseTrap">
 		<!-- The mouse only registers over elements. This rect prevents
