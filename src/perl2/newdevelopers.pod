@@ -34,11 +34,11 @@ database directly. OME contains two client interfaces that
 developers can use to access the database:
 
 1) Perl code: the libraries found in ./src/OME/src/perl2/OME contain
-   APIs for accessing the libraries. 
+   APIs for accessing the libraries. See L<omeapi>.
 
 2) XMLRPC: The Perl libraries also provide an implementation of an
    XMLRPC interface that can be used to make remote calls to the
-   database. 
+   database. See L<C<OME::Remote>|OME::Remote> for more information.
 
 More about these APIs and their usage below.
 
@@ -265,7 +265,7 @@ programs and their utilization.
 The basic unit of analysis in OME is a module. Modules are
 categorized by hierarchical categories (stored in the
 "module_cateogires" table). Modules also have types, which refer to
-Perl claases that implement the OME::Analysis::Handler interfaces,
+Perl claases that implement the L<C<OME::Analysis::Handler>|OME::Analysis::Handler> interfaces,
 and locations - which can be filenames for command-line executables
 or Perl classes. The "execution_instructions" column contains an XML
 fragment that defines how the module is to be invoked. Modules can
@@ -301,7 +301,8 @@ Analysis_paths are specific paths through analysis chains. They are
 defined by entries in the "analysis_paths" and analysis_path_maps
 tables, which create paths and specify their contents, respectively.
 
-To make this more concrete, lets look at analysis chain #1: 
+To make this more concrete, lets look at analysis chain #1:
+
  
 ome=# select * from analysis_chains where analysis_chain_id=1;
  analysis_chain_id | owner |         name          | description | locked 
@@ -310,6 +311,7 @@ ome=# select * from analysis_chains where analysis_chain_id=1;
 (1 row)
 
 This chain has three nodes, corresponding to modules 5,6, and 7.
+
  
 ome=# select analysis_chain_node_id, module_id from analysis_chain_nodes where analysis_chain_id=1;
  analysis_chain_node_id | module_id 
@@ -322,6 +324,7 @@ ome=# select analysis_chain_node_id, module_id from analysis_chain_nodes where a
 
 There are two links in this chain - one from node 3 to node 2, and
 another from node 3 to node 1.
+
  
 ome=# select analysis_chain_link_id, from_node,to_node from analysis_chain_links where analysis_chain_id=1;
  analysis_chain_link_id | from_node | to_node 
@@ -458,7 +461,7 @@ switch datasets, and Viewer.pm brings up an image viewer.
 
 The ./ome/OME/src/perl2/OME directory contains Perl classes for most
 of the Core OME data types (as defined in 000-OMECore.sql).
-Generally, these objects are derived from the OME::DBObject class. As
+Generally, these objects are derived from the L<C<OME::DBObject>|OME::DBObject> class. As
 with other modules, these files are self-documenting with "perldoc".
 
 
@@ -494,12 +497,12 @@ instance with a fresh port.
 
 StandaloneServer.pl is a simple wrapper which uses the
 XMLRPC::Transport::HTTP::Daemon code to dispatch calls to a
-OME::Remote::Dispatcher. OME::Remote::Dispatcher handles the calls
+L<C<OME::Remote::Dispatcher>|OME::Remote::Dispatcher>.  OME::Remote::Dispatcher handles the calls
 from the XMLRPC clients. Specifically, the dispatcher finds the
 appropriate classes for a given procedure call, verifies the inputs,
 executes the method, and packages the results appropriately.
 
-OME::Remote::Dispatcher relies upon OME::Remote::Prototypes to define
+OME::Remote::Dispatcher relies upon L<C<OME::Remote::Prototypes>|OME::Remote::Prototypes> to define
 the methods that can be accessed via XMLRPC. The Prototypes file
 contains a number of calls to addPrototype. Each of these calls
 specifies a class, a method, and formats for input and output. Only
@@ -572,7 +575,7 @@ The update method is used to find all of the SemanticTypes in the
 factory ("factory.findObjects("OME::SemanticType",null)). To find
 these objects, the factory sends a "findObjects" message to the
 XmlRpcCaller,  with a set of criteria indicating that objects of type
-"OME::SemanticType" are desired. The result of this call is a list of
+"L<C<OME::SemanticType>|OME::SemanticType>" are desired. The result of this call is a list of
 objects, which are instantiated as SemanticTypes, using the mapping
 in the RemoteObject static Hash "classes". Thus, as we see in
 RemoteSemanticTypes.java, all objects of type "OME::SemanticType" are
@@ -606,7 +609,7 @@ The XSLT files OME-CA2OME.xslt and OME2OME-CA.xslt (in the
 formats. 
 
 The file ./src/perl2/OME/Tests/ExportSession.pl contains an example
-of how the OME::Tasks::OmeExport package can be used to export the
+of how the L<C<OME::Tasks::OmeExport>|OME::Tasks::OmeExport> package can be used to export the
 contents of an OME session.
 
 
