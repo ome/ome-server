@@ -44,8 +44,36 @@ user-defined annotations
 
 =head1 SYNOPSIS
 
-	my $attribute = OME::Tasks::AnnotationManager->
-	    annotate([$semantic_type,$target,$data],...);
+	my ($mex, $globalAttribute) = OME::Tasks::AnnotationManager->
+	    annotateGlobal(
+	    	$semantic_type,$data,
+	    	$semantic_type,$data,
+	    	...
+	    );
+
+	my ($mex, $datasetAttribute) = OME::Tasks::AnnotationManager->
+	    annotateDataset( 
+	    	$dataset,
+	    	$semantic_type,$data,
+	    	$semantic_type,$data,
+	    	...
+	    );
+
+	my ($mex, $imageAttribute) = OME::Tasks::AnnotationManager->
+	    annotateImage( 
+	    	$image,
+	    	$semantic_type,$data,
+	    	$semantic_type,$data,
+	    	...
+	    );
+
+	my ($mex, $featureAttribute) = OME::Tasks::AnnotationManager->
+	    annotateFeature( 
+	    	$feature,
+	    	$semantic_type,$data,
+	    	$semantic_type,$data,
+	    	...
+	    );
 
 =head1 DESCRIPTION
 
