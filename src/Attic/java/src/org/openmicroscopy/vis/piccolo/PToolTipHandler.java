@@ -42,12 +42,11 @@
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.geom.Point2D;
 import java.awt.Color;
-import java.awt.Font;
 
 
 /** 
@@ -73,10 +72,10 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	
 	
 	
-	protected Font font = new Font("Helvetica",Font.PLAIN,12);
+	
 	
 	protected PPath tooltip;
-	protected PText tooltipText;
+	protected PNode tip;
 	
 	protected boolean displayed = false;
 
@@ -89,9 +88,6 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 		tooltip = new PPath();
 		tooltip.setPaint(FILL_COLOR);
 		tooltip.setStrokePaint(BORDER_COLOR);
-		tooltipText = new PText();
-		tooltipText.setFont(font);
-		tooltip.addChild(tooltipText);
 	}
 	
 	
@@ -120,7 +116,8 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	 * @param event the input event leading to the update. 
 	 */
 	public void updateToolTip(PInputEvent event) {
-		setToolTipString(event);
+		PNode n  = setToolTipNode(event);
+		setToolTip(n);
 			
 		Point2D p = event.getCanvasPosition();
 		
@@ -138,7 +135,7 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	 * 
 	 * @param event the input event leading to the change
 	 */
-	public abstract void  setToolTipString(PInputEvent event);
+	public abstract PNode  setToolTipNode(PInputEvent event);
 	
 	/**
 	 * Set the tool tip text - if the new string is null,
@@ -146,19 +143,27 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	 * set the text and adjust the position
 	 * @param s
 	 */
-	public void setToolTipText(String s) {
-		if (s.compareTo("") ==0) {
-			if (displayed == true)
+	public void setToolTip(PNode n) {
+		if (n == tip)
+			return;
+			
+		if (tip != null) {
+			tooltip.removeChild(tip);
+		}
+		if (n == null) {
+			if (displayed == true) {
 				camera.removeChild(tooltip);
+				tip = null;
+			}
 			displayed = false;   
 		}
 		else {
+			tip = n;
 			if (displayed == false)
 				camera.addChild(tooltip);
+			tooltip.addChild(n);
 			displayed = true;
-			tooltipText.setText(s);
-			PBounds b = tooltipText.getFullBounds();
-			PBounds newBounds = new PBounds(0,0,b.getWidth(),b.getHeight());
+			PBounds newBounds = new PBounds(0,0,n.getWidth(),n.getHeight());
 			tooltip.setPathTo(newBounds);
 		}	
 	}

@@ -41,7 +41,10 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
+import java.awt.Font;
+
 
 /** 
  *
@@ -52,6 +55,8 @@ import edu.umd.cs.piccolo.PNode;
  * @since OME2.1
  */
 public class PChainToolTipHandler extends PToolTipHandler {
+	
+	protected Font font = new Font("Helvetica",Font.PLAIN,12);
 	
 	public PChainToolTipHandler(PCamera camera) {
 		super(camera);
@@ -64,24 +69,30 @@ public class PChainToolTipHandler extends PToolTipHandler {
 	 * 
 	 * @param event the event that caused the update of the tool tip 
 	 */
-	public void setToolTipString(PInputEvent event) {
+	public PNode setToolTipNode(PInputEvent event) {
+		String s="";
 		PNode n = event.getInputManager().getMouseOver().getPickedNode();
 		double scale = camera.getViewScale();
-		setToolTipText("");
 		if (scale < PToolTipHandler.SCALE_THRESHOLD) {
 			if (n instanceof PModule) 
-				setToolTipText(((PModule) n).getModule().getName());
+				s = ((PModule) n).getModule().getName();
 			else if (n instanceof PFormalParameter) {
 				String t = ((PFormalParameter) n).getPModule().
-				getModule().getName();
-				setToolTipText(t);
+					getModule().getName();
+				s = t;
 			}
 			else if (n instanceof PParamLink) {
 				PFormalInput in = ((PParamLink) n).getInput();
 				PFormalOutput out = ((PParamLink) n).getOutput();
-				String s = in.getName()+"-"+out.getName();
-				setToolTipText(s);
+				s = in.getName()+"-"+out.getName();
 			}
+		}
+		if (s.compareTo("") == 0)
+			return (PNode) null;
+		else {
+			PText p = new PText(s);
+			p.setFont(font);
+			return p;
 		}
 	}
 }

@@ -42,7 +42,8 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
-
+import edu.umd.cs.piccolo.nodes.PText;
+import java.awt.Font;
 
 /** 
  *
@@ -54,6 +55,8 @@ import edu.umd.cs.piccolo.PNode;
  * @since OME2.1
  */
 public class PPaletteToolTipHandler extends PToolTipHandler {
+	
+	protected Font font = new Font("Helvetica",Font.PLAIN,12);
 	
 	public PPaletteToolTipHandler(PCamera camera) {
 		super(camera);
@@ -67,19 +70,25 @@ public class PPaletteToolTipHandler extends PToolTipHandler {
 	 * 
 	 * @param event the input event that leads to the change.
 	 */
-	public void setToolTipString(PInputEvent event) {
-			PNode n = event.getInputManager().getMouseOver().getPickedNode();
-			double scale = camera.getViewScale();
-			setToolTipText("");
-			if (scale < PToolTipHandler.SCALE_THRESHOLD) {
-				if (n instanceof PModule)
-					setToolTipText(((PModule) n).getModule().getName()); 
-				else if (n instanceof PFormalParameter) {
-					String t = ((PFormalParameter) n).getPModule().
+	public PNode setToolTipNode(PInputEvent event) {
+		PNode p = (PNode) null;
+		String s = "";
+		PNode n = event.getInputManager().getMouseOver().getPickedNode();
+		double scale = camera.getViewScale();
+		if (scale < PToolTipHandler.SCALE_THRESHOLD) {
+			if (n instanceof PModule)
+				s=((PModule) n).getModule().getName(); 
+			else if (n instanceof PFormalParameter) {
+				s= ((PFormalParameter) n).getPModule().
 					getModule().getName();
-					setToolTipText(t);
-
-				}
 			}
 		}
+		if (s.compareTo("") != 0) {
+			PText pt = new PText(s);
+			pt.setFont(font);
+			p = pt;
+		}
+		return p;
+	}
+	
 }
