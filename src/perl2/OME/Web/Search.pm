@@ -130,8 +130,13 @@ sub getPageBody {
 	my $self = shift;	
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' ) || $q->param( 'Locked_Type' );
-#	$type = $q->param( 'Locked_Type' ) unless $type;
 	my $html = $q->startform( -action => $self->pageURL( 'OME::Web::Search' ) );
+	# Save the url-parameters if any were passed. The line above will strip them
+	# at the first submit.
+	my @url_params = grep( $_ ne 'Page', $q->url_param() );
+	foreach my $param ( @url_params ) {
+		$html .= $q->hidden( -name => $param, -default => $q->url_param( $param ) );
+	}
 	my %tmpl_data;
 
 	# Return results of a select
@@ -147,7 +152,6 @@ sub getPageBody {
 		# convert LSIDs into objs.
 		my $resolver = new OME::Tasks::LSIDManager();
 		@selection = map( $resolver->getObject($_), @selection );
-
 		# close this window after action is complete if it's a popup
 		my $return_to = ( $q->url_param( 'return_to' ) || $q->param( 'return_to' ) );
 		my $ids = join( ',', map( $_->id, @selection ) );
@@ -217,11 +221,6 @@ END_HTML
 			my @fields = $render->getFields( $type, 'summary' );
 			my ($form_fields, $search_paths) = $render->getSearchFields( $type, \@fields );
 			my $order = $self->__sort_field( $search_paths, $search_paths->{ $fields[0] });
-			# These generally come in as url-parameters initially. Make sure they don't get lost.
-			$tmpl_data{ accessor_descriptor } .=
-				$q->hidden( -name => 'Type', -default => $type ).
-				$q->hidden( -name => 'accessor', -default => $q->param( 'accessor' ) ).
-				$q->hidden( -name => 'search_names', -default => $q->param( 'search_names' ) );
 		# search mode
 		} else {
 			my @fields = $render->getFields( $type, 'summary' );
