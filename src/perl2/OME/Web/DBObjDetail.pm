@@ -117,7 +117,7 @@ sub getPageTitle {
 		    ref( $self ) eq __PACKAGE__ );
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
-    return $self->Renderer()->getTitle($object, 'txt');
+    return $common_name.': '.$self->Renderer()->getName($object);
 }
 
 =head2 getPageBody
