@@ -42,6 +42,9 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import java.awt.Font;
+import java.awt.Color;
+
 public class PConstants {
 
 	// for a buffered node, we want to get its bounds with some empty space
@@ -50,4 +53,15 @@ public class PConstants {
 	
 	// magnification at which point we should do our semantic zooming.
 	public static final double SCALE_THRESHOLD=0.5;
+	
+	// time for animation delay
+	public static final int ANIMATION_DELAY=500;
+	
+	// text font
+	public static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
+	
+	// scale multiplier for chains and library
+	public static final double SCALE_FACTOR=1.2;
+	
+	public static final Color HIGHLIGHT_COLOR = new Color(204,51,255);
 }
