@@ -237,6 +237,8 @@ sub startImage {
     open $self->{_errorHandle}, "< ".$self->{_errorFile};
 
     $self->{_features} = [];
+	$session->finishTemporaryFile($path);
+
 }
 
 
