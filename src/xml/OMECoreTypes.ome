@@ -67,6 +67,61 @@
 
 		</SemanticType>
 
+        <SemanticType
+           Name="OriginalFile"
+           AppliesTo="G">
+
+          <Description>
+            An original proprietary or XML file.
+          </Description>
+
+          <Element
+             Name="Repository"
+             DBLocation="ORIGINAL_FILES.REPOSITORY"
+             DataType="reference"
+             RefersTo="Repository">
+            <Description>
+              If the original file was in the server's filesystem at
+              the time of import, this element will be NULL.  If the
+              original file was transmitted to the server from a
+              client before import, then the original file will be
+              stored in the Repository specified by this entry.
+            </Description>
+          </Element>
+          <Element
+             Name="Path"
+             DBLocation="ORIGINAL_FILES.PATH"
+             DataType="string">
+            <Description>
+              If the original file was in the server's filesystem at
+              the time of import, then this is the absolute path to
+              that file.  If the original file was transmitted to the
+              server from a client before import, then the original
+              file will be stored in a Repository, and this element
+              will be that file's relative path into the Repository.
+            </Description>
+          </Element>
+          <Element
+             Name="SHA1"
+             DBLocation="ORIGINAL_FILES.SHA1"
+             DataType="string">
+            <Description>
+              Contains the SHA-1 digest of this file.  This digest is
+              used to prevent images from being imported more than
+              once.
+            </Description>
+          </Element>
+          <Element
+             Name="Format"
+             DBLocation="ORIGINAL_FILES.FORMAT"
+             DataType="string">
+            <Description>
+              The file format of the original file
+            </Description>
+          </Element>
+
+        </SemanticType>
+
 		<SemanticType
 			Name= "Experimenter"
 			AppliesTo = "G">
