@@ -83,7 +83,8 @@
       <fileset dir="${lib}"/>
     </copy>
 			
-    <jar destfile="${jar}/ome-java.jar">
+    <jar destfile="${jar}/ome-java.jar"
+         manifest="${src}/ome-java.manifest">
       <fileset dir="build" includes="org/openmicroscopy/**/*.class"/>
     </jar>
 
