@@ -422,7 +422,7 @@ off_t size;
 int result;
 
 
-	if (! (myPixels = newPixelsRep (NULL)) ) {
+	if (! (myPixels = newPixelsRep (0)) ) {
 		perror ("BAH!");
 		return (NULL);
 	}
@@ -1442,9 +1442,9 @@ char **cgivars=param;
 	else if (!strcmp (method,"SetPixels") || !strcmp (method,"GetPixels") ||
 		! strcmp (method,"SetPlane") || !strcmp (method,"GetPlane") ||
 		! strcmp (method,"SetStack") || !strcmp (method,"GetStack")) {
+        char *filename = NULL;
 		if (!ID) return (-1);
 
-        char *filename = NULL;
 
 		if (strstr (method,"Set")) {
             rorw = 'w';
