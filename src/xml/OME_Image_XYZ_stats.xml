@@ -20,42 +20,42 @@
 			<Column ColumnID = "CentroidZ" ColumnName = "CENTROID_Z" SQL_DataType = "float" Description = ""/>
 		</Table>
 		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
-		<FormalOutput Name = "XYZStackMin" AttributeTypeName = "XYZStackMin" Description = "Minimum pixel intensity in an XYZ stack">
+		<FormalOutput Name = "Stack minimum" AttributeTypeName = "XYZStackMin" Description = "Minimum pixel intensity in an XYZ stack">
 			<FormalOutputColumn Name = "Min" FormalOutputColumnID = "XYZStackMin.Min" ColumnID = "Min" Description = "Minimum pixel intensity"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackMin.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackMin.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYZStackMax" AttributeTypeName = "XYZStackMax" Description = "Maximum pixel intensity in an XYZ stack">
+		<FormalOutput Name = "Stack maximum" AttributeTypeName = "XYZStackMax" Description = "Maximum pixel intensity in an XYZ stack">
 			<FormalOutputColumn Name = "Max" FormalOutputColumnID = "XYZStackMax.Max" ColumnID = "Max" Description = "Maximum pixel intensity"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackMax.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackMax.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYZStackMean" AttributeTypeName = "XYZStackMean" Description = "Mean of pixel intensities in an XYZ stack">
+		<FormalOutput Name = "Stack mean" AttributeTypeName = "XYZStackMean" Description = "Mean of pixel intensities in an XYZ stack">
 			<FormalOutputColumn Name = "Mean" FormalOutputColumnID = "XYZStackMean.Mean" ColumnID = "Mean" Description = "Mean of pixel intensities"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackMean.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYZStackGeoMean" AttributeTypeName = "XYZStackGeoMean" Description = "Geometric mean of pixel intensities in an XYZ stack">
+		<FormalOutput Name = "Stack geomean" AttributeTypeName = "XYZStackGeoMean" Description = "Geometric mean of pixel intensities in an XYZ stack">
 			<FormalOutputColumn Name = "Geomean" FormalOutputColumnID = "XYZStackGeoMean.Geomean" ColumnID = "Geomean" Description = "Geometric mean of pixel intensities"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackGeoMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackGeoMean.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYZStackSigma" AttributeTypeName = "XYZStackSigma" Description = "Standard deviation of pixel intensities in an XYZ stack">
+		<FormalOutput Name = "Stack sigma" AttributeTypeName = "XYZStackSigma" Description = "Standard deviation of pixel intensities in an XYZ stack">
 			<FormalOutputColumn Name = "Sigma" FormalOutputColumnID = "XYZStackSigma.Sigma" ColumnID = "Sigma" Description = "Standard Deviation of pixel intensities"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackSigma.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYZStackCentroidX" AttributeTypeName = "XYZStackCentroidX" Description = "x, in pixels, of center of intensity for the stack">
+		<FormalOutput Name = "Stack centroidX" AttributeTypeName = "XYZStackCentroidX" Description = "x, in pixels, of center of intensity for the stack">
 			<FormalOutputColumn Name = "CentroidX" FormalOutputColumnID = "XYZStackCentroidX.CentroidX" ColumnID = "CentroidX" Description = "x, in pixels, of center of intensity"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackCentroidX.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidX.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYZStackCentroidY" AttributeTypeName = "XYZStackCentroidY" Description = "y, in pixels, of center of intensity for the stack">
+		<FormalOutput Name = "Stack centroidY" AttributeTypeName = "XYZStackCentroidY" Description = "y, in pixels, of center of intensity for the stack">
 			<FormalOutputColumn Name = "CentroidY" FormalOutputColumnID = "XYZStackCentroidY.CentroidY" ColumnID = "CentroidY" Description = "y, in pixels, of center of intensity"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackCentroidY.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidY.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYZStackCentroidZ" AttributeTypeName = "XYZStackCentroidZ" Description = "z, in pixels, of center of intensity for the stack">
+		<FormalOutput Name = "Stack centroidZ" AttributeTypeName = "XYZStackCentroidZ" Description = "z, in pixels, of center of intensity for the stack">
 			<FormalOutputColumn Name = "CentroidZ" FormalOutputColumnID = "XYZStackCentroidZ.CentroidZ" ColumnID = "CentroidZ" Description = "z, in pixels, of center of intensity"/>
 			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYZStackCentroidZ.theW" ColumnID = "theW" Description = "Wavenumber describing the XYZ stack"/>
 			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYZStackCentroidZ.theT" ColumnID = "theT" Description = "Timepoint describing the XYZ stack"/>
