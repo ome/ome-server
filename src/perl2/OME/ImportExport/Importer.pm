@@ -385,7 +385,8 @@ sub store_image_metadata {
                     'SizeZ' => $href->{'Image.SizeZ'},
                     'SizeC' => $href->{'Image.NumWaves'},
                     'SizeT' => $href->{'Image.NumTimes'},
-                    'BitsPerPixel' => $href->{'Image.BitsPerPixel'}
+                    'BitsPerPixel' => $href->{'Image.BitsPerPixel'},
+                    'PixelType'    => ( $href->{'Image.BitsPerPixel'} eq 8 ? 'int8' : 'int16' )
                    });
 
 	$image->pixels_id( $pixels->id() ); # hack added by josiah 6/9/03
