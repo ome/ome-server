@@ -57,7 +57,7 @@ import java.util.Iterator;
  * @since OME2.1
  */
 
-public class CNode extends Node {
+public class CNode extends Node implements GraphLayoutNode {
 	
 	static {
 		RemoteObjectCache.addClass("OME::AnalysisChain::Node",CNode.class);
@@ -93,6 +93,11 @@ public class CNode extends Node {
  	
  	public CNode(RemoteSession session,String reference) {
  		super(session,reference);
+ 	}
+ 	
+ 	
+ 	public String getName() {
+ 		return getModule().getName();
  	}
  	
  	/**
@@ -253,7 +258,7 @@ public class CNode extends Node {
 	 * @param link the link to be added
 	 */
 	public void addPredLink(CLayoutLink link) {
-		CNode node = (CNode) link.getFromNode();
+		GraphLayoutNode node = link.getFromNode();
 		if (!preds.contains(node)) {
 			predLinks.add(link);
 			preds.add(node);
