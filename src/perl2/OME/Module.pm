@@ -58,18 +58,6 @@ sub performAnalysis {
 
     $analysis->performAnalysis($params);
     
-    #eval "require $class";
-    #my $program = $class->new($self);
-
-    #eval {
-	#$program->startAnalysis($params,$dataset) or die "Error starting analysis";
-	#foreach my $image (@$images) {
-	#    my $result = $program->analyzeOneDataset($image,$params);
-	#    die "Error analyzing image " . $image->Field("name")
-	#	unless defined $result;
-	#}
-	#$program->finishAnalysis() or die "Error finishing analysis";
-    #}
 }
 
 
@@ -95,8 +83,8 @@ sub new {
 	program     => ['FORMAL_INPUTS','PROGRAM_ID',
 			{reference => 'OME::Program'}],
 	name        => ['FORMAL_INPUTS','NAME'],
-	dataType    => ['FORMAL_INPUTS','TYPE',
-			{reference => 'OME::DataType'}],
+        columnType  => ['FORMAL_INPUTS','COLUMN_TYPE',
+			{reference => 'OME::DataType::Column'}],
 	lookupTable => ['FORMAL_INPUTS','LOOKUP_TABLE_ID',
 			{reference => 'OME::LookupTable'}]
     };
@@ -127,8 +115,8 @@ sub new {
 	program     => ['FORMAL_OUTPUTS','PROGRAM_ID',
 			{reference => 'OME::Program'}],
 	name        => ['FORMAL_OUTPUTS','NAME'],
-	dataType    => ['FORMAL_OUTPUTS','TYPE',
-			{reference => 'OME::DataType'}]
+	columnType  => ['FORMAL_OUTPUTS','COLUMN_TYPE',
+			{reference => 'OME::DataType::Column'}]
     };
 
     return $self;

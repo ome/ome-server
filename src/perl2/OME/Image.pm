@@ -18,15 +18,19 @@ sub new {
     my $self = $class->SUPER::new(@_);
 
     $self->{_fields} = {
-	id           => ['IMAGES','IMAGE_ID'],
+	id           => ['IMAGES','IMAGE_ID',
+			 {sequence => 'IMAGE_SEQ'}],
 	guid         => ['IMAGES','IMAGE_GUID'],
 	name         => ['IMAGES','NAME'],
 	description  => ['IMAGES','DESCRIPTION'],
-	instrument   => ['IMAGES','INSTRUMENT_ID',{reference => 'OME::Instrument'}],
-	experimenter => ['IMAGES','EXPERIMENTER_ID',{reference => 'OME::Experimenter'}],
+	instrument   => ['IMAGES','INSTRUMENT_ID',
+			 {reference => 'OME::Instrument'}],
+	experimenter => ['IMAGES','EXPERIMENTER_ID',
+			 {reference => 'OME::Experimenter'}],
 	created      => ['IMAGES','CREATED'],
 	inserted     => ['IMAGES','INSERTED'],
-	repository   => ['IMAGES','REPOSITORY_ID',{reference => 'OME::Repository'}],
+	repository   => ['IMAGES','REPOSITORY_ID',
+			 {reference => 'OME::Repository'}],
 	path         => ['IMAGES','PATH'],
 	sizeX        => ['ATTRIBUTES_IMAGE_XYZWT','SIZE_X'],
 	sizeY        => ['ATTRIBUTES_IMAGE_XYZWT','SIZE_Y'],

@@ -16,12 +16,14 @@ sub new {
     my $self = $class->SUPER::new(@_);
 
     $self->{_fields} = {
-	id          => ['DATASETS','DATASET_ID',{sequence => 'DATASET_SEQ'}],
+	id          => ['DATASETS','DATASET_ID',
+			{sequence => 'DATASET_SEQ'}],
 	name        => ['DATASETS','NAME'],
 	description => ['DATASETS','DESCRIPTION'],
 	locked      => ['DATASETS','LOCKED'],
-	images      => ['DATASET_IMAGE_MAP','IMAGE_ID',{map       => 'DATASET_ID',
-							reference => 'OME::Image'}]
+	images      => ['DATASET_IMAGE_MAP','IMAGE_ID',
+			{map       => 'DATASET_ID',
+			 reference => 'OME::Image'}]
     };
 
     return $self;

@@ -15,7 +15,8 @@ sub new {
     my $self = $class->SUPER::new(@_);
 
     $self->{_fields} = {
-	id   => ['REPOSITORIES','REPOSITORY_ID','SEQUENCE','REPOSITORY_SEQ'],
+	id   => ['REPOSITORIES','REPOSITORY_ID',
+		 {sequence => 'REPOSITORY_SEQ'}],
 	path => ['REPOSITORIES','PATH']
     };
 

@@ -39,8 +39,13 @@ sub new {
     my $mementoFields = {
 	id     => [$table,'ATTRIBUTE_ID',
 		   {sequence => 'ATTRIBUTE_SEQ'}]
-	#others => [$table,'*']
     };
+
+    my $columns = $datatype->Field("columns");
+    for my $column (@$columns) {
+        my $columnName = $column->Field("columnName");
+        $mementoFields->{$columnName} = [$table,$columnName];
+    }
 
     # create the memento object
     # NOTE:  this does not load anything from the database
@@ -50,6 +55,9 @@ sub new {
 	datatype => $datatype,
 	memento  => $memento
     };
+
+    bless $self, $class;
+    return $self;
 }
 
 
