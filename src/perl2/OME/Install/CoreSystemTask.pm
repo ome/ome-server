@@ -238,6 +238,7 @@ sub execute {
 		# Make sure the rest of the installation knows where the core directories are
 		$environment->base_dir($$OME_BASE_DIR);
 		$environment->tmp_dir($$OME_TMP_DIR);
+		$ENV{OME_ROOT} = $$OME_BASE_DIR;
     
 		# Confirm and/or update our group information
 		$OME_GROUP = confirm_default("The group which OME should be run under", $OME_GROUP);
