@@ -49,6 +49,7 @@ use Carp;
 
 # OME Modules
 use OME;
+use OME::Web;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -255,7 +256,7 @@ sub __processElement {
 			$web_class->require()
 				or die "Could not load package $web_class";
 			$a_href = $q->a({ 
-				href => $web_class->pageURL($web_class, $menu_element->{ url_param } ),
+				href => OME::Web->pageURL($web_class, $menu_element->{ url_param } ),
 				}, 
 				$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'}) );
 		};
@@ -290,7 +291,7 @@ sub __processElement {
 		}
 
 		# Get HREF
-		my $href = $web_class->pageURL($web_class, $menu_element->{ url_param } );
+		my $href = OME::Web->pageURL($web_class, $menu_element->{ url_param } );
 
 		# Build TR
 		$element_data .= $q->Tr($q->td( {
