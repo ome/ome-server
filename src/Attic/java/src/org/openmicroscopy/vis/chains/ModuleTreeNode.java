@@ -98,6 +98,10 @@ public class ModuleTreeNode extends DefaultMutableTreeNode {
 			return -1;
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
 	public String toString() {
 		if (object != null) {
 			if (object instanceof RemoteModule)
