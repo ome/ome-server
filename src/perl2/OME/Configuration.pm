@@ -123,14 +123,30 @@ use base qw(Class::Accessor);
 
 my %FOREIGN_KEY_VARS =
   (
-   import_chain  => {
-                     DBColumn => 'import_chain_id',
-                     FKClass  => 'OME::AnalysisChain',
-                    },
-   import_module => {
-                     DBColumn => 'import_module_id',
-                     FKClass  => 'OME::Module'
-                    },
+   import_chain          => {
+                             DBColumn => 'import_chain_id',
+                             FKClass  => 'OME::AnalysisChain',
+                            },
+   annotation_module     => {
+                             DBColumn => 'annotation_module_id',
+                             FKClass  => 'OME::Module'
+                            },
+   original_files_module => {
+                             DBColumn => 'original_files_module_id',
+                             FKClass  => 'OME::Module'
+                            },
+   global_import_module  => {
+                             DBColumn => 'global_import_module_id',
+                             FKClass  => 'OME::Module'
+                            },
+   dataset_import_module => {
+                             DBColumn => 'dataset_import_module_id',
+                             FKClass  => 'OME::Module'
+                            },
+   image_import_module   => {
+                             DBColumn => 'image_import_module_id',
+                             FKClass  => 'OME::Module'
+                            },
   );
 
 sub new {
