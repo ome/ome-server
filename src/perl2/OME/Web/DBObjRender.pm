@@ -303,8 +303,7 @@ These templates can be found under OME/src/html/Templates/generic_*
 	of the objects to be rendered. This is needed to find the specialized
 	template.
 	more_info_url is a URL to a search page of these objects.
-
-
+	paging_limit is optional, and limits the number of objects in a page.
 
 =cut
 
@@ -319,7 +318,10 @@ sub renderArray {
 		
 		# try to get paging controls
 		my ($offset, $limit);
-		$limit = $self->{ page_limits }->{ $mode };
+		$limit = $options->{ paging_limit }
+			if exists $options->{ paging_limit };
+		$limit = $self->{ page_limits }->{ $mode }
+			unless $limit;
 		my $count_method = 'count_'.$method;
 		( $offset, $pager_text ) = $self->_pagerControl( 
 			$method,
