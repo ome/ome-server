@@ -476,7 +476,7 @@ sub readPixels {
             $w_offset = $t_offset + $theC * $w_jump;
             my @xyz;
             for ($theZ = 0; $theZ < $zs; $theZ++) {
-                print STDERR "$theZ $theC $theT\n";
+                #print STDERR "$theZ $theC $theT\n";
                 my $plane_size = 0;
                 $offset = $w_offset + $theZ * $z_jump;
                 eval {
@@ -664,9 +664,9 @@ sub readUIExtHdrs {
 	    if ($endian ne $params->host_endian) {
 		#$val = $self->SUPER::flip_float($val);
 	    }
-	    if ($i < 13) {  # only the 1st 13 floats are interesting
+	    #if ($i < 13) {  # only the 1st 13 floats are interesting
 		#printf("flt: %g, ", $val);
-	    }
+	    #}
 	}
 	#print "\n";
     }
