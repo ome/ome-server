@@ -1,7 +1,7 @@
 OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
 TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
-		OME_Image_XY_stats \
+		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
 		cgrayce2 extractBinData insertBinData
 DB_INCLUDES = -I/usr/include/pgsql
@@ -70,8 +70,14 @@ DumpTIFFstats : DumpTIFFstats.o readTiffData.o
 OME_Image_XYZ_stats : OME_Image_XYZ_stats.o
 	$(CC) $(CFLAGS) OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats ${MATH_LIBS}
 
+OME_Image_XYZ_fastStats : OME_Image_XYZ_fastStats.o
+	$(CC) $(CFLAGS) OME_Image_XYZ_fastStats.o -o OME_Image_XYZ_fastStats ${MATH_LIBS}
+
 OME_Image_XY_stats : OME_Image_XY_stats.o
 	$(CC) $(CFLAGS) OME_Image_XY_stats.o -o OME_Image_XY_stats ${MATH_LIBS}
+
+OME_Image_XY_sums : OME_Image_XY_sums.o
+	$(CC) $(CFLAGS) OME_Image_XY_sums.o -o OME_Image_XY_sums ${MATH_LIBS}
 
 #DumpTIFF : DumpTIFF.o
 #	$(CC) $(DEFINES) DumpTIFF.o -o DumpTIFF ${MATH_LIBS} -ltiff
@@ -131,7 +137,9 @@ install:
 	install -c DumpTIFFheader /OME/bin/DumpTIFFheader
 	install -c DumpTIFFstats /OME/bin/DumpTIFFstats
 	install -c OME_Image_XYZ_stats /OME/bin/OME_Image_XYZ_stats
+	install -c OME_Image_XYZ_fastStats /OME/bin/OME_Image_XYZ_fastStats
 	install -c OME_Image_XY_stats /OME/bin/OME_Image_XY_stats
+	install -c OME_Image_XY_sums /OME/bin/OME_Image_XY_sums
 	install -c SoftWorxSlice /OME/bin/SoftWorxSlice
 	install -c DumpSoftWorxHeader /OME/bin/DumpSoftWorxHeader
 	install -c DumpSoftWorxExHeader /OME/bin/DumpSoftWorxExHeader
