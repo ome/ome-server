@@ -79,6 +79,7 @@ sub run_tasks {
 
 sub restore_env {
     my $env_file = shift;
+	require OME::Install::Environment;
 
     ($env_file and -e $env_file) or usage ("Error: Unable to locate Environment file \"$env_file\".\n\n");
 
