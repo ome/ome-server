@@ -43,6 +43,7 @@
 package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.Project;
 import org.openmicroscopy.Dataset;
@@ -85,7 +86,7 @@ public class ControlPanel extends JFrame implements ActionListener {
 	
 	
 	protected Project curProject;
-	protected Dataset curDataset;
+	protected CDataset curDataset;
 	
 	private Connection connection;
 	
@@ -216,16 +217,17 @@ public class ControlPanel extends JFrame implements ActionListener {
 		a = datasets.toArray(a);
 		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
 		datasetList.setModel(model);
-		curDataset = (Dataset) a[0];
+		curDataset = (CDataset) a[0];
+		curDataset.loadImages(connection);
 		updateDatasetChoice(curDataset);
 	}
 	
 	public void updateDatasetChoice(Object item) {
 		
 		System.err.println("getting execution list");
-		curDataset = (Dataset) item;
+		curDataset = (CDataset) item;
 		// update the list of executions
-		connection.getDatasetExecutionChains(curDataset);	
+		connection.setDataset(curDataset);	
 	}
 }
 
