@@ -46,6 +46,8 @@ use strict;
 our $VERSION = 2.000_000;
 
 use fields qw(_session _module_execution);
+use File::Basename;
+use OME::ImportExport::Params;
 
 =head1 CONTRACT
 
@@ -77,6 +79,9 @@ sub new {
     my $self = {};
     $self->{_session} = $session;
     $self->{_module_execution} = $module_execution;
+    my %paramHash;
+    $self->{_params} = new OME::ImportExport::Params(\%paramHash);
+    #$self->{_params} = new OME::ImportExport::Params();
 
     bless $self, $class;
     return $self;
@@ -200,13 +205,63 @@ sub ModuleExecution { return shift->{_module_execution}; }
 
 	my $session = $self->Session();
 
-Returns the ession that was given as a parameter to the C<new> method.
+Returns the session that was given as a parameter to the C<new> method.
 Note that this will only return a correct value if the overridden
 C<new> method calls its superclass C<new> method.
 
 =cut
 
 sub Session { return shift->{_session}; }
+
+
+=head2 Params
+
+    my $params = $this->Params();
+
+Returns the Params object created for this image. This object holds various
+parameters created, discovered , or calculated for this image.
+
+=cut
+
+sub Params { return shift->{_params}; }
+
+
+=head2 newImage(initialAttributes)
+
+Calls the session's Factory to create a new image object. Those attributes
+that are known before the import are recorded in the new image.
+
+=cut
+
+sub newImage {
+    my ($self, $session, $params) = @_;
+
+    my $config = $session->Factory()->loadObject("OME::Configuration", 1);
+    my $guid = $config->mac_address;
+
+    my $experimenter_id = $session->User()->id();
+    my $user_group = $session->User()->Group();
+    my $group_id = defined $user_group? $user_group->id(): undef;
+
+
+    my $recordData = {'name' => $params->oname(),
+		      'image_guid' => $guid,
+		      'description' => "",
+		      'experimenter_id' => $experimenter_id,
+		      'group_id' => $group_id,
+		      'created' => "now",
+		      'inserted' => "now",
+              };
+
+    my $image = $session->Factory->newObject("OME::Image", $recordData);
+    if (!defined $image) {
+	my $status = "Can\'t create new image";
+    }
+
+    return $image;
+
+}
+
 
 =head2 __getFileSHA1
 
@@ -265,6 +320,113 @@ sub __removeFilenames {
     return;
 }
 
+
+=head2 __nameOnly(full_file_name)
+
+Takes in a fully qualified file name, and returns just the base filename.
+No path components and no extension will be returned.
+
+=cut
+
+sub __nameOnly {
+    shift;
+    my $basenm = basename(@_[0]);
+    # remove filetype extension from filename (assumes '.' delimiter)
+    $basenm =~ s/\..+?$//;
+    return $basenm;
+}
+
+
+=head2 __storeChannelInfo
+
+    $self->__storeChannelInfo($session, $numWaves, @channelInfo);
+
+Stores metadata about each channel (wavelength) in the image. Each
+channel may have measures for excitation wavelength, emission wavelength,
+flourescense, and filter. Each channel is assigned a number starting at 0,
+corresponding to the sequence in which the channels were illuminated.
+
+The routine takes as input the session, the number of channels being 
+recorded, and an array containg <channel> number of hashes of each 
+channel's measurements. This routine writes this channel information 
+metadata to the database.
+
+Each channel info hash is keyed thusly:
+     chnlNumber
+     ExWave
+     EmWave
+     Flour
+     NDfilter
+
+=cut
+
+sub __storeChannelInfo {
+    my ($self, $session, $numWaves, @channelData) = @_;
+    my $image = $self->{image};
+
+    my @sortedData = ({});
+    @sortedData = sort {$a->{chnlNumber} <=> $b->{chnlNumber}} @channelData;
+
+    my $channel;
+    for (my $w = 0; $w < $numWaves; $w++) {
+	$channel = $channelData[$w];
+	# Clean up hash if it's empty or has incorrect number
+	if ($channel->{chnlNumber} ne $w) {
+	    $channel->{chnlNumber} = $w;
+	    $channel->{ExWave} = undef;
+	    $channel->{EmWave} = undef;
+	    $channel->{Fluor} = undef;
+	    $channel->{NDfilter} = undef;
+
+	}
+	my $logical = $session->Factory()->
+	    newAttribute("LogicalChannel",$image,$self->{module_execution},
+			 {
+			     ExcitationWavelength   => $channel->{'ExWave'},
+			     EmissionWavelength   => $channel->{'EmWave'},
+			     Fluor    => $channel->{'Fluor'},
+			     NDFilter => $channel->{'NDfilter'},
+			     PhotometricInterpretation => 'monochrome',
+			 });
+	
+	my $component = $session->Factory()->
+	    newAttribute("PixelChannelComponent",$image,$self->{module_execution},
+			 {
+			     Pixels         => $self->{pixels}->id(),
+			     Index          => $w,
+			     LogicalChannel => $logical->id(),
+			 });
+    }
+
+}
+
+
+
+=head2 __storeInputFileInfo
+
+    __storeInputFileInfo($session)
+
+Stores metadata about each input file that contributed pixels to the
+OME image. The $self hash has an array of hashes that contain all the
+input file information - one hash per input file. This routine writes
+this input file metadata to the database.
+
+=cut
+
+sub __storeInputFileInfo {
+    my $self = shift;
+    my $session = shift;
+    my @inarr = shift;
+
+    for (my $i = 0; $i < scalar @inarr; $i++) {
+	$session->Factory()->newObject("OME::Image::ImageFilesXYZWT",
+				       $inarr[$i]);
+
+    }
+
+}
+
+
 =head2 __createRepositoryFile
 
 	my ($pixels_attribute,$pix_object) = $self->
@@ -288,6 +450,7 @@ much memory in the case of large images; using SetROI would take more
 time than the other Set* methods.)
 
 =cut
+
 
 sub __createRepositoryFile {
     my ($self,$image,$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bitsPerPixel) = @_;
