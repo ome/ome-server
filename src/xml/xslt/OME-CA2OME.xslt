@@ -311,7 +311,7 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:DisplayOptions"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:StageLabel"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImagePlate"/>
-			<xsl:apply-templates select = "CA:CustomAttributes/CA:Pixels"  mode = "pass-through-CAs"/>
+			<xsl:apply-templates select = "CA:CustomAttributes/CA:Pixels"/>
 			<xsl:apply-templates select = "CA:Feature"/>
 			<xsl:apply-templates select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
 		</xsl:element>
@@ -908,6 +908,26 @@
 			</xsl:element>
 		</xsl:if>
 	</xsl:template>
+	<xsl:template match = "CA:Pixels">
+		<xsl:element name = "{name()}">
+			<xsl:for-each select = "@*">
+				<xsl:choose > 
+					<xsl:when test = "starts-with (string(),'uint')">
+						<xsl:attribute name = "{name()}">
+							<xsl:value-of select = "concat('Uint',substring(string(),5))"/>
+						</xsl:attribute>
+					</xsl:when> 
+					<xsl:when test = "string-length() > 0">
+						<xsl:attribute name = "{name()}">
+							<xsl:value-of select = "."/>
+						</xsl:attribute>
+					</xsl:when> 
+					<xsl:otherwise/> 
+				</xsl:choose > 
+			</xsl:for-each>
+		</xsl:element>
+	</xsl:template>
+
 	<xsl:template match = "*" mode = "print">
 		<xsl:element name = "{name()}">
 			<xsl:value-of select = "."/>
