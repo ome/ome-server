@@ -48,6 +48,7 @@ import java.util.Vector;
 import java.util.Iterator;
 import java.util.List;
 
+
 /** 
  * <p>A subclass of {@link RemoteChain} that contains additional 
  * state needed for chain layout
@@ -56,7 +57,7 @@ import java.util.List;
  * @version 2.1
  * @since OME2.1
  */
-public class CChain extends RemoteChain {
+public class CChain extends RemoteChain  {
 	
 	static {
 		RemoteObjectCache.addClass("OME::AnalysisChain",CChain.class);
@@ -593,5 +594,5 @@ public class CChain extends RemoteChain {
 			Vector v = getLayer(layerNumber);
 			v.setElementAt(node,n);
 		}
-	} 
+	}
  }
