@@ -57,7 +57,7 @@ document.
 
 use strict;
 use XML::LibXML;
-use OME::LSID;
+use OME::Tasks::LSIDManager;
 
 # package constants
 my $BinNS = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd";
@@ -118,7 +118,7 @@ sub importFile() {
 	my $debug         = $self->{debug};
 	my $configuration = $session->Configuration();
 	my $parser        = $self->{_parser};
-	my $LSIDresolver  = OME::LSID->new( session => $session );
+	my $LSIDresolver  = OME::Tasks::LSIDManager->new( session => $session );
 
 	# storage
 	my @cdataFiles;
