@@ -1,8 +1,8 @@
-<TMPL_VAR NAME=/pager_text>
 <TMPL_IF NAME=/tile_loop/width-5>
 	<TMPL_IF NAME=/more_info_url>
 		<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a>
 	</TMPL_IF>
+	<TMPL_VAR NAME=/pager_text>
 	<table class="ome_table">
 		<TMPL_LOOP NAME=/tile_loop/width-5>
 			<tr>
