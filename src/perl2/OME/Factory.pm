@@ -377,6 +377,18 @@ will be ANDed together in the WHERE clause.
 A couple of special syntaxes are supported for the value in a search
 clause:
 
+	dataset.name => 'Foo'
+
+inserts a JOIN clause into the query.  This allows you to follow
+foreign-key links in the objects in your search criteria.  Currently,
+it is only possible to follow has-one foreign keys.
+
+	__order => ['id','name']
+
+tells the Factory to order the results of the query.  The contents of
+the array ref should be the columns to order by.  Like search
+criteria, these columns can involve foreign key joins.
+
 	id => ['>',3]
 
 tells the Factory to use a different SQL operator in this clause.
