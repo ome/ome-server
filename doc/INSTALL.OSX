@@ -1,1 +1,267 @@
-FIXME: Unwritten platform notes.
+Mac OS X 10.2 (Jaguar) INSTALL NOTES v0.1
+-----------------------------------------
+Jeff Mellen <jeffm@mit.edu>
+27 July 2003
+
+* Bottom line: Installing OME on Mac OS X is tough because of a few factors, (1) lack of binaries available for certain programs, (2) preloaded versions of software that Apple provides, (3) the dichotomy between a Darwin-flavored installation and UNIX-based installation, and (4) libxml.  So although Mac OS X is a more user-friendly OS, it is not a more OME-friendly OS.  But it eventually works.
+
+* Note: your mileage may vary, and there may be better ways to resolve the library issues I had than what I did.  I'm a little new to OSX, and this was my first experience really smashing generic UNIX libraries and OSX together in a make/install context.  Feel free to suggest improvements, or modify these release notes, or point out where I'm a bone-headed newbie. (jeffm@mit.edu)
+
+* Your favorite mirrors for all required software (PostgreSQL, Apache, Perl, mod_perl, libxml2) would be preferred.
+
+___________________________________
+FIRST: MAGIC BULLET/LIBRARY ISSUES
+
+A conundrum:  /usr/lib vs. /usr/local/lib; /usr/include vs. /usr/local/include.  I specified my Perl prefix directory (see Perl 5.8.0 installation instructions below) to be /usr, so I think the dynamic loader would check any libraries in /usr/lib before compiling XS modules.  Also, I believe the Apple installation of gcc, by default, only uses /usr/include and /usr/lib to check for shared libraries and header files, and not /usr/local.  Libraries not meant specifically for Darwin, however, will probably utilize /usr/local more.
+
+What does this mean?  It means that if you build a few of the libraries from source, you're going to have to change the PREFIX in the Makefile (or configure file) from /usr/local to /usr.  Keep this in mind if you get dyld errors or libxml errors.  Of course, you could also just build in /usr/local, and then remember to copy the new libraries from /usr/local/lib to /usr/lib, and the include files from /usr/local/include to /usr/include.
+
+Also, if you're going to put any Fink libraries on your system in a place other than /sw, put them in /usr, not /usr/local.
+
+___________________________________
+Mac OS X Developer Tools
+
+The installation notes assume that you have downloaded the Mac OS X Developer Tools package (December 2002 release), which includes a command-line version of CVS (v 1.11.2), gcc 3.1, Project Builder, and other assorted development utilities.  To download this package (which is free), you must be a registered member of the Apple Developer Connection (ADC).  See http://developer.apple.com for details.  The Developer Tools is available at the ADC member site, under "Download Software."
+
+
+___________________________________
+Perl 5.8.0
+
+Mac OS X 10.2 comes preloaded with Perl 5.6.0.  I upgraded to v5.8.0, so I'm not sure how mod_perl and OME will work with v5.6.0.  The literature that I read about building mod_perl for OSX suggests using Perl 5.8.0.
+
+Detailed instructions on installing Perl 5.8.0 on Jaguar is available at http://developer.apple.com/internet/macosx/perl.html.  A few of the notes:
+
+-- The preinstalled libraries for Perl are in /System/Library/Perl and /Library/Perl, and the preinstalled binaries are in /usr/bin.  The default build scripts (hints/darwin.sh) will try to build the binaries to Perl 5.8.0 in /usr/local/bin, and the main Perl libraries in /Library/Perl.  If this occurs, 5.6.1 will still be the main version of Perl on your system.  This is probably not what you want if you're upgrading.  Thus, in hints/darwin.sh, make the following changes:
+
+BEFORE: prefix='/usr/local';
+AFTER: prefix='/usr/';
+
+BEFORE: privlib='/Library/Perl';
+AFTER: prefix='/System/Library/Perl';
+
+The one problem with this, I think, is that the dynamic loader, when compiling any Perl XS module, will look in /usr/lib, instead of /usr/local/lib, for the necessary directories.  This is probably the way it should behave, although some of the libraries needed for OME will want to install themselves into /usr/local. 
+
+These instructions and more are covered in the HOWTO document at http://developer.apple.com/internet/macosx/perl.html.  It's very comprehensive.
+
+_____________________________________
+Fink
+
+If you haven't installed Fink yet (http://fink.sourceforge.net), do so.  Fink is a system that keeps track of Darwin ports of various UNIX libraries and programs, including libpng, libxml2, gd, and then installs them for you.  Its semantics are similar to cpan ('fink install libjpeg').  You will need Fink to get libjpeg, libtiff, and libgd later on.  Also install FinkCommander for that Aqua-fresh feeling.
+
+Nota bene: What you *don't* want is for Fink to latch itself onto Perl's @INC list, as that has a reputation of royally screwing things up when you try to build other Perl modules from source or CPAN (Fink currently uses modules built for 5.6.1, which are incompatible with modules built with 5.8.0).  This is an easy fix, though.  When Fink installs, it adds "source /sw/bin/init.csh" into your ~/.tcshrc file.  So, in /sw/bin/init.csh, comment out the following:
+
+if ( $?PERL5LIB ) then
+   prepend_path PERL5LIB /sw/lib/perl5
+else
+   setenv PERL5LIB /sw/lib/perl5
+endif
+
+So just comment that out, as it may (or may not) cause problems.
+
+Now, using fink, get libjpeg, libtiff, and gd:
+% fink install libjpeg
+% fink install libtiff
+% fink install gd
+
+NOTE: install gd, *not* gd2.  It will be especially tempting to download gd2 if you use FinkCommander.  Resist the urge.  It does not work with the Perl version of GD supplied by OME.  Also, although this is *generally* not recommended, if you copy the library files for libjpeg, libtiff, and libgd from /sw/lib to /usr/lib, and the include headers for libjpeg, libtiff and gd from /sw/include to /usr/include, you will have fewer headaches down the line.  I think the Fink practice, however, is not to mix Fink-ported libraries with Darwin-specific libraries in the same directory-- so use with caution.
+
+______________________________________
+PostgreSQL 7.2.3/4 (the long way)
+
+For some reason, as yet undocumented, the OME SQL scripts choke under Postgres 7.3.x. when making the table plane_properties.  We should probably get to the bottom of this, but that's low priority when OME works under a perfectly capable alternate version of Postgres-- 7.2.3.
+
+Here's a joke, though:
+
+Q. Postgres 7.2.3 & 7.2.4 are so old...
+A. How old are they?
+Q. They're so old that the source target is Mac OS X 10.1, not 10.2!  So gcc chokes!  Rarr!
+
+If you can find a binary installation for Postgres 7.2 on Mac OS X 10.2, go for it, and ignore the rest of the instructions in this section.  I believe most binary installs have been upgraded for Postgres 7.3, though, (and the Postgres mirrors only offer RPMs), so you're stuck with building the source.  First:
+
+-- go to the PostgreSQL website (http://www.postgresql.org) and click on 'Download.'
+-- select a mirror of your choice (such as ftp15.us.postgresql.org)
+-- in a shell, cd to a directory (/usr/local/src, for example) and curl -O ftp://<mirror of choice>/source/v7.2.3/postgresql-7.2.3.tar.gz.
+-- tar xvzf postgresql-7.2.3.tar.gz
+
+OK, great, now comes the fun part.  It seems that semaphore support is a little better in 10.2 than 10.1, so the darwin patch that postgres provides is irrelevant, and in fact causes problems when trying to build postgres.  So, the following changes are necessary:
+
+assuming the base directory is postgresql-7-2-3 (where you gunzipped to),
+
+in src/backend/storage/ipc.c,
+   src/backend/storage/lmgr/proc.c,
+   src/backend/storage/lmgr/spin.c, make the following change:
+
+DELETE:
+
+#ifdef (__darwin__)
+  #include "port/darwin/sem.h"
+#endif
+
+and in src/backend/port/darwin/Makefile, remove sem.o from the list of dependencies.
+
+now, in the postgresql directory,
+./configure --with-perl
+make
+sudo make install
+
+The source install will not create a postgres user for you, so you will have to do this using your preferred method of creating a new user and group.  You should also specify a $PGDATA variable in /etc/csh.login (using sudo).  This should probably be /usr/local/pgsql/data.  You should also add /usr/local/pgsql/bin to the $PATH in /etc/csh.login.
+
+Finally, as your designated postgres user (or using sudo -u), run:
+
+% initdb $PGDATA
+% postmaster start
+
+This should get your Postgres installation up and running.  Phew.
+
+_________________________________________
+Apache & mod_perl
+
+Apache 1.3.26 comes preinstalled with Mac OS X, and supports mod_perl.  Unfortunately, mod_perl comes as a dynamically loadable library, which has had the reputation of being flakier than a statically loaded mod_perl.  Also, the mod_perl is for Perl 5.6.0, which we may or may not have blown away by now.  *Finally,* it looks like the OME-suggested changes to httpd.conf fail under the preinstalled version of Apache/mod_perl.  The solution, of course, is to get the latest versions of Apache 1.3 and mod_perl from source, and build Apache with mod_perl statically loaded in.  Wicked.
+
+The instructions (and motivations) for doing this can be found at http://www.macdevcenter.com/pub/a/mac/2002/11/05/apache_osx.html.  Follow those instructions, with this one change:
+
+BEFORE:
+% curl -O http://www.apache.org/dist/httpd/apache_1.3.26.tar.gz
+% tar zxvf apache_1.3.26.tar.gz
+
+AFTER:
+% curl -O http://www.apache.org/dist/httpd/apache_1.3.28.tar.gz
+% tar zxvf apache_1.3.28.tar.gz
+
+Also, the latest version of mod_perl is 1.28.
+
+Also, follow the modified instructions for installing libapreq, available at the link at the top of the page [http://www.macdevcenter.com/pub/a/mac/2002/11/05/apache_osx.html]
+
+So, if you have the normal OS X installation, you will now have *two* versions of apache on your computer; one in /etc/httpd, and the other in /usr/local/apache.  Apache binaries for 1.3.26 will be in /usr/sbin, and for the new, mod_perl-savvy version in /usr/local/apache/bin.  Also, the old version Apache is preconfigured to load on startup.  I'll resolve how to get this working correctly at the end of the install notes, under "DEPLOYMENT," but for now, stop the currently running Apache:
+
+% sudo apachectl stop
+
+__________________________________________
+required libraries (non-Fink)
+
+I encountered problems with the libxml2 version that the OME perlCheck.pl script tried to download.  The Perl LibXML modules require a libxml of 2.5.5 or higher.  Both Fink, darwin, and the OME repository have 2.5.4.  My solution was to download from source:
+
+% curl -O ftp://ftp.gnome.org/pub/GNOME/sources/libxml2/2.5/libxml2-2.5.8.tar.gz
+% tar xvzf libxml2-2.5.8.tar.gz
+% cd libxml2-2.5.8
+% ./configure
+% make
+% sudo make install
+
+libxml2 support should be good now, although you may need to move the libxml libraries from /usr/local/lib to lib, and the libxml2 includes from /usr/local/include to /usr/include.  More on that later.
+
+The perlCheck.pl script also doesn't seem to put zlib where it should (/usr/lib).  So let's download from source *again*.
+
+% curl -O http://aleron.dl.sourceforge.net/sourceforge/libpng/zlib-1.1.4.gz
+% tar zxvf zlib-1.1.4.gz
+% cd zlib-1.1.4
+
+If you want to avoid library problems, once again, change the prefix in the configure or Makefile from /usr/local to /usr.
+
+% ./configure
+% make
+% sudo make install
+
+__________________________________________
+INSTALLING OME
+
+OK, finally, you've spent a good three or four hours installing code from source, and hopefully not running into any problems that a good prefix change won't solve.  Now, it's time to install OME, according to the SBDD.  For the rest of the installation, I'm going to assume you have the following on your system, installed and working and all relevant libraries in $perl_prefix/lib (/usr or /usr/local)
+
+__________________________________________
+Fun With perlCheck.pl (read *before* running)
+
+I had problems, however, with GD and DBD::Pg.  DBD::Pg comes first in the installation list.
+
+On my machine, testing DBD::Pg resulted in a dyld "undefined symbol" error, withthe missing symbols "_error_message" and "_krb5_(assorted messages)"  This problem can be fixed by making the following change in perlCheck.pl:
+
+BEFORE (line 283, perlCheck.pl v1.7):
+$ENV[POSTGRES_LIB} = "$libDir -lssl"...
+
+AFTER:
+$ENV{POSTGRES_LIB} = "$libDir -lkrb5 -lssl"...
+
+GD is dependent on libgd 1.8.4, which is only downloadable through Fink.  GD, in turn, is dependent on several other libraries.  So I kept the files for GD inside /sw, and didn't move them into /usr/lib.  If you choose to do this, you should probably install the GD-1.33 package manually (perlCheck will choke on GD when it is installed).  Here's how to manually install any missing Perl module:
+
+% curl -O http://openmicroscopy.org/packages/perl/GD-1.33.tar.gz
+          (the name of the module is listed at the top of perlCheck.pl)
+
+% tar xvzf GD-1.33.tar.gz
+% cd GD-1.33
+
+OK, in Makefile.PL, prepend "-I/sw/include -I/sw/include/gd" to the list of include files (my @INC), and add "-L/sw/lib and -L/sw/lib/gd" just before "-L/usr/local/lib" in the list of included libraries (my @LIBPATH).  Then, in the GD-1.33 folder:
+
+% perl Makefile.PL
+% make
+% sudo make install
+
+You may want to do this in the correct order-- that is, wait for perlCheck.pl to have a problem with GD, install GD-1.33, and then resume the perlCheck script.  The installation of OME should follow the SBDD instructions after this point.
+
+---------------------------------------
+Fun With Deployment
+
+Follow the SBDD instructions *until* the part about chmod.  Instead of following the suggested permissions on the SBDD page, just call:
+
+% sudo chmod -R 755 /OME
+
+This should be fine security-wise (correct me if I'm wrong), and less of a hassle.  Continue following the SBDD instructions-- keep in mind that the <Location /perl> tag in the httpd.conf addition should read <Location /perl2>.  Also, make note of which port Apache is configured to listen on: the default from a source installation is 8080.  Don't make it port 80 (the HTTP default)-- a process must be run as root to use port 80 (actually, port numbers below 1024), and as OME uses UNIX sockets to communicate with Postgres, it cannot use root, as Postgres, for security reasons, prevents you from operating the database as root.  So stick with port 8080, or a port (like 8004) that you'll remember.
+
+When you've finished editing httpd.conf and are about to configtest Apache, you'll want to make some more changes.  You'll want to change the owner of that directory to the default Apache user (on darwin: www)  Assuming you installed the new version of Apache in /usr/local/apache, you'll want to change the owner of that directory:
+
+% sudo chown -R www:www /usr/local/apache
+
+The OME bootstrap script will create a database user with the name 'www.'  The name of the UNIX user that is running the Apache web server has to match up with a Postgres user that has access to the OME database.  Thus, as OME creates one such user (www) for you, you should make sure that it is www that runs Apache each time (find out how to do this automatically on startup at the end of these installation notes):
+
+% sudo -u www /usr/local/apache/bin/apachectl configtest
+(should say 'Syntax OK')
+% sudo -u www /usr/local/apache/bin/apachectl start (or restart)
+
+You may rejoin the normal instructions, with one caveat:  the bootstrapOME.pl script may not add the ome user correctly in Postgres.  To do this,
+
+% sudo -u postgres createuser ome (and type 'yes' for each option)
+
+And then rerun bootstrapOME.pl.  Finally, *finally*, once the bootstrapOME.pl script completes, enter the test URL (http://localhost:<port>/perl2/serve.pl?page=OME::Web::Home), and everything should be working.  Hopefully.
+
+_________________________________________________________________
+Getting OME (or at least, Apache/Postgres) to start automatically
+
+You don't want to constantly restart Apache, no?  You would like it to load when you first boot up Jaguar.  Same thing with Postgres.  If you've installed a Postgres 7.2 binary, you probably won't have to deal with this-- the Mac OS X binary package builds a startup bundle for you.  If not, let's familiarize ourselves with the Mac OS X bundle system first through editing the existing Apache startup bundle, and then editing a Postgres bundle.
+
+% cd /System/Library/StartupItems/Apache
+
+Each bundle is divided into three parts: the startup script itself (the name of the program), a description and dependencies list (StartupParameters.plist) and an I18N-compatible XML bundle of phrases (Resources) that describe what message will be displayed the console when Mac OS X loads.
+
+Changing the Apache startup script to load the version we installed is very straightforward.  Edit the Apache file:
+
+add this above . /etc/rc.common:
+
+# who should run the Apache webserver
+APACHEUSER=www
+
+# where the desired apachectl is
+APACHEBIN="/usr/local/apache/bin/apachectl"
+
+and now, these changes:
+
+BEFORE: apachectl start
+AFTER: sudo -u $APACHEUSER $APACHEBIN start
+
+BEFORE: apachectl stop
+AFTER: sudo -u $APACHEUSER $APACHEBIN stop
+
+BEFORE: apachectl restart
+AFTER: sudo -u $APACHEUSER $APACHEBIN restart
+
+Finally, in /etc/hostconfig, change the value of WEBSERVER from '-NO-' to '-YES-', if it is not done so already.
+
+OK, now Apache should load on restart.
+
+Then, if you don't already have one, download a sample startup bundle for Postgres from me (I'll see where I can stick this bundle after I commit the install notes):
+
+% cd /System/Library/StartupItems
+% sudo curl -O http://web.mit.edu/jeffm/www/postgres-startup-osx.tar.gz
+% sudo tar zxvf postgres-startup-osx.tar.gz
+% sudo rm postgres-startup-osx.tar.gz
+
+In the PostgreSQL/PostgreSQL execution script, change $PGUSER to the database user (postgre or postgres, likely), and $PGDATA to the directory in which you initialized the Postgres database.  Once again, restart.  The database should be running when you restart.
+
+OK, that's it.  Hope you enjoyed the installation. 
