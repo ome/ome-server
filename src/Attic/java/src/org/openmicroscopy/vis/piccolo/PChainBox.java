@@ -84,9 +84,16 @@ public class PChainBox extends PCategoryBox {
 	 * @return the ID of the chain stored in the box
 	 */
 	public int getChainID() {
-		return chainID;
+		return chain.getID();
 	}
 	
+	/**
+	 * @return the chain stored in the box
+	 * 
+	 */
+	public CChain getChain() {
+		return chain;
+	}
 	
 	public void setExtent(double width,double height) {
 		super.setExtent(width,height);
