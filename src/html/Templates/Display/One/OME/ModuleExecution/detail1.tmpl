@@ -2,7 +2,7 @@
 
 <!-- MEX info -->
 <td valign="top" align="center">
-<!-- TMPL_VAR NAME="mex_detail" -->
+<TMPL_VAR NAME="mex_detail">
 </td>
 
 <!-- I/O table -->
@@ -12,79 +12,79 @@
 	<tr>
 		<td class="ome_td">Inputs</td>
 		<td class="ome_td">Outputs</td>
-		<!-- TMPL_IF NAME="untyped_output_names" -->
+		<TMPL_IF NAME="untyped_output_names">
 		<td class="ome_td">Untyped Outputs</td>
-		<!-- /TMPL_IF -->
-		<!-- TMPL_IF NAME="output_groups" -->
+		</TMPL_IF>
+		<TMPL_IF NAME="output_groups">
 		<td class="ome_td">Groups of Outputs</td>
-		<!-- /TMPL_IF -->
+		</TMPL_IF>
 	</tr>
 	<tr>
 		<td class="ome_td" valign="top">
-		<!-- TMPL_LOOP NAME="input_names" -->
-			<!-- TMPL_VAR NAME="name" --><br>
-		<!-- /TMPL_LOOP -->
+		<TMPL_LOOP NAME="input_names">
+			<TMPL_VAR NAME="name"><br>
+		</TMPL_LOOP>
 		</td>
 		<td class="ome_td" valign="top"><table width="100%">
-		<!-- TMPL_LOOP NAME="output_names" -->
+		<TMPL_LOOP NAME="output_names">
 			<tr><td>
-			<!-- TMPL_VAR NAME="name" -->
+			<TMPL_VAR NAME="name">
 			</td><td>
-			<!-- TMPL_VAR NAME="checkbox" -->			
+			<TMPL_VAR NAME="checkbox">			
 			</td></tr>
-		<!-- /TMPL_LOOP -->
+		</TMPL_LOOP>
 		</table></td>
-		<!-- TMPL_IF NAME="untyped_output_names" -->
+		<TMPL_IF NAME="untyped_output_names">
 		<td class="ome_td" valign="top"><table width="100%">
-		<!-- TMPL_LOOP NAME="untyped_output_names" -->
+		<TMPL_LOOP NAME="untyped_output_names">
 			<tr><td>
-			<!-- TMPL_VAR NAME="name" -->
+			<TMPL_VAR NAME="name">
 			</td><td>
 			<!-- I dunno if I'm gonna keep this checkbox -->
-			<!-- TMPL_VAR NAME="checkbox" -->			
+			<TMPL_VAR NAME="checkbox">			
 			</td></tr>
-		<!-- /TMPL_LOOP -->
+		</TMPL_LOOP>
 		</table></td>
-		<!-- /TMPL_IF -->
-		<!-- TMPL_IF NAME="output_groups" -->
+		</TMPL_IF>
+		<TMPL_IF NAME="output_groups">
 		<td class="ome_td" valign="top"><table width="100%">
-		<!-- TMPL_LOOP NAME="output_groups" -->
+		<TMPL_LOOP NAME="output_groups">
 			<tr><td>
-			<!-- TMPL_VAR NAME="group" -->
+			<TMPL_VAR NAME="group">
 			</td></tr>
-		<!-- /TMPL_LOOP -->
+		</TMPL_LOOP>
 		</table></td>
-		<!-- /TMPL_IF -->
+		</TMPL_IF>
 	</tr>
 </table>
 </td></tr><tr><td align="right">
-<!-- TMPL_VAR NAME="merge_button" -->
+<TMPL_VAR NAME="merge_button">
 </td></tr></table>
 </td>
 
 
 </tr></table>
 
-<!-- TMPL_IF NAME="grouped_outputs" -->
+<TMPL_IF NAME="grouped_outputs">
 <h1>Merged Outputs</h1>
-<!-- TMPL_LOOP NAME="grouped_outputs" -->
-	<!-- TMPL_VAR NAME="output" -->
-<!-- /TMPL_LOOP -->
-<!-- /TMPL_IF -->
+<TMPL_LOOP NAME="grouped_outputs">
+	<TMPL_VAR NAME="output">
+</TMPL_LOOP>
+</TMPL_IF>
 
 <h1>Outputs</h1>
-<!-- TMPL_LOOP NAME="outputs" -->
-	<!-- TMPL_VAR NAME="output" -->
-<!-- /TMPL_LOOP -->
+<TMPL_LOOP NAME="outputs">
+	<TMPL_VAR NAME="output">
+</TMPL_LOOP>
 
-<!-- TMPL_IF NAME="untyped_outputs" -->
+<TMPL_IF NAME="untyped_outputs">
 <h1>Untyped Outputs</h1>
-<!-- TMPL_LOOP NAME="untyped_outputs" -->
-	<!-- TMPL_VAR NAME="untyped_output" -->
-<!-- /TMPL_LOOP -->
-<!-- /TMPL_IF -->
+<TMPL_LOOP NAME="untyped_outputs">
+	<TMPL_VAR NAME="untyped_output">
+</TMPL_LOOP>
+</TMPL_IF>
 
 <h1>Inputs</h1>
-<!-- TMPL_LOOP NAME="inputs" -->
-	<!-- TMPL_VAR NAME="input" -->
-<!-- /TMPL_LOOP -->
+<TMPL_LOOP NAME="inputs">
+	<TMPL_VAR NAME="input">
+</TMPL_LOOP>

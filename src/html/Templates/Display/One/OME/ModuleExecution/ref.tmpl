@@ -1,12 +1,12 @@
-<a title="<!-- TMPL_VAR NAME=/name -->" href="<!-- TMPL_VAR NAME=/obj_detail_url -->" class="ome_detail">
-	<!-- TMPL_VAR NAME=/name/max_text_length-25 -->
+<a title="<TMPL_VAR NAME=/name>" href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail">
+	<TMPL_VAR NAME=/name/max_text_length-25>
 </a>
-<!-- TMPL_IF NAME=image/render-ref -->
-	ran against <!-- TMPL_VAR NAME=image/render-ref -->
-<!-- TMPL_ELSE -->
-	<!-- TMPL_IF NAME=dataset/render-ref -->
-		ran against <!-- TMPL_VAR NAME=dataset/render-ref -->
-	<!-- TMPL_ELSE -->
-		(<!-- TMPL_VAR NAME=id -->)
-	<!-- /TMPL_IF -->
-<!-- /TMPL_IF -->
+<TMPL_IF NAME=image/render-ref>
+	ran against <TMPL_VAR NAME=image/render-ref>
+<TMPL_ELSE>
+	<TMPL_IF NAME=dataset/render-ref>
+		ran against <TMPL_VAR NAME=dataset/render-ref>
+	<TMPL_ELSE>
+		(<TMPL_VAR NAME=id>)
+	</TMPL_IF>
+</TMPL_IF>

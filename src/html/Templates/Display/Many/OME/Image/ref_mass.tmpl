@@ -1,17 +1,17 @@
-<!-- TMPL_IF NAME=/obj_loop -->
-	<!-- TMPL_VAR NAME=/pager_text -->
-	<!-- TMPL_IF NAME=/more_info_url -->
-		<!-- TMPL_IF NAME=/pager_text -->|<!-- /TMPL_IF -->
-		<a href="<!-- TMPL_VAR NAME=/more_info_url -->">More info...</a>
-	<!-- /TMPL_IF -->
+<TMPL_IF NAME=/obj_loop>
+	<TMPL_VAR NAME=/pager_text>
+	<TMPL_IF NAME=/more_info_url>
+		<TMPL_IF NAME=/pager_text>|</TMPL_IF>
+		<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a>
+	</TMPL_IF>
 	<span class='ome_quiet'>Clicking a thumbnail will open:
 <input type="radio" name="thumb_click_opens" value='viewer' checked>Image Viewer
 <input type="radio" name="thumb_click_opens" value='image_detail' >Image Detail
 </span>
 <br>
-	<!-- TMPL_LOOP NAME=/obj_loop -->
-		<!-- TMPL_VAR NAME=/object/render-ref -->
-	<!-- /TMPL_LOOP -->
-<!-- TMPL_ELSE -->
+	<TMPL_LOOP NAME=/obj_loop>
+		<TMPL_VAR NAME=/object/render-ref>
+	</TMPL_LOOP>
+<TMPL_ELSE>
 <b>(none)</b>
-<!-- /TMPL_IF -->
+</TMPL_IF>

@@ -2,33 +2,33 @@
 <TR>
 	<TD COLSPAN="2">
 		<table width="100%"><tr><td>
-		<a title="<!-- TMPL_VAR NAME=name -->" href="<!-- TMPL_VAR NAME=/obj_detail_url -->" class="ome_detail">
-			<!-- TMPL_VAR NAME=name/max_text_length-25 -->
+		<a title="<TMPL_VAR NAME=name>" href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail">
+			<TMPL_VAR NAME=name/max_text_length-25>
 		</a>
 		</td><td align="right">
-		<!-- TMPL_VAR NAME=/selector -->
+		<TMPL_VAR NAME=/selector>
 		</td></tr></table>
 	</TD>
 </TR>
 <TR>
 	<TD WIDTH="50">
-		<A TITLE="View this image" HREF="javascript: openPopUpImage(<!-- TMPL_VAR NAME=id -->);">
-			<IMG SRC="<!-- TMPL_VAR NAME=thumb_url -->">
+		<A TITLE="View this image" HREF="javascript: openPopUpImage(<TMPL_VAR NAME=id>);">
+			<IMG SRC="<TMPL_VAR NAME=thumb_url>">
 		</A>
 	</TD>
 	<TD ALIGN="left">
-		<!-- TMPL_VAR NAME=owner -->
+		<TMPL_VAR NAME=owner>
 		<BR>
-		<!-- TMPL_VAR NAME=group -->
+		<TMPL_VAR NAME=group>
 		<BR>
-		<!-- TMPL_VAR NAME=created -->
+		<TMPL_VAR NAME=created>
 	</TD>
 </TR>
 <TR>
 	<TD COLSPAN="2">
-		<!-- TMPL_VAR NAME=description/max_text_length-60 -->
+		<TMPL_VAR NAME=description/max_text_length-60>
 		<BR>
-		<!-- TMPL_VAR NAME=module_executions/render-popup -->
+		<TMPL_VAR NAME=module_executions/render-popup>
 	</TD>
 </TR>
 </TABLE>

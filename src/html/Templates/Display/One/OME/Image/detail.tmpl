@@ -1,39 +1,39 @@
 <table width="100%">
 	<caption>
-		<font class="ome_header_title">Image: <!-- TMPL_VAR NAME='name' --></font> 
+		<font class="ome_header_title">Image: <TMPL_VAR NAME='name'></font> 
 	</caption>
 	<tr>
 		<td valign="top">
 			<table width="50" style=" border: 1px #000000 solid;">
 				<tr>
 					<td width="50" valign="top">
-						<a title="View this image" href="javascript: openPopUpImage(<!-- TMPL_VAR NAME=id -->);"> <img src="<!-- TMPL_VAR NAME=thumb_url -->;"> </a> 
+						<a title="View this image" href="javascript: openPopUpImage(<TMPL_VAR NAME=id>);"> <img src="<TMPL_VAR NAME=thumb_url>;"> </a> 
 					</td>
 					<td align="left" valign="top">
 						<nobr>
-							Id: <!-- TMPL_VAR Name='id' -->,
+							Id: <TMPL_VAR Name='id'>,
 						</nobr>
 						<nobr>
-							Owner: <!-- TMPL_VAR NAME=owner -->,
+							Owner: <TMPL_VAR NAME=owner>,
 						</nobr>
 						<nobr>
-							Group: <!-- TMPL_VAR NAME=group -->,
+							Group: <TMPL_VAR NAME=group>,
 						</nobr><br>
 						<nobr>
-							Created: <!-- TMPL_VAR NAME=created -->,
+							Created: <TMPL_VAR NAME=created>,
 						</nobr><br>
 						<nobr>
-							Imported: <!-- TMPL_VAR NAME=inserted -->,
+							Imported: <TMPL_VAR NAME=inserted>,
 						</nobr><br>
 						<nobr>
-							Original File: <!-- TMPL_VAR NAME=original_file -->
+							Original File: <TMPL_VAR NAME=original_file>
 						</nobr>
 					</td>
 				</tr>
 				<tr>
 					<td colspan='2'>
 						Description:<br>
-						<textarea name="description" rows="5" cols="60"><!-- TMPL_VAR NAME='description' --></textarea>
+						<textarea name="description" rows="5" cols="60"><TMPL_VAR NAME='description'></textarea>
 					</td>
 				</tr>
 				<tr>
@@ -51,7 +51,7 @@
 		</td>
 		<td align="right" valign="top">
 			<font class="ome_relation_title">Module Executions:</font>
-				<!-- TMPL_VAR NAME=module_executions/render-ref_list -->
+				<TMPL_VAR NAME=module_executions/render-ref_list>
 		</td>
 	</tr>
 </table>
@@ -59,15 +59,15 @@
 	<tr>
 		<td align="left" valign="top" width="33%">
 			<font class="ome_relation_title">Datasets:</font>
-				<!-- TMPL_VAR NAME=datasets/render-ref_list --><br>
+				<TMPL_VAR NAME=datasets/render-ref_list><br>
 		</td>
 		<td align="center" valign="top" width="33%">
 			<font class="ome_relation_title">Pixel Sets:</font>
-				<!-- TMPL_VAR NAME=pixels/render-ref_list -->
+				<TMPL_VAR NAME=pixels/render-ref_list>
 		</td>
 		<td align="right" valign="top" width="33%">
 			<font class="ome_relation_title">Features:</font>
-				<!-- TMPL_VAR NAME=all_features/render-ref_list -->
+				<TMPL_VAR NAME=all_features/render-ref_list>
 		</td>
 	</tr>
 </table>
