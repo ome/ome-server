@@ -148,7 +148,7 @@ sub __getQuickViewImageData {
 		} else {
 			foreach ($d->images()) {
 				$i_content .= $q->a( {
-						href => 'javascript:openPopupImage(' . $_->id() . ');',
+						href => 'javascript:openPopUpImage(' . $_->id() . ');',
 						alt => 'N/A',
 					}, $q->img({src => $i_manager->getThumbURL($_), border => 1}));
 				$i_content .= '&nbsp';  # Spacing
