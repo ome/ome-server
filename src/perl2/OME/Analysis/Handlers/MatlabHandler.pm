@@ -147,6 +147,7 @@ sub new {
 	# Keyed by Tag name of elements under 'FunctionInputs'
 	$self->{ _translate_to_matlab } = {
 		PixelsInput => 'Pixels_to_MatlabArray',
+		PixelsSlice => 'PixelsSlice_to_MatlabArray',
 #		Scalar => 'Attr_to_MatlabScalar',
 #		Struct => 'Attr_to_MatlabStruct'
 	};
@@ -220,6 +221,7 @@ sub __openEngine {
 		my $session = OME::Session->instance();
 		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
 		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
+		print STDERR "matlab src dir is $matlab_src_dir\n";
 		$engine->eval("addpath(genpath('$matlab_src_dir'));");
 	}
 }
@@ -381,43 +383,128 @@ sub Pixels_to_MatlabArray {
 	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) );
 	my @pixel_attr_list = $self->getCurrentInputAttributes( $formal_input );
 	
-	foreach my $pixels (@pixel_attr_list) {
-		my $pixelType = $pixels->PixelType();
-		die "The OME-Matlab interface does not support $pixelType at this time."
-			unless exists $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-		my $class = $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-			
-		my $matlab_pixels = OME::Matlab::Array->newNumericArray(
-			$class,
-			$mxREAL,
-			$pixels->SizeX(),
-			$pixels->SizeY(),
-			$pixels->SizeZ(),
-			$pixels->SizeC(),
-			$pixels->SizeT()
-		) or die "Could not make an array in matlab for Pixels";
-		$matlab_pixels->makePersistent();
-	  
-		# FIXME: PixelsManager->getLocalFile( $pixels ) should implement 
-		#    the functionality below, but without loading the whole pixels
-		#    array into RAM
-
-		#  prepare for the incoming pixels
-		my $filename = $session->getTemporaryFilename("pixels","raw");
-		open my $pix, ">", $filename or die "Could not open local pixels file";
-		# FIXME: take endianess into consideration
-		my $buf = OME::Image::Server->getPixels($pixels->ImageServerID());
-		print $pix $buf;
-		close $pix;
-		
-		$self->{__engine}->eval("global $matlab_var_name");
-		$self->{__engine}->putVariable($matlab_var_name,$matlab_pixels);
-		
-		# magic one-liner. One liner means no variables are left in matlab's workplace
-		# this one-liner fills an array based on OMEIS's output which went to a temp file
-		$self->{__engine}->eval("[$matlab_var_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_var_name),'$pixelType');");
-		$session->finishTemporaryFile($filename);
+	if ( scalar @pixel_attr_list >= 1) {
+		print STDERR "The OME-Matlab interface does not support Formal inputs".
+		             " of arity greater than 1 at this time.\n";
+		return;
 	}
+	my $pixels = $pixel_attr_list[0];
+	
+	my $pixelType = $pixels->PixelType();
+	die "The OME-Matlab interface does not support $pixelType at this time."
+		unless exists $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
+	my $class = $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
+		
+	my $matlab_pixels = OME::Matlab::Array->newNumericArray(
+		$class,
+		$mxREAL,
+		$pixels->SizeX(),
+		$pixels->SizeY(),
+		$pixels->SizeZ(),
+		$pixels->SizeC(),
+		$pixels->SizeT()
+	) or die "Could not make an array in matlab for Pixels";
+	$matlab_pixels->makePersistent();
+  
+	# FIXME: PixelsManager->getLocalFile( $pixels ) should implement 
+	#    the functionality below, but without loading the whole pixels
+	#    array into RAM
+
+	#  prepare for the incoming pixels
+	my $filename = $session->getTemporaryFilename("pixels","raw");
+	open my $pix, ">", $filename or die "Could not open local pixels file";
+	# FIXME: take endianess into consideration
+	my $buf = OME::Image::Server->getPixels($pixels->ImageServerID());
+	print $pix $buf;
+	close $pix;
+	
+	$self->{__engine}->eval("global $matlab_var_name");
+	$self->{__engine}->putVariable($matlab_var_name,$matlab_pixels);
+	
+	# magic one-liner. One liner means no variables are left in matlab's workplace
+	# this one-liner fills an array based on OMEIS's output which went to a temp file
+	$self->{__engine}->eval("[$matlab_var_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_var_name),'$pixelType');");
+	$session->finishTemporaryFile($filename);
+}
+
+# Translate a PixelsSlice Input into a Matlab 5D array.
+# the guts of this were written by Tomasz
+sub PixelsSlice_to_MatlabArray {
+	my ( $self, $xmlInstr ) = @_;
+	my $session = OME::Session->instance();
+	
+	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
+	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) );
+	my @pixels_slice_attr_list = $self->getCurrentInputAttributes( $formal_input );
+
+	if ( scalar @pixels_slice_attr_list >= 1) {
+		print STDERR "The OME-Matlab interface does not support Formal inputs".
+		             " of arity greater than 1 at this time.\n";
+		return;
+	}
+	my $pixels_slice = $pixels_slice_attr_list[0];
+	
+	# is this a bona fide PixelsSlice or a PixelsSlice sub-class such as
+	# PixelsPlaneSlice
+	my $element = OME::Session->instance()->Factory()->
+	  findObject('OME::SemanticType::Element',
+				 {
+				  semantic_type => $pixels_slice->semantic_type(),
+				  name          => 'Parent',
+				 });
+ 	
+	if (defined $element) {
+		# convert the sub-class into the super-class
+		$pixels_slice = $pixels_slice->Parent();
+	}
+        
+	# get the dimensions of the pixels slice
+	my ($x0, $x1, $y0, $y1, $z0, $z1, $c0, $c1, $t0, $t1) =
+		($pixels_slice->StartX(), $pixels_slice->EndX(),
+		 $pixels_slice->StartY(), $pixels_slice->EndY(),
+		 $pixels_slice->StartZ(), $pixels_slice->EndZ(),
+		 $pixels_slice->StartC(), $pixels_slice->EndC(),
+		 $pixels_slice->StartT(), $pixels_slice->EndT());
+				
+	my $pixels = $pixels_slice->Pixels();
+	my $pixelType = $pixels->PixelType();
+	
+	die "The OME-Matlab interface does not support $pixelType at this time."
+		unless exists $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
+	my $class = $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
+		
+	my $matlab_pixels = OME::Matlab::Array->newNumericArray(
+		$class,
+		$mxREAL,
+		$x1-$x0+1,
+		$y1-$y0+1,
+		$z1-$z0+1,
+		$c1-$c0+1,
+		$t1-$t0+1
+	) or die "Could not make an array in matlab for Pixels";
+	$matlab_pixels->makePersistent();
+  
+	# FIXME: PixelsManager->getLocalFile( $pixels ) should implement 
+	#    the functionality below, but without loading the whole pixels
+	#    array into RAM
+
+	#  prepare for the incoming pixels
+	my $filename = $session->getTemporaryFilename("pixels","raw");
+	open my $pix, ">", $filename or die "Could not open local pixels file";
+	
+	# FIXME: take endianess into consideration
+	my $buf = OME::Image::Server->getROI($pixels->ImageServerID(), 
+		$x0,$y0,$z0,$c0,$t0,$x1,$y1,$z1,$c1,$t1, );
+	print $pix $buf;
+	close $pix;
+	
+	$self->{__engine}->eval("global $matlab_var_name");
+	$self->{__engine}->putVariable($matlab_var_name,$matlab_pixels);
+	
+	# magic one-liner. One liner means no variables are left in matlab's workplace
+	# this one-liner fills an array based on OMEIS's output which went to a temp file
+	$self->{__engine}->eval("[$matlab_var_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_var_name),'$pixelType');");
+	$session->finishTemporaryFile($filename);
 }
 
 sub MatlabScalar_to_Attr {
