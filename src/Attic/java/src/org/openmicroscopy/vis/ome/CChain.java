@@ -67,17 +67,15 @@ public class CChain extends RemoteChain  {
 	private static final double DELTA=0.1;
 	private boolean orderChanged = false;
 	
+	private List chainExecutions;
+	private Vector currentDatasetExecutions = null;
+	 
 	/** 
 	 * A subsidiary object used to encapsulate information about the layering
 	 */
 	private Layering layering  = new Layering();
 	
-	/**
-	 * A flag indicating whether or not this chain has any executions for 
-	 * the current dataset
-	 *
-	 */
-	private boolean executedInCurrentDataset = false;
+	private boolean executedInSelectedDataset=false;
 
 	public CChain() {
 		super();
@@ -87,6 +85,10 @@ public class CChain extends RemoteChain  {
 		super(session,reference);
 	}
 	
+	
+	public void loadExecutions(Connection connection) {
+		chainExecutions = connection.getChainExecutions(this);
+	}
 	
 	
 	public void layout() {
@@ -609,18 +611,55 @@ public class CChain extends RemoteChain  {
 			v.setElementAt(node,n);
 		}
 	}
-	/**
-	 * @return true if this chain has an execution in the current dataset
-	 */
-	public boolean hasExecutionsInCurrentDataset() {
-		return executedInCurrentDataset;
+
+	
+	public boolean hasExecutionsInDatasets(Collection datasets,
+			CDataset selected) {
+		boolean res = false;
+		Iterator iter = chainExecutions.iterator();
+		CChainExecution exec;
+		currentDatasetExecutions = new Vector();
+		
+		executedInSelectedDataset =false;
+		while (iter.hasNext()) {
+			exec = (CChainExecution) iter.next();
+			CDataset d = (CDataset)exec.getDataset();
+			if (datasets.contains(d)) {
+				if (selected == null) //return true for all things 
+					return true;
+				else if (selected == d) {
+					// otherwise, return true only for selected
+					executedInSelectedDataset=true;
+					currentDatasetExecutions.add(exec);
+					res = true;
+				}
+			}		
+		}
+		return res;
+	}
+	
+	
+	public List getCurrentDatasetExecutions() {
+		return currentDatasetExecutions;
 	}
 
+	
 	/**
-	 * @param b true if this chain has an execution in this dataset
+	 * @return
 	 */
-	public void setExecutedInCurrentDataset(boolean b) {
-		executedInCurrentDataset = b;
+	public boolean isExecutedInSelectedDataset() {
+		return executedInSelectedDataset;
 	}
 
+	public Collection getDatasetsWithExecutions() {
+		HashSet datasets = new HashSet();
+		Iterator iter = chainExecutions.iterator();
+		CChainExecution exec;
+		
+		while (iter.hasNext()) {
+			exec = (CChainExecution) iter.next();
+			datasets.add(exec.getDataset());
+		}
+		return datasets;		
+	}
  }
