@@ -3,7 +3,7 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
-		extractBinData insertBinData maxIntensity cgrayce2
+		maxIntensity cgrayce2
 DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql
 FINK_INCLUDE = -I/sw/include/
 INCS    = -I/usr/local/include $(FINK_INCLUDE) $(DB_INCLUDES)
@@ -116,12 +116,6 @@ $(OME_LIB): $(OBJECTS)
 cgrayce2:
 	$(MAKE) -C cgrayce
 
-extractBinData: extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -o extractBinData extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c $(BIN_DATA_LIBS)
-
-insertBinData: insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -o insertBinData insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c $(BIN_DATA_LIBS)
-
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
 	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
@@ -130,12 +124,6 @@ OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
 trackSpotsOMEwrpr.o : OMEdb.h
 OMEimportDVfile.o : OMEdb.h
-base64.o: base64.c base64.h
-	$(CC) $(CFLAGS) -c base64.c $(INCS)
-b64z_lib.o: b64z_lib.c b64z_lib.h
-	$(CC) $(CFLAGS) -c b64z_lib.c $(INCS)
-
-
 
 .PHONY : clean
 clean :
@@ -163,8 +151,6 @@ install:
 	install -c DumpSoftWorxHeader $(OME_ROOT)/bin/DumpSoftWorxHeader
 	install -c DumpSoftWorxExHeader $(OME_ROOT)/bin/DumpSoftWorxExHeader
 	install -c DumpSoftWorxStats $(OME_ROOT)/bin/DumpSoftWorxStats
-	install -c extractBinData $(OME_ROOT)/bin/extractBinData
-	install -c insertBinData $(OME_ROOT)/bin/insertBinData
 	install -c maxIntensity $(OME_ROOT)/bin/maxIntensity
 	install -d /usr/local/bin
 	install -c DumpDV /usr/local/bin/DumpDV
