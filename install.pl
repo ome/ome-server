@@ -27,17 +27,23 @@ use strict;
 #*********
 
 use Getopt::Long;
-use OME::Install::Environment;
+use OME::Install::FileSystemTask;
 
 #*********
 #********* GLOBALS AND DEFINES
 #*********
 
+# Tasks
+my @tasks = ("OME::Install::FileSystemTask");
+#my @tasks = ("OME::Install::PreInstall",
+#             "OME::Install::FileSystemTask",
+#             "OME::Install::PerlModuleTask" );
+
+# Main task queues
+my (@tasks_todo, @tasks_done);
+
 # Command line options
 my ($skipPasswordCheck, $defaultDirectories, $defaultUserDetails, $help, $fast);
-
-# Our OME::Install::Environment
-my $environment;
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -88,9 +94,12 @@ if ($fast) { $skipPasswordCheck 	= 1;
 	     $defaultUserDetails	= 1; }
 if ($help) { usage() }
 
-# Initialize our environment
-$environment = getInstance OME::Install::Environment;
+# Run our tasks
+foreach my $task (@tasks) {
+    $task .= "::execute";
+    eval $task;
+}
 
-# We need to drop our umask so that everyone can create files.
-print "Dropping umask to \"0000\".\n";
-umask (0000);
+print "Errors: $@\n";
+
+exit (0);
