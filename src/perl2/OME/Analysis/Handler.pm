@@ -23,15 +23,16 @@ package OME::Analysis::Handler;
 use strict;
 our $VERSION = '1.0';
 
-use fields qw(_location _factory);
+use fields qw(_location _factory _program);
 
 sub new {
-    my ($proto,$location,$factory) = @_;
+    my ($proto,$location,$factory,$program) = @_;
     my $class = ref($proto) || $proto;
 
     my $self = {};
     $self->{_location} = $location;
     $self->{_factory} = $factory;
+    $self->{_program} = $program;
 
     bless $self, $class;
     return $self;

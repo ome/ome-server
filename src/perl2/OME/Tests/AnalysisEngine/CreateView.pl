@@ -74,6 +74,9 @@ print $calcXyzInfo->program_name()." (".$calcXyzInfo->id().")\n";
 my $calcXyInfo = OME::Program->findByName('Plane statistics');
 print $calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
 
+my $findSpots = OME::Program->findByName('Find spots');
+print $findSpots->program_name()." (".$findSpots->id().")\n";
+
 print "Chain with 1 node...\n";
 
 my $view = $factory->newObject("OME::AnalysisView",{
@@ -142,7 +145,93 @@ $node1 = $factory->newObject("OME::AnalysisView::Node",{
     analysis_view => $view,
     program       => $calcXyInfo
     });
+print "    Node 2 ".$node1->program()->program_name()." (".$node1->id().")\n";
+
+
+print "Find spots chain...\n";
+
+my $view = $factory->newObject("OME::AnalysisView",{
+    owner => $session->User(),
+    name  => "Find spots"
+    });
+die "Bad view" if !defined $view;
+print "  ".$view->name()." (".$view->id().")\n";
+
+
+$node1 = $factory->newObject("OME::AnalysisView::Node",{
+    analysis_view => $view,
+    program       => $calcXyzInfo
+    });
 print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
+
+$node2 = $factory->newObject("OME::AnalysisView::Node",{
+    analysis_view => $view,
+    program       => $findSpots
+    });
+print "    Node 2 ".$node2->program()->program_name()." (".$node2->id().")\n";
+
+$link = $factory->newObject("OME::AnalysisView::Link",{
+    analysis_view => $view,
+    from_node     => $node1,
+    from_output   => $node1->program()->findOutputByName('Wave'),
+    to_node       => $node2,
+    to_input      => $node2->program()->findInputByName('Wavelength')
+    });
+print "    Link [Node 1.Wavelength]->[Node 2.Wavelength]\n";
+
+$link = $factory->newObject("OME::AnalysisView::Link",{
+    analysis_view => $view,
+    from_node     => $node1,
+    from_output   => $node1->program()->findOutputByName('Time'),
+    to_node       => $node2,
+    to_input      => $node2->program()->findInputByName('Timepoint')
+    });
+print "    Link [Node 1.Timepoint]->[Node 2.Timepoint]\n";
+
+$link = $factory->newObject("OME::AnalysisView::Link",{
+    analysis_view => $view,
+    from_node     => $node1,
+    from_output   => $node1->program()->findOutputByName('Min'),
+    to_node       => $node2,
+    to_input      => $node2->program()->findInputByName('Minimum')
+    });
+print "    Link [Node 1.Minimum]->[Node 2.Minimum]\n";
+
+$link = $factory->newObject("OME::AnalysisView::Link",{
+    analysis_view => $view,
+    from_node     => $node1,
+    from_output   => $node1->program()->findOutputByName('Max'),
+    to_node       => $node2,
+    to_input      => $node2->program()->findInputByName('Maximum')
+    });
+print "    Link [Node 1.Maximum]->[Node 2.Maximum]\n";
+
+$link = $factory->newObject("OME::AnalysisView::Link",{
+    analysis_view => $view,
+    from_node     => $node1,
+    from_output   => $node1->program()->findOutputByName('Mean'),
+    to_node       => $node2,
+    to_input      => $node2->program()->findInputByName('Mean')
+    });
+print "    Link [Node 1.Mean]->[Node 2.Mean]\n";
+
+$link = $factory->newObject("OME::AnalysisView::Link",{
+    analysis_view => $view,
+    from_node     => $node1,
+    from_output   => $node1->program()->findOutputByName('GeoMean'),
+    to_node       => $node2,
+    to_input      => $node2->program()->findInputByName('Geometric mean')
+    });
+print "    Link [Node 1.Geometric mean]->[Node 2.Geometric mean]\n";
+
+$link = $factory->newObject("OME::AnalysisView::Link",{
+    analysis_view => $view,
+    from_node     => $node1,
+    from_output   => $node1->program()->findOutputByName('Sigma'),
+    to_node       => $node2,
+    to_input      => $node2->program()->findInputByName('Sigma')
+    });
+print "    Link [Node 1.Sigma]->[Node 2.Sigma]\n";
 
 
 

@@ -78,9 +78,7 @@ sub precalculateImage {
     print STDERR "      Average: $numAverage\n";
     print STDERR "      Dim:     $numDim\n";
 
-    my $datatype = OME::DataType->findByTable("SIMPLE_COUNTS");
-    my $pkg = $datatype->getAttributePackage();
-    my $attribute = $factory->newObject($pkg,{
+    my $attribute = $factory->newAttribute('SIMPLE_COUNTS',{
 	image_id    => $image->id(),
 	num_bright  => $numBright,
 	num_average => $numAverage,

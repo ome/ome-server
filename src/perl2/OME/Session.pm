@@ -25,7 +25,7 @@ use strict;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
-
+use POSIX;
 
 
 use fields qw(Factory Manager DBH ApacheSession SessionKey);
@@ -54,6 +54,30 @@ __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 sub DBH { my $self = shift; return $self->{Manager}->DBH(); }
 sub User { my $self = shift; return $self->experimenter(); }
 
+sub getTemporaryFilename {
+    my $self = shift;
+    my $progName = shift;
+    my $extension = shift;
+    my $count=-1;
+
+    my $base_name;
+    local *FH;
+    
+    until (defined(fileno(FH)) || $count++ > 999)
+    {
+	$base_name = sprintf("%s/%s-%03d.%s", 
+			     "/tmp",
+			     $progName,$count,$extension);
+	sysopen(FH, $base_name, O_WRONLY|O_EXCL|O_CREAT);
+    }
+    if (defined(fileno(FH)) )
+    {
+	close (FH);
+	return ($base_name);
+    } else {
+	return ();
+    }
+}
 
 
 1;

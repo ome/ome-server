@@ -122,4 +122,13 @@ sub newObject {
     return $object;
 }
 
+sub newAttribute {
+    my ($self, $attribute_table, $data) = @_;
+
+    #print STDERR "@@@ $attribute_table\n";
+    my $datatype = OME::DataType->findByTable($attribute_table);
+    my $pkg = $datatype->requireAttributePackage();
+    return $self->newObject($pkg,$data);
+}
+
 1;

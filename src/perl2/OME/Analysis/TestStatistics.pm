@@ -95,9 +95,7 @@ sub precalculateImage {
     print STDERR "      Min:  $min\n";
     print STDERR "      Max:  $max\n";
 
-    my $datatype = OME::DataType->findByTable("SIMPLE_STATISTICS");
-    my $pkg = $datatype->getAttributePackage();
-    my $attribute = $factory->newObject($pkg,{
+    my $attribute = $factory->newAttribute('SIMPLE_STATISTICS',{
 	image_id => $image->id(),
 	avg_intensity => int($mean),
 	min_intensity => $min,

@@ -138,170 +138,170 @@ sub findModuleHandler {
     # will look for their values in the $input_attributes parameter,
     # and push those values into the hash accordingly.
     sub __initializeNode {
-	my $program = $curr_node->program();
-	my $module_type = $program->module_type();
-	my $location = $program->location();
+        my $program = $curr_node->program();
+        my $module_type = $program->module_type();
+        my $location = $program->location();
 
-	$nodes{$curr_nodeID} = $curr_node;
-	
-	print STDERR "  ".$program->program_name()."\n";
-	
-	print STDERR "    Loading module $location via handler $module_type\n";
-	my $handler = findModuleHandler($module_type);
-	eval "require $handler";
-	my $module = $handler->new($location,$factory,$program);
-	$node_modules{$curr_nodeID} = $module;
-	
-	print STDERR "    Sorting input links by granularity\n";
-	
-	$input_links{$curr_nodeID}->{D} = [];
-	$input_links{$curr_nodeID}->{I} = [];
-	$input_links{$curr_nodeID}->{F} = [];
-	
-	# this pushes only linked inputs
-	my @inputs = $curr_node->input_links();
-	foreach my $input (@inputs) {
-	    my $attribute_type = $input->to_input()->
-		column_type()->
-		datatype()->
-		attribute_type();
-	    push @{$input_links{$curr_nodeID}->{$attribute_type}}, $input;
-	    print "      $attribute_type ".$input->to_input()->name()."\n";
-	}
-	
-	# where this pushes them all
-	#my @inputs = $program->inputs();
-	#foreach my $input (@inputs) {
-	#    my $attribute_type = $input->
-	#	column_type()->
-	#	datatype()->
-	#	attribute_type();
-	#    push @{$input_links{$curr_nodeID}->{$attribute_type}}, $input;
-	#}
-	
-	print STDERR "    Sorting outputs by granularity\n";
+        $nodes{$curr_nodeID} = $curr_node;
+        
+        print STDERR "  ".$program->program_name()."\n";
+        
+        print STDERR "    Loading module $location via handler $module_type\n";
+        my $handler = findModuleHandler($module_type);
+        eval "require $handler";
+        my $module = $handler->new($location,$factory,$program);
+        $node_modules{$curr_nodeID} = $module;
+        
+        print STDERR "    Sorting input links by granularity\n";
+        
+        $input_links{$curr_nodeID}->{D} = [];
+        $input_links{$curr_nodeID}->{I} = [];
+        $input_links{$curr_nodeID}->{F} = [];
+        
+        # this pushes only linked inputs
+        my @inputs = $curr_node->input_links();
+        foreach my $input (@inputs) {
+            my $attribute_type = $input->to_input()->
+                column_type()->
+                datatype()->
+                attribute_type();
+            push @{$input_links{$curr_nodeID}->{$attribute_type}}, $input;
+            print "      $attribute_type ".$input->to_input()->name()."\n";
+        }
+        
+        # where this pushes them all
+        #my @inputs = $program->inputs();
+        #foreach my $input (@inputs) {
+        #    my $attribute_type = $input->
+        #        column_type()->
+        #        datatype()->
+        #        attribute_type();
+        #    push @{$input_links{$curr_nodeID}->{$attribute_type}}, $input;
+        #}
+        
+        print STDERR "    Sorting outputs by granularity\n";
 
-	$output_links{$curr_nodeID}->{D} = [];
-	$output_links{$curr_nodeID}->{I} = [];
-	$output_links{$curr_nodeID}->{F} = [];
-	
-	# ditto above
-	#my @outputs = $curr_node->output_links();
-	#foreach my $output (@outputs) {
-	#    my $attribute_type = $output->from_output()->
-	#	column_type()->
-	#	datatype()->
-	#	attribute_type();
-	#    push @{$output_links{$curr_nodeID}->{$attribute_type}}, $output;
-	#}
-	
-	my @outputs = $program->outputs();
-	foreach my $output (@outputs) {
-	    my $attribute_type = $output->
-		column_type()->
-		datatype()->
-		attribute_type();
-	    push @{$output_links{$curr_nodeID}->{$attribute_type}}, $output;
-	    print "      $attribute_type ".$output->name()."\n";
-	}
-	
-	$node_states{$curr_nodeID} = INPUT_STATE;
+        $output_links{$curr_nodeID}->{D} = [];
+        $output_links{$curr_nodeID}->{I} = [];
+        $output_links{$curr_nodeID}->{F} = [];
+        
+        # ditto above
+        #my @outputs = $curr_node->output_links();
+        #foreach my $output (@outputs) {
+        #    my $attribute_type = $output->from_output()->
+        #        column_type()->
+        #        datatype()->
+        #        attribute_type();
+        #    push @{$output_links{$curr_nodeID}->{$attribute_type}}, $output;
+        #}
+        
+        my @outputs = $program->outputs();
+        foreach my $output (@outputs) {
+            my $attribute_type = $output->
+                column_type()->
+                datatype()->
+                attribute_type();
+            push @{$output_links{$curr_nodeID}->{$attribute_type}}, $output;
+            print "      $attribute_type ".$output->name()."\n";
+        }
+        
+        $node_states{$curr_nodeID} = INPUT_STATE;
     }
 
     # Returns true if a node has no predecessors.
     sub __rootNode {
-	my ($node) = @_;
-	foreach my $granularity ('D','I','F') {
-	    my $inputs = $input_links{$node->id()}->{$granularity};
-	    return 0 if (scalar(@$inputs) > 0);
-	}
-	return 1;
+        my ($node) = @_;
+        foreach my $granularity ('D','I','F') {
+            my $inputs = $input_links{$node->id()}->{$granularity};
+            return 0 if (scalar(@$inputs) > 0);
+        }
+        return 1;
     }
 
     # Returns a list of successor nodes to a node.
     sub __successors {
-	my ($nodeID) = @_;
-	my (@succ, %succ);
-	my $outputs = $nodes{$nodeID}->output_links();
-	while (my $output = $outputs->next()) {
-	    my $succ_nodeID = $output->to_node()->id();
-	    if ($succ{$succ_nodeID} != 1) {
-		push @succ, $succ_nodeID;
-		$succ{$succ_nodeID} = 1;
-	    }
-	}
-	return \@succ;
+        my ($nodeID) = @_;
+        my (@succ, %succ);
+        my $outputs = $nodes{$nodeID}->output_links();
+        while (my $output = $outputs->next()) {
+            my $succ_nodeID = $output->to_node()->id();
+            if ($succ{$succ_nodeID} != 1) {
+                push @succ, $succ_nodeID;
+                $succ{$succ_nodeID} = 1;
+            }
+        }
+        return \@succ;
     }
 
     sub __buildDataPaths {
-	print STDERR "  Building data paths\n";
+        print STDERR "  Building data paths\n";
 
-	# A data path is represented by a list of node ID's, starting
-	# with a root node and ending with a leaf node.
+        # A data path is represented by a list of node ID's, starting
+        # with a root node and ending with a leaf node.
 
-	# First, we create paths for each root node in the chain
-	foreach my $node (@nodes) {
-	    if (__rootNode($node)) {
-		print STDERR "    Found root node ".$node->id()."\n";
-		my $path = [$node->id()];
-		push @data_paths, $path;
-	    }
-	}
+        # First, we create paths for each root node in the chain
+        foreach my $node (@nodes) {
+            if (__rootNode($node)) {
+                print STDERR "    Found root node ".$node->id()."\n";
+                my $path = [$node->id()];
+                push @data_paths, $path;
+            }
+        }
 
-	# Then, we iteratively extend each path until it reaches a
-	# leaf node.  If at any point, it branches, we create
-	# duplicates so that there is one path per branch-point.
-	my $continue = 1;
-	while ($continue) {
-	    $continue = 0;
-	    my @new_paths;
-	    while (my $data_path = shift(@data_paths)) {
-		my $end_nodeID = $data_path->[$#$data_path];
-		my $successors = __successors($end_nodeID);
-		my $num_successors = scalar(@$successors);
+        # Then, we iteratively extend each path until it reaches a
+        # leaf node.  If at any point, it branches, we create
+        # duplicates so that there is one path per branch-point.
+        my $continue = 1;
+        while ($continue) {
+            $continue = 0;
+            my @new_paths;
+            while (my $data_path = shift(@data_paths)) {
+                my $end_nodeID = $data_path->[$#$data_path];
+                my $successors = __successors($end_nodeID);
+                my $num_successors = scalar(@$successors);
 
-		if ($num_successors == 0) {
-		    push @new_paths,$data_path;
-		} elsif ($num_successors == 1) {
-		    print STDERR "    Extending ".
-			join(':',@$data_path)." with ".
-			$successors->[0]."\n";
-		    push @$data_path, $successors->[0];
-		    push @new_paths,$data_path;
-		    $continue = 1;
-		} else {
-		    foreach my $successor (@$successors) {
-			# make a copy
-			my $new_path = [@$data_path];
-			print STDERR "    Extending ".
-			    join(':',@$new_path)." with ".
-			    $successor."\n";
-			push @$new_path, $successor;
-			push @new_paths, $new_path;
-		    }
-		    $continue = 1;
-		}
-	    }
+                if ($num_successors == 0) {
+                    push @new_paths,$data_path;
+                } elsif ($num_successors == 1) {
+                    print STDERR "    Extending ".
+                        join(':',@$data_path)." with ".
+                        $successors->[0]."\n";
+                    push @$data_path, $successors->[0];
+                    push @new_paths,$data_path;
+                    $continue = 1;
+                } else {
+                    foreach my $successor (@$successors) {
+                        # make a copy
+                        my $new_path = [@$data_path];
+                        print STDERR "    Extending ".
+                            join(':',@$new_path)." with ".
+                            $successor."\n";
+                        push @$new_path, $successor;
+                        push @new_paths, $new_path;
+                    }
+                    $continue = 1;
+                }
+            }
 
-	    @data_paths = @new_paths;
-	}
+            @data_paths = @new_paths;
+        }
 
-	foreach my $data_path_list (@data_paths) {
-	    my $data_path = $factory->newObject("OME::AnalysisPath",{
-		path_length => scalar(@$data_path_list)
-	    });
-	    my $data_pathID = $data_path->id();
+        foreach my $data_path_list (@data_paths) {
+            my $data_path = $factory->newObject("OME::AnalysisPath",{
+                path_length => scalar(@$data_path_list)
+            });
+            my $data_pathID = $data_path->id();
 
-	    my $order = 0;
-	    foreach my $nodeID (@$data_path_list) {
-		my $path_entry = {
-		    path        => $data_path,
-		    path_order  => $order
-		    };
-		push @{$data_paths{$nodeID}}, $path_entry;
-		$order++;
-	    }
-	}
+            my $order = 0;
+            foreach my $nodeID (@$data_path_list) {
+                my $path_entry = {
+                    path        => $data_path,
+                    path_order  => $order
+                    };
+                push @{$data_paths{$nodeID}}, $path_entry;
+                $order++;
+            }
+        }
     }
 
     # Returns the correct ANALYSIS entry for the current node.  Takes
@@ -309,80 +309,80 @@ sub findModuleHandler {
     # per-image node, it finds the ANALYSIS entry for the current
     # image.
     sub __getAnalysis {
-	my ($nodeID) = @_;
+        my ($nodeID) = @_;
 
-	if ($dependence{$nodeID} eq 'D') {
-	    return $perdataset_analysis{$nodeID};
-	} else {
-	    return $perimage_analysis{$nodeID}->{$curr_imageID};
-	}
+        if ($dependence{$nodeID} eq 'D') {
+            return $perdataset_analysis{$nodeID};
+        } else {
+            return $perimage_analysis{$nodeID}->{$curr_imageID};
+        }
     }
 
     # Creates ACTUAL_INPUT entries in the database for a node's input
     # link and a list of attributes.
     sub __createActualInputs {
-	my ($input,$attribute_list) = @_;
-	
-	my $formal_input = $input->to_input();
-	print STDERR "      Actual input ".$formal_input->name()."...";
-	
-	my $count = 0;
-	foreach my $attribute (@$attribute_list) {
-	    my $actual_input_data = {
-		analysis     => __getAnalysis($curr_nodeID),
-		formal_input => $formal_input,
-		attribute_id => $attribute->id()
-		};
-	    my $actual_input = $factory->newObject("OME::Analysis::ActualInput",
-						   $actual_input_data);
-	    $count++;
-	}
-	
-	my $s = ($count == 1)? "": "s";
-	print STDERR $count." item$s\n";
+        my ($input,$attribute_list) = @_;
+        
+        my $formal_input = $input->to_input();
+        #print STDERR "      Actual input ".$formal_input->name()."...";
+        
+        my $count = 0;
+        foreach my $attribute (@$attribute_list) {
+            my $actual_input_data = {
+                analysis     => __getAnalysis($curr_nodeID),
+                formal_input => $formal_input,
+                attribute_id => $attribute->id()
+                };
+            my $actual_input = $factory->newObject("OME::Analysis::ActualInput",
+                                                   $actual_input_data);
+            $count++;
+        }
+        
+        my $s = ($count == 1)? "": "s";
+        #print STDERR $count." item$s\n";
     }
 
     # Creates ACTUAL_OUTPUT entries in the database for a formal
     # output and a list of attributes.
     sub __createActualOutputs {
-	my ($output,$attribute_list) = @_;
-	
-	my $formal_output = $output;#->from_output();
-	print STDERR "      Actual output ".$formal_output->name()."...";
-	
-	my $count = 0;
-	foreach my $attribute (@$attribute_list) {
-	    my $actual_output_data = {
-		analysis      => __getAnalysis($curr_nodeID),
-		formal_output => $formal_output,
-		attribute_id  => $attribute->id()
-		};
-	    my $actual_output = $factory->newObject("OME::Analysis::ActualOutput",
-						    $actual_output_data);
-	    $count++;
-	}
+        my ($output,$attribute_list) = @_;
+        
+        my $formal_output = $output;#->from_output();
+        #print STDERR "      Actual output ".$formal_output->name()."...";
+        
+        my $count = 0;
+        foreach my $attribute (@$attribute_list) {
+            my $actual_output_data = {
+                analysis      => __getAnalysis($curr_nodeID),
+                formal_output => $formal_output,
+                attribute_id  => $attribute->id()
+                };
+            my $actual_output = $factory->newObject("OME::Analysis::ActualOutput",
+                                                    $actual_output_data);
+            $count++;
+        }
 
-	my $s = ($count == 1)? "": "s";
-	print STDERR $count." item$s\n";
+        my $s = ($count == 1)? "": "s";
+        #print STDERR $count." item$s\n";
     }
 
     # If any of the predecessors has not finished, then this
     # node is not ready to run.
     sub __testModulePredecessors {
-	my $ready = 1;
+        my $ready = 1;
       TEST_PRED:
-	foreach my $granularity ('D','I','F') {
-	    my $inputs = $input_links{$curr_nodeID}->{$granularity};
-	    foreach my $input (@$inputs) {
-		my $pred_node = $input->from_node();
-		if ($node_states{$pred_node->id()} < FINISHED_STATE) {
-		    $ready = 0;
-		    last TEST_PRED;
-		}
-	    }
-	}
-	
-	return $ready;
+        foreach my $granularity ('D','I','F') {
+            my $inputs = $input_links{$curr_nodeID}->{$granularity};
+            foreach my $input (@$inputs) {
+                my $pred_node = $input->from_node();
+                if ($node_states{$pred_node->id()} < FINISHED_STATE) {
+                    $ready = 0;
+                    last TEST_PRED;
+                }
+            }
+        }
+        
+        return $ready;
     }
 
     # Determines whether the current node is a per-dataset or
@@ -394,27 +394,27 @@ sub findModuleHandler {
     # results can be reused.
     sub __determineDependence {
         if (scalar(@curr_dataset_inputs) > 0) {
-	    $dependence{$curr_nodeID} = 'D';
-	    return;
-	}
-	
-	if (scalar(@curr_dataset_outputs) > 0) {
-	    $dependence{$curr_nodeID} = 'D';
-	    return;
-	}
+            $dependence{$curr_nodeID} = 'D';
+            return;
+        }
+        
+        if (scalar(@curr_dataset_outputs) > 0) {
+            $dependence{$curr_nodeID} = 'D';
+            return;
+        }
 
-	foreach my $granularity ('D','I','F') {
-	    my $inputs = $input_links{$curr_nodeID}->{$granularity};
-	    foreach my $input (@$inputs) {
-		my $pred_node = $input->from_node();
+        foreach my $granularity ('D','I','F') {
+            my $inputs = $input_links{$curr_nodeID}->{$granularity};
+            foreach my $input (@$inputs) {
+                my $pred_node = $input->from_node();
                 if ($dependence{$pred_node->id()} eq 'D') {
-		    $dependence{$curr_nodeID} = 'D';
-		    return;
-		}
-	    }
-	}
+                    $dependence{$curr_nodeID} = 'D';
+                    return;
+                }
+            }
+        }
 
-	$dependence{$curr_nodeID} = 'I';
+        $dependence{$curr_nodeID} = 'I';
     }
 
     # The following routines are used to check to see if we need to
@@ -434,150 +434,150 @@ sub findModuleHandler {
     # modules are available.  It is the attribute ID's of these
     # results that are encoded into the input tag.
     sub __calculateCurrentInputTag {
-	my $paramString;
+        my $paramString;
 
-	if ($dependence{$curr_nodeID} eq 'D') {
-	    $paramString = "D ".$dataset->id()." ";
-	} else {
-	    $paramString = "I ".$curr_imageID." ";
-	}
+        if ($dependence{$curr_nodeID} eq 'D') {
+            $paramString = "D ".$dataset->id()." ";
+        } else {
+            $paramString = "I ".$curr_imageID." ";
+        }
 
-	$paramString .= "d ";
-	foreach my $input (@curr_dataset_inputs) {
-	    print STDERR "*** $input\n";
-	    my $formal_input = $input->to_input();
-	    my $formal_output = $input->from_output();
-	    my $pred_node = $input->from_node();
-	    $paramString .= $formal_input->id()."(";
-	    my $attribute_list = $dataset_outputs{$pred_node->id()}->{$formal_output->id()};
-	    if (ref($attribute_list) ne 'ARRAY') {
-		$attribute_list = [$attribute_list];
-	    }
-	    foreach my $attribute (sort {$a->id() <=> $b->id()} @$attribute_list) {
-		$paramString .= $attribute->id()." ";
-	    }
-	    $paramString .= ") ";
-	}
+        $paramString .= "d ";
+        foreach my $input (@curr_dataset_inputs) {
+            print STDERR "*** $input\n";
+            my $formal_input = $input->to_input();
+            my $formal_output = $input->from_output();
+            my $pred_node = $input->from_node();
+            $paramString .= $formal_input->id()."(";
+            my $attribute_list = $dataset_outputs{$pred_node->id()}->{$formal_output->id()};
+            if (ref($attribute_list) ne 'ARRAY') {
+                $attribute_list = [$attribute_list];
+            }
+            foreach my $attribute (sort {$a->id() <=> $b->id()} @$attribute_list) {
+                $paramString .= $attribute->id()." ";
+            }
+            $paramString .= ") ";
+        }
 
-	$paramString .= "i ";
-	foreach my $input (@curr_image_inputs) {
-	    my $formal_input = $input->to_input();
-	    my $formal_output = $input->from_output();
-	    my $pred_node = $input->from_node();
-	    $paramString .= $formal_input->id()."(";
-	    my $attribute_hash = $image_outputs{$pred_node->id()}->{$formal_output->id()};
-	    my @attribute_list;
+        $paramString .= "i ";
+        foreach my $input (@curr_image_inputs) {
+            my $formal_input = $input->to_input();
+            my $formal_output = $input->from_output();
+            my $pred_node = $input->from_node();
+            $paramString .= $formal_input->id()."(";
+            my $attribute_hash = $image_outputs{$pred_node->id()}->{$formal_output->id()};
+            my @attribute_list;
 
-	    if ($dependence{$curr_nodeID} eq 'D') {
-		foreach my $imageID (keys %$attribute_hash) {
-		    push @attribute_list, @{$attribute_hash->{$imageID}};
-		}
-	    } else {
-		push @attribute_list, @{$attribute_hash->{$curr_imageID}};
-	    }
-		
-	    foreach my $attribute (sort {$a->id() <=> $b->id()} @attribute_list) {
-		$paramString .= $attribute->id()." ";
-	    }
-	    $paramString .= ") ";
-	}
-	
-	$paramString .= "f ";
-	foreach my $input (@curr_feature_inputs) {
-	    my $formal_input = $input->to_input();
-	    my $formal_output = $input->from_output();
-	    my $pred_node = $input->from_node();
-	    $paramString .= $formal_input->id()."(";
-	    my $attribute_hash = $feature_outputs{$pred_node->id()}->{$formal_output->id()};
-	    my @attribute_list;
+            if ($dependence{$curr_nodeID} eq 'D') {
+                foreach my $imageID (keys %$attribute_hash) {
+                    push @attribute_list, @{$attribute_hash->{$imageID}};
+                }
+            } else {
+                push @attribute_list, @{$attribute_hash->{$curr_imageID}};
+            }
+                
+            foreach my $attribute (sort {$a->id() <=> $b->id()} @attribute_list) {
+                $paramString .= $attribute->id()." ";
+            }
+            $paramString .= ") ";
+        }
+        
+        $paramString .= "f ";
+        foreach my $input (@curr_feature_inputs) {
+            my $formal_input = $input->to_input();
+            my $formal_output = $input->from_output();
+            my $pred_node = $input->from_node();
+            $paramString .= $formal_input->id()."(";
+            my $attribute_hash = $feature_outputs{$pred_node->id()}->{$formal_output->id()};
+            my @attribute_list;
 
-	    if ($dependence{$curr_nodeID} eq 'D') {
-		foreach my $imageID (keys %$attribute_hash) {
-		    my $feature_hash = $attribute_hash->{$imageID};
-		    foreach my $featureID (keys %$feature_hash) {
-			push @attribute_list, @{$feature_hash->{$featureID}};
-		    }
-		}
-	    } else {
-		my $feature_hash = $attribute_hash->{$curr_imageID};
-		foreach my $featureID (keys %$feature_hash) {
-		    push @attribute_list, @{$feature_hash->{$featureID}};
-		}
-	    }
-		
-	    foreach my $attribute (sort {$a->id() <=> $b->id()} @attribute_list) {
-		$paramString .= $attribute->id()." ";
-	    }
-	    $paramString .= ") ";
-	}
+            if ($dependence{$curr_nodeID} eq 'D') {
+                foreach my $imageID (keys %$attribute_hash) {
+                    my $feature_hash = $attribute_hash->{$imageID};
+                    foreach my $featureID (keys %$feature_hash) {
+                        push @attribute_list, @{$feature_hash->{$featureID}};
+                    }
+                }
+            } else {
+                my $feature_hash = $attribute_hash->{$curr_imageID};
+                foreach my $featureID (keys %$feature_hash) {
+                    push @attribute_list, @{$feature_hash->{$featureID}};
+                }
+            }
+                
+            foreach my $attribute (sort {$a->id() <=> $b->id()} @attribute_list) {
+                $paramString .= $attribute->id()." ";
+            }
+            $paramString .= ") ";
+        }
 
-	return $paramString;
+        return $paramString;
     }
 
     # This routine calculates the input tag of a previous analysis.
     # All of the appropriate elements of the tag can be retrieved from
     # the ANALYSES and ACTUAL_INPUTS tables.
     sub __calculatePastInputTag {
-	my ($past_analysis) = @_;
-	my $past_paramString;
+        my ($past_analysis) = @_;
+        my $past_paramString;
 
-	if ($past_analysis->dependence() eq 'D') {
-	    $past_paramString = "D ".$past_analysis->dataset()->id()." ";
-	} else {
-	    $past_paramString = "I ".$past_analysis->image()->id()." ";
-	}
+        if ($past_analysis->dependence() eq 'D') {
+            $past_paramString = "D ".$past_analysis->dataset()->id()." ";
+        } else {
+            $past_paramString = "I ".$past_analysis->image()->id()." ";
+        }
 
-	my @all_actuals = $past_analysis->inputs();
-	my %actuals;
-	foreach my $actual (@all_actuals) {
-	    my $formal_input = $actual->formal_input();
-	    push @{$actuals{$formal_input->id()}}, $actual;
-	}
+        my @all_actuals = $past_analysis->inputs();
+        my %actuals;
+        foreach my $actual (@all_actuals) {
+            my $formal_input = $actual->formal_input();
+            push @{$actuals{$formal_input->id()}}, $actual;
+        }
 
-	foreach my $formal_inputID (keys %actuals) {
-	    my @sorted = sort {
-		$a->attribute_id() <=> $b->attribute_id()
-		} @{$actuals{$formal_inputID}};
-	    $actuals{$formal_inputID} = \@sorted;
-	}
-	
-	$past_paramString .= "d ";
-	foreach my $input (@curr_dataset_inputs) {
-	    my $formal_input = $input->to_input();
-	    $past_paramString .= $formal_input->id()."(";
-	    my $actuals = $actuals{$formal_input->id()};
-	    
-	    foreach my $actual (@$actuals) {
-		$past_paramString .= $actual->attribute_id()." ";
-	    }
-	    $past_paramString .= ") ";
-	}
-	
-	$past_paramString .= "i ";
-	foreach my $input (@curr_image_inputs) {
-	    my $formal_input = $input->to_input();
-	    $past_paramString .= $formal_input->id()."(";
-	    my $actuals = $actuals{$formal_input->id()};
-	    
-	    foreach my $actual (@$actuals) {
-		$past_paramString .= $actual->attribute_id()." ";
-	    }
-	    $past_paramString .= ") ";
-	}
-	
-	$past_paramString .= "f ";
-	foreach my $input (@curr_feature_inputs) {
-	    my $formal_input = $input->to_input();
-	    $past_paramString .= $formal_input->id()."(";
-	    my $actuals = $actuals{$formal_input->id()};
+        foreach my $formal_inputID (keys %actuals) {
+            my @sorted = sort {
+                $a->attribute_id() <=> $b->attribute_id()
+                } @{$actuals{$formal_inputID}};
+            $actuals{$formal_inputID} = \@sorted;
+        }
+        
+        $past_paramString .= "d ";
+        foreach my $input (@curr_dataset_inputs) {
+            my $formal_input = $input->to_input();
+            $past_paramString .= $formal_input->id()."(";
+            my $actuals = $actuals{$formal_input->id()};
+            
+            foreach my $actual (@$actuals) {
+                $past_paramString .= $actual->attribute_id()." ";
+            }
+            $past_paramString .= ") ";
+        }
+        
+        $past_paramString .= "i ";
+        foreach my $input (@curr_image_inputs) {
+            my $formal_input = $input->to_input();
+            $past_paramString .= $formal_input->id()."(";
+            my $actuals = $actuals{$formal_input->id()};
+            
+            foreach my $actual (@$actuals) {
+                $past_paramString .= $actual->attribute_id()." ";
+            }
+            $past_paramString .= ") ";
+        }
+        
+        $past_paramString .= "f ";
+        foreach my $input (@curr_feature_inputs) {
+            my $formal_input = $input->to_input();
+            $past_paramString .= $formal_input->id()."(";
+            my $actuals = $actuals{$formal_input->id()};
 
-	    foreach my $actual (@$actuals) {
-		$past_paramString .= $actual->attribute_id()." ";
-	    }
-	    $past_paramString .= ") ";
-	}
-	
-	return $past_paramString;
+            foreach my $actual (@$actuals) {
+                $past_paramString .= $actual->attribute_id()." ";
+            }
+            $past_paramString .= ") ";
+        }
+        
+        return $past_paramString;
     }
 
     # This routine performs the actual reuse of results.  It does not
@@ -587,376 +587,376 @@ sub findModuleHandler {
     # include the already-calculated results, and (will soon add) the
     # appropriate mappings to the ANALYSIS_PATH_MAP table.
     sub __copyPastResults {
-	my ($matched_analysis) = @_;
+        my ($matched_analysis) = @_;
 
-	my @all_outputs = $matched_analysis->outputs();
-	my %actuals;
-	foreach my $actual_output (@all_outputs) {
-	    my $formal_output = $actual_output->formal_output();
-	    my $datatype = $formal_output->column_type()->datatype();
-	    my $pkg = $datatype->requireAttributePackage();
-	    my $attribute = $factory->loadObject($pkg,$actual_output->attribute_id());
-	    #print STDERR "        ".$formal_output->name()." ".$attribute->id()."\n";
-	    push @{$actuals{$actual_output->formal_output()->id()}}, $attribute;
-	}
-	
-	foreach my $formal_output (@curr_dataset_outputs) {
-	    #my $formal_output = $output->formal_output();
-	    my $attribute_list = $actuals{$formal_output->id()};
-	    
-	    $dataset_outputs{$curr_nodeID}->{$formal_output->id()} = $attribute_list;
-	}
-	
-	foreach my $formal_output (@curr_image_outputs) {
-	    #my $formal_output = $output->formal_output();
-	    my $attribute_list = $actuals{$formal_output->id()};
-	    
-	    foreach my $attribute (@$attribute_list) {
-		my $image = $attribute->image_id();
-		push @{$image_outputs{$curr_nodeID}->{$formal_output->id()}->{$image->id()}}, $attribute;
-	    }
-	}
-	
-	foreach my $formal_output (@curr_feature_outputs) {
-	    #my $formal_output = $output->formal_output();
-	    my $attribute_list = $actuals{$formal_output->id()};
-	    
-	    foreach my $attribute (@$attribute_list) {
-		my $feature = $attribute->feature();
-		my $image = $feature->image();
-		push @{$feature_outputs{$curr_nodeID}->{$formal_output->id()}->{$image->id()}->{$feature->id()}}, $attribute;
-	    }
-	}
+        my @all_outputs = $matched_analysis->outputs();
+        my %actuals;
+        foreach my $actual_output (@all_outputs) {
+            my $formal_output = $actual_output->formal_output();
+            my $datatype = $formal_output->column_type()->datatype();
+            my $pkg = $datatype->requireAttributePackage();
+            my $attribute = $factory->loadObject($pkg,$actual_output->attribute_id());
+            #print STDERR "        ".$formal_output->name()." ".$attribute->id()."\n";
+            push @{$actuals{$actual_output->formal_output()->id()}}, $attribute;
+        }
+        
+        foreach my $formal_output (@curr_dataset_outputs) {
+            #my $formal_output = $output->formal_output();
+            my $attribute_list = $actuals{$formal_output->id()};
+            
+            $dataset_outputs{$curr_nodeID}->{$formal_output->id()} = $attribute_list;
+        }
+        
+        foreach my $formal_output (@curr_image_outputs) {
+            #my $formal_output = $output->formal_output();
+            my $attribute_list = $actuals{$formal_output->id()};
+            
+            foreach my $attribute (@$attribute_list) {
+                my $image = $attribute->image_id();
+                push @{$image_outputs{$curr_nodeID}->{$formal_output->id()}->{$image->id()}}, $attribute;
+            }
+        }
+        
+        foreach my $formal_output (@curr_feature_outputs) {
+            #my $formal_output = $output->formal_output();
+            my $attribute_list = $actuals{$formal_output->id()};
+            
+            foreach my $attribute (@$attribute_list) {
+                my $feature = $attribute->feature();
+                my $image = $feature->image();
+                push @{$feature_outputs{$curr_nodeID}->{$formal_output->id()}->{$image->id()}->{$feature->id()}}, $attribute;
+            }
+        }
     }
 
     # Updates the hash of ANALYSIS entries.  Takes into account the
     # dataset-dependency of the current module.
     sub __assignAnalysis {
-	my ($analysis) = @_;
-	if ($dependence{$curr_nodeID} eq 'D') {
-	    $perdataset_analysis{$curr_nodeID} = $analysis;
-	} else {
-	    $perimage_analysis{$curr_nodeID}->{$curr_imageID} = $analysis;
-	}
-	foreach my $data_path_entry (@{$data_paths{$curr_nodeID}}) {
-	    my $path_map = $factory->newObject("OME::AnalysisPath::Map",{
-		path               => $data_path_entry->{path},
-		path_order         => $data_path_entry->{path_order},
-		analysis           => $analysis,
-		analysis_execution => $analysis_execution
-	    });
-	}
+        my ($analysis) = @_;
+        if ($dependence{$curr_nodeID} eq 'D') {
+            $perdataset_analysis{$curr_nodeID} = $analysis;
+        } else {
+            $perimage_analysis{$curr_nodeID}->{$curr_imageID} = $analysis;
+        }
+        foreach my $data_path_entry (@{$data_paths{$curr_nodeID}}) {
+            my $path_map = $factory->newObject("OME::AnalysisPath::Map",{
+                path               => $data_path_entry->{path},
+                path_order         => $data_path_entry->{path_order},
+                analysis           => $analysis,
+                analysis_execution => $analysis_execution
+            });
+        }
     }
 
     # This routine performs the check that determines whether results
     # can be reused, using the methods described above.
     sub __checkPastResults {
-	my $paramString = __calculateCurrentInputTag();
-	my $space = ($dependence{$curr_nodeID} eq 'D')? '': '  ';
-	print STDERR "$space  Param $paramString\n";
-	
-	my $match = 0;
-	my $matched_analysis;
-	my @past_analyses = OME::Analysis->
-	    search(program_id => $curr_node->program()->id());
+        my $paramString = __calculateCurrentInputTag();
+        my $space = ($dependence{$curr_nodeID} eq 'D')? '': '  ';
+        print STDERR "$space  Param $paramString\n";
+        
+        my $match = 0;
+        my $matched_analysis;
+        my @past_analyses = OME::Analysis->
+            search(program_id => $curr_node->program()->id());
 
       FIND_MATCH:
-	foreach my $past_analysis (@past_analyses) {
-	    my $past_paramString = __calculatePastInputTag($past_analysis);
-	    print STDERR "$space    Found $past_paramString\n";
-	    
-	    if ($past_paramString eq $paramString) {
-		$match = 1;
-		$matched_analysis = $past_analysis;
-		last FIND_MATCH;
-	    }
-	}
-	
-	if ($match) {
-	    print STDERR "$space    Found reusable analysis\n";
-	    __copyPastResults($matched_analysis);
-	    __assignAnalysis($matched_analysis);
-	}
+        foreach my $past_analysis (@past_analyses) {
+            my $past_paramString = __calculatePastInputTag($past_analysis);
+            print STDERR "$space    Found $past_paramString\n";
+            
+            if ($past_paramString eq $paramString) {
+                $match = 1;
+                $matched_analysis = $past_analysis;
+                last FIND_MATCH;
+            }
+        }
+        
+        if ($match) {
+            print STDERR "$space    Found reusable analysis\n";
+            __copyPastResults($matched_analysis);
+            __assignAnalysis($matched_analysis);
+        }
 
-	return $match;
+        return $match;
     }
 
     # The main body of the analysis engine.  Its purpose is to execute
     # a prebuilt analysis chain against a dataset, reusing results if
     # possible.
     sub executeAnalysisView {
-	($session, $analysis_view,$input_parameters, $dataset) = @_;
-	$factory = $session->Factory();
+        ($session, $analysis_view,$input_parameters, $dataset) = @_;
+        $factory = $session->Factory();
 
-	# all nodes
-	@nodes = $analysis_view->nodes();
+        # all nodes
+        @nodes = $analysis_view->nodes();
 
-	print STDERR "Setup\n";
+        print STDERR "Setup\n";
 
-	print STDERR "  Creating ANALYSIS_EXECUTION table entry\n";
+        print STDERR "  Creating ANALYSIS_EXECUTION table entry\n";
 
-	$analysis_execution = $factory->newObject("OME::AnalysisExecution",{
-	    analysis_view => $analysis_view,
-	    dataset       => $dataset,
-	    experimenter  => $session->User()
-	    });
+        $analysis_execution = $factory->newObject("OME::AnalysisExecution",{
+            analysis_view => $analysis_view,
+            dataset       => $dataset,
+            experimenter  => $session->User()
+            });
 
-	# initialize all of the nodes
-	foreach my $node (@nodes) {
-	    $curr_node = $node;
-	    $curr_nodeID = $curr_node->id();
-	    __initializeNode();
-	}
+        # initialize all of the nodes
+        foreach my $node (@nodes) {
+            $curr_node = $node;
+            $curr_nodeID = $curr_node->id();
+            __initializeNode();
+        }
 
-	# Build the data paths.
-	__buildDataPaths();
+        # Build the data paths.
+        __buildDataPaths();
 
-	$continue = 1;
-	$round = 0;
+        $continue = 1;
+        $round = 0;
 
-	while ($continue) {
-	    $continue = 0;
-	    $round++;
-	    print STDERR "Round $round...\n";
+        while ($continue) {
+            $continue = 0;
+            $round++;
+            print STDERR "Round $round...\n";
 
-	    # Look for input_nodes that are ready to run (i.e., whose
-	    # predecessor nodes have been completed).
-	  ANALYSIS_LOOP:
-	    foreach my $node (@nodes) {
-		$curr_node = $node;
-		$curr_nodeID = $curr_node->id();
+            # Look for input_nodes that are ready to run (i.e., whose
+            # predecessor nodes have been completed).
+          ANALYSIS_LOOP:
+            foreach my $node (@nodes) {
+                $curr_node = $node;
+                $curr_nodeID = $curr_node->id();
 
-		# Go ahead and skip if we've completed this module.
-		if ($node_states{$curr_nodeID} > INPUT_STATE) {
-		    print STDERR "  ".$curr_node->program()->program_name()." already completed\n";
-		    next ANALYSIS_LOOP;
-		}
+                # Go ahead and skip if we've completed this module.
+                if ($node_states{$curr_nodeID} > INPUT_STATE) {
+                    print STDERR "  ".$curr_node->program()->program_name()." already completed\n";
+                    next ANALYSIS_LOOP;
+                }
 
-		if (!__testModulePredecessors()) {
-		    print STDERR "  Skipping ".$curr_node->program()->program_name()."\n";
-		    next ANALYSIS_LOOP;
-		}
+                if (!__testModulePredecessors()) {
+                    print STDERR "  Skipping ".$curr_node->program()->program_name()."\n";
+                    next ANALYSIS_LOOP;
+                }
 
-		$curr_module = $node_modules{$curr_nodeID};
-		$curr_inputs = $input_links{$curr_nodeID};
-		$curr_outputs = $output_links{$curr_nodeID};
-		
-		@curr_dataset_inputs = sort {
-		    $a->to_input()->id() <=> $b->to_input()->id()
-		    } @{$curr_inputs->{D}};
-		@curr_image_inputs = sort {
-		    $a->to_input()->id() <=> $b->to_input()->id()
-		    } @{$curr_inputs->{I}};
-		@curr_feature_inputs = sort {
-		    $a->to_input()->id() <=> $b->to_input()->id()
-		    } @{$curr_inputs->{F}};
-		
-		@curr_dataset_outputs = sort {
-		    $a->id() <=> $b->id()
-		    } @{$curr_outputs->{D}};
-		@curr_image_outputs = sort {
-		    $a->id() <=> $b->id()
-		    } @{$curr_outputs->{I}};
-		@curr_feature_outputs = sort {
-		    $a->id() <=> $b->id()
-		    } @{$curr_outputs->{F}};
-		
-		$last_node = $curr_node;
+                $curr_module = $node_modules{$curr_nodeID};
+                $curr_inputs = $input_links{$curr_nodeID};
+                $curr_outputs = $output_links{$curr_nodeID};
+                
+                @curr_dataset_inputs = sort {
+                    $a->to_input()->id() <=> $b->to_input()->id()
+                    } @{$curr_inputs->{D}};
+                @curr_image_inputs = sort {
+                    $a->to_input()->id() <=> $b->to_input()->id()
+                    } @{$curr_inputs->{I}};
+                @curr_feature_inputs = sort {
+                    $a->to_input()->id() <=> $b->to_input()->id()
+                    } @{$curr_inputs->{F}};
+                
+                @curr_dataset_outputs = sort {
+                    $a->id() <=> $b->id()
+                    } @{$curr_outputs->{D}};
+                @curr_image_outputs = sort {
+                    $a->id() <=> $b->id()
+                    } @{$curr_outputs->{I}};
+                @curr_feature_outputs = sort {
+                    $a->id() <=> $b->id()
+                    } @{$curr_outputs->{F}};
+                
+                $last_node = $curr_node;
 
-		__determineDependence();
+                __determineDependence();
 
-		if ($dependence{$curr_nodeID} eq 'D') {
-		    if (__checkPastResults()) {
-			print STDERR "    Marking state\n";
-			$node_states{$curr_nodeID} = FINISHED_STATE;
-			$continue = 1;
-			next ANALYSIS_LOOP;
-		    }
-		}
+                if ($dependence{$curr_nodeID} eq 'D') {
+                    if (__checkPastResults()) {
+                        print STDERR "    Marking state\n";
+                        $node_states{$curr_nodeID} = FINISHED_STATE;
+                        $continue = 1;
+                        next ANALYSIS_LOOP;
+                    }
+                }
 
-		print STDERR "  Executing ".$curr_node->program()->program_name()." (".$dependence{$curr_nodeID}.")\n";
+                print STDERR "  Executing ".$curr_node->program()->program_name()." (".$dependence{$curr_nodeID}.")\n";
 
-		# Execute away.
-		if ($dependence{$curr_nodeID} eq 'D') {
-		    print STDERR "    Creating ANALYSIS entry\n";
-		    my $analysis = $factory->newObject("OME::Analysis",{
-			program    => $curr_node->program(),
-			dependence => 'D',
-			dataset    => $dataset,
-			image      => undef,
-			timestamp  => 'now',
-			status     => 'RUNNING'
-			});
-		    __assignAnalysis($analysis);
-		}
+                # Execute away.
+                if ($dependence{$curr_nodeID} eq 'D') {
+                    print STDERR "    Creating ANALYSIS entry\n";
+                    my $analysis = $factory->newObject("OME::Analysis",{
+                        program    => $curr_node->program(),
+                        dependence => 'D',
+                        dataset    => $dataset,
+                        image      => undef,
+                        timestamp  => 'now',
+                        status     => 'RUNNING'
+                        });
+                    __assignAnalysis($analysis);
+                }
 
-		print STDERR "    startDataset\n";
-		$curr_module->startDataset($dataset);
+                print STDERR "    startDataset\n";
+                $curr_module->startDataset($dataset);
 
-		# Collect and present the dataset inputs
-		my %dataset_hash;
-		foreach my $input (@curr_dataset_inputs) {
-		    my $formal_input = $input->to_input();
-		    my $formal_output = $input->from_output();
-		    my $pred_node = $input->from_node();
-		    my $attribute_list = $dataset_outputs{$pred_node->id()}->{$formal_output->id()};
-		    if (ref($attribute_list) ne 'ARRAY') {
-			$attribute_list = [$attribute_list];
-		    }
-		    __createActualInputs($input,$attribute_list);
+                # Collect and present the dataset inputs
+                my %dataset_hash;
+                foreach my $input (@curr_dataset_inputs) {
+                    my $formal_input = $input->to_input();
+                    my $formal_output = $input->from_output();
+                    my $pred_node = $input->from_node();
+                    my $attribute_list = $dataset_outputs{$pred_node->id()}->{$formal_output->id()};
+                    if (ref($attribute_list) ne 'ARRAY') {
+                        $attribute_list = [$attribute_list];
+                    }
+                    __createActualInputs($input,$attribute_list);
 
-		    $dataset_hash{$formal_input->name()} = $attribute_list;
-		}
-		$curr_module->datasetInputs(\%dataset_hash);
+                    $dataset_hash{$formal_input->name()} = $attribute_list;
+                }
+                $curr_module->datasetInputs(\%dataset_hash);
 
-		print STDERR "    Precalculate dataset\n";
-		$curr_module->precalculateDataset();
+                print STDERR "    Precalculate dataset\n";
+                $curr_module->precalculateDataset();
 
-		my $image_maps = $dataset->image_links();
-	      IMAGE_LOOP:
-		while (my $image_map = $image_maps->next()) {
-		    # Collect and present the image inputs
-		    $curr_image = $image_map->image();
-		    $curr_imageID = $curr_image->id();
+                my $image_maps = $dataset->image_links();
+              IMAGE_LOOP:
+                while (my $image_map = $image_maps->next()) {
+                    # Collect and present the image inputs
+                    $curr_image = $image_map->image();
+                    $curr_imageID = $curr_image->id();
 
-		    print STDERR "    Image ".$curr_image->name()."\n";
+                    print STDERR "    Image ".$curr_image->name()."\n";
 
-		    if ($dependence{$curr_nodeID} eq 'I') {
-			if (__checkPastResults()) {
-			    next IMAGE_LOOP;
-			}
+                    if ($dependence{$curr_nodeID} eq 'I') {
+                        if (__checkPastResults()) {
+                            next IMAGE_LOOP;
+                        }
 
-			print STDERR "    Creating ANALYSIS entry\n";
-			my $analysis = $factory->newObject("OME::Analysis",{
-			    program    => $curr_node->program(),
-			    dependence => 'I',
-			    dataset    => undef,
-			    image      => $curr_image,
-			    timestamp  => 'now',
-			    status     => 'RUNNING'
-			    });
-			__assignAnalysis($analysis);
-		    }
+                        print STDERR "    Creating ANALYSIS entry\n";
+                        my $analysis = $factory->newObject("OME::Analysis",{
+                            program    => $curr_node->program(),
+                            dependence => 'I',
+                            dataset    => undef,
+                            image      => $curr_image,
+                            timestamp  => 'now',
+                            status     => 'RUNNING'
+                            });
+                        __assignAnalysis($analysis);
+                    }
 
-		    print STDERR "    startImage\n";
-		    $curr_module->startImage($curr_image);
+                    print STDERR "    startImage\n";
+                    $curr_module->startImage($curr_image);
 
-		    my %image_hash;
+                    my %image_hash;
 
-		    foreach my $input (@curr_image_inputs) {
-			my $formal_input = $input->to_input();
-			my $formal_output = $input->from_output();
-			my $pred_node = $input->from_node();
-			my $attribute_list = $image_outputs{$pred_node->id()}->{$formal_output->id()}->{$curr_imageID};
-			if (ref($attribute_list) ne 'ARRAY') {
-			    $attribute_list = [$attribute_list];
-			}
-			__createActualInputs($input,$attribute_list);
+                    foreach my $input (@curr_image_inputs) {
+                        my $formal_input = $input->to_input();
+                        my $formal_output = $input->from_output();
+                        my $pred_node = $input->from_node();
+                        my $attribute_list = $image_outputs{$pred_node->id()}->{$formal_output->id()}->{$curr_imageID};
+                        if (ref($attribute_list) ne 'ARRAY') {
+                            $attribute_list = [$attribute_list];
+                        }
+                        __createActualInputs($input,$attribute_list);
 
-			$image_hash{$formal_input->name()} = $attribute_list;
-		    }
+                        $image_hash{$formal_input->name()} = $attribute_list;
+                    }
 
-		    $curr_module->imageInputs(\%image_hash);
+                    $curr_module->imageInputs(\%image_hash);
 
-		    print STDERR "    Precalculate image\n";
-		    $curr_module->precalculateImage();
+                    print STDERR "    Precalculate image\n";
+                    $curr_module->precalculateImage();
 
-		    # Collect and present the feature inputs.
+                    # Collect and present the feature inputs.
 
-		    #print STDERR "    startFeature ".$feature->id()."\n";
-		    #$curr_module->startFeature($feature);
+                    #print STDERR "    startFeature ".$feature->id()."\n";
+                    #$curr_module->startFeature($feature);
 
-		    my %feature_hash;
+                    my %feature_hash;
 
-		    foreach my $input (@curr_feature_inputs) {
-			my $formal_input = $input->to_input();
-			my $formal_output = $input->from_output();
-			my $pred_node = $input->from_node();
-			my $attribute_hash = $feature_outputs{$pred_node->id()}->{$formal_output->id()}->{$curr_imageID};
-			foreach my $feature_id (keys %$attribute_hash) {
-			    my $attribute_list = $attribute_hash->{$feature_id};
+                    foreach my $input (@curr_feature_inputs) {
+                        my $formal_input = $input->to_input();
+                        my $formal_output = $input->from_output();
+                        my $pred_node = $input->from_node();
+                        my $attribute_hash = $feature_outputs{$pred_node->id()}->{$formal_output->id()}->{$curr_imageID};
+                        foreach my $feature_id (keys %$attribute_hash) {
+                            my $attribute_list = $attribute_hash->{$feature_id};
 
-			    if (ref($attribute_list) ne 'ARRAY') {
-				$attribute_list = [$attribute_list];
-			    }
-			    __createActualInputs($input,$attribute_list);
-			}
+                            if (ref($attribute_list) ne 'ARRAY') {
+                                $attribute_list = [$attribute_list];
+                            }
+                            __createActualInputs($input,$attribute_list);
+                        }
 
-			$feature_hash{$formal_input->name()} = $attribute_hash;
-		    }
+                        $feature_hash{$formal_input->name()} = $attribute_hash;
+                    }
 
-		    $curr_module->featureInputs(\%feature_hash);
+                    $curr_module->featureInputs(\%feature_hash);
 
-		    print STDERR "    Calculate feature\n";
-		    $curr_module->calculateFeature();
+                    print STDERR "    Calculate feature\n";
+                    $curr_module->calculateFeature();
 
-		    # Collect and process the feature outputs
+                    # Collect and process the feature outputs
 
-		    my $feature_attributes = $curr_module->collectFeatureOutputs();
+                    my $feature_attributes = $curr_module->collectFeatureOutputs();
 
-		    print STDERR "    Feature outputs\n";
-		    foreach my $output (@curr_feature_outputs) {
-			my $formal_output = $output;#->from_output();
-			my $attribute_hash = $feature_attributes->{$formal_output->name()};
-			foreach my $feature_id (keys %$attribute_hash) {
-			    my $attribute_list = $attribute_hash->{$feature_id};
-			    if (ref($attribute_list) ne 'ARRAY') {
-				$attribute_list = [$attribute_list];
-			    }
-			    __createActualOutputs($output,$attribute_list);
-			}
-			$feature_outputs{$curr_nodeID}->{$formal_output->id()}->{$curr_imageID} = $attribute_hash;
-		    }
+                    print STDERR "    Feature outputs\n";
+                    foreach my $output (@curr_feature_outputs) {
+                        my $formal_output = $output;#->from_output();
+                        my $attribute_hash = $feature_attributes->{$formal_output->name()};
+                        foreach my $feature_id (keys %$attribute_hash) {
+                            my $attribute_list = $attribute_hash->{$feature_id};
+                            if (ref($attribute_list) ne 'ARRAY') {
+                                $attribute_list = [$attribute_list];
+                            }
+                            __createActualOutputs($output,$attribute_list);
+                        }
+                        $feature_outputs{$curr_nodeID}->{$formal_output->id()}->{$curr_imageID} = $attribute_hash;
+                    }
 
-		    # Collect and process the image outputs
-		    print STDERR "    Postcalculate image\n";
-		    $curr_module->postcalculateImage();
+                    # Collect and process the image outputs
+                    print STDERR "    Postcalculate image\n";
+                    $curr_module->postcalculateImage();
 
-		    my $image_attributes = $curr_module->collectImageOutputs();
+                    my $image_attributes = $curr_module->collectImageOutputs();
 
-		    print STDERR "    Image outputs\n";
-		    foreach my $output (@curr_image_outputs) {
-			my $formal_output = $output;#->from_output();
-			my $attribute_list = $image_attributes->{$formal_output->name()};
-			if (ref($attribute_list) ne 'ARRAY') {
-			    $attribute_list = [$attribute_list];
-			}
-			__createActualOutputs($output,$attribute_list);
-			$image_outputs{$curr_nodeID}->{$formal_output->id()}->{$curr_imageID} = $attribute_list;
-		    }
+                    print STDERR "    Image outputs\n";
+                    foreach my $output (@curr_image_outputs) {
+                        my $formal_output = $output;#->from_output();
+                        my $attribute_list = $image_attributes->{$formal_output->name()};
+                        if (ref($attribute_list) ne 'ARRAY') {
+                            $attribute_list = [$attribute_list];
+                        }
+                        __createActualOutputs($output,$attribute_list);
+                        $image_outputs{$curr_nodeID}->{$formal_output->id()}->{$curr_imageID} = $attribute_list;
+                    }
 
-		    $curr_module->finishImage($curr_image);
-		}		# foreach $curr_image
+                    $curr_module->finishImage($curr_image);
+                }                # foreach $curr_image
 
-		# Collect and process the dataset outputs
-		print STDERR "    Postcalculate dataset\n";
-		$curr_module->postcalculateDataset();
+                # Collect and process the dataset outputs
+                print STDERR "    Postcalculate dataset\n";
+                $curr_module->postcalculateDataset();
 
-		my $dataset_attributes = $curr_module->collectDatasetOutputs();
+                my $dataset_attributes = $curr_module->collectDatasetOutputs();
 
-		print STDERR "    Dataset outputs\n";
-		foreach my $output (@curr_dataset_outputs) {
-		    my $formal_output = $output->from_output();
-		    my $attribute_list = $dataset_attributes->{$formal_output->name()};
-		    if (ref($attribute_list) ne 'ARRAY') {
-			$attribute_list = [$attribute_list];
-		    }
-		    __createActualOutputs($output,$attribute_list);
-		    $dataset_outputs{$curr_nodeID}->{$formal_output->id()} = $attribute_list;
-		}
+                print STDERR "    Dataset outputs\n";
+                foreach my $output (@curr_dataset_outputs) {
+                    my $formal_output = $output->from_output();
+                    my $attribute_list = $dataset_attributes->{$formal_output->name()};
+                    if (ref($attribute_list) ne 'ARRAY') {
+                        $attribute_list = [$attribute_list];
+                    }
+                    __createActualOutputs($output,$attribute_list);
+                    $dataset_outputs{$curr_nodeID}->{$formal_output->id()} = $attribute_list;
+                }
 
-		$curr_module->finishDataset($dataset);
+                $curr_module->finishDataset($dataset);
 
-		# Mark this node as finished, and flag that we need
-		# another fixed point iteration.
+                # Mark this node as finished, and flag that we need
+                # another fixed point iteration.
 
-		print STDERR "    Marking state\n";
-		$node_states{$curr_nodeID} = FINISHED_STATE;
-		$continue = 1;
-	    }			# ANALYSIS_LOOP - foreach $curr_node
-	}			# while ($continue)
+                print STDERR "    Marking state\n";
+                $node_states{$curr_nodeID} = FINISHED_STATE;
+                $continue = 1;
+            }                        # ANALYSIS_LOOP - foreach $curr_node
+        }                        # while ($continue)
 
-	$last_node->dbi_commit();
+        $last_node->dbi_commit();
     }
 
 }
@@ -969,18 +969,18 @@ __END__
     
     OME::Tasks::AnalysisEngine - OME analysis subsystem
 
-	=head1 SYNOPSIS
+        =head1 SYNOPSIS
 
-	=head1 DESCRIPTION
+        =head1 DESCRIPTION
 
-	=head1 AUTHOR
+        =head1 AUTHOR
 
-	Douglas Creager <dcreager@alum.mit.edu>
+        Douglas Creager <dcreager@alum.mit.edu>
 
-	Open Microscopy Environment, MIT 
+        Open Microscopy Environment, MIT 
 
-	=head1 SEE ALSO
+        =head1 SEE ALSO
 
-	L<OME>, http://www.openmicroscopy.org/
+        L<OME>, http://www.openmicroscopy.org/
 
-	=cut
+        =cut

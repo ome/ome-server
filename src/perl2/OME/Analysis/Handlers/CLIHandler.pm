@@ -27,17 +27,13 @@ use IO::File;
 
 use base qw(OME::Analysis::Handler);
 
-use fields qw(_outputHandle _location _program _currentImage _factory);
+use fields qw(_outputHandle _currentImage);
 
 sub new {
     my ($proto,$location,$factory,$program) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$factory);
-
-    $self->{_factory} = $factory;
-    $self->{_location} = $location;
-    $self->{_program} = $program;
+    my $self = $class->SUPER::new($location,$factory,$program);
 
     bless $self,$class;
     return $self;
@@ -181,7 +177,6 @@ sub collectImageOutputs {
 	$attribute->commit();
     }
 
-    $image->dbi_commit();
     return \%imageOutputs;
 }
 

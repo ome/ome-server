@@ -311,7 +311,7 @@ my $findSpots = $factory->newObject("OME::Program",{
     program_name => 'Find spots',
     description  => 'Find spots in the image',
     category     => 'Segmentation',
-    module_type  => 'OME::Analysis::CLIHandler',
+    module_type  => 'OME::Analysis::FindSpotsHandler',
     location     => '/OME/bin/findSpotsOME'
     });
 print "  ".$findSpots->program_name()." (".$findSpots->id().")\n";
@@ -332,14 +332,14 @@ print "    ".$input->name()." (".$input->id().")\n";
 
 $input = $factory->newObject("OME::Program::FormalInput",{
     program     => $findSpots,
-    name        => 'Min',
+    name        => 'Minimum',
     column_type => $xyzImageInfo->findColumnByName('MIN')
     });
 print "    ".$input->name()." (".$input->id().")\n";
 
 $input = $factory->newObject("OME::Program::FormalInput",{
     program     => $findSpots,
-    name        => 'Max',
+    name        => 'Maximum',
     column_type => $xyzImageInfo->findColumnByName('MAX')
     });
 print "    ".$input->name()." (".$input->id().")\n";
