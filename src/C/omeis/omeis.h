@@ -111,7 +111,7 @@ typedef struct {
 } convertFileRec;
 
 typedef enum {
-	GEOSIGMA_BASIS, SIGMA_BASIS, FIXED_BASIS
+	GEOMEAN_BASIS, MEAN_BASIS, FIXED_BASIS
 } levelBasisType;
 
 typedef struct {

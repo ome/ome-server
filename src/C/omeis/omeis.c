@@ -807,11 +807,11 @@ off_t stack_offset;
 		chSpec->gamma = 1.0;
 	} else {
 		switch (chSpec->basis) {
-			case GEOSIGMA_BASIS:
+			case GEOMEAN_BASIS:
 				chSpec->black = stackInfoP->geomean + (chSpec->black * stackInfoP->geosigma);
 				chSpec->white = stackInfoP->geomean + (chSpec->white * stackInfoP->geosigma);
 			break;
-			case SIGMA_BASIS:
+			case MEAN_BASIS:
 				chSpec->black = stackInfoP->mean + (chSpec->black * stackInfoP->sigma);
 				chSpec->white = stackInfoP->mean + (chSpec->white * stackInfoP->sigma);
 			break;

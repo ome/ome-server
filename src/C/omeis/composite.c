@@ -87,8 +87,8 @@ CompositeSpec theComposite;
 	 i.e.  geosigma + blkLevel*geosigma or sigma + blkLevel*sigma or just blkLevel.
 	*/
 	if ( (theParam = get_lc_param (param,"LevelBasis")) ) {
-		if (! strcmp (theParam,"geosigma")) levelBasis=GEOSIGMA_BASIS;
-		else if (! strcmp (theParam,"sigma")) levelBasis=SIGMA_BASIS;
+		if (! strcmp (theParam,"geomean")) levelBasis=GEOMEAN_BASIS;
+		else if (! strcmp (theParam,"mean")) levelBasis=MEAN_BASIS;
 		else levelBasis=FIXED_BASIS;
 	}
 
