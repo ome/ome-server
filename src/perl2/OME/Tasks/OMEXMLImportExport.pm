@@ -62,12 +62,11 @@ use OME::Tasks::OMEExport ;
 
 
 # Constructor. This is not an instance method as well.
-# new($session)
+# new()
 
 sub new {
-	my ($class,$session) = @_ ;
+	my ($class) = @_ ;
 	my  $self = {} ;
-	$self->{session} = $session ;
 	bless($self,$class) ;
 	return  $self ;
 }
@@ -80,8 +79,7 @@ sub new {
 sub importXMLfile {
   	my  $self = shift ;
   	my ($refFiles)=@_;
-  	my $session= $self->{session};
-  	my $importer=OME::Tasks::OMEImport->new( session => $session,debug => 1 ) ;
+  	my $importer=OME::Tasks::OMEImport->new( session => OME::Session->instance(),debug => 1 ) ;
 	foreach my $file (@$refFiles){
 		# To-do check if XML file
   		$importer->importFile($file) ;
@@ -90,35 +88,45 @@ sub importXMLfile {
 }
 
 #####################################################
-# For each given image, exports all image attributes 
-# to the specified XML file.
+# For each given image, exports all attributes from the
+# image import MEX to the specified XML file.
 # export($images,$file)
 # $images  a ref to an array containing the image objects
 # $file   MUST be absolute (path+name)
 
 sub exportToXMLFile {
 
-  	my  ($self, $images, $file) = @_ ;
- 	my  $factory = $self->{session}->Factory() ;
+	my ($self, $images, $file) = @_ ;
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory() ;
+
 	# To-do check if can write in file
-  	my  @imageAttributes = $factory->findObjects("OME::SemanticType",
-                                                        granularity => 'I');
-  	my  $exporter = OME::Tasks::OMEExport->new( session => $self->{session} ) ;
-  	my  @exportObjects = () ;
- 	my  $i = 0 ;
- 	while( $i < @$images) {
-		push(@exportObjects,$images->[$i]) ; # Add the image
-    		foreach my $attribute (@imageAttributes) {  # Add its attribute instances
-     		  my  @attr = $factory->findAttributes($attribute->name(),$images->[$i]->id()) ;
-		  if(@attr) {
-		    push(@exportObjects,@attr) ;
-		  }
-    		}
-		$i++;
-  	}
-  	$exporter->buildDOM(\@exportObjects, ResolveAllRefs => 1, ExportSTDs => 0) ;
+	my $exporter = OME::Tasks::OMEExport->new( session => $session ) ;
+	my @exportObjects = () ;
+	my $image_import_module = $session->Configuration()->image_import_module();
+	my @outputs = $image_import_module->outputs();
+	foreach my $image (@$images) {
+		push(@exportObjects,$image) ; # Add the image
+		# Get the import mex for this image
+		my  $import_MEX = $factory->findObject ("OME::ModuleExecution",
+			image_id => $image->id(),
+			module   => $image_import_module,
+		);
+		# Collect all the attributes produced by the import MEX
+		my @untyped_outputs = $import_MEX->untypedOutputs();
+		foreach my $output (@outputs,@untyped_outputs) {
+			my $ST = $output->semantic_type();
+			next unless $ST; # Skip the untyped output itself
+
+			# Get the output's attributes, and push them on the list
+			my $attributes = OME::Tasks::ModuleExecutionManager->
+				getAttributesForMEX($import_MEX,$ST);
+			push(@exportObjects,@$attributes);
+		}
+	}
+	$exporter->buildDOM(\@exportObjects, ResolveAllRefs => 1, ExportSTDs => 0) ;
 	$exporter->exportFile($file);
- 	return ;
+	return ;
 }
 
 
