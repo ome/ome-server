@@ -67,8 +67,7 @@ import java.io.FileNotFoundException;
  * </ol>
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
- * <b>Internal version:</b> $Revision$ $Date$
- * @version 2.2
+ * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
  * @since OME2.2
  */
 
@@ -670,12 +669,23 @@ public abstract class ImageServer
      */
     public static int CACHE_SIZE = 4096;
 
-    protected boolean  cacheFilled = false;
-    protected byte[]   cache;
-    protected long     cachedFileID;
-    protected FileInfo cachedFileInfo;
-    protected long     cacheStart;
-    protected int      cacheLength;
+    /** Whether the read cache is currently filled. */
+    private boolean  cacheFilled = false;
+
+    /** The actual data of the read cache. */
+    private byte[]   cache;
+
+    /** The image server ID of the file in the read cache. */
+    private long     cachedFileID;
+
+    /** The {@link FileInfo} object describing the file in the read cache. */
+    private FileInfo cachedFileInfo;
+
+    /** The offset into the file of the start of the read cache. */
+    private long     cacheStart;
+
+    /** The length of the read cache. */
+    private int      cacheLength;
 
     /**
      * <p>Reads a portion of an uploaded file.  The method implements

@@ -53,26 +53,63 @@ import org.apache.commons.httpclient.methods.MultipartPostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 
+/**
+ * <p>A concrete subclass of {@link ImageServer} which provides an
+ * HTTP connection to an OMEIS instance.  There is no public
+ * constructor for this class; instead, instances should be created
+ * with the {@link ImageServer#getDefaultImageServer} and {@link
+ * ImageServer#getHTTPImageServer} methods.
+ *
+ * @author Douglas Creager (dcreager@alum.mit.edu)
+ * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
+ * @since OME2.2
+ */
+
 public class HttpImageServer
     extends ImageServer
 {
-    protected String               url;
-    protected MultipartPostMethod  post;
-    protected HttpClient           client;
+    /** 
+     * The URL of the image server that this instance is connected to.
+     */
+    private String  url;
 
+    /**
+     * The HTTP method object used to formulate an image server call
+     * and parse its response.
+     */
+    private MultipartPostMethod  post;
+
+    /**
+     * The HTTP client object used to connect to the image server.
+     */
+    private HttpClient  client;
+
+    /**
+     * <b>Non-public method:</b> Creates a new instance connected to
+     * an image server at the specified URL.
+     */
     HttpImageServer(String url)
     {
         super();
         setURL(url);
     }
 
-    protected void setURL(String url)
+    /**
+     * Sets the URL for this instance, and creates the instance's
+     * {@link HttpClient} object.
+     */
+    private void setURL(String url)
     {
         this.url = url;
         this.client = createHttpClient();
         this.post = null;
     }
 
+    /**
+     * Creates the {@link HttpClient} object for this instance to use.
+     * Can be overridden if a class other than the default should be
+     * used.
+     */
     protected HttpClient createHttpClient()
     {
         HttpClient client = new HttpClient();
@@ -80,6 +117,10 @@ public class HttpImageServer
         return client;
     }
 
+    /**
+     * Creates the HTTP method object for this instance to use.  Can
+     * be overridden if a class other than the default should be used.
+     */
     protected MultipartPostMethod createPostMethod()
     {
         MultipartPostMethod post = new MultipartPostMethod(url);
@@ -87,12 +128,12 @@ public class HttpImageServer
         return post;
     }
 
-    protected void startCall()
+    private void startCall()
     {
         post = createPostMethod();
     }
 
-    protected void executeCall()
+    private void executeCall()
         throws ImageServerException
     {
         int status = 0;
@@ -111,13 +152,21 @@ public class HttpImageServer
         }
     }
 
-    protected void finishCall()
+    private void finishCall()
     {
         post.releaseConnection();
         post = null;
     }
 
-    protected void checkToken(StringTokenizer token, String correctValue)
+    /**
+     * Helper method -- ensures that the next token from the specified
+     * {@link StringTokenizer} has the desired value.
+     *
+     * @throws ImageServerException if the next value from the
+     * tokenizer does not match the <code>correctValue</code>
+     * parameter
+     */
+    private void checkToken(StringTokenizer token, String correctValue)
         throws ImageServerException
     {
         String realValue = token.nextToken();
@@ -128,8 +177,17 @@ public class HttpImageServer
                                            realValue);
     }
 
-    protected void checkToken(StringTokenizer token, String correctValue,
-                              String newDelim)
+    /**
+     * Helper method -- ensures that the next token from the specified
+     * {@link StringTokenizer} has the desired value.  Simultaneously
+     * sets a new list of delimeters for the tokenizer.
+     *
+     * @throws ImageServerException if the next value from the
+     * tokenizer does not match the <code>correctValue</code>
+     * parameter
+     */
+    private void checkToken(StringTokenizer token, String correctValue,
+                            String newDelim)
         throws ImageServerException
     {
         String realValue = token.nextToken(newDelim);
@@ -140,7 +198,12 @@ public class HttpImageServer
                                            realValue);
     }
 
-    protected int getIntToken(StringTokenizer token)
+    /**
+     * Returns the next token from the tokenizer as an <code>int</code>.
+     *
+     * @throws ImageServerException if the conversion fails
+     */
+    private int getIntToken(StringTokenizer token)
         throws ImageServerException
     {
         String value = token.nextToken();
@@ -154,7 +217,12 @@ public class HttpImageServer
         }
     }
 
-    protected long getLongToken(StringTokenizer token)
+    /**
+     * Returns the next token from the tokenizer as a <code>long</code>.
+     *
+     * @throws ImageServerException if the conversion fails
+     */
+    private long getLongToken(StringTokenizer token)
         throws ImageServerException
     {
         String value = token.nextToken();
@@ -168,7 +236,12 @@ public class HttpImageServer
         }
     }
 
-    protected double getDoubleToken(StringTokenizer token)
+    /**
+     * Returns the next token from the tokenizer as a <code>double</code>.
+     *
+     * @throws ImageServerException if the conversion fails
+     */
+    private double getDoubleToken(StringTokenizer token)
         throws ImageServerException
     {
         String value = token.nextToken();
@@ -182,6 +255,10 @@ public class HttpImageServer
                                            value);
         }
     }
+
+    // JAVADOC NOTICE:
+    // All of these public methods inherit their javadoc documentation
+    // from the ImageServer superclass.
 
     public long newPixels(int sizeX,
                           int sizeY,
