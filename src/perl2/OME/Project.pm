@@ -28,7 +28,7 @@ use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
   #  owner_id => 'owner',
-    group_id => 'group'
+ #   group_id => 'group'
     });
 
 __PACKAGE__->table('projects');
@@ -50,6 +50,20 @@ sub owner {
     } else {
         return $self->Session()->Factory()->loadAttribute("Experimenter",
                                                           $self->owner_id());
+    }
+}
+
+sub group {
+    my $self = shift;
+    if (@_) {
+        my $attribute = shift;
+        die "group must be a Group attribute"
+          unless $attribute->attribute_type()->name() eq "Group";
+        $self->group_id($attribute->id());
+        return undef;
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Group",
+                                                          $self->group_id());
     }
 }
 
