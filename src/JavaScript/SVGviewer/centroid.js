@@ -44,21 +44,45 @@ Centroid.VERSION = 1;
 
 Centroid.prototype.circleText = 
 '<circle r="5" stroke="blue" fill="none" cx="0" cy="0"/>';
+Centroid.prototype.focusText =
+'<g>'+
+'<line x1="-5" y1="-5" x2="5" y2="5" stroke="green"/>'+
+'<line x1="-5" y1="5" x2="5" y2="-5" stroke="green"/>'+
+'</g>';
 Centroid.prototype.mouseCatcherText = 
 '<rect x="-5" y="-5" width="10" height="10" opacity="0"/>';
-Centroid.prototype.pathText = 
-'<path d="M0,0 l10,10" stroke="green"/>';
 Centroid.prototype.pathData =
-'M0,0 l10,10';
-Centroid.prototype.reversePathData = 
-'M10,10 L0,0';
+'M0,0 l10,-10';
 Centroid.prototype.textPadding = 2;
 
 Centroid.prototype.animateTime = '0.2s';
 
-function Centroid ( theX, theY, theZ, theT ) {
-	this.init( theX, theY, theZ, theT );
+function Centroid ( data ) {//theX, theY, theZ, theT ) {
+	this.init( data ); //theX, theY, theZ, theT );
 }
+
+Centroid.prototype.init = function( data ) { //theX, theY, theZ, theT ) {
+	this.theX = data['theX'];
+	this.theY = data['theY'];
+
+	Centroid.superclass.init.call(this, this.theX, this.theY);
+
+	this.theZ = data['theZ'];
+	this.theT = data['theT'];	
+	this.data = data;
+	
+	this.ignoreMouseOver = false;
+	
+/*
+	this.coordinate = new Array();
+	this.coordinate.push( this.theX +1);
+	this.coordinate.push( this.theY +1);
+	this.coordinate.push( parseInt(this.theZ) +1);
+	this.coordinate.push( parseInt(this.theT) +1);
+*/
+	
+}
+
 
 Centroid.prototype.makePath = function( pathData ) {
 	path = svgDocument.createElementNS( svgns, "path" );
@@ -70,14 +94,14 @@ Centroid.prototype.makePath = function( pathData ) {
 Centroid.prototype.makeTextBox = function( ) {
 	textBox = svgDocument.createElementNS( svgns, "g" );
 	text = svgDocument.createElementNS( svgns, "text" );
-	data = svgDocument.createTextNode( '(' + this.coordinate.join( ', ' ) + ')');
+	data = svgDocument.createTextNode( '(' + 'foo' + ')');
+//	data = svgDocument.createTextNode( '(' + this.coordinate.join( ', ' ) + ')');
 	text.appendChild( data );
 	text.setAttribute( "fill", "black" );
-	text.setAttribute( "y", text.getBBox().height );
+	text.setAttribute( "y", text.getBBox().height  );
+	text.setAttribute( "x", this.textPadding );
 	
 	textRect = svgDocument.createElementNS( svgns, "rect" );
-	textRect.setAttribute( "x", -1 * this.textPadding );
-	textRect.setAttribute( "y", -1 * this.textPadding );
 	textRect.setAttribute( "width", text.getBBox().width + this.textPadding * 2 );
 	textRect.setAttribute( "height", text.getBBox().height + this.textPadding * 2 );
 	textRect.setAttribute( "fill", "white" );
@@ -97,53 +121,42 @@ Centroid.prototype.buildSVG = function() {
 	centroidSVG.appendChild( parseXML( this.circleText, svgDocument ) );
 	this.glyph = centroidSVG.lastChild;
 
-	this.path = this.makePath( this.pathData );
-	this.path.setAttribute( "display", "none" );
-
-	this.textBox = this.makeTextBox();
-	this.textBox.setAttribute( "transform", "translate(10,10)" );
-	this.textBox.setAttribute( "display", "none" );
-	
-	centroidSVG.appendChild( this.path );
-	centroidSVG.appendChild( this.textBox );
+	centroidSVG.appendChild( parseXML( this.focusText, svgDocument ) );
+	this.focusGraphic = centroidSVG.lastChild;
+	this.focusGraphic.setAttribute( "display", "none" );
 
 	// mouseCatcher goes on top!
 	centroidSVG.appendChild( parseXML( this.mouseCatcherText, svgDocument ) );
 	this.mouseCatcher = centroidSVG.lastChild;
 	this.mouseCatcher.addEventListener( "mouseover", this, false );
 	this.mouseCatcher.addEventListener( "mouseout", this, false );
+	this.mouseCatcher.addEventListener( "click", this, false );
 	
 	return centroidSVG;
 }
 
 Centroid.prototype.mouseover = function(e) {
-	this.glyph.setAttribute( "display", "none" );
-	this.path.setAttribute( "display", "inline" );
-	this.textBox.setAttribute( "display", "inline" );
+	if( this.ignoreMouseOver == false )
+		this.focus(e);
 }
 
 Centroid.prototype.mouseout = function(e) {
-	this.glyph.setAttribute( "display", "inline" );
-	this.path.setAttribute( "display", "none" );
-	this.textBox.setAttribute( "display", "none" );
+	if( this.ignoreMouseOver == false )
+		this.unfocus(e);
 }
 
-Centroid.prototype.init = function( theX, theY, theZ, theT ) {
-	Centroid.superclass.init.call(this, theX, theY);
+Centroid.prototype.focus = function(e) {
+	featureInfo.loadFeature( this.data['featureID'] );
+	this.focusGraphic.setAttribute( "display", "inline" );
+}
 
-	this.theX = theX;
-	this.theY = theY;
-	this.theZ = theZ;
-	this.theT = theT;
-	
-	this.coordinate = new Array();
-	this.coordinate.push( this.theX +1);
-	this.coordinate.push( this.theY +1);
-	this.coordinate.push( parseInt(this.theZ) +1);
-	this.coordinate.push( parseInt(this.theT) +1);
-	
-	this.animateOut = new Array();
-	this.animateBack = new Array();
+Centroid.prototype.unfocus = function(e) {
+	this.focusGraphic.setAttribute( "display", "none" );
+}
+
+Centroid.prototype.click = function(e) {
+	setTheZ( this.theZ );
+	setTheT( this.theT );
 }
 
 
@@ -284,22 +297,13 @@ CentroidOverlay.prototype.makeControls = function() {
 *****/
 CentroidOverlay.prototype.makeOverlay = function( ) {
 	
-	glyph = parseXML( this.circleText, svgDocument );
-	for( theZ in this.centroidData ) {
-		for( theT in this.centroidData[theZ] ) {
-			layerSlice = svgDocument.createElementNS( svgns, "g" );
-			
-			for( centroidIndex in this.centroidData[theZ][theT] ) {
-				centroid = new Centroid( 
-					this.centroidData[theZ][theT][centroidIndex]['theX'],
-					this.centroidData[theZ][theT][centroidIndex]['theY'],
-					theZ,
-					theT
-				);
-				layerSlice.appendChild( centroid.buildSVG() );
-			}
-			this.addLayerSlice( theZ, theT, layerSlice );
-		}
+	for( i in this.centroidData ) {
+		layerSlice = svgDocument.createElementNS( svgns, "g" );
+		theZ = this.centroidData[i]['theZ'];
+		theT = this.centroidData[i]['theT'];
+		centroid = new Centroid( this.centroidData[i] );
+		layerSlice.appendChild( centroid.buildSVG() );
+		this.addLayerSlice( theZ, theT, layerSlice );
 	}
 	
 	return this.overlayRoot;
