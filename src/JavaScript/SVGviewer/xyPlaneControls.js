@@ -79,6 +79,8 @@ XYPlaneControls.prototype.buildToolBox = function( toolboxLayer ) {
 	this.displayPane = this.toolBox.getGUIbox();
 	this.displayPane.appendChild( displayContent );
 	
+	// initialize 'View Plane' link
+	this.updatePlaneURL();
 };
 
 XYPlaneControls.prototype.setWindowControllers = function( windowControllers ) {
