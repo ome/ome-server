@@ -961,7 +961,7 @@ function initialise() {
 	level2ID = theMenu.addChild(level1ID, "Document", "Manage my Projects", "noOp.html", "Change other user's read/write permissions");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Search", "noOp.html", "Search through all projects");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Make new project", "/perl2/serve.pl?Page=OME::Web::MakeNewProject", "Make a new project");
-	level2ID = theMenu.addEntry (level2ID, "Document", "Metadata", "noOp.html", "View & Edit metadata");
+	level2ID = theMenu.addEntry (level2ID, "Document", "Metadata", "/perl2/serve.pl?Page=OME::Web::ProjectMetadata", "View & Edit metadata");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Components", "noOp.html", "View & Edit components");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Switch", "noOp.html", "Switch current project");
 	
