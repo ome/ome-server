@@ -70,7 +70,9 @@ __PACKAGE__->sequence('analysis_seq');
 __PACKAGE__->columns(Primary => qw(analysis_id));
 __PACKAGE__->columns(Essential => qw(program_id dependence
 				     dataset_id));
-__PACKAGE__->columns(Timing => qw(timestamp status total_time attribute_time));
+__PACKAGE__->columns(Timing => qw(timestamp status total_time
+                                  attribute_create_time attribute_db_time
+                                  attribute_sort_time));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 __PACKAGE__->has_many('inputs','OME::Analysis::ActualInput' => qw(analysis_id));

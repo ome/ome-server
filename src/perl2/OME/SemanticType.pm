@@ -57,6 +57,12 @@ use OME::DataTable;
 use OME::Remote::Prototypes;
 use base qw(OME::DBObject);
 
+use Benchmark qw(timediff timesum);
+
+__PACKAGE__->mk_classdata('_sortTime');
+__PACKAGE__->mk_classdata('_dbTime');
+__PACKAGE__->mk_classdata('_createTime');
+
 __PACKAGE__->mk_classdata('_attributeTypePackages');
 __PACKAGE__->_attributeTypePackages({});
 
@@ -251,9 +257,45 @@ sub __debug {
     #print STDERR @_, "\n";
 }
 
+sub __resetTiming {
+    my ($self) = @_;
+
+    $self->_sortTime(undef);
+    $self->_dbTime(undef);
+    $self->_createTime(undef);
+}
+
+sub __addOneTime {
+    my ($self,$name,$time) = @_;
+
+    my $old_time = $self->$name();
+    if (defined $old_time) {
+        $self->$name(timesum($old_time,$time));
+    } else {
+        $self->$name($time);
+    }
+}
+
+sub __addTiming {
+    my ($self,$sort,$db,$create) = @_;
+
+    $self->__addOneTime('_sortTime',$sort);
+    $self->__addOneTime('_dbTime',$db);
+    $self->__addOneTime('_createTime',$create);
+}
+
+sub __getSeconds {
+    my ($self,$name) = @_;
+    my $t = $self->$name();
+    print STDERR "***** ",$t," ",join(',',@$t),"\n";
+    return $t->[0];
+}
+
 
 sub newAttributes {
     my ($self,$session,$analysis,@attribute_info) = @_;
+
+    my $t0 = new Benchmark;
 
     # These hashes are keyed by table name.
     my %data_tables;
@@ -363,6 +405,7 @@ sub newAttributes {
         }
     }
 
+    my $t1 = new Benchmark;
 
     # Now, create a new row in each data table.
 
@@ -407,6 +450,8 @@ sub newAttributes {
 
     my @attributes;
 
+    my $t2 = new Benchmark;
+
     __debug("Creating attributes");
 
     for ($i = 0; $i < $length; $i += 2) {
@@ -435,6 +480,14 @@ sub newAttributes {
 
         push @attributes, $attribute;
     }
+
+    my $t3 = new Benchmark;
+
+    my $sort_time = timediff($t1,$t0);
+    my $db_time = timediff($t2,$t1);
+    my $create_time = timediff($t3,$t2);
+
+    $self->__addTiming($sort_time,$db_time,$create_time);
 
     return \@attributes;
 }

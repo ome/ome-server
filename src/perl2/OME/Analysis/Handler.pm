@@ -403,6 +403,8 @@ sub newAttributes {
     # Merge the attribute data hashes into hashes for each data table.
     # Also, mark which data tables belong to each attribute.
 
+    my $t0 = new Benchmark;
+
     my @new_attribute_info;
     my %granularityColumns = 
       (
@@ -488,6 +490,10 @@ sub newAttributes {
 
         push @new_attribute_info, $attribute_type, $data_hash;
     }
+
+    my $t1 = new Benchmark;
+
+    OME::AttributeType->__addOneTime('_sortTime',timediff($t1,$t0));
 
     my $attributes = OME::AttributeType->newAttributes($self->Session(),
                                                        $self->{_analysis},
@@ -788,6 +794,7 @@ as it progresses through these interface methods.
 sub startAnalysis {
     my ($self,$analysis) = @_;
     $self->{_analysis} = $analysis;
+    OME::AttributeType->__resetTiming();
 }
 
 sub globalInputs {
@@ -928,6 +935,13 @@ sub finishAnalysis {
     my ($self) = @_;
     $self->{_dataset_outputs} = undef;
     $self->{_global_outputs} = undef;
+
+    my $analysis = $self->{_analysis};
+    return unless defined $analysis;
+    $analysis->attribute_sort_time(OME::AttributeType->__getSeconds('_sortTime'));
+    $analysis->attribute_db_time(OME::AttributeType->__getSeconds('_dbTime'));
+    $analysis->attribute_create_time(OME::AttributeType->__getSeconds('_createTime'));
+    $analysis->storeObject();
 }
 
 
