@@ -45,6 +45,7 @@ import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.Instantiator;
 import org.openmicroscopy.ds.RemoteCaller;
+import org.openmicroscopy.ds.dto.ChainExecution;
 import org.openmicroscopy.ds.dto.ModuleExecution;
 
 
@@ -84,7 +85,7 @@ public class HistoryManager
         instantiator = icaller.getInstantiator();
     }
 
-    public List getDataHistory(ModuleExecution mex) 
+    public List getMexDataHistory(ModuleExecution mex) 
     {
         if (mex == null)
             throw new IllegalArgumentException("Module execution cannot be null");
@@ -98,18 +99,18 @@ public class HistoryManager
             throw new IllegalArgumentException("Module execution must be in the database");
         }
         
-        return getDataHistory(mexID);
+        return getMexDataHistory(mexID);
     }
     
-    public List getDataHistory(Integer mexID) {
-        return icaller.dispatchList(ModuleExecution.class,"getDataHistory",
+    public List getMexDataHistory(Integer mexID) {
+        return icaller.dispatchList(ModuleExecution.class,"getMexDataHistory",
                     new Object[] {
                         mexID
                     });
     }
     
     
-    public List getDataHistory(ModuleExecution mex,
+    public List getMexDataHistory(ModuleExecution mex,
     			FieldsSpecification spec) 
     {
         if (mex == null)
@@ -124,13 +125,67 @@ public class HistoryManager
             throw new IllegalArgumentException("Module execution must be in the database");
         }
         
-        return getDataHistory(mexID,spec);
+        return getMexDataHistory(mexID,spec);
     }
     
-    public List getDataHistory(Integer mexID,FieldsSpecification spec) {
-        return icaller.dispatchList(ModuleExecution.class,"getDataHistory",
+    public List getMexDataHistory(Integer mexID,FieldsSpecification spec) {
+        return icaller.dispatchList(ModuleExecution.class,"getMexDataHistory",
                     new Object[] {
                         mexID,
+					   spec
+                    });
+    }
+    
+    
+    public List getChainDataHistory(ChainExecution chex) 
+    {
+        if (chex == null)
+            throw new IllegalArgumentException("Chain execution cannot be null");
+        
+        Integer chexID = null;
+
+        try
+        {
+            chexID = new Integer(chex.getID());
+        } catch (DataException e) {
+            throw new 
+			IllegalArgumentException("Chain execution must be in the database");
+        }
+        
+        return getChainDataHistory(chexID);
+    }
+    
+    public List getChainDataHistory(Integer chexID) {
+        return icaller.dispatchList(ModuleExecution.class,"getChainDataHistory",
+                    new Object[] {
+                        chexID
+                    });
+    }
+    
+    
+    public List getChainDataHistory(ChainExecution chex,
+    			FieldsSpecification spec) 
+    {
+        if (chex == null)
+            throw new IllegalArgumentException("Chain execution cannot be null");
+        
+        Integer chexID = null;
+
+        try
+        {
+            chexID = new Integer(chex.getID());
+        } catch (DataException e) {
+            throw new 
+			IllegalArgumentException("Chain execution must be in the database");
+        }
+        
+        return getChainDataHistory(chexID,spec);
+    }
+    
+    public List getChainDataHistory(Integer chainID,FieldsSpecification spec) {
+        return icaller.dispatchList(ModuleExecution.class,"getChainDataHistory",
+                    new Object[] {
+                        chainID,
 					   spec
                     });
     }
