@@ -10,6 +10,13 @@ font,th,td,p,input,textarea { font-family: Verdana, Arial, Helvetica, sans-serif
 /* General formatting for common tags */
 hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
 
+/* Default link formatting */
+a { text-decoration: none; font-weight: bold; color: #0000FF}
+
+a:visited { text-decoration: none; color: #0000FF}
+
+a:hover { text-decoration: underline; color: #006699}
+
 /* Some generic style definitions */
 .ome_title { font-size: 14px; font-weight: bold; }
 
@@ -36,6 +43,8 @@ a.ome_widget {
 	font-weight: bold;
 }
 
+a.ome_widget:visited { text-decoration: none; color: #353535 }
+
 a.ome_widget:hover { text-decoration: none; color: #006699; }
 
 input.ome_widget {
@@ -55,3 +64,7 @@ input.ome_widget:hover {
 
 /* Image based links */
 a.ome_imagelink:hover { color: #FF0000; border-width: 2px; }
+
+/* Popup links */
+
+a.ome_popup { font-size: smaller; font-weight: normal; } 
