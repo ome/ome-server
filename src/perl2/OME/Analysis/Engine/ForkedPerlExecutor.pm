@@ -99,6 +99,8 @@ sub executeModule {
     } elsif ($pid) {
         # Parent process
 
+        OME::Session->forgetInstance();
+
         # We need to add a dummy handler for the SIG_CHLD signal.  On
         # Linux, the pause function (which we use below) only returns
         # in response to a signal that "either terminates [the
