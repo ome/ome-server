@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Tue Mar 29 12:09:11 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -41,6 +41,7 @@ import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.OTF;
 import org.openmicroscopy.ds.st.OriginalFile;
 import org.openmicroscopy.ds.st.Pixels;
+import org.openmicroscopy.ds.st.PixelsPlane;
 import org.openmicroscopy.ds.st.Thumbnail;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
@@ -56,6 +57,11 @@ public class RepositoryDTO
     public String getDTOTypeName() { return "@Repository"; }
     public Class getDTOType() { return Repository.class; }
 
+    public Boolean isIsLocal()
+    { return getBooleanElement("IsLocal"); }
+    public void setIsLocal(Boolean value)
+    { setElement("IsLocal",value); }
+
     public String getImageServerURL()
     { return getStringElement("ImageServerURL"); }
     public void setImageServerURL(String value)
@@ -65,11 +71,6 @@ public class RepositoryDTO
     { return getStringElement("Path"); }
     public void setPath(String value)
     { setElement("Path",value); }
-
-    public Boolean isLocal()
-    { return getBooleanElement("Local"); }
-    public void setLocal(Boolean value)
-    { setElement("Local",value); }
 
     public List getOTFList()
     { return (List) getObjectElement("OTFList"); }
@@ -86,6 +87,11 @@ public class RepositoryDTO
     public int countPixelsList()
     { return countListElement("PixelsList"); }
 
+    public List getPixelsPlaneList()
+    { return (List) getObjectElement("PixelsPlaneList"); }
+    public int countPixelsPlaneList()
+    { return countListElement("PixelsPlaneList"); }
+
     public List getThumbnailList()
     { return (List) getObjectElement("ThumbnailList"); }
     public int countThumbnailList()
@@ -97,6 +103,7 @@ public class RepositoryDTO
         parseListElement("OTFList",OTFDTO.class);
         parseListElement("OriginalFileList",OriginalFileDTO.class);
         parseListElement("PixelsList",PixelsDTO.class);
+        parseListElement("PixelsPlaneList",PixelsPlaneDTO.class);
         parseListElement("ThumbnailList",ThumbnailDTO.class);
     }
 
