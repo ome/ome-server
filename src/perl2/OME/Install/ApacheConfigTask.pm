@@ -142,17 +142,8 @@ sub getApacheBin {
 
 	# First, get the httpd executable.
 	$httpdBin = which ('httpd');
-#	foreach (split (' ',`whereis httpd`)) {
-#		chomp;
-#		if (-e $_ and not -d $_ and -x $_ and -B $_) {
-#			$httpdBin = $_;
-#			last;
-#		}
-#	}
-
-	print STDERR "Could not find httpd executable\n" if not -x $httpdBin;
-	confirm_path ('Apache (httpd) executable', $httpdBin);
-	croak "Could not find an executable httpd\n" unless -x $httpdBin;
+   
+    $httpdBin = whereis ("httpd") or croak "Unable to locate httpd binary." unless $httpdBin;
 
 	$apache_info->{bin} = $httpdBin;
 	return $apache_info;
