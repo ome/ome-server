@@ -459,7 +459,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	public void keyPressed(PInputEvent e) {
 		//System.err.println("a key was pressed ");
-		if (e.getKeyCode() != KeyEvent.VK_DELETE)
+		int key = e.getKeyCode();
+		if (key != KeyEvent.VK_DELETE && key != KeyEvent.VK_BACK_SPACE)
 			return;
 			
 		if (selectedLink != null) {
