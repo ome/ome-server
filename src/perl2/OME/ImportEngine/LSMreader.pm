@@ -48,6 +48,7 @@ use OME::Tasks::ImportManager;
 
 use Carp;
 use base qw(OME::ImportEngine::AbstractFormat);
+use vars qw($VERSION);
 
 =head1 METHODS
 
@@ -111,7 +112,7 @@ sub getGroups
 		my $compression = $tag0->{ 259 }->[0];
 		if ( defined($compression) && $compression == 5 )
 		{
-			die "This LSM importer does not support compressed TIFF images.\n";
+			next;
 		}
 		
 		my $offsetHash = $tag0->{ 34412 }->[0]; # 34412 is the key for CZ-private TAG
@@ -289,17 +290,26 @@ sub readPrivateTags
 	$buffer = $file -> readData(8);
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
-	$xref->{ 'Image.PixelSizeX' } = ($data[0] * 1000000); # convert meters to microns
+	if (($data[0] * 1000000) >= 0)
+	{
+		$xref->{ 'Image.PixelSizeX' } = ($data[0] * 1000000); # convert meters to microns
+	}
 	
 	$buffer = $file -> readData(8);
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
-	$xref->{ 'Image.PixelSizeY' } = ($data[0] * 1000000); # convert meters to microns
+	if (($data[0] * 1000000) >= 0)
+	{
+		$xref->{ 'Image.PixelSizeY' } = ($data[0] * 1000000); # convert meters to microns
+	}
 	
 	$buffer = $file -> readData(8);
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
-	$xref->{ 'Image.PixelSizeZ' } = ($data[0] * 1000000); # convert meters to microns
+	if (($data[0] * 1000000) >= 0)
+	{
+		$xref->{ 'Image.PixelSizeZ' } = ($data[0] * 1000000); # convert meters to microns
+	}
 	
 	$template = ($endian == 0) ? "Vx12Vx4Vx70V" : "Nx12Vx4Nx70N";
 	$file -> setCurrentPosition( $valueOffset + 108 );
