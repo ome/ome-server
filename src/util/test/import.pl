@@ -3,6 +3,10 @@ use Expect;
 
 my $timeout = 120;
 
+print "Importing images.  Command line:\n$0 ";
+print "'$_'" foreach @ARGV;
+print "\n";
+
 my $user = shift @ARGV;
 my $pass = shift @ARGV;
 
