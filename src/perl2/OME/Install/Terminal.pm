@@ -48,10 +48,8 @@ require Exporter;
 #*********
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(confirm
-		 confirm_path
+our @EXPORT = qw(confirm_path
 		 print_header
-		 question
 		 confirm_default
 		 get_password
 		 y_or_n
@@ -73,20 +71,6 @@ sub print_header {
     print RESET;
 }
 
-sub confirm {
-    my $text = shift;
-    my $environment = initialize OME::Install::Environment;
-    return 1 if ($environment->get_flag ("ANSWER_Y"));
-
-    print "Using \"$text\", are you sure ? [y/", BOLD, "n", RESET, "]: ";
-    my $y_or_n = ReadLine 0;
-    chomp $y_or_n;
-
-    if (lc($y_or_n) eq "y") { return 1 };
-
-    return 0;
-}
-
 sub confirm_path {
     my ($text, $default) = @_; 
 
@@ -97,7 +81,16 @@ sub confirm_path {
 
     # Rip trailing slash
     if ($input =~ /^(.*)\/$/) { $input = $1 }
-
+    
+    # log the question and the user's selected choice
+    my $environment = initialize OME::Install::Environment;
+    if ($environment->tmp_dir()) {
+   		my $logfileName = $environment->tmp_dir()."/install/"."UserSelectedOptions.log";
+   		`touch $logfileName`;
+ 	   	open  (FILEOUT, ">> $logfileName") or croak "can't open $logfileName for appending: $!\n";
+ 	   	print FILEOUT "$text ", BOLD, "[", $input, "]\n", RESET;
+ 	   	close (FILEOUT);
+    }
     return $input;
 }
 
@@ -108,17 +101,16 @@ sub confirm_default {
     my $input = ReadLine 0;
     chomp $input;
     ($input = $default) unless $input;
-
-    return $input;
-}
-
-sub question {
-    my $text = shift;
-
-    print "$text";
-    my $input = ReadLine 0;
-    chomp $input;
-
+    
+    # log the question and the user's selected choice
+    my $environment = initialize OME::Install::Environment;
+    if ($environment->tmp_dir()) {
+   		my $logfileName = $environment->tmp_dir()."/install/"."UserSelectedOptions.log";
+   		`touch $logfileName`;
+ 	   	open  (FILEOUT, ">> $logfileName") or croak "can't open $logfileName for appending: $!\n";
+ 	   	print FILEOUT "$text ", BOLD, "[", $input, "]\n", RESET;
+ 	   	close (FILEOUT);
+    }
     return $input;
 }
 
@@ -178,20 +170,33 @@ sub y_or_n {
     my $def_yorn = shift;
     my $y_or_n;
     my $environment = initialize OME::Install::Environment;
+    my $retVal;
+    
     return 1 if ($environment->get_flag ("ANSWER_Y"));
-
     $def_yorn = 'n' unless defined $def_yorn;
+    
 	if ($def_yorn eq 'n') {
    	    print wrap("", "", $text), " [y/", BOLD, "n", RESET, "]: ";
-        $y_or_n = ReadLine 0;
-        chomp $y_or_n;
-        if (lc($y_or_n) eq "y") { return 1 };
-        return 0;
    	} else {
    	    print wrap("", "", $text), " [", BOLD, "y", RESET, "/n]: ";
-        $y_or_n = ReadLine 0;
-        chomp $y_or_n;
-        if (lc($y_or_n) eq "n") { return 0 };
-        return 1;
    	}
+   	
+   	$y_or_n = ReadLine 0;
+    chomp $y_or_n;
+    if (lc($y_or_n) eq "y") {$retVal = 1} else {$retVal = 0} ;
+        
+   	# log the question and the user's selected choice
+    if ($environment->tmp_dir()) {
+   		my $logfileName = $environment->tmp_dir()."/install/"."UserSelectedOptions.log";
+   		`touch $logfileName`;
+ 	   	open  (FILEOUT, ">> $logfileName") or croak "can't open $logfileName for appending: $!\n";
+ 	   	print FILEOUT "$text";
+ 	   	if ($retVal eq 1) {
+ 	   		print FILEOUT BOLD, " [YES]\n", RESET;
+ 	   	} else {
+	 	   	print FILEOUT BOLD, " [NO]\n", RESET;
+ 	   	}
+ 	   	close (FILEOUT);
+    }
+   	return $retVal;
 }
