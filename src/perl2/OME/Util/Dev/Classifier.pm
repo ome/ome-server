@@ -268,7 +268,13 @@ sub compile_sigs {
 	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, scalar( @images ));
 	$signature_array->makePersistent();
 	
-	# load the signature outputs for each image
+	# populate the signature matrix. The format is:
+	#	        Img 1  Img 2  ...
+	#	Sig 1 [     x,     x, ... ]
+	#	Sig 2 [     x,     x, ... ]
+	#	...   [   ...,   ..., ... ]
+	#	Sig n [     x,     x, ... ]
+	#	Class [     x,     x, ... ]
 	my $image_number = 0;
 	my @sig_array;
 	foreach my $image ( @images ) {
@@ -277,11 +283,13 @@ sub compile_sigs {
 			image            => $image
 		) or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
 		# set the image category
-		$sig_array[$image_number][0] = 
+		$sig_array[scalar( @vector_legends )][$image_number] = 
 			$category_numbers{ $classifications{ $image->id }->Category->id };
 		# set the image's signature vector
 		while (my $sig_entry = $signature_entry_iterator->next()) {
-			$sig_array[$image_number][$sig_entry->Legend->VectorPosition()] = 
+			# VectorPosition is numbered 1 to n.
+			# Array positions should be 0 to (n-1).
+			$sig_array[$sig_entry->Legend->VectorPosition() - 1][$image_number] = 
 				$sig_entry->Value();
 		}
 		$signature_array->setAll( @sig_array );
