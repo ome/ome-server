@@ -960,6 +960,8 @@ sub getPackageReference {
     my $class = ref($proto) || $proto;
 
 	my $alias = shift;
+	return undef if $alias eq 'id';
+
 	my $returnedClass;
 	my $accessorType = $class->getColumnType( $alias );
 	if( $accessorType =~ /^has-many$/ ) {
