@@ -540,7 +540,7 @@ sub MatlabVector_to_Attrs {
 		'MLI:VectorDecoder[@ID="'.$vectorDecodeID.'"]/MLI:Element' );
 
 	# decode the Vector
-	my @vectorData;
+	my %vectorData; # $vectorData{$formal_output_name}->{$SE_name} = $data
 	foreach my $element ( @decoding_elements ) {
 		# gather formal output & SE
 		my $output_location = $element->getAttribute( 'OutputLocation' );
@@ -549,28 +549,44 @@ sub MatlabVector_to_Attrs {
 		my $formal_output = $self->getFormalOutput( $formal_output_name )
 			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
 	
+# Check for data collision. 
+# FIXME: This should go in the as yet unwritten "validateExecutionInstructions()"
+die "Data collision! Another Vector Element has already written to this $output_location. Error processing Vector element ".$element->toString()." of output ".$xmlInstr->toString()
+	if exists $vectorData{ $formal_output_name }->{ $SE_name };
+	
 		# Make a data hash
-		my $template_id = $xmlInstr->getAttribute( 'UseTemplate' );
-		my $data_hash;
-		if( $template_id ) {
-			my $ST_name;
-			($ST_name, $data_hash) = $self->_getTemplateData( $template_id );
-			die "Template Semantic Type ($ST_name) differs from ST registered for formal output ($formal_output). Error processing Output Instruction '".$xmlInstr->toString()."'"
-				if $formal_output->semantic_type()->name() ne $ST_name;
-		}
+		my $template_id = $xmlInstr->getAttribute( 'UseTemplate' )
+			and die "UseTemplate is not supported ATM. ask Josiah <siah\@nih.gov> to fix this.";
+#		my $data_hash;
+#		if( $template_id ) {
+#			my $ST_name;
+#			($ST_name, $data_hash) = $self->_getTemplateData( $template_id );
+#			die "Template Semantic Type ($ST_name) differs from ST registered for formal output ($formal_output). Error processing Output Instruction '".$xmlInstr->toString()."'"
+#				if $formal_output->semantic_type()->name() ne $ST_name;
+#		}
 		# See: "Hackaround for XS variable hidden uniqueness." in MatlabScalar_to_Attr()
 		my $index = $element->getAttribute( 'Index' )
 			or die "Index attribute not specified in ".$element->toString();
 		my $value = $values->[ $index - 1 ];
-		$data_hash->{ $SE_name } = "$value";
+		$vectorData{ $formal_output_name }->{ $SE_name } = "$value";
+	}
 	
-		logdbg "debug", "MatlabVector_to_Attrs: Adding an output to the list. Formal output: ".
-			$formal_output->name()." using data:\n\t".join( ', ', map( $_.' => '.$data_hash->{$_}, keys %$data_hash ) );
-		push ( @vectorData, $formal_output, $data_hash );
+	# verbose debugging aid. Should be commented out typically.
+	logdbg "debug", "Data from vector $vectorDecodeID is:\n";
+	foreach my $formal_output_name ( keys %vectorData ) {
+		logdbg "debug", "Formal output $formal_output_name has data hash:\n\t".
+			join( ", ", 
+				map( $_." => ".$vectorData{$formal_output_name}->{$_}, 
+					keys %{ $vectorData{$formal_output_name} } 
+				)
+			).
+		"\n";
 	}
 	
 	# Actually make the outputs
-	$self->newAttributes( @vectorData ); 
+	# Treating %vectorData as an array will automatically convert to the proper format.
+	# e.g. ( formal_output_name, data_hash, formal_output_name, data_hash, ...)
+	$self->newAttributes( %vectorData ); 
 }
 
 =head2 MatlabScalar_to_Attr
@@ -595,7 +611,7 @@ sub MatlabScalar_to_Attr {
 # FIXME: This sort of verification should happen at module import. A
 # function called "validateExecutionInstructions" should be written 
 # that accepts a module and checks over its execution instructions.
-die "Semantic element ('$SEforScalar') specified in ".$xmlInstr->toString()." is not defined in the semantic type".$formal_output->semantic_type->name
+die "Semantic element ('$SEforScalar') specified in ".$xmlInstr->toString()." is not defined in the semantic type ".$formal_output->semantic_type->name
 	unless $factory->findObject( 'OME::SemanticType::Element', semantic_type => $formal_output->semantic_type, name => $SEforScalar );
 
 	# Retrieve value from matlab
