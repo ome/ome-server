@@ -557,7 +557,7 @@ sub __disconnectAll {
     $self->{__handlesAvailable} = {};
     
 	if (defined $self->{__ourDBH}) {
-    	$self->{__ourDBH}->disconnect() or confess $self->{__ourDBH}->errstr;
+    	$self->{__ourDBH}->disconnect() or confess '$self->{__ourDBH}->disconnect() returned NULL. The errstr is: "'.$self->{__ourDBH}->errstr.'".';
 	}
 
     $self->{__ourDBH} = undef;
@@ -965,7 +965,7 @@ sub findAttribute {
 }
 
 sub newAttribute {
-    my ($self, $semantic_type, $target, $module_execution, $data) = @_;
+    my ($self, $semantic_type, $target, $module_execution, $data, $isParentalOutput) = @_;
 
     return undef unless defined $semantic_type && defined $data;
 
@@ -1009,6 +1009,7 @@ sub newAttribute {
 		module_execution => $module_execution,
 		semantic_type    => $type,
 	}) if (defined $module_execution and
+	      not $isParentalOutput and 
 		  ( not $module_execution->module() or
 			not $self->findObject("OME::Module::FormalOutput",
 					module        => $module_execution->module,
