@@ -145,10 +145,12 @@ char *sha1DBfile="Pixels/sha1DB.idx";
   		rorw may be set to 'w' (write), 'r' (read), 'i' (info), or 'n' (new file).
   openHeaderFile -> this function opens the Header file. If the header file is 
                     of the same version as OMEIS then it is uneventful. if, 
-					however, the header file is of a previous version, updateFile 
-					is called to update the file.
-  updateHeaderFile -> this function updates the Header file to new specifications
+					however, the header file is of a previous version, updateHeaderFile 
+					is called to update the HeaderFile.
+  updateHeaderFile -> this function updates the Header file to newest format. Returns old
+                      header format.
 */
+
 static int updateHeaderFile (PixelsRep *myPixels, int fromVers)
 {
 void *mmap_info=NULL;
@@ -202,6 +204,7 @@ char nullByte=0;
 		myPixels->fd_info, 0LL)) == (void *) -1)
 			return (-3);
 	myPixels->is_mmapped = 1;
+	
 	/* try to update based on version */
 	switch(vers){
 		case 1:
@@ -217,50 +220,31 @@ char nullByte=0;
 			head->dc * head->dt);
 		*/
 			
-			if (ret == 0) ret = 1;
+			ret = 1;
 		case 2:
-			/* the pixHeader struct did not change from vers 2 to vers 3 */
-			myPixels->head = head = (pixHeader *) mmap_info;
-			myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
-		
-			/* upgrade the plane and stack stats and hists if they were computed */
-			if (head->isFinished == 1){
-				/* prepare memory */
-				myPixels->planeInfos = (planeInfo *) malloc(sizeof(planeInfo) * nPlanes);
-				myPixels->stackInfos = (stackInfo *) malloc(sizeof(stackInfo) * nStacks);
-			
-				/* update plane and stack infos in memory*/
-				update_planeInfos_v2 ( (planeInfo_v2 *) ((u_int8_t *) mmap_info + sizeof(pixHeader)),
-										myPixels->planeInfos, nPlanes);
-				update_stackInfos_v2 ( (stackInfo_v2 *) ((u_int8_t *) mmap_info + sizeof(pixHeader) + 
-										sizeof (planeInfo_v2) * nPlanes),
-										myPixels->stackInfos, nStacks);									
-				/* copy from memory into the file*/
-				// memcpy((u_int8_t *) (mmap_info), myPixels->head, sizeof(pixHeader));
-				memcpy((u_int8_t *) (mmap_info + sizeof(pixHeader)), myPixels->planeInfos, sizeof(planeInfo)*nPlanes);
-				memcpy((u_int8_t *) (mmap_info + sizeof(pixHeader) + sizeof (planeInfo) * nPlanes), 
-				myPixels->stackInfos, sizeof(stackInfo)*nStacks);
-	
-				/* memory rewiring */
-				free (myPixels->planeInfos);
-				free (myPixels->stackInfos);
+			/* N.B: If header is vers 2 we need to recompute the statistics to compute the histogram bins */	
+		case 3:
+			/* N.B: If header is vers 3 we need to recompute the histogram bins */	
+			if (head->isFinished == 1) {
 				myPixels->planeInfos = (planeInfo*) ( (u_int8_t *) mmap_info + sizeof(pixHeader) );
 				myPixels->stackInfos = (stackInfo*) ( (u_int8_t *) mmap_info + sizeof(pixHeader) + sizeof (planeInfo) * nPlanes );
+				
+				for (i=0; i<nPlanes; i++)
+					myPixels->planeInfos[i].stats_OK = 0;
+				for (i=0; i<nStacks; i++)
+					myPixels->stackInfos[i].stats_OK = 0;
 			}
 			
 			/* put the stamp of approval */
-			head->vers = (u_int8_t) 3;
-			if (ret == 0) ret = 2;
+			head->vers = (u_int8_t) 4;
+			ret = 3; /* ret 3 is returned even if the original file was in ver 2 */
 			break;
-		case 3:
-			/* if the header is in vers 3 already we are lucky */
+		case 4:
+			/* if the header is in vers 4 already we are lucky */
 			/* N.B: this could be because another process updated this file while this process waited  */
 			/*      for an exclusive read/write lock */
-			myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
-			myPixels->planeInfos = (planeInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader));
-			myPixels->stackInfos = (stackInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader) +
-								   (sizeof (planeInfo) * head->dz * head->dc * head->dt));
-			if (ret == 0) ret = 3;
+			
+			ret = 4;
 			break;
 				
 		default:
@@ -282,8 +266,6 @@ void *mmap_info=NULL;
 pixHeader *head;
 struct stat fStat;
 int open_flags=0, mmap_flags=0;
-int ret=3 /* variable stores the pixel files original version */;
-
 
 	if (rorw == 'r' || rorw == 'i') {
 		open_flags = O_RDONLY;
@@ -331,6 +313,7 @@ int ret=3 /* variable stores the pixel files original version */;
 
 
 	myPixels->head = head = (pixHeader *) mmap_info;
+	myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
 	myPixels->is_mmapped = 1;
 	
 	if (!head->isFinished && rorw == 'r') {
@@ -352,29 +335,32 @@ int ret=3 /* variable stores the pixel files original version */;
 				return (-8);
 			myPixels->size_rep = fStat.st_size;
 		}
-		return ret;
+		return OME_IS_PIXL_VER;
 	}
 	
 	/* check the signature and version if they're in the file */
 	if (head->mySig != OME_IS_PIXL_SIG ||
 		head->vers  != OME_IS_PIXL_VER){
-			
+		
+		int ret; /* variable stores the pixel file's original version */
+		
 		/* release the read lock for the file, we will need to upgrade to write */
 		lockRepFile (myPixels->fd_info,'u',0LL,0LL);
 		if ( (ret=updateHeaderFile(myPixels, head->vers)) < 0){	
 				OMEIS_DoError ("Incompatible file type. Update failed.");
 			return (-10);
 		}
+		
 		/* all write updates were done to the file */
 		lockRepFile (myPixels->fd_info,'r',0LL,0LL);
-		return ret;	
+		return ret;
 	}
+	
 	/* if we get here we are opening an already updated pixels header file */
-	myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
 	myPixels->planeInfos = (planeInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader));
 	myPixels->stackInfos = (stackInfo *) ( (u_int8_t *) mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
 
-	return (ret);	
+	return OME_IS_PIXL_VER;	
 }
 
 
@@ -400,8 +386,8 @@ int pixel_file_vers;
 	}
 
 	/* open and mmap the repository file unless we're just getting info */
-	/* for pixel files of version 1 and 2 the statistics need to be recomputed so the pixels must be loaded */
-	if (rorw != 'i' || pixel_file_vers == 1 || pixel_file_vers == 2) {
+	/* for pixel files of version 1, 2 and 3 the statistics need to be recomputed so the pixels must be loaded */
+	if (rorw != 'i' || pixel_file_vers == 1 || pixel_file_vers == 2 || pixel_file_vers == 3) {
 		if (myPixels->fd_rep < 0) {
 			if ( (myPixels->fd_rep = openRepFile (myPixels->path_rep, open_flags)) < 0) {
 				/* If we ran recoverPixels successfully, we're done.
@@ -431,9 +417,9 @@ int pixel_file_vers;
 	}
 	
 	/* compute statistics if appropriate */
-	if (pixel_file_vers == 1 || pixel_file_vers == 2){
-			/* we might need to recompute the statistics after an update */	
-			lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
+	if (pixel_file_vers == 1 || pixel_file_vers == 2 || pixel_file_vers == 3){
+		/* we might need to recompute the statistics after an update */	
+		lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
 		if (FinishStats (myPixels, (char) 0) < 0){
 			OMEIS_DoError ("Unable to compute statistics while updating pixel file");
 			return (-1);
@@ -1462,7 +1448,8 @@ int i;
 	
 	thePix = ((char *)myPixels->pixels) + pix_off;
 	memset (&myPlaneInfo, 0, sizeof(planeInfo));
-if (head->bp == 1 && head->isSigned) {
+	
+	if (head->bp == 1 && head->isSigned) {
 		sCharP = thePix;
 		
 		/* compute plane statistics */
@@ -1480,11 +1467,11 @@ if (head->bp == 1 && head->isSigned) {
 			}
 		}
 		sCharP = thePix;
+
 		/* compute the plane histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *sCharP++;	
-			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
-			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 		}
 	} else if (head->bp == 1 && !head->isSigned) {
 		uCharP = (unsigned char *) thePix;
@@ -1508,8 +1495,7 @@ if (head->bp == 1 && head->isSigned) {
 		/* compute the plane histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *uCharP++;	
-			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
-			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 		}
 	} else if (head->bp == 2 && head->isSigned) {
 		sShrtP = (short *) thePix;
@@ -1533,8 +1519,7 @@ if (head->bp == 1 && head->isSigned) {
 		/* compute the stack histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *sShrtP++;		
-			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
-			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 		}
 	
 	} else if (head->bp == 2 && !head->isSigned) {
@@ -1559,9 +1544,7 @@ if (head->bp == 1 && head->isSigned) {
 		/* compute the stack histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *uShrtP++;	
-
-			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
-			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 		}
 	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
 		sLongP = (long *) thePix;
@@ -1585,8 +1568,7 @@ if (head->bp == 1 && head->isSigned) {
 		sLongP = (long *) thePix;
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *sLongP++;		
-			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
-			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 		}
 	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
 		uLongP = (unsigned long *) thePix;
@@ -1610,8 +1592,7 @@ if (head->bp == 1 && head->isSigned) {
 		uLongP = (unsigned long *) thePix;
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *uLongP++;		
-			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
-			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 		}
 	} else if (head->bp == 4 && head->isFloat) {
 		floatP = (float *) thePix;
@@ -1635,8 +1616,7 @@ if (head->bp == 1 && head->isSigned) {
 		/* compute the stack histogram */
 		for (i=0;i<nPix;i++) {
 			theVal = (float) *floatP++;		
-			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
-			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+			myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 		}
 	}
 	
@@ -1661,7 +1641,7 @@ if (head->bp == 1 && head->isSigned) {
 	 myPlaneInfo.geosigma = (float) sqrt (fabs(
 	 	(sum_i2-2*myPlaneInfo.geomean * sum_i + myPlaneInfo.geomean * myPlaneInfo.geomean) /
 	 	(nPix - 1.0)));
-
+	 	
 	myPlaneInfo.centroid_x = sum_xi / sum_i;
 	myPlaneInfo.centroid_y = sum_yi / sum_i;
 	

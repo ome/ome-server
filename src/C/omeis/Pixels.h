@@ -49,8 +49,13 @@
 /* ----------- */
 
 #define OME_IS_PIXL_SIG 0x5049584C /* PIXL in ASCII */
-#define OME_IS_PIXL_VER 3   /* Version 3. Change from version 2 to version 3: */
-							/* histogram computation added breaking binary compatibility */
+#define OME_IS_PIXL_VER 4   
+
+/* Change from version 3 to version 4: fixed broken Histogram computation */
+/* Change from version 2 to version 3: added histogram computation */
+
+/* N.B: its quite expected to update from version 2 to version 4 */
+
 #define NUM_BINS 128 /* NUM_BINS is the number of bins used in binning the image histogram */
                      /* N.B: Modifying value breaks binary compatibility */
                      
