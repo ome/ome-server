@@ -120,4 +120,8 @@ public class PConstants {
 	public static final float LINK_BULB_SIZE=8;
 	public static final float LINK_BULB_RADIUS = LINK_BULB_SIZE/2;
 	
+	public static final double FIELD_LABEL_SCALE=4;
+	
+	public static final double ITEM_LABEL_SCALE=3;
+	
 }
