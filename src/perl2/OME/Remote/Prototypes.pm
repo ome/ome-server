@@ -23,67 +23,524 @@ our $VERSION = '1.00';
 
 use strict;
 
-our %prototypes =
-  (
-   'OME::Session' => {
-   		      User    => [[],['OME::AttributeType::Superclass']],
-                      id      => [['$'],['$']],
-                      Factory => [[],['OME::Factory']],
-                      project => [['OME::Project'],['OME::Project']],
-                      dataset => [['OME::Dataset'],['OME::Dataset']],
-                     },
-   'OME::Factory' => {
-                      newObject     => [['$','%'],['OME::DBObject']],
-                      newAttribute  => [['$','OME::DBObject','%'],
-                                        ['OME::AttributeType::Superclass']],
-                      loadObject    => [['$','$'],['OME::DBObject']],
-                      loadAttribute => [['$','$'],
-                                        ['OME::AttributeType::Superclass']],
-                     },
-   'OME::DBObject' => {
-                       id          => [['$'],['$']],
-                       writeObject => [[],[]],
-                       Session     => [[],['OME::Session']],
-                      },
-   'OME::AttributeType::Superclass' => {
-                                        id          => [[],['$']],
-                                        writeObject => [[],[]],
-                                        Session     => [[],['OME::Session']],
-                                       },
-   'OME::Project' => {
-                      #id          => [['$'],['$']],
-                      name        => [['$'],['$']],
-                      description => [['$'],['$']],
-                      owner       => [['OME::Experimenter'],['OME::Experimenter']],
-                      group       => [['OME::Group'],['OME::Group']],
-                      #writeObject => [[],[]],
-                     },
-   'OME::Experimenter' => {
-                           #id          => [['$'],['$']],
-                           ome_name    => [['$'],['$']],
-                           firstname   => [['$'],['$']],
-                           lastname    => [['$'],['$']],
-                           email       => [['$'],['$']],
-                           data_dir    => [['$'],['$']],
-                           #writeObject => [[],[]],
-                          },
-   'OME::Group' => {
-                    #id          => [['$'],['$']],
-                    name        => [['$'],['$']],
-                    leader      => [['OME::Experimenter'],['OME::Experimenter']],
-                    contact     => [['OME::Experimenter'],['OME::Experimenter']],
-                    #writeObject => [[],[]],
-                },
-  );
+require Exporter;
+use base qw(Exporter);
+our @EXPORT = qw(addPrototype findPrototype
+                 verifyInputPrototype verifyOutputPrototype);
+
+use Carp;
+
+=head1 NAME
+
+OME::Remote::Prototypes - specifies which API methods are visible via
+the Remote Framework
+
+=head1 SYNOPSIS
+
+	package OME::MyPackage;
+	use OME::Remote::Prototypes;
+	addPrototype("OME::MyPackage","foo",[],['$']);
+	sub foo {
+	    my ($self) = @_;
+	    return 5;
+	}
+
+=head1 DESCRIPTION
+
+Contains methods for describing and checking the prototypes of the
+method calls visible via the Remote Framework.  When writing a new
+package, object methods can be published by calling the addPrototype
+procedure.  The module writer must specify the prototype of the
+function, since most RPC protocols to do not support the same
+flexibility in subroutine calls that Perl has.
+
+=head1 PROTOTYPES
+
+Each published method must have a prototype declared for both its
+input parameters and its results.  Because information about the type
+of values cannot easily be passed across the RPC channel, all of the
+typing information must be fully specified by the prototypes.
+Specifically, the Remote Framework must know which parameters on the
+input channel are object references, so that the Dispatcher can
+demarshall them into the Perl objects they represent.
+
+A single prototype (for either the input or output) is fairly
+straightforward: it is an anonymous array of strings.  Each string in
+the array specifies the type of one parameter.  The possible values
+for each each string are as follows:
+
+=over
+
+=item '$'
+
+Any scalar value
+
+=item '@'
+
+An array (treated in Perl as an array reference).  Can be abritrarily
+complex, but should not contain any object references.
+
+=item '%'
+
+A hash, struct, or the equivalent (treated in Perl as a hash
+reference).  Can be arbitrarily complex, but should not contain any
+object references.
+
+=item A class name
+
+In the RPC channel, this value must be an object reference, which can
+only be obtained from the output of a previous method.  The Dispatcher
+will ensure that the object is an instance of a subclass of the
+specified class, and throw an error otherwise.  (If you want to accept
+any object at all, you can always use the "UNIVERSAL" class, which all
+Perl classes are descendants of.)
+
+=item '*'
+
+Signifies a list; all remaining parameters are checked against the
+previous entry in the prototype.  This entry, if it exists, should be
+last in the prototype, since anything after it will be ignored.
+Further, it cannot be the first element of a prototype.  If it is, the
+Remote Framework will throw an error when the prototype is registered.
+
+=back
+
+For input prototypes, it is important to know that the published
+method will be called in Perl using object-oriented syntax.  As such,
+there will always be an implied first parameter (usually called
+$self), which should I<not> be specified in the prototype.
+
+Note that these prototypes are not nearly as complicated as what a
+Perl method can actually accept as input or generate as output.  There
+are some methods which cannot be published without providing a wrapper
+method with a simpler interface.  This wrapper method can then be
+published.  There are no cases of complex methods like this in the OME
+API.
+
+=head2 Examples
+
+Below are some hypothetical subroutines and their corresponding
+input and output prototypes.
+
+	sub add {
+	    # Takes two numbers and adds them together.
+	    my ($self,$addend1,$addend2) = @_;
+	    return $addend1+$addend2;
+	}
+	Input:  ['$','$']
+	Output: ['$']
+
+	sub addList {
+	    my $self = shift;
+	    # Takes in a list of numbers and adds them together.
+	    my $sum = 0;
+	    $sum += $_ foreach @_;
+	    return $sum;
+	}
+	Input:  ['$','*']
+	Output: ['$']
+
+	sub OME::Project::addDatasetToProject {
+	    # This method doesn't really exist; don't try to call it.
+	    my ($self,$dataset) = @_;
+	    $self->Session()->Factory()->
+	      maybeNewObject("OME::Project::DatasetMap",
+	                     {
+	                      project_id => $self->id(),
+	                      dataset_id => $dataset->id()
+	                     });
+	    return;
+	}
+	Input:  ['OME::Dataset']
+	Output: []
+
+	sub OME::Factory::findObjects {
+	    my ($self,$className,@criteria) = @_;
+	    # You can find the code for this in OME::Factory.
+	    return @listOfObjects;
+	}
+	Input:  ['$','$','*']  (technically, ['$','*'] would also work)
+	Output: ['OME::DBObject','*']
+
+=head2 Context
+
+Perl method calls also support the notion of context, which allows a
+single subroutine to generate different results depending on how its
+called.  (See L<perldata/"Context">.)  No currently RPC
+implementations support the notion of context, so the prototype of a
+method must specify which context to use explicitly, or the Dispatcher
+must guess.  It does this based on the length of the output prototype;
+if the prototype is empty ([]), the method is called in void context.
+If it has one element, it is called in scalar context.  Otherwise, it
+is called in list context.
+
+=head2 Method overloading and renaming
+
+Many Perl methods are overloaded, either by parameter list or by
+context.  Currently, the Remote Framework will only support one set of
+prototypes (including a single context specification, if any) for any
+published method.  To support overloading, the Remote Framework allows
+methods to be published under names which are different than the Perl
+subroutine implementing them.
+
+=head1 METHODS
+
+The following methods are available for handling prototypes:
+
+=head2 addPrototype
+
+	addPrototype($className,$methodName,
+	             $inputPrototype,$outputPrototype,
+	             [ context => $context, ]
+	             [ publishedName => $publishedName ]);
+
+Publishes the $className::$methodName method via the Remote Framework.
+The prototypes of the input parameters and results are specified by
+the $inputPrototype and $outputPrototype parameters, and must be of
+the format described above.  The context and publishedName parameters
+are optional; if included, they, respectively, force the Dispatcher to
+call the method in a particular context ('void', 'scalar', or 'list'),
+and publish the method under a different name.
+
+=head2 findPrototype
+
+	my $prototype = findPrototype($className,$methodName);
+
+Returns a prototype corresponding to the given $className and
+$methodName.  Note that $methodName in this case refers to the
+published method name if it differs from the Perl method name.  The
+prototype returned is a hash with the following format:
+
+	{
+	    input   => the input prototype,
+	    output  => the output prototype,
+	    method  => the Perl method name,
+	    context => the context
+	}
+
+The values should not be modified.  The hash can be passed into other
+routines in this package which require a prototype.
+
+This method will follow the inheritance tree to find a prototype for
+the method specified.  If the specified class does not publish the
+given method, each of its ancestors will be checked in order.  If
+after checking the entire ancestry tree no prototype is found,
+findPrototype will return undef.
+
+=head2 verifyInputPrototype
+
+	verifyInputPrototype($prototype,$params,$subroutine,[@subParams]);
+
+Verifies that a list of input parameters matches $prototype, which
+should be a value returned from the findPrototype function.  Uses
+$subroutine to translate object references into Perl objects.  If a
+parameter is supposed to be an object, $subroutine will be called as
+follows:
+
+	my ($object, $replacement) = $subroutine->($parameter,@subParams);
+
+This routine should return the object that $parameter represents, and
+the value that should be placed in the parameter list in place of the
+original parameter.  (The second result can be undefined, signifying
+that the parameter list should not be modified.)  The $object result
+must be a descendant of the class specified in the input prototype for
+the parameter list to match.
+
+=head2 verifyOutputPrototype
+
+	verifyOutputPrototype($prototype,$params,$subroutine,[@subParams]);
+
+Similar to verifyInputPrototype, but checks a result list against the
+output prototype.
+Uses
+$subroutine to translate Perl objects into object references.  If a
+parameter is supposed to be an object, $subroutine will be called as
+follows:
+
+	my ($object, $replacement) = $subroutine->($result,@subParams);
+
+In this case, the routine should return $result as the $object output,
+since it's already a Perl object.  The $replacement output should be
+the object reference to place in the result list.  The $object output
+will be checked to make sure it is a descendant of the class specified
+in the output prototype.
+
+=cut
 
 
-sub findPrototypes {
+our %prototypes;
+
+# If this is set to 1, then addPrototype will be very verbose.
+our $debug = 0;
+
+# If this is set to 1, then addPrototype will verify that each Perl
+# method exists.  (This will fail in the case of publishing an
+# ancestor's method, e.g., OME::DBObject->id, and in the case of a
+# class being defined in another class's file, e.g.,
+# OME::AttributeType::Superclass, defined in OME/AttributeType.pm)
+our $test = 0;
+
+addPrototype("OME::DBObject","id",['$'],['$']);
+addPrototype("OME::DBObject","writeObject",[],[]);
+addPrototype("OME::DBObject","Session",[],['OME::Session']);
+
+addPrototype("OME::AttributeType::Superclass","id",['$'],['$']);
+addPrototype("OME::AttributeType::Superclass","writeObject",[],[]);
+addPrototype("OME::AttributeType::Superclass","Session",[],['OME::Session']);
+
+addPrototype("OME::Session","User",[],['OME::AttributeType::Superclass']);
+addPrototype("OME::Session","Factory",[],['OME::Factory']);
+addPrototype("OME::Session","project",['OME::Project'],['OME::Project']);
+addPrototype("OME::Session","dataset",['OME::Dataset'],['OME::Dataset']);
+
+addPrototype("OME::Factory","newObject",['$','%'],['OME::DBObject']);
+addPrototype("OME::Factory","loadObject",['$','$'],['OME::DBObject']);
+addPrototype("OME::Factory","objectExists",['$','*'],['$']);
+addPrototype("OME::Factory","findObject",['$','*'],['OME::DBObject']);
+addPrototype("OME::Factory","findObjects",['$','*'],['OME::DBObject','*']);
+addPrototype("OME::Factory","findObjects",['$','*'],['OME::Factory::Iterator'],
+             publishedName => "iterateObjects");
+addPrototype("OME::Factory","findObjectLike",['$','*'],['OME::DBObject']);
+addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::DBObject','*']);
+addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::Factory::Iterator'],
+             publishedName => "iterateObjectsLike");
+
+addPrototype("OME::Factory::Iterator","first",[],['OME::DBObject']);
+addPrototype("OME::Factory::Iterator","next",[],['OME::DBObject']);
+
+addPrototype("OME::Project","name",['$'],['$']);
+addPrototype("OME::Project","description",['$'],['$']);
+addPrototype("OME::Project","owner_id",['$'],['$']);
+#addPrototype("OME::Project","group_id",['$'],['$']);
+addPrototype("OME::Project","dataset_links",[],['OME::Project::DatasetMap','*']);
+addPrototype("OME::Project","dataset_links",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_dataset_links");
+
+addPrototype("OME::Project::DatasetMap","project",
+             ['OME::Project'],['OME::Project']);
+addPrototype("OME::Project::DatasetMap","dataset",
+             ['OME::Dataset'],['OME::Dataset']);
+
+addPrototype("OME::Dataset","name",['$'],['$']);
+addPrototype("OME::Dataset","description",['$'],['$']);
+addPrototype("OME::Dataset","locked",['$'],['$']);
+addPrototype("OME::Dataset","owner_id",['$'],['$']);
+#addPrototype("OME::Dataset","group_id",['$'],['$']);
+addPrototype("OME::Dataset","project_links",[],['OME::Project::DatasetMap','*']);
+addPrototype("OME::Dataset","project_links",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_project_links");
+addPrototype("OME::Dataset","image_links",[],['OME::Image::DatasetMap','*']);
+addPrototype("OME::Dataset","image_links",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_image_links");
+
+addPrototype("OME::Image","name",['$'],['$']);
+addPrototype("OME::Image","description",['$'],['$']);
+addPrototype("OME::Image","image_guid",['$'],['$']);
+addPrototype("OME::Image","created",['$'],['$']);
+addPrototype("OME::Image","inserted",['$'],['$']);
+addPrototype("OME::Image","experimenter_id",['$'],['$']);
+addPrototype("OME::Image","group_id",['$'],['$']);
+addPrototype("OME::Image","dataset_links",[],['OME::Image::DatasetMap','*']);
+addPrototype("OME::Image","dataset_links",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_dataset_links");
+addPrototype("OME::Image","all_features",[],['OME::Feature','*']);
+addPrototype("OME::Image","all_features",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_all_features");
+
+addPrototype("OME::Image::DatasetMap","image",
+             ['OME::Image'],['OME::Image']);
+addPrototype("OME::Image::DatasetMap","dataset",
+             ['OME::Dataset'],['OME::Dataset']);
+
+addPrototype("OME::Feature","name",['$'],['$']);
+addPrototype("OME::Feature","tag",['$'],['$']);
+addPrototype("OME::Feature","image",['OME::Image'],['OME::Image']);
+addPrototype("OME::Feature","parent_feature",['OME::Feature'],['OME::Feature']);
+addPrototype("OME::Feature","children",[],['OME::Feature','*']);
+addPrototype("OME::Feature","children",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_children");
+
+addPrototype("OME::DataTable","granularity",['$'],['$']);
+addPrototype("OME::DataTable","table_name",['$'],['$']);
+addPrototype("OME::DataTable","description",['$'],['$']);
+addPrototype("OME::DataTable","data_columns",[],['OME::DataTable::Column','*']);
+addPrototype("OME::DataTable","data_columns",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_data_columns");
+
+addPrototype("OME::DataTable::Column","column_name",['$'],['$']);
+addPrototype("OME::DataTable::Column","description",['$'],['$']);
+addPrototype("OME::DataTable::Column","sql_type",['$'],['$']);
+addPrototype("OME::DataTable::Column","reference_type",['$'],['$']);
+addPrototype("OME::DataTable::Column","data_table",
+             ['OME::DataTable'],['OME::DataTable']);
+
+addPrototype("OME::AttributeType","granularity",['$'],['$']);
+addPrototype("OME::AttributeType","name",['$'],['$']);
+addPrototype("OME::AttributeType","description",['$'],['$']);
+addPrototype("OME::AttributeType","attribute_columns",
+             [],['OME::AttributeType::Column','*']);
+addPrototype("OME::AttributeType","attribute_columns",
+             [],['OME::Factory::Iterator'],
+             publishedName => "iterate_attribute_columns");
+
+addPrototype("OME::AttributeType::Column","name",['$'],['$']);
+addPrototype("OME::AttributeType::Column","description",['$'],['$']);
+addPrototype("OME::AttributeType::Column","attribute_type",
+             ['OME::AttributeType'],['OME::AttributeType']);
+addPrototype("OME::AttributeType::Column","data_column",
+             ['OME::DataTable::Column'],['OME::DataTable::Column']);
+
+addPrototype("OME::Program","program_name",['$'],['$']);
+addPrototype("OME::Program","description",['$'],['$']);
+addPrototype("OME::Program","category",['$'],['$']);
+addPrototype("OME::Program","module_type",['$'],['$']);
+addPrototype("OME::Program","location",['$'],['$']);
+addPrototype("OME::Program","default_iterator",['$'],['$']);
+addPrototype("OME::Program","new_feature_tag",['$'],['$']);
+addPrototype("OME::Program","execution_instructions",['$'],['$']);
+addPrototype("OME::Program","inputs",[],['OME::Program::FormalInput','*']);
+addPrototype("OME::Program","inputs",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_inputs");
+addPrototype("OME::Program","outputs",[],['OME::Program::FormalOutput','*']);
+addPrototype("OME::Program","outputs",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_outputs");
+addPrototype("OME::Program","analyses",[],['OME::Analysis','*']);
+addPrototype("OME::Program","analyses",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_analyses");
+
+addPrototype("OME::Program::FormalInput","name",['$'],['$']);
+addPrototype("OME::Program::FormalInput","description",['$'],['$']);
+addPrototype("OME::Program::FormalInput","optional",['$'],['$']);
+addPrototype("OME::Program::FormalInput","list",['$'],['$']);
+addPrototype("OME::Program::FormalInput","user_defined",['$'],['$']);
+addPrototype("OME::Program::FormalInput","attribute_type",
+             ['OME::AttributeType'],['OME::AttributeType']);
+addPrototype("OME::Program::FormalInput","lookup_table",
+             ['OME::LookupTable'],['OME::LookupTable']);
+addPrototype("OME::Program::FormalInput","program",
+             ['OME::Program'],['OME::Program']);
+
+addPrototype("OME::Program::FormalOutput","name",['$'],['$']);
+addPrototype("OME::Program::FormalOutput","description",['$'],['$']);
+addPrototype("OME::Program::FormalOutput","feature_tag",['$'],['$']);
+addPrototype("OME::Program::FormalOutput","optional",['$'],['$']);
+addPrototype("OME::Program::FormalOutput","list",['$'],['$']);
+addPrototype("OME::Program::FormalOutput","attribute_type",
+             ['OME::AttributeType'],['OME::AttributeType']);
+addPrototype("OME::Program::FormalOutput","program",
+             ['OME::Program'],['OME::Program']);
+
+addPrototype("OME::Analysis","program",['OME::Program'],['OME::Program']);
+addPrototype("OME::Analysis","dataset",['OME::Dataset'],['OME::Dataset']);
+addPrototype("OME::Analysis","dependence",['$'],['$']);
+addPrototype("OME::Analysis","timestamp",['$'],['$']);
+addPrototype("OME::Analysis","status",['$'],['$']);
+addPrototype("OME::Analysis","inputs",[],['OME::Analysis::ActualInput','*']);
+addPrototype("OME::Analysis","inputs",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_inputs");
+
+addPrototype("OME::Analysis::ActualInput","analysis",
+             ['OME::Analysis'],['OME::Analysis']);
+addPrototype("OME::Analysis::ActualInput","input_analysis",
+             ['OME::Analysis'],['OME::Analysis']);
+addPrototype("OME::Analysis::ActualInput","formal_input",
+             ['OME::Program::FormalInput'],['OME::Program::FormalInput']);
+
+sub addPrototype {
+    my ($class,$method,$inputPrototype,$outputPrototype,%options) = @_;
+
+    # Get the published name (default to the method name), and verify
+    # there's not already a prototype for this method.
+
+    if ($debug) {
+        print STDERR "  $class","->$method\n";
+        print STDERR "    Input:  [";
+        print STDERR join(",",@$inputPrototype),"]\n";
+        print STDERR "    Output: [";
+        print STDERR join(",",@$outputPrototype),"]\n";
+    }
+
+    if ($test) {
+        die "Malformed class name $class"
+          unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+        eval "require $class";
+
+        eval {
+            no strict 'refs';
+            my $fullname = "$class\::$method";
+            carp "Method ${class}->${method} does not exist"
+              unless defined &$fullname;
+        };
+    }
+
+    my $publishedName =
+      exists $options{publishedName}?
+        $options{publishedName}:
+        $method;
+    die "Prototype already exists for $class\::$publishedName!"
+      if exists $prototypes{$class}->{$publishedName};
+
+    # Verify that the prototypes are well-formed.
+
+    die "Prototypes must be array references"
+      unless (ref($inputPrototype) eq "ARRAY") &&
+             (ref($outputPrototype) eq "ARRAY");
+
+    foreach (@$inputPrototype,@$outputPrototype) {
+        next if $_ eq '$';
+        next if $_ eq '@';
+        next if $_ eq '%';
+        next if $_ eq '*';
+        next if /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+        die "Illegal prototype entry: $_";
+    }
+
+    if (scalar(@$inputPrototype) > 0) {
+        die "First entry of prototype cannot be '*'"
+          if ($inputPrototype->[0] eq '*');
+    }
+    if (scalar(@$outputPrototype) > 0) {
+        die "First entry of prototype cannot be '*'"
+          if ($outputPrototype->[0] eq '*');
+    }
+
+    # Get the context, and verify it.
+
+    my $context;
+    if (exists $options{context}) {
+        $context = lc($options{context});
+        die "Illegal context"
+          if ($context ne "void") &&
+             ($context ne "scalar") &&
+             ($context ne "list");
+    } elsif (scalar(@$outputPrototype) == 0) {
+        $context = "void";
+    } elsif (scalar(@$outputPrototype) == 1) {
+        $context = "scalar";
+    } else {
+        $context = "list";
+    }
+
+    # Create the prototype and store it
+
+    my $prototype = {
+                     input   => $inputPrototype,
+                     output  => $outputPrototype,
+                     method  => "$method",
+                     context => $context
+                    };
+    bless $prototype, "OME::Remote::Prototypes::PrototypeObject";
+
+    $prototypes{$class}->{$publishedName} = $prototype;
+}
+
+sub findPrototype {
     my ($class, $method) = @_;
 
     my @classesToCheck = ($class);
     my $prototypeFound;
 
-    print STDERR "*** $class ";
+    #print STDERR "*** $class ";
     while (my $nextClass = shift(@classesToCheck)) {
         if (exists $prototypes{$nextClass}->{$method}) {
             $prototypeFound = $prototypes{$nextClass}->{$method};
@@ -91,14 +548,129 @@ sub findPrototypes {
         }
         my $isaRef = "${nextClass}::ISA";
         no strict 'refs';
-        print STDERR join(' ',@$isaRef)," ";
+        #print STDERR join(' ',@$isaRef)," ";
         push @classesToCheck, @$isaRef;
         use strict 'refs';
     }
 
-    print STDERR "\n";
+    #print STDERR "\n";
 
     return $prototypeFound;
 }
 
+# Verifies one value in a parameter list against the type specified in
+# the prototype.
+#   PRIVATE METHOD
+#   Inputs:
+#     $param      - the parameter value (should be an lvalue)
+#     $type       - the type to check it against
+#     $subroutine - a subroutine (code reference) used to perform
+#                   object reference replacement (see the POD above)
+#     @subInputs  - other values to pass into the subroutine
+#   Returns:
+#     1 - parameter matches type
+#     0 - parameter does not match type
+#     If $type is an object type, $param will be modified according
+#     to what is returned by $subroutine.
+
+sub __verifyOneValue {
+    my ($param,$type,$subroutine,@subInputs) = @_;
+    my $ref = ref($param);
+
+    if ($type eq '$') {
+        # Function expects a single scalar
+        return !$ref;
+    }
+
+    if ($type eq '@') {
+        # Function expects an array reference
+        return $ref eq "ARRAY";
+    }
+
+    if ($type eq '%') {
+        # Function expects a hash reference
+        return $ref eq "HASH";
+    }
+
+    if (!defined $param) {
+        # Null values trivially match any object class.
+        return 1;
+    } else {
+        # Call the helper subroutine.
+        return 0 unless defined $subroutine;
+        my ($object,$replacement) = $subroutine->($param,@subInputs);
+
+        # If the subroutine flags an error (by returing undef), then
+        # the parameter doesn't match.
+        return 0 unless defined $object;
+
+        # Check the inheritance of the object.
+        my $good = UNIVERSAL::isa($object,$type);
+        #print STDERR "  vone $good\n";
+
+        # Replace the object in the parameter list, if necessary.
+        $_[0] = $replacement if defined $replacement && $good;
+
+        return $good;
+    }
+}
+
+# Verifies a list of parameters against a prototype.
+#   PRIVATE METHOD
+#   Inputs:
+#     $which      - the prototype to use ('input' or 'output')
+#     $prototype  - prototype object returned from findPrototype
+#     $params     - list of parameters (array reference)
+#     $subroutine - a subroutine (code reference) used to perform
+#                   object reference replacement (see the POD above)
+#     @subInputs  - other values to pass into the subroutine
+#   Returns:
+#     1 - parameter list matches prototype
+#     0 - doesn't
+#     Any parameters matching an object type will be replaced
+#     according to what is returned by $subroutine.
+
+sub __verifyPrototype {
+    my ($which,$prototype,$params,$subroutine,@subParams) = @_;
+
+    die "$prototype not a prototype!"
+      unless UNIVERSAL::isa($prototype,"OME::Remote::Prototypes::PrototypeObject");
+
+    my @types = (@{$prototype->{$which}});
+    my $lastType;
+    my $currentType = shift(@types);
+    foreach my $param (@$params) {
+        return 0 unless defined $currentType;
+
+        my $typeToCheck =
+          $currentType eq "*"? $lastType: $currentType;
+
+        return 0 unless defined $typeToCheck;
+        return 0 unless __verifyOneValue($param,$typeToCheck,
+                                         $subroutine,@subParams);
+
+        if ($currentType ne "*") {
+            $lastType = $currentType;
+            $currentType = shift(@types);
+        }
+    }
+
+    return 1;
+}
+
+sub verifyInputPrototype {
+    return __verifyPrototype("input",@_);
+}
+
+sub verifyOutputPrototype {
+    return __verifyPrototype("output",@_);
+}
+
+
 1;
+
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
+=cut

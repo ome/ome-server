@@ -100,6 +100,21 @@ or decoded from, respectively, a string reference which can be passed
 across the RPC channel.  The object and its reference are stored in a
 cache, so that it can be referred to in later dispatch calls.
 
+=head2 freeObject
+
+	OME::Remote::Dispatcher->($session,$object);
+
+Tells the Dispatcher that the given object will no longer be used by
+the client.  Allows the Dispatcher to remove the object from the
+cache, allowing the Perl garbage collector to free the object.
+
+Note that logging out (by calling closeSession) performs an implicit
+call to freeObject for any objects remaining in the cache for the
+session.
+
+Returns 1 if the object was deleted successfully; throws an error if
+not.
+
 =cut
 
 use strict;
@@ -110,7 +125,7 @@ use OME::SessionManager;
 use OME::Session;
 use OME::Factory;
 
-use OME::Remote::Prototypes;
+use OME::Remote::Prototypes ();  # don't import anything
 
 
 sub versionInfo {
@@ -176,29 +191,64 @@ sub dispatch {
     print "Calling ${objectProto}->${method}\n";
 
     # Lookup the method's prototype
-    my $prototypes =
-      OME::Remote::Prototypes::findPrototypes($objectClass,$method);
-      #$OME::Remote::Prototypes::prototypes{$objectClass}->{$method};
+    my $prototype =
+      OME::Remote::Prototypes::findPrototype($objectClass,$method);
 
     croak "Cannot find method $method in class $objectClass"
-      if (!defined $prototypes);
+      if (!defined $prototype);
 
-    my ($paramProto,$returnProto) = @$prototypes;
+    # Fix XML escape characters
+
+    $_ = OME::Remote::Utils::xmlEscape('P',$_) foreach @params;
     die "Parameters do not match prototype"
-      unless OME::Remote::Utils::verifyParameterList('P',\@params,$paramProto,
-                                                    $sessionKey);
+      unless OME::Remote::Prototypes::verifyInputPrototype($prototype,
+                                                           \@params,
+                                                           \&OME::Remote::Utils::inputMarshaller,
+                                                           $sessionKey);
 
-    my @result = $objectProto->$method(@params);
+    my @result;
+    my $context = $prototype->{context};
+    my $realMethod = $prototype->{method};
+
+    # Call the method appropriate to the context in the prototype
+
+    if ($context eq 'void') {
+        $objectProto->$realMethod(@params);
+        @result = ();
+    } elsif ($context eq 'scalar') {
+        my $scalar = $objectProto->$realMethod(@params);
+        @result = ($scalar);
+    } else {
+        @result = $objectProto->$realMethod(@params);
+    }
 
     die "Return value does not match prototype"
-      unless OME::Remote::Utils::verifyParameterList('R',\@result,$returnProto,
-                                                    $sessionKey);
+      unless OME::Remote::Prototypes::verifyOutputPrototype($prototype,
+                                                            \@result,
+                                                            \&OME::Remote::Utils::outputMarshaller,
+                                                            $sessionKey);
 
     print "  (",join(",",@result),")\n";
     return @result;
 }
 
 
+sub freeObject {
+    my ($proto,$sessionRef,$objectRef) = @_;
+    my $session = OME::Remote::Utils::getObject(">>SESSIONS",$sessionRef);
+    my $sessionKey = $session->{SessionKey};
+
+    $objectRef = OME::Remote::Utils::xmlEscape('P',$objectRef);
+
+    # Try to load it in the specified object, just to make sure it
+    # exists.  (getObject will throw an error if it doesn't.)
+    OME::Remote::Utils::getObject($sessionKey,$objectRef);
+
+    # It exists, so delete it.
+    OME::Remote::Utils::deleteObject($sessionKey,$objectRef);
+
+    return 1;
+}
 
 
 # These functions exist in another package so that they aren't
@@ -214,13 +264,17 @@ my %remoteObjects;
 
 sub saveObject {
     my ($sessionKey,$reference,$object) = @_;
-    print "Saving object ",ref($object)," $sessionKey/$reference\n";
-    $remoteObjects{$sessionKey}->{$reference} = $object;
+
+    # Only store the object if it's not already there.
+    if (!exists $remoteObjects{$sessionKey}->{$reference}) {
+        print "  Saving object ",ref($object)," $sessionKey/$reference\n";
+        $remoteObjects{$sessionKey}->{$reference} = $object;
+    }
 }
 
 sub deleteObject {
     my ($sessionKey,$reference) = @_;
-    print "Deleting object $reference\n";
+    print "  Deleting object $reference\n";
     delete $remoteObjects{$sessionKey}->{$reference};
 }
 
@@ -298,88 +352,42 @@ sub deleteSessionObjects {
 }
 
 
-sub verifyParameterType {
-    my ($kind,$param,$type,$sessionKey) = @_;
-    my $ref = ref($param);
+sub inputMarshaller {
+    # $param is an object reference
+    my ($param,$sessionKey) = @_;
 
-    #print STDERR "    $kind - $param $ref $type \n";
+    # Try to load in the cached object corresponding to the reference.
+    my $object;
+    eval {
+        $object = getObject($sessionKey,$param);
+    };
+    return undef if $@;
 
-    if ($type eq '$') {
-        # Function expects a single scalar
-        $_[1] = xmlEscape($kind,$param);
-        return !$ref;
-    }
-
-    if ($type eq '@') {
-        # Function expects an array reference
-        return $ref eq "ARRAY";
-    }
-
-    if ($type eq '%') {
-        # Function expects a hash reference
-        return $ref eq "HASH";
-    }
-
-    if (ref($type) eq "ARRAY") {
-        return verifyParameterList($kind,$param,$type,$sessionKey);
-    }
-
-    if ($kind eq 'P') {
-        my $object;
-        eval {
-            $object = getObject($sessionKey,$kind,$param);
-        };
-        return 0 if $@;
-
-        if (UNIVERSAL::isa($object,$type)) {
-            # Replace the object reference with the object in the
-            # parameter list.
-            $_[1] = $object;
-            return 1;
-        } else {
-            return 0;
-        }
-    } else {
-        if (UNIVERSAL::isa($param,$type)) {
-            # Replace the object with its reference.
-            my $reference = getObjectReference($sessionKey,$param);
-            saveObject($sessionKey,$reference,$param);
-            $_[1] = $reference;
-            return 1;
-        } else {
-            return 0;
-        }
-    }
+    # First result  - object to test for inheritance
+    # Second result - value to place into parameter list given to Perl
+    #                 method
+    return ($object,$object);
 }
 
+sub outputMarshaller {
+    # $param is a Perl object
+    my ($param,$sessionKey) = @_;
 
+    # Get the remote reference for the object, creating a new one if
+    # necessary.
+    my $reference = getObjectReference($sessionKey,$param);
 
-sub verifyParameterList {
-    my ($kind,$params,$types,$sessionKey) = @_;
+    # Save the object into the cache
+    saveObject($sessionKey,$reference,$param);
 
-    return 0 if ref($params) ne "ARRAY";
+    #print STDERR "  output $param $reference\n";
 
-    my @types = (@$types);
-    my $lastType;
-    my $currentType = shift(@types);
-    foreach my $param (@$params) {
-        return 0 unless defined $currentType;
-
-        my $typeToCheck =
-          $currentType eq "*"? $lastType: $currentType;
-
-        return 0 unless defined $typeToCheck;
-        return 0 unless verifyParameterType($kind,$param,
-                                            $typeToCheck,$sessionKey);
-
-        if ($currentType ne "*") {
-            $lastType = $currentType;
-            $currentType = shift(@types);
-        }
-    }
-
-    return 1;
+    # First result  - object to test for inheritance
+    # Second result - value to place into parameter list sent over RPC
+    #                 channel
+    return ($param,$reference);
 }
+
 
 
 =head1 AUTHOR

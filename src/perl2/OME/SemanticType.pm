@@ -122,12 +122,11 @@ sub requireAttributeTypePackage {
         my $data_column = $attribute_column->data_column();
         my $sql_type = $data_column->sql_type();
         if ($sql_type eq 'reference') {
-            $OME::Remote::Prototypes::prototypes{$pkg}->{$name} =
-              [['OME::AttributeType::Superclass'],
-               ['OME::AttributeType::Superclass']];
+            addPrototype($pkg,$name,
+                         ['OME::AttributeType::Superclass'],
+                         ['OME::AttributeType::Superclass']);
         } else {
-            $OME::Remote::Prototypes::prototypes{$pkg}->{$name} =
-              [['$'],['$']];
+            addPrototype($pkg,$name,['$'],['$']);
         }
     }
 
@@ -137,16 +136,13 @@ sub requireAttributeTypePackage {
     no strict 'refs';
     if ($type eq 'D') {
         *{$pkg."::dataset"} = \&{$pkg."::_getTarget"};
-        $OME::Remote::Prototypes::prototypes{$pkg}->{dataset} =
-          [[],['OME::Dataset']];
+        addPrototype($pkg,"dataset",[],['OME::Dataset']);
     } elsif ($type eq 'I') {
         *{$pkg."::image"}   = \&{$pkg."::_getTarget"};
-        $OME::Remote::Prototypes::prototypes{$pkg}->{image} =
-          [[],['OME::Image']];
+        addPrototype($pkg,"image",[],['OME::Image']);
     } elsif ($type eq 'F') {
         *{$pkg."::feature"} = \&{$pkg."::_getTarget"};
-        $OME::Remote::Prototypes::prototypes{$pkg}->{feature} =
-          [[],['OME::Feature']];
+        addPrototype($pkg,"feature",[],['OME::Feature']);
     } elsif ($type eq 'G') {
         # No global column
     }
