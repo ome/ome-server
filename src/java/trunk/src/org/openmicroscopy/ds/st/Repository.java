@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Tue Mar 29 12:09:11 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -41,6 +41,7 @@ import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.OTF;
 import org.openmicroscopy.ds.st.OriginalFile;
 import org.openmicroscopy.ds.st.Pixels;
+import org.openmicroscopy.ds.st.PixelsPlane;
 import org.openmicroscopy.ds.st.Thumbnail;
 import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
@@ -49,6 +50,10 @@ import java.util.Map;
 public interface Repository
     extends DataInterface, Attribute
 {
+    /** Criteria field name: <code>IsLocal</code> */
+    public Boolean isIsLocal();
+    public void setIsLocal(Boolean value);
+
     /** Criteria field name: <code>ImageServerURL</code> */
     public String getImageServerURL();
     public void setImageServerURL(String value);
@@ -56,10 +61,6 @@ public interface Repository
     /** Criteria field name: <code>Path</code> */
     public String getPath();
     public void setPath(String value);
-
-    /** Criteria field name: <code>Local</code> */
-    public Boolean isLocal();
-    public void setLocal(Boolean value);
 
     /** Criteria field name: <code>OTFList</code> */
     public List getOTFList();
@@ -75,6 +76,11 @@ public interface Repository
     public List getPixelsList();
     /** Criteria field name: <code>#PixelsList</code> or <code>PixelsList</code> */
     public int countPixelsList();
+
+    /** Criteria field name: <code>PixelsPlaneList</code> */
+    public List getPixelsPlaneList();
+    /** Criteria field name: <code>#PixelsPlaneList</code> or <code>PixelsPlaneList</code> */
+    public int countPixelsPlaneList();
 
     /** Criteria field name: <code>ThumbnailList</code> */
     public List getThumbnailList();
