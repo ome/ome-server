@@ -137,6 +137,7 @@ sub new {
 	$self->{manager} = OME::SessionManager->new();
 	
 	$self->{_cookies} = undef;
+	$self->{_headers} = undef;
 
 	bless($self,$class);
 	return $self;
@@ -254,28 +255,71 @@ sub serve {
 	my ($result,$content) = $self->createOMEPage();
 	
 	my $cookies = [values %{$self->{_cookies}}];
-	my %headers;
-	$headers {'-cookie'} = $cookies if scalar @$cookies;
-	$headers {'-expires'} = '-1d';
+	my $headers = $self->headers();
+	$headers->{'-cookie'} = $cookies if scalar @$cookies;
+	$headers->{'-expires'} = '-1d';
+	$headers->{-type} = $self->contentType();
 
-	print $self->CGI()->header(-type => $self->contentType(),%headers);
+
 
 	# This would be a place to put browser-specific handling if necessary
 	if ($result eq 'HTML' && defined $content) {
+		print $self->CGI()->header(%{$headers});
 		print $content;
 	} elsif ($result eq 'IMAGE' && defined $content) {
+		print $self->CGI()->header(%{$headers});
 		print $content;
 	} elsif ($result eq 'SVG' && defined $content) {
+		print $self->CGI()->header(%{$headers});
 		print $content;
-	} elsif ($result eq 'XML' && defined $content) {
-		print $content;
+	} elsif ($result eq 'FILE' && defined $content && ref($content) eq 'HASH') {
+		$self->sendFile ($content);
 	} elsif ($result eq 'REDIRECT' && defined $content) {
 		$self->redirect($content);
 	} else {
 		my $class = ref($self);
+		print $self->CGI()->header(-type => 'text/html', -status => '500',%{$headers});
 		print "You shouldn't be accessing the $class page.";
 		print "<br>Here's the error message:<br>$content" unless !(defined $content);
 	}
+}
+
+sub headers {
+	my $self = shift;
+	return $self->{_headers};
+}
+
+sub sendFile {
+	my $self = shift;
+	my $params = shift;
+	my $headers = $self->headers();
+	my $filename = $params->{filename};
+	my $downloadFilename;
+	
+	die "Call to OME::Web::sendFile() without specifying a filename!"
+		unless defined $filename;	
+	open (INFILE,$filename)
+		or die "OME::Web::sendFile() could not open $filename for reading: $!\n";
+		
+
+	$downloadFilename = $params->{downloadFilename}
+		if exists $params->{downloadFilename};
+	$downloadFilename = $filename
+		unless defined $downloadFilename;
+	
+	$headers->{'Content-Disposition'} = qq{attachment; filename="$downloadFilename"}; 
+
+	$headers->{-type} = $self->contentType();
+	print $self->CGI()->header(%{$headers});
+	
+	my $buffer;
+	while (read (INFILE,$buffer,32768)) {
+		print $buffer;
+	}
+	
+	close (INFILE);
+	unlink $filename if exists $params->{temp} and $params->{temp};
+	
 }
 
 sub redirect {
