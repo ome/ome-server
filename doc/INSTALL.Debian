@@ -30,7 +30,7 @@ apt-get -t stable install postgresql postgresql-dev postgresql-client
 
 _______________
 Debian Packages
-libdbi-perl libmd5-perl libmime-base64-perl libapache-session-perl liblog-agent-perl libtie-ixhash-perl libdbd-pg-perl libtest-simple-perl libterm-readkey-perl libcarp-assert-perl libio-stringy-perl libclass-trigger-perl perl-modules libtext-csv-perl libsql-statement-perl libdbd-csv-perl libclass-whitehole-perl libexporter-lite-perl libuniversal-exports-perl libgd-perl perlmagick libxml-namespacesupport-perl libxml-sax-perl libxml2 libxml2-dev libxml-libxml-perl libjpeg62 libjpeg62-dev libtiff3g libtiff3g-dev libclass-data-inheritable-perl libxml-libxml-common-perl libima-dbi-perl libclass-accessor-perl libbz2-dev libxml-libxslt-perl
+libdbi-perl libmd5-perl libmime-base64-perl libapache-session-perl liblog-agent-perl libtie-ixhash-perl libdbd-pg-perl libtest-simple-perl libterm-readkey-perl libcarp-assert-perl libio-stringy-perl libclass-trigger-perl perl-modules libtext-csv-perl libsql-statement-perl libdbd-csv-perl libclass-whitehole-perl libexporter-lite-perl libuniversal-exports-perl libgd-perl perlmagick libxml-namespacesupport-perl libxml-sax-perl libxml2 libxml2-dev libxml-libxml-perl libjpeg62 libjpeg62-dev libtiff3g libtiff3g-dev libclass-data-inheritable-perl libxml-libxml-common-perl libima-dbi-perl libclass-accessor-perl libbz2-dev libxml-libxslt-perl xsltproc
 
 ____
 CPAN
