@@ -63,6 +63,9 @@ __PACKAGE__->mk_classdata('_sortTime');
 __PACKAGE__->mk_classdata('_dbTime');
 __PACKAGE__->mk_classdata('_createTime');
 
+__PACKAGE__->mk_classdata('GuessRows');
+__PACKAGE__->GuessRows(0);
+
 __PACKAGE__->mk_classdata('_attributeTypePackages');
 __PACKAGE__->_attributeTypePackages({});
 
@@ -206,13 +209,13 @@ sub dataTables {
     return values %tables;
 }
 
-sub loadAttribute {
+sub __loadAttribute {
     my ($self,$id) = @_;
     my $pkg = $self->requireAttributeTypePackage();
     return $pkg->load($self->Session(),$id);
 }
 
-sub newAttribute {
+sub __newAttribute {
     my ($self,$target,$id,$rows) = @_;
     my $pkg = $self->requireAttributeTypePackage();
     return $pkg->new($self->Session(),$target,$id,$rows);
@@ -246,7 +249,7 @@ sub findAttributes {
     }
 
     my @attributes;
-    push @attributes, $self->loadAttribute($_) foreach keys %ids;
+    push @attributes, $self->__loadAttribute($_) foreach keys %ids;
 
     return @attributes;
 }
@@ -290,8 +293,231 @@ sub __getSeconds {
     return $t->[0];
 }
 
+# Creates a new attribute of a given semantic type, attempting to place
+# it into a preexisting data row if possible.
 
-sub newAttributes {
+sub __createNewAttribute {
+    my ($self,$session,$module_execution,$semantic_type,$data_hash) = @_;
+
+    # We need to look for data rows that satisfy the following criteria:
+    #   - The columns from this ST that overlap with other ST's are
+    #     equal to the appropriate values in $data_hash
+    #   - The other columns from this ST are null
+    #
+    # Further, we need at least one of these data rows for each data
+    # table that the ST lives in, each with the same attribute_id.
+    #
+    # If we can find this set of data rows, then it is eligible to be
+    # used to store this new attribute.  If not, we must create new
+    # data rows to store it.
+
+    my $factory = $session->Factory();
+
+    my %tables;
+    my %columns;
+    my %elements;
+    my %table_criteria;
+
+    my %granularityColumns =
+      (
+       'G' => undef,
+       'D' => 'dataset_id',
+       'I' => 'image_id',
+       'F' => 'feature_id'
+      );
+
+    my %granularityClasses = 
+      (
+       'D' => 'OME::Dataset',
+       'I' => 'OME::Image',
+       'F' => 'OME::Feature',
+      );
+
+    my $granularity = $semantic_type->granularity();
+    my $target_column = $granularityColumns{$granularity};
+
+    my $target_id = defined $target_column?
+      $data_hash->{$target_column}: undef;
+    my $target;
+
+    if (ref($target_id)) {
+        $target = $target_id;
+        $target_id = $target->id();
+    } else {
+        $target = $factory->loadObject($granularityClasses{$granularity},
+                                       $target_id)
+          if defined $target_column;
+    }
+
+    my @elements = $semantic_type->semantic_elements();
+    foreach my $element (@elements) {
+        my $data_column = $element->data_column();
+        my $data_column_id = $data_column->id();
+        my $data_table = $data_column->data_table();
+        my $data_table_id = $data_table->id();
+
+        my @overlaps = $factory->
+          findObjects("OME::SemanticType::Element",
+                      data_column_id => $data_column_id);
+        my $overlap = scalar(@overlaps) > 1;
+
+        $tables{$data_table_id} = $data_table;
+        $columns{$data_table_id}->{$data_column_id} = $data_column;
+        $elements{$data_table_id}->{$data_column_id} = $element;
+        $table_criteria{$data_table_id}->{$data_column->column_name()} =
+          $overlap? $data_hash->{$element->name()}: undef;
+
+        $table_criteria{$data_table_id}->{module_execution_id} =
+          $module_execution->id()
+          if defined $module_execution;
+        $table_criteria{$data_table_id}->{$target_column} = $target_id
+          if defined $target_column;
+    }
+
+    my %reusable_attribute_ids;
+    my $first_table = 1;
+
+    foreach my $data_table_id (keys %tables) {
+        my $data_table = $tables{$data_table_id};
+        my $data_table_pkg = $data_table->requireDataTablePackage();
+
+        # We've already built up the search criteria for this table,
+        # so just fire it into findObjects.
+
+        my $criteria = $table_criteria{$data_table_id};
+
+        #print STDERR $data_table->table_name(),":\n  ";
+        #print STDERR join("\n  ",
+        #                  map { $_ . " => '" . 
+        #                          (defined $criteria->{$_}? $criteria->{$_}: 
+        #                            'undef') . "'" }
+        #                  keys %$criteria), "\n";
+
+        my @matching_rows = $factory->findObjects($data_table_pkg,%$criteria);
+
+        #print STDERR "  *** Found ",scalar(@matching_rows),"\n";
+
+        # If this is the first table we've checked, then the new set
+        # should be equal to the results from findObjects.  Otherwise,
+        # it should be the intersecting of the results and the previous
+        # set.
+
+        if ($first_table) {
+            $reusable_attribute_ids{$_->id()} = undef foreach @matching_rows;
+            $first_table = 0;
+        } else {
+            my %matching;
+            $matching{$_->id()} = undef foreach @matching_rows;
+            foreach (keys %reusable_attribute_ids) {
+                delete $reusable_attribute_ids{$_}
+                  unless exists $matching{$_};
+            }
+        }
+    }
+
+    my @reusable_attribute_ids = keys %reusable_attribute_ids;
+    my $new_attribute;
+
+    if (scalar(@reusable_attribute_ids) > 0) {
+        # We found a reusable set of rows.  Arbitrarily choose the
+        # first ID in the list.
+
+        my $attribute_id = $reusable_attribute_ids[0];
+        my %rows;
+
+        foreach my $data_table_id (keys %tables) {
+            my $data_table = $tables{$data_table_id};
+            my $data_table_pkg = $data_table->requireDataTablePackage();
+
+            my $columns = $columns{$data_table_id};
+            my $row = $factory->loadObject($data_table_pkg,$attribute_id);
+
+            foreach my $data_column_id (keys %$columns) {
+                my $data_column = $columns{$data_table_id}->{$data_column_id};
+                my $element = $elements{$data_table_id}->{$data_column_id};
+                my $column_name = $data_column->column_name();
+                $column_name = lc($column_name);
+                $row->$column_name($data_hash->{$element->name()});
+            }
+
+            $row->storeObject();
+            $rows{$data_table_id} = $row;
+        }
+
+        $new_attribute = $semantic_type->__newAttribute($target,
+                                                        $attribute_id,
+                                                        \%rows);
+    } else {
+        # We did not find a reusable set of rows.
+
+        my $attribute_id;
+        my %rows;
+
+        foreach my $data_table_id (keys %tables) {
+            my $data_table = $tables{$data_table_id};
+            my $data_table_pkg = $data_table->requireDataTablePackage();
+
+            my $columns = $columns{$data_table_id};
+            my $row_hash = {};
+
+            foreach my $data_column_id (keys %$columns) {
+                my $data_column = $columns{$data_table_id}->{$data_column_id};
+                my $element = $elements{$data_table_id}->{$data_column_id};
+                my $column_name = $data_column->column_name();
+
+                $row_hash->{$column_name} = $data_hash->{$element->name()};
+            }
+
+            $row_hash->{attribute_id} = $attribute_id
+              if (defined $attribute_id);
+
+            my $data_row = $data_table->newRow($module_execution,
+                                               $target,
+                                               $row_hash);
+
+            $attribute_id = $data_row->id()
+              if (!defined $attribute_id);
+
+            $rows{$data_table_id} = $data_row;
+        }
+
+        $new_attribute = $semantic_type->__newAttribute($target,
+                                                        $attribute_id,
+                                                        \%rows);
+    }
+
+    return $new_attribute;
+}
+
+# This is the new version of newAttributes, which will try to place
+# attributes one by one into existing rows.  It is more useful, but
+# slower.
+
+sub newAttributesWithGuessing {
+    my ($self,$session,$module_execution,@attribute_info) = @_;
+
+    my ($i, $length);
+    $length = scalar(@attribute_info);
+
+    my @attributes;
+
+    for ($i = 0; $i < $length; $i += 2) {
+        my $semantic_type = $attribute_info[$i];
+        my $data_hash = $attribute_info[$i+1];
+
+        push @attributes, $self->__createNewAttribute($session,
+                                                      $module_execution,
+                                                      $semantic_type,
+                                                      $data_hash);
+    }
+
+    return \@attributes;
+}
+
+# This is the version of newAttributes which places all of the attributes
+# specified in a single call into a single row.
+
+sub newAttributesInOneRow {
     my ($self,$session,$module_execution,@attribute_info) = @_;
 
     my $t0 = new Benchmark;
@@ -420,7 +646,6 @@ sub newAttributes {
 
     foreach my $table_name (keys %data_tables) {
         my $data_table = $data_tables{$table_name};
-        my $granularity = $granularities{$table_name};
 
         __debug("  Table $table_name");
 
@@ -483,8 +708,8 @@ sub newAttributes {
         # a logical view into the database, it does not create any new
         # entries in the database itself.)
 
-        my $attribute = $semantic_type->newAttribute($target,
-                                                      $id,$rows);
+        my $attribute = $semantic_type->__newAttribute($target,
+                                                       $id,$rows);
 
         # Add the SEMANTIC_TYPE_OUTPUT entry
 
@@ -520,6 +745,17 @@ sub newAttributes {
     $self->__addTiming($sort_time,$db_time,$create_time);
 
     return \@attributes;
+}
+
+# Currently newAttributes defaults to the no-guessing version.
+
+sub newAttributes {
+    my $self = shift;
+    if ($self->GuessRows()) {
+        return $self->newAttributesWithGuessing(@_);
+    } else {
+        return $self->newAttributesInOneRow(@_);
+    }
 }
 
 
