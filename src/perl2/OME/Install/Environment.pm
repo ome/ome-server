@@ -29,9 +29,18 @@
 
 package OME::Install::Environment;
 
+#*********
+#********* INCLUDES
+#*********
+
 use warnings;
 use strict;
 use Carp;
+use Storable;
+
+#*********
+#********* GLOBALS AND DEFINES
+#*********
 
 # The singleton instance.
 my $sole_instance = undef;
@@ -42,13 +51,31 @@ my $new = sub {
     return bless($self);
 };
 
+#*********
+#********* RESTORE SUBROUTINE
+#*********
+
+# Restoration subroutine to restore the singleton instance from an
+# existing OME::Install::Environment instance that has be stored
+# using the Storable module.
+#
+sub restore_from {
+    my $env_file = shift;
+
+    $sole_instance = retrieve ($env_file);
+
+    return $sole_instance;
+}
+
+#*********
+#********* CLASS METHODS
+#*********
+
 # Class method to return the singleton instance.
 #
 # my $environment = initialize OME::Install::Environment;
 #
 sub initialize {
-    my $class = shift;
-
     unless ($sole_instance) { # first time we're called
         # Create the singleton
         $sole_instance = &$new();
@@ -56,6 +83,37 @@ sub initialize {
 
     return $sole_instance;
 }
+
+# Class method to store the singleton instance of OME::Install:Environment
+# using the Storable module.
+#
+sub store_to {
+    my ($self, $env_file) = @_;
+    print "Storing OME::Install::Environment in \"$env_file\"\n";
+
+    store ($sole_instance, $env_file) or croak "Unable to store instance in \"$env_file\". $!";
+
+    return 1;
+}
+
+
+# Class method to get or set specific flags.
+#
+# Returns 1 if the flag is set.
+sub flag {
+    my ($self, $flag) = @_;
+
+    return unless $flag;
+    return 1 if $self->{flags}->{$flag};
+
+    $self->{flags}->{$flag} = 1;
+    return;
+}
+    
+
+#*********
+#********* STORAGE SUBROUTINES
+#*********
 
 sub base_dir {
     my ($self, $base_dir) = @_;
@@ -66,7 +124,7 @@ sub base_dir {
 	return $self->{base_dir} unless not exists $self->{base_dir};
     }
 
-    return undef;
+    return;
 }
 
 sub tmp_dir {
@@ -78,7 +136,7 @@ sub tmp_dir {
 	return $self->{temp_dir} unless not exists $self->{base_dir};
     }
 
-    return undef;
+    return;
 }
 
 sub user {
@@ -90,7 +148,7 @@ sub user {
 	return $self->{user} unless not exists $self->{user};
     }
 
-    return undef;
+    return;
 }
 
 sub apache_user {
@@ -102,7 +160,7 @@ sub apache_user {
 	return $self->{apache_user} unless not exists $self->{apache_user};
     }
 
-    return undef;
+    return;
 }
 
 1;
