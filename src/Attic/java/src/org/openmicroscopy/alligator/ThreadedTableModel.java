@@ -45,7 +45,7 @@ package org.openmicroscopy.alligator;
 import javax.swing.SwingUtilities;
 import javax.swing.table.*;
 import java.util.List;
-//import org.openmicroscopy.*;
+import org.openmicroscopy.*;
 
 /**
  * <p>Several pieces of the UI in OME Alligator use table models to
@@ -157,10 +157,10 @@ public abstract class ThreadedTableModel
             int  numRows = getRowCountFromList();
             int  numColumns = getColumnCount();
             for (int r = 0; r < numRows; r++)
-                for (int c = 0; c < numColumns; c++)
-                {
-                    getValueAtFromList(r,c);
-                }
+            {
+                OMEObject object = (OMEObject) tableList.get(r);
+                object.populate();
+            }
         }
 
         finishLoading();
