@@ -1,6 +1,6 @@
 
 /*
- * org.openmicroscopy.vis.piccolo.PChainBox
+ * org.openmicroscopy.vis.piccolo.PDatasetLabelText
  *
  *------------------------------------------------------------------------------
  *
@@ -49,7 +49,6 @@ public class PDatasetLabelText extends PText  implements SelectionEventListener{
 	
 	private static final Color ACTIVE_COLOR= new Color(100,0,100,255);
 	private static final Color SELECTED_COLOR = new Color(175,0,175,255);
-	public static final double LABEL_SCALE=3;
 	private static final Color BASE_COLOR = Color.BLACK;
 	
 	
@@ -60,12 +59,12 @@ public class PDatasetLabelText extends PText  implements SelectionEventListener{
 	private CDataset dataset;
 	
 	public PDatasetLabelText(CDataset ds,SelectionState selectionState) {
-		super(ds.getName());
+		super(ds.getLabel());
 		this.dataset = ds;
 		this.selectionState = selectionState;
 		if (selectionState != null) 
 			selectionState.addSelectionEventListener(this);
-		setScale(LABEL_SCALE);
+		setScale(PConstants.ITEM_LABEL_SCALE);
 		setFont(PConstants.LABEL_FONT);
 		setColor();
 	}
@@ -106,6 +105,7 @@ public class PDatasetLabelText extends PText  implements SelectionEventListener{
 	} 
 	
 	public  void doSelection() {
+		System.err.println("dataset ..+ is being selected.."+dataset.getName());
 		selectionState.setSelectedDataset(dataset);
 	}
 }
