@@ -93,7 +93,7 @@ sub __resolveQueue {
 	my ($self, $queue) = @_;
 
 	for (my $i = 0; $i <= scalar(@$queue); ++$i) {
-		if (-d $queue->[$i]) {
+		if ($queue->[$i] and -d $queue->[$i]) {
 			# Splice off the directory
 			my $dir = splice(@$queue, $i, 1);
 
