@@ -226,7 +226,7 @@ sub __printForm {
 }
 
 sub __makeImageListings {
-	my ($self, $dataset) = @_;
+	my $self = shift;
 	my $t_generator = new OME::Web::ImageTable;
 	my $q = $self->CGI();;
 	my $factory = $self->Session()->Factory();
