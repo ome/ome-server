@@ -34,21 +34,18 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		 <SemanticType Name="Gradient" AppliesTo="G">
-			<Description> The gradient vector at each pixel is encoded as magnitude and angle. The magnitude is 
-			the channel 0 of the resulting Pixels. The angle is channel 1.
+		 <SemanticType Name="Gradient" AppliesTo="I">
+			<Description> 
+			The gradient vector at each pixel is encoded as magnitude and angle.
+			The magnitude is the channel 0 of the resulting Pixels. The angle is
+			channel 1.
 			</Description>
 			<Element 
-				Name="Magnitude" 
-				DBLocation="GRADIENT.MAGNITUDE"   
-				DataType = "reference"
-				RefersTo = "PixelChannelComponent"/>
-			<Element 
-				Name="Direction" 
-				DBLocation="GRADIENT.DIRECTION"  
-				DataType = "reference"
-				RefersTo = "PixelChannelComponent"/>
-			</SemanticType>
+				Name="Parent" 
+				DBLocation="GRADIENT.MAG_AND_DIREC"   
+				DataType="reference"
+				RefersTo="PixelsSlice"/>
+		 </SemanticType>
 	</SemanticTypeDefinitions>	
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -59,24 +56,23 @@
 		   ProgramID="Gradient"
 		   ID="urn:lsid:openmicroscopy.org:Module:102">
 		  <Description>
-			This module computes the image's gradient. It encodes the gradient vector at each
-			pixel as a magnitude and angle. The magnitude is the channel 0 of the resulting Pixels Set.
-			The angle is channel 1.
+			This module computes the image's gradient. It encodes the gradient 
+			vector at each pixel as a magnitude and angle. The magnitude is the 
+			zeroth channel of the resulting Pixels Set. The angle is encoded in
+			channel 1.
 		  </Description>
 		  <Declaration>
-			<FormalInput  Name="Pixels"         SemanticTypeName="Pixels"         Count="!"/>
-			<FormalInput  Name="Channel Index"  SemanticTypeName="ChannelIndex"   Count="!"/>
-			
-			<FormalOutput Name="Gradient"       SemanticTypeName="Gradient"              Count="!"/>
-			<FormalOutput Name="GradientPixels" SemanticTypeName="Pixels"                Count="!"/>
-			<FormalOutput Name="LogicalChannel" SemanticTypeName="LogicalChannel"        Count="!"/>
-			<FormalOutput Name="PixelChannel"   SemanticTypeName="PixelChannelComponent" Count="+"/>
+			<FormalInput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+			<FormalOutput
+				Name="Gradient"
+				SemanticTypeName="Gradient"
+				Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionPoint="startImage"
-			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
-			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+		  <ExecutionInstructions ExecutionPoint="startImage" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
 			<Inputs>
 			  <Input Name="Pixels"/>
 			  <Input Name="Channel Index.theC"/>
@@ -89,5 +85,30 @@
 			</Outputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
+		
+		<!-- Typecaster module for the Gradient -->
+		<AnalysisModule
+		   ModuleName="Gradient -&gt; PixelsPlaneSlice"
+		   Category="Typecasts.Maths"
+		   ModuleType="OME::Analysis::Modules::PPM::Gradient"
+		   ProgramID="Gradient"
+		   ID="urn:lsid:openmicroscopy.org:Module:112">
+		  <Description>
+			This module allows a Gradient attribute to be used as a 
+			PixelsPlaneSlice. The PixelsPlaneSlice points to the Gradient's
+			magnitude plane.
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Gradient"
+				SemanticTypeName="Gradient"
+				Count="!"/>
+			<FormalOutput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+		  </Declaration>
+		</AnalysisModule>
+		
 	</AML:AnalysisModuleLibrary>
 </OME>
