@@ -346,7 +346,15 @@ sub __execute {
                     my $varray = $array->getField($attr_idx,$field_idx);
                     $varray->makePersistent();
                     #printarray($varray);
-                    my $value = $varray->get(0,0);
+                    my $value;
+                    if ($varray->is_char()) {
+                        $value = $varray->getString();
+                    } elsif ($varray->is_numeric() || $varray->is_logical()) {
+                        $value = $varray->get(0,0);
+                    } else {
+                        my $class = $varray->class_name();
+                        die "Can't handle outputs of Matlab type $class";
+                    }
 
                     # Don't put primary key ID's into the hash
                     next if $field_name eq "id";
