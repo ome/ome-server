@@ -315,6 +315,11 @@ sub importGroup {
 
     # Create repository file, and fill it in from the input file pixels.
     my $xref = $params->{xml_hash};
+
+	# XXX: Tad bit of a hack, but should allow float DeltaVision data to be
+	# imported correctly. [Bug #290]
+	my $is_float = $xref->{'Data.BitsPerPixel'} == 32 ? 1 : 0;
+
 	my ($pixels, $pix) = ($self->{super})->
       __createRepositoryFile($image, 
                              $xref->{'Image.SizeX'},
@@ -323,7 +328,7 @@ sub importGroup {
                              $xref->{'Image.NumWaves'},
                              $xref->{'Image.NumTimes'},
                              $xref->{'Data.BitsPerPixel'},
-			     0, 0);
+			     0, $is_float);
     $self->{pixels} = $pixels;
     $status = readPixels($self, $params, $pix, $callback);
     if ($status ne '') {
