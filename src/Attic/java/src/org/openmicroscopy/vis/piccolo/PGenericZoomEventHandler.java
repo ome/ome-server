@@ -181,13 +181,13 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 	}
 	
 	protected void animateToNode(PNode node) {
-		if (node instanceof PBufferedNode) {
-			animateToBufferedNode((PBufferedNode) node);
+		if (node instanceof PBufferedObject) {
+			animateToBufferedObject((PBufferedObject) node);
 		
 		}
 	}
 	
-	protected void animateToBufferedNode(PBufferedNode node) {
+	protected void animateToBufferedObject(PBufferedObject node) {
 		animateToBounds(node.getBufferedBounds());
 	}
 	protected boolean isBackgroundClick(PNode node) {
