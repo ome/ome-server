@@ -30,6 +30,7 @@ use XML::LibXML;
 use OME::Tasks::SemanticTypeImport;
 use OME::Tasks::ProgramImport;
 use OME::Tasks::ChainImport;
+use OME::Tasks::HierarchyImport;
 
 sub new {
     my ($proto, %params) = @_;
@@ -116,9 +117,18 @@ sub processDOM {
 
     my $chainList = $chainImporter->processDOM($root,%flags);
 
-    # Parse the hierarchy
 
-    # Parse the custom attributes
+    # Parse the hierarchy and custom attributes
+
+    my $hierarchyImporter = OME::Tasks::HierarchyImport->
+      new(session         => $self->{session},
+          _parser         => $self->{_parser},
+          semanticTypes   => $semanticTypes,
+          semanticColumns => $semanticColumns,
+          debug           => $self->{debug});
+
+    $hierarchyImporter->processDOM($root);
+
 }
 
 
