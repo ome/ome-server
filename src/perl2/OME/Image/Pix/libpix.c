@@ -262,6 +262,7 @@ char *scaledBuf;
 
 char *ScaleBuf8 (char *theBuf, int bp, size_t nPix, float scale, int offset)
 {
+unsigned short *shortPtr = (unsigned short *)theBuf;
 unsigned char *scaledBuf,*buf;
 int thePix;
 
@@ -273,7 +274,6 @@ int thePix;
 
 	buf = scaledBuf;
 	if (bp == 2) {
-		unsigned short *shortPtr = (unsigned short *)buf;
 		for (; nPix > 0; nPix--) {
 			thePix = *shortPtr++ - offset;
 			if (thePix < 0) thePix = 0;
