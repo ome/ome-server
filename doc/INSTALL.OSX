@@ -1,22 +1,42 @@
-Mac OS X 10.2 (Jaguar) INSTALL NOTES v0.2
------------------------------------------
-Ilya Goldberg <igg@nih.gov>
-15 August 2003
-
-* There are two methods of installing OME on OSX.  The first is short and simple.  Its disadvantage is that you will use the version of Perl that came with your system (5.6.x instead of 5.8.x).  The advantage is that you will have much less code to compile, and none of it by hand.
-
-* The longer version of the installation instructions which uses more modern software follows this blurb.
-
-Before you begin:
 ___________________________________
-* Install the developer tools.  These are usualy in /Applications/Installers/
-* Install the X Window system from Apple (http://www.apple.com/macosx/x11/download/).  Don't forget the 'SDK'.  You will need to install a total of two X11-related packages.
-* Install fink.  You can jump directly to the installation instructions here:  http://fink.sourceforge.net/doc/bundled/install.php.  Note that even though this may look scary, it isn't.  Things will generally work out pretty well if you just choose the defaults to all the questions.  After you install fink, issue the following command:
-fink install gd
-This will download and install several additional packages.
-* Install PostgreSQL.  Download this:  http://openmicroscopy.org/packages/OSX/Postgres-7.2.2-OSX-bin.tar.gz
+Mac OS X 10.3 (Panther) INSTALL NOTES
+___________________________________
+Ilya Goldberg (igg@nih.gov)
+April, 2004.
+
+OS X 10.3 is a much more complete and modern system than 10.2.  Although OME will work on 10.2, 10.3 is reccomended.  The installation instructions are essentially the same.
+
+* Install the Developer tools that came with 10.3
+* Install libxml2.  Download this:
+http://openmicroscopy.org/packages/source/libxml2-2.5.10.tar.gz
+Then, at the terminal:
+tar -zxvf libxml2-2.5.10.tar.gz
+cd libxml2-2.5.10
+./configure
+make
+sudo make install
+
+* Install libxslt.  Download this:
+http://openmicroscopy.org/packages/source/libxslt-1.0.32.tar.gz
+tar -zxvf libxslt-1.0.32.tar.gz
+cd libxslt-1.0.32.tar.gz
+./configure
+make
+sudo make install
+
+* Download and Install fink (http://fink.sourceforge.net/)
+* Use fink to install gd:
+	fink install gd
+* Install PostgreSQL.
+Create a user on your system with the unix name 'postgres'.
+Download this:
+http://openmicroscopy.org/packages/OSX/Postgres-7.2.2-OSX-bin.tar.gz
 Uncompress it, install pgsql-7.2.2-jaguar.pkg and pgsql-startupitem-1.2.pkg, and follow the rest of the instructions in Postgres-Install.pdf
-* Now, follow the rest of the instruction in the SBDD.
+
+* Finally, execute the OME installer:
+cd OME
+sudo perl install.pl
+
 
 ___________________________________
 Mac OS X 10.2 (Jaguar) INSTALL NOTES v0.2 - With updated Perl, etc.
