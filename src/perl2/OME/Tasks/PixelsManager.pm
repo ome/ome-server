@@ -126,6 +126,9 @@ sub createOriginalFileAttribute {
                        });
     } elsif (UNIVERSAL::isa($file,'OME::Image::Server::File')) {
         my $server_path = OME::Image::Server->getServerPath();
+        $server_path = $server_path->as_string()
+          if UNIVERSAL::isa($server_path,'URI');
+
         my $repository = $factory->
           findAttribute('Repository',
                         {
@@ -235,7 +238,7 @@ sub localCreatePixels {
     my $nonce = 0;
     my $filename = "${time}-${nonce}-$$.ori";
     my $pathname = File::Spec->catfile($path,$filename);
-    while (-e $filename) {
+    while (-e $pathname) {
         $nonce++;
         $filename = "${time}-${nonce}-$$.ori";
         $pathname = File::Spec->catfile($path,$filename);
