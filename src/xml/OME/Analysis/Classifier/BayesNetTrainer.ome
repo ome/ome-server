@@ -89,7 +89,34 @@
 				DBLocation="BAYES_NET_CLASSIFIER.CATEGORY"
 				DataType="reference"
 				RefersTo="Category"/>
-		</SemanticType>	
+		</SemanticType>
+		
+		<SemanticType Name="SignaturesScores" AppliesTo="D">
+			<Description>
+			Records the signatures' estimated individual and cumulative
+			predictive abilities of the classifier achieved during training.
+			CumScore records performance the classifier achieved using all the
+			features upto and including this one (based on the Index). 
+			
+			</Description>
+			<Element
+				Name="IndScore"
+				DBLocation="SIGNATURES_SCORES.IND_SCORE"
+				DataType="float"/>
+			<Element
+				Name="CumScore"
+				DBLocation="SIGNATURES_SCORES.CUM_SCORE"
+				DataType="float"/>
+			<Element
+				Name="Legend"
+				DBLocation="SIGNATURES_SCORES.LEGEND"
+				DataType="reference"
+				RefersTo="SignatureVectorLegend"/>
+			<Element
+				Name="Index"
+				DBLocation="SIGNATURES_SCORES.INDEX"
+				DataType="integer"/>
+		</SemanticType>
 	</SemanticTypeDefinitions>
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -104,13 +131,14 @@
 			</Description>
 			<Declaration>
 				<FormalInput  Name="Signature Vectors"   SemanticTypeName="SignatureVectorEntry" Count="+"/>		  
-				<FormalInput  Name="Classifications"    SemanticTypeName="Classification"       Count="+"/>
+				<FormalInput  Name="Classifications"     SemanticTypeName="Classification"       Count="+"/>
 				
-				<FormalOutput Name="Classifier"         SemanticTypeName="BayesNetClassifier"   Count="!"/>
+				<FormalOutput Name="Classifier"          SemanticTypeName="BayesNetClassifier"   Count="!"/>
 				
 				<FormalOutput Name="Categories Used"     SemanticTypeName="CategoriesUsed"       Count="+"/>
 				<FormalOutput Name="Signatures Used"     SemanticTypeName="SignaturesUsed"       Count="+"/>
 				<FormalOutput Name="Signatures Excluded" SemanticTypeName="SignaturesExcluded"   Count="+"/>
+				<FormalOutput Name="Signatures Scores"   SemanticTypeName="SignaturesScores"     Count="+"/>
 				
 				<FormalOutput Name="Confusion Matrix"    SemanticTypeName="ConfusionMatrix"      Count="!">
 				<Description>
