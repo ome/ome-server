@@ -40,9 +40,9 @@ use Benchmark qw(timediff timesum timestr);
 use base qw(Ima::DBI);
 
 __PACKAGE__->set_db('Main',
-                  OME::SessionManager->DataSource(),
-                  OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword(), 
+                  OME::DBConnection->DataSource(),
+                  OME::DBConnection->DBUser(),
+                  OME::DBConnection->DBPassword(), 
                   { RaiseError => 1 });
 
 
