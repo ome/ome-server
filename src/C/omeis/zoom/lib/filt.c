@@ -10,10 +10,6 @@
  *
  * Documentation:
  *  To use these routines,
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif  /* HAVE_CONFIG_H */
-
  *	#include <filt.h>
  *  Then call filt_find to select the desired filter, e.g.
  *	Filt *f;
@@ -48,6 +44,10 @@
  *	Digital Filtering", IEEE Trans. Acoustics, Speech, and Signal Proc.,
  *	vol. ASSP-26, no. 6, Dec. 1978, pp. 508-517
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif  /* HAVE_CONFIG_H */
 
 static char rcsid[] = "$Header$";
 #include <math.h>
