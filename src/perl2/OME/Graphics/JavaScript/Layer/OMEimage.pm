@@ -34,7 +34,14 @@ function $JStype (CGI_URL,name,Dims,Path,isRGB,WBS,RGBon,optionsStr,Wavelengths,
 	this.Gray = WBS.slice(9,12).join();
 	this.RGBon = RGBon;
 	this.options.push ('RGBon');
-
+	
+	for(i in Wavelengths)
+		for(j in Wavelengths[i])
+			alert("Wavelengths["+i+"]["+j+"] = "+Wavelengths[i][j]);
+	for(i in Stats)
+		for(j in Stats[i])
+			alert("Stats["+i+"]["+j+"] = "+Stats[i][j]);
+	
 // Stats does not seem to be used. WBS needs to be updated with change to t and 
 // wavelengths. It needs info from Stats to do this.
 	
@@ -133,6 +140,16 @@ B<OME Modules>
 =head2 Data references to OME Modules
 
 none
+
+=head2 OME database tables accessed
+
+=over 4
+
+=item image_wavelengths
+
+=item xyz_image_info
+
+=back
 
 =head1 Externally referenced Functions
 
@@ -518,7 +535,7 @@ A string that, in javascript, is a three member array of 0|1.
 =cut
 
 #
-# RGBon is a javascript 3-member array of 0|1 specifying which of the three RGB channels are on
+# RGBon is a 3-member string of 0|1 specifying which of the three RGB channels are on
 sub RGBon {
 	my $self = shift;
 	return $self->{RGBon} if exists $self->{RGBon} and defined $self->{RGBon};
