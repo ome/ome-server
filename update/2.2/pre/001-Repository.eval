@@ -16,76 +16,22 @@ die "Could not find REPOSITORIES table"
 
 my ($se,$dc);
 
-# Create the IsLocal element
+$dc = OME::Tasks::SemanticTypeManager->
+  addDataColumn($dt,'IS_LOCAL','boolean');
+$se = OME::Tasks::SemanticTypeManager->
+  addSemanticElement($st,'IsLocal',$dc);
 
-$dc = $factory->findObject("OME::DataTable::Column",
-                           data_table => $dt,
-                           column_name => 'IS_LOCAL');
-unless (defined $dc) {
-    $dc = $factory->
-      newObject("OME::DataTable::Column",
-                {
-                 data_table  => $dt,
-                 column_name => 'IS_LOCAL',
-                 sql_type    => 'boolean',
-                });
-    die "Could not create IS_LOCAL column"
-      unless defined $dc;
-}
-
-$se = $factory->findObject("OME::SemanticType::Element",
-                           semantic_type => $st,
-                           name => 'IsLocal');
-unless (defined $se) {
-    $se = $factory->
-      newObject("OME::SemanticType::Element",
-                {
-                 semantic_type => $st,
-                 name          => 'IsLocal',
-                 data_column   => $dc,
-                });
-    die "Could not create IsLocal element"
-      unless defined $se;
-}
-
-# Create the ImageServerURL element
-
-$dc = $factory->findObject("OME::DataTable::Column",
-                           data_table => $dt,
-                           column_name => 'IMAGE_SERVER_URL');
-unless (defined $dc) {
-    $dc = $factory->
-      newObject("OME::DataTable::Column",
-                {
-                 data_table  => $dt,
-                 column_name => 'IMAGE_SERVER_URL',
-                 sql_type    => 'string',
-                });
-    die "Could not create IMAGE_SERVER_URL column"
-      unless defined $dc;
-}
-
-$se = $factory->findObject("OME::SemanticType::Element",
-                           semantic_type => $st,
-                           name => 'ImageServerURL');
-unless (defined $se) {
-    $se = $factory->
-      newObject("OME::SemanticType::Element",
-                {
-                 semantic_type => $st,
-                 name          => 'ImageServerURL',
-                 data_column   => $dc,
-                });
-    die "Could not create ImageServerURL element"
-      unless defined $se;
-}
+$dc = OME::Tasks::SemanticTypeManager->
+  addDataColumn($dt,'IMAGE_SERVER_URL','string');
+$se = OME::Tasks::SemanticTypeManager->
+  addSemanticElement($st,'ImageServerURL',$dc);
 
 # Force this ST to recreate its DBObject subclass.  (This ensures that
 # the new elements are accessible by the remaining Perl code.)
 
 $st->requireAttributeTypePackage(1);
 
-# Have the databse delegate add the new columns to the database tables.
+# Have the database delegate add the new columns to the database tables.
 
 $delegate->addClassToDatabase($dbh,$dt->getDataTablePackage());
 
