@@ -24,24 +24,101 @@ package org.openmicroscopy;
 import java.util.List;
 import java.util.Iterator;
 
+/**
+ * <p>Represents a collection of {@link Image Images}.  Datasets and
+ * images form a many-to-map map, as to datasets and projects.  A
+ * user's session usually has a single dataset selected as the "active
+ * dataset".  Datasets also form the unit of analysis for the OME
+ * analysis engine; {@link Chain Chains} are batch-executed against
+ * all of the images in a dataset.</p>
+ *
+ * @author Douglas Creager
+ * @version 2.0
+ * @since OME2.0
+ */
+
 public interface Dataset
     extends OMEObject
 {
+    /**
+     * Returns the name of this dataset.
+     * @return the name of this dataset
+     */
     public String getName();
+
+    /**
+     * Sets the name of this dataset.
+     * @param name the name of this dataset
+     */
     public void setName(String name);
 
+    /**
+     * Returns the description of this dataset.
+     * @return the description of this dataset
+     */
     public String getDescription();
+
+    /**
+     * Sets the description of this dataset.
+     * @param description the description of this dataset
+     */
     public void setDescription(String description);
 
-    public boolean getLocked();
+    /**
+     * Returns whether this dataset is locked.  A dataset must be
+     * locked once it is analyzed; nothing is allowed to add or remove
+     * images from a locked dataset.  (Its other properties, such and
+     * name and description, however, can still be modified.)
+     * @return whether this dataset is locked
+     */
+    public boolean isLocked();
+
+    /**
+     * Sets whether this dataset is locked.  A dataset must be locked
+     * once it is analyzed; nothing is allowed to add or remove images
+     * from a locked dataset.  (Its other properties, such and name
+     * and description, however, can still be modified.)
+     * @param locked whether this dataset is locked
+     */
     public void setLocked(boolean locked);
 
+    /**
+     * Returns the owner of this dataset.  The {@link Attribute}
+     * returned will be of the <code>Experimenter</code> semantic
+     * type.
+     * @return the owner of this dataset
+     */
     public Attribute getOwner();
+
+    /**
+     * Sets the owner of this dataset.  The {@link Attribute} provided
+     * must be of the <code>Experimenter</code> semantic type.
+     * @param owner the owner of this dataset
+     */
     public void setOwner(Attribute owner);
 
+    /**
+     * Returns a list off the projects that this dataset belongs to.
+     * @return a {@link List} of {@link Project Projects}
+     */
     public List getProjects();
+
+    /**
+     * Returns an iterator of the projects that this dataset belongs
+     * to.
+     * @return an {@link Iterator} of {@link Project Projects}
+     */
     public Iterator iterateProjects();
 
+    /**
+     * Returns a list of the images in this dataset.
+     * @return a {@link List} of {@link Image Images}
+     */
     public List getImages();
+
+    /**
+     * Returns an iterator of the images in this dataset.
+     * @return an {@link Iterator} of {@link Image Images}
+     */
     public Iterator iterateImages();
 }

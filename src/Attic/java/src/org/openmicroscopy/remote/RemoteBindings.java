@@ -25,9 +25,38 @@ import org.openmicroscopy.*;
 import java.net.URL;
 import java.net.MalformedURLException;
 
+/**
+ * <p>The main point-of-entry for using the OME Remote Framework from
+ * Java code.  Client code should create an instance of this class,
+ * and use it to log into and out of OME via the Remote Framework.
+ * The {@link #getSession} and {@link #getFactory} methods can be used
+ * to create and retrieve OME objects.  All of the Remote classes
+ * implement the interfaces defined in the
+ * <code>org.openmicroscopy</code> package.</p>
+ *
+ * @author Douglas Creager
+ * @version 2.0
+ * @since OME2.0
+ */
+
 public class RemoteBindings
 {
     private static boolean classesLoaded = false;
+
+    /**
+     * <p>Ensures that all of the remote implementations of the
+     * <code>org.openmicroscopy</code> interfaces are loaded by the
+     * class loader.  This is necessary so that the remote
+     * implementation of {@link Factory} can instantiate objects
+     * coming in on the XML-RPC stream into their appropriate
+     * <code>org.openmicroscopy.remote</code> class.</p>
+     *
+     * <p><b>NOTE:</b> Though this method is declared
+     * <code>public</code>, it should not be called directly.  The
+     * {@link #RemoteBindings} constructor will ensure that this
+     * method is called before returning.</p>
+     */
+
     public static void loadClasses()
         throws ClassNotFoundException
     {
@@ -62,6 +91,15 @@ public class RemoteBindings
     private Session      session;
     private Factory      factory;
 
+    /**
+     * <p>Creates a new instance of the <code>RemoteBindings</code>
+     * class.  There should be one instance of
+     * <code>RemoteBindings</code> for each simultaneous login that
+     * the client supports.  (In most cases, this means that there
+     * should be exactly one <code>RemoteBindings</code> instance per
+     * client.)</p>
+     */
+
     public RemoteBindings()
         throws ClassNotFoundException
     {
@@ -73,11 +111,35 @@ public class RemoteBindings
         this.factory = null;
     }
 
+    /**
+     * <p>Logs into OME via the Remote Framework.  The URL should
+     * refer to an XML-RPC server implementing the Remote Framework
+     * interface.  If this <code>RemoteBindings</code> is already
+     * logged into an OME server, this method does nothing.</p>
+     *
+     * @param url the URL of the OME Remote server
+     * @param username the username to log in as
+     * @param password the password to log in with
+     * @throws MalformedURLException if <code>url</code> does not
+     * represent a valid URL
+     */
+
     public void loginXMLRPC(String url, String username, String password)
         throws MalformedURLException
     {
         loginXMLRPC(new URL(url),username,password);
     }
+
+    /**
+     * <p>Logs into OME via the Remote Framework.  The URL should
+     * refer to an XML-RPC server implementing the Remote Framework
+     * interface.  If this <code>RemoteBindings</code> is already
+     * logged into an OME server, this method does nothing.</p>
+     *
+     * @param url the URL of the OME Remote server
+     * @param username the username to log in as
+     * @param password the password to log in with
+     */
 
     public void loginXMLRPC(URL url, String username, String password)
     {
@@ -104,6 +166,11 @@ public class RemoteBindings
         }
     }
 
+    /**
+     * <p>Logs out of OME.  If this <code>RemoteBindings</code> is not
+     * logged into an OME server, this method does nothing.</p>
+     */
+
     public void logoutXMLRPC()
     {
         synchronized(this)
@@ -122,6 +189,25 @@ public class RemoteBindings
         }
     }
 
+    /**
+     * <p>Returns the {@link Session} object associated with this
+     * <code>RemoteBindings</code>.  If it is not logged into OME,
+     * this method returns <code>null</code>.</p>
+     *
+     * @return the {@link Session} object associated with this
+     * instance
+     */
+
     public Session getSession() { return session; }
+
+    /**
+     * <p>Returns the {@link Factory} object associated with this
+     * <code>RemoteBindings</code>.  If it is not logged into OME,
+     * this method returns <code>null</code>.</p>
+     *
+     * @return the {@link Factory} object associated with this
+     * instance
+     */
+
     public Factory getFactory() { return factory; }
 }

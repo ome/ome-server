@@ -22,9 +22,8 @@
 package org.openmicroscopy;
 
 /**
- * The <code>OMEObject</code> interface is the superclass of all
- * non-attribute OME classes.  It declares the methods available to
- * all OME-controlled objects.
+ * The superclass of all non-attribute OME classes.  It declares the
+ * methods available to all OME-controlled objects.
  *
  * @author Douglas Creager
  * @version 2.0
