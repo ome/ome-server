@@ -1015,8 +1015,10 @@ sub getManyToMany {
 
 	__PACKAGE__->getPublishedManyRefs();
 
-Returns a hash describing package accessors that return lists of object references. This is 
-the "published" list of accessors; accessors to mapping classes are excluded.
+Returns a hash describing package accessors that return lists of object
+references. This is the "published" list of accessors; accessors to
+mapping classes are excluded in favor of accessors that retrieve objects
+on the other end of the mapping class.
 
 The hash follows the format { accessor => package_referenced }
 
@@ -1050,6 +1052,49 @@ sub getPublishedManyRefs {
 			unless exists $mapClassAndAlias{ $foreign_key_class }{ $foreign_key_alias };
 	}
 	return \%publishedAccessors;
+}
+
+=head2 getPublishedCols
+
+	my @published_columns =  $package->getPublishedCols();
+
+Returns a list of package column accessors. This is the "published" list
+of accessors; accessors to foreign key ids are excluded in favor of
+accessors to foreign objects.
+
+=cut
+
+sub getPublishedCols {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+		
+	my @publishedCols;
+	my %objectAccessorLocations;
+	my $column_accessors = $class->__columns();
+	
+	# add object accessors
+	@publishedCols = grep( defined $column_accessors->{$_}->[2], keys %$column_accessors );
+
+	# record object accessor locations
+	%objectAccessorLocations = 
+		map{ 
+			$column_accessors->{$_}->[0].'.'.$column_accessors->{$_}->[1] => undef
+		}
+		@publishedCols;
+	
+	# add non object accessors that don't have object accessor locations.
+	push( @publishedCols, 
+		grep( 
+			(
+			not defined $column_accessors->{$_}->[2] and
+			not exists $objectAccessorLocations{ 
+				$column_accessors->{$_}->[0].'.'.$column_accessors->{$_}->[1]
+			} ),
+			keys %$column_accessors
+		)
+	);
+
+	return @publishedCols;
 }
 
 =head2 getPackageReference
