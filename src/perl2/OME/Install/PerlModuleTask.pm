@@ -247,17 +247,46 @@ my @modules = (
 	    return 1;
 	}
     },{
-	name => 'HTML::Tagset',
-	repository_file => "$REPOSITORY/HTML-Tagset-3.03.tar.gz"
-    },{
-	name => 'HTML::Parser',
-	repository_file => "$REPOSITORY/HTML-Parser-3.27.tar.gz"
+	name => 'URI',
+	repository_file => "$REPOSITORY/URI-1.23.tar.gz"
     },{
 	# XXX DEPRECATED
 #	name => 'Image::Magick',
 #	repository_file => "$REPOSITORY/ImageMagick-5.5.6.tar.gz"
 #	#installModule => \&ImageMagickInstall
 #    },{
+	name => 'HTML::Tagset',
+	repository_file => "$REPOSITORY/HTML-Tagset-3.03.tar.gz"
+    },{
+	name => 'HTML::Parser',
+	repository_file => "$REPOSITORY/HTML-Parser-3.35.tar.gz",
+	configure_module => sub {
+	    # Since libwww has an interactive configure script we need to
+	    # implement a custom configure_module () subroutine that allows
+	    # for an interactive install
+	    my ($path, $logfile) = @_;
+	    my $iwd = getcwd;  # Initial working directory
+
+	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+		print $logfile "Configuring HTML::Parser\n";
+
+	    system ("perl Makefile.PL 2>&1");
+	
+		if ($? == 0) {
+		print $logfile "SUCCESS CONFIGURING HTML::Parser\n";
+	
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+		return 1;
+		}
+	
+		print $logfile "FAILURE CONFIGURING HTML::Parser\n";
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+	
+		return 0;
+	}
+    },{
 	name => 'LWP',
 	repository_file => "$REPOSITORY/libwww-perl-5.69.tar.gz",
 	configure_module => sub {
@@ -285,9 +314,6 @@ my @modules = (
 	
 		return 0;
 	}
-    },{
-	name => 'URI',
-	repository_file => "$REPOSITORY/URI-1.23.tar.gz"
     },{
 	name => 'XML::NamespaceSupport',
 	repository_file => "$REPOSITORY/XML-NamespaceSupport-1.08.tar.gz"
@@ -406,7 +432,7 @@ sub install {
 
     # Configure
     print "    \\_ Configuring ";
-    $retval = &{$module->{configure_module}}($wd) if exists $module->{configure_module};
+    $retval = &{$module->{configure_module}}($wd,$LOGFILE) if exists $module->{configure_module};
     $retval = configure_module ($wd, $LOGFILE) unless exists $module->{configure_module};
     
     print BOLD, "[FAILURE]", RESET, ".\n"
