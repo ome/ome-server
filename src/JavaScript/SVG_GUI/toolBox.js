@@ -1,7 +1,28 @@
 /*****
 *    
 *   toolBox.js
-*     external files dependecies: widget.js
+
+	Copyright (C) 2002 Open Microscopy Environment
+	Author: Josiah Johnston <siah@nih.gov>
+	
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+	
+	Written by: Josiah Johnston <siah@nih.gov>
+	
+
 *     Known bugs:
 *       bug #1:
 *          Attempting to unhide the GUIbox while it it hiding causes
@@ -28,7 +49,10 @@ toolBox.superclass = Widget.prototype;
 *   Class variables
 *
 *****/
-toolBox.VERSION = 1.0;
+toolBox.VERSION = .2;
+
+toolBox.prototype.padding = 10;
+
 
 toolBox.prototype.menuBarText = 
 '<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>';
@@ -87,9 +111,9 @@ toolBox.prototype.GUIboxHideDelay = 1;
 *		for the root node if you plan on doing that.
 *
 *****/
-function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText) {
+function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText, noclip) {
 	if(arguments.length > 0 )
-		this.init(x,y,width,height,menuBarText,hideControlText,GUIboxText);
+		this.init(x,y,width,height,menuBarText,hideControlText,GUIboxText, noclip);
 }
 
 /*****
@@ -98,7 +122,7 @@ function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText) {
 *
 *****/
 toolBox.prototype.init = function( x, y, width, height, menuBarText,
-		hideControlText, GUIboxText) {
+		hideControlText, GUIboxText, noclip) {
 	// call superclass method
 	toolBox.superclass.init.call(this,x,y);
 	
@@ -106,6 +130,7 @@ toolBox.prototype.init = function( x, y, width, height, menuBarText,
 	this.height = height;
 	this.width = width;
 	this.hidden = false;
+	this.noclip = noclip;
 	
 	// allow user defined custimization of apperance
 	if( menuBarText != null ) this.menuBarText = menuBarText;
@@ -149,11 +174,16 @@ toolBox.prototype.buildSVG = function() {
 	var GUIboxNoClip = svgDocument.createElementNS(svgns, "g");
 	GUIboxClip.setAttributeNS( null, "width", this.width );
 	GUIboxClip.setAttributeNS( null, "height", this.height );
-	GUIboxClip.appendChild( this.textToSVG(this.GUIboxText) );
+	if( this.noclip != null ) {
+		GUIboxNoClip.appendChild( this.textToSVG(this.GUIboxText) );
+		this.nodes.GUIbox = GUIboxNoClip.lastChild;
+	} else {
+		GUIboxClip.appendChild( this.textToSVG(this.GUIboxText) );
+		this.nodes.GUIbox = GUIboxClip.lastChild;
+	}
 	GUIboxContainer.appendChild( GUIboxClip );
 	GUIboxContainer.appendChild( GUIboxNoClip );
 	box.appendChild( GUIboxContainer );
-	this.nodes.GUIbox = GUIboxClip.lastChild;
 	this.nodes.GUIboxContainer = GUIboxContainer;
 	this.nodes.GUIboxClip = GUIboxClip;
 	this.nodes.GUIboxNoClip = GUIboxNoClip;
@@ -329,18 +359,27 @@ toolBox.prototype.drawGUITop = function() {
 		this.nodes.root.removeChild( this.nodes.GUIboxContainer );
 		this.nodes.root.appendChild( this.nodes.GUIboxContainer );
 	}
-}
+};
 
 
-/*****
-*
-*   hide
-*
-*****/
+
+toolBox.prototype.toggle = function() {
+	if(this.hidden)
+		this.unhide();
+	else
+		this.hide();
+};
+
+
 toolBox.prototype.hide = function() {
+	if( this.hidden == true ) return;
 	this.hidden = true;
 	
 	// begin animations
+	if( this.noclip != null )
+		this.nodes.GUIboxClip.appendChild( 
+			this.nodes.GUIboxNoClip.removeChild( this.nodes.GUIbox ) 
+		);
 	if(this.hideControlAnimate1)
 		this.hideControlAnimate1.beginElement();
 	this.GUIboxAnimate1.beginElement();
@@ -348,15 +387,11 @@ toolBox.prototype.hide = function() {
 	if(this.CLOSE_ON_MINIMIZE)
 		this.rootOff.beginElementAt(this.GUIboxHideDelay);
 	
-}
+};
 
 
-/*****
-*
-*  unhide
-*
-*****/
 toolBox.prototype.unhide = function() {
+	if( this.hidden == false ) return;
 	this.hidden = false;
 	
 	// begin animations
@@ -366,83 +401,54 @@ toolBox.prototype.unhide = function() {
 	this.GUIboxAnimate2.beginElement();
 	if(this.CLOSE_ON_MINIMIZE)
 		this.rootOn.beginElement();
-}
+	if( this.noclip != null )
+		this.nodes.GUIboxNoClip.appendChild( 
+			this.nodes.GUIboxClip.removeChild( this.nodes.GUIbox ) 
+		);
+};
 
-/*****
-*
-*   move
-*
-*****/
+
 toolBox.prototype.move = function(e) {
 	this.x = e.clientX - this.localPoint.x * (this.scale ? this.scale : 1);
 	this.y = e.clientY - this.localPoint.y * (this.scale ? this.scale : 1);
 	var transform = "translate(" + this.x + "," + this.y + ")";
 	transform += (this.scale ? " scale("+this.scale+")" : "");
 	this.nodes.root.setAttributeNS(null, "transform", transform);
-}
+};
 
-/*****
-*
-*   addEventListeners
-*
-*****/
+
 toolBox.prototype.addEventListeners = function() {
 	this.nodes.menuBar.addEventListener("mousedown", this, false);
 	this.nodes.menuBar.addEventListener("mouseup", this, false);
 	this.nodes.hideControl.addEventListener("click", this, false);
-}
+};
 
 
 /************   Event handlers   ************/
 
-/*****
-*
-*   mousedown
-*
-*****/
+
 toolBox.prototype.mousedown = function(e) {
 	svgDocument.documentElement.addEventListener("mousemove", this, false);
 	this.localPoint = this.getUserCoordinate(this.nodes.root, e.clientX, e.clientY);
-}
+};
 
-/*****
-*
-*   mouseup
-*
-*****/
+
 toolBox.prototype.mouseup = function(e) {
 	svgDocument.documentElement.removeEventListener("mousemove", this, false);
-}
+};
 
-/*****
-*
-*   mousemove
-*
-*****/
+
 toolBox.prototype.mousemove = function(e) {
 	this.move(e);
-}
+};
 
-/*****
-*
-*   click
-*
-*****/
+
 toolBox.prototype.click = function(e) {
-	if(this.hidden)
-		this.unhide();
-	else
-		this.hide();		
-}
-
+	this.toggle();
+};
 
 /***************** Functions not part of the class ******************/
 
-/*****
-*
-*   findAnimationsInNode
-*
-*****/
 
 function findAnimationsInNode( node ) {
 	var animations =
