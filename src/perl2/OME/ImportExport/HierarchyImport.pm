@@ -1,4 +1,51 @@
+# OME/Tasks/HierarchyImport.pm
+# This module is used for importing a list of objects from XML governed by the OME-CA schema.
+
+# Copyright (C) 2003 Open Microscopy Environment
+# Authors:
+#    Josiah Johnston <siah@nih.gov>
+#    Ilya G. Goldberg <igg@nih.gov>
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 package OME::Tasks::HierarchyImport;
+
+=head1 NAME
+
+OME::Tasks::HierarchyImport - Import a list of objects from an OME XML.
+
+=head1 SYNOPSIS
+
+	# Should really have OMEImporter make the calls for you:
+	my $importer = new OME::Tasks::OMEImport (session => $session);
+	$importer->importFile ($filename);
+
+	# Or, if you insist on doing it yourself:
+    my $parser = new XML::LibXML ();
+    my $hierarchyImporter = new OME::Tasks::HierarchyImport->(session => $session);
+    my $doc = $parser->parse_string($xml);
+    my $objectList = $hierarchyImporter->processDOM($doc->getDocumentElement());
+
+=head1 DESCRIPTION
+
+This class is responsible for importing the OME hierarchy from an XML file, DOM or string.  The OME hierarchy
+consists of the Project, Dataset, Image, and Feature elements as specified in the OME-CA schema.  Each level of the
+hierarchy has an optional CustomAttributes element which may containn one or more CustomAttributes (instances of
+a Semantic Type).
+
+=cut
+
 
 use strict;
 
@@ -9,6 +56,18 @@ use XML::LibXML;
 
 use OME::LSID;
 use OME::Tasks::AnalysisEngine;
+
+=head1 METHODS
+
+=head2 new
+
+	my $importer = new OME::Tasks::HierarchyImport (session => $session, _lsidResolver => $lsidRslvr);
+
+This makes a new hierarchy importer.  The session parameter is required, and the _lsidResolver parameter is optional.
+The _lsidResolver is an L<OME::LSID|OME::LSID> object used for resolving LSIDs to local DB IDs.  If one is not passed
+as a parameter a new resolver for this instance will be generated with this method call.
+
+=cut
 
 sub new {
 	my $proto  = shift;
@@ -27,21 +86,11 @@ sub new {
 
 	my $self = {
 		session         => $params{session},
-		_parser         => $params{_parser},
+		_lsidResolver   => $params{_lsidResolver},
 		_docIDs         => {},
 		_docRefs		=> {},
 		_DBObjects      => [],
 	};
-	
-	if (!defined $self->{_parser}) {
-		my $parser = XML::LibXML->new();
-		die "Cannot create XML parser"
-		  unless defined $parser;
-		
-		$parser->validation(exists $params{ValidateXML}?
-							$params{ValidateXML}: 0);
-		$self->{_parser} = $parser;
-	}
 
 	if (!defined $self->{_lsidResolver}) {
 		$self->{_lsidResolver} = new OME::LSID (session => $self->{session});
@@ -53,6 +102,17 @@ sub new {
 	return $self;
 }
 
+
+=head2 processDOM
+
+	my $objects = $exporter->processDOM ($root);
+
+This will read the XML sub-tree under the $root element, creating objects in the DB.  A reference to the list
+of objects in the sub-tree will be returned.
+The objects will be written to the DB at the end of the import, and the Session's database handle committed.
+All images will be imported into a dummy dataset and the standard analysis chain will be executed on them.
+
+=cut
 
 ###############################################################################
 #
@@ -193,7 +253,7 @@ sub processDOM {
 #	};
 #	
 #	logcarp "$@" if $@;
-	return;
+	return $self->{_DBObjects};
 }
 
 
@@ -468,7 +528,11 @@ sub getObjectTypeInfo ($$) {
 
 =head1 AUTHOR
 
-Josiah Johnston (siah@nih.gov), Ilya G. Goldberg (igg@nih.gov)
+Josiah Johnston (siah@nih.gov), Ilya Goldberg (igg@nih.gov)
+
+=head1 SEE ALSO
+
+L<OME::Tasks::OMEImport|OME::Tasks::OMEImport>
 
 =cut
 
