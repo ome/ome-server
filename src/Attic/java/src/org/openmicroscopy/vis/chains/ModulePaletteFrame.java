@@ -45,6 +45,7 @@ package org.openmicroscopy.vis.chains;
 import org.openmicroscopy.vis.piccolo.PPaletteCanvas;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CModule;
+import org.openmicroscopy.ModuleCategory;
 import edu.umd.cs.piccolo.PCanvas;
 import java.awt.BorderLayout;
 import java.awt.Rectangle;
@@ -93,7 +94,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		// next line needed if chain frame base
 		super(controller,connection,"OME Chains Palette");
 		setIconImage(controller.getIcon()); 
-		getCanvas().setConfig(connection,controller);
+		getCanvas().populate(connection,controller);
 		layoutFrame();
 		menuBar.setLoginsDisabled(true);
 
@@ -187,7 +188,15 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		if (node.isLeaf()) { // it's a module
 			getCanvas().highlightModule((CModule)node.getObject());
 		}
-		else 
+		else if (node.getObject() instanceof ModuleCategory) {
+			System.err.println("clicked on a category");
+			ModuleCategory mc = (ModuleCategory) node.getObject();
+			getCanvas().highlightCategory(mc.getName());
+			
+		}
+		else if (node.getName() != null)
+			getCanvas().highlightCategory(node.getName());
+		else
 			getCanvas().unhighlightModules();
 	}
 	
