@@ -89,7 +89,6 @@ public class ClientCreate extends JDialog implements ActionListener {
     public ClientCreate(String createEntity,
                    String experimenter, String group) {
 	createType = createEntity;
-	//createParent = parent;
 	this.experimenter = experimenter;
 	this.group = group;
 	try {
@@ -286,9 +285,8 @@ public class ClientCreate extends JDialog implements ActionListener {
 	fldMap.put("owner_id", "1");
 	try {
 	    obj = accessor.bindings.getFactory().newObject(type, fldMap);
-	    System.err.println("Factory made object");
-	    obj.writeObject();
-	    System.err.println("wrote object");
+	    obj.storeObject();
+	    accessor.bindings.getSession().commitTransaction();
 	}
 	catch (Exception e) {
 	    System.err.println("Exception in makeObject: " + e.toString());
