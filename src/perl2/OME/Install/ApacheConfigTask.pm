@@ -147,7 +147,7 @@ sub getApacheBin {
 	$apache_info->{bin} = $httpdBin;
 	
 	$apachectlBin = which ('apachectl');
-	$httpdBin = whereis ("apachectl") or croak "Unable to locate apachectl binary." unless $apachectlBin;
+	$apachectlBin = whereis ("apachectl") or croak "Unable to locate apachectl binary." unless $apachectlBin;
 	$apache_info->{apachectl} = $apachectlBin;
 	
 	return $apache_info;
