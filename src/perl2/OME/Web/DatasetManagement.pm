@@ -46,6 +46,7 @@ use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
+use OME::Web::Helper::JScriptFormat;
 
 use base qw{ OME::Web };
 
