@@ -113,10 +113,6 @@ sub exportFile {
 	my $CA_doc = $stylesheet->transform($doc);
 
 # these hacks were added by josiah <siah@nih.gov>
-# this is a debugging tool. actual output of the file is delegated to OME::Tasks::InsertFile->exportFile
-#$CA_doc->toFile($filename.'.postXSLT', 1);
-#$doc->toFile($filename.'.preXSLT', 1);
-# end debugging tool
 
 #	REMOVE THIS HACK WHEN $stylesheet->transform($doc); PRODUCES SOMETHING USEFUL 
 # CA_doc is blank except for <OME>. I haven't yet figured out why. 
@@ -149,6 +145,12 @@ sub doc {
 	return ($self->{_doc});
 }
 
+sub historyExporter {
+	my $self = shift;
+	return $self->{_historyExporter} if exists $self->{_historyExporter};
+	$self->{_historyExporter} = new OME::ImportExport::DataHistoryExport (session => $self->{session}, _doc => $self->doc());
+	return $self->{_historyExporter};
+}
 
 sub buildDOM {
 	my ($self, $objects, %flags) = @_;
@@ -157,7 +159,7 @@ sub buildDOM {
 		unless ref($objects) eq 'ARRAY';
 
 	if ($flags{ResolveAllRefs}) {
-		$self->resolveAllRefs ($objects);
+		$self->resolveAllRefs ($objects, %flags);
 	}
 
 	# Export the hierarchy and custom attributes
@@ -192,7 +194,7 @@ sub buildDOM {
 	# Export semantic type definitions only if ExportSTDs is set
 	if ($flags{ExportHistory}) {
 		logdbg "debug", ref ($self).'->buildDOM:  Getting a Data History Exporter';
-		my $historyExporter = new OME::ImportExport::DataHistoryExport (session => $self->{session}, _doc => $doc);
+		my $historyExporter = $self->historyExporter();
 		logdbg "debug", ref ($self).'->buildDOM:  Exporting Data History to DOM';
 		$historyExporter->buildDOM($objects,%flags);
 	}
@@ -203,8 +205,13 @@ sub buildDOM {
 }
 
 
-# FIXME:  This could stand a bit of implementation
 sub resolveAllRefs {
+	my ($self, $objects, %flags) = @_;
+
+	if ($flags{ExportHistory}) {
+		my $historyExporter = $self->historyExporter();
+		push( @$objects, $historyExporter->findDependencies( $objects ) );
+	}
 	return undef;
 }
 1;
