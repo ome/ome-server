@@ -44,17 +44,13 @@ package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.ome.CChain;
+//import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.SelectionState;
-import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
-import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
-import org.openmicroscopy.vis.chains.events.ExecutionSelectionEvent;
-import org.openmicroscopy.vis.chains.events.ExecutionSelectionEventListener;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.SelectionEvent;
+import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
 import org.openmicroscopy.Project;
-import org.openmicroscopy.ChainExecution;
+//import org.openmicroscopy.ChainExecution;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.JFrame;
@@ -77,7 +73,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
 import java.awt.Component;
 import java.awt.Font;
-import java.util.HashSet;
 import java.util.Collection;
 
 
@@ -88,8 +83,7 @@ import java.util.Collection;
  * @since OME2.1
  */
 public class ControlPanel extends JFrame implements ListSelectionListener, 
-	MouseListener, ChainSelectionEventListener, 
-		ExecutionSelectionEventListener, DatasetSelectionEventListener {
+	MouseListener, SelectionEventListener {
 	
 	protected JLabel statusLabel;
 	protected JPanel panel;
@@ -110,7 +104,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private Vector projects;
 	private Vector datasets;
 	
-	boolean reentrant = false;
+	private boolean reentrant = false;
 	
 	/// in theory, we don't need to keep state around of 
 	// current project and current dataset.
@@ -121,8 +115,6 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private Project curProject;
 	private CDataset curDataset=null;
 		
-	private HashSet activeDatasets = new HashSet();
-	private HashSet activeProjects = new HashSet();
 	
 	private SelectionState selectionState;
 	/**
@@ -224,12 +216,9 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		setResizable(false);
 
 		browser.displayAllDatasets();	
-	
-		selectionState.addChainSelectionEventListener(this);
-		selectionState.addDatasetSelectionEventListener(browser);
-		selectionState.addDatasetSelectionEventListener(this);
-		selectionState.addExecutionSelectionEventListener(this);
-		//selectionState.setDatasetSelections(datasets,null);
+
+		selectionState.addSelectionEventListener(this);		
+		selectionState.addSelectionEventListener(browser);
 	}
 
 
@@ -300,88 +289,27 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	public void valueChanged(ListSelectionEvent e) {
 		
-		if (reentrant == true) 
-			return;
-		if (e.getValueIsAdjusting() == true) 
+		System.err.println("got an event with value changed..");
+		System.err.println("reentrant is "+ reentrant);
+		System.err.println("value adjusting is "+e.getValueIsAdjusting()); 
+		if ( e.getValueIsAdjusting() == true) // or reentrant == true 
 			return;
 		Object obj = e.getSource();
+		System.err.println("value changed source is "+obj);
 		if (!(obj instanceof JList)) 
 			return;
 		JList list = (JList) obj;
 		
 		Object item = list.getSelectedValue();
+		System.err.println("selected item is "+item);
+		System.err.println("selected index is "+list.getSelectedIndex());
 		
+
 		if (list == projList)
-			updateProjectChoice(item);
-		else if (list == datasetList) 
-			updateDatasetChoice(item);
-	} 
-		
-	public void  updateProjectChoice(Object item) {
-		activeDatasets = new HashSet();
-		activeProjects = new HashSet();
-		
-		curProject = (Project) item;
-
-			
-		if (curProject != null) {
-			activeDatasets.addAll(curProject.getDatasets());	
-			activeProjects.add(curProject);
-		}
-		if (curDataset!=null)
-			activeProjects.addAll(curDataset.getProjects());
-			
-		int pos = projects.indexOf(curProject);
-		
-		reentrant =true;
-		projList.setSelectedIndex(pos);
-		if (curDataset!= null && 
-			!curProject.getDatasets().contains(curDataset)) {
-			datasetList.clearSelection();
-			curDataset = null;
-		}
-		reentrant =false;
-		fireEvents();
-		datasetList.repaint();
-		projList.repaint();
-
-	
-	}
-	
-	public void updateDatasetChoice(Object item) {
-		activeDatasets = new HashSet();
-		activeProjects = new HashSet();
-		int pos = -1;
-
-			
-		curDataset = null;
-		if (item != null)  {
-			curDataset = (CDataset) item;
-			activeDatasets.add(curDataset);
-			activeProjects.addAll(curDataset.getProjects());
-			pos = datasets.indexOf(curDataset);
-		}
-		
-		
-		reentrant =true;
-		datasetList.setSelectedIndex(pos);
-		if (curProject != null && 
-			(curDataset == null ||
-			 !curDataset.getProjects().contains(curProject))) {
-			projList.clearSelection();
-			curProject = null;
-		}
-		if (curProject != null)
-			activeDatasets.addAll(curProject.getDatasets());
-		reentrant =false;
-	
-		fireEvents();	
-		datasetList.repaint();
-		if (projList != null)
-			projList.repaint();
-	
-	}
-	
+			selectionState.setSelectedProject((Project) item);
+		else 
+			selectionState.setSelectedDataset((CDataset) item);
+	} 	
 
 	public SelectionState getSelectionState() {
 		return selectionState;
@@ -403,25 +331,14 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private void doDatasetDoubleClick(MouseEvent e) {
 		int index =datasetList.locationToIndex(e.getPoint());
 		if (index == datasetList.getSelectedIndex()) {
-			//deselect dataset 
-			Project tmp = curProject;
-			reentrant = true;
-			datasetList.clearSelection();
-			curDataset = null;
-			reentrant = false;
-			updateProjectChoice(tmp);
+			selectionState.setSelectedDataset(null);
 		}
 	}
 
 	private void doProjectDoubleClick(MouseEvent e) {
 		int index = projList.locationToIndex(e.getPoint());	
 		if (index == projList.getSelectedIndex()) {
-			CDataset tmp = curDataset;
-			reentrant = true;
-			projList.clearSelection();
-			curProject = null;
-			reentrant = false;
-			updateDatasetChoice(tmp);
+			selectionState.setSelectedProject(null);
 		}
 	}
 	
@@ -438,16 +355,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	public void mouseReleased(MouseEvent e) {
 	}
 	
-
-		
-	private void fireEvents() {
-		if (reentrant == true)
-			return;
-		selectionState.setDatasetSelections(activeDatasets,curDataset);
-		selectionState.setProjectSelections(activeProjects,curProject);
-	}
-	
-	// we're going to set the datasets to be those that are
+	/*// we're going to set the datasets to be those that are
 	// associated with the current chain.
 	public void chainSelectionChanged(ChainSelectionEvent e) {
 		
@@ -470,9 +378,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			if (activeDatasets.size() ==1) {
 				Object objs[] = activeDatasets.toArray();
 				curDataset = (CDataset) objs[0];
-				updateDatasetChoice(curDataset); 
+			//	updateDatasetChoice(curDataset); 
 			}
-			else { // multiple active. 
+			else { 
+				//				 multiple active.
+				
 				fireEvents();	
 				datasetList.repaint();
 				if (projList != null)
@@ -489,12 +399,30 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		System.err.println("control panel has new selected execution...");
 		System.err.println("exec. is "+exec.getID());
 		System.err.println("dataset is "+exec.getDataset().getName());
-		updateDatasetChoice(exec.getDataset());
-	}
+	//updateDatasetChoice(exec.getDataset());
+	}*/
 	
-	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		//CDataset d = e.getSelectedDataset();
-		//updateDatasetChoice(d);
+	
+	
+	public void selectionChanged(SelectionEvent e) {
+
+		System.err.println("selection changed...");
+		selectionState.removeSelectionEventListener(this);
+		int pos = datasets.indexOf(selectionState.getSelectedDataset());
+		System.err.println("dataset pos is "+pos);
+		if (pos >=0)
+			datasetList.setSelectedIndex(pos);
+		else
+			datasetList.clearSelection();
+		pos= projects.indexOf(selectionState.getSelectedProject());
+		System.err.println("project pos is "+pos);
+		if (pos >=0)
+			projList.setSelectedIndex(pos);
+		else
+			projList.clearSelection();
+		projList.repaint();
+		datasetList.repaint();
+		selectionState.addSelectionEventListener(this);
 	}
 }
 
