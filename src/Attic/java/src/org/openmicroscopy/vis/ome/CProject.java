@@ -78,7 +78,10 @@ public class CProject extends RemoteProject {
 		
 	
 	public boolean hasDataset(Dataset d) {
-		return datasetHash.contains(d);
+		if (d== null)
+			return false;
+		else
+			return datasetHash.contains(d);
 	}
 	
 	public HashSet getDatasetSet() {
