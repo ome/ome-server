@@ -44,6 +44,7 @@ package org.openmicroscopy.remote;
 
 //import org.openmicroscopy.*;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class RemoteIterator
     extends RemoteObject
@@ -95,12 +96,16 @@ public class RemoteIterator
 
     public Object next()
     {
-        cacheNextReference();
-        RemoteObject retval = getRemoteSession().getObjectCache().
-            getObject(perlClass,nextReference);
-        nextReference = null;
-        haveNextReference = false;
-        return retval;
+        if (hasNext())
+        {
+            RemoteObject retval = getRemoteSession().getObjectCache().
+                getObject(perlClass,nextReference);
+            nextReference = null;
+            haveNextReference = false;
+            return retval;
+        } else {
+            throw new NoSuchElementException("No more elements");
+        }
     }
 
     public void remove()
