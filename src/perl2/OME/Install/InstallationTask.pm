@@ -39,7 +39,8 @@ package OME::Install::InstallationTask;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 
 # Interface common to all installation tasks.

@@ -40,7 +40,8 @@ use strict;
 use OME::Session;
 use OME::Graphics::JavaScript::Layer;
 use vars qw($VERSION @ISA);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 @ISA = ("OME::Graphics::JavaScript::Layer");
 
 my $JStype = 'OMEimage';

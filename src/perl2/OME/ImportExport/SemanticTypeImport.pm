@@ -38,7 +38,8 @@
 package OME::ImportExport::SemanticTypeImport;
 
 use strict;
-our $VERSION = '1.0';
+use OME;
+our $VERSION = $OME::VERSION;
 
 use Carp;
 use Log::Agent;

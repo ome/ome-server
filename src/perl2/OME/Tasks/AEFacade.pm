@@ -38,7 +38,8 @@
 package OME::Tasks::AEFacade;
 
 
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 =pod
 

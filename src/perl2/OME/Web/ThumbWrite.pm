@@ -38,7 +38,8 @@
 package OME::Web::ThumbWrite;
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.0';
+use OME;
+$VERSION = $OME::VERSION;
 use CGI;
 use base qw(OME::Web);
 use OME::Tasks::Thumbnails;

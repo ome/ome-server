@@ -39,7 +39,8 @@ package OME::Log::Impl::TextMessage;
 
 use strict;
 use warnings;
-our $VERSION = '2.0';
+use OME;
+our $VERSION = $OME::VERSION;
 
 
 # Max msg size constant. The actual value is 4Kb. As a result, our UDP datagrams

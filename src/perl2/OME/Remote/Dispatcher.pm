@@ -36,7 +36,8 @@
 
 
 package OME::Remote::Dispatcher;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 =head1 NAME
 
@@ -317,7 +318,8 @@ sub freeObject {
 # exported as SOAP methods.
 
 package OME::Remote::Utils;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use strict;
 

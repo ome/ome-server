@@ -73,7 +73,8 @@ be grouped for analysis.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use OME::Image;

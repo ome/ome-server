@@ -41,7 +41,8 @@ use strict;
 use warnings;
 use threads;
 
-our $VERSION = '2.0';
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::Log::Impl::Server::Receiver;
 use OME::Log::Impl::Server::MsgProcessor;

@@ -51,7 +51,8 @@ This warning added by Josiah <siah@nih.gov> based on correspondence with Jean-Ma
 package OME::Tasks::OMEXMLImportExport;
 
 
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use strict ;
 

@@ -38,7 +38,8 @@
 package OME::Research::SearchEngine;
 
 
-our $VERSION = '1.0';
+use OME;
+our $VERSION = $OME::VERSION;
 use strict;
 
 #use Class::Accessor;

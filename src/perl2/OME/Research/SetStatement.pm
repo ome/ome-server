@@ -45,7 +45,8 @@ use Exporter;
 use vars qw (@ISA $VERSION);
 @ISA=qw(Exporter);
 
-$VERSION   = '1.00';
+use OME;
+$VERSION = $OME::VERSION;
 
 
 

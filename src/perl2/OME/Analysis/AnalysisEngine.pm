@@ -63,7 +63,8 @@ appropriate metadata into the OME database.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use Carp;
 use Log::Agent;

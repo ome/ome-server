@@ -53,7 +53,8 @@ batch-execute against all of the images in a dataset.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::Image;
 use OME::Project;

@@ -68,7 +68,8 @@ use OME::ImportExport::FileUtils;
 use OME::ImportExport::Params;
 use OME::ImportExport::PixWrapper;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 # Indeces to per plane info array
 my %uic2_ndxs = (

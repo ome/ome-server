@@ -40,7 +40,8 @@ package OME::Log::Impl::Client::LogProxy;
 use strict;
 use warnings;
 use threads;
-our $VERSION = '2.0';
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::Log::ILogger;
 use OME::Log::Impl::LogRecord;

@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 warn "WARNING:  libtiff must be installed !\n";
 WriteMakefile(
     'NAME'		=> 'OME::Image::Pix',
-    'VERSION_FROM'	=> 'Pix.pm', # finds $VERSION
+    'VERSION_FROM'	=> '../../../OME.pm', # finds $VERSION
     'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
     'LIBS'		=> ['-L/usr/local/lib -L/sw/lib -ltiff'], # e.g., '-lm'
     'DEFINE'		=> '', # e.g., '-DHAVE_SOMETHING'

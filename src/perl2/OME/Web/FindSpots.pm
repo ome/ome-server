@@ -39,7 +39,8 @@ package OME::Web::FindSpots;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.0';
+use OME;
+$VERSION = $OME::VERSION;
 use CGI;
 use OME::Web::Helper::JScriptFormat;
 use OME::Web::Helper::HTMLFormat;

@@ -77,7 +77,8 @@ use OME::ImportExport::DVreader;
 use OME::ImportExport::PixWrapper;
 use Carp;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 use Config;
 
 # $self holds a params hash,which holds at least these useful fields:

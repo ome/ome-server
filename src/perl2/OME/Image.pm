@@ -80,7 +80,8 @@ accessor/mutator for description
 package OME::Image;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -325,7 +326,8 @@ Douglas Creager <dcreager@alum.mit.edu>, Open Microscopy Environment, MIT
 package OME::Image::ImageFilesXYZWT;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -357,7 +359,8 @@ __PACKAGE__->addColumn(t_stop  => 't_stop', {SQLType => 'smallint'});
 package OME::Image::DatasetMap;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

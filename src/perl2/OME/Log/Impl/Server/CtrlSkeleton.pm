@@ -39,7 +39,8 @@ package OME::Log::Impl::Server::CtrlSkeleton;
 
 use strict;
 use warnings;
-our $VERSION = '2.0';
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::Log::Impl::Server::LogService;
 use OME::Log::Impl::Server::Skeleton;

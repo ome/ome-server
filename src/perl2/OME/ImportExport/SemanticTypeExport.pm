@@ -38,7 +38,8 @@
 package OME::ImportExport::SemanticTypeExport;
 
 use strict;
-our $VERSION = '1.0';
+use OME;
+our $VERSION = $OME::VERSION;
 our $NAMESPACE = 'http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd';
 our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';
 

@@ -42,7 +42,8 @@
 
 package OME::SetDB;
 use strict;
-our $VERSION	= 1.00;
+use OME;
+our $VERSION = $OME::VERSION;
 
 sub new {
    my $class = shift;

@@ -39,7 +39,8 @@ package OME::Web::DirTreeImport;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 use CGI;
 use OME::DBObject;
 use base qw{ OME::Web };

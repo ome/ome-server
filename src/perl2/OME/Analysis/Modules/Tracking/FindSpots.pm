@@ -38,7 +38,8 @@
 package OME::Analysis::FindSpotsHandler;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use IO::File;
 use OME::Analysis::Handler;

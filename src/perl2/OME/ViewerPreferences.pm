@@ -38,7 +38,8 @@
 package OME::ViewerPreferences;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

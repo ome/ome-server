@@ -38,7 +38,8 @@
 package OME::Database::Delegate;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use DBI;
 use UNIVERSAL::require;

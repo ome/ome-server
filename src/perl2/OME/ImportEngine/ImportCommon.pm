@@ -73,7 +73,8 @@ use base qw(Exporter);
 our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeOneFileInfo __storeInputFileInfo );
 
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 
 =head2 B<getCommonSHA1>

@@ -40,7 +40,8 @@ use Graphics::Vectors;
 use strict;
 use Image::Magick;
 use vars qw($VERSION @ISA);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 @ISA = ("Graphics::Vectors");
 
 # new

@@ -65,7 +65,8 @@ OME::DataTable create data classes for each attribute table.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use Carp;
 use Log::Agent;
@@ -173,7 +174,8 @@ sub requireAttributeTypePackage {
     my $def = "package $pkg;\n";
     $def .= q{
 	use strict;
-	our $VERSION = 2.000_000;
+use OME;
+	our $VERSION = $OME::VERSION;
 
 	use OME::SemanticType;
 	use base qw(OME::SemanticType::Superclass);
@@ -846,7 +848,8 @@ the element's data column:
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use OME::Factory;
@@ -922,7 +925,8 @@ Returns or sets the data column associated with this semantic element.
 package OME::SemanticType::Superclass;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use Class::Data::Inheritable;
@@ -1141,7 +1145,8 @@ This instance methods writes any unsaved changes to the database.
 package OME::SemanticType::BootstrapExperimenter;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -1179,7 +1184,8 @@ __PACKAGE__->addColumn(Institution => 'institution',{SQLType => 'varchar(256)'})
 package OME::SemanticType::BootstrapGroup;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -1214,7 +1220,8 @@ __PACKAGE__->addColumn(Contact => 'contact',
 package OME::SemanticType::BootstrapRepository;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

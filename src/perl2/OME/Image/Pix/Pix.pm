@@ -58,7 +58,8 @@ our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 
 our @EXPORT = ();
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 bootstrap OME::Image::Pix $VERSION;
 

@@ -77,7 +77,8 @@ use OME::ImportEngine::TIFFUtils;
 use base qw(OME::ImportEngine::AbstractFormat);
 
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 use constant 'UIC1' => 33628;
 use constant 'UIC2' => 33629;

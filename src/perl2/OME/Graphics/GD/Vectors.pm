@@ -39,7 +39,8 @@ package OME::Graphics::GD::Vectors;
 use OME::Graphics::GD;
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 @ISA = ("OME::Graphics::GD");
 
 # new

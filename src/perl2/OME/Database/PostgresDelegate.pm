@@ -38,7 +38,8 @@
 package OME::Database::PostgresDelegate;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use DBI;
 use OME::Database::Delegate;

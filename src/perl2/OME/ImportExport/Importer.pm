@@ -73,7 +73,8 @@ use OME::Analysis::AnalysisEngine;
 use OME::Image;
 use OME::Dataset;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 sub new {
     my @image_buf;

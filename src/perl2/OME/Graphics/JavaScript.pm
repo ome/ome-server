@@ -39,7 +39,8 @@ package OME::Graphics::JavaScript;
 use strict;
 use OME::Graphics;
 use vars qw($VERSION @ISA);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 @ISA = ("OME::Graphics");
 
 my $JStype = 'JSgraphics';

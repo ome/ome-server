@@ -60,7 +60,8 @@ supports is defined as a separate subclass of AbstractFormat.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use fields qw(_session _module_execution);
 use File::Basename;

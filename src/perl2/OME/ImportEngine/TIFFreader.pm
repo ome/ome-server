@@ -93,7 +93,8 @@ use OME::ImportEngine::TIFFUtils;
 use base qw(OME::ImportEngine::AbstractFormat);
 
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 
 =head2 Patterns Defining Groups

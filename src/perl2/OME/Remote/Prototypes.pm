@@ -36,7 +36,8 @@
 
 
 package OME::Remote::Prototypes;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use strict;
 

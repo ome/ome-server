@@ -38,7 +38,8 @@
 package OME::Module;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -95,7 +96,8 @@ __PACKAGE__->hasMany('analyses','OME::ModuleExecution' => 'module');
 package OME::Module::FormalInput;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -157,7 +159,8 @@ __PACKAGE__->hasMany('actual_inputs','OME::ModuleExecution::ActualInput' =>
 package OME::Module::FormalOutput;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

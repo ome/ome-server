@@ -39,7 +39,8 @@ package OME::Web::Validation;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 use CGI;
 use OME::Dataset;
 use OME::Project;

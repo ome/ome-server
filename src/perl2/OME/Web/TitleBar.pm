@@ -41,7 +41,8 @@ package OME::Web::TitleBar;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use OME::Web::Helper::HTMLFormat;

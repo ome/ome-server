@@ -53,7 +53,8 @@ use OME::ImportExport::Export_writer;
 use Carp;
 use File::Basename;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 sub new {
     my $export_writer;

@@ -38,7 +38,8 @@
 package OME::Tasks::OMEImport;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use Carp;
 use Log::Agent;

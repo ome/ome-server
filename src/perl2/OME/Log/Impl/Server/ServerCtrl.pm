@@ -40,7 +40,8 @@ package OME::Log::Impl::Server::ServerCtrl;
 use strict;
 use warnings;
 
-our $VERSION = '2.0';
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::Log::Impl::Client::Forwarder;
 use OME::Log::Impl::CtrlOp;

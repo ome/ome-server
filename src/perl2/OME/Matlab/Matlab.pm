@@ -74,7 +74,8 @@ our @EXPORT_OK = (@{$EXPORT_TAGS{'all'}});
 
 our @EXPORT = (@{$EXPORT_TAGS{'constants'}});
 
-our $VERSION = '0.01';
+use OME;
+our $VERSION = $OME::VERSION;
 
 our ($mxREAL,$mxCOMPLEX);
 our ($mxUNKNOWN_CLASS,$mxCELL_CLASS,$mxSTRUCT_CLASS,$mxOBJECT_CLASS,

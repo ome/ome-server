@@ -63,7 +63,8 @@ L<OME::ImportEngine::AbstractFormat|OME::ImportEngine::AbstractFormat>.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use Class::Data::Inheritable;
 use Log::Agent;

@@ -58,7 +58,8 @@ execution are reused.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -157,7 +158,8 @@ sub experimenter {
 package OME::AnalysisChainExecution::NodeExecution;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

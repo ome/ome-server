@@ -60,7 +60,8 @@ use Carp;
 use OME::ImportExport::FileUtils;
 use OME::ImportExport::Repacker::Repacker;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 
 my %pix_size = (0=>1, 1=>2, 2=>4, 3=>2, 4=>4);

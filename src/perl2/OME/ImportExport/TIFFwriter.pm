@@ -72,7 +72,8 @@ use IO::Seekable;
 use IO::File;
 use OME::ImportExport::FileUtils;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+use OME;
+$VERSION = $OME::VERSION;
 
 # for remembering header file positions
 my $num_IFD_entries;

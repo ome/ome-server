@@ -40,7 +40,8 @@
 # JM 14-05 fix bug when log in with wrong username/password
 
 package OME::SessionManager;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use strict;
 

@@ -37,7 +37,8 @@
 
 package OME::Tasks::ImageManager;
 
-our $VERSION = '1.0';
+use OME;
+our $VERSION = $OME::VERSION;
 
 =head 1 NAME
 

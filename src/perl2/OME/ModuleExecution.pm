@@ -86,7 +86,8 @@ analysis.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -205,7 +206,8 @@ C<ActualInputs> associated with this module_execution.
 package OME::ModuleExecution::ActualInput;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 require OME::Module;
@@ -277,7 +279,8 @@ Returns the formal input that this actual input provides data for.
 package OME::ModuleExecution::SemanticTypeOutput;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

@@ -61,7 +61,8 @@ can be accessed via the C<AttributeType-E<gt>data_columb> method.
 =cut
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use Log::Agent;
 use OME::DBObject;
@@ -178,7 +179,8 @@ sub requireDataTablePackage {
     my $def = "package $pkg;\n";
     $def .= q{
 	use strict;
-	our $VERSION = 2.000_000;
+use OME;
+	our $VERSION = $OME::VERSION;
 
 	use OME::DBObject;
 	use base qw(OME::DBObject);
@@ -247,7 +249,8 @@ sub requireDataTablePackage {
 package OME::DataTable::Column;
 
 use strict;
-our $VERSION = 2.000_000;
+use OME;
+our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
