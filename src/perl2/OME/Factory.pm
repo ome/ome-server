@@ -137,8 +137,8 @@ in $dataHash, or DBI will throw an error.
 
 This works exactly like newObject, except that if an object in the
 database already exists with the given contents, it will be returned,
-and new object will be created.  This is extremely useful for adding
-items to a many-to-many map.  For instance,
+and no new object will be created.  This is extremely useful for
+adding items to a many-to-many map.  For instance,
 
 	# Add $image to $dataset
 	my $map = $factory->
