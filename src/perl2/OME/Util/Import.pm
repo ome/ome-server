@@ -43,6 +43,7 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Util::Commands);
 
 use Carp;
+use Term::ReadKey;
 use File::Find;
 use File::Spec::Functions qw(rel2abs);
 use Getopt::Long;
@@ -79,9 +80,10 @@ Options:
       must specify a dataset. If you are importing OME Semantic Type 
       Definitions, Analysis Modules, or Chains this parameter is unnecessary.
       
-  -m  Use this to specify the manifest file. A manifest file is a file 
-      containing file or directory paths one per line. Each line beginning  
-      with the hash symbol (#) is considered a comment and is ignored. 
+  -i  With this flag, this utility runs in interactive mode prompting you to 
+      enter file/directory names. Enter EOF (control D) to signal you don't 
+      want to enter more path names. Hint: you might want to run $script $command_name
+      in interactive mode and redirect the path/names from a file. 
       
   -r  Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
@@ -107,13 +109,13 @@ sub import {
 	my $reuse;
 	my $help;
 	my $datasetName;
-	my $manifestName;
+	my $interactiveMode;
 	
 	GetOptions('reimport|r!' => \$reuse,
                'help|h' => \$help,
-               'm=s' => \$manifestName,
-               
+               'i' => \$interactiveMode,
                'd=i' => \$datasetName);
+               
     if (not defined $datasetName) {
     	import_help($self,$commands);
     	print STDERR "\n *** dataset not specified\n";
@@ -123,18 +125,19 @@ sub import {
     # create the list of files
     my @file_names;
     
-    # first get all the files from the manifest 
-    if ($manifestName) {
-		open (MANIFEST, "<", $manifestName )
-		or croak "Could not open manifest file $manifestName\n";
-	
-		while (<MANIFEST>) { 
-			chomp;
-	
+    # first get all the files from user
+    if ($interactiveMode) {
+    	while (1) {
+			print "Enter file/dir name: " if -t STDIN;
+			my $input = ReadLine 0;
+			last if not defined $input;
+
+			chomp $input;
+
 			# skip lines that begin with a hash sign.
-			if ($_ !~ m/^\#+.*/) {
-				$_ = rel2abs ("$_");
-				push (@ARGV, $_);
+			if ($input !~ m/^\#+.*/) {
+				$input = rel2abs ("$input");
+				push (@ARGV, $input);
 			}
 		}
     }
@@ -149,6 +152,11 @@ sub import {
     		print STDERR "WARNING: $_ does not exist. Not Imported.\n";
     	}
     }
+    
+    foreach(@file_names) {
+    	print STDERR "fily ".$_."\n";
+    }
+    die;
     
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->TTYlogin();
