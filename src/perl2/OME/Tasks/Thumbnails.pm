@@ -22,7 +22,6 @@ package OME::Tasks::Thumbnails;
 
 use POSIX;
 use GD;
-use OME::Tasks::ImageInfo;
 use strict;
 our $VERSION = '1.0';
 
@@ -71,11 +70,6 @@ sub new{
 	$self->{size}=50;
 	$self->{OME_JPEG}="OME_JPEG";
 	$self->{session}=shift;
-
-
-
-
-
 	bless($self,$class);
    	return $self;
 
@@ -131,7 +125,7 @@ sub generateOMEmovie{
 	my $factory=$session->Factory();
 	my $WBS=undef;
 	my $RGBon=undef;
-  my $isRGB=undef;
+  	my $isRGB=undef;
 
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path)=getImageDim($image);	
 	my $stats=getImageStats($factory,$image);				# ref array
@@ -358,7 +352,6 @@ sub getConvertedWBS{
 }
 
 ######################
-# must be merged
 
 sub getImageStats{
 	my ($factory,$image)=@_;
