@@ -44,6 +44,7 @@
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+	xmlns:DH = "http://www.openmicroscopy.org/XMLschemas/DataHistory/IR3/DataHistory.xsd"
 	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd">
 
@@ -151,8 +152,10 @@
 			<xsl:apply-templates select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
 			<xsl:apply-templates select = "STD:*"/>
 			<xsl:apply-templates select = "AML:*"/>
+			<xsl:apply-templates select = "DH:*"/>
 		</xsl:element>
 	</xsl:template>
+
 
 	<!-- This is a general template for the Description elements -->
 	<xsl:template match = "@Description">
