@@ -59,7 +59,7 @@ __PACKAGE__->addColumn(module_execution => 'module_execution_id',
 __PACKAGE__->addColumn(Path => 'path',
                        {
                         SQLType => 'varchar(256)',
-                        NotNull => 1,
+                        #NotNull => 1,
                         Unique  => 1,
                        });
 
