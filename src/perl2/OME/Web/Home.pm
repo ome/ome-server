@@ -33,6 +33,64 @@ sub getPageTitle {
     return "Open Microscopy Environment";
 }
 
+sub createOMEPage {
+my $self = shift;
+my $HTML;
+my $cgi  = $self->CGI();
+my $home = '/html/noOp.html';
+
+	$self->{contentType} = 'text/html';
+	$HTML = <<ENDHTML;
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML><HEAD>
+<TITLE>OME UI</TITLE>
+<META NAME="ROBOTS" CONTENT="NOINDEX">
+<script language="JavaScript" src="/JavaScript/UseWithJoust.js"></script>
+<script language="JavaScript">
+<!--
+// Break out of any frames.  Prolly should go right into UseWithJoust.js
+	if (top.location != location) {
+		top.location.href = document.location.href ;
+	}
+//-->
+</script>
+
+</HEAD>
+ENDHTML
+
+	if( $cgi->url_param('Float') ) {
+		$HTML .= <<ENDHTML
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+	var thePage = pageFromSearch('$home', true);
+	openMenu("/html/menuFrame.html?page=" + escape(thePage), "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=230,height=400");
+
+//-->
+</SCRIPT>
+<frameset cols="100%" rows="70,*" onLoad="loaded(); updatePage('$home');" onUnload="closeMenu();">
+	<frame name="title" src="/html/title.html" scrolling="no" noresize marginwidth="0" marginheight="0">
+	<frame name="text" src="" scrolling="auto" marginwidth="5" marginheight="5">
+</frameset>
+</HTML>
+ENDHTML
+	}
+	else {
+		$HTML .= <<ENDHTML
+<frameset cols="100%" rows="70,*" onLoad="loaded(); updatePage('$home');" onResize="defaultResizeHandler();">
+	<frame name="title" src="/html/title.html" scrolling="no" noresize marginwidth="0" marginheight="0" APPLICATION="yes">
+	<frameset cols="230,*" rows="100%">
+		<frame name="menuFrame" src="/html/menuFrame.html" scrolling="auto" marginwidth="1" marginheight="1" APPLICATION="yes">
+		<frame name="text" src="" scrolling="auto" APPLICATION="yes">
+	</frameset>
+</frameset>
+</HTML>
+ENDHTML
+	}
+
+return ('HTML', $HTML);
+
+}
+
 sub getPageBody {
     my $self = shift;
     my $cgi = $self->CGI();
@@ -40,7 +98,7 @@ sub getPageBody {
 
     $body .= $cgi->h3("Open Microscopy Environment");
     $body .= $cgi->p("Welcome to OME.  Soon you will be able to do something.");
-
+=pod
     my $factory = $self->Factory();
     my $project = $factory->loadObject("OME::Project",1);
     $body .= $cgi->p($project->id());
@@ -72,7 +130,7 @@ sub getPageBody {
     while (my $entry = $entries->next()) {
 	$body .= $cgi->p("..." . $entry->label());
     }
-    
+=cut    
     return ('HTML',$body);
 }
 

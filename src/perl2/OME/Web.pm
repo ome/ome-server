@@ -3,19 +3,19 @@
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
-#    This library is free software; you can redistribute it and/or
-#    modify it under the terms of the GNU Lesser General Public
-#    License as published by the Free Software Foundation; either
-#    version 2.1 of the License, or (at your option) any later version.
+#	 This library is free software; you can redistribute it and/or
+#	 modify it under the terms of the GNU Lesser General Public
+#	 License as published by the Free Software Foundation; either
+#	 version 2.1 of the License, or (at your option) any later version.
 #
-#    This library is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#    Lesser General Public License for more details.
+#	 This library is distributed in the hope that it will be useful,
+#	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#	 Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU Lesser General Public
-#    License along with this library; if not, write to the Free Software
-#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#	 You should have received a copy of the GNU Lesser General Public
+#	 License along with this library; if not, write to the Free Software
+#	 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 package OME::Web;
@@ -26,16 +26,15 @@ $VERSION = '1.0';
 use CGI;
 use OME::SessionManager;
 use Apache::Session::File;
-use Apache;
 
 # The OME::Web class serves as the ancestor of all webpages accessed
 # through the OME system.  Functionaly common to all pages of the site
-# are defined here.  Each webpage is defined by a subclass (ideally
+# are defined here.	 Each webpage is defined by a subclass (ideally
 # with a name prefixed with OME::Web::) which overrides the following
 # methods:
 #
-#    getPageTitle
-#    getPageBody
+#	 getPageTitle
+#	 getPageBody
 
 
 my $loginPage = 'OME::Web::Login';
@@ -44,62 +43,64 @@ my $loginPage = 'OME::Web::Login';
 # -----
 
 sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my %params = @_;
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my %params = @_;
 
-    my $CGI;
-    if (exists $params{CGI}) {
+	my $CGI;
+	if (exists $params{CGI}) {
 	$CGI = $params{CGI};
-    } else {
+	} else {
 	$CGI = new CGI;
-    }
-    
-    my $self = {
+	}
+	
+	my $self = {
 	CGI => $CGI
-    };
+	};
 
-    $self->{fontDefaults} = {
+	$self->{fontDefaults} = {
 	face => 'Verdana,Arial,Helvetica'
 	};
 
-    $self->{tableDefaults} = {
+	$self->{tableDefaults} = {
 	cellspacing => 1,
 	cellpadding => 2,
-	border      => 0
+	border		=> 0
 	};
 
-    $self->{tableHeaderRowDefaults} = {
+	$self->{tableHeaderRowDefaults} = {
 	bgcolor => '#000000'
 	};
 
-    $self->{tableHeaderDefaults} = {
+	$self->{tableHeaderDefaults} = {
 	align => 'CENTER',
 	bgcolor => '#000000'
 	};
 
-    $self->{tableFormRowDefaults} = {
+	$self->{tableFormRowDefaults} = {
 	bgcolor => '#e0e0e0'
 	};
 
-    $self->{tableRowColors} = ['#ffffd0','#d0d0d0'];
-    $self->{nextRowColor} = 0;
+	$self->{tableRowColors} = ['#ffffd0','#d0d0d0'];
+	$self->{nextRowColor} = 0;
 
-    $self->{tableRowDefaults} = {
-    };
+	$self->{tableRowDefaults} = {
+	};
 
-    $self->{tableCellDefaults} = {
+	$self->{tableCellDefaults} = {
 	align => 'LEFT'
 	};
 
-    $self->{OMEbgcolor} = '#CCCC99';
+	$self->{OMEbgcolor} = '#CCCC99';
 
-    $self->{RequireLogin} = 1;
+	$self->{RequireLogin} = 1;
 
-    $self->{manager} = OME::SessionManager->new();
+	$self->{manager} = OME::SessionManager->new();
+	
+	$self->{_cookies} = undef;
 
-    bless($self,$class);
-    return $self;
+	bless($self,$class);
+	return $self;
 }
 
 
@@ -119,9 +120,9 @@ sub User { my $self = shift; return $self->{user}; }
 # -----------
 
 sub pageURL {
-    my ($self, $page) = @_;
-    return "serve.pl?Page=$page";
-    #return $self->CGI()->escape("serve.pl?Page=$page");
+	my ($self, $page) = @_;
+	return "serve.pl?Page=$page";
+	#return $self->CGI()->escape("serve.pl?Page=$page");
 }
 
 
@@ -129,42 +130,91 @@ sub pageURL {
 # -----------
 
 sub ensureLogin {
-    my $self = shift;
-    my $manager = $self->Manager();
-    my $dbh = $self->DBH();
+	my $self = shift;
+	my $manager = $self->Manager();
+	my $dbh = $self->DBH();
+	my $cgi = $self->CGI();
 
-    # look for an existing session
-    my $r = Apache->request;
-    my $cookie = $r->header_in('Cookie');
-    $cookie =~ s/SESSION_ID=(\w*)/$1/ if $cookie;
-    
-    #or a new session if we got no cookie my %session;
-    my %apacheSession;
-    tie %apacheSession, 'Apache::Session::File', $cookie, {
-	Directory     => '/var/tmp/OME/sessions',
+	#or a new session if we got no cookie my %session;
+	my %apacheSession = $self->getApacheSession();
+print STDERR "\napacheSession{username} is ".(defined $apacheSession{username} ? "defined" : "undefined")."\n\n";
+	my $session = undef;
+	if (exists $apacheSession{username}) {
+		$session = $manager->createSession($apacheSession{username},$apacheSession{password});
+	}
+	$self->{session} = $session;
+
+	if (defined $session) {
+		my $factory = $session->Factory();
+		my $sql = "select experimenter_id from experimenters where ome_name = ?";
+		my $userid = $dbh->selectrow_array($sql,{},$session->Username());
+		my $user = $factory->loadObject('OME::Experimenter',$userid);
+	
+		$self->{user} = $user;
+	}
+
+print STDERR "\nsession is ".(defined $session ? "defined" : "undefined")."\n\n";
+	return defined $session;
+}
+
+
+#
+# setApacheSession
+# ----------------
+
+sub setApacheSession {
+my $self = shift;
+my $cgi = $self->CGI();
+my %params = @_;
+my $userName = $params{'username'};
+my $password = $params{'password'};
+my %apacheSession;
+
+	if (not defined $self->{apacheSession}) {
+		tie %apacheSession, 'Apache::Session::File', undef, {
+			Directory	  => '/var/tmp/OME/sessions',
+			LockDirectory => '/var/tmp/OME/lock'
+		};
+		$self->{apacheSession} = \%apacheSession;
+	} else {
+		%apacheSession = %$self->{apacheSession};
+	}
+
+	$apacheSession{username} = $userName;
+	$apacheSession{password} = $password;
+
+	$self->{_cookies}->{'SESSION_KEY'} =
+		$cgi->cookie( -name	   => 'SESSION_KEY',
+					  -value   => $apacheSession{_session_id},
+					  -path    => '/',
+					  -expires => (defined $userName and defined $password ? '30m' : '-1d' ));
+}
+
+
+#
+# getApacheSession
+# ----------------
+
+sub getApacheSession {
+my $self = shift;
+my $cgi = $self->CGI();
+my $sessionKey = $cgi->cookie('SESSION_KEY');
+print STDERR "getApacheSession: sessionKey=$sessionKey\n";
+my %apacheSession;
+
+	tie %apacheSession, 'Apache::Session::File', $sessionKey, {
+	Directory	  => '/var/tmp/OME/sessions',
 	LockDirectory => '/var/tmp/OME/lock'
 	};
 
-    my $session_cookie = "SESSION_ID=$apacheSession{_session_id};";
-    $r->header_out("Set-Cookie" => $session_cookie);
-    
-    $self->{apacheSession} = \%apacheSession;
-    my $session = undef;
-    if (exists $apacheSession{username}) {
-	$session = $manager->createSession($apacheSession{username},$apacheSession{password});
-    }
-    $self->{session} = $session;
+	$self->{_cookies}->{'SESSION_KEY'} =
+		$cgi->cookie( -name		=> 'SESSION_KEY',
+					  -value	=> $apacheSession{_session_id},
+					  -path    => '/',
+					  -expires	=> '30m' );
 
-    if (defined $session) {
-	my $factory = $session->Factory();
-	my $sql = "select experimenter_id from experimenters where ome_name = ?";
-	my $userid = $dbh->selectrow_array($sql,{},$session->Username());
-	my $user = $factory->loadObject('OME::Experimenter',$userid);
 
-	$self->{user} = $user;
-    }
-
-    return defined $session;
+	return %apacheSession;
 }
 
 
@@ -172,134 +222,118 @@ sub ensureLogin {
 # ----------
 
 sub getLogin {
-    my $self = shift;
-    $self->CGI()->redirect($self->pageURL($loginPage));
+	my $self = shift;
+	$self->redirect($self->pageURL($loginPage));
 }
 
 # serve()
 # -------
 sub serve {
-    my $self = shift;
+	my $self = shift;
 
-    if ($self->{RequireLogin}) {
+	if ($self->{RequireLogin}) {
 	if (!$self->ensureLogin()) {
-	    $self->getLogin();
-	    return;
+		$self->getLogin();
+		return;
 	}
-    }
-    my ($result,$content) = $self->createOMEPage();
+	}
+	#
+	my ($result,$content) = $self->createOMEPage();
 
-    if ($result eq 'HTML' && defined $content) {
-		print $self->CGI()->header('text/html');
+
+	if ($result eq 'HTML' && defined $content) {
+		print $self->CGI()->header('text/html', -cookie => [values %{$self->{_cookies}}]);
 		print $content;
-    } elsif ($result eq 'IMAGE' && defined $content) {
-		print $self->CGI()->header($self->contentType());
+	} elsif ($result eq 'IMAGE' && defined $content) {
+		print $self->CGI()->header($self->contentType(), -cookie => [values %{$self->{_cookies}}]);
 		print $content;
-    } elsif ($result eq 'SVG' && defined $content) {
-		print $self->CGI()->header($self->contentType());
+	} elsif ($result eq 'SVG' && defined $content) {
+		print $self->CGI()->header($self->contentType(), -cookie => [values %{$self->{_cookies}}]);
 		print $content;
-    } elsif ($result eq 'REDIRECT' && defined $content) {
-		$self->CGI()->redirect($content);
-    } else {
+	} elsif ($result eq 'REDIRECT' && defined $content) {
+		print $self->CGI()->header(-cookie => [values %{$self->{_cookies}}]);
+		$self->redirect($content);
+	} else {
 		my $class = ref($self);
-		print $self->CGI()->header(-type => 'text/html');
+		print $self->CGI()->header(-type => 'text/html', -cookie => [values %{$self->{_cookies}}]);
 		print "You shouldn't be accessing the $class page.";
-    }
+		print "<br>Here's the error message:<br>$content" unless !(defined $content);
+	}
+}
+
+sub redirect {
+my $self = shift;
+my $URL = shift;
+
+	print $self->CGI()->header (-type=>'text/html', -cookie => [values %{$self->{_cookies}}]);
+	print qq {
+		<script language="JavaScript">
+			<!--
+				location = "$URL";
+			//-->
+		</script>
+		};
+	exit (0);
+
 }
 
 
 # getTopNavbar
 # ------------
+# this is depricated
 
 sub getTopNavbar {
-    my $self = shift;
-    my $CGI = $self->CGI();
-    
-    return $CGI->td($CGI->font(combine($self->{fontDefaults},
-				       {size => '+2'}),
-			       $CGI->b('OME')).
-		    "<br>Top navbar");
+	my $self = shift;
+	my $CGI = $self->CGI();
+	
+	return $CGI->td($CGI->font(combine($self->{fontDefaults},
+					   {size => '+2'}),
+				   $CGI->b('OME')).
+			"<br>Top navbar");
 }
 
 # getSidebar
 # ----------
+# this is depricated
 
 sub getSidebar {
-    my $self    = shift;
-    my $CGI     = $self->CGI();
-    my $session = $self->Session();
+	my $self	= shift;
+	my $CGI		= $self->CGI();
+	my $session = $self->Session();
 
-    my $loginMessage = "";
-    
-    if (defined $session) {
+	my $loginMessage = "";
+	
+	if (defined $session) {
 	my $user = $self->User();
 	my $firstName = $user->firstname();
 	my $lastName = $user->lastname();
 	$loginMessage = "<hr>$firstName $lastName";
 	my $url = $self->pageURL('OME::Web::Logout');
 	$loginMessage .= "<br><small><a href=\"$url\">LOGOUT</a></small>";
-    }
+	}
 
-    return  $CGI->td("Sidebar${loginMessage}<hr>Dataset info?<hr>Previously run<br>analyses?");
+	return	$CGI->td("Sidebar${loginMessage}<hr>Dataset info?<hr>Previously run<br>analyses?");
 }
 
 # createOMEPage
 # -------------
 
 sub createOMEPage {
-    my $self  = shift;
-    my $CGI   = $self->CGI();
-    my $title = $self->getPageTitle();
-    my ($result,$body)  = $self->getPageBody();
+	my $self  = shift;
+	my $CGI	  = $self->CGI();
+	my $title = $self->getPageTitle();
+	my ($result,$body)	= $self->getPageBody();
 
-    return ('ERROR',undef) if (!defined $title || !defined $body);
-    return ($result,$body) if ($result eq 'REDIRECT');
+	return ('ERROR',undef) if (!defined $title || !defined $body);
+	return ($result,$body) if ($result eq 'REDIRECT');
 
-    my ($left,$center,$right,$html);
-
-    $html = "";
-
-    $left = $CGI->td($CGI->img({src    => '/images/AnimalCell.aa.jpg.png',
-				width  => 105,
-				height => 77,
-				border => 0,
-				alt    => 'Cell in mitosis'}));
-    $center = $self->getTopNavbar();
-
-    $html .= $CGI->Tr({align  => 'CENTER',
-		       valign => 'MIDDLE'},
-		      $left,
-		      $center);
-
-    my $bodyCell;
-    
-    # add some padding
-    $bodyCell = $CGI->table({cellspacing => 8, cellpadding => 0, border => 0, width => '100%'},
-			    $CGI->Tr($CGI->td($body)));
-    $bodyCell = $CGI->td({width => '100%',
-			  align => 'LEFT'},
-			 $bodyCell);
-
-    $left = $self->getSidebar();
-
-    $html .= $CGI->Tr({align  => 'CENTER',
-		       valign => 'TOP'},
-		      $left,
-		      $bodyCell);
-
-    $html = $CGI->table({cellspacing => 0,
-			 cellpadding => 0,
-			 border      => 0,
-			 width       => '100%'},
-			$html);
-
-    my $head = $CGI->start_html({title => $title,
+	my $head = $CGI->start_html({title => $title,
 				 bgcolor => $self->{OMEbgcolor},
 				 text => 'BLACK'});
-    my $tail = $CGI->end_html;
+	my $tail = $CGI->end_html;
 
-    #print STDERR $head . $html . $tail;
-    return ('HTML', $head . $html . $tail);
+	#print STDERR $head . $html . $tail;
+	return ('HTML', $head . $body . $tail);
 }
 
 
@@ -309,31 +343,31 @@ sub createOMEPage {
 # of the page.
 
 sub getPageTitle {
-    return undef;
+	return undef;
 }
 
 # getPageBody()
 # -------------
 # This should be overridden in descendant classes to return the body
-# of the page.  It should be returned as a tuple in the following
+# of the page.	It should be returned as a tuple in the following
 # form:
 
 #
-#   ('ERROR',<error message>)
-#      - something unexpectedly bad happened
+#	('ERROR',<error message>)
+#	   - something unexpectedly bad happened
 #
-#   ('HTML',<page body>)
-#      - everything worked well, returns an HTML fragment for the body
-#        of the page
+#	('HTML',<page body>)
+#	   - everything worked well, returns an HTML fragment for the body
+#		 of the page
 #
-#   ('REDIRECT',<URL>)
-#      - everything worked well, but instead of a page body, the user
-#        should be redirected (usually in the case of processing form
-#        input)
+#	('REDIRECT',<URL>)
+#	   - everything worked well, but instead of a page body, the user
+#		 should be redirected (usually in the case of processing form
+#		 input)
 
 
 sub getPageBody {
-    return ('ERROR',undef);
+	return ('ERROR',undef);
 }
 
 
@@ -341,15 +375,15 @@ sub getPageBody {
 # --------------------------------------
 
 sub lookup {
-    my $custom  = shift;
-    my $default = shift;
-    my $key     = shift;
+	my $custom	= shift;
+	my $default = shift;
+	my $key		= shift;
 
-    if (defined $custom->{$key}) {
+	if (defined $custom->{$key}) {
 	return $custom->{$key};
-    } else {
+	} else {
 	return $default->{$key};
-    }
+	}
 }
 
 
@@ -357,47 +391,47 @@ sub lookup {
 # ----------------------------------
 
 sub combine {
-    #my $custom  = shift;
-    my $table;
-    my %result;
-    my ($key,$value);
+	#my $custom	 = shift;
+	my $table;
+	my %result;
+	my ($key,$value);
 
-    foreach $table (@_) {
+	foreach $table (@_) {
 	while (($key,$value) = each %$table)
 	{
-	    $result{$key} = $value;
+		$result{$key} = $value;
 	}
-    }
+	}
 
-    return \%result;
+	return \%result;
 }
 
 
 # space(n)
 # --------
 sub space {
-    my $n = shift;
-    my $result = '';
-    my $i;
+	my $n = shift;
+	my $result = '';
+	my $i;
 
-    for ($i = 0; $i < $n; $i++)
-    {
+	for ($i = 0; $i < $n; $i++)
+	{
 	$result .= '&nbsp;';
-    }
+	}
 
-    return $result;
+	return $result;
 }
 
 
 # font(params, ...)
 # -----------------
 sub font {
-    my $self    = shift;
-    my $CGI     = $self->{CGI};
-    my $params  = shift;
-    my @content = @_;
+	my $self	= shift;
+	my $CGI		= $self->{CGI};
+	my $params	= shift;
+	my @content = @_;
 
-    return $CGI->font(combine($self->{fontDefaults},$params),@content);
+	return $CGI->font(combine($self->{fontDefaults},$params),@content);
 }
 
 
@@ -412,12 +446,12 @@ sub contentType {
 # ------------------
 
 sub table {
-    my $self    = shift;
-    my $CGI     = $self->{CGI};
-    my $params  = shift;
-    my @content = @_;
+	my $self	= shift;
+	my $CGI		= $self->{CGI};
+	my $params	= shift;
+	my @content = @_;
 
-    return $CGI->table(combine($self->{tableDefaults},$params),@content) . "\n";
+	return $CGI->table(combine($self->{tableDefaults},$params),@content) . "\n";
 }
 
 
@@ -425,24 +459,24 @@ sub table {
 # ------------------------------------------
 
 sub tableHeaders {
-    my $self      = shift;
-    my $CGI       = $self->{CGI};
-    my $rowParams = shift;
-    my $colParams = shift;
-    #my @content   = @_;
-    my ($h,$hs);
+	my $self	  = shift;
+	my $CGI		  = $self->{CGI};
+	my $rowParams = shift;
+	my $colParams = shift;
+	#my @content   = @_;
+	my ($h,$hs);
 
-    $hs = "";
-    foreach $h (@_) {
+	$hs = "";
+	foreach $h (@_) {
 	$hs .= $CGI->td(combine($self->{tableHeaderDefaults},$colParams),
 			$self->font({color => 'WHITE'},
-				    $CGI->small($CGI->b(space(2).$h.space(2)))));
+					$CGI->small($CGI->b(space(2).$h.space(2)))));
 	$hs .= "\n";
-    }
+	}
 		   
-    my $x = $CGI->Tr(combine($self->{tableHeaderRowDefaults},$rowParams),$hs);
+	my $x = $CGI->Tr(combine($self->{tableHeaderRowDefaults},$rowParams),$hs);
 
-    return $x . "\n";
+	return $x . "\n";
 }
 
 
@@ -450,23 +484,23 @@ sub tableHeaders {
 # ---------------------
 
 sub tableColoredRow {
-    my $self    = shift;
-    my $CGI     = $self->{CGI};
-    my $params  = shift;
+	my $self	= shift;
+	my $CGI		= $self->{CGI};
+	my $params	= shift;
 
-    my $rowColor = $self->{tableRowColors}->[$self->{nextRowColor}];
-    $self->{nextRowColor} = 1 - $self->{nextRowColor};
+	my $rowColor = $self->{tableRowColors}->[$self->{nextRowColor}];
+	$self->{nextRowColor} = 1 - $self->{nextRowColor};
 
-    return $CGI->Tr(combine($self->{tableRowDefaults},{bgcolor => $rowColor},$params),@_) . "\n";
+	return $CGI->Tr(combine($self->{tableRowDefaults},{bgcolor => $rowColor},$params),@_) . "\n";
 }
 
 
 sub tableRow {
-    my $self    = shift;
-    my $CGI     = $self->{CGI};
-    my $params  = shift;
+	my $self	= shift;
+	my $CGI		= $self->{CGI};
+	my $params	= shift;
 
-    return $CGI->Tr(combine($self->{tableRowDefaults},$params),@_) . "\n";
+	return $CGI->Tr(combine($self->{tableRowDefaults},$params),@_) . "\n";
 }
 
 
@@ -474,15 +508,15 @@ sub tableRow {
 # ----------------------
 
 sub tableCell {
-    my $self    = shift;
-    my $CGI     = $self->{CGI};
-    my $params  = shift;
+	my $self	= shift;
+	my $CGI		= $self->{CGI};
+	my $params	= shift;
 
-    my $thisRowColor = $self->{nextRowColor};
-    my $rowColor = $self->{tableRowColors}->[$thisRowColor];
+	my $thisRowColor = $self->{nextRowColor};
+	my $rowColor = $self->{tableRowColors}->[$thisRowColor];
 	
-    return $CGI->td(combine($self->{tableCellDefaults},{bgcolor => $rowColor},$params),
-		    $self->font({},
+	return $CGI->td(combine($self->{tableCellDefaults},{bgcolor => $rowColor},$params),
+			$self->font({},
 				space(1),
 				@_,
 				space(1))) . "\n";
@@ -493,12 +527,12 @@ sub tableCell {
 # --------------------
 
 sub spacer {
-    my $self   = shift;
-    my $CGI    = $self->{CGI};
-    my $width  = shift;
-    my $height = shift;
+	my $self   = shift;
+	my $CGI	   = $self->{CGI};
+	my $width  = shift;
+	my $height = shift;
 
-    return $CGI->img({src => "/perl/spacer.gif", width => $width, height => $height});
+	return $CGI->img({src => "/perl/spacer.gif", width => $width, height => $height});
 }
 
 
@@ -506,19 +540,19 @@ sub spacer {
 # ----------------
 
 sub tableLine {
-    my $self  = shift;
-    my $CGI   = $self->{CGI};
-    my $width = shift;
-    my $height = shift;
+	my $self  = shift;
+	my $CGI	  = $self->{CGI};
+	my $width = shift;
+	my $height = shift;
 
-    my $params = {colspan => $width};
-    if (defined $height) {
+	my $params = {colspan => $width};
+	if (defined $height) {
 	$params->{height} = $height;
-    }
+	}
 
-    return $CGI->Tr($self->{tableHeaderRowDefaults},
-		    $CGI->td(combine($self->{tableHeaderDefaults},$params),
-			     $self->spacer(1,1))) . "\n";
+	return $CGI->Tr($self->{tableHeaderRowDefaults},
+			$CGI->td(combine($self->{tableHeaderDefaults},$params),
+				 $self->spacer(1,1))) . "\n";
 }
 
 

@@ -52,24 +52,10 @@ sub getPageBody {
 	my $session = $self->Manager()->createSession($cgi->param('username'),
 						      $cgi->param('password'));
 	if (defined $session) {
-	    # look for an existing session
-	    my $r = Apache->request;
-	    my $cookie = $r->header_in('Cookie');
-	    $cookie =~ s/SESSION_ID=(\w*)/$1/;
-	    
-	    #or a new session if we got no cookie my %session;
-	    my %apacheSession;
-	    tie %apacheSession, 'Apache::Session::File', $cookie, {
-		Directory     => '/var/tmp/OME/sessions',
-		LockDirectory => '/var/tmp/OME/lock'
-	    };
-	    
-	    my $session_cookie = "SESSION_ID=$apacheSession{_session_id};";
-	    $r->header_out("Set-Cookie" => $session_cookie);
-
-	    $apacheSession{username} = $cgi->param('username');
-	    $apacheSession{password} = $cgi->param('password');
-
+print STDERR "\nin Login, session is defined\n\n";
+		$self->setApacheSession( username => $cgi->param('username'),
+		                         password => $cgi->param('password') );
+		
 	    return ('REDIRECT',$self->pageURL('OME::Web::Home'));
  	} else {
 	    $body .= $cgi->h3("Invalid login");
