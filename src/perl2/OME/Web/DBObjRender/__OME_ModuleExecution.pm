@@ -68,6 +68,7 @@ sub new {
 		'image',
 		'dataset',
 		'status',
+		 'experimenter'
 	];
 	$self->{ _allFields } = [
 		'id',
