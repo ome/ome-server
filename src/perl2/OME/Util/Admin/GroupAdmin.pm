@@ -321,7 +321,7 @@ sub listGroup {
                   "\n";
         }
     } else {
-        my $max_id_len = 5;
+        my $max_id_len = 3;
         foreach my $group (@groups) {
             my $id = $group->id();
             $max_id_len = $id
@@ -332,8 +332,8 @@ sub listGroup {
         my $user_len = (72 - $name_len - $max_id_len - 3) / 2;
 
         printf "%-*.*s %-*.*s %-*.*s %-*.*s\n",
-          $max_id_len, $max_id_len, "ID",
-          $name_len, $name_len, "Name",
+          $max_id_len, $max_id_len, "GID",
+          $name_len, $name_len, "Group Name",
           $user_len, $user_len, "Leader",
           $user_len, $user_len, "Contact";
 
@@ -347,7 +347,7 @@ sub listGroup {
             my $leader = $group->Leader();
             my $contact = $group->Contact();
 
-            printf "%*.*s %-*.*s %-*.*s %-*.*s\n",
+            printf "%-*.*s %-*.*s %-*.*s %-*.*s\n",
               $max_id_len, $max_id_len, $group->id(),
               $name_len, $name_len, $group->Name(),
               $user_len, $user_len,
