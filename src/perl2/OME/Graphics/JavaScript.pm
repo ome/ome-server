@@ -151,14 +151,34 @@ OME::Graphics::JavaScript
 =head2 Dependencies
 
 B<Inherits from>
-	OME::Graphics
+
+OME::Graphics
 
 B<makes use of OME Modules>
-	OME::Graphics::JavaScript::Layer
+
+OME::Graphics::JavaScript::Layer
+
+OME::Graphics::JavaScript::Layer::*
 
 =head2 Function calls to OME Modules
 
+L<OME::Graphics/"new()">
+
+L<OME::Graphics::JavaScript::Layer/"HTMLdiv()">
+
+L<OME::Graphics::JavaScript::Layer/"Window()">
+
+OME::Graphics::JavaScript::Layer::*->Form()
+
+OME::Graphics::JavaScript::Layer::*->JSinstance()
+
 =head2 Data references to OME Modules
+
+OME::Graphics::JavaScript::Layer::*->{Parent}
+
+OME::Graphics::JavaScript::Layer::*->{JSdefs}
+
+OME::Graphics::JavaScript::Layer->{name}
 
 =head1 Functions
 
@@ -357,7 +377,8 @@ Text containing Javascript classes embedded in html tags.
 =item Accesses external data
 
 OME::Graphics::JavaScript::Layer::*->{JSdefs}
-	these are the layer's javascript object definitions
+
+these are the layer's javascript object definitions
 
 =back
 
@@ -396,7 +417,8 @@ Generates an html form housing controls to manipulate the layers.
 =item Parameters
 
 I<$window>
-	$window is passed to L<OME::Graphics::JavaScript::Layer/"Window()">. look there for more info.
+
+$window is passed to L<OME::Graphics::JavaScript::Layer/"Window()">. look there for more info.
 
 =item Returns
 
