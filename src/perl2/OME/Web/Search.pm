@@ -139,6 +139,10 @@ sub getPageBody {
 		my @selection    = $q->param( 'selected_objects' );
 		# weed out blank selections
 		@selection = grep( $_ && $_ ne '', @selection );
+		# and duplicate selections
+		my %unique_selection;
+		$unique_selection{ $_ } = undef foreach @selection;
+		@selection = keys %unique_selection;
 		# convert LSIDs into objs.
 		my $resolver = new OME::Tasks::LSIDManager();
 		@selection = map( $resolver->getObject($_), @selection );
@@ -148,7 +152,7 @@ sub getPageBody {
 		my $ids = join( ',', map( $_->id, @selection ) );
 		$html = <<END_HTML;
 <script language="Javascript" type="text/javascript">
-	window.opener.document.forms[0].$return_to.value = $ids;
+	window.opener.document.forms[0].$return_to.value = '$ids';
 	window.opener.document.forms[0].submit();
 	window.close();
 </script>
