@@ -156,7 +156,7 @@ public class PDatasetImagesNode extends PNode  {
 	
 		zoomHalo.hide();
 		
-		if (v == false || count < size || radius <1) { 
+		if (v == false || count < size || radius <0) { 
 			currentHighlight = null;
 		}
 		else  if (thumb != currentHighlight) {
@@ -212,10 +212,7 @@ public class PDatasetImagesNode extends PNode  {
 			}
 		}
 		
-		PBounds b2 = new PBounds(b.getX()-PThumbnailSelectionHalo.BORDER,b.getY()-PThumbnailSelectionHalo.BORDER,
-			b.getWidth()+2*PThumbnailSelectionHalo.BORDER,b.getHeight()+2*PThumbnailSelectionHalo.BORDER);
-		return b2;
-		
+		return b;
 	}
 	
 	private void calculatePosition(int index) {
@@ -266,13 +263,13 @@ public class PDatasetImagesNode extends PNode  {
 	
 	public int zoomInToHalo(PThumbnail thumb, int level) {
 		 double newRadius = getRadius(level+1);
-		 if (getRadius(level) <1) { // didn't work when I also checked if next is >1
+		/* if (getRadius(level) <1) { // didn't work when I also checked if next is >1
 		 	handler.animateToBufferedNode(thumb);
 		 }
-		 else {
+		 else {*/
 	     	calcZoomInHalo(thumb,level);
 		 	handler.animateToNode(zoomHalo);
-		 }
+		//}
 	     // zoomIn
 	     
 	     int newLevel = level;
@@ -307,7 +304,7 @@ public class PDatasetImagesNode extends PNode  {
 	// when zooming out, I don't want a highlight unless radius > 1
 	public void calcZoomOutHalo(PThumbnail thumb, int level) {
 		int radius = getRadius(level);
-		if (radius > 1) {
+		if (radius > 0) {
 			zoomHalo.hide();
 			doHighlightThumbnail(thumb,radius);
 		}

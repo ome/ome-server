@@ -103,37 +103,11 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 	}
 	
 	public void setHighlighted(boolean v) {
-		// no highlight if no image. 
-		
-		//if (imageNode == null)
-		//	return;
-		if (v == true) {
-			if (highlightRect == null)
-				highlightRect = makeHighlight();
-			addChild(highlightRect);
-		//	System.err.println("highlighting image for "+image.getID());
-		}
-		else {
-		//	System.err.println("unhighlighting image for "+image.getID());
-			if (highlightRect != null && isAncestorOf(highlightRect))
-				removeChild(highlightRect);
-			highlightRect = null;
-		}
-		image.highlightThumbnails(v);
-		
-		
+	
+		image.highlightThumbnails(v);	
 	}
 	
 
-	
-	private PPath makeHighlight() {
-		PBounds b = getBounds();
-		PPath path = new PPath(b);
-		path.setStroke(PConstants.BORDER_STROKE);
-		path.setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
-		path.setPickable(false);
-		return path;
-	}
 	
 	public PNode getFullToolTip() {
 		//if (imageNode == null)
