@@ -386,6 +386,21 @@ public class PChainEventHandler extends  PPanEventHandler {
 		
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
+		
+		// if it's a module
+		if (node instanceof PBufferedNode) {
+			PBufferedNode mod = (PBufferedNode) node;
+			PCamera camera = canvas.getCamera();
+			if (mask == MouseEvent.BUTTON1_MASK && e.getClickCount()==1) {
+				PBounds b = mod.getBufferedBounds();
+				camera.animateViewToCenterBounds(b,true,
+					PConstants.ANIMATION_DELAY);
+			}
+			else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK)==1)
+				evaluatePopup(e);					
+		}
+		
+		// otherwise, must be a camera
 		if (! (node instanceof PCamera))
 			return;
 		
@@ -843,11 +858,27 @@ public class PChainEventHandler extends  PPanEventHandler {
 	 * @param e
 	 */
 	private void evaluatePopup(PInputEvent e) {
-		//System.err.println("popup event"+e);
-		double scaleFactor = 1/PConstants.SCALE_FACTOR;
-		zoom(scaleFactor,e);
-		e.setHandled(true);
-		postPopup=true;
+		PNode n = e.getPickedNode();
+		PNode p = n.getParent();
+		if (p instanceof PBufferedNode) {
+			PBufferedNode bn=(PBufferedNode) p;
+			PBounds b = bn.getBufferedBounds();
+			PCamera camera = canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);			
+		}
+		else if (p instanceof PCamera || p == canvas.getLayer() ||
+				n instanceof PCamera || n == canvas.getLayer()){
+			PBounds b = canvas.getBufferedBounds();
+			PCamera camera =canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);			
+		}
+		else {
+			//System.err.println("popup event"+e);
+			double scaleFactor = 1/PConstants.SCALE_FACTOR;
+			zoom(scaleFactor,e);
+			e.setHandled(true);
+			postPopup=true;
+		}
 	}
 	
 	/** 
