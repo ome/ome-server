@@ -54,6 +54,8 @@ import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.util.SwingWorker;
 import org.openmicroscopy.SemanticType;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.List;
@@ -440,5 +442,28 @@ public class Connection {
 		crit.put("image",image);
 		return factory.findAttributes("CategoryRef3",crit);
 	}
+	
+	// get chains for a dataset
+	public Collection getChains(CDataset d) {
+		if (d == null)
+			return null;
+		
+		HashMap crit = new HashMap();
+		crit.put("dataset_id",d);
+		List execs = factory.findObjects("OME::AnalysisChainExecution",crit);
+	    // ok. now, for each of those, get the chain.	
+		HashSet res = new HashSet();
+		Iterator iter = execs.iterator();
+		
+		while (iter.hasNext()) {
+			RemoteChainExecution exec  = (RemoteChainExecution) iter.next();
+			res.add(exec.getChain());
+		}
+		return res;
+		
+	}
+	
+	
+	
 	
 }
