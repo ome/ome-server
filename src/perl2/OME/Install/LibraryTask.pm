@@ -186,6 +186,7 @@ my @libraries = ( {
 			return (0);
 			}
 	    ),
+		valid_versions => ['ge "1.8.3"'],
 	}, {
 		name => 'zlib',
 		get_library_version => q(
@@ -196,7 +197,7 @@ my @libraries = ( {
 			return (0);
 	    	}
 		),
-		valid_versions => ['ge "1.1.3"'],
+		valid_versions => ['ge "1.1.4"'],
 		repository_file => "$REPOSITORY/zlib-1.1.4.tar.gz",
     }, {
 		name => 'libxml2',
@@ -235,7 +236,7 @@ my @libraries = ( {
 	    	return $? == 0 ? $version : undef;
 		},
 		repository_file => "$REPOSITORY/libxslt-1.0.30.tar.gz",
-		valid_versions => ['ge "1.0.30"'],
+		valid_versions => ['ge "1.0"'],
     }, {
 		name => 'bzlib',
 		get_library_version => q(
