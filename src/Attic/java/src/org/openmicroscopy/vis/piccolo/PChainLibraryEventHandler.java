@@ -46,6 +46,8 @@ import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.SelectionState;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.PCamera;
 import javax.swing.Timer;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionListener;
@@ -115,7 +117,10 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	 *  	and treat the click like a double click
 	 */
 	public void mouseClicked(PInputEvent e) {
-		System.err.println("got a mouse clicked on canvas library");
+		if ((e.getModifiers() & allButtonMask) !=
+				allButtonMask)
+			return;
+		System.err.println("got a mouse clicked on canvas library "+e);
 		if (timer.isRunning()) {// it's a double click
 			timer.stop();
 			mouseDoubleClicked(e);
@@ -136,17 +141,18 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			PChainBox cb = (PChainBox) n;
 			selectedChain=cb.getChain();
 		}
-		else if (n instanceof PModule) {
-			PChainBox cb = (PChainBox) n.getParent();
-			selectedChain = cb.getChain(); 
-		}
+		
 		SelectionState selectionState = SelectionState.getState();
 		selectionState.setSelectedChain(selectedChain);
 		e.setHandled(true);
 	} 
 	
 	private void doMouseClicked(PInputEvent e) {
-		System.err.println("doing a single click");
+		System.err.println("doing a single click "+e);
+		if (e.isPopupTrigger()) {
+			System.err.println("popup...");
+		}
+		
 		PNode node  = e.getPickedNode();
 		if (node instanceof PDatasetLabelText) {
 			// on a label.
@@ -159,19 +165,25 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			System.err.println("clicked on execution text!");
 			e.setHandled(true);
 		}
-		else {
+		else if (node instanceof PChainBox) {
 			SelectionState selectionState = SelectionState.getState();
 			System.err.println("calling super.mouseclicked..");
-		//		super.mouseClicked(e);
 		
-			if (node instanceof PChainBox) {
-				PChainBox cb = (PChainBox) node;
-				selectionState.setSelectedChain(cb.getChain());
-			}
-			else 
-				selectionState.setSelectedChain(null);
+			PChainBox cb = (PChainBox) node;
+			selectionState.setSelectedChain(cb.getChain());
+			
 			e.setHandled(true);
 		}
+		else {
+			super.mouseClicked(e);
+			if (!(node instanceof PModule)) {
+				SelectionState selectionState = SelectionState.getState();
+				selectionState.setSelectedChain(null);
+			}
+			e.setHandled(true);
+			
+		}
+		
 	}
 	
 	/**
@@ -182,6 +194,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		if (e.isPopupTrigger()) {
+			System.err.println("popup press event "+e);
 			handlePopup(e);
 		}
 		else if (node instanceof PChainBox) {
@@ -196,7 +209,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	 */
 	public void mouseReleased(PInputEvent e) {
 		if (e.isPopupTrigger()) {
-	
+			System.err.println("popup release event "+e);
 			handlePopup(e);
 		}
 		else
@@ -207,7 +220,6 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	public void mouseEntered(PInputEvent e) {
 			
 		PNode node = e.getPickedNode();
-		System.err.println("chain library. mousing over.."+node);
 		if (node instanceof PSelectableText) {
 			((PSelectableText) node).setHighlighted(true);
 			if (node instanceof PDatasetLabelText) {
@@ -228,6 +240,26 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			((PSelectableText) node).setHighlighted(false);
 			e.setHandled(true);
 		}
+	}
+	
+	public void handlePopup(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		
+		System.err.println("chain library popup on "+node);
+		if (!(node instanceof PModule)) {
+			super.handlePopup(e);
+			return;
+		}
+		
+		PModule m = (PModule) node;
+		
+		PBufferedNode bn= m.getEnclosingBufferedNode();
+		if (bn  != null) {
+			PBounds b = bn.getBufferedBounds();
+			PCamera camera = canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+		}
+		e.setHandled(true);
 	}
 	
  }
