@@ -104,6 +104,9 @@ our $IMPORT_FORMATS = join (' ',qw/
 # Database version
 our $DB_VERSION = "2.12";
 
+# Default analysis executor
+our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
+
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
 # Each class to instantiate is listed as a pair: the package that
@@ -683,6 +686,7 @@ BLURB
              template_dir     => $OME_BASE_DIR."/html/Templates",
              matlab_src_dir   => $MATLAB->{MATLAB_SRC},
              matlab_user      => $MATLAB->{MATLAB_USER},
+             executor         => $DEFAULT_EXECUTOR,
             });
 
     $ENVIRONMENT->lsid ($lsid_authority);
@@ -721,12 +725,24 @@ sub update_configuration {
             "Could not retreive the configuration variable db_version";
     $var->value ($DB_VERSION);
     $var->storeObject();
-    
+
     $var = $factory->findObject('OME::Configuration::Variable',
             configuration_id => 1, name => 'import_formats') or croak 
             "Could not retreive the configuration variable import_formats";
     $var->value ($IMPORT_FORMATS);
     $var->storeObject();
+
+    $var = $factory->findObject('OME::Configuration::Variable',
+            configuration_id => 1, name => 'executor');
+    unless ($var) {
+        $var = $factory->newObject ('OME::Configuration::Variable',
+            {
+            configuration_id => 1,
+            name             => 'executor',
+            value            => $DEFAULT_EXECUTOR,
+            });
+	    $var->storeObject();
+    }
 
     $factory->commitTransaction();
     return 1;
