@@ -179,6 +179,11 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 			attrs+=2;
 		}
 	}
+/* Temporary solution to recognize chains. Full solution is to merge the
+Chains schema into the OME schema */
+else if(strcmp( "AnalysisChain", localName ) == 0) {
+	state->isOME = 1;
+}
 	/*
 	**************************************************************************/
 
