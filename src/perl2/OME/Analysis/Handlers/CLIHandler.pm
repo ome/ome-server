@@ -1,7 +1,7 @@
 # OME/Analysis/CLIHandler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
-# Author:  Douglas Creager <dcreager@alum.mit.edu>
+# Author:  Josiah Johnston <siah@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -139,7 +139,6 @@ sub _execute {
 	my %inputs = %{ $i };
 
     my $image  = $self->getCurrentImage();
-    my $dims   = $image->Dimensions();
 
 	my $program               = $self->{_program};
 	my %outputs;
@@ -147,14 +146,16 @@ sub _execute {
 	my $debug                 = 0;
 	my $session               = $self->Session();
 	my $imagePix;
-	my %dims = ( 'x'   => $image->Dimensions()->size_x(),
-				 'y'   => $image->Dimensions()->size_y(),
-				 'z'   => $image->Dimensions()->size_z(),
-				 'w'   => $image->Dimensions()->num_waves(),
-				 't'   => $image->Dimensions()->num_times(),
-				 'BytesPerPixel' => $image->Dimensions()->bits_per_pixel()/8,
-				 'BitsPerPixel' => $image->Dimensions()->bits_per_pixel(),
-				 );
+my $Pixels =  $self->getImageInputs("Pixels")->[0];	
+my %dims = ( 'x'   => $Pixels->SizeX(),
+			 'y'   => $Pixels->SizeY(),
+			 'z'   => $Pixels->SizeZ(),
+			 'w'   => $Pixels->SizeC(),
+			 't'   => $Pixels->SizeT(),
+			 'BytesPerPixel' => $Pixels->BitsPerPixel()/8,
+			 'BitsPerPixel' => $Pixels->BitsPerPixel(),
+			 )
+	if defined $Pixels;
 	
 	my $parser = XML::LibXML->new();
 	my $tree = $parser->parse_string( $executionInstructions );
@@ -240,7 +241,7 @@ sub _execute {
 							$inputs{ 
 								$indexMethod->getAttribute( "FormalInputName" )
 							}->[0]->{
-								$indexMethod->getAttribute( "FormalInputColumnName" )
+								$indexMethod->getAttribute( "SemanticElementName" )
 							} );
 				#
 				#
@@ -256,20 +257,20 @@ sub _execute {
 							$inputs{ 
 								$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "FormalInputName" )
 							}->[0]->{
-								$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "FormalInputColumnName" )
+								$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "SemanticElementName" )
 							} 
 						);
 					$planeIndexes->{ $planeID }->{IterateStart}->{$index} = 
 						$inputs{ 
 							$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "FormalInputName" )
 						}->[0]->{
-							$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "FormalInputColumnName" )
+							$indexMethod->getElementsByTagName( "Start" )->[0]->getAttribute( "SemanticElementName" )
 						};
 					$planeIndexes->{ $planeID }->{IterateEnd}->{$index} = 
 						$inputs{ 
 							$indexMethod->getElementsByTagName( "End" )->[0]->getAttribute( "FormalInputName" )
 						}->[0]->{
-							$indexMethod->getElementsByTagName( "End" )->[0]->getAttribute( "FormalInputColumnName" )
+							$indexMethod->getElementsByTagName( "End" )->[0]->getAttribute( "SemanticElementName" )
 						};
 					$planeIndexes->{ $planeID }->{Output}->{$index} = 
 						$indexXML->getElementsByTagName( 'IterateRange')->[0];
@@ -389,45 +390,24 @@ sub _execute {
 			#
 			#############################################################
 			#
-			# Variable substitutions
-			#
-			} elsif ($subString->getElementsByTagName( 'RawImageFilePath' ) ) {
-				print STDERR "\tProcessing sub node of type RawImageFilePath\n" if $debug eq 2;
-				$cmdLineString .= $image->getFullPath();
-			} elsif ($subString->getElementsByTagName( 'sizeT' ) ) {
-				print STDERR "\tProcessing sub node of type sizeT\n" if $debug eq 2;
-				$cmdLineString .= $dims{'t'};
-			} elsif ($subString->getElementsByTagName( 'sizeW' ) ) {
-				print STDERR "\tProcessing sub node of type sizeW\n" if $debug eq 2;
-				$cmdLineString .= $dims{'w'};
-			} elsif ($subString->getElementsByTagName( 'sizeZ' ) ) {
-				print STDERR "\tProcessing sub node of type sizeZ\n" if $debug eq 2;
-				$cmdLineString .= $dims{'z'};
-			} elsif ($subString->getElementsByTagName( 'sizeX' ) ) {
-				print STDERR "\tProcessing sub node of type sizeX\n" if $debug eq 2;
-				$cmdLineString .= $dims{'x'};
-			} elsif ($subString->getElementsByTagName( 'sizeY' ) ) {
-				print STDERR "\tProcessing sub node of type sizeY\n" if $debug eq 2;
-				$cmdLineString .= $dims{'y'};
-			} elsif ($subString->getElementsByTagName( 'BitsPerPixel' ) ) {
-				print STDERR "\tProcessing sub node of type BitsPerPixel\n" if $debug eq 2;
-				$cmdLineString .= $dims{'BitsPerPixel'};
-			} elsif ($subString->getElementsByTagName( 'BytesPerPixel' ) ) {
-				print STDERR "\tProcessing sub node of type BytesPerPixel\n" if $debug eq 2;
-				$cmdLineString .= $dims{'BytesPerPixel'};
-			#
-			#############################################################
-			#
 			# Input request
 			#
 			} elsif ($subString->getElementsByTagName( 'Input' ) ) {
 				print STDERR "\tProcessing sub node of type Input\n" if $debug eq 2;
-				$cmdLineString .= 
-					$inputs{
-						$subString->getElementsByTagName( 'Input' )->[0]->getAttribute('FormalInputName')
-					}->[0]->{
-						$subString->getElementsByTagName( 'Input' )->[0]->getAttribute('FormalInputColumnName')
-					};
+				my $se = $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('SemanticElementName');
+				$se =~ s/\./\(\)->/g;
+				my $str = '$inputs{'.
+						$subString->getElementsByTagName( 'Input' )->[0]->getAttribute('FormalInputName').
+					'}->[0]->'.$se.'()';
+				my $val;
+				eval('$val ='. $str)
+					or die "Could not find semantic element '$se' in input '".$subString->getElementsByTagName( 'Input' )->[0]->getAttribute('FormalInputName')."'\n";
+				
+				$val /= $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('DivideBy')
+					if defined $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('DivideBy');
+				$val *= $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('MultiplyBy')
+					if defined $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('MultiplyBy');
+				$cmdLineString .= $val;
 			#
 			#############################################################
 			#
@@ -474,6 +454,7 @@ sub _execute {
 			}
 		}
 		my $executeString = $program->location() . $cmdLineString;
+print STDERR "Execution string is:\n$executeString\n";# if $debug;
 		print STDERR "Execution string is:\n$executeString\n" if $debug;
 		#
 		#
