@@ -176,8 +176,7 @@ This method is responsible for creating a new OME::Image instance to
 represent the image, for creating a new repository file (and
 corresponding Pixels attribute) to store the imported pixels, and for
 creating attributes to represent any other metadata in the external
-image files.  Further, this method should create instances of
-OME::Image::ImageFilesXYZWT for each file in the group.
+image files.
 
 Helper methods will be provided to aid in this as soon as I figure out
 what they should be.

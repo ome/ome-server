@@ -102,7 +102,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.12";
+our $DB_VERSION = "2.13";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
@@ -144,7 +144,6 @@ our @core_classes =
    'OME::Project::DatasetMap',
    'OME::Image',
    'OME::Image::DatasetMap',
-   'OME::Image::ImageFilesXYZWT',
    'OME::Feature',
    'OME::UserState',
    'OME::ViewerPreferences',
