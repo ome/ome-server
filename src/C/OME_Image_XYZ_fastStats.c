@@ -204,8 +204,8 @@ float sd,logOffset = 1.0;
 	theStats->mean = theStats->sum_i / theStats->numSamples;
 	theStats->geomean = exp ( theStats->sum_log_i / theStats->numSamples ) - logOffset;
 
-	sd = sqrt ( (theStats->sum_i2	 - (theStats->sum_i * theStats->sum_i) / theStats->numSamples) /  (theStats->numSamples - 1.0) );
-	theStats->sigma = (float) fabs (sd);
+	sd = fabs ( (theStats->sum_i2	 - (theStats->sum_i * theStats->sum_i) / theStats->numSamples) /  (theStats->numSamples - 1.0) );
+	theStats->sigma = (float) sqrt (sd);
 
 	theStats->centroid_x = theStats->sum_xi / theStats->sum_i;
 	theStats->centroid_y = theStats->sum_yi / theStats->sum_i;
