@@ -54,7 +54,7 @@
 		   Category="Maths"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="Gradient"
-		   ID="urn:lsid:openmicroscopy.org:Module:102">
+		   ID="urn:lsid:openmicroscopy.org:Module:7501">
 		  <Description>
 			This module computes the image's gradient. It encodes the gradient 
 			vector at each pixel as a magnitude and angle. The magnitude is the 
@@ -74,8 +74,7 @@
 		
 		  <ExecutionInstructions ExecutionPoint="startImage" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
 			<Inputs>
-			  <Input Name="Pixels"/>
-			  <Input Name="Channel Index.theC"/>
+			  <Input><PixelsSlice FormalInput="Pixels Plane Slice" ID="_input"/></Input>
 			</Inputs>
 			<Outputs>
 			  <Output Name="GradientPixels"/>
@@ -89,10 +88,10 @@
 		<!-- Typecaster module for the Gradient -->
 		<AnalysisModule
 		   ModuleName="Gradient -&gt; PixelsPlaneSlice"
-		   Category="Typecasts.Maths"
+		   Category="Maths.Typecasts"
 		   ModuleType="OME::Analysis::Modules::PPM::Gradient"
 		   ProgramID="Gradient"
-		   ID="urn:lsid:openmicroscopy.org:Module:112">
+		   ID="urn:lsid:openmicroscopy.org:Module:7502">
 		  <Description>
 			This module allows a Gradient attribute to be used as a 
 			PixelsPlaneSlice. The PixelsPlaneSlice points to the Gradient's
