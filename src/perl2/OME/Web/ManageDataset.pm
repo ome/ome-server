@@ -130,7 +130,7 @@ sub displayDatasets {
 	my $html = $t_generator->getTable( {
 			type => 'dataset',
 			filters => [ ["owner_id", $self->Session()->User()->id()] ],
-			options_row => ["Select", "Remove", "Delete"],
+			options_row => ["Switch To", "Remove", "Delete"],
 			relations => 1,
 		}
 	);

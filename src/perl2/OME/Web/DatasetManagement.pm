@@ -199,9 +199,10 @@ sub makeImageListings {
 					 -cellspacing => 1,
 					 -cellpadding => 4
 				 },
-				 $cgi->Tr({-bgcolor => '#006699'},
+				 $cgi->Tr(
 					 $cgi->startform(),
 					 $cgi->td(
+						 {-class => 'ome_action_td'},
 						 '&nbsp',
 						 $cgi->span("Add images: "),
 						 $cgi->popup_menu( {

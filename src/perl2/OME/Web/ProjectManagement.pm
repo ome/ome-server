@@ -195,7 +195,7 @@ sub makeDatasetListings {
 	my $html = $t_generator->getTable( {
 			type => 'dataset',
 			filters => [ ["id", ['in', $in_project] ] ],
-			options_row => ["Select", "Remove", "Delete"],
+			options_row => ["Switch To", "Remove", "Delete"],
 		}
 	);
 
@@ -225,9 +225,10 @@ sub makeDatasetListings {
 					 -cellspacing => 1,
 					 -cellpadding => 4
 				 },
-				 $cgi->Tr({-bgcolor => '#006699'},
+				 $cgi->Tr(
 					 $cgi->startform(),
 					 $cgi->td(
+						 {-class => 'ome_action_td'},
 						 '&nbsp',
 						 $cgi->span("Add dataset: "),
 						 $cgi->popup_menu( {

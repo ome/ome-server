@@ -114,11 +114,11 @@ sub __datasetTable {
 				$relations .= $q->br();
 			}
 			# Yes, this is variable saving :)
-			$relations = $q->td({-align => 'left', -bgcolor => '#EFEFEF'}, $relations || '');
+			$relations = $q->td({-align => 'left', -class => 'ome_td'}, $relations || '');
 		}
 		
 		unless ($name eq 'Dummy import dataset') {  # XXX Man I hate this...
-			$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
+			$table_data .= $q->Tr({-class => 'ome_td'},
 				$q->td({-align => 'center'}, [
 					$checkbox,
 					$id,
@@ -142,8 +142,12 @@ sub __datasetTable {
     }
                                                                                                           
 	if ($option_buttons) {
-    	$options_row = $q->Tr({-bgcolor => '#EFEFEF'},
-        	$q->td({-colspan => scalar(@column_headers) + 1, -align => 'center'},
+    	$options_row = $q->Tr(
+        	$q->td( {
+					-colspan => scalar(@column_headers) + 1,
+					-align => 'center',
+					-class => 'ome_td',
+				},
             	$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
             	$option_buttons,
         	)
@@ -159,7 +163,7 @@ sub __datasetTable {
 			-width => '100%',
 		},
 		$q->startform(),
-		$q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers]),  # Space for the checkbox field
+		$q->th({-class => 'ome_td'}, ["Select", @column_headers]),  # Space for the checkbox field
 		$table_data,
 		$options_row || '',
 		$q->endform()
@@ -193,7 +197,7 @@ sub __projectTable {
 		my $owner = $project->owner()->FirstName() . " " . $project->owner()->LastName();
 		my $group = $project->group() ? $project->group()->Name() : " - ";
 
-		$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
+		$table_data .= $q->Tr({-class => 'ome_td'},
 			$q->td({-align => 'center'}, [
 				$checkbox,
 				$id,
@@ -214,8 +218,12 @@ sub __projectTable {
 	}
 
 	if ($option_buttons) {
-		$options_row = $q->Tr({-bgcolor => '#EFEFEF'},
-			$q->td({-colspan => scalar(@column_headers) + 1, -align => 'center'},
+		$options_row = $q->Tr(
+			$q->td( {
+					-colspan => scalar(@column_headers) + 1,
+					-align => 'center',
+					-class => 'ome_td',
+				},
 				$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
 				$option_buttons,
 			)
@@ -231,7 +239,7 @@ sub __projectTable {
 			-width => '100%',
 		},
 		$q->startform(),
-		$q->Tr($q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers])),
+		$q->Tr($q->th({-class => 'ome_td'}, ["Select", @column_headers])),
 		$table_data,
 		$options_row || '',
 		$q->endform(),
@@ -291,11 +299,11 @@ sub __imageTable {
 				$relations .= $q->br();
 			}
 			# Yes, this is variable saving :)
-			$relations = $q->td({-align => 'left', -bgcolor => '#EFEFEF'}, $relations || '');
+			$relations = $q->td({-align => 'left', -class => 'ome_td'}, $relations || '');
 		}
 
 
-		$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
+		$table_data .= $q->Tr({-class => 'ome_td'},
 			$q->td({-align => 'center'}, [
 				$checkbox,
 				$id,
@@ -318,8 +326,12 @@ sub __imageTable {
     }
                                                                                                           
 	if ($option_buttons) {
-    	$options_row = $q->Tr({-bgcolor => '#EFEFEF'},
-        	$q->td({-colspan => scalar(@column_headers) + 1, -align => 'center'},
+    	$options_row = $q->Tr(
+			$q->td( {
+					-colspan => scalar(@column_headers) + 1,
+					-align => 'center',
+					-class => 'ome_td',
+				},
             	$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
             	$option_buttons,
         	)
@@ -335,7 +347,7 @@ sub __imageTable {
 			-width => '100%',
 		},
 		$q->startform(),
-		$q->Tr($q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers])),
+		$q->Tr($q->th({-class => 'ome_td'}, ["Select", @column_headers])),
 		$table_data,
 		$options_row || '',
 		$q->endform()
@@ -371,7 +383,7 @@ sub __MEXTable {
 		my $dataset = $factory->loadObject("OME::Dataset", $mex->dataset_id());
 		my $dataset_name = $dataset ? $dataset->name() : " - ";
                                                                                                           
-        $table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
+        $table_data .= $q->Tr({-class => 'ome_td'},
             $q->td({-align => 'center'}, [
                 $checkbox,
                 $id,
@@ -394,7 +406,7 @@ sub __MEXTable {
             -border => '0',
             -width => '100%',
         },
-        $q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers]),
+        $q->th({-class => 'ome_td'}, ["Select", @column_headers]),
         $table_data
     );
                                                                                                           
@@ -452,7 +464,7 @@ sub __genericTableFooter {
 		},
 		$q->start_form() .
 		$q->Tr(
-			$q->td({-align => 'center', -bgcolor => '#006699'}, 
+			$q->td({-align => 'center', -class => 'ome_action_td'}, 
 			   "Filter field: " .
 			   $q->popup_menu({-name => 'filter_field',
 					           -values => [@columns],

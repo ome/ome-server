@@ -148,7 +148,7 @@ sub print_form {
 			type => 'project',
 			filter_field => 'owner_id',
 			filter_string => $self->Session()->User()->id(),
-			options_row => ["Select", "Delete"],
+			options_row => ["Switch To", "Delete"],
 		}
 	);
 
