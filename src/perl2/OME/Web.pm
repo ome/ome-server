@@ -785,7 +785,8 @@ $ST is the Semantic Type if $type is a ST or attribute. Otherwise it's undef.
 
 sub _loadTypeAndGetInfo {
 	my ($proto, $type) = @_;
-	die "type is undefined!" unless defined $type;
+	confess "type is undefined!" unless defined $type;
+	confess "type is blank!" if $type eq '';
 
 	my ($package_name, $common_name, $formal_name, $ST);
 	
