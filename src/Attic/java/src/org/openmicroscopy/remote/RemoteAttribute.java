@@ -46,7 +46,7 @@ public class RemoteAttribute
 
     public ModuleExecution getModuleExecution()
     { return (ModuleExecution)
-            getRemoteElement(RemoteModuleExecution.class,"analysis"); }
+            getRemoteElement(RemoteModuleExecution.class,"module_execution"); }
 
     public OMEObject getTarget()
     {

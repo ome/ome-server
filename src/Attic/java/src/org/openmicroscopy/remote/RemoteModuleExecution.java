@@ -42,7 +42,7 @@ public class RemoteModuleExecution
     public RemoteModuleExecution(String reference) { super(reference); }
 
     public Module getModule()
-    { return (Module) getRemoteElement(RemoteModule.class,"program"); }
+    { return (Module) getRemoteElement(RemoteModule.class,"module"); }
     public void setModule(Module module)
     { setRemoteElement("program",module); }
 
@@ -105,11 +105,11 @@ public class RemoteModuleExecution
 
         public ModuleExecution getModuleExecution()
         { return (ModuleExecution)
-              getRemoteElement(RemoteModuleExecution.class,"analysis"); }
+              getRemoteElement(RemoteModuleExecution.class,"module_execution"); }
 
         public ModuleExecution getInputModuleExecution()
         { return (ModuleExecution)
-              getRemoteElement(RemoteModuleExecution.class,"input_analysis"); }
+              getRemoteElement(RemoteModuleExecution.class,"input_module_execution"); }
         public void setInputModuleExecution(ModuleExecution inputModuleExecution)
         { setRemoteElement("input_analysis",inputModuleExecution); }
 
