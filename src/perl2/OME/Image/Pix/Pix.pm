@@ -93,7 +93,7 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   $pix->setConvertFile ('somePixelFile',$bytesPerPixel,$bigEndian)
   # All of the convert methods return the number of pixels converted.
   # $offset is the offset in the file where the read begins.
-  # Convert a row, sets of rows of pixels, a plane and an XYZ stack from the file to the OME format file
+  # Convert a row, a set of rows, a plane and an XYZ stack from the file to the OME format file
   $nPix = $pix->convertRow ($offset,$theY,$theZ,$theW,$theT);
   $nPix = $pix->convertRows ($offset,$nRows,$theY,$theZ,$theW,$theT);
   $nPix = $pix->convertPlane ($offset,$theZ,$theW,$theT);
