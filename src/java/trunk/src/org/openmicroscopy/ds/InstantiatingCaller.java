@@ -58,9 +58,14 @@ import org.openmicroscopy.ds.dto.Attribute;
  */
 
 public class InstantiatingCaller
+    extends AbstractService
 {
-    private RemoteCaller caller;
     private Instantiator instantiator;
+
+    public InstantiatingCaller()
+    {
+        super();
+    }
 
     /**
      * Creates a new <code>InstantiatingCaller</code> which
@@ -70,19 +75,18 @@ public class InstantiatingCaller
     public InstantiatingCaller(RemoteCaller caller)
     {
         super();
-        this.caller = caller;
+        initializeService(RemoteServices.getInstance(caller));
+    }
+
+    public void initializeService(RemoteServices services)
+    {
+        super.initializeService(services);
         this.instantiator = new Instantiator();
     }
 
     /**
-     * Returns the {@link RemoteCaller} used by this data factory.
-     * @return the {@link RemoteCaller} used by this data factory.
-     */
-    public RemoteCaller getRemoteCaller() { return caller; }
-
-    /**
-     * Returns the {@link Instantiator} used by this data factory.
-     * @return the {@link Instantiator} used by this data factory.
+     * Returns the {@link Instantiator} used by this instance.
+     * @return the {@link Instantiator} used by this instance.
      */
     public Instantiator getInstantiator() { return instantiator; }
 
