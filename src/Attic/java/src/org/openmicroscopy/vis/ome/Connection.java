@@ -51,6 +51,7 @@ import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
+import javax.swing.JOptionPane;
 
 
 
@@ -69,6 +70,7 @@ public class Connection {
 	Factory factory;
 	
 	Modules modules;
+	Chains chains;
 
 	//inputs and outputs are hashes that match semantic types 
  	// to PModuleInputs and PModuleOutputs of the same type. 
@@ -108,7 +110,7 @@ public class Connection {
 					remote = new RemoteBindings();
 					remote.loginXMLRPC(URL,userName,passWord);
 				} catch (Exception e) {
-					System.err.println(e);
+					//System.err.println(e);
 					controller.cancelLogin();
 				}
 				return remote;
@@ -117,13 +119,20 @@ public class Connection {
 				if (remote != null) {
 					session = remote.getSession();
 					factory = remote.getFactory();
-					// this reads in all of the modules in the database
-					// similar additional calls might end up here.
-					System.err.println("factory is "+factory);
-					modules  = new Modules(factory);
-					controller.completeLogin();
-					// for debugging only
-					//modules.dump();
+					if (session != null && factory != null) {
+						// this reads in all of the modules in the database
+						// similar additional calls might end up here.
+						System.err.println("factory is "+factory);
+						modules  = new Modules(factory);
+						chains = new Chains(factory);
+						controller.completeLogin();
+						// for debugging only
+						//modules.dump();
+					}
+				else 
+					JOptionPane.showMessageDialog(controller.getMainFrame(),
+						"The login was not completed successfully.\nYour username and/or password may be incorrect, or there may be network problems. \n\nPlease try again.",
+						"Login Difficulties",JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		};
