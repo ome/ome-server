@@ -57,27 +57,16 @@ use OME;
 use OME::Session;
 use base qw(OME::Web::RenderData);
 
-=head2 getRefToObject
+=head2 getObjectLabel
 
-Overrides default behavior, html format uses first name and last name for the link.
+id. FirstName LastName
 
 =cut
 
-sub getRefToObject {
-	my ($proto,$obj,$format) = @_;
-	
-	for( $format ) {
-		if( /^txt$/ ) {
-			return $obj->id();
-		}
-		if( /^html$/ ) {
-			my $type = $proto->_getType( $obj );
-			my $id   = $obj->id();
-			my $name = "$id. ".$obj->FirstName()." ".$obj->LastName();
-			my $ref  = "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'>$name</a>";
-			return $ref;
-		}
-	}
+sub getObjectLabel {
+	my ($proto,$obj,$format, $doNotSpecialize) = @_;
+
+	return $obj->id().". ".$obj->FirstName." ".$obj->LastName;
 }
 
 =head1 Author
