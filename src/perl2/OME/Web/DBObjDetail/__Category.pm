@@ -70,36 +70,7 @@ sub _takeAction {
 	my $q = $self->CGI();
 	my $message = '';
 	
-	my @other_categories_in_this_group = 
-		$obj->CategoryGroup->CategoryList( id => [ '!=', $obj->id ] );
-	
-	my $image_ids = $q->param( 'images_to_categorize' );
-	if( $image_ids ) {
-		my @these_images_are_already_classified;
-		foreach my $image_id ( split( m',', $image_ids ) ) {
-			my $image = $factory->loadObject( 'OME::Image', $image_id )
-				or die "Couldn't load image id=$image_id";
- 			my $rc = OME::Tasks::CategoryManager->classifyImage( $image, $obj );
- 			next if $rc->semantic_type()->name() eq 'Classification';
- 			if( $rc->id ne $obj->id ) {
-	 			$message .= "<font color='red'>Cannot add image ".
-	 				$self->Renderer()->render( $image, 'ref' ).
- 					" to this category because it belongs to another category in this group.".
- 					$self->Renderer()->render( $rc, 'ref' )."</font><br>";
- 			} else {
- 				push( @these_images_are_already_classified, $image );
-			}
-		}
-		$message .= "<font color='red'>Cannot add image".
-			( ( @these_images_are_already_classified > 1 ) ? 's ' : ' ' ).
-	 		$self->Renderer()->renderArray( \@these_images_are_already_classified, 'bare_ref_mass', { type => 'OME::Image' } ).
- 			" because ".
-			( ( @these_images_are_already_classified > 1 ) ? 'they already belong' : 'it already belongs' ).
- 			" to this category.</font><br>"
- 			if( @these_images_are_already_classified );
-		$session->commitTransaction();
-	}
-	
+	# allow image declassification
 	my $image_id_to_declassify = $q->param( 'declassifyImage' );
 	if( $image_id_to_declassify ) {
 		my $image = $factory->loadObject( 'OME::Image', $image_id_to_declassify )
@@ -108,9 +79,12 @@ sub _takeAction {
 		$message .= "Declassified image ".$self->Renderer()->render( $image, 'ref' )."<br>";
 	}
 	
+	my $image_ids = $q->param( 'images_to_categorize' );
+	$message .= $self->CategoryUtil()->classify( $image_ids, $obj )
+		if( $image_ids );
+	
 	return $message;
 }
-
 
 =head1 Author
 
