@@ -174,10 +174,10 @@ sub requireAttributeTypePackage {
     my $def = "package $pkg;\n";
     $def .= q{
 	use strict;
-use OME;
+        use OME;
 	our $VERSION = $OME::VERSION;
 
-	use OME::SemanticType;
+	use OME::SemanticType::Superclass;
 	use base qw(OME::SemanticType::Superclass);
     };
 
