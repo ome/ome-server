@@ -26,32 +26,15 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
-
-
-
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Arpun Nagaraja
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
-
-
-<OME
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
-  xmlns:xsi=
-    "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:STD=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation = " http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
   <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType
+  		<SemanticType
 			Name = "FilenamePattern"
 			AppliesTo = "G">
 			<Description>Storage of a regular expression that specifies a filename pattern.  Used to group files based on custom filenames.</Description>
@@ -59,58 +42,44 @@
                Name="Format"
                DBLocation="FILENAME_PATTERN.FORMAT"
                DataType="string">
-            <Description>The importer to use: LSM, DV, PIC, STK, etc.</Description>
+               <Description>The importer to use: LSM, DV, PIC, STK, etc.</Description>
             </Element>
             <Element
                Name="RegEx"
                DBLocation="FILENAME_PATTERN.REGEX"
                DataType="string">
-            <Description>The regular expression to use to compare against filenames.</Description>
+               <Description>The regular expression to use to compare against filenames.</Description>
             </Element>
             <Element
                Name="Name"
                DBLocation="FILENAME_PATTERN.NAME"
                DataType="string">
-            <Description>A name for this pattern.</Description>
+               <Description>A name for this pattern.</Description>
             </Element>            
             <Element
                Name="BaseName"
                DBLocation="FILENAME_PATTERN.BASE_NAME"
                DataType="integer">
-            <Description>The position of the base name in the regular expression (i.e. 1).</Description>
+               <Description>The position of the base name in the regular expression.</Description>
             </Element>
             <Element
                Name="TheZ"
                DBLocation="FILENAME_PATTERN.THE_Z"
                DataType="integer">
-            <Description>The position of the the Z in the regular expression (i.e. 2).</Description>
+               <Description>The position of the the Z in the regular expression.</Description>
             </Element>
             <Element
                Name="TheT"
                DBLocation="FILENAME_PATTERN.THE_T"
                DataType="integer">
-            <Description>The position of the the T in the regular expression (i.e. 3).</Description>
+               <Description>The position of the the T in the regular expression.</Description>
             </Element>
             <Element
                Name="TheC"
                DBLocation="FILENAME_PATTERN.THE_C"
                DataType="integer">
-            <Description>The position of the the C in the regular expression (i.e. 4).</Description>
+               <Description>The position of the the C in the regular expression.</Description>
             </Element>
-	</SemanticType>
+		</SemanticType>
 	</SemanticTypeDefinitions>
-	<CustomAttributes>
-	<FilenamePattern ID="urn:lsid:openmicroscopy.org:FilenamePattern:10"
-		Format="OME::ImportEngine::TIFFreader"
-		RegEx="^(.+)(_w)(\d+)"
-		Name="default_one"
-		TheC="3"
-		BaseName="1"/>
-	<FilenamePattern ID="urn:lsid:openmicroscopy.org:FilenamePattern:11"
-		Format="OME::ImportEngine::TIFFreader"
-		RegEx="^(.+)(_w)(\d+)(.+)"
-		Name="default_two"
-		TheC="3"
-		BaseName="1"/>
-	</CustomAttributes>
 </OME>
