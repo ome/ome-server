@@ -146,7 +146,6 @@ sub getOMESession {
 
     require OME::Session;
     require OME::Factory;
-    require OME::DBObject;
     my $session;
 print STDERR "getOMESession: looking for session, experimenter_id=$experimenterID.\n";
     my @sessions = OME::Session->search ('experimenter_id' => $experimenterID);
@@ -171,11 +170,9 @@ print STDERR "getOMESession: created new session.\n";
     $session->last_access('now');
     $session->host($host);
     
-    OME::Factory->Session($session);
-    OME::DBObject->Session($session);
     $session->{Factory} = OME::Factory->new();
-    OME::DBObject->Factory($session->{Factory});
     $session->{Manager} = $self;
+	OME->Session($session);
 
 print STDERR "getOMESession: updating session.\n";
     $session->writeObject();
