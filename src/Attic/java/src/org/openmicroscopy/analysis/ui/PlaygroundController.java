@@ -82,6 +82,15 @@ public class PlaygroundController
         }
     }
 
+    public void displayMessage(String msg)
+    {
+        if (statusEmpty)
+        {
+            displayStatusText(msg);
+            statusEmpty = false;
+        }
+    }
+
     public void displayParameter(Module.FormalParameter param)
     {
         if (statusEmpty)
@@ -99,7 +108,7 @@ public class PlaygroundController
 
     public void displayNothing()
     {
-        if (lastParameter != null)
+        if (!statusEmpty)
         {
             displayStatusText(" ");
 

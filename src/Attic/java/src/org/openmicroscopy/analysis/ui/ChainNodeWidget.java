@@ -70,6 +70,19 @@ public class ChainNodeWidget
 	}
     }
 
+    private class TitleMouseListener extends MouseInputAdapter
+    {
+        public void mouseEntered(MouseEvent e)
+        {
+            controller.displayMessage("Drag to move this module");
+        }
+
+        public void mouseExited(MouseEvent e)
+        {
+            controller.displayNothing();
+        }
+    }
+
     private class LabelMouseListener extends MouseInputAdapter
     {
         private boolean  input = false;
@@ -153,6 +166,7 @@ public class ChainNodeWidget
         lbl0.setBorder(BorderFactory.createEmptyBorder(0,6,0,6));
 	add(lbl0,BorderLayout.NORTH);
 	lblName = lbl0;
+        lblName.addMouseListener(new TitleMouseListener());
 
 	labelPanel = new JPanel(new GridLayout(0,2,0,0));
 	labelPanel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
