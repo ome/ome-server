@@ -330,24 +330,21 @@ sub getScratchDir {
     my $base_name;
 	my $dir = undef;
 	
-	local *DH;
+	if ($extension) {
+		$extension = '.'.$extension;
+	} else {
+		$extension = '';
+	}
+	
     do {
-		$base_name = sprintf("%s/%s-%03d.%s", $tmpRoot,$progName,$count,$extension);
+		$base_name = sprintf("%s/%s-%03d%s", $tmpRoot,$progName,$count,$extension);
 		$base_name =~ s/\/\//\//g;
-	    if( opendir( DH, $base_name ) ) {
-	    	closedir DH;
-	    } else {
-	    	$dir = $base_name;
-	    }
+		$dir = $base_name if mkdir ($base_name,0777);
     } while ( not defined $dir || $count++ > 999);
-    if (defined $dir ) {
-		mkdir $dir
-			or die "Couldn't make directory $dir: $!\n";
-		return ($dir);
-    } else {
-		closedir (DH);
-		return ();
-    }
+
+	print STDERR "Could not make a temporary directory $tmpRoot/$progName-xxx$extension.  Giving up after $count tries."
+		unless defined $dir;
+	return ($dir);
 }
 
 
