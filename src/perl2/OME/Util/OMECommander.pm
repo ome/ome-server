@@ -56,6 +56,7 @@ sub getCommands {
        'import'  => ['OME::Util::Import'],
        'export'  => ['OME::Util::Export'],
        'execute' => ['OME::Util::ExecuteChain'],
+       'lint'    => ['OME::Util::Lint'],
        'top'     => ['OME::Util::Top'],
       };
 }

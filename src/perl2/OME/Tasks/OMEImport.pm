@@ -180,7 +180,7 @@ sub importFile {
     }
 
     # Commit the transaction to the DB.
-    $session->commitTransaction();
+    $session->commitTransaction() unless $flags{ DO_NOT_COMMIT };
 
 	return $importedObjects;
 }
@@ -256,7 +256,7 @@ sub processDOM {
 	# commit changes made to database structure by $typeImporter if we made it
 	# this far
 	my $session = OME::Session->instance();
-    $session->commitTransaction();
+    $session->commitTransaction() unless $flags{ DO_NOT_COMMIT };
     
     my @importedObjects = (
     	( $hierarchyObjects ? values %$hierarchyObjects : () ),
