@@ -383,7 +383,7 @@ my @modules = (
     },{
 	name => 'SOAP::Lite',
 	repository_file => "$REPOSITORY/SOAP-Lite-0.55.tar.gz",
-	valid_versions => ['eq 0.55'],
+	valid_versions => ['ge "0.55"'],
 	configure_module => sub {
 	    # Since SOAP::Lite has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
