@@ -146,7 +146,7 @@ sub processDOM {
               findObject("OME::Module::FormalOutput",
                          module_id => $fromNode->{module}->id(),
                          name       => $fromOutputName);
-            die "Cannot find output \"$fromOutputName\""
+            die "Cannot find output \"$fromOutputName\" from node \"$fromNodeID\""
               unless defined $output;
 
             my $toNode = $nodes{$toNodeID};
