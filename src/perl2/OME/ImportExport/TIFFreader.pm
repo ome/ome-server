@@ -208,8 +208,9 @@ sub formatImage {
     my (@xy, @xyz, @xyzw, @xyzwt);
     my $obuf = $parent->obuffer;
     my ($ifmt, $ofmt);
+    my ($sz, $ndxi, $ndxo, $ch);
     my $irow;
-    my @orow;
+    my (@orow, @orow2);
     my (@lstoff, @lstcnt);
 
     $fih = $parent->fref;
@@ -265,7 +266,18 @@ sub formatImage {
 	    for ($buf_offset = 0; $strip_size >= $row_size; $strip_size -= $row_size) {
 		$irow = substr($buf, $buf_offset, $row_size);
 		@orow = unpack($ifmt, $irow);
-		$rowbuf = pack($ofmt, @orow);
+		if ($bps == 1) {  # special thuggery for 8-bit input
+		    $sz = scalar @orow;
+		    for ($ndxo = $ndxi = 0; $ndxi < $sz; ) {
+			$ch = $orow[$ndxi++];
+			$orow2[$ndxo++] = $ch;
+			$orow2[$ndxo++] = $ch;
+		    }
+		    $rowbuf = pack("C*", @orow2);
+		}
+		else {
+		    $rowbuf = pack($ofmt, @orow);
+		}
 		push @xy, $rowbuf;
 		#print $foh $rowbuf;
 		$buf_offset += $row_size;
@@ -276,8 +288,8 @@ sub formatImage {
 	# For now, at least, we don't handle > 1 Z or T dimension
 	@xyz = \@xy;
 	@xyzw = \@xyz;
-	push (@xyzwt, \@xyzw);
-	push (@$obuf, \@xyzwt);
+	#push (@xyzwt, \@xyzw);
+	push (@$obuf, \@xyzw);
 
 	# This next op. done to make output array in same format
 	# as STKreader
