@@ -1574,6 +1574,7 @@ sub getStackStatistics {
                          Geosigma  => $geosigma,
                          CentroidX => $centroidX,
                          CentroidY => $centroidY,
+                         CentroidZ => $centroidZ,
                          SumI      => $i,
                          SumI2     => $i2,
                          SumLogI   => $logI,
