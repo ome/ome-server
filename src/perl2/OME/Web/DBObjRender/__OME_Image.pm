@@ -61,9 +61,9 @@ use base qw(OME::Web::DBObjRender);
 
 # Class data
 __PACKAGE__->_fieldLabels( {
-	'id'             => "ID",
-	'default_pixels' => "Default Pixels", 
-	'image_guid'     => "GUID"
+	'default_pixels' => "Preview", 
+	'image_guid'     => "GUID",
+	'original_file'  => "Original File"
 });
 __PACKAGE__->_fieldNames( [
 	'id',
@@ -73,6 +73,7 @@ __PACKAGE__->_fieldNames( [
 	'owner',
 	'group',
 	'created',
+	'original_file',
 ] ) ;
 __PACKAGE__->_allFieldNames( [
 	@{__PACKAGE__->_fieldNames() },
@@ -100,11 +101,53 @@ sub getRefToObject {
 			my $id   = $obj->id();
 			my $name = $obj->name();
 			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
-			my $ref = "<a href='javascript: openPopUpImage($id);'><img src='$thumbURL'></a><br>".
-			          "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id'>$name</a>";
+			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed information about this image'>$name</a><br>".
+			          "<a href='javascript: openPopUpImage($id);' title='View this image'><img src='$thumbURL'></a>";
 			return $ref;
 		}
 	}
+}
+
+=head2 getObjSummary
+
+returns a summary description of an image. Includes name, thumbnail, owner, group, and the first 89 characters of the description.
+
+=cut
+
+sub getObjSummary {
+	my ($proto,$obj) = @_;
+	
+	my $q = new CGI();
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $obj );
+	my $id   = $obj->id();
+	my $name = $obj->name();
+	my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
+	my $detailURL = "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id";
+	( my $creation_date = $obj->created() ) =~ s/\..*$//;
+	( my $description = $obj->description ) =~ s/^(.{89}).*$/$1\.\.\./s;
+	return $q->table( 
+		$q->Tr( $q->td( { colspan => 2 }, 
+			$q->a( { href => $detailURL, class => 'ome_summary_title', title => 'Detailed information about this image' }, 
+				$obj->name() 
+			)
+		) ),
+		$q->Tr( 
+			$q->td( { width => 50 },
+				$q->a( {href => "javascript: openPopUpImage($id);",  title => 'View this image'}, 
+					$q->img( { src => $thumbURL } )
+				)
+			),
+			$q->td( { align => 'left' },
+				OME::Web::DBObjRender->getRefToObject( $obj->owner(), 'html' ),
+				$q->br(),
+				OME::Web::DBObjRender->getRefToObject( $obj->group(), 'html' ),
+				$q->br(),
+				$creation_date
+			)
+		),
+		$q->Tr( $q->td( { colspan => 2 }, $description ) )
+	);
 }
 
 =head2 renderSingle
@@ -118,9 +161,15 @@ sub renderSingle {
 	
 	my $factory = $obj->Session()->Factory();
 	my $q       = new CGI;
-	my $record  = $proto->SUPER::renderSingle($obj,$format,$fieldnames);
+	my @filtered_field_names = grep( !m/^original_file$/, @$fieldnames);
+	my $record  = $proto->SUPER::renderSingle($obj,$format,\@filtered_field_names);
 
-	if( grep( m/^name$/, @$fieldnames) and $format eq 'html' ) {
+	# don't let description take up the whole screen
+	$record->{ description } =~ s/^(.{89}).*$/$1\.\.\./s
+		if exists $record->{ description };
+
+	# render original_file field
+	if( scalar( @filtered_field_names ) ne scalar( @$fieldnames ) ) {
 		my $import_mex = $factory->findObject( "OME::ModuleExecution", 
 			'module.name' => 'Image import', 
 			image => $obj, 
@@ -139,7 +188,10 @@ sub renderSingle {
 		my $original_file = $original_files->[0];
 		if( $original_file and $original_file->Repository() ) { 
 			my $originalFile_url =  $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
-			$record->{ 'name' } = $q->a( { -href => $originalFile_url }, $obj->name() );
+			$record->{ 'original_file' } = $q->a( { -href => $originalFile_url, title => 'Download original file' }, $original_file->Path() )
+				if( $format eq 'html' );
+			$record->{ 'original_file' } = $original_file->Path()
+				if( $format eq 'txt' );
 		}
 	}
 	
