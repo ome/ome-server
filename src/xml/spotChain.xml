@@ -17,8 +17,6 @@
     <Links>
       <Link FromNodeID="Importer" FromOutputName="Pixels"
             ToNodeID="Stack" ToInputName="Pixels"/>
-      <Link FromNodeID="Importer" FromOutputName="Dimensions"
-            ToNodeID="Stack" ToInputName="Dimensions"/>
 
       <Link FromNodeID="Importer" FromOutputName="Pixels"
             ToNodeID="Find" ToInputName="Pixels"/>
