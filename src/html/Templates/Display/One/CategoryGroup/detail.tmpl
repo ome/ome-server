@@ -1,0 +1,22 @@
+<table width="100%">
+	<caption>
+		Category Group: <font class="ome_header_title"><TMPL_VAR NAME='Name'></font> 
+	</caption>
+	<tr>
+		<td valign="top">
+			<table style=" border: 1px #000000 solid;">
+				<tr><td align="left" valign="top">
+					Description: <TMPL_VAR NAME=Description>
+				</td></tr>
+			</table>
+				ID: <TMPL_VAR Name='id'><br>
+				Created by: <TMPL_VAR NAME=module_execution><br>
+				Dataset: <TMPL_VAR NAME=dataset>
+		</td>
+		<td align="right" valign="top">
+			<font class="ome_relation_title">Categories in this group:</font>
+				<TMPL_VAR NAME=Categories/render-ref_list><br>
+			<a href="serve.pl?Page=OME::Web::DBObjCreate&Type=@Category&CategoryGroup=<TMPL_VAR NAME='id'>">Add a category</a>
+		</td>
+	</tr>
+</table>
