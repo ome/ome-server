@@ -30,9 +30,9 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
-import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import org.openmicroscopy.vis.ome.CChain;
-import edu.umd.cs.piccolo.nodes.PText;
+import org.openmicroscopy.vis.ome.CDataset;
+import edu.umd.cs.piccolo.PNode;
 import java.awt.Color;
 
 
@@ -44,7 +44,7 @@ import java.awt.Color;
  * @version 2.1
  * @since OME2.1
  */
-public class PChainLabelText extends PText  implements SelectionEventListener{
+public class PChainLabelText extends PRemoteObjectLabelText {
 	
 	public static final double LABEL_SCALE=.25;
 	private static final Color BASE_COLOR = Color.BLACK;
@@ -53,27 +53,28 @@ public class PChainLabelText extends PText  implements SelectionEventListener{
 	private boolean active = false;
 	private boolean selected = false;
 	private Color curColor;
-	private SelectionState selectionState;
 	private CChain chain;
 	
-	public PChainLabelText(CChain c,SelectionState selectionState) {
-		super(c.getName());
+	private PExecutionList executionList;
+	
+	public PChainLabelText(CChain c) {
+		super();
+		buildString(LABEL_SCALE,c.getName());
 		this.chain  = c;
-		this.selectionState = selectionState;
+		SelectionState selectionState = SelectionState.getState();
 		if (selectionState != null) 
 			selectionState.addSelectionEventListener(this);
-		setScale(LABEL_SCALE);
-		setFont(PConstants.LABEL_FONT);
+		setColor();
 	}
 	
 	
-	private void setActive(boolean v) {	
+	public CChain getChain() {
+		return chain;
 	}
-	
-	private void setSelected(boolean v) {
 		
-	}
 	public void selectionChanged(SelectionEvent e) {
+		
+		SelectionState selectionState = e.getSelectionState();
 		
 		if (selectionState.getSelectedChain() == chain) {
 			setActive(false);
@@ -83,10 +84,33 @@ public class PChainLabelText extends PText  implements SelectionEventListener{
 			setActive(false);
 			setSelected(false);
 		}
+		setColor();
 	} 
 	
 	public  void doSelection() {
+		SelectionState selectionState = SelectionState.getState();
 		System.err.println("dataset ..+ is being selected.."+chain.getName());
-		selectionState.setSelectedChain(chain);
+		//selectionState.setSelectedChain(chain);
+		CDataset dataset = getDataset();
+		selectionState.setSelected(chain,dataset);
+	}
+	
+	private CDataset getDataset() {
+		PNode parent = getParent();
+		if (parent == null || !(parent instanceof PChainLabels))
+			return null;
+		PChainLabels cl = (PChainLabels) parent;
+		parent = cl.getParent();
+		if (parent == null || !(parent instanceof PDataset))
+			return null;
+		return ((PDataset) parent).getDataset();
+		
+	}
+	public PExecutionList getExecutionList() {
+		if (executionList == null) {
+			CDataset dataset = getDataset();
+			executionList = new PExecutionList(dataset,chain,LABEL_SCALE);
+		}
+		return executionList;
 	}
 }
