@@ -41,6 +41,7 @@ package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.vis.ome.Connection;
+import edu.umd.cs.piccolo.util.PBounds;
 import javax.swing.SwingConstants;
 import java.util.ArrayList;
 
@@ -73,7 +74,13 @@ public class PFormalInput extends PFormalParameter {
 				PFormalParameter.TYPE_NODE_VERTICAL_OFFSET);	
 		// create locator
 		locator = new PParameterLocator(this,SwingConstants.WEST);
+		addCircle();
 		updateBounds();
+	}
+	
+	protected float getLinkTargetX() {
+		PBounds b = labelNode.getFullBoundsReference();
+		return (float) (b.getX() -PLinkTarget.CIRC_SIZE);
 	}
 	
 	
@@ -97,5 +104,10 @@ public class PFormalInput extends PFormalParameter {
 	// so, return true if there are any items in the list.
 	public boolean isLinkedTo(PFormalParameter param) {
 		return (linkedTo.size() > 0);
+	}
+	
+	// an input can only be an origin if there's noting linked to it.
+	public boolean canBeLinkOrigin() {
+		return (linkedTo.size() == 0);
 	}
 }
