@@ -541,31 +541,11 @@ sub __getImportBody {
 	}
 
 	# IMPORT
-	$body .= $q->p({class => 'ome_info_strong'}, "Importing image paths...");
-	
-	my $info;
-
 	while ($self->__resolveQueue(\@import_q)) {};
 
-	foreach (@import_q) {
-		$info .= $q->span({class => 'ome_info'},
-			"$_") . $q->br();
-	}
+	OME::Tasks::ImageTasks::forkedImportFiles($import_d, \@import_q,{AllowDuplicates => 1});
 
-	$body .= $q->p($info);
-
-	my $images = OME::Tasks::ImageTasks::importFiles($import_d, \@import_q);
-	my @image_ids;
-
-	if (scalar(@$images) < 0) {
-		$body .= $q->p({class => 'ome_error'}, 'Import failed!');
-		return $body;  # Return with failure
-	} else {
-		my $i_count = $q->span({class => 'ome_info_strong'}, scalar(@$images));
-		$body .= $q->p({class => 'ome_info'}, "Imported total ($i_count) images.");
-	}
-
-	return $body;
+	return '';
 }
 
 #*********
@@ -606,15 +586,22 @@ sub getPageBody {
 		print STDERR "*DEBUG* PARAM[$_]: ", $q->param($_), "\n";
 	}
 
-	my $body;
+	my $body = '';
 
 	if ($q->param('action') && $q->param('action') eq 'import') {
 		$body .= $self->__getImportBody();
+		if (length ($body)) {
+			return ('HTML',$body);
+		} else {
+		# No body, which means we've forked an import process.
+		# redirect to the task viewer.
+		return( 'REDIRECT', 'serve.pl?Page=OME::Web::TaskProgress');
+		}
 	} else {
 		$body .= $self->__getQueueBody();
+		return ('HTML',$body);
 	}
 	
-	return ('HTML',$body);
 }
 
 
