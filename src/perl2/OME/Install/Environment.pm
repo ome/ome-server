@@ -175,4 +175,16 @@ sub postgres_user {
     return;
 }
 
+sub admin_user {
+    my ($self, $user) = @_;
+
+    if($user) {
+	$self->{admin_user} = $user;
+    } else {
+	return $self->{admin_user} unless not exists $self->{admin_user};
+    }
+
+    return;
+}
+
 1;
