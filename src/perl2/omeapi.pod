@@ -328,7 +328,8 @@ Douglas Creager (dcreager@alum.mit.edu)
 
 L<OME::DBObject|OME::DBObject>,
 L<OME::SemanticType|OME::SemanticType>,
-L<OME::Factory|OME::Factory>
-L<OME Module Table of Contents|omemodules>
+L<OME::Factory|OME::Factory>, 
+L<OME Module Table of Contents|omemodules>, 
+L<Index|index>
 
 =cut
