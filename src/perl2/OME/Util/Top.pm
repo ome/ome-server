@@ -164,8 +164,9 @@ sub top {
 		for (my $i = 0; $i < 15-(scalar @tasks)-(scalar @workers); $i++){
 			print "\n";
 		}
-		
-		print "WID  STATUS        PID                               URL\n";
+		if (scalar @workers) {
+			print "WID  STATUS        PID                               URL\n";
+		}
 		foreach (@workers) {
 			my ($wid_str, $status_str, $pid_str, $url_str)
 				= ($_->worker_id(), $_->status(), $_->PID(), $_->URL());
