@@ -239,7 +239,7 @@ sub processDOM {
 
 	# process images
 	logdbg "debug", ref ($self)."->processDOM: Processing Images";
-	my ($importDataset);
+
 	foreach my $node ( @{ $root->getChildrenByTagName('Image') } ) {
 	
 		$object = $self->importObject ($node,undef,undef,undef);
@@ -260,13 +260,6 @@ sub processDOM {
 				unless defined $refObjectID;
 			$datasetManager->addImages ([$objectID], $refObjectID);
 		}
-
-		# These get imported into an import dataset
-		$importDataset = $self->dataset()
-			or die "Could not make an import dataset! ";
-		$self->addObject ($factory->maybeNewObject('OME::Image::DatasetMap',
-			{image_id => $objectID, dataset_id => $importDataset->id()}
-		));
 
 		# Import Image CAs
 		$CAnode = $node->getChildrenByTagName('CustomAttributes')->[0];
@@ -297,7 +290,7 @@ sub processDOM {
 	# Turn row gessing back to what it was before.
 	OME::SemanticType->GuessRows($oldRowGuessing);
 
-	return ( $self->{_importedObjects}, $importDataset ) ;
+	return ( $self->{_importedObjects} ) ;
 }
 
 
@@ -339,24 +332,6 @@ my ($self, $imageID, $parentFeature, $node) = @_;
 		}
 }
 
-sub dataset () {
-	my $self = shift;
-
-	return $self->{_dataset} if exists $self->{_dataset} and defined $self->{_dataset};
-	my $session = $self->{session};
-
-    my $dataset = $self->{factory}->
-		newObject("OME::Dataset", {
-			name => 'Dummy XML import dataset',
-			description => '',
-			locked => 'true',
-			owner_id => $session->User()->id(),
-			group_id => undef
-		});
-    $self->{_dataset} = $dataset;
-    $self->addObject ($dataset);
-    return ($dataset);
-}
 
 
 sub storeObjects () {
