@@ -65,7 +65,7 @@ import java.util.Vector;
  * @version 2.1
  * @since OME2.1
  */
-public class PChain {
+public class PChain extends PNode {
 
 	/**
 	 * The Chain to be rendered
@@ -105,7 +105,7 @@ public class PChain {
 	/**
 	 * Some parameters of the stateo f the display
 	 */
-	private float x=HGAP;
+	private float x=0;  /// was HGAP
 	private float y = 0;
 	private float top=0;
 	private float xInit;
@@ -120,28 +120,29 @@ public class PChain {
 	 * 
 	 * @param connection the database connection
 	 * @param chain		the chain to be drawn
-	 * @param layer 	the {@link PLayer} for the modules
-	 * @param linkLayer the {@link PLayer} for the links
-	 * @param x			horizontal for upper-left corner
-	 * @param y			vertical for upper-left corner
+	 * @param pickable  can the links be picked?
 	 */
-	public PChain(Connection connection,CChain chain,PNode layer,
-			PLinkLayer linkLayer,float x,float y) {
+	public PChain(Connection connection,CChain chain,boolean pickable) {
 		
 		
 		this.chain = chain;
 		this.layering = chain.getLayering();
-		this.x = x;
-		this.y =y;
-		xInit = x;
+		//this.x = x;
+		//this.y =y;
+	//	xInit = x;
 		
-		top =y;
+	//	top =y;
 		
-		drawNodes(connection,layer);
+		PLinkLayer linkLayer = new PLinkLayer();
+		linkLayer.setPickable(pickable);
+		addChild(linkLayer);
+		
+		drawNodes(connection);
 		layoutNodes();
 		drawLinks(linkLayer);	
 		//clear it out so it can be garbage-collected
 		nodeLayers = null;
+		linkLayer.moveToFront();
 		
 	}
 	
@@ -151,15 +152,14 @@ public class PChain {
 	 * The nodes in each layer will go into the {@link NodeLayers} object,
 	 * which will contain the highest # layer first, etc.
 	 * @param connection
-	 * @param layer
 	 */
-	private void drawNodes(Connection connection,PNode layer) {
+	private void drawNodes(Connection connection) {
 		
 		int layers = layering.getLayerCount(); 
 		nodeLayers = new NodeLayers(layers);
 		
 		for (int i=layers-1; i >=0; i--) {
-			Vector v = drawLayer(connection,layer,i);
+			Vector v = drawLayer(connection,i);
 			nodeLayers.addLayer(v,i);
 			float height = getLayerHeight(v);
 			if (height > chainHeight)
@@ -170,12 +170,10 @@ public class PChain {
 	/**
 	 * To draw a layer, draw each of the nodes 
 	 * @param connection
-	 * @param layer
 	 * @param layerNumber
 	 * @return a list containing the nodes in the layer
 	 */
-	private Vector drawLayer(Connection connection,PNode layer,
-						int layerNumber) {
+	private Vector drawLayer(Connection connection,int layerNumber) {
 		
 		Vector v = new Vector();
 		int layerSize=layering.getLayerSize(layerNumber);
@@ -186,7 +184,7 @@ public class PChain {
 		for (int i =0; i < layerSize; i++) {
 			GraphLayoutNode node = layering.getNode(layerNumber,i);
 			//somehow draw it, and advance x as need be.
-			Object obj = drawNode(connection,node,layer);
+			Object obj = drawNode(connection,node);
 			v.add(obj);
 		} 
 		
@@ -205,7 +203,7 @@ public class PChain {
 	 * @param layer
 	 * @return
 	 */
-	private Object drawNode(Connection connection,GraphLayoutNode node,PNode layer) {
+	private Object drawNode(Connection connection,GraphLayoutNode node) {
 		
 		PModule mNode = null;
 		if (node instanceof DummyNode)  {
@@ -216,7 +214,7 @@ public class PChain {
 
 			mNode = new PModule(connection,mod);
 			mod.addModuleWidget(mNode);
-			layer.addChild(mNode);
+			addChild(mNode);
 		}
 		node.setPModule(mNode);
 		return mNode;
@@ -399,7 +397,7 @@ public class PChain {
 		modLink.insertIntermediatePoint(j,xpos,ypos);
 	}
 	
-	public float getHeight() { 
+	public double getHeight() { 
 		//return chainHeight;
 		return (float) chainBounds.getHeight()+VGAP;
 	}
@@ -408,8 +406,8 @@ public class PChain {
 		chainBounds.add(b);
 	}
 	
-	public float getWidth() {
-		return x-xInit;
+	public double getWidth() {
+		return x;
 	}
 	
 	/**

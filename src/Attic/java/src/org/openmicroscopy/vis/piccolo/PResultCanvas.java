@@ -213,7 +213,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	 * or a module if a module was dropped. Reinstate the event handler
 	 */
 	public void drop(DropTargetDropEvent e) {
-		System.err.println("getting a drop...");
+	//	System.err.println("getting a drop...");
 		try {
 			Transferable transferable =  e.getTransferable();
 			if (transferable.isDataFlavorSupported(ChainFlavor.chainFlavor) &&
@@ -226,7 +226,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 				CChain chain = connection.getChain(id); 
 				System.err.println("dropped "+chain.getName()+" on result canvas");
 				if (chain.hasExecutionsInSelectedDatasets(selectionState) == true) {
-					System.err.println("creating dropped chains");
+					//System.err.println("creating dropped chains");
 					Point2D loc = e.getLocation();
 					createDroppedChain(chain,loc);
 					addInputEventListener(handler);
@@ -237,7 +237,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 				}
 				else {
 					clearDrop(e);
-					System.err.println("not creating dropped chain");
+					//System.err.println("not creating dropped chain");
 				}		
 			} 
 		}
@@ -272,7 +272,9 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		getCamera().localToView(location);
 		float x = (float) location.getX();
 		float y = (float) location.getY();
-		PChain p = new PChain(connection,chain,nodeLayer,linkLayer,x,y);
+		PChain p = new PChain(connection,chain,false);
+		nodeLayer.addChild(p);
+		p.setOffset(x,y);
 	}
 	
 	public void setLibraryCanvas(PChainLibraryCanvas libraryCanvas) {
