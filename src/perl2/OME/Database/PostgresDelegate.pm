@@ -245,6 +245,23 @@ use constant FIND_RELATION_SQL => <<SQL;
     FROM pg_class
    WHERE lower(relname) = lower(?)
 SQL
+# add
+
+# $sth->execute($table_oid,$column_number)
+use constant FIND_COLUMN_BY_NUMBER_SQL => <<SQL;
+  SELECT lower(attname)
+    FROM pg_attribute
+   WHERE attrelid = ?
+     AND attnum = ?
+SQL
+
+# $sth->execute($table_oid,$column_name)
+use constant FIND_COLUMN_BY_NAME_SQL => <<SQL;
+  SELECT attnum
+    FROM pg_attribute
+   WHERE attrelid = ?
+     AND lower(attname) = lower(?)
+SQL
 
 # $dbh->selectcol_arrayref($sth,$table_oid)
 use constant FIND_TABLE_INDEX_NAMES_SQL => <<SQL;
@@ -261,6 +278,12 @@ sub dropColumn {
 	$column = lc ($column);
 	# Get the table oid		
 	my ($reloid)  = $dbh->selectrow_array(FIND_RELATION_SQL,{},$table);
+	return unless $reloid;
+
+	# Get the column oid		
+	my ($coloid)  = $dbh->selectrow_array(FIND_COLUMN_BY_NAME_SQL,{},$reloid,$column);
+	return unless $coloid;
+
 	# remove triggers
 	my ($trigger)  = $dbh->selectrow_array(
 		"SELECT tgname FROM pg_trigger WHERE tgrelid=$reloid and tgargs like '%$column%'"
@@ -333,23 +356,6 @@ sub getNextSequenceValue {
 }
 
 
-# add
-
-# $sth->execute($table_oid,$column_number)
-use constant FIND_COLUMN_BY_NUMBER_SQL => <<SQL;
-  SELECT lower(attname)
-    FROM pg_attribute
-   WHERE attrelid = ?
-     AND attnum = ?
-SQL
-
-# $sth->execute($table_oid,$column_name)
-use constant FIND_COLUMN_BY_NAME_SQL => <<SQL;
-  SELECT attnum
-    FROM pg_attribute
-   WHERE attrelid = ?
-     AND lower(attname) = lower(?)
-SQL
 
 # $sth->execute($table_oid)
 use constant FIND_PRIMARY_KEY_SQL => <<SQL;
