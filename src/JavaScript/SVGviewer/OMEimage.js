@@ -180,7 +180,6 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 	return this.SVGimages[theZ][theT];
 }
 
-
 /*****
 
 	makeWBSnative(WBS,theT)
@@ -204,7 +203,7 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 		var wavenum = WBS[i*3];
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
 		WBS[i*3+1] /= this.Stats[wavenum][theT]['geomean'];
-		WBS[i*3+1] = Math.round(WBS[i*3+1]);//*100000)/100000;
+		WBS[i*3+1] = Math.round(WBS[i*3+1]*100000)/100000;
 		WBS[i*3+2] = 255/( this.Stats[wavenum][theT]['sigma'] * WBS[i*3+2] );
 		WBS[i*3+2] = Math.round(WBS[i*3+2]*100000)/100000;
 	}
