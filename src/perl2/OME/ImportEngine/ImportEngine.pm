@@ -70,6 +70,7 @@ use Class::Data::Inheritable;
 use Log::Agent;
 use OME::Image;
 use OME::Dataset;
+use UNIVERSAL::require;
 
 # ---------------------
 # The formats now come from the CONFIGURATION table.
@@ -226,16 +227,43 @@ sub importFiles {
     # each.
 
     foreach my $format_class (@$formats) {
-        logcroak "Malformed class name $format_class"
-          unless $format_class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
-        eval "require $format_class";
-
-        my $format = $format_class->new($session,$module_execution);
-        $formats{$format_class} = $format;
-
 	last
 	    unless (scalar(@$filenames) > 0);
-        $groups{$format_class} = $format->getGroups($filenames);
+
+        eval {
+            # Verify that the format class has a well-formed name
+            die "Malformed class name $format_class"
+              unless $format_class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+
+            # Load the class into memory
+            $format_class->require();
+
+            # Create and save a new instance of the format class
+            my $format = $format_class->new($session,$module_execution);
+            $formats{$format_class} = $format;
+
+            # Have the format class search for images in the list of
+            # filenames.  Any files that correspond to importable
+            # images will be removed from the list by the getGroups
+            # method.
+            my $group = $format->getGroups($filenames);
+
+            # Make sure the getGroups method returned an array ref.
+            die "${format_class}: getGroups must return an array ref"
+              unless ref($group) eq 'ARRAY';
+
+            $groups{$format_class} = $group;
+        };
+
+        if ($@) {
+            # If there was an error, allow the other classes in the
+            # list of formats to continue processing, but make sure
+            # that we don't try to do anything with this class later.
+            logwarn "Error getting groups via format $format_class: $@";
+
+            delete $formats{$format_class};
+            delete $groups{$format_class};
+        }
     }
 
     # Loop through the formats once again, allowing each to import the
@@ -250,29 +278,57 @@ sub importFiles {
     foreach my $format_class (@$formats) {
         my $format = $formats{$format_class};
         my $groups = $groups{$format_class};
+
+        # If there is no format class instance or list of groups for
+        # this format class, go ahead and skip it.
+        next FORMAT unless (defined $format) && (defined $groups);
+
       GROUP:
         foreach my $group (@$groups) {
             #print STDERR ".";
-            # First check to see if this group has been imported yet.
-            my $sha1 = $format->getSHA1($group);
-            my $old_file = $factory->
-              findObject("OME::Image::ImageFilesXYZWT",
-                         file_sha1 => $sha1);
 
-            if (defined $old_file) {
-                __debug("Image has already been imported.  ");
-                if ($self->{_flags}->{AllowDuplicates}) {
-                    __debug("AllowDuplicates is on.\n");
-                } else {
-                    __debug("Skipping...\n");
-                    next GROUP;
+            # First check to see if this group has been imported yet.
+            my $sha1;
+            eval {
+                $sha1 = $format->getSHA1($group);
+            };
+            if ($@) {
+                logwarn "Error calculating SHA-1: $format_class $group";
+                next GROUP;
+            }
+
+            if (defined $sha1) {
+                my $old_file = $factory->
+                  findObject("OME::Image::ImageFilesXYZWT",
+                             file_sha1 => $sha1);
+
+                if (defined $old_file) {
+                    __debug("Image has already been imported.  ");
+                    if ($self->{_flags}->{AllowDuplicates}) {
+                        __debug("AllowDuplicates is on.\n");
+                    } else {
+                        __debug("Skipping...\n");
+                        next GROUP;
+                    }
                 }
+            } else {
+                # TODO: Should this be an error is getSHA1 returns undef?
             }
 
             # This hasn't been imported yet, so slurp it in.
-            my $image = $format->importGroup($group);
+            my $image;
+            eval {
+                $image = $format->importGroup($group);
+            };
+
+            if ($@) {
+                logwarn "Error importing image: $format_class $group";
+                $session->rollbackTransaction();
+                next GROUP;
+            }
 
             if (!defined $image) {
+                logwarn "Undefined image: $format_class $group";
                 $session->rollbackTransaction();
                 next GROUP;
             }
