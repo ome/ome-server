@@ -1,0 +1,11 @@
+These directories and files connect omeis to Paul Heckbert's zoom. http://www.cs.cmu.edu/~ph
+http://www.xmission.com/~legalize/zoom.html
+
+This code comes from several places.  Primarily it is based on Paul Heckbert's zoom and Rich's extensions to it.  There's a bit of spackle to make it callable by omeis with Pixels as an input stream.
+
+The tiff, jpeg, and png implementations have open_stream() methods.  The tiff "streaming" is accomplished by using code from libtiff/contrib/mfs (Mike Johnson) to support tiff i/o operations to ram, which gets sent to the stream when the tiff is closed.
+
+There seems to be some potential here to implement some pipelined DSP, which might be pretty cool.
+
+Ilya Goldberg
+http://openmicroscopy.org

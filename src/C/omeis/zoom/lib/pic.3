@@ -1,0 +1,464 @@
+.\" $Header$
+.\" a few macros
+.de Cs		\" code start
+.DS
+.ft B
+.ta 9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n
+..
+.de Ce		\" code end
+.ft R
+.DE
+..
+.de Ss		\" subroutine definition start
+.nf
+.ft B
+.ta 9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n
+..
+.de Sd		\" subroutine documentation
+.ft R
+.fi
+.in +4n
+..
+.de Se		\" subroutine definition&documentation end
+.in -4n
+..
+.de DS
+.nf
+.in +4n
+.sp .5v
+..
+.de DE
+.sp .5v
+.in -4n
+.fi
+..
+.TH PIC 3  "10 August 1989"
+.SH NAME
+pic \- subroutines for device-independent picture I/O
+.SH OVERVIEW
+\fIpic\fP is a package of subroutines for device-independent frame buffer I/O
+and format-independent picture file I/O.
+It is designed to provide a standard subroutine
+interface for computer graphics and
+image processing applications that manipulate raster images
+of 8, 24, or 32-bits per pixel.
+Application programs can be more portable if they
+do all their raster graphics through this layer of routines
+rather than making device or format-dependent calls.
+Device or file format selection can be made at either compile-time or run-time.
+.PP
+To use the package, an application program first calls \fIpic_open\fP,
+which opens a picture "device" for reading or writing
+and returns a pointer that is passed in all subsequent
+\fIpic\fP calls.
+Several pictures can be open simultaneously so that one could, for example,
+be reading from two picture devices (or files) of different types,
+and writing to third device simultaneously.
+Following the \fIpic_open\fP
+call but before pixel I/O the program typically reads or
+writes various parameters of the picture.
+The parameters supported by the \fIpic\fP library at present are:
+.TP .5i
+\fInchan\fP: \fBint nchan;\fP
+Number of channels in the picture: 1, 3, or 4.
+1 channel means intensity, perhaps color mapped,
+3 channels means RGB, and
+4 channels means RGBA, where A=alpha=opacity.
+.TP .5i
+\fIbox\fP: \fBint xorig, yorig, xsize, ysize;\fP
+origin and size of picture, where \fI(xorig,yorig)\fP is the upper left corner
+of the box and \fI(xsize,ysize)\fP is its size.
+.PP
+After these parameters are read or written by the application,
+it typically reads or writes pixels.
+Pixels can be accessed individually or on a scanline basis.
+All devices should support top-down scanline access,
+and some may support random access to pixels and scanlines as well.
+There is one set of routines for reading and writing 1-channel pictures
+and another set for reading and writing 3 or 4-channel pictures.
+Three-channel pictures ignore (skip over) the \fIa\fP channel.
+If a picture was opened for reading then only the parameter "get" routines
+and pixel read routines should be called;
+if a picture was opened for writing then most device libraries will
+allow any of the parameter "set" or "get"
+or pixel read or write routines to be called.
+.PP
+When the application is done with a picture, it should call \fIpic_close\fP,
+which does device-dependent cleanup, perhaps flushing output buffers and
+closing the device or file stream.
+.PP
+Conventions:
+Picture coordinates have the origin at the upper left, with x pointing right
+and y pointing down.
+The package currently has no notion of pixel aspect ratio,
+gamma correction, or color correction.
+It is an error to set any parameters after pixel writing has
+commenced on a picture opened for writing.
+All pixel coordinates are in the same coordinate system (not window-relative).
+Channels are 8 bits per pixel, with 0=dark and 255=bright.
+The pixel datatypes are:
+.Cs
+typedef unsigned char Pixel1;   /* 1-channel picture */
+typedef struct {Pixel1 r, g, b, a;} Pixel1_rgba;   /* 3 or 4-channel picture */
+.Ce
+.SH SUBROUTINES
+The application should think of a picture as an abstract data type
+on which the following operations can be performed:
+.Ss
+#include <pic.h>
+.Sd
+Should be included by any application using \fIpic\fP.
+.Se
+
+.Ss
+Pic *pic_open(name, mode)
+char *name, *mode;
+.Sd
+Open picture with filename \fIname\fP
+with \fImode\fP=\fB"r"\fP for reading or \fB"w"\fP for writing.
+Returns a pointer which must be used in all subsequent operations on the
+picture.
+Returns 0 if unsuccessful.
+This routine uses \fIpic_file_dev\fP to recognize the file's device type.
+.Se
+
+.Ss
+void pic_close(p)
+Pic *p;
+.Sd
+Close picture, flushing buffers if necessary.
+This should be the last operation done on a picture.
+.Se
+
+.Ss
+void pic_catalog()
+.Sd
+Print a list of the device libraries linked in with the application.
+.Se
+
+.Ss
+char *pic_file_dev(file)
+char *file;
+.Sd
+Determine a file's device name by examining its magic number in its first
+few bytes, if it is a file, or by recognizing the suffix of its name.
+Returns 0 if device is unrecognized.
+Examples:
+.Cs
+pic_file_dev("mandrill.dump") == "dump"
+pic_file_dev("iris") == "iris"
+.Ce
+.in +4n
+.Se
+
+.Ss
+char *pic_get_name(p)
+char *pic_get_dev(p)
+Pic *p;
+.Sd
+These two routines returns the picture's filename or device name,
+respectively.
+.Se
+
+.Ss
+int pic_get_nchan(p)
+void pic_set_nchan(p, nchan)
+Pic *p;
+int nchan;
+.Sd
+Returns (\fIpic_get_nchan\fP) or sets (\fIpic_set_nchan\fP) the number
+of channels in the picture: 1, 3, or 4.
+.Se
+
+.Ss
+void pic_get_box(p, &ox, &oy, &sx, &sy)
+void pic_set_box(p, ox, oy, sx, sy)
+Pic *p;
+int ox, oy, sx, sy;
+.Sd
+Get or set the origin \fI(ox,oy)\fP and size \fI(sx,sy)\fP of the device.
+When a device with no intrinsic resolution (such as a picture file) is opened
+for writing, its origin is undefined (ox==PIC_UNDEFINED) initially,
+so its box must be set before pixels can be written.
+.Se
+
+.Ss
+Window *pic_get_window(p, win)
+void pic_set_window(p, win)
+Pic *p;
+Window *w;
+.Sd
+This is an alternative scheme for getting or setting the box of a picture,
+redundant with the box routines above.
+The \fBWindow\fP structure is:
+.Cs
+typedef struct {	/* WINDOW: A DISCRETE 2-D RECTANGLE */
+    int x0, y0;		/* xmin and ymin */
+    int x1, y1;		/* xmax and ymax (inclusive) */
+} Window;
+.Ce
+.in +4n
+The relation between box and window is:
+\fI(x0,y0)=(ox,oy)\fP, \fI(x1,y1)=(ox+sx-1,oy+sy-1)\fP.
+\fIpic_get_window\fP returns its window argument.
+.Se
+
+.Ss
+Pixel1 pic_read_pixel(p, x, y)
+void pic_write_pixel(p, x, y, pv)
+Pic *p;
+int x, y;
+Pixel1 pv;
+.Sd
+Read or write a pixel from a 1-channel picture.
+\fIpv\fP is the pixel value to write.
+.Se
+
+.Ss
+void pic_read_pixel_rgba(p, x, y, pv)
+void pic_write_pixel_rgba(p, x, y, r, g, b, a)
+Pic *p;
+int x, y;
+Pixel1 r, g, b, a;
+Pixel1_rgba *pv;
+.Sd
+Read or write a pixel at \fI(x,y)\fP from a 3 or 4-channel picture.
+.Se
+
+.Ss
+void pic_read_row(p, y, x0, nx, buf)
+void pic_write_row(p, y, x0, nx, buf)
+Pic *p;
+int y, x0, nx;
+Pixel1 *buf;
+.Sd
+Read or write a portion of the 1-channel scanline at y=\fIy\fP
+starting at x=\fIx0\fP,
+extending \fInx\fP pixels to the right, from or to the array \fIbuf\fP,
+which has room for \fInx\fP 1-channel pixels.
+.Se
+
+.Ss
+void pic_read_row_rgba(p, y, x0, nx, buf)
+void pic_write_row_rgba(p, y, x0, nx, buf)
+Pic *p;
+int y, x0, nx;
+Pixel1_rgba *buf;
+.Sd
+Read or write a portion of the 3 or 4-channel scanline at y=\fIy\fP
+starting at x=\fIx0\fP,
+extending \fInx\fP pixels to the right, from or to the array \fIbuf\fP,
+which has room for \fInx\fP 4-channel pixels.
+.Se
+
+.Ss
+void pic_read_block(p, x0, y0, nx, ny, buf)
+void pic_write_block(p, x0, y0, nx, ny, buf)
+void pic_read_block_rgba(p, x0, y0, nx, ny, buf_rgba)
+void pic_write_block_rgba(p, x0, y0, nx, ny, buf_rgba)
+Pic *p;
+int x0, y0, nx, ny;
+Pixel1 *buf;
+Pixel1_rgba *buf_rgba;
+.Sd
+Similar to the row routines, but these read or write a rectangular block
+of pixels with upper left corner \fI(x0,y0)\fP and size \fI(nx,ny)\fP.
+The buffers are effectively of dimension \fI[ny][nx]\fP.
+.Se
+
+.Ss
+void pic_clear(p, pv)
+Pic *p;
+Pixel1 pv;
+.Sd
+Clear all pixels of the 1-channel picture to pixel value \fIpv\fP.
+.Se
+
+.Ss
+void pic_clear_rgba(p, r, g, b, a)
+Pic *p;
+Pixel1 r, g, b, a;
+.Sd
+Clear all pixels of the 3 or 4-channel picture to pixel value \fI(r,g,b,a)\fP.
+.Se
+
+.Ss
+Pic *pic_load(name1, name2)
+char *name1, *name2;
+.Sd
+Copy picture from file \fIname1\fP into file \fIname2\fP,
+and return the descriptor of the latter picture,
+opened for writing.
+.Se
+
+.Ss
+void pic_save(p, name)
+Pic *p;
+char *name;
+.Sd
+Copy the picture in \fIp\fP into a new picture in file \fIname\fP.
+Picture \fIp\fP is not closed.
+.Se
+
+.Ss
+void pic_copy(p, q)
+Pic *p, *q;
+.Sd
+Copy picture \fIp\fP into picture \fIq\fP.
+Neither one is closed.
+.Se
+.SH LINKING
+The code within \fIpic\fP consists of two layers: the top layer of
+device-independent code,
+and the bottom layer of device-dependent "device libraries",
+with one library for each device class known.
+An application using \fIpic\fP has control at compile time of which device
+libraries are linked in to its executable file.
+Some programs will be run on just one device, so it is wasteful of disk
+space to link in more than the one device library, while other programs
+need to read and write a variety of device types, so they will want to link
+in all device libraries.
+Linking is controlled through the global array \fBpic_list\fP.
+If the application declares its own \fBpic_list\fP then it has
+explicit control of the device libraries linked;
+otherwise the linker will pick up the default \fBpic_list\fP from
+\fBpic_file.o\fP in \fBlibpic.a\fP and link in all device libraries.
+To create your own \fBpic_list\fP, put lines similar to the following
+in your application source code:
+.Cs
+extern Pic pic_dump, pic_foo;
+Pic *pic_list[PIC_LISTMAX] = {&pic_dump, &pic_foo, 0};
+.Ce
+This will cause the "dump" and "foo" device libraries to be linked in.
+Note: the "0" terminating \fBpic_list\fP is vital.
+The subroutine \fIpic_catalog()\fP prints \fBpic_list\fP.
+.SH EXAMPLE
+The following program illustrates the use of the \fIpic\fP package:
+.Cs
+#include <simple.h>
+#include <pic.h>
+
+/* pic_lum: take the luminance of afile and write it into bfile
+ * afile is expected to be 3 or 4-channel, bfile is written as 1-channel */
+
+pic_lum(afile, bfile)
+char *afile, *bfile;
+{
+    int x, y, dx, dy;
+    Pic *a, *b;
+    Window win;
+    Pixel1_rgba *rgb;
+    Pixel1 *lum;
+
+    a = pic_open(afile, "r");
+    if (!a) die("can't read %s\en", afile);
+    b = pic_open(bfile, "w");
+    if (!a) die("can't write %s\en", bfile);
+    if (pic_get_nchan(a)<3) die("%s is not 3 channel\en", afile);
+
+    pic_set_nchan(b, 1);
+    pic_set_window(b, pic_get_window(a, &win));
+    dx = win.x1-win.x0+1;
+    dy = win.y1-win.y0+1;
+    printf("%s->%s, res=%dx%d, origin=(%d,%d)\en",
+	afile, bfile, dx, dy, win.x0, win.y0);
+
+    rgb = (Pixel1_rgba *)malloc(dx*sizeof(Pixel1_rgba));
+    lum = (Pixel1 *)malloc(dx*sizeof(Pixel1));
+    for (y=0; y<dy; y++) {
+	pic_read_row_rgba(a, win.y0+y, win.x0, dx, rgb);
+	for (x=0; x<dx; x++)
+	    lum[x] = .30*rgb[x].r + .59*rgb[x].g + .11*rgb[x].b;
+	pic_write_row(b, win.y0+y, win.x0, dx, lum);
+    }
+    free(rgb);
+    free(lum);
+    pic_close(a);
+    pic_close(b);
+}
+
+static die(control, arg)
+char *control, *arg;
+{
+    fprintf(stderr, control, arg);
+    exit(1);
+}
+.Ce
+.SH CREATING A DEVICE LIBRARY
+To add a new device library to \fIpic\fP for a hypothetical file or device
+type called "foo",
+you would write the following subroutines:
+.Cs
+Foo	*foo_open(file, mode)
+void	foo_close(d)
+
+char	*foo_get_name(d)
+void	foo_clear(d, pv)
+void	foo_clear_rgba(d, r, g, b, a)
+
+void	foo_set_nchan(d, nchan)
+void	foo_set_box(d, ox, oy, dx, dy)
+void	foo_write_pixel(d, x, y, pv)
+void	foo_write_pixel_rgba(d, x, y, r, g, b, a)
+void	foo_write_row(d, y, x0, nx, buf)
+void	foo_write_row_rgba(d, y, x0, nx, buf)
+
+int	foo_get_nchan(d)
+void	foo_get_box(d, ox, oy, dx, dy)
+Pixel1	foo_read_pixel(d, x, y)
+void	foo_read_pixel_rgba(d, x, y, pv)
+void	foo_read_row(d, y, x0, nx, buf)
+void	foo_read_row_rgba(d, y, x0, nx, buf)
+.Ce
+where the arguments are identical to those of the \fIpic\fP subroutines,
+except that the first argument to these routines is a pointer to the private
+data for this device,
+.Cs
+Foo *d;
+.Ce
+This private data is a structure of your own design, containing whatever state
+information is needed to perform the above operations.
+If an operation is difficult on your device then politely punt, e.g.:
+.Cs
+Pixel1 foo_read_pixel(p, x, y) Foo *p; int x, y; {
+    fprintf(stderr, "foo_read_pixel: unimplemented\en");
+}
+.Ce
+.PP
+After the above routines are written they need to be registered by
+collecting their addresses into a global \fBPic_procs\fP structure
+and creating a prototype \fBPic\fP structure containing the device's name
+and \fBPic_procs\fP pointer.
+For our device class "foo", we'd declare:
+.Cs
+static Pic_procs pic_foo_procs = {
+    (char *(*)())foo_open, foo_close,
+    foo_get_name,
+    foo_clear, foo_clear_rgba,
+    foo_set_nchan, foo_set_box,
+    foo_write_pixel, foo_write_pixel_rgba,
+    foo_write_row, foo_write_row_rgba,
+    foo_get_nchan, foo_get_box,
+    foo_read_pixel, foo_read_pixel_rgba,
+    foo_read_row, foo_read_row_rgba,
+};
+
+Pic pic_foo = {"foo", &pic_foo_procs};
+.Ce
+By convention, the device library for device "foo" goes in a source file
+called \fBfoo.c\fP that does not #include pic.h,
+and the above global structures go in a small file called \fBfoo_pic.c\fP
+that does #include pic.h.
+.PP
+There are three global files that must be modified slightly to register your
+new device with the \fIpic\fP library:
+Add the address of your prototype \fBPic\fP structure to the list of all
+known devices in \fBpic_all.c\fP.
+Add magic number or recognition code to \fIpic_file_dev\fP in \fBpic_file.c\fP.
+Modify \fBMakefile\fP.
+Run \fBmake install\fP.
+For further examples of this process, see the files
+\fBdump.h\fP, \fBdump.c\fP, \fBdump_pic.c\fP.
+.SH AUTHOR
+Paul Heckbert, August 1989.
+ph@cs.cmu.edu

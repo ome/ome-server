@@ -1,0 +1,183 @@
+.\" $Header$
+.\" a few macros
+.de Cs		\" code start
+.DS
+.ft B
+.ta 9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n
+..
+.de Ce		\" code end
+.ft R
+.DE
+..
+.de Ss		\" subroutine definition start
+.nf
+.ft B
+.ta 9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n,+9n
+..
+.de Sd		\" subroutine documentation
+.ft R
+.fi
+.in +4n
+..
+.de Se		\" subroutine definition&documentation end
+.in -4n
+..
+.de DS
+.nf
+.in +4n
+.sp .5v
+..
+.de DE
+.sp .5v
+.in -4n
+.fi
+..
+.TH ZOOM 1 "10 August 1989"
+.SH NAME
+zoom \- filtered image scale and translate
+.SH SYNOPSIS
+.DS
+Usage: zoom [options]
+-src %s		source filename
+-dst %s		dest filename
+-s %d%d%d%d	source box (x0 y0 xsize ysize)
+-d %d%d%d%d	dest box
+-sw %d%d%d%d	window (x0 y0 x1 y1)
+-dw %d%d%d%d	dest window
+-map %f%f%f%f	scale and translate: sx sy tx ty (src to dst by default)
+-square		use square mapping (don't stretch pixels)
+-intscale	use integer scale factors
+-filt %s[%s	filter name in x and y (default=triangle)
+-supp %f[%f	filter support radius
+-blur %f[%f	blur factor: >1 is blurry, <1 is sharp
+-window %s[%s	window an IIR filter (default=blackman)
+-mono		monochrome mode (1 channel)
+-dev		print list of known picture devices/file formats
+Where %d denotes integer, %f denotes float, %s denotes string,
+and '[' marks optional following args
+.DE
+.SH DESCRIPTION
+\fIzoom\fP zooms a raster image
+from one picture file or frame buffer to another.
+The "zoom" operation, also known as "resize",
+consists of a scale and translation.
+The program supports arbitrary floating point scale and translation
+with independent control of x and y scales,
+upsampling (interpolation) or downsampling (decimation),
+1-channel black and white or 3-channel color pictures,
+overlapping source and destination windows within the same frame buffer,
+and separable filtering with a large choice of filters.
+It can also be used for in-place separable filtering of images.
+The algorithm is not limited to integer or rational scale factors;
+it can scale by any floating point number.
+The program uses the \fIpic\fP package for all picture I/O,
+so the \fIzoom\fP source code is device-independent,
+and the program can read and write any of the picture file formats and
+frame buffers known by \fIpic\fP.
+The program is optimized to be nearly as fast as special-purpose code
+for important special cases such as point sampling.
+The memory used by the algorithm is modest: it is proportional to the
+picture width times the filter width,
+not proportional to picture area.
+.PP
+To run \fIzoom\fP, the user specifies the source and destination file
+or frame buffer names, specifies the mapping (zoom transformation)
+and filter.
+Most of these options have reasonable defaults.
+The program will read and write the full-screen area of the source and
+destination pictures by default;
+the user can specify subrectangles to read and write if desired.
+Rectangles can be defined in either of two ways: as a "box",
+which consists of \fIxmin, ymin, xsize, ysize\fP,
+or as a "window", which consists of \fIxmin, ymin, xmax, ymax\fP.
+By default, the source window is zoomed into the destination window.
+Alternatively, a mapping can be specified directly with the \fB-map\fP option.
+A mapping can be constrained to have equal scale in x and y, or to have
+integer scale factors, using the \fB-square\fP and \fB-intscale\fP options,
+respectively.
+.PP
+Filters are selected with the \fB-filt\fP option.
+If given one filter name, \fB-filt\fP will use that filter in both x and y;
+if given two names, different filters can be used in the two dimensions.
+The command \fBzoom -filt '?'\fP prints
+the list of filters currently known to \fIzoom\fP.
+That list is:
+.DS
+NAME      SUPPORT
+point       0
+box         0.5
+triangle    1
+quadratic   1.5
+cubic       2
+catrom      2
+mitchell    2
+gaussian    1.25
+sinc        4
+bessel      3.24
+.DE
+The option \fB-filt point\fP gives fast pixel replication,
+\fB-filt triangle\fP (the default) gives bilinear interpolation,
+which is suitable for most purposes,
+and \fB-filt mitchell\fP gives slower, very high quality results.
+The other filters are provided for experimentation.
+The time required by a filter is proportional to its support.
+.PP
+Most of the filters known to \fIzoom\fP are FIR (finite impulse response),
+with an intrinsic support (width),
+but some of them (gaussian, sinc, bessel) are IIR (infinite impulse response),
+and must be truncated at some arbitrary support.
+This can be done with the \fB-supp\fP option.
+Again, the defaults are reasonable.
+The IIR filters can be windowed (brought down to zero) with various window
+functions listed below:
+.Cs
+hanning
+hamming
+blackman
+kaiser
+.Ce
+The sinc and bessel filters are blackman-windowed by default.
+Filters can be scaled artificially to blur or sharpen them with the \fB-blur\fP
+option.
+.SH EXAMPLES
+.Ss
+zoom -src mandrill.dump
+.Sd
+Zoom the mandrill from picture file \fBmandrill.dump\fP
+into the default destination device (whatever that is),
+mapping the file's rectangle into the device's rectangle,
+with a triangle filter.
+.Se
+
+.Ss
+zoom -src mandrill.dump -filt point -square -intscale
+.Sd
+Zoom the mandrill to the default device's full screen,
+but maintain the picture's aspect ratio, and zoom it up by an integer factor
+with point sampling (pixel replication)
+.Se
+
+.Ss
+zoom -src mandrill.dump -dst iris -d 50 75 100 100
+.Sd
+Zoom the mandrill into an iris window at position (50,70) with xsize=ysize=100.
+.Se
+
+.Ss
+zoom -src hp -dst hp -s 100 100 640 512 -d 0 0 1280 1024 -filt mitchell
+.Sd
+Zoom from hp to itself with overlapping source and destination windows,
+using a mitchell filter.
+.Se
+
+.Ss
+zoom -src hp -dst hp -s 0 0 500 500 -d 0 0 500 500 -filt cubic -blur 2
+.Sd
+Blur (low pass filter) an image in-place.
+.Se
+.SH SEE ALSO
+pic(3),
+\fIDiscrete Time Signal Processing\fP, Alan Oppenheim, Ronald Schafer, 1989.
+.SH AUTHOR
+Paul Heckbert, August 1989.
+ph@cs.cmu.edu
