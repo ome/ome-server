@@ -1,6 +1,6 @@
-# OME/Factory.pm
+# OME::Factory
 
-# Copyright (C) 2003 Open Microscopy Environment
+# Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
 #    This library is free software; you can redistribute it and/or
@@ -336,108 +336,18 @@ Also note that these methods are not intended to support arbitrarily
 complex SQL; that's what SQL is for.  As such, all of the criteria
 will be ANDed together in the WHERE clause.
 
-=head1 Class::DBI EQUIVALENTS
-
-This section describes the OME::Factory analogues to the most common
-Class::DBI methods.
-
-=head2 create
-
-	# Through Class::DBI
-	my $module = OME::Module->create($data_hash);
-
-	# Through OME::Factory
-	my $module = $factory->newObject("OME::Module",$data_hash);
-
-=head2 find_or_create
-
-	# Through Class::DBI
-	my $module = OME::Module->find_or_create($data_hash);
-
-	# Through OME::Factory
-	my $module = $factory->
-	    maybeNewObject("OME::Module",$data_hash);
-
-=head2 retrieve
-
-	# Through Class::DBI
-	my $module = OME::Module->retrieve($id);
-
-	# Through OME::Factory
-	my $module = $factory->loadObject("OME::Module",$id);
-
-=head2 search
-
-	# Through Class::DBI
-	my @programs = OME::Module->
-	    search(name        => $name,
-	           module_type => $module_type);
-	my $programIterator = OME::Module->
-	    search(name        => $name,
-	           module_type => $module_type);
-
-	# Through OME::Factory
-	my $oneProgram = $factory->
-	    findObject("OME::Module",
-	               name        => $name,
-	               module_type => $module_type);
-	my @manyPrograms = $factory->
-	    findObjects("OME::Module",
-	                name        => $name,
-	                module_type => $module_type);
-	my $programIterator = $factory->
-	    findObjects("OME::Module",
-	                name        => $name,
-	                module_type => $module_type);
-
-=head2 search_like
-
-	# Through Class::DBI
-	my @programs = OME::Module->
-	    search_like(name        => $name,
-	                module_type => $module_type);
-	my $programIterator = OME::Module->
-	    search_like(name        => $name,
-	                module_type => $module_type);
-
-	# Through OME::Factory
-	my $oneProgram = $factory->
-	    findObjectLike("OME::Module",
-	                   name        => $name,
-	                   module_type => $module_type);
-	my @manyPrograms = $factory->
-	    findObjectsLike("OME::Module",
-	                    name        => $name,
-	                    module_type => $module_type);
-	my $programIterator = $factory->
-	    findObjectsLike("OME::Module",
-	                    name        => $name,
-	                    module_type => $module_type);
-
 =cut
 
-
 use strict;
-use Ima::DBI;
-use Class::Accessor;
 use OME::SessionManager;
 use OME::DBConnection;
-use Log::Agent;
+use OME::Database::Delegate;
+use DBI;
+use Carp;
 
-use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
+use UNIVERSAL::require;
 
-use fields qw(Debug _cache _session);
-__PACKAGE__->mk_accessors(qw(Debug));
-__PACKAGE__->set_db('Main',
-                  OME::DBConnection->DataSource(),
-                  OME::DBConnection->DBUser(),
-                  OME::DBConnection->DBPassword(), 
-                  { RaiseError => 1 });
-
-
-
-# new
-# ---
+use fields qw(__session __handlesAvailable __allHandles);
 
 sub new {
     my $proto = shift;
@@ -445,54 +355,113 @@ sub new {
 
     my ($session) = @_;
 
-    my $self = $class->SUPER::new();
-    $self->{_cache} = {};
-    $self->{_session} = $session;
-    $self->{Debug} = 1;
+    my $self = {
+                __session          => $session,
+                __handlesAvailable => [],
+                __allHandles       => [],
+               };
 
-    return $self;
+    return bless $self, $class;
 }
 
+sub DESTROY {
+    my $self = shift;
+    $self->__disconnectAll();
+}
 
-# Accessors
-# ---------
-
-sub DBH { my $self = shift; return $self->db_Main(); }
 sub Session { my $self = shift; return $self->{_session}; }
 
 sub __checkClass {
     my $class = shift;
-    logcroak "Malformed class name $class"
-      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+    croak "Malformed class name $class"
+      unless $class =~ /^\w+(\:\:\w+)*$/;
 }
 
-# loadObject
-# ----------
+sub obtainDBH {
+    my ($self) = @_;
+    my $handles = $self->{__handlesAvailable};
+
+    # If we have an unused handle in the queue, return it
+    if (@$handles) {
+        #carp "--- Obtaining DBH ".
+        #  scalar(@{$self->{__handlesAvailable}})."/".
+        #  scalar(@{$self->{__allHandles}});
+        return shift @$handles if @$handles;
+    }
+
+    # Otherwise, create a new one and return it.
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+    my $dbh = $delegate->
+      connectToDatabase(OME::DBConnection->DataSource(),
+                        OME::DBConnection->DBUser(),
+                        OME::DBConnection->DBPassword());
+    die "Cannot create database handle"
+      unless defined $dbh;
+    push @{$self->{__allHandles}}, $dbh;
+
+    #carp "--- Creating DBH #".scalar(@{$self->{__allHandles}});
+
+    return $dbh;
+}
+
+sub releaseDBH {
+    my ($self,$dbh) = @_;
+
+    croak "Cannot release a null DBH!" unless defined $dbh;
+    push @{$self->{__handlesAvailable}}, $dbh;
+
+    #carp "--- Releasing handle: ".
+    #  scalar(@{$self->{__handlesAvailable}})."/".
+    #  scalar(@{$self->{__allHandles}});
+
+    return;
+}
+
+sub __disconnectAll {
+    my ($self) = @_;
+    defined $_ && $_->disconnect() foreach @{$self->{__allHandles}};
+    $self->{__allHandles} = [];
+    $self->{__handlesAvailable} = [];
+}
+
+sub commitTransaction {
+    my ($self) = @_;
+    $_->commit() foreach @{$self->{__allHandles}};
+}
+
+sub rollbackTransaction {
+    my ($self) = @_;
+    $_->rollback() foreach @{$self->{__allHandles}};
+}
 
 sub loadObject {
-    my ($self, $class, $id) = @_;
+    my ($self, $class, $id, $columns_wanted) = @_;
 
-    return undef unless defined $id;
-
-    #my $classCache = $self->{_cache}->{$class};
-    #if (exists $classCache->{$id}) {
-    #    logdbg "debug", "loading cache $class $id" if $self->{debug};
-    #    return $classCache->{$id};
-    #} else {
-    #    logdbg "debug", "loading  new  $class $id" if $self->{debug};
-    #}
+    return undef unless defined $class && defined $id;
 
     __checkClass($class);
-    eval "require $class";
-    my $object = $class->retrieve($id) or return undef;
-    $object->Session($self->Session());
+    $class->require();
 
-    #$self->{_cache}->{$class}->{$id} = $object;
+    my $dbh = $self->obtainDBH();
+    my $object;
+    eval {
+        $object = $class->__newByID($self->{__session},
+                                    $dbh,
+                                    $id,
+                                    $columns_wanted);
+    };
+    $self->releaseDBH($dbh);
+
+    die $@ if $@;
+
     return $object;
+
 }
 
 sub loadAttribute {
-    my ($self, $semantic_type, $id) = @_;
+    my ($self, $semantic_type, $id, $columns_wanted) = @_;
+
+    return undef unless defined $semantic_type && defined $id;
 
     my $type =
       ref($semantic_type) eq "OME::SemanticType"?
@@ -500,23 +469,29 @@ sub loadAttribute {
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
     die "Cannot find attribute type $semantic_type"
-        unless defined $type;
+      unless defined $type;
 
-    return $type->__loadAttribute($id);
+    my $pkg = $type->requireAttributeTypePackage();
+
+    my $dbh = $self->obtainDBH();
+    my $attribute;
+    eval {
+        $attribute = $pkg->__newByID($self->{__session},
+                                     $dbh,
+                                     $id,
+                                     $columns_wanted);
+    };
+    $self->releaseDBH($dbh);
+
+    die $@ if $@;
+
+    return $attribute;
 }
-
-
-# objectExists
-# ------------
 
 sub objectExists {
     my ($self, $class, @criteria) = @_;
     return defined $self->findObject($class,@criteria);
 }
-
-
-# findObject
-# ----------
 
 sub findObject {
     my ($self, $class, @criteria) = @_;
@@ -524,51 +499,70 @@ sub findObject {
     return $objects? $objects->next(): undef;
 }
 
-
-# findObjects
-# -----------
-
 sub findObjects {
     my ($self, $class, @criteria) = @_;
 
     # If the caller is not looking for a value, don't do anything.
     return undef unless defined wantarray;
 
-    # Return undef if the criteria are not well-formed.
-    return undef unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
+    my $columns_wanted;
 
-    my $session = $self->Session();
+    # An array ref at the beginning of the criteria counts as
+    # $columns_wanted.
+    $columns_wanted = shift(@criteria)
+      if (ref($criteria[0]) eq 'ARRAY');
+
+    my $criteria;
+
+    # Let's accept a hash ref for the criteria, too.
+    if (ref($criteria[0]) eq 'HASH') {
+        $criteria = $criteria[0];
+    } else {
+        # Return undef if the criteria are not well-formed.
+        return undef
+          unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
+        $criteria = {@criteria};
+    }
+
+    my $session = $self->{__session};
 
     __checkClass($class);
-    eval "require $class";
+    $class->require();
+
+    my $dbh = $self->obtainDBH();
+    my ($sql,$ids_available) =
+      $class->__makeSelectSQL($columns_wanted,$criteria);
+    my $sth = $dbh->prepare($sql);
+    my @values = values %$criteria;
+    map { $_ = $_->[1] if ref($_) eq 'ARRAY' } @values;
+
     if (wantarray) {
-        # looking for a list
-        my @result = (scalar(@criteria) == 0)?
-          $class->retrieve_all():
-          $class->search(@criteria);
-        $_->Session($session) foreach @result;
+        # __makeSelectSQL should have created the where clause in
+        # keys-order, which will be the same order that values returns.
+        my @result;
+        eval {
+            $sth->execute(@values);
+
+            push @result, $_
+              while $_ = $class->__newInstance($session,$sth,
+                                               $ids_available,$columns_wanted);
+        };
+        $self->releaseDBH($dbh);
+        die $@ if $@;
         return @result;
     } else {
         # looking for a scalar
-        my $iterator = (scalar(@criteria) == 0)?
-          $class->retrieve_all():
-          $class->search(@criteria);
-        return OME::Factory::Iterator->new($iterator,$session);
+        my $iterator = OME::Factory::Iterator->
+          new($session,$self,$class,$dbh,$sth,
+              \@values,$ids_available,$columns_wanted);
+        return $iterator;
     }
 }
-
-
-# objectExists
-# ------------
 
 sub objectExistsLike {
     my ($self, $class, @criteria) = @_;
     return defined $self->findObjectLike($class,@criteria);
 }
-
-
-# findObject
-# ----------
 
 sub findObjectLike {
     my ($self, $class, @criteria) = @_;
@@ -576,136 +570,72 @@ sub findObjectLike {
     return $objects? $objects->next(): undef;
 }
 
-
-# findObjects
-# -----------
-
 sub findObjectsLike {
     my ($self, $class, @criteria) = @_;
 
     # If the caller is not looking for a value, don't do anything.
     return undef unless defined wantarray;
 
-    # Return undef if the criteria are not well-formed.
-    return undef unless (scalar(@criteria) > 0) && ((scalar(@criteria) % 2) == 0);
+    my $columns_wanted;
 
-    my $session = $self->Session();
+    # An array ref at the beginning of the criteria counts as
+    # $columns_wanted.
+    $columns_wanted = shift(@criteria)
+      if (ref($criteria[0]) eq 'ARRAY');
 
-    __checkClass($class);
-    eval "require $class";
-    if (wantarray) {
-        # looking for a list
-        my @result = $class->search_like(@criteria);
-        $_->Session($session) foreach @result;
-        return @result;
+    my $criteria;
+
+    # Let's accept a hash ref for the criteria, too.
+    if (ref($criteria[0]) eq 'HASH') {
+        $criteria = $criteria[0];
     } else {
-        # looking for a scalar
-        my $iterator = $class->search_like(@criteria);
-        return OME::Factory::Iterator->new($iterator,$session);
+        # Return undef if the criteria are not well-formed.
+        return undef
+          unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
+        $criteria = {@criteria};
+    }
+
+    foreach my $key (keys %$criteria) {
+        $criteria->{$key} = ['LIKE',$criteria->{$key}];
+    }
+
+    if (defined $columns_wanted) {
+        return $self->findObjects($class,$columns_wanted,$criteria);
+    } else {
+        return $self->findObjects($class,$criteria);
     }
 }
-
-
-# newObject
-# ---------
 
 sub newObject {
     my ($self, $class, $data) = @_;
 
     __checkClass($class);
-    eval "require $class";
-    my $object = $class->create($data);
-    $object->Session($self->Session());
-    return $object;
-}
+    $class->require();
 
-sub maybeNewObject {
-    my ($self, $class, $data) = @_;
-
-    __checkClass($class);
-    eval "require $class";
-    my $object = $class->find_or_create($data);
-    $object->Session($self->Session());
-    return $object;
-}
-
-sub newAttribute {
-    my ($self, $semantic_type, $target, $module_execution, $data_hash) = @_;
-
-    my $type =
-      ref($semantic_type) eq "OME::SemanticType"?
-        $semantic_type:
-        $self->findObject("OME::SemanticType",
-                          name => $semantic_type);
-    die "Cannot find attribute type $semantic_type"
-        unless defined $type;
-
-    #print STDERR "$semantic_type -> Session = ",$type->Session(),"\n";
-
-    my $granularity = $type->granularity();
-    if ($granularity eq 'D') {
-        $data_hash->{dataset_id} = $target;
-    } elsif ($granularity eq 'I') {
-        $data_hash->{image_id} = $target;
-    } elsif ($granularity eq 'F') {
-        $data_hash->{feature_id} = $target;
-    }
-
-    my $result = OME::SemanticType->newAttributes($self->Session(),
-                                                   $module_execution,
-                                                   $type => $data_hash);
-
-
-    # We're only creating one attribute, so it doesn't need to be
-    # wrapped in an array.
-    return undef if (!defined $result);
-    return $result->[0];
-}
-
-sub newAttributes {
-    my ($self, $target, $module_execution, @attribute_info) = @_;
-
-    my @real_info;
-
-    my $i;
-    my $length = scalar(@attribute_info);
-
-    for ($i = 0; $i < $length; $i += 2) {
-        my $semantic_type = $attribute_info[$i];
-        my $data_hash = $attribute_info[$i+1];
-
-        my $type =
-          ref($semantic_type) eq "OME::SemanticType"?
-            $semantic_type:
-            $self->findObject("OME::SemanticType",
-                              name => $semantic_type);
-        die "Cannot find attribute type $semantic_type"
-          unless defined $type;
-
-        #print STDERR "$semantic_type -> Session = ",$type->Session(),"\n";
-
-        my $granularity = $type->granularity();
-        if ($granularity eq 'D') {
-            $data_hash->{dataset_id} = $target;
-        } elsif ($granularity eq 'I') {
-            $data_hash->{image_id} = $target;
-        } elsif ($granularity eq 'F') {
-            $data_hash->{feature_id} = $target;
-        }
-
-        push @real_info, $type, $data_hash;
-    }
-
-    my $result = OME::SemanticType->newAttributes($self->Session(),
-                                                  $module_execution,
-                                                  @real_info);
-
-
-    return $result;
+    my $dbh = $self->obtainDBH();
+    my $object;
+    eval {
+        $object = $class->__createNewInstance($self->{__session},$dbh,$data);
+    };
+    $dbh->commit();
+    $self->releaseDBH($dbh);
+    die $@ if $@;
+    return $@? undef: $object;
 }
 
 sub findAttributes {
-    my ($self, $semantic_type, $target) = @_;
+    my ($self,$semantic_type,@criteria) = @_;
+
+    return undef unless defined $semantic_type;
+
+    if (scalar(@criteria) == 1 && (ref($criteria[0]) ne 'HASH')) {
+        # Old prototype - only a target is passed in
+        if (defined $criteria[0]) {
+            @criteria = ( target => $criteria[0] );
+        } else {
+            @criteria = ();
+        }
+    }
 
     my $type =
       ref($semantic_type) eq "OME::SemanticType"?
@@ -713,65 +643,138 @@ sub findAttributes {
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
     die "Cannot find attribute type $semantic_type"
-        unless defined $type;
+      unless defined $type;
 
-    return $type->findAttributes($target);
+    my $pkg = $type->requireAttributeTypePackage();
+
+    return $self->findObjects($pkg,@criteria);
 }
 
-=head1 AUTHOR
+sub newAttribute {
+    my ($self, $semantic_type, $target, $module_execution, $data) = @_;
 
-Douglas Creager (dcreager@alum.mit.edu)
+    return undef unless defined $semantic_type && defined $data;
 
-=head1 SEE ALSO
+    my $type =
+      ref($semantic_type) eq "OME::SemanticType"?
+        $semantic_type:
+        $self->findObject("OME::SemanticType",
+                          name => $semantic_type);
+    die "Cannot find attribute type $semantic_type"
+      unless defined $type;
 
-L<OME::DBObject|OME::DBObject>,
-L<OME::SemanticType|OME::SemanticType>
+    my $pkg = $type->requireAttributeTypePackage();
 
-=cut
+    $data->{target} = $target if defined $target;
+    $data->{module_execution} = $module_execution;
 
+    return $self->newObject($pkg,$data);
+}
 
 package OME::Factory::Iterator;
-
 our $VERSION = 2.000_000;
 
-use Class::DBI::Iterator;
+use strict;
 
-use fields qw(_iterator _session);
+use Carp;
 
-# The OME::Factory::Iterator class is a replacement for Class::DBI's
-# iterator.  It's constructor takes in a Class::DBI::Iterator and an
-# OME::Session.  The first and next methods delegate to the
-# Class::DBI::Iterator, must make sure that any object returned has
-# its Session set properly.
+use fields qw(__session __factory __dbh __sth __values
+              __class __ids __columns __open __executed);
 
 sub new {
+    #carp "*** Iterator new";
     my $proto = shift;
-    my $class = ref($proto) || $proto;
+    my $pclass = ref($proto) || $proto;
 
-    my ($iterator,$session) = @_;
+    my ($session,$factory,$class,$dbh,$sth,$values,$ids,$columns) = @_;
     my $self = {
-                _iterator => $iterator,
-                _session  => $session,
+                __session  => $session,
+                __factory  => $factory,
+                __class    => $class,
+                __dbh      => $dbh,
+                __sth      => $sth,
+                __values   => $values,
+                __ids      => $ids,
+                __columns  => $columns,
+                __open     => 1,
+                __executed => 0,
                };
 
-    return bless $self, $class;
+    return bless $self, $pclass;
 }
 
-sub __fix {
-    my ($self,$object) = @_;
-    $object->Session($self->{_session})
-      if defined $object;
-    return $object;
+sub DESTROY {
+    #carp "*** Iterator DESTROY";
+    my $self = shift;
+    $self->__close();
+}
+
+sub __execute {
+    my $self = shift;
+    $self->{__sth}->execute(@{$self->{__values}});
+    $self->{__executed} = 1;
+}
+
+sub __close {
+    my $self = shift;
+
+    #carp "*** Iterator close";
+
+    if ($self->{__open}) {
+        $self->{__factory}->releaseDBH($self->{__dbh});
+        $self->{__open} = 0;
+    }
 }
 
 sub first {
-    my ($self) = @_;
-    return $self->__fix($self->{_iterator}->first());
+    my $self = shift;
+
+    die "Cannot retrieve objects from a closed iterator"
+      unless $self->{__open};
+
+    $self->__execute();
+    return $self->next();
 }
 
 sub next {
-    my ($self) = @_;
-    return $self->__fix($self->{_iterator}->next());
+    my $self = shift;
+
+    die "Cannot retrieve objects from a closed iterator"
+      unless $self->{__open};
+
+    $self->__execute() unless $self->{__executed};
+
+    return $self->{__class}->
+      __newInstance($self->{__session},
+                    $self->{__sth},
+                    $self->{__ids},
+                    $self->{__columns});
+}
+
+sub finish {
+    my $self = shift;
+
+    die "Cannot retrieve objects from a closed iterator"
+      unless $self->{__open};
+
+    if ($self->{__executed}) {
+        $self->{__sth}->finish();
+        $self->{__executed} = 0;
+    }
+
+    return;
+}
+
+sub close {
+    my $self = shift;
+
+    die "Cannot retrieve objects from a closed iterator"
+      unless $self->{__open};
+
+    $self->finish();
+    $self->__close();
+
+    return;
 }
 
 1;

@@ -2,7 +2,7 @@
 # This module is the superclass of any Perl object stored in the
 # database.
 
-# Copyright (C) 2003 Open Microscopy Environment
+# Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
 #    This library is free software; you can redistribute it and/or
@@ -22,491 +22,675 @@
 
 package OME::DBObject;
 
-=head1 NAME
-
-OME::DBObject - OME-specific extensions to Class::DBI
-
-=head1 SYNOPSIS
-
-	# Enables caching for all OME database classes
-	OME::DBObject->Caching(1);
-
-	# Enables caching for all but one class
-	OME::DBObject->Caching(1);
-	OME::Module->Caching(0);
-
-	# Enables caching for all classes, but stores
-	# OME::Module's separately
-	OME::DBObject->Caching(1);
-	OME::Module->useSeparateCache();
-	     # ... load some objects ...
-	OME::Module->clearCache();
-	# At this point, cached OME::Modules are discarded,
-	# allowing them to be reread from the database.  All
-	# other cached objects remain.
-
-=head1 DESCRIPTION
-
-The OME system currently uses the L<Class::DBI|Class::DBI> module for
-most of its database interaction.  All OME database instance classes
-are declared to be subclasses of this class.  This class inherits most
-of its behavior from Class::DBI, as such, its manual page should be
-consulted for base behavior.
-
-The most prominent extension to Class::DBI provided by OME::DBObject
-is that of object caching.  During benchmark tests, it was noted that
-the Class::DBI framework often loaded instances of database classes
-for often than was necessary.  While this is the desired behavior when
-the objects in the database are changing often, if they are largely
-immutable than this adds an unnecessary strain to the database server,
-and slows down the scripts.  Caching the objects as they are loaded
-from the database can get around this problem.
-
-The caching implemented by OME::DBObject is not an all-or-nothing
-solution, however.  Caching can be enabled on a class-by-class basis,
-or turned on for all classes.  Separate caches can be maintained for
-each class, or all cached objects can be stored in one central cache.
-Combinations of these are also supported.
-
-The default mode of operation is for caching to be disabled, and for
-all cached objects to be stored in a single cache.
-
-=cut
-
 use strict;
 our $VERSION = 2.000_000;
 
-use Log::Agent;
 use Carp;
-use Ima::DBI;
 use Class::Data::Inheritable;
-use Class::Accessor;
-use OME::SessionManager;
-use OME::DBConnection;
+use UNIVERSAL::require;
+use OME::Database::Delegate;
 
-use base qw(Class::DBI Class::Accessor Class::Data::Inheritable);
-use fields qw(_session);
+use base qw(Class::Data::Inheritable);
+use fields qw(__session __id __fields __changeFields);
 
-__PACKAGE__->mk_classdata('AccessorNames');
-__PACKAGE__->mk_classdata('DefaultSession');
+# The columns known about each class.
+# __columns()->{$alias} = [$table,$column,$optional_fkey_class,$sql_options]
+__PACKAGE__->mk_classdata('__columns');
+
+# The locations known about each class.
+# __locations()->{$table}->{$column} = \@aliases
+__PACKAGE__->mk_classdata('__locations');
+
+# The "default" (usually "only") table
+__PACKAGE__->mk_classdata('__defaultTable');
+
+# The tables this class is stored in.  (This is a hash whose values
+# are undef, to simulate a set.)
+__PACKAGE__->mk_classdata('__tables');
+
+# The primary key columns (at most one per table)
+# __primaryKeys()->{$table} = $column
+__PACKAGE__->mk_classdata('__primaryKeys');
+
+# The sequence used to get new primary key ID's
+__PACKAGE__->mk_classdata('__sequence');
+
+# Whether this class has been defined
+__PACKAGE__->mk_classdata('__classDefined');
+
+# Whether this class is cached
 __PACKAGE__->mk_classdata('Caching');
-__PACKAGE__->mk_classdata('__cache');
-__PACKAGE__->AccessorNames({});
-__PACKAGE__->set_db('Main',
-                  OME::DBConnection->DataSource(),
-                  OME::DBConnection->DBUser(),
-                  OME::DBConnection->DBPassword(), 
-                  { RaiseError => 1 });
-
-# Default to no caching, and a single cache for all objects.
 
 __PACKAGE__->Caching(0);
-__PACKAGE__->__cache({});
+__PACKAGE__->__classDefined(0);
 
 
-=head1 METHODS
+sub newClass {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
 
-=head2 useSeparateCache
+    $class->__classDefined(1);
+    $class->__columns({});
+    $class->__locations({});
+    $class->__defaultTable(undef);
+    $class->__tables({});
+    $class->__primaryKeys({});
+    $class->__sequence(undef);
 
-	$class->useSeparateCache();
-
-Forces instances of $class to be stored in a separate cache.  This is
-not particularly useful without also using the clearCache method.
-Calling this method directly on OME::DBObject is also not useful,
-since it just redeclares the global object cache.  This is a
-irreversible operation over the lifetime of one Perl instance.
-
-NOTE: Calling this method (either on OME::DBObject or a subclass)
-after objects have already been stored in the appropriate cache will
-cause that cache to be cleared.  Calling this method on a subclass for
-the first time, after objects of that class have already been loaded
-from the database, will E<not> cause those objects to be removed from
-the global cache.  It E<will>, however, orphan them, as the caching
-mechanism will no longer look in the global cache for this class.
-
-=cut
-
-sub useSeparateCache {
-    my ($class) = @_;
-    # Create a separate cache for this class.
-    # (Class::Data::Inheritable does most of the work.)
-    $class->__cache({});
-}
-
-=head2 clearCache
-
-	$class->clearCache();
-
-Causes the cache for $class to be emptied.  The objects will be
-eligible for garbage collection, assuming there are no other
-references to them in other code.  Subsequent objects of this class
-will be reloaded from the databases.  If this method is called on
-OME::DBObject, or on a subclass which has not had useSeparateClass
-called on it, then the global cache will be emptied.
-
-=cut
-
-sub clearCache {
-    my ($class) = @_;
-    my $cache = $class->__cache();
-    %$cache = ();
-}
-
-
-# These next two methods check the cache first for the appropriate
-# object, if caching is enabled.  If caching is disabled, or the
-# object is not in the cache, these methods delegate to the behavior
-# inherited from Class::DBI.
-
-sub retrieve {
-    my ($class,$id) = @_;
-
-    if ($class->Caching()) {
-        # Check the cache
-
-        my $cache = $class->__cache();
-        if (exists $cache->{$class}->{$id}) {
-            # Found it
-
-            #logdbg "debug", "Retrieving from cache $class.$id";
-            return $cache->{$class}->{$id};
-        }
-
-        # Object not found, so delegate
-        #logdbg "debug", "Loading object $class.$id";
-        my $object = $class->SUPER::retrieve($id);
-
-        # Storing the object here turns out to be unnecessary, as
-        # retrieve calls construct, which will fill in the cache on
-        # its own.
-
-        # $cache->{$class}->{$id} = $object;
-
-        return $object;
-    } else {
-        # Caching off, so delegate
-        return $class->SUPER::retrieve($id);
-    }
-}
-
-sub construct {
-    my ($proto,$data) = @_;
-    my $class = ref $proto || $proto;
-
-    if ($proto->Caching()) {
-        my $cache = $proto->__cache();
-        my $primary = $class->primary_column();
-        my $id = $data->{$primary};
-
-        # Check the cache
-        if (exists $cache->{$class}->{$id}) {
-            # Found it
-
-            #logdbg "debug", "Retrieving from cache $class.$id\n";
-            return $cache->{$class}->{$id};
-        }
-
-        # Object not found, so delegate
-        #logdbg "debug", "Creating object $class.$id\n";
-        my $object = $proto->SUPER::construct($data);
-
-        # Store the object in the cache
-        $cache->{$class}->{$id} = $object;
-        return $object;
-    } else {
-        # Caching disabled, so delegate
-        return $proto->SUPER::construct($data);
-    }
-}
-
-
-# I put these next two routines in to aid in debugging.  Setting the
-# OME_CLASS_DBI_DEBUG environment variable to 1 will cause a debug
-# message to be displayed whenver this method is called.  Be
-# forewarned, it gets called a _lot_.  --DC
-
-sub columns {
-    my ($class) = shift;
-
-    if (exists $ENV{OME_CLASS_DBI_DEBUG} &&
-        $ENV{OME_CLASS_DBI_DEBUG} eq '1') {
-        logtrc "debug", "${class}->columns being called (".join(',',@_).")";
-    }
-
-    $class->SUPER::columns(@_);
-}
-
-sub _set_columns {
-    my ($class) = shift;
-
-    if (exists $ENV{OME_CLASS_DBI_DEBUG} &&
-        $ENV{OME_CLASS_DBI_DEBUG} eq '1') {
-        logtrc "debug", "${class}->_set_columns being called (".join(',',@_).")";
-    }
-
-    $class->SUPER::_set_columns(@_);
-}
-
-sub delete {
-    logcarp "Class::DBI::delete disabled";
     return;
 }
 
+sub setDefaultTable {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
 
-# Class::DBI's search routines do not correctly translate '= null' into
-# 'is null'.  This routine fixes that behavior.
+    my $table = shift;
+    die "setDefaultTable called with no parameters"
+      unless defined $table;
 
-sub _do_search {
-    my ($proto, $search_type, @args) = @_;
-    my $class = ref $proto || $proto;
-    @args = %{$args[0]} if ref $args[0] eq "HASH"; 
-    my (@cols, @vals);
-    while (my ($col, $val) = splice @args, 0, 2) {
-        $col = $class->_normalized($col) or next;
-        $class->_check_columns($col);
-        push @cols, $col;
-        push @vals, $val;
+    $table = lc($table);
+
+    $class->__defaultTable($table);
+
+    # Maintain a list of all the tables this class is stored in.
+    $class->__tables()->{$table} = undef;
+
+    return;
+}
+
+sub setSequence {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $sequence = shift;
+    die "setSequence called with no parameters"
+      unless defined $sequence;
+
+    $class->__sequence($sequence);
+    return;
+}
+
+sub __verifyLocation {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    # Verify that location refers to a valid DB location.
+    # (Alphanumeric, at most one period).
+
+    my $location = shift;
+    my ($table, $column);
+
+    if ($location =~ /^\w+$/) {
+        # Only a column was specified
+        $table = $class->__defaultTable();
+        die "No default table has been specified for $class"
+          unless defined $table;
+        $column = $location;
+    } elsif ($location =~ /^(\w+)\.(\w+)$/) {
+        # Both table and column were specified
+        $table = $1;
+        $column = $2;
+    } else {
+        die "Malformed database location: $location";
     }
+
+    return (lc($table),lc($column));
+}
+
+sub addPrimaryKey {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($location) = @_;
+
+    # Verify that the location is valid.
+    my ($table,$column) = $class->__verifyLocation($location);
+
+    #print "Adding primary key $table.$column to $class\n";
+
+    # Add an entry to __primaryKeys
+    $class->__primaryKeys()->{$table} = $column;
+
+    # Maintain a list of all the tables this class is stored in.
+    $class->__tables()->{$table} = undef;
+
+    return;
+}
+
+sub addColumn {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    # First two params are always the alias(es) and DB location.
+    my $aliases = shift;
+    my $location = shift;
+
+    # If the next parameter is a scalar, it's the fkey class.
+    my $foreign_key_class = shift if (!ref($_[0]));
+
+    # Any hash ref at the end is the SQL option hash.
+    my $sql_options = shift if (ref($_[0]) eq 'HASH');
+
+    # $aliases can be specified either as an array ref, or as a single
+    # scalar.  If it's a scalar, wrap it in an array ref to make the
+    # later code simpler.
+    $aliases = [$aliases] if !ref $aliases;
+
+    # Verify that the location is valid.
+    my ($table,$column) = $class->__verifyLocation($location);
+
+    # Verify that the foreign key class, if specified, is valid.
+    if (defined $foreign_key_class) {
+        die "Malformed class name $foreign_key_class"
+          unless $foreign_key_class =~ /^\w+(\:\:\w+)*$/;
+    }
+
+    #print "Adding $table.$column to $class\n";
+
+    foreach my $alias (@$aliases) {
+        # Create an entry in __columns
+        $class->__columns()->{$alias} = [$table,$column,
+                                         $foreign_key_class,
+                                         $sql_options];
+
+        # Create an accessor/mutator
+        my $accessor;
+
+        if (defined $foreign_key_class) {
+            $accessor = sub {
+                my $self = shift;
+                die "This instance did not load in $alias"
+                  unless exists $self->{__fields}->{$table}->{$column};
+                if (@_) {
+                    $self->{__changedFields}->{$table}->{$column}++;
+                    my $datum = shift;
+                    $datum = $datum->id() if ref($datum);
+                    return $self->{__fields}->{$table}->{$column} = $datum;
+                } else {
+                    my $datum = $self->{__fields}->{$table}->{$column};
+                    return $datum if ref($datum);
+                    return $self->{__session}->Factory()->
+                      loadObject($foreign_key_class,$datum);
+                }
+            };
+        } else {
+            $accessor = sub {
+                my $self = shift;
+                die "This instance did not load in $alias"
+                  unless exists $self->{__fields}->{$table}->{$column};
+                if (@_) {
+                    $self->{__changedFields}->{$table}->{$column}++;
+                    my $datum = shift;
+                    $datum = $datum->id() if ref($datum);
+                    return $self->{__fields}->{$table}->{$column} = $datum;
+                } else {
+                    return $self->{__fields}->{$table}->{$column};
+                }
+            };
+        }
+
+        no strict 'refs';
+        *{"$class\::$alias"} = $accessor;
+    }
+
+    # Maintain a list of all of the aliases that a stored in a
+    # database column.
+    push @{$class->__locations()->{$table}->{$column}}, @$aliases;
+
+    # Maintain a list of all the tables this class is stored in.
+    $class->__tables()->{$table} = undef;
+
+    return;
+}
+
+sub getColumn {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $alias = shift;
+
+    return $class->__columns()->{$alias};
+}
+
+sub hasMany {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($aliases, $foreign_key_class, $foreign_key_alias) = @_;
+
+    # $aliases can be specified either as an array ref, or as a single
+    # scalar.  If it's a scalar, wrap it in an array ref to make the
+    # later code simpler.
+    $aliases = [$aliases] if !ref $aliases;
+
+    # Verify that the foreign key class is specified and valid.
+    if (defined $foreign_key_class) {
+        die "Malformed class name $foreign_key_class"
+          unless $foreign_key_class =~ /^\w+(\:\:\w+)*$/;
+    } else {
+        die "hasMany called without a foreign key class";
+    }
+
+    #print "Adding has-many from $foreign_key_alias in $foreign_key_class to $class\n";
+
+    foreach my $alias (@$aliases) {
+        # Create an accessor/mutator
+        my $accessor = sub {
+            my $self = shift;
+            my $factory = $self->{__session}->Factory();
+            return $factory->findObjects($foreign_key_class,
+                                         $foreign_key_alias => $self->{__id});
+        };
+
+        no strict 'refs';
+        *{"$class\::$alias"} = $accessor;
+    }
+}
+
+sub __addJoins {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($columns_needed,$tables_used,$join_clauses) = @_;
+    my $keys = $class->__primaryKeys();
+    my ($first_table, $first_key);
+
+    foreach my $table (keys %$tables_used) {
+        my $key = $keys->{$table};
+        next unless defined $key;
+
+        if (defined $first_table) {
+            push @$join_clauses, "$table.$key = $first_key";
+        } else {
+            $first_table = $table;
+            $first_key = "$table.$key";
+            unshift @$columns_needed, "$first_key as id";
+        }
+    }
+
+    return ($first_table,$first_key);
+}
+
+sub __makeSelectSQL {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($columns_wanted,$criteria) = @_;
+
+    if ((!defined $columns_wanted) || (scalar(@$columns_wanted) <= 0)) {
+        $columns_wanted = [keys %{$class->__columns()}];
+    }
+
+    # These three variables will correspond to the three sections of
+    # the SELECT statement: the list of columns, the list of tables,
+    # and the WHERE clause.
+    my @columns_needed;
+    my %tables_used;
+    my @join_clauses;
+
+    my $columns = $class->__columns();
+
+    # Add each requested column to the @columns_needed array.  The
+    # contents of this array are valid DB locations, so we build this
+    # as necessary from the contents of the __columns array.  This
+    # loop also populates the %tables_used hash.
+    foreach my $column_alias (@$columns_wanted) {
+        my $column = $columns->{$column_alias};
+        confess "Column $column_alias does not exist"
+          unless defined $column;
+
+        push @columns_needed, $column->[0].".".$column->[1];
+
+        # We are just using the keys of this hash, so the value is
+        # unimportant.
+        $tables_used{$column->[0]} = undef;
+    }
+
+    my $id_criteria = 0;
+
+    # Look through the criteria, if there are any.  Add the criteria
+    # entries to the WHERE clause list, and also make sure that the
+    # tables used by each criterion are in the %tables_used hash.
+    if (defined $criteria) {
+        foreach my $column_alias (keys %$criteria) {
+            my $location;
+
+            # A key of "id" in the criteria hash is a special case -
+            # it will always refer to the primary key field.
+            if ($column_alias eq 'id') {
+                $location = "id";
+            } else {
+                my $column = $columns->{$column_alias};
+                confess "Column $column_alias does not exist"
+                  unless defined $column;
+                $location = $column->[0].".".$column->[1];
+                $tables_used{$column->[0]} = undef;
+            }
+
+            my $criterion = $criteria->{$column_alias};
+            my ($operation,$value);
+
+            if (ref($criterion) eq 'ARRAY') {
+                $value = $criterion->[1];
+                $operation = defined $value? $criterion->[0]: "is";
+            } else {
+                $value = $criterion;
+                $operation = defined $value? "=": "is";
+            }
+
+            # If the value is an object, assume that it has an id
+            # method, and use that in the SQL query.
+            $value = $value->id() if ref($value);
+
+            if ($location eq 'id') {
+                push @join_clauses, [$operation];
+                $id_criteria = 1;
+            } else {
+                push @join_clauses, "$location $operation ?";
+            }
+        }
+    }
+
+    # Add appropriate JOIN clauses to the array of WHERE clauses if
+    # more than one table was found in the list of requested columns.
+
+    my ($first_table,$first_key) =
+      $class->__addJoins(\@columns_needed,\%tables_used,\@join_clauses);
+
+    # Go through and replace all of the criteria applying to the
+    # primary key ID with the actual primary key field in the SQL
+    # statement
+    if ($id_criteria) {
+        die "Cannot search for an ID; none is in the SQL statement!"
+          unless defined $first_key;
+        map { $_ = "$first_key ".$_->[0]." ?" if ref($_); } @join_clauses;
+    }
+
+    my $sql = "select ". join(", ",@columns_needed). " from ".
+      join(", ",keys(%tables_used));
+
+    $sql .= " where ". join(" and ",@join_clauses)
+      if scalar(@join_clauses) > 0;
+
+    return ($sql,defined $first_key);
+}
+
+sub __makeInsertSQLs {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($dbh,$data_hash) = @_;
+
+    my @fields = keys %$data_hash;
+
+    my %tables_used;
+    my %columns_needed;
+    my %values_needed;
+    my %new_values;
+
+    my $sequence = $class->__sequence();
+    my $columns = $class->__columns();
+    my $keys = $class->__primaryKeys();
+
+    my $key_val;
+
+    foreach my $alias (@fields) {
+        my $datum = $data_hash->{$alias};
+        $datum = $datum->id() if ref($datum);
+
+        #print "   $alias\n";
+
+        if ($alias eq '__id') {
+            #print "     ID! $datum\n";
+            $key_val = $datum;
+            next;
+        }
+
+        my $column_def = $columns->{$alias};
+        confess "Column $alias does not exist"
+          unless defined $column_def;
+        my ($table, $column, $foreign_key_class, $sql_options) = @$column_def;
+
+        $tables_used{$table} = undef;
+        push @{$columns_needed{$table}}, $column;
+        push @{$values_needed{$table}}, "?";
+        push @{$new_values{$table}}, $datum;
+    }
+
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+    $key_val =
+      $delegate->getNextSequenceValue($dbh,$sequence)
+      if (!defined $key_val) && (defined $sequence);
+
+    my @sqls;
+    foreach my $table (keys %tables_used) {
+        #print "Table $table '$key_val'\n";
+        my $columns = $columns_needed{$table};
+        my $column_holders = $values_needed{$table};
+        my $values = $new_values{$table};
+        my $key = $keys->{$table};
+
+        die "Cannot update $table if we don't know the primary key!"
+          if defined $key && !defined $key_val;
+
+        if (defined $key) {
+            unshift @$columns, $key;
+            unshift @$column_holders, "?";
+            unshift @$values, $key_val;
+        }
+
+        my $sql = "insert into $table (". join(", ",@$columns).
+          ") values (". join(", ",@$column_holders). ")";
+        push @sqls, [$sql,$values];
+    }
+
+    return (\@sqls, $key_val);
+}
+
+sub __makeUpdateSQLs {
+    my $self = shift;
+
+    my @changed_tables = keys %{$self->{__changedFields}};
+    my %tables_used;
+    my %columns_needed;
+    my %new_values;
+
+    my $columns = $self->__columns();
+    my $keys = $self->__primaryKeys();
+
+    foreach my $table (@changed_tables) {
+        my @changed_columns = keys %{$self->{__changedFields}->{$table}};
+
+        foreach my $column (@changed_columns) {
+            $tables_used{$table} = undef;
+            push @{$columns_needed{$table}}, "$column = ?";
+            push @{$new_values{$table}}, $self->{__fields}->{$table}->{$column};
+        }
+    }
+
+    my @sqls;
+    foreach my $table (keys %tables_used) {
+        my $columns = $columns_needed{$table};
+        my $values = $new_values{$table};
+        my $key = $keys->{$table};
+        die "Cannot update $table if we don't know the primary key!"
+          unless defined $key;
+
+        push @$values, $self->{__id};
+
+        my $sql = "update $table set ". join(", ",@$columns).
+          " where $table.$key = ?";
+        push @sqls, [$sql,$values];
+    }
+
+    return \@sqls;
+}
+
+sub __createNewInstance {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($session,$dbh,$data_hash) = @_;
+    my ($sqls,$key_val) = $class->__makeInsertSQLs($dbh,$data_hash);
+
+    # FIXME: How do we want to handle atomicity?  Currently, if any of
+    # the INSERT statements fail, an undef object is returned, but
+    # none of the statements which succeeded are rolled back.  (This
+    # would require a hierarchical transaction system.)
+    foreach my $sql_entry (@$sqls) {
+        my ($sql,$values) = @$sql_entry;
+        #print "$sql\n  (",join(',',@$values),")\n";;
+        my $sth = $dbh->prepare($sql);
+        $sth->execute(@$values) or return undef;
+    }
+
+    # Make a copy of the fields
+    my %fields;
+
+    my $columns = $class->__columns();
+
+    foreach my $alias (keys %$columns) {
+        my $entry = $columns->{$alias};
+        my $table = $entry->[0];
+        my $column = $entry->[1];
+        $fields{$table}->{$column} = undef;
+    }
+
+    foreach my $alias (keys %$data_hash) {
+        my $entry = $columns->{$alias};
+        my $table = $entry->[0];
+        my $column = $entry->[1];
+        $fields{$table}->{$column} = $data_hash->{$alias};
+        #print "$table $column = $alias\n";
+    }
+
+    my $self = {
+                __session => $session,,
+                __fields  => \%fields,
+                __id      => $key_val,
+                __changedFields => {},
+               };
+
+    return bless $self,$class;
+}
+
+sub __writeToDatabase {
+    my ($self,$dbh) = @_;
+
+    my $sqls = $self->__makeUpdateSQLs();
+
+    # FIXME: Just like in __createNewInstance, we don't handle
+    # atomicity very well.
+    foreach my $sql_entry (@$sqls) {
+        my ($sql,$values) = @$sql_entry;
+        my $sth = $dbh->prepare($sql);
+        $sth->execute(@$values) or die "Cannot write object to database!";
+    }
+
+    $self->{__changedFields} = {};
+
+    return;
+}
+
+sub __newInstance {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($session,$sth,$id_available,$columns_wanted) = @_;
+    my $sth_vals;
+
+    return undef unless $sth_vals = $sth->fetch();
+
+    if ((!defined $columns_wanted) || (scalar(@$columns_wanted) <= 0)) {
+        $columns_wanted = [keys %{$class->__columns()}];
+    }
+
+    # Try to preallocate the field hash as closely as possible.
+    my %fields;
+    #keys %fields = scalar(@$sth_vals);
 
     my $i = 0;
-    my @col_sql = map {
-        defined $vals[$i++]?
-          " $_ $search_type ? ":
-          " $_ is ? ";
-    } @cols;
 
-    my $sql = join " AND ", @col_sql;
-    return $class->retrieve_from_sql($sql => @vals);
+    my $id;
+    if ($id_available) {
+        $id = $sth_vals->[$i++];
+    }
+
+    my $self = {
+                __session => $session,
+                __fields  => \%fields,
+                __id      => $id,
+                __changedFields => {},
+               };
+
+    # Place the values returned from the database into the __fields
+    # instance variable.  This will set the entries for a NULL field
+    # to be undef.  This means that when the accessor tries to
+    # retrieve a value, exists will return true, while defined will
+    # return false.
+    my $columns = $class->__columns();
+    foreach my $alias (@$columns_wanted) {
+        my $entry = $columns->{$alias};
+        my $table = $entry->[0];
+        my $column = $entry->[1];
+        $fields{$table}->{$column} = $sth_vals->[$i++];
+    }
+
+    return bless $self, $class;
 }
 
+sub __newByID {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
 
+    my ($session,$dbh,$id,$columns_wanted) = @_;
 
-# With v0.90 of Class::DBI, has_a does not inflate object lazily.
-# This is very bad, and so we translate all calls to has_a into
-# equivalent hasa calls.
+    $columns_wanted = [keys %{$class->__columns()}]
+      unless defined $columns_wanted && scalar(@$columns_wanted) > 0;
+    my ($sql,$id_available) = $class->__makeSelectSQL($columns_wanted,
+                                                      {id => $id});
 
-sub has_a {
-	my ($class, $column, $a_class, %meths) = @_;
-    #print STDERR "has_a deprecated\n";
-    $class->hasa($a_class,$column);
+    die "ID not available"
+      unless $id_available;
 
+    #print "\n$sql\n";
+
+    my $sth = $dbh->prepare($sql);
+    eval {
+        $sth->execute($id);
+    };
+    confess $@ if $@;
+
+    return $class->__newInstance($session,$sth,$id_available,$columns_wanted);
 }
 
+sub Session { return shift->{__session}; }
+sub id { return shift->{__id}; }
+sub ID { return shift->{__id}; }
 
-# We modify the has_a and has_many functions so that objects which are
-# inflated by Class::DBI (bypassing the factory) have their session
-# link set properly.
+sub storeObject {
+    my $self = shift;
 
-sub hasa {
-	my ($class, $f_class, $f_col) = @_;
-
-    # Allow Class::DBI to do its thing.
-    $class->SUPER::hasa($f_class,$f_col);
-
-    # If this relationship points to an OME::DBObject, its Session
-    # will need to be set up.
-
-    if ($f_class->isa("OME::DBObject")) {
-        my $accessor_name = $class->accessor_name($f_col);
-        #print STDERR "$class->hasa $accessor_name\n";
-
-        # Get the accessor method created by Class::DBI.
-        my $accessor;
-        {
-            local $SIG{__WARN__} = sub {};
-            no strict 'refs';
-            $accessor = \&{"$class\::$accessor_name"};
-        }
-
-        # Create a new accessor method, which loads the object via
-        # Class::DBI's accessor, and then sets the new object's
-        # Session to be the same as this object's Session.
-
-        my $new_accessor = sub {
-            my $self = shift;
-
-            if (@_) {
-                # If we're calling this as a mutator, we don't need to
-                # change the behavior any.
-                return $accessor->($self,@_);
-            } else {
-                my $obj = $accessor->($self);
-                #print STDERR ref($self)," accessor for ",ref($obj),"\n";
-                my $session = $self->Session();
-                #print STDERR "  setting Session to $session\n";
-                $obj->Session($session) if defined $obj;
-                return $obj;
-            }
+    if (%{$self->{__changedFields}}) {
+        my $session = $self->{__session};
+        my $factory = $session->Factory();
+        my $dbh = $factory->obtainDBH();
+        eval {
+            $self->__writeToDatabase($dbh);
         };
-
-        # Replace the old accessor with the new one.
-        {
-            local $SIG{__WARN__} = sub {};
-            no strict 'refs';
-            *{"$class\::$accessor_name"} = $new_accessor;
-        }
+        $factory->releaseDBH($dbh);
+        die $@ if $@;
     }
-}
 
-sub has_many {
-	my ($class, $accessor_name, $f_class, $f_key, $args) = @_;
-
-    # Allow Class::DBI to do its thing.
-    $class->SUPER::has_many($accessor_name,$f_class,$f_key,$args);
-
-    # If this relationship points to an OME::DBObject, its Session
-    # will need to be set up.
-
-    if ($f_class->isa("OME::DBObject")) {
-        # Get the accessor method created by Class::DBI.
-        my $accessor;
-        {
-            local $SIG{__WARN__} = sub {};
-            no strict 'refs';
-            $accessor = \&{"$class\::$accessor_name"};
-        }
-
-        # Create a new accessor method, which loads the object(s) via
-        # Class::DBI's accessor, and then sets the new objects'
-        # Session to be the same as this object's Session.
-
-        my $new_accessor = sub {
-            return undef unless defined wantarray;
-            my $self = shift;
-            my $session = $self->Session();
-            if (wantarray) {
-                my @results = $self->$accessor();
-                $_->Session($session) foreach @results;
-                return @results;
-            } else {
-                my $iterator = $self->$accessor();
-                return OME::Factory::Iterator->new($iterator,$session);
-            }
-        };
-
-        # Replace the old accessor with the new one.
-        {
-            local $SIG{__WARN__} = sub {};
-            no strict 'refs';
-            *{"$class\::$accessor_name"} = $new_accessor;
-        }
-    }
-}
-
-# Accessors
-# ---------
-
-sub Session {
-    my $self = shift;
-    if (@_) {
-        #print STDERR ref($self), "->Session() mutator\n" ;
-        return $self->{_session} = shift;
-    } else {
-        #carp ref($self).".Session() is undefined!"
-        #  unless defined $self->{_session};
-        if (defined $self->{_session}) {
-            return $self->{_session};
-        } else {
-            carp "We've got an object ($self) not created with the factory!";
-            return $self->DefaultSession();
-        }
-    }
-}
-
-sub ID {
-    my $self = shift;
-    return $self->id(@_);
-}
-
-sub accessor_name {
-    my ($class, $column) = @_;
-    my $names = $class->AccessorNames();
-    #print STDERR "$class->accessor_name($column) = ",$names->{$column},"\n";
-    return $names->{$column} if (exists $names->{$column});
-    return $column;
-}
-sub DBH { my $self = shift; return $self->db_Main(); }
-
-
-# Field accessor
-# --------------
-
-sub Field {
-    my $self = shift;
-    my $field = shift;
-
-    return $self->$field(@_);
-}
-
-=head2 storeObject
-
-	$dbObject->storeObject();
-
-Writes any unsaved changes to the database.
-
-=cut
-
-# We return explicitly to throw away the return value that
-# Class::DBI->commit might return.
-
-sub storeObject { shift->commit(); return; }
-
-
-=head2 writeObject
-
-	$dbObject->writeObject();
-
-This instance methods writes any unsaved changes to the database, and
-then commits the database transaction.
-
-B<NOTE: This method is deprecated.  New code should use the
-OME::DBObject-E<gt>storeObject and OME::Session-E<gt>commitTransaction
-methods.>
-
-=cut
-
-
-sub writeObject {
-    my $self = shift;
-    $self->commit();
-    $self->dbi_commit();
     return;
 }
 
-=head2 dissociateObject
-
-	$dbObject->disassociateObject('objectField');
-
-This instance method disassociates an associated object (from a 'has a' relationship).  
-The parameter passed is the field name that is used to acess the associated object.
-
-=cut
-
-
-sub dissociateObject {
+sub writeObject {
+    carp "**** writeObject is deprecated!";
     my $self = shift;
-    my $field = shift;
-    my $object = $self->$field();
-    my $objType = ref ($object);
-    return unless defined $objType and $objType;
-    my $primary = $objType->primary_column();
-    return unless defined $primary and $primary;
-
-	my $nullObject = $objType->construct({$primary => undef});
-	return unless defined $nullObject and $nullObject;
-
-	$self->$field ($nullObject);
+    $self->storeObject();
+    $self->{__session}->commitTransaction();
 }
 
-
-=head1 AUTHOR
-
-Douglas Creager (dcreager@alum.mit.edu)
-
-=head1 SEE ALSO
-
-L<Class::DBI|Class::DBI>, L<OME::Factory|OME::Factory>
-
-=cut
 
 1;

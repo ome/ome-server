@@ -26,8 +26,8 @@ our $VERSION = 2.000_000;
 
 use strict;
 
+use Carp;
 use Log::Agent;
-use Ima::DBI;
 use Class::Accessor;
 use Class::Data::Inheritable;
 use Apache::Session::File;
@@ -35,14 +35,9 @@ use OME::DBConnection;
 use Term::ReadKey;
 use POSIX;
 
-use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
+use base qw(Class::Accessor Class::Data::Inheritable);
 
-__PACKAGE__->set_db('Main',
-                  OME::DBConnection->DataSource(),
-                  OME::DBConnection->DBUser(),
-                  OME::DBConnection->DBPassword(), 
-                  { RaiseError => 1 });
-__PACKAGE__->set_sql('find_user',<<"SQL",'Main');
+use constant FIND_USER_SQL => <<"SQL";
       select attribute_id, password
         from experimenters
        where ome_name = ?
@@ -73,7 +68,7 @@ sub createSession {
     ($key) = @_ if scalar (@_) == 1;
 
     my $session;
-    
+
     if (defined $username and defined $password) { 
         $session = $self->createWithPassword($username,$password);
     } elsif (defined $key) {
@@ -182,7 +177,6 @@ sub createWithKey {
     $session->{SessionKey} = $apacheSession->{SessionKey};
     logdbg "debug", "createWithKey: {SessionKey}=".$session->{SessionKey};
     logdbg "debug", "createWithKey: SessionKey()=".$session->SessionKey();
-	$session->writeObject();
     return $session;
 }
 
@@ -201,24 +195,17 @@ sub getOMESession {
 
     return undef unless $username and $password;
 
-    my $sth = $self->sql_find_user();
-    # Added JM 13-03-03
-    $sth->execute($username) or $Err=$sth->errstr; 
- 
-    #while ( @row = $sth->fetchrow_array ) {
-     while ( @row = $sth->fetch ) { # IMA/DBI call
-       push (@tab, @row); 
-       $rows++;	       
-    }
+    my $bootstrap_factory = OME::Factory->new(undef);
 
-    if ($Err){
-	 $self->disconnect;
-	 return undef;
-	 
-    }
-    my ($experimenterID,$dbpass) = @tab;
+    my $dbh = $bootstrap_factory->obtainDBH();
+    my ($experimenterID,$dbpass);
+    eval {
+        ($experimenterID,$dbpass) =
+          $dbh->selectrow_array(FIND_USER_SQL,{},$username);
+    };
+    $bootstrap_factory->releaseDBH($dbh);
 
-
+    return undef if $@;
 
 
 
@@ -230,42 +217,41 @@ sub getOMESession {
     return undef unless defined $dbpass and defined $experimenterID;
     return undef if (crypt($password,$dbpass) ne $dbpass);
 
-    require OME::Session;
-    require OME::Factory;
-    require OME::DBObject;
-    my $session;
     logdbg "debug", "getOMESession: looking for session, experimenter_id=$experimenterID";
-    my @sessions = OME::Session->search ('experimenter_id' => $experimenterID);
-    $session = $sessions[0] if defined $sessions[0];
-    logdbg "debug", "getOMESession: found ".scalar(@sessions)." session(s)";
+    my $session = $bootstrap_factory->
+      findObject('OME::Session',experimenter_id => $experimenterID);
+    logdbg "debug", "getOMESession: found ".(defined $session)." session(s)";
 
 # FIXME:  This should probably be a remote host.
     my $host = `hostname`;
     chomp ($host);
 
-    if (not defined $session) {
-        $session = OME::Session->create ({
-            experimenter_id => $experimenterID,
-            started         => 'now',
-            last_access     => 'now',
-            host            => $host
-        });
+    if (!defined $session) {
+        $session = $bootstrap_factory->
+          newObject('OME::Session',
+                    {
+                     experimenter_id => $experimenterID,
+                     started         => 'now',
+                     last_access     => 'now',
+                     host            => $host
+                    });
         logdbg "debug", "getOMESession: created new session";
+    } else {
+        $session->last_access('now');
+        $session->host($host);
     }
+
+    $session->{__session} = $session;
     logdie ref($self)."->getOMESession:  Could not create session object"
       unless defined $session;
 
-
-    $session->last_access('now');
-    $session->host($host);
-    
-    OME::DBObject->DefaultSession($session);
     $session->{Factory} = OME::Factory->new($session);
     $session->{Manager} = $self;
 
     logdbg "debug", "getOMESession: updating session";
-    $session->writeObject();
-    $session->dbi_commit();
+    $session->storeObject();
+    $session->commitTransaction();
+
     logdbg "debug", "getOMESession: returning session";
     return $session;
 }
@@ -414,7 +400,8 @@ my ($key,$value);
 # Accessors
 # ---------
 
-sub DBH { my $self = shift; return $self->db_Main(); }
+sub DBH { croak "No!!!!!"; }
+#sub DBH { my $self = shift; return $self->db_Main(); }
 
 
 # failedAuthentication()
