@@ -79,7 +79,7 @@ my @libraries = (
 		return (0);
 	    }
 	},
-	valid_versions => ['ge 1.1.3'],
+	valid_versions => ['ge "1.1.3"'],
 	repository_file => "$REPOSITORY/zlib-1.1.4.tar.gz",
     },{
 	name => 'libxml2',
@@ -109,7 +109,7 @@ my @libraries = (
 	    return $? == 0 ? $version : undef;
 	},
 	repository_file => "$REPOSITORY/libxslt-1.0.30.tar.gz",
-	valid_versions => ['ge 1.0.30'],
+	valid_versions => ['ge "1.0.30"'],
 	#installModule => \&LibXSLTInstall,
     },{
 	name => 'bzlib',
@@ -120,21 +120,30 @@ my @libraries = (
 	    # app with bzlib support. Not to mention it only includes the
 	    # "main" version not the full one, as far as I can tell there's
 	    # absolutely no way to decern version 1.0 from 1.0.2 in the source.
-	    q{
+	    q(
 	    #include "bzlib.h"
 	    int main () {
 		printf ("%s", "N/A");
+		foo
 		return (0);
 	    }
+	),
+	configure_library => sub {
+	    my ($path, $logfile) = @_;
+	    
+	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+	    print $logfile "BZLIB DOESN'T NEED TO BE CONFIGURED -- SKIPPING CONFIGURATION\n";
+
+	    return 1;
 	},
 	repository_file => "$REPOSITORY/bzip2-1.0.2.tar.gz",
 	#installModule => \&bzlibInstall,
     },{
 	name => 'tiff',
 	get_library_version =>
-	    # Semi-ganked from GAIM (http://gaim.sourceforge.net/) cvs rc line parser
-	    # src/gaimrc.c -- parse_line ()
-	    # Thanks to ChipX86 for the great idea, this version stub rocks.
+	# Semi-ganked from GAIM (http://gaim.sourceforge.net/) cvs rc line parser
+	# src/gaimrc.c -- parse_line ()
+	# Thanks to ChipX86 for the great idea, this version stub rocks.
 	    q(
 	    #include "tiffvers.h"
 	    int main () {
@@ -153,7 +162,25 @@ my @libraries = (
 	    return (0);
 	    }
 	),
-	valid_versions => ['ge "3.6.7"'],
+	configure_library => sub {
+	    # Since libtiff has an interactive configure script we need to
+	    # implement a custom configure_library () subroutine that allows
+	    # for an interactive install
+	    
+	    my ($path, $logfile) = @_;
+	    my $iwd = getcwd;  # Initial working directory
+
+	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+	    system ("./configure 2>&1");
+
+	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
+
+	    return 1;
+	},
+	valid_versions => ['ge "3.5.7"'],
 	repository_file => "$REPOSITORY/tiff-v3.5.7-OSX-LZW.tar.gz",
 	#installModule => \&tiffInstall,
     }
@@ -183,7 +210,7 @@ sub install {
     my $library = shift;
     print "$library->{repository_file}\n";
     my $filename = basename ($library->{repository_file});  # Yes, it works on URL's too *cheer*
-    my $retval;
+    my $retval = 0;
     my @output;
 
     $EUID = 0;
@@ -194,13 +221,13 @@ sub install {
 
     # Pre-install
     if (exists $library->{pre_install}) {
-	print "  \\_ Pre-install ";
+	print "    \\_ Pre-install ";
 	&{$library->{pre_install}};
 	print BOLD, "[SUCCESS]", RESET, ".\n";
     }
 
     # Download
-    print "  \\_ Downloading $library->{repository_file} ";
+    print "    \\_ Downloading $library->{repository_file} ";
     $retval = download_package ($library, $LOGFILE);
 
     print BOLD, "[FAILURE]", RESET, ".\n"
@@ -209,7 +236,7 @@ sub install {
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Unpack
-    print "  \\_ Unpacking ";
+    print "    \\_ Unpacking ";
     $retval = unpack_archive ($filename, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
@@ -224,8 +251,9 @@ sub install {
     my $wd = basename ($filename, ".tar.gz");
 
     # Configure
-    print "  \\_ Configuring ";
-    $retval = configure_library ($wd, $LOGFILE);
+    print "    \\_ Configuring ";
+    $retval = &{$library->{configure_library}}($wd, $LOGFILE) if exists $library->{configure_library};
+    $retval = configure_library ($wd, $LOGFILE) unless exists $library->{configure_library};
     
     print BOLD, "[FAILURE]", RESET, ".\n"
         and croak "Unable to configure library, see LibraryTask.log for details."
@@ -233,7 +261,7 @@ sub install {
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Compile
-    print "  \\_ Compiling ";
+    print "    \\_ Compiling ";
     $retval = compile_module ($wd, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
@@ -246,7 +274,7 @@ sub install {
     ### TEMPORARY
 
     # Install
-    print "  \\_ Installing ";
+    print "    \\_ Installing ";
     $retval = install_module ($wd, $LOGFILE);
 
     print BOLD, "[FAILURE]", RESET, ".\n"
