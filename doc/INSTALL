@@ -41,6 +41,7 @@ required for operation:
  * openssl (version 0.9.5 or later)
  * libpng
  * libtiff (version 3.5.7 or later)
+ * libjpeg
  * gd
  * libdb (Berkeley DB1 or later with DB1 compatability)
  * libxml2 (version 2.4.20 or later)
@@ -163,6 +164,9 @@ during installation):
 
 __________________________
 Performing An Installation
+
+*NOTE* Please make sure the PostgreSQL postmaster is started before beginning
+your installation.
 
 The install and deployment of OME is started by executing the following *as the
 UNIX root user* in the root of your distribution:
