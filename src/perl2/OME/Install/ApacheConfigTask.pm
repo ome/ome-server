@@ -37,6 +37,7 @@ use warnings;
 use English;
 use Carp;
 use File::Copy;
+use File::Spec;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 use Cwd;
@@ -180,17 +181,18 @@ sub getApacheBin {
 
 	# First, get the httpd executable.
 	$httpdBin = which ('httpd')
-	                      || which ('apache')
-						  || whereis ("httpd")
-						  || croak "Unable to locate httpd binary";
+	            || which ('httpd2')
+	            || which ('apache')
+	            || which ('apache2')
+	            || whereis ('httpd')
+	            || croak "Unable to locate httpd binary";
 	croak "Unable to execute httpd binary ($httpdBin)" unless -x $httpdBin;
 	$apache_info->{bin} = $httpdBin;
 
 	$apache_info->{apachectl} = which ('apachectl')
-	                            || which ('apachectl-ssl')
-								|| whereis ("apachectl")
-								|| croak "Unable to locate apachectl binary";
-	
+	                            || which ('apache2ctl')
+	                            || whereis ("apachectl")
+	                            || croak "Unable to locate apachectl binary";
 
 	# Get the location of httpd.conf from the compiled-in options to httpd
 	$httpdConf = `$httpdBin -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`;
@@ -214,14 +216,75 @@ sub getApacheBin {
 	return $apache_info;
 }
 
-
 sub getApacheInfo {
 	my $apache_info = shift;
 	my ($httpdConf,$omeConf);
+	my ($mod_loaded,$mod_added,$mod_loaded_off,$mod_added_off);
+	my @include_paths;
+
+	my @search_items = (
+		# XXX Example
+		#{
+		#	search_elem => scalar refrerence to target (flag[1|0] or variable)
+		#	regex       => perl compatible regex
+		#},
+		{
+			# The apache server's "ServerRoot" (root for config files)
+			search_elem => \$apache_info->{ServerRoot},
+			regex       => '^\s*ServerRoot\s+["]*([^"|\n]+)["]*',
+		},
+		{
+			# Conf file has an ome conf
+			search_elem => \$apache_info->{hasOMEinc},
+			regex       => '\s*Include $omeConf',
+		},
+		{
+			# Conf file has mod_perl loaded
+			search_elem => \$mod_loaded,
+			regex       => '^\s*LoadModule\s+perl_module',
+		},
+		{
+			# Conf file has mod_perl added
+			search_elem => \$mod_added,
+			regex       => '^\s*AddModule\s+mod_perl.c',
+		},
+		{
+			# Conf file has mod_perl loader commented out (off)
+			search_elem => \$mod_loaded_off,
+			regex       => '#\s*LoadModule\s+perl_module',
+		},
+		{
+			# Conf file has mod_perl add commented out (off)
+			search_elem => \$mod_added_off,
+			regex       => '#\s*AddModule\s+mod_perl.c',
+		},
+		{
+			# Document root
+			search_elem => \$apache_info->{DocumentRoot},
+			regex       => '^\s*DocumentRoot\s+["]*([^"|\n]+)["]*',
+		},
+		{
+			# cgi-bin script alias location
+			search_elem => \$apache_info->{cgi_bin},
+			regex       => '^\s*ScriptAlias\s+\/cgi-bin\/\s+["]*([^"|\n]+)["]*',
+		},
+	);
+
+	my $search_func = sub {
+		local (*FILE) = shift;
+
+		while (<FILE>) {
+			foreach my $search_item (@search_items) {
+				if ($_ =~ /$search_item->{'regex'}/) {
+					# Set variable with regex data or flag to 1
+					${$search_item->{'search_elem'}} = $1 || 1;
+				}
+			}
+		}
+	};
 
 	$httpdConf = $apache_info->{conf};
 	
-
 	print STDERR  "Apache configuration file ($httpdConf) does not exist\n" unless -e $httpdConf;
 	print STDERR  "Apache configuration file ($httpdConf) is not readable\n" unless -r $httpdConf;
 #	confirm_path ('Apache configuration file', $httpdConf);
@@ -232,27 +295,43 @@ sub getApacheInfo {
 	$apache_info->{conf_bak} = $httpdConf.'.bak.ome';
 	$omeConf = $apache_info->{ome_conf};
 
-	# Parse httpd.conf to see if it includes ome.conf
-	if ( open(FILE, "< $httpdConf") ) {
-		my ($mod_loaded,$mod_added,$mod_loaded_off,$mod_added_off);
-		while (<FILE>) {
-			$apache_info->{hasOMEinc} = 1 if $_ =~ /\s*Include $omeConf/;
-			$mod_loaded = 1 if $_ =~ /^\s*LoadModule perl_module/;
-			$mod_added = 1 if $_ =~ /^\s*AddModule mod_perl.c/;
-			$mod_loaded_off = 1 if $_ =~ /#\s*LoadModule\s+perl_module/;
-			$mod_added_off = 1 if $_ =~ /#\s*AddModule\s+mod_perl\.c/;
-			$apache_info->{DocumentRoot} = $1 if $_ =~ /^\s*DocumentRoot\s+["]*([^"]+)["]*/;
-			$apache_info->{cgi_bin} = $1 if $_ =~ /^\s*ScriptAlias\s+\/cgi-bin\/\s+["]*([^"]+)["]*/;
-			# FIXME: Some versions of apache use no quotes
+	# Open the root apache conf file
+	open(FILE, "< $httpdConf")
+		or croak "Couldn't open '$httpdConf' for reading: $!\n";
+
+	# Search for includes that aren't the ome conf
+	while (<FILE>) {
+		if ($_ =~ /\s*Include\s(.*)/ and $1 ne $omeConf) {
+			push (@include_paths, $1)
 		}
-		$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
-		$apache_info->{mod_perl_off} = 1 if ($mod_loaded_off or $mod_added_off);
-	} else {
-		print STDERR  "Could not open httpd.conf ($httpdConf) for reading: $!\n";
 	}
 
-	chomp $apache_info->{DocumentRoot} if $apache_info->{DocumentRoot};
-	chomp $apache_info->{cgi_bin} if $apache_info->{cgi_bin};
+	# Reposition file cursor
+	seek (FILE, 0, 0);
+	
+	# Parse the root apache conf file
+	&$search_func(*FILE);
+
+	close(FILE);
+	
+	# Parse each of the files included from the root apache conf file
+	foreach my $path (@include_paths) {
+		if (not File::Spec->file_name_is_absolute($path)) {
+			# Non-absolute path must be off the ServerRoot
+			$path = File::Spec->catdir($apache_info->{'ServerRoot'}, $path);
+		}
+
+		foreach my $file (glob($path)) {
+			open (FILE, '<', $file) 
+				or croak "Couldn't open '$file' for reading: $!\n";
+		
+			&$search_func(*FILE);
+			close (FILE);
+		}
+	}
+
+	$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
+	$apache_info->{mod_perl_off} = 1 if ($mod_loaded_off or $mod_added_off);
 
 	return $apache_info;
 }
@@ -321,7 +400,6 @@ sub execute {
 		}
 
 		$confirm_all = 0;
-		print "\n";  # Spacing
 
 		if (! y_or_n('Configure Apache server?','y') ) {
 			$APACHE->{DO_CONF}  = 0;
