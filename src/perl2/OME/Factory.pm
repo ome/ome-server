@@ -723,7 +723,6 @@ sub newObject {
     eval {
         $object = $class->__createNewInstance($self->{__ourDBH},$data);
     };
-    $self->{__ourDBH}->commit();
     die $@ if $@;
     return $@? undef: $object;
 }
