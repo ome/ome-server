@@ -43,6 +43,9 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Web::Helper::HTMLFormat;
+use OME::Analysis::Engine;
+use OME::Tasks::AnnotationManager;
+use OME::Tasks::ChainManager;
 use OME::Tasks::AEFacade;
 
 
@@ -57,6 +60,7 @@ sub getPageBody {
 	my	$self = shift ;
 	my 	$cgi = $self->CGI() ;
 	my	$session=$self->Session();
+    my  $factory = $session->Factory();
 	my 	$body="" ;	
 	my 	$HTMLFormat=new OME::Web::Helper::HTMLFormat;
 	
@@ -64,7 +68,7 @@ sub getPageBody {
 	if ($cgi->param('Execute')){
 		my %h=();
 		$h{MinimumSpotVolume}=$cgi->param('MinSpotVolume');
-		$h{Channel}=$cgi->param('Channel'); 
+		$h{Channel}=$cgi->param('Channel');
 		$h{ThresholdType}=$cgi->param('ThresholdType');
 		$h{ThresholdValue}=$cgi->param('ThresholdValue');
 		
@@ -78,29 +82,38 @@ sub getPageBody {
 
 
 		##################################
-		if ($cgi->param('startTime') eq 'Begining'){
-			#$h{TimeStart}="";
-			$h{TimeStart}=0;
-
-		}else{
+		if ($cgi->param('startTime') ne 'Begining'){
 			$h{TimeStart}=$cgi->param('Start');
-		}
-		if ($cgi->param('stopTime') eq 'End'){
-			#$h{TimeStop}="";
-			$h{TimeStop}=0;
-
-		}else{
+		} else {
+            $h{TimeStart} = undef;
+        }
+		if ($cgi->param('stopTime') ne 'End'){
 			$h{TimeStop}=$cgi->param('Stop');
+		} else {
+            $h{TimeStop} = undef;
 		}
 
+        # Create a user input MEX for the user inputs
 		my $attributeType="FindSpotsInputs";
-		my $facade= OME::Tasks::AEFacade->new($session);
-		my ($rep,$message)=$facade->executeView($session->dataset(),"Find and track spots","Parameters","Find spots",\%h,$attributeType);
-	 	if (not defined $rep){
-			$body.="<b>".$message."</b>";
+        my $mex = OME::Tasks::AnnotationManager->
+          annotateGlobal($attributeType,\%h);
+        my $cmanager = OME::Tasks::ChainManager->new();
+        my $chain = $cmanager->getChain('Find and track spots');
+        my $node  = $cmanager->getNode($chain,'Find spots');
+        my $input = $cmanager->getFormalInput($chain,$node,'Parameters');
+        my $user_inputs = { $input->id() => $mex };
+        eval {
+            OME::Analysis::Engine->
+                executeChain($chain,$session->dataset(),$user_inputs);
+        };
+
+	 	if ($@) {
+			$body.="There was an error executing this chain:<br><b>$@</b>";
 			return ('HTML',$body);
 
-		}
+		} else {
+            $body.="Done!";
+        }
 	
 	}else{
 		my @ref=$session->dataset()->images();

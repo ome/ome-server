@@ -39,8 +39,10 @@ use OME::Session;
 use OME::SessionManager;
 use OME::AnalysisChain;
 use OME::Dataset;
-use OME::Analysis::AnalysisEngine;
+use OME::Analysis::Engine;
 use OME::Tasks::ChainManager;
+use OME::Tasks::AnnotationManager;
+use OME::Tasks::ModuleExecutionManager;
 use Term::ReadKey;
 
 # I really hate those "method clash" warnings, especially since these
@@ -74,14 +76,14 @@ my $factory = $session->Factory();
 my $chain = $factory->loadObject("OME::AnalysisChain",$chainID);
 my $dataset = $factory->loadObject("OME::Dataset",$datasetID);
 
-my $engine = OME::Analysis::AnalysisEngine->new();
+my %flags;
 
 foreach my $flag_string (@ARGV) {
     my ($flag,$value) = split(/=/,$flag_string,2);
     if ($flag eq "Cached") {
         OME::DBObject->Caching($value);
     } else {
-        $engine->Flag($flag,$value);
+        $flags{$flag} = $value;
     }
 }
 
@@ -110,10 +112,11 @@ foreach my $user_input (@$user_input_list) {
     }
 
     my @columns = $semantic_type->semantic_elements();
-    my @attributes;
+    my $mex;
 
     if ($new eq 'N') {
         my $count = 0;
+        my @data_hashes;
 
       LIST_LOOP:
         while (1) {
@@ -133,11 +136,14 @@ foreach my $user_input (@$user_input_list) {
                 $data_hash->{$column_name} = $value;
             }
 
-            my $attribute = $factory->
-              newAttribute($semantic_type,undef,undef,$data_hash);
-            push @attributes,$attribute;
+            push @data_hashes, $semantic_type, $data_hash;
         }
+
+        $mex = OME::Tasks::AnnotationManager->
+          annotateGlobal(@data_hashes);
     } else {
+        my @attributes;
+
         print "  Type in a list of attribute ID's, separated by spaces.\n";
         print "  [Enter] by itself will terminate the list.\n";
 
@@ -166,12 +172,15 @@ foreach my $user_input (@$user_input_list) {
                 push @attributes, $attribute;
             }
         }
+
+        $mex = OME::Tasks::ModuleExecutionManager->
+          createVirtualMEX(\@attributes);
     }
 
-    $user_inputs{$node->id()}->{$formal_input->id()} = \@attributes;
+    $user_inputs{$formal_input->id()} = $mex;
 }
 
-$engine->executeAnalysisView($session,$chain,\%user_inputs,$dataset);
+OME::Analysis::Engine->executeChain($chain,$dataset,\%user_inputs,%flags);
 
 #$session->BenchmarkTimer->report();
 

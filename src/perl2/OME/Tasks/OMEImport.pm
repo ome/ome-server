@@ -46,6 +46,7 @@ use Log::Agent;
 use XML::LibXML;
 use XML::LibXSLT;
 
+use OME::Analysis::Engine;
 use OME::ImportExport::SemanticTypeImport;
 use OME::ImportExport::ModuleImport;
 use OME::ImportExport::ChainImport;
@@ -208,8 +209,8 @@ sub processDOM {
 				if !defined $chain;
 		} else {
 			logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
-			my $engine = OME::Analysis::AnalysisEngine->new();
-			$engine->executeAnalysisView($self->{session},$chain,{},$importDataset);
+			OME::Analysis::Engine->
+                executeChain($chain,$importDataset,{});
 		}
 	}
 

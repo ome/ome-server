@@ -43,7 +43,7 @@ use OME;
 $VERSION = $OME::VERSION;
 
 use OME::DBObject;
-use OME::Analysis::AnalysisEngine;
+use OME::Analysis::Engine;
 use OME::Tasks::ChainManager;
 
 use base qw{ OME::Web };
@@ -68,8 +68,8 @@ sub getPageBody {
 		return ('HTML', $self->collect_user_inputs( $chain ) ) if ( scalar @$user_input_list );
 		
 		# execute chain
-		my $engine = OME::Analysis::AnalysisEngine->new();
-		my $analysis_chain_execution = $engine->executeAnalysisView($session,$chain,undef,$session->dataset)
+		my $analysis_chain_execution = OME::Analysis::Engine->
+          executeChain($chain,$session->dataset,{})
 			or die "Could not execute analysis chain";
 			
 		# display results

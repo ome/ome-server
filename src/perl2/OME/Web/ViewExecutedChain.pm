@@ -44,7 +44,6 @@ $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use OME::Web::Helper::JScriptFormat;
-use OME::Analysis::AnalysisEngine;
 use OME::Tasks::ChainManager;
 
 use base qw{ OME::Web };
