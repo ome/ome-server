@@ -379,7 +379,7 @@ sub Session {
         if (defined $self->{_session}) {
             return $self->{_session};
         } else {
-            carp "We've got an object not created with the factory!";
+            carp "We've got an object ($self) not created with the factory!";
             return $self->DefaultSession();
         }
     }
