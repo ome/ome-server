@@ -41,14 +41,8 @@
 
 
 package org.openmicroscopy.vis.chains;
-import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
-import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
-import org.openmicroscopy.vis.chains.events.ProjectSelectionEvent;
-import org.openmicroscopy.vis.chains.events.ProjectSelectionEventListener;
-import org.openmicroscopy.vis.chains.events.ExecutionSelectionEvent;
-import org.openmicroscopy.vis.chains.events.ExecutionSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.SelectionEvent;
+import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CChain;
@@ -77,10 +71,7 @@ public class SelectionState {
 	private Collection activeProjects = null;
 	
 	// listener lists
-	private EventListenerList chainListeners = new EventListenerList();
-	private EventListenerList datasetListeners = new EventListenerList();
-	private EventListenerList projectListeners = new EventListenerList();
-	private EventListenerList executionListeners = new EventListenerList();
+	private EventListenerList selectionListeners = new EventListenerList();
 	
 	public SelectionState() {
 		
@@ -93,26 +84,32 @@ public class SelectionState {
 	
 	public  void setCurrentExecution(ChainExecution exec) {
 		currentExecution = exec;
-		fireExecutionSelectionEvent();
+		fireSelectionEvent();
 	}
 	
 	
 	// CHAIN
 	
-	public void setCurrentChain(CChain newChain) {
-		CChain eventChain = null;
-		int status;
-		if (newChain == null) {
-			eventChain = currentChain;
-			if (eventChain == null) // if old chain was null and so is new 
-				return; // no need for an event.
-			status = ChainSelectionEvent.DESELECTED;
+	public void setSelectedChain(CChain newChain) {
+		currentChain = newChain;
+		if (newChain == null)
+			return; // this should not happen
+		activeDatasets = newChain.getDatasetsWithExecutions();
+		activeProjects = null;
+		if (currentDataset!= null) {
+			if (!activeDatasets.contains(currentDataset))
+				currentDataset = null;
 		}
-		else  {// not a null chain
-			eventChain = newChain;
-			status = ChainSelectionEvent.SELECTED;
+		if (currentDataset == null)  { // current dataset is null
+			currentProject = null;
+		} else { //current dataset is not null..
+			if (currentProject != null &&
+					!currentProject.getDatasets().contains(currentDataset)) {
+				currentProject = null;
+			}
 		}
-		fireChainSelectionChanged(eventChain,status);	
+		
+		fireSelectionEvent();	
 	}
 	
 	public CChain getCurrentChain() {
@@ -121,134 +118,91 @@ public class SelectionState {
 	
 	// PROJECT
 	
-	public void setProjectSelections(Collection active,Project current) {
-		activeProjects = active;
-		currentProject  = current;
-		fireProjectSelectionEvent();			
+	
+	public void setSelectedProject(Project current) {
+		currentProject = current;
+		if (currentProject != null) {
+			activeDatasets = currentProject.getDatasets(); 
+			if (!activeDatasets.contains(currentDataset)) {
+				currentDataset = null;
+				activeProjects =null;
+			}
+		}
+		else 
+			activeDatasets=null;
+		fireSelectionEvent();
 	}
 	
+
 	public Collection getActiveProjects() {
 		return activeProjects;
 	}
 	
-	public Project getCurrentProject() {
+	public Project getSelectedProject() {
 		return currentProject;
 	}
 	
 	// DATASETS
 	
-	public void setDatasetSelections(Collection active,CDataset current) {
-		activeDatasets = active;
-		currentDataset  = current;
-		fireDatasetSelectionEvent();
+	public void setSelectedDataset(CDataset current) {
+		System.err.println("setting dataset to "+current);
+		currentDataset = current;
+		if (currentDataset != null) {
+			activeProjects = currentDataset.getProjects();
+			if (!activeProjects.contains(currentProject))
+				currentProject = null;
+		}
+	    else {
+	    	activeProjects = null;
+	    	
+	    }
+    	if (currentProject!=null) {
+    		System.err.println("current project is not null..");
+    		if (currentDataset != null && 
+    				!currentProject.getDatasets().contains(currentDataset)) {
+    			currentProject =null;
+    			System.err.println("current project doesn't contain dataset");
+    			System.err.println("setting to null...");
+    		}
+    		else {
+    			System.err.println("setting active datasets");
+    			activeDatasets = currentProject.getDatasets();
+    		}
+    	} 	else {
+    		activeDatasets =null;
+    	
+    	}
+	   	//chains with executions are selected.
+		fireSelectionEvent();
 	}
 
-	public CDataset getCurrentDataset() {
+	public CDataset getSelectedDataset() {
 		return currentDataset;
 	}
 
 	public Collection getActiveDatasets() {
 		return activeDatasets;
 	}
-
-	// list management
+ 	
+ 	// 	selections
 	
-	public void addChainSelectionEventListener(ChainSelectionEventListener
-			listener) {
-		chainListeners.add(ChainSelectionEventListener.class,
-				listener);
-	}
-	
-	public void removeChainSelectionEventListener(ChainSelectionEventListener
-		listener) {
-			chainListeners.remove(ChainSelectionEventListener.class,
-				listener);
-	}
-	
-	private void fireChainSelectionChanged(CChain chain,int status) {
-		ChainSelectionEvent e = new ChainSelectionEvent(this,chain,status);
-		Object[] listeners=chainListeners.getListenerList();
-		for (int i = listeners.length-2; i >=0; i-=2) {
-			if (listeners[i] == ChainSelectionEventListener.class) {
-				((ChainSelectionEventListener) listeners[i+1]).
-					chainSelectionChanged(e);
-			}
-		}
-	}
-	
-	//datasets
-	public void addDatasetSelectionEventListener(DatasetSelectionEventListener
-			listener) {
-		datasetListeners.add(DatasetSelectionEventListener.class,
-			listener);
-	}
-
-	public void removeDatasetSelectionEventListener(DatasetSelectionEventListener
-		listener) {
-		datasetListeners.remove(DatasetSelectionEventListener.class,
-			listener);
-	}
-
-	public void fireDatasetSelectionEvent() {
-		DatasetSelectionEvent e = 
-			new DatasetSelectionEvent(this,activeDatasets,currentDataset);
-		Object[] listeners=datasetListeners.getListenerList();
-		for (int i = listeners.length-2; i >=0; i-=2) {
-			if (listeners[i] == DatasetSelectionEventListener.class) {
-				((DatasetSelectionEventListener) listeners[i+1]).
-					datasetSelectionChanged(e);
-			}
-		}
-	} 
-	
-	// projects7
-	
-	public void addProjectSelectionEventListener(ProjectSelectionEventListener
-				listener) {
-		projectListeners.add(ProjectSelectionEventListener.class,
-			listener);
-	}
-
-	public void removeProjectSelectionEventListener(ProjectSelectionEventListener
-		listener) {
-			projectListeners.remove(ProjectSelectionEventListener.class,
-				listener);
-	}
-
-	private void fireProjectSelectionEvent() {
-		ProjectSelectionEvent e = 
-			new ProjectSelectionEvent(this,activeProjects,currentProject);
-		Object[] listeners=projectListeners.getListenerList();
-		for (int i = listeners.length-2; i >=0; i-=2) {
-			if (listeners[i] == ProjectSelectionEventListener.class) {
-				((ProjectSelectionEventListener) listeners[i+1]).
-					projectSelectionChanged(e);
-			}
-		}
-	}
-	
-	//executions
-	
- 	public void addExecutionSelectionEventListener(
- 			ExecutionSelectionEventListener listener) {
-		 executionListeners.add(ExecutionSelectionEventListener.class,
+ 	public void addSelectionEventListener(SelectionEventListener listener) {
+		 selectionListeners.add(SelectionEventListener.class,
 			 listener);
  	}
 
- 	public void removeExecutionSelectionEventListener(
- 			ExecutionSelectionEventListener listener) {
-		 executionListeners.remove(ExecutionSelectionEventListener.class,
+ 	public void removeSelectionEventListener(SelectionEventListener listener) {
+		 selectionListeners.remove(SelectionEventListener.class,
 			 listener);
 	}
 
- 	private void fireExecutionSelectionEvent() {
-		 ExecutionSelectionEvent e = 
-			 new ExecutionSelectionEvent(this,currentExecution);
-	 	Object[] listeners=executionListeners.getListenerList();
+ 	private void fireSelectionEvent() {
+		 SelectionEvent e = new SelectionEvent(this);
+	 	Object[] listeners=selectionListeners.getListenerList();
 	 	for (int i = listeners.length-2; i >=0; i-=2) {
-			 if (listeners[i] == ExecutionSelectionEventListener.class) {
-				 ((ExecutionSelectionEventListener) listeners[i+1]).
-					executionSelectionChanged(e);
+			 if (listeners[i] == SelectionEventListener.class) {
+				 ((SelectionEventListener) listeners[i+1]).
+					selectionChanged(e);
 		 	}
 	 	}
  	}
