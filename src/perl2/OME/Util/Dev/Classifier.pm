@@ -458,14 +458,20 @@ ENDDESCRIPTION
 # I'm putting this in a separate function because the implementation
 # will probably change.
 sub get_classifications_and_category_numbers {
-	my ($proto, $images) = @_;
+	my ($proto, $images, $classification_mex) = @_;
 	logdbg "debug", "collecting image classifications.";
 	my $factory = OME::Session->instance()->Factory();
 	my %classifications;
 	my $category_group;
 	foreach my $image ( @$images ) {
-		my @classification_list = $factory->findAttributes( 'Classification', image => $image )
-			or die "Could not find a classification for image id=".$image->id;
+		# If we were given a mex or list of mexes, then use it to find classifications
+		my @classification_list = ( $classification_mex ?
+			@{ OME::Tasks::ModuleExecutionManager->
+				getAttributesForMEX( $classification_mex, "Classification",
+					{image => $image } 
+				) } :
+			$factory->findAttributes( 'Classification', image => $image )
+		) or die "Could not find a classification for image id=".$image->id;
 		die "More than one classification found for image id=".$image->id
 			unless scalar( @classification_list ) eq 1;
 		$category_group = $classification_list[0]->Category->CategoryGroup
@@ -487,29 +493,29 @@ sub get_classifications_and_category_numbers {
 
 # returns the matlab signature array
 sub compile_signature_matrix {
-	my ($proto, $stitcher_mex, $images) = @_;
+	my ($proto, $stitcher_mex, $images, $classification_mex) = @_;
 	my $factory = OME::Session->instance()->Factory();
 	my ( $classifications, $category_numbers ) = 
-		$proto->get_classifications_and_category_numbers( $images );
+		$proto->get_classifications_and_category_numbers( $images, $classification_mex );
 
 	# instantiate the matlab signature array. 
 	#	number of columns is the size of the signature vector plus one for the image classification.
 	#	number of rows is the number of images.
-	my @vector_legends = OME::Tasks::ModuleExecutionManager->
+	my $vector_legends = OME::Tasks::ModuleExecutionManager->
 		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
 		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
-	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, scalar( @$images ));
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @$vector_legends ) + 1, scalar( @$images ));
 	$signature_array->makePersistent();
 	
 	# populate the signature matrix.
 	my $image_number = 0;
-	my $category_col_index = scalar( @vector_legends );
+	my $category_col_index = scalar( @$vector_legends );
 	foreach my $image ( @$images ) {
 		my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
 				{ image => $image }
 			)
-			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
+			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
 		# set the image category
 		my $category_num = $category_numbers->{ $classifications->{ $image->id }->Category->id };
 		$signature_array->set( $category_col_index, $image_number, $category_num );
