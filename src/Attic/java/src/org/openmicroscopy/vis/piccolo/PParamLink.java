@@ -134,7 +134,6 @@ public class PParamLink extends  PLink {
 		//double theta;
 		Point2D first;
 		Point2D second;
-		super.setLine();
 		
 		if ( start instanceof PFormalInput) {
 			// in this case, we started at the input and drew back to output

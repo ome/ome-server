@@ -102,8 +102,6 @@
 		
 	protected void setLine() {
 			
-
-		super.setLine();
 		int n = points.size();
 		Point2D start = (Point2D) points.get(n-2);
 		Point2D end = (Point2D) points.get(n-1);
