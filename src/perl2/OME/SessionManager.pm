@@ -323,10 +323,11 @@ sub getOMESession {
     logdie ref($self)."->getOMESession:  Could not create userState object"
       unless defined $userState;
 
-    my $session = OME::Session->new($userState,$bootstrap_factory);
-    
-    $userState->{__session} = $session;
+	  #$OME::Session::__soleInstance = undef;
 
+    my $session = OME::Session->instance($userState);
+	carp $session->Factory();
+    
     logdbg "debug", "getOMESession: updating userState";
     $userState->storeObject();
     $session->commitTransaction();
