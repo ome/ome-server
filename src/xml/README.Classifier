@@ -46,3 +46,16 @@ ome import OME/Analysis/Classifier/ClassificationStatistics.ome
 ome import OME/Analysis/Classifier/BayesNetTrainer.ome
 ome import OME/Analysis/Classifier/BayesNetClassifier.ome
 -----
+
+To get the matlab classifier working in OME, you gotta:
+
+make sure it is possible to run matlab from the command line
+make sure the user executing stuff has a license to run matlab
+	in the web ui, this is the apache user
+	via the command line, this is the logged in user
+make sure you set the environmental variable DYLD_LIBRARY_PATH
+to your matlab libraries. On OS X, this is typically
+	/Applications/MATLAB701/bin/mac/
+download Kevin Murphy's Bayesian Network toolbox
+	http://www.cs.ubc.ca/~murphyk/Software/FullBNT.zip
+unpack it into your matlab directory
