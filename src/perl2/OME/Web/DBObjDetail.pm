@@ -90,8 +90,8 @@ sub getPageTitle {
 	my $id   = $q->param( 'ID' );
 	my $type = $q->param( 'Type' )
 		or die "Type not specified";
-	$type = _getTypeName( $type );
-    return "$type ($id)";
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+    return "$common_name ($id)";
 }
 
 sub getPageBody {
@@ -103,16 +103,24 @@ sub getPageBody {
 		or die "Type not specified";
 	my $id   = $q->param( 'ID' )
 		or die "ID not specified";
+
 	my $object;
-	if( $type =~ s/^@// ) {
-		$object = $factory->loadAttribute( $type, $id )
-			or die "Could not load Attribute $type, id=$id";
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+	my $typeAttr;
+	if( $ST ) {
+		$object = $factory->loadAttribute( $ST, $id )
+			or die "Could not load Attribute $common_name, id=$id";
 	} else {
 		$object = $factory->loadObject( $type, $id )
 			or die "Could not load DBObject $type, id=$id";
 	}
 
-	my $type_name = _getTypeName($type);
+	my $table_name = $common_name."_TABLE";
+	my $table_label = ( $ST ?
+		$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id() },
+		       $common_name ) :
+		$common_name
+	);
 
 	my $html;
 
@@ -122,7 +130,7 @@ sub getPageBody {
 
 	
 	$html .= $q->table(
-		$q->caption( $type_name ),
+		$q->caption( $table_label ),
 		map(
 			$q->Tr( 
 				$q->td( { align => 'left' }, $labels{ $_ } ),
@@ -132,16 +140,11 @@ sub getPageBody {
 		)
 	);
 
+#	my $hasMany = $package_name->getHasManyReferences();
+#print STDERR "$package_name has many:\n\t".join(', ', keys %$hasMany)."\n";
 	return ('HTML', $html);
 }
 
-
-sub _getTypeName {
-	my $type = shift;
-	$type =~ s/^@// or
-	( $type =~ s/OME::// and $type =~ s/::/ /g );
-	return $type;
-}
 
 =head1 Author
 
