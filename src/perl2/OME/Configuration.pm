@@ -33,6 +33,7 @@
 # Written by:    Ilya Goldberg <igg@nih.gov>
 #
 #-------------------------------------------------------------------------------
+
 =head1 NAME
 
 OME::Configuration - OME Configuration variables
