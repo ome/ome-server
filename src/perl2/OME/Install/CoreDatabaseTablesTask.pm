@@ -141,6 +141,7 @@ sub create_superuser {
 
     # Drop our UID to Postgres
     $EUID = $pg_uid;
+    $UID = $pg_uid;
 
     # Make sure we can see the Postgres command
     $retval = which ("$createuser");
@@ -152,6 +153,7 @@ sub create_superuser {
 
     # Back to UID 0
     $EUID = 0;
+    $UID = 0;
 
     # Log and return success
     if (($output =~ /already exists/) or ($output =~ /^CREATE/)) {
