@@ -91,6 +91,8 @@ sub ReloadHomeScript {
 	my $self = shift;
 	my $reloadHomeFlag = $self->ReloadHome();
 	return "<script>top.location.href = top.location.href;</script>"
+		if( not defined $self->Session() );
+	return "<script>top.location.href = top.location.href;</script>"
 		if( defined $reloadHomeFlag || $self->isRedirectNecessary(1));
 	return "";
 }
