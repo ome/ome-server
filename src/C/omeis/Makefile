@@ -1,10 +1,13 @@
 CC     = gcc
 XML2_CFLAGS = `xml2-config --cflags`
 XML2_LIBS = `xml2-config --libs`
+
+# Don't put this cruft in if we don't need it
+ifeq (,$(findstring(darwin,$(OSTYPE))))
 FINK_INCLUDE = -I/sw/include/
 FINK_LIB = -L/sw/lib/ 
-# ugh! pedantic has too many complaints: 'omeis.c:37:3: warning: style of line directive is a GCC extension'
-#CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 -pedantic
+endif
+
 CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 $(XML2_CFLAGS)
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_INCLUDE) $(FINK_LIB)
 OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.c ../b64z_lib.c
@@ -18,6 +21,8 @@ else
 DEFINES=-DOMEIS_ROOT=\"/OME/OMEIS\"
 endif
 
+# BSD / OS-X 64-bit portability and large file support (>4GB)
+DEFINES += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 
 all: omeis
 
