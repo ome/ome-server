@@ -30,7 +30,7 @@ if ($ENV{OME_DEBUG} > 0) {
 }
 
 my $session = OME::SessionManager->TTYlogin();
-$session->DBH()->trace(3);
+#$session->DBH()->trace(3);
 my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 1 );
 
 map( $OMEImporter->importFile( $_ ), @ARGV );
