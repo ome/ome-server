@@ -43,6 +43,7 @@
 package org.openmicroscopy.ds.dto;
 
 import java.util.Map;
+import org.openmicroscopy.ds.DataException;
 
 /**
  * <p>Represents a piece of semantically-typed data in OME.  This
@@ -63,8 +64,8 @@ import java.util.Map;
  * #getModuleExecution()} method.</p>
  *
  * @author Douglas Creager
- * @version 2.0
- * @since OME2.0
+ * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
+ * @since OME2.2
  * @see SemanticType
  */
 
@@ -84,6 +85,20 @@ public class AttributeDTO
         parseChildElement("semantic_type",SemanticTypeDTO.class);
         parseChildElement("module_execution",ModuleExecutionDTO.class);
     }
+
+    // Inherited javadoc
+    public String getDTOTypeName()
+    {
+        try
+        {
+            return getSemanticType().getName();
+        } catch (DataException e) {
+            return "Unknown";
+        }
+    }
+
+    // Inherited javadoc
+    public Class getDTOType() { return Attribute.class; }
 
     /**
      * Returns the attribute's primary key ID.
