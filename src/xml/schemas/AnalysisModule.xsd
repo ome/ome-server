@@ -4,13 +4,11 @@
 	 targetNamespace = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
 	 xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
 	 xmlns:CLI = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"
-	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	 xmlns:xsd = "http://www.w3.org/2001/XMLSchema"
 	 version = "RC1"
 	 elementFormDefault = "qualified">
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"/>
-	<import namespace = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"/>
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"/>
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
 	<element name = "Entry">
@@ -75,7 +73,6 @@ Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 					</documentation>
 				</annotation>
 			</attribute>
-			<attribute ref = "STD:SemanticTypeName" use = "required"/>
 			<attribute name = "Count" default = "+">
 				<annotation>
 					<documentation>Specifies how many counts of this formal input are expected. Meanings are specified below
@@ -100,10 +97,11 @@ Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 				</annotation>
 				<simpleType>
 					<restriction base = "string">
-						<pattern value = "[A-Za-z0-9 ]+"/>
+						<pattern value = "[A-Za-z0-9\-\^\(\)_ ]+"/>
 					</restriction>
 				</simpleType>
 			</attribute>
+			<attribute name = "SemanticTypeName" use = "required" type = "string"/>
 		</complexType>
 	</element>
 	<element name = "FormalOutput">
@@ -129,7 +127,6 @@ Processed before storage to DB
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute ref = "STD:SemanticTypeName" use = "required"/>
 			<attribute name = "Count" default = "+">
 				<annotation>
 					<documentation>Specifies how many counts of this formal output will be produced. Meanings are specified below
@@ -151,9 +148,14 @@ Processed before storage to DB
 			<attribute name = "Name" use = "required">
 				<simpleType>
 					<restriction base = "string">
-						<pattern value = "[A-Za-z0-9 ]+"/>
+						<pattern value = "[A-Za-z0-9\-\^\(\)_ ]+"/>
 					</restriction>
 				</simpleType>
+			</attribute>
+			<attribute name = "SemanticTypeName" type = "string">
+				<annotation>
+					<documentation>THIS IS REQUIRED for every formal output outside of the importer. The importer doesn't know what it will run into before it executes, so it can't declare the semantic type of its outputs. If you are writing a module, I HIGHLY HIGHLY recommend that you type your formal outputs.</documentation>
+				</annotation>
 			</attribute>
 		</complexType>
 	</element>
@@ -177,11 +179,10 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 		</annotation>
 		<complexType>
 			<sequence>
+				<element ref = "AML:Description" minOccurs = "0"/>
 				<element ref = "AML:Declaration"/>
 				<element ref = "CLI:ExecutionInstructions" minOccurs = "0"/>
-				<element ref = "AML:Description" minOccurs = "0"/>
 			</sequence>
-			<attribute ref = "AML:ModuleName" use = "required"/>
 			<attribute name = "isStreamAlgorithm" default = "false" type = "boolean">
 				<annotation>
 					<documentation>This is a stub for future development. The database location doesn't even exist yet.
@@ -204,12 +205,10 @@ Tied to DB. Table PROGRAMS Column MODULE_TYPE
 				</annotation>
 				<simpleType>
 					<restriction base = "string">
-						<enumeration value = "OME::Analysis::PerlHandler"/>
-						<enumeration value = "OME::Analysis::CLIHandler"/>
+						<pattern value = "OME::Analysis::.+"/>
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute ref = "AML:ProgramID" use = "required"/>
 			<attribute name = "FeatureIterator">
 				<annotation>
 					<documentation>If the module iterates over a feature, specify the iterator here. It will reference a feature via the TAG column of the FEATURES table.
@@ -241,11 +240,23 @@ Tied to DB. PROGRAMS.NEW_FEATURE_TAG
 			</attribute>
 			<attribute name = "Category">
 				<annotation>
-					<documentation>References a Category. If this is not specified, the AnalysisModule will be tossed in the Miscelaneous bin.</documentation>
+					<documentation>References a Category.</documentation>
 				</annotation>
 				<simpleType>
 					<restriction base = "string">
 						<maxLength value = "32"/>
+					</restriction>
+				</simpleType>
+			</attribute>
+			<attribute name = "ProgramID" use = "required" type = "string">
+				<annotation>
+					<documentation>Eventually will refer to a program. Currently program installation is NOT implemented. So this value is the path to the installed binary file. </documentation>
+				</annotation>
+			</attribute>
+			<attribute name = "ModuleName">
+				<simpleType>
+					<restriction base = "string">
+						<maxLength value = "64"/>
 					</restriction>
 				</simpleType>
 			</attribute>
@@ -293,7 +304,9 @@ Specifies the packaging and/or compression format of the Installation file.
 	</element>
 	<element name = "Program">
 		<annotation>
-			<documentation>Stores an installation package and installation script for a program.</documentation>
+			<documentation>Stores an installation package and installation script for a program.
+This currently is NOT implemented.
+			</documentation>
 		</annotation>
 		<complexType>
 			<choice>
@@ -303,7 +316,6 @@ Specifies the packaging and/or compression format of the Installation file.
 				</sequence>
 				<element ref = "AML:Installed"/>
 			</choice>
-			<attribute ref = "AML:ProgramID" use = "required"/>
 			<attribute name = "Name">
 				<annotation>
 					<documentation>Program name.
@@ -321,6 +333,7 @@ Unclear how this would be used. DB location PROGRAMS.PROGRAM_NAME is populated b
 					<documentation>Currently unused</documentation>
 				</annotation>
 			</attribute>
+			<attribute name = "ProgramID" use = "required" type = "string"/>
 		</complexType>
 	</element>
 	<element name = "AnalysisModuleLibrary">
@@ -345,30 +358,27 @@ Or pretend you have a powerful program that can do 10 unrelated tasks, each of w
 In any case, use AnalysisModule to define an interface and Program to store installation software for a program.
 			</documentation>
 		</annotation>
+		<!--
+This was commented out by Josiah <siah@nih.gov> on July 3, 2003.
+We don't support Program installation yet, and are using the value of ProgramID
+in <AnalysisModule> to refer to the location of the installed program. 
+A temporary hack to be sure, but that's the way it works for now.
+		<keyref name = "ProgramRef" refer = "AML:Program">
+			<selector xpath = "AML:AnalysisModule"/>
+			<field xpath = "@ProgramID"/>
+		</keyref>
+		<unique name = "Program">
+			<selector xpath = "AML:Program"/>
+			<field xpath = "@ProgramID"/>
+		</unique>
+-->
 		<complexType>
 			<sequence>
 				<element ref = "AML:AnalysisModule" maxOccurs = "unbounded"/>
 				<element ref = "AML:Category" minOccurs = "0" maxOccurs = "unbounded"/>
 				<element ref = "AML:Program" minOccurs = "0" maxOccurs = "unbounded"/>
-				<element ref = "STD:SemanticTypeDefinitions"/>
 			</sequence>
 		</complexType>
-		<keyref name = "SemanticTypeRef" refer = "AML:SemanticType">
-			<selector xpath = "AML:AnalysisModule/AML:Declaration/AML:FormalInput|AML:AnalysisModule/AML:Declaration/AML:FormalOutput"/>
-			<field xpath = "@STD:SemanticTypeName"/>
-		</keyref>
-		<unique name = "SemanticType">
-			<selector xpath = "STD:SemanticTypeDefinitions/STD:SemanticType"/>
-			<field xpath = "@STD:SemanticTypeName"/>
-		</unique>
-		<keyref name = "ProgramRef" refer = "AML:Program">
-			<selector xpath = "AML:AnalysisModule"/>
-			<field xpath = "@AML:ProgramID"/>
-		</keyref>
-		<unique name = "Program">
-			<selector xpath = "AML:Program"/>
-			<field xpath = "@AML:ProgramID"/>
-		</unique>
 		<unique name = "AnalysisModule">
 			<selector xpath = "AML:AnalysisModule"/>
 			<field xpath = "@AML:ModuleName"/>
@@ -379,15 +389,7 @@ In any case, use AnalysisModule to define an interface and Program to store inst
 			<length value = "20"/>
 		</restriction>
 	</simpleType>
-	<attribute name = "ProgramID" type = "positiveInteger"/>
-	<attribute name = "ModuleName">
-		<simpleType>
-			<restriction base = "string">
-				<maxLength value = "64"/>
-			</restriction>
-		</simpleType>
-	</attribute>
-	<element name = "Description">
+	<element name = "Description" type = "string">
 		<annotation>
 			<documentation>
 				Just some free-form text to describe Images, Screens and Projects.
