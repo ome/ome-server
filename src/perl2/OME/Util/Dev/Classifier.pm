@@ -97,6 +97,8 @@ Options:
   
   -o  name of output file
   
+  -f  force re-execution of chain
+  
   -h  Print this help message.
   
 USAGE
@@ -185,9 +187,10 @@ END_STDS
 
 sub compile_sigs {
 	my ($self,$commands) = @_;
-	my ($dataset_id, $chain_id, $output_file_name );
+	my ($dataset_id, $chain_id, $output_file_name, $show_help, $force_new_chex );
 	
-	GetOptions('d=i' => \$dataset_id, 'c=i' => \$chain_id, 'o=s' => \$output_file_name );
+	GetOptions('d=i' => \$dataset_id, 'c=i' => \$chain_id, 'o=s' => \$output_file_name, 'h' => \$show_help, 'f' => \$force_new_chex );
+	return $self->compile_sigs_help($commands) if $show_help;
 	die "one or more options not specified"
 		unless $dataset_id and $chain_id and $output_file_name;
 	
@@ -233,13 +236,18 @@ sub compile_sigs {
 	
 	# collect sig stitcher module execution for this chain
 	logdbg "debug", "finding signature stitcher module execution.";
-	my $chex = $factory->findObject( "OME::AnalysisChainExecution",
-		analysis_chain => $chain,
-		dataset        => $dataset
-	);
-	unless ($chex) {
-		logdbg "debug", "Could not find execution of chain (id=".$chain->id."). Executing chain";
-		$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
+	my $chex;
+	unless( $force_new_chex ) {
+		$chex = $factory->findObject( "OME::AnalysisChainExecution",
+			analysis_chain => $chain,
+			dataset        => $dataset
+		) unless $force_new_chex;
+		unless ($chex) {
+			logdbg "debug", "Could not find execution of chain (id=".$chain->id."). Executing chain";
+			$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
+		}
+	} else {
+		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, ReuseResults => 0);
 	}
 	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
 		analysis_chain_execution => $chex,
