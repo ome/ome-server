@@ -43,7 +43,9 @@
 package org.openmicroscopy.vis.ome;
 
 import org.openmicroscopy.remote.*;
-import org.openmicroscopy.*;
+import org.openmicroscopy.Factory;
+import org.openmicroscopy.Session;
+import org.openmicroscopy.Attribute;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.managers.ChainManager;
@@ -51,6 +53,7 @@ import org.openmicroscopy.vis.piccolo.PFormalParameter;
 import org.openmicroscopy.vis.piccolo.PFormalInput;
 import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.vis.chains.Controller;
+import org.openmicroscopy.vis.util.SwingWorker;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.HashSet;
@@ -60,6 +63,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.awt.Image;
 
 
 
@@ -99,8 +105,17 @@ public class Connection {
 		
  	private final ConnectionWorker worker;
  	
+ 	private final String userName;
+ 	private final String passWord;
+ 	
+ 	
+ 	private String host;
  	// the list of chain executions for the currently selected dataset
  	private List chainExecutions;
+ 	
+ 	private ThumbnailAgent thumbnails;
+ 	
+ 	private CDataset curDataset;
 	/***
 	 * Creates a {@link ConnectionWorker} that will build a new connection to 
 	 * the database via XMLRPC. If successful, the ConnectionWorker will return 
@@ -119,6 +134,16 @@ public class Connection {
 	public Connection(final Controller controller,
 		final String URL,final String userName,final String passWord) {
 	
+		this.userName = userName;
+		this.passWord = passWord;
+		this.host = getHost(URL);
+		thumbnails = new ThumbnailAgent(host,userName,passWord);
+		try {
+			thumbnails.initialize();
+		} catch( Exception e) {
+			e.printStackTrace();
+			thumbnails = null;
+		}
 		//buildStatusWindow();	
 		worker = 
 			new ConnectionWorker(controller,this,URL,userName,passWord);
@@ -126,6 +151,25 @@ public class Connection {
 		worker.start();
 	}
 		
+	/**
+	 * The assumption is that if we are connecting to the XMLRPC server
+	 * at http://foo:port, we can get to the web server via host name foo. 
+	 * This is a bit of a hack, but it will have to do until the image 
+	 * server is reallly going...
+	 * 
+	 * @param url
+	 * @return the hostname of the corresponding url.
+	 */
+	private String getHost(String url) {
+		URL fullURL=null;
+		try {
+			 fullURL = new URL(url);}
+		catch (MalformedURLException e) {
+			System.err.println("Should never get here...");
+			return null;
+		}
+		return fullURL.getHost();
+	}
 	public void setSession(Session session) {
 		this.session = session;
 	}
@@ -316,7 +360,8 @@ public class Connection {
 		return projects;
 	}
 	
-	public void getDatasetExecutionChains(Dataset d) {
+	public void setDataset(CDataset d) {
+		curDataset = d;
 		HashMap crit = new HashMap();
 		crit.put("dataset",d);
 		chainExecutions = factory.findObjects("OME::AnalysisChainExecution",crit);
@@ -330,6 +375,11 @@ public class Connection {
 		chains.setExecutedChains(result);
 	}
 	
+	
+	public CDataset getDataset() {
+		return curDataset;
+	}
+	
 	public List getDatasetExecutions(CChain chain) {
 		ArrayList res = new ArrayList();
 		Iterator iter = chainExecutions.iterator();
@@ -339,5 +389,45 @@ public class Connection {
 				res.add(exec);
 		}
 		return res;
+	}
+	
+
+	
+	public void getThumbnail(CImage i) {
+		
+		Image image=null;
+		int id = i.getID();
+		try {
+			if (thumbnails != null) {
+				System.err.println("calling thumbnails.getThumbnail(id)");
+				getThumbnail(i,id);
+			}
+		} catch(Exception e) {
+			System.err.println("exception in grabbing thumbnail "+id);
+			e.printStackTrace();
+		}
+		System.err.println(" returning from connection.getThumbnail..");
+		if (image == null) 
+			System.err.println("image is nulll...");
+	}
+	
+	public void getThumbnail(final CImage i,final int id) {
+		final SwingWorker worker = new SwingWorker() {
+			Image image = null;
+			public Object construct() {
+				try {
+					image = thumbnails.getThumbnail(id);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+				return image;
+			}
+			
+			public void finished() {
+				i.setImageData(image);
+			}
+		};
+		worker.start();
 	}
 }
