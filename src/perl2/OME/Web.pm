@@ -284,7 +284,7 @@ sub serve {
 		}
 	}
 
-	my ($result,$content) = $self->createOMEPage();
+	my ($result,$content,$jnpl_filename) = $self->createOMEPage();
 	
 	my $cookies = [values %{$self->{_cookies}}];
 	my $headers = $self->headers();
@@ -307,6 +307,10 @@ sub serve {
 		print $self->CGI()->header(%{$headers});
 		print $content;
 	} elsif ($result eq 'SVG' && defined $content) {
+		print $self->CGI()->header(%{$headers});
+		print $content;
+	} elsif ($result eq 'JNLP' && defined $content) {
+		$headers->{'-attachment'} = $jnpl_filename;
 		print $self->CGI()->header(%{$headers});
 		print $content;
 	} elsif ($result eq 'FILE' && defined $content && ref($content) eq 'HASH') {
@@ -522,9 +526,12 @@ The first scalar is treated as a status message to determine what to do with the
 
   return ('HTML',$HTML);
 
-Accepted status strings are C<HTML>, C<IMAGE>, C<SVG>, C<FILE>, C<REDIRECT> and C<ERROR>.
+Accepted status strings are C<HTML>, C<IMAGE>, C<SVG>, C<JNLP>, C<FILE>, C<REDIRECT> and C<ERROR>,
 If the returned status is C<HTML>, then the page is appropriately decorated to match the other pages in OME.
-No special processing is currently done for C<IMAGE> and C<SVG>.
+No special processing is currently done for C<IMAGE>, C<SVG>, and C<JNLP>. For C<JNLP> the filename that should
+be used on the client must also be returned e.g. 
+  
+  return ('JNLP', $JNLP, $filename);
 
 A C<FILE> status is used for downloading files to the browser.  In this case, the second scalar is a hash reference
 containing information to control the download process.  The hash may contain the following:
