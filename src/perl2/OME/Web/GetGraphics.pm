@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# Copyright (C) 2002 Open Microscopy Environment
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:
 #	Josiah Johnston <siah@nih.gov>
 #

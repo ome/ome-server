@@ -1,6 +1,6 @@
 # OME/Web/ProjectManagement.pm
 
-# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Josiah Johnston <siah@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or

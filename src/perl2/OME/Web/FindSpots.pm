@@ -1,6 +1,6 @@
 # OME/Web/FindSpots.pm
 
-# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  JM Burel <j.burel@dundee.ac.uk>
 #
 #    This library is free software; you can redistribute it and/or
