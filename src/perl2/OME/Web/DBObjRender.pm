@@ -769,7 +769,7 @@ sub getList {
 	my $self = shift;
 	my $object = ${ $self->{__objects}->[ $self->{__count} ] };
 	my $method = $self->{__methods}->[ $self->{__count} ];
-	my $params = $self->{__params }->[ $self->{__count} ] or [];
+	my $params = ($self->{__params }->[ $self->{__count} ] or []);
 	my @list;
 	if ( $self->{__call_as_scalar}->[ $self->{__count} ] ) {
 		my $list = $object->$method( @$params );
