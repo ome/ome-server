@@ -208,19 +208,20 @@ sub getFieldTypes {
 
 =head2 getFieldLabels
 
-	my %fieldLabels = OME::Web::DBObjRender->getFieldLabels( $type, \@fieldNames );
+	my %fieldLabels = OME::Web::DBObjRender->getFieldLabels( $type, \@fieldNames, $format );
 	
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
-$fieldNames is optional. It is used to populate the returned hash.
+@fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
+$format may be 'txt' or 'html'. it is also optional (defaults to 'txt').
 
 returns a hash { field_name => field_Label }
 
 =cut
 
 sub getFieldLabels {
-	my ($proto,$type,$fieldNames) = @_;
+	my ($proto,$type,$fieldNames,$format) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getFieldLabels( $type,$fieldNames )
@@ -228,16 +229,37 @@ sub getFieldLabels {
 		    $proto eq __PACKAGE__);
 	
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
+	$format = 'txt' unless $format;
 
-	# make labels by prettifying the aliases
+	# make labels by prettifying the aliases. Add links to Semantic
+	# Element documentation as available.
 	my %labels;
+	my $q = new CGI;
+	my $factory = OME::Web->Session()->Factory();
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
 	
 	# _fieldLabels is class data that allows specialized renderers to overide a subset of labels
 	my $pkg_labels = $proto->_fieldLabels();
 	foreach( @$fieldNames ) {
 		my ($alias,$label) = ($_,$_);
 		$label =~ s/_/ /g;
-		$labels{$alias} = ( $pkg_labels->{$alias} or ucfirst($label) );
+		if( $format eq 'txt' ) {
+			$labels{$alias} = ( $pkg_labels->{$alias} or ucfirst($label) );
+		} else {
+			$labels{$alias} = ( $pkg_labels->{$alias} or ucfirst($label) );
+			if( $ST ) {
+				my $SE = $factory->findObject( 
+					'OME::SemanticType::Element', 
+					semantic_type => $ST,
+					name          => $alias
+				);
+				$labels{$alias} = $q->a(
+					{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType::Element&ID=".$SE->id() },
+					$labels{$alias} )
+					if $SE;
+			}
+		}
 	};
 	return %labels if wantarray;
 	return \%labels;
