@@ -1,4 +1,4 @@
-# OME/LookupTable.pm
+# OME/LookupTable/Entry.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,7 +35,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::LookupTable;
+package OME::LookupTable::Entry;
 
 use strict;
 use OME;
@@ -45,19 +45,19 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->newClass();
-__PACKAGE__->setDefaultTable('lookup_tables');
-__PACKAGE__->setSequence('lookup_table_seq');
-__PACKAGE__->addPrimaryKey('lookup_table_id');
-__PACKAGE__->addColumn(name => 'name',
+__PACKAGE__->setDefaultTable('lookup_table_entries');
+__PACKAGE__->setSequence('lookup_table_entry_seq');
+__PACKAGE__->addPrimaryKey('lookup_table_entry_id');
+__PACKAGE__->addColumn(value => 'value',{SQLType => 'text',NotNull => 1});
+__PACKAGE__->addColumn(label => 'label',{SQLType => 'text'});
+__PACKAGE__->addColumn(lookup_table_id => 'lookup_table_id');
+__PACKAGE__->addColumn(lookup_table => 'lookup_table_id','OME::LookupTable',
                        {
-                        SQLType => 'varchar(64)',
+                        SQLType => 'integer',
                         NotNull => 1,
                         Indexed => 1,
+                        ForeignKey => 'lookup_tables',
                        });
-__PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
-__PACKAGE__->hasMany('entries','OME::LookupTable::Entry' => 'lookup_table');
-
-
 
 
 1;
