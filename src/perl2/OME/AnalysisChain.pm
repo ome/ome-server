@@ -34,6 +34,8 @@ __PACKAGE__->columns(Essential => qw(owner name locked));
 #__PACKAGE__->hasa('OME::Experimenter' => qw(owner));
 __PACKAGE__->has_many('nodes',
                       'OME::AnalysisView::Node' => qw(analysis_view_id));
+__PACKAGE__->has_many('links',
+                      'OME::AnalysisView::Link' => qw(analysis_view_id));
 __PACKAGE__->has_many('paths',
                       'OME::AnalysisPath' => qw(analysis_view_id));
 
