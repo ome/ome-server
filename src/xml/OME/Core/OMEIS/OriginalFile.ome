@@ -72,17 +72,21 @@
 				DataType="string">
 				<Description>
 					If the original file was in the server's filesystem at
-					the time of import, then this is the absolute path to
+					the time of import, then this is the path to
 					that file.  If the original file was transmitted to the
 					server from a client before import, then the original
 					file will be stored in a Repository, and this element
-					will be that file's relative path into the Repository.
+					will be that file's name (and optionally path) in the Repository.
 				</Description>
 			</Element>
 			<Element
 				Name="FileID"
 				DBLocation="ORIGINAL_FILES.FILE_ID"
 				DataType="bigint">
+				<Description>
+					If the file is on a Repository (OMEIS), then this is the
+					file's repository ID.
+				</Description>
 			</Element>
 			<Element
 				Name="SHA1"
