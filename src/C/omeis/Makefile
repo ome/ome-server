@@ -11,7 +11,7 @@ ifdef OSTYPE
 endif
 
 IM_CFLAGS = -Izoom/include
-IM_LIBS = -ltiff -ljpeg -lpng -Lzoom/lib/ -lpic -lzoom
+IM_LIBS = -Lzoom/lib/ -lzoom -lpic -ltiff -ljpeg -lpng 
 
 # The CPP (C-Pre-Processor) in Apple's GCC 1175 is broken, upgrade to the
 # August 2003 GCC for -pedantic
@@ -39,7 +39,7 @@ make_zoom:
 	$(MAKE) -C zoom install
 
 omeis: omeis.o $(OBJS)
-	$(CC) $(LIBS) $(OBJS) -o omeis omeis.o
+	$(CC) $(OBJS) $(LIBS) -o omeis omeis.o
 
 omeis.o: omeis.c omeis.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) $(XML2_CFLAGS) $(INCS) $(DEFINES) -c omeis.c
