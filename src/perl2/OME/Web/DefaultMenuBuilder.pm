@@ -327,7 +327,7 @@ sub getPageMenu {
 		$menu_data .= $self->__processElement($menu_element);
 	}
 
-	return $q->table({width => '100%', class => 'ome_main_menu'}, $menu_data);
+	return $q->table({width => '130', class => 'ome_main_menu'}, $menu_data);
 }
 
 sub getPageLocationMenu {

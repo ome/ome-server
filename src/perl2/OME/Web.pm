@@ -430,7 +430,6 @@ sub createOMEPage {
 	if (my $menu_builder = $self->getMenuBuilder()) {
 		$menu_td =
 			$CGI->td( {
-					width => '130px',
 					valign => 'top',
 					class => 'ome_main_menu_td',
 				}, $menu_builder->getPageMenu());
@@ -451,7 +450,7 @@ sub createOMEPage {
 				])
 		);
 		
-		$body_td = $CGI->td({valign => 'top'}, $body_table);
+		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body_table);
 	} else {
 		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
 	}
