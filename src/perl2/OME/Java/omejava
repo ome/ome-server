@@ -1,0 +1,134 @@
+#!/usr/bin/perl -w
+# OME/Java/omejava
+
+#-------------------------------------------------------------------------------
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institute of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#-------------------------------------------------------------------------------
+
+
+
+
+#-------------------------------------------------------------------------------
+#
+# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+#
+#-------------------------------------------------------------------------------
+
+
+use OME::Session;
+use OME::SessionManager;
+use OME::Java::SemanticTypeInterface;
+
+use Getopt::Long;
+
+sub usage {
+    print <<"USAGE";
+
+omejava - utilities for writing Java-based OME programs
+
+Usage:
+  omejava [command] [options]
+
+Available commands:
+  st        Creates Java interfaces for semantic types in the OME database
+
+USAGE
+
+    exit 1;
+}
+
+
+my %COMMANDS = (
+                st => \&semantic_types,
+               );
+
+my $command = shift || '';
+usage() unless exists $COMMANDS{$command};
+$COMMANDS{$command}();
+
+sub semantic_type_usage {
+    print <<"USAGE";
+
+omejava - utilities for writing Java-based OME programs
+
+Usage:
+  omejava st [-d output-directory] type-names
+
+The st command creates a set of Java interfaces for the semantic types
+specified on the command line.  You will be prompted to log into OME,
+after which the requested types will be loaded, and the appropriate
+Java interfaces created.  If you want to create interfaces for all of
+the types in the system, you must explicitly specify a type of
+":all:".
+
+If the -d option is specified, a Java source tree will be created in
+that directory, and the interface files will be placed there.  If the
+-d option is not specified, the interfaces will be printed to the
+console, and no files will be created.  The --output-directory option
+is a synonym for the -d option.
+
+USAGE
+
+    exit 1;
+}
+
+sub semantic_types {
+    my ($help,$output_directory);
+    GetOptions('help|h|?' => \$help,
+               'output-directory|d=s' => \$output_directory)
+      or semantic_type_usage();
+
+    semantic_type_usage() if $help || !@ARGV;
+
+    my $session = OME::SessionManager->TTYlogin();
+    my $factory = $session->Factory();
+
+    my @types;
+    my $all_types = 0;
+
+  TYPE:
+    while (my $type_name = shift(@ARGV)) {
+        if ($type_name eq ':all:') {
+            $all_types = 1;
+            last TYPE;
+        }
+
+        my $type = $factory->
+          findObject('OME::SemanticType',name => $type_name);
+        if (defined $type) {
+            push @types, $type;
+        } else {
+            print STDERR "Cannot find type name $type_name\n";
+        }
+    }
+
+    @types = $factory->findObjects('OME::SemanticType')
+      if ($all_types);
+
+    my %options;
+    $options{OutputDirectory} = $output_directory
+      if defined $output_directory;
+
+    OME::Java::SemanticTypeInterface->writeInterfaces(\@types,%options);
+}
