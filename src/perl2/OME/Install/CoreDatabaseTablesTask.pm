@@ -54,8 +54,10 @@ use base qw(OME::Install::InstallationTask);
 use OME::Database::Delegate;
 use OME::Factory;
 use OME::SessionManager;
-use OME::Tasks::OMEImport;
+use OME::Tasks::ImageTasks;
 use OME::Tasks::SemanticTypeManager;
+use OME::ImportExport::ChainImport;
+use OME::Tasks::OMEImport;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -75,7 +77,13 @@ our ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
 our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $ADMIN_UID);
 
 # Default import formats
-our $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
+our $IMPORT_FORMATS = join (' ',qw/
+	OME::ImportEngine::MetamorphHTDFormat
+	OME::ImportEngine::DVreader
+	OME::ImportEngine::STKreader
+	OME::ImportEngine::TIFFreader
+	OME::ImportEngine::XMLreader
+/);
 
 # Database version
 our $DB_VERSION = "2.6";
@@ -545,13 +553,6 @@ sub load_xml_core {
     my ($session, $logfile) = @_;
     my @core_xml;
 
-    my $omeImport = OME::Tasks::OMEImport->
-	new(
-	    session => $session,
-	    # XXX: Debugging off.
-	    #debug => 1
-	);
-
     # get list of files
     open (CORE_XML, "<", "src/SQL/CoreXML" )
 	or croak "Could not open file \"src/SQL/CoreXML\". $!";
@@ -569,21 +570,28 @@ sub load_xml_core {
     print "Importing core XML\n";
 
     # Import each XML file
+    my $omeImport = OME::Tasks::OMEImport->new(
+	    session => $session,
+	    # XXX: Debugging off.
+	    #debug => 1
+	);
+
     foreach my $filename (@core_xml) {
-	print "  \\__ $filename ";
-	eval {
-	    $omeImport->importFile($filename,
-		    NoDuplicates           => 1,
-		    IgnoreAlterTableErrors => 1);
-	};
-
-	print BOLD, "[FAILURE]", RESET, ".\n"
-	    and print $logfile "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
-	    and croak "Error loading XML file \"$filename\", see $LOGFILE_NAME details."
-	if $@;
-
-	print BOLD, "[SUCCESS]", RESET, ".\n"
-	    and print $logfile "SUCCESS LOADING XML FILE \"$filename\"\n";
+		print "  \\__ $filename ";
+		eval {
+#			OME::Tasks::ImageTasks::importFiles(($filename));
+			$omeImport->importFile($filename,
+				NoDuplicates           => 1,
+				IgnoreAlterTableErrors => 1);
+			};
+	
+		print BOLD, "[FAILURE]", RESET, ".\n"
+			and print $logfile "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
+			and croak "Error loading XML file \"$filename\", see $LOGFILE_NAME details."
+		if $@;
+	
+		print BOLD, "[SUCCESS]", RESET, ".\n"
+			and print $logfile "SUCCESS LOADING XML FILE \"$filename\"\n";
     }
 
     $session->commitTransaction();
