@@ -329,7 +329,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
         # Null semantic types are now allowed for formal outputs
         if (defined $semanticTypeName) {
             die "When processing Formal Output (name=".$formalOutputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$semanticTypeName."\n"
-				unless not defined $semanticType;
+				unless defined $semanticType;
         }
 		my ($optional, $list, $count);
 		$count = $formalOutputXML->getAttribute( 'Count' );
