@@ -106,37 +106,26 @@ sub new {
 #
 # exportFile
 # parameters:
-#	$file - path to output file
+#	$filename - path to output file
 # 	$doc  - the DOM to write out
 # optional parameters
-#	$compression - the compression to use to compress the pixels
-# 	$BigEndian   - 'true' | 'false' - specifies where the pixels should be inserted as bigEndian or not
 #
 sub exportFile {
 	# parameters
 	my $self        = shift;
-	my $file        = shift;
+	my $filename        = shift;
 	my $doc         = shift;
-	my $compression = shift || 'zlib'; # default compression is zlib
-	my $BigEndian   = shift || 'true';
 
 	# resources
 	my $session       = $self->{session};
 	my $factory       = $session->Factory();
-	my $debug         = $self->{debug};
 	my $configuration = $session->Configuration();
 	my $parser        = $self->{_parser};
-	my $LSIDresolver  = OME::Tasks::LSIDManager->new( session => $session );
-	
 
 	my $executeInsertBinData = undef; # a flag to stuff the Pixels in the XML file
 	my $root   = $doc->getDocumentElement();
 	
-	#######################################################################
 	# Process the Pixels:
-	# 	rewrite <Pixels> to OME format & add command flags
-	# 	yank <Pixels> out of <CAs> and put in <Image>
-	#
 	foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
 
 		# getElementsByTagNameNS returns the CustomAttributes under Image and Feature
@@ -148,26 +137,10 @@ sub exportFile {
 		
 		if (defined $caXML && $caXML->parentNode()->tagName() eq 'Image' ) {
 		foreach my $pixelsXML( $caXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
-
-			# set up new <Bin:External>
-			my $repository  = $LSIDresolver->getObject( $pixelsXML->getAttribute( "Repository" ) )
-				or die "Could not resolve repository! (LSID = '".$pixelsXML->getAttribute( "Repository" )."')\n";
-			my $href = $repository->Path().'/'.$pixelsXML->getAttribute("Path");
-			$href =~ s/\/\//\//g; # strip out double slashes ('//')
-			my $externalXML = $doc->createElementNS( $BinNS, "External" );
-			$externalXML->setAttribute( "href", $href );
-			$externalXML->setAttribute( "Compression", $compression ) if $compression;
-			$pixelsXML->appendChild( $externalXML );
-
-
-			$pixelsXML->removeAttribute( "Path" );
-			$pixelsXML->removeAttribute( "FileSHA1" );
-			$pixelsXML->removeAttribute( "Repository" );
-			$pixelsXML->removeAttribute( "BitsPerPixel" );
-
-			$pixelsXML->setAttribute( "DimensionOrder", "XYZCT" );
-			$pixelsXML->setAttribute( "BigEndian", $BigEndian );
-
+			my $type = $pixelsXML->getAttribute( "PixelType" );
+			if( $type =~ m/^u/ ) {
+				$pixelsXML->setAttribute( "PixelType", ucfirst( $type ) );
+			}
 			$caXML->removeChild( $pixelsXML );
 			my @features = $imageXML->getElementsByTagNameNS( $OMENS, "Feature" );
 			if( scalar @features > 0) {
@@ -180,52 +153,27 @@ sub exportFile {
 		
 		} }
 	} 
-	#
-	# END 'Process the Pixels'
-	#
-	#######################################################################
 		
-	# write to tmp file & send through /OME/bin/insertBinData
+	# pack in the binary pixel data
 	if( $executeInsertBinData ) {
+		# this has side effect of activating OME::Image::Server
+		$session->findRepository();
+		
 		my $tmpFile = $session->getTemporaryFilename( 'InsertFiles', 'ome' )
 			or die "Could not get a Temporary File\n";
 		$doc->toFile( $tmpFile )
 			or die "Could not write to tmp file '$tmpFile'\n";
-		my $cmd = $session->Configuration()->bin_dir()."/insertBinData $tmpFile > $file";
-		die "When exporting, problems executing '$cmd'"
-			unless system( "$cmd" ) == 0;
-		die "Could not unlink temporary file '$tmpFile'\n"
-			unless unlink ($tmpFile) eq 1;
+		my $huge_xml_string = OME::Image::Server->exportOMEFile( $tmpFile );
+		open( XML_OUT, "> $filename" ) or die "Couldn't open $filename";
+		print XML_OUT $huge_xml_string;
+		close XML_OUT;
+		
+		$session->finishTemporaryFile( $tmpFile );
 	} else {
-		$doc->toFile( $file );
+		$doc->toFile( $filename );
 	}
 	
-	return $doc;
 }
-#
-# END sub resolveFiles
-#
-###############################################################################
-
-
-# this function nabbed from OME::ImportExport::Importer
-# i don't know if that package is stable and i don't want to introduce a new
-# dependency to an unstable package.
-sub getSha1 {
-    my $file = shift;
-    my $cmd = 'openssl sha1 '. $file .' |';
-    my $sh;
-    my $sha1;
-
-    open (STDOUT_PIPE,$cmd);
-    chomp ($sh = <STDOUT_PIPE>);
-    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
-    $sha1 = $1;
-    close (STDOUT_PIPE);
-
-    return $sha1;
-}
-
 
 =pod
 
