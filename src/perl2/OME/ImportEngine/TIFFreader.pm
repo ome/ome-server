@@ -281,20 +281,36 @@ sub importGroup {
 
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
-    my $params  = $self->{params};
     
     my $file = $$groupList[0];
 	$file->open('r');
-	my $tags =  readTiffIFD($file);
-	$params->endian($tags->{__Endian});
-	my $xref = $params->{ xml_hash };
-	$xref->{ $file }->{'Image.SizeX'} = $tags->{TAGS->{ImageWidth}}->[0];
-	$xref->{ $file }->{'Image.SizeY'} = $tags->{TAGS->{ImageLength}}->[0];
-	$xref->{ $file }->{'Data.BitsPerPixel'} = $tags->{TAGS->{BitsPerSample}}->[0];
+	my $tag0 =  readTiffIFD($file, 0);
+	$file->close();
+	
+	my $filename = $file->getFilename();
+
+    my $params = $self->{params};
+    my $xref = $params->{xml_hash};
+    
+    $params->fref($file);
+    $params->oname($filename);
+    $params->endian($tag0->{__Endian});
+    
+	# we don't support compressed TIFFS
+	my $comp = $tag0->{TAGS->{'Compression'}}->[0];
+	if ( defined $comp and $comp != 1 ) {
+		print STDERR "WARNING ".$file->getFilename()."'s pixel data is compressed.".
+		" It shall not be imported.\n";
+		return undef;
+	} 
+	
+	$xref->{ $file }->{'Image.SizeX'} = $tag0->{TAGS->{ImageWidth}}->[0];
+	$xref->{ $file }->{'Image.SizeY'} = $tag0->{TAGS->{ImageLength}}->[0];
+	$xref->{ $file }->{'Data.BitsPerPixel'} = $tag0->{TAGS->{BitsPerSample}}->[0];
 	$params->byte_size( $self->__bitsPerPixel2bytesPerPixel($xref->{ $file}->{'Data.BitsPerPixel'}));
 	
 	# for rgb tiffs, each single image gives three channels
-	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
+	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
 		$xref->{ $file }->{'Image.NumWaves'} = 3;
 	}
 	
@@ -321,8 +337,6 @@ sub importGroup {
 						 $xref->{ $file }->{'Image.NumTimes'},
 						 $xref->{ $file }->{'Data.BitsPerPixel'});
 	$self->{pixels} = $pixels;
-
-	$file->close();
 	
 	my $maxZ = $xref->{ $file }->{'Image.SizeZ'};
 	my $maxT = $xref->{ $file }->{'Image.NumTimes'};
@@ -330,7 +344,7 @@ sub importGroup {
 	my @channelInfo;
 	
 	# Do a check for RGB.  If it's RGB, each file has 3 channels.
-	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}) {
+	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}) {
 		foreach my $file (@$groupList) {
 			eval
 			{
@@ -377,7 +391,7 @@ sub importGroup {
 	$self->__storeInputFileInfo($session,\@finfo);
 	
 	#Store info about each input channel (wavelength)
-	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}) {
+	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}) {
 		$self->__storeChannelInfoRGB($session, scalar(@$groupList)*3, @channelInfo);
 	} else {
 		$self->__storeChannelInfo($session, scalar(@$groupList), @channelInfo);

@@ -267,10 +267,18 @@ sub importGroup {
 
     my $tags = readTiffIFD($file);
     if (!defined($tags)) {
-	$file->close();
-	return undef;
+		$file->close();
+		return undef;
     }
 
+	# we don't support compressed TIFFS
+	my $comp = $tags->{TAGS->{'Compression'}}->[0];
+	if ( defined $comp and $comp != 1 ) {
+		print STDERR "WARNING ".$file->getFilename()."'s pixel data is compressed.".
+		" It shall not be imported.\n";
+		return undef;
+	} 
+	
     my $filename = $file->getFilename();
     my $base = ($self->{super})->__nameOnly($filename);
 

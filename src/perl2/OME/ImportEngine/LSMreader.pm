@@ -49,7 +49,8 @@ use OME::Tasks::ImportManager;
 use Carp;
 use base qw(OME::ImportEngine::AbstractFormat);
 use vars qw($VERSION);
-
+use constant 'LSM' => 34412; # a valid LSM image has this tag
+ 
 =head1 METHODS
 
 The following public methods are available:
@@ -90,9 +91,8 @@ from the input list and added to the preliminary output list.
 
 This method uses readTiffIFD, which can be found in TIFFUtils.pm.
 If it's a valid tiff file, the tags are read, and then the file
-is checked for compression.  If there's no compression, the file
-is checked to see if it's a valid LSM image by getting a hash that's
-supposed to be assigned to key 34412.
+is checked for compression.  LSM images are TIFF images with
+the LSM tag defined.
 
 =cut
 
@@ -102,25 +102,18 @@ sub getGroups
 	my $inlist = shift;  # catch the reference for the filepath hash
 	my @outlist;
 	
-	foreach my $file (values %$inlist)
-	{
+	foreach my $file (values %$inlist) {
     	$file->open('r');
   		my $tag0 = readTiffIFD( $file,0 );
 		$file->close();
 		
-		# do a check for compression - this does not support compressed TIFF images (yet?)
-		my $compression = $tag0->{ 259 }->[0];
-		if ( defined($compression) && $compression == 5 )
-		{
-			next;
-		}
-		
-		my $offsetHash = $tag0->{ 34412 }->[0]; # 34412 is the key for CZ-private TAG
-		if (defined($offsetHash) && ref($offsetHash) eq 'HASH')
-		{
+		# LSM images are TIFF images with a defined LSM tag
+		my $lsm = LSM;
+		if (defined($tag0->{$lsm}->[0])){
 			push (@outlist, $file);
 		}
     }
+    
     # Clean $inlist.
     $self->__removeFiles($inlist, \@outlist);
     
@@ -151,19 +144,29 @@ sub importGroup
 {
 	my ($self, $file, $callback) = @_;
 	my $session = ($self -> {super}) -> Session();
+
+	$file->open('r');
 	my $tag0 = readTiffIFD( $file,0 ); # gets the cached version
 	my $tag2 = readTiffIFD( $file,2 ); # no cached version
-	
-	$file->open('r');
+	$file->close();
+
 	my $filename = $file->getFilename();
     my $basename = ($self->{super})->__nameOnly($filename);
 
-    my $params = $self->getParams();
+    my $params = $self->{params};
     my $xref = $params->{xml_hash};
     
     $params->fref($file);
     $params->oname($filename);
     $params->endian($tag0->{__Endian});
+    
+	# we don't support compressed TIFFS
+	my $comp = $tag0->{TAGS->{'Compression'}}->[0];
+	if ( defined $comp and $comp != 1 ) {
+		print STDERR "WARNING ".$file->getFilename()."'s pixel data is compressed.".
+		" It shall not be imported.\n";
+		return undef;
+	} 
     
     $xref->{'Image.SizeX'} = $tag0->{TAGS->{ImageWidth}}->[0];
     $xref->{'Image.SizeY'} = $tag0->{TAGS->{ImageLength}}->[0];
@@ -188,7 +191,8 @@ sub importGroup
 	{
 		push(@ch_starts, $$offsets0[$i]);
 	}
-   	
+
+	# Do a check for RGB.  If it's RGB, each file has 3 channels.
     my $image = ($self->{super})->__newImage($basename);
     $self->{image} = $image;
     if (!defined($image))
@@ -244,8 +248,6 @@ sub importGroup
     }
 
     OME::Tasks::PixelsManager -> finishPixels( $pix, $self->{pixels} );
-
-    $file->close();
 
     if ($status eq "")
     {
@@ -392,29 +394,6 @@ sub getSHA1
     my $self = shift;
     my $file = shift;
     return $file->getSHA1();
-}
-
-# Get %params hash reference
-sub getParams
-{
-    my $self = shift;
-    return $self->{params};
-}
-
-# returns a string representing a hash dump. Usage:
-# 	dumpHash( %hash )
-sub dumpHash
-{
-	my %hash = @_;
-	return "\t".join( "\n\t", map ( $_.' -> '.$hash{$_}, keys %hash ) )."\n\n";
-}
-
-# returns a string representing an array dump. Usage:
-# 	dumpArray( @array )
-sub dumpArray
-{
-	my @array = @_;
-	return "\t".join("\n\t", @array)."\n\n";
 }
 
 1;

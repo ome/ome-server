@@ -308,6 +308,15 @@ sub importGroup {
 		return undef;
     }
     
+    # we don't support compressed TIFFS
+	my $comp = $tags->{TAGS->{'Compression'}}->[0];
+	if ( defined $comp and $comp != 1 ) {
+		print STDERR "WARNING ".$file->getFilename()."'s pixel data is compressed.".
+		" It shall not be imported.\n";
+		return undef;
+	} 
+	
+    
     # use TIFF tags to fill-out info about the img
     my ($offsets_arr, $bytesize_arr) = getStrips($tags);
     $params->image_offsets($offsets_arr);
