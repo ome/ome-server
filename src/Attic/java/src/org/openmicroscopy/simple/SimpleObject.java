@@ -65,4 +65,7 @@ public class SimpleObject
     {
         throw new UnsupportedOperationException("There is no SimpleSession");
     }
+    
+    public void populate(boolean force) {
+    }
 }
