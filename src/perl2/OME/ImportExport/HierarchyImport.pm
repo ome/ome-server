@@ -229,6 +229,10 @@ sub processDOM {
 		@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
 		foreach $CA ( @CAs ) {
 			$self->importObject ($CA,'D',$objectID,undef);
+#	Dataset is assigned a NULL mex because the MEX available at this point is tied
+# to the Import Dataset (AKA Dummy Dataset x). Assigning a MEX from an analysis run
+# against the Import Dataset to an attribute of a different dataset would be a violation
+# of our current data model. Module Execution results are not supposed to span datasets.
 		}
 	}	
 
