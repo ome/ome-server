@@ -23,7 +23,7 @@
 		JavaScript classes (Centroid & CentroidOverlay) for managing and
 	displaying Centroids. 
 		
-		External File dependencies: overlayManager.js, widget.js
+	Written by: Josiah Johnston <siah@nih.gov>
 		
 	
 *****/
@@ -40,8 +40,9 @@ Centroid.prototype = new Widget();
 Centroid.prototype.constructor = Centroid;
 Centroid.superclass = Widget.prototype;
 
-Centroid.VERSION = 1;
-
+/*****
+	class constants
+*****/
 Centroid.prototype.circleText = 
 '<circle r="5" stroke="blue" fill="none" cx="0" cy="0"/>';
 Centroid.prototype.focusText =
@@ -61,7 +62,7 @@ function Centroid ( data ) {//theX, theY, theZ, theT ) {
 	this.init( data ); //theX, theY, theZ, theT );
 }
 
-Centroid.prototype.init = function( data ) { //theX, theY, theZ, theT ) {
+Centroid.prototype.init = function( data ) {
 	this.theX = data['theX'];
 	this.theY = data['theY'];
 
@@ -155,6 +156,7 @@ Centroid.prototype.unfocus = function(e) {
 }
 
 Centroid.prototype.click = function(e) {
+	featureInfo.loadFeature( this.data['featureID'], 'openToolBox' );
 	setTheZ( this.theZ );
 	setTheT( this.theT );
 }
@@ -180,32 +182,19 @@ CentroidOverlay.VERSION = 1;
 CentroidOverlay.prototype.circleText = 
 '<circle r="5" stroke="blue" fill="none" cx="0" cy="0"/>';
 
-/********************************************************************************************/
-/********************************************************************************************/
-/*************************** Functions open to the world ************************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                 Public Functions 
+********************************************************************************************/
 
-/*****
-
-	constructor
-				
-	tested
-
-*****/
 function CentroidOverlay( centroidData ) {
 	this.init( centroidData );
 }
 
 /*****
-	
 	makeControls
 	
 	returns:
 		The controls for this class, loaded into DOM with a <g> as the root.
-		
-	tested
-		
 *****/
 CentroidOverlay.prototype.makeControls = function() {
 	// check for initialization
@@ -285,15 +274,8 @@ CentroidOverlay.prototype.makeControls = function() {
 }
 
 /*****
-	
 	makeOverlay
-	
-	returns:
-		The centroid overlay for this instance, loaded into DOM with a <g> as the root.
-		The data it uses was acquired during initialization.
-		
-	tested
-		
+	returns the centroid overlay for this instance, loaded into DOM with a <g> as the root.
 *****/
 CentroidOverlay.prototype.makeOverlay = function( ) {
 	
@@ -310,19 +292,10 @@ CentroidOverlay.prototype.makeOverlay = function( ) {
 
 }
 
-/********************************************************************************************/
-/********************************************************************************************/
-/************************** Functions without safety nets ***********************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                 Private Functions 
+********************************************************************************************/
 
-/*****
-
-	init
-		
-	tested
-
-*****/
 CentroidOverlay.prototype.init = function( centroidData ) {
 
 	// call superclass initialization
