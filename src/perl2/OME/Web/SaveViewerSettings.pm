@@ -118,7 +118,7 @@ sub SaveDisplaySettings {
 	my $displayOptions = [$factory->findAttributes( 'DisplayOptions', $imageID )];
 	my ( $redChannel, $greenChannel, $blueChannel, $greyChannel );
 
-	if( $displayOptions ) {
+	if( $displayOptions->[0] ) {
 		die "More than one DisplayOptions attribute found for this image. That is invalid.\n"
 			if( scalar( @$displayOptions ) > 1 );
 		$displayOptions = $displayOptions->[0];
