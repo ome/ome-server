@@ -122,7 +122,7 @@ sub importChild ($$$$) {
         undef $session;
     }
 
-    my $session = OME::SessionManager->createSession($sessionKey);
+    $session = OME::SessionManager->createSession($sessionKey);
     print STDERR "  Session $session\n";
 
     my $factory = $session->Factory();
