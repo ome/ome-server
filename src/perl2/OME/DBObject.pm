@@ -1052,6 +1052,42 @@ sub __storeCachedObject {
     return;
 }
 
+=head2 __activateSTColumn
+
+	__activateSTColumn($type_name);
+
+In order to access or search based on a column which is an attribute
+reference, the semantic type that it points to must be loaded in.
+This method does that.  This method assumes that the OME::SemanticType
+class has already been loaded and defined, and that there is a valid
+activate session object.
+
+=cut
+
+sub __activateSTColumn ($) {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $alias = shift;
+    my $def = $class->getColumn($alias);
+
+    return
+      unless defined $def->[2]
+          && __isSTReference($def->[2]);
+
+    # Strip off the leading @
+    my $st_name = substr($def->[2],1);
+
+    OME::SemanticType->require();
+    my $factory = OME::Session->instance()->Factory();
+    my $st = $factory->findObject('OME::SemanticType',name => $st_name);
+
+    die "Semantic type $st_name not found"
+      unless defined $st;
+
+    $st->requireAttributeTypePackage();
+}
+
 =head2 __verifyLocation
 
 	my ($table,$column) = $class->__verifyLocation($location);
@@ -1187,7 +1223,6 @@ or GROUP BY clause.
 
 =cut
 
-# Returns [$table_alias, $column]
 sub __addForeignJoin {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -1205,6 +1240,9 @@ sub __addForeignJoin {
             my $columns = $class->__columns();
             my $column = $columns->{$alias};
             $foreign_aliases->{$alias} = $column;
+
+            # If this is an ST column, load in the ST's package
+            $class->__activateSTColumn($alias);
         }
         return $alias;
     } else {
@@ -1244,6 +1282,9 @@ sub __addForeignJoin {
             my $new_column = [@$target_column];
             $new_column->[0] = $target_table_alias;
             $foreign_aliases->{$full_alias} = $new_column;
+
+            # If this is an ST column, activate it
+            $fkey_class->__activateSTColumn($target_alias);
 
             push @$join_clauses,
               "${target_table_alias}.${target_pkey} = ".
