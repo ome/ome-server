@@ -1,3 +1,7 @@
+<!--
+	When an element of this list is selected, the browser will be forwarded
+	to a detailed view of that object.
+-->
 <SELECT NAME="" ONCHANGE="javascript: if( this.value != '' ) { document.location='serve.pl?Page=OME::Web::DBObjDetail&Type=<TMPL_VAR NAME=/formal_name>&ID='+this.value; }">
 	<OPTION  VALUE=""><TMPL_VAR NAME=/common_name>(s)
 	<TMPL_LOOP NAME=/obj_loop>
