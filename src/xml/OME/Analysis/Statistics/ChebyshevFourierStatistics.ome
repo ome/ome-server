@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Nikita Orlov <norlov@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="ChebyshevFourierCoefficientHistogram" AppliesTo="I">
+			<Description>
+			40 bin historgam computed from coefficients of 2D Chebyshev-Fourier
+			Transform.
+			</Description>
+			<Element
+			   Name="Bin00"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_00"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin01"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_01"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin02"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_02"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin03"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_03"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin04"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_04"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin05"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_05"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin06"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_06"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin07"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_07"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin08"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_08"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin09"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_09"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin10"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_10"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin11"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_11"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin12"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_12"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin13"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_13"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin14"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_14"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin15"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_15"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin16"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_16"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin17"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_17"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin18"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_18"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin19"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_19"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin20"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_20"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin21"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_21"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin22"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_22"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin23"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_23"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin24"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_24"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin25"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_25"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin26"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_26"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin27"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_27"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin28"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_28"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin29"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_29"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin30"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_30"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin31"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_31"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin32"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_32"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin33"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_33"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin34"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_34"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin35"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_35"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin36"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_36"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin37"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN__37"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin38"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN__38"
+			   DataType="integer"/>
+			<Element
+			   Name="Bin39"
+			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN__39"
+			   DataType="integer"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Chebyshev Fourier Statistics"
+		   Category="Signatures"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="ChebyshevFourierTransform"
+		   ID="urn:lsid:openmicroscopy.org:Module:7709">
+		  <Description>
+   		  Function computes coefficients for 2D Chebyshev-Fourier transform 
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+			<FormalOutput
+				Name="Chebyshev Fourier Coefficient Histogram"
+				SemanticTypeName="ChebyshevFourierCoefficientHistogram"
+				Count="!"/>
+ 		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><Vector DecodeWith="Chebyshev_Fourier_Statistics_Output_Vector"/></Output>
+			</FunctionOutputs>
+			
+			<VectorDecoder ID="Chebyshev_Fourier_Statistics_Output_Vector">
+				<Element Index= "1"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin00"/>
+				<Element Index= "2"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin01"/>
+				<Element Index= "3"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin02"/>
+				<Element Index= "4"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin03"/>
+				<Element Index= "5"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin04"/>
+				<Element Index= "6"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin05"/>
+				<Element Index= "7"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin06"/>
+				<Element Index= "8"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin07"/>
+				<Element Index= "9"  OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin08"/>
+				<Element Index= "10" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin09"/>
+				<Element Index= "11" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin10"/>
+				<Element Index= "12" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin11"/>
+				<Element Index= "13" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin12"/>
+				<Element Index= "14" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin13"/>
+				<Element Index= "15" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin14"/>
+				<Element Index= "16" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin15"/>
+				<Element Index= "17" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin16"/>
+				<Element Index= "18" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin17"/>
+				<Element Index= "19" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin18"/>
+				<Element Index= "20" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin19"/>
+				<Element Index= "21" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin20"/>
+				<Element Index= "22" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin21"/>
+				<Element Index= "23" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin22"/>
+				<Element Index= "24" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin23"/>
+				<Element Index= "25" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin24"/>
+				<Element Index= "26" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin25"/>
+				<Element Index= "27" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin26"/>
+				<Element Index= "28" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin27"/>
+				<Element Index= "29" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin28"/>
+				<Element Index= "30" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin29"/>
+				<Element Index= "31" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin30"/>
+				<Element Index= "32" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin31"/>
+				<Element Index= "33" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin32"/>
+				<Element Index= "34" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin33"/>
+				<Element Index= "35" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin34"/>
+				<Element Index= "36" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin35"/>
+				<Element Index= "37" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin36"/>
+				<Element Index= "38" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin37"/>
+				<Element Index= "39" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin38"/>
+				<Element Index= "40" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin39"/>
+			</VectorDecoder>
+			
+		  </ExecutionInstructions>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>
