@@ -359,7 +359,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		else if (e.isEventOfType(SelectionEvent.SET_SELECTED_CHAIN)) {
 			// show only those that are for current project
 			// and have executions for this chain
-			System.err.println("browser canvas got selected chain");
+			
 			sets = state.getExecutedDatasets();
 			TreeSet datasets;
 			if (sets != null) {

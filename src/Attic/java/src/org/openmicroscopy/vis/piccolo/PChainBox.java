@@ -230,7 +230,6 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	public void selectionChanged(SelectionEvent e) {
 		SelectionState selectionState = e.getSelectionState();
 		if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_CHAIN)) {
-			System.err.println("chain box got rollover chain event");
 			boolean selected = selectionState.getRolloverChain() == chain; 
 			setHighlighted(selected);
 			
