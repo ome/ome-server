@@ -115,10 +115,7 @@ sub importFiles {
 	push( @files, OME::Image::Server::File->upload($_) )
 		foreach ( @$filenames );
 	
-	my $importer = OME::ImportEngine::ImportEngine->new(%$options);
-	$importer->startImport();
-	my $image_list = $importer->importFiles( $dataset, \@files );
-	$importer->finishImport();
+	my $image_list = OME::ImportEngine::ImportEngine->importFiles(%$options, $dataset, \@files );
 	
 	my $chain = $session->Configuration()->import_chain();
 	OME::Analysis::Engine->executeChain($chain,$dataset,{});

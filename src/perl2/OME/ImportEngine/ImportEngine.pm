@@ -45,8 +45,7 @@ into OME
 =head1 SYNOPSIS
 
 	use OME::ImportEngine::ImportEngine;
-	my $importer = OME::ImportEngine::ImportEngine->new(%flags);
-	my $images = $importer->importFiles($dataset, \@filenames);
+	OME::ImportEngine::ImportEngine->importFiles(%flags, $dataset, \@filenames);
 
 =head1 DESCRIPTION
 
@@ -140,7 +139,7 @@ sub __getFormats {
 
 =head2 importFiles
 
-	my $images = $importer->importFiles($dataset, $files);
+	my $images = $importer->importFiles($files);
 
 Imports a list of image files into a dataset.  Note that there is no
 implicit mapping between filenames and images; in several image formats,
@@ -164,7 +163,9 @@ there is a shorter, alternative syntax that combines the calls to new
 and importFiles into a single method call:
 
 	my $importer = OME::ImportEngine::ImportEngine->new(%flags);
-	$importer->importFiles($dataset, $filenames);
+	my $files_mex = $importer->startImport( $dataset );
+	my $images = $importer->importFiles( $filenames );
+	$importer->finishImport();
 
 would become
 
@@ -178,7 +179,7 @@ whereas C<AllowDuplicates> is optional).
 =cut
 
 sub startImport {
-    my $self = shift;
+    my ($self, $dataset) = @_;
 
     my $session = OME::Session->instance();
 
@@ -188,6 +189,8 @@ sub startImport {
     OME::Tasks::ImportManager->startImport();
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
     $session->commitTransaction();
+    
+    $self->{ _dataset } = $dataset;
 
     return $files_mex;
 }
@@ -203,10 +206,11 @@ sub importFiles {
         $files = pop;
         $dataset = pop;
         $self = $self->new(@_);
-        $self->startImport();
+        $self->startImport( $dataset );
         $called_as_class = 1;
     } else {
-        ($dataset, $files) = @_;
+        $files = shift;
+        $dataset = $self->{_dataset};
     }
 
 	# error check

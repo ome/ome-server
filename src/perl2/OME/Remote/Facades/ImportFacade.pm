@@ -66,8 +66,6 @@ sub startImport {
     # global import MEX among other things).
 
     my $importer = OME::ImportEngine::ImportEngine->new();
-    my $files_mex = $importer->startImport();
-    my $session_key = OME::Session->instance()->SessionKey();
     my $dataset = $factory->
       newObject("OME::Dataset",
                 {
@@ -76,6 +74,8 @@ sub startImport {
                  locked => 0,
                  owner_id => $session->experimenter_id(),
                 });
+    my $files_mex = $importer->startImport($dataset);
+    my $session_key = OME::Session->instance()->SessionKey();
 
 
     # Fork off the child process
@@ -152,7 +152,7 @@ sub importChild ($$$$) {
     }
 
     print STDERR "  Importing\n";
-    $importer->importFiles($dataset, \@files);
+    $importer->importFiles(\@files);
     $importer->finishImport();
 
     print STDERR "  Executing chain\n";
