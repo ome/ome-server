@@ -48,41 +48,6 @@ use OME::Install::Util;
 
 use base qw(OME::Install::InstallationTask);
 
-#*********
-#********* GLOBALS AND DEFINES
-#*********
-
-# Default core directory locations
-my @core_dirs = (
-    {
-	name => "base",
-	path => "/OME",
-	description => "Base OME directory",
-	children => ["xml", "bin", "perl2", "cgi", "repository"]
-    },
-    {
-	name => "temp_base",
-	path => "/var/tmp/OME",
-	description => "Base temporary directory",
-	children => ["lock", "sessions", "install"]
-    }
-);
-
-# The HTML directories that need to be copied to the basedir
-my @html_core = ("JavaScript", "html");
-
-# The image directories that need to be copied to the basedir
-my @image_core = ("images");
-
-# Base and temp dir references
-my $OME_BASE_DIR = \$core_dirs[0]->{path};
-my $OME_TMP_DIR = \$core_dirs[1]->{path};
-
-# Global OME default user, group, UID and GID
-my $OME_USER = "ome"; 
-my $OME_GROUP = "ome";
-my $OME_UID;
-my $OME_GID;
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -106,10 +71,18 @@ sub fix_httpd_conf {
 	}
 
 	copy ($httpdConf,$httpdConfBak) or croak "Couldn't make a copy of $httpdConf: $!\n";
-	open(FILE, "+< $httpdConf") or croak "can't open $httpdConf for reading: $!\n";
-	while (<FILE>) {};
-	print FILE "Include $omeConf\n";
-	close(FILE);
+	open(FILEIN, "< $httpdConf") or croak "can't open $httpdConf for reading: $!\n";
+	open(FILEOUT, "> $httpdConf~") or croak "can't open $httpdConf~ for writing: $!\n";
+	while (<FILEIN>) {
+		s/#\s*LoadModule\s+perl_module/LoadModule perl_module/;
+		s/#\s*AddModule\s+mod_perl\.c/LoadModule mod_perl.c/;
+		s/Include\s+(\/.*)*\/httpd\.ome(.dev)?\.conf.*\n//;
+		print FILEOUT;
+	};
+	print FILEOUT "Include $omeConf\n";
+	close(FILEIN);
+	close(FILEOUT);
+	move ("$httpdConf~",$httpdConf) or croak "Couldn't write $httpdConf: $!\n";
 	$apache_info->{hasOMEinc} = 1;
 }
 
@@ -192,8 +165,8 @@ sub getApacheInfo {
 				$apache_info->{hasOMEinc} = 1 if $_ =~ /\s*Include $omeConf/;
 				$mod_loaded = 1 if $_ =~ /^\s*LoadModule perl_module/;
 				$mod_added = 1 if $_ =~ /^\s*AddModule mod_perl.c/;
-				$mod_loaded_off = 1 if $_ =~ /^#\s*LoadModule perl_module/;
-				$mod_added_off = 1 if $_ =~ /^#\s*AddModule mod_perl.c/;
+				$mod_loaded_off = 1 if $_ =~ /#\s*LoadModule\s+perl_module/;
+				$mod_added_off = 1 if $_ =~ /#\s*AddModule\s+mod_perl\.c/;
 				$apache_info->{DocumentRoot} = $1 if $_ =~ /^\s*DocumentRoot\s+["]*([^"]+)["]*/;
 			}
 			$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
