@@ -107,5 +107,6 @@ if (!$skip_chain && (scalar(@$image_list) > 0)) {
 print "\n\nSuccessfully imported images:\n";
 
 foreach my $image (@$image_list) {
+    OME::Tasks::PixelsManager->saveThumb( $image->DefaultPixels() );
     print $image->id(),": ",$image->name(),"\n";
 }
