@@ -112,7 +112,7 @@ sub __makeHash ($$$) {
     }
 
     my @defined_columns = $object->getColumns();
-    push @defined_columns, keys %{$object->getHasMany()};
+    push @defined_columns, keys %{$object->getAllHasMany()};
     push @defined_columns, keys %{$object->getManyToMany()};
     push @defined_columns, $object->getPseudoColumns();
 

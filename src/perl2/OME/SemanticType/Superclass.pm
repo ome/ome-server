@@ -43,12 +43,13 @@ our $VERSION = $OME::VERSION;
 
 use OME::DBObject;
 use Class::Data::Inheritable;
-
 use base qw(OME::DBObject Class::Data::Inheritable);
-
 __PACKAGE__->mk_classdata('_attribute_type');
 
+use Carp;
+use Log::Agent;
 use fields qw(_data_table_rows _target _module_execution _id );
+use vars qw($AUTOLOAD);
 
 =head1 NAME
 
@@ -253,6 +254,143 @@ the granularity of the attribute's semantic type will be defined.
 This instance methods writes any unsaved changes to the database.
 
 =cut
+
+=head2 getFormalName
+
+	my $formal_name = $class->getFormalName();
+
+Returns the formal name of the semantic type. i.e. @Semantic_Type_Name.
+Overrides method in DBObject
+
+=cut
+
+sub getFormalName {
+    my $proto = shift;
+    return '@'.$proto->semantic_type()->name();
+}
+
+=head2 getInferredHasMany
+
+	my @all_possible_has_many_accessors = 
+		__PACKAGE__->getInferredHasMany();
+	
+This is similar, but distinct from getHasMany. In addition to returning
+the has-many accessors that were declared at package creation, it
+discovers every possible has-many relationship to any SemanticType.
+
+i.e.
+	$experimenter->getInferredHasMany();
+Will return:
+	( RenderingSettingsList, GroupListByLeader, GroupListByContact
+	  ExperimenterGroup, ExperimentList, DatasetAnnotationList,
+	  ImageAnnotationList )
+
+Notice that 'ExperimenterGroup' is included and 'OME::Image' is not. It
+does an exhaustive search across STs, but not DBObjects defined in
+packages. It does not distiguish many-to-many mapping STs from other
+STs. It rides on a completely relational model without inferred or
+explicit structural descriptions. We humans know ExperimenterGroup is a
+mapping class because of the naming convention, its set of elements (2
+references), and it's written description. The only part of that to do
+definitive inference on is the pair of reference elements. Writing code
+to indentify ExperimenterGroup as a mapping table that should basically
+be hidden is the beginning of implementing a more semantically rich
+modeling environment than can be given by a relational model.
+
+Accessors for the discovered relationships will be created dynamically
+via AUTOLOAD magic. The naming convention is [ST_returned].'List'
+(i.e. ExperimentList), or when ambiguity arises because of multiple
+relations, [ST_returned].'ListBy'.[SE_link] (i.e. GroupListByLeader,
+GroupListByContact)
+
+These inferred has-many relationships will never be returned by
+getHasMany.
+
+=cut
+
+sub getInferredHasMany {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    # Find all SEs that refer to this package. 
+	my $factory = $proto->getFactory();
+    my @reference_elements_to_me = $factory->
+      findObjects('OME::SemanticType::Element',
+                  {
+                   'data_column.sql_type'       => 'reference',
+                   'data_column.reference_type' => $proto->semantic_type()->name(),
+                  });
+
+	# Group reference SEs by ST
+	my ( %foreign_key_class_by_STs, %ST_package_names );
+	foreach my $element (@reference_elements_to_me) {
+		my $st                = $element->semantic_type();
+		my $foreign_key_class = '@'.$st->name();
+		push( 
+			@{ $foreign_key_class_by_STs{$foreign_key_class} },
+			$element->name()
+		);
+		$ST_package_names{ $foreign_key_class } = $st->getAttributeTypePackage();
+	}
+
+	# Examine each relationship, discard ones that are flagged as
+	# explicitly defined, flag ones that are discovered, and store
+	# their proper accessor names.
+    my %inferredHasMany;
+	foreach my $foreign_key_class (sort keys %foreign_key_class_by_STs) {
+	    my @foreign_key_alias_list = sort @{ $foreign_key_class_by_STs{ $foreign_key_class } };
+		foreach my $foreign_key_alias ( @foreign_key_alias_list ) {
+			# strip the leading '@' from the st name when compiling the method name
+			my $method_name = substr( $foreign_key_class, 1 ).'List';
+			# a simple name is ambiguous if there are more than one foreign keys
+			$method_name .= 'By'.$foreign_key_alias
+				if( scalar(@foreign_key_alias_list) > 1);
+			# skip this relationship if it's been explicitly defined.
+			# This step is completely unnecessary until we expand STDs
+			next if( $proto->__wasRelationshipExplicitlyDefined( $foreign_key_class, $foreign_key_alias ) );
+			$inferredHasMany{ $method_name } = $ST_package_names{$foreign_key_class};
+			# record method & mark as inferred
+			$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $method_name, 1 ];
+# FIXME: Add remote prototypes entry?
+		}
+	}
+	
+	return \%inferredHasMany;
+}
+
+
+# Returns ( $foreign_key_class, $foreign_key_alias ) if $alias follows syntax
+# conventions of inferred has-many accessors and the relationship is
+# valid. Otherwise, returns undef.
+# Overrides DBObject method
+sub __parseHasManyAccessor {
+	my ($proto, $alias) = @_;
+	my $class = ref( $proto ) || $proto;
+	my $factory = $proto->getFactory();
+
+	if( $alias =~ m/^(\w+)List(By)?(\w+)?$/ ) {
+		my $foreign_key_class = $1;
+		my $foreign_key_alias = $2;
+		my $st = $factory->findObject( 'OME::SemanticType', name => $foreign_key_class )
+			or return undef;
+		# foreign key alias is optional if there is only one appropriate alias
+		# if it was unspecified, figure out what it is
+		unless( $foreign_key_alias ) {
+			my @foreign_key_alias_canidates = $factory->
+			  findObjects('OME::SemanticType::Element',
+						  {
+						   'data_column.sql_type'       => 'reference',
+						   'data_column.reference_type' => $proto->semantic_type->name,
+						   'semantic_type'              => $st
+						  });
+			return undef
+				if scalar( @foreign_key_alias_canidates ) ne 1;
+			$foreign_key_alias = $foreign_key_alias_canidates[0]->name;
+		}
+		return ( '@'.$foreign_key_class, $foreign_key_alias );
+	}
+	return undef;
+}
 
 1;
 

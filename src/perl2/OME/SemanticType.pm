@@ -179,44 +179,6 @@ sub requireAttributeTypePackage {
 
 	use OME::SemanticType::Superclass;
 	use base qw(OME::SemanticType::Superclass);
-	use vars qw($AUTOLOAD);
-	use Carp;
-	use Log::Agent;
-
-	sub AUTOLOAD {
-		return if $AUTOLOAD eq __PACKAGE__.'::DESTROY';
-		my $self = shift;
-		my %params = @_;
-		(my $method = $AUTOLOAD ) =~ s/.*:://;
-		logdbg "debug", "AUTOLOAD called with:\n\t". "$AUTOLOAD( ". join( ', ', map(  $_." => ".( ref($params{$_}) ? '[ '.join( ', ', @{$params{$_}} ).' ]' : $params{$_} ), keys %params ) )." )\n";
-		
-		if( (my $wanted_ST_name = $method) =~ s/List$// ) {
-			my $factory = $self->getFactory();
-			# this is needed because of two syntax styles for formal names of STs: 
-			# @st_name is used most of the place, and st_name is used in data column references
-			( my $reference_type = $self->getFormalName() ) =~ s/^@//;
-			my @SEs = $factory->findObjects( "OME::SemanticType::Element",
-				'data_column.reference_type' => $reference_type,
-				'semantic_type.name'         => $wanted_ST_name
-			) or die "No references from $wanted_ST_name to ".$self->getFormalName()." were found.";
-			die "More than one references from $wanted_ST_name to ". $self->getFormalName()." were found (". join( ', ', map( $_->name(), @SEs ) ). "). Based on the data structure, this accessor method can not be well defined."
-				if( scalar( @SEs ) > 1 );
-			
-			# Define a proper accessor method
-			__PACKAGE__->hasMany($method, '@'.$wanted_ST_name => $SEs[0]->name );
-
-			# perldoc talks about using a fancy goto statement to removed 
-			# AUTOLOAD from the execution stack if AUTOLOAD is dynamically 
-			# defining methods. something like 'goto &$sub_pointer;'
-			# ..but, I'm having trouble doing that, and this way seems to work.
-			return $self->$method( %params );
-		} else {
-			# pretend this AUTOLOAD was never called. mimic the message
-			# you'd get if you called a nonexistent method there was no
-			# AUTOLOAD
-			croak "Can't locate object method \"$method\" via package ".__PACKAGE__;
-		}
-	}
 END_DEF
 
     eval $def;

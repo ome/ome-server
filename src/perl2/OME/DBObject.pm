@@ -71,6 +71,7 @@ use OME::Database::Delegate;
 
 use base qw(Class::Data::Inheritable);
 use fields qw(__id __fields __changedFields);
+use vars qw($AUTOLOAD);
 
 # The columns known about each class.
 # __columns()->{$alias} = [$table,$column,$optional_fkey_class,$sql_options]
@@ -104,6 +105,12 @@ __PACKAGE__->mk_classdata('__deleteKeys');
 # A list of the has-many accessors which have been defined, stored as a
 # hash-set { $accessor_name => [ $foreign_key_class, $foreign_key_alias ] }
 __PACKAGE__->mk_classdata('__hasManys');
+
+# A reverse lookup for has-many accessors which have been declared. Inferred
+# accessors that have been declared but not yet defined will be stored here too.
+# hash-set { { $foreign_key_class }{ $foreign_key_alias } => [ $accessor_name, $wasInferred ] }
+# $wasInferred will be 1 if the relationship was inferred. undef otherwise
+__PACKAGE__->mk_classdata('__hasManysReverseLookup');
 
 # A list of the many-to-many accessors that use a mapping class, stored as a
 # hash-set { $accessor_name => [ $returnedPackageName, $map_class, $map_alias, $map_linker_alias ] }
@@ -255,6 +262,7 @@ sub newClass {
     $class->__primaryKeys({});
     $class->__deleteKeys({});
     $class->__hasManys({});
+    $class->__hasManysReverseLookup({});
     $class->__manyToMany({});
     $class->__sequence(undef);
 
@@ -809,13 +817,18 @@ the column exists, the type will be one of four values -- "normal",
 "has-one", "has-many", or "many-to-many".  If the column does not
 exist, the method returns undef.
 
+Alternative calling convention for internal use:
+	$class->getColumnType( $alias, 1 );
+will return undef for aliases that are valid, but have not yet been created
+aliases for inferred relations are created lazily with the AUTOLOAD method
+If that doesn't make sense to you, then you probably don't need to use this flag.
+
 =cut
 
 sub getColumnType {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-
-    my $alias = shift;
+    my ($alias, $aliasIsActuallyInstantiated) = @_;
 
     if ($alias eq 'id') {
         return "normal"
@@ -826,6 +839,9 @@ sub getColumnType {
           "has-one":
           "normal";
     } elsif (exists $class->__hasManys()->{$alias} ) {
+        return "has-many";
+    } elsif ( ( not $aliasIsActuallyInstantiated ) && 
+              $proto->__hasRelationshipBeenInferred( $alias )) {
         return "has-many";
     } elsif ( exists $class->__manyToMany()->{$alias}) {
         return "many-to-many";
@@ -884,14 +900,13 @@ sub getPseudoColumnType {
 
 Returns the formal name of the class. This is the class name for
 non-semantic types, and @Semantic_Type_Name for semantic types.
+SemanticType::Superclass implements this for STs.
 
 =cut
 
 sub getFormalName {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-
-	return '@'.$1 if( $class =~ m/^OME::SemanticType::__(.+)$/ );
 	return $class;
 }
 
@@ -945,8 +960,14 @@ sub hasMany {
     my $has_manys = $class->__hasManys();
 
     foreach my $alias (@$aliases) {
+		# Mark this relation as being explicitly defined if it has not
+		# already been marked as inferred.
+		$proto->__hasManysReverseLookup()->
+			{ $foreign_key_class }{ $foreign_key_alias } = [ $alias, undef ]
+			unless $proto->__hasRelationshipBeenInferred( $foreign_key_class, $foreign_key_alias );
+
         die "Already an alias named $alias"
-          if defined $class->getColumnType($alias);
+          if defined $class->getColumnType($alias, 1);
 
         # Create an accessor/mutator
 		my $accessor = sub {
@@ -1161,15 +1182,155 @@ The hash follows the format { accessor => package_referenced }
 sub getHasMany {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-	
-	my @aliases = ( keys %{ $class->__hasManys() } );
 	my %relations;
-	foreach (@aliases) {
-		my $returnedClass = $class->getAccessorReferenceType( $_ );
-		$relations{ $_ } = $returnedClass
+	
+	foreach my $alias ( keys %{ $class->__hasManys() } ) {
+		my ( $foreign_key_class, $foreign_key_alias ) = @{ $class->__hasManys()->{ $alias } };
+		next unless $proto->__wasRelationshipExplicitlyDefined( $foreign_key_class, $foreign_key_alias );
+		my $returnedClass = $class->getAccessorReferenceType( $alias );
+		$relations{ $alias } = $returnedClass
 			if $returnedClass;
 	}
 	return \%relations;
+}
+
+=head2 getAllHasMany
+
+	my $hash = __PACKAGE__->getAllHasMany();
+
+Returns a merged hash from __PACKAGE__->getHasMany() and
+__PACKAGE__->getInferredHasMany()
+The hash follows the format { accessor => package_referenced }
+
+=cut
+
+sub getAllHasMany {
+	my $proto = shift;
+	my $hasMany = $proto->getHasMany() || {};
+	my $infHasMany = $proto->getInferredHasMany() || {};
+	return { %$hasMany, %$infHasMany };
+}
+
+=head2 getInferredHasMany
+
+	__PACKAGE__->getInferredHasMany();
+
+Infers what has-many relationships exist from this package to STs.
+The accessors returned can be used. They will be created dynamically 
+via the AUTOLOAD method when you attempt to use them.
+Returns a hash of has-many references this packages contains. 
+
+The hash follows the format { accessor => package_referenced }
+
+This method will return blank lists for all package defined DBObjects
+other than OME::Feature, OME::Image, OME::Dataset, and
+OME::ModuleExecution. Those are special cases because references from
+STs to those DBObjects are hardcoded in OME::SemanticType.
+
+DO NOT call this method before finishing class definitions. If you do,
+all possible has-many relationships will be marked as inferred, which
+will result in unexpected behavior if relationships are later explicitly
+defined.
+
+ST's have their own implementation of this defined in
+OME::SemanticType::Superclass
+
+=cut
+
+sub getInferredHasMany {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+   	my $factory = $proto->getFactory();
+    my %inferredHasMany;
+
+	my %foreign_key_names = (
+		'OME::Feature' => 'feature',
+		'OME::Image' => 'image',
+		'OME::Dataset' => 'dataset',
+		'OME::ModuleExecution' => 'module_execution',
+	);
+	# cop out for most DBObjects; We know that STs can't have references
+	# to anything package defined DBObject besides D, I, F, and MEX
+    return () unless( exists $foreign_key_names{ $class } );
+    
+    # Find STs that we know to have references to this package
+    my %ST_criteria;
+    if( $class ne 'OME::ModuleExecution' ) {
+    	$class =~ m/^OME::(\w)/; # will give 'D', 'I', or 'F'
+    	$ST_criteria{ granularity } = $1;
+    }
+    my @STs = $factory->findObjects( 'OME::SemanticType', %ST_criteria );
+    
+	# Examine each relationship, discard ones that are flagged as
+	# explicitly defined, flag ones that are discovered, and store
+	# their proper accessor names.
+    foreach my $ST ( @STs ) {
+    	my $ST_name = $ST->name;
+		my $relationship_name = $ST_name.'List';
+		my $foreign_key_class = '@'.$ST_name;
+		my $foreign_key_alias = $foreign_key_names{ $class };
+		next if( $proto->__wasRelationshipExplicitlyDefined( $foreign_key_class, $foreign_key_alias ) );
+		$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $relationship_name, 1 ];
+		$inferredHasMany{ $relationship_name } = $ST->getAttributeTypePackage;
+	}
+	
+	return \%inferredHasMany;
+}
+
+# returns true if relationship has already been explicity inferred. 
+# will not return true if relation is valid but has not been explicitly 
+# inferred.
+# Can be called as a class or object method. The two calling styles are:
+# $proto->__hasRelationshipBeenInferred( $alias ); and
+# $proto->__hasRelationshipBeenInferred( $foreign_key_class, $foreign_key_alias );
+sub __hasRelationshipBeenInferred {
+	my $proto = shift;
+	my ( $foreign_key_class, $foreign_key_alias );
+	if( scalar( @_ ) eq 1 ) {
+		my $alias = shift;
+		( $foreign_key_class, $foreign_key_alias ) = 
+			$proto->__parseHasManyAccessor( $alias );
+		return unless $foreign_key_class;
+	} else {
+		( $foreign_key_class, $foreign_key_alias ) = @_;
+	}
+	# Only passes if relation has already been declared.
+	return ( ( exists $proto->__hasManysReverseLookup()->{ $foreign_key_class } ) &&
+             ( exists $proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } ) &&
+             ( defined $proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias }[1] ) );
+}
+
+sub __wasRelationshipExplicitlyDefined {
+	my ($proto, $foreign_key_class, $foreign_key_alias ) = @_;
+	return ( ( exists $proto->__hasManysReverseLookup()->{ $foreign_key_class } ) &&
+             ( exists $proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } ) &&
+             ( not defined $proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias }[1] ) );
+}
+
+# Returns ( $foreign_key_class, $foreign_key_alias ) if $alias follows syntax
+# conventions of inferred has-many accessors and the relationship is
+# valid. Otherwise, returns undef.
+# SemanticType::Superclass has its own implementation of this
+sub __parseHasManyAccessor {
+	my ($proto, $alias) = @_;
+	my $class = ref( $proto ) || $proto;
+	my %foreign_key_names = (
+		'OME::Feature' => 'feature',
+		'OME::Image' => 'image',
+		'OME::Dataset' => 'dataset',
+		'OME::ModuleExecution' => 'module_execution',
+	);
+	# The only package defined DBObjects that will have inferred 
+	# has-many-accessors are D,I,F,MEX
+	return undef unless exists $foreign_key_names{ $class };
+	if( $alias =~ m/^(\w+)List$/ ) {
+		my $foreign_key_class = $1;
+		my $factory = $proto->getFactory();
+		my $st = $factory->findObject( 'OME::SemanticType', name => $foreign_key_class )
+			or return undef;
+		return ( '@'.$foreign_key_class, $foreign_key_names{ $class } );
+	}
+	return undef;
 }
 
 =head2 getManyToMany
@@ -2695,6 +2856,34 @@ sub __newByID {
     confess $@ if $@;
 
     return $class->__newInstance($sth,$id_available,$columns_wanted);
+}
+
+# This generates methods claimed by getInferredHasMany()
+sub AUTOLOAD {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+	return if $AUTOLOAD eq $class.'::DESTROY';
+	my %params = @_;
+	(my $method = $AUTOLOAD ) =~ s/.*:://;
+	logdbg "debug", $class."::AUTOLOAD called with:\n\t". "$AUTOLOAD( ". join( ', ', map(  $_." => ".( ref($params{$_}) ? '[ '.join( ', ', @{$params{$_}} ).' ]' : $params{$_} ), keys %params ) )." )\n";
+
+	# Verify syntax and parse method name
+	my ( $foreign_key_class, $foreign_key_alias ) = $proto->__parseHasManyAccessor( $method );
+	confess "A non-existent method \"$method\" was called on package ".$class
+		unless $foreign_key_class && $foreign_key_alias;
+	# Has the relationship already been defined?
+	die "Will not auto generate a hasMany accessor method because the relationship has already been defined."
+		if( $proto->__wasRelationshipExplicitlyDefined( $foreign_key_class, $foreign_key_alias ) );
+	# record this method & flag it as being inferred
+	$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $method, 1 ];
+	# Properly define the method
+	$class->hasMany($method, $foreign_key_class => $foreign_key_alias );
+
+	# perldoc talks about using a fancy goto statement to removed 
+	# AUTOLOAD from the execution stack if AUTOLOAD is dynamically 
+	# defining methods. something like 'goto &$sub_pointer;'
+	# ..but, I'm having trouble doing that, and this way seems to work.
+	return $proto->$method( %params );
 }
 
 1;
