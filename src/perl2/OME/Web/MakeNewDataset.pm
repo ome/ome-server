@@ -196,6 +196,9 @@ sub getPageBody {
 		} else {
 			# Action
 			$d_manager->create($name, $description, $user->id(), $user->Group()->id());
+
+			# Clean CGI parameters
+			$cgi->delete_all();
 			
 			# Info
 			$body .= $cgi->p({-class => 'ome_info'},

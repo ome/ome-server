@@ -90,7 +90,12 @@ sub getPageBody {
 				}
 			);
 			
-            return ('REDIRECT',$self->pageURL('OME::Web::Home'));
+			# Clean CGI parameters
+			$cgi->delete_all();
+			
+			# Info
+			$body .= $cgi->p({-class => 'ome_info'},
+				'Creation of project successful.');
 		}
 	}
 
