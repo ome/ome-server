@@ -509,6 +509,16 @@ char **cgivars=param;
 			}
 
 
+			if (offset == 0 && length == theFile->size_rep && getenv("REQUEST_METHOD") ) {
+				if (GetFileInfo (theFile) < 0) {
+					freeFileRep (theFile);
+					HTTP_DoError (method,"Could not get info for FileID=%llu!",
+						(unsigned long long)fileID);
+					return (-1);
+				}
+				fprintf (stdout,"Content-Disposition: attachment; filename=\"%s\"\r\n",theFile->file_info.name);
+			}
+
 			HTTP_ResultType ("application/octet-stream");
 			fwrite (theFile->file_buf+offset,length,1,stdout);
 			freeFileRep (theFile);
@@ -525,7 +535,8 @@ char **cgivars=param;
 	
 			strcpy (file_path,"Files/");
 			if (! getRepPath (fileID,file_path,0)) {
-				HTTP_DoError (method,"Could not get repository path for FileID=%llu",fileID);
+				HTTP_DoError (method,"Could not get repository path for FileID=%llu",
+					(unsigned long long)fileID);
 				return (-1);
 			}
 	
