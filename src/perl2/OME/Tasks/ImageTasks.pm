@@ -94,20 +94,30 @@ sub addImagesToDataset ($$$) {
 }
 
 
-=head2 importFiles($repository, @filenames)
-or importFiles(@filenames)
+=head2 importFiles($repository, \%options, @filenames)
+or importFiles(\%options, $@filenames)
+or importFiles($@filenames)
+
+currently recognized options are {AllowDuplicates => 0|1}
 
 Imports the selected files into OME. 
 Returns 
 
 =cut
 sub importFiles {
-	my ($repository, @filenames) = @_;
+	my ($repository, $options, @filenames) = @_;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	
-	unless( ref($repository) and $repository->verifyType('Repository') ) {
+	if( ref( $repository ) eq 'HASH' ) {
+		unshift( @filenames, $options);
+		$options = $repository;
+		$repository = $factory->findAttribute('Repository', IsLocal => 0)
+			or die "could not find a remote repository to work with";
+	} elsif( not ref($repository) or not $repository->verifyType('Repository') ) {
+		unshift( @filenames, $options);
 		unshift( @filenames, $repository);
+		$options = {};
 		$repository = $factory->findAttribute('Repository', IsLocal => 0)
 			or die "could not find a remote repository to work with";
 	}
@@ -118,12 +128,11 @@ sub importFiles {
 		foreach ( @filenames );
 	# FIXME: split @files into two groups: xml files & proprietary
 
-	my %opts;
-#	$opts{AllowDuplicates} = 1;
+#	$options->{AllowDuplicates} = 1;
 	
 	my $chain = $factory->findObject('OME::AnalysisChain', name => 'Image server stats');
 
-	my $importer = OME::ImportEngine::ImportEngine->new(%opts);
+	my $importer = OME::ImportEngine::ImportEngine->new(%$options);
 	my ($dataset,$global_mex) = $importer->startImport();
 	my $image_list = $importer->importFiles( \@files );
 	$importer->finishImport();
