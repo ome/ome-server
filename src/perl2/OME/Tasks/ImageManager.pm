@@ -458,13 +458,12 @@ sub getDisplayOptions{
 	my ($self,$image)=@_;
 	my $session=$self->{session};
 	my $factory=$session->Factory();
-	my ($theZ,$theT,$isRGB);
+	my ($theZ,$theT,$isRGB,@cbw,@rgbOn);
 	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
 	if (defined $displayOptions){
 		$theZ=($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2;
 		$theT=($displayOptions->TStart() + $displayOptions->TStop() ) / 2;
 		$isRGB= $displayOptions->DisplayRGB();
-		my @cbw=();
 		@cbw=(
 			$displayOptions->RedChannel()->ChannelNumber(),
 			$displayOptions->RedChannel()->BlackLevel(),
@@ -479,20 +478,58 @@ sub getDisplayOptions{
 			$displayOptions->GreyChannel()->BlackLevel(),
 			$displayOptions->GreyChannel()->WhiteLevel(),
 			);
-		my @rgbon=();
-		push (@rgbon,$displayOptions->RedChannelOn(),$displayOptions->GreenChannelOn(),$displayOptions->BlueChannelOn());	
+		push (@rgbOn,$displayOptions->RedChannelOn(),$displayOptions->GreenChannelOn(),$displayOptions->BlueChannelOn());	
 		my %h=(
 			'theZ' => $theZ,
 			'theT' => $theT,
 			'isRGB' => $isRGB,
 			'CBW' => \@cbw,
-			'RGBon' =>\@rgbon
+			'RGBon' =>\@rgbOn
 			);
 		return \%h;
 
 	}else{
-		return undef;
-
+		my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp,$path) = $self->getImageDim($image);
+		my $statsHash = $self->getImageStats($image)
+			or die "Could not find Stack Statistics for image (id=".$image->id.").\n";
+		$theZ  = sprintf( "%d", $sizeZ / 2 );
+		$theT  = 0;
+		$isRGB = 1;
+		# set image channel for red display channel
+		$cbw[0] = 0; $rgbOn[0] = 1;
+		# set image channel for green display channel
+		if( $sizeC > 1 ) { $cbw[3] = 1 ; $rgbOn[1] = 1;}
+		else             { $cbw[3] = 0 ; $rgbOn[1] = 0;}
+		# set image channel for blue display channel
+		if( $sizeC > 2 ) { $cbw[6] = 2 ; $rgbOn[2] = 1;}
+		else             { $cbw[6] = 0 ; $rgbOn[2] = 0;}
+		# set image channel for greyscale display channel
+		$cbw[9] = 0;
+		# Set black and white levels for all display channels.
+		foreach my $counter (0..3) {
+			my $channelIndex = $cbw[ $counter*3 ];
+			my %channelMax;
+			unless( exists $channelMax{$channelIndex} ){
+				foreach my $statRecord( @{$statsHash->[$channelIndex]} ) {
+					$channelMax{$channelIndex} = $statRecord->{max}
+						if not exists $channelMax{$channelIndex} or $channelMax{$channelIndex} < $statRecord->{max};
+				}
+			}
+			# set black level to geomean of this section
+			$cbw[ $counter*3 + 1] = $statsHash->[ $channelIndex ][ $theT ]->{geomean};
+			# set white level to geomean + 4 geosigmas  of this section
+			$cbw[ $counter*3 + 2] = $statsHash->[ $channelIndex ][ $theT ]->{geomean} + 4*$statsHash->[ $channelIndex ][ $theT ]->{geosigma};
+			$cbw[ $counter*3 + 2] = $channelMax{$channelIndex}
+				if $cbw[ $counter*3 + 2] > $channelMax{$channelIndex};
+		}
+		my %h=(
+			'theZ' => $theZ,
+			'theT' => $theT,
+			'isRGB' => $isRGB,
+			'CBW' => \@cbw,
+			'RGBon' =>\@rgbOn
+			);
+		return \%h;
 	}
 
 
