@@ -65,10 +65,9 @@ Several of the OME::Factory methods make a distinction between
 defined by an OME::DBObject subclass included in the OME source tree.
 All of the core OME database tables (EXPERIMENTERS, PROJECTS,
 DATASETS, IMAGES, etc.) are "objects", and have predefined
-OME::DBObject subclasses (OME::Experimenter, OME::Project,
-OME::Dataset, OME::Image, etc.).  Methods such as newObject and
-loadObject operate on these core tables, and identify the specific
-OME::DBObject subclass by name.
+OME::DBObject subclasses (OME::Project, OME::Dataset, OME::Image, etc.).
+Methods such as newObject and loadObject operate on these core tables, 
+and identify the specific OME::DBObject subclass by name.
 
 Attribute tables, however, cannot have predefined OME::DBObject
 subclasses, since the semantic types available in OME can vary from
