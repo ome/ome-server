@@ -506,13 +506,13 @@ sub editUser {
     my $self = shift;
 
     my $help = 0;
-    my $user_id = "";
-    my $username = "";
-    my $firstname = "";
-    my $lastname = "";
-    my $email = "";
-    my $directory = "";
-    my $group_id = "";
+    my $user_id = '';
+    my $username = '';
+    my $firstname = '';
+    my $lastname = '';
+    my $email = '';
+    my $directory = '';
+    my $group_id = '';
    	my $group;
    	
    	my $result;
@@ -580,7 +580,7 @@ sub editUser {
 		$directory = $user->DataDirectory()
 		  if $directory eq '';
 		  
-		$group_id = $user->Group()->{__id}
+		$group_id = $user->Group()->id()
 		  if $group_id eq '';
       
       	# let user type in new properties until he is satisfied
@@ -604,7 +604,7 @@ sub editUser {
 	}
 	
 	# idiot traps, Those users are trying to kill us.
-	if (not -e $directory and $directory ne "") {
+	if (not -e $directory and $directory ne '') {
 		if (y_or_n("The $directory directory does not exist. Create it?") ) {
 			unless (mkdir $directory, 0755) {
 				print "Error creating directory:\n$!\n";
@@ -614,21 +614,19 @@ sub editUser {
 	 }
 
 	 # Verify that the specified group exists.
-	 if ($group_id !~ /^[0-9]+$/) {
-		print "\nThe group ID must be a number.\n\n";
-		$group_id = '';
-		exit 1;
-     }
-        
-	 if ($group_id ne '') {
-	 	$group = $factory->loadAttribute('Group',$group_id);
-	 	unless (defined $group) {
-	 		print "The ID $group_id does not specify an existing group.\n";
-	 		exit 1;
-	 	}
-	 }
+	if ($group_id ne '') {
+		if ($group_id !~ /^[0-9]+$/) {
+			print "\nThe group ID must be a number.\n\n";
+			exit 1;
+		 }
+			
+		$group = $factory->loadAttribute('Group',$group_id);
+		unless (defined $group) {
+			print "The ID $group_id does not specify an existing group.\n";
+			exit 1;
+		}
+	}
 		
-	
 	$user->FirstName($firstname)
 	  if $firstname ne '';
 	
