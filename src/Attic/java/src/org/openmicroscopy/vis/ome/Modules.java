@@ -28,50 +28,94 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.ArrayList;
 import org.openmicroscopy.Factory;
 import org.openmicroscopy.SemanticType;
-import org.openmicroscopy.remote.RemoteModule;
+import org.openmicroscopy.Module;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
-//import org.openmicroscopy.remote.RemoteModuleCategory;
+import org.openmicroscopy.ModuleCategory;
+
 
 /** 
- * <p>A wrapper class to handle discussion with the OME Database.<p>
+ * <p>A class to handle the modules in the OME database
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class Modules extends HashMap {
+public class Modules {
 	
+	
+	private HashMap byId = new HashMap();
+	private HashMap byModule = new HashMap();
+
+	// all of the modules that don't have categories
+	private ArrayList uncategorizedModules = new ArrayList();
+	
+	private ArrayList rootCategories = new ArrayList();
+		
 	public Modules(Factory factory) {
-	
-		super();
+		Module mod;
+		Integer id;
+		ModuleInfo info;
+		ModuleCategory cat;
+		
 		// Get all of the modules that are avialable.
 		List mods = factory.findObjects("OME::Module",null);
 		
 		// populate each of them.
 		Iterator iter = mods.iterator();
 		while (iter.hasNext()) {
-			RemoteModule mod = (RemoteModule) iter.next();
+			mod = (Module) iter.next();
 			populateModule(mod);
-			Integer id = new Integer(mod.getID());
-			put(id,new ModuleInfo(mod));
+			id = new Integer(mod.getID());
+			info = new ModuleInfo(mod);
+			byId.put(id,info);
+			byModule.put(mod,info);
+			cat = mod.getCategory();
+			if (cat == null) {
+				System.err.println("uncategorized module "+mod.getName());
+				uncategorizedModules.add(info);
+			}
 		}
+		
+		List cats = factory.findObjects("OME::Module::Category",null);
+		iter = cats.iterator();
+		while (iter.hasNext()) {
+			cat = (ModuleCategory) iter.next();
+			System.err.println("category .."+cat.getName());
+			if (cat.getParentCategory() == null) {
+				System.err.println("adding root category "+cat.getName());
+				rootCategories.add(cat);
+			}
+				
+		}
+		
+		
 	}
 	
 	
 	public Iterator iterator() {
 		
-		Collection c = values();
+		Collection c = byId.values();
 		return c.iterator();
 		
 	}
+	
+	public Iterator uncategorizedModuleIterator() {
+		return uncategorizedModules.iterator();
+	}
+	
+	public Iterator rootCategoryIterator() {
+		return rootCategories.iterator();
+	}
+	
 	public void dump() {
 		Iterator iter = iterator();
 		while (iter.hasNext()) {
 			ModuleInfo modinf = (ModuleInfo) iter.next();
-			RemoteModule mod = modinf.getModule();
+			Module mod = modinf.getModule();
 			dumpModule(mod);
 		}
 	}
@@ -88,7 +132,7 @@ public class Modules extends HashMap {
 	 * 
 	 * @param mod The module to be populated.
 	 */
-	private void populateModule(RemoteModule mod) {
+	private void populateModule(Module mod) {
 				
 		mod.populate();
 		System.err.println("Loading Module..."+mod.getName());
@@ -99,17 +143,18 @@ public class Modules extends HashMap {
 		// get inputs & outputs?
 		List params = mod.getInputs();
 		//System.err.println("...Inputs...");
-		populateParameters(params);
+		//populateParameters(params);
 		params = mod.getOutputs();
 		//System.err.println("...Outputs..");
-		populateParameters(params);
-		//System.err.println("category is "+mod.getCategory());
-		//RemoteModuleCategory category = mod.getCategory();
-		
+		//populateParameters(params);
 	}
 	
 	/**
-	 * Populating the list of parameters - formal inputs or outputs.<p> 
+	 * Populating the list of parameters - formal inputs or outputs. Deprecated.
+	 * Calling this procedure leads to some bugs, without any obvious gain. 
+	 * This call will hopefully soon be replaced by a call that caches the 
+	 * whole list.
+	 * <p> 
 	 * 
 	 * @param params parameter list to be populated.
 	 */
@@ -125,7 +170,7 @@ public class Modules extends HashMap {
 			param.getList();
 			param.getOptional();
 			SemanticType semType = param.getSemanticType();
-		//	System.err.println("semantic type is "+semType);
+			System.err.println("semantic type is "+semType);
 			if (semType != null &&
 				semType.toString().compareTo(">>OBJ:NULL") !=0 )
 				semType.getName();
@@ -135,20 +180,24 @@ public class Modules extends HashMap {
 	}
 	
 	public ModuleInfo getModuleInfo(int i) {
-		return (ModuleInfo) get(new Integer(i));
+		return (ModuleInfo) byId.get(new Integer(i));
+	}
+	
+	public ModuleInfo getModuleInfo(Module mod) {
+		return (ModuleInfo) byModule.get(mod);
 	}
 	
 	public void setModuleInfo(int i,ModuleInfo info) {
 		Integer id = new Integer(i);
-		remove(id);
-		put(id,info);	
+		byId.remove(id);
+		byId.put(id,info);	
 	}
 	/**
 	 * Utility procedures for dumping a module and its contents to stderr.<p>
 	 * 
 	 * @param mod
 	 */
-	private void dumpModule(RemoteModule mod) {
+	private void dumpModule(Module mod) {
 		System.err.println("MODULE: "+mod.getName());
 		System.err.println("Description: "+mod.getDescription());
 		System.err.println("Location: "+mod.getLocation());

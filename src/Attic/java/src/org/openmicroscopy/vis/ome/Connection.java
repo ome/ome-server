@@ -51,7 +51,7 @@ import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
-import java.util.Iterator;
+
 
 
 /** 
@@ -136,6 +136,10 @@ public class Connection {
 			user.getStringElement("LastName"));
 	}
 	
+	public Modules getModules() {
+		return modules;
+	}
+	
 	/**
 	 * Shortcut interface to allow users to get access to modules
 	 * without going through the Modules object. <p>
@@ -143,10 +147,6 @@ public class Connection {
 	 * @param i
 	 * @return
 	 */
-	
-	public Iterator getModuleIterator() {
-		return modules.iterator();
-	}
 	
 	public ModuleInfo getModuleInfo(int i) {
 		return modules.getModuleInfo(i);	

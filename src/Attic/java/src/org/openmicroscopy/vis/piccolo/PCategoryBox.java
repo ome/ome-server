@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.ome.ModuleInfo
+ * org.openmicroscopy.vis.piccolo.PCategoryBox
  *
  *------------------------------------------------------------------------------
  *
@@ -37,42 +37,20 @@
  *------------------------------------------------------------------------------
  */
 
+package org.openmicroscopy.vis.piccolo;
+
+import edu.umd.cs.piccolo.nodes.PPath;
+import java.awt.geom.Rectangle2D;
+import java.awt.Color;
 
 
- 
-package org.openmicroscopy.vis.ome;
-
-import org.openmicroscopy.vis.piccolo.PModule;
-import org.openmicroscopy.Module;
-import java.util.ArrayList;
-
-
-public class ModuleInfo {
-
-	private Module module;
-	//private ModuleCategory category;
+public class PCategoryBox extends PPath {
 	
-	private ArrayList pModules = null;
+	private static final Color CATEGORY_COLOR= new Color(255,255,0,100);
 	
-	public ModuleInfo(Module module) {
-		this.module = module;
+	public PCategoryBox(float x,float y,float w,float h) {
+		super(new Rectangle2D.Float(x,y,w,h));
+		setStrokePaint(null);
+		setPaint(CATEGORY_COLOR);
 	}
-	
-	public Module getModule() {
-		return module;
-	}
-	
-	public void addModuleWidget(PModule pMod) {
-		if (pModules == null)
-			pModules = new ArrayList();
-		pModules.add(pMod);
-	}
-	
-	public ArrayList getModuleWidgets() {
-		return pModules;
-	}
-	
-	public void removeModuleWidget(PModule mod) {
-		pModules.remove(mod);
-	}
-}
+} 

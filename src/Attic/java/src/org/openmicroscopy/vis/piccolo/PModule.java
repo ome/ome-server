@@ -47,7 +47,7 @@ import org.openmicroscopy.vis.ome.ModuleInfo;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PPaintContext;
-import org.openmicroscopy.remote.RemoteModule;
+import org.openmicroscopy.Module;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import java.awt.geom.RoundRectangle2D;
 import javax.swing.event.EventListenerList;
@@ -90,7 +90,7 @@ public class PModule extends PPath {
 	private static final Color DEFAULT_FILL = Color.lightGray;
 	public static final Color HIGHLIGHT_COLOR=Color.magenta;
 	
-	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(1.0f); 
+	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(3.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,14);
 
 	private ModuleInfo info;
@@ -124,7 +124,7 @@ public class PModule extends PPath {
 	public PModule(Connection connection,ModuleInfo info,float x,float y) {
 		super();
 		this.info = info;
-		RemoteModule module = info.getModule();
+		Module module = info.getModule();
 		
 		// create the container node for the formal parameters
 		labelNodes = new PParameterNode();
@@ -173,7 +173,7 @@ public class PModule extends PPath {
 	 *
 	 * @param connection  the database connection object
 	 */
-	private void addParameterLabels(RemoteModule module,Connection connection) {
+	private void addParameterLabels(Module module,Connection connection) {
 		
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
@@ -277,7 +277,7 @@ public class PModule extends PPath {
 	}
 	
 	
-	public RemoteModule getModule() {
+	public Module getModule() {
 		return info.getModule();
 	}
 	

@@ -44,7 +44,9 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PNode;
+import java.awt.event.MouseEvent;
 
 /** 
  * An event handler for the PPaletteCanvas. Generally works like 
@@ -60,8 +62,12 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	private PPaletteCanvas canvas;
 	private boolean selected = false;
 	
+	protected int allButtonMask = MouseEvent.BUTTON1_MASK;
+	
+	
 	public PPaletteEventHandler(PPaletteCanvas canvas) {
 		super();
+		setEventFilter(new PInputEventFilter());
 		this.canvas = canvas;		
 	}
 	
@@ -83,6 +89,22 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			canvas.setSelected(null);
 			super.mousePressed(e);
 		}
+	}
+	
+	public void mouseClicked(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		int mask = e.getModifiers() & allButtonMask;
+		if (node instanceof PCategoryBox && mask == MouseEvent.BUTTON1_MASK) {
+			System.err.println("clicked on a category box");
+			e.setHandled(true); 
+		}
+		else if ((e.getModifiers() & MouseEvent.BUTTON3_MASK) ==
+					MouseEvent.BUTTON3_MASK) {
+			System.err.println("shift clicked somewhere");
+			e.setHandled(true);
+		}
+		else
+			super.mouseClicked(e);
 	}
 	
 	

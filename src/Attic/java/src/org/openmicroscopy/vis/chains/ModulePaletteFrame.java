@@ -60,8 +60,6 @@ import java.awt.Container;
 
 public class ModulePaletteFrame extends JFrame {
 
-
-	public static final int BUFFER=30;
 	
 	private Controller controller;
 	private Container contentPane;
@@ -115,15 +113,13 @@ public class ModulePaletteFrame extends JFrame {
 			canvas.setConnection(connection);
 			toolBar.setUserName(connection.getUserName());
 			// create a pallete, show it on the screen, make it visible.
-			int w = canvas.getPaletteWidth();
-			System.err.println("width is "+w);
-			int h = canvas.getPaletteHeight();
-			System.err.println("height is "+h);
-			double scale = ((double) HEIGHT- BUFFER)/((double) h);
-			canvas.scaleToCenter(scale);
+	
+			canvas.scaleToSize((double) WIDTH,(double) HEIGHT);
+			
 			canvasFrame = new CanvasFrame(connection);
 		}
 		else {
+			canvas.logout();
 			canvasFrame.logout();
 			canvasFrame.dispose();
 			canvasFrame = null;

@@ -44,10 +44,16 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
+import org.openmicroscopy.ModuleCategory;
+import org.openmicroscopy.Module;
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.Modules;
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import java.util.Iterator;
+import java.util.List;
+import java.awt.Font;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragGestureListener;
@@ -69,28 +75,44 @@ import java.awt.datatransfer.StringSelection;
 
 public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
-	private Connection connection;
+	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,24);
 	
-	private static final float GAP=30f;
+	
+	private static final float HGAP=30f;
 	private static final float TOP=20f;
+	private static final float LEFT=20f;
 	private static final int BORDER=20;
+	
+	
 	
 	private DragSourceAdapter dragListener;
 	private DragSource dragSource;
 
-	private float x,y;
-	private float maxWidth = 0f;
+	private float x=LEFT+HGAP;
+	private float y= TOP;
+	private float VGAP=20f;
+	private float NAME_INSET=20;
+	private float maxWidth = 0;
 	private float maxHeight = 0;
+	private float categoryWidth =0;
+	
+	private Connection connection;
+	private Modules modules;
+
 	
 	private PLayer layer;
-	
+	private PLayer categoryLayer = new PLayer();
 	private PModule selected;
+	
+	private int modCount = 0;
 	
 	public PPaletteCanvas() {
 		super();
 		removeInputEventListener(getPanEventHandler());
 		addInputEventListener(new PPaletteEventHandler(this));
 		layer = getLayer();
+		layer.addChild(categoryLayer);
+		categoryLayer.moveToBack();
 		dragListener = new DragSourceAdapter() {
 			public void dragExit(DragSourceEvent dse) {
 			}
@@ -101,52 +123,100 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		
 	}
 	
-	public void setConnection(Connection connection) {
-			
-		
-		this.connection = connection;
-		// this draglistener doesn't do anything, but is needed to 
-		// satisfy API.
-		populate();
-	}
-	
 	/** 
 	 * Populate the Canvas with nodes for each of the modules. 
-	 * This procedure is called when the Connection object has completed
-	 * loading the module information from the database.<p>
-	 * 
-	 * The canvas is populated in columns of 5 modules each.
-	 * 
-	 * @param connection The connection to the database.
-	 * 
-	 */
-	
-	private void populate() {
+ 	 * This procedure is called when the Connection object has completed
+ 	 * loading the module information from the database.<p>
+ 	 * 
+ 	 * The canvas is populated in columns of 5 modules each.
+ 	 * 
+  	 * @param connection The connection to the database.
+  	 *  
+ 	 */
+	public void setConnection(Connection connection) {
 		
-		x = 0;
-		y = TOP;
+		this.connection = connection;
+		modules = connection.getModules();
 		
-		int i =0;
-		Iterator iter = connection.getModuleIterator();
+		// do it by categories
+		Iterator iter = modules.rootCategoryIterator();
+		while (iter.hasNext()) {
+			ModuleCategory cat = (ModuleCategory) iter.next();
+			displayModulesByCategory(cat);			
+		}
+		// do uncategorized.
+		 				
+		float top=y;
+		displayCategoryName("");
+		categoryWidth=0;
+		iter = modules.uncategorizedModuleIterator();
 		while (iter.hasNext()) {
 			ModuleInfo info = (ModuleInfo) iter.next();
 			displayModule(info);
-			i++;
-			if ((i % 5) == 0) { // at the start of a new column 
-				x += 100+maxWidth;
-				y = TOP;
-				maxWidth =0;
-			}
 		}
-		System.err.println("final height is "+y);
-		//getCamera().animateViewToIncludeBounds(layer.getFullBoundsReference(),0);
+		// box up this row.
+		newRow();
+		float bottom = y;
+		decorateCategory(top,bottom,categoryWidth);
+		System.err.println("bottom y is "+y);
 	}
 	
-	public void scaleToCenter(double scale) {
-		PBounds b = layer.getFullBoundsReference();
-		System.err.println("scaling to "+scale);
-		getCamera().scaleView(scale);
+	private void displayModulesByCategory(ModuleCategory cat) {
+		// display all modules for this category
+		List mods = cat.getModules();
+		Iterator iter  = mods.iterator();
 		
+		float top = y;
+		displayCategoryName(cat.getName());
+		while (iter.hasNext()) {
+			Module mod = (Module) iter.next();
+			ModuleInfo info = modules.getModuleInfo(mod);
+			displayModule(info);
+		}
+		
+		// recursively iterate over children categories.
+		List children = cat.getChildren();
+		iter = children.iterator();
+		while (iter.hasNext()) {
+			ModuleCategory child = (ModuleCategory) iter.next();
+			displayModulesByCategory(child);
+		}
+
+		//	make a new row
+		newRow();
+		
+		//	do something to box up this row.
+		float bottom =y;		
+		decorateCategory(top,bottom,categoryWidth);
+		System.err.println("bottom y is "+y);
+
+		categoryWidth = 0;
+	}
+	
+	private void decorateCategory(float top,float bottom,float width) {
+		float height = bottom-top;
+		
+		PCategoryBox box = new PCategoryBox(LEFT,top,width,height);
+		categoryLayer.addChild(box);
+		box.moveToBack();
+		
+		y+= VGAP;
+	}
+	
+	private void displayCategoryName(String name) {
+		y+=VGAP;
+		float nameX = LEFT+NAME_INSET;
+		if (name.compareTo("") !=0) {// if there is a name
+			PText nameText = new PText(name);
+			nameText.setFont(NAME_FONT);
+			nameText.setPickable(false);
+			categoryLayer.addChild(nameText);
+			nameText.moveToFront();
+			System.err.println("translating name label to "+nameX+","+y);
+			nameText.setOffset(nameX,y);
+			y += nameText.getFullBoundsReference().getHeight();
+			y+=VGAP;
+		}
 	}
 
 	/** 
@@ -160,24 +230,59 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		
 		PModule mNode = new PModule(connection,modInfo,x,y);
 		modInfo.addModuleWidget(mNode);
-		float h = (float) mNode.getBounds().getHeight();
-		y += h+GAP;
+		float w = (float) mNode.getBounds().getWidth();
+		x += w+HGAP;
 		layer.addChild(mNode);
-		float nodeWidth = (float) mNode.getBounds().getWidth();
-		if (nodeWidth > maxWidth)
-			maxWidth=nodeWidth;
-		if (y > maxHeight)
-			maxHeight = y;
+		float nodeHeight = (float) mNode.getBounds().getHeight();
+		if (nodeHeight > maxHeight)
+			maxHeight=nodeHeight;
+		if (x > maxWidth)
+			maxWidth = x;
+		if (x > categoryWidth)
+			categoryWidth = x;
+			
+		modCount++;
+		if ((modCount % 4) == 0) { // at the start of a new column
+			newRow();
+		}
 	}
 	
-	public int getPaletteWidth() {
-		return (int) layer.getFullBoundsReference().getWidth()+BORDER;
+	private void newRow() {
+		modCount = 0;
+		x = LEFT+HGAP;
+		y += VGAP+maxHeight;
+		maxHeight = 0;
 	}
+
 	
-	public int getPaletteHeight() {
-		return (int) maxHeight+BORDER;
+	public void scaleToSize(double width,double height) {
+		
+		double scale;
+		
+		PBounds b = layer.getGlobalFullBounds();
+		
+		
+		double paletteHeight = b.getY()+b.getHeight();
+		System.err.println("pallete height is "+paletteHeight);
+		// I don't know why, but I need to pad the height somehow.
+		paletteHeight+= 6*BORDER;	
+		System.err.println("adjusted palette height is "+paletteHeight);
+		double vertScale = height/paletteHeight;
+		System.err.println("vert scale is "+vertScale);
+		
+		double paletteWidth = b.getX()+b.getWidth();
+		double horizScale = width/paletteWidth;
+		System.err.println("horiz scale is "+horizScale);
+		if (horizScale < vertScale)
+			scale = horizScale;
+		else 
+			scale = vertScale;
+		System.err.println("scaling to "+scale);
+		getCamera().scaleView(scale);
+		
 	}
-	
+		
+			
 	public void setSelected(PModule module) {
 		selected = module;
 	}
@@ -200,5 +305,17 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			System.err.println("dragging..."+s);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,text,dragListener);
 		}
+	}
+	
+	
+	public void logout() {
+		layer.removeAllChildren();
+		categoryLayer  = new PLayer();
+		layer.addChild(categoryLayer);
+		categoryLayer.moveToBack();
+		x = LEFT+HGAP;
+		y = TOP;
+		maxWidth=maxHeight=0;
+		getCamera().setViewScale(1.0);
 	}
 }

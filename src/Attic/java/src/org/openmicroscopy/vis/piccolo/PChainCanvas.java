@@ -46,7 +46,7 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
-import org.openmicroscopy.remote.RemoteModule;
+import org.openmicroscopy.Module;
 import java.awt.dnd.DropTargetListener;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetEvent;
@@ -163,7 +163,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		layer.addChild(mNode);
 		
 		// put the module info back into the connection
-		RemoteModule module = info.getModule();
+		Module module = info.getModule();
 		connection.setModuleInfo(module.getID(),info);
 	}
 	
