@@ -33,6 +33,46 @@
 # Written by:    Douglas Creager <dcreager@alum.mit.edu>
 #
 #-------------------------------------------------------------------------------
+=head1 NAME
+
+OME::Web - The parent class of OME web pages
+
+=head1 SYNOPSIS
+
+	package OME::Web::Home;
+	use strict;
+	use OME;
+	use CGI;
+	use base qw/OME::Web/;
+
+	our $VERSION;
+	$VERSION = $OME::VERSION;
+	
+	sub getPageTitle {
+		return "Open Microscopy Environment";
+	}
+	
+	sub getPageBody {
+		$self->contentType('text/html');
+		$HTML = <<ENDHTML;
+			<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+			<HTML><HEAD>
+			<TITLE>Open Microscopy Environment</TITLE>
+			<META NAME="ROBOTS" CONTENT="NOINDEX">
+			</HEAD>
+	ENDHTML	
+		return ('HTML', $HTML);
+	}
+	1;
+
+
+=head1 DESCRIPTION
+
+This class is meant to be sub-classed by web pages in OME.  This class is only meant to provide common functionality.
+
+=head1 METHODS
+
+=cut
 
 
 package OME::Web;
@@ -397,6 +437,13 @@ sub createOMEPage {
 }
 
 
+=head2 getPageTitle
+
+This method should be over-ridden in a sub-class and return a text string with the page title,
+which will normally appear in the window's title bar.
+
+=cut
+
 # getPageTitle()
 # --------------
 # This should be overriden in descendant classes to return the title
@@ -405,6 +452,42 @@ sub createOMEPage {
 sub getPageTitle {
 	return undef;
 }
+
+
+=head2 getPageBody
+
+This method must be over-ridden in a sub-class and return two scalars.
+The first scalar is treated as a status message to determine what to do with the second scalar.  For example,
+
+  return ('HTML',$HTML);
+
+Accepted status strings are C<HTML>, C<IMAGE>, C<SVG>, C<FILE>, C<REDIRECT> and C<ERROR>.
+If the returned status is C<HTML>, then the page is appropriately decorated to match the other pages in OME.
+No special processing is currently done for C<IMAGE> and C<SVG>.
+
+A C<FILE> status is used for downloading files to the browser.  In this case, the second scalar is a hash reference
+containing information to control the download process.  The hash may contain the following:
+
+ filename         - a path to the file on the server to be downloaded.
+ downloadFilename - The name of the file that should be used on the client (the browser).
+ temp             - A flag that if true, will cause the downloaded file to be deleted on the server.
+ 
+ return ('FILE',{filename => $myFile, downloadFilename => 'foo.txt', temp => 1});
+
+A C<REDIRECT> status is used to get the browser to go to a different URL specified by the second scalar:
+
+  return ('REDIRECT','http://ome.org/somewhere/else.html');
+
+A C<ERROR> status means an error has occurred.  The error message should be sent as the second scalar.
+
+  return ('ERROR','Something really bad happened');
+
+The script can generate the same effect by calling
+
+  die ('Something really bad happened');
+
+=cut
+
 
 # getPageBody()
 # -------------
@@ -616,3 +699,12 @@ sub tableLine {
 }
 
 1;
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Josiah Johnston <siah@nih.gov>,
+Ilya Goldberg <igg@nih.gov>,
+Open Microscopy Environment
+
+=cut
