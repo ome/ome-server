@@ -42,6 +42,7 @@ our $VERSION = $OME::VERSION;
 our $SHOW_ASSEMBLY = 0;
 
 use OME::Remote::DTO;
+use UNIVERSAL::require;
 use Exporter;
 use base qw(Exporter);
 
@@ -105,6 +106,7 @@ sub getDataClass {
     }
 
     OME::Factory->__checkClass($class);
+    $class->require();
     return $class;
 }
 
@@ -226,7 +228,7 @@ sub __genericDTO {
 }
 
 sub __parseUpdateHash {
-    my ($proto,$serialized,$id_hash) = @_;
+    my ($proto,$class_name,$serialized,$id_hash) = @_;
 
     die "Cannot update an object with no ID"
       unless defined $serialized->{id};
@@ -235,6 +237,19 @@ sub __parseUpdateHash {
 
     # First, parse the serialized hash looking for references
     foreach my $key (keys %$serialized) {
+        my $type = $class_name->getColumnType($key);
+        die "Unknown column $key in class $class_name"
+          unless defined $type;
+
+        if ($type eq 'pseudo-column') {
+            # This is a pseudo-column, which is not actually stored in
+            # the database.  Remove it from the hash, so that the
+            # DBObject update/insert code doesn't barf.
+
+            delete $serialized->{$key};
+            next;
+        }
+
         my $val = $serialized->{$key};
         if ($val =~ /^NEW:/) {
             # If we find a reference to a new object, we look for it in
@@ -263,7 +278,7 @@ sub __updateDTO {
     my ($proto,$class_name,$serialized,$id_hash) = @_;
 
     my $factory = OME::Session->instance()->Factory();
-    my $id = $proto->__parseUpdateHash($serialized,$id_hash);
+    my $id = $proto->__parseUpdateHash($class_name,$serialized,$id_hash);
 
     if ($id =~ /^NEW:/) {
         # If the ID of the object to be saved looks like a new ID, then
