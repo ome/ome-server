@@ -439,8 +439,9 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	
     public void doMouseDoubleClicked(PInputEvent e) {
     	SelectionState state = SelectionState.getState();
-    	if (state.getSelectedProject() != null)
-			SelectionState.getState().setSelectedProject(null);
+    	if (state.getSelectedProject() != null) {
+    		SelectionState.getState().setSelectedProject(null);
+    	}
     }
     
 	public void mouseReleased(PInputEvent e) {
@@ -458,8 +459,6 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	
 	public void handlePopup(PInputEvent e) {
 		if (e.getPickedNode() instanceof ProjectLabel) {
-			//System.errprintln("trying to handle product in project selection");
-			//System.errprintln("event handled is "+e.isHandled());
 			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
 			CProject picked = pl.getProject();
 			CProject selected = SelectionState.getState().getSelectedProject();
