@@ -248,7 +248,12 @@ public class RemoteObject
         if (o instanceof String)
         {
             String s = (String) o;
-            return Integer.parseInt(s);
+            try
+            {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return 0;
+            }
         } else if (o instanceof Integer) {
             return ((Integer) o).intValue();
         } else if (o == null) {
@@ -280,7 +285,12 @@ public class RemoteObject
         if (o instanceof String)
         {
             String s = (String) o;
-            return Long.parseLong(s);
+            try
+            {
+                return Long.parseLong(s);
+            } catch (NumberFormatException e) {
+                return 0L;
+            }
         } else if (o instanceof Integer) {
             return (long) ((Integer) o).intValue();
         } else if (o == null) {
@@ -312,7 +322,12 @@ public class RemoteObject
         if (o instanceof String)
         {
             String s = (String) o;
-            return Float.parseFloat(s);
+            try
+            {
+                return Float.parseFloat(s);
+            } catch (NumberFormatException e) {
+                return 0.0F;
+            }
         } else if (o instanceof Double) {
             return (float) ((Double) o).doubleValue();
         } else if (o == null) {
@@ -343,7 +358,12 @@ public class RemoteObject
         if (o instanceof String)
         {
             String s = (String) o;
-            return Double.parseDouble(s);
+            try
+            {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException e) {
+                return 0.0D;
+            }
         } else if (o instanceof Double) {
             return ((Double) o).doubleValue();
         } else if (o == null) {
