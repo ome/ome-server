@@ -284,6 +284,7 @@ public class Controller  implements LoginResponder {
 				moduleFrame.dispose();
 				moduleFrame = null;
 			}
+			removeFrames();
 			closeStatusWindow();
 			doLogin();	
 	}
@@ -309,13 +310,16 @@ public class Controller  implements LoginResponder {
 	 */	
 	public void doLogout() {
 
-		moduleFrame.dispose();
+		cancelLogin();
+		/*moduleFrame.dispose();
 		controlPanel.dispose();
 		removeFrames();
 		// remove library
-		if (library !=null)
+		if (library !=null) {
 			library.dispose();
-		doLogin();
+			
+		}
+		doLogin(); */
 	}
 	
 	/**
@@ -334,10 +338,10 @@ public class Controller  implements LoginResponder {
 		
 		iter = resultFrames.iterator();
 
-		//ResultFrame resultFrame;
+		ResultFrame resultFrame;
 		while (iter.hasNext()) {
-			//resultFrame = (ResultFrame) iter.next();
-			//resultFrame.dispose();
+			resultFrame = (ResultFrame) iter.next();
+			resultFrame.dispose();
 		}
 		resultFrames.clear();
 
