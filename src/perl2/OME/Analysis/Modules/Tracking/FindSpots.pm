@@ -65,18 +65,19 @@ sub startImage {
     my ($self,$image) = @_;
     $self->SUPER::startImage($image);
 
-    my $image = $self->getCurrentImage();
-    my $pixels = $self->getCurrentInputAttributes("Pixels")->[0];
-    my $path = $image->getFullPath( $pixels );
-    my $location = $self->getModule()->location();
-    my $options = $self->{_options};
+    my $image       = $self->getCurrentImage();
+    my $pixels_attr = $self->getCurrentInputAttributes("Pixels")->[0];
+    my $pixels_data = OME::Tasks::PixelsManager->loadPixels( $pixels_attr );
+    my $path        = $pixels_data->getTemporaryLocalPixels();
+    my $location    = $self->getModule()->location();
+    my $options     = $self->{_options};
 
     my $params = $self->getCurrentInputAttributes("Parameters")->[0];
     my $paramopts = " ";
 
     my $channel = $params->Channel();
     if (defined $channel) {
-        if ($channel >= 0 && $channel < $pixels->SizeC()) {
+        if ($channel >= 0 && $channel < $pixels_attr->SizeC()) {
             my $v = sprintf("%d",$channel);
             $paramopts .= "$v ";
         } else {
@@ -126,7 +127,7 @@ sub startImage {
         my $timeopt = "-time ";
 
         if (defined $timeStart) {
-            if ($timeStart >= 0 && $timeStart < $pixels->SizeT()) {
+            if ($timeStart >= 0 && $timeStart < $pixels_attr->SizeT()) {
                 my $v = sprintf("%d",$timeStart);
                 $timeopt .= "$v";
             } else {
@@ -137,7 +138,7 @@ sub startImage {
         $timeopt .= "-";
 
         if (defined $timeStop) {
-            if ($timeStop >= 0 && $timeStop < $pixels->SizeT()) {
+            if ($timeStop >= 0 && $timeStop < $pixels_attr->SizeT()) {
                 my $v = sprintf("%d",$timeStop);
                 $timeopt .= "$v";
             } else {
@@ -172,8 +173,8 @@ sub startImage {
     $self->{_currentImage} = $image;
     $self->{_cmdLine} = $cmdLine;
 
-    my $dimString = "Dims=".$pixels->SizeX().",".$pixels->SizeY().
-	",".$pixels->SizeZ().",".$pixels->SizeC().",".$pixels->SizeT();
+    my $dimString = "Dims=".$pixels_attr->SizeX().",".$pixels_attr->SizeY().
+	",".$pixels_attr->SizeZ().",".$pixels_attr->SizeC().",".$pixels_attr->SizeT();
 
     print $input "$dimString\nWaveStats=\n";
 
