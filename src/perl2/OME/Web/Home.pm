@@ -88,10 +88,10 @@ sub __getQuickViewImageData {
 	# Build image header/content
 	my ($i_header, $i_content);
 
-	# Count of images in the dataset
-	my $d_icount = $d->count_images();
-	
 	if ($d) {
+		# Count of images in the dataset
+		my $d_icount = $d->count_images();
+	
 		# Header
 		$i_header  = $q->a( {
 				href => $self->getObjDetailURL( $d ),
