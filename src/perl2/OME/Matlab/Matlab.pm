@@ -149,7 +149,7 @@ only import one set of constants:
 
 	use OME::Matlab qw(:complexities);
 
-=head3 Matrix class constants (C<:classes>)
+=head2 Matrix class constants (C<:classes>)
 
 =over
 
@@ -189,7 +189,7 @@ only import one set of constants:
 
 =back
 
-=head3 Complexity constants (C<:complexities>)
+=head2 Complexity constants (C<:complexities>)
 
 =over
 
@@ -207,14 +207,14 @@ for C<object> and C<function>.  There are also convenience
 constructors to create scalars and second-order matrices of most of
 the classes.
 
-=head3 newDoubleScalar
+=head2 newDoubleScalar
 
 	my $array = OME::Matlab::Array->newDoubleScalar($value);
 
 Creates a new scalar matrix of class C<double>, and initializes its
 only element to the value provided.
 
-=head3 newComplexScalar
+=head2 newComplexScalar
 
 	my $array = OME::Matlab::Array->newComplexScalar($real,$imaginary);
 
@@ -223,7 +223,7 @@ initializes its only element to the value provided.
 
 B<This method is not yet written -- holler at Doug>
 
-=head3 newNumericScalar
+=head2 newNumericScalar
 
 	my $array = OME::Matlab::Array->newNumericScalar($value,
 	                                                 [$class],
@@ -236,7 +236,7 @@ values must be given.
 
 B<This method is not yet written -- holler at Doug>
 
-=head3 newLogicalScalar
+=head2 newLogicalScalar
 
 	my $array = OME::Matlab::Array->newLogicalScalar($value);
 
@@ -244,7 +244,7 @@ Creates a new scalar matrix of class C<logical>, and initializes its
 only element to the value provided.  As is usual in Perl, a value of 0
 signifies I<false>; any other value signifies I<true>.
 
-=head3 newStringScalar
+=head2 newStringScalar
 
 	my $array = OME::Matlab::Array->newStringScalar($value);
 
@@ -252,14 +252,14 @@ Creates a new row-vector of class C<char>.  Its height will be one,
 and its width will be the length of the string provided.  Its element
 will be assigned the values of the string.
 
-=head3 newDoubleMatrix
+=head2 newDoubleMatrix
 
 	my $array = OME::Matlab::Array->newDoubleMatrix($m,$n,[$complexity]);
 
 Creates a new $m x $n matrix of class C<double> and the specified
 complexity.  (The complexity defaults to I<real> if unspecified.)
 
-=head3 newNumericMatrix
+=head2 newNumericMatrix
 
 	my $array = OME::Matlab::Array->newNumericMatrix($m,$n,[$complexity]);
 
