@@ -35,129 +35,13 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 
-	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-	
-		<!-- FORMAL OUTPUT STs-->
-		 <SemanticType Name="CoOcMat_AngularSecondMoment" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="ASM" 
-				DBLocation="CO_OCCURRENCE_MATRIX.ASM"  
-				DataType="float"/>
-		</SemanticType>
-		
-		<SemanticType Name="CoOcMat_Contrast" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="Contrast" 
-				DBLocation="CO_OCCURRENCE_MATRIX.CONTRAST"  
-				DataType="float"/>
-		</SemanticType>
-		
-		<SemanticType Name="CoOcMat_Correlation" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="Correlation" 
-				DBLocation="CO_OCCURRENCE_MATRIX.CORRELATION"  
-				DataType="float"/>
-		</SemanticType>
-		
-		<SemanticType Name="CoOcMat_Variance" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="Variance" 
-				DBLocation="CO_OCCURRENCE_MATRIX.VARIANCE"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_InverseDifferenceMoment" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="IDM" 
-				DBLocation="CO_OCCURRENCE_MATRIX.IDM"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_SumAverage" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="SumAvg" 
-				DBLocation="CO_OCCURRENCE_MATRIX.SUM_AVG"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_SumVariance" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="SumVar" 
-				DBLocation="CO_OCCURRENCE_MATRIX.SUM_VAR"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_SumEntropy" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="SumEntropy" 
-				DBLocation="CO_OCCURRENCE_MATRIX.SUM_ENTROPY"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_Entropy" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="Entropy" 
-				DBLocation="CO_OCCURRENCE_MATRIX.ENTROPY"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_DifferenceEntropy" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="DiffEntropy" 
-				DBLocation="CO_OCCURRENCE_MATRIX.DIFF_ENTROPY"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_DifferenceVariance" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="DiffVar" 
-				DBLocation="CO_OCCURRENCE_MATRIX.DIFF_VAR"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="MeasCorr1" 
-				DBLocation="CO_OCCURRENCE_MATRIX.MEAS_CORR_1"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="MeasCorr2" 
-				DBLocation="CO_OCCURRENCE_MATRIX.MEAS_CORR_2"  
-				DataType="float"/>
-		</SemanticType>	
-		
-		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="I">
-			<Description>Statistical value computed from co-ocurrence matrx.</Description>
-			<Element 
-				Name="MaxCorrCoef" 
-				DBLocation="CO_OCCURRENCE_MATRIX.MAX_CORR_COEF"  
-				DataType="float"/>
-		</SemanticType>	
-	</SemanticTypeDefinitions>	
-	
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
 		   ModuleName="Haralick Features (Angle 0)"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
-		   ID="urn:lsid:openmicroscopy.org:Module:94">
+		   ID="urn:lsid:openmicroscopy.org:Module:7704">
 		  <Description>
 			The gray-level co-occurrence matrix is the two dimensional matrix of joint probabilities P_{d,r}(i,j) 
 			between pairs of pixels, separated by a distance, \(d\), in a given direction, \(r\). 
@@ -200,9 +84,9 @@
           <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="uint8"/></Input>
-			  <!-- Direction -->
-			  <Input><ConstantScalar Value="1"/></Input>
 			  <!-- Distance -->
+			  <Input><ConstantScalar Value="1"/></Input>
+			  <!-- Direction -->
 			  <Input><ConstantScalar Value="0"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>

@@ -188,7 +188,7 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
-		   ID="urn:lsid:openmicroscopy.org:Module:93">
+		   ID="urn:lsid:openmicroscopy.org:Module:7702">
 		  <Description>
 			The gray-level co-occurrence matrix is the two dimensional matrix of joint probabilities P_{d,r}(i,j) 
 			between pairs of pixels, separated by a distance, \(d\), in a given direction, \(r\). 
