@@ -5,9 +5,7 @@ Makefile.PL
 OME.pm
 OME/Analysis.pm
 OME/AnalysisView.pm
-OME/Attribute.pm
 OME/DBObject.pm
-OME/DataType.pm
 OME/Dataset.pm
 OME/Experimenter.pm
 OME/Factory.pm
