@@ -19,9 +19,36 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-# This program acts as a test jig for the Exporter class. It uses the same
-# API for Exporter as the production OME.
-#
+=pod
+
+=head1 NAME
+
+export_test.pl - export an OME image to an image file (not the OME format)
+
+=head1 SYNOPSIS
+
+perl ExportTiff.pl -image_ids=1,2,3 -output_directory=[path]
+
+        -image_ids or -i
+                comma separated list of image ids to export. the default Pixels of each image will be exported.
+        -output_directory or -o
+                directory to output images.
+
+=head1 DESCRIPTION
+
+ This program was supposed to act as a test jig for the Exporter class.
+ It used the same API for Exporter as the production OME(v1).
+ But it didn't work at all. So Josiah <siah@nih.gov> rewrote it against
+ the modern API. Now it exports OME images as a TIFF series. The naming
+ convention of the series could stand improvement/customization. But it is:
+ [imageName]-Z[theZ].C[theC].T[theT].tiff
+
+=head1 AUTHOR
+
+Brian S. Hughes
+Josiah Johnston <siah@nih.gov>
+
+=cut
 
 use strict;
 use OME::Image;
@@ -33,10 +60,20 @@ $VERSION = 2.000_000;
 my ($param_imageIDs, $param_outputDirectory) = @ARGV;
 
 #extract input
-my @imageIDs = split( ',', $2 ) if $param_imageIDs =~ /(-i|-image_ids)=([\d,]+)/;
-(my $output_directory = $param_outputDirectory) =~ s/(-o|-output_directory)=//;
-$output_directory .= '/' unless $output_directory =~ m/\/$/;
-
+my @imageIDs;
+if($param_imageIDs) {
+	if ( $param_imageIDs =~ /(-i|-image_ids)=([\d,]+)/ ) {
+		@imageIDs = split( ',', $2 ) ;
+	} else {
+		printUsage();
+		die "Could not parse image ID argument '$param_imageIDs'\n";
+	}
+}
+my $output_directory;
+if( $param_outputDirectory ) {
+	($output_directory = $param_outputDirectory) =~ s/(-o|-output_directory)=//;
+	$output_directory .= '/' unless $output_directory =~ m/\/$/;
+}
 
 #verify input
 if( scalar @imageIDs eq 0 ) {
@@ -55,7 +92,7 @@ my $factory = $session->Factory();
 
 # OME::ImportExport::Exporter has heavy reliance on depricated code and logic.
 # Also the architecture of the Exporter does not follow any models used by the rest of the code base.
-# In all actuality, it is depricated code until someone brings it up to speed.
+# In all actuality, it is depricated until someone brings it up to speed.
 # Anywho, this was the line that was supposed to do the work of the following loop.
 # I renamed image_list to imageIDs because that is more descriptive. Also, $export_type
 # was defined as 'TIFF'. These are the wrong parameters to Exporter->new(), but that's
@@ -76,7 +113,7 @@ foreach my $imageID (@imageIDs) {
 	for(my $theZ = 0; $theZ < $pixels->SizeZ(); $theZ++) {
 		for( my $theC = 0; $theC < $pixels->SizeC(); $theC++) {
 			for( my $theT = 0; $theT < $pixels->SizeT(); $theT++) {
-				my $path = $output_directory.$image->name()."-$theZ.$theC.$theT.tiff";
+				my $path = $output_directory.$image->name()."-Z$theZ.C$theC.T$theT.tiff";
 				
 				# Plane2TIFF produces black images. I don't know what's up with that.
 				# Till that problem is solved, Plane2TIFF8 will have to do.
