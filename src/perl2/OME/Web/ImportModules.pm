@@ -161,7 +161,7 @@ sub __getImportBody {
 	# IMPORT the modules
 	while ($self->OME::Web::ImportFiles::__resolveQueue(\@import_q)) {};
 		
-	OME::Tasks::ImageTasks::forkedImportAnalysisModules(\@import_q);	
+	OME::Tasks::ImageTasks::forkedImportFiles (undef, \@import_q);	
 	return '';
 }
 
