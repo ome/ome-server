@@ -71,16 +71,16 @@ loadObject operate on these core tables, and identify the specific
 OME::DBObject subclass by name.
 
 Attribute tables, however, cannot have predefined OME::DBObject
-subclasses, since the attribute types available in OME can vary from
+subclasses, since the semantic types available in OME can vary from
 time to time.  However, OME stores enough information about each
-attribute type to construct OME::DBObject subclasses at runtime.  (The
+semantic type to construct OME::DBObject subclasses at runtime.  (The
 real situation is slightly more complex than this because of the
-distinction between data tables and attribute types.  See the
+distinction between data tables and semantic types.  See the
 L<OME::DataTable|OME::DataTable> and
 L<OME::SemanticType|OME::SemanticType> modules for more details.)
 Methods such as newAttribute and loadAttribute operate on these
-user-defined attribute types, and identify the specific OME::DBObject
-subclass by the attribute type.
+user-defined semantic types, and identify the specific OME::DBObject
+subclass by the semantic type.
 
 =head1 OBTAINING A FACTORY
 
@@ -151,7 +151,7 @@ adding items to a many-to-many map.  For instance,
 =head2 newAttribute
 
 	my $attribute = $factory->
-	    newAttribute($attributeType,$target,$module_execution,$dataHash);
+	    newAttribute($semanticType,$target,$module_execution,$dataHash);
 
 Creates a new attribute object.  Note that this is not technically a
 DBObject subclass, since attributes can (conceivably) live in multiple
@@ -162,15 +162,15 @@ L<OME::SemanticType|OME::SemanticType>.
 The target of the attribute (dataset, image, or feature) should not be
 specified in $dataHash.  Rather, is should be passed in the $target
 parameter.  The appropriate key will be added to the $dataHash
-depending on the granularity of the attribute type.  Similarly, the
-analysis that this attribute should be associated with should be
-passed in the $module_execution parameter, not the $dataHash.
+depending on the granularity of the semantic type.  Similarly, the
+module execution that this attribute should be associated with should
+be passed in the $module_execution parameter, not the $dataHash.
 
-Since attribute type packages are created dynamically, attribute types
+Since semantic type packages are created dynamically, semantic types
 are not referred to by class name, like objects are.  The
-$attributeType parameter should be either an instance of
+$semanticType parameter should be either an instance of
 OME::SemanticType (which I<is> an OME::DBObject, and can be obtained
-via any of the *Object methods), or the name of an attribute type.
+via any of the *Object methods), or the name of an semantic type.
 Note that:
 
 	my $attribute = $factory->
@@ -184,6 +184,41 @@ is exactly equivalent to:
 	my $attribute = $factory->
 	    newAttribute($type,$image,$hash);
 
+=head2 newAttributes
+
+	my $attributes = $factory->
+	    newAttributes($target,$module_execution,
+	                  $semanticType1,$dataHash1,
+	                  $semanticType2,$dataHash2,
+	                  $semanticType3,$dataHash3,
+	                  ...);
+
+Creates several new attribute objects.  This method differs from
+C<newAttribute> in that it creates several attributes which are
+expected to live in a single set of data rows (one data row per data
+table).  This method returns an array reference of the attribute
+objects that were created.
+
+The target of the attribute (dataset, image, or feature) should not be
+specified in the $dataHashes.  Rather, is should be passed in the
+$target parameter.  The appropriate key will be added to the
+$dataHashes depending on the granularity of the semantic type.
+Similarly, the module execution that this attribute should be
+associated with should be passed in the $module_execution parameter,
+not the $dataHashes.
+
+All of the semantic types given as input must have the same
+granularity.  Further, since the attributes will be stored in a single
+set of data rows, any semantic elements which map to the same data
+column must have the same value in all of the data hashes.  If any of
+these conditions aren't met, an error is thrown and no new attributes
+are created.
+
+As in the case of C<newAttribute>, each semantic type can be specified
+by name or as an instance of L<OME::SemanticType>.  If any types are
+specified by name, and a semantic type of that name does not exist, an
+error will be thrown and no new attributes will be created.
+
 =head2 loadObject
 
 	my $object = $factory->loadObject($className,$id);
@@ -194,15 +229,15 @@ row with that primary key.
 
 =head2 loadAttribute
 
-	my $attribute = $factory->loadAttribute($attributeType,$id);
+	my $attribute = $factory->loadAttribute($semanticType,$id);
 
 Loads in the attribute with the specified primary key.  As in the case
-of newAttribute, $attributeType can be either an attribute type name
+of newAttribute, $semanticType can be either an semantic type name
 or an instance of OME::SemanticType.  Since all of the data rows that
 make up an attribute are required to have the same primary key value,
 this method works by calling loadObject on all of the data table
-classes that make up the given attribute type, and then creating a new
-attribute type instance with those data rows.
+classes that make up the given semantic type, and then creating a new
+semantic type instance with those data rows.
 
 =head2 objectExists
 
@@ -264,16 +299,16 @@ operator for comparison, rather than the = operator.
 
 =head2 findAttributes
 
-	my $iterator = $factory->findAttributes($attributeType,$target);
+	my $iterator = $factory->findAttributes($semanticType,$target);
 	while (my $attribute = $iterator->next()) {
 	    # Do something with the attributes one at a time
 	}
 
-	my @attributes = $factory->findAttributes($attributeType,$target);
+	my @attributes = $factory->findAttributes($semanticType,$target);
 	# Do something with the attributes all at once
 
 Finds the attribute of a given type referring to a given target.  As
-in the case of newAttribute, $attributeType can be either an attribute
+in the case of newAttribute, $semanticType can be either an semantic
 type name or an instance of OME::SemanticType.  The target must be an
 OME::Dataset, OME::Image, or OME::Feature object, depending on the
 granularity of the type.  Note that arbitrary search criteria is not
@@ -625,6 +660,48 @@ sub newAttribute {
     # wrapped in an array.
     return undef if (!defined $result);
     return $result->[0];
+}
+
+sub newAttributes {
+    my ($self, $target, $module_execution, @attribute_info) = @_;
+
+    my @real_info;
+
+    my $i;
+    my $length = scalar(@attribute_info);
+
+    for ($i = 0; $i < $length; $i += 2) {
+        my $semantic_type = $attribute_info[$i];
+        my $data_hash = $attribute_info[$i+1];
+
+        my $type =
+          ref($semantic_type) eq "OME::SemanticType"?
+            $semantic_type:
+            $self->findObject("OME::SemanticType",
+                              name => $semantic_type);
+        die "Cannot find attribute type $semantic_type"
+          unless defined $type;
+
+        #print STDERR "$semantic_type -> Session = ",$type->Session(),"\n";
+
+        my $granularity = $type->granularity();
+        if ($granularity eq 'D') {
+            $data_hash->{dataset_id} = $target;
+        } elsif ($granularity eq 'I') {
+            $data_hash->{image_id} = $target;
+        } elsif ($granularity eq 'F') {
+            $data_hash->{feature_id} = $target;
+        }
+
+        push @real_info, $type, $data_hash;
+    }
+
+    my $result = OME::SemanticType->newAttributes($self->Session(),
+                                                  $module_execution,
+                                                  @real_info);
+
+
+    return $result;
 }
 
 sub findAttributes {
