@@ -438,13 +438,14 @@ PRINT
     # Since we may be updating, see if there's an experimenter with the same OMEName.
     my $factory = OME::Factory->new();
     
+    delete $OME_EXPER->{ExperimenterID};
     my $experimenter = $factory->
-    newObject('OME::SemanticType::BootstrapExperimenter', $OME_EXPER);
+    	newObject('OME::SemanticType::BootstrapExperimenter', $OME_EXPER);
 
     $factory->commitTransaction();
     $factory->closeFactory();
     my $session = $manager->createSession($OME_EXPER->{OMEName}, $password);
-
+	$OME_EXPER->{ExperimenterID} = $experimenter->id();
     $ENVIRONMENT->ome_exper($OME_EXPER);
 
     return ($session);
@@ -472,9 +473,27 @@ my $session = shift;
 	$OME_EXPER->{Email}         = $experimenter->Email();
 	$OME_EXPER->{DataDirectory} = $experimenter->DataDirectory();
 	$OME_EXPER->{Password}      = $experimenter->Password();
+	$OME_EXPER->{ExperimenterID}= $experimenter->id();
 
     $ENVIRONMENT->ome_exper($OME_EXPER);
 
+}
+
+# presence or absence of ACLs is governed by the presence of the super_user variable
+# in the configuration.  The super_user must be present and set to an experimenter ID
+# that is not the session's experimenter_id in order for ACLs to be active.
+sub remove_ACLs () {
+    my $factory = OME::Factory->new();
+    
+    eval {
+		my $var = $factory->findObject('OME::Configuration::Variable',
+				configuration_id => 1, name => 'super_user');
+		$var->deleteObject();
+    };
+
+    $factory->commitTransaction();
+
+    return 1;
 }
 
 
@@ -621,6 +640,7 @@ sub update_configuration {
     $var->value ($IMPORT_FORMATS);
     $var->storeObject();
 
+	# Make sure there is an executor
     $var = $factory->findObject('OME::Configuration::Variable',
             configuration_id => 1, name => 'executor');
     unless ($var) {
@@ -632,6 +652,24 @@ sub update_configuration {
             });
 	    $var->storeObject();
     }
+
+	# Make sure that there is a super_user
+	# Note that there shouldn't ever be a superuser at this point
+    $var = $factory->findObject('OME::Configuration::Variable',
+            configuration_id => 1, name => 'super_user');
+    unless ($var) {
+        $var = $factory->newObject ('OME::Configuration::Variable',
+            {
+            configuration_id => 1,
+            name             => 'super_user',
+            value            => $session->experimenter_id(),
+            });
+    }
+    
+    $var->value ($session->experimenter_id());
+	$var->storeObject();
+    
+    
 
     $factory->commitTransaction();
     return 1;
@@ -1030,6 +1068,10 @@ BLURB
             print "  Database is current.\n";
         }
         load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
+        # At this point, we want to make sure there are no ACLs in place.
+        # This is done by removing the super_user configuration variable
+        # The super_user configuration variable will be set to whoever logs in below.
+        remove_ACLs ();
 		print "Getting a session manager\n";
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
         # If we're answering 'y' to everything, we don't want to be interactive here
@@ -1037,7 +1079,13 @@ BLURB
 		    print "Getting a non-interactive session\n";
         	$session = bootstrap_session();
         } else {
+		    print "Please log into OME to continue\n";
+		    print "N.B.: This ome experimenter will become the OME super user (no access control)\n";
+			# This will prevent any cached keys from working.
+			my $key_lifetime = $OME::SessionManager::SESSION_KEY_LIFETIME;
+			$OME::SessionManager::SESSION_KEY_LIFETIME = 0;
         	$session = $manager->TTYlogin() or croak "Unable to create an initial experimenter.";
+			$OME::SessionManager::SESSION_KEY_LIFETIME = $key_lifetime;
        	}
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
         check_repository ($session);
