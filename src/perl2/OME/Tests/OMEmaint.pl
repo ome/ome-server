@@ -120,7 +120,7 @@ if ($restore_file) {
 }
 
 # find all the neccessary programs we will run
-my @progs = ('tar', 'bzip2', 'pg_dumpall', 'psql', 'sudo', 'touch', 'mv', 
+my @progs = ('tar', 'bzip2', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
 			'dropdb','createdb', 'createuser');
 my %prog_path;
 
@@ -162,7 +162,7 @@ if ($backup_file) {
 	
 	# ome db 
 	print "    \\_ Backing up postgress database ome\n";
-	system($prog_path{'sudo'}." -u $postgress_user ".$prog_path{'pg_dumpall'}."> omeDB_backup");
+	system($prog_path{'sudo'}." -u $postgress_user ".$prog_path{'pg_dump'}." -Fc ome > omeDB_backup");
 	system ($prog_path{'tar'}." --remove-files --append omeDB_backup --file $backup_file.tar");
 		
 	# log OMEmaint version
@@ -237,6 +237,6 @@ if ($backup_file) {
 	$EUID = getpwnam ($postgress_user);
 	system ($prog_path{'createuser'}." --adduser --createdb  ome");
 	system ($prog_path{'createdb'}." ome");
-	system ($prog_path{'psql'}." -f omeDB_backup template1");
+	system ($prog_path{'pg_restore'}." -d ome omeDB_backup");
 	unlink ("omeDB_backup");
 }
