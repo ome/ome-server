@@ -466,7 +466,7 @@ $SVG .= <<ENDSVG;
 			blueScale.tieLogicalChannelPopupList( xyPlaneControls.bluePopupList );
 			greenScale.tieLogicalChannelPopupList( xyPlaneControls.greenPopupList );
 			greyScale.tieLogicalChannelPopupList( xyPlaneControls.greyPopupList );
-			greyScale.tieLogicalChannelPopupList( stats.logicalChannelPopupList );
+			greyScale.tieLogicalChannelPopupList( stats.logicalChannelPopupList, false );
 
 			// finish setup & make controller
 			azap.appendNode(toolboxLayer);
