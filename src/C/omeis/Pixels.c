@@ -1687,12 +1687,20 @@ int i;
 				theVal = (float) *floatP++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
-		} else		
+		} else {
+			/* hist_bin checking protects from +- inf */
+			int hist_bin;
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *floatP++;
-				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+				hist_bin = ((theVal-min)/(max-min))*(NUM_BINS-1);
+				if (hist_bin < 0)
+					hist_bin = 0;
+				else if (hist_bin >= NUM_BINS)
+					hist_bin = NUM_BINS-1;
+				myPlaneInfo.hist[hist_bin]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
+		}
 	}
 	
 	myPlaneInfo.sum_xi    = sum_xi;
