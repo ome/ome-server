@@ -161,8 +161,12 @@ sub Session { OME::Session->instance() };
 # -----------
 
 sub pageURL {
-	my ($self, $page) = @_;
-	return "serve.pl?Page=$page";
+	my ($self, $page, $param) = @_;
+	return "serve.pl?Page=$page".
+		( $param ?
+		  '&'.join( '&', map( $_."=".$param->{$_}, keys %$param ) ) :
+		  ''
+		);
 	#return $self->CGI()->escape("serve.pl?Page=$page");
 }
 
