@@ -21,10 +21,12 @@
     <script type="text/ecmascript" a3:scriptImplementation="Adobe"
             xlink:href="../../../src/JavaScript/SVG_GUI/popupList.js" />
     <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/SVG_GUI/slider.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
             xlink:href="../../../src/JavaScript/SVG_GUI/AntiZoomAndPan.js" />
     <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
-		var multiToolBox;
-		var panePopupList
+		var mtb;
+		var panePopupList, scaleSlider;
 		var azap = new AntiZoomAndPan();
 
 		function init(e) {
@@ -33,61 +35,99 @@
 
             var controls  = svgDocument.getElementById("controls");
 
-			multiToolBox = new multipaneToolBox(
-				160, 30, 180, 0, null, null,
+			mtb = new multipaneToolBox(
+				160, 30, 230, 0, null, null,
 				'<g>' +
-				'	<rect width="{$width}" height="2000" fill="ghostwhite" opacity="0.8"/>' +
+				'	<rect width="{$width}" height="2000" fill="rgb(200,200,200)" opacity="0.8"/>' +
 				'</g>'
 			);
-			multiToolBox.setLabel(90,12," ");
-			multiToolBox.getLabel().setAttribute( "text-anchor", "middle");
-			multiToolBox.getLabel().setAttribute( "fill", "white");
-			multiToolBox.realize(controls);
-			multiToolBox.updateLabel(true);
+			mtb.realize(controls);
+			mtb.updateLabel(true);
+			mtb.getLabel().setAttribute( "fill", "white");
 
 			var paneNames = new Array("Info", "Foo")
 			for(i in paneNames )
-				multiToolBox.addPaneText(
+				mtb.addPaneText(
 					svgDocument.getElementById( "text"+paneNames[i] ).firstChild.data,
 					paneNames[i]
 				);
 
-			multiToolBox.addPaneText(
-				svgDocument.getElementById( "textBar" ).firstChild.data,
+			mtb.addPaneText(
+				'<text x="5" y="12">This is Pane Bar</text>',
 				"Bar" 
 			);
 			
-			multiToolBox.addPane( null, "Blank" );
-		
-			var paneIndex = multiToolBox.getPaneIndexes();
+			mtb.addPane( null, "Scale" );
+			
+			blackSlider = new Slider( 
+				10, 60, 200, 0, 
+				null,
+				svgDocument.getElementById("scaleSliderBody").firstChild.data,
+				svgDocument.getElementById("blackScaleSliderThumb").firstChild.data
+			);
+			blackSlider.realize( mtb.getPane("Scale") );
+			whiteSlider = new Slider( 
+				10, 70, 200, 0, 
+				null,
+				svgDocument.getElementById("scaleSliderBody").firstChild.data,
+				svgDocument.getElementById("whiteScaleSliderThumb").firstChild.data
+			);
+			whiteSlider.realize( mtb.getPane("Scale") );
+			mtb.getPane("Scale").appendChild( mtb.textToSVG(
+				'<g transform="translate(10,70)">' +
+					svgDocument.getElementById("scaleSliderBG").firstChild.data +
+				'</g>'
+			));
+			mtb.getPane("Scale").appendChild( mtb.textToSVG(
+				'<text id="blackLevel" x="20" y="2em">Black level: </text>' ));
+			mtb.getPane("Scale").appendChild( mtb.textToSVG(
+				'<text id="whiteLevel" x="20" y="3em">White level: </text>' ));
+			mtb.getPane("Scale").appendChild( mtb.textToSVG(
+				'<text id="scaleLevel" x="20" y="4em">Scale: </text>' ));
+			
+			var paneIndex = mtb.getPaneIndexes();
 			
 			panePopupList = new popupList(
 				0, 0, paneIndex, updatePane );
-			panePopupList.realize( multiToolBox.getMenuBar() );
-			setTimeout( "panePopupList.setSelection(0)", 0);
+			panePopupList.realize( mtb.getMenuBar() );
+			setTimeout( "panePopupList.setSelection(3)", 0);
 			
             azap.appendNode(controls);
-        }
+		}
 		function updatePane(item) {
 			var itemList = panePopupList.getItemList();
-			multiToolBox.changePane( itemList[item] );
-		}		
-    ]]></script>
+			mtb.changePane( itemList[item] );
+		}
+	]]></script>
 	<defs>
 		<text id="textInfo"><![CDATA[
 			<g>
 				<text x="2" y="1em">Information:</text>
-				<text id="zLabel" x="30" y="2em">z-value is ?</text>
-				<text id="tLabel" x="30" y="3em">t-value is ?</text>
+				<text x="30" y="2em">This pane is made of multiple nodes.</text>
+				<text x="30" y="3em">They have to be contained in a 'g'</text>
+				<text x="30" y="4em">so there will be a single root node.</text>
 			</g>
 		]]></text>
 		<text id="textFoo"><![CDATA[
 			<text x="5" y="1em">This is Pane Foo.</text>
 		]]></text>
-		<text id="textBar"><![CDATA[
-			<text x="5" y="12">This is Pane Bar</text>
+		<text id="blackScaleSliderThumb"><![CDATA[
+			<rect width="3" height="10" fill="black"/>
+		]]></text>
+		<text id="whiteScaleSliderThumb"><![CDATA[
+			<rect width="3" height="10" fill="white"/>
+		]]></text>
+		<text id="scaleSliderBG"><![CDATA[
+			<g>
+				<line y1="10" y2="10" x2="200" stroke-width="2" stroke="green"/>
+				<line x1="50" y1="5" x2="50" y2="-5" stroke-width="2" stroke="green"/>
+				<line x1="100" y1="5" x2="100" y2="-5" stroke-width="2" stroke="green"/>
+			</g>
+		]]></text>
+		<text id="scaleSliderBody"><![CDATA[
+			<rect width="200" height="10" opacity="0"/>
 		]]></text>
 	</defs>
-    <g id="controls">
-    </g>
+	<g id="controls">
+	</g>
 </svg>
