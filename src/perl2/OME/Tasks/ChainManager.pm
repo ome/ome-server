@@ -717,6 +717,26 @@ sub getNodeSuccessors {
     return \@to_nodes;
 }
 
+=head2 findLeaves
+
+	my @leaves = $manager->findLeaves( $chain );
+
+Returnes the list of leaf nodes of a chain.
+
+=cut
+
+sub findLeaves {
+	my ($self, $chain) = @_;
+	my @nodes = $chain->nodes();
+	my @leaf_nodes;
+	foreach my $node( @nodes ) {
+		my @links = $node->output_links() ;
+		push @leaf_nodes, $node
+			if scalar( @links ) eq 0;
+	}
+	return @leaf_nodes;
+}
+
 1;
 
 __END__
