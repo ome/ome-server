@@ -25,16 +25,16 @@ use strict;
 use Ima::DBI;
 use Class::Accessor;
 use OME::SessionManager;
-use OME;
+use OME::DBConnection;
 
 use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
 use fields qw(Debug _cache);
 __PACKAGE__->mk_accessors(qw(Debug));
 __PACKAGE__->set_db('Main',
-                  OME::SessionManager->DataSource(),
-                  OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword(), 
+                  OME::DBConnection->DataSource(),
+                  OME::DBConnection->DBUser(),
+                  OME::DBConnection->DBPassword(), 
                   { RaiseError => 1 });
 
 
@@ -58,7 +58,6 @@ sub new {
 # ---------
 
 sub DBH { my $self = shift; return $self->db_Main(); }
-sub Session { return OME->Session(); }
 
 
 # loadObject
