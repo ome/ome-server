@@ -166,6 +166,17 @@
 				DataType="integer"/>
 		</SemanticType>
 		
+		<!--		
+		Concepts of Edge Homogenity and Difference Histogram from
+		Robert F. Murph et. al's "Searching Online Journals for Fluorescence 
+		Microscope Images Depicting Protein Subcellular Location Patterns"
+		2nd IEEE International Symposium on Bioinformatics and Bioengineering
+
+		Implementation of aformentioned topics from
+		M.V. Boland's mb_imgfeatures:
+		http://greenhorn.stc.cmu.edu/software/2001_bioinformatics/matlab/mb_imgedgefeatures.m
+		-->
+		 
 		<!-- These statistics are meant to describe the differences between bins of histogram at
 			 angle and angle+PI. In general, objects have an equal number of pixels at an angle
 			 and angle+PI -->
@@ -183,19 +194,19 @@
 			<Element
 				Name="Bin0"
 				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN0"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="Bin1"
 				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN1"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="Bin2"
 				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN2"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="Bin3"
 				DBLocation="EDGE_STATISTICS0.DIF_DIREC_HIST_BIN3"
-				DataType="integer"/>
+				DataType="float"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
 
