@@ -136,7 +136,10 @@ public class XmlRpcCaller
                 throw new IllegalArgumentException("Have not logged in");
 
             vparams.addElement(sessionReference);
-            vparams.addElement(target.toString());
+            if (target instanceof RemoteObject)
+                vparams.addElement(((RemoteObject) target).getReference());
+            else
+                vparams.addElement(target.toString());
             vparams.addElement(method);
             if (params != null)
             {
@@ -145,7 +148,8 @@ public class XmlRpcCaller
                     if (params[i] == null)
                         vparams.addElement(">>OBJ:NULL");
                     else if (params[i] instanceof RemoteObject)
-                        vparams.addElement(params[i].toString());
+                        vparams.addElement(((RemoteObject) params[i]).
+                                           getReference());
                     else if (params[i] instanceof List)
                         vparams.addElement(new Vector((List) params[i]));
                     else if (params[i] instanceof Map)
