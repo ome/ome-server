@@ -46,6 +46,7 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
+import org.openmicroscopy.vis.chains.ChainFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.vis.ome.ChainInfo;
@@ -61,6 +62,7 @@ import java.awt.dnd.DnDConstants;
 import java.awt.datatransfer.Transferable;
 import java.awt.geom.Point2D;
 import java.util.List;
+import java.util.Iterator;
 
 /** 
  * Extends PCanvas to provide functionality necessary for a piccolo canvas.<p> 
@@ -84,10 +86,13 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	private PChainEventHandler handler;
 	private DropTarget dropTarget = null;
 	
+	private ChainFrame frame;
+	
 	public PChainCanvas(Connection c) {
 		super();
 		this.connection  = c;
 		layer = getLayer();
+		
 	
 		removeInputEventListener(getZoomEventHandler());
 		linkLayer = new PLinkLayer();
@@ -103,6 +108,10 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		camera.addInputEventListener(new PChainToolTipHandler(camera));
 		
 		
+	}
+	
+	public void setFrame(ChainFrame frame) {
+		this.frame = frame;
 	}
 	
 	public PBounds getBufferedBounds() {
@@ -192,6 +201,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		// put the module info back into the connection
 		Module module = info.getModule();
 		connection.setModuleInfo(module.getID(),info);
+		setSaveEnabled(true);
 	}
 	
 	public void createDroppedChain(ChainInfo info,Point2D location) {
@@ -199,6 +209,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		float x = (float) location.getX();
 		float y = (float) location.getY();
 		PChain p = new PChain(connection,info,layer,linkLayer,x,y);
+		setSaveEnabled(true);
 	}
 	
 	public void logout() {
@@ -210,5 +221,30 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 			mod = (PModule) childObjects[i];
 			mod.remove();
 		}
+	}
+	
+	public void save() {
+		System.err.println("saving PChainCanvas...");
+	}
+	
+	private void setSaveEnabled(boolean v) {
+		if (frame != null)
+			frame.setSaveEnabled(v);
+	}
+	
+	public void updateSaveStatus() {
+		boolean res  = false;
+		Iterator  iter = layer.getChildrenIterator();
+		while (iter.hasNext()) {
+			Object obj = iter.next();
+			if(obj instanceof PModule) { 
+				res = true;
+				break;
+			}
+		}
+		setSaveEnabled(res);
+	}	
+	
+	public void save(String name,String desc) {	
 	}
 }

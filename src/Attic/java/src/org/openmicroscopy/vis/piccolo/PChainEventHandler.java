@@ -515,6 +515,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			selectedModule.remove();
 			selectedModule = null;
 		}
+		canvas.updateSaveStatus();
 	}
 	
 }
