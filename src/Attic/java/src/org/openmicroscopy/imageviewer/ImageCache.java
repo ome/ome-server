@@ -822,6 +822,9 @@ public class ImageCache
       return z;
     }
   
+    /**
+     * Trick in constructor takes care of equivalence.
+     */
     public boolean equals(Object o)
     {
       if(o == null || !(o instanceof ParameterGroup))
@@ -843,6 +846,9 @@ public class ImageCache
       else return true;
     }
      
+    /**
+     * Effective Java rule: override hashCode() when equals() overridden.
+     */
     public int hashCode()
     {
       return imageName.hashCode() +
