@@ -141,8 +141,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 		
 		if (node instanceof PFormalParameter) {
 			lastParameterEntered = (PFormalParameter) node;
-		//	System.err.println("mouse entered last entered.."+
-			//	lastParameterEntered.getName());
+			System.err.println("mouse entered last entered.."+
+				lastParameterEntered.getName());
 			if (linkState == NOT_LINKING) {
 				PModule mod = lastParameterEntered.getPModule();
 				mod.setParamsHighlighted(false);
@@ -155,7 +155,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			}
 			e.setHandled(true);
 		}
-		else if (node instanceof PModule) {
+		else if (node instanceof PModule && linkState == NOT_LINKING) {
 			PModule mod = (PModule) node;
 			mod.setAllHighlights(true);
 			e.setHandled(true);
@@ -173,6 +173,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		PNode node = e.getPickedNode();
 	
 		lastParameterEntered = null;
+		System.err.println("last parameter entered cleared");
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			if (linkState == NOT_LINKING) {	
@@ -182,7 +183,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			}			
 			e.setHandled(true);
 		}
-		else if (node instanceof PModule) {
+		else if (node instanceof PModule && linkState == NOT_LINKING) {
 			PModule mod = (PModule) node;
 			mod.setAllHighlights(false);
 			e.setHandled(true);
@@ -239,8 +240,10 @@ public class PChainEventHandler extends  PPanEventHandler {
 			selectedModule.addHandles();
 		}
 		else if (linkState != NOT_LINKING) {
-			if (e.getClickCount() ==2)
+			System.err.println("mouse pressed and not linking");
+			if (e.getClickCount() ==2) {
 				cancelLink();
+			}
 			else if (lastParameterEntered != null)
 				finishLink();
 			/*else { assume all links have one end point and one start point
@@ -273,8 +276,10 @@ public class PChainEventHandler extends  PPanEventHandler {
 			link.setPickable(true);
 			cleanUpLink();
 		}
-		else
+		else {
+			System.err.println("trying to finish link, but end point is not linkable");
 			cancelLink();
+		}
 		linkState = NOT_LINKING;
 	}
 	
