@@ -975,6 +975,8 @@ function initialise() {
 	level2ID = theMenu.addChild(level1ID, "Folder", "Image", "", "Image commands");
 	level3ID = theMenu.addChild(level2ID, "Document", "Manage my Images", "/perl2/serve.pl?Page=OME::Web::ImageManager", "Change other user's read/write permissions");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::ImageSearch", "Search through all images");
+	level3ID = theMenu.addEntry (level3ID, "Document", "Add Images/Existing dataset", "/perl2/serve.pl?Page=OME::Web::AddImageDataset", "Add images in Existing dataset");
+
 
 // Current Work
 	level1ID = theMenu.addEntry(-1, "Folder", "My work", "", "current project/dataset");
@@ -993,6 +995,8 @@ function initialise() {
 	level3ID = theMenu.addEntry (level3ID, "Document", "Viewer", "/perl2/serve.pl?Page=OME::Web::Viewer", "Open viewer on this dataset");
 
 		level4ID = theMenu.addChild (level3ID, "Document", "Layers", "noOp.html", "Layer setup: View & Edit");
+	//level3ID = theMenu.addEntry (level3ID, "Document", "Viewer new Window", "/perl2/serve.pl?Page=OME::Web::ViewerPopUp", "Open viewer on this dataset");
+
 
 	level3ID = theMenu.addEntry (level3ID, "Document", "Projects I belong to", "/perl2/serve.pl?Page=OME::Web::DatasetInProjects", "List of all projects currect dataset belongs to");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Manage analysis", "noOp.html", "Work on analysis for current dataset");
@@ -1018,8 +1022,7 @@ function initialise() {
 	
 // Logout
 	level1ID = theMenu.addEntry(-1, "Document", "Logout", "/perl2/serve.pl?Page=OME::Web::Logout", "Logout");
-
-
+	
 }
 
 self.defaultStatus = "";	
