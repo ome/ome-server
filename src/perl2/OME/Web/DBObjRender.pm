@@ -37,6 +37,37 @@
 
 package OME::Web::DBObjRender;
 
+=pod
+
+=head1 NAME
+
+OME::Web::DBObjRender - Render DBObjects for display
+
+=head1 DESCRIPTION
+
+DBObjRender will render DBObjects (and attributes) for display in HTML,
+TXT, (and perhaps someday) SVG. It's default rendering can be overridden by
+writing templates and subclasses.
+
+Important!! Subclasses should not be accessed directly. All Rendering
+should go through DBObjRendering. Specialization is completely
+transparent.
+
+Subclasses must follow the naming convention implemented in _getSpecializedRenderer.
+
+All methods work with Object Prototypes, SemanticTypes, attributes, and dbobject instances.
+If using with a Semantic Type, prefix the ST name with '@' (i.e. '@Pixels').
+
+=head1 Synopsis
+
+	use OME::Web::DBObjRender;
+
+# FIXME: add examples
+
+=head1 Published Methods
+
+=cut
+
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
@@ -66,35 +97,6 @@ sub new {
 	return $self;
 }
 
-=pod
-
-=head1 NAME
-
-OME::Web::DBObjRender - Render DBObjects for display
-
-=head1 DESCRIPTION
-
-DBObjRender will render DBObjects (and attributes) for display in HTML,
-TXT, (and perhaps someday) SVG. It's default rendering can be overridden by
-writing subclasses.
-
-Important!! Subclasses should not be accessed directly. All Rendering
-should go through DBObjRendering. Specialization is completely
-transparent.
-
-Subclasses must follow the naming convention implemented in _getSpecializedRenderer.
-
-All methods work with Object Prototypes, SemanticTypes, attributes, and dbobject instances.
-If using with a Semantic Type, prefix the ST name with '@' (i.e. '@Pixels').
-
-=head1 Synopsis
-
-	use OME::Web::DBObjRender;
-
-# FIXME: add examples
-
-=head1 Methods
-
 =head2 getName
 
 	my $object_name = OME::Web::DBObjRender->getName( $object, $options );
@@ -116,10 +118,9 @@ sub getName {
 	my ($self, $obj, $options) = @_;
 
 	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	return $specializedRenderer->_getName( $obj )
+	return $specializedRenderer->_getName( $obj, $options )
 		if( $specializedRenderer and $specializedRenderer->can('_getName') );
-
-	$options->{ max_text_length } = 23 unless exists $options->{ max_text_length };
+ 
 	my $name;
 	$name = $obj->name() if( $obj->getColumnType( 'name' ) );
 	$name = $obj->Name() if( $obj->getColumnType( 'Name' ) );
@@ -129,42 +130,6 @@ sub getName {
 	return $name;
 }
 
-=head2 getTitle
-
-	my $title = OME::Web::DBObjRender->getTitle( $object, $format );
-
-Gets a title for this object. Subclasses may override this method.
-If a 'name' or a 'Name' method exists for this object, it will be returned.
-Otherwise, '[Common name] [id] (from [Source Module Name])' will be returned.
-
-=cut
-
-sub getTitle {
-	my ($self, $obj, $format) = @_;
-
-	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	return $specializedRenderer->_getTitle( $obj, $format )
-		if( $specializedRenderer and $specializedRenderer->can('_getTitle') );
-
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $obj );
-	my $q = new CGI;
-	my $prefix = ( ( $ST and ($format eq 'html') ) ? 
-		$q->a( { 
-			href  => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id(),
-			title => 'Semantic Type Documentation'
-		},$common_name) : 
-		$common_name
-	);
-	my $name = $self->getName( $obj, { max_text_length => undef } );
-
-	return "$prefix: $name".
-		( ( $ST and $obj->module_execution() and $obj->module_execution()->module() ) ?
-			' from '.$self->getRef( $obj->module_execution(), $format ) :
-			''
-		);
-
-}
 
 =head2 getRef
 
@@ -205,9 +170,10 @@ sub getRef {
 				$name
 			);
 		}
-		return $self->getName( $obj );
+		return $self->getName( $obj, $options );
 	}
 }
+
 
 =head2 render
 
@@ -239,9 +205,9 @@ sub render {
 	my ($tmpl, %tmpl_data);
 
 	# look for custom template
-	my $summary_tmpl = $self->_findTemplate( $obj, $mode );
-	if( $summary_tmpl ) {
-		$tmpl = HTML::Template->new( filename => $summary_tmpl );
+	my $tmpl_path = $self->_findTemplate( $obj, $mode );
+	if( $tmpl_path ) {
+		$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 		# load template variable requests
 		my @fields = grep( !m/^!/, $tmpl->param() );
 		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode );
@@ -249,8 +215,11 @@ sub render {
 
 		# use generic template
 		my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
-		$tmpl = HTML::Template->new( filename => 'generic_'.$mode.'.tmpl',
-										path     => $tmpl_dir);
+		$tmpl = HTML::Template->new( 
+			filename => 'generic_'.$mode.'.tmpl',
+			path     => $tmpl_dir,
+			case_sensitive => 1
+		);
 	
 		# load object data
 		my @fields = $self->getFields( $obj, $mode );
@@ -294,6 +263,40 @@ sub render {
 	return $tmpl->output();
 }
 
+=head2 renderArray
+
+		$rendered_objects = $self->renderArray( 
+			\@objects, 
+			$render_mode, 
+			{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ),
+			  type           => $obj->getAccessorReferenceType( $method )->getFormalName()
+			}
+		);
+
+This function uses templates to render a group of objects. It will
+attach paging controls if the object list is too long.
+
+@objects should contain either 
+	a bunch of DBObjects to render or 
+	a DBObject and an accessor that will yield a bunch of DBObject to render (i.e. [ $dataset, 'images' ] )
+
+$render_mode is used to find a template for rendering this. Generic
+templates for rendering groups are:
+
+list - Produces a table with one object (rendered as summary) per row.
+ref_list - Same as list, but with references instead of summaries.
+tiled_list - Produces a table with three objects (rendered as summary) per row.
+tiled_ref_list - Same as tiled_list, but with references instead of summaries.
+ref_mass - Mushes all the references together without formatting.
+
+These templates can be found under OME/src/html/Templates/generic_* 
+
+%options holds optional parameters
+	_more_info_url is a URL to a search page of these objects.
+	type is used to look for specialized templates. It's the formal name of the objects to be rendered.
+
+=cut
+
 sub renderArray {
 	my ($self, $objs, $mode, $options) = @_;
 	$options = {} unless $options; # don't have to do undef error checks this way
@@ -330,7 +333,7 @@ sub renderArray {
 	# use generic if there is no custom
 	$tmpl_path = $self->Session()->Configuration()->ome_root().'/html/Templates/'.'generic_'.$mode.'.tmpl'
 		unless $tmpl_path;
-	my $tmpl = HTML::Template->new( filename => $tmpl_path );
+	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data;
 
 	if( $objs && scalar( @$objs ) > 0 ) {
@@ -469,27 +472,35 @@ The hashes will be of the form { field_name => rendered_field, ... }
 
 Special field names:
 	_id: will be populated solely with the id, regardless of format or mode
-	_title: will be populated with whatever is returned by getTitle( $object, $format ) 
+	_name: will be populated with whatever is returned by getName( $object, $options )
+		allows a maximum length to be specified a la: _name!MaxLength:23
+	_common_name: the commonly used name of this object type
+	_ref: a reference to the object
+
+Other behaviors:
+	name and id fields will be rendered as links in html summary view
+	To render a has many accessor (i.e. Dataset's images() method), the syntax is:
+		ACCESSOR!MODE (i.e. images!popup or images!tiled_list)
 
 =cut
 
 sub renderData {
-	my ($self, $obj, $field_names, $format, $mode, $options) = @_;
+	my ($self, $obj, $field_requests, $format, $mode, $options) = @_;
 	my ( %record, $specializedRenderer );
 	$options = {} unless $options; # makes things easier
 	
 	# handle plural calling style
 	if( ref( $obj ) eq 'ARRAY' ) {
 		my @records;
-		push( @records, { $self->renderData( $_, $field_names, $format, $mode, $options) } )
+		push( @records, { $self->renderData( $_, $field_requests, $format, $mode, $options) } )
 			foreach @$obj;
 		return @records;
 	}
 	
 	# specialized rendering
 	$specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	%record = $specializedRenderer->_renderData( $obj, $field_names, $format, $mode, $options )
-		if $specializedRenderer;
+	%record = $specializedRenderer->_renderData( $obj, $field_requests, $format, $mode, $options )
+		if $specializedRenderer and $specializedRenderer->can('_renderData');
 
 	# set mode-based behavior
 	if( $mode eq 'summary' ) {
@@ -501,42 +512,33 @@ sub renderData {
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
 	my $id   = $obj->id();
-	foreach my $field( @$field_names ) {
+	foreach my $request ( @$field_requests ) {
 		# don't override specialized renderings
-		next if exists $record{ $field };
+		next if exists $record{ $request };
 		
 		# _id = plain text id
-		if( $field eq '_id' ) {
-			$record{ _id } = $obj->id();
+		if( $request eq '_id' ) {
+			$record{ $request } = $obj->id();
 		
-		# _title = object title
-		} elsif( $field eq '_title' ) {
-			$record{ _title } = $self->getTitle( $obj, $format );
+		# _common_name = object's commone name
+		} elsif( $request eq '_common_name' ) {
+			$record{ $request } = $common_name;
 		
 		# _name = object name
-		} elsif( $field eq '_name' ) {
-			$record{ _name } = $self->getName( $obj, $options );
-					
+		} elsif( $request =~ m/^_name(!MaxLength\:)?(\d+)?$/ ) {
+			my %options;
+			%options = %$options if $options;
+			$options{ max_text_length } = $2 if $2;
+			$record{ $request } = $self->getName( $obj, \%options );
+
 		# _ref = reference to object
-		} elsif( $field eq '_ref' ) {
-			$record{ _ref } = $self->getRef( $obj, $format, $options );
+		} elsif( $request eq '_ref' ) {
+			$record{ $request } = $self->getRef( $obj, $format, $options );
 					
-		# make name and id into links for html summary views
-		} elsif( ( $field eq 'id' || $field eq 'name' ) &&
-		         ( $format eq 'html' && $mode eq 'summary' ) ) {
-			$record{ $field } = $q->a( 
-				{ 
-					href  => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
-					title => "Detailed info about this $common_name",
-					class => 'ome_detail'
-				},
-				$obj->$field
-			);
-		
 		# populate has many aliases
-		} elsif( $field =~ m/^(.+)!(.+)$/ ) {
+		} elsif( $request =~ m/^(.+)!(.+)$/ ) {
 			my ($method, $render_mode) = ($1, $2);
-			$record{ $field } = $self->renderArray( 
+			$record{ $request } = $self->renderArray( 
 				[$obj, $method], 
 				$render_mode, 
 				{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ),
@@ -545,24 +547,36 @@ sub renderData {
 			);
 
 		# populate mode render requests
-		} elsif( $field =~ m/^!(.+)$/ ) {
+		} elsif( $request =~ m/^!(.+)$/ ) {
 			my $render_mode = $1;
-			$record{ $field } = $self->render( $obj, $render_mode );
+			$record{ $request } = $self->render( $obj, $render_mode );
 		
-		# populate all other fields
+		# make name and id into links for html summary views
+		} elsif( ( $request eq 'id' || $request eq 'name' ) &&
+		         ( $format eq 'html' && $mode eq 'summary' ) ) {
+			$record{ $request } = $q->a( 
+				{ 
+					href  => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
+					title => "Detailed info about this $common_name",
+					class => 'ome_detail'
+				},
+				$obj->$request
+			);
+		
+		# populate all other requests
 		} else {
-			$record{ $field } = $obj->$field;
-			if( ref( $record{ $field } ) ) {
-				$record{ $field } = $self->getRef( $record{ $field }, $format, $options );
+			$record{ $request } = $obj->$request;
+			if( ref( $record{ $request } ) ) {
+				$record{ $request } = $self->getRef( $record{ $request }, $format, $options );
 			} else {
-				my $type = $obj->getColumnSQLType( $field );
+				my $type = $obj->getColumnSQLType( $request );
 				if( $type ) {
 					my %booleanConvert = ( 0 => 'False', 1 => 'True' );
-					$record{ $field } =~ s/^([^:]+(:\d+){2}).*$/$1/
+					$record{ $request } =~ s/^([^:]+(:\d+){2}).*$/$1/
 						if $type eq 'timestamp';
-					$record{ $field } = $booleanConvert{ $record{ $field } }
+					$record{ $request } = $booleanConvert{ $record{ $request } }
 						if $type eq 'boolean';
-					$record{ $field } = $self->_trim( $record{ $field }, $options )
+					$record{ $request } = $self->_trim( $record{ $request }, $options )
 						if( $type =~ m/^varchar|text/ ); 
 				}
 			}
@@ -571,23 +585,6 @@ sub renderData {
 	
 	return %record;
 }
-
-
-=head2 _renderData
-
-	%partial_record = $specializedRenderer->_renderData( $obj, $format, $field_names, $options );
-
-Virtual method. Subclasses should override this if to do custom rendering of certain fields
-or to implement fields not implemented in DBObject. Examples of this are:
-	Experimenter's email turned to active link if format is html
-	Image having an 'Original File' field.
-
-Subclasses need only populate fields they are overriding. i.e. Image does NOT
-need to populate the 'name' field.
-
-=cut
-
-sub _renderData{ return (); }
 
 =head2 getFields
 
@@ -599,12 +596,23 @@ $mode may be 'summary' or 'all'.
 
 Returns an ordered list of field names for the specified object type and mode.
 
-This method should not be overridden.
+This list will be constructed in one of three ways. 
+
+	First, it will try to load a specialized renderer and look for hash
+	data '_summaryFields' or '_allFields' ( depending on the mode ).
+
+	If that fails, it will try loading a custom template (specific to
+	the type and mode), and return fields from $type that appear in
+	that template.
+
+	If no custom template is found, it will return every published field
+	in the type. See OME::DBObject->getPublishedCols()
 
 =cut
 
 sub getFields {
 	my ($self, $type, $mode) = @_;
+	
 	my $specializedRenderer = ( $self->_getSpecializedRenderer( $type ) or {} );
 
 	# use subclass data for summary mode
@@ -616,11 +624,22 @@ sub getFields {
 		return @{ $specializedRenderer->{ _allFields } };
 	}
 
-	# autopopulate fields insensitive to mode
+	# default: return all fields (insensitive to mode)
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $type );
+	my @cols = $package_name->getPublishedCols();
+	
+	# last chance: filter fields by specialized templates
+	# try to find a template specific to this type & mode
+	my $tmpl_path = $self->_findTemplate( $type, $mode );
+	if( $tmpl_path ) {
+		my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+		# only keep columns that exist in the template
+		@cols = grep( $tmpl->query( name => $_ ), @cols );
+	}
+	
 	# We don't need no target
-	return ( 'id', sort( grep( $_ ne 'target', $package_name->getPublishedCols()) ) );
+	return ( 'id', sort( grep( $_ ne 'target', @cols) ) );
 }
 
 
@@ -743,7 +762,7 @@ sub getSearchFields {
 	
 	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
 	($form_fields, $search_paths) = $specializedRenderer->_getSearchFields( $type, $field_names, $defaults )
-		if( $specializedRenderer );
+		if( $specializedRenderer and $specializedRenderer->can('_getSearchFields') );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
@@ -769,19 +788,6 @@ sub getSearchFields {
 
 	return ( $form_fields, $search_paths );
 }
-
-=head2 _getSearchFields
-
-	%partial_search_fields = 
-		$specializedRenderer->_getSearchFields( $type, $field_names, $defaults );
-
-Virtual method. Subclasses should override this if to do custom rendering of search fields.
-
-Subclasses need only populate fields they are overriding.
-
-=cut
-
-sub _getSearchFields{ return (); }
 
 =head2 getRefSearchField
 
@@ -821,6 +827,9 @@ sub getRefSearchField {
 }
 
 
+=head1 Internal Methods
+
+These methods should not be accessed from outside the class
 
 =head2 _getSpecializedRenderer
 
@@ -886,6 +895,15 @@ sub _trim {
 	return substr( $str, 0, $options->{ max_text_length } - 3 ).'...';
 }
 
+=head2 _findTemplate
+
+	my $template_path = $self->_findTemplate( $obj, $mode );
+
+returns a path to a custom template (see HTML::Template) for this $obj
+and $mode - OR - undef if no matching template can be found
+
+=cut
+
 sub _findTemplate {
 	my ( $self, $obj, $mode ) = @_;
 	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
@@ -899,6 +917,48 @@ sub _findTemplate {
 	return $tmpl_path if -e $tmpl_path;
 	return undef;
 }
+
+=head1 Specialized Rendering
+
+To provide specialized rendering for a given type, write a subclass and
+implement one or more of the methods below.
+
+=head2 Naming
+
+These subclasses should be named according to the type they are
+overriding. A specialized renderer for OME::Image is named
+OME::Web::DBObjRender::__OME_Image. @Pixels renderer is named
+OME::Web::DBObjRender::__Pixels
+
+=head1 Specialized Renderer Methods 
+
+=head2 _getName
+
+	my $object_name = $specializedRenderer->_getName( $object, $options );
+
+Overrides getName()
+
+Subclasses are expected to implement $options->{ 'max_text_length' }.
+Names longer than that value should be trimmed.
+
+=head2 _renderData
+
+	%partial_record = $specializedRenderer->_renderData( $obj, $format, $field_names, $options );
+
+Implement this to do custom rendering of certain fields or to implement
+fields not implemented in DBObject. Examples of this are:
+	Experimenter's email turned to active link if format is html
+	Image having an 'Original File' field.
+
+Subclasses need only populate fields they are overriding.
+
+=head2 _getSearchFields
+
+	%partial_search_fields = 
+		$specializedRenderer->_getSearchFields( $type, $field_names, $defaults );
+
+Implement this to do custom rendering of search fields. Subclasses need
+only populate fields they are overriding.
 
 =head1 Author
 
