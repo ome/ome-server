@@ -204,7 +204,7 @@ my @libraries = ( {
 	}, {
 		name => 'libdb_B-Tree',
 		pre_install => sub {
-			my $library = shift;
+			my ($library,$logfile) = @_;
 			my @inc_paths = (
 				'/usr/include/db_185.h'           , 'db_185.h',
 				'/usr/local/include/db_185.h'     , 'db_185.h',
@@ -223,6 +223,8 @@ my @libraries = ( {
 				last if -e $inc_paths[$i];
 			}
 			$include = 'db_185.h' unless $include;
+	    	$logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+	    	print $logfile "libdb_B-Tree:  Using #include<$include> for Berkeley DB\n";
 			$library->{include_h} = $include;
 			$library->{get_library_version} = "#include <$include>\n";
 			$library->{get_library_version} .= q(
@@ -439,7 +441,7 @@ sub execute {
 		my @error;
 
 		# Pre-install
-		&{$library->{pre_install}}($library) if exists $library->{pre_install};
+		&{$library->{pre_install}}($library,$LOGFILE) if exists $library->{pre_install};
 
 		# Exceptions
 		if (exists $library->{exception} and &{$library->{exception}}) {
