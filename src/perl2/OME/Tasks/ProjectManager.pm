@@ -37,27 +37,20 @@
 
 package OME::Tasks::ProjectManager;
 
-
-use OME;
-our $VERSION = $OME::VERSION;
-
-
-=head 1 NAME
+=head1 NAME
 
 OME::Tasks::ProjectManager - manage user's projects
 
-=head 1 SYNOPSIS
+=head1 SYNOPSIS
 
-	use OME::Tasks::ProjectManager;
-	my $projectManager=new OME::Tasks::ProjectManager($session);
-	
+use OME::Tasks::ProjectManager;
+my $projectManager = new OME::Tasks::ProjectManager($session);
 
-=head 1 DESCRIPTION
+=head1 DESCRIPTION
 
 The OME::Tasks::ProjectManager provides a list of methods to manage user's projects
 
-
-=head 1 OBTAINING A PROJECTMANAGER
+=head1 OBTAINING A PROJECTMANAGER
 
 To retrieve an OME::Tasks::ProjectManager to use for managing the project, the
 user must log in to OME.  This is done via the
@@ -67,8 +60,6 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->createSession($username,$password);
 	my $projectManager = new OME::Tasks::ProjectManager($session);
-
-
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
@@ -121,7 +112,6 @@ Return: project object
 =head2 switch ($id,$bool)
 Switch project 
 
-
 =cut
 
 
@@ -129,6 +119,9 @@ use strict;
 use OME::SetDB;
 use OME::DBObject;
 OME::DBObject->Caching(0);
+
+use OME;
+our $VERSION = $OME::VERSION;
 
 sub new{
 	my $class=shift;
