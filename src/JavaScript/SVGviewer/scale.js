@@ -202,8 +202,8 @@ Scale.prototype.updateScaleDisplay = function() {
 
 	// construct variables
 	var c = this.logicalChannelPopupList.getSelection();
-	var min = Scale.Stats[c][theT]['min'];
-	var max = Scale.Stats[c][theT]['max'];
+	var min = Scale.Stats[c][theT]['Minimum'];
+	var max = Scale.Stats[c][theT]['Maximum'];
 
 	var minSliderPos = this.calcScalePos( min );
 	var maxSliderPos = this.calcScalePos( max );
@@ -280,11 +280,11 @@ Scale.setClassData = function(image, channelLabels) {
 	Scale.global_Min = new Array();
 	Scale.global_Max = new Array();
 	for(var c in Scale.Stats) {
-		Scale.global_Min[c] = Scale.Stats[c][0]['min'];
-		Scale.global_Max[c] = Scale.Stats[c][0]['max'];
+		Scale.global_Min[c] = Scale.Stats[c][0]['Minimum'];
+		Scale.global_Max[c] = Scale.Stats[c][0]['Maximum'];
 		for( var t in Scale.Stats[c] ) {
-			Scale.global_Min[c] = Math.min(Scale.Stats[c][t]['min'], Scale.global_Min[c]);
-			Scale.global_Max[c] = Math.max(Scale.Stats[c][t]['max'], Scale.global_Max[c]);
+			Scale.global_Min[c] = Math.min(Scale.Stats[c][t]['Minimum'], Scale.global_Min[c]);
+			Scale.global_Max[c] = Math.max(Scale.Stats[c][t]['Maximum'], Scale.global_Max[c]);
 		}
 	}
 

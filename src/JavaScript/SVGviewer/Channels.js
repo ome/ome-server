@@ -257,11 +257,11 @@ Channels.prototype.init = function(image, channel_labels) {
 	this.global_Min = new Array();
 	this.global_Max = new Array();
 	for(var c in this.Stats) {
-		this.global_Min[c] = this.Stats[c][0]['min'];
-		this.global_Max[c] = this.Stats[c][0]['max'];
+		this.global_Min[c] = this.Stats[c][0]['Minimum'];
+		this.global_Max[c] = this.Stats[c][0]['Maximum'];
 		for( var t in this.Stats[c] ) {
-			this.global_Min[c] = Math.min(this.Stats[c][t]['min'], this.global_Min[c]);
-			this.global_Max[c] = Math.max(this.Stats[c][t]['max'], this.global_Max[c]);
+			this.global_Min[c] = Math.min(this.Stats[c][t]['Minimum'], this.global_Min[c]);
+			this.global_Max[c] = Math.max(this.Stats[c][t]['Maximum'], this.global_Max[c]);
 		}
 	}
 

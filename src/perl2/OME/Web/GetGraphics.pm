@@ -43,6 +43,7 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::ImageManager;
+use OME::Tasks::PixelsManager;
 use OME::ViewerPreferences;
 use base qw{ OME::Web };
 
@@ -220,19 +221,23 @@ sub _getJSData {
 
 	#######################
 	# Get Stack Statistics, convert to string representation of JS 3d associative array
-	my $sh; # stats hash
-	$sh = $imageManager->getImageStats($image, $pixels)
-		or die "Could not find Stack Statistics for image ($imageID), pixels ($pixelsID).\n";
-	my @ar1; # array 1
-	for( my $c = 0;$c<scalar(@$sh);$c++) {
-		my @ar2; # array 2
-		for( my $t = 0; $t<scalar(@{$sh->[$c]}); $t++) {
-			my $str = '{ '.join( ',', map( $_.': '.$sh->[$c][$t]->{$_}, keys %{ $sh->[$c][$t] } ) ).' }';
-			push @ar2, $str;
+	my $pixels_data = OME::Tasks::PixelsManager->loadPixels( $pixels );
+	my $statsHash = $pixels_data->getStackStatistics();
+
+	my @channel_indexed;
+	foreach my $c ( sort keys %$statsHash ) {
+		my @timepoint_indexed;
+		foreach my $t( sort keys %{ $statsHash->{ $c } } ) {
+			my $js_stats_record = 
+				'{ '.join( ',', map( 
+					$_.': '.$statsHash->{$c}{$t}{$_}, 
+					sort grep( !m/^Sum|Centroid/, keys %{ $statsHash->{$c}{$t} } )
+				) ).' }';
+			push @timepoint_indexed, $js_stats_record;
 		}
-		push @ar1, '['.join( ',', @ar2 ).']';
+		push @channel_indexed, '['.join( ',', @timepoint_indexed ).']';
 	}
-	$JSinfo->{ Stats } = '['.join( ',', @ar1 ).']';
+	$JSinfo->{ Stats } = '['.join( ',', @channel_indexed ).']';
 
 
 	#######################
@@ -251,7 +256,7 @@ sub _getJSData {
 	$JSinfo->{ SavePrefsCGI_URL } = '"/perl2/serve.pl?Page=OME::Web::SaveViewerSettings"';
 	$JSinfo->{ PlaneURLs } = '{'.join( ', ', 
 		'imageInfo: "'.$self->getObjDetailURL( $image ).'"',
-		'stats: "'.$self->getObjDetailURL( $imageManager->getImageStatsMEX( $pixels ) ).'"', 
+		# add more URLs here as needed
 	).'}';
 
 	###############

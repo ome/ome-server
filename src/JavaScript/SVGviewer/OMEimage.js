@@ -517,11 +517,11 @@ OMEimage.prototype.init = function( imageID, imageName, pixelsID, Stats, Dims,  
 	this.global_Min = new Array();
 	this.global_Max = new Array();
 	for( ch in this.Stats) {
-		this.global_Min[ch] = this.Stats[ch][0]['min'];
-		this.global_Max[ch] = this.Stats[ch][0]['max'];
+		this.global_Min[ch] = this.Stats[ch][0]['Minimum'];
+		this.global_Max[ch] = this.Stats[ch][0]['Maximum'];
 		for( var t in this.Stats[ch] ) {
-			this.global_Min[ch] = Math.min(this.Stats[ch][t]['min'], this.global_Min[ch]);
-			this.global_Max[ch] = Math.max(this.Stats[ch][t]['max'], this.global_Max[ch]);
+			this.global_Min[ch] = Math.min(this.Stats[ch][t]['Minimum'], this.global_Min[ch]);
+			this.global_Max[ch] = Math.max(this.Stats[ch][t]['Maximum'], this.global_Max[ch]);
 		}
 		if( ! this.BW_backup[ ch ] ) {
 			this.BW_backup[ ch ] = new Array();
