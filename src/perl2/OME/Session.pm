@@ -97,6 +97,50 @@ sub getTemporaryFilename {
     }
 }
 
+# get a scratch directory under a repository
+sub getScratchDirRepository {
+    my $self = shift;
+    my %params = @_;
+    my $repository = $params{repository} ||
+    	die "OME::Session->getScratchDirRepository was called incorectly!\n";
+
+	return $self->getScratchDir( $params{progName}, $params{extension}, $repository->Path() );
+
+}
+
+# get a scratch directory under OME's tmp dir
+sub getScratchDir {
+    my $self = shift;
+    my $progName = shift;
+    my $extension = shift;
+    my $tmpRoot = shift;
+    $tmpRoot = $self->Configuration()->tmp_dir()
+    	unless $tmpRoot;
+    my $count=0;
+    my $base_name;
+	my $dir = undef;
+	
+	local *DH;
+    do {
+		$base_name = sprintf("%s/%s-%03d.%s", $tmpRoot,$progName,$count,$extension);
+		$base_name =~ s/\/\//\//g;
+	    if( opendir( DH, $base_name ) ) {
+	    	closedir DH;
+	    } else {
+	    	$dir = $base_name;
+	    }
+    } while ( not defined $dir || $count++ > 999);
+    if (defined $dir ) {
+		mkdir $dir
+			or die "Couldn't make directory $dir\n";
+		return ($dir);
+    } else {
+		closedir (DH);
+		return ();
+    }
+}
+
+
 # added by josiah, 2/6
 # centralized place to get configuration table.
 sub Configuration {
