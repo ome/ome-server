@@ -479,7 +479,7 @@
 		</SemanticType>
 
 		<SemanticType
-			Name= "OpticalTransferFunction"
+			Name= "OTF"
 			AppliesTo = "G">
 			<Element
 				Name= "Objective"
@@ -703,7 +703,7 @@
 				Name= "OTF"
 				DBLocation = "LOGICAL_CHANNELS.OTF"
 				DataType = "reference"
-				RefersTo = "OpticalTransferFunction"/>
+				RefersTo = "OTF"/>
 			<Element
 				Name= "Detector"
 				DBLocation = "LOGICAL_CHANNELS.DETECTOR"
