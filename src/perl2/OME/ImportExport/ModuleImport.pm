@@ -262,8 +262,8 @@ my $SemanticDefinitionsXML = $root->getElementsByTagName( "SemanticTypeDefinitio
 				dateTime => 'timestamp'
 				);
 			$columnXML->setAttribute( 
-				'Column_SQL', 
-				$dataTypeConversion{ $columnXML->getAttribute( 'Column_SQL' ) }
+				'SQL_DataType', 
+				$dataTypeConversion{ $columnXML->getAttribute( 'SQL_DataType' ) }
 			);
 
 			
@@ -288,7 +288,7 @@ my $SemanticDefinitionsXML = $root->getElementsByTagName( "SemanticTypeDefinitio
 					data_table_id  => $newTable,
 					column_name    => $columnXML->getAttribute( 'ColumnName' ),
 					description    => $columnXML->getAttribute( 'Description' ),
-					sql_type       => $columnXML->getAttribute( 'Column_SQL' )
+					sql_type       => $columnXML->getAttribute( 'SQL_DataType' )
 				};
 				print STDERR ref ($self) . "->processDOM: OME::DataTable::Column DBObject parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
 					if $debug > 1;
@@ -323,7 +323,7 @@ my $SemanticDefinitionsXML = $root->getElementsByTagName( "SemanticTypeDefinitio
 				push(@commitOnSuccessfulImport, $newColumn);
 			} else {
 				die "Found matching column with different sql data type."
-					unless $cols[0]->sql_type() eq $columnXML->getAttribute( 'Column_SQL' );
+					unless $cols[0]->sql_type() eq $columnXML->getAttribute( 'SQL_DataType' );
 				print STDERR ref ($self) . "->processDOM: found column. using existing column.\n"
 					if $debug > 1;
 				$newColumn = $cols[0];
