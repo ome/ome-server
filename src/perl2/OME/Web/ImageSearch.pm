@@ -69,6 +69,7 @@ sub getPageBody {
 		$body .=format_output($ref,$htmlFormat,$cgi);
          }else{
 		$body.="No Image found.";
+		$body .=format_form($htmlFormat,$cgi);
 
          }
 

@@ -50,7 +50,7 @@ sub getPageBody {
 	my	$datasetManager=new OME::Tasks::DatasetManager($session);
 	my	$projectManager=new OME::Tasks::ProjectManager($session);
 	my 	$htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
+	my 	$jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	################
 	# DB INFOS
@@ -77,7 +77,8 @@ sub getPageBody {
 		$body .= $jscriptFormat->openInfoProject();	
             $body .=format_output($htmlFormat,$ref,$userID,$cgi);
           }else{
-		$body.="<b>No Project found.</b>";
+		$body.="No Project found.";
+		$body .=format_form($htmlFormat,$cgi);
 
           }
 	}elsif ($cgi->param('execute') ) {

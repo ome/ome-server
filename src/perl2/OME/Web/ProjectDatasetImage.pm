@@ -84,7 +84,7 @@ sub getPageBody {
 sub print_form {
 	my ($usergpID,$imageManager,$htmlFormat,$cgi)=@_;
 	my $text="";
-	my $images=$imageManager->listMatching($usergpID);
+	my $images=$imageManager->listMatching();
  	if (scalar(@$images)>0){
 	   my %list=map { $_->image_id() => $_} @$images;
          $text.=$cgi->startform;

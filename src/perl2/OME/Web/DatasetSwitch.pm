@@ -65,7 +65,8 @@ sub print_form {
 	my ($session,$datasetManager,$htmlFormat,$cgi)= @_;
 	my $text="";
 	my $dataset = $session->dataset();
-	my $ref=$datasetManager->listMatching();
+	my @a=($session->User()->Group()->id());
+	my $ref=$datasetManager->listMatching(undef,\@a);
 	my %h = map { $_->dataset_id() => $_->name() } @$ref;
 
 	if (defined $dataset){

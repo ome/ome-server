@@ -52,7 +52,6 @@ sub getPageBody {
 	my @names = $cgi->param();
 	my %revArgs = map { $cgi->param($_) => $_ } @names;
 	 $body .= $jscriptFormat->openInfoProject();
-
 	if (exists $revArgs{Select}){
 
 	    $projectManager->switch($revArgs{Select});
@@ -104,7 +103,7 @@ sub print_form {
 
 	my ($session,$projectManager,$htmlFormat,$cgi)=@_;
 	my $text ="";
-	my $ref=$projectManager->listMatching();
+	my $ref=$projectManager->listMatching($session->User()->id());
 	$text.="Please define a project first.<br>"; 
 	return $text if (scalar(@$ref)==0);
 	$text="";

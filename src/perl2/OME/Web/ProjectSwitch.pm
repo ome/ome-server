@@ -82,7 +82,7 @@ sub getPageBody {
 sub print_form {
 	my ($session,$projectManager,$htmlFormat,$cgi)=@_;
 	my $text ="";
-	my $ref=$projectManager->listMatching();
+	my $ref=$projectManager->listMatching($session->User()->id());
 
      	$text	.=$htmlFormat->formatProject($session->project()) if (defined $session->project());
 	if (scalar (@$ref) > 0){

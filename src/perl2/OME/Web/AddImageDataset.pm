@@ -104,7 +104,8 @@ sub getPageBody {
 sub print_status{
 	my ($session,$datasetManager,$htmlFormat,$cgi)=@_;
  	my $text="";
- 	my ($share,$own,$count,$countb)=$datasetManager->share();
+	my @a=($session->User()->Group()->id());
+ 	my ($share,$own,$count,$countb)=$datasetManager->share(\@a);
  	if ($count>0){
    		$text.="<h3>Datasets you own but used by others<h3>";
    		$text.=$htmlFormat->datasetList($share);
@@ -162,7 +163,8 @@ sub format_list_images{
  	my ($session,$imageManager,$htmlFormat,$cgi)=@_;
 	my $text="";
  	my $checkbox="";
- 	my $rep=$imageManager->listMatching($session->User()->Group()->id(),1);
+	my @a=($session->User()->Group()->id());
+ 	my $rep=$imageManager->listMatching(\@a,1);
 	if (!defined $rep){
 	  my $html="";
 	  $html="<br><b> All images used </b>";

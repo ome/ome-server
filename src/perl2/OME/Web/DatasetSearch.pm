@@ -78,7 +78,7 @@ sub getPageBody {
           if (defined $ref){
 		$body .= $jscriptFormat->openInfoDataset();	
 
-            $body.=format_output($ref,$datasetManager,$htmlFormat,$cgi);
+            $body.=format_output($session,$ref,$datasetManager,$htmlFormat,$cgi);
           }else{
 		$body.="No Dataset found.";
 		$body.=format_form($htmlFormat,$cgi);
@@ -108,9 +108,10 @@ sub format_form{
 }
 
 sub format_output{
-	my ($ref,$datasetManager,$htmlFormat,$cgi)=@_;
+	my ($session,$ref,$datasetManager,$htmlFormat,$cgi)=@_;
       my $text="";
-      my $array=$datasetManager->listMatching();
+	my @a=($session->User()->Group()->id());
+      my $array=$datasetManager->listMatching(undef,\@a);
 	my %h = map { $_->dataset_id() => $_->name() } @$array;
 	$text.=$cgi->startform;
 	$text.=$htmlFormat->searchResults($ref,undef,"Dataset(s)","dataset",\%h);

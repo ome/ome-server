@@ -116,7 +116,8 @@ sub getPageBody {
 sub print_form {
 	
 	my ($session,$datasetManager,$htmlFormat,$cgi) = @_;
-	my $ref=$datasetManager->notBelongToProject();
+	my @a=($session->User()->Group()->id());
+	my $ref=$datasetManager->notBelongToProject(\@a);
 	my $text=formatList($cgi,$htmlFormat,$session,$ref);	
 	return $text;
 

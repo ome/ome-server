@@ -108,7 +108,8 @@ sub remove_dataset{
 ####
 sub retrieve_result{
   my ($session,$datasetManager,$htmlFormat,$cgi)=@_;
-  my ($share,$use,$count)=$datasetManager->manage();
+  my @a=($session->User()->Group()->id());
+  my ($share,$use,$count)=$datasetManager->manage(\@a);
   my %list=();
   my $text="";
   if ($count==0){
