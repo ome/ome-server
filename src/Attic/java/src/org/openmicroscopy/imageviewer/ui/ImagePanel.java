@@ -74,6 +74,7 @@ public class ImagePanel extends JPanel
   public ImagePanel(JComponent parentContainer)
   {
     this.container = parentContainer;
+    // default footprint (can change both internally and externally)
     setSize(600,600);
     setPreferredSize(new Dimension(600,600));
     zoomTransform = AffineTransform.getScaleInstance(zoomLevel,zoomLevel);
