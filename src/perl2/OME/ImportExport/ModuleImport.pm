@@ -47,7 +47,7 @@ sub new {
 	print STDERR $proto . "->new called with parameters:\n\t" . join( "\n\t", map { $_."=>".$params{$_} } keys %params ) ."\n" 
 		if $debug > 1;
 	
-	my @requiredParams = ('session','semanticTypes','semanticColumns');
+	my @requiredParams = ('session' );
 	
 	foreach (@requiredParams) {
 		die ref ($class) . "->new called without required parameter '$_'"
@@ -57,8 +57,6 @@ sub new {
 	my $self = {
 		session => $params{session},
 		debug   => $params{debug} || 0,
-                semanticTypes => $params{semanticTypes},
-                semanticColumns => $params{semanticColumns},
                 _parser => $params{_parser},
 	};
 	
@@ -164,9 +162,6 @@ sub processDOM {
 		if $debug > 0;
 
 
-        my $semanticTypes = $self->{semanticTypes};
-        my $semanticColumns = $self->{semanticColumns};
-
 
 foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
@@ -270,8 +265,8 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#
 		# make OME::FormalInput object
 		#
-		die "When processing Formal Input (name=".$formalInputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalInputXML->getAttribute( 'SemanticTypeName' )."\n"
-			unless exists $semanticTypes->{ $formalInputXML->getAttribute( 'SemanticTypeName' ) };
+		my $semanticType = $factory->findObject( "OME::AttributeType", name => $formalInputXML->getAttribute( 'SemanticTypeName' ) )
+			or die "When processing Formal Input (name=".$formalInputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalInputXML->getAttribute( 'SemanticTypeName' )."\n";
 
 		my ($optional, $list, $count);
 		$count = $formalInputXML->getAttribute( 'Count' );
@@ -286,7 +281,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 			name               => $formalInputXML->getAttribute( 'Name' ),
 			description        => $formalInputXML->getAttribute( 'Description' ),
 			program_id         => $newProgram,
-			attribute_type_id  => $semanticTypes->{ $formalInputXML->getAttribute( 'SemanticTypeName' ) },
+			attribute_type_id  => $semanticType->id(),
 			lookup_table_id    => $newLookupTable,
 			optional           => $optional,
 			list               => $list,
@@ -330,12 +325,11 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		# make OME::FormalOutput object
 		#
         my $semanticTypeName = $formalOutputXML->getAttribute('SemanticTypeName');
-        my $semanticType = undef;
+        my $semanticType = $factory->findObject( "OME::AttributeType", name => $semanticTypeName );
         # Null semantic types are now allowed for formal outputs
         if (defined $semanticTypeName) {
             die "When processing Formal Output (name=".$formalOutputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$semanticTypeName."\n"
-              unless exists $semanticTypes->{ $semanticTypeName };
-            $semanticType = $semanticTypes->{ $semanticTypeName };
+				unless not defined $semanticType;
         }
 		my ($optional, $list, $count);
 		$count = $formalOutputXML->getAttribute( 'Count' );
@@ -406,7 +400,8 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 			my $formalInput    = $formalInputs{ $input->getAttribute( "FormalInputName" ) }
 				or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
 			my $semanticType   = $formalInput->attribute_type();
-			my $semanticElement = $semanticColumns->{ $semanticType->name() }->{ $input->getAttribute( "SemanticElementName" ) }
+
+			my $semanticElement = $factory->findObject( "OME::AttributeType::Column", attribute_type_id => $semanticType->id(), name => $input->getAttribute( "SemanticElementName" ) )
 				or die "Could not find semantic column referenced by element ".$input->tagName()." with SemanticElementName ".$input->getAttribute( "SemanticElementName" );
 		
 			# Create attributes FormalInputID and SemanticElementID to store FORMAL_INPUT_ID and ATTRIBUTE_COLUMN_ID.
@@ -441,7 +436,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 			my $formalOutput    = $formalOutputs{ $output->getAttribute( "FormalOutputName" ) }
 				or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
 			my $semanticType   = $formalOutput->attribute_type();
-			my $semanticElement = $semanticColumns->{ $semanticType->name() }->{ $output->getAttribute( "SemanticElementName" ) }
+			my $semanticElement = $factory->findObject( "OME::AttributeType::Column", attribute_type_id => $semanticType->id(), name => $output->getAttribute( "SemanticElementName" ) )
 				or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
 
 			# Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
