@@ -473,7 +473,8 @@ addPrototype("OME::Analysis::ActualInput","input_analysis",
 addPrototype("OME::Analysis::ActualInput","formal_input",
              ['OME::Program::FormalInput'],['OME::Program::FormalInput']);
 
-addPrototype("OME::AnalysisView","owner",['$'],['$']);
+addPrototype("OME::AnalysisView","owner",
+             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
 addPrototype("OME::AnalysisView","name",['$'],['$']);
 addPrototype("OME::AnalysisView","locked",['$'],['$']);
 addPrototype("OME::AnalysisView","nodes",[],['OME::AnalysisView::Node','*']);
@@ -534,7 +535,8 @@ addPrototype("OME::AnalysisExecution","analysis_view",
              ['OME::AnalysisView'],['OME::AnalysisView']);
 addPrototype("OME::AnalysisExecution","dataset",
              ['OME::Dataset'],['OME::Dataset']);
-addPrototype("OME::AnalysisExecution","experimenter_id",['$'],['$']);
+addPrototype("OME::AnalysisExecution","experimenter",
+             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
 addPrototype("OME::AnalysisExecution","node_executions",
              [],['OME::AnalysisExecution::NodeExecution','*']);
 addPrototype("OME::AnalysisExecution","node_executions",
