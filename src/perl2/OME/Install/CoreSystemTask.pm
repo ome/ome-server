@@ -290,6 +290,10 @@ sub execute {
     print_header ("Core Binary Setup");
     
     my $INSTALL_HOME = $$OME_TMP_DIR;
+#
+# This is a hack to make sure that the directory where we're putting our log actually exists.
+# Don't like the hack?  Fix it.
+	`mkdir -p $INSTALL_HOME`;
     my $LOGFILE_NAME = "BinaryBuilds.log";
     my $LOGFILE;
 
