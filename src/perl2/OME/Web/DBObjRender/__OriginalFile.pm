@@ -57,27 +57,35 @@ use OME;
 use OME::Web;
 use base qw(OME::Web::DBObjRender);
 
-# Class data - override default behavior
-__PACKAGE__->_fieldLabels( {
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	
+	$self->{ _fieldTitles } = {
 	'Path'             => "Name",
-});
+	};
+	
+	return $self;
+}
 
-=head2 renderSingle
+=head2 _renderData
 
-makes Name link to original file from image server
+makes Path link to original file from image server if format is html
 
 =cut
 
-sub renderSingle {
-	my ($proto,$obj,$format,$fieldnames) = @_;
+sub _renderData {
+	my ($proto, $obj, $field_names, $format, $mode, $options) = @_;
 
-	my %record = $proto->SUPER::renderSingle( $obj,$format,$fieldnames );
+	return () unless( grep( /Path/, @$field_names ) and $format eq 'html' );
+
+	my %record;	
+	my $path = $proto->_trim( $obj->Path, $options );
 	my $originalFile_url = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
+	$record{Path} = "<a href='$originalFile_url'>".$path."</a>";
 
-	$record{Path} = "<a href='$originalFile_url'>".$record{Path}."</a>";
-
-	return %record if wantarray;
-	return \%record;
+	return %record;
 }
 
 
