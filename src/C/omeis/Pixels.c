@@ -193,8 +193,13 @@ struct stat fStat;
 			return (-12);
 	}
 
-	myPixels->planeInfos = (planeInfo *) ( mmap_info + sizeof(pixHeader));
-	myPixels->stackInfos = (stackInfo *) ( mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
+/*
+  If this is a new pixels file, we don't know the dx, dy, dz, dc, dt at this point
+*/
+	if (rorw != 'n') {
+		myPixels->planeInfos = (planeInfo *) ( mmap_info + sizeof(pixHeader));
+		myPixels->stackInfos = (stackInfo *) ( mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
+	}
 
 	return (1);
 }
@@ -284,6 +289,14 @@ int result;
 	head->bp = bp;
 	head->isSigned = (isSigned ? 1 : 0);
 	head->isFloat  = (isFloat  ? 1 : 0);
+	
+	/*
+	  Since we called openPixelsFile with 'n', it didn't have the dx, dy, dz, etc,
+	  so it did not assign where the infos are in relation to head.
+	  So we must assign them here.
+	*/
+	myPixels->planeInfos = (planeInfo *) ( (char *)head + sizeof(pixHeader));
+	myPixels->stackInfos = (stackInfo *) ( (char *)head + (sizeof (planeInfo) * dz * dc * dt)  + sizeof(pixHeader) );
 
 	/* release the lock created by newRepFile */
 	lockRepFile (myPixels->fd_rep,'u',0LL,0LL);
@@ -980,7 +993,7 @@ register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_lo
 	if (! (stackInfoP = myPixels->stackInfos + stack_offset) ) return (0);
 	if (stackInfoP->stats_OK) return (1);
 	if (! (planeInfoP = myPixels->planeInfos + plane_offset) ) return (0);
-	
+
 	for (z = 0; z < dz; z++) {
 		if (! planeInfoP->stats_OK)
 			DoPlaneStats (myPixels, z, c, t);
@@ -1050,7 +1063,7 @@ int FinishStats (PixelsRep *myPixels, char force) {
 	dz = head->dz;
 	dc = head->dc;
 	dt = head->dt;
-	for (t = 0; t < dt; t++)
+	for (t = 0; t < dt; t++) {
 		for (c = 0; c < dc; c++) {
 			if (force) stackInfoP->stats_OK = 0;
 			for (z = 0; z < dz; z++) {
@@ -1059,10 +1072,10 @@ int FinishStats (PixelsRep *myPixels, char force) {
 					if (!DoPlaneStats (myPixels, z, c, t)) return (0);
 				planeInfoP++;
 			}
-			if (! stackInfoP->stats_OK)
-				if (!DoStackStats (myPixels, c, t)) return (0);
+			if (!DoStackStats (myPixels, c, t)) return (0);
 			stackInfoP++;
 		}
+	}
 	return (1);
 }
 
