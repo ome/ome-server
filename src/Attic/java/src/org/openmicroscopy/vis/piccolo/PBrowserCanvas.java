@@ -41,6 +41,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.Project;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.chains.SelectionState;
@@ -369,7 +370,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		CDataset selected = state.getSelectedDataset();
 		
 		if (selected != null) {
-			//System.err.println("browser canvas. selected.. "+selected.getName());
 			datasets = new TreeSet();
 			datasets.add(selected);
 		}
@@ -380,6 +380,9 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				datasets = new TreeSet(allDatasets);
 		}	
 		displayDatasets(false);
+		Project rollover = state.getRolloverProject();
+		highlightDatasetsForProject(rollover);
+		
 	}
 		
 	public void clearExecutionList() {
@@ -400,5 +403,21 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 		PBounds b = cl.getGlobalFullBounds();
 		executionList.setOffset(b.getX(),b.getY()+b.getHeight());
+	}
+	
+	public void highlightDatasetsForProject(Project p) {
+		Collection projDatasets=null;
+		if (p !=null)
+			projDatasets = p.getDatasets();
+		Iterator iter = layer.getChildrenIterator();
+		while (iter.hasNext()) {
+			PDataset dNode = (PDataset) iter.next();
+			CDataset d = dNode.getDataset();
+			if (projDatasets != null && projDatasets.contains(d)) {
+				dNode.setHighlighted(true);
+			}
+			else
+				dNode.setHighlighted(false);
+		}
 	}
  }
