@@ -38,10 +38,6 @@
 package OME::Install::InstallationTask;
 
 use strict;
-use vars qw($VERSION);
-use OME;
-$VERSION = $OME::VERSION;
-
 
 # Interface common to all installation tasks.
 
