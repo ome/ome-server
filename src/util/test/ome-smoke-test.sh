@@ -113,10 +113,13 @@ if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	echo "Tasks table:" ;
 	echo "------------" ;
 	su -l $OME_ADMIN -c "psql -qc 'select * from tasks' -d $TEST_DB" >> $LOG_FILE ;
-	mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
-	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
-	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
+	# Kill all the PIDs listed in the tasks table
+	PID=`su -l $OME_ADMIN -c "psql -qtc 'select process_id from tasks' $TEST_DB"` 2> /dev/null ;
+	kill $PID ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
+	mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
+	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
+	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` OME Install failed" $MAIL_TO < $LOG_FILE ;
 	fi;
