@@ -1,0 +1,21 @@
+JPEG-LS is the new lossless/near-lossless compression standard for continuous-tone images, 
+ISO-14495-1/ITU-T.87. The standard is based on the LOCO-I algorithm (LOw COmplexity LOssless
+COmpression for Images) developed at Hewlett-Packard Laboratories.
+
+These directories and files contain Ismaeil R. Isameil's JPEG-LS implementation at the 
+University of British Columbia, modified to be compilable and usable within OMEIS. 
+ 
+For more info about about his implementaion:
+
+http://www.ece.ubc.ca/spmg/research/jpeg/jpeg_ls/jpegls.html
+Ismaeil R. Ismaeil mailto ismail@ee.ubc.ca
+Dr. Faouzi Kossentini mailto faouzi@ece.ubc.ca
+
+For more info about the LOCO algorithm's theoretic aspects see: http://www.hpl.hp.com/loco/
+
+We use JPEG-LS in OMEIS because it is the best loss-less compression algorithm 
+available (both for absolute compression and time efficiency).
+
+Tom Macura
+tmacura@nih.gov
+http://docs.openmicroscopy.org.uk
