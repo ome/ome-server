@@ -40,6 +40,7 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Util::Commands);
 
 use Getopt::Long;
+use Term::ANSIColor qw(:constants);
 use OME::Install::Terminal;
 
 use OME::SessionManager;
@@ -146,16 +147,16 @@ ERROR
         # Allow the user to cancel the batch operation by hitting enter
         last if $username eq '';
 
-        $firstname = confirm_default("First name?    ",$firstname)
+        $firstname = confirm_default("First Name?    ",$firstname)
           if $batch || $keep || $firstname eq '';
 
-        $lastname  = confirm_default("Last name?     ",$lastname)
+        $lastname  = confirm_default("Last Name?     ",$lastname)
           if $batch || $keep || $lastname eq '';
 
-        $email     = confirm_default("Email address? ",$email)
+        $email     = confirm_default("Email Address? ",$email)
           if $batch || $keep || $email eq '';
 
-        $directory = confirm_path   ("Data directory?",$directory)
+        $directory = confirm_path   ("Data Directory?",$directory)
           if $batch || $keep || $directory eq '';
 
         $group_id  = confirm_default("Group ID?      ",$group_id)
@@ -177,13 +178,8 @@ ERROR
 
         if (not -e $directory) {
             print "\n";
-
-            my $create =
-              multiple_choice
-                ("The $directory directory does not exist.  ".
-                 "Create it?","y","y","n");
-
-            if ($create) {
+            
+            if (y_or_n("The $directory directory does not exist. Create it?")) {
                 unless (mkdir $directory, 0755) {
                     print "Error creating directory:\n$!\n";
                 }
@@ -191,7 +187,6 @@ ERROR
         }
 
         # Verify that the username will be unique.
-
         my $existing = $factory->
           findObject('OME::SemanticType::BootstrapExperimenter',
                      {
@@ -533,7 +528,7 @@ Options:
         still provide it for convenience.
 CMDS
 }
-
+ 
 sub editUser {
     my $self = shift;
 
@@ -545,7 +540,9 @@ sub editUser {
     my $email = "";
     my $directory = "";
     my $group_id = "";
-    my $result;
+   
+   	my $result;
+   	my $interactive_mode;
 
     $result = GetOptions('help|h' => \$help,
                          'id|i=i' => \$user_id,
@@ -555,7 +552,7 @@ sub editUser {
                          'email|e=s' => \$email,
                          'directory|d=s' => \$directory,
                          'group-id|g=i' => \$group_id);
-
+	
     exit(1) unless $result;
 
     if ($help) {
@@ -563,20 +560,22 @@ sub editUser {
         exit;
     }
 
+
+	my $session = OME::SessionManager->TTYlogin();
+    my $factory = $session->Factory();
+    my $user;
+
+	# Solicit Username or figure it out based on command-line args
     if ($username ne '' && $user_id ne '') {
         print "You cannot specify both a user ID and username.\n";
         exit 1;
     } elsif ($username eq '' && $user_id eq '') {
-        print "You must specify either a user ID or username.\n";
-        exit 1;
+    	$interactive_mode = 1;
+    	$username = confirm_default("Username?", "nemo");
     }
 
-    my $session = OME::SessionManager->TTYlogin();
-    my $factory = $session->Factory();
-
-    my $user;
-
-    if ($username ne '') {
+	# Use the specified username or userid to find the user in the database
+    if ($username ne '')  {
         $user = $factory->
           findObject('OME::SemanticType::BootstrapExperimenter',
                      {
@@ -592,19 +591,65 @@ sub editUser {
         print "The specified user does not exist.\n";
         exit 1;
     }
+    
+	if ($interactive_mode) {
+		# load the selected user's current properties
+		$firstname = $user->FirstName()
+		  if $firstname eq '';
+		
+		$lastname = $user->LastName()
+		  if $lastname eq '';
+	
+		$email = $user->Email()
+		  if $email eq '';
+	
+		$directory = $user->DataDirectory()
+		  if $directory eq '';
+		  
+		my %group_hash = %{$user->Group()};
+		$group_id = $group_hash{__id}
+		  if $group_id eq '';
+      
+      	# let user type in new properties until he is satisfied
+		while (1) {
+			$firstname = confirm_default("First Name?", $firstname);
+			$lastname  = confirm_default("Last Name?", $lastname);
+			$email     = confirm_default("Email Address?", $email);
+			$directory = confirm_default("Data Directory?", $directory);
+			$group_id  = confirm_default("Group ID?", $group_id);
+			
+			print BOLD,"\nConfirm New User Properties:\n",RESET;
+			print      "      Username: ", BOLD, $username, RESET, "\n";
+			print      "    First Name: ", BOLD, $firstname, RESET, "\n";
+			print      "     Last Name: ", BOLD, $lastname, RESET, "\n";
+			print      " Email Address: ", BOLD, $email, RESET, "\n";
+			print      "Data Directory: ", BOLD, $directory, RESET, "\n";
+			print      "      Group ID: ", BOLD, $group_id, RESET, "\n";
+			
+			y_or_n ("Are these values correct ?",'y') and last;
+		}
+	}
+	
+	# idiot traps, Those users are trying to kill us.
+	if (not -e $directory and $directory ne "") {
+		if (y_or_n("The $directory directory does not exist. Create it?") ) {
+			unless (mkdir $directory, 0755) {
+				print "Error creating directory:\n$!\n";
+				exit 1;
+			}
+		}
+	 }
 
-    my $group;
-    if ($group_id ne '') {
-        $group = $factory->loadAttribute('Group',$group_id);
-        if (!defined $group) {
-            print "Group $group_id does not exist.\n";
-            exit 1;
-        }
-    }
-
-    $user->FirstName($firstname)
-      if $firstname ne '';
-
+	 # Verify that the specified group exists.
+	 my $group = $factory->loadAttribute('Group',$group_id);
+	 unless (defined $group) {
+		 print "The ID $group_id does not specify an existing group.\n";
+		 exit 1;
+	 }
+	
+	$user->FirstName($firstname)
+	  if $firstname ne '';
+	
     $user->LastName($lastname)
       if $lastname ne '';
 
@@ -616,7 +661,7 @@ sub editUser {
 
     $user->Group($group)
       if defined $group;
-
+      
     eval {
         $user->storeObject();
         $session->commitTransaction();
