@@ -31,11 +31,10 @@ package OME::Install::Environment;
 
 use warnings;
 use strict;
-
 use Carp;
 
 # The singleton instance.
-my $soleInstance = undef;
+my $sole_instance = undef;
 
 # Private constructor.
 my $new = sub {
@@ -43,19 +42,19 @@ my $new = sub {
     return bless($self);
 };
 
-# Class method to return the singleton instance that deals with the platform
-# we're running on.
+# Class method to return the singleton instance.
 #
-# my $env = OME::Install::Environment->initialize();
+# my $environment = initialize OME::Install::Environment;
 #
 sub initialize {
     my $class = shift;
-    if( !$soleInstance ) { # first time we're called
 
+    unless ($sole_instance) { # first time we're called
         # Create the singleton
-        $soleInstance = &$new();
+        $sole_instance = &$new();
     }
-    return $soleInstance;
+
+    return $sole_instance;
 }
 
 sub base_dir {
@@ -94,5 +93,16 @@ sub user {
     return undef;
 }
 
+sub apache_user {
+    my ($self, $user) = @_;
+
+    if ($user) {
+	$self->{apache_user} = $user;
+    } else {
+	return $self->{apache_user} unless not exists $self->{apache_user};
+    }
+
+    return undef;
+}
 
 1;
