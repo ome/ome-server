@@ -44,15 +44,20 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
+import edu.umd.cs.piccolo.util.PNodeFilter;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.ome.Chains;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.dnd.ChainSelection;
+import org.openmicroscopy.vis.chains.SelectionState;
+import org.openmicroscopy.vis.chains.events.SelectionEvent; 
+import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import java.util.Iterator;
+import java.util.Collection;
 import java.awt.Font;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceEvent;
@@ -73,7 +78,7 @@ import java.awt.dnd.DragGestureEvent;
  */
 
 public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
-  	PBufferedObject {
+  	PBufferedObject, SelectionEventListener {
 	
 	/***
 	 * Vertical space betwen chains
@@ -97,10 +102,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 */
 	private Connection connection=null;
 	
-	/**
-	 * Chains controller
-	 */
-	private Controller controller = null;
 	
 	/**
 	 * Scengraph layer for the canvas.
@@ -138,11 +139,13 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 * Source for drag events
 	 */
 	private DragSource dragSource;
+	
+	private PExecutionList executionList;
 
-	public PChainLibraryCanvas(Controller controller,Connection c) {
+	public PChainLibraryCanvas(Connection c) {
 		super();
 		
-		this.controller = controller;
+		SelectionState.getState().addSelectionEventListener(this);
 		this.connection  = c;
 		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
 		layer = getLayer();
@@ -157,7 +160,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		
 		removeInputEventListener(getZoomEventHandler());
 		removeInputEventListener(getPanEventHandler());
-		addInputEventListener(new PChainLibraryEventHandler(this,controller)); 
+		addInputEventListener(new PChainLibraryEventHandler(this)); 
 		
 		// initialize data transfer
 		dragListener = new DragSourceAdapter() {
@@ -212,8 +215,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		
 		float height = 0;
 		
-		PChainBox box = new PChainBox(connection,controller.getControlPanel(),
-					chain);
+		PChainBox box = new PChainBox(connection,chain);
 		layer.addChild(box);
 		box.moveToBack();
 		box.setOffset(x,y);
@@ -278,5 +280,77 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 			ChainSelection c = new ChainSelection(id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);
 		}
+	}
+	
+	public void selectionChanged(SelectionEvent e) {
+		System.err.println("canvas get selectionEvent");
+		SelectionState state = e.getSelectionState();
+		CChain chain = state.getSelectedChain();
+		if (chain != null) {
+			System.err.println("selecting chain on canvas.."+chain.getName());
+			PChainBox cb = findChainBox(chain);
+			if (cb != null)
+				zoomToChain(cb);
+		}
+	}
+	
+	private PChainBox findChainBox(CChain chain) {
+		ChainBoxFilter filter = new ChainBoxFilter(chain);
+		
+		// 	should only be one.
+		Collection boxes = layer.getAllNodes(filter,null);
+		
+		Iterator iter = boxes.iterator();
+
+		// 	should always have exactly one. but be defensive.
+		if (!iter.hasNext())
+				return null;
+		
+		// if there is one, it will be a chain box (guranteed by ChainBoxFilter)
+		PChainBox cb = (PChainBox) iter.next();
+		return cb;
+	}
+	
+	private void zoomToChain(PChainBox cb) {
+		System.err.println("zooming in on chain.");
+		PBufferedNode cBox = (PBufferedNode) cb;				
+		PBounds b = cBox.getBufferedBounds();
+		PCamera camera = getCamera();
+		camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+	}
+	
+	private class ChainBoxFilter implements PNodeFilter {
+		
+		private final CChain chain;
+		
+		ChainBoxFilter(CChain chain) {
+			this.chain = chain;	
+		}
+		public boolean accept(PNode node) {
+			if (!(node instanceof PChainBox))
+				return false;
+			return ((PChainBox) node).getChain() == chain;
+		}
+		
+		public boolean acceptChildrenOf(PNode node) {
+			return true;
+		}
+	}
+	
+	public void clearExecutionList() {
+		if (executionList != null) {
+			layer.removeChild(executionList);
+			executionList = null;
+		}
+	}
+	public void showExecutionList(PDatasetLabelText dl) {
+		clearExecutionList();
+		executionList = dl.getExecutionList();
+		
+		
+		layer.addChild(executionList);
+		
+		PBounds b = dl.getGlobalFullBounds();
+		executionList.setOffset(b.getX(),b.getY()+b.getHeight());
 	}
 }
