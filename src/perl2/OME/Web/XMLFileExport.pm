@@ -42,7 +42,6 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Tasks::OMEXMLImportExport;
 use OME::Web::DBObjTable;
 use OME::Tasks::OMEXMLImportExport;
 use OME::Tasks::ImageManager;
