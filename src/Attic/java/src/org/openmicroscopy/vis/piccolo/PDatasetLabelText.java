@@ -30,12 +30,11 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.chains.SelectionState;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.chains.events.SelectionEvent;
+import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import org.openmicroscopy.vis.ome.CDataset;
 import edu.umd.cs.piccolo.nodes.PText;
 import java.awt.Color;
-import java.awt.Font;
 import java.util.Collection;
 
 /** 
@@ -46,13 +45,12 @@ import java.util.Collection;
  * @version 2.1
  * @since OME2.1
  */
-public class PDatasetLabelText extends PText implements 
-	DatasetSelectionEventListener {
+public class PDatasetLabelText extends PText  implements SelectionEventListener{
 	
 	private static final Color ACTIVE_COLOR= new Color(100,0,100,255);
 	private static final Color SELECTED_COLOR = new Color(175,0,175,255);
+	public static final double LABEL_SCALE=3;
 	private static final Color BASE_COLOR = Color.BLACK;
-	public static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,18);
 	
 	
 	private boolean active = false;
@@ -66,9 +64,9 @@ public class PDatasetLabelText extends PText implements
 		this.dataset = ds;
 		this.selectionState = selectionState;
 		if (selectionState != null) 
-			selectionState.addDatasetSelectionEventListener(this);
-		setScale(2);
-		setFont(PConstants.NAME_FONT);
+			selectionState.addSelectionEventListener(this);
+		setScale(LABEL_SCALE);
+		setFont(PConstants.LABEL_FONT);
 		setColor();
 	}
 	
@@ -90,9 +88,9 @@ public class PDatasetLabelText extends PText implements
 		setPaint(curColor);
 	}
 	
-	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		Collection sets = e.getDatasets();
-		if (e.getSelectedDataset() == dataset) {
+	public void selectionChanged(SelectionEvent e) {
+		Collection sets = selectionState.getActiveDatasets();
+		if (selectionState.getSelectedDataset() == dataset) {
 			setActive(false);
 			setSelected(true);
 		}
@@ -105,9 +103,9 @@ public class PDatasetLabelText extends PText implements
 			setSelected(false);
 		}
 		setColor();
-	}
+	} 
 	
 	public  void doSelection() {
-		selectionState.setDatasetSelections(null,dataset);
+		selectionState.setSelectedDataset(dataset);
 	}
 }
