@@ -174,3 +174,14 @@ This will walk you through the entire OME installation and deployment. Once
 finished, the installer will store the configuration you provided in OME's base
 directory (default: "/OME/conf/environment.store") where it can be used for
 further upgrades or library/Perl module checks.
+
+_______________________
+Platform Specific Notes
+
+There are various platform specific sets of install notes provided in addition
+to this guide:
+
+	INSTALL.FreeBSD
+	INSTALL.RedHat
+	INSTALL.OSX
+	INSTALL.Debian
