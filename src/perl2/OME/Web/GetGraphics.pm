@@ -219,6 +219,7 @@ ENDSQL
 	my $sth = $DBH->prepare ($SQL);
 	$sth->execute($ImageID);
 	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
+	$bpp /= 8;
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
     my $theZ = $cgi->url_param('theZ') || ( defined $sizeZ ? $sizeZ / 2 : 0 );

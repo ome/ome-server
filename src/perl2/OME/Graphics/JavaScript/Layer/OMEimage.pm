@@ -240,7 +240,6 @@ sub Stats {
 
 #xyz_image_info: image_id | wavenumber | timepoint | min | max | mean | geomean | sigma
 	$self->{JS_Stats} ="";
-	$DBH->trace(2);
 	$sth = $DBH->prepare ("SELECT wavenumber,timepoint,min,max,mean,geomean,sigma FROM xyz_image_info WHERE image_id=?");
 	$sth->execute($self->{Parent}->{ImageID});
 	while ( @rowArray = $sth->fetchrow_array) {
@@ -248,9 +247,7 @@ sub Stats {
 			min => $rowArray[2],max => $rowArray[3],mean => $rowArray[4],geomean => $rowArray[5],sigma => $rowArray[6]};
 		$stats_js[$rowArray[0]][$rowArray[1]] = '{min:'.$rowArray[2].',max:'.$rowArray[3].
 			',mean:'.$rowArray[4].',geomean:'.$rowArray[5].',sigma:'.$rowArray[6].'}';
-		print STDERR $stats_js[$rowArray[0]][$rowArray[1]]."\n";
 	}
-	$DBH->trace(0);
 
 # Convert to JavaScript
 #	[[{min:123,max:456,...},{min:123,max:123,...},...],...]
@@ -351,7 +348,7 @@ my ($rOn,$gOn,$bOn);
 	$GSchecked = 'checked' if not $self->{isRGB};
 
 	return
-		'<TR><TD>'.$self->Form_visible."</TD><TD>$self->{name}</TD></TR>\n".
+		'<TR><TD>'.$self->Form_visible()."</TD><TD>$self->{name}</TD></TR>\n".
 		qq '<TR><TD></TD><TD><input type="radio" name="RGBradio" $RGBchecked onclick="$objRef.setType(this.checked)">RGB</TD>'.
 		qq '<TD colspan="3"><input type="radio" name="RGBradio" $GSchecked onclick="$objRef.setType(!this.checked)">Grayscale&nbsp;\n'.$self->MakeWaveMenu(9)."</TD></TR>\n".
 		qq '<TR><TD></TD><TD><input type="checkbox" name="RedCheckBox" $rOn onclick="$objRef.setRGBon(0,this.checked)">Red</TD><TD>&nbsp;\n'.$self->MakeWaveMenu(0)."</TD></TR>\n".
