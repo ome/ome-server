@@ -19,6 +19,7 @@
 	</Experiment>
 	<Plate PlateID = "123.456.75.123.123" Name = "SRP001" ExternRef = "PID.SRP001">
 		<ScreenRef ScreenID = "123.456.76.123.123"/>
+		<ScreenRef DocumentID="123.456.70.123.123" ScreenID = "123.456.76.123.456"/>
 	</Plate>
 	<Screen ScreenID = "123.456.76.123.123" Name = "Stress Response Pathway Controls" ExternRef = "SID.SRPC001">
 		<Description/>
@@ -30,10 +31,11 @@
 		<Institution/>
 		<OMEName>nico</OMEName>
 		<GroupRef GroupID = "123.456.73.123.123"/>
+		<GroupRef DocumentID="123.456.70.123.123" GroupID = "123.456.73.123.456"/>
 	</Experimenter>
 	<Group GroupID = "123.456.73.123.123" Name = "IICBU">
 		<Leader DocumentID="123.456.70.123.123" ExperimenterID = "123.456.71.123.123"/>
-		<Contact ExperimenterID = "123.456.71.123.123"/>
+		<Contact ExperimenterID = "123.456.71.123.456"/>
 	</Group>
 	<Instrument InstrumentID = "123.456.74.123.123">
 		<Microscope Manufacturer = "Zeiss" Model = "foo" SerialNumber = "bar" Type = "Upright"/>
