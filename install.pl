@@ -59,6 +59,7 @@ my @tasks = qw(
     OME::Install::PerlModuleTask
     OME::Install::ApacheConfigTask
     OME::Install::CoreDatabaseTablesTask
+    OME::Install::MaintenanceTask
 );
 
 # Task stack

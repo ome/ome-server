@@ -43,6 +43,7 @@ use File::Basename;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 use Cwd;
+use Text::Wrap;
 
 use OME::Install::Terminal;
 use OME::Install::Environment;
@@ -76,7 +77,7 @@ our @core_dirs = (
 		name => "base",
 		path => "/OME",
 		description => "Base OME directory",
-		children => ["xml", "bin", "perl2", "cgi"],
+		children => ["xml", "bin", "perl2", "cgi", "crontab"],
 		owner => \$OME_USER,
 		group => \$OME_GROUP,
 		mode => 02755, # Set the "Set-GID" bit on the dir
@@ -214,6 +215,15 @@ sub execute {
 
 	# Confirm all flag
 	my $confirm_all;
+
+	print "\n";  # Spacing
+
+	# Task blurb
+	my $blurb = <<BLURB;
+This part of the OME install will collect the initial information required. Basic directory structure and system users will be created and the install environment setup. If you are unsure of a particular question, please choose the default as that will be more than adequate for most people.
+BLURB
+
+	print wrap("", "", $blurb);
 
     while (1) {
 		if ($environment->get_flag("UPDATE") or $confirm_all) {
