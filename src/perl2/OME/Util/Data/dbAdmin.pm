@@ -113,7 +113,7 @@ sub backup {
 	$backup_file  =~ s/\.tar//; $backup_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
-	my @progs = ('tar', 'bzip2', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
+	my @progs = ('tar', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
 				'dropdb','createdb', 'createuser');
 	my %prog_path;
 	
@@ -144,27 +144,29 @@ sub backup {
 	}
 	
 	print_header("OME Backup");
-	# OMEIS
-	if (not $quick) {
-	    print "    \\_ Backing up OMEIS from $omeis_base_dir \n";
-		system ($prog_path{'tar'}." -c $omeis_base_dir > $backup_file.tar");
-	}
 	
 	# ome db 
 	print "    \\_ Backing up postgress database ome\n";
 	system($prog_path{'sudo'}." -u $postgress_user ".$prog_path{'pg_dump'}." -Fc ome > omeDB_backup");
-	system ($prog_path{'tar'}." --remove-files --append omeDB_backup --file $backup_file.tar");
-		
-	# log OMEmaint version
+ 	
+	# log version of backup
 	open (FILEOUT, ">> OMEmaint");
 	print FILEOUT "version=$dbAdmin_version\n";
 	close (FILEOUT);
-	system ($prog_path{'tar'}." --remove-files --append OMEmaint --file $backup_file.tar");
 	
-	# combine and compress
-	print "    \\_ Compressing archive \n";
-	unlink "$backup_file.tar.bz2" if (-e "$backup_file.tar.bz2");
-	system ($prog_path{'bzip2'}. " $backup_file.tar");
+	# OMEIS
+	if (not $quick) {
+	    print "    \\_ Backing up OMEIS from $omeis_base_dir \n";
+	    print "    \\_ Compressing archive \n";
+		system ($prog_path{'tar'}." --bzip2 -cf $backup_file.tar.bz2 $omeis_base_dir OMEMaint omeDB_backup");
+	} else {
+		print "    \\_ Compressing archive \n";
+		system ($prog_path{'tar'}." --bzip2 -cf $backup_file.tar.bz2 OMEMaint omeDB_backup");
+	}
+	
+	# clean up any residual files
+	unlink("OMEMaint");
+	unlink("omeDB_backup");
 }
 
 sub backup_help {
@@ -221,7 +223,7 @@ sub restore {
 	$restore_file  =~ s/\.tar//; $restore_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
-	my @progs = ('tar', 'bzip2', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
+	my @progs = ('tar', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
 				'dropdb','createdb', 'createuser');
 	my %prog_path;
 	
@@ -251,10 +253,8 @@ sub restore {
 	# de compress
 	if (not -e "$restore_file.tar"){
 		print "    \\_ Decompressing archive \n";
-		system ($prog_path{'bzip2'}. " -d  $restore_file.tar.bz2");
-	}
-	system ($prog_path{'tar'}. " --preserve-permissions --same-owner -xf $restore_file.tar");
-	
+		system ($prog_path{'tar'}. " --bzip2 --preserve-permissions --same-owner -xf $restore_file.tar.bz2");
+	}	
 	
 	# open OMEmaint version
 	open (FILEIN, "< OMEmaint");
@@ -268,7 +268,7 @@ sub restore {
 	
 	# OMEIS
 	my $semaphore = 1;
-	if (not $quick) {
+	if (not $quick and -d './OME/OMEIS') {
 	    print "    \\_ Restoring OMEIS from $omeis_base_dir \n";
 	    if (-d $omeis_base_dir) {
 	     	if (y_or_n ("Restoring OMEIS from archive will delete all current files in ".
@@ -300,6 +300,7 @@ sub restore {
 	system ($prog_path{'createuser'}." --adduser --createdb  ome");
 	system ($prog_path{'createdb'}." ome");
 	system ($prog_path{'pg_restore'}." -d ome omeDB_backup");
+	euid (0);
 	unlink ("omeDB_backup");
 }
 
