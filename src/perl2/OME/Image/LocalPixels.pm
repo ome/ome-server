@@ -47,7 +47,6 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Image::Pixels);
 
-use OME::Image::Pix;
 use OME::ImportExport::Repacker::Repacker;
 
 use constant PIX        =>  0;
@@ -112,8 +111,9 @@ sub new {
     print HEADER join("\t",@{$self}[SIZE_X..BIG_ENDIAN]),"\n";
     close HEADER;
 
-    $self->[PIX] = OME::Image::Pix->
-      new($filename,$xx,$yy,$zz,$cc,$tt,$bytesPerPixel);
+	die "help help LocalPixels.pm is broken";
+#   $self->[PIX] = OME::Image::Pix->
+#     new($filename,$xx,$yy,$zz,$cc,$tt,$bytesPerPixel);
 
     bless $self,$class;
     return $self;
@@ -144,14 +144,15 @@ sub open {
       unless scalar(@dims) == 8;
 
     # Use an old-school OME::Image::Pix object for I/O
-    my $pix = OME::Image::Pix->new($filename,@dims[0..5])
-      or die "Could not create pixel I/O object";
-
-    # [$pix,$xx,$yy,$zz,$cc,$tt,$bytesPerPixel,
-    #  $isFinished,$isSigned,$isFloat,$bigEndian,$filename]
-    my $self = [$pix,@dims,$filename];
-    bless $self,$class;
-    return $self;
+	die "help help LocalPixels.pm is broken";
+#   my $pix = OME::Image::Pix->new($filename,@dims[0..5])
+#      or die "Could not create pixel I/O object";
+#
+#   [$pix,$xx,$yy,$zz,$cc,$tt,$bytesPerPixel,
+#     $isFinished,$isSigned,$isFloat,$bigEndian,$filename]
+#   my $self = [$pix,@dims,$filename];
+#   bless $self,$class;
+#   return $self;
 }
 
 =head2 getDimensions

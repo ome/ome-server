@@ -2,7 +2,7 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats \
-		maxIntensity cgrayce2
+		cgrayce2
 FINK_INCLUDE = -I/sw/include/
 INCS    = -I/usr/local/include $(FINK_INCLUDE)
 COMPRESSION_LIBS = -lz -lbz2
@@ -101,7 +101,6 @@ install:
 	install -c DumpSoftWorxHeader $(OME_ROOT)/bin/DumpSoftWorxHeader
 	install -c DumpSoftWorxExHeader $(OME_ROOT)/bin/DumpSoftWorxExHeader
 	install -c DumpSoftWorxStats $(OME_ROOT)/bin/DumpSoftWorxStats
-	install -c maxIntensity $(OME_ROOT)/bin/maxIntensity
 	install -d /usr/local/bin
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave

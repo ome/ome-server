@@ -46,8 +46,6 @@ use Config;
 use IO::File;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::TIFFUtils;
-use OME::ImportExport::Repacker::Repacker;
-
 use OME::Tasks::PixelsManager;
 
 use base qw(OME::ImportEngine::AbstractFormat);
@@ -400,7 +398,7 @@ sub importGroup {
     # Touch the HTD file
     my $htd_attr = $self->
       __touchOriginalFile($group->{htd_file},"MetaMorph HTD");
-    print STDERR "Got attribute $htd_attr\n";
+    #print STDERR "Got attribute $htd_attr\n";
     OME::Tasks::ImportManager->markImageFiles($image,$htd_attr);
 
     # We can't create the pixels attribute until we know the dimensions.
@@ -558,7 +556,7 @@ sub importGroup {
 
     # Create attributes to describe the plate.
 
-    print STDERR "Creating plate attributes...\n";
+    #print STDERR "Creating plate attributes...\n";
 
     my $global_module = $session->Configuration->global_import_module();
     my $plate_name = $group->{description};
@@ -572,9 +570,9 @@ sub importGroup {
                     });
 
     if (defined $plate_attr) {
-        print STDERR "  Found existing plate.\n";
+        #print STDERR "  Found existing plate.\n";
     } else {
-        print STDERR "  Creating new plate...\n";
+        #print STDERR "  Creating new plate...\n";
 
         my $global_mex = OME::Tasks::ImportManager->
           getGlobalImportMEX();
@@ -586,7 +584,7 @@ sub importGroup {
                        });
     }
 
-    print STDERR "  Creating well...\n";
+    #print STDERR "  Creating well...\n";
     my $well_attr = $factory->
       newAttribute('ImagePlate',$image,$image_mex,
                    {
