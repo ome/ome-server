@@ -55,45 +55,42 @@ my $soleInstance = undef;
 my @os_specific = ();
 
 # Undetected platform.
-@os_specific[$UNKNOWN] = { family => "UNKNOWN", name => "UNKNOWN" };
-@os_specific[$UNKNOWN] = { getMAC =>
+$os_specific[$UNKNOWN] = { family => "UNKNOWN", name => "UNKNOWN" };
+$os_specific[$UNKNOWN] = { getMAC =>
     sub {
         return "";
     }
 };
 
 # Linux-specific stuff.
-@os_specific[$LINUX] = { family => "Linux", name => "UNKNOWN",
+$os_specific[$LINUX] = { family => "Linux", name => "UNKNOWN",
                             distribution => "" };
-@os_specific[$LINUX] = { getMAC =>
+$os_specific[$LINUX] = { getMAC =>
     sub {
         my @ifinfo = `/sbin/ifconfig eth0`;
         my $macAddr = $ifinfo[0];
-        $macAddr =~ s/^.*HWaddr\s+(.*)$/$1/;
+        ($macAddr) = ($macAddr =~ /^.*HWaddr\s(.*[^\s])\s/);
         chomp($macAddr);
         return $macAddr;
     }
 };
 
 # Darwin-specific stuff.
-@os_specific[$DARWIN] = { family => "Darwin", name => "UNKNOWN" };
-@os_specific[$DARWIN] = { getMAC =>
+$os_specific[$DARWIN] = { family => "Darwin", name => "UNKNOWN" };
+$os_specific[$DARWIN] = { getMAC =>
     sub {
         my @ifinfo = `/sbin/ifconfig`;
-        my $macAddr;
-        # Get the first line containing the word 'ether', then set the adress to
-        # everything after 'ether'
-        foreach (@ifinfo) {
-            if ($_ =~ /ether\s+(.*)$/) {$macAddr = $1;last;};
-        }
+	@ifinfo = grep(/ether/, @ifinfo);
+	chomp($ifinfo[0]);
+	my ($macAddr) = ($ifinfo[0] =~ /^.*ether\s(.*[^\s]).*/);
         chomp($macAddr);
         return $macAddr;
     }
 };
 
 # HPUX-specific stuff.
-@os_specific[$HPUX] = { family => "HPUX", name => "UNKNOWN" };
-@os_specific[$HPUX] = { getMAC =>
+$os_specific[$HPUX] = { family => "HPUX", name => "UNKNOWN" };
+$os_specific[$HPUX] = { getMAC =>
     sub {
         my @ifinfo = `lanscan`;
         my $macAddr = $ifinfo[2];
@@ -103,9 +100,9 @@ my @os_specific = ();
     }
 };
 
-# Sun-specific stuff.
-@os_specific[$SOLARIS] = { family => "SOLARIS", name => "UNKNOWN" };
-@os_specific[$SOLARIS] = { getMAC =>
+# Solaris-specific stuff.
+$os_specific[$SOLARIS] = { family => "Solaris", name => "UNKNOWN" };
+$os_specific[$SOLARIS] = { getMAC =>
     sub {
         my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
         $macAddr =~ s/.*ether: ([^ \t]+)$/$1/; # the colon separated string after 'ether'
@@ -115,10 +112,13 @@ my @os_specific = ();
 };
 
 # FreeBSD-specific stuff.
-@os_specific[$FREEBSD] = { family => "FreeBSD", name => "UNKNOWN" };
-@os_specific[$FREEBSD] = { getMAC =>
+$os_specific[$FREEBSD] = { family => "FreeBSD", name => "UNKNOWN" };
+$os_specific[$FREEBSD] = { getMAC =>
     sub {
-        my $macAddr = `dmefg`;
+        my @buf = `dmesg`;
+	@buf = grep(/Ethernet address/, @buf);
+	chomp($buf[0]);
+	my ($macAddr) = ($buf[0] =~ /^.*address\s(.*[^\s]).*/);
         chomp($macAddr);
         return $macAddr;
     }
@@ -147,15 +147,15 @@ sub getInstance {
 	elsif 	($^O eq "sunos") 	{ $platform = $SOLARIS }
 	elsif 	($^O eq "freebsd") 	{ $platform = $DARWIN }
 
-        @os_specific[$platform]->{name} = $^O;
+        $os_specific[$platform]->{name} = $^O;
 
         # Distribution detection
         if (-e "/etc/debian_version") {
-            @os_specific[$platform]->{distribution} = "DEBIAN";
+            $os_specific[$platform]->{distribution} = "DEBIAN";
         } elsif (-e "/etc/redhat-release") {
-            @os_specific[$platform]->{distribution} = "REDHAT";
+            $os_specific[$platform]->{distribution} = "REDHAT";
         } elsif (-e "/etc/SuSE-release") {
-	    @os_specific[$platform]->{distribution} = "SUSE";		
+	    $os_specific[$platform]->{distribution} = "SUSE";		
 	}
 
         # Create the singleton
