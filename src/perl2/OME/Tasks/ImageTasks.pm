@@ -130,13 +130,16 @@ sub importFiles {
 	
 	OME::Analysis::Engine->executeChain($chain,$dataset,{});
 
-	logdbg "debug", "\n\nSuccessfully imported images:\n";
-    logdbg "debug", $_->id(),": ",$_->name(),"\n"
+	logdbg "debug", "Successfully imported images:";
+    logdbg "debug", "\t Image(".$_->id()."): ".$_->name()
     	foreach (@$image_list);
     
  	# save default display options to omeis as thumbnail settings.
-	OME::Tasks::PixelsManager->saveThumb( $_->default_pixels() )
-		foreach (@$image_list);
+	foreach my $image (@$image_list) {
+		foreach my $pixels ($image->pixels()) {
+			OME::Tasks::PixelsManager->saveThumb( $pixels );
+		}
+	}
     return $image_list;
 }
 
