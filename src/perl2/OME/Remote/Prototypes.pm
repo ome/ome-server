@@ -436,7 +436,7 @@ addPrototype("OME::SemanticType","semantic_elements",
              [],['OME::SemanticType::Element','*']);
 addPrototype("OME::SemanticType","semantic_elements",
              [],['OME::Factory::Iterator'],
-             publishedName => "iterate_attribute_columns");
+             publishedName => "iterate_semantic_elements");
 
 addPrototype("OME::SemanticType::Element","name",['$'],['$']);
 addPrototype("OME::SemanticType::Element","description",['$'],['$']);
@@ -444,6 +444,21 @@ addPrototype("OME::SemanticType::Element","semantic_type",
              ['OME::SemanticType'],['OME::SemanticType']);
 addPrototype("OME::SemanticType::Element","data_column",
              ['OME::DataTable::Column'],['OME::DataTable::Column']);
+
+addPrototype("OME::Module::Category","name",['$'],['$']);
+addPrototype("OME::Module::Category","description",['$'],['$']);
+addPrototype("OME::Module::Category","parent_category",
+             ["OME::Module::Category"],["OME::Module::Category"]);
+addPrototype("OME::Module::Category","children",
+             [],['OME::Module::Category','*']);
+addPrototype("OME::Module::Category","children",
+             [],['OME::Factory::Iterator'],
+             publishedName => "iterate_children");
+addPrototype("OME::Module::Category","modules",
+             [],['OME::Module','*']);
+addPrototype("OME::Module::Category","modules",
+             [],['OME::Factory::Iterator'],
+             publishedName => "iterate_modules");
 
 addPrototype("OME::Module","name",['$'],['$']);
 addPrototype("OME::Module","description",['$'],['$']);
