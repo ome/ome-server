@@ -71,7 +71,6 @@ package OME::ImportEngine::STKreader;
 
 use strict;
 use Carp;
-use Unicode::String;
 
 use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::Params;
