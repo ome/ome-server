@@ -123,6 +123,12 @@ If that fails, this method calls C<getRemoteObject()>.  If that fails, undef is 
 
 sub getObject ($) {
 my ($self,$lsid) = @_;
+
+# For now, we are not recycling objects that may have previously been stored in the DB because
+# we would have to recalculate all the attributes anyway.  When we implement merging of image attributes
+# with previously imported images (for example), then we can return objects from LSIDs.
+# For now we pretend that everything is a new object.
+	return undef;
 	return $self->getLocalObject ($lsid) || $self->getRemoteObject ($lsid);
 }
 
