@@ -195,7 +195,7 @@ sub processDOM {
 
 	# Run the engine on the imported dataset.
 	if( $importDataset ) {
-		my $chain = $self->{session}->factory->
+		my $chain = $self->{session}->Factory->
 			findObject("OME::AnalysisChain",name => 'Image import analyses');
 		
 		if (!defined $chain) {
