@@ -204,6 +204,7 @@ sub getCurrentAnnotation {
 	# First look foe this User's annotations
 	my $imageAnnotation = $factory->
 		findObject( '@ImageAnnotation',
+			image                           => $image,
 			Valid                           => 1,
 			'module_execution.experimenter' => $session->User(),
 			__order                         => '!module_execution.timestamp'
@@ -211,6 +212,7 @@ sub getCurrentAnnotation {
 	# Then look for other people's
 	$imageAnnotation = $factory->
 		findObject( '@ImageAnnotation',
+			image                           => $image,
 			Valid                           => 1,
 			__order                         => '!module_execution.timestamp'
 		)
