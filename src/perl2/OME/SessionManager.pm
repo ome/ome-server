@@ -99,6 +99,30 @@ use constant INVALIDATE_OLD_SESSION_KEYS_SQL => <<"SQL";
 			> ?
 SQL
 
+use constant GET_VISIBLE_GROUPS_SQL => <<"SQL";
+	SELECT distinct g.attribute_id
+	FROM groups g, experimenter_group_map egm
+	WHERE (g.attribute_id = egm.group_id
+		AND egm.experimenter_id = ?)
+	OR g.leader = ?
+	UNION
+	SELECT e.group_id from experimenters e
+	WHERE e.attribute_id = ? 
+SQL
+
+use constant GET_VISIBLE_USERS_SQL => <<"SQL";
+	SELECT distinct e.attribute_id
+	FROM groups g, experimenter_group_map egm, experimenters e
+	WHERE (g.leader = ?
+		AND g.attribute_id = egm.group_id
+		AND egm.experimenter_id = e.attribute_id)
+	OR (g.leader = ?
+		AND e.group_id = g.attribute_id)
+	UNION
+	SELECT e.attribute_id from experimenters e
+	WHERE e.attribute_id = ? 
+SQL
+
 # The lifetime of server-side session keys in seconds
 our $SESSION_KEY_LIFETIME = 30;  # 30 minutes
 our $SESSION_KEY_LENGTH = 32;
@@ -260,8 +284,18 @@ sub createWithKey {
 	
 	$userState->last_access('now');
 	$userState->host($host);
-	
-	my $session = OME::Session->instance($userState, $bootstrap_factory);
+
+	# Collect the users and groups visible to this user
+	# groups that the experimenter belongs to
+	# members of the groups this experimenter leads
+	my $expID = $userState->experimenter_id();
+	my ($users,$groups);
+	eval {
+		$users = $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$expID,$expID,$expID);
+		$groups = $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$expID,$expID,$expID);
+	};
+		
+	my $session = OME::Session->instance($userState, $bootstrap_factory,$users,$groups);
 	
 	logdbg "debug", "createWithKey: updating userState";
 	$userState->storeObject();
@@ -343,8 +377,18 @@ sub createWithPassword {
 	logdie ref($self)."->getOMESession:  Could not create userState object"
 		unless defined $userState;
 
-	my $session = OME::Session->instance($userState, $bootstrap_factory);
-    
+
+	# Collect the users and groups visible to this user
+	# groups that the experimenter belongs to
+	# members of the groups this experimenter leads
+	my ($users,$groups);
+	eval {
+		$users = $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$experimenterID,$experimenterID,$experimenterID);
+		$groups = $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$experimenterID,$experimenterID,$experimenterID);
+	};
+		
+	my $session = OME::Session->instance($userState, $bootstrap_factory,$users,$groups);
+	
 	logdbg "debug", "getOMESession: updating userState";
 	$userState->storeObject();
 	$session->commitTransaction();

@@ -102,7 +102,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.12";
+our $DB_VERSION = "2.13";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
@@ -511,7 +511,8 @@ sub bootstrap_session {
     }
     croak "Could not create userState object.  Something is probably very very wrong." unless $userState;
 
-    print "  \\__ Getting session for user state ID=".$userState->id()."\n";    
+    print "  \\__ Getting session for user state ID=".$userState->id()."\n";
+    # N.B.: In this case, we are not specifying the visible groups and users - they are all visible.
     my $session = OME::Session->instance($userState, $factory);
 
     croak "Could not create session from userState.  Something is probably very very wrong" unless defined $session;
@@ -730,7 +731,6 @@ sub load_xml_core {
                 NoDuplicates           => 1,
                 IgnoreAlterTableErrors => 1);
             };
-    
         print BOLD, "[FAILURE]", RESET, ".\n"
             and print $logfile "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
             and croak "Error loading XML file \"$filename\", see $LOGFILE_NAME details."

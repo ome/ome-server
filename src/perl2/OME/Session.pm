@@ -150,7 +150,7 @@ use Log::Agent;
 
 #use Benchmark::Timer;
 
-__PACKAGE__->mk_ro_accessors(qw(Factory UserState ApacheSession Configuration));
+__PACKAGE__->mk_ro_accessors(qw(Factory UserState ApacheSession Configuration VisUsers VisGroups));
 
 our $__soleInstance = undef;
 
@@ -186,6 +186,8 @@ my $__newInstance = sub {
     my $userState = shift
       or die "Session cannot be initialized without a user state";
 	my $factory = shift;
+	my $vis_users = shift;
+	my $vis_groups = shift;
 
     die "User State parameter is not of class OME::UserState"
       unless (ref($userState) eq "OME::UserState") ;
@@ -197,6 +199,8 @@ my $__newInstance = sub {
     $self->{Factory} = $factory;
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
     $self->{Repository} = undef; # we'll define that later in findRepository()
+    $self->{VisUsers} = $vis_users;
+    $self->{VisGroups} = $vis_groups;
 
 	# carp "New instance.";
     return $self;
@@ -287,6 +291,8 @@ sub instance {
 	my $proto = shift;
 	my $userState = shift;
 	my $factory = shift;
+	my $vis_users = shift;
+	my $vis_groups = shift;
 
     if (defined $userState) {
         # We are trying to create a session, as opposed to just
@@ -298,12 +304,12 @@ sub instance {
             # old session object with the new user credentials.
 
             $__soleInstance->__destroySession();
-            $__soleInstance->__salvageSession($userState);
+            $__soleInstance->__salvageSession($userState,$vis_users,$vis_groups);
         } else {
             # This is the first time we've tried to create a session in
             # this Perl process.
 
-            $__soleInstance = $__newInstance->($proto,$userState,$factory);
+            $__soleInstance = $__newInstance->($proto,$userState,$factory,$vis_users,$vis_groups);
         }
 
         die "Could not create session"
@@ -319,9 +325,13 @@ sub instance {
 
 sub __salvageSession {
 	my $self = shift;
+	my $vis_users = shift;
+	my $vis_groups = shift;
 
 	$self->{UserState} = shift;
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
+    $self->{VisUsers} = $vis_users;
+    $self->{VisGroups} = $vis_groups;
 }
 
 sub __destroySession {
@@ -331,6 +341,11 @@ sub __destroySession {
 	# This ensures a fresh transaction.
 	$self->rollbackTransaction()
       if defined $self->{Factory};
+    
+    # Forget our access lists
+    $self->{vis_groups} = undef;
+    $self->{vis_users} = undef;
+    
 
     # Remove any stale temporary files which might still be lying around.
     $self->__finishAllTemporaryFiles();
