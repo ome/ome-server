@@ -248,6 +248,9 @@ struct dv_stack {
 	float mean_i[MAXWAVES];
 	float geomean_i[MAXWAVES];
 	float sigma_i[MAXWAVES];
+	/* Added */
+	float geosigma_i[MAXWAVES];
+
 
 /*
 * The integration threshold.
@@ -397,6 +400,8 @@ struct spotStructure {
 	float mean_i[MAXWAVES];
 	float geomean_i[MAXWAVES];
 	float sigma_i[MAXWAVES];
+	/* added */
+	float geosigma_i[MAXWAVES];
 
 /*
 * These accumulators are used to calculate the centroids.
@@ -577,9 +582,11 @@ void ReadWaveStats (DVstack* inStack, argiterator_t* iter, size_t timepoint)
 			fprintf (stderr, "Error: missing statistics for wave %d\n", i);
 			exit(-1);
 		}
-		sscanf (argPtr, "%d,%hd,%d,%hd,%hd,%f,%f,%f", &readWave, &inStack->wave[i], &readTimepoint,
+		/* value from perl handler! */
+		sscanf (argPtr, "%d,%hd,%d,%hd,%hd,%f,%f,%f,%f", &readWave, &inStack->wave[i], &readTimepoint,
 				&inStack->min_i[i], &inStack->max_i[i], &inStack->mean_i[i],
-				&inStack->geomean_i[i], &inStack->sigma_i[i]);
+				&inStack->geomean_i[i], &inStack->sigma_i[i],&inStack->geosigma_i[i]);
+
 		if (readTimepoint != timepoint || readWave != i) {
 			fprintf (stderr, "Error: wave %d stats are missing in list for timepoint %d\n", i, timepoint);
 			exit(-1);
@@ -600,8 +607,9 @@ void ReadWaveStats (DVstack* inStack, argiterator_t* iter, size_t timepoint)
 void Calculate_Stack_Stats (DVstack *inStack,int theWave)
 {
 PixPtr index,lastPix;
-double sum_i=0,sum_i2=0,sum_log_i=0,numWavePix,theVal, sd, offset=100.0,min,max;
-
+/* modif: offset was 100.0 now 1.0 */
+double sum_i=0,sum_i2=0,sum_log_i=0,numWavePix,theVal, sgd, sd, offset=1.0,min,max;
+float geomean;
 /*
 * Set a pointer to point to the first z of the wave we want.
 */
@@ -627,7 +635,9 @@ double sum_i=0,sum_i2=0,sum_log_i=0,numWavePix,theVal, sd, offset=100.0,min,max;
 /*
 * offset is used so that we don't compute logs of values less than or equal to zero.
 */
-		sum_log_i +=  log (theVal+offset);
+		
+		/* if (the Val>1) sum_log_i +=  log (theVal); */
+		sum_log_i +=  log (theVal+offset); 
 		if (theVal < min) min = theVal;
 		if (theVal > max) max = theVal;
 		index++;
@@ -637,13 +647,19 @@ double sum_i=0,sum_i2=0,sum_log_i=0,numWavePix,theVal, sd, offset=100.0,min,max;
 * Calculate the actual statistics from the accumulators
 */
 	numWavePix = (double) (inStack->wave_increment);
+	geomean = exp ( sum_log_i / numWavePix ) - offset;
+
 	inStack->min_i[theWave] = min;
 	inStack->max_i[theWave] = max;
 	inStack->mean_i[theWave] = sum_i / numWavePix;
-	inStack->geomean_i[theWave] = exp ( sum_log_i / numWavePix ) - offset;
+	inStack->geomean_i[theWave] = geomean;
 
-	sd = sqrt ( (sum_i2	 - (sum_i * sum_i) / numWavePix)/  (numWavePix - 1.0) );
-	inStack->sigma_i[theWave] = (float) fabs (sd);
+	sd = fabs( (sum_i2	 - (sum_i * sum_i) / numWavePix)/  (numWavePix - 1.0) ); 
+	inStack->sigma_i[theWave] = (float) sqrt (sd); 
+	sgd =fabs ( (sum_i2	 - 2* geomean *sum_i + geomean * geomean )/  (numWavePix - 1.0) ); 
+	inStack->geosigma_i[theWave] = (float) sqrt (sgd); 
+
+
 }
 
 
@@ -756,7 +772,7 @@ IndexStack lastChunk;
 /*#                       #*/
 /*#########################*/
 /*
-* This function returns the last index in the LIFO stack.  It deallocates memmory if
+* This function returns the last index in the LIFO stack.  It deallocates memory if
 * returning the last index in a chunk.	It won't free the very last chunk in the stack - the
 * one pointed to by theStack.
 */
@@ -1458,6 +1474,8 @@ CoordList borderPixel;
 		zeroSpot->sum_xi[i] = 0;
 		zeroSpot->sum_yi[i] = 0;
 		zeroSpot->sum_zi[i] = 0;
+		zeroSpot->geosigma_i[i] = 0;
+
 		}
 	
 	while (zeroSpot->borderPixels != NULL)
@@ -1498,6 +1516,7 @@ int i;
 float spotVol;
 CoordList borderPixel,previousPixel;
 PixPtr pixPtr;
+float geomean;
 
 	spotVol = (float) updateSpot->volume;
 	updateSpot->mean_x = updateSpot->sum_x / spotVol;
@@ -1514,9 +1533,15 @@ PixPtr pixPtr;
 		updateSpot->centroid_x[i] = updateSpot->sum_xi[i] / updateSpot->sum_i[i];
 		updateSpot->centroid_y[i] = updateSpot->sum_yi[i] / updateSpot->sum_i[i];
 		updateSpot->centroid_z[i] = updateSpot->sum_zi[i] / updateSpot->sum_i[i];
-		updateSpot->sigma_i[i] = sqrt ((updateSpot->sum_i2[i]-(updateSpot->sum_i[i]*updateSpot->sum_i[i])/spotVol)/(spotVol-1.0));
+		updateSpot->sigma_i[i] = sqrt ((updateSpot->sum_i2[i]-(updateSpot->sum_i[i]*updateSpot->sum_i[i])/spotVol)/(spotVol-1.0)); 
 		updateSpot->mean_i[i] = updateSpot->sum_i[i] / spotVol;
-		updateSpot->geomean_i[i] = exp (updateSpot->geomean_i[i] / spotVol );
+		geomean= exp (updateSpot->geomean_i[i] / spotVol );
+		/* updateSpot->geomean_i[i] = exp (updateSpot->geomean_i[i] / spotVol ); */
+		
+		updateSpot->geomean_i[i] = geomean;
+		updateSpot->geosigma_i[i] =sqrt( (updateSpot->sum_i2[i]-2* geomean *updateSpot->sum_i[i]+geomean * geomean)/(spotVol-1.0));
+	
+
 	}
 	
 /*
@@ -1896,8 +1921,8 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			if (saywhat == HEADING)
 				fprintf (stdout,"Surf. Area");
 			else
-				fprintf (stdout,"%10.2f",outSpot->surfaceArea);
-
+				 fprintf (stdout,"%10.2f",outSpot->surfaceArea);
+				
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
 		} /* -v */
@@ -2111,7 +2136,7 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 						fprintf (stdout, "gs[%3d]",itsStack->wave[theWave]);
 					else
 						fprintf (stdout,"%7.3f",
-							(outSpot->geomean_i[theWave]-itsStack->geomean_i[theWave])/itsStack->sigma_i[theWave]);
+							(outSpot->geomean_i[theWave]-itsStack->geomean_i[theWave])/itsStack->geosigma_i[theWave]);
 				}
 			}
 			else for (i=0;i<outSpot->nwaves;i++)
@@ -2120,7 +2145,7 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 					fprintf (stdout, "gs[%3d]",itsStack->wave[i]);
 				else
 					fprintf (stdout,"%7.3f",
-						(outSpot->geomean_i[i]-itsStack->geomean_i[i])/itsStack->sigma_i[i]);
+						(outSpot->geomean_i[i]-itsStack->geomean_i[i])/itsStack->geosigma_i[i]);
 				if (i < outSpot->nwaves-1)
 					fprintf (stdout,"\t");
 			}
@@ -2324,7 +2349,7 @@ const char* argPtr;
 		nSigmas = 0;
 		if (strlen (argUC) > 5)
 			sscanf (strrchr(argUC,'N')+1,"%fS",&nSigmas);
-		theThreshold = (int) (theStack->geomean_i[spotWave] + (theStack->sigma_i[spotWave]*nSigmas));
+		theThreshold = (int) (theStack->geomean_i[spotWave] + (theStack->geosigma_i[spotWave]*nSigmas));
 		}
 
 	else if (!strcmp (argUC,"MOMENT"))
@@ -2847,6 +2872,7 @@ argc = ccommand(&argv);
 		if (theStackListHead == NULL)
 			theStackListHead = theStackG;
 		else
+			/* theStackG au top de la pile */
 			theOldStack->next = theStackG;
 		theOldStack = theStackG;
 		theStackG->next = NULL;
@@ -2942,10 +2968,6 @@ fflush (stderr);
 	fprintf (stdout,"%4d\t",(int) thresholdG);
 	fflush (stdout);
 */
-	
-	
-		
-	
 	
 	/*
 	* Allocate memory for the first spot.
