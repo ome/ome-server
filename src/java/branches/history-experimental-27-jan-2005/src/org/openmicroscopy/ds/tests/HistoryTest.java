@@ -65,6 +65,7 @@ public class HistoryTest {
 	private static final String PASS = "foobar";
 	
 	private static final int MEX_ID=4211;
+	private static final int CHEX_ID=31;
 	
 	private DataServices services;
 	private HistoryManager historyManager;
@@ -109,10 +110,21 @@ public class HistoryTest {
 		
 		Integer mexID = new Integer(MEX_ID);
 		
-		List history = historyManager.getDataHistory(mexID);
+		List history = historyManager.getMexDataHistory(mexID);
 		
-		System.err.println("dumping history for "+mexID);
+		System.err.println("dumping MEX history for "+mexID);
+		dumpHistoryList(history);
 		
+		Integer chexID = new Integer(CHEX_ID);
+		history = historyManager.getChainDataHistory(chexID);
+		
+		System.err.println("dumping chain history for chain exec "+chexID);
+		dumpHistoryList(history);
+		
+		
+	}
+	
+	private void dumpHistoryList(List history) {
 		Iterator iter = history.iterator();
 		while (iter.hasNext()) {
 			ModuleExecution mex = (ModuleExecution)iter.next();
