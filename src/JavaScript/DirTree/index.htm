@@ -1,6 +1,6 @@
 <HTML>
 <HEAD>
-<TITLE>The Joust Outliner</TITLE>
+<TITLE>Image Importer</TITLE>
 
 <!--
 Joust Outliner Version 2.5.4
@@ -944,7 +944,7 @@ function initialise() {
 	// Initialise all the icons
 	initOutlineIcons(theMenu.imgStore);
 	
-	// Menus are initialized by the JavaScript loaded in the hiddenFrame by the /perl/DirTree.pl script.
+	// Menus are initialized by the JavaScript loaded in the hiddenFrame by the /perl2/OME/Web/DirTree.pm script.
 	// The initial call when the frame is loaded causes the root entry to be initialized.
 	// Subsequent calls are made through the loadOnToggle function bellow.
 }
@@ -952,7 +952,7 @@ function initialise() {
 
 function loadOnToggle(theEntry, url1) { 
     if (theEntry.FirstChild == -2) {
-		 self.hiddenFrame.location.href = url1+'?action=readDir;fullPath='+theEntry.fullPath+';entryID='+theEntry.id;
+		 self.hiddenFrame.location.href = url1+'&action=readDir;fullPath='+theEntry.fullPath+';entryID='+theEntry.id;
     }
 }
 
@@ -969,7 +969,7 @@ function selectOnClick(theEntry, url1) {
 	var eID = theMenu.findEntry(true, "isMultiSelected", "exact", 0);
 	var selections = '';
 	if (eID >=0 ) {
-		selections = '?action=selectionList';
+		selections = '&action=selectionList';
 		while (eID >= 0) {
 			selections = selections + ";" + escape (theMenu.entry[eID].fullPath) + "=1;";
 			// Then find next match
@@ -998,11 +998,11 @@ if (self.name == 'menu') {
 	initialise();
 	
 			self.document.writeln('<frameset cols="50%,*" rows="100%" onResize="defaultResizeHandler();">');
-				self.document.writeln('<frameset cols="100%" rows="100%,*">');
+				self.document.writeln('<frameset cols="100%" rows="100%,*" border="0">');
 					self.document.writeln('<frame name="menu" src="menu.htm" scrolling="auto" marginwidth="1" marginheight="1" APPLICATION="yes">');
-					self.document.writeln('<frame name="hiddenFrame" src="/perl/DirTree.pl" FRAMEBORDER="0" scrolling="no" marginwidth="0" marginheight="0" APPLICATION="yes">');
+					self.document.writeln('<frame name="hiddenFrame" src="/perl2/serve.pl?Page=OME::Web::DirTree" FRAMEBORDER="0" scrolling="no" marginwidth="0" marginheight="0" APPLICATION="yes">');
 				self.document.writeln('</frameset>');
-				self.document.writeln('<frame name="text" src="/perl/DirTreeSelect.pl" scrolling="auto" APPLICATION="yes">');
+				self.document.writeln('<frame name="text" src="/perl2/serve.pl?Page=OME::Web::DirTreeSelect" scrolling="auto" APPLICATION="yes">');
 			self.document.writeln('</frameset>');
 }
 //-->
