@@ -141,6 +141,7 @@ sub uninstall {
 	my $tmp_dir = $environment->tmp_dir();
 	
 	print_header("OME Uninstall");
+	chdir("/"); # to avoid permission problems, move to root directory
 	
 	# OME Base dir
 	if ( -d $base_dir) {
