@@ -228,6 +228,11 @@ sub formatImage {
 	$offsets = \@lstoff;
 	$bytecounts = \@lstcnt;
     }
+    else {
+	@$offsets = reverse(@$offsets);
+	@$bytecounts = reverse(@$bytecounts);
+    }
+
 
     # If this image is a TIFF variant, let the variant class handle it
     if (defined $self->{Variant}) {
@@ -258,11 +263,7 @@ sub formatImage {
 	    last
 		unless $status eq "";
 
-	    # remember any left over from last time
-	    substr($buf, 0, 0) = $remainder;
-
 	    # extract rows out of the buffer
-	    # assume a strip is not composed of a whole number of rows
 	    for ($buf_offset = 0; $strip_size >= $row_size; $strip_size -= $row_size) {
 		$irow = substr($buf, $buf_offset, $row_size);
 		@orow = unpack($ifmt, $irow);
@@ -282,7 +283,6 @@ sub formatImage {
 		#print $foh $rowbuf;
 		$buf_offset += $row_size;
 	    }
-	    $remainder = substr($buf, $buf_offset, $strip_size); # save any leftover
 	    
 	}
 	# For now, at least, we don't handle > 1 Z or T dimension
