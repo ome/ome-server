@@ -176,7 +176,7 @@ int DoCompositeJPEG (CompositeSpec *myComposite, char **param) {
 
 int DoCompositeZoom (CompositeSpec *myComposite, char **param) {
 Pic *ome_pic, *out_pic;
-char out_name[256];
+char out_name[256], mime_type[256];
 char *xfiltname = FILTER_DEFAULT, *yfiltname = 0;
 char *xwindowname = 0, *ywindowname = 0;
 int  square, intscale=0;
@@ -198,6 +198,14 @@ Mapping m;
 
 	ome_pic = pic_open_dev ("omeis",(char *)myComposite, "r");
 	out_pic = pic_open_stream (myComposite->format, stdout, out_name, "w");
+	
+	if (ome_pic && out_pic) {
+		strcpy (mime_type,"image/");
+		strncat (mime_type,myComposite->format,200);
+		HTTP_ResultType (mime_type);
+	} else {
+		HTTP_DoError ("DoCompositeZoom","Could not open input and/or output Pic");
+	}
 	
 	if (myComposite->isRGB) pic_set_nchan (out_pic,3);
 	else pic_set_nchan (out_pic,1);
