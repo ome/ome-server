@@ -222,7 +222,7 @@ END_HTML
 			my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = split( /,/, $q->param( 'accessor' ) );
 			my $objectTaAccessFrom = $self->Session()->Factory()->loadObject( $typeToAccessFrom, $idToAccessFrom )
 				or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
-			$tmpl_data{ accessor_descriptor } = "Showing $common_name(s) associated with ".$render->getRef( $objectTaAccessFrom, 'html' ).".";
+			$tmpl_data{ accessor_descriptor } = "Showing $common_name(s) associated with ".$render->render( $objectTaAccessFrom, 'ref' ).".";
 		
 		# search mode
 		} else {
@@ -273,7 +273,7 @@ END_HTML
 		my ($objects, $paging_text ) = $self->search();
 		my $allow_action = ( $q->param( 'allow_action' ) or $q->url_param( 'allow_action' ) );
 		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
-			{ _pager_text => $paging_text, type => $type, 
+			{ pager_text => $paging_text, type => $type, 
 				( $allow_action ?
 					( draw_checkboxes => 1 ) :
 					()
