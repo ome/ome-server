@@ -66,4 +66,16 @@ public interface GroupingMethod
    * @return Which group the thumbnail belongs to.
    */
   public GroupModel getGroup(Thumbnail t);
+  
+  /**
+   * Adds a group to the possible groups assigned by this GroupingMethod.
+   * @param gm The group to add.
+   */
+  public void addGroup(GroupModel gm);
+  
+  /**
+   * Removes a group from the possible groups assigned by this GroupingMethod.
+   * @param gm The group to remove.
+   */
+  public void removeGroup(GroupModel gm);
 }
