@@ -44,6 +44,7 @@ package org.openmicroscopy.remote;
 
 import java.net.URL;
 import java.util.*;
+import java.io.*;
 import org.apache.xmlrpc.XmlRpc;
 import org.apache.xmlrpc.XmlRpcClient;
 //import org.apache.xmlrpc.XmlRpcClientLite;
@@ -52,11 +53,16 @@ import org.openmicroscopy.Session;
 public class XmlRpcCaller
     implements RemoteCaller
 {
+    public static boolean TRACE_CALLS = false;
+
    // private XmlRpcClientLite  xmlrpc;
     private XmlRpcClient xmlrpc;
     private Vector        vparams = new Vector();
     private String        sessionReference = null;
     private Session       session = null;
+
+    private File  traceFilename;
+    private PrintWriter  traceFile;
 
     public XmlRpcCaller(URL url)
     {
@@ -77,12 +83,27 @@ public class XmlRpcCaller
         {
             if (sessionReference == null)
             {
+                if (TRACE_CALLS)
+                {
+                    try
+                    {
+                        traceFilename = File.createTempFile("xmlrpc-",".trc");
+                        traceFile = new PrintWriter(
+                            new BufferedWriter(new FileWriter(traceFilename)),
+                            true);
+                        System.err.println("Using trace file "+traceFilename);
+                    } catch (IOException e) {
+                        System.err.println("Could not create trace file!");
+                    }
+                    traceFile.println("Login "+username+" ***");
+                }
+
                 vparams.addElement(username);
                 vparams.addElement(password);
-		sessionReference = invoke("createSession").toString();
-		if (!sessionReference.equals("")) {
-		    session = new RemoteSession(sessionReference);
-		}
+                sessionReference = invoke("createSession").toString();
+                if (!sessionReference.equals("")) {
+                    session = new RemoteSession(sessionReference);
+                }
             }
         }
     }
@@ -97,6 +118,15 @@ public class XmlRpcCaller
                 invoke("closeSession");
                 sessionReference = null;
                 session = null;
+
+                if (TRACE_CALLS)
+                {
+                    traceFile.println("Logout");
+                    traceFile.close();
+
+                    traceFilename = null;
+                    traceFile = null;
+                }
             }
         }
     }
@@ -112,10 +142,25 @@ public class XmlRpcCaller
         {
             try
             {
+                if (TRACE_CALLS)
+                {
+                    traceFile.print(method+"(");
+                    for (int i = 0; i < vparams.size(); i++)
+                    {
+                        traceFile.print(vparams.elementAt(i)+",");
+                    }
+                    traceFile.println(")");
+                }
+
                 Object retval = xmlrpc.execute(method,vparams);
                 return retval;
             } catch (Exception e) {
-                //System.err.println("execute exception: "+e.getMessage());
+                if (TRACE_CALLS)
+                {
+                    traceFile.println("execute exception ("+e.getClass()+
+                                      "): "+e.getMessage());
+                    e.printStackTrace(traceFile);
+                }
                 throw new RemoteException(e.getMessage());
             } finally {
                 vparams.clear();
