@@ -88,14 +88,16 @@ our ($OME_BASE_DIR, $OME_TMP_DIR,  $OME_USER, $OME_UID, $OME_GROUP);
 our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $OME_EXPER, $ADMIN_UID);
 
 # Default import formats
+# N.B.:  TIFFreader must follow ALL tiff variants
+#        XMLreader is best kept last.
 our $IMPORT_FORMATS = join (' ',qw/
     OME::ImportEngine::MetamorphHTDFormat
     OME::ImportEngine::DVreader
     OME::ImportEngine::STKreader
-    OME::ImportEngine::TIFFreader
-    OME::ImportEngine::XMLreader
     OME::ImportEngine::BioradReader
     OME::ImportEngine::LSMreader
+    OME::ImportEngine::TIFFreader
+    OME::ImportEngine::XMLreader
 /);
 
 # Database version
@@ -325,11 +327,6 @@ sub create_database {
     my $retval;
     my $createlang = "createlang";
 
-    # Set the PGSQL lang
-    $retval = which ("$createlang");
-    $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
-	$createlang = $retval;
-
     print "Creating database\n";
 
     $dbh = DBI->connect("dbi:Pg:dbname=template1")
@@ -347,16 +344,13 @@ sub create_database {
     # This will be NULL if the database does not exist
     if (defined $db_oid) {
     print "  \\__ Exists\n";
-        $dbh->disconnect();
-        return 0;
-    }
-
+    } else {
     # Create an empty DB
     print "  \\__ Initialization\n";
     $dbh->do(q{
     CREATE DATABASE ome
     }) or croak $dbh->errstr();
-
+	}
     $dbh->disconnect();
 
 	# Make this process euid root, and execute these things as the postgres user.
@@ -366,6 +360,25 @@ sub create_database {
 	# To make sure that postgres has a sane environment, we need to su -.
 	my $old_euid = euid (0);
     print "  \\__ Adding PL-PGSQL language\n";
+
+    # Set the PGSQL lang
+	# First off, see if the postgres user knows where createlang is.
+    my @CMD_OUT = `su - $POSTGRES_USER -c "which $createlang" 2>&1`;
+    foreach (@CMD_OUT) {
+    	chomp;
+    	$retval = which ($_);
+    	last if $retval;
+    }
+
+	if (not $retval) {
+	    $retval = which ($createlang);
+	    if (not $retval) {
+			$createlang = whereis ($createlang) or croak "Unable to locate $createlang binary.";
+		}
+	}
+
+	$createlang = $retval;
+
     my @CMD_OUT = `su - $POSTGRES_USER -c "$createlang plpgsql ome" 2>&1`;
     if ($? != 0) {
     	die "Errors: \n",join ('',@CMD_OUT),"\n" unless join ('',@CMD_OUT) =~ /already installed/;
