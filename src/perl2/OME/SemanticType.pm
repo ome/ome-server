@@ -188,7 +188,7 @@ sub requireAttributeTypePackage {
     $pkg->setSequence('attribute_seq');
     $pkg->addPseudoColumn('semantic_type',
                           'has-one','OME::SemanticType');
-
+	my $any_table; 
 
     my @semantic_elements = $self->semantic_elements();
     foreach my $semantic_element (@semantic_elements) {
@@ -199,6 +199,7 @@ sub requireAttributeTypePackage {
         my $sql_type = OME::DataTable->getSQLType($type);
         my $data_table = $data_column->data_table();
         my $table_name = $data_table->table_name();
+        $any_table = $table_name unless defined $any_table; 
         $data_table->requireDataTablePackage($force);
 
         # It doesn't matter if we add the primary key more than once
