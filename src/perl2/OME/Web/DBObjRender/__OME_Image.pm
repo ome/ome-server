@@ -116,27 +116,24 @@ sub renderSingle {
 	my ($proto,$obj,$format,$fieldnames) = @_;
 	
 	my $factory = $obj->Session()->Factory();
-	my $q = new CGI;
-	
-	my $record = $proto->SUPER::renderSingle($obj,$format,$fieldnames);
+	my $q       = new CGI;
+	my $record  = $proto->SUPER::renderSingle($obj,$format,$fieldnames);
 
-	foreach my $field( @$fieldnames ) {
-		if( $field eq 'name' and $format eq 'html' ) {
-			my $import_mex = $factory->findObject( "OME::ModuleExecution", 
-				'module.name' => 'Image import', 
-				image => $obj, 
-				__order => 'timestamp' );
-			my $ai = $factory->findObject( 
-				"OME::ModuleExecution::ActualInput", 
-				module_execution => $import_mex
-			);
-			my $original_file = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
-				$ai->input_module_execution,
-				$ai->formal_input()->semantic_type
-			)->[0];
-			my $originalFile_url = $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
-			$record->{ $field } = $q->a( { -href => $originalFile_url }, $obj->name() );
-		}
+	if( grep( m/^name$/, @$fieldnames) and $format eq 'html' ) {
+		my $import_mex = $factory->findObject( "OME::ModuleExecution", 
+			'module.name' => 'Image import', 
+			image => $obj, 
+			__order => 'timestamp' );
+		my $ai = $factory->findObject( 
+			"OME::ModuleExecution::ActualInput", 
+			module_execution => $import_mex
+		);
+		my $original_file = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
+			$ai->input_module_execution,
+			$ai->formal_input()->semantic_type
+		)->[0];
+		my $originalFile_url = $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
+		$record->{ 'name' } = $q->a( { -href => $originalFile_url }, $obj->name() );
 	}
 	
 	return %$record if wantarray;
