@@ -63,7 +63,7 @@ public class RemoteAttribute
 
     public SemanticType getSemanticType()
     { return (SemanticType)
-            getRemoteElement(RemoteSemanticType.class,"attribute_type"); }
+            getRemoteElement(RemoteSemanticType.class,"semantic_type"); }
 
     public ModuleExecution getModuleExecution()
     { return (ModuleExecution)
