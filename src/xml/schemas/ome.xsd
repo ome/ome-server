@@ -141,13 +141,10 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 		<xs:annotation>
 			<xs:documentation>
 				The Image will be unreadable if any of the required Pixel attributes are missing.
-				The Pixels themselves may be stored externally or internally.  Internal storage is encoded in Base64.
-				This element must contain a list of BinData or External elements.  These elements, when read in document order, must produce a 5-D pixel array
+				The Pixels themselves are stored within the file compressed by plane, and encoded in Base64.
+				The Pixels element must contain a list of BinData, each containing a single plane of pixels.
+				These Pixels elements, when read in document order, must produce a 5-D pixel array
 				of the size specified in this element, and in the dimension order specified by 'DimensionOrder'.
-				If BinData elements are used, there must be exactly one BinData element per XY plane in the 5-D array.
-				If External elements are used, the optional Offset and ReadLength attributes allow the OME file to act as a meta-file for proprietary image formats.
-				There is no restriction on the number of External elements or how many times a given file is referenced in the External elements
-				as long as when they are all read in document order they produce the specified 5-D array.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1223,7 +1220,7 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 				BitsPerPixel is an integer '1', '8', '16'.
 				The OpticalAxisAvg is a boolean specifying wether or not optical axis averaging was done.
 				SizeX, SizeY specify the width and height of the OTF.
-				This element must contain either an External element or a BinData element.
+				This element must contain a BinData element containing the Base64-encoded OTF.
 				Both of these work the same way as they do for the Data element within Image.
 			</xs:documentation>
 		</xs:annotation>
