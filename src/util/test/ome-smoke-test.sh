@@ -64,6 +64,16 @@ echo "Starting DB backup on $HOST on `date`" > $LOG_FILE
 cd $SOURCE_DIR/src/perl2/
 rm -f $DB_BACKUP > /dev/null 2>&1
 ome admin data backup -q -a $DB_BACKUP >> $LOG_FILE 2>&1
+if (! test -s $DB_BACKUP);
+	then echo "Could not backup $DB_NAME to $DB_BACKUP" >> $LOG_FILE ;
+	if test "$MAIL_TO" ;
+		then $MAIL_PROGRAM"`date` OME backup failed" $MAIL_TO < $LOG_FILE ;
+	fi;
+	PATH=$OLD_PATH ;
+	export PATH ;
+	exit -1 ;
+fi;
+
 echo "Dropping database $DB_NAME" >> $LOG_FILE
 su -l $OME_ADMIN -c "dropdb $DB_NAME" >> $LOG_FILE 2>&1
 DROPPED=`su -l $OME_ADMIN -c "psql -l -d ome | grep $DB_NAME"`
@@ -117,7 +127,7 @@ echo "command line and options:" >> $LOG_FILE
 echo "$0 $*" >> $LOG_FILE
 echo "------------------------------------------------------------" >> $LOG_FILE
 T_START=`date +%s`
-su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*"  >> $LOG_FILE 2>&1
+su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*tif*"  >> $LOG_FILE 2>&1
 T_STOP=`date +%s`
 #
 # Get images
