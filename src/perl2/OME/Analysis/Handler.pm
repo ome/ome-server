@@ -39,7 +39,7 @@ package OME::Analysis::Handler;
 
 =head1 NAME
 
-OME::Analysis::Handler - the superclass of all module_execution handlers
+OME::Analysis::Handler - the superclass of all analysis handlers
 
 =head1 SYNOPSIS
 
@@ -49,16 +49,16 @@ OME::Analysis::Handler - the superclass of all module_execution handlers
 
 =head1 DESCRIPTION
 
-The module_execution handlers are the chief mechanism supporting language
-independence in the modules of the module_execution system.  The handlers
+The analysis handlers are the chief mechanism supporting language
+independence in the modules of the analysis system.  The handlers
 serve to decouple the details of interfacing with a given language
 from the analysis engine, and to decouple the common functionality of
 interacting with the database away from the modules.
 
 The Handler class follows the same interface that the analysis engine
 expects of its modules; in this way, the handlers can be seen as
-delegate classes, deferring to the module itself to perform
-the actual calculations.
+delegate classes, deferring to the module itself to perform the actual
+calculations.
 
 =cut
 
@@ -87,7 +87,7 @@ use fields qw(_location _session _node _output_types _untyped_output
 	my $handler = OME::Analysis::Handler->
 	    new($location,$session,$module,$node);
 
-Creates a new instance of the module_execution handler.  Subclass constructors
+Creates a new instance of the analysis handler.  Subclass constructors
 I<must> call this as part of their construction code.  The helper
 methods used to create new attributes for the module results will
 not work without the variables assigned by this method.
