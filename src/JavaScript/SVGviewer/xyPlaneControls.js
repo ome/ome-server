@@ -62,11 +62,12 @@ XYPlaneControls.prototype.init = function( actions, supplimentaryControls, chann
 	this.actions['OnOffB']       = { obj: this.image, method: 'setBlueOn' };
 	this.actions['switchRGB_BW'] = { obj: this.image, method: 'setDisplayRGB_BW' };
 	this.actions['planeCommand'] = { obj: this, method: 'ExecPlaneCommand' };
-	this.planeCommands           = [ 'Save', 'Prefetch', 'View Plane' ];
+	this.planeCommands           = [ 'Save', 'Prefetch', 'View Plane', 'Set Thumb' ];
 	this.planeActions            = [ 
 		{ obj: this.image, method: 'saveState' }, 
 		{ obj: this.image, method: 'prefetchImages' },
-		null
+		null,
+		{ obj: this.image, method: 'saveStateThumb' },		
 	];
 };
 
