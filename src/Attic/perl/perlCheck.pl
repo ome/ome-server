@@ -215,18 +215,15 @@ my $version = shift;
 
 sub Class_DBI_VersionOK {
 my $version = shift;
-	return (1) if $version == 0.91;
-	return (0) if $version > 0.90;
+	return (1) if $version == 0.90;
 	return (0);
 }
 
 sub libXML_VersionOK {
 my $version = shift;
-	my ($major,$minor,$rev) = split ('\.',$version);
-	$version = $major.'.'.$minor;
-
-	return (0) if not defined $version or $version < 2.4;
-	return (1);
+# XML::LibXML requires 2.4.20
+	return (1) if $version ge '2.4.20';
+	return (0);
 }
 
 
@@ -241,18 +238,19 @@ my $installDir = $module->{installDir};
 my $error;
 
 
+	die "Could not determine Postgres version using pg_config.  Are you sure the postgres development package is installed?\n" unless defined $pgVersion;
 	die "Postgres version must be >= 7.1\n" unless $pgVersion ge '7.1';
 
 	my $incDir = `pg_config --includedir`;
 	$incDir =~ s/^\s+//;$incDir =~ s/\s+$//;
-	$ENV{POSTGRES_INCLUDE} = $incDir;
+	$ENV{POSTGRES_INCLUDE} = $incDir unless exists $ENV{POSTGRES_INCLUDE} and defined $ENV{POSTGRES_INCLUDE};
 	my $libDir = `pg_config --libdir`;
 	$libDir =~ s/^\s+//;$libDir =~ s/\s+$//;
-	$ENV{POSTGRES_LIB} = "$libDir -lssl";
+	$ENV{POSTGRES_LIB} = "$libDir -lssl" unless exists $ENV{POSTGRES_LIB} and defined $ENV{POSTGRES_LIB};
 	
 	if ($^O eq 'darwin') {
 		print "\nranlib $libDir/libpq.a","\n";
-		die "Couldn't run ranlib on $libDir/libpq.a\n" if system ("ranlib $libDir/libpq.a");
+		die "Couldn't run ranlib on $libDir/libpq.a\n" if system ("ranlib $libDir/libpq.a") != 0;
 	}
 	
 	InstallModule ($module);
@@ -282,18 +280,18 @@ my @configFlags = (
 
 	if (not -e 'Makefile' ) {
 		print "\nRunning configure script...\n";
-		die "Couldn't execute configure script\n" if system ('./configure '.join (' ',@configFlags) );
+		die "Couldn't execute configure script\n" if system ('./configure '.join (' ',@configFlags) ) != 0;
 	}
 	
 	print "\nRunning make...\n";
-	die "Compilation errors - script aborted.\n" if system ('make');
+	die "Compilation errors - script aborted.\n" if system ('make') != 0;
 #	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
 	print "\nInstalling...\n";
-	die "Install errors - script aborted.\n" if system ($installCommand);
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
 	if ($^O eq 'darwin') {
 		print "\nFixing library links...\n";
 		die "Install errors - couldn't fix library links:\n$@.\n"
-			if system ('cd /usr/lib;ln -s libMagick.5.0.36.dylib libMagick.5.dylib');
+			if system ('cd /usr/lib;ln -s libMagick.5.0.36.dylib libMagick.5.dylib') != 0;
 		}
 	chdir '..';
 
@@ -349,8 +347,6 @@ my $module = shift;
 my $libXMLVersion = `xml2-config --version`;
 
 	chomp ($libXMLVersion);
-	my ($major,$minor,$rev) = split ('\.',$libXMLVersion);
-	$libXMLVersion = $major.'.'.$minor;
 	
 	return ($libXMLVersion);
 	
@@ -459,13 +455,13 @@ my $installDir;
 					$error = system ("$wget -nv $moduleURL 2>&1 1>/dev/null");
 				}
 			}
-			die "Couldn't download $moduleURL" if $error;
+			die "Couldn't download $moduleURL" if $error != 0;
 
 			if (not -e $installTarBall) {die "Couldn't find $installTarBall.\n";}
 		}
 
 		print "\nUnpacking $installTarBall\n";
-		die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall");
+		die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall") != 0;
 	}
 
 	if (not -e $installDir) {die "Couldn't find $installDir.\n";}
