@@ -116,7 +116,7 @@ Each channel info hash is keyed thusly:
 
 =cut
 
-sub B<__storeChannelInfo> {
+sub __storeChannelInfo {
     my ($self, $session, $numWaves, @channelData) = @_;
     my $image = $self->{image};
 
@@ -210,6 +210,7 @@ sub __storeInputFileInfo {
     for (my $i = 0; $i < scalar @$inarr; $i++) {
 	$session->Factory()->newObject("OME::Image::ImageFilesXYZWT",
 				       $inarr->[$i]);
+es
 
     }
 
