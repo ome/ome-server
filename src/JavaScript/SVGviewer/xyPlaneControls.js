@@ -29,7 +29,7 @@
 
 var svgns = "http://www.w3.org/2000/svg";
 
-XYPlaneControls.prototype.toolboxParams = {
+XYPlaneControls.prototype.toolboxApperance = {
 	x: 250,
 	y: 30, 
 	width: 200, 
@@ -72,7 +72,7 @@ XYPlaneControls.prototype.init = function( actions, supplimentaryControls, chann
 
 XYPlaneControls.prototype.buildToolBox = function( toolboxLayer ) {
 	var displayContent = this.buildDisplay();
-	this.toolBox = new toolBox( this.toolboxParams );
+	this.toolBox = new toolBox( this.toolboxApperance );
 	this.toolBox.setLabel(100,12,"XY Plane Controls");
 	this.toolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
 	this.toolBox.realize( toolboxLayer );
@@ -278,7 +278,7 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
  
  	// RGB to grayscale button
 	this.RGB_BWbutton = new button(
-		110, 110, 
+		112, 107, 
 		{ obj: this, method: 'switchRGB_BW' },
 		skinLibrary["RGB_BWButtonOn"],
 		skinLibrary["RGB_BWButtonOff"],
