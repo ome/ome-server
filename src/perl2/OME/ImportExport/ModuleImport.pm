@@ -231,7 +231,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 				my $statement = "
 					CREATE TABLE ".$newTable->table_name()." (
 						ATTRIBUTE_ID	 OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,
-						ANALYSIS_ID      OID REFERENCES ACTUAL_OUTPUTS DEFERRABLE INITIALLY DEFERRED,";
+						ANALYSIS_ID      OID REFERENCES ANALYSES DEFERRABLE INITIALLY DEFERRED,";
 # I believe ACTUAL_OUTPUT_ID will not stick around much longer. After analysisEngine no longer needs it, it should be removed.
 				if( $newTable->granularity() eq 'I' ) {
 					$statement .= "IMAGE_ID      OID NOT NULL REFERENCES IMAGES DEFERRABLE INITIALLY DEFERRED";
