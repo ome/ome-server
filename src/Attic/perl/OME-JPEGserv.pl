@@ -61,9 +61,9 @@ my $blue = $cgi->url_param('Blue');
 			$green = 1 unless defined $green;
 			$blue = 1 unless defined $blue;
 		}
-		/* This assumes that RGB will always be associated with      */
-		/* channels 3,2,1, resp. Needs to read the color/channel     */
-		/* assignment from the metadata, once it gets recorded there */
+#		  This assumes that RGB will always be associated with      
+#		  channels 3,2,1, resp. Needs to read the color/channel     
+#		  assignment from the metadata, once it gets recorded there 
 		if (scalar @$rows eq 3) {
 		    $cmd = q/combine -compose ReplaceBlue "|convert -normalize '/.
 			$rows->[$blue]->[0].$rows->[$blue]->[1].
