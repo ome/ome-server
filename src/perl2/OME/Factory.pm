@@ -151,7 +151,7 @@ adding items to a many-to-many map.  For instance,
 =head2 newAttribute
 
 	my $attribute = $factory->
-	    newAttribute($attributeType,$target,$dataHash);
+	    newAttribute($attributeType,$target,$analysis,$dataHash);
 
 Creates a new attribute object.  Note that this is not technically a
 DBObject subclass, since attributes can (conceivably) live in multiple
@@ -162,7 +162,9 @@ L<OME::AttributeType|OME::AttributeType>.
 The target of the attribute (dataset, image, or feature) should not be
 specified in $dataHash.  Rather, is should be passed in the $target
 parameter.  The appropriate key will be added to the $dataHash
-depending on the granularity of the attribute type.
+depending on the granularity of the attribute type.  Similarly, the
+analysis that this attribute should be associated with should be
+passed in the $analysis parameter, not the $dataHash.
 
 Since attribute type packages are created dynamically, attribute types
 are not referred to by class name, like objects are.  The
@@ -593,7 +595,7 @@ sub maybeNewObject {
 }
 
 sub newAttribute {
-    my ($self, $attribute_type, $target, $data_hash) = @_;
+    my ($self, $attribute_type, $target, $analysis, $data_hash) = @_;
 
     my $type =
       ref($attribute_type) eq "OME::AttributeType"?
@@ -615,7 +617,7 @@ sub newAttribute {
     }
 
     my $result = OME::AttributeType->newAttributes($self->Session(),
-                                                   undef,
+                                                   $analysis,
                                                    $type => $data_hash);
 
 

@@ -175,7 +175,7 @@ sub Dimensions {
     	                   SizeC      => $w,
     	                   SizeT      => $t,
     	                   BitsPerPixel => $BitsPerPixel };
-        my $dims = $factory->newAttribute("Dimensions",$self->id(),$recordData)
+        my $dims = $factory->newAttribute("Dimensions",$self->id(),undef,$recordData)
     	#my $dims = $self->Session()->Factory()->newObject( "OME::Image::Dimensions", $recordData )
     		or die ref ($self) . "->Dimensions() could not create a new object of type OME::Image::Dimensions. Parameters used were: ". values (%$recordData) . "\n";
     	$self->{_dimensions} = $factory->
