@@ -59,10 +59,8 @@ use OME::Web::Helper::JScriptFormat;
 $VERSION = $OME::VERSION;
 use base qw(OME::Web);
 
-# Package globals for each Table's data columns
-my @IMAGE_COLUMNS = qw(ID Name Preview Owner Group Description);
-my @DATASET_COLUMNS = qw(ID Status Name Owner Group Description);
-my @PROJECT_COLUMNS = qw(ID Name Owner Group Description);
+# Global display types, one for each object type we have a table method for
+my @DISPLAY_TYPES = qw(Projects Datasets Images);  # First element is default
 
 #*********
 #********* PRIVATE METHODS
@@ -80,17 +78,22 @@ sub __datasetTable {
 			                               filter_field => $options->{filter_field},
 										   filter_string => $options->{filter_string}});
 
+	my @column_headers = qw(ID Status Name Owner Group Description);
+
+	# Generate our table data
 	foreach my $dataset (@datasets) {
 		my $id = $dataset->id();
+		my $checkbox = $q->checkbox(-name => 'selected', -value => $id, -label => '');
 		my $name = $dataset->name();
 		my $description = $dataset->description();
 		my $owner = $dataset->owner()->FirstName() . " " . $dataset->owner()->LastName();
 		my $status = $dataset->locked() ? "Locked" : " - ";
 		my $group = $dataset->group() ? $dataset->group()->Name() : " - ";
 
-		unless ($name eq 'Dummy import dataset') {
+		unless ($name eq 'Dummy import dataset') {  # XXX Man I hate this...
 			$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
 				$q->td({-align => 'center'}, [
+					$checkbox,
 					$id,
 					$status,
 					$q->a({-href => "javascript:openInfoDataset($id);"}, $name),
@@ -102,17 +105,28 @@ sub __datasetTable {
 			);
 		}
 	}
+
+	# Options row
+	my $options = $q->Tr( {-bgcolor => '#EFEFEF'},
+		$q->td({-colspan => scalar(@column_headers) + 1, -align => 'center'}, 
+			$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}) .  # Propagation
+			$q->submit({name => 'Delete', value => 'Delete'})
+		)
+	);
 	
+	# Populate and return our table
 	my $table = $q->table( {
 			-class => 'ome_table',
 			-cellpadding => '4',
 			-cellspacing => '1',
 			-border => '0',
 			-width => '100%',
-			-bgcolor => '#000000',
 		},
-		$q->th({-bgcolor => '#EFEFEF'}, [@DATASET_COLUMNS]),
-		$table_data
+		$q->startform(),
+		$q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers]),  # Space for the checkbox field
+		$table_data,
+		$options,
+		$q->endform()
 	);
 
 	return $table;
@@ -129,17 +143,21 @@ sub __projectTable {
 	my @projects = $self->__filterObjects({filter_object => 'OME::Project',
 			                               filter_field => $options->{filter_field},
 										   filter_string => $options->{filter_string}});
+	
+	my @column_headers = qw(ID Name Owner Group Description);
 
+	# Generate our table data
 	foreach my $project (@projects) {
 		my $id = $project->id();
+		my $checkbox = $q->checkbox(-name => 'selected', -value => $id, -label => '');
 		my $name = $project->name();
 		my $description = $project->description();
 		my $owner = $project->owner()->FirstName() . " " . $project->owner()->LastName();
 		my $group = $project->group() ? $project->group()->Name() : " - ";
-		print STDERR ref($project->owner()), "\n";
 
 		$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
 			$q->td({-align => 'center'}, [
+				$checkbox,
 				$id,
 				$q->a({-href => "javascript:openInfoProject($id);"}, $name),
 				$owner,
@@ -149,19 +167,19 @@ sub __projectTable {
 			)
 		);
 	}
+	# Options row
 
+	# Populate and return our table
 	my $table = $q->table( {
 			-class => 'ome_table',
 			-cellpadding => '4',
 			-cellspacing => '1',
 			-border => '0',
 			-width => '100%',
-			-bgcolor => '#000000',
 		},
-		$q->th({-bgcolor => '#EFEFEF'}, [@PROJECT_COLUMNS]),
+		$q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers]),
 		$table_data
 	);
-
 
 	return $table;
 }
@@ -177,9 +195,13 @@ sub __imageTable {
 	my @images = $self->__filterObjects({filter_object => 'OME::Image',
 			                             filter_field => $options->{filter_field},
 										 filter_string => $options->{filter_string}});
-	
+
+	my @column_headers = qw(ID Name Preview Owner Group Description);
+
+	# Generate our table data
 	foreach my $image (@images) {
 		my $id = $image->id();
+		my $checkbox = $q->checkbox(-name => 'selected', -value => $id, -label => '');
 		my $name = $image->name();
 		my $thumbnail = $q->img( {
 				-align => 'bottom',
@@ -195,6 +217,7 @@ sub __imageTable {
 
 		$table_data .= $q->Tr({-bgcolor => '#EFEFEF'},
 			$q->td({-align => 'center'}, [
+				$checkbox,
 				$id,
 				$name,
 				$q->a({-href => "javascript:openPopUpImage($id);"}, $thumbnail),
@@ -205,52 +228,58 @@ sub __imageTable {
 			)
 		);
 	}
+	# Options row
 
+	# Populate and return our table
 	my $table = $q->table( {
 			-class => 'ome_table',
 			-cellpadding => '4',
 			-cellspacing => '1',
 			-border => '0',
 			-width => '100%',
-			-bgcolor => '#000000',
 		},
-		$q->th({-bgcolor => '#EFEFEF'}, [@IMAGE_COLUMNS]),
+		$q->th({-bgcolor => '#EFEFEF'}, ["Select", @column_headers]),
 		$table_data
 	);
-
 
 	return $table;
 }
 
-sub __genericHeader {
+
+sub __genericTableHeader {
 	my $self = shift;
 	my ($title) = @_;
 	my $q = $self->CGI();
 
 	# Title text
-	my $title = $q->p({-class => 'ome_title'}, $title);
+	$title = $q->span({-class => 'ome_title'}, $title);
 
-	# "Display:" selection box form
-	my $display = $q->startform({-method => 'get',
-			                     -name => 'display',
-								 -action => '/perl2/serve.pl'}) .
-				  "Display: " .
-	              $q->popup_menu({-name => 'type',
-						          -values => ['Projects', 'Datasets', 'Images'],
-								  -default => 'Projects',}) .
-				  "&nbsp" .  # Spacing
-				  $q->submit({-name => 'display_filter', -value => 'Go'});
-				  $q->endform();
-
-	# Packing table for output
-	my $table = $q->table({-border => '0', -width => '100%'},
-		$q->Tr($q->td({-align => 'left'}, $title), $q->td({-align => 'right', -valign => 'bottom'}, $display))
+	# "Display:" selection box table and form
+	my $table = $q->table( {
+			-border => '0',
+			-width => '100%',
+		},
+		$q->start_form() .
+		$q->Tr(
+			$q->td({-align => 'left'}, $title),
+			$q->td({-align => 'right'},
+				"Display: " .
+				$q->popup_menu( {
+						-name => 'type',
+						-values => [@DISPLAY_TYPES],
+						-default => $DISPLAY_TYPES[0]
+					}) .
+				'&nbsp' .
+				$q->submit({-value => 'Go'})
+			)
+		) .
+		$q->endform()
 	);
-
+		   
 	return $table;
 }
 
-sub __filterFormTable {
+sub __genericTableFooter {
 	my $self = shift;
 	my @columns = @_;
 	my $q = $self->CGI();
@@ -258,29 +287,32 @@ sub __filterFormTable {
 	# Put a "none" on the front
 	unshift(@columns, "None");
 
-	# A filter form for filtering display on a Factory like "findObjectsLike" method
-	my $form = $q->startform({-method => 'get',
-			                  -name => 'filter_form',
-							  -action => '/perl2/serve.pl'}) .
-			   "Filter on: " .
-			   $q->popup_menu({-name => 'filter_field',
-					           -values => [@columns],
-							   -default => $columns[0],}) .
-			    " String: " .
-		        $q->textfield({-name => 'filter_string', -default => '', -size => 15}) .
-		        "&nbsp" .  # Spacing
-		        $q->submit({-name => 'data_filter', -value => 'Go'});
-		        $q->endform();
-
+	# A filter form table for filtering display on a Factory like "findObjectsLike" method
 	my $table = $q->table( {
 			-class => 'ome_table',
+			-align => 'center',
+			-border => 0,
+			#-width => '100%',
 			-cellpadding => '4',
 			-cellspacing => '1',
-			-border => '0',
-			-width => '100%',
-			-bgcolor => '#000000',
 		},
-		$q->td({-align => 'center', -bgcolor => '#EFEFEF'}, $form));
+		$q->start_form() .
+		$q->Tr(
+			$q->td({-align => 'center', -bgcolor => '#006699'}, 
+			   "Filter field: " .
+			   $q->popup_menu({-name => 'filter_field',
+					           -values => [@columns],
+							   -default => $columns[0]
+						   }) .
+			   " Filter string: " .
+		       $q->textfield({-name => 'filter_string', -default => '', -size => 15}) .
+		       "&nbsp" .  # Spacing
+			   $q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}) .  # Propagation
+		       $q->submit({-name => 'data_filter', -value => 'Go'})
+		    )
+	    ) .
+		$q->endform()
+	);
 
 	return $table;
 }
@@ -320,40 +352,52 @@ sub getPageBody {
     my $q = $self->CGI();
 	my $j_format = new OME::Web::Helper::JScriptFormat;
 	my ($main_table, $header, $filter_table);
+	
+	# XXX Testing
+	my $status;
+	if ($q->param('Delete')) {
+		$status = 'Delete activated on... ';
+		foreach ($q->param('selected')) { $status .= "id = $_ "; }
+	}
+	# XXX Testing
 
 	my $type = $q->param('type') || 'projects';  # Projects is the default display
 	my $filter_field = $q->param('filter_field') || '';
 	my $filter_string = $q->param('filter_string') || '';
 	
-	# Cleanup so we don't get superfluous propogation
-	$q->delete('filter_field', 'filter_string');
+	# Cleanup so we don't get superfluous propagation
+	$q->delete('filter_field', 'filter_string', 'selected');
 
 	# Based on the type, gen our page data
 	if (lc($type) eq 'datasets') {
-		$header = $self->__genericHeader("Datasets");
+		my $columns = OME::Dataset->__columns();
+		my @column_aliases = ("id", keys(%$columns));  # Primary keys aren't in the column list
+		$header = $self->__genericTableHeader("Datasets");
 		$main_table = $self->__datasetTable({filter_field => $filter_field,
 			                                 filter_string  => $filter_string});
-		$filter_table = $self->__filterFormTable(@DATASET_COLUMNS);
+		$filter_table = $self->__genericTableFooter(@column_aliases);
 	} elsif (lc($type) eq 'projects') {
-		$header = $self->__genericHeader("Projects");
+		my $columns = OME::Project->__columns();
+		my @column_aliases = ("id", keys(%$columns));  # Primary keys aren't in the column list
+		$header = $self->__genericTableHeader("Projects");
 		$main_table = $self->__projectTable({filter_field => $filter_field,
 			                                 filter_string  => $filter_string});
-		$filter_table = $self->__filterFormTable(@PROJECT_COLUMNS);
+		$filter_table = $self->__genericTableFooter(@column_aliases);
 	} elsif (lc($type) eq 'images') {
-		$header = $self->__genericHeader("Images");
+		my $columns = OME::Image->__columns();
+		my @column_aliases = ("id", keys(%$columns));  # Primary keys aren't in the column list
+		$header = $self->__genericTableHeader("Images");
 		$main_table = $self->__imageTable({filter_field => $filter_field,
 				                           filter_string  => $filter_string});
-		$filter_table = $self->__filterFormTable(@IMAGE_COLUMNS);
+		$filter_table = $self->__genericTableFooter(@column_aliases);
 	}
-
-	# XXX Hidden form to store the "Page" parameter for serve.pl
-	my $hidden_form = $q->startform() . $q->hidden(-name => 'Page', __PACKAGE__) . $q->endform();
 
 	return ('HTML',
 	        $j_format->openInfoProject() .
 			$j_format->openInfoDataset() .
 			$j_format->popUpImage() .
-			$header . $main_table . $filter_table . $hidden_form);
+			$q->span({-class => 'ome_error'}, $status) .  # XXX Testing
+			$header . $main_table . $q->p() . $filter_table);
 }
 
 
