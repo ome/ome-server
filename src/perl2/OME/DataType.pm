@@ -65,7 +65,7 @@ sub getAttributePackage {
 sub requireAttributePackage {
     my $self = shift;
     my $pkg = $self->getAttributePackage();
-    return if exists $self->_attributePackages()->{$pkg};
+    return $pkg if exists $self->_attributePackages()->{$pkg};
     #print STDERR "**** Loading attribute package $pkg\n";
 
     my $def = "package $pkg;\n";
@@ -101,12 +101,17 @@ sub requireAttributePackage {
 	$pkg->hasa('OME::Image' => qw(image_id));
 	$accessors->{image_id} = 'image';
     } elsif ($type eq 'F') {
-	#$pkg->hasa(OME::Feature => qw(feature_id));
+	my $features_type = OME::DataType->findByTable('FEATURES');
+	my $features_pkg = $features_type->requireAttributePackage();
+	$pkg->hasa($features_pkg => qw(feature_id));
+	$accessors->{feature_id} = 'feature';
     }
 
     $pkg->AccessorNames($accessors);
 
     $self->_attributePackages()->{$pkg} = $self;
+
+    return $pkg;
 }
 
 

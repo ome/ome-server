@@ -68,6 +68,12 @@ print $testStatistics->program_name()." (".$testStatistics->id().")\n";
 my $testCounts = OME::Program->findByName('Test counts');
 print $testCounts->program_name()." (".$testCounts->id().")\n";
 
+my $calcXyzInfo = OME::Program->findByName('Stack statistics');
+print $calcXyzInfo->program_name()." (".$calcXyzInfo->id().")\n";
+
+my $calcXyInfo = OME::Program->findByName('Plane statistics');
+print $calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
+
 print "Chain with 1 node...\n";
 
 my $view = $factory->newObject("OME::AnalysisView",{
@@ -114,6 +120,30 @@ $link = $factory->newObject("OME::AnalysisView::Link",{
     to_input      => $node2->program()->findInputByName('Average')
     });
 print "    Link [Node 1.Average]->[Node 2.Average]\n";
+
+
+print "Image import chain...\n";
+
+my $view = $factory->newObject("OME::AnalysisView",{
+    owner => $session->User(),
+    name  => "Image import analyses"
+    });
+die "Bad view" if !defined $view;
+print "  ".$view->name()." (".$view->id().")\n";
+
+
+$node1 = $factory->newObject("OME::AnalysisView::Node",{
+    analysis_view => $view,
+    program       => $calcXyzInfo
+    });
+print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
+
+$node1 = $factory->newObject("OME::AnalysisView::Node",{
+    analysis_view => $view,
+    program       => $calcXyInfo
+    });
+print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
+
 
 
 $link->dbi_commit();

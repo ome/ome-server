@@ -179,6 +179,7 @@ print STDERR "getOMESession: created new session.\n";
 
 print STDERR "getOMESession: updating session.\n";
     $session->writeObject();
+    $session->dbi_commit();
 print STDERR "getOMESession: returning session.\n";
     return $session;
 }

@@ -29,7 +29,7 @@ our $VERSION = '1.0';
 use base qw(OME::Analysis::PerlAnalysis);
 
 sub new {
-    my ($proto,$factory) = @_;
+    my ($proto,$factory,$program) = @_;
     my $class = ref($proto) || $proto;
 
     my $self = $class->SUPER::new($factory);
@@ -44,7 +44,7 @@ sub precalculateImage {
     my $factory = $self->{_factory};
     my $image = $self->{_currentImage};
 
-    my $average = $self->{_imageInputs}->{Average}->avg_intensity();
+    my $average = $self->{_imageInputs}->{Average}->[0]->avg_intensity();
     
     my $dimensions = $image->Dimensions();
 

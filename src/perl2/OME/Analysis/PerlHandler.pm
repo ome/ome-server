@@ -28,10 +28,10 @@ use base qw(OME::Analysis::Handler);
 use fields qw(_instance);
 
 sub new {
-    my ($proto,$location,$factory) = @_;
+    my ($proto,$location,$factory,$program) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$factory);
+    my $self = $class->SUPER::new($location,$factory,$program);
     eval "require $location";
     $self->{_instance} = $location->new($factory);
 

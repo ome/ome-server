@@ -68,6 +68,30 @@ print "  ".$simpleStatistics->table_name()." (".$simpleStatistics->id().")\n";
 my $simpleCounts = OME::DataType->findByTable('SIMPLE_COUNTS');
 print "  ".$simpleCounts->table_name()." (".$simpleCounts->id().")\n";
 
+my $xyzImageInfo = OME::DataType->findByTable('XYZ_IMAGE_INFO');
+print "  ".$xyzImageInfo->table_name()." (".$xyzImageInfo->id().")\n";
+
+my $xyImageInfo = OME::DataType->findByTable('XY_IMAGE_INFO');
+print "  ".$xyImageInfo->table_name()." (".$xyImageInfo->id().")\n";
+
+my $features = OME::DataType->findByTable('FEATURES');
+print "  ".$features->table_name()." (".$features->id().")\n";
+
+my $timepoint = OME::DataType->findByTable('TIMEPOINT');
+print "  ".$timepoint->table_name()." (".$timepoint->id().")\n";
+
+my $threshold = OME::DataType->findByTable('THRESHOLD');
+print "  ".$threshold->table_name()." (".$threshold->id().")\n";
+
+my $location = OME::DataType->findByTable('LOCATION');
+print "  ".$location->table_name()." (".$location->id().")\n";
+
+my $extent = OME::DataType->findByTable('EXTENT');
+print "  ".$extent->table_name()." (".$extent->id().")\n";
+
+my $signal = OME::DataType->findByTable('SIGNAL');
+print "  ".$signal->table_name()." (".$signal->id().")\n";
+
 print "Creating programs...\n";
 
 my ($input,$output);
@@ -114,7 +138,7 @@ $input = $factory->newObject("OME::Program::FormalInput",{
     name        => 'Average',
     column_type => $simpleStatistics->findColumnByName('AVG_INTENSITY')
     });
-print "    ".$input->name()." (".$output->id().")\n";
+print "    ".$input->name()." (".$input->id().")\n";
 
 $output = $factory->newObject("OME::Program::FormalOutput",{
     program     => $testCounts,
@@ -132,6 +156,346 @@ $output = $factory->newObject("OME::Program::FormalOutput",{
     program     => $testCounts,
     name        => 'Dim count',
     column_type => $simpleCounts->findColumnByName('NUM_DIM')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+
+my $calcXyInfo = $factory->newObject("OME::Program",{
+    program_name => 'Plane statistics',
+    description  => 'Calculate pixel statistics for each XY plane',
+    category     => 'Statistics',
+    module_type  => 'OME::Analysis::CLIHandler',
+    location     => '/OME/bin/OME_Image_XY_stats'
+    });
+print "  ".$calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
+
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'Wave',
+    column_type => $xyImageInfo->findColumnByName('WAVENUMBER')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'Time',
+    column_type => $xyImageInfo->findColumnByName('TIMEPOINT')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'Z',
+    column_type => $xyImageInfo->findColumnByName('ZSECTION')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'Min',
+    column_type => $xyImageInfo->findColumnByName('MIN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'Max',
+    column_type => $xyImageInfo->findColumnByName('MAX')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'Mean',
+    column_type => $xyImageInfo->findColumnByName('MEAN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'GeoMean',
+    column_type => $xyImageInfo->findColumnByName('GEOMEAN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyInfo,
+    name        => 'Sigma',
+    column_type => $xyImageInfo->findColumnByName('SIGMA')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+
+my $calcXyzInfo = $factory->newObject("OME::Program",{
+    program_name => 'Stack statistics',
+    description  => 'Calculate pixel statistics for each XYZ stack',
+    category     => 'Statistics',
+    module_type  => 'OME::Analysis::CLIHandler',
+    location     => '/OME/bin/OME_Image_XYZ_stats'
+    });
+print "  ".$calcXyzInfo->program_name()." (".$calcXyzInfo->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Wave',
+    column_type => $xyzImageInfo->findColumnByName('WAVENUMBER')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Time',
+    column_type => $xyzImageInfo->findColumnByName('TIMEPOINT')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Min',
+    column_type => $xyzImageInfo->findColumnByName('MIN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Max',
+    column_type => $xyzImageInfo->findColumnByName('MAX')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Mean',
+    column_type => $xyzImageInfo->findColumnByName('MEAN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'GeoMean',
+    column_type => $xyzImageInfo->findColumnByName('GEOMEAN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Sigma',
+    column_type => $xyzImageInfo->findColumnByName('SIGMA')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Centroid_x',
+    column_type => $xyzImageInfo->findColumnByName('CENTROID_X')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Centroid_y',
+    column_type => $xyzImageInfo->findColumnByName('CENTROID_Y')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $calcXyzInfo,
+    name        => 'Centroid_z',
+    column_type => $xyzImageInfo->findColumnByName('CENTROID_Z')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+
+my $findSpots = $factory->newObject("OME::Program",{
+    program_name => 'Find spots',
+    description  => 'Find spots in the image',
+    category     => 'Segmentation',
+    module_type  => 'OME::Analysis::CLIHandler',
+    location     => '/OME/bin/findSpotsOME'
+    });
+print "  ".$findSpots->program_name()." (".$findSpots->id().")\n";
+
+$input = $factory->newObject("OME::Program::FormalInput",{
+    program     => $findSpots,
+    name        => 'Wavelength',
+    column_type => $xyzImageInfo->findColumnByName('WAVENUMBER')
+    });
+print "    ".$input->name()." (".$input->id().")\n";
+
+$input = $factory->newObject("OME::Program::FormalInput",{
+    program     => $findSpots,
+    name        => 'Timepoint',
+    column_type => $xyzImageInfo->findColumnByName('TIMEPOINT')
+    });
+print "    ".$input->name()." (".$input->id().")\n";
+
+$input = $factory->newObject("OME::Program::FormalInput",{
+    program     => $findSpots,
+    name        => 'Min',
+    column_type => $xyzImageInfo->findColumnByName('MIN')
+    });
+print "    ".$input->name()." (".$input->id().")\n";
+
+$input = $factory->newObject("OME::Program::FormalInput",{
+    program     => $findSpots,
+    name        => 'Max',
+    column_type => $xyzImageInfo->findColumnByName('MAX')
+    });
+print "    ".$input->name()." (".$input->id().")\n";
+
+$input = $factory->newObject("OME::Program::FormalInput",{
+    program     => $findSpots,
+    name        => 'Mean',
+    column_type => $xyzImageInfo->findColumnByName('MEAN')
+    });
+print "    ".$input->name()." (".$input->id().")\n";
+
+$input = $factory->newObject("OME::Program::FormalInput",{
+    program     => $findSpots,
+    name        => 'Geometric mean',
+    column_type => $xyzImageInfo->findColumnByName('GEOMEAN')
+    });
+print "    ".$input->name()." (".$input->id().")\n";
+
+$input = $factory->newObject("OME::Program::FormalInput",{
+    program     => $findSpots,
+    name        => 'Sigma',
+    column_type => $xyzImageInfo->findColumnByName('SIGMA')
+    });
+print "    ".$input->name()." (".$input->id().")\n";
+
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Timepoint',
+    column_type => $timepoint->findColumnByName('TIMEPOINT')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Threshold',
+    column_type => $threshold->findColumnByName('THRESHOLD')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'X',
+    column_type => $location->findColumnByName('X')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Y',
+    column_type => $location->findColumnByName('Y')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Z',
+    column_type => $location->findColumnByName('Z')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Volume',
+    column_type => $extent->findColumnByName('VOLUME')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Perimeter',
+    column_type => $extent->findColumnByName('PERIMITER')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Surface area',
+    column_type => $extent->findColumnByName('SURFACE_AREA')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Form factor',
+    column_type => $extent->findColumnByName('FORM_FACTOR')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Wavelength',
+    column_type => $signal->findColumnByName('WAVELENGTH')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Integral',
+    column_type => $signal->findColumnByName('INTEGRAL')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Centroid X',
+    column_type => $signal->findColumnByName('CENTROID_X')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Centroid Y',
+    column_type => $signal->findColumnByName('CENTROID_Y')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Centroid Z',
+    column_type => $signal->findColumnByName('CENTROID_Z')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Mean',
+    column_type => $signal->findColumnByName('MEAN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+#$output = $factory->newObject("OME::Program::FormalOutput",{
+#    program     => $findSpots,
+#    name        => 'StdDev over Mean',
+#    column_type => $signal->findColumnByName('SD_OVER_MEAN')
+#    });
+#print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Geometric Mean',
+    column_type => $signal->findColumnByName('GEOMEAN')
+    });
+print "    ".$output->name()." (".$output->id().")\n";
+
+#$output = $factory->newObject("OME::Program::FormalOutput",{
+#    program     => $findSpots,
+#    name        => 'StdDev over Geomean',
+#    column_type => $signal->findColumnByName('SD_OVER_GEOMEAN')
+#    });
+#print "    ".$output->name()." (".$output->id().")\n";
+
+$output = $factory->newObject("OME::Program::FormalOutput",{
+    program     => $findSpots,
+    name        => 'Spots',
+    column_type => $features->findColumnByName('NAME')
     });
 print "    ".$output->name()." (".$output->id().")\n";
 

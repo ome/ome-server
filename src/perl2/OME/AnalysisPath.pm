@@ -1,4 +1,4 @@
-# OME/Dataset.pm
+# OME/AnalysisPath.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -18,35 +18,39 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::Dataset;
+package OME::AnalysisPath;
 
 use strict;
 our $VERSION = '1.0';
 
 use OME::DBObject;
-use OME::Image;
-use OME::Project;
+use base qw(OME::DBObject);
+
+__PACKAGE__->table('analysis_paths');
+__PACKAGE__->sequence('analysis_path_seq');
+__PACKAGE__->columns(Primary => qw(path_id));
+__PACKAGE__->columns(Essential => qw(path_length));
+
+
+package OME::AnalysisPath::Map;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    project_id => 'project',
-    owner_id   => 'owner',
-    group_id   => 'group'
+    analysis_execution_id => 'analysis_execution',
+    analysis_id           => 'analysis',
+    path_id               => 'path'
     });
 
-__PACKAGE__->table('datasets');
-__PACKAGE__->sequence('dataset_seq');
-__PACKAGE__->columns(Primary => qw(dataset_id));
-__PACKAGE__->columns(Essential => qw(name description locked));
-__PACKAGE__->has_many('image_links','OME::Image::DatasetMap' => qw(dataset_id));
-__PACKAGE__->has_many('project_links','OME::Project::DatasetMap' => qw(dataset_id));
-__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
-__PACKAGE__->hasa('OME::Group' => qw(group_id));
-
-__PACKAGE__->make_filter('search3' =>
-			 '%s = ? and %s = ? and %s = ?');
-
-
+__PACKAGE__->table('analysis_path_map');
+__PACKAGE__->columns(Essential => qw(path_id path_order analysis_id
+				     analysis_execution_id));
+__PACKAGE__->hasa('OME::AnalysisPath' => qw(path_id));
+__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
+__PACKAGE__->hasa('OME::AnalysisExecution' => qw(analysis_execution_id));
 
 1;
-

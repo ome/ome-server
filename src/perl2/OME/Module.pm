@@ -58,34 +58,6 @@ sub findOutputByName {
 }
 
 
-# performAnalysis(parameters,dataset)
-# -----------------------------------
-# Creates a new Analysis (an instance of this Program being run), and
-# performs the analysis against a dataset.  The parameters are defined
-# as follows:
-#    { $FormalInput => { attribute => $Attribute } }
-# or { $FormalInput => { analysis  => $Analysis,
-#                        output    => $FormalOutput } }
-# These two possibilities model the fact that inputs can come from a
-# previous module's calculations, or from user input.
-
-sub performAnalysis {
-    my ($self, $params, $dataset) = @_;
-    my $factory = $self->Factory();
-
-    my $analysisData = {
-        program      => $self,
-        experimenter => $self->Session()->User(),
-        dataset      => $dataset
-        };
-    my $analysis = $factory->newObject("OME::Analysis",$analysisData);
-
-    # We've set up everything we can, now delegate to
-    # the Analysis object to perform the actual processing.
-
-    $analysis->performAnalysis($params);
-    
-}
 
 
 package OME::Program::FormalInput;
@@ -96,6 +68,8 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use OME::DataType;
 use base qw(OME::DBObject);
+
+require OME::Analysis;
 
 __PACKAGE__->AccessorNames({
     program_id      => 'program',
@@ -110,6 +84,9 @@ __PACKAGE__->columns(Other => qw(lookup_table_id));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
 __PACKAGE__->hasa('OME::DataType::Column' => qw(column_type));
+
+__PACKAGE__->has_many('actual_inputs','OME::Analysis::ActualInput' =>
+		      qw(formal_input_id));
                      
 __PACKAGE__->make_filter('__program_name' => 'program_id = ? and name = ?');
 
@@ -130,6 +107,8 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
+require OME::Analysis;
+
 __PACKAGE__->AccessorNames({
     program_id      => 'program'
     });
@@ -140,6 +119,9 @@ __PACKAGE__->columns(Primary => qw(formal_output_id));
 __PACKAGE__->columns(Essential => qw(program_id name column_type));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::DataType::Column' => qw(column_type));
+
+__PACKAGE__->has_many('actual_outputs','OME::Analysis::ActualOutput' =>
+		      qw(formal_output_id));
                      
 __PACKAGE__->make_filter('__program_name' => 'program_id = ? and name = ?');
 

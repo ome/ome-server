@@ -20,6 +20,7 @@
 
 
 use OME::Image;
+use OME::Dataset;
 use OME::Project;
 use OME::Session;
 use OME::SessionManager;
@@ -108,7 +109,7 @@ die "Project undefined\n" unless defined $project;
 # Either way, we must associate the dataset with the current project.
 
 my $datasetName = shift; # from @ARGV
-my $datasetIter = OME::Dataset->search(name => $datasetName, owner_id => $projectUser->ID(), locked => 'false');
+my $datasetIter = OME::Dataset->search3(name => $datasetName, owner_id => $projectUser->ID(), locked => 'false');
 my $dataset = $project->addDataset ($datasetIter->next()) if defined $datasetIter;
 $dataset = $project->newDataset ($datasetName) unless defined $dataset;
 
