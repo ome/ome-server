@@ -1,6 +1,6 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<OME xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
-	<DocumentGroup xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd">
+<OME xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
+	<DocumentGroup>
 		<Include DocumentID = "123.456.70.123.123" href = "File2.ome" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456"/>
 	</DocumentGroup>
 	<Project ID = "123.456.1.123.123" Name = "Stress Response Pathway" Description = "">

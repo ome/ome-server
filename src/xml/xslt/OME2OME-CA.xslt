@@ -1,7 +1,7 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<xsl:transform xmlns:xsl = "http://www.w3.org/1999/XSL/Transform" version = "1.0" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance">
+<xsl:transform xmlns:xsl = "http://www.w3.org/1999/XSL/Transform" version = "1.0" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd">
 	<xsl:template match = "OME:OME">
-		<xsl:element name = "OME">
+		<xsl:element name = "OME" namespace = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 			<xsl:attribute name = "schemaLocation">
 				<xsl:value-of select = "@xsi:schemaLocation"/>
 			</xsl:attribute>
@@ -29,7 +29,6 @@
 			</xsl:element>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Project -->
 	<xsl:template match = "OME:Project">
 		<xsl:element name = "Project">
@@ -46,7 +45,6 @@
 			<xsl:apply-templates select = "OME:GroupRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Dataset -->
 	<xsl:template match = "OME:Dataset">
 		<xsl:element name = "Dataset">
@@ -67,7 +65,6 @@
 			<xsl:apply-templates select = "OME:ProjectRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Image and the required Dimensions Image attribute -->
 	<xsl:template match = "OME:Image">
 		<xsl:element name = "Image">
@@ -140,23 +137,20 @@
 			</xsl:element>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Image attributes -->
-
+	
 	<!-- ExperimentRef -->
 	<xsl:template match = "OME:Image/OME:ExperimentRef">
 		<xsl:element name = "ImageExperiment">
 			<xsl:apply-templates select = "." mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- GroupRef -->
 	<xsl:template match = "OME:Image/OME:GroupRef">
 		<xsl:element name = "ImageGroup">
 			<xsl:apply-templates select = "." mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- InstrumentRef -->
 	<xsl:template match = "OME:Image/OME:InstrumentRef">
 		<xsl:element name = "ImageInstrument">
@@ -168,17 +162,14 @@
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- ImagingEnvironment -->
 	<xsl:template match = "OME:Image/OME:ImagingEnvironment">
 		<xsl:apply-templates select = "." mode = "E2A-Refs"/>
 	</xsl:template>
-
 	<!-- Thumbnail -->
 	<xsl:template match = "OME:Image/OME:Thumbnail">
 		<xsl:apply-templates select = "." mode = "E2A-Refs"/>
 	</xsl:template>
-
 	<!-- ChannelComponent -->
 	<xsl:template match = "OME:ChannelInfo/OME:ChannelComponent">
 		<xsl:element name = "ChannelComponent">
@@ -198,7 +189,6 @@
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- ChannelInfo -->
 	<xsl:template match = "OME:Image/OME:ChannelInfo">
 		<xsl:element name = "LogicalChannel">
@@ -275,7 +265,6 @@
 		</xsl:element>
 		<xsl:apply-templates select = "OME:ChannelComponent"/>
 	</xsl:template>
-
 	<!-- DisplayOptions - DisplayChannels -->
 	<xsl:template match = "OME:DisplayOptions/*" mode = "MakeDisplayChannel">
 		<xsl:element name = "DisplayChannel">
@@ -296,7 +285,6 @@
 			</xsl:attribute>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- DisplayOptions -->
 	<xsl:template match = "OME:DisplayOptions">
 		<xsl:element name = "DisplayOptions">
@@ -360,7 +348,6 @@
 		<xsl:apply-templates select = "OME:GreyChannel" mode = "MakeDisplayChannel"/>
 		<xsl:apply-templates select = "OME:ROI"/>
 	</xsl:template>
-
 	<!-- DisplayOptions - ROI -->
 	<xsl:template match = "OME:DisplayOptions/OME:ROI">
 		<xsl:element name = "DisplayROI">
@@ -398,7 +385,6 @@
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- PlateRef -->
 	<xsl:template match = "OME:Image/OME:PlateRef">
 		<xsl:element name = "ImagePlate">
@@ -411,7 +397,6 @@
 			<xsl:apply-templates select = "." mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- StageLabel -->
 	<xsl:template match = "OME:StageLabel">
 		<xsl:element name = "StageLabel">
@@ -429,8 +414,8 @@
 			</xsl:attribute>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Pixels -->
+	
 	<!--xsl:template match = "OME:Pixels">
 		<xsl:element name = "Pixels">
 			<xsl:attribute name = "ID">
@@ -458,15 +443,13 @@
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template-->
-
-
+	
 	<!--
 
 		Global Attributes
 
 	-->
-
-
+	
 	<!-- Experimenter -->
 	<xsl:template match = "OME:Experimenter">
 		<xsl:element name = "Experimenter">
@@ -491,7 +474,6 @@
 			<xsl:apply-templates select = "OME:GroupRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Group -->
 	<xsl:template match = "OME:Group">
 		<xsl:element name = "Group">
@@ -519,7 +501,6 @@
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Experiment -->
 	<xsl:template match = "OME:Experiment">
 		<xsl:element name = "Experiment">
@@ -535,7 +516,6 @@
 			<xsl:apply-templates select = "OME:ExperimenterRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument -->
 	<xsl:template match = "OME:Instrument">
 		<xsl:element name = "Instrument">
@@ -561,7 +541,6 @@
 		<xsl:apply-templates select = "OME:Filter"/>
 		<xsl:apply-templates select = "OME:OTF"/>
 	</xsl:template>
-
 	<!-- Instrument - LightSource -->
 	<xsl:template match = "OME:Instrument/OME:LightSource">
 		<xsl:element name = "LightSource">
@@ -583,7 +562,6 @@
 		<xsl:apply-templates select = "OME:Filament"/>
 		<xsl:apply-templates select = "OME:Arc"/>
 	</xsl:template>
-
 	<!-- LightSource - Laser -->
 	<xsl:template match = "OME:LightSource/OME:Laser">
 		<xsl:element name = "Laser">
@@ -619,7 +597,6 @@
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- LightSource - Filament -->
 	<xsl:template match = "OME:LightSource/OME:Filament">
 		<xsl:element name = "Filament">
@@ -632,7 +609,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- LightSource - Arc -->
 	<xsl:template match = "OME:LightSource/OME:Arc">
 		<xsl:element name = "Arc">
@@ -645,7 +621,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument - Dectector -->
 	<xsl:template match = "OME:Instrument/OME:Detector">
 		<xsl:element name = "Detector">
@@ -676,7 +651,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument - Objective -->
 	<xsl:template match = "OME:Instrument/OME:Objective">
 		<xsl:element name = "Objective">
@@ -701,7 +675,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument - Filter -->
 	<xsl:template match = "OME:Instrument/OME:Filter">
 		<xsl:element name = "Filter">
@@ -715,7 +688,6 @@
 		<xsl:apply-templates select = "OME:EmFilter"/>
 		<xsl:apply-templates select = "OME:FilterSet"/>
 	</xsl:template>
-
 	<!-- Instrument - Filter - ExFilter -->
 	<xsl:template match = "OME:Instrument/OME:Filter/OME:ExFilter">
 		<xsl:element name = "ExcitationFilter">
@@ -734,7 +706,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument - Filter - Dichroic -->
 	<xsl:template match = "OME:Instrument/OME:Filter/OME:Dichroic">
 		<xsl:element name = "Dichroic">
@@ -750,7 +721,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument - Filter - EmFilter -->
 	<xsl:template match = "OME:Instrument/OME:Filter/OME:EmFilter">
 		<xsl:element name = "EmissionFilter">
@@ -769,7 +739,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument - Filter - FilterSet -->
 	<xsl:template match = "OME:Instrument/OME:Filter/OME:FilterSet">
 		<xsl:element name = "FilterSet">
@@ -785,7 +754,6 @@
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Instrument - OTF -->
 	<xsl:template match = "OME:Instrument/OME:OTF">
 		<xsl:element name = "OpticalTransferFunction">
@@ -809,7 +777,6 @@
 			<xsl:apply-templates select = "OME:FilterRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Screen -->
 	<xsl:template match = "OME:Screen">
 		<xsl:element name = "Screen">
@@ -827,7 +794,6 @@
 			</xsl:attribute>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Plate -->
 	<xsl:template match = "OME:Plate">
 		<xsl:element name = "Plate">
@@ -843,13 +809,12 @@
 			<xsl:apply-templates select = "OME:ScreenRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!--
 
 		Utility Templates
 
 	-->
-
+	
 	<!--
 		A general template to convert child elements and attributes to attributes
 		and also deal with references
@@ -860,7 +825,6 @@
 			<xsl:apply-templates select = "*[substring(name(),string-length(name())-2,3) = 'Ref']" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
-
 	<!--
 		A utility template to convert child elements and attributes to attributes.
 		Does not deal with grand-child elements correctly
@@ -886,7 +850,6 @@
 			</xsl:attribute>
 		</xsl:for-each>
 	</xsl:template>
-	
 	<!-- A utility template to make a reference to a parent element -->
 	<xsl:template match = "*" mode = "MakeParentRef">
 		<xsl:apply-templates select = ".." mode = "MakeRefs">
@@ -895,10 +858,9 @@
 			</xsl:with-param>
 		</xsl:apply-templates>
 	</xsl:template>
-
 	<!-- A utility template to make references -->
 	<xsl:template match = "*" mode = "MakeRefs">
-	<!--
+		<!--
 		By default, $Name is composed of the element name minus its last three letters
 		(i.e. ExperimenterRef element will set $Name to 'Experimenter'.
 		By default, $ReferenceTo is composed of the $Name  with 'ID' tacked on to the end.
@@ -920,7 +882,6 @@
 			</xsl:if>
 		</xsl:element>
 	</xsl:template>
-
 	<!-- Convert PixelTypes to BitsPerPixel -->
 	<xsl:template name = "PixelType2BitsPerPixel">
 		<xsl:param name = "PixelType" select = "string()"/>
@@ -960,12 +921,10 @@
 			</xsl:when>
 		</xsl:choose>
 	</xsl:template>
-
 	<!-- This just prints out the names of whatever nodes it gets -->
 	<xsl:template match = "*" mode = "print">
 		<xsl:value-of select = "name()"/>
 	</xsl:template>
-
 	<!-- This copies whatever nodes it gets -->
 	<xsl:template match = "*" mode = "copy">
 		<xsl:copy/>
