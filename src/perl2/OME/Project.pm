@@ -125,6 +125,7 @@ __PACKAGE__->addColumn(view => 'view',{SQLType => 'varchar(64)'});
 __PACKAGE__->hasMany('dataset_links','OME::Project::DatasetMap','project');
 __PACKAGE__->manyToMany('datasets',
                         'OME::Project::DatasetMap','project','dataset');
+__PACKAGE__->addACL({user => 'owner_id',group => 'group_id'});
 
 
 sub unlockedDatasets {
