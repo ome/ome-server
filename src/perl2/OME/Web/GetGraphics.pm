@@ -376,6 +376,7 @@ ENDSVG
 # dynamic initialization of JS objects goes here:
 $SVG .= <<ENDSVG;
 	// global variables
+		var svgns = "http://www.w3.org/2000/svg";
 		var azap = new AntiZoomAndPan();
 
 		// visualization & logic objects
@@ -403,7 +404,8 @@ $SVG .= <<ENDSVG;
 			image = new OMEimage($imageID, $imageName, $pixelsID, Stats, $Dims, $ImageServerURL,
 			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB,
 			                     $imageServerID, $theZ, $theT);
-			image.realize( svgDocument.getElementById("image") );
+			var imageBox = svgDocument.getElementById("image");
+			image.realize( imageBox );
 			
 			// set up windows
 			var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
@@ -429,7 +431,10 @@ ENDSVG
 # insert centroid data
 if( $centroidData ) {
 $SVG .= <<ENDSVG;
-			var overlayBox  = svgDocument.getElementById("overlays");
+			var overlayBox  = svgDocument.createElementNS (svgns, "g");
+			overlayBox.setAttribute ("id", "overlays");
+			imageBox.appendChild (overlayBox);
+
 			centroids = new CentroidOverlay( $centroidData );
 			overlayBox.appendChild( centroids.makeOverlay() );
 			overlayManager = new OverlayManager( image, overlayBox );
@@ -490,8 +495,6 @@ $SVG .= <<ENDSVG;
 		<rect width="100%" height="100%" fill="blue" opacity="0"/>	
 	</g>
 	<g id="image">
-	</g>
-	<g id="overlays">
 	</g>
 	<g id="toolboxLayer">
 	</g>
