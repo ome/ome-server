@@ -43,9 +43,8 @@ my $matlab_user;
 
 if (scalar(@ARGV) >= 1) {
 	$matlab_user = shift(@ARGV);
-	if ($EUID ne 0) {
-		die "If you want to pass a matlab_user, you must run the makefile as root"
-	}
+	die "You must run the makefile as root to pass it a matlab_user" 
+		if ($EUID ne 0);
 }
 if (scalar(@ARGV) >= 2) {
 	$matlab_path = shift(@ARGV);
@@ -59,24 +58,25 @@ $matlab_path = $path_test;
 
 # Execute matlab with a -n flag to get the ARCH and MATLAB variables.
 my ($matlab_dir, $matlab_arch, $matlab_vers);
-foreach (`$matlab_path -n`) {
+my @outputs = `$matlab_path -n`;
+foreach (@outputs) {
 	$matlab_arch = $1 if $_ =~ /\s+ARCH\s+=\s+(.+)$/;
 	$matlab_dir  = $1 if $_ =~ /\s+MATLAB\s+=\s(.+)$/;
 }
+die "Could not find matlab architecture.\n@outputs" unless $matlab_arch;
+die "Could not find matlab home.\n@outputs" unless $matlab_dir;
 
-# Execute matlab with the proper user to figure out MATLAB version
+# Execute matlab as the proper user to figure out MATLAB version
 if (defined $matlab_user) {
-	foreach (`su $matlab_user -c '$matlab_path -nojvm -r quit'`) {
-		$matlab_vers = $1 if $_ =~ /^\s*Version\s*(\S+)\s+/;
-	}
+	@outputs = `su $matlab_user -c '$matlab_path -nojvm -r quit'`; 
 } else {
-	foreach (`$matlab_path -nojvm -r quit`) {
-		$matlab_vers = $1 if $_ =~ /^\s*Version\s*(\S+)\s+/;
-	}
+	@outputs = `$matlab_path -nojvm -r quit`; 
 }
-die "Could not find matlab architecture." unless $matlab_arch;
-die "Could not find matlab home." unless $matlab_dir;
-die "Could not find matlab version." unless $matlab_vers;
+
+foreach (@outputs) {
+	$matlab_vers = $1 if $_ =~ /^\s*Version\s*(\S+)\s+/;
+}
+die "Could not find matlab version.\n@outputs" unless $matlab_vers;
 
 # Figure out the required Matlab lib and includes, this varies version to version
 # and architecture to architecture
