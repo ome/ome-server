@@ -35,15 +35,9 @@ var svgns = "http://www.w3.org/2000/svg";
 ********************************************************************************************/
 
 /*****
-
 	constructor
-		image = OMEimage
-		updateBlack = function for black slider to call
-		updateWhite = function for white slider to call
-		waveChagne = function for wave popuplist to call
-		
-	tested
-
+		featureData = associative array of field_name: value pairs to display.
+		  id must be one of the fields specified.
 *****/
 function FeatureInfo(featureData) {
 	this.init( featureData );
