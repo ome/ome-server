@@ -10,8 +10,8 @@
   xmlns:STD=
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
@@ -118,28 +118,43 @@
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule ModuleName = "Fast Stack statistics" 
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_fastStats" 
-	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_fastStats">
+	<Description>Calculate pixel statistics for each XYZ Stack.</Description>
 	<Declaration>
-		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = "" Count="!"/>
-		<FormalInput Name = "PlaneMinimum" SemanticTypeName = "PlaneMinimum" Description = "" Count="+"/>
-		<FormalInput Name = "PlaneMaximum" SemanticTypeName = "PlaneMaximum" Description = "" Count="+"/>
-		<FormalInput Name = "PlaneSum_i" SemanticTypeName = "PlaneSum_i" Description = "" Count="+"/>
-		<FormalInput Name = "PlaneSum_i2" SemanticTypeName = "PlaneSum_i2" Description = "" Count="+"/>
-		<FormalInput Name = "PlaneSum_log_i" SemanticTypeName = "PlaneSum_log_i" Description = "" Count="+"/>
-		<FormalInput Name = "PlaneSum_Xi" SemanticTypeName = "PlaneSum_Xi" Description = "" Count="+"/>
-		<FormalInput Name = "PlaneSum_Yi" SemanticTypeName = "PlaneSum_Yi" Description = "" Count="+"/>
-		<FormalInput Name = "PlaneSum_Zi" SemanticTypeName = "PlaneSum_Zi" Description = "" Count="+"/>
-		<FormalOutput Name = "Minima"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Maxima"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Mean"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Geomean"   SemanticTypeName = "StackGeometricMean"   Description = "Geometric mean of pixel intensities in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Sigma"     SemanticTypeName = "StackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Centroids" SemanticTypeName = "StackCentroid" Description = "x, in pixels, of center of intensity for the stack" Count="+"/>
+		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Count="!"/>
+		<FormalInput Name = "PlaneMinimum" SemanticTypeName = "PlaneMinimum" Count="+"/>
+		<FormalInput Name = "PlaneMaximum" SemanticTypeName = "PlaneMaximum" Count="+"/>
+		<FormalInput Name = "PlaneSum_i" SemanticTypeName = "PlaneSum_i" Count="+"/>
+		<FormalInput Name = "PlaneSum_i2" SemanticTypeName = "PlaneSum_i2" Count="+"/>
+		<FormalInput Name = "PlaneSum_log_i" SemanticTypeName = "PlaneSum_log_i" Count="+"/>
+		<FormalInput Name = "PlaneSum_Xi" SemanticTypeName = "PlaneSum_Xi" Count="+"/>
+		<FormalInput Name = "PlaneSum_Yi" SemanticTypeName = "PlaneSum_Yi" Count="+"/>
+		<FormalInput Name = "PlaneSum_Zi" SemanticTypeName = "PlaneSum_Zi" Count="+"/>
+		<FormalOutput Name = "Minima"   SemanticTypeName = "StackMinimum" Count="+">
+			<Description>Minimum pixel intensity in an XYZ stack</Description>
+		</FormalOutput>
+		<FormalOutput Name = "Maxima" SemanticTypeName = "StackMaximum" Count="+">
+			<Description>Maximum pixel intensity in an XYZ stack</Description>
+		</FormalOutput>
+		<FormalOutput Name = "Mean" SemanticTypeName = "StackMean" Count="+">
+			<Description>Mean of pixel intensities in an XYZ stack</Description>
+		</FormalOutput>
+		<FormalOutput Name = "Geomean" SemanticTypeName = "StackGeometricMean" Count="+">
+			<Description>Geometric mean of pixel intensities in an XYZ stack</Description>
+		</FormalOutput>
+		<FormalOutput Name = "Sigma" SemanticTypeName = "StackSigma" Count="+">
+			<Description>Standard deviation of pixel intensities in an XYZ stack</Description>
+		</FormalOutput>
+		<FormalOutput Name = "Centroids" SemanticTypeName = "StackCentroid" Count="+">
+			<Description>x, in pixels, of center of intensity for the stack</Description>
+		</FormalOutput>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
-		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
+		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="
+			http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd
+			http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
 		<CommandLine>
 			<InputSubString>
 				<RawText> Dims=</RawText>
