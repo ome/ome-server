@@ -351,6 +351,42 @@ $mxUINT64_CLASS = __mxUINT64_CLASS();
 $mxFUNCTION_CLASS = __mxFUNCTION_CLASS();
 
 package OME::Matlab::Array;
+require Exporter;
+
+our @EXPORT = qw(printArray
+		scalar
+		makePersistent
+		);
+our @ISA = qw(Exporter);
+
+
+
+sub print {
+    my $array = shift;
+    print "  Perl: $array\n";
+    print "    Class:  ",$array->class_name(),"\n";
+    print "    Order:  ",$array->order(),"\n";
+    print "    Dims:   ",join('x',@{$array->dimensions()}),"\n";
+    if ($array->is_numeric() || $array->is_logical()) {
+        print "    Values: (",join(',',@{$array->getAll()}),")\n";
+	}
+	if ($array->is_char()){
+		print "    Value: '",$array->getString(),"'\n";
+	}
+}
+
+# returns the first value of the array
+sub scalar {
+	my $array = shift;
+	
+	if ($array->is_numeric() || $array->is_logical()) {
+		return $array->getAll()->[0];
+	}
+	if ($array->is_char()){
+		return $array->getString();
+	}
+	return undef;
+}
 
 sub makePersistent {
     my ($self,$persistent) = shift;
