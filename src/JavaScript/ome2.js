@@ -61,7 +61,7 @@ InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::ManageDataset&Popup=1';
 function openExistingDataset (group_id) {
 	window.open(
 		InfoDatasetPage + '&UsergpID=' + group_id,
-		'ExistingDataset',
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
@@ -71,7 +71,7 @@ function openExistingDataset (group_id) {
 function openExistingProject (group_id) {
 	window.open(
 		InfoProjectPage + '&UsergpID=' + group_id,
-		'ExistingProject',
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
@@ -80,7 +80,7 @@ function openExistingProject (group_id) {
 
 function openInfoDataset (dataset_id) {
 	window.open(DatasetInfoPage + '&DatasetID=' + dataset_id,
-		'InfoDataset',
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
@@ -89,7 +89,7 @@ function openInfoDataset (dataset_id) {
 
 function openInfoProject (project_id) {
 	window.open(ProjectInfoPage + '&ProjectID=' + project_id,
-		'InfoProject',
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
@@ -98,7 +98,7 @@ function openInfoProject (project_id) {
 
 function openInfoDatasetImport (dataset_id) {
 	window.open(DatasetInfoPage + '&DatasetID=' + dataset_id,
-		'InfoDatasetImport',
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
 }
@@ -107,7 +107,7 @@ function openInfoDatasetImport (dataset_id) {
 
 function openPopUpDataset (dataset_id) {
 	window.open(GetGraphicsPage + '&DatasetID=' + dataset_id,
-		'DatasetViewer',
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
 }
@@ -117,6 +117,6 @@ function openPopUpDataset (dataset_id) {
 
 function openPopUpImage (image_id) {
 	window.open(GetGraphicsPage + '&ImageID=' + image_id,
-		'ImageViewer',
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500');
 }
