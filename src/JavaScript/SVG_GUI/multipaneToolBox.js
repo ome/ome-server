@@ -1,14 +1,39 @@
 /*****
 *    
 *   multipaneToolBox.js
+
+
+
+	Copyright (C) 2003 Open Microscopy Environment
+		Massachusetts Institute of Technology,
+		National Institutes of Health,
+		University of Dundee
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+
+	Written by: Josiah Johnston <siah@nih.gov>
+	
+				
 *     external file dependencies: widget.js, toolBox.js
 *     Known bugs:
 *       bug #1:
 *          Attempting to unhide the GUIbox while it is hiding causes
 *       it to turn invisible. It can be made visible by hiding and unhiding 
 *       it again.
-*     Author: Josiah Johnston
-*     email: siah@nih.gov
 *
 *****/
 
@@ -28,15 +53,13 @@ multipaneToolBox.superclass = toolBox.prototype;
 *   Class variables
 *
 *****/
-multipaneToolBox.VERSION = 1.0;
+multipaneToolBox.VERSION = .2;
 
 
 
-/********************************************************************************************/
-/********************************************************************************************/
-/*************************** Functions open to the world ************************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                 Public Functions 
+********************************************************************************************/
 
 
 /*****
@@ -61,14 +84,10 @@ function multipaneToolBox(x,y,width,height,menuBarText,hideControlText,GUIboxTex
 }
 
 /*****
-
 	updateLabel(val)
 		will automatically update the label if turned on
 		val == true ? turn on : turn off
 		Don't call this before calling realize.
-	
-	tested
-	
 *****/
 multipaneToolBox.prototype.updateLabel = function(val) {
 	// has realization occured?
@@ -85,7 +104,6 @@ multipaneToolBox.prototype.updateLabel = function(val) {
 }
 
 /*****
-
 	addPane( newPane, name )
 		adds a single pane to GUIboxContainer, a grand parent of GUIbox that is not subject
 		to clipping
@@ -93,9 +111,6 @@ multipaneToolBox.prototype.updateLabel = function(val) {
 		name is optional. If given, you may refer to the pane by name instead of number.
 		if called without any parameters, it will make a new empty pane
 		returns index to newPane
-	
-	tested
-
 *****/
 multipaneToolBox.prototype.addPane = function(newPane, name) {
 	var i = ( name ? name : this.panes.length )
@@ -114,14 +129,10 @@ multipaneToolBox.prototype.addPane = function(newPane, name) {
 }
 
 /*****
-
 	addPanes( newPanes )
 		adds multiple panes at once
 		newPanes is an array of SVG nodes
 		returns array of indexes to panes
-		
-	tested
-	
 *****/
 multipaneToolBox.prototype.addPanes = function(newPanes) {
 	var indexes = new Array();
@@ -131,29 +142,21 @@ multipaneToolBox.prototype.addPanes = function(newPanes) {
 }
 
 /*****
-
 	addPaneText( paneText, name )
 		adds a pane, makes content from SVG text
 		paneText is the pane content as SVG tags
 		name is optional. If given, you may refer to the pane by name instead of number.
 		returns index to newPane
-		
-	tested
-	
 *****/
 multipaneToolBox.prototype.addPaneText = function( paneText, name ) {
 	return this.addPane( this.textToSVG( paneText ), name );
 }
 
 /*****
-
 	addPanesText( paneTextArray )
 		adds multiple panes, makes content from SVG text
 		paneTextArray is an array of SVG tags
 		returns array of indexes to panes
-		
-	tested
-	
 *****/
 multipaneToolBox.prototype.addPanesText = function( paneTextArray ) {
 	var indexes = new Array();
@@ -163,14 +166,10 @@ multipaneToolBox.prototype.addPanesText = function( paneTextArray ) {
 }
 
 /*****
-
 	changePane(paneIndex)
 		changes displayed pane to paneIndex
 		returns pane if successful
-		returns null if unsuccessful
-		
-	tested
-	
+		returns null if unsuccessful	
 *****/
 multipaneToolBox.prototype.changePane = function(paneIndex) {
 	if(this.panes[paneIndex]) {
@@ -208,12 +207,8 @@ multipaneToolBox.prototype.changePane = function(paneIndex) {
 }
 
 /*****
-
 	getPaneIndexes()
 		returns a complete list of pane indexes
-		
-	tested
-	
 *****/
 multipaneToolBox.prototype.getPaneIndexes = function() {
 	var paneIndexes = new Array();
@@ -223,30 +218,18 @@ multipaneToolBox.prototype.getPaneIndexes = function() {
 }
 
 /*****
-
 	getPane(index)
-		returns the pane pointed to by index if index is valid
-	
-	comprehensively tested
-	
+		returns the pane pointed to by index if index is valid	
 *****/
 multipaneToolBox.prototype.getPane = function(index) {
 	if(this.panes != null)
 		return this.panes[index];
 }
 
-/********************************************************************************************/
-/********************************************************************************************/
-/************************** Functions without safety nets ***********************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                 Private Functions 
+********************************************************************************************/
 
-
-/*****
-*
-*   init
-*
-*****/
 multipaneToolBox.prototype.init = function( x, y, width, height, menuBarText,
 		hideControlText, GUIboxText) {
 	// call superclass method
@@ -256,11 +239,7 @@ multipaneToolBox.prototype.init = function( x, y, width, height, menuBarText,
 	this.currentDisplay = null;
 }
 
-/*****
 
-	buildSVG()
-
-*****/
 multipaneToolBox.prototype.buildSVG = function() {
 	// call superclass method
 	multipaneToolBox.superclass.buildSVG.call(this);
