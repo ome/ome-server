@@ -46,7 +46,12 @@
       <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
       <Element Name="Sigma" DBLocation="STACK_STATISTICS.SIGMA" DataType="float"/>
     </SemanticType>
-    <SemanticType Name="StackMinimum" AppliesTo="I">
+    <SemanticType Name="StackGeometricSigma" AppliesTo="I">
+      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="GeometricSigma" DBLocation="STACK_STATISTICS.GEOSIGMA" DataType="float"/>
+    </SemanticType>
+     <SemanticType Name="StackMinimum" AppliesTo="I">
       <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
       <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
       <Element Name="Minimum" DBLocation="STACK_STATISTICS.MINIMUM" DataType="integer"/>
@@ -83,6 +88,9 @@
         </FormalOutput>
         <FormalOutput Name="Sigma" SemanticTypeName="StackSigma" Count="+">
           <Description>Standard deviation of pixel intensities in an XYZ stack</Description>
+        </FormalOutput>
+	  <FormalOutput Name="Geosigma" SemanticTypeName="StackGeometricSigma" Count="+">
+          <Description>Standard Geometric deviation of pixel intensities in an XYZ stack i.e. distance between point and geometric mean</Description>
         </FormalOutput>
         <FormalOutput Name="Centroid" SemanticTypeName="StackCentroid" Count="+">
           <Description>x, in pixels, of center of intensity for the stack</Description>
@@ -143,7 +151,7 @@
           </OutputRecord>
           <OutputRecord>
 <!-- This reads a line of output & repeats until it has reached the end of the stream. -->
-            <pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+            <pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
             <Output AccessBy="1">
               <OutputTo Location="Minima.TheC"/>
               <OutputTo Location="Maxima.TheC"/>
@@ -151,6 +159,7 @@
               <OutputTo Location="Geomean.TheC"/>
               <OutputTo Location="Sigma.TheC"/>
               <OutputTo Location="Centroid.TheC"/>
+		  <OutputTo Location="Geosigma.TheC"/>
             </Output>
             <Output AccessBy="2">
               <OutputTo Location="Minima.TheT"/>
@@ -159,6 +168,7 @@
               <OutputTo Location="Geomean.TheT"/>
               <OutputTo Location="Sigma.TheT"/>
               <OutputTo Location="Centroid.TheT"/>
+		  <OutputTo Location="Geosigma.TheT"/>
             </Output>
             <Output AccessBy="3">
               <OutputTo Location="Minima.Minimum"/>
@@ -183,6 +193,9 @@
             </Output>
             <Output AccessBy="10">
               <OutputTo Location="Centroid.Z"/>
+            </Output>
+		<Output AccessBy="11">
+              <OutputTo Location="Geosigma.GeometricSigma"/>
             </Output>
           </OutputRecord>
         </STDOUT>
