@@ -7,3 +7,6 @@ update semantic_elements set name='ImageServerID' where
 	semantic_elements.name='PixelsID' and
 	semantic_elements.semantic_type_id=semantic_types.semantic_type_id and
 	semantic_types.name='Pixels';
+UPDATE pg_attribute SET attnotnull = FALSE WHERE
+	attname = 'path' AND
+		attrelid = ( SELECT oid FROM pg_class WHERE relname = 'repositories') ;
