@@ -5,7 +5,7 @@
 	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
-	xmlns:AML = "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+	xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 
 	<!-- Pass everything through that doesn't match the defined OME namspace -->
@@ -14,7 +14,6 @@
 	</xsl:template>
 	<xsl:template match = "OME:OME">
 		<xsl:element name = "OME" namespace = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
-			xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 			xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd">
 			<xsl:attribute name = "xsi:schemaLocation">
 				<xsl:value-of select = "@xsi:schemaLocation"/>
@@ -25,21 +24,18 @@
 			<xsl:apply-templates select = "OME:Dataset"/>
 			<xsl:apply-templates select = "OME:Image"/>
 			<xsl:apply-templates select = "OME:CustomAttributes"/>
-		</xsl:element>
-	</xsl:template>
-	<xsl:template match = "OME:CustomAttributes">
-		<xsl:element name = "CustomAttributes">
-			<!-- Copy descendants of CustomAttributes in the original document -->
-			<xsl:copy-of select = "OME:CustomAttributes/*"/>
-			<!-- Apply templates to children of OME excluding CustomAttributes and DocumentGroup (need to exclude STD and AML also) NOT TESTED! -->
+
+			<xsl:element name = "CustomAttributes">
+				<xsl:apply-templates select = "OME:Experimenter"/>
+				<xsl:apply-templates select = "OME:Group"/>
+				<xsl:apply-templates select = "OME:Experiment"/>
+				<xsl:apply-templates select = "OME:Instrument"/>
+				<xsl:apply-templates select = "OME:Plate"/>
+				<xsl:apply-templates select = "OME:Screen"/>
+			</xsl:element>
 			
-			<!--xsl:apply-templates select = "*[name() != 'CustomAttributes'][name() != 'DocumentGroup']" mode = "Convert2CA"/-->
-			<xsl:apply-templates select = "OME:Experimenter"/>
-			<xsl:apply-templates select = "OME:Group"/>
-			<xsl:apply-templates select = "OME:Experiment"/>
-			<xsl:apply-templates select = "OME:Instrument"/>
-			<xsl:apply-templates select = "OME:Plate"/>
-			<xsl:apply-templates select = "OME:Screen"/>
+			<xsl:apply-templates select = "STD:*"/>
+			<xsl:apply-templates select = "AML:*"/>
 		</xsl:element>
 	</xsl:template>
 	<!-- Project -->

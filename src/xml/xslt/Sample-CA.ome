@@ -4,45 +4,44 @@
   <Dataset ID="urn:lsid:foo.bar.com:Dataset:123456" Name="Controls" Locked="true" Experimenter="urn:lsid:foo.bar.com:Experimenter:123456" Group="urn:lsid:foo.bar.com:Group:123456">
     <ProjectRef ID="urn:lsid:foo.bar.com:Project:123456"/>
   </Dataset>
-  <Image ID="urn:lsid:foo.bar.com:Image:123456" Name="P1W1S1" CreationDate="1988-04-07T18:39:09" Description="This is an Image">
+  <Image ID="urn:lsid:foo.bar.com:Image:123456" Name="P1W1S1" CreationDate="1988-04-07T18:39:09" Experimenter="urn:lsid:foo.bar.com:Experimenter:123456" Group="urn:lsid:foo.bar.com:Group:123456" DefaultPixels="" Description="This is an Image">
     <DatasetRef ID="urn:lsid:foo.bar.com:Dataset:123456"/>
     <CustomAttributes>
-      <Dimensions PixelSizeX="0.2" PixelSizeY="0.2" PixelSizeZ="0.2" PixelSizeC="" PixelSizeT=""/>
-      <ImageExperiment Experiment="urn:lsid:foo.bar.com:Experiment:123456"/>
-      <ImageGroup Group="urn:lsid:foo.bar.com:Group:123456"/>
-      <ImageInstrument Instrument="urn:lsid:foo.bar.com:Instrument:123456" Objective="urn:lsid:foo.bar.com:Objective:123456"/>
-      <ImagingEnvironment Temperature=".1" AirPressure=".1" Humidity=".2" CO2Percent=".3"/>
-      <Thumbnail href="http://ome.nia.gov/GetThumbnail?ID=urn:lsid:foo.bar.com:Image:123456" MIMEtype="image/jpeg"/>
-      <LogicalChannel ID="id41054" Name="Channel 1" SamplesPerPixel="" LightAttenuation="" LightWavelength="" DetectorOffset="" IlluminationType="" PinholeSize="" PhotometricInterpretation="" Mode="" ContrastMethod="" AuxLightAttenuation="" AuxTechnique="Photobleaching" AuxLightWavelength="" ExcitationWavelength="490" EmissionWavelength="528" Fluor="GFP" NDFilter="0.0" LightSource="urn:lsid:foo.bar.com:LightSource:123456" AuxLightSource="urn:lsid:foo.bar.com:LightSource:123789" OTF="urn:lsid:foo.bar.com:OTF:123456" Detector="urn:lsid:foo.bar.com:Detector:123456" Filter="urn:lsid:foo.bar.com:Filter:123456"/>
-      <ChannelComponent Index="1" LogicalChannel="id41054"/>
-      <DisplayOptions ID="id41111" Zoom="1.0" ColorMap="" ZStart="5" ZStop="10" TStart="1" TStop="3" RedChannel="id41119" GreenChannel="id41133" BlueChannel="id41148"/>
-      <DisplayChannel ID="id41119" ChannelNumber="1" BlackLevel="100" WhiteLevel="2019" Gamma="1.0"/>
-      <DisplayChannel ID="id41133" ChannelNumber="2" BlackLevel="120" WhiteLevel="2020" Gamma="1.0"/>
-      <DisplayChannel ID="id41148" ChannelNumber="3" BlackLevel="130" WhiteLevel="2021" Gamma="1.0"/>
-      <DisplayROI X0="0" Y0="0" Z0="0" X1="512" Y1="512" Z1="0" T0="0" T1="0" DisplayOptions="id41111"/>
-      <StageLabel Name="Zulu" X="123" Y="456" Z="789"/>
-      <ImagePlate Well="A03" Sample="1" Plate="urn:lsid:foo.bar.com:Plate:123456"/>
+      <Dimensions ID="id41917" PixelSizeX="0.2" PixelSizeY="0.2" PixelSizeZ="0.2" PixelSizeC="" PixelSizeT=""/>
+      <ImageExperiment ID="id41951" Experiment="urn:lsid:foo.bar.com:Experiment:123456"/>
+      <ImageInstrument ID="id41970" Instrument="urn:lsid:foo.bar.com:Instrument:123456" Objective="urn:lsid:foo.bar.com:Objective:123456"/>
+      <ImagingEnvironment ID="id41985" Temperature=".1" AirPressure=".1" Humidity=".2" CO2Percent=".3"/>
+      <Thumbnail ID="id41999" href="http://ome.nia.gov/GetThumbnail?ID=urn:lsid:foo.bar.com:Image:123456" MIMEtype="image/jpeg"/>
+      <LogicalChannel ID="urn:lsid:foo.bar.com:LogicalChannel:123456" Name="Channel 1" IlluminationType="foo" AuxTechnique="Photobleaching" ExWave="490" EmWave="528" Fluor="GFP" NDfilter="0.0" LightSource="urn:lsid:foo.bar.com:LightSource:123456" AuxLightSource="urn:lsid:foo.bar.com:LightSource:123789" OTF="urn:lsid:foo.bar.com:OTF:123456" Detector="urn:lsid:foo.bar.com:Detector:123456" Filter="urn:lsid:foo.bar.com:Filter:123456"/>
+      <PixelChannelComponent ID="id42069" Pixels="urn:lsid:foo.bar.com:Pixels:123456" Index="1" ColorDomain="foo" LogicalChannel="urn:lsid:foo.bar.com:LogicalChannel:123456"/>
+      <DisplayOptions ID="urn:lsid:foo.bar.com:DisplayOptions:123456" Zoom="1.0" ZStart="5" ZStop="10" TStart="1" TStop="3" RedChannel="id42092" GreenChannel="id42106" BlueChannel="id42120"/>
+      <DisplayChannel ID="id42092" ChannelNumber="1" BlackLevel="100" WhiteLevel="2019" Gamma="1.0"/>
+      <DisplayChannel ID="id42106" ChannelNumber="2" BlackLevel="120" WhiteLevel="2020" Gamma="1.0"/>
+      <DisplayChannel ID="id42120" ChannelNumber="3" BlackLevel="130" WhiteLevel="2021" Gamma="1.0"/>
+      <DisplayROI ID="id42155" X0="0" Y0="0" Z0="0" X1="512" Y1="512" Z1="0" T0="0" T1="0" DisplayOptions="urn:lsid:foo.bar.com:DisplayOptions:123456"/>
+      <StageLabel ID="id42178" Name="Zulu" X="123" Y="456" Z="789"/>
+      <ImagePlate ID="id42192" Well="A03" Sample="1" Plate="urn:lsid:foo.bar.com:Plate:123456"/>
     </CustomAttributes>
   </Image>
   <CustomAttributes>
     <Experimenter ID="urn:lsid:foo.bar.com:Experimenter:123456" FirstName="Nicola" LastName="Sacco" Email="Nicola.Sacco@justice.net" OMEName="nico"/>
-    <ExperimenterGroup Experimenter="urn:lsid:foo.bar.com:Experimenter:123456" Group="urn:lsid:foo.bar.com:Group:123456"/>
-    <ExperimenterGroup Experimenter="urn:lsid:foo.bar.com:Experimenter:123456" Group="urn:lsid:foo.bar.com:Group:123789"/>
+    <ExperimenterGroup ID="id41691" Experimenter="urn:lsid:foo.bar.com:Experimenter:123456" Group="urn:lsid:foo.bar.com:Group:123456"/>
+    <ExperimenterGroup ID="id41697" Experimenter="urn:lsid:foo.bar.com:Experimenter:123456" Group="urn:lsid:foo.bar.com:Group:123789"/>
     <Group ID="urn:lsid:foo.bar.com:Group:123456" Name="IICBU" Leader="urn:lsid:foo.bar.com:Experimenter:123456" Contact="urn:lsid:foo.bar.com:Experimenter:123456"/>
     <Experiment ID="foo.bar.com:Experiment:123456" Type="Time-lapse" Description="This was an experiment." Experimenter="urn:lsid:foo.bar.com:Experimenter:123456"/>
     <Instrument ID="urn:lsid:foo.bar.com:Instrument:123456" Manufacturer="Zeiss" Model="foo" SerialNumber="bar" Type="Upright"/>
     <LightSource ID="urn:lsid:foo.bar.com:LightSource:123456" Manufacturer="Olympus" Model="WMD Laser" SerialNumber="123skdjhf1234" Instrument="urn:lsid:foo.bar.com:Instrument:123456"/>
-    <Laser Type="Semiconductor" Medium="GaAs" Wavelength="" FrequencyDoubled="" Tunable="" Pulse="" Power="" LightSource="urn:lsid:foo.bar.com:LightSource:123456" Pump="urn:lsid:foo.bar.com:LightSource:123789"/>
+    <Laser ID="id41765" Type="Semiconductor" Medium="GaAs" LightSource="urn:lsid:foo.bar.com:LightSource:123456" Pump="urn:lsid:foo.bar.com:LightSource:123789"/>
     <LightSource ID="urn:lsid:foo.bar.com:LightSource:123123" Manufacturer="Olympus" Model="Realy Bright Lite" SerialNumber="123skdjhf1456" Instrument="urn:lsid:foo.bar.com:Instrument:123456"/>
-    <Arc Type="Hg" Power="" LightSource="urn:lsid:foo.bar.com:LightSource:123123"/>
-    <Detector ID="urn:lsid:foo.bar.com:Detector:123456" Manufacturer="Kodak" Model="Instamatic" SerialNumber="fnuiprf89uh123498" Type="CCD" Gain="" Voltage="" Offset="" Instrument="urn:lsid:foo.bar.com:Instrument:123456"/>
+    <Arc ID="id41798" Type="Hg" LightSource="urn:lsid:foo.bar.com:LightSource:123123"/>
+    <Detector ID="urn:lsid:foo.bar.com:Detector:123456" Manufacturer="Kodak" Model="Instamatic" SerialNumber="fnuiprf89uh123498" Type="CCD" Instrument="urn:lsid:foo.bar.com:Instrument:123456"/>
     <Objective ID="urn:lsid:foo.bar.com:Objective:123456" Manufacturer="Olympus" Model="SPlanL" SerialNumber="456anxcoas123" LensNA="2.4" Magnification="40.0" Instrument="urn:lsid:foo.bar.com:Instrument:123456"/>
     <Filter ID="urn:lsid:foo.bar.com:Filter:123456" Instrument="urn:lsid:foo.bar.com:Instrument:123456"/>
-    <FilterSet Manufacturer="Omega" Model="SuperGFP" LotNumber="123LJKHG123" Filter="urn:lsid:foo.bar.com:Filter:123456"/>
+    <FilterSet ID="id41856" Manufacturer="Omega" Model="SuperGFP" LotNumber="123LJKHG123" Filter="urn:lsid:foo.bar.com:Filter:123456"/>
     <OpticalTransferFunction ID="urn:lsid:foo.bar.com:OTF:123456" SizeX="512" SizeY="512" PixelType="int8" OpticalAxisAverage="true" Instrument="urn:lsid:foo.bar.com:Instrument:123456" Objective="urn:lsid:foo.bar.com:Objective:123456" Filter="urn:lsid:foo.bar.com:Filter:123456"/>
     <Plate ID="urn:lsid:foo.bar.com:Plate:123456" Name="SRP001" ExternalReference="PID.SRP001"/>
-    <PlateScreen Plate="urn:lsid:foo.bar.com:Plate:123456" Screen="urn:lsid:foo.bar.com:Screen:123456"/>
-    <PlateScreen Plate="urn:lsid:foo.bar.com:Plate:123456" Screen="urn:lsid:foo.bar.com:Screen:123789"/>
+    <PlateScreen ID="id41631" Plate="urn:lsid:foo.bar.com:Plate:123456" Screen="urn:lsid:foo.bar.com:Screen:123456"/>
+    <PlateScreen ID="id41637" Plate="urn:lsid:foo.bar.com:Plate:123456" Screen="urn:lsid:foo.bar.com:Screen:123789"/>
     <Screen ID="urn:lsid:foo.bar.com:Screen:123456" Name="Stress Response Pathway Controls" ExternalReference="SID.SRPC001"/>
   </CustomAttributes>
 </OME>
