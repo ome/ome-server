@@ -116,7 +116,7 @@ sub __parseInstructions {
       if $references_needed;
     my %references;
     foreach my $reference (@references) {
-        $references{$reference->getAttribute('Name')} = 1;
+        $references{$reference->getAttribute('Location')} = 1;
         print "   Ref $reference\n";
     }
     $self->{__references} = \%references;
