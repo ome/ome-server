@@ -173,31 +173,37 @@ sub requireDataTablePackage {
     my $pkg = $self->getDataTablePackage();
     return $pkg 
       if (!$force) && (exists $self->_dataTablePackages()->{$pkg});
-    logdbg "debug", "Loading data table package $pkg";
 
-    logcroak "Malformed class name $pkg"
-      unless $pkg =~ /^\w+(\:\:\w+)*$/;
-
-    my $def = "package $pkg;\n";
-    $def .= q{
-	use strict;
-use OME;
-	our $VERSION = $OME::VERSION;
-
-	use OME::DBObject;
-	use base qw(OME::DBObject);
-    };
-
-    eval $def;
-
-    $pkg->mk_classdata('_data_table');
-    $pkg->_data_table($self);
-    $pkg->newClass();
-
-    my $table = $self->table_name();
-    $pkg->setDefaultTable($table);
-    $pkg->setSequence('attribute_seq');
-    $pkg->addPrimaryKey('attribute_id');
+	if( not exists $self->_dataTablePackages()->{$pkg} ) {
+		logdbg "debug", "Loading data table package $pkg";
+	
+		logcroak "Malformed class name $pkg"
+		  unless $pkg =~ /^\w+(\:\:\w+)*$/;
+	
+		my $def = "package $pkg;\n";
+		$def .= q{
+		use strict;
+		use OME;
+		our $VERSION = $OME::VERSION;
+	
+		use OME::DBObject;
+		use base qw(OME::DBObject);
+		};
+	
+		eval $def;
+	
+		$pkg->mk_classdata('_data_table');
+		$pkg->_data_table($self);
+		$pkg->newClass();
+	
+		my $table = $self->table_name();
+		$pkg->setDefaultTable($table);
+		$pkg->setSequence('attribute_seq');
+		$pkg->addPrimaryKey('attribute_id');
+	} else {
+		logdbg "debug", "Refreshing data table package $pkg";
+	}
+	
     $pkg->addColumn(module_execution => 'module_execution_id',
                     'OME::ModuleExecution',
                     {
@@ -207,12 +213,13 @@ use OME;
                     });
 
     my $columns = $self->data_columns();
+    my $table = $self->table_name();
     while (my $column = $columns->next()) {
         my $name = lc($column->column_name());
         my $type = $column->sql_type();
         my $sql_type = $self->getSQLType($type);
 
-        $pkg->addColumn($name,$name,{SQLType => $sql_type});
+		$pkg->addColumn($name,$name,{SQLType => $sql_type});
     }
 
     my $type = $self->granularity();
