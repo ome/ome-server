@@ -415,6 +415,31 @@ sub getRefToObject {
 	}
 }
 
+=head2 getRelationAccessors
+
+	my %object_relation_accessors = OME::Web::DBObjRender->getRelationAccessors( $object );
+
+$object is an instance of a DBObject or an Attribute.
+
+get an object's has many relations. This may include relations not
+defined with DBObject methods.
+
+%object_relation_accessors is formated { accessor => return_type }
+
+=cut
+
+sub getRelationAccessors {
+	my ($proto,$obj) = @_;
+	my $specializedRenderer;
+	return $specializedRenderer->getRelationAccessors( $obj )
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
+		    $proto eq __PACKAGE__);
+
+	my $relation_accessors = $obj->getPublishedManyRefs();
+	return %$relation_accessors if wantarray;
+	return $relation_accessors;
+}
+
 =head2 getSearchFields
 
 	# get html form elements keyed by field names 
