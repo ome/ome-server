@@ -6,11 +6,11 @@ use Log::Agent;
 
 # This is a 2x speed-up.
 use OME::DBObject;
-	OME::DBObject->Caching(1);
+OME::DBObject->Caching(1);
 
 
 if( ! $ARGV[0] ) {
-	print "Usage is:\n\t perl ExportSession.pl [--file outputFile] [--exportSTDs] [ [All] | [ [User] [Group] [Project] [Dataset] [Images] [Features]] ]\n";
+	print "Usage is:\n\t perl ExportSession.pl [--file outputFile] [--exportSTDs] [ [All] | [ [Global] [User] [Group] [Project] [Dataset] [Images] [Features]] ]\n";
 	exit -1;
 }
 
@@ -25,10 +25,15 @@ my $session = OME::SessionManager->TTYlogin();
 #$session->DBH()->trace(3);
 my $OMEExporter = OME::Tasks::OMEExport->new( session => $session);
 my $file;
-my @objects;
+my @exportObjects;
 my $factory = $session->Factory();
 my $ExportSTDs;
 
+
+my @featureAttributes = $factory->findObjects("OME::AttributeType",granularity => 'F');
+my @datasetAttributes = $factory->findObjects("OME::AttributeType",granularity => 'D');
+my @imageAttributes = $factory->findObjects("OME::AttributeType",granularity => 'I');
+my ($object,$attribute);
 
 for (my $i=0; $i < @ARGV; $i++) {
 	if ($ARGV[$i] eq '--file') {
@@ -41,40 +46,59 @@ for (my $i=0; $i < @ARGV; $i++) {
 	}
 	if ($ARGV[$i] eq 'User' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding User';
-		push (@objects, $session->User());
+		push (@exportObjects, $session->User());
 	}
 	if ($ARGV[$i] eq 'Group' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Group';
-		push (@objects, $session->User()->Group());
+		push (@exportObjects, $session->User()->Group());
 	}
 	if ($ARGV[$i] eq 'Project' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Project';
-		push (@objects, $session->project());
+		push (@exportObjects, $session->project());
 	}
 	if ($ARGV[$i] eq 'Dataset' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Dataset';
-		push (@objects, $session->dataset());
+		push (@exportObjects, $session->dataset());
 	}
 	if ($ARGV[$i] eq 'Images' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Images';
-		push (@objects, $session->dataset()->images());
+		if ($session->dataset()) {
+			my @images = $session->dataset()->images();
+			foreach my $image (@images) {
+				push (@exportObjects, $image);
+				foreach $attribute (@imageAttributes) {
+					my @objects = $factory->findAttributes($attribute->name(),$image->id());
+					if (@objects > 0) {
+						logdbg "debug", "Adding Image attribute '".$attribute->name()."'";
+						push (@exportObjects,@objects);
+					}
+				}
+			}
+		}
 	}
 	if ($ARGV[$i] eq 'Features' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Features';
-		my @images = $session->dataset()->images();
-		foreach (@images) {
-			my @features = $_->all_features();
-			foreach (@features) {
-				logdbg "debug", 'Adding Bounds feature '.$_->id();
-				push (@objects, $factory->findAttributes('Bounds',$_->id()));
-				push (@objects, $factory->findAttributes('Ratio',$_->id()));
+		if ($session->dataset()) {
+			my @images = $session->dataset()->images();
+			foreach my $image (@images) {
+				my @features = $image->all_features();
+				foreach my $feature (@features) {
+					push (@exportObjects, $feature);
+					foreach $attribute (@featureAttributes) {
+						my @objects = $factory->findAttributes($attribute->name(),$feature->id());
+						if (@objects > 0) {
+							logdbg "debug", "Adding Feature attribute '".$attribute->name()."'";
+							push (@exportObjects,@objects);
+						}
+					}
+				}
 			}
 		}
 	}
 }
 
 logdbg "debug", 'Building DOM';
-$OMEExporter->buildDOM (\@objects, ResolveAllRefs => 1, ExportSTDs => $ExportSTDs);
+$OMEExporter->buildDOM (\@exportObjects, ResolveAllRefs => 1, ExportSTDs => $ExportSTDs);
 
 if (defined $file) {
 	logdbg "debug", "Exporting to $file";
