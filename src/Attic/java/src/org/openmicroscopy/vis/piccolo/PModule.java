@@ -53,6 +53,7 @@ import edu.umd.cs.piccolo.util.PNodeFilter;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
 
 import org.openmicroscopy.Module;
+import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
@@ -127,6 +128,8 @@ public class PModule extends PPath implements PBufferedNode {
 	private PLinkTarget inputLinkTarget;
 	private PLinkTarget outputLinkTarget;
 	
+	// the chain node to which this module belongs
+	private Node node=null;
 	
 	/**
 	 * The main constructor 
@@ -554,5 +557,13 @@ public class PModule extends PPath implements PBufferedNode {
 			}
 		};
 		return labelNodes.getAllNodes(outputFilter,null);
+	}
+	
+	public void setNode(Node node) {
+		this.node = node;
+	}
+	
+	public Node getNode() {
+		return node;
 	}
 }
