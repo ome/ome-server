@@ -1,0 +1,81 @@
+# OME/Analysis/Modules/Tests/ImageSignature.pm
+
+#-------------------------------------------------------------------------------
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institute of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#-------------------------------------------------------------------------------
+
+
+
+
+#-------------------------------------------------------------------------------
+#
+# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+#
+#-------------------------------------------------------------------------------
+
+
+package OME::Analysis::Modules::Tests::ImageSignature;
+
+use strict;
+use OME;
+our $VERSION = $OME::VERSION;
+
+use OME::Analysis::Handler;
+use OME::Tasks::ModuleExecutionManager;
+
+use base qw(OME::Analysis::Handler);
+
+sub execute {
+    my ($self,$dependence,$target) = @_;
+    my $factory = OME::Session->instance()->Factory();
+
+    my $mex = $self->getModuleExecution();
+    my $module = $mex->module();
+    my $formal_input = $factory->
+      findObject('OME::Module::FormalInput',
+                 {
+                  module => $module,
+                  name   => 'Pixels',
+                 });
+
+    my $actual_input = $factory->
+      findObject('OME::ModuleExecution::ActualInput',
+                 {
+                  module_execution => $mex,
+                  formal_input     => $formal_input,
+                 });
+    my $input_mex = $actual_input->input_module_execution();
+
+    my $pixelses = OME::Tasks::ModuleExecutionManager->
+      getAttributesForMEX($input_mex,$formal_input->semantic_type());
+
+    $self->newAttributesWithTargets('Signature',
+                                    {
+                                     Value  => $_->id(),
+                                     target => $mex->image(),
+                                    })
+      foreach @$pixelses;
+}
+
+1;
