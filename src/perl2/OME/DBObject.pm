@@ -43,6 +43,14 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+=head1 NAME
+
+OME::DBObject - OME's Object/Relational mapping class
+
+=head1 DESCRIPTION
+
+=cut
+
 use Carp;
 use Class::Data::Inheritable;
 use UNIVERSAL::require;
@@ -87,7 +95,7 @@ __PACKAGE__->Caching(0);
 __PACKAGE__->__classDefined(0);
 
 
-=head1 METHODS
+=head1 METHODS - Caching
 
 =head2 useSeparateCache
 
@@ -224,6 +232,17 @@ sub addPrimaryKey {
 
     # Maintain a list of all the tables this class is stored in.
     $class->__tables()->{$table} = undef;
+
+    # Make an extra, deprecated accessor for the primary key, as long as
+    # there isn't already an alias of this name
+    if (!defined $class->__columns()->{$column}) {
+        my $accessor = sub {
+            return shift->id();
+        };
+
+        no strict 'refs';
+        *{"$class\::$column"} = $accessor;
+    }
 
     return;
 }
