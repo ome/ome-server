@@ -1266,8 +1266,9 @@ sub findModuleHandler {
 
         my $match = 0;
         my $matched_analysis;
-        my @past_analyses = OME::Analysis->
-          search(program_id => $curr_node->program()->id());
+        my @past_analyses = $factory->
+          findObjects("OME::Analysis",
+                      program_id => $curr_node->program()->id());
         my $this_analysis = __getAnalysis($curr_nodeID);
         my $this_analysisID;
         $this_analysisID = $this_analysis->id() if (defined $this_analysis);
