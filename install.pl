@@ -36,6 +36,7 @@ use strict;
 use Getopt::Long;
 use lib qw(src/perl2);
 use Carp;
+use English;
 
 # OME Modules
 require OME::Install::PreInstallTask;
@@ -140,9 +141,16 @@ GetOptions ("f|env-file=s" => \$env_file,   # Environment file
 			"a|check-all" => \$check_all,   # Set $perl_check, $lib_check
 			"i|install" => \$install,       # Default (unused at the moment)
 			"h|help" => \$usage,            # Display help
-	    );
+		);
+
+# Root check
+unless ($EUID == 0) {
+	print STDERR "You must be root (UID 0) in order to install OME.\n";
+	exit(1);
+}
 
 usage () if $usage;
+
 if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
 
 if ($lib_check) {
