@@ -101,7 +101,7 @@ sub new {
 		Struct		=> 'MatlabStruct_to_Attr'
 	};
 
-	# Mapping from Pixel Types to matlab class bindings
+	# Mapping from OME Pixel Types to matlab classes
 	$self->{ _pixel_type_to_matlab_class } = {
 		uint8  => $mxUINT8_CLASS,
 		uint16 => $mxUINT16_CLASS,
@@ -111,10 +111,65 @@ sub new {
 	
 	# Mapping from matlab classes to pixel types. Also limits the supported matlab classes.
 	$self->{ _matlab_class_to_pixel_type } = {
-		uint8  => 'uint8',
-		uint16 => 'uint16',
-		uint32 => 'uint32',
-		single => 'float'
+		$mxUINT8_CLASS  => 'uint8' ,
+		$mxUINT16_CLASS => 'uint16',
+		$mxUINT32_CLASS => 'uint32',
+		$mxSINGLE_CLASS => 'float' ,
+	};
+	
+	# Mapping from matlab classes to Matlab convert function name
+	$self->{ _matlab_class_to_convert} = {
+		$mxUINT8_CLASS  => 'uint8' ,
+		$mxUINT16_CLASS => 'uint16',
+		$mxUINT32_CLASS => 'uint32',
+		$mxSINGLE_CLASS => 'single' ,
+	};
+	
+	# Mapping from matlab classes to strings for display purposes
+	$self->{ _matlab_class_to_string } = {
+		$mxUNKNOWN_CLASS   => 'mxUNKNOWN_CLASS',
+		$mxCELL_CLASS      => 'mxCELL_CLASS',
+		$mxSTRUCT_CLASS    => 'mxSTRUCT_CLASS',
+		$mxOBJECT_CLASS    => 'mxOBJECT_CLASS',
+		$mxCHAR_CLASS      => 'mxCHAR_CLASS',
+		$mxLOGICAL_CLASS   => 'mxLOGICAL_CLASS',
+		$mxDOUBLE_CLASS    => 'mxDOUBLE_CLASS',
+		$mxSINGLE_CLASS    => 'mxSINGLE_CLASS',
+		$mxINT8_CLASS      => 'mxINT8_CLASS',
+		$mxUINT8_CLASS     => 'mxUINT8_CLASS',
+		$mxINT16_CLASS     => 'mxINT16_CLASS',
+		$mxUINT16_CLASS    => 'mxUINT16_CLASS',
+		$mxINT32_CLASS     => 'mxINT32_CLASS',
+		$mxUINT32_CLASS    => 'mxUINT32_CLASS',
+		$mxINT64_CLASS     => 'mxINT64_CLASS',
+		$mxUINT64_CLASS    => 'mxUINT64_CLASS',
+		$mxFUNCTION_CLASS  => 'mxFUNCTION_CLASS',
+	};
+	
+	# Mappings from matlab classes to OME SE datatypes
+	$self->{ _matlab_class_to_ome_datatype} = {
+		$mxCHAR_CLASS      => 'string',
+		$mxLOGICAL_CLASS   => 'boolean',
+		$mxDOUBLE_CLASS    => 'double',
+		$mxSINGLE_CLASS    => 'float',
+		$mxINT8_CLASS      => 'smallint',
+		$mxUINT8_CLASS     => 'smallint',
+		$mxINT16_CLASS     => 'smallint',
+		$mxUINT16_CLASS    => 'integer',
+		$mxINT32_CLASS     => 'integer',
+		$mxUINT32_CLASS    => 'bigint',
+		$mxINT64_CLASS     => 'bigint',
+	};
+	
+	# Mappings from OME SE datatypes to matlab classes 
+	$self->{ _ome_datatype_to_matlab_class} = {
+		'string'   => $mxCHAR_CLASS,
+		'boolean'  => $mxLOGICAL_CLASS,
+		'double'   => $mxDOUBLE_CLASS,
+		'float'    => $mxSINGLE_CLASS,
+		'smallint' => $mxINT16_CLASS,
+		'integer'  => $mxINT32_CLASS,
+		'bigint'   => $mxINT64_CLASS,
 	};
 	
 	bless $self,$class;
@@ -305,7 +360,7 @@ sub Pixels_to_MatlabArray {
 	die "The OME-Matlab interface does not support $pixelType at this time."
 		unless exists $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
 	my $class = $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-
+	
 	# Get the Pixels data into a local file.
 	# FIXME: PixelsManager->getLocalFile( $pixels ) should implement the 
 	#	 functionality below without loading the whole pixels array into RAM
@@ -344,8 +399,8 @@ sub Pixels_to_MatlabArray {
 	    ($nPix = $self->{__engine}->getVariable('nPix')->getScalar()) ne $expectedPix) {
 		die "Could not read Pixels into Matlab. Read $nPix, expected $expectedPix."
 	}
-	
 	$self->{__engine}->eval("$matlab_var_name = reshape($matlab_var_name"."_serialized, size($matlab_var_name))");
+	$self->{__engine}->eval("$matlab_var_name = ".$self->{_matlab_class_to_convert}->{$class}."($matlab_var_name)");
 	
 	# Convert array datatype if requested
 	# FIXME: does this datatype conversion taint $matlab_pixels ?
@@ -363,7 +418,7 @@ sub Pixels_to_MatlabArray {
 
 =head2 Attr_to_MatlabScalar
 
-Translate an input attribute into a matlab scalar
+Translate an input attribute into a matlab scalar 
 Uses <Scalar>
 
 =cut
@@ -386,12 +441,36 @@ sub Attr_to_MatlabScalar {
 		if scalar( @$input_attr ) > 1;
 	my $value = $input_attr->[0]->$SEforScalar();
 
+	# get input class type
+	my $class;
+	my $formal_input = $self->getFormalInput( $formal_input_name );
+	foreach ($formal_input->semantic_type()->semantic_elements()) {
+		if ($_->name() eq "$SEforScalar") {
+			$class = $_->data_column()->sql_type();
+			last;
+		}
+	}
+	$class = $self->{ _ome_datatype_to_matlab_class}->{$class};
+	
 	# Place value into matlab
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
-	my $array = OME::Matlab::Array->newDoubleScalar($value);
+	my $array;
+	if ($class == $mxCHAR_CLASS) {
+		$array = OME::Matlab::Array->newStringScalar($value);
+	} elsif ($class == $mxLOGICAL_CLASS) {
+		$array = OME::Matlab::Array->newLogicalScalar($value);
+	} else {
+		$array = OME::Matlab::Array->newNumericScalar($value, $class);
+	}
+	
 	$array->makePersistent();
 	$self->{__engine}->eval("global $matlab_var_name;");
 	$self->{__engine}->putVariable($matlab_var_name,$array);
+	
+	# Convert array datatype if requested
+	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
+	}
 }
 
 =head2 Constant_to_MatlabScalar
@@ -415,6 +494,11 @@ sub Constant_to_MatlabScalar {
 	$array->makePersistent();
 	$self->{__engine}->eval("global $matlab_var_name");
 	$self->{__engine}->putVariable($matlab_var_name,$array);
+	
+	# Convert array datatype if requested
+	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
+	}
 }
 
 =head1 Output processing
@@ -475,21 +559,19 @@ sub MatlabArray_to_Pixels {
 	# This is diametrically opposite to MATLAB's assumptions.
 	$self->{__engine}->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
 
-	# Get array's dimensions.
-	$self->{__engine}->eval("[sizeX,sizeY,sizeZ,sizeC,sizeT] = size($matlab_var_name);");
-	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) = 
-		($self->{__engine}->getVariable('sizeX')->getScalar(),
-		 $self->{__engine}->getVariable('sizeY')->getScalar(),
-		 $self->{__engine}->getVariable('sizeZ')->getScalar(),
-		 $self->{__engine}->getVariable('sizeC')->getScalar(),
-		 $self->{__engine}->getVariable('sizeT')->getScalar());
-	
-	# Get pixel type
-	$self->{__engine}->eval("str = class($matlab_var_name);");
-	my $type = $self->{__engine}->getVariable('str')->getScalar();
-	die "Pixels of Matlab class $type are not supported at this time"
-		unless exists $self->{ _matlab_class_to_pixel_type }->{ $type };
-	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{ $type };
+	# Get array's dimensions and pixel type
+	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) 
+	      = @{$self->{__engine}->getVariable($matlab_var_name)->dimensions()};
+	$sizeX = 1 unless defined($sizeX);
+	$sizeY = 1 unless defined($sizeY);
+	$sizeZ = 1 unless defined($sizeZ);
+	$sizeC = 1 unless defined($sizeC);
+	$sizeT = 1 unless defined($sizeT);
+
+	my $matlabType = $self->{__engine}->getVariable($matlab_var_name)->class();
+	die "Pixels of Matlab class $matlabType are not supported at this time"
+		unless exists $self->{ _matlab_class_to_pixel_type }->{$matlabType};
+	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{$matlabType};
 	
 	# Make Pixels
 	my @pixels_params = (
@@ -596,14 +678,9 @@ Operates on vector matlab outputs. Uses <Vector> in conjuction with
 
 sub MatlabVector_to_Attrs {
 	my ( $self, $xmlInstr ) = @_;
-
-	# Retrieve value from matlab
+	
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
-	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
-		or die "Couldn't retrieve $matlab_var_name";
-	$matlab_output->makePersistent();
-	my $values = $matlab_output->convertToList();
-
+	
 	# get Vector Decoding
 	my $vectorDecodeID = $xmlInstr->getAttribute( 'DecodeWith' )
 		or die "DecodeWith attribute not specified in ".$xmlInstr->toString();
@@ -613,13 +690,44 @@ sub MatlabVector_to_Attrs {
 	# decode the Vector
 	my %vectorData; # $vectorData{$formal_output_name}->{$SE_name} = $data
 	foreach my $element ( @decoding_elements ) {
+	
 		# gather formal output & SE
 		my $output_location = $element->getAttribute( 'OutputLocation' );
 		my ( $formal_output_name, $SE_name ) = split( /\./, $output_location )
 			or die "output_location '$output_location' could not be parsed.";
 		my $formal_output = $self->getFormalOutput( $formal_output_name )
 			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
+
+		# get index
+		my $index = $element->getAttribute( 'Index' )
+			or die "Index attribute not specified in ".$element->toString();
+			
+		$self->{__engine}->eval("$matlab_var_name"."_index_val_$index = $matlab_var_name($index)");
+
+
+		# Convert array datatype if requested
+		if( my $convertToDatatype = $element->getAttribute( 'ConvertToDatatype' ) ) {
+			$self->{__engine}->eval("$matlab_var_name"."_index_val_$index = $convertToDatatype($matlab_var_name"."_index_val_$index);");
+		}
 	
+		# retrieve value from matlab
+		my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name."_index_val_$index" )
+			or die "Couldn't retrieve $matlab_var_name Index = $index\n";
+		$matlab_output->makePersistent();
+		my $value = $matlab_output->getScalar();
+		my $class = $matlab_output->class();
+		
+		# make sure declared (OME-XML) and actual (MATLAB) data-types are the same
+		foreach ($formal_output->semantic_type()->semantic_elements()) {
+			if ($_->name() eq "$SE_name") {
+				die "Semantic Element ($SE_name) of Semantic Type (".$formal_output->semantic_type()->name().") is of declared type (".$_->data_column()->sql_type().
+					") but is of actual type (".$self->{ _matlab_class_to_string }->{$class}."). \n"
+					if ( not defined($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
+						 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $_->data_column()->sql_type()) ;
+				last;
+			}
+		}
+		
 		# Make a data hash
 		my $template_id = $xmlInstr->getAttribute( 'UseTemplate' )
 			and die "UseTemplate is not supported ATM for ".$xmlInstr->tagName().". ask Josiah <siah\@nih.gov> to fix this.";
@@ -631,12 +739,9 @@ sub MatlabVector_to_Attrs {
 #				if $formal_output->semantic_type()->name() ne $ST_name;
 #		}
 		# See: "Hackaround for XS variable hidden uniqueness." in MatlabScalar_to_Attr()
-		my $index = $element->getAttribute( 'Index' )
-			or die "Index attribute not specified in ".$element->toString();	
-    die "Vector index is out of bounds. Index is $index, and vector length is "
-			.scalar( @$values ).". Error when processing ".$element->toString() 
-			unless $index <= scalar( @$values ); 
-		my $value = $values->[ $index - 1 ];
+
+		# INDEX is $index
+		
 		$vectorData{ $formal_output_name }->{ $SE_name } = "$value";
 	}
 	
@@ -666,7 +771,6 @@ Operates on scalar matlab outputs. Uses <Scalar> in conjuction with <Templates>
 
 sub MatlabScalar_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
-
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	
@@ -675,13 +779,30 @@ sub MatlabScalar_to_Attr {
 	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location );
 	my $formal_output = $self->getFormalOutput( $formal_output_name );
 
-	# Retrieve value from matlab
+	# Convert array datatype if requested
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
+	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
+	}
+	
+	# Retrieve value from matlab
 	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
 		or die "Couldn't retrieve $matlab_var_name";
 	$matlab_output->makePersistent();
 	my $value = $matlab_output->getScalar();
+	my $class = $matlab_output->class();
 
+	# make sure declared (OME-XML) and actual (MATLAB) data-types are the same
+	foreach ($formal_output->semantic_type()->semantic_elements()) {
+		if ($_->name() eq "$SEforScalar") {
+			die "Semantic Element ($SEforScalar) of Semantic Type (".$formal_output->semantic_type()->name().") is of declared type (".$_->data_column()->sql_type().
+				") but is of actual type (".$self->{ _matlab_class_to_string }->{$class}."). \n"
+				if ( not defined($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
+					 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $_->data_column()->sql_type());
+			last;
+		}
+	}
+	
 	# Make a data hash
 	my $template_id = $xmlInstr->getAttribute( 'UseTemplate' );
 	my $data_hash;
@@ -720,6 +841,10 @@ sub MatlabScalar_to_Attr {
 
 	given a <Struct> output instruction, will convert a matlab output to an 
 	attribute. Uses 
+	
+	1/6/05 TJM: N.B we don't have a real use-case for this function of the 
+	MatlabHandler this function is missing checks that make sure (OME-XML) 
+	declared and actual(MATLAB) data-types are the same.
 
 =cut
 
