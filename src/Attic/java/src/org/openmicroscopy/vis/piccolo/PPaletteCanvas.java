@@ -110,6 +110,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	public PPaletteCanvas() {
 		super();
 		removeInputEventListener(getPanEventHandler());
+		removeInputEventListener(getZoomEventHandler());
 		addInputEventListener(new PPaletteEventHandler(this));
 		layer = getLayer();
 		layer.addChild(categoryLayer);
