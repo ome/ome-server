@@ -21,14 +21,14 @@
 package OME::Web::ProjectSwitch;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
-@ISA = ("OME::Web");
+use OME::Web::Validation;
+use base qw{ OME::Web };
 
 sub getPageTitle {
-	return "Open Microscopy Environment - Project Metadata";
+ 	return "Open Microscopy Environment - Switch Project";
 }
 
 sub getPageBody {
@@ -41,20 +41,10 @@ sub getPageBody {
 	if( $cgi->param('Switch')) {
 
 		# load new project
-		my $newProject = $session->Factory()->loadObject("OME::Project", $cgi->param('newProject') );
-
-		# validate input
-		if( not defined $newProject ) {
-			$body .= "Error: unable to load project (id: ".$cgi->param('newProject')."<br>";
-			return ('HTML',$body)
-		}
+		my $newProject = $session->Factory()->loadObject("OME::Project", $cgi->param('newProject') )
+			or die "Unable to load project (id: ".$cgi->param('newProject')."\n";
 		
-		# validate permissions
-# FIXME: is this the right way to validate access permission? note: message reflects validation method.
-		if(not ($session->User()->group()->group_id() eq $newProject->owner()->group()->group_id()) ) {
-			$body .= "You do not have permission to access this. You are not a member of this group";
-			return ('HTML',$body);
-		}
+# FIXME: validate permissions
 		
 		# switch current project to new project
 		$session->project($newProject);
@@ -62,9 +52,15 @@ sub getPageBody {
 		
 		# print sucess message
 		$body .= "Switch sucessful. ";
+		$body .= "<p>At this point, session's dataset should be set to undef and you should be directed to validation for this to be dealt with. The second part is easy. Setting session's dataset is harder. Using \$session->dataset( undef ) to do this results in a fatal error. Message is:<br><pre>";
+		$body .= "'' is not an object of type 'OME::Dataset' at /Users/josiah/OME/src/perl2//OME/Web/MakeNewProject.pm line 58";
+		$body .= "</pre><br>I tried using 1 instead of undef and it gave the message <pre>'1' is not an object...</pre> This demonstrates that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?</p>";
 		
 		# update titlebar
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+		
+		# this will add a script to reload OME::Home if it's necessary
+		$body .= OME::Web::Validation->ReloadHomeScript();
 
 	}
 	# print form
@@ -83,8 +79,9 @@ sub print_form {
 		if (scalar @projects) > 0;
 	my $text = '';
 	
-	$text .= "\n".$cgi->startform;
-	$text .= "Current project is ".$project->name()."<BR>";
+	$text .= $cgi->startform;
+	$text .= "Current project is ".$project->name()."<BR>"
+		if(defined $project);
 
 	$text .= 
 		$cgi->table(
@@ -99,7 +96,7 @@ sub print_form {
 					$cgi->submit (-name=>'Switch',-value=>'Switch Projects') ) ),
 		);
 			
-	$text .= $cgi->endform."\n";
+	$text .= $cgi->endform;
 	return $text;
 }
 
