@@ -345,8 +345,37 @@ sub execute {
 	and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
 	    unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
+    
+	print "Installing OMEIS\n";
 
-    close ($LOGFILE);
+    # Configure
+    print "  \\_ Configuring ";
+    $retval = configure_module ("src/C/omeis", $LOGFILE);
+     
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to configure module, see $LOGFILE_NAME for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    # Compile
+    print "  \\_ Compiling ";
+    $retval = compile_module ("src/C/omeis", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+	and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
+	    unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+    
+	# Install
+    print "  \\_ Installing ";
+    $retval = install_module ("src/C/omeis", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+	and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
+	    unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+    
+	close ($LOGFILE);
     
     print "\n";  # Spacing
 
