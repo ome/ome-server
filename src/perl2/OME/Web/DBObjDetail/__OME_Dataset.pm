@@ -85,7 +85,7 @@ sub _takeAction {
 	my $self = shift;
 	my $object = $self->_loadObject();
 	my $q = $self->CGI();
-	if( $q->param( 'action' ) eq 'SaveChanges' ) {
+	if( $q->param( 'action' ) && $q->param( 'action' ) eq 'SaveChanges' ) {
 		$object->description( $q->param( 'description' ) );
 		$object->name( $q->param( 'name' ) );
 		$object->storeObject();
