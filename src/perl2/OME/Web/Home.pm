@@ -26,7 +26,6 @@ $VERSION = '1.0';
 use CGI;
 use OME::Web;
 use OME::DBObject;
-use OME::Image;
 @ISA = ("OME::Web");
 
 sub getPageTitle {
@@ -54,7 +53,7 @@ ENDHTML
 <SCRIPT LANGUAGE="JavaScript">
 <!--
 	var thePage = pageFromSearch('$home', true);
-	openMenu("/html/menuFrame.html?page=" + escape(thePage), "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=230,height=400");
+	openMenu("/html/menuFrame.html?content=" + escape(thePage), "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=230,height=400");
 
 //-->
 </SCRIPT>
