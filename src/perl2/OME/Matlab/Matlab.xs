@@ -29,7 +29,7 @@
 
 /*------------------------------------------------------------------------------
  *
- * Written by:   
+ * Written by:   Douglas Creager <dcreager@alum.mit.edu>
  * 
  *------------------------------------------------------------------------------
  */
@@ -512,6 +512,20 @@ is_uint32(pArray)
         OME::Matlab::Array pArray
         CODE:
                 RETVAL = mxIsUint32(pArray);
+        OUTPUT:
+                RETVAL
+
+char *
+getString(pArray)
+        OME::Matlab::Array pArray
+        INIT:
+                char * buf;
+                int buflen;
+        CODE:
+                buflen = (mxGetM(pArray) * mxGetN(pArray) * sizeof(mxChar)) + 1;
+                buf = malloc(buflen);
+                mxGetString(pArray,buf,buflen);
+                RETVAL = buf;
         OUTPUT:
                 RETVAL
 
