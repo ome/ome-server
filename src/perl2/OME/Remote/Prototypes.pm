@@ -198,15 +198,18 @@ The following methods are available for handling prototypes:
 	addPrototype($className,$methodName,
 	             $inputPrototype,$outputPrototype,
 	             [ context => $context, ]
-	             [ publishedName => $publishedName ]);
+	             [ publishedName => $publishedName ],
+	             [ force => 1 ]);
 
 Publishes the $className::$methodName method via the Remote Framework.
 The prototypes of the input parameters and results are specified by
 the $inputPrototype and $outputPrototype parameters, and must be of
-the format described above.  The context and publishedName parameters
-are optional; if included, they, respectively, force the Dispatcher to
-call the method in a particular context ('void', 'scalar', or 'list'),
-and publish the method under a different name.
+the format described above.  The context, publishedName, and force
+parameters are optional.  The context option forces the Dispatcher to
+call the method in a particular context ('void', 'scalar', or 'list').
+The publishedName option makes the Dispatcher publish the method under
+a different name.  If the force option is set to 1, addPrototype will
+silently replace any existing prototype.
 
 =head2 findPrototype
 
@@ -578,8 +581,10 @@ sub addPrototype {
       exists $options{publishedName}?
         $options{publishedName}:
         $method;
+
     die "Prototype already exists for $class\::$publishedName!"
-      if exists $prototypes{$class}->{$publishedName};
+      if exists $prototypes{$class}->{$publishedName} &&
+         (!$options{force});
 
     # Verify that the prototypes are well-formed.
 
