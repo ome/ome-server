@@ -41,9 +41,10 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.Project;
+
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
+import org.openmicroscopy.vis.ome.CProject;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
@@ -109,6 +110,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	private Vector strips;
 	private double screenHeight = 0;
 	private double screenWidth =0;
+	
+	private PDataset lastRolledOver = null;
 	
 	public PBrowserCanvas(Connection c) {
 		super();
@@ -365,31 +368,44 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
-		System.err.println(" browser canvas got event");
 		SelectionState state = e.getSelectionState();
-		Collection selections = state.getActiveDatasets();
-		CDataset selected = state.getSelectedDataset();
-		
-		if (selected != null) {
-			datasets = new TreeSet();
-			datasets.add(selected);
+		int mask = e.getMask();
+		if ((mask & SelectionEvent.SET_ROLLOVER_PROJECT)
+			== SelectionEvent.SET_ROLLOVER_PROJECT) {
+			CProject rollover = state.getRolloverProject();
+			highlightDatasetsForProject(rollover);
+		}
+		else if ((mask & SelectionEvent.SET_ROLLOVER_DATASET) ==
+			SelectionEvent.SET_ROLLOVER_DATASET) {
+			CDataset rolled = state.getRolloverDataset();
+			highlightDataset(rolled);	 
 		}
 		else {
-			if (selections != null && selections.size() > 0)
-				datasets = new TreeSet(selections);
-			else
-				datasets = new TreeSet(allDatasets);
-		}	
-		displayDatasets(false);
-		Project rollover = state.getRolloverProject();
-		highlightDatasetsForProject(rollover);
-		
+			Collection selections = state.getActiveDatasets();
+			CDataset selected = state.getSelectedDataset();
+			
+			if (state.getSelectedProject() != null)
+				highlightDatasetsForProject(null);
+				
+			if (selected != null) {
+				datasets = new TreeSet();
+				datasets.add(selected);
+			}
+			else {
+				if (selections != null && selections.size() > 0)
+					datasets = new TreeSet(selections);
+				else
+					datasets = new TreeSet(allDatasets);
+			}	
+			displayDatasets(false);
+		}
 	}
 
 	public int getEventMask() {
 		return SelectionEvent.SET_SELECTED_DATASET | 
 			SelectionEvent.SET_ACTIVE_DATASETS | 
-			SelectionEvent.SET_ROLLOVER_PROJECT;
+			SelectionEvent.SET_ROLLOVER_PROJECT |
+			SelectionEvent.SET_ROLLOVER_DATASET;
 	}
 		
 	public void clearExecutionList() {
@@ -412,19 +428,29 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		executionList.setOffset(b.getX(),b.getY()+b.getHeight());
 	}
 	
-	public void highlightDatasetsForProject(Project p) {
-		Collection projDatasets=null;
-		if (p !=null)
-			projDatasets = p.getDatasets();
+	public void highlightDatasetsForProject(CProject p) {
+		
 		Iterator iter = layer.getChildrenIterator();
 		while (iter.hasNext()) {
 			PDataset dNode = (PDataset) iter.next();
 			CDataset d = dNode.getDataset();
-			if (projDatasets != null && projDatasets.contains(d)) {
+			if (p != null && p.hasDataset(d)) {
 				dNode.setHighlighted(true);
 			}
 			else
 				dNode.setHighlighted(false);
 		}
+	}
+	
+	public void highlightDataset(CDataset rolled) {
+		if (lastRolledOver != null) { 
+			lastRolledOver.setHighlighted(false);
+			lastRolledOver = null;
+		}
+		
+		if (rolled != null) {	
+			lastRolledOver = rolled.getNode();
+			lastRolledOver.setHighlighted(true);
+		}		
 	}
  }
