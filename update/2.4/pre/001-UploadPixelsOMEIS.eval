@@ -1,5 +1,6 @@
 use OME::Image::Server;
 use OME::LocalFile;
+use OME::Tasks::PixelsManager;
 
 print "     \\_ Looking for remote repository... ";
 my $repository = $factory->findAttribute("Repository", IsLocal => 0);
@@ -31,6 +32,7 @@ foreach $pixels (@pixelses) {
 		if (not $pixelsID) {
 			print " *** ", BOLD, "FAILED !!!", RESET, " *** \n";
 		} else {
+			OME::Tasks::PixelsManager->saveThumb( $pixels );
 			print " OMEIS ID = $pixelsID\n";
 			$pixels->ImageServerID ($pixelsID);
 			$pixels->Repository ($repository);
@@ -82,15 +84,9 @@ sub postPixels {
 		$pixels->SizeZ(),
 		$pixels->SizeC(),
 		$pixels->SizeT(),
-		$pixels->BitsPerPixel() / 8,
-		0, 0 );
-	my $stackSize = $pixels->SizeX() * $pixels->SizeY() * $pixels->SizeZ() * $pixels->BitsPerPixel() / 8;
-	for( my $t = 0; $t < $pixels->SizeT(); $t++ ) {
-		for( my $c = 0; $c < $pixels->SizeC(); $c++ ) {
-			my $offset = ( $t * $pixels->SizeC() + $c ) * $stackSize;
-			OME::Image::Server->convertStack( $pixelsID, $c, $t, $fileID, $offset );
-		}
-	}
+		OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType() )
+	);
+	OME::Image::Server->convert( $pixelsID, $fileID, 0 );
 	OME::Image::Server->finishPixels( $pixelsID );
 	OME::Image::Server->deleteFile ($fileID);
 	return $pixelsID;
