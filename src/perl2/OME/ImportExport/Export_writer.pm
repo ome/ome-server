@@ -107,7 +107,7 @@ sub accessImage {
     my $status = "Failed to load image id $id";
 
     $image = $session->Factory()->loadObject("OME::Image", $id);
-    $attributes = $image->ImageAttributes();
+    my $attributes = $image->ImageAttributes();
     return $status
 	unless defined $image && defined $attributes;
 

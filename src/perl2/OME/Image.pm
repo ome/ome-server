@@ -27,7 +27,7 @@ __PACKAGE__->hasa(OME::Instrument => qw(instrument_id));
 __PACKAGE__->hasa(OME::Experimenter => qw(experimenter_id));
 __PACKAGE__->hasa(OME::Repository => qw(repository_id));
 __PACKAGE__->hasa(OME::Group => qw(group_id));
-__PACKAGE__->has_many('datasets',OME::Image::DatasetMap => qw(image_id));
+#__PACKAGE__->has_many('datasets',OME::Image::DatasetMap => qw(image_id));
 
 
 sub _init {
@@ -88,7 +88,7 @@ sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
 
     my $attributes = $self->ImageAttributes();
-    
+
     my $sX = $attributes->size_x();
     my $sY = $attributes->size_y();
     my $sZ = $attributes->size_z();
@@ -196,13 +196,13 @@ __PACKAGE__->columns(Essential => qw(size_x size_y size_z num_waves num_times bi
 __PACKAGE__->hasa(OME::Image => qw(image_id));
 
 
-package OME::Image::DatasetMap;
-
-use strict;
-our $VERSION = '1.0';
-
-use OME::DBObject;
-use base qw(
+#package OME::Image::DatasetMap;
+#
+#use strict;
+#our $VERSION = '1.0';
+#
+#use OME::DBObject;
+#use base qw(
 
 
 1;
