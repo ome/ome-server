@@ -258,12 +258,14 @@ my @columns;
 		$attribute =~ s/^\s+//;$attribute =~ s/\s+$//;
 	# Trim leading and trailing whitespace, set value to undef if not like a C float.
 		$value =~ s/^\s+//;$value =~ s/\s+$//;$value = undef unless ($value =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
-		$self->{$attribute} = $value;
+		$self->{$attribute} = $value if exists $Fields{$attribute};
 	}
 	close (STDOUT_PIPE);
 
-	die "Could not determine the width of $datasetPath.\n" unless exists $self->{SizeX} and $self->{SizeX};
-	die "Could not determine the height of $datasetPath.\n" unless exists $self->{SizeY} and $self->{SizeY};
+	die "Could not determine the width of $datasetPath.\nError reported:\n".`cat $tempFileNameErr`
+		unless exists $self->{SizeX} and $self->{SizeX};
+	die "Could not determine the height of $datasetPath.\nError reported:\n".`cat $tempFileNameErr`
+		unless exists $self->{SizeY} and $self->{SizeY};
 
 # This will calculate statistics about TIFF files, and output two lines -
 # one line with the following column headings, and the next line containing the values.
