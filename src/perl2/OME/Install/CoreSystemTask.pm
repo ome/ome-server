@@ -1,3 +1,4 @@
+
 # OME/Install/CoreSystemTask.pm
 # This task initializes the core OME system which currently consists of the 
 # OME_BASE directory structure and ome user/group.
@@ -87,6 +88,9 @@ my $OME_GID;
 # Global Apache user
 my $APACHE_USER;
 
+# Postgres admin
+my $POSTGRES_USER = "postgres";
+
 #*********
 #********* LOCAL SUBROUTINES
 #*********
@@ -139,6 +143,38 @@ sub get_apache_user {
     return $username;
 }
 
+sub get_postgres_user {
+    my $username = shift;  # A user specified default if we have one
+
+    unless ($username) {
+	$username = "";
+
+	# Grab our Apache user from the password file
+	open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
+	while (<PW_FILE>) {
+	    chomp;
+	    $username = (split ":")[0];
+	    if ($username =~ /postgres|postgre|pgsql|psql/) {
+		last;
+	    }
+	}
+    }
+    close(PW_FILE);
+
+    # It's possible we've got multiple instances of these users in the password
+    # file so lets confirm things. By the same token, if that the user is of a
+    # different name, ask for it.
+    while (1) {
+	$username = confirm_default ("What is the Unix username of the Postgres default user?", $username);
+	getpwnam ($username)
+	    or (print "User \"$username\" does not exist, try again.\n" and next);
+
+	last;
+    }
+
+    return $username;
+}
+
 #*********
 #********* START OF CODE
 #*********
@@ -179,12 +215,16 @@ sub execute {
 	# Get and/or update our apache user information
 	$APACHE_USER = get_apache_user ($APACHE_USER);
 
+	# Get and/or update our postgres admin information
+	$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
+
 	# Get and/or update our "special" Unix user information
 	$SPECIAL_USER = confirm_default ("Unix user which should be a member of the OME group (optional)", $SPECIAL_USER);
 
 	# Make sure the rest of the installation knows who the apache and ome users are
 	$environment->user($OME_USER);
 	$environment->apache_user($APACHE_USER);
+	$environment->postgres_user($POSTGRES_USER);
 
 	print "\n";  # Spacing
 
@@ -196,6 +236,7 @@ sub execute {
 	print "OME groupname: $OME_GROUP\n";
 	print "OME Unix username: $OME_USER\n";
 	print "Apache Unix username: $APACHE_USER\n";
+	print "Postgres admin username: $POSTGRES_USER\n";
 	print "Special Unix username: $SPECIAL_USER\n";
 
 	print "\n";  # Spacing
@@ -223,6 +264,10 @@ sub execute {
 		print "  \\_ Adding user ", BOLD, "\"$OME_USER\"", RESET, ".\n", ;
 		add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP) or croak "Failure creating user \"$OME_GROUP\"";
 		$OME_UID = getpwnam($OME_USER) or croak "Failure retrieving UID for \"$OME_USER\"";
+    }
+
+    if(not getpwnam($POSTGRES_USER)) {
+	croak "Failure retrieving UID for \"$POSTGRES_USER\"";
     }
 
     # Add the apache and OME user to the OME group if needed

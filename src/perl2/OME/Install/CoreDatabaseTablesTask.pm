@@ -68,8 +68,8 @@ my $INSTALL_HOME;
 # Our basedirs and user which we grab from the environment
 my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
 
-# Our Apache user we'll grab from the environment
-my ($APACHE_USER);
+# Our Apache user & Postgres admin we'll grab from the environment
+my ($APACHE_USER, $POSTGRES_USER);
 
 # Default import formats
 my $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
@@ -129,7 +129,7 @@ our @core_classes =
 # Create a postgres superuser SQL: CREATE USER foo CREATEUSER
 sub create_superuser {
     my ($username, $logfile) = @_;
-    my $pg_uid = getpwnam ("postgres") or croak "Unable to retrieve PostgreSQL user UID";
+    my $pg_uid = getpwnam ($POSTGRES_USER) or croak "Unable to retrieve PostgreSQL user UID";
     my $createuser = "createuser";
     my @outputs;
     my $retval;
@@ -148,7 +148,7 @@ sub create_superuser {
     $createuser = whereis ("createuser") or croak "Unable to locate creatuser binary." unless $retval;
 
     # Create the user using the command line tools
-    @outputs = `su postgres -c "$createuser -d -a $username" 2>&1`;
+    @outputs = `su $POSTGRES_USER -c "$createuser -d -a $username" 2>&1`;
 
     # Back to UID 0
 #    $EUID = 0;
@@ -215,7 +215,7 @@ sub create_database {
     $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
 
     print "  \\__ Adding PL-PGSQL language\n";
-    my @CMD_OUT = `su postgres -c "$createlang plpgsql ome" 2>&1`;
+    my @CMD_OUT = `su $POSTGRES_USER -c "$createlang plpgsql ome" 2>&1`;
     die join ("\n",@CMD_OUT) if $? != 0;
 
     # Fix our little object ID bug
@@ -529,7 +529,9 @@ sub execute {
     $OME_UID = getpwnam ($OME_USER)
 	or croak "Unable to retrive OME_USER UID!";
     $APACHE_USER = $environment->apache_user()
-	or croak "Unable to retrieve APACHER_USER!";
+	or croak "Unable to retrieve APACHE_USER!";
+    $POSTGRES_USER = $environment->postgres_user()
+	or croak "Unable to retrieve POSTGRES_USER!";
 
     # Set our installation home
     $INSTALL_HOME = $OME_TMP_DIR."/install";

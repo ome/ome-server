@@ -163,4 +163,16 @@ sub apache_user {
     return;
 }
 
+sub postgres_user {
+    my ($self, $user) = @_;
+
+    if($user) {
+	$self->{postgres_user} = $user;
+    } else {
+	return $self->{postgres_user} unless not exists $self->{postgres_user};
+    }
+
+    return;
+}
+
 1;
