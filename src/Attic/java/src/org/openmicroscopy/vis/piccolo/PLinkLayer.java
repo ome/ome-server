@@ -117,7 +117,7 @@ public class PLinkLayer extends PLayer {
 	
 		PModuleLink lnk = findModuleLink(start,end);
 		if (lnk == null) {// if there is no link
-			lnk = new PModuleLink(this,start,end);
+			lnk = new PModuleLink(this,link,start,end);
 			modules.addChild(lnk);
 		}
 		return lnk;
