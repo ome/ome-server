@@ -126,7 +126,66 @@ function $JStype (ImageID, dims, theZ, theT) {
 }
 ENDJSOBJECT
 
+=pod
 
+=head1 JavaScript.pm
+
+=head1 Package information
+
+L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function calls to OME Modules">, L<"Data references to OME Modules">
+
+=head2 Description
+
+Creates javascript classes and html snippets. Right now it is specific to 
+OME::Web::GetGraphics, but that could change in the future.
+
+=head2 Path
+
+src/perl2/OME/Graphics/JavaScript
+
+=head2 Package name
+
+OME::Graphics::JavaScript
+
+=head2 Dependencies
+
+B<Inherits from>
+	OME::Graphics
+B<makes use of OME Modules>
+	OME::Graphics::JavaScript::Layer
+
+=head2 Function calls to OME Modules
+
+=head2 Data references to OME Modules
+
+=head1 Functions
+
+L<"Externaly referenced">, L<"Internally referenced">
+
+=head2 Externally referenced
+
+
+=over 4
+
+X<new()>
+
+=item new()
+
+ 
+Description
+	constructor
+Parameters
+	required
+		ImageID, Session, Dims
+	optional
+		theZ, theT
+Returns
+	$self
+Overrides function in OME::Graphics
+Uses functions
+	OME::Graphics->new()
+
+=cut
 
 # new
 # ---
@@ -167,6 +226,28 @@ sub new {
 
 	return $self;
 }
+
+=pod
+
+X<AddLayer()>
+
+=item AddLayer()
+
+ 
+Description
+	pushes a Layer object onto the layers array
+Parameters
+	$layer
+		layer should be a reference to an object of type OME::Graphics::JavaScript::Layer::*
+Returns
+	$layer
+Uses NO functions
+Accesses external data:
+	OME::Graphics::JavaScript::Layer::*->
+		{Parent}
+		{name}
+
+=cut
 
 #
 # This method pushes a Layer object onto the layers array.
