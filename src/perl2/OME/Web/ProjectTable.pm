@@ -51,7 +51,6 @@ use Data::Dumper;
 # OME Modules
 use OME;
 use OME::Project;
-use OME::Tasks::ProjectManager;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -87,7 +86,13 @@ sub getTable {
 	my $q = $self->CGI();
 	my $table_data;
 
-	unless (@projects) { @projects = $p_manager->getAllProjects(); }
+	unless (@projects) {
+		@projects = $self->__filterObjects( {
+				filters => $options->{filters},
+				filter_object => 'OME::Project'
+			}
+		);
+	}
 	
 	my @column_headers = qw(ID Name Owner Group Description);
 

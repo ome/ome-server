@@ -201,33 +201,33 @@ sub __genericTableFooter {
 	return $table;
 }
 
-#sub __filterObjects {
-#	my $self = shift;
-#	my $options = shift;
-#
-#	my $factory = $self->Session()->Factory();
-#	my @objects;
-#
-#	my %filter;
-#
-#	# Copy each of our array based option filters to a filter hash
-#	foreach (@{$options->{filters}}) {
-#		$filter{$_->[0]} = $_->[1];
-#	}
-#
-#	# Filter the dataset objects if needed
-#	if ($options->{filters}) { 
-#		# Get a cursor for our search with a forced lowercase field
-#		my $cursor = $factory->findObjectsLike($options->{filter_object}, %filter);
-#
-#		# Iterate and populate list
-#		while (my $object = $cursor->next()) { push(@objects, $object) }
-#	} else {
-#		@objects = $factory->findObjects($options->{filter_object});
-#	}
-#
-#	return @objects;
-#}
+sub __filterObjects {
+	my $self = shift;
+	my $options = shift;
+
+	my $factory = $self->Session()->Factory();
+	my @objects;
+
+	my %filter;
+
+	# Copy each of our array based option filters to a filter hash
+	foreach (@{$options->{filters}}) {
+		$filter{$_->[0]} = $_->[1];
+	}
+
+	# Filter the objects if needed
+	if ($options->{filters}) { 
+		# Get a cursor for our search
+		my $cursor = $factory->findObjectsLike($options->{filter_object}, %filter);
+
+		# Iterate and populate list
+		while (my $object = $cursor->next()) { push(@objects, $object) }
+	} else {
+		@objects = $factory->findObjects($options->{filter_object});
+	}
+
+	return @objects;
+}
 
 sub __getRelationTD {
 	my ($self, @objects) = @_;
@@ -297,15 +297,16 @@ sub getPageBody {
 	my $type = $q->param('type') || 'projects';  # Projects is the default display
 	   $type = lc($type);
 
+	# Make a filterset to pass to getTable()
 	my $filterset;
 	if ($q->param('filter_field') and $q->param('filter_string')) {
 		push(@$filterset, [$q->param('filter_field'), $q->param('filter_string')]);
 	}
 	
-	my @options_row = $q->param('options_row');
-	
 	# Cleanup so we don't get superfluous propagation
 	$q->delete('filter_field', 'filter_string', 'selected');
+
+	my @options_row = $q->param('options_row');
 
 	# XXX TEMPORARY
 	if ($type =~ /mex/) {
@@ -326,6 +327,8 @@ sub getPageBody {
 	$main_table = $self->getTable( {
 				options_row => [@options_row],
 				relations => $q->param('relations') || 0,
+				filters => $filterset || undef,
+				select_column => 0,
 		},
 	);
 	$filter_table = $self->__genericTableFooter(@column_aliases);

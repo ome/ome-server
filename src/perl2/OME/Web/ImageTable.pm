@@ -51,7 +51,6 @@ use Data::Dumper;
 # OME Modules
 use OME;
 use OME::Image;
-use OME::Tasks::ImageManager;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -87,7 +86,13 @@ sub getTable {
 	my $q = $self->CGI();
 	my $table_data;
 
-	unless (@images) { @images = $i_manager->getAllImages(); }
+	unless (@images) {
+		@images = $self->__filterObjects( {
+				filters => $options->{filters},
+				filter_object => 'OME::Image'
+			}
+		);
+	}
 	
 	my @column_headers = qw(ID Name Preview Owner Group Description);
 

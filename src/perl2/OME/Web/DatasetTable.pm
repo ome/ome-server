@@ -51,7 +51,6 @@ use Data::Dumper;
 # OME Modules
 use OME;
 use OME::Dataset;
-use OME::Tasks::DatasetManager;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -80,14 +79,19 @@ sub __genericTableHeader { shift->SUPER::__genericTableHeader("Datasets"); }
 
 sub getTable {
 	my ($self, $options, @datasets) = @_;
-	my $d_manager = new OME::Tasks::DatasetManager;
 
 	# Method variables
 	my $factory = $self->Session()->Factory();
 	my $q = $self->CGI();
 	my $table_data;
 	
-	unless (@datasets) { @datasets = $d_manager->getAllDatasets(); }
+	unless (@datasets) {
+		@datasets = $self->__filterObjects( {
+				filters => $options->{filters},
+				filter_object => 'OME::Dataset'
+			}
+		);
+	}
 
 	my @column_headers = qw(ID Status Name Owner Group Description);
 
