@@ -85,7 +85,7 @@ public class CDataset extends RemoteDataset implements Comparable{
 		Iterator iter = i.iterator();
 		while (iter.hasNext()) {
 			CImage image = (CImage) iter.next();
-			System.err.println("loading image "+image.getID());
+		//	System.err.println("loading image "+image.getID());
 			image.loadImageData(connection);
 			images.add(image);		
 		}
