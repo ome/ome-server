@@ -487,17 +487,50 @@ sub create_experimenter {
     return ($session);
 }
 
+
+# Make sure an experimenter ends up in the stored environment
+sub save_exper_env {
+my $session = shift;
+
+	croak "Trying to save OME Experimenter in installation environment without a defined session"
+		unless defined $session;
+
+	my $factory = $session->Factory();
+	croak "Trying to save OME Experimenter in installation environment: Couldn't get factory for session"
+		unless defined $factory;
+
+	my $experimenter = $factory->
+		findObject('OME::SemanticType::BootstrapExperimenter',id => $session->experimenter_id());
+	croak "Couldn't find session owner (Experimenter ID=".$session->experimenter_id().") in DB." unless $experimenter;
+
+	$OME_EXPER->{FirstName}     = $experimenter->FirstName();
+	$OME_EXPER->{LastName}      = $experimenter->LastName();
+	$OME_EXPER->{OMEName}       = $experimenter->OMEName();
+	$OME_EXPER->{Email}         = $experimenter->Email();
+	$OME_EXPER->{DataDirectory} = $experimenter->DataDirectory();
+	$OME_EXPER->{Password}      = $experimenter->Password();
+	$OME_EXPER->{id}            = $experimenter->id();
+
+    $ENVIRONMENT->ome_exper($OME_EXPER);
+
+}
+
+
 # This little gem gets a session without logging in.
 # This should only really be done if we're running this non-interactive.
 sub bootstrap_session {
     my $factory = OME::Factory->new();
     croak "Couldn't create a new factory" unless $factory;
-	croak '$OME_EXPER is undefined' unless $OME_EXPER;
+	croak "Can't get a non-interactive session:\n".
+		"OME Expreimenter not defined in installation environment.\n".
+		"Try doing an update first (install.pl -u)." unless $OME_EXPER;
 
 	print "  \\__ Finding Experimenter ".$OME_EXPER->{OMEName}."\n";
 	my $experimenterObj = $factory->
 		findObject('OME::SemanticType::BootstrapExperimenter',OMEName => $OME_EXPER->{OMEName});
-	croak "Couldn't find Experimenter ".$OME_EXPER->{OMEName}." in DB" unless $experimenterObj;
+	croak "Can't get a non-interactive session:\n".
+		"Can't find the OME Expreimenter that did the previous installation/update (username=".$OME_EXPER->{OMEName}.")\n".
+		"Try doing an update first (install.pl -u)." unless $experimenterObj;
 
     print "  \\__ Getting user state for ".$experimenterObj->OMEName()."\n";
     my $userState = $factory->findObject('OME::UserState',experimenter_id => $experimenterObj->id());
@@ -515,12 +548,12 @@ sub bootstrap_session {
         $userState->last_access('now');
         $userState->host(hostname());
     }
-    croak "Could not create userState object" unless $userState;
+    croak "Could not create userState object.  Something is probably very very wrong." unless $userState;
 
     print "  \\__ Getting session for user state ID=".$userState->id()."\n";    
     my $session = OME::Session->instance($userState, $factory);
 
-    croak "Could not create session from userState" unless defined $session;
+    croak "Could not create session from userState.  Something is probably very very wrong" unless defined $session;
 
     $userState->storeObject();
     $session->commitTransaction();
@@ -968,6 +1001,9 @@ sub execute {
 
     # Update the Database version
     update_configuration ($session) or croak "Unable to update the configuration object.";
+
+    # Update the Experimenter in the install environment
+    save_exper_env ($session);
 
     $session->commitTransaction();
     
