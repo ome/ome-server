@@ -82,8 +82,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private PLink link;
 	private Point2D.Float linkStart = new Point2D.Float();
 	private static final int NOT_LINKING=1;
-	private static final int LINKING_FIRST_POINT=2;
-	private static final int LINKING_SUBSEQUENT_POINTS=2;
+	private static final int LINKING_PARAMS=2;
+	private static final int LINKING_MODULES=3;
 	private int linkState = NOT_LINKING;
 	
 	private PFormalParameter linkOrigin;
@@ -115,11 +115,15 @@ public class PChainEventHandler extends  PPanEventHandler {
 		// module nodes simply get translated.
 		System.err.println("in chain handler drag");
 		if (node instanceof PModule) {
-			System.err.println("translating a node");
-			PModule mn = (PModule) node;
-			Dimension2D delta = e.getDeltaRelativeTo(node);
-			node.translate(delta.getWidth(),delta.getHeight());
-			e.setHandled(true);
+			if (linkState != LINKING_MODULES) {
+				System.err.println("translating a node");
+				PModule mn = (PModule) node;
+				Dimension2D delta = e.getDeltaRelativeTo(node);
+				node.translate(delta.getWidth(),delta.getHeight());
+				e.setHandled(true);
+			}
+			else 
+				System.err.println("drag during linking of modules");
 		}
 		else if (!(node instanceof PFormalParameter)){
 			super.drag(e);
@@ -201,10 +205,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 	
 	public void mouseMoved(PInputEvent e) {
-		if (linkState != NOT_LINKING) {
+		if (linkState == LINKING_PARAMS) {
 			Point2D pos = e.getPosition();
 			link.setEndCoords((float) pos.getX(),(float) pos.getY());
 		}
+
 	}
 	
 	public void mousePressed(PInputEvent e) {
@@ -222,24 +227,36 @@ public class PChainEventHandler extends  PPanEventHandler {
 			selectedModule = null;
 		}
 		
-		if (node instanceof PFormalParameter && linkState == NOT_LINKING) {
+		if (node instanceof PFormalParameter && linkState != LINKING_PARAMS) {
+			// works if I say == NOT_LINKING
 	//		System.err.println("starting a new link");
+			if (linkState  == LINKING_MODULES) {
+				//do something appropriate here. 
+			}
 			if (lastParameterEntered == null)
 				mouseEntered(e);
 			PFormalParameter param = (PFormalParameter) node;
-			startLink(param);
+			if (param.canBeLinkOrigin())
+				startLink(param);
 			e.setHandled(true);
 		}
 		else if (node instanceof PLink) {
 			System.err.println("pressed on link");
 			selectedLink = (PLink) node;
-			selectedLink.setSelected(true);	
+			selectedLink.setSelected(true);
+			linkState = NOT_LINKING;	
 		}
 		else if (node instanceof PModule) {
+			if (linkState == NOT_LINKING && e.getClickCount() ==2 ) {
+				System.err.println("setting link state to LINKING_MODULES");
+				linkState = LINKING_MODULES;
+			}
 			selectedModule = (PModule) node;
 			selectedModule.addHandles();
+			//eventually, check link state. do one thing if not
+			//linking and another if linkingmodules
 		}
-		else if (linkState != NOT_LINKING) {
+		else if (linkState == LINKING_PARAMS) {
 			System.err.println("mouse pressed and not linking");
 			if (e.getClickCount() ==2) {
 				cancelLink();
@@ -253,7 +270,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 			}*/
 			e.setHandled(true);
 		}
-		//else
+		else
+			linkState =  NOT_LINKING;
 		//	super.mousePressed(e);
 	}
 		
@@ -265,7 +283,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		linkLayer.addChild(link);
 		link.setStartParam(linkOrigin);
 		link.setPickable(false);
-		linkState = LINKING_FIRST_POINT;			
+		linkState = LINKING_PARAMS;			
  	}
 		
 	// this link ends at lastParameterEntered
