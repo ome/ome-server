@@ -39,14 +39,15 @@ package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
-
+import org.openmicroscopy.vis.ome.CDataset;
+import org.openmicroscopy.vis.ome.CProject;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
-import org.openmicroscopy.Project;
+
 import javax.swing.Timer;
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -55,6 +56,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+
 
 /** 
  * A Piccolo canvas for selecting projects.
@@ -65,7 +68,7 @@ import java.awt.event.ActionEvent;
  * @since OME2.1
  */
 public class PProjectSelectionCanvas extends PCanvas 
-	implements SelectionEventListener{
+	implements PBufferedObject, SelectionEventListener{
 	
 	private static final int HEIGHT=50;
 	private static final int MAXHEIGHT=150;
@@ -95,7 +98,7 @@ public class PProjectSelectionCanvas extends PCanvas
 	private void populate(Collection projects) {
 		Iterator iter = projects.iterator();
 		while (iter.hasNext()) {
-			Project p = (Project) iter.next();
+			CProject p = (CProject) iter.next();
 			ProjectLabel pl = new ProjectLabel(p,this);
             // build node
 			layer.addChild(pl);
@@ -121,76 +124,168 @@ public class PProjectSelectionCanvas extends PCanvas
 			Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
 				ProjectLabel pl = (ProjectLabel) obj;
-				System.err.println("x is "+x+", column width is "+columnWidth);
-				System.err.println("component width is "+width);
-				if (x+columnWidth+HGAP > width) {
+				//System.errprintln("x is "+x+", column width is "+columnWidth);
+				//System.errprintln("component width is "+width);
+				PBounds b = pl.getGlobalFullBounds();
+				double mywidth = pl.getGlobalFullBounds().getWidth()*
+					ProjectLabel.SELECTED_SCALE;
+				//f (x+columnWidth+HGAP > width) {
+				if (x+mywidth+HGAP > width) {
+		
 					y +=rowHeight+HGAP;
 					x =0;
 				}
 				pl.setOffset(x,y);
-			}
-			
-			x+=columnWidth+HGAP;
+	//			x+=columnWidth+HGAP;
+				x += mywidth+HGAP;
+			}	
 		}
-		scaleToFit(0);
+		//scaleToFit(0);
 	}
 	
-	public void scaleToFit(int delay) {
+	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
-		System.err.println("bounds are "+b);
+		return new PBounds(b.getX()-PConstants.SMALL_BORDER,
+			b.getY()-PConstants.SMALL_BORDER,
+			b.getWidth()+2*PConstants.SMALL_BORDER,
+			b.getHeight()+2*PConstants.SMALL_BORDER); 
+	}
+	
+	private void scaleToFit(int delay) {
+		//PBounds b = //layer.getFullBounds();
+		PBounds b = getBufferedBounds();
+		//System.errprintln("bounds are "+b);
 		getCamera().animateViewToCenterBounds(b,true,delay);
-		getCamera().setViewScale(INITIAL_SCALE);
+		//getCamera().setViewScale(INITIAL_SCALE);
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
+		SelectionState state = e.getSelectionState();
 		
-	//	if (e.getMask() == SelectionEvent.SET_ROLLOVER_PROJECT &&
-	//		  e.getSelectionState().getSelectedProject() == null)
-	 	if (e.getSelectionState().getSelectedProject() == null) 
-			scaleToFit(PConstants.ANIMATION_DELAY);
+	 	if ((e.getMask() & SelectionEvent.SET_SELECTED_PROJECT) ==
+	 		SelectionEvent.SET_SELECTED_PROJECT) {
+	 		if (state.getSelectedProject() == null) 
+				scaleToFit(PConstants.ANIMATION_DELAY); 
+				setSelectedProject();
+	 	}
+		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_DATASET)
+				== SelectionEvent.SET_ROLLOVER_DATASET) {
+			CDataset rolled = state.getRolloverDataset();
+				
+		
+			Collection projects = null;
+			setRollover(rolled);
+		}
+		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_PROJECT)
+					==  SelectionEvent.SET_ROLLOVER_PROJECT) {
+			// set rollover sets things to be active if they are active projects
+			setRollover(state.getRolloverProject());
+		}
 	}
 	
 	public int getEventMask() {
-		return SelectionEvent.SET_SELECTED_PROJECT;
+		return SelectionEvent.SET_SELECTED_PROJECT |
+			SelectionEvent.SET_ROLLOVER_PROJECT |
+			SelectionEvent.SET_ROLLOVER_DATASET;
+	}
+	
+	public void setRollover(CDataset rolled) {
+		Iterator iter = layer.getChildrenIterator();
+		ProjectLabel pLabel;
+		SelectionState state = SelectionState.getState();
+		
+		while (iter.hasNext()) {
+			Object obj = iter.next();
+			if (obj instanceof ProjectLabel) {
+				pLabel = (ProjectLabel) obj;
+				if (rolled != null && 
+					rolled.hasProject(pLabel.getProject())) 
+					pLabel.setRollover(true);
+				else if (state.isActiveProject(pLabel.getProject()))
+					pLabel.setActive();
+				else
+					pLabel.setNormal();
+			}
+		}
 	}
 			
+ 	public void setRollover(CProject proj) {
+		Iterator iter = layer.getChildrenIterator();
+		ProjectLabel pLabel;
+		SelectionState state = SelectionState.getState();
+		
+		while (iter.hasNext()) {
+		Object obj = iter.next();
+			if (obj instanceof ProjectLabel) {
+				pLabel = (ProjectLabel) obj;
+				if (pLabel.getProject() == proj)
+					pLabel.setRollover(true);
+				else  if (state.isActiveProject(pLabel.getProject()))
+					pLabel.setActive();
+				else
+					pLabel.setNormal();
+			}
+		}
+ 	}
+ 	
+	public void setSelectedProject() {
+		SelectionState state = SelectionState.getState();
+		CProject selected = state.getSelectedProject();
+		Iterator iter = layer.getChildrenIterator();
+		ProjectLabel pLabel;
+				
+		while (iter.hasNext()) {
+			Object obj = iter.next();
+			if (obj instanceof ProjectLabel) {
+				pLabel = (ProjectLabel) obj;
+				if (pLabel.getProject() == selected)
+					pLabel.setSelected();
+				else if (state.isActiveProject(pLabel.getProject()))
+					pLabel.setActive();
+				else
+					pLabel.setNormal();
+			}
+		}
+	} 
 }
 
 
-class ProjectLabel extends PText implements SelectionEventListener {
+class ProjectLabel extends PText  {
 	
 	public static final double NORMAL_SCALE=1.0;
 	public static final double ACTIVE_SCALE=1.25;	
     public static final double ROLLOVER_SCALE=1.25;
 	public static final double SELECTED_SCALE=1.5;
-	public Project project;
+	public CProject project;
 	
 	private double previousScale =NORMAL_SCALE;
 	private Paint previousPaint;
 	PProjectSelectionCanvas canvas;
 	
-	ProjectLabel(Project project,PProjectSelectionCanvas canvas) {
+	
+	ProjectLabel(CProject project,PProjectSelectionCanvas canvas) {
 		super();
 		this.project = project;
 		this.canvas = canvas;
 		setText(project.getName());
 		setFont(PConstants.TOOLTIP_FONT);
-		// initially
-	//	setScale(SELECTED_SCALE);
-		SelectionState.getState().addSelectionEventListener(this);
 		
 	}
 	
-	public Project getProject() {
+	public CProject getProject() {
 		return project;
 	}
 	
 	public void setNormal() {
+		if (project == SelectionState.getState().getSelectedProject())
+			return;
 		setScale(NORMAL_SCALE);
 		setPaint(PConstants.DEFAULT_COLOR);
 	}
 	
 	public void setActive() {
+		if (project == SelectionState.getState().getSelectedProject())
+					return;
 		setScale(ACTIVE_SCALE);
 		setPaint(PConstants.PROJECT_ACTIVE_COLOR);
 	}
@@ -204,33 +299,24 @@ class ProjectLabel extends PText implements SelectionEventListener {
 			PConstants.ANIMATION_DELAY);
 	}
 	
-	public void setRollover(boolean v) {	
-		// don't make it smaller if already selected
-		setScale(ROLLOVER_SCALE);
-		setPaint(PConstants.PROJECT_ROLLOVER_COLOR);
-	}
-	
-	public void selectionChanged(SelectionEvent e) {
-		SelectionState state = e.getSelectionState();
-		if (project == state.getSelectedProject())
-			setSelected();
-		else if (project == state.getRolloverProject())
-			setRollover(true);
-		else if (state.isActiveProject(project))
-			setActive();
-		else
+	public void setRollover(boolean v) {
+		if (project == SelectionState.getState().getSelectedProject())
+			return;
+			
+		if (v == true) {
+			setScale(ROLLOVER_SCALE);
+			setPaint(PConstants.PROJECT_ROLLOVER_COLOR);
+		}
+		else  {
 			setNormal();
-	}
-	
-	public int getEventMask() {
-		return SelectionEvent.SET_SELECTED_PROJECT|
-			SelectionEvent.SET_ROLLOVER_PROJECT;
+		}
 	}
 }
 
 class ProjectLabelEventHandler extends PBasicInputEventHandler implements 
 	ActionListener {
 	
+	private int leftButtonMask = MouseEvent.BUTTON1_MASK;
 	private final Timer timer =new Timer(300,this);
 	private PInputEvent cachedEvent;
 	
@@ -248,12 +334,15 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	
 	public void mouseExited(PInputEvent e) {
 		if (e.getPickedNode() instanceof ProjectLabel) {
-			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
 			SelectionState.getState().setRolloverProject(null);
 		}
 	}
 	
 	public void mouseClicked(PInputEvent e) {
+		
+		if ((e.getModifiers() & leftButtonMask) !=
+				leftButtonMask)
+			return;
 		if (timer.isRunning()) {
 			timer.stop();
 			doMouseDoubleClicked(e);
@@ -273,13 +362,42 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	
 	public void doMouseClicked(PInputEvent e) {
 		if (e.getPickedNode() instanceof ProjectLabel) {
+			//System.errprintln("mouse clicked in project selection. seting project");
+			//System.errprintln("event handled is "+e.isHandled());
 			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
 			SelectionState.getState().setSelectedProject(pl.getProject());
 		}
 	}
 	
     public void doMouseDoubleClicked(PInputEvent e) {
-		SelectionState.getState().setSelectedProject(null);
+    	SelectionState state = SelectionState.getState();
+    	if (state.getSelectedProject() != null)
+			SelectionState.getState().setSelectedProject(null);
     }
+    
+	public void mouseReleased(PInputEvent e) {
+		//System.errprintln("mouse released call");
+		if (e.isPopupTrigger()) {
+			e.setHandled(true);
+			handlePopup(e);
+		}
+	}
+	
+	public void mousePressed(PInputEvent e) {
+		//System.errprintln("mouse pressed call");
+		mouseReleased(e);
+	}
+	
+	public void handlePopup(PInputEvent e) {
+		if (e.getPickedNode() instanceof ProjectLabel) {
+			//System.errprintln("trying to handle product in project selection");
+			//System.errprintln("event handled is "+e.isHandled());
+			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
+			CProject picked = pl.getProject();
+			CProject selected = SelectionState.getState().getSelectedProject();
+			if (picked == selected) 
+				SelectionState.getState().setSelectedProject(null);			
+		}
+	}
  
 }
