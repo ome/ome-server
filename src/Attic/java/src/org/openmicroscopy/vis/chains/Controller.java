@@ -404,5 +404,9 @@ public class Controller  implements LoginResponder {
 	public void setCurrentResults(ResultFrame r) {
 		currentResultFrame = r;
 	}
+	
+	public ControlPanel getControlPanel() {
+		return controlPanel;
+	}
 }
 
