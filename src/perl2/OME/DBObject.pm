@@ -639,8 +639,8 @@ sub addColumn {
                         $value = $self->{__fields}->{$table}->{$column};
                     }
 
-                    return 1 if ($value =~ /^t(rue)?$/i);
-                    return 0 if ($value =~ /^f(alse)?$/i);
+                    return 1 if (defined $value and $value =~ /^t(rue)?$/i);
+                    return 0 if (defined $value and $value =~ /^f(alse)?$/i);
                     return $value;
                 };
             } else {
@@ -2004,6 +2004,7 @@ no warnings "uninitialized";
             } elsif ($sql_type eq 'boolean') {
                 # If the column is Boolean, 1/0 won't work.
                 foreach my $value (@new_values) {
+                	next unless defined $value;
                     die "Illegal Boolean column value '$value'"
                       unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
 
@@ -2152,7 +2153,7 @@ sub __makeInsertSQLs {
           unless defined $column_def;
         my ($table, $column, $foreign_key_class, $sql_options) = @$column_def;
 
-        if (defined $sql_options &&
+        if (defined $sql_options && defined $sql_options->{SQLType} &&
             $sql_options->{SQLType} eq 'boolean' and 
             defined $datum ) {
 

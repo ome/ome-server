@@ -291,7 +291,7 @@ sub new {
         # Save this accessor into the current package
         {
             no strict 'refs';
-            *{__PACKAGE__."\:\:$fk_name"} = $accessor;
+            *{__PACKAGE__."\:\:$fk_name"} = $accessor unless defined *{__PACKAGE__."\:\:$fk_name"};
         }
     }
 

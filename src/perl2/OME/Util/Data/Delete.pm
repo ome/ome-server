@@ -273,7 +273,7 @@ my $mex_id;
 	}
 	
 	# If the MEX is an $IMAGE_IMPORT_MEX, delete the image
-	if ($mex->module->id() == $IMAGE_IMPORT_MODULE_ID) {
+	if ($mex->module->id() == $IMAGE_IMPORT_MODULE_ID and $mex->image()) {
 		my $image = $mex->image();
 		print $recurs_indent,"  Image ",$image->id()," ",$image->name(),"\n";
 

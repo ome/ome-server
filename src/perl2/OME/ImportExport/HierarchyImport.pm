@@ -303,6 +303,7 @@ returns 1 if the MEX_id given was created ...
 
 sub createdMEXduringImport () {
 my ($self, $MEX) = @_;
+	return undef unless $MEX;
 my $MEX_ID = ref ($MEX) ? $MEX->id() : $MEX;
 	return undef unless exists $self->{_mexes_used};
 	return undef unless defined $self->{_mexes_used};
@@ -367,15 +368,17 @@ sub importObject ($$$$) {
 		unless $LSID;
 #	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
 	$theObject = $lsid->getLocalObject ($LSID);
-	$parentDBID = undef if $granularity eq 'G';
-    if ($granularity eq 'G') {
-        $module_execution = OME::Tasks::ImportManager->getGlobalImportMEX();
-    } elsif ($granularity eq 'D') {
-        $module_execution = OME::Tasks::ImportManager->
-          getDatasetImportMEX($parentDBID);
-    } elsif ($granularity eq 'I') {
-        $module_execution = OME::Tasks::ImportManager->
-          getImageImportMEX($parentDBID);
+	if (defined $granularity) {
+		$parentDBID = undef if $granularity eq 'G';
+		if ($granularity eq 'G') {
+			$module_execution = OME::Tasks::ImportManager->getGlobalImportMEX();
+		} elsif ($granularity eq 'D') {
+			$module_execution = OME::Tasks::ImportManager->
+			  getDatasetImportMEX($parentDBID);
+		} elsif ($granularity eq 'I') {
+			$module_execution = OME::Tasks::ImportManager->
+			  getImageImportMEX($parentDBID);
+		}
     }
 	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$node->nodeName()};
 	$self->{_mexes_used}->{ $module_execution->id() } = undef
@@ -407,6 +410,7 @@ sub importObject ($$$$) {
 	my %unresolvedRefs;
 	my ($objField,$theRef,$refObject);
 	while ( ($objField,$theRef) = each %$refCols ) {
+		next unless $theRef;
 		if (exists $docIDs->{$theRef}) {
 			$objectData->{$objField} = $docIDs->{$theRef};
 		#	logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
@@ -444,6 +448,7 @@ sub importObject ($$$$) {
 
 	# Add the unresolved references for this object from the local unresolvedRefs hash to the global docRefs hash
 	while ( ($objField, $theRef) = each %unresolvedRefs ) {
+		next unless $theRef;
 		push (@{ $docRefs->{$theRef} }, {Object=>$theObject, Field=>$objField});
 	}
 
@@ -465,6 +470,7 @@ sub importObject ($$$$) {
 	}
 	# If this object has a ref to a malformed LSIDs, record it. (Index on the malformed LSID)
 	while ( ($objField,$theRef) = each %$refCols ) {
+		next unless $theRef;
 		push (@{ $self->{_malformedLSIDs}->{$theRef}->{refsToObject} }, {Object=>$theObject, Field=>$objField})
 			unless defined $lsid->checkLSID($theRef);
 	}
@@ -552,13 +558,18 @@ sub getObjectTypeInfo ($$) {
 			# The first place to look is in an attribute
 			$objectData->{$attrColName} = $node->getAttribute($attrColName);
 			# The second place to look is in a subNode
-			$objectData->{$attrColName} = $node->getElementsByLocalName( $attrColName )->[0]->firstChild()->data()
-				unless defined $objectData->{$attrColName} or $node->getElementsByLocalName( $attrColName )->size() <= 0;
+			if (not defined $objectData->{$attrColName} and $node->getElementsByLocalName( $attrColName )->size() > 0) {
+				$objectData->{$attrColName} = $node->getElementsByLocalName( $attrColName )->[0]->firstChild()->data()
+			}
 			my $sql_type = $attrCol->data_column()->sql_type();
 			if ($sql_type eq 'reference') {
 				$refCols->{$attrColName} = $objectData->{$attrColName};
 			} elsif ($sql_type eq 'boolean') {
-				$objectData->{$attrColName} = $objectData->{$attrColName} eq 'true' ? '1' : '0';
+				if (defined $objectData->{$attrColName}) {
+					$objectData->{$attrColName} = $objectData->{$attrColName} eq 'true' ? '1' : '0';
+				} else {
+					$objectData->{$attrColName} = undef;
+				}
 			} elsif ($sql_type eq 'timestamp') {
 				$objectData->{$attrColName} = XML2ODBC_timestamp ($objectData->{$attrColName});
 			}
@@ -577,18 +588,19 @@ sub getObjectTypeInfo ($$) {
 
 sub XML2ODBC_timestamp () {
 	my $value = shift;
+	return undef unless $value;
 	my ($date,$time,$timezone);
 	$date = $1 if $value =~ /^(\d\d\d\d-\d\d-\d\d)/;
 	if ($value =~ /(\d\d:\d\d:\d\d(\.\d+)?)(([+-]\d\d?(:\d\d)?)|Z)?$/) {
-		$time = $1;
-		$timezone = $3;
+		$time = defined $1 ? $1 : '';
+		$timezone = defined $3 ? $3 : '';
 	}
 	if ($timezone =~ /[+-]\d\d?$/) {
 		$timezone .= ':00';
 	}
 	
 	return $date.' '.$time.$timezone if $date and $time;
-	return "";
+	return undef;
 }
 
 

@@ -324,6 +324,10 @@ sub __callOMEIS {
 
 	$params{SessionKey} = $session->SessionKey()
 		unless exists $params{SessionKey};
+	
+	foreach (keys %params) {
+		delete $params{$_} unless defined $params{$_};
+	}
 
     if ($local_server) {
         # If there is a File or Pixels parameter, pull it out of the

@@ -282,6 +282,10 @@ sub __getRegexGroups {
     my %file_list_copy = %$read_only_file_list;
     
     my $format = ref( $self );
+    # See if there is a FilenamePattern ST in this DB.
+	my $ST = $factory->findObject("OME::SemanticType",name => 'FilenamePattern');
+    return (\%groups, $infoHash) unless defined $ST;
+
     # Get the array of filenamePattern hashes
     my @filenamePatternList = $factory->findObjects( 
     	'@FilenamePattern',

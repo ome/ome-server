@@ -232,6 +232,7 @@ This determines if an LSID is properly formed. Returns undef if not, $LSID if so
 
 sub checkLSID ($) {
 my ($self,$lsid) = @_;
+	return undef unless $lsid;
 	my ($urn,$urnType,$authority,$namespace,$localIDdbInstance) =
       split (/:/,$lsid);
     return undef unless defined $localIDdbInstance;
