@@ -1,7 +1,6 @@
 #!/usr/bin/perl -w
 # Copyright (C) 2002 Open Microscopy Environment
-# Authors:
-#	Ilya G. Goldberg <igg@nih.gov>
+# Author:
 #	Josiah Johnston <siah@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or
@@ -23,17 +22,8 @@ use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::DBObject;
-use OME::Image;
 use base qw{ OME::Web };
 
-use GD;
-use OME::Graphics::JavaScript;
-use OME::Graphics::JavaScript::Layer::Vectors;
-use OME::Graphics::JavaScript::Layer::Centroids;
-use OME::Graphics::JavaScript::Layer::OMEimage;
-use OME::Graphics::GD::Vectors;
-use OME::Graphics::GD::Centroids;
 use Benchmark;
 
 sub new {
@@ -68,13 +58,7 @@ sub createOMEPage {
 			unless defined $dataset;
 	}
 
-	if ( $cgi->url_param('DrawLayersControls') ) {
-		return ('HTML',$self->DrawLayersControls());
-	} elsif ( $cgi->url_param('name') ) {
-		return ('IMAGE',$self->DrawGraphics());
-	} elsif ( $cgi->url_param('HTML') ) {
-		return ('HTML',$self->DrawMainWindow());
-	} elsif ( $cgi->url_param('BuildSVGviewer') ) {
+	if ( $cgi->url_param('BuildSVGviewer') ) {
 		return('SVG', $self->BuildSVGviewer());
 	} elsif ( $cgi->url_param('DrawDatasetControl')) {
 		return('HTML', $self->DrawDatasetControl());
@@ -87,47 +71,12 @@ sub createOMEPage {
 
 
 sub getPageTitle {
-    return "Open Microscopy Environment";
+    return "OME - SVG viewer";
 }
 
 sub contentType {
 my $self = shift;
 	return $self->{contentType};
-}
-
-sub DrawMainWindow {
-my $self = shift;
-my $cgi   = $self->CGI();
-my $JSgraphics = $self->getJSgraphics() ;
-my $JS;
-my $HTML;
-
-	$JS = <<ENDJS;
-	function MakePopup () {
-		if (!document.popup)
-			document.popup = window.open('serve.pl?Page=OME::Web::GetGraphics&DrawLayersControls=1&ImageID=$self->{ImageID}', 'cal', 'dependent=yes, width=400, height=600, screenX=0, screenY=0, titlebar=yes');
-		if (!document.popup.opener) document.popup.opener = self;
-		if (document.popup.focus) document.popup.focus();
-	}
-	function doNothing () {
-	}
-ENDJS
-
-
-	$self->{contentType} = 'text/html';
-	$HTML = $cgi->start_html(-title=>'Graphics Test', -script=>$JS.$JSgraphics->JSobjectDefs());
-	$HTML .= qq '<form onsubmit="doNothing()">';
-	$HTML .= qq 'Z:<input type="button" name="theZdown" value="v" onclick="$JSgraphics->{JSref}.Zdown()">\n';
-	$HTML .= qq '<input type="text" name="theZtextBox" size="3" onchange="$JSgraphics->{JSref}.SwitchZ(parseInt(this.value))">\n';
-	$HTML .= qq '<input type="button" name="theZup" value="^" onclick="$JSgraphics->{JSref}.Zup()">&nbsp;&nbsp;\n';
-	$HTML .= qq 'T:<input type="button" name="theTdown" value="<" onclick="$JSgraphics->{JSref}.Tdown()">\n';
-	$HTML .= qq '<input type="text" name="theTtextBox" size="3" onchange="$JSgraphics->{JSref}.SwitchT(parseInt(this.value))">\n';
-	$HTML .= qq '<input type="button" name="theTup" value=">" onclick="$JSgraphics->{JSref}.Tup()">\n';
-	$HTML .= qq '&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:MakePopup()">Layers</a></form>\n';
-	$HTML .= $JSgraphics->JSinstance ('position:absolute; left:0; top:35; visibility:visible; border-width:1 border-style:solid border-color:black');
-
-	$HTML .= $cgi->end_html;
-	return ($HTML);
 }
 
 sub DrawMainWindowSVGimage {
@@ -155,8 +104,6 @@ $HTML .= <<ENDHTML;
 	</frameset>
 </html>
 ENDHTML
-#	$HTML .= qq '\n<embed width="100%" height="100%" src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&ImageID=$ImageID">\n';
-#	$HTML .= $cgi->end_html;
 
 	return ($HTML);
 }
@@ -298,6 +245,158 @@ ENDHTML
 
 	return ($HTML);
 
+}
+
+
+sub SVGgetDataJS {
+	my $self    = shift;
+	my $cgi     = $self->CGI();
+	my $JSinfo  = {};
+	my $session = $self->Session();
+	my $factory = $session->Factory();
+
+    my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
+
+	$JSinfo->{ ImagedID } = $ImageID;
+
+	my $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID)
+		or die "Could not retreive Image from ImageID=$ImageID\n";
+
+	# get Dimensions from image and make them readable
+	my $pixels = $image->DefaultPixels()
+		or die "Could not a primary set of Pixels for this image\n";
+	my $dims = [ $pixels->SizeX,
+	             $pixels->SizeY,
+	             $pixels->SizeZ,
+	             $pixels->SizeC,
+	             $pixels->SizeT,
+	             $pixels->BitsPerPixel/8
+	            ];
+	
+	# get wavelengths from image and make them JavaScript readable
+	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
+		or die "Image has no PixelChannelComponent attributes! Cannot display!\n";
+	my @channelComponents = grep{ $_->Pixels()->id() eq $pixels->id() } @ccs;
+	die "Image has no channel components for default Pixels!" if( scalar( @channelComponents ) eq 0 );
+	my @JSwavelengths;
+	foreach my $cc (@channelComponents) {
+		my $ChannelNum = $cc->Index();
+		my $Label = undef;
+		$Label = $cc->LogicalChannel()->Name()  || 
+		         $cc->LogicalChannel()->Fluor() || 
+		         $cc->LogicalChannel()->EmissionWavelength();
+		my @overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
+		$Label .= $cc->Index()
+			if( scalar( @overlap ) > 1 || not defined $Label );
+		push @JSwavelengths, "{WaveNum:$ChannelNum,Label:\"$Label\"}";
+	}
+	
+	###########################################################################
+	#
+	#	Get Stack Statistics
+	#
+	my $stackStats = $factory->findObject( "OME::Module", name => 'Stack statistics' )
+		or die "Stack statistics must be installed for this viewer to work!\n";
+	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
+		module_id => $stackStats->id(),
+		name       => 'Pixels' )
+		or die "Cannot find 'Pixels' formal input for Module 'Stack Statistics'.\n";
+	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
+		formal_input_id   => $pixelsFI->id(),
+		input_module_execution_id => $pixels->module_execution()->id() )
+		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
+	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
+
+	# FIXME: update this method call when method accepts search parameters
+	my @mins   = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackMinimum", $image ) );
+	my @maxes  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackMaximum", $image ) );
+	my @means  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackMean", $image ) );
+	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackGeometricMean", $image ) );
+	my @sigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackSigma", $image ) );
+	
+	my $sh; # stats hash
+	foreach( @mins ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
+	foreach( @maxes ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum(); }
+	foreach( @means ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
+	foreach( @gmeans ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
+	foreach( @sigma ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
+	my @ar1; # array 1
+	for( my $i = 0;$i<scalar(@$sh);$i++) {
+		my @ar2; # array 2
+		for( my $j = 0; $j<scalar(@{$sh->[$i]}); $j++) {
+			my $str = '{ '.join( ',', map( $_.': '.$sh->[$i][$j]->{$_}, keys %{ $sh->[$i][$j] } ) ).' }';
+			push @ar2, $str;
+		}
+		push @ar1, '['.join( ',', @ar2 ).']';
+	}
+	my $JSstats = '['.join( ',', @ar1 ).']';
+	#
+	#	END 'Get Stack Statistics'
+	#
+	###########################################################################
+
+	# get display settings
+	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
+	my $viewerPreferences = $factory->findObject( 'OME::ViewerPreferences', experimenter_id => $session->User()->id() );
+	
+	# compile info
+	$JSinfo->{ ImageID }            = $ImageID;
+	$JSinfo->{ Stats }              = $JSstats;
+	$JSinfo->{ Wavelengths }        = '['.join(',',@JSwavelengths).']';
+	$JSinfo->{ Dims }               = '['.join (',', @$dims).']';
+	$JSinfo->{ CGI_URL }            = '/cgi-bin/OME_JPEG';
+	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath( $pixels );
+	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
+	$JSinfo->{ theZ }               = $cgi->url_param('theZ') || sprintf "%d",$dims->[2] / 2;
+	$JSinfo->{ theT }               = $cgi->url_param('theT') || 0;
+	$JSinfo->{ isRGB }              = 'null';
+	$JSinfo->{ CBW }                = 'null'; # ChannelNumber, BlackLevel, WhiteLevel
+	$JSinfo->{ RGBon }              = 'null';
+	$JSinfo->{ toolBoxScale }       = 1;
+
+	#	Set Defaults
+	if( defined $displayOptions ) {
+		$JSinfo->{ theZ }      = sprintf( "%d", ( $displayOptions->ZStart() + $displayOptions->ZStop() ) / 2 )
+			if( not defined $cgi->url_param('theZ') );
+		$JSinfo->{ theT }      = sprintf( "%d", ( $displayOptions->TStart() + $displayOptions->TStop() ) / 2 )
+			if( not defined $cgi->url_param('theT') );
+		$JSinfo->{ isRGB }     = $displayOptions->DisplayRGB();
+		
+		my @CBW;
+		@CBW = (
+			$displayOptions->RedChannel()->ChannelNumber(),
+			$displayOptions->RedChannel()->BlackLevel(),
+			$displayOptions->RedChannel()->WhiteLevel(),
+			$displayOptions->BlueChannel()->ChannelNumber(),
+			$displayOptions->BlueChannel()->BlackLevel(),
+			$displayOptions->BlueChannel()->WhiteLevel(),
+			$displayOptions->GreenChannel()->ChannelNumber(),
+			$displayOptions->GreenChannel()->BlackLevel(),
+			$displayOptions->GreenChannel()->WhiteLevel(),
+			$displayOptions->GreyChannel()->ChannelNumber(),
+			$displayOptions->GreyChannel()->BlackLevel(),
+			$displayOptions->GreyChannel()->WhiteLevel(),
+		) if $displayOptions;
+		$JSinfo->{ CBW } = '[' . join( ',', @CBW ) . ']'
+			if( @CBW );
+		$JSinfo->{ RGBon } = '[' . $displayOptions->RedChannelOn() . ',' . $displayOptions->GreenChannelOn() . ',' . $displayOptions->BlueChannelOn() . ']';
+	}
+
+	if( defined $viewerPreferences ) {
+		$JSinfo->{ toolBoxScale } = $viewerPreferences->toolbox_scale();
+	}
+
+	return $JSinfo;
 }
 
 
@@ -973,282 +1072,4 @@ ENDSVG
 	return $SVG;
 }
 
-
-sub SVGgetDataJS {
-	my $self    = shift;
-	my $cgi     = $self->CGI();
-	my $JSinfo  = {};
-	my $session = $self->Session();
-	my $factory = $session->Factory();
-
-    my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
-
-	$JSinfo->{ ImagedID } = $ImageID;
-
-	my $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID)
-		or die "Could not retreive Image from ImageID=$ImageID\n";
-
-	# get Dimensions from image and make them readable
-	my $pixels = $image->DefaultPixels()
-		or die "Could not a primary set of Pixels for this image\n";
-	my $dims = [ $pixels->SizeX,
-	             $pixels->SizeY,
-	             $pixels->SizeZ,
-	             $pixels->SizeC,
-	             $pixels->SizeT,
-	             $pixels->BitsPerPixel/8
-	            ];
-	
-	# get wavelengths from image and make them JavaScript readable
-	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
-		or die "Image has no PixelChannelComponent attributes! Cannot display!\n";
-	my @channelComponents = grep{ $_->Pixels()->id() eq $pixels->id() } @ccs;
-	die "Image has no channel components for default Pixels!" if( scalar( @channelComponents ) eq 0 );
-	my @JSwavelengths;
-	foreach my $cc (@channelComponents) {
-		my $ChannelNum = $cc->Index();
-		my $Label = undef;
-		$Label = $cc->LogicalChannel()->Name()  || 
-		         $cc->LogicalChannel()->Fluor() || 
-		         $cc->LogicalChannel()->EmissionWavelength();
-		my @overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
-		$Label .= $cc->Index()
-			if( scalar( @overlap ) > 1 || not defined $Label );
-		push @JSwavelengths, "{WaveNum:$ChannelNum,Label:\"$Label\"}";
-	}
-	
-	###########################################################################
-	#
-	#	Get Stack Statistics
-	#
-	my $stackStats = $factory->findObject( "OME::Module", name => 'Stack statistics' )
-		or die "Stack statistics must be installed for this viewer to work!\n";
-	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
-		module_id => $stackStats->id(),
-		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for module 'Stack Statistics'.\n";
-	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
-		formal_input_id   => $pixelsFI->id(),
-		input_module_execution_id => $pixels->module_execution()->id() )
-		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
-	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
-
-	# FIXME: update this method call when method accepts search parameters
-	my @mins   = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackMinimum", $image ) );
-	my @maxes  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackMaximum", $image ) );
-	my @means  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackMean", $image ) );
-	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackGeometricMean", $image ) );
-	my @sigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackSigma", $image ) );
-	
-	my $sh; # stats hash
-	foreach( @mins ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
-	foreach( @maxes ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum(); }
-	foreach( @means ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
-	foreach( @gmeans ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
-	foreach( @sigma ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
-	my @ar1; # array 1
-	for( my $i = 0;$i<scalar(@$sh);$i++) {
-		my @ar2; # array 2
-		for( my $j = 0; $j<scalar(@{$sh->[$i]}); $j++) {
-			my $str = '{ '.join( ',', map( $_.': '.$sh->[$i][$j]->{$_}, keys %{ $sh->[$i][$j] } ) ).' }';
-			push @ar2, $str;
-		}
-		push @ar1, '['.join( ',', @ar2 ).']';
-	}
-	my $JSstats = '['.join( ',', @ar1 ).']';
-	#
-	#	END 'Get Stack Statistics'
-	#
-	###########################################################################
-
-	# get display settings
-	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
-	my $viewerPreferences = $factory->findObject( 'OME::ViewerPreferences', experimenter_id => $session->User()->id() );
-	
-	# compile info
-	$JSinfo->{ ImageID }            = $ImageID;
-	$JSinfo->{ Stats }              = $JSstats;
-	$JSinfo->{ Wavelengths }        = '['.join(',',@JSwavelengths).']';
-	$JSinfo->{ Dims }               = '['.join (',', @$dims).']';
-	$JSinfo->{ CGI_URL }            = '/cgi-bin/OME_JPEG';
-	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath( $pixels );
-	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
-	$JSinfo->{ theZ }               = $cgi->url_param('theZ') || sprintf "%d",$dims->[2] / 2;
-	$JSinfo->{ theT }               = $cgi->url_param('theT') || 0;
-	$JSinfo->{ isRGB }              = 'null';
-	$JSinfo->{ CBW }                = 'null'; # ChannelNumber, BlackLevel, WhiteLevel
-	$JSinfo->{ RGBon }              = 'null';
-	$JSinfo->{ toolBoxScale }       = 1;
-
-	#	Set Defaults
-	if( defined $displayOptions ) {
-		$JSinfo->{ theZ }      = sprintf( "%d", ( $displayOptions->ZStart() + $displayOptions->ZStop() ) / 2 )
-			if( not defined $cgi->url_param('theZ') );
-		$JSinfo->{ theT }      = sprintf( "%d", ( $displayOptions->TStart() + $displayOptions->TStop() ) / 2 )
-			if( not defined $cgi->url_param('theT') );
-		$JSinfo->{ isRGB }     = $displayOptions->DisplayRGB();
-		
-		my @CBW;
-		@CBW = (
-			$displayOptions->RedChannel()->ChannelNumber(),
-			$displayOptions->RedChannel()->BlackLevel(),
-			$displayOptions->RedChannel()->WhiteLevel(),
-			$displayOptions->BlueChannel()->ChannelNumber(),
-			$displayOptions->BlueChannel()->BlackLevel(),
-			$displayOptions->BlueChannel()->WhiteLevel(),
-			$displayOptions->GreenChannel()->ChannelNumber(),
-			$displayOptions->GreenChannel()->BlackLevel(),
-			$displayOptions->GreenChannel()->WhiteLevel(),
-			$displayOptions->GreyChannel()->ChannelNumber(),
-			$displayOptions->GreyChannel()->BlackLevel(),
-			$displayOptions->GreyChannel()->WhiteLevel(),
-		) if $displayOptions;
-		$JSinfo->{ CBW } = '[' . join( ',', @CBW ) . ']'
-			if( @CBW );
-		$JSinfo->{ RGBon } = '[' . $displayOptions->RedChannelOn() . ',' . $displayOptions->GreenChannelOn() . ',' . $displayOptions->BlueChannelOn() . ']';
-	}
-
-	if( defined $viewerPreferences ) {
-		$JSinfo->{ toolBoxScale } = $viewerPreferences->toolbox_scale();
-	}
-
-	return $JSinfo;
-}
-
-
-
-sub DrawGraphics {
-my $self = shift;
-my $cgi   = $self->CGI();
-my %params;
-my $type;
-my $layer;
-my @string;
-
-	foreach ($cgi->url_param()) {
-		$params{$_} = $cgi->url_param($_);
-		push (@string,$_.' = '.$cgi->url_param($_));
-	}
-
-	$params{allZ} = $params{allZ} eq 'true' ? 1 : 0;
-	$params{allT} = $params{allT} eq 'true' ? 1 : 0;
-	$params{width} = 782;
-	$params{height} = 854;
-	$params{color} = OME::Graphics::JavaScript::Layer->X11Colors->{ $params{color} };
-	$type = delete $params{layerType};
-	
-	# $type should be something under OME::Graphics::GD
-	$layer = eval ("new $type (%params)") || die "Layer of type '$type' is not supported\n";
-	$layer->Draw ();
-
-# some stuff for testing - this draws the params onto the image.
-	my $Y=0;
-	my $black = $layer->{image}->colorResolve(1,1,1);
-	foreach (@string) {
-		$layer->{image}->string(gdSmallFont,10,$Y,$_,$black);
-		$Y += 12;
-	}
-
-# Output the layer's image.
-	$self->{contentType} = $layer->imageType;
-	return $layer->getImage;
-}
-
-# Add to Layer:
-# imageType (i.e. 'image/png')
-# getImage returns the actual image, i.e. {image}->png, etc.
-# Change type to a full module spec.
-
-
-
-sub DrawLayersControls {
-my $self = shift;
-my $cgi   = $self->CGI();
-my $JSgraphics = $self->getJSgraphics() ;
-
-	$self->{contentType} = 'text/html';
-	return $cgi->start_html(-title=>'Layers Popup').$JSgraphics->Form('opener').$cgi->end_html;
-}
-
-
-sub getJSgraphics {
-    my $self = shift;
-    my $cgi   = $self->CGI();
-
-    my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
-    $self->{ImageID} = $ImageID;
-    my $image;
-
-    my $layer;
-
-# This to come from the DB eventually.
-    my $Layers = [
-                  {
-                      JStype   => 'OMEimage',
-                      LayerCGI => '../cgi-bin/OME_JPEG',
-                      SQL      => undef,
-                      Options  => 'name=Image234&allZ=0&allT=0&isRGB=1'
-                      },{
-                          JStype   => 'Vectors',
-                          LayerCGI => 'serve.pl',
-                          SQL      => undef,
-                          Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Vectors&color=green&name=Vectors2&allZ=1&allT=0'
-                          },{
-                              JStype   => 'Centroids',
-                              LayerCGI => 'serve.pl',
-                              SQL      => undef,
-                              Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Centroids&color=blue&name=Centroids11&allZ=1&allT=0'
-                              },{
-                                  JStype   => 'Vectors',
-                                  LayerCGI => 'serve.pl',
-                                  SQL      => undef,
-                                  Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Vectors&color=blue&name=Vectors1&allZ=1&allT=0'
-                                  }];
-    my $layerSpec;
-
-    # Don't bother with the image if we're just drawing the layer controls.
-    $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID);
-    die "Could not retreive Image from ImageID=$ImageID\n"
-    	unless defined $image;
-	my $pixels = $image->DefaultPixels();
-    print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath( $pixels )."\n";
-	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($pixels->SizeX(),$pixels->SizeY(),$pixels->SizeZ(),
-            $pixels->SizeC(),$pixels->SizeT(),$pixels->BitsPerPixel());
-
-	$bpp /= 8;
-
-# Set theZ and theT to defaults unless they are in the CGI url_param.
-    my $theZ = $cgi->url_param('theZ') || ( defined $sizeZ ? sprintf "%d",$sizeZ / 2 : 0 );
-    my $theT = $cgi->url_param('theT') || 0;
-
-    my $JSgraphics = new OME::Graphics::JavaScript (
-                                                    theZ=>$theZ,theT=>$theT,Session=>$self->Session(),ImageID=>$ImageID,
-                                                    Dims=>[$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp]);
-
-# Add the layers
-    foreach $layerSpec (@$Layers) {
-
-        $layer = eval 'new OME::Graphics::JavaScript::Layer::'.$layerSpec->{JStype}.'(%$layerSpec)';
-        if ($@ || !defined $layer) {
-            print STDERR "Error loading package - $@\n";
-            die "Error loading package - $@\n";
-        } else {
-            $JSgraphics->AddLayer ($layer);
-        }
-    }
-
-    return $JSgraphics;
-
-}
-
+1;
