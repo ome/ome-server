@@ -93,6 +93,9 @@ public class XmlRpcCaller
     public static boolean TRACE_CALLS = false;
     public static boolean USE_LITE_CLIENT = true;
 
+    private boolean profileCalls = false;
+    private long profilerTime = 0L;
+
     private XmlRpcClient  xmlrpc;
     private Vector        vparams = new Vector();
     private String        sessionKey = null;
@@ -235,10 +238,17 @@ public class XmlRpcCaller
         }
     }
 
+    public void startProfiler() { profileCalls = true; }
+    public void stopProfiler() { profileCalls = false; }
+    public void resetProfiler() { profilerTime = 0L; }
+    public long getProfiledMilliseconds() { return profilerTime; }
+
     private Object invoke(String method)
     {
         synchronized(this)
         {
+            long startTime = System.currentTimeMillis();
+
             try
             {
                 if (TRACE_CALLS)
@@ -252,6 +262,15 @@ public class XmlRpcCaller
                 }
 
                 Object retval = xmlrpc.execute(method,vparams);
+
+                long stopTime = System.currentTimeMillis();
+                if (profileCalls)
+                {
+                    long thisTime = stopTime-startTime;
+                    profilerTime += thisTime;
+                    System.err.println("Profiler: "+thisTime);
+                }
+
                 return decodeObject(retval);
             } catch (IOException e) {
                 throw new RemoteConnectionException(e.getMessage());
@@ -261,6 +280,14 @@ public class XmlRpcCaller
                     traceFile.println("execute exception ("+e.getClass()+
                                       "): "+e.getMessage());
                     e.printStackTrace(traceFile);
+                }
+
+                long stopTime = System.currentTimeMillis();
+                if (profileCalls)
+                {
+                    long thisTime = stopTime-startTime;
+                    profilerTime += thisTime;
+                    System.err.println("Profiler: "+thisTime);
                 }
 
                 System.err.println(e.getClass());

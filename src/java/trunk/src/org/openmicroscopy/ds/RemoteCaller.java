@@ -77,4 +77,8 @@ public interface RemoteCaller
      */
     public Integer dispatchInteger(String method, Object[] params);
 
+    public void startProfiler();
+    public void stopProfiler();
+    public void resetProfiler();
+    public long getProfiledMilliseconds();
 }
