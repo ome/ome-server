@@ -40,7 +40,7 @@
 
 
 
-package org.openmicroscopy.ds.data;
+package org.openmicroscopy.ds;
 
 public class DataException
     extends RuntimeException
