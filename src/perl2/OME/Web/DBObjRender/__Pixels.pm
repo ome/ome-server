@@ -61,10 +61,9 @@ use base qw(OME::Web::RenderData);
 # Class data
 my %_fieldLabels = (
 	'id'               => "ID",
-	'image'            => "Image",
-	'module_execution' => "Module Execution (MEX)"
+	'module_execution' => "MEX"
 );
-my @_fieldNames = ('id', 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType', 'BitsPerPixel', 'image', 'module_execution', 'semantic_type');
+my @_fieldNames = ('id', 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType', 'BitsPerPixel', 'image', 'module_execution');
 my @_allFieldNames = (@_fieldNames, 'FileSHA1', 'ImageServerID', 'Repository' );
 
 
