@@ -1109,6 +1109,9 @@ int FinishPixels (PixelsRep *myPixels, char force) {
 
 		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (-6);
 	}
+	
+	fchmod (myPixels->fd_rep,0400);
+	fchmod (myPixels->fd_info,0400);
 
 	return (0);
 }

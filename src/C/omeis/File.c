@@ -154,10 +154,15 @@ int DeleteFile (FileRep *myFile) {
 	if (myFile->is_mmapped) munmap (myFile->file_buf, myFile->size_rep);
 	if (myFile->fd_info >=0 ) close (myFile->fd_info);
 	if (myFile->fd_rep >=0 ) close (myFile->fd_rep);
-	if (myFile->path_rep)
+	
+	if (myFile->path_rep) {
+		chmod (myFile->path_rep,0600);
 		unlink (myFile->path_rep);
-	if (myFile->path_info)
+	}
+	if (myFile->path_info) {
+		chmod (myFile->path_info,0600);
 		unlink (myFile->path_info);
+	}
 	myFile->fd_info = -1;
 	myFile->fd_rep = -1;
 	myFile->is_mmapped = 0;
@@ -268,6 +273,7 @@ int FinishFile (FileRep *myFile) {
 	}
 
 	close (myFile->fd_info);
+
 	myFile->fd_info = -1;
 
 	if (myFile->is_mmapped) {
@@ -285,6 +291,9 @@ int FinishFile (FileRep *myFile) {
 		close (myFile->fd_rep);
 		myFile->fd_rep = -1;
 	}
+
+	chmod (myFile->path_info,0400);
+	chmod (myFile->path_rep,0400);
 
 	
 	return (0);
