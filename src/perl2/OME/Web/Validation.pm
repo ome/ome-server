@@ -59,11 +59,8 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;
-	my $body = "";
-
-	$body .= $self->showMessage();
-
-    	return ('HTML',$body);
+	my $body = $self->showMessage();
+    return ('HTML',$body);
 }
 
 =pod
@@ -129,7 +126,7 @@ It is internally referenced. It returns html snippets.
 sub showMessage {
 	my $self = shift;
 	my $session = $self->Session();
-	
+
 	return $self->projectNotDefined()
 		if(not defined $session->project());
 	return $self->datasetNotDefined()
@@ -149,7 +146,7 @@ sub projectNotDefined {
 	my $self    = shift;
 	my $session = $self->Session();
 	my $user    = $session->User()
-		or die ref ($self)."->projectNotDefined() say: There is no user defined for this session.";
+		or die ref ($self)."->projectNotDefined() There is no user defined for this session.";
 	my $cgi     = $self->CGI();
 	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my $text    = '';
