@@ -147,7 +147,7 @@ picomeis_read_row_rgba(void *vp, int y, int x0, int nx, Pixel1_rgba *buf)
 CompositeSpec *theOMEisPic = (CompositeSpec *)vp;
 PixelsRep *thePixels = theOMEisPic->thePixels;
 int theZ = theOMEisPic->theZ;
-int theT = theOMEisPic->theZ;
+int theT = theOMEisPic->theT;
 channelSpecType *theChR = &(theOMEisPic->RGBAGr[0]);
 channelSpecType *theChG = &(theOMEisPic->RGBAGr[1]);
 channelSpecType *theChB = &(theOMEisPic->RGBAGr[2]);
