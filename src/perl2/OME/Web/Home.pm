@@ -51,7 +51,6 @@ use UNIVERSAL::require;
 
 # OME Modules
 use OME;
-use OME::Web::Table;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ImageManager;
@@ -135,9 +134,10 @@ sub __getQuickViewImageData {
 	if ($d) {
 		# Header
 		$i_header  = $q->a( {
-				href => $self->pageURL('OME::Web::DatasetManagement') . '&DatasetID=' . $d->id(),
+				href => $self->getObjDetailURL( $d ),
 				class => 'ome_quiet',
-			}, $d->name() . ' Preview ');
+				}, 
+		$d->name() . ' Preview ');
 		$i_header .= $q->span({class => 'ome_quiet'}, "[$d_icount image(s)]");
 
 		my $i = 0;
@@ -189,7 +189,7 @@ sub __getQuickViewProjectData {
 	if ($p_count > 0) {
 			# Header
 		$p_header .= $q->a( {
-				href => $self->pageURL('OME::Web::ProjectTable'),
+				href => $self->pageURL('OME::Web::Search', { Type => 'OME::Project' } ),
 				class => 'ome_quiet',
 			}, 'Project Preview ');
 		$p_header .= $q->span({class => 'ome_quiet'}, "[$p_count project(s)]");
@@ -197,7 +197,7 @@ sub __getQuickViewProjectData {
 			# Content
 		foreach ($p_manager->getUserProjectsLimit(MAX_PREVIEW_PROJECTS)) {
 			my $a_options = {
-				href => $self->pageURL('OME::Web::ProjectManagement') . '&ProjectID=' . $_->id(),
+				href => $self->getObjDetailURL( $_ ),
 				class => 'ome_quiet',
 			};
 	
@@ -242,7 +242,7 @@ sub __getQuickViewDatasetData {
 	if ($p) {
 		# Header
 		$d_header .= $q->a( {
-				href => $self->pageURL('OME::Web::ProjectManagement') . '&ProjectID=' . $p->id(),
+				href => $self->getSearchAccessorURL( $p, 'datasets' ),
 				class => 'ome_quiet',
 			}, 'Datasets in ' . $p->name());
 		$d_header .= $q->span({class => 'ome_quiet'}, " [$p_dcount dataset(s)]");
@@ -255,7 +255,7 @@ sub __getQuickViewDatasetData {
 			my $local_d_icount = $d_manager->getImageCount($_);
 
 			$d_content .= $q->a( {
-					href => $self->pageURL('OME::Web::DatasetManagement') . '&DatasetID=' . $_->id(),
+					href => $self->getObjDetailURL( $_ ),
 					class => 'ome_quiet',
 				}, $_->name());
 
