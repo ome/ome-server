@@ -72,10 +72,10 @@ sub _create {
 	$data_hash{ group } = $session->User()->Group();
 	
 	my $dataset = $factory->newObject( 'OME::Dataset', \%data_hash );
-	my $map=$factory->maybeNewObject("OME::Project::DatasetMap",{
+	$factory->maybeNewObject("OME::Project::DatasetMap",{
 			project => $session->project(),
 			dataset => $dataset
-		} );
+		} ) if $session->project();
  	$session->commitTransaction();
  	
 	return( 'REDIRECT', $self->getObjDetailURL( $dataset ) );
