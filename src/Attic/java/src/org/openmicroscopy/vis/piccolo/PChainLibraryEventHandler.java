@@ -43,7 +43,6 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CChain;
-import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.chains.SelectionState;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
@@ -78,20 +77,19 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	private final Timer timer = new Timer(300, this);
 	
 	private PInputEvent cachedEvent;
-
-	private SelectionState  selectionState;		
+		
 	/**
 	 * A flag indicating that the previous event was a popup
 	 * 
 	 */
 	private static boolean postPopup = false;
 	
-	public PChainLibraryEventHandler(PChainLibraryCanvas canvas,
-		Controller controller) {
+	
+	
+	public PChainLibraryEventHandler(PChainLibraryCanvas canvas) {
 		super(canvas);
 		this.canvas = canvas;
-		selectionState = controller.getControlPanel().getSelectionState();
-		//this.addChainSelectionEventListener(controller.getControlPanel());
+		
 			
 	}
 	
@@ -117,6 +115,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	 *  	and treat the click like a double click
 	 */
 	public void mouseClicked(PInputEvent e) {
+		System.err.println("got a mouse clicked on canvas library");
 		if (timer.isRunning()) {// it's a double click
 			timer.stop();
 			mouseDoubleClicked(e);
@@ -129,7 +128,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	}
 	
 	private void mouseDoubleClicked(PInputEvent e) {
-		
+		System.err.println("doing a double click");
 		CChain selectedChain = null;
 		
 		PNode n = e.getPickedNode();
@@ -141,11 +140,13 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			PChainBox cb = (PChainBox) n.getParent();
 			selectedChain = cb.getChain(); 
 		}
+		SelectionState selectionState = SelectionState.getState();
 		selectionState.setSelectedChain(selectedChain);
 		e.setHandled(true);
 	} 
 	
 	private void doMouseClicked(PInputEvent e) {
+		System.err.println("doing a single click");
 		PNode node  = e.getPickedNode();
 		if (node instanceof PDatasetLabelText) {
 			// on a label.
@@ -154,8 +155,15 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 
 			e.setHandled(true);
 		}
+		else if (node instanceof PExecutionText) {
+			System.err.println("clicked on execution text!");
+			e.setHandled(true);
+		}
 		else {
-			super.mouseClicked(e);
+			SelectionState selectionState = SelectionState.getState();
+			System.err.println("calling super.mouseclicked..");
+		//		super.mouseClicked(e);
+		
 			if (node instanceof PChainBox) {
 				PChainBox cb = (PChainBox) node;
 				selectionState.setSelectedChain(cb.getChain());
@@ -195,4 +203,31 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			canvas.clearDraggingChain();
 		
 	}
-}
+	
+	public void mouseEntered(PInputEvent e) {
+			
+		PNode node = e.getPickedNode();
+		System.err.println("chain library. mousing over.."+node);
+		if (node instanceof PSelectableText) {
+			((PSelectableText) node).setHighlighted(true);
+			if (node instanceof PDatasetLabelText) {
+				PDatasetLabelText dl = (PDatasetLabelText) node;
+				canvas.showExecutionList(dl);
+			}
+			e.setHandled(true);
+		}
+		else  {
+			canvas.clearExecutionList();
+			super.mouseEntered(e);
+		}
+	}
+	
+	public void mouseExited(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		if (node instanceof PSelectableText) {
+			((PSelectableText) node).setHighlighted(false);
+			e.setHandled(true);
+		}
+	}
+	
+ }
