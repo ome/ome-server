@@ -118,7 +118,8 @@ my @modules = (
 	name => 'MD5',
 	repository_file => "$REPOSITORY/MD5-2.02.tar.gz",
 	exception => sub {
-	    if ($PERL_VERSION ge v5.8.0) { return 1 };
+		# N.B: $PERL_VERSION is broken. use $] instead.
+	    if ($] > 5.008) { return 1 };
 	} 
     },{
 	name => 'MIME::Base64',
