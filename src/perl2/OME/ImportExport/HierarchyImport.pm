@@ -273,6 +273,8 @@ sub processDOM {
 		# Import Image CAs
 		$CAnode = $node->getChildrenByTagName('CustomAttributes')->[0];
 		@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
+		# Display Options has a default reference to the default Pixels, but may be imported before default pixels are determined.
+		my $display_options = undef;i
 		foreach $CA ( @CAs ) {
 			my $imgAttr = $self->importObject ($CA,'I',$objectID,$importAnalysis);
 # This is a hack to rename the pixels repository file to the standard naming convention
@@ -298,12 +300,17 @@ sub processDOM {
 				# Assign pixels to image
 				$object->DefaultPixels( $imgAttr->id() ) 
 					unless $object->DefaultPixels();
+			} elsif( $CA->tagName() eq 'DisplayOptions' ) {
+				$display_options = $imgAttr;
 			}
 		}
 # end of hack
 
 		my $image = $object;
 		my $imageID = $image->id();
+		
+		$display_options->Pixels($image->DefaultPixels())
+			if defined $display_options and not defined $display_options->Pixels();
 		# Import Features
 		$self->importFeatures ($imageID, undef, $importAnalysis, $node);
 	}
