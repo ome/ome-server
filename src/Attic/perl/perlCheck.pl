@@ -96,6 +96,7 @@ my $version = shift;
 sub DBD_Pg_VersionOK {
 my $version = shift;
 	return (1) if $version eq 0.95;
+	return (1) if $version eq 1.01;
 	return (0);
 }
 
@@ -118,7 +119,7 @@ my $error;
 	$ENV{POSTGRES_INCLUDE} = $incDir;
 	my $libDir = `pg_config --libdir`;
 	$libDir =~ s/^\s+//;$libDir =~ s/\s+$//;
-	$ENV{POSTGRES_LIB} = $libDir;
+	$ENV{POSTGRES_LIB} = "$libDir -lssl";
 	
 	if ($^O eq 'darwin') {
 		print "\nranlib $libDir/libpq.a","\n";
