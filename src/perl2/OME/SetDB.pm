@@ -20,6 +20,8 @@
 
 
 #------------------------------------------------------------------------------
+# FIXME:
+#	this class may need to be refactored at some point to have less reliance on direct SQL queries.
 
 
 package OME::SetDB;
