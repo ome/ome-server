@@ -216,70 +216,87 @@ sub dispatch {
     my $session = OME::Remote::Utils::getObject(">>SESSIONS",$sessionRef);
     my $sessionKey = $session->{SessionKey};
 
-    print "dispatch(",join(',',map {$_ = OME::Remote::Utils::xmlEscape('P',$_);} @_[1..$#_]),")\n"
-      if $SHOW_CALLS;
-
-    my ($objectProto,$objectClass);
-
-    $objectRef = OME::Remote::Utils::xmlEscape('P',$objectRef);
-    if ($objectRef =~ /\>\>OBJ\:/) {
-        # This looks like an object reference
-        $objectProto = OME::Remote::Utils::getObject($sessionKey,$objectRef);
-        #print STDERR "    op $objectProto\n";
-        $objectClass = ref($objectProto);
-        #print STDERR "    oc $objectClass\n";
-    } else {
-        # It doesn't look like an object reference, assume it's a
-        # class name.
-        $objectProto = $objectClass = $objectRef;
-    }
-
-    $method = OME::Remote::Utils::xmlEscape('P',$method);
-
-    # Lookup the method's prototype
-    my $prototype =
-      OME::Remote::Prototypes::findPrototype($objectClass,$method);
-
-    croak "Cannot find method $method in class $objectClass"
-      if (!defined $prototype);
-
-    # Fix XML escape characters
-
-    $_ = OME::Remote::Utils::xmlEscape('P',$_) foreach @params;
-    _die "Parameters do not match prototype"
-      unless OME::Remote::Prototypes::verifyInputPrototype($prototype,
-                                                           \@params,
-                                                           \&OME::Remote::Utils::inputMarshaller,
-                                                           $sessionKey);
-
     my @result;
-    my $context = $prototype->{context};
-    my $realMethod = $prototype->{method};
-
-    # Call the method appropriate to the context in the prototype
+    my $context;
 
     eval {
-        if ($context eq 'void') {
-            $objectProto->$realMethod(@params);
-            @result = ();
-        } elsif ($context eq 'scalar') {
-            my $scalar = $objectProto->$realMethod(@params);
-            @result = ($scalar);
+        print "dispatch(",
+          join(',',
+               map {$_ = OME::Remote::Utils::xmlEscape('P',$_);} @_[1..$#_]),
+          ")\n"
+          if $SHOW_CALLS;
+
+        my ($objectProto,$objectClass);
+
+        $objectRef = OME::Remote::Utils::xmlEscape('P',$objectRef);
+        if ($objectRef =~ /\>\>OBJ\:/) {
+            # This looks like an object reference
+            $objectProto = OME::Remote::Utils::getObject($sessionKey,$objectRef);
+            #print STDERR "    op $objectProto\n";
+            $objectClass = ref($objectProto);
+            #print STDERR "    oc $objectClass\n";
         } else {
-            @result = $objectProto->$realMethod(@params);
+            # It doesn't look like an object reference, assume it's a
+            # class name.
+            $objectProto = $objectClass = $objectRef;
         }
+
+        $method = OME::Remote::Utils::xmlEscape('P',$method);
+
+        # Lookup the method's prototype
+        my $prototype =
+          OME::Remote::Prototypes::findPrototype($objectClass,$method);
+
+        croak "Cannot find method $method in class $objectClass"
+          if (!defined $prototype);
+
+        # Fix XML escape characters
+
+        $_ = OME::Remote::Utils::xmlEscape('P',$_) foreach @params;
+        _die "Parameters do not match prototype"
+          unless OME::Remote::Prototypes::verifyInputPrototype
+            ($prototype,
+             \@params,
+             \&OME::Remote::Utils::inputMarshaller,
+             $sessionKey);
+
+        $context = $prototype->{context};
+        my $realMethod = $prototype->{method};
+
+        # Call the method appropriate to the context in the prototype
+
+        eval {
+            if ($context eq 'void') {
+                $objectProto->$realMethod(@params);
+                @result = ();
+            } elsif ($context eq 'scalar') {
+                my $scalar = $objectProto->$realMethod(@params);
+                @result = ($scalar);
+            } else {
+                @result = $objectProto->$realMethod(@params);
+            }
+        };
+
+        if ($@) {
+            print STDERR "*** REMOTE SERVER ERROR:\n$@\n";
+            _die $@;
+        }
+
+        _die "Return value does not match prototype"
+          unless OME::Remote::Prototypes::verifyOutputPrototype
+            ($prototype,
+             \@result,
+             \&OME::Remote::Utils::outputMarshaller,
+             $sessionKey);
+
+        print "  (",join(",",@result),")\n"
+          if $SHOW_RESULTS;
     };
 
-    _die $@ if $@;
-
-    _die "Return value does not match prototype"
-      unless OME::Remote::Prototypes::verifyOutputPrototype($prototype,
-                                                            \@result,
-                                                            \&OME::Remote::Utils::outputMarshaller,
-                                                            $sessionKey);
-
-    print "  (",join(",",@result),")\n"
-      if $SHOW_RESULTS;
+    if ($@) {
+        print STDERR "*** REMOTE SERVER ERROR:\n$@\n";
+        die $@;
+    }
 
     # RPC protocols usually require a method to return exactly one
     # return value, so any list-context methods should have their
