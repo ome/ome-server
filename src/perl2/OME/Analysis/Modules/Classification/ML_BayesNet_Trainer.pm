@@ -70,6 +70,7 @@ sub execute {
 	my $dataset = $target; # target should always be a dataset
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
+	my $outBuffer  = " " x 2048;
 	
 	# open connection to matlab
 	my $matlab_engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
@@ -79,31 +80,36 @@ sub execute {
 	logdbg "debug", "Matlab src dir is $matlab_src_dir\n".
 	$matlab_engine->eval("addpath(genpath('$matlab_src_dir'));");
 
-	# Compile Signature matrix and place into matlab for input
 	my $start_time = [gettimeofday()];
 	my @images = $dataset->images( );
 	@images = sort {$a->id <=> $b->id} @images;
-
+	
+	# Compile Signature matrix and place into matlab for input
     my @classification_mexes = map { $_->input_module_execution() } @{ 
     	$self->getActualInputs( 'Classifications' ) };
     my @sigVectors_mexes = map { $_->input_module_execution() } @{ 
-    	$self->getActualInputs( 'SignatureVectors' ) };
-	my $signature_matrix = OME::Util::Classifier->compile_signature_matrix( \@sigVectors_mexes, \@images, \@classification_mexes );
+    	$self->getActualInputs( 'Signature Vectors' ) };
+	my $signature_matrix = OME::Util::Classifier->
+		compile_signature_matrix( \@sigVectors_mexes, \@images, \@classification_mexes );
 	$matlab_engine->eval("global signature_matrix");
 	$matlab_engine->putVariable( "signature_matrix", $signature_matrix);
 	$mex->attribute_db_time(tv_interval($start_time));
 	
-# Dump the signature matrix to test what we have so far
-my $output_file_name = '~/foo.mat';
-$matlab_engine->eval("global signature_vector");
-$matlab_engine->putVariable('signature_vector',$signature_matrix);
-$matlab_engine->eval( "save $output_file_name signature_vector;" );
-print STDERR "Saved input signature vector to file $output_file_name.\n\n\n";
-
+	# Execute the trainer
+	$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
 	$matlab_engine->eval( 
-		"[sigs_used, sigs_used_col, sigs_excluded, discWalls, bnet] = ".
-		"	ML_BayesNet_Trainer(signature_vector)"
+		"[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ".
+		"	ML_BayesNet_Trainer(signature_matrix);"
 	);
+	$outBuffer =~ s/(\0.*)$//;
+	if ($outBuffer =~ m/^\s*$/) {
+		logdbg "debug", "***** Output from Matlab:\n";
+	} else {
+		$mex->error_message("$outBuffer");
+		logdbg "debug", "***** Error! Output from Matlab:\n$outBuffer\n";		
+	}
+
+	# ------ STORE OUTPUTS ------
 
 	# Store the discritization walls & classifier
 	# For now, dump them to a file, upload that to the image server, 
@@ -111,42 +117,44 @@ print STDERR "Saved input signature vector to file $output_file_name.\n\n\n";
 	my $classifier_dump_path = $session->getTemporaryFilename('ML_BayesNet_Trainer','mat');
 	$matlab_engine->eval( "save $classifier_dump_path discWalls bnet;" );
 	my $classifier_dump_file_obj = OME::Image::Server::File->upload($classifier_dump_path);
-	$self->newAttributes('BayesNetClassifier',
-		{ FileID => $classifier_dump_file_obj->getFileID() }
-	);
+	$self->newAttributes('Classifier', {
+		dataset => $dataset,
+		FileID => $classifier_dump_file_obj->getFileID() 
+	} );
+	$session->finishTemporaryFile( $classifier_dump_path );
 	
 	# Store the signatures used and their scores
 	my $sigs_used_ml = $matlab_engine->getVariable( 'sigs_used' );
 	my $sigs_used_list = $sigs_used_ml->convertToList();
 	my $sigs_cum_scores_ml = $matlab_engine->getVariable( 'sigs_used_col' );
 	my $sigs_cum_scores = $sigs_cum_scores_ml->convertToList();
-# FIXME: individual scores are not yet returned by the function. 
-# Remove these comments when the function is fixed.
-#	my $sigs_ind_scores_ml = $matlab_engine->getVariable( 'sigs_used_ind' );
-#	my $sigs_ind_scores = $sigs_ind_scores_ml->convertToList();
+	my $sigs_ind_scores_ml = $matlab_engine->getVariable( 'sigs_used_ind' );
+	my $sigs_ind_scores = $sigs_ind_scores_ml->convertToList();
 	# These arrays are ordered by the first sig selected, 
 	# the second sig selected, and so on. This is stored in $i
 	# and will be permanently stored in SignaturesScores.Index
 	for my $i ( 0..( @$sigs_used_list - 1 ) ) {
 		my $sig_index = $sigs_used_list->[ $i ];
 		my $sig_cum_score = $sigs_cum_scores->[ $i ];
-#		my $sig_ind_score = $sigs_ind_scores->[ $i ];
+		my $sig_ind_score = $sigs_ind_scores->[ $i ];
 		my $vectorLegendList = OME::Tasks::ModuleExecutionManager->
-			getAttributesForMEX(@sigVectors_mexes, 'SignatureVectorLegend', {
+			getAttributesForMEX(\@sigVectors_mexes, 'SignatureVectorLegend', {
 				VectorPosition   => $sig_index,			
 			} )
 			or die "Could not find a Vector Legend for one of the signatures used (index=$sig_index)";
 		die "Found ".@$vectorLegendList." Vector Legends matching signature used index $sig_index. Expected to find 1."
 			unless @$vectorLegendList == 1;
 		my $vectorLegend = $vectorLegendList->[0];
-		$self->newAttributes('SignaturesUsed', {
+		$self->newAttributes('Signatures Used', {
+			dataset => $dataset,
 			Legend => $vectorLegend
 		} );
-		$self->newAttributes('SignaturesScores', {
+		$self->newAttributes('Signatures Scores', {
+			dataset => $dataset,
 			Legend   => $vectorLegend,
 			Index    => $i,
 			CumScore => $sig_cum_score,
-#			IndScore => $sig_ind_score
+			IndScore => $sig_ind_score
 		} );
 	}
 	
@@ -162,23 +170,72 @@ print STDERR "Saved input signature vector to file $output_file_name.\n\n\n";
 		die "Found ".@$vectorLegendList." Vector Legends matching signature excluded index $sig_index. Expected to find 1."
 			unless @$vectorLegendList == 1;
 		my $vectorLegend = $vectorLegendList->[0];
-		$self->newAttributes('SignaturesExcluded', {
+		$self->newAttributes('Signatures Not Discretized', {
+			dataset => $dataset,
 			Legend => $vectorLegend
 		} );
 	}
-
-# FIXME: Store the Confusion Matrix once the matlab function spits it out.
 
 	# Make CategoriesUsed
 	my @classifications = $self->getInputAttributes( 'Classifications' );
 	my %categories_used = map{ $_->Category->id => $_->Category } @classifications;
 	foreach my $category ( values %categories_used ) {
-		$self->newAttributes('CategoriesUsed', {
+		$self->newAttributes('Categories Used', {
+			dataset => $dataset,
 			Category => $category
 		} );		
 	}
 
-
+	# Store Confusion Matrix
+	my $confusion_matrix_ml = $matlab_engine->getVariable( 'conf_mat' );
+	# getAll() returns a flat list. I know a priori that this matrix is square,
+	# and its width is the number of categories. The list goes from top to 
+	# bottom, left to right. Rows are StandardCategory, Cols are 
+	my $confusion_matrix_values = $confusion_matrix_ml->getAll();
+	my $confusion_matrix_width = scalar( keys( %categories_used ) );
+	die "Confusion matrix is of unexpected size"
+		unless scalar( @$confusion_matrix_values ) eq ( $confusion_matrix_width * $confusion_matrix_width );
+	# make a 2d matrix. while making it, sum the rows.
+	my @confusion_matrix;
+	my @confusion_matrix_row_sums;
+	my $col_index = 0;
+	my $row_index = 0;
+	my $total_num_predictions = 0;
+	my $correct_predictions = 0;
+	foreach my $value ( @$confusion_matrix_values ) {
+		if( $row_index == $confusion_matrix_width ) {
+			$row_index = 0;
+			$col_index++;
+		}
+		$confusion_matrix[ $row_index ][ $col_index ] = $value;
+		$confusion_matrix_row_sums[ $row_index ] += $value;
+		$total_num_predictions += $value;
+		$correct_predictions += $value
+			if $row_index eq $col_index;
+		$row_index++;
+	}
+	# Store the ConfusionMatrix container
+	my $confusion_matrix_attr_list = $self->newAttributes( 'Confusion Matrix', {
+		dataset             => $dataset,
+		Accuracy            => ( $correct_predictions / $total_num_predictions ),
+		TotalNumPredictions => $total_num_predictions,
+		TotalUnknown        => ($dataset->count_images() - $total_num_predictions)
+	} );
+	my $confusion_matrix_attr = $confusion_matrix_attr_list->[0];
+	# Store each entry of the matrix
+	foreach my $row ( 0..( $confusion_matrix_width - 1 ) ) {
+		foreach my $col( 0..( $confusion_matrix_width - 1 ) ) {
+			$self->newAttributes( 'ConfusionMatrixEntries', {
+				dataset             => $dataset,
+				StandardCategory    => ($row + 1),
+				AlternativeCategory => ($col + 1),
+				ConfusionMatrix     => $confusion_matrix_attr,
+				NumPredictions      => $confusion_matrix[ $row ][ $col ],
+				NormalizedNumPredictions => ( $confusion_matrix[ $row ][ $col ] / $confusion_matrix_row_sums[ $row ] ),
+			} );
+		}
+	}
+	
 	# close connection to matlab
 	$matlab_engine->close();
 
