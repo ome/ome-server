@@ -56,6 +56,7 @@ use OME::Analysis::Engine::Executor;
 use OME::Analysis::Engine::DataPaths;
 use OME::Tasks::ModuleExecutionManager;
 use OME::Tasks::ChainManager;
+use OME::Tasks::NotificationManager;
 
 use Time::HiRes qw(gettimeofday tv_interval);
 use Log::Agent;
