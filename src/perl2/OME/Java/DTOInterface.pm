@@ -263,8 +263,8 @@ my %MDTO_ACCESSORS = (
                       long    => 'getLongElement',
                      );
 
-sub writeOneAccessor ($$$$) {
-    my ($int_fh,$dto_fh,$field_name,$field_desc) = @_;
+sub writeOneAccessor ($$$$$) {
+    my ($int_fh,$dto_fh,$map_code,$field_name,$field_desc) = @_;
 
     my $java_type = $field_desc->[0];
     my $element_name = $field_desc->[1];
@@ -274,8 +274,6 @@ sub writeOneAccessor ($$$$) {
     my $prefix = $java_type eq 'boolean'? 'is': 'get';
     my $accessor;
     my $value;
-    my $dtoclass;
-    undef $dtoclass;
     if ($field_name eq 'ID') {
         $java_type = "int";
         $accessor = "getIntElement";
@@ -283,17 +281,23 @@ sub writeOneAccessor ($$$$) {
     } elsif ($java_type =~ /^List\:(.*)$/) {
         my $list_type = $1;
         $java_type = "List";
-        $accessor = "(List) parseListElement";
+        $accessor = "(List) getObjectElement";
         $value = "value";
-	$dtoclass = "${list_type}DTO.class";
+
+        $$map_code .= <<"JAVA";
+        parseListElement("${element_name}",${list_type}DTO.class);
+JAVA
     } elsif (exists $MDTO_CLASSES{$java_type}) {
         $accessor = $MDTO_ACCESSORS{$java_type};
         $value = "value";
         $java_type = $MDTO_CLASSES{$java_type};
     } else {
-        $accessor = "(${java_type}) parseChildElement";
-	$dtoclass  = "${java_type}DTO.class";
+        $accessor = "(${java_type}) getObjectElement";
         $value = "value";
+
+        $$map_code .= <<"JAVA";
+        parseChildElement("${element_name}",${java_type}DTO.class);
+JAVA
     }
 
     print $int_fh <<"JAVA";
@@ -301,20 +305,11 @@ sub writeOneAccessor ($$$$) {
     public ${java_type} ${prefix}${field_name}();
 JAVA
 
-    # HERE's where we do the gets if we have defined dto class, use
-    # it. Otherwise, don't.
-    if (defined $dtoclass) {
-	print $dto_fh <<"JAVA";
-    public ${java_type} ${prefix}${field_name}()
-    { return ${accessor}("${element_name}",$dtoclass); }
-JAVA
-    } else {
-	print $dto_fh <<"JAVA";
+    print $dto_fh <<"JAVA";
     public ${java_type} ${prefix}${field_name}()
     { return ${accessor}("${element_name}"); }
 JAVA
-   }
-    
+
     if ($java_type ne 'List') {
     print $int_fh <<"JAVA";
     public void set${field_name}(${java_type} value);
@@ -326,7 +321,7 @@ JAVA
 JAVA
     } else {
     print $int_fh <<"JAVA";
-    /** Criteria field name: <code>#${element_name}</code> or <code>${element_name}List</code> */
+    /** Criteria field name: <code>#${element_name}</code> or <code>${element_name}</code> */
     public int count${field_name}();
 JAVA
 
@@ -458,11 +453,13 @@ JAVA
 
     # Output an accessor and mutator for each semantic element
 
+    my $map_code = "";
 
     my $fields = $class->{Fields};
 
     while (my ($field_name,$field_desc) = splice(@$fields,0,2)) {
-        writeOneAccessor($int_fh,$dto_fh, $field_name,$field_desc);
+        writeOneAccessor($int_fh,$dto_fh,\$map_code,
+                         $field_name,$field_desc);
     }
 
     # Output the interface's closing brace
@@ -471,10 +468,22 @@ JAVA
 }
 JAVA
 
-     print $dto_fh "\n}\n";
+    if ($map_code ne "") {
+        print $dto_fh <<"JAVA";
+    public void setMap(Map elements)
+    {
+        super.setMap(elements);
+$map_code    }
+
+}
+JAVA
+    } else {
+        print $dto_fh "\n}\n";
+    }
 
     $int_fh->close();
     $dto_fh->close();
+
 }
 
 1;
