@@ -138,8 +138,8 @@ public class InstantiatingCaller
                              String method,
                              Object[] params)
     {
-        Object result = caller.dispatch(method,params);
-        return instantiator.instantiateList(javaClass,result);
+        Object result = caller.dispatch(method,params);        
+        return instantiator.instantiateList(javaClass,result); 
     }
 
     /**
