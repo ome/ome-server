@@ -40,6 +40,7 @@ package OME::Remote::Facade;
 use Carp;
 use strict;
 use OME;
+use Apache::XMLRPC;
 our $VERSION = $OME::VERSION;
 
 our @FACADES;
@@ -60,13 +61,14 @@ BEGIN {
                   OME::Remote::Facades::GenericFacade
                   OME::Remote::Facades::SessionFacade
                   OME::Remote::Facades::ConfigFacade
-x2                  OME::Remote::Facades::AnnotationFacade
+                  OME::Remote::Facades::AnnotationFacade
                   OME::Remote::Facades::ProjectFacade
                   OME::Remote::Facades::DatasetFacade
                   OME::Remote::Facades::ImportFacade
                   OME::Remote::Facades::ModuleExecutionFacade
                   OME::Remote::Facades::AnalysisFacade
                   OME::Remote::Facades::HistoryFacade
+                  OME::Remote::Facades::ChainRetrievalFacade
                  );
     foreach my $facade (@FACADES) { $facade->require() }
 
@@ -141,7 +143,7 @@ sub serverVersion {
 }
 
 sub createSession {
-    my ($proto, $username, $password) = @_;
+    my ($proto,$username, $password) = @_; 
 
     print STDERR "$$ createSession $username\n"
       if $SHOW_CALLS;
@@ -159,7 +161,7 @@ sub createSession {
 
 
 sub authenticateSession {
-    my ($proto, $sessionKey) = @_;
+    my ($proto,$sessionKey) = @_;
 
     print STDERR "$$ authenticateSession $sessionKey\n"
       if $SHOW_CALLS;
@@ -176,7 +178,7 @@ sub authenticateSession {
 
 
 sub closeSession {
-    my ($proto, $sessionKey) = @_;
+    my ($proto,$sessionKey) = @_;
 
     print STDERR "$$ closeSession $sessionKey\n"
       if $SHOW_CALLS;
@@ -235,7 +237,7 @@ sub dispatch {
 
     # Otherwise, commit the session's transaction and return the
     # result.
-
+    print STDERR "Dispatch result is $result[0]\n";
     return @result;
 }
 
