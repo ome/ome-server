@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,7 +57,7 @@ public class DataColumnDTO
     { setElement("id",new Integer(value)); }
 
     public DataTable getDataTable()
-    { return (DataTable) getObjectElement("data_table"); }
+    { return (DataTable) parseChildElement("data_table",DataTableDTO.class); }
     public void setDataTable(DataTable value)
     { setElement("data_table",value); }
 
@@ -77,21 +77,14 @@ public class DataColumnDTO
     { setElement("sql_type",value); }
 
     public SemanticType getReferenceType()
-    { return (SemanticType) getObjectElement("reference_semantic_type"); }
+    { return (SemanticType) parseChildElement("reference_semantic_type",SemanticTypeDTO.class); }
     public void setReferenceType(SemanticType value)
     { setElement("reference_semantic_type",value); }
 
     public List getColumns()
-    { return (List) getObjectElement("columns"); }
+    { return (List) parseListElement("columns",DataColumnDTO.class); }
     public int countColumns()
     { return countListElement("columns"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("data_table",DataTableDTO.class);
-        parseChildElement("reference_semantic_type",SemanticTypeDTO.class);
-        parseListElement("columns",DataColumnDTO.class);
-    }
 
 }

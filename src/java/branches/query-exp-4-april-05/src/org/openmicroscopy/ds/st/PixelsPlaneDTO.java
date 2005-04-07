@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Tue Mar 29 11:02:12 2005
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -69,7 +69,7 @@ public class PixelsPlaneDTO
     { setElement("FileSHA1",value); }
 
     public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
+    { return (Repository) parseChildElement("Repository",RepositoryDTO.class); }
     public void setRepository(Repository value)
     { setElement("Repository",value); }
 
@@ -78,10 +78,5 @@ public class PixelsPlaneDTO
     public void setPixelType(String value)
     { setElement("PixelType",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
-    }
 
 }

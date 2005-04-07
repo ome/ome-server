@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -45,21 +45,21 @@ import java.util.Map;
 public interface StackCentroid
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Z</code> */
-    public Float getZ();
-    public void setZ(Float value);
-
-    /** Criteria field name: <code>Y</code> */
-    public Float getY();
-    public void setY(Float value);
+    /** Criteria field name: <code>TheT</code> */
+    public Integer getTheT();
+    public void setTheT(Integer value);
 
     /** Criteria field name: <code>X</code> */
     public Float getX();
     public void setX(Float value);
 
-    /** Criteria field name: <code>TheT</code> */
-    public Integer getTheT();
-    public void setTheT(Integer value);
+    /** Criteria field name: <code>Y</code> */
+    public Float getY();
+    public void setY(Float value);
+
+    /** Criteria field name: <code>Z</code> */
+    public Float getZ();
+    public void setZ(Float value);
 
     /** Criteria field name: <code>TheC</code> */
     public Integer getTheC();

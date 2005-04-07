@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,15 +52,15 @@ public class LocationDTO
     public String getDTOTypeName() { return "@Location"; }
     public Class getDTOType() { return Location.class; }
 
-    public Float getTheZ()
-    { return getFloatElement("TheZ"); }
-    public void setTheZ(Float value)
-    { setElement("TheZ",value); }
-
     public Float getTheY()
     { return getFloatElement("TheY"); }
     public void setTheY(Float value)
     { setElement("TheY",value); }
+
+    public Float getTheZ()
+    { return getFloatElement("TheZ"); }
+    public void setTheZ(Float value)
+    { setElement("TheZ",value); }
 
     public Float getTheX()
     { return getFloatElement("TheX"); }

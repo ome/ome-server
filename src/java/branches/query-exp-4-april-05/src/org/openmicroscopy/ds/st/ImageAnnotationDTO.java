@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -38,7 +38,6 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
-import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
 import java.util.Map;
@@ -53,45 +52,30 @@ public class ImageAnnotationDTO
     public String getDTOTypeName() { return "@ImageAnnotation"; }
     public Class getDTOType() { return ImageAnnotation.class; }
 
-    public Boolean isValid()
-    { return getBooleanElement("Valid"); }
-    public void setValid(Boolean value)
-    { setElement("Valid",value); }
-
     public Integer getTheZ()
     { return getIntegerElement("TheZ"); }
     public void setTheZ(Integer value)
     { setElement("TheZ",value); }
-
-    public Integer getTheT()
-    { return getIntegerElement("TheT"); }
-    public void setTheT(Integer value)
-    { setElement("TheT",value); }
-
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
-
-    public Long getTimestamp()
-    { return getLongElement("Timestamp"); }
-    public void setTimestamp(Long value)
-    { setElement("Timestamp",value); }
 
     public String getContent()
     { return getStringElement("Content"); }
     public void setContent(String value)
     { setElement("Content",value); }
 
-    public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
-    public void setExperimenter(Experimenter value)
-    { setElement("Experimenter",value); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Experimenter",ExperimenterDTO.class);
-    }
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
+
+    public Boolean isValid()
+    { return getBooleanElement("Valid"); }
+    public void setValid(Boolean value)
+    { setElement("Valid",value); }
+
 
 }

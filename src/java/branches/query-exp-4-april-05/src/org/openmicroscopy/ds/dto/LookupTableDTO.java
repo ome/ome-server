@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -67,14 +67,9 @@ public class LookupTableDTO
     { setElement("description",value); }
 
     public List getEntries()
-    { return (List) getObjectElement("entries"); }
+    { return (List) parseListElement("entries",LookupTableEntryDTO.class); }
     public int countEntries()
     { return countListElement("entries"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseListElement("entries",LookupTableEntryDTO.class);
-    }
 
 }

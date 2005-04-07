@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,16 +52,6 @@ public class PlaneSum_XiDTO
     public String getDTOTypeName() { return "@PlaneSum_Xi"; }
     public Class getDTOType() { return PlaneSum_Xi.class; }
 
-    public Float getSum_Xi()
-    { return getFloatElement("Sum_Xi"); }
-    public void setSum_Xi(Float value)
-    { setElement("Sum_Xi",value); }
-
-    public Integer getTheT()
-    { return getIntegerElement("TheT"); }
-    public void setTheT(Integer value)
-    { setElement("TheT",value); }
-
     public Integer getTheC()
     { return getIntegerElement("TheC"); }
     public void setTheC(Integer value)
@@ -71,6 +61,16 @@ public class PlaneSum_XiDTO
     { return getIntegerElement("TheZ"); }
     public void setTheZ(Integer value)
     { setElement("TheZ",value); }
+
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
+
+    public Float getSum_Xi()
+    { return getFloatElement("Sum_Xi"); }
+    public void setSum_Xi(Float value)
+    { setElement("Sum_Xi",value); }
 
 
 }

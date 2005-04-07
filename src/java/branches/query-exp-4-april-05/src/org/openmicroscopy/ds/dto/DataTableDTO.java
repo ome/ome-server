@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -72,14 +72,9 @@ public class DataTableDTO
     { setElement("granularity",value); }
 
     public List getColumns()
-    { return (List) getObjectElement("columns"); }
+    { return (List) parseListElement("columns",DataColumnDTO.class); }
     public int countColumns()
     { return countListElement("columns"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseListElement("columns",DataColumnDTO.class);
-    }
 
 }

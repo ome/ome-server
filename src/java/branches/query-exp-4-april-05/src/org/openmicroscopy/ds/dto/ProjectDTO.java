@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -69,20 +69,14 @@ public class ProjectDTO
     { setElement("description",value); }
 
     public Experimenter getOwner()
-    { return (Experimenter) getObjectElement("owner"); }
+    { return (Experimenter) parseChildElement("owner",ExperimenterDTO.class); }
     public void setOwner(Experimenter value)
     { setElement("owner",value); }
 
     public List getDatasets()
-    { return (List) getObjectElement("datasets"); }
+    { return (List) parseListElement("datasets",DatasetDTO.class); }
     public int countDatasets()
     { return countListElement("datasets"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("owner",ExperimenterDTO.class);
-        parseListElement("datasets",DatasetDTO.class);
-    }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,11 +52,6 @@ public class StackGeometricSigmaDTO
     public String getDTOTypeName() { return "@StackGeometricSigma"; }
     public Class getDTOType() { return StackGeometricSigma.class; }
 
-    public Float getGeometricSigma()
-    { return getFloatElement("GeometricSigma"); }
-    public void setGeometricSigma(Float value)
-    { setElement("GeometricSigma",value); }
-
     public Integer getTheT()
     { return getIntegerElement("TheT"); }
     public void setTheT(Integer value)
@@ -66,6 +61,11 @@ public class StackGeometricSigmaDTO
     { return getIntegerElement("TheC"); }
     public void setTheC(Integer value)
     { setElement("TheC",value); }
+
+    public Float getGeometricSigma()
+    { return getFloatElement("GeometricSigma"); }
+    public void setGeometricSigma(Float value)
+    { setElement("GeometricSigma",value); }
 
 
 }

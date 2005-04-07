@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -53,41 +53,6 @@ public class DisplayROIDTO
     public String getDTOTypeName() { return "@DisplayROI"; }
     public Class getDTOType() { return DisplayROI.class; }
 
-    public DisplayOptions getDisplayOptions()
-    { return (DisplayOptions) getObjectElement("DisplayOptions"); }
-    public void setDisplayOptions(DisplayOptions value)
-    { setElement("DisplayOptions",value); }
-
-    public Integer getT1()
-    { return getIntegerElement("T1"); }
-    public void setT1(Integer value)
-    { setElement("T1",value); }
-
-    public Integer getT0()
-    { return getIntegerElement("T0"); }
-    public void setT0(Integer value)
-    { setElement("T0",value); }
-
-    public Integer getZ1()
-    { return getIntegerElement("Z1"); }
-    public void setZ1(Integer value)
-    { setElement("Z1",value); }
-
-    public Integer getY1()
-    { return getIntegerElement("Y1"); }
-    public void setY1(Integer value)
-    { setElement("Y1",value); }
-
-    public Integer getX1()
-    { return getIntegerElement("X1"); }
-    public void setX1(Integer value)
-    { setElement("X1",value); }
-
-    public Integer getZ0()
-    { return getIntegerElement("Z0"); }
-    public void setZ0(Integer value)
-    { setElement("Z0",value); }
-
     public Integer getY0()
     { return getIntegerElement("Y0"); }
     public void setY0(Integer value)
@@ -98,10 +63,40 @@ public class DisplayROIDTO
     public void setX0(Integer value)
     { setElement("X0",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("DisplayOptions",DisplayOptionsDTO.class);
-    }
+    public Integer getZ0()
+    { return getIntegerElement("Z0"); }
+    public void setZ0(Integer value)
+    { setElement("Z0",value); }
+
+    public Integer getX1()
+    { return getIntegerElement("X1"); }
+    public void setX1(Integer value)
+    { setElement("X1",value); }
+
+    public Integer getY1()
+    { return getIntegerElement("Y1"); }
+    public void setY1(Integer value)
+    { setElement("Y1",value); }
+
+    public Integer getZ1()
+    { return getIntegerElement("Z1"); }
+    public void setZ1(Integer value)
+    { setElement("Z1",value); }
+
+    public Integer getT0()
+    { return getIntegerElement("T0"); }
+    public void setT0(Integer value)
+    { setElement("T0",value); }
+
+    public Integer getT1()
+    { return getIntegerElement("T1"); }
+    public void setT1(Integer value)
+    { setElement("T1",value); }
+
+    public DisplayOptions getDisplayOptions()
+    { return (DisplayOptions) parseChildElement("DisplayOptions",DisplayOptionsDTO.class); }
+    public void setDisplayOptions(DisplayOptions value)
+    { setElement("DisplayOptions",value); }
+
 
 }

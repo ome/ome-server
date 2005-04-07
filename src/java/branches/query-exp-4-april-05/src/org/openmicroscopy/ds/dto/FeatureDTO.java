@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,12 +57,12 @@ public class FeatureDTO
     { setElement("id",new Integer(value)); }
 
     public Image getImage()
-    { return (Image) getObjectElement("image"); }
+    { return (Image) parseChildElement("image",ImageDTO.class); }
     public void setImage(Image value)
     { setElement("image",value); }
 
     public Feature getParentFeature()
-    { return (Feature) getObjectElement("parent_feature"); }
+    { return (Feature) parseChildElement("parent_feature",FeatureDTO.class); }
     public void setParentFeature(Feature value)
     { setElement("parent_feature",value); }
 
@@ -77,16 +77,9 @@ public class FeatureDTO
     { setElement("name",value); }
 
     public List getChildren()
-    { return (List) getObjectElement("children"); }
+    { return (List) parseListElement("children",FeatureDTO.class); }
     public int countChildren()
     { return countListElement("children"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("image",ImageDTO.class);
-        parseChildElement("parent_feature",FeatureDTO.class);
-        parseListElement("children",FeatureDTO.class);
-    }
 
 }

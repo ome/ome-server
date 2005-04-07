@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -40,6 +40,7 @@ package org.openmicroscopy.ds.st;
 import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.DisplayOptions;
 import org.openmicroscopy.ds.st.PixelChannelComponent;
+import org.openmicroscopy.ds.st.PixelsSlice;
 import org.openmicroscopy.ds.st.Repository;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
@@ -55,67 +56,65 @@ public class PixelsDTO
     public String getDTOTypeName() { return "@Pixels"; }
     public Class getDTOType() { return Pixels.class; }
 
-    public Long getImageServerID()
-    { return getLongElement("ImageServerID"); }
-    public void setImageServerID(Long value)
-    { setElement("ImageServerID",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
-
     public String getFileSHA1()
     { return getStringElement("FileSHA1"); }
     public void setFileSHA1(String value)
     { setElement("FileSHA1",value); }
 
-    public String getPixelType()
-    { return getStringElement("PixelType"); }
-    public void setPixelType(String value)
-    { setElement("PixelType",value); }
+    public Repository getRepository()
+    { return (Repository) parseChildElement("Repository",RepositoryDTO.class); }
+    public void setRepository(Repository value)
+    { setElement("Repository",value); }
 
-    public Integer getSizeT()
-    { return getIntegerElement("SizeT"); }
-    public void setSizeT(Integer value)
-    { setElement("SizeT",value); }
-
-    public Integer getSizeC()
-    { return getIntegerElement("SizeC"); }
-    public void setSizeC(Integer value)
-    { setElement("SizeC",value); }
-
-    public Integer getSizeZ()
-    { return getIntegerElement("SizeZ"); }
-    public void setSizeZ(Integer value)
-    { setElement("SizeZ",value); }
-
-    public Integer getSizeY()
-    { return getIntegerElement("SizeY"); }
-    public void setSizeY(Integer value)
-    { setElement("SizeY",value); }
+    public Long getImageServerID()
+    { return getLongElement("ImageServerID"); }
+    public void setImageServerID(Long value)
+    { setElement("ImageServerID",value); }
 
     public Integer getSizeX()
     { return getIntegerElement("SizeX"); }
     public void setSizeX(Integer value)
     { setElement("SizeX",value); }
 
+    public Integer getSizeY()
+    { return getIntegerElement("SizeY"); }
+    public void setSizeY(Integer value)
+    { setElement("SizeY",value); }
+
+    public Integer getSizeZ()
+    { return getIntegerElement("SizeZ"); }
+    public void setSizeZ(Integer value)
+    { setElement("SizeZ",value); }
+
+    public Integer getSizeC()
+    { return getIntegerElement("SizeC"); }
+    public void setSizeC(Integer value)
+    { setElement("SizeC",value); }
+
+    public Integer getSizeT()
+    { return getIntegerElement("SizeT"); }
+    public void setSizeT(Integer value)
+    { setElement("SizeT",value); }
+
+    public String getPixelType()
+    { return getStringElement("PixelType"); }
+    public void setPixelType(String value)
+    { setElement("PixelType",value); }
+
     public List getDisplayOptionsList()
-    { return (List) getObjectElement("DisplayOptionsList"); }
+    { return (List) parseListElement("DisplayOptionsList",DisplayOptionsDTO.class); }
     public int countDisplayOptionsList()
     { return countListElement("DisplayOptionsList"); }
 
     public List getPixelChannelComponentList()
-    { return (List) getObjectElement("PixelChannelComponentList"); }
+    { return (List) parseListElement("PixelChannelComponentList",PixelChannelComponentDTO.class); }
     public int countPixelChannelComponentList()
     { return countListElement("PixelChannelComponentList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
-        parseListElement("DisplayOptionsList",DisplayOptionsDTO.class);
-        parseListElement("PixelChannelComponentList",PixelChannelComponentDTO.class);
-    }
+    public List getPixelsSliceList()
+    { return (List) parseListElement("PixelsSliceList",PixelsSliceDTO.class); }
+    public int countPixelsSliceList()
+    { return countListElement("PixelsSliceList"); }
+
 
 }

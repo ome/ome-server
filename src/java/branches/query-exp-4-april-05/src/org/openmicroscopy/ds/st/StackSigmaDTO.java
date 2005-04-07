@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,20 +52,20 @@ public class StackSigmaDTO
     public String getDTOTypeName() { return "@StackSigma"; }
     public Class getDTOType() { return StackSigma.class; }
 
-    public Float getSigma()
-    { return getFloatElement("Sigma"); }
-    public void setSigma(Float value)
-    { setElement("Sigma",value); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
     public Integer getTheT()
     { return getIntegerElement("TheT"); }
     public void setTheT(Integer value)
     { setElement("TheT",value); }
 
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
+    public Float getSigma()
+    { return getFloatElement("Sigma"); }
+    public void setSigma(Float value)
+    { setElement("Sigma",value); }
 
 
 }

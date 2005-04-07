@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -53,25 +53,20 @@ public class ClassificationDTO
     public String getDTOTypeName() { return "@Classification"; }
     public Class getDTOType() { return Classification.class; }
 
-    public Boolean isValid()
-    { return getBooleanElement("Valid"); }
-    public void setValid(Boolean value)
-    { setElement("Valid",value); }
+    public Category getCategory()
+    { return (Category) parseChildElement("Category",CategoryDTO.class); }
+    public void setCategory(Category value)
+    { setElement("Category",value); }
 
     public Float getConfidence()
     { return getFloatElement("Confidence"); }
     public void setConfidence(Float value)
     { setElement("Confidence",value); }
 
-    public Category getCategory()
-    { return (Category) getObjectElement("Category"); }
-    public void setCategory(Category value)
-    { setElement("Category",value); }
+    public Boolean isValid()
+    { return getBooleanElement("Valid"); }
+    public void setValid(Boolean value)
+    { setElement("Valid",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Category",CategoryDTO.class);
-    }
 
 }

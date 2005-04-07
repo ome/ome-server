@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -70,7 +70,7 @@ public interface DataColumn
 
     /** Criteria field name: <code>columns</code> */
     public List getColumns();
-    /** Criteria field name: <code>#columns</code> or <code>columns</code> */
+    /** Criteria field name: <code>#columns</code> or <code>columnsList</code> */
     public int countColumns();
 
 }

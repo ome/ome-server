@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -49,13 +49,13 @@ public interface PlaneSum_Zi
     public Float getSum_Zi();
     public void setSum_Zi(Float value);
 
-    /** Criteria field name: <code>TheT</code> */
-    public Integer getTheT();
-    public void setTheT(Integer value);
-
     /** Criteria field name: <code>TheC</code> */
     public Integer getTheC();
     public void setTheC(Integer value);
+
+    /** Criteria field name: <code>TheT</code> */
+    public Integer getTheT();
+    public void setTheT(Integer value);
 
     /** Criteria field name: <code>TheZ</code> */
     public Integer getTheZ();

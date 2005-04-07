@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -55,95 +55,85 @@ public class DisplayOptionsDTO
     public String getDTOTypeName() { return "@DisplayOptions"; }
     public Class getDTOType() { return DisplayOptions.class; }
 
-    public Integer getTStop()
-    { return getIntegerElement("TStop"); }
-    public void setTStop(Integer value)
-    { setElement("TStop",value); }
+    public Boolean isRedChannelOn()
+    { return getBooleanElement("RedChannelOn"); }
+    public void setRedChannelOn(Boolean value)
+    { setElement("RedChannelOn",value); }
 
-    public Integer getTStart()
-    { return getIntegerElement("TStart"); }
-    public void setTStart(Integer value)
-    { setElement("TStart",value); }
-
-    public Integer getZStop()
-    { return getIntegerElement("ZStop"); }
-    public void setZStop(Integer value)
-    { setElement("ZStop",value); }
-
-    public Integer getZStart()
-    { return getIntegerElement("ZStart"); }
-    public void setZStart(Integer value)
-    { setElement("ZStart",value); }
-
-    public String getColorMap()
-    { return getStringElement("ColorMap"); }
-    public void setColorMap(String value)
-    { setElement("ColorMap",value); }
-
-    public DisplayChannel getGreyChannel()
-    { return (DisplayChannel) getObjectElement("GreyChannel"); }
-    public void setGreyChannel(DisplayChannel value)
-    { setElement("GreyChannel",value); }
-
-    public Boolean isDisplayRGB()
-    { return getBooleanElement("DisplayRGB"); }
-    public void setDisplayRGB(Boolean value)
-    { setElement("DisplayRGB",value); }
-
-    public Boolean isBlueChannelOn()
-    { return getBooleanElement("BlueChannelOn"); }
-    public void setBlueChannelOn(Boolean value)
-    { setElement("BlueChannelOn",value); }
-
-    public DisplayChannel getBlueChannel()
-    { return (DisplayChannel) getObjectElement("BlueChannel"); }
-    public void setBlueChannel(DisplayChannel value)
-    { setElement("BlueChannel",value); }
+    public DisplayChannel getGreenChannel()
+    { return (DisplayChannel) parseChildElement("GreenChannel",DisplayChannelDTO.class); }
+    public void setGreenChannel(DisplayChannel value)
+    { setElement("GreenChannel",value); }
 
     public Boolean isGreenChannelOn()
     { return getBooleanElement("GreenChannelOn"); }
     public void setGreenChannelOn(Boolean value)
     { setElement("GreenChannelOn",value); }
 
-    public DisplayChannel getGreenChannel()
-    { return (DisplayChannel) getObjectElement("GreenChannel"); }
-    public void setGreenChannel(DisplayChannel value)
-    { setElement("GreenChannel",value); }
+    public DisplayChannel getBlueChannel()
+    { return (DisplayChannel) parseChildElement("BlueChannel",DisplayChannelDTO.class); }
+    public void setBlueChannel(DisplayChannel value)
+    { setElement("BlueChannel",value); }
 
-    public Boolean isRedChannelOn()
-    { return getBooleanElement("RedChannelOn"); }
-    public void setRedChannelOn(Boolean value)
-    { setElement("RedChannelOn",value); }
+    public Boolean isBlueChannelOn()
+    { return getBooleanElement("BlueChannelOn"); }
+    public void setBlueChannelOn(Boolean value)
+    { setElement("BlueChannelOn",value); }
 
-    public DisplayChannel getRedChannel()
-    { return (DisplayChannel) getObjectElement("RedChannel"); }
-    public void setRedChannel(DisplayChannel value)
-    { setElement("RedChannel",value); }
+    public Boolean isDisplayRGB()
+    { return getBooleanElement("DisplayRGB"); }
+    public void setDisplayRGB(Boolean value)
+    { setElement("DisplayRGB",value); }
+
+    public DisplayChannel getGreyChannel()
+    { return (DisplayChannel) parseChildElement("GreyChannel",DisplayChannelDTO.class); }
+    public void setGreyChannel(DisplayChannel value)
+    { setElement("GreyChannel",value); }
+
+    public String getColorMap()
+    { return getStringElement("ColorMap"); }
+    public void setColorMap(String value)
+    { setElement("ColorMap",value); }
+
+    public Integer getZStart()
+    { return getIntegerElement("ZStart"); }
+    public void setZStart(Integer value)
+    { setElement("ZStart",value); }
+
+    public Integer getZStop()
+    { return getIntegerElement("ZStop"); }
+    public void setZStop(Integer value)
+    { setElement("ZStop",value); }
+
+    public Integer getTStart()
+    { return getIntegerElement("TStart"); }
+    public void setTStart(Integer value)
+    { setElement("TStart",value); }
+
+    public Integer getTStop()
+    { return getIntegerElement("TStop"); }
+    public void setTStop(Integer value)
+    { setElement("TStop",value); }
+
+    public Pixels getPixels()
+    { return (Pixels) parseChildElement("Pixels",PixelsDTO.class); }
+    public void setPixels(Pixels value)
+    { setElement("Pixels",value); }
 
     public Float getZoom()
     { return getFloatElement("Zoom"); }
     public void setZoom(Float value)
     { setElement("Zoom",value); }
 
-    public Pixels getPixels()
-    { return (Pixels) getObjectElement("Pixels"); }
-    public void setPixels(Pixels value)
-    { setElement("Pixels",value); }
+    public DisplayChannel getRedChannel()
+    { return (DisplayChannel) parseChildElement("RedChannel",DisplayChannelDTO.class); }
+    public void setRedChannel(DisplayChannel value)
+    { setElement("RedChannel",value); }
 
     public List getDisplayROIList()
-    { return (List) getObjectElement("DisplayROIList"); }
+    { return (List) parseListElement("DisplayROIList",DisplayROIDTO.class); }
     public int countDisplayROIList()
     { return countListElement("DisplayROIList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("GreyChannel",DisplayChannelDTO.class);
-        parseChildElement("BlueChannel",DisplayChannelDTO.class);
-        parseChildElement("GreenChannel",DisplayChannelDTO.class);
-        parseChildElement("RedChannel",DisplayChannelDTO.class);
-        parseChildElement("Pixels",PixelsDTO.class);
-        parseListElement("DisplayROIList",DisplayROIDTO.class);
-    }
 
 }

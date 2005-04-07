@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -46,16 +46,16 @@ import java.util.Map;
 public interface Arc
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>LightSource</code> */
-    public LightSource getLightSource();
-    public void setLightSource(LightSource value);
+    /** Criteria field name: <code>Type</code> */
+    public String getType();
+    public void setType(String value);
 
     /** Criteria field name: <code>Power</code> */
     public Float getPower();
     public void setPower(Float value);
 
-    /** Criteria field name: <code>Type</code> */
-    public String getType();
-    public void setType(String value);
+    /** Criteria field name: <code>LightSource</code> */
+    public LightSource getLightSource();
+    public void setLightSource(LightSource value);
 
 }

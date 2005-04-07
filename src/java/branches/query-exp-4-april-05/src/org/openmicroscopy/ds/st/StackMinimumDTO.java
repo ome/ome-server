@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,15 +52,15 @@ public class StackMinimumDTO
     public String getDTOTypeName() { return "@StackMinimum"; }
     public Class getDTOType() { return StackMinimum.class; }
 
-    public Integer getMinimum()
-    { return getIntegerElement("Minimum"); }
-    public void setMinimum(Integer value)
-    { setElement("Minimum",value); }
-
     public Integer getTheT()
     { return getIntegerElement("TheT"); }
     public void setTheT(Integer value)
     { setElement("TheT",value); }
+
+    public Integer getMinimum()
+    { return getIntegerElement("Minimum"); }
+    public void setMinimum(Integer value)
+    { setElement("Minimum",value); }
 
     public Integer getTheC()
     { return getIntegerElement("TheC"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -50,12 +50,12 @@ public interface ImagePlate
     public String getWell();
     public void setWell(String value);
 
-    /** Criteria field name: <code>Sample</code> */
-    public Integer getSample();
-    public void setSample(Integer value);
-
     /** Criteria field name: <code>Plate</code> */
     public Plate getPlate();
     public void setPlate(Plate value);
+
+    /** Criteria field name: <code>Sample</code> */
+    public Integer getSample();
+    public void setSample(Integer value);
 
 }

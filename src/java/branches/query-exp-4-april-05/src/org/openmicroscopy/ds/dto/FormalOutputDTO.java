@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,7 +57,7 @@ public class FormalOutputDTO
     { setElement("id",new Integer(value)); }
 
     public Module getModule()
-    { return (Module) getObjectElement("module"); }
+    { return (Module) parseChildElement("module",ModuleDTO.class); }
     public void setModule(Module value)
     { setElement("module",value); }
 
@@ -82,7 +82,7 @@ public class FormalOutputDTO
     { setElement("list",value); }
 
     public SemanticType getSemanticType()
-    { return (SemanticType) getObjectElement("semantic_type"); }
+    { return (SemanticType) parseChildElement("semantic_type",SemanticTypeDTO.class); }
     public void setSemanticType(SemanticType value)
     { setElement("semantic_type",value); }
 
@@ -91,11 +91,5 @@ public class FormalOutputDTO
     public void setFeatureTag(String value)
     { setElement("feature_tag",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("module",ModuleDTO.class);
-        parseChildElement("semantic_type",SemanticTypeDTO.class);
-    }
 
 }

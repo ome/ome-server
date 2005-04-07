@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -47,12 +47,12 @@ import java.util.Map;
 public interface ImageInstrument
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Objective</code> */
-    public Objective getObjective();
-    public void setObjective(Objective value);
-
     /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();
     public void setInstrument(Instrument value);
+
+    /** Criteria field name: <code>Objective</code> */
+    public Objective getObjective();
+    public void setObjective(Objective value);
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,25 +52,25 @@ public class PlaneGeometricSigmaDTO
     public String getDTOTypeName() { return "@PlaneGeometricSigma"; }
     public Class getDTOType() { return PlaneGeometricSigma.class; }
 
-    public Float getGeometricSigma()
-    { return getFloatElement("GeometricSigma"); }
-    public void setGeometricSigma(Float value)
-    { setElement("GeometricSigma",value); }
-
-    public Integer getTheT()
-    { return getIntegerElement("TheT"); }
-    public void setTheT(Integer value)
-    { setElement("TheT",value); }
-
     public Integer getTheC()
     { return getIntegerElement("TheC"); }
     public void setTheC(Integer value)
     { setElement("TheC",value); }
 
+    public Float getGeometricSigma()
+    { return getFloatElement("GeometricSigma"); }
+    public void setGeometricSigma(Float value)
+    { setElement("GeometricSigma",value); }
+
     public Integer getTheZ()
     { return getIntegerElement("TheZ"); }
     public void setTheZ(Integer value)
     { setElement("TheZ",value); }
+
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
 
 
 }

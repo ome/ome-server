@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -51,16 +51,16 @@ public interface PixelChannelComponent
     public LogicalChannel getLogicalChannel();
     public void setLogicalChannel(LogicalChannel value);
 
-    /** Criteria field name: <code>ColorDomain</code> */
-    public String getColorDomain();
-    public void setColorDomain(String value);
+    /** Criteria field name: <code>Pixels</code> */
+    public Pixels getPixels();
+    public void setPixels(Pixels value);
 
     /** Criteria field name: <code>Index</code> */
     public Integer getIndex();
     public void setIndex(Integer value);
 
-    /** Criteria field name: <code>Pixels</code> */
-    public Pixels getPixels();
-    public void setPixels(Pixels value);
+    /** Criteria field name: <code>ColorDomain</code> */
+    public String getColorDomain();
+    public void setColorDomain(String value);
 
 }

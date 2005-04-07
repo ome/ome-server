@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -46,20 +46,20 @@ import java.util.Map;
 public interface Dichroic
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Filter</code> */
-    public Filter getFilter();
-    public void setFilter(Filter value);
-
-    /** Criteria field name: <code>LotNumber</code> */
-    public String getLotNumber();
-    public void setLotNumber(String value);
+    /** Criteria field name: <code>Manufacturer</code> */
+    public String getManufacturer();
+    public void setManufacturer(String value);
 
     /** Criteria field name: <code>Model</code> */
     public String getModel();
     public void setModel(String value);
 
-    /** Criteria field name: <code>Manufacturer</code> */
-    public String getManufacturer();
-    public void setManufacturer(String value);
+    /** Criteria field name: <code>LotNumber</code> */
+    public String getLotNumber();
+    public void setLotNumber(String value);
+
+    /** Criteria field name: <code>Filter</code> */
+    public Filter getFilter();
+    public void setFilter(Filter value);
 
 }

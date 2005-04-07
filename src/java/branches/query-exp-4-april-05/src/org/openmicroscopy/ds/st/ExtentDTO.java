@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:16 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,70 +52,70 @@ public class ExtentDTO
     public String getDTOTypeName() { return "@Extent"; }
     public Class getDTOType() { return Extent.class; }
 
-    public Float getFormFactor()
-    { return getFloatElement("FormFactor"); }
-    public void setFormFactor(Float value)
-    { setElement("FormFactor",value); }
-
-    public Float getPerimeter()
-    { return getFloatElement("Perimeter"); }
-    public void setPerimeter(Float value)
-    { setElement("Perimeter",value); }
-
-    public Float getSurfaceArea()
-    { return getFloatElement("SurfaceArea"); }
-    public void setSurfaceArea(Float value)
-    { setElement("SurfaceArea",value); }
-
-    public Integer getVolume()
-    { return getIntegerElement("Volume"); }
-    public void setVolume(Integer value)
-    { setElement("Volume",value); }
-
-    public Integer getSigmaZ()
-    { return getIntegerElement("SigmaZ"); }
-    public void setSigmaZ(Integer value)
-    { setElement("SigmaZ",value); }
-
-    public Integer getSigmaY()
-    { return getIntegerElement("SigmaY"); }
-    public void setSigmaY(Integer value)
-    { setElement("SigmaY",value); }
-
-    public Integer getSigmaX()
-    { return getIntegerElement("SigmaX"); }
-    public void setSigmaX(Integer value)
-    { setElement("SigmaX",value); }
-
-    public Integer getMaxZ()
-    { return getIntegerElement("MaxZ"); }
-    public void setMaxZ(Integer value)
-    { setElement("MaxZ",value); }
-
     public Integer getMaxY()
     { return getIntegerElement("MaxY"); }
     public void setMaxY(Integer value)
     { setElement("MaxY",value); }
 
-    public Integer getMaxX()
-    { return getIntegerElement("MaxX"); }
-    public void setMaxX(Integer value)
-    { setElement("MaxX",value); }
-
-    public Integer getMinZ()
-    { return getIntegerElement("MinZ"); }
-    public void setMinZ(Integer value)
-    { setElement("MinZ",value); }
+    public Integer getMinX()
+    { return getIntegerElement("MinX"); }
+    public void setMinX(Integer value)
+    { setElement("MinX",value); }
 
     public Integer getMinY()
     { return getIntegerElement("MinY"); }
     public void setMinY(Integer value)
     { setElement("MinY",value); }
 
-    public Integer getMinX()
-    { return getIntegerElement("MinX"); }
-    public void setMinX(Integer value)
-    { setElement("MinX",value); }
+    public Integer getMinZ()
+    { return getIntegerElement("MinZ"); }
+    public void setMinZ(Integer value)
+    { setElement("MinZ",value); }
+
+    public Integer getMaxX()
+    { return getIntegerElement("MaxX"); }
+    public void setMaxX(Integer value)
+    { setElement("MaxX",value); }
+
+    public Integer getMaxZ()
+    { return getIntegerElement("MaxZ"); }
+    public void setMaxZ(Integer value)
+    { setElement("MaxZ",value); }
+
+    public Integer getSigmaX()
+    { return getIntegerElement("SigmaX"); }
+    public void setSigmaX(Integer value)
+    { setElement("SigmaX",value); }
+
+    public Integer getSigmaY()
+    { return getIntegerElement("SigmaY"); }
+    public void setSigmaY(Integer value)
+    { setElement("SigmaY",value); }
+
+    public Integer getSigmaZ()
+    { return getIntegerElement("SigmaZ"); }
+    public void setSigmaZ(Integer value)
+    { setElement("SigmaZ",value); }
+
+    public Integer getVolume()
+    { return getIntegerElement("Volume"); }
+    public void setVolume(Integer value)
+    { setElement("Volume",value); }
+
+    public Float getSurfaceArea()
+    { return getFloatElement("SurfaceArea"); }
+    public void setSurfaceArea(Float value)
+    { setElement("SurfaceArea",value); }
+
+    public Float getPerimeter()
+    { return getFloatElement("Perimeter"); }
+    public void setPerimeter(Float value)
+    { setElement("Perimeter",value); }
+
+    public Float getFormFactor()
+    { return getFloatElement("FormFactor"); }
+    public void setFormFactor(Float value)
+    { setElement("FormFactor",value); }
 
 
 }

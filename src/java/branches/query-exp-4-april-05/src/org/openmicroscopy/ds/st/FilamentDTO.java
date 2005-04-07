@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -53,25 +53,20 @@ public class FilamentDTO
     public String getDTOTypeName() { return "@Filament"; }
     public Class getDTOType() { return Filament.class; }
 
-    public LightSource getLightSource()
-    { return (LightSource) getObjectElement("LightSource"); }
-    public void setLightSource(LightSource value)
-    { setElement("LightSource",value); }
+    public String getType()
+    { return getStringElement("Type"); }
+    public void setType(String value)
+    { setElement("Type",value); }
 
     public Float getPower()
     { return getFloatElement("Power"); }
     public void setPower(Float value)
     { setElement("Power",value); }
 
-    public String getType()
-    { return getStringElement("Type"); }
-    public void setType(String value)
-    { setElement("Type",value); }
+    public LightSource getLightSource()
+    { return (LightSource) parseChildElement("LightSource",LightSourceDTO.class); }
+    public void setLightSource(LightSource value)
+    { setElement("LightSource",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("LightSource",LightSourceDTO.class);
-    }
 
 }

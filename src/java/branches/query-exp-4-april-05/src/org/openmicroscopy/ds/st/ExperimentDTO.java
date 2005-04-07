@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -54,31 +54,25 @@ public class ExperimentDTO
     public String getDTOTypeName() { return "@Experiment"; }
     public Class getDTOType() { return Experiment.class; }
 
-    public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
-    public void setExperimenter(Experimenter value)
-    { setElement("Experimenter",value); }
+    public String getType()
+    { return getStringElement("Type"); }
+    public void setType(String value)
+    { setElement("Type",value); }
 
     public String getDescription()
     { return getStringElement("Description"); }
     public void setDescription(String value)
     { setElement("Description",value); }
 
-    public String getType()
-    { return getStringElement("Type"); }
-    public void setType(String value)
-    { setElement("Type",value); }
+    public Experimenter getExperimenter()
+    { return (Experimenter) parseChildElement("Experimenter",ExperimenterDTO.class); }
+    public void setExperimenter(Experimenter value)
+    { setElement("Experimenter",value); }
 
     public List getImageExperimentList()
-    { return (List) getObjectElement("ImageExperimentList"); }
+    { return (List) parseListElement("ImageExperimentList",ImageExperimentDTO.class); }
     public int countImageExperimentList()
     { return countListElement("ImageExperimentList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Experimenter",ExperimenterDTO.class);
-        parseListElement("ImageExperimentList",ImageExperimentDTO.class);
-    }
 
 }

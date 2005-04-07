@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -59,7 +59,7 @@ public class UserStateDTO
     { setElement("id",new Integer(value)); }
 
     public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("experimenter"); }
+    { return (Experimenter) parseChildElement("experimenter",ExperimenterDTO.class); }
     public void setExperimenter(Experimenter value)
     { setElement("experimenter",value); }
 
@@ -69,17 +69,17 @@ public class UserStateDTO
     { setElement("host",value); }
 
     public Project getProject()
-    { return (Project) getObjectElement("project"); }
+    { return (Project) parseChildElement("project",ProjectDTO.class); }
     public void setProject(Project value)
     { setElement("project",value); }
 
     public Dataset getDataset()
-    { return (Dataset) getObjectElement("dataset"); }
+    { return (Dataset) parseChildElement("dataset",DatasetDTO.class); }
     public void setDataset(Dataset value)
     { setElement("dataset",value); }
 
     public ModuleExecution getModuleExecution()
-    { return (ModuleExecution) getObjectElement("module_execution"); }
+    { return (ModuleExecution) parseChildElement("module_execution",ModuleExecutionDTO.class); }
     public void setModuleExecution(ModuleExecution value)
     { setElement("module_execution",value); }
 
@@ -103,13 +103,5 @@ public class UserStateDTO
     public void setStarted(String value)
     { setElement("started",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("experimenter",ExperimenterDTO.class);
-        parseChildElement("project",ProjectDTO.class);
-        parseChildElement("dataset",DatasetDTO.class);
-        parseChildElement("module_execution",ModuleExecutionDTO.class);
-    }
 
 }

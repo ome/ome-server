@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -48,26 +48,26 @@ import java.util.Map;
 public interface Plate
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Screen</code> */
-    public Screen getScreen();
-    public void setScreen(Screen value);
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
 
     /** Criteria field name: <code>ExternalReference</code> */
     public String getExternalReference();
     public void setExternalReference(String value);
 
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
+    /** Criteria field name: <code>Screen</code> */
+    public Screen getScreen();
+    public void setScreen(Screen value);
 
     /** Criteria field name: <code>ImagePlateList</code> */
     public List getImagePlateList();
-    /** Criteria field name: <code>#ImagePlateList</code> or <code>ImagePlateList</code> */
+    /** Criteria field name: <code>#ImagePlateList</code> or <code>ImagePlateListList</code> */
     public int countImagePlateList();
 
     /** Criteria field name: <code>PlateScreenList</code> */
     public List getPlateScreenList();
-    /** Criteria field name: <code>#PlateScreenList</code> or <code>PlateScreenList</code> */
+    /** Criteria field name: <code>#PlateScreenList</code> or <code>PlateScreenListList</code> */
     public int countPlateScreenList();
 
 }

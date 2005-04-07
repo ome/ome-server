@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -46,34 +46,6 @@ import java.util.Map;
 public interface DisplayROI
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>DisplayOptions</code> */
-    public DisplayOptions getDisplayOptions();
-    public void setDisplayOptions(DisplayOptions value);
-
-    /** Criteria field name: <code>T1</code> */
-    public Integer getT1();
-    public void setT1(Integer value);
-
-    /** Criteria field name: <code>T0</code> */
-    public Integer getT0();
-    public void setT0(Integer value);
-
-    /** Criteria field name: <code>Z1</code> */
-    public Integer getZ1();
-    public void setZ1(Integer value);
-
-    /** Criteria field name: <code>Y1</code> */
-    public Integer getY1();
-    public void setY1(Integer value);
-
-    /** Criteria field name: <code>X1</code> */
-    public Integer getX1();
-    public void setX1(Integer value);
-
-    /** Criteria field name: <code>Z0</code> */
-    public Integer getZ0();
-    public void setZ0(Integer value);
-
     /** Criteria field name: <code>Y0</code> */
     public Integer getY0();
     public void setY0(Integer value);
@@ -81,5 +53,33 @@ public interface DisplayROI
     /** Criteria field name: <code>X0</code> */
     public Integer getX0();
     public void setX0(Integer value);
+
+    /** Criteria field name: <code>Z0</code> */
+    public Integer getZ0();
+    public void setZ0(Integer value);
+
+    /** Criteria field name: <code>X1</code> */
+    public Integer getX1();
+    public void setX1(Integer value);
+
+    /** Criteria field name: <code>Y1</code> */
+    public Integer getY1();
+    public void setY1(Integer value);
+
+    /** Criteria field name: <code>Z1</code> */
+    public Integer getZ1();
+    public void setZ1(Integer value);
+
+    /** Criteria field name: <code>T0</code> */
+    public Integer getT0();
+    public void setT0(Integer value);
+
+    /** Criteria field name: <code>T1</code> */
+    public Integer getT1();
+    public void setT1(Integer value);
+
+    /** Criteria field name: <code>DisplayOptions</code> */
+    public DisplayOptions getDisplayOptions();
+    public void setDisplayOptions(DisplayOptions value);
 
 }

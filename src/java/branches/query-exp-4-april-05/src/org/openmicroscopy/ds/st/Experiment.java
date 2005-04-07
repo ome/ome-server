@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -47,21 +47,21 @@ import java.util.Map;
 public interface Experiment
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Experimenter</code> */
-    public Experimenter getExperimenter();
-    public void setExperimenter(Experimenter value);
+    /** Criteria field name: <code>Type</code> */
+    public String getType();
+    public void setType(String value);
 
     /** Criteria field name: <code>Description</code> */
     public String getDescription();
     public void setDescription(String value);
 
-    /** Criteria field name: <code>Type</code> */
-    public String getType();
-    public void setType(String value);
+    /** Criteria field name: <code>Experimenter</code> */
+    public Experimenter getExperimenter();
+    public void setExperimenter(Experimenter value);
 
     /** Criteria field name: <code>ImageExperimentList</code> */
     public List getImageExperimentList();
-    /** Criteria field name: <code>#ImageExperimentList</code> or <code>ImageExperimentList</code> */
+    /** Criteria field name: <code>#ImageExperimentList</code> or <code>ImageExperimentListList</code> */
     public int countImageExperimentList();
 
 }

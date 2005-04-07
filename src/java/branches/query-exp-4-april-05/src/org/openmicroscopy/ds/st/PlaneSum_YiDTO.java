@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,6 +52,11 @@ public class PlaneSum_YiDTO
     public String getDTOTypeName() { return "@PlaneSum_Yi"; }
     public Class getDTOType() { return PlaneSum_Yi.class; }
 
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
+
     public Float getSum_Yi()
     { return getFloatElement("Sum_Yi"); }
     public void setSum_Yi(Float value)
@@ -61,11 +66,6 @@ public class PlaneSum_YiDTO
     { return getIntegerElement("TheT"); }
     public void setTheT(Integer value)
     { setElement("TheT",value); }
-
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
 
     public Integer getTheZ()
     { return getIntegerElement("TheZ"); }

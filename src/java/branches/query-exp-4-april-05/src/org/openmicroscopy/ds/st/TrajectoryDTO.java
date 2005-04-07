@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:16 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -53,15 +53,15 @@ public class TrajectoryDTO
     public String getDTOTypeName() { return "@Trajectory"; }
     public Class getDTOType() { return Trajectory.class; }
 
-    public Float getAverageVelocity()
-    { return getFloatElement("AverageVelocity"); }
-    public void setAverageVelocity(Float value)
-    { setElement("AverageVelocity",value); }
-
     public Float getTotalDistance()
     { return getFloatElement("TotalDistance"); }
     public void setTotalDistance(Float value)
     { setElement("TotalDistance",value); }
+
+    public Float getAverageVelocity()
+    { return getFloatElement("AverageVelocity"); }
+    public void setAverageVelocity(Float value)
+    { setElement("AverageVelocity",value); }
 
     public String getName()
     { return getStringElement("Name"); }
@@ -69,14 +69,9 @@ public class TrajectoryDTO
     { setElement("Name",value); }
 
     public List getTrajectoryEntryList()
-    { return (List) getObjectElement("TrajectoryEntryList"); }
+    { return (List) parseListElement("TrajectoryEntryList",TrajectoryEntryDTO.class); }
     public int countTrajectoryEntryList()
     { return countListElement("TrajectoryEntryList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseListElement("TrajectoryEntryList",TrajectoryEntryDTO.class);
-    }
 
 }

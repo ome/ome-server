@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -55,44 +55,35 @@ public class GroupDTO
     public String getDTOTypeName() { return "@Group"; }
     public Class getDTOType() { return Group.class; }
 
-    public Experimenter getContact()
-    { return (Experimenter) getObjectElement("Contact"); }
-    public void setContact(Experimenter value)
-    { setElement("Contact",value); }
-
-    public Experimenter getLeader()
-    { return (Experimenter) getObjectElement("Leader"); }
-    public void setLeader(Experimenter value)
-    { setElement("Leader",value); }
-
     public String getName()
     { return getStringElement("Name"); }
     public void setName(String value)
     { setElement("Name",value); }
 
+    public Experimenter getLeader()
+    { return (Experimenter) parseChildElement("Leader",ExperimenterDTO.class); }
+    public void setLeader(Experimenter value)
+    { setElement("Leader",value); }
+
+    public Experimenter getContact()
+    { return (Experimenter) parseChildElement("Contact",ExperimenterDTO.class); }
+    public void setContact(Experimenter value)
+    { setElement("Contact",value); }
+
     public List getExperimenterList()
-    { return (List) getObjectElement("ExperimenterList"); }
+    { return (List) parseListElement("ExperimenterList",ExperimenterDTO.class); }
     public int countExperimenterList()
     { return countListElement("ExperimenterList"); }
 
     public List getExperimenterGroupList()
-    { return (List) getObjectElement("ExperimenterGroupList"); }
+    { return (List) parseListElement("ExperimenterGroupList",ExperimenterGroupDTO.class); }
     public int countExperimenterGroupList()
     { return countListElement("ExperimenterGroupList"); }
 
     public List getImageGroupList()
-    { return (List) getObjectElement("ImageGroupList"); }
+    { return (List) parseListElement("ImageGroupList",ImageGroupDTO.class); }
     public int countImageGroupList()
     { return countListElement("ImageGroupList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Contact",ExperimenterDTO.class);
-        parseChildElement("Leader",ExperimenterDTO.class);
-        parseListElement("ExperimenterList",ExperimenterDTO.class);
-        parseListElement("ExperimenterGroupList",ExperimenterGroupDTO.class);
-        parseListElement("ImageGroupList",ImageGroupDTO.class);
-    }
 
 }

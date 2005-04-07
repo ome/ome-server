@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -45,10 +45,6 @@ import java.util.Map;
 public interface StackGeometricSigma
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>GeometricSigma</code> */
-    public Float getGeometricSigma();
-    public void setGeometricSigma(Float value);
-
     /** Criteria field name: <code>TheT</code> */
     public Integer getTheT();
     public void setTheT(Integer value);
@@ -56,5 +52,9 @@ public interface StackGeometricSigma
     /** Criteria field name: <code>TheC</code> */
     public Integer getTheC();
     public void setTheC(Integer value);
+
+    /** Criteria field name: <code>GeometricSigma</code> */
+    public Float getGeometricSigma();
+    public void setGeometricSigma(Float value);
 
 }

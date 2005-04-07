@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -53,30 +53,25 @@ public class FilterSetDTO
     public String getDTOTypeName() { return "@FilterSet"; }
     public Class getDTOType() { return FilterSet.class; }
 
-    public Filter getFilter()
-    { return (Filter) getObjectElement("Filter"); }
-    public void setFilter(Filter value)
-    { setElement("Filter",value); }
-
-    public String getLotNumber()
-    { return getStringElement("LotNumber"); }
-    public void setLotNumber(String value)
-    { setElement("LotNumber",value); }
+    public String getManufacturer()
+    { return getStringElement("Manufacturer"); }
+    public void setManufacturer(String value)
+    { setElement("Manufacturer",value); }
 
     public String getModel()
     { return getStringElement("Model"); }
     public void setModel(String value)
     { setElement("Model",value); }
 
-    public String getManufacturer()
-    { return getStringElement("Manufacturer"); }
-    public void setManufacturer(String value)
-    { setElement("Manufacturer",value); }
+    public String getLotNumber()
+    { return getStringElement("LotNumber"); }
+    public void setLotNumber(String value)
+    { setElement("LotNumber",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Filter",FilterDTO.class);
-    }
+    public Filter getFilter()
+    { return (Filter) parseChildElement("Filter",FilterDTO.class); }
+    public void setFilter(Filter value)
+    { setElement("Filter",value); }
+
 
 }

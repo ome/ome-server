@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -55,30 +55,24 @@ public class PixelChannelComponentDTO
     public Class getDTOType() { return PixelChannelComponent.class; }
 
     public LogicalChannel getLogicalChannel()
-    { return (LogicalChannel) getObjectElement("LogicalChannel"); }
+    { return (LogicalChannel) parseChildElement("LogicalChannel",LogicalChannelDTO.class); }
     public void setLogicalChannel(LogicalChannel value)
     { setElement("LogicalChannel",value); }
 
-    public String getColorDomain()
-    { return getStringElement("ColorDomain"); }
-    public void setColorDomain(String value)
-    { setElement("ColorDomain",value); }
+    public Pixels getPixels()
+    { return (Pixels) parseChildElement("Pixels",PixelsDTO.class); }
+    public void setPixels(Pixels value)
+    { setElement("Pixels",value); }
 
     public Integer getIndex()
     { return getIntegerElement("Index"); }
     public void setIndex(Integer value)
     { setElement("Index",value); }
 
-    public Pixels getPixels()
-    { return (Pixels) getObjectElement("Pixels"); }
-    public void setPixels(Pixels value)
-    { setElement("Pixels",value); }
+    public String getColorDomain()
+    { return getStringElement("ColorDomain"); }
+    public void setColorDomain(String value)
+    { setElement("ColorDomain",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("LogicalChannel",LogicalChannelDTO.class);
-        parseChildElement("Pixels",PixelsDTO.class);
-    }
 
 }

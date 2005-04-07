@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -58,30 +58,25 @@ public class OriginalFileDTO
     public void setFormat(String value)
     { setElement("Format",value); }
 
+    public Repository getRepository()
+    { return (Repository) parseChildElement("Repository",RepositoryDTO.class); }
+    public void setRepository(Repository value)
+    { setElement("Repository",value); }
+
     public String getSHA1()
     { return getStringElement("SHA1"); }
     public void setSHA1(String value)
     { setElement("SHA1",value); }
-
-    public Long getFileID()
-    { return getLongElement("FileID"); }
-    public void setFileID(Long value)
-    { setElement("FileID",value); }
 
     public String getPath()
     { return getStringElement("Path"); }
     public void setPath(String value)
     { setElement("Path",value); }
 
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
+    public Long getFileID()
+    { return getLongElement("FileID"); }
+    public void setFileID(Long value)
+    { setElement("FileID",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
-    }
 
 }

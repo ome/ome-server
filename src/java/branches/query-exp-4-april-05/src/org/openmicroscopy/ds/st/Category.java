@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:09 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -61,7 +61,7 @@ public interface Category
 
     /** Criteria field name: <code>ClassificationList</code> */
     public List getClassificationList();
-    /** Criteria field name: <code>#ClassificationList</code> or <code>ClassificationList</code> */
+    /** Criteria field name: <code>#ClassificationList</code> or <code>ClassificationListList</code> */
     public int countClassificationList();
 
 }

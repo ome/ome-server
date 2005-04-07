@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Wed Mar  9 11:35:54 2005
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -59,7 +59,7 @@ public class ModuleExecutionDTO
     { setElement("id",new Integer(value)); }
 
     public Module getModule()
-    { return (Module) getObjectElement("module"); }
+    { return (Module) parseChildElement("module",ModuleDTO.class); }
     public void setModule(Module value)
     { setElement("module",value); }
 
@@ -74,17 +74,17 @@ public class ModuleExecutionDTO
     { setElement("dependence",value); }
 
     public Dataset getDataset()
-    { return (Dataset) getObjectElement("dataset"); }
+    { return (Dataset) parseChildElement("dataset",DatasetDTO.class); }
     public void setDataset(Dataset value)
     { setElement("dataset",value); }
 
     public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("experimenter"); }
+    { return (Experimenter) parseChildElement("experimenter",ExperimenterDTO.class); }
     public void setExperimenter(Experimenter value)
     { setElement("experimenter",value); }
 
     public Image getImage()
-    { return (Image) getObjectElement("image"); }
+    { return (Image) parseChildElement("image",ImageDTO.class); }
     public void setImage(Image value)
     { setElement("image",value); }
 
@@ -124,42 +124,29 @@ public class ModuleExecutionDTO
     { setElement("error_message",value); }
 
     public List getInputs()
-    { return (List) getObjectElement("inputs"); }
+    { return (List) parseListElement("inputs",ActualInputDTO.class); }
     public int countInputs()
     { return countListElement("inputs"); }
 
     public List getConsumedOutputs()
-    { return (List) getObjectElement("consumed_outputs"); }
+    { return (List) parseListElement("consumed_outputs",ActualInputDTO.class); }
     public int countConsumedOutputs()
     { return countListElement("consumed_outputs"); }
 
     public List getPredecessors()
-    { return (List) getObjectElement("predecessors"); }
+    { return (List) parseListElement("predecessors",ModuleExecutionDTO.class); }
     public int countPredecessors()
     { return countListElement("predecessors"); }
 
     public List getSuccessors()
-    { return (List) getObjectElement("successors"); }
+    { return (List) parseListElement("successors",ModuleExecutionDTO.class); }
     public int countSuccessors()
     { return countListElement("successors"); }
 
     public List getChainExecutions()
-    { return (List) getObjectElement("chain_executions"); }
+    { return (List) parseListElement("chain_executions",ChainExecutionDTO.class); }
     public int countChainExecutions()
     { return countListElement("chain_executions"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("module",ModuleDTO.class);
-        parseChildElement("dataset",DatasetDTO.class);
-        parseChildElement("experimenter",ExperimenterDTO.class);
-        parseChildElement("image",ImageDTO.class);
-        parseListElement("inputs",ActualInputDTO.class);
-        parseListElement("consumed_outputs",ActualInputDTO.class);
-        parseListElement("predecessors",ModuleExecutionDTO.class);
-        parseListElement("successors",ModuleExecutionDTO.class);
-        parseListElement("chain_executions",ChainExecutionDTO.class);
-    }
 
 }

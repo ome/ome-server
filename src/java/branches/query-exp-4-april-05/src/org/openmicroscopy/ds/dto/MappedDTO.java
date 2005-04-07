@@ -250,7 +250,7 @@ public abstract class MappedDTO
      * DTO (because it wasn't filled in by the XML-RPC method which
      * created this DTO), then nothing happens.
      */
-    protected void parseChildElement(String element, Class dtoClazz)
+    protected Object parseChildElement(String element, Class dtoClazz)
     {
         // It's an error if the specified class isn't a MappedDTO
         // subclass.
@@ -259,7 +259,7 @@ public abstract class MappedDTO
 
         // If the desired element doesn't exist, return silently.
         if (!elements.containsKey(element))
-            return;
+            return null;
 
         try
         {
@@ -267,7 +267,11 @@ public abstract class MappedDTO
             if (o != null)
             {
                 if (dtoClazz.isInstance(o))
-                    return;
+                    return o;
+                if (o instanceof String && 
+                		((String) o).compareTo(NULL_REFERENCE) ==0) {
+                		return null;
+                }
                 else if (!(o instanceof Map))
                     throw new DataException("Illegal type for element "+element);
 
@@ -275,12 +279,14 @@ public abstract class MappedDTO
                 MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
                 dto.setMap(m);
                 elements.put(element,dto);
+                return dto;
             }
         } catch (InstantiationException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         } catch (IllegalAccessException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         }
+        return null;
     }
 
     /**
@@ -291,7 +297,7 @@ public abstract class MappedDTO
      * DTO (because it wasn't filled in by the XML-RPC method which
      * created this DTO), then nothing happens.
      */
-    protected void parseListElement(String element, Class dtoClazz)
+    protected List parseListElement(String element, Class dtoClazz)
     {
         // It's an error if the specified class isn't a MappedDTO
         // subclass.
@@ -300,28 +306,34 @@ public abstract class MappedDTO
 
         // If the desired element doesn't exist, return silently.
         if (!elements.containsKey(element))
-            return;
+            return null;
 
         try
         {
-            List list = (List) elements.get(element);
+        		// has it been parsed?
+        	   Object obj = elements.get(element);
+        	   if (obj instanceof MappedDTOList) 
+        	   		return (MappedDTOList) obj;
+            
+        	   List list = (List) obj;
+            MappedDTOList newList = new MappedDTOList();
             for (int i = 0; i < list.size(); i++)
             {
                 Object o = list.get(i);
                 if (o != null)
                 {
-                    if (dtoClazz.isInstance(o))
-                        return;
-                    else if (!(o instanceof Map))
+                    if (!(o instanceof Map))
                         throw new DataException("Illegal type for element "+
                                                 element);
 
                     Map m = (Map) o;
                     MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
                     dto.setMap(m);
-                    list.set(i,dto);
+                    newList.add(dto);
                 }
             }
+            elements.put(element,newList);
+            return newList;
         } catch (InstantiationException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         } catch (IllegalAccessException e) {
@@ -331,7 +343,7 @@ public abstract class MappedDTO
 
     protected int getIntElement(String key)
     {
-        Integer value = getIntegerElement(key);
+    	    Integer value = getIntegerElement(key);
         if (value == null)
             throw new DataException(key+" field is null");
         else

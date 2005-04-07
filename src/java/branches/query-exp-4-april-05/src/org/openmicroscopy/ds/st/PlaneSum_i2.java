@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -45,17 +45,17 @@ import java.util.Map;
 public interface PlaneSum_i2
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Sum_i2</code> */
-    public Float getSum_i2();
-    public void setSum_i2(Float value);
+    /** Criteria field name: <code>TheC</code> */
+    public Integer getTheC();
+    public void setTheC(Integer value);
 
     /** Criteria field name: <code>TheT</code> */
     public Integer getTheT();
     public void setTheT(Integer value);
 
-    /** Criteria field name: <code>TheC</code> */
-    public Integer getTheC();
-    public void setTheC(Integer value);
+    /** Criteria field name: <code>Sum_i2</code> */
+    public Float getSum_i2();
+    public void setSum_i2(Float value);
 
     /** Criteria field name: <code>TheZ</code> */
     public Integer getTheZ();

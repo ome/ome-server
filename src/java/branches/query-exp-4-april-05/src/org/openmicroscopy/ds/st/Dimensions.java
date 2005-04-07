@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -45,18 +45,6 @@ import java.util.Map;
 public interface Dimensions
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>PixelSizeT</code> */
-    public Float getPixelSizeT();
-    public void setPixelSizeT(Float value);
-
-    /** Criteria field name: <code>PixelSizeC</code> */
-    public Float getPixelSizeC();
-    public void setPixelSizeC(Float value);
-
-    /** Criteria field name: <code>PixelSizeZ</code> */
-    public Float getPixelSizeZ();
-    public void setPixelSizeZ(Float value);
-
     /** Criteria field name: <code>PixelSizeY</code> */
     public Float getPixelSizeY();
     public void setPixelSizeY(Float value);
@@ -64,5 +52,17 @@ public interface Dimensions
     /** Criteria field name: <code>PixelSizeX</code> */
     public Float getPixelSizeX();
     public void setPixelSizeX(Float value);
+
+    /** Criteria field name: <code>PixelSizeZ</code> */
+    public Float getPixelSizeZ();
+    public void setPixelSizeZ(Float value);
+
+    /** Criteria field name: <code>PixelSizeC</code> */
+    public Float getPixelSizeC();
+    public void setPixelSizeC(Float value);
+
+    /** Criteria field name: <code>PixelSizeT</code> */
+    public Float getPixelSizeT();
+    public void setPixelSizeT(Float value);
 
 }

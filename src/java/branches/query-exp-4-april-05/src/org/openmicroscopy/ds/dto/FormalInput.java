@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -82,7 +82,7 @@ public interface FormalInput
 
     /** Criteria field name: <code>actual_inputs</code> */
     public List getActualInputs();
-    /** Criteria field name: <code>#actual_inputs</code> or <code>actual_inputs</code> */
+    /** Criteria field name: <code>#actual_inputs</code> or <code>actual_inputsList</code> */
     public int countActualInputs();
 
 }

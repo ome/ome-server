@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -58,32 +58,32 @@ public interface Filter
 
     /** Criteria field name: <code>DichroicList</code> */
     public List getDichroicList();
-    /** Criteria field name: <code>#DichroicList</code> or <code>DichroicList</code> */
+    /** Criteria field name: <code>#DichroicList</code> or <code>DichroicListList</code> */
     public int countDichroicList();
 
     /** Criteria field name: <code>EmissionFilterList</code> */
     public List getEmissionFilterList();
-    /** Criteria field name: <code>#EmissionFilterList</code> or <code>EmissionFilterList</code> */
+    /** Criteria field name: <code>#EmissionFilterList</code> or <code>EmissionFilterListList</code> */
     public int countEmissionFilterList();
 
     /** Criteria field name: <code>ExcitationFilterList</code> */
     public List getExcitationFilterList();
-    /** Criteria field name: <code>#ExcitationFilterList</code> or <code>ExcitationFilterList</code> */
+    /** Criteria field name: <code>#ExcitationFilterList</code> or <code>ExcitationFilterListList</code> */
     public int countExcitationFilterList();
 
     /** Criteria field name: <code>FilterSetList</code> */
     public List getFilterSetList();
-    /** Criteria field name: <code>#FilterSetList</code> or <code>FilterSetList</code> */
+    /** Criteria field name: <code>#FilterSetList</code> or <code>FilterSetListList</code> */
     public int countFilterSetList();
 
     /** Criteria field name: <code>LogicalChannelList</code> */
     public List getLogicalChannelList();
-    /** Criteria field name: <code>#LogicalChannelList</code> or <code>LogicalChannelList</code> */
+    /** Criteria field name: <code>#LogicalChannelList</code> or <code>LogicalChannelListList</code> */
     public int countLogicalChannelList();
 
     /** Criteria field name: <code>OTFList</code> */
     public List getOTFList();
-    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFListList</code> */
     public int countOTFList();
 
 }

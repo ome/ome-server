@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -50,50 +50,50 @@ import java.util.Map;
 public interface LightSource
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Instrument</code> */
-    public Instrument getInstrument();
-    public void setInstrument(Instrument value);
-
-    /** Criteria field name: <code>SerialNumber</code> */
-    public String getSerialNumber();
-    public void setSerialNumber(String value);
+    /** Criteria field name: <code>Manufacturer</code> */
+    public String getManufacturer();
+    public void setManufacturer(String value);
 
     /** Criteria field name: <code>Model</code> */
     public String getModel();
     public void setModel(String value);
 
-    /** Criteria field name: <code>Manufacturer</code> */
-    public String getManufacturer();
-    public void setManufacturer(String value);
+    /** Criteria field name: <code>SerialNumber</code> */
+    public String getSerialNumber();
+    public void setSerialNumber(String value);
+
+    /** Criteria field name: <code>Instrument</code> */
+    public Instrument getInstrument();
+    public void setInstrument(Instrument value);
 
     /** Criteria field name: <code>ArcList</code> */
     public List getArcList();
-    /** Criteria field name: <code>#ArcList</code> or <code>ArcList</code> */
+    /** Criteria field name: <code>#ArcList</code> or <code>ArcListList</code> */
     public int countArcList();
 
     /** Criteria field name: <code>FilamentList</code> */
     public List getFilamentList();
-    /** Criteria field name: <code>#FilamentList</code> or <code>FilamentList</code> */
+    /** Criteria field name: <code>#FilamentList</code> or <code>FilamentListList</code> */
     public int countFilamentList();
 
     /** Criteria field name: <code>LaserListByLightSource</code> */
     public List getLaserListByLightSource();
-    /** Criteria field name: <code>#LaserListByLightSource</code> or <code>LaserListByLightSource</code> */
+    /** Criteria field name: <code>#LaserListByLightSource</code> or <code>LaserListByLightSourceList</code> */
     public int countLaserListByLightSource();
 
     /** Criteria field name: <code>LaserListByPump</code> */
     public List getLaserListByPump();
-    /** Criteria field name: <code>#LaserListByPump</code> or <code>LaserListByPump</code> */
+    /** Criteria field name: <code>#LaserListByPump</code> or <code>LaserListByPumpList</code> */
     public int countLaserListByPump();
 
     /** Criteria field name: <code>LogicalChannelListByAuxLightSource</code> */
     public List getLogicalChannelListByAuxLightSource();
-    /** Criteria field name: <code>#LogicalChannelListByAuxLightSource</code> or <code>LogicalChannelListByAuxLightSource</code> */
+    /** Criteria field name: <code>#LogicalChannelListByAuxLightSource</code> or <code>LogicalChannelListByAuxLightSourceList</code> */
     public int countLogicalChannelListByAuxLightSource();
 
     /** Criteria field name: <code>LogicalChannelListByLightSource</code> */
     public List getLogicalChannelListByLightSource();
-    /** Criteria field name: <code>#LogicalChannelListByLightSource</code> or <code>LogicalChannelListByLightSource</code> */
+    /** Criteria field name: <code>#LogicalChannelListByLightSource</code> or <code>LogicalChannelListByLightSourceList</code> */
     public int countLogicalChannelListByLightSource();
 
 }

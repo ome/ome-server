@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,20 +52,20 @@ public class PlaneMinimumDTO
     public String getDTOTypeName() { return "@PlaneMinimum"; }
     public Class getDTOType() { return PlaneMinimum.class; }
 
-    public Integer getMinimum()
-    { return getIntegerElement("Minimum"); }
-    public void setMinimum(Integer value)
-    { setElement("Minimum",value); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
     public Integer getTheT()
     { return getIntegerElement("TheT"); }
     public void setTheT(Integer value)
     { setElement("TheT",value); }
 
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
+    public Integer getMinimum()
+    { return getIntegerElement("Minimum"); }
+    public void setMinimum(Integer value)
+    { setElement("Minimum",value); }
 
     public Integer getTheZ()
     { return getIntegerElement("TheZ"); }

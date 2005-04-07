@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -50,20 +50,20 @@ public interface OriginalFile
     public String getFormat();
     public void setFormat(String value);
 
+    /** Criteria field name: <code>Repository</code> */
+    public Repository getRepository();
+    public void setRepository(Repository value);
+
     /** Criteria field name: <code>SHA1</code> */
     public String getSHA1();
     public void setSHA1(String value);
-
-    /** Criteria field name: <code>FileID</code> */
-    public Long getFileID();
-    public void setFileID(Long value);
 
     /** Criteria field name: <code>Path</code> */
     public String getPath();
     public void setPath(String value);
 
-    /** Criteria field name: <code>Repository</code> */
-    public Repository getRepository();
-    public void setRepository(Repository value);
+    /** Criteria field name: <code>FileID</code> */
+    public Long getFileID();
+    public void setFileID(Long value);
 
 }

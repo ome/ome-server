@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -47,41 +47,41 @@ import java.util.Map;
 public interface Detector
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Instrument</code> */
-    public Instrument getInstrument();
-    public void setInstrument(Instrument value);
-
-    /** Criteria field name: <code>Offset</code> */
-    public Float getOffset();
-    public void setOffset(Float value);
-
-    /** Criteria field name: <code>Voltage</code> */
-    public Float getVoltage();
-    public void setVoltage(Float value);
-
     /** Criteria field name: <code>Gain</code> */
     public Float getGain();
     public void setGain(Float value);
-
-    /** Criteria field name: <code>Type</code> */
-    public String getType();
-    public void setType(String value);
-
-    /** Criteria field name: <code>SerialNumber</code> */
-    public String getSerialNumber();
-    public void setSerialNumber(String value);
-
-    /** Criteria field name: <code>Model</code> */
-    public String getModel();
-    public void setModel(String value);
 
     /** Criteria field name: <code>Manufacturer</code> */
     public String getManufacturer();
     public void setManufacturer(String value);
 
+    /** Criteria field name: <code>Model</code> */
+    public String getModel();
+    public void setModel(String value);
+
+    /** Criteria field name: <code>SerialNumber</code> */
+    public String getSerialNumber();
+    public void setSerialNumber(String value);
+
+    /** Criteria field name: <code>Type</code> */
+    public String getType();
+    public void setType(String value);
+
+    /** Criteria field name: <code>Voltage</code> */
+    public Float getVoltage();
+    public void setVoltage(Float value);
+
+    /** Criteria field name: <code>Offset</code> */
+    public Float getOffset();
+    public void setOffset(Float value);
+
+    /** Criteria field name: <code>Instrument</code> */
+    public Instrument getInstrument();
+    public void setInstrument(Instrument value);
+
     /** Criteria field name: <code>LogicalChannelList</code> */
     public List getLogicalChannelList();
-    /** Criteria field name: <code>#LogicalChannelList</code> or <code>LogicalChannelList</code> */
+    /** Criteria field name: <code>#LogicalChannelList</code> or <code>LogicalChannelListList</code> */
     public int countLogicalChannelList();
 
 }

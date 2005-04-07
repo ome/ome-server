@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -48,31 +48,31 @@ import java.util.Map;
 public interface Group
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Contact</code> */
-    public Experimenter getContact();
-    public void setContact(Experimenter value);
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
 
     /** Criteria field name: <code>Leader</code> */
     public Experimenter getLeader();
     public void setLeader(Experimenter value);
 
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
+    /** Criteria field name: <code>Contact</code> */
+    public Experimenter getContact();
+    public void setContact(Experimenter value);
 
     /** Criteria field name: <code>ExperimenterList</code> */
     public List getExperimenterList();
-    /** Criteria field name: <code>#ExperimenterList</code> or <code>ExperimenterList</code> */
+    /** Criteria field name: <code>#ExperimenterList</code> or <code>ExperimenterListList</code> */
     public int countExperimenterList();
 
     /** Criteria field name: <code>ExperimenterGroupList</code> */
     public List getExperimenterGroupList();
-    /** Criteria field name: <code>#ExperimenterGroupList</code> or <code>ExperimenterGroupList</code> */
+    /** Criteria field name: <code>#ExperimenterGroupList</code> or <code>ExperimenterGroupListList</code> */
     public int countExperimenterGroupList();
 
     /** Criteria field name: <code>ImageGroupList</code> */
     public List getImageGroupList();
-    /** Criteria field name: <code>#ImageGroupList</code> or <code>ImageGroupList</code> */
+    /** Criteria field name: <code>#ImageGroupList</code> or <code>ImageGroupListList</code> */
     public int countImageGroupList();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,7 +57,7 @@ public class SemanticElementDTO
     { setElement("id",new Integer(value)); }
 
     public SemanticType getSemanticType()
-    { return (SemanticType) getObjectElement("semantic_type"); }
+    { return (SemanticType) parseChildElement("semantic_type",SemanticTypeDTO.class); }
     public void setSemanticType(SemanticType value)
     { setElement("semantic_type",value); }
 
@@ -67,7 +67,7 @@ public class SemanticElementDTO
     { setElement("name",value); }
 
     public DataColumn getDataColumn()
-    { return (DataColumn) getObjectElement("data_column"); }
+    { return (DataColumn) parseChildElement("data_column",DataColumnDTO.class); }
     public void setDataColumn(DataColumn value)
     { setElement("data_column",value); }
 
@@ -76,11 +76,5 @@ public class SemanticElementDTO
     public void setDescription(String value)
     { setElement("description",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("semantic_type",SemanticTypeDTO.class);
-        parseChildElement("data_column",DataColumnDTO.class);
-    }
 
 }

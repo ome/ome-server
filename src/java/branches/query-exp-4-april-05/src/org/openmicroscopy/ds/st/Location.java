@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -45,13 +45,13 @@ import java.util.Map;
 public interface Location
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>TheZ</code> */
-    public Float getTheZ();
-    public void setTheZ(Float value);
-
     /** Criteria field name: <code>TheY</code> */
     public Float getTheY();
     public void setTheY(Float value);
+
+    /** Criteria field name: <code>TheZ</code> */
+    public Float getTheZ();
+    public void setTheZ(Float value);
 
     /** Criteria field name: <code>TheX</code> */
     public Float getTheX();

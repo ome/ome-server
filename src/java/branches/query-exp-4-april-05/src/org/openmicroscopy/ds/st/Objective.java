@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,6 +52,10 @@ public interface Objective
     public Instrument getInstrument();
     public void setInstrument(Instrument value);
 
+    /** Criteria field name: <code>Manufacturer</code> */
+    public String getManufacturer();
+    public void setManufacturer(String value);
+
     /** Criteria field name: <code>Magnification</code> */
     public Float getMagnification();
     public void setMagnification(Float value);
@@ -60,26 +64,22 @@ public interface Objective
     public Float getLensNA();
     public void setLensNA(Float value);
 
-    /** Criteria field name: <code>SerialNumber</code> */
-    public String getSerialNumber();
-    public void setSerialNumber(String value);
-
     /** Criteria field name: <code>Model</code> */
     public String getModel();
     public void setModel(String value);
 
-    /** Criteria field name: <code>Manufacturer</code> */
-    public String getManufacturer();
-    public void setManufacturer(String value);
+    /** Criteria field name: <code>SerialNumber</code> */
+    public String getSerialNumber();
+    public void setSerialNumber(String value);
 
     /** Criteria field name: <code>ImageInstrumentList</code> */
     public List getImageInstrumentList();
-    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentList</code> */
+    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentListList</code> */
     public int countImageInstrumentList();
 
     /** Criteria field name: <code>OTFList</code> */
     public List getOTFList();
-    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFListList</code> */
     public int countOTFList();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,66 +57,55 @@ public class LightSourceDTO
     public String getDTOTypeName() { return "@LightSource"; }
     public Class getDTOType() { return LightSource.class; }
 
-    public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
-    public void setInstrument(Instrument value)
-    { setElement("Instrument",value); }
-
-    public String getSerialNumber()
-    { return getStringElement("SerialNumber"); }
-    public void setSerialNumber(String value)
-    { setElement("SerialNumber",value); }
+    public String getManufacturer()
+    { return getStringElement("Manufacturer"); }
+    public void setManufacturer(String value)
+    { setElement("Manufacturer",value); }
 
     public String getModel()
     { return getStringElement("Model"); }
     public void setModel(String value)
     { setElement("Model",value); }
 
-    public String getManufacturer()
-    { return getStringElement("Manufacturer"); }
-    public void setManufacturer(String value)
-    { setElement("Manufacturer",value); }
+    public String getSerialNumber()
+    { return getStringElement("SerialNumber"); }
+    public void setSerialNumber(String value)
+    { setElement("SerialNumber",value); }
+
+    public Instrument getInstrument()
+    { return (Instrument) parseChildElement("Instrument",InstrumentDTO.class); }
+    public void setInstrument(Instrument value)
+    { setElement("Instrument",value); }
 
     public List getArcList()
-    { return (List) getObjectElement("ArcList"); }
+    { return (List) parseListElement("ArcList",ArcDTO.class); }
     public int countArcList()
     { return countListElement("ArcList"); }
 
     public List getFilamentList()
-    { return (List) getObjectElement("FilamentList"); }
+    { return (List) parseListElement("FilamentList",FilamentDTO.class); }
     public int countFilamentList()
     { return countListElement("FilamentList"); }
 
     public List getLaserListByLightSource()
-    { return (List) getObjectElement("LaserListByLightSource"); }
+    { return (List) parseListElement("LaserListByLightSource",LaserDTO.class); }
     public int countLaserListByLightSource()
     { return countListElement("LaserListByLightSource"); }
 
     public List getLaserListByPump()
-    { return (List) getObjectElement("LaserListByPump"); }
+    { return (List) parseListElement("LaserListByPump",LaserDTO.class); }
     public int countLaserListByPump()
     { return countListElement("LaserListByPump"); }
 
     public List getLogicalChannelListByAuxLightSource()
-    { return (List) getObjectElement("LogicalChannelListByAuxLightSource"); }
+    { return (List) parseListElement("LogicalChannelListByAuxLightSource",LogicalChannelDTO.class); }
     public int countLogicalChannelListByAuxLightSource()
     { return countListElement("LogicalChannelListByAuxLightSource"); }
 
     public List getLogicalChannelListByLightSource()
-    { return (List) getObjectElement("LogicalChannelListByLightSource"); }
+    { return (List) parseListElement("LogicalChannelListByLightSource",LogicalChannelDTO.class); }
     public int countLogicalChannelListByLightSource()
     { return countListElement("LogicalChannelListByLightSource"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Instrument",InstrumentDTO.class);
-        parseListElement("ArcList",ArcDTO.class);
-        parseListElement("FilamentList",FilamentDTO.class);
-        parseListElement("LaserListByLightSource",LaserDTO.class);
-        parseListElement("LaserListByPump",LaserDTO.class);
-        parseListElement("LogicalChannelListByAuxLightSource",LogicalChannelDTO.class);
-        parseListElement("LogicalChannelListByLightSource",LogicalChannelDTO.class);
-    }
 
 }

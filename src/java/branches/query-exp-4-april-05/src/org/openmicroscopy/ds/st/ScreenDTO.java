@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -54,36 +54,30 @@ public class ScreenDTO
     public String getDTOTypeName() { return "@Screen"; }
     public Class getDTOType() { return Screen.class; }
 
-    public String getExternalReference()
-    { return getStringElement("ExternalReference"); }
-    public void setExternalReference(String value)
-    { setElement("ExternalReference",value); }
+    public String getName()
+    { return getStringElement("Name"); }
+    public void setName(String value)
+    { setElement("Name",value); }
 
     public String getDescription()
     { return getStringElement("Description"); }
     public void setDescription(String value)
     { setElement("Description",value); }
 
-    public String getName()
-    { return getStringElement("Name"); }
-    public void setName(String value)
-    { setElement("Name",value); }
+    public String getExternalReference()
+    { return getStringElement("ExternalReference"); }
+    public void setExternalReference(String value)
+    { setElement("ExternalReference",value); }
 
     public List getPlateList()
-    { return (List) getObjectElement("PlateList"); }
+    { return (List) parseListElement("PlateList",PlateDTO.class); }
     public int countPlateList()
     { return countListElement("PlateList"); }
 
     public List getPlateScreenList()
-    { return (List) getObjectElement("PlateScreenList"); }
+    { return (List) parseListElement("PlateScreenList",PlateScreenDTO.class); }
     public int countPlateScreenList()
     { return countListElement("PlateScreenList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseListElement("PlateList",PlateDTO.class);
-        parseListElement("PlateScreenList",PlateScreenDTO.class);
-    }
 
 }

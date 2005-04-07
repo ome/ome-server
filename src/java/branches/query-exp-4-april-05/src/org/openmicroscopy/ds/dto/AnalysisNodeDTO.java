@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,12 +57,12 @@ public class AnalysisNodeDTO
     { setElement("id",new Integer(value)); }
 
     public AnalysisChain getChain()
-    { return (AnalysisChain) getObjectElement("analysis_chain"); }
+    { return (AnalysisChain) parseChildElement("analysis_chain",AnalysisChainDTO.class); }
     public void setChain(AnalysisChain value)
     { setElement("analysis_chain",value); }
 
     public Module getModule()
-    { return (Module) getObjectElement("module"); }
+    { return (Module) parseChildElement("module",ModuleDTO.class); }
     public void setModule(Module value)
     { setElement("module",value); }
 
@@ -77,22 +77,14 @@ public class AnalysisNodeDTO
     { setElement("new_feature_tag",value); }
 
     public List getInputLinks()
-    { return (List) getObjectElement("input_links"); }
+    { return (List) parseListElement("input_links",AnalysisLinkDTO.class); }
     public int countInputLinks()
     { return countListElement("input_links"); }
 
     public List getOutputLinks()
-    { return (List) getObjectElement("output_links"); }
+    { return (List) parseListElement("output_links",AnalysisLinkDTO.class); }
     public int countOutputLinks()
     { return countListElement("output_links"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("analysis_chain",AnalysisChainDTO.class);
-        parseChildElement("module",ModuleDTO.class);
-        parseListElement("input_links",AnalysisLinkDTO.class);
-        parseListElement("output_links",AnalysisLinkDTO.class);
-    }
 
 }

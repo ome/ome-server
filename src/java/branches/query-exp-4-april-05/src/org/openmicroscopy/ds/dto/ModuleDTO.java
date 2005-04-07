@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -77,7 +77,7 @@ public class ModuleDTO
     { setElement("location",value); }
 
     public ModuleCategory getCategory()
-    { return (ModuleCategory) getObjectElement("category"); }
+    { return (ModuleCategory) parseChildElement("category",ModuleCategoryDTO.class); }
     public void setCategory(ModuleCategory value)
     { setElement("category",value); }
 
@@ -92,17 +92,17 @@ public class ModuleDTO
     { setElement("new_feature_tag",value); }
 
     public List getFormalInputs()
-    { return (List) getObjectElement("inputs"); }
+    { return (List) parseListElement("inputs",FormalInputDTO.class); }
     public int countFormalInputs()
     { return countListElement("inputs"); }
 
     public List getFormalOutputs()
-    { return (List) getObjectElement("outputs"); }
+    { return (List) parseListElement("outputs",FormalOutputDTO.class); }
     public int countFormalOutputs()
     { return countListElement("outputs"); }
 
     public List getExecutions()
-    { return (List) getObjectElement("executions"); }
+    { return (List) parseListElement("executions",ModuleExecutionDTO.class); }
     public int countExecutions()
     { return countListElement("executions"); }
 
@@ -111,13 +111,5 @@ public class ModuleDTO
     public void setExecutionInstructions(String value)
     { setElement("execution_instructions",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("category",ModuleCategoryDTO.class);
-        parseListElement("inputs",FormalInputDTO.class);
-        parseListElement("outputs",FormalOutputDTO.class);
-        parseListElement("executions",ModuleExecutionDTO.class);
-    }
 
 }

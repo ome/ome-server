@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -66,7 +66,7 @@ public interface Feature
 
     /** Criteria field name: <code>children</code> */
     public List getChildren();
-    /** Criteria field name: <code>#children</code> or <code>children</code> */
+    /** Criteria field name: <code>#children</code> or <code>childrenList</code> */
     public int countChildren();
 
 }

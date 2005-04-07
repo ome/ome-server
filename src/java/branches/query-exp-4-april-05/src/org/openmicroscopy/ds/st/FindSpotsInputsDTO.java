@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:16 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:06 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,30 +52,30 @@ public class FindSpotsInputsDTO
     public String getDTOTypeName() { return "@FindSpotsInputs"; }
     public Class getDTOType() { return FindSpotsInputs.class; }
 
-    public Float getThresholdValue()
-    { return getFloatElement("ThresholdValue"); }
-    public void setThresholdValue(Float value)
-    { setElement("ThresholdValue",value); }
-
     public String getThresholdType()
     { return getStringElement("ThresholdType"); }
     public void setThresholdType(String value)
     { setElement("ThresholdType",value); }
-
-    public Float getMinimumSpotVolume()
-    { return getFloatElement("MinimumSpotVolume"); }
-    public void setMinimumSpotVolume(Float value)
-    { setElement("MinimumSpotVolume",value); }
 
     public Integer getChannel()
     { return getIntegerElement("Channel"); }
     public void setChannel(Integer value)
     { setElement("Channel",value); }
 
+    public Float getMinimumSpotVolume()
+    { return getFloatElement("MinimumSpotVolume"); }
+    public void setMinimumSpotVolume(Float value)
+    { setElement("MinimumSpotVolume",value); }
+
     public Integer getTimeStop()
     { return getIntegerElement("TimeStop"); }
     public void setTimeStop(Integer value)
     { setElement("TimeStop",value); }
+
+    public Float getThresholdValue()
+    { return getFloatElement("ThresholdValue"); }
+    public void setThresholdValue(Float value)
+    { setElement("ThresholdValue",value); }
 
     public Integer getTimeStart()
     { return getIntegerElement("TimeStart"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:05 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -52,25 +52,25 @@ public class StackCentroidDTO
     public String getDTOTypeName() { return "@StackCentroid"; }
     public Class getDTOType() { return StackCentroid.class; }
 
-    public Float getZ()
-    { return getFloatElement("Z"); }
-    public void setZ(Float value)
-    { setElement("Z",value); }
-
-    public Float getY()
-    { return getFloatElement("Y"); }
-    public void setY(Float value)
-    { setElement("Y",value); }
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
 
     public Float getX()
     { return getFloatElement("X"); }
     public void setX(Float value)
     { setElement("X",value); }
 
-    public Integer getTheT()
-    { return getIntegerElement("TheT"); }
-    public void setTheT(Integer value)
-    { setElement("TheT",value); }
+    public Float getY()
+    { return getFloatElement("Y"); }
+    public void setY(Float value)
+    { setElement("Y",value); }
+
+    public Float getZ()
+    { return getFloatElement("Z"); }
+    public void setZ(Float value)
+    { setElement("Z",value); }
 
     public Integer getTheC()
     { return getIntegerElement("TheC"); }

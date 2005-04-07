@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -62,7 +62,7 @@ public class ModuleCategoryDTO
     { setElement("name",value); }
 
     public ModuleCategory getParentCategory()
-    { return (ModuleCategory) getObjectElement("parent_category"); }
+    { return (ModuleCategory) parseChildElement("parent_category",ModuleCategoryDTO.class); }
     public void setParentCategory(ModuleCategory value)
     { setElement("parent_category",value); }
 
@@ -72,21 +72,14 @@ public class ModuleCategoryDTO
     { setElement("description",value); }
 
     public List getChildCategories()
-    { return (List) getObjectElement("children"); }
+    { return (List) parseListElement("children",ModuleCategoryDTO.class); }
     public int countChildCategories()
     { return countListElement("children"); }
 
     public List getModules()
-    { return (List) getObjectElement("modules"); }
+    { return (List) parseListElement("modules",ModuleDTO.class); }
     public int countModules()
     { return countListElement("modules"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("parent_category",ModuleCategoryDTO.class);
-        parseListElement("children",ModuleCategoryDTO.class);
-        parseListElement("modules",ModuleDTO.class);
-    }
 
 }

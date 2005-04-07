@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -48,69 +48,69 @@ import java.util.Map;
 public interface DisplayOptions
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>TStop</code> */
-    public Integer getTStop();
-    public void setTStop(Integer value);
-
-    /** Criteria field name: <code>TStart</code> */
-    public Integer getTStart();
-    public void setTStart(Integer value);
-
-    /** Criteria field name: <code>ZStop</code> */
-    public Integer getZStop();
-    public void setZStop(Integer value);
-
-    /** Criteria field name: <code>ZStart</code> */
-    public Integer getZStart();
-    public void setZStart(Integer value);
-
-    /** Criteria field name: <code>ColorMap</code> */
-    public String getColorMap();
-    public void setColorMap(String value);
-
-    /** Criteria field name: <code>GreyChannel</code> */
-    public DisplayChannel getGreyChannel();
-    public void setGreyChannel(DisplayChannel value);
-
-    /** Criteria field name: <code>DisplayRGB</code> */
-    public Boolean isDisplayRGB();
-    public void setDisplayRGB(Boolean value);
-
-    /** Criteria field name: <code>BlueChannelOn</code> */
-    public Boolean isBlueChannelOn();
-    public void setBlueChannelOn(Boolean value);
-
-    /** Criteria field name: <code>BlueChannel</code> */
-    public DisplayChannel getBlueChannel();
-    public void setBlueChannel(DisplayChannel value);
-
-    /** Criteria field name: <code>GreenChannelOn</code> */
-    public Boolean isGreenChannelOn();
-    public void setGreenChannelOn(Boolean value);
+    /** Criteria field name: <code>RedChannelOn</code> */
+    public Boolean isRedChannelOn();
+    public void setRedChannelOn(Boolean value);
 
     /** Criteria field name: <code>GreenChannel</code> */
     public DisplayChannel getGreenChannel();
     public void setGreenChannel(DisplayChannel value);
 
-    /** Criteria field name: <code>RedChannelOn</code> */
-    public Boolean isRedChannelOn();
-    public void setRedChannelOn(Boolean value);
+    /** Criteria field name: <code>GreenChannelOn</code> */
+    public Boolean isGreenChannelOn();
+    public void setGreenChannelOn(Boolean value);
 
-    /** Criteria field name: <code>RedChannel</code> */
-    public DisplayChannel getRedChannel();
-    public void setRedChannel(DisplayChannel value);
+    /** Criteria field name: <code>BlueChannel</code> */
+    public DisplayChannel getBlueChannel();
+    public void setBlueChannel(DisplayChannel value);
 
-    /** Criteria field name: <code>Zoom</code> */
-    public Float getZoom();
-    public void setZoom(Float value);
+    /** Criteria field name: <code>BlueChannelOn</code> */
+    public Boolean isBlueChannelOn();
+    public void setBlueChannelOn(Boolean value);
+
+    /** Criteria field name: <code>DisplayRGB</code> */
+    public Boolean isDisplayRGB();
+    public void setDisplayRGB(Boolean value);
+
+    /** Criteria field name: <code>GreyChannel</code> */
+    public DisplayChannel getGreyChannel();
+    public void setGreyChannel(DisplayChannel value);
+
+    /** Criteria field name: <code>ColorMap</code> */
+    public String getColorMap();
+    public void setColorMap(String value);
+
+    /** Criteria field name: <code>ZStart</code> */
+    public Integer getZStart();
+    public void setZStart(Integer value);
+
+    /** Criteria field name: <code>ZStop</code> */
+    public Integer getZStop();
+    public void setZStop(Integer value);
+
+    /** Criteria field name: <code>TStart</code> */
+    public Integer getTStart();
+    public void setTStart(Integer value);
+
+    /** Criteria field name: <code>TStop</code> */
+    public Integer getTStop();
+    public void setTStop(Integer value);
 
     /** Criteria field name: <code>Pixels</code> */
     public Pixels getPixels();
     public void setPixels(Pixels value);
 
+    /** Criteria field name: <code>Zoom</code> */
+    public Float getZoom();
+    public void setZoom(Float value);
+
+    /** Criteria field name: <code>RedChannel</code> */
+    public DisplayChannel getRedChannel();
+    public void setRedChannel(DisplayChannel value);
+
     /** Criteria field name: <code>DisplayROIList</code> */
     public List getDisplayROIList();
-    /** Criteria field name: <code>#DisplayROIList</code> or <code>DisplayROIList</code> */
+    /** Criteria field name: <code>#DisplayROIList</code> or <code>DisplayROIListList</code> */
     public int countDisplayROIList();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Tue Mar 29 12:09:11 2005
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,10 +57,10 @@ public class RepositoryDTO
     public String getDTOTypeName() { return "@Repository"; }
     public Class getDTOType() { return Repository.class; }
 
-    public Boolean isIsLocal()
-    { return getBooleanElement("IsLocal"); }
-    public void setIsLocal(Boolean value)
-    { setElement("IsLocal",value); }
+    public Boolean isLocal()
+    { return getBooleanElement("Local"); }
+    public void setLocal(Boolean value)
+    { setElement("Local",value); }
 
     public String getImageServerURL()
     { return getStringElement("ImageServerURL"); }
@@ -73,38 +73,29 @@ public class RepositoryDTO
     { setElement("Path",value); }
 
     public List getOTFList()
-    { return (List) getObjectElement("OTFList"); }
+    { return (List) parseListElement("OTFList",OTFDTO.class); }
     public int countOTFList()
     { return countListElement("OTFList"); }
 
     public List getOriginalFileList()
-    { return (List) getObjectElement("OriginalFileList"); }
+    { return (List) parseListElement("OriginalFileList",OriginalFileDTO.class); }
     public int countOriginalFileList()
     { return countListElement("OriginalFileList"); }
 
     public List getPixelsList()
-    { return (List) getObjectElement("PixelsList"); }
+    { return (List) parseListElement("PixelsList",PixelsDTO.class); }
     public int countPixelsList()
     { return countListElement("PixelsList"); }
 
     public List getPixelsPlaneList()
-    { return (List) getObjectElement("PixelsPlaneList"); }
+    { return (List) parseListElement("PixelsPlaneList",PixelsPlaneDTO.class); }
     public int countPixelsPlaneList()
     { return countListElement("PixelsPlaneList"); }
 
     public List getThumbnailList()
-    { return (List) getObjectElement("ThumbnailList"); }
+    { return (List) parseListElement("ThumbnailList",ThumbnailDTO.class); }
     public int countThumbnailList()
     { return countListElement("ThumbnailList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseListElement("OTFList",OTFDTO.class);
-        parseListElement("OriginalFileList",OriginalFileDTO.class);
-        parseListElement("PixelsList",PixelsDTO.class);
-        parseListElement("PixelsPlaneList",PixelsPlaneDTO.class);
-        parseListElement("ThumbnailList",ThumbnailDTO.class);
-    }
 
 }

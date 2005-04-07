@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -59,42 +59,42 @@ public interface Instrument
     public String getSerialNumber();
     public void setSerialNumber(String value);
 
-    /** Criteria field name: <code>Model</code> */
-    public String getModel();
-    public void setModel(String value);
-
     /** Criteria field name: <code>Manufacturer</code> */
     public String getManufacturer();
     public void setManufacturer(String value);
 
+    /** Criteria field name: <code>Model</code> */
+    public String getModel();
+    public void setModel(String value);
+
     /** Criteria field name: <code>DetectorList</code> */
     public List getDetectorList();
-    /** Criteria field name: <code>#DetectorList</code> or <code>DetectorList</code> */
+    /** Criteria field name: <code>#DetectorList</code> or <code>DetectorListList</code> */
     public int countDetectorList();
 
     /** Criteria field name: <code>FilterList</code> */
     public List getFilterList();
-    /** Criteria field name: <code>#FilterList</code> or <code>FilterList</code> */
+    /** Criteria field name: <code>#FilterList</code> or <code>FilterListList</code> */
     public int countFilterList();
 
     /** Criteria field name: <code>ImageInstrumentList</code> */
     public List getImageInstrumentList();
-    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentList</code> */
+    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentListList</code> */
     public int countImageInstrumentList();
 
     /** Criteria field name: <code>LightSourceList</code> */
     public List getLightSourceList();
-    /** Criteria field name: <code>#LightSourceList</code> or <code>LightSourceList</code> */
+    /** Criteria field name: <code>#LightSourceList</code> or <code>LightSourceListList</code> */
     public int countLightSourceList();
 
     /** Criteria field name: <code>OTFList</code> */
     public List getOTFList();
-    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFListList</code> */
     public int countOTFList();
 
     /** Criteria field name: <code>ObjectiveList</code> */
     public List getObjectiveList();
-    /** Criteria field name: <code>#ObjectiveList</code> or <code>ObjectiveList</code> */
+    /** Criteria field name: <code>#ObjectiveList</code> or <code>ObjectiveListList</code> */
     public int countObjectiveList();
 
 }

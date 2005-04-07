@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:04 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -58,63 +58,54 @@ public class OTFDTO
     public Class getDTOType() { return OTF.class; }
 
     public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
+    { return (Instrument) parseChildElement("Instrument",InstrumentDTO.class); }
     public void setInstrument(Instrument value)
     { setElement("Instrument",value); }
 
-    public Boolean isOpticalAxisAverage()
-    { return getBooleanElement("OpticalAxisAverage"); }
-    public void setOpticalAxisAverage(Boolean value)
-    { setElement("OpticalAxisAverage",value); }
+    public Objective getObjective()
+    { return (Objective) parseChildElement("Objective",ObjectiveDTO.class); }
+    public void setObjective(Objective value)
+    { setElement("Objective",value); }
 
-    public String getPath()
-    { return getStringElement("Path"); }
-    public void setPath(String value)
-    { setElement("Path",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
-
-    public String getPixelType()
-    { return getStringElement("PixelType"); }
-    public void setPixelType(String value)
-    { setElement("PixelType",value); }
-
-    public Integer getSizeY()
-    { return getIntegerElement("SizeY"); }
-    public void setSizeY(Integer value)
-    { setElement("SizeY",value); }
+    public Filter getFilter()
+    { return (Filter) parseChildElement("Filter",FilterDTO.class); }
+    public void setFilter(Filter value)
+    { setElement("Filter",value); }
 
     public Integer getSizeX()
     { return getIntegerElement("SizeX"); }
     public void setSizeX(Integer value)
     { setElement("SizeX",value); }
 
-    public Filter getFilter()
-    { return (Filter) getObjectElement("Filter"); }
-    public void setFilter(Filter value)
-    { setElement("Filter",value); }
+    public Integer getSizeY()
+    { return getIntegerElement("SizeY"); }
+    public void setSizeY(Integer value)
+    { setElement("SizeY",value); }
 
-    public Objective getObjective()
-    { return (Objective) getObjectElement("Objective"); }
-    public void setObjective(Objective value)
-    { setElement("Objective",value); }
+    public String getPixelType()
+    { return getStringElement("PixelType"); }
+    public void setPixelType(String value)
+    { setElement("PixelType",value); }
+
+    public Repository getRepository()
+    { return (Repository) parseChildElement("Repository",RepositoryDTO.class); }
+    public void setRepository(Repository value)
+    { setElement("Repository",value); }
+
+    public String getPath()
+    { return getStringElement("Path"); }
+    public void setPath(String value)
+    { setElement("Path",value); }
+
+    public Boolean isOpticalAxisAverage()
+    { return getBooleanElement("OpticalAxisAverage"); }
+    public void setOpticalAxisAverage(Boolean value)
+    { setElement("OpticalAxisAverage",value); }
 
     public List getLogicalChannelList()
-    { return (List) getObjectElement("LogicalChannelList"); }
+    { return (List) parseListElement("LogicalChannelList",LogicalChannelDTO.class); }
     public int countLogicalChannelList()
     { return countListElement("LogicalChannelList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Instrument",InstrumentDTO.class);
-        parseChildElement("Repository",RepositoryDTO.class);
-        parseChildElement("Filter",FilterDTO.class);
-        parseChildElement("Objective",ObjectiveDTO.class);
-        parseListElement("LogicalChannelList",LogicalChannelDTO.class);
-    }
 
 }

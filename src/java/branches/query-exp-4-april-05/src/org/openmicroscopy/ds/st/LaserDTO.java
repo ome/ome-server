@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -53,56 +53,50 @@ public class LaserDTO
     public String getDTOTypeName() { return "@Laser"; }
     public Class getDTOType() { return Laser.class; }
 
-    public LightSource getPump()
-    { return (LightSource) getObjectElement("Pump"); }
-    public void setPump(LightSource value)
-    { setElement("Pump",value); }
-
-    public LightSource getLightSource()
-    { return (LightSource) getObjectElement("LightSource"); }
-    public void setLightSource(LightSource value)
-    { setElement("LightSource",value); }
-
-    public Float getPower()
-    { return getFloatElement("Power"); }
-    public void setPower(Float value)
-    { setElement("Power",value); }
-
-    public String getPulse()
-    { return getStringElement("Pulse"); }
-    public void setPulse(String value)
-    { setElement("Pulse",value); }
-
-    public Boolean isTunable()
-    { return getBooleanElement("Tunable"); }
-    public void setTunable(Boolean value)
-    { setElement("Tunable",value); }
-
-    public Boolean isFrequencyDoubled()
-    { return getBooleanElement("FrequencyDoubled"); }
-    public void setFrequencyDoubled(Boolean value)
-    { setElement("FrequencyDoubled",value); }
-
     public Integer getWavelength()
     { return getIntegerElement("Wavelength"); }
     public void setWavelength(Integer value)
     { setElement("Wavelength",value); }
-
-    public String getMedium()
-    { return getStringElement("Medium"); }
-    public void setMedium(String value)
-    { setElement("Medium",value); }
 
     public String getType()
     { return getStringElement("Type"); }
     public void setType(String value)
     { setElement("Type",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Pump",LightSourceDTO.class);
-        parseChildElement("LightSource",LightSourceDTO.class);
-    }
+    public String getMedium()
+    { return getStringElement("Medium"); }
+    public void setMedium(String value)
+    { setElement("Medium",value); }
+
+    public Boolean isFrequencyDoubled()
+    { return getBooleanElement("FrequencyDoubled"); }
+    public void setFrequencyDoubled(Boolean value)
+    { setElement("FrequencyDoubled",value); }
+
+    public Boolean isTunable()
+    { return getBooleanElement("Tunable"); }
+    public void setTunable(Boolean value)
+    { setElement("Tunable",value); }
+
+    public String getPulse()
+    { return getStringElement("Pulse"); }
+    public void setPulse(String value)
+    { setElement("Pulse",value); }
+
+    public Float getPower()
+    { return getFloatElement("Power"); }
+    public void setPower(Float value)
+    { setElement("Power",value); }
+
+    public LightSource getLightSource()
+    { return (LightSource) parseChildElement("LightSource",LightSourceDTO.class); }
+    public void setLightSource(LightSource value)
+    { setElement("LightSource",value); }
+
+    public LightSource getPump()
+    { return (LightSource) parseChildElement("Pump",LightSourceDTO.class); }
+    public void setPump(LightSource value)
+    { setElement("Pump",value); }
+
 
 }

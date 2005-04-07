@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:47:03 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -60,50 +60,39 @@ public class FilterDTO
     public Class getDTOType() { return Filter.class; }
 
     public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
+    { return (Instrument) parseChildElement("Instrument",InstrumentDTO.class); }
     public void setInstrument(Instrument value)
     { setElement("Instrument",value); }
 
     public List getDichroicList()
-    { return (List) getObjectElement("DichroicList"); }
+    { return (List) parseListElement("DichroicList",DichroicDTO.class); }
     public int countDichroicList()
     { return countListElement("DichroicList"); }
 
     public List getEmissionFilterList()
-    { return (List) getObjectElement("EmissionFilterList"); }
+    { return (List) parseListElement("EmissionFilterList",EmissionFilterDTO.class); }
     public int countEmissionFilterList()
     { return countListElement("EmissionFilterList"); }
 
     public List getExcitationFilterList()
-    { return (List) getObjectElement("ExcitationFilterList"); }
+    { return (List) parseListElement("ExcitationFilterList",ExcitationFilterDTO.class); }
     public int countExcitationFilterList()
     { return countListElement("ExcitationFilterList"); }
 
     public List getFilterSetList()
-    { return (List) getObjectElement("FilterSetList"); }
+    { return (List) parseListElement("FilterSetList",FilterSetDTO.class); }
     public int countFilterSetList()
     { return countListElement("FilterSetList"); }
 
     public List getLogicalChannelList()
-    { return (List) getObjectElement("LogicalChannelList"); }
+    { return (List) parseListElement("LogicalChannelList",LogicalChannelDTO.class); }
     public int countLogicalChannelList()
     { return countListElement("LogicalChannelList"); }
 
     public List getOTFList()
-    { return (List) getObjectElement("OTFList"); }
+    { return (List) parseListElement("OTFList",OTFDTO.class); }
     public int countOTFList()
     { return countListElement("OTFList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Instrument",InstrumentDTO.class);
-        parseListElement("DichroicList",DichroicDTO.class);
-        parseListElement("EmissionFilterList",EmissionFilterDTO.class);
-        parseListElement("ExcitationFilterList",ExcitationFilterDTO.class);
-        parseListElement("FilterSetList",FilterSetDTO.class);
-        parseListElement("LogicalChannelList",LogicalChannelDTO.class);
-        parseListElement("OTFList",OTFDTO.class);
-    }
 
 }

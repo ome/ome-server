@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Thu Apr  7 10:49:34 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,7 +57,7 @@ public class AnalysisPathDTO
     { setElement("id",new Integer(value)); }
 
     public AnalysisChain getChain()
-    { return (AnalysisChain) getObjectElement("analysis_chain"); }
+    { return (AnalysisChain) parseChildElement("analysis_chain",AnalysisChainDTO.class); }
     public void setChain(AnalysisChain value)
     { setElement("analysis_chain",value); }
 
@@ -67,15 +67,9 @@ public class AnalysisPathDTO
     { setElement("path_length",value); }
 
     public List getEntries()
-    { return (List) getObjectElement("path_nodes"); }
+    { return (List) parseListElement("path_nodes",AnalysisPathEntryDTO.class); }
     public int countEntries()
     { return countListElement("path_nodes"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("analysis_chain",AnalysisChainDTO.class);
-        parseListElement("path_nodes",AnalysisPathEntryDTO.class);
-    }
 
 }
