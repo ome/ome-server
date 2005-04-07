@@ -66,7 +66,6 @@ populates field FileID with a link to download the file from the image server
 
 sub _renderData {
 	my ($proto, $obj, $field_requests, $options) = @_;
-print STDERR "I'm here\n";
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	my %record;
