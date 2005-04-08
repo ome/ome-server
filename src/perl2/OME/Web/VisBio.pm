@@ -39,6 +39,7 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use base qw(OME::Web);
+use Sys::Hostname;
 
 sub new {
 	my $proto = shift;
@@ -64,8 +65,7 @@ sub createOMEPage{
 
 	# load system defaults
 	if (not defined $server) {
-		$server = `hostname`;
-		chop($server);
+		$server = hostname();
 	}
 	if (not defined $user) {
 		$user = $factory->loadObject( 'OME::SemanticType::BootstrapExperimenter', $session->User->id)->OMEName();
