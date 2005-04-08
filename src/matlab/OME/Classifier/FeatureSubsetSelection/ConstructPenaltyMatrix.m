@@ -27,27 +27,48 @@
 % Written By: Tom Macura <tmacura@nih.gov>
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-function score = ConfusionMatrixScore(conf_mat, penalty_mat);
+function mat = ConstructPenaltyMatrix (category_weights, damping_function);
+%
+% This function constructs a matrix A such that entry A_ij is the distance
+% (based on category_weights) tempered with the damping_function
+%
 % INPUTS NEEDED:
-%   'conf_mat'      - confusion matrix
-%   'penalty_mat'   - penalty matrix (optional). This should have zeros on diag
+%   'category_weights'   - e.g. [1 4 8] for C. elegans worm example
+%   'damping_function'   - optional string ('linear','sqr', 'sqrt', 'exp', 'log')
+%                          defaults to 'linear';
+%
 % OUTPUTS GIVEN:
-%   'score'         - scalar summarizing the confusion matrix 
+%   'mat'                - penalty matrix ready to be applied (see ConfusionMatrixScore) 
 %
 % Tom Macura - 2005. tm289@cam.ac.uk
 
-if (nargin < 2)
-	[r,c] = size(conf_mat);
-	penalty_mat = zeros(r,c);
+% set optional damping_function parameter to default
+if (nargin < 2) 
+	damping_function = 'linear';
 end
 
-[r,c] = size(conf_mat);
-[r_p,c_p] = size(penalty_mat);
-
-if (r ~= r_p || c ~= c_p)
-	error('conf_mat and penalty_mat do not have same dimensions');
+% create preliminary penalty matrix
+[r, c] = size(category_weights);
+mat = zeros(c,c);
+for i=1:c
+	for j=1:c
+		mat(i,j) = abs(category_weights(1,i) - category_weights(1,j));
+	end
 end
 
-sum(sum(conf_mat))
-conf_mat = conf_mat + penalty_mat .* conf_mat;
-score = sum(diag(conf_mat)) / sum(sum(conf_mat));
+% apply damping function to preliminary penalty matrix
+if (strcmp(damping_function, 'linear'))
+	mat = mat;
+elseif (strcmp(damping_function, 'sqr'))
+	mat = mat.*mat;
+elseif (strcmp(damping_function, 'sqrt'))
+	mat = sqrt(mat);
+elseif (strcmp(damping_function, 'exp'))
+	mat = 2.718281828459045 .^ mat;
+elseif (strcmp(damping_function, 'log'))
+	mat = log (mat+1);
+elseif (strcmp(damping_function, 'loglog'))
+	mat = log (log (mat+1) + 1);
+else
+	error('Specified string `%s` refers to an unkown damping function.\n', damping_function);
+end
