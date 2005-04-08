@@ -86,7 +86,7 @@
 			</Description>
 			<Element
 				Name="Category"
-				DBLocation="BAYES_NET_CLASSIFIER.CATEGORY"
+				DBLocation="BNET_CATEGORIES_USED.CATEGORY"
 				DataType="reference"
 				RefersTo="Category"/>
 		</SemanticType>
