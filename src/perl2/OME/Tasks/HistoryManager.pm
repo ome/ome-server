@@ -42,6 +42,18 @@ package OME::Tasks::HistoryManager;
 
 OME::Tasks::HistoryManager - retrieve data history
 
+=head1 SYNOPSIS
+
+	# For a mex id, Retrieve the complete list of predecessor mexes
+	my @mex_list = OME::Tasks::HistoryManager->getMexDataHistory( $mex_id );
+	# Same thing, but with a ModuleExecution object
+	my @mex_list = OME::Tasks::HistoryManager->getMexDataHistory( $mex );
+
+	# For a Chain Execution id, Retrieve the complete list of predecessor mexes
+	my @mex_list = OME::Tasks::HistoryManager->getChainDataHistory( $chex_id );
+	# Same thing, but with a ChainExecution object
+	my @mex_list = OME::Tasks::HistoryManager->getChainDataHistory( $chex );
+
 =head1 DESCRIPTION
 
 The OME::Tasks::HistoryManager is a manager for    retrieving the data
@@ -68,11 +80,11 @@ The following methods are available to a "HistoryManager."
 
 =head2 getMexDataHistory($mex_id)
 
-Retrieve the data historyfor the specified mex.
+Retrieve the data history for the specified mex.
 
 =head2 getChainDataHistory($chex_id)
 
-Retrieve the data historyfor the specified chain execution.
+Retrieve the data history for the specified chain execution.
 
 =cut
 
@@ -101,12 +113,14 @@ sub getMexDataHistory {
     my $session=OME::Session->instance();
     my $factory = $session->Factory();
     
-
-     # retrieve the module execution
-     my $mex= $factory->loadObject('OME::ModuleExecution',$mex_id)
-	    or confess "Couldn't load module execution $mex_id";
-
-    #mark it in a hash
+    my $mex;
+	if( ref( $mex_id ) eq 'OME::ModuleExecution' ) {
+		$mex = $mex_id;
+	} else {
+		# retrieve the module execution
+		$mex= $factory->loadObject('OME::ModuleExecution',$mex_id)
+			or confess "Couldn't load module execution $mex_id";
+	}
 
     # return all module executions that we have seen.
     return _getMexClosures($mex);
@@ -124,7 +138,7 @@ sub getChainDataHistory {
     # first, get node executions
     my @nexes = $factory->findObjects(
 	'OME::AnalysisChainExecution::NodeExecution',
-        { analysis_chain_execution_id => $chex_id });
+        { analysis_chain_execution => $chex_id });
 
     # then, get module executions for those.
     my @mexes = map { $_->module_execution()} @nexes;
