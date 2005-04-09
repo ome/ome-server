@@ -17,8 +17,6 @@
 package OME::Remote::Apache::Transport;
 
 use base qw(SOAP::Transport::HTTP::Server);
-use OME::Remote::SerializerXMLRPC;
-use OME::Remote::DeserializerXMLRPC;
 use Time::HiRes qw(gettimeofday tv_interval);
 
 sub DESTROY { SOAP::Trace::objects('()') }
@@ -28,11 +26,7 @@ sub new { require Apache; require Apache::Constants;
 
   unless (ref $self) {
     my $class = ref($self) || $self;
-    $self = $class->SUPER::new(@_)
-    	-> serializer(OME::Remote::SerializerXMLRPC->new)
-    	-> deserializer(OME::Remote::DeserializerXMLRPC->new)
-    ;
-
+    $self = $class->SUPER::new(@_);
 
     SOAP::Trace::objects('()');
   }
