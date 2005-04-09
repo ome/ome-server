@@ -17,7 +17,6 @@
 package OME::Remote::Apache::Transport;
 
 use base qw(SOAP::Transport::HTTP::Server);
-use Time::HiRes qw(gettimeofday tv_interval);
 
 sub DESTROY { SOAP::Trace::objects('()') }
 
@@ -27,7 +26,6 @@ sub new { require Apache; require Apache::Constants;
   unless (ref $self) {
     my $class = ref($self) || $self;
     $self = $class->SUPER::new(@_);
-
     SOAP::Trace::objects('()');
   }
   return $self;
@@ -36,8 +34,7 @@ sub new { require Apache; require Apache::Constants;
 sub handler { 
   my $self = shift->new; 
   my $r = shift || Apache->request; 
-  my $start_time=[gettimeofday()];
-  print STDERR "Starting  handle in transport\n";
+
   $self->request(HTTP::Request->new( 
     $r->method => $r->uri,
     HTTP::Headers->new($r->headers_in),
@@ -45,7 +42,6 @@ sub handler {
   ));
   $self->SUPER::handle;
 
-  my $inner_start = [gettimeofday()];
   # we will specify status manually for Apache, because
   # if we do it as it has to be done, returning SERVER_ERROR,
   # Apache will modify our content_type to 'text/html; ....'
@@ -55,16 +51,8 @@ sub handler {
   $r->status($self->response->code);
   $self->response->headers->scan(sub { $r->header_out(@_) });
   $r->send_http_header(join '; ', $self->response->content_type);
-  my $response= $self->response->content;
-  my $inner_split_start = [gettimeofday()];
-  $r->print($response); # this line is the culprit. 
+  $r->print($self->response->content);
   &Apache::Constants::OK;
-  my $inner_split_elapsed = tv_interval($inner_split_start);
-  print STDERR "last  half of transport handler takes $inner_split_elapsed\n";
-  my $innerelapsed = tv_interval($inner_start);
-  print STDERR "elapsed in transport.pm _after_ super.handle.. $innerelapsed\n";
-  my $elapsed = tv_interval($start_time);
-  print STDERR "Elapsed in handler.. $elapsed\n";
 }
 
 sub configure {
