@@ -40,10 +40,11 @@ package OME::Remote::Facade;
 use Carp;
 use strict;
 use OME;
-use Apache::XMLRPC;
+#use Apache::XMLRPC;
 our $VERSION = $OME::VERSION;
 
 our @FACADES;
+our %METHODS;
 
 use UNIVERSAL::require;
 use OME::SessionManager;
@@ -58,6 +59,7 @@ OME::Remote::Facade - implementation of the Remote Framework interface
 
 BEGIN {
     @FACADES = qw(
+                  OME::Remote::Facades::ChainRetrievalFacade
                   OME::Remote::Facades::GenericFacade
                   OME::Remote::Facades::SessionFacade
                   OME::Remote::Facades::ConfigFacade
@@ -68,8 +70,13 @@ BEGIN {
                   OME::Remote::Facades::ModuleExecutionFacade
                   OME::Remote::Facades::AnalysisFacade
                   OME::Remote::Facades::HistoryFacade
-                  OME::Remote::Facades::ChainRetrievalFacade
                  );
+    %METHODS = (serverVersion => 1,
+    			createSession => 1,
+    			authenticateSession => 1,
+    			closeSession => 1,
+		    	dispatch => 1);	
+    	
     foreach my $facade (@FACADES) { $facade->require() }
 
     # Fix the XML-RPC server fault constants -- the XML-RPC spec says
@@ -81,57 +88,18 @@ BEGIN {
     $SOAP::Constants::FAULT_MUST_UNDERSTAND = 502;
 }
 
-package XMLRPC::Serializer;
-
-sub encode_scalar {
-  my $self = shift;
-  return ['value', {}, [['string',{},'*([-NULL-])*']]] unless defined $_[0];
-  return $self->SOAP::Serializer::encode_scalar(@_);
-}
-
-package XMLRPC::Deserializer;
-
-sub decode_value {
-  my $self = shift;
-  my $ref = shift;
-  my($name, $attrs, $children, $value) = @$ref;
-
-  if ($value eq '*([-NULL-])*') {
-      return undef;
-  } elsif ($name eq 'value') {
-    $children ? scalar(($self->decode_object($children->[0]))[1]) : $value;
-  } elsif ($name eq 'array') {
-    return [map {scalar(($self->decode_object($_))[1])} @{o_child($children->[0]) || []}];
-  } elsif ($name eq 'struct') { 
-    return {map {
-      my %hash = map {o_qname($_) => $_} @{o_child($_) || []};
-      #----- scalar is required here, because 5.005 evaluates 'undef' in list context as empty array
-      (o_chars($hash{name}) => scalar(($self->decode_object($hash{value}))[1]));
-    } @{$children || []}};
-  } elsif ($name eq 'base64') {
-    require MIME::Base64; 
-    MIME::Base64::decode_base64($value);
-  } elsif ($name =~ /^(?:int|i4|boolean|string|double|dateTime\.iso8601|methodName)$/) {
-    return $value;
-  } elsif ($name =~ /^(?:params)$/) {
-    return [map {scalar(($self->decode_object($_))[1])} @{$children || []}];
-  } elsif ($name =~ /^(?:methodResponse|methodCall)$/) {
-    return +{map {$self->decode_object($_)} @{$children || []}};
-  } elsif ($name =~ /^(?:param|fault)$/) {
-    return scalar(($self->decode_object($children->[0]))[1]);
-  } else {
-    die "wrong element '$name'\n";
-  }
-}
-
-package OME::Remote::Facade;
-
 our $SHOW_CALLS = 1;
 
 # The server version should be an array of three values:
 # [major, minor, patch]
 
 our $SERVER_VERSION = [2,2,1];
+
+sub hasMethod {
+	my ($proto,$meth) = @_;
+
+	return (defined $METHODS{$meth});
+}
 
 sub serverVersion {
     my ($proto) = @_;
@@ -203,20 +171,20 @@ sub dispatch {
     my $session = OME::SessionManager->createSession($sessionKey);
     die "STALE SESSION" unless defined $session;
 
-    my @result;
+    my $result;
     my $executed = 0;
 
     eval {
+
       FACADE:
         foreach my $facade (@FACADES) {
-            if (UNIVERSAL::can($facade,$method)) {
+           if (UNIVERSAL::can($facade,$method)) {
                 $executed = 1;
-                @result = $facade->$method(@params);
+                $result = $facade->$method(@params);
                 last FACADE;
             }
         }
     };
-
     # If that eval caused an error, we'll need to die.  However, we
     # should save the error message, just in case the session-close
     # statements clobber it.
@@ -227,7 +195,6 @@ sub dispatch {
     $session->deleteInstance(1);
     OME::DBObject->clearAllCaches();
 
-    print STDERR $eval_error if $eval_error;
     die $eval_error if $eval_error;
 
     # If the method never got executed, throw an error.
@@ -237,8 +204,7 @@ sub dispatch {
 
     # Otherwise, commit the session's transaction and return the
     # result.
-    print STDERR "Dispatch result is $result[0]\n";
-    return @result;
+    return $result;
 }
 
 1;
