@@ -59,7 +59,8 @@ our $VERSION = $OME::VERSION;
 use Log::Agent;
 use Carp;
 use OME::Matlab;
-use OME::Util::Classifier;
+use OME::Tasks::ClassifierTasks;
+use OME::Image::Server::File;
 
 use base qw(OME::Analysis::Handler);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -89,8 +90,8 @@ sub execute {
     	$self->getActualInputs( 'Classifications' ) };
     my @sigVectors_mexes = map { $_->input_module_execution() } @{ 
     	$self->getActualInputs( 'Signature Vectors' ) };
-	my $signature_matrix = OME::Util::Classifier->
-		compile_signature_matrix( \@sigVectors_mexes, \@images, \@classification_mexes );
+	my $signature_matrix = OME::Tasks::ClassifierTasks->
+		_compileSignatureMatrixWithCategories( \@sigVectors_mexes, \@images, \@classification_mexes );
 	$matlab_engine->eval("global signature_matrix");
 	$matlab_engine->putVariable( "signature_matrix", $signature_matrix);
 	$mex->attribute_db_time(tv_interval($start_time));
@@ -109,7 +110,7 @@ sub execute {
 		logdbg "debug", "***** Error! Output from Matlab:\n$outBuffer\n";		
 	}
 
-	# ------ STORE OUTPUTS ------
+	# ------ STORE OUTPUTS ------ #
 
 	# Store the discritization walls & classifier
 	# For now, dump them to a file, upload that to the image server, 
@@ -150,9 +151,9 @@ sub execute {
 			Legend => $vectorLegend
 		} );
 		$self->newAttributes('Signatures Scores', {
-			dataset => $dataset,
+			dataset  => $dataset,
 			Legend   => $vectorLegend,
-			Index    => $i,
+			Rank     => $i,
 			CumScore => $sig_cum_score,
 			IndScore => $sig_ind_score
 		} );
