@@ -52,18 +52,6 @@
 				DBLocation="BAYES_NET_CLASSIFIER.FILE_ID"
 				DataType="integer"/>		  
 		</SemanticType>
-		
-		<SemanticType Name="SignaturesUsed" AppliesTo="D">
-			<Description>
-			Records which signatures are actually used in classification.
-			Granularity should match SignatureVectorLegend.
-			</Description>
-			<Element
-				Name="Legend"
-				DBLocation="SIGNATURES_USED.LEGEND"
-				DataType="reference"
-				RefersTo="SignatureVectorLegend"/>
-		</SemanticType>
 	
 		<SemanticType Name="SignaturesNotDiscretized" AppliesTo="D">
 			<Description>
@@ -91,14 +79,15 @@
 				RefersTo="Category"/>
 		</SemanticType>
 		
-		<SemanticType Name="SignaturesScores" AppliesTo="D">
+		<SemanticType Name="SignatureScores" AppliesTo="D">
 			<Description>
-			Records the signatures' estimated individual and cumulative
-			predictive abilities of the classifier achieved during training.
+			Records the estimated individual and cumulative predictive abilities
+			this signature brings to the classifier based on performance achieved
+			during the training phase.
 			</Description>
 			<Element
 				Name="IndScore"
-				DBLocation="SIGNATURES_SCORES.IND_SCORE"
+				DBLocation="SIGNATURE_SCORES.IND_SCORE"
 				DataType="float">
 				<Description>
 				IndScore summarizes performance the classifier achieved using
@@ -107,7 +96,7 @@
 			</Element>
 			<Element
 				Name="CumScore"
-				DBLocation="SIGNATURES_SCORES.CUM_SCORE"
+				DBLocation="SIGNATURE_SCORES.CUM_SCORE"
 				DataType="float">
 				<Description>
 				CumScore summarizes performance the classifier achieved using
@@ -116,7 +105,7 @@
 			</Element>
 			<Element
 				Name="Rank"
-				DBLocation="SIGNATURES_SCORES.RANK"
+				DBLocation="SIGNATURE_SCORES.RANK"
 				DataType="integer">
 				<Description>
 				During the classifier training phase, signatures are ranked
@@ -126,11 +115,10 @@
 			</Element>
 			<Element
 				Name="Legend"
-				DBLocation="SIGNATURES_SCORES.LEGEND"
+				DBLocation="SIGNATURE_SCORES.LEGEND"
 				DataType="reference"
 				RefersTo="SignatureVectorLegend">
 			</Element>
-				
 		</SemanticType>
 	</SemanticTypeDefinitions>
 
@@ -149,14 +137,18 @@
 				<FormalInput  Name="Classifications"     SemanticTypeName="Classification"       Count="+"/>
 				
 				<FormalOutput Name="Classifier"          SemanticTypeName="BayesNetClassifier"   Count="!"/>
-				
 				<FormalOutput Name="Categories Used"     SemanticTypeName="CategoriesUsed"       Count="+"/>
-				<FormalOutput Name="Signatures Used"     SemanticTypeName="SignaturesUsed"       Count="+"/>
-				<FormalOutput Name="Signatures Not Discretized" SemanticTypeName="SignaturesNotDiscretized"   Count="+"/>
-				<FormalOutput Name="Signatures Scores"   SemanticTypeName="SignaturesScores"     Count="+"/>
-				
+				<FormalOutput Name="Signatures Used"     SemanticTypeName="SignatureScores"      Count="+">
+					<Description>
+					During training, a very small subset (typically less than 2.5 percent) of signatures
+					are found to have discriminating effect for a particular classification problem.
+					This FO records which signatures were selected (based on scores, also recorded) to be
+					used in actuall classifications.
+					</Description>
+				</FormalOutput>
+				<FormalOutput Name="Signatures Not Discretized" SemanticTypeName="SignaturesNotDiscretized"   Count="+"/>				
 				<FormalOutput Name="Confusion Matrix"    SemanticTypeName="ConfusionMatrix"      Count="!">
-				<Description>
+					<Description>
 					Performance characteristics of the trained classifier.
 					</Description>
 				</FormalOutput>
