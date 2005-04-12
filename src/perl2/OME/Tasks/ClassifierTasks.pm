@@ -150,15 +150,22 @@ sub makeClassifierChain {
 		'executions.node_executions.module_execution' => $trainerMEX,
 		name => ['like', 'Trainer chain%' ])
 		or die "Couldn't find a chain used to produce the trainer MEX ".$trainerMEX->id;
+
 	# Step 2: clone and rename the chain
 	my $classifierChain = OME::Tasks::ChainManager->
 		cloneChain( $trainerChain );
 	$classifierChain->name( 'Classifier chain '.$classifierChain->id );
-	# Step 3: identify sigStitcher node in new chain
+
+	# Step 3: identify important nodes in new chain
 	my $sigStitcherNode = $factory->findObject( 'OME::AnalysisChain::Node',
 		analysis_chain => $classifierChain,
 		'module.name'  => ['like', 'Signature Stitcher%' ]
 	) or die "Couldn't find a Chain node to match chain ".$classifierChain->id.", module.name like 'Signature Stitcher%'";
+	my $trainerNode = $factory->findObject( 'OME::AnalysisChain::Node',
+		analysis_chain => $classifierChain,
+		'module.name'  => ['like', 'BayesNet Trainer' ]
+	) or die "Couldn't find a Chain node to match chain ".$classifierChain->id.", module.name 'BayesNet Trainer'";
+
 	# Step 4: identify signatures to be saved
 	my $sigsNeededList = OME::Tasks::ModuleExecutionManager->
 		getAttributesForMEX( $trainerMEX, 'SignaturesUsed' )
@@ -174,11 +181,13 @@ sub makeClassifierChain {
 # For pragmatic reasons, I'll accept this work-around, but I do think it
 # would be worthwhile to revisit this issue.
 $session->commitTransaction();
+
 	# Step 5: cut links into sigStitcher that aren't needed
 	my @unneededSigLinks = $sigStitcherNode->input_links( 
 		'to_input.name' => ['not in', [map( $_->Legend->FormalInput, @$sigsNeededList )] ]
 	);
 	$_->deleteObject() foreach @unneededSigLinks;
+
 	# Step 6: remove nodes that do not have connected outputs. 
 	#         do not remove the trainer module while doing this
 	#         repeat until no nodes are removed
@@ -202,12 +211,189 @@ $session->commitTransaction();
 			$node_to_delete->deleteObject();
 		}
 	} while $num_nodes_removed;
+	
+# FIXME:
+# Need to make a new signature stitcher. The old one will have a bunch of
+# required inputs that won't be fullfilled here. The new one should also
+# take in the signature legend that the old produced. The new one's inputs
+# will need to be compatible with the old ones. Maybe I should rethink the
+# algorithm I'm using here. Either that or I swap out the signature stitcher 
+# before swapping the trainer.
+
 	# Step 7: replace the trainer with the classifier
+	my $classifierModule = $factory->findObject( 'OME::Module',
+		name => 'BayesNet Classifier'
+	) or die "Couldn't find a module named 'BayesNet Classifier'";
+	my $classifierNode = OME::Tasks::ChainManager->addNode(
+		$classifierChain, $classifierModule );
+	my $signatureLink = OME::Tasks::ChainManager->addLink(
+		$classifierChain, $sigStitcherNode, 'SignatureVector', 
+		                  $classifierNode,  'SignatureVectors' 
+	);
+	my @trainerLinks = $trainerNode->input_links();
+	$_->deleteObject() foreach @trainerLinks;
+	$trainerNode->deleteObject();
 
 	# Step 8: save and return the chain.
 	$classifierChain->storeObject();
 	$session->commitTransaction();
 	return $classifierChain;
+}
+
+=head2 _compileSignatureMatrix()
+
+	my $signatureArray = OME::Tasks::ClassifierTasks->
+		_compileSignatureMatrix($stitcher_mex, $images);
+
+Returns a signature matrix suitable for classification (an
+OME::Matlab::PersistentArray object) This signature matrix will not have
+a category column.
+
+=cut
+
+sub _compileSignatureMatrix {
+	my ($proto, $stitcher_mex, $images) = @_;
+	my $factory = OME::Session->instance()->Factory();
+
+	# instantiate the matlab signature array. 
+	#	number of columns is the size of the signature vector
+	#	number of rows is the number of images.
+	my $vector_legends = OME::Tasks::ModuleExecutionManager->
+		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
+		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @$vector_legends ), scalar( @$images ));
+	$signature_array->makePersistent();
+	
+	# populate the signature matrix.
+	my $image_number = 0;
+	my $category_col_index = scalar( @$vector_legends );
+	foreach my $image ( @$images ) {
+		my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
+			getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
+				{ image => $image }
+			)
+			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
+		# set the image's signature vector
+		foreach my $sig_entry ( @$signature_entry_list ) {
+			# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
+			my $col_index = $sig_entry->Legend->VectorPosition() - 1;
+			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
+		}
+		$image_number += 1;
+	}	
+	return $signature_array;
+}
+
+=head2 _compileSignatureMatrixWithCategories()
+
+	my $signature_array = OME::Tasks::ClassifierTasks->
+		_compileSignatureMatrixWithCategories($stitcher_mex, $images, $classification_mex);
+
+Returns a signature matrix suitable for training (an
+OME::Matlab::PersistentArray object). The last column of the signature
+matrix will be the category IDs.
+
+=cut
+
+sub _compileSignatureMatrixWithCategories {
+	my ($proto, $stitcher_mex, $images, $classification_mex) = @_;
+	my $factory = OME::Session->instance()->Factory();
+	
+	# classifications is a hash that maps image ids to classification attributes
+	# category_numbers is a hash that maps category ids to ids suited for the 
+	# BayesNet. 
+	my ( $classifications, $category_numbers ) = $proto->
+		_getClassificationsAndCategoryNumbering( $images, $classification_mex);
+
+	# instantiate the matlab signature array. 
+	#	number of columns is the size of the signature vector plus one for the image classification.
+	#	number of rows is the number of images.
+	my $vector_legends = OME::Tasks::ModuleExecutionManager->
+		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
+		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @$vector_legends ) + 1, scalar( @$images ));
+	$signature_array->makePersistent();
+	
+	# populate the signature matrix.
+	my $image_number = 0;
+	my $category_col_index = scalar( @$vector_legends );
+	foreach my $image ( @$images ) {
+		my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
+			getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
+				{ image => $image }
+			)
+			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
+		# set the image category
+		my $category_num = $category_numbers->{ $classifications->{ $image->id }->Category->id };
+		$signature_array->set( $category_col_index, $image_number, $category_num );
+		# set the image's signature vector
+		foreach my $sig_entry ( @$signature_entry_list ) {
+			# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
+			my $col_index = $sig_entry->Legend->VectorPosition() - 1;
+			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
+		}
+		$image_number += 1;
+	}	
+	return $signature_array;
+}
+
+
+=head2 _getClassificationsAndCategoryNumbering()
+
+	my ( $classifications, $category_numbers ) = $proto->
+		_getClassificationsAndCategoryNumbering( $images, $classification_mex);
+
+
+Checks inputs, Compiles classifications and constructs a Category
+mapping. The BayesNet toolbox requires Categories to be numbered 1-n,
+where n is the number of categories.
+
+Inputs:
+	images is a list of OME::Images
+	classification_mex can be a mex or list of mexes. These mexes should have
+produced mutually exclusive classifications under one category group for those images.
+
+Outputs:
+	classifications is a hash that maps image ids to classification attributes
+	category_numbers is a hash that maps category ids to ids suited for the BayesNet. 
+
+=cut
+
+sub _getClassificationsAndCategoryNumbering {
+	my ($proto, $images, $classification_mex) = @_;
+	my $factory = OME::Session->instance()->Factory();
+	my ( $classifications, $category_numbers );
+	my $category_group;
+	foreach my $image ( @$images ) {
+		# If we were given a mex or list of mexes, then use it to find classifications
+		my @classification_list = @{ OME::Tasks::ModuleExecutionManager->
+				getAttributesForMEX( $classification_mex, "Classification",
+					{image => $image } 
+				) }
+			or die "Could not find a classification for image id=".$image->id;
+		die "More than one classification found for image id=".$image->id.
+		    ", mex id(s) ".(
+		    	# $classification_mex may be a list of MEXs or a single MEX.
+		    	# either print out the list of IDs or the single ID
+		    	ref( $classification_mex ) eq 'ARRAY' ?
+		    	'( '.join( ", ", map( $_->id, @$classification_mex ) ).' )' :
+		    	$classification_mex->id
+		    )
+			unless scalar( @classification_list ) eq 1;
+		$category_group = $classification_list[0]->Category->CategoryGroup
+			unless $category_group;
+		die "Classification for image id=".$image->id." does not belong to the same category group as other images in this dataset."
+			unless $category_group->id eq $classification_list[0]->Category->CategoryGroup->id;
+		$classifications->{ $image->id } = $classification_list[0];
+	}
+	# map categories to category numbers
+	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
+	my $cn = 0;
+	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
+		$cn++;
+		$category_numbers->{ $_->id } = $cn;
+	}
+	return ($classifications, $category_numbers );
 }
 
 sub __parseClassiferOrMEXInput {
