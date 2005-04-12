@@ -630,7 +630,6 @@ sub loadObject {
 		if( substr( $class, 0, 1 ) eq '@' );
 
     return undef unless defined $class && defined $id;
-
     __checkClass($class);
     $class->require();
 
@@ -642,7 +641,6 @@ sub loadObject {
     };
 
     confess $@ if $@;
-
     return $object;
 
 }
@@ -651,7 +649,6 @@ sub loadAttribute {
     my ($self, $semantic_type, $id, $columns_wanted) = @_;
 
     return undef unless defined $semantic_type && defined $id;
-
     my $type =
       ref($semantic_type) eq "OME::SemanticType"?
         $semantic_type:
@@ -670,7 +667,6 @@ sub loadAttribute {
     };
 
     confess $@ if $@;
-
     return $attribute;
 }
 
@@ -688,6 +684,7 @@ sub findObject {
 
 sub findObjects {
     my ($self, $class, @criteria) = @_;
+
 
     # If the caller is not looking for a value, don't do anything.
     return undef unless defined wantarray;
@@ -713,7 +710,7 @@ sub findObjects {
         $criteria = $criteria[0];
     } else {
         # Return undef if the criteria are not well-formed.
-        return undef
+	  return undef
           unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
         $criteria = {@criteria};
     }
@@ -895,7 +892,6 @@ sub findAttributes {
     my ($self,$semantic_type,@criteria) = @_;
 
     return undef unless defined $semantic_type;
-
     if (scalar(@criteria) == 1 && (ref($criteria[0]) ne 'HASH')) {
         # Old prototype - only a target is passed in
         if (defined $criteria[0]) {
@@ -1070,6 +1066,7 @@ sub newAttribute {
 	return $attr;
 }
 
+
 package OME::Factory::Iterator;
 use OME;
 our $VERSION = $OME::VERSION;
@@ -1228,5 +1225,6 @@ sub close {
     my $self = shift;
     $self->{__iterator}->close();
 }
+
 
 1;
