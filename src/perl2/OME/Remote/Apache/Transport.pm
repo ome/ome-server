@@ -15,9 +15,10 @@
 # ======================================================================
 
 package OME::Remote::Apache::Transport;
-
+use SOAP::Transport::HTTP;
+use OME::Remote::SerializerXMLRPC;
+use OME::Remote::DeserializerXMLRPC;
 use base qw(SOAP::Transport::HTTP::Server);
-
 sub DESTROY { SOAP::Trace::objects('()') }
 
 sub new { require Apache; require Apache::Constants;
@@ -25,7 +26,12 @@ sub new { require Apache; require Apache::Constants;
 
   unless (ref $self) {
     my $class = ref($self) || $self;
-    $self = $class->SUPER::new(@_);
+    $self = $class->SUPER::new(@_)
+    	-> serializer(OME::Remote::SerializerXMLRPC->new)
+   	-> deserializer(OME::Remote::DeserializerXMLRPC->new)
+    ;
+
+
     SOAP::Trace::objects('()');
   }
   return $self;
@@ -34,7 +40,6 @@ sub new { require Apache; require Apache::Constants;
 sub handler { 
   my $self = shift->new; 
   my $r = shift || Apache->request; 
-
   $self->request(HTTP::Request->new( 
     $r->method => $r->uri,
     HTTP::Headers->new($r->headers_in),
@@ -51,7 +56,8 @@ sub handler {
   $r->status($self->response->code);
   $self->response->headers->scan(sub { $r->header_out(@_) });
   $r->send_http_header(join '; ', $self->response->content_type);
-  $r->print($self->response->content);
+  my $response= $self->response->content;
+  $r->print($response); # this line is the culprit. 
   &Apache::Constants::OK;
 }
 
