@@ -29,15 +29,16 @@
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = ...
-			FindSignatureSubset (discData, discWalls, fmetric, test_samples, iterations)
+			FindSignatureSubset (discData, discWalls, fmetric, testing_perc, iterations)
 
 % INPUT NEEDED      
 %   'discData'      - your discretized data
 %   'discWalls'     - cell array with bin wall locations
 %   'fmetric'       - function handle to metric that estimates classifier
 %                     performance based on confusion matrix
-%   'test_samples'  - how many test-images per class (optional)
-%   'iterations'    - how many runs with random test images (optional)
+%   'testing_perc'  - portion of training images to use as test-images
+%                     (real number between 0 and 1) [optional]
+%   'iterations'    - how many runs with random test images [optional]
 % OUTPUT GIVEN
 %   'sigs_used'     - integers representing which signatures
 %                     were found to be the best (collectively)
@@ -74,11 +75,11 @@ function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = ..
 % Tom Macura - 2005. tm289@cam.ac.uk               Modified for inclusion in OME
 
 if (nargin < 4) 
-	test_samples = -1;
+	testing_perc = 0.15;
 end
 
 if (nargin < 5)
-	iterations = -1;
+	iterations = 15;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,7 +103,7 @@ length_sigs_left = length(sigs_left)
 % find initial best signature to classify with                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i = 1:length(sigs_left)
-	conf_mat = n_fold_validate(sigs_left(i), discData, discWalls, test_samples, iterations);
+	conf_mat = n_fold_validate(discData([sigs_left(i) end],:), discWalls(sigs_left(i)), testing_perc, iterations);
 	ind_score(i) = fmetric(conf_mat);
 	fprintf(1, 'Signature: %03d -- Score: %f\n', sigs_left(i), ind_score(i));
 end
@@ -117,14 +118,13 @@ ind_score               = [ind_score(1:score_place-1) ind_score(score_place+1:en
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % greedy hill-climbing                                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 conf_mat = cell(1,length(sigs_left));
 done = 0;
 while ~done
 
 	% find signature with largest impact on cumulative score
 	for i = 1:length(sigs_left)
-        conf_mat{i} = n_fold_validate([sigs_used sigs_left(i)], discData, discWalls, test_samples, iterations);
+        conf_mat{i} = n_fold_validate(discData([sigs_used sigs_left(i) end],:), discWalls([sigs_used sigs_left(i)]), testing_perc, iterations);
 		score(i) = fmetric(conf_mat{i});
 		fprintf(1, 'Signature: %03d -- Cum. Score: %f\n', sigs_left(i), score(i));
 	end
@@ -152,15 +152,17 @@ while ~done
 end
 conf_mat = conf_mat{temp_place};
 
-function [conf_mat] = n_fold_validate (sigs_to_use, discData, discWalls, test_samples, iterations)
+function [conf_mat] = n_fold_validate (discData, discWalls, testing_perc, iterations)
 % INPUTS NEEDED:
-%   'sigs_to_use'   - vector of integers representing signatures you want to use
+%   N.B: 'discData' and 'discWalls' are already trimmed according to sigs_to_use.
 %   'discData'      - data, in the form where rows are signatures and
 %                     columns are instances (images). By convention,
-%                     the bottom row contains the instance's class.  
+%                     the bottom row contains the instance's class.
 %   'discWalls'     - cell array with bin wall locations
-%   'test_samples'  - how many instances per class to use in testing set (optional)
-%   'iterations'    - how many times to perform n_fold_validation (optional)
+%   'testing_perc'  - portion of training images to use as test-images
+%                     (real number between 0 and 1)
+%   'iterations'    - how many times to perform n_fold_validation
+%
 % OUTPUTS GIVEN:
 %   'conf_mat'      - confusion matrix summarizing how signature set fared at
 %                     n_fold_verification
@@ -175,36 +177,31 @@ function [conf_mat] = n_fold_validate (sigs_to_use, discData, discWalls, test_sa
 % Lawrence David - 2003.  lad2002@columbia.edu
 % Tom Macura - 2005. tm289@cam.ac.uk              Modified for inclusion in OME
 
-% Compose some reasonable defaults
-if (test_samples < 1)
-	classcounter = unique(discData(end,:));
-	class_number = length(classcounter);
+% Convert percentage into numbers
+classcounter = unique(discData(end,:));
+class_number = length(classcounter);
 
-	% find cardinality of smallest dataset
-	for u = 1:class_number                            
-		[junk matching_class] = find(discData(end,:)==classcounter(u));
-		ind_class_size(u)     = length(matching_class);
-	end
-
-	% 15 percent of instances for testing, 85 percent for training
-	test_samples = ceil(.15*min(ind_class_size));     
+% find cardinality of smallest dataset
+for u = 1:class_number                            
+	[junk matching_class] = find(discData(end,:)==classcounter(u));
+	ind_class_size(u)     = length(matching_class);
 end
 
-if (iterations < 1) 
-	iterations = 15;
-end
-
+% 15 percent of instances for testing, 85 percent for training
+test_samples = ceil(testing_perc*min(ind_class_size));
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % being n_fold_verification                                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 abso = 0; % variable to hold sums of 'all or nothing' decisions
 for i = 1:iterations
 	% remember about discData(end,:). That is the row of classes 
-	[percentages absolutes]  = TrainAndTest(discData([sigs_to_use end],:), discWalls(sigs_to_use), test_samples); 
+	[percentages absolutes]  = TrainAndTest(discData, discWalls, test_samples); 
 
     abso = abso + absolutes;
 end
 conf_mat = abso
+return
 
 function [percentages, absolutes] = TrainAndTest(discData, discWalls, test_samples)
 % INPUTS NEEDED:  
@@ -311,7 +308,7 @@ for u = 1:len % for each instance
 	
 	% find which classes are predicted
 	predicted_class = find (marginal_probs == max(marginal_probs));
-	predicted_class = randperm(length(predicted_class)); % randomize the predicted class
+	predicted_class = predicted_class(randperm(length(predicted_class))); % randomize the predicted class
 	predicted_class = predicted_class(1);                % select the first class
 	
 	if (sum(marginal_probs) == 0)
