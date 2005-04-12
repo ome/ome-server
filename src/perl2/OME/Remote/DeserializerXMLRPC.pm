@@ -36,6 +36,7 @@
 
 
 package OME::Remote::DeserializerXMLRPC;
+use XMLRPC::Lite;
 use base qw(XMLRPC::Deserializer);
 
 use Carp;
@@ -77,6 +78,15 @@ sub decode_value {
   }
 }
 
+
+sub o_qname { $_[0]->[0] };
+sub o_attr  { $_[0]->[1] };
+sub o_child { ref $_[0]->[2] ? $_[0]->[2] : undef };
+sub o_chars { ref $_[0]->[2] ? undef : $_[0]->[2] };
+            # $_[0]->[3] is not used. Serializer stores object ID there
+sub o_value { $_[0]->[4] };
+sub o_lname { $_[0]->[5] };
+sub o_lattr { $_[0]->[6] };
 
 1;
 
