@@ -59,7 +59,7 @@ our $VERSION = $OME::VERSION;
 use Log::Agent;
 use Carp;
 use OME::Matlab;
-use OME::Util::Classifier;
+use OME::Tasks::ClassifierTasks;
 
 use base qw(OME::Analysis::Handler);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -67,48 +67,121 @@ use Time::HiRes qw(gettimeofday tv_interval);
 sub execute {
     my ($self,$dependence,$target) = @_;
 	my $mex = $self->getModuleExecution();
-	my $dataset = $target; # target should always be a dataset
-	# That was true for the trainer. Is it still true for the classifier.
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+	my $outBuffer  = " " x 2048;
+	my $start_time = [gettimeofday()];
 
-	die "Hello world!";
-
-    my $classifier = @{ $self->getActualInputs( 'Classifications' ) }->[0];
-	
 	# open connection to matlab
 	my $matlab_engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
 		or die "Cannot open a connection to Matlab!";
-	my $session = OME::Session->instance();
 	my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
 	my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
 	logdbg "debug", "Matlab src dir is $matlab_src_dir\n".
 	$matlab_engine->eval("addpath(genpath('$matlab_src_dir'));");
 
-	# Compile Signature matrix and place into matlab for input
-	my $start_time = [gettimeofday()];
-	my @images = $dataset->images( );
-	@images = sort {$a->id <=> $b->id} @images;
-
-    my @classification_mexes = map { $_->input_module_execution() } @{ 
-    	$self->getActualInputs( 'Classifications' ) };
-    my @sigVectors_mexes = map { $_->input_module_execution() } @{ 
-    	$self->getActualInputs( 'SignatureVectors' ) };
-	my $signature_matrix = OME::Util::Classifier->compile_signature_matrix( \@sigVectors_mexes, \@images, \@classification_mexes );
-	$matlab_engine->eval("global signature_matrix");
-	$matlab_engine->putVariable( "signature_matrix", $signature_matrix);
-	$mex->attribute_db_time(tv_interval($start_time));
+	# Target may be a dataset or an image. Ideally, this module will be 
+	# executed once per image. Anyway, stuff into an array to make code
+	# easier later.
+	my @images;
+	if( ref( $target ) eq 'OME::Dataset' ) {
+		@images = $target->images;
+	} else {
+		@images = [ $target ];
+	}
 	
-# Dump the signature matrix to test what we have so far
-# my $output_file_name = '~/foo.mat';
-# $matlab_engine->eval("global signature_vector");
-# $matlab_engine->putVariable('signature_vector',$signature_matrix);
-# $matlab_engine->eval( "save $output_file_name signature_vector;" );
-# print STDERR "Saved signature vector to file $output_file_name.\n\n\n";
+	# Load Classifier & discritezation walls. These were dumped to a matlab
+	# file and uploaded to the file repository. The file has two variables:
+	# bnet and discWalls.
+	my $classifier = $self->getInputAttributes( "Classifier" );
+	$classifier = $classifier->[0];
+	my $classifier_dump_file = OME::Image::Server::File->new( $classifier->FileID() );
+	my $classifier_dump_path = $session->getTemporaryFilename('ML_BayesNet_Classifier','mat');
+	open my $file_handle, ">", $classifier_dump_path 
+		or die "Could not open $classifier_dump_path";
+	print $file_handle $classifier_dump_file->readData( $classifier_dump_file->getLength() );
+	close $file_handle;
+	$outBuffer  = " " x 2048;
+	$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
+	$matlab_engine->eval("load '$classifier_dump_path'");
+	$outBuffer =~ s/(\0.*)$//;
+	if ($outBuffer =~ m/\S/) {
+		$mex->error_message("$outBuffer");
+		die "***** Error! loading BayesNet classifier (id=".$classifier->id.
+		    "). Error msg:\n$outBuffer";
+	}
+	$session->finishTemporaryFile( $classifier_dump_path );
+	
+	# Signatures Used: They come out of the trainer in an ordered array
+	# The order of the array is important; basically, the indexes of the
+	# array specifies a BayesNet node.
+	# ATM, this order is not stored in SignaturesUsed, but does make its
+	# way into SignaturesScores (another output of the Trainer module)
+	my @sigsUsedAttrs = $self->getInputAttributes( "SignaturesUsed" );
+	my @orderedSigsUsed;
+	foreach my $sigUsed ( @sigsUsedAttrs ) {
+		my $score = OME::Tasks::ModuleExecutionManager->
+			getAttributesForMEX( $sigUsed->module_execution, 'SignaturesScores',
+				{ Legend => $sigUsed->id } )
+			or die "Couldn't retrieve SignaturesScores output from MEX ".
+				   $sigUsed->module_execution->id;
+		$orderedSigsUsed[ $score->Rank() ] = $sigUsed->Legend->VectorPosition;
+	}
+	# make matlab variable 'sigs_used' from @orderedSigsUsed
+	my $mlOrderedSigsUsed = OME::Matlab::Array->
+		newNumericArray( undef, undef, \@orderedSigsUsed );
+	$matlab_engine->eval("global sigs_used");
+	$matlab_engine->putVariable( "sigs_used", $mlOrderedSigsUsed);
+	
+	# Load the basis for retrieving signatures
+	my @sigVectors_mexes = map { $_->input_module_execution() } @{ 
+		$self->getActualInputs( 'Signature Vectors' ) };
 
-# IMPLEMENT THE REST OF THIS
+	# Build up Categories. Order them to correspond to the order used
+	# by the Trainer. The indexes will then provide a mapping from the
+	# category numbers used by the BayesNet and the categories objects
+	# in OME.
+	my @categoriesUsed = $self->getInputAttributes( "CategoriesUsed" );
+	my @categories = sort { $a->Name cmp $b->Name } map( $_->Category, @categoriesUsed );
 
+	foreach my $image( @images ) {
+		# Compile Signature matrix and place into matlab for input
+		my $signature_matrix = OME::Tasks::ClassifierTasks->
+			_compileSignatureMatrix( \@sigVectors_mexes, $image );
+		$matlab_engine->eval("global contData");
+		$matlab_engine->putVariable( "contData", $signature_matrix);
+		# Execute the classifier
+		$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
+		$matlab_engine->eval( 
+			"[marginal_probs] = ".
+			"	ML_BayesNet_Classifier(bnet, contData, sigs_used, discWalls);"
+		);
+		$outBuffer =~ s/(\0.*)$//;
+		if ($outBuffer =~ m/^\s*$/) {
+			logdbg "debug", "***** Output from Matlab:\n";
+		} else {
+			$mex->error_message("$outBuffer");
+			die "***** Error! Output from Matlab:\n$outBuffer\n";
+		}
+
+		# Store the marginal probabilities
+		my $marginalProbsML = $matlab_engine->getVariable( 'marginal_probs' );
+		my $marginalProbs = $marginalProbsML->convertToList();
+		for my $i ( 0..( @$marginalProbs - 1 ) ) {
+			my $category = $categories[ $i ];
+			my $probability = $marginalProbs->[ $i ];
+			$self->newAttributes('Classification', {
+				image      => $image,
+				Category   => $category,
+				Confidence => $probability
+			} );
+		}
+	}
+	
 	# close connection to matlab
 	$matlab_engine->close();
 
+	$mex->storeObject();
 }
 
 
