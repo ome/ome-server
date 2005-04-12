@@ -69,6 +69,13 @@ use base qw(OME::Analysis::Handler);
 
 # Finds inputs & stiches them together
 
+
+# FIXME:
+# Allow modules that use this interface to input VectorLegends, and only
+# create new VectorLegends if none are found in the list of module inputs.
+# This would mandate checking to see if the vector legend actual input is 
+# compatible with the sig stitcher module.
+
 sub execute {
 	my ($self,$dependence,$target) = @_;
 	my $factory = OME::Session->instance()->Factory();
