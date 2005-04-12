@@ -35,7 +35,25 @@
 
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
-	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name = "CategorizationDistribution" AppliesTo = "I">
+			<Description>
+			Reference to the Category an image belongs to. Similar to the classification
+			ST but lacks the mutual exclusion principal. CategorizationDistribution
+			confidences for a particular image and CategoryGroup sum to one.
+			</Description>
+			<Element
+				Name = "Category"
+				DBLocation = "CATEGORIZATION_DISTRIBUTION.CATEGORY"
+				DataType = "reference"
+				RefersTo = "Category"/>
+			<Element
+				Name = "Confidence"
+				DBLocation = "CATEGORIZATION_DISTRIBUTION.CONFIDENCE"
+				DataType = "float"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>
+	<AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
 			ModuleName="BayesNet Classifier"
 			Category="Classifier"
@@ -52,8 +70,8 @@
 				<FormalInput  Name="CategoriesUsed"   SemanticTypeName="CategoriesUsed"       Count="+"/>
 				<FormalInput  Name="SignaturesUsed"   SemanticTypeName="SignaturesUsed"       Count="+"/>
 				
-				<FormalOutput Name="Classifications"  SemanticTypeName="Classification"       Count="+"/>				
+				<FormalOutput Name="CategorizationDistribution"  SemanticTypeName="CategorizationDistribution" Count="+"/>				
 			</Declaration>
 		</AnalysisModule>
-	</AML:AnalysisModuleLibrary>
+	</AnalysisModuleLibrary>
 </OME>
