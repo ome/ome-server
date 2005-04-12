@@ -263,13 +263,18 @@ public abstract class MappedDTO
 
         try
         {
+
             Object o = elements.get(element);
             if (o != null)
             {
                 if (dtoClazz.isInstance(o))
                     return o;
+		// Strings that match the null reference marker
+		// or have zero length
+		// should be interpreted as nulls.
                 if (o instanceof String && 
-                		((String) o).compareTo(NULL_REFERENCE) ==0) {
+               		( (((String) o).compareTo(NULL_REFERENCE) ==0) ||
+               		  ((String) o).length() ==0 )){
                 		return null;
                 }
                 else if (!(o instanceof Map))
@@ -549,8 +554,10 @@ public abstract class MappedDTO
         		return null;
         String s = o.toString();
         
-        if (s.compareTo(NULL_REFERENCE) == 0) 
+        if (s.compareTo(NULL_REFERENCE) == 0) { 
+        		elements.remove(key);
         		return null;
+        }
         return s;
         //return o == null ? null : o.toString();
     }
