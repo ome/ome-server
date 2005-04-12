@@ -5,6 +5,9 @@
 #
 # $Id$
 #
+# Modfiied to work specifically with OME calls that 
+# serialize internally. See "serve" -anything appropraitely blessed
+# will be returned unchanged.
 
 # NOTE: see Storable for marshalling.
 

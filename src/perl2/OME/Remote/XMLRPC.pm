@@ -7,6 +7,8 @@
 #
 # $Id$
 #
+# Modified to work with OME - dont' rely on a map, as was done in the
+# original Frontier code
 
 package OME::Remote::XMLRPC;
 
