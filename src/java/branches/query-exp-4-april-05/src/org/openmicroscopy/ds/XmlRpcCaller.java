@@ -93,7 +93,7 @@ public class XmlRpcCaller
     public static boolean TRACE_CALLS = false;
     public static boolean USE_LITE_CLIENT = false;
 
-    private boolean profileCalls = true;
+    private boolean profileCalls = false;
     private long profilerTime = 0L;
 
     private XmlRpcClient  xmlrpc;
