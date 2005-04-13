@@ -28,6 +28,7 @@ package org.openmicroscopy.ds.tests;
 
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Iterator;
 
 import org.openmicroscopy.ds.Criteria;
 import org.openmicroscopy.ds.DataFactory;
@@ -36,6 +37,10 @@ import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.ServerVersion;
 import org.openmicroscopy.ds.dto.Module;
+import org.openmicroscopy.ds.dto.FormalInput;
+import org.openmicroscopy.ds.dto.FormalOutput;
+import org.openmicroscopy.ds.dto.SemanticType;
+import org.openmicroscopy.ds.managers.ModuleRetrievalManager;
 
 
 /**
@@ -61,6 +66,7 @@ public class ModuleTest {
 	
 	private DataServices services;
 	private DataFactory factory;
+	private ModuleRetrievalManager manager;
 	
 	public ModuleTest() {
 		super();
@@ -69,12 +75,14 @@ public class ModuleTest {
 			// construct connection to omeds
 			services = DataServer.getDefaultServices(SHOOLA_URL);
 			// doe the basic login
-			factory  = initializeFactory(services);
+			initializeFactory(services);
 			if (factory == null) {
 				System.err.println("Cannot contact Shoola server: "+SHOOLA_URL);
 				System.exit(0);
 			}
 			getModules();
+			if (manager != null)
+				getManagerModules();
 			System.err.println("Done!");
 		}
 		catch (MalformedURLException e) {
@@ -83,7 +91,8 @@ public class ModuleTest {
 		}	
 	}
 	
-	private DataFactory initializeFactory(DataServices services) {
+	
+	private void initializeFactory(DataServices services) {
 		System.err.println("trying to get data...");
 		//  login 
 		RemoteCaller remote = services.getRemoteCaller();
@@ -93,7 +102,9 @@ public class ModuleTest {
 		System.err.println("Server Version "+ ver);
 		
 		// retrieve the DataFactory which is used for data requests
-		return (DataFactory) services.getService(DataFactory.class);
+		factory =  (DataFactory) services.getService(DataFactory.class);
+		manager = (ModuleRetrievalManager) services.getService(
+				ModuleRetrievalManager.class);
 			
 	}
 	
@@ -120,16 +131,89 @@ public class ModuleTest {
 		c.addWantedField("id");
 		c.addWantedField("name");
 		c.addWantedField("description");
-		c.addWantedField("location");
-		c.addWantedField("module_type");
-		c.addWantedField("default_iterator");	
-		c.addWantedField("new_feature_tag");
+		c.addWantedField("category");
+		c.addWantedField("inputs");
+		c.addWantedField("outputs");
+	
+		//Specify which fields we want for the datasets.
+		c.addWantedField("category", "id");
+	//	c.addWantedField("category", "name");
+		// what do we want about inputs and outputs 
+		c.addWantedField("inputs","id");
+		c.addWantedField("inputs","name");
+		c.addWantedField("inputs","semantic_type");
+		c.addWantedField("inputs.semantic_type","id");
+		c.addWantedField("inputs.semantic_type","name");
+		c.addWantedField("outputs","id");
+		c.addWantedField("outputs","name");
+		c.addWantedField("outputs","semantic_type");
+		c.addWantedField("outputs.semantic_type","id");
+		c.addWantedField("outputs.semantic_type","name");
+		
+		c.addOrderBy("name");
 		return c;
 	}
 	
+	private void getManagerModules() {
+		System.err.println("=============================");
+		System.err.println("starting module retrieval via manager..");
+		long start = System.currentTimeMillis();
+		List modules = manager.retrieveModules();
+		long elapsed = System.currentTimeMillis()-start;
+		double time = ((double) elapsed)/1000.0;
+		System.err.println(modules.size()+ " modules retrieved in "+time+" seconds.");
+		//dumpModuleList(modules);
+		
+	}
+	
+	private void dumpModuleList(List modules) {
+		Iterator iter = modules.iterator();
+		while (iter.hasNext()) {
+			Module mod = (Module) iter.next();
+			System.err.println("=============");
+			System.err.println(mod.getID()+"," +mod.getName());
+			System.err.println(mod.getDescription());
+			/*if (mod.getCategory() != null)
+				System.err.println("Category: "+mod.getCategory().getID());
+			List inputs = mod.getFormalInputs();
+			if (inputs != null && inputs.size() > 0) {
+				System.err.println("Inputs: ");
+				dumpInputs(inputs);
+			}
+			List outputs = mod.getFormalOutputs();
+			if (outputs != null && outputs.size() > 0) {
+				System.err.println("Outputs: ");
+				dumpOutputs(outputs);
+			}*/			
+		}
+	}
 
     private double getElapsed(long start) {
 	return ((double) (System.currentTimeMillis()-start))/1000.0;
+    }
+    
+    private void dumpInputs(List inputs) {
+    	 	Iterator iter = inputs.iterator();
+    	 	while (iter.hasNext()) {
+    	 		FormalInput fin = (FormalInput) iter.next();
+    	 		System.err.println(fin.getID()+", "+fin.getName());
+    	 		SemanticType st = fin.getSemanticType();
+    	 		if (st != null) {
+    	 			System.err.println("Semantic Type: "+st.getID()+", "+st.getName());
+    	 		}
+    	 	}
+    }
+    
+    private void dumpOutputs(List outputs) {
+    		Iterator iter = outputs.iterator();
+	 	while (iter.hasNext()) {
+	 		FormalOutput fout = (FormalOutput) iter.next();
+	 		System.err.println(fout.getID()+", "+fout.getName());
+	 		SemanticType st = fout.getSemanticType();
+	 		if (st != null) {
+	 			System.err.println("Semantic Type: "+st.getID()+", "+st.getName());
+	 		}
+	 	}
     }
     
    public static void main(String[] args) {
