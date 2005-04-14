@@ -48,6 +48,5 @@ if (r ~= r_p || c ~= c_p)
 	error('conf_mat and penalty_mat do not have same dimensions');
 end
 
-sum(sum(conf_mat))
 conf_mat = conf_mat + penalty_mat .* conf_mat;
 score = sum(diag(conf_mat)) / sum(sum(conf_mat));
