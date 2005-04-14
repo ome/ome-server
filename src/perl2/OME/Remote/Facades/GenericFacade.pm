@@ -41,16 +41,15 @@ our $VERSION = $OME::VERSION;
 
 use OME::Session;
 use OME::Factory;
-use Data::Dumper;
+
 use OME::Remote::DTO::GenericAssembler;
+
 =head1 NAME
 
 OME::Remote::Facades::GenericFacade - remote facade methods for
 retrieving arbitrary DBObjects and Attributes
 
 =cut
-
-my $SHOW_CALLS=1;
 
 sub countObjects {
     my ($proto,$object_type,$criteria) = @_;
@@ -117,7 +116,6 @@ sub retrieveObjects {
       if (defined $fields_wanted) && (ref($fields_wanted) ne 'HASH');
 
     my @result = $factory->findObjects($class_name,$criteria);
-
     my $dtos = OME::Remote::DTO::GenericAssembler->
       makeDTOList(\@result,$fields_wanted);
 
