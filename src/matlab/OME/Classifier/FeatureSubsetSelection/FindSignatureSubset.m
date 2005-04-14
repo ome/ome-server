@@ -99,16 +99,13 @@ for i = 1:hei-1                  % don't involve the class row, (-1)
 end
 length_sigs_excl = length(sigs_excluded)
 length_sigs_left = length(sigs_left)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find initial best signature to classify with                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for i = 1:length(sigs_left)
-	conf_mat = n_fold_validate(discData([sigs_left(i) end],:), discWalls(sigs_left(i)), testing_perc, iterations);
-	ind_score(i) = fmetric(conf_mat);
-	fprintf(1, 'Signature: %03d -- Score: %f\n', sigs_left(i), ind_score(i));
-end
-
+[ind_score] = n_fold_validate(discData, discWalls, [], sigs_left, testing_perc, iterations, fmetric);
 [big_score, score_place] = max(ind_score);                                              
+
 sigs_used_ind           = big_score;
 sigs_used_col           = big_score;
 sigs_used               = sigs_left(score_place);
@@ -123,13 +120,8 @@ done = 0;
 while ~done
 
 	% find signature with largest impact on cumulative score
-	for i = 1:length(sigs_left)
-        conf_mat{i} = n_fold_validate(discData([sigs_used sigs_left(i) end],:), discWalls([sigs_used sigs_left(i)]), testing_perc, iterations);
-		score(i) = fmetric(conf_mat{i});
-		fprintf(1, 'Signature: %03d -- Cum. Score: %f\n', sigs_left(i), score(i));
-	end
-
-    [temp_score, temp_place] = max(score);
+    [score_avg score_std conf_mat] = n_fold_validate(discData, discWalls, sigs_used, sigs_left, testing_perc, iterations, fmetric);
+    [temp_score, temp_place] = max(score_avg);
     
     % add signature if it improves cumulative score
     if temp_score > big_score                                      
@@ -152,21 +144,31 @@ while ~done
 end
 conf_mat = conf_mat{temp_place};
 
-function [conf_mat] = n_fold_validate (discData, discWalls, testing_perc, iterations)
+function [scr_mean scr_std conf_mat] = n_fold_validate (discData, discWalls, initial_sigs, additional_sigs, testing_perc, iterations, fmetric)
 % INPUTS NEEDED:
 %   N.B: 'discData' and 'discWalls' are already trimmed according to sigs_to_use.
 %   'discData'      - data, in the form where rows are signatures and
 %                     columns are instances (images). By convention,
 %                     the bottom row contains the instance's class.
 %   'discWalls'     - cell array with bin wall locations
+%
+%   'initial_sigs'  - always use these sigs
+%
+%   'addtional_sigs'- try adding one of these sigs at a time. Look for the best
+%                     additional sig
+%
 %   'testing_perc'  - portion of training images to use as test-images
 %                     (real number between 0 and 1)
+%
 %   'iterations'    - how many times to perform n_fold_validation
 %
 % OUTPUTS GIVEN:
-%   'conf_mat'      - confusion matrix summarizing how signature set fared at
+%   'scr_mean'      - mean score vector summarizing how various signature set fared at
 %                     n_fold_verification
-%
+%   'scr_std'       - standard deviation score vector summarizing how various signature
+%                     set fared at n_fold_verification
+%   'conf_mat'      - cumulative (combines performance through all iterations)
+%                     confusion matricies for all signatures 
 % NOTES:
 %   This group of code is a rough driver to quickly pull in discretized data,
 %   learn a classifier, and then output how the classifer fared on multiple 
@@ -177,40 +179,37 @@ function [conf_mat] = n_fold_validate (discData, discWalls, testing_perc, iterat
 % Lawrence David - 2003.  lad2002@columbia.edu
 % Tom Macura - 2005. tm289@cam.ac.uk              Modified for inclusion in OME
 
-% Convert percentage into numbers
-classcounter = unique(discData(end,:));
-class_number = length(classcounter);
-
-% find cardinality of smallest dataset
-for u = 1:class_number                            
-	[junk matching_class] = find(discData(end,:)==classcounter(u));
-	ind_class_size(u)     = length(matching_class);
-end
-
-% 15 percent of instances for testing, 85 percent for training
-test_samples = ceil(testing_perc*min(ind_class_size));
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % being n_fold_verification                                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 abso = 0; % variable to hold sums of 'all or nothing' decisions
-for i = 1:iterations
-	% remember about discData(end,:). That is the row of classes 
-	[percentages absolutes]  = TrainAndTest(discData, discWalls, test_samples); 
-
-    abso = abso + absolutes;
+for i = 1:length(additional_sigs)
+	score_vec = [];
+	for j = 1:iterations
+		% remember about discData(end,:). That is the row of classes 
+		[percentages absolutes]  = TrainAndTest(discData([initial_sigs additional_sigs(i) end],:), discWalls([initial_sigs additional_sigs(i)]), testing_perc); 
+	
+		abso = abso + absolutes;
+		score_vec = [score_vec ConfusionMatrixScore(absolutes)];
+    end
+	conf_mat{i} = abso;
+	scr_mean(i) = mean(score_vec);
+	scr_std(i)  = std(score_vec);
+    abso
+    score_vec
+	fprintf(1, 'Signature: %03d -- Score [avg][var]: %f %f \n', additional_sigs(i), scr_mean(i), scr_std(i));
 end
-conf_mat = abso
 return
 
-function [percentages, absolutes] = TrainAndTest(discData, discWalls, test_samples)
+function [percentages, absolutes] = TrainAndTest(discData, discWalls, testing_perc)
 % INPUTS NEEDED:  
 %   'discData'     - discretized data, in the form where rows are signatures 
 %                    and columns are instances (images). By convention, the  
 %                    bottom row contains the instance's class.
 %   'discWalls'    - cell array with bin wall locations
-%   'test_samples' - how many randomly selected instances, per class, you would
-%                    like to set aside for each testing run.
+%   'testing_perc' - portion of training images to use as test-images
+%                    (real number between 0 and 1)
 % OUTPUTS GIVEN:
 %   'percentages'  - the sum of the probability distributions for every
 %                    image.  These sums are arranged in confusion matrices by 
@@ -240,28 +239,29 @@ function [percentages, absolutes] = TrainAndTest(discData, discWalls, test_sampl
 % to try to greedily learn an optimal network for the class node.  
 %
 % Tom Macura - 2005. tm289@cam.ac.uk
-[hei len] = size(discData);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% divide the discData into training and testing datasets
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[classcounter] = unique(discData(end,:));
-class_number = length(classcounter);
 rand('state',sum(100*clock));           % keeping the rand real
 
-% Figure out individual classes size. Randomly
-ind_class_size = zeros(1,class_number); 
-for u=1:class_number
-    [junk matching_class_vec] = find(discData(end,:)==classcounter(u));
-    ind_class_size(u) = length(matching_class_vec);
-    ind_class_size_is = ind_class_size(u);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Convert percentage into numbers
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+classcounter = unique(discData(end,:));
+class_number = length(classcounter);
+
+% find cardinality of smallest dataset
+for u = 1:class_number                            
+	[junk matching_class_vec] = find(discData(end,:)==classcounter(u));
+	ind_class_size(u) = length(matching_class_vec);
     matching_class{u} = matching_class_vec(randperm(ind_class_size(u)));
 end
 
 % Figure out how many train_samples and test_samples you need
+test_samples = ceil(testing_perc*min(ind_class_size));
 train_samples = min(ind_class_size) - test_samples;
 
-% Divide into test and training sets
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% divide the discData into training and testing datasets
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 discTrain_cols = [];  % column indicies
 discTest_cols  = [];  % column indicies
 
