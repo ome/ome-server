@@ -97,8 +97,6 @@ for i = 1:hei-1                  % don't involve the class row, (-1)
         sigs_left = [sigs_left i];
     end
 end
-length_sigs_excl = length(sigs_excluded)
-length_sigs_left = length(sigs_left)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find initial best signature to classify with                  %
