@@ -3,7 +3,7 @@
 %
 % INPUT GIVEN
 %   'bnet'          - Bayesian Belief Network object
-%   'contData'      - undiscretized vector with entries in `sigs_used` order
+%   'contData'      - undiscretized signature VECTOR with entries in `sigs_used` order
 %   'sigs_used'     - integers representing which signatures
 %                     were found to be the best (collectively)
 %                     in classifying the training set.
@@ -13,17 +13,17 @@
 %   'marginal_probs' - vector of doubles storing with what predicted 
 %                      probabilities the instance belongs to those classes
 
-function [marginal_probs] = ML_BayesNetClassifier (bnet, contData, sigs_used, discWalls);
+function [marginal_probs] = ML_BayesNet_Classifier (bnet, contData, sigs_used, discWalls);
 % sanity checks
 if (length(contData) ~= length(sigs_used)) 
-	error ("contData and sigs_used must be the same size\n");
+	error ('contData and sigs_used must be the same size');
 end
 
 % use learned wall placements in discretization                 %
 discData = ones(size(contData)); 
 for i = 1:length(sigs_used)
 	for j = 1:length(discWalls{sigs_used(i)})
-		discData(i) = discData(i) + (contData(i) > discWalls{sigs_used(i)}(j));
+		discData(i,:) = discData(i,:) + (contData(i,:) > discWalls{sigs_used(i)}(j));
 	end
 end
 
