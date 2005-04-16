@@ -55,14 +55,13 @@ discData = uint8(discData);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % build the Bayes Net (BNET)                                    %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-discData = discData(sigs_used,:);
-
+discData = discData([sigs_used end],:);
 [rows cols] = size(discData);
 for i=1:length(sigs_used)
-	node_sizes(i) = length(discWalls(sigs_used(i))) + 1;
+	node_sizes(i) = length(discWalls{sigs_used(i)}) + 1;
 end
 node_sizes(end+1) = length(unique(contData(end,:))); % how many different classes
-                                                     %there are
+                                                     % there are
        
 % filling the adjacency matrix to make the DAG for a naive bayesian network
 dag = false(rows, rows);
