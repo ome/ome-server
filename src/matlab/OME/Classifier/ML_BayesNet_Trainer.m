@@ -20,29 +20,42 @@
 
 function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ...
 	ML_BayesNet_Trainer(contData)
-	
-contData    = double(contData);
-[rows cols] = size(contData);        
-discData    = ones(size(contData)); 
+
+[rows cols] = size(contData);      
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % individually learn wall placements                            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for i=1:rows
-	discWalls{i} = FindDiscretizationWallsFayyadIrani(contData(i,:),contData(end,:));
+sigs_excluded = [];
+sigs_left = [];
+discWalls = [];
+
+for i = 1:rows-1              % don't involve the class row, (-1)
+	discWalls_vec = FindDiscretizationWallsFayyadIrani (contData(i,:),contData(end,:));
+	if length(discWalls_vec) == 0
+    	sigs_excluded = [sigs_excluded i];
+    else
+        sigs_left = [sigs_left i];
+        discWalls{end+1} = discWalls_vec;
+    end
 end
 
+contData = contData([sigs_left end],:);
+[rows cols] = size(contData);        
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % use learned wall placements in discretization                 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for i = 1:rows
+discData = ones(size(contData)); 
+for i = 1:rows-1
     for j = 1:length(discWalls{i})
         discData(i,:) = discData(i,:) + (contData(i,:) > discWalls{i}(j));
     end
 end
-discData(end,:) = contData(end,:); % restoring the class signatures
-discData = uint8(discData);
+discData(end,:) = contData(end,:);
+discData = uint8(discData)
+size(discData)
+size(discWalls)
 
 % Uncomment the line below to visualize the feature's discriminating power
 % plot_discData(discData([555 end],:));
@@ -50,7 +63,7 @@ discData = uint8(discData);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % find optimal subset of signatures                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = FindSignatureSubset(discData, discWalls, @ConfusionMatrixScore);
+[sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = FindSignatureSubset(discData, discWalls, @ConfusionMatrixScore);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % build the Bayes Net (BNET)                                    %

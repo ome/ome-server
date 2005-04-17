@@ -49,8 +49,6 @@ function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = ..
 %   'sigs_used_col' - doubles recording the signatures'
 %                     (corresponding to sigs_used vector) estimated
 %                     collective predictive abilities.
-%   'sigs_excluded' - sigs that could not be discretized and 
-%                     therefore were excluded.
 %   'conf_mat'      - Confusion Matrix summarizing results classifier
 %                     achieved during training
 % INTRODUCTION
@@ -83,24 +81,11 @@ if (nargin < 5)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% feature removal                                               %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[hei len] = size(discData);
-sigs_excluded = [];
-sigs_left = [];
-
-% Only signatures that can be discretized are used for classification
-for i = 1:hei-1                  % don't involve the class row, (-1)
-    if length(discWalls{i}) == 0
-    	sigs_excluded = [sigs_excluded i];
-    else
-        sigs_left = [sigs_left i];
-    end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find initial best signature to classify with                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+[hei len] = size(discData);
+sigs_left = [1: hei-1];
+
 [ind_score] = n_fold_validate(discData, discWalls, [], sigs_left, testing_perc, iterations, fmetric);
 [big_score, score_place] = max(ind_score);                                              
 
