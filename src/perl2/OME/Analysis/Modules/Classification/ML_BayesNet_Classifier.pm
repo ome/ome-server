@@ -60,6 +60,7 @@ use Log::Agent;
 use Carp;
 use OME::Matlab;
 use OME::Tasks::ClassifierTasks;
+use OME::Image::Server::File;
 
 use base qw(OME::Analysis::Handler);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -122,20 +123,24 @@ sub execute {
 	foreach my $sigUsed ( @sigsUsedAttrs ) {
 		my $score = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX( $sigUsed->module_execution, 'SignaturesScores',
-				{ Legend => $sigUsed->id } )
+				{ Legend => $sigUsed->Legend } )
 			or die "Couldn't retrieve SignaturesScores output from MEX ".
 				   $sigUsed->module_execution->id;
+		$score = $score->[0];
 		$orderedSigsUsed[ $score->Rank() ] = $sigUsed->Legend->VectorPosition;
 	}
 	# make matlab variable 'sigs_used' from @orderedSigsUsed
 	my $mlOrderedSigsUsed = OME::Matlab::Array->
-		newNumericArray( undef, undef, \@orderedSigsUsed );
+		newNumericArray( $OME::Matlab::mxDOUBLE_CLASS, $OME::Matlab::mxREAL, scalar(@orderedSigsUsed) )
+		or die "Coulnd't make matlab array to store the signatures used";
+	$mlOrderedSigsUsed->setAll( \@orderedSigsUsed );
+	$mlOrderedSigsUsed->makePersistent();
 	$matlab_engine->eval("global sigs_used");
 	$matlab_engine->putVariable( "sigs_used", $mlOrderedSigsUsed);
 	
 	# Load the basis for retrieving signatures
 	my @sigVectors_mexes = map { $_->input_module_execution() } @{ 
-		$self->getActualInputs( 'Signature Vectors' ) };
+		$self->getActualInputs( 'SignatureVectors' ) };
 
 	# Build up Categories. Order them to correspond to the order used
 	# by the Trainer. The indexes will then provide a mapping from the
@@ -151,6 +156,10 @@ sub execute {
 		$matlab_engine->eval("global contData");
 		$matlab_engine->putVariable( "contData", $signature_matrix);
 		# Execute the classifier
+#print STDERR "trying to get a signature matrix for image ".$image->name."\n";
+#print STDERR "from signature vector mexes ".join( ', ', map( $_->id, @sigVectors_mexes ))."\n";
+#$matlab_engine->eval( "save classifier_inputs.mat bnet contData sigs_used discWalls" );
+		$outBuffer  = " " x 2048;
 		$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
 		$matlab_engine->eval( 
 			"[marginal_probs] = ".
@@ -165,7 +174,8 @@ sub execute {
 		}
 
 		# Store the marginal probabilities
-		my $marginalProbsML = $matlab_engine->getVariable( 'marginal_probs' );
+		my $marginalProbsML = $matlab_engine->getVariable( 'marginal_probs' )
+			or die "couldn't retrieve classifier output";
 		my $marginalProbs = $marginalProbsML->convertToList();
 		for my $i ( 0..( @$marginalProbs - 1 ) ) {
 			my $category = $categories[ $i ];
