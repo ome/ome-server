@@ -422,7 +422,7 @@ ENDDESCRIPTION
 			my $formal_input = $doc->createElement( 'FormalInput');
 			$formal_input->setAttribute( 'Name', $input_name );
 			$formal_input->setAttribute( 'SemanticTypeName', $ST_name );
-			$formal_input->setAttribute( 'Count', '!' );
+			$formal_input->setAttribute( 'Count', '?' );
 			$declaration->appendChild( $formal_input );
 			$input_links_by_input{ $input_name } = $input_link;
 		}

@@ -109,9 +109,9 @@
 	arity that can be ordered should also work, but that's not work
 	implementing this now.</Description>
 	<Declaration>
-		<FormalInput Name="ImageTestSignature" SemanticTypeName="ImageTestSignature" Count="!"/>
-		<FormalInput Name="ImageTestSignature_2" SemanticTypeName="ImageTestSignature" Count="!"/>
-		<FormalInput Name="ImageTestSignatureTwo" SemanticTypeName="ImageTestSignatureTwo" Count="!"/>
+		<FormalInput Name="ImageTestSignature" SemanticTypeName="ImageTestSignature" Count="?"/>
+		<FormalInput Name="ImageTestSignature_2" SemanticTypeName="ImageTestSignature" Count="?"/>
+		<FormalInput Name="ImageTestSignatureTwo" SemanticTypeName="ImageTestSignatureTwo" Count="?"/>
 
 		<FormalOutput Name = "SignatureVector" SemanticTypeName = "SignatureVectorEntry"  Count="+"/>
 		<FormalOutput Name = "VectorLegend"    SemanticTypeName = "SignatureVectorLegend" Count="+"/>

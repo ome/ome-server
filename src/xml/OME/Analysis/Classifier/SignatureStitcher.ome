@@ -84,62 +84,62 @@
 		  <Declaration>
 		  
 		  	<!-- Feature Statistics -->
-			<FormalInput Name="Count"         SemanticTypeName="FeatureCount"     Count="!"/>	
-			<FormalInput Name="Euler"         SemanticTypeName="FeatureEuler"     Count="!"/>	
-			<FormalInput Name="Centroid"      SemanticTypeName="FeatureCentroid"  Count="!"/>
+			<FormalInput Name="Count"         SemanticTypeName="FeatureCount"     Count="?"/>	
+			<FormalInput Name="Euler"         SemanticTypeName="FeatureEuler"     Count="?"/>	
+			<FormalInput Name="Centroid"      SemanticTypeName="FeatureCentroid"  Count="?"/>
 
-			<FormalInput Name="Area Min"      SemanticTypeName="FeatureAreaMin"    Count="!"/>	
-			<FormalInput Name="Area Max"      SemanticTypeName="FeatureAreaMax"    Count="!"/>	
-			<FormalInput Name="Area Mean"     SemanticTypeName="FeatureAreaMean"   Count="!"/>	
-			<FormalInput Name="Area Median"   SemanticTypeName="FeatureAreaMedian" Count="!"/>	
-			<FormalInput Name="Area Variance" SemanticTypeName="FeatureAreaVar"    Count="!"/>	
-			<FormalInput Name="Area Hist"     SemanticTypeName="FeatureAreaHist"   Count="!"/>
+			<FormalInput Name="Area Min"      SemanticTypeName="FeatureAreaMin"    Count="?"/>	
+			<FormalInput Name="Area Max"      SemanticTypeName="FeatureAreaMax"    Count="?"/>	
+			<FormalInput Name="Area Mean"     SemanticTypeName="FeatureAreaMean"   Count="?"/>	
+			<FormalInput Name="Area Median"   SemanticTypeName="FeatureAreaMedian" Count="?"/>	
+			<FormalInput Name="Area Variance" SemanticTypeName="FeatureAreaVar"    Count="?"/>	
+			<FormalInput Name="Area Hist"     SemanticTypeName="FeatureAreaHist"   Count="?"/>
 			
-			<FormalInput Name="Dist Min"      SemanticTypeName="FeatureDistMin"    Count="!"/>	
-			<FormalInput Name="Dist Max"      SemanticTypeName="FeatureDistMax"    Count="!"/>	
-			<FormalInput Name="Dist Mean"     SemanticTypeName="FeatureDistMean"   Count="!"/>	
-			<FormalInput Name="Dist Median"   SemanticTypeName="FeatureDistMedian" Count="!"/>	
-			<FormalInput Name="Dist Variance" SemanticTypeName="FeatureDistVar"    Count="!"/>	
-			<FormalInput Name="Dist Hist"     SemanticTypeName="FeatureDistHist"   Count="!"/>
+			<FormalInput Name="Dist Min"      SemanticTypeName="FeatureDistMin"    Count="?"/>	
+			<FormalInput Name="Dist Max"      SemanticTypeName="FeatureDistMax"    Count="?"/>	
+			<FormalInput Name="Dist Mean"     SemanticTypeName="FeatureDistMean"   Count="?"/>	
+			<FormalInput Name="Dist Median"   SemanticTypeName="FeatureDistMedian" Count="?"/>	
+			<FormalInput Name="Dist Variance" SemanticTypeName="FeatureDistVar"    Count="?"/>	
+			<FormalInput Name="Dist Hist"     SemanticTypeName="FeatureDistHist"   Count="?"/>
 
 			<!-- Haralick Features -->
-			<FormalInput Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
-			<FormalInput Name="Contrast"						SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>
-			<FormalInput Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="!"/>
-			<FormalInput Name="Variance"						SemanticTypeName="CoOcMat_Variance" 						Count="!"/>
-			<FormalInput Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="!"/>
-			<FormalInput Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="!"/>
-			<FormalInput Name="Sum Variance"					SemanticTypeName="CoOcMat_SumVariance" 				    	Count="!"/>
-			<FormalInput Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="!"/>
-			<FormalInput Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="!"/>
-			<FormalInput Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="!"/>
-			<FormalInput Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="!"/>
-			<FormalInput Name="First Measure of Correlation"	SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="!"/>
-			<FormalInput Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="!"/>
-			<FormalInput Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
+			<FormalInput Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="?"/>
+			<FormalInput Name="Contrast"						SemanticTypeName="CoOcMat_Contrast" 						Count="?"/>
+			<FormalInput Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="?"/>
+			<FormalInput Name="Variance"						SemanticTypeName="CoOcMat_Variance" 						Count="?"/>
+			<FormalInput Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="?"/>
+			<FormalInput Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="?"/>
+			<FormalInput Name="Sum Variance"					SemanticTypeName="CoOcMat_SumVariance" 				    	Count="?"/>
+			<FormalInput Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="?"/>
+			<FormalInput Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="?"/>
+			<FormalInput Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="?"/>
+			<FormalInput Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="?"/>
+			<FormalInput Name="First Measure of Correlation"	SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="?"/>
+			<FormalInput Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="?"/>
+			<FormalInput Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="?"/>
 			
 			<!-- Chebyshev Statistcs -->
-			<FormalInput Name="Chebyshev Coefficient Histogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="!"/>
-			<FormalInput Name="Chebyshev Fourier Coefficient Histogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="!"/>
+			<FormalInput Name="Chebyshev Coefficient Histogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
+			<FormalInput Name="Chebyshev Fourier Coefficient Histogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="?"/>
 
 			<!-- Zernike Moments -->
-			<FormalInput Name="Zernike Moments" SemanticTypeName="ZernikeMoments" Count="!"/>
+			<FormalInput Name="Zernike Moments" SemanticTypeName="ZernikeMoments" Count="?"/>
 			
 			<!-- Edge Statistics -->
-			<FormalInput Name="Edge Area"           SemanticTypeName="EdgeArea"       Count="!"/>
+			<FormalInput Name="Edge Area"           SemanticTypeName="EdgeArea"       Count="?"/>
 
-			<FormalInput Name="Magnitude Mean"      SemanticTypeName="EdgeMagMean"    Count="!"/>	
-			<FormalInput Name="Magnitude Median"    SemanticTypeName="EdgeMagMedian"  Count="!"/>	
-			<FormalInput Name="Magnitude Variance"  SemanticTypeName="EdgeMagVar"     Count="!"/>	
-			<FormalInput Name="Magnitude Histogram" SemanticTypeName="EdgeMagHist"    Count="!"/>
+			<FormalInput Name="Magnitude Mean"      SemanticTypeName="EdgeMagMean"    Count="?"/>	
+			<FormalInput Name="Magnitude Median"    SemanticTypeName="EdgeMagMedian"  Count="?"/>	
+			<FormalInput Name="Magnitude Variance"  SemanticTypeName="EdgeMagVar"     Count="?"/>	
+			<FormalInput Name="Magnitude Histogram" SemanticTypeName="EdgeMagHist"    Count="?"/>
 			
-			<FormalInput Name="Direction Mean"      SemanticTypeName="EdgeDirecMean"   Count="!"/>
-			<FormalInput Name="Direction Median"    SemanticTypeName="EdgeDirecMedian" Count="!"/>	
-			<FormalInput Name="Direction Variance"  SemanticTypeName="EdgeDirecVar"    Count="!"/>	
-			<FormalInput Name="Direction Histogram" SemanticTypeName="EdgeDirecHist"   Count="!"/>
+			<FormalInput Name="Direction Mean"      SemanticTypeName="EdgeDirecMean"   Count="?"/>
+			<FormalInput Name="Direction Median"    SemanticTypeName="EdgeDirecMedian" Count="?"/>	
+			<FormalInput Name="Direction Variance"  SemanticTypeName="EdgeDirecVar"    Count="?"/>	
+			<FormalInput Name="Direction Histogram" SemanticTypeName="EdgeDirecHist"   Count="?"/>
 			
-			<FormalInput Name="Direction Homogeneity"    SemanticTypeName="EdgeDirecHomo"     Count="!"/>
-			<FormalInput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" Count="!"/>
+			<FormalInput Name="Direction Homogeneity"    SemanticTypeName="EdgeDirecHomo"     Count="?"/>
+			<FormalInput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" Count="?"/>
 			
 			<FormalOutput Name = "SignatureVector" SemanticTypeName = "SignatureVectorEntry"  Count="+"/>
 			<FormalOutput Name = "VectorLegend"    SemanticTypeName = "SignatureVectorLegend" Count="+"/>
