@@ -62,6 +62,7 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use Log::Agent;
 use OME::Analysis::Handler;
 use OME::Tasks::ModuleExecutionManager;
 
@@ -95,7 +96,7 @@ sub execute {
 		
 		# Collect the actual inputs for all the images
 		my @input_attr_list = $self->getInputAttributes( $formal_input )
-		  or die "Couldn't get inputs for formal input '".$formal_input->name."', (id=".$formal_input->id.")!";
+		  or logdbg "debug", "Couldn't get inputs for formal input '".$formal_input->name."', (id=".$formal_input->id.")!";
 		
 		# Every semantic element gets an entry in the vector
 		my @SEs = $formal_input->semantic_type->semantic_elements();
