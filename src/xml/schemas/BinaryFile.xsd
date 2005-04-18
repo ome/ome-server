@@ -80,10 +80,10 @@ If Offset and ReadLength are specified in conjuction with Compression, then they
 			<documentation>Describes a binary file.</documentation>
 		</annotation>
 		<complexType>
-			<sequence>
+			<choice>
 				<element ref = "Bin:External"/>
 				<element ref = "Bin:BinData"/>
-			</sequence>
+			</choice>
 			<attribute name = "FileName" use = "required">
 				<simpleType>
 					<restriction base = "string">
