@@ -211,14 +211,6 @@ $session->commitTransaction();
 			$node_to_delete->deleteObject();
 		}
 	} while $num_nodes_removed;
-	
-# FIXME:
-# Need to make a new signature stitcher. The old one will have a bunch of
-# required inputs that won't be fullfilled here. The new one should also
-# take in the signature legend that the old produced. The new one's inputs
-# will need to be compatible with the old ones. Maybe I should rethink the
-# algorithm I'm using here. Either that or I swap out the signature stitcher 
-# before swapping the trainer.
 
 	# Step 7: replace the trainer with the classifier
 	my $classifierModule = $factory->findObject( 'OME::Module',
@@ -249,12 +241,18 @@ Returns a signature matrix suitable for classification (an
 OME::Matlab::PersistentArray object) This signature matrix will not have
 a category column.
 
+Inputs:
+	both $stitcher_mex and $images can be either arrays of objects or
+	single objects.
+
 =cut
 
 sub _compileSignatureMatrix {
 	my ($proto, $stitcher_mex, $images) = @_;
 	my $factory = OME::Session->instance()->Factory();
-
+	# deal with single object calling style
+	$images = [ $images ] if ref( $images ) eq 'OME::Image';
+	
 	# instantiate the matlab signature array. 
 	#	number of columns is the size of the signature vector
 	#	number of rows is the number of images.
