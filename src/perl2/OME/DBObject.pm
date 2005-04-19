@@ -1090,6 +1090,21 @@ sub manyToMany {
 
     my $many_to_many = $class->__manyToMany();
 
+	my ($m_to_m_type, $m_to_m_id_column);
+
+	$map_class->require();
+
+	my $columns = $map_class->__columns();
+
+	foreach (keys %$columns) {
+		if ($_ eq $map_linker_alias) {
+			$m_to_m_type = $columns->{$_}->[2];
+		}
+		if ($_ eq $map_alias) {
+			$m_to_m_id_column = $columns->{$_}->[1];
+		}
+	}
+
     foreach my $alias (@$aliases) {
         die "Already an alias named $alias"
           if defined $class->getColumnType($alias);
@@ -1119,18 +1134,19 @@ sub manyToMany {
 			}
 
             if (wantarray) {
-                my @links = $factory->
-                  findObjects($map_class,
-                              $map_alias => $self->{__id},
-                              %params);
+				my $has_manys = $m_to_m_type->__hasManys();
+				my ($m_to_m_accessor, $m_to_m_criteria);
 
-                my @objects;
-                foreach my $link (@links) {
-                    $link = $link->$map_linker_alias();
-                    push (@objects,$link) if $link;
-                }
+				foreach (keys %$has_manys) {
+					if ($has_manys->{$_}->[0] eq $map_class) {
+						$m_to_m_accessor = $_;
+						last;
+					}
+				}
 
-                return @objects;
+				my $m_to_m_criteria = $m_to_m_accessor . "." . $m_to_m_id_column;
+
+				return $factory->findObjects($m_to_m_type, { $m_to_m_criteria => $self->{__id} });	
             } else {
                 my $links = $factory->
                   findObjects($map_class,
@@ -1296,7 +1312,7 @@ sub getInferredHasMany {
     	$class =~ m/^OME::(\w)/; # will give 'D', 'I', or 'F'
     	$ST_criteria{ granularity } = $1;
     }
-    my @STs = $factory->findObjects( 'OME::SemanticType', %ST_criteria );
+	my @STs = $factory->findObjects( 'OME::SemanticType', %ST_criteria );
     
 	# Examine each relationship, discard ones that are flagged as
 	# explicitly defined, flag ones that are discovered, and store
@@ -2525,8 +2541,12 @@ no warnings "uninitialized";
         }
     }
 
-    print STDERR "\n$sql\n" if $SHOW_SQL;
-    print STDERR join(',',@values),"\n" if $SHOW_SQL;
+	if ($SHOW_SQL) {
+		my ($p, $f, $l) = caller;
+		print STDERR "__makeSelectSQL() -- Package: '$p', Filename: '$f', Line: '$l'\n";
+    	print STDERR "\n$sql\n";
+    	print STDERR join(',',@values),"\n";
+	}
 
     return ($sql,defined $first_key,\@values);
 }
