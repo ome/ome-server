@@ -1,149 +1,533 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# Copyright (C) 2003 Open Microscopy Environment
-#       Massachusetts Institue of Technology,
-#       National Institutes of Health,
-#       University of Dundee
-#
-#
-#
-#    This library is free software; you can redistribute it and/or
-#    modify it under the terms of the GNU Lesser General Public
-#    License as published by the Free Software Foundation; either
-#    version 2.1 of the License, or (at your option) any later version.
-#
-#    This library is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#    Lesser General Public License for more details.
-#
-#    You should have received a copy of the GNU Lesser General Public
-#    License along with this library; if not, write to the Free Software
-#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--->
+<?xml version="1.0"?>
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    <SemanticType Name="SignatureVectorEntry" AppliesTo="I">
+      <Description>
+A single image signature. A signature describes something about the
+image. i.e. number of blobs, whether the texture is rough or smooth,
+etc.
+      </Description>
+      <Element Name="Value" DBLocation="SIGNATURE.VALUE" DataType="double"/>
+      <Element Name="Legend" DBLocation="SIGNATURE.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend"/>
+    </SemanticType>
+    <SemanticType Name="SignatureVectorLegend" AppliesTo="D">
+      <Description>
+Describes the data derivation of a position in a signature vector. I
+(Josiah) have been thinking about this having global granularity. This
+isn't feasible ATM because modules that accept non global inputs are not
+allowed to produce global outputs.
+      </Description>
+      <Element Name="VectorPosition" DBLocation="SIGNATURE_LEGEND.VECTOR_POSITION" DataType="integer">
+        <Description>Will be in the range of 1 to N, where N is the number of vector positions.
+        </Description>
+      </Element>
+      <Element Name="FormalInput" DBLocation="SIGNATURE_LEGEND.FORMAL_INPUT_NAME" DataType="string">
+        <Description>
+The name of the formal input assigned to this vector position. The
+function of this is to describe the data history. The data history can
+be accurately derived because the chain will have been locked by the
+time this is produced.
+        </Description>
+      </Element>
+      <Element Name="SemanticElement" DBLocation="SIGNATURE_LEGEND.SEMANTIC_ELEMENT_NAME" DataType="string">
+        <Description>
+The name of the semantic element of the formal input assigned to this
+vector position.
+        </Description>
+      </Element>
+    </SemanticType>
+  </SemanticTypeDefinitions>
+  <AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+    <AnalysisModule ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher" Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:9997" ModuleName="Signature Stitcher" ProgramID="">
+      <Description>
+Combines outputs from "signature modules" into a single vector that
+describes the image. This stitching is very handy for classifiers.
+      </Description>
+      <Declaration>
+        <FormalInput Name="FeatureDistHist" SemanticTypeName="FeatureDistHist" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 1" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 2" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 3" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 4" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 5" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 6" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 7" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 8" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 9" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 10" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 11" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 12" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 13" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 14" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 15" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 16" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 17" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 18" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 19" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 20" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 21" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 22" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 23" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 24" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 25" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 26" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 27" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 28" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 29" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 30" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 31" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="CoOcMat_Entropy 32" SemanticTypeName="CoOcMat_Entropy" Count="!"/>
+        <FormalInput Name="FeatureAreaMean" SemanticTypeName="FeatureAreaMean" Count="!"/>
+        <FormalInput Name="FeatureEuler" SemanticTypeName="FeatureEuler" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 1" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 2" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 3" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 4" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 5" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 6" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 7" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 8" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 9" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 10" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 11" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 12" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 13" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 14" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 15" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 16" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 17" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 18" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 19" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 20" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 21" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 22" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 23" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 24" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 25" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 26" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 27" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 28" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 29" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 30" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 31" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_AngularSecondMoment 32" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="!"/>
+        <FormalInput Name="EdgeArea" SemanticTypeName="EdgeArea" Count="!"/>
+        <FormalInput Name="FeatureDistMean" SemanticTypeName="FeatureDistMean" Count="!"/>
+        <FormalInput Name="EdgeDirecHomo" SemanticTypeName="EdgeDirecHomo" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 1" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 2" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 3" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 4" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 5" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 6" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 7" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 8" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 9" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 10" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 11" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 12" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 13" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 14" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 15" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 16" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 17" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 18" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 19" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 20" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 21" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 22" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 23" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 24" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 25" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 26" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 27" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 28" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 29" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 30" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 31" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceVariance 32" SemanticTypeName="CoOcMat_DifferenceVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 1" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 2" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 3" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 4" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 5" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 6" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 7" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 8" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 9" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 10" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 11" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 12" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 13" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 14" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 15" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 16" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 17" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 18" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 19" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 20" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 21" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 22" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 23" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 24" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 25" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 26" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 27" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 28" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 29" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 30" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 31" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_SumAverage 32" SemanticTypeName="CoOcMat_SumAverage" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 1" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 2" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 3" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 4" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 5" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 6" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 7" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 8" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 9" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 10" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 11" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 12" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 13" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 14" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 15" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 16" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 17" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 18" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 19" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 20" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 21" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 22" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 23" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 24" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 25" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 26" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 27" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 28" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 29" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 30" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 31" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_Contrast 32" SemanticTypeName="CoOcMat_Contrast" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 1" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 2" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 3" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 4" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 5" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 6" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 7" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 8" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 9" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 10" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 11" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 12" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 13" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 14" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 15" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 16" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 17" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 18" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 19" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 20" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 21" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 22" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 23" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 24" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 25" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 26" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 27" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 28" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 29" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 30" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 31" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_SumEntropy 32" SemanticTypeName="CoOcMat_SumEntropy" Count="!"/>
+        <FormalInput Name="FeatureAreaMedian" SemanticTypeName="FeatureAreaMedian" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 1" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 2" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 3" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 4" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 5" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 6" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 7" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 8" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 9" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 10" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 11" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 12" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 13" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 14" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 15" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 16" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 17" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 18" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 19" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 20" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 21" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 22" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 23" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 24" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 25" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 26" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 27" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 28" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 29" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 30" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 31" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_FirstMeasureOfCorrelation 32" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="FeatureDistMin" SemanticTypeName="FeatureDistMin" Count="!"/>
+        <FormalInput Name="EdgeMagHist" SemanticTypeName="EdgeMagHist" Count="!"/>
+        <FormalInput Name="FeatureDistVar" SemanticTypeName="FeatureDistVar" Count="!"/>
+        <FormalInput Name="ChebyshevCoefficientHistogram 1" SemanticTypeName="ChebyshevCoefficientHistogram" Count="!"/>
+        <FormalInput Name="ChebyshevCoefficientHistogram 2" SemanticTypeName="ChebyshevCoefficientHistogram" Count="!"/>
+        <FormalInput Name="FeatureDistMedian" SemanticTypeName="FeatureDistMedian" Count="!"/>
+        <FormalInput Name="EdgeDirecMean" SemanticTypeName="EdgeDirecMean" Count="!"/>
+        <FormalInput Name="EdgeDirecMedian" SemanticTypeName="EdgeDirecMedian" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 1" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 2" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 3" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 4" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 5" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 6" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 7" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 8" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 9" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 10" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 11" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 12" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 13" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 14" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 15" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 16" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 17" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 18" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 19" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 20" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 21" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 22" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 23" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 24" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 25" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 26" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 27" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 28" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 29" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 30" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 31" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_Variance 32" SemanticTypeName="CoOcMat_Variance" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 1" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 2" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 3" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 4" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 5" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 6" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 7" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 8" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 9" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 10" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 11" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 12" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 13" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 14" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 15" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 16" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 17" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 18" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 19" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 20" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 21" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 22" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 23" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 24" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 25" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 26" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 27" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 28" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 29" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 30" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 31" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="CoOcMat_InverseDifferenceMoment 32" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="!"/>
+        <FormalInput Name="FeatureCount" SemanticTypeName="FeatureCount" Count="!"/>
+        <FormalInput Name="FeatureAreaMax" SemanticTypeName="FeatureAreaMax" Count="!"/>
+        <FormalInput Name="EdgeMagMedian" SemanticTypeName="EdgeMagMedian" Count="!"/>
+        <FormalInput Name="ChebyshevFourierCoefficientHistogram 1" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="!"/>
+        <FormalInput Name="ChebyshevFourierCoefficientHistogram 2" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 1" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 2" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 3" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 4" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 5" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 6" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 7" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 8" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 9" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 10" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 11" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 12" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 13" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 14" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 15" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 16" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 17" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 18" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 19" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 20" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 21" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 22" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 23" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 24" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 25" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 26" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 27" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 28" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 29" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 30" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 31" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 32" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
+        <FormalInput Name="ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="!"/>
+        <FormalInput Name="ZernikeMoments 1" SemanticTypeName="ZernikeMoments" Count="!"/>
+        <FormalInput Name="EdgeMagMean" SemanticTypeName="EdgeMagMean" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 1" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 2" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 3" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 4" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 5" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 6" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 7" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 8" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 9" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 10" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 11" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 12" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 13" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 14" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 15" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 16" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 17" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 18" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 19" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 20" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 21" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 22" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 23" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 24" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 25" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 26" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 27" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 28" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 29" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 30" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 31" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 32" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
+        <FormalInput Name="FeatureCentroid" SemanticTypeName="FeatureCentroid" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 1" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 2" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 3" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 4" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 5" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 6" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 7" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 8" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 9" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 10" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 11" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 12" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 13" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 14" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 15" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 16" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 17" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 18" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 19" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 20" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 21" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 22" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 23" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 24" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 25" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 26" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 27" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 28" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 29" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 30" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 31" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="CoOcMat_Correlation 32" SemanticTypeName="CoOcMat_Correlation" Count="!"/>
+        <FormalInput Name="FeatureAreaHist" SemanticTypeName="FeatureAreaHist" Count="!"/>
+        <FormalInput Name="FeatureAreaVar" SemanticTypeName="FeatureAreaVar" Count="!"/>
+        <FormalInput Name="EdgeDirecVar" SemanticTypeName="EdgeDirecVar" Count="!"/>
+        <FormalInput Name="FeatureDistMax" SemanticTypeName="FeatureDistMax" Count="!"/>
+        <FormalInput Name="EdgeDirecHist" SemanticTypeName="EdgeDirecHist" Count="!"/>
+        <FormalInput Name="FeatureAreaMin" SemanticTypeName="FeatureAreaMin" Count="!"/>
+        <FormalInput Name="EdgeDiffDirecHist" SemanticTypeName="EdgeDiffDirecHist" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 1" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 2" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 3" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 4" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 5" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 6" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 7" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 8" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 9" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 10" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 11" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 12" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 13" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 14" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 15" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 16" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 17" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 18" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 19" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 20" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 21" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 22" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 23" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 24" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 25" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 26" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 27" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 28" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 29" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 30" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 31" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="CoOcMat_SumVariance 32" SemanticTypeName="CoOcMat_SumVariance" Count="!"/>
+        <FormalInput Name="EdgeMagVar" SemanticTypeName="EdgeMagVar" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 1" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 2" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 3" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 4" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 5" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 6" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 7" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 8" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 9" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 10" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 11" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 12" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 13" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 14" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 15" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 16" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 17" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 18" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 19" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 20" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 21" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 22" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 23" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 24" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 25" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 26" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 27" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 28" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 29" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 30" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 31" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
+        <FormalInput Name="CoOcMat_DifferenceEntropy 32" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="!"/>
 
-
-<!--
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by: Josiah Johnston <siah@nih.gov>
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--->
-
-
-<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
-	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		 
-		<SemanticType Name="SignatureVectorEntry" AppliesTo="I">
-		  <Description>A single image signature. A signature describes
-		  something about the image. i.e. number of blobs, whether the
-		  texture is rough or smooth, etc.</Description>
-		  <Element Name="Value"  DBLocation="SIGNATURE.VALUE" DataType="double"/>
-		  <Element Name="Legend"  DBLocation="SIGNATURE.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend"/>
-		</SemanticType>
-		
-		<SemanticType Name="SignatureVectorLegend" AppliesTo="D">
-		  <Description>Describes the data derivation of a position in a
-		  signature vector. I (Josiah) have been thinking about this having
-		  global granularity. This isn't feasible ATM because modules that
-		  accept non global inputs are not allowed to produce global
-		  outputs.</Description>
-		  <Element Name="VectorPosition"  DBLocation="SIGNATURE_LEGEND.VECTOR_POSITION" DataType="integer">
-			<Description>Will be in the range of 1 to N, where N is the
-			number of vector positions.</Description>
-		  </Element>
-		  <Element Name="FormalInput"  DBLocation="SIGNATURE_LEGEND.FORMAL_INPUT_NAME" DataType="string">
-			<Description>The name of the formal input assigned to this
-			vector position. The function of this is to describe the data
-			history. The data history can be accurately derived because
-			the chain will have been locked by the time this is
-			produced.</Description>
-		  </Element>
-		  <Element Name="SemanticElement"  DBLocation="SIGNATURE_LEGEND.SEMANTIC_ELEMENT_NAME" DataType="string">
-			<Description>The name of the semantic element of the formal
-			input assigned to this vector position.</Description>
-		  </Element>
-		</SemanticType>
-	</SemanticTypeDefinitions>
-
-	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
-		<AnalysisModule
-		   ModuleName="Signature Stitcher"
-		   Category="Classifier"
-		   ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher"
-		   ProgramID=""
-		   ID="urn:lsid:openmicroscopy.org:Module:7200">
-		  <Description>
-		   This module computes statistics about the contiguous regions of the image 
-		   (features). It is passed in a binary image such that non-zero pixel intensities 
-		   are of features.
-		  </Description>
-		  <Declaration>
-		  
-		  	<!-- Feature Statistics -->
-			<FormalInput Name="Count"         SemanticTypeName="FeatureCount"     Count="?"/>	
-			<FormalInput Name="Euler"         SemanticTypeName="FeatureEuler"     Count="?"/>	
-			<FormalInput Name="Centroid"      SemanticTypeName="FeatureCentroid"  Count="?"/>
-
-			<FormalInput Name="Area Min"      SemanticTypeName="FeatureAreaMin"    Count="?"/>	
-			<FormalInput Name="Area Max"      SemanticTypeName="FeatureAreaMax"    Count="?"/>	
-			<FormalInput Name="Area Mean"     SemanticTypeName="FeatureAreaMean"   Count="?"/>	
-			<FormalInput Name="Area Median"   SemanticTypeName="FeatureAreaMedian" Count="?"/>	
-			<FormalInput Name="Area Variance" SemanticTypeName="FeatureAreaVar"    Count="?"/>	
-			<FormalInput Name="Area Hist"     SemanticTypeName="FeatureAreaHist"   Count="?"/>
-			
-			<FormalInput Name="Dist Min"      SemanticTypeName="FeatureDistMin"    Count="?"/>	
-			<FormalInput Name="Dist Max"      SemanticTypeName="FeatureDistMax"    Count="?"/>	
-			<FormalInput Name="Dist Mean"     SemanticTypeName="FeatureDistMean"   Count="?"/>	
-			<FormalInput Name="Dist Median"   SemanticTypeName="FeatureDistMedian" Count="?"/>	
-			<FormalInput Name="Dist Variance" SemanticTypeName="FeatureDistVar"    Count="?"/>	
-			<FormalInput Name="Dist Hist"     SemanticTypeName="FeatureDistHist"   Count="?"/>
-
-			<!-- Haralick Features -->
-			<FormalInput Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="?"/>
-			<FormalInput Name="Contrast"						SemanticTypeName="CoOcMat_Contrast" 						Count="?"/>
-			<FormalInput Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="?"/>
-			<FormalInput Name="Variance"						SemanticTypeName="CoOcMat_Variance" 						Count="?"/>
-			<FormalInput Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="?"/>
-			<FormalInput Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="?"/>
-			<FormalInput Name="Sum Variance"					SemanticTypeName="CoOcMat_SumVariance" 				    	Count="?"/>
-			<FormalInput Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="?"/>
-			<FormalInput Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="?"/>
-			<FormalInput Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="?"/>
-			<FormalInput Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="?"/>
-			<FormalInput Name="First Measure of Correlation"	SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="?"/>
-			<FormalInput Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="?"/>
-			<FormalInput Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="?"/>
-			
-			<!-- Chebyshev Statistcs -->
-			<FormalInput Name="Chebyshev Coefficient Histogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
-			<FormalInput Name="Chebyshev Fourier Coefficient Histogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="?"/>
-
-			<!-- Zernike Moments -->
-			<FormalInput Name="Zernike Moments" SemanticTypeName="ZernikeMoments" Count="?"/>
-			
-			<!-- Edge Statistics -->
-			<FormalInput Name="Edge Area"           SemanticTypeName="EdgeArea"       Count="?"/>
-
-			<FormalInput Name="Magnitude Mean"      SemanticTypeName="EdgeMagMean"    Count="?"/>	
-			<FormalInput Name="Magnitude Median"    SemanticTypeName="EdgeMagMedian"  Count="?"/>	
-			<FormalInput Name="Magnitude Variance"  SemanticTypeName="EdgeMagVar"     Count="?"/>	
-			<FormalInput Name="Magnitude Histogram" SemanticTypeName="EdgeMagHist"    Count="?"/>
-			
-			<FormalInput Name="Direction Mean"      SemanticTypeName="EdgeDirecMean"   Count="?"/>
-			<FormalInput Name="Direction Median"    SemanticTypeName="EdgeDirecMedian" Count="?"/>	
-			<FormalInput Name="Direction Variance"  SemanticTypeName="EdgeDirecVar"    Count="?"/>	
-			<FormalInput Name="Direction Histogram" SemanticTypeName="EdgeDirecHist"   Count="?"/>
-			
-			<FormalInput Name="Direction Homogeneity"    SemanticTypeName="EdgeDirecHomo"     Count="?"/>
-			<FormalInput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" Count="?"/>
-			
-			<FormalOutput Name = "SignatureVector" SemanticTypeName = "SignatureVectorEntry"  Count="+"/>
-			<FormalOutput Name = "VectorLegend"    SemanticTypeName = "SignatureVectorLegend" Count="+"/>
-		  </Declaration>
-		</AnalysisModule>
-	</AML:AnalysisModuleLibrary>
+        <FormalOutput Name="SignatureVector" SemanticTypeName="SignatureVectorEntry" Count="+"/>
+        <FormalOutput Name="VectorLegend" SemanticTypeName="SignatureVectorLegend" Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+  </AnalysisModuleLibrary>
 </OME>
