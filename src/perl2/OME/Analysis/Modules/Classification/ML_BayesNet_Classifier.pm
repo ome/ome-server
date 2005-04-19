@@ -131,7 +131,7 @@ sub execute {
 	}
 	# make matlab variable 'sigs_used' from @orderedSigsUsed
 	my $mlOrderedSigsUsed = OME::Matlab::Array->
-		newNumericArray( $OME::Matlab::mxDOUBLE_CLASS, $OME::Matlab::mxREAL, scalar(@orderedSigsUsed) )
+		newNumericArray( $OME::Matlab::mxDOUBLE_CLASS, $OME::Matlab::mxREAL, 1, scalar(@orderedSigsUsed) )
 		or die "Coulnd't make matlab array to store the signatures used";
 	$mlOrderedSigsUsed->setAll( \@orderedSigsUsed );
 	$mlOrderedSigsUsed->makePersistent();
@@ -163,12 +163,10 @@ sub execute {
 		$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
 		$matlab_engine->eval( 
 			"[marginal_probs] = ".
-			"	ML_BayesNet_Classifier(bnet, contData, sigs_used, discWalls);"
+			"	ML_BayesNet_Classifier(bnet, contData(sigs_used), sigs_used, discWalls);"
 		);
 		$outBuffer =~ s/(\0.*)$//;
-		if ($outBuffer =~ m/^\s*$/) {
-			logdbg "debug", "***** Output from Matlab:\n";
-		} else {
+		if ($outBuffer =~ m/\S/) {
 			$mex->error_message("$outBuffer");
 			die "***** Error! Output from Matlab:\n$outBuffer\n";
 		}
