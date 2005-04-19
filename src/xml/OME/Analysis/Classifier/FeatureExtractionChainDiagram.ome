@@ -33,7 +33,7 @@
 -->
   
 <AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
-  <AnalysisChain Name="Signature Chain" Locked="false">
+  <AnalysisChain Name="Signature Chain Diagram" Locked="false" Description="This is a diagram of the signature chain. It will import, but will not execute because outputs of multiple modules lead into a single input. Use `ome help classifier stitch_chain` for convertg this into a usable chain.">
     <Nodes>
     	<!-- Slicing Trunk -->
 		<Node NodeID="Files"              ProgramName="Original files"/>
