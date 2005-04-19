@@ -103,11 +103,9 @@ sub execute {
 		"	ML_BayesNet_Trainer(signature_matrix);"
 	);
 	$outBuffer =~ s/(\0.*)$//;
-	if ($outBuffer =~ m/^\s*$/) {
-		logdbg "debug", "***** Output from Matlab:\n";
-	} else {
+	if ($outBuffer =~ m/\S/) {
 		$mex->error_message("$outBuffer");
-		logdbg "debug", "***** Error! Output from Matlab:\n$outBuffer\n";		
+		die "***** Error! Output from Matlab:\n$outBuffer\n";		
 	}
 
 	# ------ STORE OUTPUTS ------ #
@@ -116,7 +114,14 @@ sub execute {
 	# For now, dump them to a file, upload that to the image server, 
 	# 	and make a BayesNetClassifier output
 	my $classifier_dump_path = $session->getTemporaryFilename('ML_BayesNet_Trainer','mat');
+	$outBuffer  = " " x 2048;
+	$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
 	$matlab_engine->eval( "save $classifier_dump_path discWalls bnet;" );
+	$outBuffer =~ s/(\0.*)$//;
+	if ($outBuffer =~ m/\S/) {
+		$mex->error_message("$outBuffer");
+		die "***** Error! Output from Matlab:\n$outBuffer\n";		
+	}
 	my $classifier_dump_file_obj = OME::Image::Server::File->upload($classifier_dump_path);
 	$self->newAttributes('Classifier', {
 		dataset => $dataset,
