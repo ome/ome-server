@@ -855,8 +855,21 @@ sub getColumnType {
         return "many-to-many";
     } elsif (exists $class->__pseudo_columns()->{$alias}) {
         return "pseudo-column";
+
+	# This alias may be an inferred relation that hasn't been picked up yet.
+    } elsif ( not $aliasIsActuallyInstantiated ) {
+		# Verify syntax and parse method name
+		my ( $foreign_key_class, $foreign_key_alias ) = $proto->__parseHasManyAccessor( $alias );
+
+		# bail out if method was not parsable
+		return undef unless ( defined $foreign_key_class && defined $foreign_key_alias );
+		# record this method & flag it as being inferred
+		$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $alias, 1 ];
+		# Properly define the method
+		$class->hasMany($alias, $foreign_key_class => $foreign_key_alias );
+        return "has-many";
     } else {
-        return undef;
+    	return undef;
     }
 }
 
@@ -990,7 +1003,7 @@ sub hasMany {
 			{ $foreign_key_class }{ $foreign_key_alias } = [ $alias, undef ]
 			unless $proto->__hasRelationshipBeenInferred( $foreign_key_class, $foreign_key_alias );
 
-        die "Already an alias named $alias"
+        confess "Already an alias named $alias"
           if defined $class->getColumnType($alias, 1);
 
         # Create an accessor/mutator

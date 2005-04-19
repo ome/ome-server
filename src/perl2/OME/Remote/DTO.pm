@@ -140,10 +140,6 @@ sub __makeHash ($$$) {
 	    }
 	}
 
-	# force inference of relationships. This allows requests of inferred
-	# methods to be granted.
-	$object->getInferredHasMany();
-
 	# Actually make the hash
     my $dto = {};
 	foreach my $method_request ( keys %requests ) {
