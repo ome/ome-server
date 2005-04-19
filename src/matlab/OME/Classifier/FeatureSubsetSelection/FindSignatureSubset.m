@@ -28,7 +28,7 @@
 %             Tom Macura <tmacura@nih.gov>
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = ...
+function [sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = ...
 			FindSignatureSubset (discData, discWalls, fmetric, testing_perc, iterations)
 
 % INPUT NEEDED      
