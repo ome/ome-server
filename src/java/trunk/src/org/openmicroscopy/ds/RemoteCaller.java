@@ -58,6 +58,12 @@ public interface RemoteCaller
     public String getSessionKey();
 
     /**
+     * Sets the session key directly to a known key string.
+     * No verification or error checking is performed on the key.
+     */
+    public void setSessionKey(String key);
+
+    /**
      * Returns the version of the server which this
      * <code>RemoteCaller</code> is connected to.  The {@link
      * ServerVersion} class can be used to compare two versions,

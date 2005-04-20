@@ -90,8 +90,8 @@ public class XmlRpcCaller
      */
     public static final String  NULL_REFERENCE = "*([-NULL-])*";
 
-    public static boolean TRACE_CALLS = false;
-    public static boolean USE_LITE_CLIENT = true;
+    public static final boolean TRACE_CALLS = false;
+    public static final boolean USE_LITE_CLIENT = true;
 
     private boolean profileCalls = false;
     private long profilerTime = 0L;
@@ -407,6 +407,7 @@ public class XmlRpcCaller
     }
 
     public String getSessionKey() { return sessionKey; }
+    public void setSessionKey(String key) { sessionKey = key; }
 
     public Object invoke(String method, Object[] params)
     {
