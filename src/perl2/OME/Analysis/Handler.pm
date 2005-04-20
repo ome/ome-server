@@ -345,7 +345,8 @@ sub __expandAttributeInfo {
         if (!ref($key)) {
             # This is a string, treat it as a formal input name.
             $formal_output_name = $key;
-            $formal_output = $self->getFormalOutput($formal_output_name);
+            $formal_output = $self->getFormalOutput($formal_output_name)
+            	or die "Couldn't find a formal output named $formal_output_name";
             $semantic_type = $formal_output->semantic_type();
         } elsif (UNIVERSAL::isa($key,"OME::SemanticType")) {
             # This is a semantic type
