@@ -58,4 +58,14 @@ to your matlab libraries. On OS X, this is typically
 	/Applications/MATLAB701/bin/mac/
 download Kevin Murphy's Bayesian Network toolbox
 	http://www.cs.ubc.ca/~murphyk/Software/FullBNT.zip
-unpack it into your matlab directory
+unpack it into your matlab directory. If you want, you can install
+portions of the BayesNet toolbox that are written in C. This results in
+a speedup factor of 2-5. Instructions for that are here:
+	http://www.cs.ubc.ca/~murphyk/Software/BNT/usage.html#install
+The instructions on that page tell you to edit add_BNT_to_path.m This is
+not actually necessary in an OME installation because those paths are
+added by OME code through an independent mechanism.
+
+* Note, if you are playing in matlab with this stuff and save a baysian
+network to disk, you must have the FullBNT directoryes in your path when
+you reload the file. Otherwise, the bnet object will become corrupted.
