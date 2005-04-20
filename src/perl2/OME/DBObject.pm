@@ -2189,7 +2189,7 @@ sub __getQueryLocation {
         $location = $foreign_column->[0].".".$foreign_column->[1];
     } else {
         my $column = $class->__columns()->{$column_alias};
-        confess "Column $column_alias does not exist"
+        confess "Column $column_alias does not exist in type '" . $class . "'"
           unless defined $column;
         $location = $column->[0].".".$column->[1];
         $tables_used->{$column->[0]} = undef;
