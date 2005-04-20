@@ -66,7 +66,10 @@ sub createOMEPage {
 
 	# load system defaults
 	if (not defined $server) {
-		$server = hostname();
+		$server = `hostname -f`;
+		if (not defined $server) { # hostname failed; try using Sys::Hostname
+			$server = hostname();
+		}
 	}
 	if (not defined $key) {
 		$key = $session->SessionKey();
