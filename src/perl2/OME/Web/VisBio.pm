@@ -49,14 +49,15 @@ sub new {
 	return $self;
 }
 
-sub createOMEPage{
+sub createOMEPage {
 	my $self = shift;
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 	my $cgi  = $self->CGI();
 	
 	my $id = $cgi->url_param('ImageID');
-	my $user = $cgi->url_param('user');
+	my $key = $cgi->url_param('SessionKey');
+#	my $user = $cgi->url_param('user');
 	my $server = $cgi->url_param('server');
 	
 	if (not $id) {	
@@ -67,9 +68,12 @@ sub createOMEPage{
 	if (not defined $server) {
 		$server = hostname();
 	}
-	if (not defined $user) {
-		$user = $factory->loadObject( 'OME::SemanticType::BootstrapExperimenter', $session->User->id)->OMEName();
+	if (not defined $key) {
+		$key = $session->SessionKey();
 	}
+#	if (not defined $user) {
+#		$user = $factory->loadObject('OME::SemanticType::BootstrapExperimenter', $session->User->id)->OMEName();
+#	}
 	$self->contentType('application/x-java-jnlp');
 
 	# Output JNLP file with proper arguments
@@ -105,10 +109,11 @@ sub createOMEPage{
 	$jnlp .= "    <jar href=\"xmlrpc-1.2-b1.jar\"/>\n";
 	$jnlp .= "  </resources>\n";
 	$jnlp .= "  <application-desc main-class=\"loci.visbio.VisBio\">\n";
-	$jnlp .= "    <argument>ome-image=$user\@$server:$id</argument>\n";
+	$jnlp .= "    <argument>ome-image=key:$key\@$server:$id</argument>\n";
 	$jnlp .= "  </application-desc>\n";
 	$jnlp .= "</jnlp>\n";
 	
 	return ('JNLP', $jnlp, 'LaunchVisBio.jnlp');
 }
+
 1;
