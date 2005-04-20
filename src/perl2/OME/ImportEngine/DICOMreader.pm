@@ -154,17 +154,8 @@ sub getGroups {
 			die "Uh, file is not defined at (z,c,t)=($z,0,0)!\n"
 				unless ( defined($file) );
 			
-			# The other keys of this hash give access to the actual
-			# sub-patterns matched by the RE:
-			print STDERR "Z string is ".$group->[$z][0][0]->{Z}."\n";
-			# $zString = $group->[$z][$c][$t]->{Z};
-			# $cString = $group->[$z][$c][$t]->{C};
-			# $tString = $group->[$z][$c][$t]->{T};
-			# Note that undef strings are converted to ''.
-      	
-			push (@groupList, $file);
-			
 			# delete the file from the hash, so it's not processed by other importers
+			push (@groupList, $file);
     		$filename = $file->getFilename();
 			delete $fref->{ $filename };
 			delete $DICOMs{ $filename };
