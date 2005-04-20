@@ -1135,7 +1135,7 @@ sub manyToMany {
 
             if (wantarray) {
 				my $has_manys = $m_to_m_type->__hasManys();
-				my ($m_to_m_accessor, $m_to_m_criteria);
+				my $m_to_m_accessor;
 
 				foreach (keys %$has_manys) {
 					if ($has_manys->{$_}->[0] eq $map_class) {
