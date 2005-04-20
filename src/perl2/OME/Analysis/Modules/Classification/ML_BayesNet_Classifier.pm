@@ -156,9 +156,6 @@ sub execute {
 		$matlab_engine->eval("global contData");
 		$matlab_engine->putVariable( "contData", $signature_matrix);
 		# Execute the classifier
-#print STDERR "trying to get a signature matrix for image ".$image->name."\n";
-#print STDERR "from signature vector mexes ".join( ', ', map( $_->id, @sigVectors_mexes ))."\n";
-#$matlab_engine->eval( "save classifier_inputs.mat bnet contData sigs_used discWalls" );
 		$outBuffer  = " " x 2048;
 		$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
 		$matlab_engine->eval( 
@@ -178,7 +175,7 @@ sub execute {
 		for my $i ( 0..( @$marginalProbs - 1 ) ) {
 			my $category = $categories[ $i ];
 			my $probability = $marginalProbs->[ $i ];
-			$self->newAttributes('Classification', {
+			$self->newAttributes('CategorizationDistribution', {
 				image      => $image,
 				Category   => $category,
 				Confidence => $probability
