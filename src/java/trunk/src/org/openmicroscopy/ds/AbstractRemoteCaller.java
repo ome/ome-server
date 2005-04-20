@@ -49,7 +49,6 @@ public abstract class AbstractRemoteCaller
     extends AbstractService
     implements RemoteCaller
 {
-    protected DataServices services;
 
     /**
      * Creates a new <code>AbstractRemoteCaller</code> instance.
