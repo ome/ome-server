@@ -41,7 +41,6 @@
 package org.openmicroscopy.ds;
 
 import java.util.List;
-import java.util.Map;
 
 import org.openmicroscopy.ds.dto.DataInterface;
 import org.openmicroscopy.ds.dto.Attribute;
