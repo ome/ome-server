@@ -57,6 +57,8 @@ a.ome_quiet:hover { text-decoration: none; color : #FF0000; }  /* Red is tempora
 
 a.ome_detail { font-weight: normal; color : #2222FF; }
 
+a.ome_punchline { font-weight: bold; color: #22F; }
+
 /* MAIN LAYOUT TABLE AND TD's */
 
 .ome_page_table { width: 100%; }
