@@ -574,13 +574,6 @@ sub renderData {
 					
 			# populate field requests
 			} else {
-# Magic to force load of the inferred relation accessor. It's kind of a hack.
-# The problem is, getColumnType won't report the columnType for inferred 
-# relations until they have either been explicitly inferred or used. I'm 
-# reluctant to change that behavior without working through all the 
-# ramifications. So for now, I'll use this hack. To use an inferred relation
-# in a template, you must mark it as inferred. e.g. <TMPL_VAR NAME=CategoryList/inferred_relation>
-$obj->$field if exists $request->{ inferred_relation };
 				my $type = $obj->getColumnType( $field );
 				# Avoid "Use of uninitialized value in string eq" message.
 				next if( not defined $type );
@@ -603,8 +596,16 @@ $obj->$field if exists $request->{ inferred_relation };
 				} else {
 					# reference field
 					if( $type eq 'has-one' ) {
-						my $render_mode = ( $request->{ render } or 'ref' );
-						$record{ $request_string } = $self->render( $obj->$field(), $render_mode, $request );
+						# request for data
+						if( exists $request->{ field } && defined $request->{ field } ) {
+							my %rendered_data = $self->renderData( $obj->$field(), [$request->{ field }] );
+							$record{ $request_string } = $rendered_data{ $request->{ field } };
+						} 
+						# request for rendering
+						else {
+							my $render_mode = ( $request->{ render } or 'ref' );
+							$record{ $request_string } = $self->render( $obj->$field(), $render_mode, $request );
+						}
 					}
 		
 					# *many reference accessor
@@ -817,9 +818,18 @@ sub _parse_tmpl_fields {
 		foreach my $request ( @$field_requests ) {
 			my $field;
 			my %parsed_request;
+			# I need to specify a magic field as a value. This hack with 
+			# ome_save_dash_followed_by_magic_variable_prefix does that.
+			# The better long term solution is change the prefix of magic 
+			# fields to something other than the delimeter.
+$request =~ s'-/'ome_save_dash_followed_by_magic_variable_prefix'g;
 			my @items = split( m'/', $request );
+$request =~ s'ome_save_dash_followed_by_magic_variable_prefix'-/'g;
+for my $i( 0..(scalar( @items) -1) ) {
+	$items[$i] =~ s'ome_save_dash_followed_by_magic_variable_prefix'-/';
+}
 			# the first item will be blank for magic fields because magic fields
-			# are prefixed with the delimeter
+			# are prefixed with the delimeter '/'
 			if( $items[0] eq '' ) {
 				shift( @items );
 				$field = '/'.shift( @items );
@@ -975,9 +985,14 @@ generic_tiled_list.tmpl for examples of rendering lists of objects.
 
 field_name can be any of the object's fields from its DBObject
 definition, a field populated by the _renderData method of the
-specialized subclass, or a magic field.
+specialized subclass, or a magic field. To reach through a relation, 
+use 
+	<!-- TMPL_VAR NAME='relation_name/field-field_name' -->
+Ex: To use the name of an analysis chain when constructing 
+a template to show an analysis chain execution, use 
+	<!-- TMPL_VAR NAME='analisis_chain/field-name' -->
 
-Modifiers:
+Standard Modifiers:
 	field/max_text_length-n : truncates the field length to max_text_length
 	reference_field/render-mode: render the objects given by has_many_ref in the specified mode.
 		evaluates to a renderArray() call.
