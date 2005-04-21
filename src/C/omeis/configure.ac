@@ -82,7 +82,6 @@ case "$host_os" in
 	;;
 esac
 
-
 dnl Because our Apple friends are idiots and don't want to include things that
 dnl are part of a *proper* install like pkg-config, we do this. It probably
 dnl needs an M4 macro, etc. to be made more robust.
@@ -141,6 +140,25 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
+
+dnl Checks and records variable widths
+AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long int)
+
+dnl Records the correct format strings for off_t and OID variables
+if test "$ac_cv_sizeof_long_long_int" = "$ac_cv_sizeof_long"; then
+	AC_DEFINE(OFF_T_FMT, ["ld"], [The correct off_t format string for this platform])
+	AC_MSG_NOTICE(using off_t format string... "ld")
+	AC_DEFINE(OID_FMT, ["lu"], [The correct OID format string for this platform])
+	AC_MSG_NOTICE(using OID format string... "lu")
+else
+	AC_MSG_NOTICE(using off_t format string... "lld")
+	AC_DEFINE(OFF_T_FMT, ["lld"])
+	AC_MSG_NOTICE(using OID format string... "llu")
+	AC_DEFINE(OID_FMT, ["llu"])
+fi
 
 dnl Checks for library functions.
 AC_FUNC_MMAP
