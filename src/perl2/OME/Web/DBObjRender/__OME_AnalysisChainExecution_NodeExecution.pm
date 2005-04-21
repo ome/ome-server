@@ -57,6 +57,7 @@ use base qw(OME::Web::DBObjRender);
 =head2 _renderData
 
 sets '/name' to the MEX's name
+sets 'target' to the MEX's target
 
 =cut
 
@@ -64,11 +65,27 @@ sub _renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
 	my %record;
 	if( exists $field_requests->{ '/name' } ) {
-		%record = $self->renderData( 
-			$obj->module_execution(), 
-			{ '/name' => $field_requests->{ '/name' } },
-			$options
-		);
+		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my %rendered_data = $self->renderData( 
+				$obj->module_execution(), 
+				{ '/name' => [ $request ] },
+				$options
+			);
+			$record{ $request_string } = $rendered_data{ '/name' };
+		}
+	}
+	if( exists $field_requests->{ 'target' } ) {
+		foreach my $request ( @{ $field_requests->{ 'target' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my $target = ( $obj->module_execution->dataset ?
+				$obj->module_execution->dataset :
+				$obj->module_execution->image
+			);
+			my $mode = ( exists $request->{render} ? $request->{render} : undef );
+			$record{ $request_string } = $self->
+				render( $target, $mode );
+		}
 	}
 	return %record;
 }
