@@ -60,7 +60,10 @@ use base qw(OME::Web::DBObjRender);
 
 =head2 _renderData
 
-makes virtual fields breakdown_by_node
+makes virtual fields breakdown_by_node, which is a list of nodes, each of which
+links to a search page that will show all executions of that node in this CHEX.
+
+implements /name as the chain's name
 
 =cut
 
@@ -70,7 +73,7 @@ sub _renderData {
 	my $factory = $obj->Session()->Factory();
 	my %record;
 
-	# thumbnail url
+	# breakdown_by_node
 	if( exists $field_requests->{ 'breakdown_by_node' } ) {
 		foreach my $request ( @{ $field_requests->{ 'breakdown_by_node' } } ) {
 			my @nodes = $obj->analysis_chain->nodes();
@@ -94,6 +97,13 @@ sub _renderData {
 			);
 			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = join( ', ', @node_execution_links );
+		}
+	}
+	if( exists $field_requests->{ '/name' } ) {
+		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = $self->
+				_trim( $obj->analysis_chain->name, $request );
 		}
 	}
 	
