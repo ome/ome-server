@@ -62,7 +62,7 @@ sets '/name' to either module name or "Virtual MEX [id]"
 sub _renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
 	my %record;
-	# thumbnail url
+	# /name
 	if( exists $field_requests->{ '/name' } ) {
 		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
 			my $request_string = $request->{ 'request_string' };
