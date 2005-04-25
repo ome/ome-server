@@ -64,8 +64,13 @@ public class PrimitiveConverters
             return (Integer) o;
         else if (o instanceof Number)
             return new Integer(((Number) o).intValue());
-        else if (o instanceof String)
-            return Integer.valueOf((String) o);
+        else if (o instanceof String) {
+        	    String s = (String) o;
+        	    if (s.length() == 0)
+        	    		return null;
+        	    else 
+        	    		return Integer.valueOf(s);
+        }
         else
             throw new NumberFormatException("Expected an int, got a "+
                                             o.getClass());
