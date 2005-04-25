@@ -114,21 +114,13 @@ sub execute {
 	$session->finishTemporaryFile( $classifier_dump_path );
 	
 	# Signatures Used: They come out of the trainer in an ordered array
-	# The order of the array is important; basically, the indexes of the
+	# The order of this array is important; basically, the indexes of the
 	# array specifies a BayesNet node.
-	# ATM, this order is not stored in SignaturesUsed, but does make its
-	# way into SignaturesScores (another output of the Trainer module)
-	my @sigsUsedAttrs = $self->getInputAttributes( "SignaturesUsed" );
-	my @orderedSigsUsed;
-	foreach my $sigUsed ( @sigsUsedAttrs ) {
-		my $score = OME::Tasks::ModuleExecutionManager->
-			getAttributesForMEX( $sigUsed->module_execution, 'SignaturesScores',
-				{ Legend => $sigUsed->Legend } )
-			or die "Couldn't retrieve SignaturesScores output from MEX ".
-				   $sigUsed->module_execution->id;
-		$score = $score->[0];
-		$orderedSigsUsed[ $score->Rank() ] = $sigUsed->Legend->VectorPosition;
-	}
+	my @sigsUsedAttrs = $self->getInputAttributes( "Signatures Needed" );
+	my @orderedSigsUsed = map(
+		$_->Legend->VectorPosition, 
+		sort( { $a->Rank cmp $b->Rank } @sigsUsedAttrs )
+	);
 	# make matlab variable 'sigs_used' from @orderedSigsUsed
 	my $mlOrderedSigsUsed = OME::Matlab::Array->
 		newNumericArray( $OME::Matlab::mxDOUBLE_CLASS, $OME::Matlab::mxREAL, 1, scalar(@orderedSigsUsed) )
