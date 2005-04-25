@@ -1,6 +1,9 @@
 <TMPL_IF NAME=/obj_loop>
 	<TMPL_LOOP NAME=/obj_loop>
-		<TMPL_VAR NAME=/object/render-ref>
+		<TMPL_VAR NAME=/object/render-ref_map>
+	</TMPL_LOOP>
+	<TMPL_LOOP NAME=/obj_loop/second_one>
+		<TMPL_VAR NAME=/object/render-map>
 	</TMPL_LOOP>
 	<TMPL_IF NAME=/pager_text>
 		<a href="<TMPL_VAR NAME=/more_info_url>">...</a>
