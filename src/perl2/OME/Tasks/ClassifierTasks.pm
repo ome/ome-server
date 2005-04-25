@@ -284,12 +284,15 @@ sub _compileSignatureMatrix {
 
 =head2 _compileSignatureMatrixWithCategories()
 
-	my $signature_array = OME::Tasks::ClassifierTasks->
+	my ($signature_array, $categoryMapping) = OME::Tasks::ClassifierTasks->
 		_compileSignatureMatrixWithCategories($stitcher_mex, $images, $classification_mex);
 
 Returns a signature matrix suitable for training (an
 OME::Matlab::PersistentArray object). The last column of the signature
 matrix will be the category IDs.
+$categoryMapping is a reference to a hash of the form 
+	{ ML_ID => DB_ID }
+It maps the category ids presented to matlab to the database ids.
 
 =cut
 
@@ -331,8 +334,12 @@ sub _compileSignatureMatrixWithCategories {
 			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
 		}
 		$image_number += 1;
-	}	
-	return $signature_array;
+	}
+	# Reverse the category mapping from { DB_id => ML_id } to { ML_id => DB_id }
+	my $categoryReverseMapping;
+	$categoryReverseMapping->{ $category_numbers->{ $_ } } = $_
+		foreach( keys %$category_numbers );
+	return ( $signature_array, $categoryReverseMapping );
 }
 
 
