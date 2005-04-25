@@ -47,8 +47,17 @@ ome import OME/Analysis/Classifier/BayesNetTrainer.ome
 ome import OME/Analysis/Classifier/BayesNetClassifier.ome
 -----
 
-To get the matlab classifier working in OME, you gotta:
+Useful Chains
+-----
+# needed
+ome import OME/Analysis/Classifier/TrainerChain.ome
+# unnecessary, but potentially useful to developers
+ome import OME/Analysis/Classifier/SignatureChain.ome
+-----
 
+
+To get the matlab classifier working in OME, you gotta:
+-----
 make sure it is possible to run matlab from the command line
 make sure the user executing stuff has a license to run matlab
 	in the web ui, this is the apache user
