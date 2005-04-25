@@ -172,7 +172,7 @@ sub getPageBody {
 					{ $a->name cmp $b->name }
 					@{ $image_classifications{ $category->id } || [] }
 				);
-				push( @{ $tmpl_data{ CategoryList } }, {
+				push( @{ $tmpl_data{ _CategoryList } }, {
 					CategoryRef => $self->Renderer()->render( $category, 'ref' ),
 					images      => $self->Renderer()->renderArray( 
 						\@sorted_images, 'bare_ref_mass_no_map', { type => 'OME::Image' } 
