@@ -78,9 +78,11 @@
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "CustomAttributes">
-		<xsd:sequence>
-			<xsd:any processContents = "skip"/>
-		</xsd:sequence>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:any processContents = "skip"/>
+			</xsd:sequence>
+		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "Project">
 		<xsd:complexType>
