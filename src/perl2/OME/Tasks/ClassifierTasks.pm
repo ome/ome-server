@@ -368,7 +368,11 @@ sub _getClassificationsAndCategoryNumbering {
 				getAttributesForMEX( $classification_mex, "Classification",
 					{image => $image } 
 				) }
-			or die "Could not find a classification for image id=".$image->id;
+			or die "Could not find a classification for image id=".$image->id.
+			       " using mexes: ". ( ref( $classification_mex ) eq 'ARRAY' ?
+			           join( ', ', map( $_->id, @$classification_mex ) ) :
+			           $classification_mex->id
+			       );
 		die "More than one classification found for image id=".$image->id.
 		    ", mex id(s) ".(
 		    	# $classification_mex may be a list of MEXs or a single MEX.
