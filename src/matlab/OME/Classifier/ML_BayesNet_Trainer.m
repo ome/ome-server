@@ -53,9 +53,9 @@ for i = 1:rows-1
     end
 end
 discData(end,:) = contData(end,:);
-discData = uint8(discData)
-size(discData)
-size(discWalls)
+discData = uint8(discData);
+size(discData);
+size(discWalls);
 
 % Uncomment the line below to visualize the feature's discriminating power
 % plot_discData(discData([555 end],:));
