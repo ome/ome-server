@@ -183,7 +183,7 @@ sub getPageBody {
 				{ $a->name cmp $b->name }
 				@{ $image_classifications{ 0 } || [] }
 			);
-			unshift( @{ $tmpl_data{ CategoryList } }, {
+			unshift( @{ $tmpl_data{ _CategoryList } }, {
 				CategoryRef => 'Unclassified',
 				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass_no_map', { type => 'OME::Image' } ),
 			} );
