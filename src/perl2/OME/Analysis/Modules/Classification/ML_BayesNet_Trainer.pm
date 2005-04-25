@@ -90,14 +90,14 @@ sub execute {
     	$self->getActualInputs( 'Classifications' ) };
     my @sigVectors_mexes = map { $_->input_module_execution() } @{ 
     	$self->getActualInputs( 'Signature Vectors' ) };
-	my $signature_matrix = OME::Tasks::ClassifierTasks->
+	my ($signature_matrix, $categoryMapping) = OME::Tasks::ClassifierTasks->
 		_compileSignatureMatrixWithCategories( \@sigVectors_mexes, \@images, \@classification_mexes );
 	$matlab_engine->eval("global signature_matrix");
 	$matlab_engine->putVariable( "signature_matrix", $signature_matrix);
 	$mex->attribute_db_time(tv_interval($start_time));
 	
 	# Execute the trainer
-	$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
+	$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));
 	$matlab_engine->eval( 
 		"[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ".
 		"	ML_BayesNet_Trainer(signature_matrix);"
@@ -105,8 +105,15 @@ sub execute {
 	$outBuffer =~ s/(\0.*)$//;
 	if ($outBuffer =~ m/\S/) {
 		$mex->error_message("$outBuffer");
-		die "***** Error! Output from Matlab:\n$outBuffer\n";		
+		logdbg "debug", "***** Error! Output from Matlab:\n$outBuffer\n";
 	}
+	# Useful for debugging...
+	#$outBuffer  = " " x 2048;
+	#$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));
+	#$matlab_engine->eval( "save trainer_output sigs_used sigs_used_ind sigs_used_col sigs_excluded discWalls bnet conf_mat" );
+	#$outBuffer =~ s/(\0.*)$//;
+	#logdbg "debug", "***** Error! Couldn't dump output:\n$outBuffer\n"
+	#	if ($outBuffer =~ m/\S/);
 
 	# ------ STORE OUTPUTS ------ #
 
@@ -120,7 +127,7 @@ sub execute {
 	$outBuffer =~ s/(\0.*)$//;
 	if ($outBuffer =~ m/\S/) {
 		$mex->error_message("$outBuffer");
-		die "***** Error! Output from Matlab:\n$outBuffer\n";		
+		die "***** Error saving discretization walls and bayesNet. Output from Matlab:\n$outBuffer\n";
 	}
 	my $classifier_dump_file_obj = OME::Image::Server::File->upload($classifier_dump_path);
 	$self->newAttributes('Classifier', {
@@ -152,15 +159,14 @@ sub execute {
 			unless @$vectorLegendList == 1;
 		my $vectorLegend = $vectorLegendList->[0];
 		$self->newAttributes('Signatures Used', {
-			dataset => $dataset,
-			Legend => $vectorLegend
-		} );
-		$self->newAttributes('Signatures Scores', {
 			dataset  => $dataset,
 			Legend   => $vectorLegend,
 			Rank     => $i,
-			CumScore => $sig_cum_score,
-			IndScore => $sig_ind_score
+			# For some reason, these next two variables come out as 'NaN' sometimes
+			# The quotes are a work around for the XS wierdness described in
+			# OME::Analysis::Handlers::MatlabHandler->MatlabStruct_to_Attr()
+			CumScore => "$sig_cum_score",
+			IndScore => "$sig_ind_score"
 		} );
 	}
 	
@@ -178,7 +184,7 @@ sub execute {
 		my $vectorLegend = $vectorLegendList->[0];
 		$self->newAttributes('Signatures Not Discretized', {
 			dataset => $dataset,
-			Legend => $vectorLegend
+			Legend  => $vectorLegend
 		} );
 	}
 
@@ -187,7 +193,7 @@ sub execute {
 	my %categories_used = map{ $_->Category->id => $_->Category } @classifications;
 	foreach my $category ( values %categories_used ) {
 		$self->newAttributes('Categories Used', {
-			dataset => $dataset,
+			dataset  => $dataset,
 			Category => $category
 		} );		
 	}
@@ -223,7 +229,11 @@ sub execute {
 	# Store the ConfusionMatrix container
 	my $confusion_matrix_attr_list = $self->newAttributes( 'Confusion Matrix', {
 		dataset             => $dataset,
-		Accuracy            => ( $correct_predictions / $total_num_predictions ),
+		# Avoid a divide by 0 error
+		Accuracy            => ( $total_num_predictions ne 0 ? 
+			( $correct_predictions / $total_num_predictions ) : 
+			'NaN'
+		),
 		TotalNumPredictions => $total_num_predictions,
 		TotalUnknown        => ($dataset->count_images() - $total_num_predictions)
 	} );
@@ -233,11 +243,15 @@ sub execute {
 		foreach my $col( 0..( $confusion_matrix_width - 1 ) ) {
 			$self->newAttributes( 'ConfusionMatrixEntries', {
 				dataset             => $dataset,
-				StandardCategory    => ($row + 1),
-				AlternativeCategory => ($col + 1),
+				StandardCategory    => $categoryMapping->{ $row + 1 },
+				AlternativeCategory => $categoryMapping->{ $col + 1 },
 				ConfusionMatrix     => $confusion_matrix_attr,
 				NumPredictions      => $confusion_matrix[ $row ][ $col ],
-				NormalizedNumPredictions => ( $confusion_matrix[ $row ][ $col ] / $confusion_matrix_row_sums[ $row ] ),
+				# Avoid a divide by 0 error
+				NormalizedNumPredictions => ( $confusion_matrix_row_sums[ $row ] ne 0 ?
+					( $confusion_matrix[ $row ][ $col ] / $confusion_matrix_row_sums[ $row ] ) :
+					'NaN'
+				)
 			} );
 		}
 	}
