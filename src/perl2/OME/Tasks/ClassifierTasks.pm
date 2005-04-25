@@ -148,7 +148,7 @@ sub makeClassifierChain {
 	# Step 1: find trainer chain
 	my $trainerChain = $factory->findObject( 'OME::AnalysisChain',
 		'executions.node_executions.module_execution' => $trainerMEX,
-		name => ['like', 'Trainer chain%' ])
+		name => ['like', 'Train a Classifier%' ])
 		or die "Couldn't find a chain used to produce the trainer MEX ".$trainerMEX->id;
 
 	# Step 2: clone and rename the chain
@@ -168,8 +168,8 @@ sub makeClassifierChain {
 
 	# Step 4: identify signatures to be saved
 	my $sigsNeededList = OME::Tasks::ModuleExecutionManager->
-		getAttributesForMEX( $trainerMEX, 'SignaturesUsed' )
-		or die "Couldn't retrieve SignaturesUsed output from MEX ".
+		getAttributesForMEX( $trainerMEX, 'SignatureScores' )
+		or die "Couldn't retrieve SignatureScores output from MEX ".
 			   $trainerMEX->id;
 # FIXME: (Explanation of Hack)
 # When I commit the transaction at this point, I am able to delete Nodes
