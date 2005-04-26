@@ -80,7 +80,7 @@ public class ChainRetrievalTest {
 			services = DataServer.getDefaultServices(SHOOLA_URL);
 			// doe the basic login
 			initializeChainRetrievalManager(services);
-			criteriaGetChains();
+		//	criteriaGetChains();
 			if (chainRetrievalManager != null) {
 			    getChains();
 			}
@@ -166,7 +166,7 @@ public class ChainRetrievalTest {
 		long elapsed = System.currentTimeMillis()-start;
 		double time = ((double) elapsed)/1000.0;
 		System.err.println(chains.size()+ " chains retrieved in "+time+" seconds.");
-		//		dumpChainList(chains);
+		dumpChainList(chains);
 	}
 	
 	private void dumpChainList(List chains) {
@@ -186,6 +186,7 @@ public class ChainRetrievalTest {
 		}
 		Experimenter exp = chain.getOwner();
 		System.err.println("owner: "+exp.getFirstName()+" "+exp.getLastName());
+		System.err.println("description : "+chain.getDescription());
 		
    	        Iterator iter;
 		List links = chain.getLinks();
