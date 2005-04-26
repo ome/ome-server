@@ -257,9 +257,10 @@ public abstract class MappedDTO
         if (!MappedDTO.class.isAssignableFrom(dtoClazz))
             throw new DataException("Specified class is not a MappedDTO subclass");
 
-        // If the desired element doesn't exist, return silently.
+        // If the desired element doesn't exist, complain
         if (!elements.containsKey(element))
-            return null;
+            throw new DataException("The "+element+" field was not loaded");
+
 
         try
         {
@@ -309,9 +310,9 @@ public abstract class MappedDTO
         if (!MappedDTO.class.isAssignableFrom(dtoClazz))
             throw new DataException("Specified class is not a MappedDTO subclass");
 
-        // If the desired element doesn't exist, return silently.
+        // If the desired element doesn't exist, complain
         if (!elements.containsKey(element))
-            return null;
+            throw new DataException("The "+element+" field was not loaded");
 
         try
         {
@@ -320,6 +321,12 @@ public abstract class MappedDTO
         	   if (obj instanceof MappedDTOList) 
         	   		return (MappedDTOList) obj;
             
+        	   if (obj instanceof String) {
+        	   		String s = (String) obj;
+               	if  (s.compareTo(NULL_REFERENCE) ==0 || s.length() == 0)
+               		return null;
+            }
+        	  
         	   List list = (List) obj;
             MappedDTOList newList = new MappedDTOList();
             for (int i = 0; i < list.size(); i++)
@@ -357,7 +364,9 @@ public abstract class MappedDTO
 
     /**
      * Returns an <code>short</code> value from the backing map.  
-     * If the value in the backing map is an {@link Short},
+     * It is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is an {@link Short},
      * the <code>short</code> is returned directly.  If the value is a
      * {@link Long}, the <code>long</code> value is cast into an
      * <code>short</code> and returned.  If the value is a {@link
@@ -376,6 +385,9 @@ public abstract class MappedDTO
      */
     protected Short getShortElement(String key)
     {
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         Object o = elements.get(key);
 
         try
@@ -387,8 +399,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns an <code>int</code> value from the backing map.  
-     * If the value in the backing map is an {@link Integer}, the
+     * Returns an <code>int</code> value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is an {@link Integer}, the
      * <code>int</code> is returned directly.  If the value is a
      * {@link Long}, the <code>long</code> value is cast into an
      * <code>int</code> and returned.  If the value is a {@link Float}
@@ -407,6 +421,10 @@ public abstract class MappedDTO
      */
     protected Integer getIntegerElement(String key)
     {
+    	
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         Object o = elements.get(key);
 
         try
@@ -436,6 +454,9 @@ public abstract class MappedDTO
      */
     protected Long getLongElement(String key)
     {
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         Object o = elements.get(key);
 
         try
@@ -447,8 +468,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a <code>float</code> value from the backing map.  
-     * If the value in the backing map is an {@link Integer}, {@link
+     * Returns a <code>float</code> value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is an {@link Integer}, {@link
      * Long}, {@link Float}, or {@link Double} the value is returned
      * directly, with an appropriate case as necessary.  If the value
      * is a {@link String} which can be parsed into a
@@ -464,6 +487,9 @@ public abstract class MappedDTO
      */
     protected Float getFloatElement(String key)
     {
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         Object o = elements.get(key);
 
         try
@@ -475,8 +501,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a <code>double</code> value from the backing map. 
-     * If the value in the backing map is an {@link Integer}, {@link
+     * Returns a <code>double</code> value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is an {@link Integer}, {@link
      * Long}, {@link Float}, or {@link Double} the value is returned
      * directly, with an appropriate case as necessary.  If the value
      * is a {@link String} which can be parsed into a
@@ -492,6 +520,10 @@ public abstract class MappedDTO
      */
     protected Double getDoubleElement(String key)
     {
+    	
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         Object o = elements.get(key);
 
         try
@@ -503,8 +535,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a <code>boolean</code> value from the backing map.  
-     * If the value in the backing map is a {@link Boolean},
+     * Returns a <code>boolean</code> value from the backing map. 
+     * It is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is a {@link Boolean},
      * the <code>boolean</code> value is returned directly.  If it is
      * an {@link Integer} or {@link Long}, then a <code>false</code>
      * value is returned if the element's value is 0; otherwise
@@ -525,6 +559,9 @@ public abstract class MappedDTO
      */
     protected Boolean getBooleanElement(String key)
     {
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         Object o = elements.get(key);
 
         try
@@ -536,8 +573,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a {@link String} value from the backing map. 
-     * If the object in the backing map for this key is not a {@link
+     * Returns a {@link String} value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the object in the backing map for this key is not a {@link
      * String}, it is transformed into one via the {@link
      * Object#toString} method.
      *
@@ -549,24 +588,29 @@ public abstract class MappedDTO
      */
     protected String getStringElement(String key)
     {
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         Object o = elements.get(key);
         if (o == null)
         		return null;
         String s = o.toString();
         
-        if (s.compareTo(NULL_REFERENCE) == 0) { 
-        		elements.remove(key);
-        		return null;
+        if (s.compareTo(NULL_REFERENCE) == 0 ||
+	    s.length() == 0) { 
+      		return null;
         }
         return s;
         //return o == null ? null : o.toString();
     }
 
     /**
-     * Returns the value for the specified key.  No type-checking or
-     * type-casting is performed; whatever was returned by the XML-RPC
-     * layer is returned from this method.  The only error condition
-     * is if the key does not exist in the backing map.
+     * Returns the value for the specified key.  It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). No type-checking or type-casting is performed; whatever 
+     * was returned by the XML-RPC layer is returned from this method.  
+     * The only error condition is if the key does not exist in the backing map.
      *
      * @param key the element of the backing map to retrieve
      * @return the specified element in the backing map
@@ -575,6 +619,9 @@ public abstract class MappedDTO
      */
     protected Object getObjectElement(String key)
     {
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
         return elements.get(key);
     }
 
