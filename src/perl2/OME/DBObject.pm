@@ -1116,22 +1116,6 @@ sub manyToMany {
             my $self = shift;
             my %params = @_;
             my $factory = $self->getFactory();
-            # Allow search parameters to be passed through and return
-            # the expected result. ex. The parameters in 
-            # $dataset->images( name => [ 'like', 'foo%' ] ) would become
-            # $dataset->images( 'image.name' => [ 'like', 'foo%' ] ) so
-            # the search parameters won't be misinterpreted as intended
-            # for the mapping table.
-            foreach my $key ( keys %params ) {
-            	next if $key eq '__offset' or $key eq '__limit';
-            	if( $key eq '__order' ) {
-	            	$params{ __order } =~ s/^(\!)?($map_linker_alias\.)?(\w+)$/$1$map_linker_alias\.$3/;
-	            } else {
-	            	(my $normalized_key = $key) =~ s/^($map_linker_alias\.)?(\w+)$/$map_linker_alias\.$2/;
-					$params{ $normalized_key } = $params{ $key };
-					delete $params{ $key };
-	            }
-			}
 
             if (wantarray) {
 				my $has_manys = $m_to_m_type->__hasManys();
@@ -1146,7 +1130,7 @@ sub manyToMany {
 
 				my $m_to_m_criteria = $m_to_m_accessor . "." . $m_to_m_id_column;
 
-				return $factory->findObjects($m_to_m_type, { $m_to_m_criteria => $self->{__id} });	
+				return $factory->findObjects($m_to_m_type, { $m_to_m_criteria => $self->{__id}, %params });	
             } else {
                 my $links = $factory->
                   findObjects($map_class,
@@ -1165,7 +1149,7 @@ sub manyToMany {
             my %params = @_;
             # Fix up search parameters. See above note in the accessor method
             foreach my $key ( keys %params ) {
-            	next if $key eq '__offset' or $key eq '__limit';
+            	next if $key eq '__offset' ||  $key eq '__limit';
             	if( $key eq '__order' ) {
 	            	$params{ __order } =~ s/^(\!)?($map_linker_alias\.)?(\w+)$/$1$map_linker_alias\.$3/;
 	            } else {
