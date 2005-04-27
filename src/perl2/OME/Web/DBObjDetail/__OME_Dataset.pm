@@ -175,7 +175,7 @@ sub getPageBody {
 				push( @{ $tmpl_data{ _CategoryList } }, {
 					CategoryRef => $self->Renderer()->render( $category, 'ref' ),
 					images      => $self->Renderer()->renderArray( 
-						\@sorted_images, 'bare_ref_mass_no_map', { type => 'OME::Image' } 
+						\@sorted_images, 'bare_ref_mass', { type => 'OME::Image' } 
 					),
 				} );
 			}
@@ -185,7 +185,7 @@ sub getPageBody {
 			);
 			unshift( @{ $tmpl_data{ _CategoryList } }, {
 				CategoryRef => 'Unclassified',
-				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass_no_map', { type => 'OME::Image' } ),
+				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
 			} );
 		}
 	}
