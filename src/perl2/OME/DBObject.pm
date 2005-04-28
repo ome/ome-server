@@ -1147,13 +1147,19 @@ sub manyToMany {
         my $counter = sub {
             my $self = shift;
             my %params = @_;
-            # Fix up search parameters. See above note in the accessor method
+            # Allow search parameters to be passed through and return   	 
+			# the expected result. ex. The parameters in 	 
+			# $dataset->images( name => [ 'like', 'foo%' ] ) would become 	 
+			# $dataset->images( 'image.name' => [ 'like', 'foo%' ] ) so 	 
+			# the search parameters won't be misinterpreted as intended 	 
+			# for the mapping table.
             foreach my $key ( keys %params ) {
-            	next if $key eq '__offset' ||  $key eq '__limit';
+            	next if $key eq '__offset' ||  $key eq '__limit' || $key eq '__distinct';
             	if( $key eq '__order' ) {
 	            	$params{ __order } =~ s/^(\!)?($map_linker_alias\.)?(\w+)$/$1$map_linker_alias\.$3/;
 	            } else {
 	            	(my $normalized_key = $key) =~ s/^($map_linker_alias\.)?(\w+)$/$map_linker_alias\.$2/;
+					next if ( $normalized_key eq $key );
 					$params{ $normalized_key } = $params{ $key };
 					delete $params{ $key };
 	            }
