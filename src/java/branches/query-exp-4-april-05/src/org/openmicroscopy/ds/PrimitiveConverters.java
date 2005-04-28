@@ -47,8 +47,13 @@ public class PrimitiveConverters
             return (Short) o;
         else if (o instanceof Number)
             return new Short(((Number) o).shortValue());
-        else if (o instanceof String)
-            return Short.valueOf((String) o);
+        else if (o instanceof String) {
+        		String s = (String) o;
+        		if (s.length() == 0)
+        			return null;
+        		else return Short.valueOf(s);
+        }
+         
         else
             throw new NumberFormatException("Expected an int, got a "+
                                             o.getClass());
@@ -86,8 +91,13 @@ public class PrimitiveConverters
             return (Long) o;
         else if (o instanceof Number)
             return new Long(((Number) o).longValue());
-        else if (o instanceof String)
-            return Long.valueOf((String) o);
+        else if (o instanceof String) {
+        		String s = (String) o;
+        		if (s.length() == 0)
+        			return null;
+        		else
+        			return Long.valueOf(s);
+        }
         else
             throw new NumberFormatException("Expected a long, got a "+
                                             o.getClass());
@@ -103,8 +113,14 @@ public class PrimitiveConverters
             return (Float) o;
         else if (o instanceof Number)
             return new Float(((Number) o).floatValue());
-        else if (o instanceof String)
-            return Float.valueOf((String) o);
+        else if (o instanceof String) {
+        		String s = (String) o;
+        		if (s.length() == 0)
+        			return null;
+        		else 
+        			return Float.valueOf(s);
+        }
+            
         else
             throw new NumberFormatException("Expected a float, got a "+
                                             o.getClass());
@@ -120,8 +136,14 @@ public class PrimitiveConverters
             return (Double) o;
         else if (o instanceof Number)
             return new Double(((Number) o).doubleValue());
-        else if (o instanceof String)
-            return Double.valueOf((String) o);
+        else if (o instanceof String) {
+        		String s = (String) o;
+        		if (s.length() == 0)
+        			return null;
+        		else
+        			return Double.valueOf(s);
+        }
+            
         else
             throw new NumberFormatException("Expected a double, got a "+
                                             o.getClass());
