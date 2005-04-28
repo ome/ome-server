@@ -178,9 +178,12 @@ function openExistingProject (group_id) {
 
 // openInfoDataset()
 
-function openInfoDataset (dataset_id) {
-	window.open(DatasetInfoPage + '&ID=' + dataset_id,
-		'_blank',
+function openInfoDataset (dataset_id, url_parameter) {
+	var url = DatasetInfoPage + '&ID=' + dataset_id;
+	if( url_parameter ) {
+		url += '&'+url_parameter;
+	}
+	window.open(url, '_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
