@@ -76,45 +76,36 @@ sub getPageBody {
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data = $self->Renderer()->_populate_object_in_template( $dataset, $tmpl );
 	
-	my @hidden_fields;
 	my %cgi_params = $q->Vars();
 	
-	my %unique_cg_hash;
-	if (exists $cgi_params{cg_list}) {
-		my @cg_ids = $q->param( 'cg_list' );
-		my @cgs = $factory->findObjects ('@CategoryGroup', id => ['in',\@cg_ids]);
-		%unique_cg_hash = map
-			{ $_->id() => $_ }
-			@cgs;
-	} else {
-		my @cgs = $factory->findObjects ('@CategoryGroup');
-		%unique_cg_hash = map
-			{ $_->id => $_ }
-			@cgs;
-	}
+	# Find category groups used in this dataset. They will be used for the
+	# dropdown list that allows clustering thumbnails by categories.
+	my @cg_list = $factory->findObjects ('@CategoryGroup', {
+		'CategoryList.ClassificationList.image.dataset_links.dataset' => $dataset->id(),
+		__distinct => 'id'
+	});
+	@cg_list = sort{ $a->Name cmp $b->Name } @cg_list;
 
-	push (@hidden_fields,$q->hidden ({
-		-name => 'cg_list',
-	# Making -default an empty list causes the parameter to be not set!
-		-default => keys %unique_cg_hash ? [keys %unique_cg_hash] : [0]
-		}));
-
-
-	# If the user selected another CG with the Search or Create link,
-	# then include that in the drop down list of CGs
-	my $cg_id = $q->param( 'selected_cg' );
-	if( ( defined $cg_id ) && 
-	    ( $cg_id ne '' ) &&
-		( not exists $unique_cg_hash{ $cg_id } ) ) {
-		my $cg = $factory->loadObject( '@CategoryGroup', $cg_id )
+	# load the selected category group. 
+	# 	selected_cg        comes from the search popup (or create popup)
+	# 	group_images_by_cg comes from the dropdown list
+	my $cg_id = $q->param( 'selected_cg' ) || $q->param( 'group_images_by_cg' );
+	my $cg;
+	if( ( defined $cg_id ) &&  ( $cg_id ne '' ) ) {
+		$cg = $factory->loadObject( '@CategoryGroup', $cg_id )
 			or die "Couldn't load CategoryGroup id='$cg_id'";
-		$unique_cg_hash{ $cg_id } = $cg if $cg;
+		# If this category group has no classifications in this dataset, 
+		# then it isn't in the list of CGs and should be added.
+		# Doing this ensures it will be in the drop down list of CGs
+		if( not $factory->findObject( '@Classification', {
+				'image.dataset_links.dataset' => $dataset->id,
+				'Category.CategoryGroup'      => $cg
+			} ) ) {
+			unshift( @cg_list, $cg );
+		}
 	}
-	$cg_id = $q->param( 'group_images_by_cg' )
-		unless $cg_id;
 
-	# actually make the popup list
-	my @cg_list = sort{ $a->Name cmp $b->Name } values %unique_cg_hash ;
+	# actually make the dropdown list
 	$tmpl_data{ categories_used } = (
 		@cg_list ?
 		$q->popup_menu(
@@ -127,12 +118,12 @@ sub getPageBody {
 				( map { $_->id => $_->Name } @cg_list )
 			},
 			-onChange => "javascript: document.forms[0].submit();"
-		) : '(No CategoryGroups are used by this Dataset)'
+		) : 
+		'(No CategoryGroups are used by this Dataset)'
 	);
 
 	# Use selected CategoryGroup (if there is one) to group images.
-	if( $cg_id and exists $unique_cg_hash{$cg_id}) {
-		my $cg = $unique_cg_hash{$cg_id};
+	if( $cg ) {
 		my %image_classifications;
 		my $image_iter = $dataset->images();
 		my $image;
@@ -197,7 +188,6 @@ sub getPageBody {
 	         $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	         $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	         $q->hidden({-name => 'action', -default => ''}).
-	         join (' ',@hidden_fields).
 	         $tmpl->output().
 	         $q->endform();
 
