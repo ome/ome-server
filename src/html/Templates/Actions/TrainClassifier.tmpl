@@ -1,0 +1,42 @@
+<!--
+We highly advise you read this <a href="">tutorial</a> if this is your
+first time to use OME's automated classification.
+-->
+<h2>Train a classifier</h2>
+Ingredients:
+<ol>
+<!--
+<li><b>Trainer chain:</b> specifies which signatures to use.<br>
+<TMPL_VAR NAME=trainer_chains>
+</li>
+-->
+
+<li><b>Training Dataset:</b> a set of representive images used to train the classifier.<br>
+Using <TMPL_VAR NAME="training_dataset">. (<a href="javascript:selectOne('OME::Dataset', 'training_dataset_id');" class="ome_widget">change selection</a>)
+<input type="hidden" id="training_dataset_id" name="training_dataset_id" value="<TMPL_VAR NAME=training_dataset_id>">
+</li>
+
+<li><TMPL_UNLESS NAME=category_group><font class="ome_blocking_step"></TMPL_UNLESS><b>Category Group:</b><TMPL_UNLESS NAME=category_group></font></TMPL_UNLESS>
+	a collection of Categories that divides this training set into distinct groups.<br>
+Select a CategoryGroup from this list: <TMPL_VAR NAME=category_group_select>, <a href="javascript: selectOne( '\@CategoryGroup', 'category_group_id' );">Search</a>, or <a href="javascript: creationPopup( '\@CategoryGroup', 'category_group_id' );">Create</a>.
+</li>
+
+<TMPL_IF NAME=category_group>
+
+<li><TMPL_IF NAME=num_images_unclassified><font class="ome_blocking_step"></TMPL_IF><b>Manual classification:</b><TMPL_IF NAME=num_images_unclassified></font></TMPL_IF>
+	Supervised learning requires manual classification of the training set.<br>
+	<TMPL_IF NAME=num_images_unclassified>
+		<TMPL_VAR NAME=num_images_unclassified> images in this dataset still need to be classified. <a href="javascript:openInfoDataset(<TMPL_VAR NAME=training_dataset_id>, 'selected_cg=<TMPL_VAR NAME=category_group_id>');">Classify them</a>
+	<TMPL_ELSE>
+		All images in this dataset have been classified with <TMPL_VAR NAME=category_group>
+	</TMPL_IF>
+</li>
+
+</ol>
+<hr>
+
+<TMPL_UNLESS NAME=num_images_unclassified>
+You are ready to <a href="" class="ome_punchline">Train the Classifier</a>
+</TMPL_UNLESS>
+
+</TMPL_IF>
