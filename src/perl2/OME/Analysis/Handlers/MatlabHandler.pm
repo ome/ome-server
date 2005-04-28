@@ -258,18 +258,24 @@ sub __execute {
 	}
 	my $command = "${output_cmd}${location}${input_cmd};";
 	logdbg "debug", "***** Command to Matlab: $command\n";
-	my $outBuffer  = " " x 2048;
+	my $outBuffer  = " " x 4096;
 	$self->{__engine}->setOutputBuffer($outBuffer, length($outBuffer));	
 	
 	my $start_time = [gettimeofday()];
 	$self->{__engine}->eval($command);
+#	$self->{__engine}->eval( "save ome_ml_dump" );
 	$mex->total_time(tv_interval($start_time));
 	$outBuffer =~ s/(\0.*)$//;
-	if ($outBuffer =~ m/^\s*$/) {
-		logdbg "debug", "***** Output from Matlab:\n";
-	} else {
-		$mex->error_message("$outBuffer");
-		logdbg "debug", "***** Output from Matlab:\n $outBuffer\n";		
+	$outBuffer =~ s/[^[:print:][:space:]]//g;
+	if ($outBuffer =~ m/\S/) {
+# We really should die when we first see errors. I just spent 2 hours tracking 
+# an error from _getScalarFromMatlab() back to this point. I realize that 
+# passing messages from matlab functions to ome land is extremely useful for
+# debugging, so I'm leaving the next two lines in, so developers can easily
+# turn them on as needed.
+#		$mex->error_message("Error executing matlab command\n\t$command\nError message is:\n".$outBuffer);
+#		logdbg "debug", "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
+		die "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
 	}
 }
 
@@ -776,9 +782,8 @@ sub MatlabVector_to_Attrs {
 		my $index = $element->getAttribute( 'Index' )
 			or die "Index attribute not specified in ".$element->toString();
 			
-		$self->{__engine}->eval("$matlab_var_name"."_index_val_$index = $matlab_var_name($index)");
-
-
+		$self->{__engine}->eval( "$matlab_var_name"."_index_val_$index = $matlab_var_name($index)" );
+		
 		# Convert array datatype if requested
 		my $class;
 		if( my $convertToDatatype = $element->getAttribute( 'ConvertToDatatype' ) ) {
