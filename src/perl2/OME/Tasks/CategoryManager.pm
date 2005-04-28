@@ -67,15 +67,37 @@ Finds all images in the given category
 
 sub getImagesInCategory {
 	my ($proto, $category) = @_;
-	my @classifications = $category->ClassificationList( );
-# for some unknown reason, using 
-#	Valid    => [ "is not", 0 ]
-# as a filtering parameter consistently fails with the message
-# "DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 1069."
-# so i'll just filter the list with grep
-	@classifications = grep( ( ( not defined $_->Valid ) || $_->Valid eq 1 ), @classifications );
-	my @images = sort( { $a->name cmp $b->name } map( $_->image, @classifications ) );
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+	my @images = $factory->findObjects( 'OME::Image', 
+		'ClassificationList.Valid'    => 't', 
+		'ClassificationList.Category' => $category,
+		__distinct => 'id',
+#		__order    => 'name',
+# I can't use that order in the factory call cuz DBObject blows up with:
+# SELECT DISTINCT ON expressions must match initial ORDER BY expressions
+# It works if I have __order => ['id', 'name'], but that's not what I want.
+	);
+	@images = sort( { $a->name cmp $b->name } @images );
 	return @images;
+}
+
+=head2 countUnclassifiedImagesInDataset()
+
+	my $image_count = OME::Tasks::CategoryManager->
+		countUnclassifiedImagesInDataset($categoryGroup, $dataset);
+
+Returns number of images in $dataset that are not classified by $categoryGroup.
+
+=cut
+
+sub countUnclassifiedImagesInDataset {
+	my ($proto, $categoryGroup, $dataset) = @_;
+	my $num_images_unclassified = $dataset->count_images() - $dataset->count_images( 
+		'image.ClassificationList.Valid' => 't', 
+		'image.ClassificationList.Category.CategoryGroup' => $categoryGroup->id, 
+		__distinct => 'image_id' );
+	return $num_images_unclassified;
 }
 
 =head2 classifyImage()
