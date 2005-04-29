@@ -273,9 +273,12 @@ sub __execute {
 # passing messages from matlab functions to ome land is extremely useful for
 # debugging, so I'm leaving the next two lines in, so developers can easily
 # turn them on as needed.
-#		$mex->error_message("Error executing matlab command\n\t$command\nError message is:\n".$outBuffer);
-#		logdbg "debug", "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
-		die "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
+# Postnote: Sadly, I must leave these lines in for now b/c FeatureStatistics
+# produces warnings as outputs. I wish there was a robust way to distinguish
+# warnings from errors.
+		$mex->error_message("Error executing matlab command\n\t$command\nError message is:\n".$outBuffer);
+		logdbg "debug", "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
+#		die "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
 	}
 }
 
