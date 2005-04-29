@@ -106,9 +106,9 @@ my $fi_id = $classificationInput->id;
 my $mex_id_list = join( ',', map( $_->id, @$classification_mexes ) );
 return( 'HTML', <<END_INSTRS );
 <p>Due to technical difficulties involveing apache and matlab, you will
-have to execute this on the command line. Make sure you've followed the
-setup instructions in here: OME/src/xml/README.Classifier then type this
-at the command line:<br>
+have to execute this on the command line. Make sure you've followed
+these setup instructions <a href="http://cvs.openmicroscopy.org.uk/horde/chora/browse.php?f=OME%2Fsrc%2Fxml%2FREADME.Classifier">OME/src/xml/README.Classifier</a> then
+type this at the command line:<br>
 <pre>
 	ome execute -c -a $chain_id -d $dataset_id --inputs $fi_id:$mex_id_list
 </pre></p><p>
