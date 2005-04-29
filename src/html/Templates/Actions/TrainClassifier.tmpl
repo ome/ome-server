@@ -36,7 +36,7 @@ Select a CategoryGroup from this list: <TMPL_VAR NAME=category_group_select>, <a
 <hr>
 
 <TMPL_UNLESS NAME=num_images_unclassified>
-You are ready to <a href="" class="ome_punchline">Train the Classifier</a>
+You are ready to <a href="javascript: document.forms[0].elements['action'].value = 'trainClassifier'; document.forms[0].submit();" class="ome_punchline">Train the Classifier</a>
 </TMPL_UNLESS>
 
 </TMPL_IF>
