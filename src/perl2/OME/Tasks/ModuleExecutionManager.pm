@@ -263,11 +263,14 @@ sub coalateInputs {
 	my $mex_list_is_ok = 1;
 	foreach my $ST_id( keys %attributes_by_ST ) {
 		my $ST = $factory->loadObject( "OME::SemanticType", $ST_id );
-		my @loaded_attributes = $self->getAttributesForMEX( 
-			\@source_mexes, $ST );
-		# check for the same number of loaded attributes and verify that they all match
-		if( (scalar( @loaded_attributes ) eq scalar( keys %{ $attributes_by_ST{ $ST_id } } ) ) and
-			( not grep( (not exists $attributes_by_ST{ $ST_id }{ $_ } ), @loaded_attributes ) ) ) {
+		my $loaded_attributes = $self->getAttributesForMEX( \@source_mexes, $ST );
+		# see if the list of attributes produced by those mexes is identical to
+		# the list that was passed in.
+		if( (scalar( @$loaded_attributes ) ne scalar( keys %{ $attributes_by_ST{ $ST_id } } ) ) or
+			# this grep will yield the number of attributes produced
+			# by the source mexes that are not in the input list of attributes
+			# (for a given ST)
+			( grep( (not exists $attributes_by_ST{ $ST_id }{ $_->id } ), @$loaded_attributes ) ) ) {
 			$mex_list_is_ok = 0;
 			last;
 		}
@@ -307,7 +310,7 @@ sub createVirtualMEX {
         if ($dependence ne 'G') {
             my $mex_target =
               ($dependence eq 'D')? $mex->dataset(): $mex->image();
-            die "Cannot create a virtual MEX -- target mismatch"
+            confess "Cannot create a virtual MEX -- target mismatch"
               if (defined $target) && (defined $mex_target)
                 && ($target->id() != $mex_target->id());
             $target = $mex_target;
