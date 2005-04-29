@@ -98,17 +98,33 @@ sub getPageBody {
 		my $user_inputs = {
 			$classificationInput->id => $classification_mexes
 		};
+		$session->commitTransaction();
 
-
-my $task = OME::Tasks::NotificationManager->
-  new('Executing '.$trainer_chain->name, 1);
-$task->setPID($$);
-OME::Fork->doLater( sub {
-	OME::Analysis::Engine->
-		executeChain( $trainer_chain, $dataset, $user_inputs, $task );
-});
-return( 'REDIRECT', 'serve.pl?Page=OME::Web::TaskProgress');
-
+my $chain_id = $trainer_chain->id;
+my $dataset_id = $dataset->id;
+my $fi_id = $classificationInput->id;
+my $mex_id_list = join( ',', map( $_->id, @$classification_mexes ) );
+return( 'HTML', <<END_INSTRS );
+<p>Due to technical difficulties involveing apache and matlab, you will
+have to execute this on the command line. Make sure you've followed the
+setup instructions in here: OME/src/xml/README.Classifier then type this
+at the command line:<br>
+<pre>
+	ome execute -c -a $chain_id -d $dataset_id --inputs $fi_id:$mex_id_list
+</pre></p><p>
+END_INSTRS
+		
+		# This is not possible until apache is set up to run matlab
+		# It starts the chain going, but doesn't redirect the page until the
+		# chain is finished.
+		# my $task = OME::Tasks::NotificationManager->
+		#   new('Executing '.$trainer_chain->name, 1);
+		# $task->setPID($$);
+		# OME::Fork->doLater( sub {
+		# 	OME::Analysis::Engine->
+		# 		executeChain( $trainer_chain, $dataset, $user_inputs, $task );
+		# });
+		# return( 'REDIRECT', 'serve.pl?Page=OME::Web::TaskProgress');
 	}
 
 	# Count the unclassified images.
