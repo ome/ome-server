@@ -93,11 +93,12 @@ in order for the chain to be written to the DB.
 sub getClassifierChain {
 	my ($proto, $classifierOrMEX ) = @_;
 	
+# I haven't tested this yet
 	# Search for an existing one
-	my $chain = $proto->findClassifierChain( $classifierOrMEX );
-	return $chain if $chain;
+#	my $chain = $proto->findClassifierChain( $classifierOrMEX );
+#	return $chain if $chain;
 	# Can't find one? Make a new one
-	$chain = $proto->makeClassifierChain( $classifierOrMEX );
+my	$chain = $proto->makeClassifierChain( $classifierOrMEX );
 	return $chain;
 }
 
@@ -121,8 +122,48 @@ sub findClassifierChain {
 	my ( $classifier, $trainerMEX ) = $proto->
 		__parseClassiferOrMEXInput( $classifierOrMEX );
 
-	# Step 1: construct search parameters for retrieving existing chain
+	# Step 1: identify signatures to be saved
+	my $trainerChain = $factory->findObject( 'OME::AnalysisChain',
+		'executions.node_executions.module_execution' => $trainerMEX,
+		'name'       => ['like', 'Train a Classifier%' ],
+		'__distinct' => 'id'
+	) or die "Couldn't find a chain used to produce the trainer MEX ".$trainerMEX->id;
+	my $sigStitcherNode = $factory->findObject( 'OME::AnalysisChain::Node',
+		'analysis_chain' => $trainerChain,
+		'module.name'  => ['like', 'Signature Stitcher%' ]
+	) or die "Couldn't find a Chain node to match chain ".$trainerChain->id.", module.name like 'Signature Stitcher%'";
+	my $sigsNeededList = OME::Tasks::ModuleExecutionManager->
+		getAttributesForMEX( $trainerMEX, 'SignatureScores' )
+		or die "Couldn't retrieve SignatureScores output from MEX ".$trainerMEX->id;
+	my %sigsNeededLookup;
+	foreach my $sigNeeded ( @$sigsNeededList ) {
+		my $fi = $factory->findObject( 'OME::Module::FormalInput', 
+			name   => $_->Legend->FormalInput,
+			module => $sigStitcherNode->module
+		);
+		$sigsNeededLookup{ $fi->id } = undef;
+	}
+
 	# Step 2: search and return if found
+	my @classifierChainCandidatesByStitcherNode = $factory->findObjects( 'OME::AnalysisChain::Node', {
+		'chain.nodes.module.name' => 'BayesNet Classifier',
+		'module'                  => $sigStitcherNode->module,
+		'__distinct'              => 'id'
+	} );
+	foreach my $stitcherNodeCandidate ( @classifierChainCandidatesByStitcherNode ) {
+		# if there is the same number of links into the stitcher node as links we need
+		# and if there are no links into the stitcher node that are not in our list
+		# then we have a winner
+		return $stitcherNodeCandidate->chain if( 
+			( scalar( keys %sigsNeededLookup ) eq $stitcherNodeCandidate->count_input_links ) &&
+			( not grep( 
+				(not exists $sigsNeededLookup{ $_->to_input->id }), 
+				$stitcherNodeCandidate->input_links
+			) ) 
+		);
+	}
+	
+	# If we made it this far, we didn't find anything.
 	return undef;
 }
 
