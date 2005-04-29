@@ -105,7 +105,7 @@ sub getPageBody {
 		}
 	}
 
-	# actually make the dropdown list
+	# make the CategoryGroup dropdown list
 	$tmpl_data{ categories_used } = (
 		@cg_list ?
 		$q->popup_menu(
@@ -122,63 +122,45 @@ sub getPageBody {
 		'(No CategoryGroups are used by this Dataset)'
 	);
 
-	# Use selected CategoryGroup (if there is one) to group images.
+	# Use selected CategoryGroup to group images.
 	if( $cg ) {
-		my %image_classifications;
-		my $image_iter = $dataset->images();
-		my $image;
-		while ($image = $image_iter->next()) {
-			my $classification = OME::Tasks::CategoryManager->
-				getImageClassification( $image, $cg );
-			# Watch out for multiple classifications
-			if( ref( $classification ) eq 'ARRAY' ) {
-				$html .= "<font color='red'>Image ".$self->Renderer()->render( $image, 'ref' ).
-					" has more than one classification under CategoryGroup ".
-					$self->Renderer()->render( $cg, 'ref' ).
-					". This display can only handle one classification per image.</font>";
-				# Flag for "can't display classification"
-				%image_classifications = ();
-				last;
-			# This image hasn't been classified
-			} elsif( not defined $classification ) {
-				push( @{ $image_classifications{0} }, $image );
-			} else {
-				push( @{ $image_classifications{ $classification->Category->id } }, $image );
-			}
-		}
-		# %image_classifications works as a "can't display classification" flag.
-		# If 'selected_category_group' isn't set, the template will
-		# revert to a big list of images. So only set it if we can
-		# handle this category group.
-		if( %image_classifications ) {
-			$tmpl_data{ selected_category_group_ref } = $self->Renderer()->render( $cg, 'ref' );
-			my @category_list = sort( { $a->Name cmp $b->Name } $cg->CategoryList() );
-			$tmpl_data{ available_categories } = $q->popup_menu(
-				-name     => 'category_to_classify_with',
-				'-values' => [ map( $_->id, @category_list) ],
-				-labels   => { map { $_->id => $_->Name } @category_list }
-			) if @category_list;
-			foreach my $category ( @category_list ) {
-				my @sorted_images = sort( 
-					{ $a->name cmp $b->name }
-					@{ $image_classifications{ $category->id } || [] }
-				);
-				push( @{ $tmpl_data{ _CategoryList } }, {
-					CategoryRef => $self->Renderer()->render( $category, 'ref' ),
-					images      => $self->Renderer()->renderArray( 
-						\@sorted_images, 'bare_ref_mass', { type => 'OME::Image' } 
-					),
-				} );
-			}
-			my @unclassified_images = sort( 
-				{ $a->name cmp $b->name }
-				@{ $image_classifications{ 0 } || [] }
-			);
-			unshift( @{ $tmpl_data{ _CategoryList } }, {
-				CategoryRef => 'Unclassified',
-				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
+		my @category_list = $cg->CategoryList( __order => 'Name' );
+		# Entries will be removed from this hash as images are found to belong
+		# to this cg. What's left will be the list of unclassified images.
+		my %images_lacking_classifications = map(
+			{ $_->id => $_ } 
+			$dataset->images()
+		);
+		# The dropdown list of categories to go with 'Classify Image As ...'
+		$tmpl_data{ available_categories }        = $q->popup_menu(
+			-name     => 'category_to_classify_with',
+			'-values' => [ map( $_->id, @category_list) ],
+			-labels   => { map { $_->id => $_->Name } @category_list }
+		) if @category_list;
+		$tmpl_data{ selected_category_group_ref } = $self->Renderer()->render( $cg, 'ref' );
+		# The images sorted by Category
+		foreach my $category ( @category_list ) {
+			my @classifications = OME::Tasks::CategoryManager->
+				getClassificationsInDataset( $category, $dataset );
+			my @images = map( $_->image, @classifications );
+			delete $images_lacking_classifications{ $_->id }
+				foreach @images;
+			push( @{ $tmpl_data{ _CategoryList } }, {
+				CategoryRef => $self->Renderer()->render( $category, 'ref' ),
+				images      => $self->Renderer()->renderArray( 
+					\@images, 'bare_ref_mass', { type => 'OME::Image' } 
+				),
 			} );
 		}
+		# The unclassified images
+		my @unclassified_images = sort( 
+			{ $a->name cmp $b->name }
+			values %images_lacking_classifications
+		);
+		unshift( @{ $tmpl_data{ _CategoryList } }, {
+			CategoryRef => 'Unclassified',
+			images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
+		} );
 	}
 	
 	
