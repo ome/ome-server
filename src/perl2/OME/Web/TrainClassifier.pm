@@ -44,9 +44,10 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Analysis::Engine;
-use OME::Tasks::AnnotationManager;
-use OME::Tasks::ChainManager;
+use OME::Tasks::ModuleExecutionManager;
 use OME::Tasks::CategoryManager;
+use OME::Fork;
+use OME::Tasks::NotificationManager;
 
 use base qw(OME::Web);
 
@@ -84,6 +85,38 @@ sub getPageBody {
 			or die "Couldn't load CategoryGroup id='".$q->param( 'category_group_id' )."'";
 	}
 
+	# Run the trainer!
+	if( $q->param( 'action' ) eq 'trainClassifier' ) {
+		my @classifications = OME::Tasks::CategoryManager->
+			getClassificationsInDataset( $cg, $dataset );
+		my $classification_mexes = OME::Tasks::ModuleExecutionManager->
+			coalateInputs( \@classifications );
+		my $classificationInput = $factory->findObject( 'OME::Module::FormalInput',
+			'module.name' => "BayesNet Trainer",
+			'name'        => 'Classifications'
+		) or die "Couldn't find 'Classifications' formal input to module 'BayesNet Trainer'";
+		my $user_inputs = {
+			$classificationInput->id => $classification_mexes
+		};
+
+
+my $task = OME::Tasks::NotificationManager->
+  new('Executing '.$trainer_chain->name, 1);
+$task->setPID($$);
+OME::Fork->doLater( sub {
+	OME::Analysis::Engine->
+		executeChain( $trainer_chain, $dataset, $user_inputs, $task );
+});
+return( 'REDIRECT', 'serve.pl?Page=OME::Web::TaskProgress');
+
+	}
+
+	# Count the unclassified images.
+	my $num_images_unclassified;
+	$num_images_unclassified = OME::Tasks::CategoryManager->
+		countUnclassifiedImagesInDataset( $cg, $dataset )
+		if( $dataset && $cg );
+
 	# actually make the dropdown list
 	my @cg_list = $factory->findObjects ('@CategoryGroup', { __order => 'Name' });
 	my $categoriesGroup_dropdown = (
@@ -102,12 +135,6 @@ sub getPageBody {
 		'(No CategoryGroups found)'
 	);
 	
-	# Count the unclassified images.
-	my $num_images_unclassified;
-	$num_images_unclassified = OME::Tasks::CategoryManager->
-		countUnclassifiedImagesInDataset( $cg, $dataset )
-		if( $dataset && $cg );
-
 	# Load & populate the template
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
 	my $tmpl_path = $tmpl_dir."/TrainClassifier.tmpl";
@@ -124,6 +151,7 @@ sub getPageBody {
 	);
 	my $html = 
 		$q->startform().
+		$q->hidden({-name => 'action'}).
 		$tmpl->output().
 		$q->endform();
 
