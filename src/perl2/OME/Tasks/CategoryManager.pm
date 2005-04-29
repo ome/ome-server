@@ -100,6 +100,52 @@ sub countUnclassifiedImagesInDataset {
 	return $num_images_unclassified;
 }
 
+=head2 getUnclassifiedImagesInDataset()
+
+UNIMPLEMENTED: I can't work out a query for this. :(
+
+	my @unclassifiedImages = OME::Tasks::CategoryManager->
+		getUnclassifiedImagesInDataset($categoryGroup, $dataset);
+
+Returns the images in $dataset that are not classified by $categoryGroup.
+
+
+=cut
+
+=head2 getClassificationsInDataset()
+
+	my @classificationsForCG = OME::Tasks::CategoryManager->
+		getClassificationsInDataset($categoryGroup, $dataset);
+	my @classificationsForCategory = OME::Tasks::CategoryManager->
+		getClassificationsInDataset($category, $dataset);
+
+Returns the classifications for images in $dataset that are belong to
+$categoryGroup or $category.
+
+=cut
+
+sub getClassificationsInDataset {
+	my ($proto, $cSomething, $dataset) = @_;
+	my $factory = OME::Session->instance()->Factory();
+	if( $cSomething->semantic_type->name eq 'CategoryGroup' ) {
+		return $factory->findObjects( '@Classification', {
+			'Valid'                          => 't',
+			'Category.CategoryGroup'         => $cSomething,
+			'image.dataset_links.dataset_id' => $dataset,
+			'__order'                        => 'image.name'
+		} );
+	} elsif( $cSomething->semantic_type->name eq 'Category' ) {
+		return $factory->findObjects( '@Classification', {
+			'Valid'                          => 't',
+			'Category'                       => $cSomething,
+			'image.dataset_links.dataset_id' => $dataset,
+			'__order'                        => 'image.name'
+		} );
+	} else {
+		die "parameter $cSomething not recognized";
+	}
+}
+
 =head2 classifyImage()
 
 	OME::Tasks::CategoryManager->classifyImage($image, $category);
