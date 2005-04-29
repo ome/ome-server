@@ -90,6 +90,12 @@ Options:
   
   -d  Dataset name or ID.
     
+  -i, --inputs
+    specify User inputs by id and source MEX(s)
+    ex. -i 551:17,21-552:114 
+    means supply formal input 551 with source MEXs 17 & 21
+          supply formal input 552 wiht source MEX 114
+  
   -f, --force
     Force re-execution of chain (i.e. do not reuse previous module execution 
     results).
@@ -110,12 +116,14 @@ sub execute {
 	$reuse = 0;
 	$caching = 0;
 	
+	my $inputs_string;
 	GetOptions ('a=s' => \$chainStr,
 				'd=s' => \$datasetStr,
 				'force|f!' => \$reuse,
 				'caching|c!' => \$caching,
-				'help|h' => \$help);
-    
+				'help|h' => \$help,
+				'inputs|i=s' => \$inputs_string);
+
     execute_help() if $help;
     OME::DBObject->Caching(1) if ($caching or $ENV{'OME_CACHE'});
 
@@ -159,14 +167,27 @@ sub execute {
 		die "Analysis Chain with name $chainStr doesn't exist!" unless $chain;
 	}
 	
-	
+	# User inputs were given as command line parameters
+	my %user_inputs;
+	my @input_chunks = split( m/-/, $inputs_string );
+	foreach my $chunk ( @input_chunks ) {
+		my ($fi_id, @mex_ids) = split( m/[:|,]/, $chunk );
+		my $fi = $factory->loadObject( 'OME::Module::FormalInput', $fi_id )
+			or die "Coulnd't load Formal Input (id=$fi_id)";
+		my @inputMEXs = map( 
+			( $factory->loadObject( 'OME::ModuleExecution', $_ )
+				or die "Couldn't load ModuleExecution (id=$_)" ),
+			@mex_ids
+		);
+		$user_inputs{ $fi_id } = \@inputMEXs;
+	}
+
+	unless( %user_inputs ) {
 	# Retrieve user inputs
 	my $cmanager = OME::Tasks::ChainManager->new($session);
 	my $user_input_list = $cmanager->getUserInputs($chain);
-	
 	print "User Inputs:\n" if (scalar @$user_input_list);
-	
-	my %user_inputs;
+
 	foreach my $user_input (@$user_input_list) {
 		my ($node,$module,$formal_input,$semantic_type) = @$user_input;
 		print "\n",$module->name(),".",$formal_input->name(),":\n";
@@ -255,6 +276,7 @@ sub execute {
 
 		# hash of mexes corresponding to formal inputid.	
 		$user_inputs{$formal_input->id()} = $mex;
+	}
 	}
 	
 	print "Executing Analysis Chain `".$chain->name()."`\n";
