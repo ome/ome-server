@@ -296,7 +296,7 @@ for u = 1:len % for each instance
 	
 	if (sum(marginal_probs) == 0)
 		absolutes(actual_class, class_number+1) =  ...,
-				absolutes(actual_class, class_number) + 1;
+				absolutes(actual_class, class_number+1) + 1;
 	else 
 		absolutes(actual_class, predicted_class) =  ...,
 				absolutes(actual_class, predicted_class) + 1;
