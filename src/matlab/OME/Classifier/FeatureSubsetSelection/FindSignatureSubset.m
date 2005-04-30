@@ -283,7 +283,7 @@ bnet = learn_params(bnet,double(discTrainData));
 % Testing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [hei len] = size(discTestData);
-absolutes   = zeros(class_number, class_number);
+absolutes   = zeros(class_number, class_number+1);
 percentages = zeros(class_number, class_number);
 for u = 1:len % for each instance
 	actual_class = discTestData(end,u);
@@ -295,9 +295,10 @@ for u = 1:len % for each instance
 	predicted_class = predicted_class(1);                % select the first class
 	
 	if (sum(marginal_probs) == 0)
-		fprintf (1, 'All O marginal_probs happened. SHIT\n');
+		absolutes(actual_class, class_number+1) =  ...,
+				absolutes(actual_class, class_number) + 1;
 	else 
-		absolutes(actual_class, predicted_class) =  ...
+		absolutes(actual_class, predicted_class) =  ...,
 				absolutes(actual_class, predicted_class) + 1;
 		percentages(actual_class,:) = ... 
 				percentages(actual_class,:) + marginal_probs;
