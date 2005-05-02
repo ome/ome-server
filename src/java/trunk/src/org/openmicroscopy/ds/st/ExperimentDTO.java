@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:22 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -55,7 +55,7 @@ public class ExperimentDTO
     public Class getDTOType() { return Experiment.class; }
 
     public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
+    { return (Experimenter) parseChildElement("Experimenter",ExperimenterDTO.class); }
     public void setExperimenter(Experimenter value)
     { setElement("Experimenter",value); }
 
@@ -70,15 +70,9 @@ public class ExperimentDTO
     { setElement("Type",value); }
 
     public List getImageExperimentList()
-    { return (List) getObjectElement("ImageExperimentList"); }
+    { return (List) parseListElement("ImageExperimentList",ImageExperimentDTO.class); }
     public int countImageExperimentList()
     { return countListElement("ImageExperimentList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Experimenter",ExperimenterDTO.class);
-        parseListElement("ImageExperimentList",ImageExperimentDTO.class);
-    }
 
 }

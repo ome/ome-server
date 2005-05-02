@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -62,12 +62,12 @@ public interface ModuleCategory
 
     /** Criteria field name: <code>children</code> */
     public List getChildCategories();
-    /** Criteria field name: <code>#children</code> or <code>children</code> */
+    /** Criteria field name: <code>#children</code> or <code>childrenList</code> */
     public int countChildCategories();
 
     /** Criteria field name: <code>modules</code> */
     public List getModules();
-    /** Criteria field name: <code>#modules</code> or <code>modules</code> */
+    /** Criteria field name: <code>#modules</code> or <code>modulesList</code> */
     public int countModules();
 
 }

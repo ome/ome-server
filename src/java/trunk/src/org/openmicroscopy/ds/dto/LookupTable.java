@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -58,7 +58,7 @@ public interface LookupTable
 
     /** Criteria field name: <code>entries</code> */
     public List getEntries();
-    /** Criteria field name: <code>#entries</code> or <code>entries</code> */
+    /** Criteria field name: <code>#entries</code> or <code>entriesList</code> */
     public int countEntries();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -64,14 +64,9 @@ public class ClassificationDTO
     { setElement("Confidence",value); }
 
     public Category getCategory()
-    { return (Category) getObjectElement("Category"); }
+    { return (Category) parseChildElement("Category",CategoryDTO.class); }
     public void setCategory(Category value)
     { setElement("Category",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Category",CategoryDTO.class);
-    }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,26 +57,19 @@ public class NodeExecutionDTO
     { setElement("id",new Integer(value)); }
 
     public ChainExecution getChainExecution()
-    { return (ChainExecution) getObjectElement("analysis_chain_execution"); }
+    { return (ChainExecution) parseChildElement("analysis_chain_execution",ChainExecutionDTO.class); }
     public void setChainExecution(ChainExecution value)
     { setElement("analysis_chain_execution",value); }
 
     public AnalysisNode getNode()
-    { return (AnalysisNode) getObjectElement("analysis_chain_node"); }
+    { return (AnalysisNode) parseChildElement("analysis_chain_node",AnalysisNodeDTO.class); }
     public void setNode(AnalysisNode value)
     { setElement("analysis_chain_node",value); }
 
     public ModuleExecution getModuleExecution()
-    { return (ModuleExecution) getObjectElement("module_execution"); }
+    { return (ModuleExecution) parseChildElement("module_execution",ModuleExecutionDTO.class); }
     public void setModuleExecution(ModuleExecution value)
     { setElement("module_execution",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("analysis_chain_execution",ChainExecutionDTO.class);
-        parseChildElement("analysis_chain_node",AnalysisNodeDTO.class);
-        parseChildElement("module_execution",ModuleExecutionDTO.class);
-    }
 
 }

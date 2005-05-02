@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -38,7 +38,6 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
-import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
 import java.util.Map;
@@ -58,25 +57,10 @@ public class DatasetAnnotationDTO
     public void setValid(Boolean value)
     { setElement("Valid",value); }
 
-    public Long getTimestamp()
-    { return getLongElement("Timestamp"); }
-    public void setTimestamp(Long value)
-    { setElement("Timestamp",value); }
-
     public String getContent()
     { return getStringElement("Content"); }
     public void setContent(String value)
     { setElement("Content",value); }
 
-    public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
-    public void setExperimenter(Experimenter value)
-    { setElement("Experimenter",value); }
-
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Experimenter",ExperimenterDTO.class);
-    }
 
 }

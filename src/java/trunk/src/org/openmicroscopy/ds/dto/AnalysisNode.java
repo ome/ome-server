@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -66,12 +66,12 @@ public interface AnalysisNode
 
     /** Criteria field name: <code>input_links</code> */
     public List getInputLinks();
-    /** Criteria field name: <code>#input_links</code> or <code>input_links</code> */
+    /** Criteria field name: <code>#input_links</code> or <code>input_linksList</code> */
     public int countInputLinks();
 
     /** Criteria field name: <code>output_links</code> */
     public List getOutputLinks();
-    /** Criteria field name: <code>#output_links</code> or <code>output_links</code> */
+    /** Criteria field name: <code>#output_links</code> or <code>output_linksList</code> */
     public int countOutputLinks();
 
 }

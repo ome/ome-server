@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Tue Mar 29 12:09:11 2005
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -41,7 +41,6 @@ import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.OTF;
 import org.openmicroscopy.ds.st.OriginalFile;
 import org.openmicroscopy.ds.st.Pixels;
-import org.openmicroscopy.ds.st.PixelsPlane;
 import org.openmicroscopy.ds.st.Thumbnail;
 import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
@@ -50,10 +49,6 @@ import java.util.Map;
 public interface Repository
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>IsLocal</code> */
-    public Boolean isIsLocal();
-    public void setIsLocal(Boolean value);
-
     /** Criteria field name: <code>ImageServerURL</code> */
     public String getImageServerURL();
     public void setImageServerURL(String value);
@@ -62,29 +57,28 @@ public interface Repository
     public String getPath();
     public void setPath(String value);
 
+    /** Criteria field name: <code>Local</code> */
+    public Boolean isLocal();
+    public void setLocal(Boolean value);
+
     /** Criteria field name: <code>OTFList</code> */
     public List getOTFList();
-    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFListList</code> */
     public int countOTFList();
 
     /** Criteria field name: <code>OriginalFileList</code> */
     public List getOriginalFileList();
-    /** Criteria field name: <code>#OriginalFileList</code> or <code>OriginalFileList</code> */
+    /** Criteria field name: <code>#OriginalFileList</code> or <code>OriginalFileListList</code> */
     public int countOriginalFileList();
 
     /** Criteria field name: <code>PixelsList</code> */
     public List getPixelsList();
-    /** Criteria field name: <code>#PixelsList</code> or <code>PixelsList</code> */
+    /** Criteria field name: <code>#PixelsList</code> or <code>PixelsListList</code> */
     public int countPixelsList();
-
-    /** Criteria field name: <code>PixelsPlaneList</code> */
-    public List getPixelsPlaneList();
-    /** Criteria field name: <code>#PixelsPlaneList</code> or <code>PixelsPlaneList</code> */
-    public int countPixelsPlaneList();
 
     /** Criteria field name: <code>ThumbnailList</code> */
     public List getThumbnailList();
-    /** Criteria field name: <code>#ThumbnailList</code> or <code>ThumbnailList</code> */
+    /** Criteria field name: <code>#ThumbnailList</code> or <code>ThumbnailListList</code> */
     public int countThumbnailList();
 
 }

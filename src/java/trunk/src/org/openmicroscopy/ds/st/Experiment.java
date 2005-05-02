@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:22 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -61,7 +61,7 @@ public interface Experiment
 
     /** Criteria field name: <code>ImageExperimentList</code> */
     public List getImageExperimentList();
-    /** Criteria field name: <code>#ImageExperimentList</code> or <code>ImageExperimentList</code> */
+    /** Criteria field name: <code>#ImageExperimentList</code> or <code>ImageExperimentListList</code> */
     public int countImageExperimentList();
 
 }

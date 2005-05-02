@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Wed Mar  9 11:35:54 2005
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -104,27 +104,27 @@ public interface ModuleExecution
 
     /** Criteria field name: <code>inputs</code> */
     public List getInputs();
-    /** Criteria field name: <code>#inputs</code> or <code>inputs</code> */
+    /** Criteria field name: <code>#inputs</code> or <code>inputsList</code> */
     public int countInputs();
 
     /** Criteria field name: <code>consumed_outputs</code> */
     public List getConsumedOutputs();
-    /** Criteria field name: <code>#consumed_outputs</code> or <code>consumed_outputs</code> */
+    /** Criteria field name: <code>#consumed_outputs</code> or <code>consumed_outputsList</code> */
     public int countConsumedOutputs();
 
     /** Criteria field name: <code>predecessors</code> */
     public List getPredecessors();
-    /** Criteria field name: <code>#predecessors</code> or <code>predecessors</code> */
+    /** Criteria field name: <code>#predecessors</code> or <code>predecessorsList</code> */
     public int countPredecessors();
 
     /** Criteria field name: <code>successors</code> */
     public List getSuccessors();
-    /** Criteria field name: <code>#successors</code> or <code>successors</code> */
+    /** Criteria field name: <code>#successors</code> or <code>successorsList</code> */
     public int countSuccessors();
 
     /** Criteria field name: <code>chain_executions</code> */
     public List getChainExecutions();
-    /** Criteria field name: <code>#chain_executions</code> or <code>chain_executions</code> */
+    /** Criteria field name: <code>#chain_executions</code> or <code>chain_executionsList</code> */
     public int countChainExecutions();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -58,7 +58,7 @@ public class OTFDTO
     public Class getDTOType() { return OTF.class; }
 
     public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
+    { return (Instrument) parseChildElement("Instrument",InstrumentDTO.class); }
     public void setInstrument(Instrument value)
     { setElement("Instrument",value); }
 
@@ -73,7 +73,7 @@ public class OTFDTO
     { setElement("Path",value); }
 
     public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
+    { return (Repository) parseChildElement("Repository",RepositoryDTO.class); }
     public void setRepository(Repository value)
     { setElement("Repository",value); }
 
@@ -93,28 +93,19 @@ public class OTFDTO
     { setElement("SizeX",value); }
 
     public Filter getFilter()
-    { return (Filter) getObjectElement("Filter"); }
+    { return (Filter) parseChildElement("Filter",FilterDTO.class); }
     public void setFilter(Filter value)
     { setElement("Filter",value); }
 
     public Objective getObjective()
-    { return (Objective) getObjectElement("Objective"); }
+    { return (Objective) parseChildElement("Objective",ObjectiveDTO.class); }
     public void setObjective(Objective value)
     { setElement("Objective",value); }
 
     public List getLogicalChannelList()
-    { return (List) getObjectElement("LogicalChannelList"); }
+    { return (List) parseListElement("LogicalChannelList",LogicalChannelDTO.class); }
     public int countLogicalChannelList()
     { return countListElement("LogicalChannelList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Instrument",InstrumentDTO.class);
-        parseChildElement("Repository",RepositoryDTO.class);
-        parseChildElement("Filter",FilterDTO.class);
-        parseChildElement("Objective",ObjectiveDTO.class);
-        parseListElement("LogicalChannelList",LogicalChannelDTO.class);
-    }
 
 }

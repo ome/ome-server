@@ -55,12 +55,6 @@ public abstract class AbstractRemoteCaller
      */
     public AbstractRemoteCaller() { super(); }
 
-    public void initializeService(DataServices services)
-    {
-        this.services = services;
-    }
-
-    public DataServices getDataServices() { return services; }
 
     ////////////////////////////////////////////////////////////////////
     // All of the following methods are implemented in terms of

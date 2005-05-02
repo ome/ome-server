@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -110,7 +110,7 @@ public interface DisplayOptions
 
     /** Criteria field name: <code>DisplayROIList</code> */
     public List getDisplayROIList();
-    /** Criteria field name: <code>#DisplayROIList</code> or <code>DisplayROIList</code> */
+    /** Criteria field name: <code>#DisplayROIList</code> or <code>DisplayROIListList</code> */
     public int countDisplayROIList();
 
 }

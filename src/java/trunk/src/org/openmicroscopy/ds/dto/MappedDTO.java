@@ -45,11 +45,8 @@ package org.openmicroscopy.ds.dto;
 import org.openmicroscopy.ds.DataException;
 import org.openmicroscopy.ds.DataFactory;
 import org.openmicroscopy.ds.PrimitiveConverters;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * <p>Provides a base implementation of the remote framework DTO
@@ -67,7 +64,14 @@ import java.util.HashMap;
  * map backing the DTO.  In the more complex cases, though, the helper
  * methods must be used, for instance, to translate the contents of a
  * sublist into the appropriate DTO's.</p>
- *
+ * 
+ * <p>Requests for fields that are not populated return a "null" response. 
+ * This is a departure from earlier code that threw an exception in such cases. 
+ * This revision simplifies handlling - allowing the back-end to be more flexible in
+ * what is returned, but places more of a burden on the client. Specifically, 
+ * clients can no longer distinguish between values that have not been retrieved 
+ * and those that do not exist. If this becomes a problem, the excpetion-throwing
+ * behavior should be restored.</p>
  * @author Douglas Creager (dcreager@alum.mit.edu)
  * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
@@ -76,6 +80,9 @@ import java.util.HashMap;
 public abstract class MappedDTO
     implements DataInterface
 {
+	
+	public static final String  NULL_REFERENCE = "*([-NULL-])*";
+	 
     /**
      * This is the {@link Map} used to back the DTO.  All of the data
      * fields of the DTO are stored in the map.  The helper accessor
@@ -243,41 +250,49 @@ public abstract class MappedDTO
      * DTO (because it wasn't filled in by the XML-RPC method which
      * created this DTO), then nothing happens.
      */
-    protected void parseChildElement(String element, Class dtoClazz)
+    protected Object parseChildElement(String element, Class dtoClazz)
     {
         // It's an error if the specified class isn't a MappedDTO
         // subclass.
         if (!MappedDTO.class.isAssignableFrom(dtoClazz))
             throw new DataException("Specified class is not a MappedDTO subclass");
 
-        // If the desired element doesn't exist, return silently.
+        // If the desired element doesn't exist, complain
         if (!elements.containsKey(element))
-            return;
+            throw new DataException("The "+element+" field was not loaded");
+
 
         try
         {
+
             Object o = elements.get(element);
             if (o != null)
             {
                 if (dtoClazz.isInstance(o))
-                    return;
-		// it's null.
-		if ((o instanceof String) && ((String) o).length() ==0) {
-		    elements.put(element,null);
-		    return;
-		}
-                else if (!(o instanceof Map)) 
+                    return o;
+		// Strings that match the null reference marker
+		// or have zero length
+		// should be interpreted as nulls.
+                if (o instanceof String && 
+               		( (((String) o).compareTo(NULL_REFERENCE) ==0) ||
+               		  ((String) o).length() ==0 )){
+                		return null;
+                }
+                else if (!(o instanceof Map))
                     throw new DataException("Illegal type for element "+element);
+
                 Map m = (Map) o;
                 MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
                 dto.setMap(m);
                 elements.put(element,dto);
+                return dto;
             }
         } catch (InstantiationException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         } catch (IllegalAccessException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         }
+        return null;
     }
 
     /**
@@ -288,37 +303,53 @@ public abstract class MappedDTO
      * DTO (because it wasn't filled in by the XML-RPC method which
      * created this DTO), then nothing happens.
      */
-    protected void parseListElement(String element, Class dtoClazz)
+    protected List parseListElement(String element, Class dtoClazz)
     {
         // It's an error if the specified class isn't a MappedDTO
         // subclass.
         if (!MappedDTO.class.isAssignableFrom(dtoClazz))
             throw new DataException("Specified class is not a MappedDTO subclass");
 
-        // If the desired element doesn't exist, return silently.
+        // If the desired element doesn't exist, complain
         if (!elements.containsKey(element))
-            return;
+            throw new DataException("The "+element+" field was not loaded");
 
         try
         {
-            List list = (List) elements.get(element);
+        		// has it been parsed?
+        	   Object obj = elements.get(element);
+        	   if (obj instanceof MappedDTOList) 
+        	   		return (MappedDTOList) obj;
+            
+        	   if (obj instanceof String) {
+        	   		String s = (String) obj;
+		// when we have a null, return an empty list.
+		if  (s.compareTo(NULL_REFERENCE) ==0 || s.length() == 0) {
+		    MappedDTOList newList = new MappedDTOList();
+		    elements.put(element,newList);
+		    return newList;
+		}
+            }
+        	  
+        	   List list = (List) obj;
+            MappedDTOList newList = new MappedDTOList();
             for (int i = 0; i < list.size(); i++)
             {
                 Object o = list.get(i);
                 if (o != null)
                 {
-                    if (dtoClazz.isInstance(o))
-                        return;
-                    else if (!(o instanceof Map))
+                    if (!(o instanceof Map))
                         throw new DataException("Illegal type for element "+
                                                 element);
 
                     Map m = (Map) o;
                     MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
                     dto.setMap(m);
-                    list.set(i,dto);
+                    newList.add(dto);
                 }
             }
+            elements.put(element,newList);
+            return newList;
         } catch (InstantiationException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         } catch (IllegalAccessException e) {
@@ -328,7 +359,7 @@ public abstract class MappedDTO
 
     protected int getIntElement(String key)
     {
-        Integer value = getIntegerElement(key);
+    	    Integer value = getIntegerElement(key);
         if (value == null)
             throw new DataException(key+" field is null");
         else
@@ -336,10 +367,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns an <code>short</code> value from the backing map.  It
-     * is an error if the specified key does not exist (i.e., it was
+     * Returns an <code>short</code> value from the backing map.  
+     * It is an error if the specified key does not exist (i.e., it was
      * not populated by the XML-RPC call which created this DTO
-     * object).  If the value in the backing map is an {@link Short},
+     * object). If the value in the backing map is an {@link Short},
      * the <code>short</code> is returned directly.  If the value is a
      * {@link Long}, the <code>long</code> value is cast into an
      * <code>short</code> and returned.  If the value is a {@link
@@ -372,10 +403,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns an <code>int</code> value from the backing map.  It is
-     * an error if the specified key does not exist (i.e., it was not
-     * populated by the XML-RPC call which created this DTO object).
-     * If the value in the backing map is an {@link Integer}, the
+     * Returns an <code>int</code> value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is an {@link Integer}, the
      * <code>int</code> is returned directly.  If the value is a
      * {@link Long}, the <code>long</code> value is cast into an
      * <code>int</code> and returned.  If the value is a {@link Float}
@@ -394,6 +425,7 @@ public abstract class MappedDTO
      */
     protected Integer getIntegerElement(String key)
     {
+    	
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
@@ -408,9 +440,7 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a <code>long</code> value from the backing map.  It is
-     * an error if the specified key does not exist (i.e., it was not
-     * populated by the XML-RPC call which created this DTO object).
+     * Returns a <code>long</code> value from the backing map.  
      * If the value in the backing map is an {@link Integer} or {@link
      * Long}, the value is returned directly.  If the value is a
      * {@link Float} or {@link Double}, is it rounded via the {@link
@@ -442,10 +472,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a <code>float</code> value from the backing map.  It is
-     * an error if the specified key does not exist (i.e., it was not
-     * populated by the XML-RPC call which created this DTO object).
-     * If the value in the backing map is an {@link Integer}, {@link
+     * Returns a <code>float</code> value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is an {@link Integer}, {@link
      * Long}, {@link Float}, or {@link Double} the value is returned
      * directly, with an appropriate case as necessary.  If the value
      * is a {@link String} which can be parsed into a
@@ -475,10 +505,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a <code>double</code> value from the backing map.  It is
-     * an error if the specified key does not exist (i.e., it was not
-     * populated by the XML-RPC call which created this DTO object).
-     * If the value in the backing map is an {@link Integer}, {@link
+     * Returns a <code>double</code> value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the value in the backing map is an {@link Integer}, {@link
      * Long}, {@link Float}, or {@link Double} the value is returned
      * directly, with an appropriate case as necessary.  If the value
      * is a {@link String} which can be parsed into a
@@ -494,6 +524,7 @@ public abstract class MappedDTO
      */
     protected Double getDoubleElement(String key)
     {
+    	
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
@@ -508,10 +539,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a <code>boolean</code> value from the backing map.  It
-     * is an error if the specified key does not exist (i.e., it was
+     * Returns a <code>boolean</code> value from the backing map. 
+     * It is an error if the specified key does not exist (i.e., it was
      * not populated by the XML-RPC call which created this DTO
-     * object).  If the value in the backing map is a {@link Boolean},
+     * object). If the value in the backing map is a {@link Boolean},
      * the <code>boolean</code> value is returned directly.  If it is
      * an {@link Integer} or {@link Long}, then a <code>false</code>
      * value is returned if the element's value is 0; otherwise
@@ -546,10 +577,10 @@ public abstract class MappedDTO
     }
 
     /**
-     * Returns a {@link String} value from the backing map.  It is an
-     * error if the specified key does not exist (i.e., it was not
-     * populated by the XML-RPC call which created this DTO object).
-     * If the object in the backing map for this key is not a {@link
+     * Returns a {@link String} value from the backing map. It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). If the object in the backing map for this key is not a {@link
      * String}, it is transformed into one via the {@link
      * Object#toString} method.
      *
@@ -565,14 +596,25 @@ public abstract class MappedDTO
             throw new DataException("The "+key+" field was not loaded");
 
         Object o = elements.get(key);
-        return o == null ? null : o.toString();
+        if (o == null)
+        		return null;
+        String s = o.toString();
+        
+        if (s.compareTo(NULL_REFERENCE) == 0 ||
+	    s.length() == 0) { 
+      		return null;
+        }
+        return s;
+        //return o == null ? null : o.toString();
     }
 
     /**
-     * Returns the value for the specified key.  No type-checking or
-     * type-casting is performed; whatever was returned by the XML-RPC
-     * layer is returned from this method.  The only error condition
-     * is if the key does not exist in the backing map.
+     * Returns the value for the specified key.  It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object). No type-checking or type-casting is performed; whatever 
+     * was returned by the XML-RPC layer is returned from this method.  
+     * The only error condition is if the key does not exist in the backing map.
      *
      * @param key the element of the backing map to retrieve
      * @return the specified element in the backing map

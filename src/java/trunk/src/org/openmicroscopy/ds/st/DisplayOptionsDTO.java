@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -81,7 +81,7 @@ public class DisplayOptionsDTO
     { setElement("ColorMap",value); }
 
     public DisplayChannel getGreyChannel()
-    { return (DisplayChannel) getObjectElement("GreyChannel"); }
+    { return (DisplayChannel) parseChildElement("GreyChannel",DisplayChannelDTO.class); }
     public void setGreyChannel(DisplayChannel value)
     { setElement("GreyChannel",value); }
 
@@ -96,7 +96,7 @@ public class DisplayOptionsDTO
     { setElement("BlueChannelOn",value); }
 
     public DisplayChannel getBlueChannel()
-    { return (DisplayChannel) getObjectElement("BlueChannel"); }
+    { return (DisplayChannel) parseChildElement("BlueChannel",DisplayChannelDTO.class); }
     public void setBlueChannel(DisplayChannel value)
     { setElement("BlueChannel",value); }
 
@@ -106,7 +106,7 @@ public class DisplayOptionsDTO
     { setElement("GreenChannelOn",value); }
 
     public DisplayChannel getGreenChannel()
-    { return (DisplayChannel) getObjectElement("GreenChannel"); }
+    { return (DisplayChannel) parseChildElement("GreenChannel",DisplayChannelDTO.class); }
     public void setGreenChannel(DisplayChannel value)
     { setElement("GreenChannel",value); }
 
@@ -116,7 +116,7 @@ public class DisplayOptionsDTO
     { setElement("RedChannelOn",value); }
 
     public DisplayChannel getRedChannel()
-    { return (DisplayChannel) getObjectElement("RedChannel"); }
+    { return (DisplayChannel) parseChildElement("RedChannel",DisplayChannelDTO.class); }
     public void setRedChannel(DisplayChannel value)
     { setElement("RedChannel",value); }
 
@@ -126,24 +126,14 @@ public class DisplayOptionsDTO
     { setElement("Zoom",value); }
 
     public Pixels getPixels()
-    { return (Pixels) getObjectElement("Pixels"); }
+    { return (Pixels) parseChildElement("Pixels",PixelsDTO.class); }
     public void setPixels(Pixels value)
     { setElement("Pixels",value); }
 
     public List getDisplayROIList()
-    { return (List) getObjectElement("DisplayROIList"); }
+    { return (List) parseListElement("DisplayROIList",DisplayROIDTO.class); }
     public int countDisplayROIList()
     { return countListElement("DisplayROIList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("GreyChannel",DisplayChannelDTO.class);
-        parseChildElement("BlueChannel",DisplayChannelDTO.class);
-        parseChildElement("GreenChannel",DisplayChannelDTO.class);
-        parseChildElement("RedChannel",DisplayChannelDTO.class);
-        parseChildElement("Pixels",PixelsDTO.class);
-        parseListElement("DisplayROIList",DisplayROIDTO.class);
-    }
 
 }

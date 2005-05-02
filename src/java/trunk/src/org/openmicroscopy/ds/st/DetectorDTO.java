@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -55,7 +55,7 @@ public class DetectorDTO
     public Class getDTOType() { return Detector.class; }
 
     public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
+    { return (Instrument) parseChildElement("Instrument",InstrumentDTO.class); }
     public void setInstrument(Instrument value)
     { setElement("Instrument",value); }
 
@@ -95,15 +95,9 @@ public class DetectorDTO
     { setElement("Manufacturer",value); }
 
     public List getLogicalChannelList()
-    { return (List) getObjectElement("LogicalChannelList"); }
+    { return (List) parseListElement("LogicalChannelList",LogicalChannelDTO.class); }
     public int countLogicalChannelList()
     { return countListElement("LogicalChannelList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Instrument",InstrumentDTO.class);
-        parseListElement("LogicalChannelList",LogicalChannelDTO.class);
-    }
 
 }

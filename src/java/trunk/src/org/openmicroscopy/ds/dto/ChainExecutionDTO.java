@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -59,12 +59,12 @@ public class ChainExecutionDTO
     { setElement("id",new Integer(value)); }
 
     public AnalysisChain getChain()
-    { return (AnalysisChain) getObjectElement("analysis_chain"); }
+    { return (AnalysisChain) parseChildElement("analysis_chain",AnalysisChainDTO.class); }
     public void setChain(AnalysisChain value)
     { setElement("analysis_chain",value); }
 
     public Dataset getDataset()
-    { return (Dataset) getObjectElement("dataset"); }
+    { return (Dataset) parseChildElement("dataset",DatasetDTO.class); }
     public void setDataset(Dataset value)
     { setElement("dataset",value); }
 
@@ -74,22 +74,14 @@ public class ChainExecutionDTO
     { setElement("timestamp",value); }
 
     public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("experimenter"); }
+    { return (Experimenter) parseChildElement("experimenter",ExperimenterDTO.class); }
     public void setExperimenter(Experimenter value)
     { setElement("experimenter",value); }
 
     public List getNodeExecutions()
-    { return (List) getObjectElement("node_executions"); }
+    { return (List) parseListElement("node_executions",NodeExecutionDTO.class); }
     public int countNodeExecutions()
     { return countListElement("node_executions"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("analysis_chain",AnalysisChainDTO.class);
-        parseChildElement("dataset",DatasetDTO.class);
-        parseChildElement("experimenter",ExperimenterDTO.class);
-        parseListElement("node_executions",NodeExecutionDTO.class);
-    }
 
 }

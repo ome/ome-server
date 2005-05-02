@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -79,44 +79,34 @@ public class InstrumentDTO
     { setElement("Manufacturer",value); }
 
     public List getDetectorList()
-    { return (List) getObjectElement("DetectorList"); }
+    { return (List) parseListElement("DetectorList",DetectorDTO.class); }
     public int countDetectorList()
     { return countListElement("DetectorList"); }
 
     public List getFilterList()
-    { return (List) getObjectElement("FilterList"); }
+    { return (List) parseListElement("FilterList",FilterDTO.class); }
     public int countFilterList()
     { return countListElement("FilterList"); }
 
     public List getImageInstrumentList()
-    { return (List) getObjectElement("ImageInstrumentList"); }
+    { return (List) parseListElement("ImageInstrumentList",ImageInstrumentDTO.class); }
     public int countImageInstrumentList()
     { return countListElement("ImageInstrumentList"); }
 
     public List getLightSourceList()
-    { return (List) getObjectElement("LightSourceList"); }
+    { return (List) parseListElement("LightSourceList",LightSourceDTO.class); }
     public int countLightSourceList()
     { return countListElement("LightSourceList"); }
 
     public List getOTFList()
-    { return (List) getObjectElement("OTFList"); }
+    { return (List) parseListElement("OTFList",OTFDTO.class); }
     public int countOTFList()
     { return countListElement("OTFList"); }
 
     public List getObjectiveList()
-    { return (List) getObjectElement("ObjectiveList"); }
+    { return (List) parseListElement("ObjectiveList",ObjectiveDTO.class); }
     public int countObjectiveList()
     { return countListElement("ObjectiveList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseListElement("DetectorList",DetectorDTO.class);
-        parseListElement("FilterList",FilterDTO.class);
-        parseListElement("ImageInstrumentList",ImageInstrumentDTO.class);
-        parseListElement("LightSourceList",LightSourceDTO.class);
-        parseListElement("OTFList",OTFDTO.class);
-        parseListElement("ObjectiveList",ObjectiveDTO.class);
-    }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,7 +57,7 @@ public class FormalInputDTO
     { setElement("id",new Integer(value)); }
 
     public Module getModule()
-    { return (Module) getObjectElement("module"); }
+    { return (Module) parseChildElement("module",ModuleDTO.class); }
     public void setModule(Module value)
     { setElement("module",value); }
 
@@ -82,12 +82,12 @@ public class FormalInputDTO
     { setElement("list",value); }
 
     public SemanticType getSemanticType()
-    { return (SemanticType) getObjectElement("semantic_type"); }
+    { return (SemanticType) parseChildElement("semantic_type",SemanticTypeDTO.class); }
     public void setSemanticType(SemanticType value)
     { setElement("semantic_type",value); }
 
     public LookupTable getLookupTable()
-    { return (LookupTable) getObjectElement("lookup_table"); }
+    { return (LookupTable) parseChildElement("lookup_table",LookupTableDTO.class); }
     public void setLookupTable(LookupTable value)
     { setElement("lookup_table",value); }
 
@@ -97,17 +97,9 @@ public class FormalInputDTO
     { setElement("user_defined",value); }
 
     public List getActualInputs()
-    { return (List) getObjectElement("actual_inputs"); }
+    { return (List) parseListElement("actual_inputs",ActualInputDTO.class); }
     public int countActualInputs()
     { return countListElement("actual_inputs"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("module",ModuleDTO.class);
-        parseChildElement("semantic_type",SemanticTypeDTO.class);
-        parseChildElement("lookup_table",LookupTableDTO.class);
-        parseListElement("actual_inputs",ActualInputDTO.class);
-    }
 
 }

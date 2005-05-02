@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -93,7 +93,7 @@ public class LogicalChannelDTO
     { setElement("AuxLightAttenuation",value); }
 
     public LightSource getAuxLightSource()
-    { return (LightSource) getObjectElement("AuxLightSource"); }
+    { return (LightSource) parseChildElement("AuxLightSource",LightSourceDTO.class); }
     public void setAuxLightSource(LightSource value)
     { setElement("AuxLightSource",value); }
 
@@ -133,12 +133,12 @@ public class LogicalChannelDTO
     { setElement("DetectorOffset",value); }
 
     public Detector getDetector()
-    { return (Detector) getObjectElement("Detector"); }
+    { return (Detector) parseChildElement("Detector",DetectorDTO.class); }
     public void setDetector(Detector value)
     { setElement("Detector",value); }
 
     public OTF getOTF()
-    { return (OTF) getObjectElement("OTF"); }
+    { return (OTF) parseChildElement("OTF",OTFDTO.class); }
     public void setOTF(OTF value)
     { setElement("OTF",value); }
 
@@ -153,12 +153,12 @@ public class LogicalChannelDTO
     { setElement("LightAttenuation",value); }
 
     public LightSource getLightSource()
-    { return (LightSource) getObjectElement("LightSource"); }
+    { return (LightSource) parseChildElement("LightSource",LightSourceDTO.class); }
     public void setLightSource(LightSource value)
     { setElement("LightSource",value); }
 
     public Filter getFilter()
-    { return (Filter) getObjectElement("Filter"); }
+    { return (Filter) parseChildElement("Filter",FilterDTO.class); }
     public void setFilter(Filter value)
     { setElement("Filter",value); }
 
@@ -173,19 +173,9 @@ public class LogicalChannelDTO
     { setElement("Name",value); }
 
     public List getPixelChannelComponentList()
-    { return (List) getObjectElement("PixelChannelComponentList"); }
+    { return (List) parseListElement("PixelChannelComponentList",PixelChannelComponentDTO.class); }
     public int countPixelChannelComponentList()
     { return countListElement("PixelChannelComponentList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("AuxLightSource",LightSourceDTO.class);
-        parseChildElement("Detector",DetectorDTO.class);
-        parseChildElement("OTF",OTFDTO.class);
-        parseChildElement("LightSource",LightSourceDTO.class);
-        parseChildElement("Filter",FilterDTO.class);
-        parseListElement("PixelChannelComponentList",PixelChannelComponentDTO.class);
-    }
 
 }

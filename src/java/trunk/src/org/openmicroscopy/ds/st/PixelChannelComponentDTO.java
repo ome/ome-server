@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -55,7 +55,7 @@ public class PixelChannelComponentDTO
     public Class getDTOType() { return PixelChannelComponent.class; }
 
     public LogicalChannel getLogicalChannel()
-    { return (LogicalChannel) getObjectElement("LogicalChannel"); }
+    { return (LogicalChannel) parseChildElement("LogicalChannel",LogicalChannelDTO.class); }
     public void setLogicalChannel(LogicalChannel value)
     { setElement("LogicalChannel",value); }
 
@@ -70,15 +70,9 @@ public class PixelChannelComponentDTO
     { setElement("Index",value); }
 
     public Pixels getPixels()
-    { return (Pixels) getObjectElement("Pixels"); }
+    { return (Pixels) parseChildElement("Pixels",PixelsDTO.class); }
     public void setPixels(Pixels value)
     { setElement("Pixels",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("LogicalChannel",LogicalChannelDTO.class);
-        parseChildElement("Pixels",PixelsDTO.class);
-    }
 
 }

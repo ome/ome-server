@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -56,7 +56,7 @@ public interface CategoryGroup
 
     /** Criteria field name: <code>CategoryList</code> */
     public List getCategoryList();
-    /** Criteria field name: <code>#CategoryList</code> or <code>CategoryList</code> */
+    /** Criteria field name: <code>#CategoryList</code> or <code>CategoryListList</code> */
     public int countCategoryList();
 
 }

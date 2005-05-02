@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -54,7 +54,7 @@ public class ExcitationFilterDTO
     public Class getDTOType() { return ExcitationFilter.class; }
 
     public Filter getFilter()
-    { return (Filter) getObjectElement("Filter"); }
+    { return (Filter) parseChildElement("Filter",FilterDTO.class); }
     public void setFilter(Filter value)
     { setElement("Filter",value); }
 
@@ -78,10 +78,5 @@ public class ExcitationFilterDTO
     public void setManufacturer(String value)
     { setElement("Manufacturer",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Filter",FilterDTO.class);
-    }
 
 }

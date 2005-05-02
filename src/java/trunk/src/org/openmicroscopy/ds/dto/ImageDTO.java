@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -71,7 +71,7 @@ public class ImageDTO
     { setElement("description",value); }
 
     public Experimenter getOwner()
-    { return (Experimenter) getObjectElement("owner"); }
+    { return (Experimenter) parseChildElement("owner",ExperimenterDTO.class); }
     public void setOwner(Experimenter value)
     { setElement("owner",value); }
 
@@ -86,27 +86,19 @@ public class ImageDTO
     { setElement("inserted",value); }
 
     public Pixels getDefaultPixels()
-    { return (Pixels) getObjectElement("default_pixels"); }
+    { return (Pixels) parseChildElement("default_pixels",PixelsDTO.class); }
     public void setDefaultPixels(Pixels value)
     { setElement("default_pixels",value); }
 
     public List getDatasets()
-    { return (List) getObjectElement("datasets"); }
+    { return (List) parseListElement("datasets",DatasetDTO.class); }
     public int countDatasets()
     { return countListElement("datasets"); }
 
     public List getFeatures()
-    { return (List) getObjectElement("all_features"); }
+    { return (List) parseListElement("all_features",FeatureDTO.class); }
     public int countFeatures()
     { return countListElement("all_features"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("owner",ExperimenterDTO.class);
-        parseChildElement("default_pixels",PixelsDTO.class);
-        parseListElement("datasets",DatasetDTO.class);
-        parseListElement("all_features",FeatureDTO.class);
-    }
 
 }

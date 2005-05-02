@@ -189,47 +189,6 @@ public class XmlRpcCaller
         }
     }
 
-    /**
-     * <p>Decodes an object received from the XML-RPC layer into its
-     * Java equivalent.  <b>Note:</b> This method is only used to
-     * perform encodings specific to the transport layer in use.  For
-     * instance, XML-RPC does not support null values, so any null
-     * values in the <code>object</code> parameter will be transformed
-     * into a String value which can be transmitted.  <b>This method
-     * is not intended for translating low-level XML-RPC transmission
-     * objects into high-level data representation objects.</b> That
-     * functionality is dependent on the high-level encoding in
-     * question, and therefore is not appropriate to this class.</p>
-     *
-     * <p>This method can be overridden if the default encoding is not
-     * appropriate.</p>
-     */
-    protected Object decodeObject(Object object)
-    {
-        if ((object instanceof String) && 
-            ((String) object).equals(NULL_REFERENCE))
-            return null;
-        else if (object instanceof List) {
-            List list = new ArrayList();
-            Iterator it = ((List) object).iterator();
-            while (it.hasNext())
-                list.add(decodeObject(it.next()));
-            return list;
-        } else if (object instanceof Map) {
-            Map map = new HashMap();
-            Iterator it = ((Map) object).keySet().iterator();
-            while (it.hasNext())
-            {
-                Object key = it.next();
-                Object value = ((Map) object).get(key);
-                map.put(decodeObject(key),decodeObject(value));
-            }
-            return map;
-        } else {
-            return object;
-        }
-    }
-
     private void addParameter(Object object)
     {
         synchronized(this)
@@ -271,7 +230,7 @@ public class XmlRpcCaller
                     System.err.println("Profiler: "+thisTime);
                 }
 
-                return decodeObject(retval);
+                return retval;
             } catch (IOException e) {
                 throw new RemoteConnectionException(e.getMessage());
             } catch (Exception e) {
@@ -409,21 +368,8 @@ public class XmlRpcCaller
     public String getSessionKey() { return sessionKey; }
     public void setSessionKey(String key) { sessionKey = key; }
 
-    public Object invoke(String method, Object[] params)
-    {
-        synchronized(this)
-        {
-            if (sessionKey == null)
-                throw new IllegalArgumentException("Have not logged in");
-
-            addParameter(sessionKey);
-            if (params != null)
-            {
-                for (int i = 0; i < params.length; i++)
-                    addParameter(params[i]);
-            }
-            return invoke(method);
-        }
+    public Object invoke(String method,Object[] params) {
+    		return dispatch(method,params);
     }
 
     public Object dispatch(String method, Object[] params)

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -54,7 +54,7 @@ public class DisplayROIDTO
     public Class getDTOType() { return DisplayROI.class; }
 
     public DisplayOptions getDisplayOptions()
-    { return (DisplayOptions) getObjectElement("DisplayOptions"); }
+    { return (DisplayOptions) parseChildElement("DisplayOptions",DisplayOptionsDTO.class); }
     public void setDisplayOptions(DisplayOptions value)
     { setElement("DisplayOptions",value); }
 
@@ -98,10 +98,5 @@ public class DisplayROIDTO
     public void setX0(Integer value)
     { setElement("X0",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("DisplayOptions",DisplayOptionsDTO.class);
-    }
 
 }

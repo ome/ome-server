@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:16 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -84,14 +84,9 @@ public class TrajectoryEntryDTO
     { setElement("Order",value); }
 
     public Trajectory getTrajectory()
-    { return (Trajectory) getObjectElement("Trajectory"); }
+    { return (Trajectory) parseChildElement("Trajectory",TrajectoryDTO.class); }
     public void setTrajectory(Trajectory value)
     { setElement("Trajectory",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Trajectory",TrajectoryDTO.class);
-    }
 
 }

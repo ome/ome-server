@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -59,7 +59,7 @@ public class ThumbnailDTO
     { setElement("Path",value); }
 
     public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
+    { return (Repository) parseChildElement("Repository",RepositoryDTO.class); }
     public void setRepository(Repository value)
     { setElement("Repository",value); }
 
@@ -68,10 +68,5 @@ public class ThumbnailDTO
     public void setMimeType(String value)
     { setElement("MimeType",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
-    }
 
 }

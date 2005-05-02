@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -62,7 +62,7 @@ public interface SemanticType
 
     /** Criteria field name: <code>semantic_elements</code> */
     public List getElements();
-    /** Criteria field name: <code>#semantic_elements</code> or <code>semantic_elements</code> */
+    /** Criteria field name: <code>#semantic_elements</code> or <code>semantic_elementsList</code> */
     public int countElements();
 
 }

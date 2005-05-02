@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -74,12 +74,12 @@ public interface Objective
 
     /** Criteria field name: <code>ImageInstrumentList</code> */
     public List getImageInstrumentList();
-    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentList</code> */
+    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentListList</code> */
     public int countImageInstrumentList();
 
     /** Criteria field name: <code>OTFList</code> */
     public List getOTFList();
-    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFListList</code> */
     public int countOTFList();
 
 }

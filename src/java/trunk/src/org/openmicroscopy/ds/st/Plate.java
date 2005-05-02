@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -62,12 +62,12 @@ public interface Plate
 
     /** Criteria field name: <code>ImagePlateList</code> */
     public List getImagePlateList();
-    /** Criteria field name: <code>#ImagePlateList</code> or <code>ImagePlateList</code> */
+    /** Criteria field name: <code>#ImagePlateList</code> or <code>ImagePlateListList</code> */
     public int countImagePlateList();
 
     /** Criteria field name: <code>PlateScreenList</code> */
     public List getPlateScreenList();
-    /** Criteria field name: <code>#PlateScreenList</code> or <code>PlateScreenList</code> */
+    /** Criteria field name: <code>#PlateScreenList</code> or <code>PlateScreenListList</code> */
     public int countPlateScreenList();
 
 }

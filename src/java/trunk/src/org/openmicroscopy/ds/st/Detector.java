@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -81,7 +81,7 @@ public interface Detector
 
     /** Criteria field name: <code>LogicalChannelList</code> */
     public List getLogicalChannelList();
-    /** Criteria field name: <code>#LogicalChannelList</code> or <code>LogicalChannelList</code> */
+    /** Criteria field name: <code>#LogicalChannelList</code> or <code>LogicalChannelListList</code> */
     public int countLogicalChannelList();
 
 }

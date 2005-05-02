@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -54,14 +54,9 @@ public class ImageGroupDTO
     public Class getDTOType() { return ImageGroup.class; }
 
     public Group getGroup()
-    { return (Group) getObjectElement("Group"); }
+    { return (Group) parseChildElement("Group",GroupDTO.class); }
     public void setGroup(Group value)
     { setElement("Group",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Group",GroupDTO.class);
-    }
 
 }

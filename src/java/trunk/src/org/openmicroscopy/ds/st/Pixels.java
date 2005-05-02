@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -86,12 +86,12 @@ public interface Pixels
 
     /** Criteria field name: <code>DisplayOptionsList</code> */
     public List getDisplayOptionsList();
-    /** Criteria field name: <code>#DisplayOptionsList</code> or <code>DisplayOptionsList</code> */
+    /** Criteria field name: <code>#DisplayOptionsList</code> or <code>DisplayOptionsListList</code> */
     public int countDisplayOptionsList();
 
     /** Criteria field name: <code>PixelChannelComponentList</code> */
     public List getPixelChannelComponentList();
-    /** Criteria field name: <code>#PixelChannelComponentList</code> or <code>PixelChannelComponentList</code> */
+    /** Criteria field name: <code>#PixelChannelComponentList</code> or <code>PixelChannelComponentListList</code> */
     public int countPixelChannelComponentList();
 
 }

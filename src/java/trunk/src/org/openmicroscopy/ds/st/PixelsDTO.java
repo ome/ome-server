@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -61,7 +61,7 @@ public class PixelsDTO
     { setElement("ImageServerID",value); }
 
     public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
+    { return (Repository) parseChildElement("Repository",RepositoryDTO.class); }
     public void setRepository(Repository value)
     { setElement("Repository",value); }
 
@@ -101,21 +101,14 @@ public class PixelsDTO
     { setElement("SizeX",value); }
 
     public List getDisplayOptionsList()
-    { return (List) getObjectElement("DisplayOptionsList"); }
+    { return (List) parseListElement("DisplayOptionsList",DisplayOptionsDTO.class); }
     public int countDisplayOptionsList()
     { return countListElement("DisplayOptionsList"); }
 
     public List getPixelChannelComponentList()
-    { return (List) getObjectElement("PixelChannelComponentList"); }
+    { return (List) parseListElement("PixelChannelComponentList",PixelChannelComponentDTO.class); }
     public int countPixelChannelComponentList()
     { return countListElement("PixelChannelComponentList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
-        parseListElement("DisplayOptionsList",DisplayOptionsDTO.class);
-        parseListElement("PixelChannelComponentList",PixelChannelComponentDTO.class);
-    }
 
 }

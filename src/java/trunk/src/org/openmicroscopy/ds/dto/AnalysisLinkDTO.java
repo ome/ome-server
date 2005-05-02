@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -57,38 +57,29 @@ public class AnalysisLinkDTO
     { setElement("id",new Integer(value)); }
 
     public AnalysisChain getChain()
-    { return (AnalysisChain) getObjectElement("analysis_chain"); }
+    { return (AnalysisChain) parseChildElement("analysis_chain",AnalysisChainDTO.class); }
     public void setChain(AnalysisChain value)
     { setElement("analysis_chain",value); }
 
     public AnalysisNode getFromNode()
-    { return (AnalysisNode) getObjectElement("from_node"); }
+    { return (AnalysisNode) parseChildElement("from_node",AnalysisNodeDTO.class); }
     public void setFromNode(AnalysisNode value)
     { setElement("from_node",value); }
 
     public FormalOutput getFromOutput()
-    { return (FormalOutput) getObjectElement("from_output"); }
+    { return (FormalOutput) parseChildElement("from_output",FormalOutputDTO.class); }
     public void setFromOutput(FormalOutput value)
     { setElement("from_output",value); }
 
     public AnalysisNode getToNode()
-    { return (AnalysisNode) getObjectElement("to_node"); }
+    { return (AnalysisNode) parseChildElement("to_node",AnalysisNodeDTO.class); }
     public void setToNode(AnalysisNode value)
     { setElement("to_node",value); }
 
     public FormalInput getToInput()
-    { return (FormalInput) getObjectElement("to_input"); }
+    { return (FormalInput) parseChildElement("to_input",FormalInputDTO.class); }
     public void setToInput(FormalInput value)
     { setElement("to_input",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("analysis_chain",AnalysisChainDTO.class);
-        parseChildElement("from_node",AnalysisNodeDTO.class);
-        parseChildElement("from_output",FormalOutputDTO.class);
-        parseChildElement("to_node",AnalysisNodeDTO.class);
-        parseChildElement("to_input",FormalInputDTO.class);
-    }
 
 }

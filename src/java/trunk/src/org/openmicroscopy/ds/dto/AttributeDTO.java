@@ -76,16 +76,6 @@ public class AttributeDTO
     public AttributeDTO() { super(); }
     public AttributeDTO(Map elements) { super(elements); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("dataset",DatasetDTO.class);
-        parseChildElement("image",ImageDTO.class);
-        parseChildElement("feature",FeatureDTO.class);
-        parseChildElement("semantic_type",SemanticTypeDTO.class);
-        parseChildElement("module_execution",ModuleExecutionDTO.class);
-    }
-
     // Inherited javadoc
     public String getDTOTypeName()
     {
@@ -106,11 +96,12 @@ public class AttributeDTO
 
     // Inherited javadoc
     public SemanticType getSemanticType()
-    { return (SemanticType) getObjectElement("semantic_type"); }
+    { return (SemanticType) parseChildElement("semantic_type",
+    		SemanticTypeDTO.class); }
 
     // Inherited javadoc
     public Dataset getDataset()
-    { return (Dataset) getObjectElement("dataset"); }
+    { return (Dataset) parseChildElement("dataset",DatasetDTO.class); }
 
     // Inherited javadoc
     public void setDataset(Dataset dataset)
@@ -118,7 +109,7 @@ public class AttributeDTO
 
     // Inherited javadoc
     public Image getImage()
-    { return (Image) getObjectElement("image"); }
+    { return (Image) parseChildElement("image",ImageDTO.class); }
 
     // Inherited javadoc
     public void setImage(Image image)
@@ -126,7 +117,7 @@ public class AttributeDTO
 
     // Inherited javadoc
     public Feature getFeature()
-    { return (Feature) getObjectElement("feature"); }
+    { return (Feature) parseChildElement("feature",FeatureDTO.class); }
 
     // Inherited javadoc
     public void setFeature(Feature feature)
@@ -134,7 +125,8 @@ public class AttributeDTO
 
     // Inherited javadoc
     public ModuleExecution getModuleExecution()
-    { return (ModuleExecution) getObjectElement("module_execution"); }
+    { return (ModuleExecution) 
+    		parseChildElement("module_execution",ModuleExecutionDTO.class); }
 
     // Inherited javadoc
     public void setModuleExecution(ModuleExecution mex)

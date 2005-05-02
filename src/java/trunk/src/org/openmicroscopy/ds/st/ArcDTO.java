@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -54,7 +54,7 @@ public class ArcDTO
     public Class getDTOType() { return Arc.class; }
 
     public LightSource getLightSource()
-    { return (LightSource) getObjectElement("LightSource"); }
+    { return (LightSource) parseChildElement("LightSource",LightSourceDTO.class); }
     public void setLightSource(LightSource value)
     { setElement("LightSource",value); }
 
@@ -68,10 +68,5 @@ public class ArcDTO
     public void setType(String value)
     { setElement("Type",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("LightSource",LightSourceDTO.class);
-    }
 
 }

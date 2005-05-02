@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:18:38 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -59,7 +59,7 @@ public class AnalysisChainDTO
     { setElement("id",new Integer(value)); }
 
     public Experimenter getOwner()
-    { return (Experimenter) getObjectElement("owner"); }
+    { return (Experimenter) parseChildElement("owner",ExperimenterDTO.class); }
     public void setOwner(Experimenter value)
     { setElement("owner",value); }
 
@@ -79,27 +79,19 @@ public class AnalysisChainDTO
     { setElement("locked",value); }
 
     public List getNodes()
-    { return (List) getObjectElement("nodes"); }
+    { return (List) parseListElement("nodes",AnalysisNodeDTO.class); }
     public int countNodes()
     { return countListElement("nodes"); }
 
     public List getLinks()
-    { return (List) getObjectElement("links"); }
+    { return (List) parseListElement("links",AnalysisLinkDTO.class); }
     public int countLinks()
     { return countListElement("links"); }
 
     public List getPaths()
-    { return (List) getObjectElement("paths"); }
+    { return (List) parseListElement("paths",AnalysisPathDTO.class); }
     public int countPaths()
     { return countListElement("paths"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("owner",ExperimenterDTO.class);
-        parseListElement("nodes",AnalysisNodeDTO.class);
-        parseListElement("links",AnalysisLinkDTO.class);
-        parseListElement("paths",AnalysisPathDTO.class);
-    }
 
 }

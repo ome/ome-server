@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:16 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -60,7 +60,7 @@ public interface Trajectory
 
     /** Criteria field name: <code>TrajectoryEntryList</code> */
     public List getTrajectoryEntryList();
-    /** Criteria field name: <code>#TrajectoryEntryList</code> or <code>TrajectoryEntryList</code> */
+    /** Criteria field name: <code>#TrajectoryEntryList</code> or <code>TrajectoryEntryListList</code> */
     public int countTrajectoryEntryList();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:24 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -64,14 +64,9 @@ public class ImagePlateDTO
     { setElement("Sample",value); }
 
     public Plate getPlate()
-    { return (Plate) getObjectElement("Plate"); }
+    { return (Plate) parseChildElement("Plate",PlateDTO.class); }
     public void setPlate(Plate value)
     { setElement("Plate",value); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Plate",PlateDTO.class);
-    }
 
 }

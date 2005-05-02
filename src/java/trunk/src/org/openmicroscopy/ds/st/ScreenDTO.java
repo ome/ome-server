@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:37:15 2004
+ * Created by hochheiserha via omejava on Mon May  2 15:12:23 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -70,20 +70,14 @@ public class ScreenDTO
     { setElement("Name",value); }
 
     public List getPlateList()
-    { return (List) getObjectElement("PlateList"); }
+    { return (List) parseListElement("PlateList",PlateDTO.class); }
     public int countPlateList()
     { return countListElement("PlateList"); }
 
     public List getPlateScreenList()
-    { return (List) getObjectElement("PlateScreenList"); }
+    { return (List) parseListElement("PlateScreenList",PlateScreenDTO.class); }
     public int countPlateScreenList()
     { return countListElement("PlateScreenList"); }
 
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseListElement("PlateList",PlateDTO.class);
-        parseListElement("PlateScreenList",PlateScreenDTO.class);
-    }
 
 }
