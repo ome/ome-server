@@ -261,9 +261,13 @@ public abstract class MappedDTO
             {
                 if (dtoClazz.isInstance(o))
                     return;
-                else if (!(o instanceof Map))
+		// it's null.
+		if ((o instanceof String) && ((String) o).length() ==0) {
+		    elements.put(element,null);
+		    return;
+		}
+                else if (!(o instanceof Map)) 
                     throw new DataException("Illegal type for element "+element);
-
                 Map m = (Map) o;
                 MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
                 dto.setMap(m);
