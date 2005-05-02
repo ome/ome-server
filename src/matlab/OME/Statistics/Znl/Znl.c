@@ -22,9 +22,6 @@
 #include <sys/types.h>
 #include "complex.h"
 
-#define row 0
-#define col 1
-
 /*
 	Calculates n! (uses double arithmetic to avoid overflow)
 */
@@ -79,16 +76,16 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
     mexErrMsgTxt("The second argument (l) should be a scalar\n") ;
   }
 
-  if ( !mxIsNumeric(prhs[2]) || (mxIsComplex(prhs[2])) ) {
-    mexErrMsgTxt("The 3d argument (X) should be numeric and not complex.");
+  if ( !mxIsDouble(prhs[2]) ) {
+    mexErrMsgTxt("The 3d argument (X) should be of type mxDOUBLE.");
   }
 
-  if ( !mxIsNumeric(prhs[3]) || (mxIsComplex(prhs[3])) ) {
-    mexErrMsgTxt("The 3d argument (Y) should be numeric and not complex.");
+  if ( !mxIsDouble(prhs[3]) ) {
+    mexErrMsgTxt("The 3d argument (Y) should be of type mxDOUBLE.");
   }
 
-  if ( !mxIsNumeric(prhs[4]) || (mxIsComplex(prhs[4])) ) {
-    mexErrMsgTxt("The 3d argument (P) should be numeric and not complex.");
+  if ( !mxIsDouble(prhs[4]) ) {
+    mexErrMsgTxt("The 3d argument (P) should be of type mxDOUBLE.");
   }
 
   if (mxGetM(prhs[2])!=mxGetM(prhs[3]) || 
@@ -96,7 +93,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
     mexErrMsgTxt("X, Y, and P must have the same number of rows.") ;
   }
 
-  if (mxGetM(prhs[2]) < mxGetM(prhs[2])) {
+  if ( (mxGetN(prhs[2]) != 1)  || (mxGetN(prhs[3]) != 1)  ||
+  	   (mxGetN(prhs[4]) != 1)) {
     mexErrMsgTxt("X, Y, and P should be column vectors.") ;
   }
 
@@ -106,15 +104,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
   X = mxGetPr(prhs[2]) ;
   Y = mxGetPr(prhs[3]) ;
   P = mxGetPr(prhs[4]) ;
-  sum.r = 0.0;
-  sum.i = 0.0;
+  sum = Complex (0.0, 0.0);
+
   for(i = 0 ; i < mxGetM(prhs[2]) ; i++) {
     x = X[i] ;
     y = Y[i] ;
     p = P[i] ;
     
-    Vnl.r = 0.0;
-    Vnl.i = 0.0;
+    Vnl = Complex (0.0, 0.0);
     for( m = 0; m <= (n-l)/2; m++) {
       double tmp = (pow((double)-1.0,(double)m)) * ( factorial(n-m) ) / 
 				( factorial(m) * (factorial((n - 2.0*m + l) / 2.0)) *
