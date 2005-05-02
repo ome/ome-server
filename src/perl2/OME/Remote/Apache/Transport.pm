@@ -17,7 +17,8 @@
 package OME::Remote::Apache::Transport;
 
 use base qw(SOAP::Transport::HTTP::Server);
-
+use OME::Remote::SerializerXMLRPC;
+use OME::Remote::DeserializerXMLRPC;
 sub DESTROY { SOAP::Trace::objects('()') }
 
 sub new { require Apache; require Apache::Constants;
@@ -25,7 +26,10 @@ sub new { require Apache; require Apache::Constants;
 
   unless (ref $self) {
     my $class = ref($self) || $self;
-    $self = $class->SUPER::new(@_);
+    $self = $class->SUPER::new(@_)
+    	-> serializer(OME::Remote::SerializerXMLRPC->new)
+    	-> deserializer(OME::Remote::DeserializerXMLRPC->new)
+    ;
     SOAP::Trace::objects('()');
   }
   return $self;
