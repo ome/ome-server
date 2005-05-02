@@ -265,21 +265,20 @@ sub __execute {
 	$self->{__engine}->eval($command);
 #	$self->{__engine}->eval( "save ome_ml_dump" );
 	$mex->total_time(tv_interval($start_time));
+
+	# Save warning messages if found.
+	# Errors may have happened here, but we're going to check for them later
+	# by attempting to retrieve output variables. The death message indicates
+	# the error probalby happened in the executing of the matlab function,
+	# not in retrieving outputs.
 	$outBuffer =~ s/(\0.*)$//;
 	$outBuffer =~ s/[^[:print:][:space:]]//g;
 	if ($outBuffer =~ m/\S/) {
-# We really should die when we first see errors. I just spent 2 hours tracking 
-# an error from _getScalarFromMatlab() back to this point. I realize that 
-# passing messages from matlab functions to ome land is extremely useful for
-# debugging, so I'm leaving the next two lines in, so developers can easily
-# turn them on as needed.
-# Postnote: Sadly, I must leave these lines in for now b/c FeatureStatistics
-# produces warnings as outputs. I wish there was a robust way to distinguish
-# warnings from errors.
-		$mex->error_message("Error executing matlab command\n\t$command\nError message is:\n".$outBuffer);
-		logdbg "debug", "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
-#		die "Error executing matlab command\n\t$command\nError message is:\n$outBuffer";
+		$mex->error_message("A warning resulted from matlab command\n\t$command\nThe message is:\n".$outBuffer);
+		logdbg "debug", "A warning resulted from matlab command\n\t$command\nThe message is:\n$outBuffer";
 	}
+	# useful for messages from error checks that will happen later.
+	$self->{ __command } = $command;
 }
 
 =head1 Input processing
@@ -379,7 +378,9 @@ sub _getScalarFromMatlab {
 	
 	# Get value from matlab
 	$array = $self->{__engine}->getVariable( $name )
-		or die "Couldn't retrieve $name";
+		or die "Couldn't retrieve output variable $name from matlab.\n".
+		       "This typically indicates an error in the execution of the program.\n".
+		       "The execution string was:\n\t".$self->{ __command }."\n";
 	$array->makePersistent();
 	
 	return $array;
@@ -642,15 +643,19 @@ sub MatlabArray_to_Pixels {
 	$self->{__engine}->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
 
 	# Get array's dimensions and pixel type
+	my $ml_pixels_array = $self->{__engine}->getVariable($matlab_var_name)
+		or die "Couldn't retrieve output variable $matlab_var_name from matlab.\n".
+		       "This typically indicates an error in the execution of the program.\n".
+		       "The execution string was:\n\t".$self->{ __command }."\n";
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) 
-	      = @{$self->{__engine}->getVariable($matlab_var_name)->dimensions()};
+	      = @{$ml_pixels_array->dimensions()};
 	$sizeX = 1 unless defined($sizeX);
 	$sizeY = 1 unless defined($sizeY);
 	$sizeZ = 1 unless defined($sizeZ);
 	$sizeC = 1 unless defined($sizeC);
 	$sizeT = 1 unless defined($sizeT);
 
-	my $matlabType = $self->{__engine}->getVariable($matlab_var_name)->class();
+	my $matlabType = $ml_pixels_array->class();
 	die "Pixels of Matlab class $matlabType are not supported at this time"
 		unless exists $self->{ _matlab_class_to_pixel_type }->{$matlabType};
 	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{$matlabType};
@@ -785,8 +790,9 @@ sub MatlabVector_to_Attrs {
 		my $index = $element->getAttribute( 'Index' )
 			or die "Index attribute not specified in ".$element->toString();
 			
-		$self->{__engine}->eval( "$matlab_var_name"."_index_val_$index = $matlab_var_name($index)" );
-		
+		$self->{__engine}->eval("$matlab_var_name"."_index_val_$index = $matlab_var_name($index)");
+
+
 		# Convert array datatype if requested
 		my $class;
 		if( my $convertToDatatype = $element->getAttribute( 'ConvertToDatatype' ) ) {
@@ -935,7 +941,9 @@ sub MatlabStruct_to_Attr {
 
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
 	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
-		or die "Couldn't retrieve $matlab_var_name";
+		or die "Couldn't retrieve output variable $matlab_var_name from matlab.\n".
+		       "This typically indicates an error in the execution of the program.\n".
+		       "The execution string was:\n\t".$self->{ __command }."\n";
 	$matlab_output->makePersistent();
 
 	# Loop through outputs in the list
