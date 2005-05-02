@@ -29,16 +29,19 @@
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 function [sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = ...
-			FindSignatureSubset (discData, discWalls, fmetric, testing_perc, iterations)
+			FindSignatureSubset (discData, discWalls, sigs_excluded, fmetric, testing_perc, iterations)
 
 % INPUT NEEDED      
 %   'discData'      - your discretized data
 %   'discWalls'     - cell array with bin wall locations
+%   'sigs_excluded' - sigs that could not be discretized and 
+%                     therefore were excluded.
 %   'fmetric'       - function handle to metric that estimates classifier
 %                     performance based on confusion matrix
 %   'testing_perc'  - portion of training images to use as test-images
 %                     (real number between 0 and 1) [optional]
 %   'iterations'    - how many runs with random test images [optional]
+%
 % OUTPUT GIVEN
 %   'sigs_used'     - integers representing which signatures
 %                     were found to be the best (collectively)
@@ -72,11 +75,11 @@ function [sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = ...
 % Lawrence David - 2003.  lad2002@columbia.edu
 % Tom Macura - 2005. tm289@cam.ac.uk               Modified for inclusion in OME
 
-if (nargin < 4) 
+if (nargin < 5) 
 	testing_perc = 0.15;
 end
 
-if (nargin < 5)
+if (nargin < 6)
 	iterations = 15;
 end
 
@@ -84,7 +87,7 @@ end
 % find initial best signature to classify with                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [hei len] = size(discData);
-sigs_left = [1: hei-1];
+sigs_left = setdiff([1: hei-1], sigs_excluded);
 
 [ind_score] = n_fold_validate(discData, discWalls, [], sigs_left, testing_perc, iterations, fmetric);
 [big_score, score_place] = max(ind_score);                                              

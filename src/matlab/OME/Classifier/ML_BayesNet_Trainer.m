@@ -27,21 +27,15 @@ function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bne
 % individually learn wall placements                            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 sigs_excluded = [];
-sigs_left = [];
 discWalls = [];
 
 for i = 1:rows-1              % don't involve the class row, (-1)
-	discWalls_vec = FindDiscretizationWallsFayyadIrani (contData(i,:),contData(end,:));
-	if length(discWalls_vec) == 0
+	discWalls{end+1} = FindDiscretizationWallsFayyadIrani (contData(i,:),contData(end,:));
+	
+	if length(discWalls{end}) == 0
     	sigs_excluded = [sigs_excluded i];
-    else
-        sigs_left = [sigs_left i];
-        discWalls{end+1} = discWalls_vec;
     end
 end
-
-contData = contData([sigs_left end],:);
-[rows cols] = size(contData);        
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % use learned wall placements in discretization                 %
@@ -53,9 +47,6 @@ for i = 1:rows-1
     end
 end
 discData(end,:) = contData(end,:);
-discData = uint8(discData);
-size(discData);
-size(discWalls);
 
 % Uncomment the line below to visualize the feature's discriminating power
 % plot_discData(discData([555 end],:));
@@ -63,7 +54,7 @@ size(discWalls);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % find optimal subset of signatures                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = FindSignatureSubset(discData, discWalls, @ConfusionMatrixScore);
+[sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = FindSignatureSubset(discData, discWalls, sigs_excluded, @ConfusionMatrixScore);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % build the Bayes Net (BNET)                                    %
