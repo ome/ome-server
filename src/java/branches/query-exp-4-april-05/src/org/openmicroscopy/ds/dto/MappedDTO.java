@@ -323,8 +323,12 @@ public abstract class MappedDTO
             
         	   if (obj instanceof String) {
         	   		String s = (String) obj;
-               	if  (s.compareTo(NULL_REFERENCE) ==0 || s.length() == 0)
-               		return null;
+		// when we have a null, return an empty list.
+		if  (s.compareTo(NULL_REFERENCE) ==0 || s.length() == 0) {
+		    MappedDTOList newList = new MappedDTOList();
+		    elements.put(element,newList);
+		    return newList;
+		}
             }
         	  
         	   List list = (List) obj;
