@@ -36,6 +36,8 @@
 
 package org.openmicroscopy.ds;
 
+import org.openmicroscopy.ds.dto.MappedDTO;
+
 public class PrimitiveConverters
 {
     public static Short convertToShort(Object o)
@@ -49,7 +51,8 @@ public class PrimitiveConverters
             return new Short(((Number) o).shortValue());
         else if (o instanceof String) {
         		String s = (String) o;
-        		if (s.length() == 0)
+        		if (s.length() == 0 ||
+			    s.compareTo(MappedDTO.NULL_REFERENCE) ==0 )
         			return null;
         		else return Short.valueOf(s);
         }
@@ -71,7 +74,8 @@ public class PrimitiveConverters
             return new Integer(((Number) o).intValue());
         else if (o instanceof String) {
         	    String s = (String) o;
-        	    if (s.length() == 0)
+        	    if (s.length() == 0 || 
+			s.compareTo(MappedDTO.NULL_REFERENCE) ==0 )
         	    		return null;
         	    else 
         	    		return Integer.valueOf(s);
@@ -93,7 +97,8 @@ public class PrimitiveConverters
             return new Long(((Number) o).longValue());
         else if (o instanceof String) {
         		String s = (String) o;
-        		if (s.length() == 0)
+        		if (s.length() == 0 ||
+			    s.compareTo(MappedDTO.NULL_REFERENCE) ==0 )
         			return null;
         		else
         			return Long.valueOf(s);
@@ -115,7 +120,8 @@ public class PrimitiveConverters
             return new Float(((Number) o).floatValue());
         else if (o instanceof String) {
         		String s = (String) o;
-        		if (s.length() == 0)
+        		if (s.length() == 0 ||
+			    s.compareTo(MappedDTO.NULL_REFERENCE) ==0 )
         			return null;
         		else 
         			return Float.valueOf(s);
@@ -138,7 +144,8 @@ public class PrimitiveConverters
             return new Double(((Number) o).doubleValue());
         else if (o instanceof String) {
         		String s = (String) o;
-        		if (s.length() == 0)
+        		if (s.length() == 0 ||
+			    s.compareTo(MappedDTO.NULL_REFERENCE) ==0 )
         			return null;
         		else
         			return Double.valueOf(s);
