@@ -56,6 +56,7 @@ use base qw(OME::Web::DBObjRender);
 =head2 _renderData
 
 sets '/name' to either module name or "Virtual MEX [id]"
+sets 'error' to 1 if the status is error
 
 =cut
 
@@ -71,6 +72,13 @@ sub _renderData {
 			} else {
 				$record{ $request_string } = 'Virtual MEX '.$obj->id();
 			}
+		}
+	}
+	if( exists $field_requests->{ 'error' } ) {
+		foreach my $request ( @{ $field_requests->{ 'error' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = 1
+				if $obj->status eq 'ERROR';
 		}
 	}
 	return %record;
