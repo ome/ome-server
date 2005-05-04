@@ -115,7 +115,6 @@ Centroid.prototype.makeTextBox = function( ) {
 }
 
 Centroid.prototype.buildSVG = function() {
-	centroidSVG = svgDocument.createElementNS(svgns, "g");
 	centroidSVG = svgDocument.createElementNS( svgns, "g" );
 	translation = 'translate(' + this.theX + ',' + this.theY + ')';
 	centroidSVG.setAttribute( "transform", translation );
@@ -241,12 +240,12 @@ CentroidOverlay.prototype.makeControls = function() {
 	this.dynamicControls.padding = 5;
 	
 	this.allZButton = new button(
-		100, 0, this.allZ
+		100, 0, this.showAllZs
 	);
 	this.allZButton.setLabel(-9, 9,"Show all Z");
 	this.allZButton.getLabel().setAttribute("text-anchor", "end");
 	this.allTButton = new button(
-		100, 20, this.allT
+		100, 20, this.showAllTs
 	);
 	this.allTButton.setLabel(-9, 9,"Show all T");
 	this.allTButton.getLabel().setAttribute("text-anchor", "end");
@@ -273,19 +272,19 @@ CentroidOverlay.prototype.makeControls = function() {
 	return this.root;
 }
 
+
 /*****
 	makeOverlay
 	returns the centroid overlay for this instance, loaded into DOM with a <g> as the root.
 *****/
 CentroidOverlay.prototype.makeOverlay = function( ) {
 	
+
 	for( i in this.centroidData ) {
-		layerSlice = svgDocument.createElementNS( svgns, "g" );
 		theZ = this.centroidData[i]['theZ'];
 		theT = this.centroidData[i]['theT'];
 		centroid = new Centroid( this.centroidData[i] );
-		layerSlice.appendChild( centroid.buildSVG() );
-		this.addLayerSlice( theZ, theT, layerSlice );
+		this.addGraphicToSlice (theZ, theT, centroid.buildSVG());
 	}
 	
 	return this.overlayRoot;
