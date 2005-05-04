@@ -138,11 +138,16 @@ Overlay.prototype.turnOnOff = function( value ) {
 *****/
 Overlay.prototype.showAllZs = function( value ) {
 	this.allZ = value;
+	var z;
 	if( !value ) {
 		for( z in this.sliceByIndex ) {
 			if( this.sliceByIndex[z][this.oldT] && z != this.oldZ ) {
 				this.sliceByIndex[z][this.oldT].setAttribute( "display", "none" );
 			}	
+		}
+	} else {
+		for( z in this.sliceByIndex ) {
+			this.sliceByIndex[z][this.oldT].setAttribute( "display", "inline" );
 		}
 	}
 	this.updateIndex( this.oldZ, this.oldT );
@@ -155,11 +160,16 @@ Overlay.prototype.showAllZs = function( value ) {
 *****/
 Overlay.prototype.showAllTs = function( value ) {
 	this.allT = value;
+	var t;
 	if( !value ) {
 		for( t in this.sliceByIndex[this.oldZ] ) {
 			if( this.sliceByIndex[this.oldZ][t] && t != this.oldT ) {
 				this.sliceByIndex[this.oldZ][t].setAttribute( "display", "none" );
 			}	
+		}
+	} else {
+		for( t in this.sliceByIndex[this.oldZ] ) {
+			this.sliceByIndex[this.oldZ][t].setAttribute( "display", "inline" );
 		}
 	}
 	this.updateIndex( this.oldZ, this.oldT );
@@ -167,19 +177,26 @@ Overlay.prototype.showAllTs = function( value ) {
 
 /*****
 	
-	addLayerSlice
+	addGraphicToSlice
 	
-	adds a layer slice to the overlay
+	adds a <g> to the specified slice.
+	Adds new slice to overlay if necessary.
+	Slices have their own <g> that contains all graphics.
 		
 *****/
-Overlay.prototype.addLayerSlice = function( theZ, theT, layerSlice ) {
-	layerSlice.setAttribute( "display", "none" );
+Overlay.prototype.addGraphicToSlice = function( theZ, theT, theG ) {
+	var layerSlice;
 	if( this.sliceByIndex[theZ] == null ) 
 		this.sliceByIndex[theZ] = new Array();
-	if( this.sliceByIndex[theZ][theT] == null ) 
-		this.sliceByIndex[theZ][theT] = new Array();
-	this.sliceByIndex[theZ][theT] = layerSlice;
-	this.overlayRoot.appendChild( layerSlice );
+	if( this.sliceByIndex[theZ][theT] == null ) {
+		layerSlice = svgDocument.createElementNS( svgns, "g" );
+		layerSlice.setAttribute( "display", "none" );
+		this.sliceByIndex[theZ][theT] = layerSlice;
+		this.overlayRoot.appendChild( layerSlice );
+	} else {
+		layerSlice = this.sliceByIndex[theZ][theT];
+	}
+	layerSlice.appendChild( theG );
 }
 
 /********************************************************************************************
