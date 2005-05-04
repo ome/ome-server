@@ -99,12 +99,13 @@ sub _renderData {
 						analysis_chain_node      => $node->id,
 						analysis_chain_execution => $obj->id
 					} ).
-					"' title='View Executions of this node'>".
-					$node->module->name."</a>".
+					"' title='View Executions of this node' ".
 					( $error_count ? 
-						" <i>($error_count Errors)</i>" :
+						'class="ome_error"' :
 						''
-					);
+					).
+					">".
+					$node->module->name."</a>";
 				push( @node_execution_links, $link );					
 			}
 			my $request_string = $request->{ 'request_string' };
