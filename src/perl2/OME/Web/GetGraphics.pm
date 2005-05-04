@@ -463,6 +463,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "overlayManager.switchOverlay(0)", 200 );
 			setTimeout( "overlayManager.turnLayerOnOff(false)", 200 );
 			setTimeout( "overlayManager.toolBox.hide()", 200 );
+			overlayManager.updateIndex();
 ENDSVG
 }
 
