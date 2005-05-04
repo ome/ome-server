@@ -3,7 +3,8 @@
 	Analysis Chain <TMPL_VAR NAME=analysis_chain>
 	was executed against Dataset <TMPL_VAR NAME=dataset>
 	on <TMPL_VAR NAME=timestamp>
-	by <TMPL_VAR NAME=experimenter>.
+	by <TMPL_VAR NAME=experimenter>. 
+	<TMPL_IF NAME=num_errors>It had <b><TMPL_VAR NAME=num_errors> Errors</b></TMPL_IF>
 </p>
 <p>
 <font class="ome_relation_title">
