@@ -58,6 +58,8 @@ use base qw(OME::Web::DBObjRender);
 
 sets '/name' to the MEX's name
 sets 'target' to the MEX's target
+sets 'status' to the MEX's status
+sets 'error' to 1 if the MEX's status is ERROR
 
 =cut
 
@@ -85,6 +87,19 @@ sub _renderData {
 			my $mode = ( exists $request->{render} ? $request->{render} : undef );
 			$record{ $request_string } = $self->
 				render( $target, $mode );
+		}
+	}
+	if( exists $field_requests->{ 'status' } ) {
+		foreach my $request ( @{ $field_requests->{ 'status' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = $obj->module_execution->status;
+		}
+	}
+	if( exists $field_requests->{ 'error' } ) {
+		foreach my $request ( @{ $field_requests->{ 'error' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = 1
+				if $obj->module_execution->status eq 'ERROR';
 		}
 	}
 	return %record;
