@@ -63,6 +63,9 @@ use base qw(OME::Web::DBObjRender);
 makes virtual fields breakdown_by_node, which is a list of nodes, each of which
 links to a search page that will show all executions of that node in this CHEX.
 
+makes virtual field 'num_errors' that counts MEXs that have error status.
+This can be used with a TMPL_IF
+
 implements /name as the chain's name
 
 =cut
@@ -97,6 +100,15 @@ sub _renderData {
 			);
 			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = join( ', ', @node_execution_links );
+		}
+	}
+	if( exists $field_requests->{ 'num_errors' } ) {
+		foreach my $request ( @{ $field_requests->{ 'num_errors' } } ) {
+			my $error_node_count = $obj->count_node_executions( 
+				'module_execution.status' => 'ERROR'
+			);
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = $error_node_count;
 		}
 	}
 	if( exists $field_requests->{ '/name' } ) {
