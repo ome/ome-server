@@ -87,17 +87,26 @@ sub _renderData {
 				$_->module->name ne 'Image import' ),
 				@nodes
 			);
-			my @node_execution_links = map( 
-				"<a href='".
-				$self->pageURL( 'OME::Web::Search', {
-					Type                     => 'OME::AnalysisChainExecution::NodeExecution',
-					analysis_chain_node      => $_->id,
-					analysis_chain_execution => $obj->id
-				} ).
-				"' title='View Executions of this node'>".
-				$_->module->name."</a>",
-				@nodes
-			);
+			my @node_execution_links;
+			foreach my $node ( @nodes ) {
+				my $error_count = $obj->count_node_executions( 
+					'module_execution.status' => 'ERROR',
+					analysis_chain_node       => $node
+				);
+				my $link = "<a href='".
+					$self->pageURL( 'OME::Web::Search', {
+						Type                     => 'OME::AnalysisChainExecution::NodeExecution',
+						analysis_chain_node      => $node->id,
+						analysis_chain_execution => $obj->id
+					} ).
+					"' title='View Executions of this node'>".
+					$node->module->name."</a>".
+					( $error_count ? 
+						" <i>($error_count Errors)</i>" :
+						''
+					);
+				push( @node_execution_links, $link );					
+			}
 			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = join( ', ', @node_execution_links );
 		}
