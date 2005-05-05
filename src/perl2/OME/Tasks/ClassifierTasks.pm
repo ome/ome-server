@@ -85,20 +85,19 @@ definitions of modules.
 Given a classifier object or module execution that produced a classifier,
 this returns an optimized chain for running the classifier. It will first 
 look for an existing chain. If the search fail, it will make a new one.
-Note, if a new chain is constructed, you will have to commit the transaction
-in order for the chain to be written to the DB.
+NOTE, if a new chain is constructed, it will commit the transaction before
+returning.
 
 =cut
 
 sub getClassifierChain {
 	my ($proto, $classifierOrMEX ) = @_;
-	
-# I haven't tested this yet
+
 	# Search for an existing one
-#	my $chain = $proto->findClassifierChain( $classifierOrMEX );
-#	return $chain if $chain;
-	# Can't find one? Make a new one
-my	$chain = $proto->makeClassifierChain( $classifierOrMEX );
+	my $chain = $proto->findClassifierChain( $classifierOrMEX );
+	return $chain if $chain;
+	# Can't find one? Then make a new one
+	$chain = $proto->makeClassifierChain( $classifierOrMEX );
 	return $chain;
 }
 
@@ -138,7 +137,7 @@ sub findClassifierChain {
 	my %sigsNeededLookup;
 	foreach my $sigNeeded ( @$sigsNeededList ) {
 		my $fi = $factory->findObject( 'OME::Module::FormalInput', 
-			name   => $_->Legend->FormalInput,
+			name   => $sigNeeded->Legend->FormalInput,
 			module => $sigStitcherNode->module
 		);
 		$sigsNeededLookup{ $fi->id } = undef;
@@ -146,15 +145,15 @@ sub findClassifierChain {
 
 	# Step 2: search and return if found
 	my @classifierChainCandidatesByStitcherNode = $factory->findObjects( 'OME::AnalysisChain::Node', {
-		'chain.nodes.module.name' => 'BayesNet Classifier',
-		'module'                  => $sigStitcherNode->module,
-		'__distinct'              => 'id'
+		'analysis_chain.nodes.module.name' => 'BayesNet Classifier',
+		'module'                           => $sigStitcherNode->module,
+		'__distinct'                       => 'id'
 	} );
 	foreach my $stitcherNodeCandidate ( @classifierChainCandidatesByStitcherNode ) {
 		# if there is the same number of links into the stitcher node as links we need
 		# and if there are no links into the stitcher node that are not in our list
 		# then we have a winner
-		return $stitcherNodeCandidate->chain if( 
+		return $stitcherNodeCandidate->analysis_chain if( 
 			( scalar( keys %sigsNeededLookup ) eq $stitcherNodeCandidate->count_input_links ) &&
 			( not grep( 
 				(not exists $sigsNeededLookup{ $_->to_input->id }), 
