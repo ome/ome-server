@@ -93,23 +93,46 @@ sub _renderData {
 					'module_execution.status' => 'ERROR',
 					analysis_chain_node       => $node
 				);
-				my $link = "<a href='".
-					$self->pageURL( 'OME::Web::Search', {
-						Type                     => 'OME::AnalysisChainExecution::NodeExecution',
-						analysis_chain_node      => $node->id,
-						analysis_chain_execution => $obj->id
-					} ).
-					"' title='View Executions of this node' ".
-					( $error_count ? 
-						'class="ome_error"' :
-						''
-					).
-					">".
-					$node->module->name."</a>";
-				push( @node_execution_links, $link );					
+				my $nex_count = $obj->count_node_executions( 
+					analysis_chain_node       => $node
+				);
+				my $link;
+				# Link straight to the mex if this node has a single NEX
+				if( $nex_count eq 1 ) {
+					my $single_nex = $factory->findObject( 
+						'OME::AnalysisChainExecution::NodeExecution',
+						analysis_chain_execution => $obj,
+						analysis_chain_node      => $node
+					);
+					$link = "${nex_count}x <a href='".
+						$self->getObjDetailURL( $single_nex->module_execution ).
+						"' title='View Executions of this node' ".
+						( $error_count ? 
+							'class="ome_error"' :
+							'class="ome_detail"'
+						).
+						">".
+						$node->module->name."</a>";
+				# Link to the search page if this node has many NEXs
+				} else {
+					$link = "${nex_count}x <a href='".
+						$self->pageURL( 'OME::Web::Search', {
+							Type                     => 'OME::AnalysisChainExecution::NodeExecution',
+							analysis_chain_node      => $node->id,
+							analysis_chain_execution => $obj->id
+						} ).
+						"' title='View Executions of this node' ".
+						( $error_count ? 
+							'class="ome_error"' :
+							'class="ome_detail"'
+						).
+						">".
+						$node->module->name."</a>";
+				}
+				push( @node_execution_links, $link );
 			}
 			my $request_string = $request->{ 'request_string' };
-			$record{ $request_string } = join( ', ', @node_execution_links );
+			$record{ $request_string } = '<ul>'.join( "\n", map( "<li>".$_."</li>", @node_execution_links )).'</ul>';
 		}
 	}
 	if( exists $field_requests->{ 'num_errors' } ) {
