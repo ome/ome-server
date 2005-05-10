@@ -114,7 +114,8 @@ public class Instantiator
             return null;
 	if (result instanceof String) {
 	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
+		s.length() ==0)
 		return null;
 	    else 
 		throw new RemoteServerErrorException("Invalid result type "+
@@ -163,7 +164,8 @@ public class Instantiator
 
 	if (result instanceof String) {
 	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
+		s.length() ==0)
 		return null;
 	    else 
 		throw new RemoteServerErrorException("Invalid result type "+
@@ -216,7 +218,8 @@ public class Instantiator
         } 
 	if (result instanceof String) {
 	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
+		s.length() ==0)
 		return null;
 	    else 
 		throw new RemoteServerErrorException("Invalid result type "+
@@ -267,7 +270,8 @@ public class Instantiator
         } 
 	if (result instanceof String) {
 	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
+		s.length() ==0)
 		return null;
 	    else 
 		throw new RemoteServerErrorException("Invalid result type "+
