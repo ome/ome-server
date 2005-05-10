@@ -112,7 +112,14 @@ public class Instantiator
     {
         if (result == null)
             return null;
-
+	if (result instanceof String) {
+	    String s = (String) result;
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+		return null;
+	    else 
+		throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+	}
         if (result instanceof Map)
         {
             Class dtoClass = getDTOClass(javaClass);
@@ -154,6 +161,14 @@ public class Instantiator
         if (result == null)
             return null;
 
+	if (result instanceof String) {
+	    String s = (String) result;
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+		return null;
+	    else 
+		throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+	}
         if (result instanceof Map)
         {
             Class dtoClass = getSemanticTypeClass(semanticType);
@@ -198,7 +213,16 @@ public class Instantiator
         if (result == null)
         {
             return null;
-        } else if (result instanceof List) {
+        } 
+	if (result instanceof String) {
+	    String s = (String) result;
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+		return null;
+	    else 
+		throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+	}
+	if (result instanceof List) {
             List list = (List) result;
 
             try
@@ -240,7 +264,16 @@ public class Instantiator
         if (result == null)
         {
             return null;
-        } else if (result instanceof List) {
+        } 
+	if (result instanceof String) {
+	    String s = (String) result;
+	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0)
+		return null;
+	    else 
+		throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+	}
+	if (result instanceof List) {
             List list = (List) result;
 
             try
