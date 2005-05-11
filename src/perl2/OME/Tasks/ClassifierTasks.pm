@@ -101,6 +101,30 @@ sub getClassifierChain {
 	return $chain;
 }
 
+=head2 getClassifiersCategoryGroup()
+
+	my $categoryGroup = OME::Tasks::ClassifierTasks->
+		getClassifiersCategoryGroup( $classifier );
+
+This returns the category group a classifier object was trained with.
+
+=cut
+
+sub getClassifiersCategoryGroup {
+	my ($proto, $classifier ) = @_;
+	my $factory = OME::Session->instance()->Factory();
+
+	die "I need a classifier" unless $classifier;
+	my $classifications_actual_input = $factory->
+		findObject( 'OME::ModuleExecution::ActualInput',
+			module_execution => $classifier->module_execution,
+			'formal_input.semantic_type.name' => 'Classification',
+		) or die "Couldn't find a Classification actual input to MEX ".$classifier->module_execution->id;
+	my $classifications = OME::Tasks::ModuleExecutionManager->
+		getAttributesForMEX( $classifications_actual_input->input_module_execution, 'Classification' )
+		or die "Couldn't find attributes for actual input ".$classifications_actual_input->id;
+	return $classifications->[0]->Category()->CategoryGroup();
+}
 =head2 findClassifierChain()
 
 	my $classifierChain = OME::Tasks::ClassifierTasks->
