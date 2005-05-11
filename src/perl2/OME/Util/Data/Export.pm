@@ -82,6 +82,8 @@ Options:
 
   -h  Print this help message.
   
+  --no_compress  Do not compress the output file. (disabled by default)
+  
 USAGE
     CORE::exit(1);
 }
@@ -89,11 +91,13 @@ USAGE
 
 sub chains {
 	my ($self,$commands) = @_;
-	my $filename;
-	my $help;
-	my $datasetName;
+	my ($filename, $help, $datasetName, $no_compression );
 	
-	GetOptions('file|f=s' => \$filename);
+	GetOptions(
+		'file|f=s' => \$filename,
+		'no_compress!' => \$no_compression 
+	);
+	$no_compression = ( $no_compression ? 0 : undef );
 	my @chain_names = @ARGV;
 	
 	my $session = $self->getSession();
@@ -114,7 +118,9 @@ sub chains {
 	$chainExport->buildDOM (\@chains);
 
 	if ($filename) {
-		$chainExport->exportFile ($filename);
+		$chainExport->exportFile ($filename, 
+			( defined $no_compression ? ( compression => 0 ) : () )
+		);
 	} else {
 		print $chainExport->exportXML();
 	}
