@@ -57,9 +57,11 @@ use OME;
 $VERSION = $OME::VERSION;
 use base qw(OME::Web::DBObjRender);
 use OME::Session;
+use OME::Tasks::ClassifierTasks;
 
 =head2 _renderData
 
+implements '/name' with the name of the categoryGroup and the dataset it was run against.
 populates field FileID with a link to download the file from the image server
 
 =cut
@@ -69,6 +71,7 @@ sub _renderData {
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	my %record;
+	# FileID
 	if( exists $field_requests->{ 'FileID' } ) {
 		foreach my $request ( @{ $field_requests->{ 'FileID' } } ) {
 			my $request_string = $request->{ 'request_string' };
@@ -77,6 +80,17 @@ sub _renderData {
 				'<a href="'.
 				$repository->ImageServerURL().'?Method=ReadFile&FileID='.$obj->FileID().
 				'" title="Download this file">'.$obj->FileID()."</a>";
+		}
+	}
+	# /name
+	if( exists $field_requests->{ '/name' } ) {
+		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my $cg = OME::Tasks::ClassifierTasks->getClassifiersCategoryGroup( $obj );
+			my $training_dataset = $obj->dataset();
+			$record{ $request_string } = 
+				"Classify by ".$cg->Name.
+				" (trained on ".$training_dataset->name.")";
 		}
 	}
 	return %record;
