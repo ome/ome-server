@@ -1,0 +1,28 @@
+<!--
+We highly advise you read this <a href="">tutorial</a> if this is your
+first time to use OME's automated classification.
+-->
+<h2>Run a classifier</h2>
+You'll need 2 ingredients:
+<ol>
+
+<li><b>Experimental Dataset:</b> a set of images you would like the classifier to distiguish.<br>
+Using <TMPL_VAR NAME="exp_dataset">. (<a href="javascript:selectOne('OME::Dataset', 'exp_dataset_id');" class="ome_widget">change selection</a>)
+<input type="hidden" id="exp_dataset_id" name="exp_dataset_id" value="<TMPL_VAR NAME=exp_dataset_id>">
+</li>
+
+<li><TMPL_UNLESS NAME=classifier><font class="ome_blocking_step"></TMPL_UNLESS><b>Classifier object:</b><TMPL_UNLESS NAME=classifier></font></TMPL_UNLESS>
+	a Bayesian Network trained to sort images into categories.<br>
+<TMPL_IF NAME="classifier">
+	Click to examine <TMPL_VAR NAME="classifier">.<br>
+</TMPL_IF>
+Select a Classifier: <TMPL_VAR NAME=classifier_select> or 
+<a href="javascript: selectOne( '\@BayesNetClassifier', 'classifier_id' );">Search</a>.
+</li>
+
+</ol>
+
+<TMPL_IF NAME=classifier>
+	<hr>
+	You are ready to <a href="javascript: document.forms[0].elements['action'].value = 'runClassifier'; document.forms[0].submit();" class="ome_punchline">Run the Classifier</a>
+</TMPL_IF>
