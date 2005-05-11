@@ -372,6 +372,12 @@ sub renderArray {
 				if( $field eq '/common_name' ) {
 					$tmpl_data{ $request_string } = $common_name;
 				}
+				# /run_time_param = try to pull out a value from the options hash.
+				if ( $field eq '/run_time_param' &&
+				     exists $request->{ 'name' } && 
+				     exists $options->{ $request->{ 'name' } } ) {
+					$tmpl_data{ $request_string } = $options->{ $request->{ 'name' } };
+				}
 			
 				# populate loops that tile objects
 				if( $field eq '/tile_loop' ) {
@@ -531,7 +537,7 @@ sub renderData {
 			
 			# don't override specialized renderings
 			next if exists $record{ $request_string };
-					
+
 			# /common_name = object's commone name
 			if( $field eq '/common_name' ) {
 				$record{ $request_string } = $common_name;
@@ -571,6 +577,17 @@ sub renderData {
 			# /obj_detail_url = url to detailed description of object
 			} elsif( $field eq '/obj_detail_url' ) {
 				$record{ $request_string } = $self->getObjDetailURL( $obj );
+
+			# /run_time_param = try to pull out a value from the options hash.
+			} elsif( $field eq '/run_time_param' ) {
+				$record{ $request_string } = $options->{ $request->{ 'name' } }
+					if exists $options->{ $request->{ 'name' } };
+					
+			# /default_value = allow run time setting of selection through on $options hash
+			} elsif( $field eq '/default_value' ) {
+				$record{ $request_string } = 1
+					if( exists $options->{ default_value } &&
+					    $options->{ default_value } eq $obj->id );
 					
 			# populate field requests
 			} else {
@@ -1012,6 +1029,13 @@ Magic fields for individual objects
 		and blank if neither option is specified.
 	/LSID: the object's LSID
 	/object/render-mode: render the current object in the mode given. evaluates to a render() call.
+	/default_value: will be set to 1 if $obj->id = $options->{ default_value }
+		It's a way to allow run time setting of the selected value in a group
+		See generic_dropdown_select.tmpl for an example
+	/run_time_param/name-Foo: allows run time parameters to be passed to the template. 
+		in the above example, Foo would be nabbed from the options hash and stuffed
+		into the template.
+	
 
 Magic fields for lists of objects (templates picked up by renderArray().)
 	/more_info_url: shows a url to more detailed version of the list
@@ -1022,6 +1046,10 @@ Magic fields for lists of objects (templates picked up by renderArray().)
 	/common_name: common name of the object type (i.e. Image, Pixels)
 	/tile_loop/width-n: used to make a multi column table with one object rendered per cell. see generic_tiled_list.tmpl
 	/obj_loop: used to loop across objects.
+	/run_time_param/name-Foo: allows run time parameters to be passed to the template. 
+		in the above example, Foo would be nabbed from the options hash and stuffed
+		into the template.
+	
 
 Either of the loop Magic fields can contain specific fields or render mode requests.
 
