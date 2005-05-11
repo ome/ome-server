@@ -90,6 +90,8 @@ Options:
   
   -d  Dataset name or ID.
     
+  -s, --skip_optional_inputs
+
   -i, --inputs
     specify User inputs by id and source MEX(s)
     ex. -i 551:17,21-552:114 
@@ -112,17 +114,17 @@ USAGE
 sub execute {
 	my $self = shift;
 	
-	my ($chainStr, $datasetStr, $reuse, $caching, $help);
+	my ($chainStr, $datasetStr, $reuse, $caching, $help, $inputs_string, $skip_optional_inputs );
 	$reuse = 0;
 	$caching = 0;
 	
-	my $inputs_string;
 	GetOptions ('a=s' => \$chainStr,
 				'd=s' => \$datasetStr,
 				'force|f!' => \$reuse,
 				'caching|c!' => \$caching,
 				'help|h' => \$help,
-				'inputs|i=s' => \$inputs_string);
+				'inputs|i=s' => \$inputs_string,
+				'skip_optional_inputs|s!' => \$skip_optional_inputs );
 
     execute_help() if $help;
     OME::DBObject->Caching(1) if ($caching or $ENV{'OME_CACHE'});
@@ -169,7 +171,8 @@ sub execute {
 	
 	# User inputs were given as command line parameters
 	my %user_inputs;
-	my @input_chunks = split( m/-/, $inputs_string );
+	my @input_chunks = split( m/-/, $inputs_string )
+		if $inputs_string;
 	foreach my $chunk ( @input_chunks ) {
 		my ($fi_id, @mex_ids) = split( m/[:|,]/, $chunk );
 		my $fi = $factory->loadObject( 'OME::Module::FormalInput', $fi_id )
@@ -186,6 +189,8 @@ sub execute {
 	# Retrieve user inputs
 	my $cmanager = OME::Tasks::ChainManager->new($session);
 	my $user_input_list = $cmanager->getUserInputs($chain);
+	@$user_input_list = grep {not $_->[2]->optional} @$user_input_list
+		if $skip_optional_inputs;
 	print "User Inputs:\n" if (scalar @$user_input_list);
 
 	foreach my $user_input (@$user_input_list) {
