@@ -373,6 +373,13 @@ sub _makeDefaultDisplayOptions {
 		ColorMap   => 'RGB',
 	);
 	my $displayOptions;
+
+	# set up MEX
+    my $annotation_module = OME::Session->instance()->
+    	Configuration()->annotation_module();
+	my $mex = OME::Tasks::ModuleExecutionManager->
+		createMEX($annotation_module,'I',$image);
+
 	
 	# set display channels
 	my (%displayChannelData, $channelIndex, @channelOrder);
@@ -398,7 +405,7 @@ sub _makeDefaultDisplayOptions {
 	( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
 		__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	$displayChannelData{ Gamma } = 1.0;
-	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
+	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, $mex, \%displayChannelData );
 	$displayData{ RedChannel } = $displayChannel;
 
 	# Gray Channel
@@ -415,7 +422,7 @@ sub _makeDefaultDisplayOptions {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
 			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 		$displayChannelData{ Gamma } = 1.0;
-		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $mex, \%displayChannelData );
 	} else {
 		$displayData{GreenChannelOn} = 0;
 	}
@@ -430,14 +437,14 @@ sub _makeDefaultDisplayOptions {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
 			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 		$displayChannelData{ Gamma } = 1.0;
-		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $mex, \%displayChannelData );
 	} else {
 		$displayData{BlueChannelOn} = 0;
 	}
 	$displayData{ BlueChannel } = $displayChannel;
 
 	# Make DisplayOptions
-	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, undef, \%displayData )
+	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, $mex, \%displayData )
 		or die "Couldn't make a new DisplayOptions";
 	return $displayOptions;
 }
