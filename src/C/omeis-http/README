@@ -1,0 +1,3 @@
+To compile the main.c file do:
+make
+gcc -L. main.c -lcurl -lhttpOMEIS
