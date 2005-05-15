@@ -2,7 +2,7 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats \
-		maxIntensity cgrayce2 omeis-http
+		maxIntensity cgrayce2 omeis_http
 FINK_INCLUDE = -I/sw/include/
 INCS    = -I/usr/local/include $(FINK_INCLUDE)
 COMPRESSION_LIBS = -lz -lbz2
@@ -25,8 +25,8 @@ export OME_ROOT
 
 all: $(TARGETS)
 
-omeis-http:
-	make -C omeis-http
+omeis_http: 
+	$(MAKE) -C omeis-http
 
 BSUtils.o: BSUtils.c
 	$(CC) $(CFLAGS) -c BSUtils.c
