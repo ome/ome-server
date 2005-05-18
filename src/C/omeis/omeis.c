@@ -131,6 +131,10 @@ char **cgivars=param;
 	if ( (theParam = get_param (param,"PixelsID")) ) {
 		sscanf (theParam,"%llu",&scan_ID);
 		ID = (OID) scan_ID;
+		if (ID <= 0) {
+			OMEIS_ReportError (method, NULL, ID, "PixelsID must be positive.");
+			return (-1);
+		}
 	} else if (m_val != M_NEWPIXELS   &&
 			 m_val != M_FILEINFO      &&
 			 m_val != M_FILESHA1      &&
@@ -144,7 +148,7 @@ char **cgivars=param;
 			OMEIS_ReportError (method, NULL, ID, "PixelsID Parameter missing");
 			return (-1);
 	}
-
+	
 	if ((theParam = get_lc_param(param,"IsLocalFile"))) {
 		if ( !strcmp (theParam,"true") || !strcmp (theParam,"1") ) isLocalFile = 1;
 	} else
