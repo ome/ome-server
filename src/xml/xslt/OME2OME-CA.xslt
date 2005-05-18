@@ -139,9 +139,11 @@
 			<xsl:attribute name = "Experimenter">
 				<xsl:value-of select = "OME:ExperimenterRef/@ID"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Group">
-				<xsl:value-of select = "OME:GroupRef/@ID"/>
-			</xsl:attribute>
+			<xsl:if test = "string-length(OME:GroupRef/@ID) > 0">
+				<xsl:attribute name = "Group">
+					<xsl:value-of select = "OME:GroupRef/@ID"/>
+				</xsl:attribute>
+			</xsl:if>
 			<xsl:if test = "string-length(@DefaultPixels) > 0">
 				<xsl:attribute name = "DefaultPixels">
 					<xsl:value-of select = "@DefaultPixels"/>
