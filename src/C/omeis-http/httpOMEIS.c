@@ -239,7 +239,6 @@ OID finishPixels (omeis* is, OID pixelsID)
 	char command [256];
 	sprintf(command,"%s%sMethod=FinishPixels&PixelsID=%llu", is->url,"?",pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
-	buffer[1023] = '\0';
 
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
