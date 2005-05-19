@@ -3,33 +3,33 @@
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
 
-void CtoOMEISDatatype (char* data_type, pixHeader* head)
+void CtoOMEISDatatype (const char* data_type, pixHeader* head)
 {
-	if (strcmp (data_type, "char") == 0) {
+	if (!strcmp (data_type, "char") || !strcmp(data_type, "int8")) {
 		head->bp       = 1;
 		head->isSigned = 1;
 		head->isFloat  = 0;
-	} else if (strcmp (data_type, "unsigned char") == 0) {
+	} else if (!strcmp (data_type, "unsigned char") || !strcmp(data_type, "uint8")) {
 		head->bp       = 1;
 		head->isSigned = 0;
 		head->isFloat  = 0;
-	} else if (strcmp (data_type, "short") == 0) {
+	} else if (!strcmp (data_type, "short") || !strcmp(data_type, "int16")) {
 		head->bp       = 2;
 		head->isSigned = 1;
 		head->isFloat  = 0;
-	} else if (strcmp (data_type, "unsigned short") == 0) {
+	} else if (!strcmp (data_type, "unsigned short") || !strcmp(data_type, "uint16")) {
 		head->bp       = 2;
 		head->isSigned = 0;
 		head->isFloat  = 0;
-	} else if (strcmp (data_type, "long") == 0 || strcmp (data_type, "int") == 0) {
+	} else if (!strcmp (data_type, "long") || !strcmp (data_type, "int") || !strcmp (data_type, "int32")) {
 		head->bp       = 4;
 		head->isSigned = 1;
 		head->isFloat  = 0;
-	} else if (strcmp (data_type, "unsigned long") == 0) {
+	} else if (!strcmp (data_type, "unsigned long") || !strcmp (data_type, "uint32")) {
 		head->bp       = 4;
 		head->isSigned = 0;
 		head->isFloat  = 0;
-	} else if (strcmp (data_type, "float") == 0) {
+	} else if (strcmp (data_type, "float") || !strcmp (data_type, "single")) {
 		head->bp       = 4;
 		head->isSigned = 0;
 		head->isFloat  = 1;
@@ -49,11 +49,32 @@ void OMEIStoCDatatype (char* data_type, pixHeader* head)
 	} else if (head->bp == 2 && head->isSigned == 0) {
 		strcpy (data_type, "unsigned short") ;
 	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 0) {
-		strcmp (data_type, "int");
+		strcpy (data_type, "int");
 	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
-		strcmp (data_type, "unsigned long");
+		strcpy (data_type, "unsigned long");
 	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 1) {
-		strcmp (data_type, "float");
+		strcpy (data_type, "float");
+	} else {
+		fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
+	}
+}
+
+void OMEIStoMATLABDatatype (char* data_type, pixHeader* head)
+{
+	if (head->bp == 1 && head->isSigned == 1) {
+		strcpy (data_type, "int8");
+	} else if (head->bp == 1 && head->isSigned == 0) {
+		strcpy (data_type, "uint8");
+	} else if (head->bp == 2 && head->isSigned == 1) {
+		strcpy (data_type, "int16") ;
+	} else if (head->bp == 2 && head->isSigned == 0) {
+		strcpy (data_type, "uint16") ;
+	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 0) {
+		strcpy (data_type, "int32");
+	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
+		strcpy (data_type, "uint32");
+	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 1) {
+		strcpy (data_type, "single");
 	} else {
 		fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
 	}

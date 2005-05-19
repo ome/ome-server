@@ -3,7 +3,8 @@
 
 #include "httpOMEIS.h"
 
-void CtoOMEISDatatype (char* data_type, pixHeader* head);
+void CtoOMEISDatatype (const char* data_type, pixHeader* head);
 void OMEIStoCDatatype (char* data_type, pixHeader* head);
 void** OMEIStoCArray (void* input, pixHeader* head, char* conversion_type);
+void OMEIStoMATLABDatatype (char* data_type, pixHeader* head);
 #endif
