@@ -1,6 +1,10 @@
 function [head] = MATLABtoOMEISDatatype (data_type);
 % function [head] = MATLABtoOMEISDatatype (data_type))
 
+if (~ischar(data_type))
+	data_type = class(data_type);
+end
+
 if (strcmp (data_type, 'char') | strcmp (data_type, 'int8'))
 	head.bp       = 1;
 	head.isSigned = 1;

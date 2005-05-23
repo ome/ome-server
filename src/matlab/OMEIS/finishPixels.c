@@ -41,11 +41,16 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	is = openConnectionOMEIS (url, sessionkey);
 	
 	if (!(ID = finishPixels (is, ID))) {
+		/* clean up */
+		mxFree(url);
+		mxFree(sessionkey);
+		mxFree(is);
+		
 		mexErrMsgTxt("finishPixels OMEIS method failed.\n");
 	}
-	
 	plhs[0] = mxCreateScalarDouble((double) ID);
 	
+	/* clean up */
 	mxFree(url);
 	mxFree(sessionkey);
 	mxFree(is);

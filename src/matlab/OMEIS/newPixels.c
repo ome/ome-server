@@ -11,12 +11,11 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	/* OMEIS data structures */
 	omeis* is;
-	pixHeader* head = (pixHeader*) mxMalloc(sizeof(head));
+	pixHeader* head = (pixHeader*) mxMalloc(sizeof(pixHeader));
 	
 	/* MATLAB data structueres */
 	mxArray *m_dx, *m_dy, *m_dz, *m_dc, *m_dt, *m_bp, *m_isSigned, *m_isFloat;
 	mxArray *m_url, *m_sessionkey;
-	
 	char* url, *sessionkey;
 	
 	if (nrhs != 2)
@@ -57,7 +56,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		mexErrMsgTxt("newPixels requires the second input, pixHeader struct, to have field: isSigned");
 	if (!(m_isFloat  = mxGetField(prhs[1], 0, "isFloat")))
 		mexErrMsgTxt("newPixels requires the second input, pixHeader struct, to have field: isFloat");
-	
+
 	head->dx = (ome_dim) mxGetScalar(m_dx);
  	head->dy = (ome_dim) mxGetScalar(m_dy);
  	head->dz = (ome_dim) mxGetScalar(m_dz);
@@ -66,21 +65,25 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
  	head->bp = (u_int8_t) mxGetScalar(m_bp);
  	head->isSigned = (u_int8_t) mxGetScalar(m_isSigned);
  	head->isFloat  = (u_int8_t) mxGetScalar(m_isFloat);
- 	
+	
 	url = mxArrayToString(m_url);
 	sessionkey = mxArrayToString(m_sessionkey);
 	
 	is = openConnectionOMEIS (url, sessionkey);
-	if ( !(ID = newPixels (is, head)) ) {			
+
+	if ( !(ID = newPixels (is, head)) ) {	
+		/* clean up */
 		mxFree(url);
 		mxFree(sessionkey);
 		mxFree(head);
 		mxFree(is);
+		
 		mexErrMsgTxt("newPixels OMEIS method failed.\n");
 	}
-	
+
 	plhs[0] = mxCreateScalarDouble((double) ID);
 
+	/* clean up */
 	mxFree(url);
 	mxFree(sessionkey);
 	mxFree(head);

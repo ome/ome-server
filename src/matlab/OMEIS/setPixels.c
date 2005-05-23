@@ -63,12 +63,18 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	url = mxArrayToString(m_url);
 	sessionkey = mxArrayToString(m_sessionkey);
-	
+
 	is = openConnectionOMEIS (url, sessionkey);
 	
 	if (!(head = pixelsInfo (is, ID))){
 		char err_str[128];
-		sprintf(err_str, "PixelsID %llu or OMEIS URL '%s' is probably wrong\n", ID, is->url);
+		sprintf(err_str, "PixelsID %llu or OMEIS URL '%s' is probably wrong\n", ID, is->url);		
+		
+		/* clean up */
+		mxFree(url);
+		mxFree(sessionkey);
+		mxFree(is);
+		
 		mexErrMsgTxt(err_str);
 	}
 	
@@ -100,8 +106,16 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	CtoOMEISDatatype ((char*) mxGetClassName(prhs[2]), &tmp_head);
 	if ( (tmp_head.bp       != head->bp)       ||
 		 (tmp_head.isSigned != head->isSigned) ||
-		 (tmp_head.isFloat  != head->isFloat) )
+		 (tmp_head.isFloat  != head->isFloat) ) {
+		 
+		/* clean up */
+		mxFree(url);
+		mxFree(sessionkey);
+		mxFree(head);
+		mxFree(is);
+				 
 		mexErrMsgTxt("Types of input array and Pixels don't match\n");
+	}
 	
 	/* set the pixels */
 	int pix = setPixels (is, ID, mxGetPr(prhs[2]));
@@ -109,6 +123,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	/* record number of pixels written */
 	plhs[0] = mxCreateScalarDouble((double) pix);
 	
+	/* clean up */
 	mxFree(url);
 	mxFree(sessionkey);
 	mxFree(head);

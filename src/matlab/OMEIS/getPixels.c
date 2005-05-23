@@ -41,7 +41,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	mxArray *m_url, *m_sessionkey;
 	
 	char* url, *sessionkey;
-	
+
 	if (nrhs != 2)
 		mexErrMsgTxt("\n [pixels] = getPixels (is, ID)");
 		
@@ -66,10 +66,15 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	sessionkey = mxArrayToString(m_sessionkey);
 	
 	is = openConnectionOMEIS (url, sessionkey);
-	
-	if (!(head = pixelsInfo (is, ID))){
+	if (!(head = pixelsInfo (is, ID))) {
 		char err_str[128];
 		sprintf(err_str, "PixelsID %llu or OMEIS URL '%s' is probably wrong\n", ID, is->url);
+		
+		/* clean up */
+		mxFree(url);
+		mxFree(sessionkey);
+		mxFree(is);
+		
 		mexErrMsgTxt(err_str);
 	}
 	
@@ -79,7 +84,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	/* figure out type */
 	char class_name[16]; OMEIStoMATLABDatatype (class_name, head);
+
 	if (!(pixels = getPixels (is, ID))) {
+		/* clean up */
+		mxFree(url);
+		mxFree(sessionkey);
+		mxFree(head);
+		mxFree(is);
+		
 		char err_str[128];
 		sprintf(err_str, "Couldn't load pixelsID %llu\n", ID);
 		mexErrMsgTxt(err_str);
@@ -88,11 +100,11 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	/* attach pixels from OMEIS to MATLAB array */
 	int tmp_dims[2] = {1,1};
 	plhs[0] = mxCreateNumericArray (2, tmp_dims, MATLABDatatypetoInt(class_name), mxREAL);
-	mxFree(mxGetPr(plhs[0]));
 	
 	mxSetData (plhs[0], pixels);
 	mxSetDimensions (plhs[0], dims, 5);
-		
+	
+	/* clean up */
 	mxFree(url);
 	mxFree(sessionkey);
 	mxFree(head);

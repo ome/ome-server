@@ -1,7 +1,7 @@
 #  Tomasz Macura
 
 MEX       = mex
-MEX_FLAGS = -O -inline -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEIS
+MEX_FLAGS = -O -inline -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEIS_MAT
 
 targets: newPixels.mex* pixelsInfo.mex* finishPixels.mex* getPixels.mex* setPixels.mex*
 
