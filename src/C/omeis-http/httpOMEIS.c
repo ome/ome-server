@@ -61,6 +61,12 @@ OID newPixels (omeis* is, pixHeader* head)
     sprintf(command,"%s%sMethod=NewPixels&Dims=%s&IsSigned=%d&IsFloat=%d", is->url, "?", dims, head->isSigned, head->isFloat);
 	buffer = (char*) executeGETCall(is, command, 1024);
 	
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return 0;
+	}
+	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
 		FREE(buffer);
@@ -69,6 +75,8 @@ OID newPixels (omeis* is, pixHeader* head)
 	
 	if (sscanf(buffer,"%llu", &pixelsID) != 1) {
 		fprintf(stderr, "Output from OMEIS method NewPixels couldn't be parsed.\n");
+		FREE(buffer);
+		return 0;
 	}
 	
 	FREE(buffer);
@@ -84,19 +92,25 @@ pixHeader* pixelsInfo (omeis* is, OID pixelsID)
 
 	sprintf(command,"%s%sMethod=PixelsInfo&PixelsID=%llu",is->url,"?", pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
+	
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return NULL;
+	}
 
 	if (strstr(buffer, "Error")) {
 		FREE(buffer);
 		return NULL;
 	}
-	
+
 	if (sscanf(buffer,"Dims=%d,%d,%d,%d,%d,%d\nFinished=%d\nSigned=%d\nFloat=%d\nSHA1=%40c",
 		&dx, &dy, &dz, &dc, &dt, &bp, &isFinished, &isSigned, &isFloat, head->sha1) != 10) {
 		fprintf(stderr, "Output from OMEIS method PixelsInfo couldn't be parsed.\n");
 		FREE(buffer);
 		return NULL;
 	}
-	
+
 	head->dx = (ome_dim) dx;
 	head->dy = (ome_dim) dy;
 	head->dz = (ome_dim) dz;
@@ -119,6 +133,12 @@ char* pixelsSHA1 (omeis *is, OID pixelsID)
 	char command [256];
 	sprintf(command,"%s%sMethod=PixelsSHA1&PixelsID=%llu", is->url,"?",pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
+	
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return NULL;
+	}
 	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
@@ -214,21 +234,27 @@ void* getPixels (omeis* is, OID pixelsID)
 	char* buffer;
 	char command [256];
     pixHeader* ph;
+
     ph = pixelsInfo (is, pixelsID);
     int bytes = ph->dx*ph->dy*ph->dz*ph->dc*ph->dt*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
    
     sprintf(command,"%s%sMethod=GetPixels&PixelsID=%llu&BigEndian=%d",is->url,"?",pixelsID,bigEndian()); 	
-    buffer = (char*) executeGETCall(is, command,bytes+1);
-    buffer[bytes] = '\0';
+    buffer = (char*) executeGETCall(is, command, bytes);
     
+    if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return NULL;
+	}
+	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
 		FREE(buffer);
 		return NULL;
 	}
-	
+
 	return (void*) buffer;
 }
 
@@ -240,6 +266,12 @@ OID finishPixels (omeis* is, OID pixelsID)
 	sprintf(command,"%s%sMethod=FinishPixels&PixelsID=%llu", is->url,"?",pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
 
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return 0;
+	}
+	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
 		FREE(buffer);
@@ -262,6 +294,12 @@ char* getLocalPath (omeis *is, OID pixelsID)
 	sprintf(command,"%s%sMethod=GetLocalPath&PixelsID=%llu", is->url,"?",pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
 
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return 0;
+	}
+	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
 		FREE(buffer);
@@ -285,7 +323,7 @@ void* executeGETCall (omeis* is, char* parameters, size_t nmemb)
 	smartBuffer buffer;
 
 	/* callocing avoids problems with string null terminators */
-	buffer.buffer = (unsigned char*) CALLOC (nmemb, 1);
+	buffer.buffer = (unsigned char*) CALLOC (nmemb+1, 1);
 	buffer.len = 0;
 	buffer.capacity = nmemb;
 	
