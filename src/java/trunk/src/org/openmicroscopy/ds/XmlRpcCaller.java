@@ -249,7 +249,6 @@ public class XmlRpcCaller
                     System.err.println("Profiler: "+thisTime);
                 }
 
-                System.err.println(e.getClass());
                 String msg = e.getMessage();
                 if (msg.startsWith("STALE SESSION") ||
                     msg.startsWith("INVALID LOGIN"))
