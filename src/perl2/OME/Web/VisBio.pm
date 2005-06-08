@@ -106,6 +106,7 @@ sub createOMEPage {
 	$jnlp .= "    <jar href=\"commons-logging.jar\"/>\n";
 	$jnlp .= "    <jar href=\"forms-1.0.4.jar\"/>\n";
 	$jnlp .= "    <jar href=\"ij.jar\"/>\n";
+	$jnlp .= "    <jar href=\"loci-ome-xml.jar\"/>\n";
 	$jnlp .= "    <jar href=\"looks-1.2.2.jar\"/>\n";
 	$jnlp .= "    <jar href=\"ome-java.jar\"/>\n";
 	$jnlp .= "    <jar href=\"visad.jar\"/>\n";
