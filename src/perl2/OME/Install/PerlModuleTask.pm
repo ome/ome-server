@@ -776,7 +776,30 @@ sub execute {
 				and croak "Unable to install module, see $LOGFILE_NAME for details."
 				unless $retval;
 			print BOLD, "[SUCCESS]", RESET, ".\n";
-
+			
+			#
+			# OMEIS MATLAB Interface
+			#
+			print "Installing MEX Interface to omeis-http\n";
+			
+			# Configure
+			print "  \\_ Configuring omeis-http with MATLAB Bindings ";
+			$retval = configure_module ("src/C/omeis-http", $LOGFILE, {options => "--with-MATLAB --with-MATLAB-user=$MATLAB->{USER}"});
+			
+			print BOLD, "[FAILURE]", RESET, ".\n"
+			and croak "Unable to configure omeis-http, see $LOGFILE_NAME for details."
+			unless $retval;
+			print BOLD, "[SUCCESS]", RESET, ".\n";
+			
+			# Compile
+			print "  \\_ Compiling omeis-http with MATLAB Bindings";
+			$retval = compile_module ("src/C/omeis-http", $LOGFILE);
+			
+			print BOLD, "[FAILURE]", RESET, ".\n"
+			and croak "Unable to compile omeis-http, see $LOGFILE_NAME for details."
+			unless $retval;
+			print BOLD, "[SUCCESS]", RESET, ".\n";
+			
 			#
 			# OME MATLAB .m files
 			#
