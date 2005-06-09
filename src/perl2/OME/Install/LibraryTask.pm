@@ -108,7 +108,18 @@ my @libraries = ( {
 	    	}
 		},
 		valid_versions => ['ge 60'],
-    }, {
+    },{
+		name => 'libcurl',
+		get_library_version => q{
+			#include "stdio.h"
+	    	#include "curl/curl.h"
+	    	int main () {
+				printf ("%s", LIBCURL_VERSION);
+				return (0);
+	    	}
+		},
+		valid_versions => ['ge "7.10.0"'],
+    },  {
 		name => 'libtiff',
 		# XXX Unfortunately, this only works with new libtiff's... *sigh*
 		# We need tiff >= 3.5.7 to be able to check for LZW support at runtime
