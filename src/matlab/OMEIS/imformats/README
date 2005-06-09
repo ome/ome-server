@@ -1,0 +1,8 @@
+omeis.ext  = 'omeis';
+omeis.isa  = 'isOMEIS'
+omeis.info = 'imOMEIS'
+omeis.read = 'readOMEIS';
+omeis.write = 'writeOMEIS'
+omeis.alpha = 0;
+omeis.description = 'Reading/Writing pixels directly to OMEIS'
+imformats('add', omeis)
