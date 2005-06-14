@@ -31,16 +31,16 @@
 % OMEIS based files
 function [info, msg] = imOMEIS(filename);
 
+if (~isOMEIS(filename))
+	error ('This is not a bona fide omeis file.');
+end
+
 % read file to get info
 file = fopen(filename, 'r');
 
 token = fgets(file);
 url = fgets(file);
 pix_str = fgets(file);
-
-if (~strncmp(token, '#OMEIS-LOCAL',12))
-	error ('File ought to begin with magic string `#OMEIS-LOCAL`');
-end
 
 url(end) = []; % trim trailing new line character
 

@@ -32,6 +32,11 @@
 function [y_or_n] = isOMEIS (filename)
 
 y_or_n = 0;
-if (strfind(filename, 'omeis'))
+
+% read file to get info
+file = fopen(filename, 'r');
+
+% omeis files begin with magic string `#OMEIS-LOCAL`
+if (strncmp(fgets(file), '#OMEIS-LOCAL',12))
 	y_or_n = 1;
 end
