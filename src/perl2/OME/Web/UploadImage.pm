@@ -77,9 +77,9 @@ sub getPageBody {
 		if( $dataset_id && $dataset_id ne '' );
 	
 	# Import if they just uploaded a file?
-	if( $q->param('original_image_file') ) {
-		my $original_file_name = $q->param('original_image_file');
-		my $file_handle = $q->upload( 'original_image_file' );
+	if( $q->param('File') ) {
+		my $original_file_name = $q->param('File');
+		my $file_handle = $q->upload( 'File' );
 		return ( 'ERROR', $q->cgi_error )
 			if( !$file_handle && $q->cgi_error );
 		unless( $dataset ) {
@@ -107,20 +107,23 @@ sub getPageBody {
 		}
 	}
 
+	my $action = $dataset ? '/perl2/upload.pl' : undef;
 	# Load & populate the template
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	my $tmpl_path = $tmpl_dir."/UploadImage.tmpl";
-	my $tmpl = HTML::Template->new( filename => $tmpl_path,
-	                                case_sensitive => 1 );
+	my $tmpl_dir = $self->actionTemplateDir();
+	my $tmpl = HTML::Template->new( 
+		filename => "UploadImage.tmpl",
+		path     => $tmpl_dir, 
+	    case_sensitive => 1 );
 	$tmpl->param( 'Dataset' => $self->Renderer()->render( $dataset, 'ref' ) )
 		if( $dataset );
 	$tmpl->param( 
-		'file_field' => $q->filefield( -name => 'original_image_file' ) );
+		'file_field' => $q->filefield( -name => 'File' ) );
 	
 	$body .= 
-		$q->start_multipart_form().
-		$tmpl->output().
+		$q->start_multipart_form( -action => $action ).
+		$q->hidden   ( -name => 'Method', -value => 'UploadFile' ).
 		$q->hidden   ( -name => 'Dataset' ).
+		$tmpl->output().
 		$q->end_form();
 
 	return ('HTML',$body);

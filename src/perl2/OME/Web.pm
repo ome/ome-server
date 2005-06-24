@@ -847,6 +847,22 @@ sub _loadTypeAndGetInfo {
 	return ($package_name, $common_name, $formal_name, $ST);	
 }
 
+=head2 actionTemplateDir
+
+	my $template_dir = $self->actionTemplateDir();
+	
+	Returns the directory where templates for class layout are stored.
+
+=cut
+
+sub actionTemplateDir { 
+	my $self = shift;
+	my $session = $self->Session();
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	return $tmpl_dir."/Actions/";
+}
+
+
 =head2 getObjDetailURL
 
 	my $url_to_obj_detail = $self->getObjDetailURL( $obj, %url_params );

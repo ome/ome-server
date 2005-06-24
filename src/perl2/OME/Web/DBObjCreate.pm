@@ -205,9 +205,9 @@ sub _getForm {
 
   	# load a template
  	my $tmpl_path = $self->_findTemplate( $type, 'create' );
- 	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_create.tmpl'
+ 	$tmpl_path = $self->_baseTemplateDir().'/generic_create.tmpl'
  		unless $tmpl_path;
- 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+ 	my $tmpl = HTML::Template->new( filename => $tmpl_path, path => $self->_baseTemplateDir(), case_sensitive => 1 );
  	
  	# get data for the template
 	my $requests = $self->_parse_tmpl_fields( [ $tmpl->param( ) ] );
@@ -651,6 +651,21 @@ sub __specialize {
 	return undef;
 }
 
+=head2 _baseTemplateDir
+
+	my $template_dir = $self->_baseTemplateDir();
+	
+	Returns the directory where specialized templates for this class are stored.
+
+=cut
+
+sub _baseTemplateDir { 
+	my $self = shift;
+	my $session = $self->Session();
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	return $tmpl_dir."/Create/";
+}
+
 =head2 _findTemplate
 
 	my $template_path = $self->_findTemplate( $obj, $mode );
@@ -663,14 +678,14 @@ and $mode - OR - undef if no matching template can be found
 sub _findTemplate {
 	my ( $self, $obj, $mode ) = @_;
 	return undef unless $obj;
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my $tmpl_dir = $self->_baseTemplateDir();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
 	my $tmpl_path = $formal_name; 
 	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/_/g; 
-	$tmpl_path .= "_".$mode.".tmpl";
-	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
+	$tmpl_path =~ s/::/\//g; 
+	$tmpl_path .= "/".$mode.".tmpl";
+	$tmpl_path = $tmpl_dir.$tmpl_path;
 	return $tmpl_path if -e $tmpl_path;
 	return undef;
 }

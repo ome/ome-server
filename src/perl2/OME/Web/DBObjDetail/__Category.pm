@@ -79,7 +79,7 @@ sub getPageBody {
 	
 	# load a template
 	my ($tmpl, %tmpl_data);
-	my $tmpl_path = $self->Renderer()->_findTemplate( $obj, $mode );
+	my $tmpl_path = $self->Renderer()->_findTemplate( $obj, $mode, 'one' );
 	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
 		unless $tmpl_path;
 	die "Could not find a specialized or generic template to match Object $obj with mode $mode"

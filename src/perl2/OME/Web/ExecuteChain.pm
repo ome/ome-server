@@ -71,7 +71,7 @@ sub getPageBody {
 		# prompt for user inputs
 		my $cmanager = OME::Tasks::ChainManager->new($session);
 		my $user_input_list = $cmanager->getUserInputs($chain);		
-		return ('HTML', $self->collect_user_inputs( $chain ) ) if ( scalar @$user_input_list );
+#		return ('HTML', $self->collect_user_inputs( $chain ) ) if ( scalar @$user_input_list );
 		
 		return ('HTML', "Cannot execute without a dataset selected" )
 			unless $session->dataset();
@@ -107,7 +107,9 @@ sub printForm {
 	foreach my $chain ( @chains ) {
 		my $user_input_list = $cmanager->getUserInputs($chain);
 		push( @chains_without_free_inputs, $chain )
-			if scalar(@$user_input_list) eq 0;
+#			if scalar(@$user_input_list) eq 0;
+if( ( scalar(@$user_input_list) eq 0 ) ||
+    ( grep( (not $_->[2]->optional), @$user_input_list ) eq 0 ) );
 	}
 	@chains = @chains_without_free_inputs;
 	

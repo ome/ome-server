@@ -179,8 +179,8 @@ sub render {
 	return '' unless $obj;
 
 	# load a template
-	my $tmpl_path = $self->_findTemplate( $obj, $mode );
-	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
+	my $tmpl_path = $self->_findTemplate( $obj, $mode, 'one' );
+	$tmpl_path = $self->_baseTemplateDir('one').'/generic_'.$mode.'.tmpl'
 		unless $tmpl_path;
 	die "Could not find a specialized or generic template to match Object $obj with mode $mode"
 		unless -e $tmpl_path;
@@ -342,9 +342,9 @@ sub renderArray {
 	}
 	
 	# try to load custom template
-	my $tmpl_path = $self->_findTemplate( $options->{type}, $mode );
+	my $tmpl_path = $self->_findTemplate( $options->{type}, $mode, 'many' );
 	# use generic if there is no custom
-	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
+	$tmpl_path = $self->_baseTemplateDir('many').'/generic_'.$mode.'.tmpl'
 		unless $tmpl_path;
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data;
@@ -682,7 +682,9 @@ sub getFields {
 	# alternately: filter fields by specialized templates
 	# try to find a template specific to this type & mode
 	if( $mode ) {
-		my $tmpl_path = $self->_findTemplate( $type, $mode );
+		my $tmpl_path = 
+			$self->_findTemplate( $type, $mode, 'one' ) || 
+			$self->_findTemplate( $type, $mode, 'many' );
 		if( $tmpl_path ) {
 			my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 			# only keep columns that exist in the template
@@ -934,26 +936,47 @@ sub _trim {
 	return substr( $str, 0, $options->{ max_text_length } - 3 ).'...';
 }
 
+=head2 _baseTemplateDir
+
+	my $template_dir = $self->_baseTemplateDir( $arity );
+	
+	Returns the directory where specialized templates for this class are stored.
+	$arity is either 'one' or 'many'
+
+=cut
+
+sub _baseTemplateDir { 
+	my ($self, $arity) = @_;
+	my $session = $self->Session();
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	$tmpl_dir .= "/Display/";
+	$tmpl_dir .= 'One/' if( $arity =~ m/One/i );
+	$tmpl_dir .= 'Many/' if( $arity =~ m/Many/i );
+	return $tmpl_dir;
+}
+
 =head2 _findTemplate
 
-	my $template_path = $self->_findTemplate( $obj, $mode );
+	my $template_path = $self->_findTemplate( $obj, $mode, $arity );
 
 returns a path to a custom template (see HTML::Template) for this $obj
 and $mode - OR - undef if no matching template can be found
+$arity is either 'one' or 'many'.
 
 =cut
 
 sub _findTemplate {
-	my ( $self, $obj, $mode ) = @_;
+	my ( $self, $obj, $mode, $arity ) = @_;
 	return undef unless $obj;
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my $tmpl_dir = $self->_baseTemplateDir( $arity );
+
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
-	my $tmpl_path = $formal_name; 
+	my $tmpl_path = $formal_name;
 	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/_/g; 
-	$tmpl_path .= "_".$mode.".tmpl";
-	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
+	$tmpl_path =~ s/::/\//g; 
+	$tmpl_path .= "/".$mode.".tmpl";
+	$tmpl_path = $tmpl_dir.$tmpl_path;
 	return $tmpl_path if -e $tmpl_path;
 	return undef;
 }

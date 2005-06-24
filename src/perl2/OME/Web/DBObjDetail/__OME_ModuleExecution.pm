@@ -88,7 +88,7 @@ sub getPageBody {
 	@formal_outputs = grep( defined $_->semantic_type(), @formal_outputs );
 	my @formal_inputs = $mex->module()->inputs();
 	my @untyped_outputs = $mex->untypedOutputs();
-	my $tmpl_path = $self->Renderer()->_findTemplate( ref( $mex ), 'detail1' );
+	my $tmpl_path = $self->Renderer()->_findTemplate( ref( $mex ), 'detail1', 'one' );
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data;
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );	

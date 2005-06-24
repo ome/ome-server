@@ -328,9 +328,11 @@ END_HTML
 		
 	}
 	
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	my $tmpl = HTML::Template->new( filename => 'Search.tmpl', path => $tmpl_dir,
-                                    case_sensitive => 1 );
+	my $tmpl = HTML::Template->new( 
+		filename       => 'Search.tmpl', 
+		path           => $self->_baseTemplateDir(),
+		case_sensitive => 1 
+	);
 	$tmpl->param( %tmpl_data );
 
 	$html .= 
@@ -496,7 +498,8 @@ sub getSearchCriteria {
 	
 	# Render search fields
 	my $search_field_tmpl = HTML::Template->new( 
-		filename => $self->Session()->Configuration()->template_dir().'/search_field.tmpl',
+		filename       => 'search_field.tmpl',
+		path           => $self->_baseTemplateDir(), 
 		case_sensitive => 1
 	);
 	foreach my $field( @search_fields ) {
@@ -717,6 +720,20 @@ sub __sort_field {
 	}
 }
 
+=head2 _baseTemplateDir
+
+	my $template_dir = $self->_baseTemplateDir();
+	
+	Returns the directory where specialized templates for this class are stored.
+
+=cut
+
+sub _baseTemplateDir { 
+	my $self = shift;
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	return $tmpl_dir."/Search/";
+}
+
 =head2 _findTemplate
 
 	my $template_path = $self->_findTemplate( $obj );
@@ -730,13 +747,13 @@ sub _findTemplate {
 	my ( $self, $obj ) = @_;
 	my $mode = 'search';
 	return undef unless $obj;
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my $tmpl_dir = $self->_baseTemplateDir();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
 	my $tmpl_path = $formal_name; 
 	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/_/g; 
-	$tmpl_path .= "_".$mode.".tmpl";
+	$tmpl_path =~ s/::/\//g; 
+	$tmpl_path .= "/".$mode.".tmpl";
 	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
 	return $tmpl_path if -e $tmpl_path;
 	$tmpl_path = $tmpl_dir.'/generic_search.tmpl';

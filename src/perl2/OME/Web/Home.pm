@@ -254,10 +254,11 @@ sub getPageBody {
 	my ($d_header, $d_content) = $self->__getQuickViewDatasetData($p);
 
 	# Load & populate the template
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	my $tmpl_path = $tmpl_dir."/Home.tmpl";
-	my $tmpl = HTML::Template->new( filename => $tmpl_path,
-	                                case_sensitive => 1 );
+	my $tmpl_dir = $self->actionTemplateDir();
+	my $tmpl = HTML::Template->new( 
+		filename => "Home.tmpl",
+		path     => $tmpl_dir,
+		case_sensitive => 1 );
 	$tmpl->param(
 		image_header   => $i_header,
 		project_header => $p_header,

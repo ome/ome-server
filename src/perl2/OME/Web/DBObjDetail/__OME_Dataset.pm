@@ -72,7 +72,7 @@ sub getPageBody {
 	my $dataset = $self->_loadObject();
 	my $factory = $self->Session()->Factory();
 
-	my $tmpl_path = $self->Renderer()->_findTemplate( 'OME::Dataset', 'detail' );
+	my $tmpl_path = $self->Renderer()->_findTemplate( 'OME::Dataset', 'detail', 'one' );
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data = $self->Renderer()->_populate_object_in_template( $dataset, $tmpl );
 	

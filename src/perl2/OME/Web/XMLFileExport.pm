@@ -115,7 +115,7 @@ sub getPageBody {
 	}
 
 	$self->contentType('text/html');
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my $tmpl_dir = $self->actionTemplateDir();
 	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
 	if( @images ) {
 		$tmpl->param( selected_images => $self->Renderer()->renderArray( \@images, 'ref_mass', { type => 'OME::Image' } ) );
