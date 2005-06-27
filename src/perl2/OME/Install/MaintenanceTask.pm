@@ -190,6 +190,9 @@ sub fix_cron_scripts {
 	my ($key,$val);
 	print $LOGFILE "Fixing crontabs \n";
 	while ( ($key,$val) = each (%$subs) ) {
+		next if not defined $key;
+		$val = "" if not defined $val;
+
 		print $LOGFILE "Replacing %$key% with $val\n";
 	}
 
@@ -203,6 +206,8 @@ sub fix_cron_scripts {
 		close (FILE);
 		my $config = join ('',@lines);
 		while ( ($key,$val) = each (%$subs) ) {
+			next if not defined $key;
+			$val = "" if not defined $val;
 			$config =~ s/%$key%/$val/mg;
 		}
 		$file =~ s/$script_dir/$install_dir/;
