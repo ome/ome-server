@@ -1,0 +1,16 @@
+<TABLE width="100%">
+<TR>
+	<TD WIDTH="50">
+		<img src="<TMPL_VAR NAME=thumb_url>&Size=400,400">
+	</TD>
+	<TD ALIGN="left" valign="top">
+		ID: <TMPL_VAR NAME=id><br>
+		Title: <a title="<TMPL_VAR NAME=name>" href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail">
+			<TMPL_VAR NAME=name/max_text_length-25></a><br>
+		Owner: <TMPL_VAR NAME=owner><BR>
+		Group: <TMPL_VAR NAME=group><BR>
+		Created: <TMPL_VAR NAME=created><br>
+		Description: <TMPL_VAR NAME=description/max_text_length-60>
+	</TD>
+</TR>
+</TABLE>
