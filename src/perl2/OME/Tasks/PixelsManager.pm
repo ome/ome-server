@@ -182,7 +182,9 @@ Usage
 		$bytesPerPixel,$isSigned,$isFloat);
 
 retrieves the name of a Pixel type from a description.
+
 =cut
+
 sub getPixelType {
 	my ($proto, $bpp, $signed, $float) = @_;
 	return $PIXEL_TYPES{$bpp}{$signed}{$float};
