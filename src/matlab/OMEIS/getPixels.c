@@ -7,27 +7,6 @@
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
 
-int MATLABDatatypetoInt (char* data_type)
-{
-	if (! strcmp(data_type, "int8")) {
-		return mxINT8_CLASS;
-	} else if (! strcmp(data_type, "uint8")) {
-		return mxUINT8_CLASS;
-	} else if (! strcmp(data_type, "int16")) {
-		return mxINT16_CLASS;
-	} else if (! strcmp(data_type, "uint16")) {
-		return mxUINT16_CLASS;	
-	} else if (! strcmp (data_type, "int32")) {
-		return mxINT32_CLASS;
-	} else if (! strcmp (data_type, "uint32")) {
-		return mxUINT32_CLASS;
-	} else if (! strcmp (data_type, "single")) {
-		return mxSINGLE_CLASS;
-	}
-	
-	fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
-	return 0;
-}
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	OID ID;
@@ -81,10 +60,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	/* figure out dimensions */
 	int dims[5]; dims[0] = head->dx; dims[1] = head->dy;
 		dims[2] = head->dz; dims[3] = head->dc; dims[4] = head->dt;
-	
-	/* figure out type */
-	char class_name[16]; OMEIStoMATLABDatatype (class_name, head);
-
+		
 	if (!(pixels = getPixels (is, ID))) {
 		/* clean up */
 		mxFree(url);
@@ -99,7 +75,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	/* attach pixels from OMEIS to MATLAB array */
 	int tmp_dims[2] = {1,1};
-	plhs[0] = mxCreateNumericArray (2, tmp_dims, MATLABDatatypetoInt(class_name), mxREAL);
+	plhs[0] = mxCreateNumericArray (2, tmp_dims, OMEIStoMATLABDatatype(head), mxREAL);
 	
 	mxSetData (plhs[0], pixels);
 	mxSetDimensions (plhs[0], dims, 5);

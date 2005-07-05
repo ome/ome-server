@@ -7,27 +7,6 @@
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
 
-int MATLABDatatypetoInt (char* data_type)
-{
-	if (! strcmp(data_type, "int8")) {
-		return mxINT8_CLASS;
-	} else if (! strcmp(data_type, "uint8")) {
-		return mxUINT8_CLASS;
-	} else if (! strcmp(data_type, "int16")) {
-		return mxINT16_CLASS;
-	} else if (! strcmp(data_type, "uint16")) {
-		return mxUINT16_CLASS;	
-	} else if (! strcmp (data_type, "int32")) {
-		return mxINT32_CLASS;
-	} else if (! strcmp (data_type, "uint32")) {
-		return mxUINT32_CLASS;
-	} else if (! strcmp (data_type, "single")) {
-		return mxSINGLE_CLASS;
-	}
-	
-	fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
-	return 0;
-}
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	OID ID;
@@ -104,6 +83,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	pixHeader tmp_head;
 	CtoOMEISDatatype ((char*) mxGetClassName(prhs[2]), &tmp_head);
+	
 	if ( (tmp_head.bp       != head->bp)       ||
 		 (tmp_head.isSigned != head->isSigned) ||
 		 (tmp_head.isFloat  != head->isFloat) ) {
