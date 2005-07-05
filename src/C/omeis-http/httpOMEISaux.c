@@ -3,6 +3,30 @@
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
 
+#ifdef MATLAB
+#include "matrix.h"
+int OMEIStoMATLABDatatype (pixHeader* head)
+{
+	if (head->bp == 1 && head->isSigned == 1) {
+		return mxINT8_CLASS;
+	} else if (head->bp == 1 && head->isSigned == 0) {
+		return mxUINT8_CLASS;
+	} else if (head->bp == 2 && head->isSigned == 1) {
+		return mxINT16_CLASS;
+	} else if (head->bp == 2 && head->isSigned == 0) {
+		return mxUINT16_CLASS;	
+	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 0) {
+		return mxINT32_CLASS;
+	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
+		return mxUINT32_CLASS;
+	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 1) {
+		return mxSINGLE_CLASS;
+	}
+	
+	return 0;
+}
+#endif
+
 void CtoOMEISDatatype (const char* data_type, pixHeader* head)
 {
 	if (!strcmp (data_type, "char") || !strcmp(data_type, "int8")) {
@@ -31,7 +55,7 @@ void CtoOMEISDatatype (const char* data_type, pixHeader* head)
 		head->isFloat  = 0;
 	} else if (strcmp (data_type, "float") || !strcmp (data_type, "single")) {
 		head->bp       = 4;
-		head->isSigned = 0;
+		head->isSigned = 1;
 		head->isFloat  = 1;
 	} else {
 		fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
@@ -52,29 +76,8 @@ void OMEIStoCDatatype (char* data_type, pixHeader* head)
 		strcpy (data_type, "int");
 	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
 		strcpy (data_type, "unsigned long");
-	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 1) {
+	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 1) {
 		strcpy (data_type, "float");
-	} else {
-		fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
-	}
-}
-
-void OMEIStoMATLABDatatype (char* data_type, pixHeader* head)
-{
-	if (head->bp == 1 && head->isSigned == 1) {
-		strcpy (data_type, "int8");
-	} else if (head->bp == 1 && head->isSigned == 0) {
-		strcpy (data_type, "uint8");
-	} else if (head->bp == 2 && head->isSigned == 1) {
-		strcpy (data_type, "int16") ;
-	} else if (head->bp == 2 && head->isSigned == 0) {
-		strcpy (data_type, "uint16") ;
-	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 0) {
-		strcpy (data_type, "int32");
-	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
-		strcpy (data_type, "uint32");
-	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 1) {
-		strcpy (data_type, "single");
 	} else {
 		fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
 	}

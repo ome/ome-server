@@ -164,7 +164,7 @@ int setPixels (omeis *is, OID pixelsID, void* pixels)
 	/* initialize smart Buffer for output */
 	buffer.buffer = (unsigned char*) CALLOC(1024,1);
 	buffer.len = 0;
-	buffer.capacity = 32;
+	buffer.capacity = 1023;
 	
 	is->curl = curl_easy_init();
 	curl_easy_setopt(is->curl, CURLOPT_FORBID_REUSE, 1);
@@ -314,6 +314,117 @@ char* getLocalPath (omeis *is, OID pixelsID)
 	return path;
 }
 
+int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
+			int x1, int y1, int z1, int c1, int t1, void* pixels)
+{
+	char scratch[128];
+	smartBuffer buffer;
+	
+	/* initialize smart Buffer for output */
+	buffer.buffer = (unsigned char*) CALLOC(1024,1);
+	buffer.len = 0;
+	buffer.capacity = 1023;
+	
+	is->curl = curl_easy_init();
+	curl_easy_setopt(is->curl, CURLOPT_FORBID_REUSE, 1);
+	#ifdef DEBUG
+		curl_easy_setopt(is->curl, CURLOPT_VERBOSE, 1);
+	#endif
+	curl_easy_setopt (is->curl, CURLOPT_WRITEFUNCTION, writeBuffer);
+	curl_easy_setopt (is->curl, CURLOPT_WRITEDATA, &buffer);
+	
+	struct curl_httppost *post=NULL;
+    struct curl_httppost *last=NULL;
+    struct curl_slist *headerlist=NULL;
+    
+	curl_formadd(&post, &last,
+				CURLFORM_COPYNAME, "Method",
+				CURLFORM_COPYCONTENTS, "SetROI",
+				CURLFORM_END);
+
+	sprintf (scratch, "%llu", pixelsID);
+	curl_formadd(&post, &last,
+				 CURLFORM_COPYNAME, "PixelsID",
+				 CURLFORM_COPYCONTENTS, scratch,
+				 CURLFORM_END);
+				 
+	sprintf (scratch, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", x0, y0, z0, c0, t0,
+			x1, y1, z1, c1, t1);
+	curl_formadd(&post, &last,
+				 CURLFORM_COPYNAME, "ROI",
+				 CURLFORM_COPYCONTENTS, scratch,
+				 CURLFORM_END);
+				 
+	sprintf (scratch, "%d", bigEndian());
+	curl_formadd(&post, &last,
+				 CURLFORM_COPYNAME, "BigEndian",
+				 CURLFORM_COPYCONTENTS, scratch,
+				 CURLFORM_END);
+				 
+	curl_formadd(&post, &last,
+				CURLFORM_COPYNAME, "Pixels",
+				CURLFORM_BUFFER, "data",
+				CURLFORM_BUFFERPTR, pixels,
+				CURLFORM_BUFFERLENGTH, (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1),
+				CURLFORM_END);
+
+	headerlist = curl_slist_append(headerlist, "Expect:");    
+    curl_easy_setopt(is->curl, CURLOPT_URL, is->url);
+    curl_easy_setopt(is->curl, CURLOPT_HTTPHEADER, headerlist);
+    curl_easy_setopt(is->curl, CURLOPT_HTTPPOST, post);
+
+    int result_code = curl_easy_perform (is->curl);
+
+    /* cleanup */
+	curl_easy_cleanup (is->curl);
+	curl_formfree (post);
+	curl_slist_free_all (headerlist);
+	
+    if (result_code != CURLE_OK) {
+		FREE(buffer.buffer);
+		return 0;
+	}
+	
+	int pix;
+	if (sscanf(buffer.buffer,"%d\n", &pix) != 1) {
+		fprintf(stderr, "Output from OMEIS method SetROI couldn't be parsed.\n");
+		FREE(buffer.buffer);
+		return 0;
+	}
+	FREE(buffer.buffer);
+	return pix;
+}
+
+void* getROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
+			int x1, int y1, int z1, int c1, int t1)
+{
+	char* buffer;
+	char command [256];
+    pixHeader* ph;
+
+    ph = pixelsInfo (is, pixelsID);
+    int bytes = (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1);
+	if (bytes < 1024)
+    	bytes = 1024;
+
+    sprintf(command,"%s%sMethod=GetROI&PixelsID=%llu&ROI=%d,%d,%d,%d,%d,%d,%d,%d,%d,%d"
+    				"BigEndian=%d",is->url,"?",pixelsID,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,bigEndian()); 	
+    buffer = (char*) executeGETCall(is, command, bytes);
+    
+    if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return NULL;
+	}
+	
+    if (strstr(buffer, "Error")) {
+		fprintf (stderr, "ERROR:\n%s\n", buffer);
+		FREE(buffer);
+		return NULL;
+	}
+
+	return (void*) buffer;
+}
 /*
 	Private Functions
 */

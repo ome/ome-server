@@ -50,4 +50,8 @@ int setPixels (omeis *is, OID pixelsID, void* pixels);
 void* getPixels (omeis* is, OID pixelsID);
 OID finishPixels (omeis* is, OID pixelsID);
 char* getLocalPath (omeis *is, OID pixelsID);
+int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
+			int x1, int y1, int z1, int c1, int t1, void* pixels);
+void* getROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
+			int x1, int y1, int z1, int c1, int t1);
 #endif
