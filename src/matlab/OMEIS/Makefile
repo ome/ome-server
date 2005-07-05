@@ -3,7 +3,8 @@
 MEX       = mex
 MEX_FLAGS = -O -inline -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEIS
 
-targets: newPixels.mex* pixelsInfo.mex* finishPixels.mex* getPixels.mex* setPixels.mex*
+targets: newPixels.mex* pixelsInfo.mex* finishPixels.mex* getPixels.mex* setPixels.mex* \
+getROI.mex* setROI.mex*
 
 newPixels.mex*: newPixels.c 
 	$(MEX) $(MEX_FLAGS) newPixels.c
@@ -19,6 +20,12 @@ getPixels.mex*: getPixels.c
 
 setPixels.mex*: setPixels.c
 	$(MEX) $(MEX_FLAGS) setPixels.c
+	
+getROI.mex*: getROI.c
+	$(MEX) $(MEX_FLAGS) getROI.c
+
+setROI.mex*: setROI.c
+	$(MEX) $(MEX_FLAGS) setROI.c
 	
 # Utilities for cleaning up your directory.  
 # 'make clean' removes emacs backup files
