@@ -111,7 +111,7 @@ sub getPageBody {
 	# make the CategoryGroup name and associated Category dropdown list
 	my $catGroupAndCats_list = (
 		@categoryGroups ?
-		$self->Renderer()->renderArray( \@categoryGroups, 'CG_and_C_list' ) : '(No CategoryGroups found)'
+		$self->Renderer()->renderArray( \@categoryGroups, 'CG_and_C_list', { type => '@CategoryGroup' } ) : '(No CategoryGroups found)'
 	);
 	
 	# Get the list of ID's that are left to annotate
