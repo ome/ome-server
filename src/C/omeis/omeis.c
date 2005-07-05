@@ -1066,7 +1066,23 @@ char **cgivars=param;
 			OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 			return (-1);
 		}
-
+		
+		head = thePixels->head;
+		if (!CheckCoords (thePixels, x0, y0, z0, c0, t0)){
+			OMEIS_ReportError (method, "PixelsID", ID, "Parameters x0, y0, z0, c0, t0"
+								" (%d,%d,%d,%d,%d) must be in range (%d,%d,%d,%d,%d).",
+								x0,y0,z0,c0,t0,head->dx-1,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
+			freePixelsRep (thePixels);
+			return (-1);
+		}
+		if (!CheckCoords (thePixels, x1, y1, z1, c1, t1)){
+			OMEIS_ReportError (method, "PixelsID", ID, "Parameters x1, y1, z1, c1, t1"
+								" (%d,%d,%d,%d,%d) must be in range (%d,%d,%d,%d,%d).",
+								x1,y1,z1,c1,t1,head->dx-1,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
+			freePixelsRep (thePixels);
+			return (-1);
+		}
+		
 		if (rorw == 'w')
 			thePixels->IO_stream = openInputFile(filename,isLocalFile);
 		else {
