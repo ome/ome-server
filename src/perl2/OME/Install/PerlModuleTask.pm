@@ -657,6 +657,7 @@ sub execute {
 			INSTALL     => 0,
 			USER        => undef,
 			MATLAB_INST => undef,
+			EXEC => undef,
 			AS_DEV      => 0,
 			MATLAB_SRC  => undef,		
 		};
@@ -686,6 +687,7 @@ sub execute {
 				print " Install MATLAB Perl API?: ", BOLD, $MATLAB->{INSTALL} ? 'yes':'no', RESET, "\n";
 				print "              MATLAB User: ", BOLD, $MATLAB->{USER}, RESET, "\n" if $MATLAB->{INSTALL} ;
 				print "              MATLAB Path: ", BOLD, $MATLAB->{MATLAB_INST}, RESET, "\n" if $MATLAB->{INSTALL} ;
+				print "              MATLAB Exec: ", BOLD, $MATLAB->{EXEC}, RESET, "\n" if $MATLAB->{INSTALL} ;				
 				print "   Config MATLAB for dev?: ", BOLD, $MATLAB->{AS_DEV} ? 'yes':'no', RESET, "\n";
 				print "     MATLAB .m files Path: ", BOLD, $MATLAB->{MATLAB_SRC},  RESET, "\n" if $MATLAB->{INSTALL} ;
 				print "\n";  # Spacing
@@ -708,9 +710,16 @@ sub execute {
 				
 				if (! $MATLAB->{MATLAB_INST}) {
 					$MATLAB->{MATLAB_INST} = which ('matlab');
+					$MATLAB->{MATLAB_INST} =~ s|\/\/|\/|; # cleanup double slashes // 
 					$MATLAB->{MATLAB_INST} =~ s|/bin/matlab$||;
 				}
 				$MATLAB->{MATLAB_INST} = confirm_path ("Path to MATLAB installation", $MATLAB->{MATLAB_INST});
+				
+				if (! $MATLAB->{EXEC}) {
+					$MATLAB->{EXEC} = which ('matlab');
+					$MATLAB->{EXEC} =~ s|\/\/|\/|; # cleanup double slashes // 
+				}
+				$MATLAB->{EXEC} = confirm_path ("Path to MATLAB binary", $MATLAB->{EXEC});
 				
 				if (y_or_n ("Configure MATLAB Perl API for developers?")){
 					$MATLAB->{AS_DEV} = 1;
@@ -783,7 +792,7 @@ sub execute {
 			print "Installing MEX Interface to omeis-http\n";
 			
 			# Configure
-			print "  \\_ Configuring omeis-http with MATLAB Bindings ";
+			print "  \\_ Configuring omeis-http with MATLAB bindings ";
 			$retval = configure_module ("src/C/omeis-http", $LOGFILE, {options => "--with-MATLAB --with-MATLAB-user=$MATLAB->{USER}"});
 			
 			print BOLD, "[FAILURE]", RESET, ".\n"
@@ -792,7 +801,7 @@ sub execute {
 			print BOLD, "[SUCCESS]", RESET, ".\n";
 			
 			# Compile
-			print "  \\_ Compiling omeis-http with MATLAB Bindings";
+			print "  \\_ Compiling omeis-http with MATLAB bindings ";
 			$retval = compile_module ("src/C/omeis-http", $LOGFILE);
 			
 			print BOLD, "[FAILURE]", RESET, ".\n"
@@ -806,7 +815,7 @@ sub execute {
 			print "Installing OME MATLAB .m files \n";
 			
 			# Compile
-			print "  \\_ Compiling ";
+			print "  \\_ Compiling MEX files";
 			
 			$retval = compile_module ("src/matlab/", $LOGFILE);
 			

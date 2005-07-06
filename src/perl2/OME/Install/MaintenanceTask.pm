@@ -318,9 +318,9 @@ BLURB
 		}
 
 		$confirm_all = 0;
-		if (y_or_n ('Install the OME admin utility (ome)?','y') ){
+		if (y_or_n ('Install the OME admin utility?','y') ){
 			$MAINT_CONF->{omeadmin} = 1;
-			$MAINT_CONF->{omeadmin_path} = confirm_default("Install omeadmin to","/usr/local/bin");
+			$MAINT_CONF->{omeadmin_path} = confirm_default("Install admin utility 'ome' in","/usr/local/bin");
 		} else {
 			$MAINT_CONF->{omeadmin} = 0;
 		}

@@ -592,6 +592,7 @@ BLURB
              ome_root         => $OME_BASE_DIR,
              template_dir     => $OME_BASE_DIR."/html/Templates",
              matlab_src_dir   => $MATLAB->{MATLAB_SRC},
+             matlab_exec      => $MATLAB->{EXEC},             
              matlab_user      => $MATLAB->{MATLAB_USER},
              executor         => $DEFAULT_EXECUTOR,
             });
