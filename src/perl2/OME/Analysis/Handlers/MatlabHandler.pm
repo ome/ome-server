@@ -1058,14 +1058,19 @@ sub __openEngine {
 	my ($self) = @_;
 
 	if (!$self->{__engineOpen}) {
-		my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm");
+		# load configuration variables
+		my $session = OME::Session->instance();
+		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
+		my $matlab_exec = $conf->matlab_exec or croak "couldn't retrieve matlab exec path from configuration";
+		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
+		
+		logdbg "debug", "Matlab src dir is $matlab_src_dir";
+		logdbg "debug", "Matlab exec is $matlab_exec";
+
+		my $engine = OME::Matlab::Engine->open("$matlab_exec -nodisplay -nojvm");
 		die "Cannot open a connection to Matlab!" unless $engine;
 		$self->{__engine} = $engine;
 		$self->{__engineOpen} = 1;
-		my $session = OME::Session->instance();
-		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
-		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
-		logdbg "debug", "Matlab src dir is $matlab_src_dir\n".
 		$engine->eval("addpath(genpath('$matlab_src_dir'));");
 	}
 }
