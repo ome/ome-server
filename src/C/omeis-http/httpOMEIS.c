@@ -403,7 +403,7 @@ void* getROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
     pixHeader* ph;
 
     ph = pixelsInfo (is, pixelsID);
-    int bytes = (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1);
+    int bytes = (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
 
