@@ -66,6 +66,7 @@ use OME::Tasks::PixelsManager;
 use OME::Analysis::Handler;
 use OME::Session;
 use OME::ModuleExecution;
+use OME::Install::Environment;
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use fields qw(__engine __engineOpen);
@@ -194,6 +195,7 @@ sub new {
 		'bigint'   => $mxINT64_CLASS,
 	};
 	
+	$self->{_environment} = initialize OME::Install::Environment;
 	bless $self,$class;
 	return $self;
 }
@@ -354,7 +356,7 @@ sub _putScalarToMatlab {
 =head2 _getScalarFromMatlab
 
 	my $array = $self->_getScalarFromMatlab($matlab_var_name, $convert_to_matlab_class);
-	$array->value();
+	$array->getScalar();
 	$array->class();
 
 Gets a scalar of a particular name from the Matlab Engine workspace.
@@ -454,53 +456,13 @@ sub Pixels_to_MatlabArray {
 		$ascender = $ascender->Parent();
 	}
 
-	# Ensure PixelType is supported.
-	my $pixelType = $pixels->PixelType();
-	die "The OME-Matlab interface does not support $pixelType at this time."
-		unless exists $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-	my $class = $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-	
-	# Get the Pixels data into a local file.
-	# FIXME: PixelsManager->getLocalFile( $pixels ) should implement the 
-	#	 functionality below without loading the whole pixels array into RAM
-	#    and taking endianess into consideration
-	my $filename = $session->getTemporaryFilename("pixels","raw");
-	open my $pix, ">", $filename or die "Could not open local pixels file";
-	my $buf = ( @ROI ?
-		OME::Image::Server->getROI($pixels->ImageServerID(), @ROI ) : 
-		OME::Image::Server->getPixels($pixels->ImageServerID())
-	);
-	print $pix $buf;
-	close $pix;
-  	
-	# Get that file into Matlab.
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
-	my $matlab_pixels = OME::Matlab::Array->newNumericArray(
-		$class,
-		$mxREAL,
-		@Dims
-	) or die "Could not make an array in matlab for Pixels";
-	$matlab_pixels->makePersistent();
 	$self->{__engine}->eval("global $matlab_var_name;");
-	$self->{__engine}->putVariable($matlab_var_name,$matlab_pixels);
-	
-	# magic one-liner. One liner means no variables are left in matlab's workplace
-	# this one-liner fills an array from the temp file
-	$self->{__engine}->eval("[$matlab_var_name"."_serialized] = fread(fopen('$filename', 'r'), '$pixelType');");
-	
-	# verify that all pixels were read
-	my $nPix;
-	my $expectedPix = $Dims[0]*$Dims[1]*$Dims[2]*$Dims[3]*$Dims[4];
-	
-	$self->{__engine}->eval("nPix=prod(size($matlab_var_name"."_serialized));");
-	
-	if (not defined($self->{__engine}->getVariable('nPix')) or 
-	    ($nPix = $self->{__engine}->getVariable('nPix')->getScalar()) ne $expectedPix) {
-		die "Could not read Pixels into Matlab. Read $nPix, expected $expectedPix."
+	if (scalar @ROI) {
+		$self->{__engine}->eval("$matlab_var_name = getROI(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI).");");
+	} else {
+		$self->{__engine}->eval("$matlab_var_name = getPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels->ImageServerID().");");
 	}
-	$self->{__engine}->eval("$matlab_var_name = reshape($matlab_var_name"."_serialized, size($matlab_var_name))");
-	# Reshape has converted the pixels array to double
-	$self->{__engine}->eval("$matlab_var_name = ".$self->{_matlab_class_to_convert}->{$class}."($matlab_var_name)");
 	
 	# Convert array datatype if requested
 	# FIXME: does this datatype conversion taint $matlab_pixels ?
@@ -511,9 +473,6 @@ sub Pixels_to_MatlabArray {
 	# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
 	# This is diametrically opposite to MATLAB's assumptions.
 	$self->{__engine}->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
-
-	# Cleanup
-	$session->finishTemporaryFile($filename);
 }
 
 =head2 Attr_to_MatlabScalar
@@ -678,15 +637,11 @@ sub MatlabArray_to_Pixels {
 		OME::Tasks::PixelsManager->createPixels( @pixels_params ) :
 		OME::Tasks::PixelsManager->createParentalPixels( @pixels_params )
 	);
-	
-	# Shovel data into image server via tmp file
-	my $filename = $session->getTemporaryFilename("pixels","raw");
-	$self->{__engine}->eval("fwrite(fopen('$filename','w'),$matlab_var_name, class($matlab_var_name));");
-	die "Could not write the expected number of pixels to OMEIS" 
-	   unless $pixels_data->setPixelsFile($filename,1) == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
-	   
-	$session->finishTemporaryFile($filename);
 
+	$self->{__engine}->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
+	die "Could not write the expected number of pixels to OMEIS"
+		unless $self->_getScalarFromMatlab($matlab_var_name."_pix")->getScalar() == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
+	
 	# Finalize Pixels
 	my $pixelsID = OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
 	OME::Tasks::PixelsManager->saveThumb($pixels_attr);
