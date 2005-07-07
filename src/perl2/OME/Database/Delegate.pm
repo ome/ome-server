@@ -316,6 +316,21 @@ sub getRemoteDSN {
     die "OME::Database::Delegate->getRemoteDSN is abstract";
 }
 
+=head2 tableExists
+
+	die "Table $table doesn't exist" unless $delegate->tableExists($dbh,$table);
+
+Determines if the specified table name exists in the DB.  Not case-sensitive.
+Returns undef if table not found, 1 if it exists.
+
+=cut
+
+sub tableExists {
+    die "OME::Database::Delegate->tableExists is abstract";
+}
+
+
+
 =head2 dropColumn
 
     $delegate->dropColumn ($dbh,$table,$column);
@@ -405,6 +420,29 @@ method should use the $dbh handle to access the database.
 sub getNextSequenceValue {
     die "OME::Database::Delegate->getNextSequenceValue is abstract";
 }
+
+
+
+=head2 addForeignKeyConstraints
+
+	$delegate->addForeignKeyConstraints($dbh,$class);
+
+This method is responsible for defining the foreign key constraints for the
+the references used in the given class.  The $class parameter may be a class name
+or a reference.
+The implementation should add FK constraints regardless of the existence
+of the ForeignKey option in the class columns' SQL options - it should add FK
+constraints for any foreign class referenced by the class's columns.
+The implementation is also responsible for not adding duplicate FK constraints,
+because this method may be called multiple times on a given class within the same
+DB instance.
+
+=cut
+
+sub addForeignKeyConstraints {
+    die "OME::Database::Delegate->addForeignKeyConstraints is abstract";
+}
+
 
 =head2 addClassToDatabase
 

@@ -84,7 +84,7 @@ __PACKAGE__->setDefaultTable('configuration');
 __PACKAGE__->addPrimaryKey('var_id');
 __PACKAGE__->addColumn(configuration_id => 'configuration_id',{SQLType => 'integer'});
 __PACKAGE__->addColumn(name => 'name',{SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(value => 'value',{SQLType => 'varchar(256)'});
+__PACKAGE__->addColumn(value => 'value',{SQLType => 'text'});
 __PACKAGE__->Caching(1);
 
 1;

@@ -31,6 +31,13 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Douglas Creager <dcreager@alum.mit.edu>
+# Modified by:
+#    Arpun Nagaraja  <arnagaraja@comcast.net>
+#      Added FilenamePattern processing
+#    Ilya Goldberg   <igg@nih.gov>
+#      Fixed FilenamePattern stuff
+#    Nico Stuurmann   <nicos@itsa.ucsf.edu>
+#      Added processing of compund base names
 #
 #-------------------------------------------------------------------------------
 
@@ -273,7 +280,10 @@ sub __getRegexGroups {
     my $maxZ;
     my $maxT;
     my $maxC;
-    
+
+    # An array containing the matches making up basename - NS
+    my @basenameMatches; 
+
     # A hash containing the number of patterns, as well as numZ, C, T, for each pattern
     my $infoHash;
     
@@ -305,11 +315,13 @@ sub __getRegexGroups {
     	my $regex = $filenamePattern->RegEx();
     	eval { "" =~ /$regex/; };
 		die "Invalid regular expression pattern: $regex\n" if $@;
+
+		# print "Working on regex: " . $regex ."\n";
     	
     	# There has to be a name in the file or you won't be able to group.
     	# Die if there isn't a name!
     	my $base = $filenamePattern->BaseName();
-		die "No name in filePattern!" unless $base and $base > 0;
+		die "No name in filePattern!" unless $base;
 
 		$regexes{$regex} = {
 			Base => $base,
@@ -339,7 +351,7 @@ sub __getRegexGroups {
 		while ( ($regex,$parts) = each %regexes ) {
 			logdbg "debug",  "Checking $filename for $regex\n";
 			if( $filename =~ $parts->{RE}) {
-				eval ('$name = $'.$parts->{Base});
+				eval ('$name = '.$parts->{Base});
 				die "When grouping files, Name capture failed with error: $@\n" if $@;
 				logdbg "debug",  "\t got name $name\n";
 				next unless $name;

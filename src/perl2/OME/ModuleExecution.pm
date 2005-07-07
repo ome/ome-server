@@ -122,9 +122,13 @@ __PACKAGE__->addColumn(new_feature_tag => 'new_feature_tag',
 __PACKAGE__->addColumn(input_tag => 'input_tag',
                        {SQLType => 'text'});
 __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
-                       {SQLType => 'integer', Indexed => 1,
+                       {SQLType => 'integer', Indexed => 1, NotNull => 1,
                         ForeignKey => 'experimenters'});
 __PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
+__PACKAGE__->addColumn(group_id => 'group_id',
+                       {SQLType => 'integer', Indexed => 1,
+                        ForeignKey => 'groups'});
+__PACKAGE__->addColumn(group => 'group_id','@Group');
 __PACKAGE__->addColumn(timestamp => 'timestamp',
                        {
                         SQLType => 'timestamp',
@@ -151,9 +155,7 @@ __PACKAGE__->hasMany('parentalOutputs','OME::ModuleExecution::ParentalOutput' =>
                      'module_execution');
 __PACKAGE__->addACL ({
         	user    => 'experimenter_id',
-        	group   => 'acl.group_id',
-        	froms   => ['experimenters acl'],
-        	wheres  => ["acl.attribute_id = experimenter_id"],
+        	group   => 'group_id',
         	});
 
 

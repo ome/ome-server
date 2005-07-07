@@ -59,7 +59,7 @@
             <Element
                Name="BaseName"
                DBLocation="FILENAME_PATTERN.BASE_NAME"
-               DataType="integer">
+               DataType="string">
                <Description>The position of the base name in the regular expression.</Description>
             </Element>
             <Element

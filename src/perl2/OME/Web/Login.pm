@@ -74,12 +74,14 @@ sub getPageBody {
 			$q->param('username'),
 			$q->param('password'),
 		);
+		my $key_request = $q->param ('SessionKey');
 		$q->delete_all();
 
 		if (defined $session) {
 			# login successful, redirect
             $self->setSessionCookie($self->Session()->SessionKey());
-            return ('REDIRECT',$self->pageURL('OME::Web::Home'));
+            return ('REDIRECT',$self->pageURL('OME::Web::Home')) unless $key_request;
+            return ('TXT',$self->Session()->SessionKey());
 		} else {
 			# login failed, report it
 			return ('HTML', $self->__loginForm("The username and/or password you entered don't match an experimenter in the system.  Please try again."));

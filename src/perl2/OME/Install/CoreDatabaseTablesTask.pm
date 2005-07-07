@@ -97,12 +97,13 @@ our $IMPORT_FORMATS = join (' ',qw/
     OME::ImportEngine::BioradReader
     OME::ImportEngine::LSMreader
     OME::ImportEngine::TIFFreader
+    OME::ImportEngine::BMPreader
     OME::ImportEngine::DICOMreader
     OME::ImportEngine::XMLreader
 /);
 
 # Database version
-our $DB_VERSION = "2.15";
+our $DB_VERSION = "2.16";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
@@ -216,7 +217,6 @@ sub update_database {
     my $dbh = $factory->obtainDBH();
     my $delegate = OME::Database::Delegate->getDefaultDelegate();
     
-    
     print "WARNING:  You are about to update an existing ome database.\n";
     print "  If anything goes wrong before the update is finished,\n";
     print "  your database may be left in an invalid state\n";
@@ -231,6 +231,11 @@ sub update_database {
 	# This of course, we have to do as root and then switch back.
 	my $old_euid = euid (0);
     print "Copying update directories to $OME_TMP_DIR/update\n";
+
+	if (-d "$OME_TMP_DIR/update") {
+    	delete_tree ("$OME_TMP_DIR/update");
+	}
+
 	copy_tree ("update", "$OME_TMP_DIR");
 	fix_ownership( {
 			owner => $OME_USER,
@@ -304,34 +309,34 @@ sub load_schema {
     my $logfile = shift;
     my $retval;
     my $delegate = OME::Database::Delegate->getDefaultDelegate();
-
-    my $factory = OME::Factory->new();
+    my $session = OME::Session->bootstrapInstance();
+    my $factory = $session->Factory();
     my $dbh = $factory->obtainDBH();
 
     print "Loading the database schema\n";
 
     foreach my $class (@core_classes) {
-
-    print "  \\__ $class ";
+        print "  \\__ $class ";
+        
+        $class->require();
     
-    $class->require();
-
-    # Add our class to the DB
-    eval {
-        $delegate->addClassToDatabase($dbh,$class);
-    };
+        # Add our class to the DB
+        eval {
+            $delegate->addClassToDatabase($dbh,$class);
+        };
+        
+        print BOLD, "[FAILURE]", RESET, ".\n"
+            and print $logfile "ERROR LOADING CLASS \"$class\" -- OUTPUT: \"$@\"\n"
+            and croak "Error loading class \"$class\", see $LOGFILE_NAME details."
+            if $@;
     
-    print BOLD, "[FAILURE]", RESET, ".\n"
-        and print $logfile "ERROR LOADING CLASS \"$class\" -- OUTPUT: \"$@\"\n"
-        and croak "Error loading class \"$class\", see $LOGFILE_NAME details."
-        if $@;
-
-
-    print BOLD, "[SUCCESS]", RESET, ".\n"
-        and print $logfile "SUCCESS LOADING CLASS \"$class\"\n";
+    
+        print BOLD, "[SUCCESS]", RESET, ".\n"
+            and print $logfile "SUCCESS LOADING CLASS \"$class\"\n";
     }
 
     $factory->commitTransaction();
+    $session->finishBootstrap();
 
     return 1;
 }
@@ -433,17 +438,17 @@ PRINT
 
     print "\n";  # Spacing
 
-    # IGG 12/10/03:  Refactored this a wee bit to work with updates
-    # Since we may be updating, see if there's an experimenter with the same OMEName.
-    my $factory = OME::Factory->new();
+    my $session = OME::Session->bootstrapInstance();
+    my $factory = $session->Factory();
     
     delete $OME_EXPER->{ExperimenterID};
     my $experimenter = $factory->
     	newObject('OME::SemanticType::BootstrapExperimenter', $OME_EXPER);
 
     $factory->commitTransaction();
-    $factory->closeFactory();
-    my $session = $manager->createSession($OME_EXPER->{OMEName}, $password);
+    $session->finishBootstrap();
+
+    $session = $manager->createSession($OME_EXPER->{OMEName}, $password);
 	$OME_EXPER->{ExperimenterID} = $experimenter->id();
     $ENVIRONMENT->ome_exper($OME_EXPER);
 
@@ -861,6 +866,64 @@ sub load_analysis_core {
 }
 
 
+
+sub add_DB_constraints {
+    my ($session, $logfile) = @_;
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+    my $factory = $session->Factory();
+    my $dbh = $factory->obtainDBH();
+
+    print "Adding Referential Integrity constraints for DBObjects\n";
+
+    foreach my $class (@core_classes) {
+        next if $class =~ /^OME::SemanticType::Bootstrap/;
+        print "  \\__ $class ";
+    
+        # Add our constraints
+        eval {
+            $delegate->addForeignKeyConstraints($dbh,$class);
+        };
+        
+        print BOLD, "[FAILURE]", RESET, ".\n"
+            and print $logfile "ERROR Adding FK constraints to CLASS \"$class\" -- OUTPUT: \"$@\"\n"
+            and croak "Error Adding FK constraints to class \"$class\", see $LOGFILE_NAME details."
+            if $@;
+    
+    
+        print BOLD, "[SUCCESS]", RESET, ".\n"
+            and print $logfile "SUCCESS Adding FK constraints to CLASS \"$class\"\n";
+    }
+    
+    print "Adding Referential Integrity constraints for Semantic Types\n";
+    my $ST_iter = $factory->findObjects ('OME::SemanticType');
+    my $ST;
+    while ($ST = $ST_iter->next() ) { 
+        my ($name,$package) = ($ST->name(),$ST->getAttributeTypePackage());
+        print "  \\__ $name ";
+    
+        # Add our constraints
+        eval {
+            $delegate->addForeignKeyConstraints($dbh,$package);
+        };
+        
+        print BOLD, "[FAILURE]", RESET, ".\n"
+            and print $logfile "ERROR Adding FK constraints to ST \"$name\" -- OUTPUT: \"$@\"\n"
+            and croak "Error Adding FK constraints to ST \"$name\", see $LOGFILE_NAME details."
+            if $@;
+    
+    
+        print BOLD, "[SUCCESS]", RESET, ".\n"
+            and print $logfile "SUCCESS Adding FK constraints to ST \"$name\"\n";
+    }
+
+    $factory->commitTransaction();
+
+    return 1;
+}
+
+
+
+
 #*********
 #********* START OF CODE
 #*********
@@ -1168,6 +1231,9 @@ BLURB
 
     # Update the Experimenter in the install environment
     save_exper_env ($session);
+
+    # Load all constraints
+    add_DB_constraints ($session, $LOGFILE);
 
     $session->commitTransaction();
     

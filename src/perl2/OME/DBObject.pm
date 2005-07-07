@@ -1970,7 +1970,32 @@ sub __resolveReference {
 	return ($local_column,$target_table_name,$target_column,$target_class);
 }
 
+=head2 __getPrimaryKeyLocation
 
+	my ($table,$column) = $class->__getPrimaryKeyLocation();
+
+Gets the table and column that contains a primary key for this class.
+By default, this is the default table for the class and its primary key,
+though potentially, this could be any primary key definition if a default
+table is not defined.
+Returns an array containing the table name and the column name.
+If the class has no primary keys defined, returns undef.
+
+=cut
+
+sub __getPrimaryKeyLocation {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+	my $table = $class->__defaultTable();
+	my $pKeys = $class->__primaryKeys();
+	$table = (keys %$pKeys)[0]
+		unless $table;
+	return undef unless $table;
+	my $column = $pKeys->{$table};
+	
+	return ($table,$column);
+}
 
 =head2 __addForeignJoin
 
@@ -2036,13 +2061,10 @@ sub __addForeignJoin {
             # A has-many will set locl_column to '.'
             # We need to determine the table name for this class
             # And the column name that has its primary key.
-            my $local_table_alias = $class->__defaultTable();
-            my $pKeys = $class->__primaryKeys();
-            $local_table_alias = (keys %$pKeys)[0]
-                unless $local_table_alias;
+            my ($local_table_alias,$local_column_name) =
+            	$class->__getPrimaryKeyLocation();
             confess "BAH! Class $class does not have a primary key table!"
-                unless $local_table_alias;
-            my $local_column_name = $pKeys->{$local_table_alias};
+               unless $local_table_alias;
 
             # Set up the target table alias
             my $number = $$foreign_key_number++;
@@ -2503,7 +2525,7 @@ no warnings "uninitialized";
         my $u_list = join (',', @{$ACL_vis->{users}} );
         my $g_list = join (',', @{$ACL_vis->{groups}} );
         push (@join_clauses,
-            "($u_location IN ($u_list) OR $g_location IN ($g_list))");
+            "($u_location IN ($u_list) OR $g_location IN ($g_list) OR $g_location isnull)");
 #        logdbg "debug", "$class ACL clause : ($u_location IN ($u_list) OR $g_location IN ($g_list))\n";
     }
 

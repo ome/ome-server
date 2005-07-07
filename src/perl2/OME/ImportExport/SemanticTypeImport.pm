@@ -115,6 +115,7 @@ sub processDOM {
     my $ignoreAlterTableErrors = $flags{IgnoreAlterTableErrors};
 
     my @commitOnSuccessfulImport;
+    my @newAttributes;
 
     my %dataTypeConversion = (
                               # XMLType  => SQL_Type
@@ -430,8 +431,7 @@ sub processDOM {
 
         # Add the table to the database
         # This gets the Factory's DBH - not a new one.
-        my $dbh = $factory->obtainDBH();
-        $delegate->addClassToDatabase($dbh,$pkg);
+        $delegate->addClassToDatabase($factory->obtainDBH(),$pkg);
 # We're not supposed to release the Factory's DBH.  Only ones we get from Factory->newDBH
 #        $factory->releaseDBH($dbh);
 
@@ -528,6 +528,7 @@ sub processDOM {
             #######################################################################
 
             push(@commitOnSuccessfulImport, $newAttrType);
+            push(@newAttributes, $newAttrType);
         }
         #
         # END "if AttributeType doesn't exist, create it"
@@ -550,8 +551,12 @@ sub processDOM {
     #
     ###############################################################################
 
-    $_->storeObject() foreach @commitOnSuccessfulImport;
+	$_->storeObject() foreach @commitOnSuccessfulImport;
     @commitOnSuccessfulImport = ();
+
+	my $dbh = $factory->obtainDBH();
+    $delegate->addForeignKeyConstraints ($dbh,$_->getAttributeTypePackage())
+        foreach @newAttributes;
 
     $self->{semanticTypes} = $semanticTypes;
     $self->{semanticColumns} = $semanticColumns;

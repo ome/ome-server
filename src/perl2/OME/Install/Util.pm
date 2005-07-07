@@ -588,25 +588,19 @@ sub copy_tree {
 #
 
 sub delete_tree {
-	# FIXME delete_tree() needs to be ported to the new scan_dir() which uses
-	# arrays, not hashrefs.
-	croak ("delete_tree() functionality disabled");
-
-
     my ($base,$filter) = @_;
 
 
     $base = File::Spec->rel2abs($base);  # does clean up as well
-    my $paths = scan_dir($base,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
-    my @to_delete = keys(%$paths);  # just names, no path
-    my ($total_entries,$deleted) = (scalar(@to_delete),0);
+	unless (-d $base) { croak "OME::Install::Util::delete_tree() can only operate on directories. While deleting '$base', $!" }
 
-    if( ref($filter) eq "CODE" ) {  # filter out files and dirs we don't delete
-        @to_delete = grep {local $_=$_; &$filter} @to_delete;
+    my @paths = scan_dir($base,sub{ ! /^\.{1,2}$/ });  # filter . and .. out
+    my ($total_entries,$deleted) = (scalar(@paths),0); # entries in directory other than '.' and '..'
+    if( ref($filter) eq "CODE" ) {  # filter out unwanted files and dirs
+        @paths = grep { &$filter } @paths;
     }
 
-    foreach my $item (@to_delete) {  # if @to_delete is empty, block is skipped
-        $item = $paths->{$item};  # abs path of current entry
+    foreach my $item (@paths) {  # if @paths is empty, we return
         if( -f $item ) {
             unlink($item) or die("Couldn't delete file $item. $!.\n");
             $deleted++;
