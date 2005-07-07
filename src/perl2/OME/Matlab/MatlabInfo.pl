@@ -36,13 +36,16 @@ my $arch = 0;
 my $root = 0;
 my $inc  = 0;
 my $lib  = 0;
+my $path = 0;
 
-$result = GetOptions('v|version' => \$ver,
-					 'a|arch' => \$arch,
-					 'r|root' => \$root,
-					 'i|include' => \$inc,
-					 'l|lib' => \$lib);
-					 
+GetOptions('v|version' => \$ver,
+			'a|arch' => \$arch,
+			'r|root' => \$root,
+			'i|include' => \$inc,
+			'l|lib' => \$lib,
+			'p|path' => \$path);
+$result = $ver + $arch + $root + $inc + $lib + $path;
+
 # Make sure we have a matlab executable
 my @extra_paths = glob ("/Applications/MATLAB*/bin");
 push (@extra_paths,glob ("/Applications/matlab*/bin"));
@@ -64,6 +67,7 @@ $path_test = "$matlab_path/bin/matlab" unless -x $path_test and -f $path_test;
 $path_test = "$matlab_path/matlab" unless -x $path_test and -f $path_test;
 die "Could not find matlab executable" unless -x $path_test and -f $path_test;
 $matlab_path = $path_test;
+$matlab_path =~ s/\/\//\//;
 
 # Execute matlab with a -n flag to get the ARCH and MATLAB variables.
 my ($matlab_dir, $matlab_arch, $matlab_vers);
@@ -75,7 +79,17 @@ foreach (@outputs) {
 die "Could not find matlab architecture.\n@outputs" unless $matlab_arch;
 die "Could not find matlab home.\n@outputs" unless $matlab_dir;
 
-# Execute matlab as the proper user to figure out MATLAB version
+# can we fulfill all the user's queries without launching the matlab executable?
+if ($result > 0) {
+	print ("$matlab_path\n") and $result--   if ($path);
+	print ("$matlab_arch\n") and $result--   if ($arch);
+	print ("$matlab_dir\n")  and $result--   if ($root);
+	exit unless $result > 0;
+}
+
+#
+# Additional Info requries executing matlab.
+#
 if (defined $matlab_user) {
 	@outputs = `su $matlab_user -c '$matlab_path -nojvm -r quit'`; 
 } else {
@@ -108,17 +122,16 @@ if ($matlab_vers =~ /6\.5\.0.+/) {
 
 # present the matlab info to the user depending on specified parameters
 if (not $result) {
+	print STDERR "Matlab Path: $matlab_path\n";
 	print STDERR "Matlab Vers: $matlab_vers\n";
 	print STDERR "Matlab Arch: $matlab_arch\n";
-	print STDERR "Matlab Home: $matlab_dir\n\n";
+	print STDERR "Matlab Root: $matlab_dir\n\n";
 	print STDERR "Include: $matlab_include\n";
 	print STDERR "Lib:     $matlab_lib_cmd\n";
 	exit;
 }
 
 print ("$matlab_vers\n")    if ($ver);
-print ("$matlab_arch\n")    if ($arch);
-print ("$matlab_dir\n")     if ($root);
 print ("$matlab_include\n") if ($inc);
 print ("$matlab_lib_cmd\n") if ($lib);
 
