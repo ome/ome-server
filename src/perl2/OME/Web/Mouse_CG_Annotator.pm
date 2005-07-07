@@ -63,11 +63,10 @@ sub getPageBody {
 	my $session= $self->Session();
     my $factory = $session->Factory();
     my %tmpl_data;
-    my $debug;
 
 	my @categoryGroups = $factory->findObjects ('@CategoryGroup', __order => 'id');
 	
-	# DNFW, this naming convention is tied to CategoryGroup_special_list.tmpl
+	# DNFW, this naming convention is tied to Mouse_CG_Annotator.tmpl
 	my @category_names = map( "FromCG".$_->id, @categoryGroups );
 	my @add_category_name = map( "CategoryAddTo".$_->id, @categoryGroups );
 	
@@ -109,6 +108,8 @@ sub getPageBody {
 	}
 	# commit the DB transaction
 	$session->commitTransaction();
+	
+	# Render each Category Group and associated Category List
 	my $cgCounter = 1;
 	
 	foreach my $cg (@categoryGroups) {
@@ -166,7 +167,6 @@ sub getPageBody {
 	$tmpl->param( %tmpl_data );
 
 	my $html =
-		$debug.
 		$q->startform().
 		$tmpl->output().
 		$q->endform();
