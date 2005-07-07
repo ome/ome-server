@@ -137,7 +137,7 @@ sub getPageBody {
 		push( @image_thumbs, $factory->loadObject( 'OME::Image', $id ) );
 	}
 	
-	$tmpl_data{ 'image_thumbs' } = $self->Renderer()->renderArray( \@image_thumbs, 'bare_ref_mass', { type => 'OME::Image' });
+	$tmpl_data{ 'image_thumbs' } = $self->Renderer()->renderArray( \@image_thumbs, 'ref_cg_display_mass', { type => 'OME::Image' });
 	$tmpl_data{ 'MGI_URL' } = $url;
 	
 	# Load & populate the template
