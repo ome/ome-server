@@ -710,14 +710,14 @@ sub execute {
 				
 				if (! $MATLAB->{MATLAB_INST}) {
 					$MATLAB->{MATLAB_INST} = which ('matlab');
-					$MATLAB->{MATLAB_INST} =~ s|\/\/|\/|; # cleanup double slashes // 
+					$MATLAB->{MATLAB_INST} = resolve_sym_links ($MATLAB->{MATLAB_INST}); 
 					$MATLAB->{MATLAB_INST} =~ s|/bin/matlab$||;
 				}
 				$MATLAB->{MATLAB_INST} = confirm_path ("Path to MATLAB installation", $MATLAB->{MATLAB_INST});
 				
 				if (! $MATLAB->{EXEC}) {
 					$MATLAB->{EXEC} = which ('matlab');
-					$MATLAB->{EXEC} =~ s|\/\/|\/|; # cleanup double slashes // 
+					$MATLAB->{EXEC} = normalize_path ($MATLAB->{EXEC});
 				}
 				$MATLAB->{EXEC} = confirm_path ("Path to MATLAB binary", $MATLAB->{EXEC});
 				
