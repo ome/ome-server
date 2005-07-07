@@ -1184,8 +1184,7 @@ sub resolve_sym_links {
 		}
 	}
 	# lots of /../ could have completely emptied the expansion
-	($_ eq '') ? '/' : $_;
-	return $_;
+	($_ eq '') ? return '/' : return $_;
 }
 
 1;
