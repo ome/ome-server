@@ -257,9 +257,14 @@ my $cgi = $self->CGI();
 # ----------------
 
 sub getSessionKey {
-my $self = shift;
-my $cgi = $self->CGI();
-return $cgi->cookie('SESSION_KEY');
+	my $self = shift;
+	my $cgi = $self->CGI();
+	my $key = $cgi->cookie('SESSION_KEY');
+	return $key if $key;
+	$key = $cgi->url_param('SessionKey');
+	return $key if $key;
+	$key = $cgi->param('SessionKey');
+	return $key;
 }
 
 
