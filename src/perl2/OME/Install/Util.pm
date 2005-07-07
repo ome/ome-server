@@ -74,6 +74,7 @@ our @EXPORT = qw(
 		which
 		euid
 		get_mac
+		resolve_sym_links
 		);
 
 # Distribution detection
@@ -1155,5 +1156,36 @@ sub which {
 
 # END modified BSD Licensed code
 
+# Adopted from Bennett Todd (bet@sbi.com) (c) 1993
+# From http://www.cpan.org/scripts/file-handling/expand.symlink.pl
+sub resolve_sym_links {
+	my $old = shift;
+
+	$old =~ s#^#cwd()/# unless $old =~ m#^/#; # ensure rooted path
+	my @dir = split(/\//, $old);
+	shift(@dir); # discard leading null element
+	$_ = '';
+	dir: foreach my $dir (@dir) {
+		next dir if $dir eq '.';
+		if ($dir eq '..') {
+			s#/[^/]+$##;
+			next dir;
+		}
+		$_ .= '/' . $dir;
+
+		while (my $r = readlink) {
+			if ($r =~ m#^/#) { # starts with slash, replace entirely
+				$_ = resolve_sym_links($r);
+				s#^/tmp_mnt## && next dir; # dratted automounter
+			} else { # no slash?  Just replace the tail then
+				s#[^/]+$#$r#;
+				$_ = resolve_sym_links($_);
+			}
+		}
+	}
+	# lots of /../ could have completely emptied the expansion
+	($_ eq '') ? '/' : $_;
+	return $_;
+}
 
 1;
