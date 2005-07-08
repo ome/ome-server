@@ -123,7 +123,11 @@ sub backup {
 		  if (defined($env_file) and not -e $env_file);
 		  
 	if ($backup_file eq "") {
-		$backup_file = confirm_default("Backup to archive",cwd()."/ome_backup.tar.bz2");
+		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+		$year += 1900;
+		$mday = sprintf("%02d", $mday);
+		$mon  = sprintf("%02d", $mon+1);
+		$backup_file = confirm_default("Backup to archive",cwd()."/ome_backup_$year-$mon-$mday.tar.bz2");
 	}
 	
 	$backup_file  =~ s/\.tar//; $backup_file  =~ s/\.bz2//;
@@ -224,6 +228,10 @@ Usage:
 Backs up OMEIS's image repository and OME's postgress db to an .tar.bz2 archive of 
 specified name.
 
+The default naming convention is
+  ome_backup_YYYY-MM-DD.tar.bz2
+where YYYY-MM-DD is the date, in ISO-8601, the backup was performed.
+
 Options:
      -f, --env-file    
 		Location of the stored environment overrides the default of 
@@ -263,10 +271,14 @@ sub restore {
 		  if (defined($env_file) and not -e $env_file);
 
 	if ($restore_file eq "") {
-		$restore_file = confirm_default("Restore from archive",cwd()."/ome_backup.tar.bz2");
+		my @files = glob ("ome_backup_????-??-??*");
+		if (scalar @files) {
+			@files = sort {$b cmp $a}  @files; # reverse order
+			$restore_file = confirm_default("Restore from archive",$files[0]);
+		} else {
+			$restore_file = confirm_default("Restore from archive","?");		
+		}
 	}
-
-	$restore_file  =~ s/\.tar//; $restore_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
 	my @progs = ('tar', 'pg_restore', 'dropdb','createdb', 'createuser');
@@ -288,15 +300,15 @@ sub restore {
 	my $omeis_base_dir = $environment->omeis_base_dir();
 	
 	# check if file exists
-	if ( not -e "$restore_file.tar.bz2" ){
-		croak "Archive $restore_file.tar.bz2 does not exist.\n";	
+	if ( not -e "$restore_file" ){
+		croak "Archive $restore_file does not exist.\n";	
 	}
 	
 	print_header("OME Restore");
 
 	# open OMEmaint version
 	print "    \\_ Checking archive version \n";
-	foreach (`$prog_path{'tar'} --bzip2 -x OMEmaint -f $restore_file.tar.bz2 2>&1`) {
+	foreach (`$prog_path{'tar'} --bzip2 -x OMEmaint -f $restore_file 2>&1`) {
 		print STDERR "\nCouldn't extract OMEmaint from tar archive: $_" and die 
 		if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 	}
@@ -305,7 +317,7 @@ sub restore {
 	<FILEIN> =~ m/version=(.*$)/;
 	close (FILEIN);
 	if ($1 ne $dbAdmin_version) {
-		croak "$restore_file.tar.bz2 is not compatible with this version of $0"; 
+		croak "$restore_file is not compatible with this version of $0"; 
 	}
 	close (FILEIN);
 	unlink "OMEmaint" or die "couldn't remove OMEmaint";
@@ -316,7 +328,7 @@ sub restore {
     
     # check if the OMEIS data was ever archived
     my $success = 1;
-	foreach (`$prog_path{'tar'} --bzip2 -t Files Pixels -f $restore_file.tar.bz2 2>&1`) {
+	foreach (`$prog_path{'tar'} --bzip2 -t Files Pixels -f $restore_file 2>&1`) {
 		$success = 0 if $_=~ /tar/ or $_ =~ /Error/;
 		# this is not a catastrophic error condition. It only means that OMEIS's
 		# folders Files and Pixels aren't included in the archive
@@ -346,7 +358,7 @@ sub restore {
 	    # expand the tar file directly into the OMEIS directory
 	    if ($semaphore eq 1) {
 			print "    \\_ Restoring OMEIS to $omeis_base_dir from archive\n";
-			foreach (`$prog_path{'tar'} --bzip2 --preserve-permissions --same-owner --directory $omeis_base_dir -x Files Pixels -f $restore_file.tar.bz2`) {
+			foreach (`$prog_path{'tar'} --bzip2 --preserve-permissions --same-owner --directory $omeis_base_dir -x Files Pixels -f $restore_file`) {
 				print STDERR "\nCouldn't extract OMEIS's Files and Pixels from tar archive: $_" 
 				and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 			}
@@ -397,7 +409,7 @@ sub restore {
 	
 	# need to extract omeDB_backup in /tmp since postgress might not have
 	# access permissions in current directory
-	foreach (`$prog_path{'tar'} --bzip2 --preserve-permissions --same-owner --directory /tmp -x omeDB_backup -f $restore_file.tar.bz2`) {
+	foreach (`$prog_path{'tar'} --bzip2 --preserve-permissions --same-owner --directory /tmp -x omeDB_backup -f $restore_file`) {
 		print STDERR "\nCouldn't extract omeDB_backup from tar archive: $_" and die 
 		if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 	}
@@ -431,6 +443,10 @@ Usage:
 
 Restores OMEIS's image repository and OME's postgress db from an .tar.bz2 archive of 
 specified name.
+
+By default, it looks in the current directory for an ome_backup file of this form:
+  ome_backup_YYYY-MM-DD.tar.bz2
+The ome_backup file with the latest YYYY-MM-DD is selected.
 
 Options:
      -f, --env-file    

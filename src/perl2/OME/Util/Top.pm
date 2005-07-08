@@ -115,8 +115,6 @@ sub top {
 		my @tasks_F  = OME::Tasks::NotificationManager->list(state=>'FINISHED');
 		my @tasks_A  = OME::Tasks::NotificationManager->list(state=>'ABORTED');
 	
-		
-		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 		my $timestamp = time;
 		my $timestr = localtime $timestamp;
 		
