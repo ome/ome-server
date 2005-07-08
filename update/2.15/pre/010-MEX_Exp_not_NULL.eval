@@ -9,7 +9,7 @@ foreach my $null_exp (@$null_exps) {
 		"WHERE datasets.dataset_id = module_executions.dataset_id ".
 		"AND module_executions.module_execution_id = $null_exp");
 	unless ($experimenter_id) {
-		($experimenter_id) = $dbh->selectrow_array ("SELECT experimenter_id from images, module_executions ".
+		($experimenter_id) = $dbh->selectrow_array ("SELECT images.experimenter_id from images, module_executions ".
 			"WHERE images.image_id = module_executions.image_id ".
 			"AND module_executions.module_execution_id = $null_exp");
 	}
