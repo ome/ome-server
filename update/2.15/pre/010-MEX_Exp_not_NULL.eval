@@ -1,0 +1,27 @@
+# Fix any module executions with null experimenter IDs
+print "     \\_ Fixing MEXes with NULL Experimenters \n";
+my $null_exps  = $dbh->selectcol_arrayref("SELECT module_execution_id FROM module_executions ".
+	"WHERE experimenter_id isnull");
+my ($default_experimenter) = $dbh->selectrow_array ("SELECT attribute_id from experimenters ORDER BY attribute_id LIMIT 1");
+
+foreach my $null_exp (@$null_exps) {
+	my ($experimenter_id) = $dbh->selectrow_array ("SELECT owner_id from datasets, module_executions ".
+		"WHERE datasets.dataset_id = module_executions.dataset_id ".
+		"AND module_executions.module_execution_id = $null_exp");
+	unless ($experimenter_id) {
+		($experimenter_id) = $dbh->selectrow_array ("SELECT experimenter_id from images, module_executions ".
+			"WHERE images.image_id = module_executions.image_id ".
+			"AND module_executions.module_execution_id = $null_exp");
+	}
+	unless ($experimenter_id) {
+		$experimenter_id = $default_experimenter;
+	}
+
+	$dbh->do("UPDATE module_executions SET experimenter_id = $experimenter_id WHERE module_execution_id = $null_exp");			
+	printf "\r       \\_ MEX %10d Exp %10d",$null_exp,$experimenter_id;
+}
+$delegate->notNULL($dbh, 'MODULE_EXECUTIONS', 'EXPERIMENTER_ID');
+$dbh->commit();
+print "",BOLD, "[SUCCESS]", RESET, ".\n";
+
+1;

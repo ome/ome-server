@@ -1,0 +1,5 @@
+$delegate->dropColumn($dbh, 'CONFIGURATION', 'OLD_VALUE');
+$delegate->dropColumn($dbh, 'FILENAME_PATTERN', 'OLD_BASE_NAME');
+
+OME::DBObject->clearAllCaches();
+1;

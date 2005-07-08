@@ -1,0 +1,166 @@
+# Fix attributes with NULL MEXes
+# Get all the attribute tables,
+# for each table, get all rows where module_execution_id is null
+# make annotation MEXes for orphanned attributes.
+# at most one new annotation MEX/image, one/dataset, and one global.
+
+my ($annotation_module) = $dbh->selectrow_array (<<SQL);
+	SELECT value FROM configuration WHERE name = 'annotation_module_id'
+SQL
+my ($import_module) = $dbh->selectrow_array (<<SQL);
+	SELECT value FROM configuration WHERE name = 'image_import_module_id'
+SQL
+
+# The Following STs (if having NULL MEXes) will be assigned to the
+# image import MEX
+my $import_tables = {
+	IMAGE_DIMENSIONS => 1,
+	IMAGE_PIXELS => 1,
+	DISPLAY_CHANNELS => 1,
+	DISPLAY_OPTIONS => 1,
+};
+my $STOs;
+
+
+print "     \\_ Fixing attributes with NULL MEXes \n";
+
+
+my $global_MEX;
+my %dataset_MEXes;
+my %image_MEXes;
+my %image_import_MEXes;
+my $message = "Fixing NULL MEXes PID: $$ on ".localtime;
+my ($global_experimenter) = $dbh->selectrow_array ("SELECT attribute_id from experimenters ORDER BY attribute_id LIMIT 1");
+my ($global_group) = $dbh->selectrow_array ("SELECT group_id from experimenters WHERE attribute_id = $global_experimenter");
+
+my $att_tables  = $dbh->selectcol_arrayref("SELECT table_name FROM data_tables");
+foreach my $att_table (@$att_tables) {
+	my $null_atts = $dbh->selectcol_arrayref("SELECT attribute_id FROM $att_table ".
+		"WHERE module_execution_id isnull");
+	my $granularity;
+	my $STs;
+	if (@$null_atts) {
+		($granularity) = $dbh->selectrow_array (<<SQL);
+			SELECT DISTINCT st.granularity
+			FROM semantic_types st, semantic_elements se,
+				data_tables dt, data_columns dc
+			WHERE dt.table_name='$att_table'
+				AND dc.data_table_id=dt.data_table_id
+				AND se.data_column_id=dc.data_column_id
+				AND se.semantic_type_id=st.semantic_type_id
+SQL
+		$STs = $dbh->selectcol_arrayref(<<SQL);
+			SELECT DISTINCT se.semantic_type_id
+			FROM semantic_elements se,
+				data_tables dt, data_columns dc
+			WHERE dt.table_name='$att_table'
+				AND dc.data_table_id=dt.data_table_id
+				AND se.data_column_id=dc.data_column_id
+SQL
+	}
+	# Set the attribute's MEX to something.
+	# orphanned image and feature attributes get the image's import mex
+	# orphaned global and dataset attributes get an annotation MEX
+	foreach my $null_att (@$null_atts) {
+		my $mex;
+		if ($granularity eq 'G') {
+			# get our global annotation MEX
+			# Each orphaned global attribute gets its own MEX
+			$mex = $delegate->getNextSequenceValue ($dbh,'module_execution_seq');
+			$dbh->do(<<SQL);
+				INSERT INTO module_executions
+					(module_execution_id,experimenter_id,status,module_id,dependence,error_message)
+				VALUES ($mex,$global_experimenter,'EXECUTING',$annotation_module,'G','$message')
+SQL
+		} elsif ($granularity eq 'D') {
+			# get the dataset annotation MEX for this dataset.
+			my ($dataset_id) = $dbh->selectrow_array ("SELECT dataset_id FROM $att_table WHERE attribute_id = $null_att");
+			my $dataset_MEX = $dataset_MEXes{$dataset_id};
+			unless ($dataset_MEX) {
+				my ($experimenter_id) = $dbh->selectrow_array ("SELECT owner_id from datasets WHERE dataset_id = $dataset_id");
+				my ($group_id) = $dbh->selectrow_array ("SELECT group_id from experimenters WHERE attribute_id = $experimenter_id");
+				$dataset_MEX = $delegate->getNextSequenceValue ($dbh,'module_execution_seq');
+				$dbh->do(<<SQL);
+					INSERT INTO module_executions
+						(module_execution_id,experimenter_id,group_id,status,module_id,dependence,dataset_id,error_message)
+					VALUES ($dataset_MEX,$experimenter_id,$group_id,'EXECUTING',$annotation_module,'D',$dataset_id,'$message')
+SQL
+			}
+			$mex = $dataset_MEX;
+			$dataset_MEXes{$dataset_id} = $dataset_MEX;
+
+		} elsif ($granularity eq 'I' or $granularity eq 'F') {
+			# get the image ID and the import MEX for this image
+			my $image_id;
+			if ($granularity eq 'I') {
+				($image_id) = $dbh->selectrow_array ("SELECT image_id FROM $att_table WHERE  attribute_id = $null_att");			
+			} else {
+				($image_id) = $dbh->selectrow_array ("SELECT DISTINCT features.image_id FROM features,$att_table ".
+					"WHERE features.feature_id = $att_table.feature_id ".
+					"AND $att_table.attribute_id = $null_att");			
+			}
+			
+			my $image_MEX;
+			
+			# If this is a table that belongs to import, get the image import module
+			if ($import_tables->{$att_table}) {
+				$image_MEX = $image_import_MEXes{$image_id};
+				unless ($image_MEX) {
+					($image_MEX) = $dbh->selectrow_array (<<SQL);
+						SELECT module_execution_id from module_executions
+						WHERE image_id = $image_id
+						AND module_id = $import_module
+SQL
+					$image_import_MEXes{$image_id} = $image_MEX;
+				}
+				# Dimensions and Pixels are a declared output in import MEXes,
+				# So pretend we already made a STO for them.
+				my $ST = $STs->[0];
+				$STOs->{$image_MEX.':'.$ST} = 1 if $image_MEX
+					and ($att_table eq 'IMAGE_DIMENSIONS' or $att_table eq 'IMAGE_PIXELS');
+			}
+			# If still no image MEX
+			unless ($image_MEX) {
+				$image_MEX = $image_MEXes{$image_id};
+				# If still no image MEX, make a new annotation MEX
+				unless ($image_MEX) {
+					my ($experimenter_id) = $dbh->selectrow_array ("SELECT experimenter_id from images WHERE image_id = $image_id");
+					my ($group_id) = $dbh->selectrow_array ("SELECT group_id from experimenters WHERE attribute_id = $experimenter_id");
+					$image_MEX = $delegate->getNextSequenceValue ($dbh,'module_execution_seq');
+					$dbh->do(<<SQL);
+						INSERT INTO module_executions
+							(module_execution_id,experimenter_id,group_id,status,module_id,dependence,image_id,error_message)
+						VALUES ($image_MEX,$experimenter_id,$group_id,'EXECUTING',$annotation_module,'I',$image_id,'$message')
+SQL
+					$image_MEXes{$image_id} = $image_MEX;
+				}
+			}
+
+			$mex = $image_MEX;
+		}
+
+		$dbh->do("UPDATE $att_table SET module_execution_id = $mex WHERE attribute_id = $null_att");
+		# Since we're using an annotation module with undeclared outputs
+		# We need to add the STs to the semantic_type_outputs table
+		foreach my $ST (@$STs) {
+			$dbh->do("INSERT INTO semantic_type_outputs (semantic_type_id,module_execution_id) VALUES ($ST,$mex)")
+				unless $STOs->{$mex.':'.$ST};
+			$STOs->{$mex.':'.$ST} = 1;
+		}
+
+		printf "\r       \\_ %-30s ($granularity) ID: %10d MEX: %10d",$att_table,$null_att,$mex;
+	}
+
+	if (@$null_atts) {
+		printf "\r       \\_ %-30s ",$att_table;
+		print  " ",BOLD, "[SUCCESS]", RESET;
+		printf "%30s \n",'';
+	}
+	$delegate->notNULL($dbh, $att_table, 'MODULE_EXECUTION_ID');
+}
+
+$dbh->do("UPDATE module_executions SET status = 'FINISHED', error_message = null WHERE error_message = '$message'");
+$dbh->commit();
+print "",BOLD, "[SUCCESS]", RESET, ".\n";
+
+1;

@@ -1,0 +1,23 @@
+# Fix FilenamePattern attributes, converting numeric
+# values to '$1','$2', etc.
+
+if ($delegate->tableExists($dbh,'filename_pattern')) {
+	print "     \\_ Fixing FilenamePattern.BaseName...\n";
+	
+	my $base_names  = $dbh->selectall_arrayref(<<SQL);
+		SELECT base_name,attribute_id FROM filename_pattern
+SQL
+	my ($row,$base_name,$attr_id);
+	foreach $row (@$base_names) {
+		($base_name,$attr_id) = @$row;
+		if ($base_name =~ /([,]|^)(\d+)/) {
+			print "     \\_   ID: $attr_id $base_name -> ";
+			$base_name =~ s/([,]|^)(\d+)/\$$2/g;
+			$dbh->do("UPDATE filename_pattern SET base_name = '$base_name' WHERE attribute_id = $attr_id");
+			print "$base_name\n";
+		}
+	}
+	$dbh->commit();
+	print "     \\_ Fixing FilenamePattern.BaseName ",BOLD, "[SUCCESS]", RESET, ".\n";
+}
+1;
