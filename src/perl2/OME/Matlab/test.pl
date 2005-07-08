@@ -38,7 +38,7 @@ use OME::Matlab;
 
 print "Trying to compute 4x8 using MATLAB ...\n";
 my $x = OME::Matlab::Array->newDoubleScalar(4);
-my $engine = OME::Matlab::Engine->open();
+my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm");
 
 if (not defined $engine) {
 	print STDERR "Test Failed.\n Perl Matlab API is incorrectly installed.\n".

@@ -91,9 +91,9 @@ if ($result > 0) {
 # Additional Info requries executing matlab.
 #
 if (defined $matlab_user) {
-	@outputs = `su $matlab_user -c '$matlab_path -nojvm -r quit'`; 
+	@outputs = `su $matlab_user -c '$matlab_path -nodisplay -nojvm -r quit'`; 
 } else {
-	@outputs = `$matlab_path -nojvm -r quit`; 
+	@outputs = `$matlab_path -nodisplay -nojvm -r quit`; 
 }
 
 foreach (@outputs) {
