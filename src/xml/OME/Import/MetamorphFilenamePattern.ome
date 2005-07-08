@@ -39,6 +39,6 @@
 			RegEx="^(.+)(_w)(\d+)(.*)"
 			Name="Metamorph Filename Pattern"
 			TheC="3"
-			BaseName="1"/>
+			BaseName="$1"/>
 	</CustomAttributes>
 </OME>

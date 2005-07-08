@@ -90,5 +90,41 @@
 				DataType = "reference"
 				RefersTo = "Group"/>
 		</SemanticType>
+
+		<SemanticType
+			Name= "Group"
+			AppliesTo = "G">
+			<Description>Defines groups of experimenters.  This can be a lab or a project group.  It is not meant to represent an institution or a company.</Description>
+			<Element
+				Name= "Name"
+				DBLocation = "GROUPS.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "Leader"
+				DBLocation = "GROUPS.LEADER"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+			<Element
+				Name= "Contact"
+				DBLocation = "GROUPS.CONTACT"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "ExperimenterGroup"
+			AppliesTo = "G">
+			<Description>Defines the relationship between Experimenters and Groups.</Description>
+			<Element
+				Name= "Experimenter"
+				DBLocation = "EXPERIMENTER_GROUP_MAP.EXPERIMENTER_ID"
+				DataType = "reference"
+				RefersTo = "Experimenter"/>
+			<Element
+				Name= "Group"
+				DBLocation = "EXPERIMENTER_GROUP_MAP.GROUP_ID"
+				DataType = "reference"
+				RefersTo = "Group"/>
+		</SemanticType>
 	</SemanticTypeDefinitions>
 </OME>

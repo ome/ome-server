@@ -1,12 +1,10 @@
-/OME/Core/Experiment.ome
-/OME/Core/Plate.ome
-/OME/Core/Screen.ome
 /OME/Core/Experimenter.ome
-/OME/Core/Group.ome
-/OME/Core/Instrument.ome
-/OME/Core/Image.ome
 /OME/Core/OMEIS/Repository.ome
 /OME/Core/OMEIS/OriginalFile.ome
+/OME/Core/Experiment.ome
+/OME/Core/Screen.ome
+/OME/Core/Instrument.ome
+/OME/Core/Image.ome
 /OME/Import/ImportModule.ome
 /OME/Import/ImageServerStatistics.ome
 /OME/Import/FilenamePattern.ome
