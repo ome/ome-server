@@ -47,6 +47,8 @@ import org.openmicroscopy.ds.dto.Module;
 import org.openmicroscopy.ds.dto.ModuleExecution;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.dto.Image;
+import org.openmicroscopy.ds.st.Experimenter;
+
 
 /**
  *
@@ -80,7 +82,7 @@ public class ImportManager
     private Map datasetImport = null;
     private Map imageImport = null;
 
-    public void startImport()
+    public void startImport(Experimenter user)
     {
         if (importing)
             throw new IllegalStateException("Import has already started");
@@ -88,6 +90,7 @@ public class ImportManager
         importing = true;
         Module module = config.getOriginalFilesModule();
         originalFiles = mem.createMEX(module,null,null);
+	originalFiles.setExperimenter(user);
         mem.createNEX(originalFiles,null,null);
         datasetImport = new HashMap();
         imageImport = new HashMap();
