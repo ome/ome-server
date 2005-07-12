@@ -862,7 +862,9 @@ sub __storePixelDimensionInfo {
 
     my $image = $self->{image};
     my $factory = $self->Session()->Factory();
-    $factory->newAttribute("Dimensions",$image,$self->{module_execution},
+    my $img_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
+        
+    $factory->newAttribute("Dimensions",$image,$img_mex,
 			   {PixelSizeX => $pixarr->[0],
 			    PixelSizeY => $pixarr->[1],
 			    PixelSizeZ => $pixarr->[2]});
