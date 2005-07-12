@@ -69,16 +69,12 @@ sub getImagesInCategory {
 	my ($proto, $category) = @_;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
-	my @images = $factory->findObjects( 'OME::Image', 
-		'ClassificationList.Valid'    => 't', 
-		'ClassificationList.Category' => $category,
-		__distinct => 'id',
-#		__order    => 'name',
-# I can't use that order in the factory call cuz DBObject blows up with:
-# SELECT DISTINCT ON expressions must match initial ORDER BY expressions
-# It works if I have __order => ['id', 'name'], but that's not what I want.
+	my @classifications = $factory->findObjects( '@Classification', 
+		'Valid'    => 't', 
+		'Category' => $category,
+		__order    => 'image.name',
 	);
-	@images = sort( { $a->name cmp $b->name } @images );
+	my @images = map( $_->image, @classifications );
 	return @images;
 }
 
