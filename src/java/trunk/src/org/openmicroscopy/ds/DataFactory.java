@@ -577,7 +577,10 @@ public class DataFactory
         } else if (result instanceof Number) {
             realID = ((Number) result).intValue();
         } else if (result instanceof String) {
-            realID = Integer.parseInt((String) result);
+	    String resString = (String) result;
+	    if (resString.length() > 0 &&
+		resString.compareTo(MappedDTO.NULL_REFERENCE) !=0)
+		realID = Integer.parseInt((String) result);
         } else {
             throw new RemoteServerErrorException("Server returned an invalid type "+
                                                  result.getClass());
@@ -671,7 +674,6 @@ public class DataFactory
             if (dto.isNew())
             {
                 int newID = nextNew++;
-                System.err.println("New object "+dto.getClass().getName()+" "+newID);
                 newIDs.put(dto,"NEW:"+newID);
             }
         }
