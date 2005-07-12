@@ -18,16 +18,6 @@ use OME::Remote::RPC2;
 sub handler {
    my $r = shift;
 
-   my $conf = $r->server_root_relative( $r->dir_config( "XMLRPC_Config" ) );
-
-   if( -f $conf ) {
-      unless( $rt = do $conf ) {
-         die "Couldn\'t parse conf file ($conf): $@\n"   if $@;
-         die "Couldn\'t compile conf file ($conf): $!\n" unless defined $rt;
-         die "Couldn\'t run conf file ($conf)\n"         unless $rt;
-      }
-   }
-
    my $decoder = OME::Remote::RPC2->new();
 
    my $content;
