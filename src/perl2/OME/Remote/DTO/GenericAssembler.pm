@@ -275,7 +275,8 @@ sub __updateDTO {
     my ($proto,$class_name,$serialized,$id_hash) = @_;
 
     my $factory = OME::Session->instance()->Factory();
-    my $id = $proto->__parseUpdateHash($class_name,$serialized,$id_hash);
+    my $id =
+	$proto->__parseUpdateHash($class_name,$serialized,$id_hash);
 
     if ($id =~ /^NEW:/) {
         # If the ID of the object to be saved looks like a new ID, then
@@ -316,7 +317,7 @@ sub __updateDTO {
             $object->$key($serialized->{$key});
         }
         $object->storeObject();
-        return;
+        return $id;
     }
 }
 
