@@ -107,7 +107,7 @@ public class TestImport
             // Start the import process
 
             System.out.println("Starting import...");
-            im.startImport();
+            im.startImport(user);
 
             // Create a dataset to contain the images that create.
             // This requires maintaining a list of the new image
@@ -183,13 +183,16 @@ public class TestImport
 
             System.out.println("Creating pixels file...");
             ModuleExecution ii = im.getImageImportMEX(image);
+	    ii.setExperimenter(user);
 
             // Create a new pixels file on the image server to contain
             // the image's pixels.
 
+	    System.out.println("Got Image import Mex");
             Pixels pix = pf.newPixels(r,image,ii,
                                       SIZE_X,SIZE_Y,SIZE_Z,SIZE_C,SIZE_T,
                                       BYTES_PER_PIX,false,false);
+            System.err.println("Created pixels");
 
             /*---------------------------------------------------------*
              * Normally, you would use the pf.convert* methods to fill
@@ -268,6 +271,7 @@ public class TestImport
             physical.setPixels(pix);
             physical.setIndex(new Integer(0));
             physical.setLogicalChannel(logical);
+	    physical.setModuleExecution(ii);
             df.markForUpdate(physical);
 
             // Once all of the image's metadata has been created, the
