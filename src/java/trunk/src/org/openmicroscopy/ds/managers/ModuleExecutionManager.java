@@ -45,6 +45,7 @@ import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.DuplicateObjectException;
+import org.openmicroscopy.ds.RemoteServerErrorException;
 import org.openmicroscopy.ds.dto.Module;
 import org.openmicroscopy.ds.dto.AnalysisNode;
 import org.openmicroscopy.ds.dto.FormalInput;
@@ -54,6 +55,8 @@ import org.openmicroscopy.ds.dto.NodeExecution;
 import org.openmicroscopy.ds.dto.ActualInput;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.dto.Image;
+
+import java.lang.Exception;
 
 /**
  *
@@ -168,7 +171,6 @@ public class ModuleExecutionManager
         mex.setTimestamp("now");
         mex.setStatus("UNFINISHED");
         factory.markForUpdate(mex);
-
         return mex;
     }
 
@@ -353,24 +355,23 @@ public class ModuleExecutionManager
                                       ModuleExecution inputMEX,
                                       FormalInput formalInput)
     {
+	ActualInput ai;
         if (outputMEX == null)
             throw new IllegalArgumentException("Output MEX cannot be null");
         if (inputMEX == null)
             throw new IllegalArgumentException("Input MEX cannot be null");
         if (formalInput == null)
             throw new IllegalArgumentException("Formal input cannot be null");
-
-        Criteria crit = new Criteria();
-        crit.addWantedField("id");
-        crit.addFilter("module_execution",inputMEX);
-        crit.addFilter("formal_input",formalInput);
-        crit.addFilter("input_module_execution",outputMEX);
-
-        ActualInput ai = (ActualInput)
-            factory.retrieve(ActualInput.class,crit);
-
-        if (ai != null)
-            throw new DuplicateObjectException("That actual input already exists");
+	Criteria crit = new Criteria();
+	crit.addWantedField("id");
+	crit.addFilter("module_execution",inputMEX);
+	crit.addFilter("formal_input",formalInput);
+	crit.addFilter("input_module_execution",outputMEX);
+	
+	ai = (ActualInput)
+	    factory.retrieve(ActualInput.class,crit);
+	if (ai != null) 
+	    throw new DuplicateObjectException("That actual input already exists"); 
 
         ai = (ActualInput) factory.createNew(ActualInput.class);
         ai.setModuleExecution(inputMEX);
