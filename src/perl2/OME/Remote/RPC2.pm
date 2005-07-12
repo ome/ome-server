@@ -18,6 +18,8 @@ use XML::Parser;
 use OME::Remote::Facade;
 use Time::HiRes qw(gettimeofday tv_interval);
 use vars qw{%scalars %char_entities};
+our $NULL_STRING= "*([-NULL-])*";
+
 
 %char_entities = (
     '&' => '&amp;',
@@ -466,7 +468,9 @@ sub end {
     } elsif ($state eq 'value') {
 	# the rpc_text is a string if no type tags were given
 	if ($expat->{'may_get_cdata'}) {
-	    $expat->{'may_get_cdata'} = 0;
+	    $expat->{'may_get_cdata'} = 0;  
+	    delete $expat->{'rpc_text'} 
+	         if ($expat->{'rpc_text'} eq $NULL_STRING);
 	    if ($expat->{'use_objects'}) {
 		$expat->{'rpc_value'}
 		= OME::Remote::RPC2::String->new($expat->{'rpc_text'});
