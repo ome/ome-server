@@ -587,6 +587,7 @@ sub renderData {
 			} elsif( $field eq '/default_value' ) {
 				$record{ $request_string } = 1
 					if( exists $options->{ default_value } &&
+						defined $options->{ default_value } && 
 					    $options->{ default_value } eq $obj->id );
 					
 			# populate field requests
