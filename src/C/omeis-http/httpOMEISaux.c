@@ -19,7 +19,7 @@ int OMEIStoMATLABDatatype (pixHeader* head)
 		return mxINT32_CLASS;
 	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
 		return mxUINT32_CLASS;
-	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 1) {
+	} else if (head->isFloat == 1) {
 		return mxSINGLE_CLASS;
 	}
 	
@@ -76,7 +76,7 @@ void OMEIStoCDatatype (char* data_type, pixHeader* head)
 		strcpy (data_type, "int");
 	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
 		strcpy (data_type, "unsigned long");
-	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 1) {
+	} else if (head->isFloat == 1) {
 		strcpy (data_type, "float");
 	} else {
 		fprintf (stderr, "%s is not a type supported by OMEIS\n", data_type);
