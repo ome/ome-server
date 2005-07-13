@@ -31,7 +31,7 @@ elseif (strcmp (data_type, 'unsigned long') | strcmp (data_type, 'uint32'))
 	head.isFloat  = 0;
 elseif (strcmp (data_type, 'float') | strcmp (data_type, 'single'))
 	head.bp       = 4;
-	head.isSigned = 0;
+	head.isSigned = 1;
 	head.isFloat  = 1;
 else
 	fprintf (1.0, '%s is not a type supported by OMEIS\n', data_type);
