@@ -243,8 +243,10 @@ sub getPageBody {
 			$q->a( { -name => $ai->formal_input()->name() }, ' ' ).
 			$tableMaker->getTable( 
 				{
+					excludeFields    => { module_execution => undef },
 					embedded_in_form => $self->{ form_name },
-					title            => $ai->formal_input()->name(),
+					title            => "The <span class='ome_punchline'>".$ai->formal_input()->name()."</span> input was satisfied by ".
+					                    $self->Renderer()->render( $ai->input_module_execution, 'ref' ),
 				},
 				$self->_STformalName( $ai->formal_input()->semantic_type() ),
 				$attributes
