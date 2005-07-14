@@ -63,6 +63,7 @@ a.ome_error { text-decoration: line-through; font-weight: normal; color : red; }
 a.ome_error:hover { color: #006699; }
 
 a.ome_punchline { font-weight: bold; color: #22F; }
+.ome_punchline { font-weight: bold; }
 
 /* MAIN LAYOUT TABLE AND TD's */
 
