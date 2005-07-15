@@ -72,14 +72,16 @@ our $OME_GID;
 # $APACHE_CONF_DEF is the default configuration (when there isn't one in the environment)
 our $APACHE;
 our $APACHE_CONF_DEF = {
-	DO_CONF  => 1,
-	DEV_CONF => 0,
-	OMEIS    => 1,
-	OMEDS    => 1,
-	WEB      => undef, # This gets set to DocumentRoot if its undef and DO_CONF is true.
-	CGI_BIN  => undef,
-	OMEIS_UP => 'midnight', # values are now, midnight and manual
-	HUP      => 1,
+	DO_CONF   => 1,
+	DEV_CONF  => 0,
+	OMEIS     => 1,
+	OMEDS     => 1,
+	WEB       => undef, # This gets set to DocumentRoot if its undef and DO_CONF is true.
+	CGI_BIN   => undef,
+	OMEIS_UP  => 'midnight', # values are now, midnight and manual
+	HUP       => 1,
+	HTTPD     => undef, # Path to the httpd binary
+	APACHECTL => undef, # Path to the httpdconf binary
 };
 
 # Globals
@@ -130,9 +132,9 @@ sub fix_httpd_conf {
 		croak "can't open $httpdConf~ for writing: $!\n";
 
 	while (<FILEIN>) {
-		s/#\s*LoadModule\s+perl_module/LoadModule perl_module/;
-		s/#\s*AddModule\s+mod_perl\.c/AddModule mod_perl.c/;
-		s/Include\s+(\/.*)*\/httpd(2)?\.ome(\.dev)?\.conf.*\n//;
+		s/^\s*#\s*LoadModule\s+perl_module/LoadModule perl_module/;
+		s/^\s*#\s*AddModule\s+mod_perl\.c/AddModule mod_perl.c/;
+		s/^\s*Include\s+(\/.*)*\/httpd(2)?\.ome(\.dev)?\.conf.*\n//;
 		print FILEOUT;
 	};
 	print FILEOUT "Include $omeConf\n";
@@ -482,25 +484,27 @@ sub getApacheBin {
 	my ($httpdConf,$httpdBin,$httpdRoot,$httpdVers);
 
 	# First, get the httpd executable.
-	$httpdBin = which ('httpd')
+	$httpdBin = which ($APACHE->{HTTPD})
+		        || which ('httpd')
 	            || which ('httpd2')
 	            || which ('apache')
 	            || which ('apache2')
-	            || whereis ('httpd')
+	            || whereis ('httpd',$APACHE->{HTTPD})
 	            || (print $LOGFILE "Unable to locate httpd binary\n" and
 	            	croak "Unable to locate httpd binary");
 	print $LOGFILE "Unable to execute httpd binary ($httpdBin)\n" and
 		croak "Unable to execute httpd binary ($httpdBin)" unless -x $httpdBin;
 	print $LOGFILE "Apache binary: $httpdBin\n";
+	$apache_info->{bin} = $APACHE->{HTTPD} = $httpdBin;
 
-	$apache_info->{bin} = $httpdBin;
-
-	$apache_info->{apachectl} = which ('apachectl')
+	$apache_info->{apachectl} = which ($APACHE->{APACHECTL})
+		                        || which ('apachectl')
 	                            || which ('apache2ctl')
-	                            || whereis ("apachectl")
+	                            || whereis ("apachectl",$APACHE->{APACHECTL})
 	                            || (print $LOGFILE "Unable to locate apachectl binary\n" and
 	                            	croak "Unable to locate apachectl binary");
 	print $LOGFILE "apachectl binary: ".$apache_info->{apachectl}."\n";
+	$APACHE->{APACHECTL} = $apache_info->{apachectl};
 
 	# Get the location of httpd.conf from the compiled-in options to httpd
 	$httpdConf = `$httpdBin -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`;
@@ -556,7 +560,7 @@ sub getApacheInfo {
 		{
 			# Conf file has an ome conf
 			search_elem => \$apache_info->{'hasOMEinc'},
-			regex       => qr/\s*Include $omeConf/,
+			regex       => qr/^\s*Include $omeConf/,
 		},
 		{
 			# Conf file has mod_perl loaded
@@ -758,6 +762,8 @@ BLURB
 			print      "             Data (omeds): ", BOLD, $APACHE->{OMEDS}    ?'yes':'no', RESET, "\n";
 			print      "                      Web: ", BOLD, $APACHE->{WEB}      ?'yes':'no', RESET, "\n";
 			print BOLD,"Apache directories:\n",RESET if $APACHE->{WEB} or $APACHE->{OMEIS};
+			print      "             httpd binary: ", BOLD, $APACHE->{HTTPD}, RESET, "\n" if $APACHE->{HTTPD};
+			print      "         apachectl binary: ", BOLD, $APACHE->{APACHECTL}, RESET, "\n" if $APACHE->{APACHECTL};
 			print      "             DocumentRoot: ", BOLD, $APACHE->{WEB}, RESET, "\n" if $APACHE->{WEB};
 			print      "                  cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
 			if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
@@ -780,6 +786,12 @@ BLURB
 			redo;
 		}
 		$APACHE->{DO_CONF}  = 1;
+		$apache_info = getApacheBin();
+		$apache_info->{ome_conf} = $ome_conf;
+		getApacheInfo($apache_info);
+		$httpd_vers = 'httpd2' if $apache_info->{version} == 2;
+		$APACHE->{WEB} = $apache_info->{DocumentRoot} unless defined $APACHE->{WEB} and $APACHE->{WEB};
+		$APACHE->{CGI_BIN} = $apache_info->{cgi_bin} unless defined $APACHE->{CGI_BIN} and $APACHE->{CGI_BIN};
 
 
 		#********
@@ -871,6 +883,8 @@ BLURB
 	print $LOGFILE "             Data (omeds): ", $APACHE->{OMEDS}    ?'yes':'no', "\n";
 	print $LOGFILE "                      Web: ", $APACHE->{WEB}      ?'yes':'no', "\n";
 	print $LOGFILE "Apache directories:\n";
+	print $LOGFILE "             httpd binary: ", $APACHE->{HTTPD}, "\n";
+	print $LOGFILE "         apachectl binary: ", $APACHE->{APACHECTL}, "\n";
 	print $LOGFILE "             DocumentRoot: ", $APACHE->{WEB}, "\n";
 	print $LOGFILE "                  cgi-bin: ", $APACHE->{CGI_BIN}, "\n";
 	if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
