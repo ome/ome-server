@@ -117,17 +117,21 @@ if ($matlab_vers =~ /6\.5\.0.+/) {
 	$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
 	
 } else {
-	print STDERR "WARNING Matlab Version $matlab_vers not supported.\n";	
+	print STDERR "WARNING Matlab Version $matlab_vers not supported.\n";
+	# print some default stuff
+	$matlab_include = "-I$matlab_dir/extern/include";
+	$matlab_lib = "$matlab_dir/bin/$matlab_arch";
+	$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
 }
 
 # present the matlab info to the user depending on specified parameters
 if (not $result) {
-	print STDERR "Matlab Path: $matlab_path\n";
-	print STDERR "Matlab Vers: $matlab_vers\n";
-	print STDERR "Matlab Arch: $matlab_arch\n";
-	print STDERR "Matlab Root: $matlab_dir\n\n";
-	print STDERR "Include: $matlab_include\n";
-	print STDERR "Lib:     $matlab_lib_cmd\n";
+	print "Matlab Path: $matlab_path\n";
+	print "Matlab Vers: $matlab_vers\n";
+	print "Matlab Arch: $matlab_arch\n";
+	print "Matlab Root: $matlab_dir\n\n";
+	print "Include: $matlab_include\n";
+	print "Lib:     $matlab_lib_cmd\n";
 	exit;
 }
 
