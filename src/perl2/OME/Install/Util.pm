@@ -1131,6 +1131,7 @@ sub path_in_tree {
 
 sub which {
     my $prog = shift;
+    return 0 unless $prog;
 
     my @path = split(/:/, $ENV{'PATH'});
     if ($ENV{'PATH'} =~ /:$/) {

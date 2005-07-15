@@ -98,15 +98,15 @@ sub confirm_default {
 }
 
 sub whereis {
-    my $binary = shift;
-
-    while (1) {
-	print "Please specify the location of the \"$binary\" binary [q to quit]: ";
-	my $input = ReadLine 0;
-	chomp $input;
-	if (lc($input) eq 'q') { return 0 }
-	which ($input) and return $input or print "Unable to locate binary \"$input\", try again.\n" and next;
-    }
+	my $binary = shift;
+	my $default = shift;
+	my $input;
+	
+	while (1) {
+		$input = confirm_default ("Please specify the location of the \"$binary\" binary (q to quit): ",$default);
+		if (lc($input) eq 'q') { return 0; }
+		which ($input) and return $input or print "Unable to locate binary \"$input\", try again.\n" and next;
+	}
 }
 
 sub get_password {
