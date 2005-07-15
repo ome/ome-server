@@ -184,6 +184,7 @@ recognized %options are:
 	width            => 'table_width'
 	actions          => [ action_button_name, ... ]
 	excludefields    => { field_name => undef, ... }
+	includefields    => { field_name => undef, ... }
 	noTxtDownload    => 1|0                          # 1 disables 'Download [table] as txt' link
 
 a Length of 0 or less is considered to be 'no limit'. an undef Length is
@@ -201,10 +202,16 @@ sub getTable {
 
 	# build table
 	my $html;
-	
-	my @fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
-	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
-		if exists $options->{excludeFields};
+	my @fieldNames;
+	if (exists $options->{fields} and $options->{fields}) {
+		@fieldNames = keys %{$options->{fields}};
+	} else {
+		@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
+		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
+			if exists $options->{excludeFields};
+		push (@fieldNames, keys %{$options->{includeFields}})
+			if exists $options->{includeFields};
+	}
 	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
 	my ($searches, $search_on) = $self->SearchUtil()->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
 	my @records    = $self->Renderer()->renderData( $objects, [@fieldNames, 'id', '/obj_detail_url' ]);
@@ -251,10 +258,15 @@ sub getTable {
 	# allow paging ?
 	my $allowPaging = ( $pagingText ? 1 : 0 );
 	
+	my %text_params = %{ $self->{__params} };
+	foreach (keys %text_params) {
+		delete $text_params{$_} if $_ =~ /((__limit)|(__offset))$/;
+	}
+
 	my @downloadAsTxt = ( $options->{ noTxtDownload } ? () : 
 		( $q->a( { -href => 
 			$self->pageURL('OME::Web::DBObjTable', { 
-				%{ $self->{__params} },
+				%text_params,
 				Format => 'txt',
 			} ),
 			-title => 'Download this table as tab delimited text' }, 
@@ -441,10 +453,14 @@ sub getJoinTable {
 		);
 		
 		# link to text table
+		my %text_params = %{ $self->{__params} };
+		foreach (keys %text_params) {
+			delete $text_params{$_} if $_ =~ /((__limit)|(__offset))$/;
+		}
 		my $txt_table_link = 
 			$q->a( { -href => 
 				$self->pageURL('OME::Web::DBObjTable', { 
-					%{ $self->{__params} },
+					%text_params,
 					Format => 'txt',
 				} ) }, "Download as txt"
 			);
@@ -512,13 +528,19 @@ sub getJoinTextTable {
 		my @fieldNames = @{ $j_group->{ field_names } };
 		my %labels = %{ $j_group->{ field_labels } };
 		push (@titles,join( '-', @{ $j_group->{ titles } } ) );
-		
+
+		# order records
+		if( $q->param( '_OrderBy' ) && $q->param( '_OrderBy' ) ne '' ) {
+			my $order_by = $q->param( '_OrderBy' );
+			@records = sort( { $a->{ $order_by } <=> $b->{ $order_by } } @records );
+		}
+
 		# column labels
 		my @columnLabels = map( $labels{ $_ }, @fieldNames );
 		
 		# Build the table
 		my $table = join( $options->{delimiter}, @columnLabels )."\n";
-	
+
 		# table data
 		foreach my $record ( @records ) {
 			$table .= join( $options->{delimiter}, map( defined $record->{$_} ? $record->{$_} : '', @fieldNames ) )."\n";
@@ -548,11 +570,12 @@ DBObject accessor method. The value for the 'accessor' search key is
 exepected to be a reference to an array of the form [ $typeToAccessFrom,
 $idToAccessFrom, $accessorMethod ].
 
-The __limit and __offset search parameters will be ignored.
 
 recognized %options are:
 	title            => 'table_title'
-	excludefields    => { field_name => undef, ... }
+	excludeFields    => { field_name => undef, ... }
+	includeFields    => { field_name => undef, ... }
+	fields           => { field_name => undef, ... }
 	delimiter        => $field_delimiter
 
 =cut
@@ -561,16 +584,22 @@ sub getTextTable {
 	my $self = shift;
 	my $q       = $self->CGI();
 	my @params = @_;
-	$params[0]->{ Length } = -1;
 	$params[0]->{ Format } = 'txt';
 	my ( $objects, $options, $title, $formal_name ) =
 		$self->__parseParams( @params );
 	
 	$options->{delimiter} = "\t" unless $options->{delimiter};
 	
-	my @fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
-	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
-		if exists $options->{excludeFields};
+	my @fieldNames;
+	if (exists $options->{fields} and $options->{fields}) {
+		@fieldNames = keys %{$options->{fields}};
+	} else {
+		@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
+		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
+			if exists $options->{excludeFields};
+		push (@fieldNames, keys %{$options->{includeFields}})
+			if exists $options->{includeFields};
+	}
 	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
 	my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, {text => 1});
 
@@ -671,6 +700,22 @@ sub __getJoinedGroups {
 		my @types = split( m',', $q->param( 'Types' ) );
 		$self->{__params}->{Types} = join( ',', @types );
 		foreach my $type( @types ) {
+			my %options;
+			if ( my $fields = $q->param( $type."___fields" ) ) {
+				foreach my $field( split (/,/,$fields ) ) {
+					$options{ fields }->{$field} = undef;
+				}
+			}
+			if ( my $fields = $q->param( $type."___includeFields" ) ) {
+				foreach my $field( split (/,/,$fields ) ) {
+					$options{ includeFields }->{$field} = undef;
+				}
+			}
+			if ( my $fields = $q->param( $type."___excludeFields" ) ) {
+				foreach my $field( split (/,/,$fields ) ) {
+					$options{ excludeFields }->{$field} = undef;
+				}
+			}
 			my %searchParams = __get_CGI_search_params( $q, $type );
 			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 			my ( $objects, $object_count, $minimalParams ) = __load_objects( $self->Session()->Factory(), $formal_name, \%searchParams );
@@ -683,7 +728,8 @@ sub __getJoinedGroups {
 				title   => $title,
 				type    => $formal_name,
 				objects => $objects,
-				search  => {%searchParams}
+				search  => {%searchParams},
+				options => {%options}
 			});
 		}
 	} else {
@@ -711,14 +757,23 @@ sub __getJoinedGroups {
 		my $title = $entry->{ title };
 		my $type  = $entry->{ type };
 		my $objects  = $entry->{ objects };
+		my $entry_options = $entry->{ options };
 
 		# load type
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 
 		# collect records & such for objects
-		my @fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
-		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
-			if exists $options->{excludeFields};
+		my @fieldNames;
+		if (exists $entry_options->{fields} and $entry_options->{fields}) {
+			@fieldNames = keys %{$entry_options->{fields}};
+		} else {
+			@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
+			@fieldNames = grep( (not exists $entry_options->{excludeFields}->{$_}), @fieldNames )
+				if exists $entry_options->{excludeFields};
+			push (@fieldNames, keys %{$entry_options->{includeFields}})
+				if exists $entry_options->{includeFields};
+		}
+print STDERR "$type Fields: @fieldNames\n";
 		my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
 		my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, {text => 1} );
 
@@ -823,9 +878,24 @@ sub __parseParams {
 			or confess "url parameter Type not specified";
 		$options->{ Length } = $q->param( $type."___limit" ) 
 			unless $options->{ Length };
+		$options->{ Length } = -1 unless $options->{ Length };
+		if ( my $fields = $q->param( $type."___fields" ) ) {
+			foreach my $field( split (/,/,$fields ) ) {
+				$options->{ fields }->{$field} = undef;
+			}
+		}
+		if ( my $fields = $q->param( $type."___includeFields" ) ) {
+			foreach my $field( split (/,/,$fields ) ) {
+				$options->{ includeFields }->{$field} = undef;
+			}
+		}
+		if ( my $fields = $q->param( $type."___excludeFields" ) ) {
+			foreach my $field( split (/,/,$fields ) ) {
+				$options->{ excludeFields }->{$field} = undef;
+			}
+		}
 		%searchParams = __get_CGI_search_params( $q, $type );
 	}
-
 	# load type
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 
@@ -961,6 +1031,7 @@ sub __get_CGI_search_params {
 		my $value = $q->param ($param);
 		if (index ($param,$type) == 0) {
 			$param = substr ($param, length($type)+1);
+			undef $param if $param =~ /^_/;
 		} else {
 			undef $param;
 		}
