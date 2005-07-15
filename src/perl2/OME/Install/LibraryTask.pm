@@ -177,33 +177,34 @@ my @libraries = ( {
 		valid_versions => ['ge "3.5.7"'],
 		repository_file => "$REPOSITORY/tiff-v3.5.7-OSX-LZW.tar.gz",
     }, {
-		name => 'libgd',
-		pre_install => sub {
-			my $library = shift;
-			my $gdlib_config = 'gdlib-config';
-
-			my $version_sub = sub {
-	    		my $version = `gdlib-config --version`;
-	    		chomp $version;
-				return $? == 0 ? $version : undef;
-			};
-
-			$library->{get_library_version} = $version_sub if which($gdlib_config);
-		},
-		get_library_version => q(
-	    	#include "gd.h"
-			/* There's no crossplatform way to do this for version 1 so
-		 	 * we'll assume the lib is okay if we can link against it.
-		 	 * This will get overwritten with a sub if we've got version 2.
-		 	 */
-	    	int main () {
-			printf ("%s", "N/A");
-
-			return (0);
-			}
-	    ),
-		valid_versions => ['ge "1.8.3"'],
-	}, {
+# DEPRECATED
+#		name => 'libgd',
+#		pre_install => sub {
+#			my $library = shift;
+#			my $gdlib_config = 'gdlib-config';
+#
+#			my $version_sub = sub {
+#	    		my $version = `gdlib-config --version`;
+#	    		chomp $version;
+#				return $? == 0 ? $version : undef;
+#			};
+#
+#			$library->{get_library_version} = $version_sub if which($gdlib_config);
+#		},
+#		get_library_version => q(
+#	    	#include "gd.h"
+#			/* There's no crossplatform way to do this for version 1 so
+#		 	 * we'll assume the lib is okay if we can link against it.
+#		 	 * This will get overwritten with a sub if we've got version 2.
+#		 	 */
+#	    	int main () {
+#			printf ("%s", "N/A");
+#
+#			return (0);
+#			}
+#	    ),
+#		valid_versions => ['ge "1.8.3"'],
+#	}, {
 		name => 'zlib',
 		get_library_version => q(
 	    	#include "zlib.h"
