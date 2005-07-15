@@ -239,27 +239,28 @@ my @modules = (
 	#repository_file => "$REPOSITORY/Class-DBI-0.90.tar.gz",
 	#valid_versions => ['eq "0.90"']
 	#},{
-	name => 'GD',
-	repository_file => "$REPOSITORY/GD-1.33.tar.gz",
-	configure_module => sub {
+	# XXX DEPRECATED
+	#name => 'GD',
+	#repository_file => "$REPOSITORY/GD-1.33.tar.gz",
+	#configure_module => sub {
 	    # Since GD has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
 
-	    my ($path, $logfile) = @_;
-	    my $iwd = getcwd;  # Initial working directory
+	#    my ($path, $logfile) = @_;
+	#    my $iwd = getcwd;  # Initial working directory
 
-	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+	#    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
-	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+	#    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-	    system ("perl Makefile.PL 2>&1");
+	#    system ("perl Makefile.PL 2>&1");
 
-	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
+	#    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
 
-	    return 1;
-	}
-    },{
+	#    return 1;
+	#}
+    #},{
 	name => 'URI',
 	repository_file => "$REPOSITORY/URI-1.23.tar.gz"
     },{
