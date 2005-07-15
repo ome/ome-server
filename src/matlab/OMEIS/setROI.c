@@ -96,10 +96,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	pixHeader tmp_head;
 	CtoOMEISDatatype ((char*) mxGetClassName(prhs[12]), &tmp_head);
 	
-	if ( (tmp_head.bp       != head->bp)       ||
-		 (tmp_head.isSigned != head->isSigned) ||
-		 (tmp_head.isFloat  != head->isFloat) ) {
-		 
+	if ( !samePixelType(&tmp_head, head)) {
 		/* clean up */
 		mxFree(url);
 		mxFree(sessionkey);

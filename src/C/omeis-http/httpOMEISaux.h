@@ -2,7 +2,7 @@
 #define HTTP_OMEIS_AUX_H
 
 #include "httpOMEIS.h"
-
+int samePixelType (pixHeader* lhs, pixHeader* rhs);
 int OMEIStoMATLABDatatype (pixHeader* head);
 void CtoOMEISDatatype (const char* data_type, pixHeader* head);
 void OMEIStoCDatatype (char* data_type, pixHeader* head);

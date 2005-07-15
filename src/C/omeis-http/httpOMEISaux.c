@@ -5,6 +5,29 @@
 
 #ifdef MATLAB
 #include "matrix.h"
+
+/*
+	checks to see if pixels are of the same types by comparing the
+	bits per pixel, isSigned, and isFloat variables
+*/
+
+int samePixelType (pixHeader* lhs, pixHeader* rhs)
+{
+	/* if isFloat=1 isSigned might be 0 or might be 1.
+	   Hence we have this special check */
+	   
+	if ((lhs->isFloat == 1) && (rhs->isFloat == 1))
+		return 1;
+		
+	if ( (lhs->bp != rhs->bp) ||
+		 (lhs->isSigned != rhs->isSigned) ||
+		 (lhs->isFloat  != lhs->isFloat) ){
+		 return 0;
+	} else {
+		return 1;
+	}
+}
+
 int OMEIStoMATLABDatatype (pixHeader* head)
 {
 	if (head->bp == 1 && head->isSigned == 1) {
