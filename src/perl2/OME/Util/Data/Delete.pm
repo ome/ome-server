@@ -72,6 +72,7 @@ our $WEB_UI;
 sub getCommands {
     return
       {
+       'CHEX'    => 'DeleteCHEX',
        'MEX'     => 'DeleteMEX',
       };
 }
@@ -89,8 +90,133 @@ Usage:
     $script $command_name [command] [options]
 
 Available OME database deletion related commands are:
+    CHEX        Delete a Chain Execution and all of its descendents.
     MEX         Delete a Module Execution and all of its descendents.
 CMDS
+}
+sub DeleteCHEX_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"CMDS";
+Usage:
+    $script $command_name [<options>] [MEX_ID]+
+
+Delete one or more CHEXes and all of their descendents. This can potentially delete a lot.
+Images, Datasets, the whole lot potentially.
+It is suggested to try -n first to see what will happen.
+And once its gone, its gone.  You can only get it back from a backup.
+You do have a backup, right?
+
+Options:
+  -n, --noop        Do not delete anything, just report what would be deleted.
+  -d, --delete      Actually delete the CHEX(es).  Nothing will happen unless -n or -d is specified.  
+  -c, --chain       Delete all CHEXes for the specified chain (ID if numeric, otherwise by name).  
+  -f, --keep-files  Keep orphaned OMEIS Files.  
+  -p, --keep-pixels Keep orphaned OMEIS Pixels.
+CMDS
+}
+
+
+sub DeleteCHEX {
+	my ($self,$commands) = @_;
+	my $script = $self->scriptName();
+	my $command_name = $self->commandName($commands);
+	my ($noop,$delete,$chain_in,$keep_files,$keep_pixels);
+
+	# Parse our command line options
+	GetOptions('noop|n!' => \$noop,
+		   'delete|d' => \$delete,
+		   'chain|c=s' => \$chain_in,
+		   'keep-files|f' => \$keep_files,
+		   'keep-pixels|p' => \$keep_pixels,
+		   );
+
+	if (scalar(@ARGV) <= 0 and not defined $chain_in) {
+		$self->DeleteCHEX_help();
+	}
+	$keep_files  = 1 if $noop;
+	$keep_pixels = 1 if $noop;
+	my $manager = OME::SessionManager->new();
+    my $session = $self->getSession();
+	$FACTORY = $session->Factory();
+	
+	# This is useful for debugging:
+	#$FACTORY->obtainDBH()->{AutoCommit} = 1;
+
+	$IMAGE_IMPORT_MODULE_ID = $session->Configuration()->image_import_module()->id();
+	
+	# Get the MEX(es)
+	my @CHEXes;
+	my $chain;
+
+	if (defined $chain_in and $chain_in =~ /^(\d+)$/) {
+		$chain = $FACTORY->loadObject( "OME::AnalysisChain", $chain_in) or 
+			die "Could not load Chain ID $chain_in\n";
+	} elsif (defined $chain_in) {
+		$chain = $FACTORY->findObject( "OME::AnalysisChain", {name => $chain_in}) or 
+			die "Could not load Chain '$chain_in'\n";
+	}
+
+	if ($chain) {
+		@CHEXes = $FACTORY->
+			findObjects("OME::AnalysisChainExecution",
+				{
+				analysis_chain_id => $chain->id(),
+				});
+		
+		print "Retreived ",scalar (@CHEXes)," CHEXes for chain '",$chain->name(),"'\n";
+	}
+
+	foreach my $arg_chex_id (@ARGV) {
+		my $arg_chex = $FACTORY->loadObject( "OME::AnalysisChainExecution", $arg_chex_id) or 
+			die "Could not load CHEX ID=$arg_chex_id specified on the command-line.\n";
+		push (@CHEXes,$arg_chex);
+		print "Retreived CHEX ID = $arg_chex_id\n";
+	}
+
+	# CONVERT each CHEX into the constiutent MEXs
+	my @MEXes;
+	foreach my $chex (@CHEXes) {
+		my @NEXes = $FACTORY->findObjects("OME::AnalysisChainExecution::NodeExecution",
+						{ analysis_chain_execution => $chex }) or
+						die "Could not load MEXs for CHEX ID ".$chex->id()."\n";
+					
+		my @CHEX_MEXs = map { $_->module_execution} @NEXes;
+		@MEXes = (@MEXes, @CHEX_MEXs);
+	}
+
+	$RECURSION_LEVEL=0;
+	undef %DELETED_ATTRS;
+	undef %DELETED_MEXES;
+	undef %ACS_DELETED_NODES;
+	undef %DELETED_PIXELS;
+	undef %DELETED_ORIGINAL_FILES;
+
+	foreach my $MEX (@MEXes) {		
+		
+		unless ($delete or $noop) {
+			print "Nothing to do.  Try -n\n";
+			exit;
+		}
+	
+		$self->delete_mex ($MEX,$delete,undef);
+	}
+
+	$session->commitTransaction() if $delete;
+	
+	# We can't combine a DB transaction with an OMEIS transaction,
+	# So we do this only if the DB transaction succeeds
+	$self->cleanup_omeis($keep_files,$keep_pixels);
+	
+	undef $FACTORY;
+	undef %DELETED_ATTRS;
+	undef %DELETED_MEXES;
+	undef %ACS_DELETED_NODES;
+	undef %DELETED_PIXELS;
+	undef %DELETED_ORIGINAL_FILES;
 }
 
 
@@ -182,7 +308,7 @@ sub DeleteMEX {
 
 	foreach my $arg_mex_id (@ARGV) {
 		my $arg_mex = $FACTORY->loadObject( "OME::ModuleExecution", $arg_mex_id) or 
-			die "Could not load MEX ID=$arg_mex_id specified on the comman-line.\n";
+			die "Could not load MEX ID=$arg_mex_id specified on the command-line.\n";
 		push (@MEXes,$arg_mex);
 		print "Retreived MEX ID = $arg_mex_id\n";
 	}
