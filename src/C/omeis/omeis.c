@@ -189,12 +189,21 @@ char **cgivars=param;
 				return (-1);
 			}
 
+			if ( (theParam = get_lc_param (param,"IsFloat")) ) {
+				if (!strcmp (theParam,"1") || !strcmp (theParam,"true") ) {
+					isFloat  = 1;
+					isSigned = 1;
+				}
+			}
+			
 			if ( (theParam = get_lc_param (param,"IsSigned")) ) {
 				if (!strcmp (theParam,"1") || !strcmp (theParam,"true") ) isSigned=1;
-			}
-
-			if ( (theParam = get_lc_param (param,"IsFloat")) ) {
-				if (!strcmp (theParam,"1") || !strcmp (theParam,"true") ) isFloat=1;
+				
+				/* [Bug 536] isFloat=1 and isSigned=0 is not allowed */
+				if ( (!strcmp (theParam,"0") || !strcmp (theParam,"false")) && isFloat) {
+					OMEIS_ReportError (method, NULL, ID,"IsSigned must be 1 for floating-point pixels, not %s", theParam);
+					return (-1);
+				}
 			}
 			
 			if ( !(numB == 1 || numB == 2 || numB == 4) ) {
