@@ -42,26 +42,16 @@
 		   ID="urn:lsid:openmicroscopy.org:Module:3221">
 		  <Description>Creates new pixels for each pixel slice.</Description>
 		  <Declaration>
-			<FormalInput
-			   Name="Slices" SemanticTypeName="PixelsSlice" Count="!"/>
-			<FormalOutput
-			   Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+			<FormalInput  Name="Slices" SemanticTypeName="PixelsSlice" Count="!"/>
+			<FormalOutput Name="Pixels" SemanticTypeName="Pixels"      Count="!"/>
 		  </Declaration>
 	
-		  <ExecutionInstructions 
-		  	ExecutionGranularity="I" 
-		  	xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" 
-		  	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-		  	xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input>
-			  	<PixelsSlice FormalInput="Slices" ID="In_Pixels"/>
-			  </Input>
+				<Input><PixelsArray FormalInput="Slices" ConvertToDatatype="single"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output>
-			  	<PixelsOutput FormalOutput="Pixels" ID="Out_Pixels"/>
-			  </Output>
+				<Output><PixelsArray FormalInput="Pixel Test" ConvertToDatatype="single"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
