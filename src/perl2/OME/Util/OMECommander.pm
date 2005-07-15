@@ -1,4 +1,4 @@
-# OME/Util/OMEAdmin.pm
+# OME/Util/OMECommander.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -59,6 +59,7 @@ sub getCommands {
        'lint'       => ['OME::Util::Lint'],
        'top'        => ['OME::Util::Top'],
        'classifier' => ['OME::Util::Classifier' ],
+       'templates'  => ['OME::Util::Templates' ],
       };
 }
 
