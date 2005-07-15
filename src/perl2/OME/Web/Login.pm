@@ -68,7 +68,7 @@ sub getPageBody {
     my $self = shift;
     my $q = $self->CGI();
 
-	if ($q->param('execute')) {
+	if ($q->param('execute') or ($q->param('username') && $q->param('password'))) {
 		# results submitted, try to log in
 		my $session = $self->Manager()->createSession(
 			$q->param('username'),
@@ -81,7 +81,7 @@ sub getPageBody {
 			# login successful, redirect
             $self->setSessionCookie($self->Session()->SessionKey());
             return ('REDIRECT',$self->pageURL('OME::Web::Home')) unless $key_request;
-            return ('TXT',$self->Session()->SessionKey());
+            return ('TXT',$self->Session()->SessionKey()."\n");
 		} else {
 			# login failed, report it
 			return ('HTML', $self->__loginForm("The username and/or password you entered don't match an experimenter in the system.  Please try again."));
