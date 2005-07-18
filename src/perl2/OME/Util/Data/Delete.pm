@@ -45,6 +45,7 @@ use base qw(OME::Util::Commands);
 
 use Log::Agent;
 use Getopt::Long;
+use Carp;
 
 use OME::SessionManager;
 use OME::Session;
@@ -94,6 +95,7 @@ Available OME database deletion related commands are:
     MEX         Delete a Module Execution and all of its descendents.
 CMDS
 }
+
 sub DeleteCHEX_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
@@ -116,6 +118,7 @@ Options:
   -c, --chain       Delete all CHEXes for the specified chain (ID if numeric, otherwise by name).  
   -f, --keep-files  Keep orphaned OMEIS Files.  
   -p, --keep-pixels Keep orphaned OMEIS Pixels.
+  -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
 CMDS
 }
 
@@ -124,7 +127,7 @@ sub DeleteCHEX {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
 	my $command_name = $self->commandName($commands);
-	my ($noop,$delete,$chain_in,$keep_files,$keep_pixels);
+	my ($noop,$delete,$chain_in,$keep_files,$keep_pixels,$make_graph);
 
 	# Parse our command line options
 	GetOptions('noop|n!' => \$noop,
@@ -132,6 +135,7 @@ sub DeleteCHEX {
 		   'chain|c=s' => \$chain_in,
 		   'keep-files|f' => \$keep_files,
 		   'keep-pixels|p' => \$keep_pixels,
+		   'graph|g=s' => \$make_graph,
 		   );
 
 	if (scalar(@ARGV) <= 0 and not defined $chain_in) {
@@ -188,35 +192,7 @@ sub DeleteCHEX {
 		@MEXes = (@MEXes, @CHEX_MEXs);
 	}
 
-	$RECURSION_LEVEL=0;
-	undef %DELETED_ATTRS;
-	undef %DELETED_MEXES;
-	undef %ACS_DELETED_NODES;
-	undef %DELETED_PIXELS;
-	undef %DELETED_ORIGINAL_FILES;
-
-	foreach my $MEX (@MEXes) {		
-		
-		unless ($delete or $noop) {
-			print "Nothing to do.  Try -n\n";
-			exit;
-		}
-	
-		$self->delete_mex ($MEX,$delete,undef);
-	}
-
-	$session->commitTransaction() if $delete;
-	
-	# We can't combine a DB transaction with an OMEIS transaction,
-	# So we do this only if the DB transaction succeeds
-	$self->cleanup_omeis($keep_files,$keep_pixels);
-	
-	undef $FACTORY;
-	undef %DELETED_ATTRS;
-	undef %DELETED_MEXES;
-	undef %ACS_DELETED_NODES;
-	undef %DELETED_PIXELS;
-	undef %DELETED_ORIGINAL_FILES;
+	$self->delete_mexes (\@MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
 }
 
 
@@ -313,7 +289,15 @@ sub DeleteMEX {
 		print "Retreived MEX ID = $arg_mex_id\n";
 	}
 
+	$self->delete_mexes (\@MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
 
+
+}
+
+sub delete_mexes {
+	my ($self,$MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph) = @_;
+	
+	my $session = $self->getSession();
 
 	$RECURSION_LEVEL=0;
 	undef %DELETED_ATTRS;
@@ -322,7 +306,7 @@ sub DeleteMEX {
 	undef %DELETED_PIXELS;
 	undef %DELETED_ORIGINAL_FILES;
 
-	foreach my $MEX (@MEXes) {		
+	foreach my $MEX (@$MEXes) {		
 		
 		unless ($delete or $noop) {
 			print "Nothing to do.  Try -n\n";
@@ -360,6 +344,8 @@ my $delete = shift;
 my $from_mex = shift;
 my $mex_id;
 
+	confess "NULL MEX!" unless $mex;
+
 	$mex_id = $mex->id();
 
 	return if exists $DELETED_MEXES{$mex_id};
@@ -391,23 +377,27 @@ my $mex_id;
 	my @actual_inputs = $FACTORY->
 		findObjects("OME::ModuleExecution::ActualInput",
 			{
-			input_module_execution => $mex,
+			input_module_execution_id => $mex_id,
 			});
 	foreach $input (@actual_inputs) {
-		$self->delete_mex ($input->module_execution(),$delete,$mex);
+		$self->delete_mex ($input->module_execution(),$delete,$mex) if $input->module_execution();
 	}
 
 	
 	# Gather up the typed an untyped outputs
 	my @outputs = $mex->module()->outputs();
 	my @untyped_outputs = $mex->untypedOutputs();
-	push (@outputs,@untyped_outputs);
+	my @parental_outputs = $mex->parentalOutputs();
+	my %parentals;
+	$parentals{$_->id()} = $_ foreach @parental_outputs;
+	push (@outputs,@untyped_outputs,@parental_outputs);
 
 	foreach my $output (@outputs) {
 		my $ST = $output->semantic_type();
 		next unless $ST; # Skip the untyped output itself
 		my $o_name;
-		$o_name =  UNIVERSAL::can ($output,'name') ? $output->name() : '*** Untyped **';
+		$o_name =  UNIVERSAL::can ($output,'name') ? $output->name() :
+			exists $parentals{$output->id()} ? '*** Parental ***' : '*** Untyped ***';
 		print $recurs_indent,"  Output = ",$o_name," (",$ST->name(),")\n";
 
 		# Get the output's attributes
@@ -424,6 +414,13 @@ my $mex_id;
 	# Delete any untyped outputs - these are OME::ModuleExecution::SemanticTypeOutput
 	foreach my $output (@untyped_outputs) {
 		print $recurs_indent,"  Untyped output ",$output->id(),"\n";
+		$output->deleteObject() if $delete;
+	}
+	
+	# Delete any parental outputs - these are OME::ModuleExecution::ParentalOutput
+	# These are attributes that get created
+	foreach my $output (@parental_outputs) {
+		print $recurs_indent,"  Parental output ",$output->id(),"\n";
 		$output->deleteObject() if $delete;
 	}
 	
@@ -605,7 +602,7 @@ my @ref_attrs;
 			my @attrs = $FACTORY->findAttributes($ST_ref->{ST}, {
 				$ref_SE => $attr_id,
 			});
-			push (@ref_attrs , @attrs);
+			push (@ref_attrs , @attrs) if scalar (@attrs);
 		}
 	}
 
