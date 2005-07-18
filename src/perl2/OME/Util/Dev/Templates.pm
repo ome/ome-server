@@ -85,6 +85,7 @@ USAGE
 sub update {
 	my ($self,$commands) = @_;
 	my %allowed_paths = (
+	#   'Path'         => [ 'updateFunction', @parameters_to_pass_into_function ],
 		'Display/One'  => [ 'updateDisplayTemplates', 'one' ],
 		'Display/Many' => [ 'updateDisplayTemplates', 'many' ],
 	);
@@ -94,6 +95,7 @@ sub update {
 	my( $update_dir );
 	GetOptions('u=s' => \$update_dir);
 
+	# Error checking, parameter massaging
 	if( not defined $update_dir ) {
 		die "You must specify a directory to update.";
 	} elsif( $update_dir eq 'all' ) {
@@ -104,12 +106,14 @@ sub update {
 		$update_dir = [ $update_dir ];
 	}
 	
+	# update every requested directory
 	foreach my $tmpl_dir ( @$update_dir ) {
 		die "Template directory $tmpl_dir is unknown or unallowed"
 			unless( exists $allowed_paths{ $tmpl_dir } );
 		print "updating $tmpl_dir...\n";
 		my $tmpl_root = $session->Configuration()->template_dir();
 		my ( $function, @extra_params ) = @{ $allowed_paths{ $tmpl_dir } };
+		# Call the update function
 		my( $mex, @new_tmpl_attrs) = $self->$function( $tmpl_root.'/'.$tmpl_dir, @extra_params );
 		print "Created ".scalar(@new_tmpl_attrs)." new templates. MEX id is ".$mex->id."\n";
 	}
