@@ -2400,7 +2400,8 @@ no warnings "uninitialized";
                         if (defined $arrayval) {
                             push @questions, '?';
                             $arrayval = $arrayval->id()
-                              if UNIVERSAL::isa($arrayval,"OME::DBObject");
+                              if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
+                              	   ref($arrayval) );
 							$arrayval = 'NaN'
 								if( $class->isRealType($sql_type) && 
 									$arrayval && 
@@ -2411,7 +2412,7 @@ no warnings "uninitialized";
                     $question = '('.join(',',@questions).')';
                 } else {
                     $value = $value->id()
-                      if UNIVERSAL::isa($value,"OME::DBObject");
+                      if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
 					$value = 'NaN'
 						if( $class->isRealType($sql_type) && 
 							$value && 
@@ -2426,7 +2427,7 @@ no warnings "uninitialized";
 						$value && 
 						$value =~ m'^(-)?Inf(inity)?$'i );
                 $value = $value->id()
-                  if UNIVERSAL::isa($value,"OME::DBObject");
+                  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
                 push @new_values, $value;
                 $operation = defined $value? "=": "is";
             }
