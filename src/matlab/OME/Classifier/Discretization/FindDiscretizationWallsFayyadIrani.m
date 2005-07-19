@@ -33,7 +33,7 @@ function [walls] = FindDiscretizationWallsFayyadIrani (points, classes, interval
 % INPUT             points      - the 1-dimensional values of each instance
 %                   classes     - class numbers of all points
 %                   intervals   - how much you want to break up each smaller 
-%                                 section. OPTIONAL. The default is 25. 
+%                                 section. OPTIONAL. The default is 40. 
 %
 % OUTPUT            walls       - vector containing all "walls"
 % NOTES
@@ -52,7 +52,7 @@ function [walls] = FindDiscretizationWallsFayyadIrani (points, classes, interval
 
 % warning off MATLAB:colon:operandsNotRealScalar;         % shutup
 if (nargin < 3)
-	intervals = 25;
+	intervals = 40;
 end
 
 walls   = [];
@@ -102,6 +102,10 @@ if ~isempty(bin_walls)          % stop if you split into space with no points
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
 	if ~(gain < right_side)
+		%
+		% FIXME intervals is hard-coded to 25. WTF?
+		%
+		intervals = 25;
         walls = [walls bin_walls(lsp) FindDiscretizationWallsFayyadIrani(p1,c1,intervals) FindDiscretizationWallsFayyadIrani(p2,c2,intervals)];
 	else
         walls = [];

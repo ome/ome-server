@@ -29,11 +29,10 @@
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 function [sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = ...
-			FindSignatureSubset (discData, discWalls, sigs_excluded, fmetric, testing_perc, iterations)
+			FindSignatureSubset (contData, sigs_excluded, fmetric, testing_perc, iterations)
 
 % INPUT NEEDED      
-%   'discData'      - your discretized data
-%   'discWalls'     - cell array with bin wall locations
+%   'contData'      - your continuous data
 %   'sigs_excluded' - sigs that could not be discretized and 
 %                     therefore were excluded.
 %   'fmetric'       - function handle to metric that estimates classifier
@@ -75,28 +74,28 @@ function [sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = ...
 % Lawrence David - 2003.  lad2002@columbia.edu
 % Tom Macura - 2005. tm289@cam.ac.uk               Modified for inclusion in OME
 
-if (nargin < 5) 
-	testing_perc = 0.15;
+if (nargin < 4) 
+	testing_perc = 0.35;
 end
 
-if (nargin < 6)
-	iterations = 15;
+if (nargin < 5)
+	iterations = 35;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find initial best signature to classify with                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[hei len] = size(discData);
+[hei len] = size(contData);
 sigs_left = setdiff([1: hei-1], sigs_excluded);
 
-[ind_score] = n_fold_validate(discData, discWalls, [], sigs_left, testing_perc, iterations, fmetric);
+[ind_score] = n_fold_validate(contData, [], sigs_left, testing_perc, iterations, fmetric);
 [big_score, score_place] = max(ind_score);                                              
 
 sigs_used_ind           = big_score;
 sigs_used_col           = big_score;
 sigs_used               = sigs_left(score_place);
-sigs_left               = [sigs_left(1:score_place-1) sigs_left(score_place+1:end)]
-ind_score               = [ind_score(1:score_place-1) ind_score(score_place+1:end)]
+sigs_left               = [sigs_left(1:score_place-1) sigs_left(score_place+1:end)];
+ind_score               = [ind_score(1:score_place-1) ind_score(score_place+1:end)];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % greedy hill-climbing                                          %
@@ -106,7 +105,7 @@ done = 0;
 while ~done
 
 	% find signature with largest impact on cumulative score
-    [score_avg score_std conf_mat] = n_fold_validate(discData, discWalls, sigs_used, sigs_left, testing_perc, iterations, fmetric);
+    [score_avg score_std conf_mat] = n_fold_validate(contData, sigs_used, sigs_left, testing_perc, iterations, fmetric);
     [temp_score, temp_place] = max(score_avg);
     
     % add signature if it improves cumulative score
@@ -116,8 +115,8 @@ while ~done
         sigs_used_ind  = [sigs_used_ind ind_score(temp_place)];
         sigs_used_col  = [sigs_used_col temp_score];
         
-		sigs_left = [sigs_left(1:temp_place) sigs_left(temp_place+1:end)];
-		ind_score = [ind_score(1:temp_place) ind_score(temp_place+1:end)];
+		sigs_left = [sigs_left(1:temp_place-1) sigs_left(temp_place+1:end)];
+		ind_score = [ind_score(1:temp_place-1) ind_score(temp_place+1:end)];
 		
 		% optimal performanced reached, additional signatures are superflous
         if ( abs(temp_score-1) < 0.01)                                      
@@ -130,13 +129,12 @@ while ~done
 end
 conf_mat = conf_mat{temp_place};
 
-function [scr_mean scr_std conf_mat] = n_fold_validate (discData, discWalls, initial_sigs, additional_sigs, testing_perc, iterations, fmetric)
+function [scr_mean scr_std conf_mat] = n_fold_validate (contData, initial_sigs, additional_sigs, testing_perc, iterations, fmetric)
 % INPUTS NEEDED:
-%   N.B: 'discData' and 'discWalls' are already trimmed according to sigs_to_use.
-%   'discData'      - data, in the form where rows are signatures and
+%   N.B: 'contData' is already trimmed according to sigs_to_use.
+%   'contData'      - data, in the form where rows are signatures and
 %                     columns are instances (images). By convention,
 %                     the bottom row contains the instance's class.
-%   'discWalls'     - cell array with bin wall locations
 %
 %   'initial_sigs'  - always use these sigs
 %
@@ -165,32 +163,43 @@ function [scr_mean scr_std conf_mat] = n_fold_validate (discData, discWalls, ini
 % Lawrence David - 2003.  lad2002@columbia.edu
 % Tom Macura - 2005. tm289@cam.ac.uk              Modified for inclusion in OME
 
-    
+class_number = length(unique(contData(end,:)));
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % being n_fold_verification                                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 abso = 0; % variable to hold sums of 'all or nothing' decisions
-for i = 1:length(additional_sigs)
-	score_vec = [];
-	for j = 1:iterations
-		% remember about discData(end,:). That is the row of classes 
-		[percentages absolutes]  = TrainAndTest(discData([initial_sigs additional_sigs(i) end],:), discWalls([initial_sigs additional_sigs(i)]), testing_perc); 
+
+len_add_sigs = length(additional_sigs);
+conf_mat = cell(1,len_add_sigs);
+scr_mean = zeros(1,len_add_sigs);
+scr_std  = zeros(1,len_add_sigs);
+
+for i=1:len_add_sigs
+	abso = zeros(class_number, class_number+1);
+	score_vec = zeros(1,iterations);
 	
+	for j = 1:iterations
+		% remember about contData(end,:). That is the row of classes 
+		[percentages absolutes]  = TrainAndTest(contData([initial_sigs additional_sigs(i) end],:), testing_perc); 
+
 		abso = abso + absolutes;
-		score_vec = [score_vec ConfusionMatrixScore(absolutes)];
+		score_vec(j) = ConfusionMatrixScore(absolutes);
     end
+    
 	conf_mat{i} = abso;
 	scr_mean(i) = mean(score_vec);
 	scr_std(i)  = std(score_vec);
+    
     abso
     score_vec
 	fprintf(1, 'Signature: %03d -- Score [avg][var]: %f %f \n', additional_sigs(i), scr_mean(i), scr_std(i));
 end
 return
 
-function [percentages, absolutes] = TrainAndTest(discData, discWalls, testing_perc)
+function [percentages, absolutes] = TrainAndTest(contData, testing_perc)
 % INPUTS NEEDED:  
-%   'discData'     - discretized data, in the form where rows are signatures 
+%   'contData'     - continious data, in the form where rows are signatures 
 %                    and columns are instances (images). By convention, the  
 %                    bottom row contains the instance's class.
 %   'discWalls'    - cell array with bin wall locations
@@ -231,12 +240,15 @@ rand('state',sum(100*clock));           % keeping the rand real
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Convert percentage into numbers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-classcounter = unique(discData(end,:));
+classcounter = unique(contData(end,:));
 class_number = length(classcounter);
+
+ind_class_size = zeros(1,class_number);
+matching_class = cell(1,class_number);
 
 % find cardinality of smallest dataset
 for u = 1:class_number                            
-	[junk matching_class_vec] = find(discData(end,:)==classcounter(u));
+	[junk matching_class_vec] = find(contData(end,:)==classcounter(u));
 	ind_class_size(u) = length(matching_class_vec);
     matching_class{u} = matching_class_vec(randperm(ind_class_size(u)));
 end
@@ -246,41 +258,69 @@ test_samples = ceil(testing_perc*min(ind_class_size));
 train_samples = min(ind_class_size) - test_samples;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% divide the discData into training and testing datasets
+% divide the contData into training and testing datasets
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-discTrain_cols = [];  % column indicies
-discTest_cols  = [];  % column indicies
+contTrain_cols = [];  % column indicies
+contTest_cols  = [];   % column indicies
 
 for u = 1:class_number
 	matching_class_vec = matching_class{u};
-	discTrain_cols = [discTrain_cols matching_class_vec(1:train_samples)];
-	discTest_cols  = [discTest_cols  matching_class_vec(train_samples+1:train_samples+test_samples)];
+	contTrain_cols = [contTrain_cols matching_class_vec(1:train_samples)];
+	contTest_cols  = [contTest_cols  matching_class_vec(train_samples+1:train_samples+test_samples)];
 end
 
-discTrainData = discData(:,discTrain_cols);
-discTestData  = discData(:,discTest_cols);
+contTrainData = contData(:,contTrain_cols);
+contTestData  = contData(:,contTest_cols);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% learn descretization walls
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+[hei len] = size(contTrainData);
+discWalls = [];
+
+for i = 1:hei-1              % don't involve the class row, (-1)
+	discWalls{end+1} = FindDiscretizationWallsFayyadIrani (contTrainData(i,:),contTrainData(end,:),25);
+
+	if length(discWalls{end}) == 0
+		fprintf(1, 'Holly shit sigs_excluded\n');
+	end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% descretization data based on walls
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+discTrainData = ones(size(contTrainData)); 
+discTestData  = ones(size(contTestData));
+for i = 1:hei-1
+    for j = 1:length(discWalls{i})
+        discTrainData(i,:) = discTrainData(i,:) + (contTrainData(i,:) > discWalls{i}(j));
+        discTestData(i,:)  = discTestData(i,:)  + (contTestData(i,:)  > discWalls{i}(j));
+    end
+end
+discTrainData(end,:) = contTrainData(end,:);
+discTestData(end,:)  = contTestData(end,:);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Training
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[hei len] = size(discTrainData);
-node_sizes = zeros(1,length(discWalls));
-for i = 1:length(discWalls)                         % setting 'node sizes' - a variable 
+node_sizes = zeros(1,length(discWalls) + 1);        % +1 since there is always one
+													% more bin than walls.
+for i = 1:length(discWalls)
     node_sizes(i) = (length(discWalls{i}) + 1);
-end                                                 % +1 since there is always one
-node_sizes(end+1) = class_number;                   % more bin than walls.
+end                                                 
+node_sizes(end) = class_number;                    
 
 % filling the adjacency matrix to make the DAG for a naive bayesian network
-dag = false(hei, hei);
-dag([1:end-1],end) = true;
+dag = zeros(hei, hei);
+dag([1:end-1],end) = 1;
 
-bnet = mk_bnet(double(dag), double(node_sizes)); % generate bayes net, some datatype issues
+bnet = mk_bnet(dag, node_sizes); % generate bayes net, some datatype issues
 
 for i = 1:hei                               
     bnet.CPD{i} = tabular_CPD(bnet,i);          % make each node 'tabular' so that it knows 
 end                                             % its dealing with discrete data
 
-bnet = learn_params(bnet,double(discTrainData));
+bnet = learn_params(bnet, discTrainData);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Testing
@@ -288,20 +328,33 @@ bnet = learn_params(bnet,double(discTrainData));
 [hei len] = size(discTestData);
 absolutes   = zeros(class_number, class_number+1);
 percentages = zeros(class_number, class_number);
+
+engin = jtree_inf_engine(bnet);
+evidence = cell(1, hei);
 for u = 1:len % for each instance
 	actual_class = discTestData(end,u);
-	marginal_probs = BayesNetClassifier(bnet, discTestData(1:end-1,u));
+	
+	% Quick Test. Very similar to BayesNetClassifier but reusing BNET engine
+	% for efficency reasons (500% speedup)
+	for t = 1:hei-1
+		evidence{t} = discTestData(t,u);
+	end
+	[engin, loglik] = enter_evidence(engin,evidence);
+	marginal_probs  = marginal_nodes(engin,hei);
+	marginal_probs  = marginal_probs.T';
 	
 	% find which classes are predicted
 	predicted_class = find (marginal_probs == max(marginal_probs));
 	predicted_class = predicted_class(randperm(length(predicted_class))); % randomize the predicted class
 	predicted_class = predicted_class(1);                % select the first class
 	
+	%predicted_class = predicted_class( floor( (length(predicted_class)+1)/2 ) );
+	
 	if (sum(marginal_probs) == 0)
-		absolutes(actual_class, class_number+1) =  ...,
+		absolutes(actual_class, class_number+1) =  ...
 				absolutes(actual_class, class_number+1) + 1;
 	else 
-		absolutes(actual_class, predicted_class) =  ...,
+		absolutes(actual_class, predicted_class) =  ...
 				absolutes(actual_class, predicted_class) + 1;
 		percentages(actual_class,:) = ... 
 				percentages(actual_class,:) + marginal_probs;
