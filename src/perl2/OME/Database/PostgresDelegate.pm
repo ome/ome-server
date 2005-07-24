@@ -675,8 +675,8 @@ sub addForeignKeyConstraints {
 
 	while (my ($alias,$colSpec) = each %$columns) {
 		# Check for a reference to another class
-		if ($colSpec->[2]) {
-			my ($table,$column,$foreign_class_name) = @$colSpec;
+		my ($table,$column,$foreign_class_name,$sql_options) = @$colSpec;
+		if ($foreign_class_name) {
 			# Load the class corresponding to the foreign class name
 			my $foreign_class = OME::DBObject->__loadOMEType( $foreign_class_name );
 			my ($ftable,$fcolumn) = $foreign_class->__getPrimaryKeyLocation();
@@ -845,6 +845,21 @@ sub addClassToDatabase {
 	
 						# FIXME: We should try to verify the type and
 						# other SQL options.
+						# IGG:  Unfortunately, several versions of Postgres (if not all)
+						# Keep adding constraints, etc even if they already exist.
+						# One unacceptable side-effect of this is the accumulation
+						# of indexes, referential integrity constraints, etc on these columns/tables
+						# which causes serious performance degradation without providing any benefit.
+						# For this reason, we need a way to check for every possible thing
+						# we will modify before attempting to modify it.
+						# Some, but not all of these checks exist.
+						# For now, we are only modifying NotNull because doing this
+						# multiple times does not appear to be detrimental.
+						
+						if ($not_null) {
+							$self->notNULL($dbh, $table, $column);
+						}
+
 					} else {
 						#print "New column ($column)!\n";
 						# IGG 12/10/03:  Refactored this a wee bit to work with 7.2
