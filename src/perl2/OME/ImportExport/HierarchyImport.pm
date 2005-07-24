@@ -103,11 +103,14 @@ sub new {
 		_docIDs         => {},
 		_docRefs		=> {},
 		_DBObjects      => [],
+# IGG 7/22/05:
+# We can't have NULL analysis STs anymore.
+# Is there any reason why we need these to be NULL?
 		_nullAnalysisSTs=> {
-			'Thumbnail'      => undef,
-			'DisplayChannel' => undef,
-			'DisplayOptions' => undef,
-			'DisplayROI'     => undef, 
+#			'Thumbnail'      => undef,
+#			'DisplayChannel' => undef,
+#			'DisplayOptions' => undef,
+#			'DisplayROI'     => undef, 
 			},
 			
 	};
