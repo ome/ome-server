@@ -92,6 +92,7 @@ detailed help messages.
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
+use OME::Tasks::ModuleExecutionManager;
 
 use UNIVERSAL::require;
 use Getopt::Long;
@@ -99,6 +100,7 @@ use Getopt::Long;
 our $DATA_SOURCE;
 our $DB_USER;
 our $DB_PASSWORD;
+our $ADMIN_MEX;
 
 =head2 getCommands
 
@@ -314,18 +316,6 @@ sub printHeader {
     }
 }
 
-sub getSession {
-    my ($self) = @_;
-
-    my $session = OME::SessionManager->TTYlogin({
-# We're turning this off until we determine wether or not this is sane
-#    	DataSource => $DATA_SOURCE,
-#    	DBUser     => $DB_USER,
-#    	DBPassword => $DB_PASSWORD,
-    });
-    return $session;
-
-}
 
 sub noHelpForCommand {
     my ($self,$supercommands) = @_;
@@ -362,6 +352,115 @@ $script_name help $prev_name
 MSG
     }
 }
+
+
+
+=head2 Utility functions
+
+	my $session = $self->getSession();
+	my $experimenter = $self->getExperimenter ($username_or_id_user_input);
+	my $group = $self->getGroup ($groupname_or_id_user_input);
+	my $mex = $self->getAdminMEX (); # This will always return the same MEX
+	$self->finishAdminMEX ();        # until this call is made.
+
+=cut
+
+
+sub getSession {
+    my ($self) = @_;
+
+    my $session = OME::SessionManager->TTYlogin({
+# We're turning this off until we determine wether or not this is sane
+#    	DataSource => $DATA_SOURCE,
+#    	DBUser     => $DB_USER,
+#    	DBPassword => $DB_PASSWORD,
+    });
+    return $session;
+
+}
+
+
+sub getExperimenter {
+    my $self = shift;
+    my $exp_in = shift;
+    my $object;
+    my $session = $self->getSession();
+    my $factory = $session->Factory();
+
+    if ($exp_in =~ /^[0-9]+$/) {
+        # Experimenter was specified by ID
+        $object = $factory->
+          loadObject('OME::SemanticType::BootstrapExperimenter',
+                     $exp_in);
+    } else {
+        $object = $factory->
+          findObject('OME::SemanticType::BootstrapExperimenter',
+                     {
+                      OMEName => $exp_in });
+    }
+    
+    return $object;
+
+}
+
+
+sub getGroup {
+    my $self = shift;
+    my $grp_in = shift;
+    my $object;
+    my $session = $self->getSession();
+    my $factory = $session->Factory();
+
+    if ($grp_in =~ /^[0-9]+$/) {
+        # Experimenter was specified by ID
+        $object = $factory->
+          loadObject('@Group',
+                     $grp_in);
+    } else {
+        $object = $factory->
+          findObject('@Group',
+                     {
+                      Name => $grp_in });
+    }
+    
+    return $object;
+
+}
+
+sub getAdminMEX {
+	my $self = shift;
+
+	return $ADMIN_MEX if $ADMIN_MEX;
+	
+    my $session = $self->getSession();
+	my $module = $session->Configuration()->administration_module()
+		or die "couldn't laod Administration module";
+	$ADMIN_MEX = OME::Tasks::ModuleExecutionManager->createMEX($module,'G' )
+		or die "Couldn't get mex for Administration module";
+    # Create a universal execution for this module, so that the analysis
+    # engine never tries to execute it.
+    OME::Tasks::ModuleExecutionManager->
+        createNEX($ADMIN_MEX,undef,undef);
+
+	# FIXME (igg 7/24/05):
+	# Oddly enough, we have to commit this transaction, otherwise we get
+	# referential integrity errors when we try to commit new attributes
+	# Anymbody got a clue as to why that is?
+	$session->commitTransaction();
+	return ($ADMIN_MEX);
+}
+
+sub finishAdminMEX {
+	my $self = shift;
+
+	return undef unless $ADMIN_MEX;
+	$ADMIN_MEX->status('FINISHED');
+	$ADMIN_MEX->storeObject();
+	undef ($ADMIN_MEX);
+	return;
+}
+
+
 
 1;
 
