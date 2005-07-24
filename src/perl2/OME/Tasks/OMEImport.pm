@@ -140,7 +140,7 @@ sub importFile {
 		my $sha1 = $file->getSHA1();
 		eval {
 			$originalFile = $session->Factory->
-			  findAttribute("originalFile",SHA1 => $sha1);
+			  findAttribute("OriginalFile",SHA1 => $sha1);
 		};
 		return if defined $originalFile;
 	}
@@ -163,8 +163,8 @@ sub importFile {
 
 	my $importedObjects = $self->processDOM($CA_doc->getDocumentElement(),%flags);
 
-	# Store the file hash if we're doing the import.
-	if ($importSelfInitiated && $filename) {
+	# Store the file hash if we did the upload.
+	if ($filename) {
 		my $mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 		if (defined $mex) {
 			$originalFile = $session->Factory->
@@ -182,7 +182,14 @@ sub importFile {
     # Commit the transaction to the DB.
     $session->commitTransaction() unless $flags{ DO_NOT_COMMIT };
 
-	return $importedObjects;
+	# return different things depending on how we were called.
+	if ($filename and $importSelfInitiated) {
+		return ($importedObjects,$file,$originalFile)
+	} elsif ($filename) {
+		return ($importedObjects,$file)
+	} else {
+		return $importedObjects;
+	}
 }
 
 # importXML commented out by josiah 6/10/03
