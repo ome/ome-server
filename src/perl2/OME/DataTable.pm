@@ -208,6 +208,7 @@ sub requireDataTablePackage {
                     'OME::ModuleExecution',
                     {
                      SQLType => 'integer',
+                     NotNull => 1,
                      Indexed => 1,
                      ForeignKey => 'module_executions',
                     });
