@@ -140,19 +140,7 @@ ERROR
 
         # Verify that the specified leader exists.
 
-        my $leader;
-
-        if ($leader_input =~ /^[0-9]+$/) {
-            # Leader was specified by ID
-            $leader = $factory->
-              loadObject('OME::SemanticType::BootstrapExperimenter',
-                         $leader_input);
-        } else {
-            $leader = $factory->
-              findObject('OME::SemanticType::BootstrapExperimenter',
-                         { OMEName => $leader_input });
-        }
-
+        my $leader = $self->getExperimenter ($leader_input);
         if (!defined $leader) {
             print "Could not find the specified leader ($leader_input).\n";
             $leader_input = '';
@@ -162,19 +150,7 @@ ERROR
 
         # Verify that the specified contact exists.
 
-        my $contact;
-
-        if ($contact_input =~ /^[0-9]+$/) {
-            # Contact was specified by ID
-            $contact = $factory->
-              loadObject('OME::SemanticType::BootstrapExperimenter',
-                         $contact_input);
-        } else {
-            $contact = $factory->
-              findObject('OME::SemanticType::BootstrapExperimenter',
-                         { OMEName => $contact_input });
-        }
-
+        my $contact = $self->getExperimenter ($contact_input);
         if (!defined $contact) {
             print "Could not find the specified contact ($contact_input).\n";
             $contact_input = '';
@@ -185,7 +161,7 @@ ERROR
         # Create the new attribute for the group
 
         my $group = $factory->
-          newAttribute('Group',undef,undef,
+          newAttribute('Group',undef,$self->getAdminMEX(),
                        {
                         Name    => $name,
                         Leader  => $leader,
@@ -202,6 +178,7 @@ ERROR
 
         last unless $batch;
     }
+    $self->finishAdminMEX();
 }
 
 sub addGroup_help {
@@ -245,14 +222,16 @@ sub listGroup {
     my $name = "";
     my $leader_input = "";
     my $contact_input = "";
+    my $user_input = "";
     my $tabbed = 0;
     my $result;
-    my ($leader, $contact);
+    my ($leader, $contact, $user);
 
     $result = GetOptions('help|h' => \$help,
                          'name|n=s' => \$name,
                          'leader|l=s' => \$leader_input,
                          'contact|c=s' => \$contact_input,
+                         'user|u=s' => \$user_input,
                          'tabbed|t' => \$tabbed);
 
     exit(1) unless $result;
@@ -276,35 +255,30 @@ sub listGroup {
       if $name ne '';
 
     if ($leader_input ne '') {
-        if ($leader =~ /^[0-9]+$/) {
-            $leader = $leader_input;
-        } else {
-            $leader = $factory->
-              loadObject('OME::SemanticType::BootstrapExperimenter',
-                         { OMEName => $leader_input });
-
-            if (!defined $leader) {
-                print "Cannot find user $leader_input.\n";
-                exit 1;
-            }
-        }
+    	$leader = $self->getExperimenter ($leader_input);
+		if (!defined $leader) {
+			print "Cannot find user $leader_input.\n";
+			exit 1;
+		}
         $criteria->{Leader} = $leader;
     }
 
     if ($contact_input ne '') {
-        if ($contact =~ /^[0-9]+$/) {
-            $contact = $contact_input;
-        } else {
-            $contact = $factory->
-              loadObject('OME::SemanticType::BootstrapExperimenter',
-                         { OMEName => $contact_input });
-
-            if (!defined $contact) {
-                print "Cannot find user $contact_input.\n";
-                exit 1;
-            }
+    	$contact = $self->getExperimenter ($contact_input);
+        if (!defined $contact) {
+			print "Cannot find user $contact_input.\n";
+			exit 1;
         }
         $criteria->{Contact} = $contact;
+    }
+
+    if ($user_input ne '') {
+    	$user = $self->getExperimenter ($user_input);
+        if (!defined $user) {
+			print "Cannot find user $user_input.\n";
+			exit 1;
+        }
+        $criteria->{'ExperimenterGroupList.Experimenter'} = $user;
     }
 
     my @groups = $factory->
@@ -386,6 +360,9 @@ that is found, displays the group ID and name, and names of the group
 leader and contact person.
 
 Filter options:
+    -u, --user (<user ID> | <username>)
+        Lists the groups that the given user belongs to.
+
     -n, --name <name>
         Lists the groups with a matching name.  You can specify a
         partial name; any groups containing the specified string will
@@ -412,7 +389,7 @@ sub editGroup {
     my $self = shift;
 
     my $help = 0;
-    my $group_id = "";
+    my $group_input = "";
     my $name = "";
     my $leader_input = "";
     my $contact_input = "";
@@ -421,7 +398,7 @@ sub editGroup {
     my $result;
 
     $result = GetOptions('help|h' => \$help,
-                         'group|g=s' => \$group_id,
+                         'group|g=s' => \$group_input,
                          'name|n=s' => \$name,
                          'leader|l=s' => \$leader_input,
                          'contact|c=s' => \$contact_input,
@@ -436,7 +413,7 @@ sub editGroup {
         exit;
     }
 
-    if ($group_id eq '') {
+    if ($group_input eq '') {
         print "You must specify a group to edit with the -g option.\n";
         exit 1;
     }
@@ -444,15 +421,10 @@ sub editGroup {
     my $session = $self->getSession();
     my $factory = $session->Factory();
 
-	my $group;
-	if ($group_id =~ /^[0-9]+$/) {
-        $group = $factory->loadAttribute('Group',$group_id);
-    } else {
-        $group = $factory->findAttribute('Group',{Name => $group_id});
-    }
+	my $group = $self->getGroup ($group_input);
 
     if (!defined $group) {
-        print "Group #${group_id} does not exist.\n";
+        print "Group #${group_input} does not exist.\n";
         exit 1;
     }
 
@@ -461,7 +433,7 @@ sub editGroup {
     my $leader;
 
     if ($leader_input ne '') {
-        $leader = $self->__getExperimenter ($leader_input);
+        $leader = $self->getExperimenter ($leader_input);
         if (!defined $leader) {
             print "Could not find the specified leader ($leader_input).\n";
             exit 1;
@@ -473,7 +445,7 @@ sub editGroup {
     my $contact;
 
     if ($contact_input ne '') {
-        $contact = $self->__getExperimenter ($contact_input);
+        $contact = $self->getExperimenter ($contact_input);
 
         if (!defined $contact) {
             print "Could not find the specified contact ($contact_input).\n";
@@ -486,7 +458,7 @@ sub editGroup {
     my $addUser;
 
     if ($addUser_input ne '') {
-        $addUser = $self->__getExperimenter ($addUser_input);
+        $addUser = $self->getExperimenter ($addUser_input);
 
         die "Could not find the specified user ($addUser_input).\n" unless $addUser;
         
@@ -494,10 +466,13 @@ sub editGroup {
         my $object = $factory->findObject(
             'OME::SemanticType::BootstrapExperimenterGroup',$data);
         if ($object) {
-            print STDERR "Experimenter $addUser_input is already a member of Group $group_id\n";
+            print STDERR "Experimenter $addUser_input is already a member of Group $group_input\n";
         } else {
-            $factory->newObject(
-            'OME::SemanticType::BootstrapExperimenterGroup',$data);
+			my $exp_group = $factory->newAttribute('ExperimenterGroup',undef,$self->getAdminMEX(), {
+				Experimenter => $addUser,
+				Group        => $group,
+			});
+			$self->finishAdminMEX();
         }
     }
 
@@ -506,7 +481,7 @@ sub editGroup {
     my $deleteUser;
 
     if ($deleteUser_input ne '') {
-        $deleteUser = $self->__getExperimenter ($deleteUser_input);
+        $deleteUser = $self->getExperimenter ($deleteUser_input);
 
         if (!defined $deleteUser) {
             print "Could not find the specified user ($deleteUser_input).\n";
@@ -515,9 +490,9 @@ sub editGroup {
         
         my $data = {Experimenter => $deleteUser, Group => $group};
         my $object = $factory->findObject(
-            'OME::SemanticType::BootstrapExperimenterGroup',$data);
+            '@ExperimenterGroup',$data);
         unless ($object) {
-            print STDERR "Experimenter $deleteUser_input is not a member of Group $group_id\n";
+            print STDERR "Experimenter $deleteUser_input is not a member of Group $group_input\n";
             exit 1;
         } else {
             $object->deleteObject();
@@ -549,28 +524,6 @@ sub editGroup {
 
 }
 
-sub __getExperimenter {
-    my $self = shift;
-    my $exp_in = shift;
-    my $object;
-    my $session = $self->getSession();
-    my $factory = $session->Factory();
-
-    if ($exp_in =~ /^[0-9]+$/) {
-        # Experimenter was specified by ID
-        $object = $factory->
-          loadObject('OME::SemanticType::BootstrapExperimenter',
-                     $exp_in);
-    } else {
-        $object = $factory->
-          findObject('OME::SemanticType::BootstrapExperimenter',
-                     {
-                      OMEName => $exp_in });
-    }
-    
-    return $object;
-
-}
 
 sub editGroup_help {
     my ($self,$commands) = @_;
