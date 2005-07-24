@@ -85,7 +85,7 @@ sub addUser {
     my $email = "";
     my $directory = "";
     my $password = "";
-    my $group_id = "";
+    my $group_input = "";
     my $result;
 
     $result = GetOptions('help|h' => \$help,
@@ -95,7 +95,7 @@ sub addUser {
                          'email|e=s' => \$email,
                          'directory|d=s' => \$directory,
                          'password|p=s' => \$password,
-                         'group-id|g=i' => \$group_id);
+                         'group|g=s' => \$group_input);
 
     exit(1) unless $result;
 
@@ -111,13 +111,13 @@ sub addUser {
 	while (1) {
 		# correct user properties till ome admin-user is happy
 		while (1) {
-			$username  = confirm_default("Username?",$username);
-			$firstname = confirm_default("First Name?",$firstname);
-			$lastname  = confirm_default("Last Name?",$lastname);
-			$email     = confirm_default("Email Address?",$email);
-			$directory = confirm_path   ("Data Directory?",$directory);
-			$group_id  = confirm_default("Group ID?",$group_id);
-			$password  = get_password   ("Password?",6);
+			$username    = confirm_default("Username?",$username);
+			$firstname   = confirm_default("First Name?",$firstname);
+			$lastname    = confirm_default("Last Name?",$lastname);
+			$email       = confirm_default("Email Address?",$email);
+			$directory   = confirm_path   ("Data Directory?",$directory);
+			$group_input = confirm_default("Group (Name or ID)?",$group_input);
+			$password    = get_password   ("Password?",6);
 	
 			print BOLD,"\nConfirm New User's Properties:\n",RESET;
 			print      "      Username: ", BOLD, $username, RESET, "\n";
@@ -125,7 +125,7 @@ sub addUser {
 			print      "     Last Name: ", BOLD, $lastname, RESET, "\n";
 			print      " Email Address: ", BOLD, $email, RESET, "\n";
 			print      "Data Directory: ", BOLD, $directory, RESET, "\n";
-			print      "      Group ID: ", BOLD, $group_id, RESET, "\n";
+			print      "         Group: ", BOLD, $group_input, RESET, "\n";
 			
 			y_or_n ("Are these values correct ?",'y') and last;
 		}
@@ -154,44 +154,72 @@ sub addUser {
             redo;
         }
 
-        # Verify that the specified group exists.
-		if ($group_id !~ /^[0-9]+$/) {
-            print STDERR "\nThe group ID must be a number.\n\n";
-            $group_id = '';
-            redo;
-        }
-
-        my $group = $factory->loadAttribute('Group',$group_id);
-        unless (defined $group) {
-            print STDERR "\nThe ID $group_id does not specify an existing group.\n\n";
-            $group_id = '';
-            redo;
-        }
+		# Verify that the specified group exists.
+		my $group;
+		my $new_group;
+		my $mex = $self->getAdminMEX();
+		if ($group_input ne '') {
+			$group = $self->getGroup ($group_input);
+			unless (defined $group) {
+			
+			# Give the user a chance to create the group.
+				print "Group $group_input could not be found.\n";
+				if (y_or_n ("Create Group $group_input with $username as its leader?",'n')) {
+					$group = $factory->newAttribute('Group',undef,$mex, {
+						Name    => $group_input,
+					}) or 
+						die "Could not create new group";
+					$new_group = 1;
+				} else {
+					$group_input = '';
+					redo;
+				}
+			}
+		}
 
         # The Experimenter attribute type does not contain semantic
         # elements for OME name or password, so we must still add the
         # user via the bootstrap DBObject.
 
-        my $experimenter = $factory->
-          newObject('OME::SemanticType::BootstrapExperimenter',
-                    {
-                     OMEName       => $username,
-                     FirstName     => $firstname,
-                     LastName      => $lastname,
-                     Email         => $email,
-                     Password      => $password,
-                     DataDirectory => $directory,
-                     Group         => $group_id,
-                    });
+        my $experimenter = $factory->newAttribute('Experimenter', undef, $mex, {
+				FirstName        => $firstname,
+				LastName         => $lastname,
+				Email            => $email,
+				Group            => $group,
+		});
+		unless ($experimenter) {
+			$session->rollbackTransaction();
+			die "Failed to create experimenter - newAttribute returned NULL";
+		}
+		my $bootstrap_experimenter = $factory->loadObject (
+			'OME::SemanticType::BootstrapExperimenter',$experimenter->id());
+		$bootstrap_experimenter->OMEName($username);
+		$bootstrap_experimenter->Password($password);
+		$bootstrap_experimenter->DataDirectory($directory);
+		$bootstrap_experimenter->storeObject();
+
+		if ($new_group) {
+			$group->Leader ($experimenter);
+			$group->Contact ($experimenter);
+			$group->storeObject();
+		}
+
+		# Make sure there is an ExperimenterGroup object for this association
+		my $exp_group = $factory->findObject ('@ExperimenterGroup', {
+			Experimenter => $experimenter,
+			Group        => $group,
+		});
+		unless ($exp_group) {
+			$exp_group = $factory->newAttribute('ExperimenterGroup',undef,$mex, {
+				Experimenter => $experimenter,
+				Group        => $group,
+			});
+		}
+
+		$self->finishAdminMEX();
 		$session->commitTransaction();
-		
-        if (defined $experimenter) {
-            print "Created user #",$experimenter->id(),".\n";
-            last;
-        } else {
-            print STDERR "Error creating user.\n";
-            last;
-        }
+		print "Created user #",$experimenter->id(),".\n";
+		last;
     }
 }
 
@@ -207,6 +235,7 @@ Usage:
 
 Creates a new OME user.  You can specify the information about the new
 user on the command line, or type it in at the prompts.
+You can also simultaneously create a new group and its leader/contact.
 
 Options:
 
@@ -231,10 +260,9 @@ Options:
         command-line is publicly available to other processes, but we
         still provide it for convenience.
 
-    -g, --group-id <id>
-        Specify the group for the new user.  You'll need to have already
-        looked up the ID for the new group with the "groups list"
-        command.
+    -g, --group (<id> | <name>)
+        Specify the group for the new user.  If the group doesn't exist, a new
+        one can be made with the specified user as its leader/contact.
 CMDS
 }
 
@@ -245,7 +273,8 @@ sub listUsers {
     my $username = "";
     my $firstname = "";
     my $lastname = "";
-    my $group_id = "";
+    my $group_input = "";
+    my $primary_group_input = "";
     my $tabbed = 0;
     my $result;
 
@@ -253,7 +282,8 @@ sub listUsers {
                          'username|u=s' => \$username,
                          'first-name|f=s' => \$firstname,
                          'last-name|l=s' => \$lastname,
-                         'group-id|g=i' => \$group_id,
+                         'group|g=s' => \$group_input,
+                         'primary-group|p=s' => \$primary_group_input,
                          'tabbed|t' => \$tabbed);
 
     exit(1) unless $result;
@@ -279,8 +309,26 @@ sub listUsers {
       if $firstname ne '';
     $criteria->{LastName} = ['LIKE',"%${lastname}%"]
       if $lastname ne '';
-    $criteria->{Group} = $group_id
-      if $group_id ne '';
+    
+    my $group;
+    if ($group_input ne '') {
+    	$group = $self->getGroup ($group_input);
+		unless (defined $group) {
+			print "Group $group_input could not be found.\n";
+			exit 1;
+		}
+	    $criteria->{'ExperimenterGroupList.Group'} = $group;
+    }
+    
+    my $primary_group;
+    if ($primary_group_input ne '') {
+    	$group = $self->getGroup ($primary_group_input);
+		unless (defined $group) {
+			print "Group $primary_group_input could not be found.\n";
+			exit 1;
+		}
+	    $criteria->{Group} = $group;
+    }
 
     my @users = $factory->
       findObjects('OME::SemanticType::BootstrapExperimenter',
@@ -370,9 +418,11 @@ Lists all of the users matching the specified criteria.  Displays the
 user ID, username, and full name for any that are found.
 
 Filter options:
-    -g, --group-id <id>
-        Lists only those users which belong to the specified group.  The
-        group is specified by its group ID.
+    -g, --group (<id> | <name>)
+        Lists only those users who belong to the specified group.
+
+    -p, --primary-group (<id> | <name>)
+        Lists only those users who's primary group is the specified group.
 
     -u, --username <name>
         Lists the user which has the given username.
@@ -400,14 +450,12 @@ sub changePassword {
     my $self = shift;
 
     my $help = 0;
-    my $user_id = "";
-    my $username = "";
+    my $user_input = "";
     my $password = "";
     my $result;
 
     $result = GetOptions('help|h' => \$help,
-                         'id|i=i' => \$user_id,
-                         'username|u=s' => \$username,
+                         'user|u=s' => \$user_input,
                          'password|p=s' => \$password);
 
     exit(1) unless $result;
@@ -417,10 +465,7 @@ sub changePassword {
         exit;
     }
 
-    if ($username ne '' && $user_id ne '') {
-        print "You cannot specify both a user ID and username.\n";
-        exit 1;
-    } elsif ($username eq '' && $user_id eq '') {
+    if ($user_input eq '') {
         print "You must specify either a user ID or username.\n";
         exit 1;
     }
@@ -428,22 +473,9 @@ sub changePassword {
     my $session = $self->getSession();
     my $factory = $session->Factory();
 
-    my $user;
-
-    if ($username ne '') {
-        $user = $factory->
-          findObject('OME::SemanticType::BootstrapExperimenter',
-                     {
-                      OMEName => $username,
-                     });
-    } else {
-        $user = $factory->
-          loadObject('OME::SemanticType::BootstrapExperimenter',
-                     $user_id);
-    }
-
+    my $user = $self->getExperimenter ($user_input);
     if (!defined $user) {
-        print "The specified user does not exist.\n";
+        print "The specified user \"$user_input\" does not exist.\n";
         exit 1;
     }
 
@@ -486,13 +518,8 @@ administrative user.  This is *not* the user whose password you want
 to change.
 
 Options:
-    -i, --id <user ID>
-        Specify the user by their database ID.  The <user ID>
-        parameter must be a positive integer, and can be found via the
-        "users list" command.
-
-    -u, --username <username>
-        Specify the user by their username.
+    -u, --user (<username> | <ID>)
+        Specify the user by their username or database ID.
 
     -p, --password <password>
         Supplies the new password on the command line rather than
@@ -506,26 +533,24 @@ sub editUser {
     my $self = shift;
 
     my $help = 0;
-    my $user_id = '';
-    my $username = '';
+    my $user_input = '';
     my $firstname = '';
     my $lastname = '';
     my $email = '';
     my $directory = '';
-    my $group_id = '';
+    my $group_input = '';
    	my $group;
    	
    	my $result;
    	my $interactive_mode;
 
     $result = GetOptions('help|h' => \$help,
-                         'id|i=i' => \$user_id,
-                         'username|u=s' => \$username,
+                         'user|u=s' => \$user_input,
                          'first-name|f=s' => \$firstname,
                          'last-name|l=s' => \$lastname,
                          'email|e=s' => \$email,
                          'directory|d=s' => \$directory,
-                         'group-id|g=i' => \$group_id);
+                         'group|g=s' => \$group_input);
 	
     exit(1) unless $result;
 
@@ -540,29 +565,15 @@ sub editUser {
     my $user;
 
 	# Solicit Username or figure it out based on command-line args
-    if ($username ne '' && $user_id ne '') {
-        print "You cannot specify both a user ID and username.\n";
-        exit 1;
-    } elsif ($username eq '' && $user_id eq '') {
+    if ($user_input eq '') {
     	$interactive_mode = 1;
-    	$username = confirm_default("Username?", "nemo");
+    	$user_input = confirm_default("Username or ID?", "nemo");
     }
 
-	# Use the specified username or userid to find the user in the database
-    if ($username ne '')  {
-        $user = $factory->
-          findObject('OME::SemanticType::BootstrapExperimenter',
-                     {
-                      OMEName => $username,
-                     });
-    } else {
-        $user = $factory->
-          loadObject('OME::SemanticType::BootstrapExperimenter',
-                     $user_id);
-    }
+	$user = $self->getExperimenter ($user_input);
 
     if (!defined $user) {
-        print "The specified user does not exist.\n";
+        print "The specified user \"$user_input\" does not exist.\n";
         exit 1;
     }
     
@@ -580,24 +591,24 @@ sub editUser {
 		$directory = $user->DataDirectory()
 		  if $directory eq '';
 		  
-		$group_id = $user->Group()->id()
-		  if $group_id eq '';
+		$group_input = $user->Group()->Name()
+		  if $group_input eq '';
       
       	# let user type in new properties until he is satisfied
 		while (1) {
-			$firstname = confirm_default("First Name?", $firstname);
-			$lastname  = confirm_default("Last Name?", $lastname);
-			$email     = confirm_default("Email Address?", $email);
-			$directory = confirm_default("Data Directory?", $directory);
-			$group_id  = confirm_default("Group ID?", $group_id);
+			$firstname   = confirm_default("First Name?", $firstname);
+			$lastname    = confirm_default("Last Name?", $lastname);
+			$email       = confirm_default("Email Address?", $email);
+			$directory   = confirm_default("Data Directory?", $directory);
+			$group_input = confirm_default("Group ID or Name?", $group_input);
 			
 			print BOLD,"\nConfirm User's New Properties:\n",RESET;
-			print      "      Username: ", BOLD, $username, RESET, "\n";
+			print      "      Username: ", BOLD, $user->OMEName(), RESET, "\n";
 			print      "    First Name: ", BOLD, $firstname, RESET, "\n";
 			print      "     Last Name: ", BOLD, $lastname, RESET, "\n";
 			print      " Email Address: ", BOLD, $email, RESET, "\n";
 			print      "Data Directory: ", BOLD, $directory, RESET, "\n";
-			print      "      Group ID: ", BOLD, $group_id, RESET, "\n";
+			print      "         Group: ", BOLD, $group_input, RESET, "\n";
 			
 			y_or_n ("Are these values correct ?",'y') and last;
 		}
@@ -614,15 +625,10 @@ sub editUser {
 	 }
 
 	 # Verify that the specified group exists.
-	if ($group_id ne '') {
-		if ($group_id !~ /^[0-9]+$/) {
-			print "\nThe group ID must be a number.\n\n";
-			exit 1;
-		 }
-			
-		$group = $factory->loadAttribute('Group',$group_id);
+	if ($group_input ne '') {
+		$group = $self->getGroup ($group_input);
 		unless (defined $group) {
-			print "The ID $group_id does not specify an existing group.\n";
+			print "Group $group_input could not be found.\n";
 			exit 1;
 		}
 	}
@@ -666,20 +672,15 @@ Usage:
 Edits an existing OME user. 
 
 If you don't want to use this utility in interactive mode, specify the user with the 
--i or -u flags and use the edit options.
+-u flag and use the edit options.
 
 The edit is performed atomically; if there is any database error or 
 inconsistency in the data, none of the other (possibly valid) changes are 
 saved.
 
 Options:
-    -i, --id <user ID>
-        Specify the user by their database ID.  The <user ID>
-        parameter must be a positive integer, and can be found via the
-        "users list" command.
-
-    -u, --username <username>
-        Specify the user by their username.
+    -u, --user (<user ID> | <user name>)
+        Specify the user by their username or database ID.
 
     -f, --first-name <name>
         Change the user's first name.
@@ -693,9 +694,8 @@ Options:
     -d, --directory <path>
         Change the user's data directory.
 
-    -g, --group-id <id>
-        Change the user's main group.  You'll need to have already
-        looked up the ID for the group with the "groups list" command.
+    -g, --group (<id> | <name>)
+        Change the user's main group.
 CMDS
 }
 
