@@ -1,6 +1,3 @@
-/OME/Core/Experimenter.ome
-/OME/Core/OMEIS/Repository.ome
-/OME/Core/OMEIS/OriginalFile.ome
 /OME/Core/Experiment.ome
 /OME/Core/Screen.ome
 /OME/Core/Instrument.ome
@@ -10,6 +7,7 @@
 /OME/Import/FilenamePattern.ome
 /OME/Import/MetamorphFilenamePattern.ome
 /OME/Annotations/AnnotationModule.ome
+/OME/Annotations/AdministrationModule.ome
 /OME/Annotations/annotations.ome
 /OME/Annotations/classification.ome
 /OME/Analysis/FindSpots/spotModules.ome

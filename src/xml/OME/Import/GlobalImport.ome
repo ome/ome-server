@@ -59,44 +59,38 @@
     "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule
-  ModuleName="Dataset import"
+  ModuleName="Original files"
   ModuleType="OME::Analysis::Handlers::NoopHandler"
   ProgramID=""
-  ID="urn:lsid:openmicroscopy.org:Module:5">
-	
+  ID="urn:lsid:openmicroscopy.org:Module:1">
+
   <Description>
-    Placeholder module which represents the act of importing a dataset
-    into OME.
+    Placeholder module which records the original proprietary or XML
+    files from which most data derives.
   </Description>
 
   <Declaration>
 
-    <FormalInput
+    <FormalOutput
        Name="Files"
        SemanticTypeName="OriginalFile"
        Count="+">
       <Description>The original proprietary or XML files</Description>
-    </FormalInput>
-
-    <FormalOutput
-       Name="Other metadata"
-       Count="*">
-      <Description>Dataset attributes found by the importer</Description>
     </FormalOutput>
 
-    </Declaration>
+  </Declaration>
 
 </AnalysisModule>
 
 <AnalysisModule
-  ModuleName="Image import"
+  ModuleName="Global import"
   ModuleType="OME::Analysis::Handlers::NoopHandler"
   ProgramID=""
-  ID="urn:lsid:openmicroscopy.org:Module:6">
+  ID="urn:lsid:openmicroscopy.org:Module:4">
 	
   <Description>
-    Placeholder module which represents the act of importing an image
-    into OME.
+    Placeholder module which represents the act of importing global
+    attributes into OME.
   </Description>
 
   <Declaration>
@@ -109,23 +103,9 @@
     </FormalInput>
 
     <FormalOutput
-       Name="Pixels"
-       SemanticTypeName="Pixels"
-       Count="!">
-      <Description>The original image pixels</Description>
-    </FormalOutput>
-
-    <FormalOutput
-       Name="Dimensions"
-       SemanticTypeName="Dimensions"
-       Count="!">
-      <Description>The dimensions of the Pixels output</Description>
-    </FormalOutput>
-
-    <FormalOutput
        Name="Other metadata"
        Count="*">
-      <Description>Any other piece of metadata found by the importer</Description>
+      <Description>Global attributes found by the importer</Description>
     </FormalOutput>
 
     </Declaration>

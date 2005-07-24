@@ -31,7 +31,11 @@
 
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by:  
+# Written by:  Ilya Goldberg (igg@nih.gov)
+# This module is the initial administration module normally created manually
+# During the bootstrap installation process.  It is also used subsequently
+# to create users/groups and user-group mappings.
+# Its LSID is urn:lsid:openmicroscopy.org:Module:0
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
@@ -59,76 +63,24 @@
     "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule
-  ModuleName="Dataset import"
-  ModuleType="OME::Analysis::Handlers::NoopHandler"
-  ProgramID=""
-  ID="urn:lsid:openmicroscopy.org:Module:5">
+	ModuleName="Administration"
+	ModuleType="OME::Analysis::Handlers::NoopHandler"
+	ProgramID=""
+	ID="urn:lsid:openmicroscopy.org:Module:1001">
 	
-  <Description>
-    Placeholder module which represents the act of importing a dataset
-    into OME.
-  </Description>
-
-  <Declaration>
-
-    <FormalInput
-       Name="Files"
-       SemanticTypeName="OriginalFile"
-       Count="+">
-      <Description>The original proprietary or XML files</Description>
-    </FormalInput>
-
-    <FormalOutput
-       Name="Other metadata"
-       Count="*">
-      <Description>Dataset attributes found by the importer</Description>
-    </FormalOutput>
-
-    </Declaration>
-
-</AnalysisModule>
-
-<AnalysisModule
-  ModuleName="Image import"
-  ModuleType="OME::Analysis::Handlers::NoopHandler"
-  ProgramID=""
-  ID="urn:lsid:openmicroscopy.org:Module:6">
+	<Description>
+		Module for creating attributes relating to system administration
+	</Description>
 	
-  <Description>
-    Placeholder module which represents the act of importing an image
-    into OME.
-  </Description>
-
-  <Declaration>
-
-    <FormalInput
-       Name="Files"
-       SemanticTypeName="OriginalFile"
-       Count="+">
-      <Description>The original proprietary or XML files</Description>
-    </FormalInput>
-
-    <FormalOutput
-       Name="Pixels"
-       SemanticTypeName="Pixels"
-       Count="!">
-      <Description>The original image pixels</Description>
-    </FormalOutput>
-
-    <FormalOutput
-       Name="Dimensions"
-       SemanticTypeName="Dimensions"
-       Count="!">
-      <Description>The dimensions of the Pixels output</Description>
-    </FormalOutput>
-
-    <FormalOutput
-       Name="Other metadata"
-       Count="*">
-      <Description>Any other piece of metadata found by the importer</Description>
-    </FormalOutput>
-
-    </Declaration>
+	<Declaration>
+		<FormalOutput
+		   Name="Attribute"
+		   Count="+">
+		  <Description>
+			The attributes created during system administration, can be of any semantic type
+		  </Description>
+		</FormalOutput>
+	</Declaration>
 
 </AnalysisModule>
 
