@@ -76,6 +76,12 @@ __PACKAGE__->addColumn(Group => 'group_id',
                        });
 __PACKAGE__->addColumn(DataDirectory => 'data_dir',{SQLType => 'varchar(256)'});
 __PACKAGE__->addColumn(Institution => 'institution',{SQLType => 'varchar(256)'});
+# We use the BootstrapExperimenter after bootstrap
+# becaue OMEName and Password are not defined in the Experimenter ST.
+# So we need to explicitly establish the linkage to the groups, using the same
+# access mechanism that would be used if we were doing this to the ST.
+# Using this acessor before the bootstrap is complete will fail.
+__PACKAGE__->hasMany('ExperimenterGroupList','@ExperimenterGroup','Experimenter');
 
 
 # I don't think we want to inherit from SemanticTypeSuperclass necessarily,
