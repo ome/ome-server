@@ -60,6 +60,8 @@ use OME::Tasks::ImageTasks;
 use OME::Tasks::SemanticTypeManager;
 use OME::ImportExport::ChainImport;
 use OME::Tasks::OMEImport;
+use OME::Tasks::ModuleExecutionManager;
+
 
 # Packages that should have been installed by now
 use HTTP::Request::Common;
@@ -170,6 +172,11 @@ our @core_classes =
    # Make sure this next one is last
    'OME::Configuration::Variable',
   );
+
+# This global holds all the attributes created during installation (Experimenter, Group, etc).
+our @INSTALLATION_ATTRIBUTES;
+
+
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -341,6 +348,103 @@ sub load_schema {
     return 1;
 }
 
+sub get_installation_mex {
+
+	my $session = shift;
+
+    my $factory = $session->Factory();
+    
+	print "Creating the Installation MEX "
+		and print $LOGFILE "Creating the Installation MEX\n";
+
+    my $module = $factory->findObject ("OME::Module", {name => 'Installation'});
+	print BOLD, "[FAILURE]", RESET, ".\n"
+		and print $LOGFILE "Module \"Installation\" not loaded into DB - Bootstrap failed\n"
+		and croak "Module \"Installation\" not loaded into DB - Bootstrap failed, see $LOGFILE_NAME details."
+		unless $module;
+
+	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G',undef) or
+		print BOLD, "[FAILURE]", RESET, ".\n"
+			and print $LOGFILE "ERROR creating MEX for Installation module\n"
+			and croak "ERROR creating MEX for Installation module, see $LOGFILE_NAME details.";
+
+    # Create a universal execution for this module, so that the analysis
+    # engine never tries to execute it.
+    OME::Tasks::ModuleExecutionManager->
+        createNEX($mex,undef,undef);
+
+	# Update everything we've created so far to originate from this MEX
+	foreach my $attr (@INSTALLATION_ATTRIBUTES) {
+		# Figure out which ST definition to use for the attribute
+		my ($type,$OF_attr);
+		if (ref ($attr) =~ /OME::SemanticType::Bootstrap(\w+)$/) {
+			$type = $factory->findObject('OME::SemanticType',{name => $1});
+		} elsif (ref ($attr) eq 'OME::Image::Server::File') {
+			$OF_attr = $factory->newAttribute("OriginalFile",undef,$mex, {
+				SHA1 => $attr->getSHA1(), 
+				Path => $attr->getFilename(), 
+				FileID => $attr->getFileID(), 
+				Format => 'OME XML',
+				Repository => $session->findRepository(),
+			});
+			print BOLD, "[FAILURE]", RESET, ".\n"
+				and print $LOGFILE "Could not create OriginalFile attribute for file ".$attr->getFilename()."\n"
+				and croak "Could not create OriginalFile attribute for file ".$attr->getFilename().
+					", see $LOGFILE_NAME details."
+				unless $OF_attr;
+			$attr = $OF_attr;
+			$type = $attr->semantic_type() if $attr;
+		} elsif (UNIVERSAL::can($attr,'semantic_type')) {
+			$type = $attr->semantic_type();
+		}
+		print BOLD, "[FAILURE]", RESET, ".\n"
+			and print $LOGFILE "Could not determine semantic type for attribute ".ref($attr)."\n"
+			and croak "Could not determine semantic type for attribute ".ref($attr).
+				", see $LOGFILE_NAME details."
+		unless $type;
+
+		$attr->module_execution ($mex);
+		$attr->storeObject();
+		
+
+		# Make the undefined output for this module
+		$factory->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
+			module_execution => $mex,
+			semantic_type    => $type,
+		});
+	}
+	# Mark the Installation module as finished
+	$mex->status('FINISHED');
+	$mex->storeObject();
+
+	# Add the bootstrap modules to the configuration
+	my $configuration = $session->Configuration();
+	my $originalFilesModule = $factory->
+		findObject("OME::Module",name => 'Original files');
+	$configuration->original_files_module($originalFilesModule);
+
+	my $globalImportModule = $factory->
+		findObject("OME::Module",name => 'Global import');
+	$configuration->global_import_module($globalImportModule);
+
+
+
+	eval {
+	    $factory->commitTransaction();
+    };
+
+	print BOLD, "[FAILURE]", RESET, ".\n"
+		and print $LOGFILE "ERROR committing Installation MEX to DB -- OUTPUT: \"$@\"\n"
+		and croak "ERROR committing Installation MEX to DB, see $LOGFILE_NAME details."
+		if $@;
+
+
+	print BOLD, "[SUCCESS]", RESET, ".\n"
+		and print $LOGFILE "SUCCESS creating Installation MEX\n";
+
+    return $mex;
+}
+
 sub create_experimenter {
     my $manager = shift;
     my $personal_info;
@@ -444,6 +548,21 @@ PRINT
     delete $OME_EXPER->{ExperimenterID};
     my $experimenter = $factory->
     	newObject('OME::SemanticType::BootstrapExperimenter', $OME_EXPER);
+    my $group = $factory->
+    	newObject('OME::SemanticType::BootstrapGroup', {
+    		Name    => 'OME',
+    		Leader  => $experimenter->attribute_id(),
+    		Contact => $experimenter->attribute_id(),
+    	});
+    $experimenter->Group ($group->attribute_id());
+    $experimenter->storeObject();
+    my $experimenter_group = $factory->
+    	newObject('OME::SemanticType::BootstrapExperimenterGroup', {
+    		Experimenter => $experimenter->attribute_id(),
+    		Group        => $group->attribute_id(),
+    	});
+    
+    push (@INSTALLATION_ATTRIBUTES,$experimenter,$group,$experimenter_group);
 
     $factory->commitTransaction();
     $session->finishBootstrap();
@@ -454,6 +573,8 @@ PRINT
 
     return ($session);
 }
+
+
 
 
 # Make sure an experimenter ends up in the stored environment
@@ -704,6 +825,8 @@ sub make_repository {
              IsLocal        => 0,
             });
     $repository->storeObject;
+    
+    push (@INSTALLATION_ATTRIBUTES,$repository);
 
     $session->commitTransaction();
     return $repository;
@@ -739,6 +862,69 @@ sub check_repository {
 
  	$ENVIRONMENT->omeis_url($repository_url);
  	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url(), $LOGFILE );
+}
+
+# These are things we can load without a MEX,
+# But must include everything we need to create the initial MEX.
+# Mainly, the experimenter and module definitions (Installation).
+sub load_xml_bootstrap {
+	my ($session) = @_;
+	my @bootrap_files;
+	
+	# get list of files
+	open (BOOTSTRAP_XML, "<", "src/xml/BootstrapXML" )
+	or croak "Could not open file \"src/xml/BootstrapXML\". $!";
+	
+	while (<BOOTSTRAP_XML>) { 
+		chomp;
+	
+		# Put the ABS paths in the array
+		$_ = rel2abs ("src/xml/$_");
+		push (@bootrap_files, $_) if /^[^#]/;
+	}
+	
+	close (BOOTSTRAP_XML);
+	
+	print "Importing bootstrap XML\n";
+	
+	my $omeImport = OME::Tasks::OMEImport->new();
+	
+	# We'll call startImport 'cause we'll call finishImport at the end of this
+	# This doesn't do much because no MEXes will be created since
+	# There is no Original Files module at this point.
+	OME::Tasks::ImportManager->startImport();
+	my ($objects,$file,$originalFileAttr);
+
+	# Import each XML file
+	foreach my $filename (@bootrap_files) {
+		print "  \\__ $filename ";
+		eval {
+			($objects,$file,$originalFileAttr) = $omeImport->importFile($filename,
+				NoDuplicates           => 1,
+				IgnoreAlterTableErrors => 1);
+			};
+		print BOLD, "[FAILURE]", RESET, ".\n"
+			and print $LOGFILE "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
+			and croak "Error loading XML file \"$filename\", see $LOGFILE_NAME details."
+		if $@;
+	
+		print BOLD, "[SUCCESS]", RESET, ".\n"
+			and print $LOGFILE "SUCCESS LOADING XML FILE \"$filename\"\n";
+		
+		push (@INSTALLATION_ATTRIBUTES,$file);
+	}
+	
+	# We'll call finishImport so that we can start a new one now that we have some
+	# modules defined to register what's happening during import.
+	# Otherwise, if we keep the old import, it will remember that we had
+	# nothing defined, and won't make any MEXes.
+	OME::Tasks::ImportManager->finishImport();
+	
+	# At this stage the system is basically ready for regular imports,
+	# so we'll commit what we have so far.
+	$session->commitTransaction();
+	
+	return $session;
 }
 
 sub load_xml_core {
@@ -787,38 +973,6 @@ sub load_xml_core {
     $session->commitTransaction();
 
     return $session;
-}
-
-sub commit_experimenter {
-    my $session = shift;
-    my $factory = $session->Factory();
-
-    print "Committing our first experimenter\n";
-
-    # Replace the instance of BootstrapExperimenter with the equivalent
-    # instance of the Experimenter semantic type.
-    my $experimenter = ($factory->
-    findAttributes("Experimenter", undef))[0]
-    or croak "Could not load Experimenter semantic types.";
-
-
-    print "  \\__ Adding group\n";
-    my $group = $factory->
-    newAttribute("Group",undef,undef,
-               {
-                Name    => 'OME',
-                Leader  => $experimenter->id(),
-                Contact => $experimenter->id()
-               });
-
-    print "  \\__ Adding experimenter to group\n";
-    $experimenter->Group($group->id());
-
-    $experimenter->storeObject();
-
-    $session->commitTransaction();
-
-    return 1;
 }
 
 sub load_analysis_core {
@@ -1168,14 +1322,16 @@ BLURB
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
         $session = create_experimenter ($manager) or croak "Unable to create an initial experimenter.";
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
-        print_header "Finalizing Database";
+        print_header "Bootstrapping Database";
         make_repository ($session);
         check_repository ($session);
         # Set the UID to whoever owns the install directory
         euid(0);
         euid((stat ('.'))[4]);
+        load_xml_bootstrap ($session);
+        my $install_mex = get_installation_mex ($session);
+        print_header "Finalizing Database";
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
-        commit_experimenter ($session) or croak "Unable to load commit experimenter.";
         load_analysis_core ($session, $LOGFILE)
         or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
     }
@@ -1205,14 +1361,6 @@ BLURB
       findObject("OME::Module",name => 'Annotation');
     $configuration->annotation_module($annotationModule);
 
-    my $originalFilesModule = $factory->
-      findObject("OME::Module",name => 'Original files');
-    $configuration->original_files_module($originalFilesModule);
-
-    my $globalImportModule = $factory->
-      findObject("OME::Module",name => 'Global import');
-    $configuration->global_import_module($globalImportModule);
-
     my $datasetImportModule = $factory->
       findObject("OME::Module",name => 'Dataset import');
     $configuration->dataset_import_module($datasetImportModule);
@@ -1220,6 +1368,10 @@ BLURB
     my $imageImportModule = $factory->
       findObject("OME::Module",name => 'Image import');
     $configuration->image_import_module($imageImportModule);
+
+    my $administrationModule = $factory->
+      findObject("OME::Module",name => 'Administration');
+    $configuration->administration_module($administrationModule);
 
     # Grab our import chain and assign it to the configuration object
     my $importChain = $factory->
@@ -1230,7 +1382,7 @@ BLURB
     update_configuration ($session) or croak "Unable to update the configuration object.";
 
     # Update the Experimenter in the install environment
-    save_exper_env ($session);
+    save_exper_env ($session);	
 
     # Load all constraints
     add_DB_constraints ($session, $LOGFILE);
