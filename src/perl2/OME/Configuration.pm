@@ -148,6 +148,10 @@ my %FOREIGN_KEY_VARS =
                              DBColumn => 'image_import_module_id',
                              FKClass  => 'OME::Module'
                             },
+   administration_module   => {
+                             DBColumn => 'administration_module_id',
+                             FKClass  => 'OME::Module'
+                            },
   );
 
 sub new {
