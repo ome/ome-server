@@ -1027,7 +1027,7 @@ sub add_DB_constraints {
     my $factory = $session->Factory();
     my $dbh = $factory->obtainDBH();
 
-    print "Adding Referential Integrity constraints for DBObjects\n";
+    print "Adding Constraints for DBObjects\n";
 
     foreach my $class (@core_classes) {
         next if $class =~ /^OME::SemanticType::Bootstrap/;
@@ -1036,19 +1036,20 @@ sub add_DB_constraints {
         # Add our constraints
         eval {
             $delegate->addForeignKeyConstraints($dbh,$class);
+            $delegate->addNotNullConstraints($dbh,$class);
         };
         
         print BOLD, "[FAILURE]", RESET, ".\n"
-            and print $logfile "ERROR Adding FK constraints to CLASS \"$class\" -- OUTPUT: \"$@\"\n"
-            and croak "Error Adding FK constraints to class \"$class\", see $LOGFILE_NAME details."
+            and print $logfile "ERROR Adding constraints to CLASS \"$class\" -- OUTPUT: \"$@\"\n"
+            and croak "Error Adding constraints to class \"$class\", see $LOGFILE_NAME details."
             if $@;
     
     
         print BOLD, "[SUCCESS]", RESET, ".\n"
-            and print $logfile "SUCCESS Adding FK constraints to CLASS \"$class\"\n";
+            and print $logfile "SUCCESS Adding constraints to CLASS \"$class\"\n";
     }
     
-    print "Adding Referential Integrity constraints for Semantic Types\n";
+    print "Adding constraints for Semantic Types\n";
     my $ST_iter = $factory->findObjects ('OME::SemanticType');
     my $ST;
     while ($ST = $ST_iter->next() ) { 
@@ -1058,16 +1059,17 @@ sub add_DB_constraints {
         # Add our constraints
         eval {
             $delegate->addForeignKeyConstraints($dbh,$package);
+            $delegate->addNotNullConstraints($dbh,$package);
         };
         
         print BOLD, "[FAILURE]", RESET, ".\n"
-            and print $logfile "ERROR Adding FK constraints to ST \"$name\" -- OUTPUT: \"$@\"\n"
-            and croak "Error Adding FK constraints to ST \"$name\", see $LOGFILE_NAME details."
+            and print $logfile "ERROR Adding constraints to ST \"$name\" -- OUTPUT: \"$@\"\n"
+            and croak "Error Adding constraints to ST \"$name\", see $LOGFILE_NAME details."
             if $@;
     
     
         print BOLD, "[SUCCESS]", RESET, ".\n"
-            and print $logfile "SUCCESS Adding FK constraints to ST \"$name\"\n";
+            and print $logfile "SUCCESS Adding constraints to ST \"$name\"\n";
     }
 
     $factory->commitTransaction();
