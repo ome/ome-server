@@ -649,6 +649,37 @@ sub __createIndex {
 	}
 }
 
+sub addNotNullConstraints {
+	my ($self,$dbh,$class) = @_;
+	die "addNotNullConstraints: Wrong number of parameters"
+		unless defined $dbh && defined $class;
+
+	my $class_name;
+	if (ref ($class)) {
+		$class_name = ref ($class);
+		die "addNotNullConstraints: Malformed class name $class"
+			unless $class_name =~ /^\w+(\:\:\w+)*$/;
+	} else {
+		$class_name = $class;
+		die "addNotNullConstraints: Malformed class name $class"
+			unless $class_name =~ /^\w+(\:\:\w+)*$/;
+		$class = OME::DBObject->__loadOMEType( $class_name )
+	}
+
+	die "addNotNullConstraints: $class is not a subclass of OME::DBObject"
+		unless UNIVERSAL::isa($class,"OME::DBObject");
+
+	my $columns   = $class->__columns();
+	my $fKeys;
+
+	while (my ($alias,$colSpec) = each %$columns) {
+		my ($table,$column,$foreign_class_name,$sql_options) = @$colSpec;
+		$self->notNULL ($dbh,$table,$column)
+			if (exists $sql_options->{NotNull} and $sql_options->{NotNull});
+	}
+}
+
+
 sub addForeignKeyConstraints {
 	my ($self,$dbh,$class) = @_;
 
@@ -843,23 +874,6 @@ sub addClassToDatabase {
 					if (defined $col_num) {
 						#print "$column exists!\n";
 	
-						# FIXME: We should try to verify the type and
-						# other SQL options.
-						# IGG:  Unfortunately, several versions of Postgres (if not all)
-						# Keep adding constraints, etc even if they already exist.
-						# One unacceptable side-effect of this is the accumulation
-						# of indexes, referential integrity constraints, etc on these columns/tables
-						# which causes serious performance degradation without providing any benefit.
-						# For this reason, we need a way to check for every possible thing
-						# we will modify before attempting to modify it.
-						# Some, but not all of these checks exist.
-						# For now, we are only modifying NotNull because doing this
-						# multiple times does not appear to be detrimental.
-						
-#						if ($not_null) {
-#							$self->notNULL($dbh, $table, $column);
-#						}
-
 					} else {
 						#print "New column ($column)!\n";
 						# IGG 12/10/03:  Refactored this a wee bit to work with 7.2

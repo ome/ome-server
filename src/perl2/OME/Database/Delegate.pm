@@ -423,6 +423,23 @@ sub getNextSequenceValue {
 
 
 
+=head2 addNotNullConstraints
+
+	$delegate->addNotNullConstraints($dbh,$class);
+
+This method is responsible for adding any not-null constraints.
+The implementation must not add duplicate constraints if they already exist
+in the database.
+
+=cut
+
+sub addNotNullConstraints {
+    die "OME::Database::Delegate->addNotNullConstraints is abstract";
+}
+
+
+
+
 =head2 addForeignKeyConstraints
 
 	$delegate->addForeignKeyConstraints($dbh,$class);
