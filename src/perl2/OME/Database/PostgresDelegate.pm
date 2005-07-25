@@ -856,9 +856,9 @@ sub addClassToDatabase {
 						# For now, we are only modifying NotNull because doing this
 						# multiple times does not appear to be detrimental.
 						
-						if ($not_null) {
-							$self->notNULL($dbh, $table, $column);
-						}
+#						if ($not_null) {
+#							$self->notNULL($dbh, $table, $column);
+#						}
 
 					} else {
 						#print "New column ($column)!\n";
