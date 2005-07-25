@@ -115,14 +115,6 @@
 			<selector xpath = "STD:SemanticType"/>
 			<field xpath = "@SemanticTypeName"/>
 		</unique>
-		<unique name = "FieldID">
-			<selector xpath = ".//STD:Field"/>
-			<field xpath = "@FieldID"/>
-		</unique>
-		<keyref name = "FieldIDref" refer = "STD:FieldID">
-			<selector xpath = ".//STD:SemanticElement"/>
-			<field xpath = "@FieldID"/>
-		</keyref>
 	</element>
 	<attribute name = "SemanticTypeName">
 		<simpleType>
