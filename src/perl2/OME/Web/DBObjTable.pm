@@ -204,7 +204,7 @@ sub getTable {
 	my $html;
 	my @fieldNames;
 	if (exists $options->{fields} and $options->{fields}) {
-		@fieldNames = keys %{$options->{fields}};
+		@fieldNames = @{$options->{fields}};
 	} else {
 		@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
@@ -592,7 +592,7 @@ sub getTextTable {
 	
 	my @fieldNames;
 	if (exists $options->{fields} and $options->{fields}) {
-		@fieldNames = keys %{$options->{fields}};
+		@fieldNames = @{$options->{fields}};
 	} else {
 		@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
@@ -702,9 +702,7 @@ sub __getJoinedGroups {
 		foreach my $type( @types ) {
 			my %options;
 			if ( my $fields = $q->param( $type."___fields" ) ) {
-				foreach my $field( split (/,/,$fields ) ) {
-					$options{ fields }->{$field} = undef;
-				}
+				$options{ fields } = [ split (/,/,$fields ) ];
 			}
 			if ( my $fields = $q->param( $type."___includeFields" ) ) {
 				foreach my $field( split (/,/,$fields ) ) {
@@ -765,7 +763,7 @@ sub __getJoinedGroups {
 		# collect records & such for objects
 		my @fieldNames;
 		if (exists $entry_options->{fields} and $entry_options->{fields}) {
-			@fieldNames = keys %{$entry_options->{fields}};
+			@fieldNames = @{$entry_options->{fields}};
 		} else {
 			@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
 			@fieldNames = grep( (not exists $entry_options->{excludeFields}->{$_}), @fieldNames )
@@ -880,9 +878,7 @@ sub __parseParams {
 			unless $options->{ Length };
 		$options->{ Length } = -1 unless $options->{ Length };
 		if ( my $fields = $q->param( $type."___fields" ) ) {
-			foreach my $field( split (/,/,$fields ) ) {
-				$options->{ fields }->{$field} = undef;
-			}
+				$options->{ fields } = [split (/,/,$fields )];
 		}
 		if ( my $fields = $q->param( $type."___includeFields" ) ) {
 			foreach my $field( split (/,/,$fields ) ) {
@@ -1035,7 +1031,7 @@ sub __get_CGI_search_params {
 		} else {
 			undef $param;
 		}
-		if ($value =~ m/,/) {
+		if ($value =~ m/,/ and $param) {
 			if ($param eq 'accessor' ) {
 				$value = [ split( m/,/, $value ) ];
 			} else {
