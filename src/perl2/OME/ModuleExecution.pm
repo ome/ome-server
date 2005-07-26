@@ -153,6 +153,8 @@ __PACKAGE__->hasMany('untypedOutputs','OME::ModuleExecution::SemanticTypeOutput'
                      'module_execution');
 __PACKAGE__->hasMany('parentalOutputs','OME::ModuleExecution::ParentalOutput' =>
                      'module_execution');
+__PACKAGE__->hasMany('node_executions','OME::AnalysisChainExecution::NodeExecution' =>
+                     'module_execution');
 __PACKAGE__->addACL ({
         	user    => 'experimenter_id',
         	group   => 'group_id',
