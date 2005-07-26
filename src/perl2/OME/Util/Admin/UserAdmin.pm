@@ -216,6 +216,11 @@ sub addUser {
 			});
 		}
 
+		# Set the MEX's group to the experimenter's group
+		# So that they can always see themsleves.
+		$mex->group ($group);
+		$mex->storeObject();
+
 		$self->finishAdminMEX();
 		$session->commitTransaction();
 		print "Created user #",$experimenter->id(),".\n";
