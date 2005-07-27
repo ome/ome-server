@@ -181,9 +181,21 @@ void _print_element(const xmlChar *name, const xmlChar **attrs) {
 
 static void extractBinDataStartDocument(ParserState *state) {
 	state->elementInfo             = NULL;	
+	/*
+	 IGG 7/27/05, Bug 499:
+	 Since we're putting an XML document on stdout,
+	 we need to print the XML declaration.
+	 <?xml version="1.0" encoding="iso-8859-1"?>
+	*/
+	fprintf( stdout, "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" );
 }
 
 static void extractBinDataEndDocument( ParserState *state ) {
+	/*
+	 IGG 7/27/05, Bug 499:
+	 To maintain unixish sanity, we really should terminate in a newline
+	*/
+	fprintf( stdout, "\n" );
 }
 
 

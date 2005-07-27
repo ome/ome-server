@@ -286,10 +286,22 @@ static void OME_StartDocument(ParserState *state) {
 	state->binDataInfo->BinDataOut    = NULL;
 	state->binDataInfo->strm = NULL;
 	
+	/*
+	 IGG 7/27/05, Bug 499:
+	 Since we're putting an XML document on stdout,
+	 we need to print the XML declaration.
+	 <?xml version="1.0" encoding="iso-8859-1"?>
+	*/
+	fprintf( stdout, "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" );
 }
 
 static void OME_EndDocument( ParserState *state ) {
 	free( state->binDataInfo );
+	/*
+	 IGG 7/27/05, Bug 499:
+	 To maintain unixish sanity, we really should terminate in a newline
+	*/
+	fprintf( stdout, "\n" );
 }
 
 
