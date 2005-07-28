@@ -104,12 +104,12 @@ __PACKAGE__->addColumn(feature_view => 'feature_view',{SQLType => 'text'});
 __PACKAGE__->addColumn(last_access => 'last_access',
                        {
                         SQLType => 'timestamp',
-                        Default => 'now',
+                        Default => 'now()',
                        });
 __PACKAGE__->addColumn(started => 'started',
                        {
                         SQLType => 'timestamp',
-                        Default => 'now',
+                        Default => 'now()',
                        });
 
 
