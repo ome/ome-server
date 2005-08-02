@@ -25,6 +25,9 @@ require Apache::RequestIO;
 require Apache::Const;
 require APR::Table;
 
+use OME::Remote::SerializerXMLRPC;
+use OME::Remote::DeserializerXMLRPC;
+
 Apache::Const->import(-compile => 'OK');
 
 sub DESTROY { SOAP::Trace::objects('()') }
@@ -34,7 +37,9 @@ sub new {
 
   unless (ref $self) {
     my $class = ref($self) || $self;
-    $self = $class->SUPER::new(@_);
+    $self = $class->SUPER::new(@_)
+	        ->serializer(OME::Remote::SerializerXMLRPC->new)
+	        ->deserializer(OME::Remote::DeserializerXMLRPC->new);
 	SOAP::Trace::objects('()');
   }
   return $self;
