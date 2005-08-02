@@ -234,7 +234,7 @@ static double window_func (double x, char *d)
     fprintf(stderr,"%s*%s(%g) = %g*%g = %g\n",
 	w->filter->name, w->window->name, x);
 	filt_func(w->filter, x), filt_func(w->window, x/w->filter->supp),
-	filt_func(w->filter, x) * filt_func(w->window, x/w->filter->supp));
+	filt_func(w->filter, x) * filt_func(w->window, x/w->filter->supp);
 #   endif
     return filt_func(w->filter, x) * filt_func(w->window, x/w->filter->supp);
 }

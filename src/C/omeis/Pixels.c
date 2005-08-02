@@ -50,6 +50,7 @@
 #include <sys/param.h>
 #include <math.h>
 #include <float.h>
+#include <stdint.h>
 
 #include <tiffio.h>
 
@@ -1243,22 +1244,22 @@ float scale, blk;
 			nIO++;
 		}
 	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
-		long *sLongP = (long *)thePix;
+		int32_t *s32bitP = (int32_t *)thePix;
 		while (nIO < nPix) {
-			theVal = ((float) (*sLongP++) - blk)*scale;
+			theVal = ((float) (*s32bitP++) - blk)*scale;
 			if (theVal < 0) theVal = 0;
 			if (theVal > 255) theVal=255;
-			*buf = (long)theVal;
+			*buf = (int32_t)theVal;
 			buf += jump;
 			nIO++;
 		}
 	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
-		unsigned long *uLongP = (unsigned long *)thePix;
+		uint32_t *u32bitP = (uint32_t *)thePix;
 		while (nIO < nPix) {
-			theVal = ((float) (*uLongP++) - blk)*scale;
+			theVal = ((float) (*u32bitP++) - blk)*scale;
 			if (theVal < 0) theVal = 0;
 			if (theVal > 255) theVal=255;
-			*buf = (unsigned long)theVal;
+			*buf = (uint32_t)theVal;
 			buf += jump;
 			nIO++;
 		}
@@ -1436,10 +1437,10 @@ size_t pix_off;
 char *thePix;
 unsigned char  *uCharP;
 unsigned short *uShrtP;
-unsigned long  *uLongP;
+uint32_t *u32bitP;
 char  *sCharP;
 short *sShrtP;
-long  *sLongP;
+int32_t  *s32bitP;
 float *floatP;
 register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
 int i;
@@ -1594,12 +1595,12 @@ int i;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
-		sLongP = (long *) thePix;
+		s32bitP = (int32_t *) thePix;
 		
 		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
-				theVal = (float) *sLongP++;
+				theVal = (float) *s32bitP++;
 				sum_xi    += (theVal*x);
 				sum_yi    += (theVal*y);
 				sum_zi    += (theVal*z);
@@ -1613,27 +1614,27 @@ int i;
 		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
 		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
-		sLongP = (long *) thePix;
+		s32bitP = (int32_t *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
 			for (i=0;i<nPix;i++) {
-				theVal = (float) *sLongP++;
+				theVal = (float) *s32bitP++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 		} else		
 			for (i=0;i<nPix;i++) {
-				theVal = (float) *sLongP++;
+				theVal = (float) *s32bitP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
-		uLongP = (unsigned long *) thePix;
+		u32bitP = (uint32_t *) thePix;
 		
 		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
-				theVal = (float) *uLongP++;
+				theVal = (float) *u32bitP++;
 				sum_xi    += (theVal*x);
 				sum_yi    += (theVal*y);
 				sum_zi    += (theVal*z);
@@ -1646,17 +1647,17 @@ int i;
 
 		logOffset = min > 0 ? 0 : 1.0;
 
-		uLongP = (unsigned long *) thePix;
+		u32bitP = (uint32_t *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
 			for (i=0;i<nPix;i++) {
-				theVal = (float) *uLongP++;
+				theVal = (float) *u32bitP++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 		} else		
 			for (i=0;i<nPix;i++) {
-				theVal = (float) *uLongP++;
+				theVal = (float) *u32bitP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
