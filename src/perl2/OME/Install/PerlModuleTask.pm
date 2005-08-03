@@ -676,13 +676,64 @@ sub execute {
 	
 		while (1) {
 			if ($environment->get_flag("UPDATE") or $confirm_all) {
-				print "\n";  # Spacing
+				print "Testing MATLAB configuration \n";
 				
 				# Change the MATLAB_SRC path always to the current directory
 				# if the dev configuration option is elected
-				$MATLAB->{MATLAB_SRC} = getcwd ()."/src/matlab"
-					if ($MATLAB->{AS_DEV} == 1);
+				if ( $MATLAB->{AS_DEV} == 1) {				
+					print " \\_ Checking if path to MATLAB .m files is stale ";
+
+					if ($MATLAB->{MATLAB_SRC} eq getcwd ()."/src/matlab") {
+						print BOLD, "[SUCCESS]", RESET, ".\n";
+					} else {
+						print BOLD, "[FAILURE]", RESET, ".\n";
+						print "Path was stale. Reset ".$MATLAB->{MATLAB_SRC}." to ".getcwd ()."/src/matlab \n";
+						print $LOGFILE "Path was stale. Reset".$MATLAB->{MATLAB_SRC}." to ".getcwd ()."/src/matlab \n";
+						
+						$MATLAB->{MATLAB_SRC} = getcwd ()."/src/matlab";
+					}
+				}
+				
+				# That the specified user is authorized to run matlab
+				print " \\_ Checking if user $MATLAB->{USER} is licensed to run $MATLAB->{EXEC} ";
+				print $LOGFILE "Checking if user $MATLAB->{USER} is licensed to run $MATLAB->{EXEC} ... ";
+				
+				my @outputs = `su $MATLAB->{USER} -c '$MATLAB->{EXEC} -nodisplay -nojvm -r quit'`; 
+				my $matlab_ran;
+
+				foreach (@outputs) {
+					$matlab_ran = 1 if $_ =~ /\s*< M A T L A B >\s*/;
+				}
+				
+				if ($matlab_ran) {
+					print BOLD, "[SUCCESS]", RESET, ".\n";
+					print $LOGFILE "[SUCCESS] \n Output From Matlab: @outputs";
+				} else {
+					print BOLD, "[FAILURE]", RESET, ".\n";
+					print $LOGFILE "[FAILURE] \n Output From Matlab: @outputs";
 					
+					print "MATLAB won't start. $MATLAB->{USER} is probably not licensed to run MATLAB.\n";
+					
+					# make an expert guess
+					open (MATLAB_LICENSE_FILE, "< ".$MATLAB->{MATLAB_INST}."/etc/MLM.opt") or
+						print $LOGFILE "Couldn't open $MATLAB->{MATLAB_INST}"."/etc/MLM.opt for reading" and
+						croak "Couldn't open $MATLAB->{MATLAB_INST}"."/etc/MLM.opt for reading";
+					my @matlab_license_file = <MATLAB_LICENSE_FILE>;
+					close (MATLAB_LICENSE_FILE);
+					
+					foreach (@matlab_license_file) {
+						$_ =~ s/#.*\n//; # remove comment lines						
+						$MATLAB->{USER} = $1 if $_ =~ m/USER\s*(\w*)/;
+					}		
+					
+					print $LOGFILE "$MATLAB->{MATLAB_INST}"."/etc/MLM.opt couldn't be parsed" and
+						croak "$MATLAB->{MATLAB_INST}"."/etc/MLM.opt couldn't be parsed"
+						unless $MATLAB->{USER} ne '';	
+					print "According to MLM.opt, $MATLAB->{USER} is a licensed MATLAB user. This user will now be used for OME install purposes.\n";
+					print $LOGFILE "$MATLAB->{USER} is a licensed MATLAB user.\n";
+				}
+				print "\n"; # spacing
+				
 				# Ask user to confirm his/her original entries
 				print BOLD,"MATLAB Perl API configuration:\n",RESET;
 				print " Install MATLAB Perl API?: ", BOLD, $MATLAB->{INSTALL} ? 'yes':'no', RESET, "\n";
@@ -711,7 +762,7 @@ sub execute {
 				
 				if (! $MATLAB->{MATLAB_INST}) {
 					$MATLAB->{MATLAB_INST} = which ('matlab');
-					$MATLAB->{MATLAB_INST} = resolve_sym_links ($MATLAB->{MATLAB_INST}); 
+					$MATLAB->{MATLAB_INST} = normalize_path(resolve_sym_links ($MATLAB->{MATLAB_INST}));
 					$MATLAB->{MATLAB_INST} =~ s|/bin/matlab$||;
 				}
 				$MATLAB->{MATLAB_INST} = confirm_path ("Path to MATLAB installation", $MATLAB->{MATLAB_INST});
@@ -733,7 +784,7 @@ sub execute {
 			} else {
 				$MATLAB->{INSTALL} = 0;
 			}
-			
+			print "\n";  # Spacing
 			$confirm_all = 1;
 		}
 		
@@ -816,7 +867,7 @@ sub execute {
 			print "Installing OME MATLAB .m files \n";
 			
 			# Compile
-			print "  \\_ Compiling MEX files";
+			print "  \\_ Compiling MEX files ";
 			
 			$retval = compile_module ("src/matlab/", $LOGFILE);
 			
