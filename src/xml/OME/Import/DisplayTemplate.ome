@@ -40,27 +40,27 @@
           </Description>
           <Element
 			 Name="ObjectType"
-			 DBLocation="DISPLAY_TEMPLATES.OBJECT_TYPE"
+			 DBLocation="DISPLAY_TEMPLATE.OBJECT_TYPE"
 			 DataType="string"/>
           <Element
 			 Name="Arity"
-			 DBLocation="DISPLAY_TEMPLATES.ARITY"
+			 DBLocation="DISPLAY_TEMPLATE.ARITY"
 			 DataType="string"/>
           <Element
 			 Name="Mode"
-			 DBLocation="DISPLAY_TEMPLATES.MODE"
+			 DBLocation="DISPLAY_TEMPLATE.MODE"
 			 DataType="string"/>
           <Element
 			 Name="Name"
-			 DBLocation="DISPLAY_TEMPLATES.NAME"
+			 DBLocation="DISPLAY_TEMPLATE.NAME"
 			 DataType="string"/>
           <Element
 			 Name="Description"
-			 DBLocation="DISPLAY_TEMPLATES.DESCRIPTION"
+			 DBLocation="DISPLAY_TEMPLATE.DESCRIPTION"
 			 DataType="string"/>
           <Element
 			 Name="Template"
-			 DBLocation="DISPLAY_TEMPLATES.TEMPLATE"
+			 DBLocation="DISPLAY_TEMPLATE.TEMPLATE"
 			 DataType="string"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>
