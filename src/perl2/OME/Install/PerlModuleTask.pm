@@ -802,7 +802,7 @@ sub execute {
 			#
 			print "Installing MATLAB Perl API \n";
 			
-			# Configure
+			# Configure 
 			print "  \\_ Configuring ";
 			$retval = configure_module("src/perl2/OME/Matlab/", $LOGFILE, 
 				{options => "$MATLAB->{USER} $MATLAB->{MATLAB_INST}"});
@@ -826,6 +826,7 @@ sub execute {
 			
 			copy_tree("src/perl2/OME/Matlab/", $OME_TMP_DIR);  # problems here result in croaks
 			fix_ownership({owner => "$MATLAB->{USER}"}, "$OME_TMP_DIR/Matlab");
+			utime time, time, '$OME_TMP_DIR/Matlab/Makefile'; # change this Makefile's timestamp to now. i.e. make it later than Makefile.PL
 			$retval = test_module ("$OME_TMP_DIR/Matlab", $LOGFILE, 
 				{user =>"$MATLAB->{USER}"});
 			rmtree("$OME_TMP_DIR/Matlab"); # problems here result in croaks
