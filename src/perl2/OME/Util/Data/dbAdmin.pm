@@ -90,7 +90,7 @@ Available OME database related commands are:
     restore     Restore OME data from an .tar.bz2 archive.
     delete      Delete things in the OME DB.
     connection  Configure database connection.
-    chown       Change ownership of objects in the DB.
+    chown       Change ownership of objects and MEXes in the DB.
 CMDS
 }
 
@@ -575,19 +575,22 @@ sub chown {
     my $factory = $session->Factory();
 	
 	# Parse our command line options
-	my ($group_in,$user_in,$projects,$datasets,$images);
+	my ($group_in,$user_in,$projects,$datasets,$images,$MEXes);
 	GetOptions('g|group=s' => \$group_in,
 						 'u|user=s'  => \$user_in,
 						 'p|project' => \$projects,
 						 'd|dataset' => \$datasets,
 						 'i|image'   => \$images,
+						 'm|MEX'   => \$MEXes,
 	);
 	
 	my ($user,$group);
 	
     if ($group_in) {
-        $group = $self->__getObject('OME::SemanticType::BootstrapGroup',$group_in);
-        die "Unable to find Group $group_in\n" unless $group;
+    	if (not $group_in eq '#undefined#') {
+	        $group = $self->__getObject('OME::SemanticType::BootstrapGroup',$group_in);
+			die "Unable to find Group $group_in\n" unless $group;
+		}
     }
     
     if ($user_in) {
@@ -600,6 +603,7 @@ sub chown {
     $object_type = 'OME::Project' if $projects;
     $object_type = 'OME::Dataset' if $datasets;
     $object_type = 'OME::Image' if $images;
+    $object_type = 'OME::ModuleExecution' if $MEXes;
     
     foreach $object_in (@objects) {
         $object = $self->__getObject ($object_type,$object_in);
@@ -607,7 +611,7 @@ sub chown {
             $object->owner ($user) if $user_in;
             $object->group ($group) if $group_in;
             $object->storeObject();
-            print "Changing ownership of $object_in\n";
+            print "Changing ownership of $object_type $object_in\n";
         } else {
             print STDERR "$object_type $object_in not found\n";
         }
@@ -635,6 +639,7 @@ sub __getObject {
     my $factory = $session->Factory();
     my $field = 'name';
     $field = 'OMEName' if $type =~ /Experimenter$/;
+    $field = 'Name' if $type =~ /Group$/;
 
     if ($obj_in =~ /^[0-9]+$/) {
         # Object was specified by ID
@@ -654,13 +659,14 @@ sub chown_help {
     $self->printHeader();
     print <<"CMDS";
 Usage:
-    $script $command_name [<options>] [<project <ID|name>> | <dataset <ID|name>> | <image <ID|name>>]...
+    $script $command_name [<options>] [<project <ID|name>> | <dataset <ID|name>> | <image <ID|name>> | MEXes]...
 
 Change user and group ownership.
 
 Options:
      -g, --group (<group ID> | <group name>)
-     	Specify group to change ownership to
+     	Specify group to change ownership to.
+     	Use #undefined# (with the #'s) to set it to NULL (make it public).
      -u, --user (<user ID> | <username>)
      	Specify user to change ownership to
      -p, --project
@@ -669,6 +675,8 @@ Options:
         Parameters are dataset IDs or names
      -i, --image
         Parameters are dataset IDs or names
+     -m, --MEX
+        Parameters are Module Execution IDs (MEXes)
 CMDS
 }
 
