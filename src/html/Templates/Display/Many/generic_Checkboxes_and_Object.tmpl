@@ -1,0 +1,7 @@
+<table class="ome_table">
+<TMPL_LOOP NAME=/obj_loop>
+	<tr>
+		<td class="ome_td"><input type="checkbox" name="selected_objects" value="<TMPL_VAR NAME='id'>"><TMPL_VAR NAME=/object/render-ref></td>
+	</tr>
+</TMPL_LOOP>
+</table>
