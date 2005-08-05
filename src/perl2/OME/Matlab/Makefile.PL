@@ -31,11 +31,11 @@ use strict;
 use ExtUtils::MakeMaker;
 use English;
 
-my @outputs = `perl MatlabInfo.pl @ARGV -v -a -r -i -l`;
+my @outputs = `perl MatlabInfo.pl @ARGV -a -r -v -i -l`;
 
-my $matlab_vers    = $outputs[0];
-my $matlab_arch    = $outputs[1];
-my $matlab_dir     = $outputs[2];
+my $matlab_arch    = $outputs[0];
+my $matlab_dir     = $outputs[1];
+my $matlab_vers    = $outputs[2];
 my $matlab_include = $outputs[3];
 my $matlab_lib     = $outputs[4];
 
