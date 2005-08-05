@@ -223,7 +223,8 @@ sub addUser {
 
 		$self->finishAdminMEX();
 		$session->commitTransaction();
-		print "Created user #",$experimenter->id(),".\n";
+		print "Created user  #",$experimenter->id(),".\n";
+		print "Created group #",$group->id(),".\n" if $new_group;
 		last;
     }
 }
