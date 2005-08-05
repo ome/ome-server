@@ -6,6 +6,9 @@
 /OME/Import/ImageServerStatistics.ome
 /OME/Import/FilenamePattern.ome
 /OME/Import/MetamorphFilenamePattern.ome
+/OME/Import/AnnotationTemplate.ome
+/OME/Import/BrowseTemplate.ome
+/OME/Import/DisplayTemplate.ome
 /OME/Annotations/AnnotationModule.ome
 /OME/Annotations/AdministrationModule.ome
 /OME/Annotations/annotations.ome
