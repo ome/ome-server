@@ -823,13 +823,13 @@ sub execute {
 	
 			# Testing
 			print "  \\_ Testing ";
-			
-			copy_tree("src/perl2/OME/Matlab/", $OME_TMP_DIR);  # problems here result in croaks
-			fix_ownership({owner => "$MATLAB->{USER}"}, "$OME_TMP_DIR/Matlab");
-			utime time, time, '$OME_TMP_DIR/Matlab/Makefile'; # change this Makefile's timestamp to now. i.e. make it later than Makefile.PL
-			$retval = test_module ("$OME_TMP_DIR/Matlab", $LOGFILE, 
+			my $copy_path = which('cp');
+			foreach (`$copy_path -pr src/perl2/OME/Matlab $OME_TMP_DIR/install 2>&1`) {
+				croak "Couldn't copy src/perl2/OME/Matlab for testing to $OME_TMP_DIR/install : $_";
+			}
+			$retval = test_module ("$OME_TMP_DIR/install/Matlab", $LOGFILE, 
 				{user =>"$MATLAB->{USER}"});
-			rmtree("$OME_TMP_DIR/Matlab"); # problems here result in croaks
+			rmtree("$OME_TMP_DIR/install/Matlab"); # problems here result in croaks
 				
 			print BOLD, "[FAILURE]", RESET, ".\n"
 				and croak "Tests failed, see $LOGFILE_NAME for details."
