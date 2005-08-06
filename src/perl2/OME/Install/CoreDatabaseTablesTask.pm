@@ -719,7 +719,7 @@ BLURB
              template_dir     => $OME_BASE_DIR."/html/Templates",
              matlab_src_dir   => $MATLAB->{MATLAB_SRC},
              matlab_exec      => $MATLAB->{EXEC},             
-             matlab_user      => $MATLAB->{MATLAB_USER},
+             matlab_user      => $MATLAB->{USER},
              executor         => $DEFAULT_EXECUTOR,
             });
 
@@ -747,55 +747,63 @@ sub to_base {
 }
 
 
+
 sub update_configuration {
     my $session = shift;
     my $factory = $session->Factory();
     my $var;
-
-    # Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
-    # was ignored due to a pre-existing configuration
-    $var = $factory->findObject('OME::Configuration::Variable',
-            configuration_id => 1, name => 'db_version') or croak 
-            "Could not retreive the configuration variable db_version";
-    $var->value ($DB_VERSION);
-    $var->storeObject();
-
-    $var = $factory->findObject('OME::Configuration::Variable',
-            configuration_id => 1, name => 'import_formats') or croak 
-            "Could not retreive the configuration variable import_formats";
-    $var->value ($IMPORT_FORMATS);
-    $var->storeObject();
-
-	# Make sure there is an executor
-    $var = $factory->findObject('OME::Configuration::Variable',
-            configuration_id => 1, name => 'executor');
-    unless ($var) {
-        $var = $factory->newObject ('OME::Configuration::Variable',
+	
+	my $MATLAB = $ENVIRONMENT->matlab_conf();
+	my %update_configuration_variables = (
+		# Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
+		# was ignored due to a pre-existing configuration    
+    	db_version     => $DB_VERSION,
+		import_formats => $IMPORT_FORMATS,
+		# Make sure there is an executor
+		executor       => $DEFAULT_EXECUTOR,
+		super_user     => $session->experimenter_id(),
+		# update the matlab vars in case the matlab installation et. al. changed since last install
+		matlab_user    => $MATLAB->{USER},
+		matlab_exec    => $MATLAB->{EXEC},
+		matlab_src_dir => $MATLAB->{MATLAB_SRC},
+	);
+	
+	# This hash controls whether new configuration variables are created or not
+	# if = 0, variable is expected to be already in the DB. If not, installer croaks
+	# if = 1, variable is added to DB, as required.
+	my %new_configuration_variables = (
+		# these should already be there
+		db_version     => 0,
+		import_formats => 0,
+		executor       => 1,
+		# Note that there shouldn't ever be a superuser at this point
+		super_user     => 1,
+		# the matlab vars should already be there, but it doesn't matter if their not
+		matlab_user    => 1,
+		matlab_src_dir => 1,
+		# If updating from 2.4.0, this variable doesn't exist
+		matlab_exec    => 1,
+	);
+	
+	foreach my $var_name (keys %update_configuration_variables) {
+    	my $var = $factory->findObject('OME::Configuration::Variable',
+    									configuration_id => 1,
+    									name => $var_name);
+		if (not $var and not $new_configuration_variables{$var_name}) {
+			croak "Could not retreive the configuration variable $var_name";
+		} elsif (not $var) {
+			$var = $factory->newObject ('OME::Configuration::Variable',
             {
             configuration_id => 1,
-            name             => 'executor',
-            value            => $DEFAULT_EXECUTOR,
+            name             => $var_name,
+            value            => $update_configuration_variables {$var_name},
             });
+		} else {
+            $var->value ($update_configuration_variables {$var_name});
+		}
 	    $var->storeObject();
-    }
-
-	# Make sure that there is a super_user
-	# Note that there shouldn't ever be a superuser at this point
-    $var = $factory->findObject('OME::Configuration::Variable',
-            configuration_id => 1, name => 'super_user');
-    unless ($var) {
-        $var = $factory->newObject ('OME::Configuration::Variable',
-            {
-            configuration_id => 1,
-            name             => 'super_user',
-            value            => $session->experimenter_id(),
-            });
-    }
-    
-    $var->value ($session->experimenter_id());
-	$var->storeObject();
-    
-    
+            
+	}
 
     $factory->commitTransaction();
     return 1;
