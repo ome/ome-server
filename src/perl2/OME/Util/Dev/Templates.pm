@@ -73,9 +73,11 @@ already registered will be ignored.
 
 Options:
 
-	-u all          Update all template directories.
-	-u Display/One  Update the Display/One directory
-	-u Display/Many Update the Display/Many directory
+	-u all          		Update all template directories.
+	-u Display/One  		Update the Display/One directory
+	-u Display/Many 		Update the Display/Many directory
+	-u Actions/Annotator	Update the Actions/Annotator directory
+	-u Browse				Update the Browse directory
 
 USAGE
     CORE::exit(1);
@@ -85,9 +87,11 @@ USAGE
 sub update {
 	my ($self,$commands) = @_;
 	my %allowed_paths = (
-	#   'Path'         => [ 'updateFunction', @parameters_to_pass_into_function ],
-		'Display/One'  => [ 'updateDisplayTemplates', 'one' ],
-		'Display/Many' => [ 'updateDisplayTemplates', 'many' ],
+	#   'Path'        	    => [ 'updateFunction', @parameters_to_pass_into_function ],
+		'Display/One' 	    => [ 'updateDisplayTemplates', 'one' ],
+		'Display/Many' 		=> [ 'updateDisplayTemplates', 'many' ],
+		'Actions/Annotator' => [ 'updateAnnotationTemplates'],
+		'Browse'			=> [ 'updateBrowseTemplates' ]
 	);
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
@@ -130,7 +134,7 @@ sub updateDisplayTemplates {
 	my @new_tmpls;
 	
 	print "\tScanning $tmpl_dir\n";
-	my @file_paths = get_template_files( $tmpl_dir, 1);
+	my @file_paths = get_template_files( $tmpl_dir, 0);
 	foreach my $path (@file_paths) {
 		# parse the path
 		my $file = $path;
@@ -161,9 +165,9 @@ sub updateDisplayTemplates {
 #			$file_contents .= $line;
 #		}
 #		close(FH);
-	
+		$file =~ s/_\d+.tmpl$//;
 		my %data_hash = (
-			Name       => "(default)",
+			Name       => $file,
 			Arity      => $arity,
 			Mode       => $mode,
 			ObjectType => $object_type,
@@ -176,6 +180,131 @@ sub updateDisplayTemplates {
 			print "\tCreating new template attribute for $path\n";
 			my $new_tmpl = $factory->newAttribute( "DisplayTemplate", undef, $mex, \%data_hash ) 
 				or die "Couldn't make a new DisplayTemplate for $path";
+			push( @new_tmpls, $new_tmpl );
+		}
+	}
+	$mex->status( 'FINISHED' );
+	$mex->storeObject();
+	$session->commitTransaction();
+	return ($mex, @new_tmpls );
+}
+
+sub updateAnnotationTemplates {
+	my ($self, $tmpl_dir, $arity) = @_;
+	my $session = $self->getSession();
+	my $factory = $session->Factory();
+	my $module = $factory->findObject( 'OME::Module', name => 'Global import' )
+		or die "couldn't laod Global import module";
+	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G' )
+		or die "Couldn't get mex for Global import";
+	my @new_tmpls;
+	
+	print "\tScanning $tmpl_dir\n";
+	my @file_paths = get_template_files( $tmpl_dir, 1);
+	foreach my $path (@file_paths) {
+		# parse the path
+		my $file = $path;
+		$file =~ s/$tmpl_dir\/?//;
+		my @parts = split( /\//, $file );
+		$file = pop @parts;
+		
+		# figure out object type
+		my $object_type;
+		# a DBObject template?
+		if( @parts && $parts[0] eq 'OME' ) {
+			$object_type = join( '::', @parts );
+		# or a ST template?
+		} elsif( scalar( @parts) > 0 ) {
+			$object_type = '@'.$parts[0];
+		}
+		
+		# object_type will be generic IFF it's a generic template
+		$object_type = '_generic' unless ($object_type);
+	
+		# get the file contents
+#		open( FH, "< $path" );
+#		my $file_contents;
+#		while( defined( my $line = <FH> ) ) {
+#			$file_contents .= $line;
+#		}
+#		close(FH);
+		$file =~ s/_\d+.tmpl$//;
+		my %data_hash = (
+			Name       => $file,
+#			Arity      => $arity,
+			ObjectType => $object_type,
+#			Template   => $file_contents
+			Template   => $path,
+#			ImplementedBy => ?
+		);
+		
+		# turn all this into a new AnnotationTemplate?
+		unless( $factory->findAttribute( "AnnotationTemplate", \%data_hash ) ) {
+			print "\tCreating new template attribute for $path\n";
+			my $new_tmpl = $factory->newAttribute( "AnnotationTemplate", undef, $mex, \%data_hash ) 
+				or die "Couldn't make a new AnnotationTemplate for $path";
+			push( @new_tmpls, $new_tmpl );
+		}
+	}
+	$mex->status( 'FINISHED' );
+	$mex->storeObject();
+	$session->commitTransaction();
+	return ($mex, @new_tmpls );
+}
+
+sub updateBrowseTemplates {
+	my ($self, $tmpl_dir) = @_;
+	my $session = $self->getSession();
+	my $factory = $session->Factory();
+	my $module = $factory->findObject( 'OME::Module', name => 'Global import' )
+		or die "couldn't laod Global import module";
+	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G' )
+		or die "Couldn't get mex for Global import";
+	my @new_tmpls;
+	
+	print "\tScanning $tmpl_dir\n";
+	my @file_paths = get_template_files( $tmpl_dir, 1);
+	foreach my $path (@file_paths) {
+		# parse the path
+		my $file = $path;
+		$file =~ s/$tmpl_dir\/?//;
+		my @parts = split( /\//, $file );
+		$file = pop @parts;
+		
+		# figure out object type
+		my $object_type;
+		# a DBObject template?
+		if( @parts && $parts[0] eq 'OME' ) {
+			$object_type = join( '::', @parts );
+		# or a ST template?
+		} elsif( scalar( @parts) > 0 ) {
+			$object_type = '@'.$parts[0];
+		}
+		
+		# object_type will be generic IFF it's a generic template
+		$object_type = '_generic' unless ($object_type);
+	
+		# get the file contents
+#		open( FH, "< $path" );
+#		my $file_contents;
+#		while( defined( my $line = <FH> ) ) {
+#			$file_contents .= $line;
+#		}
+#		close(FH);
+		$file =~ s/_\d+.tmpl$//;
+		my %data_hash = (
+			Name       => $file,
+			ObjectType => $object_type,
+#			Template   => $file_contents
+			Template   => $path,
+#			ImplementedBy => CG_Search.pm
+		);
+		
+		# turn all this into a new BrowseTemplate?
+		unless( $factory->findAttribute( "BrowseTemplate", \%data_hash ) ) {
+			print "\tCreating new template attribute for $path\n";
+			my $new_tmpl = $factory->newAttribute( "BrowseTemplate", undef, $mex, \%data_hash ) 
+				or die "Couldn't make a new BrowseTemplate for $path";
 			push( @new_tmpls, $new_tmpl );
 		}
 	}
