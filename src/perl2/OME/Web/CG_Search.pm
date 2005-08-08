@@ -177,45 +177,39 @@ sub getPageBody {
 		$tmpl_data{ 'image_thumbs' } = $self->Renderer()->renderArray( \@image_thumbs, 'ref_cg_display_mass', { type => 'OME::Image' });
 	
 		$tmpl->param( %tmpl_data );
-		
-		$html =
-			$debug.
-			$q->startform().
-			$tmpl->output().
-			$q->hidden( -name => 'Template' ).
-			$q->endform();
-	} else {
-		my @templates = $factory->findObjects('@BrowseTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
-		my $popup;
-		my $button;
-		my $url = $self->pageURL('OME::Web::CG_ConstructTemplate');
-		my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
-							 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
-							 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
+	}
+	
+	my @templates = $factory->findObjects('@BrowseTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
+	my $popup;
+	my $button;
+	my $url = $self->pageURL('OME::Web::CG_ConstructTemplate');
+	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
+						 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
+						 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
 
-		if ( scalar(@templates) > 0 ) {
-			$directions = "Select a template:<br>";
-			$popup = $q->popup_menu(
-								-name     => 'Template',
-								'-values' =>  [ map( $_->id, @templates) ],
-								-labels   =>  { map{ $_->id => $_->Name } @templates }
-							);
-			$button = $q->submit (
-							-name => 'LoadTemplate',
-							-value => 'Go'
-						 );
-		}
-		
-		$html =
+	if ( scalar(@templates) > 0 ) {
+		$directions = "Current template:";
+		$popup = $q->popup_menu(
+							-name     => 'Template',
+							'-values' =>  [ map( $_->id, @templates) ],
+							-labels   =>  { map{ $_->id => $_->Name } @templates }
+						);
+		$button = $q->submit (
+						-name => 'LoadTemplate',
+						-value => 'Load'
+					 );
+	}
+	
+	$html =
 		$debug.
 		$q->startform().
 		$directions.
 		$popup.
-		$button.
-		$q->endform();
-		$q->endform();
-	}
+		$button;
 	
+	$html .= $tmpl->output() if ($tmpl);
+	$html .= $q->hidden( -name => 'Template' ).
+			 $q->endform();
 
 	return ('HTML',$html);
 	

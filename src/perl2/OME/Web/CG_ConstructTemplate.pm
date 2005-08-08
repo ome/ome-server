@@ -141,7 +141,7 @@ sub getPageBody {
 		}
 		my $concatenated_comments = join(",", @comments);
 		print TMPL "<!-- $concatenated_comments -->\n";
-		print TMPL "<a href = \"javascript:selectMany('OME::Image', 'images_to_annotate');\" class=\"ome_widget\">Search for images to annotate</a><br>
+		print TMPL "<a href = \"javascript:selectMany('OME::Image', 'images_to_annotate');\"><br>Search for images to annotate</a><br>
 <tr>
 	<td class=\"ome_td\"><center>CategoryGroup</center></td>
 	<td class=\"ome_td\"><center>Categories</center></td>

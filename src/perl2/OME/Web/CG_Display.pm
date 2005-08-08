@@ -165,17 +165,11 @@ sub getPageBody {
 		my $mode = $1;
 		$tmpl_data{ $image_request } = $self->Renderer()->render( $image, $mode);
 		$tmpl->param( %tmpl_data );
-		
-		$html =
-			$debug.
-			$q->startform().
-			$tmpl->output().
-			$q->hidden( -name => 'Template' ).
-			$q->endform();
-	} else {
-		# render the dropdown list of available templates, and if they select
-		# one, refresh the page with that param in the URL
-		my @templates = $factory->findObjects('@DisplayTemplate', { ObjectType =>  'OME::Image', Arity => 'one' } );
+	}
+	
+	# render the dropdown list of available templates, and if they select
+	# one, refresh the page with that param in the URL
+	my @templates = $factory->findObjects('@DisplayTemplate', { ObjectType =>  'OME::Image', Arity => 'one' } );
 # 		my @user_templates;
 # 		foreach my $tmpl_attr (@templates) {
 # 			my $mexes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($tmpl_attr);
@@ -183,34 +177,36 @@ sub getPageBody {
 # 			my $tmp = $mex->{'__fields'}->{'module_executions'}->{'module_id'};
 # 			$debug .= join("<br>", keys(%$tmp))."<br><br><br>";
 # 		}
-		my $popup;
-		my $button;
-		my $url = $self->pageURL('OME::Web::CG_ConstructTemplate');
-		my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
-							 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
-							 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
+	my $popup;
+	my $button;
+	my $url = $self->pageURL('OME::Web::CG_ConstructTemplate');
+	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
+						 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
+						 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
 
-		if ( scalar(@templates) > 0 ) {
-			$directions = "Select a template:<br>";
-			$popup = $q->popup_menu(
-								-name     => 'Template',
-								'-values' =>  [ map( $_->id, @templates) ],
-								-labels   =>  { map{ $_->id => $_->Name } @templates }
-							);
-			$button = $q->submit (
-							-name => 'LoadTemplate',
-							-value => 'Go'
-						 );
-		}
-		
-		$html =
+	if ( scalar(@templates) > 0 ) {
+		$directions = "Current template:<br>";
+		$popup = $q->popup_menu(
+							-name     => 'Template',
+							'-values' =>  [ map( $_->id, @templates) ],
+							-labels   =>  { map{ $_->id => $_->Name } @templates }
+						);
+		$button = $q->submit (
+						-name => 'LoadTemplate',
+						-value => 'Load'
+					 );
+	}
+	
+	$html =
 		$debug.
 		$q->startform().
 		$directions.
 		$popup.
-		$button.
-		$q->endform();
-	}
+		$button;
+	
+	$html .= $tmpl->output() if ($tmpl);
+	$html .= $q->hidden( -name => 'Template' ).
+			 $q->endform();
 
 	return ('HTML',$html);
 	
