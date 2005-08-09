@@ -66,14 +66,25 @@ sub getPageBody {
     my @categoryGroups;
     my $html;
 
-	# Load the correct template
+	# Load the correct template and make sure the URL still carries the template
+	# name.
 	my $tmpl_dir = $self->actionTemplateDir();
-	my $which_tmpl = $q->param( 'Template' );
+	my $which_tmpl = $q->url_param( 'Template' );
+	my $referer = $q->referer();
+	my $url = $self->pageURL('OME::Web::CG_Annotator');
+	if ($referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
+		$which_tmpl = $1;
+		$which_tmpl =~ s/%20/ /;
+		return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
+	}
+	$which_tmpl =~ s/%20/ /;
 	my $tmpl;
 	
 	if ($which_tmpl) {
-		my $tmplAttr = $factory->loadObject( '@AnnotationTemplate', $which_tmpl )
-			or die "Could not load AnnotationTemplate with id $which_tmpl";
+		# my $tmplAttr = $factory->loadObject( '@AnnotationTemplate', $which_tmpl )
+# 			or die "Could not load AnnotationTemplate with id $which_tmpl";
+		my $tmplAttr = $factory->findObject( '@AnnotationTemplate', Name => $which_tmpl )
+						or die "Could not load AnnotationTemplate with name $which_tmpl";
 		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
 										path => $tmpl_dir,
 										case_sensitive => 1 );
@@ -217,7 +228,8 @@ sub getPageBody {
 	my @templates = $factory->findObjects('@AnnotationTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
 	my $popup;
 	my $button;
-	my $url = $self->pageURL('OME::Web::CG_ConstructTemplate');
+	my $url = $self->pageURL('OME::Web::CG_Annotator');
+	my $current = $q->url_param( 'Template' );
 	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
 						 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
 						 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
@@ -225,14 +237,17 @@ sub getPageBody {
 	if ( scalar(@templates) > 0 ) {
 		$directions = "Current Template: ";
 		$popup = $q->popup_menu(
-							-name     => 'Template',
-							'-values' =>  [ map( $_->id, @templates) ],
-							-labels   =>  { map{ $_->id => $_->Name } @templates }
+							-name     => 'Templates',
+							'-values' =>  [ map( $_->Name, @templates) ],
+							-labels   =>  { map{ $_->Name => $_->Name } @templates },
+							-default  => $current
 						);
 		$button = $q->submit (
 						-name => 'LoadTemplate',
 						-value => 'Load'
 					 );
+					 
+		return ('REDIRECT', $self->redirect($url.'&Template='.$q->param( 'Templates' ))) if ($q->param( 'LoadTemplate' ));
 	}
 
 	$html =
@@ -243,8 +258,7 @@ sub getPageBody {
 		$button;
 	
 	$html .= $tmpl->output() if ($tmpl);
-	$html .= $q->hidden( -name => 'Template' ).
-			 $q->endform();
+	$html .= $q->endform();
 	
 	return ('HTML',$html);	
 }

@@ -65,7 +65,6 @@ sub getPageBody {
 	
 	
 	my @construct_requests = $q->param( 'selected_objects' );
-	# $debug .= join("<br>", @construct_requests)."<br>";
 	my @categoryGroups = $factory->findObjects ('@CategoryGroup', __order => 'Name');
 	
 	my $tmpl_dir = $self->actionTemplateDir();
@@ -282,7 +281,7 @@ Images left to annotate:<br>
 		$session->commitTransaction();
 		
 		# Change this to redirect to the page the user came from?
-		return ('REDIRECT',$self->pageURL("OME::Web::CG_Annotator&Template=$id"));
+		return ('REDIRECT',$self->pageURL("OME::Web::CG_Annotator&Template=$templateName"));
 	}
 	
 	
