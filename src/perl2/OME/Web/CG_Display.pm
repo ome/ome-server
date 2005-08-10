@@ -89,11 +89,9 @@ sub getPageBody {
 	if ($which_tmpl) {
 	
 		my $image = $factory->loadObject( 'OME::Image', $id) if ($id);
-		# Load the template
-		# my $tmplAttr = $factory->loadObject( '@DisplayTemplate', $which_tmpl )
-# 						or die "Could not load DisplayTemplate with id $which_tmpl";
+		
 		my $tmplAttr = $factory->findObject( '@DisplayTemplate', Name => $which_tmpl )
-						or die "Could not load DisplayTemplate with name $which_tmpl";
+						or die "Could not find DisplayTemplate with name $which_tmpl";
 		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
 										path => $tmpl_dir,
 										case_sensitive => 1 );
@@ -193,8 +191,8 @@ sub getPageBody {
 	my $button;
 	my $url = $self->pageURL('OME::Web::CG_Display');
 	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
-						 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
-						 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
+						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
+						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 
 	if ( scalar(@templates) > 0 ) {
 		$directions = "Current template:<br>";

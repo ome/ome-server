@@ -140,17 +140,19 @@ sub getPageBody {
 		}
 		my $concatenated_comments = join(",", @comments);
 		print TMPL "<!-- $concatenated_comments -->\n";
-		print TMPL "<a href = \"javascript:selectMany('OME::Image', 'images_to_annotate');\"><br>Search for images to annotate</a><br>
+		print TMPL "<a href = \"javascript:selectMany('OME::Image', 'images_to_annotate');\"><br>Search for images to annotate</a><br><br>
 <tr>
 	<td class=\"ome_td\"><center>CategoryGroup</center></td>
 	<td class=\"ome_td\"><center>Categories</center></td>
 	<td class=\"ome_td\"><center>Add New Category</center></td>
+	<td class=\"ome_td\"><center>Info</center></td>
 </tr>
 <TMPL_LOOP NAME=cg.loop>
 	<tr>
 		<td class=\"ome_td\" align=\"left\"><TMPL_VAR NAME=cg.Name></td>
-		<td class=\"ome_td\" align=\"left\"><SELECT name=\"FromCG<TMPL_VAR NAME='cg.id'>\"><OPTION value=\"\">Do Not Annotate</option><TMPL_VAR NAME=cg.rendered_cats></select></td>
+		<td class=\"ome_td\" align=\"left\"><SELECT name=\"FromCG<TMPL_VAR NAME='cg.id'>\"><OPTION value=\"\">Do Not Annotate</option><TMPL_VAR NAME=cg.cat/render-list_of_options></select></td>
 		<td class=\"ome_td\" align=\"left\"><input type=\"text\" size=\"15\" name=\"CategoryAddTo<TMPL_VAR NAME='cg.id'>\" alt=\"blank\"></td>
+		<td class=\"ome_td\" align=\"left\"><TMPL_VAR NAME=cg.classification></td>
 	</tr>
 </TMPL_LOOP>
 </table>
@@ -176,7 +178,7 @@ Images left to annotate:<br>
 		<td align=\"left\">
 			<center><TMPL_VAR NAME=cg.Name></center>
 			<SELECT name=\"FromCG<TMPL_VAR NAME='cg.id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"30\">
-			<TMPL_VAR NAME=cg.rendered_cats></SELECT><br>
+			<TMPL_VAR NAME=cg.cat/render-list_of_options></SELECT><br>
 		</td>
 	</TMPL_LOOP>
 	<td valign=\"top\">
@@ -192,7 +194,7 @@ Images left to annotate:<br>
 		<td valign=\"top\">
 			<center><TMPL_VAR NAME=cg[1].Name><br>
 			<SELECT name=\"FromCG<TMPL_VAR NAME='cg[1].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"30\">
-			<TMPL_VAR NAME=cg[1].rendered_cats></SELECT><br>
+			<TMPL_VAR NAME=cg[1].cat/render-list_of_options></SELECT><br>
 		</td>
 		<td valign=\"top\">
 			<table>
@@ -203,17 +205,17 @@ Images left to annotate:<br>
 								<td>
 									<center><TMPL_VAR NAME=cg[2].Name><br>
 									<SELECT name=\"FromCG<TMPL_VAR NAME='cg[2].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"8\">
-									<TMPL_VAR NAME=cg[2].rendered_cats></SELECT><br>
+									<TMPL_VAR NAME=cg[2].cat/render-list_of_options></SELECT><br>
 								</td>
 								<td>
 									<center><TMPL_VAR NAME=cg[3].Name><br>
 									<SELECT name=\"FromCG<TMPL_VAR NAME='cg[3].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"8\">
-									<TMPL_VAR NAME=cg[3].rendered_cats></SELECT><br>
+									<TMPL_VAR NAME=cg[3].cat/render-list_of_options></SELECT><br>
 								</td>
 								<td>
 									<center><TMPL_VAR NAME=cg[4].Name><br>
 									<SELECT name=\"FromCG<TMPL_VAR NAME='cg[4].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"8\">
-									<TMPL_VAR NAME=cg[4].rendered_cats></SELECT><br>
+									<TMPL_VAR NAME=cg[4].cat/render-list_of_options></SELECT><br>
 								</td>
 								<td valign=\"top\">
 									<!-- fix this, it's just a hack -->

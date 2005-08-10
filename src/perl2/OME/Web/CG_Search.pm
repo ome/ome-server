@@ -82,10 +82,8 @@ sub getPageBody {
 	my $tmpl;
 	
 	if ($which_tmpl) {
-		# my $tmplAttr = $factory->loadObject( '@BrowseTemplate', $which_tmpl )
-# 						or die "Could not load BrowseTemplate with id $which_tmpl";
 		my $tmplAttr = $factory->findObject( '@BrowseTemplate', Name => $which_tmpl )
-						or die "Could not load BrowseTemplate with name $which_tmpl";
+						or die "Could not find BrowseTemplate with name $which_tmpl";
 		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
 										case_sensitive => 1 );
 		
@@ -129,20 +127,24 @@ sub getPageBody {
 			if( $use_cg_loop ) {
 				$cg_data{ 'cg.Name' } = $self->Renderer()->render( $cg, 'ref');
 				$cg_data{ "cg.id" } = $cg->id();
-				$cg_data{ "cg.rendered_cats" } = $self->Renderer()->renderArray( 
+				$cg_data{ "cg.cat/render-list_of_options" } = $self->Renderer()->renderArray( 
 					\@categoryList, 
 					'list_of_options', 
 					{ default_value => $categoryID, type => '@Category' }
 				);
 				push( @cg_loop_data, \%cg_data );
 			} else {
-				$tmpl_data{ 'cg['.$cntr.'].rendered_cats' } = $self->Renderer()->renderArray( 
+				$tmpl_data{ 'cg['.$cntr.'].cat/render-list_of_options' } = $self->Renderer()->renderArray( 
 					\@categoryList, 
 					'list_of_options', 
 					{ default_value => $categoryID, type => '@Category' }
-				);
-				$tmpl_data{ 'cg['.$cntr.'].Name' } = $self->Renderer()->render( $cg, 'ref');
-				$tmpl_data{ 'cg['.$cntr.'].id' } = $cg->id;
+				) if ( grep{ $_ eq 'cg['.$cntr.'].cat/render-list_of_options' } @parameter_names );
+				
+				$tmpl_data{ 'cg['.$cntr.'].Name' } = $self->Renderer()->render( $cg, 'ref')
+					if ( grep{ $_ eq 'cg['.$cntr.'].Name' } @parameter_names );
+					
+				$tmpl_data{ 'cg['.$cntr.'].id' } = $cg->id
+					if ( grep{ $_ eq 'cg['.$cntr.'].id' } @parameter_names );
 			}
 					
 			# If the user selects a Category...
@@ -172,8 +174,7 @@ sub getPageBody {
 			$cntr++;
 		}
 		$tmpl_data{ 'cg.loop' } = \@cg_loop_data if( $use_cg_loop );
-		#my $num = scalar(keys(%final_image_ids));
-		#$debug .= "There are $num images that meet the criteria.<br>";
+		
 		foreach my $id ( keys(%final_image_ids) ) {
 			push( @image_thumbs, $factory->loadObject( 'OME::Image', $id ) );
 		}
@@ -188,8 +189,8 @@ sub getPageBody {
 	my $button;
 	my $url = $self->pageURL('OME::Web::CG_Search');
 	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
-						 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
-						 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
+						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
+						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 
 	if ( scalar(@templates) > 0 ) {
 		$directions = "Current template:";

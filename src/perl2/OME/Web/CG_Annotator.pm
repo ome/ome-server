@@ -81,10 +81,8 @@ sub getPageBody {
 	my $tmpl;
 	
 	if ($which_tmpl) {
-		# my $tmplAttr = $factory->loadObject( '@AnnotationTemplate', $which_tmpl )
-# 			or die "Could not load AnnotationTemplate with id $which_tmpl";
 		my $tmplAttr = $factory->findObject( '@AnnotationTemplate', Name => $which_tmpl )
-						or die "Could not load AnnotationTemplate with name $which_tmpl";
+						or die "Could not find AnnotationTemplate with name $which_tmpl";
 		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
 										path => $tmpl_dir,
 										case_sensitive => 1 );
@@ -107,7 +105,7 @@ sub getPageBody {
 			push (@categoryGroups, $cg);
 		}
 		
-		# DNFW, this naming convention is tied to CG_Annotator.tmpl
+		# DNFW, this naming convention is tied to Annotator template
 		my @category_names = map( "FromCG".$_->id, @categoryGroups );
 		my @add_category_name = map( "CategoryAddTo".$_->id, @categoryGroups );
 		
@@ -122,7 +120,7 @@ sub getPageBody {
 					my $category = $factory->loadObject( '@Category', $categoryID )
 						or die "Couldn't load Category (id=$categoryID)";
 					# Create new 'Classification' attributes on image
-					my $currentImage = $factory->loadObject( 'OME::Image', ($q->param( 'currentImageID' )));
+					my $currentImage = $factory->loadObject( 'OME::Image', $q->param( 'currentImageID' ));
 					OME::Tasks::CategoryManager->classifyImage($currentImage, $category);
 				}
 			}
@@ -150,48 +148,12 @@ sub getPageBody {
 		# commit the DB transaction
 		$session->commitTransaction();
 		
-		# Render each Category Group and associated Category List
-		my @cg_loop_data;
-		my $use_cg_loop = grep{ $_ eq 'cg.loop'} @parameter_names;
-		my $cntr = 1;
-		foreach my $cg (@categoryGroups) {
-			my $label = "FromCG".$cg->id;
-			my $categoryID = $q->param( $label );
-			
-			# what we'd like to have sometime
-			#$self->Renderer()->populateTemplate( 'template_name', { "cg_".$cntr => $cg } );
-			
-			my %cg_data;
-			my @categoryList = $cg->CategoryList;
-			if( $use_cg_loop ) {
-				$cg_data{ 'cg.Name' } = $self->Renderer()->render( $cg, 'ref');
-				$cg_data{ "cg.id" } = $cg->id();
-				$cg_data{ "cg.rendered_cats" } = $self->Renderer()->renderArray( 
-					\@categoryList, 
-					'list_of_options', 
-					{ default_value => $categoryID, type => '@Category' }
-				);
-				push( @cg_loop_data, \%cg_data );
-			} else {
-				$tmpl_data{ 'cg['.$cntr.'].Name' } = $self->Renderer()->render( $cg, 'ref');
-				$tmpl_data{ "cg[".$cntr."].id" } = $cg->id();
-				$tmpl_data{ "cg[".$cntr."].rendered_cats" } = $self->Renderer()->renderArray( 
-					\@categoryList, 
-					'list_of_options', 
-					{ default_value => $categoryID, type => '@Category' }
-				);
-			}
-			$cntr++;
-		}
-		$tmpl_data{ 'cg.loop' } = \@cg_loop_data
-			if( $use_cg_loop );
-		
 		# Get the list of ID's that are left to annotate
 		my $concatenated_image_ids = $q->param( 'images_to_annotate' );
 		
 		# sort by name
 		my @unsorted_image_ids = split( /,/, $concatenated_image_ids );
-		my @image_ids = sort( { ($factory->findObject( 'OME::Image', id => $a))->name cmp ($factory->findObject( 'OME::Image', id => $b))->name } @unsorted_image_ids );
+		my @image_ids = sort( { ($factory->loadObject( 'OME::Image', $a))->name cmp ($factory->loadObject( 'OME::Image', $b))->name } @unsorted_image_ids );
 		my @image_thumbs;
 		my $currentImageID;
 		
@@ -219,6 +181,61 @@ sub getPageBody {
 		$tmpl_data{ 'image_thumbs' } = $self->Renderer()->renderArray( \@image_thumbs, 'bare_ref_mass', { type => 'OME::Image' });
 		$tmpl_data{ 'image_id_list' } = join( ',', @image_ids); # list of ID's to annotate
 		
+		# Render each Category Group and associated Category List
+		my @cg_loop_data;
+		my $use_cg_loop = grep{ $_ eq 'cg.loop'} @parameter_names;
+		my $cntr = 1;
+		foreach my $cg (@categoryGroups) {
+			my $label = "FromCG".$cg->id;
+			my $categoryID = $q->param( $label );
+			my %cg_data;
+			my @categoryList = $cg->CategoryList;
+			my $currentImage = $factory->loadObject( 'OME::Image', $currentImageID);
+			my $classification = OME::Tasks::CategoryManager->getImageClassification($currentImage, $cg);
+			my $categoryName = $classification->Category->Name if ($classification);
+			
+			if( $use_cg_loop ) {
+				$cg_data{ 'cg.Name' } = $self->Renderer()->render( $cg, 'ref');
+				$cg_data{ "cg.id" } = $cg->id();
+				$cg_data{ "cg.cat/render-list_of_options" } = $self->Renderer()->renderArray( 
+					\@categoryList, 
+					'list_of_options', 
+					{ default_value => $categoryID, type => '@Category' }
+				);
+				
+				if ($currentImage) {
+				$cg_data{ 'cg.classification' } = "Classified as <b>$categoryName</b>"
+					if $categoryName;
+				$cg_data{ 'cg.classification' } = "<i>Unclassified</i>"
+					unless $categoryName;
+				}
+				push( @cg_loop_data, \%cg_data );
+			} else {
+				$tmpl_data{ 'cg['.$cntr.'].Name' } = $self->Renderer()->render( $cg, 'ref')
+					if ( grep{ $_ eq 'cg['.$cntr.'].Name' } @parameter_names );
+					
+				$tmpl_data{ "cg[".$cntr."].id" } = $cg->id()
+					if ( grep{ $_ eq 'cg['.$cntr.'].id' } @parameter_names );
+					
+				$tmpl_data{ 'cg['.$cntr.'].cat/render-list_of_options' } = $self->Renderer()->renderArray( 
+					\@categoryList, 
+					'list_of_options', 
+					{ default_value => $categoryID, type => '@Category' }
+				) if ( grep{ $_ eq 'cg['.$cntr.'].cat/render-list_of_options' } @parameter_names );
+				
+				if (( grep{ $_ eq 'cg['.$cntr.'].classification' } @parameter_names ) && $currentImage) {
+					$tmpl_data{ 'cg['.$cntr.'].classification' } = "Classified as <b>$categoryName</b>"
+						if $categoryName;
+					$tmpl_data{ 'cg['.$cntr.'].classification' } = "<i>Unclassified</i>"
+						unless $categoryName;
+				}
+			}
+			$cntr++;
+		}
+		
+		$tmpl_data{ 'cg.loop' } = \@cg_loop_data
+			if( $use_cg_loop );
+		
 		# populate the template
 		$tmpl->param( %tmpl_data );
 	}
@@ -231,8 +248,8 @@ sub getPageBody {
 	my $url = $self->pageURL('OME::Web::CG_Annotator');
 	my $current = $q->url_param( 'Template' );
 	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
-						 If you already have a template in your Actions/Annotator, Actions/Browse, or Actions/Display
-						 directory,<br>from the command line, run 'ome templates update -u Actions'</i>";
+						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
+						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 						 
 	if ( scalar(@templates) > 0 ) {
 		$directions = "Current Template: ";
