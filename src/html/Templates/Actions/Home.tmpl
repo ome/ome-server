@@ -27,8 +27,9 @@
 			<a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Project" class="ome_quiet">New Project</a> | 
 			<a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Dataset" class="ome_quiet">New Dataset</a> | 
 			<a href="serve.pl?Page=OME::Web::ImportImages" class="ome_quiet">Import Images</a> |
-			<a href="serve.pl?Page=OME::Web::Search&amp;Type=OME::Image&amp;__order=!inserted" class="ome_quiet">Recently Imported Images</a> |
-			<a href="serve.pl?Page=OME::Web::Search&amp;Type=OME::AnalysisChainExecution&amp;__order=!timestamp" class="ome_quiet">Recently Executed Chains</a>
+			
+			<a href="javascript: search('OME::Image', '__order', '!inserted');" class="ome_quiet">Recently Imported Images</a> |
+			<a href="javascript: search('OME::AnalysisChainExecution', '__order', '!timestamp');" class="ome_quiet">Recently Executed Chains</a>
 		</td>
 	</tr>
 </table>

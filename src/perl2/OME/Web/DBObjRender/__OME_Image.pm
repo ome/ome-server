@@ -99,6 +99,43 @@ sub _renderData {
 				if $currentAnnotation;
 		}
 	}
+	# last_data_1
+	if( exists $field_requests->{ 'last_data_1' } ) {
+		foreach my $request ( @{ $field_requests->{ 'last_data_1' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my @mexes = $obj->module_executions( __order => '!timestamp' );
+			my $last_module_execution = $mexes[0];
+			my @untypedOutputs = $last_module_execution->untypedOutputs();
+			my @STs = map( $_->semantic_type, @untypedOutputs );
+	    	my $first_ST = $STs[0];
+			my $attributes = OME::Tasks::ModuleExecutionManager->
+	    		getAttributesForMEX($last_module_execution,$first_ST);
+			my $last_data_1 = $attributes->[0];
+			$record{ $request_string } = $self->Renderer()->render( $last_data_1, 'ref' );
+		}
+	}
+	# last_data_2
+	if( exists $field_requests->{ 'last_data_2' } ) {
+		foreach my $request ( @{ $field_requests->{ 'last_data_2' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my @mexes = $obj->module_executions( __order => '!timestamp' );
+			my $last_module_execution = $mexes[1];
+			my $ST;
+			if( $last_module_execution->count_formal_outputs() == 0 ) {
+				my @untypedOutputs = $last_module_execution->untypedOutputs();
+				my @STs = map( $_->semantic_type, @untypedOutputs );
+	    		$ST = $STs[0];
+	    	} else {
+				my @STs = $last_module_execution->formal_outputs();
+	    		$ST = $STs[0];
+	    	}
+			my $attributes = OME::Tasks::ModuleExecutionManager->
+	    		getAttributesForMEX($last_module_execution,$ST);
+			my $last_data_2 = $attributes->[0];
+			$record{ $request_string } = $self->Renderer()->render( $last_data_2, 'ref' );
+		}
+	}
+	
 	# current_annotation_author:
 	if( exists $field_requests->{ 'current_annotation_author' } ) {
 		foreach my $request ( @{ $field_requests->{ 'current_annotation_author' } } ) {
@@ -171,10 +208,10 @@ sub _renderData {
 			
 			if( scalar( @$original_files ) > 1 ) {
 				my $more_info_url = 
- 					$self->pageURL( 'OME::Web::Search', {
- 						Type => '@OriginalFile',
+					$self->getSearchURL( 
+ 						'@OriginalFile',
  						id   => join( ',', map( $_->id, @$original_files ) ),
- 					} );
+					);
 				$record{ $request_string } = 
 					scalar( @$original_files )." files found. ".
 					"<a href='$more_info_url'>See individual listings</a> or ".

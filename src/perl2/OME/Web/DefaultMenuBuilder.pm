@@ -90,31 +90,31 @@ my @MENU = (
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { Type => 'OME::Project' },
+		url_param => { SearchType => 'OME::Project' },
 		text => 'Projects',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { Type => 'OME::Dataset' },
+		url_param => { SearchType => 'OME::Dataset' },
 		text => 'Datasets',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { Type => 'OME::Image' },
+		url_param => { SearchType => 'OME::Image' },
 		text => 'Images',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { Type => 'OME::ModuleExecution' },
+		url_param => { SearchType => 'OME::ModuleExecution' },
 		text => 'Module Executions',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { Type => 'OME::AnalysisChainExecution' },
+		url_param => { SearchType => 'OME::AnalysisChainExecution' },
 		text => 'Chain Executions',
 	},
 	{
@@ -193,7 +193,7 @@ my @MENU = (
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { Type => 'OME::AnalysisChainExecution' },
+		url_param => { SearchType => 'OME::AnalysisChainExecution' },
 		text => 'View Chain Results',
 	},
 	# ** OPTIONS **

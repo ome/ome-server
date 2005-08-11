@@ -116,11 +116,11 @@ sub _renderData {
 				# Link to the search page if this node has many NEXs
 				} else {
 					$link = "${nex_count}x <a href='".
-						$self->pageURL( 'OME::Web::Search', {
-							Type                     => 'OME::AnalysisChainExecution::NodeExecution',
+						$self->getSearchURL( 
+							'OME::AnalysisChainExecution::NodeExecution',
 							analysis_chain_node      => $node->id,
 							analysis_chain_execution => $obj->id
-						} ).
+						) .
 						"' title='View Executions of this node' ".
 						( $error_count ? 
 							'class="ome_error"' :

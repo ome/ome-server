@@ -1,11 +1,11 @@
 <table><tr><td valign="top">
 	<button type="submit" id="Search" name="Search"><span class="ome_header_title">Search</span></button><br><br>
-<TMPL_UNLESS NAME=Locked_Type>
+<TMPL_UNLESS NAME=Locked_SearchType>
 	Look for:<br>
 	<TMPL_VAR NAME=search_types>
 <TMPL_ELSE>
-	Search For: <TMPL_VAR NAME=Locked_Type>
-	<input type="hidden" name="Locked_Type" value="<TMPL_VAR NAME=formal_name>">
+	Search For: <TMPL_VAR NAME=Locked_SearchType>
+	<input type="hidden" name="Locked_SearchType" value="<TMPL_VAR NAME=formal_name>">
 </TMPL_UNLESS>
 <hr>
 <TMPL_VAR NAME=criteria_controls>

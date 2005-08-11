@@ -197,10 +197,11 @@ sub getPageBody {
 	
 	# Render outputs ( ungrouped )
 	foreach my $fo ( @formal_outputs ) {
-		my $more_info_url = $self->pageURL( 'OME::Web::Search', {
-			Type             => $fo->semantic_type()->requireAttributeTypePackage()->getFormalName(),
+		my $more_info_url = $self->getSearchURL( 
+			$fo->semantic_type()->requireAttributeTypePackage()->getFormalName(),
 			module_execution => $mex->id()
-		} );
+		);
+
 		push( @{ $tmpl_data{ outputs } }, { 
 			output => $tableMaker->getTable( 
 				{

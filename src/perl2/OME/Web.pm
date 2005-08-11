@@ -897,7 +897,7 @@ sub getObjDetailURL {
 
 =head2 getSearchAccessorURL
 
-	my $url_to_obj_detail = $self->getSearchAccessorURL( $obj, $method );
+	my $search_url = $self->getSearchAccessorURL( $obj, $method );
 
 $obj should be a DBObject instance. Attributes are fine.
 $method should be a 'has-many' or 'many-to-many' method of $obj
@@ -910,10 +910,30 @@ sub getSearchAccessorURL {
 	my ($self, $obj, $method) = @_;
 	$self->_loadTypeAndGetInfo( $obj->getAccessorReferenceType( $method ) );
 	return $self->pageURL( 'OME::Web::Search', {
-		Type         => $obj->getAccessorReferenceType( $method )->getFormalName(),
+		SearchType      => $obj->getAccessorReferenceType( $method )->getFormalName(),
 		accessor_type   => $obj->getFormalName(),
 		accessor_id     => $obj->id, 
 		accessor_method => $method
+	} );
+}
+
+=head2 getSearchURL
+
+	my $search_url = $self->getSearchURL( $obj_type, @search_params );
+
+same input parameters as $factory->findObjects()
+
+returns a url to a search page that corresponds to that kind of DB search
+
+=cut
+
+sub getSearchURL {
+	my ($self, $obj_type, @search_params) = @_;
+	my ($package_name, $common_name, $formal_name, $ST) = 
+		$self->_loadTypeAndGetInfo( $obj_type );
+	return $self->pageURL( 'OME::Web::Search', {
+		SearchType      => $formal_name, 
+		@search_params
 	} );
 }
 

@@ -138,7 +138,7 @@ sub __getQuickViewProjectData {
 	if ($p_count > 0) {
 			# Header
 		$p_header .= $q->a( {
-				href => $self->pageURL('OME::Web::Search', { Type => 'OME::Project' } ),
+				href => $self->getSearchURL( 'OME::Project' ),
 				class => 'ome_quiet',
 			}, 'Project Preview ');
 		$p_header .= $q->span({class => 'ome_quiet'}, "[$p_count project(s)]");

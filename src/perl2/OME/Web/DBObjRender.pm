@@ -246,10 +246,10 @@ sub _populate_object_in_template {
 				my ($foreign_key_class, $foreign_key_alias ) = @{ $obj->__hasManys()->{ $method } };
 				my ( undef, $search_path, $default_search_value ) = $self->SearchUtil()->
 					getRefSearchField( $foreign_key_class, $obj->getFormalName(), $foreign_key_alias, $obj );
-				$more_info_url = $self->pageURL( 'OME::Web::Search', {
-					Type         => $foreign_key_class,
+				$more_info_url = $self->getSearchURL( 
+					$foreign_key_class,
 					$search_path => $default_search_value
-				} );
+				);
 			} else { # many to many accessor needs the accessor field set
 				$more_info_url = $self->getSearchAccessorURL( $obj, $method )
 			}
@@ -351,7 +351,7 @@ sub renderArray {
 	my $field_requests = $self->_parse_tmpl_fields( [ $tmpl->param() ] );
 
 	# put together data for template
-	if( $objs && scalar( @$objs ) > 0 ) {
+	if( $objs && scalar( @$objs ) > 0 && $objs->[0]) {
 		my ($package_name, $common_name, $formal_name, $ST) =
 			$self->_loadTypeAndGetInfo( $objs->[0] );
 		

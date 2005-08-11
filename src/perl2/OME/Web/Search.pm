@@ -105,8 +105,8 @@ sub getMenuText {
 	return $menuText unless ref($self);
 
 	my $q    = $self->CGI();
-	my $type = $q->param( 'Type' );
-	$type = $q->param( 'Locked_Type' ) unless $type;
+	my $type = $q->param( 'SearchType' );
+	$type = $q->param( 'Locked_SearchType' ) unless $type;
 	if( $type ) {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 		return "$common_name";
@@ -119,8 +119,8 @@ sub getPageTitle {
 	my $menuText = "Search for something";
 	return $menuText unless ref($self);
 	my $q    = $self->CGI();
-	my $type = $q->param( 'Type' );
-	$type = $q->param( 'Locked_Type' ) unless $type;
+	my $type = $q->param( 'SearchType' );
+	$type = $q->param( 'Locked_SearchType' ) unless $type;
 	if( $type ) {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
     	return "Search for $common_name";
@@ -132,13 +132,13 @@ sub getPageBody {
 	my $self = shift;	
 	my $factory = $self->Session()->Factory();
 	my $q    = $self->CGI();
-	my $type = $q->param( 'Type' ) || $q->param( 'Locked_Type' );
+	my $type = $q->param( 'SearchType' ) || $q->param( 'Locked_SearchType' );
 	my $html = $q->startform( -action => $self->pageURL( 'OME::Web::Search' ) );
 	# Save the url-parameters if any were passed. The line above will strip them
 	# at the first submit.
 	my %do_not_save_these_url_params = (
 		'Page' => undef,
-		'Type' => undef
+		'SearchType' => undef
 	);
 	my @params_to_save = grep( ( not exists $do_not_save_these_url_params{ $_ } ), 
 		$q->url_param() );
@@ -211,7 +211,7 @@ END_HTML
 	);
 	
 	$tmpl_data{ search_types } = $q->popup_menu(
-		-name     => 'Type',
+		-name     => 'SearchType',
 		'-values' => [ 
 			'', 
 			@search_types, 
@@ -256,8 +256,8 @@ END_HTML
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 		
 		# finish setting template data not specific to search results
-		if( $q->param( 'Locked_Type' ) ) {
-			$tmpl_data{ Locked_Type } = $common_name;
+		if( $q->param( 'Locked_SearchType' ) ) {
+			$tmpl_data{ Locked_SearchType } = $common_name;
 			$tmpl_data{ formal_name } = $formal_name;
 		}
 
@@ -550,8 +550,8 @@ sub search {
 
 	my (%searchParams, @objects, $object_count);
 
-	my $type = $q->param( 'Type' );
-	$type = $q->param( 'Locked_Type' ) unless $type;
+	my $type = $q->param( 'SearchType' );
+	$type = $q->param( 'Locked_SearchType' ) unless $type;
 	my @search_names = $q->param( 'search_names' );
 	foreach my $search_on ( @search_names ) {
 		next unless ( $q->param( $search_on ) && $q->param( $search_on ) ne '');
