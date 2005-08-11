@@ -107,6 +107,13 @@ sub processFile {
 	$maxRow = $sheet->{ MaxRow };
 	$maxCol = $sheet->{ MaxCol };
 	
+	# Get the appropriate modules and mexes
+	my $global_module = $factory->findObject( 'OME::Module', name => 'Spreadsheet Global import' )
+			or die "couldn't load Spreadsheet Global import module";
+	my $global_mex = OME::Tasks::ModuleExecutionManager->createMEX($global_module,'G' )
+		or die "Couldn't get mex for Spreadsheet Global import";
+	my @objs;
+	
 	# Get the column headings - different process for excel and tab
 	if ( $type eq EXCEL ) {
 		for (my $col = 0; $col <= $maxCol; $col++) {
@@ -164,23 +171,17 @@ sub processFile {
 			}));
 	}
 	
- 	# If there are CG's that need to be created, create them
-	my ($mex, $objs);
-	if (scalar (@globalAnnotations)) {
-		$output .= "New Category Groups:<br>";
-		for (my $i=0; $i < scalar(@globalAnnotations); $i+=2) {
-			$output .= "Name =".$globalAnnotations[$i+1]->{Name}."<br>";
-		}
-		($mex, $objs) = OME::Tasks::AnnotationManager->annotateGlobal(@globalAnnotations);
-		@globalAnnotations = (); # Clear the array
-		
-		# Need this for later
-		foreach my $CG (@$objs) {
-			$CategoryGroups{$CG->Name()} = $CG;
-		}
-		$session->commitTransaction();
+ 	# If there are CG's that need to be created, create them		
+	$output .= "New Category Groups:<br>" if (scalar (@globalAnnotations));
+	for (my $i=0; $i < scalar(@globalAnnotations); $i+=2) {
+		$output .= "Name =".$globalAnnotations[$i+1]->{Name}."<br>";
+		my $obj = $factory->newAttribute( $globalAnnotations[$i], undef,
+										   $global_mex, $globalAnnotations[$i+1]);
+		$CategoryGroups{$obj->Name()} = $obj;
 	}
-	
+	@globalAnnotations = (); # Clear the array
+	$session->commitTransaction();
+
 	open (FILE, "< $fileToParse");
 	<FILE>; # Don't need the first line (column headings) anymore
 	
@@ -307,37 +308,35 @@ Try using IDs instead, to ensure uniqueness\n" if (scalar(@objects) > 1);
 				}
 			}
 			
-			# Future support for other types of granularity?
-			
+			# Future support for other types of granularity?			
 			$semanticElements{"$STName:$SEName:$SEValue"} = $SEValue;
 		}
 		
 		# Annotate for this particular image, if there were ST image annotations to be done
-		if (scalar (@imageAnnotations)) {
-			OME::Tasks::AnnotationManager->annotateImage($image->{ Image }, @imageAnnotations);
-			@imageAnnotations = ();
-			$session->commitTransaction();
+		for (my $i = 0; $i < scalar(@imageAnnotations); $i+=2) {
+			$factory->newAttribute( $imageAnnotations[$i], $image->{ Image },
+										   $global_mex, $imageAnnotations[$i+1]);
 		}
+		$session->commitTransaction();
 	}
 	close FILE;
 	
 	# If there are Categories or ST global annotations that need to be added to the
 	# database, add them.
-	if (scalar (@globalAnnotations)) {
-		$output .= "<br>New Categories:<br>";
-		($mex, $objs) = OME::Tasks::AnnotationManager->annotateGlobal(@globalAnnotations);
-		@globalAnnotations = ();
-		foreach my $object (@$objs) {
-			my $type = ref($object);
-			if ($type eq 'OME::SemanticType::__Category') {
-				my $catName = $object->Name();
-				$categories{$object->CategoryGroup()->Name().':'.$catName} = $object;
-				$output .= "Name = $catName<br>";
-			}
+	$output .= "<br>New Categories:<br>" if scalar(@globalAnnotations);
+	for (my $i = 0; $i < scalar(@globalAnnotations); $i+=2) {
+		my $object = $factory->newAttribute( $globalAnnotations[$i], undef,
+										   $global_mex, $globalAnnotations[$i+1]);
+		my $type = ref($object);
+		if ($type eq 'OME::SemanticType::__Category') {
+			my $catName = $object->Name();
+			$categories{$object->CategoryGroup()->Name().':'.$catName} = $object;
+			$output .= "Name = $catName<br>";
 		}
-		$session->commitTransaction();
 	}
-
+	$session->commitTransaction();
+	@globalAnnotations = ();
+	
 	# Apply the CategoryGroup annotations to the images
 	my @lostImages;
 	if (scalar(keys %images) > 0) {
