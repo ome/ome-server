@@ -60,11 +60,11 @@ sub getPageBody {
 	my $self = shift ;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
-    my $factory = $session->Factory();
-    my %tmpl_data;
-    my $debug;
-    my @categoryGroups;
-    my $html;
+	my $factory = $session->Factory();
+	my %tmpl_data;
+	my $debug;
+	my @categoryGroups;
+	my $html;
 
 	# Load the correct template and make sure the URL still carries the template
 	# name.
@@ -128,7 +128,7 @@ sub getPageBody {
 			
 		# If the user clicks "Add" then add the category in the text box to the appropriate CG
 		if ( $q->param( 'AddToCG' ) ) {
-			# Add a category
+			# for each category group
 			foreach my $categoryGroupName ( @add_category_name ) {
 				my %data_hash;
 				my $categoryToAdd = $q->param( $categoryGroupName );
@@ -194,6 +194,7 @@ sub getPageBody {
 			my $classification = OME::Tasks::CategoryManager->getImageClassification($currentImage, $cg);
 			my $categoryName = $classification->Category->Name if ($classification);
 			
+			# If the template is using a loop, the variable names will be different
 			if( $use_cg_loop ) {
 				$cg_data{ 'cg.Name' } = $self->Renderer()->render( $cg, 'ref');
 				$cg_data{ "cg.id" } = $cg->id();
@@ -203,6 +204,7 @@ sub getPageBody {
 					{ default_value => $categoryID, type => '@Category' }
 				);
 				
+				# If there's actually an image there.
 				if ($currentImage) {
 				$cg_data{ 'cg.classification' } = "Classified as <b>$categoryName</b>"
 					if $categoryName;
@@ -211,6 +213,10 @@ sub getPageBody {
 				}
 				push( @cg_loop_data, \%cg_data );
 			} else {
+				# The greps are used to see if the user actually wants
+				# the variables in question. It is not used in the loop
+				# because the variables are not in the list of parameters.
+				# FIXME!
 				$tmpl_data{ 'cg['.$cntr.'].Name' } = $self->Renderer()->render( $cg, 'ref')
 					if ( grep{ $_ eq 'cg['.$cntr.'].Name' } @parameter_names );
 					
@@ -240,14 +246,15 @@ sub getPageBody {
 		$tmpl->param( %tmpl_data );
 	}
 	
-	# render the dropdown list of available templates, and if they select
-	# one, refresh the page
+	# render the dropdown list of available templates
+	
 	my @templates = $factory->findObjects('@AnnotationTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
 	my $popup;
 	my $button;
 	my $url = $self->pageURL('OME::Web::CG_Annotator');
+	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
 	my $current = $q->url_param( 'Template' );
-	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
+	my $directions = "<i>There are no templates in the database. <a href=\"$createURL\">Create a template</a><br><br>
 						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
 						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 						 

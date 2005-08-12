@@ -148,7 +148,7 @@ sub processFile {
 
 		# First col could be Image.Name or Image.id, or it might not be
  		if ($colHead eq 'Image.Name' or $colHead eq 'Image.id') {
-			# ignore it for now (it's neither ST or CG)
+			# ignore it for now (it's neither ST nor CG)
 		} elsif ($STName && $SEName) {
  			$STCols{ $colCounter } = 1;
  		} else { 
@@ -230,7 +230,6 @@ sub processFile {
 		if ($imageIdentifier) {
 			my @objects = $factory->findObjects ( 'OME::Image', { name => $imageIdentifier } )
 									if ($columnHeadings[0] eq 'Image.Name');
-			#$output .= "Objects is ".join("<br>", @objects)."<br>";
 			@objects = $factory->findObjects ( 'OME::Image', { id => $imageIdentifier } )
 									if ($columnHeadings[0] eq 'Image.id');
 			die "There are two images in the database with that name $imageIdentifier.
@@ -239,7 +238,6 @@ Try using IDs instead, to ensure uniqueness\n" if (scalar(@objects) > 1);
 				Image => $objects[0],
 			} unless exists $images{$imageIdentifier};
 			$image = $images{ $imageIdentifier };
-			#$output .= join("<br>", $image->{Image}->name)."<br>";
 		}
 		
 		# Process the CG Columns in order
@@ -268,7 +266,7 @@ Try using IDs instead, to ensure uniqueness\n" if (scalar(@objects) > 1);
 		my @stkeys = sort ( keys %STCols );
 		foreach my $index ( @stkeys ) {
 			my $STSE = $columnHeadings[$index];
-			die "STSE is undefined\n" unless $STSE;
+			die "Column heading is undefined\n" unless $STSE;
 			my $SEValue = shift(@seVals);
 
 			$STSE =~ m/(\w+)\.(\w+)/;
@@ -277,7 +275,7 @@ Try using IDs instead, to ensure uniqueness\n" if (scalar(@objects) > 1);
 
 			my $attribute = $factory->findObject('@'.$STName, { $SEName => $SEValue });
 			
-			# This is strictly to calculate the granularity of the ST
+			# This is strictly to get the granularity of the ST
 			my $ST = $factory->findObject('OME::SemanticType', { name => $STName });
 			my $granularity = $ST->granularity;
 			
@@ -288,7 +286,7 @@ Try using IDs instead, to ensure uniqueness\n" if (scalar(@objects) > 1);
 				next;
 			}
 			
-			# Granularity is Image, so do annotateImage
+			# Granularity is Image, so do image annotation
 			elsif ( exists($image->{ Image }) && $granularity eq 'I') {
 				unless ($attribute or exists $semanticElements{ "$STName:$SEName:$SEValue" }) {
 					push ( @imageAnnotations, ($STName,{
@@ -298,7 +296,7 @@ Try using IDs instead, to ensure uniqueness\n" if (scalar(@objects) > 1);
 				}
 			}
 			
-			# Granularity is Global, so do annotateGlobal
+			# Granularity is Global, so do global
 			elsif ( $granularity eq 'G' ) {
 				unless ($attribute or exists $semanticElements{ "$STName:$SEName:$SEValue" }) {
 					push ( @globalAnnotations, ($STName,{
@@ -308,7 +306,6 @@ Try using IDs instead, to ensure uniqueness\n" if (scalar(@objects) > 1);
 				}
 			}
 			
-			# Future support for other types of granularity?			
 			$semanticElements{"$STName:$SEName:$SEValue"} = $SEValue;
 		}
 		

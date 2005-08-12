@@ -109,7 +109,7 @@ sub getPageBody {
 		my %final_image_ids;
 		my $firstCG = 1;
 		
-		# This code is for filtering displayed thumbs and should be standard for all CG display templates
+		# This code is for filtering displayed thumbs
 		# I don't like the way this works: it seems messy and redundant.
 		# Perhaps there's a better way to do this, but I can't figure it out.
 		
@@ -123,6 +123,7 @@ sub getPageBody {
 			my $categoryID = $q->param( $label );
 			
 			my @categoryList = $cg->CategoryList;
+			# First, render the various lists and whatnot
 			my %cg_data;
 			if( $use_cg_loop ) {
 				$cg_data{ 'cg.Name' } = $self->Renderer()->render( $cg, 'ref');
@@ -146,7 +147,8 @@ sub getPageBody {
 				$tmpl_data{ 'cg['.$cntr.'].id' } = $cg->id
 					if ( grep{ $_ eq 'cg['.$cntr.'].id' } @parameter_names );
 			}
-					
+			
+			# Now do filtering
 			# If the user selects a Category...
 			if ( $q->param( 'GetThumbs' ) ) {
 				my @image_hashes = OME::Tasks::CategoryManager->getImagesInCategory($categoryID);
@@ -188,7 +190,8 @@ sub getPageBody {
 	my $popup;
 	my $button;
 	my $url = $self->pageURL('OME::Web::CG_Search');
-	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
+	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
+	my $directions = "<i>There are no templates in the database. <a href=\"$createURL\">Create a template</a><br><br>
 						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
 						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 

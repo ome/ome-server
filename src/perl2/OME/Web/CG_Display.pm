@@ -57,19 +57,18 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
-# ADD ERROR CHECKING
 sub getPageBody {
 	my $self = shift ;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
-    my $factory = $session->Factory();
-    my $dataset = $session->dataset();
-    my %tmpl_data;
-    my $debug;
-    my @categoryGroups;
-    my $html;
-    
-    # Load the correct template and make sure the URL still carries the template
+    	my $factory = $session->Factory();
+    	my $dataset = $session->dataset();
+    	my %tmpl_data;
+    	my $debug;
+    	my @categoryGroups;
+    	my $html;
+    	
+    	# Load the correct template and make sure the URL still carries the template
 	# name.
 	my $tmpl_dir = $self->actionTemplateDir();
 	my $which_tmpl = $q->url_param( 'Template' );
@@ -124,6 +123,7 @@ sub getPageBody {
 				my $category;
 				$category = $classification->Category if ($classification);
 				
+				# If the template is using a loop, the variable names will be different
 				my %cg_data;
 				if( $use_cg_loop ) {
 					$cg_data{ 'cg/render-ref' } = $self->Renderer()->render( $cg, 'ref')
@@ -145,6 +145,10 @@ sub getPageBody {
 					
 					push( @cg_loop_data, \%cg_data );
 				} else {
+					# The greps are used to see if the user actually wants
+					# the variables in question. It is not used in the loop
+					# because the variables are not in the list of parameters.
+					# FIXME!
 					$tmpl_data{ 'cg['.$cntr.']/render-ref' } = $self->Renderer()->render( $cg, 'ref')
 						if( grep{ $_ eq 'cg['.$cntr.']/render-ref' } @parameter_names );
 						
@@ -189,8 +193,9 @@ sub getPageBody {
 # 		}
 	my $popup;
 	my $button;
-	my $url = $self->pageURL('OME::Web::CG_Display');
-	my $directions = "<i>There are no templates in the database. <a href=\"$url\">Create a template</a><br><br>
+	my $url = $self->pageURL('OME::Web::CG_ConstructTemplate');
+	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
+	my $directions = "<i>There are no templates in the database. <a href=\"$createURL\">Create a template</a><br><br>
 						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
 						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 

@@ -61,8 +61,6 @@ sub getPageBody {
 	my $session= $self->Session();
     my $factory = $session->Factory();
     my %tmpl_data;
-    my $debug;
-	
 	
 	my @construct_requests = $q->param( 'selected_objects' );
 	my @categoryGroups = $factory->findObjects ('@CategoryGroup', __order => 'Name');
@@ -77,10 +75,12 @@ sub getPageBody {
 	else {
 		my $templateName = $q->param( 'TemplateName' );
 		my $filename = $templateName;
+		
+		# Effort to standardize the file names - remove ".tmpl" extension
+		# if it exists (it will be added later) and replace all spaces with _
 		$filename =~ s/\.tmpl$//;
 		$filename =~ s/ /_/g;
 
-		# Make this file an attribute of the ST AnnotationTemplate
 		my $module = $factory->findObject( 'OME::Module', name => 'Global import' )
 			or die "couldn't load Global import module";
 		my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G' )
@@ -100,7 +100,7 @@ sub getPageBody {
 #			Arity      => $arity,
 			ObjectType => '@CategoryGroup',
 			Template   => $annotator_path,
-#			ImplementedBy => ?
+			ImplementedBy => "CG_Annotator.pm"
 		);
 		
 		my %browse_data_hash = (
@@ -108,7 +108,7 @@ sub getPageBody {
 #			Arity      => $arity,
 			ObjectType => '@CategoryGroup',
 			Template   => $browse_path,
-#			ImplementedBy => ?
+			ImplementedBy => "CG_Browse.pm"
 		);
 		
 		my %display_data_hash = (
@@ -119,6 +119,7 @@ sub getPageBody {
 			Template   => $display_path
 		);
 		
+		# Make this file an attribute of the ST AnnotationTemplate
 		my $new_tmpl = $factory->newAttribute( "AnnotationTemplate", undef, $mex, \%annotator_data_hash ) 
 			or die "Couldn't make a new AnnotationTemplate for $annotator_path";
 		my $id = $new_tmpl->id;
@@ -130,8 +131,13 @@ sub getPageBody {
 <input type=\"hidden\" name=\"AddToCG\">
 <TMPL_VAR NAME=image_large><br>
 <table class=\"ome_table\">\n";
+		
+		# Print the line that lists the ids that will be loaded
 		my $concatenated_ids = join(",", @construct_requests);
 		print TMPL "<TMPL_VAR NAME=\"CategoryGroup.load/id-[$concatenated_ids]\">\n";
+		
+		# Get the name for each ID, so the user knows which ID is associated
+		# with which name
 		my @comments;
 		foreach my $req (@construct_requests) {
 			my $cg = $factory->findObject( '@CategoryGroup', { id => $req } );
@@ -163,6 +169,7 @@ Images left to annotate:<br>
 		close TMPL;
 		$session->commitTransaction();
 		
+		# Now create the Browse template attribute
 		$factory->newAttribute( "BrowseTemplate", undef, $mex, \%browse_data_hash ) 
 			or die "Couldn't make a new BrowseTemplate for $browse_path";
 		
@@ -234,6 +241,7 @@ Images left to annotate:<br>
 		$session->commitTransaction();
 		close TMPL;
 		
+		# Make Display template attribute
 		$factory->newAttribute( "DisplayTemplate", undef, $mex, \%display_data_hash ) 
 			or die "Couldn't make a new DisplayTemplate attribute for $display_path";
 		
@@ -294,7 +302,6 @@ Images left to annotate:<br>
 	$tmpl->param( %tmpl_data );
 
 	my $html =
-		$debug.
 		$q->startform().
 		$tmpl->output().
 		$q->endform();
