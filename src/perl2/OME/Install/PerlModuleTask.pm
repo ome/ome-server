@@ -404,7 +404,10 @@ my @modules = (
     },{
 	name => 'XML::LibXSLT',
 	repository_file => "$REPOSITORY/XML-LibXSLT-1.57.tar.gz",
-    }
+     },{
+	name => 'Spreadsheet::ParseExcel',
+	repository_file => "$REPOSITORY/Spreadsheet-ParseExcel-0.2603.tar.gz",
+   }
 );
 
 #*********
