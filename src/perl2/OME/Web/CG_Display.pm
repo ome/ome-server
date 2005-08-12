@@ -193,7 +193,7 @@ sub getPageBody {
 # 		}
 	my $popup;
 	my $button;
-	my $url = $self->pageURL('OME::Web::CG_ConstructTemplate');
+	my $url = $self->pageURL('OME::Web::CG_Display');
 	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
 	my $directions = "<i>There are no templates in the database. <a href=\"$createURL\">Create a template</a><br><br>
 						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
