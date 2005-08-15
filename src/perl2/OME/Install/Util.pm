@@ -37,10 +37,11 @@ use strict;
 use warnings;
 use English;
 use Carp;
+use Cwd;
 use File::Copy;
 use File::Basename;
 use File::Glob ':glob';
-use Cwd;
+use File::Find; 
 use File::Spec::Functions qw(rel2abs rootdir updir canonpath splitpath splitdir catdir catpath);
 
 require Exporter;
@@ -75,6 +76,8 @@ our @EXPORT = qw(
 		euid
 		get_mac
 		resolve_sym_links
+		scan_tree
+		copy_dir
 		);
 
 # Distribution detection
@@ -415,7 +418,7 @@ my %os_specific = (
 #********* LOCAL SUBROUTINES
 #*********
 
-# Returns an array of files with the filter removed, each value returned is an
+# Returns an array of files and directories with the filter removed, each value returned is an
 # absolute path.
 #
 # my @contents = scan_dir($dir, $filter);
@@ -461,6 +464,38 @@ sub scan_dir {
 	return @contents;
 }
 
+# Copies all files contained in a given origin directory to the specified
+# destination directory. Not Recursive
+#
+# copy_dir($from, $to [, $filter]);
+#
+# $from     Directory to copy contents from. It must be a valid path either
+#           absolute or relative to the working directory.
+# $to       Directory to copy contents to. It must be a valid path either
+#           absolute or relative to the working directory.
+# $filter   Optional coderef to filter out the contents of the $from directory.
+#           If specified, it is evaluated for each element of $from (locally
+#           setting $_ to each element) in order to select the elements for
+#           which the expression evaluated to true.
+# DIES      If a dir can't be opened for reading or a new dir can't be made or
+#           a file can't be copied.
+#
+# Example:
+#
+
+sub copy_dir {
+    my ($from, $to, $filter) = @_;
+
+	my @files = scan_dir ($from, $filter);
+	mkdir $to if (not -d $to);
+	
+	foreach my $item (@files) {
+		copy($item, $to) or croak "Couldn't copy file $item: $!" if -f $item;
+	}
+	
+	return;
+}
+
 
 #*********
 #********* EXPORTED SUBROUTINES
@@ -501,6 +536,52 @@ sub get_mac {
     my $get_mac = $os_specific{$OSNAME}->{get_mac};
 
     return &$get_mac;
+}
+
+# Recursively scans an origin directory and returns an array of directory name,
+# each value returned is an absolute path. N B: The origin directory is not
+# returned
+#
+# scan_tree($dir, [, $filter]);
+#
+# $dir      Directory to scan. It must be a valid path either absolute or
+#           relative to the working directory.
+#
+# $filter   Optional coderef to filter out the contents of the $dir directory.
+#           If specified, it is evaluated for each element of $dir (locally
+#           setting $_ to each element) in order to select the elements for
+#           which the expression evaluated to true.
+# DIES      If $dir can't be opened for reading.
+#
+# Example:
+#
+#   scan_tree("../src/html/Templates", sub{!m#.*\/system[/]# and !m#.*\/system$#});
+#
+# The above will list all directories under the html templates directory
+# ignoring all directories that are called 'system' (and all their subdirectories)
+#
+
+sub scan_tree {
+    my ($origin_dir, $filter) = @_;
+    my @dirs;
+    my %dir_scratch;
+    
+    if (ref($filter) eq "CODE") {
+		find (sub{$dir_scratch{File::Spec->rel2abs("$File::Find::dir/$_")}=1
+			if (-d "$_" and grep {&$filter} "$File::Find::dir/$_")}, $origin_dir);
+	} else {
+		find (sub{$dir_scratch{File::Spec->rel2abs("$File::Find::dir/$_")}=1
+			if -d "$_"}, $origin_dir);
+	}
+	
+	# remove the origin_dir from returned list
+	# delete ($dir_scratch{File::Spec->rel2abs($origin_dir)});
+	
+	foreach (keys %dir_scratch) {
+		push (@dirs, File::Spec->rel2abs($_));
+	}
+
+	return @dirs;
 }
 
 # Recursively copies all files and directories contained in a given origin
