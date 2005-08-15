@@ -65,7 +65,6 @@ sub getPageBody {
 	my @construct_requests = $q->param( 'selected_objects' );
 	my @categoryGroups = $factory->findObjects ('@CategoryGroup', __order => 'Name');
 	
-	my $tmpl_dir = $self->actionTemplateDir();
 	
 	if (scalar(@construct_requests) == 0) {
 		$tmpl_data{ 'checkbox_and_cg' } = $self->Renderer()->renderArray(\@categoryGroups, 'Checkboxes_and_Object');
@@ -88,10 +87,10 @@ sub getPageBody {
 			
 		# Put mex ID on the end of the filename to ensure a unique file
 		$filename .= "_".$mex->id;
-		my $tmpl_dir = $self->actionTemplateDir();
-		my $annotator_path = "$tmpl_dir"."Annotator/CategoryGroup/$filename.tmpl";
-		my $browse_path = "$tmpl_dir"."../Browse/CategoryGroup/$filename.tmpl";
-		my $display_path = "$tmpl_dir"."../Display/One/OME/Image/$filename.tmpl";
+		my $tmpl_dir = $self->rootTemplateDir( 'custom' );
+		my $annotator_path = "$tmpl_dir"."/Actions/Annotator/CategoryGroup/$filename.tmpl";
+		my $browse_path = "$tmpl_dir"."/Browse/CategoryGroup/$filename.tmpl";
+		my $display_path = "$tmpl_dir"."/Display/One/OME/Image/$filename.tmpl";
 		
 		# WARNING TO TELL USER OF A NAME COLLISION
 		
@@ -296,6 +295,7 @@ Images left to annotate:<br>
 	
 	
 	# Load & populate the template
+	my $tmpl_dir = $self->actionTemplateDir();
 	my $tmpl = HTML::Template->new( filename => "CG_ConstructTemplate.tmpl",
 									path => $tmpl_dir,
 	                                case_sensitive => 1 );

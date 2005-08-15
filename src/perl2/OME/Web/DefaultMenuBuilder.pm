@@ -123,31 +123,31 @@ my @MENU = (
 		text => 'Other',
 	},
 	# ** Annotate **
-# 	{
-# 		web_class => undef,
-# 		type => 'heading',
-# 		text => 'Annotation',
-# 	},
-# 	{
-# 		web_class => 'OME::Web::CG_ConstructTemplate',
-# 		type => 'link',
-# 		text => 'Create a Template',
-# 	},
-# 	{
-# 		web_class => 'OME::Web::CG_Annotator',
-# 		type => 'link',
-# 		text => 'Annotate Images',
-# 	},
-# 	{
-# 		web_class => 'OME::Web::CG_Search',
-# 		type => 'link',
-# 		text => 'Search by Annotation',
-# 	},
-# 	{
-# 		web_class => 'OME::Web::SpreadsheetImporter::SpreadsheetImporterPrompt',
-# 		type => 'link',
-# 		text => 'Import Spreadsheet',
-#	},
+	{
+		web_class => undef,
+		type => 'heading',
+		text => 'Annotation',
+	},
+	{
+		web_class => 'OME::Web::CG_ConstructTemplate',
+		type => 'link',
+		text => 'Create a Template',
+	},
+	{
+		web_class => 'OME::Web::CG_Annotator',
+		type => 'link',
+		text => 'Annotate Images',
+	},
+	{
+		web_class => 'OME::Web::CG_Search',
+		type => 'link',
+		text => 'Search by Annotation',
+	},
+	{
+		web_class => 'OME::Web::SpreadsheetImporter::SpreadsheetImporterPrompt',
+		type => 'link',
+		text => 'Import Spreadsheet',
+	},
 	# ** Images **
 	{
 		web_class => undef,
