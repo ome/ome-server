@@ -482,7 +482,7 @@ ERROR
     print "Copying IMAGE directories\n";
     	foreach my $directory (@image_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR");
+		copy_tree ("$directory", "$$OME_BASE_DIR", sub{ ! /CVS$/i });
 		fix_ownership( {
 				owner => $OME_USER,
 				group => $OME_GROUP,
@@ -492,7 +492,7 @@ ERROR
 	print "Copying CONFIG directories\n";
     	foreach my $directory (@config_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR");
+		copy_tree ("$directory", "$$OME_BASE_DIR", sub{ ! /CVS$/i });
 		fix_ownership( {
 				owner => $OME_USER,
 				group => $OME_GROUP,
@@ -507,7 +507,10 @@ ERROR
 
     foreach my $directory (@html_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR");
+
+		# DON'T copy html/Templates	that directory requires special treatement
+		# so we don't over-write user defined templates. Read [Bug 531] 
+		copy_tree ("$directory", "$$OME_BASE_DIR", sub{ ! /Templates$/i and !/CVS$/i});
 		fix_ownership( {
 				owner => $OME_USER,
 				group => $OME_GROUP,
