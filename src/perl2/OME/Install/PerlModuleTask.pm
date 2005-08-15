@@ -683,7 +683,7 @@ sub execute {
 		while (1) {
 			if ($environment->get_flag("UPDATE") or $confirm_all) {
 			
-				if ( $MATLAB->{MATLAB_INST} ) {
+				if ( $MATLAB->{INSTALL} ) {
 					print "Testing MATLAB configuration \n";
 					
 					# Change the MATLAB_SRC path always to the current directory
