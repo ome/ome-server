@@ -663,7 +663,7 @@ sub _baseTemplateDir {
 	my $self = shift;
 	my $session = $self->Session();
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	return $tmpl_dir."/Create/";
+	return $tmpl_dir."/System/Create/";
 }
 
 =head2 _findTemplate

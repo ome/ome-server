@@ -950,7 +950,7 @@ sub _baseTemplateDir {
 	my ($self, $arity) = @_;
 	my $session = $self->Session();
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	$tmpl_dir .= "/Display/";
+	$tmpl_dir .= "/System/Display/";
 	$tmpl_dir .= 'One/' if( $arity =~ m/One/i );
 	$tmpl_dir .= 'Many/' if( $arity =~ m/Many/i );
 	return $tmpl_dir;
