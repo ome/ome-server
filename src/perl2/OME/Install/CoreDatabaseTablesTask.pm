@@ -243,7 +243,7 @@ sub update_database {
     	delete_tree ("$OME_TMP_DIR/update");
 	}
 
-	copy_tree ("update", "$OME_TMP_DIR");
+	copy_tree ("update", "$OME_TMP_DIR", sub{ ! /CVS$/i });
 	fix_ownership( {
 			owner => $OME_USER,
 			group => $OME_GROUP,
@@ -754,6 +754,8 @@ sub update_configuration {
     my $var;
 	
 	my $MATLAB = $ENVIRONMENT->matlab_conf();
+	my $APACHE = $ENVIRONMENT->apache_conf();
+	
 	my %update_configuration_variables = (
 		# Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
 		# was ignored due to a pre-existing configuration    
@@ -766,6 +768,7 @@ sub update_configuration {
 		matlab_user    => $MATLAB->{USER},
 		matlab_exec    => $MATLAB->{EXEC},
 		matlab_src_dir => $MATLAB->{MATLAB_SRC},
+		template_dir   => $APACHE->{TEMPLATE_DIR},
 	);
 	
 	# This hash controls whether new configuration variables are created or not
@@ -783,6 +786,7 @@ sub update_configuration {
 		matlab_src_dir => 1,
 		# If updating from 2.4.0, this variable doesn't exist
 		matlab_exec    => 1,
+		template_dir   => 0,
 	);
 	
 	foreach my $var_name (keys %update_configuration_variables) {
