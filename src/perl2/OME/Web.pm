@@ -854,18 +854,48 @@ sub _loadTypeAndGetInfo {
 
 =head2 actionTemplateDir
 
-	my $template_dir = $self->actionTemplateDir();
+	my $template_dir = $self->actionTemplateDir( );
 	
-	Returns the directory where templates for class layout are stored.
+	Returns the directory where templates for Action layouts are stored.
+	Optionally takes a 'custom' parameter that returns the path 
+	to the custom template Action directory.
 
 =cut
 
 sub actionTemplateDir { 
 	my $self = shift;
+	my $custom = shift;
 	my $session = $self->Session();
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	return $tmpl_dir."/Actions/";
+	if( $custom ) {
+		return $tmpl_dir."/Actions/";
+	} else {
+		return $tmpl_dir."/System/Actions/";
+	}
 }
+
+=head2 rootTemplateDir
+
+	my $template_dir = $self->rootTemplateDir( );
+	
+	Returns the directory where templates for layouts are stored.
+	Optionally takes a 'custom' parameter that returns the path 
+	to the custom template directory.
+
+=cut
+
+sub rootTemplateDir { 
+	my $self = shift;
+	my $custom = shift;
+	my $session = $self->Session();
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	if( $custom ) {
+		return $tmpl_dir;
+	} else {
+		return $tmpl_dir."/System/";
+	}
+}
+
 
 
 =head2 getObjDetailURL
