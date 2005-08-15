@@ -731,7 +731,7 @@ sub __sort_field {
 sub _baseTemplateDir { 
 	my $self = shift;
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	return $tmpl_dir."/Search/";
+	return $tmpl_dir."/System/Search/";
 }
 
 =head2 _findTemplate
