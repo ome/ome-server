@@ -90,31 +90,31 @@ my @MENU = (
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { SearchType => 'OME::Project' },
+		url_param => { Type => 'OME::Project' },
 		text => 'Projects',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { SearchType => 'OME::Dataset' },
+		url_param => { Type => 'OME::Dataset' },
 		text => 'Datasets',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { SearchType => 'OME::Image' },
+		url_param => { Type => 'OME::Image' },
 		text => 'Images',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { SearchType => 'OME::ModuleExecution' },
+		url_param => { Type => 'OME::ModuleExecution' },
 		text => 'Module Executions',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { SearchType => 'OME::AnalysisChainExecution' },
+		url_param => { Type => 'OME::AnalysisChainExecution' },
 		text => 'Chain Executions',
 	},
 	{
@@ -123,31 +123,31 @@ my @MENU = (
 		text => 'Other',
 	},
 	# ** Annotate **
-	{
-		web_class => undef,
-		type => 'heading',
-		text => 'Annotation',
-	},
-	{
-		web_class => 'OME::Web::CG_ConstructTemplate',
-		type => 'link',
-		text => 'Create a Template',
-	},
-	{
-		web_class => 'OME::Web::CG_Annotator',
-		type => 'link',
-		text => 'Annotate Images',
-	},
-	{
-		web_class => 'OME::Web::CG_Search',
-		type => 'link',
-		text => 'Search by Annotation',
-	},
-	{
-		web_class => 'OME::Web::SpreadsheetImporter::SpreadsheetImporterPrompt',
-		type => 'link',
-		text => 'Import Spreadsheet',
-	},
+ 	{
+ 		web_class => undef,
+ 		type => 'heading',
+ 		text => 'Annotation',
+ 	},
+ 	{
+ 		web_class => 'OME::Web::CG_ConstructTemplate',
+ 		type => 'link',
+ 		text => 'Create a Template',
+ 	},
+ 	{
+ 		web_class => 'OME::Web::CG_Annotator',
+ 		type => 'link',
+ 		text => 'Annotate Images',
+ 	},
+ 	{
+ 		web_class => 'OME::Web::CG_Search',
+ 		type => 'link',
+ 		text => 'Search by Annotation',
+ 	},
+# 	{
+# 		web_class => 'OME::Web::SpreadsheetImporter::SpreadsheetImporterPrompt',
+# 		type => 'link',
+# 		text => 'Import Spreadsheet',
+#	},
 	# ** Images **
 	{
 		web_class => undef,
@@ -193,9 +193,22 @@ my @MENU = (
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
-		url_param => { SearchType => 'OME::AnalysisChainExecution' },
+		url_param => { Type => 'OME::AnalysisChainExecution' },
 		text => 'View Chain Results',
 	},
+        # ** Experiments **
+	{
+		web_class => undef,
+		type => 'heading',
+		text => 'Experiments',
+	},
+	{
+		web_class => 'OME::Web::MultiObjCreate::ExperimentProtocol',
+		type => 'link',
+		text => 'Define a protocol',
+	},
+    
+	
 	# ** OPTIONS **
 	{
 		web_class => undef,
