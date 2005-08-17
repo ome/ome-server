@@ -65,8 +65,15 @@ sub getPageBody {
 	my $q = $self->CGI() ;
 
 	# create?
-	if( $q->param( 'create' ) ) {
-		return $self->_create( );
+	
+	print STDERR "GroupAndCategoryCreator - getting form \n"
+	    unless $q->param('create');
+	print STDERR "GroupAndCategoryCreator -  creating \n"
+	    if (defined $q->param('action'));
+	
+	if( $q->param( 'action' ) ) {
+	    my $actionName =  $q->param('action');
+	    return $self->$actionName();
 	} else {
 		return $self->_getForm();
 	}
@@ -93,7 +100,7 @@ sub _getForm {
 	
 }
 
-sub _create {
+sub create {
 	my $self = shift ;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
