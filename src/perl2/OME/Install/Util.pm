@@ -1220,7 +1220,7 @@ sub which {
         $path[$#path] = "";
     }
 
-	push (@path,'/usr/sbin');
+	push (@path,'/usr/sbin','/usr/local/bin');
 
     if ("$prog" =~ '/' && -x "$prog" && -f "$prog") {
         return $prog;
