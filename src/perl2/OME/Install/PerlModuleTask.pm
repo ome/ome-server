@@ -144,14 +144,14 @@ my @modules = (
 	repository_file => "$REPOSITORY/DBD-Pg-1.22.tar.gz",
 	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'ne 1.21', 'eq 1.22'],
 	pre_install => sub {
-	    which ("pg_config") or croak "Unable to execute pg_config, are PostgreSQL and its development packages installed ?";
+	    my $pg_config = which ("pg_config") or croak "Unable to execute pg_config, are PostgreSQL and its development packages installed ?";
 
-	    my $version = `pg_config --version`;
+	    my $version = `$pg_config --version`;
 	    croak "PostgreSQL version must be >= 7.1" unless $version ge '7.1';
 
-	    $ENV{POSTGRES_INCLUDE} = `pg_config --includedir` or croak "Unable to retrieve PostgreSQL include dir.";
+	    $ENV{POSTGRES_INCLUDE} = `$pg_config --includedir` or croak "Unable to retrieve PostgreSQL include dir.";
 	    chomp $ENV{POSTGRES_INCLUDE};
-	    $ENV{POSTGRES_LIB} = `pg_config --libdir` or croak "Unable to retrieve PostgreSQL library dir.";
+	    $ENV{POSTGRES_LIB} = `$pg_config --libdir` or croak "Unable to retrieve PostgreSQL library dir.";
 	    chomp $ENV{POSTGRES_LIB};
 
 	    if ($OSNAME eq 'darwin') {
