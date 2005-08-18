@@ -1118,7 +1118,7 @@ BLURB
 	print "Installing HTML Templates for Web-UI \n";
 	
 	print "  \\__ Verifying structure of $APACHE->{TEMPLATE_DIR} ";
-	my @old_sys_html_dirs = scan_tree("$APACHE->{TEMPLATE_DIR}/", sub{m#.*\/system[/]# or m#.*\/system$#});
+	my @old_sys_html_dirs = scan_tree("$APACHE->{TEMPLATE_DIR}/", sub{m#.*\/System[/]# or m#.*\/System$#});
 	@old_sys_html_dirs = sort { $b cmp $a } @old_sys_html_dirs; # reverse sort
 	if (not -e "$APACHE->{TEMPLATE_DIR}/") {
 		# this is a valid condition that occurs when installing OME on a clean system
@@ -1128,9 +1128,9 @@ BLURB
 
 	} elsif (not scalar @old_sys_html_dirs and not $cvs_sourced_templates) {
 		# this is a valid condition that occurs in updating from 2.4.0 to 2.4.1
-		print $LOGFILE "No HTML system directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
+		print $LOGFILE "No HTML System directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
 			"The structure is invalid. It will be cleaned-out and rebuilt.\n";
-		print "No HTML 'system' directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
+		print "No HTML System directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
 			"The structure is invalid. It will be cleaned-out and rebuilt.\n";
 		delete_tree("$APACHE->{TEMPLATE_DIR}") or
 			(print BOLD, "[FAILURE]", RESET, ".\n" and
@@ -1145,8 +1145,8 @@ BLURB
 			(delete_tree($_) and rmdir($_))
 				or
 			(print BOLD, "[FAILURE]", RESET, ".\n" and
-			 print $LOGFILE ".... delete of $APACHE->{TEMPLATE_DIR}/system failed.\n" and
-			 croak ("delete of $APACHE->{TEMPLATE_DIR}/system failed.\n"));
+			 print $LOGFILE ".... delete of $APACHE->{TEMPLATE_DIR}/System failed.\n" and
+			 croak ("delete of $APACHE->{TEMPLATE_DIR}/System failed.\n"));
 		}
 		print BOLD, "[SUCCESS]", RESET, ".\n";
 	} else {
@@ -1155,7 +1155,7 @@ BLURB
 	
 	# Verify structure and update structure of user directories
 	print "  \\__ Updating user templates ";
-	my @usr_html_dirs = scan_tree(cwd()."/src/html/Templates/", sub{!m#.*\/system[/]# and !m#.*\/system$# and !m#CVS#});
+	my @usr_html_dirs = scan_tree(cwd()."/src/html/Templates/", sub{!m#.*\/System[/]# and !m#.*\/System$# and !m#CVS#});
 	@usr_html_dirs = sort { $a cmp $b } @usr_html_dirs;
 	
 	if (not $cvs_sourced_templates) {
@@ -1176,7 +1176,7 @@ BLURB
 
 	# Update system directories
 	print "  \\__ Updating system templates ";
-	my @sys_html_dirs = scan_tree(cwd()."/src/html/Templates", sub{(m#.*\/system[/]# or m#.*\/system$#) and !m#CVS#});
+	my @sys_html_dirs = scan_tree(cwd()."/src/html/Templates", sub{(m#.*\/System[/]# or m#.*\/System$#) and !m#CVS#});
 	@sys_html_dirs = sort { $a cmp $b } @sys_html_dirs;
 
 	if (not $cvs_sourced_templates) {
