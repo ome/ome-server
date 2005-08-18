@@ -230,6 +230,11 @@ sub create {
     # create the STs.
     # result is a hash with keys being the STs that we are
     # creating and vals being the objects .
+
+    #debug
+    print STDERR "pre-create age is " .
+	$vals->{DevelopmentalStage}->{Age} . "\n";
+
     my $results = OME::Tasks::MultipleSTAnnotationManager->
 	createGroupAnnotations($vals);
     
@@ -239,16 +244,21 @@ sub create {
     # create referencs to other STs on form.
     $self->getFormVals($results);
 
+    #debug
+    print STDERR "age is " . $results->{DevelompentalStage}->{Age} ."\n";
+
+
     # complete all of the linkages
     $self->completeLinkages($results);
 
-    # store the object and commit transcation
-    my ($returnST) = $self->getReturnType();
-    $results->{$returnST}->storeObject();
+    # store the objects and 
+    $self->storeObjects($results);
     
+    #commit transcations
     $session->commitTransaction();
 
     # find correct st to return, and go to its detail page.
+    my ($returnST) = $self->getReturnType();
     my $obj = $results->{$returnST};
     my $url = OME::Web::DBObjCreate->getObjDetailURL($obj);
     return('REDIRECT',$url);
@@ -274,6 +284,7 @@ sub getSTVals {
 
     my %res;
     foreach my $st (@stList) {
+	print STDERR "getSTVals. filling in fields for $st\n";
 	my %stSpec;
 	# find things in param that start with same start
 	#-  put them into a hash -key by script value name (minus
@@ -283,12 +294,15 @@ sub getSTVals {
 	# key, value to hash
 	
 	# find the relevant things, iterate over them.
-	my (@vars) = grep /$st\.*/, @params;
+	my (@vars) = grep /$st\.[^.]*/, @params;
 	foreach my $var (@vars) {
+	    print STDERR "\t found parm $var\n";
 	    # strip off st name
-	    $var =~ /$st\.(.*)/;
+	    $var =~ /$st\.([^.]*)/;
 	    my $field = $1;
+	    print STDERR "\tFound field $field\n";
 	    my $val = $q->param($var);
+	    print STDERR "\t setting to $val\n";
 
 	    # we don't want this val if it's the name of another st.
 	    # other STs need to be included in this list as their own
@@ -389,7 +403,6 @@ sub completeTypeLinkages {
     
     foreach my $field (keys %$fields) {
 	my $fieldType = $fields->{$field};
-	print STDERR "Trying field $field, type $fieldType\n";
 
 	# only bother to do this if there is something of the type to
 	# be set that we have found in the form results.
@@ -401,6 +414,8 @@ sub completeTypeLinkages {
 	}
     }
 }
+
+
 
 
 =head getTypesByName
@@ -440,6 +455,20 @@ sub getTypesByName {
     return \%res;
 }
 
+=head2 storeObjects 
+
+Complete the storage of the objects 
+=cut
+
+sub storeObjects {
+
+    my $self =shift;
+    my $results = shift;
+    my @sts = $self->getSTsToCreate();
+    foreach my $st (@sts) {
+	$results->{$st}->storeObject();
+    }
+}
 
 sub getSTsToCreate{ 
 }

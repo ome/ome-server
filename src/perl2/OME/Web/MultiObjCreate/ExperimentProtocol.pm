@@ -65,7 +65,7 @@ sub getSTsToCreate{
     my $self = shift;
 
     return ("ExperimentProtocol","Husbandry","SamplePreparation",
-	    "DevelopmentalStage");
+	    "DevelopmentalStage","Fluorofor","Strain");
 }
 
 
@@ -74,5 +74,20 @@ sub getReturnType {
     return "ExperimentProtocol";
 }
 
+
+sub populateTemplate {
+
+    my $self = shift;
+    my $tmpl_params = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    $self->SUPER::populateTemplate($tmpl_params);
+
+
+    $tmpl_params->{DevelopmentalStageValue} = 
+	$self->populateDropDown(
+	    '@DevelopmentalStageValue','DevelopmentalStageValue');
+}
 
 1;
