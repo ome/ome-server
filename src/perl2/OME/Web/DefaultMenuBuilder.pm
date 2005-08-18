@@ -143,11 +143,11 @@ my @MENU = (
  		type => 'link',
  		text => 'Search by Annotation',
  	},
-# 	{
-# 		web_class => 'OME::Web::SpreadsheetImporter::SpreadsheetImporterPrompt',
-# 		type => 'link',
-# 		text => 'Import Spreadsheet',
-#	},
+	{
+		web_class => 'OME::Web::SpreadsheetImporter::SpreadsheetImporterPrompt',
+		type => 'link',
+		text => 'Import Spreadsheet',
+	},
 	# ** Images **
 	{
 		web_class => undef,
