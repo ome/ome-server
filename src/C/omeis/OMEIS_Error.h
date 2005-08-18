@@ -59,13 +59,4 @@ OMEIS_DoError (const char *template, ...)
 	__attribute__ ((format (printf, 1, 2)));
 
 
-/* ------------------- */
-/* Global Error string */
-/* ------------------- */
-/*
-  N.B.: The file omeis.h must be included by the file that contains main()
-  The file that contains main() must be the only one to include omeis.h
-*/
-extern char OMEIS_ERROR_STR [OMEIS_ERROR_SIZE];
-
 #endif /* OMEIS_Error_h */
