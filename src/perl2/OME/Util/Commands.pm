@@ -176,16 +176,18 @@ sub listCommands {
 	$self->handleCommand($help,\@supercommands);
 
 Causes this command group to parse the beginning of the @ARGV array,
-and to try to execute the command that it finds.  If the $help
-parameter is set to a true value, then the method will print a help
-message for that command, rather than executing it.
+and to try to execute the command that it finds.  
 
 Arguments to the command are presented in @ARGV, just as if the
-command were the body of the script itself.  This allows the command
+command was the body of the script itself.  This allows the command
 function to use Getopt::Long to parse any remaining options on the
-command line.  It is advisable for each command function to accept a
--h/--help option, and to explicitly call the help function associated
-with the command when it is received.
+command line.
+
+If the $help parameter is set to a true value, then the method will print
+a help message for that command, rather than executing it. ome help *
+is the prefered method for users to get documentation about an ome command.
+It is redundant for command functions to accept a -h/--help options.
+You might want to read [Bug 505] for perspective.
 
 To facilitate nested command groups (described under the getCommand
 method), the handleCommand accepts the \@supercommands parameter.
@@ -208,7 +210,7 @@ sub handleCommand {
     my $commands = $self->getCommands();
     $supercommands = [] unless defined $supercommands;
     
-    # Set $command if the last supercommand matches the only
+    # [BUG 309] Set $command if the last supercommand matches the only
     # command in the class.
     my $command = (keys %$commands)[0]
         if scalar (keys (%$commands)) == 1 and
@@ -281,8 +283,17 @@ behavior of handleCommand) into something printable.
 
 sub commandName {
     my ($self,$supercommands) = @_;
+	my @cmds = @$supercommands;
+	my $cmd_string = '';
+	my $i;
+	
+	# [BUG 309] remove duplicates in $supercommands
+	$cmd_string = $cmds[0] if scalar @cmds;
+	for ($i = 0; $i < (scalar @cmds) -1; $i++) {
+		$cmd_string = $cmd_string." ".$cmds[$i+1] unless ($cmds[$i] eq $cmds[$i+1]);
+	}
 
-    return join(' ',@$supercommands);
+    return $cmd_string;
 }
 
 =head2 Output functions
