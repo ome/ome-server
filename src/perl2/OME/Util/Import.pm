@@ -81,20 +81,22 @@ OME objects.
 
 Options:
       
-  -d  Use this to specify the dataset name or ID. Imported images must be
-      associated with a dataset. If you don't own an unlocked dataset with 
-      the specified name, a new one will be created for you. If you are 
-      importing OME Semantic Type Definitions, Analysis Modules, or Chains
-      this parameter is unnecessary. If you import images, but don't 
-      specify a dataset, a new dataset will be created for you
-      called 'Import Dummy Dataset'.
+  -d, --dataset (<id> | <name>) 
+      Specify which dataset images should be imported into. If you don't
+      own an unlocked dataset with the specified name, a new one will be
+      created for you. If you are importing OME Semantic Type Definitions,
+      Analysis Modules, or Chains this parameter is unnecessary. If you
+      import images, but don't specify a dataset, a new dataset called
+      '<time_stamp> Import Dataset' will be created for you.
       
-  -r  Reimports images which are already in the database.  This should
+  -D, --description
+      Use this flag if you want to give a description to your new dataset.
+      
+  -r, --reimport
+      Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
       XML files.
-      
-  -h  Print this help message.
-  
+        
 USAGE
     CORE::exit(1);
 }
@@ -103,12 +105,21 @@ USAGE
 sub import {
  	my ($self,$commands) = @_;
 	my $reuse;
-	my $help;
 	my $datasetName;
+	my $datasetDescription;
+	
+	my $timestamp = time;
+	my $timestr = localtime $timestamp;
 	
 	GetOptions('reimport|r!' => \$reuse,
-               'help|h' => \$help,
-               'd=s' => \$datasetName);
+               'dataset|d=s' => \$datasetName,
+               'description|D=s' => \$datasetDescription);
+               
+    # idiot traps
+    die "No files or directories specified for import.\n" unless scalar @ARGV;
+    die "You cannot specify a database description without also specifying the database name.\n"
+    	if (defined $datasetDescription and not defined $datasetName);
+    
     my @file_names;
     foreach my $filename (@ARGV) {
     	push (@file_names,$filename)
@@ -116,8 +127,9 @@ sub import {
     	push (@file_names,bsd_glob("$filename/*")) if -d $filename and -r $filename;
     }
     
-    import_help() if $help;
-
+    # suggest a default dataset description
+    $datasetDescription = "These images were imported using the OME command-line tool on $timestr. This description was auto-generated. Use the -D command-line parameter to specify your own descriptions during image import." unless $datasetDescription;
+    
     my $session = $self->getSession();
 	my $factory = $session->Factory();
 	
@@ -140,14 +152,16 @@ sub import {
 			die "Specified Dataset with ID $datasetName is locked!" unless not $dataset->locked();
 		} else {
 			my $dataset_data = {
-								name   => $datasetName,
-								owner  => $session->User(),
-								locked => 'false'
+								name        => $datasetName,
+								description => $datasetDescription,
+								owner       => $session->User(),
+								locked      => 'false'
 							   };
 			$dataset = $factory->findObject( "OME::Dataset", $dataset_data);
 			
 			if (not defined $dataset) {
 				$dataset = $factory->newObject( "OME::Dataset", $dataset_data );
+
 				# If there is a project in this session, then associate this new dataset with it
 				my $project = $session->project();
 				if (defined $project) {
