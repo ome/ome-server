@@ -42,11 +42,15 @@ use base qw(OME::Util::Commands);
 use OME::Util::UserAdmin;
 use OME::Util::GroupAdmin;
 use OME::Util::dbAdmin;
+use OME::Util::Uninstall;
+use OME::Util::Configure;
+
 sub getCommands {
     return
       {
        'users' => ['OME::Util::UserAdmin'],
        'groups' => ['OME::Util::GroupAdmin'],
+       'configure' => ['OME::Util::Configure'],
        'data' => ['OME::Util::dbAdmin'],
        'uninstall' => ['OME::Util::Uninstall'],
       };
