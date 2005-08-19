@@ -193,50 +193,7 @@ Images left to annotate:<br>
 		<a href = \"\" class=\"ome_widget\">Deselect All</a>
 	</td>
 </tr>
-</table>
-
-<!--table>
-	<tr>
-		<td valign=\"top\">
-			<center><TMPL_VAR NAME=cg[1].Name><br>
-			<SELECT name=\"FromCG<TMPL_VAR NAME='cg[1].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"30\">
-			<TMPL_VAR NAME=cg[1].cat/render-list_of_options></SELECT><br>
-		</td>
-		<td valign=\"top\">
-			<table>
-				<tr>
-					<td>
-						<table>
-							<tr>
-								<td>
-									<center><TMPL_VAR NAME=cg[2].Name><br>
-									<SELECT name=\"FromCG<TMPL_VAR NAME='cg[2].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"8\">
-									<TMPL_VAR NAME=cg[2].cat/render-list_of_options></SELECT><br>
-								</td>
-								<td>
-									<center><TMPL_VAR NAME=cg[3].Name><br>
-									<SELECT name=\"FromCG<TMPL_VAR NAME='cg[3].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"8\">
-									<TMPL_VAR NAME=cg[3].cat/render-list_of_options></SELECT><br>
-								</td>
-								<td>
-									<center><TMPL_VAR NAME=cg[4].Name><br>
-									<SELECT name=\"FromCG<TMPL_VAR NAME='cg[4].id'>\" onclick=\"javascript: document.forms[0].GetThumbs.value='GetThumbs'; document.forms[0].submit();\" size = \"8\">
-									<TMPL_VAR NAME=cg[4].cat/render-list_of_options></SELECT><br>
-								</td>
-								<td valign=\"top\">
-									<!-- fix this, it's just a hack -->
-									<a href = \"\" class=\"ome_widget\">Deselect All</a>
-								</td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-				<tr><td><TMPL_VAR NAME=image_thumbs></td></tr>
-			</table>
-			
-		</td>
-	</tr>
-</table-->";
+</table>";
 		$session->commitTransaction();
 		close TMPL;
 		
