@@ -92,7 +92,6 @@ Options:
   -v  Verbose. Print out a topologically sorted view of the chain nodes.
   
   -c  Compress the output file. 
-  -h  Print this help message.
   
 USAGE
     CORE::exit(1);

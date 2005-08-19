@@ -86,9 +86,11 @@ This command uses the Analysis Engine to execute the analysis chain against
 a dataset.
 
 Options:
-  -a  Analysis chain name or ID.
+  -a, --analysis-chain (<name> | <id>)
+     Analysis chain
   
-  -d  Dataset name or ID.
+  -d, --dataset (<name> | <id>)
+     Dataset name
     
   -s, --skip_optional_inputs
 
@@ -105,8 +107,6 @@ Options:
   -c, --caching
     Enable DBObject caching.
 
-  -h, --help
-    Print this help message.
 USAGE
     CORE::exit(1);
 }
@@ -114,19 +114,17 @@ USAGE
 sub execute {
 	my $self = shift;
 	
-	my ($chainStr, $datasetStr, $reuse, $caching, $help, $inputs_string, $skip_optional_inputs );
+	my ($chainStr, $datasetStr, $reuse, $caching, $inputs_string, $skip_optional_inputs );
 	$reuse = 0;
 	$caching = 0;
 	
-	GetOptions ('a=s' => \$chainStr,
-				'd=s' => \$datasetStr,
+	GetOptions ('a|analysis-chain=s' => \$chainStr,
+				'd|dataset=s' => \$datasetStr,
 				'force|f!' => \$reuse,
 				'caching|c!' => \$caching,
-				'help|h' => \$help,
 				'inputs|i=s' => \$inputs_string,
 				'skip_optional_inputs|s!' => \$skip_optional_inputs );
 
-    execute_help() if $help;
     OME::DBObject->Caching(1) if ($caching or $ENV{'OME_CACHE'});
 
     my $session = $self->getSession();	

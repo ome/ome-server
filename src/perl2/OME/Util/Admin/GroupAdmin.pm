@@ -75,25 +75,18 @@ CMDS
 sub addGroup {
     my $self = shift;
 
-    my $help = 0;
     my $batch = 0;
     my $name = "";
     my $leader_input = "";
     my $contact_input = "";
     my $result;
 
-    $result = GetOptions('help|h' => \$help,
-                         'batch|b' => \$batch,
+    $result = GetOptions('batch|b' => \$batch,
                          'name|n=s' => \$name,
                          'leader|l=s' => \$leader_input,
                          'contact|c=s' => \$contact_input);
 
     exit(1) unless $result;
-
-    if ($help) {
-        $self->addUser_help();
-        exit;
-    }
 
     if ($batch &&
         ($name ne '' ||
@@ -218,7 +211,6 @@ CMDS
 sub listGroup {
     my $self = shift;
 
-    my $help = 0;
     my $name = "";
     my $leader_input = "";
     my $contact_input = "";
@@ -227,19 +219,13 @@ sub listGroup {
     my $result;
     my ($leader, $contact, $user);
 
-    $result = GetOptions('help|h' => \$help,
-                         'name|n=s' => \$name,
+    $result = GetOptions('name|n=s' => \$name,
                          'leader|l=s' => \$leader_input,
                          'contact|c=s' => \$contact_input,
                          'user|u=s' => \$user_input,
                          'tabbed|t' => \$tabbed);
 
     exit(1) unless $result;
-
-    if ($help) {
-        $self->listUsers_help();
-        exit;
-    }
 
     my $session = $self->getSession();
     my $factory = $session->Factory();
@@ -388,7 +374,6 @@ CMDS
 sub editGroup {
     my $self = shift;
 
-    my $help = 0;
     my $group_input = "";
     my $name = "";
     my $leader_input = "";
@@ -397,8 +382,7 @@ sub editGroup {
     my $deleteUser_input = '';
     my $result;
 
-    $result = GetOptions('help|h' => \$help,
-                         'group|g=s' => \$group_input,
+    $result = GetOptions('group|g=s' => \$group_input,
                          'name|n=s' => \$name,
                          'leader|l=s' => \$leader_input,
                          'contact|c=s' => \$contact_input,
@@ -407,11 +391,6 @@ sub editGroup {
                          );
 
     exit(1) unless $result;
-
-    if ($help) {
-        $self->addUser_help();
-        exit;
-    }
 
     if ($group_input eq '') {
         print "You must specify a group to edit with the -g option.\n";

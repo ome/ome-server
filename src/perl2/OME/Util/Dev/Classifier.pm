@@ -112,9 +112,7 @@ Options:
   -f, --force
     Force re-execution of chain (i.e. do not reuse previous module execution 
     results).
-  
-  -h  Print this help message.
-  
+    
 USAGE
     CORE::exit(1);
 }
@@ -145,8 +143,6 @@ Options:
   -o  output directory
         
   -compress  Compress the output file. 
-
-  -h  Print this help message.
   
 USAGE
     CORE::exit(1);
@@ -200,16 +196,14 @@ END_STDS
 
 sub compile_sigs {
 	my ($self,$commands) = @_;
-	my ($datasetStr, $chainStr, $output_file_name, $chex_id, $show_help, $force_new_chex );
+	my ($datasetStr, $chainStr, $output_file_name, $chex_id, $force_new_chex );
 	
 	GetOptions ('d=s' => \$datasetStr,
 	            'a=s' => \$chainStr,
 	            'o=s' => \$output_file_name,
 	            'e=i' => \$chex_id,
-	            'h' => \$show_help,
 	            'f|force' => \$force_new_chex );
 	            
-	return $self->compile_sigs_help($commands) if $show_help;
 	die "one or more options not specified"
 		unless (($datasetStr and $chainStr) or $chex_id) and $output_file_name;
 	

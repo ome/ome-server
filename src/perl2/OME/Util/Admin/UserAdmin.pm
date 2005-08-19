@@ -78,7 +78,6 @@ CMDS
 sub addUser {
     my $self = shift;
 
-    my $help = 0;
     my $username = "";
     my $firstname = "";
     my $lastname = "";
@@ -88,8 +87,7 @@ sub addUser {
     my $group_input = "";
     my $result;
 
-    $result = GetOptions('help|h' => \$help,
-                         'username|u=s' => \$username,
+    $result = GetOptions('username|u=s' => \$username,
                          'first-name|f=s' => \$firstname,
                          'last-name|l=s' => \$lastname,
                          'email|e=s' => \$email,
@@ -98,12 +96,7 @@ sub addUser {
                          'group|g=s' => \$group_input);
 
     exit(1) unless $result;
-
-    if ($help) {
-        $self->addUser_help();
-        exit;
-    }
-
+    
     my $session = $self->getSession();
     my $factory = $session->Factory();
     
@@ -275,7 +268,6 @@ CMDS
 sub listUsers {
     my $self = shift;
 
-    my $help = 0;
     my $username = "";
     my $firstname = "";
     my $lastname = "";
@@ -284,8 +276,7 @@ sub listUsers {
     my $tabbed = 0;
     my $result;
 
-    $result = GetOptions('help|h' => \$help,
-                         'username|u=s' => \$username,
+    $result = GetOptions('username|u=s' => \$username,
                          'first-name|f=s' => \$firstname,
                          'last-name|l=s' => \$lastname,
                          'group|g=s' => \$group_input,
@@ -293,11 +284,6 @@ sub listUsers {
                          'tabbed|t' => \$tabbed);
 
     exit(1) unless $result;
-
-    if ($help) {
-        $self->listUsers_help();
-        exit;
-    }
 
     my $session = $self->getSession();
     my $factory = $session->Factory();
@@ -455,21 +441,14 @@ CMDS
 sub changePassword {
     my $self = shift;
 
-    my $help = 0;
     my $user_input = "";
     my $password = "";
     my $result;
 
-    $result = GetOptions('help|h' => \$help,
-                         'user|u=s' => \$user_input,
+    $result = GetOptions('user|u=s' => \$user_input,
                          'password|p=s' => \$password);
 
     exit(1) unless $result;
-
-    if ($help) {
-        $self->listUsers_help();
-        exit;
-    }
 
     if ($user_input eq '') {
         print "You must specify either a user ID or username.\n";
@@ -538,7 +517,6 @@ CMDS
 sub editUser {
     my $self = shift;
 
-    my $help = 0;
     my $user_input = '';
     my $firstname = '';
     my $lastname = '';
@@ -550,8 +528,7 @@ sub editUser {
    	my $result;
    	my $interactive_mode;
 
-    $result = GetOptions('help|h' => \$help,
-                         'user|u=s' => \$user_input,
+    $result = GetOptions('user|u=s' => \$user_input,
                          'first-name|f=s' => \$firstname,
                          'last-name|l=s' => \$lastname,
                          'email|e=s' => \$email,
@@ -559,12 +536,6 @@ sub editUser {
                          'group|g=s' => \$group_input);
 	
     exit(1) unless $result;
-
-    if ($help) {
-        $self->editUser_help();
-        exit;
-    }
-
 
     my $session = $self->getSession();
     my $factory = $session->Factory();

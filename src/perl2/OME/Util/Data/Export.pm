@@ -79,8 +79,6 @@ Options:
       
   -f  Specify a filename for the OME XML file.  Otherwise all output goes
       to STDOUT
-
-  -h  Print this help message.
   
   --no_compress  Do not compress the output file. (disabled by default)
   
@@ -91,7 +89,7 @@ USAGE
 
 sub chains {
 	my ($self,$commands) = @_;
-	my ($filename, $help, $datasetName, $no_compression );
+	my ($filename, $datasetName, $no_compression );
 	
 	GetOptions(
 		'file|f=s' => \$filename,
