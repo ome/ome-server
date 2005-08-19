@@ -151,11 +151,14 @@ sub importFiles {
 			if( scalar( @$image_list ) > 0 ) {
 				my $factory = $session->Factory();
 				if( not defined $dataset ) {
+					my $timestamp = time;
+					my $timestr = localtime $timestamp;
+	
 					$dataset = $factory->
 					  newObject("OME::Dataset",
 								{
-								 name => "Forked import Dummy Dataset",
-								 description => "Images imported by Remote Importer",
+								 name => "$timestr Import Dataset",
+								 description => "These images were imported on $timestr.\nThe dataset name and description were auto-generated because the user did not specify them at import time.",
 								 locked => 0,
 								 owner_id => $session->experimenter_id(),
 								})
