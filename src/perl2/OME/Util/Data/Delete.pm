@@ -120,6 +120,7 @@ Options:
   -p, --keep-pixels Keep orphaned OMEIS Pixels.
   -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
 CMDS
+    CORE::exit(1);
 }
 
 
@@ -138,9 +139,8 @@ sub DeleteCHEX {
 		   'graph|g=s' => \$make_graph,
 		   );
 
-	if (scalar(@ARGV) <= 0 and not defined $chain_in) {
-		$self->DeleteCHEX_help();
-	}
+	$self->DeleteCHEX_help($commands) if (scalar(@ARGV) <= 0 and not defined $chain_in);
+	
 	$keep_files  = 1 if $noop;
 	$keep_pixels = 1 if $noop;
 	my $manager = OME::SessionManager->new();
@@ -181,7 +181,7 @@ sub DeleteCHEX {
 		print "Retreived CHEX ID = $arg_chex_id\n";
 	}
 
-	# CONVERT each CHEX into the constiutent MEXs
+	# CONVERT each CHEX into the constituent MEXs
 	my @MEXes;
 	foreach my $chex (@CHEXes) {
 		my @NEXes = $FACTORY->findObjects("OME::AnalysisChainExecution::NodeExecution",
@@ -220,6 +220,7 @@ Options:
   -p, --keep-pixels Keep orphaned OMEIS Pixels.
   -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
 CMDS
+    CORE::exit(1);
 }
 
 
@@ -238,9 +239,8 @@ sub DeleteMEX {
 		   'graph|g=s' => \$make_graph,
 		   );
 
-	if (scalar(@ARGV) <= 0 and not defined $module_in) {
-		$self->DeleteMEX_help();
-	}
+	$self->DeleteMEX_help($commands) if (scalar(@ARGV) <= 0 and not defined $module_in);
+
 	$keep_files  = 1 if $noop;
 	$keep_pixels = 1 if $noop;
 	my $manager = OME::SessionManager->new();
