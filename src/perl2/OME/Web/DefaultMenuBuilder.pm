@@ -196,19 +196,6 @@ my @MENU = (
 		url_param => { SearchType => 'OME::AnalysisChainExecution' },
 		text => 'View Chain Results',
 	},
-        # ** Experiments **
-	{
-		web_class => undef,
-		type => 'heading',
-		text => 'Experiments',
-	},
-	{
-		web_class => 'OME::Web::MultiObjCreate::ExperimentProtocol',
-		type => 'link',
-		text => 'Define a protocol',
-	},
-    
-	
 	# ** OPTIONS **
 	{
 		web_class => undef,
