@@ -12,8 +12,10 @@
 % OUTPUT GIVEN
 %   'conf_mat'      - Confusion Matrix summarizing results classifier
 %                     achieved on testing images
+%   'marginal_probs' - a matrix with a row per image, and a column per predicted 
+%                      outcome. It gives the probability distribution per image.
 
-function [conf_mat] = ML_BayesNet_Tester (bnet, contData, sigs_used, discWalls);
+function [conf_mat, marginal_probs] = ML_BayesNet_Tester (bnet, contData, sigs_used, discWalls);
 
 % read the total number of classes this classifier can classify as from the bnet
 % structure
@@ -24,20 +26,20 @@ absolutes   = zeros(class_number, class_number);
 percentages = zeros(class_number, class_number);
 for u = 1:len % for each instance
 	actual_class = contData(end,u);
-	marginal_probs = ML_BayesNet_Classifier(bnet, contData([sigs_used],u), sigs_used, discWalls);
+	marginal_probs(u,:) = ML_BayesNet_Classifier(bnet, contData([sigs_used],u), sigs_used, discWalls);
 	
 	% find which classes are predicted
-	predicted_class = find (marginal_probs == max(marginal_probs));
+	predicted_class = find (marginal_probs(u,:) == max(marginal_probs(u,:)));
 	predicted_class = predicted_class(randperm(length(predicted_class))); % randomize the predicted class
 	predicted_class = predicted_class(1);                % select the first class
 	
-	if (sum(marginal_probs) == 0)
+	if (sum(marginal_probs(u,:)) == 0)
 		fprintf (1, 'All O marginal_probs happened. SHIT\n');
 	else 
 		absolutes(actual_class, predicted_class) =  ...
 				absolutes(actual_class, predicted_class) + 1;
 		percentages(actual_class,:) = ... 
-				percentages(actual_class,:) + marginal_probs;
+				percentages(actual_class,:) + marginal_probs(u,:);
 	end
 end
 
