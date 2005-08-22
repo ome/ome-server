@@ -78,6 +78,7 @@ our @EXPORT = qw(
 		resolve_sym_links
 		scan_tree
 		copy_dir
+		scan_dir
 		);
 
 # Distribution detection
