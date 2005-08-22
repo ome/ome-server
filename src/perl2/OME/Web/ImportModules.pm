@@ -138,18 +138,7 @@ sub __getImportBody {
 				);
 			}
 		}
-		
-		# filters that allow only files *.ome and *.xml to be added to the upload queue
-		my @good_ome_filenames;
-		foreach (@$good_paths) {
-			if (($_ =~ m/\.ome$/) || ($_ =~ m/\.xml$/)) {
-				push (@good_ome_filenames, $_);
-			}else {
-				$body .= $q->p({class => 'ome_error'},
-					"The file '$_' does not end with .ome or .xml. It has been removed from the 'Import Queue'.");
-			}
-		}
-		@import_q = @good_ome_filenames;
+		@import_q = @$good_paths;
 	}
 
 	if (scalar(@import_q) < 1) {
@@ -160,8 +149,16 @@ sub __getImportBody {
 
 	# IMPORT the modules
 	while ($self->OME::Web::ImportFiles::__resolveQueue(\@import_q)) {};
-		
-	OME::Tasks::ImageTasks::forkedImportFiles (undef, \@import_q);	
+	
+	my @import_files_q;
+	foreach (@import_q) {
+		push (@import_files_q, $_)
+			if -f $_ and -r $_ and -s $_;
+		push (@import_files_q,bsd_glob("$_/*"))
+			if -d $_ and -r $_;
+	}
+	
+	OME::Tasks::ImageTasks::forkedImportFiles (undef, \@import_files_q);	
 	return '';
 }
 

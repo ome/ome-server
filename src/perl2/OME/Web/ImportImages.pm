@@ -48,6 +48,7 @@ use CGI;
 use Carp;
 use Data::Dumper;
 use File::Spec;
+use File::Glob ':glob';
 
 # OME Modules
 use OME;
@@ -277,8 +278,15 @@ sub __getImportBody {
 
 	# IMPORT
 	while ($self->OME::Web::ImportFiles::__resolveQueue(\@import_q)) {};
-
-	OME::Tasks::ImageTasks::forkedImportFiles($import_d, \@import_q);
+	my @import_files_q;
+	foreach (@import_q) {
+		push (@import_files_q, $_)
+			if -f $_ and -r $_ and -s $_;
+		push (@import_files_q,bsd_glob("$_/*"))
+			if -d $_ and -r $_;
+	}
+	
+	OME::Tasks::ImageTasks::forkedImportFiles($import_d, \@import_files_q);
 
 	return '';
 }

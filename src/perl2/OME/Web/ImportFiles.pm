@@ -206,7 +206,7 @@ sub __getQueueBody {
 	my $path_dir = $q->param('Path') || $home_dir;
 	   $path_dir = File::Spec->canonpath($path_dir);  # Cleanup path
 
-	# Files selected from the dir listing
+	# Files or dirs selected from the dir listing
 	my @add_selected = $q->param('add_selected');
 	
 	# Files selected from the import queue
@@ -231,9 +231,24 @@ sub __getQueueBody {
 	
 	# Rebuild importq
 	if ($action eq 'add') {
+	
+		# convert into files and directories
+		my @add_files;
+		my @add_dirs;
+		foreach (@add_selected) {
+			if (-f $_) {
+				push (@add_files, $_);
+			} elsif (-d $_) {
+				push (@add_dirs, $_);			
+			} else {
+				$body .= $q->p({-class => 'ome_info'}, "ERROR: OMG What is $_ ?.\n");
+			}
+		}
+		
 		@importq = $self->OME::Web::ImportFiles::__processQueue(\@importq, \@add_selected, undef);
-
-		$body .= $q->p({-class => 'ome_info'}, "Added ".scalar( @add_selected )." files to the import queue.\n") if( @add_selected );
+		$body .= $q->p({-class => 'ome_info'}, "Added ".scalar( @add_files )." files to the import queue.\n") if( @add_files );
+		$body .= $q->p({-class => 'ome_info'}, "Added ".scalar( @add_dirs )." directories to the import queue.\n") if( @add_dirs );
+		
 	} elsif ($action eq 'remove') {
 		@importq = $self->OME::Web::ImportFiles::__processQueue(\@importq, undef, \@q_selected);
 
