@@ -1,4 +1,4 @@
-# OME/Util/dbAdmin.pm
+# OME/Util/Data/dbAdmin.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::dbAdmin;
+package OME::Util::Data::dbAdmin;
 
 use strict;
 use OME;
@@ -68,7 +68,8 @@ sub getCommands {
       {
        'backup'      => 'backup',
        'restore'     => 'restore',
-       'delete'      => ['OME::Util::Delete'],
+       'export'      => ['OME::Util::Data::Export'],
+       'delete'      => ['OME::Util::Data::Delete'],
        'chown'       => 'chown',
       };
 }
@@ -87,7 +88,8 @@ Usage:
 Available OME database related commands are:
     backup      Backup OME data to an (optionally) compressed tar archive.
     restore     Restore OME data from an (optionally) compressed tar archive.
-    delete      Delete things in the OME DB.
+    export      Export objects as XML files.
+    delete      Delete objects in the OME DB.
     chown       Change ownership of objects and MEXes in the DB.
 CMDS
 }

@@ -1,4 +1,4 @@
-# OME/Util/Classifier.pm
+# OME/Util/Dev/Classifier.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -34,7 +34,7 @@
 #
 #-------------------------------------------------------------------------------
 
-package OME::Util::Classifier;
+package OME::Util::Dev::Classifier;
 
 use strict;
 use OME;
@@ -594,3 +594,5 @@ sub get_next_LSID {
 
 	return 'urn:lsid:openmicroscopy.org:Module:'.($high_id + 1);
 }
+
+1;

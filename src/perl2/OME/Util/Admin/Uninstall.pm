@@ -1,4 +1,4 @@
-# OME/Util/Uninstall
+# OME/Util/Admin/Uninstall.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::Uninstall;
+package OME::Util::Admin::Uninstall;
 
 use strict;
 use OME;
@@ -86,8 +86,6 @@ will be destroyed.
 Options:
       
   -a This flag signals to remove everything. 
-  -f Location of the stored environment overrides the default of 
-   "/etc/ome-install.store"
 USAGE
     CORE::exit(1);
 }
@@ -98,19 +96,14 @@ sub uninstall {
     my $command_name = $self->commandName($commands);
     
 	# Default env file location 
-	my $env_file = "/etc/ome-install.store";
 	my $all=0;
 	
 	# Parse our command line options
-	my $result = GetOptions('f|env-file=s' => \$env_file,
-							'a|all' => \$all,
-						   );
+	my $result = GetOptions('a|all' => \$all);
 	exit(1) unless $result;
 	
 	# idiot nets
 	croak "You must run $script $command_name with uid=0 (root). " if (euid() ne 0);
-	croak "Environment file '$env_file' does not exist.\n".
-		  "Call $script $command_name backup with the -f flag to specify it. " if (not -e $env_file);
 	
 	if ($all) {
 		exit 1 unless y_or_n ("You have elected to completely remove your OME installation.".
@@ -131,7 +124,7 @@ sub uninstall {
 
 	# open the enviroment to get info about the OME installation
 	my $environment = initialize OME::Install::Environment;
-	$environment = OME::Install::Environment::restore_from($env_file);
+	$environment = OME::Install::Environment::restore_from();
 	
 	my $postgress_user = $environment->postgres_user();
 	my $base_dir = $environment->base_dir();
@@ -227,6 +220,7 @@ sub uninstall_perl_libs {
 
 }
 
+1;
 
 __END__
 

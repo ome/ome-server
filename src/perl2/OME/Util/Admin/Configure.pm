@@ -1,4 +1,4 @@
-# OME/Util/OMEAdmin.pm
+# OME/Util/Admin/Configure.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -30,7 +30,7 @@
 # Written by:    Tom Macura <tmacura@nih.gov>
 #-------------------------------------------------------------------------------
 
-package OME::Util::Configure;
+package OME::Util::Admin::Configure;
 
 use strict;
 use OME;
@@ -91,7 +91,10 @@ sub configure {
    			   'matlab-user=s'  => \$matlab_user,
    			   'm-files-path=s' => \$m_files_path,
    			   'max-local-workers=s' => \$max_local_workers);
-	
+   			   
+	my $interactive = 0;
+	$interactive = 1 if ($db or $user or $host or $port or $class or $omeis_repository_url or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
+
 	print_header("OME Configure");
 	my $blurb = <<BLURB;
 This utility allows you to modify configuration variables that are critical to your OME installation. Incorrect configuration decisions are guaranteed to make OME unusable. In contrast to the installer, this tool doesn't test user inputs for logical consistency. It ought to be used very rarely and only by advanced OME system administrators. Fortunately, these settings are reversable -- we strongly recommend that you take a note of the current configuration and revert back to that configuration if your changes have ill effects. Read ome help admin configure to learn more.
@@ -134,7 +137,7 @@ BLURB
             print "\n";  # Spacing
             
             # Don't be interactive if we got any parameters
-			last if ($db or $user or $host or $port or $class or $omeis_repository_url or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
+			last if ($interactive);
 			if (y_or_n ("Are these values correct ?","y")) {
 				print "\n";  # Spacing
 				last;
@@ -170,7 +173,7 @@ BLURB
             print "\n";  # Spacing
 
 			# Don't be interactive if we got any parameters
-			last if ($db or $user or $host or $port or $class or $omeis_repository_url or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
+			last if ($interactive);
 			if (y_or_n ("Are these values correct ?","y")) {
 				print "\n";  # Spacing
 				last;
@@ -192,7 +195,7 @@ BLURB
 			print "\n";  # Spacing
 			
 			# Don't be interactive if we got any parameters
-			last if ($db or $user or $host or $port or $class or $omeis_repository_url or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
+			last if ($interactive);
 			if (y_or_n ("Are these values correct ?","y")) {
 				print "\n";  # Spacing
 				last;
@@ -230,7 +233,7 @@ BLURB
 			print "\n";  # Spacing
 			
 			# Don't be interactive if we got any parameters
-			last if ($db or $user or $host or $port or $class or $omeis_repository_url or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
+			last if ($interactive);
 			if (y_or_n ("Are these values correct ?","y")) {
 				print "\n";  # Spacing
 				last;
@@ -276,7 +279,7 @@ BLURB
 			print "\n";  # Spacing
 			
 			# Don't be interactive if we got any parameters
-			last if ($db or $user or $host or $port or $class or $omeis_repository_url or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
+			last if ($interactive);
 			if (y_or_n ("Are these values correct ?","y")) {
 				last;
 			}

@@ -39,27 +39,18 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Util::Commands);
 
-use OME::Util::OMEAdmin;
-use OME::Util::UserAdmin;
-use OME::Util::GroupAdmin;
-use OME::Util::dbAdmin;
-
-use OME::SessionManager;
-use OME::Session;
-use OME::Tasks::ProjectManager;
-use OME::Tasks::ImageTasks;
-
 sub getCommands {
     return
       {
-       'admin'      => ['OME::Util::OMEAdmin'],
+       'admin'      => ['OME::Util::Admin::OMEAdmin'],
+       'annotate'   => ['OME::Util::Annotate::Annotate'],
+       'data'       => ['OME::Util::Data::dbAdmin'],
        'import'     => ['OME::Util::Import'],
-       'export'     => ['OME::Util::Export'],
        'execute'    => ['OME::Util::ExecuteChain'],
-       'lint'       => ['OME::Util::Lint'],
        'top'        => ['OME::Util::Top'],
-       'classifier' => ['OME::Util::Classifier' ],
-       'templates'  => ['OME::Util::Templates' ],
+       'lint'       => ['OME::Util::Dev::Lint'],
+       'classifier' => ['OME::Util::Dev::Classifier' ],
+       'templates'  => ['OME::Util::Dev::Templates' ],
       };
 }
 
@@ -74,9 +65,11 @@ Usage:
     $script $command_name <command> [<options>]
 
 ome commands are:
-    admin            Commands for administering OME.
-    import           Command for importing files to OME
+    admin            Commands for administering OME users and settings
+    annotate         Commands for mass annotation of OME objects
+    data             Commands for managing OME data
     execute          Command for executing OME analysis chains
+    import           Command for importing files to OME
     top              Command for displaying progress info about OME tasks
     help <command>   Display help information about a specific command
 

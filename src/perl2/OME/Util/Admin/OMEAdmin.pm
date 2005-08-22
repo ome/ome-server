@@ -1,4 +1,4 @@
-# OME/Util/OMEAdmin.pm
+# OME/Util/Admin/OMEAdmin.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::OMEAdmin;
+package OME::Util::Admin::OMEAdmin;
 
 use strict;
 use OME;
@@ -39,20 +39,13 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Util::Commands);
 
-use OME::Util::UserAdmin;
-use OME::Util::GroupAdmin;
-use OME::Util::dbAdmin;
-use OME::Util::Uninstall;
-use OME::Util::Configure;
-
 sub getCommands {
     return
       {
-       'users' => ['OME::Util::UserAdmin'],
-       'groups' => ['OME::Util::GroupAdmin'],
-       'configure' => ['OME::Util::Configure'],
-       'data' => ['OME::Util::dbAdmin'],
-       'uninstall' => ['OME::Util::Uninstall'],
+       'users' => ['OME::Util::Admin::UserAdmin'],
+       'groups' => ['OME::Util::Admin::GroupAdmin'],
+       'configure' => ['OME::Util::Admin::Configure'],
+       'uninstall' => ['OME::Util::Admin::Uninstall'],
       };
 }
 
@@ -69,7 +62,6 @@ Usage:
 $script $command_name commands are:
     users            Commands for administering OME users
     groups           Commands for administering OME groups
-    data             Commands for administering OME data
     uninstall        Command  for removing your OME installation
     help <command>   Display help information about a specific command
 

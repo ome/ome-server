@@ -260,3 +260,18 @@ sub import {
 sub END {
 	print "Exiting...\n";
 }
+
+1;
+
+__END__
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=head1 SEE ALSO
+
+L<OME>, http://www.openmicroscopy.org/
+
+=cut

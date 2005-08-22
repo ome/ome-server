@@ -1,4 +1,4 @@
-# OME/Util/GroupAdmin.pm
+# OME/Util/Admin/GroupAdmin.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::GroupAdmin;
+package OME::Util::Admin::GroupAdmin;
 
 use strict;
 use OME;

@@ -1,4 +1,4 @@
-# OME/Util/UserAdmin.pm
+# OME/Util/Admin/UserAdmin.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::UserAdmin;
+package OME::Util::Admin::UserAdmin;
 
 use strict;
 use OME;

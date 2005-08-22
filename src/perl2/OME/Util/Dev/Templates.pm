@@ -1,4 +1,4 @@
-# OME/Util/Templates.pm
+# OME/Util/Dev/Templates.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -34,7 +34,7 @@
 #
 #-------------------------------------------------------------------------------
 
-package OME::Util::Templates;
+package OME::Util::Dev::Templates;
 
 use strict;
 use OME;
@@ -332,3 +332,5 @@ sub get_template_files {
 	push @files, get_template_files( $_, $depth+1 ) foreach @dirs;	
 	return @files;
 }
+
+1;

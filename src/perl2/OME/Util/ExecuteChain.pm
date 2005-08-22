@@ -347,3 +347,5 @@ sub execute {
 sub END {
 	print "Exiting...\n";
 }
+
+1;

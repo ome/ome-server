@@ -1,4 +1,4 @@
-# OME/Util/Export.pm
+# OME/Util/Data/Export.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -34,7 +34,7 @@
 #
 #-------------------------------------------------------------------------------
 
-package OME::Util::Export;
+package OME::Util::Data::Export;
 
 use strict;
 use OME;
@@ -125,3 +125,4 @@ sub chains {
 
 }
 
+1;

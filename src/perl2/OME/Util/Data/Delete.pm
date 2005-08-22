@@ -1,5 +1,4 @@
-#!/usr/bin/perl -w
-# OME/Tests/ImportTest.pl
+# OME/Util/Data/Delete.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,7 +34,7 @@
 #
 #-------------------------------------------------------------------------------
 
-package OME::Util::Delete;
+package OME::Util::Data::Delete;
 
 use strict;
 use OME;
