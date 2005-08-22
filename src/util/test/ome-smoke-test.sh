@@ -63,7 +63,7 @@ su -l $OME_ADMIN -c "cd $IMAGE_DIR ; cvs up -dP" > /dev/null 2>&1
 echo "Starting DB backup on $HOST on `date`" > $LOG_FILE
 cd $SOURCE_DIR/src/perl2/
 rm -f $DB_BACKUP > /dev/null 2>&1
-ome admin data backup -q -a $DB_BACKUP >> $LOG_FILE 2>&1
+ome data backup -q --force -a $DB_BACKUP >> $LOG_FILE 2>&1
 if (! test -s $DB_BACKUP);
 	then echo "Could not backup $DB_NAME to $DB_BACKUP" >> $LOG_FILE ;
 	if test "$MAIL_TO" ;
@@ -109,7 +109,7 @@ perl $SCRIPT_DIR/install.pl $OME_ADMIN $OME_PASS >> $LOG_FILE 2>&1
 if (! test /etc/ome-install.store -nt $TEMP_DIR/smoke-test-install-start ) ;
 	then mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
 	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
-	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
+	ome data restore --force -a $DB_BACKUP  > /dev/null 2>&1 ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
 	echo "Smoke Test Failed. Import failed" >> $LOG_FILE ;
 	if test "$MAIL_TO" ;
@@ -166,7 +166,7 @@ if test $DO_ERROR -gt 0 ;
 	kill -9 $PID ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
 	mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
-	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
+	ome data restore --force -a $DB_BACKUP  > /dev/null 2>&1 ;
 	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` OME import failed" $MAIL_TO < $LOG_FILE ;
@@ -180,7 +180,7 @@ fi;
 #
 mv /etc/ome-install.store-bak /etc/ome-install.store
 su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1
-ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1
+ome data restore --force -a $DB_BACKUP  > /dev/null 2>&1
 /usr/sbin/apachectl graceful  > /dev/null 2>&1
 declare -i DELTA_T=$T_STOP-$T_START
 BLURB="`date` Smoke Test passed on $HOST. Installed and imported $IMPORT_IMAGES images in $DELTA_T seconds"
