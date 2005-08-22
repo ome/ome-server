@@ -42,7 +42,7 @@ use Carp;
 use Carp 'cluck';
 use vars qw($VERSION);
 use OME::SessionManager;
-use OME::Util::Templates;
+use OME::Util::Dev::Templates;
 
 use base qw(OME::Web);
 
