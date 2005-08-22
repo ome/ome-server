@@ -185,3 +185,5 @@ sub top {
 		sleep($update_delay);
 	}
 }
+
+1;
