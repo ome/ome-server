@@ -351,7 +351,7 @@ sub __getRegexGroups {
 		while ( ($regex,$parts) = each %regexes ) {
 			logdbg "debug",  "Checking $filename for $regex\n";
 			if( $filename =~ $parts->{RE}) {
-				eval ('$name = '.$parts->{Base});
+				eval ('$name = "'.$parts->{Base}.'"');
 				die "When grouping files, Name capture failed with error: $@\n" if $@;
 				logdbg "debug",  "\t got name $name\n";
 				next unless $name;
