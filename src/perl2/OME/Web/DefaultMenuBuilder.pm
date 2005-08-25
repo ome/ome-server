@@ -144,7 +144,7 @@ my @MENU = (
  		text => 'Search by Annotation',
  	},
 	{
-		web_class => 'OME::Web::SpreadsheetImporter::SpreadsheetImporterPrompt',
+		web_class => 'OME::Web::SpreadsheetImporterPrompt',
 		type => 'link',
 		text => 'Import Spreadsheet',
 	},
