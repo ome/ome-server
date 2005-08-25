@@ -41,7 +41,7 @@ use base qw(OME::Util::Commands);
 use Getopt::Long;
 
 use OME::Install::Util; # for scan_dir
-use OME::Util::Annotate::SpreadsheetsUtil;
+use OME::Util::Annotate::SpreadsheetWriter;
 
 sub getCommands {
     return
@@ -67,7 +67,6 @@ Usage:
     
 $script $command_name commands are:
     PDI    Wizard for organising images into a projects/datasets/images heirarchy
-           [EXPERIMENTAL. RESULTING SPREEDSHEETS ARE USELESS]
            
     CGC    Wizard for organising images into a category-group/category/images
            heirarchy 
@@ -125,9 +124,9 @@ sub pdi_wizard {
 	}
 	my $result;
 	if (not $short) {
-		$result = writeSpreadsheet ($file, $dataset_column, $project_column);
+		$result = OME::Util::Annotate::SpreadsheetWriter->processFile($file, $dataset_column, $project_column);
 	} else {
-		$result = writeSpreadsheet ($file, $dataset_column);	
+		$result = OME::Util::Annotate::SpreadsheetWriter->processFile($file, $dataset_column);	
 	}
 	
 	print STDERR "csv spreadsheet wasn't written. The directory structure under the specified root is incorrect.\n" unless ($result);
@@ -232,7 +231,7 @@ sub cgc_wizard {
 		$category_column->{$final_dir} = "$_/*";
 	}
 	
-	my $result = writeSpreadsheet ($file, $category_column, $cg_column);
+	my $result = OME::Util::Annotate::SpreadsheetWriter->processFIle($file, $category_column, $cg_column);
 	
 	print STDERR "csv spreadsheet wasn't written. The directory structure under the specified root is incorrect.\n" unless ($result);
 }

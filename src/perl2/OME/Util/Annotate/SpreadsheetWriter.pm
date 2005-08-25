@@ -1,4 +1,4 @@
-# OME/Util/Annotate/SpreadsheetsUtil
+# OME/Util/Annotate/SpreadsheetWriter
 
 #-------------------------------------------------------------------------------
 #
@@ -30,7 +30,24 @@
 # Written by:   Tom Macura <tmacura@nih.gov>
 #-------------------------------------------------------------------------------
 
-package OME::Util::Annotate::SpreadsheetsUtil;
+package OME::Util::Annotate::SpreadsheetWriter;
+
+=pod
+
+=head1 NAME
+
+OME::Util::Annotate::SpreadsheetWriter - Package for auto-generating bulk-annotation
+										spreadsheets for OME
+
+=head1 DESCRIPTION
+
+A package to derive Project, Dataset, Category Group, and Category annotations
+from directory strucutre and write these annotations into a csv spreadsheet.
+These spreadsheets can be imported into OME by SpreadsheetReader.
+
+=head1 METHODS
+
+=cut
 
 use strict;
 use OME;
@@ -40,13 +57,8 @@ use Carp;
 use File::Glob ':glob'; # for bsd_glob
 use File::Spec; # for splitpath
 
-our @ISA = qw(Exporter);
-our @EXPORT = qw(
-		writeSpreadsheet
-		);
-		
-=head2 writeSpreadsheet
-	writeSpreadsheet ("tmp.csv", $cg_age, $cg_body_part, $cg_quality);
+=head2 processFile
+	processFile ("tmp.csv", $cg_age, $cg_body_part, $cg_quality);
 This is a utility function that converts a set of image annotation rules
 into a csv spreadsheet. Although it is used by the OME annotation wizards to
 make simple annotations, it is more powerful when used as a PERL API.
@@ -87,7 +99,7 @@ my $cg_quality = {
 	Windy  => "$root/*/day*windy*",
 };
 
-writeSpreadsheet ("tmp.csv", $cg_age, $cg_body_part, $cg_quality);
+processFile ("tmp.csv", $cg_age, $cg_body_part, $cg_quality);
 
 Returns 0 if a spreadsheet could not be written (because of mistaken rules)
 and 1 otherwise.
@@ -98,9 +110,8 @@ and 1 otherwise.
 
 =cut
 
-sub writeSpreadsheet {
-	my $fn = shift; 
-	my @classification_rules = @_;
+sub processFile{
+	my ($self, $fn, @classification_rules) = @_;
 	my $master_hash;
 	my $cg_list; # a hash ref
 	
@@ -145,7 +156,7 @@ sub writeSpreadsheet {
 	# Use the master hash to write-out a csv file
 	open (FILEOUT, "> $fn") or die "Couldn't open %fn for writing\n";
 	my @array_cg_list = keys (%$cg_list);
-	print FILEOUT "Image.Name, ".join (", ", @array_cg_list)."\n";
+	print FILEOUT "Image.Name,".join (",", @array_cg_list)."\n";
 
 	foreach my $file (sort keys %$master_hash) {
 		print FILEOUT "$file, ";
@@ -153,7 +164,7 @@ sub writeSpreadsheet {
 		foreach my $cg (@array_cg_list) {
 			my $category = $master_hash->{$file}->{$cg};
 			if (defined $category) {
-				print FILEOUT "$category, ";
+				print FILEOUT "$category,";
 			} else {
 				print FILEOUT $cg_list->{$cg}.",";
 			}

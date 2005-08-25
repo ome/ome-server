@@ -41,7 +41,7 @@ use base qw(OME::Util::Commands);
 
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
-use OME::Web::SpreadsheetImporter::SpreadsheetImporter;
+use OME::Util::Annotate::SpreadsheetReader;
 
 sub getCommands {
     return
@@ -75,7 +75,8 @@ sub spreadsheet_importer {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
     my $command_name = $self->commandName($commands);
-    
+    my $session = $self->getSession();
+
     my ($file, $noop);
 	GetOptions('f|file=s' => \$file,
    			   'n|noop=s' => \$noop);
@@ -85,9 +86,18 @@ sub spreadsheet_importer {
 	$file = $ARGV[0] if (scalar @ARGV);
 	$self->spreadsheet_help($commands) if (not defined $file);
    			   
-	my $output = OME::Web::SpreadsheetImporter::SpreadsheetImporter->processFile($file);
-	$output =~ s/<br>/\n/;
-	print "$output\n";
+	my $results = OME::Util::Annotate::SpreadsheetReader->processFile($file);
+	my $output;
+	if (!ref $results) {
+		$output .= "Error annotating: \n";
+		$output .= $results;
+	} else {
+		$output .= "Finished: annotating: \n";
+		$output .= OME::Util::Annotate::SpreadsheetReader->printSpreadsheetAnnotationResultsCL($results);
+	}
+
+	# format HTML output so it looks nice when printed out to the command-line
+	print "$output";
 }
 
 sub spreadsheet_help {
