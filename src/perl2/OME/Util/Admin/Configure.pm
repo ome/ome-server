@@ -42,6 +42,10 @@ use Getopt::Long;
 use Text::Wrap;
 use Term::ANSIColor qw(:constants);
 
+use OME::Session;
+use OME::Factory;
+use OME::SessionManager;
+
 use OME::Install::Util; # for euid()
 use OME::Install::Terminal;
 use OME::Install::Environment;

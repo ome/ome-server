@@ -45,7 +45,9 @@ use base qw(OME::Util::Commands);
 use Carp;
 use Getopt::Long;
 
+use OME::Fork;
 use OME::Session;
+use OME::SessionManager;
 use OME::AnalysisChain;
 use OME::Dataset;
 use OME::Analysis::Engine;
