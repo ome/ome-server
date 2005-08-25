@@ -174,12 +174,14 @@ sub backup {
 	}
 	
 	# warn about OMEIS size
-	print STDERR BOLD, "Warning:", RESET, " You have elected to backup OMEIS. Use the ", BOLD, "-q", RESET,
-				" flag if this was not your intention.\nBe advised that this operation,",
-				" depending on the size of your OMEIS repository (its size and location\n",
-				"are printed below), is likely to take a long time.\n";
-	print BOLD, `du -hs $omeis_base_dir`, RESET;
-	$force or y_or_n("Continue?") or exit();
+	if (not $quick) {
+		print STDERR BOLD, "Warning:", RESET, " You have elected to backup OMEIS. Use the ", BOLD, "-q", RESET,
+					" flag if this was not your intention.\nBe advised that this operation,",
+					" depending on the size of your OMEIS repository (its size and location\n",
+					"are printed below), is likely to take a long time.\n";
+		print BOLD, `du -hs $omeis_base_dir`, RESET;
+		$force or y_or_n("Continue?") or exit();
+	}
 	
 	print_header("OME Backup");
 	
@@ -194,9 +196,10 @@ sub backup {
 	$flags .= '-h '.$dbConf->{Host}.' ' if $dbConf->{Host};
 	$flags .= '-p '.$dbConf->{Port}.' ' if $dbConf->{Port};
 	$flags .= '-U '.$dbConf->{User}.' ' if $dbConf->{User};
-	$flags .= '-Fp'; # -F (format). We use the plain text SQL script file
-					 # this should be the most portable 
-					 
+	$flags .= '-Fc'; # -F (format). 
+					 # -p: use the plain text SQL script file this should be the most portable 
+					 # -c: custom archive suitable for input into pg_restore
+
 	print STDERR "su $postgress_user -c '".$prog_path{'pg_dump'}." $flags $dbName > /tmp/omeDB_backup'\n";
 
 	# backup database and watch output from pg_dump
@@ -310,7 +313,7 @@ sub restore {
 	}
 	
 	# find all the neccessary programs we will run
-	my @progs = ('tar', 'pg_restore', 'dropdb','createdb', 'createuser');
+	my @progs = ('tar', 'pg_restore', 'dropdb','createdb', 'createuser', 'psql');
 	my %prog_path;
 	
 	foreach my $prog (@progs) {
@@ -488,6 +491,10 @@ print STDERR "su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbN
 	system ("su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'");
 	system ("su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'");
 	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'");
+
+# these are the commands used to restore a pg_backup archives made with the -p Format
+# print STDERR "su $postgress_user -c '".$prog_path{'psql'}." $flags $dbName < /tmp/omeDB_backup'";
+#	system ("su $postgress_user -c '".$prog_path{'psql'}." $flags $dbName < /tmp/omeDB_backup'");
 }
 
 sub restore_help {
