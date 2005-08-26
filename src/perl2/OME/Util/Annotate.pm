@@ -64,8 +64,8 @@ Usage:
 $script $command_name commands are:
     wizard           Various wizards to help users define image annotations based 
                      on their directory structure.
-    spreadsheet      Command for doing bulk annotations based on Excel spreadsheets
-   	                 or csv files (e.g. created by the OME annotation wizards) 
+    spreadsheet      Command for doing bulk annotations based on Excel or tsv 
+   	                 spreadsheets (e.g. created by the OME annotation wizards) 
     help <command>   Display help information about a specific command
 
 CMDS
@@ -92,7 +92,7 @@ sub spreadsheet_importer {
 		$output .= "Error annotating: \n";
 		$output .= $results;
 	} else {
-		$output .= "Finished: annotating: \n";
+		$output .= "Finished annotating: \n";
 		$output .= OME::Util::Annotate::SpreadsheetReader->printSpreadsheetAnnotationResultsCL($results);
 	}
 
@@ -110,12 +110,12 @@ sub spreadsheet_help {
 Usage:
     $script $command_name [<options>]
 
-This command parses Excel spreadsheets or csv files (e.g. created by the OME
+This command parses Excel or tsv spreadsheets (e.g. created by the OME
 annotation wizards) to create bulk annotations.
 
 Options:
 	 -f, --file
-	 The Excel or csv spreadsheet that will be parsed to generate annotations.
+	 The Excel or tsv spreadsheet that will be parsed to generate annotations.
 	 
      -n, --noop
      Do not create any annotations, just report what would be created.
