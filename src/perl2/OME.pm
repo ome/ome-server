@@ -46,6 +46,7 @@ our $BIG_ENDIAN;
 
 our %MESSAGES = (
 	LSID_COLLISION => undef,
+	OMEIS_DEBUG => undef,
 );
 
 sub THREADS_AVAILABLE {
@@ -68,6 +69,10 @@ if (exists $ENV{OME_DEBUG} && $ENV{OME_DEBUG} > 0) {
 		-prefix      => "$0",
 		-level    => 'debug'
 	);
+}
+
+if (exists $ENV{OMEIS_DEBUG} && $ENV{OMEIS_DEBUG} > 0) {
+	$MESSAGES{OMEIS_DEBUG} = 1;
 }
 
 if (exists $ENV{OME_WARN_LSID_COLLISION} && $ENV{OME_WARN_LSID_COLLISION} > 0) {

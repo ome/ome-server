@@ -81,7 +81,7 @@ use HTTP::Request::Common;
 use LWP::UserAgent;
 use Log::Agent;
 
-our $SHOW_CALLS = 0;
+our $SHOW_CALLS = $OME::MESSAGES{OMEIS_DEBUG};
 our $SHOW_READS = 0;
 
 =head1 CONSTANTS
@@ -379,10 +379,10 @@ sub __callOMEIS {
         }
 
         if ($SHOW_CALLS) {
-            print STDERR "Calling local OMEIS: $server_path\n";
-            print STDERR "  Params: \n";
+            logdbg "debug",  "Calling local OMEIS: $server_path";
+            logdbg "debug",  "  Params:";
             foreach my $k (keys %params) {
-                print STDERR "    '$k' = '",$params{$k},"'\n";
+                logdbg "debug", "    '$k' = '",$params{$k};
             }
         }
 
@@ -453,10 +453,10 @@ sub __callOMEIS {
         }
 
         if ($SHOW_CALLS) {
-            print STDERR "Calling remote OMEIS: $server_path\n";
-            print STDERR "  Params: \n";
+			logdbg "debug", "Calling remote OMEIS: $server_path";
+			logdbg "debug", "  Params:";
             for (my $i = 0; $i < scalar( @params); $i+=2 ) {
-                print STDERR "    '".$params[$i]."' = '".$params[$i+1]."'\n";
+                logdbg "debug", "    '".$params[$i]."' = '".$params[$i+1];
             }
         }
         my $request =
