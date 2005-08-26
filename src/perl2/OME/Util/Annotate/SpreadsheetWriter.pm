@@ -42,7 +42,7 @@ OME::Util::Annotate::SpreadsheetWriter - Package for auto-generating bulk-annota
 =head1 DESCRIPTION
 
 A package to derive Project, Dataset, Category Group, and Category annotations
-from directory strucutre and write these annotations into a csv spreadsheet.
+from directory strucutre and write these annotations into a tsv spreadsheet.
 These spreadsheets can be imported into OME by SpreadsheetReader.
 
 =head1 METHODS
@@ -58,9 +58,9 @@ use File::Glob ':glob'; # for bsd_glob
 use File::Spec; # for splitpath
 
 =head2 processFile
-	processFile ("tmp.csv", $cg_age, $cg_body_part, $cg_quality);
+	processFile ("tmp.tsv", $cg_age, $cg_body_part, $cg_quality);
 This is a utility function that converts a set of image annotation rules
-into a csv spreadsheet. Although it is used by the OME annotation wizards to
+into a tsv spreadsheet. Although it is used by the OME annotation wizards to
 make simple annotations, it is more powerful when used as a PERL API.
 
 This function is intended to be used by OME users who have some experience with
@@ -99,7 +99,7 @@ my $cg_quality = {
 	Windy  => "$root/*/day*windy*",
 };
 
-processFile ("tmp.csv", $cg_age, $cg_body_part, $cg_quality);
+processFile ("tmp.tsv", $cg_age, $cg_body_part, $cg_quality);
 
 Returns 0 if a spreadsheet could not be written (because of mistaken rules)
 and 1 otherwise.
@@ -153,20 +153,20 @@ sub processFile{
 	# check the master hash size
 	return 0 if (not keys %$master_hash);
 	
-	# Use the master hash to write-out a csv file
+	# Use the master hash to write-out a tsv file
 	open (FILEOUT, "> $fn") or die "Couldn't open %fn for writing\n";
 	my @array_cg_list = keys (%$cg_list);
-	print FILEOUT "Image.Name,".join (",", @array_cg_list)."\n";
+	print FILEOUT "Image.Name\t".join ("\t", @array_cg_list)."\n";
 
 	foreach my $file (sort keys %$master_hash) {
-		print FILEOUT "$file, ";
+		print FILEOUT "$file\t";
 
 		foreach my $cg (@array_cg_list) {
 			my $category = $master_hash->{$file}->{$cg};
 			if (defined $category) {
-				print FILEOUT "$category,";
+				print FILEOUT "$category\t";
 			} else {
-				print FILEOUT $cg_list->{$cg}.",";
+				print FILEOUT $cg_list->{$cg}."\t";
 			}
 		}
 		print FILEOUT "\n";
