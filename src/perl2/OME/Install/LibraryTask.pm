@@ -42,7 +42,6 @@ use File::Basename;
 
 use OME::Install::Util;
 use OME::Install::Environment;
-use OME::Install::Terminal;
 use base qw(OME::Install::InstallationTask);
 
 #*********
@@ -68,8 +67,8 @@ my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER);
 # OME user information
 my ($OME_UID, $OME_GID);
 
-# Installation home
-my $INSTALL_HOME;
+# Set our installation home
+my $INSTALL_HOME = '/var/tmp/ome-lib-check';
 
 # The libraries we're managing
 my @libraries = ( {
@@ -437,17 +436,26 @@ sub install {
 #*********
 
 sub execute {
+	# This is eval'ed because it contains a dependency on Term::ReadKey which
+	# May not be resolved for other parts of the installer, but is required
+	# at this point.
+    eval "use OME::Install::Terminal";
+    croak "Errors loading module: $@\n" if $@;
+
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
-
-    # Set our installation home
-    $INSTALL_HOME = '/tmp';
 	
 	# Store our IWD so we can get back to it later
 	my $iwd = getcwd;
-    
+	
+	# Set a very passive umask
+	my $umask = umask 0;
+
     # chdir into our INSTALL_HOME	
-    chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
+    unless (chdir ($INSTALL_HOME)) {
+    	mkdir ($INSTALL_HOME,0777) or croak "Unable to mkdir to \"$INSTALL_HOME\", $!";
+    	chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
+    }
     
     print_header ("C Library Dependency Setup");
 
@@ -501,9 +509,14 @@ sub execute {
 	    	if ($? == 0) {
 				$library->{version} = `$binary 2>&1`;
 	    
-				croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}"
-					if $?;
+	    		if ($?) {
+	    			unlink ($source_file);
+	    			unlink ($binary);
+					croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}";
+	    		}
 	    	}
+			unlink ($source_file);
+			unlink ($binary);
 		}
 
 		if (not $library->{version}) {
@@ -541,6 +554,7 @@ sub execute {
 	}
 
 	chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
+	umask ($umask);
 
 	return 1;
 }
@@ -550,6 +564,114 @@ sub rollback {
 
     # Just a stub for now
     return 1;
+}
+
+# This is a bare-bones check that does not require any prerequisites,
+# and generates a full report - even if things are mising.
+sub check {    
+
+	
+	# Bad library flag
+	my $bad_libraries;
+
+	$CC = which ("$CC");
+	croak "Can't locate a C compiler" unless $CC;
+
+	# Store our IWD so we can get back to it later
+	my $iwd = getcwd;
+
+	my $umask = umask 0;
+    # chdir into our INSTALL_HOME	
+    unless (chdir ($INSTALL_HOME)) {
+    	mkdir ($INSTALL_HOME,0777) or croak "Unable to mkdir to \"$INSTALL_HOME\", $!";
+    	chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
+    }
+
+    # chdir into our INSTALL_HOME
+    chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
+
+    #*********
+    #********* Check each module (exceptions then version)
+    #*********
+
+    foreach my $library (@libraries) {
+		print "  \\_ $library->{name}";
+
+		my @error;
+
+		# Pre-install
+		&{$library->{pre_install}}($library,$LOGFILE) if exists $library->{pre_install};
+
+		# Exceptions
+		if (exists $library->{exception} and &{$library->{exception}}) {
+	    	print BOLD, " [OK]", RESET, ".\n";
+	    	next;
+		}
+
+		# If getting the library version requires a subroutine execute it
+		if (ref ($library->{get_library_version}) eq 'CODE') {
+	    	$library->{version} = &{$library->{get_library_version}};
+		} else {
+	    	# We need to compile some source in order to get our library version
+	    	my $binary = "$INSTALL_HOME/$library->{name}_check";
+	    	my $source_file = $binary.".c";
+
+	    	open (my $CHECK_C, ">", $source_file)
+				or croak "Unable to create version check source file for \"$library->{name}\" $!";
+			print $CHECK_C ($library->{get_library_version}, "\n"); 
+	    	close ($CHECK_C);
+
+	    	my $finkIncs = '';
+	    	$finkIncs = '-I/sw/include'
+	    		if( $OSNAME eq "darwin" and -e '/sw/include/' );
+			@error = `$CC $finkIncs $source_file -o $binary 2>&1`;
+
+	    	if ($? == 0) {
+				$library->{version} = `$binary 2>&1`;
+	    
+	    		if ($?) {
+	    			unlink ($source_file);
+	    			unlink ($binary);
+					croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}";
+	    		}
+	    	}
+			unlink ($source_file);
+			unlink ($binary);
+		}
+
+		if (not $library->{version}) {
+	    	# Log the error returned by get_library_version ()
+
+	    	print BOLD, " [NOT INSTALLED]", RESET, ".\n";
+
+			$library->{version} = undef;
+			
+			$bad_libraries = 1;
+		}
+
+
+		if ($library->{version}) {
+			if (check_library($library)) {
+				print " $library->{version} ", BOLD, "[OK]", RESET, ".\n";
+				next;
+			} else {
+				print " $library->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
+				print STDERR "\nUnsupported version \($library->{version}\) of \"$library->{name}\".\n\n";
+
+				$bad_libraries = 1;
+			}
+		} else {
+			$bad_libraries = 1;
+		}
+	}
+
+	print "\n";  #Spacing
+
+	chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
+	umask ($umask);
+
+	return 1 unless $bad_libraries;
+	return 0;
 }
 
 1;
