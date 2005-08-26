@@ -39,6 +39,7 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Util::Commands);
 use Getopt::Long;
+use File::Spec::Functions qw(rel2abs);
 
 use OME::Install::Util; # for scan_dir
 use OME::Util::Annotate::SpreadsheetWriter;
@@ -129,7 +130,7 @@ sub pdi_wizard {
 		$result = OME::Util::Annotate::SpreadsheetWriter->processFile($file, $dataset_column);	
 	}
 	
-	print STDERR "csv spreadsheet wasn't written. The directory structure under the specified root is incorrect.\n" unless ($result);
+	print STDERR "tsv spreadsheet wasn't written. The directory structure under the specified root is incorrect.\n" unless ($result);
 }
 sub pdi_wizard_help {
     my ($self,$commands) = @_;
@@ -142,7 +143,7 @@ Usage:
     $script $command_name [<options>]
 
 This command examines a directory structure to associate images with datasets and
-and projects. A csv spreadsheet is written that can be parsed by OME using
+and projects. A tsv spreadsheet is written that can be parsed by OME using
 e.g. the command-line tool "ome annotate spreadsheet".
 
 All directories one level under the root directory become projects. All
@@ -178,7 +179,7 @@ then the Dataset-Image heirarchy will be:
 	    
 Options:
 	 -f, --file
-	 The name of the csv spreadsheet that will be written.
+	 The name of the tsv spreadsheet that will be written.
 	 
 	 -s, --short
 	 This signifies that the root points to the Dataset-Image heirarchy.
@@ -202,7 +203,9 @@ sub cgc_wizard {
    	
    	$self->cgc_wizard_help($commands) unless (defined $file and defined $root);
 	die "root parameter is not a directory" if (not -d $root);
+	$root = rel2abs($root);
 	
+	# Get CategoryGroups
 	my @cg_dir;
 	if (not $short) {
 		foreach (scan_dir($root, sub{ !/^\.{1,2}$/})) {
@@ -212,28 +215,28 @@ sub cgc_wizard {
 		$cg_dir[0] = $root;
 	}
 	
-	my @category_dir;
+	my @cg_columns;
 	foreach (@cg_dir) {
+		# get Categories for this CategoryGroup
+		my @category_dir;
 		foreach (scan_dir ($_, sub{ !/^\.{1,2}$/})) {
 			push (@category_dir, $_) if -d $_;
 		}
+		# make the hash
+		my ($vol, $dir, $final_dir) = File::Spec->splitpath($_);
+#		print STDERR "ColumnName => $final_dir\n";
+		my $cg_column = {ColumnName => "$final_dir"};		
+		foreach (@category_dir) {
+			($vol, $dir, $final_dir) = File::Spec->splitpath($_);
+#			print STDERR "\t$final_dir => $_/*\n";
+			$cg_column->{$final_dir} = "$_/*";
+		}
+		push (@cg_columns, $cg_column);
 	}
 
-	my $cg_column = {ColumnName => "CategoryGroup"};	
-	foreach (@cg_dir) {
-		my ($vol, $dir, $final_dir) = File::Spec->splitpath($_);
-		$cg_column->{$final_dir} = "$_/*/*";
-	}
+	my $result = OME::Util::Annotate::SpreadsheetWriter->processFile($file, @cg_columns);
 	
-	my $category_column = {ColumnName => "Category"};
-	foreach (@category_dir) {
-		my ($vol, $dir, $final_dir) = File::Spec->splitpath($_);
-		$category_column->{$final_dir} = "$_/*";
-	}
-	
-	my $result = OME::Util::Annotate::SpreadsheetWriter->processFIle($file, $category_column, $cg_column);
-	
-	print STDERR "csv spreadsheet wasn't written. The directory structure under the specified root is incorrect.\n" unless ($result);
+	print STDERR "tsv spreadsheet wasn't written. The directory structure under the specified root is incorrect.\n" unless ($result);
 }
 sub cgc_wizard_help {
     my ($self,$commands) = @_;
@@ -246,7 +249,7 @@ Usage:
     $script $command_name [<options>]
 
 This command examines a directory structure to associate images with CategoryGroups and
-and Categories. A csv spreadsheet is written that can be parsed by OME using
+and Categories. A tsv spreadsheet is written that can be parsed by OME using
 e.g. the command-line tool "ome annotate spreadsheet".
 
 All directories one level under the root directory become CategoryGroups. All
@@ -278,7 +281,7 @@ pointed at /Worms
 
 Options:
 	 -f, --file
-	 The name of the csv spreadsheet that will be written.
+	 The name of the tsv spreadsheet that will be written.
 	 
 	 -s, --short
 	 This signifies that the root directory name is used to form the CategoryGroup.
