@@ -145,17 +145,11 @@ USAGE
 #********* START OF CODE
 #*********
 
-# Set the cwd to wherever we ran the script from
-chdir ($FindBin::Bin);
-
-# Number of checks to run
-my $checks_to_run = 0;
+# Command line options
+my ($update, $perl_check, $lib_check, $check_all, $usage, $install, $answer_y);
 
 # Default env file location
 my $env_file = ('/etc/ome-install.store');
-
-# Command line options
-my ($update, $perl_check, $lib_check, $check_all, $usage, $install, $answer_y);
 
 # Parse our command line options
 GetOptions ("u|update" => \$update,         # update
@@ -167,6 +161,60 @@ GetOptions ("u|update" => \$update,         # update
 			"y|yes" => \$answer_y,          # Always answer 'y', set $update
 			"h|help" => \$usage,            # Display help
 		);
+
+usage () if $usage;
+
+if ($check_all) { $perl_check = 1; $lib_check = 1; }
+
+my $lib_check_result;
+my $perl_check_result;
+if ($lib_check) {
+    eval "require OME::Install::LibraryTask";
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+
+    $lib_check_result = OME::Install::LibraryTask::check ();
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+}
+
+if ($perl_check) {
+    eval "require OME::Install::PerlModuleTask";
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+
+    $perl_check_result = OME::Install::PerlModuleTask::check ();
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+}
+
+if ($perl_check or $lib_check) {
+	exit (0) if $perl_check_result and $lib_check_result;
+	exit (1);
+}
+
+
+
+###
+# Get ready for an actual install/update
+
+
+# Answer Y flag implies update flag
+$update = 1 if restore_env ($env_file);
+# These need a restored environment
+if ( $answer_y and not $update ) {
+	die "Unable to restore the installation environemnt from file";
+}
+
+if ($update) {
+    my $environment = initialize OME::Install::Environment;
+    $environment->set_flag ("UPDATE");
+}
+
+if ($answer_y) {
+    my $environment = initialize OME::Install::Environment;
+    $environment->set_flag ("ANSWER_Y");
+}
+
+
+# Set the cwd to wherever we ran the script from
+chdir ($FindBin::Bin);
 
 # Root check
 usage (<<ERROR) unless $EUID == 0;
@@ -192,59 +240,6 @@ Or, if you can't run sudo:
 # perl install.pl
 ERROR
 
-usage () if $usage;
-
-if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
-
-# Answer Y flag implies update flag
-$update = 1 if restore_env ($env_file);
-# These need a restored environment
-if ( ($perl_check or $answer_y) and not $update ) {
-	die "Unable to restore the installation environemnt from file";
-}
-
-if ($update) {
-    my $environment = initialize OME::Install::Environment;
-    $environment->set_flag ("UPDATE");
-}
-
-if ($answer_y) {
-    my $environment = initialize OME::Install::Environment;
-    $environment->set_flag ("ANSWER_Y");
-}
-
-if ($lib_check) {
-    # Initialize our environment and set the LIB_CHECK flag
-	my $environment = initialize OME::Install::Environment;
-    $environment->set_flag ("LIB_CHECK");
-
-    eval "require OME::Install::LibraryTask";
-    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
-
-    OME::Install::LibraryTask::execute ();
-    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
-
-    --$checks_to_run;
-
-    exit (0) if $checks_to_run < 1;
-}
-
-if ($perl_check) {
-
-    # Initialize our environment and set the PERL_CHECK flag
-    my $environment = initialize OME::Install::Environment;
-    $environment->set_flag ("PERL_CHECK");
-
-    eval "require OME::Install::PerlModuleTask";
-    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
-
-    OME::Install::PerlModuleTask::execute ();
-    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
-
-    --$checks_to_run;
-
-    exit (0) if $checks_to_run < 1;
-}
 
 run_tasks ();
 
