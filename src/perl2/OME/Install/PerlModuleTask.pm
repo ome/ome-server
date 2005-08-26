@@ -43,7 +43,6 @@ use Cwd;
 
 use OME::Install::Util;
 use OME::Install::Environment;
-use OME::Install::Terminal;
 use base qw(OME::Install::InstallationTask);
 
 #*********
@@ -105,6 +104,18 @@ my $INSTALL_HOME;
 
 my @modules = (
     {
+	name => 'Term::ReadKey',
+	repository_file => "$REPOSITORY/TermReadKey-2.21.tar.gz"
+ 	},{
+	name => 'Storable',
+	repository_file => "$REPOSITORY/Storable-1.0.13.tar.gz"
+   	},{
+	name => 'Carp::Assert',
+	repository_file => "$REPOSITORY/Carp-Assert-0.17.tar.gz"
+ 	},{
+	name => 'Compress::Zlib',
+	repository_file => "$REPOSITORY/Compress-Zlib-1.19.tar.gz"
+   	},{
 	name => 'DBI',
 	repository_file => "$REPOSITORY/DBI-1.30.tar.gz",
 	# XXX DBI has never been a problem. In general the problem child is DBD::Pg
@@ -524,6 +535,13 @@ sub install {
 #*********
 
 sub execute {
+	# This is eval'ed because it contains a dependency on Term::ReadKey which
+	# May not be resolved for other parts of the installer, but is required
+	# at this point.
+    eval "use OME::Install::Terminal";
+    croak "Errors loading module: $@\n" if $@;
+
+
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
 
@@ -912,6 +930,46 @@ sub rollback {
 
     # Stub for the moment.
     return 1;
+}
+
+# This is a bare-bones check that does not require any prerequisites,
+# and generates a full report - even if things are mising.
+sub check {
+	my $ok = 1;
+
+    foreach my $module (@modules) {
+		print "  \\_ $module->{name}";
+
+		if (exists $module->{exception} and &{$module->{exception}}) {
+			print BOLD, " [OK]", RESET, ".\n";
+			next;
+		}
+
+		# If we've got a get_module_version() override in the module definition use it,
+		# otherwise just use the default function.
+		$module->{version} = &{$module->{get_module_version}}
+			if exists $module->{get_module_version};
+		$module->{version} = get_module_version($module->{name})
+			unless $module->{version}; 
+
+		if (not $module->{version}) {
+			print BOLD, " [NOT INSTALLED]\n", RESET;
+			$ok = 0;
+			next;
+		}
+
+		if (check_module($module)) {
+			print " $module->{version} ", BOLD, "[OK]", RESET, ".\n";
+			next;
+		} else {
+			print " $module->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
+			$ok = 0;
+		}
+    }
+    
+    # Clear out the eval errors
+    eval "1";
+    return $ok;
 }
 
 1;
