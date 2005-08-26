@@ -57,6 +57,7 @@ file into OME.
 use strict;
 use Carp 'cluck';
 use vars qw($VERSION);
+use English; # for $INPUT_RECORD_SEPARATOR
 use Term::ANSIColor qw(:constants);
 use Spreadsheet::ParseExcel;
 
@@ -118,8 +119,22 @@ sub processFile {
 			 push ( @columnHeadings, $contents ) if $contents;
 		}
 	} else {
-		open (FILE, "< $fileToParse") or die "Couldn't open $fileToParse for reading: $!";		
+		# TSV formated spreadsheets use the tab character to separate columns.
+		# But what do they use to separate rows? It depends. Most people use the
+		# new-line character. Certainly that is how text tables produced with 
+		# the OME WebUI and spreadsheet wizard tools are formated. Excel spreadsheets
+		# exported in TSV format, on the other hand, uses the return character (\r).
+		# So to support both CR and NL TSV formats we do a quick pass over the file
+		# to see which character is used. Then we set the input record separator to
+		# that character. The input record separator affects how end of line is parsed
+		# by file I/O. TJM 25-10-2005
+		open (FILE, "< $fileToParse") or die "Couldn't open $fileToParse for reading: $!";	
 		my $text = <FILE>;
+		$INPUT_RECORD_SEPARATOR = "\r" if $text =~ m/\r/;
+		close FILE;
+		
+		open (FILE, "< $fileToParse") or die "Couldn't open $fileToParse for reading: $!";	
+		$text = <FILE>;
 		chomp($text);
 		
 		@columnHeadings = split (/\t/,$text);
@@ -259,6 +274,10 @@ sub processFile {
 			my $CGName = $columnHeadings[$index] or
 				die "ColumnHeading for column $index is undefined\n";
 			my $categoryName = shift(@cats);
+			
+			# skip 'Null' cells. i.e. cells that contain only white-space characters
+			next unless defined $categoryName and $categoryName =~ m/\S+/;
+			
 			my $CG = $CategoryGroups{$CGName};
 			
 			my $category = $factory->findObject ('@Category', { Name => $categoryName, CategoryGroup => $CG });
@@ -288,7 +307,10 @@ sub processFile {
 			
 			my $granularity = $factory->findObject('OME::SemanticType', { name => $STName })->granularity;
 			my $SEValue = shift(@seVals);
-
+			
+			# skip 'Null' cells. i.e. cells that contain only white-space characters
+			next unless defined $SEValue and $SEValue =~ m/\S+/;
+			
 			# There's an Image ST but there's no image to annotate!
 			if ( $granularity eq 'I' and not exists $image->{ Image }) {
 				$ERRORoutput .= "You must specify an image for $STSE because it's an
@@ -320,6 +342,9 @@ sub processFile {
 			my $datasetManager = new OME::Tasks::DatasetManager;
 			my $datasetName = shift (@datasetNames);
 			
+			# skip 'Null' cells. i.e. cells that contain only white-space characters
+			next unless defined $datasetName and $datasetName =~ m/\S+/;
+			
 			my $dataset = $factory->findObject ('OME::Dataset', { name => $datasetName });			
 			if (not $dataset) {
 				$dataset = $datasetManager->newDataset ($datasetName, "Created on $timestr from".
@@ -328,15 +353,19 @@ sub processFile {
 				push (@newDatasets, $dataset);
 			}
 			
-			$datasetManager->addToDataset($dataset, $image->{ Image });
+			$datasetManager->addToDataset($dataset, $image->{ Image }) if $imageIdentifier;
 			# record the new image classification for output purposes
 			$image->{'Dataset'} = $dataset;
 			push (@datasets, $dataset); # pass it to projects
 		}
 		
 		# Process Projects
-		if ($projCol) {
+		if (defined $projCol) {
 			my $projectManager = new OME::Tasks::ProjectManager;
+
+			# skip 'Null' cells. i.e. cells that contain only white-space characters
+			next unless defined $projName and $projName =~ m/\S+/;
+			
 			my $project = $factory->findObject ('OME::Project', { name => $projName });
 			if (not $project) {
 				$projectManager->create( {
@@ -359,6 +388,7 @@ sub processFile {
 		$session->commitTransaction();
 	}
 	close FILE unless $type eq EXCEL;
+	$INPUT_RECORD_SEPARATOR = ''; # probably don't need to do this, but let's be safe
 	$session->commitTransaction();
 	
 	# package up outputs and return
@@ -397,12 +427,12 @@ sub printSpreadsheetAnnotationResultsCL {
 	}	
 	if (scalar @newProjs) {
 		$output .= "New Projects:\n";
-		$output .= "    '".$_->name()."'\n" foreach (sort @newProjs);
+		$output .= "    '".$_->name()."'\n" foreach (sort {$a->name() cmp $b->name()} @newProjs);
 		$output .= "\n"; # spacing
 	}
 	if (scalar (@newDatasets)) {
 		$output .= "New Datasets:\n";
-		$output .= "    '".$_->name()."'\n" foreach (sort @newDatasets);
+		$output .= "    '".$_->name()."'\n" foreach (sort {$a->name() cmp $b->name()} @newDatasets);
 		$output .= "\n"; # spacing
 	}
 	if (scalar keys %$newProjDataset) {
@@ -417,16 +447,14 @@ sub printSpreadsheetAnnotationResultsCL {
 	}
 	if (scalar @newCGs) {
 		$output .= "New Category Groups:\n";
-		$output .= "    '".$_->Name()."'\n" foreach (sort @newCGs);
+		$output .= "    '".$_->Name()."'\n" foreach (sort {$a->Name() cmp $b->Name()} @newCGs);
 		$output .= "\n"; # spacing
 	}
 	if (scalar keys %$newCategories) {
 		$output .= "New Categories:\n";
 		foreach my $CGName (sort keys %$newCategories) {
-			my $CG = $factory->findObject ('@CategoryGroup', { Name => $CGName });
 			$output .= "    '".$CGName."'\n";
 			foreach my $categoryName (sort keys %{$newCategories->{$CGName}}) {
-				my $category = $factory->findObject ('@Category', { Name => $categoryName, CategoryGroup => $CG });
 				$output .= "        \\_'".$categoryName."'\n";
 			}
 		}
