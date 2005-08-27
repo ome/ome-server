@@ -102,7 +102,7 @@ sub printSpreadsheetAnnotationResultsHTML {
 	my $factory = $session->Factory();
 	
 	die "second input to printResultsHTML is expected to be a hash"	if (ref $Results ne "HASH");	
-	my $ERRORoutput    = $Results->{ERRORoutput};
+	my @ERRORoutput    = @{$Results->{ERRORoutput}};
 	my @newProjs       = @{$Results->{newProjs}};
 	my @newDatasets    = @{$Results->{newDatasets}};
 	my $newProjDataset = $Results->{newProjDatast};
@@ -112,19 +112,21 @@ sub printSpreadsheetAnnotationResultsHTML {
 	my $images         = $Results->{images};
 	
 	my $output;
-	if (defined $ERRORoutput and $ERRORoutput ne '') {
-		$output .= "<font color='red'>".$ERRORoutput."</font><br><br>";
+	if (scalar @ERRORoutput) {
+		foreach (@ERRORoutput) {
+			$output .= "<font color='red'>$_</font><br>";
+		}
 	}	
 	if (scalar @newProjs) {
 		$output .= "New Projects:<br>";
 		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->name().'</a><br>'
-			foreach (sort @newProjs);
+			foreach (sort {$a->name() cmp $b->name()} @newProjs);
 		$output .= "<br>"; # spacing
 	}
 	if (scalar (@newDatasets)) {
 		$output .= "New Datasets:<br>";
 		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->name().'</a><br>'
-			foreach (sort @newDatasets);
+			foreach (sort {$a->name() cmp $b->name()} @newDatasets);
 		$output .= "<br>"; # spacing
 	}
 	if (scalar keys %$newProjDataset) {
@@ -142,7 +144,7 @@ sub printSpreadsheetAnnotationResultsHTML {
 	if (scalar @newCGs) {
 		$output .= "New Category Groups:<br>";
 		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->Name().'</a><br>'
-			foreach (sort @newCGs);
+			foreach (sort {$a->Name() cmp $b->Name()} @newCGs);
 		$output .= "<br>"; # spacing
 	}
 	if (scalar keys %$newCategories) {

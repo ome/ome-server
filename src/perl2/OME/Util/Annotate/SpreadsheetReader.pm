@@ -89,7 +89,7 @@ sub processFile {
  	my ($self, $fileToParse) = @_;
  	my $session= $self->Session();
     my $factory = $session->Factory();
-    my $ERRORoutput;
+    my @ERRORoutput;
 	
 	# Get the appropriate modules and mexes
 	my $global_module = $factory->findObject( 'OME::Module', name => 'Spreadsheet Global import' )
@@ -158,12 +158,12 @@ sub processFile {
 		if ($colHead eq "" or $colHead =~ m/#.*/) {
 			# skip columns without a heading or use the # character to comment-things out
  		} elsif ($colHead eq 'Image.Name' or $colHead eq 'Image.id') {
- 			$ERRORoutput .= "Only one image identifier (Image.Name or Image.id) column per spreadsheet is permitted."
- 				and return $ERRORoutput if $imgCol;
+ 		 	push (@ERRORoutput, "Only one image identifier (Image.Name or Image.id) column per spreadsheet is permitted.")
+ 				and return @ERRORoutput if $imgCol;
  			$imgCol = $colCounter;
 		} elsif ($colHead eq 'Project') {
-			$ERRORoutput .= "Only one Project column per spreadsheet is permitted." 
-				and return $ERRORoutput if $projCol;
+			push (@ERRORoutput, "Only one Project column per spreadsheet is permitted.")
+				and return @ERRORoutput if $projCol;
 			$projCol = $colCounter;
 		} elsif ($colHead eq 'Dataset') {
 			$DatasetCols{ $colCounter } = 1;
@@ -261,7 +261,7 @@ sub processFile {
 				die "There are two images in the database with that name $imageIdentifier. ".
 					"Try using IDs instead to ensure uniqueness.\n" if (scalar(@objects) > 1);
 				
-				$ERRORoutput .= "Image with identifier $imageIdentifier doesn't exist. Skipping Row."
+				push (@ERRORoutput, "Image with identifier $imageIdentifier doesn't exist. Skipping Row.")
 					and next if (scalar @objects != 1);
 
 				$images{$imageIdentifier} = {Image => $objects[0]};
@@ -313,8 +313,7 @@ sub processFile {
 			
 			# There's an Image ST but there's no image to annotate!
 			if ( $granularity eq 'I' and not exists $image->{ Image }) {
-				$ERRORoutput .= "You must specify an image for $STSE because it's an
-							Image SemanticType.  Did not annotate.";
+				push(@ERRORoutput, "You must specify an image for $STSE because it's an Image SemanticType.  Did not annotate.");
 				next;
 			}
 			
@@ -394,7 +393,7 @@ sub processFile {
 	# package up outputs and return
 	# some one-else will be create some human understandable output
 	my $Results;
-	$Results->{ERRORoutput}   = $ERRORoutput;
+	$Results->{ERRORoutput}   = \@ERRORoutput;
 	$Results->{newProjs}      = \@newProjs;
 	$Results->{newDatasets}   = \@newDatasets;
 	$Results->{newProjDatast} = $newProjDataset;
@@ -412,7 +411,7 @@ sub printSpreadsheetAnnotationResultsCL {
 	my $factory = $session->Factory();
 	
 	die "second input to printResultsHTML is expected to be a hash"	if (ref $Results ne "HASH");	
-	my $ERRORoutput    = $Results->{ERRORoutput};
+	my @ERRORoutput    = @{$Results->{ERRORoutput}};
 	my @newProjs       = @{$Results->{newProjs}};
 	my @newDatasets    = @{$Results->{newDatasets}};
 	my $newProjDataset = $Results->{newProjDatast};
@@ -422,8 +421,10 @@ sub printSpreadsheetAnnotationResultsCL {
 	my $images         = $Results->{images};
 
 	my $output = "";
-	if (defined $ERRORoutput and $ERRORoutput ne '') {
-		$output .= "$ERRORoutput\n\n";
+	if (scalar @ERRORoutput) {
+		foreach (@ERRORoutput) {
+			$output .= "$_\n";
+		}
 	}	
 	if (scalar @newProjs) {
 		$output .= "New Projects:\n";
