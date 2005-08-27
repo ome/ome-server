@@ -1362,7 +1362,7 @@ size_t off0, off1;
 		}
 	}
 
-	return (nIO);
+	return (nIO_t);
 }
 
 
