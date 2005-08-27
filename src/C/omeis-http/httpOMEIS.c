@@ -215,6 +215,7 @@ int setPixels (omeis *is, OID pixelsID, void* pixels)
 	curl_slist_free_all (headerlist);
 	
     if (result_code != CURLE_OK) {
+    	FREE(head);
 		FREE(buffer.buffer);
 		return 0;
 	}
@@ -222,9 +223,11 @@ int setPixels (omeis *is, OID pixelsID, void* pixels)
 	int pix;
 	if (sscanf(buffer.buffer,"%d\n", &pix) != 1) {
 		fprintf(stderr, "Output from OMEIS method SetPixels couldn't be parsed.\n");
+		FREE(head);
 		FREE(buffer.buffer);
 		return 0;
 	}
+	FREE(head);
 	FREE(buffer.buffer);
 	return pix;
 }
@@ -244,13 +247,15 @@ void* getPixels (omeis* is, OID pixelsID)
     buffer = (char*) executeGETCall(is, command, bytes);
     
     if (buffer == NULL) {
-		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);
+		FREE(ph);
 		FREE(buffer);
 		return NULL;
 	}
 	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
+		FREE(ph);
 		FREE(buffer);
 		return NULL;
 	}
@@ -317,6 +322,7 @@ char* getLocalPath (omeis *is, OID pixelsID)
 int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 			int x1, int y1, int z1, int c1, int t1, void* pixels)
 {
+	pixHeader* head = pixelsInfo (is, pixelsID); /* needed to figure out bp */
 	char scratch[128];
 	smartBuffer buffer;
 	
@@ -365,7 +371,7 @@ int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 				CURLFORM_COPYNAME, "Pixels",
 				CURLFORM_BUFFER, "data",
 				CURLFORM_BUFFERPTR, pixels,
-				CURLFORM_BUFFERLENGTH, (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1),
+				CURLFORM_BUFFERLENGTH, (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*head->bp,
 				CURLFORM_END);
 
 	headerlist = curl_slist_append(headerlist, "Expect:");    
@@ -381,6 +387,7 @@ int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 	curl_slist_free_all (headerlist);
 	
     if (result_code != CURLE_OK) {
+		FREE(head);
 		FREE(buffer.buffer);
 		return 0;
 	}
@@ -388,9 +395,11 @@ int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 	int pix;
 	if (sscanf(buffer.buffer,"%d\n", &pix) != 1) {
 		fprintf(stderr, "Output from OMEIS method SetROI couldn't be parsed.\n");
+		FREE(head);
 		FREE(buffer.buffer);
 		return 0;
 	}
+	FREE(head);
 	FREE(buffer.buffer);
 	return pix;
 }
@@ -413,12 +422,14 @@ void* getROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
     
     if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(ph);
 		FREE(buffer);
 		return NULL;
 	}
 	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
+		FREE(ph);
 		FREE(buffer);
 		return NULL;
 	}
