@@ -291,6 +291,34 @@ OID finishPixels (omeis* is, OID pixelsID)
 	return newID;
 }
 
+OID deletePixels (omeis* is, OID pixelsID)
+{
+	OID oldID;
+	char* buffer;
+	char command [256];
+	sprintf(command,"%s%sMethod=DeletePixels&PixelsID=%llu", is->url,"?",pixelsID);
+	buffer = (char*) executeGETCall(is, command, 1024);
+
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		FREE(buffer);
+		return 0;
+	}
+	
+	if (strstr(buffer, "Error")) {
+		fprintf (stderr, "ERROR:\n%s\n", buffer);
+		FREE(buffer);
+		return 0;
+	}
+
+	if (sscanf(buffer,"%llu", &oldID) != 1) {
+		fprintf(stderr, "Output from OMEIS method DeletePixels couldn't be parsed.\n");
+	}
+	
+	FREE(buffer);
+	return oldID;
+}
+
 char* getLocalPath (omeis *is, OID pixelsID)
 {
 	char* path = (char*) MALLOC (sizeof(char)*OME_DIGEST_CHAR_LENGTH);

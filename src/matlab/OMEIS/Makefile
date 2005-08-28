@@ -3,8 +3,8 @@
 MEX       = mex
 MEX_FLAGS = -O -inline -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEIS
 
-targets: newPixels.mex* pixelsInfo.mex* finishPixels.mex* getPixels.mex* setPixels.mex* \
-getROI.mex* setROI.mex*
+targets: newPixels.mex* pixelsInfo.mex* finishPixels.mex* deletePixels.mex* \
+getPixels.mex* setPixels.mex* getROI.mex* setROI.mex*
 
 newPixels.mex*: newPixels.c 
 	$(MEX) $(MEX_FLAGS) newPixels.c
@@ -14,7 +14,10 @@ pixelsInfo.mex*: pixelsInfo.c
 	
 finishPixels.mex*: finishPixels.c
 	$(MEX) $(MEX_FLAGS) finishPixels.c
-	
+
+deletePixels.mex*: deletePixels.c
+	$(MEX) $(MEX_FLAGS) deletePixels.c
+
 getPixels.mex*: getPixels.c
 	$(MEX) $(MEX_FLAGS) getPixels.c
 
