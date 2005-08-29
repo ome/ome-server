@@ -444,8 +444,8 @@ void* getROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 	if (bytes < 1024)
     	bytes = 1024;
 
-    sprintf(command,"%s%sMethod=GetROI&PixelsID=%llu&ROI=%d,%d,%d,%d,%d,%d,%d,%d,%d,%d"
-    				"BigEndian=%d",is->url,"?",pixelsID,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,bigEndian()); 	
+    sprintf(command,"%s%sMethod=GetROI&PixelsID=%llu&ROI=%d,%d,%d,%d,%d,%d,%d,%d,%d,%d&BigEndian=%d",
+    		is->url,"?",pixelsID,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,bigEndian()); 	
     buffer = (char*) executeGETCall(is, command, bytes);
     
     if (buffer == NULL) {
