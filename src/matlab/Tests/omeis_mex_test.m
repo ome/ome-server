@@ -11,6 +11,7 @@ function omeis_mex_test ()
 % I am assuming that OMEIS is hosted on the local computer
 [s, hostname] = system('hostname');
 hostname = hostname(1:end-1);
+hostname = sprintf('%s/cgi-bin/omeis', hostname);
 
 % This is hacked code and is evil.
 % It queries the ome database to figure out what are the valid OMEIS pixel ids
@@ -18,9 +19,9 @@ perl_script = fopen ('omeis_test_helper.pl', 'w');
 fprintf(perl_script, 'use strict;\nmy $inf = "ids_tmp";\nmy $ouf = "ids_tmp_clean";\nopen (FILE_IN, "< $inf") or die;\nopen (FILE_OUT, "> $ouf") or die;\nwhile (<FILE_IN>) {\n    print FILE_OUT $1." " if m/\\s*(\\d+)\\s*/;\n}\nclose(FILE_IN);\nclose(FILE_OUT);\n');
 fclose(perl_script);
 
-system('/usr/local/bin/psql -d ome -o ids_tmp -c "SELECT image_server_id FROM image_pixels"');
+system('/usr/bin/psql -d ome -o ids_tmp -c "SELECT image_server_id FROM image_pixels"');
 perl('omeis_test_helper.pl');
-ids = load('ids_tmp_clean');
+ids = sort(load('ids_tmp_clean'));
 system('rm ids_tmp ids_tmp_clean omeis_test_helper.pl');
 
 fprintf ('Extracted Info about your OME install\n');
@@ -28,6 +29,12 @@ fprintf ('            OMEIS URL: %s\n', hostname);
 fprintf ('   OMEIS Pixels Count: %d\n\n', length(ids));
 
 fprintf ('Starting OME/MATLAB Test:');
+is = openConnectionOMEIS(hostname);
+
+counter_bp_1_passed = 0;
+counter_bp_2_passed = 0;
+counter_bp_1_failed = 0;
+counter_bp_2_failed = 0;
 
 for pix_id = ids
     fprintf ('Processing PixelsID %d:\n', pix_id);
@@ -37,7 +44,7 @@ for pix_id = ids
     
     % get image and remove top left corner
     fprintf ('\tgetPixels ...');  im = getPixels(is, pix_id);            fprintf (' done\n');
-    % imshow(im, [min(min(im)) max(max(im))]);
+    % figure; imshow(im, [min(min(im)) max(max(im))]);
     
     [sizeX, sizeY, sizeZ, sizeC, sizeT] = size(im);
     im (1:floor(sizeX/2), 1:floor(sizeY/2)) = 0;
@@ -49,7 +56,7 @@ for pix_id = ids
     fprintf ('\tgetROI ...');
     im_q = getROI(is, pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0);
     fprintf (' done\n');
-    %imshow(im_q, [min(min(im_q)) max(max(im_q))]);
+    % figure; imshow(im_q, [min(min(im_q)) max(max(im_q))]);
     
     fprintf ('\tsetROI ...');
     num_pixels = setROI (is, n_pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0, im_q);;
@@ -59,8 +66,22 @@ for pix_id = ids
     % figure; imshow(getPixels(is,n_pix_id), [min(min(im)) max(max(im))]);
     
     if (n_pix_id == pix_id)
+	if (im_struct.bp == 1)
+		counter_bp_1_passed = counter_bp_1_passed + 1;
+    else
+		counter_bp_2_passed = counter_bp_2_passed + 1;
+	end
        fprintf ('TEST PASSED \n\n');
     else
-       error ('TEST FAILED New PixelsID is %d\n\n', n_pix_id);
+	if (im_struct.bp == 1)
+		counter_bp_1_failed = counter_bp_1_failed + 1;
+	else
+		counter_bp_2_failed = counter_bp_2_failed + 1;
+	end
+	fprintf ('\tdeletePixels ...'); n_pix_id = deletePixels (is, n_pix_id); fprintf (' done\n');	
+    fprintf ('TEST FAILED New PixelsID is %d\n\n', n_pix_id);
     end
 end
+
+fprintf ('TESTS PASSED (bp=1) [%d] (bp=2) [%d]\n', counter_bp_1_passed, counter_bp_2_passed);
+fprintf ('TESTS FAILED (bp=1) [%d] (bp=2) [%d]\n', counter_bp_1_failed, counter_bp_2_failed);
