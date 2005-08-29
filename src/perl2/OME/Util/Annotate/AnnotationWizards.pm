@@ -85,21 +85,43 @@ sub pdi_wizard {
     my $script = $self->scriptName();
     my $command_name = $self->commandName($commands);
     
-    my ($file, $root, $short);
+    my ($file, $root, $short, @exclude_dir);
 	GetOptions('f|file=s' => \$file,
    			   'r|root=s' => \$root,
-   			   's|short'  => \$short);
-   			   
+   			   's|short'  => \$short,
+   			   'x|exclude=s' => \@exclude_dir);
+   	@exclude_dir = split(/,/,join(',', @exclude_dir));
+   	
 	$self->pdi_wizard_help($commands) unless (defined $file and defined $root);
 	die "root parameter is not a directory" if (not -d $root);
+	$root = rel2abs($root);
 
+	foreach (@exclude_dir) {
+		die "exclude parameter: $_ is not a directory\n"
+			unless (-d $_);
+#		die "exclude parameter: $_ is not a sub-directory of root\n"
+#			unless (path_in_tree(rel2abs($root), rel2abs($_)));
+	}
+	
 	my @project_dir;
 	if (not $short) {
-		foreach (scan_dir($root, sub{ !/^\.{1,2}$/})) {
-			push (@project_dir, $_) if -d $_;
+		foreach my $proj_dir (scan_dir($root, sub{ !/^\.{1,2}$/ })) {
+			next if not -d $proj_dir;
+			$proj_dir = rel2abs($proj_dir);
+			
+			my $skip;
+			foreach (@exclude_dir) {
+				$skip = 1 if ($proj_dir eq rel2abs($_));
+			}
+			next if $skip;
+			push (@project_dir, $proj_dir);
 		}
 	} else {
-		$project_dir[0] = $root;
+		my $skip;
+		foreach $_ (@exclude_dir) {
+			$skip = 1 if rel2abs($root) eq rel2abs($_);
+		}
+		$project_dir[0] = $root unless $skip;
 	}
 	
 	my @dataset_dir;
@@ -185,7 +207,11 @@ Options:
 	 This signifies that the root points to the Dataset-Image heirarchy.
 	 
 	 -r, --root
-	 Path to the root directory.      
+	 Path to the root directory.
+	 
+	 -x, --exclude
+	 Ignore the specified root subdirectories.
+	 
 USAGE
     CORE::exit(1);
 }
@@ -196,23 +222,44 @@ sub cgc_wizard {
     my $script = $self->scriptName();
     my $command_name = $self->commandName($commands);
     
-    my ($file, $root, $short);
+    my ($file, $root, $short, @exclude_dir);
 	GetOptions('f|file=s'  => \$file,
    			   'r|root=s'  => \$root,
-   			   's|short'   => \$short);
-   	
+   			   's|short'   => \$short,
+   			   'x|exclude=s' => \@exclude_dir);
+   	@exclude_dir = split(/,/,join(',',@exclude_dir));
+
    	$self->cgc_wizard_help($commands) unless (defined $file and defined $root);
 	die "root parameter is not a directory" if (not -d $root);
 	$root = rel2abs($root);
 	
+	foreach (@exclude_dir) {
+		die "exclude parameter: $_ is not a directory\n"
+			unless (-d $_);
+#		die "exclude parameter: $_ is not a sub-directory of root\n"
+#			unless (path_in_tree(rel2abs($root), rel2abs($_)));
+	}
+	
 	# Get CategoryGroups
 	my @cg_dir;
 	if (not $short) {
-		foreach (scan_dir($root, sub{ !/^\.{1,2}$/})) {
-			push (@cg_dir, $_) if -d $_;
+		foreach my $dir (scan_dir($root, sub{ !/^\.{1,2}$/})) {
+			next if not -d $root;
+			$dir = rel2abs($dir);
+
+			my $skip;
+			foreach (@exclude_dir) {
+				$skip = 1 if ($dir eq rel2abs($_))
+			}
+			next if $skip;
+			push (@cg_dir, $dir);
 		}
 	} else {
-		$cg_dir[0] = $root;
+		my $skip;
+		foreach $_ (@exclude_dir) {
+			$skip = 1 if rel2abs($root) eq rel2abs($_);
+		}
+		$cg_dir[0] = $root unless $skip;
 	}
 	
 	my @cg_columns;
@@ -224,11 +271,11 @@ sub cgc_wizard {
 		}
 		# make the hash
 		my ($vol, $dir, $final_dir) = File::Spec->splitpath($_);
-#		print STDERR "ColumnName => $final_dir\n";
+		print STDERR "ColumnName => $final_dir\n";
 		my $cg_column = {ColumnName => "$final_dir"};		
 		foreach (@category_dir) {
 			($vol, $dir, $final_dir) = File::Spec->splitpath($_);
-#			print STDERR "\t$final_dir => $_/*\n";
+			print STDERR "\t$final_dir => $_/*\n";
 			$cg_column->{$final_dir} = "$_/*";
 		}
 		push (@cg_columns, $cg_column);
@@ -287,7 +334,10 @@ Options:
 	 This signifies that the root directory name is used to form the CategoryGroup.
 	 
 	 -r, --root
-	 Path to the root directory.      
+	 Path to the root directory.
+	 
+	 -x, --exclude
+	 Ignore the specified root subdirectories.
 USAGE
     CORE::exit(1);
 }
