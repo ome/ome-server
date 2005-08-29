@@ -155,7 +155,7 @@ sub processFile{
 	
 	# Use the master hash to write-out a tsv file
 	open (FILEOUT, "> $fn") or die "Couldn't open %fn for writing\n";
-	my @array_cg_list = keys (%$cg_list);
+	my @array_cg_list = sort keys (%$cg_list);
 	print FILEOUT "Image.Name\t".join ("\t", @array_cg_list)."\n";
 
 	foreach my $file (sort keys %$master_hash) {
@@ -166,7 +166,14 @@ sub processFile{
 			if (defined $category) {
 				print FILEOUT "$category\t";
 			} else {
-				print FILEOUT $cg_list->{$cg}."\t";
+				# $cg_list->{$cg} might be  undefined that's fine. It just means
+				# that an image shouldn't be classfied in any category for that
+				# category group
+				if (defined $cg_list->{$cg}) {
+					print FILEOUT $cg_list->{$cg}."\t";
+				} else {
+					print FILEOUT "\t";
+				}
 			}
 		}
 		print FILEOUT "\n";
