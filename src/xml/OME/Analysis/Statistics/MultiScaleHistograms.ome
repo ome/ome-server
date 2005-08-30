@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Nikita Orlov <norlov@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="MultiScaleHistograms" AppliesTo="I">
+			<Description>
+			Multiscale histograms (number of bins 3,5,7,9) results in 1x24 vector.
+			</Description>
+			<Element
+				Name="TBins3_Bin00"
+				DBLocation="MSCALEHIST.3BINS_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="TBins3_Bin01"
+				DBLocation="MSCALEHIST.3BINS_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="TBins3_Bin02"
+				DBLocation="MSCALEHIST.3BINS_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="TBins5_Bin00"
+				DBLocation="MSCALEHIST.5BINS_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="TBins5_Bin01"
+				DBLocation="MSCALEHIST.5BINS_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="TBins5_Bin02"
+				DBLocation="MSCALEHIST.5BINS_BIN_02"
+				DataType="integer"/>
+			<Element
+				Name="TBins5_Bin03"
+				DBLocation="MSCALEHIST.5BINS_BIN_03"
+				DataType="integer"/>
+			<Element
+				Name="TBins5_Bin04"
+				DBLocation="MSCALEHIST.5BINS_BIN_04"
+				DataType="integer"/>
+				
+			<Element
+				Name="TBins7_Bin00"
+				DBLocation="MSCALEHIST.7BINS_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="TBins7_Bin01"
+				DBLocation="MSCALEHIST.7BINS_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="TBins7_Bin02"
+				DBLocation="MSCALEHIST.7BINS_BIN_02"
+				DataType="integer"/>
+			<Element
+				Name="TBins7_Bin03"
+				DBLocation="MSCALEHIST.7BINS_BIN_03"
+				DataType="integer"/>
+			<Element
+				Name="TBins7_Bin04"
+				DBLocation="MSCALEHIST.7BINS_BIN_04"
+				DataType="integer"/>
+			<Element
+				Name="TBins7_Bin05"
+				DBLocation="MSCALEHIST.7BINS_BIN_05"
+				DataType="integer"/>
+			<Element
+				Name="TBins7_Bin06"
+				DBLocation="MSCALEHIST.7BINS_BIN_06"
+				DataType="integer"/>
+				
+			<Element
+				Name="TBins9_Bin00"
+				DBLocation="MSCALEHIST.9BINS_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin01"
+				DBLocation="MSCALEHIST.9BINS_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin02"
+				DBLocation="MSCALEHIST.9BINS_BIN_02"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin03"
+				DBLocation="MSCALEHIST.9BINS_BIN_03"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin04"
+				DBLocation="MSCALEHIST.9BINS_BIN_04"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin05"
+				DBLocation="MSCALEHIST.9BINS_BIN_05"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin06"
+				DBLocation="MSCALEHIST.9BINS_BIN_06"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin07"
+				DBLocation="MSCALEHIST.9BINS_BIN_07"
+				DataType="integer"/>
+			<Element
+				Name="TBins9_Bin08"
+				DBLocation="MSCALEHIST.9BINS_BIN_08"
+				DataType="integer"/>
+		</SemanticType>
+		
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Multi-Scale Histograms"
+		   Category="Signatures"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="MultiScaleHistograms"
+		   ID="urn:lsid:openmicroscopy.org:Module:7714">
+		  <Description>
+			Idea of multiscale histogram came from the belief of a unique representativity of an image through infinite
+			series of histograms with sequentially increasing number of bins.  Here we used 4 histograms with number of bins
+			being 3,5,7,9.
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+			<FormalOutput
+				Name="Multi-Scale Histogram Vectors"
+				SemanticTypeName="MultiScaleHistograms"
+				Count="!"/>
+ 		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><Vector DecodeWith="Multi-Scale Histogram Vectors"/></Output>
+			</FunctionOutputs>			
+			  <VectorDecoder ID="Multi-Scale Histogram Vectors">
+				<Element Index="1"  OutputLocation="Multi-Scale Histogram Vectors.3BINS_BIN_00"/>
+				<Element Index="2"  OutputLocation="Multi-Scale Histogram Vectors.3BINS_BIN_01"/>
+				<Element Index="3"  OutputLocation="Multi-Scale Histogram Vectors.3BINS_BIN_02"/>
+				
+				<Element Index="4"  OutputLocation="Multi-Scale Histogram Vectors.5BINS_BIN_00"/>
+				<Element Index="5"  OutputLocation="Multi-Scale Histogram Vectors.5BINS_BIN_01"/>
+				<Element Index="6"  OutputLocation="Multi-Scale Histogram Vectors.5BINS_BIN_02"/>
+				<Element Index="7"  OutputLocation="Multi-Scale Histogram Vectors.5BINS_BIN_03"/>
+				<Element Index="8"  OutputLocation="Multi-Scale Histogram Vectors.5BINS_BIN_04"/>
+				
+				<Element Index="9"  OutputLocation="Multi-Scale Histogram Vectors.7BINS_BIN_00"/>
+				<Element Index="10"  OutputLocation="Multi-Scale Histogram Vectors.7BINS_BIN_01"/>
+				<Element Index="11"  OutputLocation="Multi-Scale Histogram Vectors.7BINS_BIN_02"/>
+				<Element Index="12"  OutputLocation="Multi-Scale Histogram Vectors.7BINS_BIN_03"/>
+				<Element Index="13"  OutputLocation="Multi-Scale Histogram Vectors.7BINS_BIN_04"/>
+				<Element Index="14"  OutputLocation="Multi-Scale Histogram Vectors.7BINS_BIN_05"/>
+				<Element Index="15"  OutputLocation="Multi-Scale Histogram Vectors.7BINS_BIN_06"/>
+				
+				<Element Index="16"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_00"/>
+				<Element Index="17"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_01"/>
+				<Element Index="18"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_02"/>
+				<Element Index="19"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_03"/>
+				<Element Index="20"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_04"/>
+				<Element Index="21"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_05"/>
+				<Element Index="22"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_06"/>
+				<Element Index="23"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_07"/>
+				<Element Index="24"  OutputLocation="Multi-Scale Histogram Vectors.9BINS_BIN_08"/>
+			  </VectorDecoder>	
+			</ExecutionInstructions>
+		</AnalysisModule>
+		
+	</AML:AnalysisModuleLibrary>
+</OME>
