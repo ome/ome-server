@@ -48,12 +48,7 @@
 		
 		<SemanticType Name="ChebyshevPolynomialOrder" AppliesTo="G">
 			<Description>
-<<<<<<< ChebyshevTransform.ome
 			The highest order for the transform (how many coefficients to be computed)
-=======
-			Order of the Chebyshev polynomial that is used to approximate the
-			image.
->>>>>>> 1.7
 			</Description>
 			<Element 
 				Name="Order" 
