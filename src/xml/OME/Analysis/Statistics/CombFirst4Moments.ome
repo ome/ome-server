@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Nikita Orlov <norlov@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="Comb4Orient4MomentsHistogram" AppliesTo="I">
+			<Description>
+			Four orientational filters (major diagonal, transposed major diagonal, vertical and horizontal) are applied to the image; 
+			then first four moments (mean, std, skewness, kurtosis) are computed (column-wise), and the corresponding vectors
+			(mean-vector, std-vector, skewness-vector, kurtosis-vector) are transformed into 3-bin histograms.
+			</Description>
+			<Element
+				Name="Minus45_Mean_HistBin00"
+				DBLocation="COMB4MOMENTS.FM45_MEAN_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Mean_HistBin01"
+				DBLocation="COMB4MOMENTS.FM45_MEAN_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Mean_HistBin02"
+				DBLocation="COMB4MOMENTS.FM45_MEAN_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="Minus45_Std_HistBin00"
+				DBLocation="COMB4MOMENTS.FM45_STD_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Std_HistBin01"
+				DBLocation="COMB4MOMENTS.FM45_STD_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Std_HistBin02"
+				DBLocation="COMB4MOMENTS.FM45_STD_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="Minus45_Skew_HistBin00"
+				DBLocation="COMB4MOMENTS.FM45_SKEW_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Skew_HistBin01"
+				DBLocation="COMB4MOMENTS.FM45_SKEW_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Skew_HistBin02"
+				DBLocation="COMB4MOMENTS.FM45_SKEW_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="Minus45_Kurt_HistBin00"
+				DBLocation="COMB4MOMENTS.FM45_KURT_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Kurt_HistBin01"
+				DBLocation="COMB4MOMENTS.FM45_KURT_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Minus45_Kurt_HistBin02"
+				DBLocation="COMB4MOMENTS.FM45_KURT_BIN_02"
+				DataType="integer"/>
+				
+				
+			<Element
+				Name="Plus45_Mean_HistBin00"
+				DBLocation="COMB4MOMENTS.FP45_MEAN_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Mean_HistBin01"
+				DBLocation="COMB4MOMENTS.FP45_MEAN_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Mean_HistBin02"
+				DBLocation="COMB4MOMENTS.FP45_MEAN_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="Plus45_Std_HistBin00"
+				DBLocation="COMB4MOMENTS.FP45_STD_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Std_HistBin01"
+				DBLocation="COMB4MOMENTS.FP45_STD_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Std_HistBin02"
+				DBLocation="COMB4MOMENTS.FP45_STD_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="Plus45_Skew_HistBin00"
+				DBLocation="COMB4MOMENTS.FP45_SKEW_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Skew_HistBin01"
+				DBLocation="COMB4MOMENTS.FP45_SKEW_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Skew_HistBin02"
+				DBLocation="COMB4MOMENTS.FP45_SKEW_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="Plus45_Kurt_HistBin00"
+				DBLocation="COMB4MOMENTS.FP45_KURT_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Kurt_HistBin01"
+				DBLocation="COMB4MOMENTS.FP45_KURT_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Plus45_Kurt_HistBin02"
+				DBLocation="COMB4MOMENTS.FP45_KURT_BIN_02"
+				DataType="integer"/>
+				
+				
+			<Element
+				Name="0_Mean_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Mean_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Mean_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="0_Std_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_STD_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Std_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_STD_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Std_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_STD_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="0_Skew_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Skew_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Skew_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="0_Kurt_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_KURT_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Kurt_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_KURT_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Kurt_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_KURT_BIN_02"
+				DataType="integer"/>
+				
+				
+			<Element
+				Name="90_Mean_HistBin00"
+				DBLocation="COMB4MOMENTS.F90_MEAN_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="90_Mean_HistBin01"
+				DBLocation="COMB4MOMENTS.F90_MEAN_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="90_Mean_HistBin02"
+				DBLocation="COMB4MOMENTS.F90_MEAN_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="90_Std_HistBin00"
+				DBLocation="COMB4MOMENTS.F90_STD_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="90_Std_HistBin01"
+				DBLocation="COMB4MOMENTS.F90_STD_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="90_Std_HistBin02"
+				DBLocation="COMB4MOMENTS.F90_STD_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="90_Skew_HistBin00"
+				DBLocation="COMB4MOMENTS.F90_SKEW_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="90_Skew_HistBin01"
+				DBLocation="COMB4MOMENTS.F90_SKEW_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="90_Skew_HistBin02"
+				DBLocation="COMB4MOMENTS.F90_SKEW_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="90_Kurt_HistBin00"
+				DBLocation="COMB4MOMENTS.F90_KURT_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="90_Kurt_HistBin01"
+				DBLocation="COMB4MOMENTS.F90_KURT_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="90_Kurt_HistBin02"
+				DBLocation="COMB4MOMENTS.F90_KURT_BIN_02"
+				DataType="integer"/>
+		</SemanticType>
+		
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Comb First 4 Moments"
+		   Category="Signatures"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="CombFirst4Moments"
+		   ID="urn:lsid:openmicroscopy.org:Module:7711">
+		  <Description>
+			Original image (m x n) is transformed by each of four filters (-45, +45, +90, 0).
+			During that transformation only a part of the original image is retained; also, for every 'portion' (a vector) 
+			we compute 4 basic moments (mean, std, skewness, kurtosis), and keep them rather than the original portion. 
+			The resulting L x 4 matrix gets 3-bin histogramed column-wise, resulting in '3-bin hist for mean', '3-bin hist for std', etc
+			(we have 1x12 vector at this stage).
+			Then the routine repeats for the next orientational filter.
+			Filters go in following order: major diagonal (-45), transposed major diagonal (+45), vertical comb (+90) and horizontal (0).
+			Four filter orientations result in 1x48 vector.
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+			<FormalOutput
+				Name="Histogram Vectors For Comb Moments"
+				SemanticTypeName="Comb4Orient4MomentsHistogram"
+				Count="!"/>
+ 		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><Vector DecodeWith="Histogram Vectors For Comb Moments"/></Output>
+			</FunctionOutputs>			
+			  <VectorDecoder ID="Histogram Vectors For Comb Moments">
+				<Element Index="1"  OutputLocation="Histogram Vectors For Comb Moments.FM45_MEAN_BIN_00"/>
+				<Element Index="2"  OutputLocation="Histogram Vectors For Comb Moments.FM45_MEAN_BIN_01"/>
+				<Element Index="3"  OutputLocation="Histogram Vectors For Comb Moments.FM45_MEAN_BIN_02"/>
+				
+				<Element Index="4"  OutputLocation="Histogram Vectors For Comb Moments.FM45_STD_BIN_00"/>
+				<Element Index="5"  OutputLocation="Histogram Vectors For Comb Moments.FM45_STD_BIN_01"/>
+				<Element Index="6"  OutputLocation="Histogram Vectors For Comb Moments.FM45_STD_BIN_02"/>
+				
+				<Element Index="7"  OutputLocation="Histogram Vectors For Comb Moments.FM45_SKEW_BIN_00"/>
+				<Element Index="8"  OutputLocation="Histogram Vectors For Comb Moments.FM45_SKEW_BIN_01"/>
+				<Element Index="9"  OutputLocation="Histogram Vectors For Comb Moments.FM45_SKEW_BIN_02"/>
+				
+				<Element Index="10"  OutputLocation="Histogram Vectors For Comb Moments.FM45_KURT_BIN_00"/>
+				<Element Index="11"  OutputLocation="Histogram Vectors For Comb Moments.FM45_KURT_BIN_01"/>
+				<Element Index="12"  OutputLocation="Histogram Vectors For Comb Moments.FM45_KURT_BIN_02"/>
+				
+				
+				<Element Index="13"  OutputLocation="Histogram Vectors For Comb Moments.FP45_MEAN_BIN_00"/>
+				<Element Index="14"  OutputLocation="Histogram Vectors For Comb Moments.FP45_MEAN_BIN_01"/>
+				<Element Index="15"  OutputLocation="Histogram Vectors For Comb Moments.FP45_MEAN_BIN_02"/>
+				
+				<Element Index="16"  OutputLocation="Histogram Vectors For Comb Moments.FP45_STD_BIN_00"/>
+				<Element Index="17"  OutputLocation="Histogram Vectors For Comb Moments.FP45_STD_BIN_01"/>
+				<Element Index="18"  OutputLocation="Histogram Vectors For Comb Moments.FP45_STD_BIN_02"/>
+				
+				<Element Index="19"  OutputLocation="Histogram Vectors For Comb Moments.FP45_SKEW_BIN_00"/>
+				<Element Index="20"  OutputLocation="Histogram Vectors For Comb Moments.FP45_SKEW_BIN_01"/>
+				<Element Index="21"  OutputLocation="Histogram Vectors For Comb Moments.FP45_SKEW_BIN_02"/>
+				
+				<Element Index="22"  OutputLocation="Histogram Vectors For Comb Moments.FP45_KURT_BIN_00"/>
+				<Element Index="23"  OutputLocation="Histogram Vectors For Comb Moments.FP45_KURT_BIN_01"/>
+				<Element Index="24"  OutputLocation="Histogram Vectors For Comb Moments.FP45_KURT_BIN_02"/>
+				
+				
+				<Element Index="25"  OutputLocation="Histogram Vectors For Comb Moments.F90_MEAN_BIN_00"/>
+				<Element Index="26"  OutputLocation="Histogram Vectors For Comb Moments.F90_MEAN_BIN_01"/>
+				<Element Index="27"  OutputLocation="Histogram Vectors For Comb Moments.F90_MEAN_BIN_02"/>
+				
+				<Element Index="28"  OutputLocation="Histogram Vectors For Comb Moments.F90_STD_BIN_00"/>
+				<Element Index="29"  OutputLocation="Histogram Vectors For Comb Moments.F90_STD_BIN_01"/>
+				<Element Index="30"  OutputLocation="Histogram Vectors For Comb Moments.F90_STD_BIN_02"/>
+				
+				<Element Index="31"  OutputLocation="Histogram Vectors For Comb Moments.F90_SKEW_BIN_00"/>
+				<Element Index="32"  OutputLocation="Histogram Vectors For Comb Moments.F90_SKEW_BIN_01"/>
+				<Element Index="33"  OutputLocation="Histogram Vectors For Comb Moments.F90_SKEW_BIN_02"/>
+				
+				<Element Index="34"  OutputLocation="Histogram Vectors For Comb Moments.F90_KURT_BIN_00"/>
+				<Element Index="35"  OutputLocation="Histogram Vectors For Comb Moments.F90_KURT_BIN_01"/>
+				<Element Index="36"  OutputLocation="Histogram Vectors For Comb Moments.F90_KURT_BIN_02"/>
+				
+				
+				<Element Index="37"  OutputLocation="Histogram Vectors For Comb Moments.F0_MEAN_BIN_00"/>
+				<Element Index="38"  OutputLocation="Histogram Vectors For Comb Moments.F0_MEAN_BIN_01"/>
+				<Element Index="39"  OutputLocation="Histogram Vectors For Comb Moments.F0_MEAN_BIN_02"/>
+				
+				<Element Index="40"  OutputLocation="Histogram Vectors For Comb Moments.F0_STD_BIN_00"/>
+				<Element Index="41"  OutputLocation="Histogram Vectors For Comb Moments.F0_STD_BIN_01"/>
+				<Element Index="42"  OutputLocation="Histogram Vectors For Comb Moments.F0_STD_BIN_02"/>
+				
+				<Element Index="43"  OutputLocation="Histogram Vectors For Comb Moments.F0_SKEW_BIN_00"/>
+				<Element Index="44"  OutputLocation="Histogram Vectors For Comb Moments.F0_SKEW_BIN_01"/>
+				<Element Index="45"  OutputLocation="Histogram Vectors For Comb Moments.F0_SKEW_BIN_02"/>
+				
+				<Element Index="46"  OutputLocation="Histogram Vectors For Comb Moments.F0_KURT_BIN_00"/>
+				<Element Index="47"  OutputLocation="Histogram Vectors For Comb Moments.F0_KURT_BIN_01"/>
+				<Element Index="48"  OutputLocation="Histogram Vectors For Comb Moments.F0_KURT_BIN_02"/>
+			  </VectorDecoder>	
+			</ExecutionInstructions>
+		</AnalysisModule>
+		
+	</AML:AnalysisModuleLibrary>
+</OME>

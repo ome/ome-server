@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Nikita Orlov <norlov@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="TamuraTextures" AppliesTo="I">
+			<Description>
+			6-component vector referring to Tamura texture descriptors.
+			</Description>
+			<Element
+				Name="Total_Coarseness"
+				DBLocation="TAMURA_TEXTURES.TOTAL_COARSENESS"
+				DataType="float"/>
+			<Element
+				Name="Coarseness_Hist_Bin_00"
+				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="Coarseness_Hist_Bin_01"
+				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="Coarseness_Hist_Bin_00"
+				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_02"
+				DataType="integer"/>
+			<Element
+				Name="Directionality"
+				DBLocation="TAMURA_TEXTURES.DIRECTIONALITY"
+				DataType="float"/>
+			<Element
+				Name="Contrast"
+				DBLocation="TAMURA_TEXTURES.CONTRAST"
+				DataType="float"/>
+		</SemanticType>
+		
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Tamura Textures"
+		   Category="Signatures"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="TamuraTextures"
+		   ID="urn:lsid:openmicroscopy.org:Module:7712"> 
+		  <Description>
+			6-component vector; Tamura texture descriptors of three basic types:
+			total coarseness, 3-histogram of a local coarseness (matrix), 
+			directionality and the contrast.  3 scalars and 3-vector.
+			Reference: Tamura H., Mori S., Yamawaki T., 'Textural features corresponsing to visual perception'. 
+			IEEE Trans. on Systems, Man and Cybernetics, 8, 1978, 460-472
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+			<FormalOutput
+				Name="Tamura Textures"
+				SemanticTypeName="TamuraTextures"
+				Count="!"/>
+ 		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><Vector DecodeWith="Tamura Textures"/></Output>
+			</FunctionOutputs>			
+			  <VectorDecoder ID="Tamura Textures">
+				<Element Index="1"  OutputLocation="Tamura Textures.TOTAL_COARSENESS"/>
+				<Element Index="2"  OutputLocation="Tamura Textures.COARSENESS_HIST_BIN_00"/>
+				<Element Index="3"  OutputLocation="Tamura Textures.COARSENESS_HIST_BIN_01"/>
+				<Element Index="4"  OutputLocation="Tamura Textures.COARSENESS_HIST_BIN_02"/>
+				<Element Index="5"  OutputLocation="Tamura Textures.DIRECTIONALITY"/>
+				<Element Index="6"  OutputLocation="Tamura Textures.CONTRAST"/>
+			  </VectorDecoder>	
+			</ExecutionInstructions>
+		</AnalysisModule>
+		
+	</AML:AnalysisModuleLibrary>
+</OME>
