@@ -36,7 +36,8 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		<SemanticType Name="ChebyshevCoefficientMatrix" AppliesTo="I">
 			<Description>
-			Nikita, please fill this out.
+			2D Chebyshev transform has been realized in a way similar to fft2 matlab function.
+			It runs a 1D transform on the image processing consequently rows then columns.
 			</Description>
 			<Element 
 				Name="Parent" 
@@ -47,8 +48,12 @@
 		
 		<SemanticType Name="ChebyshevPolynomialOrder" AppliesTo="G">
 			<Description>
+<<<<<<< ChebyshevTransform.ome
+			The highest order for the transform (how many coefficients to be computed)
+=======
 			Order of the Chebyshev polynomial that is used to approximate the
 			image.
+>>>>>>> 1.7
 			</Description>
 			<Element 
 				Name="Order" 
