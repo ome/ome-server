@@ -463,7 +463,21 @@ sub Pixels_to_MatlabArray {
 	} else {
 		$self->{__engine}->eval("$matlab_var_name = getPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels->ImageServerID().");");
 	}
-	
+
+	# check that the gotten variable is the right size	
+	my $ml_pixels_array = $self->{__engine}->getVariable($matlab_var_name);
+	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) 
+	      = @{$ml_pixels_array->dimensions()};
+	$sizeX = 1 unless defined($sizeX);
+	$sizeY = 1 unless defined($sizeY);
+	$sizeZ = 1 unless defined($sizeZ);
+	$sizeC = 1 unless defined($sizeC);
+	$sizeT = 1 unless defined($sizeT);
+
+	die "getROI/getPixels failed for pixels ".$pixels->ImageServerID().". The ".
+		"returned MATLAB array has dimensions ($sizeX, $sizeY, $sizeZ, $sizeC, $sizeT)"
+		unless ($sizeX*$sizeY*$sizeZ*$sizeC*$sizeT == $Dims[0]*$Dims[1]*$Dims[2]*$Dims[3]*$Dims[4]);
+		
 	# Convert array datatype if requested
 	# FIXME: does this datatype conversion taint $matlab_pixels ?
 	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
@@ -615,7 +629,7 @@ sub MatlabArray_to_Pixels {
 	$sizeT = 1 unless defined($sizeT);
 
 	my $matlabType = $ml_pixels_array->class();
-	die "Pixels of Matlab class $matlabType are not supported at this time"
+	die "Pixels of Matlab class ".$self->{_matlab_class_to_string}->{$matlabType}." are not supported at this time"
 		unless exists $self->{ _matlab_class_to_pixel_type }->{$matlabType};
 	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{$matlabType};
 	
