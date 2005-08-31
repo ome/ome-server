@@ -289,9 +289,9 @@ BLURB
 			}
 			
 			my $ans = multiple_choice("Analysis Engine Executor ", "Unthreaded", "Unthreaded", "Threaded", "Distributed"); 
-			if ($ans eq "Unthreaded") {
+			if ($ans eq "Threaded") {
 				$executor = "OME::Analysis::Engine::ForkedPerlExecutor";
-			} elsif ($ans eq "Threaded") {
+			} elsif ($ans eq "Unthreaded") {
 				$executor = "OME::Analysis::Engine::UnthreadedPerlExecutor";
 			} elsif ($ans eq "Distributed") {
 				$executor = "OME::Analysis::Engine::SimpleWorkerExecutor";
