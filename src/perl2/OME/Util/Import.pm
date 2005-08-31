@@ -155,6 +155,7 @@ sub import {
 								name        => $datasetName,
 								description => $datasetDescription,
 								owner       => $session->User(),
+								group       => $session->User()->Group()->id(),
 								locked      => 'false'
 							   };
 			$dataset = $factory->findObject( "OME::Dataset", $dataset_data);

@@ -54,47 +54,8 @@ use Carp;
 use Log::Agent;
 
 use OME::Task;
+use OME::Tasks::DatasetManager;
 use OME::Tasks::NotificationManager;
-
-# addImagesToDataset(dataset, images)
-# -----------------------------------
-# Adds the given images to a dataset.  The images parameter can be
-# specified either as a Class::DBI iterator or as a reference to an
-# array of DBObjects.
-
-sub __addOneImageToDataset ($$$) {
-	my ($factory, $dataset, $image) = @_;
-
-	eval {
-	my $link = $factory->newObject("OME::Image::DatasetMap",
-					   {image	=> $image,
-					dataset => $dataset});
-	}
-	
-	# This should be a better error check - right now we
-	# assume that any error represents an attempt to create a
-	# duplicate map entry, which we silently ignore.
-}
-
-sub addImagesToDataset ($$$) {
-	my ($factory, $dataset, $images) = @_;
-
-	if (ref($images) eq 'ARRAY') {
-	# We have an array of image objects
-
-		foreach my $image (@$images) {
-		__addOneImageToDataset($factory,$dataset,$image);
-	}
-	} else {
-	# We should have an iterator
-	
-	while (my $image = $images->next()) {
-		__addOneImageToDataset($factory,$dataset,$image);
-	}
-	}
-
-	$factory->dbi_commit();
-}
 
 =head1 METHODS
 
@@ -130,7 +91,8 @@ sub importFiles {
 	$task->setPID($$);
     my $importer = OME::ImportEngine::ImportEngine->new(%$options);
     my $session = OME::Session->instance();
-
+	my $datasetManager = OME::Tasks::DatasetManager->new($session);
+	
     my $files_mex = $importer->startImport();
 
 	eval {
@@ -149,31 +111,19 @@ sub importFiles {
             $importer->finishImport();
 
 			if( scalar( @$image_list ) > 0 ) {
-				my $factory = $session->Factory();
 				if( not defined $dataset ) {
 					my $timestamp = time;
 					my $timestr = localtime $timestamp;
-	
-					$dataset = $factory->
-					  newObject("OME::Dataset",
-								{
-								 name => "$timestr Import Dataset",
-								 description => "These images were imported on $timestr.\nThe dataset name and description were auto-generated because the user did not specify them at import time.",
-								 locked => 0,
-								 owner_id => $session->experimenter_id(),
-								})
+					
+					$dataset = $datasetManager->newDataset("$timestr Import Dataset",
+					"These images were imported on $timestr.\nThe dataset name and description were auto-generated because the user did not specify them at import time.")
 					or die "Couldn't make a new dataset";
 				}
 	
 				# Add the new images to the dataset.
-				foreach $image (@$image_list) {
-					$factory->newObject("OME::Image::DatasetMap",
-										{
-										 image_id   => $image->id(),
-										 dataset_id => $dataset->id(),
-										});
+				foreach $image (@$image_list){
+					OME::Tasks::DatasetManager->addToDataset ($dataset,$image)
 				}
-		
 				$task->step();
 				$task->setMessage('Executing import chain');
 				my $chain = $session->Configuration()->import_chain();
@@ -224,6 +174,13 @@ created if images are returned by the ImportEngine.  If $dataset is
 unspecified, replace it with undef.  %options is optional. currently recognized
 options are {AllowDuplicates => 0|1}
 
+WARNING:
+	This function should probably be deprecated:
+	http://bugs.openmicroscopy.org.uk/show_bug.cgi?id=561
+
+	And it's NewDataset code has a bug. It really should be using the DatasetManager
+	not Factory newObject calls. Anyway the newObject call isn't setting the group_id.
+	
 =cut
 
 sub importImageServerFiles {
@@ -355,5 +312,10 @@ sub forkedImportImageServerFiles {
 	});
 }
 
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>
+ 
+=cut
 
 1;
