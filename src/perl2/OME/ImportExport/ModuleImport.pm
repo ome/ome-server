@@ -39,6 +39,7 @@ package OME::ImportExport::ModuleImport;
 
 use XML::LibXML;
 use OME::Tasks::LSIDManager;
+use OME::Tasks::ModuleTasks; # for help dealing with Module categories
 use OME::Session;
 use Log::Agent;
 use strict;
@@ -140,46 +141,6 @@ sub importXMLFile {
 #
 ###############################################################################
 
-# Given a full category path and optional description, ensures that all
-# portions of the path exist in the database as categories, and returns
-# the Category object for the leaf category.
-
-sub __getCategory {
-    my ($self,$path,$description) = @_;
-    my $session = OME::Session->instance();
-    my $factory = $session->Factory();
-
-    my @names = split(/\./,$path);
-    my $leaf_name = pop(@names);
-
-    # Create/load categories for all but the leaf element
-    my $last_parent;
-    foreach my $name (@names) {
-        my $criteria = { name => $name };
-        $criteria->{parent_category_id} = $last_parent->id()
-          if defined $last_parent;
-
-        $last_parent = $factory->
-          maybeNewObject('OME::Module::Category',$criteria);
-    }
-
-    # And then do the same for the leaf element
-    my %criteria = ( name => $leaf_name );
-    $criteria{parent_category_id} = $last_parent->id()
-      if defined $last_parent;
-
-    # We can't use maybeNewObject b/c the search criteria is not the
-    # same as the hash to create the new object.
-
-    my $category = $factory->findObject('OME::Module::Category',%criteria);
-    if (!defined $category) {
-        $criteria{description} = $description;
-        $category = $factory->newObject('OME::Module::Category',\%criteria);
-    }
-
-    return $category;
-}
-
 
 ###############################################################################
 #
@@ -208,7 +169,7 @@ sub processDOM {
 		my $categoryDescription = [$categoryDescriptions->[0]->childNodes()]->[0]->data()
 			if $categoryDescriptions and [$categoryDescriptions->[0]->childNodes()]->[0];
 
-		my $category = $self->__getCategory($categoryPath,$categoryDescription);
+		OME::Tasks::ModuleTasks::makeCategoriesFromPath($categoryPath,$categoryDescription);
 	}
 
 
@@ -226,12 +187,10 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		logdbg "debug", ref($self)."->processDOM: ". $moduleXML->getAttribute( 'ModuleName' ) ." already exists in the DB. Skipping...";
 		next;
 	}
-        my $categoryPath = $moduleXML->getAttribute('Category');
-        my $categoryID;
-        if (defined $categoryPath) {
-            my $category = $self->__getCategory($categoryPath);
-            $categoryID = $category->id();
-        }
+	
+	my $categoryPath = $moduleXML->getAttribute('Category');
+	my $categoryID = OME::Tasks::ModuleTasks::makeCategoriesFromPath($categoryPath)->id()
+		if defined $categoryPath;
 
 	my $descriptions = $moduleXML->getElementsByLocalName('Description');
 	my $description = [$descriptions->[0]->childNodes()]->[0]->data()
