@@ -347,6 +347,43 @@ newLogicalArray(package,...)
                 mxFree(dims);
         OUTPUT:
                 RETVAL
+                
+OME::Matlab::Array
+newStringArray(package, strings_ref)
+        const char *package = NO_INIT;
+        SV * strings_ref
+        INIT:
+                AV      *strings_array;
+        		const char **strings;
+                int i, num_strings;
+                SV      **aval;
+                STRLEN  string_len;
+                if (!SvROK(strings_ref))
+                {
+                    croak("newStringArray expects a reference for $fieldNames");
+                }
+
+                if (SvTYPE(SvRV(strings_ref)) != SVt_PVAV)
+                {
+                    croak("newStringArray expects an array ref for $fieldNames");
+                }
+                strings_array = (AV *) SvRV(strings_ref);
+               	num_strings = av_len(strings_array)+1;
+        CODE:
+        		strings = mxCalloc(num_strings, sizeof(char *));
+				for (i = 0; i < num_strings; i++)
+                {
+                    aval = av_fetch(strings_array,i,0);
+                    if (aval != NULL)
+                    {
+                        strings[i] = SvPV(*aval,string_len);
+                    }
+                }
+
+                RETVAL = mxCreateCharMatrixFromStrings(num_strings, strings);
+                mxFree(strings);
+        OUTPUT:
+                RETVAL
 
 OME::Matlab::Array
 newNumericArray(package,classID,complexity,...)
@@ -367,7 +404,7 @@ newNumericArray(package,classID,complexity,...)
                 mxFree(dims);
         OUTPUT:
                 RETVAL
-
+                
 void
 DESTROY(pArray)
         OME::Matlab::Array pArray
