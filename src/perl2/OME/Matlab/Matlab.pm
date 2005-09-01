@@ -265,6 +265,14 @@ complexity.  (The complexity defaults to I<real> if unspecified.)
 Creates a new $m x $n matrix of the specified class and complexity.  
 (defaults to C<double> and I<real> resp)
 
+=head2 newStringArray
+
+	my $array = OME::Matlab::Array->newSringArray(\@str);
+
+Create a two-dimensional string mxArray, where each row is initialized to a
+string from str. The created mxArray has dimensions m-by-max, where max is the
+length of the longest string in str.
+
 =head2 newNumericArray
 
 	my $array = OME::Matlab::Array->newNumericArray($class,$complexity,@dim);
