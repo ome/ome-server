@@ -40,8 +40,17 @@ function [outPixels] = FourierTransform(inPixels)
 inPixels = inPixels(:,:);
 
 % fftshift shifts the zero-frequency component of the Fourier transform to center
-% of spectrum
-inPixels = fftshift(fft2(inPixels));
+% of spectrum.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% September 1, 2005. Josiah Johnston <siah@nih.gov>
+% Subsequent to conversations with Tom and Nikita, I am commenting out the 
+% fftshift for the moment. The non-ome version of the classifier code base has
+% been using a fourier space without the shift. It is unclear what the effects
+% of using the shift will be on classifier performance, so for expediency, we
+% will stick with the established protocal. Later, we plan to compare the two
+% methods and keep the one with superior performance.
+%inPixels = fftshift(fft2(inPixels));
+inPixels = fft2(inPixels);
 
 outPixels(:,:,1) = abs(inPixels);
 outPixels(:,:,2) = angle(inPixels);
