@@ -45,11 +45,11 @@
 %% Function is memory-consuming.
 %% 256x320 with N = 20 is almost marginal (memory use is about 1Gb), for now it is hardcoded limit.
 %% For future use on 32bit machines the threshold must rather be under 2Gb, so it'll need some refinement.
-
+%% The default coefficient value is 11. 
 function [coeff_packed] = ChebyshevFourierTransform(Im,N)
 Im = double(Im);
-N=5;
-recYes=0; packingOrder = 40;
+if nargin<2, N=11; end;
+recYes=0; packingOrder = 32;
 
 [m,n] = size(Im); nLast = n*m;
 if nLast > 256*320, warning(':: ChebyshevFourierTransform :: image size is critical');end
