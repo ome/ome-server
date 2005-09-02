@@ -53,6 +53,7 @@ use OME::Session;
 use OME::Tasks::ImageTasks;
 use OME::Tasks::ChainManager;
 use OME::Tasks::OMEImport;
+use OME::Tasks::ModuleTasks;
 use OME::Tasks::ModuleExecutionManager;
 use OME::ImportExport::ChainExport;
 use OME::Matlab;
@@ -267,7 +268,7 @@ sub compile_sigs {
 		}
 	}
 	
-	# collect sig stitcher module execution for this chain
+	# Find the chain execution or re-execute the chain
 	logdbg "debug", "finding signature stitcher module execution.";
 	if ($force_new_chex) {
 		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, undef, ReuseResults => 0);
@@ -284,6 +285,7 @@ sub compile_sigs {
 		}
 	}
 	
+	# collect sig stitcher module execution for this chain
 	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
 		analysis_chain_execution => $chex,
 		analysis_chain_node      => $sig_stitch_node
@@ -296,7 +298,7 @@ sub compile_sigs {
 	# make the matlab signature array. 
 	my @images = $dataset->images;
 	@images = sort {$a->id <=> $b->id} @images;
-	my $signature_array = $self->
+	my ($signature_labels_array, $signature_array) = $self->
 		compile_signature_matrix( $stitcher_mex, \@images);
 
 	# save the array to disk
@@ -304,9 +306,11 @@ sub compile_sigs {
 	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
 		or die "Cannot open a connection to Matlab!";
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
+	$engine->eval("global signature_labels");
+	$engine->putVariable('signature_labels',$signature_labels_array);
 	$engine->eval("global signature_vector");
 	$engine->putVariable('signature_vector',$signature_array);
-	$engine->eval( "save $output_file_name signature_vector;" );
+	$engine->eval( "save $output_file_name signature_labels signature_vector;" );
 	print "Saved signature vector to file $output_file_name.\n";
 	$engine->close();
 	$engine = undef;
@@ -328,7 +332,8 @@ sub stitch_chain {
 	
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
-	
+	my $manager = OME::Tasks::ChainManager->new($session);
+
 	# find modules that produce signatures
 	# simple implementation of leaf nodes for now
 	logdbg "debug", "Finding Signature Modules in chain $chain_name";
@@ -341,10 +346,65 @@ sub stitch_chain {
 			unless( scalar( @chains ) eq 1 );
 		$chain = $chains[ 0 ];
 	}
-	my @signature_nodes = OME::Tasks::ChainManager->findLeaves( $chain );
+	
+	my @signature_nodes = $manager->findLeaves( $chain );
+	@signature_nodes = sort {$a->module->name cmp $b->module->name} @signature_nodes;
+	
 	logdbg "debug", "Found chain nodes. Format of output is 'module_name(node_id)'\n\t".
 		join( ', ', map( $_->module->name."(".$_->id.")", @signature_nodes ) );
 	
+	# compute FI names that are going to be used in the signature stitcher
+	my @signature_nodes_FI_names;
+	
+	my @root_nodes = @{$manager->getRootNodes( $chain )};
+	my $root_node = $root_nodes[0];
+	foreach my $sig_node (@signature_nodes) {
+		# create a FI Name based on the Path of Modules.
+		my @node_path = $manager->findPath($root_node, $sig_node );
+		my $FI_name;
+		
+		foreach (@node_path) {
+			# ignore modules based on their categories
+			next unless (defined $_->module->category); # ignore no category modules
+			my $cat_path = OME::Tasks::ModuleTasks::returnPathToLeafCategory ($_->module->category);
+			next if ($cat_path =~ m/.*Slicers.*/);  # ignore slicer modules 
+			next if ($cat_path =~ m/.*Typecasts.*/); # ignore typecaster modules 
+
+			# create FI base on "Module First Names";
+			$FI_name .= $_->module->name.":";
+		}
+		chop($FI_name);
+		push @signature_nodes_FI_names, $FI_name;
+	}
+	
+	# make sure that $signature_nodes are all unique strings. If there are multiple
+	# exact same strings, we shall enumerate them.
+	my %unique_FI_names_count;
+	my %unique_FI_names_ptr; # points to the first redundent string. This way we can retroactively add a _1 suffix
+
+	for (my $i=0; $i < scalar @signature_nodes_FI_names; $i++) {
+		my $FI_name = $signature_nodes_FI_names[$i];
+		
+		if (not exists $unique_FI_names_count{$FI_name}) {
+			$unique_FI_names_count{$FI_name} = 1;
+			$unique_FI_names_ptr{$FI_name} = $i;			
+			next;
+		}
+		
+		# retroactively add a _1 suffix to the first redundent string
+		if ($unique_FI_names_count{$FI_name} == 1) {
+			print "was ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
+			$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}] = 
+				$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."_1";
+			print "now ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
+		}
+		print "was ".$signature_nodes_FI_names[$i]."\n";
+		$unique_FI_names_count{$FI_name} = $unique_FI_names_count{$FI_name} + 1;
+		$signature_nodes_FI_names[$i] = 
+				$signature_nodes_FI_names[$i]."_".$unique_FI_names_count{$FI_name};
+		print "now ".$signature_nodes_FI_names[$i]."\n";
+	}
+
 	##############
 	# create signature module (xml)
 	logdbg "debug", "Creating signature module";
@@ -390,35 +450,17 @@ ENDDESCRIPTION
 	$module->appendChild( $declaration );
 	
 	# Inputs
-	my %input_links_by_ST; # values will be array of each link coming in of the same ST
-	# round one: gather inputs links
+	my  @signature_nodes_FI_names_copy = @signature_nodes_FI_names;
 	foreach my $sig_node ( @signature_nodes ) {
+		my $FI_name = shift @signature_nodes_FI_names_copy;
+		
 		foreach my $output ( $sig_node->module->outputs ) {
 			my $ST_name = $output->semantic_type->name;
-			push( @{ $input_links_by_ST{ $ST_name } }, {
-				from_node   => $sig_node,
-				from_output => $output
-			} );
-		}
-	}
-	# round two: sort links, translate them to inputs, record mapping from links to inputs
-	my %input_links_by_input; # flat hash to store link info. key by input name
-	foreach my $ST_name ( keys %input_links_by_ST ) {
-		my $name_incrementer = 0;
-		foreach my $input_link( @{ $input_links_by_ST{ $ST_name } } ) {
-			$name_incrementer++;
-			my $input_name;
-			if( scalar( @{ $input_links_by_ST{ $ST_name } } ) eq 1 ) {
-				$input_name = $ST_name;
-			} else {
-				$input_name = "$ST_name $name_incrementer";
-			}
 			my $formal_input = $doc->createElement( 'FormalInput');
-			$formal_input->setAttribute( 'Name', $input_name );
+			$formal_input->setAttribute( 'Name', $FI_name."::".$ST_name);
 			$formal_input->setAttribute( 'SemanticTypeName', $ST_name );
 			$formal_input->setAttribute( 'Count', '?' );
 			$declaration->appendChild( $formal_input );
-			$input_links_by_input{ $input_name } = $input_link;
 		}
 	}
 	
@@ -449,32 +491,41 @@ ENDDESCRIPTION
 	
 	# create new chain that includes signature module (db)
 	logdbg "debug", "Creating new chain that includes the stitcher";
-	my ($new_chain, $node_mapping) = OME::Tasks::ChainManager->cloneChain( $chain, undef, 'gimme node mapping!' );
+	my ($new_chain, $node_mapping) = $manager->cloneChain( $chain, undef, 'gimme node mapping!' );
 	$new_chain->name( "Autogenerated Signature chain ".$new_chain->id );
 	$new_chain->storeObject();
 	my $stitcher_node  = $factory->newObject( 'OME::AnalysisChain::Node', {
 		module         => $stitcher_module,
 		analysis_chain => $new_chain
 	} );
+	
 	# make links
-	foreach my $input_name ( keys %input_links_by_input ) {
-		my $formal_input = $factory->findObject( "OME::Module::FormalInput",
-			module => $stitcher_module,
-			name   => $input_name
-		) or die "Couldn't load input $input_name for module $module_name";
-		my $from_node = $node_mapping->{ $input_links_by_input{ $input_name }{ 'from_node' }->id };
-		my $data = {
-			to_node     => $stitcher_node,
-			to_input    => $formal_input,
-			from_node   => $from_node,
-			from_output => $input_links_by_input{ $input_name }{ 'from_output' },
-			analysis_chain => $new_chain
-		};
-		$factory->newObject( "OME::AnalysisChain::Link", $data )
-			or die "Couldn't make link from ".
-				$input_links_by_input{ $input_name }{ 'from_node' }->module->name.'.'.
-				$input_links_by_input{ $input_name }{ 'from_output' }->name.
-				" to $module_name.$input_name";
+	foreach my $sig_node (@signature_nodes) {
+		my $FI_name = shift (@signature_nodes_FI_names);
+		foreach my $output ($sig_node->module->outputs) {
+			my $ST_name = $output->semantic_type->name;
+			
+			my $formal_input;
+			$formal_input = $factory->findObject( "OME::Module::FormalInput",
+				module => $stitcher_module,
+				name   => $FI_name."::".$ST_name
+			) or die "Couldn't load input $FI_name::$ST_name for module $module_name";
+			
+			# use node_mapping to link the new node with the old
+			my $from_node = $node_mapping->{$sig_node->id };
+			
+			my $data = {
+				to_node     => $stitcher_node,
+				to_input    => $formal_input,
+				from_node   => $from_node,
+				from_output => $output,
+				analysis_chain => $new_chain
+			};
+			$factory->newObject( "OME::AnalysisChain::Link", $data )
+				or die "Couldn't make link from ".
+					$from_node->module->name.".". $output->mae." to ".
+					$stitcher_node->name.".".$formal_input;
+		}
 	}
 	$session->commitTransaction();
 	
@@ -533,18 +584,26 @@ sub compile_signature_matrix {
 	my ( $classifications, $category_numbers ) = 
 		$proto->get_classifications_and_category_numbers( $images, $classification_mex );
 
-	# instantiate the matlab signature array. 
-	#	number of columns is the size of the signature vector plus one for the image classification.
-	#	number of rows is the number of images.
-	my $vector_legends = OME::Tasks::ModuleExecutionManager->
+	# get vector_legends.
+	my $vector_legends_ptr = OME::Tasks::ModuleExecutionManager->
 		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
 		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
-	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @$vector_legends ) + 1, scalar( @$images ));
+	my @vector_legends = sort {$a->VectorPosition <=> $b->VectorPosition} @$vector_legends_ptr;
+	
+	# populate the signature matrix's labels
+	my @signature_labels =  map( $_->FormalInput(), @vector_legends);
+	my $signature_labels_array = OME::Matlab::Array->newStringArray(\@signature_labels);
+	$signature_labels_array->makePersistent();
+
+	# instantiate the matlab signature array. 
+	#	number of columns is the size of the signature vector plus one for the image classification.
+	#	number of rows is the number of images
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, scalar( @$images ));
 	$signature_array->makePersistent();
 	
-	# populate the signature matrix.
+	# populate the signature matrix proper
 	my $image_number = 0;
-	my $category_col_index = scalar( @$vector_legends );
+	my $category_col_index = scalar( @vector_legends );
 	foreach my $image ( @$images ) {
 		my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
@@ -562,7 +621,8 @@ sub compile_signature_matrix {
 		}
 		$image_number += 1;
 	}	
-	return $signature_array;
+
+	return $signature_labels_array, $signature_array, 
 }
 
 sub get_next_LSID {
