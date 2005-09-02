@@ -41,7 +41,7 @@ __PACKAGE__->addColumn(module => 'module_id','OME::Module',
                        });
 __PACKAGE__->addColumn(name => 'name',
                        {
-                        SQLType => 'varchar(64)',
+                        SQLType => 'text',
                         NotNull => 1,
                         Indexed => 1,
                        });
