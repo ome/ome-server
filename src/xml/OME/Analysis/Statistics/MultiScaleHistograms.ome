@@ -36,107 +36,108 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		<SemanticType Name="MultiScaleHistograms" AppliesTo="I">
 			<Description>
-			Multiscale histograms (number of bins 3,5,7,9) results in 1x24 vector.
+			Normalized (by the maximal value) multiscale histograms (number of bins 3,5,7,9) 
+			results in 1x24 vector.
 			</Description>
 			<Element
 				Name="TBins3_Bin00"
 				DBLocation="MSCALEHIST.3BINS_BIN_00"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins3_Bin01"
 				DBLocation="MSCALEHIST.3BINS_BIN_01"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins3_Bin02"
 				DBLocation="MSCALEHIST.3BINS_BIN_02"
-				DataType="integer"/>
+				DataType="float"/>
 				
 			<Element
 				Name="TBins5_Bin00"
 				DBLocation="MSCALEHIST.5BINS_BIN_00"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins5_Bin01"
 				DBLocation="MSCALEHIST.5BINS_BIN_01"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins5_Bin02"
 				DBLocation="MSCALEHIST.5BINS_BIN_02"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins5_Bin03"
 				DBLocation="MSCALEHIST.5BINS_BIN_03"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins5_Bin04"
 				DBLocation="MSCALEHIST.5BINS_BIN_04"
-				DataType="integer"/>
+				DataType="float"/>
 				
 			<Element
 				Name="TBins7_Bin00"
 				DBLocation="MSCALEHIST.7BINS_BIN_00"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins7_Bin01"
 				DBLocation="MSCALEHIST.7BINS_BIN_01"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins7_Bin02"
 				DBLocation="MSCALEHIST.7BINS_BIN_02"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins7_Bin03"
 				DBLocation="MSCALEHIST.7BINS_BIN_03"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins7_Bin04"
 				DBLocation="MSCALEHIST.7BINS_BIN_04"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins7_Bin05"
 				DBLocation="MSCALEHIST.7BINS_BIN_05"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins7_Bin06"
 				DBLocation="MSCALEHIST.7BINS_BIN_06"
-				DataType="integer"/>
+				DataType="float"/>
 				
 			<Element
 				Name="TBins9_Bin00"
 				DBLocation="MSCALEHIST.9BINS_BIN_00"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin01"
 				DBLocation="MSCALEHIST.9BINS_BIN_01"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin02"
 				DBLocation="MSCALEHIST.9BINS_BIN_02"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin03"
 				DBLocation="MSCALEHIST.9BINS_BIN_03"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin04"
 				DBLocation="MSCALEHIST.9BINS_BIN_04"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin05"
 				DBLocation="MSCALEHIST.9BINS_BIN_05"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin06"
 				DBLocation="MSCALEHIST.9BINS_BIN_06"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin07"
 				DBLocation="MSCALEHIST.9BINS_BIN_07"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="TBins9_Bin08"
 				DBLocation="MSCALEHIST.9BINS_BIN_08"
-				DataType="integer"/>
+				DataType="float"/>
 		</SemanticType>
 		
 	</SemanticTypeDefinitions>	
@@ -149,9 +150,9 @@
 		   ProgramID="MultiScaleHistograms"
 		   ID="urn:lsid:openmicroscopy.org:Module:7714">
 		  <Description>
-			Idea of multiscale histogram came from the belief of a unique representativity of an image through infinite
-			series of histograms with sequentially increasing number of bins.  Here we used 4 histograms with number of bins
-			being 3,5,7,9.
+			The idea of multiscale histograms came from the belief of a unique representativity of an image through infinite
+			series of histograms with sequentially increasing number of bins.  
+			Here we used 4 normalized (!) histograms with number of bins being 3,5,7,9.
 		  </Description>
 		  <Declaration>
 			<FormalInput

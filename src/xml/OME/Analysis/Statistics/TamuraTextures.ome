@@ -45,15 +45,15 @@
 			<Element
 				Name="Coarseness_Hist_Bin_00"
 				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_00"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="Coarseness_Hist_Bin_01"
 				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_01"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="Coarseness_Hist_Bin_00"
 				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_02"
-				DataType="integer"/>
+				DataType="float"/>
 			<Element
 				Name="Directionality"
 				DBLocation="TAMURA_TEXTURES.DIRECTIONALITY"
