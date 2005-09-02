@@ -722,7 +722,7 @@ sub getNodeSuccessors {
 
 	my @leaves = $manager->findLeaves( $chain );
 
-Returnes the list of leaf nodes of a chain.
+Returns list of a chain's leaf nodes.
 
 =cut
 
@@ -738,6 +738,37 @@ sub findLeaves {
 	return @leaf_nodes;
 }
 
+=head2 findPath
+
+	my @path = $manager->findPath( $rootNode, $targetNode );
+
+Returns all nodes in the path between $rootNode and $targetNode (inclusive).
+If no such path exists the returned array is empty. 
+
+=cut
+
+sub findPath {
+	my ($self, $rootNode, $targetNode) = @_;
+	my @path;
+
+	# base case, rootNode is targetNode
+	if ($rootNode->id == $targetNode->id) {
+		push @path, $rootNode;
+		return @path;
+	}
+	
+	# recursion case
+	my @nodes = @{$self->getNodeSuccessors($rootNode)};
+	foreach (@nodes) {
+		my @local_path = $self->findPath($_, $targetNode);
+
+		if ( scalar @local_path ) {
+			push @path, $rootNode, @local_path;
+			return @path;
+		}
+	}
+	return @path; # return an empty path;
+}
 1;
 
 __END__
