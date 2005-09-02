@@ -42,7 +42,10 @@
 		<Node NodeID="CreatePlaneSlices"  ProgramName="Create plane slices"/>
 		
 		<!-- Direct arc into Statistics -->
-		<Node NodeID="HaralickFeatures" ProgramName="Haralick Features"/>
+		<Node NodeID="HaralickFeatures_0"   ProgramName="Haralick Features (Angle 0)"/>
+		<Node NodeID="HaralickFeatures_45"  ProgramName="Haralick Features (Angle 45)"/>
+		<Node NodeID="HaralickFeatures_90"  ProgramName="Haralick Features (Angle 90)"/>
+		<Node NodeID="HaralickFeatures_135" ProgramName="Haralick Features (Angle 135)"/>
 		<Node NodeID="ZernikeMoments"   ProgramName="Zernike Moments"/>
 		
 		<!-- Gradient arc into Edge Statistics -->
@@ -106,8 +109,23 @@
 		<Link
 			FromNodeID="CreatePlaneSlices"
 			FromOutputName="Plane slices" 
-			ToNodeID="HaralickFeatures"
+			ToNodeID="HaralickFeatures_0"
 			ToInputName="Pixels Plane Slice"/>			
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="HaralickFeatures_45"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="HaralickFeatures_90"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="HaralickFeatures_135"
+			ToInputName="Pixels Plane Slice"/>		
 		<Link
 			FromNodeID="CreatePlaneSlices"
 			FromOutputName="Plane slices" 
@@ -167,7 +185,22 @@
 		<Link
 			FromNodeID="FrequencySpace->PixelsPlaneSlice"
 			FromOutputName="Pixels Plane Slice"
-			ToNodeID="HaralickFeatures"
+			ToNodeID="HaralickFeatures_0"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_45"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_90"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_135"
 			ToInputName="Pixels Plane Slice"/>
 		<Link
 			FromNodeID="FrequencySpace->PixelsPlaneSlice"
@@ -194,7 +227,22 @@
 		<Link
 			FromNodeID="WaveletCoefficientsLevel1->PixelsPlaneSlice"
 			FromOutputName="Pixels Plane Slice"
-			ToNodeID="HaralickFeatures"
+			ToNodeID="HaralickFeatures_0"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel1->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_45"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel1->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_90"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel1->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_135"
 			ToInputName="Pixels Plane Slice"/>
 		<Link
 			FromNodeID="WaveletTransform"
@@ -204,7 +252,22 @@
 		<Link
 			FromNodeID="WaveletCoefficientsLevel2->PixelsPlaneSlice"
 			FromOutputName="Pixels Plane Slice"
-			ToNodeID="HaralickFeatures"
+			ToNodeID="HaralickFeatures_0"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel2->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_45"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel2->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_90"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel2->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_135"
 			ToInputName="Pixels Plane Slice"/>
 			
 		<!-- Chebyshev Fourier arc into Statistics -->
@@ -238,7 +301,22 @@
 		<Link
 			FromNodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
 			FromOutputName="Pixels Plane Slice"
-			ToNodeID="HaralickFeatures"
+			ToNodeID="HaralickFeatures_0"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_45"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_90"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures_135"
 			ToInputName="Pixels Plane Slice"/>
 			
 		<!-- Chebyshev arc into Signatures -->
