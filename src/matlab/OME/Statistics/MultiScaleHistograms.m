@@ -46,7 +46,7 @@
 function hh = MultiScaleHistograms(im), im = im(:);
 nn = [3 5 7 9]; hh = [];
 for ii = 1:length(nn), hh = [hh hist(im,nn(ii))];end
-%hh = hh./max(hh(:));
-hh = uint16(hh);
+hh = hh./max(hh(:));
+%hh = uint16(hh);
 return;
 

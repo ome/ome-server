@@ -110,8 +110,8 @@ total_coarseness = mean(newh);
 newh = reshape(2.^newh,size(Im,1),size(Im,2));
 nbin = 3;
 coarseness_hist = hist(newh(:),nbin);
-%coarseness_hist = coarseness_hist./max(coarseness_hist);
-coarseness_hist = uint16(coarseness_hist);
+coarseness_hist = coarseness_hist./max(coarseness_hist);
+%coarseness_hist = uint16(coarseness_hist);
 return;
 
 function sm = moveav(Im,nk),
