@@ -36,7 +36,7 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		<SemanticType Name="ChebyshevFourierCoefficientHistogram" AppliesTo="I">
 			<Description>
-			40 bin historgam computed from coefficients of 2D Chebyshev-Fourier
+			32 bin historgam computed from coefficients of 2D Chebyshev-Fourier
 			Transform.
 			</Description>
 			<Element
@@ -167,38 +167,6 @@
 			   Name="Bin31"
 			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_31"
 			   DataType="integer"/>
-			<Element
-			   Name="Bin32"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_32"
-			   DataType="integer"/>
-			<Element
-			   Name="Bin33"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_33"
-			   DataType="integer"/>
-			<Element
-			   Name="Bin34"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_34"
-			   DataType="integer"/>
-			<Element
-			   Name="Bin35"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_35"
-			   DataType="integer"/>
-			<Element
-			   Name="Bin36"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN_36"
-			   DataType="integer"/>
-			<Element
-			   Name="Bin37"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN__37"
-			   DataType="integer"/>
-			<Element
-			   Name="Bin38"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN__38"
-			   DataType="integer"/>
-			<Element
-			   Name="Bin39"
-			   DBLocation="CHEBYSHEV_FOURIER_STATISTICS.HIST_BIN__39"
-			   DataType="integer"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
 
@@ -264,14 +232,6 @@
 				<Element Index= "30" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin29"/>
 				<Element Index= "31" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin30"/>
 				<Element Index= "32" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin31"/>
-				<Element Index= "33" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin32"/>
-				<Element Index= "34" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin33"/>
-				<Element Index= "35" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin34"/>
-				<Element Index= "36" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin35"/>
-				<Element Index= "37" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin36"/>
-				<Element Index= "38" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin37"/>
-				<Element Index= "39" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin38"/>
-				<Element Index= "40" OutputLocation="Chebyshev Fourier Coefficient Histogram.Bin39"/>
 			</VectorDecoder>
 			
 		  </ExecutionInstructions>
