@@ -1068,8 +1068,8 @@ sub test_module {
 
     my @output;
     if ($user) {
-	    print $logfile "TESTING MODULE -- su -l $user -c 'make test $cl_options'\n";
-    	@output = `su -l $user -c 'cd $path; make test $cl_options' 2>&1`;
+	    print $logfile "TESTING MODULE -- su $user -c 'make test $cl_options'\n";
+    	@output = `su $user -c 'cd $path; make test $cl_options' 2>&1`;
     } else {
 	    print $logfile "TESTING MODULE -- 'make test'\n";
 	    @output = `make test 2>&1`;
