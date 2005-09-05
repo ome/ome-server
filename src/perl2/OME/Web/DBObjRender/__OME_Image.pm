@@ -182,29 +182,7 @@ sub _renderData {
 	if( exists $field_requests->{ 'original_file' } ) {
 		foreach my $request ( @{ $field_requests->{ 'original_file' } } ) {
 			my $request_string = $request->{ 'request_string' };
-			# Find the original file (this code should really live in ImageManager)
-			my $import_mex = $factory->findObject( "OME::ModuleExecution", 
-				'module.name' => 'Image import', 
-				image => $obj, 
-				__order => 'timestamp' );
-			unless( $import_mex ) {
-				$record{ $request_string } = "No Image import MEX found for this image.";
-				next;
-			}
-			my $ai = $factory->findObject( 
-				"OME::ModuleExecution::ActualInput", 
-				module_execution => $import_mex,
-				'formal_input.semantic_type.name' => 'OriginalFile'
-			);
-			unless( $ai ) {
-				$record{ $request_string } = "No OriginalFile inputs were found for Image import MEX ".
-					$self->Renderer()->render( $import_mex, 'ref' )." for this image.";
-				next;
-			}
-			my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
-				$ai->input_module_execution,
-				'OriginalFile'
-			);
+			my $original_files = OME::Tasks::ImageManager->getImageOriginalFiles($obj);
 			
 			if( scalar( @$original_files ) > 1 ) {
 				my $more_info_url = 
