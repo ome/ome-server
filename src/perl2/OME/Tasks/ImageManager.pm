@@ -630,10 +630,36 @@ sub getImageWavelengths{
 	return \@Wavelengths;
 }
 
+########################
+# Parameters:
+# 	image = image object
+# this was written by Josiah Johnston and used to be in __OME_Image.pm
+sub getImageOriginalFiles{
+	my ($self,$image)=@_ ;
+	my $session=$self->__Session();
+	my $factory=$session->Factory();
+	
+	# Maybe dying here is to harsh for OME::ModuleExecution and ActualInput.
+	# Let's start dieing and if this is the wrong behaviour, we can change it later
+	my $import_mex = $factory->findObject( "OME::ModuleExecution", 
+		'module.name' => 'Image import', 
+		image => $image, 
+		__order => 'timestamp' ) or die "No Image import MEX found for this image.";
 
+	my $ai = $factory->findObject( 
+		"OME::ModuleExecution::ActualInput", 
+		module_execution => $import_mex,
+		'formal_input.semantic_type.name' => 'OriginalFile'
+	) or die "No OriginalFile inputs were found for Image import MEX ".
+			$self->Renderer()->render( $import_mex, 'ref' )." for this image.";
 
-
-
+	my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
+		$ai->input_module_execution,
+		'OriginalFile'
+	);
+	
+	return $original_files;
+}
 ####################
 
 sub getDisplayOptions{
