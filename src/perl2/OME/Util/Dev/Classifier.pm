@@ -50,6 +50,7 @@ use XML::LibXML;
 use XML::LibXSLT;
 use OME::SessionManager;
 use OME::Session;
+use OME::Tasks::ImageManager;
 use OME::Tasks::ImageTasks;
 use OME::Tasks::ChainManager;
 use OME::Tasks::OMEImport;
@@ -295,9 +296,21 @@ sub compile_sigs {
 		if $stitcher_mex->status() eq 'ERROR';
 	logdbg "debug", "found signature stitcher module execution (mex=".$stitcher_mex->id().").";
 	
-	# make the matlab signature array. 
 	my @images = $dataset->images;
 	@images = sort {$a->id <=> $b->id} @images;
+	
+	# make an array of image_paths
+	my @image_paths; # this is the name of the image's original file
+	foreach my $img (@images) {
+		my $of_list_objs = OME::Tasks::ImageManager->getImageOriginalFiles($img);
+		my @of_list_paths =  map( $_->Path, @$of_list_objs );
+
+		die "Image ".$_->name." doesn't have exactly one Original File"
+			unless (scalar @of_list_paths == 1);
+		push @image_paths, @of_list_paths;
+	}
+	
+	# make the matlab signature array and label array
 	my ($signature_labels_array, $signature_array) = $self->
 		compile_signature_matrix( $stitcher_mex, \@images);
 
@@ -308,9 +321,11 @@ sub compile_sigs {
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
 	$engine->eval("global signature_labels");
 	$engine->putVariable('signature_labels',$signature_labels_array);
+	$engine->eval("global image_paths");
+	$engine->putVariable('image_paths', OME::Matlab::Array->newStringArray(\@image_paths));	
 	$engine->eval("global signature_vector");
 	$engine->putVariable('signature_vector',$signature_array);
-	$engine->eval( "save $output_file_name signature_labels signature_vector;" );
+	$engine->eval( "save $output_file_name signature_labels signature_vector image_paths;" );
 	print "Saved signature vector to file $output_file_name.\n";
 	$engine->close();
 	$engine = undef;
@@ -393,16 +408,16 @@ sub stitch_chain {
 		
 		# retroactively add a _1 suffix to the first redundent string
 		if ($unique_FI_names_count{$FI_name} == 1) {
-			print "was ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
+#			print "was ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
 			$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}] = 
 				$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."_1";
-			print "now ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
+#			print "now ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
 		}
-		print "was ".$signature_nodes_FI_names[$i]."\n";
+#		print "was ".$signature_nodes_FI_names[$i]."\n";
 		$unique_FI_names_count{$FI_name} = $unique_FI_names_count{$FI_name} + 1;
 		$signature_nodes_FI_names[$i] = 
 				$signature_nodes_FI_names[$i]."_".$unique_FI_names_count{$FI_name};
-		print "now ".$signature_nodes_FI_names[$i]."\n";
+#		print "now ".$signature_nodes_FI_names[$i]."\n";
 	}
 
 	##############
