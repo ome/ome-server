@@ -36,23 +36,38 @@ function [Count, Euler, Centroid, ...
 		 DistMin, DistMax, DistMean, DistMedian, DistVar, DistHist] ...
 		                                          = FeatureStatistics(BinaryMask)
 
+% Input check
+if( ~strcmpi( class( BinaryMask ), 'logical' ) )
+	error( 'BinaryMask input must be cast into the Logical datatype. It is currently %s.', class( BinaryMask ) );
+end;
+
 % How many bins the histograms have
 NUM_BINS = 10;
 
 % Calculate number of contiguous regions in the image
-features = bwlabel(im2bw(BinaryMask));
-Count = max(max(features));
+[ features, Count ] = bwlabel( BinaryMask );
 
-% Calculate Euler number
-global_stats = imfeature(double(im2bw(BinaryMask)), 'EulerNumber', 'Centroid');
-Euler = global_stats.EulerNumber;
+% Calculate region properties. Use regionprops() if available. 
+% regionprops() came out in v 4.1 of the image processing toolbox
+% If it isn't available, use imfeature. Both functions have identical
+% interfaces.
+% Determine which function to use:
+returnCode = exist( 'regionprops', 'file' );
+if( ismember( returnCode, [2:6] ) )
+	useThisFunction = @regionprops;
+else
+	useThisFunction = @imfeature;
+end;
+% Actually perform calculation:
+global_stats  = useThisFunction(double(BinaryMask), 'EulerNumber', 'Centroid');
+featuresStats = useThisFunction(features, 'Area', 'Centroid' );
 
-% Calculate the image centroid
+% Calculate Euler number & Centroid of the entire image.
+Euler    = global_stats.EulerNumber;
 Centroid = global_stats.Centroid;
 
-% Calculate the statistics about the feature's areas 
-featuresAreas = imfeature(features, 'Area');
-featuresAreas = [featuresAreas.Area];
+% Calculate the statistics about each feature's areas 
+featuresAreas = [featuresStats.Area];
 
 AreaMin    = min(featuresAreas);
 AreaMax    = max(featuresAreas);
@@ -63,8 +78,7 @@ AreaHist   = hist(featuresAreas, NUM_BINS);
 
 % Calculate the statistics about the distances between the feature centroids
 % and image's centroid.
-featuresCentroid = [imfeature(features,'Centroid')];
-featuresCentroid = [featuresCentroid.Centroid];
+featuresCentroid = [featuresStats.Centroid];
 featuresCentroidX = featuresCentroid(1:2:end) - double(Centroid(1));
 featuresCentroidY = featuresCentroid(2:2:end) - double(Centroid(2));
 featuresCentroidDist = sqrt(featuresCentroidX.*featuresCentroidX + ...
