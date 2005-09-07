@@ -36,6 +36,7 @@ FeatureDistMedian, FeatureDistVar, FeatureDistHist] = FeatureStatistics(im_bw);
 
 % zernike moments
 ZernikeMoments = mb_zernike(im);
+ZernikeMomentsFFT = mb_zernike(im_fft);
 
 %%
 %% Fresh -> "Haralick Features (Angle X)" 
@@ -528,7 +529,7 @@ sig_var_names = { ...
 'FeatureAreaMin' 'FeatureAreaVar' 'FeatureCentroid' 'FeatureCount' 'FeatureDistHist' ...
 'FeatureDistMax' 'FeatureDistMean' 'FeatureDistMedian' 'FeatureDistMin' ...
 'FeatureDistVar' 'FeatureEuler' ...
-'ZernikeMoments' };
+'ZernikeMoments' 'ZernikeMomentsFFT'};
 
 % Use list to make signature vector and labels vector
 sig_labels = {};
