@@ -245,7 +245,7 @@
 			<xsl:apply-templates select = "@Experimenter" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "@Group" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "CA:ProjectRef" mode = "MakeOMEref"/>
-			<xsl:copy-of select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
+			<xsl:apply-templates select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Image">
@@ -790,9 +790,9 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:DisplayChannel" mode="MakeDisplayChannel">
-		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:param name = "Name"/>
 		<xsl:param name = "isOn">true</xsl:param>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "{$Name}">
 			<xsl:apply-templates select = "@* [name() != 'ID']"/>
 			<xsl:if test="$Name != 'GreyChannel'">
