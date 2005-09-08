@@ -66,6 +66,9 @@ sub getPageBody {
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 
+
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+	# Extract data from the form
 	my $action = $cgi->param('action');
 	my $image_ids = $cgi->param('images_to_export');
 	my @images;
@@ -86,6 +89,9 @@ sub getPageBody {
 	$approximate_file_size /= 1048576;
 	$approximate_file_size = sprintf( '%.2f', $approximate_file_size);
 	
+
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+	# Export if requested
 	if ( $action eq 'Export'){
 		my $filename = $session->getTemporaryFilename('XMLFileExport','ome')
 			or die "OME::Web::XMLFileExport could not obtain temporary filename\n";
@@ -114,6 +120,8 @@ sub getPageBody {
 		}
 	}
 
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+	# Instead of exporting, retrieve and populate the form.
 	$self->contentType('text/html');
 	my $tmpl_dir = $self->actionTemplateDir();
 	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
@@ -124,12 +132,21 @@ sub getPageBody {
 			if( $approximate_file_size >= 500 );
 	}
 	$body .= 
-		$cgi->startform( -action => $self->pageURL( 'OME::Web::XMLFileExport' ) ).
+		$cgi->startform( { -name => 'primary', -action => $self->pageURL( 'OME::Web::XMLFileExport' ) } ).
 		$tmpl->output().
 		$cgi->hidden( -name => 'images_to_export' ).
 		$cgi->endform();		
 
 	return ('HTML',$body);
+}
+
+sub getURLtoExport {
+	my ($proto, $file_name, @image_ids) = @_;
+	return $proto->pageURL( $proto, {
+		filename         => $file_name,
+		images_to_export => join( ',', @image_ids ), 
+		action => 'Export'
+	} );
 }
 
 1;
