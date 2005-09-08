@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
+ * Created by hochheiserha via omejava on Thu Sep  8 14:15:01 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -45,32 +45,32 @@ import java.util.Map;
 public interface FilenamePattern
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>TheC</code> */
-    public Integer getTheC();
-    public void setTheC(Integer value);
-
     /** Criteria field name: <code>TheT</code> */
     public Integer getTheT();
     public void setTheT(Integer value);
+
+    /** Criteria field name: <code>TheC</code> */
+    public Integer getTheC();
+    public void setTheC(Integer value);
 
     /** Criteria field name: <code>TheZ</code> */
     public Integer getTheZ();
     public void setTheZ(Integer value);
 
-    /** Criteria field name: <code>BaseName</code> */
-    public Integer getBaseName();
-    public void setBaseName(Integer value);
-
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
+    /** Criteria field name: <code>Format</code> */
+    public String getFormat();
+    public void setFormat(String value);
 
     /** Criteria field name: <code>RegEx</code> */
     public String getRegEx();
     public void setRegEx(String value);
 
-    /** Criteria field name: <code>Format</code> */
-    public String getFormat();
-    public void setFormat(String value);
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
+
+    /** Criteria field name: <code>BaseName</code> */
+    public String getBaseName();
+    public void setBaseName(String value);
 
 }
