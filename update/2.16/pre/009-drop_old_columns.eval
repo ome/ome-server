@@ -1,5 +1,5 @@
-$delegate->dropColumn($dbh, 'FORMAL_INPUT',  'OLD_NANE');
-$delegate->dropColumn($dbh, 'FORMAL_OUTPUT', 'OLD_NAME');
+$delegate->dropColumn($dbh, 'FORMAL_INPUTS',  'OLD_NANE');
+$delegate->dropColumn($dbh, 'FORMAL_OUTPUTS', 'OLD_NAME');
 
 OME::DBObject->clearAllCaches();
 1;
