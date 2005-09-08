@@ -58,6 +58,7 @@ our $VERSION = $OME::VERSION;
 use OME::Tasks::ImageManager;
 use OME::Session;
 use OME::Tasks::ModuleExecutionManager;
+use OME::Web::XMLFileExport;
 use Carp 'cluck';
 use base qw(OME::Web::DBObjRender);
 
@@ -65,6 +66,7 @@ use base qw(OME::Web::DBObjRender);
 
 makes virtual fields 
 	thumb_url: an href to the thumbnail of the Image's default pixels
+	export_url: an href to download an ome xml file of this image
 	current_annotation: the text contents of the current Image annotation
 		according to OME::Tasks::ImageManager->getCurrentAnnotation()
 	current_annotation_author: A ref to the author of the current annotation 
@@ -87,6 +89,13 @@ sub _renderData {
 		foreach my $request ( @{ $field_requests->{ 'thumb_url' } } ) {
 			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = OME::Tasks::ImageManager->getThumbURL( $obj );
+		}
+	}
+	# export url
+	if( exists $field_requests->{ 'export_url' } ) {
+		foreach my $request ( @{ $field_requests->{ 'export_url' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = OME::Web::XMLFileExport->getURLtoExport( $obj->name().'.ome', $obj->id );
 		}
 	}
 	# current_annotation:
