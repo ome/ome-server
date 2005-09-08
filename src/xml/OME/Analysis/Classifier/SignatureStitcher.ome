@@ -80,7 +80,7 @@ The name of the semantic element of the formal
 
   </SemanticTypeDefinitions>
   <AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
-    <AnalysisModule ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher" Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:7204" ModuleName="Signature Stitcher" ProgramID="">
+    <AnalysisModule ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher" Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:9999" ModuleName="Signature Stitcher" ProgramID="">
       <Description>
 Combines outputs from "signature modules" into a single vector that
 describes the image. This stitching is very handy for classifiers.
@@ -91,480 +91,480 @@ describes the image. This stitching is very handy for classifiers.
         <FormalInput Name="Fourier Transform:Chebyshev Fourier Statistics::ChebyshevFourierCoefficientHistogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="?"/>
         <FormalInput Name="Fourier Transform:Chebyshev Statistics::ChebyshevCoefficientHistogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
         <FormalInput Name="Chebyshev Statistics::ChebyshevCoefficientHistogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeArea" SemanticTypeName="EdgeArea" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeMagMean" SemanticTypeName="EdgeMagMean" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeMagMedian" SemanticTypeName="EdgeMagMedian" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeMagVar" SemanticTypeName="EdgeMagVar" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeMagHist" SemanticTypeName="EdgeMagHist" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecMean" SemanticTypeName="EdgeDirecMean" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecMedian" SemanticTypeName="EdgeDirecMedian" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecVar" SemanticTypeName="EdgeDirecVar" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecHist" SemanticTypeName="EdgeDirecHist" Count="?"/>
-        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecHomo" SemanticTypeName="EdgeDirecHomo" Count="?"/>
         <FormalInput Name="Gradient:Edge Statistics::EdgeDiffDirecHist" SemanticTypeName="EdgeDiffDirecHist" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureCount" SemanticTypeName="FeatureCount" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureEuler" SemanticTypeName="FeatureEuler" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureCentroid" SemanticTypeName="FeatureCentroid" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureAreaMin" SemanticTypeName="FeatureAreaMin" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureAreaMax" SemanticTypeName="FeatureAreaMax" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureAreaMean" SemanticTypeName="FeatureAreaMean" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureAreaMedian" SemanticTypeName="FeatureAreaMedian" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureAreaVar" SemanticTypeName="FeatureAreaVar" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureAreaHist" SemanticTypeName="FeatureAreaHist" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureDistMin" SemanticTypeName="FeatureDistMin" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureDistMax" SemanticTypeName="FeatureDistMax" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureDistMean" SemanticTypeName="FeatureDistMean" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureDistMedian" SemanticTypeName="FeatureDistMedian" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureDistVar" SemanticTypeName="FeatureDistVar" Count="?"/>
-        <FormalInput Name="Global Threshold:Feature Statistics::FeatureDistHist" SemanticTypeName="FeatureDistHist" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecHomo" SemanticTypeName="EdgeDirecHomo" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecHist" SemanticTypeName="EdgeDirecHist" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecVar" SemanticTypeName="EdgeDirecVar" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecMedian" SemanticTypeName="EdgeDirecMedian" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeDirecMean" SemanticTypeName="EdgeDirecMean" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeMagHist" SemanticTypeName="EdgeMagHist" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeMagVar" SemanticTypeName="EdgeMagVar" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeMagMedian" SemanticTypeName="EdgeMagMedian" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeMagMean" SemanticTypeName="EdgeMagMean" Count="?"/>
+        <FormalInput Name="Gradient:Edge Statistics::EdgeArea" SemanticTypeName="EdgeArea" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistHist" SemanticTypeName="FeatureDistHist" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistVar" SemanticTypeName="FeatureDistVar" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMedian" SemanticTypeName="FeatureDistMedian" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMean" SemanticTypeName="FeatureDistMean" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMax" SemanticTypeName="FeatureDistMax" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMin" SemanticTypeName="FeatureDistMin" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaHist" SemanticTypeName="FeatureAreaHist" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaVar" SemanticTypeName="FeatureAreaVar" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMedian" SemanticTypeName="FeatureAreaMedian" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMean" SemanticTypeName="FeatureAreaMean" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMax" SemanticTypeName="FeatureAreaMax" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMin" SemanticTypeName="FeatureAreaMin" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureCentroid" SemanticTypeName="FeatureCentroid" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureEuler" SemanticTypeName="FeatureEuler" Count="?"/>
+        <FormalInput Name="Otsu's Method:Global Threshold:Feature Statistics::FeatureCount" SemanticTypeName="FeatureCount" Count="?"/>
         <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
-        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance" SemanticTypeName="CoOcMat_DifferenceVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy" SemanticTypeName="CoOcMat_DifferenceEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Entropy" SemanticTypeName="CoOcMat_Entropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy" SemanticTypeName="CoOcMat_SumEntropy" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance" SemanticTypeName="CoOcMat_SumVariance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage" SemanticTypeName="CoOcMat_SumAverage" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment" SemanticTypeName="CoOcMat_InverseDifferenceMoment" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Variance" SemanticTypeName="CoOcMat_Variance" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Correlation" SemanticTypeName="CoOcMat_Correlation" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Contrast" SemanticTypeName="CoOcMat_Contrast" Count="?"/>
+        <FormalInput Name="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment" SemanticTypeName="CoOcMat_AngularSecondMoment" Count="?"/>
         <FormalInput Name="Fourier Transform:Zernike Moments::ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="?"/>
         <FormalInput Name="Zernike Moments::ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="?"/>
         <FormalOutput Name="SignatureVector" SemanticTypeName="SignatureVectorEntry" Count="+"/>
