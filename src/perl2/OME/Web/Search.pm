@@ -81,22 +81,10 @@ sub new {
 		{ mode => 'tiled_list', mode_title => 'Summaries' },
 		{ mode => 'tiled_ref_list', mode_title => 'Names' },
 	];
-		
+	
+	$self->{ form_name } = 'primary';
+	
 	return $self;
-}
-
-# These routines allow filtering of search types.
-sub __get_search_types {
-	return (
-		'OME::Project', 
-		'OME::Dataset', 
-		'OME::Image', 
-		'OME::ModuleExecution', 
-		'OME::Module', 
-		'OME::AnalysisChain', 
-		'OME::AnalysisChainExecution',
-		'OME::SemanticType'
-	);
 }
 
 sub getMenuText {
@@ -129,29 +117,42 @@ sub getPageTitle {
 }
 
 sub getPageBody {
+
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+	# Setup variables
 	my $self = shift;	
 	my $factory = $self->Session()->Factory();
 	my $q    = $self->CGI();
-	my $type = $q->param( 'SearchType' ) || $q->param( 'Locked_SearchType' );
-	my $html = $q->startform( -action => $self->pageURL( 'OME::Web::Search' ) );
-	# Save the url-parameters if any were passed. The line above will strip them
-	# at the first submit.
-	my %do_not_save_these_url_params = (
-		'Page' => undef,
-		'SearchType' => undef
-	);
-	my @params_to_save = grep( ( not exists $do_not_save_these_url_params{ $_ } ), 
-		$q->url_param() );
-	@params_to_save = $q->param( '__save_these_params' ) 
-		unless @params_to_save;
-	if( @params_to_save ) {
-		$html .= $q->hidden( -name => '__save_these_params', -values => \@params_to_save );
-		$html .= $q->hidden( -name => $_, -default => $q->param( $_ ) )
+	# $type is the formal name of type of object being searched for
+	my $type = $self->_getCurrentSearchType();
+	my $html = $q->startform( -name => 'primary', -action => $self->pageURL( 'OME::Web::Search' ) );
+	my %tmpl_data;
+	my $form_name = $self->{ form_name };
+
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+	# Save the url-parameters if any were passed. 
+	# e.g. accessor_type, accessor_id, accessor_method, select
+	if( $q->param( '__save_these_params' ) ) {
+		$html .= "\n".$q->hidden( -name => '__save_these_params' )."\n";
+		foreach my $param ( $q->param( '__save_these_params' ) ){
+			my $value = $q->param( $param );
+			$q->param( $param, $value );
+			$html .= $q->hidden( -name => $param )."\n";
+		}
+	} else {
+		my %do_not_save_these_url_params = (
+			'Page' => undef,
+			'SearchType' => undef
+		);
+		my @params_to_save = grep( ( not exists $do_not_save_these_url_params{ $_ } ), $q->url_param() );
+		$html .= "\n".$q->hidden( -name => '__save_these_params', -values => \@params_to_save )."\n";
+		$html .= "\n".$q->hidden( -name => $_, -default => $q->param( $_ ) )."\n"
 			foreach ( @params_to_save );
 	}
-	my %tmpl_data;
 
-	# Return results of a select
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+	# Return results of a select, then close this popup window.
+	# This search package can be called as a popup window that searches & selects.
 	if( $q->param( 'do_select' ) ) {
 		
 		my @selection    = $q->param( 'selected_objects' );
@@ -165,82 +166,23 @@ sub getPageBody {
 		my $resolver = new OME::Tasks::LSIDManager();
 		@selection = map( $resolver->getObject($_), @selection );
 
-		# close this window after action is complete if it's a popup
-		my $return_to = ( $q->url_param( 'return_to' ) || $q->param( 'return_to' ) );
+		my $return_to_form = ( $q->url_param( 'return_to_form' ) || $q->param( 'return_to_form' ) || 'primary');
+		my $return_to_form_element = ( $q->url_param( 'return_to' ) || $q->param( 'return_to' ) );
 		my $ids = join( ',', map( $_->id, @selection ) );
 		$html = <<END_HTML;
 			<script language="Javascript" type="text/javascript">
-				window.opener.document.forms[0].${return_to}.value = '$ids';
-				window.opener.document.forms[0].submit();
+				window.opener.document.forms['$return_to_form'].${return_to_form_element}.value = '$ids';
+				window.opener.document.forms['$return_to_form'].submit();
 				window.close();
 			</script>
 END_HTML
 		return( 'HTML', $html );
 	}
 
-	# Drop down list of search types
-	my @search_types = $self->__get_search_types();	
-	# if the type requested isn't in the list of searchable types, add it. 
-	# This stores the type, which is required for paging to work.
-	unshift( @search_types, $type )
-		unless(
-			( not defined $type ) || 
-			( $type =~ m/^@/ ) ||
-			( grep( $_ eq $type, @search_types ) )
-		);
-	my %search_type_labels;
-	foreach my $formal_name ( @search_types ) {
-		my ($package_name, $common_name, undef, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
-		$search_type_labels{ $formal_name } = $common_name;
-	}
-	my @globalSTs = $factory->findObjects( 'OME::SemanticType', 
-		granularity => 'G',
-		__order     => 'name'
-	);
-	my @datasetSTs = $factory->findObjects( 'OME::SemanticType', 
-		granularity => 'D',
-		__order     => 'name'
-	);
-	my @imageSTs = $factory->findObjects( 'OME::SemanticType', 
-		granularity => 'I',
-		__order     => 'name'
-	);
-	my @featureSTs = $factory->findObjects( 'OME::SemanticType', 
-		granularity => 'F',
-		__order     => 'name'
-	);
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+	# get a Drop down list of search types
+	$tmpl_data{ search_types } = $self->__get_search_types_popup_menu();
 	
-	$tmpl_data{ search_types } = $q->popup_menu(
-		-name     => 'SearchType',
-		'-values' => [ 
-			'', 
-			@search_types, 
-			'G', 
-			map( '@'.$_->name(), @globalSTs),
-			'D',
-			map( '@'.$_->name(), @datasetSTs),
-			'I',
-			map( '@'.$_->name(), @imageSTs),
-			'F',
-			map( '@'.$_->name(), @featureSTs),
-		],
-		-default  => ( $type ? $type : '' ),
-		-override => 1,
-		-labels   => { 
-			''  => '-- Select a Search Type --', 
-			%search_type_labels,
-			'G' => '-- Global Semantic Types --', 
-			(map{ '@'.$_->name() => $_->name() } @globalSTs ),
-			'D' => '-- Dataset Semantic Types --',
-			(map{ '@'.$_->name() => $_->name() } @datasetSTs ),
-			'I' => '-- Image Semantic Types --',
-			(map{ '@'.$_->name() => $_->name() } @imageSTs ),
-			'F' => '-- Feature Semantic Types --',
-			(map{ '@'.$_->name() => $_->name() } @featureSTs ),
-		},
-		-onchange => "if(this.value != '' && this.value != 'G' && this.value != 'D' && this.value != 'I' && this.value != 'F' ) { document.forms[0].submit(); } return false;"
-	);
-
 	# set up display modes
 	my $current_display_mode = ( $q->param( 'Mode' ) || 'tiled_list' );
 	foreach my $entry ( @{ $self->{ _display_modes } } ) {
@@ -300,7 +242,7 @@ END_HTML
 		# Select button
 		$tmpl_data{do_select} = 
 			'<span class="ome_quiet">'.
-			'<a href="javascript:selectAllCheckboxes( \'selected_objects\' );">Select All</a> | '.
+			'<a href="javascript: document.forms[\''.$form_name.'\'].elements[\'select_all\'].value = 1; selectAllCheckboxes( \'selected_objects\' );">Select All</a> | '.
 			'<a href="javascript:deselectAllCheckboxes( \'selected_objects\' );">Reset</a><br>'.
 			'</span>'
 			if( $select && $select eq 'many' );
@@ -310,6 +252,23 @@ END_HTML
 				-value => 'Make Selection',
 			} )
 			if( $select );
+
+		# set the selected objects to all if requested.
+		# This approach only half works. It selects many checkboxes,
+		# but that is not reflected on the form when the user changes
+		# pages because the checkboxes are generated by display code
+		# that knows nothing about what is selected and what isn't.
+# 		if( $q->param( 'select_all' ) ) {
+# 			my %searchParams = $self->_getSearchParams();
+# 			my @objects = $factory->findObjects( $formal_name, %searchParams );
+# 			my $resolver = new OME::Tasks::LSIDManager();
+# 			my @lsids = map( $resolver->getLSID( $_ ), @objects );
+# 			$q->param( 'selected_objects', @lsids );
+# 		}
+		# This is used to retain selected objects across pages. 
+		# It takes advantage of CGI's "sticky fields"
+		$html .= $q->hidden( -name => 'selected_objects' )
+			if( $select && $select eq 'many' );
 
 		# gotta have hidden fields
 		$html .= "\n".
@@ -321,10 +280,8 @@ END_HTML
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
 			$q->hidden( -name => 'page_action', -default => undef, -override => 1 ).
-			$q->hidden( -name => 'accessor_id' );
-		# This is used to retain selected objects across pages.
-		$html .= $q->hidden( -name => 'selected_objects' )
-			if( $select && $select eq 'many' );
+			$q->hidden( -name => 'accessor_id' ).
+			$q->hidden( -name => 'select_all', -default => undef, -override => 1 );
 		
 	}
 	
@@ -455,6 +412,7 @@ sub getSearchCriteria {
 	my %tmpl_data;
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $type );
+	my $form_name = $self->{ form_name };
 
 	my $tmpl_path = $self->_findTemplate( $type );
 	my $tmpl = HTML::Template->new( filename => $tmpl_path,
@@ -470,8 +428,8 @@ sub getSearchCriteria {
 			loadObject( $typeToAccessFrom, $idToAccessFrom )
 			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
 		$tmpl_data{ '/accessor_object_ref' } = $render->render( $objectToAccessFrom, 'ref' ).
-			"(<a href='javascript: document.forms[0].elements[\"accessor_id\"].value = \"\"; ".
-			                     "document.forms[0].submit();'".
+			"(<a href='javascript: document.forms[\"$form_name\"].elements[\"accessor_id\"].value = \"\"; ".
+			                     "document.forms[\"$form_name\"].submit();'".
 			   "title='Cancel selection'/>X</a> ".
 			"<a href='javascript: selectOne( \"$typeToAccessFrom\", \"accessor_id\" );'".
 			   "title='Change selection'/>C</a>)";
@@ -504,18 +462,18 @@ sub getSearchCriteria {
 	);
 	foreach my $field( @search_fields ) {
 		# a button for ascending sort
-		my $sort_up = "<a href='javascript: document.forms[0].elements[\"__order\"].value = \"".
+		my $sort_up = "<a href='javascript: document.forms[\"$form_name\"].elements[\"__order\"].value = \"".
 			$search_paths->{ $field }.
-			"\"; document.forms[0].submit();' title='Sort results by ".
+			"\"; document.forms[\"$form_name\"].submit();' title='Sort results by ".
 			$field_titles{ $field }." in increasing order'".
 			( $order && $order eq $search_paths->{ $field } ?
 				" class = 'ome_active_sort_arrow'" : ''
 			).'>';
 		# a button for descending sort
 		my $sort_down = "<a href='javascript: ".
-				"document.forms[0].elements[\"__order\"].value = ".
+				"document.forms[\"$form_name\"].elements[\"__order\"].value = ".
 				"\"!".$search_paths->{ $field }."\";".
-				"document.forms[0].submit();' title='Sort results by ".
+				"document.forms[\"$form_name\"].submit();' title='Sort results by ".
 			$field_titles{ $field }." in decreasing order'".
 			# $order is prefixed by a ! for descending sort. that explains substr().
 			( $order && substr( $order, 1 ) eq $search_paths->{ $field } ?
@@ -548,10 +506,45 @@ sub search {
 	my $q       = $self->CGI();
 	my $factory = $self->Session()->Factory();
 
-	my (%searchParams, @objects, $object_count);
+	my %searchParams = $self->_getSearchParams();
+	my $pagingText;
+	($pagingText, %searchParams) = $self->_preparePaging( %searchParams );
+	my ($objectToAccessFrom, $accessorMethod) = $self->_prepAccessorSearch();
 
-	my $type = $q->param( 'SearchType' );
-	$type = $q->param( 'Locked_SearchType' ) unless $type;
+	my @objects;
+ 	if( $objectToAccessFrom ) {  	    # get objects from an accessor method
+#		logdbg "debug", "Retrieving object from an accessor method:\n\t". $objectToAccessFrom->getFormalName()."(id=".$objectToAccessFrom->id.")->$accessorMethod ( ". join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
+ 		@objects = $objectToAccessFrom->$accessorMethod( %searchParams );
+ 	} else {                            # or with factory
+		my $type = $self->_getCurrentSearchType();
+		my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
+# 		logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
+		@objects = $factory->findObjects( $formal_name, %searchParams );
+	}
+			
+	return ( \@objects, $pagingText );
+}
+
+
+=head2 _getSearchParams
+
+	my %searchParameters = $self->_getSearchParams();
+	my $searchType       = $self->_getCurrentSearchType();
+	my @objects          = $factory->findObjects( $searchType, %searchParameters );
+	
+	parses the search parameters from cgi parameters, and makes them ready for 
+	a standard factory search. Does not include offset or limit.
+
+=cut
+
+sub _getSearchParams {
+	my ($self ) = @_;
+	my $q       = $self->CGI();
+	my $factory = $self->Session()->Factory();
+
+	my %searchParams;
+
+	my $type = $self->_getCurrentSearchType();
 	my @search_names = $q->param( 'search_names' );
 	foreach my $search_on ( @search_names ) {
 		next unless ( $q->param( $search_on ) && $q->param( $search_on ) ne '');
@@ -564,18 +557,62 @@ sub search {
 			$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
 		}
 	}
+	return %searchParams;
+}
 
-	# load type
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+=head2 _prepAccessorSearch
+
+	my ($objectToAccessFrom, $accessorMethod) = $self->_prepAccessorSearch();
+	
+	parses the search parameters from cgi parameters, to find the object
+	to search through for an accessor search mode. Used to search through
+	has-many relationships.
+
+=cut
+
+sub _prepAccessorSearch {
+	my ($self) = @_;
+	my $q       = $self->CGI();
+	my $factory = $self->Session()->Factory();
+	
 	my ($objectToAccessFrom, $accessorMethod);
-
-	# count Objects
- 	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne ''  ) {
+	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne ''  ) {
 		my $typeToAccessFrom = $q->param( 'accessor_type' );
 		my $idToAccessFrom   = $q->param( 'accessor_id' );
 		$accessorMethod   = $q->param( 'accessor_method' );
  		$objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
  			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
+	}
+	return ($objectToAccessFrom, $accessorMethod);
+}
+
+=head2 _preparePaging
+
+	my %searchParameters = $self->_getSearchParams();
+	my $pagingText;
+	($pagingText, %searchParameters) = $self->_preparePaging( %searchParameters );
+	my $searchType       = $self->_getCurrentSearchType();
+	my @objects          = $factory->findObjects( $searchType, %searchParameters );
+	
+	parses the offset or limit from incoming cgi parameters, updates them,
+	and generates the paging controls.
+
+=cut
+
+sub _preparePaging {
+	my ($self, %searchParams ) = @_;
+	my $q       = $self->CGI();
+	my $factory = $self->Session()->Factory();
+
+
+	# load type
+	my $type         = $self->_getCurrentSearchType();
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+	my ($objectToAccessFrom, $accessorMethod) = $self->_prepAccessorSearch();
+
+	# count Objects
+ 	my $object_count;
+	if( $objectToAccessFrom ) {
 # getColumnType doesn't report on valid but as yet uninferred relations, so I'm disabling this error check for now.
 # 		ref( $objectToAccessFrom )->getColumnType( $accessorMethod )
 # 			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
@@ -627,19 +664,10 @@ sub search {
 		) );
 	# update the __offset parameter
 	$q->param( "__offset", $searchParams{ __offset } );
-
-	# get objects: from an accessor method
- 	if( $objectToAccessFrom ) {
-		logdbg "debug", "Retrieving object from an accessor method:\n\t". $objectToAccessFrom->getFormalName()."(id=".$objectToAccessFrom->id.")->$accessorMethod ( ". join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
- 		@objects = $objectToAccessFrom->$accessorMethod( %searchParams );
- 	# or with factory
- 	} else {
- 		logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
-		@objects = $factory->findObjects( $formal_name, %searchParams );
-	}
-		
+	
 	# paging controls
 	my $pagingText;
+	my $form_name = $self->{ form_name };
 	if( $searchParams{ __limit } ) {
 		my $offset = $searchParams{ __offset };
 		my $limit  = $searchParams{ __limit };
@@ -648,14 +676,14 @@ sub search {
 		if( $numPages > 1 ) {
 			$pagingText .= $q->a( {
 					-title => "First Page",
-					-href => "javascript: document.forms[0].page_action.value='FirstPage'; document.forms[0].submit();",
+					-href => "javascript: document.forms['$form_name'].page_action.value='FirstPage'; document.forms['$form_name'].submit();",
 					}, 
 					'<<',
 				).' '
 				if ( $currentPage > 1 and $numPages > 2 );
 			$pagingText .= $q->a( {
 					-title => "Previous Page",
-					-href => "javascript: document.forms[0].page_action.value='PrevPage'; document.forms[0].submit();",
+					-href => "javascript: document.forms['$form_name'].page_action.value='PrevPage'; document.forms['$form_name'].submit();",
 					}, 
 					'<'
 				)." "
@@ -663,22 +691,22 @@ sub search {
 			$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 			$pagingText .= "\n".$q->a( {
 					-title => "Next Page",
-					-href  => "javascript: document.forms[0].page_action.value='NextPage'; document.forms[0].submit();",
+					-href  => "javascript: document.forms['$form_name'].page_action.value='NextPage'; document.forms['$form_name'].submit();",
 					}, 
 					'>'
 				)." "
 				if $currentPage < $numPages;
 			$pagingText .= "\n".$q->a( {
 					-title => "Last Page",
-					-href  => "javascript: document.forms[0].page_action.value='LastPage'; document.forms[0].submit();",
+					-href  => "javascript: document.forms['$form_name'].page_action.value='LastPage'; document.forms['$form_name'].submit();",
 					}, 
 					'>>'
 				)
 				if( $currentPage < $numPages and $numPages > 2 );
 		}
 	}
-	
-	return ( \@objects, $pagingText );
+
+	return ($pagingText, %searchParams);
 }
 
 =head2 __sort_field
@@ -802,6 +830,121 @@ sub _specialize {
 	# couldn't load the special package? return undef
 	return undef;
 }
+
+=head2 _getCurrentSearchType
+
+	my $searchType = $self->_getCurrentSearchType();
+
+This loads the current search type from incoming cgi parameters.
+
+=cut
+
+sub _getCurrentSearchType {
+	my ($self) = @_;
+	my $q    = $self->CGI();
+	# $type is the formal name of type of object being searched for
+	my $type = $q->param( 'SearchType' ) || $q->param( 'Locked_SearchType' );
+	return $type;	
+}
+
+# These routines allow filtering of search types.
+sub __get_search_types {
+	return (
+		'OME::Project', 
+		'OME::Dataset', 
+		'OME::Image', 
+		'OME::ModuleExecution', 
+		'OME::Module', 
+		'OME::AnalysisChain', 
+		'OME::AnalysisChainExecution',
+		'OME::SemanticType'
+	);
+}
+
+=head2 __get_search_types_popup_menu
+
+	my $popupMenuHTML = $self->__get_search_types_popup_menu();
+
+This returns a popup_menu form element that has all available search types.
+
+=cut
+
+sub __get_search_types_popup_menu {
+
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+	# Setup variables
+	my $self = shift;	
+	my $factory = $self->Session()->Factory();
+	my $q    = $self->CGI();
+	my $searchType = $self->_getCurrentSearchType();
+	my $form_name = $self->{ form_name };
+	
+	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+	# Make a Drop down list of search types
+	my @search_types = $self->__get_search_types();	
+	# if the type requested isn't in the list of searchable types, add it. 
+	# This stores the type, which is required for paging to work.
+	unshift( @search_types, $searchType )
+		unless(
+			( not defined $searchType ) ||               # it wasn't defined
+			( $searchType =~ m/^@/ ) ||                  # we'll add it below
+			( grep( $_ eq $searchType, @search_types ) ) # it's already in the list
+		);
+	my %search_type_labels;
+	foreach my $formal_name ( @search_types ) {
+		my ($package_name, $common_name, undef, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
+		$search_type_labels{ $formal_name } = $common_name;
+	}
+	my @globalSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'G',
+		__order     => 'name'
+	);
+	my @datasetSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'D',
+		__order     => 'name'
+	);
+	my @imageSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'I',
+		__order     => 'name'
+	);
+	my @featureSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'F',
+		__order     => 'name'
+	);
+	
+	return $q->popup_menu(
+		-name     => 'SearchType',
+		'-values' => [ 
+			'', 
+			@search_types, 
+			'G', 
+			map( '@'.$_->name(), @globalSTs),
+			'D',
+			map( '@'.$_->name(), @datasetSTs),
+			'I',
+			map( '@'.$_->name(), @imageSTs),
+			'F',
+			map( '@'.$_->name(), @featureSTs),
+		],
+		-default  => ( $searchType ? $searchType : '' ),
+		-override => 1,
+		-labels   => { 
+			''  => '-- Select a Search Type --', 
+			%search_type_labels,
+			'G' => '-- Global Semantic Types --', 
+			(map{ '@'.$_->name() => $_->name() } @globalSTs ),
+			'D' => '-- Dataset Semantic Types --',
+			(map{ '@'.$_->name() => $_->name() } @datasetSTs ),
+			'I' => '-- Image Semantic Types --',
+			(map{ '@'.$_->name() => $_->name() } @imageSTs ),
+			'F' => '-- Feature Semantic Types --',
+			(map{ '@'.$_->name() => $_->name() } @featureSTs ),
+		},
+		-onchange => "if(this.value != '' && this.value != 'G' && this.value != 'D' && this.value != 'I' && this.value != 'F' ) { document.forms['$form_name'].submit(); } return false;"
+	);
+
+}
+
 
 =head1 Author
 
