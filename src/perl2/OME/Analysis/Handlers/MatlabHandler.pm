@@ -378,6 +378,16 @@ sub _getScalarFromMatlab {
 	$self->{__engine}->eval("$name = ".$self->{_matlab_class_to_convert}->{$class}.
 	                        "($name);") if defined $class;
 	
+	# Trimming required to avoid overflow and underflow problems with Postgress
+	$self->{__engine}->eval("if (strcmp(class($name), 'double') && abs($name) < realmin('double')) $name = double(0); end");
+	$self->{__engine}->eval("if (strcmp(class($name), 'single') && abs($name) < realmin('single')) $name = single(0); end");
+	
+	$self->{__engine}->eval("if (strcmp(class($name), 'double') && $name < -realmax('double')) $name = double(-inf); end");
+	$self->{__engine}->eval("if (strcmp(class($name), 'single') && $name < -realmax('single')) $name = single(-inf); end");
+	
+	$self->{__engine}->eval("if (strcmp(class($name), 'double') && $name > realmax('double')) $name = double(inf); end");
+	$self->{__engine}->eval("if (strcmp(class($name), 'single') && $name > realmax('single')) $name = single(inf); end");
+	
 	# Get value from matlab
 	$array = $self->{__engine}->getVariable( $name )
 		or die "Couldn't retrieve output variable $name from matlab.\n".
