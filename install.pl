@@ -191,7 +191,7 @@ if ($perl_check or $lib_check) {
 		exit (1);
 	} else {
 		# Don't change this line:
-		print "Check passed";
+		print "Check passed\n";
 		exit (0);
 	}
 }
@@ -213,6 +213,9 @@ if ( ($answer_y or $install) and not $update ) {
 if ($update) {
     my $environment = initialize OME::Install::Environment;
     $environment->set_flag ("UPDATE");
+    # Make sure we don't read these from ome-install.store, but from the CLI options
+    $environment->unset_flag ("NO_BUILD");
+    $environment->unset_flag ("ANSWER_Y");
 }
 
 if ($install) {
