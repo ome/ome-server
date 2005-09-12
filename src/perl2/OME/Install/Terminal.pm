@@ -132,7 +132,7 @@ sub get_password {
 	print "\n";  # Spacing
 
 	if (length ($input) < $min_len ) {
-	    print "Password must be at least 6 characters long.\n" and next;
+	    print "Password must be at least $min_len characters long.\n" and next;
 	} elsif ($input ne $input2) {
 	    print "Passwords do not match. Please re-enter.\n" and next;
 	}
