@@ -122,12 +122,10 @@ Options:
   -u, --update      do an update instead of install
   -f, --env-file    Location of the stored environment overrides
                     the default of "/OME/conf/environment.store"
-  -c, --perl-check  Just run a Perl module check using the
-                    stored environment
-  -l, --lib-check   Just run a library check using the stored
-                    environment
-  -i, --install     Default execution
+  -c, --perl-check  Just run a Perl module check for installed modules
+  -l, --lib-check   Just run a library check for installed C libraries 
   -a, --check-all   Run all our sanity checks
+  -i, --install     Install only - no compilation
   -y, --yes         Answer 'y' to all the questions (implies -u)
   -h, --help        This message
 
@@ -152,42 +150,52 @@ my ($update, $perl_check, $lib_check, $check_all, $usage, $install, $answer_y);
 my $env_file = ('/etc/ome-install.store');
 
 # Parse our command line options
-GetOptions ("u|update" => \$update,         # update
-            "f|env-file=s" => \$env_file,   # Environment file
-            "c|perl-check" => \$perl_check, # Just run the perl module task
-			"l|lib-check" => \$lib_check,   # Just run the library task
-			"a|check-all" => \$check_all,   # Set $perl_check, $lib_check
-			"i|install" => \$install,       # Default (unused at the moment)
-			"y|yes" => \$answer_y,          # Always answer 'y', set $update
-			"h|help" => \$usage,            # Display help
+GetOptions ("u|update" => \$update,           # update
+            "f|env-file=s" => \$env_file,     # Environment file
+            "c|perl-check" => \$perl_check,   # Just run the perl module task
+			"l|lib-check" => \$lib_check,     # Just run the library task
+			"a|check-all" => \$check_all,     # Set $perl_check, $lib_check
+			"i|install" => \$install,         # install only, no compilation
+			"y|yes" => \$answer_y,            # Always answer 'y', set $update
+			"h|help" => \$usage,              # Display help
 		);
 
 usage () if $usage;
 
-if ($check_all) { $perl_check = 1; $lib_check = 1; }
+if ($check_all) { $perl_check = 1; $lib_check = 1 }
 
-my $lib_check_result;
-my $perl_check_result;
+my ($lib_check_result, $perl_check_result);
 if ($lib_check) {
     eval "require OME::Install::LibraryTask";
     croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
 
-    $lib_check_result = OME::Install::LibraryTask::check ();
-    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+	eval {
+		$lib_check_result = OME::Install::LibraryTask::check ();
+	}
 }
 
 if ($perl_check) {
     eval "require OME::Install::PerlModuleTask";
     croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
 
-    $perl_check_result = OME::Install::PerlModuleTask::check ();
-    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+	eval {
+		$perl_check_result = OME::Install::PerlModuleTask::check ();
+    }
 }
 
+
 if ($perl_check or $lib_check) {
-	exit (0) if $perl_check_result and $lib_check_result;
-	exit (1);
+	if (  ($perl_check and not $perl_check_result) or
+		($lib_check and not $lib_check_result)
+		) {
+		exit (1);
+	} else {
+		# Don't change this line:
+		print "Check passed";
+		exit (0);
+	}
 }
+
 
 
 
@@ -198,13 +206,18 @@ if ($perl_check or $lib_check) {
 # Answer Y flag implies update flag
 $update = 1 if restore_env ($env_file);
 # These need a restored environment
-if ( $answer_y and not $update ) {
-	die "Unable to restore the installation environemnt from file";
+if ( ($answer_y or $install) and not $update ) {
+	die "Unable to restore the installation environemnt from file $env_file";
 }
 
 if ($update) {
     my $environment = initialize OME::Install::Environment;
     $environment->set_flag ("UPDATE");
+}
+
+if ($install) {
+    my $environment = initialize OME::Install::Environment;
+    $environment->set_flag ("NO_BUILD");
 }
 
 if ($answer_y) {
