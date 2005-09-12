@@ -141,7 +141,7 @@ sub fix_httpd_conf {
 		s/^\s*Include\s+(\/.*)*\/httpd(2)?\.ome(\.dev)?\.conf.*\n//;
 		print FILEOUT;
 	};
-	print FILEOUT "Include $omeConf\n";
+	print FILEOUT "Include $omeConf\n" if $omeConf;
 	close(FILEIN);
 	close(FILEOUT);
 	move ("$httpdConf~",$httpdConf) or
@@ -188,7 +188,14 @@ sub httpd_restart {
 # Test our apache config
 sub httpd_test {
 	my $error;
-
+	
+    my $environment = initialize OME::Install::Environment;
+	$OME_BASE_DIR = $environment->base_dir() unless $OME_BASE_DIR;
+	unless ($LOGFILE) {
+		$OME_TMP_DIR  = $environment->tmp_dir() unless $OME_TMP_DIR;
+	    open ($LOGFILE, ">", "$OME_TMP_DIR/install/$LOGFILE_NAME");
+	}
+	
 	print "Testing Apache configuration \n";
 
 	print $LOGFILE "Getting an LWP user agent\n";
@@ -1237,7 +1244,10 @@ sub mod_perl_script {
 	return <<'SCRIPT_END';
 #!/usr/bin/perl -w
 use strict;
-print "Content-Type: text/plain\n\n";
+use CGI;
+my $CGI = CGI->new();
+print $CGI->header(-type => 'text/plain'),
+
 
 my ($key,$value);
 while ( ($key, $value) = each %ENV)
