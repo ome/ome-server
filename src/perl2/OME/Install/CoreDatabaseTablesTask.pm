@@ -447,30 +447,7 @@ sub get_installation_mex {
 
 sub create_experimenter {
     my $manager = shift;
-    my $personal_info;
     
-    if (not defined $OME_EXPER, or not $OME_EXPER) {
-        if ($ADMIN_UID) {
-            ($OME_EXPER->{OMEName}, $personal_info, $OME_EXPER->{DataDirectory}) = (getpwuid($ADMIN_UID))[0,6,7];
-        
-            if ($personal_info) {
-                my $full_name = (split (',',$personal_info,2))[0];
-                ($OME_EXPER->{FirstName},$OME_EXPER->{LastName}) = split (' ',$full_name,2);
-            } else {
-                ($OME_EXPER->{FirstName},$OME_EXPER->{LastName}) = ('','');
-            }
-            $OME_EXPER->{Email} = $OME_EXPER->{OMEName}.'@'.hostname();
-            $OME_EXPER->{OMEName} = lc ( substr ($OME_EXPER->{FirstName}, 0, 1).$OME_EXPER->{LastName} )
-                unless $OME_EXPER->{OMEName};
-        } else {
-            $OME_EXPER->{FirstName} = '';
-            $OME_EXPER->{LastName}  = '';
-            $OME_EXPER->{OMEName}  = '';
-            $OME_EXPER->{Email}    = '';
-            $OME_EXPER->{DataDirectory}  = '';
-        }
-    }
-
     print_header "Initial user creation";
 
     # Confirm all flag
@@ -484,10 +461,41 @@ BLURB
 	print wrap("", "", $blurb);
 	
 	print "\n";  # Spacing
+	
+
+	###
+	# Try to set some defaults if we got nothing.
+    if (not defined $OME_EXPER, or not $OME_EXPER) {
+        if ($ADMIN_UID) {
+		    my $personal_info;
+            ($OME_EXPER->{OMEName}, $personal_info, $OME_EXPER->{DataDirectory}) = (getpwuid($ADMIN_UID))[0,6,7];
+
+            if ($personal_info) {
+                my $full_name = (split (',',$personal_info,2))[0];
+                ($OME_EXPER->{FirstName},$OME_EXPER->{LastName}) = split (' ',$full_name,2);
+            } else {
+                ($OME_EXPER->{FirstName},$OME_EXPER->{LastName}) = ('','');
+            }
+            $OME_EXPER->{Email} = $OME_EXPER->{OMEName}.'@'.hostname();
+            $OME_EXPER->{OMEName} = lc ( substr ($OME_EXPER->{FirstName}, 0, 1).$OME_EXPER->{LastName} )
+                unless $OME_EXPER->{OMEName};
+			$confirm_all = 1;
+		} else {
+            $OME_EXPER->{FirstName} = '';
+            $OME_EXPER->{LastName}  = '';
+            $OME_EXPER->{OMEName}  = '';
+            $OME_EXPER->{Email}    = '';
+            $OME_EXPER->{DataDirectory}  = '';
+			$confirm_all = 0;
+        }
+    } else {
+		$confirm_all = 1;
+    }
+
 
 
     while (1) {
-        if ($OME_EXPER or $confirm_all) {
+        if ($confirm_all) {
             print "            First name: ", BOLD, $OME_EXPER->{FirstName}    , RESET, "\n";
             print "             Last name: ", BOLD, $OME_EXPER->{LastName}     , RESET, "\n";
             print "              Username: ", BOLD, $OME_EXPER->{OMEName}      , RESET, "\n";
@@ -508,6 +516,8 @@ BLURB
         $OME_EXPER->{OMEName}       = confirm_default ("              Username", $OME_EXPER->{OMEName});
         $OME_EXPER->{Email}         = confirm_default ("        E-mail address", $OME_EXPER->{Email});
         $OME_EXPER->{DataDirectory} = confirm_default ("Default data directory", $OME_EXPER->{DataDirectory});
+		my $password;
+		($password, $OME_EXPER->{Password}) = get_password ("Set password for OME user ".$OME_EXPER->{OMEName}.": ", 6);
         
         print "\n";  # Spacing
 
@@ -521,7 +531,7 @@ BLURB
 		
     }
     
-    if (not check_permissions ({user => $APACHE_USER, r => 1, w => 1}, $OME_EXPER->{DataDirectory})) {
+    if (not check_permissions ({user => $APACHE_USER, r => 1}, $OME_EXPER->{DataDirectory})) {
     	print wrap("", "", <<PRINT);
  
 OME user "$OME_EXPER->{OMEName}" data directory "$OME_EXPER->{DataDirectory}" cannot be accessed by the Apache user "$APACHE_USER". This directory and its contents should either be owned by the OME group "$OME_GROUP" or be world-readable. The recommended course of action is to change group ownership to "$OME_GROUP".
@@ -536,11 +546,6 @@ PRINT
         }
 		
 	}
-	
-    my $password;
-    ($password, $OME_EXPER->{Password}) = get_password ("Set password for OME user ".$OME_EXPER->{OMEName}.": ", 6);
-
-    print "\n";  # Spacing
 
     my $session = OME::Session->bootstrapInstance();
     my $factory = $session->Factory();
@@ -548,6 +553,7 @@ PRINT
     delete $OME_EXPER->{ExperimenterID};
     my $experimenter = $factory->
     	newObject('OME::SemanticType::BootstrapExperimenter', $OME_EXPER);
+
     my $group = $factory->
     	newObject('OME::SemanticType::BootstrapGroup', {
     		Name    => 'OME',
@@ -561,13 +567,25 @@ PRINT
     		Experimenter => $experimenter->attribute_id(),
     		Group        => $group->attribute_id(),
     	});
-    
+	$experimenter_group->storeObject();
+   
     push (@INSTALLATION_ATTRIBUTES,$experimenter,$group,$experimenter_group);
+
+	my $session_key =  OME::SessionManager->generateSessionKey();
+	my $userState = $factory->
+		newObject('OME::UserState', {
+			experimenter_id => $experimenter->attribute_id(),
+			started         => 'now()',
+			last_access     => 'now()',
+			host            => hostname(),
+			session_key     => $session_key,
+		});
+	$userState->storeObject();
 
     $factory->commitTransaction();
     $session->finishBootstrap();
 
-    $session = $manager->createSession($OME_EXPER->{OMEName}, $password);
+    $session = $manager->createSession($session_key);
 	$OME_EXPER->{ExperimenterID} = $experimenter->id();
     $ENVIRONMENT->ome_exper($OME_EXPER);
 
@@ -645,13 +663,13 @@ sub bootstrap_session {
           newObject('OME::UserState',
                     {
                      experimenter_id => $experimenterObj->id(),
-                     started         => 'now',
-                     last_access     => 'now',
+                     started         => 'now()',
+                     last_access     => 'now()',
                      host            => hostname()
                     });
         $factory->commitTransaction();
     } else {
-        $userState->last_access('now');
+        $userState->last_access('now()');
         $userState->host(hostname());
     }
     croak "Could not create userState object.  Something is probably very very wrong." unless $userState;
@@ -675,9 +693,6 @@ sub init_configuration {
 
     print_header "Initializing configuration";
     
-    my $lsid_def = $ENVIRONMENT->lsid ();
-    $lsid_def = hostname() unless $lsid_def; 
-
 	# Task blurb
 	my $blurb = <<BLURB;
 The installer will now finalize your OME environment by asking you for an LSID authority and to provide an initial user for you to use with the web interface and Java clients.
@@ -686,12 +701,22 @@ The LSID authority is a type of universal identification for your OME environmen
 BLURB
 
 	print wrap("", "", $blurb);
-	
 	print "\n";  # Spacing
 
-    my $lsid_authority = confirm_default ("LSID Authority", $lsid_def);
+    my $lsid_def = $ENVIRONMENT->lsid ();
+    my $lsid_authority;
+    if ($lsid_def) {
+		$lsid_authority = $lsid_def if
+			y_or_n ("LSID Authority set to '$lsid_def'.  OK ?",'y');
+    }
 
-    # The DB instance uniquely identifies this specific DB instance on this machine
+    unless ($lsid_authority) {
+		$lsid_def = hostname() unless $lsid_def; 
+	
+	
+		$lsid_authority = confirm_default ("LSID Authority", $lsid_def);
+	}
+	# The DB instance uniquely identifies this specific DB instance on this machine
     # Can only make one per second - sorry.
     # This is the integer returned by time() converted to a base62 string.
 
@@ -825,11 +850,21 @@ sub make_repository {
 
     # FIXME Make this a little more verbose, probably needs some explanation.
     my $repository_def = $ENVIRONMENT->omeis_url();
-    $repository_def = "http://$hostname/cgi-bin/omeis" if $ENVIRONMENT->apache_conf->{OMEIS} and not $repository_def;
 
-    my $repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
-    $ENVIRONMENT->omeis_url($repository_url);
+    my $repository_url;
+    if ($repository_def) {
+		$repository_url = $repository_def if
+			y_or_n ("OMEIS URL set to '$repository_def'.  OK ?",'y');
+    }
+    
+    unless ($repository_url) {
+    	$repository_def = "http://$hostname/cgi-bin/omeis" if $ENVIRONMENT->apache_conf->{OMEIS} and not $repository_def;
+    	$repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
+	}
 
+
+	$ENVIRONMENT->omeis_url($repository_url);
+	
     my $repository = $factory->
     newObject('OME::SemanticType::BootstrapRepository',
             {
@@ -1208,22 +1243,38 @@ BLURB
 	my $db_delegate = OME::Database::Delegate->getDefaultDelegate();
 
     # Drop our UID to the OME_USER
+    # Unfortunately, we can't very well connect to the DB as the ome user
+    # when this user doesn't exist yet, can we.
     euid($OME_UID);
 
     # Make sure our OME_USER is also a Postgres user
     print "Creating OME PostgreSQL SUPERUSER ($OME_USER)";
     print $LOGFILE "Creating OME PostgreSQL SUPERUSER ($OME_USER)\n";
-    $retval = $db_delegate->createUser ($OME_USER,1);
-    print $LOGFILE "Result for creating OME_USER $OME_USER:\n".$db_delegate->errorStr()."\n"
+
+    # Regardless of the RaiseError flag to DBI, trying to connect
+    # as an unregistered user (in some versions of postgres/DBI) is fatal!
+    eval {
+		$retval = $db_delegate->createUser ($OME_USER,1);
+    };
+	print $LOGFILE "Result for creating OME_USER $OME_USER:\n".$db_delegate->errorStr()."\n"
     	unless $retval;
     while (not $retval) {
-		$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
+		# Regardless of the RaiseError flag to DBI, trying to connect
+		# as an unregistered user (in some versions of postgres/DBI) is fatal!
+		eval {
+			$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
+		};
 		last if $retval;
 	    print $LOGFILE "Result for creating OME_USER $OME_USER as $POSTGRES_USER:\n"
 	    	.$db_delegate->errorStr()."\n";
 
 		my $old_euid = euid (scalar getpwnam ($POSTGRES_USER));
-		$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
+
+		# Regardless of the RaiseError flag to DBI, trying to connect
+		# as an unregistered user (in some versions of postgres/DBI) is fatal!
+		eval {
+			$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
+		};
 		euid ($old_euid);
 	    print $LOGFILE "Result for creating OME_USER $OME_USER as $POSTGRES_USER "
 	    	."After euid()\n".$db_delegate->errorStr()."\n" unless $retval;
