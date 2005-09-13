@@ -164,6 +164,9 @@ usage () if $usage;
 
 if ($check_all) { $perl_check = 1; $lib_check = 1 }
 
+# Turn off Term::ANSIColor unless STDOUT is a tty
+$ENV{ANSI_COLORS_DISABLED} = 1 unless -t STDOUT;
+
 my ($lib_check_result, $perl_check_result);
 if ($lib_check) {
     eval "require OME::Install::LibraryTask";
