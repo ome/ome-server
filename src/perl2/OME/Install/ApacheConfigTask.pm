@@ -38,6 +38,7 @@ use English;
 use Carp;
 use Sys::Hostname;
 use File::Copy;
+use File::Path;
 use File::Spec;
 use File::Spec::Functions qw(abs2rel);
 use Term::ANSIColor qw(:constants);
@@ -521,13 +522,24 @@ sub getApacheBin {
 	$httpdConf = `$httpdBin -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`;
 	chomp $httpdConf;
 	
+	if (not File::Spec->file_name_is_absolute ($httpdConf) ) {
+		$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
+		$httpdConf = File::Spec->canonpath( $httpdConf ); 
+		$httpdRoot = `$httpdBin -V | grep HTTPD_ROOT | cut -d '"' -f 2`;
+		chomp $httpdRoot;
+		$apache_info->{root} = $httpdRoot;
+		print $LOGFILE "Unable to find httpd root\n" and
+			croak "Unable to find httpd root" unless $httpdRoot;
+		print $LOGFILE "httpd root: $httpdRoot\n";
+	} else {
+			$apache_info->{root} = '/';
+	}
+	print $LOGFILE "Unable to read httpd conf($httpdConf)\n" and
+		croak "Unable to read httpd conf ($httpdConf)" unless -r $httpdConf;
+	print $LOGFILE "httpd conf: $httpdConf\n";
+	$apache_info->{conf} = $httpdConf;
 
-	$httpdRoot = `$httpdBin -V | grep HTTPD_ROOT | cut -d '"' -f 2`;
-	chomp $httpdRoot;
-	$apache_info->{root} = $httpdRoot;
-	print $LOGFILE "Unable to find httpd root\n" and
-		croak "Unable to find httpd root" unless $httpdRoot;
-	print $LOGFILE "httpd root: $httpdRoot\n";
+
 
 	$httpdVers = `$httpdBin -V | grep 'Server version'`;
 	$httpdVers = $1 if $httpdVers =~ /:\s*Apache\/(\d)/;
@@ -536,15 +548,6 @@ sub getApacheBin {
 	print $LOGFILE "Unable to determine httpd version\n" and
 		croak "Unable to determine httpd version" unless $httpdVers;
 	print $LOGFILE "httpd version: $httpdVers\n";
-
-	if (not File::Spec->file_name_is_absolute ($httpdConf) ) {
-		$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
-		$httpdConf = File::Spec->canonpath( $httpdConf ); 
-	}
-	$apache_info->{conf} = $httpdConf;
-	print $LOGFILE "Unable to read httpd conf($httpdConf)\n" and
-		croak "Unable to read httpd conf ($httpdConf)" unless -r $httpdConf;
-	print $LOGFILE "httpd conf: $httpdConf\n";
 
 	return $apache_info;
 }
@@ -883,8 +886,14 @@ BLURB
 			my $docRoot = $APACHE->{WEB};
 			$docRoot = $apache_info->{DocumentRoot} unless $docRoot;
 			$APACHE->{WEB} = confirm_path ('Copy index.html to :', $docRoot);
-			while (! -e $APACHE->{WEB}) {
-				$APACHE->{WEB} = confirm_path ('Copy index.html to :', $docRoot);
+			while (! -d $APACHE->{WEB}) {
+				my $old_UID = euid($APACHE_UID);
+				eval { mkpath($APACHE->{WEB}) };
+				euid($old_UID);
+				if ($@) {
+					print "Couldn't create $APACHE->{WEB}: $@";
+					$APACHE->{WEB} = confirm_path ('Copy index.html to :', $docRoot);
+				}
 			}
 		} else {
 			$APACHE->{WEB} = '';
@@ -1064,6 +1073,15 @@ BLURB
 		$source = 'src/html/index.html';
 		$dest = $APACHE->{WEB}.'/index.html';
 		print $LOGFILE "Copying $source to $dest\n";
+		if (! -d $APACHE->{WEB}) {
+			my $old_UID = euid($APACHE_UID);
+			eval { mkpath($APACHE->{WEB}) };
+			euid($old_UID);
+			print $LOGFILE "Couldn't create $APACHE->{WEB}: $@\n" and
+				croak "Couldn't create $APACHE->{WEB}: $@"
+				if $@
+		}
+
 		copy ($source,$dest) or
 			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
 			croak "Could not copy $source to $dest:\n$!\n";
