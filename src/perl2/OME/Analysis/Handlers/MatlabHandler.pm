@@ -768,9 +768,14 @@ sub MatlabVector_to_Attrs {
 		# get index
 		my $index = $element->getAttribute( 'Index' )
 			or die "Index attribute not specified in ".$element->toString();
-			
-		$self->{__engine}->eval("$matlab_var_name"."_index_val_$index = $matlab_var_name($index)");
 
+		# since "vectors of strings" are really "matrices of chars",
+		# they need a special treatment
+		$self->{__engine}->eval("if (strcmp(class($matlab_var_name), 'char')) ".
+								"$matlab_var_name"."_index_val_$index = $matlab_var_name($index,:); ".
+								"else ".
+								"$matlab_var_name"."_index_val_$index = $matlab_var_name($index); ".
+								"end");
 
 		# Convert array datatype if requested
 		my $class;
