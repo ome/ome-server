@@ -182,7 +182,7 @@ sub render {
 	my $tmpl_path = $self->_findTemplate( $obj, $mode, 'one' );
 	$tmpl_path = $self->_baseTemplateDir('one').'/generic_'.$mode.'.tmpl'
 		unless $tmpl_path;
-	die "Could not find a specialized or generic template to match Object $obj with mode $mode"
+	confess "Could not find a specialized or generic template to match Object $obj with mode $mode"
 		unless -e $tmpl_path;
 	$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 
@@ -304,6 +304,9 @@ These templates can be found under OME/src/html/Templates/generic_*
 	template.
 	more_info_url is a URL to a search page of these objects.
 	paging_limit is optional, and limits the number of objects in a page.
+	form_name is the name of the form this is being put in. It is used by
+	paging text, and defaults to 'primary'. Things will not work properly if
+	the html returned by this function is not embedded in a form.
 
 =cut
 
@@ -323,10 +326,14 @@ sub renderArray {
 		$limit = $self->{ page_limits }->{ $mode }
 			unless $limit;
 		my $count_method = 'count_'.$method;
+		my $form_name; 
+		$form_name = $options->{ form_name } 
+			if exists $options->{ form_name };
 		( $offset, $pager_text ) = $self->_pagerControl( 
 			$method,
 			$obj->$count_method,
-			$limit
+			$limit,
+			$form_name
 		);
 
 		# set up paging if there is a limit for this type and if pagerControl returned ok
@@ -423,7 +430,7 @@ sub renderArray {
 }
 
 sub _pagerControl {
-	my ( $self, $control_name, $obj_count, $limit ) = @_;
+	my ( $self, $control_name, $obj_count, $limit, $form_name ) = @_;
 	return () unless ( $obj_count and $limit );
 
 	# setup
@@ -431,6 +438,7 @@ sub _pagerControl {
 	my $offset = ($q->param( $control_name.'___offset' ) or 0);
 	my $pagingText;
 	my $numPages = POSIX::ceil( $obj_count / $limit );
+	$form_name = 'primary' unless( defined $form_name and $form_name ne '' );
 
 	# Turn the page
 	my $action = $q->param( $control_name.'_page_action' ) ;
@@ -454,14 +462,14 @@ sub _pagerControl {
 		$pagingText .= "<input type='hidden' name='${control_name}_page_action'>";
 		$pagingText .= $q->a( {
 				-title => "First Page",
-				-href => "javascript: document.forms[0].${control_name}_page_action.value='FirstPage_$control_name'; document.forms[0].submit();",
+				-href => "javascript: document.forms['$form_name'].${control_name}_page_action.value='FirstPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'<<'
 			)." "
 			if ( $currentPage > 1 and $numPages > 2 );
 		$pagingText .= $q->a( {
 				-title => "Previous Page",
-				-href => "javascript: document.forms[0].${control_name}_page_action.value='PrevPage_$control_name'; document.forms[0].submit();",
+				-href => "javascript: document.forms['$form_name'].${control_name}_page_action.value='PrevPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'<'
 			)." "
@@ -469,14 +477,14 @@ sub _pagerControl {
 		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 		$pagingText .= "\n".$q->a( {
 				-title => "Next Page",
-				-href  => "javascript: document.forms[0].${control_name}_page_action.value='NextPage_$control_name'; document.forms[0].submit();",
+				-href  => "javascript: document.forms['$form_name'].${control_name}_page_action.value='NextPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'>'
 			)." "
 			if $currentPage < $numPages;
 		$pagingText .= "\n".$q->a( {
 				-title => "Last Page",
-				-href  => "javascript: document.forms[0].${control_name}_page_action.value='LastPage_$control_name'; document.forms[0].submit();",
+				-href  => "javascript: document.forms['$form_name'].${control_name}_page_action.value='LastPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'>>'
 			)
