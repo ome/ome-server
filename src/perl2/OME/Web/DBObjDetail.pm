@@ -159,7 +159,7 @@ sub getPageBody {
 
 	my $q = $self->CGI();
 	my $object = $self->_loadObject();
-	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
+	$self->{ form_name } = 'primary';
 	$html .= $q->startform( { -name => $self->{ form_name } } ).
 	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
