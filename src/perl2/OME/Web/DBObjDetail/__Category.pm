@@ -70,7 +70,6 @@ sub getPageBody {
 	my $obj = $self->_loadObject();
 	my $mode = 'detail';
 	
-	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
 	
 	#
 	# basically do $self->Renderer()->render($obj, $mode) with a twist by filling
@@ -96,6 +95,7 @@ sub getPageBody {
 	# populate template
 	$tmpl->param( %tmpl_data );
 	
+ 	$self->{ form_name } = 'primary';
 	$html .= $q->startform( { -name => $self->{ form_name } } ).
 	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
