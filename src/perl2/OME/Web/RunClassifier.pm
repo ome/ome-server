@@ -151,7 +151,7 @@ END_INSTRS
 		classifier          => ( $classifier ? $self->Renderer()->render( $classifier, 'ref' ) : '' ),
 	);
 	my $html = 
-		$q->startform().
+		$q->startform( { -name => 'primary' } ).
 		$q->hidden({-name => 'action'}).
 		$tmpl->output().
 		$q->endform();

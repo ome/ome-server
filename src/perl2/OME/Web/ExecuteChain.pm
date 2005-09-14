@@ -116,7 +116,7 @@ if( ( scalar(@$user_input_list) eq 0 ) ||
 	my $labels;
 	%$labels = map{ $_->id() => $_->name() } @chains;
 	$text .= "<h2>Execute Analysis Chain</h2>";
-	$text .= $cgi->startform;
+	$text .= $cgi->startform( { -name => 'primary' } );
 	$text .= $cgi->popup_menu( 
 		-name   => 'chain_id',
 		-labels => $labels,

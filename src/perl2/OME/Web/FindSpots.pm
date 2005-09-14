@@ -248,7 +248,7 @@ sub print_form{
 
 	# html ouput
 	$html.=$cgi->h3("Enter parameters for findSpots");
-	$html.=$cgi->startform;
+	$html.=$cgi->startform( { -name => 'primary' } );
 
 	$html.=$cgi->table({-border=>1,-cellspacing=>1,-cellpadding=>1},
 		$cgi->Tr(\@tableRows)
