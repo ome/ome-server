@@ -67,13 +67,13 @@ my @MENU = (
 	{
 		web_class => 'OME::Web::DBObjCreate',
 		type => 'link',
-		url_param => { SearchType => 'OME::Project' },
+		url_param => { Type => 'OME::Project' },
 		text => 'Project',
 	},
 	{
 		web_class => 'OME::Web::DBObjCreate',
 		type => 'link',
-		url_param => { SearchType => 'OME::Dataset' },
+		url_param => { Type => 'OME::Dataset' },
 		text => 'Dataset',
 	},
 	{
