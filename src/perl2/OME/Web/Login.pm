@@ -112,7 +112,7 @@ sub __loginForm {
 
 	my $header_table = $q->table({-border => 0, -align => 'center'}, $table_data);
 
-	my $login_table .= $q->startform .
+	my $login_table .= $q->startform( { -name => 'primary' } ) .
 	                   $q->table({-border => 0, -align => 'center'},
 						   $q->Tr(
 							   $q->td({-align => 'right'}, $q->b("Username:")),
