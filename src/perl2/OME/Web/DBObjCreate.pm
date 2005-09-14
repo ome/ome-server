@@ -309,7 +309,7 @@ sub _getForm {
 	# coalate html output
  	$tmpl->param( %tmpl_data );
 	my $html = 
-		$q->startform( -onsubmit => 'return validateForm( this, false, true );' ).
+		$q->startform(  { -name => 'primary', -onsubmit => 'return validateForm( this, false, true );' } ).
 		$VALIDATION_INCS.
 		$tmpl->output().
  		$q->endform();
