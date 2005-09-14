@@ -217,7 +217,7 @@ sub getPageBody {
 	
 	$html =
 		$debug.
-		$q->startform().
+		$q->startform( { -name => 'primary' } ).
 		$directions.
 		$popup.
 		$button;

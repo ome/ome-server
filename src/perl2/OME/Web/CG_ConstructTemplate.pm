@@ -259,7 +259,7 @@ Images left to annotate:<br>
 	$tmpl->param( %tmpl_data );
 
 	my $html =
-		$q->startform().
+		$q->startform( { -name => 'primary' } ).
 		$tmpl->output().
 		$q->endform();
 
