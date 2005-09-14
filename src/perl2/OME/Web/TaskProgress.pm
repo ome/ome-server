@@ -94,7 +94,7 @@ sub getPageBody {
 	my $body;
 	if (scalar @tasks) {
 		$body = 
-			$cgi->startform().
+			$cgi->startform( { -name => 'primary' } ).
 			$self->Renderer()->renderArray( \@tasks, 'table', { type => 'OME::Task' } ).
 			$cgi->hidden(-name=>'action').
 			$cgi->endform();

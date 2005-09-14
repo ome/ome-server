@@ -87,7 +87,7 @@ sub getPageBody {
 	$tmpl->param( 'Output' => $output );
 	
 	my $html =
-		$q->startform().
+		$q->startform( { -name => 'primary' } ).
 		$tmpl->output().
 		$q->endform();
 
