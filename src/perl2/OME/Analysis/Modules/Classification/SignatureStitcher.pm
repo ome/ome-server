@@ -102,6 +102,11 @@ sub execute {
 		my @SEs = $formal_input->semantic_type->semantic_elements();
 		@SEs = sort { $a->name cmp $b->name } @SEs;
 		foreach my $se ( @SEs ) {
+		
+			# is SE of an appropriate type i.e a double
+			next if $se->data_column()->sql_type() eq 'string';
+			next if $se->data_column()->sql_type() eq 'reference';
+
 			$signature_vector_size++;
 			my $se_name = $se->name();
 			
