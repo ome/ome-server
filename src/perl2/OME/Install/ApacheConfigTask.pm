@@ -538,6 +538,7 @@ sub getApacheBin {
 		croak "Unable to read httpd conf ($httpdConf)" unless -r $httpdConf;
 	print $LOGFILE "httpd conf: $httpdConf\n";
 	$apache_info->{conf} = $httpdConf;
+	$APACHE->{HTTPD_CONF} = $httpdConf;
 
 
 
