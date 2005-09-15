@@ -375,8 +375,8 @@ sub stitch_chain {
 	my $root_node = $root_nodes[0];
 	foreach my $sig_node (@signature_nodes) {
 		# create a FI Name based on the Path of Modules.
-		my @node_path = $manager->findPath($root_node, $sig_node );
-		my $FI_name;
+		my @node_path = $manager->findPath($root_node, $sig_node);
+		my $FI_name = "im";
 		
 		foreach (@node_path) {
 			# ignore modules based on their categories
@@ -385,10 +385,12 @@ sub stitch_chain {
 			next if ($cat_path =~ m/.*Slicers.*/);  # ignore slicer modules 
 			next if ($cat_path =~ m/.*Typecasts.*/); # ignore typecaster modules 
 
-			# create FI base on "Module First Names";
-			$FI_name .= $_->module->name.":";
+			if (defined $_->module->location) {
+				$FI_name = $_->module->location."($FI_name)"
+			} else {
+				$FI_name = $_->module->name."($FI_name)"
+			}
 		}
-		chop($FI_name);
 		push @signature_nodes_FI_names, $FI_name;
 	}
 	
@@ -472,7 +474,7 @@ ENDDESCRIPTION
 		foreach my $output ( $sig_node->module->outputs ) {
 			my $ST_name = $output->semantic_type->name;
 			my $formal_input = $doc->createElement( 'FormalInput');
-			$formal_input->setAttribute( 'Name', $FI_name."::".$ST_name);
+			$formal_input->setAttribute( 'Name', $FI_name.".".$ST_name);
 			$formal_input->setAttribute( 'SemanticTypeName', $ST_name );
 			$formal_input->setAttribute( 'Count', '?' );
 			$declaration->appendChild( $formal_input );
@@ -523,7 +525,7 @@ ENDDESCRIPTION
 			my $formal_input;
 			$formal_input = $factory->findObject( "OME::Module::FormalInput",
 				module => $stitcher_module,
-				name   => $FI_name."::".$ST_name
+				name   => $FI_name.".".$ST_name
 			) or die "Couldn't load input $FI_name::$ST_name for module $module_name";
 			
 			# use node_mapping to link the new node with the old
@@ -606,7 +608,7 @@ sub compile_signature_matrix {
 	my @vector_legends = sort {$a->VectorPosition <=> $b->VectorPosition} @$vector_legends_ptr;
 	
 	# populate the signature matrix's labels
-	my @signature_labels =  map( $_->FormalInput(), @vector_legends);
+	my @signature_labels =  map( $_->FormalInput().".".$_->SemanticElement(), @vector_legends);
 	my $signature_labels_array = OME::Matlab::Array->newStringArray(\@signature_labels);
 	$signature_labels_array->makePersistent();
 
@@ -632,6 +634,7 @@ sub compile_signature_matrix {
 		foreach my $sig_entry ( @$signature_entry_list ) {
 			# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
 			my $col_index = $sig_entry->Legend->VectorPosition() - 1;
+			print STDERR "col_index is $col_index\n";
 			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
 		}
 		$image_number += 1;
