@@ -180,11 +180,180 @@
 				DBLocation="CO_OCCURRENCE_MATRIX.MAX_CORR_COEF"  
 				DataType="float"/>
 		</SemanticType>	
+
+		<!-- Rotation Invariant FORMAL OUTPUT STs-->
+		 <SemanticType Name="CoOcMat_AngularSecondMoment_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="ASM_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.ASM_avg"  
+				DataType="float"/>
+			<Element 
+				Name="ASM_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.ASM_range"  
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="CoOcMat_Contrast_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="Contrast_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.CONTRAST_avg"
+				DataType="float"/>
+			<Element 
+				Name="Contrast_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.CONTRAST_range"
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="CoOcMat_Correlation_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="Correlation_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.CORRELATION_avg"  
+				DataType="float"/>
+			<Element 
+				Name="Correlation_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.CORRELATION_range"  
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="CoOcMat_Variance_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="Variance_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.VARIANCE_avg"  
+				DataType="float"/>
+			<Element 
+				Name="Variance_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.VARIANCE_range"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="IDM_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.IDM_avg"  
+				DataType="float"/>
+			<Element 
+				Name="IDM_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.IDM_range"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_SumAverage_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="SumAvg_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_AVG_avg"  
+				DataType="float"/>
+			<Element 
+				Name="SumAvg_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_AVG_range"  
+				DataType="float"/>
+			</SemanticType>
+		
+		<SemanticType Name="CoOcMat_SumVariance_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="SumVar_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_VAR_avg"  
+				DataType="float"/>
+			<Element 
+				Name="SumVar_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_VAR_range"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_SumEntropy_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="SumEntropy_avg"
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_ENTROPY_avg"
+				DataType="float"/>
+			<Element 
+				Name="SumEntropy_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_ENTROPY_range" 
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_Entropy_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="Entropy_avg"
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.ENTROPY_avg"  
+				DataType="float"/>
+			<Element 
+				Name="Entropy_range"
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.ENTROPY_range"
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_DifferenceEntropy_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="DiffEntropy_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_ENTROPY_avg"  
+				DataType="float"/>
+			<Element 
+				Name="DiffEntropy_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_ENTROPY_range"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_DifferenceVariance_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="DiffVar_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_VAR_avg"
+				DataType="float"/>
+			<Element 
+				Name="DiffVar_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_VAR_range"
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="MeasCorr1_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.MEAS_CORR_1_avg"  
+				DataType="float"/>
+			<Element 
+				Name="MeasCorr1_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI.MEAS_CORR_1_range"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="MeasCorr2_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI_RI.MEAS_CORR_2_avg"  
+				DataType="float"/>
+			<Element 
+				Name="MeasCorr2_range"
+				DBLocation="CO_OCCURRENCE_MATRIX_RI_RI.MEAS_CORR_2_range"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_RI" AppliesTo="I">
+			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
+			<Element 
+				Name="MaxCorrCoef_avg" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI_RI_RI.MAX_CORR_COEF_avg"
+				DataType="float"/>
+			<Element 
+				Name="MaxCorrCoef_range" 
+				DBLocation="CO_OCCURRENCE_MATRIX_RI_RI_RI.MAX_CORR_COEF_range"
+				DataType="float"/>
+		</SemanticType>	
 	</SemanticTypeDefinitions>
 	
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
-		   ModuleName="Haralick Features"
+		   ModuleName="Haralick Features 2D"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
@@ -260,240 +429,79 @@
 		</AnalysisModule>
 		
 		<AnalysisModule
-		   ModuleName="Haralick Features (Angle 0)"
+		   ModuleName="Haralick Features 2D Rotation Invariant"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="mb_texture"
+		   ProgramID="HaralickFeaturesRI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7704">
-		  <Description>Same as Haralick Features module, except the
-		  distance input it locked to 1, and the angle input is locked
-		  to 0 degrees. </Description>
-		  <Declaration>
-			<FormalInput    Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"        Count="!"/>
+		  <Description>
+			This module is very similar to Haralick Features 2D except that it
+			computes the features in four directions (0, 45, 90, 135) and returns
+			aggregated statistics: mean and range (max-min).
 			
-			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
-			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>
-			<FormalOutput	Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="!"/>
-			<FormalOutput	Name="Variance"							SemanticTypeName="CoOcMat_Variance" 						Count="!"/>
-			<FormalOutput	Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="!"/>
-			<FormalOutput	Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="!"/>
-			<FormalOutput	Name="Sum Variance"						SemanticTypeName="CoOcMat_SumVariance" 				    	Count="!"/>
-			<FormalOutput	Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="!"/>
-			<FormalOutput	Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="!"/>
-			<FormalOutput	Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="!"/>
-			<FormalOutput	Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="!"/>
-			<FormalOutput	Name="First Measure of Correlation"		SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="!"/>
-			<FormalOutput	Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="!"/>
-			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
+			This makes these texture descriptions rotation invariant, at least
+			in 45 degree increments. 
+		  </Description>
+		  <Declaration>
+			<FormalInput  Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"         Count="!"/>
+			<FormalInput  Name="Texture Distance"   SemanticTypeName="HaralickTextureDistance"  Count="?"/>	
+			
+			<FormalOutput Name="Angular Second Moment"			 SemanticTypeName="CoOcMat_AngularSecondMoment_RI" 	    	 Count="!"/>
+			<FormalOutput Name="Contrast"						 SemanticTypeName="CoOcMat_Contrast_RI" 					 Count="!"/>
+			<FormalOutput Name="Correlation"					 SemanticTypeName="CoOcMat_Correlation_RI" 					 Count="!"/>
+			<FormalOutput Name="Variance"						 SemanticTypeName="CoOcMat_Variance_RI" 					 Count="!"/>
+			<FormalOutput Name="Inverse Difference Moment"		 SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI"     	 Count="!"/>
+			<FormalOutput Name="Sum Average"					 SemanticTypeName="CoOcMat_SumAverage_RI" 					 Count="!"/>
+			<FormalOutput Name="Sum Variance"					 SemanticTypeName="CoOcMat_SumVariance_RI" 			    	 Count="!"/>
+			<FormalOutput Name="Sum Entropy"					 SemanticTypeName="CoOcMat_SumEntropy_RI" 					 Count="!"/>
+			<FormalOutput Name="Entropy"						 SemanticTypeName="CoOcMat_Entropy_RI" 						 Count="!"/>
+			<FormalOutput Name="Difference Entropy"				 SemanticTypeName="CoOcMat_DifferenceEntropy_RI" 			 Count="!"/>
+			<FormalOutput Name="Difference Variance"			 SemanticTypeName="CoOcMat_DifferenceVariance_RI"			 Count="!"/>
+			<FormalOutput Name="First Measure of Correlation"    SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI"	 Count="!"/>
+			<FormalOutput Name="Second Measure of Correlation"   SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI"    Count="!"/>
+			<FormalOutput Name="Maximal Correlation Coefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="!"/>
 		  </Declaration>
 		
           <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="uint8"/></Input>
-			  <!-- Distance -->
-			  <Input><ConstantScalar Value="1"/></Input>
-			  <!-- Direction -->
-			  <Input><ConstantScalar Value="0"/></Input>
+			  <Input><Scalar InputLocation="Texture Distance.Distance"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><Vector DecodeWith="Haralick_Output_Vector"/></Output>
+			  <Output><Vector DecodeWith="Haralick_Avg_and_Range_Output_Vector"/></Output>
 			</FunctionOutputs>
 			
-			<VectorDecoder ID="Haralick_Output_Vector">
-				<Element Index="1"  OutputLocation="Angular Second Moment.ASM"/>
-				<Element Index="2"  OutputLocation="Contrast.Contrast"/>
-				<Element Index="3"  OutputLocation="Correlation.Correlation"/>
-				<Element Index="4"  OutputLocation="Variance.Variance"/>
-				<Element Index="5"  OutputLocation="Inverse Difference Moment.IDM"/>
-				<Element Index="6"  OutputLocation="Sum Average.SumAvg"/>
-				<Element Index="7"  OutputLocation="Sum Variance.SumVar"/>
-				<Element Index="8"  OutputLocation="Sum Entropy.SumEntropy"/>
-				<Element Index="9"  OutputLocation="Entropy.Entropy"/>
-				<Element Index="10" OutputLocation="Difference Entropy.DiffEntropy"/>
-				<Element Index="11" OutputLocation="Difference Variance.DiffVar"/>
-				<Element Index="12" OutputLocation="First Measure of Correlation.MeasCorr1"/>
-				<Element Index="13" OutputLocation="Second Measure of Correlation.MeasCorr2"/>
-				<Element Index="14" OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef"/>
+			<VectorDecoder ID="Haralick_Avg_and_Range_Output_Vector">
+				<Element Index="1"  OutputLocation="Angular Second Moment.ASM_avg"/>
+				<Element Index="2"  OutputLocation="Contrast.Contrast_avg"/>
+				<Element Index="3"  OutputLocation="Correlation.Correlation_avg"/>
+				<Element Index="4"  OutputLocation="Variance.Variance_avg"/>
+				<Element Index="5"  OutputLocation="Inverse Difference Moment.IDM_avg"/>
+				<Element Index="6"  OutputLocation="Sum Average.SumAvg_avg"/>
+				<Element Index="7"  OutputLocation="Sum Variance.SumVar_avg"/>
+				<Element Index="8"  OutputLocation="Sum Entropy.SumEntropy_avg"/>
+				<Element Index="9"  OutputLocation="Entropy.Entropy_avg"/>
+				<Element Index="10" OutputLocation="Difference Entropy.DiffEntropy_avg"/>
+				<Element Index="11" OutputLocation="Difference Variance.DiffVar_avg"/>
+				<Element Index="12" OutputLocation="First Measure of Correlation.MeasCorr1_avg"/>
+				<Element Index="13" OutputLocation="Second Measure of Correlation.MeasCorr2_avg"/>
+				<Element Index="14" OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef_avg"/>
+				<Element Index="15" OutputLocation="Angular Second Moment.ASM_range"/>
+				<Element Index="16" OutputLocation="Contrast.Contrast_range"/>
+				<Element Index="17" OutputLocation="Correlation.Correlation_range"/>
+				<Element Index="18" OutputLocation="Variance.Variance_range"/>
+				<Element Index="19" OutputLocation="Inverse Difference Moment.IDM_range"/>
+				<Element Index="20" OutputLocation="Sum Average.SumAvg_range"/>
+				<Element Index="21" OutputLocation="Sum Variance.SumVar_range"/>
+				<Element Index="22" OutputLocation="Sum Entropy.SumEntropy_range"/>
+				<Element Index="23" OutputLocation="Entropy.Entropy_range"/>
+				<Element Index="24" OutputLocation="Difference Entropy.DiffEntropy_range"/>
+				<Element Index="25" OutputLocation="Difference Variance.DiffVar_range"/>
+				<Element Index="26" OutputLocation="First Measure of Correlation.MeasCorr1_range"/>
+				<Element Index="27" OutputLocation="Second Measure of Correlation.MeasCorr2_range"/>
+				<Element Index="28" OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef_range"/>
 			</VectorDecoder>
 		  </ExecutionInstructions>
 		</AnalysisModule>
-
-		<AnalysisModule
-		   ModuleName="Haralick Features (Angle 45)"
-		   Category="Signatures"
-		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="mb_texture"
-		   ID="urn:lsid:openmicroscopy.org:Module:7705">
-		  <Description>Same as Haralick Features module, except the
-		  distance input it locked to 1, and the angle input is locked
-		  to 45 degrees. </Description>
-		  <Declaration>
-			<FormalInput    Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"        Count="!"/>
-			
-			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
-			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>
-			<FormalOutput	Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="!"/>
-			<FormalOutput	Name="Variance"							SemanticTypeName="CoOcMat_Variance" 						Count="!"/>
-			<FormalOutput	Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="!"/>
-			<FormalOutput	Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="!"/>
-			<FormalOutput	Name="Sum Variance"						SemanticTypeName="CoOcMat_SumVariance" 				    	Count="!"/>
-			<FormalOutput	Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="!"/>
-			<FormalOutput	Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="!"/>
-			<FormalOutput	Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="!"/>
-			<FormalOutput	Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="!"/>
-			<FormalOutput	Name="First Measure of Correlation"		SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="!"/>
-			<FormalOutput	Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="!"/>
-			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
-		  </Declaration>
-		
-          <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
-			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="uint8"/></Input>
-			  <!-- Distance -->
-			  <Input><ConstantScalar Value="1"/></Input>
-			  <!-- Direction -->
-			  <Input><ConstantScalar Value="45"/></Input>
-			</FunctionInputs>
-			<FunctionOutputs>
-			  <Output><Vector DecodeWith="Haralick_Output_Vector"/></Output>
-			</FunctionOutputs>
-			
-			<VectorDecoder ID="Haralick_Output_Vector">
-				<Element Index="1"  OutputLocation="Angular Second Moment.ASM"/>
-				<Element Index="2"  OutputLocation="Contrast.Contrast"/>
-				<Element Index="3"  OutputLocation="Correlation.Correlation"/>
-				<Element Index="4"  OutputLocation="Variance.Variance"/>
-				<Element Index="5"  OutputLocation="Inverse Difference Moment.IDM"/>
-				<Element Index="6"  OutputLocation="Sum Average.SumAvg"/>
-				<Element Index="7"  OutputLocation="Sum Variance.SumVar"/>
-				<Element Index="8"  OutputLocation="Sum Entropy.SumEntropy"/>
-				<Element Index="9"  OutputLocation="Entropy.Entropy"/>
-				<Element Index="10" OutputLocation="Difference Entropy.DiffEntropy"/>
-				<Element Index="11" OutputLocation="Difference Variance.DiffVar"/>
-				<Element Index="12" OutputLocation="First Measure of Correlation.MeasCorr1"/>
-				<Element Index="13" OutputLocation="Second Measure of Correlation.MeasCorr2"/>
-				<Element Index="14" OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef"/>
-			</VectorDecoder>
-		  </ExecutionInstructions>
-		</AnalysisModule>
-
-		<AnalysisModule
-		   ModuleName="Haralick Features (Angle 90)"
-		   Category="Signatures"
-		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="mb_texture"
-		   ID="urn:lsid:openmicroscopy.org:Module:7706">
-		  <Description>Same as Haralick Features module, except the
-		  distance input it locked to 1, and the angle input is locked
-		  to 90 degrees. </Description>
-		  <Declaration>
-			<FormalInput    Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"        Count="!"/>
-			
-			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
-			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>
-			<FormalOutput	Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="!"/>
-			<FormalOutput	Name="Variance"							SemanticTypeName="CoOcMat_Variance" 						Count="!"/>
-			<FormalOutput	Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="!"/>
-			<FormalOutput	Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="!"/>
-			<FormalOutput	Name="Sum Variance"						SemanticTypeName="CoOcMat_SumVariance" 				    	Count="!"/>
-			<FormalOutput	Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="!"/>
-			<FormalOutput	Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="!"/>
-			<FormalOutput	Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="!"/>
-			<FormalOutput	Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="!"/>
-			<FormalOutput	Name="First Measure of Correlation"		SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="!"/>
-			<FormalOutput	Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="!"/>
-			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
-		  </Declaration>
-		
-          <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
-			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="uint8"/></Input>
-			  <!-- Distance -->
-			  <Input><ConstantScalar Value="1"/></Input>
-			  <!-- Direction -->
-			  <Input><ConstantScalar Value="90"/></Input>
-			</FunctionInputs>
-			<FunctionOutputs>
-			  <Output><Vector DecodeWith="Haralick_Output_Vector"/></Output>
-			</FunctionOutputs>
-			
-			<VectorDecoder ID="Haralick_Output_Vector">
-				<Element Index="1"  OutputLocation="Angular Second Moment.ASM"/>
-				<Element Index="2"  OutputLocation="Contrast.Contrast"/>
-				<Element Index="3"  OutputLocation="Correlation.Correlation"/>
-				<Element Index="4"  OutputLocation="Variance.Variance"/>
-				<Element Index="5"  OutputLocation="Inverse Difference Moment.IDM"/>
-				<Element Index="6"  OutputLocation="Sum Average.SumAvg"/>
-				<Element Index="7"  OutputLocation="Sum Variance.SumVar"/>
-				<Element Index="8"  OutputLocation="Sum Entropy.SumEntropy"/>
-				<Element Index="9"  OutputLocation="Entropy.Entropy"/>
-				<Element Index="10" OutputLocation="Difference Entropy.DiffEntropy"/>
-				<Element Index="11" OutputLocation="Difference Variance.DiffVar"/>
-				<Element Index="12" OutputLocation="First Measure of Correlation.MeasCorr1"/>
-				<Element Index="13" OutputLocation="Second Measure of Correlation.MeasCorr2"/>
-				<Element Index="14" OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef"/>
-			</VectorDecoder>
-		  </ExecutionInstructions>
-		</AnalysisModule>
-
-		<AnalysisModule
-		   ModuleName="Haralick Features (Angle 135)"
-		   Category="Signatures"
-		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="mb_texture"
-		   ID="urn:lsid:openmicroscopy.org:Module:7707">
-		  <Description>Same as Haralick Features module, except the
-		  distance input it locked to 1, and the angle input is locked
-		  to 135 degrees. </Description>
-		  <Declaration>
-			<FormalInput    Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"        Count="!"/>
-			
-			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
-			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>
-			<FormalOutput	Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="!"/>
-			<FormalOutput	Name="Variance"							SemanticTypeName="CoOcMat_Variance" 						Count="!"/>
-			<FormalOutput	Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="!"/>
-			<FormalOutput	Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="!"/>
-			<FormalOutput	Name="Sum Variance"						SemanticTypeName="CoOcMat_SumVariance" 				    	Count="!"/>
-			<FormalOutput	Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="!"/>
-			<FormalOutput	Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="!"/>
-			<FormalOutput	Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="!"/>
-			<FormalOutput	Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="!"/>
-			<FormalOutput	Name="First Measure of Correlation"		SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="!"/>
-			<FormalOutput	Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="!"/>
-			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
-		  </Declaration>
-		
-          <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
-			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="uint8"/></Input>
-			  <!-- Distance -->
-			  <Input><ConstantScalar Value="1"/></Input>
-			  <!-- Direction -->
-			  <Input><ConstantScalar Value="135"/></Input>
-			</FunctionInputs>
-			<FunctionOutputs>
-			  <Output><Vector DecodeWith="Haralick_Output_Vector"/></Output>
-			</FunctionOutputs>
-			
-			<VectorDecoder ID="Haralick_Output_Vector">
-				<Element Index="1"  OutputLocation="Angular Second Moment.ASM"/>
-				<Element Index="2"  OutputLocation="Contrast.Contrast"/>
-				<Element Index="3"  OutputLocation="Correlation.Correlation"/>
-				<Element Index="4"  OutputLocation="Variance.Variance"/>
-				<Element Index="5"  OutputLocation="Inverse Difference Moment.IDM"/>
-				<Element Index="6"  OutputLocation="Sum Average.SumAvg"/>
-				<Element Index="7"  OutputLocation="Sum Variance.SumVar"/>
-				<Element Index="8"  OutputLocation="Sum Entropy.SumEntropy"/>
-				<Element Index="9"  OutputLocation="Entropy.Entropy"/>
-				<Element Index="10" OutputLocation="Difference Entropy.DiffEntropy"/>
-				<Element Index="11" OutputLocation="Difference Variance.DiffVar"/>
-				<Element Index="12" OutputLocation="First Measure of Correlation.MeasCorr1"/>
-				<Element Index="13" OutputLocation="Second Measure of Correlation.MeasCorr2"/>
-				<Element Index="14" OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef"/>
-			</VectorDecoder>
-		  </ExecutionInstructions>
-		</AnalysisModule>
-
 	</AML:AnalysisModuleLibrary>
 </OME>
