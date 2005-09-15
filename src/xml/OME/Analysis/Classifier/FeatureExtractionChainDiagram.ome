@@ -42,7 +42,7 @@
 		<Node NodeID="CreatePlaneSlices"  ProgramName="Create plane slices"/>
 		
 		<!-- Direct arc into Statistics -->
-		<Node NodeID="HaralickFeatures" ProgramName="Haralick Features 2D"/>
+		<Node NodeID="HaralickFeatures" ProgramName="Haralick Features 2D Rotation Invariant"/>
 		<Node NodeID="ZernikeMoments"   ProgramName="Zernike Moments"/>
 		
 		<!-- Gradient arc into Edge Statistics -->

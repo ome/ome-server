@@ -6,72 +6,45 @@
       <Node NodeID="Image import" ProgramName="Image import"/>
       <Node NodeID="Create pixels slices" ProgramName="Create pixels slices"/>
       <Node NodeID="Create plane slices" ProgramName="Create plane slices"/>
-      <Node NodeID="Zernike Moments" ProgramName="Zernike Moments"/>
-      <Node NodeID="Signature Stitcher" ProgramName="Signature Stitcher"/>
-      <Node NodeID="Chebyshev Transform" ProgramName="Chebyshev Transform"/>
-      <Node NodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ProgramName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Haralick Features (Angle 135) 1" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="Haralick Features (Angle 90) 1" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Haralick Features (Angle 0) 1" ProgramName="Haralick Features (Angle 0)"/>
-      <Node NodeID="Haralick Features (Angle 45) 1" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Haralick Features (Angle 0)" ProgramName="Haralick Features (Angle 0)"/>
+      <Node NodeID="Chebyshev Fourier Statistics" ProgramName="Chebyshev Fourier Statistics"/>
+      <Node NodeID="Signature Stitcher (7206)" ProgramName="Signature Stitcher"/>
       <Node NodeID="PixelsPlaneSlice -&gt; PixelsSlice" ProgramName="PixelsPlaneSlice -&gt; PixelsSlice"/>
-      <Node NodeID="Otsu's Method" ProgramName="Otsu's Method"/>
       <Node NodeID="Global Threshold" ProgramName="Global Threshold"/>
       <Node NodeID="Feature Statistics" ProgramName="Feature Statistics"/>
-      <Node NodeID="Fourier Transform" ProgramName="Fourier Transform"/>
-      <Node NodeID="FrequencySpace -&gt; PixelsPlaneSlice" ProgramName="FrequencySpace -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Haralick Features (Angle 0) 2" ProgramName="Haralick Features (Angle 0)"/>
-      <Node NodeID="Haralick Features (Angle 90) 2" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Zernike Moments 1" ProgramName="Zernike Moments"/>
-      <Node NodeID="Chebyshev Transform 1" ProgramName="Chebyshev Transform"/>
-      <Node NodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ProgramName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Haralick Features (Angle 90) 3" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Haralick Features (Angle 135) 3" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="Haralick Features (Angle 0) 3" ProgramName="Haralick Features (Angle 0)"/>
-      <Node NodeID="Haralick Features (Angle 45) 3" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Chebyshev Statistics 1" ProgramName="Chebyshev Statistics"/>
-      <Node NodeID="Haralick Features (Angle 45) 2" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Chebyshev Fourier Statistics 1" ProgramName="Chebyshev Fourier Statistics"/>
-      <Node NodeID="Haralick Features (Angle 135) 2" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="Wavelet Transform 1" ProgramName="Wavelet Transform"/>
-      <Node NodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" ProgramName="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Haralick Features (Angle 90) 4" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Haralick Features (Angle 0) 4" ProgramName="Haralick Features (Angle 0)"/>
-      <Node NodeID="Haralick Features (Angle 45) 4" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Haralick Features (Angle 135) 4" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" ProgramName="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Haralick Features (Angle 90) 5" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Haralick Features (Angle 45) 5" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Haralick Features (Angle 135) 5" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="Haralick Features (Angle 0) 5" ProgramName="Haralick Features (Angle 0)"/>
-      <Node NodeID="Haralick Features (Angle 90)" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Chebyshev Fourier Statistics" ProgramName="Chebyshev Fourier Statistics"/>
-      <Node NodeID="Haralick Features (Angle 45)" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Chebyshev Statistics" ProgramName="Chebyshev Statistics"/>
-      <Node NodeID="Haralick Features (Angle 135)" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="Wavelet Transform" ProgramName="Wavelet Transform"/>
-      <Node NodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" ProgramName="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Haralick Features (Angle 90) 6" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Haralick Features (Angle 45) 6" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Haralick Features (Angle 0) 6" ProgramName="Haralick Features (Angle 0)"/>
-      <Node NodeID="Haralick Features (Angle 135) 6" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" ProgramName="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Haralick Features (Angle 135) 7" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="Haralick Features (Angle 45) 7" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Haralick Features (Angle 90) 7" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Haralick Features (Angle 0) 7" ProgramName="Haralick Features (Angle 0)"/>
+      <Node NodeID="Otsu's Method" ProgramName="Otsu's Method"/>
       <Node NodeID="Gradient" ProgramName="Gradient"/>
       <Node NodeID="Edge Statistics" ProgramName="Edge Statistics"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant" ProgramName="Haralick Features 2D Rotation Invariant"/>
+      <Node NodeID="Chebyshev Statistics" ProgramName="Chebyshev Statistics"/>
+      <Node NodeID="Zernike Moments" ProgramName="Zernike Moments"/>
+      <Node NodeID="Wavelet Transform" ProgramName="Wavelet Transform"/>
+      <Node NodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" ProgramName="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant 1" ProgramName="Haralick Features 2D Rotation Invariant"/>
+      <Node NodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" ProgramName="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant 2" ProgramName="Haralick Features 2D Rotation Invariant"/>
+      <Node NodeID="Fourier Transform" ProgramName="Fourier Transform"/>
+      <Node NodeID="FrequencySpace -&gt; PixelsPlaneSlice" ProgramName="FrequencySpace -&gt; PixelsPlaneSlice"/>
+      <Node NodeID="Chebyshev Statistics 1" ProgramName="Chebyshev Statistics"/>
+      <Node NodeID="Zernike Moments 1" ProgramName="Zernike Moments"/>
+      <Node NodeID="Wavelet Transform 1" ProgramName="Wavelet Transform"/>
+      <Node NodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" ProgramName="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant 4" ProgramName="Haralick Features 2D Rotation Invariant"/>
+      <Node NodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" ProgramName="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant 5" ProgramName="Haralick Features 2D Rotation Invariant"/>
+      <Node NodeID="Chebyshev Transform 1" ProgramName="Chebyshev Transform"/>
+      <Node NodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ProgramName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant 6" ProgramName="Haralick Features 2D Rotation Invariant"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant 3" ProgramName="Haralick Features 2D Rotation Invariant"/>
+      <Node NodeID="Chebyshev Fourier Statistics 1" ProgramName="Chebyshev Fourier Statistics"/>
+      <Node NodeID="Chebyshev Transform" ProgramName="Chebyshev Transform"/>
+      <Node NodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ProgramName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"/>
+      <Node NodeID="Haralick Features 2D Rotation Invariant 7" ProgramName="Haralick Features 2D Rotation Invariant"/>
     </Nodes>
     <Links>
       <Link FromNodeID="Original files" FromOutputName="Files" ToNodeID="Image import" ToInputName="Files"/>
       <Link FromNodeID="Image import" FromOutputName="Pixels" ToNodeID="Create pixels slices" ToInputName="Pixels"/>
       <Link FromNodeID="Create pixels slices" FromOutputName="Slices" ToNodeID="Create plane slices" ToInputName="Slices"/>
-      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Haralick Features (Angle 0)" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Haralick Features (Angle 45)" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Haralick Features (Angle 90)" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Haralick Features (Angle 135)" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Haralick Features 2D Rotation Invariant" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Zernike Moments" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Gradient" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="PixelsPlaneSlice -&gt; PixelsSlice" ToInputName="Plane slices"/>
@@ -80,531 +53,174 @@
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Chebyshev Fourier Statistics" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Chebyshev Transform" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Chebyshev Statistics" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Zernike Moments" FromOutputName="Zernike Moments" ToNodeID="Signature Stitcher" ToInputName="Zernike Moments::ZernikeMoments"/>
-      <Link FromNodeID="Chebyshev Transform" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ToInputName="Chebyshev Coefficient Matrix"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 1" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 1" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 1" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment"/>
+      <Link FromNodeID="Chebyshev Fourier Statistics" FromOutputName="Chebyshev Fourier Coefficient Histogram" ToNodeID="Signature Stitcher (7206)" ToInputName="ChebyshevFourierTransform(im).ChebyshevFourierCoefficientHistogram"/>
       <Link FromNodeID="PixelsPlaneSlice -&gt; PixelsSlice" FromOutputName="Slices" ToNodeID="Otsu's Method" ToInputName="Pixels Slice"/>
       <Link FromNodeID="PixelsPlaneSlice -&gt; PixelsSlice" FromOutputName="Slices" ToNodeID="Global Threshold" ToInputName="Pixels Slice"/>
-      <Link FromNodeID="Otsu's Method" FromOutputName="Threshold Level" ToNodeID="Global Threshold" ToInputName="Threshold Level"/>
       <Link FromNodeID="Global Threshold" FromOutputName="Binary Mask" ToNodeID="Feature Statistics" ToInputName="Binary Mask"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Hist" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistHist"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Variance" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistVar"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Median" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMedian"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Mean" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMean"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Max" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMax"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Min" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureDistMin"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Area Hist" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaHist"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Area Variance" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaVar"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Area Median" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMedian"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Area Mean" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMean"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Area Max" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMax"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Area Min" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureAreaMin"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Centroid" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureCentroid"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Euler" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureEuler"/>
-      <Link FromNodeID="Feature Statistics" FromOutputName="Count" ToNodeID="Signature Stitcher" ToInputName="Otsu's Method:Global Threshold:Feature Statistics::FeatureCount"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Count" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureCount"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Euler" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureEuler"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Centroid" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureCentroid"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Area Min" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMin"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Area Max" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMax"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Area Mean" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMean"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Area Median" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMedian"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Area Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureAreaVar"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Area Hist" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureAreaHist"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Min" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureDistMin"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Max" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureDistMax"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Mean" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureDistMean"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Median" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureDistMedian"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureDistVar"/>
+      <Link FromNodeID="Feature Statistics" FromOutputName="Dist Hist" ToNodeID="Signature Stitcher (7206)" ToInputName="FeatureStatistics(GlobalThreshold(im)).FeatureDistHist"/>
+      <Link FromNodeID="Otsu's Method" FromOutputName="Threshold Level" ToNodeID="Global Threshold" ToInputName="Threshold Level"/>
+      <Link FromNodeID="Gradient" FromOutputName="Gradient" ToNodeID="Edge Statistics" ToInputName="Gradient"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Edge Area" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeArea"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Mean" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeMagMean"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Median" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeMagMedian"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeMagVar"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Histogram" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeMagHist"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Mean" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeDirecMean"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Median" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeDirecMedian"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeDirecVar"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Histogram" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeDirecHist"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Homogeneity" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeDirecHomo"/>
+      <Link FromNodeID="Edge Statistics" FromOutputName="Diff Direction Histogram" ToNodeID="Signature Stitcher (7206)" ToInputName="EdgeStatistics(Gradient(im)).EdgeDiffDirecHist"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(im).CoOcMat_MaximalCorrelationCoefficient_RI"/>
+      <Link FromNodeID="Chebyshev Statistics" FromOutputName="Chebyshev Coefficient Histogram" ToNodeID="Signature Stitcher (7206)" ToInputName="ChebyshevStatistics(im).ChebyshevCoefficientHistogram"/>
+      <Link FromNodeID="Zernike Moments" FromOutputName="Zernike Moments" ToNodeID="Signature Stitcher (7206)" ToInputName="mb_zernike(im).ZernikeMoments"/>
+      <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 1"/>
+      <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 2"/>
+      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features 2D Rotation Invariant 1" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 1" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_MaximalCorrelationCoefficient_RI"/>
+      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features 2D Rotation Invariant 2" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 2" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_MaximalCorrelationCoefficient_RI"/>
       <Link FromNodeID="Fourier Transform" FromOutputName="Frequency Space" ToNodeID="FrequencySpace -&gt; PixelsPlaneSlice" ToInputName="Frequency Space"/>
-      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Statistics 1" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features 2D Rotation Invariant 3" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Wavelet Transform 1" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Statistics 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Transform 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Zernike Moments 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Fourier Statistics 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 2" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 2" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 2" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 2" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 2" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 2" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Zernike Moments 1" FromOutputName="Zernike Moments" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Zernike Moments::ZernikeMoments"/>
-      <Link FromNodeID="Chebyshev Transform 1" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ToInputName="Chebyshev Coefficient Matrix"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 3" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 3" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 3" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 0)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 3" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Chebyshev Statistics 1" FromOutputName="Chebyshev Coefficient Histogram" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Statistics::ChebyshevCoefficientHistogram"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 2" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Chebyshev Fourier Statistics 1" FromOutputName="Chebyshev Fourier Coefficient Histogram" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Chebyshev Fourier Statistics::ChebyshevFourierCoefficientHistogram"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 2" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 2"/>
-      <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 1"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 4" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 4" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 4" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 4" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 4" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 4" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 4" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 4" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 5" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 5" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 5" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 5" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 5" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 5" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 5" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 5" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Fourier Transform:Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90)" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 90)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Chebyshev Fourier Statistics" FromOutputName="Chebyshev Fourier Coefficient Histogram" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Fourier Statistics::ChebyshevFourierCoefficientHistogram"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45)" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 45)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Chebyshev Statistics" FromOutputName="Chebyshev Coefficient Histogram" ToNodeID="Signature Stitcher" ToInputName="Chebyshev Statistics::ChebyshevCoefficientHistogram"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135)" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Haralick Features (Angle 135)::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 1"/>
-      <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 2"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 6" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 6" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 6" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 6" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 6" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 6" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 6" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 6" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 7" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 7" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 7" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 7" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 135) 7" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 135)_1::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 45) 7" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 45)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 90) 7" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 90)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_MaximalCorrelationCoefficient"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SecondMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_FirstMeasureOfCorrelation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_DifferenceEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Entropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumEntropy"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumVariance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Sum Average" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_SumAverage"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_InverseDifferenceMoment"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Variance" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Variance"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Correlation"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_Contrast"/>
-      <Link FromNodeID="Haralick Features (Angle 0) 7" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="Wavelet Transform:Haralick Features (Angle 0)_2::CoOcMat_AngularSecondMoment"/>
-      <Link FromNodeID="Gradient" FromOutputName="Gradient" ToNodeID="Edge Statistics" ToInputName="Gradient"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Diff Direction Histogram" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeDiffDirecHist"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Homogeneity" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeDirecHomo"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Histogram" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeDirecHist"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Variance" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeDirecVar"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Median" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeDirecMedian"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Direction Mean" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeDirecMean"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Histogram" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeMagHist"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Variance" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeMagVar"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Median" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeMagMedian"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Magnitude Mean" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeMagMean"/>
-      <Link FromNodeID="Edge Statistics" FromOutputName="Edge Area" ToNodeID="Signature Stitcher" ToInputName="Gradient:Edge Statistics::EdgeArea"/>
+      <Link FromNodeID="Chebyshev Statistics 1" FromOutputName="Chebyshev Coefficient Histogram" ToNodeID="Signature Stitcher (7206)" ToInputName="ChebyshevStatistics(FourierTransform(im)).ChebyshevCoefficientHistogram"/>
+      <Link FromNodeID="Zernike Moments 1" FromOutputName="Zernike Moments" ToNodeID="Signature Stitcher (7206)" ToInputName="mb_zernike(FourierTransform(im)).ZernikeMoments"/>
+      <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 2"/>
+      <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 1"/>
+      <Link FromNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features 2D Rotation Invariant 4" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 4" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_MaximalCorrelationCoefficient_RI"/>
+      <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features 2D Rotation Invariant 5" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 5" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_MaximalCorrelationCoefficient_RI"/>
+      <Link FromNodeID="Chebyshev Transform 1" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ToInputName="Chebyshev Coefficient Matrix"/>
+      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features 2D Rotation Invariant 6" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 6" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_MaximalCorrelationCoefficient_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 3" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_MaximalCorrelationCoefficient_RI"/>
+      <Link FromNodeID="Chebyshev Fourier Statistics 1" FromOutputName="Chebyshev Fourier Coefficient Histogram" ToNodeID="Signature Stitcher (7206)" ToInputName="ChebyshevFourierTransform(FourierTransform(im)).ChebyshevFourierCoefficientHistogram"/>
+      <Link FromNodeID="Chebyshev Transform" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ToInputName="Chebyshev Coefficient Matrix"/>
+      <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features 2D Rotation Invariant 7" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_AngularSecondMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Contrast" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Contrast_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Correlation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Variance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Inverse Difference Moment" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_InverseDifferenceMoment_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SumAverage_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Sum Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SumVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SumEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Entropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Difference Entropy" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_DifferenceEntropy_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Difference Variance" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_DifferenceVariance_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_FirstMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SecondMeasureOfCorrelation_RI"/>
+      <Link FromNodeID="Haralick Features 2D Rotation Invariant 7" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7206)" ToInputName="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_MaximalCorrelationCoefficient_RI"/>
     </Links>
   </AnalysisChain>
 </AnalysisChains>
