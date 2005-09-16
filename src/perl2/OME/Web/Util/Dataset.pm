@@ -70,14 +70,18 @@ use base qw(OME::Web);
 	my $message = $self->DatasetUtil()->addImages( $image_ids);
 
 $image_ids is comma separated list of image ids
+
 =cut
 
 sub addImages {
-	my ($self, $image_ids, $category ) = @_;
+	my ($self, $image_ids ) = @_;
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 	my $message;
 	my (@these_images_are_already_in_dataset, @succesfully_added_to_dataset);
+	
+	return "<font color='red'>Cannot add images to dataset. It is locked.</font>"
+		if $session->dataset()->locked();
 	
 	foreach my $image_id ( split( m',', $image_ids ) ) {
 		my $image = $factory->loadObject( 'OME::Image', $image_id )
@@ -102,6 +106,40 @@ sub addImages {
 		if (@these_images_are_already_in_dataset);
 		
 	
+	return $message;
+}
+
+=head2 removeImages
+
+	my $message = $self->DatasetUtil()->removeImages( $image_ids);
+
+$image_ids is comma separated list of image ids
+
+=cut
+
+sub removeImages {
+	my ($self, $image_ids ) = @_;
+	my $session = $self->Session();
+	my $factory = $session->Factory();
+	my $message;
+	my (@these_images_are_already_in_dataset, @succesfully_added_to_dataset);
+	
+	# Return a useful message if dataset is locked.
+	return "<font color='red'>Cannot remove images from dataset. It is locked.</font>"
+		if $session->dataset()->locked();
+	
+	# load the images and remove them from the dataset
+	my @image_list;
+	foreach my $image_id ( split( m',', $image_ids ) ) {
+		my $image = $factory->loadObject( 'OME::Image', $image_id )
+			or die "Couldn't load image id=$image_id";
+		OME::Tasks::DatasetManager->deleteImageFromDataset($session->dataset(), $image);
+		push( @image_list, $image )
+	}
+	
+	$message .= "Successfully removed ".
+		$self->Renderer()->renderArray( \@image_list, 'bare_ref_mass', { type => 'OME::Image' } ).".<br>";
+
 	return $message;
 }
 
