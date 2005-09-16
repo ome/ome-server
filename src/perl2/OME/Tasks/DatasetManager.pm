@@ -461,6 +461,17 @@ sub addToDataset{
     my ($datasetID,$imageID)=@_;
     my $session=$self->Session();
     my $factory=$session->Factory();
+
+	# load the dataset and check to see if it is locked
+	my $dataset;
+    unless( ref( $datasetID ) ) {
+    	$dataset = $factory->loadObject( 'OME::Dataset', $datasetID )
+    		or confess "Couldn't load dataset id '$datasetID'";
+    } else {
+    	$dataset = $datasetID;
+    }
+    return 0 if $dataset->locked();
+
     my $map = $factory->findObject("OME::Image::DatasetMap",
     					{
 						'dataset_id' => $datasetID,
@@ -477,6 +488,43 @@ sub addToDataset{
     	return 1;
     }
     return 0;
+}
+
+
+#################
+# Parameters
+#	datasetID
+#	imageID
+# Return 
+#   1 = image newly added to Dataset
+#   0 = image already exists in Dataset
+sub deleteImageFromDataset{
+    my ($self, $datasetID, $imageID) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    my $dataset;
+
+	# load the dataset and check to see if it is locked
+    unless( ref( $datasetID ) ) {
+    	$dataset = $factory->loadObject( 'OME::Dataset', $datasetID )
+    		or confess "Couldn't load dataset id '$datasetID'";
+    } else {
+    	$dataset = $datasetID;
+    }
+    return undef if $dataset->locked();
+    
+    # try to load the map, return undef if not found
+    my $map = $factory->findObject("OME::Image::DatasetMap",
+    					{
+						'dataset_id' => $datasetID,
+						'image_id'   => $imageID,
+						})
+		or return undef;
+	
+	# We have the map. Delete it.
+	$map->deleteObject();
+   	$session->commitTransaction();
+   	return 1;
 }
 
 #################
