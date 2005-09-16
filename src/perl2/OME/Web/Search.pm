@@ -179,14 +179,12 @@ sub getPageBody {
 		my $return_to_form = ( $q->url_param( 'return_to_form' ) || $q->param( 'return_to_form' ) || 'primary');
 		my $return_to_form_element = ( $q->url_param( 'return_to' ) || $q->param( 'return_to' ) );
 		my $ids = join( ',', map( $_->id, @selected_objects ) );
-		$html = <<END_HTML;
-			<script language="Javascript" type="text/javascript">
+		$self->{ _onLoadJS } = <<END_HTML;
 				window.opener.document.forms['$return_to_form'].${return_to_form_element}.value = '$ids';
 				window.opener.document.forms['$return_to_form'].submit();
 				window.close();
-			</script>
 END_HTML
-		return( 'HTML', $html );
+		return( 'HTML', '' );
 	}
 
 	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
@@ -305,6 +303,8 @@ END_HTML
 
 	return ( 'HTML', $html );	
 }
+
+sub getOnLoadJS { return shift->{ _onLoadJS }; }
 
 =head2 getSearchFields
 
