@@ -130,6 +130,7 @@ sub uninstall {
 	my $base_dir = $environment->base_dir();
 	my $omeis_base_dir = $environment->omeis_base_dir();
 	my $tmp_dir = $environment->tmp_dir();
+	my $httpdConf = $environment->apache_conf()->{HTTPD_CONF};
 	
 	print_header("OME Uninstall");
 	chdir("/"); # to avoid permission problems, move to root directory
@@ -142,6 +143,11 @@ sub uninstall {
 		}
 	} else {
 		 print "    \\_ $base_dir already doesn't exist.\n";
+	}
+	
+	# Scrub httpd.conf if we no longer have a Base dir
+	if ($httpdConf and not -d $base_dir) {
+		system ('sudo','perl', '-pi', '-e', 's/^\s*Include\s+(\/.*)*\/httpd(2)?\.ome(\.dev)?\.conf.*\n//;',$httpdConf);
 	}
 	
 	# OMEIS Base dir
