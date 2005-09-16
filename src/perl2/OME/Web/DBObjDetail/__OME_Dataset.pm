@@ -219,6 +219,12 @@ sub _takeAction {
 		$message .= $self->DatasetUtil()->addImages($image_ids);
 	}
 	
+	# remove images
+	my $image_ids = $q->param( 'images_to_remove' );
+	if( $image_ids ) {
+		$message .= $self->DatasetUtil()->removeImages($image_ids);
+	}
+	
 	# Declassify image
 	my $image_id_to_declassify = $q->param( 'declassifyImage' );
 	if( $image_id_to_declassify && $image_id_to_declassify ne '' ) {
