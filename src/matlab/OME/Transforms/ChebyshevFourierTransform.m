@@ -59,7 +59,6 @@ xx = X(:); yy = Y(:); img = Im(:);  clear Im;
 [f,r] = cart2pol(xx,yy); clear xx yy;
 kk = find(r<=1); nk = length(kk); nLast = nk;
 Nmax = fix((min(m,n)-1)/2); if N > Nmax, N = Nmax;end
-if m*n*N > 256*320*20, error(':: ChebyshevFourierTransform :: memory use is critical [> 256*320*20], abort');end
 NN = 2*N + 1;
 
 %% Get Cheb-Fourier matrix 'C'...
