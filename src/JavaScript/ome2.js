@@ -149,10 +149,13 @@ function selectOne( type, return_to ) {
 
 // selectMany()
 
-function selectMany( type, return_to ) {
+function selectMany( type, return_to, url_parameter ) {
+	var url = SearchPage + '&Locked_SearchType=' + type + '&select=many&return_to=' + return_to;
+	if( url_parameter ) {
+		url += '&'+url_parameter;
+	}
 	window.open(
-		SearchPage + '&Locked_SearchType=' + type + '&select=many&return_to=' + return_to,
-		'_blank',
+		url, '_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
 	);
 }
