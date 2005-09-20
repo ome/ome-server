@@ -523,14 +523,14 @@ sub getApacheBin {
 	chomp $httpdConf;
 	
 	if (not File::Spec->file_name_is_absolute ($httpdConf) ) {
-		$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
-		$httpdConf = File::Spec->canonpath( $httpdConf ); 
 		$httpdRoot = `$httpdBin -V | grep HTTPD_ROOT | cut -d '"' -f 2`;
 		chomp $httpdRoot;
 		$apache_info->{root} = $httpdRoot;
 		print $LOGFILE "Unable to find httpd root\n" and
 			croak "Unable to find httpd root" unless $httpdRoot;
 		print $LOGFILE "httpd root: $httpdRoot\n";
+		$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
+		$httpdConf = File::Spec->canonpath( $httpdConf ); 
 	} else {
 			$apache_info->{root} = '/';
 	}
