@@ -1118,6 +1118,9 @@ sub manyToMany {
             my $factory = $self->getFactory();
 
             if (wantarray) {
+				eval "use $m_to_m_type";
+				die "error when loading package $m_to_m_type\n$@" if $@;
+
 				my $has_manys = $m_to_m_type->__hasManys();
 				my $m_to_m_accessor;
 
