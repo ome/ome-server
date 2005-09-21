@@ -466,6 +466,10 @@ which were created by a given module execution.  The final parameter,
 if specified, should be a hashref of extra criteria for the search.
 They will be passed directly into the factory.
 
+$mex can either be a single module execution or an array of module
+executions. If it is an array, it will return attributes of the 
+given ST that were output by any MEXs in the array.
+
 =cut
 
 sub getAttributesForMEX {
