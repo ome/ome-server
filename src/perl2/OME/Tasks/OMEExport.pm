@@ -35,6 +35,27 @@
 #-------------------------------------------------------------------------------
 
 
+=pod
+
+=head1 NAME
+
+OME::Tasks::OMEExport - Export OME objects
+
+=head1 SYNOPSIS
+
+	my $exporter = OME::Tasks::OMEExport->new( session => $session ) ;
+	$exporter->buildDOM(\@exportObjects, ResolveAllRefs => 1, ExportSTDs => 1) ;
+	$exporter->exportFile('filename.ome');
+
+=head1 DESCRIPTION
+
+Provides a simple interface to export OME objects.
+
+=head1 METHODS
+
+=cut
+
+
 package OME::Tasks::OMEExport;
 
 use strict;
@@ -55,6 +76,20 @@ use OME::ImportExport::SemanticTypeExport;
 #use OME::Tasks::ChainExport;
 use OME::ImportExport::HierarchyExport;
 use OME::ImportExport::DataHistoryExport;
+
+=head2 new
+
+	my $exporter = OME::Tasks::OMEExport->new( session => $session ) ;
+
+Required Parameters are:
+	session: An active session (instance of OME::Session)
+
+Optional debugging parameters:
+	_doc: An instance of XML::LibXML::Document to append to. The default
+	      behavior is to create a new one.
+	          
+
+=cut
 
 sub new {
 	my ($proto, %params) = @_;
@@ -94,6 +129,14 @@ sub new {
 	return bless $self, $class;
 }
 
+=head2 exportFile
+
+	$exporter->exportFile( $file_path ) ;
+
+Called after buildDOM(). It creates an OME XML file at the path given. 
+It returns nothing. It will die if it gets an error.
+
+=cut
 
 sub exportFile {
 	my ($self, $filename, %flags) = @_;
@@ -163,6 +206,17 @@ sub historyExporter {
 	return $self->{_historyExporter};
 }
 
+=head2 buildDOM
+
+	$exporter->buildDOM(\@exportObjects, ResolveAllRefs => 1, ExportSTDs => 1) ;
+
+flags are:
+	ResolveAllRefs: Do not allow dangling references. Include all referenced objects.
+	ExportSTDs:     Export semantic types definitions for exported attributes.
+	ExportHistory:  Export data history
+
+=cut
+
 sub buildDOM {
 	my ($self, $objects, %flags) = @_;
 	my $doc = $self->doc();
@@ -202,7 +256,7 @@ sub buildDOM {
 
 #	$chainExporter->buildDOM($objects,%flags);
 
-	# Export semantic type definitions only if ExportSTDs is set
+	# Export History only if ExportHistory is set
 	if ($flags{ExportHistory}) {
 		logdbg "debug", ref ($self).'->buildDOM:  Getting a Data History Exporter';
 		my $historyExporter = $self->historyExporter();
@@ -225,4 +279,12 @@ sub resolveAllRefs {
 	}
 	return undef;
 }
+
+=head1 Author
+
+Ilya Goldberg <igg@nih.gov>
+
+=cut
+
+
 1;
