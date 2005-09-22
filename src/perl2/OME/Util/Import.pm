@@ -116,7 +116,6 @@ sub import {
                'description|D=s' => \$datasetDescription);
                
     # idiot traps
-    die "No files or directories specified for import.\n" unless scalar @ARGV;
     die "You cannot specify a database description without also specifying the database name.\n"
     	if (defined $datasetDescription and not defined $datasetName);
     
@@ -126,7 +125,8 @@ sub import {
     		if -f $filename and -r $filename and -s $filename;
     	push (@file_names,bsd_glob("$filename/*")) if -d $filename and -r $filename;
     }
-    
+	die "No valid files or directories specified for import.\n" unless scalar @file_names;
+
     # suggest a default dataset description
     $datasetDescription = "These images were imported using the OME command-line tool on $timestr. This description was auto-generated. Use the -D command-line parameter to specify your own descriptions during image import." unless $datasetDescription;
     
