@@ -107,7 +107,12 @@ sub buildDOM {
 	
 	# Go through the list of objects and export STDs for the ones that inherit from OME::SemanticType::Superclass.
 	foreach (@$objects) {
-		$self->exportST ($_) if UNIVERSAL::isa($_,"OME::SemanticType::Superclass");
+logdbg "debut", "got object ".ref( $_ )." id=".$_->id;
+		$self->exportST ($_) 
+			if( UNIVERSAL::isa($_,"OME::SemanticType::Superclass") || 
+			    UNIVERSAL::isa($_,"OME::SemanticType") 
+			  );
+logdbg "debut", "\texported it" if UNIVERSAL::isa($_,"OME::SemanticType::Superclass");
 	}
 }
 
@@ -153,8 +158,16 @@ sub STDelement {
 # Export the ST declaration for an OME::SemanticType::Superclass object.
 sub exportST {
 	my ($self, $object) = @_;
-	my $semantic_type = $object->semantic_type();
-	my $attribute_name = $semantic_type->name();
+	
+	# Get the ST & ST name from the incoming object
+	my ($semantic_type, $attribute_name);
+	if( UNIVERSAL::isa($_,"OME::SemanticType::Superclass") ) {
+		$semantic_type = $object->semantic_type();
+		$attribute_name = $semantic_type->name();
+	} elsif( UNIVERSAL::isa($_,"OME::SemanticType") ) {
+		$semantic_type = $object;
+		$attribute_name = $semantic_type->name();
+	}
 
 	logdbg "debug", ref ($self)."->exportST:  Exporting STD $attribute_name";
 	
