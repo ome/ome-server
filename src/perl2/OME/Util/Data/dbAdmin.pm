@@ -460,8 +460,8 @@ sub restore {
 					print "Database could not be dropped. Try again ? ", 
 					BOLD, "[y", RESET, "/n", BOLD, "]\n", RESET;
 					print BOLD, "\t[WAITING 15 SECONDS]", RESET, "\n" and sleep 15;
-			} else {
-					y_or_n ("Database could not be dropped. Try again ?") ? $dropdb = 1: $dropdb = 0; 
+				} else {
+					y_or_n ("Database could not be dropped. Try again ?") ? $dropdb = 0: $dropdb = 1; 
 				}
 			} else {
 				# success == 1
