@@ -175,9 +175,27 @@ sub uninstall {
     my $db_version = eval ("OME::Install::CoreDatabaseTablesTask::get_db_version()");
     
 	if ($db_version) {
-		if ($all or y_or_n ("Remove Postgress database \"ome\" ?")) {
-			system($prog_path{'dropdb'}." ome");
-		}	
+			my $dropdb = 0;
+			my $success = 0;
+			$dropdb = 1 if (y_or_n ("Database ome (version $db_version) was found. Drop it ?"));
+			
+			while ($dropdb == 1) {
+				$success = 0;
+				
+				foreach (`su $postgress_user -c 'dropdb ome' 2>&1`) {
+					$success = 1 if $_ =~ /DROP DATABASE/ and not $_ =~ /ERROR/;
+				}
+				
+				if ($success == 0) {
+					y_or_n ("Database could not be dropped. Try again ?") ? $dropdb = 0: $dropdb = 1; 
+				} else {
+					print "    \\_ Postgress database ome was dropped. \n";
+					# success == 1
+					last;
+				}
+			}
+			print BOLD, "[WARNING] ", RESET, "Database ome wasn't dropped.\n" if ($success == 0);
+
 	} else {	
 		print "    \\_ Postgress database ome already doesn't exist. \n";
 	}
