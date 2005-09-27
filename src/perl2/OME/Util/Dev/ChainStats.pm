@@ -82,6 +82,8 @@ This command displays statistics about a chain execution.
 Options:
   --chex <id>
      ID of Analysis chain executions
+  -v | --verbose
+     print more information
 
 USAGE
     CORE::exit(1);
@@ -90,9 +92,11 @@ USAGE
 sub chex_stats {
 	my $self = shift;
 	
-	my ($chex_id );
+	my ($chex_id, $verbose );
 	
-	GetOptions ('chex=i' => \$chex_id );
+	GetOptions ('chex=i' => \$chex_id,
+	            'v|verbos' => \$verbose,
+	           );
 
 	die "Need a chex id" unless $chex_id;
 
@@ -106,26 +110,49 @@ sub chex_stats {
 	      "executed against dataset ".$chex->dataset->name." (id:".$chex->dataset->id.") on ".$chex->timestamp.".\n";
 	print "	The dataset contains ".$chex->dataset->count_images." images.\n";
 	
-	my @total_nodes = $chex->analysis_chain->nodes( __distinct => 'id' );
+	my @total_nodes = $chex->analysis_chain->nodes();
 	my @executed_nodes = $chex->node_executions( __distinct => 'analysis_chain_node' );
 	@executed_nodes = map( $_->analysis_chain_node, @executed_nodes );
+	my @error_nodes = $chex->node_executions( 'module_execution.status' => 'ERROR', __distinct => 'analysis_chain_node' );
+	@error_nodes = map( $_->analysis_chain_node, @error_nodes );
 	
 	print scalar( @executed_nodes )." of ".scalar( @total_nodes )." nodes have been executed.\n";
-	
+	print "	Of those, ".scalar( @error_nodes )." nodes had at least one error.\n";
+	if( $verbose ) {
+		print "Executed nodes:\n";
+		foreach my $node ( @executed_nodes ) {
+			print "\t".$node->module->name()." x ".$chex->count_node_executions( analysis_chain_node => $node ).".\n";
+		}
+		print "Nodes with errors:\n";
+		foreach my $node ( @error_nodes ) {
+			print "\t".$node->module->name().": ".
+				$chex->count_node_executions( analysis_chain_node => $node, 'module_execution.status' => 'ERROR' )." errors.\n";
+		}
+		my @non_executed_nodes = $chex->analysis_chain->nodes( id => [ 'not in', \@executed_nodes ] );
+		print "Non-executed nodes:\n";
+		foreach my $node ( @non_executed_nodes ) {
+			print "\t".$node->module->name()."\n";
+		}
+	}
 	
 	my @executions_per_node = map( $chex->count_node_executions( analysis_chain_node => $_ ), @executed_nodes );
 	my $sum = 0; 
-	my %mode_bucket;
-	map{ $mode_bucket{ $_ } = 0 } @executions_per_node;
+	my %histogram;
+	map{ $histogram{ $_ } = 0 } @executions_per_node;
 	foreach ( @executions_per_node ) {
 		$sum += $_;
-		$mode_bucket{ $_ }++;
+		$histogram{ $_ }++;
 	}
-	my @mode_bucket_indexes = keys( %mode_bucket );
-	sort { $mode_bucket{ $b } cmp $mode_bucket{ $a } } @mode_bucket_indexes;
-	my $mode = $mode_bucket_indexes[0];
+	my $mode = $executions_per_node[0];
+	# find the index of highest histogram value
+	foreach ( keys( %histogram ) ) {
+		$mode = $_
+			if( $histogram{ $mode } < $histogram{ $_ } );
+	}
 	my $average = $sum / scalar( @executed_nodes );
 	
+
+
 	print "Stats for executed nodes:\n";
 	print "	there have been an average of $average executions per node.\n";
 	print "	the mode is $mode.\n";
