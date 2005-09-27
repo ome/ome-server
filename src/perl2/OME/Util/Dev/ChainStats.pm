@@ -101,6 +101,11 @@ sub chex_stats {
 	
 	my $chex = $factory->loadObject( 'OME::AnalysisChainExecution', $chex_id )
 		or die "Couldn't load chex $chex_id";
+		
+	print "Displaying information about chain ".$chex->analysis_chain->name." (id:".$chex->analysis_chain->id.") ".
+	      "executed against dataset ".$chex->dataset->name." (id:".$chex->dataset->id.") on ".$chex->timestamp.".\n";
+	print "	The dataset contains ".$chex->dataset->count_images." images.\n";
+	
 	my @total_nodes = $chex->analysis_chain->nodes( __distinct => 'id' );
 	my @executed_nodes = $chex->node_executions( __distinct => 'analysis_chain_node' );
 	@executed_nodes = map( $_->analysis_chain_node, @executed_nodes );
