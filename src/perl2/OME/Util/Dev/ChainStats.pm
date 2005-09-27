@@ -116,14 +116,15 @@ sub chex_stats {
 		$sum += $_;
 		$mode_bucket{ $_ }++;
 	}
-	my @mode_bucket_indexes; @mode_bucket_indexes = keys( %mode_bucket );
+	my @mode_bucket_indexes = keys( %mode_bucket );
 	sort { $mode_bucket{ $b } cmp $mode_bucket{ $a } } @mode_bucket_indexes;
 	my $mode = $mode_bucket_indexes[0];
 	my $average = $sum / scalar( @executed_nodes );
 	
-	print "there have been an average of $average executions per node.\n";
-	print "the mode is $mode.\n";
-	print "the sum is $sum.\n";
+	print "Stats for executed nodes:\n";
+	print "	there have been an average of $average executions per node.\n";
+	print "	the mode is $mode.\n";
+	print "	the sum is $sum.\n";
 
 }
 
