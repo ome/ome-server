@@ -47,6 +47,7 @@ sub getCommands {
        'data'       => ['OME::Util::Data::dbAdmin'],
        'import'     => ['OME::Util::Import'],
        'execute'    => ['OME::Util::ExecuteChain'],
+       'chex_stats' => ['OME::Util::ChainStats'],
        'top'        => ['OME::Util::Top'],
        'lint'       => ['OME::Util::Dev::Lint'],
        'classifier' => ['OME::Util::Dev::Classifier' ],
@@ -69,6 +70,7 @@ ome commands are:
     annotate         Commands for mass annotation of OME objects
     data             Commands for managing OME data
     execute          Command for executing OME analysis chains
+    chex_stats       Command for getting information about a Chain Execution
     import           Command for importing files to OME
     top              Command for displaying progress info about OME tasks
     help <command>   Display help information about a specific command
