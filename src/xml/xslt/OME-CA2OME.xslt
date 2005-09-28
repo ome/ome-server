@@ -646,7 +646,9 @@
 				<xsl:with-param name="AttrName">EmWave</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "@Fluor" mode = "Attribute2OptionalAttribute"/>
-			<xsl:apply-templates select = "@NDfilter" mode = "Attribute2OptionalAttribute"/>
+			<xsl:apply-templates select = "@NDFilter" mode = "Attribute2OptionalAttribute">
+				<xsl:with-param name="AttrName">NDfilter</xsl:with-param>
+			</xsl:apply-templates>
 			<xsl:apply-templates select = "@LightSource"/>
 			<xsl:apply-templates select = "@AuxLightSource"/>
 			<xsl:apply-templates select = "@OTF" mode = "MakeOMEref"/>

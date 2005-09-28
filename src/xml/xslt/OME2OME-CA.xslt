@@ -47,7 +47,7 @@
 	xmlns:DH = "http://www.openmicroscopy.org/XMLschemas/DataHistory/IR3/DataHistory.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 
-	<!-- Pass everything through that doesn't match the defined OME namspace -->
+	<!-- Pass everything through that doesn't match the defined OME namespace -->
 	<xsl:template match = "*">
 		<xsl:copy-of select = "."/>
 	</xsl:template>
@@ -281,10 +281,16 @@
 			<xsl:apply-templates select = "OME:AuxLightSourceRef/@Wavelength" mode = "OptionalAttribute">
 				<xsl:with-param name = "Name">AuxLightWavelength</xsl:with-param>
 			</xsl:apply-templates>
-			<xsl:apply-templates select = "@ExWave" mode = "OptionalAttribute"/>
-			<xsl:apply-templates select = "@EmWave" mode = "OptionalAttribute"/>
+			<xsl:apply-templates select = "@ExWave" mode = "OptionalAttribute">
+				<xsl:with-param name = "Name">ExcitationWavelength</xsl:with-param>
+      </xsl:apply-templates>
+			<xsl:apply-templates select = "@EmWave" mode = "OptionalAttribute">
+				<xsl:with-param name = "Name">EmissionWavelength</xsl:with-param>
+			</xsl:apply-templates>
 			<xsl:apply-templates select = "@Fluor" mode = "OptionalAttribute"/>
-			<xsl:apply-templates select = "@NDfilter" mode = "OptionalAttribute"/>
+			<xsl:apply-templates select = "@NDfilter" mode = "OptionalAttribute">
+				<xsl:with-param name = "Name">NDFilter</xsl:with-param>
+			</xsl:apply-templates>
 			<xsl:apply-templates select = "OME:LightSourceRef" mode = "MakeRefs"/>
 			<xsl:apply-templates select = "OME:AuxLightSourceRef" mode = "MakeRefs"/>
 			<xsl:apply-templates select = "OME:OTFRef" mode = "MakeRefs"/>
