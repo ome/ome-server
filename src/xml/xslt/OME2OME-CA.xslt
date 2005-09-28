@@ -225,7 +225,18 @@
 	</xsl:template>
 	<!-- Thumbnail -->
 	<xsl:template match = "OME:Image/OME:Thumbnail">
-		<xsl:apply-templates select = "." mode = "Element2Attributes"/>
+		<xsl:element name = "Thumbnail">
+			<xsl:attribute name = "ID">
+				<xsl:value-of select = "generate-id()"/>
+			</xsl:attribute>
+			<xsl:apply-templates select = "@href" mode = "OptionalAttribute">
+				<xsl:with-param name = "Name">Path</xsl:with-param>
+			</xsl:apply-templates>
+			<xsl:apply-templates select = "@MIMEtype" mode = "OptionalAttribute">
+				<xsl:with-param name = "Name">MimeType</xsl:with-param>
+			</xsl:apply-templates>
+		</xsl:element>
+		<!--<xsl:apply-templates select = "." mode = "Element2Attributes"/>-->
 	</xsl:template>
 	<!-- PixelChannelComponent -->
 	<xsl:template match = "OME:ChannelInfo/OME:ChannelComponent">
@@ -283,7 +294,7 @@
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "@ExWave" mode = "OptionalAttribute">
 				<xsl:with-param name = "Name">ExcitationWavelength</xsl:with-param>
-      </xsl:apply-templates>
+			</xsl:apply-templates>
 			<xsl:apply-templates select = "@EmWave" mode = "OptionalAttribute">
 				<xsl:with-param name = "Name">EmissionWavelength</xsl:with-param>
 			</xsl:apply-templates>

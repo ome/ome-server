@@ -619,10 +619,17 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Thumbnail">
-		<xsl:if test="string-length(@href) > 0">
+		<xsl:if test="string-length(@Path) > 0">
 			<xsl:element name = "Thumbnail">
-				<xsl:apply-templates select = "@href" mode = "Attribute2OptionalAttribute"/>
-				<xsl:apply-templates select = "@MIMEtype" mode = "Attribute2OptionalAttribute"/>
+				<xsl:attribute name = "ID">
+					<xsl:value-of select = "@ID"/>
+				</xsl:attribute>
+				<xsl:apply-templates select = "@Path" mode = "Attribute2OptionalAttribute">
+					<xsl:with-param name="AttrName">href</xsl:with-param>
+				</xsl:apply-templates>
+				<xsl:apply-templates select = "@MimeType" mode = "Attribute2OptionalAttribute">
+					<xsl:with-param name="AttrName">MIMEtype</xsl:with-param>
+				</xsl:apply-templates>
 			</xsl:element>
 		</xsl:if>
 	</xsl:template>
