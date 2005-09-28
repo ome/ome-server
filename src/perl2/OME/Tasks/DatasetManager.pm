@@ -83,8 +83,6 @@ Note: The method performs its work on the active dataset ($session->dataset()) i
 
 Check if a given dataset belongs to a given project. Returns successful (1) or unsuccessful (undef) based on the link's existance.
 
-(extension of OME::Project->DoesDatasetBelong())
-
 =head2 change ($description,$name,$datasetID)
 
 	$datasetManager->change(
