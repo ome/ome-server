@@ -151,7 +151,6 @@ sub _getForm {
     $self->populateTemplate(\%tmpl_params);
 
     $tmpl->param( %tmpl_params );
-
     my $html =
 	$q->startform().
 	$tmpl->output().
