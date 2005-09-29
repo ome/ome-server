@@ -73,6 +73,43 @@ use base qw(Class::Data::Inheritable);
 use fields qw(__id __fields __changedFields);
 use vars qw($AUTOLOAD);
 
+# This provides storage for __makeSelectSQL()
+__PACKAGE__->mk_classdata('__cached_sql_text');
+# This turns __makeSelectSQL's caching on or off
+__PACKAGE__->mk_classdata('__cache_sql_text_in_makeSelectSQL');
+__PACKAGE__->__cache_sql_text_in_makeSelectSQL(1);
+
+# This is the controls to the testing harness for SQL text caching.
+# If you want to test the caching and not use it, set __cache_sql_text_in_makeSelectSQL to 1
+#	e.g. __PACKAGE__->__cache_sql_text_in_makeSelectSQL(1);
+# AND set __test_SQL_text_caching to a set of debugging log files that
+# have appropriate permissions.
+# The first log file will get one byte written every time the caching code
+# generates the same results as the standard code. The second log file will 
+# get one byte for every failure. So, to determine the number of successes 
+# & failures, look at the size of those files. The third log file is for
+# failure reports.
+# This disables the timing advantage of caching because it runs caching 
+# alongside the standard mechanism then compares the two results.
+__PACKAGE__->mk_classdata('__test_SQL_text_caching');
+# __PACKAGE__->__test_SQL_text_caching( [
+# 	'/Users/josiah/foo/__makeSelectSQL_cache_pass',
+# 	'/Users/josiah/foo/__makeSelectSQL_cache_fail',
+# 	'/Users/josiah/foo/__makeSelectSQL_cache_failed_message',
+# ] );
+# These paths are logs for cache hits & misses,  and how often the
+# $columns_needed parameter is specified. The columns_needed was always
+# absent or 'COUNT' from each of the UI's.
+# to disable a specific logging file, replace it with undef placeholder
+# As above, counts are indicated by file size.
+__PACKAGE__->mk_classdata('__log_SQL_text_caching');
+# __PACKAGE__->__log_SQL_text_caching( [
+# 	'/Users/josiah/foo/__makeSelectSQL_cache_hit',
+# 	'/Users/josiah/foo/__makeSelectSQL_cache_miss',
+# 	'/Users/josiah/foo/__makeSelectSQL_columns_needed_specified',
+# 	'/Users/josiah/foo/__makeSelectSQL_columns_needed_not_specified',
+# ] );
+
 # The columns known about each class.
 # __columns()->{$alias} = [$table,$column,$optional_fkey_class,$sql_options]
 __PACKAGE__->mk_classdata('__columns');
@@ -1704,7 +1741,7 @@ sub refresh {
 
     my $columns_wanted = [keys %{$self->__columns()}];
 
-    my ($sql,$id_available,$values) = $self->
+    my ($sql,$id_available,$values,$sth) = $self->
       __makeSelectSQL($columns_wanted,{id => $id});
 
     my $dbh = $factory->obtainDBH();
@@ -2215,7 +2252,7 @@ sub __getQueryLocation {
 
 =head2 __makeSelectSQL
 
-	my ($sql,$id_available,$values) = $class->
+	my ($sql,$id_available,$values,$sth) = $class->
 	    __makeSelectSQL($columns_wanted,$criteria);
 
 Creates an SQL statement suitable for retrieving instances of this
@@ -2237,11 +2274,6 @@ any ?-placeholders which appear in the SQL statement.
 =cut
 
 sub __makeSelectSQL {
-# This is turned off only for this function due to the
-# crazy (and wrong):
-# Use of uninitialized value in string eq at OME/DBObject.pm line 1989.
-# See below (though no longer line 1989)
-no warnings "uninitialized";
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
@@ -2262,7 +2294,150 @@ no warnings "uninitialized";
     my $count_only = 0;
     my $location;
 
-    # Add each requested column to the @columns_needed array.  The
+	# Logging...
+	my ( $log_hit, $log_miss, $log_cols_specified, $log_cols_unspecified);
+	( $log_hit, $log_miss, $log_cols_specified, $log_cols_unspecified) =
+		@{ $class->__log_SQL_text_caching() }
+		if( $class->__log_SQL_text_caching() ) ;
+	if( $columns_wanted && ($columns_wanted ne 'COUNT') && $log_cols_specified) {
+		open( COLS_SPECIFIED, ">> $log_cols_specified" )
+			or die "couldn't open $log_cols_specified";
+		print COLS_SPECIFIED " ";
+		close COLS_SPECIFIED;
+	} elsif( (not defined $columns_wanted) && $log_cols_unspecified ) {
+		open( COLS_UNSPECIFIED, ">> $log_cols_unspecified" )
+			or die "couldn't open $log_cols_unspecified";
+		print COLS_UNSPECIFIED " ";
+		close COLS_UNSPECIFIED;
+	}
+
+	# Experimental caching.
+	$class->__cached_sql_text({}) unless( defined $class->__cached_sql_text() );
+	my ($cache_key, $cached_sql, $cached_id_available, $cached_sth);
+	my @values_when_using_cache;
+	if( $class->__cache_sql_text_in_makeSelectSQL() ) {
+		# Generate a key that will uniquely identify the generated SQL.
+		$cache_key = $proto->__makeSelectSQL_cacheKey($columns_wanted,$criteria);
+	
+		# Attempt to retreive cached SQL from the key
+		if( exists $class->__cached_sql_text()->{ $cache_key } ) {
+			if( $log_hit) {
+				open( FOO, ">> $log_hit" )
+					or die "couldn't open $log_hit";
+				print FOO " ";
+				close FOO;
+			}
+
+			($cached_sql, $cached_id_available, $cached_sth) = @{ $class->__cached_sql_text()->{ $cache_key } };
+			
+			# prevent __limit and __offset from being processed with the other criteria;
+			# they need to be at the very end of the values array
+			my ($limit, $offset);
+			if (exists $criteria->{__limit} && ( not defined $columns_wanted || $columns_wanted ne 'COUNT' )) {
+				$limit = $criteria->{__limit};
+				delete $criteria->{__limit};
+				die "Invalid LIMIT clause $limit -- must be an integer"
+				  unless $limit =~ /^\d+$/;
+			}
+			if (exists $criteria->{__offset} && ( not defined $columns_wanted || $columns_wanted ne 'COUNT' )) {
+				$offset = $criteria->{__offset};
+				delete $criteria->{__offset};
+				die "Invalid OFFSET clause $offset -- must be an integer"
+				  unless $offset =~ /^\d+$/;
+			}
+			
+			# Make the values array
+			foreach my $column_alias (sort keys %$criteria) {
+				
+				# __order is already compiled into the SQL text.
+				next if $column_alias eq '__order';
+
+				my $criterion = $criteria->{$column_alias};
+				my($operation, $value);
+		
+				my $sql_type = exists $columns->{$column_alias}?
+				  $columns->{$column_alias}->[3]->{SQLType}:
+				  "";
+	
+				# If the value is an object, assume that it has an id
+				# method, and use that in the SQL query.
+		
+				my @new_values;
+	            my $question = '?';
+
+				if (ref($criterion) eq 'ARRAY') {
+					$value = $criterion->[1];
+					if (ref($value) eq 'ARRAY') {
+						my @questions;
+						foreach my $arrayval (@$value) {
+							if (defined $arrayval) {
+								push @questions, '?';
+								$arrayval = $arrayval->id()
+								  if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
+									   ref($arrayval) );
+								$arrayval = 'NaN'
+									if( $class->isRealType($sql_type) && 
+										$arrayval && 
+										$value =~ m'^(-)?Inf(inity)?$'i );
+								push @new_values, $arrayval;
+							}
+						}
+						$question = '('.join(',',@questions).')';
+					} else {
+						$value = $value->id()
+						  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+						$value = 'NaN'
+							if( $class->isRealType($sql_type) && 
+								$value && 
+								$value =~ m'^(-)?Inf(inity)?$'i );
+						push @new_values, $value;
+					}
+					$operation = defined $value? $criterion->[0]: "is"; 
+				} else {
+					$value = $criterion;
+					$value = 'NaN'
+						if( $class->isRealType($sql_type) && 
+							$value && 
+							$value =~ m'^(-)?Inf(inity)?$'i );
+					$value = $value->id()
+					  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+					push @new_values, $value;
+	                $operation = defined $value? "=": "is";
+				}
+	
+				if ($sql_type eq 'boolean') {
+					# If the column is Boolean, 1/0 won't work.
+					foreach my $value (@new_values) {
+						next unless defined $value;
+						die "Illegal Boolean column value '$value'"
+						  unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
+	
+						$value = 'true' if $value eq '1';
+						$value = 'false' if $value eq '0';
+					}
+				} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
+					# If the column is a float, the join clause below was used, and the values needs an epsilon
+					# push @join_clauses, "abs($location - $question) < ?";
+					push @new_values, $EPSILON;
+				}
+				
+				push @values_when_using_cache, @new_values;
+			}
+	
+			push @values_when_using_cache, $limit  if defined $limit;
+			push @values_when_using_cache, $offset if defined $offset;
+			return ( $cached_sql, $cached_id_available, \@values_when_using_cache, $cached_sth)
+				unless $class->__test_SQL_text_caching();
+		} elsif( $log_miss) {
+			open( LOG_MISS, ">> $log_miss" )
+				or die "couldn't open $log_miss";
+			print LOG_MISS " ";
+			close LOG_MISS;
+		}
+	}
+	
+	
+	# Add each requested column to the @columns_needed array.  The
     # contents of this array are valid DB locations, so we build this
     # as necessary from the contents of the __columns array.  This
     # loop also populates the %tables_used hash.
@@ -2373,7 +2548,7 @@ no warnings "uninitialized";
 
         # Parse the remaining criteria
 
-        foreach my $column_alias (keys %$criteria) {
+        foreach my $column_alias (sort keys %$criteria) {
             $location = $class->
               __getQueryLocation(\$foreign_key_number,
                                  \@foreign_tables,\%foreign_aliases,
@@ -2422,7 +2597,7 @@ no warnings "uninitialized";
 							$value =~ m'^(-)?Inf(inity)?$'i );
                     push @new_values, $value;
                 }
-                $operation = defined $value? $criterion->[0]: "is";
+				$operation = defined $value? $criterion->[0]: "is"; 
             } else {
                 $value = $criterion;
 				$value = 'NaN'
@@ -2435,10 +2610,7 @@ no warnings "uninitialized";
                 $operation = defined $value? "=": "is";
             }
 
-			# It appears to be impossible to silence an incorrect warning about
-			# Use of uninitialized value in string eq in the following line:
-			# Hence, "unintialized" warnings are turned off for this moethod.
-            if ($location eq 'id') {
+            if (defined $location && $location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
             } elsif ($sql_type eq 'boolean') {
@@ -2547,15 +2719,62 @@ no warnings "uninitialized";
         if (defined $limit) {
             die "Illegal limit value $limit"
               unless $limit =~ /^\d+$/;
-            $sql .= " limit $limit";
+# I changed this to use the array of values so that I could cache the SQL text
+#            $sql .= " limit $limit";
+            $sql .= " limit ?";
+            push @values, $limit;
         }
 
         if (defined $offset) {
             die "Illegal offset value $offset"
               unless $offset =~ /^\d+$/;
-            $sql .= " offset $offset";
+# I changed this to use the array of values so that I could cache the SQL text
+#            $sql .= " offset $offset";
+            $sql .= " offset ?";
+            push @values, $offset;
         }
     }
+
+    print STDERR "\n$sql\n" if $SHOW_SQL;
+    print STDERR join(',',@values),"\n" if $SHOW_SQL;
+    my $sth;# = $class->getFactory()->obtainDBH()->prepare($sql);
+
+	# Store the SQL text & id_available if we're caching that
+	if( $class->__cache_sql_text_in_makeSelectSQL() ) {
+		# Testing harness.
+		if( $class->__test_SQL_text_caching() && defined $cached_sql) {
+			# paths to debug log files
+			my ( $pass_count, $fail_count, $failure_msg ) = @{ $class->__test_SQL_text_caching() };
+			system( "touch $pass_count $fail_count" );
+			my $values_match = 1;
+			$values_match = 0 unless ( scalar( @values_when_using_cache ) eq scalar( @values ) );
+			for my $i ( 0..(scalar( @values_when_using_cache - 1 ) ) ) {
+				$values_match = 0
+					unless $values_when_using_cache[ $i ] eq $values[ $i ];
+			}
+			if( ( $cached_sql eq $sql ) && 
+				( $cached_id_available eq (defined $first_key ) ) &&
+				$values_match ) {
+				open( FOO, ">> $pass_count" ) 
+					or die "Couldn't open $pass_count";
+				print FOO " ";
+				close FOO;
+			} else {
+				open( FOO, ">> $fail_count" ) 
+					or die "Couldn't open $fail_count";
+				print FOO " ";
+				close FOO;
+				open( FOO, ">> $failure_msg" ) 
+					or die "Couldn't open $failure_msg";
+				print FOO "SQL Text caching failed. The cache key was $cache_key.\nSQL text (standard, cached):\n\t$sql\n\t$cached_sql\nid avail: ".(defined $first_key)." $cached_id_available\n".
+						  "Values (standard generation, cached generation):\n\t@values\n\t@values_when_using_cache\n\n\n";
+				close FOO;
+			}
+		}
+
+		$class->__cached_sql_text()->{ $cache_key } =
+			[$sql,defined $first_key,$sth ];
+	}
 
 	if ($SHOW_SQL) {
 		my ($p, $f, $l) = caller;
@@ -2564,9 +2783,57 @@ no warnings "uninitialized";
     	print STDERR join(',',@values),"\n";
 	}
 
-    return ($sql,defined $first_key,\@values);
+    return ($sql,defined $first_key,\@values, $sth);
 }
 
+sub __makeSelectSQL_cacheKey {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($columns_wanted,$criteria) = @_;
+
+	# Generate a key that will uniquely identify the generated SQL.
+	# Start out with which columns are wanted
+	my $cache_key = ( $columns_wanted ?
+		( $columns_wanted eq 'COUNT' ?
+			$columns_wanted :
+			join( ',', @$columns_wanted ).';' 
+		) : '*;' );
+	# Add the order by. 
+	my $order_by = $criteria->{__order};
+	$order_by ||= [];
+	$order_by = [$order_by] unless ref($order_by);
+	$cache_key .= 'Order:'.join(',', @$order_by).';'
+		if( scalar @$order_by > 0 );
+	# Next add criteria keys, operators, and number of ?'s in used by an in statement
+	# e.g. "Name => [ in => [ 'foo', 'bar' ] ]" gets translated to "Name.in(2)"
+	foreach my $key ( sort( keys %$criteria ) ) {
+		$cache_key .= $key;
+		if( ref( $criteria->{ $key } ) eq 'ARRAY' ) {
+			# store the operator if one was given
+			$cache_key .= '.'.$criteria->{ $key }->[0];
+			# store the number of values if multiple values where given
+			if( ref( $criteria->{ $key }->[1] ) eq 'ARRAY' ) {
+				$cache_key .= '('.scalar( @{ $criteria->{ $key }->[1] } ).')'
+			# store the value if it is undef, NAN, or null. These values 
+			# affect the generated SQL statement.
+			} elsif( not defined $criteria->{ $key }->[1] ) {
+				$cache_key .= '=undef';
+			} elsif( $criteria->{ $key }->[1] =~ m/nan|null/i ) {
+				$cache_key .= '='.lc( $criteria->{ $key }->[1] );				
+			}
+		}
+		# store the value if it is undef, NAN, or null. These values 
+		# affect the generated SQL statement.
+		if( not defined $criteria->{ $key } ) {
+			$cache_key .= '=undef';
+		} elsif( $criteria->{ $key } =~ m/nan|null/i ) {
+			$cache_key .= '='.lc( $criteria->{ $key } );				
+		}
+		$cache_key .= ';'
+	}
+	return $cache_key;
+}
 =head2 __makeInsertSQLs
 
 	my ($sqls,$new_key) = $class->__makeInsertSQLs($dbh,$data_hash);
@@ -3068,8 +3335,8 @@ sub __newByID {
     my $cached_object = $class->__getCachedObject($id);
     return $cached_object if defined $cached_object;
 
-    my ($sql,$id_available,$values) = $class->
-      __makeSelectSQL($columns_wanted,{id => $id});
+	my ($sql,$id_available,$values) = $class->
+	  __makeSelectSQL($columns_wanted,{id => $id});
 
     die "ID not available"
       unless $id_available;
