@@ -254,8 +254,36 @@
 	 DBLocation = "SAMPLE_PREPARATION.DESCRIPTION"
 	 DataType = "string"/>
     </SemanticType>
-
-
-    
   </SemanticTypeDefinitions>
+
+  <CustomAttributes>
+
+    <DevelopmentalStageValue
+       ID="urn:lsid:foo.bar.com:DevelomentalStageValue:456832">
+      <Name>Mixed Stage</Name>
+    </DevelopmentalStageValue>
+
+
+    <DevelopmentalStageValue
+       ID="urn:lsid:foo.bar.com:DevelomentalStageValue:456833">
+      <Name>Larval</Name>
+    </DevelopmentalStageValue>
+
+    <DevelopmentalStageValue
+       ID="urn:lsid:foo.bar.com:DevelomentalStageValue:456834">
+      <Name>Adult</Name>
+    </DevelopmentalStageValue>
+
+    <DevelopmentalStageValue
+       ID="urn:lsid:foo.bar.com:DevelomentalStageValue:456835">
+      <Name>Dour</Name>
+    </DevelopmentalStageValue>
+
+    <DevelopmentalStageValue
+       ID="urn:lsid:foo.bar.com:DevelomentalStageValue:456836">
+      <Name>Embryo</Name>
+    </DevelopmentalStageValue>
+
+  </CustomAttributes>
+
 </OME>
