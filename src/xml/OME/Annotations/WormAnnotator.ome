@@ -1,0 +1,261 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    # Copyright (C) 2003 Open Microscopy Environment
+    #       Massachusetts Institue of Technology,
+    #       National Institutes of Health,
+    #       University of Dundee
+    #
+    #
+    #
+    #    This library is free software; you can redistribute it and/or
+    #    modify it under the terms of the GNU Lesser General Public
+    #    License as published by the Free Software Foundation; either
+    #    version 2.1 of the License, or (at your option) any later version.
+    #
+    #    This library is distributed in the hope that it will be useful,
+    #    but WITHOUT ANY WARRANTY; without even the implied warranty ofm, 
+    #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    #    Lesser General Public License for more details.
+    #
+    #    You should have received a copy of the GNU Lesser General Public
+    #    License along with this library; if not, write to the Free Software
+    #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    #
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Written by:  Harry Hochheiser <hsh@nih.gov>
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<OME
+   xmlns=
+   "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+   xmlns:xsi=
+   "http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:STD=
+   "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+   xsi:schemaLocation = "
+	 http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+	 http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+	 http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+	 http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    <SemanticType
+       Name= "InstrumentConfiguration"
+       AppliesTo = "G">
+      <Description>A configuration for a
+	microscope. Allows settings for given data collection
+	to e easily reused. </Description>
+      <Element
+	 Name= "Instrument"
+	 DBLocation = "INSTRUMENT_CONFIGURATION.INSTRUMENT"
+	 DataType = "reference"
+         RefersTo = "Instrument"/>
+      <Element
+	 Name= "LightSource"
+	 DBLocation = "INSTRUMENT_CONFIGURATION.LIGHT_SOURCE"
+	 DataType = "reference"
+ 	 RefersTo = "LightSource"/>
+      <Element
+	 Name= "Exposure"
+	 DBLocation = "INSTRUMENT_CONFIGURATION.EXPOSURE"
+	 DataType = "float"/>
+      <Element
+	 Name= "Filter"
+	 DBLocation = "INSTRUMENT_CONFIGURATION.FILTER"
+	 DataType = "reference"
+	 RefersTo = "Filter"/>
+       <Element 
+	  Name ="Objective"
+	  DBLocation = "INSTRUMENT_CONFIGURATION.OBJECTIVE"
+	  DataType = "reference"
+	  RefersTo = "Objective"/>
+    </SemanticType>
+
+    <SemanticType
+       Name= "NeutralDensityFilterFilter"
+       AppliesTo = "G">
+      <Element
+	 Name= "Manufacturer"
+	 DBLocation = "NEUTRAL_DENSITY_FILTERS.MANUFACTURER"
+	 DataType = "string"/>
+      <Element
+	 Name= "Model"
+	 DBLocation = "NEUTRAL_DENSITY_FILTERS.MODEL"
+	 DataType = "string"/>
+      <Element
+	 Name= "LotNumber"
+	 DBLocation = "NEUTRAL_DENSITY_FILTERS.LOT_NUMBER"
+	 DataType = "string"/>
+      <Element
+	 Name= "Type"
+	 DBLocation = "NEUTRAL_DENSITY_FILTERS.PRECENTAGE"
+	 DataType = "float"/>
+      <Element
+	 Name= "Filter"
+	 DBLocation = "NEUTRAL_DENSITY_FILTERS.FILTER"
+	 DataType = "reference"
+	 RefersTo = "Filter"/>
+    </SemanticType>
+
+    <SemanticType 
+       Name="ExternalLink"
+       AppliesTo="G">
+      <Description>A link to an external data source. to keep it
+	simple, we'll have an id as used by that data source, and the 
+	full URL that can be used to retrieve data. 
+	This is a bit redundant, but providing the URL as a pattern
+	could be problematic. A possible alternative would be to 
+	have this type include just an id, and reference an
+	external source, which would be a generic container for a
+	given source.
+      </Description>
+      <Element
+	 Name = "Description"
+	 DBLocation = "EXTERNAL_LINK.DESCRIPTION"
+	 DataType="string"/>
+      <Element 
+	 Name = "ExternalId"
+         DBLocation ="EXTERNAL_LINK.EXTERNAL_ID"
+	 DataType = "string"/>
+      <Element 
+	 Name = "URL"
+         DBLocation ="EXTERNAL_LINK.URL"
+	 DataType = "string"/>
+    </SemanticType>
+
+
+    <SemanticType
+       Name= "ExperimentProtocol"
+       AppliesTo = "G">
+      <Description>A protocol for a given
+       experiment. </Description>	
+      <Element 
+         Name="Name"
+	 DBLocation = "EXPERIMENT_PROTOCOL.NAME"
+	 DataType ="string"/>
+      <Element 
+         Name="Owner"
+	 DataType="reference"
+	 DBLocation  = "EXPERIMENT_PROTOCOL.OWNER"
+	 RefersTo = "Experimenter"/>
+      <Element
+	 Name= "ExpStrain"
+	 DBLocation = "EXPERIMENT_PROTOCOL.EXP_STRAIN"
+	 DataType = "reference"
+         RefersTo = "ExpStrain"/>
+      <Element
+	 Name= "Fluorofor"
+	 DBLocation = "EXPERIMENT_PROTOCOL.FLUOROFOR"
+	 DataType = "reference"
+	 RefersTo = "Fluorofor"/>
+      <Element
+	 Name= "DevelopmentalStage"
+	 DBLocation = "EXPERIMENT_PROTOCOL.DEVELOPMENTAL_STAGE"
+	 DataType = "reference"
+	 RefersTo = "DevelopmentalStage"/>
+      <Element
+	 Name= "Husbandry"
+	 DBLocation = "EXPERIMENT_PROTOCOL.HUSBANDRY"
+	 DataType = "reference"
+	 RefersTo = "Husbandry"/>
+      <Element
+	 Name= "SamplePreparation"
+	 DBLocation = "EXPERIMENT_PROTOCOL.SAMPLE_PREPARATION"
+	 DataType = "reference"
+	 RefersTo = "SamplePreparation"/>
+      <Element
+	 Name= "Comments"
+	 DBLocation = "EXPERIMENT_PROTOCOL.COMMENTS"
+	 DataType = "string"/>
+    </SemanticType>
+
+    
+    <SemanticType
+       Name= "ExpStrain"
+       AppliesTo = "G">
+      <Element
+	 Name= "Name"
+	 DBLocation = "EXP_STRAIN.NAME"
+	 DataType = "string"/>
+      <Element
+	 Name= "ExternalLink"
+	 DBLocation = "EXP_STRAIN.EXTERNAL_LINK"
+	 DataType = "reference"
+	 RefersTo = "ExternalLink"/>
+    </SemanticType>
+
+    <SemanticType
+       Name= "Fluorofor"
+       AppliesTo = "G">
+      <Element
+	 Name= "Name"
+	 DBLocation = "FLUOROFOR.NAME"
+	 DataType = "string"/>
+      <Element
+	 Name= "ExternalLink"
+	 DBLocation = "FLUOROFOR.EXTERNAL_LINK"
+	 DataType = "reference"
+	 RefersTo = "ExternalLink"/>
+      <Element
+	 Name= "Excitation"
+	 DBLocation = "FLUOROFOR.Excitation"
+	 DataType = "float"/>
+      <Element
+	 Name= "Emission"
+	 DBLocation = "FLUOROFOR.Emission"
+	 DataType = "float"/>
+    </SemanticType>
+
+    <SemanticType 
+       Name = "DevelopmentalStage"
+       AppliesTo  = "G">
+      <Element 
+	 Name = "DevelopmentalStageValue"
+	 DBLocation =  "DEVELOPMENTAL_STAGE.STAGE_VALUE"
+	 DataType = "reference"
+	 RefersTo = "DevelopmentalStageValue"/>
+      <Element
+	 Name = "Age"
+	 DBLocation = "DEVELOPMENTAL_STAGE.AGE"
+	 DataType =  "float"/>
+    </SemanticType>
+
+    <SemanticType 
+       Name = "DevelopmentalStageValue"
+       AppliesTo  = "G">
+      <Description>one of "mixed stage","larval","adult","dour","embryo"
+      </Description>
+      <Element 
+	 Name = "Name"
+	 DBLocation =  "DEVELOPMENTAL_STAGE_VALUE.NAME"
+	 DataType = "string"/>
+    </SemanticType>
+
+    <SemanticType
+       Name = "Husbandry"
+       AppliesTo = "G">
+      <Element
+	 Name = "Description"
+	 DBLocation = "HUSBANDRY.DESCRIPTION"
+	 DataType = "string"/>
+    </SemanticType>
+
+    <SemanticType
+       Name = "SamplePreparation"
+       AppliesTo = "G">
+      <Element
+	 Name = "Description"
+	 DBLocation = "SAMPLE_PREPARATION.DESCRIPTION"
+	 DataType = "string"/>
+    </SemanticType>
+
+
+    
+  </SemanticTypeDefinitions>
+</OME>
