@@ -1,0 +1,169 @@
+<!-- Creating an Experiment Protocol  -->
+<table cellpadding="3" cellspacing="1" class="ome_table" width="100%">
+
+  <!-- Name -->
+  <tr bgcolor="#FFFFFF">
+    <td>Name (required)</td>
+    <td><input type="text" name="@ExperimentProtocol.Name" size="40"
+    alt="blank"></td> 
+  </tr>
+
+  <!-- experimenter -->
+  <tr bgcolor="#FFFFFF">
+    <td>Owner</td>
+    <td><TMPL_VAR NAME="@ExperimentProtocol.Owner"></td> 
+  </tr>
+
+  <!-- sample prep  -->
+  <tr bgcolor="#FFFFFF">
+    <td>Sample Preparation</td>
+    <td>
+      <textarea
+	   name="@ExperimentProtocol.SamplePreparation.Description" rows="3" 
+	   cols="50">
+      </textarea>
+    </td> 
+  </tr> 
+
+  <!-- husbandry -->
+  <tr bgcolor="#FFFFFF">
+    <td>Husbandry</td>
+    <td>
+      <textarea name="@ExperimentProtocol.Husbandry.Description" rows="3"
+		cols="50">
+      </textarea>
+    </td> 
+  </tr> 
+
+  <!-- comments -->
+  <tr bgcolor="#FFFFFF">
+    <td>Comments</td>
+    <td><textarea name="@ExperimentProtocol.Comments" rows="3"
+    cols="50"></textarea></td> 
+  </tr>
+
+  <!-- stage -->
+  <tr bgcolor="#FFFFFF">
+    <td>Developmental Age</td>
+    <td>
+      <textarea name="@ExperimentProtocol.DevelopmentalStage.Age"
+            size="10">
+      </textarea>
+    </td> 
+  </tr>
+
+  <!-- developmental stage  -->
+  <tr bgcolor="#FFFFFF">
+    <td>Developmental Stage</td>
+    <td>
+      <TMPL_VAR
+      NAME="@ExperimentProtocol.DevelopmentalStage.DevelopmentalStageValue">
+    </td> 
+  </tr> 
+
+
+  <!-- flourofor name, etc -->
+  <tr bgcolor="#FFFFFF">
+    <td>Fluorofor Name</td>
+    <td><input type="text" name="@ExperimentProtocol.Fluorofor.Name" size="40"
+    alt="blank"></td> 
+  </tr> 
+
+
+  <tr bgcolor="#FFFFFF">
+    <td>Fluorofor Excitation</td>
+    <td>
+      <input type="text"
+	     name="@ExperimentProtocol.Fluorofor.Excitation" size="10" 
+	     alt="blank">
+    </td> 
+  </tr> 
+
+  <tr bgcolor="#FFFFFF">
+    <td>Fluorofor Emission</td>
+    <td>
+      <input type="text" name="@ExperimentProtocol.Fluorofor.Emission"
+	     size="10" alt="blank">
+    </td> 
+  </tr>
+
+
+  <tr bgcolor="#FFFFFF">
+    <td>Fluorofor External Link Description</td>
+    <td>
+      <input type="text" name="@ExperimentProtocol.Fluorofor.ExternalLink.Description"
+	     size="10" alt="blank">
+    </td> 
+  </tr>
+
+  <tr bgcolor="#FFFFFF">
+    <td>Fluorofor External ID Description</td>
+    <td>
+      <input type="text" name="@ExperimentProtocol.Fluorofor.ExternalLink.ExternalId"
+	     size="10" alt="blank">
+    </td> 
+  </tr>
+
+
+  <tr bgcolor="#FFFFFF">
+    <td>Fluorofor External Link URL</td>
+    <td>
+      <input type="text" name="@ExperimentProtocol.Fluorofor.ExternalLink.URL"
+	     size="10" alt="blank">
+    </td> 
+  </tr>
+
+
+
+  <!-- strain name, etc -->
+  <tr bgcolor="#FFFFFF">
+    <td>Strain Name</td>
+    <td><input type="text" name="@ExperimentProtocol.Strain.Name" size="40"
+    alt="blank"></td> 
+  </tr> 
+
+  </tr> 
+
+
+  <tr bgcolor="#FFFFFF">
+    <td>Strain External Link Description</td>
+    <td>
+      <input type="text" name="@ExperimentProtocol.Strain.ExternalLink.Description"
+	     size="10" alt="blank">
+    </td> 
+  </tr>
+
+  <tr bgcolor="#FFFFFF">
+    <td>Strain External ID Description</td>
+    <td>
+      <input type="text" name="@ExperimentProtocol.Strain.ExternalLink.ExternalId"
+	     size="10" alt="blank">
+    </td> 
+  </tr>
+
+
+  <tr bgcolor="#FFFFFF">
+    <td>Strain External Link URL</td>
+    <td>
+      <input type="text" name="@ExperimentProtocol.Strain.ExternalLink.URL"
+	     size="10" alt="blank">
+    </td> 
+  </tr>
+
+  <!-- end input table -->
+</table>
+
+
+<!-- Button table -->
+<table cellpadding="3" cellspacing="0" width="100%"><tr
+						       bgcolor="#E0E0E0">
+  <tr>
+    <td align="right">
+      <button type="submit" id="create" value="create"
+	      name="action">
+	Create Protocol
+      </button>
+    </td>
+  </tr>
+</table>
+
