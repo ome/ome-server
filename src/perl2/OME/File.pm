@@ -100,6 +100,23 @@ informational and display purposes only.
 
 sub getFilename { abstract }
 
+
+=head2 getPath
+
+	my $filename = $file->getPath();
+
+Returns the full path of the file object.  This method may not always return
+a defined value.  For example, if the file object was instantiated from a remote
+server, the path may be meaningless (or not even kept).  However, if the file object
+was instantiated from a local file (i.e. by uploading a local file to a remote server)
+then this method will return the original path used for the upload.  Also, if the
+file object is a local file (which is deprecated, BTW), then this would be the fully
+qualified path to the file.
+
+=cut
+
+sub getPath { abstract }
+
 =head2 getBaseFilename
 
 	my $filename = $file->getBaseFilename();
