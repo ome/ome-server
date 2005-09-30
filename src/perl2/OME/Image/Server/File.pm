@@ -50,11 +50,14 @@ use base qw(OME::File);
 use Carp;
 use OME::Image::Server;
 use Log::Agent;
+use File::Spec;
+
 
 use constant FILE_ID  => 0;
 use constant FILENAME => 1;
 use constant LENGTH   => 2;
 use constant CURSOR   => 3;
+use constant PATH     => 4;
 
 =head1 DESCRIPTION
 
@@ -69,21 +72,29 @@ image server at a time.
 =head2 new
 
 	my $file = OME::Image::Server::File->new($fileID);
+	my $file = OME::Image::Server::File->new($fileID,$path);
 
 Opens an image server file for access via the OME::File interface.
 The OME::Image::Server class must be configured to connect to a valid
 image server, via its C<useLocalServer> or <useRemoteServer> methods.
 The file itself must have already been uploaded to this image server;
 it is specified by the file ID returned from the C<uploadFile> method.
+The $path parameter is optional, and is used by the upload() method to
+store the original path that was used for the upload.
 
 =cut
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my ($fileID) = @_;
+    my ($fileID,$path) = @_;
 
-    my $self = [$fileID,undef,undef,0];
+    my $self = [];
+    $self->[FILE_ID] = $fileID;
+    $self->[FILENAME] = undef;
+    $self->[LENGTH] = undef;
+    $self->[CURSOR] = 0;
+    $self->[PATH] = $path;
     bless $self,$class;
     return $self;
 }
@@ -116,7 +127,7 @@ sub upload {
 
     my $fileID = OME::Image::Server->uploadFile($filename);
     die "Could not upload file $filename" unless defined $fileID;
-    return $proto->new($fileID);
+    return $proto->new($fileID,File::Spec->rel2abs($filename));
 }
 
 =head2 open
@@ -170,6 +181,10 @@ sub getFilename {
     my $self = shift;
     $self->__loadInfo();
     return $self->[FILENAME];
+}
+
+sub getPath {
+	return (shift->[PATH]);
 }
 
 =head2 getBaseFilename
