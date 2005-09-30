@@ -131,10 +131,14 @@ sub new {
 
 =head2 exportFile
 
-	$exporter->exportFile( $file_path ) ;
+	$exporter->exportFile( $file_path, %flags ) ;
 
 Called after buildDOM(). It creates an OME XML file at the path given. 
 It returns nothing. It will die if it gets an error.
+
+Recognized flags:
+	no_Pixels => 1 # useful for debugging. prevents binary pixel data from 
+	               # being stuffed in the file.
 
 =cut
 
@@ -179,7 +183,11 @@ sub exportFile {
 	) or die "$xsltproc_path returned non-zero exit status: $?\n$errorStream" ;
 	$session->finishTemporaryFile( $CA_file );
 
-	OME::Image::Server->exportOMEFile( $OME_file_no_pixels, undef, $filename );
+	unless ( $flags{ no_Pixels }  ) {
+		OME::Image::Server->exportOMEFile( $OME_file_no_pixels, undef, $filename );
+	} else {
+		system( "cp $OME_file_no_pixels $filename" );
+	}
 
 	$session->finishTemporaryFile( $OME_file_no_pixels );
 }
