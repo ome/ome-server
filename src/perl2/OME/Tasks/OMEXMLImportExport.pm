@@ -90,13 +90,14 @@ sub importXMLfile {
 #####################################################
 # For each given image, exports all attributes from the
 # image import MEX to the specified XML file.
-# export($images,$file)
+# export($images, $file, %flags)
 # $images  a ref to an array containing the image objects
 # $file   MUST be absolute (path+name)
+# %flags  is passed into OME::Tasks::OMEExport::exportFile
 
 sub exportToXMLFile {
 
-	my ($self, $images, $file) = @_ ;
+	my ($self, $images, $file, %flags) = @_ ;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory() ;
 
@@ -125,7 +126,7 @@ sub exportToXMLFile {
 		}
 	}
 	$exporter->buildDOM(\@exportObjects, ResolveAllRefs => 1, ExportSTDs => 0) ;
-	$exporter->exportFile($file);
+	$exporter->exportFile($file, %flags);
 	return ;
 }
 
