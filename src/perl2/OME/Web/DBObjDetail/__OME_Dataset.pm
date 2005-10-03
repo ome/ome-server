@@ -80,10 +80,10 @@ sub getPageBody {
 	
 	# Find category groups used in this dataset. They will be used for the
 	# dropdown list that allows clustering thumbnails by categories.
-	my @cg_list = $factory->findObjects ('@CategoryGroup', {
+	my @cg_list = $factory->findObjects ('@CategoryGroup',
 		'CategoryList.ClassificationList.image.dataset_links.dataset' => $dataset->id(),
 		__distinct => 'id'
-	});
+	);
 	@cg_list = sort{ $a->Name cmp $b->Name } @cg_list;
 
 	# load the selected category group. 
