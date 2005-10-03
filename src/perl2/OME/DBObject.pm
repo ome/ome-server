@@ -2252,7 +2252,7 @@ sub __getQueryLocation {
 
 =head2 __makeSelectSQL
 
-	my ($sql,$id_available,$values,$sth) = $class->
+	my ($sql,$id_available,$values) = $class->
 	    __makeSelectSQL($columns_wanted,$criteria);
 
 Creates an SQL statement suitable for retrieving instances of this
@@ -2313,7 +2313,7 @@ sub __makeSelectSQL {
 
 	# Experimental caching.
 	$class->__cached_sql_text({}) unless( defined $class->__cached_sql_text() );
-	my ($cache_key, $cached_sql, $cached_id_available, $cached_sth);
+	my ($cache_key, $cached_sql, $cached_id_available);
 	my @values_when_using_cache;
 	if( $class->__cache_sql_text_in_makeSelectSQL() ) {
 		# Generate a key that will uniquely identify the generated SQL.
@@ -2328,29 +2328,33 @@ sub __makeSelectSQL {
 				close FOO;
 			}
 
-			($cached_sql, $cached_id_available, $cached_sth) = @{ $class->__cached_sql_text()->{ $cache_key } };
+			($cached_sql, $cached_id_available) = @{ $class->__cached_sql_text()->{ $cache_key } };
 			
 			# prevent __limit and __offset from being processed with the other criteria;
 			# they need to be at the very end of the values array
 			my ($limit, $offset);
-			if (exists $criteria->{__limit} && ( not defined $columns_wanted || $columns_wanted ne 'COUNT' )) {
-				$limit = $criteria->{__limit};
-				delete $criteria->{__limit};
+			if (exists $criteria->{__limit} ) {
 				die "Invalid LIMIT clause $limit -- must be an integer"
-				  unless $limit =~ /^\d+$/;
+				  unless $criteria->{__limit} =~ /^\d+$/;
+				# Only store __limit if we will be using it.
+				$limit = $criteria->{__limit}
+					unless $columns_wanted eq 'COUNT';
+				delete $criteria->{__limit};
 			}
-			if (exists $criteria->{__offset} && ( not defined $columns_wanted || $columns_wanted ne 'COUNT' )) {
-				$offset = $criteria->{__offset};
-				delete $criteria->{__offset};
+			if (exists $criteria->{__offset} ) {
 				die "Invalid OFFSET clause $offset -- must be an integer"
-				  unless $offset =~ /^\d+$/;
+				  unless $criteria->{__offset} =~ /^\d+$/;
+				# Only store __offset if we will be using it.
+				$offset = $criteria->{__offset}
+					unless $columns_wanted eq 'COUNT';
+				delete $criteria->{__offset};
 			}
 			
 			# Make the values array
 			foreach my $column_alias (sort keys %$criteria) {
 				
-				# __order is already compiled into the SQL text.
-				next if $column_alias eq '__order';
+				# __order and __distinct are already compiled into the SQL text.
+				next if( $column_alias eq '__order' || $column_alias eq '__distinct' );
 
 				my $criterion = $criteria->{$column_alias};
 				my($operation, $value);
@@ -2363,6 +2367,7 @@ sub __makeSelectSQL {
 				# method, and use that in the SQL query.
 		
 				my @new_values;
+				my $have_values = 1;
 	            my $question = '?';
 
 				if (ref($criterion) eq 'ARRAY') {
@@ -2405,6 +2410,9 @@ sub __makeSelectSQL {
 	                $operation = defined $value? "=": "is";
 				}
 	
+				# Treat an undef value the same as a search for a 'null'
+				$value = 'null' if not defined $value;
+
 				if ($sql_type eq 'boolean') {
 					# If the column is Boolean, 1/0 won't work.
 					foreach my $value (@new_values) {
@@ -2419,14 +2427,26 @@ sub __makeSelectSQL {
 					# If the column is a float, the join clause below was used, and the values needs an epsilon
 					# push @join_clauses, "abs($location - $question) < ?";
 					push @new_values, $EPSILON;
+				} elsif (lc($operation) eq 'is not' && lc($value) eq 'null') {
+					$have_values = 0;
+				} elsif (lc($operation) eq 'is' && lc($value) eq 'null') {
+					$have_values = 0;
 				}
-				
-				push @values_when_using_cache, @new_values;
+
+				push @values_when_using_cache, @new_values if $have_values;
 			}
 	
 			push @values_when_using_cache, $limit  if defined $limit;
 			push @values_when_using_cache, $offset if defined $offset;
-			return ( $cached_sql, $cached_id_available, \@values_when_using_cache, $cached_sth)
+
+			if ($SHOW_SQL) {
+				my ($p, $f, $l) = caller;
+				print STDERR "__makeSelectSQL() from cache -- Package: '$p', Filename: '$f', Line: '$l'\n";
+				print STDERR "\n$cached_sql\n";
+				print STDERR scalar( @values_when_using_cache )." values: ".join(',',@values_when_using_cache),"\n";
+			}
+		
+			return ( $cached_sql, $cached_id_available, \@values_when_using_cache)
 				unless $class->__test_SQL_text_caching();
 		} elsif( $log_miss) {
 			open( LOG_MISS, ">> $log_miss" )
@@ -2609,7 +2629,10 @@ sub __makeSelectSQL {
                 push @new_values, $value;
                 $operation = defined $value? "=": "is";
             }
-
+			
+			# Treat an undef value the same as a search for a 'null'
+			$value = 'null' if not defined $value;
+			
             if (defined $location && $location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
@@ -2735,10 +2758,6 @@ sub __makeSelectSQL {
         }
     }
 
-    print STDERR "\n$sql\n" if $SHOW_SQL;
-    print STDERR join(',',@values),"\n" if $SHOW_SQL;
-    my $sth;# = $class->getFactory()->obtainDBH()->prepare($sql);
-
 	# Store the SQL text & id_available if we're caching that
 	if( $class->__cache_sql_text_in_makeSelectSQL() ) {
 		# Testing harness.
@@ -2773,17 +2792,17 @@ sub __makeSelectSQL {
 		}
 
 		$class->__cached_sql_text()->{ $cache_key } =
-			[$sql,defined $first_key,$sth ];
+			[$sql,defined $first_key ];
 	}
 
 	if ($SHOW_SQL) {
 		my ($p, $f, $l) = caller;
 		print STDERR "__makeSelectSQL() -- Package: '$p', Filename: '$f', Line: '$l'\n";
     	print STDERR "\n$sql\n";
-    	print STDERR join(',',@values),"\n";
+		print STDERR scalar( @values )." values: ".join(',',@values),"\n";
 	}
 
-    return ($sql,defined $first_key,\@values, $sth);
+    return ($sql,defined $first_key,\@values);
 }
 
 sub __makeSelectSQL_cacheKey {
@@ -2805,6 +2824,12 @@ sub __makeSelectSQL_cacheKey {
 	$order_by = [$order_by] unless ref($order_by);
 	$cache_key .= 'Order:'.join(',', @$order_by).';'
 		if( scalar @$order_by > 0 );
+	# Add the distinct
+	my $distinct_on = $criteria->{__distinct};
+	$distinct_on ||= [];
+	$distinct_on = [$distinct_on] unless ref($distinct_on);
+	$cache_key .= 'Distinct:'.join(',', @$distinct_on).';'
+		if( scalar( @$distinct_on ) > 0 );
 	# Next add criteria keys, operators, and number of ?'s in used by an in statement
 	# e.g. "Name => [ in => [ 'foo', 'bar' ] ]" gets translated to "Name.in(2)"
 	foreach my $key ( sort( keys %$criteria ) ) {
