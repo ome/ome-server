@@ -2362,6 +2362,7 @@ sub __makeSelectSQL {
 				my $sql_type = exists $columns->{$column_alias}?
 				  $columns->{$column_alias}->[3]->{SQLType}:
 				  "";
+				$sql_type = "" unless $sql_type;
 	
 				# If the value is an object, assume that it has an id
 				# method, and use that in the SQL query.
@@ -2633,7 +2634,7 @@ sub __makeSelectSQL {
 			# Treat an undef value the same as a search for a 'null'
 			$value = 'null' if not defined $value;
 			
-            if (defined $location && $location eq 'id') {
+            if ($location && $location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
             } elsif ($sql_type eq 'boolean') {
