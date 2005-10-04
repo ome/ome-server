@@ -69,6 +69,7 @@ our $APACHE_USER;
 our $APACHE_UID;
 our $OME_GROUP;
 our $OME_GID;
+our $ANSWER_Y;
 
 # $APACHE comes from the install environment.
 # $APACHE_CONF_DEF is the default configuration (when there isn't one in the environment)
@@ -444,8 +445,8 @@ sub fix_ome_conf {
 	my @lines;
 	my $file;
 
-    my @files = glob ("$OME_CONF_DIR/httpd.*.conf $OME_CONF_DIR/httpd2.*.conf");
-	
+    my @files = glob ("$OME_CONF_DIR/httpd*conf");
+
 	print $LOGFILE "Replacing %OME_DIST_BASE with $OME_DIST_BASE\n";
 	print $LOGFILE "Replacing %OME_INSTALL_BASE with $OME_BASE_DIR\n";
 
@@ -534,6 +535,16 @@ sub getApacheBin {
 	} else {
 			$apache_info->{root} = '/';
 	}
+	unless (-r $httpdConf) {
+		if ( not $ANSWER_Y ) {
+			while (not -r $httpdConf) {
+				$httpdConf = confirm_path ("Please provide the full path of Apache's root httpd.conf",'');
+				open (HTTPD_CONF_TEST, "<", $httpdConf) or print "$!\n";
+				close (HTTPD_CONF_TEST);
+			}
+		}
+	}
+	
 	print $LOGFILE "Unable to read httpd conf($httpdConf)\n" and
 		croak "Unable to read httpd conf ($httpdConf)" unless -r $httpdConf;
 	print $LOGFILE "httpd conf: $httpdConf\n";
@@ -545,10 +556,21 @@ sub getApacheBin {
 	$httpdVers = `$httpdBin -V | grep 'Server version'`;
 	$httpdVers = $1 if $httpdVers =~ /:\s*Apache\/(\d)/;
 	croak "Could not determine Apache version\n" unless defined $httpdVers;
+
+	# There are no less than 3 (!) ways of acessing apache modules:
+	# The mod_perl 1 way, the mod_perl 1.99 way, and the mod_perl 2 way.  YAY!
+	if ($httpdVers == 2) {
+		eval "use Apache2::Reload;";
+		if ($@) {
+			$httpdVers = 1.99;
+		}
+	}
+
 	$apache_info->{version} = $httpdVers;
 	print $LOGFILE "Unable to determine httpd version\n" and
 		croak "Unable to determine httpd version" unless $httpdVers;
 	print $LOGFILE "httpd version: $httpdVers\n";
+
 
 	return $apache_info;
 }
@@ -635,8 +657,7 @@ sub getApacheInfo {
 	
 	print STDERR  "Apache configuration file ($httpdConf) does not exist\n" unless -e $httpdConf;
 	print STDERR  "Apache configuration file ($httpdConf) is not readable\n" unless -r $httpdConf;
-#	confirm_path ('Apache configuration file', $httpdConf);
-	$apache_info->{'conf'} = $httpdConf;
+
 	croak "Could not find $httpdConf\n" unless -e $httpdConf;
 	croak "Could not read $httpdConf\n" unless -r $httpdConf;
 
@@ -709,6 +730,7 @@ sub execute {
     $APACHE_UID   = getpwnam ($APACHE_USER) or croak "Unable to retrive APACHE_USER UID!";
 	$OME_GROUP    = $environment->group() or croak "OME group is not set!\n";
 	$OME_GID      = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
+	$ANSWER_Y     = $environment->get_flag('ANSWER_Y');
     $OME_TMP_DIR  = $environment->tmp_dir() or croak "Unable to retrieve OME_TMP_DIR!";
 	# Things the user can set
 	$APACHE       = defined $environment->apache_conf()  ? $environment->apache_conf()  : $APACHE_CONF_DEF;
@@ -749,7 +771,14 @@ BLURB
 		$apache_info = getApacheBin();
 		$apache_info->{ome_conf} = $ome_conf;
 		getApacheInfo($apache_info);
-		$httpd_vers = 'httpd2' if $apache_info->{version} == 2;
+		if ($apache_info->{version} == 2) {
+			$httpd_vers = 'httpd2' 
+		} elsif ($apache_info->{version} == 1.99) {
+			$httpd_vers = 'httpd1.99';
+		} else {
+			$httpd_vers = 'httpd';
+		}
+
 		$APACHE->{WEB} = $apache_info->{DocumentRoot} unless defined $APACHE->{WEB} and $APACHE->{WEB};
 		$APACHE->{CGI_BIN} = $apache_info->{cgi_bin} unless defined $APACHE->{CGI_BIN} and $APACHE->{CGI_BIN};
 	}
@@ -816,7 +845,13 @@ BLURB
 		$apache_info = getApacheBin();
 		$apache_info->{ome_conf} = $ome_conf;
 		getApacheInfo($apache_info);
-		$httpd_vers = 'httpd2' if $apache_info->{version} == 2;
+		if ($apache_info->{version} == 2) {
+			$httpd_vers = 'httpd2' 
+		} elsif ($apache_info->{version} == 1.99) {
+			$httpd_vers = 'httpd1.99';
+		} else {
+			$httpd_vers = 'httpd';
+		}
 		$APACHE->{WEB} = $apache_info->{DocumentRoot} unless defined $APACHE->{WEB} and $APACHE->{WEB};
 		$APACHE->{CGI_BIN} = $apache_info->{cgi_bin} unless defined $APACHE->{CGI_BIN} and $APACHE->{CGI_BIN};
 
@@ -831,16 +866,22 @@ BLURB
 			} else {
 				$APACHE->{DEV_CONF} = 0;
 			}
-			$httpd_vers = 'httpd2';
 		} else {
 			if (y_or_n("Use OME Apache-1.x configuration for developers?")) {
 				$APACHE->{DEV_CONF} = 1;
 			} else {
 				$APACHE->{DEV_CONF} = 0;
 			}
+		}
+
+		if ($apache_info->{version} == 2) {
+			$httpd_vers = 'httpd2' 
+		} elsif ($apache_info->{version} == 1.99) {
+			$httpd_vers = 'httpd1.99';
+		} else {
 			$httpd_vers = 'httpd';
 		}
-			
+
 		croak "Could not read OME Apache configuration file ($ome_conf)\n" unless -r $ome_conf;
 		getApacheInfo($apache_info) or croak "Could not get any Apache info\n";
 
