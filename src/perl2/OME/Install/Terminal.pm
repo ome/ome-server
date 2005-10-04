@@ -81,7 +81,7 @@ sub confirm_path {
     ($input = $default) unless $input;
 
     # Rip trailing slash
-    if ($input =~ /^(.*)\/$/) { $input = $1 }
+    if ($input =~ /^(.*)\/$/) { $input = $1; }
     
     return $input;
 }
@@ -156,8 +156,7 @@ sub y_or_n {
     my $retVal=1;
     
     $def_yorn = 'n' unless defined $def_yorn;
-    
-    return 1 if ($environment->get_flag ("ANSWER_Y"));
+    $def_yorn = 'y' if ($environment->get_flag ("ANSWER_Y"));
     
    	# keep asking the question until the user answers it properly
    	my $semaphore = 1;
@@ -167,7 +166,11 @@ sub y_or_n {
 		} else {
 			print wrap("", "", $text), " [", BOLD, "y", RESET, "/n]: ";
 		}
-		
+        if ($environment->get_flag ("ANSWER_Y")) {
+       	    print "\n";
+            return 1;
+        }
+
 		$y_or_n = ReadLine 0;
 		chomp $y_or_n;
 		
