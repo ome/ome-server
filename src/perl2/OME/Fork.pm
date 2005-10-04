@@ -182,9 +182,18 @@ our $MPV;          # mod_perl version
 sub BEGIN {
 	if ( UNIVERSAL::can ('Apache','request') ) {
 		eval { mod_perl->require(); };
-		unless ($@) {
-			$MPV = 2 if $mod_perl::VERSION >= 1.99;
+		if (not $@) {
+			$MPV = 1.99 if $mod_perl::VERSION >= 1.99;
 			$MPV = 1 if $mod_perl::VERSION < 1.99;
+		} else {
+			$MPV = 0;
+		}
+	} elsif ( UNIVERSAL::can ('Apache2::RequestUtil','request') ) {
+		eval { mod_perl2->require(); };
+		if (not $@) {
+			$MPV = 2 if $mod_perl2::VERSION >= 2;
+		} else {
+			$MPV = 0;
 		}
 	} else {
 		$MPV = 0;
@@ -201,16 +210,20 @@ sub doLater {
 my $proto = shift;
 my $task = shift;
 
-	if ($MPV == 1) {
-		my $r = Apache->request();
-		$r->register_cleanup( sub {&$task;return 0;} );
-	} elsif ($MPV == 2) {
-		APR::Pool->require();
-		my $r = Apache->request();
-		$r->pool->cleanup_register( sub {&$task;return 0;} );
-	} elsif ($MPV == 0) {
-		push (@TASKS,$task);
-	}
+        if ($MPV == 1) {
+                my $r = Apache->request();
+                $r->register_cleanup( sub {&$task;return 0;} );
+        } elsif ($MPV == 1.99) {
+                APR::Pool->require();
+                my $r = Apache->request();
+                $r->pool->cleanup_register( sub {&$task;return 0;} );
+        } elsif ($MPV == 2) {
+                APR::Pool->require();
+                my $r = Apache2::RequestUtil->request();
+                $r->pool->cleanup_register( sub {&$task;return 0;} );
+        } elsif ($MPV == 0) {
+                push (@TASKS,$task);
+        }
 }
 
 
