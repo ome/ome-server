@@ -17,14 +17,11 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-	
-	
 	<!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Josiah Johnston <siah@nih.gov>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-	
 	<element name = "ExecutionInstructions">
 		<annotation>
 			<documentation>Instructions for executing a matlab function.</documentation>
@@ -78,7 +75,6 @@
 					<annotation>
 						<documentation>Will pass a numeric matrix into the function.
 Translates a module input of Semantic Type Pixels (or any psuedo subclass of Pixels) to a numeric matrix. Limits specified by PixelsSlice or its subclasses will be honored.
-						
 						</documentation>
 					</annotation>
 					<complexType>
@@ -91,7 +87,6 @@ Translates a module input of Semantic Type Pixels (or any psuedo subclass of Pix
 							<annotation>
 								<documentation>An input ID. 
 In the future, can be used to establish references.
-								
 								</documentation>
 							</annotation>
 						</attribute>
@@ -119,7 +114,7 @@ In the future, can be used to establish references.
 				</element>
 				<element name = "Scalar">
 					<annotation>
-						<documentation>A 1x1 numeric or logical matrix -OR- a char matrix.</documentation>
+						<documentation>A 1x1 numeric or logical matrix -OR- a char matrix. Used only with inputs of arity 1 (i.e. Count='!')</documentation>
 					</annotation>
 					<complexType>
 						<attribute name = "InputLocation" use = "required" type = "string">
@@ -178,7 +173,6 @@ In the future, can be used to establish references.
 							<annotation>
 								<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
-								
 								</documentation>
 							</annotation>
 						</attribute>
@@ -186,7 +180,6 @@ In the future, can be used to stitch together data from different function outpu
 							<annotation>
 								<documentation>Useful when a function outputs a Pixels type that is unsupported by OME. The permitted list is the matlab types supported by OME.
 Note to perl developers: This list should stay syncronized with the Matlab Class to OME pixel-type mapping hash $self->{ _matlab_class_to_pixel_type } that is defined in OME::Analysis::Handlers::MatlabHandler->new()
-								
 								</documentation>
 							</annotation>
 							<simpleType>
@@ -195,6 +188,9 @@ Note to perl developers: This list should stay syncronized with the Matlab Class
 									<enumeration value = "uint16"/>
 									<enumeration value = "uint32"/>
 									<enumeration value = "single"/>
+									<enumeration value = "int8"/>
+									<enumeration value = "int16"/>
+									<enumeration value = "int32"/>
 								</restriction>
 							</simpleType>
 						</attribute>
@@ -253,7 +249,6 @@ Note to perl developers: This list should stay syncronized with the Matlab Class
 							<annotation>
 								<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
-								
 								</documentation>
 							</annotation>
 						</attribute>
@@ -278,7 +273,6 @@ In the future, can be used to stitch together data from different function outpu
 		<annotation>
 			<documentation>Used to add structure &amp; explicit data description to function outputs such as ChannelComponents or LogicalChannels.
 The contents of this element should follow CustomAttribute syntax and conventions.
-			
 			</documentation>
 		</annotation>
 	</element>
@@ -312,7 +306,6 @@ The contents of this element should follow CustomAttribute syntax and convention
 							<annotation>
 								<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
-								
 								</documentation>
 							</annotation>
 						</attribute>
@@ -320,7 +313,6 @@ In the future, can be used to stitch together data from different function outpu
 							<annotation>
 								<documentation>The MATLAB scalar that is part of a MATLAB vector will be converted to the (MATLAB) datatype specified. The permitted list is the matlab types supported by OME.
 Note to perl developers: This list should stay syncronized with the Matlab Class to OME SE Type mapping hash $self->{ _matlab_class_to_ome_datatype} that is defined in OME::Analysis::Handlers::MatlabHandler->new()
-								
 								</documentation>
 							</annotation>
 							<simpleType>
@@ -346,7 +338,6 @@ Note to perl developers: This list should stay syncronized with the Matlab Class
 				<annotation>
 					<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
-					
 					</documentation>
 				</annotation>
 			</attribute>
