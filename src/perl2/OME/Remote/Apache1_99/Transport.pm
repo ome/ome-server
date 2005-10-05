@@ -19,15 +19,16 @@ package OME::Remote::Apache1_99::Transport;
  
 use base qw(SOAP::Transport::HTTP::Server);
  
-require Apache2::RequestRec;
-require Apache2::RequestIO;
-require Apache2::Const;
+require Apache2;
+require Apache::RequestRec;
+require Apache::RequestIO;
+require Apache::Const;
 require APR::Table;
 
 use OME::Remote::SerializerXMLRPC;
 use OME::Remote::DeserializerXMLRPC;
 
-Apache2::Const->import(-compile => 'OK');
+Apache::Const->import(-compile => 'OK');
 
 sub DESTROY { SOAP::Trace::objects('()') }
                                                                                 
@@ -73,7 +74,7 @@ sub handler {
   $r->content_type($self->response->content_type);
   $r->print($self->response->content);
 
-  return Apache2::Const::OK;
+  return Apache::OK;
 }
 
 sub configure {
