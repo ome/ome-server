@@ -80,7 +80,7 @@ Usage:
 This command displays statistics about a chain execution.
 
 Options:
-  --chex <id>
+  -c | --chex <id>
      ID of Analysis chain executions
   -v | --verbose
      print more information
@@ -90,51 +90,29 @@ USAGE
 }
 
 sub chex_stats {
+	# Setup variables
 	my $self = shift;
-	
+    my $session = $self->getSession();	
+	my $factory = $session->Factory();	
 	my ($chex_id, $verbose );
 	
-	GetOptions ('chex=i' => \$chex_id,
+	# Collect inputs
+	GetOptions ('c|chex=i' => \$chex_id,
 	            'v|verbos' => \$verbose,
 	           );
 
+	# Load data
 	die "Need a chex id" unless $chex_id;
-
-    my $session = $self->getSession();	
-	my $factory = $session->Factory();
-	
 	my $chex = $factory->loadObject( 'OME::AnalysisChainExecution', $chex_id )
 		or die "Couldn't load chex $chex_id";
 		
-	print "Displaying information about chain ".$chex->analysis_chain->name." (id:".$chex->analysis_chain->id.") ".
-	      "executed against dataset ".$chex->dataset->name." (id:".$chex->dataset->id.") on ".$chex->timestamp.".\n";
-	print "	The dataset contains ".$chex->dataset->count_images." images.\n";
-	
-	my @total_nodes = $chex->analysis_chain->nodes();
+	my @total_nodes    = $chex->analysis_chain->nodes();
 	my @executed_nodes = $chex->node_executions( __distinct => 'analysis_chain_node' );
-	@executed_nodes = map( $_->analysis_chain_node, @executed_nodes );
-	my @error_nodes = $chex->node_executions( 'module_execution.status' => 'ERROR', __distinct => 'analysis_chain_node' );
-	@error_nodes = map( $_->analysis_chain_node, @error_nodes );
+	@executed_nodes    = map( $_->analysis_chain_node, @executed_nodes );
+	my @error_nodes    = $chex->node_executions( 'module_execution.status' => 'ERROR', __distinct => 'analysis_chain_node' );
+	@error_nodes       = map( $_->analysis_chain_node, @error_nodes );
 	
-	print scalar( @executed_nodes )." of ".scalar( @total_nodes )." nodes have been executed.\n";
-	print "	Of those, ".scalar( @error_nodes )." nodes had at least one error.\n";
-	if( $verbose ) {
-		print "Executed nodes:\n";
-		foreach my $node ( @executed_nodes ) {
-			print "\t".$node->module->name()." x ".$chex->count_node_executions( analysis_chain_node => $node ).".\n";
-		}
-		print "Nodes with errors:\n";
-		foreach my $node ( @error_nodes ) {
-			print "\t".$node->module->name().": ".
-				$chex->count_node_executions( analysis_chain_node => $node, 'module_execution.status' => 'ERROR' )." errors.\n";
-		}
-		my @non_executed_nodes = $chex->analysis_chain->nodes( id => [ 'not in', \@executed_nodes ] );
-		print "Non-executed nodes:\n";
-		foreach my $node ( @non_executed_nodes ) {
-			print "\t".$node->module->name()."\n";
-		}
-	}
-	
+	# Derive NEX/Node stats
 	my @executions_per_node = map( $chex->count_node_executions( analysis_chain_node => $_ ), @executed_nodes );
 	my $sum = 0; 
 	my %histogram;
@@ -144,20 +122,93 @@ sub chex_stats {
 		$histogram{ $_ }++;
 	}
 	my $mode = $executions_per_node[0];
-	# find the index of highest histogram value
+	# find the index of highest histogram value. That's the mode.
 	foreach ( keys( %histogram ) ) {
 		$mode = $_
 			if( $histogram{ $mode } < $histogram{ $_ } );
 	}
 	my $average = $sum / scalar( @executed_nodes );
+
+
+	# Derive MEX stats, including timing info
+	my @nexes            = $chex->node_executions();
+	my @mexes            = map( $_->module_execution, @nexes );
+	my $reused_mex_count = grep( $_->count_node_executions > 1, @mexes );
+	my ($mex_total_time, $mex_total_time_breakdown, 
+	    $mex_execution_time, $mex_db_retrieval_time, $mex_db_storage_time ) = 
+	   (0,0,0,0,0);
+	my $mexes_w_time = 0;
+	my %mexes_wo_time;
+	foreach my $mex (@mexes) {
+		$mex_total_time += $mex->attribute_sort_time;
+		if ( $mex->total_time ) {
+				$mex_total_time_breakdown += $mex->attribute_sort_time;
+				$mex_execution_time += $mex->total_time;
+				$mex_db_retrieval_time += $mex->attribute_db_time;
+				$mex_db_storage_time += $mex->attribute_create_time;
+				$mexes_w_time++;
+		} else {
+				$mexes_wo_time{ $mex->module->name }++;
+		}
+	}
+
+
+	# Print Overview
+	print "Displaying information about chain ".$chex->analysis_chain->name." (id:".$chex->analysis_chain->id.") ".
+	      "executed against dataset ".$chex->dataset->name." (id:".$chex->dataset->id.") on ".$chex->timestamp.".\n";
+	print "	The dataset contains ".$chex->dataset->count_images." images.\n";
+		print scalar( @executed_nodes )." of ".scalar( @total_nodes )." nodes have been executed.\n";
+	print "	Of those, ".scalar( @error_nodes )." nodes had at least one error.\n"
+		if scalar( @error_nodes );
 	
-
-
-	print "Stats for executed nodes:\n";
-	print "	there have been an average of $average executions per node.\n";
-	print "	the mode is $mode.\n";
-	print "	the sum is $sum.\n";
-
+	# Print NEX/Node stats
+	print "\nNode execution stats:\n";
+	print "	average executions per node: $average\n";
+	print "	mode:                        $mode\n";
+	print "	sum:                         $sum\n";
+	if( $verbose ) {
+		print "Executed nodes:\n"
+			if ( scalar( @executed_nodes  ) );
+		foreach my $node ( @executed_nodes ) {
+			print "\t".$node->module->name()." x ".$chex->count_node_executions( analysis_chain_node => $node )."\n";
+		}
+		print "Nodes with errors:\n"
+			if ( scalar( @error_nodes  ) );
+		foreach my $node ( @error_nodes ) {
+			print "\t".$node->module->name().": ".
+				$chex->count_node_executions( analysis_chain_node => $node, 'module_execution.status' => 'ERROR' )." errors\n";
+		}
+		my @non_executed_nodes = $chex->analysis_chain->nodes( id => [ 'not in', \@executed_nodes ] );
+		print "Non-executed nodes:\n"
+			if ( scalar( @non_executed_nodes  ) );
+		foreach my $node ( @non_executed_nodes ) {
+			print "\t".$node->module->name()."\n";
+		}
+	}
+	
+	# Print MEX stats
+	printf( "\nModule execution stats:\n" );
+	printf( "	Modules executed: %.0f\n", scalar( @mexes ) );
+	printf( "	Reused MEXes:     %.0f\n", $reused_mex_count );
+	printf( "	Total time spent executing modules: %.2f sec\n", $mex_total_time );
+	printf( "Detailed timing information available for %.0f of %.0f MEXs\n", $mexes_w_time, scalar( @mexes ) );
+	if( $mexes_w_time ) {
+		printf( "	Execution time: %.2f sec (%.2f%%)\n", $mex_execution_time, $mex_execution_time/$mex_total_time_breakdown * 100 );
+		printf( "	Input retrieval time: %.2f sec (%.2f%%)\n", $mex_db_retrieval_time, $mex_db_retrieval_time/$mex_total_time_breakdown * 100 );
+		printf( "	Output storage time: %.2f sec (%.2f%%)\n", $mex_db_storage_time, $mex_db_storage_time/$mex_total_time_breakdown * 100 );
+		printf( "	Other: %.2f sec (%.2f%%)\n", 
+				($mex_total_time_breakdown - $mex_execution_time - $mex_db_retrieval_time - $mex_db_storage_time), 
+				(($mex_total_time_breakdown - $mex_execution_time - $mex_db_retrieval_time - $mex_db_storage_time)/$mex_total_time_breakdown * 100 )
+		);
+		printf( "	Total time executing these modules: %.2f sec\n", $mex_total_time_breakdown );
+	}
+	if( $verbose ) {
+		print "These modules did not record the breakdown of their execution time.\n";
+		print "	[module name]	[num times it appears in this chex]\n";
+		foreach my $module_name ( sort( keys( %mexes_wo_time )) ) {
+			print "	$module_name	".$mexes_wo_time{ $module_name }."\n";
+		}
+	}
 }
 
 1;
