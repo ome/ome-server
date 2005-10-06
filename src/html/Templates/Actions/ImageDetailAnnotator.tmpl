@@ -5,9 +5,9 @@ NAME=images_to_annotate>">
 <input type="hidden" name="SaveAndNext">
 <TMPL_VAR NAME=image_large><br>
 <table class="ome_table">
-<TMPL_VAR NAME="DetailSTs.load/-[Probe:ImageProbe,Strain:ImageStrain]">
+<!-- <TMPL_VAR NAME="DetailSTs.load/-[Probe:ImageProbe,Strain:ImageStrain]">
 <a href = "javascript:selectMany('OME::Image',
-'images_to_annotate');"><br>Search for images to annotate</a><br><br>
+'images_to_annotate');"><br>Search for images to annotate</a><br><br> -->
 <TMPL_LOOP NAME=st.loop>
 <tr>
 	<td class="ome_td" align="left"><TMPL_VAR
