@@ -217,32 +217,36 @@ sub populateImageDetails {
     
     # sort by name
     my @unsorted_image_ids = split( /,/, $concatenated_image_ids );
-    my @image_ids = sort( { ($factory->loadObject( 'OME::Image', $a))->name cmp ($factory->loadObject( 'OME::Image', $b))->name } @unsorted_image_ids );
+    my @unsorted_images = map  $factory->loadObject('OME::Image', $_) ,	@unsorted_image_ids;
+    my @images = sort ( {$a->name cmp $b->name} @unsorted_images);
+
     my @image_thumbs;
     my $currentImageID;
     
     # if no image is displayed, the ID you need is in the array
-    if ($q->param( 'currentImageID' ) eq '') { $currentImageID = shift(@image_ids); }
-    else { $currentImageID = $q->param( 'currentImageID' ); }
-    
-    my $image = $factory->loadObject( 'OME::Image', $currentImageID);
+    my $image;
+    if ($q->param( 'currentImageID' ) eq '') { 
+	$image = shift(@images);
+	$currentImageID = $image->ID if (defined $image);
+    }
+    else { 
+	$currentImageID = $q->param( 'currentImageID' ); 
+	$image = $factory->loadObject( 'OME::Image', $currentImageID);
+    }
     
     # If they want to annotate this image, get the next ID and load that image
     if ($q->param( 'SaveAndNext' )) {
-	$currentImageID = shift(@image_ids);
-	$image = $factory->loadObject( 'OME::Image', $currentImageID);
+	$image = shift(@images);
+	$currentImageID = $image->ID if (defined $image);
     }
     $tmpl_data->{ 'image_large' } = $self->Renderer()->render( $image, 'large');
     
     # set the ID of the current image on display
     $tmpl_data->{ 'current_image_id' } = $currentImageID;
     
-    # Update the list of images left to annotate
-    foreach my $image_id ( @image_ids ) {
-	push( @image_thumbs, $factory->loadObject( 'OME::Image', $image_id ) );
-    }
-    
-    $tmpl_data->{ 'image_thumbs' } = $self->Renderer()->renderArray( \@image_thumbs, 'bare_ref_mass', { type => 'OME::Image' });
+     $tmpl_data->{ 'image_thumbs' } = 
+	 $self->Renderer()->renderArray(\@images, 'bare_ref_mass', { type => 'OME::Image' });
+    my @image_ids = map $_->ID , @images;
     $tmpl_data->{ 'image_id_list' } = join( ',', @image_ids); # list of ID's to annotate
 
     return $currentImageID;
@@ -282,14 +286,6 @@ sub populateAnnotationTypes {
 		$self->Renderer()->renderArray( 
 		\@stValList,'list_of_options', { default_value => $stVal, type => $st }
 		);
-	    # this is ok for now!!!!1
-	    # If there's actually an image there.
-	    if ($currentImage) {
-		$st_data{ 'st.classification' } = "Classified as <b>$stVal</b>"
-		    if $stVal;
-		$st_data{ 'st.classification' } = "<i>Unclassified</i>"
-		    unless $stVal;
-	    }
 	    push( @st_loop_data, \%st_data );
 	} 
     }
