@@ -385,12 +385,12 @@ sub _getScalarFromMatlab {
 	                        "($name);") if defined $class;
 	
 	# Trimming required to avoid overflow and underflow problems with Postgress
-	$engine->eval("if (strcmp(class($name), 'double') && abs($name) < realmin('double')) $name = double(0); end; ".
-	              "if (strcmp(class($name), 'single') && abs($name) < realmin('single')) $name = single(0); end; ".
-	              "if (strcmp(class($name), 'double') && $name < -realmax('double')) $name = double(-inf); end; ".
-	              "if (strcmp(class($name), 'single') && $name < -realmax('single')) $name = single(-inf); end; ".
-	              "if (strcmp(class($name), 'double') && $name > realmax('double')) $name = double(inf); end; ".
-	              "if (strcmp(class($name), 'single') && $name > realmax('single')) $name = single(inf); end; "
+	$self->{__engine}->eval("if (strcmp(class($name), 'double') && abs($name) < realmin('double')) $name = double(0); end; ".
+	                        "if (strcmp(class($name), 'single') && abs($name) < realmin('single')) $name = single(0); end; ".
+	                        "if (strcmp(class($name), 'double') && $name < -realmax('double')) $name = double(-inf); end; ".
+	                        "if (strcmp(class($name), 'single') && $name < -realmax('single')) $name = single(-inf); end; ".
+	                        "if (strcmp(class($name), 'double') && $name > realmax('double')) $name = double(inf); end; ".
+	                        "if (strcmp(class($name), 'single') && $name > realmax('single')) $name = single(inf); end; "
 	);
 	
 	# Get value from matlab
