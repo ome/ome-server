@@ -99,26 +99,26 @@ sub getPageHeader {
 		# Recent project
 	if (my $obj = $session->project()) {
 		$project_links = 
-			$q->span({class => 'ome_quiet'}, 'Most recent project: ') .
+			$q->span({class => 'ome_quiet'}, 'Current project: ') .
 			$q->a({href => OME::Web->getObjDetailURL( $obj ), class => 'ome_quiet'}, $obj->name()) .
 			' ' .  # Spacing
  			$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $obj->id() .');'}, '(Popup)');
 	} else {
 		$project_links = 
-			$q->span({class => 'ome_quiet'}, 'No recent project. ') .
+			$q->span({class => 'ome_quiet'}, 'No current project. ') .
 			$q->a({href => $PM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
 	
 		# Recent dataset
 	if (my $obj = $session->dataset()) {
 		$dataset_links = 
-			$q->span({class => 'ome_quiet'}, 'Most recent dataset: ') .
+			$q->span({class => 'ome_quiet'}, 'Current dataset: ') .
 			$q->a({href => OME::Web->getObjDetailURL( $obj ), class => 'ome_quiet'}, $obj->name()) .
 			' ' .  # Spacing
  			$q->a({class => 'ome_popup', href => 'javascript:openInfoDataset(' . $obj->id() .');'}, '(Popup)');
 	} else {
 		$dataset_links = 
-			$q->span({class => 'ome_quiet'}, 'No recent dataset. ') .
+			$q->span({class => 'ome_quiet'}, 'No current dataset. ') .
 			$q->a({href => $DM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
 
@@ -158,21 +158,21 @@ sub getPageHeader {
 			cellspacing => '0',
 		},
 		$q->Tr(
-			$q->td($logo_link),
-			$q->td( {-align => 'left', -valign => 'top' },
-				$q->span({class => 'ome_menu_title' }, 'Open Microscopy Environment').
-				' v'.$VERSION
-			),
-			$q->td({align => 'right', -valign => 'top' },
+		        $q->td({align => 'left', -valign => 'top' },
 				$q->span( {
-						class => 'ome_quiet',
-						style => 'font-weight: bold;'
-					}, 'Welcome ' . $full_name),
+						class => 'ome_welcome',
+			#			style => 'font-weight: bold;'
+					}, 'Welcome, ' . $full_name),
 				$q->br(),
 				$project_links,
 				$q->br(),
 				$dataset_links,
-			)
+			),
+			$q->td( {-align => 'left', -valign => 'top' },
+				$q->span({class => 'ome_menu_title' }, 'Open Microscopy Environment').
+				' v'.$VERSION
+			),
+			$q->td($logo_link),
 		)
 	);
 

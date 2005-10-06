@@ -48,6 +48,9 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_relation_title { font-size: 14px; }
 
+/* for welcoming */
+.ome_welcome {  font-size: 12px; color: #111111; }
+
 /* QUIET */
 .ome_quiet { font-size: 10px; color: #444444; }
 

@@ -85,7 +85,7 @@ my @MENU = (
 	{
 		web_class => undef,
 		type => 'heading',
-		text => 'Search',
+		text => 'Select',
 	},
 	{
 		web_class => 'OME::Web::Search',
@@ -148,6 +148,12 @@ my @MENU = (
 		type => 'link',
 		text => 'Import Spreadsheet',
 	},
+	{
+		web_class => 'OME::Web::ImageDetailAnnotator',
+		type => 'link',
+		text => 'Detailed Image Annotation',
+	},
+
 	# ** Images **
 	{
 		web_class => undef,
