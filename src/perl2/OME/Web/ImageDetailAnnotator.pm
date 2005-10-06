@@ -210,15 +210,35 @@ sub populateImageDetails {
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my $tmpl_data = shift;
+    my ($tmpl_data) = @_;
+    my @images;
+    my @completed_images;
 
     # Get the list of ID's that are left to annotate
-    my $concatenated_image_ids = $q->param( 'images_to_annotate' );
+    if ($q->param('images_to_annotate') ne 'none') {
+	if ($q->param('images_to_annotate') ne "") {
+	    my $concatenated_image_ids = $q->param( 'images_to_annotate' );
+	    
+	    # sort by name
+	    my @unsorted_image_ids = split( /,/, $concatenated_image_ids );
+	    my @unsorted_images = map  $factory->loadObject('OME::Image', $_) ,	@unsorted_image_ids;
+	    @images = sort ( {$a->name cmp $b->name} @unsorted_images);
+	} else { 
+	    my $d = $session->dataset;
+	    @images = $d->images;
+	}
+    }
+
     
-    # sort by name
-    my @unsorted_image_ids = split( /,/, $concatenated_image_ids );
-    my @unsorted_images = map  $factory->loadObject('OME::Image', $_) ,	@unsorted_image_ids;
-    my @images = sort ( {$a->name cmp $b->name} @unsorted_images);
+    # completed images
+    if ($q->param('images_completed') ne "") {
+	my $completedList = $q->param('images_completed');
+	my @completed_ids  =split( /,/, $completedList);
+	my @unsorted_completed = map  
+	    $factory->loadObject('OME::Image', $_) ,
+	    @completed_ids;
+	@completed_images = sort ( {$a->name cmp $b->name} @unsorted_completed);
+    }
 
     my @image_thumbs;
     my $currentImageID;
@@ -236,6 +256,11 @@ sub populateImageDetails {
     
     # If they want to annotate this image, get the next ID and load that image
     if ($q->param( 'SaveAndNext' )) {
+	# if an image had been specified
+	if ($q->param('currentImageID') ne '') {
+	    # push it onto completed
+	    push (@completed_images,$image);
+	}
 	$image = shift(@images);
 	$currentImageID = $image->ID if (defined $image);
     }
@@ -246,9 +271,22 @@ sub populateImageDetails {
     
      $tmpl_data->{ 'image_thumbs' } = 
 	 $self->Renderer()->renderArray(\@images, 'bare_ref_mass', { type => 'OME::Image' });
-    my @image_ids = map $_->ID , @images;
-    $tmpl_data->{ 'image_id_list' } = join( ',', @image_ids); # list of ID's to annotate
 
+    if (scalar(@images) > 0) {
+	my @image_ids = map $_->ID , @images;
+	$tmpl_data->{ 'images_to_annotate' } = join( ',', @image_ids);
+	# list of ID's to annotate
+    }
+    else {
+	$tmpl_data->{'images_to_annotate'} = 'none';
+    }
+
+
+    $tmpl_data->{'annotated_image_thumbs'}  = 
+	$self->Renderer()->renderArray(\@completed_images, 'bare_ref_mass', 
+				       { type => 'OME::Image' });
+    my @completed_ids = map $_->ID,@completed_images;
+    $tmpl_data->{'images_completed'} = join(',',@completed_ids);
     return $currentImageID;
 }
 
