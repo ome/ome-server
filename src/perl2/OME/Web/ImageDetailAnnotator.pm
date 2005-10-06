@@ -75,12 +75,16 @@ sub getPageBody {
     my @parameter_names = $tmpl->param();
     my ($sts,$maps) = $self->findSTs(\@parameter_names);
 
+    $self->selectDataset();
     # annnotate
     $self->annotateImages($sts,$maps);
 
     # display images
     my $currentImageID = $self->populateImageDetails(\%tmpl_data);
-    
+
+    # populate dataset choices
+    $self->populateDatasets(\%tmpl_data);
+
     # display annotation types
     $self->populateAnnotationTypes($currentImageID,
 				   \%tmpl_data,\@parameter_names,$sts);
@@ -154,6 +158,17 @@ sub loadST  {
     return $semantic_type;
 }
 
+sub selectDataset() {
+    my $self = shift;
+    my $q = $self->CGI() ;
+    my $session= $self->Session();
+    
+    if ($q->param('ChangeDataset')) {
+	my $dataset  = $q->param('dataset');
+	$session->dataset($dataset);
+    }
+
+}
 sub annotateImages {
     my $self = shift;
     my $q = $self->CGI() ;
@@ -290,6 +305,22 @@ sub populateImageDetails {
     return $currentImageID;
 }
 
+sub populateDatasets() {
+    my $self= shift;
+    my $session = $self->Session();
+    my $dataset = $session->dataset;
+    my $factory = $session->Factory();
+    my $tmpl_data = shift;
+
+    print STDERR "current dataset is " . $dataset->name . "\n";
+    my @dataset_list = $factory->findObjects("OME::Dataset",
+	{ owner => $session->User() });
+    #pull out those things that are importset..
+    my @dataset_choices = grep {$_->name() ne 'ImportSet'} @dataset_list;
+    $tmpl_data->{'datasets'} = 
+	$self->Renderer()->renderArray(
+	    \@dataset_choices ,'list_of_options',{default_value =>   $dataset->ID});
+}
 
 sub populateAnnotationTypes {
     my $self = shift ;
