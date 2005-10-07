@@ -65,9 +65,14 @@ sub getPageBody {
 
     # Load the correct template and make sure the URL still carries the template
     # name.
-    my $tmpl_dir = $self->actionTemplateDir();
+    my $tmpl_dir = $self->actionTemplateDir(custom=>1);
+    $tmpl_dir .= "/Annotator/";
+    print STDERR "template dir is $tmpl_dir  \n";
+    my $filename=$q->param('template');
+  #  $filename .=".tmpl";
+    print STDERR "template file is $filename \n";
     my $tmpl =
-	HTML::Template->new(filename=>"ImageDetailAnnotator.tmpl",
+	HTML::Template->new(filename=>$filename,
 			    path=>$tmpl_dir,case_sensitive=>1);
     
     
