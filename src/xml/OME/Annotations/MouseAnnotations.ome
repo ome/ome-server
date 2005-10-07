@@ -1,0 +1,390 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    # Copyright (C) 2003 Open Microscopy Environment
+    #       Massachusetts Institue of Technology,
+    #       National Institutes of Health,
+    #       University of Dundee
+    #
+    #
+    #
+    #    This library is free software; you can redistribute it and/or
+    #    modify it under the terms of the GNU Lesser General Public
+    #    License as published by the Free Software Foundation; either
+    #    version 2.1 of the License, or (at your option) any later version.
+    #
+    #    This library is distributed in the hope that it will be useful,
+    #    but WITHOUT ANY WARRANTY; without even the implied warranty ofm, 
+    #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    #    Lesser General Public License for more details.
+    #
+    #    You should have received a copy of the GNU Lesser General Public
+    #    License along with this library; if not, write to the Free Software
+    #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    #
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Written by:  Harry Hochheiser <hsh@nih.gov>
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<OME
+   xmlns=
+   "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+   xmlns:xsi=
+   "http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:STD=
+   "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+   xsi:schemaLocation = "
+	 http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+	 http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+	 http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+	 http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions
+   xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+   xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+   http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<!--
+    # These types and instances take the categories and category
+    # groups that Arpun created for mouse annotation and re-casts them 
+    # as SemanticTypes. 
+    # 
+    # Relationships involving probes, strains, genes, and external
+    # links have also been fleshed out
+  -->
+     <SemanticType 
+	Name="EmbryoStage"
+	AppliesTo="G">
+	<Description>Embryo's Stage of growth.</Description>
+	<Element 
+	   Name="Stage"
+	   DBLocation="EMBRYO_STAGE.Stage"
+	   DataType="string"/>
+	<Element 
+	   Name="Description"
+	   DBLocation="EMBRYO_STAGE.Description"
+	   DataType="string"/>
+       </SemanticType>
+
+     <!-- As shown below, ProbeType values include sense and - anti-sense -->
+     <SemanticType 
+	Name="ProbeType"
+	AppliesTo="G">
+	<Description>Type of Probe</Description>
+	<Element 
+	   Name="Type"
+	   DBLocation="PROBE_TYPE.TYPE"
+	   DataType="string"/>
+	<Element 
+	   Name="Description"
+	   DBLocation="PROBE_TYPE.Description"
+	   DataType="string"/>
+       </SemanticType>
+
+
+    <!-- Question: is there anything else that we need to say about a 
+         probe? -->
+
+    <SemanticType
+       Name= "Probe"
+       AppliesTo = "G">
+      <Description>An Experimental Probe</Description>
+      <Element
+	 Name= "Name"
+	 DBLocation = "PROBE.NAME"
+	 DataType = "string"/>
+      <Element 
+	 Name = "Type"
+	 DBLocation = "PROBE.PROBE_TYPE"
+	 DataType = "reference"
+	 RefersTo = "ProbeType"/>
+    </SemanticType>
+   
+    <!-- Question: is there anything else that we need to say about a 
+         strain? in this model, all of the meaningful information
+         would  be found in some external link, but this won't work
+	 for locally-defined strains. What information do we need 
+	 about strains?
+
+	 We might associate optional information with a strain
+	 by adding a 'StrainDescription' type with appropriate fields
+	 and a reference to a strain. This could be created 
+	 and populated for any homegrown strain.'  -->
+    <SemanticType
+       Name= "Strain"
+       AppliesTo = "G">
+      <Description>An Experimental Strain</Description>
+      <Element
+	 Name= "Name"
+	 DBLocation = "STRAIN.NAME"
+	 DataType = "string"/>
+    </SemanticType>
+    
+    <!-- Question: as with strain: is more information needed? With 
+         genes, it's perhaps more plausible to believe that all
+         relevant info will be found by chasing an external link.  -->
+    <SemanticType
+       Name= "Gene"
+       AppliesTo = "G">
+      <Description>A Gene</Description>
+      <Element
+	 Name= "Name"
+	 DBLocation = "GENE.NAME"
+	 DataType = "string"/>
+    </SemanticType>
+
+    <!-- Question: can a probe be associated with multiple genes?
+	 Shoule we replace this map with a reference in Probe to a 
+         Gene? -->
+    <SemanticType
+       Name= "ProbeGeneMap"
+       AppliesTo = "G">
+      <Description>Defines the relationship between Probes and Genes.</Description>
+      <Element
+	 Name= "Probe"
+	 DBLocation = "PROBE_GENE_MAP.PROBE_ID"
+	 DataType = "reference"
+	 RefersTo = "Probe"/>
+      <Element
+	 Name= "Gene"
+	 DBLocation = "PROBE_GENE_MAP.GENE_ID"
+	 DataType = "reference"
+	 RefersTo = "Gene"/>
+    </SemanticType>
+
+    <!-- A strain definitely can be associated with multiple genes -->
+    <SemanticType
+       Name= "StrainGeneMap"
+       AppliesTo = "G">
+      <Description>Defines the relationship between Strains and Genes.
+      </Description>
+      <Element
+	 Name= "Strain"
+	 DBLocation = "STRAIN_GENE_MAP.STRAIN_ID"
+	 DataType = "reference"
+	 RefersTo = "Strain"/>
+      <Element
+	 Name= "Gene"
+	 DBLocation = "STRAIN_GENE_MAP.GENE_ID"
+	 DataType = "reference"
+	 RefersTo = "Gene"/>
+    </SemanticType>
+
+    <!-- Question: To keep it 	simple, we'll have an id as used by 
+         that data source, and the full URL that can be used to 
+         retrieve data. This is a bit redundant, but providing the URL   
+         as a pattern could be problematic. A possible alternative   
+         would be to have this type include just an id, and reference   
+         an external source, which would be a generic container for a
+	given source. -->
+    <SemanticType 
+       Name="ExternalLink"
+       AppliesTo="G">
+      <Description>A link to an external data source.</Description>
+      <Element
+	 Name = "Description"
+	 DBLocation = "EXTERNAL_LINK.DESCRIPTION"
+	 DataType="string"/>
+      <Element 
+	 Name = "ExternalId"
+         DBLocation ="EXTERNAL_LINK.EXTERNAL_ID"
+	 DataType = "string"/>
+      <Element 
+	 Name = "URL"
+         DBLocation ="EXTERNAL_LINK.URL"
+	 DataType = "string"/>
+    </SemanticType>
+
+
+    <!-- We assume Genes, probes, and strains can each have multiple
+	 external links -->
+
+    <SemanticType
+       Name= "GeneExternalLinkMap"
+       AppliesTo = "G">
+      <Description>Defines the relationship between Genes and External
+	links.</Description>
+      <Element
+	 Name= "Gene"
+	 DBLocation = "GENE_EXTERNAL_LINK_MAP.GENE_ID"
+	 DataType = "reference"
+	 RefersTo = "Gene"/>
+      <Element
+	 Name= "ExternalLink"
+	 DBLocation = "GENE_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
+	 DataType = "reference"
+	 RefersTo = "ExternalLink"/>
+    </SemanticType>
+
+
+    <SemanticType
+       Name= "ProbeExternalLinkMap"
+       AppliesTo = "G">
+      <Description>Defines the relationship between Probes and External
+	links.</Description>
+      <Element
+	 Name= "Probe"
+	 DBLocation = "PROBE_EXTERNAL_LINK_MAP.PROBE_ID"
+	 DataType = "reference"
+	 RefersTo = "Probe"/>
+      <Element
+	 Name= "ExternalLink"
+	 DBLocation = "PROBE_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
+	 DataType = "reference"
+	 RefersTo = "ExternalLink"/>
+    </SemanticType>
+
+
+
+    <SemanticType
+       Name= "StrainExternalLink"
+       AppliesTo = "G">
+      <Description>Defines the relationship between Strains and External
+	links.</Description>
+      <Element
+	 Name= "Strain"
+	 DBLocation = "STRAIN_EXTERNAL_LINK_MAP.STRAIN_ID"
+	 DataType = "reference"
+	 RefersTo = "Strain"/>
+      <Element
+	 Name= "ExternalLink"
+	 DBLocation = "STRAIN_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
+	 DataType = "reference"
+	 RefersTo = "ExternalLink"/>
+    </SemanticType>
+
+    <SemanticType
+      Name = "ImageProbe"
+      AppliesTo = "I">
+      <Description>A mapping between probes and images</Description>
+      <Element
+	Name = "Probe"
+	DBLocation = "PROBE_IMAGE_MAP.PROBE_ID"
+	DataType = "reference"
+	RefersTo = "Probe"/>
+    </SemanticType>
+
+    <SemanticType
+      Name = "ImageStrain"
+      AppliesTo = "I">
+      <Description>A mapping between strains and images</Description>
+      <Element
+	Name = "Strain"
+	DBLocation = "STRAIN_IMAGE_MAP.STRAIN_ID"
+	DataType = "reference"
+	RefersTo = "Strain"/>
+    </SemanticType>
+
+  </SemanticTypeDefinitions>
+  
+  <CustomAttributes>
+    <EmbryoStage
+       ID="urn:lsid:foo.bar.com:EmbryoStage:456832">
+      <Stage>1-Cell</Stage>
+      <Description>Single Cell</Description>
+    </EmbryoStage>
+
+    <EmbryoStage
+       ID="urn:lsid:foo.bar.com:EmbryoStage:456839">
+      <Stage>2-Cell</Stage>
+      <Description>Pair of  Cells</Description>
+    </EmbryoStage>
+
+    <EmbryoStage       ID="urn:lsid:foo.bar.com:EmbryoStage:456849" >
+      <Stage>4-Cell</Stage>
+      <Description>Quartet of  Cells</Description>
+    </EmbryoStage>
+
+    <EmbryoStage      ID="urn:lsid:foo.bar.com:EmbryoStage:456852">
+      <Stage>8-Cell</Stage>
+      <Description>Octet of  Cells</Description>
+    </EmbryoStage>
+
+    <EmbryoStage      ID="urn:lsid:foo.bar.com:EmbryoStage:456859">
+      <Stage>Morula</Stage>
+      <Description>Morula</Description>
+    </EmbryoStage>
+
+    <EmbryoStage      ID="urn:lsid:foo.bar.com:EmbryoStage:456860">
+      <Stage>Blastocyst</Stage>
+      <Description>Blastocyst</Description>
+    </EmbryoStage>
+
+    <ProbeType ID="urn:lsid:foo.bar.com:ProbeType:456860">
+      <Type>Sense</Type>
+      <Description>Sense</Description>
+    </ProbeType>
+
+
+    <ProbeType ID="urn:lsid:foo.bar.com:ProbeType:456861">
+      <Type>Anti-Sense</Type>
+      <Description>Anti-Sense</Description>
+    </ProbeType>
+
+    <Probe ID="urn:lsid:foo.bar.com:Probe:456961">
+      <Name>C0608A05-AS</Name>
+    </Probe>
+
+    <Probe ID="urn:lsid:foo.bar.com:Probe:456962">
+      <Name>C0608A05-S</Name>
+    </Probe>
+
+    <Probe ID="urn:lsid:foo.bar.com:Probe:45693">
+      <Name>C0234F10-AS</Name>
+    </Probe>
+
+    <Probe ID="urn:lsid:foo.bar.com:Probe:45694">
+      <Name>C0827H10-AS</Name>
+    </Probe>
+
+    <Probe ID="urn:lsid:foo.bar.com:Probe:45695">
+      <Name>H3014D06-AS</Name>
+    </Probe>
+
+    <Gene ID="urn:lsid:foo.bar.com:Gene:45702">
+      <Name>krt2-8</Name>
+    </Gene>
+
+    <Gene ID="urn:lsid:foo.bar.com:Gene:45704">
+      <Name>sp1</Name>
+    </Gene>
+
+    <Gene ID="urn:lsid:foo.bar.com:Gene:45706">
+      <Name>mizl</Name>
+    </Gene>
+
+    <Gene ID="urn:lsid:foo.bar.com:Gene:45713">
+      <Name>zfp219</Name>
+    </Gene>
+
+    <Strain ID="urn:lsid:foo.bar.com:Strain:000465">
+      <Name>HH1</Name>
+    </Strain>
+
+    <Strain ID="urn:lsid:foo.bar.com:Strain:000466">
+      <Name>HH2</Name>
+    </Strain>
+
+    <Strain ID="urn:lsid:foo.bar.com:Strain:000467">
+      <Name>HH3</Name>
+    </Strain>
+
+    <Strain ID="urn:lsid:foo.bar.com:Strain:000468">
+      <Name>HH4</Name>
+    </Strain>
+
+    <Strain ID="urn:lsid:foo.bar.com:Strain:000469">
+      <Name>HH5</Name>
+    </Strain>
+
+    <Strain ID="urn:lsid:foo.bar.com:Strain:000470">
+      <Name>HH6</Name>
+    </Strain>
+
+  </CustomAttributes>
+</OME>
