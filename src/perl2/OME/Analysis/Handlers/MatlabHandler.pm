@@ -361,46 +361,61 @@ sub _putScalarToMatlab {
 
 =head2 _getScalarFromMatlab
 
-	my $array = $self->_getScalarFromMatlab($matlab_var_name, $convert_to_matlab_class);
-	$array->getScalar();
-	$array->class();
-
+	my ($value, $class) = $self->_getScalarFromMatlab($matlab_var_name, $convert_to_matlab_class);
+	
 Gets a scalar of a particular name from the Matlab Engine workspace.
 $convert_to_matlab_class is an optional parameter that signals what is
 the desired output Matlab type. If specified it should be one of the
 constant class types defined in OME::Matlab. e.g. $mxDOUBLE_CLASS,
 $mxLOGICAL_CLASS, etc.
 
-returns an instance of OME::Matlab::Array that has had makePersistent
-called on it.
+returns the scalar value of the variable and it's MATLAB type (e.g. $mxDOUBLE_CLASS).
 
 =cut
 
 sub _getScalarFromMatlab {
-	my ($self, $name, $class) = @_;
-	my $array;
+	my ($self, $name, $convert_class) = @_;
 	
 	# Convert array datatype if requested	
-	$self->{__engine}->eval("$name = ".$self->{_matlab_class_to_convert}->{$class}.
-	                        "($name);") if defined $class;
-	
-	# Trimming required to avoid overflow and underflow problems with Postgress
-	$self->{__engine}->eval("if (strcmp(class($name), 'double') && abs($name) < realmin('double')) $name = double(0); end; ".
-	                        "if (strcmp(class($name), 'single') && abs($name) < realmin('single')) $name = single(0); end; ".
-	                        "if (strcmp(class($name), 'double') && $name < -realmax('double')) $name = double(-inf); end; ".
-	                        "if (strcmp(class($name), 'single') && $name < -realmax('single')) $name = single(-inf); end; ".
-	                        "if (strcmp(class($name), 'double') && $name > realmax('double')) $name = double(inf); end; ".
-	                        "if (strcmp(class($name), 'single') && $name > realmax('single')) $name = single(inf); end; "
-	);
-	
-	# Get value from matlab
-	$array = $self->{__engine}->getVariable( $name )
+	$self->{__engine}->eval("$name = ".$self->{_matlab_class_to_convert}->{$convert_class}.
+	                        "($name);") if defined $convert_class;
+
+	my $array = $self->{__engine}->getVariable( $name )
 		or die "Couldn't retrieve output variable $name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
-	$array->makePersistent();
+		       
+	my $value = $array->getScalar();
+	my $class = $array->class();
+
+	$value = $self->_trimNumeric ($value, $class);
+
+	return ($value, $class);
+}
+
+sub _trimNumeric {
+	my ($self, $value, $class) = @_;
 	
-	return $array;
+	# Trimming required to avoid overflow and underflow problems with Postgress
+	if( $class eq $mxDOUBLE_CLASS) {
+		if( abs( $value ) < $self->{_numerical_constants}->{min_double} ) {
+			$value = 0;
+		} elsif( $value < -1 * $self->{_numerical_constants}->{max_double} ) {
+			$value = $self->{_numerical_constants}->{double_neg_inf};
+		} elsif( $value > $self->{_numerical_constants}->{max_double} ) {
+			$value = $self->{_numerical_constants}->{double_inf};
+		}
+	} elsif ( $class == $mxSINGLE_CLASS) {
+		if( abs( $value ) < $self->{_numerical_constants}->{min_single} ) {
+			$value = 0;
+		} elsif( $value < -1 * $self->{_numerical_constants}->{max_single} ) {
+			$value = $self->{_numerical_constants}->{single_neg_inf};
+		} elsif( $value > $self->{_numerical_constants}->{max_single} ) {
+			$value = $self->{_numerical_constants}->{single_inf};
+		}
+	}
+	
+	return $value;
 }
 
 =head2 Pixels_to_MatlabArray
@@ -471,13 +486,38 @@ sub Pixels_to_MatlabArray {
 		$ascender = $ascender->Parent();
 	}
 
+	# Convert array datatype if requested
+	# FIXME: does this datatype conversion taint $matlab_pixels ?
+	my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' );
+
+	# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
+	# This is diametrically opposite to MATLAB's assumptions.
+	# hence we do "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);"
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
-	$self->{__engine}->eval("global $matlab_var_name;");
+
+	my $matlabCmdString = "";
 	if (scalar @ROI) {
-		$self->{__engine}->eval("$matlab_var_name = getROI(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI).");");
+		if ($convertToDatatype) {
+			$matlabCmdString = "global $matlab_var_name; ".
+							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ".
+							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+		} else {
+			$matlabCmdString = "global $matlab_var_name; ".
+							   "$matlab_var_name = getROI(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ".
+							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+		}
 	} else {
-		$self->{__engine}->eval("$matlab_var_name = getPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels->ImageServerID().");");
+		if ($convertToDatatype) {
+			$matlabCmdString = "global $matlab_var_name; ".
+							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels->ImageServerID().")); ".
+							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+		} else {
+			$matlabCmdString = "global $matlab_var_name; ".
+							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels->ImageServerID()."); ".
+							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+		}
 	}
+	$self->{__engine}->eval($matlabCmdString);
 
 	# check that the gotten variable is the right size	
 	my $ml_pixels_array = $self->{__engine}->getVariable($matlab_var_name);
@@ -492,16 +532,6 @@ sub Pixels_to_MatlabArray {
 	die "getROI/getPixels failed for pixels ".$pixels->ImageServerID().". The ".
 		"returned MATLAB array has dimensions ($sizeX, $sizeY, $sizeZ, $sizeC, $sizeT)"
 		unless ($sizeX*$sizeY*$sizeZ*$sizeC*$sizeT == $Dims[0]*$Dims[1]*$Dims[2]*$Dims[3]*$Dims[4]);
-		
-	# Convert array datatype if requested
-	# FIXME: does this datatype conversion taint $matlab_pixels ?
-	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
-	}
-	
-	# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
-	# This is diametrically opposite to MATLAB's assumptions.
-	$self->{__engine}->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
 }
 
 =head2 Attr_to_MatlabScalar
@@ -623,12 +653,11 @@ sub MatlabArray_to_Pixels {
 	
 	# Convert array datatype if requested
 	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
+		# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
+		# This is diametrically opposite to MATLAB's assumptions.	
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ".
+								"$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
 	}
-	
-	# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
-	# This is diametrically opposite to MATLAB's assumptions.
-	$self->{__engine}->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
 
 	# Get array's dimensions and pixel type
 	my $ml_pixels_array = $self->{__engine}->getVariable($matlab_var_name)
@@ -668,8 +697,9 @@ sub MatlabArray_to_Pixels {
 	);
 
 	$self->{__engine}->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
+	my ($value, $class) = $self->_getScalarFromMatlab($matlab_var_name."_pix");
 	die "Could not write the expected number of pixels to OMEIS"
-		unless $self->_getScalarFromMatlab($matlab_var_name."_pix")->getScalar() == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
+		unless $value == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
 	
 	# Finalize Pixels
 	my $pixelsID = OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
@@ -760,38 +790,54 @@ sub MatlabVector_to_Attrs {
 		'MLI:VectorDecoder[@ID="'.$vectorDecodeID.'"]/MLI:Element' );
 
 	# decode the Vector
-	my %vectorData; # $vectorData{$formal_output_name}->{$SE_name} = $data
+	# convert the vector into a cell whose elements have the appropriate class	
+	my $matlabCmdString = "";
 	foreach my $element ( @decoding_elements ) {
-	
-		# gather formal output & SE
-		my $output_location = $element->getAttribute( 'OutputLocation' );
-		my ( $formal_output_name, $SE_name ) = split( /\./, $output_location )
-			or die "output_location '$output_location' could not be parsed.";
-		my $formal_output = $self->getFormalOutput( $formal_output_name )
-			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
 
 		# get index
 		my $index = $element->getAttribute( 'Index' )
 			or die "Index attribute not specified in ".$element->toString();
 
-		# since "vectors of strings" are really "matrices of chars",
-		# they need a special treatment
-		$self->{__engine}->eval("if (strcmp(class($matlab_var_name), 'char')) ".
-								"$matlab_var_name"."_index_val_$index = $matlab_var_name($index,:); ".
-								"else ".
-								"$matlab_var_name"."_index_val_$index = $matlab_var_name($index); ".
-								"end");
-
 		# Convert array datatype if requested
-		my $class;
-		if( my $convertToDatatype = $element->getAttribute( 'ConvertToDatatype' ) ) {
-			$class = $self->{_convert_to_matlab_class}->{$convertToDatatype};
+		my $convertToDatatype = $element->getAttribute( 'ConvertToDatatype' );
+		if ($convertToDatatype) {
+			die "Invalid convertToDatatype '$convertToDatatype'\n" unless $self->{_convert_to_matlab_class}->{$convertToDatatype};
 		}
 		
-		# retrieve value from matlab
-		my $matlab_output = $self->_getScalarFromMatlab($matlab_var_name."_index_val_$index", $class);
-		my $value = $matlab_output->getScalar();
-		$class = $matlab_output->class();
+		# TODO
+		# since "vectors of strings" are really "matrices of chars" they need a special treatment
+		# they are cell vectors of strings
+		
+		if ($convertToDatatype) {
+			$matlabCmdString .= "$matlab_var_name"."_converted{$index} = $convertToDatatype($matlab_var_name($index));\n";
+		} else {
+			$matlabCmdString .= "$matlab_var_name"."_converted{$index} = $matlab_var_name($index);\n";
+		}
+	}
+	$self->{__engine}->eval("$matlabCmdString");
+	
+	# retrieve vector from matlab
+	my $convertedCell = $self->{__engine}->getVariable("$matlab_var_name"."_converted")
+		or die "Couldn't retrieve output variable "."$matlab_var_name"."_converted"." from matlab.\n".
+		       "This typically indicates an error in the execution of the program.\n".
+		       "The execution string was:\n\t".$self->{ __command }."\n";
+
+	# load the vector data hash
+	my %vectorData; # $vectorData{$formal_output_name}->{$SE_name} = $data	
+	foreach my $element ( @decoding_elements ) {
+		my $index = $element->getAttribute( 'Index' );
+		my $output_location = $element->getAttribute( 'OutputLocation' );
+		my ( $formal_output_name, $SE_name ) = split( /\./, $output_location )
+			or die "output_location '$output_location' could not be parsed.";
+		my $formal_output = $self->getFormalOutput( $formal_output_name )
+			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
+		
+		my $array = $convertedCell->getCell($index-1)
+			or die "Could not retrieve the $index th cell. The index is most probably out of bounds\n"; # -1 is needed cause this indexing starts at 0.
+		$array->makePersistent();
+		my $value = $array->getScalar();
+		my $class = $array->class();
+		$value = $self->_trimNumeric ($value, $class);
 		
 		# make sure declared (OME-XML) and actual (MATLAB) data-types are the same
 		my $se = $factory->findObject( "OME::SemanticType::Element", {
@@ -862,10 +908,9 @@ sub MatlabScalar_to_Attr {
 		$class = $self->{_convert_to_matlab_class}->{$convertToDatatype};
 	}
 	
-	my $matlab_output = $self->_getScalarFromMatlab($self->_outputVarName($xmlInstr), $class);
-	my $value = $matlab_output->getScalar();
-	   $class = $matlab_output->class();
-	
+	my $value;
+	($value, $class) = $self->_getScalarFromMatlab($self->_outputVarName($xmlInstr), $class);
+
 	# make sure declared (OME-XML) and actual (MATLAB) data-types are the same
 	my $se = $factory->findObject( "OME::SemanticType::Element", {
 			semantic_type => $formal_output->semantic_type(),
@@ -1105,7 +1150,31 @@ sub __openEngine {
 		die "Cannot open a connection to Matlab!" unless $engine;
 		$self->{__engine} = $engine;
 		$self->{__engineOpen} = 1;
-		$engine->eval("addpath(genpath('$matlab_src_dir'));");
+		
+		# set the path and figure out architecture/MATLAB-version specific constants
+		$engine->eval("addpath(genpath('$matlab_src_dir')); ".
+					  "constants = [realmin('double') realmax('double') realmin('single') realmax('single') double(-inf) double(inf) single(-inf) single(inf)];");
+					  
+		my $constants = $engine->getVariable('constants')->getAll() or die "couldn't get constants\n";
+		my $min_double = $constants->[0];
+		my $max_double = $constants->[1];
+		my $min_single = $constants->[2];
+		my $max_single = $constants->[3];
+		my $double_neg_inf = $constants->[4];
+		my $double_inf     = $constants->[5];
+		my $single_neg_inf = $constants->[6];
+		my $single_inf     = $constants->[7];
+	
+		$self->{_numerical_constants} = {
+			'min_double' => $min_double,
+			'max_double' => $max_double,
+			'min_single' => $min_single,
+			'max_single' => $max_single,
+			'double_neg_inf' => $double_neg_inf,
+			'double_inf'     => $double_inf,
+			'single_neg_inf' => $single_neg_inf,
+			'single_inf'     => $single_inf,
+		};	
 	}
 }
 
