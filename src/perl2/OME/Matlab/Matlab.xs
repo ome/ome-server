@@ -1072,6 +1072,15 @@ getFieldName(pArray,index)
         OUTPUT:
             RETVAL
 
+OME::Matlab::Array
+getCell(pArray,index)
+        OME::Matlab::Array pArray
+        int index
+        CODE:
+            RETVAL = mxGetCell(pArray,index);
+        OUTPUT:
+            RETVAL
+            
 MODULE = OME::Matlab	PACKAGE = OME::Matlab::Engine
 
 OME::Matlab::Engine
