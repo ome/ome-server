@@ -182,7 +182,8 @@ BLURB
 				print "\n";  # Spacing
 				last;
 			}
-			$omeis_repository->ImageServerURL(confirm_default ("OMEIS Server", $omeis_repository_url));	
+			$omeis_repository_url = confirm_default ("OMEIS Server", $omeis_repository_url);
+			$omeis_repository->ImageServerURL($omeis_repository_url);
 			$lsid = confirm_default ("LSID Authority", $lsid);
 		}
 	}
