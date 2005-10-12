@@ -68,7 +68,6 @@ sub getPageBody {
     # name.
 
     my $filename = $q->param('template');
-    print STDERR "template file is $filename \n";
     my $tmpl = HTML::Template->new(filename=>$filename,case_sensitive=>1);
     $tmpl_data{'template'}=$filename;
     
