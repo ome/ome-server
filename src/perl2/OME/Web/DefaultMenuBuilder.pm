@@ -148,11 +148,6 @@ my @MENU = (
 		type => 'link',
 		text => 'Import Spreadsheet',
 	},
-	{
-		web_class => 'OME::Web::ImageDetailAnnotator',
-		type => 'link',
-		text => 'Detailed Image Annotation',
-	},
 
 	# ** Images **
 	{
