@@ -650,8 +650,7 @@ sub getImageOriginalFiles{
 		"OME::ModuleExecution::ActualInput", 
 		module_execution => $import_mex,
 		'formal_input.semantic_type.name' => 'OriginalFile'
-	) or die "No OriginalFile inputs were found for Image import MEX ".
-			$self->Renderer()->render( $import_mex, 'ref' )." for this image.";
+	) or die "No OriginalFile inputs were found for Image import MEX id=".$import_mex->id;
 
 	my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
 		$ai->input_module_execution,
