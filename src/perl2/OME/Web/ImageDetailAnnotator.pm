@@ -30,7 +30,8 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Arpun Nagaraja <arpun@mit.edu>
+# Written by:    Harry Hochheiser <hsh@nih.gov>, based on code in
+#                CG_Annotator.pm by Arpun Nagaraja <arpun@mit.edu>
 #
 #-------------------------------------------------------------------------------
 
@@ -65,16 +66,11 @@ sub getPageBody {
 
     # Load the correct template and make sure the URL still carries the template
     # name.
-    my $tmpl_dir = $self->actionTemplateDir(custom=>1);
-    $tmpl_dir .= "/Annotator/";
-    print STDERR "template dir is $tmpl_dir  \n";
-    my $filename=$q->param('template');
-  #  $filename .=".tmpl";
+
+    my $filename = $q->param('template');
     print STDERR "template file is $filename \n";
-    my $tmpl =
-	HTML::Template->new(filename=>$filename,
-			    path=>$tmpl_dir,case_sensitive=>1);
-    
+    my $tmpl = HTML::Template->new(filename=>$filename,case_sensitive=>1);
+    $tmpl_data{'template'}=$filename;
     
     # Load the requested category groups
     my @parameter_names = $tmpl->param();
