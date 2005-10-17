@@ -76,5 +76,5 @@ not actually necessary in an OME installation because those paths are
 added by OME code through an independent mechanism.
 
 * Note, if you are playing in matlab with this stuff and save a baysian
-network to disk, you must have the FullBNT directoryes in your path when
+network to disk, you must have the FullBNT directories in your path when
 you reload the file. Otherwise, the bnet object will become corrupted.
