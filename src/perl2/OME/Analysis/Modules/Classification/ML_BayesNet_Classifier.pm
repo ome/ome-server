@@ -74,9 +74,10 @@ sub execute {
 	my $start_time = [gettimeofday()];
 
 	# open connection to matlab
-	my $matlab_engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
-		or die "Cannot open a connection to Matlab!";
 	my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
+	my $matlab_exec = $conf->matlab_exec or croak "couldn't retrieve matlab exec path from configuration";
+	my $matlab_engine = OME::Matlab::Engine->open("$matlab_exec -nodisplay -nojvm")
+		or die "Cannot open a connection to Matlab!";
 	my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
 	logdbg "debug", "Matlab src dir is $matlab_src_dir\n".
 	$matlab_engine->eval("addpath(genpath('$matlab_src_dir'));");
