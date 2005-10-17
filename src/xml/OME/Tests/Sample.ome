@@ -39,9 +39,10 @@
 
 <OME xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+	xmlns:CA  = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+	xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 	<Project Name = "Stress Response Pathway" ID = "urn:lsid:foo.bar.com:Project:123456">
 		<ExperimenterRef ID = "urn:lsid:foo.bar.com:Experimenter:123456"/>
 		<GroupRef ID = "urn:lsid:foo.bar.com:Group:123456"/>
@@ -51,7 +52,10 @@
 		<ExperimenterRef ID = "urn:lsid:foo.bar.com:Experimenter:123456"/>
 		<GroupRef ID = "urn:lsid:foo.bar.com:Group:123456"/>
 		<ProjectRef ID = "urn:lsid:foo.bar.com:Project:123456"/>
-		<CustomAttributes/>
+		<CA:CustomAttributes 
+			xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" 
+			xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+			xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"/>
 	</Dataset>
 	<Experiment Type = "Time-lapse" ID = "urn:lsid:foo.bar.com:Experiment:123456">
 		<Description>This was an experiment.</Description>
@@ -98,7 +102,9 @@
 		<OTF ID = "urn:lsid:foo.bar.com:OTF:123456" PixelType = "int8" OpticalAxisAvrg = "true" SizeX = "512" SizeY = "512">
 			<ObjectiveRef ID = "urn:lsid:foo.bar.com:Objective:123456"/>
 			<FilterRef ID = "urn:lsid:foo.bar.com:Filter:123456"/>
-			<Bin:External Compression = "bzip2" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456" href = "OTF123.otf"/>
+			<Bin:BinaryFile FileName="OTF123.otf" Size="1028000">
+				<Bin:External Compression = "bzip2" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456" href = "http://my.domain.org/OTF/OTF123.otf"/>
+			</Bin:BinaryFile>
 		</OTF>
 	</Instrument>
 	<Image Name = "P1W1S1" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" ID = "urn:lsid:foo.bar.com:Image:123456">
