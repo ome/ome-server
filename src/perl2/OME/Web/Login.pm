@@ -80,7 +80,10 @@ sub getPageBody {
 		if (defined $session) {
 			# login successful, redirect
             $self->setSessionCookie($self->Session()->SessionKey());
-            return ('REDIRECT',$self->pageURL('OME::Web::Home')) unless $key_request;
+            my $target_url = $q->param( 'target_url' ) || 
+                             $q->url_param( 'target_url' ) ||
+                             $self->pageURL('OME::Web::Home');
+            return ('REDIRECT', $target_url) unless $key_request;
             return ('TXT',$self->Session()->SessionKey()."\n");
 		} else {
 			# login failed, report it
