@@ -228,7 +228,7 @@ sub _getForm {
 				if exists $request->{ exclude };
 				
 			# grab the published fields that aren't being excluded
-			my @fields = grep( ( not exists $excluded_fields{ $_ }) , $package_name->getPublishedCols() );
+			my @fields = sort( grep( ( not exists $excluded_fields{ $_ }) , $package_name->getPublishedCols() ) );
 			
 			# get form inputs iff requested
 			my %rendered_fields;
