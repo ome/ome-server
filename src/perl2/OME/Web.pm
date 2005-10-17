@@ -206,6 +206,14 @@ sub ensureLogin {
 	my $self = shift;
 	my $manager = $self->Manager();
 
+# Uncomment the three lines of code below to make this installation have 
+# open guest access. You'll also need to set up an account named 'guest', 
+# with password 'abc123'. For instructions on adding a user, from the 
+# command line type: "ome help admin users add"
+# my $session = $self->Manager()->createSession( 'guest', 'abc123' );
+# $self->setSessionCookie($self->Session()->SessionKey());
+# return defined $session;
+
 	#or a new session if we got no cookie my %session;
 	my $sessionKey = $self->getSessionKey();
 
@@ -273,7 +281,13 @@ sub getSessionKey {
 
 sub getLogin {
 	my $self = shift;
-	$self->redirect($self->pageURL($loginPage));
+	my $q = $self->CGI();
+	my $target_page = $q->self_url();
+	my $redirect;
+	unless( $target_page =~ m/$loginPage/ ) {
+		$redirect = { target_url => $target_page };
+	}
+	$self->redirect($self->pageURL($loginPage, $redirect ));
 }
 
 # serve()
