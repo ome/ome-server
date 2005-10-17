@@ -2311,7 +2311,8 @@ sub __makeSelectSQL {
 		close COLS_UNSPECIFIED;
 	}
 
-	# Experimental caching.
+	###########################
+	# Caching of generated text
 	$class->__cached_sql_text({}) unless( defined $class->__cached_sql_text() );
 	my ($cache_key, $cached_sql, $cached_id_available);
 	my @values_when_using_cache;
@@ -2568,7 +2569,6 @@ sub __makeSelectSQL {
         }
 
         # Parse the remaining criteria
-
         foreach my $column_alias (sort keys %$criteria) {
             $location = $class->
               __getQueryLocation(\$foreign_key_number,
@@ -2634,7 +2634,7 @@ sub __makeSelectSQL {
 			# Treat an undef value the same as a search for a 'null'
 			$value = 'null' if not defined $value;
 			
-            if ($location && $location eq 'id') {
+            if (defined $location && $location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
             } elsif ($sql_type eq 'boolean') {
@@ -2743,8 +2743,6 @@ sub __makeSelectSQL {
         if (defined $limit) {
             die "Illegal limit value $limit"
               unless $limit =~ /^\d+$/;
-# I changed this to use the array of values so that I could cache the SQL text
-#            $sql .= " limit $limit";
             $sql .= " limit ?";
             push @values, $limit;
         }
@@ -2752,8 +2750,6 @@ sub __makeSelectSQL {
         if (defined $offset) {
             die "Illegal offset value $offset"
               unless $offset =~ /^\d+$/;
-# I changed this to use the array of values so that I could cache the SQL text
-#            $sql .= " offset $offset";
             $sql .= " offset ?";
             push @values, $offset;
         }
@@ -2806,6 +2802,7 @@ sub __makeSelectSQL {
     return ($sql,defined $first_key,\@values);
 }
 
+# this generates a cache key for __makeSelectSQL
 sub __makeSelectSQL_cacheKey {
     my $proto = shift;
     my $class = ref($proto) || $proto;
