@@ -206,14 +206,6 @@ sub ensureLogin {
 	my $self = shift;
 	my $manager = $self->Manager();
 
-# Uncomment the three lines of code below to make this installation have 
-# open guest access. You'll also need to set up an account named 'guest', 
-# with password 'abc123'. For instructions on adding a user, from the 
-# command line type: "ome help admin users add"
-# my $session = $self->Manager()->createSession( 'guest', 'abc123' );
-# $self->setSessionCookie($self->Session()->SessionKey());
-# return defined $session;
-
 	#or a new session if we got no cookie my %session;
 	my $sessionKey = $self->getSessionKey();
 
@@ -227,7 +219,18 @@ sub ensureLogin {
 		}
 		return defined $session;
 	}
-
+# Uncomment the block of code below to make this installation have 
+# open guest access. You'll also need to set up an account named 'guest', 
+# with password 'abc123'. For instructions on adding a user, from the 
+# command line type: "ome help admin users add"
+#	else {
+#		my $session = $self->Manager()->createSession( 'guest', 'abc123' );
+		# We could reset the user state here. That would keep multiple simoultaneous
+		# guest logins from interfering with each other.
+#		return defined $session;
+#	}
+# End Guest access block
+	
 	return;
 }
 
