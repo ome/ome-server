@@ -289,6 +289,10 @@ sub getLogin {
 
 	# this will record state information
 	my $target_url = $q->self_url();
+	# CGI's self_url() does not contain url_params if a form was just submitted.
+	# Page (e.g. 'OME::Web::Home') is always a url_param. AFAIK, it is the only
+	# URL param that regularly gets mixed with POST params. For more info, see
+	# CGI's documentation "MIXING POST AND URL PARAMETERS"
 	unless( $target_url =~ m/Page=/ ) {
 		my $page = $q->url_param("Page");
 		$target_url .= "&Page=$page";
