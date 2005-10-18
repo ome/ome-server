@@ -75,14 +75,17 @@ sub getPageBody {
 			$q->param('password'),
 		);
 		my $key_request = $q->param ('SessionKey');
+        my $target_url = $q->param( 'target_url' );
 		$q->delete_all();
 
 		if (defined $session) {
 			# login successful, redirect
             $self->setSessionCookie($self->Session()->SessionKey());
-            my $target_url = $q->param( 'target_url' ) || 
-                             $q->url_param( 'target_url' ) ||
-                             $self->pageURL('OME::Web::Home');
+            if( defined $target_url ) {
+            	$target_url =~ s/;/&/g;
+            } else {
+            	$target_url = $self->pageURL('OME::Web::Home');
+            }
             return ('REDIRECT', $target_url) unless $key_request;
             return ('TXT',$self->Session()->SessionKey()."\n");
 		} else {
@@ -110,13 +113,21 @@ sub __loginForm {
 	if ($error) {
 		$table_data .= $q->Tr($q->td($q->p({-class => 'ome_error', -align => 'center'}, $error))); 
 	} else {
-		$table_data .= $q->Tr($q->td($q->p("Please enter your username and password to log in.")));
+		$table_data .= $q->Tr($q->td(
+			( $q->param( 'login_timeout' ) ? 
+				$q->p({-class => 'ome_error', -align => 'center'}, "Your login timed out." ) :
+				''
+			).
+			$q->p("Please enter your username and password to log in.")
+		));
 	}
 
 	my $header_table = $q->table({-border => 0, -align => 'center'}, $table_data);
 
-	my $login_table .= $q->startform( { -name => 'primary' } ) .
-	                   $q->table({-border => 0, -align => 'center'},
+	my $login_table .= $q->startform( { -name => 'primary' } );
+	$login_table .= $q->hidden( 'target_url' )
+		if( $q->param( 'target_url' ) );
+	$login_table .= $q->table({-border => 0, -align => 'center'},
 						   $q->Tr(
 							   $q->td({-align => 'right'}, $q->b("Username:")),
 							   $q->td($q->textfield(-name => 'username', -default => '', -size => 25))

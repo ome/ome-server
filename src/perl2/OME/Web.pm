@@ -222,6 +222,7 @@ sub ensureLogin {
 		if ($session) {
 			$self->setSessionCookie($self->Session()->SessionKey());
 		} else {
+			$self->{ _login_timeout } = 1;
 			$self->setSessionCookie();
 		}
 		return defined $session;
@@ -282,12 +283,27 @@ sub getSessionKey {
 sub getLogin {
 	my $self = shift;
 	my $q = $self->CGI();
-	my $target_page = $q->self_url();
-	my $redirect;
-	unless( $target_page =~ m/$loginPage/ ) {
-		$redirect = { target_url => $target_page };
+
+	# this will record state information
+	my $target_url = $q->self_url();
+	unless( $target_url =~ m/Page=/ ) {
+		my $page = $q->url_param("Page");
+		$target_url .= "&Page=$page";
 	}
-	$self->redirect($self->pageURL($loginPage, $redirect ));
+
+	print $q->header (-type=>'text/html', -cookie => [values %{$self->{_cookies}}]);
+	print $q->start_html( -onLoad => 'document.forms[\'primary\'].submit();'	);
+	print $q->start_form( -action => $self->pageURL($loginPage), -name => 'primary' );
+	unless( $target_url =~ m/$loginPage/ ) {
+		print $q->hidden( target_url => $target_url );
+	}
+	# ensureLogin sets $self->{ _login_timeout } for us.
+	if( exists $self->{ _login_timeout } && $self->{ _login_timeout }) {
+		print $q->hidden( login_timeout => 1 );
+	}
+	print $q->endform();
+	print $q->end_html;
+
 }
 
 # serve()
