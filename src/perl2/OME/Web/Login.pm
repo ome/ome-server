@@ -145,10 +145,10 @@ sub __loginForm {
 						   ), $q->Tr(
 							   $q->td($q->br()),  # Spacing
 							   $q->td({-align => 'center', -colspan => 2},
-							   		$q->submit(-name => 'execute', -value => 'Log in').
+							   		$q->submit(-name => 'execute', -value => 'Log in')
 # This next line works as a guest access link, if guest access is enabled in Web.pm
 # See OME::Web->ensureLogin() for info on setting up guest access.
-#							   		" ".$q->a( { -href => $target_url, -class => 'ome_quiet' }, "Guest Login" )
+#							   		." ".$q->a( { -href => $target_url, -class => 'ome_quiet' }, "Guest Login" )
 							   )
 						   )
 					   ) .
