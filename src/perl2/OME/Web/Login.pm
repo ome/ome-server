@@ -75,17 +75,12 @@ sub getPageBody {
 			$q->param('password'),
 		);
 		my $key_request = $q->param ('SessionKey');
-        my $target_url = $q->param( 'target_url' );
+        my $target_url = $self->__getTargetURL(); # get this before deleting the parameters ;)
 		$q->delete_all();
 
 		if (defined $session) {
 			# login successful, redirect
             $self->setSessionCookie($self->Session()->SessionKey());
-            if( defined $target_url ) {
-            	$target_url =~ s/;/&/g;
-            } else {
-            	$target_url = $self->pageURL('OME::Web::Home');
-            }
             return ('REDIRECT', $target_url) unless $key_request;
             return ('TXT',$self->Session()->SessionKey()."\n");
 		} else {
@@ -99,6 +94,18 @@ sub getPageBody {
 #----------------
 # PRIVATE METHODS
 #----------------
+
+sub __getTargetURL {
+	my $self = shift;
+	my $q = $self->CGI();
+	my $target_url = $q->param( 'target_url' );
+	if( defined $target_url ) {
+		$target_url =~ s/;/&/g;
+	} else {
+		$target_url = $self->pageURL('OME::Web::Home');
+	}
+	return $target_url;
+}
 
 sub __loginForm {
 	my $self = shift;
@@ -124,6 +131,7 @@ sub __loginForm {
 
 	my $header_table = $q->table({-border => 0, -align => 'center'}, $table_data);
 
+	my $target_url = $self->__getTargetURL();
 	my $login_table .= $q->startform( { -name => 'primary' } );
 	$login_table .= $q->hidden( 'target_url' )
 		if( $q->param( 'target_url' ) );
@@ -137,7 +145,11 @@ sub __loginForm {
 						   ), $q->Tr(
 							   $q->td($q->br()),  # Spacing
 							   $q->td({-align => 'center', -colspan => 2},
-							   		$q->submit(-name => 'execute', -value => 'Log in'))
+							   		$q->submit(-name => 'execute', -value => 'Log in').
+# This next line works as a guest access link, if guest access is enabled in Web.pm
+# See OME::Web->ensureLogin() for info on setting up guest access.
+#							   		" ".$q->a( { -href => $target_url, -class => 'ome_quiet' }, "Guest Login" )
+							   )
 						   )
 					   ) .
 					   $q->endform;
