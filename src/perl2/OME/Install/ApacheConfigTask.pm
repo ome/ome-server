@@ -597,7 +597,7 @@ sub getApacheInfo {
 		{
 			# Conf file has an ome conf
 			search_elem => \$apache_info->{'hasOMEinc'},
-			regex       => qr/^\s*Include $omeConf/,
+			regex       => qr/^\s*Include\s+$omeConf/,
 		},
 		{
 			# Conf file has mod_perl loaded
@@ -632,6 +632,9 @@ sub getApacheInfo {
 	);
 
 	my $include_set = new IncludeSet;
+
+	# preclear all the search_elem
+	${$_->{'search_elem'}} = undef foreach (@search_items);
 
 	# Nested anonymous subroutine for searching conf files
 	my $search_func = sub {
@@ -859,7 +862,16 @@ BLURB
 		#********
 		#******** Set the apache conf file we'll be using
 		#********
-	
+		my $install_dir = getcwd."/src/perl2";
+		$blurb = <<BLURB;
+Your OME installation can be configured for development or deployment.
+For developers, Apache can be configured to serve OME out of the installation directory (currently $install_dir).
+This configuration lets modifications to OME code be picked up immediately by Apache without having to re-run the installer.
+For deployment (the default), Apache will be configured to serve OME from the operating system's Perl directory, ignoring any subsequent modifications in $install_dir.
+BLURB
+		print wrap("", "", $blurb);
+		print "\n";  # Spacing
+
 		if ($apache_info->{version} == 2) {
 			if (y_or_n("Use OME Apache-2.x configuration for developers?")) {
 				$APACHE->{DEV_CONF} = 1;
@@ -1029,7 +1041,10 @@ BLURB
 			print $LOGFILE "Can't write to $httpdConf\n"
 			and croak "  You do not have write permissions for \"$httpdConf\".\nApache is not properly configured.";
 		} else {
-			if ( y_or_n("fix \"$httpdConf\" ?") ) {
+			print "The Apache conf file ($httpdConf) must be configured correctly in order to serve OME via mod_perl.\n";
+			print "The OME installer can fix $httpdConf for you automatically.\n";
+			print "If you chose not to fix it automatically, the installer will perform a test of the current configuration and exit if it fails.\n";
+			if ( y_or_n("fix \"$httpdConf\" automatically? ",'y') ) {
 				print "fixing httpd.conf. The current version will be saved in ".$apache_info->{conf_bak}."\n"
 					and print $LOGFILE "Fixing $httpdConf.  Backup version in ".$apache_info->{conf_bak}."\n";
 				fix_httpd_conf ($apache_info) or 
