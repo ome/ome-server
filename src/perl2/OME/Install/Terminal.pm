@@ -167,7 +167,7 @@ sub y_or_n {
 			print wrap("", "", $text), " [", BOLD, "y", RESET, "/n]: ";
 		}
         if ($environment->get_flag ("ANSWER_Y")) {
-       	    print "\n";
+       	    print "y\n";
             return 1;
         }
 
