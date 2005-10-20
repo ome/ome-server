@@ -1,0 +1,10 @@
+<input type="hidden" name="path" value="Gene,ProbeGeneMap,ImageProbe">
+<input type="hidden" name="GeneName" value="<TMPL_VAR NAME=GeneName>">
+<input type="hidden" name="Template" value="<TMPL_VAR NAME=Template>">
+
+Basic Gene annotations stuff for gene <TMPL_VAR NAME="GeneName">...
+<ul>
+<TMPL_LOOP NAME="ProbeGenes">
+<li> probe: <TMPL_VAR NAME="Probe">
+</TMPL_LOOP>
+</ul>
