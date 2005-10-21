@@ -190,7 +190,17 @@ sub Session { OME::Session->instance() };
 
 sub pageURL {
 	my ($self, $page, $param) = @_;
-	return "serve.pl?Page=$page".
+
+	# Absolute urls are needed for links to be valid in external documents (e.g. downloaded spreadsheets)
+	# $self->CGI is not always available, because this method is sometimes called on a class,
+	# rather than the instance. this is really a hack-around.
+	my $base_url;
+	if( ref( $self ) ) {
+		$base_url = $self->CGI()->url();
+	} else {
+		$base_url = 'serve.pl'
+	}
+	return $base_url."?Page=$page".
 		( $param ?
 		  '&'.join( '&', map( $_."=".$param->{$_}, keys %$param ) ) :
 		  ''
@@ -468,6 +478,7 @@ sub createOMEPage {
 	my $title = $self->getPageTitle();
 	my ($result,$body)	= $self->getPageBody();
 	return ('ERROR',undef) if (!defined $title || !defined $body);
+	return ('HTML',$body) if ($result eq 'HTML-complete' );
 	return ($result,$body) if ($result ne 'HTML');
 
 	my $head = $CGI->start_html(
