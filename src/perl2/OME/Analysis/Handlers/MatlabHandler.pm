@@ -69,151 +69,156 @@ use OME::ModuleExecution;
 use OME::Install::Environment;
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
-use fields qw(__engine __engineOpen);
+#use fields qw(__engine __engineOpen);
 use Time::HiRes qw(gettimeofday tv_interval);
 
 my $supported_NS = 'http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd';
 
+#############
+# CONSTANTS #
+#############
+my $_environment = initialize OME::Install::Environment;
+
+# List of functions in this package make matlab global variables from input execution instructions
+# Keyed by Tag name of elements under <Input>
+my %_translate_to_matlab = (
+	PixelsArray    => 'Pixels_to_MatlabArray',
+	Scalar         => 'Attr_to_MatlabScalar',
+	ConstantScalar => 'Constant_to_MatlabScalar',
+);
+
+# List of package functions to make ome attributes from output execution instructions
+# Keyed by Tag name of elements under <Output>
+my %_translate_from_matlab = (
+	PixelsArray => 'MatlabArray_to_Pixels',
+	Scalar		=> 'MatlabScalar_to_Attr',
+	Vector		=> 'MatlabVector_to_Attrs',
+	Struct		=> 'MatlabStruct_to_Attr'
+);
+
+# Mapping from OME Pixel Types to matlab classes
+my %_pixel_type_to_matlab_class = (
+	int8   => $mxINT8_CLASS,
+	uint8  => $mxUINT8_CLASS,
+	int16  => $mxINT16_CLASS,
+	uint16 => $mxUINT16_CLASS,
+	int32  => $mxINT32_CLASS,
+	uint32 => $mxUINT32_CLASS,
+	float  => $mxSINGLE_CLASS,
+);
+	
+# Mapping from matlab classes to pixel types. Also limits the supported matlab classes.
+my %_matlab_class_to_pixel_type = (
+	$mxINT8_CLASS   => 'int8',
+	$mxUINT8_CLASS  => 'uint8' ,
+	$mxINT16_CLASS  => 'int16',
+	$mxUINT16_CLASS => 'uint16',
+	$mxINT32_CLASS  => 'int32',
+	$mxUINT32_CLASS => 'uint32',
+	$mxSINGLE_CLASS => 'float' ,
+);
+
+# Mapping from matlab classes to Matlab convert function name
+my %_matlab_class_to_convert = (
+	$mxLOGICAL_CLASS   => 'logical',
+	$mxDOUBLE_CLASS    => 'double',
+	$mxSINGLE_CLASS    => 'single',
+	$mxINT8_CLASS      => 'int8',
+	$mxUINT8_CLASS     => 'uint8',
+	$mxINT16_CLASS     => 'int16',
+	$mxUINT16_CLASS    => 'uint16',
+	$mxINT32_CLASS     => 'int32',
+	$mxUINT32_CLASS    => 'uint32',
+	$mxINT64_CLASS     => 'int64',
+	$mxUINT64_CLASS    => 'uint64',
+);
+
+# Mapping from convert function names to matlab classes
+my %_convert_to_matlab_class = (
+	'logical' => $mxLOGICAL_CLASS, 
+	'double'  => $mxDOUBLE_CLASS,
+	'single'  => $mxSINGLE_CLASS, 
+	'int8'    => $mxINT8_CLASS, 
+	'uint8'   => $mxUINT8_CLASS, 
+	'int16'   => $mxINT16_CLASS,
+	'uint16'  => $mxUINT16_CLASS,
+	'int32'   => $mxINT32_CLASS, 
+	'uint32'  => $mxUINT32_CLASS, 
+	'int64'   => $mxINT64_CLASS,
+	'uint64'  => $mxUINT64_CLASS, 
+);
+
+# Mapping from matlab classes to strings for display purposes
+my %_matlab_class_to_string = (
+	$mxUNKNOWN_CLASS   => 'mxUNKNOWN_CLASS',
+	$mxCELL_CLASS      => 'mxCELL_CLASS',
+	$mxSTRUCT_CLASS    => 'mxSTRUCT_CLASS',
+	$mxOBJECT_CLASS    => 'mxOBJECT_CLASS',
+	$mxCHAR_CLASS      => 'mxCHAR_CLASS',
+	$mxLOGICAL_CLASS   => 'mxLOGICAL_CLASS',
+	$mxDOUBLE_CLASS    => 'mxDOUBLE_CLASS',
+	$mxSINGLE_CLASS    => 'mxSINGLE_CLASS',
+	$mxINT8_CLASS      => 'mxINT8_CLASS',
+	$mxUINT8_CLASS     => 'mxUINT8_CLASS',
+	$mxINT16_CLASS     => 'mxINT16_CLASS',
+	$mxUINT16_CLASS    => 'mxUINT16_CLASS',
+	$mxINT32_CLASS     => 'mxINT32_CLASS',
+	$mxUINT32_CLASS    => 'mxUINT32_CLASS',
+	$mxINT64_CLASS     => 'mxINT64_CLASS',
+	$mxUINT64_CLASS    => 'mxUINT64_CLASS',
+	$mxFUNCTION_CLASS  => 'mxFUNCTION_CLASS',
+);
+
+# Mappings from matlab classes to OME SE datatypes
+my %_matlab_class_to_ome_datatype = (
+	$mxCHAR_CLASS      => 'string',
+	$mxLOGICAL_CLASS   => 'boolean',
+	$mxDOUBLE_CLASS    => 'double',
+	$mxSINGLE_CLASS    => 'float',
+	$mxINT8_CLASS      => 'smallint',
+	$mxUINT8_CLASS     => 'smallint',
+	$mxINT16_CLASS     => 'smallint',
+	$mxUINT16_CLASS    => 'integer',
+	$mxINT32_CLASS     => 'integer',
+	$mxUINT32_CLASS    => 'bigint',
+	$mxINT64_CLASS     => 'bigint',
+);
+
+# Mappings from OME SE datatypes to matlab classes 
+my %_ome_datatype_to_matlab_class = (
+	'string'   => $mxCHAR_CLASS,
+	'boolean'  => $mxLOGICAL_CLASS,
+	'double'   => $mxDOUBLE_CLASS,
+	'float'    => $mxSINGLE_CLASS,
+	'smallint' => $mxINT16_CLASS,
+	'integer'  => $mxINT32_CLASS,
+	'bigint'   => $mxINT64_CLASS,
+);
+my %_numerical_constants; # this gets filled out in _openEngine()
+
+######################################
+# PERSISTENT MATLAB ENGINE VARIABLES #
+######################################
+my $_engine = undef;
+my $_engineOpen = 0;
+	
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
-
 	my $self = $class->SUPER::new(@_);
 
-	$self->{__engine} = undef;
-	$self->{__engineOpen} = 0;
 	$self->{__inputVariableNames} = {};
 	$self->{__outputVariableNames} = {};
-	
-	# List of functions in this package make matlab global variables from input execution instructions
-	# Keyed by Tag name of elements under <Input>
-	$self->{ _translate_to_matlab } = {
-		PixelsArray    => 'Pixels_to_MatlabArray',
-		Scalar         => 'Attr_to_MatlabScalar',
-		ConstantScalar => 'Constant_to_MatlabScalar',
-	};
-	
-	# List of package functions to make ome attributes from output execution instructions
-	# Keyed by Tag name of elements under <Output>
-	$self->{ _translate_from_matlab } = {
-		PixelsArray => 'MatlabArray_to_Pixels',
-		Scalar		=> 'MatlabScalar_to_Attr',
-		Vector		=> 'MatlabVector_to_Attrs',
-		Struct		=> 'MatlabStruct_to_Attr'
-	};
 
-	# Mapping from OME Pixel Types to matlab classes
-	$self->{ _pixel_type_to_matlab_class } = {
-		int8   => $mxINT8_CLASS,
-		uint8  => $mxUINT8_CLASS,
-		int16  => $mxINT16_CLASS,
-		uint16 => $mxUINT16_CLASS,
-		int32  => $mxINT32_CLASS,
-		uint32 => $mxUINT32_CLASS,
-		float  => $mxSINGLE_CLASS,
-	};
-	
-	# Mapping from matlab classes to pixel types. Also limits the supported matlab classes.
-	$self->{ _matlab_class_to_pixel_type } = {
-		$mxINT8_CLASS   => 'int8',
-		$mxUINT8_CLASS  => 'uint8' ,
-		$mxINT16_CLASS  => 'int16',
-		$mxUINT16_CLASS => 'uint16',
-		$mxINT32_CLASS  => 'int32',
-		$mxUINT32_CLASS => 'uint32',
-		$mxSINGLE_CLASS => 'float' ,
-	};
-	
-	# Mapping from matlab classes to Matlab convert function name
-	$self->{ _matlab_class_to_convert} = {
-		$mxLOGICAL_CLASS   => 'logical',
-		$mxDOUBLE_CLASS    => 'double',
-		$mxSINGLE_CLASS    => 'single',
-		$mxINT8_CLASS      => 'int8',
-		$mxUINT8_CLASS     => 'uint8',
-		$mxINT16_CLASS     => 'int16',
-		$mxUINT16_CLASS    => 'uint16',
-		$mxINT32_CLASS     => 'int32',
-		$mxUINT32_CLASS    => 'uint32',
-		$mxINT64_CLASS     => 'int64',
-		$mxUINT64_CLASS    => 'uint64',
-	};
-	
-	# Mapping from convert function names to matlab classes
-	$self->{ _convert_to_matlab_class} = {
-		'logical' => $mxLOGICAL_CLASS, 
-		'double'  => $mxDOUBLE_CLASS,
-		'single'  => $mxSINGLE_CLASS, 
-		'int8'    => $mxINT8_CLASS, 
-		'uint8'   => $mxUINT8_CLASS, 
-		'int16'   => $mxINT16_CLASS,
-		'uint16'  => $mxUINT16_CLASS,
-		'int32'   => $mxINT32_CLASS, 
-		'uint32'  => $mxUINT32_CLASS, 
-		'int64'   => $mxINT64_CLASS,
-		'uint64'  => $mxUINT64_CLASS, 
-	};
-	
-	# Mapping from matlab classes to strings for display purposes
-	$self->{ _matlab_class_to_string } = {
-		$mxUNKNOWN_CLASS   => 'mxUNKNOWN_CLASS',
-		$mxCELL_CLASS      => 'mxCELL_CLASS',
-		$mxSTRUCT_CLASS    => 'mxSTRUCT_CLASS',
-		$mxOBJECT_CLASS    => 'mxOBJECT_CLASS',
-		$mxCHAR_CLASS      => 'mxCHAR_CLASS',
-		$mxLOGICAL_CLASS   => 'mxLOGICAL_CLASS',
-		$mxDOUBLE_CLASS    => 'mxDOUBLE_CLASS',
-		$mxSINGLE_CLASS    => 'mxSINGLE_CLASS',
-		$mxINT8_CLASS      => 'mxINT8_CLASS',
-		$mxUINT8_CLASS     => 'mxUINT8_CLASS',
-		$mxINT16_CLASS     => 'mxINT16_CLASS',
-		$mxUINT16_CLASS    => 'mxUINT16_CLASS',
-		$mxINT32_CLASS     => 'mxINT32_CLASS',
-		$mxUINT32_CLASS    => 'mxUINT32_CLASS',
-		$mxINT64_CLASS     => 'mxINT64_CLASS',
-		$mxUINT64_CLASS    => 'mxUINT64_CLASS',
-		$mxFUNCTION_CLASS  => 'mxFUNCTION_CLASS',
-	};
-	
-	# Mappings from matlab classes to OME SE datatypes
-	$self->{ _matlab_class_to_ome_datatype} = {
-		$mxCHAR_CLASS      => 'string',
-		$mxLOGICAL_CLASS   => 'boolean',
-		$mxDOUBLE_CLASS    => 'double',
-		$mxSINGLE_CLASS    => 'float',
-		$mxINT8_CLASS      => 'smallint',
-		$mxUINT8_CLASS     => 'smallint',
-		$mxINT16_CLASS     => 'smallint',
-		$mxUINT16_CLASS    => 'integer',
-		$mxINT32_CLASS     => 'integer',
-		$mxUINT32_CLASS    => 'bigint',
-		$mxINT64_CLASS     => 'bigint',
-	};
-	
-	# Mappings from OME SE datatypes to matlab classes 
-	$self->{ _ome_datatype_to_matlab_class} = {
-		'string'   => $mxCHAR_CLASS,
-		'boolean'  => $mxLOGICAL_CLASS,
-		'double'   => $mxDOUBLE_CLASS,
-		'float'    => $mxSINGLE_CLASS,
-		'smallint' => $mxINT16_CLASS,
-		'integer'  => $mxINT32_CLASS,
-		'bigint'   => $mxINT64_CLASS,
-	};
-	
-	$self->{_environment} = initialize OME::Install::Environment;
+	# __openEngine this will reuse the current MATLAB engine, if possible
+	$self->__openEngine();
+
 	bless $self,$class;
 	return $self;
 }
 
-sub DESTROY {
-	my ($self) = @_;
-	$self->__closeEngine();
-}
-
 sub startAnalysis {
 	my ($self,$module_execution) = @_;
-	$self->__openEngine();
 
 	my $parser = XML::LibXML->new();
 	my $tree   = $parser->parse_string( $self->getModule()->execution_instructions() );
@@ -241,9 +246,9 @@ sub startImage {
 
 sub finishAnalysis {
 	my ($self) = @_;
+
 	# this insures a check of output arities
 	$self->SUPER::finishAnalysis();
-	$self->__closeEngine();
 }
 
 sub __execute {
@@ -267,11 +272,11 @@ sub __execute {
 	my $command = "${output_cmd}${location}${input_cmd};";
 	logdbg "debug", "***** Command to Matlab: $command\n";
 	my $outBuffer  = " " x 4096;
-	$self->{__engine}->setOutputBuffer($outBuffer, length($outBuffer));	
+	$_engine->setOutputBuffer($outBuffer, length($outBuffer));	
 	
 	my $start_time = [gettimeofday()];
-	$self->{__engine}->eval($command);
-#	$self->{__engine}->eval( "save ome_ml_dump" );
+	$_engine->eval($command);
+#	$_engine->eval( "save ome_ml_dump" );
 	$mex->total_time(tv_interval($start_time));
 
 	# Save warning messages if found.
@@ -284,6 +289,8 @@ sub __execute {
 	if ($outBuffer =~ m/\S/) {
 		$mex->error_message("A warning resulted from matlab command\n\t$command\nThe message is:\n".$outBuffer);
 		logdbg "debug", "A warning resulted from matlab command\n\t$command\nThe message is:\n$outBuffer";
+	} else {
+		logdbg "debug", "Matlab command returned without warning \n";
 	}
 	# useful for messages from error checks that will happen later.
 	$self->{ __command } = $command;
@@ -317,8 +324,8 @@ sub placeInputs {
 	my @input_list = $self->_functionInputs();
 	foreach my $input( @input_list ) {
 		die "In Execution instructions of module ".$self->getModule()->name().", can't handle input: ".$input->tagName()."\n'".$input->toString()."'"
-			unless( exists $self->{ _translate_to_matlab }->{ $input->tagName() } );
-		my $translation_function = $self->{ _translate_to_matlab }->{ $input->tagName() };
+			unless( exists $_translate_to_matlab{ $input->tagName() } );
+		my $translation_function = $_translate_to_matlab{ $input->tagName() };
 		$self->$translation_function( $input );
 	}
 }
@@ -353,8 +360,8 @@ sub _putScalarToMatlab {
 	}
 	
 	$array->makePersistent();
-	$self->{__engine}->eval("global $name;");
-	$self->{__engine}->putVariable($name,$array);
+	$_engine->eval("global $name;");
+	$_engine->putVariable($name,$array);
 	
 	return $array;
 }
@@ -377,10 +384,10 @@ sub _getScalarFromMatlab {
 	my ($self, $name, $convert_class) = @_;
 	
 	# Convert array datatype if requested	
-	$self->{__engine}->eval("$name = ".$self->{_matlab_class_to_convert}->{$convert_class}.
-	                        "($name);") if defined $convert_class;
+	$_engine->eval("$name = ".$_matlab_class_to_convert{$convert_class}.
+ 				   "($name);") if defined $convert_class;
 
-	my $array = $self->{__engine}->getVariable( $name )
+	my $array = $_engine->getVariable( $name )
 		or die "Couldn't retrieve output variable $name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
@@ -398,20 +405,20 @@ sub _trimNumeric {
 	
 	# Trimming required to avoid overflow and underflow problems with Postgress
 	if( $class eq $mxDOUBLE_CLASS) {
-		if( abs( $value ) < $self->{_numerical_constants}->{min_double} ) {
+		if( abs( $value ) < $_numerical_constants{min_double} ) {
 			$value = 0;
-		} elsif( $value < -1 * $self->{_numerical_constants}->{max_double} ) {
-			$value = $self->{_numerical_constants}->{double_neg_inf};
-		} elsif( $value > $self->{_numerical_constants}->{max_double} ) {
-			$value = $self->{_numerical_constants}->{double_inf};
+		} elsif( $value < -1 * $_numerical_constants{max_double} ) {
+			$value = $_numerical_constants{double_neg_inf};
+		} elsif( $value > $_numerical_constants{max_double} ) {
+			$value = $_numerical_constants{double_inf};
 		}
 	} elsif ( $class == $mxSINGLE_CLASS) {
-		if( abs( $value ) < $self->{_numerical_constants}->{min_single} ) {
+		if( abs( $value ) < $_numerical_constants{min_single} ) {
 			$value = 0;
-		} elsif( $value < -1 * $self->{_numerical_constants}->{max_single} ) {
-			$value = $self->{_numerical_constants}->{single_neg_inf};
-		} elsif( $value > $self->{_numerical_constants}->{max_single} ) {
-			$value = $self->{_numerical_constants}->{single_inf};
+		} elsif( $value < -1 * $_numerical_constants{max_single} ) {
+			$value = $_numerical_constants{single_neg_inf};
+		} elsif( $value > $_numerical_constants{max_single} ) {
+			$value = $_numerical_constants{single_inf};
 		}
 	}
 	
@@ -499,28 +506,28 @@ sub Pixels_to_MatlabArray {
 	if (scalar @ROI) {
 		if ($convertToDatatype) {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ".
+							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$_environment->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		} else {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getROI(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ".
+							   "$matlab_var_name = getROI(openConnectionOMEIS('".$_environment->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		}
 	} else {
 		if ($convertToDatatype) {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels->ImageServerID().")); ".
+							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels->ImageServerID().")); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		} else {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels->ImageServerID()."); ".
+							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels->ImageServerID()."); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		}
 	}
-	$self->{__engine}->eval($matlabCmdString);
+	$_engine->eval($matlabCmdString);
 
 	# check that the gotten variable is the right size	
-	my $ml_pixels_array = $self->{__engine}->getVariable($matlab_var_name);
+	my $ml_pixels_array = $_engine->getVariable($matlab_var_name);
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) 
 	      = @{$ml_pixels_array->dimensions()};
 	$sizeX = 1 unless defined($sizeX);
@@ -563,14 +570,13 @@ sub Attr_to_MatlabScalar {
 	# Convert array datatype if requested
 	my $class;
 	if (my $convertToDatatype = $xmlInstr->getAttribute('ConvertToDatatype')) {
-		$class = $self->{ _convert_to_matlab_class}->{ $convertToDatatype };
+		$class = $_convert_to_matlab_class{$convertToDatatype};
 	} else {
 		my $se = $factory->findObject( "OME::SemanticType::Element", {
 			semantic_type => $self->getFormalInput( $formal_input_name )->semantic_type(),
 			name          => "$SEforScalar"
 		} );
-		$class = $self->{ _ome_datatype_to_matlab_class}->
-		   { $se->data_column()->sql_type() };
+		$class = $_ome_datatype_to_matlab_class{ $se->data_column()->sql_type() };
 	}
 	
 	# Place value into matlab
@@ -595,7 +601,7 @@ sub Constant_to_MatlabScalar {
 	# Convert array datatype if requested
 	my $class = $mxDOUBLE_CLASS;
 	if (my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype')) {
-		$class = $self->{ _convert_to_matlab_class}->{ $convertToDatatype };
+		$class = $_convert_to_matlab_class{ $convertToDatatype };
 	}
 	
 	# Place value into matlab
@@ -628,8 +634,8 @@ sub getOutputs {
 	my @output_list = $self->_functionOutputs();
 	foreach my $output( @output_list ) {
 		die "In Execution instructions of module ".$self->getModule()->name().", can't handle output:\n".$output->toString()
-			unless( exists $self->{ _translate_from_matlab }->{ $output->tagName() } );
-		my $translation_function = $self->{ _translate_from_matlab }->{ $output->tagName() };
+			unless( exists $_translate_from_matlab{ $output->tagName() } );
+		my $translation_function = $_translate_from_matlab{ $output->tagName() };
 		$self->$translation_function( $output );
 	}
 
@@ -655,12 +661,12 @@ sub MatlabArray_to_Pixels {
 	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
 		# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
 		# This is diametrically opposite to MATLAB's assumptions.	
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ".
-								"$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
+		$_engine->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ".
+  					   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
 	}
 
 	# Get array's dimensions and pixel type
-	my $ml_pixels_array = $self->{__engine}->getVariable($matlab_var_name)
+	my $ml_pixels_array = $_engine->getVariable($matlab_var_name)
 		or die "Couldn't retrieve output variable $matlab_var_name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
@@ -673,9 +679,9 @@ sub MatlabArray_to_Pixels {
 	$sizeT = 1 unless defined($sizeT);
 
 	my $matlabType = $ml_pixels_array->class();
-	die "Pixels of Matlab class ".$self->{_matlab_class_to_string}->{$matlabType}." are not supported at this time"
-		unless exists $self->{ _matlab_class_to_pixel_type }->{$matlabType};
-	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{$matlabType};
+	die "Pixels of Matlab class ".$_matlab_class_to_string{$matlabType}." are not supported at this time"
+		unless exists $_matlab_class_to_pixel_type{$matlabType};
+	my $pixelType = $_matlab_class_to_pixel_type{$matlabType};
 	
 	# Make Pixels
 	my @pixels_params = (
@@ -696,7 +702,7 @@ sub MatlabArray_to_Pixels {
 		OME::Tasks::PixelsManager->createParentalPixels( @pixels_params )
 	);
 
-	$self->{__engine}->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$self->{_environment}->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
+	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
 	my ($value, $class) = $self->_getScalarFromMatlab($matlab_var_name."_pix");
 	die "Could not write the expected number of pixels to OMEIS"
 		unless $value == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
@@ -801,7 +807,7 @@ sub MatlabVector_to_Attrs {
 		# Convert array datatype if requested
 		my $convertToDatatype = $element->getAttribute( 'ConvertToDatatype' );
 		if ($convertToDatatype) {
-			die "Invalid convertToDatatype '$convertToDatatype'\n" unless $self->{_convert_to_matlab_class}->{$convertToDatatype};
+			die "Invalid convertToDatatype '$convertToDatatype'\n" unless $_convert_to_matlab_class{$convertToDatatype};
 		}
 		
 		# TODO
@@ -814,10 +820,10 @@ sub MatlabVector_to_Attrs {
 			$matlabCmdString .= "$matlab_var_name"."_converted{$index} = $matlab_var_name($index);\n";
 		}
 	}
-	$self->{__engine}->eval("$matlabCmdString");
+	$_engine->eval("$matlabCmdString");
 	
 	# retrieve vector from matlab
-	my $convertedCell = $self->{__engine}->getVariable("$matlab_var_name"."_converted")
+	my $convertedCell = $_engine->getVariable("$matlab_var_name"."_converted")
 		or die "Couldn't retrieve output variable "."$matlab_var_name"."_converted"." from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
@@ -847,9 +853,9 @@ sub MatlabVector_to_Attrs {
 		
 		die "Semantic Element ($SE_name) of Semantic Type (".$formal_output->semantic_type()->name().
 			") is of declared type (".$se->data_column()->sql_type().") but is of actual type (".
-			$self->{ _matlab_class_to_string }->{$class}."). \n"
-			if ( not exists($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
-				 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $se->data_column()->sql_type());
+			$_matlab_class_to_string{$class}."). \n"
+			if ( not exists($_matlab_class_to_ome_datatype{$class}) or 
+				 $_matlab_class_to_ome_datatype{$class} ne $se->data_column()->sql_type());
 			
 		# Make a data hash
 		my $template_id = $xmlInstr->getAttribute( 'UseTemplate' )
@@ -905,7 +911,7 @@ sub MatlabScalar_to_Attr {
 	# Retrieve value from matlab
 	my $class;
 	if (my $convertToDatatype = $xmlInstr->getAttribute('ConvertToDatatype') ) {
-		$class = $self->{_convert_to_matlab_class}->{$convertToDatatype};
+		$class = $_convert_to_matlab_class{$convertToDatatype};
 	}
 	
 	my $value;
@@ -918,9 +924,9 @@ sub MatlabScalar_to_Attr {
 		} );
 	die "Semantic Element ($SEforScalar) of Semantic Type (".$formal_output->semantic_type()->name().
 	    ") is of declared type (".$se->data_column()->sql_type().") but is of actual type (".
-	    $self->{ _matlab_class_to_string }->{$class}."). \n"
-		if ( not exists($self->{ _matlab_class_to_ome_datatype}->{$class}) or 
-			 $self->{ _matlab_class_to_ome_datatype}->{$class} ne $se->data_column()->sql_type());
+	    $_matlab_class_to_string{$class}."). \n"
+		if ( not exists($_matlab_class_to_ome_datatype{$class}) or 
+			 $_matlab_class_to_ome_datatype{$class} ne $se->data_column()->sql_type());
 	
 	# Make a data hash
 	my $template_id = $xmlInstr->getAttribute( 'UseTemplate' );
@@ -974,7 +980,7 @@ sub MatlabStruct_to_Attr {
 		or die "Formal output could not be found. Error processing output: ".$xmlInstr->toString();
 
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
-	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
+	my $matlab_output = $_engine->getVariable( $matlab_var_name )
 		or die "Couldn't retrieve output variable $matlab_var_name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
@@ -1136,26 +1142,27 @@ Starts up the Matlab interface (OME::Matlab::Engine)
 sub __openEngine {
 	my ($self) = @_;
 
-	if (!$self->{__engineOpen}) {
-		# load configuration variables
-		my $session = OME::Session->instance();
-		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
-		my $matlab_exec = $conf->matlab_exec or croak "couldn't retrieve matlab exec path from configuration";
-		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
+	# load configuration variables
+	my $session = OME::Session->instance();
+	my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
+	my $matlab_exec = $conf->matlab_exec or croak "couldn't retrieve matlab exec path from configuration";
+	my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
+	logdbg "debug", "Matlab src dir is $matlab_src_dir";
 		
-		logdbg "debug", "Matlab src dir is $matlab_src_dir";
+	# initially open the MATLAB Engine
+	if (!$_engineOpen) {
 		logdbg "debug", "Matlab exec is $matlab_exec";
-
-		my $engine = OME::Matlab::Engine->open("$matlab_exec -nodisplay -nojvm");
-		die "Cannot open a connection to Matlab!" unless $engine;
-		$self->{__engine} = $engine;
-		$self->{__engineOpen} = 1;
-		
+		$_engine = OME::Matlab::Engine->open("$matlab_exec -nodisplay -nojvm");
+		die "Cannot open a connection to Matlab!" unless $_engine;
+		$_engineOpen = 1;
+	}
+	
+	# figure out MATLAB constants
+	if (not exists $_numerical_constants{'min_double'}) {
 		# set the path and figure out architecture/MATLAB-version specific constants
-		$engine->eval("addpath(genpath('$matlab_src_dir')); ".
-					  "constants = [realmin('double') realmax('double') realmin('single') realmax('single') double(-inf) double(inf) single(-inf) single(inf)];");
-					  
-		my $constants = $engine->getVariable('constants')->getAll() or die "couldn't get constants\n";
+		$_engine->eval("constants = [realmin('double') realmax('double') realmin('single') realmax('single') double(-inf) double(inf) single(-inf) single(inf)];");
+		
+		my $constants = $_engine->getVariable('constants')->getAll() or die "couldn't get constants\n";
 		my $min_double = $constants->[0];
 		my $max_double = $constants->[1];
 		my $min_single = $constants->[2];
@@ -1164,8 +1171,8 @@ sub __openEngine {
 		my $double_inf     = $constants->[5];
 		my $single_neg_inf = $constants->[6];
 		my $single_inf     = $constants->[7];
-	
-		$self->{_numerical_constants} = {
+		
+		%_numerical_constants = (
 			'min_double' => $min_double,
 			'max_double' => $max_double,
 			'min_single' => $min_single,
@@ -1174,7 +1181,18 @@ sub __openEngine {
 			'double_inf'     => $double_inf,
 			'single_neg_inf' => $single_neg_inf,
 			'single_inf'     => $single_inf,
-		};	
+		);	
+	}
+	
+	# check that the MATLAB Engine is running properly and clear out the
+	# current MATLAB environment
+	$_engine->eval("clear; addpath(genpath('$matlab_src_dir')); starter = 12345;");
+
+	my $starter = $_engine->getVariable('starter');
+	if (not defined $starter or $starter->getScalar() != 12345) {
+		logdbg "debug", "RESTARTING MATLAB ENVIRONMENT -- NOT GOOD";
+		$self->__closeEngine();
+		$self->__openEngine();
 	}
 }
 
@@ -1187,10 +1205,10 @@ Shuts down the Matlab interface (OME::Matlab::Engine)
 sub __closeEngine {
 	my ($self) = @_;
 
-	if ($self->{__engineOpen}) {
-		$self->{__engine}->close();
-		$self->{__engine} = undef;
-		$self->{__engineOpen} = 0;
+	if ($_engineOpen) {
+		$_engine->close();
+		$_engine = undef;
+		$_engineOpen = 0;
 	}
 }
 
