@@ -30,8 +30,7 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Harry Hochheiser <hsh@nih.gov>, based on code in
-#                CG_Annotator.pm by Arpun Nagaraja <arpun@mit.edu>
+# Written by:    Harry Hochheiser <hsh@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
@@ -89,17 +88,17 @@ sub getPageBody {
 
     my $gene = $factory->findObject('@Gene',  Name => $geneName);
     print STDERR "Gene id is " .$gene->ID() . "\n";
-    my @probes = $factory->findObjects('@ProbeGeneMap', {Gene =>$gene});
-    print STDERR "Probes found : " . scalar(@probes) . "\n";
+    my @pgmaps = $factory->findObjects('@ProbeGeneMap', {Gene =>$gene});
+    print STDERR "Probes found : " . scalar(@pgmaps) . "\n";
 
     
     my @loop_data;
 
-    while (@probes) {
+    while (@pgmaps) {
 	my %row_data;	
-	my $probe = shift @probes;
-	print STDERR "seeeing probe " .$probe->id .".\n";
-	$row_data{'Probe'} = $probe->ID;
+	my $pgmap = shift @pgmaps;
+	my $probe = $pgmap->Probe;
+	$row_data{'Probe'} = $probe->Name;
 	push(@loop_data,\%row_data);
     }
     $tmpl_data{'ProbeGenes'} = \@loop_data;
