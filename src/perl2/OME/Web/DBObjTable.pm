@@ -116,6 +116,14 @@ sub getPageBody {
 				downloadFilename => $title.'.tsv',
 				content          => $table,
 			});
+		} elsif( $q->param( 'no_decorations' ) ) {
+			return ('HTML-complete', 
+				$q->start_html.
+				$self->getTable( {
+					width         => '100%',
+				}).
+				$q->end_html
+			);
 		} else {
 			return ('HTML', 
 				$self->getTable( {
@@ -263,6 +271,7 @@ sub getTable {
 		delete $text_params{$_} if $_ =~ /((__limit)|(__offset))$/;
 	}
 
+	$options->{ noTxtDownload } if $options->{ no_decorations };
 	my @downloadAsTxt = ( $options->{ noTxtDownload } ? () : 
 		( $q->a( { -href => 
 			$self->pageURL('OME::Web::DBObjTable', { 
@@ -278,7 +287,9 @@ sub getTable {
 	my @columnHeaders;
 	my $table_sort_field = '';
 	# do not enable column sorting
-	if( $options->{ embedded_in_form } && !$options->{ table_id }) {
+	if( $options->{ no_decorations } || 
+	         ($options->{ embedded_in_form } && !$options->{ table_id }) 
+	       ) {
 		@columnHeaders = map( $labels{ $_ }, @fieldNames );
 		unshift( @columnHeaders, 'ID' );
 		unshift( @columnHeaders, 'Select' )
@@ -321,16 +332,18 @@ sub getTable {
 				-border => '0',
 			},
 			# Table title
-			$q->caption( $title ),
+			( $options->{ no_decorations } ? '' : $q->caption( $title ) ),
 			$q->Tr( [
 				# table descriptor
-				$q->td( { -class => 'ome_td', -colspan => scalar( @columnHeaders ), -align => 'right' }, 
-					$q->span( { -class => 'ome_widget' }, join( " | ", (
-						@downloadAsTxt,
-						( $allowPaging ? $pagingText : ()), 
-						map( $self->__getActionButton( $_, $form_name ), @{ $options->{ actions } } )
-					) ) )
-				), 
+				($options->{ no_decorations } ? () :
+					$q->td( { -class => 'ome_td', -colspan => scalar( @columnHeaders ), -align => 'right' }, 
+						$q->span( { -class => 'ome_widget' }, join( " | ", (
+							@downloadAsTxt,
+							( $allowPaging ? $pagingText : ()), 
+							map( $self->__getActionButton( $_, $form_name ), @{ $options->{ actions } } )
+						) ) )
+					)
+				),
 				# Column headers
 				$q->td( { -class => 'ome_td' }, \@columnHeaders ),
 				# Search fields
@@ -344,7 +357,7 @@ sub getTable {
 		'<nobr>'.$pagingText.'</nobr>'.
 		$q->hidden({-name => "PageNum_$formal_name", -default => ( $q->param( "PageNum_$formal_name" ) or undef ) })
 		if( $allowPaging );
-	unless( $options->{ embedded_in_form } ){
+	unless( $options->{ embedded_in_form } || $options->{ no_decorations }){
 		$q->param( 'search_names', values %$search_on ) if $q->param( 'search_names' );
 		$html .= 
 			$q->hidden({-name => 'action', -default => ''}).
@@ -771,7 +784,7 @@ sub __getJoinedGroups {
 			push (@fieldNames, keys %{$entry_options->{includeFields}})
 				if exists $entry_options->{includeFields};
 		}
-print STDERR "$type Fields: @fieldNames\n";
+
 		my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
 		my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, {text => 1} );
 
@@ -874,6 +887,7 @@ sub __parseParams {
 	} elsif( $mode eq 'cgi' ) {
 		$type = $q->param( 'Type' )
 			or confess "url parameter Type not specified";
+		$options->{ no_decorations } = $q->param( 'no_decorations' ) ;
 		$options->{ Length } = $q->param( $type."___limit" ) 
 			unless $options->{ Length };
 		$options->{ Length } = -1 unless $options->{ Length };
@@ -896,14 +910,17 @@ sub __parseParams {
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 
 	# PAGING: prepare offset & limit
-	$searchParams{ __limit } = ( $options->{ Length } or $self->{ _default_Length } );
-	if( $searchParams{ __limit } > 0 ) {
-		$searchParams{ __offset } = ( $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) : 0 );
-		$searchParams{ __offset } *= $searchParams{ __limit };
-	} else {
-		delete $searchParams{ __limit };
-		delete $searchParams{ __offset };
+	unless( $options->{ no_decorations } ) {
+		$searchParams{ __limit } = ( $options->{ Length } or $self->{ _default_Length } );
+		if( $searchParams{ __limit } > 0 ) {
+			$searchParams{ __offset } = ( $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) : 0 );
+			$searchParams{ __offset } *= $searchParams{ __limit };
+		} else {
+			delete $searchParams{ __limit };
+			delete $searchParams{ __offset };
+		}
 	}
+	
 	my $orderBy = ( $package_name->getColumnType( 'id' ) ? 'id' : undef );
 	my $table_id = ( $options->{ table_id } || '' );
 	if( $q->param( $table_id.'_OrderBy' ) and $q->param( $table_id.'_OrderBy' ) ne '' ) {
