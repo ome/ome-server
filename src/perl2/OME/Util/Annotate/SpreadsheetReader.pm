@@ -296,7 +296,10 @@ sub processFile {
 			$image->{ $CGName } = $category;
 		}
 		
-		# Process the ST Columns in order
+		my %ST_data_hash;
+		my %STs;
+		# Extract the Semantic type data in column order. Index it for attribute
+		# creation below
 		foreach my $index ( sort keys %STCols ) {
 			my $STSE = $columnHeadings[$index] or 
 				die "ColumnHeading for column $index is undefined\n";
@@ -305,32 +308,42 @@ sub processFile {
 			my $STName = $1;
 			my $SEName = $2;
 			
-			my $granularity = $factory->findObject('OME::SemanticType', { name => $STName })->granularity;
+			my $ST = $factory->findObject('OME::SemanticType', { name => $STName });
+			$STs{ $STName } = $ST;
+			my $granularity = $ST->granularity;
 			my $SEValue = shift(@seVals);
 			
 			# skip 'Null' cells. i.e. cells that contain only white-space characters
 			next unless defined $SEValue and $SEValue =~ m/\S+/;
 			
+			$ST_data_hash{ $STName }->{ $SEName } = $SEValue;
+
 			# There's an Image ST but there's no image to annotate!
 			if ( $granularity eq 'I' and not exists $image->{ Image }) {
 				push(@ERRORoutput, "You must specify an image for $STSE because it's an Image SemanticType.  Did not annotate.");
 				next;
 			}
+		}
+		# Create attributes from the indexed, semantically typed data.
+		foreach my $ST ( values %STs ) {
+			my $STName = $ST->name;
+			my $data_hash = $ST_data_hash{ $STName };
+			my $granularity = $ST->granularity;
 			
 			# Granularity is Image, so do image annotation
-			elsif ($granularity eq 'I') {
-				$factory->newAttribute ($STName, $image->{ Image }, $global_mex, {
-										$SEName => $SEValue
-										}) or die "could not make new (I) $STName:$SEName -> $SEValue";
-				$image->{"ST:".$STName}->{$SEName} = $SEValue;
+			if ($granularity eq 'I') {
+				$factory->newAttribute ($STName, $image->{ Image }, $global_mex, $data_hash)
+					or die "could not make new (I) $STName\n\t".
+						join( "\n\t", map( $_." => ".$data_hash->{$_}, keys %$data_hash ) );
+				$image->{"ST:".$STName} = $data_hash;
 			}
 			
 			# Granularity is Global, so do global
 			elsif ( $granularity eq 'G' ) {
-				$factory->newAttribute ($STName, undef, $global_mex, {
-										$SEName => $SEValue
-										}) or die "could not make new (G) $STName:$SEName -> $SEValue";
-				$newGlobalSTSE->{$STName}->{$SEName} = $SEValue;
+				$factory->newAttribute ($STName, undef, $global_mex, $data_hash)
+					or die "could not make new (G) $STName\n\t".
+						join( "\n\t", map( $_." => ".$data_hash->{$_}, keys %$data_hash ) );
+				$newGlobalSTSE->{$STName} = $data_hash;
 			}
 		}
 		
@@ -488,7 +501,8 @@ sub printSpreadsheetAnnotationResultsCL {
 				$output .= "    Classifications:\n";
 				foreach my $key (sort keys %$image) {
 					my $CG = $factory->findObject ('@CategoryGroup', { Name => $key });
-					$output .= "        \\_ '".$key."' : '".$image->{$key}->Name()."'\n";
+					$output .= "        \\_ '".$key."' : '".$image->{$key}->Name()."'\n"
+						if $CG;
 				}
 			}
 			$output .= "\n"; # spacing
