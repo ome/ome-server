@@ -182,7 +182,6 @@
 					</xsl:element>
 				</xsl:if>				
 				<xsl:apply-templates select = "OME:ExperimentRef"/>
-
 				<xsl:apply-templates select = "OME:InstrumentRef"/>
 				<xsl:apply-templates select = "OME:ImagingEnvironment"/>
 				<xsl:apply-templates select = "OME:Thumbnail"/>
@@ -190,9 +189,7 @@
 				<xsl:apply-templates select = "OME:DisplayOptions"/>
 				<xsl:apply-templates select = "OME:StageLabel"/>
 				<xsl:apply-templates select = "OME:PlateRef"/>
-				<!--
 				<xsl:apply-templates select = "OME:Pixels"/>
-				-->
 				<xsl:copy-of select = "OME:Feature"/>
 				<xsl:copy-of select = "OME:CustomAttributes/*"/>
 			</xsl:element>
@@ -484,31 +481,45 @@
 		</xsl:element>
 	</xsl:template>
 	<!-- Pixels -->
-	
-	<!--xsl:template match = "OME:Pixels">
+	<xsl:template match = "OME:Pixels">
 		<xsl:element name = "Pixels">
 			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Method">
+			<!--xsl:attribute name = "Method">
 				<xsl:value-of select = "OME:DerivedFrom/@Method"/>
-			</xsl:attribute>
-			<xsl:attribute name = "DimensionOrder">
+			</xsl:attribute-->
+			<!--xsl:attribute name = "DimensionOrder">
 				<xsl:value-of select = "@DimensionOrder"/>
+			</xsl:attribute-->
+			<xsl:attribute name = "SizeX">
+				<xsl:value-of select = "@SizeX"/>
+			</xsl:attribute>
+			<xsl:attribute name = "SizeY">
+				<xsl:value-of select = "@SizeY"/>
+			</xsl:attribute>
+			<xsl:attribute name = "SizeZ">
+				<xsl:value-of select = "@SizeZ"/>
+			</xsl:attribute>
+			<xsl:attribute name = "SizeC">
+				<xsl:value-of select = "@SizeC"/>
+			</xsl:attribute>
+			<xsl:attribute name = "SizeT">
+				<xsl:value-of select = "@SizeT"/>
 			</xsl:attribute>
 			<xsl:attribute name = "PixelType">
 				<xsl:value-of select = "@PixelType"/>
 			</xsl:attribute>
-			<xsl:attribute name = "BigEndian">
+			<!--xsl:attribute name = "BigEndian">
 				<xsl:value-of select = "@BigEndian"/>
-			</xsl:attribute>
-			<xsl:apply-templates select = "OME:DerivedFrom" mode = "MakeRefs">
+			</xsl:attribute-->
+			<!--xsl:apply-templates select = "OME:DerivedFrom" mode = "MakeRefs">
 				<xsl:with-param name = "Name">
 					<xsl:text>DerivedFrom</xsl:text>
 				</xsl:with-param>
-			</xsl:apply-templates>
+			</xsl:apply-templates-->
 		</xsl:element>
-	</xsl:template-->
+	</xsl:template>
 	
 	<!--
 
