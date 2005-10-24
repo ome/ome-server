@@ -54,6 +54,7 @@ use LWP::UserAgent;
 use HTTP::Response;
 use Log::Agent;
 use Sys::Hostname;
+use CGI;
 
 use OME::Session;
 use OME::Analysis::Engine::Worker;
@@ -70,8 +71,19 @@ sub new {
 	
 	unless ($DATA_SOURCE) {
 		$DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getRemoteDSN();
+		# Uncomment this next line if you want to use a Mac for a backend
+		# and a non-mac for the worker nodes.
+#		$DATA_SOURCE =~ s/\.local//;
 	}
 
+# When DBUser is not presented to the worker node as a url parameter, it defaults
+# to the name of the apache user on the worker node. It needs to be the name of
+# a postgres user on the backend. Here is the error I get trying to use my 
+# laptop as the backend and ome as the worker node:
+# ModPerl::Registry: DBI connect('dbname=ome;host=siah-tibook','',...) failed: FATAL 1:  user "apache" does not exist at /usr/lib/perl5/site_perl/5.8.3/OME/Database/Delegate.pm line 269\n
+# I can't get this from the install environment because it's not set.
+	my $DBUser = `whoami`;
+	chomp( $DBUser );
 	my $self = {
 		instance_id => undef,
 	# Array of hashrefs, keyed by 'MexID','Dep','TargetID'
@@ -82,6 +94,7 @@ sub new {
 	# The messages the worker will send us when its done.
 		OurWorker   => undef,
 		AnyWorker   => undef,
+		DBUser => $DBUser,
 	};
 	bless $self, $class;
 	
@@ -134,14 +147,22 @@ sub pressWorker {
 	return undef unless $worker and $job and $job->{MEX};
 	
 	$job->{WorkerID} = $worker->id();
-	my $params = join ('&', map ($_.'='.$job->{$_},keys %$job));
 
+	# Put together the url parameters. Use CGI to make all the characters safe.
+	my $q = CGI->new();
+	foreach my $key (keys %$job ) {
+		$q->param( $key, $job->{$key} );
+	}
 	# Put our notices on the parameter list
-	$params .= "&Notice=".$self->{OurWorker};
-	$params .= "&Notice=".$self->{AnyWorker};
+	$q->param( "Notice", $self->{OurWorker}, $self->{AnyWorker} );
+	
+	my $params = $q->self_url();
+	undef $q;
+	$params =~ s/.*?\?//; # Strip the leading junk. ex: http://junk/is/here?params
+	my $url = $worker->URL().'?'.$params;
 
-	logdbg "debug", "pressWorker: Calling ".$worker->URL().'?'.$params;
-	my $response = $self->{UA}->get($worker->URL().'?'.$params);
+	logdbg "debug", "pressWorker: Calling ".$url;
+	my $response = $self->{UA}->get($url);
 
 	return 1 if $response->is_success();
 	
@@ -198,6 +219,7 @@ sub executeModule {
 		Dependence   => $dependence,
 		Target       => $target ? $target->id() : undef,
 		DataSource   => $self->{DataSource},
+		DBUser       => $self->{DBUser},
 		SessionKey   => $self->{SessionKey},
 	};
 	push (@$queue,$job);
