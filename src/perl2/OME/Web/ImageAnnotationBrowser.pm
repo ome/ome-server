@@ -99,6 +99,8 @@ sub getPageBody {
 	my $pgmap = shift @pgmaps;
 	my $probe = $pgmap->Probe;
 	$row_data{'Probe'} = $probe->Name;
+	my $images = $self->getImageDisplay($probe);
+	$row_data{'ProbeImages'} = $images;
 	push(@loop_data,\%row_data);
     }
     $tmpl_data{'ProbeGenes'} = \@loop_data;
@@ -110,7 +112,27 @@ sub getPageBody {
     $html .= $q->endform();
 
     return ('HTML',$html);	
+}
 
+sub getImageDisplay {
+    my $self = shift;
+    my $probe = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my (@probeImageMaps) = 
+	$factory->findObjects('@ImageProbe', {Probe=>$probe});
+    my @images;
+
+    while (@probeImageMaps) {
+	my $map = shift @probeImageMaps;
+	my %row_data;
+	my $imageID = $map->image_id;
+	my $image = $factory->loadObject("OME::Image",$imageID);
+	push(@images,$image);
+    }
+    return $self->Renderer->renderArray(\@images,'bare_ref_mass',
+					{ type => 'OME::Image'});
 }
 
 sub getGeneChooser {
