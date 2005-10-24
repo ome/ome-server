@@ -193,7 +193,9 @@ sub _renderData {
 			my $request_string = $request->{ 'request_string' };
 			my $original_files = OME::Tasks::ImageManager->getImageOriginalFiles($obj);
 			
-			if( scalar( @$original_files ) > 1 ) {
+			if( not defined $original_files ) {
+				$record{ $request_string } = "No original files found";
+			} elsif( ref( $original_files ) eq 'ARRAY' ) {
 				my $more_info_url = 
 					$self->getSearchURL( 
  						'@OriginalFile',
@@ -203,15 +205,13 @@ sub _renderData {
 					scalar( @$original_files )." files found. ".
 					"<a href='$more_info_url'>See individual listings</a> or ".
 					"<a href='javascript:alert(\"Ilya is gonna do this part\");'>download them all at once</a>";
-			} elsif( scalar( @$original_files ) == 1 ) {
+			} else {
 				$record{ $request_string } = 
 					$self->render( 
-						$original_files->[0], 
+						$original_files, 
 						( $request->{ render } or 'ref' ), 
 						$request 
 					);
-			} else {
-				$record{ $request_string } = "No original files found";
 			}
 			my @original_file_links = map( 
 				$self->render( $_, ( $request->{ render } or 'ref' ), $request ),

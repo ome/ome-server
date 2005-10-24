@@ -302,12 +302,10 @@ sub compile_sigs {
 	# make an array of image_paths
 	my @image_paths; # this is the name of the image's original file
 	foreach my $img (@images) {
-		my $of_list_objs = OME::Tasks::ImageManager->getImageOriginalFiles($img);
-		my @of_list_paths =  map( $_->Path, @$of_list_objs );
-
+		my  = OME::Tasks::ImageManager->getImageOriginalFiles($img);
 		die "Image ".$_->name." doesn't have exactly one Original File"
-			unless (scalar @of_list_paths == 1);
-		push @image_paths, @of_list_paths;
+			if( ref( $original_files ) eq 'ARRAY' );
+		push @image_paths, $originalFile->Path();
 	}
 	
 	# make the matlab signature array and label array

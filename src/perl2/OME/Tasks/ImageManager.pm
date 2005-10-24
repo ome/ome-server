@@ -630,36 +630,46 @@ sub getImageWavelengths{
 	return \@Wavelengths;
 }
 
-########################
-# Parameters:
-# 	image = image object
-# this was written by Josiah Johnston and used to be in __OME_Image.pm
+=head2 getImageOriginalFiles
+
+	my $originalFiles = OME::Tasks::ImageManager->getImageOriginalFiles($image);
+
+collects original files attributes for a given image. 
+If none are found, returns undef.
+If one is found, returns it.
+If a bunch are found, returns a list.
+
+=cut
+
 sub getImageOriginalFiles{
 	my ($self,$image)=@_ ;
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
 	
-	# Maybe dying here is to harsh for OME::ModuleExecution and ActualInput.
-	# Let's start dieing and if this is the wrong behaviour, we can change it later
 	my $import_mex = $factory->findObject( "OME::ModuleExecution", 
 		'module.name' => 'Image import', 
 		image => $image, 
-		__order => 'timestamp' ) or die "No Image import MEX found for this image.";
+		__order => 'timestamp'
+	) or return undef;
 
 	my $ai = $factory->findObject( 
 		"OME::ModuleExecution::ActualInput", 
 		module_execution => $import_mex,
 		'formal_input.semantic_type.name' => 'OriginalFile'
-	) or die "No OriginalFile inputs were found for Image import MEX id=".$import_mex->id;
+	) or return undef;
 
 	my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
 		$ai->input_module_execution,
 		'OriginalFile'
 	);
 	
+	return undef
+		if( scalar( $original_files ) == 0 );
+	return $original_files->[0]
+		if( scalar( $original_files ) == 1 );
 	return $original_files;
 }
-####################
+
 
 sub getDisplayOptions{
 	my ($self,$image,$pixels)=@_ ;
