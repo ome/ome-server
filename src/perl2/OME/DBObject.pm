@@ -2274,6 +2274,11 @@ any ?-placeholders which appear in the SQL statement.
 =cut
 
 sub __makeSelectSQL {
+# This is turned off only for this function due to the   	 
+# crazy (and wrong): 	 
+# Use of uninitialized value in string eq at OME/DBObject.pm line 1989. 	 
+# See below (though no longer line 1989) 	 
+no warnings "uninitialized"; 	 
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
