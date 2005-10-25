@@ -2,3 +2,10 @@
 <Input type="hidden" name="Root" value="<TMPL_VAR NAME=Root>">
 <input type="hidden" name="Template" value="<TMPL_VAR NAME=Template>">
 
+<TMPL_IF NAME=RootHtml>
+Images for <TMPL_VAR NAME=RootType> <TMPL_VAR NAME=RootHtml><br>
+<TMPL_ELSE>
+<TMPL_VAR NAME=RootType> <TMPL_VAR NAME=Root> not found</br>
+</TMPL_IF>
+
+<TMPL_VAR NAME=AnnotationDetail>
