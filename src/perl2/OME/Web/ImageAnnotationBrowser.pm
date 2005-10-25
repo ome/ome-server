@@ -132,16 +132,27 @@ sub getPageBody {
     my $pathTypes= $self->getPaths($tmpl);
     
     
+
     # find the instances associated with root. 
     # NOTE: We might want to change this if we revise to handle 
     # _all_ instances of the first class
     my $pathElt = shift @$pathTypes;
     my $rootObj = $factory->findObject($pathElt, Name=>$root);
-
-    # get the associated layout code
-    # strip of preceding '@'
+    my $data_html;
     $pathElt =~ /@(.*)/;
-    my $data_html= $self->getLayoutCode($rootObj,$pathTypes,$1);
+    my $rootType = $1;
+
+    if (defined $rootObj)  {
+
+	# get the associated layout code
+	# strip of preceding '@'
+
+	$data_html= $self->getLayoutCode($rootObj,$pathTypes,$rootType);
+    }
+    else  {
+	$data_html = "$rootType \"$root\" not found";
+    }
+	
 
     # populate the template..
     $tmpl->param(%tmpl_data);
