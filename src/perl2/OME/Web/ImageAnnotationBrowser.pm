@@ -138,16 +138,20 @@ sub getPageBody {
     # _all_ instances of the first class
     my $pathElt = shift @$pathTypes;
     my $rootObj = $factory->findObject($pathElt, Name=>$root);
+
     my $data_html;
+
+    # strip off preceding '@'
+
     $pathElt =~ /@(.*)/;
     my $rootType = $1;
 
     if (defined $rootObj)  {
 
 	# get the associated layout code
-	# strip of preceding '@'
+	$data_html = $self->getHeader($rootObj,$rootType);
 
-	$data_html= $self->getLayoutCode($rootObj,$pathTypes,$rootType);
+	$data_html .= $self->getLayoutCode($rootObj,$pathTypes,$rootType);
     }
     else  {
 	$data_html = "$rootType \"$root\" not found";
@@ -185,6 +189,44 @@ sub getPaths {
     $path =~ m/Path.load\/types-\[(.*)\]/;
     my @paths = split(/,/,$1);
     return \@paths;
+}
+
+=head1 getHeader 
+    Find a header to put above details. This header will link back
+    to external links if possible.
+=cut
+
+sub getHeader {
+    my $self = shift;
+    my ($rootObj,$rootType) = @_;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my $q = $self->CGI();
+    my $header;
+
+    # at this point, $root object is what we start with, rootType is
+    # its type
+    
+    # find map from root type to ext link
+    my $mapType ="@".$rootType."ExternalLink";
+
+    my $name = $rootObj->Name();
+
+    # find instance of this for the object
+    my $map = $factory->findObject($mapType,$rootType=>$rootObj);
+
+    # if it exists, get link and make href
+    if (defined $map) {
+	my $link = $map->ExternalLink();
+	my $url = $link->URL();
+	$header = "Images for Gene ";
+	$header .= $q->a({href=>$url},$name);
+
+    }else {    # if not, just put out name.
+	$header = "Images for $rootType $name<br>";
+    }
+    return $header;
+
 }
 
 =head1 getLayoutCode
