@@ -67,23 +67,37 @@ sub getPageBody {
     # Load the correct template and make sure the URL still carries the template
     # name.
 
-    my $filename = $q->param('template');
-    my $tmpl = HTML::Template->new(filename=>$filename,case_sensitive=>1);
-    $tmpl_data{'template'}=$filename;
+    my $tmpl_dir=$self->actionTemplateDir('custom');
+    my $which_tmpl = $q->param('Template'); 
+
+    my $referer = $q->referer();
+    my $url = $self->pageURL('OME::Web::ImageDetailAnnotator');
+    if ($referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
+	$which_tmpl = $1;
+	$which_tmpl =~ s/%20/ /;
+	return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
+    }
+    $which_tmpl =~ s/%20/ /;
+    my $tmpl;
+
+    my $tmpl_Attr  =  $factory->findObject( '@AnnotationTemplate', 
+					    Name => $which_tmpl )
+	or die "Could not find AnnotationTemplate with name $which_tmpl";
+    $tmpl = HTML::Template->new( filename => $tmpl_Attr->Template(),
+				 path => $tmpl_dir,
+				 case_sensitive => 1 );
+
+    $tmpl_data{'template'}=$which_tmpl;
     
     # Load the requested category groups
     my @parameter_names = $tmpl->param();
     my ($sts,$maps) = $self->findSTs(\@parameter_names);
 
-    $self->selectDataset();
     # annnotate
     $self->annotateImages($sts,$maps);
 
     # display images
     my $currentImageID = $self->populateImageDetails(\%tmpl_data);
-
-    # populate dataset choices
-    $self->populateDatasets(\%tmpl_data);
 
     # display annotation types
     $self->populateAnnotationTypes($currentImageID,
@@ -158,17 +172,6 @@ sub loadST  {
     return $semantic_type;
 }
 
-sub selectDataset() {
-    my $self = shift;
-    my $q = $self->CGI() ;
-    my $session= $self->Session();
-    
-    if ($q->param('ChangeDataset')) {
-	my $dataset  = $q->param('dataset');
-	$session->dataset($dataset);
-    }
-
-}
 sub annotateImages {
     my $self = shift;
     my $q = $self->CGI() ;
@@ -238,10 +241,7 @@ sub populateImageDetails {
 	    my @unsorted_image_ids = split( /,/, $concatenated_image_ids );
 	    my @unsorted_images = map  $factory->loadObject('OME::Image', $_) ,	@unsorted_image_ids;
 	    @images = sort ( {$a->name cmp $b->name} @unsorted_images);
-	} else { 
-	    my $d = $session->dataset;
-	    @images = $d->images;
-	}
+	}  
     }
 
     
@@ -303,23 +303,6 @@ sub populateImageDetails {
     my @completed_ids = map $_->ID,@completed_images;
     $tmpl_data->{'images_completed'} = join(',',@completed_ids);
     return $currentImageID;
-}
-
-sub populateDatasets() {
-    my $self= shift;
-    my $session = $self->Session();
-    my $dataset = $session->dataset;
-    my $factory = $session->Factory();
-    my $tmpl_data = shift;
-
-    print STDERR "current dataset is " . $dataset->name . "\n";
-    my @dataset_list = $factory->findObjects("OME::Dataset",
-	{ owner => $session->User() });
-    #pull out those things that are importset..
-    my @dataset_choices = grep {$_->name() ne 'ImportSet'} @dataset_list;
-    $tmpl_data->{'datasets'} = 
-	$self->Renderer()->renderArray(
-	    \@dataset_choices ,'list_of_options',{default_value =>   $dataset->ID});
 }
 
 sub populateAnnotationTypes {
