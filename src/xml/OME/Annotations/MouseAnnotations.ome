@@ -141,8 +141,9 @@
     <!-- Question: can a probe be associated with multiple genes?
 	 Shoule we replace this map with a reference in Probe to a 
          Gene? -->
+
     <SemanticType
-       Name= "ProbeGeneMap"
+       Name= "ProbeGene"
        AppliesTo = "G">
       <Description>Defines the relationship between Probes and Genes.</Description>
       <Element
@@ -159,7 +160,7 @@
 
     <!-- A strain definitely can be associated with multiple genes -->
     <SemanticType
-       Name= "StrainGeneMap"
+       Name= "StrainGene"
        AppliesTo = "G">
       <Description>Defines the relationship between Strains and Genes.
       </Description>
@@ -205,7 +206,7 @@
 	 external links -->
 
     <SemanticType
-       Name= "GeneExternalLinkMap"
+       Name= "GeneExternalLink"
        AppliesTo = "G">
       <Description>Defines the relationship between Genes and External
 	links.</Description>
@@ -223,7 +224,7 @@
 
 
     <SemanticType
-       Name= "ProbeExternalLinkMap"
+       Name= "ProbeExternalLink"
        AppliesTo = "G">
       <Description>Defines the relationship between Probes and External
 	links.</Description>
@@ -242,7 +243,7 @@
 
 
     <SemanticType
-       Name= "StrainExternalLinkMap"
+       Name= "StrainExternalLink"
        AppliesTo = "G">
       <Description>Defines the relationship between Strains and External
 	links.</Description>
