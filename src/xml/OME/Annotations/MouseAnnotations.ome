@@ -242,7 +242,7 @@
 
 
     <SemanticType
-       Name= "StrainExternalLink"
+       Name= "StrainExternalLinkMap"
        AppliesTo = "G">
       <Description>Defines the relationship between Strains and External
 	links.</Description>
