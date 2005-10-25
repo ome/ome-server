@@ -126,6 +126,7 @@ sub getPageBody {
     # instantiate variables in the template
     $tmpl_data{'Root'} = $root;
     $tmpl_data{'Template'} = $q->param('Template');
+    $tmpl_data{'RootType'} =
 
 	
     # get a parsed array of the types in the path variable.
@@ -139,22 +140,19 @@ sub getPageBody {
     my $pathElt = shift @$pathTypes;
     my $rootObj = $factory->findObject($pathElt, Name=>$root);
 
-    my $data_html;
 
     # strip off preceding '@'
 
     $pathElt =~ /@(.*)/;
     my $rootType = $1;
+    $tmpl_data{'RootType'} = $rootType;
 
     if (defined $rootObj)  {
 
 	# get the associated layout code
-	$data_html = $self->getHeader($rootObj,$rootType);
-
-	$data_html .= $self->getLayoutCode($rootObj,$pathTypes,$rootType);
-    }
-    else  {
-	$data_html = "$rootType \"$root\" not found";
+	$tmpl_data{'RootHtml'} = $self->getHeader($rootObj,$rootType);
+	$tmpl_data{'AnnotationDetail'} = 
+	    $self->getLayoutCode($rootObj,$pathTypes,$rootType);
     }
 	
 
@@ -163,7 +161,6 @@ sub getPageBody {
     # and the form.
     my $html =
 	$q->startform( { -name => 'primary' } );
-    $html .=  $data_html if ($data_html);
     $html .= $tmpl->output() if ($tmpl);
     $html .= $q->endform();
 
@@ -202,7 +199,7 @@ sub getHeader {
     my $session= $self->Session();
     my $factory = $session->Factory();
     my $q = $self->CGI();
-    my $header;
+    my $html;
 
     # at this point, $root object is what we start with, rootType is
     # its type
@@ -219,13 +216,12 @@ sub getHeader {
     if (defined $map) {
 	my $link = $map->ExternalLink();
 	my $url = $link->URL();
-	$header = "Images for Gene ";
-	$header .= $q->a({href=>$url},$name);
+	$html = $q->a({href=>$url},$name);
 
     }else {    # if not, just put out name.
-	$header = "Images for $rootType $name<br>";
+	$html = "$name";
     }
-    return $header;
+    return $html;
 
 }
 
