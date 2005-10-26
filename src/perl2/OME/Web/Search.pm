@@ -130,27 +130,6 @@ sub getPageBody {
 	my $form_name = $self->{ form_name };
 
 	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
-	# Save the url-parameters if any were passed. 
-	# e.g. accessor_type, accessor_id, accessor_method, select
-	if( $q->param( '__save_these_params' ) ) {
-		$html .= "\n".$q->hidden( -name => '__save_these_params' )."\n";
-		foreach my $param ( $q->param( '__save_these_params' ) ){
-			my $value = $q->param( $param );
-			$q->param( $param, $value );
-			$html .= $q->hidden( -name => $param )."\n";
-		}
-	} else {
-		my %do_not_save_these_url_params = (
-			'Page' => undef,
-			'SearchType' => undef
-		);
-		my @params_to_save = grep( ( not exists $do_not_save_these_url_params{ $_ } ), $q->url_param() );
-		$html .= "\n".$q->hidden( -name => '__save_these_params', -values => \@params_to_save )."\n";
-		$html .= "\n".$q->hidden( -name => $_, -default => $q->param( $_ ) )."\n"
-			foreach ( @params_to_save );
-	}
-
-	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
 	# Return results of a select, then close this popup window.
 	# This search package can be called as a popup window that searches & selects.
 	if( $q->param( 'do_select' ) || $q->param( 'select_all' ) ) {
@@ -176,8 +155,8 @@ sub getPageBody {
 			@selected_objects = $factory->findObjects( $formal_name, %searchParams );
  		}
 
-		my $return_to_form = ( $q->url_param( 'return_to_form' ) || $q->param( 'return_to_form' ) || 'primary');
-		my $return_to_form_element = ( $q->url_param( 'return_to' ) || $q->param( 'return_to' ) );
+		my $return_to_form = ( $q->param( 'return_to_form' ) || 'primary');
+		my $return_to_form_element = ( $q->param( 'return_to' ) );
 		my $ids = join( ',', map( $_->id, @selected_objects ) );
 		$self->{ _onLoadJS } = <<END_HTML;
 				window.opener.document.forms['$return_to_form'].${return_to_form_element}.value = '$ids';
@@ -236,7 +215,7 @@ END_HTML
 		 		
 		# Get Objects & Render them
 		my ($objects, $paging_text ) = $self->search();
-		my $select = ( $q->param( 'select' ) or $q->url_param( 'select' ) );
+		my $select = $q->param( 'select' );
 		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
 			{ pager_text => $paging_text, type => $type, 
 				( $select && $select eq 'many' ?
@@ -258,12 +237,14 @@ END_HTML
 			$q->submit( { 
 				-name => 'do_select',
 				-value => 'Select checked objects',
-			} ) .
+			} )
+			if( $select );
+		$tmpl_data{do_select} .= 
 			$q->submit( { 
 				-name => 'select_all',
 				-value => 'Select all search results',
 			} )
-			if( $select );
+			if( $select && $select eq 'many' );
 
 		# This is used to retain selected objects across pages. 
 		# It takes advantage of CGI's "sticky fields". The values (i.e. LSID's)
@@ -286,7 +267,9 @@ END_HTML
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
 			$q->hidden( -name => 'page_action', -default => undef, -override => 1 ).
-			$q->hidden( -name => 'accessor_id' );
+			$q->hidden( -name => 'accessor_id' ).
+			$q->hidden( -name => 'accessor_method' ).
+			$q->hidden( -name => 'accessor_type' );
 		
 	}
 	
@@ -298,6 +281,10 @@ END_HTML
 	$tmpl->param( %tmpl_data );
 
 	$html .= 
+		$q->hidden( -name => 'return_to_form' ).
+		$q->hidden( -name => 'return_to' ).
+		$q->hidden( -name => 'select' ).
+		$q->hidden( -name => 'Popup' ).
 		$tmpl->output().
 		$q->endform();
 
@@ -309,7 +296,7 @@ sub getOnLoadJS { return shift->{ _onLoadJS }; }
 =head2 getSearchFields
 
 	# get html form elements keyed by field names 
-	my ($form_fields, $search_paths) = OME::Web::Search->getSearchFields( $type, \@field_names, \%default_search_values );
+	my $form_fields = OME::Web::Search->getSearchFields( $type, \@field_names, \%default_search_values );
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -317,31 +304,28 @@ $type can be a DBObject name ("OME::Image"), an Attribute name
 %default_search_values is also optional. If given, it is used to populate the search form fields.
 
 $form_fields is a hash reference of html form inputs { field_name => form_input, ... }
-$search_paths is also a hash reference keyed by field names. It's values
-are search paths. In most cases the search path will be the same as
-the field name. For reference fields, the path will specify a field in the referent. 
-For example, a reference field named 'dataset' would have a search path 'dataset.name'
+$search_fields is a list of DBObject fields (or Semantid Elements if searching 
+for an ST) to search on. 
 
 =cut
 
 sub getSearchFields {
 	my ($self, $type, $field_names, $defaults) = @_;
-	my ($form_fields, $search_paths);
+	my ($form_fields);
 	
 	my $specializedSearch = $self->_specialize( $type );
-	($form_fields, $search_paths) = $specializedSearch->_getSearchFields( $type, $field_names, $defaults )
+	$form_fields = $specializedSearch->_getSearchFields( $type, $field_names, $defaults )
 		if( $specializedSearch and $specializedSearch->can('_getSearchFields') );
 
+	my $q = $self->CGI();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
-
-	my $q = $self->CGI();
-	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$field_names;
 	foreach my $field ( @$field_names ) {
 		next if exists $form_fields->{ $field };
-		if( $fieldRefs{ $field } ) {
-			( $form_fields->{ $field }, $search_paths->{ $field } ) = 
-				$self->getRefSearchField( $formal_name, $fieldRefs{ $field }, $field, $defaults->{ $field } );
+		my $foreignClass = $package_name->getAccessorReferenceType( $field );
+		if( $foreignClass ) {
+			$form_fields->{ $field } = $self->getRefSearchField( 
+				$formal_name, $foreignClass, $field, $defaults->{ $field } );
 		} else {
 			$q->param( $field, $defaults->{ $field }  ) 
 				unless defined $q->param( $field );
@@ -350,17 +334,16 @@ sub getSearchFields {
 				-size    => 17, 
 				-default => $defaults->{ $field } 
 			);
-			$search_paths->{ $field } = $field;
 		}
 	}
 
-	return ( $form_fields, $search_paths );
+	return $form_fields;
 }
 
 =head2 getRefSearchField
 
 	# get an html form element that will allow searches to $to_type
-	my ( $searchField, $search_path ) = 
+	my $htmlSearchField = 
 		$self->getRefSearchField( $from_type, $to_type, $accessor_to_type, $default_obj );
 
 the types may be a DBObject name ("OME::Image"), an Attribute name
@@ -369,39 +352,93 @@ $from_type is the type you are searching from
 $accessor_to_type is an accessor of $from_type that returns an instance of $to_type
 $to_type is the type the accessor returns
 
-returns a form input and a search path for that input. The search path
-for a module_execution's module field is module.name
+returns a form input and a search path for that input.
 
 =cut
 
 sub getRefSearchField {
 	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
+	my $threshold_Popup = 10;
 	
-	my $specializedSearch = $self->_specialize( $to_type );
-	return $specializedSearch->_getRefSearchField( $from_type, $to_type, $accessor_to_type, $default )
-		if( $specializedSearch and $specializedSearch->can('_getRefSearchField') );
-
-	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
-	my ($to_package) = OME::Web->_loadTypeAndGetInfo( $to_type );
-	my $searchOn = '';
-	if( $to_package->getColumnType( 'name' ) ) {
-		$searchOn = '.name';
-		$default = $default->name() if $default;
-	} elsif( $to_package->getColumnType( 'Name' ) ) {
-		$searchOn = '.Name';
-		$default = $default->Name() if $default;
-	} else {
-		$default = $default->id() if $default;
+	if( not defined $default ) {
+		my $specializedSearch = $self->_specialize( $to_type );
+		$default = $specializedSearch->_getDefault( )
+			if( $specializedSearch && $specializedSearch->can('_getDefault') );
 	}
 
+	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
+	my ($to_package, $to_common_name, $to_formal_name) = OME::Web->_loadTypeAndGetInfo( $to_type );
+	$default = $default->id() if $default;
+
 	my $q = $self->CGI();
-	$q->param( $accessor_to_type.$searchOn, $default  ) 
-		unless defined $q->param($accessor_to_type.$searchOn );
-	return ( 
-		$q->textfield( -name => $accessor_to_type.$searchOn , -size => 17, -default => $default ),
-		$accessor_to_type.$searchOn,
-		$default
-	);
+	$q->param( $accessor_to_type, $default  ) 
+		unless defined $q->param($accessor_to_type );
+
+	my $factory = $self->Session()->Factory();
+	my $htmlSnippet;
+
+	# Make a popup menu if there aren't very many objects to select from
+	if( $factory->countObjects( $to_formal_name ) < $threshold_Popup ) {
+		my @objects_to_select = $factory->findObjects( $to_formal_name );
+		my %object_names = map{ $_->id() => $self->Renderer()->getName($_) } @objects_to_select;
+		my $object_order = [ '', sort( { $object_names{$a} cmp $object_names{$b} } keys( %object_names ) ) ];
+		$object_names{''} = 'All';
+		$htmlSnippet = 
+			$q->scrolling_list( 
+				-name     => $accessor_to_type,
+				'-values' => $object_order,
+				-labels	  => \%object_names,
+				-default  => $default,
+				-size     => 3,
+				-multiple => 'true',
+			);
+	# Make a click through link if there are very many objects to select from
+	} else {
+		if( $q->param($accessor_to_type ) ) {
+		
+			# Work out the selection. It will be one or more ids. If it's
+			# one parameter, it could be a comma separated list.
+			my ($selectionRepresentation, @ids);
+			my @selectionVals = $q->param($accessor_to_type );
+			if( scalar( @selectionVals ) == 1 ) {
+				@ids = split( /,/, $selectionVals[0] );
+			} else {
+				@ids = @selectionVals;
+			}
+			
+			# Build a representation of the selection
+			# Only show the individual objects if there aren't many selected
+			if( scalar( @ids ) < 5 ) {
+				my @objs = map( $factory->loadObject( $to_type, $_ ), @ids );
+				$selectionRepresentation = $self->Renderer()->renderArray( \@objs, 'ref_list' );
+			# If there are too many to show, link to a popup page to show them all
+			} else {
+				$selectionRepresentation = $q->a(
+					{ -href => 'javascript: openPopUp( "'.$self->getSearchURL( $to_type, id => join( ',', @ids ) ).'" )' },
+					scalar( @ids )." selected. "
+				);
+			}
+			
+			my $form_name = $self->{ form_name };
+			$htmlSnippet = 
+				$q->hidden( -name => $accessor_to_type ).
+				$selectionRepresentation.
+				"(<a href='javascript: document.forms[\"$form_name\"].elements[\"$accessor_to_type\"].value = \"\"; ".
+									 "document.forms[\"$form_name\"].submit();'".
+				   "title='Cancel selection'/>X</a> ".
+				"<a href='javascript: selectMany( \"$to_type\", \"$accessor_to_type\" );'".
+				   "title='Change selection'/>C</a>)";
+		} else { #  then if nothing is selected.
+			$htmlSnippet = 
+				$q->hidden( -name => $accessor_to_type ).
+				"(".
+				$q->a( { 
+					-href => "javascript: selectMany( '$to_type', '$accessor_to_type' );"
+				}, "Select" ).")";
+		}
+	}
+
+	return $htmlSnippet;
 }
 
 =head1 Internal Methods
@@ -452,13 +489,13 @@ sub getSearchCriteria {
 		@search_fields = grep( (!m/^\//), $tmpl->param() ); # Screen out special field requests that start with '/'
 	}
 
-	my ($form_fields, $search_paths) = $self->getSearchFields( $type, \@search_fields );
+	my $form_fields = $self->getSearchFields( $type, \@search_fields );
 	my %field_titles = $render->getFieldTitles( $type, \@search_fields );
-	$q->param( 'search_names', values %$search_paths); # explicitly record what fields we are searching on.
+	$q->param( 'search_names', @search_fields); # explicitly record what fields we are searching on.
 	my $specializedSearch = $self->_specialize( $type );
 	my $order = ( $specializedSearch ?
-		$specializedSearch->__sort_field( $search_paths, $search_paths->{ $search_fields[0] }) :
-		$self->__sort_field( $search_paths, $search_paths->{ $search_fields[0] })
+		$specializedSearch->__sort_field( \@search_fields, $search_fields[0]) :
+		$self->__sort_field( \@search_fields, $search_fields[0] )
 	);
 	
 	# Render search fields
@@ -470,20 +507,20 @@ sub getSearchCriteria {
 	foreach my $field( @search_fields ) {
 		# a button for ascending sort
 		my $sort_up = "<a href='javascript: document.forms[\"$form_name\"].elements[\"__order\"].value = \"".
-			$search_paths->{ $field }.
+			$field.
 			"\"; document.forms[\"$form_name\"].submit();' title='Sort results by ".
 			$field_titles{ $field }." in increasing order'".
-			( $order && $order eq $search_paths->{ $field } ?
+			( $order && $order eq $field ?
 				" class = 'ome_active_sort_arrow'" : ''
 			).'>';
 		# a button for descending sort
 		my $sort_down = "<a href='javascript: ".
 				"document.forms[\"$form_name\"].elements[\"__order\"].value = ".
-				"\"!".$search_paths->{ $field }."\";".
+				"\"!".$field."\";".
 				"document.forms[\"$form_name\"].submit();' title='Sort results by ".
 			$field_titles{ $field }." in decreasing order'".
 			# $order is prefixed by a ! for descending sort. that explains substr().
-			( $order && substr( $order, 1 ) eq $search_paths->{ $field } ?
+			( $order && substr( $order, 1 ) eq $field ?
 				" class = 'ome_active_sort_arrow'" : ''
 			).'>';
 
@@ -555,13 +592,19 @@ sub _getSearchParams {
 	my @search_names = $q->param( 'search_names' );
 	foreach my $search_on ( @search_names ) {
 		next unless ( $q->param( $search_on ) && $q->param( $search_on ) ne '');
-		my $value = $q->param( $search_on );
-		# search string parsing
-		$value =~ s/\*/\%/g;
-		unless( $value =~ m/,/ ) {
-			$searchParams{ $search_on } = [ 'ilike', $value ];
+		my @values = $q->param( $search_on );
+		@values = grep{ (defined $_) && ($_ ne '') } @values;
+		if( scalar( @values ) > 1 ) {
+			$searchParams{ $search_on } = [ 'in', \@values ];		
 		} else {
-			$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
+			my $value = $values[0];
+			# search string parsing
+			$value =~ s/\*/\%/g;
+			unless( $value =~ m/,/ ) {
+				$searchParams{ $search_on } = [ 'ilike', $value ];
+			} else {
+				$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
+			}
 		}
 	}
 	return %searchParams;
@@ -719,7 +762,7 @@ sub _preparePaging {
 =head2 __sort_field
 
 	# get the field to sort by. set a default if there isn't a cgi param
-	my $order = $self->__sort_field( $search_paths, $default );
+	my $order = $self->__sort_field( \@search_fields, $default );
 	# retrieve the order from a cgi parameter
 	$searchParams{ __order } = $self->__sort_field();
 
@@ -728,27 +771,26 @@ sub _preparePaging {
 	The search path is returned.
 
 	$default will be used if no cgi __order parameter is found, and
-	there is no 'Name' or 'name' field in $search_paths
-	$search_paths is a hash that is keyed by available search field
-	names. It's values are search paths for each of those fields. see
-	getSearchFields()
+	there is no 'Name' or 'name' field in $search_fields
+	$search_fields is a list of available search field
+	names.
 
 =cut
 
 sub __sort_field {
-	my ($self, $search_paths, $default ) = @_;
+	my ($self, $search_fields, $default ) = @_;
 	my $q = $self->CGI();
 
 	if( $q->param( '__order' ) && $q->param( '__order' ) ne '' ) {
 		return $q->param( '__order' );
 	}
 	
-	if( exists $search_paths->{ 'name' } ) {
-		$q->param( '__order', $search_paths->{ 'name' } );
-		return $search_paths->{ 'name' };
-	} elsif( exists $search_paths->{ 'Name' } ) {
-		$q->param( '__order', $search_paths->{ 'Name' } );
-		return $search_paths->{ 'Name' };
+	if( grep( $_ eq 'name', @$search_fields ) ) {
+		$q->param( '__order', 'name' );
+		return 'name';
+	} elsif( grep( $_ eq 'Name', @$search_fields ) ) {
+		$q->param( '__order', 'Name' );
+		return 'Name';
 	} else {
 		$q->param( '__order', $default );
 		return $default;
