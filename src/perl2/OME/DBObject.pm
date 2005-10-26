@@ -896,14 +896,14 @@ sub getColumnType {
 	# This alias may be an inferred relation that hasn't been picked up yet.
     } elsif ( not $aliasIsActuallyInstantiated ) {
 		# Verify syntax and parse method name
-		my ( $foreign_key_class, $foreign_key_alias ) = $proto->__parseHasManyAccessor( $alias );
+		my ( $foreign_key_class, $foreign_key_alias ) = $class->__parseHasManyAccessor( $alias );
 
 		# bail out if method was not parsable
 		return undef unless ( defined $foreign_key_class && defined $foreign_key_alias );
 		# record this method & flag it as being inferred
-		$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $alias, 1 ];
+		$class->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $alias, 1 ];
 		# Properly define the method
-		$class->hasMany($alias, $foreign_key_class => $foreign_key_alias );
+		$class->hasMany($alias, $foreign_key_class, $foreign_key_alias );
         return "has-many";
     } else {
     	return undef;
@@ -1036,9 +1036,9 @@ sub hasMany {
     foreach my $alias (@$aliases) {
 		# Mark this relation as being explicitly defined if it has not
 		# already been marked as inferred.
-		$proto->__hasManysReverseLookup()->
+		$class->__hasManysReverseLookup()->
 			{ $foreign_key_class }{ $foreign_key_alias } = [ $alias, undef ]
-			unless $proto->__hasRelationshipBeenInferred( $foreign_key_class, $foreign_key_alias );
+			unless $class->__hasRelationshipBeenInferred( $foreign_key_class, $foreign_key_alias );
 
         confess "Already an alias named $alias"
           if defined $class->getColumnType($alias, 1);
@@ -1561,7 +1561,11 @@ sub getAccessorReferenceType {
 		my $factory = $class->getFactory();
 		my $ST = $factory->findObject("OME::SemanticType",name => $st_name)
 			or die "Cannot find Semantic type named $st_name";
-		$returnedClass = $ST->getAttributeTypePackage($st_name);
+		$returnedClass = $ST->requireAttributeTypePackage($st_name);
+
+	# Make sure the package is loaded if we have one to return.
+	} elsif( defined $returnedClass ) {
+		$returnedClass->require();
 	}
 
 	return $returnedClass;
