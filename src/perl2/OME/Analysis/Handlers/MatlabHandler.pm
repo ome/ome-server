@@ -937,7 +937,7 @@ sub MatlabScalar_to_Attr {
 		die "Template Semantic Type ($ST_name) differs from ST registered for formal output ($formal_output). Error processing Output Instruction '".$xmlInstr->toString()."'"
 			if $formal_output->semantic_type()->name() ne $ST_name;
 	}
-	# Hackaround for XS variable hidden uniqueness.
+	# Hackaround for XS wierdness, or more descriptively: XS variable hidden uniqueness.
 	# Similar to IGG's Black Magic encountered in SemanticTypeImport
 	# with sql_type. Namely, DB Driver problems with passing a scalar
 	# that ends up being an SQL reserved keyword. In both cases, the 
