@@ -986,13 +986,29 @@ returns a url to a search page for whatever is returned from $obj's $method
 
 sub getSearchAccessorURL {
 	my ($self, $obj, $method) = @_;
-	$self->_loadTypeAndGetInfo( $obj->getAccessorReferenceType( $method ) );
-	return $self->pageURL( 'OME::Web::Search', {
-		SearchType      => $obj->getAccessorReferenceType( $method )->getFormalName(),
-		accessor_type   => $obj->getFormalName(),
-		accessor_id     => $obj->id, 
-		accessor_method => $method
-	} );
+	my $type = $obj->getColumnType( $method ); # This has side effect of loading the possibly inferred method
+	my $searchTypeFormalName = $obj->getAccessorReferenceType( $method )->getFormalName();
+
+	if( $type eq "has-many" ) {
+		# An example of the parameters resulting here is:
+		#	$obj == 'CategoryGroup'
+		#	$method == 'CategoryList'
+		# We need to know the formal name of the type returned by CategoryList()
+		# and need to get the foreign key in Category that refers to CategoryGroup
+		my ( $foreign_key_class, $foreign_key_alias ) = 
+			@{ $obj->__hasManys()->{$method} };
+		return $self->pageURL( 'OME::Web::Search', {
+			SearchType         => $searchTypeFormalName,
+			$foreign_key_alias => $obj->id()
+		} );
+	} elsif( $type eq "many-to-many" ) {
+		return $self->pageURL( 'OME::Web::Search', {
+			SearchType      => $searchTypeFormalName,
+			accessor_type   => $obj->getFormalName(),
+			accessor_id     => $obj->id, 
+			accessor_method => $method
+		} );
+	}
 }
 
 =head2 getSearchURL
