@@ -240,19 +240,7 @@ sub _populate_object_in_template {
 		my @relations_data;
 		foreach my $relation( @$relations ) {
 			my( $title, $method, $foreign_key_class ) = @$relation;
-			my $more_info_url;
-			if( $obj->getColumnType( $method ) eq 'has-many' ) {
-				# has many accessor needs the search field set.
-				my ($foreign_key_class, $foreign_key_alias ) = @{ $obj->__hasManys()->{ $method } };
-				my ( undef, $search_path, $default_search_value ) = $self->SearchUtil()->
-					getRefSearchField( $foreign_key_class, $obj->getFormalName(), $foreign_key_alias, $obj );
-				$more_info_url = $self->getSearchURL( 
-					$foreign_key_class,
-					$search_path => $default_search_value
-				);
-			} else { # many to many accessor needs the accessor field set
-				$more_info_url = $self->getSearchAccessorURL( $obj, $method )
-			}
+			my $more_info_url = $self->getSearchAccessorURL( $obj, $method );
 
 			push( @relations_data, { 
 				name => $title, 
@@ -338,6 +326,12 @@ sub renderArray {
 
 		# set up paging if there is a limit for this type and if pagerControl returned ok
 		if( $limit and $pager_text ) {
+			# black magic. Fixes a problem similar to XS wierdness. Grep the codebase for XS wierdness for more details on that.
+			# punchline, is the next line completelyavoids the sometimes error of:
+			# Error serving OME::Web::DBObjDetail: DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 731.
+			# OME::Factory::findObjects('OME::Factory=HASH(0xb385e0)','OME::ModuleExecution','image',1,'__offset',0,'__limit',10) called at /Users/josiah/OME/cvs/OME/src/perl2//OME/DBObject.pm line 1051
+			# In the case that was causing the error, $limit was coming from options specified in the template.
+			$limit = $limit + 0;
 			@relation_objects = $obj->$method( __limit => $limit, __offset => $offset );
 			$options->{pager_text} = $pager_text;
 		
