@@ -262,7 +262,7 @@ sub getPageBody {
 		$directions = "Current Template: ";
 		$popup = $q->popup_menu(
 							-name     => 'Templates',
-							'-values' =>  [ map( $_->Name, @templates) ],
+							-values =>  [ map( $_->Name, @templates) ],
 							-labels   =>  { map{ $_->Name => $_->Name } @templates },
 							-default  => $current
 						);
