@@ -46,18 +46,18 @@ use OME::SessionManager;
 use base qw(OME::Web);
 
 sub getPageTitle {
-    return "OME: Image Annotation Browser";
+    return "OME: Image Annotation Details";
 }
 
 {
-    my $menu_text = "Image Annotation Browser";
+    my $menu_text = "Image Annotation Details";
     sub getMenuText { return $menu_text }
 }
 
 
 =head1 getPageBody
 
-Get the body for a page that displays images associated with given
+Get the body for a page that displays an image associated with given
     annotations. The annotations to be displayed will be given by the
     content of a Template file - as specified in the Template
     parameter of the requesting URL.
@@ -66,27 +66,23 @@ Get the body for a page that displays images associated with given
 This template file will contain a TMPL_VAR of the name
     "Path.load/types-[....]". Inside the brackets, this variable name
     will include a list of types that will be used to define a path
-    leading from some root to sets of images.
+    leading images to a set of annotations.
 
 The list of types will alternate between objects and maps. An
     event-numbered list of types will always be included - starting with
     a root, followed by a map type, a subsequent type, etc., and
-    ending with a map that leads to OME::Image. Since OME::Image is
-    always the last element, it's presence in the list is implied.
+    ending with a map that leads to a final ST.
     
 Thus, for example, a list of the form 
-    [@Gene,@ProbeGeneMap,@Probe,@ImageProbe] will start with
-    an instance of the Gene ST, use ProbeGeneMap to find a set of
-    probes, and ImageProbe to find a set of images for each probe.
+    [@ImageProbe,@Probe,@ProbeGene,@Gene] will start with
+    an Image, use ImageProbe to find all associated probes, and then
+    ProbeGene to find all genes for the probe.
 
-It is assumed that this module is also called with a query parameter
-    Root indicating the value (name) of the first ST in the list. Thus,
-    Gene=Mga will find all of the probes and eventually images
-    associated with the name "Mga". The value given for root is
-    assumed to be the Name of the instance of the first ST.
+Successive annotation types will be displayed in nested lists.
 
-   
-    
+Where possible, the final elements will be displayed with appropriate
+   links to external URLs.
+       
 =cut
 
 
@@ -104,10 +100,12 @@ sub getPageBody {
     my $which_tmpl = $q->url_param('Template');
     my $referer = $q->referer();
     my $url = $self->pageURL('OME::Web::ImageAnnotationDetail');
+    my $ID = $q->url_param("ID");
     if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
 	$which_tmpl = $1;
 	$which_tmpl =~ s/%20/ /;
-	return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
+	my $redirect =$self->redirect($url.'&Template='.$which_tmpl."&ID=".$ID);
+	return ('REDIRECT', $redirect);
     }
     $which_tmpl =~ s/%20/ /;
 
@@ -119,17 +117,23 @@ sub getPageBody {
     my $tmpl = 
 	HTML::Template->new(filename => $tmplData->Template(),
 			    case_sensitive=>1);
-    
 
+    # instantiate variables in the template    
+    $tmpl_data{'Template'} = $q->param('Template');
+
+    # load the imaeg.
     my $ID = $q->param('ID');
     my $image = $factory->loadObject( 'OME::Image', $ID);
+    # populate  the basic image display  in the template.
     $self->getImageDisplay($tmpl,\%tmpl_data,$image);
-    # instantiate variables in the template
-    $tmpl_data{'Template'} = $q->param('Template');
+
+
 
 	
     # get a parsed array of the types in the path variable.
     my $pathTypes= $self->getPaths($tmpl);
+
+    # get the display detail.
     $tmpl_data{'AnnotationDetails'} = 
 	$self->getDetail($pathTypes,'OME::Image',$image);
     
@@ -166,6 +170,10 @@ sub getPaths {
 }
 
 
+=head1 getImageDisplay
+
+    get the basic display for the image 
+=cut
 sub getImageDisplay {
     my $self  = shift;
     my ($tmpl,$tmpl_data,$image) = @_;
@@ -183,6 +191,11 @@ sub getImageDisplay {
     $tmpl_data->{$image_request } = $self->Renderer()->render( $image, $mode);
 }
 
+=head1 getDetail
+
+    Recursively iterate through the path of types, populating the list s
+    until we get down to the bare items at the end
+=cut
 sub getDetail {
     my $self= shift;
     my ($pathTypes,$parentType,$root) = @_;
@@ -228,7 +241,7 @@ sub getDetail {
 	    foreach my $map (@maps) {
 		# now, i've got the gene;
 		my $target = $map->$targetField;
-		#my $url = $target->Name();
+		# get the external URL
 		my $url = $self->getObjURL($target,$type);
 		$html .= "<li> $targetField $url</br>";
 	    }
@@ -268,7 +281,18 @@ sub getDetail {
     return $html;
 }
 
+=head1 getObjURL
 
+    Find an HREF the external URL for the object. Assume that if we have
+    type Foo, then ST "FooExternalLink" will contain the appropriate
+    mapping to an external link. Also assume that any external link
+    will be sufficient.
+
+    The URL will be returned in an HREF for the URL, with the name 
+    of the object being used as the text of the link. If no URL is
+    available, the name of the object is returned.
+
+=cut
 sub getObjURL {
     my $self = shift;
     my ($target,$type) = @_;

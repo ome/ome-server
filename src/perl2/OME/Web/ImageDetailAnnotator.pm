@@ -57,6 +57,29 @@ sub getPageTitle {
     sub getMenuText { return $menu_text }
 }
 
+=head1 getPageBody
+
+Load up the correct annotation template, save any annotations, allow
+    for selection of images, show images that have been annotated and 
+    have not yet been annotated.
+
+    The assumption here is that we're running off of a template
+    that has a variable named
+    DetailSTs.load/-[ST1:MapST1,ST2:MapST2...]
+
+    where the STn:MapSTn pairs indicate the STs that will be used to
+    annotate images. For each pair, the first elemen will be an ST
+    indicating some data with which we will want each images to be
+    associated. 
+
+    The MapST in each pair will be a simple mapping between the
+    specified ST and images.
+
+    Note that this does not account for ST instances that map directly
+    to images. This functionality is not currently supported
+    
+    
+=cut
 sub getPageBody {
     my $self = shift ;
     my $q = $self->CGI() ;
@@ -91,6 +114,8 @@ sub getPageBody {
     
     # Load the requested category groups
     my @parameter_names = $tmpl->param();
+
+    # find the STs and the mapping STs to be used
     my ($sts,$maps) = $self->findSTs(\@parameter_names);
 
     # annnotate
@@ -113,6 +138,18 @@ sub getPageBody {
 
     return ('HTML',$html);	
 }
+
+=head1 findSTs
+    
+    As mentioned above, the annotation STs are fond in a template
+    variable of the form:
+    DetailSTs.load/-[ST1:MapST1,ST2:MapST2...]
+
+    This procedure parses this variable, returning 2 values:
+    a list of the actual ST objects, and a hash mapping
+    ST names to mapping ST objects.
+
+=cut
 
 sub findSTs {
     my $self = shift;
@@ -150,6 +187,13 @@ sub findSTs {
     return (\@sts,\%maps);
 }
 
+
+=head1 loadST
+
+loads a given ST 
+
+
+=cut
 sub loadST  {
     my $self = shift;
     my $session= $self->Session();
@@ -172,6 +216,11 @@ sub loadST  {
     return $semantic_type;
 }
 
+=head1 annotateImages
+
+    Saves annotations associated with the current image.
+
+=cut
 sub annotateImages {
     my $self = shift;
     my $q = $self->CGI() ;
@@ -183,7 +232,7 @@ sub annotateImages {
     if ($q->param( 'SaveAndNext' )) {
 	# for each incoming category - FromCG.id (in template)
 	foreach my $st (@$sts) {
-	    print STDERR "ST is  $st\n";
+	    #find the field name specified in the template
 	    my $stAnnotationFieldName = "st".$st->id;
 
 	    # Get incoming category ids from CGI parameters
@@ -194,22 +243,16 @@ sub annotateImages {
 
 		my $attribute = $factory->loadAttribute( $st, $attributeID )
 		    or die "Couldn't load Attribute (id=$attributeID)";
-		# Create new 'Classification' attributes on image
+		# load the current image
+		
 		my $currentImage = $factory->loadObject( 'OME::Image',
 				 $q->param( 'currentImageID' ));
 
 		####create a new association between the image id 
 		### and the attribute_id.
-		
-		print STDERR "looking for association with  "
-		    .  $st->name() . "\n";
-
+		# find the apppropriate ST
 		my $assnSt = $maps->{$st->name()};
-		print STDERR "loading association ST: " .
-		    $assnSt->name() . "\n";
-
-		print STDERR "annotating type with " . $assnSt->name()
-		              . "\n";
+		#create the annotation
 		my ($mex,$attrs) =
 		    OME::Tasks::AnnotationManager->annotateImage(
 			$currentImage,$assnSt,
@@ -223,6 +266,9 @@ sub annotateImages {
     }
 }
 
+=head1 populateImageDetails
+
+=cut
 sub populateImageDetails {
     my $self = shift ;
     my $q = $self->CGI() ;
@@ -284,9 +330,11 @@ sub populateImageDetails {
     # set the ID of the current image on display
     $tmpl_data->{ 'current_image_id' } = $currentImageID;
     
+    
      $tmpl_data->{ 'image_thumbs' } = 
 	 $self->Renderer()->renderArray(\@images, 'bare_ref_mass', { type => 'OME::Image' });
 
+    # populate hidden field indicating what to do next.
     if (scalar(@images) > 0) {
 	my @image_ids = map $_->ID , @images;
 	$tmpl_data->{ 'images_to_annotate' } = join( ',', @image_ids);
@@ -296,7 +344,7 @@ sub populateImageDetails {
 	$tmpl_data->{'images_to_annotate'} = 'none';
     }
 
-
+    # display images that have been annotated.
     $tmpl_data->{'annotated_image_thumbs'}  = 
 	$self->Renderer()->renderArray(\@completed_images, 'bare_ref_mass', 
 				       { type => 'OME::Image' });
@@ -305,6 +353,16 @@ sub populateImageDetails {
     return $currentImageID;
 }
 
+=head2 populateAnnotationTypes
+
+Popuate the menus with the various annotation types. For each ST that
+    we are using, add an  entry to the St.loop. Each entry in the
+    ST.loop variable will have a select name of stxx, where xx is the
+    ID of the ST (given by template var st.id), a label given by
+    template var st.Name, and a pull down option list given by the 
+    st.val/render-list_of_options field.
+
+=cut
 sub populateAnnotationTypes {
     my $self = shift ;
     my ($currentImageID,$tmpl_data,$parameter_names,$sts) = @_;
@@ -322,7 +380,6 @@ sub populateAnnotationTypes {
 	my $stVal = $q->param( $label );
 	my %st_data;
 
-	# hmm. what is this for?
 	my @stValList = $factory->findObjects($st);
 
 	my $currentImage = $factory->loadObject( 'OME::Image',$currentImageID);

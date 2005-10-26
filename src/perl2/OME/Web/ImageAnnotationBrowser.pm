@@ -75,8 +75,8 @@ The list of types will alternate between objects and maps. An
     always the last element, it's presence in the list is implied.
     
 Thus, for example, a list of the form 
-    [@Gene,@ProbeGeneMap,@Probe,@ImageProbe] will start with
-    an instance of the Gene ST, use ProbeGeneMap to find a set of
+    [@Gene,@ProbeGene,@Probe,@ImageProbe] will start with
+    an instance of the Gene ST, use ProbeGene to find a set of
     probes, and ImageProbe to find a set of images for each probe.
 
 It is assumed that this module is also called with a query parameter
