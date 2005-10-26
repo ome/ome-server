@@ -41,11 +41,10 @@ package OME::Web::Search::Experimenter;
 
 =head1 NAME
 
-OME::Web::Search::Experimenter - Specialized rendering for Experimenter Attribute
+OME::Web::Search::Experimenter - 
 
 =head1 DESCRIPTION
 
-Provides custom behavior for rendering an Experimenter Attribute
 
 =head1 METHODS
 
@@ -57,38 +56,15 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Web::Search);
 
-=head2 getRefSearchField
+=head2 _getDefault
 
-returns a dropdown list of Experimenter names valued by id.
+returns the logged in user
 
 =cut
 
-sub _getRefSearchField {
-	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
-	
-	my $factory = $self->Session()->Factory();
-	$default = $self->Session()->experimenter_id()
-		unless $default;
-	
-	my (undef, undef, $from_formal_name) = $self->_loadTypeAndGetInfo( $from_type );
-
-	# Owner list
-	my @experimenters = $factory->findAttributes( "Experimenter" );
-	my %experimenter_names = map{ $_->id() => $_->FirstName().' '.$_->LastName() } @experimenters;
-	my $experimenter_order = [ '', sort( { $experimenter_names{$a} cmp $experimenter_names{$b} } keys( %experimenter_names ) ) ];
-	$experimenter_names{''} = 'All';
-
-	my $q = $self->CGI();
-	$q->param( $accessor_to_type, $default ) unless defined $q->param( $accessor_to_type );
-	return (
-		$q->popup_menu( 
-			-name     => $accessor_to_type,
-			'-values' => $experimenter_order,
-			-labels	  => \%experimenter_names,
-			-default  => $default
-		),
-		$accessor_to_type
-	);
+sub _getDefault {
+	my ($self) = @_;
+	return $self->Session()->experimenter();
 }
 
 

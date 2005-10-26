@@ -60,34 +60,21 @@ use base qw(OME::Web::Search);
 
 =head2 __sort_field
 
-	# get the field to sort by. set a default if there isn't a cgi param
-	my $order = $self->__sort_field( $search_paths, $default );
-	# retrieve the order from a cgi parameter
-	$searchParams{ __order } = $self->__sort_field();
-
-	This method determines what search path the results should be ordered by.
-	As a side affect, it stores the search path as a cgi parameter.
-	The search path is returned.
-
-	$default will be used if no cgi __order parameter is found, and
-	'timestamp' is not in $search_paths.
-	$search_paths is a hash that is keyed by available search field
-	names. It's values are search paths for each of those fields. see
-	getSearchFields()
+Returns timestamp for default search field. See superclass method for more info.
 
 =cut
 
 sub __sort_field {
-	my ($self, $search_paths, $default ) = @_;
+	my ($self, $search_fields, $default ) = @_;
 	my $q = $self->CGI();
 
 	if( $q->param( '__order' ) && $q->param( '__order' ) ne '' ) {
 		return $q->param( '__order' );
 	}
 	
-	if( exists $search_paths->{ 'timestamp' } ) {
-		$q->param( '__order', $search_paths->{ 'timestamp' } );
-		return $search_paths->{ 'timestamp' };
+	if( grep( $_ =~ m/timestamp/, @$search_fields ) ) {
+		$q->param( '__order', 'timestamp' );
+		return 'timestamp';
 	} else {
 		$q->param( '__order', $default );
 		return $default;

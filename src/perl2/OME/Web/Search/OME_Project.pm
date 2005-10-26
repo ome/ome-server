@@ -41,11 +41,11 @@ package OME::Web::Search::OME_Project;
 
 =head1 NAME
 
-OME::Web::Search::OME_Project - spell out the summary fields
+OME::Web::Search::OME_Project -
 
 =head1 DESCRIPTION
 
-Orders Project fields
+
 
 =head1 METHODS
 
@@ -59,22 +59,15 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Web::Search);
 
-=head2 getRefSearchField
+=head2 _getDefault
 
 Set default to session's active project.
 
 =cut
 
-sub _getRefSearchField {
-	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
-	
- 	my $q = $self->CGI();
-	$q->param( $accessor_to_type.'.name', $self->Session()->project()->name() )
-		unless defined $q->param($accessor_to_type.'.name' );
-	return ( 
-		$q->textfield( -name => $accessor_to_type.'.name' , -size => 17 ),
-		$accessor_to_type.'.name'
-	);
+sub _getDefault {
+	my ($self) = @_;
+	return $self->Session()->project();
 }
 
 =head1 Author
