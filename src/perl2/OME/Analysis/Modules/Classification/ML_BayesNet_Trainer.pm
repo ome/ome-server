@@ -165,7 +165,7 @@ sub execute {
 			Rank     => $i,
 			# For some reason, these next two variables come out as 'NaN' sometimes
 			# The quotes are a work around for the XS wierdness described in
-			# OME::Analysis::Handlers::MatlabHandler->MatlabStruct_to_Attr()
+			# OME::Analysis::Handlers::MatlabHandler->MatlabScalar_to_Attr()
 			CumScore => "$sig_cum_score",
 			IndScore => "$sig_ind_score"
 		} );
