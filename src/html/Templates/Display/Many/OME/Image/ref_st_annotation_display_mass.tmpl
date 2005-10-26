@@ -1,0 +1,10 @@
+<TMPL_IF NAME=/obj_loop>
+	<TMPL_LOOP NAME=/obj_loop>
+		<TMPL_VAR NAME=/object/render-ref_map>
+	</TMPL_LOOP>
+	<TMPL_LOOP NAME=/obj_loop/loop2>
+		<TMPL_VAR NAME=/object/render-ref_st_annotation_display>
+	</TMPL_LOOP>
+<TMPL_ELSE>
+	<span class='ome_quiet'>(no images)</span>
+</TMPL_IF>
