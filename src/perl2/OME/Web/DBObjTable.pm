@@ -271,7 +271,7 @@ sub getTable {
 		delete $text_params{$_} if $_ =~ /((__limit)|(__offset))$/;
 	}
 
-	$options->{ noTxtDownload } if $options->{ no_decorations };
+	$options->{ noTxtDownload } = 1 if $options->{ no_decorations };
 	my @downloadAsTxt = ( $options->{ noTxtDownload } ? () : 
 		( $q->a( { -href => 
 			$self->pageURL('OME::Web::DBObjTable', { 
