@@ -276,7 +276,8 @@ sub getLayoutCode {
 	    }
 	    # render them in an html array
 	    $html .=   return 
-		$self->Renderer->renderArray(\@images,'bare_ref_mass',
+		$self->Renderer()->renderArray(\@images,
+					       'ref_st_annotation_display_mass',
 					     { type => 'OME::Image'});
 	    
 	}
