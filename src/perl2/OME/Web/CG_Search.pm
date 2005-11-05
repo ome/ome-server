@@ -121,6 +121,23 @@ sub getPageBody {
 			my %temp_image_ids;
 			my $label = "FromCG".$cg->id;
 			my $categoryID = $q->param( $label );
+			# Accept a category name as parameter, but change it to id
+			unless( ( not defined $categoryID ) || 
+			        ( $categoryID =~ m/^\d+$/ ) ) {
+			    die "More than one category named $categoryID"
+			    	if( $factory->countObjects( 
+						'@Category', 
+						CategoryGroup => $cg,
+						Name          => $categoryID
+					) > 1 );
+				my $category = $factory->findObject( 
+					'@Category', 
+					CategoryGroup => $cg,
+					Name          => $categoryID
+				) or die "Couldn't load a Category for CG ".$cg->Name." given parameter $categoryID.";
+				$categoryID = $category->id();
+				$q->param( $label, $categoryID )
+			}
 			
 			my @categoryList = $cg->CategoryList;
 			# First, render the various lists and whatnot
