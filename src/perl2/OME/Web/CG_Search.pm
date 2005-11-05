@@ -121,22 +121,24 @@ sub getPageBody {
 			my %temp_image_ids;
 			my $label = "FromCG".$cg->id;
 			my $categoryID = $q->param( $label );
-			# Accept a category name as parameter, but change it to id
-			unless( ( not defined $categoryID ) || 
-			        ( $categoryID =~ m/^\d+$/ ) ) {
+			# Allow parameter specification as CG_Name=Category_Name
+			# If these parameters were found, translate to id and turn on search
+			if( $q->param( $cg->Name ) ) {
+				my $categoryName = $q->param( $cg->Name );
 			    die "More than one category named $categoryID"
 			    	if( $factory->countObjects( 
 						'@Category', 
 						CategoryGroup => $cg,
-						Name          => $categoryID
+						Name          => $categoryName
 					) > 1 );
 				my $category = $factory->findObject( 
 					'@Category', 
 					CategoryGroup => $cg,
-					Name          => $categoryID
-				) or die "Couldn't load a Category for CG ".$cg->Name." given parameter $categoryID.";
+					Name          => $categoryName
+				) or die "Couldn't load a Category for CG '".$cg->Name."' given parameter $categoryName.";
 				$categoryID = $category->id();
-				$q->param( $label, $categoryID )
+				$q->param( $label, $categoryID );
+				$q->param( 'GetThumbs', 1 );
 			}
 			
 			my @categoryList = $cg->CategoryList;
