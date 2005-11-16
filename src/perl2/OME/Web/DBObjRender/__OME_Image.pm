@@ -215,10 +215,6 @@ sub _renderData {
 						$request 
 					);
 			}
-			my @original_file_links = map( 
-				$self->render( $_, ( $request->{ render } or 'ref' ), $request ),
-				@$original_files
-			);
 		}
 	}
 	
