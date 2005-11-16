@@ -1033,11 +1033,11 @@ sub getSearchURL {
 
 =head2 getDownloadAllURL
     
-    my $zip_url = $self->getDownloadAllURL( $obj );
+    my $zip_url = $self->getDownloadAllURL( $image );
 
-$obj should be a DBObject instance.
+$image should be an instance of OME::Image
 
-returns a URL to download all the image files for the object
+returns a URL to download all the original files for a given image
 
 =cut
 
@@ -1046,7 +1046,7 @@ sub getDownloadAllURL {
     my $original_files = OME::Tasks::ImageManager->getImageOriginalFiles($obj);
     my $zip_url = $self->Session()->Factory()->findObject( '@Repository' )->ImageServerURL()."?Method=ZipFiles&FileID=";
     foreach my $zip_imgObj(@{$original_files}) {
-	$zip_url = $zip_url.$zip_imgObj->FileID().",";
+		$zip_url = $zip_url.$zip_imgObj->FileID().",";
     }
     $zip_url = substr($zip_url, 0, -1);
     $zip_url = $zip_url."&OrigName=".$obj->name();
