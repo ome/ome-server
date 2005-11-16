@@ -664,9 +664,9 @@ sub getImageOriginalFiles{
 	);
 	
 	return undef
-		if( scalar( $original_files ) == 0 );
+		if( scalar( @$original_files ) == 0 );
 	return $original_files->[0]
-		if( scalar( $original_files ) == 1 );
+		if( scalar( @$original_files ) == 1 );
 	return $original_files;
 }
 
