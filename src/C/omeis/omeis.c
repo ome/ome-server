@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * Written by:	Ilya G. Goldberg <igg@nih.gov>   11/2003
- * 
+ *
  *------------------------------------------------------------------------------
  */
 
@@ -41,13 +41,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <string.h> 
-#include <ctype.h> 
+#include <string.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/param.h>
+#include <dirent.h>
 
 #include "Pixels.h"
 #include "File.h"
@@ -59,6 +60,7 @@
 #include "xmlBinaryResolution.h"
 #include "xmlBinaryInsertion.h"
 #include "xmlIsOME.h"
+#include "archive.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
@@ -94,7 +96,7 @@ dispatch (char **param)
 	char file_path[MAXPATHLEN],file_path2[MAXPATHLEN];
 	unsigned long tiffDir=0;
 	int i;
-	
+
 	/* Co-ordinates */
 	ome_coord theC = -1, theT = -1, theZ = -1, theY = -1;
 
@@ -120,14 +122,14 @@ dispatch (char **param)
 		OMEIS_ReportError ("OMEIS", NULL, ID, "Method parameter missing");
 		return (-1);
 	}
-	
+
 	m_val = get_method_by_name(method);
 	/* Trap for inputed method name strings that don't correspond to implemented methods */
 	if (m_val == 0){
 			OMEIS_ReportError (method, NULL, ID, "Method doesn't exist");
 			return (-1);
 	}
-	
+
 	/* END (method operations) */
 
 	/* ID requirements */
@@ -147,11 +149,12 @@ dispatch (char **param)
 			 m_val != M_EXPORTOMEFILE &&
 			 m_val != M_ISOMEXML      &&
 			 m_val != M_DELETEFILE    &&
-			 m_val != M_GETLOCALPATH) {
+			 m_val != M_GETLOCALPATH  &&
+		         m_val != M_ZIPFILES) {
 			OMEIS_ReportError (method, NULL, ID, "PixelsID Parameter missing");
 			return (-1);
 	}
-	
+
 	if ((theParam = get_lc_param(param,"IsLocalFile"))) {
 		if ( !strcmp (theParam,"true") || !strcmp (theParam,"1") ) isLocalFile = 1;
 	} else
@@ -166,7 +169,7 @@ dispatch (char **param)
 
 	if ( (theParam = get_param (param,"theT")) )
 		sscanf (theParam,"%d",&theT);
-	
+
 	if ( (theParam = get_param (param,"theY")) )
 		sscanf (theParam,"%d",&theY);
 
@@ -180,7 +183,7 @@ dispatch (char **param)
 		case M_NEWPIXELS:
 			isSigned = 0;
 			isFloat = 0;
-		
+
 			if (! (dims = get_param (param,"Dims")) ) {
 				OMEIS_ReportError (method, NULL, ID, "Dims Parameter missing");
 				return (-1);
@@ -198,22 +201,22 @@ dispatch (char **param)
 					isSigned = 1;
 				}
 			}
-			
+
 			if ( (theParam = get_lc_param (param,"IsSigned")) ) {
 				if (!strcmp (theParam,"1") || !strcmp (theParam,"true") ) isSigned=1;
-				
+
 				/* [Bug 536] isFloat=1 and isSigned=0 is not allowed */
 				if ( (!strcmp (theParam,"0") || !strcmp (theParam,"false")) && isFloat) {
 					OMEIS_ReportError (method, NULL, ID,"IsSigned must be 1 for floating-point pixels, not %s", theParam);
 					return (-1);
 				}
 			}
-			
+
 			if ( !(numB == 1 || numB == 2 || numB == 4) ) {
 				OMEIS_ReportError (method, NULL, ID,"Bytes per pixel must be 1, 2 or 4, not %d", numB);
 				return (-1);
 			}
-			
+
 			if ( numB != 4 && isFloat ) {
 				OMEIS_ReportError (method, NULL, ID,"Bytes per pixel must be 4 for floating-point pixels, not %d", numB);
 				return (-1);
@@ -249,7 +252,7 @@ dispatch (char **param)
 			print_md(head->sha1);
 			fprintf(stdout,"\n");
 
-			freePixelsRep (thePixels); 
+			freePixelsRep (thePixels);
 
 			break;
 		case M_PIXELSSHA1:
@@ -266,7 +269,7 @@ dispatch (char **param)
 			print_md(head->sha1);
 			fprintf(stdout,"\n");
 
-			freePixelsRep (thePixels); 
+			freePixelsRep (thePixels);
 
 			break;
 		case M_FINISHPIXELS:
@@ -281,9 +284,9 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
-	
+
 			resultID = FinishPixels (thePixels,force);
-		
+
 			if ( resultID == 0) {
 				OMEIS_ReportError (method, "PixelsID", ID, "FinishPixels failed.");
 				freePixelsRep (thePixels);
@@ -302,7 +305,7 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
-	
+
 			if (!ExpungePixels (thePixels)) {
 				OMEIS_ReportError (method, "PixelsID", ID, "ExpungePixels failed.");
 				return (-1);
@@ -315,7 +318,7 @@ dispatch (char **param)
 			break;
 		case M_GETPLANESSTATS:
 			if (!ID) return (-1);
-		
+
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
@@ -343,7 +346,7 @@ dispatch (char **param)
 							 planeInfoP->sum_i, planeInfoP->sum_i2, planeInfoP->sum_log_i,
 							 planeInfoP->sum_xi, planeInfoP->sum_yi, planeInfoP->sum_zi
 						);
-	
+
 						planeInfoP++;
 					}
 
@@ -352,7 +355,7 @@ dispatch (char **param)
 			break;
 		case M_GETPLANESHIST:
 			if (!ID) return (-1);
-		
+
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
@@ -384,7 +387,7 @@ dispatch (char **param)
 			break;
 		case M_GETSTACKSTATS:
 			if (!ID) return (-1);
-		
+
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
@@ -419,7 +422,7 @@ dispatch (char **param)
 			break;
 		case M_GETSTACKHIST:
 		if (!ID) return (-1);
-		
+
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
@@ -437,7 +440,7 @@ dispatch (char **param)
 			dc = head->dc;
 			dt = head->dt;
 			HTTP_ResultType ("text/plain");
-			
+
 			for (t = 0; t < dt; t++)
 				for (c = 0; c < dc; c++) {
 					fprintf(stdout,"%lu\t%lu\t", c,t);
@@ -475,7 +478,7 @@ dispatch (char **param)
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
 			}
-			
+
 			if (ID) {
 				if (! (thePixels = GetPixelsRep (ID,'i',bigEndian())) ) {
 					OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
@@ -488,7 +491,7 @@ dispatch (char **param)
 				if (! getRepPath (fileID,file_path,0)) {
 					OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed");
 					return (-1);
-				}		
+				}
 			} else strcpy (file_path,"");
 
 			HTTP_ResultType ("text/plain");
@@ -532,13 +535,13 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "FileID", fileID, "Could not make new repository file");
 				return (-1);
 			}
-			
+
 			if (GetFileInfo (theFile) < 0) {
 				freeFileRep (theFile);
 				OMEIS_ReportError (method, "FileID", fileID,"Could not get file info");
 				return (-1);
 			}
-			
+
 			if (GetFileAliases (theFile) < 0) {
 				freeFileRep (theFile);
 				OMEIS_ReportError (method, "FileID", fileID,"Could not get aliases");
@@ -582,7 +585,7 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "FileID", fileID,"newFileRep failed");
 				return (-1);
 			}
-			
+
 			if (GetFileInfo (theFile) < 0) {
 				freeFileRep (theFile);
 				OMEIS_ReportError (method, "FileID", fileID,"Could not get info for repository file");
@@ -601,7 +604,7 @@ dispatch (char **param)
 		case M_READFILE:
 			offset = 0;
 			length = 0;
-			
+
 			if ( (theParam = get_param (param,"FileID")) ) {
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
@@ -614,11 +617,11 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "FileID", fileID, "GetFileRep failed.");
 				return (-1);
 			}
-			
+
 			if (stat (theFile->path_rep, &fStat) < 0) {
 				OMEIS_ReportError (method, "FileID", fileID,"Could not get size of file");
 				freeFileRep (theFile);
-				return (-1);			
+				return (-1);
 			}
 			theFile->size_rep = fStat.st_size;
 
@@ -633,18 +636,18 @@ dispatch (char **param)
 			} else {
 				length = (size_t)theFile->size_rep - offset;
 			}
-					 
+
 			/* check if the offset is past EOF */
 			if (offset >= theFile->size_rep) {
 				OMEIS_ReportError (method, "FileID", fileID, "Offset is greater than file's length.");
 				return (-1);
 			}
-			
-			/* Check that reading the specified number of bytes will not send us past EOF. 
+
+			/* Check that reading the specified number of bytes will not send us past EOF.
 			   If so, resize the length so we read as much as possible but no more */
 			if (offset+length >= theFile->size_rep)
 				length = theFile->size_rep - offset;
-		
+
 			if (offset == 0 && length == theFile->size_rep && getenv("REQUEST_METHOD") ) {
 				if (GetFileInfo (theFile) < 0) {
 					OMEIS_ReportError (method, "FileID", fileID, "GetFileInfo failed.");
@@ -659,6 +662,11 @@ dispatch (char **param)
 			freeFileRep (theFile);
 
 			break;
+		case M_ZIPFILES:
+		  if (zipFiles(param))
+		    return (-1);
+		  break;
+		
 		case M_IMPORTOMEFILE:
 			if ( (theParam = get_param (param,"FileID")) ) {
 				sscanf (theParam,"%llu",&scan_ID);
@@ -667,13 +675,13 @@ dispatch (char **param)
 				OMEIS_ReportError (method, NULL, ID,"FileID must be specified!");
 				return (-1);
 			}
-	
+
 			strcpy (file_path,"Files/");
 			if (! getRepPath (fileID,file_path,0)) {
 				OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed.");
 				return (-1);
 			}
-	
+
 			/*
 			  libxml2 can directly read gzip files, but not bzip2.
 			  Inflate if bzip2, otherwise parse .gz directly.
@@ -715,7 +723,7 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "FileID", ID, "getRepPath failed.");
 				return (-1);
 			}
-	
+
 			xmlInsertBinaryData( file_path, iam_BigEndian );
 			/* This is supposed to parse from STDIN. It works when input
 			is piped in and omeis is ran as a command line program. It
@@ -731,11 +739,11 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "FileID", fileID, "ExpungeFile failed.");
 				return (-1);
 			}
-			
+
 			freeFileRep (theFile);
 
-			break;			
-	
+			break;
+
 		case M_ISOMEXML:
 			if ( (theParam = get_param (param,"FileID")) ) {
 				sscanf (theParam,"%llu",&scan_ID);
@@ -744,7 +752,7 @@ dispatch (char **param)
 				OMEIS_ReportError (method, NULL, ID,"FileID must be specified!");
 				return (-1);
 			}
-	
+
 			strcpy (file_path,"Files/");
 			if (! getRepPath (fileID,file_path,0)) {
 				OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed.");
@@ -786,12 +794,12 @@ dispatch (char **param)
 				sscanf (theParam,"%llu",&scan_off);
 				file_offset = (size_t)scan_off;
 			}
-		
+
 			tiffDir=0;
 			if ( (theParam = get_param (param,"TIFFDirIndex")) ) {
 				sscanf (theParam,"%lu",&tiffDir);
 			}
-		
+
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
@@ -819,7 +827,7 @@ dispatch (char **param)
 					freePixelsRep (thePixels);
 					return (-1);
 				}
-				
+
 				nPix = head->dx*head->dy;
 				if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
 					OMEIS_ReportError (method, "PixelsID", ID,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
@@ -873,7 +881,7 @@ dispatch (char **param)
 				freeFileRep   (theFile);
 				return (-1);
 			} else {
-			
+
 				/* compute the Pixel's statistics as appropriate */
 				switch (m_val) {
 					case M_CONVERT:
@@ -885,7 +893,7 @@ dispatch (char **param)
 					case M_CONVERTPLANE:
 					case M_CONVERTTIFF:
 						DoPlaneStats (thePixels, theZ, theC, theT);
-						break; 
+						break;
 				}
 				freePixelsRep (thePixels);
 				freeFileRep   (theFile);
@@ -894,7 +902,7 @@ dispatch (char **param)
 			}
 
 			break;
-			
+
 		case M_COMPOSITE:
 			if (theZ < 0 || theT < 0) {
 				OMEIS_ReportError (method, "PixelsID", ID,"Parameters theZ, and theT must be specified for the composite method." );
@@ -904,7 +912,7 @@ dispatch (char **param)
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
-			
+
 			if (DoComposite (thePixels, theZ, theT, param) < 0) {
 				OMEIS_ReportError (method, "PixelsID", ID, "Could not generate composite.");
 				freePixelsRep (thePixels);
@@ -912,7 +920,7 @@ dispatch (char **param)
 			}
 			freePixelsRep (thePixels);
 			break;
-		
+
 		case M_GETTHUMB:
 			if ( (theParam = get_param (param,"Size")) ) {
 				sscanf (theParam,"%d,%d",&sizeX,&sizeY);
@@ -921,7 +929,7 @@ dispatch (char **param)
 					return (-1);
 				}
 			}
-	
+
 			strcpy (file_path,"Pixels/");
 			if (! getRepPath (ID,file_path,0)) {
 				OMEIS_ReportError (method, "PixelsID", ID, "Could not get repository path");
@@ -941,10 +949,10 @@ dispatch (char **param)
 
 			if ( DoThumb(ID,file,sizeX,sizeY) < 0 ) {
 				OMEIS_ReportError (method, "PixelsID", ID,"Could not get thumbnail at %s",file_path);
-				fclose(file); 
+				fclose(file);
 				return (-1);
 			}
-			fclose(file); 
+			fclose(file);
 
 
 			break;
@@ -1023,7 +1031,7 @@ dispatch (char **param)
 				freePixelsRep (thePixels);
 				return (-1);
 			}
-			
+
 			nPix = head->dx*nRows;
 			offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
 		}
@@ -1078,7 +1086,7 @@ dispatch (char **param)
 			OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 			return (-1);
 		}
-		
+
 		head = thePixels->head;
 		if (!CheckCoords (thePixels, x0, y0, z0, c0, t0)){
 			OMEIS_ReportError (method, "PixelsID", ID, "Parameters x0, y0, z0, c0, t0"
@@ -1094,7 +1102,7 @@ dispatch (char **param)
 			freePixelsRep (thePixels);
 			return (-1);
 		}
-		
+
 		if (rorw == 'w')
 			thePixels->IO_stream = openInputFile(filename,isLocalFile);
 		else {
@@ -1110,8 +1118,8 @@ dispatch (char **param)
 		freePixelsRep (thePixels);
 	}
 
-	
-	
+
+
 	return (1);
 }
 

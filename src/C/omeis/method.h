@@ -84,6 +84,7 @@ get_method_by_name(char * m_name);
 #define M_UPLOADFILE    52
 #define M_READFILE      53
 #define M_DELETEFILE    54
+#define M_ZIPFILES      55
 
 	/* OTHER/UTILITY METHODS */
 #define M_GETLOCALPATH  60
