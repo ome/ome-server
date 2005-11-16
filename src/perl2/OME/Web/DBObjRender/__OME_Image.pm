@@ -201,10 +201,12 @@ sub _renderData {
  						'@OriginalFile',
  						id   => join( ',', map( $_->id, @$original_files ) ),
 					);
+				my $zip_url = $self->getDownloadAllURL($obj);
+
 				$record{ $request_string } = 
 					scalar( @$original_files )." files found. ".
 					"<a href='$more_info_url'>See individual listings</a> or ".
-					"<a href='javascript:alert(\"Ilya is gonna do this part\");'>download them all at once</a>";
+					"<a href='$zip_url'>download them all at once</a>";
 			} else {
 				$record{ $request_string } = 
 					$self->render( 
