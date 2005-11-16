@@ -1049,8 +1049,13 @@ sub getDownloadAllURL {
 		$zip_url = $zip_url.$zip_imgObj->FileID().",";
     }
     $zip_url = substr($zip_url, 0, -1);
-    $zip_url = $zip_url."&OrigName=".$obj->name();
-    
+    # Remove the spaces from the object name before passing it on.
+    # Ideally, this would remove all characters that might cause trouble with
+    # file names, until omeis's archive.c component can handle awkward file names.
+    my $origName = $obj->name();
+    $origName =~ s/ /_/g;
+    $zip_url = $zip_url."&OrigName=".$origName;
+
     return $zip_url;
 }
 
