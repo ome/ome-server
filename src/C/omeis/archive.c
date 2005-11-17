@@ -122,12 +122,13 @@ zipFiles(char **param) {
     
     // Adding the original name to the zip command
     old_zip_cmd = zip_cmd;
-    zip_cmd = malloc(strlen(old_zip_cmd)+strlen(temp_path)+1+strlen(orig_name)+strlen(".zip ")+1);
+    zip_cmd = malloc(strlen(old_zip_cmd)+1+strlen(temp_path)+1+strlen(orig_name)+strlen(".zip\" ")+1);
     strcpy(zip_cmd, old_zip_cmd);
+    strcat(zip_cmd, "\"");
     strcat(zip_cmd, temp_path);
     strcat(zip_cmd, "/");
     strcat(zip_cmd, orig_name);
-    strcat(zip_cmd, ".zip ");
+    strcat(zip_cmd, ".zip\" ");
 
     for (i = 0; i < num_files; i++) {
       fileID = zipFileID[i];
@@ -153,10 +154,11 @@ zipFiles(char **param) {
       
       //Adding to the zip command
       old_zip_cmd = zip_cmd;
-      zip_cmd = malloc(strlen(old_zip_cmd) + 1 + strlen(symlink_path) + 1);
+      zip_cmd = malloc(strlen(old_zip_cmd) + 2 + strlen(symlink_path) + 2);
       strcpy(zip_cmd, old_zip_cmd);
-      strcat(zip_cmd, " ");
+      strcat(zip_cmd, " \"");
       strcat(zip_cmd, symlink_path);
+      strcat(zip_cmd, "\"");
       
       if (symlink(orig_path, symlink_path)) {
 	OMEIS_ReportError (method, "FileID", fileID, "symlink failed");
@@ -227,7 +229,7 @@ zipFiles(char **param) {
       }
     }
   }
-
+  
   // Removing the tmp directory
   rmdir(temp_path);
   
