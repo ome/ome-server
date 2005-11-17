@@ -2275,6 +2275,9 @@ values for the SQL statement.  These should be used as the bind values
 for the DBI call; this array is guaranteed to be in the same order as
 any ?-placeholders which appear in the SQL statement.
 
+Optionally, a third parameter can be passed in. If defined, the sql will 
+combine the search criteria with OR's instead of AND's.
+
 =cut
 
 sub __makeSelectSQL {
@@ -2286,7 +2289,7 @@ no warnings "uninitialized";
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my ($columns_wanted,$criteria) = @_;
+    my ($columns_wanted, $criteria, $searchWithOR) = @_;
 
     # These three variables will correspond to the four sections of
     # the SELECT statement: the list of columns, the list of tables,
@@ -2328,6 +2331,7 @@ no warnings "uninitialized";
 	if( $class->__cache_sql_text_in_makeSelectSQL() ) {
 		# Generate a key that will uniquely identify the generated SQL.
 		$cache_key = $proto->__makeSelectSQL_cacheKey($columns_wanted,$criteria);
+		$cache_key .= '.OR' if $searchWithOR;
 	
 		# Attempt to retreive cached SQL from the key
 		if( exists $class->__cached_sql_text()->{ $cache_key } ) {
@@ -2727,19 +2731,32 @@ no warnings "uninitialized";
               );
     }
     
-    # Now would be a good time to add ACL clauses.
-
+    # Add ACL clauses last
+    my $acl_clause;
     if (exists $ACL_locs->{user} and exists $ACL_locs->{group} and $ACL_vis) {
         my ($u_location,$g_location) = ($ACL_locs->{user},$ACL_locs->{group});
         my $u_list = join (',', @{$ACL_vis->{users}} );
         my $g_list = join (',', @{$ACL_vis->{groups}} );
-        push (@join_clauses,
-            "($u_location IN ($u_list) OR $g_location IN ($g_list) OR $g_location isnull)");
-#        logdbg "debug", "$class ACL clause : ($u_location IN ($u_list) OR $g_location IN ($g_list))\n";
+        $acl_clause =  "($u_location IN ($u_list) OR $g_location IN ($g_list) OR $g_location isnull)";
+#        logdbg "debug", "$class ACL clause : $acl_clause\n";
     }
 
-    $sql .= " where ". join(" and ",@join_clauses)
-      if scalar(@join_clauses) > 0;
+	# Compile the where clause
+	unless ( $searchWithOR ) {
+		push @join_clauses, $acl_clause
+			if $acl_clause;
+		$sql .= " where ". join(" and ",@join_clauses)
+		  if scalar(@join_clauses) > 0;
+	} else {
+		my $base_join_clauses = '( '.join(" or ", @join_clauses ).' )';
+		my @final_clause_list;
+		push @final_clause_list, $base_join_clauses 
+			if $base_join_clauses;
+		push @final_clause_list, $acl_clause 
+			if $acl_clause;
+		$sql .= " where ". join(" and ", ( @final_clause_list ) )
+		  if( scalar(@final_clause_list) > 0 );
+	}
 
     # The ORDER BY, LIMIT, and OFFSET clauses are not added if we're
     # only retrieving a count.
