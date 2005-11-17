@@ -201,7 +201,7 @@ sub _renderData {
  						'@OriginalFile',
  						id   => join( ',', map( $_->id, @$original_files ) ),
 					);
-				my $zip_url = $self->getDownloadAllURL($obj);
+				my $zip_url = OME::Image::Server->getDownloadAllURL($obj);
 
 				$record{ $request_string } = 
 					scalar( @$original_files )." files found. ".

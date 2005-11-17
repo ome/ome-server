@@ -1031,34 +1031,6 @@ sub getSearchURL {
 	} );
 }
 
-=head2 getDownloadAllURL
-    
-    my $zip_url = $self->getDownloadAllURL( $image );
-
-$image should be an instance of OME::Image
-
-returns a URL to download all the original files for a given image
-
-=cut
-
-sub getDownloadAllURL {
-    my ($self, $obj) = @_;
-    my $original_files = OME::Tasks::ImageManager->getImageOriginalFiles($obj);
-    my $zip_url = $self->Session()->Factory()->findObject( '@Repository' )->ImageServerURL()."?Method=ZipFiles&FileID=";
-    foreach my $zip_imgObj(@{$original_files}) {
-		$zip_url = $zip_url.$zip_imgObj->FileID().",";
-    }
-    $zip_url = substr($zip_url, 0, -1);
-    # Remove the spaces from the object name before passing it on.
-    # Ideally, this would remove all characters that might cause trouble with
-    # file names, until omeis's archive.c component can handle awkward file names.
-    my $origName = $obj->name();
-    $origName =~ s/ /_/g;
-    $zip_url = $zip_url."&OrigName=".$origName;
-
-    return $zip_url;
-}
-
 1;
 
 =head1 AUTHOR
