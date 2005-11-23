@@ -107,6 +107,10 @@ sub addUser {
 			$username    = confirm_default("Username?",$username);
 			$firstname   = confirm_default("First Name?",$firstname);
 			$lastname    = confirm_default("Last Name?",$lastname);
+			while( (not defined $lastname) || ($lastname eq '') ) {
+				print BOLD,"Last name must be specified.\n";
+				$lastname    = confirm_default("Last Name?",$lastname);
+			}
 			$email       = confirm_default("Email Address?",$email);
 			$directory   = confirm_path   ("Data Directory?",$directory);
 			$group_input = confirm_default("Group (Name or ID)?",$group_input);
@@ -575,6 +579,10 @@ sub editUser {
 		while (1) {
 			$firstname   = confirm_default("First Name?", $firstname);
 			$lastname    = confirm_default("Last Name?", $lastname);
+			while( (not defined $lastname) || ($lastname eq '') ) {
+				print BOLD,"Last name must be specified.\n";
+				$lastname    = confirm_default("Last Name?",$lastname);
+			}
 			$email       = confirm_default("Email Address?", $email);
 			$directory   = confirm_default("Data Directory?", $directory);
 			$group_input = confirm_default("Group ID or Name?", $group_input);
