@@ -311,6 +311,8 @@ sub getLayoutCode {
     }
     else  {
 	# if I found no maps.
+	return "No images found "if (scalar(@$pathTypes) == 0);
+
 	return "No ${targetField}s found";
     }
     return $html;
