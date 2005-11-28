@@ -81,8 +81,8 @@ Thus, for example, a list of the form
 
 It is assumed that this module is also called with a query parameter
     Root indicating the value (name) of the first ST in the list. Thus,
-    Gene=Mga will find all of the probes and eventually images
-    associated with the name "Mga". The value given for root is
+    Root=Mga will find all of the genes, probes and eventually images
+    associated with the name "Mga". The value given for root is 
     assumed to be the Name of the instance of the first ST.
 
    
@@ -126,7 +126,6 @@ sub getPageBody {
     # instantiate variables in the template
     $tmpl_data{'Root'} = $root;
     $tmpl_data{'Template'} = $q->param('Template');
-    $tmpl_data{'RootType'} =
 
 	
     # get a parsed array of the types in the path variable.
@@ -303,6 +302,7 @@ sub getLayoutCode {
 		# recurse to populate the next level.
 		$html .= $self->getLayoutCode($target,\@localTypes,
 					      $targetField);
+		$html .= "<p>"
 	    }
 	    # end the list.
 
@@ -311,9 +311,9 @@ sub getLayoutCode {
     }
     else  {
 	# if I found no maps.
-	return "No images found "if (scalar(@$pathTypes) == 0);
+	return "<p>No images found.<p> "if (scalar(@$pathTypes) == 0);
 
-	return "No ${targetField}s found";
+	return "No ${targetField}s found.<p>";
     }
     return $html;
 }
