@@ -246,7 +246,7 @@ sub getLayoutCode {
     my $session= $self->Session();
     my $factory = $session->Factory();
     
-    my $html;
+    my $html="";
 
     # The map is the type that goes between $parentType
     # and $type - the next entry in the list.
@@ -283,12 +283,22 @@ sub getLayoutCode {
 	    # render them in an html array
 	    # this is where i'll call out to another routine
 	    # if I want to do a second hierarchy.
-	    $html .=   $self->secondDimRender(\@images,$paths2);
-	    
+	    my $resHtml;
+	    if (scalar(@$paths2) > 0) {
+		$resHtml=   $self->secondDimRender(\@images,$paths2);
+	    }   elsif (scalar(@images) > 0) {
+		$resHtml = 
+		    $self->Renderer()->renderArray(\@images,
+			   'ref_st_annotation_display_mass',
+						   { type =>
+							 'OME::Image'});
+	    }
+	    return $resHtml if ($resHtml eq "");
+	    $html .= $resHtml;
 	}
 	else  { # still more to go.
 	    #start a new list
-	    $html .= "<ul>";
+	    my $resHtml ="";
 	    foreach my $map (@maps) {
 		# get target of map
 		# print a label for it
@@ -297,7 +307,7 @@ sub getLayoutCode {
 		# target field is now the next type in the hierarchy.
 		my $target = $map->$targetField;
 		# get the item and build it as a list of item.
-		$html .= "<li> ". $targetField . "  ".
+		$resHtml .= "<li> ". $targetField . "  ".
 		    $target->Name() .    "<br>\n";
 
 		# fresh copy of the list of types for the next
@@ -314,21 +324,18 @@ sub getLayoutCode {
 		    $local2[$i]=$paths2->[$i];
 		}
 		# recurse to populate the next level.
-		$html .= $self->getLayoutCode($target,\@localTypes,
+		$resHtml .= $self->getLayoutCode($target,\@localTypes,
 					      $targetField,\@local2);
-		$html .= "<p>"
+		$resHtml .= "<p>"
 	    }
 	    # end the list.
-
-	    $html .= "</ul>";
+	    if ($resHtml ne "") {
+		$html = "<ul>$resHtml</ul>";
+	    }
 	}
     }
     else  {
 	return "";
-	# if I found no maps.
-	#return "<p>No images found.<p> "if (scalar(@$pathTypes) == 0);
-
-	#return "No ${targetField}s found.<p>";
     }
     return $html;
 }
@@ -342,13 +349,14 @@ sub secondDimRender {
 
     my $type = shift @$paths;
 
-    my $html;
+    my $html="";
     
     #find all of the items of type $type
     my  @items = $factory->findObjects($type);
     $type=~ /@(.*)/;
     my $parentType = $1;
-    $html = "<UL>";
+
+    my $itemHtml="";
     foreach my $item (@items) {
 	my @mypaths;
 	for (my $i =0; $i < scalar(@$paths); $i++) {
@@ -357,12 +365,13 @@ sub secondDimRender {
 	my $res  =
 	    $self->secondDimRecurse($images,$parentType,$item,\@mypaths);
 	if ($res ne "") {
-	    $html .= "<LI> " . $item->Name() ;
-	    $html .= $res;
+	    $itemHtml .= "<LI> " . $item->Name() ;
+	    $itemHtml .= $res;
 	}
-	
     }
-    $html .= "</UL>";
+    if ($itemHtml  ne "") {
+	$html = "<UL>$itemHtml</UL>";
+    }
     return $html;
 }
 
