@@ -129,8 +129,9 @@ sub getPageBody {
 
 	
     # get a parsed array of the types in the path variable.
-    my $pathTypes= $self->getPaths($tmpl);
+    my ($pathTypes,$pathTypes2)= $self->getPaths($tmpl);
     
+    # here is where we can add a swap depending on state of the pull-down
     
 
     # find the instances associated with root. 
@@ -151,10 +152,9 @@ sub getPageBody {
 	# get the associated layout code
 	$tmpl_data{'RootHtml'} = $self->getHeader($rootObj,$rootType);
 	$tmpl_data{'AnnotationDetail'} = 
-	    $self->getLayoutCode($rootObj,$pathTypes,$rootType);
+	    $self->getLayoutCode($rootObj,$pathTypes,$rootType,$pathTypes2);
     }
 	
-
     # populate the template..
     $tmpl->param(%tmpl_data);
     # and the form.
@@ -179,12 +179,20 @@ sub getPaths {
     my $tmpl = shift;
 
     my @parameters = $tmpl->param();
-    my @found_params = grep (m/\.load/,@parameters);
+    my @found_params = grep (m/\.load\/types1-/,@parameters);
     my $path = $found_params[0];
 
-    $path =~ m/Path.load\/types-\[(.*)\]/;
+    $path =~ m/Path.load\/types1-\[(.*)\]/;
     my @paths = split(/,/,$1);
-    return \@paths;
+
+    @found_params = grep (m/\.load\/types2-/,@parameters);
+    $path = $found_params[0];
+
+    $path =~ m/Path.load\/types2-\[(.*)\]/;
+    my @paths2 = split(/,/,$1);
+
+
+    return (\@paths,\@paths2);
 }
 
 =head1 getHeader 
@@ -234,7 +242,7 @@ sub getHeader {
 =cut
 sub getLayoutCode {
     my $self = shift;
-    my ($root,$pathTypes,$parentType) = @_;
+    my ($root,$pathTypes,$parentType,$paths2) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
     
@@ -243,14 +251,13 @@ sub getLayoutCode {
     # The map is the type that goes between $parentType
     # and $type - the next entry in the list.
     # type will be undef when the map maps directly to image.
-    # shifting walks down the list destructively,
-    # so we have to copy the list when we recurse.
+
 
     my $map = shift @$pathTypes;
     my $type = shift @$pathTypes || undef;
 
     # strip off the "@" to get the field name.
-    $type =~ /@(.*)/;
+    $type =~ /@(.*)/ if (defined $type);
     # so, if map is ProbeGeneMap and type is "@Probe", target field
     # will be probe
     my $targetField = $1;
@@ -274,10 +281,9 @@ sub getLayoutCode {
 		push(@images,$image);
 	    }
 	    # render them in an html array
-	    $html .=   return 
-		$self->Renderer()->renderArray(\@images,
-					       'ref_st_annotation_display_mass',
-					     { type => 'OME::Image'});
+	    # this is where i'll call out to another routine
+	    # if I want to do a second hierarchy.
+	    $html .=   $self->secondDimRender(\@images,$paths2);
 	    
 	}
 	else  { # still more to go.
@@ -294,14 +300,22 @@ sub getLayoutCode {
 		$html .= "<li> ". $targetField . "  ".
 		    $target->Name() .    "<br>\n";
 
-		# fresh copy of the list of types for the next recursion
+		# fresh copy of the list of types for the next
+		# recursion;
+		# shifting walks down the list destructively,
+		# so we have to copy the list when we recurse.
 		my @localTypes;
 		for (my $i=0; $i < scalar(@$pathTypes); $i++) {
 		    $localTypes[$i]=$pathTypes->[$i];
 		}
+
+		my @local2;
+		for (my $i=0; $i < scalar(@$paths2); $i++) {
+		    $local2[$i]=$paths2->[$i];
+		}
 		# recurse to populate the next level.
 		$html .= $self->getLayoutCode($target,\@localTypes,
-					      $targetField);
+					      $targetField,\@local2);
 		$html .= "<p>"
 	    }
 	    # end the list.
@@ -310,15 +324,143 @@ sub getLayoutCode {
 	}
     }
     else  {
+	return "";
 	# if I found no maps.
-	return "<p>No images found.<p> "if (scalar(@$pathTypes) == 0);
+	#return "<p>No images found.<p> "if (scalar(@$pathTypes) == 0);
 
-	return "No ${targetField}s found.<p>";
+	#return "No ${targetField}s found.<p>";
     }
     return $html;
 }
 
 
+sub secondDimRender {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my ($images,$paths) = @_;
 
+    my $type = shift @$paths;
+
+    my $html;
+    
+    #find all of the items of type $type
+    my  @items = $factory->findObjects($type);
+    $type=~ /@(.*)/;
+    my $parentType = $1;
+    $html = "<UL>";
+    foreach my $item (@items) {
+	my @mypaths;
+	for (my $i =0; $i < scalar(@$paths); $i++) {
+	    $mypaths[$i]=$paths->[$i];
+	}
+	my $res  =
+	    $self->secondDimRecurse($images,$parentType,$item,\@mypaths);
+	if ($res ne "") {
+	    $html .= "<LI> " . $item->Name() ;
+	    $html .= $res;
+	}
+	
+    }
+    $html .= "</UL>";
+    return $html;
+}
+
+sub secondDimRecurse {
+    my $self= shift;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    my ($images,$parentType,$parent,$paths) = @_;
+
+    my $html;
+    $html .=  "<UL>";
+    
+    my $mapType = shift @$paths;
+    my $type = shift @$paths || undef;
+
+
+    #find the maps.
+
+    $type =~ /@(.*)/ if (defined $type);
+    my $targetField = $1;
+    my @maps  = $factory->findObjects($mapType,{$parentType =>
+						    $parent});
+
+    if (scalar(@maps) > 0)  {
+
+	if (scalar(@$paths) == 0)  {
+	    #actually render the images 
+	    my $resHtml .= $self->renderImages(\@maps,$images);
+	    return $resHtml if ($resHtml eq "");
+	    $html .= $resHtml;
+	}
+	#  now,  map type is something like ABMap, and type is $b
+	# ie., each map is a probe gene, and mapType is probeGene.
+	else {
+	    #types is now @Probe, targetfiled is "Probe"
+	    #recurse
+	    foreach my $map (@maps) {
+		my $target = $map->$targetField;
+		# copy
+		my @localPath;
+		for (my $i =0; $i < scalar(@$paths); $i++) {
+		    $localPath[$i] = $paths->[$i];
+		    #$targetfield is new parent type, $target is new parent
+		    my $resHtml .=
+			$self->secondDimRecurse($images,$targetField,
+						$target,\@localPath);
+		    return $resHtml if ($resHtml eq "");
+		    $html .= "<li> ". $targetField . "  ".
+			$target->Name() .    "<br>\n";
+		    
+		    $html .= $resHtml;
+
+		}
+	    }
+	}
+    }
+    else {
+	return "";
+	# if I found no maps.
+	#return "<p>No images.<p> "if (scalar(@$paths) == 0);
+
+	#my $parentName = $parentType->Name();
+	#return "No $parentName.<p>";
+    }
+
+    $html .= "</UL>";
+    return $html;
+
+}
+
+
+sub renderImages {
+    my $self = shift;
+    my ($maps,$images) = @_;
+ 
+    # at this point, we have two refs to arrays.
+    # map is an array of things that map to images.
+    # (with $image_id fields)
+    # and $images is a bunch of images.
+    # we want to retain intersection and render.
+    my @imagesToRender;
+    IMAGE: foreach my $image (@$images) {
+	foreach my $map (@$maps) {
+	    if ($map->image_id == $image->ID) {
+		push @imagesToRender, ($image);
+		next IMAGE;
+	    }
+	}
+    }
+    if (scalar(@imagesToRender) > 0) {
+	return $self->Renderer()->renderArray(\@imagesToRender,
+					      'ref_st_annotation_display_mass',
+					      { type =>
+						    'OME::Image'});
+    }
+    else {
+	return "";
+    }
+}
 
 1;
