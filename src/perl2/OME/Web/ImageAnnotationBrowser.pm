@@ -178,6 +178,8 @@ sub getPaths {
     my $self= shift;
     my $tmpl = shift;
 
+    my $res2 = undef;
+
     my @parameters = $tmpl->param();
     my @found_params = grep (m/\.load\/types1-/,@parameters);
     my $path = $found_params[0];
@@ -188,11 +190,14 @@ sub getPaths {
     @found_params = grep (m/\.load\/types2-/,@parameters);
     $path = $found_params[0];
 
-    $path =~ m/Path.load\/types2-\[(.*)\]/;
-    my @paths2 = split(/,/,$1);
+    if (defined  $path) {
+	$path =~ m/Path.load\/types2-\[(.*)\]/;
+	my @paths2 = split(/,/,$1);
+	$res2= \@paths2;
+    }
 
 
-    return (\@paths,\@paths2);
+    return (\@paths,$res2);
 }
 
 =head1 getHeader 
@@ -284,14 +289,16 @@ sub getLayoutCode {
 	    # this is where i'll call out to another routine
 	    # if I want to do a second hierarchy.
 	    my $resHtml;
-	    if (scalar(@$paths2) > 0) {
+	    if (defined $paths2 && scalar(@$paths2) > 0) {
 		$resHtml=   $self->secondDimRender(\@images,$paths2);
 	    }   elsif (scalar(@images) > 0) {
+		print STDERR "trying to render some images..";
 		$resHtml = 
 		    $self->Renderer()->renderArray(\@images,
 			   'ref_st_annotation_display_mass',
 						   { type =>
 							 'OME::Image'});
+		print STDERR "Images rendered..." if ($resHtml ne "");
 	    }
 	    return $resHtml if ($resHtml eq "");
 	    $html .= $resHtml;
@@ -300,15 +307,16 @@ sub getLayoutCode {
 	    #start a new list
 	    my $resHtml ="";
 	    foreach my $map (@maps) {
+		my $innerHtml = "";
 		# get target of map
 		# print a label for it
 		# recurse with it as root and it's type as parent
 
+
 		# target field is now the next type in the hierarchy.
 		my $target = $map->$targetField;
-		# get the item and build it as a list of item.
-		$resHtml .= "<li> ". $targetField . "  ".
-		    $target->Name() .    "<br>\n";
+		print STDERR "trying to render for " .$target->Name()
+		    . "\n";
 
 		# fresh copy of the list of types for the next
 		# recursion;
@@ -319,14 +327,25 @@ sub getLayoutCode {
 		    $localTypes[$i]=$pathTypes->[$i];
 		}
 
-		my @local2;
-		for (my $i=0; $i < scalar(@$paths2); $i++) {
-		    $local2[$i]=$paths2->[$i];
+		my $res2 = undef;
+		if (defined $paths2) {
+		    my @local2;
+		    for (my $i=0; $i < scalar(@$paths2); $i++) {
+			$local2[$i]=$paths2->[$i];
+		    }
+		    $res2 = \@local2;
 		}
 		# recurse to populate the next level.
-		$resHtml .= $self->getLayoutCode($target,\@localTypes,
-					      $targetField,\@local2);
-		$resHtml .= "<p>"
+		$innerHtml .= $self->getLayoutCode($target,\@localTypes,
+					      $targetField,$res2);
+		if ($innerHtml ne "") {
+		    print STDERR "got something\n";
+		    # get the item and build it as a list of item.
+		    $resHtml .= "<li> ". $targetField . "  ".
+			$target->Name() .    "<br>\n";
+		    $resHtml .= $innerHtml;
+		    $resHtml .= "<p>"		    
+		}
 	    }
 	    # end the list.
 	    if ($resHtml ne "") {
