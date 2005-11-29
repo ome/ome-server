@@ -278,75 +278,16 @@ sub getLayoutCode {
 	if (scalar(@$pathTypes) ==0 ) {
 	    # we're at the end of the list of types.
 
-	    my @images;
-	    # find the image associated with the maps.
-	    foreach my $map (@maps) {
-		my $imageID = $map->image_id;
-		my $image = $factory->loadObject('OME::Image',$imageID);
-		push(@images,$image);
-	    }
-	    # render them in an html array
-	    # this is where i'll call out to another routine
-	    # if I want to do a second hierarchy.
-	    my $resHtml;
-	    if (defined $paths2 && scalar(@$paths2) > 0) {
-		$resHtml=   $self->secondDimRender(\@images,$paths2);
-	    }   elsif (scalar(@images) > 0) {
-		print STDERR "trying to render some images..";
-		$resHtml = 
-		    $self->Renderer()->renderArray(\@images,
-			   'ref_st_annotation_display_mass',
-						   { type =>
-							 'OME::Image'});
-		print STDERR "Images rendered..." if ($resHtml ne "");
-	    }
+	    my $resHtml = $self->completeFirstDim(\@maps,$paths2);
+
 	    return $resHtml if ($resHtml eq "");
 	    $html .= $resHtml;
 	}
 	else  { # still more to go.
 	    #start a new list
-	    my $resHtml ="";
-	    foreach my $map (@maps) {
-		my $innerHtml = "";
-		# get target of map
-		# print a label for it
-		# recurse with it as root and it's type as parent
-
-
-		# target field is now the next type in the hierarchy.
-		my $target = $map->$targetField;
-		print STDERR "trying to render for " .$target->Name()
-		    . "\n";
-
-		# fresh copy of the list of types for the next
-		# recursion;
-		# shifting walks down the list destructively,
-		# so we have to copy the list when we recurse.
-		my @localTypes;
-		for (my $i=0; $i < scalar(@$pathTypes); $i++) {
-		    $localTypes[$i]=$pathTypes->[$i];
-		}
-
-		my $res2 = undef;
-		if (defined $paths2) {
-		    my @local2;
-		    for (my $i=0; $i < scalar(@$paths2); $i++) {
-			$local2[$i]=$paths2->[$i];
-		    }
-		    $res2 = \@local2;
-		}
-		# recurse to populate the next level.
-		$innerHtml .= $self->getLayoutCode($target,\@localTypes,
-					      $targetField,$res2);
-		if ($innerHtml ne "") {
-		    print STDERR "got something\n";
-		    # get the item and build it as a list of item.
-		    $resHtml .= "<li> ". $targetField . "  ".
-			$target->Name() .    "<br>\n";
-		    $resHtml .= $innerHtml;
-		    $resHtml .= "<p>"		    
-		}
-	    }
+	    my $resHtml =
+		$self->processMaps(\@maps,$targetField,$pathTypes,
+				   $paths2);
 	    # end the list.
 	    if ($resHtml ne "") {
 		$html = "<ul>$resHtml</ul>";
@@ -359,6 +300,83 @@ sub getLayoutCode {
     return $html;
 }
 
+sub completeFirstDim {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my ($maps,$paths) = @_;
+
+    my $html = "";
+    my @images;
+    foreach my $map (@$maps) {
+	my $imageID = $map->image_id;
+	my $image = $factory->loadObject('OME::Image',$imageID);
+	push(@images,$image);
+    }
+    if (defined $paths && scalar(@$paths) > 0) {
+	$html=   $self->secondDimRender(\@images,$paths);
+    } elsif (scalar(@images) > 0) {
+	$html = 
+	    $self->Renderer()->renderArray(\@images,
+					   'ref_st_annotation_display_mass',
+					   { type =>
+						 'OME::Image'});
+    }
+    return $html;
+}
+
+sub processMaps {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my ($maps,$targetField,$pathTypes,$paths2) = @_;
+
+    my $html = "";
+    foreach my $map (@$maps) {
+	my $innerHtml = "";
+	# get target of map
+	# print a label for it
+	# recurse with it as root and it's type as parent
+	
+	
+	# target field is now the next type in the hierarchy.
+	my $target = $map->$targetField;
+	print STDERR "trying to render for " .$target->Name()
+	    . "\n";
+	
+	# fresh copy of the list of types for the next
+	# recursion;
+	# shifting walks down the list destructively,
+	# so we have to copy the list when we recurse.
+	my @localTypes;
+	for (my $i=0; $i < scalar(@$pathTypes); $i++) {
+	    $localTypes[$i]=$pathTypes->[$i];
+	}
+	
+	my $res2 = undef;
+	if (defined $paths2) {
+	    my @local2;
+	    for (my $i=0; $i < scalar(@$paths2); $i++) {
+		$local2[$i]=$paths2->[$i];
+	    }
+	    $res2 = \@local2;
+	}
+		# recurse to populate the next level.
+	$innerHtml .= $self->getLayoutCode($target,\@localTypes,
+					   $targetField,$res2);
+	if ($innerHtml ne "") {
+	    print STDERR "got something\n";
+	    # get the item and build it as a list of item.
+	    $html .= "<li> ". $targetField . "  ".
+		$target->Name() .    "<br>\n";
+	    $html .= $innerHtml;
+	    $html .= "<p>"		    
+	}
+    }
+    return $html;
+}
+    
 
 sub secondDimRender {
     my $self = shift;
@@ -402,7 +420,8 @@ sub secondDimRecurse {
 
     my $html;
     $html .=  "<UL>";
-    
+    #  now,  map type is something like ABMap, and type is $b
+    # ie., each map is a probe gene, and mapType is probeGene.    
     my $mapType = shift @$paths;
     my $type = shift @$paths || undef;
 
@@ -422,8 +441,7 @@ sub secondDimRecurse {
 	    return $resHtml if ($resHtml eq "");
 	    $html .= $resHtml;
 	}
-	#  now,  map type is something like ABMap, and type is $b
-	# ie., each map is a probe gene, and mapType is probeGene.
+
 	else {
 	    #types is now @Probe, targetfiled is "Probe"
 	    #recurse
@@ -449,11 +467,6 @@ sub secondDimRecurse {
     }
     else {
 	return "";
-	# if I found no maps.
-	#return "<p>No images.<p> "if (scalar(@$paths) == 0);
-
-	#my $parentName = $parentType->Name();
-	#return "No $parentName.<p>";
     }
 
     $html .= "</UL>";
