@@ -220,9 +220,16 @@ sub getHeader {
     my $mapType ="@".$rootType."ExternalLink";
 
     my $name = $rootObj->Name();
+    $html = $name;
 
-    # find instance of this for the object
-    my $map = $factory->findObject($mapType,$rootType=>$rootObj);
+    # find instance of this for the object. Do it in an eval 
+    # because this type might not exist.
+    my $map;
+
+    eval {$map= $factory->findObject($mapType,$rootType=>$rootObj) };
+
+    return $html if $@;
+
 
     # if it exists, get link and make href
     if (defined $map) {
@@ -230,8 +237,6 @@ sub getHeader {
 	my $url = $link->URL();
 	$html = $q->a({href=>$url},$name);
 
-    }else {    # if not, just put out name.
-	$html = "$name";
     }
     return $html;
 
@@ -342,8 +347,6 @@ sub processMaps {
 	
 	# target field is now the next type in the hierarchy.
 	my $target = $map->$targetField;
-	print STDERR "trying to render for " .$target->Name()
-	    . "\n";
 	
 	# fresh copy of the list of types for the next
 	# recursion;
@@ -366,7 +369,6 @@ sub processMaps {
 	$innerHtml .= $self->getLayoutCode($target,\@localTypes,
 					   $targetField,$res2);
 	if ($innerHtml ne "") {
-	    print STDERR "got something\n";
 	    # get the item and build it as a list of item.
 	    $html .= "<li> ". $targetField . "  ".
 		$target->Name() .    "<br>\n";
@@ -384,8 +386,8 @@ sub secondDimRender {
     my $factory = $session->Factory();
     my ($images,$paths) = @_;
 
-    my $type = shift @$paths;
 
+    my $type = shift @$paths;
     my $html="";
     
     #find all of the items of type $type
@@ -418,13 +420,11 @@ sub secondDimRecurse {
     my $factory = $session->Factory();
     my ($images,$parentType,$parent,$paths) = @_;
 
-    my $html;
-    $html .=  "<UL>";
+    my $html= "";
     #  now,  map type is something like ABMap, and type is $b
     # ie., each map is a probe gene, and mapType is probeGene.    
     my $mapType = shift @$paths;
     my $type = shift @$paths || undef;
-
 
     #find the maps.
 
@@ -432,14 +432,16 @@ sub secondDimRecurse {
     my $targetField = $1;
     my @maps  = $factory->findObjects($mapType,{$parentType =>
 						    $parent});
+    my $innerHtml = "";
 
     if (scalar(@maps) > 0)  {
 
 	if (scalar(@$paths) == 0)  {
 	    #actually render the images 
-	    my $resHtml .= $self->renderImages(\@maps,$images);
-	    return $resHtml if ($resHtml eq "");
-	    $html .= $resHtml;
+	    my $resHtml = $self->renderImages(\@maps,$images);
+	    if ($resHtml ne "") {
+		$innerHtml .= $resHtml;
+	    }
 	}
 
 	else {
@@ -455,12 +457,11 @@ sub secondDimRecurse {
 		    my $resHtml .=
 			$self->secondDimRecurse($images,$targetField,
 						$target,\@localPath);
-		    return $resHtml if ($resHtml eq "");
-		    $html .= "<li> ". $targetField . "  ".
-			$target->Name() .    "<br>\n";
-		    
-		    $html .= $resHtml;
-
+		    if ($resHtml ne "") {
+			$innerHtml .= "<li> ". $targetField . "  ".
+			    $target->Name() .    "<br>\n";
+			$innerHtml .= $resHtml;
+		    }
 		}
 	    }
 	}
@@ -468,8 +469,9 @@ sub secondDimRecurse {
     else {
 	return "";
     }
-
-    $html .= "</UL>";
+    if ($innerHtml ne "") {
+	$html =  "<UL>$innerHtml</UL>";
+    }
     return $html;
 
 }
