@@ -263,6 +263,15 @@ function classifyImage (id) {
 	}
 }
 
+
+function openPopUp (url) {
+	window.open(
+		url + '&Popup=1',
+		'_blank',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
+}
+
+
 // openPopUpImage()
 
 function openPopUpImage (id) {
