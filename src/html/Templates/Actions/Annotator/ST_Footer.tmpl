@@ -1,0 +1,24 @@
+<a href = "javascript:selectMany('OME::Image','images_to_annotate');"><br>Search for images to annotate</a><br><br> 
+<TMPL_LOOP NAME=st.loop>
+<tr>
+	<td class="ome_td" align="left"><TMPL_VAR
+	NAME=st.Name></td>
+	<td class="ome_td" align="left">
+	<SELECT name="st<TMPL_VAR NAME='st.id'>" WIDTH="150" STYLE="width:150px">
+	<OPTION value="">...</option>
+	<TMPL_VAR NAME=st.val/render-list_of_options></select>
+	</td>
+
+</TMPL_LOOP>
+</table>
+<input type="button" value='Save & Next' onclick="javascript:
+	document.forms[0].SaveAndNext.value='SaveAndNext';
+	document.forms[0].submit();"><br><br> 
+
+Images left to annotate:<br> 
+
+<TMPL_VAR NAME=image_thumbs><br>
+
+Annotated Images:<br>
+
+<TMPL_VAR NAME=annotated_image_thumbs><br>
