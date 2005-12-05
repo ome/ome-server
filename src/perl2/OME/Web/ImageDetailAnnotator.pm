@@ -91,7 +91,7 @@ sub getPageBody {
     # name.
 
     my $tmpl_dir=$self->actionTemplateDir('custom');
-    my $which_tmpl = $q->param('Template'); 
+    my $which_tmpl = $q->url_param('Template'); 
 
     my $referer = $q->referer();
     my $url = $self->pageURL('OME::Web::ImageDetailAnnotator');
@@ -179,8 +179,6 @@ sub findSTs {
 	my $map_type = $self->loadST($mapST);
 
 	push(@sts,$semantic_type);
-	print STDERR "associating map type " . $map_type->name() . " with " .
-	    $semantic_type->name() . "\n";
 	
 	$maps{$semantic_type->name()} = $map_type;
     }
@@ -207,7 +205,6 @@ sub loadST  {
 					     {name => $name});
 	die "couldn't load SemanticType : $name" unless 
 	    defined $semantic_type;
-	print STDERR "found ST " . $semantic_type->name() . "\n";
     } elsif (UNIVERSAL::isa($semantic_type,'OME::SemanticType')) {
 	# Excellent, this is just what we need
     } else {
@@ -279,7 +276,8 @@ sub populateImageDetails {
     my @completed_images;
 
     # Get the list of ID's that are left to annotate
-    if ($q->param('images_to_annotate') ne 'none') {
+    if (defined $q->param('images_to_annotate') &&
+	$q->param('images_to_annotate') ne 'none') {
 	if ($q->param('images_to_annotate') ne "") {
 	    my $concatenated_image_ids = $q->param( 'images_to_annotate' );
 	    
@@ -292,7 +290,8 @@ sub populateImageDetails {
 
     
     # completed images
-    if ($q->param('images_completed') ne "") {
+    if (defined $q->param('images_completed') &&
+	$q->param('images_completed') ne "") {
 	my $completedList = $q->param('images_completed');
 	my @completed_ids  =split( /,/, $completedList);
 	my @unsorted_completed = map  
@@ -306,7 +305,8 @@ sub populateImageDetails {
     
     # if no image is displayed, the ID you need is in the array
     my $image;
-    if ($q->param( 'currentImageID' ) eq '') { 
+    if (defined $q->param('currentImageID') &&
+	$q->param( 'currentImageID' ) eq '') { 
 	$image = shift(@images);
 	$currentImageID = $image->ID if (defined $image);
     }
@@ -389,8 +389,6 @@ sub populateAnnotationTypes {
 	if( $use_st_loop ) {
 	    $st_data{ 'st.Name' } = $self->Renderer()->render( $st, 'ref');
 	    $st_data{ "st.id" } = $st->id();
-	    print STDERR "rendering val list. st is " .$st->name .	"\n";
-	    print STDERR "# of vals.. " . scalar(@stValList) . "\n";
 	    $st_data{ "st.val/render-list_of_options" } = 
 		$self->Renderer()->renderArray( 
 		\@stValList,'list_of_options', { default_value => $stVal, type => $st }
