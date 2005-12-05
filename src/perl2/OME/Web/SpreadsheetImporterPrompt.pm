@@ -186,12 +186,18 @@ sub printSpreadsheetAnnotationResultsHTML {
 			if (scalar keys %$image) {
 				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp  Classifications:<br>';
 				foreach my $key (sort keys %$image) {
-					my $CG = $factory->findObject ('@CategoryGroup', { Name => $key });
+
+				    my $CG = $factory->findObject
+					('@CategoryGroup', { Name =>
+								 $key });
+				    if (defined $CG) {
 					$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($CG).'">'.$key."</a>".
-					' : <a href='.OME::Web->getObjDetailURL($image->{$key}).'">'.$image->{$key}->Name().'</a><br>';
+					    ' : <a
+					href='.OME::Web->getObjDetailURL($image->{$key}).'">'.$image->{$key}->Name().'</a><br>';
+				    }
 				}
+				$output .= "<br>"; # spacing
 			}
-			$output .= "<br>"; # spacing
 		}
 	}
 	return $output;
