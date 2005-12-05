@@ -195,7 +195,9 @@ sub getImageDisplay {
 
     Recursively iterate through the path of types, populating the list s
     until we get down to the bare items at the end
+
 =cut
+
 sub getDetail {
     my $self= shift;
     my ($pathTypes,$parentType,$root) = @_;
@@ -307,9 +309,14 @@ sub getObjURL {
     my $linkMap = $type."ExternalLink";
     $type =~ /@(.*)/;
     my $field =$1;
-    my $linkMapEntry = $factory->findObject($linkMap,$field=>$target);
+    my $linkMapEntry;
+    
+    eval {$linkMapEntry = $factory->findObject($linkMap,$field=>$target)};
 
-    if (defined $linkMapEntry) {
+    if ($@) { 
+	$html = $name;
+    }
+    elsif (defined $linkMapEntry) {
 	my  $link = $linkMapEntry->ExternalLink();
 	my $url = $link->URL();
 	$html =$q->a({href=>$url},$name);

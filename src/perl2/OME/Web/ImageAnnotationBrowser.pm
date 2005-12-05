@@ -275,7 +275,8 @@ sub getLayoutCode {
     # find the maps that correspond to the root object.
     my @maps = $factory->
 	findObjects($map, { $parentType  =>
-				$root});
+				$root,
+	                    __order =>['id']});
     
     if (scalar(@maps) > 0) {
 	# if i have any maps
@@ -370,8 +371,8 @@ sub processMaps {
 					   $targetField,$res2);
 	if ($innerHtml ne "") {
 	    # get the item and build it as a list of item.
-	    $html .= "<li> ". $targetField . "  ".
-		$target->Name() .    "<br>\n";
+	    $html .= "<li>". $targetField . "  ".
+		$self->getHeader($target,$targetField) . "<br>\n";
 	    $html .= $innerHtml;
 	    $html .= "<p>"		    
 	}
@@ -391,7 +392,7 @@ sub secondDimRender {
     my $html="";
     
     #find all of the items of type $type
-    my  @items = $factory->findObjects($type);
+    my  @items = $factory->findObjects($type, { __order => ['id']});
     $type=~ /@(.*)/;
     my $parentType = $1;
 
@@ -404,7 +405,8 @@ sub secondDimRender {
 	my $res  =
 	    $self->secondDimRecurse($images,$parentType,$item,\@mypaths);
 	if ($res ne "") {
-	    $itemHtml .= "<LI> " . $item->Name() ;
+	    $itemHtml .= "<LI> $parentType ". 
+		$self->getHeader($item,$parentType);
 	    $itemHtml .= $res;
 	}
     }
@@ -431,7 +433,8 @@ sub secondDimRecurse {
     $type =~ /@(.*)/ if (defined $type);
     my $targetField = $1;
     my @maps  = $factory->findObjects($mapType,{$parentType =>
-						    $parent});
+						    $parent,
+				                __order =>['id'] });
     my $innerHtml = "";
 
     if (scalar(@maps) > 0)  {
@@ -443,7 +446,6 @@ sub secondDimRecurse {
 		$innerHtml .= $resHtml;
 	    }
 	}
-
 	else {
 	    #types is now @Probe, targetfiled is "Probe"
 	    #recurse
@@ -458,8 +460,8 @@ sub secondDimRecurse {
 			$self->secondDimRecurse($images,$targetField,
 						$target,\@localPath);
 		    if ($resHtml ne "") {
-			$innerHtml .= "<li> ". $targetField . "  ".
-			    $target->Name() .    "<br>\n";
+			$innerHtml .= "<li> " . $targetField . " " .
+			    $self->getHeader($target,$targetField) . "<br>\n";
 			$innerHtml .= $resHtml;
 		    }
 		}
