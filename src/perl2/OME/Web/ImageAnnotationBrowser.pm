@@ -207,7 +207,7 @@ sub getPaths {
 
 sub getHeader {
     my $self = shift;
-    my ($rootObj,$rootType) = @_;
+    my ($obj,$type) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
     my $q = $self->CGI();
@@ -217,16 +217,16 @@ sub getHeader {
     # its type
     
     # find map from root type to ext link
-    my $mapType ="@".$rootType."ExternalLink";
+    my $mapType ="@".$type."ExternalLink";
 
-    my $name = $rootObj->Name();
+    my $name = $obj->Name();
     $html = $name;
 
     # find instance of this for the object. Do it in an eval 
     # because this type might not exist.
     my $map;
 
-    eval {$map= $factory->findObject($mapType,$rootType=>$rootObj) };
+    eval {$map= $factory->findObject($mapType,$type=>$obj) };
 
     return $html if $@;
 
