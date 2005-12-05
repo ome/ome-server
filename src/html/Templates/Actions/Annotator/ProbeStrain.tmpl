@@ -1,35 +1,4 @@
-<input type="hidden" name="images_to_annotate" value="<TMPL_VAR
-NAME=images_to_annotate>">
-<input type="hidden" name="template" value="<TMPL_VAR NAME=template>">
-<input type="hidden" name="images_completed" value="<TMPL_VAR 
-NAME=images_completed>"> 
-<input type="hidden" name="currentImageID" value="<TMPL_VAR NAME=current_image_id>">
-<input type="hidden" name="SaveAndNext">
-<TMPL_VAR NAME=image_large><br>
-<table class="ome_table">
-<TMPL_VAR NAME="DetailSTs.load/-[Probe:ImageProbe,Strain:ImageStrain]">
-<a href = "javascript:selectMany('OME::Image',
-'images_to_annotate');"><br>Search for images to annotate</a><br><br> 
-<TMPL_LOOP NAME=st.loop>
-<tr>
-	<td class="ome_td" align="left"><TMPL_VAR
-	NAME=st.Name></td>
-	<td class="ome_td" align="left">
-	<SELECT name="st<TMPL_VAR NAME='st.id'>" WIDTH="150" STYLE="width:150px">
-	<OPTION value="">...</option>
-	<TMPL_VAR NAME=st.val/render-list_of_options></select>
-	</td>
-
-</TMPL_LOOP>
-</table>
-<input type="button" value='Save & Next' onclick="javascript:
-	document.forms[0].SaveAndNext.value='SaveAndNext';
-	document.forms[0].submit();"><br><br> 
-
-Images left to annotate:<br> 
-
-<TMPL_VAR NAME=image_thumbs><br>
-
-Annotated Images:<br>
-
-<TMPL_VAR NAME=annotated_image_thumbs><br>
+<TMPL_INCLUDE NAME="ST_Header.tmpl">
+<TMPL_VAR
+NAME="DetailSTs.load/-[Probe:ImageProbe,EmbryoStage:ImageEmbryoStage]">
+<TMPL_INCLUDE NAME="ST_Footer.tmpl">
