@@ -61,7 +61,17 @@ sub getPageBody {
     
     if ($q->param( 'Annotate' )) {
     	my $fileToParse = $q->param( 'fileToParse' );
+	print STDERR "annotating $fileToParse\n";
     	die "File $fileToParse is invalid\n" unless( $fileToParse );
+         
+	my $tmpFile = $session->getTemporaryFilename('import','xls');
+	print STDERR "temp file $tmpFile\n";
+	open TMP, ">$tmpFile";
+	while (<$fileToParse>) {
+	    print TMP $_;
+	}
+	close TMP;
+	$fileToParse= $tmpFile;
 
 		$output .= $q->p({class => 'ome_error'}, "Filepath $fileToParse is invalid.\n")
 			unless (-f $fileToParse);
@@ -75,6 +85,7 @@ sub getPageBody {
 				$output .= "Finished annotating: <br><br>";
 				$output .= OME::Web::SpreadsheetImporterPrompt->printSpreadsheetAnnotationResultsHTML ($results);
 			}
+			unlink $fileToParse;
 		}
 	}
     
@@ -87,7 +98,8 @@ sub getPageBody {
 	$tmpl->param( 'Output' => $output );
 	
 	my $html =
-		$q->startform( { -name => 'primary' } ).
+		$q->startform( { -name => 'primary', 
+				 -enctype => 'multipart/form-data' } ).
 		$tmpl->output().
 		$q->endform();
 
