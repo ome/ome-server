@@ -105,6 +105,115 @@ sub processFile {
 	my $sheet = $workbook->{ Worksheet }[0] if ($type eq EXCEL); # first sheet from the workbook
 	
 	# Get the column headings - different process for excel and tab
+	my $columnHeadings;
+	my $maxRow;
+	my $maxCol;
+	($maxRow,$maxCol,$columnHeadings) = 
+		$self->getColumnHeadings($type,$sheet,$fileToParse);
+	
+	
+	# Figure out which columns are image identifiers (Image.Name or Image.id),
+	# Dataset, Project, Category Group (CG) or Semantic Type (ST)
+	my $imgCol;
+    my $projCol;
+	my $DatasetCols;
+	my $STCols,
+	my $CGCols;
+
+	($imgCol,$projCol,$DatasetCols,$STCols,$CGCols) =
+	    $self->classifyColumnHeadings($columnHeadings,\@ERRORoutput);
+
+	# Use the TimeStamp to make sane Object descriptions
+	my $timestamp = time;
+	my $timestr = localtime $timestamp; 
+	
+	# If a category group referenced in the column headers isn't already in the database
+	# make a new category group with that name 
+	my $newCGs;
+	
+	my $CategoryGroups; # need this later when making new
+			    # categories in order to be able to
+			    # associate categories with CGs
+
+	($newCGs,$CategoryGroups) = 
+	    $self->getCategoryGroups($columnHeadings,$CGCols,$fileToParse,$global_mex,
+	                             $timestr);
+	my $file;
+	if ($type ne EXCEL) {
+		open (FILE, "< $fileToParse");
+		<FILE>; # skip the first line (column headings)
+		$file = \*FILE;
+	}
+	
+	# Process the file row by row.
+	my $newCategories;
+	my $newGlobalSTSE;
+	my @newDatasets;
+	my @newProjs;
+	my $newProjDataset;
+	my %images;
+	
+	for (my $row = 1; $row <= $maxRow; $row++) {
+		my $imageIdentifier;
+		my $projName;
+		my @datasetNames;
+		my @cats;
+		my @seVals;
+
+		($imageIdentifier,$projName) = 
+		    $self->parseRow($type,$row,$imgCol,$projCol,\@datasetNames,
+				    \@cats,\@seVals,$DatasetCols,$CGCols,$STCols,
+				    $maxCol,$sheet,$file);
+
+		# Get the image from the database if it exists and the user wants it
+		my $image;
+		if ($imageIdentifier) {
+		    $image =
+			$self->loadImage($imageIdentifier,\%images,$imgCol,$columnHeadings,
+					 \@ERRORoutput);
+		}
+		$self->processCategoryGroups($image,$CGCols,$CategoryGroups,
+					     $columnHeadings,\@cats,
+					     $newCategories,$global_mex,
+					     $fileToParse,$timestr);
+
+		$self->processSTs($STCols,\@seVals,$columnHeadings,
+				  $image,$newGlobalSTSE,
+				  $global_mex,\@ERRORoutput);
+
+		# Process Datasets
+		my @datasets; # @datasets is at this scope so it can be passed to projects
+		$self->processDatasets(\@datasets,$DatasetCols,\@datasetNames,
+				       $image,$imageIdentifier,\@newDatasets,
+				       $fileToParse,$timestr);
+
+		# Process Projects
+		$self->processProjects($projCol,$projName,\@datasets,\@newProjs,$newProjDataset,$fileToParse,$timestr);
+	
+		$session->commitTransaction();
+	}
+	close FILE unless $type eq EXCEL;
+	$INPUT_RECORD_SEPARATOR = ''; # probably don't need to do this, but let's be safe
+	$session->commitTransaction();
+	
+	# package up outputs and return
+	# some one-else will be create some human understandable output
+	my $Results;
+	$Results->{ERRORoutput}   = \@ERRORoutput;
+	$Results->{newProjs}      = \@newProjs;
+	$Results->{newDatasets}   = \@newDatasets;
+	$Results->{newProjDatast} = $newProjDataset;
+	$Results->{newCGs}        = $newCGs;
+	$Results->{newCategories} = $newCategories;
+	$Results->{newGlobalSTSE} = $newGlobalSTSE;
+	$Results->{images}        = \%images;
+	return $Results;
+}
+
+# get the column headings, etc.
+sub getColumnHeadings {
+	my $self = shift;
+	my ($type,$sheet,$fileToParse) = @_;
 	my @columnHeadings;
 	my $maxRow;
 	my $maxCol;
@@ -144,277 +253,322 @@ sub processFile {
 		$maxRow = $. - 1;
 		close FILE;
 	}
-	
-	# Figure out which columns are image identifiers (Image.Name or Image.id),
-	# Dataset, Project, Category Group (CG) or Semantic Type (ST)
-	my $imgCol;
+	return ($maxRow,$maxCol,\@columnHeadings);
+
+}
+
+sub classifyColumnHeadings {
+    my $self = shift;
+    my ($columnHeadings,$ERRORoutput) = @_;
+
+    my $colCounter = 0;
+    my $imgCol;
     my $projCol;
-	my %DatasetCols;
+
+    my %DatasetCols;
     my %STCols;
-	my %CGCols;
+    my %CGCols;
 
-	my $colCounter = 0;
-	foreach my $colHead (@columnHeadings) {
-		if ($colHead eq "" or $colHead =~ m/#.*/) {
-			# skip columns without a heading or use the # character to comment-things out
- 		} elsif ($colHead eq 'Image.Name' or $colHead eq 'Image.id') {
- 		 	push (@ERRORoutput, "Only one image identifier (Image.Name or Image.id) column per spreadsheet is permitted.")
- 				and return @ERRORoutput if $imgCol;
- 			$imgCol = $colCounter;
-		} elsif ($colHead eq 'Project') {
-			push (@ERRORoutput, "Only one Project column per spreadsheet is permitted.")
-				and return @ERRORoutput if $projCol;
-			$projCol = $colCounter;
-		} elsif ($colHead eq 'Dataset') {
-			$DatasetCols{ $colCounter } = 1;
-		} elsif ($colHead =~ m/(\w+)\.(\w+)/) {
-		#	my $attribute = $factory->findObject('@' $1, { SEName => $2 });
-			my $attribute = 1;
-#			$ERRORoutput .= "The ST $STName is undefined or does not contain SE $SE\n" and return
-#					unless $attribute;
- 			$STCols{ $colCounter } = 1;
- 		} else { 
-			$CGCols{ $colCounter } = 1; 
-		}	
- 		$colCounter++;
+    
+    foreach my $colHead (@$columnHeadings) {
+	if ($colHead eq "" or $colHead =~ m/#.*/) {
+	    # skip columns without a heading or use the # character to comment-things out
+	} elsif ($colHead eq 'Image.Name' or $colHead eq 'Image.id') {
+	    push (@$ERRORoutput, "Only one image identifier (Image.Name or Image.id) column per spreadsheet is permitted.")
+		and return @$ERRORoutput if $imgCol;
+	    $imgCol = $colCounter;
+	} elsif ($colHead eq 'Project') {
+	    push (@$ERRORoutput, "Only one Project column per spreadsheet is permitted.")
+		and return @$ERRORoutput if $projCol;
+	    $projCol = $colCounter;
+	} elsif ($colHead eq 'Dataset') {
+	    $DatasetCols{ $colCounter } = 1;
+	} elsif ($colHead =~ m/(\w+)\.(\w+)/) {
+	    #	my $attribute = $factory->findObject('@' $1, { SEName => $2 });
+	    my $attribute = 1;
+	    $STCols{ $colCounter } = 1;
+	} else { 
+	    $CGCols{ $colCounter } = 1; 
+	}	
+	$colCounter++;
+    }
+    
+    return ($imgCol,$projCol,\%DatasetCols,\%STCols,\%CGCols);
+}
+
+sub getCategoryGroups {
+    my $self= shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my ($columnHeadings,$CGCols,$fileToParse,$global_mex,$timestr) = @_;
+
+    my @newCGs;
+    my %CategoryGroups;
+
+    foreach my $index (keys(%$CGCols)) {
+	my $CGName = $$columnHeadings[$index];
+	my $CG = $factory->findObject ('@CategoryGroup', { Name => $CGName });
+	if (not $CG) {
+	    $CG = $factory->newAttribute( 'CategoryGroup', undef, $global_mex, {
+		Name => $CGName,
+		Description => "Created on $timestr from file $fileToParse by the bulk annotation spreadsheet importer."
+					  }) or die "could not make new CG attribute $CGName";
+	    push (@newCGs, $CG); # record the creation of new CG to generate HTML/command-line output later
 	}
-	# Use the TimeStamp to make sane Object descriptions
-	my $timestamp = time;
-	my $timestr = localtime $timestamp; 
-	
-	# If a category group referenced in the column headers isn't already in the database
-	# make a new category group with that name 
-	my @newCGs;
-	
-	my %CategoryGroups; # need this later when making new categories in order to be able to associate categories with CGs
-	foreach my $index (keys(%CGCols)) {
-		my $CGName = $columnHeadings[$index];
-		my $CG = $factory->findObject ('@CategoryGroup', { Name => $CGName });
-		if (not $CG) {
-			$CG = $factory->newAttribute( 'CategoryGroup', undef, $global_mex, {
-					Name => $CGName,
-					Description => "Created on $timestr from file $fileToParse by the bulk annotation spreadsheet importer."
-				  }) or die "could not make new CG attribute $CGName";
-			push (@newCGs, $CG); # record the creation of new CG to generate HTML/command-line output later
-		}
-		$CategoryGroups{ $CGName } = $CG;
+	$CategoryGroups{ $CGName } = $CG;
+    }
+    $session->commitTransaction();
+    return (\@newCGs,\%CategoryGroups);
+}
+
+sub parseRow {
+    my $self=shift;
+    my ($type,$row,$imgCol,$projCol,$datasetNames,$cats,$seVals,
+	$DatasetCols,$CGCols,$STCols,$maxCol,$sheet,$file) = @_;
+    my $imageIdentifier;
+    my $projName;
+
+    if ($type eq EXCEL) {
+	for (my $col = 0; $col <= $maxCol; $col++) {
+	    my $cell = $sheet->{Cells}[$row][$col];
+	    my $content = $cell->Value if $cell;
+	    
+	    $imageIdentifier = $content if ( defined $imgCol and $imgCol == $col );
+	    $projName = $content        if ( defined $projCol and $projCol == $col);
+	    push ( @$datasetNames, $content ) if ( $$DatasetCols{ $col } );
+	    push ( @$cats, $content )         if ( $$CGCols{ $col } );
+	    push ( @$seVals, $content )       if ( $$STCols{ $col } );
 	}
-	$session->commitTransaction();
+    } else { # TAB
+	my $text = <$file>;
+	chomp($text);
+	my @entries = split(/\t/, $text);
+	
+	my $col = 0;
+	foreach my $entry (@entries) {
+	    $imageIdentifier = $entry if ( defined $imgCol and $imgCol == $col );
+	    $projName = $entry        if ( defined $projCol and $projCol == $col);
+	    push ( @$datasetNames, $entry ) if ( $$DatasetCols { $col } );
+	    push ( @$cats, $entry )         if ( $$CGCols{ $col } );
+	    push ( @$seVals, $entry )       if ( $$STCols{ $col } );
+	    $col++;
+	}
+    }
+    return ($imageIdentifier,$projName);
+}
+    
+sub loadImage {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my ($imageIdentifier,$images,$imgCol,$columnHeadings,$ERRORoutput) = @_;
 
-	if ($type ne EXCEL) {
-		open (FILE, "< $fileToParse");
-		<FILE>; # skip the first line (column headings)
+    if ( not $$images{$imageIdentifier} ) {
+	my @objects;
+	@objects = $factory->findObjects 
+	    ( 'OME::Image', { name => "$imageIdentifier" } )
+	    if ($$columnHeadings[$imgCol] eq 'Image.Name');
+	@objects = $factory->findObjects ( 'OME::Image', { id =>
+	       "$imageIdentifier" } ) 
+	    if ($$columnHeadings[$imgCol] eq 'Image.id');
+	
+	die "There are two images in the database with that name
+	$imageIdentifier. ". 
+	"Try using IDs instead to ensure uniqueness.\n" 
+	if (scalar(@objects) > 1);
+	
+	push (@$ERRORoutput, "Image with identifier $imageIdentifier doesn't exist. Skipping Row.")
+	    and next if (scalar @objects != 1);
+	
+	$$images{$imageIdentifier} = {Image => $objects[0]};
+    }
+    return $$images{$imageIdentifier};
+}
+
+sub processCategoryGroups {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my ($image,$CGCols,$CategoryGroups,$columnHeadings,$cats,$newCategories,$global_mex,$fileToParse,$timestr) = @_; 
+
+
+    foreach my $index(sort keys %$CGCols) { 
+	my $CGName = $$columnHeadings[$index] or
+	    die "ColumnHeading for column $index is undefined \n";
+	my $categoryName = shift(@$cats);
+	
+	# skip 'Null' cells. i.e. cells that contain only white-space
+	# characters
+	next unless defined $categoryName and $categoryName =~ m/\S+/;
+
+	my $CG = $$CategoryGroups{$CGName}; 
+	my $category = $factory->findObject ('@Category', { Name =>
+					$categoryName, CategoryGroup => $CG });
+	if (not $category) { 
+	    $category = $factory->newAttribute ('Category', undef, 
+			$global_mex, { Name => $categoryName, 
+				       CategoryGroup => $CG, 
+				       Description => "Created by bulk annotation spreadsheet importer from file $fileToParse on timestr."  }) 		or die "could not make new Category $categoryName"; 
+	    
+	    $newCategories->{$CGName}->{$categoryName} = 1; 
+           # record the creation of new category to generate
+	   # HTML/command-line output later
+	}
+	OME::Tasks::CategoryManager->classifyImage($image->{Image}, $category); 
+	# record the new image classification for later
+	$image->{ $CGName } = $category; 
+    } 
+}
+
+
+sub processSTs {
+
+    my $self = shift;
+    my $session = $self->Session();	
+    my $factory = $session->Factory();
+    
+    my ($STCols,$seVals,$columnHeadings,$image,$newGlobalSTSE,$global_mex,$ERRORoutput)  = @_;
+    my %ST_data_hash; 
+    my %STs; 
+    # Extract the Semantic type data in column order. Index it for attribute 
+    # creation below  
+    foreach my $index ( sort keys %$STCols )  { 
+	my $STSE = $$columnHeadings[$index] or 
+	    die "ColumnHeading for column $index is undefined\n"; 
+	$STSE =~ m/(\w+)\.(\w+)/; 
+	my $STName = $1; 
+	my $SEName = $2; 
+	my $ST = $factory->findObject('OME::SemanticType', { name => $STName });
+	$STs{ $STName } = $ST; 
+
+	my $granularity = $ST->granularity; 
+	my $SEValue = shift(@$seVals); 
+
+	# ok. here's what we have to do to find the reference
+	# look up the semantic element for the type - with name $SEName
+	my $SE = $factory->findObject('OME::SemanticType::Element', {name=> $SEName, semantic_type=> $ST} );
+				      
+	# get it's column
+	my $col = $SE->data_column();
+
+	if ($col->sql_type() eq 'reference') {
+	    # if it's a reference,
+	    # find type it refers to.
+	    eval {
+		my $refType = $col->reference_semantic_type();
+		# lookup value where the "name" is $SEValue.
+		my $refObj = $factory->findObject($refType,
+						  {Name=>$SEValue });
+		if (defined $refObj) {
+		    #use it instead.
+		    $SEValue = $refObj;
+		}
+	    }
+
+	}
+
+        # skip 'Null' cells. i.e. cells that contain only white-space 
+	#characters  
+	next unless defined $SEValue and $SEValue =~ m/\S+/; 
+	$ST_data_hash{ $STName }->{ $SEName } = $SEValue; 
+
+        # There's an Image ST but there's no image to annotate!  
+	if ( $granularity eq 'I' and not exists $image->{ Image }) { 
+	    push(@$ERRORoutput, "You must specify an image for $STSE because it's an Image SemanticType. Did not annotate."); 
+	    next; 
+	} 
+    } 
+
+    # Create attributes from the indexed, semantically typed data.  
+    foreach my $ST ( values %STs ) { 
+	my $STName = $ST->name; 
+	my $data_hash = $ST_data_hash{ $STName }; 
+	my $granularity = $ST->granularity; 
+
+        # Granularity is Image, so do image annotation  
+	if ($granularity eq 'I') { 
+	    $factory->newAttribute ($STName, $image->{ Image }, 
+				    $global_mex, $data_hash) or 
+			die "could not make new (I) $STName\n\t". 
+	              join( "\n\t", map( $_." => ".$data_hash->{$_}, 
+					 keys %$data_hash ) );
+
+	    $image->{"ST:".$STName} = $data_hash; 
+	} 
+
+       # Granularity is Global, so do global  
+	elsif ( $granularity eq 'G' ) { 
+	    $factory->newAttribute ($STName, undef, $global_mex, $data_hash) or
+		die "could not make new (G) $STName\n\t". 
+		join( "\n\t", map( $_." => ".$data_hash->{$_}, 
+				   keys %$data_hash ) ); 
+	    $newGlobalSTSE->{$STName} = $data_hash; } 
+    }
+}
+
+sub processDatasets{ 
+
+    my $self = shift;
+    my $session = $self->Session();	
+    my $factory = $session->Factory();
+
+    my ($datasets,$DatasetCols,$datasetNames,$image,$imageIdentifier,$newDatasets,$fileToParse,$timestr) = @_;
+
+    foreach my $index (sort keys %$DatasetCols) {
+	# $columnHeadings[$index] is 'Dataset'
+	my $datasetManager = new OME::Tasks::DatasetManager;
+	my $datasetName = shift (@$datasetNames);
+			
+	# skip 'Null' cells. i.e. cells that contain only white-space characters
+	next unless defined $datasetName and $datasetName =~ m/\S+/;
+			
+	my $dataset = $factory->findObject ('OME::Dataset', { name => $datasetName });			
+	if (not $dataset) {
+	    $dataset = $datasetManager->newDataset ($datasetName, "Created on $timestr from".
+						    " file $fileToParse by the bulk annotation spreadsheet importer.") or
+						    die "could not create new dataset $datasetName";
+	    push (@$newDatasets, $dataset);
+	}
+			
+	$datasetManager->addToDataset($dataset, $image->{ Image }) if $imageIdentifier;
+	# record the new image classification for output purposes
+	$image->{'Dataset'} = $dataset;
+	push (@$datasets, $dataset); # pass it to projects
+    }
+}
+
+sub processProjects {
+    my $self = shift;
+    my $session = $self->Session();	
+    my $factory = $session->Factory();
+    my ($projCol,$projName,$datasets,$newProjs,$newProjDataset,$fileToParse,$timestr) =  @_;
+
+    if (defined $projCol) {
+	my $projectManager = new OME::Tasks::ProjectManager;
+	
+	# skip 'Null' cells. i.e. cells that contain only white-space characters
+	next unless defined $projName and $projName =~ m/\S+/;
+	
+	my $project = $factory->findObject ('OME::Project', { name => $projName });
+	if (not $project) {
+	    $projectManager->create( {
+		name => "$projName",
+		description => "Created on $timestr from file $fileToParse by the bulk annotation spreadsheet importer.",
+				     }) or die "could not create new project $projName";
+	    
+	    # projectManger create() returns 1 or 0. useless
+	    $project = $factory->findObject ('OME::Project', { name => $projName });
+	    push (@$newProjs, $project);
 	}
 	
-	# Process the file row by row.
-	my $newCategories;
-	my $newGlobalSTSE;
-	my @newDatasets;
-	my @newProjs;
-	my $newProjDataset;
-	my %images;
+	$projectManager->addDatasets($datasets, $project->project_id());
 	
-	for (my $row = 1; $row <= $maxRow; $row++) {
-		my $imageIdentifier;
-		my $projName;
-		my @datasetNames;
-		my @cats;
-		my @seVals;
-		
-		if ($type eq EXCEL) {
-			for (my $col = 0; $col <= $maxCol; $col++) {
-				my $cell = $sheet->{Cells}[$row][$col];
-				my $content = $cell->Value if $cell;
-				
-				$imageIdentifier = $content if ( defined $imgCol and $imgCol == $col );
-				$projName = $content        if ( defined $projCol and $projCol == $col);
-				push ( @datasetNames, $content ) if ( $DatasetCols { $col } );
-				push ( @cats, $content )         if ( $CGCols{ $col } );
-				push ( @seVals, $content )       if ( $STCols{ $col } );
-			}
-		} else { # TAB
-			my $text = <FILE>;
-			chomp($text);
-			my @entries = split(/\t/, $text);
-			
-			my $col = 0;
-			foreach my $entry (@entries) {
-				$imageIdentifier = $entry if ( defined $imgCol and $imgCol == $col );
-				$projName = $entry        if ( defined $projCol and $projCol == $col);
-				push ( @datasetNames, $entry ) if ( $DatasetCols { $col } );
-				push ( @cats, $entry )         if ( $CGCols{ $col } );
-				push ( @seVals, $entry )       if ( $STCols{ $col } );
-				$col++;
-			}
-		}
-
-		# Get the image from the database if it exists and the user wants it
-		my $image;
-		if ($imageIdentifier) {
-			if ( not $images{$imageIdentifier} ) {
-				my @objects;
-				@objects = $factory->findObjects ( 'OME::Image', { name => "$imageIdentifier" } )
-										if ($columnHeadings[$imgCol] eq 'Image.Name');
-				@objects = $factory->findObjects ( 'OME::Image', { id => "$imageIdentifier" } )
-										if ($columnHeadings[$imgCol] eq 'Image.id');
-
-				die "There are two images in the database with that name $imageIdentifier. ".
-					"Try using IDs instead to ensure uniqueness.\n" if (scalar(@objects) > 1);
-				
-				push (@ERRORoutput, "Image with identifier $imageIdentifier doesn't exist. Skipping Row.")
-					and next if (scalar @objects != 1);
-
-				$images{$imageIdentifier} = {Image => $objects[0]};
-			}
-			$image = $images{$imageIdentifier};
-		}
-
-		# Process the CG Columns in order to create new Categories, as appropriate
-		foreach my $index (sort keys %CGCols) {
-			my $CGName = $columnHeadings[$index] or
-				die "ColumnHeading for column $index is undefined\n";
-			my $categoryName = shift(@cats);
-			
-			# skip 'Null' cells. i.e. cells that contain only white-space characters
-			next unless defined $categoryName and $categoryName =~ m/\S+/;
-			
-			my $CG = $CategoryGroups{$CGName};
-			
-			my $category = $factory->findObject ('@Category', { Name => $categoryName, CategoryGroup => $CG });
-			if (not $category) {
-				$category = $factory->newAttribute ('Category', undef, $global_mex, {
-								Name => $categoryName,
-								CategoryGroup => $CG,
-								Description => "Created by bulk annotation spreadsheet importer from file $fileToParse on $timestr."
-							}) or die "could not make new Category $categoryName";
-
-				$newCategories->{$CGName}->{$categoryName} = 1; # record the creation of new category to generate HTML/command-line output later
-			}
-			OME::Tasks::CategoryManager->classifyImage($image->{Image}, $category);
-			
-			# record the new image classification for later
-			$image->{ $CGName } = $category;
-		}
-		
-		my %ST_data_hash;
-		my %STs;
-		# Extract the Semantic type data in column order. Index it for attribute
-		# creation below
-		foreach my $index ( sort keys %STCols ) {
-			my $STSE = $columnHeadings[$index] or 
-				die "ColumnHeading for column $index is undefined\n";
-				
-			$STSE =~ m/(\w+)\.(\w+)/;
-			my $STName = $1;
-			my $SEName = $2;
-			
-			my $ST = $factory->findObject('OME::SemanticType', { name => $STName });
-			$STs{ $STName } = $ST;
-			my $granularity = $ST->granularity;
-			my $SEValue = shift(@seVals);
-			
-			# skip 'Null' cells. i.e. cells that contain only white-space characters
-			next unless defined $SEValue and $SEValue =~ m/\S+/;
-			
-			$ST_data_hash{ $STName }->{ $SEName } = $SEValue;
-
-			# There's an Image ST but there's no image to annotate!
-			if ( $granularity eq 'I' and not exists $image->{ Image }) {
-				push(@ERRORoutput, "You must specify an image for $STSE because it's an Image SemanticType.  Did not annotate.");
-				next;
-			}
-		}
-		# Create attributes from the indexed, semantically typed data.
-		foreach my $ST ( values %STs ) {
-			my $STName = $ST->name;
-			my $data_hash = $ST_data_hash{ $STName };
-			my $granularity = $ST->granularity;
-			
-			# Granularity is Image, so do image annotation
-			if ($granularity eq 'I') {
-				$factory->newAttribute ($STName, $image->{ Image }, $global_mex, $data_hash)
-					or die "could not make new (I) $STName\n\t".
-						join( "\n\t", map( $_." => ".$data_hash->{$_}, keys %$data_hash ) );
-				$image->{"ST:".$STName} = $data_hash;
-			}
-			
-			# Granularity is Global, so do global
-			elsif ( $granularity eq 'G' ) {
-				$factory->newAttribute ($STName, undef, $global_mex, $data_hash)
-					or die "could not make new (G) $STName\n\t".
-						join( "\n\t", map( $_." => ".$data_hash->{$_}, keys %$data_hash ) );
-				$newGlobalSTSE->{$STName} = $data_hash;
-			}
-		}
-		
-		# Process Datasets
-		my @datasets; # @datasets is at this scope so it can be passed to projects
-		foreach my $index (sort keys %DatasetCols) {
-			# $columnHeadings[$index] is 'Dataset'
-			my $datasetManager = new OME::Tasks::DatasetManager;
-			my $datasetName = shift (@datasetNames);
-			
-			# skip 'Null' cells. i.e. cells that contain only white-space characters
-			next unless defined $datasetName and $datasetName =~ m/\S+/;
-			
-			my $dataset = $factory->findObject ('OME::Dataset', { name => $datasetName });			
-			if (not $dataset) {
-				$dataset = $datasetManager->newDataset ($datasetName, "Created on $timestr from".
-					" file $fileToParse by the bulk annotation spreadsheet importer.") or
-				die "could not create new dataset $datasetName";
-				push (@newDatasets, $dataset);
-			}
-			
-			$datasetManager->addToDataset($dataset, $image->{ Image }) if $imageIdentifier;
-			# record the new image classification for output purposes
-			$image->{'Dataset'} = $dataset;
-			push (@datasets, $dataset); # pass it to projects
-		}
-		
-		# Process Projects
-		if (defined $projCol) {
-			my $projectManager = new OME::Tasks::ProjectManager;
-
-			# skip 'Null' cells. i.e. cells that contain only white-space characters
-			next unless defined $projName and $projName =~ m/\S+/;
-			
-			my $project = $factory->findObject ('OME::Project', { name => $projName });
-			if (not $project) {
-				$projectManager->create( {
-					name => "$projName",
-					description => "Created on $timestr from file $fileToParse by the bulk annotation spreadsheet importer.",
-				}) or die "could not create new project $projName";
-				
-				# projectManger create() returns 1 or 0. useless
-				$project = $factory->findObject ('OME::Project', { name => $projName });
-				push (@newProjs, $project);
-			}
-			
-			$projectManager->addDatasets(\@datasets, $project->project_id());
-			
-			# record which datasets are associated with which projects
-			foreach (@datasets) {
-				$newProjDataset->{$projName}->{$_->name()} =1;
-			}
-		}
-		$session->commitTransaction();
+	# record which datasets are associated with which projects
+	foreach (@$datasets) {
+	    $newProjDataset->{$projName}->{$_->name()} =1;
 	}
-	close FILE unless $type eq EXCEL;
-	$INPUT_RECORD_SEPARATOR = ''; # probably don't need to do this, but let's be safe
-	$session->commitTransaction();
-	
-	# package up outputs and return
-	# some one-else will be create some human understandable output
-	my $Results;
-	$Results->{ERRORoutput}   = \@ERRORoutput;
-	$Results->{newProjs}      = \@newProjs;
-	$Results->{newDatasets}   = \@newDatasets;
-	$Results->{newProjDatast} = $newProjDataset;
-	$Results->{newCGs}        = \@newCGs;
-	$Results->{newCategories} = $newCategories;
-	$Results->{newGlobalSTSE} = $newGlobalSTSE;
-	$Results->{images}        = \%images;
-	return $Results;
+    }
 }
 
 # prints a "Results Hash" in a command-line readable format.
@@ -501,8 +655,7 @@ sub printSpreadsheetAnnotationResultsCL {
 				$output .= "    Classifications:\n";
 				foreach my $key (sort keys %$image) {
 					my $CG = $factory->findObject ('@CategoryGroup', { Name => $key });
-					$output .= "        \\_ '".$key."' : '".$image->{$key}->Name()."'\n"
-						if $CG;
+					$output .= "        \\_ '".$key."' : '".$image->{$key}->Name()."'\n";
 				}
 			}
 			$output .= "\n"; # spacing
