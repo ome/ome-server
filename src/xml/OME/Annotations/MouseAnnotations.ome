@@ -62,8 +62,8 @@
 	AppliesTo="G">
 	<Description>Embryo's Stage of growth.</Description>
 	<Element 
-	   Name="Stage"
-	   DBLocation="EMBRYO_STAGE.Stage"
+	   Name="Name"
+	   DBLocation="EMBRYO_STAGE.NAME"
 	   DataType="string"/>
 	<Element 
 	   Name="Description"
@@ -280,39 +280,54 @@
 	DataType = "reference"
 	RefersTo = "Strain"/>
     </SemanticType>
+    
+    <SemanticType
+       Name = "ImageEmbryoStage"
+       AppliesTo = "I">
+      <Description>A mapping between embryonic stages and images. Not
+	really a many-to-many map, as an image is taken at exactly one
+	embryonic stage. However, the definition of an image is not
+	easily extended.
+      </Description>
+      <Element 
+	 Name = "EmbryoStage"
+	 DBLocation = "IMAGE_EMBRYO_STAGE.EMBRYO_STAGE_ID"
+	 DataType = "reference"
+	 RefersTo = "EmbryoStage"/>
+    </SemanticType>
 
   </SemanticTypeDefinitions>
   
   <CustomAttributes>
     <EmbryoStage
        ID="urn:lsid:foo.bar.com:EmbryoStage:456832">
-      <Stage>1-Cell</Stage>
+      <Name>1-Cell</Name>
       <Description>Single Cell</Description>
     </EmbryoStage>
 
     <EmbryoStage
        ID="urn:lsid:foo.bar.com:EmbryoStage:456839">
-      <Stage>2-Cell</Stage>
+      <Name>2-Cell</Name>
       <Description>Pair of  Cells</Description>
     </EmbryoStage>
 
     <EmbryoStage       ID="urn:lsid:foo.bar.com:EmbryoStage:456849" >
-      <Stage>4-Cell</Stage>
+      <Name>4-Cell</Name>
       <Description>Quartet of  Cells</Description>
     </EmbryoStage>
 
     <EmbryoStage      ID="urn:lsid:foo.bar.com:EmbryoStage:456852">
-      <Stage>8-Cell</Stage>
+      <Name>8-Cell</Name>
       <Description>Octet of  Cells</Description>
     </EmbryoStage>
 
     <EmbryoStage      ID="urn:lsid:foo.bar.com:EmbryoStage:456859">
-      <Stage>Morula</Stage>
+      <Name>Morula</Name>
       <Description>Morula</Description>
     </EmbryoStage>
 
     <EmbryoStage      ID="urn:lsid:foo.bar.com:EmbryoStage:456860">
-      <Stage>Blastocyst</Stage>
+      <Name>Blastocyst</Name>
       <Description>Blastocyst</Description>
     </EmbryoStage>
 
