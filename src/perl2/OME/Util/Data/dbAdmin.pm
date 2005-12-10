@@ -214,28 +214,28 @@ sub backup {
 	}
 	
 	# log version of backup
-	open (FILEOUT, "> OMEmaint") or die "Couldn't open OMEmaint for writing\n";
+	open (FILEOUT, "> /tmp/OMEmaint") or die "Couldn't open OMEmaint for writing\n";
 	print FILEOUT "version=$dbAdmin_version\n";
 	close (FILEOUT);
 	
 	# OMEIS
 	if (not $quick) {
 	    print "    \\_ Backing up OMEIS from $omeis_base_dir \n";
-	    print STDERR "$prog_path{'tar'} $comp_flag -c OMEmaint --directory /tmp/ omeDB_backup --directory $omeis_base_dir Files Pixels -f '$backup_file.tar$comp_ext'\n";
-		foreach (`$prog_path{'tar'} $comp_flag -c OMEmaint --directory /tmp/ omeDB_backup --directory $omeis_base_dir Files Pixels -f '$backup_file.tar$comp_ext' 2>&1`) {
+	    print STDERR "$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup --directory $omeis_base_dir Files Pixels\n";
+		foreach (`$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup --directory $omeis_base_dir Files Pixels 2>&1`) {
 			print STDERR "\nCouldn't create tar archive: $_" and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 		}
 		print "    \\_ Compressing archive \n" unless $compression eq "none";
 	} else {
 		print "    \\_ Compressing archive \n" unless $compression eq "none";
-		print STDERR "$prog_path{'tar'} $comp_flag -c OMEmaint --directory /tmp/ omeDB_backup -f '$backup_file.tar$comp_ext'\n";
-		foreach (`$prog_path{'tar'} $comp_flag -c OMEmaint --directory /tmp/ omeDB_backup -f '$backup_file.tar$comp_ext' 2>&1`) {
+		print STDERR "$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup \n";
+		foreach (`$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup 2>&1`) {
 			print STDERR "\nCouldn't create tar archive: $_" and die if $_ =~ /tar/ or $_ =~ /ERROR/ or $_ =~ /FATAL/;
 		}
 	}
 	
 	# clean up any residual files
-	unlink("OMEmaint") or die "Couldn't remove OMEmaint during cleanup\n";
+	unlink("/tmp/OMEmaint") or die "Couldn't remove /tmp/OMEmaint during cleanup\n";
 	unlink("/tmp/omeDB_backup") or die "Couldn't remove /tmp/omeDB_backup during cleanup\n";
 }
 
@@ -352,9 +352,9 @@ sub restore {
 	# extract OMEmaint version and omeDB_backup
 	# need to extract omeDB_backup in /tmp since postgress might not have
 	# access permissions in current directory
-	print "    \\_ Extracting postgress database ome and checking archive version \n";
-	print STDERR "$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory /tmp -x OMEmaint omeDB_backup -f '$restore_file'\n";
-	foreach (`$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory /tmp -x OMEmaint omeDB_backup -f '$restore_file' 2>&1`) {
+	print "    \\_ Extracting postgres database ome and checking archive version \n";
+	print STDERR "$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory /tmp -xf '$restore_file' OMEmaint omeDB_backup\n";
+	foreach (`$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory /tmp -xf '$restore_file' OMEmaint omeDB_backup 2>&1`) {
 		print STDERR "\nCouldn't extract OMEmaint and omeDB_backup from tar archive: $_" and die 
 		if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 	}
@@ -376,8 +376,8 @@ sub restore {
     my $success = 1;
 	if (not $quick) {
 		print "    \\_ Checking archive for OMEIS files \n";
-		print STDERR "$prog_path{'tar'} $comp_flag -t Files/lastFileID -f '$restore_file'\n";
-		foreach (`$prog_path{'tar'} $comp_flag -t Files/lastFileID -f '$restore_file' 2>&1`) {
+		print STDERR "$prog_path{'tar'} $comp_flag -tf '$restore_file' Files/lastFileID\n";
+		foreach (`$prog_path{'tar'} $comp_flag -tf '$restore_file' Files/lastFileID 2>&1`) {
 			$success = 0 if $_=~ /tar/ or $_ =~ /Error/;
 			# this is not a catastrophic error condition. It only means that OMEIS's
 			# folders Files and Pixels aren't included in the archive
@@ -418,8 +418,8 @@ sub restore {
 	    # expand the tar file directly into the OMEIS directory
 	    if ($semaphore eq 1) {
 			print "    \\_ Restoring OMEIS to $omeis_base_dir from archive\n";
-			print STDERR "$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory $omeis_base_dir -x Files Pixels -f '$restore_file'\n";
-			foreach (`$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory $omeis_base_dir -x Files Pixels -f '$restore_file'`) {
+			print STDERR "$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory $omeis_base_dir -xf '$restore_file' Files Pixels\n";
+			foreach (`$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory $omeis_base_dir -xf '$restore_file' Files Pixels`) {
 				print STDERR "\nCouldn't extract OMEIS's Files and Pixels from tar archive: $_" 
 				and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 			}
