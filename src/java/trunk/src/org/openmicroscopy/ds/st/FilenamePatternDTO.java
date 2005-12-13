@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
+ * Created by hochheiserha via omejava on Thu Sep  8 14:15:01 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -67,9 +67,9 @@ public class FilenamePatternDTO
     public void setTheZ(Integer value)
     { setElement("TheZ",value); }
 
-    public Integer getBaseName()
-    { return getIntegerElement("BaseName"); }
-    public void setBaseName(Integer value)
+    public String getBaseName()
+    { return getStringElement("BaseName"); }
+    public void setBaseName(String value)
     { setElement("BaseName",value); }
 
     public String getName()
