@@ -93,6 +93,7 @@ our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $OME_EXPER, $ADMIN_UID);
 # N.B.:  TIFFreader must follow ALL tiff variants
 #        XMLreader is best kept last.
 our $IMPORT_FORMATS = join (' ',qw/
+    OME::ImportEngine::OMETIFFreader
     OME::ImportEngine::MetamorphHTDFormat
     OME::ImportEngine::DVreader
     OME::ImportEngine::STKreader
