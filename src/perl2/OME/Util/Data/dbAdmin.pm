@@ -486,11 +486,17 @@ sub restore {
 	$flags .= '-U '.$dbConf->{User}.' ' if $dbConf->{User};
 	
 print STDERR "su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'\n"; 	
-print STDERR "su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'\n";
-print STDERR "su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'\n";
 	system ("su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'");
+
+print STDERR "su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'\n";
 	system ("su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'");
+
+print STDERR "su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'\n";
 	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'");
+
+
+
+
 
 # these are the commands used to restore a pg_backup archives made with the -p Format
 # print STDERR "su $postgress_user -c '".$prog_path{'psql'}." $flags $dbName < /tmp/omeDB_backup'";
