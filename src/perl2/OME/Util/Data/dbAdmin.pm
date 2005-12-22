@@ -200,10 +200,10 @@ sub backup {
 					 # -p: use the plain text SQL script file this should be the most portable 
 					 # -c: custom archive suitable for input into pg_restore
 
-	print STDERR "su $postgress_user -c '".$prog_path{'pg_dump'}." $flags $dbName > /tmp/omeDB_backup'\n";
+	print STDERR "su $postgress_user -c '".$prog_path{'pg_dump'}." $flags -o $dbName > /tmp/omeDB_backup'\n";
 
 	# backup database and watch output from pg_dump
-	foreach (`su $postgress_user -c '$prog_path{'pg_dump'} $flags $dbName > /tmp/omeDB_backup' 2>&1`) {
+	foreach (`su $postgress_user -c '$prog_path{'pg_dump'} $flags -o $dbName > /tmp/omeDB_backup' 2>&1`) {
 		print STDERR "\nDatabase Backup Failed: $_" and die if $_ =~ /pg_dump/ or $_ =~ /ERROR/ or $_ =~ /FATAL/;
 	}
 	
@@ -491,8 +491,8 @@ print STDERR "su $postgress_user -c '".$prog_path{'createuser'}." --adduser --cr
 print STDERR "su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'\n";
 	system ("su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'");
 
-print STDERR "su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'\n";
-	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'");
+print STDERR "su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -O -d $dbName --use-set-session-authorization /tmp/omeDB_backup'\n";
+	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -O -d $dbName --use-set-session-authorization /tmp/omeDB_backup'");
 
 
 
