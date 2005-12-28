@@ -77,8 +77,8 @@
 	AppliesTo="G">
 	<Description>Type of Probe</Description>
 	<Element 
-	   Name="Type"
-	   DBLocation="PROBE_TYPE.TYPE"
+	   Name="Name"
+	   DBLocation="PROBE_TYPE.Name"
 	   DataType="string"/>
 	<Element 
 	   Name="Description"
