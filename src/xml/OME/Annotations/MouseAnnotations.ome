@@ -332,13 +332,13 @@
     </EmbryoStage>
 
     <ProbeType ID="urn:lsid:foo.bar.com:ProbeType:456860">
-      <Type>Sense</Type>
+      <Name>Sense</Name>
       <Description>Sense</Description>
     </ProbeType>
 
 
     <ProbeType ID="urn:lsid:foo.bar.com:ProbeType:456861">
-      <Type>Anti-Sense</Type>
+      <Name>Anti-Sense</Name>
       <Description>Anti-Sense</Description>
     </ProbeType>
 
