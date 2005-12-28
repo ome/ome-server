@@ -468,8 +468,7 @@ sub getSearchCriteria {
 		my $typeToAccessFrom = $q->param( 'accessor_type' );
 		my $idToAccessFrom   = $q->param( 'accessor_id' );
 		my $accessorMethod   = $q->param( 'accessor_method' );
-		my $objectToAccessFrom = $factory->
-			loadObject( $typeToAccessFrom, $idToAccessFrom )
+		my $objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
 			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
 		$tmpl_data{ '/accessor_object_ref' } = $render->render( $objectToAccessFrom, 'ref' ).
 			"(<a href='javascript: document.forms[\"$form_name\"].elements[\"accessor_id\"].value = \"\"; ".
