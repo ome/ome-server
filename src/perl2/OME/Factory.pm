@@ -262,6 +262,15 @@ by name or as an instance of L<OME::SemanticType>.  If any types are
 specified by name, and a semantic type of that name does not exist, an
 error will be thrown and no new attributes will be created.
 
+=head2 maybeNewAttribute
+
+	my $attribute = $factory->
+	    maybeNewAttribute($semanticType,$target,$module_execution,$dataHash);
+
+This works exactly like newObject, except that if an object in the
+database already exists with the given contents, it will be returned,
+and no new object will be created. 
+
 =head2 loadObject
 
 	my $object = $factory->loadObject($className,$id);
@@ -1125,6 +1134,24 @@ sub newAttribute {
 
 	return $attr;
 }
+
+sub maybeNewAttribute {
+    my ($self, $semantic_type, $target, $module_execution,
+	$data,$isParentalOutput) = @_;
+
+    my $object;
+    my $objects =  $self->findAttributes($semantic_type,$data);
+    if (defined $objects) {
+	$object = $objects->next();
+	return $object if defined $object;
+    }
+    $object =
+	$self->newAttribute($semantic_type,$target,$module_execution,$data,
+			    $isParentalOutput); 
+
+    return $object;
+}
+
 
 
 package OME::Factory::Iterator;
