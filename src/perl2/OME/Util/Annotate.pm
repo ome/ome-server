@@ -40,10 +40,10 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Util::Commands);
 
 use Getopt::Long;
-Getopt::Long::Configure("bundling");
 use OME::Util::Annotate::SpreadsheetReader;
 
 sub getCommands {
+    my $self = shift;
     return
       {
        'wizard' => ['OME::Util::Annotate::AnnotationWizards'],
