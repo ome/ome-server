@@ -1,4 +1,4 @@
-# OME/Util/Annotate/SpreadsheetReader.pm
+#/OME/Util/Annotate/SpreadsheetReader.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -446,10 +446,12 @@ sub processSTs {
 	my $SEValue = shift(@$seVals); 
 
 	# ok. here's what we have to do to find the reference
-	# look up the semantic element for the type - with name $SEName
+	# look up the semantic element for the type - with name
+	# $SEName
 	my $SE = $factory->findObject('OME::SemanticType::Element', {name=> $SEName, semantic_type=> $ST} );
 				      
 	# get it's column
+
 	my $col = $SE->data_column();
 
 	if ($col->sql_type() eq 'reference') {
@@ -461,11 +463,25 @@ sub processSTs {
 		my $refObj = $factory->findObject($refType,
 						  {Name=>$SEValue });
 		if (defined $refObj) {
-		    #use it instead.
+		    
+ 		    #use it instead.
 		    $SEValue = $refObj;
 		}
-	    }
+		# here we must do something where we try to 
+		# create a new instance of type $refType where name is
+		#$SEVAlue. 
+		# if it works, set $sevalue to that new object.
+		else {
+		    my $targ = undef;
 
+		    $targ = $image->{Image} if
+			($refType->granularity() eq 'I') ;
+		    my $obj = $factory->maybeNewAttribute($refType,$targ,$global_mex,{Name=>$SEValue});
+		    if (defined $obj) {
+			$SEValue = $obj;
+		    }
+		}
+	    }
 	}
 
         # skip 'Null' cells. i.e. cells that contain only white-space 
@@ -488,7 +504,7 @@ sub processSTs {
 
         # Granularity is Image, so do image annotation  
 	if ($granularity eq 'I') { 
-	    $factory->newAttribute ($STName, $image->{ Image }, 
+	    $factory->maybeNewAttribute ($STName, $image->{ Image }, 
 				    $global_mex, $data_hash) or 
 			die "could not make new (I) $STName\n\t". 
 	              join( "\n\t", map( $_." => ".$data_hash->{$_}, 
@@ -499,7 +515,8 @@ sub processSTs {
 
        # Granularity is Global, so do global  
 	elsif ( $granularity eq 'G' ) { 
-	    $factory->newAttribute ($STName, undef, $global_mex, $data_hash) or
+
+	    $factory->maybeNewAttribute ($STName, undef, $global_mex, $data_hash) or
 		die "could not make new (G) $STName\n\t". 
 		join( "\n\t", map( $_." => ".$data_hash->{$_}, 
 				   keys %$data_hash ) ); 
