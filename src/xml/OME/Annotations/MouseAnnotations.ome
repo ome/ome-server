@@ -338,8 +338,8 @@
 
 
     <ProbeType ID="urn:lsid:foo.bar.com:ProbeType:456861">
-      <Name>Anti-Sense</Name>
-      <Description>Anti-Sense</Description>
+      <Name>Antisense</Name>
+      <Description>Antisense</Description>
     </ProbeType>
 
     <Probe ID="urn:lsid:foo.bar.com:Probe:456961">
