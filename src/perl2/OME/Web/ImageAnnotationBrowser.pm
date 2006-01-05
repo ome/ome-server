@@ -101,6 +101,7 @@ sub getPageBody {
     # the template  name.
     # get template from url parameter, or referer
 
+
     my $which_tmpl = $q->url_param('Template');
     my $referer = $q->referer();
     my $url = $self->pageURL('OME::Web::ImageAnnotationBrowser');
@@ -111,21 +112,45 @@ sub getPageBody {
     }
     $which_tmpl =~ s/%20/ /;
 
+    # get the root object
+    my $root = $q->param('Root');
+
+
+    my $output = $self->getAnnotationDetails($root,$which_tmpl,
+					     \%tmpl_data,$self);
+
+
+    # and the form.
+    my $html =
+	$q->startform( { -name => 'primary' } );
+    $html .= $output;
+    $html .= $q->endform();
+
+    return ('HTML',$html);	
+}
+
+sub getAnnotationDetails {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my ($root,$which_tmpl,$tmpl_data,$obj) = @_;
+
     # load the appropriate information for the named template.
     my $tmplData = 
 	$factory->findObject( '@BrowseTemplate', Name => $which_tmpl );
+
+    
 	
     # instantiate the template
     my $tmpl = 
 	HTML::Template->new(filename => $tmplData->Template(),
 			    case_sensitive=>1);
     
-   # get the root object
-    my $root = $q->param('Root');
+
 
     # instantiate variables in the template
-    $tmpl_data{'Root'} = $root;
-    $tmpl_data{'Template'} = $q->param('Template');
+    $tmpl_data->{'Root'} = $root;
+    $tmpl_data->{'Template'} = $which_tmpl;
 
 	
     # get a parsed array of the types in the path variable.
@@ -145,25 +170,27 @@ sub getPageBody {
 
     $pathElt =~ /@(.*)/;
     my $rootType = $1;
-    $tmpl_data{'RootType'} = $rootType;
 
+
+    my $annotation_detail;
     if (defined $rootObj)  {
 
 	# get the associated layout code
-	$tmpl_data{'RootHtml'} = $self->getHeader($rootObj,$rootType);
-	$tmpl_data{'AnnotationDetail'} = 
-	    $self->getLayoutCode($rootObj,$pathTypes,$rootType,$pathTypes2);
+	$annotation_detail = "Images for $rootType " .
+	    $self->getHeader($rootObj,$rootType,$obj) . "<br>\n";
+	$annotation_detail .= 
+	    $self->getLayoutCode($rootObj,$pathTypes,$rootType,$pathTypes2,
+				 $obj,$which_tmpl);
     }
+    else {
+	$annotation_detail = "$rootType $root not found \n";
+    }
+    $tmpl_data->{'AnnotationDetail'} = $annotation_detail;
 	
     # populate the template..
-    $tmpl->param(%tmpl_data);
-    # and the form.
-    my $html =
-	$q->startform( { -name => 'primary' } );
-    $html .= $tmpl->output() if ($tmpl);
-    $html .= $q->endform();
-
-    return ('HTML',$html);	
+    $tmpl->param(%$tmpl_data);
+    
+    return $tmpl->output();
 }
 
 =head1 getPaths
@@ -207,12 +234,12 @@ sub getPaths {
 
 sub getHeader {
     my $self = shift;
-    my ($obj,$type) = @_;
+    my ($obj,$type,$webObj) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my $q = $self->CGI();
     my $html;
 
+    my $q = $webObj->CGI();
     # at this point, $root object is what we start with, rootType is
     # its type
     
@@ -252,11 +279,12 @@ sub getHeader {
 =cut
 sub getLayoutCode {
     my $self = shift;
-    my ($root,$pathTypes,$parentType,$paths2) = @_;
+    my ($root,$pathTypes,$parentType,$paths2,$obj,$template) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
     
     my $html="";
+    
 
     # The map is the type that goes between $parentType
     # and $type - the next entry in the list.
@@ -284,7 +312,7 @@ sub getLayoutCode {
 	if (scalar(@$pathTypes) ==0 ) {
 	    # we're at the end of the list of types.
 
-	    my $resHtml = $self->completeFirstDim(\@maps,$paths2);
+	    my $resHtml = $self->completeFirstDim(\@maps,$paths2,$obj,$template);
 
 	    return $resHtml if ($resHtml eq "");
 	    $html .= $resHtml;
@@ -293,7 +321,7 @@ sub getLayoutCode {
 	    #start a new list
 	    my $resHtml =
 		$self->processMaps(\@maps,$targetField,$pathTypes,
-				   $paths2);
+				   $paths2,$obj,$template);
 	    # end the list.
 	    if ($resHtml ne "") {
 		$html = "<ul>$resHtml</ul>";
@@ -311,7 +339,7 @@ sub completeFirstDim {
     my $session= $self->Session();
     my $factory = $session->Factory();
 
-    my ($maps,$paths) = @_;
+    my ($maps,$paths,$obj,$template) = @_;
 
     my $html = "";
     my @images;
@@ -320,14 +348,17 @@ sub completeFirstDim {
 	my $image = $factory->loadObject('OME::Image',$imageID);
 	push(@images,$image);
     }
+
     if (defined $paths && scalar(@$paths) > 0) {
-	$html=   $self->secondDimRender(\@images,$paths);
+	$html=   $self->secondDimRender(\@images,$paths,$obj,$template);
     } elsif (scalar(@images) > 0) {
 	$html = 
-	    $self->Renderer()->renderArray(\@images,
+	    my $renderer = $obj->Renderer();
+	    $renderer->renderArray(\@images,
 					   'ref_st_annotation_display_mass',
 					   { type =>
-						 'OME::Image'});
+						 'OME::Image',
+					     Template=>$template});
     }
     return $html;
 }
@@ -336,7 +367,7 @@ sub processMaps {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($maps,$targetField,$pathTypes,$paths2) = @_;
+    my ($maps,$targetField,$pathTypes,$paths2,$obj,$template) = @_;
 
     my $html = "";
     foreach my $map (@$maps) {
@@ -368,11 +399,13 @@ sub processMaps {
 	}
 		# recurse to populate the next level.
 	$innerHtml .= $self->getLayoutCode($target,\@localTypes,
-					   $targetField,$res2);
+					   $targetField,$res2,$obj,
+					   $template);
 	if ($innerHtml ne "") {
+	    my $q = $obj->CGI();
 	    # get the item and build it as a list of item.
 	    $html .= "<li>". $targetField . "  ".
-		$self->getHeader($target,$targetField) . "<br>\n";
+		$self->getHeader($target,$targetField,$obj) . "<br>\n";
 	    $html .= $innerHtml;
 	    $html .= "<p>"		    
 	}
@@ -385,7 +418,7 @@ sub secondDimRender {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($images,$paths) = @_;
+    my ($images,$paths,$obj,$template) = @_;
 
 
     my $type = shift @$paths;
@@ -403,10 +436,11 @@ sub secondDimRender {
 	    $mypaths[$i]=$paths->[$i];
 	}
 	my $res  =
-	    $self->secondDimRecurse($images,$parentType,$item,\@mypaths);
+	    $self->secondDimRecurse($images,$parentType,$item,\@mypaths,$obj,
+				    $template);
 	if ($res ne "") {
 	    $itemHtml .= "<LI> $parentType ". 
-		$self->getHeader($item,$parentType);
+		$self->getHeader($item,$parentType,$obj);
 	    $itemHtml .= $res;
 	}
     }
@@ -420,7 +454,7 @@ sub secondDimRecurse {
     my $self= shift;
     my $session = $self->Session();
     my $factory = $session->Factory();
-    my ($images,$parentType,$parent,$paths) = @_;
+    my ($images,$parentType,$parent,$paths,$obj,$template) = @_;
 
     my $html= "";
     #  now,  map type is something like ABMap, and type is $b
@@ -438,10 +472,9 @@ sub secondDimRecurse {
     my $innerHtml = "";
 
     if (scalar(@maps) > 0)  {
-
 	if (scalar(@$paths) == 0)  {
 	    #actually render the images 
-	    my $resHtml = $self->renderImages(\@maps,$images);
+	    my $resHtml = $self->renderImages(\@maps,$images,$obj,$template);
 	    if ($resHtml ne "") {
 		$innerHtml .= $resHtml;
 	    }
@@ -458,10 +491,11 @@ sub secondDimRecurse {
 		    #$targetfield is new parent type, $target is new parent
 		    my $resHtml .=
 			$self->secondDimRecurse($images,$targetField,
-						$target,\@localPath);
+						$target,\@localPath,$obj,$template);
 		    if ($resHtml ne "") {
 			$innerHtml .= "<li> " . $targetField . " " .
-			    $self->getHeader($target,$targetField) . "<br>\n";
+			    $self->getHeader($target,$targetField,$obj) . 
+			    "<br>\n";
 			$innerHtml .= $resHtml;
 		    }
 		}
@@ -481,8 +515,8 @@ sub secondDimRecurse {
 
 sub renderImages {
     my $self = shift;
-    my ($maps,$images) = @_;
- 
+    my ($maps,$images,$obj,$template) = @_;
+
     # at this point, we have two refs to arrays.
     # map is an array of things that map to images.
     # (with $image_id fields)
@@ -491,6 +525,7 @@ sub renderImages {
     my @imagesToRender;
     IMAGE: foreach my $image (@$images) {
 	foreach my $map (@$maps) {
+		$image->ID . "\n";
 	    if ($map->image_id == $image->ID) {
 		push @imagesToRender, ($image);
 		next IMAGE;
@@ -498,10 +533,12 @@ sub renderImages {
 	}
     }
     if (scalar(@imagesToRender) > 0) {
-	return $self->Renderer()->renderArray(\@imagesToRender,
+	my $renderer = $obj->Renderer();
+	return $renderer->renderArray(\@imagesToRender,
 					      'ref_st_annotation_display_mass',
 					      { type =>
-						    'OME::Image'});
+						    'OME::Image',
+						Template=>$template});
     }
     else {
 	return "";
