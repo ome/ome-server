@@ -160,7 +160,8 @@ sub getGroups {
 		next unless defined $comment;
 
 		# parse XML from comment
-		my $doc = $parser->parse_string($comment);
+    my $doc;
+    eval { $doc = $parser->parse_string($comment); };
 		next unless defined $doc;
 
 		# get OME/Image/Pixels element
@@ -168,7 +169,7 @@ sub getGroups {
 		my $imageElement = ($rootElement->getChildrenByTagName('Image'))[0];
 		my $pixelsElement = ($imageElement->getChildrenByTagName('Pixels'))[0];
 		my @tiffData = $pixelsElement->getChildrenByTagName('TiffData');
-		next unless defined @tiffData && @tiffData > 0;
+		next unless @tiffData > 0;
 
 		# get attributes of Pixels element
 		my $dimOrder = $pixelsElement->getAttribute('DimensionOrder');
