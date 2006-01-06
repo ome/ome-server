@@ -83,6 +83,7 @@ use OME::Factory;
 use OME::Session;
 use OME::Configuration;
 use Term::ReadKey;
+use OME::DBObject;
 
 use base qw(Class::Accessor Class::Data::Inheritable);
 
@@ -311,6 +312,50 @@ sub createWithKey {
 	return $session;
 }
 
+
+sub updateACL {
+	my $self = shift;
+	my $session       = OME::Session->instance();
+	my $factory       = $session->Factory();
+	my $configuration = $factory->Configuration();
+	my $superuser     = $configuration->super_user();
+	my $exp_id        = $session->experimenter_id();
+	my $dbh           = $factory->obtainDBH();
+
+	# Gather lists of whose data teh logged in user gets to see
+	my $ACL;
+	if ($superuser and $superuser != $exp_id) {
+		$ACL = {
+			users  => $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$exp_id,$exp_id,$exp_id),
+			groups => $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$exp_id,$exp_id,$exp_id),
+		}
+	}
+	
+	# Compare old and new lists of whose data the logged in user gets access to.
+	my $oldACL = $session->ACL();
+	my $ACLsDiffer = 0;
+	ACL_COMPARISON: foreach my $key ( keys %$oldACL ) {
+		if( scalar( @{ $ACL->{ $key } } ) ne scalar( @{ $oldACL->{ $key } } ) ) {
+			$ACLsDiffer = 1;
+			last ACL_COMPARISON;
+		}
+		for( my $index = 0; $index < scalar( @{ $ACL->{ $key } } ); $index++ ) {
+			if( $oldACL->{ $key }->[ $index ] ne $ACL->{ $key }->[ $index ] ) {
+				$ACLsDiffer = 1;
+				last ACL_COMPARISON;
+			}
+		}
+	}
+
+	# update the ACL access list if needed.
+	if( $ACLsDiffer ) {
+		# Update the list itself
+		$session->{ACL} = $ACL;
+		# The access lists's experimenter & group ids are embedded in 
+		# cached SQL text. Those caches are now invalid, and need to be cleared.
+		OME::DBObject->__clear_ALL_makeSelectSQL_cache();
+	}
+}
 
 #
 # createWithPassword
