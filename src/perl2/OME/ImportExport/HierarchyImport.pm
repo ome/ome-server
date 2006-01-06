@@ -80,6 +80,7 @@ use OME::Tasks::DatasetManager;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::ImportManager;
 use OME::Session;
+use OME::SessionManager;
 
 =head1 METHODS
 
@@ -188,13 +189,17 @@ sub processDOM {
 	# process projects
 	logdbg "debug", ref ($self)."->processDOM: Processing Projects";
 	foreach $node ( @{ $root->getChildrenByTagName('Project') } ) {
-		$self->importObject ($node,undef,undef,undef);
+		my $project = $self->importObject ($node,undef,undef,undef);
+		# [Bug 580] work-around restrictive access control: make an "import group" if necessary
+		$self->ensureImportVisibility( $project );
 	}	
 
 	# process datasets
 	logdbg "debug", ref ($self)."->processDOM: Processing Datasets";
 	foreach $node ( @{ $root->getChildrenByTagName('Dataset') } ) {
 		$object = $self->importObject ($node,undef,undef,undef);
+		# [Bug 580] work-around restrictive access control: make an "import group" if necessary
+		$self->ensureImportVisibility( $object );
 		$objectID = $object->id();
 
 		# make connections between datasets and projects
@@ -247,6 +252,8 @@ sub processDOM {
 		}
 		
 		$object = $self->importObject ($node,undef,undef,undef);
+		# [Bug 580] work-around restrictive access control: make an "import group" if necessary
+		$self->ensureImportVisibility( $object );
 		$objectID = $object->id();
 
 		# make connections between images and datasets
@@ -297,6 +304,80 @@ sub processDOM {
 	return ( $self->{_importedObjects} ) ;
 }
 
+
+=head2 ensureImportVisibility
+
+	$self->ensureImportVisibility( $object );
+
+$object needs to be a DBObject with an 'owner' and a 'group' field.
+e.g. Project, Dataset, Image, ModuleExecution
+
+This function ensures the given object is visible to the logged in user.
+
+Implementat notes: 
+[Bug 590]
+This is a work-around for restrictive access control. This function will 
+first check if the logged in user can see the recently imported object.
+If that is not the case, it will find or create an 'Import group' and 
+set group ownership to the 'Import group'. The 'Import group' will has
+the logged in user for its leader, contact, and sole member.
+
+=cut
+
+sub ensureImportVisibility {
+	my ($self, $object) = @_;
+	my $experimenter = $object->owner();
+	my $group        = $object->group();
+	my $session	     = OME::Session->instance();
+	my $factory	     = $session->Factory();
+	my $loggedInUser = $session->experimenter();
+	
+	# Return if the logged in user already see this object.
+	if( $factory->loadObject( $object->getFormalName(), $object->id() ) ) {
+		logdbg "debug", "The logged in user, ".$loggedInUser->LastName.", can see the object ".$object->getFormalName()." ".$object->id();
+		return;
+	} else {
+		logdbg "debug", "The logged in user, ".$loggedInUser->LastName.", can NOT see the object ".$object->getFormalName()." ".$object->id().
+			". The object has belongs to: ".$object->owner->id.", ".$object->group_id.".\n";
+	}
+
+	
+	# Find or create the Import group
+	my @importGroupCandidates = $factory->findObjects( '@Group', Leader => $loggedInUser, Contact => $loggedInUser );
+	@importGroupCandidates = grep{ $_->count_ExperimenterGroupList == 0 } @importGroupCandidates;
+	my $importGroup;
+	if( scalar( @importGroupCandidates ) == 1 ) {
+		$importGroup = $importGroupCandidates[0];
+	} else {
+		my $admin_module = $session->Configuration()->administration_module()
+			or die "couldn't laod Administration module";
+		my $admin_mex = OME::Tasks::ModuleExecutionManager->createMEX($admin_module,'G' )
+			or die "Couldn't get mex for Administration module";
+		$importGroup = $factory->
+			newAttribute('Group', undef, $admin_mex, {
+				Name    => "Import Group for ".$loggedInUser->LastName,
+				Contact => $loggedInUser,
+				Leader  => $loggedInUser
+			});
+		$admin_mex->status( 'FINISHED' );
+		$admin_mex->storeObject();
+
+		# Update the list of whose data the logged in user can see.
+		# This activates the permissions of the new group.
+		OME::SessionManager->updateACL();
+	}
+	
+	# Set the group of this object to the 'Import Group'
+	$object->group( $importGroup );
+	$object->storeObject();
+
+	# Error check
+	confess "Still cannot load object ".$object->getFormalName()." ".$object->id().
+			". The object has belongs to: ".$object->owner->id.", ".$object->group_id.".\n"
+		unless( $factory->loadObject( $object->getFormalName(), $object->id() ) );
+
+	return;
+}
 
 =head2 createdMEXduringImport
 
