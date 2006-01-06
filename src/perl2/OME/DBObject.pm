@@ -75,6 +75,7 @@ use vars qw($AUTOLOAD);
 
 # This provides storage for __makeSelectSQL()
 __PACKAGE__->mk_classdata('__cached_sql_text');
+__PACKAGE__->__cached_sql_text({});
 # This turns __makeSelectSQL's caching on or off
 __PACKAGE__->mk_classdata('__cache_sql_text_in_makeSelectSQL');
 __PACKAGE__->__cache_sql_text_in_makeSelectSQL(1);
@@ -2280,6 +2281,13 @@ combine the search criteria with OR's instead of AND's.
 
 =cut
 
+sub __clear_ALL_makeSelectSQL_cache {
+	my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $cache = $class->__cached_sql_text();
+    %$cache = ();
+}
+
 sub __makeSelectSQL {
 # This is turned off only for this function due to the   	 
 # crazy (and wrong): 	 
@@ -2325,7 +2333,7 @@ no warnings "uninitialized";
 
 	###########################
 	# Caching of generated text
-	$class->__cached_sql_text({}) unless( defined $class->__cached_sql_text() );
+	$class->__cached_sql_text()->{ $class } = {} unless( defined $class->__cached_sql_text()->{ $class } );
 	my ($cache_key, $cached_sql, $cached_id_available);
 	my @values_when_using_cache;
 	if( $class->__cache_sql_text_in_makeSelectSQL() ) {
@@ -2334,7 +2342,7 @@ no warnings "uninitialized";
 		$cache_key .= '.OR' if $searchWithOR;
 	
 		# Attempt to retreive cached SQL from the key
-		if( exists $class->__cached_sql_text()->{ $cache_key } ) {
+		if( exists $class->__cached_sql_text()->{ $class }->{ $cache_key } ) {
 			if( $log_hit) {
 				open( FOO, ">> $log_hit" )
 					or die "couldn't open $log_hit";
@@ -2342,7 +2350,7 @@ no warnings "uninitialized";
 				close FOO;
 			}
 
-			($cached_sql, $cached_id_available) = @{ $class->__cached_sql_text()->{ $cache_key } };
+			($cached_sql, $cached_id_available) = @{ $class->__cached_sql_text()->{ $class }->{ $cache_key } };
 			
 			# prevent __limit and __offset from being processed with the other criteria;
 			# they need to be at the very end of the values array
@@ -2814,7 +2822,7 @@ no warnings "uninitialized";
 			}
 		}
 
-		$class->__cached_sql_text()->{ $cache_key } =
+		$class->__cached_sql_text()->{ $class }->{ $cache_key } =
 			[$sql,defined $first_key ];
 	}
 
@@ -3420,8 +3428,9 @@ sub AUTOLOAD {
 		if( $proto->__wasRelationshipExplicitlyDefined( $foreign_key_class, $foreign_key_alias ) );
 	# record this method & flag it as being inferred
 	$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $method, 1 ];
-	# Properly define the method
-	$class->hasMany($method, $foreign_key_class => $foreign_key_alias );
+	# Properly define the relationship
+	(my $method_relationship = $method ) =~ s/^count_//;
+	$class->hasMany($method_relationship, $foreign_key_class => $foreign_key_alias );
 
 	# perldoc talks about using a fancy goto statement to removed 
 	# AUTOLOAD from the execution stack if AUTOLOAD is dynamically 
