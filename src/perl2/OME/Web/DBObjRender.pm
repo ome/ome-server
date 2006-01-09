@@ -760,8 +760,14 @@ sub getFieldTitles {
 	
 	# _fieldTitles allows specialized renderers to overide titles
 	my $pkg_titles = $specializedRenderer->{ _fieldTitles } if $specializedRenderer;
-	foreach( @$field_names ) {
-		my ($alias,$title) = ($_,$_);
+	foreach my $field ( @$field_names ) {
+		my ($alias,$title) = ($field,$field);
+		# A field may have the form: dataset_links.dataset. In that case, the 
+		# title needs to reflect the rightmost name.
+		$title =~ s/.*\.//;
+
+# Uncomment this to have "ALL" appear by a wildcard search field.
+#		$title = "ALL" if $alias eq '*';
 		$title =~ s/_/ /g;
 		if( $format eq 'txt' ) {
 			$titles{$alias} = ( $pkg_titles->{$alias} or ucfirst($title) );
