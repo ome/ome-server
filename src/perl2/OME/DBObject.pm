@@ -1226,6 +1226,52 @@ sub manyToMany {
     }
 }
 
+=head2 getManyToManyAliasSearchPath
+
+	my $searchPath           = $class->getManyToManyAliasSearchPath( $alias );
+	my $searchTypeFormalName = $class->getAccessorReferenceType( $alias )->getFormalName();
+	my @objects = $factory->findObjects( $searchTypeFormalName, $searchPath => $obj->id, [other search parameters] );
+	
+is equivalent to:
+	
+	my @objects = $obj->alias( [other search parameters] )
+
+This method returns a search path that can be used for factory searches. In the
+simple case, the same goal can be accomplished through simpler means. The 
+benefit of this method is that is allows normalization of code and more 
+complex queries.
+
+=cut
+
+sub getManyToManyAliasSearchPath {
+    my ($proto, $alias) = @_;
+    my $class = ref($proto) || $proto;
+
+    my $many_to_many = $class->__manyToMany();
+	my ($returned_class, $map_class, $map_alias, $map_linker_alias ) = 
+		@{ $many_to_many->{$alias} };
+# Scenario:
+# image->datasets
+# data from above line is: OME::Dataset, OME::Image::DatasetMap, image, dataset
+# We need: image_links.image
+# The first part is Dataset's link to OME::Image::DatasetMap via OME::Image::DatasetMap's dataset field
+# The second part is map_alias
+
+	# Find the link from returned_class to the map_class
+	my $first_link;
+	my $returned_class_has_manys = $returned_class->__hasManys();
+	foreach my $returned_class_alias( keys %$returned_class_has_manys ) {
+		my ( $foreign_key_class, $foreign_key_alias ) = @{ $returned_class_has_manys->{ $returned_class_alias } };
+		if( ( $foreign_key_class eq $map_class ) &&
+		    ( $foreign_key_alias eq $map_linker_alias ) ) {
+			$first_link = $returned_class_alias;
+			last;
+		}
+	}
+	
+	return "$first_link.$map_alias";
+}
+
 =head2 getReferences
 
 	__PACKAGE__->getReferences();
@@ -1417,6 +1463,41 @@ sub __parseHasManyAccessor {
 	return undef;
 }
 
+=head2 __establishProposedRelationship
+
+	if( $class->__establishProposedRelationship( 'fooList' ) ) {
+		# $class has a method called fooList that can now be queried
+	} else {
+		# $class had no relationship to foo that was recorded in the DB
+	}
+
+validates proposed relatioships, and if they are valid, then establishes them.
+
+=cut
+
+sub __establishProposedRelationship {
+    my ($proto, $method) = @_;
+    my $class = ref($proto) || $proto;
+
+	# Verify syntax and parse method name
+	my ( $foreign_key_class, $foreign_key_alias ) = $proto->__parseHasManyAccessor( $method );
+	return 
+		unless $foreign_key_class && $foreign_key_alias;
+	# Has the relationship already been defined?
+	return
+		if( $proto->__wasRelationshipExplicitlyDefined( $foreign_key_class, $foreign_key_alias ) or
+			$proto->__hasRelationshipBeenInferred( $foreign_key_class, $foreign_key_alias ) );
+	# record this method & flag it as being inferred
+	$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $method, 1 ];
+	# Properly define the relationship
+	(my $method_relationship = $method ) =~ s/^count_//;
+	$class->hasMany($method_relationship, $foreign_key_class => $foreign_key_alias );
+
+	# return successful
+	return 1;
+}
+
+
 =head2 getManyToMany
 
 	my $many_to_many_hash = __PACKAGE__->getManyToMany();
@@ -1540,8 +1621,9 @@ sub getAccessorReferenceType {
     my $class = ref($proto) || $proto;
 
 	my $alias = shift;
-	return undef if $alias eq 'id';
-
+	return undef if( ( not defined $alias ) || ($alias eq 'id') );
+	# Alias may be an inferred relation. establishing the method for querying.
+	$class->__establishProposedRelationship( $alias );
 	my $returnedClass;
 	my $accessorType = $class->getColumnType( $alias );
 	if( $accessorType eq 'has-many' ) {
@@ -3454,6 +3536,7 @@ sub __newByID {
     return $class->__newInstance($sth,$id_available,$columns_wanted);
 }
 
+
 # This generates methods claimed by getInferredHasMany()
 sub AUTOLOAD {
     my $proto = shift;
@@ -3461,20 +3544,10 @@ sub AUTOLOAD {
 	return if $AUTOLOAD eq $class.'::DESTROY';
 	my %params = @_;
 	(my $method = $AUTOLOAD ) =~ s/.*:://;
-	logdbg "debug", $class."::AUTOLOAD called with:\n\t". "$AUTOLOAD( ". join( ', ', map(  $_." => ".( ref($params{$_}) ? '[ '.join( ', ', @{$params{$_}} ).' ]' : $params{$_} ), keys %params ) )." )\n";
+ 	logdbg "debug", $class."::AUTOLOAD called with:\n\t". "$AUTOLOAD( ". join( ', ', map(  $_." => ".( ref($params{$_}) ? '[ '.join( ', ', @{$params{$_}} ).' ]' : $params{$_} ), keys %params ) )." )\n";
 
-	# Verify syntax and parse method name
-	my ( $foreign_key_class, $foreign_key_alias ) = $proto->__parseHasManyAccessor( $method );
-	confess "A non-existent method \"$method\" was called on package ".$class
-		unless $foreign_key_class && $foreign_key_alias;
-	# Has the relationship already been defined?
-	die "Will not auto generate a hasMany accessor method because the relationship has already been defined."
-		if( $proto->__wasRelationshipExplicitlyDefined( $foreign_key_class, $foreign_key_alias ) );
-	# record this method & flag it as being inferred
-	$proto->__hasManysReverseLookup()->{ $foreign_key_class }{ $foreign_key_alias } = [ $method, 1 ];
-	# Properly define the relationship
-	(my $method_relationship = $method ) =~ s/^count_//;
-	$class->hasMany($method_relationship, $foreign_key_class => $foreign_key_alias );
+	$class->__establishProposedRelationship( $method )
+		or confess "Could not establish relationship $method from class $class";
 
 	# perldoc talks about using a fancy goto statement to removed 
 	# AUTOLOAD from the execution stack if AUTOLOAD is dynamically 
