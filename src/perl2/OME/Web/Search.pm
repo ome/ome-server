@@ -207,8 +207,6 @@ END_HTML
  			$q->param( '__order', '' );
  			$q->param( '__offset', '' );
  			$q->param( 'search_type', $type );
- 			$q->param( 'accessor_id', '');
- 			$q->param('/accessor_object_ref','');
  		}
  		
 		$tmpl_data{ criteria_controls } = $self->getSearchCriteria( $type );
@@ -266,10 +264,7 @@ END_HTML
 			$q->hidden( -name => '__order' ).
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
-			$q->hidden( -name => 'page_action', -default => undef, -override => 1 ).
-			$q->hidden( -name => 'accessor_id' ).
-			$q->hidden( -name => 'accessor_method' ).
-			$q->hidden( -name => 'accessor_type' );
+			$q->hidden( -name => 'page_action', -default => undef, -override => 1 );
 		
 	}
 	
@@ -322,7 +317,14 @@ sub getSearchFields {
 		OME::Web->_loadTypeAndGetInfo( $type );
 	foreach my $field ( @$field_names ) {
 		next if exists $form_fields->{ $field };
-		my $foreignClass = $package_name->getAccessorReferenceType( $field );
+		# A field may have the form: dataset_links.dataset The code block below
+		# finds the package name of the right most method
+		my @fields = split( /\./, $field );
+		my $foreignClass = $package_name->getAccessorReferenceType( shift @fields );
+		foreach my $single_field ( @fields ) {
+			$foreignClass = $foreignClass->getAccessorReferenceType( $single_field );
+		}
+		
 		if( $foreignClass ) {
 			$form_fields->{ $field } = $self->getRefSearchField( 
 				$formal_name, $foreignClass, $field, $defaults->{ $field } );
@@ -461,31 +463,39 @@ sub getSearchCriteria {
 	my $tmpl_path = $self->_findTemplate( $type );
 	my $tmpl = HTML::Template->new( filename => $tmpl_path,
 	                                case_sensitive => 1 );
-
-	# accessor stuff. 
-	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne '' ) {
-	# We are working in accessor mode. Set object reference
-		my $typeToAccessFrom = $q->param( 'accessor_type' );
-		my $idToAccessFrom   = $q->param( 'accessor_id' );
-		my $accessorMethod   = $q->param( 'accessor_method' );
-		my $objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
-			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
-		$tmpl_data{ '/accessor_object_ref' } = $render->render( $objectToAccessFrom, 'ref' ).
-			"(<a href='javascript: document.forms[\"$form_name\"].elements[\"accessor_id\"].value = \"\"; ".
-			                     "document.forms[\"$form_name\"].submit();'".
-			   "title='Cancel selection'/>X</a> ".
-			"<a href='javascript: selectOne( \"$typeToAccessFrom\", \"accessor_id\" );'".
-			   "title='Change selection'/>C</a>)";
-	}
 	
 	# Acquire search fields
 	my @search_fields;
+	# Default: template does not care what search fields are given
+	my %specialRequestSearchFields;
 	if( $tmpl->query( name => '/search_fields_loop' ) ) {
-	# Query the object for its fields
-		@search_fields = ( $render->getFields( $type, 'summary' ), 'id' );
+		# First look for any requested via parameters
+		@search_fields = $q->param( 'search_names' );
+		my %lookup = map{ $_ => undef } @search_fields;
+		# Look for fields shown in the object's summary to add to the bottom of the list
+		my @summaryFields = ( $render->getFields( $type, 'summary' ), 'id' );
+		foreach my $summaryField ( @summaryFields ) {
+			push @search_fields, $summaryField
+				if( not exists $lookup{ $summaryField } );
+		}
 	} else {
-	# Otherwise, the search fields are in the template.
-		@search_fields = grep( (!m/^\//), $tmpl->param() ); # Screen out special field requests that start with '/'
+		# First look for any requested via parameters
+		@search_fields = $q->param( 'search_names' );
+		my %lookup = map{ $_ => undef } @search_fields;
+		# Lookup search fields from the display template.
+		my @template_fields = grep( (!m/^\//), $tmpl->param() ); # Screen out special field requests that start with '/'
+		# Record which fields were not requested by the template
+		my %template_field_lookup = map{ $_ => undef } @template_fields;
+		foreach my $requestedField ( @search_fields ) {
+			$specialRequestSearchFields{ $requestedField } = undef
+				if( not exists $template_field_lookup{ $requestedField } );
+		}
+		# Add template requests to the list
+		foreach my $tpmlField ( @template_fields ) {
+			push @search_fields, $tpmlField
+				if( not exists $lookup{ $tpmlField } );
+		}
+
 	}
 
 	my $form_fields = $self->getSearchFields( $type, \@search_fields );
@@ -503,6 +513,7 @@ sub getSearchCriteria {
 		path           => $self->_baseTemplateDir(), 
 		case_sensitive => 1
 	);
+	my $specialRequestSection = '';
 	foreach my $field( @search_fields ) {
 		# a button for ascending sort
 		my $sort_up = "<a href='javascript: document.forms[\"$form_name\"].elements[\"__order\"].value = \"".
@@ -538,13 +549,17 @@ sub getSearchCriteria {
 				{ search_field => $search_field_tmpl->output() }
 			) if $form_fields->{ $field };
 		} else {
-			$tmpl_data{$field} = $search_field_tmpl->output();
+			if( exists $specialRequestSearchFields{ $field } ) {
+				$specialRequestSection .= $search_field_tmpl->output();
+			} else {
+				$tmpl_data{$field} = $search_field_tmpl->output();
+			}
 		} 
 		$search_field_tmpl->clear_params();
 	}
 	
 	$tmpl->param( %tmpl_data );
-	return $tmpl->output();
+	return $specialRequestSection.$tmpl->output();
 }
 
 sub search {
@@ -555,18 +570,11 @@ sub search {
 	my %searchParams = $self->_getSearchParams();
 	my $pagingText;
 	($pagingText, %searchParams) = $self->_preparePaging( %searchParams );
-	my ($objectToAccessFrom, $accessorMethod) = $self->_prepAccessorSearch();
 
-	my @objects;
- 	if( $objectToAccessFrom ) {  	    # get objects from an accessor method
-#		logdbg "debug", "Retrieving object from an accessor method:\n\t". $objectToAccessFrom->getFormalName()."(id=".$objectToAccessFrom->id.")->$accessorMethod ( ". join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
- 		@objects = $objectToAccessFrom->$accessorMethod( %searchParams );
- 	} else {                            # or with factory
-		my $type = $self->_getCurrentSearchType();
-		my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
-# 		logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
-		@objects = $factory->findObjects( $formal_name, %searchParams );
-	}
+	my $type = $self->_getCurrentSearchType();
+	my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
+# 	logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
+	my @objects = $factory->findObjects( $formal_name, %searchParams );
 			
 	return ( \@objects, $pagingText );
 }
@@ -614,31 +622,6 @@ sub _getSearchParams {
 	return %searchParams;
 }
 
-=head2 _prepAccessorSearch
-
-	my ($objectToAccessFrom, $accessorMethod) = $self->_prepAccessorSearch();
-	
-	parses the search parameters from cgi parameters, to find the object
-	to search through for an accessor search mode. Used to search through
-	has-many relationships.
-
-=cut
-
-sub _prepAccessorSearch {
-	my ($self) = @_;
-	my $q       = $self->CGI();
-	my $factory = $self->Session()->Factory();
-	
-	my ($objectToAccessFrom, $accessorMethod);
-	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne ''  ) {
-		my $typeToAccessFrom = $q->param( 'accessor_type' );
-		my $idToAccessFrom   = $q->param( 'accessor_id' );
-		$accessorMethod   = $q->param( 'accessor_method' );
- 		$objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
- 			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
-	}
-	return ($objectToAccessFrom, $accessorMethod);
-}
 
 =head2 _preparePaging
 
@@ -662,19 +645,9 @@ sub _preparePaging {
 	# load type
 	my $type         = $self->_getCurrentSearchType();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-	my ($objectToAccessFrom, $accessorMethod) = $self->_prepAccessorSearch();
 
 	# count Objects
- 	my $object_count;
-	if( $objectToAccessFrom ) {
-# getColumnType doesn't report on valid but as yet uninferred relations, so I'm disabling this error check for now.
-# 		ref( $objectToAccessFrom )->getColumnType( $accessorMethod )
-# 			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
- 		my $countAccessor = "count_".$accessorMethod;
- 		$object_count = $objectToAccessFrom->$countAccessor( %searchParams );
- 	} else {
-		$object_count = $factory->countObjects( $formal_name, %searchParams );
-	}
+ 	my $object_count = $factory->countObjects( $formal_name, %searchParams );
 
 	# PAGING: prepare limit, offset, and order_by
 	$searchParams{ __limit } = $self->{ _default_limit };
