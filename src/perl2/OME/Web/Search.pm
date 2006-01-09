@@ -526,8 +526,11 @@ sub getSearchCriteria {
 		$search_field_tmpl->param(
 			field_label  => $field_titles{ $field },
 			form_field   => $form_fields->{ $field },
-			sort_up      => $sort_up, 
-			sort_down    => $sort_down,
+			# Don't put sorting buttons on wildcard searches
+			( ( $field ne '*' ) ? (
+				sort_up      => $sort_up, 
+				sort_down    => $sort_down,
+			) : () )
 		);
 		if( $tmpl->query( name => '/search_fields_loop' ) ) {
 			push( 
@@ -595,6 +598,8 @@ sub _getSearchParams {
 		@values = grep{ (defined $_) && ($_ ne '') } @values;
 		if( scalar( @values ) > 1 ) {
 			$searchParams{ $search_on } = [ 'in', \@values ];		
+		} elsif( $search_on eq '*' ) {
+			$searchParams{ $search_on } = $values[0];
 		} else {
 			my $value = $values[0];
 			# search string parsing
