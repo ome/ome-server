@@ -986,7 +986,7 @@ returns a url to a search page for whatever is returned from $obj's $method
 
 sub getSearchAccessorURL {
 	my ($self, $obj, $method) = @_;
-	my $type = $obj->getColumnType( $method ); # This has side effect of loading the possibly inferred method
+	my $type = $obj->getColumnType( $method ); # This has a side effect of loading the possibly inferred method
 	my $searchTypeFormalName = $obj->getAccessorReferenceType( $method )->getFormalName();
 
 	if( $type eq "has-many" ) {
@@ -1002,11 +1002,12 @@ sub getSearchAccessorURL {
 			$foreign_key_alias => $obj->id()
 		} );
 	} elsif( $type eq "many-to-many" ) {
+		# Derive the path that connects $obj->method to what it returns
+		my $path = $obj->getManyToManyAliasSearchPath( $method );
 		return $self->pageURL( 'OME::Web::Search', {
 			SearchType      => $searchTypeFormalName,
-			accessor_type   => $obj->getFormalName(),
-			accessor_id     => $obj->id, 
-			accessor_method => $method
+			search_names    => $path,
+			$path           => $obj->id
 		} );
 	}
 }
