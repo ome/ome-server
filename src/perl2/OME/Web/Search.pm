@@ -605,7 +605,7 @@ sub _getSearchParams {
 			# search string parsing
 			$value =~ s/\*/\%/g;
 			unless( $value =~ m/,/ ) {
-				$searchParams{ $search_on } = [ 'ilike', $value ];
+				$searchParams{ $search_on } = [ 'ilike', '%'.$value.'%' ];
 			} else {
 				$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
 			}
