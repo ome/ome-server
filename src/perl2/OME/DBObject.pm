@@ -2374,89 +2374,106 @@ no warnings "uninitialized";
 			
 			# Make the values array
 			foreach my $column_alias (sort keys %$criteria) {
-				
-				# __order and __distinct are already compiled into the SQL text.
-				next if( $column_alias eq '__order' || $column_alias eq '__distinct' );
 
-				my $criterion = $criteria->{$column_alias};
-				my($operation, $value);
-		
-				my $sql_type = exists $columns->{$column_alias}?
-				  $columns->{$column_alias}->[3]->{SQLType}:
-				  "";
-				$sql_type = "" unless $sql_type;
+				# Handle a wildcard search parameter ('*') differently from other parameters
+				if( $column_alias eq '*' ) {
+					# Get columns to search on. Start out with every column,
+					# then filter to columns that contain data, and are not specified in the 
+					# search criteria. no foreign keys allowed here.
+					my @columns = grep{ ( $class->getColumnType($_) eq 'normal' ) && ( not exists $criteria->{$_} ) }
+						$class->getColumns();
+					
+					# Add that many values to the questions.
+					my $criterion = $criteria->{$column_alias};
+					foreach my $column_name ( @columns ) {
+						push @values_when_using_cache, $criterion;
+					}
+					
+				} else {
+											
+					# __order and __distinct are already compiled into the SQL text.
+					next if( $column_alias eq '__order' || $column_alias eq '__distinct' );
 	
-				# If the value is an object, assume that it has an id
-				# method, and use that in the SQL query.
+					my $criterion = $criteria->{$column_alias};
+					my($operation, $value);
+			
+					my $sql_type = exists $columns->{$column_alias}?
+					  $columns->{$column_alias}->[3]->{SQLType}:
+					  "";
+					$sql_type = "" unless $sql_type;
 		
-				my @new_values;
-				my $have_values = 1;
-	            my $question = '?';
-
-				if (ref($criterion) eq 'ARRAY') {
-					$value = $criterion->[1];
-					if (ref($value) eq 'ARRAY') {
-						my @questions;
-						foreach my $arrayval (@$value) {
-							if (defined $arrayval) {
-								push @questions, '?';
-								$arrayval = $arrayval->id()
-								  if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
-									   ref($arrayval) );
-								$arrayval = 'NaN'
-									if( $class->isRealType($sql_type) && 
-										$arrayval && 
-										$value =~ m'^(-)?Inf(inity)?$'i );
-								push @new_values, $arrayval;
+					# If the value is an object, assume that it has an id
+					# method, and use that in the SQL query.
+			
+					my @new_values;
+					my $have_values = 1;
+					my $question = '?';
+	
+					if (ref($criterion) eq 'ARRAY') {
+						$value = $criterion->[1];
+						if (ref($value) eq 'ARRAY') {
+							my @questions;
+							foreach my $arrayval (@$value) {
+								if (defined $arrayval) {
+									push @questions, '?';
+									$arrayval = $arrayval->id()
+									  if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
+										   ref($arrayval) );
+									$arrayval = 'NaN'
+										if( $class->isRealType($sql_type) && 
+											$arrayval && 
+											$value =~ m'^(-)?Inf(inity)?$'i );
+									push @new_values, $arrayval;
+								}
 							}
+							$question = '('.join(',',@questions).')';
+						} else {
+							$value = $value->id()
+							  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+							$value = 'NaN'
+								if( $class->isRealType($sql_type) && 
+									$value && 
+									$value =~ m'^(-)?Inf(inity)?$'i );
+							push @new_values, $value;
 						}
-						$question = '('.join(',',@questions).')';
+						$operation = defined $value? $criterion->[0]: "is"; 
 					} else {
-						$value = $value->id()
-						  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+						$value = $criterion;
 						$value = 'NaN'
 							if( $class->isRealType($sql_type) && 
 								$value && 
 								$value =~ m'^(-)?Inf(inity)?$'i );
+						$value = $value->id()
+						  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
 						push @new_values, $value;
+						$operation = defined $value? "=": "is";
 					}
-					$operation = defined $value? $criterion->[0]: "is"; 
-				} else {
-					$value = $criterion;
-					$value = 'NaN'
-						if( $class->isRealType($sql_type) && 
-							$value && 
-							$value =~ m'^(-)?Inf(inity)?$'i );
-					$value = $value->id()
-					  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
-					push @new_values, $value;
-	                $operation = defined $value? "=": "is";
-				}
+		
+					# Treat an undef value the same as a search for a 'null'
+					$value = 'null' if not defined $value;
 	
-				# Treat an undef value the same as a search for a 'null'
-				$value = 'null' if not defined $value;
-
-				if ($sql_type eq 'boolean') {
-					# If the column is Boolean, 1/0 won't work.
-					foreach my $value (@new_values) {
-						next unless defined $value;
-						die "Illegal Boolean column value '$value'"
-						  unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
-	
-						$value = 'true' if $value eq '1';
-						$value = 'false' if $value eq '0';
+					if ($sql_type eq 'boolean') {
+						# If the column is Boolean, 1/0 won't work.
+						foreach my $value (@new_values) {
+							next unless defined $value;
+							die "Illegal Boolean column value '$value'"
+							  unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
+		
+							$value = 'true' if $value eq '1';
+							$value = 'false' if $value eq '0';
+						}
+					} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
+						# If the column is a float, the join clause below was used, and the values needs an epsilon
+						# push @join_clauses, "abs($location - $question) < ?";
+						push @new_values, $EPSILON;
+					} elsif (lc($operation) eq 'is not' && lc($value) eq 'null') {
+						$have_values = 0;
+					} elsif (lc($operation) eq 'is' && lc($value) eq 'null') {
+						$have_values = 0;
 					}
-				} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
-					# If the column is a float, the join clause below was used, and the values needs an epsilon
-					# push @join_clauses, "abs($location - $question) < ?";
-					push @new_values, $EPSILON;
-				} elsif (lc($operation) eq 'is not' && lc($value) eq 'null') {
-					$have_values = 0;
-				} elsif (lc($operation) eq 'is' && lc($value) eq 'null') {
-					$have_values = 0;
+	
+					push @values_when_using_cache, @new_values if $have_values;
 				}
-
-				push @values_when_using_cache, @new_values if $have_values;
 			}
 	
 			push @values_when_using_cache, $limit  if defined $limit;
@@ -2591,99 +2608,126 @@ no warnings "uninitialized";
 
         # Parse the remaining criteria
         foreach my $column_alias (sort keys %$criteria) {
-            $location = $class->
-              __getQueryLocation(\$foreign_key_number,
-                                 \@foreign_tables,\%foreign_aliases,
-                                 \@join_clauses,\%tables_used,
-                                 $column_alias);
 
-            my $criterion = $criteria->{$column_alias};
-            my ($operation,$value);
-
-            my $question = '?';
-			my $have_values = 1;
-
-            my $sql_type = exists $columns->{$column_alias}?
-              $columns->{$column_alias}->[3]->{SQLType}:
-              "";
-
-            # If the value is an object, assume that it has an id
-            # method, and use that in the SQL query.
-
-            my @new_values;
-
-            if (ref($criterion) eq 'ARRAY') {
-                $value = $criterion->[1];
-                if (ref($value) eq 'ARRAY') {
-                    my @questions;
-                    foreach my $arrayval (@$value) {
-                        if (defined $arrayval) {
-                            push @questions, '?';
-                            $arrayval = $arrayval->id()
-                              if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
-                              	   ref($arrayval) );
-							$arrayval = 'NaN'
-								if( $class->isRealType($sql_type) && 
-									$arrayval && 
-									$value =~ m'^(-)?Inf(inity)?$'i );
-                            push @new_values, $arrayval;
-                        }
-                    }
-                    $question = '('.join(',',@questions).')';
-                } else {
-                    $value = $value->id()
-                      if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+			# Handle a wildcard search parameter ('*') differently from other parameters
+			if( $column_alias eq '*' ) {
+				# Get columns to search on. Start out with every column,
+				# then filter to columns that contain data, and are not specified in the 
+				# search criteria. no foreign keys allowed here.
+				my @columns = grep{ ( $class->getColumnType($_) eq 'normal' ) && ( not exists $criteria->{$_} ) }
+					$class->getColumns();
+				
+				# Build the search criteria
+				my $criterion = $criteria->{$column_alias};
+				my @wildcard_or_block;
+				foreach my $column_name ( @columns ) {
+					push @values, '%'.$criterion.'%';
+					$location = $class->
+					  __getQueryLocation(\$foreign_key_number,
+										 \@foreign_tables,\%foreign_aliases,
+										 \@join_clauses,\%tables_used,
+										 $column_name);
+					push @wildcard_or_block, "($location ilike ?)";
+				}
+				
+				push @join_clauses, "( ".join( ' OR ', @wildcard_or_block )." )";
+			
+			} else {
+			
+				$location = $class->
+				  __getQueryLocation(\$foreign_key_number,
+									 \@foreign_tables,\%foreign_aliases,
+									 \@join_clauses,\%tables_used,
+									 $column_alias);
+	
+				my $criterion = $criteria->{$column_alias};
+				my ($operation,$value);
+	
+				my $question = '?';
+				my $have_values = 1;
+	
+				my $sql_type = exists $columns->{$column_alias}?
+				  $columns->{$column_alias}->[3]->{SQLType}:
+				  "";
+	
+				# If the value is an object, assume that it has an id
+				# method, and use that in the SQL query.
+	
+				my @new_values;
+	
+				if (ref($criterion) eq 'ARRAY') {
+					$value = $criterion->[1];
+					if (ref($value) eq 'ARRAY') {
+						my @questions;
+						foreach my $arrayval (@$value) {
+							if (defined $arrayval) {
+								push @questions, '?';
+								$arrayval = $arrayval->id()
+								  if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
+									   ref($arrayval) );
+								$arrayval = 'NaN'
+									if( $class->isRealType($sql_type) && 
+										$arrayval && 
+										$value =~ m'^(-)?Inf(inity)?$'i );
+								push @new_values, $arrayval;
+							}
+						}
+						$question = '('.join(',',@questions).')';
+					} else {
+						$value = $value->id()
+						  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+						$value = 'NaN'
+							if( $class->isRealType($sql_type) && 
+								$value && 
+								$value =~ m'^(-)?Inf(inity)?$'i );
+						push @new_values, $value;
+					}
+					$operation = defined $value? $criterion->[0]: "is"; 
+				} else {
+					$value = $criterion;
 					$value = 'NaN'
 						if( $class->isRealType($sql_type) && 
 							$value && 
 							$value =~ m'^(-)?Inf(inity)?$'i );
-                    push @new_values, $value;
-                }
-				$operation = defined $value? $criterion->[0]: "is"; 
-            } else {
-                $value = $criterion;
-				$value = 'NaN'
-					if( $class->isRealType($sql_type) && 
-						$value && 
-						$value =~ m'^(-)?Inf(inity)?$'i );
-                $value = $value->id()
-                  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
-                push @new_values, $value;
-                $operation = defined $value? "=": "is";
-            }
-			
-			# Treat an undef value the same as a search for a 'null'
-			$value = 'null' if not defined $value;
-			
-            if (defined $location && $location eq 'id') {
-                push @join_clauses, [$operation, $question];
-                $id_criteria = 1;
-            } elsif ($sql_type eq 'boolean') {
-                # If the column is Boolean, 1/0 won't work.
-                foreach my $value (@new_values) {
-                	next unless defined $value;
-                    die "Illegal Boolean column value '$value'"
-                      unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
-
-                    $value = 'true' if $value eq '1';
-                    $value = 'false' if $value eq '0';
-                }
-                push @join_clauses, "$location $operation $question";
-            } elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
-                # If the column is a float, = won't work.
-                push @join_clauses, "abs($location - $question) < ?";
-                push @new_values, $EPSILON;
-			} elsif (lc($operation) eq 'is not' && lc($value) eq 'null') {
- 				push @join_clauses, "$location $operation $value";
- 				$have_values = 0;
- 			} elsif (lc($operation) eq 'is' && lc($value) eq 'null') {
- 				push @join_clauses, "$location $operation $value";
- 				$have_values = 0;
-            } else {
-                push @join_clauses, "$location $operation $question";
-            }
-
-            push @values, @new_values if $have_values;
+					$value = $value->id()
+					  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+					push @new_values, $value;
+					$operation = defined $value? "=": "is";
+				}
+				
+				# Treat an undef value the same as a search for a 'null'
+				$value = 'null' if not defined $value;
+				
+				if (defined $location && $location eq 'id') {
+					push @join_clauses, [$operation, $question];
+					$id_criteria = 1;
+				} elsif ($sql_type eq 'boolean') {
+					# If the column is Boolean, 1/0 won't work.
+					foreach my $value (@new_values) {
+						next unless defined $value;
+						die "Illegal Boolean column value '$value'"
+						  unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
+	
+						$value = 'true' if $value eq '1';
+						$value = 'false' if $value eq '0';
+					}
+					push @join_clauses, "$location $operation $question";
+				} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
+					# If the column is a float, = won't work.
+					push @join_clauses, "abs($location - $question) < ?";
+					push @new_values, $EPSILON;
+				} elsif (lc($operation) eq 'is not' && lc($value) eq 'null') {
+					push @join_clauses, "$location $operation $value";
+					$have_values = 0;
+				} elsif (lc($operation) eq 'is' && lc($value) eq 'null') {
+					push @join_clauses, "$location $operation $value";
+					$have_values = 0;
+				} else {
+					push @join_clauses, "$location $operation $question";
+				}
+	
+				push @values, @new_values if $have_values;
+			}
         }
     }
 
