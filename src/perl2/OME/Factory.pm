@@ -391,7 +391,20 @@ list, or as a hash reference.  For instance:
 
 Also note that these methods are not intended to support arbitrarily
 complex SQL; that's what SQL is for.  As such, all of the criteria
-will be ANDed together in the WHERE clause.
+will be ANDed together in the WHERE clause. 
+
+A wildcard criteria will search through all unspecified search fields. 
+For example, 
+
+	my @images = $factory->
+	    findObjects("OME::Image",
+	                *          => "foo",
+	                created    => ['like', "2006-01-09%" ],
+	                owner.FirstName => 'Josiah');
+
+will find all images that were imported on January 9, 2006 by someone 
+named Josiah that include "foo" somewhere in their name, description, or 
+any image field besides 'created'.
 
 A couple of special syntaxes are supported for the value in a search
 clause:
