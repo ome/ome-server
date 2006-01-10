@@ -480,6 +480,8 @@ BLURB
             $OME_EXPER->{Email} = $OME_EXPER->{OMEName}.'@'.hostname();
             $OME_EXPER->{OMEName} = lc ( substr ($OME_EXPER->{FirstName}, 0, 1).$OME_EXPER->{LastName} )
                 unless $OME_EXPER->{OMEName};
+			$OME_EXPER->{Password}  = ''; # triggers Set Password question
+										  # we can't possibly recommend a password. Or can we? Default ome user password like Ur0wnd
 			$confirm_all = 1;
 		} else {
             $OME_EXPER->{FirstName} = '';
@@ -487,6 +489,7 @@ BLURB
             $OME_EXPER->{OMEName}  = '';
             $OME_EXPER->{Email}    = '';
             $OME_EXPER->{DataDirectory}  = '';
+			$OME_EXPER->{Password}  = ''; # triggers Set Password question
 			$confirm_all = 0;
         }
     } else {
@@ -517,15 +520,17 @@ BLURB
         $OME_EXPER->{OMEName}       = confirm_default ("              Username", $OME_EXPER->{OMEName});
         $OME_EXPER->{Email}         = confirm_default ("        E-mail address", $OME_EXPER->{Email});
         $OME_EXPER->{DataDirectory} = confirm_default ("Default data directory", $OME_EXPER->{DataDirectory});
-		my $password;
-		($password, $OME_EXPER->{Password}) = get_password ("Set password for OME user ".$OME_EXPER->{OMEName}.": ", 6);
-        
+		$OME_EXPER->{Password}      = ''; # triggers Set Password question
         print "\n";  # Spacing
 
         $confirm_all = 1;
     }
 
-    if (not -d $OME_EXPER->{DataDirectory}) {
+	my $password;
+	($password, $OME_EXPER->{Password}) = get_password ("Set password for OME user ".$OME_EXPER->{OMEName}.": ", 6)
+		    if ($OME_EXPER->{Password} eq '');
+		    
+	if (not -d $OME_EXPER->{DataDirectory}) {
         mkpath ($OME_EXPER->{DataDirectory}, 0, 0755)  # Internal croak
         	if y_or_n ('Directory "'.$OME_EXPER->{DataDirectory}.
             	'" does not exist. Do you want to create it ?', 'y');
