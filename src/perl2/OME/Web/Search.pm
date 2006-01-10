@@ -274,6 +274,7 @@ END_HTML
 		case_sensitive => 1 
 	);
 	$tmpl->param( %tmpl_data );
+
 	$html .= 
 		$q->hidden( -name => 'return_to_form' ).
 		$q->hidden( -name => 'return_to' ).
@@ -283,9 +284,7 @@ END_HTML
 		$q->endform();
 
 	return ( 'HTML', $html );	
-    }
-
-
+}
 
 sub getOnLoadJS { return shift->{ _onLoadJS }; }
 
@@ -362,7 +361,7 @@ returns a form input and a search path for that input.
 sub getRefSearchField {
 	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	my $threshold_Popup = 10;
-
+	
 	if( not defined $default ) {
 		my $specializedSearch = $self->_specialize( $to_type );
 		$default = $specializedSearch->_getDefault( )
@@ -382,8 +381,7 @@ sub getRefSearchField {
 
 	# Make a popup menu if there aren't very many objects to select from
 	if( $factory->countObjects( $to_formal_name ) < $threshold_Popup ) {
-
-	    my @objects_to_select = $factory->findObjects( $to_formal_name );
+		my @objects_to_select = $factory->findObjects( $to_formal_name );
 		my %object_names = map{ $_->id() => $self->Renderer()->getName($_) } @objects_to_select;
 		my $object_order = [ '', sort( { $object_names{$a} cmp $object_names{$b} } keys( %object_names ) ) ];
 		$object_names{''} = 'All';
@@ -465,27 +463,6 @@ sub getSearchCriteria {
 	my $tmpl_path = $self->_findTemplate( $type );
 	my $tmpl = HTML::Template->new( filename => $tmpl_path,
 	                                case_sensitive => 1 );
-#<<<<<<< Search.pm
-	# Setting up Advanced Searching
-	$tmpl_data{ '/adv_search_setup' } = $self->_setupAdvancedSearch();
-	
-	# accessor stuff. 
-	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne '' ) {
-	# We are working in accessor mode. Set object reference
-		my $typeToAccessFrom = $q->param( 'accessor_type' );
-		my $idToAccessFrom   = $q->param( 'accessor_id' );
-		my $accessorMethod   = $q->param( 'accessor_method' );
-		my $objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
-			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
-		$tmpl_data{ '/accessor_object_ref' } = $render->render( $objectToAccessFrom, 'ref' ).
-			"(<a href='javascript: document.forms[\"$form_name\"].elements[\"accessor_id\"].value = \"\"; ".
-			                     "document.forms[\"$form_name\"].submit();'".
-			   "title='Cancel selection'/>X</a> ".
-			"<a href='javascript: selectOne( \"$typeToAccessFrom\", \"accessor_id\" );'".
-			   "title='Change selection'/>C</a>)";
-	}
-#=======
-#>>>>>>> 1.45
 	
 	# Acquire search fields
 	my @search_fields;
@@ -594,28 +571,10 @@ sub search {
 	my $pagingText;
 	($pagingText, %searchParams) = $self->_preparePaging( %searchParams );
 
-#<<<<<<< Search.pm
-	my @objects;
- 	if( $objectToAccessFrom ) {  	    # get objects from an accessor method
-#		logdbg "debug", "Retrieving object from an accessor method:\n\t". $objectToAccessFrom->getFormalName()."(id=".$objectToAccessFrom->id.")->$accessorMethod ( ". join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
- 		@objects = $objectToAccessFrom->$accessorMethod( %searchParams );
- 	} else {                            # or with factory
-		my $type = $self->_getCurrentSearchType();
-		my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
-# 		logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
-		if ( $searchParams{all_fields} ) {
-		    @objects = $factory->findObjectsOpenSearch( $formal_name, $searchParams{ all_fields });		}		
-		# Advanced search    
-		else {
-		    @objects = $factory->findObjects( $formal_name, %searchParams );
-		}
-	    }
-=======
 	my $type = $self->_getCurrentSearchType();
 	my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
 # 	logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
 	my @objects = $factory->findObjects( $formal_name, %searchParams );
->>>>>>> 1.45
 			
 	return ( \@objects, $pagingText );
 }
@@ -641,45 +600,15 @@ sub _getSearchParams {
 
 	my $type = $self->_getCurrentSearchType();
 	my @search_names = $q->param( 'search_names' );
-
-
-	# Search From Homepage
-	if ($q->param('FromPage') && $q->param('FromPage') eq 'Home') {
-#	    if ($q->param('owner')) {
-#		$searchParams{ owner } = [ 'ilike' , $q->param('owner')];
-#	    }
-	    $searchParams{ all_fields } = $q->param( 'all_fields' );
-	}
-	# Basic Search
-	elsif (!$q->param('adv_switch') && $q->param('all_fields')) {
-	    $searchParams{ all_fields } = $q->param( 'all_fields' );   
-	}
-	#Advanced Search
-	else {
-	    
-	    foreach my $search_on ( @search_names ) {
+	foreach my $search_on ( @search_names ) {
 		next unless ( $q->param( $search_on ) && $q->param( $search_on ) ne '');
 		my @values = $q->param( $search_on );
 		@values = grep{ (defined $_) && ($_ ne '') } @values;
 		if( scalar( @values ) > 1 ) {
-<<<<<<< Search.pm
-		    $searchParams{ $search_on } = [ 'in', \@values ];		
-=======
 			$searchParams{ $search_on } = [ 'in', \@values ];		
 		} elsif( $search_on eq '*' ) {
 			$searchParams{ $search_on } = $values[0];
->>>>>>> 1.45
 		} else {
-<<<<<<< Search.pm
-		    my $value = $values[0];
-		    # search string parsing
-#		    $value =~ s/\*/\%/g;
-		    unless( $value =~ m/,/ ) {
-			$searchParams{ $search_on } = [ 'ilike', '%'.$value.'%' ];
-		    } else {
-			$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
-		    }
-=======
 			my $value = $values[0];
 			# search string parsing
 			$value =~ s/\*/\%/g;
@@ -688,12 +617,10 @@ sub _getSearchParams {
 			} else {
 				$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
 			}
->>>>>>> 1.45
 		}
-	    }
 	}
 	return %searchParams;
-    }
+}
 
 
 =head2 _preparePaging
@@ -714,33 +641,13 @@ sub _preparePaging {
 	my $q       = $self->CGI();
 	my $factory = $self->Session()->Factory();
 
+
 	# load type
 	my $type         = $self->_getCurrentSearchType();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 
 	# count Objects
-<<<<<<< Search.pm
- 	my $object_count;
-	if( $objectToAccessFrom ) {
-# getColumnType doesn't report on valid but as yet uninferred relations, so I'm disabling this error check for now.
-# 		ref( $objectToAccessFrom )->getColumnType( $accessorMethod )
-# 			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
- 		my $countAccessor = "count_".$accessorMethod;
- 		$object_count = $objectToAccessFrom->$countAccessor( %searchParams );
- 	} else {
-	    # Basic Search
-	    if ($searchParams{all_fields}) {
-		my @objects = $factory->findObjectsOpenSearch( $type, $searchParams{ all_fields });
-		$object_count = scalar(@objects);
-	    }
-	    # Advanced Search
-	    else {
-		$object_count = $factory->countObjects( $formal_name, %searchParams );
-	    }
-	}
-=======
  	my $object_count = $factory->countObjects( $formal_name, %searchParams );
->>>>>>> 1.45
 
 	# PAGING: prepare limit, offset, and order_by
 	$searchParams{ __limit } = $self->{ _default_limit };
@@ -827,48 +734,6 @@ sub _preparePaging {
 	}
 
 	return ($pagingText, %searchParams);
-}
-
-=head2
-    
-    my $advancedSearchText = $self->_setupAdvancedSearch();
-
-    Produces text required to seperate basic searches from advanced searches.  
-    This text goes before the search criteria for the type of item, most likely
-    through a HTML::Template.  
-
-=cut
-
-sub _setupAdvancedSearch {
-    my ($self) = @_;
-    my $q = $self->CGI();
-
-    my %tmpl_data;
-
-    $tmpl_data{'/all_fields'} = $q->textfield( -name => 'all_fields', -size => 17, -default => $q->param('all_fields'));
-    
-    # Advanced Search
-    if ($q->param('adv_switch') eq 'on') {
-	$tmpl_data{'/adv_switch'} = 'checked';
-	$tmpl_data{'/basic_box'} = 'hidden';
-	$tmpl_data{'/adv_box'} = 'visible';
-    }
-    
-    # Basic Search
-    else {
-	$tmpl_data{'/adv_switch'} = 'unchecked';
-	$tmpl_data{'/basic_box'} = 'visible';
-	$tmpl_data{'/adv_box'} = 'hidden';
-    }
-	
-    my $tmpl = HTML::Template->new( 
-	       filename       => 'adv_search_setup.tmpl',
-	       path           => $self->_baseTemplateDir(), 
-	       case_sensitive => 1
-    );
-
-    $tmpl->param( %tmpl_data );
-    return $tmpl->output();
 }
 
 =head2 __sort_field
