@@ -713,7 +713,7 @@ sub __storeDisplayOptions {
 	$displayChannelData{ ChannelNumber } = $channelIndex;
 	if (not defined $max or not defined $min) {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-		__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
 		$displayChannelData{BlackLevel} = $min;
 		$displayChannelData{WhiteLevel} = $max;
@@ -735,7 +735,7 @@ sub __storeDisplayOptions {
 		$displayChannelData{ ChannelNumber } = $channelIndex;
 		if (not defined $max or not defined $min) {
 			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+			$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 		} else {
 			$displayChannelData{BlackLevel} = $min;
 			$displayChannelData{WhiteLevel} = $max;
@@ -755,7 +755,7 @@ sub __storeDisplayOptions {
 		$displayChannelData{ ChannelNumber } = $channelIndex;
 		if (not defined $max or not defined $min) {
 			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+			$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 		} else {
 			$displayChannelData{BlackLevel} = $min;
 			$displayChannelData{WhiteLevel} = $max;
@@ -774,7 +774,7 @@ sub __storeDisplayOptions {
 
 
 sub __defaultBlackWhiteLevels {
-	my ( $statsHash, $channelIndex, $theT ) = @_;
+	my ( $self, $statsHash, $channelIndex, $theT ) = @_;
 	my ( $blackLevel, $whiteLevel );
 	
 	$blackLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
