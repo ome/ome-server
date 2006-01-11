@@ -173,7 +173,7 @@ our @__nonGlobalCaches;
 __PACKAGE__->Caching(1);
 __PACKAGE__->__classDefined(0);
 
-our $SHOW_SQL = 0;
+our $SHOW_SQL = 1;
 our $EPSILON = 1e-6;
 
 my %realTypes = (
@@ -842,6 +842,30 @@ sub getColumns {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     return keys %{ $class->__columns()};
+}
+
+=head2 getColumnAliases
+
+	my @aliases = $class->getColumnAliases( $alias );
+
+Given an alias to a column, will return all other aliases to that column.
+
+=cut
+
+sub getColumnAliases {
+    my ($proto, $startingAlias) = @_;
+    my $class = ref($proto) || $proto;
+
+    return () if not exists $class->__columns()->{$startingAlias};
+    
+    my $column = $class->__columns()->{$startingAlias}->[1];
+    my @duplicateAliases;
+    foreach my $alias ( keys %{ $class->__columns()} ) {
+    	push @duplicateAliases, $alias
+	    	if( ( $class->__columns()->{$alias}->[1] eq $column ) &&
+	    	    ( $alias ne $startingAlias ) );
+    }
+    return @duplicateAliases;
 }
 
 =head2 getPseudoColumns
@@ -1624,6 +1648,7 @@ sub getAccessorReferenceType {
 	return undef if( ( not defined $alias ) || ($alias eq 'id') );
 	# Alias may be an inferred relation. establishing the method for querying.
 	$class->__establishProposedRelationship( $alias );
+	
 	my $returnedClass;
 	my $accessorType = $class->getColumnType( $alias );
 	if( $accessorType eq 'has-many' ) {
@@ -2458,16 +2483,38 @@ no warnings "uninitialized";
 			foreach my $column_alias (sort keys %$criteria) {
 
 				# Handle a wildcard search parameter ('*') differently from other parameters
+				# '*' is intended to search across all unspecified search fields.
 				if( $column_alias eq '*' ) {
+					# Identify search fields that are to be skipped. Start with 
+					# the specified criteria, then other aliases that refer to
+					# those same columns. e.g. OME::Image has 4 aliases to experimenter_id
+					my %skip_columns;
+					foreach my $alias ( keys %$criteria ) {
+						$skip_columns{ $alias } = undef;
+						my @aliases = $class->getColumnAliases( $alias );
+						$skip_columns{ $_ } = undef
+							foreach @aliases;
+					}
+					
 					# Get columns to search on. Start out with every column,
-					# then filter to columns that contain data, and are not specified in the 
-					# search criteria. no foreign keys allowed here.
-					my @columns = grep{ ( $class->getColumnType($_) eq 'normal' ) && ( not exists $criteria->{$_} ) }
-						$class->getColumns();
+					# then filter to columns that contain data, and are not 
+					# specified in the search criteria. no foreign keys allowed here.
+					my @wildCardColumns;
+					my @startingColumns = $class->getColumns();
+					foreach my $column ( @startingColumns ) {
+						next unless ( $class->getColumnType($column) eq 'normal' );
+						next if ( exists $skip_columns{$column} );
+						push @wildCardColumns, $column;
+						# Don't add a column more than once by adding it under other aliases
+						my @aliases = $class->getColumnAliases( $column );
+						$skip_columns{ $_ } = undef
+							foreach @aliases;
+				
+					}
 					
 					# Add that many values to the questions.
 					my $criterion = $criteria->{$column_alias};
-					foreach my $column_name ( @columns ) {
+					foreach my $column_name ( @wildCardColumns ) {
 						push @values_when_using_cache, $criterion;
 					}
 					
@@ -2692,17 +2739,39 @@ no warnings "uninitialized";
         foreach my $column_alias (sort keys %$criteria) {
 
 			# Handle a wildcard search parameter ('*') differently from other parameters
+			# '*' is intended to search across all unspecified search fields.
 			if( $column_alias eq '*' ) {
-				# Get columns to search on. Start out with every column,
-				# then filter to columns that contain data, and are not specified in the 
-				# search criteria. no foreign keys allowed here.
-				my @columns = grep{ ( $class->getColumnType($_) eq 'normal' ) && ( not exists $criteria->{$_} ) }
-					$class->getColumns();
+				# Identify search fields that are to be skipped. Start with 
+				# the specified criteria, then other aliases that refer to
+				# those same columns. e.g. OME::Image has 4 aliases to experimenter_id
+				my %skip_columns;
+				foreach my $alias ( keys %$criteria ) {
+					$skip_columns{ $alias } = undef;
+					my @aliases = $class->getColumnAliases( $alias );
+					$skip_columns{ $_ } = undef
+						foreach @aliases;
+				}
 				
+				# Get columns to search on. Start out with every column,
+				# then filter to columns that contain data, and are not 
+				# specified in the search criteria. no foreign keys allowed here.
+				my @wildCardColumns;
+				my @startingColumns = $class->getColumns();
+				foreach my $column ( @startingColumns ) {
+					next unless ( $class->getColumnType($column) eq 'normal' );
+					next if ( exists $skip_columns{$column} );
+					push @wildCardColumns, $column;
+					# Don't add a column more than once by adding it under other aliases
+					my @aliases = $class->getColumnAliases( $column );
+					$skip_columns{ $_ } = undef
+						foreach @aliases;
+			
+				}
+								
 				# Build the search criteria
 				my $criterion = $criteria->{$column_alias};
 				my @wildcard_or_block;
-				foreach my $column_name ( @columns ) {
+				foreach my $column_name ( @wildCardColumns ) {
 					push @values, '%'.$criterion.'%';
 					$location = $class->
 					  __getQueryLocation(\$foreign_key_number,
