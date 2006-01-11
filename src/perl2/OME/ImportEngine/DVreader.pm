@@ -359,7 +359,14 @@ sub importGroup {
 
 }
 
-
+# Override AbstractFormat's method in order to mimic the display defaults used 
+# by DeltaVision acquisition software.
+sub __defaultBlackWhiteLevels {
+	my ( $self, $statsHash, $channelIndex, $theT ) = @_;	
+	my $blackLevel = $statsHash->{ $channelIndex }{ $theT }->{Minimum};
+	my $whiteLevel = $statsHash->{ $channelIndex }{ $theT }->{Maximum};
+	return ( $blackLevel, $whiteLevel );
+}
 
 # Read in the DeltaVision image metadata
 sub readHeaders {
