@@ -195,18 +195,19 @@ END_HTML
 		# meant for. It will be different than Type if the user just
 		# switched what type she is looking for.
  		my $search_type = $q->param( 'search_type' );
- 		# search_names stores the names of the search fields. any or
- 		# all of these may posted as a cgi parameter
-		my @cgi_search_names = $q->param( 'search_names' );
 
 		# clear stale search parameters
 		# Reset fields if the search type was just switched.
 		unless( $search_type && $search_type eq $type || !$search_type ) {
+			# search_names stores the names of the search fields. any or
+			# all of these may posted as a cgi parameter
+			my @cgi_search_names = $q->param( 'search_names' );
 			$q->delete( $_ ) foreach( @cgi_search_names );
 
  			$q->param( '__order', '' );
  			$q->param( '__offset', '' );
  			$q->param( 'search_type', $type );
+ 			$q->delete( 'search_names' );
  		}
  		
 		$tmpl_data{ criteria_controls } = $self->getSearchCriteria( $type );
