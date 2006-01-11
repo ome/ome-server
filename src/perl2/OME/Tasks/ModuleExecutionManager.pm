@@ -162,6 +162,7 @@ sub createMEX {
                  timestamp       => 'now',
                  status          => 'UNFINISHED',
                  experimenter    => $session->UserState()->experimenter(),
+                 group           => $session->UserState()->experimenter()->Group(),
                 });
 
     return $mex;
