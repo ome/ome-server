@@ -173,7 +173,7 @@ our @__nonGlobalCaches;
 __PACKAGE__->Caching(1);
 __PACKAGE__->__classDefined(0);
 
-our $SHOW_SQL = 1;
+our $SHOW_SQL = 0;
 our $EPSILON = 1e-6;
 
 my %realTypes = (
