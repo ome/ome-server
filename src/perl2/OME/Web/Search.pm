@@ -453,7 +453,6 @@ These methods should not be accessed from outside the class
 sub getSearchCriteria {
 	my ($self, $type)    = @_;
 	my $q                = $self->CGI();
-	my @cgi_search_names = $q->param( 'search_names' );
 	my $render = $self->Renderer();
 	my $factory = $self->Session()->Factory();
 	my %tmpl_data;
@@ -600,9 +599,12 @@ sub _getSearchParams {
 	my %searchParams;
 
 	my $type = $self->_getCurrentSearchType();
+	# We don't care about the other things this function returns, only the package name
+	my ($package_name) = $self->_loadTypeAndGetInfo( $type );
 	my @search_names = $q->param( 'search_names' );
 	foreach my $search_on ( @search_names ) {
 		next unless ( $q->param( $search_on ) && $q->param( $search_on ) ne '');
+
 		my @values = $q->param( $search_on );
 		@values = grep{ (defined $_) && ($_ ne '') } @values;
 		if( scalar( @values ) > 1 ) {
@@ -614,7 +616,22 @@ sub _getSearchParams {
 			# search string parsing
 			$value =~ s/\*/\%/g;
 			unless( $value =~ m/,/ ) {
-				$searchParams{ $search_on } = [ 'ilike', '%'.$value.'%' ];
+
+				# Determine whether this search path returns a reference.
+				# A field may have the form: dataset_links.dataset The code block below
+				# finds the package name of the right most method
+				my @fields = split( /\./, $search_on );
+				my $foreignClass = $package_name->getAccessorReferenceType( shift @fields );
+				foreach my $single_field ( @fields ) {
+					$foreignClass = $foreignClass->getAccessorReferenceType( $single_field );
+				}
+		
+				# Do not insert wildcards in the search value if the search field is a reference
+				if( $foreignClass ) {
+					$searchParams{ $search_on } = $value;
+				} else {
+					$searchParams{ $search_on } = [ 'ilike', '%'.$value.'%' ];
+				}
 			} else {
 				$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
 			}
