@@ -2515,7 +2515,7 @@ no warnings "uninitialized";
 					# Add that many values to the questions.
 					my $criterion = $criteria->{$column_alias};
 					foreach my $column_name ( @wildCardColumns ) {
-						push @values_when_using_cache, $criterion;
+						push @values_when_using_cache, '%'.$criterion.'%';
 					}
 					
 				} else {
