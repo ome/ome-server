@@ -322,13 +322,6 @@ matching the search criteria.  In scalar context, returns an iterator
 whose next() method will return those objects one at a time.  This
 iterator is provided by the Class::DBI module.
 
-=head2 findObjectsOpenSearch
-
-	my @objects = $factory->findObjectsOpenSearch($className,$searchFragment);
-
-This searches all of the fields of the class for anything matching the search 
-fragment. Additionally, it joins the search clauses with OR's instead of AND's.
-
 =head2 objectExistsLike
 
 	my $object = $factory->objectExistsLike($className,%criteria);
@@ -769,59 +762,6 @@ sub findObjects {
         my $iterator = OME::Factory::Iterator->
           new($class,$sth,
               $values,$ids_available,$columns_wanted);
-        return $iterator;
-    }
-}
-
-sub findObjectsOpenSearch {
-    my ($self, $class, $base_criteria) = @_;
-
-    # If the caller is not looking for a value, don't do anything.
-    return undef unless defined wantarray;
-
-	# If the class is a ST, use findAttributes
-# 	return $self->findAttributes( $class, @criteria )
-# 		if( ( $class ne "OME::SemanticType" and 
-# 		      UNIVERSAL::isa( $class, "OME::SemanticType" ) ) );
-# 	return $self->findAttributes( substr( $class, 1 ), @criteria )
-# 		if( substr( $class, 0, 1 ) eq '@' );
-
-	# Load the class
-    __checkClass($class);
-    $class->require();
-
-	# Get columns to search on. Start out with every column.
-	my @columns = $class->getColumns();
-	# Then filter to columns that contain data. no foreign keys allowed here.
-	@columns = grep( $class->getColumnType($_) eq 'normal', @columns );
-	
-	# Build the search criteria
-	my $criteria;
-	foreach my $column ( @columns ) {
-		$criteria->{ $column } = [ 'ilike', '%'.$base_criteria.'%' ];
-	}
-
-    my ($sql,$ids_available,$values) =
-      $class->__makeSelectSQL(undef,$criteria,'search_with_or');
-
-    my $sth = $self->{__ourDBH}->prepare($sql);
-
-    if (wantarray) {
-        # __makeSelectSQL should have created the where clause in
-        # keys-order, which will be the same order that values returns.
-        my @result;
-        eval {
-            $sth->execute(@$values);
-
-            push @result, $_
-              while $_ = $class->__newInstance($sth, $ids_available);
-        };
-        confess $@ if $@;
-        return @result;
-    } else {
-        # looking for a scalar
-        my $iterator = OME::Factory::Iterator->
-          new($class,$sth,$values,$ids_available);
         return $iterator;
     }
 }
