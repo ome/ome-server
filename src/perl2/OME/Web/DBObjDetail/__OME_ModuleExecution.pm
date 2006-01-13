@@ -71,8 +71,11 @@ use base qw(OME::Web::DBObjDetail);
 
 sub getPageBody {
 	my $self = shift;
-	my $factory = $self->Session()->Factory();
+	my $session = $self->Session();
+	my $factory = $session->Factory();
 	my $q = $self->CGI();
+
+	my $html = ( $self->_takeAction( ) || '' );
 
 	my $mex = $self->_loadObject();
 	return $self->SUPER::getPageBody()
@@ -139,8 +142,31 @@ sub getPageBody {
 	##############
 	#	Start Rendering
 
-	# Execution Details
-	$tmpl_data{ mex_detail } = $self->Renderer()->render( $mex, 'detail' );
+
+	# determine what permissions (if any) the user can edit,
+	# and compile html snippet to allow editing. These snippets
+	# are inserted in the MEX detail template as run time parameters.
+	my $chown_options;
+	my $exp           = $session->experimenter();
+	my $super_user_id = $session->Configuration()->super_user;
+	# experimenter: only the superuser can change the experimenter ownership
+	if( $exp->id eq $super_user_id ) {
+		my @experimenters = $factory->findObjects( '@Experimenter' );
+		$chown_options->{ 'chown_experimenter' } = 
+			$self->Renderer()->renderArray( \@experimenters, 'dropdown_select', 
+				{ field_name => 'experimenter', default_value => $mex->experimenter_id } );
+	}
+	# group: the superuser or owner can change the group ownership
+	if( ( $exp->id eq $mex->experimenter_id ) or ($exp->id eq $super_user_id ) ) {
+		my @groups = $factory->findObjects( '@Group' );
+		$chown_options->{ 'chown_group' } = 
+			$self->Renderer()->renderArray( \@groups, 'dropdown_select', 
+				{ field_name => 'group', default_value => $mex->group_id } );
+	}
+	# Render ;Execution Details
+	$tmpl_data{ mex_detail } = $self->Renderer()->render( $mex, 'detail', $chown_options);
+
+
 
 	# I/O Table
 	# input column of i/o table
@@ -272,6 +298,43 @@ sub getPageBody {
 sub _STformalName {
 	my ($self, $ST) = @_;
 	return '@'.$ST->name();
+}
+
+=head2 _takeAction
+
+Allows an administrator to change the experimenter and group ownership.
+Allows an owner of a MEX to change group ownership.
+
+=cut
+
+sub _takeAction {
+	my $self    = shift;
+	my $session = $self->Session();
+	my $factory = $session->Factory();
+	my $q       = $self->CGI();
+	my $mex     = $self->_loadObject();
+	my $exp     = $session->experimenter();
+	my $super_user_id = $session->Configuration()->super_user;
+
+	# change group ownership
+	return unless( ( $exp->id eq $mex->experimenter_id ) or ($exp->id eq $super_user_id ) );
+	my $new_group = $q->param( 'group' );
+	if( ( $new_group ) && ( $new_group ne $mex->group_id ) ) {
+		$mex->group( $new_group );
+		$mex->storeObject();
+		$session->commitTransaction();
+	}
+
+	# change experimenter ownership
+	return unless( $exp->id eq $super_user_id );
+	my $new_exp   = $q->param( 'experimenter' );
+	if( ( $new_exp ) && ( $new_exp ne $mex->experimenter_id ) ) {
+		$mex->experimenter( $new_exp );
+		$mex->storeObject();
+		$session->commitTransaction();
+	}
+
+
 }
 
 =head1 Author

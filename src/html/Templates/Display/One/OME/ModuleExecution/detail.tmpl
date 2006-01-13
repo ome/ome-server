@@ -40,7 +40,25 @@
 	</tr>
 	<tr>
 		<td valign=top class="ome_td">Experimenter</td>
-		<td valign=top class="ome_td"><TMPL_VAR NAME="experimenter"></td>
+		<td valign=top class="ome_td">
+		<TMPL_IF NAME="/run_time_param/name-chown_experimenter">
+			<TMPL_VAR NAME="/run_time_param/name-chown_experimenter"><br>
+			<button type="submit">Save Changes</button>
+		<TMPL_ELSE>
+			<TMPL_VAR NAME="experimenter">
+		</TMPL_IF>
+		</td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">Group</td>
+		<td valign=top class="ome_td">
+		<TMPL_IF NAME="/run_time_param/name-chown_group">
+			<TMPL_VAR NAME="/run_time_param/name-chown_group"><br>
+			<button type="submit">Save Changes</button>
+		<TMPL_ELSE>
+			<TMPL_VAR NAME="group">
+		</TMPL_IF>
+		</td>
 	</tr>
 	<tr>
 		<td valign=top class="ome_td">Status</td>
