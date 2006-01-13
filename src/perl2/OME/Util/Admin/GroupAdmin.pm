@@ -152,9 +152,9 @@ ERROR
         }
 
         # Create the new attribute for the group
-
+		my $mex = $self->getAdminMEX();
         my $group = $factory->
-          newAttribute('Group',undef,$self->getAdminMEX(),
+          newAttribute('Group',undef,$mex,
                        {
                         Name    => $name,
                         Leader  => $leader,
@@ -163,6 +163,9 @@ ERROR
 
         if (defined $group) {
             print "Created group #",$group->id(),".\n";
+            # Make sure the group can see itself
+            $mex->group( $group );
+            $mex->storeObject();
         } else {
             print "Error creating group.\n";
         }
