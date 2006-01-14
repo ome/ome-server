@@ -450,10 +450,15 @@ sub editGroup {
         if ($object) {
             print STDERR "Experimenter $addUser_input is already a member of Group $group_input\n";
         } else {
-			my $exp_group = $factory->newAttribute('ExperimenterGroup',undef,$self->getAdminMEX(), {
+			my $mex = $self->getAdminMEX();
+			my $exp_group = $factory->newAttribute('ExperimenterGroup',undef,$mex, {
 				Experimenter => $addUser,
 				Group        => $group,
 			});
+			# Ensure this link is visible by members of the group.
+            $mex->group( $group );
+            $mex->storeObject();
+			
 			$self->finishAdminMEX();
         }
     }
