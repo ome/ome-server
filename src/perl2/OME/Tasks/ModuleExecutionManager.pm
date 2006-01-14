@@ -110,7 +110,8 @@ them commit any database transactions.
 
 	my $mex = OME::Tasks::ModuleExecutionManager->
 	    createMEX($module,$dependence,$target,
-	              $iterator_tag,$new_feature_tag);
+	              $iterator_tag,$new_feature_tag,
+	              $owner,$group);
 
 Creates a new module execution of the given module.  It is marked as
 having the given dependence and target.  The $dependence parameter
@@ -131,13 +132,28 @@ they provide values for the MEX fields of the same name.  If either is
 undefined, that value is copied from the default_iterator or
 new_feature_tag column, respectively, of the module.
 
+If the $owner and $group parameters are given, then they provide values
+for the experimenter and group ownership. If they are not given or set to 
+0, those values default to the logged in user and that user's primary group.
+If they are set to undef, they will be passed through.
+
 =cut
 
 sub createMEX {
     my $class = shift;
-    my ($module,$dependence,$target,$iterator_tag,$new_feature_tag) = @_;
+    my ($module,$dependence,$target,$iterator_tag,$new_feature_tag,$owner,$group) = @_;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
+
+    # Set owner and group to defaults if they were not provided as parameters.
+	$owner = $session->UserState()->experimenter() 
+		if( ( scalar( @_ ) < 6 ) or 
+		    ( (defined $owner) && ($owner eq 0) ) 
+		  );
+	$group = $session->UserState()->experimenter()->Group() 
+		if( scalar( @_ ) < 7 or 
+		    ( (defined $owner) && ($owner eq 0) ) 
+		  );
 
     Carp::cluck "Undefined module" unless defined $module;
 
@@ -161,8 +177,8 @@ sub createMEX {
                  new_feature_tag => $new_feature_tag,
                  timestamp       => 'now',
                  status          => 'UNFINISHED',
-                 experimenter    => $session->UserState()->experimenter(),
-                 group           => $session->UserState()->experimenter()->Group(),
+                 experimenter    => $owner,
+                 group           => $group,
                 });
 
     return $mex;
