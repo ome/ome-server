@@ -182,11 +182,16 @@ sub importFile {
     # Commit the transaction to the DB.
     $session->commitTransaction() unless $flags{ DO_NOT_COMMIT };
 
+	# close this Import if we started it.
+	if( $importSelfInitiated ) {
+		OME::Tasks::ImportManager->finishImport();
+	}
+
 	# return different things depending on how we were called.
 	if ($filename and $importSelfInitiated) {
-		return ($importedObjects,$file,$originalFile)
+		return ($importedObjects,$file,$originalFile);
 	} elsif ($filename) {
-		return ($importedObjects,$file)
+		return ($importedObjects,$file);
 	} else {
 		return $importedObjects;
 	}
