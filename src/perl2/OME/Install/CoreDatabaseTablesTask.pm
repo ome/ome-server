@@ -364,7 +364,7 @@ sub get_installation_mex {
 		and croak "Module \"Installation\" not loaded into DB - Bootstrap failed, see $LOGFILE_NAME details."
 		unless $module;
 
-	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G',undef) or
+	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G',undef, undef, undef, 0, undef) or
 		print BOLD, "[FAILURE]", RESET, ".\n"
 			and print $LOGFILE "ERROR creating MEX for Installation module\n"
 			and croak "ERROR creating MEX for Installation module, see $LOGFILE_NAME details.";
@@ -1009,8 +1009,9 @@ sub load_xml_core {
 
     foreach my $filename (@core_xml) {
         print "  \\__ $filename ";
+        my ($importedObjects,$file,$originalFile);
         eval {
-            $omeImport->importFile($filename,
+            ($importedObjects,$file,$originalFile) = $omeImport->importFile($filename,
                 NoDuplicates           => 1,
                 IgnoreAlterTableErrors => 1);
             };
@@ -1019,6 +1020,21 @@ sub load_xml_core {
             and croak "Error loading XML file \"$filename\", see $LOGFILE_NAME details."
         if $@;
     
+    	# Make the imported attributes visible to everyone by setting their 
+    	# MEX's group permissions to NULL. This actually is overkill, since
+    	# all I'm really after is the FilenamePattern
+    	my %mexes;
+    	foreach my $object ( @$importedObjects, $originalFile ) {
+    		if( ( defined $object ) && ( UNIVERSAL::isa($object,"OME::SemanticType::Superclass") ) ) {
+    			$mexes{ $object->module_execution_id } = $object->module_execution();
+    		}
+    	}
+    	foreach my $mex ( values( %mexes ) ) {
+			$mex->group( undef );
+    		$mex->storeObject();
+    	}
+
+    	
         print BOLD, "[SUCCESS]", RESET, ".\n"
             and print $logfile "SUCCESS LOADING XML FILE \"$filename\"\n";
     }
