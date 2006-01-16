@@ -1,4 +1,4 @@
-# OME/Web/ImageAnnotationBrowser.pm
+#OME/Web/ImageAnnotationBrowser.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -42,7 +42,7 @@ use Carp;
 use Carp 'cluck';
 use vars qw($VERSION);
 use OME::SessionManager;
-
+use Data::Dumper;
 use base qw(OME::Web);
 
 sub getPageTitle {
@@ -116,8 +116,8 @@ sub getPageBody {
     my $root = $q->param('Root');
 
 
-    my $output = $self->getAnnotationDetails($root,$which_tmpl,
-					     \%tmpl_data,$self);
+    my $output = $self->getAnnotationDetails($self,$root,$which_tmpl,
+					     \%tmpl_data);
 
 
     # and the form.
@@ -133,7 +133,7 @@ sub getAnnotationDetails {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($root,$which_tmpl,$tmpl_data,$obj) = @_;
+    my ($container,$root,$which_tmpl,$tmpl_data) = @_;
 
     # load the appropriate information for the named template.
     my $tmplData = 
@@ -154,8 +154,9 @@ sub getAnnotationDetails {
 
 	
     # get a parsed array of the types in the path variable.
-    my ($pathTypes,$pathTypes2)= $self->getPaths($tmpl);
-    
+    # was my ($pathTypes,$pathTypes2)= $self->getPaths($tmpl);
+    my ($paths) = $self->getPaths($tmpl);
+    my $pathTypes = $paths->[0];  # get first entry.
     # here is where we can add a swap depending on state of the pull-down
     
 
@@ -163,6 +164,7 @@ sub getAnnotationDetails {
     # NOTE: We might want to change this if we revise to handle 
     # _all_ instances of the first class
     my $pathElt = shift @$pathTypes;
+    print STDERR "path elt is $pathElt\n";
     my $rootObj = $factory->findObject($pathElt, Name=>$root);
 
 
@@ -173,14 +175,14 @@ sub getAnnotationDetails {
 
 
     my $annotation_detail;
+    my @images;
     if (defined $rootObj)  {
 
 	# get the associated layout code
 	$annotation_detail = "Images for $rootType " .
-	    $self->getHeader($rootObj,$rootType,$obj) . "<br>\n";
+	    $self->getHeader($container,$rootObj,$rootType) . "<br>\n";
 	$annotation_detail .= 
-	    $self->getLayoutCode($rootObj,$pathTypes,$rootType,$pathTypes2,
-				 $obj,$which_tmpl);
+	    $self->getLayoutCode($container,$rootObj,$paths,$rootType,$which_tmpl,1,\@images);
     }
     else {
 	$annotation_detail = "$rootType $root not found \n";
@@ -204,27 +206,27 @@ sub getAnnotationDetails {
 sub getPaths {
     my $self= shift;
     my $tmpl = shift;
-
-    my $res2 = undef;
+    my @pathArray;
 
     my @parameters = $tmpl->param();
-    my @found_params = grep (m/\.load\/types1-/,@parameters);
-    my $path = $found_params[0];
+ 
+    my @found_params  = grep (m/\.load\/types/,@parameters);
+    my $paramCount = scalar(@found_params);
+    print STDERR "***param count is $paramCount\n";
+    for (my $i = 1; $i <= $paramCount;  $i++) {
+	my @list = grep (m/\.load\/types$i/,@parameters);
+	# pull param $i out of found_params
+	my $param = $list[0];
+	print STDERR "found param $param\n";
 
-    $path =~ m/Path.load\/types1-\[(.*)\]/;
-    my @paths = split(/,/,$1);
+	# find the path value.
+	$param =~ m/Path.load\/types$i-\[(.*)\]/;
+	my @path = split (/,/,$1);
 
-    @found_params = grep (m/\.load\/types2-/,@parameters);
-    $path = $found_params[0];
-
-    if (defined  $path) {
-	$path =~ m/Path.load\/types2-\[(.*)\]/;
-	my @paths2 = split(/,/,$1);
-	$res2= \@paths2;
+	push @pathArray,\@path;
+	
     }
-
-
-    return (\@paths,$res2);
+    return \@pathArray;
 }
 
 =head1 getHeader 
@@ -234,12 +236,12 @@ sub getPaths {
 
 sub getHeader {
     my $self = shift;
-    my ($obj,$type,$webObj) = @_;
+    my ($container,$obj,$type) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
     my $html;
 
-    my $q = $webObj->CGI();
+    my $q = $container->CGI();
     # at this point, $root object is what we start with, rootType is
     # its type
     
@@ -279,16 +281,18 @@ sub getHeader {
 =cut
 sub getLayoutCode {
     my $self = shift;
-    my ($root,$pathTypes,$parentType,$paths2,$obj,$template) = @_;
+    my ($container,$root,$paths,$parentType,$template,$first,$images) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
     
     my $html="";
+    print STDERR "** starting get layout code. root is $root, parent   type is $parentType\n";
     
 
     # The map is the type that goes between $parentType
     # and $type - the next entry in the list.
     # type will be undef when the map maps directly to image.
+    my $pathTypes = $paths->[0];
 
 
     my $map = shift @$pathTypes;
@@ -300,6 +304,9 @@ sub getLayoutCode {
     # will be probe
     my $targetField = $1;
 
+    print STDERR "*** in get layout code. map is $map, type is $type\n";
+    print STDERR Data::Dumper->Dump([$map,$type]);
+    
     # find the maps that correspond to the root object.
     my @maps = $factory->
 	findObjects($map, { $parentType  =>
@@ -312,16 +319,14 @@ sub getLayoutCode {
 	if (scalar(@$pathTypes) ==0 ) {
 	    # we're at the end of the list of types.
 
-	    my $resHtml = $self->completeFirstDim(\@maps,$paths2,$obj,$template);
-
+	    my $resHtml = $self->completeDim($container,\@maps,$paths,$template,$first,$images);
 	    return $resHtml if ($resHtml eq "");
 	    $html .= $resHtml;
 	}
 	else  { # still more to go.
 	    #start a new list
 	    my $resHtml =
-		$self->processMaps(\@maps,$targetField,$pathTypes,
-				   $paths2,$obj,$template);
+		$self->processMaps($container,\@maps,$targetField,$paths,$template,$first,$images);
 	    # end the list.
 	    if ($resHtml ne "") {
 		$html = "<ul>$resHtml</ul>";
@@ -334,27 +339,104 @@ sub getLayoutCode {
     return $html;
 }
 
-sub completeFirstDim {
+
+sub getFullDimLayoutCode {
+
+    print STDERR "*STARTING  full dim layout code..\n";
+    my $self= shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my ($container,$paths,$template,$images) = @_;
+    
+    my $pathTypes = $paths->[0];
+    my $pathElt = shift @$pathTypes;
+    print STDERR "*  in full dim layout. path element is $pathElt\n";
+    
+    $pathElt =~ /@(.*)/;
+    my $rootType = $1;
+
+    my $html;
+    # get all objects of this type,  
+    my $objs = $factory->findObjects($pathElt);
+    my $itemsHtml;
+    while (my $obj = $objs->next()) {
+	my @localPaths;
+	for (my $i=0; $i < scalar(@$paths); $i++ ) {
+	    my $inner = $paths->[$i];
+	    my @copy;
+	    for (my $j = 0; $j  < scalar(@$inner); $j++) {
+		$copy[$j] = $inner->[$j];
+	    }
+	    $localPaths[$i] = \@copy;
+	}
+
+	my $innerHtml =$self->getLayoutCode($container,$obj,
+					    \@localPaths,$rootType,$template,0,$images);
+	if ($innerHtml ne "")  {
+	    $itemsHtml  = "<LI> $rootType";
+	    $itemsHtml .=
+					    $self->getHeader($container,$obj,$rootType)
+					    . "<br>\n";
+	    $itemsHtml .= $innerHtml;
+	}
+    }
+    if ($itemsHtml ne "") {
+	$html = "<UL>$itemsHtml</UL>";
+    }
+    return $html;
+}
+
+sub completeDim {
+    print STDERR "* starting complete dim \n";
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
 
-    my ($maps,$paths,$obj,$template) = @_;
+    my ($container,$maps,$paths,$template,$first,$images) = @_;
 
-    my $html = "";
-    my @images;
-    foreach my $map (@$maps) {
-	my $imageID = $map->image_id;
-	my $image = $factory->loadObject('OME::Image',$imageID);
-	push(@images,$image);
+    # first tells off if it's first dim or not. If it is, we don't
+    # filter - just take all images. if it is, stuff that we find must
+    # be in the list we're looking at.
+    my @newImages;
+    if ($first) {
+
+	foreach my $map (@$maps) {
+	    my $imageID = $map->image_id;
+	    my $image = $factory->loadObject('OME::Image',$imageID);
+	    push(@newImages,$image);
+	}
     }
+    else {
+	foreach my $map (@$maps) {
+	    my $imageID = $map->image_id;
+	    foreach my $image (@$images) {
+		if ($image->ID() == $imageID) {
+		    push(@newImages,$image);
+		    last;
+		}
+	    }
+	}
+    }
+	
+    $images = \@newImages;
+    my $html = "";
+    print STDERR "*~*!*!* in complete dimr. # of paths is " . scalar(@$paths) . "\n";
+    if (defined $paths && scalar(@$paths) > 1) {
+	print STDERRR "** at end of first dim...\n";
+	# copy dim 2 and onward.
+	shift @$paths;
 
-    if (defined $paths && scalar(@$paths) > 0) {
-	$html=   $self->secondDimRender(\@images,$paths,$obj,$template);
-    } elsif (scalar(@images) > 0) {
+	# was $html=
+	# $self->secondDimRender($container,$images,$paths,$template);
+	$html = $self->getFullDimLayoutCode($container,$paths,$template,$images);
+    } elsif (scalar(@$images) > 0) {
+	print STDERR "****RENDERING  " . scalar(@$images) . "\n";
+	print STDERR Data::Dumper->Dump([$images]);
+	print STDERR Data::Dumper->Dump([$template]);
+	my $renderer = $container->Renderer();
 	$html = 
-	    my $renderer = $obj->Renderer();
-	    $renderer->renderArray(\@images,
+	    $renderer->renderArray($images,
 					   'ref_st_annotation_display_mass',
 					   { type =>
 						 'OME::Image',
@@ -363,11 +445,13 @@ sub completeFirstDim {
     return $html;
 }
 
-sub processMaps {
+sub processMaps  { 
+
+    print STDERR "* STARTING PRocess maps \n";
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($maps,$targetField,$pathTypes,$paths2,$obj,$template) = @_;
+    my ($container,$maps,$targetField,$pathTypes,$template,$first,$images) = @_;
 
     my $html = "";
     foreach my $map (@$maps) {
@@ -384,28 +468,23 @@ sub processMaps {
 	# recursion;
 	# shifting walks down the list destructively,
 	# so we have to copy the list when we recurse.
-	my @localTypes;
-	for (my $i=0; $i < scalar(@$pathTypes); $i++) {
-	    $localTypes[$i]=$pathTypes->[$i];
-	}
-	
-	my $res2 = undef;
-	if (defined $paths2) {
-	    my @local2;
-	    for (my $i=0; $i < scalar(@$paths2); $i++) {
-		$local2[$i]=$paths2->[$i];
+	my @localPaths;
+	for (my $i=0; $i < scalar(@$pathTypes); $i++ ) {
+	    my $inner = $pathTypes->[$i];
+	    my @copy;
+	    for (my $j = 0; $j  < scalar(@$inner); $j++) {
+		$copy[$j] = $inner->[$j];
 	    }
-	    $res2 = \@local2;
+	    $localPaths[$i] = \@copy;
 	}
-		# recurse to populate the next level.
-	$innerHtml .= $self->getLayoutCode($target,\@localTypes,
-					   $targetField,$res2,$obj,
-					   $template);
+	# recurse to populate the next level.
+	$innerHtml .= $self->getLayoutCode($container,$target,\@localPaths,
+					   $targetField,$template,$first,$images);
 	if ($innerHtml ne "") {
-	    my $q = $obj->CGI();
+	    my $q = $container->CGI();
 	    # get the item and build it as a list of item.
 	    $html .= "<li>". $targetField . "  ".
-		$self->getHeader($target,$targetField,$obj) . "<br>\n";
+		$self->getHeader($container,$target,$targetField) . "<br>\n";
 	    $html .= $innerHtml;
 	    $html .= "<p>"		    
 	}
@@ -418,13 +497,14 @@ sub secondDimRender {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($images,$paths,$obj,$template) = @_;
+    my ($container,$images,$pathTypes,$template) = @_;
 
-
+    my $paths = $pathTypes->[0];
     my $type = shift @$paths;
     my $html="";
     
     #find all of the items of type $type
+    print STDERRR "***SECOND DIM RENDER . type is $type\n";
     my  @items = $factory->findObjects($type, { __order => ['id']});
     $type=~ /@(.*)/;
     my $parentType = $1;
@@ -436,11 +516,10 @@ sub secondDimRender {
 	    $mypaths[$i]=$paths->[$i];
 	}
 	my $res  =
-	    $self->secondDimRecurse($images,$parentType,$item,\@mypaths,$obj,
-				    $template);
+	    $self->secondDimRecurse($container,$images,$parentType,$item,\@mypaths,$template);
 	if ($res ne "") {
 	    $itemHtml .= "<LI> $parentType ". 
-		$self->getHeader($item,$parentType,$obj);
+		$self->getHeader($container,$item,$parentType);
 	    $itemHtml .= $res;
 	}
     }
@@ -454,7 +533,7 @@ sub secondDimRecurse {
     my $self= shift;
     my $session = $self->Session();
     my $factory = $session->Factory();
-    my ($images,$parentType,$parent,$paths,$obj,$template) = @_;
+    my ($container,$images,$parentType,$parent,$paths,$template) = @_;
 
     my $html= "";
     #  now,  map type is something like ABMap, and type is $b
@@ -474,7 +553,7 @@ sub secondDimRecurse {
     if (scalar(@maps) > 0)  {
 	if (scalar(@$paths) == 0)  {
 	    #actually render the images 
-	    my $resHtml = $self->renderImages(\@maps,$images,$obj,$template);
+	    my $resHtml = $self->renderImages($container,\@maps,$images,$template);
 	    if ($resHtml ne "") {
 		$innerHtml .= $resHtml;
 	    }
@@ -490,11 +569,11 @@ sub secondDimRecurse {
 		    $localPath[$i] = $paths->[$i];
 		    #$targetfield is new parent type, $target is new parent
 		    my $resHtml .=
-			$self->secondDimRecurse($images,$targetField,
-						$target,\@localPath,$obj,$template);
+			$self->secondDimRecurse($container,$images,$targetField,
+						$target,\@localPath,$template);
 		    if ($resHtml ne "") {
 			$innerHtml .= "<li> " . $targetField . " " .
-			    $self->getHeader($target,$targetField,$obj) . 
+			    $self->getHeader($container,$target,$targetField) . 
 			    "<br>\n";
 			$innerHtml .= $resHtml;
 		    }
@@ -515,7 +594,7 @@ sub secondDimRecurse {
 
 sub renderImages {
     my $self = shift;
-    my ($maps,$images,$obj,$template) = @_;
+    my ($container,$maps,$images,$template) = @_;
 
     # at this point, we have two refs to arrays.
     # map is an array of things that map to images.
@@ -533,7 +612,7 @@ sub renderImages {
 	}
     }
     if (scalar(@imagesToRender) > 0) {
-	my $renderer = $obj->Renderer();
+	my $renderer = $container->Renderer();
 	return $renderer->renderArray(\@imagesToRender,
 					      'ref_st_annotation_display_mass',
 					      { type =>
