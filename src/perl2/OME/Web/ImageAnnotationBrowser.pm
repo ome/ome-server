@@ -374,7 +374,7 @@ sub getFullDimLayoutCode {
 	my $innerHtml =$self->getLayoutCode($container,$obj,
 					    \@localPaths,$rootType,$template,0,$images);
 	if ($innerHtml ne "")  {
-	    $itemsHtml  = "<LI> $rootType";
+	    $itemsHtml .= "<LI> $rootType ";
 	    $itemsHtml .=
 					    $self->getHeader($container,$obj,$rootType)
 					    . "<br>\n";
@@ -382,7 +382,7 @@ sub getFullDimLayoutCode {
 	}
     }
     if ($itemsHtml ne "") {
-	$html = "<UL>$itemsHtml</UL>";
+	$html .= "<UL>$itemsHtml</UL>";
     }
     return $html;
 }
@@ -427,8 +427,6 @@ sub completeDim {
 	# copy dim 2 and onward.
 	shift @$paths;
 
-	# was $html=
-	# $self->secondDimRender($container,$images,$paths,$template);
 	$html = $self->getFullDimLayoutCode($container,$paths,$template,$images);
     } elsif (scalar(@$images) > 0) {
 	print STDERR "****RENDERING  " . scalar(@$images) . "\n";
@@ -491,137 +489,6 @@ sub processMaps  {
     }
     return $html;
 }
-    
-
-sub secondDimRender {
-    my $self = shift;
-    my $session= $self->Session();
-    my $factory = $session->Factory();
-    my ($container,$images,$pathTypes,$template) = @_;
-
-    my $paths = $pathTypes->[0];
-    my $type = shift @$paths;
-    my $html="";
-    
-    #find all of the items of type $type
-    print STDERRR "***SECOND DIM RENDER . type is $type\n";
-    my  @items = $factory->findObjects($type, { __order => ['id']});
-    $type=~ /@(.*)/;
-    my $parentType = $1;
-
-    my $itemHtml="";
-    foreach my $item (@items) {
-	my @mypaths;
-	for (my $i =0; $i < scalar(@$paths); $i++) {
-	    $mypaths[$i]=$paths->[$i];
-	}
-	my $res  =
-	    $self->secondDimRecurse($container,$images,$parentType,$item,\@mypaths,$template);
-	if ($res ne "") {
-	    $itemHtml .= "<LI> $parentType ". 
-		$self->getHeader($container,$item,$parentType);
-	    $itemHtml .= $res;
-	}
-    }
-    if ($itemHtml  ne "") {
-	$html = "<UL>$itemHtml</UL>";
-    }
-    return $html;
-}
-
-sub secondDimRecurse {
-    my $self= shift;
-    my $session = $self->Session();
-    my $factory = $session->Factory();
-    my ($container,$images,$parentType,$parent,$paths,$template) = @_;
-
-    my $html= "";
-    #  now,  map type is something like ABMap, and type is $b
-    # ie., each map is a probe gene, and mapType is probeGene.    
-    my $mapType = shift @$paths;
-    my $type = shift @$paths || undef;
-
-    #find the maps.
-
-    $type =~ /@(.*)/ if (defined $type);
-    my $targetField = $1;
-    my @maps  = $factory->findObjects($mapType,{$parentType =>
-						    $parent,
-				                __order =>['id'] });
-    my $innerHtml = "";
-
-    if (scalar(@maps) > 0)  {
-	if (scalar(@$paths) == 0)  {
-	    #actually render the images 
-	    my $resHtml = $self->renderImages($container,\@maps,$images,$template);
-	    if ($resHtml ne "") {
-		$innerHtml .= $resHtml;
-	    }
-	}
-	else {
-	    #types is now @Probe, targetfiled is "Probe"
-	    #recurse
-	    foreach my $map (@maps) {
-		my $target = $map->$targetField;
-		# copy
-		my @localPath;
-		for (my $i =0; $i < scalar(@$paths); $i++) {
-		    $localPath[$i] = $paths->[$i];
-		    #$targetfield is new parent type, $target is new parent
-		    my $resHtml .=
-			$self->secondDimRecurse($container,$images,$targetField,
-						$target,\@localPath,$template);
-		    if ($resHtml ne "") {
-			$innerHtml .= "<li> " . $targetField . " " .
-			    $self->getHeader($container,$target,$targetField) . 
-			    "<br>\n";
-			$innerHtml .= $resHtml;
-		    }
-		}
-	    }
-	}
-    }
-    else {
-	return "";
-    }
-    if ($innerHtml ne "") {
-	$html =  "<UL>$innerHtml</UL>";
-    }
-    return $html;
-
-}
-
-
-sub renderImages {
-    my $self = shift;
-    my ($container,$maps,$images,$template) = @_;
-
-    # at this point, we have two refs to arrays.
-    # map is an array of things that map to images.
-    # (with $image_id fields)
-    # and $images is a bunch of images.
-    # we want to retain intersection and render.
-    my @imagesToRender;
-    IMAGE: foreach my $image (@$images) {
-	foreach my $map (@$maps) {
-		$image->ID . "\n";
-	    if ($map->image_id == $image->ID) {
-		push @imagesToRender, ($image);
-		next IMAGE;
-	    }
-	}
-    }
-    if (scalar(@imagesToRender) > 0) {
-	my $renderer = $container->Renderer();
-	return $renderer->renderArray(\@imagesToRender,
-					      'ref_st_annotation_display_mass',
-					      { type =>
-						    'OME::Image',
-						Template=>$template});
-    }
-    else {
-	return "";
-    }
-}
+   
 
 1;
