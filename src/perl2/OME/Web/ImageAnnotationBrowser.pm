@@ -42,7 +42,6 @@ use Carp;
 use Carp 'cluck';
 use vars qw($VERSION);
 use OME::SessionManager;
-use Data::Dumper;
 use base qw(OME::Web);
 
 sub getPageTitle {
@@ -164,7 +163,6 @@ sub getAnnotationDetails {
     # NOTE: We might want to change this if we revise to handle 
     # _all_ instances of the first class
     my $pathElt = shift @$pathTypes;
-    print STDERR "path elt is $pathElt\n";
     my $rootObj = $factory->findObject($pathElt, Name=>$root);
 
 
@@ -212,12 +210,10 @@ sub getPaths {
  
     my @found_params  = grep (m/\.load\/types/,@parameters);
     my $paramCount = scalar(@found_params);
-    print STDERR "***param count is $paramCount\n";
-    for (my $i = 1; $i <= $paramCount;  $i++) {
+    for (my $i = 0; $i < $paramCount;  $i++) {
 	my @list = grep (m/\.load\/types$i/,@parameters);
 	# pull param $i out of found_params
 	my $param = $list[0];
-	print STDERR "found param $param\n";
 
 	# find the path value.
 	$param =~ m/Path.load\/types$i-\[(.*)\]/;
@@ -257,11 +253,16 @@ sub getHeader {
 
     eval {$map= $factory->findObject($mapType,$type=>$obj) };
 
-    return $html if $@;
 
-
-    # if it exists, get link and make href
-    if (defined $map) {
+    # if there's an error or no map give the object detail url or just
+    # the name (if no details)
+    if ($@ || !$map) {
+	my $detail = $self->getObjDetailURL($obj);
+	if ($detail) {
+	    $html = $q->a({href=>$detail},$name);
+	}
+    }
+    elsif ($map) { # but, if the link does exist, create it.
 	my $link = $map->ExternalLink();
 	my $url = $link->URL();
 	$html = $q->a({href=>$url},$name);
@@ -286,7 +287,6 @@ sub getLayoutCode {
     my $factory = $session->Factory();
     
     my $html="";
-    print STDERR "** starting get layout code. root is $root, parent   type is $parentType\n";
     
 
     # The map is the type that goes between $parentType
@@ -304,8 +304,6 @@ sub getLayoutCode {
     # will be probe
     my $targetField = $1;
 
-    print STDERR "*** in get layout code. map is $map, type is $type\n";
-    print STDERR Data::Dumper->Dump([$map,$type]);
     
     # find the maps that correspond to the root object.
     my @maps = $factory->
@@ -342,7 +340,6 @@ sub getLayoutCode {
 
 sub getFullDimLayoutCode {
 
-    print STDERR "*STARTING  full dim layout code..\n";
     my $self= shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
@@ -351,7 +348,6 @@ sub getFullDimLayoutCode {
     
     my $pathTypes = $paths->[0];
     my $pathElt = shift @$pathTypes;
-    print STDERR "*  in full dim layout. path element is $pathElt\n";
     
     $pathElt =~ /@(.*)/;
     my $rootType = $1;
@@ -388,7 +384,6 @@ sub getFullDimLayoutCode {
 }
 
 sub completeDim {
-    print STDERR "* starting complete dim \n";
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
@@ -421,17 +416,12 @@ sub completeDim {
 	
     $images = \@newImages;
     my $html = "";
-    print STDERR "*~*!*!* in complete dimr. # of paths is " . scalar(@$paths) . "\n";
     if (defined $paths && scalar(@$paths) > 1) {
-	print STDERRR "** at end of first dim...\n";
 	# copy dim 2 and onward.
 	shift @$paths;
 
 	$html = $self->getFullDimLayoutCode($container,$paths,$template,$images);
     } elsif (scalar(@$images) > 0) {
-	print STDERR "****RENDERING  " . scalar(@$images) . "\n";
-	print STDERR Data::Dumper->Dump([$images]);
-	print STDERR Data::Dumper->Dump([$template]);
 	my $renderer = $container->Renderer();
 	$html = 
 	    $renderer->renderArray($images,
@@ -445,7 +435,6 @@ sub completeDim {
 
 sub processMaps  { 
 
-    print STDERR "* STARTING PRocess maps \n";
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
