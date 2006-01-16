@@ -142,7 +142,7 @@ sub getPageBody {
     my $groups =$self->getCategoryGroups(\@parameters);
 
     $html .= $self->getGroupsDetail($groups,$image) if 
-	(scalar(@$groups) > 0);
+	($groups && scalar(@$groups) > 0);
 
     $tmpl_data{'AnnotationDetails'} = $html;
     
@@ -227,6 +227,7 @@ sub getCategoryGroups {
     
     my (@cat_params) = grep(/CategoryGroup\.load/,@$parameters);
     my $request = $cat_params[0];
+    return undef unless $request;
 
     my @cats;
     if ($request =~ m/\/id=\[(.*)\]/) {
@@ -441,13 +442,9 @@ sub getObjURL {
     eval {$linkMapEntry = $factory->findObject($linkMap,$field=>$target)};
 
     if ($@ ||  !$linkMapEntry) { 
-	#$html = $name;
 	my $detail = $self->getObjDetailURL($target);
 	if ($detail) {
 	    $html = $q->a({href=>$detail},$name);
-	}
-	else { 
-	    $html= $name;
 	}
     }
     elsif ($linkMapEntry) {
