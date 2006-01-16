@@ -42,7 +42,7 @@ use Carp;
 use Carp 'cluck';
 use vars qw($VERSION);
 use OME::SessionManager;
-
+use Data::Dumper;
 use base qw(OME::Web);
 
 sub getPageTitle {
@@ -63,10 +63,12 @@ Get the body for a page that displays an image associated with given
     parameter of the requesting URL.
 
   
-This template file will contain a TMPL_VAR of the name
-    "Path.load/types-[....]". Inside the brackets, this variable name
+This template file will contain a TMPL_VARS of the name
+    "Path.load/types-[....]". Inside the brackets, these variable name
     will include a list of types that will be used to define a path
-    leading images to a set of annotations.
+    leading images to a set of annotations. These  vars will be given
+  ids: types1, types2 etc. that will indicate the order in which they
+    are placed into the resulting output page.
 
 The list of types will alternate between objects and maps. An
     event-numbered list of types will always be included - starting with
@@ -121,21 +123,28 @@ sub getPageBody {
     # instantiate variables in the template    
     $tmpl_data{'Template'} = $q->param('Template');
 
+    my @parameters=$tmpl->param();
+
     # load the imaeg.
     my $ID = $q->param('ID');
     my $image = $factory->loadObject( 'OME::Image', $ID);
     # populate  the basic image display  in the template.
-    $self->getImageDisplay($tmpl,\%tmpl_data,$image);
+    $self->getImageDisplay(\@parameters,\%tmpl_data,$image);
 
+    # get a parsed array of the ST types in the path variable.s
+    my $pathTypes= $self->getPaths(\@parameters);
 
-
-	
-    # get a parsed array of the types in the path variable.
-    my $pathTypes= $self->getPaths($tmpl);
-
+    my $html;
     # get the display detail.
-    $tmpl_data{'AnnotationDetails'} = 
-	$self->getDetail($pathTypes,'OME::Image',$image);
+   $html .= $self->getDetail($pathTypes,$image) if
+       (scalar(@$pathTypes) > 0);
+
+    my $groups =$self->getCategoryGroups(\@parameters);
+
+    $html .= $self->getGroupsDetail($groups,$image) if 
+	(scalar(@$groups) > 0);
+
+    $tmpl_data{'AnnotationDetails'} = $html;
     
     # populate the template..
     $tmpl->param(%tmpl_data);
@@ -148,6 +157,27 @@ sub getPageBody {
     return ('HTML',$html);	
 }
 
+=head1 getImageDisplay
+
+    get the basic display for the image 
+=cut
+sub getImageDisplay {
+    my $self  = shift;
+    my ($parameter_names,$tmpl_data,$image) = @_;
+
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+ 
+
+    my @image_requests = grep( m'^image/render-(\w+)$', @$parameter_names )
+	or die "no image requested";
+    my $image_request = $image_requests[0];
+    $image_request =~ m'^image/render-(\w+)$';
+    my $mode = $1;
+    $tmpl_data->{$image_request } = $self->Renderer()->render( $image, $mode);
+}
+
+
 =head1 getPaths
 
     Find the template parameter named "Path.load/types-[...]",
@@ -158,48 +188,99 @@ sub getPageBody {
 =cut
 sub getPaths {
     my $self= shift;
-    my $tmpl = shift;
+    my $parameters = shift;
 
-    my @parameters = $tmpl->param();
-    my @found_params = grep (m/\.load/,@parameters);
-    my $path = $found_params[0];
+    my @found_params = grep (m/\.load\/types/,@$parameters);
+    my $size = scalar(@found_params);
+    my @paths;
 
-    $path =~ m/Path.load\/types-\[(.*)\]/;
-    my @paths = split(/,/,$1);
+    for (my $i = 0; $i < $size; $i++) {
+	# get ith params
+	my @tmp = grep (m/\.load\/types$i/,@found_params);
+	my $path = $tmp[0];
+	# pull out entry
+	$path  =~ m/Path.load\/types$i-\[(.*)\]/;
+	# split them up.
+	my @elts = split(/,/,$1);
+	push(@paths,\@elts);
+    }
     return \@paths;
 }
 
+=head1 getCategoryGroups 
 
-=head1 getImageDisplay
-
-    get the basic display for the image 
+   find a template variable like 
+    <TMPL_VAR NAME="CategoryGroup.load/id=[Test Group,53910]">
+    and return a list of category group objects.
 =cut
-sub getImageDisplay {
-    my $self  = shift;
-    my ($tmpl,$tmpl_data,$image) = @_;
 
+sub getCategoryGroups {
+    my  $self=  shift;
+    my $parameters= shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my @parameter_names = $tmpl->param();
- 
 
-    my @image_requests = grep( m'^image/render-(\w+)$', @parameter_names )
-	or die "no image requested";
-    my $image_request = $image_requests[0];
-    $image_request =~ m'^image/render-(\w+)$';
-    my $mode = $1;
-    $tmpl_data->{$image_request } = $self->Renderer()->render( $image, $mode);
+    # find the STs and the mapping STs to be used
+    my $cgST =
+	$factory->findObject('OME::SemanticType',{name=>'CategoryGroup'});
+    $cgST->requireAttributeTypePackage();
+    
+    my (@cat_params) = grep(/CategoryGroup\.load/,@$parameters);
+    my $request = $cat_params[0];
+
+    my @cats;
+    if ($request =~ m/\/id=\[(.*)\]/) {
+	@cats = split(/,/,$1);
+    } else {
+	die "couldn't parse $request";
+    }
+
+    my @cgs;
+    foreach my $cat (@cats) {
+	my $cg;
+	if ($cat =~ /\d+/)  {
+	    $cg =$factory->loadObject('@CategoryGroup', $cat);
+	}
+	else {
+	    my $iter = $factory->findAttributes($cgST,{Name=> $cat});
+	    $cg = $iter->next();
+	}
+	if ($cg) {
+	    push(@cgs,$cg);
+	}
+    }
+    return \@cgs;
+
 }
 
-=head1 getDetail
-
-    Recursively iterate through the path of types, populating the list s
-    until we get down to the bare items at the end
+=head2 getDetail
+    loop over allof the paths passed in, getting details for all
 
 =cut
 
 sub getDetail {
     my $self= shift;
+    my ($pathTypes,$root) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    my $html;
+
+    foreach my $path (@$pathTypes) {
+	$html  .= $self->getPathDetail($path,'OME::Image',$root);
+    }
+    return $html;
+}
+
+=head1 getPathDetail
+
+    Recursively iterate through one path of types, populating the list s
+    until we get down to the bare items at the end
+
+=cut
+
+sub getPathDetail {
+    my $self= shift;
+    my $q= $self->CGI();
     my ($pathTypes,$parentType,$root) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
@@ -230,6 +311,7 @@ sub getDetail {
 	    findObjects($map, { $parentType  =>
 				    $root});
     }
+
     
     if (scalar(@maps) > 0) {
 	# if i have any maps
@@ -258,9 +340,8 @@ sub getDetail {
 		# target field is now the next type in the
 		# hierarchy. - probe.
 		my $target = $map->$targetField;
-		# get the item and build it as a list of item.
-		$html .= "<li> ". $targetField . "  ".
-		    $target->Name() .    "<br>\n";
+		$html .= "<li> ". $targetField . " " .
+		    $self->getObjURL($target,$type) .    "<br>\n";
 
 		# fresh copy of the list of types for the next recursion
 		my @localTypes;
@@ -268,7 +349,7 @@ sub getDetail {
 		    $localTypes[$i]=$pathTypes->[$i];
 		}
 		# recurse to populate the next level.
-		$html .= $self->getDetail(\@localTypes,
+		$html .= $self->getPathDetail(\@localTypes,
 					      $targetField,$target);
 	    }
 	    # end the list.
@@ -282,6 +363,51 @@ sub getDetail {
     }
     return $html;
 }
+
+=head1 getGroupsDetail
+
+    get details for each group
+
+=cut
+
+sub getGroupsDetail  {
+    my $self  = shift;
+    my ($groups,$image)=@_;
+    my $html;
+    foreach my $group (@$groups) {
+	$html .= $self->getGroupDetail($group,$image);
+    }
+    return $html;
+}
+
+=head1 getGroupDetail
+
+    get the detail for a specific group
+
+=cut
+
+sub getGroupDetail {
+
+    my $self=shift;
+    my $q=$self->CGI();
+    my ($group,$image) = @_;
+
+    # do a list for this group, print category name and value
+    # find classification for this group and this image.
+    my $classification =
+	OME::Tasks::CategoryManager->getImageClassification($image,$group);
+    return "" unless $classification;
+
+    my $html = "<ul><li>";
+    my $groupURL = $q->a({ href=> $self->getObjDetailURL($group) },
+			 $group->Name());
+    my $cat = $classification->Category();
+    my $catURL = $q->a({ href=> $self->getObjDetailURL($cat)}, $cat->Name);
+    $html  .=  "$groupURL $catURL\n";
+    $html .= "</ul>\n";
+    return $html;
+}
+
 
 =head1 getObjURL
 
@@ -310,17 +436,25 @@ sub getObjURL {
     $type =~ /@(.*)/;
     my $field =$1;
     my $linkMapEntry;
+
     
     eval {$linkMapEntry = $factory->findObject($linkMap,$field=>$target)};
 
-    if ($@) { 
-	$html = $name;
+    if ($@ ||  !$linkMapEntry) { 
+	#$html = $name;
+	my $detail = $self->getObjDetailURL($target);
+	if ($detail) {
+	    $html = $q->a({href=>$detail},$name);
+	}
+	else { 
+	    $html= $name;
+	}
     }
-    elsif (defined $linkMapEntry) {
+    elsif ($linkMapEntry) {
 	my  $link = $linkMapEntry->ExternalLink();
 	my $url = $link->URL();
 	$html =$q->a({href=>$url},$name);
-    }
+    } 
     return $html;
 }
     
