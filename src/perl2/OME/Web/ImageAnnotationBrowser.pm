@@ -62,12 +62,15 @@ Get the body for a page that displays images associated with given
     parameter of the requesting URL.
 
   
-This template file will contain a TMPL_VAR of the name
-    "Path.load/types-[....]". Inside the brackets, this variable name
-    will include a list of types that will be used to define a path
-    leading from some root to sets of images.
+This template file will contain a TMPL_VARS of the form
+    "Path.load/types<x>-[....]", where "<x>" is a numeric value,
+    starting with one and increasing. Each of these variables will
+    include a list of types that will define a path leading from a
+    root to sets of images. The number <x> will define the order in
+    which these variables are used: 0 will be the outermost hierarchy,
+    1 will be next, etc. 
 
-The list of types will alternate between objects and maps. An
+These list of types will alternate between objects and maps. An
     event-numbered list of types will always be included - starting with
     a root, followed by a map type, a subsequent type, etc., and
     ending with a map that leads to OME::Image. Since OME::Image is
@@ -78,13 +81,13 @@ Thus, for example, a list of the form
     an instance of the Gene ST, use ProbeGene to find a set of
     probes, and ImageProbe to find a set of images for each probe.
 
+
 It is assumed that this module is also called with a query parameter
     Root indicating the value (name) of the first ST in the list. Thus,
     Root=Mga will find all of the genes, probes and eventually images
     associated with the name "Mga". The value given for root is 
-    assumed to be the Name of the instance of the first ST.
-
-   
+    assumed to be the Name of the instance of the first ST, in the
+    variable named "Path.load/types0..."
     
 =cut
 
@@ -115,6 +118,9 @@ sub getPageBody {
     my $root = $q->param('Root');
 
 
+    # get the details. this is where the bulk of the work gets done.
+    # use this procedure to allow for bulk of layout to be called from
+    # other modules
     my $output = $self->getAnnotationDetails($self,$root,$which_tmpl,
 					     \%tmpl_data);
 
@@ -128,10 +134,19 @@ sub getPageBody {
     return ('HTML',$html);	
 }
 
+=head1 getAnnotationDetails
+
+    Do the bulk of populating the details of the annotations.
+    Starting from a root value, iterate down the hierarchy and
+    populate the template as appropriate.
+
+=cut
+
 sub getAnnotationDetails {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
+    # container is the OME::Web object that is calling this code.
     my ($container,$root,$which_tmpl,$tmpl_data) = @_;
 
     # load the appropriate information for the named template.
@@ -153,21 +168,20 @@ sub getAnnotationDetails {
 
 	
     # get a parsed array of the types in the path variable.
-    # was my ($pathTypes,$pathTypes2)= $self->getPaths($tmpl);
+    # this will be an array of references to arrays.
+    # each reference array will be a list of paths.
     my ($paths) = $self->getPaths($tmpl);
-    my $pathTypes = $paths->[0];  # get first entry.
-    # here is where we can add a swap depending on state of the pull-down
+    my $pathTypes = $paths->[0];  # get first path. 
     
 
     # find the instances associated with root. 
-    # NOTE: We might want to change this if we revise to handle 
+    # NOTE: We will want to change this if we decide to handle 
     # _all_ instances of the first class
     my $pathElt = shift @$pathTypes;
     my $rootObj = $factory->findObject($pathElt, Name=>$root);
 
 
-    # strip off preceding '@'
-
+    # strip off preceding '@' to get the name of the type.
     $pathElt =~ /@(.*)/;
     my $rootType = $1;
 
@@ -176,18 +190,21 @@ sub getAnnotationDetails {
     my @images;
     if (defined $rootObj)  {
 
-	# get the associated layout code
+	# get the associated layout code, with external link if need be.
 	$annotation_detail = "Images for $rootType " .
-	    $self->getHeader($container,$rootObj,$rootType) . "<br>\n";
+	    $self->getHeader($container,$rootObj,$rootType) .	"<br>\n";
+	# do the real work.
 	$annotation_detail .= 
-	    $self->getLayoutCode($container,$rootObj,$paths,$rootType,$which_tmpl,1,\@images);
+	    $self->getLayoutCode($container,$rootObj,$paths,
+				 $rootType,$which_tmpl);
     }
     else {
+	# or just say that there's nothing found
 	$annotation_detail = "$rootType $root not found \n";
     }
-    $tmpl_data->{'AnnotationDetail'} = $annotation_detail;
-	
     # populate the template..
+    $tmpl_data->{'AnnotationDetail'} = $annotation_detail;
+
     $tmpl->param(%$tmpl_data);
     
     return $tmpl->output();
@@ -195,9 +212,9 @@ sub getAnnotationDetails {
 
 =head1 getPaths
 
-    Find the template parameter named "Path.load/types-[...]",
-    parse out the list of types inside the brackets, and return an
-    array reference.
+    Find the template parameters named "Path.load/types<x>-[...]",
+    parse out the list of types inside the brackets, and return a
+    reference to an array or arrays (one for each variable).
     
 
 =cut
@@ -207,27 +224,36 @@ sub getPaths {
     my @pathArray;
 
     my @parameters = $tmpl->param();
- 
+
+    # find all potentially matching parameters names
     my @found_params  = grep (m/\.load\/types/,@parameters);
     my $paramCount = scalar(@found_params);
+    
+    # iterate over them in order
     for (my $i = 0; $i < $paramCount;  $i++) {
-	my @list = grep (m/\.load\/types$i/,@parameters);
+
 	# pull param $i out of found_params
+	my @list = grep (m/\.load\/types$i/,@parameters);
 	my $param = $list[0];
 
 	# find the path value.
 	$param =~ m/Path.load\/types$i-\[(.*)\]/;
+	#convert to array
 	my @path = split (/,/,$1);
 
+	# store array ref
 	push @pathArray,\@path;
 	
     }
+    # return ref to array of refs.
     return \@pathArray;
 }
 
 =head1 getHeader 
     Find a header to put above details. This header will link back
-    to external links if possible.
+    to external links if possible. If not external link is available, 
+    provide the object detail url. if that is not availabe, simply do
+    the name
 =cut
 
 sub getHeader {
@@ -238,20 +264,21 @@ sub getHeader {
     my $html;
 
     my $q = $container->CGI();
-    # at this point, $root object is what we start with, rootType is
-    # its type
-    
-    # find map from root type to ext link
-    my $mapType ="@".$type."ExternalLink";
 
     my $name = $obj->Name();
     $html = $name;
+    
+    # find map from root type to external  links
+    my $mapType =$type."ExternalLinkList";
+
+
 
     # find instance of this for the object. Do it in an eval 
     # because this type might not exist.
     my $map;
 
-    eval {$map= $factory->findObject($mapType,$type=>$obj) };
+    # get the list of links, & find the first element in this list.
+    eval{ my $maps = $obj->$mapType(); $map = $maps->next() };
 
 
     # if there's an error or no map give the object detail url or just
@@ -263,6 +290,7 @@ sub getHeader {
 	}
     }
     elsif ($map) { # but, if the link does exist, create it.
+	
 	my $link = $map->ExternalLink();
 	my $url = $link->URL();
 	$html = $q->a({href=>$url},$name);
@@ -285,15 +313,29 @@ sub getLayoutCode {
     my ($container,$root,$paths,$parentType,$template,$first,$images) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
+    if (!$images) {
+	my @imageArray;
+	$images = \@imageArray;
+    }
+
+    # first time through require special handling: for first
+    # dimension, we will grab images. for all others, we will 
+    # filter from originalset.
+    $first = 1 unless (defined $first);
     
     my $html="";
     
+    # get the first array of dimensions - this is the one we're
+    # currently working off of.
+    my $pathTypes = $paths->[0];
+
 
     # The map is the type that goes between $parentType
     # and $type - the next entry in the list.
     # type will be undef when the map maps directly to image.
-    my $pathTypes = $paths->[0];
-
+    #  thus, for example, map might be @ProbeGene, and type is
+    # @Probe.,
+    # $parentType is @gene.
 
     my $map = shift @$pathTypes;
     my $type = shift @$pathTypes || undef;
@@ -315,16 +357,21 @@ sub getLayoutCode {
 	# if i have any maps
 
 	if (scalar(@$pathTypes) ==0 ) {
-	    # we're at the end of the list of types.
-
-	    my $resHtml = $self->completeDim($container,\@maps,$paths,$template,$first,$images);
+	    # we're at the end of the list of types for this hierarchy
+	    # pop the now-empty first list of types,
+	    shift @$paths;
+	    # complete it and complete this dimension. 
+	    my $resHtml = $self->completeDim($container,\@maps,
+					     $paths,$template,$first,$images);
+	    # either add the appropriate html or return null.
 	    return $resHtml if ($resHtml eq "");
 	    $html .= $resHtml;
 	}
 	else  { # still more to go.
-	    #start a new list
+	    #process the maps to go down a level?
 	    my $resHtml =
-		$self->processMaps($container,\@maps,$targetField,$paths,$template,$first,$images);
+		$self->processMaps($container,\@maps,$targetField,
+				   $paths,$template,$first,$images);
 	    # end the list.
 	    if ($resHtml ne "") {
 		$html = "<ul>$resHtml</ul>";
@@ -337,7 +384,78 @@ sub getLayoutCode {
     return $html;
 }
 
+=head1 completeDim
 
+    The completion of a dimension requires either grabbin a new set of
+    images (if this is the first dimension) or filtering the existing
+    set of images to contain only those that are referenced in the
+    maps
+
+=cut
+
+sub completeDim {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my ($container,$maps,$paths,$template,$first,$images) = @_;
+
+    # first tells off if it's first dim or not. If it is, we don't
+    # filter - just take all images. 
+    my @newImages;
+    if ($first) {
+
+	foreach my $map (@$maps) {
+	    my $imageID = $map->image_id;
+	    my $image = $factory->loadObject('OME::Image',$imageID);
+	    push(@newImages,$image);
+	}
+    }
+    else {
+	# if it's not the first dim, take intersection of those that
+	# are  in the image list and those that are specified by the map
+	foreach my $map (@$maps) {
+	    my $imageID = $map->image_id;
+	    foreach my $image (@$images) {
+		if ($image->ID() == $imageID) {
+		    push(@newImages,$image);
+		    last;
+		}
+	    }
+	}
+    }
+	
+    $images = \@newImages;
+    my $html = "";
+    if (defined $paths && scalar(@$paths) > 0) {
+	# if we have more dimensions to go, continue on with the
+	# full  layout of the next dimension
+	
+	$html = $self->getFullDimLayoutCode($container,$paths,
+					    $template,$images);
+    } elsif (scalar(@$images) > 0) {
+	# at this point, no more dimensions to go. so, 
+	# if we have any images, we render them.
+	my $renderer = $container->Renderer();
+	$html = 
+	    $renderer->renderArray($images,
+					   'ref_st_annotation_display_mass',
+					   { type =>
+						 'OME::Image',
+					     Template=>$template});
+    }
+    return $html;
+}
+
+
+=head1 getFullDimLayoutCode
+    For hierarchies 2-n, we don't have a specific "root" to start 
+    with. Instead, we pull out every instance of the specified type
+    and iterate over it, making it a new entry if there is any
+    associated data.
+
+
+=cut
 sub getFullDimLayoutCode {
 
     my $self= shift;
@@ -355,84 +473,38 @@ sub getFullDimLayoutCode {
     my $html;
     # get all objects of this type,  
     my $objs = $factory->findObjects($pathElt);
+
     my $itemsHtml;
     while (my $obj = $objs->next()) {
-	my @localPaths;
-	for (my $i=0; $i < scalar(@$paths); $i++ ) {
-	    my $inner = $paths->[$i];
-	    my @copy;
-	    for (my $j = 0; $j  < scalar(@$inner); $j++) {
-		$copy[$j] = $inner->[$j];
-	    }
-	    $localPaths[$i] = \@copy;
-	}
+	# copy the paths for each recursive instance
+	my $localPaths = $self->copyPaths($paths);
 
+	# recurse to the next level. Note that this recursive call
+	#will not be the first instance
 	my $innerHtml =$self->getLayoutCode($container,$obj,
-					    \@localPaths,$rootType,$template,0,$images);
+					    $localPaths,$rootType,
+					    $template,0,$images);
+	# if this gives me anything, put it in an <LI> tag
 	if ($innerHtml ne "")  {
 	    $itemsHtml .= "<LI> $rootType ";
-	    $itemsHtml .=
-					    $self->getHeader($container,$obj,$rootType)
-					    . "<br>\n";
+	    $itemsHtml .= $self->getHeader($container,$obj,$rootType)
+		. "<br>\n";
 	    $itemsHtml .= $innerHtml;
 	}
     }
+    # if the over all loop gives me anything, put it in a list.
     if ($itemsHtml ne "") {
 	$html .= "<UL>$itemsHtml</UL>";
     }
     return $html;
 }
 
-sub completeDim {
-    my $self = shift;
-    my $session= $self->Session();
-    my $factory = $session->Factory();
 
-    my ($container,$maps,$paths,$template,$first,$images) = @_;
+=head1 processMaps
 
-    # first tells off if it's first dim or not. If it is, we don't
-    # filter - just take all images. if it is, stuff that we find must
-    # be in the list we're looking at.
-    my @newImages;
-    if ($first) {
+    walk down a list of map objects,populating and recursing.
 
-	foreach my $map (@$maps) {
-	    my $imageID = $map->image_id;
-	    my $image = $factory->loadObject('OME::Image',$imageID);
-	    push(@newImages,$image);
-	}
-    }
-    else {
-	foreach my $map (@$maps) {
-	    my $imageID = $map->image_id;
-	    foreach my $image (@$images) {
-		if ($image->ID() == $imageID) {
-		    push(@newImages,$image);
-		    last;
-		}
-	    }
-	}
-    }
-	
-    $images = \@newImages;
-    my $html = "";
-    if (defined $paths && scalar(@$paths) > 1) {
-	# copy dim 2 and onward.
-	shift @$paths;
-
-	$html = $self->getFullDimLayoutCode($container,$paths,$template,$images);
-    } elsif (scalar(@$images) > 0) {
-	my $renderer = $container->Renderer();
-	$html = 
-	    $renderer->renderArray($images,
-					   'ref_st_annotation_display_mass',
-					   { type =>
-						 'OME::Image',
-					     Template=>$template});
-    }
-    return $html;
-}
-
+=cut
 sub processMaps  { 
 
     my $self = shift;
@@ -455,18 +527,11 @@ sub processMaps  {
 	# recursion;
 	# shifting walks down the list destructively,
 	# so we have to copy the list when we recurse.
-	my @localPaths;
-	for (my $i=0; $i < scalar(@$pathTypes); $i++ ) {
-	    my $inner = $pathTypes->[$i];
-	    my @copy;
-	    for (my $j = 0; $j  < scalar(@$inner); $j++) {
-		$copy[$j] = $inner->[$j];
-	    }
-	    $localPaths[$i] = \@copy;
-	}
-	# recurse to populate the next level.
-	$innerHtml .= $self->getLayoutCode($container,$target,\@localPaths,
-					   $targetField,$template,$first,$images);
+	my $localPaths = $self->copyPaths($pathTypes);
+
+	# recurse to populate the next level, passing $first value along
+	$innerHtml .= $self->getLayoutCode($container,$target,$localPaths,
+				   $targetField,$template,$first,$images);
 	if ($innerHtml ne "") {
 	    my $q = $container->CGI();
 	    # get the item and build it as a list of item.
@@ -478,6 +543,29 @@ sub processMaps  {
     }
     return $html;
 }
+
+=head1 copyPaths
+
+    generate a copy of the path array as needed for recursion.
+
+=cut
+
+sub copyPaths {
+    my $self=shift;
+    my $pathTypes = shift;
+
+    my @localPaths;
+    for (my $i=0; $i < scalar(@$pathTypes); $i++ ) {
+	my $inner = $pathTypes->[$i];
+	my @copy;
+	for (my $j = 0; $j  < scalar(@$inner); $j++) {
+	    $copy[$j] = $inner->[$j];
+	}
+	$localPaths[$i] = \@copy;
+    }
+    return \@localPaths;
+}
+
    
 
 1;
