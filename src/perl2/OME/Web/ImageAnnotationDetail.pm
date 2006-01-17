@@ -433,22 +433,23 @@ sub getObjURL {
     my $name = $target->Name();
     my $html = $name;
     # type = "@Gene", $target is the gene.
-    my $linkMap = $type."ExternalLink";
+
     $type =~ /@(.*)/;
     my $field =$1;
-    my $linkMapEntry;
 
-    
-    eval {$linkMapEntry = $factory->findObject($linkMap,$field=>$target)};
+    my $linkMap = $field."ExternalLinkList";
 
-    if ($@ ||  !$linkMapEntry) { 
+    my $map;
+    eval {my $maps = $target->$linkMap(); $map = $maps->next();};
+
+    if ($@ ||  !$map) { 
 	my $detail = $self->getObjDetailURL($target);
 	if ($detail) {
 	    $html = $q->a({href=>$detail},$name);
 	}
     }
-    elsif ($linkMapEntry) {
-	my  $link = $linkMapEntry->ExternalLink();
+    elsif ($map) {
+	my  $link = $map->ExternalLink();
 	my $url = $link->URL();
 	$html =$q->a({href=>$url},$name);
     } 
