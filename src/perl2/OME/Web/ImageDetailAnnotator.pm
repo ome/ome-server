@@ -116,17 +116,40 @@ sub getPageBody {
     my @parameter_names = $tmpl->param();
 
     # find the STs and the mapping STs to be used
+    my $cgST =
+    $factory->findObject('OME::SemanticType',{name=>'CategoryGroup'});
+    $cgST->requireAttributeTypePackage();
+
     my ($sts,$maps) = $self->findSTs(\@parameter_names);
 
-    # annnotate
-    $self->annotateImages($sts,$maps);
+    # get the category groups
+    my($category_groups) = $self->findCategoryGroups($cgST,\@parameter_names);
+
 
     # display images
-    my $currentImageID = $self->populateImageDetails(\%tmpl_data);
+    my $currentImage = $self->populateImageDetails(\%tmpl_data);
 
-    # display annotation types
-    $self->populateAnnotationTypes($currentImageID,
-				   \%tmpl_data,\@parameter_names,$sts);
+
+    # annnotate if they hit 'save and next'
+    if ($q->param('SaveAndNext')) {
+	$self->annotateWithSTs($currentImage,$sts,$maps);
+	$self->annotateWithCGs($currentImage,$category_groups);
+    }
+    elsif ($q->param('AddToCG')) {
+	$self->addCategories($category_groups);
+    }
+
+
+
+    # display annotation types - first STs
+    if (grep {$_ eq 'st.loop'} @parameter_names) {
+	$self->populateAnnotationSTs($currentImage,\%tmpl_data,$sts,$maps);
+    }
+
+    # and then category groups
+    if (grep {$_ eq 'cg.loop'} @parameter_names) {
+	$self->populateAnnotationGroups($currentImage,\%tmpl_data,$category_groups);
+    }
     # populate the template
     $tmpl->param( %tmpl_data );
 
@@ -159,9 +182,8 @@ sub findSTs {
 
     my @stlist;
 
-    my @found_params = grep( m/\.load/, @$parameter_names );
+    my @found_params = grep( m/DetailSTs\.load/, @$parameter_names );
     my $request = $found_params[0];
-    my $concatenated_request;
     my @ids;
     if( $request =~ m/\/-\[(.*)\]/ ) {
 	@stlist = split(/,/, $1);
@@ -213,55 +235,119 @@ sub loadST  {
     return $semantic_type;
 }
 
-=head1 annotateImages
+=head1 findCategoryGroups
 
-    Saves annotations associated with the current image.
+    Find and load category groups as given in template
 
 =cut
-sub annotateImages {
+
+sub findCategoryGroups {
+    my $self = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my $cgST = shift;
+    my $parameter_names = shift;
+
+    my (@cat_params) = grep(/CategoryGroup\.load/,@$parameter_names);
+    my $request = $cat_params[0];
+
+    my @cats;
+    if ($request =~ m/\/id=\[(.*)\]/) {
+	@cats = split(/,/,$1);
+    } else {
+	die "couldn't parse $request";
+    }
+
+    my @cgs;
+    foreach my $cat (@cats) {
+	my $cg;
+	if ($cat =~ /\d+/)  {
+	    $cg =$factory->loadObject('@CategoryGroup', $cat);
+	}
+	else {
+	    my $iter = $factory->findAttributes($cgST,{Name=> $cat});
+	    $cg = $iter->next();
+	}
+	if ($cg) {
+	    push(@cgs,$cg);
+	}
+    }
+    return \@cgs;
+}
+
+
+=head1 annotateWithSTs
+
+    Saves ST annotations associated with the current image.
+
+=cut
+sub annotateWithSTs {
     my $self = shift;
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($sts,$maps) = @_;
+    my ($currentImage,$sts,$maps) = @_;
 
-    # Classify an image if they click Save & Next
-    if ($q->param( 'SaveAndNext' )) {
-	# for each incoming category - FromCG.id (in template)
-	foreach my $st (@$sts) {
-	    #find the field name specified in the template
-	    my $stAnnotationFieldName = "st".$st->id;
+    # for each incoming category - FromCG.id (in template)
+    foreach my $st (@$sts) {
+	#find the field name specified in the template
+	my $stAnnotationFieldName = "st".$st->id;
+	
+	# Get incoming category ids from CGI parameters
+	# get value of it.
+	my $attributeID = $q->param( $stAnnotationFieldName );
+	# Load attribute object?
+	if( $attributeID && $attributeID ne '' ) {
+	    my $attribute = $factory->loadAttribute( $st, $attributeID )
+		or die "Couldn't load Attribute (id=$attributeID)";
 
-	    # Get incoming category ids from CGI parameters
-	    # get value of it.
-	    my $attributeID = $q->param( $stAnnotationFieldName );
-	    # Load attribute object?
-	    if( $attributeID && $attributeID ne '' ) {
-
-		my $attribute = $factory->loadAttribute( $st, $attributeID )
-		    or die "Couldn't load Attribute (id=$attributeID)";
-		# load the current image
-		
-		my $currentImage = $factory->loadObject( 'OME::Image',
-				 $q->param( 'currentImageID' ));
-
-		####create a new association between the image id 
-		### and the attribute_id.
-		# find the apppropriate ST
-		my $assnSt = $maps->{$st->name()};
-		#create the annotation
-		my ($mex,$attrs) =
-		    OME::Tasks::AnnotationManager->annotateImage(
-			$currentImage,$assnSt,
-			{ $st->name() => $attribute});
-	    }
+	    ####create a new association between the image id 
+	    ### and the attribute_id.
+	    # find the apppropriate ST
+	    my $assnSt = $maps->{$st->name()};
+	    #create the annotation
+	    my ($mex,$attrs) =
+		OME::Tasks::AnnotationManager->annotateImage(
+		    $currentImage,$assnSt,
+		    { $st->name() => $attribute});
 	}
-	#################
-	# commit the DB transaction
-	$session->commitTransaction();
-
     }
+    #################
+    # commit the DB transaction
+    $session->commitTransaction();
 }
+
+=head2 annotateWithCGs
+    
+    annotate with images with CategoryGroups.
+=cut
+
+sub annotateWithCGs {
+    
+    my $self = shift;
+    my $q = $self->CGI();
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my ($currentImage,$categoryGroups) = @_;
+
+
+    my @categoryNames = map("FromCG".$_->id,@$categoryGroups);
+    
+    foreach my $categoryName (@categoryNames) {
+	# get incoming from CGI
+	my $categoryID = $q->param($categoryName);
+	if ($categoryID && $categoryID ne '') {
+	    my    $category=$factory->loadObject('@Category',$categoryID);
+	    OME::Tasks::CategoryManager->classifyImage($currentImage,$category);
+	}
+    }
+    #################
+    # commit the DB transaction
+    $session->commitTransaction();
+
+}
+
+
 
 =head1 populateImageDetails
 
@@ -350,10 +436,10 @@ sub populateImageDetails {
 				       { type => 'OME::Image' });
     my @completed_ids = map $_->ID,@completed_images;
     $tmpl_data->{'images_completed'} = join(',',@completed_ids);
-    return $currentImageID;
+    return $image;
 }
 
-=head2 populateAnnotationTypes
+=head2 populateAnnotationSTs
 
 Popuate the menus with the various annotation types. For each ST that
     we are using, add an  entry to the St.loop. Each entry in the
@@ -362,43 +448,135 @@ Popuate the menus with the various annotation types. For each ST that
     template var st.Name, and a pull down option list given by the 
     st.val/render-list_of_options field.
 
+    If the image already has the a defined value for the annotation
+    ST, it will be used as the default in this list. If not, the
+    parameter from the CGI will be used as the default, allowing us to
+    carry-over selections from previous screens, thus simplifying
+    annotation.
+
+    If multiple annotations of a given type exist, the first one found
+    will be used as the default.
+
+
 =cut
-sub populateAnnotationTypes {
+sub populateAnnotationSTs {
     my $self = shift ;
-    my ($currentImageID,$tmpl_data,$parameter_names,$sts) = @_;
+    my ($currentImage,$tmpl_data,$sts,$maps) = @_;
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
     
 
-    # Render each ST and values
     my @st_loop_data;
-    my $use_st_loop = grep{ $_ eq 'st.loop'} @$parameter_names;
-    my $cntr = 1;
     foreach my $st (@$sts) {
 	my $label = "st".$st->id();
 	my $stVal = $q->param( $label );
 	my %st_data;
 
+
 	my @stValList = $factory->findObjects($st);
 
-	my $currentImage = $factory->loadObject( 'OME::Image',$currentImageID);
+	my $stName =$st->name();
+        # get the map between image and the st.: ie, ImageProbe
+	my $map = $maps->{$stName}->name();
+
+	# the accessor for the list of instances of the ST - ImageProbeList.
+	my $accessor = $map."List" ;
+
+	if ($currentImage) {
+	    # if we have a value for that map,
+	    my  $currentVals = $currentImage->$accessor();
+	    # find first entry
+	    my $mapVal = $currentVals->next();
+	    if ($mapVal) {
+		# and get the instance f the st
+		my $currentVal = $mapVal->$stName();
+		# to make it the default value in this form. 
+		$stVal = $currentVal->id();
+	    }
+	}
 
 	
 	# If the template is using a loop, the variable names will be different
-	if( $use_st_loop ) {
-	    $st_data{ 'st.Name' } = $self->Renderer()->render( $st, 'ref');
-	    $st_data{ "st.id" } = $st->id();
-	    $st_data{ "st.val/render-list_of_options" } = 
-		$self->Renderer()->renderArray( 
+	$st_data{ 'st.Name' } = $self->Renderer()->render( $st, 'ref');
+	$st_data{ "st.id" } = $st->id();
+	$st_data{ "st.val/render-list_of_options" } = 
+	    $self->Renderer()->renderArray( 
 		\@stValList,'list_of_options', { default_value => $stVal, type => $st }
-		);
-	    push( @st_loop_data, \%st_data );
-	} 
+	    );
+	push( @st_loop_data, \%st_data );
     }
     
-    $tmpl_data->{ 'st.loop' } = \@st_loop_data
-	if( $use_st_loop );
+    $tmpl_data->{ 'st.loop' } = \@st_loop_data;
 }
 
+
+=head1 populateAnnotationGroups
+
+   Populate the fields for annotation by catgory group.
+
+=cut
+sub populateAnnotationGroups {
+
+    my $self = shift;
+    my ($currentImage,$tmpl_data,$category_groups) = @_;
+    my $q = $self->CGI() ;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my @cg_loop_data;
+
+
+    foreach my $cg (@$category_groups) {
+	my $label = "FromCG".$cg->id;
+	# get category id if one is specified in form
+	my $categoryID = $q->param($label);
+	my %cg_data;	
+	my @categoryList = $cg->CategoryList();
+	my $classification = OME::Tasks::CategoryManager->
+	    getImageClassification($currentImage,$cg);
+	$categoryID = $classification->Category->ID if ($classification);
+
+	$cg_data{ 'cg.Name' } = $self->Renderer()->render( $cg, 'ref');
+	$cg_data{ "cg.id" } = $cg->id();
+	$cg_data{ "cg.cat/render-list_of_options" } = $self->Renderer()->renderArray( 
+	    \@categoryList, 
+	    'list_of_options', 
+	    { default_value => $categoryID, type => '@Category' }
+	    );
+	push (@cg_loop_data,\%cg_data);
+    }
+    $tmpl_data->{'cg.loop'} = \@cg_loop_data;
+}
+
+=head1 addCategories
+
+    When requested, add categories
+
+=cut
+
+sub addCategories {
+
+    my $self =shift;
+    my $categoryGroups = shift;
+    my $q = $self->CGI() ;
+    my $session= $self->Session();
+
+    my @addCategoryNames =map
+	("CategoryAddTo".$_->id,@$categoryGroups);
+
+    foreach my $categoryGroupName (@addCategoryNames) {
+	my $categoryToAdd = $q->param($categoryGroupName);
+	$categoryGroupName =~ m/CategoryAddTo(\d+)/;
+	my $categoryGroupID=$1;  # get the id of the category group
+	my %data_hash =	( 'Name' => $categoryToAdd, 
+			  'Description' => undef,
+			  'CategoryGroup' => $categoryGroupID
+	    );
+	if ($categoryToAdd && $categoryToAdd ne '') {
+	    OME::Tasks::AnnotationManager->annotateGlobal('Category',\%data_hash);
+	}
+    }
+    $session->commitTransaction();
+}
 1;
