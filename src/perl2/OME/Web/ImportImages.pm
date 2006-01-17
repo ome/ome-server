@@ -282,7 +282,7 @@ sub __getImportBody {
 	foreach (@import_q) {
 		push (@import_files_q, $_)
 			if -f $_ and -r $_ and -s $_;
-		push (@import_files_q,bsd_glob("$_/*"))
+		push (@import_q,bsd_glob("$_/*"))
 			if -d $_ and -r $_;
 	}
 	
