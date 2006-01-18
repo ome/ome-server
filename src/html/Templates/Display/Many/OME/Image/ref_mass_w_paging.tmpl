@@ -1,0 +1,22 @@
+<!--
+ImageMap thumbnails in mass view are rendered all images (OME_Image_ref_map.tmpl)
+followed by all maps (OME_Image_map.tmpl). If image maps are rendered consecutively
+(i.e  <img><map><img><map> etc.)  unwanted page breaks form between consecutive image
+thumbnail.s
+-->
+<TMPL_IF NAME=/obj_loop/paging_limit-50>
+	<TMPL_VAR NAME=/pager_text>
+	<TMPL_IF NAME=/more_info_url>
+		<TMPL_IF NAME=/pager_text> | </TMPL_IF>
+		<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a>
+	</TMPL_IF>
+	<br>
+	<TMPL_LOOP NAME=/obj_loop/paging_limit-50>
+		<TMPL_VAR NAME=/object/render-ref_map>
+	</TMPL_LOOP>
+	<TMPL_LOOP NAME=/obj_loop/loop2>
+		<TMPL_VAR NAME=/object/render-map>
+	</TMPL_LOOP>
+<TMPL_ELSE>
+	<span class='ome_quiet'>(no images)</span>
+</TMPL_IF>
