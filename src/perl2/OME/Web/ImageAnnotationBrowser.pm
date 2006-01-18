@@ -178,21 +178,24 @@ sub getAnnotationDetails {
     # parse out the roots, into an array of 0...n root vars.
     my $roots = $self->parseRoots($root);
 
-
-    
     # get the header
-
     my $annotation_detail;
-    $annotation_detail = $self->getPageHeader($container,$roots,$paths);
+    my $ok;
+    my ($annotation_detail,$ok,$roots) = $self->loadRoots($roots,$paths);
+    
+    print  STDERR "**roots loaded. ok is $ok \n";
+    if ($ok ==  1) {
+	$annotation_detail = $self->getPageHeader($container,$roots,$paths);
 
 
-    my $layout =  $self->getDimLayoutCode($container,$paths,$roots,
+	my $layout =  $self->getDimLayoutCode($container,$paths,$roots,
 					  $which_tmpl);
-    if ($layout eq "") {
-	# or just say that there's nothing found
-	$layout = "<br>No Images found\n";
+	if ($layout eq "") {
+	    # or just say that there's nothing found
+	    $layout = "<br>No Images found\n";
+	}
+	$annotation_detail .= $layout;
     }
-    $annotation_detail .= $layout;
     # populate the template..
     $tmpl_data->{'AnnotationDetail'} = $annotation_detail;
 
@@ -261,6 +264,51 @@ sub parseRoots {
     return \@roots;
 }
 
+=head1 loadRoots
+
+    load all of the root objects.
+=cut
+
+sub loadRoots {
+    my $self= shift;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    my ($roots,$paths) =@_;
+    my $text="";
+    my $ok=1;
+    my @rootObjs;
+
+    my $count = scalar(@$paths);
+    for (my $i = 0; $i < $count; $i++ ) {
+	my $rootName = $roots->[$i];
+
+	next if ($rootName eq "");
+	my $rootType = $paths->[$i]->[0];
+	my $root;
+	if ($rootName =~ /^\d+$/) { # id is passed in
+	    $root = $factory->loadObject($rootType,$rootName);
+	}
+	else { # name
+	    $root = $factory->findObject($rootType,Name=>$rootName);
+	}
+	if ($root) { # if found, save it.
+	    $rootObjs[$i] = $root;
+	}
+	else { # not found. problem.
+	    $ok = 0;
+	    if ($text eq "") {
+		$text = "Cannot find ";
+	    }
+	    else {
+		$text .=", "
+	    }
+	    $rootType =~ /@(.*)/;
+	    $text .="$1 $rootName ";
+	}
+    }
+    return ($text,$ok,\@rootObjs);
+}
+
 =head1 getPageHeader 
     A header for the whole page.
 
@@ -277,16 +325,9 @@ sub getPageHeader {
     my $rootText;
     my $count = scalar(@$paths);
     for (my $i = 0; $i < $count; $i++) {
-	my $rootName = $roots->[$i];
-	next if ($rootName eq "");
+	my $root = $roots->[$i];
+	next unless ($root);
 	my $rootType = $paths->[$i]->[0];
-	my $root;
-	if ($rootName =~ /^\d+$/) { # id is passed in
-	    $root = $factory->loadObject($rootType,$rootName);
-	}
-	else { # name
-	    $root = $factory->findObject($rootType,Name=>$rootName);
-	}
 	my $header = $self->getHeader($container,$root,$rootType);
 	if ($i > 0  & $rootText ne "") {
 	    $rootText .= ", ";
@@ -388,19 +429,13 @@ sub getDimLayoutCode {
     my $html;
     # do we have a root here?
     my $root = shift @$roots;
-    if ($root ne "") {
+    if ($root) {
 	my $pathTypes = $paths->[0];
 	my $pathElt = shift @$pathTypes;
 	$pathElt =~ /@(.*)/;
 	my $rootType=$1;
-	my $rootObj; 
-	if ($root =~ /^\d+$/) {
-	    $rootObj  = $factory->loadObject($pathElt,$root);
-	}
-	else {
-	    $rootObj = $factory->findObject($pathElt,Name=>$root);
-	}
-	$html = $self->getLayoutCode($container,$rootObj,$paths,$roots,
+
+	$html = $self->getLayoutCode($container,$root,$paths,$roots,
 				     $rootType,$template,$first,$images);
     }
     else {
