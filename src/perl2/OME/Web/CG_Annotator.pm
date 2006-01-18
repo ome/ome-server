@@ -178,7 +178,7 @@ sub getPageBody {
 			push( @image_thumbs, $factory->loadObject( 'OME::Image', $image_id ) );
 		}
 		
-		$tmpl_data{ 'image_thumbs' } = $self->Renderer()->renderArray( \@image_thumbs, 'bare_ref_mass', { type => 'OME::Image' });
+		$tmpl_data{ 'image_thumbs' } = $self->Renderer()->renderArray( \@image_thumbs, 'ref_mass', { type => 'OME::Image' });
 		$tmpl_data{ 'image_id_list' } = join( ',', @image_ids); # list of ID's to annotate
 		
 		# Render each Category Group and associated Category List
