@@ -213,10 +213,13 @@ END_HTML
 		$tmpl_data{ criteria_controls } = $self->getSearchCriteria( $type );
 		 		
 		# Get Objects & Render them
-		my ($objects, $paging_text, $num_results ) = $self->search();
+		my %searchParams = $self->_getSearchParams();
+		my $type = $self->_getCurrentSearchType();
+		my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
+		my $num_results = $factory->countObjects( $formal_name, \%searchParams );
 		my $select = $q->param( 'select' );
-		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
-			{ pager_text => $paging_text, type => $type, 
+		$tmpl_data{ results } = $render->renderArray( [$formal_name, \%searchParams], $current_display_mode, 
+			{ type => $type, 
 				( $select && $select eq 'many' ?
 					( draw_checkboxes => 1 ) :
 				( $select && $select eq 'one' ?
@@ -445,9 +448,17 @@ sub getRefSearchField {
 	return $htmlSnippet;
 }
 
-=head1 Internal Methods
+=head2 getSearchCriteria
 
-These methods should not be accessed from outside the class
+	my $html_snippet = $self->getSearchCriteria( $type );
+
+Returns search controls for a given type. It first attempts to construct
+this with a template specific to the type (for an example see: 
+	OME/src/html/Templates/System/Search/OME/Image/search.tmpl )
+If it cannot find a custom search template, it will determine search fields 
+from field show in the display template for that type.
+
+Suggestions or trials at improved logic for this method would be welcome.
 
 =cut 
 
@@ -563,25 +574,6 @@ sub getSearchCriteria {
 	return $specialRequestSection.$tmpl->output();
 }
 
-sub search {
-	my ($self ) = @_;
-	my $q       = $self->CGI();
-	my $factory = $self->Session()->Factory();
-
-	my %searchParams = $self->_getSearchParams();
-	my $pagingText;
-	($pagingText, %searchParams) = $self->_preparePaging( %searchParams );
-
-	my $type = $self->_getCurrentSearchType();
-	my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
-# 	logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
-	my @objects = $factory->findObjects( $formal_name, %searchParams );
-	my $obj_count = $factory->countObjects( $formal_name, %searchParams );
-			
-	return ( \@objects, $pagingText, $obj_count );
-}
-
-
 =head2 _getSearchParams
 
 	my %searchParameters = $self->_getSearchParams();
@@ -639,122 +631,10 @@ sub _getSearchParams {
 			}
 		}
 	}
+	$searchParams{ __order } = $self->__sort_field();
 	return %searchParams;
 }
 
-
-=head2 _preparePaging
-
-	my %searchParameters = $self->_getSearchParams();
-	my $pagingText;
-	($pagingText, %searchParameters) = $self->_preparePaging( %searchParameters );
-	my $searchType       = $self->_getCurrentSearchType();
-	my @objects          = $factory->findObjects( $searchType, %searchParameters );
-	
-	parses the offset or limit from incoming cgi parameters, updates them,
-	and generates the paging controls.
-
-=cut
-
-sub _preparePaging {
-	my ($self, %searchParams ) = @_;
-	my $q       = $self->CGI();
-	my $factory = $self->Session()->Factory();
-
-
-	# load type
-	my $type         = $self->_getCurrentSearchType();
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-
-	# count Objects
- 	my $object_count = $factory->countObjects( $formal_name, %searchParams );
-
-	# PAGING: prepare limit, offset, and order_by
-	$searchParams{ __limit } = $self->{ _default_limit };
-	my $numPages = POSIX::ceil( $object_count / $searchParams{ __limit } );
-	$searchParams{ __order } = $self->__sort_field();
-	# only use the offset parameter if we're ordering by the same thing as last time
-	if( defined $q->param( 'last_order_by') && 
-	    $q->param( 'last_order_by') eq $searchParams{ __order } &&
-	    $q->param( "__offset" ) ne '') {
-		$searchParams{ __offset } = $q->param( "__offset" );
-	} else {
-		$searchParams{ __offset } = 0;
-	}
-
-	# Turn pages
-	my $currentPage = int( $searchParams{ __offset } / $searchParams{ __limit } );
-	my $action = $q->param( 'page_action' ) ;
-	if( $action ) {
-		my $max_offset = ($numPages - 1) * $searchParams{ __limit };
-		if( $action eq 'FirstPage' ) {
-			$searchParams{ __offset } = 0;
-		} elsif( $action eq 'PrevPage' ) {
-			$searchParams{ __offset } = ( $currentPage - 1 ) * $searchParams{ __limit };
-			# paranoid check
-			$searchParams{ __offset } = 0
-				if $searchParams{ __offset } < 0;
-		} elsif( $action eq 'NextPage' ) {
-			$searchParams{ __offset } = ( $currentPage + 1 ) * $searchParams{ __limit };
-			# paranoid check
-			$searchParams{ __offset } = $max_offset
-				if $searchParams{ __offset } > $max_offset;
-		} elsif( $action eq 'LastPage' ) {
-			$searchParams{ __offset } = $max_offset;
-		}
-	}
-	# update last_order_by. don't add a key to searchParams by accident in the process.
-	$q->param( 'last_order_by', (
-			exists $searchParams{ __order } ?
-			$searchParams{ __order } :
-			undef
-		) );
-	# update the __offset parameter
-	$q->param( "__offset", $searchParams{ __offset } );
-	
-	# paging controls
-	my $pagingText;
-	my $form_name = $self->{ form_name };
-	if( $searchParams{ __limit } ) {
-		my $offset = $searchParams{ __offset };
-		my $limit  = $searchParams{ __limit };
-		# add 1 to make it human readable (i.e. 1-n instead of 0-(n-1) )
-		$currentPage = int( $searchParams{ __offset } / $searchParams{ __limit } ) + 1;
-		if( $numPages > 1 ) {
-			$pagingText .= $q->a( {
-					-title => "First Page",
-					-href => "javascript: document.forms['$form_name'].page_action.value='FirstPage'; document.forms['$form_name'].submit();",
-					}, 
-					'<<',
-				).' '
-				if ( $currentPage > 1 and $numPages > 2 );
-			$pagingText .= $q->a( {
-					-title => "Previous Page",
-					-href => "javascript: document.forms['$form_name'].page_action.value='PrevPage'; document.forms['$form_name'].submit();",
-					}, 
-					'<'
-				)." "
-				if $currentPage > 1;
-			$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
-			$pagingText .= "\n".$q->a( {
-					-title => "Next Page",
-					-href  => "javascript: document.forms['$form_name'].page_action.value='NextPage'; document.forms['$form_name'].submit();",
-					}, 
-					'>'
-				)." "
-				if $currentPage < $numPages;
-			$pagingText .= "\n".$q->a( {
-					-title => "Last Page",
-					-href  => "javascript: document.forms['$form_name'].page_action.value='LastPage'; document.forms['$form_name'].submit();",
-					}, 
-					'>>'
-				)
-				if( $currentPage < $numPages and $numPages > 2 );
-		}
-	}
-
-	return ($pagingText, %searchParams);
-}
 
 =head2 __sort_field
 
