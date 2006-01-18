@@ -115,6 +115,21 @@
 	<font class="ome_relation_title">Images:</font>
 	<TMPL_VAR NAME=images/render-ref_mass>
 </TMPL_IF><br>
+<br>
+
+
+<TMPL_IF NAME=images_are_single_channel>
+	<span style="font-size: 14px; ">Set black & white levels for all images in this dataset:</span>
+	<table>
+	<tr><td></td><td>Black Level</td><td>White Level</td></tr>
+	<tr>
+		<td>Expressed in Geosigma's relative to Geometric mean. </td>
+		<td><input name="blackGeoSigma" type="text" size="5" maxlength="10"></td>
+		<td><input name="whiteGeoSigma" type="text" size="5" maxlength="10"></td>
+	</tr>
+	</table>
+	<button type="submit">Save changes to display settings</button>
+</TMPL_IF>
 <hr>
 
 <font class="ome_relation_title">Module Executions:</font>

@@ -61,6 +61,7 @@ our $VERSION = $OME::VERSION;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::CategoryManager;
 use OME::Web::DBObjDetail::__Category;
+use OME::Tasks::PixelsManager;
 
 use Log::Agent;
 use base qw(OME::Web::DBObjDetail);
@@ -182,12 +183,13 @@ sub _takeAction {
 	my $dataset = $self->_loadObject();
 	my $q = $self->CGI();
 	my $message;
-	my $factory = $self->Session()->Factory();
+	my $session = $self->Session();
+	my $factory = $session->Factory();
 
 	# make this dataset the "most recent"
-	$self->Session()->dataset( $dataset );
-	$self->Session()->storeObject();
-	$self->Session()->commitTransaction();
+	$session->dataset( $dataset );
+	$session->storeObject();
+	$session->commitTransaction();
 	
 	# Edits
 	if( $q->param( 'action' ) && $q->param( 'action' ) eq 'Save' ) {
@@ -196,33 +198,33 @@ sub _takeAction {
 			$dataset->description( $q->param( 'description' ) );
 			$dataset->name( $q->param( 'name' ) );
 			$dataset->storeObject();
-			$self->Session()->commitTransaction();
+			$session->commitTransaction();
 		}
 		# Edit annotation
 		if( $q->param( 'annotation' ) ) {
 			OME::Tasks::DatasetManager->writeAnnotation( 
 				$dataset, { Content => $q->param( 'annotation' ) }
 			);
-			$self->Session()->commitTransaction();
+			$session->commitTransaction();
 		}
 	}
 	
 	# Delete Annotation
 	if( $q->param( 'action' ) eq 'DeleteAnnotation' ) {
 		OME::Tasks::DatasetManager->deleteCurrentAnnotation( $dataset );
-		$self->Session()->commitTransaction();
+		$session->commitTransaction();
 	}
 
 	# Add images
-	my $image_ids = $q->param( 'images_to_add' );
-	if( $image_ids ) {
-		$message .= $self->DatasetUtil()->addImages($image_ids);
+	my $image_ids_to_add = $q->param( 'images_to_add' );
+	if( $image_ids_to_add ) {
+		$message .= $self->DatasetUtil()->addImages($image_ids_to_add);
 	}
 	
 	# remove images
-	my $image_ids = $q->param( 'images_to_remove' );
-	if( $image_ids ) {
-		$message .= $self->DatasetUtil()->removeImages($image_ids);
+	my $image_ids_to_remove = $q->param( 'images_to_remove' );
+	if( $image_ids_to_remove ) {
+		$message .= $self->DatasetUtil()->removeImages($image_ids_to_remove);
 	}
 	
 	# Declassify image
@@ -255,6 +257,49 @@ sub _takeAction {
 		my $category_id = $q->param( 'category_to_classify_with' );
 		$message .= $self->CategoryUtil()->
 			classify( $image_id_to_classify, $category_id );
+	}
+	
+	# change image displays
+	my $blackLevelInGeoSigmas = $q->param( 'blackGeoSigma' );
+	my $whiteLevelInGeoSigmas = $q->param( 'whiteGeoSigma' );
+	my $channelSpecifier      = $q->param( 'channelSpecifier' );
+	# Simple translation of channel specifier for now: assume single channel
+	my $channelIndex = 0;
+	if( (defined $blackLevelInGeoSigmas) && ( $blackLevelInGeoSigmas ne '' ) && 
+	    (defined $whiteLevelInGeoSigmas) && ( $whiteLevelInGeoSigmas ne '' ) && 
+	    (defined $channelIndex ) 
+	  ) {
+		my @images = $dataset->images();
+		foreach my $image( @images ) {
+			my $pixels_attr = $image->default_pixels();
+			unless( $pixels_attr ) {
+				$message .= "Could not set display of image ".$image->name." (id:".$image->id.") because it has no pixels.<br>";
+				next;
+			}
+		    my $pixels_data = OME::Tasks::PixelsManager->loadPixels( $pixels_attr );
+			my $statsHash   = $pixels_data->getStackStatistics();
+			my $displayOptions = OME::Tasks::PixelsManager->getDisplayOptions( $pixels_attr );
+			my $theT = ($displayOptions->TStart() + $displayOptions->TStop() ) / 2;
+			my ( $absoluteBlackLevel, $absoluteWhiteLevel );
+			$absoluteBlackLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 
+				$blackLevelInGeoSigmas * $statsHash->{ $channelIndex }{ $theT }->{Geosigma}  );
+			$absoluteBlackLevel = $statsHash->{ $channelIndex }{ $theT }->{Minimum}
+				if $absoluteBlackLevel < $statsHash->{ $channelIndex }{ $theT }->{Minimum};
+			$absoluteWhiteLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 
+				$whiteLevelInGeoSigmas * $statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
+			$absoluteWhiteLevel = $statsHash->{ $channelIndex }{ $theT }->{Maximum}
+				if $absoluteWhiteLevel > $statsHash->{ $channelIndex }{ $theT }->{Maximum};
+			
+			# Still maintaining simplistic assumption of single channel images.
+			my $displayChannel = $displayOptions->GreyChannel();
+			$displayChannel->BlackLevel( $absoluteBlackLevel );
+			$displayChannel->WhiteLevel( $absoluteWhiteLevel );
+			$displayChannel->storeObject();
+			
+			$pixels_data->setThumb( $displayOptions );
+		}
+		$session->commitTransaction();
+		$message .= 'Reset black and white level of '.scalar( @images ).' images.<br>';
 	}
 	
 	return $message;
