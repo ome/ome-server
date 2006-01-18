@@ -301,89 +301,8 @@ These templates can be found under OME/src/html/Templates/generic_*
 
 sub renderArray {
 	my ($self, $objs, $mode, $options) = @_;
+	my $factory = OME::Web->Session()->Factory();
 	$options = {} unless $options; # don't have to do undef error checks this way
-	
-	# [ $formal_name, \%search_params ] calling style - load the objects and paging text.
-	if( ref( $objs ) eq 'ARRAY' && scalar( @$objs ) eq 2 && !ref($objs->[0]) && (ref($objs->[1]) eq 'HASH') ) {
-		my ($formal_name, $search_params) = @$objs;
-		
-		# try to get paging controls
-		my ($offset, $limit, $pager_text);
-		$limit = $options->{ paging_limit }
-			if exists $options->{ paging_limit };
-		$limit = $self->{ page_limits }->{ $mode }
-			unless $limit;
-		my $factory = OME::Web->Session()->Factory();
-		my $form_name; 
-		$form_name = $options->{ form_name } 
-			if exists $options->{ form_name };
-		# The name of the pager control (the first parameter) needs to be unique
-		# The formal name of the search type will be fairly unique... hopefully.
-		# Actually, this method will break down when there are more than one list
-		# of this type shown in a page. 
-		( $offset, $pager_text ) = $self->_pagerControl( 
-			$formal_name,
-			$factory->countObjects( $formal_name, $search_params ),
-			$limit,
-			$form_name
-		);
-
-		# set up paging if there is a limit for this type and if pagerControl returned ok
-		if( $limit and $pager_text ) {
-			# black magic. Fixes a problem similar to XS wierdness. Grep the codebase for XS wierdness for more details on that.
-			# punchline, is the next line completelyavoids the sometimes error of:
-			# Error serving OME::Web::DBObjDetail: DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 731.
-			# OME::Factory::findObjects('OME::Factory=HASH(0xb385e0)','OME::ModuleExecution','image',1,'__offset',0,'__limit',10) called at /Users/josiah/OME/cvs/OME/src/perl2//OME/DBObject.pm line 1051
-			# In the case that was causing the error, $limit was coming from options specified in the template.
-			$limit = $limit + 0;
-			$search_params->{ __limit } = $limit;
-			$search_params->{ __offset } = $offset;
-			$options->{pager_text} = $pager_text;
-		}		
-
-		my @found_objects = $factory->findObjects( $formal_name, $search_params );
-		$objs = \@found_objects;
-	}
-
-	# [ $obj, $method ] calling style - load the objects and paging text.
-	if( ref( $objs ) eq 'ARRAY' && scalar( @$objs ) eq 2 && !ref($objs->[1]) ) {
-		my ($obj, $method) = @$objs;
-		my ( @relation_objects, $pager_text );
-		
-		# try to get paging controls
-		my ($offset, $limit);
-		$limit = $options->{ paging_limit }
-			if exists $options->{ paging_limit };
-		$limit = $self->{ page_limits }->{ $mode }
-			unless $limit;
-		my $count_method = 'count_'.$method;
-		my $form_name; 
-		$form_name = $options->{ form_name } 
-			if exists $options->{ form_name };
-		( $offset, $pager_text ) = $self->_pagerControl( 
-			$method,
-			$obj->$count_method,
-			$limit,
-			$form_name
-		);
-
-		# set up paging if there is a limit for this type and if pagerControl returned ok
-		if( $limit and $pager_text ) {
-			# black magic. Fixes a problem similar to XS wierdness. Grep the codebase for XS wierdness for more details on that.
-			# punchline, is the next line completelyavoids the sometimes error of:
-			# Error serving OME::Web::DBObjDetail: DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 731.
-			# OME::Factory::findObjects('OME::Factory=HASH(0xb385e0)','OME::ModuleExecution','image',1,'__offset',0,'__limit',10) called at /Users/josiah/OME/cvs/OME/src/perl2//OME/DBObject.pm line 1051
-			# In the case that was causing the error, $limit was coming from options specified in the template.
-			$limit = $limit + 0;
-			@relation_objects = $obj->$method( __limit => $limit, __offset => $offset );
-			$options->{pager_text} = $pager_text;
-		
-		# get objs w/o paging
-		} else {
-			@relation_objects = $obj->$method();
-		}
-		$objs = \@relation_objects
-	}
 	
 	# try to load custom template
 	my $tmpl_path = $self->_findTemplate( $options->{type}, $mode, 'many' );
@@ -393,6 +312,100 @@ sub renderArray {
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data;
 	my $field_requests = $self->_parse_tmpl_fields( [ $tmpl->param() ] );
+
+	# Determine paging limit. 
+	my $limit;
+	# First look in run time options
+	if( exists $options->{ paging_limit } ) { 
+		$limit = $options->{ paging_limit };
+	# Next look in the template, specified as: <TMPL_VAR NAME = '/paging_limit/value-XXX'>
+	} elsif( exists $field_requests->{ '/obj_loop' } ) {
+		$limit = $field_requests->{ '/obj_loop' }->[0]->{ paging_limit };
+	# Finally look to parameters hard-coded in this class
+	} else {
+		$limit = $self->{ page_limits }->{ $mode };
+	}
+	# black magic. Fixes a problem similar to XS wierdness. Grep the codebase for XS wierdness for more details on that.
+	# punchline, is the next line completely avoids the sometimes error of:
+	# Error serving OME::Web::DBObjDetail: DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 731.
+	# OME::Factory::findObjects('OME::Factory=HASH(0xb385e0)','OME::ModuleExecution','image',1,'__offset',0,'__limit',10) called at /Users/josiah/OME/cvs/OME/src/perl2//OME/DBObject.pm line 1051
+	# In the case that was causing the error, $limit was coming from options specified in the template.
+	$limit = $limit + 0;
+				
+	# Determine calling style
+	my $callingStyle;
+	if( ref( $objs ) eq 'ARRAY' && scalar( @$objs ) eq 2 && !ref($objs->[0]) && (ref($objs->[1]) eq 'HASH') ) {
+		$callingStyle = 'search';
+	} elsif( ref( $objs ) eq 'ARRAY' && scalar( @$objs ) eq 2 && !ref($objs->[1]) ) {
+		$callingStyle = 'accessor';
+	} else {
+		$callingStyle = 'objectList';
+	}
+
+
+	# Do parameter parsing 
+	my ($formal_name, $search_params, $obj, $method);
+	if( $callingStyle eq 'search' ) {
+		($formal_name, $search_params) = @$objs;
+	} elsif( $callingStyle eq 'accessor' ) {
+		($obj, $method) = @$objs;
+	}
+
+
+	# Count Objects AND get pager control name
+	my ($num_objs, $pager_control_name );
+	if( $callingStyle eq 'search' ) {
+		$num_objs = $factory->countObjects( $formal_name, $search_params );
+		# This strategy of naming the pager control will break down when there are more than one list of a given type shown in a page. 
+		( my $pager_control_name = $formal_name ) =~ s/::|@/_/g;
+	} elsif( $callingStyle eq 'accessor' ) {
+		my $count_method = 'count_'.$method;
+		$num_objs = $obj->$count_method;
+		( my $pager_control_name = $obj->getFormalName() ) =~ s/::|@/_/g;
+		$pager_control_name .= '.'.$method;
+	} else { # objectList
+		# This strategy of naming the pager control will break down when there are more than one list of a given type shown in a page. 
+		( my $pager_control_name = $options->{type} ) =~ s/::|@/_/g;
+		$num_objs = scalar( @$objs );
+	}
+	
+	
+	# Build pager controls
+	my $form_name; 
+	$form_name = $options->{ form_name } 
+		if exists $options->{ form_name };
+	my ( $offset, $pager_text ) = $self->_pagerControl( 
+		$pager_control_name,
+		$num_objs,
+		$limit,
+		$form_name
+	);
+	
+	# If paging returned ok, finalize it and set $objs to the objects on this page
+	if( $pager_text ) {
+		$options->{pager_text} = $pager_text;
+		if( $callingStyle eq 'search' ) {
+			$search_params->{ __limit } = $limit;
+			$search_params->{ __offset } = $offset;
+			$objs = [ $factory->findObjects( $formal_name, $search_params ) ];
+		} elsif( $callingStyle eq 'accessor' ) {
+			$objs = [ $obj->$method( __limit => $limit, __offset => $offset ) ];
+		} else { # objectList
+			# Paging requires sorted data. Figure out what to sort on, default to id
+			my $sort = ( exists $options->{ __order } ? $options->{ __order } : 'id' );
+			@$objs = sort { $a->$sort cmp $b->$sort } @$objs;
+			$objs = [ splice( @$objs, $offset, $limit ) ];
+		}
+	}
+	# If paging didn't work for whatever reason, load objects as needed.
+	else {
+		if( $callingStyle eq 'search' ) {
+			$objs = [ $factory->findObjects( $formal_name, $search_params ) ];
+		} elsif( $callingStyle eq 'accessor' ) {
+			$objs = [ $obj->$method() ];
+		}
+	}
+	
 
 	# put together data for template
 	if( $objs && scalar( @$objs ) > 0 && $objs->[0]) {
@@ -468,12 +481,12 @@ sub renderArray {
 
 sub _pagerControl {
 	my ( $self, $control_name, $obj_count, $limit, $form_name ) = @_;
+	
 	return () unless ( $obj_count and $limit );
 
 	# setup
 	my $q = $self->CGI();
 	my $offset = ($q->param( $control_name.'___offset' ) or 0);
-	my $pagingText;
 	my $numPages = POSIX::ceil( $obj_count / $limit );
 	$form_name = 'primary' unless( defined $form_name and $form_name ne '' );
 
@@ -492,10 +505,11 @@ sub _pagerControl {
 	}
 	my $currentPage = int( $offset / $limit ) + 1;
 
+	my $pagingText = "Results ".$offset."-".($offset+$limit)." of $obj_count. Page ";
 
 	# make controls
 	if( $numPages > 1 ) {
-		$pagingText = "<input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
+		$pagingText .= "<input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
 		$pagingText .= "<input type='hidden' name='${control_name}_page_action'>";
 		$pagingText .= $q->a( {
 				-title => "First Page",
