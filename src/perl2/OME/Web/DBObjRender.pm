@@ -278,14 +278,19 @@ ref_mass - Mushes all the references together without formatting.
 These templates can be found under OME/src/html/Templates/generic_* 
 
 %options holds optional parameters
-	type is used to look for specialized templates. It's the formal name
+	* type is used to look for specialized templates. It's the formal name
 	of the objects to be rendered. This is needed to find the specialized
 	template.
-	more_info_url is a URL to a search page of these objects.
-	paging_limit is optional, and limits the number of objects in a page.
-	form_name is the name of the form this is being put in. It is used by
+	* more_info_url is a URL to a search page of these objects.
+	* paging_limit is optional, and limits the number of objects in a page.
+	* form_name is the name of the form this is being put in. It is used by
 	paging text, and defaults to 'primary'. Things will not work properly if
 	the html returned by this function is not embedded in a form.
+	* pager_control_name is optional. It is the name of the form field 
+	handling paging for the returned html block. It is only necessary if
+	you are embedding multiple blocks of the same object type in the same 
+	page. The dataset detail page does this when rendering images grouped by 
+	categories.
 
 =cut
 
@@ -350,18 +355,19 @@ sub renderArray {
 	my ($num_objs, $pager_control_name );
 	if( $callingStyle eq 'search' ) {
 		$num_objs = $factory->countObjects( $formal_name, $search_params );
-		# This strategy of naming the pager control will break down when there are more than one list of a given type shown in a page. 
-		( my $pager_control_name = $formal_name ) =~ s/::|@/_/g;
+		$pager_control_name = $formal_name;
 	} elsif( $callingStyle eq 'accessor' ) {
 		my $count_method = 'count_'.$method;
 		$num_objs = $obj->$count_method;
-		( my $pager_control_name = $obj->getFormalName() ) =~ s/::|@/_/g;
-		$pager_control_name .= '.'.$method;
+		$pager_control_name = $obj->getFormalName().'.'.$method;
 	} else { # objectList
-		# This strategy of naming the pager control will break down when there are more than one list of a given type shown in a page. 
-		( my $pager_control_name = $options->{type} ) =~ s/::|@/_/g;
 		$num_objs = scalar( @$objs );
+		$pager_control_name = $options->{type};
 	}
+	$pager_control_name =~ s/::|@/_/g;
+	# Override derived pager_control_name if it was explicitly given.
+	$pager_control_name = $options->{ pager_control_name }
+		if( exists( $options->{ pager_control_name } ) );
 	
 	
 	# Build pager controls
@@ -374,6 +380,8 @@ sub renderArray {
 		$limit,
 		$form_name
 	);
+	$options->{ no_more_info } = 1
+		if( $num_objs <= $limit );
 	
 	# If paging returned ok, finalize it and set $objs to the objects on this page
 	if( $pager_text ) {
