@@ -213,7 +213,7 @@ END_HTML
 		$tmpl_data{ criteria_controls } = $self->getSearchCriteria( $type );
 		 		
 		# Get Objects & Render them
-		my ($objects, $paging_text ) = $self->search();
+		my ($objects, $paging_text, $num_results ) = $self->search();
 		my $select = $q->param( 'select' );
 		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
 			{ pager_text => $paging_text, type => $type, 
@@ -224,6 +224,7 @@ END_HTML
 					()
 				) )
 			} );
+		$tmpl_data{ num_results } = $num_results;
 
 		# Select button
 		$tmpl_data{do_select} = 
@@ -575,8 +576,9 @@ sub search {
 	my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
 # 	logdbg "debug", "Retrieving object from search parameters:\n\tfactory->findObjectsLike( $formal_name, ".join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
 	my @objects = $factory->findObjects( $formal_name, %searchParams );
+	my $obj_count = $factory->countObjects( $formal_name, %searchParams );
 			
-	return ( \@objects, $pagingText );
+	return ( \@objects, $pagingText, $obj_count );
 }
 
 
