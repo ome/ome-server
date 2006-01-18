@@ -729,7 +729,10 @@ sub findObjects {
 
     # Let's accept a hash ref for the criteria, too.
     if (ref($criteria[0]) eq 'HASH') {
-        $criteria = $criteria[0];
+    	# Make a COPY of the hash because __makeSelectSQL will delete some entries
+    	# from it.
+    	my %hash = %{ $criteria[0] };
+        $criteria = \%hash;
     } else {
         # Return undef if the criteria are not well-formed.
 	  return undef
@@ -780,7 +783,10 @@ sub countObjects {
 
     # Let's accept a hash ref for the criteria, too.
     if (ref($criteria[0]) eq 'HASH') {
-        $criteria = $criteria[0];
+    	# Make a COPY of the hash because __makeSelectSQL will delete some entries
+    	# from it.
+    	my %hash = %{ $criteria[0] };
+        $criteria = \%hash;
     } else {
         # Return undef if the criteria are not well-formed.
         return undef
@@ -835,7 +841,10 @@ sub findObjectsLike {
 
     # Let's accept a hash ref for the criteria, too.
     if (ref($criteria[0]) eq 'HASH') {
-        $criteria = $criteria[0];
+    	# Make a COPY of the hash because __makeSelectSQL will delete some entries
+    	# from it.
+    	my %hash = %{ $criteria[0] };
+        $criteria = \%hash;
     } else {
         # Return undef if the criteria are not well-formed.
         return undef
@@ -867,7 +876,10 @@ sub countObjectsLike {
 
     # Let's accept a hash ref for the criteria, too.
     if (ref($criteria[0]) eq 'HASH') {
-        $criteria = $criteria[0];
+    	# Make a COPY of the hash because __makeSelectSQL will delete some entries
+    	# from it.
+    	my %hash = %{ $criteria[0] };
+        $criteria = \%hash;
     } else {
         # Return undef if the criteria are not well-formed.
         return undef
