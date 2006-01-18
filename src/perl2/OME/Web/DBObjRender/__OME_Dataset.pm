@@ -87,6 +87,13 @@ sub _renderData {
 			$record{ $request_string } = $obj->count_images();
 		}
 	}
+	# count_images:
+	if( exists $field_requests->{ 'images_are_single_channel' } ) {
+		foreach my $request ( @{ $field_requests->{ 'images_are_single_channel' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = $obj->count_images( 'image.pixels.SizeC' => 1 );
+		}
+	}
 	# current_annotation:
 	if( exists $field_requests->{ 'current_annotation' } ) {
 		foreach my $request ( @{ $field_requests->{ 'current_annotation' } } ) {
