@@ -216,7 +216,6 @@ END_HTML
 		my %searchParams = $self->_getSearchParams();
 		my $type = $self->_getCurrentSearchType();
 		my (undef, undef, $formal_name) = $self->_loadTypeAndGetInfo( $type );
-		my $num_results = $factory->countObjects( $formal_name, \%searchParams );
 		my $select = $q->param( 'select' );
 		$tmpl_data{ results } = $render->renderArray( [$formal_name, \%searchParams], $current_display_mode, 
 			{ type => $type, 
@@ -227,7 +226,6 @@ END_HTML
 					()
 				) )
 			} );
-		$tmpl_data{ num_results } = $num_results;
 
 		# Select button
 		$tmpl_data{do_select} = 
