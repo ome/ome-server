@@ -111,16 +111,6 @@ sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
 	my $self  = $class->SUPER::new(@_);
-	
-	$self->{ page_limits } = {
-		list  => 10,
-		popup => 0,
-		ref_list => 10,
-		ref_mass => 100,
-		tiled_list => 24,
-		tiled_ref_list => 24,
-	};
-	
 	return $self;
 }
 
@@ -318,12 +308,16 @@ sub renderArray {
 	# First look in run time options
 	if( exists $options->{ paging_limit } ) { 
 		$limit = $options->{ paging_limit };
-	# Next look in the template, specified as: <TMPL_VAR NAME = '/paging_limit/value-XXX'>
-	} elsif( exists $field_requests->{ '/obj_loop' } ) {
+	# Next look in the template, specified as: <TMPL_VAR NAME = '/obj_loop/paging_limit-XXX'>
+	} elsif( ( exists $field_requests->{ '/obj_loop' } ) && 
+	         ( exists $field_requests->{ '/obj_loop' }->[0]->{ paging_limit } ) 
+	       ) {
 		$limit = $field_requests->{ '/obj_loop' }->[0]->{ paging_limit };
-	# Finally look to parameters hard-coded in this class
-	} else {
-		$limit = $self->{ page_limits }->{ $mode };
+	# Next look in the template, specified as: <TMPL_VAR NAME = '/tile_loop/paging_limit-XXX'>
+	} elsif( ( exists $field_requests->{ '/tile_loop' } ) && 
+	         ( exists $field_requests->{ '/tile_loop' }->[0]->{ paging_limit } ) 
+	       ) {
+		$limit = $field_requests->{ '/tile_loop' }->[0]->{ paging_limit };
 	}
 	# black magic. Fixes a problem similar to XS wierdness. Grep the codebase for XS wierdness for more details on that.
 	# punchline, is the next line completely avoids the sometimes error of:
@@ -388,13 +382,22 @@ sub renderArray {
 			$search_params->{ __limit } = $limit;
 			$search_params->{ __offset } = $offset;
 			$objs = [ $factory->findObjects( $formal_name, $search_params ) ];
+			
+			$options->{ more_info_url } = $self->getSearchURL( $formal_name, %$search_params )
+				unless $options->{ no_more_info };
 		} elsif( $callingStyle eq 'accessor' ) {
 			$objs = [ $obj->$method( __limit => $limit, __offset => $offset ) ];
+
+			$options->{ more_info_url } = $self->getSearchAccessorURL( $obj, $method )
+				unless $options->{ no_more_info };
 		} else { # objectList
 			# Paging requires sorted data. Figure out what to sort on, default to id
 			my $sort = ( exists $options->{ __order } ? $options->{ __order } : 'id' );
 			@$objs = sort { $a->$sort cmp $b->$sort } @$objs;
 			$objs = [ splice( @$objs, $offset, $limit ) ];
+
+			$options->{ more_info_url } = $self->getSearchURL( $options->{type}, 'id', join( ',', map( $_->id, @$objs ) ) )
+				unless $options->{ no_more_info };
 		}
 	}
 	# If paging didn't work for whatever reason, load objects as needed.
@@ -505,11 +508,13 @@ sub _pagerControl {
 	}
 	my $currentPage = int( $offset / $limit ) + 1;
 
-	my $pagingText = "Results ".$offset."-".($offset+$limit)." of $obj_count. Page ";
+	# Results x-y of N...
+	my $pagingText = "Results ".$offset."-".
+		( ($offset+$limit > $obj_count ) ? $obj_count : $offset+$limit)." of $obj_count. ";
 
 	# make controls
 	if( $numPages > 1 ) {
-		$pagingText .= "<input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
+		$pagingText .= "Page <input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
 		$pagingText .= "<input type='hidden' name='${control_name}_page_action'>";
 		$pagingText .= $q->a( {
 				-title => "First Page",
