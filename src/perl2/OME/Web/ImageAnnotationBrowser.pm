@@ -172,36 +172,27 @@ sub getAnnotationDetails {
     # each reference array will be a list of paths.
     my ($paths) = $self->getPaths($tmpl);
     my $pathTypes = $paths->[0];  # get first path. 
+
+
     
-
-    # find the instances associated with root. 
-    # NOTE: We will want to change this if we decide to handle 
-    # _all_ instances of the first class
-    my $pathElt = shift @$pathTypes;
-    my $rootObj = $factory->findObject($pathElt, Name=>$root);
+    # parse out the roots, into an array of 0...n root vars.
+    my $roots = $self->parseRoots($root);
 
 
-    # strip off preceding '@' to get the name of the type.
-    $pathElt =~ /@(.*)/;
-    my $rootType = $1;
-
+    
+    # get the header
 
     my $annotation_detail;
-    my @images;
-    if (defined $rootObj)  {
+    $annotation_detail = $self->getPageHeader($container,$roots,$paths);
 
-	# get the associated layout code, with external link if need be.
-	$annotation_detail = "Images for $rootType " .
-	    $self->getHeader($container,$rootObj,$rootType) .	"<br>\n";
-	# do the real work.
-	$annotation_detail .= 
-	    $self->getLayoutCode($container,$rootObj,$paths,
-				 $rootType,$which_tmpl);
-    }
-    else {
+
+    my $layout =  $self->getDimLayoutCode($container,$paths,$roots,
+					  $which_tmpl);
+    if ($layout eq "") {
 	# or just say that there's nothing found
-	$annotation_detail = "$rootType $root not found \n";
+	$layout = "<br>No Images found\n";
     }
+    $annotation_detail .= $layout;
     # populate the template..
     $tmpl_data->{'AnnotationDetail'} = $annotation_detail;
 
@@ -247,6 +238,58 @@ sub getPaths {
     }
     # return ref to array of refs.
     return \@pathArray;
+}
+
+=head1 parseRoots
+    With n hierarchies, we can have roots in 0-n of them. this
+    procedure will parse out a textual list of roots of the form 
+    [root1,root2,root3] and return a reference to an array of the
+    individual values.
+    
+    The entries root2, root2, etc. must be names of objects. for all i,
+    root#i must be an object of the first type list in the
+    Path.load/types#1.
+
+=cut
+
+sub parseRoots {
+    my $self=shift;
+    my $root=shift;
+    
+    $root =~ /\[(.*)\]/;
+    my @roots = split(/,/,$1);
+    return \@roots;
+}
+
+=head1 getPageHeader 
+    A header for the whole page.
+
+=cut
+
+sub getPageHeader {
+    my $self= shift;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+
+    my ($container,$roots,$paths) = @_;
+    
+    my $html = "Images for  ";
+    my $rootText;
+    my $count = scalar(@$paths);
+    for (my $i = 0; $i < $count; $i++) {
+	my $rootName = $roots->[$i];
+	next if ($rootName eq "");
+	my $rootType = $paths->[$i]->[0];
+	my $root = $factory->findObject($rootType,Name=>$rootName);
+	my $header = $self->getHeader($container,$root,$rootType);
+	if ($i > 0  & $rootText ne "") {
+	    $rootText .= ", ";
+	}
+	$rootType =~ /@(.*)/;
+	$rootText .= "$1 $header";
+    }
+    $html  .= "$rootText<br>";
+    return $html;
 }
 
 =head1 getHeader 
@@ -300,6 +343,60 @@ sub getHeader {
 
 }
 
+=head getDimLayoutCode
+
+    start the layout for a dimension
+
+=cut
+
+sub getDimLayoutCode {
+
+    my $self=shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my ($container,$paths,$roots,$template,$first,$images) =@_;
+
+    my $factory = $session->Factory();
+    if (!$images) {
+	my @imageArray;
+	$images = \@imageArray;
+    }
+
+    # first time through require special handling: for first
+    # dimension, we will grab images. for all others, we will 
+    # filter from originalset.
+    $first = 1 unless (defined $first);
+
+    my $factory = $session->Factory();
+    if (!$images) {
+	my @imageArray;
+	$images = \@imageArray;
+    }
+
+    # first time through require special handling: for first
+    # dimension, we will grab images. for all others, we will 
+    # filter from originalset.
+    $first = 1 unless (defined $first);
+
+    my $html;
+    # do we have a root here?
+    my $root = shift @$roots;
+    if ($root ne "") {
+	my $pathTypes = $paths->[0];
+	my $pathElt = shift @$pathTypes;
+	$pathElt =~ /@(.*)/;
+	my $rootType=$1;
+	my $rootObj = $factory->findObject($pathElt,Name=>$root);
+	$html = $self->getLayoutCode($container,$rootObj,$paths,$roots,
+				     $rootType,$template,$first,$images);
+    }
+    else {
+	$html = $self->getFullDimLayoutCode(
+	    $container,$paths,$roots,$template,$first,$images);
+    }
+    return $html;
+}
 =head1 getLayoutCode
     
     Get the layout code. Recursively walk down the list of types,
@@ -310,7 +407,7 @@ sub getHeader {
 =cut
 sub getLayoutCode {
     my $self = shift;
-    my ($container,$root,$paths,$parentType,$template,$first,$images) = @_;
+    my ($container,$root,$paths,$roots,$parentType,$template,$first,$images) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
     if (!$images) {
@@ -361,7 +458,7 @@ sub getLayoutCode {
 	    # pop the now-empty first list of types,
 	    shift @$paths;
 	    # complete it and complete this dimension. 
-	    my $resHtml = $self->completeDim($container,\@maps,
+	    my $resHtml = $self->completeDim($container,\@maps,$roots,
 					     $paths,$template,$first,$images);
 	    # either add the appropriate html or return null.
 	    return $resHtml if ($resHtml eq "");
@@ -371,7 +468,7 @@ sub getLayoutCode {
 	    #process the maps to go down a level?
 	    my $resHtml =
 		$self->processMaps($container,\@maps,$targetField,
-				   $paths,$template,$first,$images);
+				   $roots,$paths,$template,$first,$images);
 	    # end the list.
 	    if ($resHtml ne "") {
 		$html = "<ul>$resHtml</ul>";
@@ -398,7 +495,7 @@ sub completeDim {
     my $session= $self->Session();
     my $factory = $session->Factory();
 
-    my ($container,$maps,$paths,$template,$first,$images) = @_;
+    my ($container,$maps,$roots,$paths,$template,$first,$images) = @_;
 
     # first tells off if it's first dim or not. If it is, we don't
     # filter - just take all images. 
@@ -410,6 +507,7 @@ sub completeDim {
 	    my $image = $factory->loadObject('OME::Image',$imageID);
 	    push(@newImages,$image);
 	}
+	$first  = 0;
     }
     else {
 	# if it's not the first dim, take intersection of those that
@@ -430,9 +528,8 @@ sub completeDim {
     if (defined $paths && scalar(@$paths) > 0) {
 	# if we have more dimensions to go, continue on with the
 	# full  layout of the next dimension
-	
-	$html = $self->getFullDimLayoutCode($container,$paths,
-					    $template,$images);
+	$html = $self->getDimLayoutCode($container,$paths,$roots,
+					    $template,$first,$images);
     } elsif (scalar(@$images) > 0) {
 	# at this point, no more dimensions to go. so, 
 	# if we have any images, we render them.
@@ -462,7 +559,7 @@ sub getFullDimLayoutCode {
     my $session= $self->Session();
     my $factory = $session->Factory();
 
-    my ($container,$paths,$template,$images) = @_;
+    my ($container,$paths,$roots,$template,$first,$images) = @_;
     
     my $pathTypes = $paths->[0];
     my $pathElt = shift @$pathTypes;
@@ -472,18 +569,21 @@ sub getFullDimLayoutCode {
 
     my $html;
     # get all objects of this type,  
+
     my $objs = $factory->findObjects($pathElt);
 
     my $itemsHtml;
     while (my $obj = $objs->next()) {
 	# copy the paths for each recursive instance
-	my $localPaths = $self->copyPaths($paths);
+	my $localPaths = $self->copyArray2D($paths);
+	my $localRoots = $self->copyArray($roots);
 
 	# recurse to the next level. Note that this recursive call
 	#will not be the first instance
 	my $innerHtml =$self->getLayoutCode($container,$obj,
-					    $localPaths,$rootType,
-					    $template,0,$images);
+					    $localPaths,$roots,
+					    $rootType,$template,$first,$images);
+	
 	# if this gives me anything, put it in an <LI> tag
 	if ($innerHtml ne "")  {
 	    $itemsHtml .= "<LI> $rootType ";
@@ -493,6 +593,8 @@ sub getFullDimLayoutCode {
 	}
     }
     # if the over all loop gives me anything, put it in a list.
+
+
     if ($itemsHtml ne "") {
 	$html .= "<UL>$itemsHtml</UL>";
     }
@@ -510,7 +612,8 @@ sub processMaps  {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($container,$maps,$targetField,$pathTypes,$template,$first,$images) = @_;
+    my ($container,$maps,$targetField,$roots,
+	$pathTypes,$template,$first,$images) = @_;
 
     my $html = "";
     foreach my $map (@$maps) {
@@ -527,11 +630,13 @@ sub processMaps  {
 	# recursion;
 	# shifting walks down the list destructively,
 	# so we have to copy the list when we recurse.
-	my $localPaths = $self->copyPaths($pathTypes);
+	my $localPaths = $self->copyArray2D($pathTypes);
+	my $localRoots = $self->copyArray($roots);
 
 	# recurse to populate the next level, passing $first value along
-	$innerHtml .= $self->getLayoutCode($container,$target,$localPaths,
-				   $targetField,$template,$first,$images);
+	$innerHtml .=	$self->getLayoutCode($container,$target,$localPaths,
+			     $localRoots,$targetField,$template,$first,
+					     $images); 
 	if ($innerHtml ne "") {
 	    my $q = $container->CGI();
 	    # get the item and build it as a list of item.
@@ -544,28 +649,41 @@ sub processMaps  {
     return $html;
 }
 
-=head1 copyPaths
+=head1 copyArray2D
 
-    generate a copy of the path array as needed for recursion.
+    generate a copy of a 2D array as needed for recursion.
 
 =cut
 
-sub copyPaths {
+sub copyArray2D {
     my $self=shift;
-    my $pathTypes = shift;
+    my $array = shift;
 
-    my @localPaths;
-    for (my $i=0; $i < scalar(@$pathTypes); $i++ ) {
-	my $inner = $pathTypes->[$i];
+    my @local;
+    for (my $i=0; $i < scalar(@$array); $i++ ) {
+	my $inner = $array->[$i];
 	my @copy;
 	for (my $j = 0; $j  < scalar(@$inner); $j++) {
 	    $copy[$j] = $inner->[$j];
 	}
-	$localPaths[$i] = \@copy;
+	$local[$i] = \@copy;
     }
-    return \@localPaths;
+    return \@local;
 }
 
+=head copyArray
+    generate a copy of a 1-d array
+=cut
+
+sub copyArray {
+    my $self=  shift;
+    my $array = shift;
+    my @local;
+    for (my $i = 0; $i< scalar(@$array); $i++) {
+	$local[$i] = $array->[$i];
+    }
+    return \@local;
+}
    
 
 1;
