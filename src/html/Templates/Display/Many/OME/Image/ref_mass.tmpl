@@ -4,7 +4,7 @@ followed by all maps (OME_Image_map.tmpl). If image maps are rendered consecutiv
 (i.e  <img><map><img><map> etc.)  unwanted page breaks form between consecutive image
 thumbnail.s
 -->
-<TMPL_IF NAME=/obj_loop>
+<TMPL_IF NAME=/obj_loop/paging_limit-50>
 	<TMPL_VAR NAME=/pager_text>
 	<TMPL_IF NAME=/more_info_url>
 		<TMPL_IF NAME=/pager_text>|</TMPL_IF>
@@ -14,7 +14,7 @@ thumbnail.s
 	<span class='ome_quiet'>Click the upper left quadrant of a thumbnail for image info;
 	click elsewhere to open image viewer.</span>
 	<br>
-	<TMPL_LOOP NAME=/obj_loop>
+	<TMPL_LOOP NAME=/obj_loop/paging_limit-50>
 		<TMPL_VAR NAME=/object/render-ref_map>
 	</TMPL_LOOP>
 	<TMPL_LOOP NAME=/obj_loop/loop2>
