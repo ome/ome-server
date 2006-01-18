@@ -280,7 +280,13 @@ sub getPageHeader {
 	my $rootName = $roots->[$i];
 	next if ($rootName eq "");
 	my $rootType = $paths->[$i]->[0];
-	my $root = $factory->findObject($rootType,Name=>$rootName);
+	my $root;
+	if ($rootName =~ /^\d+$/) { # id is passed in
+	    $root = $factory->loadObject($rootType,$rootName);
+	}
+	else { # name
+	    $root = $factory->findObject($rootType,Name=>$rootName);
+	}
 	my $header = $self->getHeader($container,$root,$rootType);
 	if ($i > 0  & $rootText ne "") {
 	    $rootText .= ", ";
@@ -387,7 +393,13 @@ sub getDimLayoutCode {
 	my $pathElt = shift @$pathTypes;
 	$pathElt =~ /@(.*)/;
 	my $rootType=$1;
-	my $rootObj = $factory->findObject($pathElt,Name=>$root);
+	my $rootObj; 
+	if ($root =~ /^\d+$/) {
+	    $rootObj  = $factory->loadObject($pathElt,$root);
+	}
+	else {
+	    $rootObj = $factory->findObject($pathElt,Name=>$root);
+	}
 	$html = $self->getLayoutCode($container,$rootObj,$paths,$roots,
 				     $rootType,$template,$first,$images);
     }
