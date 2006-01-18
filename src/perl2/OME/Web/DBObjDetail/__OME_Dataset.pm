@@ -148,7 +148,7 @@ sub getPageBody {
 			push( @{ $tmpl_data{ _CategoryList } }, {
 				CategoryRef => $self->Renderer()->render( $category, 'ref' ),
 				images      => $self->Renderer()->renderArray( 
-					\@images, 'bare_ref_mass', { type => 'OME::Image' } 
+					\@images, 'ref_mass_w_paging', { type => 'OME::Image', pager_control_name => 'images_in_cat_'.$category->id } 
 				),
 			} );
 		}
@@ -159,7 +159,7 @@ sub getPageBody {
 		);
 		unshift( @{ $tmpl_data{ _CategoryList } }, {
 			CategoryRef => 'Unclassified',
-			images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
+			images      => $self->Renderer()->renderArray( \@unclassified_images, 'ref_mass_w_paging', { type => 'OME::Image', pager_control_name => 'unclassified_images' } ),
 		} );
 	}
 	
