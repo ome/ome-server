@@ -19,7 +19,7 @@
 		<td class="ome_td">Elapsed time</td>
 		<td class="ome_td">PID</td>
 	</tr>
-	<TMPL_LOOP NAME=/obj_loop>
+	<TMPL_LOOP NAME=/obj_loop/paging_limit-20>
 	<tr>
 		<td align="center" class="ome_td">
 			<input type="checkbox" name="selected" value="<TMPL_VAR NAME=id>" />

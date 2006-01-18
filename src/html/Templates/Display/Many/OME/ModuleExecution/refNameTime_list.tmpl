@@ -1,4 +1,4 @@
-<TMPL_IF NAME=/obj_loop>
+<TMPL_IF NAME=/obj_loop/paging_limit-10>
 	<table class="ome_table">
 		<caption><nobr>
 			<TMPL_VAR NAME=/pager_text>
@@ -7,7 +7,7 @@
 				<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a>
 			</TMPL_IF>
 		</nobr></caption>
-		<TMPL_LOOP NAME=/obj_loop>
+		<TMPL_LOOP NAME=/obj_loop/paging_limit-10>
 			<tr>
 				<td class="ome_td"><TMPL_VAR NAME=/object/render-refNameTime></td>
 			</tr>
