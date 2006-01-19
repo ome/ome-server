@@ -82,7 +82,8 @@ use strict;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
-use CGI;
+# IGG 1/19/06: Emiting xhtml confuses things - we're not compliant with xhtml transitional 1.0
+use CGI qw/-no_xhtml/;
 use Carp;
 use Carp 'cluck';
 use OME::SessionManager;
@@ -110,6 +111,9 @@ use base qw(Class::Data::Inheritable);
 # to make it easier to modify in subclasses.
 __PACKAGE__->mk_classdata('contentType');
 __PACKAGE__->contentType('text/html');
+# IGG: lots and lots of problems to fix before we can do this:
+# If we ever do, we would want to turn off the -no_xhtml pragma above
+#__PACKAGE__->contentType('application/xhtml+xml');
 
 my $loginPage = 'OME::Web::Login';
 
