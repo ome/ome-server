@@ -159,7 +159,7 @@ sub getPageBody {
 		my $return_to_form_element = ( $q->param( 'return_to' ) );
 		my $ids = join( ',', map( $_->id, @selected_objects ) );
 		$self->{ _onLoadJS } = <<END_HTML;
-				window.opener.document.forms['$return_to_form'].${return_to_form_element}.value = '$ids';
+				window.opener.document.forms['$return_to_form'].elements['${return_to_form_element}'].value = '$ids';
 				window.opener.document.forms['$return_to_form'].submit();
 				window.close();
 END_HTML
