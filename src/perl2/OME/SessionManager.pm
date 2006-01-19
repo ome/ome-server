@@ -262,14 +262,16 @@ sub createWithKey {
 	if (OME::Session->hasInstance()) {
 		logdbg "debug", "createWithKey: found existing OME::Session instance";
 		my $curr_session = OME::Session->instance();
-			if ($curr_session->session_key() eq $sessionKey) {
-				logdbg "debug", "createWithKey: reusing OME::Session instance";
+		if ($curr_session->session_key() eq $sessionKey) {
+			logdbg "debug", "createWithKey: reusing OME::Session instance";
 			# Make sure AutoCommit is off.
 			# Generally, this is only required if it was turned on
 			# in the END block of OME::Session
-				$curr_session->Factory()->revive();
-				return $curr_session
-			}
+			$curr_session->Factory()->revive();
+			return $curr_session
+		} else {
+			$curr_session->deleteInstance(1);
+		}
 	}
 	my $bootstrap_factory = OME::Factory->new($flags);
 	my $dbh = $bootstrap_factory->obtainDBH();
