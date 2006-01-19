@@ -255,8 +255,6 @@ sub finishBootstrap {
     die "There is no active session" unless defined $__soleInstance;
     die "How are there two session instances?" unless $self eq $__soleInstance;
     $__soleInstance->__destroySession();
-    $__soleInstance->{Factory}->closeFactory();
-    $__soleInstance->{Factory} = undef;
     $__soleInstance = undef;
     return;
 }
