@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<script type="text/javascript" src="/JavaScript/sarissa.js"></script>
+<head>
+	<title>Ajax Latency Test</title>
+	<script language="javascript"  type="text/javascript">
+	
+		var url = "";
+		var username = "";
+		var password = "";
+		var SessionKey = "";
+
+		var xmlhttp =  new XMLHttpRequest();
+		
+		function doSubmit() {
+			url = document.getElementById('URL').value;
+			username = document.getElementById('username').value;
+			password = document.getElementById('password').value;
+			var req_url = encodeURI(url+"?Page=OME::Web::Login&SessionKey=1&username="+username+"&password="+password);
+			xmlhttp.open('GET', req_url, false);
+			xmlhttp.send(null);
+			if (xmlhttp.readyState == 4) {
+				if (xmlhttp.status == 200) {
+					SessionKey = document.getElementById('SessionKey').value = xmlhttp.responseText;
+					doRequests();
+				} else {
+					target.submit();
+				}
+			}
+		}
+
+		function doRequests() {
+			var req_url = encodeURI(url+"?Page=OME::Web::Ping");
+			var t1=0;
+			var t2=0;
+			var dt=0;
+			var all_dt=0;
+			document.getElementById('milisecs').value = "";
+			for (i = 0; i <= 25; i++) {
+				t1 = new Date().getTime();
+				xmlhttp.open('GET', req_url, false);
+				xmlhttp.send(null);
+				t2 = new Date().getTime();
+				dt = t2 - t1;
+				all_dt += dt;
+				document.getElementById('milisecs').value += "\n"+dt;
+			}
+			document.getElementById('avg').value = all_dt/25;
+
+
+		}
+	</script>
+</head>
+<body>
+	<p>
+	This little test makes 25 sequential GET requests from the specified URL, and reports the number of milliseconds
+	each request took.  The method it uses to issue the requests is XMLHttpRequest as implemented by the
+	<a href="http://sarissa.sourceforge.net/doc/">sarissa</a> library.
+	</p>
+	<p>
+	The request is sent to OME::Web::Ping, which requires login (SessionKey cookie or URL param),
+	and responds with a text/plain "Hi!".
+	</p>
+	<hr align="center" />
+	<form method="get">
+	URL <input name="URL" type="text" value="http://localhost/perl2/serve.pl" id="URL" size="120" /><br>
+	Username <input name="username" type="text"  id="username"/><br>
+	Password <input name="password" type="password" id="password" /><br>
+	<input name="submit" type="button"  id="submit" value="Start" onClick="doSubmit()"/><br>
+	<hr align="center" />
+	SessionKey <input name="SessionKey" type="text" id="SessionKey" size="40" readonly="readonly" /><br>
+	ms/Req. <input name="avg" type="text" id="avg" size="40" readonly="readonly" /><br>
+	<textarea id="milisecs" rows="30" cols="15">
+
+</textarea>
+</form>
+</body>
+</html>
