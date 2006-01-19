@@ -306,7 +306,7 @@ sub renderArray {
 		unless $tmpl_path;
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data;
-	my $field_requests = $self->_parse_tmpl_fields( [ $tmpl->param() ] );
+	my $field_requests = $self->parse_tmpl_fields( [ $tmpl->param() ] );
 
 	# Determine paging limit. 
 	my $limit;
@@ -517,7 +517,7 @@ sub _pagerControl {
 	my $currentPage = int( $offset / $limit ) + 1;
 
 	# Results x-y of N...
-	my $pagingText = "Results ".$offset."-".
+	my $pagingText = "Results ".($offset + 1)."-".
 		( ($offset+$limit > $obj_count ) ? $obj_count : $offset+$limit)." of $obj_count. ";
 
 	# make controls
@@ -582,7 +582,7 @@ sub renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
 	my ( %record, $specializedRenderer );
 	$options = {} unless $options; # makes things easier
-	$field_requests = $self->_parse_tmpl_fields( $field_requests );
+	$field_requests = $self->parse_tmpl_fields( $field_requests );
 
 	# handle plural calling style
 	if( ref( $obj ) eq 'ARRAY' ) {
@@ -761,7 +761,7 @@ sub getFields {
 		if( $tmpl_path ) {
 			my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 			# only keep columns that exist in the template
-			my $field_requests = $self->_parse_tmpl_fields( [ $tmpl->param() ] );
+			my $field_requests = $self->parse_tmpl_fields( [ $tmpl->param() ] );
 			@cols = grep( exists $field_requests->{ $_ }, @cols );
 		}
 	}
@@ -900,15 +900,22 @@ sub getRelations {
 }
 
 
-# field syntax is: "field/option-value/option-value..."
-# magic fields are distinguished from object fields the prefix '/' (i.e. "/magic_field")
+=head2 parse_tmpl_fields
 
-# parse field requests into fields & options. store in hash formatted like so:
-#	$parsed_field_requests{ $field_named_foo } = \@requests_for_field_named_foo
-#	\@requests_for_field_named_foo is a bunch of hashes formated like so:
-#	$request{ $option_name } = $option_value;
-# also, the orgininal request is stored in:  $request{ 'request_string' }
-sub _parse_tmpl_fields {
+	my $field_requests = $self->parse_tmpl_fields( [ $tmpl->param() ] );
+
+field syntax is: "field/option-value/option-value..."
+magic fields are distinguished from object fields the prefix '/' (i.e. "/magic_field")
+
+parse field requests into fields & options. store in hash formatted like so:
+	$parsed_field_requests{ $field_named_foo } = \@requests_for_field_named_foo
+	\@requests_for_field_named_foo is a bunch of hashes formated like so:
+	$request{ $option_name } = $option_value;
+also, the orgininal request is stored in:  $request{ 'request_string' }
+
+=cut
+
+sub parse_tmpl_fields {
 	my ( $self, $field_requests ) = @_;
 
 	if( ref( $field_requests ) eq 'ARRAY' ) {
