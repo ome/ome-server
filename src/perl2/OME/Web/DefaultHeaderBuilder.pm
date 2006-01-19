@@ -51,7 +51,6 @@ use Carp;
 use OME;
 use OME::Task;
 use OME::Web;
-use OME::Tasks::NotificationManager;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -89,6 +88,7 @@ sub getPageHeader {
 
 	# Session goodies
 	my $session = $self->Session();
+	my $factory = $session->Factory();
 	my $recent_dataset = $session->dataset();
 	my $recent_project = $session->project();
 	my $full_name = $session->User->FirstName . ' ' . $session->User->LastName;
@@ -125,15 +125,16 @@ sub getPageHeader {
 
 	# Logo image link
 	my $logo_link;
-	my @tasks = OME::Tasks::NotificationManager->list(state=>'IN PROGRESS');
-	
+	my $tasks = $factory->countObjects('OME::Task',state=>'IN PROGRESS');
+
 	# check if the logo 
-	if (scalar @tasks) { 
+	if ($tasks) { 
 		$logo_link =
 			$q->a({href => $HOME_LOCATION},
 				$q->img( {
 						alt => 'OME Logo',
 						src => '/images/logo-sauron.gif',
+#						src => '/images/logo-4.png',
 						border => '0'
 					}
 				)
@@ -144,6 +145,7 @@ sub getPageHeader {
 				$q->img( {
 						alt => 'OME Logo',
 						src => '/images/logo_smaller.gif',
+#						src => '/images/logo-4.png',
 						border => '0'
 					}
 				)
