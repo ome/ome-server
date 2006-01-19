@@ -304,7 +304,7 @@ sub instance {
             # old session object with the new user credentials.
 
             $__soleInstance->__destroySession();
-            $__soleInstance->__salvageSession($userState,$ACL);
+            $__soleInstance->__salvageSession($userState,$factory,$ACL);
         } else {
             # This is the first time we've tried to create a session in
             # this Perl process.
@@ -325,20 +325,23 @@ sub instance {
 }
 
 sub __salvageSession {
-	my ($self, $userstate, $ACL) = @_;
+	my ($self, $userstate, $factory, $ACL) = @_;
 
 	$self->{UserState} = $userstate;
     $self->{ACL} = $ACL;
+    $self->{Factory} = $factory;
 }
 
 sub __destroySession {
     my $self = shift;
     return unless defined $self;
 
-	# This ensures a fresh transaction.
-	$self->rollbackTransaction()
-      if defined $self->{Factory};
-    
+	carp "OME::Session __destroySession: \$self->__destroySession();\n";
+	if (defined $self->{Factory}) {
+		$self->{Factory}->closeFactory();
+		$self->{Factory} = undef;
+	}
+
     # Forget our access lists
     $self->{ACL} = undef;    
 
@@ -351,11 +354,25 @@ sub __destroySession {
 	#carp "Returning salvaged session.";
 }
 
+# Note that this doesn't get called in Apache/mod_perl until the child exits
+# To execute something at the end of each request, put it in an END block
 DESTROY {
-    my $self = shift;
-    $self->__destroySession();
+	if ($__soleInstance) {
+    	$__soleInstance->__destroySession();
+		$__soleInstance = undef;
+	}
 }
 
+END {
+# Turning AutoCommit on at this point ensures that we have no open transactions
+# when we're just sitting idle.
+# Note that doing this *requires* turning it back on in the SessionManager
+# When re-using a session.  If not reusing a session, the new factory call
+# will create a DBH with transactions on (at least by default).
+	if ($__soleInstance) {
+		$__soleInstance->{Factory}->idle();
+	}
+}
 =head2 deleteInstance
 
 Explicitly deletes the singleton instance from the process. This
