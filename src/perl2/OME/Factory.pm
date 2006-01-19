@@ -118,17 +118,7 @@ below:
 =head1 Database Handles and Transactions
 
 Factory maintains its own database handle (DBH) to ensure that all DBObjects it generates
-are from the same transaction.  Factory also allows the caller to get their own separate
-DBH to issue SQL queries on (newDBH method).  These DBHs are cached by Factory and must be
-returned to it when the caller is finished with the DBH (releaseDBH method).  A transaction
-is initiated in this DBH, and the caller is responsible for committing the transaction themselves.
-The transaction for this DBH is separate from the transaction the Factory itself is in.
-In other words, DB writes made via the Factory or the DBObjects it produces will not be visible in this
-transaction until the commitTransaction method is called on Factory or its associated Session.
-The transaction will be terminated (rolled back) when releaseDBH is called.  The Factory's own
-transaction can be committed or rolled back by calling commitTransaction or rollbackTransaction.
-This is normally done by calling these methods on L<OME::Session|OME::Session>.
-
+are from the same transaction.
 
 =head1 METHODS
 
@@ -138,25 +128,6 @@ This is normally done by calling these methods on L<OME::Session|OME::Session>.
 
 This method returns the DBI database handle associated with this
 OME::Factory.  You can use it to run arbitrary SQL commands within the Factory's own transaction.
-To get a new DBH (and a separate transaction), call newDBH().
-
-=head2 newDBH
-
-	my $dbh = $factory->newDBH();
-
-This method returns a new DBI database handle I<not> associated with this
-OME::Factory.  You can use it to run arbitrary SQL commands outside of Factory's transaction.
-The Factory maintains a cache of DBHs that it made.  This call must be balanced with a releaseDBH call.
-
-=head2 releaseDBH
-
-	$factory->releaseDBH($dbh);
-
-This method releases the DBH and puts it baqck in Factory's DBH cache.  Before putting it
-back in the cache, a $dbh->rollback() call will be made to ensure that there are no DBHs
-with hanging transaction in the cache.  If the handle was used to modify the DB, it is
-the caller's responsibility to call $dbh->commit().
-
 
 =head2 newObject
 
@@ -496,19 +467,18 @@ The *Like methods are provided as a convenience.
 use strict;
 use OME::Database::Delegate;
 use DBI;
-use Carp qw(cluck croak confess);
+use Carp qw(cluck croak confess carp);
 
 use UNIVERSAL::require;
 use Log::Agent;
-
-use fields qw(__handlesAvailable __allHandles);
 
 sub new {
     my $proto = shift;
     my $dbFlags = shift;
     my $class = ref($proto) || $proto;
 
-    
+
+#	cluck "Factory->new()\n";
     my $delegate = OME::Database::Delegate->getDefaultDelegate()
             or croak "Could not get default DB delegate";
 
@@ -518,9 +488,6 @@ sub new {
       unless defined $dbh;
 
     my $self = {__ourDBH           => $dbh,
-                __handlesAvailable => {},
-                __allHandles       => {},
-                __configurations   => {},
                };
 
     return bless $self, $class;
@@ -534,6 +501,17 @@ sub DESTROY {
 sub closeFactory {
     my $self = shift;
     $self->__disconnectAll();
+}
+
+sub idle {
+    my $self = shift;
+	$self->{__ourDBH}->rollback();
+	$self->{__ourDBH}->{AutoCommit} = 1;
+}
+
+sub revive {
+    my $self = shift;
+	$self->{__ourDBH}->{AutoCommit} = 0;
 }
 
 sub Session { return OME::Session->instance() }
@@ -565,61 +543,12 @@ sub obtainDBH {
     return $self->{__ourDBH};
 }
 
-sub newDBH {
-    my ($self) = @_;
-
-    my @handles = values %{$self->{__handlesAvailable}};
-    my $dbh;
-    $dbh = shift @handles if scalar @handles;
-    
-    if ($dbh) {
-    	delete $self->{__handlesAvailable}->{"$dbh"};
-    } else {
-		my $delegate = OME::Database::Delegate->getDefaultDelegate()
-			or croak "Could not get default DB delegate";
-		$dbh = $delegate->
-		  connectToDatabase();
-		confess "Cannot create database handle"
-		  unless defined $dbh;
-		$self->{__allHandles}->{"$dbh"} = $dbh;
-    }
-
-    return $dbh;
-}
-
-sub releaseDBH {
-    my ($self,$dbh) = @_;
-
-    croak "Cannot release a null DBH!" unless $dbh;
-    if ($dbh == $self->{__ourDBH}) {
-        cluck "Releasing the Factory's DBH is deprecated.  Nothing happens...";
-        return;
-    }
-    
-    croak "Attempt to release a DBH which is not in the Factory's DBH pool"
-    	unless exists $self->{__allHandles}->{"$dbh"};
-    
-    croak "Attempt to release a DBH which is already released"
-    	if exists $self->{__handlesAvailable}->{"$dbh"};
-    	
-    $dbh->rollback() or croak $dbh->errstr;
-    $self->{__handlesAvailable}->{"$dbh"} = $dbh;
-
-    #carp "--- Releasing handle: ".
-    #  scalar(@{$self->{__handlesAvailable}})."/".
-    #  scalar(@{$self->{__allHandles}});
-
-    return;
-}
-
 sub __disconnectAll {
     my ($self) = @_;
-    #carp "--- $$ Disconnecting handles\n";
-    defined $_ && $_->disconnect() foreach values %{$self->{__allHandles}};
-    $self->{__allHandles} = {};
-    $self->{__handlesAvailable} = {};
-    
+
 	if (defined $self->{__ourDBH}) {
+		$self->{__ourDBH}->rollback();
+		$self->{__ourDBH}->{AutoCommit} = 1;
     	$self->{__ourDBH}->disconnect() or confess '$self->{__ourDBH}->disconnect() returned NULL. The errstr is: "'.$self->{__ourDBH}->errstr.'".';
 	}
 
