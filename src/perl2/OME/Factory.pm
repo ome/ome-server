@@ -505,8 +505,9 @@ sub closeFactory {
 
 sub idle {
     my $self = shift;
-	$self->{__ourDBH}->rollback();
-	$self->{__ourDBH}->{AutoCommit} = 1;
+	my $dbh = $self->{__ourDBH};
+	$dbh->rollback() unless $dbh->{AutoCommit};
+	$dbh->{AutoCommit} = 1;
 }
 
 sub revive {
@@ -546,10 +547,11 @@ sub obtainDBH {
 sub __disconnectAll {
     my ($self) = @_;
 
-	if (defined $self->{__ourDBH}) {
-		$self->{__ourDBH}->rollback();
-		$self->{__ourDBH}->{AutoCommit} = 1;
-    	$self->{__ourDBH}->disconnect() or confess '$self->{__ourDBH}->disconnect() returned NULL. The errstr is: "'.$self->{__ourDBH}->errstr.'".';
+	my $dbh = $self->{__ourDBH};
+	if ($dbh) {
+		$dbh->rollback() unless $dbh->{AutoCommit};
+		$dbh->{AutoCommit} = 1;
+    	$dbh->disconnect() or confess '$self->{__ourDBH}->disconnect() returned NULL. The errstr is: "'.$dbh->errstr.'".';
 	}
 
     $self->{__ourDBH} = undef;
@@ -558,15 +560,17 @@ sub __disconnectAll {
 
 sub commitTransaction {
     my ($self) = @_;
-	if (defined $self->{__ourDBH}) {
-		$self->{__ourDBH}->commit() or confess $self->{__ourDBH}->errstr;
+	my $dbh = $self->{__ourDBH};
+	if ($dbh and not $dbh->{AutoCommit}) {
+		$dbh->commit() or confess $dbh->errstr;
 	}
 }
 
 sub rollbackTransaction {
     my ($self) = @_;
-	if (defined $self->{__ourDBH}) {
-		$self->{__ourDBH}->rollback() or confess $self->{__ourDBH}->errstr;
+	my $dbh = $self->{__ourDBH};
+	if ($dbh and not $dbh->{AutoCommit}) {
+		$dbh->rollback() or confess $dbh->errstr;
 	}
 }
 
