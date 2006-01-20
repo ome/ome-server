@@ -254,7 +254,7 @@ sub finishBootstrap {
     die "This is not a bootstrap session" if exists $self->{UserState};
     die "There is no active session" unless defined $__soleInstance;
     die "How are there two session instances?" unless $self eq $__soleInstance;
-    $__soleInstance->__destroySession();
+    $__soleInstance->__destroySession(1);
     $__soleInstance = undef;
     return;
 }
@@ -332,9 +332,11 @@ sub __salvageSession {
 
 sub __destroySession {
     my $self = shift;
+    my $force = shift;
     return unless defined $self;
 
-	carp "OME::Session __destroySession: \$self->__destroySession();\n";
+	carp "OME::Session __destroySession: \$self->__destroySession();\n"
+		unless $force;
 	if (defined $self->{Factory}) {
 		$self->{Factory}->closeFactory();
 		$self->{Factory} = undef;
@@ -387,7 +389,7 @@ sub deleteInstance {
 	carp "WARNING: Explicit deletion of OME::Session"
       unless $force;
 
-    $__soleInstance->__destroySession();
+    $__soleInstance->__destroySession($force);
 	$__soleInstance = undef;
 
 	return 1;
