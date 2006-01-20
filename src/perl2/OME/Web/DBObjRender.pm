@@ -348,6 +348,10 @@ sub renderArray {
 		($formal_name, $search_params) = @$objs;
 	} elsif( $callingStyle eq 'accessor' ) {
 		($obj, $method) = @$objs;
+	} else {
+		# make a copy of the objects array so the it won't get thrown off by any truncations below.
+		my @copy = @$objs;
+		$objs = \@copy;
 	}
 
 
