@@ -127,8 +127,8 @@ sub getPageBody {
 		print TMPL "<input type=\"hidden\" name=\"images_to_annotate\" value=\"<TMPL_VAR NAME=image_id_list>\">
 <input type=\"hidden\" name=\"currentImageID\" value=\"<TMPL_VAR NAME=current_image_id>\">
 <input type=\"hidden\" name=\"SaveAndNext\">
-<input type=\"hidden\" name=\"AddToCG\">
-<TMPL_VAR NAME=image_large><br>
+<input type=\"hidden\" name=\"AddToCG\"><br>
+<TMPL_VAR NAME=current_image/render-large><br>
 <table class=\"ome_table\">\n";
 		
 		# Print the line that lists the ids that will be loaded
