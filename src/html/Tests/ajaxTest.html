@@ -22,12 +22,20 @@
 			xmlhttp.send(null);
 			if (xmlhttp.readyState == 4) {
 				if (xmlhttp.status == 200) {
+					// an example SessionKey: 7549eb4ce53e4872eb6abd14b705f43c
 					SessionKey = document.getElementById('SessionKey').value = xmlhttp.responseText;
-					doRequests();
+					if (SessionKey.length < 100) {
+						doRequests();
+					} else {
+						alert ("Login apparently failed - try again.");
+					}
 				} else {
-					target.submit();
+					alert ("The server returned an error:\n"+xmlhttp.responseText);
 				}
+			} else {
+				alert ("The request failed - possibly your browser does not support requests?\n");
 			}
+
 		}
 
 		function doRequests() {
@@ -36,42 +44,61 @@
 			var t2=0;
 			var dt=0;
 			var all_dt=0;
+			var n=25;
 			document.getElementById('milisecs').value = "";
-			for (i = 0; i <= 25; i++) {
+			for (i = 0; i < n; i++) {
 				t1 = new Date().getTime();
 				xmlhttp.open('GET', req_url, false);
 				xmlhttp.send(null);
 				t2 = new Date().getTime();
 				dt = t2 - t1;
 				all_dt += dt;
-				document.getElementById('milisecs').value += "\n"+dt;
+				document.getElementById('milisecs').value += dt+"\n";
 			}
-			document.getElementById('avg').value = all_dt/25;
+			document.getElementById('avg').value = all_dt/n;
 
 
 		}
 	</script>
 </head>
 <body>
+	<h4>Minimum latency test</h4>
 	<p>
-	This little test makes 25 sequential GET requests from the specified URL, and reports the number of milliseconds
-	each request took.  The method it uses to issue the requests is XMLHttpRequest as implemented by the
-	<a href="http://sarissa.sourceforge.net/doc/">sarissa</a> library.
+	This test measures the minimum latency for a client request - the server establishes a session (connection to DB, etc) and returns a fixed greeting.
+	It should be routinely possible to get latencies below 20ms.  Low latency allows smaller more frequent requests from user interface clients,
+	which makes for a more interactive user experience.
 	</p>
 	<p>
-	The request is sent to OME::Web::Ping, which requires login (SessionKey cookie or URL param),
-	and responds with a text/plain "Hi!".
+	This page is also a simple demonstration of dynamically updating
+	web pages by calling the OME server from JavaScript.  This is not quite
+	<a href="http://en.wikipedia.org/wiki/AJAX">
+	Ajax</a> (Asynchronous JavaScript and XML), but it is how an Ajax application would talk to its server.
+	</p>
+	<p>
+	This test makes 25 sequential GET requests from the specified OME server URL, and reports the number of milliseconds
+	to receive each response.  Requests are issued using XMLHttpRequest as implemented by the
+	<a href="http://sarissa.sourceforge.net/doc/">sarissa</a> library.
+	A request is first sent to OME::Web::Login, exchanging the supplied username/password for a SessionKey, and setting the SessionKey cookie in the browser.
+	This initial login request is not timed.
+	The 25 requests are then sent to
+	<a href="http://cvs.openmicroscopy.org.uk/horde/chora/co.php?f=OME/src/perl2/OME/Web/Ping.pm">
+	OME::Web::Ping</a>, which sets up (or re-establishes) a session on the server using the client's SessionKey,
+	and responds with a text/plain greeting ("Hi!").
+	</p>
+	<p>
+	<b>N.B.:</b> The domain (server name) of the OME URL below should match the domain of this page (in the URL above).
+	Some browsers allow scripts in web-pages to contact servers on different domains, while others consider this a security risk.
 	</p>
 	<hr align="center" />
 	<form method="get">
 	URL <input name="URL" type="text" value="http://localhost/perl2/serve.pl" id="URL" size="120" /><br>
-	Username <input name="username" type="text"  id="username"/><br>
+	Username <input name="username" type="text"  id="username"/>&nbsp;&nbsp;&nbsp;
 	Password <input name="password" type="password" id="password" /><br>
 	<input name="submit" type="button"  id="submit" value="Start" onClick="doSubmit()"/><br>
 	<hr align="center" />
 	SessionKey <input name="SessionKey" type="text" id="SessionKey" size="40" readonly="readonly" /><br>
 	ms/Req. <input name="avg" type="text" id="avg" size="40" readonly="readonly" /><br>
-	<textarea id="milisecs" rows="30" cols="15">
+	<textarea id="milisecs" rows="25" cols="15">
 
 </textarea>
 </form>
