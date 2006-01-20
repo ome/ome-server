@@ -91,6 +91,7 @@ sub execute {
 	# Make some entries for each input
 	my $signature_vector_size = 0;
 	foreach my $formal_input ( @formal_inputs ) {
+		logdbg "debug", "Creating Signature Vector for ".$formal_input->name()." \n";
 		die "Inputs of arity greater than 1 are not supported at this time. Error with input ".$formal_input->name()
 			if $formal_input->list();
 		
