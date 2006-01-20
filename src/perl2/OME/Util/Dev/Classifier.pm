@@ -302,9 +302,9 @@ sub compile_sigs {
 	# make an array of image_paths
 	my @image_paths; # this is the name of the image's original file
 	foreach my $img (@images) {
-		my  = OME::Tasks::ImageManager->getImageOriginalFiles($img);
+		my $originalFile = OME::Tasks::ImageManager->getImageOriginalFiles($img);
 		die "Image ".$_->name." doesn't have exactly one Original File"
-			if( ref( $original_files ) eq 'ARRAY' );
+			if( ref( $originalFile ) eq 'ARRAY' );
 		push @image_paths, $originalFile->Path();
 	}
 	
@@ -625,6 +625,7 @@ sub compile_signature_matrix {
 				{ image => $image }
 			)
 			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
+		print "Compiling Sigs for Image ".($image_number+1)." of ". scalar(@$images). "\n"; 
 		# set the image category
 		my $category_num = $category_numbers->{ $classifications->{ $image->id }->Category->id };
 		$signature_array->set( $category_col_index, $image_number, $category_num );
@@ -632,7 +633,6 @@ sub compile_signature_matrix {
 		foreach my $sig_entry ( @$signature_entry_list ) {
 			# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
 			my $col_index = $sig_entry->Legend->VectorPosition() - 1;
-			print STDERR "col_index is $col_index\n";
 			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
 		}
 		$image_number += 1;
