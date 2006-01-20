@@ -530,14 +530,14 @@ sub _pagerControl {
 		$pagingText .= "<input type='hidden' name='${control_name}_page_action'>";
 		$pagingText .= $q->a( {
 				-title => "First Page",
-				-href => "javascript: document.forms['$form_name'].${control_name}_page_action.value='FirstPage_$control_name'; document.forms['$form_name'].submit();",
+				-href => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='FirstPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'<<'
 			)." "
 			if ( $currentPage > 1 and $numPages > 2 );
 		$pagingText .= $q->a( {
 				-title => "Previous Page",
-				-href => "javascript: document.forms['$form_name'].${control_name}_page_action.value='PrevPage_$control_name'; document.forms['$form_name'].submit();",
+				-href => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='PrevPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'<'
 			)." "
@@ -545,14 +545,14 @@ sub _pagerControl {
 		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 		$pagingText .= "\n".$q->a( {
 				-title => "Next Page",
-				-href  => "javascript: document.forms['$form_name'].${control_name}_page_action.value='NextPage_$control_name'; document.forms['$form_name'].submit();",
+				-href  => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='NextPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'>'
 			)." "
 			if $currentPage < $numPages;
 		$pagingText .= "\n".$q->a( {
 				-title => "Last Page",
-				-href  => "javascript: document.forms['$form_name'].${control_name}_page_action.value='LastPage_$control_name'; document.forms['$form_name'].submit();",
+				-href  => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='LastPage_$control_name'; document.forms['$form_name'].submit();",
 				}, 
 				'>>'
 			)
