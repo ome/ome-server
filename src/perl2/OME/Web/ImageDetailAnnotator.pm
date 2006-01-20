@@ -249,6 +249,7 @@ sub findCategoryGroups {
     my $parameter_names = shift;
 
     my (@cat_params) = grep(/CategoryGroup\.load/,@$parameter_names);
+    return [] unless( scalar( @cat_params ) > 0);
     my $request = $cat_params[0];
 
     my @cats;
