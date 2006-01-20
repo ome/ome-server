@@ -154,7 +154,7 @@ sub processFile{
 	return 0 if (not keys %$master_hash);
 	
 	# Use the master hash to write-out a tsv file
-	open (FILEOUT, "> $fn") or die "Couldn't open %fn for writing\n";
+	open (FILEOUT, "> $fn") or die "Couldn't open $fn for writing: $!\n";
 	my @array_cg_list = sort keys (%$cg_list);
 	print FILEOUT "Image.Name\t".join ("\t", @array_cg_list)."\n";
 
