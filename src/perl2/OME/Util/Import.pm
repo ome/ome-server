@@ -153,7 +153,6 @@ sub import {
 		} else {
 			my $dataset_data = {
 								name        => $datasetName,
-								description => $datasetDescription,
 								owner       => $session->User(),
 								group       => $session->User()->Group()->id(),
 								locked      => 'false'
@@ -161,11 +160,13 @@ sub import {
 			$dataset = $factory->findObject( "OME::Dataset", $dataset_data);
 			
 			if (not defined $dataset) {
+				$dataset_data -> {'description'} = $datasetDescription;
 				$dataset = $factory->newObject( "OME::Dataset", $dataset_data );
 
 				# If there is a project in this session, then associate this new dataset with it
 				my $project = $session->project();
 				if (defined $project) {
+					
 					# Assign the dataset to the project
 					print '- Adding Dataset "',$dataset->name(),'" to Project "',$project->name(),'"...',"\n";
 					my $projectManager = new OME::Tasks::ProjectManager;
