@@ -1,3 +1,37 @@
+/*------------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2005 Open Microscopy Environment
+ *      Massachusetts Institute of Technology,
+ *      National Institutes of Health,
+ *      University of Dundee
+ *
+ *
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *------------------------------------------------------------------------------
+ */
+ 
+ 
+/*------------------------------------------------------------------------------
+ *
+ * Written by:	Tom J. Macura <tmacura@nih.gov>   
+ * 
+ *------------------------------------------------------------------------------
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,11 +68,10 @@ typedef struct {
 	int capacity;
 } smartBuffer;
 
-void* executeGETCall (omeis* is, char* parameters, size_t nmemb);
+void* executeGETCall (const omeis* is, const char* parameters, size_t nmemb);
 size_t writeBuffer (void* ptr, size_t size, size_t nmemb, smartBuffer* buffer);
-int bigEndian (void);
 
-omeis* openConnectionOMEIS (char* url, char* sessionKey)
+omeis* openConnectionOMEIS (const char* url, const char* sessionKey)
 {
 	omeis* is = (omeis*) MALLOC (sizeof(omeis));
 	
@@ -51,7 +84,7 @@ omeis* openConnectionOMEIS (char* url, char* sessionKey)
 	return is;
 }
 
-OID newPixels (omeis* is, pixHeader* head)
+OID newPixels (const omeis* is, const pixHeader* head)
 {
 	OID pixelsID;
 	char* buffer;
@@ -83,7 +116,7 @@ OID newPixels (omeis* is, pixHeader* head)
 	return pixelsID;
 }
 
-pixHeader* pixelsInfo (omeis* is, OID pixelsID)
+pixHeader* pixelsInfo (const omeis* is, OID pixelsID)
 {
 	pixHeader* head = (pixHeader*) MALLOC (sizeof(pixHeader));
 	char* buffer;
@@ -126,7 +159,7 @@ pixHeader* pixelsInfo (omeis* is, OID pixelsID)
 	return head;
 }
 
-char* pixelsSHA1 (omeis *is, OID pixelsID)
+char* pixelsSHA1 (const omeis *is, OID pixelsID)
 {
 	char* sha1 = (char*) MALLOC(sizeof(char)*OME_DIGEST_CHAR_LENGTH+1);
 	char* buffer;
@@ -155,24 +188,25 @@ char* pixelsSHA1 (omeis *is, OID pixelsID)
 	return sha1;
 }
 
-int setPixels (omeis *is, OID pixelsID, void* pixels)
+int setPixels (const omeis *is, OID pixelsID, void* pixels)
 {
 	pixHeader* head = pixelsInfo (is, pixelsID);
 	char scratch[32];
 	smartBuffer buffer;
+	CURL* curl;
 	
 	/* initialize smart Buffer for output */
 	buffer.buffer = (unsigned char*) CALLOC(1024,1);
 	buffer.len = 0;
 	buffer.capacity = 1023;
 	
-	is->curl = curl_easy_init();
-	curl_easy_setopt(is->curl, CURLOPT_FORBID_REUSE, 1);
+	curl = curl_easy_init();
+	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 	#ifdef DEBUG
-		curl_easy_setopt(is->curl, CURLOPT_VERBOSE, 1);
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 	#endif
-	curl_easy_setopt (is->curl, CURLOPT_WRITEFUNCTION, writeBuffer);
-	curl_easy_setopt (is->curl, CURLOPT_WRITEDATA, &buffer);
+	curl_easy_setopt (curl, CURLOPT_WRITEFUNCTION, writeBuffer);
+	curl_easy_setopt (curl, CURLOPT_WRITEDATA, &buffer);
 	
 	struct curl_httppost *post=NULL;
     struct curl_httppost *last=NULL;
@@ -203,14 +237,14 @@ int setPixels (omeis *is, OID pixelsID, void* pixels)
 				CURLFORM_END);
 
 	headerlist = curl_slist_append(headerlist, "Expect:");    
-    curl_easy_setopt(is->curl, CURLOPT_URL, is->url);
-    curl_easy_setopt(is->curl, CURLOPT_HTTPHEADER, headerlist);
-    curl_easy_setopt(is->curl, CURLOPT_HTTPPOST, post);
+    curl_easy_setopt(curl, CURLOPT_URL, is->url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
+    curl_easy_setopt(curl, CURLOPT_HTTPPOST, post);
 
-    int result_code = curl_easy_perform (is->curl);
+    int result_code = curl_easy_perform (curl);
 
     /* cleanup */
-	curl_easy_cleanup (is->curl);
+	curl_easy_cleanup (curl);
 	curl_formfree (post);
 	curl_slist_free_all (headerlist);
 	
@@ -232,7 +266,7 @@ int setPixels (omeis *is, OID pixelsID, void* pixels)
 	return pix;
 }
 
-void* getPixels (omeis* is, OID pixelsID)
+void* getPixels (const omeis* is, OID pixelsID)
 {
 	char* buffer;
 	char command [256];
@@ -263,7 +297,7 @@ void* getPixels (omeis* is, OID pixelsID)
 	return (void*) buffer;
 }
 
-OID finishPixels (omeis* is, OID pixelsID)
+OID finishPixels (const omeis* is, OID pixelsID)
 {
 	OID newID;
 	char* buffer;
@@ -291,7 +325,7 @@ OID finishPixels (omeis* is, OID pixelsID)
 	return newID;
 }
 
-OID deletePixels (omeis* is, OID pixelsID)
+OID deletePixels (const omeis* is, OID pixelsID)
 {
 	OID oldID;
 	char* buffer;
@@ -319,7 +353,7 @@ OID deletePixels (omeis* is, OID pixelsID)
 	return oldID;
 }
 
-char* getLocalPath (omeis *is, OID pixelsID)
+char* getLocalPath (const omeis *is, OID pixelsID)
 {
 	char* path = (char*) MALLOC (sizeof(char)*OME_DIGEST_CHAR_LENGTH);
 	char* buffer;
@@ -347,25 +381,26 @@ char* getLocalPath (omeis *is, OID pixelsID)
 	return path;
 }
 
-int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
+int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 			int x1, int y1, int z1, int c1, int t1, void* pixels)
 {
 	pixHeader* head = pixelsInfo (is, pixelsID); /* needed to figure out bp */
 	char scratch[128];
 	smartBuffer buffer;
+	CURL* curl;
 	
 	/* initialize smart Buffer for output */
 	buffer.buffer = (unsigned char*) CALLOC(1024,1);
 	buffer.len = 0;
 	buffer.capacity = 1023;
 	
-	is->curl = curl_easy_init();
-	curl_easy_setopt(is->curl, CURLOPT_FORBID_REUSE, 1);
+	curl = curl_easy_init();
+	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
 	#ifdef DEBUG
-		curl_easy_setopt(is->curl, CURLOPT_VERBOSE, 1);
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 	#endif
-	curl_easy_setopt (is->curl, CURLOPT_WRITEFUNCTION, writeBuffer);
-	curl_easy_setopt (is->curl, CURLOPT_WRITEDATA, &buffer);
+	curl_easy_setopt (curl, CURLOPT_WRITEFUNCTION, writeBuffer);
+	curl_easy_setopt (curl, CURLOPT_WRITEDATA, &buffer);
 	
 	struct curl_httppost *post=NULL;
     struct curl_httppost *last=NULL;
@@ -403,14 +438,14 @@ int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 				CURLFORM_END);
 
 	headerlist = curl_slist_append(headerlist, "Expect:");    
-    curl_easy_setopt(is->curl, CURLOPT_URL, is->url);
-    curl_easy_setopt(is->curl, CURLOPT_HTTPHEADER, headerlist);
-    curl_easy_setopt(is->curl, CURLOPT_HTTPPOST, post);
+    curl_easy_setopt(curl, CURLOPT_URL, is->url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
+    curl_easy_setopt(curl, CURLOPT_HTTPPOST, post);
 
-    int result_code = curl_easy_perform (is->curl);
+    int result_code = curl_easy_perform (curl);
 
     /* cleanup */
-	curl_easy_cleanup (is->curl);
+	curl_easy_cleanup (curl);
 	curl_formfree (post);
 	curl_slist_free_all (headerlist);
 	
@@ -432,7 +467,7 @@ int setROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 	return pix;
 }
 
-void* getROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
+void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 			int x1, int y1, int z1, int c1, int t1)
 {
 	char* buffer;
@@ -467,32 +502,33 @@ void* getROI (omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 /*
 	Private Functions
 */
-void* executeGETCall (omeis* is, char* parameters, size_t nmemb)
+void* executeGETCall (const omeis* is, const char* parameters, size_t nmemb)
 {
 	int result_code;
 	smartBuffer buffer;
+	CURL* curl;
 
 	/* callocing avoids problems with string null terminators */
 	buffer.buffer = (unsigned char*) CALLOC (nmemb+1, 1);
 	buffer.len = 0;
 	buffer.capacity = nmemb;
 	
-	is->curl = curl_easy_init();
-	curl_easy_setopt (is->curl, CURLOPT_URL, parameters);
-	curl_easy_setopt (is->curl, CURLOPT_FORBID_REUSE, 1);
+	curl = curl_easy_init();
+	curl_easy_setopt (curl, CURLOPT_URL, parameters);
+	curl_easy_setopt (curl, CURLOPT_FORBID_REUSE, 1);
 	#ifdef DEBUG
-	curl_easy_setopt (is->curl, CURLOPT_VERBOSE, 1);
+	curl_easy_setopt (curl, CURLOPT_VERBOSE, 1);
 	#endif
 	
 	/* Define our callback to get called when there's data to be written */
-	curl_easy_setopt (is->curl, CURLOPT_WRITEFUNCTION, writeBuffer);
-	curl_easy_setopt (is->curl, CURLOPT_WRITEDATA, &buffer);
-	result_code = curl_easy_perform (is->curl);
+	curl_easy_setopt (curl, CURLOPT_WRITEFUNCTION, writeBuffer);
+	curl_easy_setopt (curl, CURLOPT_WRITEDATA, &buffer);
+	result_code = curl_easy_perform (curl);
 	if (result_code != CURLE_OK) {
 		FREE(buffer.buffer);
 		return NULL;
 	}
-	curl_easy_cleanup (is->curl);
+	curl_easy_cleanup (curl);
 	
 	return buffer.buffer;
 }
@@ -513,18 +549,4 @@ size_t writeBuffer (void* ptr, size_t size, size_t nmemb, smartBuffer* buffer)
 	buffer->len += nmemb;
 	
 	return nmemb;
-}
-
-/*
-	Josiah Johnston <siah@nih.gov>
-	Returns 1 if the machine executing this code is bigEndian, 0 otherwise.
-*/
-int bigEndian (void)
-{
-    static int init = 1;
-    static int endian_value;
-    char *p;
-
-    p = (char*)&init;
-    return endian_value = p[0]?0:1;
 }

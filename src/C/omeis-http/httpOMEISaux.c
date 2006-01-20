@@ -1,3 +1,36 @@
+/*------------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2005 Open Microscopy Environment
+ *      Massachusetts Institute of Technology,
+ *      National Institutes of Health,
+ *      University of Dundee
+ *
+ *
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *------------------------------------------------------------------------------
+ */
+ 
+ 
+/*------------------------------------------------------------------------------
+ *
+ * Written by:	Tom J. Macura <tmacura@nih.gov>   
+ * 
+ *------------------------------------------------------------------------------
+ */
 #include <string.h>
 #include <stdlib.h>
 #include "httpOMEIS.h"
@@ -5,28 +38,6 @@
 
 #ifdef MATLAB
 #include "matrix.h"
-
-/*
-	checks to see if pixels are of the same types by comparing the
-	bits per pixel, isSigned, and isFloat variables
-*/
-
-int samePixelType (pixHeader* lhs, pixHeader* rhs)
-{
-	/* if isFloat=1 isSigned might be 0 or might be 1.
-	   Hence we have this special check */
-	   
-	if ((lhs->isFloat == 1) && (rhs->isFloat == 1))
-		return 1;
-		
-	if ( (lhs->bp != rhs->bp) ||
-		 (lhs->isSigned != rhs->isSigned) ||
-		 (lhs->isFloat  != lhs->isFloat) ){
-		 return 0;
-	} else {
-		return 1;
-	}
-}
 
 int OMEIStoMATLABDatatype (pixHeader* head)
 {
@@ -49,6 +60,43 @@ int OMEIStoMATLABDatatype (pixHeader* head)
 	return 0;
 }
 #endif
+
+/*
+	Josiah Johnston <siah@nih.gov>
+	Returns 1 if the machine executing this code is bigEndian, 0 otherwise.
+*/
+
+int bigEndian (void)
+{
+    static int init = 1;
+    static int endian_value;
+    char *p;
+
+    p = (char*)&init;
+    return endian_value = p[0]?0:1;
+}
+
+/*
+	checks to see if pixels are of the same types by comparing the
+	bits per pixel, isSigned, and isFloat variables
+*/
+
+int samePixelType (pixHeader* lhs, pixHeader* rhs)
+{
+	/* if isFloat=1 isSigned might be 0 or might be 1.
+	   Hence we have this special check */
+	   
+	if ((lhs->isFloat == 1) && (rhs->isFloat == 1))
+		return 1;
+		
+	if ( (lhs->bp != rhs->bp) ||
+		 (lhs->isSigned != rhs->isSigned) ||
+		 (lhs->isFloat  != lhs->isFloat) ){
+		 return 0;
+	} else {
+		return 1;
+	}
+}
 
 void CtoOMEISDatatype (const char* data_type, pixHeader* head)
 {
@@ -106,7 +154,7 @@ void OMEIStoCDatatype (char* data_type, pixHeader* head)
 	}
 }
 
-void** OMEIStoCArray (void* input, pixHeader* head, char* conversion_type)
+void** OMEIStoCArray (void* input, pixHeader* head, const char* conversion_type)
 {
 	char initial_type[32];
 	int i,j;
