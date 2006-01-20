@@ -78,8 +78,8 @@ Load up the correct annotation template, save any annotations, allow
     Note that this does not account for ST instances that map directly
     to images. This functionality is not currently supported
     
-    
 =cut
+
 sub getPageBody {
     my $self = shift ;
     my $q = $self->CGI() ;
@@ -127,13 +127,13 @@ sub getPageBody {
 
 
     # display images
-    my $currentImage = $self->populateImageDetails(\%tmpl_data);
+    my ($currentImage,$imageToAnnotate) = $self->populateImageDetails(\%tmpl_data);
 
 
     # annnotate if they hit 'save and next'
     if ($q->param('SaveAndNext')) {
-	$self->annotateWithSTs($currentImage,$sts,$maps);
-	$self->annotateWithCGs($currentImage,$category_groups);
+	$self->annotateWithSTs($imageToAnnotate,$sts,$maps);
+	$self->annotateWithCGs($imageToAnnotate,$category_groups);
     }
     elsif ($q->param('AddToCG')) {
 	$self->addCategories($category_groups);
@@ -350,9 +350,10 @@ sub annotateWithCGs {
 
 
 
-=head1 populateImageDetails
+=head2 populateImageDetails
 
 =cut
+
 sub populateImageDetails {
     my $self = shift ;
     my $q = $self->CGI() ;
@@ -391,15 +392,15 @@ sub populateImageDetails {
     my $currentImageID;
     
     # if no image is displayed, the ID you need is in the array
-    my $image;
+    my ( $currentImage, $imageToAnnotate);
     if (defined $q->param('currentImageID') &&
 	$q->param( 'currentImageID' ) eq '') { 
-	$image = shift(@images);
-	$currentImageID = $image->ID if (defined $image);
+	$currentImage = shift(@images);
+	$currentImageID = $currentImage->ID if (defined $currentImage);
     }
     else { 
 	$currentImageID = $q->param( 'currentImageID' ); 
-	$image = $factory->loadObject( 'OME::Image', $currentImageID);
+	$currentImage = $factory->loadObject( 'OME::Image', $currentImageID);
     }
     
     # If they want to annotate this image, get the next ID and load that image
@@ -407,12 +408,14 @@ sub populateImageDetails {
 	# if an image had been specified
 	if ($q->param('currentImageID') ne '') {
 	    # push it onto completed
-	    push (@completed_images,$image);
+	    push (@completed_images,$currentImage);
 	}
-	$image = shift(@images);
-	$currentImageID = $image->ID if (defined $image);
+	# save the image to be annotated. The calling function will perform the actual annotation.
+    $imageToAnnotate = $currentImage;
+	$currentImage = shift(@images);
+	$currentImageID = $currentImage->ID if (defined $currentImage);
     }
-    $tmpl_data->{ 'image_large' } = $self->Renderer()->render( $image, 'large');
+    $tmpl_data->{ 'image_large' } = $self->Renderer()->render( $currentImage, 'large');
     
     # set the ID of the current image on display
     $tmpl_data->{ 'current_image_id' } = $currentImageID;
@@ -437,7 +440,7 @@ sub populateImageDetails {
 				       { type => 'OME::Image' });
     my @completed_ids = map $_->ID,@completed_images;
     $tmpl_data->{'images_completed'} = join(',',@completed_ids);
-    return $image;
+    return( $currentImage, $imageToAnnotate);
 }
 
 =head2 populateAnnotationSTs
