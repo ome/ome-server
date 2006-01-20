@@ -79,9 +79,9 @@ sub spreadsheet_importer {
 
     my ($file, $noop);
 	GetOptions('f|file=s' => \$file,
-   			   'n|noop=s' => \$noop);
+   			   'n|noop'   => $noop);
    			   
-    die "Flag not supported. Inform Tomasz\n" if $noop;
+    die "Flag not supported. Inform Tom Macura\n" if $noop;
 	
 	$file = $ARGV[0] if (scalar @ARGV);
 	$self->spreadsheet_help($commands) if (not defined $file);
