@@ -345,6 +345,7 @@ sub load_schema {
 
     $factory->commitTransaction();
     $session->finishBootstrap();
+    $session = undef;
 
     return 1;
 }
@@ -588,13 +589,15 @@ PRINT
 		});
 	$userState->storeObject();
 
-    $factory->commitTransaction();
-    $session->finishBootstrap();
-
-    $session = $manager->createSession($session_key);
-	$OME_EXPER->{ExperimenterID} = $experimenter->id();
+	$OME_EXPER->{ExperimenterID} = $experimenter->attribute_id();
     $ENVIRONMENT->ome_exper($OME_EXPER);
 
+    $factory->commitTransaction();
+    $session->finishBootstrap();
+    $session = undef;
+
+    $session = $manager->createSession($session_key);
+	croak "Could not create a session for the new user" unless $session;
     return ($session);
 }
 
