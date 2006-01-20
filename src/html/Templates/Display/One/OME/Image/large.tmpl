@@ -10,7 +10,9 @@
 		Owner: <TMPL_VAR NAME=owner><BR>
 		Group: <TMPL_VAR NAME=group><BR>
 		Created: <TMPL_VAR NAME=created><br>
-		Description: <TMPL_VAR NAME=description/max_text_length-60>
+		Description: <TMPL_VAR NAME='description'><br>
+		Comments:<br>
+		<textarea name="comments" rows="5" cols="30"><TMPL_VAR NAME='current_annotation'></textarea>
 	</TD>
 </TR>
 </TABLE>
