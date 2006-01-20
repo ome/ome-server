@@ -44,6 +44,7 @@ use vars qw($VERSION);
 use OME::SessionManager;
 use OME::Tasks::AnnotationManager;
 use OME::Tasks::CategoryManager;
+use OME::Tasks::ImageManager;
 
 use base qw(OME::Web);
 
@@ -111,6 +112,7 @@ sub getPageBody {
 		
 		# Classify an image if they click Save & Next
 		if ($q->param( 'SaveAndNext' )) {
+			my $currentImage = $factory->loadObject( 'OME::Image', $q->param( 'currentImageID' ));
 			# for each incoming category
 			foreach my $categoryAnnotationFieldName ( @category_names ) {
 				# Get incoming category ids from CGI parameters
@@ -120,8 +122,19 @@ sub getPageBody {
 					my $category = $factory->loadObject( '@Category', $categoryID )
 						or die "Couldn't load Category (id=$categoryID)";
 					# Create new 'Classification' attributes on image
-					my $currentImage = $factory->loadObject( 'OME::Image', $q->param( 'currentImageID' ));
 					OME::Tasks::CategoryManager->classifyImage($currentImage, $category);
+				}
+			}
+			# Save image comments as a text annotation
+			if( $q->param( 'comments' ) ) {
+				my $currentAnnotation = OME::Tasks::ImageManager->
+					getCurrentAnnotation( $currentImage );
+				if( (not defined $currentAnnotation ) ||
+				    ( $currentAnnotation->Content ne $q->param( 'comments' ) ) 
+				  ) {
+					OME::Tasks::ImageManager->writeAnnotation(
+						$currentImage, { Content => $q->param( 'comments' ) }
+					);
 				}
 			}
 		}
@@ -168,7 +181,18 @@ sub getPageBody {
 			$currentImageID = shift(@image_ids);
 			$image = $factory->loadObject( 'OME::Image', $currentImageID);
 		}
-		$tmpl_data{ 'image_large' } = $self->Renderer()->render( $image, 'large');
+		my $field_requests = $self->Renderer()->parse_tmpl_fields( [ $tmpl->param() ] );
+		my $field = 'current_image';
+		if( $field_requests->{ $field } ) {
+			foreach my $request ( @{ $field_requests->{ $field } } ) {
+				my $request_string = $request->{ 'request_string' };
+				my $render_mode = ( $request->{ render } or 'ref' );
+				$tmpl_data{ $request_string } = $self->Renderer()->render( $image, $render_mode );
+			}
+		} else {
+			#/render-large
+			$tmpl_data{ 'image_large' } = $self->Renderer()->render( $image, 'large');
+		}
 		
 		# set the ID of the current image on display
 		$tmpl_data{ 'current_image_id' } = $currentImageID;

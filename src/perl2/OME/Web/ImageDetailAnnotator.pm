@@ -45,6 +45,7 @@ use vars qw($VERSION);
 use OME::SessionManager;
 use OME::Tasks::AnnotationManager;
 use OME::Tasks::CategoryManager;
+use OME::Tasks::ImageManager;
 
 use base qw(OME::Web);
 
@@ -127,13 +128,26 @@ sub getPageBody {
 
 
     # display images
-    my ($currentImage,$imageToAnnotate) = $self->populateImageDetails(\%tmpl_data);
+    my ($currentImage,$imageToAnnotate) = $self->populateImageDetails(\%tmpl_data, $tmpl);
 
 
     # annnotate if they hit 'save and next'
     if ($q->param('SaveAndNext')) {
-	$self->annotateWithSTs($imageToAnnotate,$sts,$maps);
-	$self->annotateWithCGs($imageToAnnotate,$category_groups);
+		$self->annotateWithSTs($imageToAnnotate,$sts,$maps);
+		$self->annotateWithCGs($imageToAnnotate,$category_groups);
+		# Save image comments as a text annotation
+		if( $q->param( 'comments' ) ) {
+			my $currentAnnotation = OME::Tasks::ImageManager->
+				getCurrentAnnotation( $imageToAnnotate );
+			if( (not defined $currentAnnotation ) ||
+				( $currentAnnotation->Content ne $q->param( 'comments' ) ) 
+			  ) {
+				OME::Tasks::ImageManager->writeAnnotation(
+					$imageToAnnotate, { Content => $q->param( 'comments' ) }
+				);
+				$session->commitTransaction();
+			}
+		}
     }
     elsif ($q->param('AddToCG')) {
 	$self->addCategories($category_groups);
@@ -359,7 +373,7 @@ sub populateImageDetails {
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($tmpl_data) = @_;
+    my ($tmpl_data, $tmpl) = @_;
     my @images;
     my @completed_images;
 
@@ -415,7 +429,21 @@ sub populateImageDetails {
 	$currentImage = shift(@images);
 	$currentImageID = $currentImage->ID if (defined $currentImage);
     }
-    $tmpl_data->{ 'image_large' } = $self->Renderer()->render( $currentImage, 'large');
+    
+    # Render the image. Allow the template to specify the rendering mode using the syntax:
+    # <TMPL_VAR NAME=current_image/render-RENDER_MODE>
+	my $field_requests = $self->Renderer()->parse_tmpl_fields( [ $tmpl->param() ] );
+	my $field = 'current_image';
+	if( $field_requests->{ $field } ) {
+		foreach my $request ( @{ $field_requests->{ $field } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my $render_mode = ( $request->{ render } or 'ref' );
+			$tmpl_data->{ $request_string } = $self->Renderer()->render( $currentImage, $render_mode );
+		}
+	} else {
+		# legacy support.
+		$tmpl_data->{ 'image_large' } = $self->Renderer()->render( $currentImage, 'large');
+	}
     
     # set the ID of the current image on display
     $tmpl_data->{ 'current_image_id' } = $currentImageID;
