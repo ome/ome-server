@@ -75,6 +75,7 @@ use Log::Agent;
 use OME::Image;
 use OME::Tasks::ImportManager;
 use UNIVERSAL::require;
+use Time::HiRes qw(gettimeofday tv_interval);
 
 
 # ---------------------
@@ -241,12 +242,15 @@ sub importFiles {
 
     # Instantiate all of the format classes and retrieve the groups for
     # each.
-
+	my $start_time = [gettimeofday()];
+	
     foreach my $format_class (@$formats) {
 	last
 	    unless (scalar(keys %files) > 0);
 
         eval {
+		    logdbg "debug",  "Checking for images readable by ".$format_class;
+
             # Verify that the format class has a well-formed name
             die "Malformed class name $format_class"
               unless $format_class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
@@ -281,7 +285,9 @@ sub importFiles {
             delete $groups{$format_class};
         }
     }
-
+    logdbg "debug", "Format check took ". tv_interval($start_time) ." seconds \n";
+	
+    
     # Loop through the formats once again, allowing each to import the
     # groups that it found.
 
