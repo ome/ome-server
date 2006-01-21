@@ -301,7 +301,6 @@ sub instance {
             # destroy the old session's resources, and then salvage the
             # old session object with the new user credentials.
 
-            $__soleInstance->__destroySession();
             $__soleInstance->__salvageSession($userState,$factory,$ACL);
         } else {
             # This is the first time we've tried to create a session in
