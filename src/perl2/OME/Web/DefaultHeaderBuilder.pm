@@ -125,7 +125,10 @@ sub getPageHeader {
 
 	# Logo image link
 	my $logo_link;
-	my $tasks = $factory->countObjects('OME::Task',state=>'IN PROGRESS');
+	my $tasks = $factory->countObjects('OME::Task',{
+		'state'    => 'IN PROGRESS',
+		'session.experimenter_id' => $session->User->id(),
+		});
 
 	# check if the logo 
 	if ($tasks) { 
