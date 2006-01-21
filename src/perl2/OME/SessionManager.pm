@@ -259,35 +259,26 @@ sub createWithKey {
 	my $sessionKey = shift;
 	my $flags = shift;
 
+
+	my ($session,$factory);
 	if (OME::Session->hasInstance()) {
-		logdbg "debug", "createWithKey: found existing OME::Session instance";
-		my $curr_session = OME::Session->instance();
-		if (($curr_session->session_key() eq $sessionKey)
-			and $curr_session->User()
-			and $curr_session->Factory()) {
-			logdbg "debug", "createWithKey: reusing OME::Session instance";
-			# Make sure AutoCommit is off.
-			# Generally, this is only required if it was turned on
-			# in the END block of OME::Session
-			$curr_session->Factory()->revive();
-			return $curr_session
-		} else {
-			$curr_session->deleteInstance(1);
-			$curr_session = undef;
-		}
+		$session = OME::Session->instance();
+		$factory = $session->Factory()->revive();
 	}
-	my $bootstrap_factory = OME::Factory->new($flags);
-	my $dbh = $bootstrap_factory->obtainDBH();
+
+	$factory = OME::Factory->new($flags) unless $factory;
+	croak "Could not create a new factory" unless $factory;
+
+	my $dbh = $factory->obtainDBH();
 	eval {
 		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
-		$dbh->commit ();
 	};
 
-	$sessionKey = $self->validateSessionKey($sessionKey) or return undef;
+	return undef unless length ($sessionKey) == $SESSION_KEY_LENGTH;
 	
-	my $userState = $bootstrap_factory->
+	my $userState = $factory->
 		findObject('OME::UserState', session_key => $sessionKey);
-	logdbg "debug", "getOMESession: found existing userState(s)" if defined $userState;
+#	logdbg "debug", "createWithKey: found existing userState(s)" if defined $userState;
 	
 	return undef unless defined $userState;
 
@@ -301,30 +292,15 @@ sub createWithKey {
 	
 	$userState->last_access('now');
 	$userState->host($host);
-
-	# Collect the users and groups visible to this user
-	# groups that the experimenter belongs to
-	# members of the groups this experimenter leads
-	my $ACL;
-	eval {
-		my $configuration = $bootstrap_factory->Configuration();
-		my $superuser = $configuration->super_user();
-		my $exp_id = $userState->experimenter_id();
-		if ($superuser and $superuser != $exp_id) {
-			$ACL = {
-				users  => $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$exp_id,$exp_id,$exp_id),
-				groups => $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$exp_id,$exp_id,$exp_id),
-			}
-		}
-	};
-		
-	my $session = OME::Session->instance($userState, $bootstrap_factory, $ACL);
 	
-	logdbg "debug", "createWithKey: updating userState";
+	
+	$session = OME::Session->instance($userState, $factory, undef);
+	
+	$self->updateACL();
+	
 	$userState->storeObject();
 	$session->commitTransaction();
 	
-	logdbg "debug", "createWithKey: returning session";
 	return $session;
 }
 
@@ -418,10 +394,9 @@ sub createWithPassword {
 	}
 
 
-	logdbg "debug", "getOMESession: looking for userState, experimenter_id=$experimenterID";
+	logdbg "debug", "createWithPassword: looking for userState, experimenter_id=$experimenterID";
 	my $userState = $bootstrap_factory->
 		findObject('OME::UserState',experimenter_id => $experimenterID);
-	logdbg "debug", "getOMESession: found existing userState(s)" if defined $userState;
 	
 	if (!defined $userState) {
 		my $sessionKey = $self->generateSessionKey();
@@ -433,15 +408,16 @@ sub createWithPassword {
 				last_access     => 'now',
 				host            => $host
 			});
-		logdbg "debug", "getOMESession: created new userState";
+		logdbg "debug", "createWithPassword: created new userState";
 		$bootstrap_factory->commitTransaction();
 	} else {
 		$userState->last_access('now');
 		$userState->host($host);
 		$userState->session_key($self->generateSessionKey()) unless $userState->session_key();
+		logdbg "debug", "createWithPassword: found existing userState(s)";
 	}
 
-	logdie ref($self)."->getOMESession:  Could not create userState object"
+	logdie ref($self)."->createWithPassword:  Could not create userState object"
 		unless defined $userState;
 
 
@@ -463,11 +439,10 @@ sub createWithPassword {
 		
 	my $session = OME::Session->instance($userState, $bootstrap_factory, $ACL);
 	
-	logdbg "debug", "getOMESession: updating userState";
 	$userState->storeObject();
 	$session->commitTransaction();
 	
-	logdbg "debug", "getOMESession: returning session";
+	logdbg "debug", "createWithPassword: returning session";
 	return $session;
 }
 
