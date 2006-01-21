@@ -487,7 +487,9 @@ sub new {
     confess "Cannot create database handle"
       unless defined $dbh;
 
-    my $self = {__ourDBH           => $dbh,
+	logdbg "debug", "OME::Factory: new factory connected to ".$dbh->{Name};
+    my $self = {__ourDBH => $dbh,
+    			__config => undef,
                };
 
     return bless $self, $class;
@@ -512,20 +514,24 @@ sub idle {
 
 sub revive {
     my $self = shift;
-	$self->{__ourDBH}->{AutoCommit} = 0;
+    if ($self->{__ourDBH}) {
+		$self->{__ourDBH}->{AutoCommit} = 0;
+		return $self;
+	} else {
+		return undef;
+	}
 }
 
 sub Session { return OME::Session->instance() }
 
 # Configurations are specific to databases we may be connected to
+# IGG 1/20/06:  While true, a given Factory instance is only connected to one DB
 sub Configuration {
 	my $self = shift;
-	my $dbh = $self->{__ourDBH};
-	return undef unless $dbh;
-	return $self->{__configurations}->{$dbh} if exists $self->{__configurations}->{$dbh};
+	return $self->{__config} if $self->{__config};
 	
-	$self->{__configurations}->{$dbh} = OME::Configuration->new( $self );
-	return $self->{__configurations}->{$dbh};
+	$self->{__config} = OME::Configuration->new( $self );
+	return $self->{__config};
 }
 
 sub __checkClass {
@@ -536,7 +542,8 @@ sub __checkClass {
 
 sub forget {
     my ($self) = @_;
-    $self->{__ourDBH} = undef;;
+    $self->{__ourDBH} = undef;
+    $self->{__config} = undef;
 }
 
 sub obtainDBH {
@@ -555,6 +562,7 @@ sub __disconnectAll {
 	}
 
     $self->{__ourDBH} = undef;
+    $self->{__config} = undef;
 
 }
 
