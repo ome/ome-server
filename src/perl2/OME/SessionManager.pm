@@ -290,7 +290,7 @@ sub createWithKey {
 		$host = $ENV{'HOST'};
 	}
 	
-	$userState->last_access('now');
+	$userState->last_access('now()');
 	$userState->host($host);
 	
 	
@@ -404,14 +404,14 @@ sub createWithPassword {
 			newObject('OME::UserState', {
 				experimenter_id => $experimenterID,
 				session_key     => $sessionKey,
-				started         => 'now',
-				last_access     => 'now',
+				started         => 'now()',
+				last_access     => 'now()',
 				host            => $host
 			});
 		logdbg "debug", "createWithPassword: created new userState";
 		$bootstrap_factory->commitTransaction();
 	} else {
-		$userState->last_access('now');
+		$userState->last_access('now()');
 		$userState->host($host);
 		$userState->session_key($self->generateSessionKey()) unless $userState->session_key();
 		logdbg "debug", "createWithPassword: found existing userState(s)";
@@ -466,7 +466,7 @@ sub logout {
 	logdbg "debug", ref($self)."->logout: logging out";
 
 	my $userState = $session->getUserState();
-	$userState->last_access('now');
+	$userState->last_access('now()');
 	$userState->session_key(undef);
 	$userState->storeObject();
 	$session->commitTransaction();
