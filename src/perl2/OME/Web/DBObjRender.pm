@@ -556,7 +556,7 @@ sub _pagerControl {
 			unless( $pageNum eq $currentPage ) {
 				$pagingText .= $q->a( {
 					-title => "Jump to page $pageNum",
-					-href => "javascript: document.forms['$form_name'].elements['${control_name}___offset'].value=".($pageNum * $limit)."; document.forms['$form_name'].submit();",
+					-href => "javascript: document.forms['$form_name'].elements['${control_name}___offset'].value=".($pageNum * $limit - 1)."; document.forms['$form_name'].submit();",
 					}, 
 					"$pageNum"
 				)." ";
