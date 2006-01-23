@@ -526,6 +526,16 @@ sub _pagerControl {
 
 	# make controls
 	if( $numPages > 1 ) {
+		my $min = (
+			( $currentPage - 4 < 1 ) ? 
+			1 : 
+			$currentPage - 4  
+		);
+		my $max = (
+			( $min + 10 > $numPages ) ?
+			$numPages :
+			$min + 10
+		);
 		$pagingText .= "Page <input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
 		$pagingText .= "<input type='hidden' name='${control_name}_page_action'>";
 		$pagingText .= $q->a( {
@@ -542,7 +552,19 @@ sub _pagerControl {
 				'<'
 			)." "
 			if $currentPage > 1;
-		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
+		for my $pageNum ($min..$max) {
+			unless( $pageNum eq $currentPage ) {
+				$pagingText .= $q->a( {
+					-title => "Jump to page $pageNum",
+					-href => "javascript: document.forms['$form_name'].elements['${control_name}___offset'].value=".($pageNum * $limit)."; document.forms['$form_name'].submit();",
+					}, 
+					"$pageNum"
+				)." ";
+			} else {
+				$pagingText .= "$currentPage ";
+			}
+		}
+#		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 		$pagingText .= "\n".$q->a( {
 				-title => "Next Page",
 				-href  => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='NextPage_$control_name'; document.forms['$form_name'].submit();",
