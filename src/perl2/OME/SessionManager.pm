@@ -310,7 +310,10 @@ sub updateACL {
 	my $session       = OME::Session->instance();
 	my $factory       = $session->Factory();
 	my $configuration = $factory->Configuration();
-	my $superuser     = $configuration->super_user();
+	my $superuser;
+	eval {
+		$superuser     = $configuration->super_user();
+	}
 	my $exp_id        = $session->experimenter_id();
 	my $dbh           = $factory->obtainDBH();
 
