@@ -40,8 +40,8 @@ package OME::Analysis::Engine::SimpleWorkerExecutor;
 
 OME::Analysis::Engine::SimpleWorkerExecutor - an implementation of the
 L<OME::Analysis::Engine::Executor|OME::Analysis::Engine::Executor>
-interface which executes modules by calling
-L<OME::Analysis::Engine::Worker|OME::Analysis::Engine::Worker>s
+interface which executes modules by calling one of the workers represented by the
+L<OME::Analysis::Engine::Worker|OME::Analysis::Engine::Worker> class.
 
 =cut
 
@@ -70,9 +70,11 @@ sub new {
 	my $class = ref($proto) || $proto;
 	
 	unless ($DATA_SOURCE) {
-		$DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getRemoteDSN();
+		$DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getDSN();
 		# Uncomment this next line if you want to use a Mac for a backend
 		# and a non-mac for the worker nodes.
+		# Note that this only works if your computer name (i.e. the part before '.local')
+		# gets properly resolved by your DNS server
 #		$DATA_SOURCE =~ s/\.local//;
 	}
 
@@ -85,6 +87,7 @@ sub new {
 	my $DBUser = `whoami`;
 	chomp( $DBUser );
 	my $self = {
+	# This is a unique ID for this executor instance
 		instance_id => undef,
 	# Array of hashrefs, keyed by 'MexID','Dep','TargetID'
 		queue       => [],
@@ -115,7 +118,7 @@ sub new {
 	logdbg "debug", "SimpleWorkerExecutor->new: Registering listeners";
 	
 	# Register our listener
-	$self->{OurWorker} = 'WorkerIdle'.$self->{instance_id};
+	$self->{OurWorker} = 'WorkerIdle_'.$self->{instance_id};
 	$self->{AnyWorker} = 'WorkerIdle';
 	OME::Tasks::NotificationManager->registerListener ($self->{OurWorker});
 	OME::Tasks::NotificationManager->registerListener ($self->{AnyWorker});
@@ -139,6 +142,18 @@ sub getWorker {
 }
 
 #
+# Count busy workers.  The count is only for workers pressed by this
+# executor instance
+sub countBusyWorkers {
+	my ($self) = @_;
+	return OME::Session->instance()->Factory()->countObjects (
+		'OME::Analysis::Engine::Worker',{
+			status	=> 'BUSY',
+			master  => $self->{instance_id},
+		});
+}
+
+#
 # Make a worker do something
 # returns 1 or undef.
 sub pressWorker {
@@ -149,12 +164,11 @@ sub pressWorker {
 	$job->{WorkerID} = $worker->id();
 
 	# Put together the url parameters. Use CGI to make all the characters safe.
-	my $q = CGI->new();
-	foreach my $key (keys %$job ) {
-		$q->param( $key, $job->{$key} );
-	}
+	my $q = CGI->new($job);
 	# Put our notices on the parameter list
 	$q->param( "Notice", $self->{OurWorker}, $self->{AnyWorker} );
+	# Put our instance ID as the MasterID
+	$q->param( "MasterID", $self->{instance_id} );
 	
 	my $params = $q->self_url();
 	undef $q;
@@ -239,19 +253,28 @@ sub waitForAnyModules {
 	my ($events,$event,$ourEvent) =
 		(undef,'',$self->{OurWorker});
 
+	my $nWorking = $self->countBusyWorkers();
+	return unless $nWorking;
+
 	# Our "event loop"
 	while ($event ne $ourEvent) {
 		# Block until something happens
 		logdbg "debug", "waitForAnyModules: waiting for a worker to finish";
 		my $events = OME::Tasks::NotificationManager->listen (30);
 		
-		# Shift the queue if anything happened
+		# Shift the queue if anything happened or we timed out
 		$self->shiftQueue();
 		
-		# Return if one of one our workers finished
-		foreach (@$events) {
-			$event = $_;
-			last if $event eq $ourEvent;
+		if ($events) {
+		# Somebody sent a message:  Either one of our workers, or an unrelated worker
+			# Return if one of one our workers finished
+			foreach (@$events) {
+				$event = $_ and last if $event eq $ourEvent;
+			}
+		} else {
+		# we timed out waiting for a message.  Maybe we missed it.
+		# If the number of busy workers now is less than before then return
+			return if $self->countBusyWorkers() < $nWorking;
 		}
 	}
 }
