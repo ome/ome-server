@@ -313,7 +313,7 @@ sub updateACL {
 	my $superuser;
 	eval {
 		$superuser     = $configuration->super_user();
-	}
+	};
 	my $exp_id        = $session->experimenter_id();
 	my $dbh           = $factory->obtainDBH();
 
