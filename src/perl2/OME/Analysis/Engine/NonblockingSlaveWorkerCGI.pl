@@ -200,16 +200,8 @@ my ($code,$message) = @_;
 	my @lines = split (/\n/,$message);
 	
 	my $line1 = shift @lines;
-	
-	my @headers = (
-		"HTTP/1.1 $code $line1",
-		"Content-Type: text/plain",
-		);
+		print $CGI->header(-type => 'text/html', -status => "500 $line1", -Connection => 'Close');
 
-	# Don't bother us again if we're still running
-	push (@headers,"Connection: Close");
-
-	print join ("\015\012",@headers)."\015\012\015\012";
 	print "$line1\n",join ("\n",@lines),"\n";
 	
 	# We're still running if status is OK
