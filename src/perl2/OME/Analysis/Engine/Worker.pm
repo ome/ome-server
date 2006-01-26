@@ -95,6 +95,12 @@ When a worker's status is 'BUSY', this is the worker's process ID on the host th
 
 =cut
 
+=head2 master ()
+
+When a worker's status is 'BUSY', this is the master's unique ID.
+
+=cut
+
 
 __PACKAGE__->newClass();
 __PACKAGE__->setSequence('analysis_worker_seq');
@@ -121,6 +127,11 @@ __PACKAGE__->addColumn(last_used => 'last_used',
 __PACKAGE__->addColumn(PID => 'pid',
                        {
                         SQLType => 'integer',
+                       });
+__PACKAGE__->addColumn(master => 'master',
+                       {
+                        SQLType => 'varchar(64)',
+                        Indexed => 1,
                        });
 
 # These objects should never be cached to make sure that their status is always current.
