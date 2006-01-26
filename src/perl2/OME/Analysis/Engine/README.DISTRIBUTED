@@ -10,15 +10,16 @@ To set it up, you will need to do the following:
 
 Setup the Workers
 --------------------------------
-On EACH worker node:
+On EACH worker node (a node can host several workers):
 
 * Install OME (sudo perl install.pl). OMEIS and a local database is optional
 
 * Copy src/perl2/OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl into the appropriate
 Apache accessible directory so that you could specify a URL that would execute
-the WorkerCGI.pl as a mod_pelr CGI e.g:
+the NonblockingSlaveWorkerCGI.pl as a mod_pelr CGI e.g:
 
 sudo cp src/perl2/OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl /OME/perl2/
+The URL would then be http://worker123.node.com/perl2/NonblockingSlaveWorkerCGI.pl
 
 * Set the maximum workers the node can host by running 
 src/perl2/OME/Analysis/Engine/install_worker_node.pl as root.
@@ -96,7 +97,10 @@ module and then sends the DB all the notices  specified in the Notices parameter
 using OME::Tasks::NotificationManager->notify().  There are two kinds of Notices
 set up by the SimpleWorkerExecutor:  One that includes a unique ID string for 
 that executor instance, and one that is generic 
-(The notices are 'WorkerIdleUniqueID' and 'WorkerIdle').
+(The notices are 'WorkerIdle_UniqueID' and 'WorkerIdle').  There is also a backup
+mechanism for the notices.  While its executing (status() = 'BUSY'), the worker
+sets its master field to the MasterID passed in from the caller.  This MasterID
+allows an executor instance to identify its own busy workers.
 
 Worker nodes can be used by any back-end, so steps are taken to ensure than no
 more than the specified maximum number of workers are ever running on the same
@@ -109,13 +113,17 @@ continues.  If not, it responds with a 503 status (BUSY).
 
 Meanwhile, back at the farm, the executor has been called a bunch of times and
 finally reaches waitForAnyModules.  This method blocks until at least one
-worker is finished.  Since workers signal they are finished by sending IPC
-notices, this method is nothing more than a listener for these notices
-(NotificationManager->listen()).  If a notice includes the executor's unique
-ID, the executor knows that one of its own jobs is finished.  A generic notice
-means that a worker working with some other executor (but on the same DB)
-became idle.  Either way, a call is placed to shiftQueue before returning.  The
-executor registers its listeners in its constructor and unregisters them in the
-destructor to make sure it doesn't miss anything.
-
+worker is finished.  The method returns immediately if there are no busy workers
+(registered in the DB) for this executor instance.  Since workers signal they are
+finished by sending IPC notices, this method is nothing more than a listener for
+these notices (NotificationManager->listen()).  The listen() method is called
+with a timeout so that the executor doesn't ever get stuck if messages aren't
+issued (or received) for whatever reason.  If the timeout expires, then the
+executor counts how many busy workers there are for its instance, and if that
+number is less than the initial count when waitForAnyModules was called, it
+returns. If a notice includes the executor's unique ID (MasterID), the executor
+knows that one of its own jobs is finished.  A generic notice means that a worker
+working with some other executor (but on the same DB) became idle.  Either way,
+a call is placed to shiftQueue before returning.  The executor registers its
+listeners in its constructor and unregisters them in the destructor.
 
