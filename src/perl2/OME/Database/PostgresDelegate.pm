@@ -987,7 +987,7 @@ sub waitNotifies {
 my ($self,$dbh,$timeout) = @_;
 my @notices;
 
-	my $fd = $dbh->func ('getfd') or
+	my $fd = $dbh->{pg_socket} or $dbh->func ('getfd') or
 		die "Unable to get PostgreSQL back-end FD";
 	my $sel = IO::Select->new ($fd);
 	# Block until something happens
