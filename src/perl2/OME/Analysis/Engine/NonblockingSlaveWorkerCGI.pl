@@ -171,6 +171,7 @@ OME::Fork->doLater ( sub {
 	$worker->status('IDLE');
 	$worker->last_used('now()');
 	$worker->PID(undef);
+	$worker->master(undef);
 	$worker->storeObject();
 	OME::Tasks::NotificationManager->notify ($_) foreach (@$Notices);
 	unregister_worker ();
