@@ -255,28 +255,39 @@ sub waitForAnyModules {
 
 	my $nWorking = $self->countBusyWorkers();
 	return unless $nWorking;
-
+	
 	# Our "event loop"
 	while ($event ne $ourEvent) {
 		# Block until something happens
 		logdbg "debug", "waitForAnyModules: waiting for a worker to finish";
-		my $events = OME::Tasks::NotificationManager->listen (30);
-		
-		# Shift the queue if anything happened or we timed out
-		$self->shiftQueue();
-		
+		$events = OME::Tasks::NotificationManager->listen (5);
+		$event = '';
 		if ($events) {
-		# Somebody sent a message:  Either one of our workers, or an unrelated worker
+			# Somebody sent a message:  Either one of our workers, or an unrelated worker
+			# Shift the queue if anything happened
+			$self->shiftQueue();
+
 			# Return if one of one our workers finished
 			foreach (@$events) {
-				$event = $_ and last if $event eq $ourEvent;
+				$event = $_ and last if $_ eq $ourEvent;
 			}
 		} else {
-		# we timed out waiting for a message.  Maybe we missed it.
-		# If the number of busy workers now is less than before then return
-			return if $self->countBusyWorkers() < $nWorking;
+#			logdbg "debug", "waitForAnyModules: TIMEOUT while waiting for a worker to finish";
+			# we timed out waiting for a message.  Maybe we missed it.
+			# If the number of busy workers now is less than before then return
+			if ($self->countBusyWorkers() < $nWorking) {
+				logdbg "debug", "waitForAnyModules: Missed a worker message while waiting for a worker to finish";
+				$self->shiftQueue();
+				return;
+			} else {
+				# Apparently, we timed out without any workers finishing.
+				# Shift the queue, and wait some more.
+#				logdbg "debug", "waitForAnyModules: Nobody finished";
+				$self->shiftQueue();
+			}
 		}
 	}
+	logdbg "debug", "waitForAnyModules: Received notification from finished worker";
 }
 
 sub waitForAllModules {
