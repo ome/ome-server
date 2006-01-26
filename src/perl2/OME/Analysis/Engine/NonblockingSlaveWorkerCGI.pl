@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# OME/Tasks/Analysis/Engine/BlockingSlaveWorkerCGI.pl
+# OME/Tasks/Analysis/Engine/NonBlockingSlaveWorkerCGI.pl
 
 #-------------------------------------------------------------------------------
 #
@@ -37,26 +37,30 @@
 
 =head1 NAME
 
-BlockingSlaveWorkerCGI - A worker for the OME Analysis Engine that can be called
+NonBlockingSlaveWorkerCGI - A worker for the OME Analysis Engine that can be called
 remotely with a CGI interface.
 
 
 =head1 SYNOPSIS
 
- curl 'http://worker1.host.com/BlockingSlaveWorkerCGI.pl?\
+ curl 'http://worker1.host.com/NonBlockingSlaveWorkerCGI.pl?\
 	DataSource=dbi:Pg:dbname=ome;host=back-end.host.com&\
 	SessionKey=9bca3b0e1a8fbde72aeb0db4f41e7d58&\
+	MasterID=5t11f1Qnm4Lw&\
 	MEX=123&Dependence=i&Target=465'
 
-The DataSource, SessionKey, MEX, and Dependence are required parameters.
+The DataSource, SessionKey, MasterID, MEX, and Dependence are required parameters.
+DataSource is a perl DBI Datasource Name (DSN).
+SessionKey is the standard OME SessionKey
+MasterID is an ID that uniquely identifies an
+L<OME::Analysis::Engine::SimpleWorkerExecutor|OME::Analysis::Engine::SimpleWorkerExecutor> instance.
 
 Target is required if Dependence is 'I' or 'D' (ImageID or DatasetID respectively)
 
 =head1 DESCRIPTION
 
-BlockingSlaveWorkerCGI is about as dumb as nails.  Any back-end came come along and have it
-do its bidding (enslave it).  Also, its blocking, so the request will hang until this worker
-is done.  It does maintain a lock-file with its PID so that it can be determined how many workers
+NonBlockingSlaveWorkerCGI is about as dumb as nails.  Any back-end can come along and have it
+do its bidding (enslave it). It does maintain a lock-file with its PID so that it can be determined how many workers
 are actually running on a given server.  If the request will cause the number of lock files in
 $TEMP_DIR/Workers/ to exceed the number specified by max_workers in the install environment file,
 503 Status will be returned.
@@ -77,6 +81,8 @@ our $VERSION = $OME::VERSION;
 use Carp;
 use CGI qw(:standard);
 use Fcntl qw (:flock O_RDWR O_CREAT); # import LOCK_* and OPEN constants
+use Log::Agent;
+
 use OME::Install::Environment;
 use OME::SessionManager;
 use OME::Analysis::Engine::UnthreadedPerlExecutor;
@@ -117,7 +123,7 @@ do_response (SERVER_BUSY,"Too many workers running") unless
 our $CGI = new CGI;
 my ($DataSource,$SessionKey,$DBUser,$DBPassword,
 	$MEX_ID,$Dependence,$Target_ID,
-	$Notices,$Worker_ID) = get_params ($CGI);
+	$Notices,$Worker_ID,$MasterID) = get_params ($CGI);
 
 # Try to get a remote session
 my $session = OME::SessionManager->createSession ($SessionKey,{
@@ -145,6 +151,8 @@ do_response (BAD_REQUEST,"Unable to load Worker ID $Worker_ID") unless $worker;
 # Set the worker status to 'BUSY'
 $worker->status('BUSY');
 $worker->PID($$);
+$worker->master($MasterID);
+
 $worker->storeObject();
 
 # Register the module execution for later
@@ -152,10 +160,14 @@ OME::Fork->doLater ( sub {
 	# Note that this executor sets the module status on error and stores the MEX
 	# We probably don't need an eval here, because there's already one in this
 	# executor.
+	logdbg "debug", "NonBlockingSlaveWorkerCGI: executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
 	eval {
 		my $executor = OME::Analysis::Engine::UnthreadedPerlExecutor->new();
 		$executor->executeModule ($mex,$Dependence,$target);
 	};
+	if ($@) {
+		logdbg "debug", "NonBlockingSlaveWorkerCGI: ERROR executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target:\n$@";
+	}
 	$worker->status('IDLE');
 	$worker->last_used('now()');
 	$worker->PID(undef);
@@ -163,14 +175,16 @@ OME::Fork->doLater ( sub {
 	OME::Tasks::NotificationManager->notify ($_) foreach (@$Notices);
 	unregister_worker ();
 	$session->commitTransaction();
+	logdbg "debug", "NonBlockingSlaveWorkerCGI: finished executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
 });
 
 # Commit transaction, setting worker status to BUSY,
 $session->commitTransaction();
 
-# Send an OK responce and exit
+# Send an OK response and exit
 do_response (STATUS_OK,'OK');
 
+# The sub we registered with OME::Fork->doLater will execute now (after we've sent the response).
 
 ################
 # End of Code
@@ -280,7 +294,7 @@ sub unregister_worker {
 
 
 sub get_params {
-	my ($DataSource,$SessionKey,$DBUser,$DBPassword); # DataSource is required
+	my ($DataSource,$SessionKey,$DBUser,$DBPassword,$MasterID); # all are required
 	my ($MEX,$Dependence,$Target);        # $target can be undef only if $Dependence = 'G'
 	my @Notices;
 	my $WorkerID;
@@ -289,6 +303,15 @@ sub get_params {
 	$DataSource = $CGI->param('DataSource') unless $DataSource;
 	do_response (BAD_REQUEST,"DataSource not specified") unless $DataSource;
 	
+	# If the DSN's host is not set, then the caller is self-hosting the DB, which means
+	# we set the host for our DSN to the caller's IP.
+	# If the DSN's host is not set and the caller is 127.0.0.1, then we leave the DSN alone
+	# because everything (the caller, the worker, and the DB) are on localhost.
+	my $host = $ENV{REMOTE_ADDR};
+	$DataSource .= ';host='.$host
+		unless ($host eq '127.0.0.1' or $DataSource =~ /;host=\S+/);
+	logdbg "debug", "NonBlockingSlaveWorkerCGI: DataSource = $DataSource";
+
 	$DBUser = $CGI->url_param('DBUser');
 	$DBUser = $CGI->param('DBUser') unless $DBUser;
 	
@@ -324,7 +347,11 @@ sub get_params {
 	$WorkerID = int ($WorkerID);
 	do_response (BAD_REQUEST,"WorkerID must be a positive integer") unless $WorkerID;
 
-	return ($DataSource,$SessionKey,$DBUser,$DBPassword,$MEX,$Dependence,$Target,\@Notices,$WorkerID);
+	$MasterID = $CGI->url_param('MasterID');
+	$MasterID = $CGI->param('MasterID') unless $MasterID;
+	do_response (BAD_REQUEST,"MasterID must be specified") unless $MasterID;
+
+	return ($DataSource,$SessionKey,$DBUser,$DBPassword,$MEX,$Dependence,$Target,\@Notices,$WorkerID,$MasterID);
 }
 
 1;
