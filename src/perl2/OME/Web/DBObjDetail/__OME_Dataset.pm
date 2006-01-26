@@ -83,17 +83,18 @@ sub getPageBody {
 	# dropdown list that allows clustering thumbnails by categories.
 	my @cg_list = $factory->findObjects ('@CategoryGroup',
 		'CategoryList.ClassificationList.image.dataset_links.dataset' => $dataset->id(),
-		__distinct => 'id',
+		__distinct => ['Name', 'id'],
+		__order    => ['Name', 'id'],
 	);
-	@cg_list = sort{ $a->Name cmp $b->Name } @cg_list;
 	my @unused_cg_list = $factory->findObjects ('@CategoryGroup',
 		( scalar( @cg_list ) ? 
 			('id' => [ 'not in', [ map( $_->id, @cg_list ) ] ] ) : 
 			()
 		),
-		__distinct => 'id',
+		__distinct => ['Name', 'id'],
+		__order    => ['Name', 'id'],
 	);
-	@cg_list = ( @cg_list, (sort{ $a->Name cmp $b->Name } @unused_cg_list ) );
+	@cg_list = ( @cg_list, @unused_cg_list );
 
 	# load the selected category group. 
 	# 	selected_cg        comes from the search popup (or create popup)
