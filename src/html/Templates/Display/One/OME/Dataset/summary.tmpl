@@ -1,11 +1,14 @@
 <TMPL_VAR NAME=/selector>
-<font class="ome_header_title">
-	<a href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail" title="<TMPL_VAR NAME=description/max_text_length-60/escape_html>">
-		<TMPL_VAR NAME=name/max_text_length-25>
-	</a>
-</font>
+<a href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_punchline" title="<TMPL_VAR NAME=description/max_text_length-60/escape_html>">
+	<TMPL_VAR NAME=name/max_text_length-25>
+</a>
 <TMPL_IF NAME=count_images>
-	<span class='ome_quiet'>(<TMPL_VAR NAME=count_images> images)</span><br>
+	<span class='ome_quiet'>(<TMPL_VAR NAME=count_images> images)</span>
+<TMPL_ELSE>
+	<span class='ome_quiet'>(no images)</span>
 </TMPL_IF>
+<br>
 <span class='ome_quiet'>Owned by <TMPL_VAR NAME=owner/render-ref></span><br>
-<TMPL_VAR NAME=images/render-bare_ref_mass/paging_limit-6>
+<TMPL_IF NAME=count_images>
+	<TMPL_VAR NAME=images/render-bare_ref_mass/paging_limit-6>
+</TMPL_IF>
