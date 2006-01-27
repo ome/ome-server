@@ -60,9 +60,12 @@ use OME::Session;
 use OME::Analysis::Engine::Worker;
 use OME::Tasks::NotificationManager;
 use OME::Database::Delegate;
+use OME::Install::Environment;
 
 use constant SERVER_BUSY     => 503;
 our $DATA_SOURCE;
+our $DB_USER;
+our $DB_PASS;
 
 
 sub new {
@@ -71,10 +74,17 @@ sub new {
 	
 	unless ($DATA_SOURCE) {
 		$DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getDSN();
+		my $DB_conf = OME::Install::Environment->initialize()->DB_conf();
+		$DB_USER = $DB_conf->{User};
+		$DB_PASS = $DB_conf->{Password};
+		$DB_USER = getpwuid($<) unless $DB_USER;
+
 		# Uncomment this next line if you want to use a Mac for a backend
 		# and a non-mac for the worker nodes.
 		# Note that this only works if your computer name (i.e. the part before '.local')
 		# gets properly resolved by your DNS server
+		# Also, this is only necessary if your mac uses a non-localhost DB, which is also on
+		# a .local domain.
 #		$DATA_SOURCE =~ s/\.local//;
 	}
 
@@ -84,20 +94,18 @@ sub new {
 # laptop as the backend and ome as the worker node:
 # ModPerl::Registry: DBI connect('dbname=ome;host=siah-tibook','',...) failed: FATAL 1:  user "apache" does not exist at /usr/lib/perl5/site_perl/5.8.3/OME/Database/Delegate.pm line 269\n
 # I can't get this from the install environment because it's not set.
-	my $DBUser = `whoami`;
-	chomp( $DBUser );
 	my $self = {
 	# This is a unique ID for this executor instance
 		instance_id => undef,
 	# Array of hashrefs, keyed by 'MexID','Dep','TargetID'
 		queue       => [],
 		UA          => undef,
-		DataSource  => undef,
 		SessionKey  => undef,
 	# The messages the worker will send us when its done.
 		OurWorker   => undef,
 		AnyWorker   => undef,
-		DBUser => $DBUser,
+		DBUser => $DB_USER,
+		DBPassword => $DB_PASS,
 	};
 	bless $self, $class;
 	
@@ -179,7 +187,7 @@ sub pressWorker {
 	my $response = $self->{UA}->get($url);
 
 	return 1 if $response->is_success();
-	
+	logerr "pressWorker: Error pressing worker: ".$response->status_line();
 	# Update last_used if the responce was an error
 	# Maybe it will fix itself?
 	# This is mostly used to retry 503 - SERVER_BUSY responces at a later time.
@@ -234,6 +242,7 @@ sub executeModule {
 		Target       => $target ? $target->id() : undef,
 		DataSource   => $self->{DataSource},
 		DBUser       => $self->{DBUser},
+		DBPassword   => $self->{DBPassword},
 		SessionKey   => $self->{SessionKey},
 	};
 	push (@$queue,$job);
@@ -254,8 +263,7 @@ sub waitForAnyModules {
 		(undef,'',$self->{OurWorker});
 
 	my $nWorking = $self->countBusyWorkers();
-	return unless $nWorking;
-	
+
 	# Our "event loop"
 	while ($event ne $ourEvent) {
 		# Block until something happens
@@ -267,7 +275,7 @@ sub waitForAnyModules {
 			# Shift the queue if anything happened
 			$self->shiftQueue();
 
-			# Return if one of one our workers finished
+			# Return if one of our workers finished
 			foreach (@$events) {
 				$event = $_ and last if $_ eq $ourEvent;
 			}
