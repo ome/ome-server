@@ -90,7 +90,6 @@ use OME::Fork;
 use OME::Tasks::NotificationManager;
 
 
-use constant ENV_FILE        => '/etc/ome-install.store';
 use constant PID_FILE        => 'WorkerPIDs';
 our $PID_FILE_PATH; # set to $environment->tmp_dir().'/'.PID_FILE
 
@@ -101,14 +100,15 @@ use constant NOT_IMPLEMENTED => 501;
 use constant SERVER_BUSY     => 503;
 
 
+
 ################
 # Start of Code
 ################
 
+our $CGI = new CGI;
 
 # Get the installation environment
-OME::Install::Environment::restore_from (ENV_FILE);
-my $environment = initialize OME::Install::Environment;
+my $environment = OME::Install::Environment->initialize();
 my $worker_conf = $environment->worker_conf();
 do_response (NOT_IMPLEMENTED,"Workers not configured") unless $worker_conf;
 
@@ -120,70 +120,84 @@ do_response (SERVER_BUSY,"Too many workers running") unless
 	register_worker($worker_conf->{MaxWorkers});
 
 # Parse parameters
-our $CGI = new CGI;
 my ($DataSource,$SessionKey,$DBUser,$DBPassword,
 	$MEX_ID,$Dependence,$Target_ID,
 	$Notices,$Worker_ID,$MasterID) = get_params ($CGI);
 
 # Try to get a remote session
-my $session = OME::SessionManager->createSession ($SessionKey,{
-	DataSource => $DataSource,
-	DBUser     => $DBUser,
-	DBPassword => $DBPassword,
-	});
-do_response (BAD_REQUEST,"Unable to get remote session") unless $session;
+my $session;
+eval {
+	$session = OME::SessionManager->createSession ($SessionKey,{
+		DataSource => $DataSource,
+		DBUser     => $DBUser,
+		DBPassword => $DBPassword,
+		});
+};
+do_response (SERVER_ERROR,"Unable to get remote session: $@") unless $session;
 
 # Get our MEX object and target object if needed.
-my $factory = $session->Factory();
-my $mex = $factory->loadObject ('OME::ModuleExecution',$MEX_ID);
-do_response (BAD_REQUEST,"Unable to load MEX ID $MEX_ID") unless $mex;
+my ($factory,$mex);
+eval {
+	$factory = $session->Factory();
+	$mex = $factory->loadObject ('OME::ModuleExecution',$MEX_ID);
+};
+do_response (SERVER_ERROR,"Unable to load MEX ID $MEX_ID: $@") unless $mex;
 
 my $target;
-$target = $factory->loadObject ('OME::Image',$Target_ID) if $Dependence eq 'I';
-$target = $factory->loadObject ('OME::Dataset',$Target_ID) if $Dependence eq 'D';
-do_response (BAD_REQUEST,"Unable to load Target ID $Target_ID")
+eval {
+	$target = $factory->loadObject ('OME::Image',$Target_ID) if $Dependence eq 'I';
+	$target = $factory->loadObject ('OME::Dataset',$Target_ID) if $Dependence eq 'D';
+};
+do_response (SERVER_ERROR,"Unable to load Target ID $Target_ID: $@")
 	if ($Dependence eq 'I' or $Dependence eq 'D') and not defined $target;
 
 my $worker;
-$worker = $factory->loadObject ('OME::Analysis::Engine::Worker',$Worker_ID);
-do_response (BAD_REQUEST,"Unable to load Worker ID $Worker_ID") unless $worker;
+eval {
+	$worker = $factory->loadObject ('OME::Analysis::Engine::Worker',$Worker_ID);
+};
+do_response (SERVER_ERROR,"Unable to load Worker ID $Worker_ID: $@") unless $worker;
 
 # Set the worker status to 'BUSY'
-$worker->status('BUSY');
-$worker->PID($$);
-$worker->master($MasterID);
-
-$worker->storeObject();
-
-# Register the module execution for later
-OME::Fork->doLater ( sub {
-	# Note that this executor sets the module status on error and stores the MEX
-	# We probably don't need an eval here, because there's already one in this
-	# executor.
-	logdbg "debug", "NonBlockingSlaveWorkerCGI: executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
-	eval {
-		my $executor = OME::Analysis::Engine::UnthreadedPerlExecutor->new();
-		$executor->executeModule ($mex,$Dependence,$target);
-	};
-	if ($@) {
-		logdbg "debug", "NonBlockingSlaveWorkerCGI: ERROR executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target:\n$@";
-	}
-	$worker->status('IDLE');
-	$worker->last_used('now()');
-	$worker->PID(undef);
-	$worker->master(undef);
+eval {
+	$worker->status('BUSY');
+	$worker->PID($$);
+	$worker->master($MasterID);
+	
 	$worker->storeObject();
-	OME::Tasks::NotificationManager->notify ($_) foreach (@$Notices);
-	unregister_worker ();
+	
+	# Register the module execution for later
+	OME::Fork->doLater ( sub {
+		# Note that this executor sets the module status on error and stores the MEX
+		# We probably don't need an eval here, because there's already one in this
+		# executor.
+		logdbg "debug", "NonBlockingSlaveWorkerCGI: executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
+		eval {
+			my $executor = OME::Analysis::Engine::UnthreadedPerlExecutor->new();
+			$executor->executeModule ($mex,$Dependence,$target);
+		};
+		if ($@) {
+			logdbg "debug", "NonBlockingSlaveWorkerCGI: ERROR executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target:\n$@";
+		}
+		$worker->status('IDLE');
+		$worker->last_used('now()');
+		$worker->PID(undef);
+		$worker->master(undef);
+		$worker->storeObject();
+		OME::Tasks::NotificationManager->notify ($_) foreach (@$Notices);
+		unregister_worker ();
+		$session->commitTransaction();
+		logdbg "debug", "NonBlockingSlaveWorkerCGI: finished executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
+	});
+	# Commit transaction, setting worker status to BUSY,
 	$session->commitTransaction();
-	logdbg "debug", "NonBlockingSlaveWorkerCGI: finished executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
-});
+};
 
-# Commit transaction, setting worker status to BUSY,
-$session->commitTransaction();
-
-# Send an OK response and exit
-do_response (STATUS_OK,'OK');
+if ($@) {
+	do_response (SERVER_ERROR,'Could not initialize worker for MEX $MEX_ID: $@');
+} else {
+	# Send an OK response and exit
+	do_response (STATUS_OK,'OK');
+}
 
 # The sub we registered with OME::Fork->doLater will execute now (after we've sent the response).
 
@@ -200,13 +214,14 @@ my ($code,$message) = @_;
 	my @lines = split (/\n/,$message);
 	
 	my $line1 = shift @lines;
-		print $CGI->header(-type => 'text/html', -status => "500 $line1", -Connection => 'Close');
+	print $CGI->header(-type => 'text/plain', -status => "$code $line1", -Connection => 'Close');
 
-	print "$line1\n",join ("\n",@lines),"\n";
+	print "$line1\n".join ("\n",@lines)."\n";
+	logerr "$line1\n".join ("\n",@lines)."\n" unless $code == STATUS_OK;
 	
 	# We're still running if status is OK
 	unregister_worker () unless $code == STATUS_OK;
-	exit;
+	exit 1;
 }
 
 
