@@ -58,10 +58,9 @@
 #endif
 
 
-
 /* driver that updates pixels from vers 2 to vers 3 */
 int main (int argc, char **argv) {
-char beSilent = 0, doQuery = 0;
+char beSilent = 0, doQuery = 0, doVerify = 0;
 OID thePixID=0,theFileID=0, theID=0;
 PixelsRep *myPixels;
 FileRep *myFile;
@@ -70,7 +69,9 @@ int pix_vers_fd, file_vers_fd;
 char pix_vers_path[OMEIS_PATH_SIZE], file_vers_path[OMEIS_PATH_SIZE];
 int pix_vers=0, file_vers=0;
 char pix_vers_str[256], file_vers_str[256];
-		
+u_int8_t sha1[OME_DIGEST_LENGTH];
+int fd;
+
 	
 	if (argc > 1) {
 		/* Can't be both silent and ask questions */
@@ -85,6 +86,7 @@ char pix_vers_str[256], file_vers_str[256];
 		  Note that 0 is 'undefined'
 		*/
 		if ( !strcmp(argv[1],"-q") ) doQuery = 1; 
+		if ( !strcmp(argv[1],"-v") ) doVerify = 1; 
 	}
 
 	if (chdir (OMEIS_ROOT)) {
@@ -101,7 +103,15 @@ char pix_vers_str[256], file_vers_str[256];
 		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get a new PixelsRep");
 		exit (-1);
 	}
-	thePixID = lastID (myPixels->path_ID);
+	if ((fd = open(myPixels->path_ID, O_RDONLY, 0600)) < 0) {
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s", myPixels->path_ID);
+	}
+	if ((read(fd, &thePixID, sizeof (OID)) < 0) || thePixID == 0xFFFFFFFFFFFFFFFFULL) {
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could get last Pixels ID");
+	}
+	close(fd);
+	if (!beSilent) fprintf (stdout,"%llu Pixels in repository\n",thePixID);
+
 	/* with a NULL ID, path_rep is set to the root with trailing slash */
 	sprintf (pix_vers_path,"%sVERSION",myPixels->path_rep);
 	freePixelsRep (myPixels);
@@ -133,7 +143,15 @@ char pix_vers_str[256], file_vers_str[256];
 		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get a new FileRep");
 		exit (-1);
 	}
-	theFileID = lastID (myFile->path_ID);
+	if ((fd = open(myFile->path_ID, O_RDONLY, 0600)) < 0) {
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s", myFile->path_ID);
+	}
+	if ((read(fd, &theFileID, sizeof (OID)) < 0) || theFileID == 0xFFFFFFFFFFFFFFFFULL) {
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could get last File ID");
+	}
+	close(fd);
+	if (!beSilent) fprintf (stdout,"%llu Files in repository\n",theFileID);
+
 	/* with a NULL ID, path_rep is set to the root with trailing slash */
 	sprintf (file_vers_path,"%sVERSION",myFile->path_rep);
 	freeFileRep (myFile);
@@ -182,6 +200,7 @@ char pix_vers_str[256], file_vers_str[256];
 	} else {
 		if (!beSilent) fprintf(stdout, "Updating Pixels 1 to %llu\n", (unsigned long long)thePixID);
 		for (theID=1; theID <= thePixID; theID++) {
+			OMEIS_ClearError();
 			if (!beSilent) fprintf(stdout, "\r%25llu", (unsigned long long)theID);
 			fflush (stdout);
 			if ( (myPixels = GetPixelsRep (theID,'i',1)) ){
@@ -210,6 +229,7 @@ char pix_vers_str[256], file_vers_str[256];
 	} else {
 		if (!beSilent) fprintf(stdout, "Updating Files 1 to %llu\n", (unsigned long long)theFileID);
 		for (theID=1; theID <= theFileID; theID++) {
+			OMEIS_ClearError();
 			if (!beSilent) fprintf(stdout, "\r%25llu", (unsigned long long)theID);
 			fflush (stdout);
 			if ( (myFile = GetFileRep (theID,'i',1)) ){
@@ -230,5 +250,54 @@ char pix_vers_str[256], file_vers_str[256];
 	}
 
 
+	if (doVerify) {
+		/*
+		  Process Pixels
+		*/
+		if (!beSilent) fprintf(stdout, "Verifying Pixels 1 to %llu\n", (unsigned long long)thePixID);
+		for (theID=2182; theID <= thePixID; theID++) {
+			OMEIS_ClearError();
+			if (!beSilent) fprintf(stdout, "\r%25llu  ", (unsigned long long)theID);
+			fflush (stdout);
+			if ( (myPixels = GetPixelsRep (theID,'r',1)) ){
+//				if (get_md_from_file (myPixels->path_rep, (unsigned char *)sha1) < 0) {
+				if (get_md_from_buffer (myPixels->pixels, myPixels->size_rep, (unsigned char *)sha1) < 0) {
+					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","PixelsID",theID,"Could not get a sha1 digest");
+				}
+				if (memcmp (sha1, myPixels->head->sha1, OME_DIGEST_LENGTH)) {
+					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","PixelsID",theID,"Digests don't match");
+				}
+				freePixelsRep (myPixels);
+			} else {
+				if (!beSilent) OMEIS_ReportError ("verifyOMEIS","PixelsID",theID,"Could not be opened");
+			}
+		}
+		if (!beSilent) fprintf(stdout, "\nSuccessfully verified Pixels in OMEIS\n");
+	
+	
+		/*
+		  Process Files
+		*/
+		if (!beSilent) fprintf(stdout, "Verifying Files 1 to %llu\n", (unsigned long long)theFileID);
+		for (theID=1; theID <= theFileID; theID++) {
+			OMEIS_ClearError();
+			if (!beSilent) fprintf(stdout, "\r%25llu  ", (unsigned long long)theID);
+			fflush (stdout);
+			if ( (myFile = GetFileRep (theID,'r',1)) ){
+//				if ( get_md_from_file (myFile->path_rep, (unsigned char *)sha1) < 0 ) {
+				if ( get_md_from_buffer (myFile->file_buf, myFile->size_rep, (unsigned char *)sha1) < 0 ) {
+					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","FileID",theID,"Could not get a sha1 digest");
+				}
+				if (memcmp (sha1, myFile->file_info.sha1, OME_DIGEST_LENGTH)) {
+					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","FileID",theID,"Digests don't match");
+				}
+				freeFileRep (myFile);
+			} else {
+				if (!beSilent) OMEIS_ReportError ("verifyOMEIS","FileID",theID,"Could not be opened");
+			}
+		}
+		if (!beSilent) fprintf(stdout, "\nSuccessfully verified Files in OMEIS\n");
+
+	}
  	return (0);
 }
