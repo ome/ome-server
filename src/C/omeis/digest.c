@@ -45,7 +45,6 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <openssl/evp.h>
-#include <errno.h>
 
 #include "digest.h"
 #include "OMEIS_Error.h"
@@ -60,7 +59,7 @@ get_md_from_file (char * filename, unsigned char * md_value)
 	assert(md_value != NULL);
 
 	if ((fd = (open(filename, O_RDONLY))) == -1) {
-		OMEIS_DoError ("Error opening %s: %s",filename,strerror(errno));
+		OMEIS_DoError ("Error opening %s",filename);
 		return (-1);
 	}
 
@@ -135,7 +134,7 @@ get_md_from_fd (int fd, unsigned char * md_value)
 	} while (rlen > 0);
 
 	if (rlen < 0) {
-		OMEIS_DoError ("Error reading from fd: %s",strerror(errno));
+		OMEIS_DoError ("Error reading from fd");
 		return(-1);  /* Error reading from fd */
 	}
 
