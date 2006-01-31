@@ -255,7 +255,7 @@ int fd;
 		  Process Pixels
 		*/
 		if (!beSilent) fprintf(stdout, "Verifying Pixels 1 to %llu\n", (unsigned long long)thePixID);
-		for (theID=2182; theID <= thePixID; theID++) {
+		for (theID=1; theID <= thePixID; theID++) {
 			OMEIS_ClearError();
 			if (!beSilent) fprintf(stdout, "\r%25llu  ", (unsigned long long)theID);
 			fflush (stdout);
