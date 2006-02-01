@@ -299,19 +299,27 @@ int newRepFile (OID theID, char *path, size_t size, char *suffix) {
   
   This allows one to run a cron job to compress files that haven't been accessed in a while:
 */
-// find . -regex '.*/[0123456789]*' -atime +30 -exec bzip2 -9 '{}' \;
+// find . -regex '.*/[0123456789]*' -atime +30 -type f -exec bzip2 -9 -f '{}' \;
 //
 //  N.B.:  As of this writing bzip2 and gzip are supported.
 
 
 int openRepFile (const char *filename, int flags) {
 int myFD;
+char our_filename [OMEIS_PATH_SIZE*2];
+int nc;
 
 	if ( (myFD = open (filename, flags, 0600)) < 0) {
-		if (inflateBZfile (filename) == 0) {
-			return ( open (filename, flags, 0600) );
-		} else if (inflateGZfile (filename) == 0) {
-			return ( open (filename, flags, 0600) );
+		/*
+		* resolve the symlink, if any.
+		* This way we can open it even if its linked to a file that is now compressed
+		*/
+		realpath (filename,our_filename);
+
+		if (inflateBZfile (our_filename) == 0) {
+			return ( open (our_filename, flags, 0600) );
+		} else if (inflateGZfile (our_filename) == 0) {
+			return ( open (our_filename, flags, 0600) );
 		} else {
 			return (-1);
 		}
