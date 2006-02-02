@@ -81,6 +81,8 @@ __PACKAGE__->hasMany('input_links',
                      'OME::AnalysisChain::Link' => 'to_node');
 __PACKAGE__->hasMany('output_links',
                      'OME::AnalysisChain::Link' => 'from_node');
+__PACKAGE__->hasMany('executions',
+                     'OME::AnalysisChainExecution::NodeExecution' => 'analysis_chain_node');
 
 =head1 METHODS (C<AnalysisView::Node>)
 
