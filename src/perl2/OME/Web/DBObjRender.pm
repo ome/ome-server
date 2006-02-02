@@ -181,7 +181,10 @@ sub render {
 
 	# populate template
 	$tmpl->param( %tmpl_data );
-	return $tmpl->output();
+	my $out = $tmpl->output();
+	$out =~ /^(\s*)$/;
+	return $tmpl->output() unless ($1 eq $out);
+	return "";
 }
 
 # this function collects data for an object in a template
@@ -491,7 +494,10 @@ sub renderArray {
 
 	# populate template
 	$tmpl->param( %tmpl_data );
-	return $tmpl->output();
+	my $out = $tmpl->output();
+	$out =~ /^(\s*)$/;
+	return $tmpl->output() unless ($1 eq $out);
+	return "";
 }
 
 sub _pagerControl {
