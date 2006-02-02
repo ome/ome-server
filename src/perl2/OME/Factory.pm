@@ -427,7 +427,12 @@ in the set of objects returned.
 
 tells the Factory to order the results of the query.  The contents of
 the array ref should be the columns to order by.  Like search
-criteria, these columns can involve foreign key joins.
+criteria, these columns can involve foreign key joins. 
+
+	__order => '!name'
+
+By default, search returns with ascending order. Use a exclamation mark
+as a prefix to specify descending order.
 
 	id => ['>',3]
 
