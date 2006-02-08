@@ -96,18 +96,19 @@ sub importFiles {
     my $files_mex = $importer->startImport();
 
 	eval {
-            my @files;
+            my %files;
 
             foreach my $filename (@$filenames) {
-                push @files, OME::Image::Server::File->upload($filename)
+                my $omeis_file = OME::Image::Server::File->upload($filename)
                 	if -f $filename and -r $filename and -s $filename;
+                $files{ $filename } = $omeis_file;
                 $task->step();
                 $task->setMessage("Uploaded $filename");
             }
 
             $task->step();
             $task->setMessage('Importing');
-            my $image_list = $importer->importFiles(\@files);
+            my $image_list = $importer->importFiles(\%files);
             $importer->finishImport();
 
 			if( scalar( @$image_list ) > 0 ) {
