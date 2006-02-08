@@ -379,14 +379,29 @@ sub getObjects {
     }
     else {
 	# get all of the given type.
-	my @objs = $factory->findObjects($typeST);
+	my @objs = $factory->findObjects($typeST, {__order => 'id'});
 	$objsRef = \@objs;
     }
     
+    print STDERR "*****GET OBJECTS***\n";
+    for (my $i =0; $i < (@$objsRef); $i++ ) {
+	print STDERR "NAME: " . $objsRef->[$i]->Name . ", id " .
+	    $objsRef->[$i]->id . "\n";
+    }
     # now, objsRef is a reference to an aaray containing the list of
     # top-level items that I want to work with
     my $tree = $self->getTreeFromRootList($objsRef,@$paths);
     my $flatTree = $self->flattenTree($tree);
+    # strip ids off of items.
+    for (my $i = 0; $i < scalar(@$flatTree); $i++ ) {
+	my $ent = $flatTree->[$i];
+	for (my $j = 0; $j < scalar(@$ent)-1; $j++) {
+	    my $val = $ent->[$j];
+	    $val =~ m/([^_]*)__\d+/;
+	    print STDERR "***VAL IS $val, match is $1\n";
+	    $ent->[$j]=$1;
+	}
+    }
     return $flatTree;
 }
 
@@ -457,7 +472,9 @@ sub getTreeFromRootList {
     my %tree;
     foreach my $obj (@$objs) {
 	my $name = $obj->Name();
-	$tree{$name} = $self->getTree($obj,@paths);
+	my $id= $obj->id();
+	my $key = $name . "__" . $id;
+	$tree{$key} = $self->getTree($obj,@paths);
     }
     return \%tree;
 }
@@ -502,7 +519,9 @@ sub getTree {
 	my $child = $map->$next; # follow the pointer to the next
 				# object (ie., ProbeGeneList->Probe)
 	my $name = $child->Name(); # get the name
-	$tree{$name} = $self->getTree($child,@paths); #recurse
+	my $id = $child->id();
+	my $key = $name . "__" . $id;
+	$tree{$key} = $self->getTree($child,@paths); #recurse
     }
     return \%tree;
 }
@@ -549,7 +568,18 @@ sub flattenTree {
 	    push @rows,$valRow;
 	}
     }
-    return \@rows;
+    # sort the rows by id of first item.
+    my @sortedRows = sort sortByIdKey @rows;
+    return \@sortedRows;
+}
+
+
+sub sortByIdKey {
+    $a->[0]=~ /[^_]*__(\d+)/;
+    my $aID = $1;
+    $b->[0]=~ /[^_]*__(\d+)/;
+    my $bID = $1;
+    return $aID <=> $bID;
 }
 
     
@@ -716,7 +746,7 @@ sub populateColumnHeaders {
 	    if (!$same) {
 		my %column;
 		my $colSpan =
-		    $self->getRepeatCount($columns,$j,$i,$val);
+		    $self->getRepeatCount($columns,$j,$i);
 		print STDERR "*** get repeat count in columns is $colSpan\n";
 		$column{columnNameEntry} = $val;
 		$column{columnNameSpan} = $colSpan;
@@ -786,7 +816,7 @@ sub populateBody {
 	    if ($val ne $prev[$i] || $same == 0) {
 		my %entry;
 		my $rowSpan = 
-		    $self->getRepeatCount($activeRows,$rowIndex,$i,$val);
+		    $self->getRepeatCount($activeRows,$rowIndex,$i);
 		$entry{rowNameEntry} = $val;
 		$entry{rowNameSpan} = $rowSpan;
 		push(@entries,\%entry);
@@ -807,22 +837,37 @@ sub populateBody {
 }
 
 
-sub getRepeatCount {
-    my ($self,$entries,$start,$field,$val) = @_;
+#sub getRepeatCount {
+ #   my ($self,$entries,$start,$field,$val) = @_;
     
-    my $cnt;
-    for (my $i=$start; $i < scalar(@$entries); $i++) {
-	my $rec = $entries->[$i];
-	if ($rec->[$field] eq $val) {
-	    $cnt++;
+  #  my $cnt;
+   # for (my $i=$start; $i < scalar(@$entries); $i++) {
+	#my $rec = $entries->[$i];
+	#if ($rec->[$field] eq $val) {
+	#    $cnt++;
+	#}
+	#else {
+	#    return $cnt;
+	#}
+#    }
+#    return $cnt;
+#}
+
+sub getRepeatCount {
+    my ($self,$entries,$start,$field) = @_;
+
+    my $template = $entries->[$start];
+    my $cnt = 1;
+    for (my $j = $start+1; $j < scalar(@$entries); $j++) {
+	my $rec = $entries->[$j];
+	for (my $k = 0; $k <= $field; $k++) {
+	    return $cnt if ($rec->[$k] ne $template->[$k]); # ok,
+				# we're done - unequal filed
 	}
-	else {
-	    return $cnt;
-	}
+	$cnt++;
     }
     return $cnt;
 }
-
     
     
     
