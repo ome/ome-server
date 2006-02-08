@@ -170,7 +170,7 @@ sub importFile {
 			$originalFile = $session->Factory->
 			  newAttribute("OriginalFile",undef,$mex,
 						   {SHA1 => $file->getSHA1(), 
-							Path => $file->getFilename(), 
+							Path => $filename, 
 							FileID => $file->getFileID(), 
 							Format => 'OME XML',
 							Repository => $repository });
