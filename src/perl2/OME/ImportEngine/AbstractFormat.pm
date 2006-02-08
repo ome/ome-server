@@ -75,6 +75,8 @@ use OME::Tasks::PixelsManager;
 
 use File::Basename;
 use Log::Agent;
+use base qw(Class::Data::Inheritable);
+__PACKAGE__->mk_classdata('fullPaths');
 
 =head1 CONTRACT
 
@@ -517,7 +519,11 @@ sub __touchOriginalFile {
     logdbg "debug",  "Touch '$format' $file\n";
 
     return OME::Tasks::PixelsManager->
-      createOriginalFileAttribute($file,$format,$file_mex);
+      createOriginalFileAttribute($file,$format,$file_mex,
+      	# If the full paths class variable has been set, then retrieve
+      	# the complete path and pass it as a final parameter to this function
+      	# Otherwise, do nothing.
+      	($self->fullPaths() ? $self->fullPaths()->{ $file->getFileID() } : () ));
 }
 
 =head2 __storeChannelInfo
