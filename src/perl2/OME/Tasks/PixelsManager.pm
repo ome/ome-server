@@ -87,16 +87,25 @@ Provides methods to accomplish common Pixel tasks.
 
 =head2 createOriginalFileAttribute
 
+	my $originalFilesAttribute = OME::Tasks::PixelsManager->
+      createOriginalFileAttribute($omeis_file_object, $format, $file_mex, $full_path );
+    
+Create an original file attribute. $full_path is optional. omeis stores the 
+file name, and strips the path of the imported file. This mechanism allows 
+the original path to be stored in the OriginalFile's Path element for 
+subsequent queries. If $full_path is not specified, OriginalFile's Path 
+element will default to the file name. 
+
 =cut
 
 sub createOriginalFileAttribute {
     my $proto = shift;
-    my ($file,$format,$mex) = @_;
+    my ($file,$format,$mex,$fullPath) = @_;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
     if (UNIVERSAL::isa($file,'OME::LocalFile')) {
-        my $filename = $file->getFilename();
+        my $filename = $fullPath or $file->getFilename();
 
         # See if we've already created an attribute for this file with
         # the same MEX.
@@ -127,6 +136,7 @@ sub createOriginalFileAttribute {
     } elsif (UNIVERSAL::isa($file,'OME::Image::Server::File')) {
         my $repository = $session->findRepository();
         my $fileID = $file->getFileID();
+        my $filename = $fullPath or $file->getFilename();
 
         # See if we've already created an attribute for this file with
         # the same MEX.
@@ -146,7 +156,7 @@ sub createOriginalFileAttribute {
           newAttribute('OriginalFile',undef,$mex,
                        {
                         Repository => $repository,
-                        Path       => $file->getFilename(),
+                        Path       => $filename,
                         FileID     => $file->getFileID(),
                         SHA1       => $file->getSHA1(),
                         Format     => $format,
