@@ -1,0 +1,17 @@
+<TMPL_IF NAME=id>
+<TABLE>
+<TR>
+<TD align="center" class="ome_category_border" 
+    style="<TMPL_VAR NAME=classificationColor>">
+<img src="<TMPL_VAR NAME=thumb_url>" UseMap="#Image<TMPL_VAR name=id>">     
+<TMPL_IF NAME=classificationName>
+<br>
+<TMPL_VAR NAME=classificationName>
+</TMPL_IF>
+</TD>
+</TR>
+
+
+
+</TABLE>
+</TMPL_IF>
