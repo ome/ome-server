@@ -181,6 +181,7 @@ sub render {
 
 	# populate template
 	$tmpl->param( %tmpl_data );
+	# If the output is only whitespace, then return an empty string.
 	my $out = $tmpl->output();
 	$out =~ /^(\s*)$/;
 	return $tmpl->output() unless ($1 eq $out);
@@ -494,6 +495,7 @@ sub renderArray {
 
 	# populate template
 	$tmpl->param( %tmpl_data );
+	# If the output is only whitespace, then return an empty string.
 	my $out = $tmpl->output();
 	$out =~ /^(\s*)$/;
 	return $tmpl->output() unless ($1 eq $out);
@@ -512,7 +514,7 @@ sub _pagerControl {
 	$form_name = 'primary' unless( defined $form_name and $form_name ne '' );
 
 	# Turn the page
-	my $action = $q->param( $control_name.'_page_action' ) ;
+	my $action = $q->param( $control_name.'_page_action' );
 	if( $action ) {
 		if( $action eq 'FirstPage_'.$control_name ) {
 			$offset = 0;
@@ -526,24 +528,19 @@ sub _pagerControl {
 	}
 	my $currentPage = int( $offset / $limit ) + 1;
 
-	# Results x-y of N...
+	# Update form parameters
+	$q->delete( $control_name.'_page_action' );
+	$q->param( $control_name.'___offset', $offset );
+
+	# print "Results x-y of N"
 	my $pagingText = "Results ".($offset + 1)."-".
 		( ($offset+$limit > $obj_count ) ? $obj_count : $offset+$limit)." of $obj_count. ";
 
 	# make controls
 	if( $numPages > 1 ) {
-		my $min = (
-			( $currentPage - 4 < 1 ) ? 
-			1 : 
-			$currentPage - 4  
-		);
-		my $max = (
-			( $min + 10 > $numPages ) ?
-			$numPages :
-			$min + 10
-		);
-		$pagingText .= "Page <input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
-		$pagingText .= "<input type='hidden' name='${control_name}_page_action'>";
+		$pagingText .= 
+			$q->hidden( -name => $control_name.'___offset' ).
+			$q->hidden( -name => $control_name.'_page_action' );
 		$pagingText .= $q->a( {
 				-title => "First Page",
 				-href => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='FirstPage_$control_name'; document.forms['$form_name'].submit();",
@@ -558,11 +555,22 @@ sub _pagerControl {
 				'<'
 			)." "
 			if $currentPage > 1;
-		for my $pageNum ($min..$max) {
+		my $minPageNumDisplayed = (
+			( $currentPage - 4 < 1 ) ? 
+			1 : 
+			$currentPage - 4  
+		);
+		my $maxPageNumDisplayed = (
+			( $minPageNumDisplayed + 10 > $numPages ) ?
+			$numPages :
+			$minPageNumDisplayed + 10
+		);
+		$pagingText .= "... " if( $minPageNumDisplayed ne 0 );
+		for my $pageNum ($minPageNumDisplayed..$maxPageNumDisplayed) {
 			unless( $pageNum eq $currentPage ) {
 				$pagingText .= $q->a( {
 					-title => "Jump to page $pageNum",
-					-href => "javascript: document.forms['$form_name'].elements['${control_name}___offset'].value=".($pageNum * $limit - 1)."; document.forms['$form_name'].submit();",
+					-href => "javascript: document.forms['$form_name'].elements['${control_name}___offset'].value=".(($pageNum - 1 ) * $limit)."; document.forms['$form_name'].submit();",
 					}, 
 					"$pageNum"
 				)." ";
@@ -570,6 +578,7 @@ sub _pagerControl {
 				$pagingText .= "$currentPage ";
 			}
 		}
+		$pagingText .= "... " if( $maxPageNumDisplayed ne $numPages );
 #		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 		$pagingText .= "\n".$q->a( {
 				-title => "Next Page",
