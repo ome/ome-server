@@ -74,6 +74,7 @@ use Class::Data::Inheritable;
 use Log::Agent;
 use OME::Image;
 use OME::Tasks::ImportManager;
+use OME::ImportEngine::AbstractFormat;
 use UNIVERSAL::require;
 use Time::HiRes qw(gettimeofday tv_interval);
 
@@ -151,11 +152,10 @@ an image is split across several files.  The import classes for those
 formats will correctly group the filenames by image, and import the
 grouped files accordingly.
 
-The $files parameter is given as an array reference to allow it to
-be modified by the import engine.  Any files which are successfully
-imported into some image will be removed from the list.  After the
-call to C<importFiles> returns, none of the files left in the array
-were recognized by any of the import formats.
+The $files parameter can either be:
+	a) an array reference of image server file objects (e.g. OME::Image::Server::File) or
+	b) a hash reference with keys as full paths and values as image server file objects.
+
 
 The list of images imported is returned as an array reference.
 
@@ -165,12 +165,12 @@ and importFiles into a single method call:
 
 	my $importer = OME::ImportEngine::ImportEngine->new(%flags);
 	my $files_mex = $importer->startImport( );
-	my $images = $importer->importFiles( $filenames );
+	my $images = $importer->importFiles( $files );
 	$importer->finishImport();
 
 would become
 
-	OME::ImportEngine::ImportEngine->importFiles(%flags, $filenames);
+	OME::ImportEngine::ImportEngine->importFiles(%flags, $files);
 
 The two syntaxes are identical in behavior.  All of the rules
 governing the parameters to C<new> are also in effect in the
@@ -208,27 +208,38 @@ sub __resetCounters() {
 
 sub importFiles {
     my $self = shift;
-    my $files;
+    my $filesRef;
 
     my $called_as_class = 0;
 
     # Allows this to be called as a class method.
     if (!ref($self)) {
-        $files = pop;
+        $filesRef = pop;
         $self = $self->new(@_);
         $self->startImport( );
         $called_as_class = 1;
     } else {
-        $files = shift;
+        $filesRef = shift;
     }
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
+	# Allow the calling style that specifies full paths in the filesRef 
+	# e.g. { '/full/file/path' => $image_server_file_object, ... } calling style
+	if( ref( $filesRef ) eq 'HASH' ) {
+		my %fullPaths;
+		foreach my $path( keys( %$filesRef ) ) {
+			$fullPaths{ $filesRef->{ $path }->getFileID() } = $path;
+		}
+		$filesRef = [ values %$filesRef ];
+		OME::ImportEngine::AbstractFormat->fullPaths( \%fullPaths );
+	}
+
     my %files;
-    $self->{nFiles} = scalar (@$files);
-    foreach my $file (@$files) {
+    $self->{nFiles} = scalar (@$filesRef);
+    foreach my $file (@$filesRef) {
         $files{$file->getFilename()} = $file;
     }
 
