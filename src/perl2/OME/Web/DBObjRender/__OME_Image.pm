@@ -217,9 +217,52 @@ sub _renderData {
 			}
 		}
 	}
-	
+	if (exists $field_requests->{ 'classificationColor'}) {
+	    my $cg= $options->{CategoryGroup};
+	    if ($cg) {
+		print STDERR "**got category group... " . $cg->Name . "\n";
+		my ($style,$name)  = $self->getClassificationColor($obj,$cg);
+		if ($style) {
+		    foreach my $request ( @ {
+			$field_requests->{'classificationColor'}}) {
+			my $request_string = $request->{'request_string'};
+			$record{$request_string} = $style;
+		    }
+		    foreach my $request ( @ {
+			$field_requests->{'classificationName'}}) {
+			my $request_string = $request->{'request_string'};
+			$record{$request_string} = $name;
+		    }
+		}
+	    }
+	}
 	return %record;
 }
+
+
+sub getClassificationColor {
+    my ($self,$obj,$cg) = @_;
+
+
+    my $classification =
+	OME::Tasks::CategoryManager->getImageClassification($obj,$cg);
+    return unless $classification;
+
+
+    my @categories = $cg->CategoryList(__order => 'Name');
+
+    my @colorList = ("teal","maroon","red","purple","navy","lime",
+		     "olive","yellow","green","blue","silver","aqua");
+    my %colorMap;
+    foreach my $cat (@categories) {
+	$colorMap{$cat->id} = pop(@colorList);
+    }
+    my $color = $colorMap{$classification->Category->id};
+    my $colorString = "background: $color;";
+    my $name = $classification->Category->Name;
+    return ($colorString,$name);
+}
+
 
 =head1 Author
 
