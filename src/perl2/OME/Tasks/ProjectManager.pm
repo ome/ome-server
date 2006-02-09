@@ -246,7 +246,9 @@ Returns a project object.
 		$project2->id() => [$dataset1, $dataset2],
 	});
 
-Project removal method which accepts a hash reference keyed by project ID and containing an array reference of dataset objects or dataset ID's.
+Project removal method which accepts a hash reference keyed by project
+ID and containing an array reference of dataset objects or dataset ID's.
+Results a session->commitTransaction.
 
 Returns 1 on success and undef on failure, this is an *all or nothing method* (either every remove is successful or the entire task fails)
 
@@ -615,64 +617,27 @@ sub load{
 
 sub removeDatasets {
 	my ($self, $to_remove) = @_;
-	my $factory = $self->Session()->Factory();
+	my $session = $self->Session();
+	my $factory = $session->Factory();
 
 	# Unless you give me something, go away
 	return undef unless $to_remove;
 
-	foreach my $project_key (keys %$to_remove) {
-		my $project_id;
-		my $sql = 'DELETE FROM project_dataset_map WHERE project_id = ';
-
-		# Translate possible object key to a valid ID
-		carp ref($project_key);
-		if (ref($project_key) eq 'OME::Project') {
-			carp "Object.";
-			$project_id = $project_key->id();
-		} else {
-			$project_id = $project_key;
+	foreach my $project_id (keys %$to_remove) {
+		my $dataset_ids = $to_remove->{ $project_id };
+		foreach my $dataset_id ( @$dataset_ids ) {
+			my $map = $factory->findObject("OME::Project::DatasetMap",
+								{
+								'dataset' => $dataset_id,
+								'project' => $project_id,
+								})
+				or next;
+			# We have the map. Delete it.
+			$map->deleteObject();
 		}
-
-		$sql .= $project_id . ' AND dataset_id in (';
-
-		# Make sure we've got a set of datasets
-		next unless defined $to_remove->{$project_key};
-
-		my $i = 0;
-
-		foreach my $dataset_id (@{$to_remove->{$project_key}}) {
-			# Commas only if we're on at least the second element
-			if ($i > 0) { $sql .= ','; }
-
-			if (ref($dataset_id) eq 'OME::Dataset') {
-				$dataset_id = $dataset_id->id();
-			}
-			
-			$sql .= $dataset_id;
-			++$i;
-		}
-
-		$sql .= ');';
-
-		# Failure checking
-		my $dbh;
-		unless ($dbh = $factory->obtainDBH()) {
-			carp "Failure to retrieve DBH";
-			return;
-		}
-
-		carp $sql;
-		$dbh->do($sql);
-	
-		if ($dbh->errstr) {
-			carp $dbh->errstr, "rolling back.";
-			$dbh->rollback;
-			return;
-		}
-
-		$dbh->commit;
 	}
 
+   	$session->commitTransaction();
 	return 1;
 }
 
