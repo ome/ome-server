@@ -41,6 +41,7 @@ use strict;
 use OME 2.002_000;
 our $VERSION = 1.000;
 
+
 =head1 NAME
 
 OME::Analysis::Modules::Slicers::Pixels
@@ -48,6 +49,7 @@ OME::Analysis::Modules::Slicers::Pixels
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
+use Time::HiRes qw(gettimeofday tv_interval);
 
 sub new {
     my $proto = shift;
@@ -62,10 +64,15 @@ sub new {
 sub startImage {
     my ($self,$image) = @_;
     $self->SUPER::startImage($image);
+	my $mex = $self->getModuleExecution();
 
     my $session = OME::Session->instance();
 
+	my $start_time = [gettimeofday()];
     my @pixelses = $self->getCurrentInputAttributes("Pixels");
+	$mex->read_time(tv_interval($start_time));
+
+	$start_time = [gettimeofday()];
   PIXELS:
     foreach my $pixels (@pixelses) {
         my $new_slice = $self->
@@ -84,6 +91,9 @@ sub startImage {
                          EndT   => $pixels->SizeT() - 1,
                         });
     }
+	$mex->write_time(tv_interval($start_time));
+
+	$mex->storeObject();
 }
 
 1;

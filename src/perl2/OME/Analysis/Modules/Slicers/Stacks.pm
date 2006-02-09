@@ -48,6 +48,7 @@ OME::Analysis::Modules::Slicers::Stacks
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
+use Time::HiRes qw(gettimeofday tv_interval);
 
 sub new {
     my $proto = shift;
@@ -67,9 +68,12 @@ sub startImage {
     my $factory = $session->Factory();
     my $mex     = $self->getModuleExecution();
 
+	my $start_time = [gettimeofday()];
     my @slices  = $self->getCurrentInputAttributes("Slices");
     my @indices = $self->getCurrentInputAttributes("Stack indices");
-
+	$mex->read_time(tv_interval($start_time));
+	
+	$start_time = [gettimeofday()];
   SLICE:
     foreach my $slice (@slices) {
         my $c0 = $slice->StartC();
@@ -145,6 +149,9 @@ sub startImage {
             }
         }
     }
+
+	$mex->write_time(tv_interval($start_time));
+	$mex->storeObject();
 }
 
 1;
