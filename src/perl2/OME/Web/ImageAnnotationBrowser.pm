@@ -220,6 +220,8 @@ sub getPaths {
     my @parameters = $tmpl->param();
 
     # find all potentially matching parameters names
+
+
     my @found_params  = grep (m/\.load\/types/,@parameters);
     my $paramCount = scalar(@found_params);
     
@@ -629,7 +631,8 @@ sub getFullDimLayoutCode {
 	#will not be the first instance
 	my $innerHtml =$self->getLayoutCode($container,$obj,
 					    $localPaths,$roots,
-					    $rootType,$template,$first,$images);
+					    $rootType,$template,$first,
+					    $images);
 	
 	# if this gives me anything, put it in an <LI> tag
 	if ($innerHtml ne "")  {
