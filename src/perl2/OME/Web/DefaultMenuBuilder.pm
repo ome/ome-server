@@ -85,7 +85,7 @@ my @MENU = (
 	{
 		web_class => undef,
 		type => 'heading',
-		text => 'Select',
+		text => 'Search',
 	},
 	{
 		web_class => 'OME::Web::Search',
