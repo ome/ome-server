@@ -183,8 +183,7 @@ sub render {
 	$tmpl->param( %tmpl_data );
 	# If the output is only whitespace, then return an empty string.
 	my $out = $tmpl->output();
-	$out =~ /^(\s*)$/;
-	return $tmpl->output() unless ($1 eq $out);
+	return $out unless( $out =~ m/^(\s*)$/ );
 	return "";
 }
 
@@ -497,8 +496,7 @@ sub renderArray {
 	$tmpl->param( %tmpl_data );
 	# If the output is only whitespace, then return an empty string.
 	my $out = $tmpl->output();
-	$out =~ /^(\s*)$/;
-	return $tmpl->output() unless ($1 eq $out);
+	return $out unless( $out =~ m/^(\s*)$/ );
 	return "";
 }
 
