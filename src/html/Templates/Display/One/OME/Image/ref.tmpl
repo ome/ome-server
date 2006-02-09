@@ -1,5 +1,7 @@
+<TMPL_IF NAME=id>
 <img src="<TMPL_VAR NAME=thumb_url>" Usemap="#Image<TMPL_VAR NAME=id>">
 <map name="Image<TMPL_VAR NAME=id>">
 	<area shape="rect" coords="0,0,25,25" Title="Info for <TMPL_VAR NAME=name>" href="<TMPL_VAR NAME=/obj_detail_url>">
 	<area shape="rect" coords="0,0,50,50" Title="View <TMPL_VAR NAME=name>" href="javascript:openImage(<TMPL_VAR NAME=id>);">
 </map>
+</TMPL_IF>
