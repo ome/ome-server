@@ -357,11 +357,11 @@ sub renderDims {
 
 	$tmpl_data->{colCount}=$colCount;
 
-	my $cHeaders = $self->populateColumnHeaders($activeCols,$rowEntrySize);
+	my $cHeaders = $self->populateColumnHeaders($activeCols,$rowEntrySize,$colPath);
 	$tmpl_data->{columnHeaders} =$cHeaders;
 
 	my $body =
-	    $self->populateBody($cells,$activeRows,$activeCols);
+	    $self->populateBody($cells,$activeRows,$activeCols,$rowPath);
 	$tmpl_data->{cells}=$body;
     }
     return $hasData;
@@ -741,12 +741,20 @@ sub getActiveList {
 =cut
 sub populateColumnHeaders {
     my $self=shift;
-    my ($columns,$rowSize) = @_;
+    my ($columns,$rowSize,$colPath) = @_;
+
+    # colPath is the returned value for types, which will have the
+    # form @ST, @map, @ST, @map, etc. let's start by stripping out
+    # every other item.
+    my $colTypes = $self->filterOutMaps($colPath);
+    
+    
     my  $emptyHeaders = $self->populateEmptyColumnHeaders($rowSize);
     my @headers;
     my $firstCol = $columns->[0];
     my $rowCount = scalar(@$firstCol)-1; # of rows in column headers
     # is one less than the number of element in the first column.
+    # this is also the # of field in the column..
 
     my @prevColumns;
     for (my $i =0; $i < $rowCount; $i++)  {
@@ -770,7 +778,7 @@ sub populateColumnHeaders {
 		my %column;
 		my $colSpan =
 		    $self->getRepeatCount($columns,$j,$i);
-		$column{columnNameEntry} = $val;
+		$column{columnNameEntry} =  $self->getTextFor($val,$colTypes->[$i]);# $val;
 		$column{columnNameSpan} = $colSpan;
 		push(@columns,\%column);
 		$prevColumns[$i] = $val;
@@ -819,7 +827,13 @@ sub getHeaderSize {
 sub populateBody {
     my $self= shift;
 
-    my ($cells,$activeRows,$activeCols) = @_;
+    my ($cells,$activeRows,$activeCols,$rowPath) = @_;
+
+    # rowPath is the returned value for types, which will have the
+    # form @ST, @map, @ST, @map, etc. let's start by stripping out
+    # every other item.
+    my $rowTypes = $self->filterOutMaps($rowPath);
+
     my @cellRows;
 
     my  @prev; # what's in the previously printed row.
@@ -832,13 +846,14 @@ sub populateBody {
 	
 	my  $same=1; # are we in same row as previous?
 
+	# $i is the index - which field in the row.
 	for (my $i = 0; $i < scalar(@$row)-1; $i++) {
 	    my $val = $row->[$i];
 	    if ($val ne $prev[$i] || $same == 0) {
 		my %entry;
 		my $rowSpan = 
 		    $self->getRepeatCount($activeRows,$rowIndex,$i);
-		$entry{rowNameEntry} = $val;
+		$entry{rowNameEntry} = $self->getTextFor($val,$rowTypes->[$i]);
 		$entry{rowNameSpan} = $rowSpan;
 		push(@entries,\%entry);
 
@@ -857,22 +872,15 @@ sub populateBody {
 
 }
 
-
-#sub getRepeatCount {
- #   my ($self,$entries,$start,$field,$val) = @_;
-    
-  #  my $cnt;
-   # for (my $i=$start; $i < scalar(@$entries); $i++) {
-	#my $rec = $entries->[$i];
-	#if ($rec->[$field] eq $val) {
-	#    $cnt++;
-	#}
-	#else {
-	#    return $cnt;
-	#}
-#    }
-#    return $cnt;
-#}
+sub filterOutMaps {
+    my ($self,$path)  = @_;
+    my @filtered;
+    for (my $i =0,my $j=0; $i < scalar(@$path) ; $i+=2,$j++) {
+	$filtered[$j]=$path->[$i];
+    }
+    return \@filtered;
+}
+   
 
 sub getRepeatCount {
     my ($self,$entries,$start,$field) = @_;
@@ -891,18 +899,52 @@ sub getRepeatCount {
 }
     
     
-    
-    
-sub printHeaderInfo {
-    my $self=shift;
-    my ($field,$data) =@_;
-    my @entries;
-    for (my $i=0; $i < scalar(@$data)-1; $i++) {
-	my %entry;
-	$entry{$field} = $data->[$i];
-	push(@entries,\%entry);
+=head1 getTextFor
+    given a name of an item and the type of an item,
+    find the string to put in a cell.
+    3 posssibilities: 
+    1) there is an external link. put an href to that link,
+      with name as the visible text.
+    2) there is an object detail url. return an appropriate href.
+    3) otherwise, just put the name of the object.
+
+=cut
+sub getTextFor {
+    my ($self,$name,$type)  = @_;
+    my $session = $self->Session;
+    my $factory = $session->Factory;
+    my $q = $self->CGI;
+
+    my $text = $name; #default
+
+    my $obj = $factory->findObject($type,Name=>$name);
+    if ($obj) {
+	if ($type =~ /@(.*)/) {
+	    # try to find external link
+	    my $tName = $1;
+	    my $mapType = $tName."ExternalLinkList";
+	    
+	    my $map;
+	    # get the list of links, & find the first element in this list.
+	    eval{ my $maps = $obj->$mapType(); $map = $maps->next() };
+
+	    # if there's an error or no map give the object detail url or just
+	    # the name (if no details)
+	    if ($@ || !$map) {
+		my $detail = $self->getObjDetailURL($obj);
+		if ($detail) {
+		    $text = $q->a({href=>$detail},$name);
+		}
+	    }
+	    elsif ($map) { # but, if the link does exist, create it.
+		
+		my $link = $map->ExternalLink();
+		my $url = $link->URL();
+		$text = $q->a({href=>$url},$name);
+	    }
+	}
     }
-    return \@entries;
+    return $text;
 }
 
 =head1 populateRow
