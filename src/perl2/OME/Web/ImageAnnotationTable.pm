@@ -1,5 +1,4 @@
-#OME/Web/ImageAnnotationTable.pm
-
+# OME/Web/ImageAnnotationTable.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -33,7 +32,6 @@
 # Written by:    Harry Hochheiser <hsh@nih.gov>
 #
 #-------------------------------------------------------------------------------
-
 
 package OME::Web::ImageAnnotationTable;
 
@@ -108,6 +106,7 @@ sub getTableDetails {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
+
     my $q = $self->CGI();
     # container is the OME::Web object that is calling this code.
     my ($container,$which_tmpl) = @_;
@@ -138,25 +137,6 @@ sub getTableDetails {
     my $types = $self->getTypes($tmpl);
     $self->getChoices($tmpl,$types);
 
-    # do the list of categories
-    my $cgName = $q->param('CategoryGroup');
-    my %cgHash;
-
-    $cgHash{type} = '@CategoryGroup';
-    my $cg;
-    if ($cgName) {
-	$cg = $factory->findObject('@CategoryGroup',Name=>$cgName);
-	if ($cg) {
-	    $self->{CategoryGroup} = $cg;
-	    $cgHash{default_value} = $cg->id();
-	}
-    }
-
-    my @catGroupList = $factory->findObjects('@CategoryGroup');
-    my $cats =
-	$self->Renderer->renderArray(\@catGroupList,'list_of_options', 
-				       \%cgHash);
-    $tmpl_data{'categoryGroups/render-list_of_options'}=$cats;
 
 
     if ($self->{rows} && $self->{columns}) {
@@ -165,6 +145,9 @@ sub getTableDetails {
 	    $tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	}
 	else {
+	    $tmpl_data{'categoryGroups/render-list_of_options'}=
+		$self->prepareCategoryGroups();
+
 	    my $hasData = $self->renderDims(\%tmpl_data,$types);
 	    if ($hasData == 0) {
 		$tmpl_data{errorMsg}="No Data to Render\n";
@@ -174,6 +157,7 @@ sub getTableDetails {
     $tmpl->param(%tmpl_data);
     return $tmpl->output();
 }
+
 
 =head1
 
@@ -264,6 +248,49 @@ sub getChoices {
     }
     $tmpl->param(Columns=>\@columns);
     $tmpl->param(Rows=>\@rows);
+}
+
+=head1 prepareCategoryGroups 
+    prepare and populate the category groups parameter and pull-down 
+=cut
+
+sub prepareCategoryGroups {
+
+    my $self=shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my $q = $self->CGI();
+
+    # do the list of categories
+    my $cgParam = $q->param('CategoryGroup');
+    my %cgHash;
+    
+    $cgHash{type} = '@CategoryGroup';
+    my $cg;
+    if ($cgParam) {
+	if ($cgParam =~ /\D+/) { # not numbers
+	    $cg = $factory->findObject('@CategoryGroup',Name=>$cgParam);
+	    if ($cg) {
+		$self->{CategoryGroup} = $cg;
+		$cgHash{default_value} = $cg->id();
+	    }
+	}
+	else {
+	    # $cg is now the id of a cg.
+	    my  $cg =
+		$factory->loadObject('@CategoryGroup',$cgParam);
+	    if ($cg) {
+		$self->{CategoryGroup} = $cg;
+		$cgHash{default_value} = $cgParam;
+	    }
+	}
+    }
+
+    my @catGroupList = $factory->findObjects('@CategoryGroup');
+    my $cats =
+	$self->Renderer->renderArray(\@catGroupList,'list_of_options', 
+				     \%cgHash);
+    return $cats;
 }
 
 =head1 renderDims
@@ -878,6 +905,9 @@ sub populateRow {
     my $self=shift;
     my ($cells,$row,$activeCols) = @_;
     my $cg= $self->{CategoryGroup};
+    print STDERR "*** populating with category group  " . $cg->Name .
+	"\n" if ($cg);
+	
 
     my $rowLeaf = $row->[scalar(@$row)-1];
     my $rowName = $rowLeaf->Name;
