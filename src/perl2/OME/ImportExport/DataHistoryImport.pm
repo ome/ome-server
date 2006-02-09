@@ -126,15 +126,15 @@ sub processDOM {
 			or die "Could not load module with lsid '".$mexXML->getAttribute( 'ModuleID' )."'\n";
 		$mex = $factory->newObject("OME::ModuleExecution",
 			{
-				module_id     => $module,
-				dependence    => $mexXML->getAttribute( 'Dependence' ),
-				dataset_id    => $dataset->id(),
-				timestamp     => $executionHistory->getAttribute( 'Timestamp' ),
-				status        => $executionHistory->getAttribute( 'Status' ),
-				total_time    => $executionHistory->getAttribute( 'RunTime' ),
-				error_message => $executionHistory->getAttribute( 'ErrorMessage' ),
-				attribute_create_time => $executionHistory->getAttribute( 'AttributeCreateTime' ),
-				attribute_sort_time   => $executionHistory->getAttribute( 'AttributeSortTime' ),
+				module_id      => $module,
+				dependence     => $mexXML->getAttribute( 'Dependence' ),
+				dataset_id     => $dataset->id(),
+				timestamp      => $executionHistory->getAttribute( 'Timestamp' ),
+				status         => $executionHistory->getAttribute( 'Status' ),
+				total_time     => $executionHistory->getAttribute( 'RunTime' ),
+				error_message  => $executionHistory->getAttribute( 'ErrorMessage' ),
+				write_time     => $executionHistory->getAttribute( 'AttributeCreateTime' ),
+				read_time      => $executionHistory->getAttribute( 'AttributeSortTime' ),
 			}) or die "Couldn't make a new ModuleExecution";
 		push( @objects2store, $mex );
 		my $lsid = $LSIDresolver->setLSID( $mex, $mexXML->getAttribute( 'ID' ) );
