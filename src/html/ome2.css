@@ -139,3 +139,17 @@ a.ome_imagelink:hover { color: #FF0000; border-width: 2px; }
 
 /* POPUP LINKS */
 a.ome_popup { font-size: smaller; font-weight: normal; } 
+
+/* FOR CATEGORIES */
+.ome_category_border 
+{
+  padding: 0.1em;
+  border: none; 
+}
+
+.ome_table_border 
+{ 
+  border: solid;
+  border-width: thin;                  
+  border-style: dotted;
+}
