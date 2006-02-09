@@ -235,13 +235,13 @@ sub startImage {
 
 	my $start_time = [gettimeofday()];
 	$self->placeInputs();
-	$mex->attribute_db_time(tv_interval($start_time));
+	$mex->read_time(tv_interval($start_time));
 	
 	$self->__execute() if $self->__checkExecutionGranularity( ) eq 'I';
 	
 	$start_time = [gettimeofday()];
 	$self->getOutputs();
-	$mex->attribute_create_time(tv_interval($start_time));
+	$mex->write_time(tv_interval($start_time));
 }
 
 sub finishAnalysis {
@@ -277,7 +277,7 @@ sub __execute {
 	my $start_time = [gettimeofday()];
 	$_engine->eval($command);
 #	$_engine->eval( "save ome_ml_dump" );
-	$mex->total_time(tv_interval($start_time));
+	$mex->execution_time(tv_interval($start_time));
 
 	# Save warning messages if found.
 	# Errors may have happened here, but we're going to check for them later
@@ -388,10 +388,10 @@ sub _getScalarFromMatlab {
  				   "($name);") if defined $convert_class;
 
 	my $array = $_engine->getVariable( $name )
-		or die "Couldn't retrieve output variable $name from matlab.\n".
+		or die "Couldn't retrieve scalar output variable $name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
-		       
+
 	my $value = $array->getScalar();
 	my $class = $array->class();
 
@@ -667,7 +667,7 @@ sub MatlabArray_to_Pixels {
 
 	# Get array's dimensions and pixel type
 	my $ml_pixels_array = $_engine->getVariable($matlab_var_name)
-		or die "Couldn't retrieve output variable $matlab_var_name from matlab.\n".
+		or die "Couldn't retrieve pixels output variable $matlab_var_name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) 
@@ -702,7 +702,13 @@ sub MatlabArray_to_Pixels {
 		OME::Tasks::PixelsManager->createParentalPixels( @pixels_params )
 	);
 
-	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
+	my $outBuffer  = " " x 4096;
+	$_engine->setOutputBuffer($outBuffer, length($outBuffer));
+	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name)");
+	$outBuffer =~ s/(\0.*)$//;
+	$outBuffer =~ s/[^[:print:][:space:]]//g;
+	die "ERROR saving pixels to omeis w/ command:\n\t".$matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);\n$outBuffer\n"
+		if( $outBuffer =~ m/\S/);
 	my ($value, $class) = $self->_getScalarFromMatlab($matlab_var_name."_pix");
 	die "Could not write the expected number of pixels to OMEIS"
 		unless $value == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
@@ -824,7 +830,7 @@ sub MatlabVector_to_Attrs {
 	
 	# retrieve vector from matlab
 	my $convertedCell = $_engine->getVariable("$matlab_var_name"."_converted")
-		or die "Couldn't retrieve output variable "."$matlab_var_name"."_converted"." from matlab.\n".
+		or die "Couldn't retrieve vector output variable "."$matlab_var_name"."_converted"." from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
 
@@ -981,7 +987,7 @@ sub MatlabStruct_to_Attr {
 
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
 	my $matlab_output = $_engine->getVariable( $matlab_var_name )
-		or die "Couldn't retrieve output variable $matlab_var_name from matlab.\n".
+		or die "Couldn't retrieve struct output variable $matlab_var_name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
 	$matlab_output->makePersistent();
