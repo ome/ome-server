@@ -1,0 +1,2 @@
+[Bug 570] Give module_execution timing columns meaningful names and preserve
+the data that was, in the past, written to the wrong columns.
