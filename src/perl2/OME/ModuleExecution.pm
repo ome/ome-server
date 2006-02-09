@@ -134,13 +134,14 @@ __PACKAGE__->addColumn(timestamp => 'timestamp',
                         SQLType => 'timestamp',
                         Default => 'now()',
                        });
-__PACKAGE__->addColumn(total_time => 'total_time',
+__PACKAGE__->addColumn(['execution_time', 'x_time'] => 'x_time',
                        {SQLType => 'float'});
-__PACKAGE__->addColumn(attribute_sort_time => 'attribute_sort_time',
+# The next three timing columns have the attribute_*_time aliases for legacy purposes.
+__PACKAGE__->addColumn(['total_time', 't_time', 'attribute_sort_time'] => 't_time',
                        {SQLType => 'float'});
-__PACKAGE__->addColumn(attribute_db_time => 'attribute_db_time',
+__PACKAGE__->addColumn(['read_time',  'r_time', 'attribute_db_time'] => 'r_time',
                        {SQLType => 'float'});
-__PACKAGE__->addColumn(attribute_create_time => 'attribute_create_time',
+__PACKAGE__->addColumn(['write_time', 'w_time', 'attribute_create_time'] => 'w_time',
                        {SQLType => 'float'});
 __PACKAGE__->addColumn(status => 'status',{SQLType => 'varchar(16)'});
 __PACKAGE__->addColumn(error_message => 'error_message',

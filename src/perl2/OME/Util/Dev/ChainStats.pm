@@ -140,12 +140,12 @@ sub chex_stats {
 	my $mexes_w_time = 0;
 	my %mexes_wo_time;
 	foreach my $mex (@mexes) {
-		$mex_total_time += $mex->attribute_sort_time;
-		if ( $mex->total_time ) {
-				$mex_total_time_breakdown += $mex->attribute_sort_time;
-				$mex_execution_time += $mex->total_time;
-				$mex_db_retrieval_time += $mex->attribute_db_time;
-				$mex_db_storage_time += $mex->attribute_create_time;
+		$mex_total_time += $mex->total_time;
+		if ( $mex->execution_time ) {
+				$mex_total_time_breakdown += $mex->total_time;
+				$mex_execution_time += $mex->execution_time;
+				$mex_db_retrieval_time += $mex->read_time;
+				$mex_db_storage_time += $mex->write_time;
 				$mexes_w_time++;
 		} else {
 				$mexes_wo_time{ $mex->module->name }++;
