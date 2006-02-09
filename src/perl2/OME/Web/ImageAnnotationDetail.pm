@@ -223,7 +223,6 @@ sub getCategoryGroups {
     # find the STs and the mapping STs to be used
     my $cgST =
 	$factory->findObject('OME::SemanticType',{name=>'CategoryGroup'});
-    $cgST->requireAttributeTypePackage();
     
     my (@cat_params) = grep(/CategoryGroup\.load/,@$parameters);
     my $request = $cat_params[0];
