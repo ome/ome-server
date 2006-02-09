@@ -4,17 +4,32 @@
 	<td class="ome_td" align="left"><TMPL_VAR
 	NAME=st.Name></td>
 	<td class="ome_td" align="left">
-	<SELECT name="st<TMPL_VAR NAME='st.id'>" WIDTH="150" STYLE="width:150px">
+	<SELECT name="st<TMPL_VAR NAME='st.id'>" WIDTH="200" STYLE="width:200px">
 	<OPTION value="">...</option>
 	<TMPL_VAR NAME=st.val/render-list_of_options></select>
 	</td>
-
+	<td class="ome_td">    </td>
+</tr>
 </TMPL_LOOP>
+
+<TMPL_LOOP NAME=cg.loop>
+	<tr>
+		<td class="ome_td" align="left"><TMPL_VAR NAME=cg.Name></td>
+		<td class="ome_td" align="left">
+		<SELECT name="FromCG<TMPL_VAR NAME='cg.id'>"
+	WIDTH="200" STYLE="width:200px"><OPTION value="">...</option><TMPL_VAR NAME=cg.cat/render-list_of_options></select></td>
+		<td class="ome_td" align="left"><input type="text" size="15" name="CategoryAddTo<TMPL_VAR NAME='cg.id'>" alt="blank"></td>
+	</tr>
+</TMPL_LOOP>
+
+
+
 </table>
 <input type="button" value='Save & Next' onclick="javascript:
 	document.forms[0].SaveAndNext.value='SaveAndNext';
-	document.forms[0].submit();"><br><br> 
+	document.forms[0].submit();">
 
+<input type="button" value='Add Categories' onclick="javascript: document.forms[0].AddToCG.value='AddToCG'; document.forms[0].submit();"><br>
 Images left to annotate:<br> 
 
 <TMPL_VAR NAME=image_thumbs><br>
