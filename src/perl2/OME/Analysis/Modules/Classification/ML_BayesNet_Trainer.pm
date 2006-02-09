@@ -95,14 +95,16 @@ sub execute {
 		_compileSignatureMatrixWithCategories( \@sigVectors_mexes, \@images, \@classification_mexes );
 	$matlab_engine->eval("global signature_matrix");
 	$matlab_engine->putVariable( "signature_matrix", $signature_matrix);
-	$mex->attribute_db_time(tv_interval($start_time));
+	$mex->read_time(tv_interval($start_time));
 	
 	# Execute the trainer
+	$start_time = [gettimeofday()];
 	$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));
 	$matlab_engine->eval( 
 		"[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ".
 		"	ML_BayesNet_Trainer(signature_matrix);"
 	);
+	$mex->execute_time(tv_interval($start_time));
 	$outBuffer =~ s/(\0.*)$//;
 	if ($outBuffer =~ m/\S/) {
 		$mex->error_message("$outBuffer");
@@ -121,6 +123,7 @@ sub execute {
 	# Store the discritization walls & classifier
 	# For now, dump them to a file, upload that to the image server, 
 	# 	and make a BayesNetClassifier output
+	$start_time = [gettimeofday()];
 	my $classifier_dump_path = $session->getTemporaryFilename('ML_BayesNet_Trainer','mat');
 	$outBuffer  = " " x 2048;
 	$matlab_engine->setOutputBuffer($outBuffer, length($outBuffer));	
@@ -256,6 +259,7 @@ sub execute {
 			} );
 		}
 	}
+	$mex->write_time(tv_interval($start_time));
 	
 	# close connection to matlab
 	$matlab_engine->close();
