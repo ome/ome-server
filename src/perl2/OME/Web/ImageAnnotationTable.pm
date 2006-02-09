@@ -135,9 +135,10 @@ sub getTableDetails {
 
     # populate the pull-downs.
     my $types = $self->getTypes($tmpl);
-    $self->getChoices($tmpl,$types);
+    $self->getChoices(\%tmpl_data,$types);
 
-
+    $tmpl_data{'categoryGroups/render-list_of_options'}=
+	$self->prepareCategoryGroups();
 
     if ($self->{rows} && $self->{columns}) {
 	
@@ -145,9 +146,6 @@ sub getTableDetails {
 	    $tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	}
 	else {
-	    $tmpl_data{'categoryGroups/render-list_of_options'}=
-		$self->prepareCategoryGroups();
-
 	    my $hasData = $self->renderDims(\%tmpl_data,$types);
 	    if ($hasData == 0) {
 		$tmpl_data{errorMsg}="No Data to Render\n";
@@ -230,24 +228,34 @@ sub getTypes {
 =cut
 sub getChoices {
     my $self=shift;
-    my $tmpl = shift;
+    my $tmpl_data = shift;
     my $types = shift;
 
     my @rows;
 
     my @columns;
+    
+    my $rows= $self->{rows};
+    my $cols = $self->{columns};
+
     foreach my $type (keys %$types) {
 	# clear off header if it's an st
 	$type =~ s/@(.*)/$1/;
 	my %row;
 	my %col;
 	$row{rowName} = $type;
+	if ($type eq $rows) {
+	    $row{selectedRow} = 1;
+	}
 	push(@rows,\%row);
 	$col{columnName} = $type;
+	if ($type eq $cols) {
+	    $col{selectedCol} = 1;
+	}
 	push (@columns,\%col);
     }
-    $tmpl->param(Columns=>\@columns);
-    $tmpl->param(Rows=>\@rows);
+    $tmpl_data->{Columns}=\@columns;
+    $tmpl_data->{Rows}=\@rows;
 }
 
 =head1 prepareCategoryGroups 
