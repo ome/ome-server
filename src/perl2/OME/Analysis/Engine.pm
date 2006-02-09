@@ -850,7 +850,7 @@ sub executeChain {
 				my $start_time = [gettimeofday()];
                 my $nex = $self->executeNodeWithTarget($node,$target);
 				my $mex = $nex->module_execution();
-				$mex->attribute_sort_time(tv_interval($start_time));
+				$mex->total_time(tv_interval($start_time));
 				
                 # Mark some state and keep going
 			    $mex->storeObject();
