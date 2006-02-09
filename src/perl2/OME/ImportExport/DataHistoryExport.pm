@@ -305,12 +305,12 @@ sub exportHistory {
 		my $executionHistoryXML = $DOM->createElement( 'ExecutionHistory' );
 		# Maps object accessor names (hash values) to xml attribute names (keys)
 		my %executionHistoryCodes = ( 
-			'RunTime'             => 'total_time', 
+			'RunTime'             => 'execution_time', 
 			'Timestamp'           => 'timestamp', 
 			'Status'              => 'status',
 			'ErrorMessage'        => 'error_message',
-			'AttributeCreateTime' => 'attribute_create_time',
-			'AttributeSortTime'   => 'attribute_sort_time'
+			'AttributeCreateTime' => 'write_time',
+			'AttributeSortTime'   => 'total_time'
 		);
 		foreach( keys %executionHistoryCodes ) {
 			my $method = $executionHistoryCodes{$_};
