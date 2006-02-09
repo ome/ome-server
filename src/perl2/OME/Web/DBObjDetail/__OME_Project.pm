@@ -79,11 +79,19 @@ sub _takeAction {
 		$self->Session()->commitTransaction();
 	}
 
-	# allow adding datasets to a project
+	# add datasets to a project
 	my $dataset_ids = $q->param( 'datasets_to_add' );
 	if( $dataset_ids ) {
 		OME::Tasks::ProjectManager->addDatasets( [ split( m',', $dataset_ids ) ], $object->id() );
 	}
+
+	# remove datasets from a project
+	my $dataset_ids = $q->param( 'datasets_to_remove' );
+	if( $dataset_ids ) {
+		OME::Tasks::ProjectManager->removeDatasets( { $object->id() => [ split( m',', $dataset_ids ) ] } );
+	}
+	
+	return;
 }
 
 

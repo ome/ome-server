@@ -1,4 +1,5 @@
 <input type="hidden" name="datasets_to_add">
+<input type="hidden" name="datasets_to_remove">
 <table width="100%">
 	<caption>
 		<font class="ome_header_title">Project: <TMPL_VAR NAME='name'></font> 
@@ -28,6 +29,11 @@
 							<tr>
 								<td style="background-color: #D1D7DC">
 								 <a href="javascript:selectMany('OME::Dataset', 'datasets_to_add');" class="ome_widget">Add Datasets</a>
+								</td>
+							</tr>
+							<tr>
+								<td style="background-color: #D1D7DC">
+									<a href="javascript:selectMany('OME::Dataset', 'datasets_to_remove', 'project_links.project=<TMPL_VAR Name=id>&search_names=project_links.project');" class="ome_widget">Remove Datasets</a>
 								</td>
 							</tr>
 						</table>
