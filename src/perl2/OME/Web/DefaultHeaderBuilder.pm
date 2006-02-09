@@ -99,26 +99,26 @@ sub getPageHeader {
 		# Recent project
 	if (my $obj = $session->project()) {
 		$project_links = 
-			$q->span({class => 'ome_quiet'}, 'Current project: ') .
+			$q->span({class => 'ome_quiet'}, 'Recently viewed project: ') .
 			$q->a({href => OME::Web->getObjDetailURL( $obj ), class => 'ome_quiet'}, $obj->name()) .
 			' ' .  # Spacing
  			$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $obj->id() .');'}, '(Popup)');
 	} else {
 		$project_links = 
-			$q->span({class => 'ome_quiet'}, 'No current project. ') .
+			$q->span({class => 'ome_quiet'}, 'You have no projects. ') .
 			$q->a({href => $PM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
 	
 		# Recent dataset
 	if (my $obj = $session->dataset()) {
 		$dataset_links = 
-			$q->span({class => 'ome_quiet'}, 'Current dataset: ') .
+			$q->span({class => 'ome_quiet'}, 'Recently viewed Dataset: ') .
 			$q->a({href => OME::Web->getObjDetailURL( $obj ), class => 'ome_quiet'}, $obj->name()) .
 			' ' .  # Spacing
  			$q->a({class => 'ome_popup', href => 'javascript:openInfoDataset(' . $obj->id() .');'}, '(Popup)');
 	} else {
 		$dataset_links = 
-			$q->span({class => 'ome_quiet'}, 'No current dataset. ') .
+			$q->span({class => 'ome_quiet'}, 'You have no datasets. ') .
 			$q->a({href => $DM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
 
@@ -180,7 +180,7 @@ sub getPageHeader {
 			$q->td($logo_link),
 		)
 	);
-
+print 
 	return $header_table;
 }
 
