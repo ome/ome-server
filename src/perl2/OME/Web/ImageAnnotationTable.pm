@@ -111,7 +111,7 @@ sub getTableDetails {
     my $q = $self->CGI();
     # container is the OME::Web object that is calling this code.
     my ($container,$which_tmpl) = @_;
-
+    my %tmpl_data;
     # load the appropriate information for the named template.
     my $tmplData = 
 	$factory->findObject( '@BrowseTemplate', Name => $which_tmpl );
@@ -131,44 +131,47 @@ sub getTableDetails {
     # error.
     $self->{rows} = $q->param('Rows');
     $self->{columns} = $q->param('Columns');
-    my $cgName = $q->param('CategoryGroup');
-    my $cg;
-    if ($cgName) {
-	$cg = $factory->findObject('@CategoryGroup',Name=>$cgName);
-	$self->{CategoryGroup} = $cg;
-    }
+
+
 
     # populate the pull-downs.
     my $types = $self->getTypes($tmpl);
     $self->getChoices($tmpl,$types);
 
     # do the list of categories
-    # load  catlist
-    
-    # load CG st.
-    my $categoryGroupST = $factory->findObject('OME::SemanticType', 
-					       name =>'CategoryGroup');
-    my @catGroupList = $factory->findObjects($categoryGroupST);
+    my $cgName = $q->param('CategoryGroup');
+    my %cgHash;
+
+    $cgHash{type} = '@CategoryGroup';
+    my $cg;
+    if ($cgName) {
+	$cg = $factory->findObject('@CategoryGroup',Name=>$cgName);
+	if ($cg) {
+	    $self->{CategoryGroup} = $cg;
+	    $cgHash{default_value} = $cg->id();
+	}
+    }
+
+    my @catGroupList = $factory->findObjects('@CategoryGroup');
     my $cats =
-	$self->Renderer()->renderArray(\@catGroupList,'list_of_options', {
-	    default_value => $cg, type=> $categoryGroupST} );
-    $tmpl->param('categoryGroups/render-list_of_options'=>$cats);
+	$self->Renderer->renderArray(\@catGroupList,'list_of_options', 
+				       \%cgHash);
+    $tmpl_data{'categoryGroups/render-list_of_options'}=$cats;
 
 
     if ($self->{rows} && $self->{columns}) {
 	
 	if ($self->{rows} eq $self->{columns}) {
-	    $tmpl->param(errorMsg=>"You must choose different values for rows and columns\n");
+	    $tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	}
 	else {
-	    print STDERR "*** calling renderdims..\n";
-	    my $hasData = $self->renderDims($tmpl,$types);
+	    my $hasData = $self->renderDims(\%tmpl_data,$types);
 	    if ($hasData == 0) {
-		$tmpl->param(errorMsg=>"No Data to Render\n");
+		$tmpl_data{errorMsg}="No Data to Render\n";
 	    }
 	}
     }
-
+    $tmpl->param(%tmpl_data);
     return $tmpl->output();
 }
 
@@ -217,14 +220,12 @@ sub getTypes {
 
 	# find the path value.
 	$param =~ m/Path.load\/types-\[(.*)\]/;
-	print STDERR "PARSING $param\n";
 	#convert to array
 	my @paths = split (/,/,$1);
 	#now, each  entry in  @paths is something like
 	#@Probe:@ProbeGene:@Probe:@ImageProbe,
 	# etc.
 	foreach my $path (@paths) {
-	    print STDERR "splitting $path\n";
 	    my @entries = split (/:/, $path);
 	    # first item becomes a key
 	    my $dimensionKey = $entries[0];
@@ -282,12 +283,11 @@ sub renderDims {
     my $session= $self->Session();
     my $factory = $session->Factory();
     my $q = $self->CGI();
-    my ($tmpl,$types) = @_;
+    my ($tmpl_data,$types) = @_;
     my $rows = $self->{rows};
     my $columns = $self->{columns};
     my $hasData = 0;
 
-    print STDERR "** in render dims.\n";
     # get the objects associated with the columns. Eventually, 
     # this will get replaced by something that drills down the row hierarchy
     my $rowKey = "@".$rows;
@@ -320,14 +320,14 @@ sub renderDims {
 	my $colCount =
 	    scalar(@$activeCols)+$rowEntrySize;
 
-	$tmpl->param(colCount=>$colCount);
+	$tmpl_data->{colCount}=$colCount;
 
 	my $cHeaders = $self->populateColumnHeaders($activeCols,$rowEntrySize);
-	$tmpl->param(columnHeaders=>$cHeaders);
+	$tmpl_data->{columnHeaders} =$cHeaders;
 
 	my $body =
 	    $self->populateBody($cells,$activeRows,$activeCols);
-	$tmpl->param(cells=>$body);
+	$tmpl_data->{cells}=$body;
     }
     return $hasData;
 }
@@ -373,7 +373,6 @@ sub getObjects {
     my $objsRef;
     if ($root) {
 	# get objects that match the root
-	print STDERR "*** root object $root, type - "  . $typeST->name . "\n";
 	# do single object - or some set of objects
 	$objsRef = $self->getRoots($typeST,$root);
     }
@@ -383,11 +382,6 @@ sub getObjects {
 	$objsRef = \@objs;
     }
     
-    print STDERR "*****GET OBJECTS***\n";
-    for (my $i =0; $i < (@$objsRef); $i++ ) {
-	print STDERR "NAME: " . $objsRef->[$i]->Name . ", id " .
-	    $objsRef->[$i]->id . "\n";
-    }
     # now, objsRef is a reference to an aaray containing the list of
     # top-level items that I want to work with
     my $tree = $self->getTreeFromRootList($objsRef,@$paths);
@@ -398,7 +392,6 @@ sub getObjects {
 	for (my $j = 0; $j < scalar(@$ent)-1; $j++) {
 	    my $val = $ent->[$j];
 	    $val =~ m/([^_]*)__\d+/;
-	    print STDERR "***VAL IS $val, match is $1\n";
 	    $ent->[$j]=$1;
 	}
     }
@@ -670,10 +663,8 @@ sub getAccessorName {
     # and second to last - which is the items that we retrieved - the
     # last row/column item. (ie, Probe).
     
-    print STDERR "****Getting accessor name for $fieldName\n";
     my $fName = "@" . $fieldName;
     my $path = $types->{$fName};
-    print STDERR "** associated path is $path\n";
     my $count = scalar(@$path);
     my $listAccessor = $path->[$count-1];
     my $rootItem = $path->[$count-2];
@@ -681,7 +672,6 @@ sub getAccessorName {
     $listAccessor =~ s/@(.*)/$1/;
     $rootItem =~ s/@(.*)/$1/;
     my $accessor = "${listAccessor}List.$rootItem";
-    print STDERR "accessor name is $accessor \n";
     return $accessor;
 }
 
@@ -731,8 +721,6 @@ sub populateColumnHeaders {
 
 	for (my $j = 0; $j < scalar(@$columns); $j++) {
 	    my  $val = $columns->[$j]->[$i];
-	    print STDERR "** looking at $val, column $j, row $i, previous " 
-		. " is " . $prevColumns[$i] . "\n";
 
 	    my $same =1;
 	    # look @ all previous entries in this column to see if
@@ -747,7 +735,6 @@ sub populateColumnHeaders {
 		my %column;
 		my $colSpan =
 		    $self->getRepeatCount($columns,$j,$i);
-		print STDERR "*** get repeat count in columns is $colSpan\n";
 		$column{columnNameEntry} = $val;
 		$column{columnNameSpan} = $colSpan;
 		push(@columns,\%column);
@@ -768,7 +755,6 @@ sub populateEmptyColumnHeaders {
     my $size = shift;
     
     my @headers;
-    print STDERR "*** # of empty columns!!!  $size \n";
     for (my $i=0; $i < $size; $i++) {
 	my %header;
 	$header{emptyColumnHeader}="";
