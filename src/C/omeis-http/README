@@ -1,3 +1,8 @@
-To compile the main.c file do:
+Compile the libhttpOMEIS library:
+./autogen.sh
 make
+
+Compile the main.c file (test creation/deletion API) do:
 gcc -L. main.c -lcurl -lhttpOMEIS
+Compile the testStats file to test retreival of plane and stack statistics
+gcc -L. -o testStats testStats.c -lcurl -lhttpOMEIS

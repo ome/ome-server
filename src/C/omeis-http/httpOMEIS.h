@@ -57,6 +57,15 @@ typedef struct {
 /*	u_int8_t reserved[15]; */ /* buffer to 64 (60?)assuming OME_DIGEST_LENGTH=20 */
 } pixHeader;
 
+typedef struct
+{
+	float min, max, mean, sigma, geomean, geosigma;
+	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
+	float centroid_x, centroid_y, centroid_z;
+} pixStats;
+
+
+
 typedef struct {
 	char url[128];
 	char sessionKey[128];
@@ -76,4 +85,12 @@ int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t
 			int x1, int y1, int z1, int c1, int t1, void* pixels);
 void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 			int x1, int y1, int z1, int c1, int t1);
+void* getStack (const omeis *is, OID pixelsID, int theC, int theT);
+
+pixStats **getStackStats (const omeis *is, OID pixelsID);
+void freeStackStats (pixStats **theStats);
+
+pixStats ***getPlaneStats (const omeis *is, OID pixelsID);
+void freePlaneStats (pixStats ***theStats);
+
 #endif

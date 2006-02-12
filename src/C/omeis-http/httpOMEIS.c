@@ -51,19 +51,21 @@
 #include "matrix.h"
 #define CALLOC mxCalloc
 #define MALLOC mxMalloc
+#define REALLOC mxRealloc
 #define FREE mxFree
 
 #else
 
 #define CALLOC calloc
 #define MALLOC malloc
+#define REALLOC realloc
 #define FREE free
 
 #endif
 
 /* PRIVATE functions and datatypes */
 typedef struct {
-	unsigned char* buffer;
+	void* buffer;
 	int len;
 	int capacity;
 } smartBuffer;
@@ -276,20 +278,18 @@ void* getPixels (const omeis* is, OID pixelsID)
     int bytes = ph->dx*ph->dy*ph->dz*ph->dc*ph->dt*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
-   
+	FREE(ph);
+
     sprintf(command,"%s%sMethod=GetPixels&PixelsID=%llu&BigEndian=%d",is->url,"?",pixelsID,bigEndian()); 	
     buffer = (char*) executeGETCall(is, command, bytes);
     
     if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);
-		FREE(ph);
-		FREE(buffer);
 		return NULL;
 	}
 	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(ph);
 		FREE(buffer);
 		return NULL;
 	}
@@ -478,6 +478,7 @@ void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int
     int bytes = (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
+	FREE(ph);
 
     sprintf(command,"%s%sMethod=GetROI&PixelsID=%llu&ROI=%d,%d,%d,%d,%d,%d,%d,%d,%d,%d&BigEndian=%d",
     		is->url,"?",pixelsID,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,bigEndian()); 	
@@ -485,20 +486,278 @@ void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int
     
     if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
-		FREE(ph);
-		FREE(buffer);
 		return NULL;
 	}
 	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(ph);
 		FREE(buffer);
 		return NULL;
 	}
 
 	return (void*) buffer;
 }
+
+void* getStack (const omeis *is, OID pixelsID, int theC, int theT)
+{
+	char* buffer;
+	char command [256];
+	int bytes;
+    pixHeader* ph;
+
+    ph = pixelsInfo (is, pixelsID);
+    bytes = ph->dx*ph->dy*ph->dz*ph->bp;
+	if (bytes < 1024)
+    	bytes = 1024;
+	FREE (ph);
+
+    sprintf(command,"%s%sMethod=GetStack&PixelsID=%llu&theC=%d&theT=%d&BigEndian=%d",
+    		is->url,"?",pixelsID,theC,theT,bigEndian()); 	
+    buffer = (char*) executeGETCall(is, command, bytes);
+    
+    if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		return NULL;
+	}
+	
+    if (strstr(buffer, "Error")) {
+		fprintf (stderr, "ERROR:\n%s\n", buffer);
+		FREE(buffer);
+		return NULL;
+	}
+
+	return (void*) buffer;
+}
+
+
+/*
+  This returns a 2-D array of pixStats structs, which can be acessed like this:
+  stats = getStackStats (is, pixelsID, theC, theT);
+  c0t0min = stats[0][0].min;
+  c0t1min = stats[0][1].min;
+  theMin = stats[theC][theT].min;
+  The first dimension specifies the channel and the second specifies the time
+  available stats are:
+  	float min, max, mean, sigma, geomean, geosigma;
+  	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
+  	float centroid_x, centroid_y, centroid_z;
+
+  When finished with the stats, make sure to call freeStackStats (stats);
+
+  The 2-D array returned by this function is stored as a contiguous block
+  of pixStats structs in memory at &(stats[0][0]) or, just stats, so it can be acessed
+  serially in CT order using a pixStats pointer.
+*/
+pixStats **getStackStats (const omeis *is, OID pixelsID){
+	char* buffer, *line, *lineEnd;
+	char command [256];
+    pixStats *array;
+    pixStats **theStats;
+    unsigned long theC, theT, nC=0, nT=0;
+    pixHeader* ph;
+
+    ph = pixelsInfo (is, pixelsID);
+	nC = ph->dc;
+	nT = ph->dt;
+	FREE(ph);
+
+	sprintf(command,"%s%sMethod=GetStackStats&PixelsID=%llu",is->url,"?", pixelsID);
+	buffer = (char*) executeGETCall(is, command, 1024);
+	
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		return NULL;
+	}
+
+	if (strstr(buffer, "Error")) {
+		FREE(buffer);
+		return NULL;
+	}
+
+	/* Allocate the memory for the array */
+	array = malloc(nC * nT * sizeof(pixStats));
+    if (array == NULL) {
+		fprintf (stderr, "Could not allocate space for stats array\n");	
+		return (NULL);
+	}
+
+	/* next we allocate room for the pointers to the Cs */
+	theStats = malloc(nC * sizeof(pixStats *));
+	if (theStats == NULL) {
+		fprintf (stderr, "Could not allocate space for stats array\n");	
+		return (NULL);
+	}
+
+	/* and set the pointers */
+	for (theC = 0; theC < nC; theC++)
+	{
+		theStats[theC] = array + (theC * nT);
+	}
+
+	/*
+	  Now go through the buffer again reading the stats
+	*/
+	line = buffer;
+	lineEnd = strstr (buffer,"\n");
+	while (lineEnd) {
+		sscanf (line,"%lu\t%lu",&theC,&theT);
+		sscanf (line,"%*lu\t%*lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f",
+			&(theStats[theC][theT].min),
+			&(theStats[theC][theT].max),
+			&(theStats[theC][theT].mean),
+			&(theStats[theC][theT].sigma),
+			&(theStats[theC][theT].geomean),
+			&(theStats[theC][theT].geosigma),
+			&(theStats[theC][theT].centroid_x),
+			&(theStats[theC][theT].centroid_y),
+			&(theStats[theC][theT].centroid_z),
+			&(theStats[theC][theT].sum_i),
+			&(theStats[theC][theT].sum_i2),
+			&(theStats[theC][theT].sum_log_i),
+			&(theStats[theC][theT].sum_xi),
+			&(theStats[theC][theT].sum_yi),
+			&(theStats[theC][theT].sum_zi)
+		);
+		line = lineEnd+1;
+		lineEnd = strstr (line,"\n");
+	}
+
+	FREE(buffer);
+	return theStats;
+}
+
+
+void freeStackStats (pixStats **theStats){
+	FREE (*theStats);
+	FREE (theStats);
+}
+
+
+
+/*
+pixStats ***getPlaneStats (const omeis *is, OID pixelsID);
+
+  This returns a 3-D array of pixStats strcuts, which can be acessed like this:
+  stats = getStackStats (is, pixelsID);
+  z0c0t0min = stats[0][0][0].min;
+  z1c0t1min = stats[1][0][1].min;
+  theMin    = stats[theZ][theC][theT].min;
+  available stats are:
+	float min, max, mean, sigma, geomean, geosigma;
+	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
+	float centroid_x, centroid_y;
+	// centroid_z is set to the Z index.
+
+  When finished with the stats, make sure to call freePlaneStats (stats);
+
+  The 3-D array returned by this function is stored as a contiguous block
+  of pixStats structs in memory at &(stats[0][0][0]) or, just stats, so it can be acessed
+  serially in ZCT order using a pixStats pointer.
+*/
+pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
+	char* buffer, *line, *lineEnd;
+	char command [256];
+    pixStats *array;
+    pixStats **theStatsZ;
+    pixStats ***theStats;
+    unsigned long theZ, theC, theT, nZ=0, nC=0, nT=0;
+    pixHeader* ph;
+
+    ph = pixelsInfo (is, pixelsID);
+	nZ = ph->dz;
+	nC = ph->dc;
+	nT = ph->dt;
+	FREE(ph);
+
+	sprintf(command,"%s%sMethod=GetPlaneStats&PixelsID=%llu",is->url,"?", pixelsID);
+	buffer = (char*) executeGETCall(is, command, 1024);
+	
+	if (buffer == NULL) {
+		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
+		return NULL;
+	}
+
+	if (strstr(buffer, "Error")) {
+		fprintf (stderr, "Server error: %s.\n", buffer);	
+		FREE(buffer);
+		return NULL;
+	}
+
+	
+	/* Allocate the memory for the array */
+	array = malloc(nZ * nC * nT * sizeof(pixStats));
+    if (array == NULL) {
+		fprintf (stderr, "Could not allocate space for stats array\n");	
+		FREE(buffer);
+		return (NULL);
+	}
+
+	/* next we allocate room for the pointers to Cs */
+	theStatsZ = malloc(nZ * nC * sizeof(pixStats *));
+	if (theStats == NULL) {
+		fprintf (stderr, "Could not allocate space for stats array\n");	
+		FREE(buffer);
+		return (NULL);
+	}
+
+	/* next we allocate room for the pointers to the Zs. */
+	theStats = malloc(nZ * sizeof(pixStats **));
+	if (theStats == NULL) {
+		fprintf (stderr, "Could not allocate space for stats array\n");	
+		FREE(buffer);
+		return (NULL);
+	}
+
+	/* and set the pointers */
+	for (theZ = 0; theZ < nZ; theZ++) {
+		theStats[theZ] = theStatsZ + (theZ * nC) ;
+		for (theC = 0; theC < nC; theC++) {
+			theStats[theZ][theC] = array + (theZ * nC * nT) + (theC * nT);
+		}
+	}
+
+	/*
+	  Now go through the buffer reading the stats
+	*/
+	line = buffer;
+	lineEnd = strstr (buffer,"\n");
+	while (lineEnd) {
+		sscanf (line,"%lu\t%lu\t%lu",&theC,&theT,&theZ);
+		sscanf (line,"%*lu\t%*lu\t%*lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f",
+			&(theStats[theZ][theC][theT].min),
+			&(theStats[theZ][theC][theT].max),
+			&(theStats[theZ][theC][theT].mean),
+			&(theStats[theZ][theC][theT].sigma),
+			&(theStats[theZ][theC][theT].geomean),
+			&(theStats[theZ][theC][theT].geosigma),
+			&(theStats[theZ][theC][theT].centroid_x),
+			&(theStats[theZ][theC][theT].centroid_y),
+			&(theStats[theZ][theC][theT].sum_i),
+			&(theStats[theZ][theC][theT].sum_i2),
+			&(theStats[theZ][theC][theT].sum_log_i),
+			&(theStats[theZ][theC][theT].sum_xi),
+			&(theStats[theZ][theC][theT].sum_yi),
+			&(theStats[theZ][theC][theT].sum_zi)
+		);
+		theStats[theZ][theC][theT].centroid_z = theZ;
+		line = lineEnd+1;
+		lineEnd = strstr (line,"\n");
+	}
+
+	FREE(buffer);
+	return theStats;
+}
+
+
+void freePlaneStats (pixStats ***theStats){
+	FREE (**theStats);
+	FREE (*theStats);
+	FREE (theStats);
+}
+
+
+
+
 /*
 	Private Functions
 */
@@ -525,28 +784,38 @@ void* executeGETCall (const omeis* is, const char* parameters, size_t nmemb)
 	curl_easy_setopt (curl, CURLOPT_WRITEDATA, &buffer);
 	result_code = curl_easy_perform (curl);
 	if (result_code != CURLE_OK) {
+		curl_easy_cleanup (curl);
 		FREE(buffer.buffer);
 		return NULL;
 	}
 	curl_easy_cleanup (curl);
-	
+	if (buffer.len < buffer.capacity) 
+		*( (char *)(buffer.buffer+buffer.len) ) = '\0';
+
 	return buffer.buffer;
 }
 
 size_t writeBuffer (void* ptr, size_t size, size_t nmemb, smartBuffer* buffer)
 {
-	unsigned char* typed_ptr = ptr;
+size_t write_size;
+void *newBuffer;
 
-	if (nmemb + buffer->len > buffer->capacity) {
-		fprintf(stderr, "ERROR not enough memmory allocated to accept data from OMEIS");
-		return 0;
-	}
-
-	int i;
-	for (i = 0; i < size*nmemb; i++) {
-		buffer->buffer[buffer->len+i] = typed_ptr[i];
-	}
-	buffer->len += nmemb;
+	write_size = nmemb*size;
 	
-	return nmemb;
+	if ( write_size + buffer->len > buffer->capacity) {
+		newBuffer = REALLOC (buffer->buffer,write_size + buffer->len + 1);
+		if (!newBuffer) {
+			fprintf(stderr, "ERROR not enough memmory allocated to accept data from OMEIS");
+			return 0;
+		} else {
+			buffer->buffer = newBuffer;
+			buffer->capacity = write_size + buffer->len + 1;
+			*( (char *)(buffer->buffer+buffer->len+write_size) ) = '\0';
+		}
+	}
+
+	memcpy(buffer->buffer+buffer->len, ptr, write_size);
+	buffer->len += write_size;
+	
+	return write_size;
 }
