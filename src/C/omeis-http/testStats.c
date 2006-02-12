@@ -36,7 +36,6 @@ int main (int argc, char**argv)
 		printf("SHA1=%s\n",     ph->sha1);
 	}
 	
-	while (1) {
 	
 	printf ("XYZ stack statistics:\n");
 	stackStats = getStackStats (is, ID);
@@ -66,7 +65,6 @@ int main (int argc, char**argv)
 	}
 	freePlaneStats (planeStats);
 
-	}
 	free(is);
 	free(ph);
 	return 1;
