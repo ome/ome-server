@@ -351,12 +351,6 @@ sub renderDims {
 	# number of columns needed for row paths..
 	my $rowEntrySize = $self->getHeaderSize($self->{rowEntries});
 
-
-	my $colCount =
-	    scalar(@$activeCols)+$rowEntrySize;
-
-	$tmpl_data->{colCount}=$colCount;
-
 	my $cHeaders = $self->populateColumnHeaders($activeCols,$rowEntrySize,$colPath);
 	$tmpl_data->{columnHeaders} =$cHeaders;
 
@@ -385,7 +379,7 @@ sub renderDims {
     leaves, getObjects returns an array of paths. Each path is itself
     an array, with the first element being the name of the root object being
     searched for, and subsequent elements being names of objects along
-    the way to the atual root objet, whih is the last item in the array.
+    the way to the atual root object, whih is the last item in the array.
 
 =cut
 
