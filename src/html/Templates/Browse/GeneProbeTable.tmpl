@@ -8,7 +8,8 @@ Rows: <SELECT NAME ="Rows">
       <option value="None">None</option>
 
 <TMPL_LOOP NAME=Rows>
-	   <option value="<TMPL_VAR NAME=rowName>">
+	   <option value="<TMPL_VAR NAME=rowName>" 
+	   <TMPL_IF name=selectedRow>selected</TMPL_IF> >
 	   	   <TMPL_VAR name=rowName>
 	   </option>
 </TMPL_LOOP>
@@ -17,9 +18,11 @@ Rows: <SELECT NAME ="Rows">
 Column: <SELECT NAME ="Columns">
       <option value="None">None</option>
 <TMPL_LOOP NAME=Columns>
-	   <option value="<TMPL_VAR NAME=columnName>"> 
-	   	   <TMPL_VAR name=columnName>
-		   </option>
+	   <option value="<TMPL_VAR NAME=columnName>" 
+	   <TMPL_IF name=selectedCol>selected</TMPL_IF> >
+
+   	   <TMPL_VAR name=columnName>
+	   </option>
 </TMPL_LOOP>
  </SELECT>
 
@@ -36,27 +39,28 @@ document.forms[0].update.value='update'; document.forms[0].submit();">
 	 <BR><br><TMPL_VAR NAME=errorMsg>
 <TMPL_ELSE>
 
-<TABLE  COLS="<TMPL_VAR NAME=colCount>" WIDTH="100%">
+<TABLE WIDTH="100%">
 
 
-
+<THEAD>
 
 <TMPL_LOOP NAME=columnHeaders>
 <TR>
 
 <TMPL_LOOP NAME=emptyColumnHeaders>
-  <td class="ome_table_border"><TMPL_VAR NAME=emptyColumnHeader></td>
+  <td class="ome_col_header_border"><TMPL_VAR NAME=emptyColumnHeader></td>
 </TMPL_LOOP>
 
 <TMPL_LOOP NAME=columnNameEntries>
-	   <TD COLSPAN="<TMPL_VAR NAME=columnNameSpan>" class="ome_table_border">
+	   <TD COLSPAN="<TMPL_VAR NAME=columnNameSpan>"
+	   class="ome_col_header_border"> 
 	   <strong><TMPL_VAR NAME=columnNameEntry></strong></TD>
 </TMPL_LOOP>
-</tr>
+</TR>
 
 </TMPL_LOOP> 
 
-
+</THEAD>
 
 
 <TMPL_IF NAME=cells>
@@ -67,7 +71,7 @@ document.forms[0].update.value='update'; document.forms[0].submit();">
 <TR>
 
 <TMPL_LOOP NAME=rowName>
-   <TD class="ome_table_border" ROWSPAN="<TMPL_VAR NAME=rowNameSpan>">
+   <TD class="ome_row_header_border" ROWSPAN="<TMPL_VAR NAME=rowNameSpan>">
        <strong><TMPL_VAR NAME=rowNameEntry></strong></TD>
 </TMPL_LOOP>
 
