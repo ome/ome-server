@@ -217,19 +217,26 @@ sub _renderData {
 			}
 		}
 	}
+	
 	if (exists $field_requests->{ 'classificationColor'}) {
+	    # if we as for coloring by classification
+
 	    my $cg= $options->{CategoryGroup};
+	    # get the category group that was sent in
 	    if ($cg) {
-		print STDERR "**got category group... " . $cg->Name . "\n";
+		# get a color and name for the classification
 		my ($style,$name)  = $self->getClassificationColor($obj,$cg);
 		if ($style) {
 		    foreach my $request ( @ {
 			$field_requests->{'classificationColor'}}) {
-			my $request_string = $request->{'request_string'};
+			# set the style
+
+			my $request_string =  $request->{'request_string'};
 			$record{$request_string} = $style;
 		    }
 		    foreach my $request ( @ {
 			$field_requests->{'classificationName'}}) {
+			# set the name
 			my $request_string = $request->{'request_string'};
 			$record{$request_string} = $name;
 		    }
@@ -239,26 +246,40 @@ sub _renderData {
 	return %record;
 }
 
+=head1 getClassificationColor
 
+    my ($style,$name) = $self->getClassificationColor($obj,$cg);
+
+    get a classification color, along with category name, for the
+    given object in a given category group
+=cut
 sub getClassificationColor {
     my ($self,$obj,$cg) = @_;
 
 
+    # get the classification
     my $classification =
 	OME::Tasks::CategoryManager->getImageClassification($obj,$cg);
     return unless $classification;
 
-
+    # get categories in the list.
     my @categories = $cg->CategoryList(__order => 'Name');
 
-    my @colorList = ("teal","maroon","red","purple","navy","lime",
-		     "olive","yellow","green","blue","silver","aqua");
+    my @colorList = ("teal","maroon","silver","purple","navy","lime",
+		     "olive","yellow","green","blue","red","aqua");
     my %colorMap;
+
+    # map categories onto a color list
     foreach my $cat (@categories) {
 	$colorMap{$cat->id} = pop(@colorList);
     }
+    # find a colr
     my $color = $colorMap{$classification->Category->id};
+
+    #build an appropriate css tag
     my $colorString = "background: $color;";
+    
+    #get the name
     my $name = $classification->Category->Name;
     return ($colorString,$name);
 }
