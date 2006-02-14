@@ -71,8 +71,8 @@ OME::Web::ImageAnnotationTable - An OME page displaying a table of
     will be used to populate the output of the table. This
     specification will take the form of:
 
-    <TMPL_VAR   NAME="Path.load/types-[@Gene:@ProbeGene:@Probe:@ImageProbe,
-    @EmbryoStage:@ImageEmbryoStage]"> 
+    <TMPL_VAR   NAME="Path.load/types-[Gene:ProbeGene:Probe:ImageProbe,
+    EmbryoStage:ImageEmbryoStage]"> 
 
     This list has two items. Each are lists of data types and mapping types
     that go from some root type down to some mapping type that can be
@@ -112,7 +112,7 @@ sub new {
     # the names for the rows, columns, and category group
     $self->{rows}="";
     $self->{columns}="";
-    $self->{CategoryGroup};
+    $self->{CategoryGroup}="";
     # the actual rows and columns
     $self->{rowEntries} = undef;
     $self->{colEntries} = undef;
@@ -253,8 +253,8 @@ sub getTableDetails {
     some root to a map that refers to an image.
 
     thus, 
-    Path.load/types-[@Gene:@ProbeGene,@Probe:@ImageProbe,
-                     @EmbryoStage:@ImageEmbryoStage]
+    Path.load/types-[Gene:ProbeGene,Probe:ImageProbe,
+                     EmbryoStage:ImageEmbryoStage]
 
     defines two dimensions.
 
@@ -266,8 +266,8 @@ sub getTableDetails {
     path objects.
     Thus, for the above example, we'll have the following result:
 
-    { @Gene =>  ('@Gene','@ProbeGene','@Probe','@ImageProbe'),
-      @EmbryoStage => ('@EmbryoStage','@ImageEmbryoStage') }
+    { Gene =>  ('Gene','ProbeGene','Probe','ImageProbe'),
+      EmbryoStage => ('EmbryoStage','ImageEmbryoStage') }
   
     The return value is the reference to the hash.
 =cut
@@ -328,7 +328,6 @@ sub getChoices {
 
     foreach my $type (keys %$types) {
 	# clear off header if it's an st
-	$type =~ s/@(.*)/$1/;
 	my %row;
 	my %col;
 	$row{rowName} = $type;
@@ -417,13 +416,11 @@ sub renderDims {
     my $hasData = 0;
 
     
-    my $rowKey = "@".$rows;
-    my $rowPath = $types->{$rowKey};
+    my $rowPath = $types->{$rows};
     $self->{rowEntries} = $self->getObjects($container,$rows,$rowPath);
 
     # same for columns.
-    my $colKey = "@".$columns;
-    my $colPath = $types->{$colKey};
+    my $colPath = $types->{$columns};
     $self->{colEntries} = $self->getObjects($container,$columns,$colPath);
 
     # populate the cells with data in a hash.
@@ -432,6 +429,7 @@ sub renderDims {
     
     my ($cells,$activeRows,$activeCols) =
 	$self->populateCells($types);
+
 
     # if any data, populate the template
     if ($cells) {
@@ -563,7 +561,7 @@ sub getRoots {
     the tree. The result is a reference to a hash of hashes that
     contains the values in the tree.
 
-    Thus, if the path is @Gene:@ProbeGene:@Probe:@ImageProbe, the
+    Thus, if the path is Gene:ProbeGene:Probe:ImageProbe, the
     resulting hash will be keyed with the names and ids of all of the genes
     passed in as roots - @$objs.  For each gene, the hash will contain
     an entry for each Probe. The entry for each probe will be a hash 
@@ -624,7 +622,7 @@ sub getTree {
     my ($obj,@paths) = @_;
 
     # now, $obj is a gene, $paths is
-    # [@ProbeGene,@Probe,@ImageProbe]
+    # [ProbeGene,Probe,ImageProbe]
     # or, map followed by class followed by map.
 
     #termination condition - stop when we've hit the last non-map
@@ -635,11 +633,9 @@ sub getTree {
     # strategy. find all of the maps 
     # load the mapping type (ie, ProbeGene)
     my $map = shift @paths;
-    $map =~ s/@(.*)/$1/;
 
     # next type is probe.
     my $next = shift @paths;
-    $next =~ s/@(.*)/$1/;
 
     # build the accessor.
     my $accessor = "${map}List"; #
@@ -713,9 +709,7 @@ sub flattenTree {
 	my $ent = $sortedRows[$i];
 	for (my $j = 0; $j < scalar(@$ent)-1; $j++) {
 	    my $val = $ent->[$j];
-	    print STDERR "looking at object $val..\n";
 	    if ($val =~ m/([^_]*)__\d+/) {
-		print STDERR "Stripped it is $1\n";
 		$ent->[$j]=$1;
 	    }
 	}
@@ -845,10 +839,9 @@ sub getAccessorName {
     # and second to last - which is the items that we retrieved - the
     # last row/column item. (ie, Probe).
     
-    my $fName = "@" . $fieldName;
 
     # get the types out of the types hash
-    my $path = $types->{$fName};
+    my $path = $types->{$fieldName};
     my $count = scalar(@$path);
 
     # get the last two items.
@@ -856,8 +849,7 @@ sub getAccessorName {
     my $rootItem = $path->[$count-2];
 
     #strip off loading ampersands.
-    $listAccessor =~ s/@(.*)/$1/;
-    $rootItem =~ s/@(.*)/$1/;
+
 
     my $accessor = "${listAccessor}List.$rootItem";
     return $accessor;
@@ -897,8 +889,13 @@ sub getActiveList {
  
 
 =head2 populateColumnHeaders
+    my $colHeaders =
+       $self->populateColumnHeaders($container,$activeCols,
+                $rowEntrySize,$colPath);
 
-    put headers in the columns of the table.
+    Put headers in the columns of the table. $rowSize is the number of
+    columns that will be needed for header information for row
+    entries. $colPath is the path of types to the columns.
 
 =cut
 sub populateColumnHeaders {
@@ -906,11 +903,12 @@ sub populateColumnHeaders {
     my ($container,$columns,$rowSize,$colPath) = @_;
 
     # colPath is the returned value for types, which will have the
-    # form @ST, @map, @ST, @map, etc. let's start by stripping out
+    # form ST, map, ST, map, etc. let's start by stripping out
     # every other item.
     my $colTypes = $self->filterOutMaps($colPath);
     
     
+    # create empty headers as need be.
     my  $emptyHeaders = $self->populateEmptyColumnHeaders($rowSize);
     my @headers;
     my $firstCol = $columns->[0];
@@ -919,31 +917,48 @@ sub populateColumnHeaders {
     # this is also the # of field in the column..
 
     my @prevColumns;
+    # for each row in columns
     for (my $i =0; $i < $rowCount; $i++)  {
 	my %header;
+	
+	# get appropiate # of empty heders.
 	$header{emptyColumnHeaders} = $emptyHeaders;
 	my @columns;
 
+	# for each column in that row.
 	for (my $j = 0; $j < scalar(@$columns); $j++) {
-	    my  $val = $columns->[$j]->[$i];
 
 	    my $same =1;
 	    # look @ all previous entries in this column to see if
-	    # they match
+	    # they match  whatever was in the most recent column
 	    for (my $k = 0; $k <= $i; $k++) {
-		if ($columns->[$j]->[$k] ne $prevColumns[$k]) { 
+		if (!$prevColumns[$k] || 
+		    $columns->[$j]->[$k] ne $prevColumns[$k]) { 
+		    # if any difference, bail out
 		    $same  = 0;
 		    last;
 		}
 	    }
+
+
+	    # if it's not the same,
 	    if (!$same) {
+		# get the val.
+		my  $val = $columns->[$j]->[$i];
+
 		my %column;
+		# find out how many times the column is repeating.
 		my $colSpan =
 		    $self->getRepeatCount($columns,$j,$i);
-		$column{columnNameEntry} =  
-		    $self->getTextFor($container,$val,$colTypes->[$i]);# $val;
 		$column{columnNameSpan} = $colSpan;
+		
+		# get the link content for this value
+		$column{columnNameEntry} =  
+		    $self->getTextFor($container,$val,$colTypes->[$i]);
+	    
+
 		push(@columns,\%column);
+		# update the previous entry.
 		$prevColumns[$i] = $val;
 	    }
 	}
@@ -954,6 +969,13 @@ sub populateColumnHeaders {
     }
     return \@headers;
 }
+
+=head2 populateEmptycolumnHeaders
+    
+    my $emptyColumns = $self->populateEmptyColumnHeaders($size);
+
+   create  the requisite number of empty column headings.
+=cut 
 
 
 sub populateEmptyColumnHeaders {
@@ -969,7 +991,10 @@ sub populateEmptyColumnHeaders {
     return \@headers;
 }
 
+
 =head2 getHeaderSize
+
+    my $headerSize = $self->getHeaderSize($rowEntries)
 
     return the number of items that must be printed in the header for
     each row/column
@@ -984,7 +1009,13 @@ sub getHeaderSize {
 
 =head2 populateBody
 
+    my $body =	 $self->populateBody($container,$cells,$activeRows,
+				$activeCols,$rowPath);
     Populate the body, one row at a time.
+
+    Simimlar to populateColumnHeaders, except here we call
+    populateRow, which eventually renders all of the images.
+    
 =cut
 
 sub populateBody {
@@ -993,7 +1024,7 @@ sub populateBody {
     my ($container,$cells,$activeRows,$activeCols,$rowPath) = @_;
 
     # rowPath is the returned value for types, which will have the
-    # form @ST, @map, @ST, @map, etc. let's start by stripping out
+    # form ST, map, ST, map, etc. let's start by stripping out
     # every other item.
     my $rowTypes = $self->filterOutMaps($rowPath);
 
@@ -1038,6 +1069,15 @@ sub populateBody {
 
 }
 
+=head2 filterOutMaps
+
+    my $filteredPath = $self->filterOutMaps($path);
+
+    Given a path consisting of the names of types, alternating between
+    object types and map types, return an array containing only the
+    object types.
+
+=cut
 sub filterOutMaps {
     my ($self,$path)  = @_;
     my @filtered;
@@ -1047,7 +1087,16 @@ sub filterOutMaps {
     return \@filtered;
 }
    
+=head2 
+    my $cnt =$self->getRepeatCount($entries,$start,$field)
 
+    How many times do we see repeats of the values in
+    $entries->[$start], where fields 0..$field are all equal to 
+    those in $entries->[$start]? Used to determine when a column/row
+    header should span multiple columns/rows.
+    
+
+=cut
 sub getRepeatCount {
     my ($self,$entries,$start,$field) = @_;
 
@@ -1066,6 +1115,8 @@ sub getRepeatCount {
     
     
 =head2 getTextFor
+
+    my $text = $self->getTextFor($container,$name,$type);
     given a name of an item and the type of an item,
     find the string to put in a cell.
     3 posssibilities: 
@@ -1083,31 +1134,30 @@ sub getTextFor {
 
     my $text = $name; #default
 
-    my $obj = $factory->findObject($type,Name=>$name);
-    if ($obj) {
-	if ($type =~ /@(.*)/) {
-	    # try to find external link
-	    my $tName = $1;
-	    my $mapType = $tName."ExternalLinkList";
-	    
-	    my $map;
-	    # get the list of links, & find the first element in this list.
-	    eval{ my $maps = $obj->$mapType(); $map = $maps->next() };
+    my $typeName = "@".$type;
 
-	    # if there's an error or no map give the object detail url or just
-	    # the name (if no details)
-	    if ($@ || !$map) {
-		my $detail = $self->getObjDetailURL($obj);
-		if ($detail) {
-		    $text = $q->a({href=>$detail},$name);
-		}
+    # find the object
+    my $obj = $factory->findObject($typeName,Name=>$name);
+    if ($obj) {
+	my $mapType = $type."ExternalLinkList";
+	
+	my $map;
+	# get the list of links, & find the first element in this list.
+	eval{ my $maps = $obj->$mapType(); $map = $maps->next() };
+	
+	# if there's an error or no map give the object detail url or just
+	# the name (if no details)
+	if ($@ || !$map) {
+	    my $detail = $self->getObjDetailURL($obj);
+	    if ($detail) {
+		$text = $q->a({href=>$detail},$name);
 	    }
-	    elsif ($map) { # but, if the link does exist, create it.
-		
-		my $link = $map->ExternalLink();
-		my $url = $link->URL();
-		$text = $q->a({href=>$url},$name);
-	    }
+	}
+	elsif ($map) { # but, if the link does exist, create it.
+	    
+	    my $link = $map->ExternalLink();
+	    my $url = $link->URL();
+	    $text = $q->a({href=>$url},$name);
 	}
     }
     return $text;
@@ -1115,14 +1165,15 @@ sub getTextFor {
 
 =head2 populateRow
 
-    put sets of images in each cell.
+    my $rowCells = $self->populateRow($container,$cells,$row,$activeCols);
+    
+
+    put sets of images from cells into the output table.
 =cut
 sub populateRow {
     my $self=shift;
     my ($container,$cells,$row,$activeCols) = @_;
     my $cg= $self->{CategoryGroup};
-    print STDERR "*** populating with category group  " . $cg->Name .
-	"\n" if ($cg);
 	
 
     my $rowLeaf = $row->[scalar(@$row)-1];
@@ -1133,17 +1184,28 @@ sub populateRow {
 	# find the last entry in it.
 	my $colLeaf = $col->[scalar(@$col)-1];
 	my $colName = $colLeaf->Name;
+	# get cells
 	my $images = $cells->{$rowName}->{$colName};
+	#render them.
 	my $cell = $self->getRendering($container,$images,$cg);
 	push(@cells,$cell);
     }
     return \@cells;
 }
 
+
+=head2 getRendering
+
+    my $rendering = $self->getRendering($container,$images,$cg);
+
+    Render the images according to the category group
+=cut
+
 sub getRendering {
     my ($self,$container,$images,$cg) = @_;
     my %cell;
     if ($images) {
+	# sort them by category group first.
 	my $sortedImages = $self->sortImagesByCG($images,$cg);
 	my $renderer=$container->Renderer();
 	my $rendering =
@@ -1157,22 +1219,29 @@ sub getRendering {
     return \%cell;
 }
 
-# for each image, get the cg.
-# populate a new array. each element in this array is a pair
-# containing [$cgid, $image];
-# sort the array by cg
-# return the images.
+=head2
+
+    my $sortedImageArrayRef = $self->sortImagesByCG($images,$cg);
+   
+
+    Sort the images by cateogory  in a given group.
+=cut
+
 sub sortImagesByCG {
     my ($self,$images,$cg) = @_;
     
     my @cgArray;
     foreach my $image (@$images) {
+        # for each image, get the cg.
 	my $classification = 
 	    OME::Tasks::CategoryManager->getImageClassification($image,$cg);
 	my $catName="";
 	if ($classification) {
 	    $catName = $classification->Category->Name;
 	}
+       # populate a new array. each element in this array is a pair
+       # containing [$cgid, $image];
+
 	my @imgDetail = ($catName,$image);
 	push(@cgArray,\@imgDetail);
     }
