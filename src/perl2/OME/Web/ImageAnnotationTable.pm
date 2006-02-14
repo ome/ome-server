@@ -35,6 +35,67 @@
 
 package OME::Web::ImageAnnotationTable;
 
+=head1 NAME
+
+OME::Web::ImageAnnotationTable - An OME page displaying a table of
+    images as annotated in one or more hierarchies.
+
+=head1 DESCRIPTION
+
+    Analysis and interpretation of annotated images often requires
+    displays tailored to specific experimentals. 
+
+    Images from WISH screens of pre-implementation mouse embryos
+    (Yoshikawa, et al., Gene Expression Patterns 6(2), January 2006)
+    involve categorization of images by genes and associated probes
+    (on the one hand) and stage of embryonic development (on the other). 
+
+    Given these annotations, images can be displayed in  grid, with
+    development stages as the columns and genes/probes forming the
+    rows (Yoshikawa, et al., Figure 3). 
+
+    ImageAnnotationTable is an OME::Web page tha supports this
+    layout. Furthermore, for any given grid construction, images
+    within a cell can be color-coded on the basis of values from a
+    specified category group.
+
+=head1 USAGE
+    
+    This page can be served via the usual OME dispatcher. Parameters
+    needed for proper execution include:
+
+
+    Template=GeneProbeTable:  - the name of an instance of the
+    AnnotationTemplate semantic type. This intance must refer to an
+    HTML::Template file that has a specification of the types that
+    will be used to populate the output of the table. This
+    specification will take the form of:
+
+    <TMPL_VAR   NAME="Path.load/types-[@Gene:@ProbeGene:@Probe:@ImageProbe,
+    @EmbryoStage:@ImageEmbryoStage]"> 
+
+    This list has two items. Each are lists of data types and mapping types
+    that go from some root type down to some mapping type that can be
+    used to retrieve sets of images. Each list must start with a data
+    type and then provide a mapping type that maps to some other data
+    type. This pattern will repeat until a final mapping type is
+    reached. The final mapping type will implicitly point to a list of
+    images.
+
+    Rows=Gene, Columns=EmbryoStage: These parameters will specify the
+    root types to be used for the rows and columns of the output
+    table. These names must correspond to the initial values given in
+    the "Path.load/types" specification lists.
+    
+    CategoryGroup=Localization: the category group used for
+    color-coding of the images. Note that no color-coding will be used
+    if this value is left unspecified.
+
+=head1 METHODS
+
+=cut
+
+
 use strict;
 use Carp;
 use Carp 'cluck';
@@ -52,7 +113,7 @@ sub getPageTitle {
 }
 
 
-=head1 getPageBody
+=head2 getPageBody
     
 =cut
 
@@ -94,11 +155,17 @@ sub getPageBody {
     return ('HTML',$html);	
 }
 
-=head1 getTableDetails
+=head2 getTableDetails
+
+    my $output = $self->getTableDetails($container,$which_tmpl);
 
     getTableDetails does the meat of the work of building this page.
     We load the template, populate pull-downs that let us switch x and
     y axes, and render the various dimensions.
+
+    $container is the object that calls this code. 
+    $which_tmpl is the template that we are populating
+    
     
 =cut
 
@@ -107,9 +174,9 @@ sub getTableDetails {
     my $session= $self->Session();
     my $factory = $session->Factory();
 
-    my $q = $self->CGI();
     # container is the OME::Web object that is calling this code.
     my ($container,$which_tmpl) = @_;
+    my $q = $container->CGI();
     my %tmpl_data;
     # load the appropriate information for the named template.
     my $tmplData = 
@@ -138,7 +205,7 @@ sub getTableDetails {
     $self->getChoices(\%tmpl_data,$types);
 
     $tmpl_data{'categoryGroups/render-list_of_options'}=
-	$self->prepareCategoryGroups();
+	$self->prepareCategoryGroups($container);
 
     if ($self->{rows} && $self->{columns}) {
 	
@@ -146,7 +213,7 @@ sub getTableDetails {
 	    $tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	}
 	else {
-	    my $hasData = $self->renderDims(\%tmpl_data,$types);
+	    my $hasData = $self->renderDims($container,\%tmpl_data,$types);
 	    if ($hasData == 0) {
 		$tmpl_data{errorMsg}="No Data to Render\n";
 	    }
@@ -157,7 +224,7 @@ sub getTableDetails {
 }
 
 
-=head1
+=head2
 
     getTypes - for the template. Finds the TMPL_VARS given in a 
     Path.load/types-[..] format. 
@@ -218,7 +285,7 @@ sub getTypes {
     return \%pathSet;
 }
 
-=head1 getChoices
+=head2 getChoices
 
     getChoices populates the Columns and Rows pull-down menus in the
     template. This is done by iterating down the root types for each
@@ -258,16 +325,17 @@ sub getChoices {
     $tmpl_data->{Rows}=\@rows;
 }
 
-=head1 prepareCategoryGroups 
+=head2 prepareCategoryGroups 
     prepare and populate the category groups parameter and pull-down 
 =cut
 
 sub prepareCategoryGroups {
 
     my $self=shift;
+    my $container = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my $q = $self->CGI();
+    my $q = $container->CGI();
 
     # do the list of categories
     my $cgParam = $q->param('CategoryGroup');
@@ -295,13 +363,14 @@ sub prepareCategoryGroups {
     }
 
     my @catGroupList = $factory->findObjects('@CategoryGroup');
+    my $renderer=  $container->Renderer;
     my $cats =
-	$self->Renderer->renderArray(\@catGroupList,'list_of_options', 
+	$renderer->renderArray(\@catGroupList,'list_of_options', 
 				     \%cgHash);
     return $cats;
 }
 
-=head1 renderDims
+=head2 renderDims
 
     The main rendering code. Parameters are 
         $tmpl - the template being populated
@@ -317,8 +386,8 @@ sub renderDims {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my $q = $self->CGI();
-    my ($tmpl_data,$types) = @_;
+    my ($container,$tmpl_data,$types) = @_;
+    my $q = $container->CGI();
     my $rows = $self->{rows};
     my $columns = $self->{columns};
     my $hasData = 0;
@@ -327,12 +396,12 @@ sub renderDims {
     # this will get replaced by something that drills down the row hierarchy
     my $rowKey = "@".$rows;
     my $rowPath = $types->{$rowKey};
-    $self->{rowEntries} = $self->getObjects($rows,$rowPath);
+    $self->{rowEntries} = $self->getObjects($container,$rows,$rowPath);
 
     # same for columns.
     my $colKey = "@".$columns;
     my $colPath = $types->{$colKey};
-    $self->{colEntries} = $self->getObjects($columns,$colPath);
+    $self->{colEntries} = $self->getObjects($container,$columns,$colPath);
 
     # populate the cells with data in a hash.
     # activeRows returns a list of rows that have data,
@@ -351,17 +420,20 @@ sub renderDims {
 	# number of columns needed for row paths..
 	my $rowEntrySize = $self->getHeaderSize($self->{rowEntries});
 
-	my $cHeaders = $self->populateColumnHeaders($activeCols,$rowEntrySize,$colPath);
+	my $cHeaders = 
+	    $self->populateColumnHeaders($container,$activeCols,
+					 $rowEntrySize,$colPath);
 	$tmpl_data->{columnHeaders} =$cHeaders;
 
 	my $body =
-	    $self->populateBody($cells,$activeRows,$activeCols,$rowPath);
+	    $self->populateBody($container,$cells,$activeRows,
+				$activeCols,$rowPath);
 	$tmpl_data->{cells}=$body;
     }
     return $hasData;
 }
 
-=head1 
+=head2 
 
     getObjects gets the objects of interest for a given hierarchy.
     Given a Type (Probe,EbmbryoStage, etc.) and a set of paths from
@@ -385,9 +457,10 @@ sub renderDims {
 
 sub getObjects {
     my $self=shift;
+    my $container = shift;
     my $session = $self->Session();
     my $factory = $session->Factory();
-    my $q = $self->CGI();
+    my $q = $container->CGI();
 
     my $type =shift; # type is Probe,EmbryoStage, etc.
     my $paths = shift;
@@ -430,7 +503,7 @@ sub getObjects {
 
 
 
-=head1 getRoots 
+=head2 getRoots 
 
     get the root objects corresponding to a comma-separated list of
     objects from the CGI parameter. load the object either by Name or
@@ -461,7 +534,7 @@ sub getRoots {
     return \@objs;
 }
 
-=head1 getTreeFromRootList
+=head2 getTreeFromRootList
 
     Given  a list of root objects and a list of object types, populate
     the tree. The result is a reference to a hash of hashes that
@@ -502,7 +575,7 @@ sub getTreeFromRootList {
 }
 
 
-=head1 getTree
+=head2 getTree
 
     The workhorse that does the job of recursively building the tree
     for a given object.
@@ -549,7 +622,7 @@ sub getTree {
 }
 
 
-=head1 flattenTree
+=head2 flattenTree
 
     given a tree from getTreeFromRootList, this will turn flatten it
     into an array of values. This array will contain one entry for
@@ -607,7 +680,7 @@ sub sortByIdKey {
     
 
 
-=head1 populateCells
+=head2 populateCells
     Get the objects to fill the cell.
 
     $rowName is the Name of the rows - Probe,etc.
@@ -669,7 +742,7 @@ sub populateCells {
     return ($cells,$aRows,$aColumns);
 }
 
-=head1 getAccessorName
+=head2 getAccessorName
 
     Build up the accessor to $fieldName (ie., Probe).
     given an image, we would go to ${someType}List to get the mapping
@@ -704,7 +777,7 @@ sub getAccessorName {
     return $accessor;
 }
 
-=head1 getActiveList
+=head2 getActiveList
     We want to get things into a result list in the same order in which
     they were in the original list, so using keys of the hash is not
     enough. Sorting is also inappropriate, as position in list is
@@ -728,14 +801,14 @@ sub getActiveList {
 }
  
 
-=head1 populateColumnHeaders
+=head2 populateColumnHeaders
 
     put headers in the columns of the table.
 
 =cut
 sub populateColumnHeaders {
     my $self=shift;
-    my ($columns,$rowSize,$colPath) = @_;
+    my ($container,$columns,$rowSize,$colPath) = @_;
 
     # colPath is the returned value for types, which will have the
     # form @ST, @map, @ST, @map, etc. let's start by stripping out
@@ -772,7 +845,8 @@ sub populateColumnHeaders {
 		my %column;
 		my $colSpan =
 		    $self->getRepeatCount($columns,$j,$i);
-		$column{columnNameEntry} =  $self->getTextFor($val,$colTypes->[$i]);# $val;
+		$column{columnNameEntry} =  
+		    $self->getTextFor($container,$val,$colTypes->[$i]);# $val;
 		$column{columnNameSpan} = $colSpan;
 		push(@columns,\%column);
 		$prevColumns[$i] = $val;
@@ -800,7 +874,7 @@ sub populateEmptyColumnHeaders {
     return \@headers;
 }
 
-=head1 getHeaderSize
+=head2 getHeaderSize
 
     return the number of items that must be printed in the header for
     each row/column
@@ -813,7 +887,7 @@ sub getHeaderSize {
     return $size;
 }
 
-=head1 populateBody
+=head2 populateBody
 
     Populate the body, one row at a time.
 =cut
@@ -821,7 +895,7 @@ sub getHeaderSize {
 sub populateBody {
     my $self= shift;
 
-    my ($cells,$activeRows,$activeCols,$rowPath) = @_;
+    my ($container,$cells,$activeRows,$activeCols,$rowPath) = @_;
 
     # rowPath is the returned value for types, which will have the
     # form @ST, @map, @ST, @map, etc. let's start by stripping out
@@ -847,7 +921,9 @@ sub populateBody {
 		my %entry;
 		my $rowSpan = 
 		    $self->getRepeatCount($activeRows,$rowIndex,$i);
-		$entry{rowNameEntry} = $self->getTextFor($val,$rowTypes->[$i]);
+		$entry{rowNameEntry} = $self->getTextFor($container,
+							 $val,
+							 $rowTypes->[$i]);
 		$entry{rowNameSpan} = $rowSpan;
 		push(@entries,\%entry);
 
@@ -859,7 +935,8 @@ sub populateBody {
 	    }
 	}
 	$rowContents{rowName} = \@entries;
-	$rowContents{rowCells} = $self->populateRow($cells,$row,$activeCols);
+	$rowContents{rowCells} = 
+	    $self->populateRow($container,$cells,$row,$activeCols);
 	push (@cellRows,\%rowContents);
     }
     return \@cellRows;
@@ -893,7 +970,7 @@ sub getRepeatCount {
 }
     
     
-=head1 getTextFor
+=head2 getTextFor
     given a name of an item and the type of an item,
     find the string to put in a cell.
     3 posssibilities: 
@@ -904,10 +981,10 @@ sub getRepeatCount {
 
 =cut
 sub getTextFor {
-    my ($self,$name,$type)  = @_;
+    my ($self,$container,$name,$type)  = @_;
     my $session = $self->Session;
     my $factory = $session->Factory;
-    my $q = $self->CGI;
+    my $q = $container->CGI;
 
     my $text = $name; #default
 
@@ -941,13 +1018,13 @@ sub getTextFor {
     return $text;
 }
 
-=head1 populateRow
+=head2 populateRow
 
     put sets of images in each cell.
 =cut
 sub populateRow {
     my $self=shift;
-    my ($cells,$row,$activeCols) = @_;
+    my ($container,$cells,$row,$activeCols) = @_;
     my $cg= $self->{CategoryGroup};
     print STDERR "*** populating with category group  " . $cg->Name .
 	"\n" if ($cg);
@@ -962,23 +1039,24 @@ sub populateRow {
 	my $colLeaf = $col->[scalar(@$col)-1];
 	my $colName = $colLeaf->Name;
 	my $images = $cells->{$rowName}->{$colName};
-	my $cell = $self->getRendering($images,$cg);
+	my $cell = $self->getRendering($container,$images,$cg);
 	push(@cells,$cell);
     }
     return \@cells;
 }
 
 sub getRendering {
-    my ($self,$images,$cg) = @_;
+    my ($self,$container,$images,$cg) = @_;
     my %cell;
     if ($images) {
 	my $sortedImages = $self->sortImagesByCG($images,$cg);
+	my $renderer=$container->Renderer();
 	my $rendering =
-	    $self->Renderer()->renderArray($sortedImages,
-					   'color_code_ref_mass_by_cg'
-					   ,{type=>'OME::Image',
-					     CategoryGroup =>
-						 $cg});
+	    $renderer->renderArray($sortedImages,
+				   'color_code_ref_mass_by_cg'
+				   ,{type=>'OME::Image',
+				     CategoryGroup =>
+					 $cg});
 	$cell{cell} = $rendering;
     }
     return \%cell;
