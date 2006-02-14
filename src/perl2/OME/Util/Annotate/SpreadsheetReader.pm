@@ -193,7 +193,14 @@ sub processFile {
 		$session->commitTransaction();
 	}
 	close FILE unless $type eq EXCEL;
-	$INPUT_RECORD_SEPARATOR = ''; # probably don't need to do this, but let's be safe
+	$INPUT_RECORD_SEPARATOR = ''; # probably don't need to do
+				# this, but let's be safe
+	$global_mex->status('FINISHED');
+	if (scalar @ERRORoutput) {
+	    my $errorMsg = $self->getErrorMessage(\@ERRORoutput);
+	    $global_mex->error_message($errorMsg); 
+	}
+	$global_mex->storeObject();
 	$session->commitTransaction();
 	
 	# package up outputs and return
@@ -606,9 +613,7 @@ sub printSpreadsheetAnnotationResultsCL {
 
 	my $output = "";
 	if (scalar @ERRORoutput) {
-		foreach (@ERRORoutput) {
-			$output .= "$_\n";
-		}
+	    $output .= $self->getErrorMessage(\@ERRORoutput);
 	}	
 	if (scalar @newProjs) {
 		$output .= "New Projects:\n";
@@ -680,6 +685,15 @@ sub printSpreadsheetAnnotationResultsCL {
 	}
 
 	return $output;
+}
+
+sub getErrorMessage {
+    my ($self,$ERRORoutput) = @_;
+    my $output ="";
+    foreach (@$ERRORoutput) {
+	$output .="$_\n";
+    }
+    return $output;
 }
 
 =head1 Author
