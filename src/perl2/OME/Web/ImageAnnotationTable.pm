@@ -516,15 +516,6 @@ sub getObjects {
     # convert that tree into an array,
     my $flatTree = $self->flattenTree($tree);
 
-    # strip ids off of items.
-    for (my $i = 0; $i < scalar(@$flatTree); $i++ ) {
-	my $ent = $flatTree->[$i];
-	for (my $j = 0; $j < scalar(@$ent)-1; $j++) {
-	    my $val = $ent->[$j];
-	    $val =~ m/([^_]*)__\d+/;
-	    $ent->[$j]=$1;
-	}
-    }
     return $flatTree;
 }
 
@@ -581,7 +572,12 @@ sub getRoots {
 
     For all of these hashes, the key will be a hybrid string resulting
     from the concatentation of the object name, two underscores "__"
-    and the object id. 
+    and the object id.  These underscores are necessary to allow for
+    sorted by atributed_ids: without the id in the key, we would only
+    be able to sort by name. However, for some STs  that have values
+    with inherent order (such as EmbryoStage: 1-Cell, 2-Cell, 4-Cell,
+    etc), this approach is not acceptable. So, we sort by attribute id
+    instead, and strip these keys off later.
 
     Note that mapping classes are not included in the result, as they
     are only used to find the next level of descendant in the
@@ -613,7 +609,9 @@ sub getTreeFromRootList {
 
 =head2 getTree
 
+    my $tree = $self->getTre($obj, $path)
     The workhorse that does the job of recursively building the tree
+    starting from a given object and walking down the types given in path.
     for a given object.
 =cut
 
@@ -643,22 +641,28 @@ sub getTree {
     my $next = shift @paths;
     $next =~ s/@(.*)/$1/;
 
+    # build the accessor.
     my $accessor = "${map}List"; #
+
+    # find the maps
     my @maps = $obj->$accessor;  # ie., ProbeGeneList.
     my %tree;
     foreach my $map (@maps) { # for each map
 	my $child = $map->$next; # follow the pointer to the next
 				# object (ie., ProbeGeneList->Probe)
 	my $name = $child->Name(); # get the name
-	my $id = $child->id();
-	my $key = $name . "__" . $id;
-	$tree{$key} = $self->getTree($child,@paths); #recurse
+	my $id = $child->id(); # and id 
+	my $key = $name . "__" . $id; 
+	# recurse.
+	$tree{$key} = $self->getTree($child,@paths); 
     }
     return \%tree;
 }
 
 
 =head2 flattenTree
+
+    my $arrayRef = $self->flattenTree($tree);
 
     given a tree from getTreeFromRootList, this will turn flatten it
     into an array of values. This array will contain one entry for
@@ -667,7 +671,6 @@ sub getTree {
     list except for the leaf, the name of the object is given. For the
     leaf, the object itself is given
     
-
     This data is, of course, very redundant, but it is useful for
     populating table columns and headers.
 
@@ -678,7 +681,9 @@ sub flattenTree {
     my $tree = shift;
     my @rows;
 
-    #termination - must return an array of arrays 
+    #termination - must return an array containing one element,
+    # which is an array of one element - the item in question
+    # containing the last item
     if (ref($tree) ne 'HASH') {
 	my @res;
 	push @res,$tree;
@@ -690,21 +695,43 @@ sub flattenTree {
     #recursion
     foreach my $key (keys %$tree) {
 	my $val = $tree->{$key};
-	# recurse
+	# recurse - flatten the values
 	my $valRows = $self->flattenTree($val);
+
+	# for each val in valrows, 
+	# add key to the front
 	foreach my $valRow (@$valRows) {
-	    # for each val in valrows, 
-	    # add key to the front
 	    unshift @$valRow,$key;
 	    push @rows,$valRow;
 	}
     }
     # sort the rows by id of first item.
     my @sortedRows = sort sortByIdKey @rows;
+
+    # strip the ids off of the items.
+    for (my $i = 0; $i < scalar(@sortedRows); $i++ ) {
+	my $ent = $sortedRows[$i];
+	for (my $j = 0; $j < scalar(@$ent)-1; $j++) {
+	    my $val = $ent->[$j];
+	    print STDERR "looking at object $val..\n";
+	    if ($val =~ m/([^_]*)__\d+/) {
+		print STDERR "Stripped it is $1\n";
+		$ent->[$j]=$1;
+	    }
+	}
+    }
+
     return \@sortedRows;
 }
 
+=head3 sortByIDKey
+    sortByIDKey ($a,$b) 
+    
+    sorts the items by order of the ids contained in their
+    "$name__$id" first element.
 
+
+=cut
 sub sortByIdKey {
     $a->[0]=~ /[^_]*__(\d+)/;
     my $aID = $1;
@@ -717,12 +744,19 @@ sub sortByIdKey {
 
 
 =head2 populateCells
-    Get the objects to fill the cell.
 
-    $rowName is the Name of the rows - Probe,etc.
-    $rowEntries are those things found in the rows
-        ditto for colname
-    $types is the type hash
+    my ($cells,$activeRows,$activeCols) = $self->populateCells($types);
+
+    Get the objects to fill the matrix. Return a nested hash:
+    first-level keyed by row id, second by column, with value being
+    the list of images in the cell defined by that row,column pair.
+
+    $activeRows and $activeColumns are hashes indicating which
+    rows/columns have data. Only those rows/columns with data will be
+    drawn.
+
+    
+
 =cut
 sub populateCells {
     my $self=shift;
@@ -734,6 +768,7 @@ sub populateCells {
     my $colName = $self->{columns};
     my $rowEntries = $self->{rowEntries};
     my $colEntries = $self->{colEntries};
+    
     # get rows by accessor 'ImageProbeList.Probe
     # to do this, get type entry for row,
     # get last entry - that gets us image probe.
@@ -750,11 +785,18 @@ sub populateCells {
 	# this is the of objects that define the row. let's get the
 	# last item
 	my $rowLeaf = $row->[scalar(@$row)-1];
+
+	#thus, for example $rowLeaf is a probe
 	my $rName = $rowLeaf->Name;
+
 	foreach my $col (@$colEntries) {
 	    my $colLeaf = $col->[scalar(@$col)-1];
+	    # and colLeaf is an embryoStage.
 	    my $cName = $colLeaf->Name;
 	    # for each row and column, get images.
+	    # the filter clauses end up looking like 
+	    # ImageProbeList.Probe = <probeName> (for row) and 
+	    # ImageEmbryoStageList.EmbryoStage = <embryo stage name>
 	    my @images = $factory->findObjects('OME::Image',
 					       { $rowAccessor => $rowLeaf,
 						 $columnAccessor =>
@@ -780,8 +822,10 @@ sub populateCells {
 
 =head2 getAccessorName
 
-    Build up the accessor to $fieldName (ie., Probe).
-    given an image, we would go to ${someType}List to get the mapping
+    my $accessor = $self->getAccessorName($fieldName,$types);
+
+    Build up the accessor to $fieldName (ie., Probe). Given an image,
+    we would go to ${someType}List to get the mapping 
     to an image, and then ${SomeType}List.${FieldName} to get to the
     object.
     
@@ -802,24 +846,40 @@ sub getAccessorName {
     # last row/column item. (ie, Probe).
     
     my $fName = "@" . $fieldName;
+
+    # get the types out of the types hash
     my $path = $types->{$fName};
     my $count = scalar(@$path);
+
+    # get the last two items.
     my $listAccessor = $path->[$count-1];
     my $rootItem = $path->[$count-2];
 
+    #strip off loading ampersands.
     $listAccessor =~ s/@(.*)/$1/;
     $rootItem =~ s/@(.*)/$1/;
+
     my $accessor = "${listAccessor}List.$rootItem";
     return $accessor;
 }
 
 =head2 getActiveList
-    We want to get things into a result list in the same order in which
-    they were in the original list, so using keys of the hash is not
-    enough. Sorting is also inappropriate, as position in list is
-    semantically determined (1-cell, morula,blastocyst, etc), as opposed
-    to lexicographically determined. So, assume that they  got in to the 
-    list correctly, and we're just going to preserve those values.
+    
+
+    my $arrayRef = $self->getActiveList($items,\%active)
+
+    $items is the list of all items (either for all rows or all
+    columns. We wish to filter this list to find only those things
+    that are active - ie., those cells that have data.
+
+    However, the cells are keyed off of the names of the last item in
+    the entry list - that which is "closest" to the data. So, we look
+    at the name of the last item in each entry in the items list. If
+    that name is found in the active hash, we save it. These lets us
+    keep only those items from $items that are active, and to keep
+    them in the order in which they were found. The _entire_ active
+    item is returned in the resulting array.
+
 =cut
 sub getActiveList {
     my $self=shift;
@@ -828,7 +888,6 @@ sub getActiveList {
     foreach my $entry (@$items) {
 	my $item = $entry->[scalar(@$entry)-1];
 	my $name = $item->Name;
-	#push (@results,$name) if ($active->{$name});
 	# store the whole entry, so we can use it to recontruct the
 	# header
 	push (@results,$entry) if ($active->{$name});
