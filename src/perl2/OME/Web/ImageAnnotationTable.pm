@@ -103,6 +103,23 @@ use vars qw($VERSION);
 use OME::SessionManager;
 use base qw(OME::Web);
 
+sub new {
+    my $proto =shift;
+    my $class = ref($proto) || $proto;
+    my $self = $class->SUPER::new(@_);
+    
+    # some private variables
+    # the names for the rows, columns, and category group
+    $self->{rows}="";
+    $self->{columns}="";
+    $self->{CategoryGroup};
+    # the actual rows and columns
+    $self->{rowEntries} = undef;
+    $self->{colEntries} = undef;
+    
+    return $self;
+}
+
 sub getPageTitle {
     return "OME: Image Annotation Table";
 }
@@ -205,7 +222,7 @@ sub getTableDetails {
     $self->getChoices(\%tmpl_data,$types);
 
     $tmpl_data{'categoryGroups/render-list_of_options'}=
-	$self->prepareCategoryGroups($container);
+	$self->getCategoryGroups($container);
 
     if ($self->{rows} && $self->{columns}) {
 	
@@ -226,8 +243,10 @@ sub getTableDetails {
 
 =head2
 
-    getTypes - for the template. Finds the TMPL_VARS given in a 
-    Path.load/types-[..] format. 
+    my $types = $self->getTypes($tmpl);
+
+    getTypes - for the template. For a gievn template, 
+    finds the TMPL_VARS given in a  Path.load/types-[..] format. 
     
     this will be a list of paths, separated by commas.
     ecach path will be a colon-separated path of types leading from
@@ -250,9 +269,7 @@ sub getTableDetails {
     { @Gene =>  ('@Gene','@ProbeGene','@Probe','@ImageProbe'),
       @EmbryoStage => ('@EmbryoStage','@ImageEmbryoStage') }
   
-    The reference to the hash is returned as the value.
-
-    TODO: Extend to handle Classifications.
+    The return value is the reference to the hash.
 =cut
 sub getTypes {
 
@@ -286,11 +303,15 @@ sub getTypes {
 }
 
 =head2 getChoices
+    $self->getChoices(\%tmpl_data,$types);
 
     getChoices populates the Columns and Rows pull-down menus in the
     template. This is done by iterating down the root types for each
     of the dimensions, stripping off the leading '@', and putting them
     into the template variable.
+
+    If something matching the "Rows" or "Columns" parameter is found,
+        set that value to be selected
         
 =cut
 sub getChoices {
@@ -326,10 +347,12 @@ sub getChoices {
 }
 
 =head2 prepareCategoryGroups 
+    $cgs = $self->getCategoryGroups($container);
+
     prepare and populate the category groups parameter and pull-down 
 =cut
 
-sub prepareCategoryGroups {
+sub getCategoryGroups {
 
     my $self=shift;
     my $container = shift;
@@ -340,7 +363,8 @@ sub prepareCategoryGroups {
     # do the list of categories
     my $cgParam = $q->param('CategoryGroup');
     my %cgHash;
-    
+
+    # set up hash to describe rendering. 
     $cgHash{type} = '@CategoryGroup';
     my $cg;
     if ($cgParam) {
@@ -352,7 +376,7 @@ sub prepareCategoryGroups {
 	    }
 	}
 	else {
-	    # $cg is now the id of a cg.
+	    # $cgParam is now the id of a cg.
 	    my  $cg =
 		$factory->loadObject('@CategoryGroup',$cgParam);
 	    if ($cg) {
@@ -372,13 +396,13 @@ sub prepareCategoryGroups {
 
 =head2 renderDims
 
-    The main rendering code. Parameters are 
-        $tmpl - the template being populated
-        $rows - which dimension is selected for the row
-              (as given by the 'Rows' parameter to the cgi or
-                (eventually) the pull-down
-        $columns  - similar to rows - the dimension selected for the colums
-        $types - the types hash as returned from getTypes.
+    my $hasData = $self-renderDims($container,\%tmpl_data,$types);
+    
+    The main rendering code. Parameters are the container in which
+    this is being executed, the template being populated, and the
+    types hash as returned from getTypes.
+
+    Return value is true if data is found, else false
 
 =cut
 
@@ -392,8 +416,7 @@ sub renderDims {
     my $columns = $self->{columns};
     my $hasData = 0;
 
-    # get the objects associated with the columns. Eventually, 
-    # this will get replaced by something that drills down the row hierarchy
+    
     my $rowKey = "@".$rows;
     my $rowPath = $types->{$rowKey};
     $self->{rowEntries} = $self->getObjects($container,$rows,$rowPath);
@@ -407,8 +430,6 @@ sub renderDims {
     # activeRows returns a list of rows that have data,
     # active cols indicates columns
     
-    # will have to change this to have rows and columns be levels of
-    # leaves in hierarchy, not "GEne",etc.
     my ($cells,$activeRows,$activeCols) =
 	$self->populateCells($types);
 
@@ -435,10 +456,13 @@ sub renderDims {
 
 =head2 
 
+    $self->{rowEntries} =
+          $self->getObjects($container,$rows,$rowPath);
+
     getObjects gets the objects of interest for a given hierarchy.
-    Given a Type (Probe,EbmbryoStage, etc.) and a set of paths from
-    that type to something that maps to images, find the objects that
-    are of interest.
+    Given a container, a  type (Probe,EbmbryoStage, etc.), and a path
+    that maps  that type to something that eventually maps to images,
+    find the objects that     are of interest.
 
     There are two possibilities. If there is a CGI parameter
     corresponding to the input type - (ie., if Type=Probe and there is
@@ -468,7 +492,6 @@ sub getObjects {
     # load the type
     my $typeST =
 	$factory->findObject('OME::SemanticType',{name=>$type});
-    $typeST->requireAttributeTypePackage();
     # get root vaalue
     my $root = $q->param($type);
 
@@ -486,8 +509,13 @@ sub getObjects {
     
     # now, objsRef is a reference to an aaray containing the list of
     # top-level items that I want to work with
+
+    # get a tree of objects
+
     my $tree = $self->getTreeFromRootList($objsRef,@$paths);
+    # convert that tree into an array,
     my $flatTree = $self->flattenTree($tree);
+
     # strip ids off of items.
     for (my $i = 0; $i < scalar(@$flatTree); $i++ ) {
 	my $ent = $flatTree->[$i];
@@ -505,14 +533,16 @@ sub getObjects {
 
 =head2 getRoots 
 
-    get the root objects corresponding to a comma-separated list of
+    my $arrayRef = $self->getRoots($type,$root);
+
+    Get the root objects corresponding to a comma-separated list of
     objects from the CGI parameter. load the object either by Name or
     by Id.
 =cut
 
 sub getRoots {
     my $self = shift;
-    my ($rowType,$rootList) = @_;
+    my ($type,$rootList) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
     my @objs;
@@ -522,10 +552,10 @@ sub getRoots {
 	undef $obj;
 	if ($root =~ /^\d+$/) {
 	    # load by id
-	    $obj = $factory->loadObject($rowType,$root);
+	    $obj = $factory->loadObject($type,$root);
 	}
 	else {
-	    $obj = $factory->findObject($rowType,Name=>$root);   
+	    $obj = $factory->findObject($type,Name=>$root);   
 	}
 	if ($obj) {
 	    push(@objs,$obj);
@@ -536,16 +566,22 @@ sub getRoots {
 
 =head2 getTreeFromRootList
 
+    my $tree = $self->getTreeFromRootList($objsRef,@$paths);
+
     Given  a list of root objects and a list of object types, populate
     the tree. The result is a reference to a hash of hashes that
     contains the values in the tree.
 
     Thus, if the path is @Gene:@ProbeGene:@Probe:@ImageProbe, the
-    resulting hash will be keyed with the names of all of the genes
+    resulting hash will be keyed with the names and ids of all of the genes
     passed in as roots - @$objs.  For each gene, the hash will contain
-    an entry for each Probe. The entry for each probe will be a hash
-    keyed by the name of the probe, with the actual probe object as a
-    value.
+    an entry for each Probe. The entry for each probe will be a hash 
+    keyed by the name and id of the probe, with the actual probe
+    object as a  value.
+
+    For all of these hashes, the key will be a hybrid string resulting
+    from the concatentation of the object name, two underscores "__"
+    and the object id. 
 
     Note that mapping classes are not included in the result, as they
     are only used to find the next level of descendant in the
@@ -555,7 +591,7 @@ sub getRoots {
     sufficient to get images for a given leaf object. To see why this
     is the case, note that the leaves will be Probe instances. So, to
     find the Images for a probe, we can look for images where
-    ImageProbeList.Probe => our probe instance.
+    ImageProbeList.Probe = our probe instance.
 
 =cut
 
