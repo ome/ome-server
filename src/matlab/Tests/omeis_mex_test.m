@@ -40,46 +40,51 @@ for pix_id = ids
     fprintf ('Processing PixelsID %d:\n', pix_id);
     
     fprintf ('\tPixelsInfo ...'); im_struct = pixelsInfo (is, pix_id);   fprintf (' done\n');
-    fprintf ('\tnewPixels ...');  n_pix_id = newPixels (is, im_struct);  fprintf (' done\n');
+    if (im_struct.isFinished)
+	    fprintf ('\tnewPixels ...');  n_pix_id = newPixels (is, im_struct);  fprintf (' done\n');
     
-    % get image and remove top left corner
-    fprintf ('\tgetPixels ...');  im = getPixels(is, pix_id);            fprintf (' done\n');
-    % figure; imshow(im, [min(min(im)) max(max(im))]);
+    	% get image and remove top left corner
+    	fprintf ('\tgetPixels ...');  im = getPixels(is, pix_id);            fprintf (' done\n');
+    	% figure; imshow(im, [min(min(im)) max(max(im))]);
     
-    [sizeX, sizeY, sizeZ, sizeC, sizeT] = size(im);
-    im (1:floor(sizeX/2), 1:floor(sizeY/2)) = 0;
+	    [sizeX, sizeY, sizeZ, sizeC, sizeT] = size(im);
+   		im (1:floor(sizeX/2), 1:floor(sizeY/2)) = 0;
     
-    % set image (without top left corner) on OMEIS
-    fprintf ('\tsetPixels ...');  setPixels(is, n_pix_id, im);           fprintf (' done\n');
+	    % set image (without top left corner) on OMEIS
+    	fprintf ('\tsetPixels ...');  setPixels(is, n_pix_id, im);           fprintf (' done\n');
     
-    % get top left corner and set it on the new imae
-    fprintf ('\tgetROI ...');
-    im_q = getROI(is, pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0);
-    fprintf (' done\n');
-    % figure; imshow(im_q, [min(min(im_q)) max(max(im_q))]);
+	    % get top left corner and set it on the new imae
+    	fprintf ('\tgetROI ...');
+    	im_q = getROI(is, pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0);
+    	fprintf (' done\n');
+    	% figure; imshow(im_q, [min(min(im_q)) max(max(im_q))]);
     
-    fprintf ('\tsetROI ...');
-    num_pixels = setROI (is, n_pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0, im_q);;
-    fprintf (' done\n');
+    	fprintf ('\tsetROI ...');
+    	num_pixels = setROI (is, n_pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0, im_q);;
+    	fprintf (' done\n');
     
-    fprintf ('\tfinishPixels ...'); n_pix_id = finishPixels (is, n_pix_id); fprintf (' done\n');
-    % figure; imshow(getPixels(is,n_pix_id), [min(min(im)) max(max(im))]);
+	    fprintf ('\tfinishPixels ...'); n_pix_id = finishPixels (is, n_pix_id); fprintf (' done\n');
+    	% figure; imshow(getPixels(is,n_pix_id), [min(min(im)) max(max(im))]);
     
-    if (n_pix_id == pix_id)
-	if (im_struct.bp == 1)
-		counter_bp_1_passed = counter_bp_1_passed + 1;
+    	if (n_pix_id == pix_id)
+			if (im_struct.bp == 1)
+				counter_bp_1_passed = counter_bp_1_passed + 1;
+    		else
+				counter_bp_2_passed = counter_bp_2_passed + 1;
+			end
+       		fprintf ('TEST PASSED \n\n');
+    	else
+			if (im_struct.bp == 1)
+				counter_bp_1_failed = counter_bp_1_failed + 1;
+			else
+				counter_bp_2_failed = counter_bp_2_failed + 1;
+			end
+	
+			fprintf ('\tdeletePixels ...'); n_pix_id = deletePixels (is, n_pix_id); fprintf (' done\n');	
+    		fprintf ('TEST FAILED New PixelsID is %d\n\n', n_pix_id);
+    	end
     else
-		counter_bp_2_passed = counter_bp_2_passed + 1;
-	end
-       fprintf ('TEST PASSED \n\n');
-    else
-	if (im_struct.bp == 1)
-		counter_bp_1_failed = counter_bp_1_failed + 1;
-	else
-		counter_bp_2_failed = counter_bp_2_failed + 1;
-	end
-	fprintf ('\tdeletePixels ...'); n_pix_id = deletePixels (is, n_pix_id); fprintf (' done\n');	
-    fprintf ('TEST FAILED New PixelsID is %d\n\n', n_pix_id);
+    	fprintf ('SKIPPED unfinished pixels\n');
     end
 end
 
