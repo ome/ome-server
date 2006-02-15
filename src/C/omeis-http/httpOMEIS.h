@@ -76,13 +76,13 @@ omeis* openConnectionOMEIS (const char* url, const char* sessionKey);
 OID newPixels (const omeis* is, const pixHeader* head);
 pixHeader* pixelsInfo (const omeis* is, OID pixelsID);
 char* pixelsSHA1 (const omeis *is, OID pixelsID);
-int setPixels (const omeis *is, OID pixelsID, void* pixels);
+int setPixels (const omeis *is, OID pixelsID, const void* pixels);
 void* getPixels (const omeis* is, OID pixelsID);
 OID finishPixels (const omeis* is, OID pixelsID);
 OID deletePixels (const omeis* is, OID pixelsID);
 char* getLocalPath (const omeis *is, OID pixelsID);
 int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
-			int x1, int y1, int z1, int c1, int t1, void* pixels);
+			int x1, int y1, int z1, int c1, int t1, const void* pixels);
 void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
 			int x1, int y1, int z1, int c1, int t1);
 void* getStack (const omeis *is, OID pixelsID, int theC, int theT);

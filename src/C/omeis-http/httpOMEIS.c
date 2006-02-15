@@ -190,7 +190,7 @@ char* pixelsSHA1 (const omeis *is, OID pixelsID)
 	return sha1;
 }
 
-int setPixels (const omeis *is, OID pixelsID, void* pixels)
+int setPixels (const omeis *is, OID pixelsID, const void* pixels)
 {
 	pixHeader* head = pixelsInfo (is, pixelsID);
 	char scratch[32];
@@ -235,7 +235,7 @@ int setPixels (const omeis *is, OID pixelsID, void* pixels)
 				CURLFORM_COPYNAME, "Pixels",
 				CURLFORM_BUFFER, "data",
 				CURLFORM_BUFFERPTR, pixels,
-				CURLFORM_BUFFERLENGTH, head->dx*head->dy*head->dz*head->dc*head->dt*head->bp,
+				CURLFORM_BUFFERLENGTH, (long) head->dx*head->dy*head->dz*head->dc*head->dt*head->bp,
 				CURLFORM_END);
 
 	headerlist = curl_slist_append(headerlist, "Expect:");    
@@ -382,7 +382,7 @@ char* getLocalPath (const omeis *is, OID pixelsID)
 }
 
 int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
-			int x1, int y1, int z1, int c1, int t1, void* pixels)
+			int x1, int y1, int z1, int c1, int t1, const void* pixels)
 {
 	pixHeader* head = pixelsInfo (is, pixelsID); /* needed to figure out bp */
 	char scratch[128];
@@ -434,7 +434,7 @@ int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t
 				CURLFORM_COPYNAME, "Pixels",
 				CURLFORM_BUFFER, "data",
 				CURLFORM_BUFFERPTR, pixels,
-				CURLFORM_BUFFERLENGTH, (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*head->bp,
+				CURLFORM_BUFFERLENGTH, (long) (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*head->bp,
 				CURLFORM_END);
 
 	headerlist = curl_slist_append(headerlist, "Expect:");    
