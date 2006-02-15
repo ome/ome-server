@@ -42,6 +42,7 @@
 #include <curl/easy.h>
 
 #include "httpOMEIS.h"
+#include "httpOMEISaux.h"
 /* #define DEBUG */ /* Uncomment preprocessor directive to see verbose info */
 
 /* special logic to use MATLAB specific memory managment during matlab files */
@@ -66,8 +67,8 @@
 /* PRIVATE functions and datatypes */
 typedef struct {
 	void* buffer;
-	int len;
-	int capacity;
+	size_t len;
+	size_t capacity;
 } smartBuffer;
 
 void* executeGETCall (const omeis* is, const char* parameters, size_t nmemb);
@@ -235,7 +236,7 @@ int setPixels (const omeis *is, OID pixelsID, const void* pixels)
 				CURLFORM_COPYNAME, "Pixels",
 				CURLFORM_BUFFER, "data",
 				CURLFORM_BUFFERPTR, pixels,
-				CURLFORM_BUFFERLENGTH, (long) head->dx*head->dy*head->dz*head->dc*head->dt*head->bp,
+				CURLFORM_BUFFERLENGTH, (long) (head->dx*head->dy*head->dz*head->dc*head->dt*head->bp),
 				CURLFORM_END);
 
 	headerlist = curl_slist_append(headerlist, "Expect:");    
@@ -434,7 +435,7 @@ int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t
 				CURLFORM_COPYNAME, "Pixels",
 				CURLFORM_BUFFER, "data",
 				CURLFORM_BUFFERPTR, pixels,
-				CURLFORM_BUFFERLENGTH, (long) (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*head->bp,
+				CURLFORM_BUFFERLENGTH, (long) ( (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*head->bp ),
 				CURLFORM_END);
 
 	headerlist = curl_slist_append(headerlist, "Expect:");    
@@ -694,7 +695,7 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
 
 	/* next we allocate room for the pointers to Cs */
 	theStatsZ = malloc(nZ * nC * sizeof(pixStats *));
-	if (theStats == NULL) {
+	if (theStatsZ == NULL) {
 		fprintf (stderr, "Could not allocate space for stats array\n");	
 		FREE(buffer);
 		return (NULL);
