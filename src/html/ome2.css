@@ -144,6 +144,7 @@ a.ome_popup { font-size: smaller; font-weight: normal; }
 .ome_category_border 
 {
   padding: 0.15em;
+  font-size: .8em;
   border: none; 
 }
 
@@ -151,21 +152,28 @@ a.ome_popup { font-size: smaller; font-weight: normal; }
 
   border: solid;
   border-width: 1px;                  
-  border-style: dotted;
   border-color: silver;                                            
-  font-size: .8em;
   text-align:center;
   background-color: #d0d0d0;
 }
 
+.ome_annotation_table { 
+   padding: 3px;
+}
 
 
 .ome_row_header_border, .ome_col_header_border { 
-  padding: 1px;
-  font-size: .8em;
+  padding: 3px;
+  font-size: 1em;
   background-color: #b0b0b0;
 }
 
 .ome_col_header_border { 
       text-align:center;
 }
+
+
+.ome_empty_header_border { 
+  padding: 1px;
+  background-color: #FFFFFF;
+ }
