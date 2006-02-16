@@ -777,34 +777,34 @@ getAll(pArray)
                     switch (cid)
                     {
                         case mxLOGICAL_CLASS:
-                            av_push(values,newSViv(*((mxLogical *) pr)++));
+                            av_push(values,newSViv( ((mxLogical *) pr)[i] ));
                             break;
                         case mxINT8_CLASS:
-                            av_push(values,newSViv(*((signed char *) pr)++));
+                            av_push(values,newSViv( ((signed char *) pr)[i] ));
                             break;
                         case mxUINT8_CLASS:
-                            av_push(values,newSViv(*((unsigned char *) pr)++));
+                            av_push(values,newSViv( ((unsigned char *) pr)[i] ));
                             break;
                         case mxINT16_CLASS:
-                            av_push(values,newSViv(*((signed short int *) pr)++));
+                            av_push(values,newSViv( ((signed short int *) pr)[i] ));
                             break;
                         case mxUINT16_CLASS:
-                            av_push(values,newSViv(*((unsigned short int *) pr)++));
+                            av_push(values,newSViv( ((unsigned short int *) pr)[i] ));
                             break;
                         case mxINT32_CLASS:
-                            av_push(values,newSViv(*((signed int *) pr)++));
+                            av_push(values,newSViv( ((signed int *) pr)[i] ));
                             break;
                         case mxUINT32_CLASS:
-                            av_push(values,newSViv(*((unsigned int *) pr)++));
+                            av_push(values,newSViv( ((unsigned int *) pr)[i] ));
                             break;
                         case mxINT64_CLASS:
-                        	av_push(values,newSViv(*((long long int *) pr)++));
+                        	av_push(values,newSViv( ((long long int *) pr)[i] ));
                         	break;
                         case mxSINGLE_CLASS:
-                            av_push(values,newSVnv(*((float *) pr)++));
+                            av_push(values,newSVnv( ((float *) pr)[i] ));
                             break;
                         case mxDOUBLE_CLASS:
-                            av_push(values,newSVnv(*((double *) pr)++));
+                            av_push(values,newSVnv( ((double *) pr)[i] ));
                             break;
                         default:
                             croak("cannot call getAll on a non-numeric/non-logical array");
