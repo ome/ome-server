@@ -39,7 +39,10 @@ document.forms[0].update.value='update'; document.forms[0].submit();">
 	 <BR><br><TMPL_VAR NAME=errorMsg>
 <TMPL_ELSE>
 
-<TABLE WIDTH="100%">
+<TABLE WIDTH="100%" class="ome_annotation_table">
+<!-- one column group for the row headers, specifies that it should
+use only available space
+<COLGROUP SPAN="<TMPL_VAR name=rowHeaderCount>" WIDTH="0*"/>
 
 
 <THEAD>
@@ -48,7 +51,7 @@ document.forms[0].update.value='update'; document.forms[0].submit();">
 <TR>
 
 <TMPL_LOOP NAME=emptyColumnHeaders>
-  <td class="ome_col_header_border"><TMPL_VAR NAME=emptyColumnHeader></td>
+  <td class="ome_empty_header_border"><TMPL_VAR NAME=emptyColumnHeader></td>
 </TMPL_LOOP>
 
 <TMPL_LOOP NAME=columnNameEntries>
