@@ -122,10 +122,13 @@ OID newPixels (const omeis* is, const pixHeader* head)
 pixHeader* pixelsInfo (const omeis* is, OID pixelsID)
 {
 	pixHeader* head = (pixHeader*) MALLOC (sizeof(pixHeader));
+	
+	char* sha1 = (char*) MALLOC(sizeof(char)*OME_DIGEST_CHAR_LENGTH);
 	char* buffer;
 	char command [256];
 	int dx, dy, dz, dc, dt, bp, isFinished, isSigned, isFloat;
-
+	int i;
+	
 	sprintf(command,"%s%sMethod=PixelsInfo&PixelsID=%llu",is->url,"?", pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
 	
@@ -141,7 +144,7 @@ pixHeader* pixelsInfo (const omeis* is, OID pixelsID)
 	}
 
 	if (sscanf(buffer,"Dims=%d,%d,%d,%d,%d,%d\nFinished=%d\nSigned=%d\nFloat=%d\nSHA1=%40c",
-		&dx, &dy, &dz, &dc, &dt, &bp, &isFinished, &isSigned, &isFloat, head->sha1) != 10) {
+		&dx, &dy, &dz, &dc, &dt, &bp, &isFinished, &isSigned, &isFloat, sha1) != 10) {
 		fprintf(stderr, "Output from OMEIS method PixelsInfo couldn't be parsed.\n");
 		FREE(buffer);
 		return NULL;
@@ -156,15 +159,19 @@ pixHeader* pixelsInfo (const omeis* is, OID pixelsID)
 	head->isFinished = (u_int8_t) isFinished;
 	head->isSigned   = (u_int8_t) isSigned;
 	head->isFloat    = (u_int8_t) isFloat;
+	
+	for (i=0; i < OME_DIGEST_CHAR_LENGTH-1; i++)
+		head->sha1[i] = (u_int8_t) sha1[i];
 	head->sha1[OME_DIGEST_CHAR_LENGTH-1] = '\0';
 
 	FREE(buffer);
+	FREE(sha1);
 	return head;
 }
 
 char* pixelsSHA1 (const omeis *is, OID pixelsID)
 {
-	char* sha1 = (char*) MALLOC(sizeof(char)*OME_DIGEST_CHAR_LENGTH+1);
+	char* sha1 = (char*) MALLOC(sizeof(char)*OME_DIGEST_CHAR_LENGTH);
 	char* buffer;
 	char command [256];
 	sprintf(command,"%s%sMethod=PixelsSHA1&PixelsID=%llu", is->url,"?",pixelsID);
@@ -356,7 +363,7 @@ OID deletePixels (const omeis* is, OID pixelsID)
 
 char* getLocalPath (const omeis *is, OID pixelsID)
 {
-	char* path = (char*) MALLOC (sizeof(char)*OME_DIGEST_CHAR_LENGTH);
+	char* path = (char*) MALLOC (sizeof(char)*128);
 	char* buffer;
 	char command [256];
 	sprintf(command,"%s%sMethod=GetLocalPath&PixelsID=%llu", is->url,"?",pixelsID);
