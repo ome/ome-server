@@ -186,11 +186,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="ASM_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.ASM_avg"  
+				DBLocation="CoOcMat_AngularSecondMoment_RI.ASM_avg"  
 				DataType="float"/>
 			<Element 
 				Name="ASM_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.ASM_range"  
+				DBLocation="CoOcMat_AngularSecondMoment_RI.ASM_range"  
 				DataType="float"/>
 		</SemanticType>
 		
@@ -198,11 +198,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Contrast_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.CONTRAST_avg"
+				DBLocation="CoOcMat_Contrast_RI.CONTRAST_avg"
 				DataType="float"/>
 			<Element 
 				Name="Contrast_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.CONTRAST_range"
+				DBLocation="CoOcMat_Contrast_RI.CONTRAST_range"
 				DataType="float"/>
 		</SemanticType>
 		
@@ -210,11 +210,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Correlation_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.CORRELATION_avg"  
+				DBLocation="CoOcMat_Correlation_RI.CORRELATION_avg"  
 				DataType="float"/>
 			<Element 
 				Name="Correlation_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.CORRELATION_range"  
+				DBLocation="CoOcMat_Correlation_RI.CORRELATION_range"  
 				DataType="float"/>
 		</SemanticType>
 		
@@ -222,11 +222,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Variance_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.VARIANCE_avg"  
+				DBLocation="CoOcMat_Variance_RI.VARIANCE_avg"  
 				DataType="float"/>
 			<Element 
 				Name="Variance_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.VARIANCE_range"  
+				DBLocation="CoOcMat_Variance_RI.VARIANCE_range"  
 				DataType="float"/>
 		</SemanticType>	
 		
@@ -234,11 +234,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="IDM_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.IDM_avg"  
+				DBLocation="CoOcMat_InverseDifferenceMoment_RI.IDM_avg"  
 				DataType="float"/>
 			<Element 
 				Name="IDM_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.IDM_range"  
+				DBLocation="CoOcMat_InverseDifferenceMoment_RI.IDM_range"  
 				DataType="float"/>
 		</SemanticType>	
 		
@@ -246,11 +246,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="SumAvg_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_AVG_avg"  
+				DBLocation="CoOcMat_SumAverage_RI.SUM_AVG_avg"  
 				DataType="float"/>
 			<Element 
 				Name="SumAvg_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_AVG_range"  
+				DBLocation="CoOcMat_SumAverage_RI.SUM_AVG_range"  
 				DataType="float"/>
 			</SemanticType>
 		
@@ -258,11 +258,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="SumVar_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_VAR_avg"  
+				DBLocation="CoOcMat_SumVariance_RI.SUM_VAR_avg"  
 				DataType="float"/>
 			<Element 
 				Name="SumVar_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_VAR_range"  
+				DBLocation="CoOcMat_SumVariance_RI.SUM_VAR_range"  
 				DataType="float"/>
 		</SemanticType>	
 		
@@ -270,11 +270,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="SumEntropy_avg"
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_ENTROPY_avg"
+				DBLocation="CoOcMat_SumEntropy_RI.SUM_ENTROPY_avg"
 				DataType="float"/>
 			<Element 
 				Name="SumEntropy_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.SUM_ENTROPY_range" 
+				DBLocation="CoOcMat_SumEntropy_RI.SUM_ENTROPY_range" 
 				DataType="float"/>
 		</SemanticType>	
 		
@@ -282,11 +282,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Entropy_avg"
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.ENTROPY_avg"  
+				DBLocation="CoOcMat_Entropy_RI.ENTROPY_avg"  
 				DataType="float"/>
 			<Element 
 				Name="Entropy_range"
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.ENTROPY_range"
+				DBLocation="CoOcMat_Entropy_RI.ENTROPY_range"
 				DataType="float"/>
 		</SemanticType>	
 		
@@ -294,11 +294,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="DiffEntropy_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_ENTROPY_avg"  
+				DBLocation="CoOcMat_DifferenceEntropy_RI.DIFF_ENTROPY_avg"  
 				DataType="float"/>
 			<Element 
 				Name="DiffEntropy_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_ENTROPY_range"  
+				DBLocation="CoOcMat_DifferenceEntropy_RI.DIFF_ENTROPY_range"  
 				DataType="float"/>
 		</SemanticType>	
 		
@@ -306,11 +306,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="DiffVar_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_VAR_avg"
+				DBLocation="CoOcMat_DifferenceVariance_RI.DIFF_VAR_avg"
 				DataType="float"/>
 			<Element 
 				Name="DiffVar_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.DIFF_VAR_range"
+				DBLocation="CoOcMat_DifferenceVariance_RI.DIFF_VAR_range"
 				DataType="float"/>
 		</SemanticType>
 		
@@ -318,11 +318,11 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="MeasCorr1_avg" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.MEAS_CORR_1_avg"  
+				DBLocation="CoOcMat_FirstMeasureOfCorrelation_RI.MEAS_CORR_1_avg"  
 				DataType="float"/>
 			<Element 
 				Name="MeasCorr1_range" 
-				DBLocation="CO_OCCURRENCE_MATRIX_RI.MEAS_CORR_1_range"  
+				DBLocation="CoOcMat_FirstMeasureOfCorrelation_RI.MEAS_CORR_1_range"  
 				DataType="float"/>
 		</SemanticType>	
 		
