@@ -704,7 +704,7 @@ sub MatlabArray_to_Pixels {
 
 	my $outBuffer  = " " x 4096;
 	$_engine->setOutputBuffer($outBuffer, length($outBuffer));
-	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name)");
+	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
 	$outBuffer =~ s/(\0.*)$//;
 	$outBuffer =~ s/[^[:print:][:space:]]//g;
 	die "ERROR saving pixels to omeis w/ command:\n\t".$matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);\n$outBuffer\n"
