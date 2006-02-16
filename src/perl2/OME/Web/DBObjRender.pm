@@ -704,8 +704,28 @@ sub renderData {
 			# populate field requests
 			} else {
 				my $type = $obj->getColumnType( $field );
-				# Avoid "Use of uninitialized value in string eq" message.
-				next if( not defined $type );
+				
+				# work with "count_*" methods
+				if( ( not defined $type ) && ($field =~ m/^count_(.*)$/ ) ) {
+					my $actual_field = $1;
+					my $actual_type  = $obj->getColumnType( $actual_field );
+					# Only has-many and many-to-many fields have a corresponding count_... method
+					if( $actual_type =~ m/many/ ) {
+						$record{ $request_string } = $obj->$field;
+						$record{ $request_string } = $q->escapeHTML( $record{ $request_string } )
+							if exists $request->{ escape_html };
+					# If this request is not valid, mark it as such to aid debugging, 
+					# then skip ahead to avoid "Use of uninitialized value in string eq" warning messages.
+					} else {
+						$record{ $request_string } = "INVALID TEMPLATE REQUEST FOR '$field'";
+						next;
+					}
+				# If this request is not valid, mark it as such to aid debugging, 
+				# then skip ahead to avoid "Use of uninitialized value in string eq" warning messages.
+				} elsif( not defined $type ) {
+					$record{ $request_string } = "INVALID TEMPLATE REQUEST FOR '$field'";
+					next;
+				}
 				
 				# data fields
 				if( $type eq 'normal' ) {
@@ -1156,6 +1176,9 @@ use
 Ex: To use the name of an analysis chain when constructing 
 a template to show an analysis chain execution, use 
 	<!-- TMPL_VAR NAME='analisis_chain/field-name' -->
+To count the number of objects is a has-many or a many-to-many relation, 
+use the count_* method, e.g.
+	<!-- TMPL_VAR NAME='count_has_many_relation_name' -->
 
 Standard Modifiers:
 	field/max_text_length-n : truncates the field length to max_text_length
