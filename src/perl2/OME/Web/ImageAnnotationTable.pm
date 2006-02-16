@@ -438,6 +438,7 @@ sub renderDims {
 	# # of columns is the number of active columns + the 
 	# number of columns needed for row paths..
 	my $rowEntrySize = $self->getHeaderSize($self->{rowEntries});
+	$tmpl_data->{rowHeaderCount} = $rowEntrySize;
 
 	my $cHeaders = 
 	    $self->populateColumnHeaders($container,$activeCols,
