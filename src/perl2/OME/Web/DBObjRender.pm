@@ -717,13 +717,13 @@ sub renderData {
 					# If this request is not valid, mark it as such to aid debugging, 
 					# then skip ahead to avoid "Use of uninitialized value in string eq" warning messages.
 					} else {
-						$record{ $request_string } = "INVALID TEMPLATE REQUEST FOR '$field'";
+						logdbg "debug", "INVALID TEMPLATE REQUEST FOR '$field', full request is '$request_string'.";
 						next;
 					}
 				# If this request is not valid, mark it as such to aid debugging, 
 				# then skip ahead to avoid "Use of uninitialized value in string eq" warning messages.
 				} elsif( not defined $type ) {
-					$record{ $request_string } = "INVALID TEMPLATE REQUEST FOR '$field'";
+					logdbg "debug", "INVALID TEMPLATE REQUEST FOR '$field', full request is '$request_string'.";
 					next;
 				}
 				
