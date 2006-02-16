@@ -1,0 +1,33 @@
+<TABLE width="100%">
+<TR>
+	<TD COLSPAN="2">
+		<table width="100%"><tr><td>
+		<a title="<TMPL_VAR NAME=name>" href="<TMPL_VAR NAME=/obj_detail_url>" class="ome_detail">
+			<TMPL_VAR NAME=name/max_text_length-25>
+		</a>
+		</td><td align="right">
+		<TMPL_VAR NAME=/selector>
+		</td></tr></table>
+	</TD>
+</TR>
+<TR>
+	<TD>Category: </TD>
+	<TD>
+	<TMPL_IF NAME="category">
+		<TMPL_VAR NAME="category">
+	<TMPL_ELSE>
+		<span class="ome_quiet">(unspecified)</span>
+	</TMPL_IF>
+	</TD>
+</TR>
+<TR>
+	<TD COLSPAN="2">
+		<TMPL_VAR NAME=description/max_text_length-60><BR>
+		<TMPL_IF NAME=count_analyses>
+			<TMPL_VAR NAME=analyses/render-popup>
+		<TMPL_ELSE>
+			<span class="ome_quiet">(This has not been executed.)</span>
+		</TMPL_IF>
+	</TD>
+</TR>
+</TABLE>
