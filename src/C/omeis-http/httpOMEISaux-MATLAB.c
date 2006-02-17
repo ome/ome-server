@@ -31,15 +31,27 @@
  * 
  *------------------------------------------------------------------------------
  */
- 
-#ifndef HTTP_OMEIS_AUX_H
-#define HTTP_OMEIS_AUX_H
-
 #include "httpOMEIS.h"
+#include "matrix.h"
 
-int bigEndian (void);
-int samePixelType (pixHeader* lhs, pixHeader* rhs);
-void CtoOMEISDatatype (const char* data_type, pixHeader* head);
-void OMEIStoCDatatype (char* data_type, pixHeader* head);
-void** OMEIStoCArray (void* input, pixHeader* head, const char* conversion_type);
+int OMEIStoMATLABDatatype (pixHeader* head)
+{
+	if (head->bp == 1 && head->isSigned == 1) {
+		return mxINT8_CLASS;
+	} else if (head->bp == 1 && head->isSigned == 0) {
+		return mxUINT8_CLASS;
+	} else if (head->bp == 2 && head->isSigned == 1) {
+		return mxINT16_CLASS;
+	} else if (head->bp == 2 && head->isSigned == 0) {
+		return mxUINT16_CLASS;	
+	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 0) {
+		return mxINT32_CLASS;
+	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
+		return mxUINT32_CLASS;
+	} else if (head->isFloat == 1) {
+		return mxSINGLE_CLASS;
+	}
+	
+	return 0;
+}
 #endif

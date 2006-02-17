@@ -45,24 +45,14 @@
 #include "httpOMEISaux.h"
 /* #define DEBUG */ /* Uncomment preprocessor directive to see verbose info */
 
-/* special logic to use MATLAB specific memory managment during matlab files */
-/* #define MATLAB */
-#ifdef MATLAB
-
-#include "matrix.h"
-#define CALLOC mxCalloc
-#define MALLOC mxMalloc
-#define REALLOC mxRealloc
-#define FREE mxFree
-
-#else
-
-#define CALLOC calloc
-#define MALLOC malloc
-#define REALLOC realloc
-#define FREE free
-
-#endif
+/* special logic to use MATLAB specific memory managment during matlab files
+   oCalloc et.al. are thin wrappers around either the MATLAB (httpOMEIS-MATLAB.c)
+   or stdlib memory management functions (httpOMEIS-generic.c)*/
+   
+void *oCalloc (size_t n, size_t size);
+void *oMalloc (size_t n);
+void *oRealloc (void *ptr, size_t size);
+void oFree (void* ptr);
 
 /* PRIVATE functions and datatypes */
 typedef struct {
@@ -76,7 +66,7 @@ size_t writeBuffer (void* ptr, size_t size, size_t nmemb, smartBuffer* buffer);
 
 omeis* openConnectionOMEIS (const char* url, const char* sessionKey)
 {
-	omeis* is = (omeis*) MALLOC (sizeof(omeis));
+	omeis* is = (omeis*) oMalloc (sizeof(omeis));
 	
 	strncpy(is->url, url, 128);
 	strncpy(is->sessionKey, sessionKey, 128);
@@ -99,31 +89,31 @@ OID newPixels (const omeis* is, const pixHeader* head)
 	
 	if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 	
 	if (sscanf(buffer,"%llu", &pixelsID) != 1) {
 		fprintf(stderr, "Output from OMEIS method NewPixels couldn't be parsed.\n");
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 	
-	FREE(buffer);
+	oFree(buffer);
 	return pixelsID;
 }
 
 pixHeader* pixelsInfo (const omeis* is, OID pixelsID)
 {
-	pixHeader* head = (pixHeader*) MALLOC (sizeof(pixHeader));
+	pixHeader* head = (pixHeader*) oMalloc (sizeof(pixHeader));
 	
-	char* sha1 = (char*) MALLOC(sizeof(char)*OME_DIGEST_CHAR_LENGTH);
+	char* sha1 = (char*) oMalloc(sizeof(char)*OME_DIGEST_CHAR_LENGTH);
 	char* buffer;
 	char command [256];
 	int dx, dy, dz, dc, dt, bp, isFinished, isSigned, isFloat;
@@ -134,19 +124,19 @@ pixHeader* pixelsInfo (const omeis* is, OID pixelsID)
 	
 	if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
 	if (strstr(buffer, "Error")) {
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
 	if (sscanf(buffer,"Dims=%d,%d,%d,%d,%d,%d\nFinished=%d\nSigned=%d\nFloat=%d\nSHA1=%40c",
 		&dx, &dy, &dz, &dc, &dt, &bp, &isFinished, &isSigned, &isFloat, sha1) != 10) {
 		fprintf(stderr, "Output from OMEIS method PixelsInfo couldn't be parsed.\n");
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
@@ -164,14 +154,14 @@ pixHeader* pixelsInfo (const omeis* is, OID pixelsID)
 		head->sha1[i] = (u_int8_t) sha1[i];
 	head->sha1[OME_DIGEST_CHAR_LENGTH-1] = '\0';
 
-	FREE(buffer);
-	FREE(sha1);
+	oFree(buffer);
+	oFree(sha1);
 	return head;
 }
 
 char* pixelsSHA1 (const omeis *is, OID pixelsID)
 {
-	char* sha1 = (char*) MALLOC(sizeof(char)*OME_DIGEST_CHAR_LENGTH);
+	char* sha1 = (char*) oMalloc(sizeof(char)*OME_DIGEST_CHAR_LENGTH);
 	char* buffer;
 	char command [256];
 	sprintf(command,"%s%sMethod=PixelsSHA1&PixelsID=%llu", is->url,"?",pixelsID);
@@ -179,13 +169,13 @@ char* pixelsSHA1 (const omeis *is, OID pixelsID)
 	
 	if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 	
@@ -194,7 +184,7 @@ char* pixelsSHA1 (const omeis *is, OID pixelsID)
 	}
 	sha1[OME_DIGEST_CHAR_LENGTH-1] = '\0';
 
-	FREE(buffer);
+	oFree(buffer);
 	return sha1;
 }
 
@@ -206,7 +196,7 @@ int setPixels (const omeis *is, OID pixelsID, const void* pixels)
 	CURL* curl;
 	
 	/* initialize smart Buffer for output */
-	buffer.buffer = (unsigned char*) CALLOC(1024,1);
+	buffer.buffer = (unsigned char*) oCalloc(1024,1);
 	buffer.len = 0;
 	buffer.capacity = 1023;
 	
@@ -259,20 +249,20 @@ int setPixels (const omeis *is, OID pixelsID, const void* pixels)
 	curl_slist_free_all (headerlist);
 	
     if (result_code != CURLE_OK) {
-    	FREE(head);
-		FREE(buffer.buffer);
+    	oFree(head);
+		oFree(buffer.buffer);
 		return 0;
 	}
 	
 	int pix;
 	if (sscanf(buffer.buffer,"%d\n", &pix) != 1) {
 		fprintf(stderr, "Output from OMEIS method SetPixels couldn't be parsed.\n");
-		FREE(head);
-		FREE(buffer.buffer);
+		oFree(head);
+		oFree(buffer.buffer);
 		return 0;
 	}
-	FREE(head);
-	FREE(buffer.buffer);
+	oFree(head);
+	oFree(buffer.buffer);
 	return pix;
 }
 
@@ -286,7 +276,7 @@ void* getPixels (const omeis* is, OID pixelsID)
     int bytes = ph->dx*ph->dy*ph->dz*ph->dc*ph->dt*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
-	FREE(ph);
+	oFree(ph);
 
     sprintf(command,"%s%sMethod=GetPixels&PixelsID=%llu&BigEndian=%d",is->url,"?",pixelsID,bigEndian()); 	
     buffer = (char*) executeGETCall(is, command, bytes);
@@ -298,7 +288,7 @@ void* getPixels (const omeis* is, OID pixelsID)
 	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
@@ -315,13 +305,13 @@ OID finishPixels (const omeis* is, OID pixelsID)
 
 	if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 
@@ -329,7 +319,7 @@ OID finishPixels (const omeis* is, OID pixelsID)
 		fprintf(stderr, "Output from OMEIS method FinishPixels couldn't be parsed.\n");
 	}
 	
-	FREE(buffer);
+	oFree(buffer);
 	return newID;
 }
 
@@ -343,13 +333,13 @@ OID deletePixels (const omeis* is, OID pixelsID)
 
 	if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 
@@ -357,13 +347,13 @@ OID deletePixels (const omeis* is, OID pixelsID)
 		fprintf(stderr, "Output from OMEIS method DeletePixels couldn't be parsed.\n");
 	}
 	
-	FREE(buffer);
+	oFree(buffer);
 	return oldID;
 }
 
 char* getLocalPath (const omeis *is, OID pixelsID)
 {
-	char* path = (char*) MALLOC (sizeof(char)*128);
+	char* path = (char*) oMalloc (sizeof(char)*128);
 	char* buffer;
 	char command [256];
 	sprintf(command,"%s%sMethod=GetLocalPath&PixelsID=%llu", is->url,"?",pixelsID);
@@ -371,13 +361,13 @@ char* getLocalPath (const omeis *is, OID pixelsID)
 
 	if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
-		FREE(buffer);
+		oFree(buffer);
 		return 0;
 	}
 	
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 	
@@ -385,7 +375,7 @@ char* getLocalPath (const omeis *is, OID pixelsID)
 		fprintf(stderr, "Output from OMEIS method FinishPixels couldn't be parsed.\n");
 	}
 	
-	FREE(buffer);
+	oFree(buffer);
 	return path;
 }
 
@@ -398,7 +388,7 @@ int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t
 	CURL* curl;
 	
 	/* initialize smart Buffer for output */
-	buffer.buffer = (unsigned char*) CALLOC(1024,1);
+	buffer.buffer = (unsigned char*) oCalloc(1024,1);
 	buffer.len = 0;
 	buffer.capacity = 1023;
 	
@@ -458,20 +448,20 @@ int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t
 	curl_slist_free_all (headerlist);
 	
     if (result_code != CURLE_OK) {
-		FREE(head);
-		FREE(buffer.buffer);
+		oFree(head);
+		oFree(buffer.buffer);
 		return 0;
 	}
 	
 	int pix;
 	if (sscanf(buffer.buffer,"%d\n", &pix) != 1) {
 		fprintf(stderr, "Output from OMEIS method SetROI couldn't be parsed.\n");
-		FREE(head);
-		FREE(buffer.buffer);
+		oFree(head);
+		oFree(buffer.buffer);
 		return 0;
 	}
-	FREE(head);
-	FREE(buffer.buffer);
+	oFree(head);
+	oFree(buffer.buffer);
 	return pix;
 }
 
@@ -486,7 +476,7 @@ void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int
     int bytes = (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
-	FREE(ph);
+	oFree(ph);
 
     sprintf(command,"%s%sMethod=GetROI&PixelsID=%llu&ROI=%d,%d,%d,%d,%d,%d,%d,%d,%d,%d&BigEndian=%d",
     		is->url,"?",pixelsID,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,bigEndian()); 	
@@ -499,7 +489,7 @@ void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int
 	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
@@ -517,7 +507,7 @@ void* getStack (const omeis *is, OID pixelsID, int theC, int theT)
     bytes = ph->dx*ph->dy*ph->dz*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
-	FREE (ph);
+	oFree (ph);
 
     sprintf(command,"%s%sMethod=GetStack&PixelsID=%llu&theC=%d&theT=%d&BigEndian=%d",
     		is->url,"?",pixelsID,theC,theT,bigEndian()); 	
@@ -530,7 +520,7 @@ void* getStack (const omeis *is, OID pixelsID, int theC, int theT)
 	
     if (strstr(buffer, "Error")) {
 		fprintf (stderr, "ERROR:\n%s\n", buffer);
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
@@ -567,7 +557,7 @@ pixStats **getStackStats (const omeis *is, OID pixelsID){
     ph = pixelsInfo (is, pixelsID);
 	nC = ph->dc;
 	nT = ph->dt;
-	FREE(ph);
+	oFree(ph);
 
 	sprintf(command,"%s%sMethod=GetStackStats&PixelsID=%llu",is->url,"?", pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
@@ -578,7 +568,7 @@ pixStats **getStackStats (const omeis *is, OID pixelsID){
 	}
 
 	if (strstr(buffer, "Error")) {
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
@@ -630,14 +620,14 @@ pixStats **getStackStats (const omeis *is, OID pixelsID){
 		lineEnd = strstr (line,"\n");
 	}
 
-	FREE(buffer);
+	oFree(buffer);
 	return theStats;
 }
 
 
 void freeStackStats (pixStats **theStats){
-	FREE (*theStats);
-	FREE (theStats);
+	oFree (*theStats);
+	oFree (theStats);
 }
 
 
@@ -675,7 +665,7 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
 	nZ = ph->dz;
 	nC = ph->dc;
 	nT = ph->dt;
-	FREE(ph);
+	oFree(ph);
 
 	sprintf(command,"%s%sMethod=GetPlaneStats&PixelsID=%llu",is->url,"?", pixelsID);
 	buffer = (char*) executeGETCall(is, command, 1024);
@@ -687,7 +677,7 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
 
 	if (strstr(buffer, "Error")) {
 		fprintf (stderr, "Server error: %s.\n", buffer);	
-		FREE(buffer);
+		oFree(buffer);
 		return NULL;
 	}
 
@@ -696,7 +686,7 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
 	array = malloc(nZ * nC * nT * sizeof(pixStats));
     if (array == NULL) {
 		fprintf (stderr, "Could not allocate space for stats array\n");	
-		FREE(buffer);
+		oFree(buffer);
 		return (NULL);
 	}
 
@@ -704,7 +694,7 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
 	theStatsZ = malloc(nZ * nC * sizeof(pixStats *));
 	if (theStatsZ == NULL) {
 		fprintf (stderr, "Could not allocate space for stats array\n");	
-		FREE(buffer);
+		oFree(buffer);
 		return (NULL);
 	}
 
@@ -712,7 +702,7 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
 	theStats = malloc(nZ * sizeof(pixStats **));
 	if (theStats == NULL) {
 		fprintf (stderr, "Could not allocate space for stats array\n");	
-		FREE(buffer);
+		oFree(buffer);
 		return (NULL);
 	}
 
@@ -752,15 +742,15 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
 		lineEnd = strstr (line,"\n");
 	}
 
-	FREE(buffer);
+	oFree(buffer);
 	return theStats;
 }
 
 
 void freePlaneStats (pixStats ***theStats){
-	FREE (**theStats);
-	FREE (*theStats);
-	FREE (theStats);
+	oFree (**theStats);
+	oFree (*theStats);
+	oFree (theStats);
 }
 
 
@@ -775,8 +765,8 @@ void* executeGETCall (const omeis* is, const char* parameters, size_t nmemb)
 	smartBuffer buffer;
 	CURL* curl;
 
-	/* callocing avoids problems with string null terminators */
-	buffer.buffer = (unsigned char*) CALLOC (nmemb+1, 1);
+	/* oCallocing avoids problems with string null terminators */
+	buffer.buffer = (unsigned char*) oCalloc (nmemb+1, 1);
 	buffer.len = 0;
 	buffer.capacity = nmemb;
 	
@@ -793,7 +783,7 @@ void* executeGETCall (const omeis* is, const char* parameters, size_t nmemb)
 	result_code = curl_easy_perform (curl);
 	if (result_code != CURLE_OK) {
 		curl_easy_cleanup (curl);
-		FREE(buffer.buffer);
+		oFree(buffer.buffer);
 		return NULL;
 	}
 	curl_easy_cleanup (curl);
@@ -811,7 +801,7 @@ void *newBuffer;
 	write_size = nmemb*size;
 	
 	if ( write_size + buffer->len > buffer->capacity) {
-		newBuffer = REALLOC (buffer->buffer,write_size + buffer->len + 1);
+		newBuffer = oRealloc (buffer->buffer,write_size + buffer->len + 1);
 		if (!newBuffer) {
 			fprintf(stderr, "ERROR not enough memmory allocated to accept data from OMEIS");
 			return 0;

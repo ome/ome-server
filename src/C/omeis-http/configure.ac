@@ -7,7 +7,7 @@ AC_PROG_RANLIB
 dnl Check for -lcurl
 AC_CHECK_LIB(curl, curl_global_init)
 AC_CHECK_HEADER(curl/curl.h,LIBCURL='yes',AC_MSG_ERROR([
-*** OMEIS requires libcurl; (Required cURL headers not found) ***]))
+*** OMEIS-http requires libcurl; (Required cURL headers not found) ***]))
 
 dnl Figure out whether MATLAB user is specified
 AC_ARG_WITH(MATLAB-user,
@@ -23,18 +23,19 @@ AC_ARG_WITH(MATLAB-user,
 dnl Figure out whether to use matlab bindings or not.
 AC_ARG_WITH(MATLAB,
 			AC_HELP_STRING([--with-MATLAB],
-						   [compile the omeis-http library with MATLAB bindings [defaults to no]]),
+						   [compile an additional omeis-http library (libhttpOMEIS-MATLAB) with MATLAB bindings [defaults to no]]),
 [
 	if test "$withval" != no ; then
-		AC_MSG_NOTICE(compiling omeis-http with MATLAB bindings... $withval)
+		AC_MSG_NOTICE(Compiling additional omeis-http library (libhttpOMEIS-MATLAB) with MATLAB bindings... $withval)
 		MATLAB="-DMATLAB"
 		MATLAB_INCLUDE=`../../../src/perl2/OME/Matlab/MatlabInfo.pl $MATLAB_USER -I`
-		AC_SUBST(MATLAB)
+		MATLAB_LIBRARY="libhttpOMEISMATLAB.a"
 	fi
 ], [
-	AC_MSG_NOTICE(compiling omeis-http without MATLAB bindings)
+	AC_MSG_NOTICE(Compiling additional omeis-http library with MATLAB bindings NO)
 	MATLAB_INCLUDE=""
 ])
 
 AC_SUBST(MATLAB_INCLUDE)
+AC_SUBST(MATLAB_LIBRARY)
 AC_OUTPUT(Makefile)

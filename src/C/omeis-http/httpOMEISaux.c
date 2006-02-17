@@ -36,31 +36,6 @@
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
 
-#ifdef MATLAB
-#include "matrix.h"
-
-int OMEIStoMATLABDatatype (pixHeader* head)
-{
-	if (head->bp == 1 && head->isSigned == 1) {
-		return mxINT8_CLASS;
-	} else if (head->bp == 1 && head->isSigned == 0) {
-		return mxUINT8_CLASS;
-	} else if (head->bp == 2 && head->isSigned == 1) {
-		return mxINT16_CLASS;
-	} else if (head->bp == 2 && head->isSigned == 0) {
-		return mxUINT16_CLASS;	
-	} else if (head->bp == 4 && head->isSigned == 1 && head->isFloat == 0) {
-		return mxINT32_CLASS;
-	} else if (head->bp == 4 && head->isSigned == 0 && head->isFloat == 0) {
-		return mxUINT32_CLASS;
-	} else if (head->isFloat == 1) {
-		return mxSINGLE_CLASS;
-	}
-	
-	return 0;
-}
-#endif
-
 /*
 	Josiah Johnston <siah@nih.gov>
 	Returns 1 if the machine executing this code is bigEndian, 0 otherwise.

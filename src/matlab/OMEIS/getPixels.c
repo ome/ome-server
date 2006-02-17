@@ -6,6 +6,7 @@
 
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
+#include "httpOMEISaux-MATLAB.h" /* for OMEIStoMATLABDatatype */
 
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {

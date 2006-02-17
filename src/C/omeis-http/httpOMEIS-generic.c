@@ -32,14 +32,22 @@
  *------------------------------------------------------------------------------
  */
  
-#ifndef HTTP_OMEIS_AUX_H
-#define HTTP_OMEIS_AUX_H
+#include <stdlib.h>
 
-#include "httpOMEIS.h"
+void *oCalloc (size_t n, size_t size) {
+	return calloc (n, size);
+}
 
-int bigEndian (void);
-int samePixelType (pixHeader* lhs, pixHeader* rhs);
-void CtoOMEISDatatype (const char* data_type, pixHeader* head);
-void OMEIStoCDatatype (char* data_type, pixHeader* head);
-void** OMEIStoCArray (void* input, pixHeader* head, const char* conversion_type);
-#endif
+void *oMalloc (size_t n) {
+	return malloc (n);
+}
+
+void *oRealloc (void *ptr, size_t size)
+{
+	return realloc(ptr, size);
+}
+
+void oFree (void* ptr)
+{
+	free (ptr);
+}

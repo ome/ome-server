@@ -37,9 +37,6 @@
 
 #include "httpOMEIS.h"
 
-int bigEndian (void);
-int samePixelType (pixHeader* lhs, pixHeader* rhs);
-void CtoOMEISDatatype (const char* data_type, pixHeader* head);
-void OMEIStoCDatatype (char* data_type, pixHeader* head);
-void** OMEIStoCArray (void* input, pixHeader* head, const char* conversion_type);
+int OMEIStoMATLABDatatype (pixHeader* head);
+
 #endif
