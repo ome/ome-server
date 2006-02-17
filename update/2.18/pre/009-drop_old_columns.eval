@@ -1,0 +1,8 @@
+$delegate->dropColumn($dbh, 'FIND_SPOTS_INPUTS', 'OLD_CHANNEL');
+$delegate->dropColumn($dbh, 'EXTENT', 'OLD_SIGMA_X');
+$delegate->dropColumn($dbh, 'EXTENT', 'OLD_SIGMA_Y');
+$delegate->dropColumn($dbh, 'EXTENT', 'OLD_SIGMA_Z');
+$delegate->dropColumn($dbh, 'THRESHOLD', 'OLD_THRESHOLD');
+
+OME::DBObject->clearAllCaches();
+1;

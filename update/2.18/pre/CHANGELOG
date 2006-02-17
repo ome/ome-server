@@ -1,0 +1,7 @@
+Datatype changes to the following STs used by FindSpots:
+FindSpotsInputs
+	Channel:  integer -> string
+Extent
+	SigmaX, SigmaY, SigmaZ: integer -> float
+Threshold
+	Threshold: integer -> float

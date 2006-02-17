@@ -64,7 +64,7 @@
   </SemanticType>
 
   <SemanticType Name="Threshold" AppliesTo="F">
-    <Element Name="Threshold" DBLocation="THRESHOLD.THRESHOLD" DataType="integer"/>
+    <Element Name="Threshold" DBLocation="THRESHOLD.THRESHOLD" DataType="float"/>
   </SemanticType>
 
   <SemanticType
@@ -84,9 +84,9 @@
     <Element Name="MaxX" DBLocation="EXTENT.MAX_X" DataType="integer"/>
     <Element Name="MaxY" DBLocation="EXTENT.MAX_Y" DataType="integer"/>
     <Element Name="MaxZ" DBLocation="EXTENT.MAX_Z" DataType="integer"/>
-    <Element Name="SigmaX" DBLocation="EXTENT.SIGMA_X" DataType="integer"/>
-    <Element Name="SigmaY" DBLocation="EXTENT.SIGMA_Y" DataType="integer"/>
-    <Element Name="SigmaZ" DBLocation="EXTENT.SIGMA_Z" DataType="integer"/>
+    <Element Name="SigmaX" DBLocation="EXTENT.SIGMA_X" DataType="float"/>
+    <Element Name="SigmaY" DBLocation="EXTENT.SIGMA_Y" DataType="float"/>
+    <Element Name="SigmaZ" DBLocation="EXTENT.SIGMA_Z" DataType="float"/>
     <Element Name="Volume" DBLocation="EXTENT.VOLUME" DataType="integer"/>
     <Element Name="SurfaceArea" DBLocation="EXTENT.SURFACE_AREA" DataType="float">
     	<Description>For 2D spots, this includes fenestrations</Description>
@@ -159,7 +159,7 @@
              DataType="integer"/>
     <Element Name="Channel"
              DBLocation="FIND_SPOTS_INPUTS.CHANNEL"
-             DataType="integer"/>
+             DataType="string"/>
     <Element Name="MinimumSpotVolume"
              DBLocation="FIND_SPOTS_INPUTS.MIN_VOLUME"
              DataType="float"/>
