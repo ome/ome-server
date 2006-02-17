@@ -106,7 +106,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.18";
+our $DB_VERSION = "2.19";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
@@ -269,9 +269,19 @@ sub update_database {
             if ($file =~ /^CHANGELOG/) {
                 next;
             } elsif ($file =~ /\.sql$/) {
-                eval { `psql -f $file ome` };
+            	# By default the psql script processor doesn't stop when
+            	# it encounters errors.
+            	# we have to force it to stop by setting ON_ERROR_STOP.
+            	# unfortunately, we can't put this all on one command
+            	# line, so we have to pre-pend this to the sql file.
+            	eval {
+            		`echo '\\set ON_ERROR_STOP 1' > $file~`;
+            		`cat $file >> $file~`;
+            		`mv $file~ $file`;
+            	};
+                my $result = system ('psql', '-f', $file, 'ome');
 
-                if ($@) {
+                if ($result) { # non-zero exit */
                     print BOLD, "[FAILURE]", RESET, ".\n";
                     croak $@;
                 }
