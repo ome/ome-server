@@ -54,4 +54,4 @@ int OMEIStoMATLABDatatype (pixHeader* head)
 	
 	return 0;
 }
-#endif
+
