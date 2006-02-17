@@ -7,7 +7,7 @@
 # Copyright (C) 2003 Open Microscopy Environment
 #       Massachusetts Institute of Technology,
 #       National Institutes of Health,
-#       University of Dundee
+#       University of Dundee 
 #
 #
 #
@@ -539,6 +539,66 @@ ERROR
 
     my $retval = 0;
 
+	##############
+	# OMEIS
+	##############
+	print "Installing OMEIS\n";
+
+    # Configure
+    unless ($environment->get_flag("NO_BUILD")) {
+        print "  \\_ Configuring ";
+        $retval = configure_module ("src/C/omeis", $LOGFILE, {options => "--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR"});
+         
+        print BOLD, "[FAILURE]", RESET, ".\n"
+            and croak "Unable to configure module, see $LOGFILE_NAME for details."
+            unless $retval;
+        print BOLD, "[SUCCESS]", RESET, ".\n";
+    
+        # Compile
+        print "  \\_ Compiling ";
+        $retval = compile_module ("src/C/omeis", $LOGFILE);
+        
+        print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
+            unless $retval;
+        print BOLD, "[SUCCESS]", RESET, ".\n";
+    }
+    
+	# Install
+    print "  \\_ Installing ";
+    $retval = install_module ("src/C/omeis", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+	and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
+	    unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+    
+    ##############
+	# OMEIS - HTTP
+	##############
+	print "Installing omeis-http\n";
+	print "  \\_ Configuring ";
+	$retval = configure_module ("src/C/omeis-http", $LOGFILE);
+	 
+	print BOLD, "[FAILURE]", RESET, ".\n"
+		and croak "Unable to configure module, see $LOGFILE_NAME for details."
+		unless $retval;
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+
+	# Compile
+	print "  \\_ Compiling ";
+	$retval = compile_module ("src/C/omeis-http", $LOGFILE);
+	
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
+		unless $retval;
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+        
+        
+	##############
+	# core binaries
+	##############
+	
     print "Installing core binaries\n";
     
     # Set the env variable OME_ROOT so that things get installed in the right places.
@@ -574,43 +634,12 @@ ERROR
 	and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
 	    unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
-    
-	print "Installing OMEIS\n";
 
-    # Configure
-    unless ($environment->get_flag("NO_BUILD")) {
-        print "  \\_ Configuring ";
-        $retval = configure_module ("src/C/omeis", $LOGFILE, {options => "--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR"});
-         
-        print BOLD, "[FAILURE]", RESET, ".\n"
-            and croak "Unable to configure module, see $LOGFILE_NAME for details."
-            unless $retval;
-        print BOLD, "[SUCCESS]", RESET, ".\n";
-    
-        # Compile
-        print "  \\_ Compiling ";
-        $retval = compile_module ("src/C/omeis", $LOGFILE);
-        
-        print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
-            unless $retval;
-        print BOLD, "[SUCCESS]", RESET, ".\n";
-    }
-    
-	# Install
-    print "  \\_ Installing ";
-    $retval = install_module ("src/C/omeis", $LOGFILE);
-    
-    print BOLD, "[FAILURE]", RESET, ".\n"
-	and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
-	    unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n";
-    
 	close ($LOGFILE);
     
     print "\n";  # Spacing
-
-
+    
+    
     return;
 }
 
