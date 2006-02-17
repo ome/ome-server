@@ -81,10 +81,10 @@ void* getPixels (const omeis* is, OID pixelsID);
 OID finishPixels (const omeis* is, OID pixelsID);
 OID deletePixels (const omeis* is, OID pixelsID);
 char* getLocalPath (const omeis *is, OID pixelsID);
-int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
-			int x1, int y1, int z1, int c1, int t1, const void* pixels);
-void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t0,
-			int x1, int y1, int z1, int c1, int t1);
+int setROI (const omeis *is, OID pixelsID, int X0, int Y0, int Z0, int C0, int T0,
+			int X1, int Y1, int Z1, int C1, int T1, void* pixels);
+void* getROI (const omeis *is, OID pixelsID, int X0, int Y0, int Z0, int C0, int T0,
+			int X1, int Y1, int Z1, int C1, int T1);
 void* getStack (const omeis *is, OID pixelsID, int theC, int theT);
 
 pixStats **getStackStats (const omeis *is, OID pixelsID);
