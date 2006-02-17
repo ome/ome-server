@@ -133,6 +133,8 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 #include <ctype.h>
 #include "iolib/failio.h"
 #include "iolib/argarray.h"
+#include "omeis-http/httpOMEIS.h"
+
 
 /*
 * The following line is commented out because it is not
@@ -162,6 +164,7 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 #define CHUNK_SIZE 8189
 #define MAXWAVES 5
 #define BIGFLOAT 1.0E30
+#define MAX_HIST_SIZE 4096
 #define X_PLUS 1
 #define X_MINUS 2
 #define Y_PLUS 3
@@ -169,18 +172,30 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 #define Z_PLUS 5
 #define Z_MINUS 6
 
+/* Pixel types */
+#define PIX_T_FLOAT  1
+#define PIX_T_UINT8  2
+#define PIX_T_UINT16 3
+#define PIX_T_UINT32 4
+#define PIX_T_INT8   5
+#define PIX_T_INT16  6
+#define PIX_T_INT32  7
+
 #define HEADING 1
 #define VALUES 2
 #define DATABASE_HEADING 3
 #define DATABASE_VALUES 4
 
-#define OUTARGS 5
+#define OUTARGS 6
 
 #define PI 3.14159265358979323846264338327
 #define SQUARE_ROOT_OF_2 1.4142135623731
 
-#define BORDER_PIXEL -123
-#define SPOT_PIXEL -456
+#define MASK_THRESHOLD 128 /* pixels above (not equal) to threshold are spots */
+#define MASK_PIXEL 0
+#define SPOT_PIXEL 255
+#define BORDER_PIXEL 1
+#define PROCESSED_SPOT_PIXEL 3
 
 
 /*########################################################################################################*/
@@ -189,18 +204,10 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 /*##########################                                                    ##########################*/
 /*########################################################################################################*/
 
-typedef struct spotStructure SpotStruct;
-typedef SpotStruct *SpotPtr;
-typedef short pixel;
-typedef pixel *PixPtr;
-typedef struct dv_stack DVstack;
-typedef struct dv_stack_info DVstackInfo;
-typedef struct IndexStackStructure IndexStackStruct;
-typedef IndexStackStruct *IndexStack;
-typedef struct CoordListStructure CoordListStruct;
-typedef CoordListStruct *CoordList;
-typedef short coordinate;
-typedef struct dv_point Point5D;
+typedef uint8_t MaskPixel;
+typedef MaskPixel *MaskPtr;
+typedef void *PixPtr;
+typedef unsigned long coordinate;
 
 
 
@@ -212,18 +219,18 @@ typedef struct dv_point Point5D;
 /*########################################################################################################*/
 
 
-struct dv_point {
+typedef struct {
 	coordinate x;
 	coordinate y;
 	coordinate z;
 	coordinate w;
 	coordinate t;
-};
+} Point5D;
 
 
 
 /*#########################*/
-/*#       DVstack         #*/
+/*#       PixStack        #*/
 /*#########################*/
 /*
 * This structure will contain the whole image stack.  The actual image data (->stack) will be
@@ -232,41 +239,47 @@ struct dv_point {
 * Note that there are two very different kinds of stack in this program - the image stack
 * as defined in this structure and the LIFO stack that is used for finding spots.
 */
-struct dv_stack {
+typedef struct pix_stack {
 	int nwaves;
-	short max_x,max_y,max_z;	/* This is the width, height, thickness, respectively */
-	short min_x,min_y,min_z;	/* These should be set to 0 */
-	PixPtr stack;			/* This points to the actual image stack.  The entire stack is */
-			/* a contiguous block of pixels, which is X*Y*Z*nwaves long.  The order is the */
-			/* same as exists in the DV file.  All the Z sections of one wavelegth followed by */
-			/* all the Z sections of the next wavelegth, etc. */
+	short max_x,max_y,max_z;  /* This is the width, height, thickness, respectively */
+	short min_x,min_y,min_z;  /* These should be set to 0 */
 
-	short wave[MAXWAVES];	/* These are the wavelegths in the stack, and the order in which they */
-							/* appear in the stack */
-	pixel max_i[MAXWAVES];	/* each wavelegth has its own min, max, etc */
-	pixel min_i[MAXWAVES];
-	float mean_i[MAXWAVES];
-	float geomean_i[MAXWAVES];
-	float sigma_i[MAXWAVES];
-	/* Added */
-	float geosigma_i[MAXWAVES];
+	PixPtr *stacks; /*  An array of channels (wavelengths) each containing an XYZ set of pixels */
 
+	/* things from libhttpOMEIS */
+	OID       PixelsID;
+	omeis     *is;    /* the omeis object returned by openConnectionOMEIS */
+	pixHeader *ph;    /* the header object returned by pixelsInfo */
+	pixStats **stats; /* the statistics returned by getStackStats */
+	
+	int pixType;  /* an enumeration of the various pixel types */
 
+	double (*PixValueIdx)(void *theStack, size_t pix_indx);
+	double (*PixValueCrd)(struct pix_stack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
 /*
-* The integration threshold.
+* The integration threshold + channel.
 */
-	int threshold;
-	int spotWave;
+	double threshold;
+
+	coordinate spotWave;
+	coordinate timepoint; /* this is the last timepoint read by ReadTimepoint */
 	
 /*
-* These are pre-set to help us navigate through the stack.
-* If we add y_increment to a pointer into the stack, then the pointer
-* will point to the next pixel down.  Likewise for z_increment and wave_increment
+* These are pre-set to help us navigate through the stack using indexes.
 */
-	unsigned long y_increment,z_increment,wave_increment;
+	size_t y_increment,z_increment,nPix;
 
-	DVstack* next;
-};
+/* an 8-bit XYZ mask of the spot pixels */
+	MaskPtr mask;
+
+/* The list of spots */
+	struct spotStructure *spots;
+/* The current timepoint's spotlist head. */
+	struct spotStructure *currSpotList;
+	size_t  nSpots;
+
+	struct pix_stack* next;
+} PixStack;
 
 
 
@@ -277,7 +290,7 @@ struct dv_stack {
 
 
 /*#########################*/
-/*#	  IndexStackStruct	  #*/
+/*#   IndexStack          #*/
 /*#########################*/
 /*
 * This structure contains the LIFO stack used by Eat_Spot.	The stack is dynamically allocated
@@ -291,12 +304,13 @@ struct dv_stack {
 * theStack->prevChunk (which is allways the last chunk in the stack).  The chunks are allocated
 * as needed in Push_Stack, and deallocated as needed in Pop_Stack.
 */
-struct IndexStackStructure {
-	PixPtr index[CHUNK_SIZE];
-	IndexStack nextChunk;
-	IndexStack prevChunk;
+typedef struct IndexStackStructure {
+	MaskPtr index[CHUNK_SIZE];
+	struct IndexStackStructure *nextChunk;
+	struct IndexStackStructure *prevChunk;
 	long last; /* less than 0 if empty. */
-};
+} IndexStackStruct;
+typedef IndexStackStruct *IndexStack;
 
 
 
@@ -309,71 +323,109 @@ struct IndexStackStructure {
 * pixels.  The pixels are stored as X,Y,Z triplets.  The structure also has a next
 * variable to point to the next set of coordinates.
 */
-struct CoordListStructure {
+typedef struct CoordListStructure {
 	coordinate X,Y,Z;
 	char flag;
-	CoordList next;
-};
+	struct CoordListStructure *next;
+} CoordListStruct;
+typedef CoordListStruct *CoordList;
 
 
 
 
 /*#########################*/
-/*#      SpotStruct       #*/
+/*#      SpotStats        #*/
+/*#########################*/
+/*
+* One of these per spot per wavelength
+*/
+typedef struct
+{
+
+/* The spot has a different centroid at each wavelegth */
+	double centroid_x;
+	double centroid_y;
+	double centroid_z;
+
+/*
+* This is the integral - sum of intensisties of the pixels that make up the spot.
+* There is a value for each wavelegth.	Same for the rest of the intensity stats.
+*/
+	double sum_i;
+	double sum_i2;
+	double min_i;
+	double max_i;
+	double mean_i;
+	double geomean_i;
+	double sigma_i;
+	double geosigma_i;
+
+/*
+* These accumulators are used to calculate the centroids.
+*/
+	double sum_xi;
+	double sum_yi;
+	double sum_zi;
+} SpotStats;
+
+
+
+/*#########################*/
+/*#      Spot             #*/
 /*#########################*/
 /*
  * This is the structure that is used to store information about each
  * spot.  The list of spots is a circular double-linked list.  New spots are added
  * before the head of the list.
  */
-struct spotStructure {
-	long ID;
-	int nwaves;
-	int itsWave;  /* this is the wave index for the wavelegth that this
+typedef struct spotStructure {
+	unsigned long ID;
+	coordinate nwaves;
+	coordinate itsWave;  /* this is the wave index for the wavelegth that this
 						is a spot from */
-	DVstack *itsStack;
+	PixStack *itsStack;
 /*
 * This is an index to the timepoint this spot came from.  It is in the same format as would be passed to
-* ReadDVstack.	The first timepoint is 0.
+* ReadTimepoint.	The first timepoint is 0.
 */
-	short itsTimePoint;	 
+	coordinate itsTimePoint;	 
 
 /*
 * When looking for spots, these bounds are used to set the spot limits.	 They
 * may be different from the bounds of the image stack.
 */
-	short clip_Xmin,clip_Ymin,clip_Zmin;
-	short clip_Xmax,clip_Ymax,clip_Zmax;
+	coordinate clip_Xmin,clip_Ymin,clip_Zmin;
+	coordinate clip_Xmax,clip_Ymax,clip_Zmax;
+
+/*
+* We copy the threshold from the stack, because it may be recalculated at each timepoint
+*/
+	double threshold;
 
 /*
 * The minimum and maximum coordinates form a "minimal box" around the spot.
 * Since the box's sides lie along the X,Y,Z axes, it is not necessarily the
 * smallest box - it is simply the range of the spot's X,Y,Z coordinates.
 */
-	short min_x,min_y,min_z;
-	short max_x,max_y,max_z;
+	coordinate min_x,min_y,min_z;
+	coordinate max_x,max_y,max_z;
 
 /*
 * The mean coordinates give the center of volume for the spot.
 */
-	float mean_x,mean_y,mean_z;
+	double mean_x,mean_y,mean_z;
 
 /*
 * These can be thought of as horizontal, vertical and Z-axis "dispersions" for the spot.
 */
-	float sigma_x,sigma_y,sigma_z;
+	double sigma_x,sigma_y,sigma_z;
 
 
 /* number of pixels that make up the spot */
-	unsigned long volume;
+	size_t volume;
 
-/* The maximum size of the stack generated to find the spot. */
-	unsigned long max_stack;
-
-/* The spot has a different centroid at each wavelegth */
-	float centroid_x[MAXWAVES];
-	float centroid_y[MAXWAVES];
-	float centroid_z[MAXWAVES];
+/* per-wavelength stats */
+	SpotStats *stats;
 
 /*
 * This is a pointer to the closest spot in the next timepoint.
@@ -381,46 +433,25 @@ struct spotStructure {
 * spot that becomes the nearest neighbor.  Ideally its the same spot and this
 * pointer points to its next position.
 */
-	SpotStruct *nextTimePoint;
+	struct spotStructure *nextTimePoint;
 
 /*
 * These are the vectors to the "same" spot in the next timepoint.  They are
 * expressed in pixel coordinates.
 */
-	float vecX,vecY,vecZ;
-
-/*
-* This is the integral - sum of intensisties of the pixels that make up the spot.
-* There is a value for each wavelegth.	Same for the rest of the intensity stats.
-*/
-	float sum_i[MAXWAVES];
-	float sum_i2[MAXWAVES];
-	float min_i[MAXWAVES];
-	float max_i[MAXWAVES];
-	float mean_i[MAXWAVES];
-	float geomean_i[MAXWAVES];
-	float sigma_i[MAXWAVES];
-	/* added */
-	float geosigma_i[MAXWAVES];
-
-/*
-* These accumulators are used to calculate the centroids.
-*/
-	float sum_xi[MAXWAVES];
-	float sum_yi[MAXWAVES];
-	float sum_zi[MAXWAVES];
+	double vecX,vecY,vecZ;
 
 /*
 * These accumulators are used to calculate position information.
 */
-	float sum_x, sum_y, sum_z;
-	float sum_x2, sum_y2, sum_z2;
+	double sum_x, sum_y, sum_z;
+	double sum_x2, sum_y2, sum_z2;
 
 /*
 * These values are used internally in the spot-finding algorithm to keep
 * track of where we are.  They have no meaning outside of the algorithm.
 */
-	short cur_x,cur_y,cur_z;
+	coordinate cur_x,cur_y,cur_z;
 
 /*
 * this is a linked list of border pixels around the spot.
@@ -430,9 +461,9 @@ struct spotStructure {
 	double perimiter;
 	double formFactor;
 	double surfaceArea;
-	short seedX;
-	short seedY;
-	short seedZ;
+	coordinate seedX;
+	coordinate seedY;
+	coordinate seedZ;
 
 /*
 * This is a circular double-linked list for ease of maneuverability (and obfuscation).
@@ -440,16 +471,18 @@ struct spotStructure {
 * points to the head, and new member->previous points to the old head->previous.
 */
 
-	SpotStruct *next;
-	SpotStruct *previous;
+	struct spotStructure *next;
+	struct spotStructure *previous;
 
 /*
 * This pointer points to a list of spots in the next timepoint.
 * This pointer is only valid at the head of a list of spots for a given timepoint. Otherwise
 * its NULL.  Sure its not the best data structure organization.  So sue me.
 */
-	SpotStruct *nextTimePointList;
-};
+	struct spotStructure *nextTimePointList;
+	struct spotStructure *itsHead; /* point to the head of the list for a given timepoint list */
+} Spot;
+typedef Spot *SpotPtr;
 
 
 
@@ -466,70 +499,53 @@ struct spotStructure {
 /*##########################                                                    ##########################*/
 /*########################################################################################################*/
 
-void InitializeDVstack (DVstack* inStack, Point5D dims);
-void ReadDVstack (DVstack* inStack, FILE *fp, Point5D dims, long time);
-void ReadWaveStats (DVstack* inStack, argiterator_t* iter, size_t nWaves);
-void Calculate_Stack_Stats (DVstack *theStackG,int theWave);
-void Push_Stack (PixPtr index, IndexStack theStack);
-PixPtr Pop_Stack (IndexStack theStack);
-void Eat_Spot_Rec (PixPtr index);
-void Eat_Spot(PixPtr index);
-void Index_To_Coords (DVstack* inStack, PixPtr index,short *X,short *Y,short *Z);
-void Update_Spot (DVstack* inStack, PixPtr index);
-PixPtr Get_Index_From_Coords (SpotPtr theSpot, short X,short Y,short Z);
+PixStack* NewPixStack (const char *omeis_url, OID PixelsID);
+coordinate ReadTimepoint (PixStack* theStack, coordinate theT);
+void Push_Stack (MaskPtr maskIndex, IndexStack theStack);
+MaskPtr Pop_Stack (IndexStack theStack);
+void Eat_Spot_Rec (SpotPtr theSpot, MaskPtr maskIndex);
+void Eat_Spot (SpotPtr theSpot, MaskPtr maskIndex);
+void Index_To_Coords (PixStack* theStack, MaskPtr maskIndex,coordinate *X,coordinate *Y,coordinate *Z);
+void Update_Spot (SpotPtr theSpot, MaskPtr maskIndex);
+MaskPtr Coords_To_Index (PixStack* theStack, coordinate X,coordinate Y,coordinate Z);
 void Get_Perimiter (SpotPtr theSpot);
 void SwapListElements (CoordList previousElement1, CoordList previousElement2);
 void Get_Surface_Area (SpotPtr theSpot);
 double Get_Surface_Area_CC (char *c, int n);
-PixPtr Update_Index (PixPtr index, char direction);
-void Set_Border_Pixel (short X, short Y, short Z);
-SpotPtr New_Spot (SpotPtr spotList,DVstack *theStackG, int itsWave, short itsTime);
-void Zero_Spot (SpotPtr theSpotG,DVstack *theStackG, int itsWave, short itsTime);
-void Update_Spot_Stats (SpotPtr theSpotG);
-void Output_Spot (SpotPtr theSpotG, int argc, char**argv,int outArgs, char saywhat);
-void Write_Output (SpotPtr theSpotListHead,int argc, char**argv,int outArgs);
+MaskPtr Update_Index (SpotPtr theSpot, MaskPtr maskIndex, char direction);
+void Set_Border_Pixel (SpotPtr theSpot, coordinate X, coordinate Y, coordinate Z);
+SpotPtr New_Spot (PixStack *theStack, coordinate itsWave, coordinate itsTime);
+void Zero_Spot (SpotPtr theSpot,PixStack *theStack, coordinate itsWave, coordinate itsTime);
+void Finish_Spot_Stats (SpotPtr theSpot);
+void Output_Spot (SpotPtr theSpot, int argc, char**argv,int outArgs, char saywhat);
+void Write_Output (SpotPtr theSpotList,int argc, char**argv,int outArgs);
 void Compose_inArgs (char *inArgs, int argc, char**argv);
 
-pixel Set_Threshold (const char *arg, DVstack *theStack);
-double *Get_Prob_Hist (DVstack *theStack, unsigned short *histSizePtr);
-pixel Get_Thresh_Moment (DVstack *theStack);
-pixel Get_Thresh_Otsu (DVstack *theStack);
-pixel Get_Thresh_ME (DVstack *theStack);
-pixel Get_Thresh_Kittler (DVstack *theStack);
+double Set_Threshold (const char *arg, PixStack *theStack);
+double *Get_Prob_Hist (PixStack *theStack, unsigned short *histSizePtr);
+double Get_Thresh_Moment (PixStack *theStack);
+double Get_Thresh_Otsu (PixStack *theStack);
+double Get_Thresh_ME (PixStack *theStack);
+double Get_Thresh_Kittler (PixStack *theStack);
 
-void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes);
-void BSUtilsSwapHeader(char *cTheHeader);
-
-
-
-
-
-
-
-
-/*#########################*/
-/*#                       #*/
-/*#   GLOBAL VARIABLES    #*/
-/*#                       #*/
-/*#########################*/
-/*
-* These variables are global - Since we are no longer using recursion, they probably
-* don't need to be, and probably won't be for long.
-*/
-
-DVstack *theStackG;
-SpotPtr theSpotG;
-pixel thresholdG;
-long stack_size = 0;
-unsigned long max_stack_size = 0;
-char doBorderG=1;
-short DV_REV_ENDIAN_MAGIC;
+double PixValueIdx_uint8 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_uint16 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_uint32 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_int8 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_int16 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_int32 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_float (PixPtr theStack, size_t pix_indx);
+double PixValueCrd_uint8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_uint16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_uint32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_int8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_int16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_int32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_float (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
 
 
 
-
-
-
+void usage(char **argv);
 
 
 
@@ -541,134 +557,246 @@ short DV_REV_ENDIAN_MAGIC;
 /*########################################################################################################*/
 
 
+
 /*#########################*/
 /*#                       #*/
-/*#     ReadDVstack       #*/
+/*#     NewPixStack       #*/
 /*#                       #*/
 /*#########################*/
 /*
- * The following routines read one timepoint into the provided DVstack.
+ * The following routine allocates a new PixStack,
+ * and fills in its values by calling httpOMEIS.
+ * It also allocates room for a mask that will be used for thresholding
 */
 
-void ReadDVstack (DVstack* inStack, FILE* fp, Point5D dims, long time)
+PixStack* NewPixStack (const char *omeis_url, OID PixelsID)
 {
-	size_t timepointSize = inStack->wave_increment * dims.w * sizeof(pixel);
-	Seek (fp, time * timepointSize);
-	Read (fp, inStack->stack, timepointSize);
-}
+	PixStack* theStack;
+	coordinate nwaves;
+	pixHeader *ph;    /* the header object returned by pixelsInfo */
 
-void InitializeDVstack (DVstack* inStack, Point5D dims)
-{
-	memset (inStack, 0, sizeof(DVstack));
-	inStack->nwaves = dims.w;
-	inStack->max_x = dims.x - 1;
-	inStack->max_y = dims.y - 1;
-	inStack->max_z = dims.z - 1;
-	inStack->y_increment = dims.x;
-	inStack->z_increment = dims.x * dims.y;
-	inStack->wave_increment = dims.x * dims.y * dims.z;
-	if (!inStack->stack)
-		inStack->stack = (PixPtr) Allocate (inStack->wave_increment * dims.w * sizeof(pixel), "for image data");
-}
-
-void ReadWaveStats (DVstack* inStack, argiterator_t* iter, size_t timepoint)
-{
-	size_t i;
-	size_t readTimepoint = 0;
-	size_t readWave = 0;
-	for (i = 0; i < inStack->nwaves; ++ i) {
-		const char* argPtr = Argiter_NextString (iter);
-		if (!argPtr) {
-			fprintf (stderr, "Error: missing statistics for wave %d\n", i);
-			exit(-1);
-		}
-		/* value from perl handler! */
-		sscanf (argPtr, "%d,%hd,%d,%hd,%hd,%f,%f,%f,%f", &readWave, &inStack->wave[i], &readTimepoint,
-				&inStack->min_i[i], &inStack->max_i[i], &inStack->mean_i[i],
-				&inStack->geomean_i[i], &inStack->sigma_i[i],&inStack->geosigma_i[i]);
-
-		if (readTimepoint != timepoint || readWave != i) {
-			fprintf (stderr, "Error: wave %d stats are missing in list for timepoint %d\n", i, timepoint);
-			exit(-1);
-		}
+	theStack = calloc (1,sizeof(PixStack));
+	if (theStack == NULL) {
+		fprintf (stderr,"Could not retreive information for PixelsID=%llu\n",(unsigned long long)PixelsID);
+		return NULL;
 	}
-}
+	
+	theStack->PixelsID = PixelsID;
+#ifdef DEBUG
+fprintf (stderr,"opening connection to %s\n",omeis_url);
+fflush (stderr);
+#endif
 
-/*#########################*/
-/*#                       #*/
-/*# Calculate_Stack_Stats #*/
-/*#                       #*/
-/*#########################*/
-/*
-* This function calculates some statistics for the image stack.
-* Statistics are calculated for one wavelegth at a time.
-* The statistics are stored in the stack structure, so nothing is returned.
-*/
-void Calculate_Stack_Stats (DVstack *inStack,int theWave)
-{
-PixPtr index,lastPix;
-/* modif: offset was 100.0 now 1.0 */
-double sum_i=0,sum_i2=0,sum_log_i=0,numWavePix,theVal, sgd, sd, offset=1.0,min,max;
-float geomean;
-/*
-* Set a pointer to point to the first z of the wave we want.
-*/
-	index = inStack->stack + (inStack->wave_increment * theWave);
+	theStack->is = openConnectionOMEIS(omeis_url, "0000");
+#ifdef DEBUG
+if (theStack->is) fprintf (stderr,"opened connection to %s\n",omeis_url);
+else fprintf (stderr,"failed to open connection to %s\n",omeis_url);
+fflush (stderr);
+#endif
+	theStack->ph = pixelsInfo (theStack->is, PixelsID);
+	theStack->stats = getStackStats (theStack->is, PixelsID);
 
-/*
-* set a pixel to point to the end of this wave.
-*/
-	lastPix = index + inStack->wave_increment;
-
-/*
-* Set initial values for min and max
-*/
-	min = max = (double) *index;
-/*
-* crunch through pixels while we're in between the two pointers.
-*/
-	while (index < lastPix)
-	{
-		theVal = (double) *index;
-		sum_i += theVal;
-		sum_i2 += (theVal*theVal);
-/*
-* offset is used so that we don't compute logs of values less than or equal to zero.
-*/
-		
-		/* if (the Val>1) sum_log_i +=  log (theVal); */
-		sum_log_i +=  log (theVal+offset); 
-		if (theVal < min) min = theVal;
-		if (theVal > max) max = theVal;
-		index++;
+	if (theStack->is == NULL || theStack->ph == NULL || theStack->stats == NULL) {
+		if (theStack->is != NULL) free (theStack->is);
+		if (theStack->ph != NULL) free (theStack->ph);
+		if (theStack->stats != NULL) freeStackStats (theStack->stats);
+		free (theStack);
+		fprintf (stderr,"Could not retreive information for PixelsID=%llu\n",(unsigned long long)PixelsID);
+		return NULL;
 	}
 
+	ph = theStack->ph;
+
+	nwaves = theStack->nwaves = ph->dc;
+	theStack->max_x = ph->dx - 1;
+	theStack->max_y = ph->dy - 1;
+	theStack->max_z = ph->dz - 1;
+	theStack->y_increment = ph->dx;
+	theStack->z_increment = ph->dx * ph->dy;
+	theStack->nPix = ph->dx * ph->dy * ph->dz;
+	theStack->stacks = NULL;
+
+	if (ph->isFloat) {
+		theStack->pixType = PIX_T_FLOAT;
+		theStack->PixValueIdx = PixValueIdx_float;
+		theStack->PixValueCrd = PixValueCrd_float;
+	} else if (ph->isSigned && ph->bp == 1 ) {
+		theStack->pixType = PIX_T_INT8;
+		theStack->PixValueIdx = PixValueIdx_int8;
+		theStack->PixValueCrd = PixValueCrd_int8;
+	} else if (ph->isSigned && ph->bp == 2 ) {
+		theStack->pixType = PIX_T_INT16;
+		theStack->PixValueIdx = PixValueIdx_int16;
+		theStack->PixValueCrd = PixValueCrd_int16;
+	} else if (ph->isSigned && ph->bp == 4 ) {
+		theStack->pixType = PIX_T_INT32;
+		theStack->PixValueIdx = PixValueIdx_int32;
+		theStack->PixValueCrd = PixValueCrd_int32;
+	} else if (!ph->isSigned && ph->bp == 1 ) {
+		theStack->pixType = PIX_T_UINT8;
+		theStack->PixValueIdx = PixValueIdx_uint8;
+		theStack->PixValueCrd = PixValueCrd_uint8;
+	} else if (!ph->isSigned && ph->bp == 2 ) {
+		theStack->pixType = PIX_T_UINT16;
+		theStack->PixValueIdx = PixValueIdx_uint16;
+		theStack->PixValueCrd = PixValueCrd_uint16;
+	} else if (!ph->isSigned && ph->bp == 4 ) {
+		theStack->pixType = PIX_T_UINT32;
+		theStack->PixValueIdx = PixValueIdx_uint32;
+		theStack->PixValueCrd = PixValueCrd_uint32;
+	}
+	
+	/*
+	* Allocate memory for the array of pointers to the XYZ stacks
+	* xyzPixels = theStack->stacks[theC]
+	*/
+	if ( (theStack->stacks = (PixPtr *) calloc (nwaves, sizeof(PixPtr *))) == NULL) {
+		fprintf (stderr,"Could not allocate memory while initializing PixelsID=%llu\n",(unsigned long long)PixelsID);
+		free (theStack->is);
+		freeStackStats (theStack->stats);
+		free (theStack);
+	}
+
+	/*
+	* Allocate memory for an 8-bit mask
+	*/
+	if ( (theStack->mask = (MaskPtr) calloc (theStack->nPix,sizeof(MaskPixel))) == NULL) {
+		fprintf (stderr,"Could not allocate memory while initializing PixelsID=%llu\n",(unsigned long long)PixelsID);
+		free (theStack->stacks);
+		free (theStack->is);
+		freeStackStats (theStack->stats);
+		free (theStack);
+	}
+	
+	/*
+	* The list of spots
+	*/
+	theStack->spots = NULL;
+	theStack->nSpots = 0;
+	return (theStack);
+}
+
+
+
+
+/*#########################*/
+/*#                       #*/
+/*#     ReadTimepoint     #*/
+/*#                       #*/
+/*#########################*/
 /*
-* Calculate the actual statistics from the accumulators
+ * The following routines read one timepoint into the provided PixStack.
 */
-	numWavePix = (double) (inStack->wave_increment);
-	geomean = exp ( sum_log_i / numWavePix ) - offset;
 
-	inStack->min_i[theWave] = min;
-	inStack->max_i[theWave] = max;
-	inStack->mean_i[theWave] = sum_i / numWavePix;
-	inStack->geomean_i[theWave] = geomean;
+coordinate ReadTimepoint (PixStack* theStack, coordinate theT)
+{
+coordinate theC, nwaves, j;
 
-	sd = fabs( (sum_i2	 - (sum_i * sum_i) / numWavePix)/  (numWavePix - 1.0) ); 
-	inStack->sigma_i[theWave] = (float) sqrt (sd); 
-	sgd =fabs ( (sum_i2	 - 2* geomean *sum_i + geomean * geomean )/  (numWavePix - 1.0) ); 
-	inStack->geosigma_i[theWave] = (float) sqrt (sgd); 
-
+	nwaves = theStack->nwaves;
+	for (theC=0;theC<nwaves;theC++) {
+		if (theStack->stacks[theC] != NULL) free (theStack->stacks[theC]);
+		theStack->stacks[theC] = getStack (theStack->is,theStack->PixelsID,theC,theT);
+		if (theStack->stacks[theC] == NULL) {
+			for (j=0;j<theC;j++) {
+				free (theStack->stacks[j]);
+				theStack->stacks[j] = NULL;
+				return 0;
+			}
+		}
+	}
+	theStack->timepoint = theT;
+	return nwaves;
 
 }
 
 
 
 
+/*#########################*/
+/*#                       #*/
+/*#  MakeThresholdMask    #*/
+/*#                       #*/
+/*#########################*/
+/* This sets the stack's pre-allocated mask using the 
+ * stack's global threshold.
+*/
+void MakeThresholdMask (PixStack* theStack) {
+coordinate theC;
+double threshold;
+MaskPtr maskPtr, lastMaskPtr;
+size_t nPix;
 
+uint8_t *uint8_p;
+uint16_t *uint16_p;
+uint32_t *uint32_p;
+int8_t *int8_p;
+int16_t *int16_p;
+int32_t *int32_p;
+float *float_p;
+	
+	theC = theStack->spotWave;
+	threshold = theStack->threshold;
+	
+	maskPtr = theStack->mask;
+	nPix = theStack->nPix;
+	lastMaskPtr = maskPtr + nPix;
+	
+	switch (theStack->pixType) {
+		case PIX_T_FLOAT:
+			float_p = (float *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*float_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_UINT8:
+			uint8_p = (uint8_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*uint8_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_UINT16:
+			uint16_p = (uint16_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*uint16_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_UINT32:
+			uint32_p = (uint32_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*uint32_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_INT8:
+			int8_p = (int8_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*int8_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_INT16:
+			int16_p = (int16_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*int16_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_INT32:
+			int32_p = (int32_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*int32_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		default:
+		break;
+	}
 
-
-
+	
+}
 
 
 /*#########################*/
@@ -683,7 +811,7 @@ float geomean;
 * contains an array of CHUNK_SIZE indexes, a pointer to the next chunk, a pointer
 * to the last chunk, and a local index to the last entry in the array.
 */
-void Push_Stack (PixPtr index, IndexStack theStack)
+void Push_Stack (MaskPtr maskIndex, IndexStack theStack)
 {
 IndexStack lastChunk;
 
@@ -693,15 +821,13 @@ IndexStack lastChunk;
 * then the border of the image determines one of the spot borders.  In this case a border pixel
 * will actually be a spot pixel.  If the index was set to NULL by Update_Index we are at the
 * spot border as determioned by the image border.
-* Otherwise, the border pixels are the ones just outside the spot, and *index will be
+* Otherwise, the border pixels are the ones just outside the spot, and *maskIndex will be
 * less than threshold.  This kind of border pixels is not a spot pixel.
 * Either way, we set a border pixel and return.
 */
-	if ( index == NULL )
+	if ( maskIndex == NULL )
 		return;
-	if (*index < 0)
-		return;
-	if (*index <= thresholdG)
+	if (*maskIndex <= MASK_THRESHOLD)
 		return;
 /*
 * Get a pointer to the last chunk in the stack, and increment its index.
@@ -748,12 +874,7 @@ IndexStack lastChunk;
 * At this point, lastChunk points to a non-full chunk, and lastChunk->last points
 * to the first available index in lastChunk.
 */
-	lastChunk->index[lastChunk->last] = index;
-
-/* Increment the counter that keeps track of the maximum stack size. */
-	stack_size++;
-	if (stack_size > max_stack_size)
-		max_stack_size = stack_size;
+	lastChunk->index[lastChunk->last] = maskIndex;
 	
 }
 
@@ -776,7 +897,7 @@ IndexStack lastChunk;
 * returning the last index in a chunk.	It won't free the very last chunk in the stack - the
 * one pointed to by theStack.
 */
-PixPtr Pop_Stack (IndexStack theStack)
+MaskPtr Pop_Stack (IndexStack theStack)
 {
 PixPtr theIndex;
 IndexStack lastChunk;
@@ -816,10 +937,6 @@ IndexStack lastChunk;
 	*/
 		theStack->prevChunk->last--;
 		}
-/*
-* De-crement stack_size, which keeps track of maximum stack size.
-*/
-	stack_size--;
 
 /*
 * Finally, return the last index in the stack.
@@ -841,39 +958,41 @@ IndexStack lastChunk;
 /*#         Eat_Spot      #*/
 /*#                       #*/
 /*#########################*/
-void Eat_Spot (PixPtr index)
+void Eat_Spot (SpotPtr theSpot, MaskPtr maskIndex)
 {
-static IndexStack theStack;
+static IndexStack theLIFOstack;
+PixStack *theStack;
 
 /*
-* If there is no stack, then make one.
+* If there is no LIFO, then make one.
 */
-	if (theStack == NULL)
+	if (theLIFOstack == NULL)
 		{
-		theStack = (IndexStack) malloc (sizeof(IndexStackStruct));
-		if (theStack == NULL)
+		theLIFOstack = (IndexStack) malloc (sizeof(IndexStackStruct));
+		if (theLIFOstack == NULL)
 			{
 			fprintf (stderr,"FATAL ERROR: Could not allocate memory for pixel indexes.\n");
 			exit (-1);
 			}
-		theStack->nextChunk = theStack;
-		theStack->prevChunk = theStack;
-		theStack->last = -1;
+		theLIFOstack->nextChunk = theLIFOstack;
+		theLIFOstack->prevChunk = theLIFOstack;
+		theLIFOstack->last = -1;
 		}
 
 
+	theStack = theSpot->itsStack;
 	
-	Index_To_Coords (theStackG, index,&(theSpotG->seedX),&(theSpotG->seedY),&(theSpotG->seedZ) );
+	Index_To_Coords (theStack, maskIndex,&(theSpot->seedX),&(theSpot->seedY),&(theSpot->seedZ) );
 /*
 * We update the spot's statistics based on the properties of this pixel (position, intensity, etc).
 * This is the seed pixel.
 */
-	Update_Spot (theStackG, index);
+	Update_Spot (theSpot, maskIndex);
 
 /*
-* We set this pixel to SPOT_PIXEL so that we don't count it again.
+* We set this pixel to PROCESSED_SPOT_PIXEL so that we don't count it again.
 */
-	*index = SPOT_PIXEL;
+	*maskIndex = PROCESSED_SPOT_PIXEL;
 	
 /*
 * We push the indexes of the pixels in all six directions onto the stack.  Update_Index returns a new index
@@ -882,24 +1001,24 @@ static IndexStack theStack;
 * threshold.  If so, it gets pushed on the stack.  At most, we would have pushed the six pixels that surround
 * the seed pixel.
 */
-	Push_Stack (Update_Index(index,X_PLUS),theStack);
-	Push_Stack (Update_Index(index,X_MINUS),theStack);
-	Push_Stack (Update_Index(index,Y_PLUS),theStack);
-	Push_Stack (Update_Index(index,Y_MINUS),theStack);
-	if (theSpotG->clip_Zmax-theSpotG->clip_Zmin)
+	Push_Stack (Update_Index(theSpot,maskIndex,X_PLUS),theLIFOstack);
+	Push_Stack (Update_Index(theSpot,maskIndex,X_MINUS),theLIFOstack);
+	Push_Stack (Update_Index(theSpot,maskIndex,Y_PLUS),theLIFOstack);
+	Push_Stack (Update_Index(theSpot,maskIndex,Y_MINUS),theLIFOstack);
+	if (theSpot->clip_Zmax-theSpot->clip_Zmin)
 	{
-		Push_Stack (Update_Index(index,Z_PLUS),theStack);
-		Push_Stack (Update_Index(index,Z_MINUS),theStack);
+		Push_Stack (Update_Index(theSpot,maskIndex,Z_PLUS),theLIFOstack);
+		Push_Stack (Update_Index(theSpot,maskIndex,Z_MINUS),theLIFOstack);
 	}
 /*
 * We've processed the seed pixel, so now its time to pop the first pixel from the stack.
 */
-	index = Pop_Stack (theStack);
+	maskIndex = Pop_Stack (theLIFOstack);
 	
 /*
-* This is where the action is.  The index supplied by Pop_Stack will be NULL when the stack is empty.
+* This is where the action is.  The maskIndex supplied by Pop_Stack will be NULL when the stack is empty.
 */
-	while (index != NULL)
+	while (maskIndex != NULL)
 		{
 		
 		/*
@@ -912,29 +1031,29 @@ static IndexStack theStack;
 		* still on the stack, we have to check each time.  We check before pushing them mainly to keep
 		* stack size reasonable, not to make sure that we visit each one only once.
 		*/
-		if (*index > thresholdG)
+		if (*maskIndex > MASK_THRESHOLD)
 		{
 			
 		/*
 		* If we found a valid pixel, then basically do the same thing we did before.
 		*/
-			Update_Spot (theStackG, index);
-			*index = SPOT_PIXEL;
-			Push_Stack (Update_Index(index,X_PLUS),theStack);
-			Push_Stack (Update_Index(index,X_MINUS),theStack);
-			Push_Stack (Update_Index(index,Y_PLUS),theStack);
-			Push_Stack (Update_Index(index,Y_MINUS),theStack);
-			if (theSpotG->clip_Zmax-theSpotG->clip_Zmin)
+			Update_Spot (theSpot, maskIndex);
+			*maskIndex = PROCESSED_SPOT_PIXEL;
+			Push_Stack (Update_Index(theSpot,maskIndex,X_PLUS),theLIFOstack);
+			Push_Stack (Update_Index(theSpot,maskIndex,X_MINUS),theLIFOstack);
+			Push_Stack (Update_Index(theSpot,maskIndex,Y_PLUS),theLIFOstack);
+			Push_Stack (Update_Index(theSpot,maskIndex,Y_MINUS),theLIFOstack);
+			if (theSpot->clip_Zmax-theSpot->clip_Zmin)
 			{
-				Push_Stack (Update_Index(index,Z_PLUS),theStack);
-				Push_Stack (Update_Index(index,Z_MINUS),theStack);
+				Push_Stack (Update_Index(theSpot,maskIndex,Z_PLUS),theLIFOstack);
+				Push_Stack (Update_Index(theSpot,maskIndex,Z_MINUS),theLIFOstack);
 			}
 		}
 
 		/*
 		* pop another pixel off the stack and begin again.
 		*/
-		index = Pop_Stack (theStack);
+		maskIndex = Pop_Stack (theLIFOstack);
 		}
 }
 
@@ -966,45 +1085,45 @@ static IndexStack theStack;
 * This algorithm is no longer used by this program, but I thought I would leave it in
 * for posterity.
 */
-void Eat_Spot_Rec (PixPtr index)
+void Eat_Spot_Rec (SpotPtr theSpot, MaskPtr maskIndex)
 {
 /*
 extern pixel thresholdG;
 */
 
 /*
-* Update_Index returns NULL if we try to go out of bounds (theSpotG->clip),
+* Update_Index returns NULL if we try to go out of bounds (theSpot->clip),
 * so we should check for that first, and return immediately.
 */
-	if (index == NULL) return;
+	if (maskIndex == NULL) return;
 
 /*
 * Also, we want to return if the index is pointing to a pixel less than or
 * equal to threshold.
 */
-	if (*index <= thresholdG) return;
+	if (*maskIndex <= MASK_THRESHOLD) return;
 
 /*
 * At this point index is pointing at a spot pixel, so we call Update_Spot
 * to update the spot statistics with this pixel.
 */
-	Update_Spot (theStackG, index);
+	Update_Spot (theSpot, maskIndex);
 
 /*
 * To prevent re-considering this pixel, we set it to threshold.
 */
-	*index = thresholdG;
+	*maskIndex = PROCESSED_SPOT_PIXEL;
 
 /*
 * For each of the six directions, we call Update_Index with a direction, which returns
 * a new index which we immediately pass recursively to Eat_Spot.
 */
-	Eat_Spot (Update_Index(index,X_PLUS));
-	Eat_Spot (Update_Index(index,X_MINUS));
-	Eat_Spot (Update_Index(index,Y_PLUS));
-	Eat_Spot (Update_Index(index,Y_MINUS));
-	Eat_Spot (Update_Index(index,Z_PLUS));
-	Eat_Spot (Update_Index(index,Z_MINUS));
+	Eat_Spot_Rec (theSpot, Update_Index(theSpot, maskIndex,X_PLUS));
+	Eat_Spot_Rec (theSpot, Update_Index(theSpot, maskIndex,X_MINUS));
+	Eat_Spot_Rec (theSpot, Update_Index(theSpot, maskIndex,Y_PLUS));
+	Eat_Spot_Rec (theSpot, Update_Index(theSpot, maskIndex,Y_MINUS));
+	Eat_Spot_Rec (theSpot, Update_Index(theSpot, maskIndex,Z_PLUS));
+	Eat_Spot_Rec (theSpot, Update_Index(theSpot, maskIndex,Z_MINUS));
 	return;
 }
 
@@ -1012,55 +1131,45 @@ extern pixel thresholdG;
 
 
 
-void Index_To_Coords (DVstack* inStack, PixPtr index,short *Xp,short *Yp,short *Zp)
+void Index_To_Coords (PixStack* theStack, MaskPtr maskIndex,coordinate *Xp,coordinate *Yp,coordinate *Zp)
 {
-unsigned long index2;
-short X,Y,Z;
+size_t maskIndex2;
+coordinate X,Y,Z;
 
 /*
 * First,  subtract the stack pointer from index,  thus getting
 * a "true" index.
 */
-	index2 = index - inStack->stack;
-
-/*
-* Second,	subtract the wave increment to get an index into the stack.
-*/
-	index2 -= (theSpotG->itsWave * inStack->wave_increment);
+	maskIndex2 = maskIndex - theStack->mask;
 
 /*
 * The z coordinate is the wave index divided by the size of a z-section.
 * The integer division is a truncation.
 */
-	Z = index2 / (inStack->z_increment);
+	Z = maskIndex2 / (theStack->z_increment);
 
 /*
 * Then we subtract the z coordinate * section size to get an index into the section.
 */
-	index2 -= (Z * (inStack->z_increment));
+	maskIndex2 -= (Z * (theStack->z_increment));
 
 /*
 * The y coordinate is the index divided by the width.
 */
-	Y = index2 / (inStack->y_increment);
+	Y = maskIndex2 / (theStack->y_increment);
 
 /*
 * Lastly,	if we subtract the y coordinate * width from the index,	 we will be left
 * with the x coordinate.
 */
-	index2 -= (Y * (inStack->y_increment));
-	X = index2;
+	maskIndex2 -= (Y * (theStack->y_increment));
+	X = maskIndex2;
 
 	*Xp = X;
 	*Yp = Y;
 	*Zp = Z;
 /*
-* It is important to note that these coordinates are based on the origin being (0,0,0) not
-* as DV defines it at (1,1,1).  For now, we will leave the internal coordinate base at (0,0,0),
-* and add the vector (1,1,1) to the displayed coordinates.  This is an interim solution
-* pending something more elegant and consistent.  Ideally, this would be to have DV move
-* its coordinate base to (0,0,0) as is done in the rest of the known universe.  Having
-* written something in FORTRAN with arrays based on index 1 is no excuse not to follow convention.
+* It is important to note that these coordinates are based on the origin being (0,0,0) not (1,1,1).
 */
 
 }
@@ -1078,79 +1187,74 @@ short X,Y,Z;
 * This functions assumes index points to a valid spot pixel, and updates the 
 * spot accumulators in the global spot structure.
 */
-void Update_Spot (DVstack* inStack, PixPtr index)
+void Update_Spot (SpotPtr theSpot, MaskPtr maskIndex)
 {
-int i;
-float floatIndex;
+coordinate theC;
+double pixVal;
+size_t pixIndx;
+double (*GetPixValueIdx)(void *theStack, size_t pixelIndex);
+SpotStats *theSpotCstats;
 
 
 /*
 * We need to back-calculate the coordinates from the index.
 */
-	Index_To_Coords (theStackG,index,&(theSpotG->cur_x),&(theSpotG->cur_y),&(theSpotG->cur_z));
+	Index_To_Coords (theSpot->itsStack, maskIndex, &(theSpot->cur_x),&(theSpot->cur_y),&(theSpot->cur_z));
+	pixIndx = maskIndex - theSpot->itsStack->mask;
+
 /*
 * Set spoot coordinate maxima and minima according to the
 * current coordinates.
 */
-	if (theSpotG->cur_x > theSpotG->max_x)
-		theSpotG->max_x = theSpotG->cur_x;
-	if (theSpotG->cur_x < theSpotG->min_x)
-		theSpotG->min_x = theSpotG->cur_x;
-	if (theSpotG->cur_y > theSpotG->max_y)
-		theSpotG->max_y = theSpotG->cur_y;
-	if (theSpotG->cur_y < theSpotG->min_y)
-		theSpotG->min_y = theSpotG->cur_y;
-	if (theSpotG->cur_z > theSpotG->max_z)
-		theSpotG->max_z = theSpotG->cur_z;
-	if (theSpotG->cur_z < theSpotG->min_z)
-		theSpotG->min_z = theSpotG->cur_z;
+	if (theSpot->cur_x > theSpot->max_x)
+		theSpot->max_x = theSpot->cur_x;
+	if (theSpot->cur_x < theSpot->min_x)
+		theSpot->min_x = theSpot->cur_x;
+	if (theSpot->cur_y > theSpot->max_y)
+		theSpot->max_y = theSpot->cur_y;
+	if (theSpot->cur_y < theSpot->min_y)
+		theSpot->min_y = theSpot->cur_y;
+	if (theSpot->cur_z > theSpot->max_z)
+		theSpot->max_z = theSpot->cur_z;
+	if (theSpot->cur_z < theSpot->min_z)
+		theSpot->min_z = theSpot->cur_z;
 
 /*
 * Increment the volume counter.
 */
-	theSpotG->volume++;
+	theSpot->volume++;
 
 /*
 * update the coordinate accumulators and the coordinate sum of squares accumulators.
 */
-	theSpotG->sum_x += theSpotG->cur_x;
-	theSpotG->sum_y += theSpotG->cur_y;
-	theSpotG->sum_z += theSpotG->cur_z;
-	theSpotG->sum_x2 += ((float)theSpotG->cur_x * (float)theSpotG->cur_x);
-	theSpotG->sum_y2 += ((float)theSpotG->cur_y * (float)theSpotG->cur_y);
-	theSpotG->sum_z2 += ((float)theSpotG->cur_z * (float)theSpotG->cur_z);
-
-/*
-* Now we update all the wavelegth specific information.
-* First, we set index to point at the same pixel in the first wave.
-*/
-	index  -= (theSpotG->itsWave * theStackG->wave_increment);
+	theSpot->sum_x += theSpot->cur_x;
+	theSpot->sum_y += theSpot->cur_y;
+	theSpot->sum_z += theSpot->cur_z;
+	theSpot->sum_x2 += ((float)theSpot->cur_x * (float)theSpot->cur_x);
+	theSpot->sum_y2 += ((float)theSpot->cur_y * (float)theSpot->cur_y);
+	theSpot->sum_z2 += ((float)theSpot->cur_z * (float)theSpot->cur_z);
 
 /*
 * Then we do a bunch of things once for each wave.
 */
-	for (i=0;i<theStackG->nwaves;i++)
+	GetPixValueIdx = theSpot->itsStack->PixValueIdx;
+	for (theC=0;theC<theSpot->nwaves;theC++)
 	{
-		floatIndex = (float)*index;
+		pixVal = GetPixValueIdx (theSpot->itsStack->stacks[theC],pixIndx);
+		theSpotCstats = &(theSpot->stats[theC]);
 	/*
 	* Update the wave-specific accumulators, minima, maxima, etc.
 	*/
-		if (*index < theSpotG->min_i[i])
-			theSpotG->min_i[i] = *index;
-		if (*index > theSpotG->max_i[i])
-			theSpotG->max_i[i] = *index;
-		theSpotG->sum_i[i] += *index;
-		theSpotG->sum_i2[i] += (floatIndex * floatIndex);
-		theSpotG->sum_xi[i] += floatIndex * theSpotG->cur_x;
-		theSpotG->sum_yi[i] += floatIndex * theSpotG->cur_y;
-		theSpotG->sum_zi[i] += floatIndex * theSpotG->cur_z;
-		theSpotG->geomean_i[i] += (float) log ( (double)*index );
-	
-	/*
-	* To get to the same pixel in the next wave, all we need to do is add
-	* the size of a wave to the index.
-	*/
-		index += theStackG->wave_increment;
+		if (pixVal < theSpotCstats->min_i)
+			theSpotCstats->min_i = pixVal;
+		if (pixVal > theSpotCstats->max_i)
+			theSpotCstats->max_i = pixVal;
+		theSpotCstats->sum_i += pixVal;
+		theSpotCstats->sum_i2 += (pixVal * pixVal);
+		theSpotCstats->sum_xi += pixVal * theSpot->cur_x;
+		theSpotCstats->sum_yi += pixVal * theSpot->cur_y;
+		theSpotCstats->sum_zi += pixVal * theSpot->cur_z;
+		theSpotCstats->geomean_i += log ( pixVal );
 	}
 
 	
@@ -1174,94 +1278,93 @@ float floatIndex;
 /*
 * This function updates the index based on a coordinate direction.
 */
-PixPtr Update_Index (PixPtr index, char direction)
+MaskPtr Update_Index (SpotPtr theSpot, MaskPtr maskIndex, char direction)
 {
 /*
-extern SpotPtr theSpotG;
-extern DVstack *theStackG;
+extern SpotPtr theSpot;
+extern PixStack *theStack;
 */
 
 /*
 * Initially, we set a pointer to NULL.	If we are in bounds, then it will
 * be set to a valid pointer.  Otherwise, we'll return with NULL.
 */
-PixPtr theIndex = NULL;
+MaskPtr theIndex = NULL;
 char doBorder=0;
-short X,Y,Z;
+coordinate X,Y,Z;
 
-	X = theSpotG->cur_x;
-	Y = theSpotG->cur_y;
-	Z = theSpotG->cur_z;
+	X = theSpot->cur_x;
+	Y = theSpot->cur_y;
+	Z = theSpot->cur_z;
 /*
 * Return NULL if we are on the border.
 */
 	switch (direction)
 	{
 	case X_PLUS:
-		if (X < theSpotG->clip_Xmax)
-			theIndex = index + 1;
-		else if (X == theSpotG->clip_Xmax)
+		if (X < theSpot->clip_Xmax)
+			theIndex = maskIndex + 1;
+		else if (X == theSpot->clip_Xmax)
 			doBorder = 1;
 	break;
 	case X_MINUS:
-		if (X > theSpotG->clip_Xmin)
-			theIndex = index - 1;
-		else if (X == theSpotG->clip_Xmin)
+		if (X > theSpot->clip_Xmin)
+			theIndex = maskIndex - 1;
+		else if (X == theSpot->clip_Xmin)
 			doBorder = 1;
 	break;
 
 	case Y_PLUS:
-		if (Y < theSpotG->clip_Ymax)
-			theIndex = index + theStackG->y_increment;
-		else if (Y == theSpotG->clip_Ymax)
+		if (Y < theSpot->clip_Ymax)
+			theIndex = maskIndex + theSpot->itsStack->y_increment;
+		else if (Y == theSpot->clip_Ymax)
 			doBorder = 1;
 	break;
 	case Y_MINUS:
-		if (Y > theSpotG->clip_Ymin)
-			theIndex = index - theStackG->y_increment;
-		else if (Y == theSpotG->clip_Ymin)
+		if (Y > theSpot->clip_Ymin)
+			theIndex = maskIndex - theSpot->itsStack->y_increment;
+		else if (Y == theSpot->clip_Ymin)
 			doBorder = 1;
 	break;
 
 	case Z_PLUS:
-		if (Z < theSpotG->clip_Zmax)
-			theIndex = index + theStackG->z_increment;
-		else if (Z == theSpotG->clip_Zmax)
+		if (Z < theSpot->clip_Zmax)
+			theIndex = maskIndex + theSpot->itsStack->z_increment;
+		else if (Z == theSpot->clip_Zmax)
 			doBorder = 1;
 	break;
 	case Z_MINUS:
-		if (Z > theSpotG->clip_Zmin)
-			theIndex = index - theStackG->z_increment;
-		else if (Z == theSpotG->clip_Zmin)
+		if (Z > theSpot->clip_Zmin)
+			theIndex = maskIndex - theSpot->itsStack->z_increment;
+		else if (Z == theSpot->clip_Zmin)
 			doBorder = 1;
 	break;
 	}  /* switch (direction */
 
-	if (theIndex && *theIndex < 0)
-		return (NULL);
-
-	if (theIndex && *theIndex <= thresholdG)
-		doBorder = 1;
-
-	if (doBorder)
-		Set_Border_Pixel (X,Y,Z);
+	/* if this is NULL, then we went out of bounds. */
+	if (theIndex != NULL) {
+		/* If we landed on a mask pixel, then we are currently on a border pixel */
+		if (*theIndex == MASK_PIXEL) doBorder = 1;
+		/* If we didn't land on a MASK_PIXEL or SPOT_PIXEL, then we already visited here */
+		else if (*theIndex != SPOT_PIXEL) theIndex = NULL;
+	}
+	
+	if (theIndex != NULL && doBorder)
+		Set_Border_Pixel (theSpot, X,Y,Z);
 
 	return (theIndex);
 }
 
 
-PixPtr Get_Index_From_Coords (SpotPtr theSpot, short X,short Y,short Z)
+MaskPtr Coords_To_Index (PixStack* theStack, coordinate X,coordinate Y,coordinate Z)
 {
-PixPtr index;
-DVstack *itsStack;
+MaskPtr maskIndex;
 
-	itsStack = theSpot->itsStack;
-	index = itsStack->stack;
-	index += (theSpot->itsWave * itsStack->wave_increment);
-	index += (Z * (itsStack->z_increment));
-	index += (Y * (itsStack->y_increment));
-	index += X;
-	return (index);
+	maskIndex = theStack->mask;
+	maskIndex += (Z * (theStack->z_increment));
+	maskIndex += (Y * (theStack->y_increment));
+	maskIndex += X;
+	return (maskIndex);
 
 }
 
@@ -1269,52 +1372,24 @@ DVstack *itsStack;
 
 
 
-void Set_Border_Pixel (short X, short Y, short Z)
+void Set_Border_Pixel (SpotPtr theSpot, coordinate X, coordinate Y, coordinate Z)
 {
 CoordList newPixel;
-
 /*
-* Return immediately if we're not doing the border.
-*/
-	if (!doBorderG) return;
-
-/*
-* allocate memory for the border pixel.  If there is not enough memory, its not
-* a fatal error.  Just report that there is no memory for border pixels, free up memory
-* already used for border pixels, set the doBorderG flag so we don't do any more border
-* pixels, and get over it.
-* It would prety much defeat the purpose of this if we were
-* to report borders for only some of the spots, so we do not report borders for any of them.
-* If we were really good, we would free up memory for the border pixels in the other spots,
-* but I was too lazy to do that.
+* Used for calculating maximum sutface area by contouring pixels
+MaskPtr maskPixel;
+int sa = 0;
+size_t y_incr,z_incr;
 */
 
 /*
-	if ( (theSpotG->borderPixels != NULL) &&
-	    (X == theSpotG->borderPixels->X) &&
-	    (Y == theSpotG->borderPixels->Y) &&
-	    (Z == theSpotG->borderPixels->Z) )
-		return;
+* allocate memory for the border pixel.
 */
-	newPixel = (CoordList) malloc (sizeof(CoordListStruct));
+	newPixel = (CoordList) calloc (1,sizeof(CoordListStruct));
 	if (newPixel == NULL)
 		{
-		SpotPtr theSpot;
-
 		fprintf (stderr,"Could not allocate memory to store spot border pixels.\n");
 		fprintf (stderr,"No border pixels will be reported.\n");
-		doBorderG = 0;
-		theSpot = theSpotG;
-		do
-			{
-			while (theSpotG->borderPixels != NULL)
-				{
-				newPixel = theSpotG->borderPixels;
-				theSpotG->borderPixels = theSpotG->borderPixels->next;
-				free (newPixel);
-				}
-			theSpot = theSpot->next;
-			} while (theSpot != theSpotG);
 		return;
 		}
 	
@@ -1322,10 +1397,46 @@ CoordList newPixel;
 	newPixel->Y = Y;
 	newPixel->Z = Z;
 	newPixel->flag = 0;
-	newPixel->next = theSpotG->borderPixels;
-	theSpotG->borderPixels = newPixel;
-	theSpotG->borderCount++;
+	newPixel->next = theSpot->borderPixels;
+	theSpot->borderPixels = newPixel;
+	theSpot->borderCount++;
 
+/*
+* calculate the ammount of surface area this border pixel has exposed
+* The exposed surface area is incremented for each neighboring pixel == MASK_PIXEL
+* This models surface area as a membrane stretched very tightly around the spot, tracing
+* the contour of every pixel.  This is probably not correct.  A 1-pixel spot would
+* have a surface area of 6.  If modeled as a sphere, it would have a SA of pi (~3).
+* a 3x3x3 pixel spot would have an SA of 54 when modeled as a cube, and an SA of 28.3
+* if modeled as a sphere.  Modeling SA by contouring pixels leads to an artificially high SA
+* because spots tend to have rough edges due to noise.
+* As a simple approximation, a 3x3x3 pixel spot has 26 permiter pixels, which is close to the sphere model.
+* This approximation improves as the spots get larger.
+* Since in these types of images (fluorescence microscopy) we are generally interested in SA/volume ratio as an
+* indicator of shape rather than artificially high SAs due to roughness of the contour (where the roughness is caused by
+* noise rather than biological effects), we're reporting the number of perimiter pixels as an approximation of a "smoothed" SA.
+	maskPixel = Coords_To_Index (theSpot->itsStack, X, Y, Z);
+	y_incr = theSpot->itsStack->y_increment;
+	z_incr = theSpot->itsStack->z_increment;
+
+
+	if (X == theSpot->clip_Xmax) sa++;
+	else if (*(maskPixel+1) == MASK_PIXEL) sa++;
+	if (X == theSpot->clip_Xmin) sa++;
+	else if (*(maskPixel-1) == MASK_PIXEL) sa++;
+
+	if (Y == theSpot->clip_Ymax) sa++;
+	else if (*(maskPixel+y_incr) == MASK_PIXEL) sa++;
+	if (Y == theSpot->clip_Ymin) sa++;
+	else if (*(maskPixel-y_incr) == MASK_PIXEL) sa++;
+
+	if (Z == theSpot->clip_Zmax) sa++;
+	else if (*(maskPixel+z_incr) == MASK_PIXEL) sa++;
+	if (Z == theSpot->clip_Zmin) sa++;
+	else if (*(maskPixel-z_incr) == MASK_PIXEL) sa++;
+
+
+*/
 
 	return;
 }
@@ -1347,59 +1458,74 @@ CoordList newPixel;
 * and calls Zero_Spot to 
 * initialize all the variables of the spot structure and make it ready to use.
 */
-SpotPtr New_Spot (SpotPtr spotList,DVstack *inStack, int itsWave, short itsTime)
+SpotPtr New_Spot (PixStack *theStack, coordinate itsWave, coordinate itsTime)
 {
 SpotPtr newSpot=NULL;
 static unsigned long ID=0;
 
-/*
-* Allocate memory with error-checking.
-*/
-	newSpot = (SpotPtr) malloc (sizeof(struct spotStructure));
-	if (newSpot == NULL)
-		return (NULL);
+SpotPtr spotList,currSpotList;
 
 /*
-* There are two possible conditions.  Either this is the first spot in the list, or
-* this is not the first spot in the list.
-* If the list pointer that got passed is NULL, then this is the first spot in the list, 
+* Allocate memory for the spot and stats array.
+*/
+	newSpot = (SpotPtr) calloc (1,sizeof(struct spotStructure));
+	if (newSpot == NULL)
+		return (NULL);
+	if ( (newSpot->stats = calloc (theStack->nwaves, sizeof(SpotStats))) == NULL ) {
+		free (newSpot);
+		return (NULL);
+	}
+
+/*
+* If theStack->spots is NULL, then this is the first spot in the list, 
 * so the new spot's previous and next pointers point to itself.
-* If spotList is not NULL, then we have to add this spot to the list.  It will be added
+* If theStack->spots is not NULL, then we have to add this spot to the list.  It will be added
 * just before the head of the list - or, since this is a circular list, at the end.
 * The spot list grows as an expanding circle, which can be traveled in either direction.
 * Kind of exotic, no?
 */
-	if (spotList != NULL)
+	spotList = theStack->spots;
+	currSpotList = theStack->currSpotList;
+	if (currSpotList != NULL && itsTime == currSpotList->itsTimePoint)
 		{
 	/*
-	* newSpot's previous points to what the spotList's previous used to point to.
-	* newSpot's next points to the spotList.
-	* the spotList's previous points to the newSpot,
-	* The spot that used to be before spotList now has its next pointing to newSpot.
+	* newSpot's previous points to what the currSpotList's previous used to point to.
+	* newSpot's next points to the currSpotList.
+	* the currSpotList's previous points to the newSpot,
+	* The spot that used to be before currSpotList now has its next pointing to newSpot.
 	* Got that?
 	*/
 		newSpot->ID = ID++;
-		newSpot->previous = spotList->previous;
-		newSpot->next = spotList;
-		spotList->previous->next = newSpot;
-		spotList->previous = newSpot;
-		newSpot->nextTimePointList = spotList->nextTimePointList;
-		}
-	/* brand new spot list */
-	else
-		{
+		newSpot->previous = currSpotList->previous;
+		newSpot->next = currSpotList;
+		currSpotList->previous->next = newSpot;
+		currSpotList->previous = newSpot;
+		newSpot->nextTimePointList = NULL;
+	}
+	/* New spot list */
+	else {
 		newSpot->ID = ID++;
 		newSpot->previous = newSpot;
 		newSpot->next = newSpot;
 		newSpot->nextTimePointList = NULL;
+		if (currSpotList == NULL) {
+		/* this is the first spot in the first timepoint */
+			spotList = theStack->spots = newSpot;
+		} else {
+		/* this is a new timepoint list */
+			currSpotList->nextTimePointList = newSpot;
 		}
-	newSpot->nextTimePoint = NULL;
-	newSpot->itsStack = inStack;
+		currSpotList = theStack->currSpotList = newSpot;
+	}
+	newSpot->itsStack = theStack;
+	newSpot->itsHead = currSpotList;
+
 /*	
 * Zero-out the accumulators, etc.
 */
 	newSpot->borderPixels = NULL;
-	Zero_Spot (newSpot, inStack, itsWave, itsTime);
+
+	Zero_Spot (newSpot, theStack, itsWave, itsTime);
 	
 	return (newSpot);
 }
@@ -1418,76 +1544,75 @@ static unsigned long ID=0;
 /*#       Zero_Spot       #*/
 /*#                       #*/
 /*#########################*/
-void Zero_Spot (SpotPtr zeroSpot,DVstack *itsStack, int itsWave, short itsTime)
-
+void Zero_Spot (SpotPtr theSpot,PixStack *theStack, coordinate itsWave, coordinate itsTime)
 {
-int i;
+coordinate theC;
 CoordList borderPixel;
 
 
-	zeroSpot->itsStack = itsStack;
-	zeroSpot->nwaves = itsStack->nwaves;
-	zeroSpot->itsWave = itsWave;
-	zeroSpot->itsTimePoint = itsTime;
-	zeroSpot->clip_Xmin = itsStack->min_x;
-	zeroSpot->clip_Xmax = itsStack->max_x;
-	zeroSpot->clip_Ymin = itsStack->min_y;
-	zeroSpot->clip_Ymax = itsStack->max_y;
-	zeroSpot->clip_Zmin = itsStack->min_z;
-	zeroSpot->clip_Zmax = itsStack->max_z;
+	theSpot->itsStack = theStack;
+	theSpot->nwaves = theStack->nwaves;
+	theSpot->threshold = theStack->threshold;
+	theSpot->itsWave = itsWave;
+	theSpot->itsTimePoint = itsTime;
+	theSpot->clip_Xmin = theStack->min_x;
+	theSpot->clip_Xmax = theStack->max_x;
+	theSpot->clip_Ymin = theStack->min_y;
+	theSpot->clip_Ymax = theStack->max_y;
+	theSpot->clip_Zmin = theStack->min_z;
+	theSpot->clip_Zmax = theStack->max_z;
 
 /*
 * Note that these are set backwards !
 */
-	zeroSpot->min_x = itsStack->max_x;
-	zeroSpot->max_x = itsStack->min_x;
-	zeroSpot->min_y = itsStack->max_y;
-	zeroSpot->max_y = itsStack->min_y;
-	zeroSpot->min_z = itsStack->max_z;
-	zeroSpot->max_z = itsStack->min_z;
+	theSpot->min_x = theStack->max_x;
+	theSpot->max_x = theStack->min_x;
+	theSpot->min_y = theStack->max_y;
+	theSpot->max_y = theStack->min_y;
+	theSpot->min_z = theStack->max_z;
+	theSpot->max_z = theStack->min_z;
 
-	zeroSpot->mean_x = zeroSpot->mean_y = zeroSpot->mean_z = 0;
-	zeroSpot->sigma_x = zeroSpot->sigma_y = zeroSpot->sigma_z = 0;
+	theSpot->mean_x = theSpot->mean_y = theSpot->mean_z = 0;
+	theSpot->sigma_x = theSpot->sigma_y = theSpot->sigma_z = 0;
 
 /*
 * A spot cannot have a volume of zero if its valid, so this is a convenient variable to check
 * that we have a valid spot (not a place-holder).
 */
-	zeroSpot->volume = 0;
+	theSpot->volume = 0;
 
-	zeroSpot->sum_x = zeroSpot->sum_y = zeroSpot->sum_z = 0;
-	zeroSpot->sum_x2 = zeroSpot->sum_y2 = zeroSpot->sum_z2 = 0;
-	zeroSpot->cur_x = zeroSpot->cur_y = zeroSpot->cur_z = 0;
+	theSpot->sum_x = theSpot->sum_y = theSpot->sum_z = 0;
+	theSpot->sum_x2 = theSpot->sum_y2 = theSpot->sum_z2 = 0;
+	theSpot->cur_x = theSpot->cur_y = theSpot->cur_z = 0;
 
-	for (i=0;i<itsStack->nwaves;i++)
+	for (theC=0;theC<theStack->nwaves;theC++)
 		{
-		zeroSpot->centroid_x[i] = 0;
-		zeroSpot->centroid_y[i] = 0;
-		zeroSpot->centroid_z[i] = 0;
-		zeroSpot->sum_i[i] = 0;
-		zeroSpot->sum_i2[i] = 0;
-		zeroSpot->min_i[i] = BIGFLOAT;
-		zeroSpot->max_i[i] = 0;
-		zeroSpot->mean_i[i] = 0;
-		zeroSpot->geomean_i[i] = 0;
-		zeroSpot->sigma_i[i] = 0;
-		zeroSpot->sum_xi[i] = 0;
-		zeroSpot->sum_yi[i] = 0;
-		zeroSpot->sum_zi[i] = 0;
-		zeroSpot->geosigma_i[i] = 0;
-
+		theSpot->stats[theC].centroid_x = 0;
+		theSpot->stats[theC].centroid_y = 0;
+		theSpot->stats[theC].centroid_z = 0;
+		theSpot->stats[theC].sum_i = 0;
+		theSpot->stats[theC].sum_i2 = 0;
+		theSpot->stats[theC].min_i = BIGFLOAT;
+		theSpot->stats[theC].max_i = 0;
+		theSpot->stats[theC].mean_i = 0;
+		theSpot->stats[theC].geomean_i = 0;
+		theSpot->stats[theC].sigma_i = 0;
+		theSpot->stats[theC].sum_xi = 0;
+		theSpot->stats[theC].sum_yi = 0;
+		theSpot->stats[theC].sum_zi = 0;
+		theSpot->stats[theC].geosigma_i = 0;
 		}
 	
-	while (zeroSpot->borderPixels != NULL)
+	while (theSpot->borderPixels != NULL)
 	{
-		borderPixel = zeroSpot->borderPixels;
-		zeroSpot->borderPixels = zeroSpot->borderPixels->next;
+		borderPixel = theSpot->borderPixels;
+		theSpot->borderPixels = theSpot->borderPixels->next;
 		free (borderPixel);
 	}
-	zeroSpot->borderCount = 0;
-	zeroSpot->seedX=0;
-	zeroSpot->seedY=0;
-	zeroSpot->seedZ=0;
+	theSpot->borderCount = 0;
+	theSpot->seedX=0;
+	theSpot->seedY=0;
+	theSpot->seedZ=0;
 	
 	
 }
@@ -1503,43 +1628,43 @@ CoordList borderPixel;
 
 /*#########################*/
 /*#                       #*/
-/*#   Update_Spot_Stats   #*/
+/*#   Finish_Spot_Stats   #*/
 /*#                       #*/
 /*#########################*/
 /*
 * This routine gets called after the accumulators are filled - i.e. after the whole
 * spot has been "eaten" in order to calculate some final statistics.
 */
-void Update_Spot_Stats (SpotPtr updateSpot)
+void Finish_Spot_Stats (SpotPtr theSpot)
 {
-int i;
+coordinate theC;
 float spotVol;
 CoordList borderPixel,previousPixel;
-PixPtr pixPtr;
+MaskPtr maskPtr;
 float geomean;
+SpotStats *theSpotStats;
 
-	spotVol = (float) updateSpot->volume;
-	updateSpot->mean_x = updateSpot->sum_x / spotVol;
-	updateSpot->mean_y = updateSpot->sum_y / spotVol;
-	updateSpot->mean_z = updateSpot->sum_z / spotVol;
-	updateSpot->sigma_x = sqrt ((updateSpot->sum_x2-(updateSpot->sum_x*updateSpot->sum_x)/spotVol)/(spotVol-1.0));
-	updateSpot->sigma_y = sqrt ((updateSpot->sum_y2-(updateSpot->sum_y*updateSpot->sum_y)/spotVol)/(spotVol-1.0));
-	updateSpot->sigma_z = sqrt ((updateSpot->sum_z2-(updateSpot->sum_z*updateSpot->sum_z)/spotVol)/(spotVol-1.0));
-	updateSpot->max_stack = max_stack_size;
-	max_stack_size = 0;
+	spotVol = (float) theSpot->volume;
+	theSpot->mean_x = theSpot->sum_x / spotVol;
+	theSpot->mean_y = theSpot->sum_y / spotVol;
+	theSpot->mean_z = theSpot->sum_z / spotVol;
+	theSpot->sigma_x = sqrt ((theSpot->sum_x2-(theSpot->sum_x*theSpot->sum_x)/spotVol)/(spotVol-1.0));
+	theSpot->sigma_y = sqrt ((theSpot->sum_y2-(theSpot->sum_y*theSpot->sum_y)/spotVol)/(spotVol-1.0));
+	theSpot->sigma_z = sqrt ((theSpot->sum_z2-(theSpot->sum_z*theSpot->sum_z)/spotVol)/(spotVol-1.0));
 
-	for (i=0;i<updateSpot->nwaves;i++)
+	for (theC=0;theC<theSpot->nwaves;theC++)
 	{
-		updateSpot->centroid_x[i] = updateSpot->sum_xi[i] / updateSpot->sum_i[i];
-		updateSpot->centroid_y[i] = updateSpot->sum_yi[i] / updateSpot->sum_i[i];
-		updateSpot->centroid_z[i] = updateSpot->sum_zi[i] / updateSpot->sum_i[i];
-		updateSpot->sigma_i[i] = sqrt ((updateSpot->sum_i2[i]-(updateSpot->sum_i[i]*updateSpot->sum_i[i])/spotVol)/(spotVol-1.0)); 
-		updateSpot->mean_i[i] = updateSpot->sum_i[i] / spotVol;
-		geomean= exp (updateSpot->geomean_i[i] / spotVol );
-		/* updateSpot->geomean_i[i] = exp (updateSpot->geomean_i[i] / spotVol ); */
+		theSpotStats = &(theSpot->stats[theC]);
+		theSpotStats->centroid_x = theSpotStats->sum_xi / theSpotStats->sum_i;
+		theSpotStats->centroid_y = theSpotStats->sum_yi / theSpotStats->sum_i;
+		theSpotStats->centroid_z = theSpotStats->sum_zi / theSpotStats->sum_i;
+		theSpotStats->sigma_i = sqrt ((theSpotStats->sum_i2-(theSpotStats->sum_i*theSpotStats->sum_i)/spotVol)/(spotVol-1.0)); 
+		theSpotStats->mean_i = theSpotStats->sum_i / spotVol;
+		geomean= exp (theSpotStats->geomean_i / spotVol );
+		/* theSpotStats->geomean_i = exp (theSpotStats->geomean_i / spotVol ); */
 		
-		updateSpot->geomean_i[i] = geomean;
-		updateSpot->geosigma_i[i] =sqrt( (updateSpot->sum_i2[i]-2* geomean *updateSpot->sum_i[i]+geomean * geomean)/(spotVol-1.0));
+		theSpotStats->geomean_i = geomean;
+		theSpotStats->geosigma_i =sqrt( (theSpotStats->sum_i2-2* geomean *theSpotStats->sum_i+geomean * geomean)/(spotVol-1.0));
 	
 
 	}
@@ -1547,28 +1672,26 @@ float geomean;
 /*
 * Set border pixels to the border pixel value
 */
-	pixPtr = updateSpot->itsStack->stack;
-	pixPtr += (updateSpot->itsWave * updateSpot->itsStack->wave_increment);
-	borderPixel = updateSpot->borderPixels;
+	maskPtr = theSpot->itsStack->mask;
+	borderPixel = theSpot->borderPixels;
 	previousPixel = borderPixel;
 	while (borderPixel)
 	{
-		pixPtr = Get_Index_From_Coords (updateSpot,borderPixel->X,borderPixel->Y,borderPixel->Z);
-		if (*pixPtr == SPOT_PIXEL)
-			*pixPtr = BORDER_PIXEL;
-		else
-			{
+		maskPtr = Coords_To_Index (theSpot->itsStack,borderPixel->X,borderPixel->Y,borderPixel->Z);
+		if (*maskPtr == PROCESSED_SPOT_PIXEL)
+			*maskPtr = BORDER_PIXEL;
+		else {
 /*
 #ifdef DEBUG
-fprintf (stderr,"Deleting Spot #%ld (%d,%d,%d) = %d\n",updateSpot->ID,borderPixel->X,borderPixel->Y,borderPixel->Z,*pixPtr);
+fprintf (stderr,"Deleting Spot #%ld (%d,%d,%d) = %d\n",theSpot->ID,borderPixel->X,borderPixel->Y,borderPixel->Z,*maskPtr);
 fflush (stderr);
 #endif
 */
 			previousPixel->next = borderPixel->next;
 			free (borderPixel);
 			borderPixel = previousPixel;
-			updateSpot->borderCount--;
-			}
+			theSpot->borderCount--;
+		}
 		previousPixel = borderPixel;
 		if (borderPixel)
 			borderPixel = borderPixel->next;
@@ -1576,29 +1699,30 @@ fflush (stderr);
 /*
 * calculate stuff from the border pixels.
 */
-	if (updateSpot->itsStack->max_z)
-		Get_Surface_Area (updateSpot);
+	if (theSpot->clip_Zmax - theSpot->clip_Zmin)
+		Get_Surface_Area (theSpot);
 	else
-		Get_Perimiter (updateSpot);
+		Get_Perimiter (theSpot);
 }
 
 
 
 /*	Compute the chain code of the object beginning at pixel (i,j).
-	Return the code as NN integers in the array C.			*/
+	Return the code as NN integers in the array c.
+*/
 void chain8 (SpotPtr theSpot, char *c, short i, short j, int *nn)
 {
 	int val,n,m,q,r, di[9],dj[9],ii, d, dii;
 	int lastdir, jj;
 	int xMin,xMax,yMin,yMax,nMax;
 	int x,y;
-	PixPtr data;
+	MaskPtr data;
 
 	xMin = theSpot->itsStack->min_x;
 	xMax = theSpot->itsStack->max_x;
 	yMin = theSpot->itsStack->min_y;
 	yMax = theSpot->itsStack->max_y;
-	data = theSpot->itsStack->stack;
+	data = theSpot->itsStack->mask;
 
 /*	Table given index offset for each of the 8 directions.		*/
 	di[0] = 0;	di[1] = -1;	di[2] = -1;	di[3] = -1;
@@ -1608,7 +1732,7 @@ void chain8 (SpotPtr theSpot, char *c, short i, short j, int *nn)
 
 	nMax = *nn;
 	for (ii=0; ii<nMax; ii++) c[ii] = -1;	/* Clear the code table */
-	data = Get_Index_From_Coords (theSpot,i,j,0);
+	data = Coords_To_Index (theSpot->itsStack,i,j,0);
 	val = *data;	n = 0;	/* Initialize for starting pixel */
 	q = i;	r = j;  lastdir = 4;
 
@@ -1619,7 +1743,7 @@ void chain8 (SpotPtr theSpot, char *c, short i, short j, int *nn)
 			jj = ii%8;
 			x = di[jj]+q;
 			y = dj[jj]+r;
-			data = Get_Index_From_Coords (theSpot,x,y,0);
+			data = Coords_To_Index (theSpot->itsStack,x,y,0);
 			if ( (x <= xMax) && (x >= xMin) && (y <= yMax) && (y >= yMin) )
 				if ( *data == val) {
 				   dii = jj;	m = 1;
@@ -1637,7 +1761,7 @@ void chain8 (SpotPtr theSpot, char *c, short i, short j, int *nn)
 
 	if ( (q!=i) || (r!=j) )
 	{
-		fprintf (stderr,"WARNING: Failed to achieve closure in Spot %ld!\n",theSpot->ID);
+		fprintf (stderr,"WARNING: Failed to achieve closure in Spot %lu!\n",theSpot->ID);
 		fflush (stderr);
 	}
 	*nn = n;
@@ -1749,12 +1873,13 @@ void Get_Surface_Area (SpotPtr theSpot)
 double surfaceArea = 0;
 /*
 * FIXME:  Total hack of computing surface area by using the number of perimiter pixels.  Makes
-* no account of anisotropic space.  The formula is correct, though. Hmm, I wonder since the volume is in the
-* same anisotropic space wether things will conveniently take care of themselves....probably not.  Even if
-* it does, it will work for the form factor, but not for the actual surface area.
+* no account of anisotropic space, but otherwise a decent approximation if all the dimensions are 1.
+* Hmm, I wonder since the volume is in the
+* same anisotropic space wether things will conveniently take care of themselves....probably not.
+* At any rate, it will work for the form factor if not for the actual surface area.
 */
-	theSpot->surfaceArea = (double) theSpot->borderCount;
-	theSpot->formFactor = ( 36.0*PI*pow ((double)theSpot->volume,2) ) / pow (surfaceArea,3);
+	surfaceArea = theSpot->surfaceArea = theSpot->borderCount;
+	theSpot->formFactor = ( 36.0*PI*pow ((double)theSpot->volume,2.0) ) / pow (surfaceArea,3.0);
 }
 
 
@@ -1811,9 +1936,11 @@ int i;
 */
 void Output_Spot (SpotPtr outSpot, int argc, char**argv,int outArgs, char saywhat)
 {
-int theArg,i,theWave;
-DVstack *itsStack;
+int theArg;
+coordinate theWave=0;
+PixStack *theStack;
 char doDB = 0;
+char *endPtr;
 static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 
 
@@ -1835,7 +1962,7 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 		doDB = 0;
   
 
-	itsStack = outSpot->itsStack;
+	theStack = outSpot->itsStack;
 /*
 * We are going to loop through the arguments. and as we encounter a valid output argument,
 * write stuff to stdout.
@@ -1849,22 +1976,22 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			if (saywhat == HEADING)
 				fprintf (stdout,"  ID   ");
 			else
-				fprintf (stdout,"%7ld",outSpot->ID);
+				fprintf (stdout,"%7lu",outSpot->ID);
 
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
 		} /* -ID */
 	
 
-/* -dID :	 dataset ID  - filename*/
-		if (!strcmp ( argv[theArg],"-tID"))
+/* -dID :	 Pixels ID from the command line */
+		if (!strcmp ( argv[theArg],"-dID"))
 		{
 			if (strlen (dIDcontrolString) < 2)
-				sprintf (dIDcontrolString,"%%%ds",strlen(argv[1]));
+				sprintf (dIDcontrolString,"%%%ds",(int)strlen(argv[2]));
 			if (saywhat == HEADING)
-				fprintf (stdout,dIDcontrolString,"filename");
+				fprintf (stdout,dIDcontrolString,"PixelsID");
 			else
-				fprintf (stdout,dIDcontrolString,argv[1]);
+				fprintf (stdout,dIDcontrolString,argv[2]);
 
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
@@ -1872,13 +1999,13 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 	
 
 /* -aID :	 Output the arguments for this run (argument identifier) */
-		if (!strcmp ( argv[theArg],"-tID"))
+		if (!strcmp ( argv[theArg],"-aID"))
 		{
 
 			if (strlen (inArgs) < 2 )
 				{
 				Compose_inArgs (inArgs,argc,argv);
-				sprintf (aIDcontrolString,"%%%ds",strlen(inArgs));
+				sprintf (aIDcontrolString,"%%%ds",(int)strlen(inArgs));
 				}
 			if (saywhat == HEADING)
 				fprintf (stdout,aIDcontrolString,"args.");
@@ -1895,7 +2022,7 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			if (saywhat == HEADING)
 				fprintf (stdout,"volume ");
 			else
-				fprintf (stdout,"%7ld",outSpot->volume);
+				fprintf (stdout,"%llu",(unsigned long long)outSpot->volume);
 
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
@@ -1908,7 +2035,7 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			if (saywhat == HEADING)
 				fprintf (stdout,"Form Factor");
 			else
-				fprintf (stdout,"%11.9f",outSpot->formFactor);
+				fprintf (stdout,"%f",outSpot->formFactor);
 
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
@@ -1921,7 +2048,7 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			if (saywhat == HEADING)
 				fprintf (stdout,"Surf. Area");
 			else
-				 fprintf (stdout,"%10.2f",outSpot->surfaceArea);
+				 fprintf (stdout,"%f",outSpot->surfaceArea);
 				
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
@@ -1934,24 +2061,11 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			if (saywhat == HEADING)
 				fprintf (stdout,"perimiter");
 			else
-				fprintf (stdout,"%9.2f",outSpot->perimiter);
+				fprintf (stdout,"%f",outSpot->perimiter);
 
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
 		} /* -v */
-	
-
-/* -stack :	 Ouput maximum stack size */
-		if (!strcmp ( argv[theArg],"-stack"))
-		{
-			if (saywhat == HEADING)
-				fprintf (stdout,"stack	");
-			else
-				fprintf (stdout,"%7ld",outSpot->max_stack);
-
-		/* If there are more arguments to come, spit out a tab character. */
-			fprintf (stdout,"\t");
-		} /* -stack */
 	
 
 /* -mc :  Ouput mean coordinates (center of volume)	 */
@@ -1960,77 +2074,66 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			if (saywhat == HEADING)
 				fprintf (stdout,"mean X\tmean Y\tmean Z");
 			else
-				fprintf (stdout,"%6.1f\t%6.1f\t%6.1f",
+				fprintf (stdout,"%f\t%f\t%f",
 				outSpot->mean_x,outSpot->mean_y,outSpot->mean_z);
 			fprintf (stdout,"\t");
 		} /* -mc */
 	
 	
 /* -c <n> :	 Ouput centroids (center of mass - different at each wavelegth) */
-		else if (!strcmp ( argv[theArg],"-c"))
-		{
-			theWave = atoi(argv[theArg+1]);
-			if (theWave != 0)
-			{
+		else if (!strcmp ( argv[theArg],"-c")) {
+			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
+			else endPtr = argv[theArg+1];
+			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
+				theArg++;
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
-						fprintf (stdout,"c[%3d]X\tc[%3d]Y\tc[%3d]Z",
-							itsStack->wave[theWave], 
-							itsStack->wave[theWave], 
-							itsStack->wave[theWave]);
+						fprintf (stdout,"c[%3lu]X\tc[%3lu]Y\tc[%3lu]Z",
+							theWave, theWave, theWave);
 					else
-						fprintf (stdout,"%7.1f\t%7.1f\t%7.1f",
-							outSpot->centroid_x[theWave],
-							outSpot->centroid_y[theWave],
-							outSpot->centroid_z[theWave]);
+						fprintf (stdout,"%f\t%f\t%f",
+							outSpot->stats[theWave].centroid_x,
+							outSpot->stats[theWave].centroid_y,
+							outSpot->stats[theWave].centroid_z);
 				}
-			}
-			else for (i=0;i<outSpot->nwaves;i++)
-			{
+			} else for (theWave = 0; theWave < outSpot->nwaves; theWave++) {
 				if (saywhat == HEADING)
-					fprintf (stdout,"c[%3d]X\tc[%3d]Y\tc[%3d]Z",
-						itsStack->wave[i], 
-						itsStack->wave[i], 
-						itsStack->wave[i]);
+					fprintf (stdout,"c[%3lu]X\tc[%3lu]Y\tc[%3lu]Z",theWave,theWave,theWave);
 				else
-					fprintf (stdout,"%7.1f\t%7.1f\t%7.1f",
-						outSpot->centroid_x[i],
-						outSpot->centroid_y[i],
-						outSpot->centroid_z[i]);
-				if (i < outSpot->nwaves-1)
+					fprintf (stdout,"%f\t%f\t%f",
+						outSpot->stats[theWave].centroid_x,
+						outSpot->stats[theWave].centroid_y,
+						outSpot->stats[theWave].centroid_z);
+				if (theWave < outSpot->nwaves-1)
 					fprintf (stdout,"\t");
 			}
 			fprintf (stdout,"\t");
-			theArg++;
 		} /* -c */
 	
 	
 /* -i <n> :	 Ouput Integrals */
 		else if (!strcmp (argv[theArg],"-i"))
 		{
-			theWave = atoi(argv[theArg+1]);
-			if (theWave != 0)
-			{
-				if (theWave < outSpot->nwaves)
-				{
+			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
+			else endPtr = argv[theArg+1];
+			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
+				theArg++;
+				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
-						fprintf (stdout, " i[%3d]  ",itsStack->wave[theWave]);
+						fprintf (stdout, " i[%3lu]  ",theWave);
 					else
-						fprintf (stdout,"%9.1f",outSpot->sum_i[theWave]);
+						fprintf (stdout,"%f",outSpot->stats[theWave].sum_i);
 				}
-			}
-			else for (i=0;i<outSpot->nwaves;i++)
-			{
+			} else for (theWave = 0; theWave < outSpot->nwaves; theWave++) {
 				if (saywhat == HEADING)
-					fprintf (stdout, " i[%3d]  ",itsStack->wave[i]);
+					fprintf (stdout, " i[%3lu]  ",theWave);
 				else
-					fprintf (stdout,"%9.1f",outSpot->sum_i[i]);
-				if (i < outSpot->nwaves-1)
+					fprintf (stdout,"%f",outSpot->stats[theWave].sum_i);
+				if (theWave < outSpot->nwaves-1)
 					fprintf (stdout,"\t");
 			}
 			fprintf (stdout,"\t");
-			theArg++;
 		} /* -i */
 
 
@@ -2038,28 +2141,25 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 /* -m <n> :	 Ouput means */
 		else if (!strcmp (argv[theArg],"-m"))
 		{
-			theWave = atoi(argv[theArg+1]);
-			if (theWave != 0)
-			{
-				if (theWave < outSpot->nwaves)
-				{
+			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
+			else endPtr = argv[theArg+1];
+			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
+				theArg++;
+				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
-						fprintf (stdout, "m[%3d] ",itsStack->wave[theWave]);
+						fprintf (stdout, "m[%3lu] ",theWave);
 					else
-						fprintf (stdout,"%7.1f",outSpot->mean_i[theWave]);
+						fprintf (stdout,"%f",outSpot->stats[theWave].mean_i);
 				}
-			}
-			else for (i=0;i<outSpot->nwaves;i++)
-			{
+			} else for (theWave = 0; theWave < outSpot->nwaves; theWave++) {
 				if (saywhat == HEADING)
-					fprintf (stdout, "m[%3d] ",itsStack->wave[i]);
+					fprintf (stdout, "m[%3lu] ",theWave);
 				else
-					fprintf (stdout,"%7.1f",outSpot->mean_i[i]);
-				if (i < outSpot->nwaves-1)
+					fprintf (stdout,"%f",outSpot->stats[theWave].mean_i);
+				if (theWave < outSpot->nwaves-1)
 					fprintf (stdout,"\t");
 			}
 			fprintf (stdout,"\t");
-			theArg++;
 		} /* -m */
 
 
@@ -2067,118 +2167,111 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 /* -ms <n> :  Ouput means - number of standard deviations above the wavelegth's mean */
 		else if (!strcmp (argv[theArg],"-ms"))
 		{
-			theWave = atoi(argv[theArg+1]);
-			if (theWave != 0)
-			{
-				if (theWave < outSpot->nwaves)
-				{
+			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
+			else endPtr = argv[theArg+1];
+			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
+				theArg++;
+				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
-						fprintf (stdout, "ms[%3d]",itsStack->wave[theWave]);
+						fprintf (stdout, "ms[%3lu]",theWave);
 					else
-						fprintf (stdout,"%7.3f",
-							(outSpot->mean_i[theWave]-itsStack->mean_i[theWave])/itsStack->sigma_i[theWave]);
+						fprintf (stdout,"%f",
+							(outSpot->stats[theWave].mean_i - theStack->stats[theWave][outSpot->itsTimePoint].mean)
+							/ theStack->stats[theWave][outSpot->itsTimePoint].sigma);
 				}
-			}
-			else for (i=0;i<outSpot->nwaves;i++)
-			{
+			} else for (theWave = 0; theWave < outSpot->nwaves; theWave++) {
 				if (saywhat == HEADING)
-					fprintf (stdout, "ms[%3d]",itsStack->wave[i]);
+					fprintf (stdout, "ms[%3lu]",theWave);
 				else
-					fprintf (stdout,"%7.3f",
-						(outSpot->mean_i[i]-itsStack->mean_i[i])/itsStack->sigma_i[i]);
-				if (i < outSpot->nwaves-1)
+					fprintf (stdout,"%f",
+						(outSpot->stats[theWave].mean_i - theStack->stats[theWave][outSpot->itsTimePoint].mean)
+						/ theStack->stats[theWave][outSpot->itsTimePoint].sigma);
+				if (theWave < outSpot->nwaves-1)
 					fprintf (stdout,"\t");
 			}
 			fprintf (stdout,"\t");
-			theArg++;
 		} /* -ms */
 
 
 
 /* -g <n> :	 Ouput geometric means */
-		else if (!strcmp (argv[theArg],"-g"))
-		{
-			theWave = atoi(argv[theArg+1]);
-			if (theWave != 0)
-			{
-				if (theWave < outSpot->nwaves)
-				{
+		else if (!strcmp (argv[theArg],"-g")) {
+			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
+			else endPtr = argv[theArg+1];
+			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
+				theArg++;
+				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
-						fprintf (stdout, "g[%3d] ",itsStack->wave[theWave]);
+						fprintf (stdout, "g[%3lu] ",theWave);
 					else
-						fprintf (stdout,"%7.1f",outSpot->geomean_i[theWave]);
+						fprintf (stdout,"%f",outSpot->stats[theWave].geomean_i);
 				}
-			}
-			else for (i=0;i<outSpot->nwaves;i++)
-			{
+			} else for (theWave = 0; theWave < outSpot->nwaves; theWave++) {
 				if (saywhat == HEADING)
-					fprintf (stdout, "g[%3d] ",itsStack->wave[i]);
+					fprintf (stdout, "g[%3lu] ",theWave);
 				else
-					fprintf (stdout,"%7.1f",outSpot->geomean_i[i]);
-				if (i < outSpot->nwaves-1)
+					fprintf (stdout,"%f",outSpot->stats[theWave].geomean_i);
+				if (theWave < outSpot->nwaves-1)
 					fprintf (stdout,"\t");
 			}
 			fprintf (stdout,"\t");
-			theArg++;
 		} /* -g */
 
 
 
 /* -gs <n> :  Ouput geometric means - number of standard deviations above the wavelegth's geometric mean */
-		else if (!strcmp (argv[theArg],"-gs"))
-		{
-			theWave = atoi(argv[theArg+1]);
-			if (theWave != 0)
-			{
-				if (theWave < outSpot->nwaves)
-				{
+		else if (!strcmp (argv[theArg],"-gs")) {
+			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
+			else endPtr = argv[theArg+1];
+			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
+				theArg++;
+				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
-						fprintf (stdout, "gs[%3d]",itsStack->wave[theWave]);
+						fprintf (stdout, "gs[%3lu]",theWave);
 					else
-						fprintf (stdout,"%7.3f",
-							(outSpot->geomean_i[theWave]-itsStack->geomean_i[theWave])/itsStack->geosigma_i[theWave]);
+						fprintf (stdout,"%f",
+							(outSpot->stats[theWave].geomean_i - theStack->stats[theWave][outSpot->itsTimePoint].geomean)
+							/ theStack->stats[theWave][outSpot->itsTimePoint].geosigma);
 				}
-			}
-			else for (i=0;i<outSpot->nwaves;i++)
-			{
+			} else for (theWave = 0; theWave < outSpot->nwaves; theWave++) {
 				if (saywhat == HEADING)
-					fprintf (stdout, "gs[%3d]",itsStack->wave[i]);
+					fprintf (stdout, "gs[%3lu]",theWave);
 				else
-					fprintf (stdout,"%7.3f",
-						(outSpot->geomean_i[i]-itsStack->geomean_i[i])/itsStack->geosigma_i[i]);
-				if (i < outSpot->nwaves-1)
+					fprintf (stdout,"%f",
+						(outSpot->stats[theWave].geomean_i - theStack->stats[theWave][outSpot->itsTimePoint].geomean)
+						/ theStack->stats[theWave][outSpot->itsTimePoint].geosigma);
+				if (theWave < outSpot->nwaves-1)
 					fprintf (stdout,"\t");
 			}
 			fprintf (stdout,"\t");
-			theArg++;
 		} /* -gs */
     	else if (!strcmp ( argv[theArg],"-tm") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout," Mean  \t");
 			else
-				fprintf (stdout,"%7.1f\t",outSpot->itsStack->mean_i[outSpot->itsWave]);
+				fprintf (stdout,"%f\t",theStack->stats[outSpot->itsWave][outSpot->itsTimePoint].mean);
     		}
     	else if (!strcmp ( argv[theArg],"-tSD") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout,"  SD   \t");
 			else
-				fprintf (stdout,"%7.2f\t",outSpot->itsStack->sigma_i[outSpot->itsWave]);
+				fprintf (stdout,"%f\t",outSpot->itsStack->stats[outSpot->itsWave][outSpot->itsTimePoint].sigma);
     		}
     	else if (!strcmp ( argv[theArg],"-tt") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout," t  \t");
 			else
-				fprintf (stdout,"%4d\t",outSpot->itsTimePoint);
+				fprintf (stdout,"%lu\t",outSpot->itsTimePoint);
     		}
     	else if (!strcmp ( argv[theArg],"-th") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout,"Thresh.\t");
 			else
-				fprintf (stdout,"%7d\t",outSpot->itsStack->threshold);
+				fprintf (stdout,"%lf\t",outSpot->threshold);
     		}
 
 
@@ -2196,8 +2289,9 @@ void Write_Output (SpotPtr theSpotListHead,int argc, char**argv,int outArgs)
 SpotPtr theSpot,theTimepointListHead;
 char done=0,doDB=0,doLabels=1;
 int thisTime,i;
+PixStack *theStack;
 
-
+	theStack = theSpotListHead->itsStack;
 	for (i=0;i<argc;i++)
 		{
 		if (!strcmp ( argv[i],"-db"))
@@ -2272,13 +2366,13 @@ the output we want.
 			for (i=0;i<argc;i++)
 				{
 				if (!strcmp ( argv[i],"-tm"))
-					fprintf (stdout,"%7.1f\t",theSpot->itsStack->mean_i[theSpot->itsWave]);
+					fprintf (stdout,"%f\t",theStack->stats[theSpot->itsWave][theSpot->itsTimePoint].mean);
 				if (!strcmp ( argv[i],"-tSD"))
-					fprintf (stdout,"%7.2f\t",theSpot->itsStack->sigma_i[theSpot->itsWave]);
+					fprintf (stdout,"%f\t",theStack->stats[theSpot->itsWave][theSpot->itsTimePoint].sigma);
 				if (!strcmp ( argv[i],"-tt"))
-					fprintf (stdout,"%4d\t",theSpot->itsTimePoint);
+					fprintf (stdout,"%lu\t",theSpot->itsTimePoint);
 				if (!strcmp ( argv[i],"-th"))
-					fprintf (stdout,"%7d\t",theSpot->itsStack->threshold);
+					fprintf (stdout,"%lf\t",theStack->threshold);
 				}
 	/*
 	* Go through all the spots for the timepoint.
@@ -2311,7 +2405,7 @@ the output we want.
 	* Advance the timepoint by moving theSpot to the nextTimePointList.
 	* This is done only to get the next timepoint, and to know when we're done.
 	*/
-		theSpot = theSpot->nextTimePointList;
+		theSpot = theSpot->itsHead->nextTimePointList;
 		if (theSpot == NULL)
 			done = 1;
 		else
@@ -2320,11 +2414,11 @@ the output we want.
 	
 }
 
-pixel Set_Threshold (const char *arg, DVstack *theStack)
+double Set_Threshold (const char *arg, PixStack *theStack)
 {
 float nSigmas;
-int theThreshold;
-int spotWave;
+double theThreshold;
+coordinate theC,theT;
 char argUC[128];
 char* argUCptr;
 const char* argPtr;
@@ -2335,22 +2429,20 @@ const char* argPtr;
 	while (*argPtr) {*argUCptr++ = toupper (*argPtr++); }
 	*argUCptr++ = '\0';
 
-	spotWave = theStack->spotWave;
+	theC = theStack->spotWave;
+	theT = theStack->timepoint;
 
-	if (!strncmp(argUC,"MEAN",4))
-		{
+	if (!strncmp(argUC,"MEAN",4)) {
 		nSigmas = 0;
 		if (strlen (argUC) > 4)
 			sscanf (strrchr(argUC,'N')+1,"%fS",&nSigmas);
-		theThreshold = (int) (theStack->mean_i[spotWave] + (theStack->sigma_i[spotWave]*nSigmas));
-		}
-	else if (!strncmp(argUC,"GMEAN",5))
-		{
+		theThreshold = theStack->stats[theC][theT].mean + (theStack->stats[theC][theT].sigma*nSigmas);
+	} else if (!strncmp(argUC,"GMEAN",5)) {
 		nSigmas = 0;
 		if (strlen (argUC) > 5)
 			sscanf (strrchr(argUC,'N')+1,"%fS",&nSigmas);
-		theThreshold = (int) (theStack->geomean_i[spotWave] + (theStack->geosigma_i[spotWave]*nSigmas));
-		}
+		theThreshold = theStack->stats[theC][theT].geomean + (theStack->stats[theC][theT].geosigma*nSigmas);
+	}
 
 	else if (!strcmp (argUC,"MOMENT"))
 		theThreshold = Get_Thresh_Moment (theStack);
@@ -2361,72 +2453,129 @@ const char* argPtr;
 	else if (!strcmp (argUC,"KITTLER"))
 		theThreshold = Get_Thresh_Kittler (theStack);
 	else
-		sscanf (argUC,"%d",&theThreshold);
+		sscanf (argUC,"%lf",&theThreshold);
 
 
-	if (theThreshold > theStack->max_i[spotWave])
-		theThreshold = theStack->max_i[spotWave];
-	return ((pixel)theThreshold);
+	if (theThreshold > theStack->stats[theC][theT].max)
+		theThreshold = theStack->stats[theC][theT].max;
+	return (theThreshold);
 }
 
 
 
-double *Get_Prob_Hist (DVstack *theStack, unsigned short *histSizePtr)
+double *Get_Prob_Hist (PixStack *theStack, unsigned short *histSizePtr)
 {
-unsigned long theWave,i;
-unsigned short histSize;
-unsigned long *theHist,*theHistPtr;
-double *theHistProb,*theHistProbPtr,nPix;
-pixel *index,*lastPix;
+coordinate theC,theT;
+size_t nPix;
 
-/*
-* Allocate a histogram the size of the dynamic range of the stack.
-* Also allocate the probability histogram that we will return.
-*/
-	theWave = theStack->spotWave;
-	*histSizePtr = histSize = (theStack->max_i[theWave])+1;
-	theHist = (unsigned long *) malloc (histSize*sizeof(unsigned long));
-	theHistProb = (double *) malloc (histSize*sizeof(double));
-	if (!theHist || !theHistProb)
-	{
-		fprintf (stderr,"Could not allocate memory for histogram.\n");
-		exit (-1);
-	}
-	theHistPtr = theHist;
-	for (i=0;i<histSize;i++)
-		*theHistPtr++ = 0;
+unsigned short histSize, theBin;
+double max,min,range;
+unsigned long long *intHist;
+double *probHist;
+double scale;
 
-/*
-* Set a pointer to point to the first z of the wave we want.
-*/
-	index = theStack->stack + (theStack->wave_increment * theWave);
-
-/*
-* set a pixel to point to the end of this wave.
-*/
-	lastPix = index + theStack->wave_increment;
-
-	nPix = (double) (lastPix - index);
-/*
-* crunch through pixels while we're in between the two pointers.
-*/
-	while (index < lastPix)
-	{
-		theHist[*index]++;
-		index++;
+uint8_t *uint8_p0, *uint8_p1;
+uint16_t *uint16_p0, *uint16_p1;
+uint32_t *uint32_p0, *uint32_p1;
+int8_t *int8_p0, *int8_p1;
+int16_t *int16_p0, *int16_p1;
+int32_t *int32_p0, *int32_p1;
+float *float_p0, *float_p1;
+	
+	theC = theStack->spotWave;
+	theT = theStack->timepoint;
+	nPix = theStack->nPix;
+	max = theStack->stats[theC][theT].max;
+	min = theStack->stats[theC][theT].min;
+	range = max - min;
+	
+	if (range <= 0) {
+		*histSizePtr = 0;
+		return (NULL);
 	}
 	
-	theHistProbPtr = theHistProb;
-	theHistPtr = theHist;
-	for (i=0;i<histSize;i++)
-		*theHistProbPtr++ = (double) (*theHistPtr++) / nPix;
+	if ( theStack->pixType == PIX_T_FLOAT || range > MAX_HIST_SIZE ) {
+		histSize = MAX_HIST_SIZE;
+	} else {
+		histSize = (unsigned short)range;
+	}
+
+	*histSizePtr = histSize;
+	scale = (histSize - 1.0) / range;
+
+	if ( (intHist = calloc (histSize, sizeof (unsigned long long))) == NULL) return (NULL);
+	if ( (probHist = malloc (sizeof (double) * histSize)) == NULL ) {
+		free (intHist);
+		return (NULL);
+	}
+
+	switch (theStack->pixType) {
+		case PIX_T_FLOAT:
+			float_p0 = (float *) (theStack->stacks[theC]);
+			float_p1 = float_p0 + nPix;
+			while (float_p0 < float_p1) {
+				intHist[(int) ((*float_p0++-min)*scale)]++;
+			}
+		break;
+		case PIX_T_UINT8:
+			uint8_p0 = (uint8_t *) (theStack->stacks[theC]);
+			uint8_p1 = uint8_p0 + nPix;
+			while (uint8_p0 < uint8_p1) {
+				intHist[(int) ((*uint8_p0++-min)*scale)]++;
+			}
+		break;
+		case PIX_T_UINT16:
+			uint16_p0 = (uint16_t *) (theStack->stacks[theC]);
+			uint16_p1 = uint16_p0 + nPix;
+			while (uint16_p0 < uint16_p1) {
+				intHist[(int) ((*uint16_p0++-min)*scale)]++;
+			}
+		break;
+		case PIX_T_UINT32:
+			uint32_p0 = (uint32_t *) (theStack->stacks[theC]);
+			uint32_p1 = uint32_p0 + nPix;
+			while (uint32_p0 < uint32_p1) {
+				intHist[(int) ((*uint32_p0++-min)*scale)]++;
+			}
+		break;
+		case PIX_T_INT8:
+			int8_p0 = (int8_t *) (theStack->stacks[theC]);
+			int8_p1 = int8_p0 + nPix;
+			while (int8_p0 < int8_p1) {
+				intHist[(int) ((*int8_p0++-min)*scale)]++;
+			}
+		break;
+		case PIX_T_INT16:
+			int16_p0 = (int16_t *) (theStack->stacks[theC]);
+			int16_p1 = int16_p0 + nPix;
+			while (int16_p0 < int16_p1) {
+				intHist[(int) ((*int16_p0++-min)*scale)]++;
+			}
+		break;
+		case PIX_T_INT32:
+			int32_p0 = (int32_t *) (theStack->stacks[theC]);
+			int32_p1 = int32_p0 + nPix;
+			while (int32_p0 < int32_p1) {
+				intHist[(int) ((*int32_p1++-min)*scale)]++;
+			}
+		break;
+		default:
+		break;
+	}
 	
-	free (theHist);
-	return (theHistProb);
+	for (theBin = 0; theBin < histSize; theBin++) {
+		probHist[theBin] = (double) intHist[theBin] / (double) nPix;
+	}
+	
+	free (intHist);
+	
+	return (probHist);
+
+	
 }
 
 
-pixel Get_Thresh_Moment (DVstack *theStack)
+double Get_Thresh_Moment (PixStack *theStack)
 {
 unsigned short histSize;
 double *probHist,*probHistPtr,prob;
@@ -2434,9 +2583,15 @@ double m1=0.0, m2=0.0, m3=0.0;
 double cd, c0, c1, z0, z1, pd, p0, p1;
 double pDistr = 0.0;
 unsigned long i;
-pixel thresh=0;
+double thresh=0.0;
+unsigned short hist_thresh=0;
+double scale;
 
 	probHist = Get_Prob_Hist (theStack, &histSize);
+	if (histSize && probHist == NULL) return ( (
+		theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+		theStack->stats[theStack->spotWave][theStack->timepoint].min) / 2.0
+	);
 
 	probHistPtr = probHist;
 	for (i = 0; i < histSize; i++)
@@ -2458,20 +2613,42 @@ pixel thresh=0;
 	p1 = 1.0 - p0;
 
 	probHistPtr = probHist;
-	for (thresh = 0; thresh < histSize; thresh++)
+	for (hist_thresh = 0; hist_thresh < histSize; hist_thresh++)
 	{
 		pDistr += *probHistPtr++;
 		if (pDistr > p0)
 			break;
 	}
 
-	free (probHist);
+	if (probHist) free (probHist);
+	
+	/* re-scale the threshold.
+	* the hiostogram bin is determined like this:
+	* hist[((value - min)*scale)]++;
+	* where min is the stack minimum, and scale = (histSize - 1.0) / range
+	*/
+	if (histSize) {
+		scale = (histSize - 1.0) / (
+			theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+			theStack->stats[theStack->spotWave][theStack->timepoint].min
+		);
+		if (scale != 0) {
+			thresh = (double) hist_thresh / scale;
+			thresh += theStack->stats[theStack->spotWave][theStack->timepoint].min;
+		} else {
+			thresh = theStack->stats[theStack->spotWave][theStack->timepoint].max;
+		}
+	} else {
+		/* Degenerate case: all the pixels are of one value */
+		thresh = theStack->stats[theStack->spotWave][theStack->timepoint].min;
+	}
+	
 	return (thresh);
 }
 
 
 
-pixel Get_Thresh_Otsu (DVstack *theStack)
+double Get_Thresh_Otsu (PixStack *theStack)
 {
 unsigned short histSize,histSize_1;
 double *probHist;
@@ -2479,9 +2656,16 @@ double varWMin=BIGFLOAT;
 double m0Low,m0High,m1Low,m1High,varLow,varHigh;
 double varWithin;
 unsigned long i,j;
-pixel thresh=0;
+double thresh=0.0;
+unsigned short hist_thresh=0;
+double scale;
 
 	probHist = Get_Prob_Hist (theStack, &histSize);
+	if (histSize && probHist == NULL) return ( (
+		theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+		theStack->stats[theStack->spotWave][theStack->timepoint].min) / 2.0
+	);
+
 
 	histSize_1 = histSize - 1;
 	for (i = 1; i < histSize_1; i++)
@@ -2508,31 +2692,62 @@ pixel thresh=0;
 		if (varWithin < varWMin)
 		{
 			varWMin = varWithin;
-			thresh = i;
+			hist_thresh = i;
 		}
 	}
+
+	if (probHist) free (probHist);
+	
+	/* re-scale the threshold.
+	* the hiostogram bin is determined like this:
+	* hist[((value - min)*scale)]++;
+	* where min is the stack minimum, and scale = (histSize - 1.0) / range
+	*/
+	if (histSize) {
+		scale = (histSize - 1.0) / (
+			theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+			theStack->stats[theStack->spotWave][theStack->timepoint].min
+		);
+		if (scale != 0) {
+			thresh = (double) hist_thresh / scale;
+			thresh += theStack->stats[theStack->spotWave][theStack->timepoint].min;
+		} else {
+			thresh = theStack->stats[theStack->spotWave][theStack->timepoint].max;
+		}
+	} else {
+		/* Degenerate case: all the pixels are of one value */
+		thresh = theStack->stats[theStack->spotWave][theStack->timepoint].min;
+	}
+
 #ifdef DEBUG
-fprintf (stderr,"Otsu's discriminant method threshold: %d\n",(int) thresh);
+fprintf (stderr,"Otsu's discriminant method threshold: %lf\n", thresh);
 fflush (stderr);
 #endif
 	
-	free (probHist);
+
 	return (thresh);
 
 }
 
 
 
-pixel Get_Thresh_ME (DVstack *theStack)
+double Get_Thresh_ME (PixStack *theStack)
 {
 unsigned short histSize;
 double *probHist,*probHistPtr,prob;
 double Hn=0.0, Ps=0.0, Hs=0.0;
 double psi = 0, psiMax=0.0;
 unsigned long i,j;
-pixel thresh = 0;
+double thresh=0.0;
+unsigned short hist_thresh=0;
+double scale;
 
 	probHist = Get_Prob_Hist (theStack, &histSize);
+	if (histSize && probHist == NULL) return ( (
+		theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+		theStack->stats[theStack->spotWave][theStack->timepoint].min) / 2.0
+	);
+
 
 	probHistPtr = probHist;
 	for (i=0; i < histSize; i++)
@@ -2556,14 +2771,35 @@ pixel thresh = 0;
 		if (psi > psiMax)
 		{
 			psiMax = psi;
-			thresh = i;
+			hist_thresh = i;
 		}
 	}
 	
-	free (probHist);
+	if (probHist) free (probHist);
+	
+	/* re-scale the threshold.
+	* the hiostogram bin is determined like this:
+	* hist[((value - min)*scale)]++;
+	* where min is the stack minimum, and scale = (histSize - 1.0) / range
+	*/
+	if (histSize) {
+		scale = (histSize - 1.0) / (
+			theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+			theStack->stats[theStack->spotWave][theStack->timepoint].min
+		);
+		if (scale != 0) {
+			thresh = (double) hist_thresh / scale;
+			thresh += theStack->stats[theStack->spotWave][theStack->timepoint].min;
+		} else {
+			thresh = theStack->stats[theStack->spotWave][theStack->timepoint].max;
+		}
+	} else {
+		/* Degenerate case: all the pixels are of one value */
+		thresh = theStack->stats[theStack->spotWave][theStack->timepoint].min;
+	}
 
 #ifdef DEBUG
-fprintf (stderr,"Maximum Entropy threshold: %d\n",(int) thresh);
+fprintf (stderr,"Maximum Entropy threshold: %lf\n", thresh);
 fflush (stderr);
 #endif
 
@@ -2572,7 +2808,7 @@ fflush (stderr);
 }
 
 
-pixel Get_Thresh_Kittler (DVstack *theStack)
+double Get_Thresh_Kittler (PixStack *theStack)
 {
 unsigned short histSize,histSize_1;
 double *probHist,*probHistPtr,prob;
@@ -2581,13 +2817,20 @@ double term1, term2;
 double stdDevLow, stdDevHigh;
 double discr, discrMin, discrMax, discrM1;
 unsigned long i,j;
-pixel thresh;
+double thresh=0.0;
+unsigned short hist_thresh=0;
+double scale;
 
 	probHist = Get_Prob_Hist (theStack, &histSize);
+	if (histSize && probHist == NULL) return ( (
+		theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+		theStack->stats[theStack->spotWave][theStack->timepoint].min) / 2.0
+	);
+
 
 	histSize_1 = histSize - 1;
 	discr = discrM1 = discrMax = discrMin = 0.0;
-	for (i = 1, thresh = 0; i < histSize_1; i++)
+	for (i = 1, hist_thresh = 0; i < histSize_1; i++)
 	{
 		m0Low = m0High = m1Low = m1High = varLow = varHigh = 0.0;
 
@@ -2633,9 +2876,36 @@ pixel thresh;
 		discrM1 = discr;
 	}
 
-	thresh = i;
+	hist_thresh = i;
 
-	free (probHist);
+	if (probHist) free (probHist);
+	
+	/* re-scale the threshold.
+	* the hiostogram bin is determined like this:
+	* hist[((value - min)*scale)]++;
+	* where min is the stack minimum, and scale = (histSize - 1.0) / range
+	*/
+	if (histSize) {
+		scale = (histSize - 1.0) / (
+			theStack->stats[theStack->spotWave][theStack->timepoint].max - 
+			theStack->stats[theStack->spotWave][theStack->timepoint].min
+		);
+		if (scale != 0) {
+			thresh = (double) hist_thresh / scale;
+			thresh += theStack->stats[theStack->spotWave][theStack->timepoint].min;
+		} else {
+			thresh = theStack->stats[theStack->spotWave][theStack->timepoint].max;
+		}
+	} else {
+		/* Degenerate case: all the pixels are of one value */
+		thresh = theStack->stats[theStack->spotWave][theStack->timepoint].min;
+	}
+
+#ifdef DEBUG
+fprintf (stderr,"Kittler threshold: %lf\n", thresh);
+fflush (stderr);
+#endif
+
 	return (thresh);
 
 }
@@ -2669,23 +2939,16 @@ pixel thresh;
 
 int main (int argc, char **argv)
 {
-DVstack* theOldStack = NULL,*theStackListHead = NULL;
-FILE *fp= NULL;
-long i;
-int spotWave,minSpotVol,time;
-PixPtr index,maxIndex;
-SpotPtr theSpotList=NULL,theSpotListHead=NULL;
-int tStart=0,tStop=0;
-Point5D dims = { 0, 0, 0, 0, 0};
+int minSpotVol;
+coordinate theC, theT;
+MaskPtr maskIndex,maxIndex;
+coordinate tStart=0,tStop=0;
+SpotPtr theSpot;
 const char* argval = NULL;
 const char* threshold = NULL;
 argarray_t args;
-argiterator_t argiter = 0;
-const char* c_rgRequiredArgs[64] = {
-	"Dims"  , "dimensions of the input file",
-	"WaveStats","per-wave per-timepoint statists",
-	"",""
-};
+OID PixelsID;
+PixStack *theStack;
 
 /*
 * The following line is commented out because it is not
@@ -2718,248 +2981,93 @@ argc = ccommand(&argv);
 */
 	if (argc < OUTARGS)
 	{
-		fprintf (stderr,"Usage:\n");
-		fprintf (stderr,"\t%s <DV filename> <waveindex> <threshold> <min spot vol> [<optional arguments> <output arguments>]\n", Argarray_GetString(&args,"AppName"));
-		fprintf (stderr,"Note that the brackets (<>) are used to delineate options in this usage message.\n");
-		fprintf (stderr,"Do not use brackets when actually putting in arguments.\n");
-		fprintf (stderr,"On stdin the following arguments must be given:\n");
-		fprintf (stderr,"\tDims=<width>,<height>,<z-depth>,<nwaves>,<ntimepoints>\n");
-		fprintf (stderr,"\tWaveStats=\n");
-		fprintf (stderr,"\t<waveindex>,<wavelength>,<timepoint>,<min_intensity>,<max_i>,<mean_i>,<geometric_mean_i>,<sigma>\n");
-		fprintf (stderr,"\t... [one entry per wave per timepoint] ...\n");
-		fprintf (stderr,"\n");	
-		fprintf (stderr,"<thresholds>:\n");
-		fprintf (stderr,"\tnumber:  If a number is entered for this field, then it will be used as the threshold.\n");
-		fprintf (stderr,"\tmean:	The mean pixel value at the specified waveindex will be used as the threshold.\n");
-		fprintf (stderr,"\tmean<n>s:	The mean pixel value plus <n> standard deviations will be used as threshold.\n");
-		fprintf (stderr,"\tgmean:	 The geometric mean of the specified waveindex will be used as threshold.\n");
-		fprintf (stderr,"\tgmean<n>s:	 The geometric mean plus <n> standard deviations will be used for threshold.\n");
-		fprintf (stderr,"\tmoment:  The moment preservation method.\n");
-		fprintf (stderr,"\totsu:  The Otsu's determinant threshold.\n");
-		fprintf (stderr,"\tme:  The maximum entropy method.\n");
-		fprintf (stderr,"\tkittler:  The Kittler method of minimum error.\n");
-		fprintf (stderr,"\n");	
-		fprintf (stderr,"<optional arguments>:\n");
-		fprintf (stderr,"\t-time <n1>-<n2> begin and end timepoints.  Default is all timepoints. -time 4- will do t4 to the end, etc.\n");
-		fprintf (stderr,"\t-polyVec <filename> output tracking vectors to DV 2-D polygon file.\n");
-		fprintf (stderr,"\t-polyTra <filename> output trajectories to DV 2-D polygon file.\n");
-		fprintf (stderr,"\t-iwght <fraction> weight of spot's average intensity for finding spots in t+1 (def. = 0.0).\n");
-		fprintf (stderr,"\t<Output arguments>:\n");
-		fprintf (stderr,"\t-db Format output for database import - tab-delimited text.\n");
-		fprintf (stderr,"\t    Database format is one line per spot.  Any summary information specified (-tm, -tt, etc) will be\n");
-		fprintf (stderr,"\t    displayed once for each spot - not once per timepoint. Column order will be as specified in <Output arguments>,\n");
-		fprintf (stderr,"\t    Spots in a trajectory will have the same ID, but different timepoints.  For now, only spots in trajectories starting\n");
-		fprintf (stderr,"\t    with t0 are displayed\n");
-		fprintf (stderr,"\t-nl Supress column headings.  Usefull if database does not recognize column headings (i.e. FileMaker)\n");
-		fprintf (stderr,"\t-ID Display the spot's ID# - a 'serial number' unique to each spot in this dataset.\n");
-		fprintf (stderr,"\t-tID Display the trajectory ID# - a 'serial number' unique to to each trajectory in this dataset.\n");
-		fprintf (stderr,"\t-dID Dataset ID - Usefull if combining many datasets in a database.  The ID is the filename, and will\n");
-		fprintf (stderr,"\t     be the same for all spots in this dataset.\n");
-		fprintf (stderr,"\t-aID Argument ID.  Display input arguments - text containing the required arguments for this run - everything except\n");
-		fprintf (stderr,"\t     the filename, polyVec, polyTra and <output arguments>.  The arguments are separated by a space, not a tab.\n");
-		fprintf (stderr,"\t-c <waveindex>: Display centroids (center of mass).\n");
-		fprintf (stderr,"\t-i <waveindex>:  Display integral - sum of pixel values\n");
-		fprintf (stderr,"\t-m <waveindex> Display mean pixel value.\n");
-		fprintf (stderr,"\t-g <waveindex> Display the geometric mean pixel value.\n");
-		fprintf (stderr,"\t-ms <waveindex> Same as -m, but number of std. deviations over the waveindex's mean.\n");
-		fprintf (stderr,"\t-gs <waveindex> Same as -g, but number of std. deviations over the waveindex's geometric mean.\n");
-		fprintf (stderr,"\t-mc Display the average coordinate values of the spot (center of volume).\n");
-		fprintf (stderr,"\t-v Display the spot's volume\n");
-		fprintf (stderr,"\t-ff Display the spot's form-factor (1 for sphere in 3D or circle in 2D, <1 if deviates)\n");
-		fprintf (stderr,"\t-per Display the spot's perimiter\n");
-		fprintf (stderr,"\t-sa Display the spot's surface area\n");
-		fprintf (stderr,"\t### Time series data ###\n");
-		fprintf (stderr,"\t-tm Display mean pixel value of the entire timepoint for the spot's waveindex - once/timepoint\n");
-		fprintf (stderr,"\t-tSD Display the standard deviation of the entire timepoint for the spot's waveindex - once/timepoint\n");
-		fprintf (stderr,"\t-tt Display the timepoint number (once/timepoint).\n");
-		fprintf (stderr,"\t-th Display the threshold used for the timepoint (once/timepoint).\n");
-		fprintf (stderr,"\n");	
-		fprintf (stderr,"Output:\n");
-		fprintf (stderr,"\tThe output is a table of vectors.  There is one row (line) for each timepoint.  The requested output is\n");
-		fprintf (stderr,"\tplaced in columns with one set of columns for each feature (or 'spot').\n");
-		fprintf (stderr,"\tThe option -tm, -tSD -tt -th may be specified any number of times in any order\n");
-		fprintf (stderr,"\t(or not at all).  They will be displayed once per timepoint (once per line of output) before the other outputs.\n");
-		fprintf (stderr,"\tN.B.:  The number of sets of columns in the output is the number of spots found in the first timepoint.\n");
-		fprintf (stderr,"\tIf spots appear at later timepoints, they will not be in the output.\n");
-		fprintf (stderr,"\n");	
-		fprintf (stderr,"Example:\n");
-		fprintf (stderr,"\tfindSpotsOME lookatemgo.r3d_d3d 528 gmean4.5s 10 -polyTra polyFoo -iwght 0.05 -time5- -tt -tm -tSD\n");
-		fprintf (stderr,"\n");	
-
+		usage (argv);
 		exit (-1);
 	}
 
-	/* Get the stdin arguments */
-	fprintf (stderr,"Please enter Dims and WaveStats (or ^D to abort):\n");
-	Argarray_ImportPOSTFromStdin (&args);
-	if (!Argarray_VerifyRequiredArgs (&args, &c_rgRequiredArgs[0]))
-		exit (-1);
-
-	/*
-	 * Get the image dimensions
-	 */
-	sscanf (Argarray_GetString(&args,"Dims"), "%hd,%hd,%hd,%hd,%hd", &dims.x, &dims.y, &dims.z, &dims.w, &dims.t);
-
-	/*
-	* Open the DV file, with error checking.
-	*/
+	sscanf (argv[2],"%llu",&PixelsID);
+	if (PixelsID == 0) {
+		fprintf (stderr,"The PixelsID ('%s') cannot be 0.\n",argv[2]);
+		usage(argv);
+		exit (-2);
+	}
+	
+#ifdef DEBUG
+fprintf (stderr,"reading info for PixelsID %llu\n",PixelsID);
+fflush (stderr);
+#endif
+	/* This establishes an omeis connection and calls pixelsInfo */
+	theStack = NewPixStack (argv[1], PixelsID);
+	if (theStack == NULL) {
+		fprintf (stderr,"Could not retreive information for PixelsID=%llu\n",(unsigned long long)PixelsID);
+		exit (-3);
+	}
+#ifdef DEBUG
+fprintf (stderr,"read info for PixStack\n");
+fflush (stderr);
+#endif
 
 	/*
 	* Get the spot wavelegth and the minimum spot volume.
 	*/
-	Argiter_Initialize (&args, &argiter, "AppName");
-	fp = OpenFile (Argiter_NextString (&argiter), "r");
-	spotWave = Argiter_NextInteger (&argiter);
-	threshold = Argiter_NextString (&argiter);
-	minSpotVol = Argiter_NextInteger (&argiter);
+	sscanf (argv[3],"%lu",&theC);
+	theStack->spotWave = theC;
+	threshold = argv[4];
+	sscanf (argv[5],"%d",&minSpotVol);
 
 	/*
 	* Read the timespan option
 	*/
 	argval = Argarray_GetString (&args, "time");
-	if (argval)
-		sscanf (argval, "%d-%d", &tStart, &tStop);
-
-/*
-* Set the timepoint range to use.
-* tStart and tStop start out being 0.  If they were not specified then we use all of them
-* if they were specified then they will be based on time0 = 1, rather time0 = 0
-* (as per DV convention), so we subtract one from each of them.  If we end up with negative tStart
-* we set it to 0 (default).  If tStop is less than or equal to tStart, then tStop is the number
-* of timepoints in the file.
-*/
-	tStart--;
-	tStop--;
-	if (tStart < 0)
+	if (argval) {
+		sscanf (argval, "%lu-%lu", &tStart, &tStop);
+		if (tStart >= theStack->ph->dt)
+			tStart = 0;
+		if (tStop >= theStack->ph->dt || tStop < tStart)
+			tStop = theStack->ph->dt;
+	} else {
 		tStart = 0;
-	if (tStop < tStart)
-		tStop = dims.t;
+		tStop = theStack->ph->dt;
+	}
+
+
+#ifdef DEBUG
 /*
 * We are going to output the thresholds - one per timepoint - on a single line.
-	fprintf (stdout,"Timepoint:\t");
-	for (time=tStart;time < tStop;time++)
-		fprintf (stdout,"%4d\t",time);
-	fprintf (stdout,"\nThreshold:\t");
 */
+	fprintf (stderr,"argval: %s, tStart:%lu, tStop:%lu\n", argval, tStart,tStop);
+fflush (stderr);
+#endif
 
 /*
 * ################   MAIN  LOOOP   ################ *
 */
 
-	/*
-	* Get the wave statistics
-	*/
-	Argiter_Initialize (&args, &argiter, "WaveStats");
-	/* skip stats for unused timepoints */
-	/* FIXME: remove the ugly empty stack hack when the stack list is gone */
-	theStackG = (DVstack*) malloc (sizeof(DVstack));
-	InitializeDVstack (theStackG, dims);
-	for (time = 0; time < tStart; ++ time)
-		ReadWaveStats (theStackG, &argiter, time);
-	free (theStackG);
-	theStackG = NULL;
-
-	for (time = tStart; time < tStop; time++) {
+	for (theT = tStart; theT < tStop; theT++) {
 /*
-* Read in the stack of images.
+* Read in the stacks of planes for this timepoint.
 */
-		theStackG = (DVstack*) malloc (sizeof(DVstack));
-		InitializeDVstack (theStackG, dims);
-		ReadDVstack (theStackG, fp, dims, time);
-		ReadWaveStats (theStackG, &argiter, time);
-
-		/* put the stack in the stack list */
-		if (theStackListHead == NULL)
-			theStackListHead = theStackG;
-		else
-			/* theStackG au top de la pile */
-			theOldStack->next = theStackG;
-		theOldStack = theStackG;
-		theStackG->next = NULL;
+		ReadTimepoint (theStack, theT);
 #ifdef DEBUG
-fprintf (stderr,"read DV stack\n");
-fflush (stderr);
-#endif
-	/*
-	 * Write out the waves we found in the DV file
-		fprintf (stdout,"Wave:	   ");
-		for (i=0;i<theStackG->nwaves;i++)
-			fprintf (stdout,"\t%7d",(int)theStackG->wave[i]);
-		fprintf (stdout,"\n");
-	 */
-		
-#ifdef DEBUG
-		fprintf (stderr,"Wave:	   ");
-		for (i=0;i<theStackG->nwaves;i++)
-			fprintf (stderr,"\t%7d",(int)theStackG->wave[i]);
-		fprintf (stderr,"\n");
-		fflush (stderr);
-#endif
-	/*
-	* Get_Wave_Index returns an index that's out of bounds ( > waves in stack)
-	* if it could not find an appropriate index.
-	*/
-		if (spotWave >= theStackG->nwaves)
-		{
-			fprintf (stderr,"Could not find wavelength %d in file %s\n", spotWave, argv[1]);
-			exit (-1);
-		}
-	
-	theStackG->spotWave = spotWave;
-	
-	/*
-	* Calculate statistics for the stack.
-	*/
-		for (i=0;i<theStackG->nwaves;i++)
-			Calculate_Stack_Stats (theStackG,i);
-	
-#ifdef DEBUG
-fprintf (stderr,"Calculated stats\n");
+fprintf (stderr,"read timepoint\n");
 fflush (stderr);
 #endif
 	
 	/*
-	* figure out what to set the threshold to.
+	* figure out what to set the threshold to from the input parameter
 	*/
-		thresholdG = Set_Threshold (threshold,theStackG);
-		theStackG->threshold = thresholdG;
+		theStack->threshold = Set_Threshold (threshold,theStack);
+	/* Make a XYZ mask based on the threshold */
+		MakeThresholdMask (theStack);
+
+		
 
 #ifdef DEBUG
-fprintf (stderr,"spotWave: %d\n",spotWave);
-fprintf (stderr,"theStackG->geomean_i[spotWave]: %f\n",theStackG->geomean_i[spotWave]);
-fprintf (stderr,"theStackG->sigma_i[spotWave]: %f\n",theStackG->sigma_i[spotWave]);
+fprintf (stderr,"theC: %lu theT: %lu\n",theC,theT);
+fprintf (stderr,"theStack->geomean_i[theC]: %f\n",theStack->stats[theC][theT].geomean);
+fprintf (stderr,"theStack->sigma_i[theC]: %f\n",theStack->stats[theC][theT].sigma);
+fprintf (stderr,"Integration threshold:	 %lf\n", theStack->threshold);
 fflush (stderr);
-#endif
-
-#ifdef DEBUG
-		fprintf (stderr,"Max:	   ");
-		for (i=0;i<theStackG->nwaves;i++)
-			fprintf (stderr,"\t%7d",(int)theStackG->max_i[i]);
-		fprintf (stderr,"\n");
-		
-		fprintf (stderr,"Min:	   ");
-		for (i=0;i<theStackG->nwaves;i++)
-			fprintf (stderr,"\t%7d",(int)theStackG->min_i[i]);
-		fprintf (stderr,"\n");
-		
-	
-		fprintf (stderr,"Mean:	   ");
-		for (i=0;i<theStackG->nwaves;i++)
-			fprintf (stderr,"\t%7.1f",theStackG->mean_i[i]);
-		fprintf (stderr,"\n");
-		
-		fprintf (stderr,"Geo. mean:");
-		for (i=0;i<theStackG->nwaves;i++)
-			fprintf (stderr,"\t%7.1f",theStackG->geomean_i[i]);
-		fprintf (stderr,"\n");
-		
-		fprintf (stderr,"Sigma:	   ");
-		for (i=0;i<theStackG->nwaves;i++)
-			fprintf (stderr,"\t%7.1f",theStackG->sigma_i[i]);
-		fprintf (stderr,"\n");
-		
-		fprintf (stderr,"Integration threshold:	 %d\n",(int) thresholdG);
-		fflush (stderr);
 #endif
 
 /*
@@ -2971,79 +3079,57 @@ fflush (stderr);
 	
 	/*
 	* Allocate memory for the first spot.
-	* theSpotG will allways point to the spot-in-progress.	Once completed,
+	* theSpot will allways point to the spot-in-progress.	Once completed,
 	* a new spot is allocated, and that new spot is then pointed to by
-	* theSpotG.	 In this way, theSpotG is allways the last spot in the list,
+	* theSpot.	 In this way, theSpot is allways the last spot in the list,
 	* and it is never a valid spot - it is either blank or in progress.
+	* Note also that there is at least one spot in each time point, though it may not be valid (volume=0).
 	*/
 	
-		theSpotG = New_Spot (NULL,theStackG,spotWave,time);
-		if (theSpotG == NULL)
+		theSpot = New_Spot (theStack,theC,theT);
+		if (theSpot == NULL)
 		{
 			fprintf (stderr,"Could not allocate memory for spot.\n");
 			exit (-1);
 		}
 	
+	
 	/*
-	* We make a new list pointed to by theSpotList for each timepoint.
-	* If this is the first timepoint, then we point theSpotListHead to theSpotG.
-	* Otherwise we set nextTimePointList of theSpotList (which is still the previous TP's list)
-	* to theSpotG.
+	* Set up the pixel indexes to loop through.
 	*/
-		if (theSpotListHead == NULL)
-			theSpotListHead = theSpotG;
-		else
-			theSpotList->nextTimePointList = theSpotG;
+		maskIndex = theStack->mask;
+		maxIndex = maskIndex + theStack->nPix;
 
 	/*
-	* Once our list is safely attached, we set theSpotList to the new spot.
+	* Run through the pixels in theC, making spots.
 	*/
-		theSpotList = theSpotG;
-	
-	
-	/*
-	* Set index to point to the first pixel in the wave which we will use
-	* to pick out spots.
-	*/
-		index = theStackG->stack + (theStackG->wave_increment*spotWave);
-	
-	/*
-	* Set a pointer to the end of this wave.
-	*/
-		maxIndex = index + theStackG->wave_increment;
-	
-	/*
-	* Run through the pixels in spotWave, making spots.
-	*/
-		while (index < maxIndex)
-		{
-		
+		while (maskIndex < maxIndex) {
+
 		/*
 		* If we run into a pixel that's above threshold, then call Eat_Spot to
 		* eat it.
 		*/
-			if (*index > thresholdG)
-			{
-				Eat_Spot (index);
+			if (*maskIndex > MASK_THRESHOLD) {
+				Eat_Spot (theSpot,maskIndex);
 			/*
 			* If the resultant spot has a volume greater than that specified,
 			* update the spot statistics, call the output routine, and make
 			* a new spot to contain the next spot-in-progress.
 			*/
-				if (theSpotG->volume >= minSpotVol)
-					{
-					Update_Spot_Stats (theSpotG);
-					theSpotG = New_Spot (theSpotList,theStackG,spotWave,time);
-					}
-			
+				if (theSpot->volume >= minSpotVol) {
+					Finish_Spot_Stats (theSpot);
+					theSpot = New_Spot (theStack,theC,theT);
+				}
+
 			/*
 			* If the spot was smaller than the minimum size, we need to make sure
 			* all the accumulators and such are zeroed-out.
 			*/
 				else
-					Zero_Spot (theSpotG,theStackG,spotWave,time);
+					Zero_Spot (theSpot,theStack,theC,theT);
 			} /* The index was > threshold so we ate a spot. */
-			index++;
+
+		maskIndex++;
 		} /* loop for all the pixels in a timepoint */
 	} /* loop for all the timepoints. */
 
@@ -3055,7 +3141,7 @@ fflush (stderr);
 /*
 * Output of spot info is handled by Write_Output
 */
-	Write_Output (theSpotListHead, argc, argv, OUTARGS);
+	Write_Output (theStack->spots, argc, argv, OUTARGS);
 	
 	Argarray_Destroy (&args);
 /*
@@ -3063,4 +3149,118 @@ fflush (stderr);
 */	
 	return (0);
 }
+
+void usage (char **argv) {
+		fprintf (stderr,"Usage:\n");
+		fprintf (stderr,"\t%s <OMEIS URL> <PixelsID> <waveindex> <threshold> <min spot vol> [<optional arguments> <output arguments>]\n", argv[0]);
+		fprintf (stderr,"Note that the brackets (<>) are used to delineate options in this usage message.\n");
+		fprintf (stderr,"Do not use brackets when actually putting in arguments.\n");
+		fprintf (stderr,"<thresholds>:\n");
+		fprintf (stderr,"\tnumber:    If a number is entered for this field, then this pixel value will be used as the threshold.\n");
+		fprintf (stderr,"\tmean:      The mean pixel value at the specified waveindex will be used as the threshold.\n");
+		fprintf (stderr,"\tmean<n>s:  The mean pixel value plus <n> standard deviations will be used as threshold.\n");
+		fprintf (stderr,"\tgmean:     The geometric mean of the specified waveindex will be used as threshold.\n");
+		fprintf (stderr,"\tgmean<n>s: The geometric mean plus <n> standard deviations will be used for threshold.\n");
+		fprintf (stderr,"\tmoment:    The moment preservation method.\n");
+		fprintf (stderr,"\totsu:      The Otsu's determinant threshold.\n");
+		fprintf (stderr,"\tme:        The maximum entropy method.\n");
+		fprintf (stderr,"\tkittler:   The Kittler method of minimum error.\n");
+		fprintf (stderr,"\n");	
+		fprintf (stderr,"<optional arguments>:\n");
+		fprintf (stderr,"\t-time <n1>-<n2> begin and end timepoints.  Default is all timepoints. -time 4- will do t4 to the end, etc.  Time begins at 0\n");
+		fprintf (stderr,"\t-polyVec <filename> output tracking vectors to DV 2-D polygon file.\n");
+		fprintf (stderr,"\t-polyTra <filename> output trajectories to DV 2-D polygon file.\n");
+		fprintf (stderr,"\t-iwght <fraction> weight of spot's average intensity for finding spots in t+1 (def. = 0.0).\n");
+		fprintf (stderr,"<Output arguments>:\n");
+		fprintf (stderr,"  Output is tab-delimited text with one line per spot.  Any summary information specified (-tm, -tt, etc) will be\n");
+		fprintf (stderr,"  displayed once for each spot - not once per timepoint. Column order will be as specified in <Output arguments>,\n");
+		fprintf (stderr,"\t-nl Supress column headings.  Usefull if database does not recognize column headings (i.e. FileMaker)\n");
+		fprintf (stderr,"\t-ID Display the spot's ID# - a 'serial number' unique to each spot in this dataset.\n");
+		fprintf (stderr,"\t-dID Dataset ID - Usefull if combining many images in a database.  The ID is the PixelsID supplied, and will\n");
+		fprintf (stderr,"\t     be the same for all spots in this image.\n");
+		fprintf (stderr,"\t-aID Argument ID.  Display input arguments - text containing the required arguments for this run - everything except\n");
+		fprintf (stderr,"\t     the filename, polyVec, polyTra and <output arguments>.  The arguments are separated by a space, not a tab.\n");
+		fprintf (stderr,"### Channel/spectral data ###\n");
+		fprintf (stderr,"  The <waveindex> parameter is optional.  If it is omitted, the indicated information is output for all wavelengths/channels\n");
+		fprintf (stderr,"  Channels/wavelengths in the image are indexed starting with 0\n");
+		fprintf (stderr,"\t-c <waveindex>: Display centroids (center of mass).\n");
+		fprintf (stderr,"\t-i <waveindex>:  Display integral - sum of pixel values\n");
+		fprintf (stderr,"\t-m <waveindex> Display mean pixel value.\n");
+		fprintf (stderr,"\t-g <waveindex> Display the geometric mean pixel value.\n");
+		fprintf (stderr,"\t-ms <waveindex> Same as -m, but number of std. deviations over the waveindex's mean.\n");
+		fprintf (stderr,"\t-gs <waveindex> Same as -g, but number of std. deviations over the waveindex's geometric mean.\n");
+		fprintf (stderr,"### Spatial data ###\n");
+		fprintf (stderr,"\t-mc Display the average coordinate values of the spot (center of volume).\n");
+		fprintf (stderr,"\t-v Display the spot's volume\n");
+		fprintf (stderr,"\t-ff Display the spot's form-factor (1 for sphere in 3D or circle in 2D, <1 if deviates)\n");
+		fprintf (stderr,"\t-per Display the spot's perimiter\n");
+		fprintf (stderr,"\t-sa Display the spot's surface area\n");
+		fprintf (stderr,"### Time series data ###\n");
+		fprintf (stderr,"\t-tm Display mean pixel value of the entire timepoint for the spot's waveindex\n");
+		fprintf (stderr,"\t-tSD Display the standard deviation of the entire timepoint for the spot's waveindex\n");
+		fprintf (stderr,"\t-tt Display the timepoint number\n");
+		fprintf (stderr,"\t-th Display the threshold used for the timepoint\n");
+		fprintf (stderr,"\n");	
+		fprintf (stderr,"Example:\n");
+		fprintf (stderr,"\tfindSpotsOME http://omeis.foo.com/cgi-bin/omeis 123 0 gmean1.5s 10 -polyTra polyFoo -db -tt -th -c -i -m -g -ms -gs -mc -v -sa -per -ff\n");
+		fprintf (stderr,"\n");	
+}
+
+
+double PixValueIdx_uint8 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (uint8_t *)(theStack)+pixIndex);
+}
+
+double PixValueIdx_uint16 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (uint16_t *)(theStack)+pixIndex);
+}
+
+double PixValueIdx_uint32 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (uint32_t *)(theStack)+pixIndex);
+}
+
+double PixValueIdx_int8 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (int8_t *)(theStack)+pixIndex);
+}
+
+double PixValueIdx_int16 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (int16_t *)(theStack)+pixIndex);
+}
+
+double PixValueIdx_int32 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (int32_t *)(theStack)+pixIndex);
+}
+
+double PixValueIdx_float (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (float *)(theStack)+pixIndex);
+}
+
+double PixValueCrd_uint8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (uint8_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+}
+
+double PixValueCrd_uint16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (uint16_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+}
+
+double PixValueCrd_uint32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (uint32_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+}
+
+double PixValueCrd_int8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (int8_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+}
+
+double PixValueCrd_int16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (int16_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+}
+
+double PixValueCrd_int32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (int32_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+}
+
+double PixValueCrd_float (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (float *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+}
+
 

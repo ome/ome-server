@@ -209,7 +209,7 @@ sub print_form{
 	my $image = $image_list[0];
 	my $channelLabels= $imageManager->getImageWavelengths($image);
 	my %labels = map{ $_->{WaveNum} => $_->{Label} } @$channelLabels ;
-	my @values = map( $_->{WaveNum}, @$channelLabels );
+	my @values = map( $_->{Label}, @$channelLabels );
 	$tableColumns[1] = $cgi->popup_menu( 
 		-name	  => 'Channel',
 		'-values' => \@values,

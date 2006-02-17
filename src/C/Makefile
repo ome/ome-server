@@ -7,6 +7,8 @@ FINK_INCLUDE = -I/sw/include/
 INCS    = -I/usr/local/include $(FINK_INCLUDE)
 COMPRESSION_LIBS = -lz -lbz2
 MATH_LIBS = -lm
+OMEIS_LIBS = -lcurl -lhttpOMEIS
+OMEIS_LIBPATHS = -Lomeis-http
 LIBPATHS = -L/usr/local/lib -L/sw/lib
 LIBS = $(MATH_LIBS) $(LIBPATHS)
 DEFINES = -DDEBUG
@@ -34,8 +36,8 @@ BSUtils.o: BSUtils.c
 readTiffData.o: readTiffData.c readTIFF.h
 	$(CC) $(CFLAGS) -c readTiffData.c
 
-findSpotsOME : findSpotsOME.c readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
-	$(CC) $(CFLAGS) findSpotsOME.c readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
+findSpotsOME : findSpotsOME.c iolib/argarray.o omeis-http/httpOMEIS.o
+	$(CC) $(CFLAGS) $(OMEIS_LIBPATHS) findSpotsOME.c iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} ${OMEIS_LIBS}
 
 BinarizeGlobal: BinarizeGlobal.c readTIFF.h readTiffData.o BSUtils.o
 	$(CC) $(CFLAGS) readTiffData.o BSUtils.o BinarizeGlobal.c -o BinarizeGlobal ${MATH_LIBS} -ltiff

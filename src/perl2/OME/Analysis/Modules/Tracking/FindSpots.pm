@@ -45,17 +45,17 @@ use IO::File;
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
-use fields qw(_options _inputHandle _outputHandle _errorHandle
-              _inputFile _outputFile _errorFile _cmdLine);
+use fields qw(_options _outputHandle _errorHandle
+              _outputFile _errorFile _cmdLine);
+use OME::Tasks::ImageManager;
 
-use OME::Tasks::PixelsManager;
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
     my $self = $class->SUPER::new(@_);
 
-    $self->{_options} = "-db -tt -th -c 0 -i 0 -m 0 -g 0 -ms 0 -gs 0 -mc -v -sa -per -ff";
+    $self->{_options} = "-db -tt -th -c -i -m -g -ms -gs -mc -v -sa -per -ff";
 
 
     bless $self,$class;
@@ -63,20 +63,23 @@ sub new {
 }
 
 sub startImage {
-    my ($self,$image) = @_;
-    $self->SUPER::startImage($image);
+    my ($self,$imageIN) = @_;
+    $self->SUPER::startImage($imageIN);
 
     my $image       = $self->getCurrentImage();
     my $pixels_attr = $self->getCurrentInputAttributes("Pixels")->[0];
-    my $pixels_data = OME::Tasks::PixelsManager->loadPixels( $pixels_attr );
-    my $path        = $pixels_data->getTemporaryLocalPixels();
+    my $path        = $pixels_attr->Repository()->ImageServerURL().' '.$pixels_attr->ImageServerID;
     my $location    = $self->getModule()->location();
     my $options     = $self->{_options};
 
     my $params = $self->getCurrentInputAttributes("Parameters")->[0];
     my $paramopts = " ";
 
-    my $channel = $params->Channel();
+	# The channel is a label.  We have to convert it to a channel index
+	my $channelLabels= OME::Tasks::ImageManager->getImageWavelengths($image);
+	my %channelIndexes = map{ $_->{Label} => $_->{WaveNum} } @$channelLabels ;
+
+    my $channel = $channelIndexes{$params->Channel()};
     if (defined $channel) {
         if ($channel >= 0 && $channel < $pixels_attr->SizeC()) {
             my $v = sprintf("%d",$channel);
@@ -152,93 +155,31 @@ sub startImage {
 
     my $cmdLine = "$location $path $paramopts $options";
 
-    my ($input, $output, $error, $pid);
+    my ($output, $error, $pid);
     my $session = $self->Session();
-    my $inputFile  = $session->getTemporaryFilename("findSpots","stdin");
     my $outputFile = $session->getTemporaryFilename("findSpots","stdout");
     my $errorFile  = $session->getTemporaryFilename("findSpots","stderr");
 
-    $input = new IO::File;
     $output = new IO::File;
     $error = new IO::File;
-    open $input, "> $inputFile";
-
     print STDERR "      $cmdLine\n";
 
-    $self->{_inputHandle} = $input;
     $self->{_outputHandle} = $output;
     $self->{_errorHandle} = $error;
-    $self->{_inputFile} = $inputFile;
     $self->{_outputFile} = $outputFile;
     $self->{_errorFile} = $errorFile;
     $self->{_currentImage} = $image;
     $self->{_cmdLine} = $cmdLine;
 
-    my $dimString = "Dims=".$pixels_attr->SizeX().",".$pixels_attr->SizeY().
-	",".$pixels_attr->SizeZ().",".$pixels_attr->SizeC().",".$pixels_attr->SizeT();
-
-    print $input "$dimString\nWaveStats=\n";
-
-    my $mean_list = $self->getCurrentInputAttributes('Stack means');
-    my $geomean_list = $self->getCurrentInputAttributes('Stack geomeans');
-    my $sigma_list = $self->getCurrentInputAttributes('Stack sigmas');
-    my $min_list = $self->getCurrentInputAttributes('Stack minima');
-    my $max_list = $self->getCurrentInputAttributes('Stack maxima');
-    my $geosigma_list = $self->getCurrentInputAttributes('Stack geosigmas');
-
-    die "Bad input lists"
-        if (scalar(@$mean_list) != scalar(@$geomean_list))
-            || (scalar(@$mean_list) != scalar(@$sigma_list))
-            || (scalar(@$mean_list) != scalar(@$min_list))
-            || (scalar(@$mean_list) != scalar(@$max_list)) || (scalar(@$mean_list) != scalar(@$geosigma_list) );
-
-
-    my %wave_stats;
-
-    $wave_stats{$_->TheT()}->{$_->TheC()}->{Mean} = $_->Mean()
-        foreach @$mean_list;
-    $wave_stats{$_->TheT()}->{$_->TheC()}->{Geomean} = $_->GeometricMean()
-        foreach @$geomean_list;
-    $wave_stats{$_->TheT()}->{$_->TheC()}->{Sigma} = $_->Sigma()
-        foreach @$sigma_list;
-    $wave_stats{$_->TheT()}->{$_->TheC()}->{Min} = $_->Minimum()
-        foreach @$min_list;
-    $wave_stats{$_->TheT()}->{$_->TheC()}->{Max} = $_->Maximum()
-        foreach @$max_list;
-    $wave_stats{$_->TheT()}->{$_->TheC()}->{Geosigma} = $_->GeometricSigma()
-        foreach @$geosigma_list;
-
-    foreach my $time (sort {$a <=> $b} (keys %wave_stats)) {
-        my $stats = $wave_stats{$time};
-
-        foreach my $wave (sort {$a <=> $b} (keys %$stats)) {
-            my @stats = ($wave,
-                         $wave,
-                         $time,
-                         $wave_stats{$time}->{$wave}->{Min},
-                         $wave_stats{$time}->{$wave}->{Max},
-                         $wave_stats{$time}->{$wave}->{Mean},
-                         $wave_stats{$time}->{$wave}->{Geomean},
-                         $wave_stats{$time}->{$wave}->{Sigma},
-				 $wave_stats{$time}->{$wave}->{Geosigma},
-				);
-            my $wave_stat = join(',',@stats);
-            print $input "$wave_stat\n";
-        }
-    }
-
-    close $input;
 
     #$cmdLine = $self->{_cmdLine};
-    system("$cmdLine < ".$self->{_inputFile}.
-	   " > ".$self->{_outputFile}.
+    system("$cmdLine > ".$self->{_outputFile}.
 	   " 2> ".$self->{_errorFile});
 
     open $self->{_outputHandle}, "< ".$self->{_outputFile};
     open $self->{_errorHandle}, "< ".$self->{_errorFile};
 
     $self->{_features} = [];
-	$session->finishTemporaryFile($path);
 
 }
 
@@ -258,7 +199,7 @@ sub finishImage {
     }
 
     my $image = $self->getCurrentImage();
-    my $wavelength_rex = qr/^([cimg])\[([ 0-9]+)\]([XYZ])?$/;
+    my $wavelength_rex = qr/^(c|i|m|g|ms|gs)\[(\s*[0-9]+)\]([XYZ])?$/;
 
     my $spotCount = 1;
 
@@ -271,7 +212,7 @@ sub finishImage {
 	          push @data, $datum;
 	     	}
 
-	    	my $feature = $self->newFeature('Spot '+$spotCount++);
+	    	my $feature = $self->newFeature('Spot '.$spotCount++);
            	my $featureID = $feature->id();
            	print STDERR "ns$featureID ";
 
@@ -341,6 +282,10 @@ sub finishImage {
 		           $signalData->{Mean} = $datum;
 		         } elsif ($c1 eq "g") {
 		           $signalData->{GeometricMean} = $datum;
+		         } elsif ($c1 eq "ms") {
+		           $signalData->{Sigma} = $datum;
+		         } elsif ($c1 eq "gs") {
+		           $signalData->{GeometricSigma} = $datum;
 		        }
         } else {
 		      #print STDERR "?";
@@ -361,7 +306,6 @@ sub finishImage {
     close $self->{_errorHandle};
 
     my $session = OME::Session->instance();
-    $session->finishTemporaryFile($self->{_inputFile});
     $session->finishTemporaryFile($self->{_outputFile});
     $session->finishTemporaryFile($self->{_errorFile});
 
