@@ -195,6 +195,12 @@ int setPixels (const omeis *is, OID pixelsID, const void* pixels)
 	smartBuffer buffer;
 	CURL* curl;
 	
+	if (head == NULL) {
+		fprintf (stderr,"PixelsID=%llu is invalid.\n", (unsigned long long) pixelsID);
+		oFree(head);
+		return 0;
+	}
+	
 	/* initialize smart Buffer for output */
 	buffer.buffer = (unsigned char*) oCalloc(1024,1);
 	buffer.len = 0;
@@ -273,6 +279,12 @@ void* getPixels (const omeis* is, OID pixelsID)
     pixHeader* ph;
 
     ph = pixelsInfo (is, pixelsID);
+    
+    if (ph == NULL) {
+		fprintf (stderr,"PixelsID=%llu is invalid.\n", (unsigned long long) pixelsID);
+		oFree(ph);
+		return NULL;
+	}
     int bytes = ph->dx*ph->dy*ph->dz*ph->dc*ph->dt*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
@@ -387,6 +399,12 @@ int setROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int t
 	smartBuffer buffer;
 	CURL* curl;
 	
+	if (head == NULL) {
+		fprintf (stderr,"PixelsID=%llu is invalid.\n", (unsigned long long) pixelsID);
+		oFree(head);
+		return 0;
+	}
+	
 	/* initialize smart Buffer for output */
 	buffer.buffer = (unsigned char*) oCalloc(1024,1);
 	buffer.len = 0;
@@ -473,7 +491,13 @@ void* getROI (const omeis *is, OID pixelsID, int x0, int y0, int z0, int c0, int
     pixHeader* ph;
 
     ph = pixelsInfo (is, pixelsID);
-    int bytes = (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*ph->bp;
+	if (ph == NULL) {
+		fprintf (stderr,"PixelsID=%llu is invalid.\n", (unsigned long long) pixelsID);
+		oFree(ph);
+		return NULL;
+	}
+
+	int bytes = (x1-x0+1)*(y1-y0+1)*(z1-z0+1)*(c1-c0+1)*(t1-t0+1)*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
 	oFree(ph);
@@ -504,6 +528,12 @@ void* getStack (const omeis *is, OID pixelsID, int theC, int theT)
     pixHeader* ph;
 
     ph = pixelsInfo (is, pixelsID);
+    if (ph == NULL) {
+		fprintf (stderr,"PixelsID=%llu is invalid.\n", (unsigned long long) pixelsID);
+		oFree(ph);
+		return NULL;
+	}
+	
     bytes = ph->dx*ph->dy*ph->dz*ph->bp;
 	if (bytes < 1024)
     	bytes = 1024;
@@ -555,13 +585,19 @@ pixStats **getStackStats (const omeis *is, OID pixelsID){
     pixHeader* ph;
 
     ph = pixelsInfo (is, pixelsID);
+	if (ph == NULL) {
+		fprintf (stderr,"PixelsID=%llu is invalid.\n", (unsigned long long) pixelsID);
+		oFree(ph);
+		return NULL;
+	}
 	nC = ph->dc;
 	nT = ph->dt;
 	oFree(ph);
 
 	sprintf(command,"%s%sMethod=GetStackStats&PixelsID=%llu",is->url,"?", pixelsID);
+
 	buffer = (char*) executeGETCall(is, command, 1024);
-	
+
 	if (buffer == NULL) {
 		fprintf (stderr, "Could not get response from server. Perhaps URL `%s` is wrong.\n", is->url);	
 		return NULL;
@@ -662,6 +698,11 @@ pixStats ***getPlaneStats (const omeis *is, OID pixelsID){
     pixHeader* ph;
 
     ph = pixelsInfo (is, pixelsID);
+	if (ph == NULL) {
+		fprintf (stderr,"PixelsID=%llu is invalid.\n", (unsigned long long) pixelsID);
+		oFree(ph);
+		return NULL;
+	}
 	nZ = ph->dz;
 	nC = ph->dc;
 	nT = ph->dt;
