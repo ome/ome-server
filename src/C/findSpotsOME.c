@@ -131,8 +131,6 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
-#include "iolib/failio.h"
-#include "iolib/argarray.h"
 #include "omeis-http/httpOMEIS.h"
 
 
@@ -519,7 +517,8 @@ void Zero_Spot (SpotPtr theSpot,PixStack *theStack, coordinate itsWave, coordina
 void Finish_Spot_Stats (SpotPtr theSpot);
 void Output_Spot (SpotPtr theSpot, int argc, char**argv,int outArgs, char saywhat);
 void Write_Output (SpotPtr theSpotList,int argc, char**argv,int outArgs);
-void Compose_inArgs (char *inArgs, int argc, char**argv);
+int getArg (int argc, char **argv, const char *theArg);
+
 
 double Set_Threshold (const char *arg, PixStack *theStack);
 double *Get_Prob_Hist (PixStack *theStack, unsigned short *histSizePtr);
@@ -1884,42 +1883,6 @@ double surfaceArea = 0;
 
 
 
-/*#########################*/
-/*#                       #*/
-/*#    Compose_inArgs     #*/
-/*#                       #*/
-/*#########################*/
-/*
-* This little functions composes the string that will be sent to output when the -aID option
-* is used.  This string contains all the input arguments that affect this run.  The string pointer
-* passed in must point to some allocated memory.  This function does not allocate memory.
-*/
-void Compose_inArgs (char *inArgs, int argc, char**argv)
-{
-int i;
-
-
-	sprintf (inArgs,"%s %s %s",argv[2],argv[3],argv[4]);
-	for (i=0;i<argc;i++)
-	    {
-	    if (!strcmp (argv[i],"-iwght"))
-	        {
-	        strcat (inArgs," ");
-	        strcat (inArgs,argv[i]);
-	        strcat (inArgs," ");
-	        strcat (inArgs,argv[i+1]);
-	        }
-		else if (!strncmp (argv[i],"-time",5))
-			{
-			strcat (inArgs," ");
-			strcat (inArgs,argv[i]);
-			}
-		}
-}
-
-
-
-
 
 
 
@@ -1941,7 +1904,7 @@ coordinate theWave=0;
 PixStack *theStack;
 char doDB = 0;
 char *endPtr;
-static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
+static char dIDcontrolString[32]="-";
 
 
 	if (outSpot == NULL)
@@ -1996,25 +1959,7 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
 		} /* -tID */
-	
-
-/* -aID :	 Output the arguments for this run (argument identifier) */
-		if (!strcmp ( argv[theArg],"-aID"))
-		{
-
-			if (strlen (inArgs) < 2 )
-				{
-				Compose_inArgs (inArgs,argc,argv);
-				sprintf (aIDcontrolString,"%%%ds",(int)strlen(inArgs));
-				}
-			if (saywhat == HEADING)
-				fprintf (stdout,aIDcontrolString,"args.");
-			else
-			    fprintf (stdout,aIDcontrolString,inArgs);
-		/* If there are more arguments to come, spit out a tab character. */
-			fprintf (stdout,"\t");
-		} /* -tID */
-	
+		
 
 /* -v :	 Ouput volume */
 		if (!strcmp ( argv[theArg],"-v"))
@@ -2075,9 +2020,33 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 				fprintf (stdout,"mean X\tmean Y\tmean Z");
 			else
 				fprintf (stdout,"%f\t%f\t%f",
-				outSpot->mean_x,outSpot->mean_y,outSpot->mean_z);
+					outSpot->mean_x,outSpot->mean_y,outSpot->mean_z);
 			fprintf (stdout,"\t");
 		} /* -mc */
+	
+
+/* -sd :  Ouput std. deviation for the spot's X, Y and Z (dispersion) */
+		else if (!strcmp ( argv[theArg],"-sd"))
+		{
+			if (saywhat == HEADING)
+				fprintf (stdout,"sigma X\tsigma Y\tsigma Z");
+			else
+				fprintf (stdout,"%f\t%f\t%f",
+					outSpot->sigma_x,outSpot->sigma_y,outSpot->sigma_z);
+			fprintf (stdout,"\t");
+		} /* -sd */
+	
+
+/* -box :  Ouput min and max values for the spot's X, Y and Z coordinates (bounding box) */
+		else if (!strcmp ( argv[theArg],"-box"))
+		{
+			if (saywhat == HEADING)
+				fprintf (stdout,"min X\tmin Y\tmin Z\tmax X\tmax Y\tmax Z");
+			else
+				fprintf (stdout,"%lu\t%lu\t%lu\t%lu\t%lu\t%lu",
+					outSpot->min_x,outSpot->min_y,outSpot->min_z,outSpot->max_x,outSpot->max_y,outSpot->max_z);
+			fprintf (stdout,"\t");
+		} /* -sd */
 	
 	
 /* -c <n> :	 Ouput centroids (center of mass - different at each wavelegth) */
@@ -2287,18 +2256,13 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 void Write_Output (SpotPtr theSpotListHead,int argc, char**argv,int outArgs)
 {
 SpotPtr theSpot,theTimepointListHead;
-char done=0,doDB=0,doLabels=1;
+char done=0,doDB=1,doLabels=1;
 int thisTime,i;
 PixStack *theStack;
 
 	theStack = theSpotListHead->itsStack;
-	for (i=0;i<argc;i++)
-		{
-		if (!strcmp ( argv[i],"-db"))
-			doDB=1;
-		if (!strcmp ( argv[i],"-nl"))
-			doLabels=0;
-		}
+	if (getArg (argc,argv,"-nl") > -1) doLabels=0;
+
 /*
 * Write column headings if we're supposed to.  If we've suppressed column headings or we're writing a dabase, don't
 * print these out.  If we're doing database style, then we'll print them in output spot wherever the user wants them.
@@ -2939,14 +2903,12 @@ fflush (stderr);
 
 int main (int argc, char **argv)
 {
-int minSpotVol;
+int minSpotVol,argIndx;
 coordinate theC, theT;
 MaskPtr maskIndex,maxIndex;
 coordinate tStart=0,tStop=0;
 SpotPtr theSpot;
-const char* argval = NULL;
 const char* threshold = NULL;
-argarray_t args;
 OID PixelsID;
 PixStack *theStack;
 
@@ -2959,11 +2921,6 @@ PixStack *theStack;
 argc = ccommand(&argv);
 #endif
 
-/*
- * Initialize argument parser. Read args from stdin and add the args from CLI
-*/
-	Argarray_Initialize (&args);
-	Argarray_ImportDashCLI (&args, argc, argv);
 
 /*
 * Write the command line arguments to stdout - mainly so that
@@ -2971,8 +2928,9 @@ argc = ccommand(&argv);
 * this output also.
 */
 #ifdef DEBUG
-	if (!Argarray_NameExists (&args, "db"))
-		Argarray_DumpArgs (&args);
+	if (getArg (argc,argv, "db") > -1) {
+		for (argIndx=0; argIndx < argc; argIndx++) fprintf (stderr,"%s ",argv[argIndx]);
+	}
 #endif
 
 /*
@@ -3018,9 +2976,9 @@ fflush (stderr);
 	/*
 	* Read the timespan option
 	*/
-	argval = Argarray_GetString (&args, "time");
-	if (argval) {
-		sscanf (argval, "%lu-%lu", &tStart, &tStop);
+	if ( (argIndx = getArg (argc, argv, "-time")) > -1 && argIndx < argc) {
+		sscanf (argv[argIndx+1], "%lu-%lu", &tStart, &tStop);
+		if (tStart == tStop) tStop++;
 		if (tStart >= theStack->ph->dt)
 			tStart = 0;
 		if (tStop >= theStack->ph->dt || tStop < tStart)
@@ -3035,7 +2993,7 @@ fflush (stderr);
 /*
 * We are going to output the thresholds - one per timepoint - on a single line.
 */
-	fprintf (stderr,"argval: %s, tStart:%lu, tStop:%lu\n", argval, tStart,tStop);
+	fprintf (stderr,"time argument: %s, tStart:%lu, tStop:%lu\n", argv[argIndx+1], tStart,tStop);
 fflush (stderr);
 #endif
 
@@ -3143,7 +3101,6 @@ fflush (stderr);
 */
 	Write_Output (theStack->spots, argc, argv, OUTARGS);
 	
-	Argarray_Destroy (&args);
 /*
 * Exit gracefully.
 */	
@@ -3168,9 +3125,6 @@ void usage (char **argv) {
 		fprintf (stderr,"\n");	
 		fprintf (stderr,"<optional arguments>:\n");
 		fprintf (stderr,"\t-time <n1>-<n2> begin and end timepoints.  Default is all timepoints. -time 4- will do t4 to the end, etc.  Time begins at 0\n");
-		fprintf (stderr,"\t-polyVec <filename> output tracking vectors to DV 2-D polygon file.\n");
-		fprintf (stderr,"\t-polyTra <filename> output trajectories to DV 2-D polygon file.\n");
-		fprintf (stderr,"\t-iwght <fraction> weight of spot's average intensity for finding spots in t+1 (def. = 0.0).\n");
 		fprintf (stderr,"<Output arguments>:\n");
 		fprintf (stderr,"  Output is tab-delimited text with one line per spot.  Any summary information specified (-tm, -tt, etc) will be\n");
 		fprintf (stderr,"  displayed once for each spot - not once per timepoint. Column order will be as specified in <Output arguments>,\n");
@@ -3178,8 +3132,6 @@ void usage (char **argv) {
 		fprintf (stderr,"\t-ID Display the spot's ID# - a 'serial number' unique to each spot in this dataset.\n");
 		fprintf (stderr,"\t-dID Dataset ID - Usefull if combining many images in a database.  The ID is the PixelsID supplied, and will\n");
 		fprintf (stderr,"\t     be the same for all spots in this image.\n");
-		fprintf (stderr,"\t-aID Argument ID.  Display input arguments - text containing the required arguments for this run - everything except\n");
-		fprintf (stderr,"\t     the filename, polyVec, polyTra and <output arguments>.  The arguments are separated by a space, not a tab.\n");
 		fprintf (stderr,"### Channel/spectral data ###\n");
 		fprintf (stderr,"  The <waveindex> parameter is optional.  If it is omitted, the indicated information is output for all wavelengths/channels\n");
 		fprintf (stderr,"  Channels/wavelengths in the image are indexed starting with 0\n");
@@ -3195,6 +3147,8 @@ void usage (char **argv) {
 		fprintf (stderr,"\t-ff Display the spot's form-factor (1 for sphere in 3D or circle in 2D, <1 if deviates)\n");
 		fprintf (stderr,"\t-per Display the spot's perimiter\n");
 		fprintf (stderr,"\t-sa Display the spot's surface area\n");
+		fprintf (stderr,"\t-sd Display the spot's dispersion - std. deviation of the spot's X,Y and Z\n");
+		fprintf (stderr,"\t-box :  Ouput min and max values for the spot's X, Y and Z coordinates (bounding box)\n");
 		fprintf (stderr,"### Time series data ###\n");
 		fprintf (stderr,"\t-tm Display mean pixel value of the entire timepoint for the spot's waveindex\n");
 		fprintf (stderr,"\t-tSD Display the standard deviation of the entire timepoint for the spot's waveindex\n");
@@ -3202,8 +3156,16 @@ void usage (char **argv) {
 		fprintf (stderr,"\t-th Display the threshold used for the timepoint\n");
 		fprintf (stderr,"\n");	
 		fprintf (stderr,"Example:\n");
-		fprintf (stderr,"\tfindSpotsOME http://omeis.foo.com/cgi-bin/omeis 123 0 gmean1.5s 10 -polyTra polyFoo -db -tt -th -c -i -m -g -ms -gs -mc -v -sa -per -ff\n");
+		fprintf (stderr,"\tfindSpotsOME http://omeis.foo.com/cgi-bin/omeis 123 0 gmean1.5s 10 -tt -th -c -i -m -g -ms -gs -mc -v -sa -per -ff\n");
 		fprintf (stderr,"\n");	
+}
+
+int getArg (int argc, char **argv, const char *theArg) {
+	while (argc > 0) {
+		argc--;
+		if (! strcmp (theArg,argv[argc]) ) return (argc);
+	}
+	return (-1);
 }
 
 

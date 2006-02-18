@@ -36,8 +36,8 @@ BSUtils.o: BSUtils.c
 readTiffData.o: readTiffData.c readTIFF.h
 	$(CC) $(CFLAGS) -c readTiffData.c
 
-findSpotsOME : findSpotsOME.c iolib/argarray.o omeis-http/httpOMEIS.o
-	$(CC) $(CFLAGS) $(OMEIS_LIBPATHS) findSpotsOME.c iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} ${OMEIS_LIBS}
+findSpotsOME : findSpotsOME.c omeis-http/httpOMEIS.o
+	$(CC) $(CFLAGS) $(OMEIS_LIBPATHS) findSpotsOME.c -o findSpotsOME ${MATH_LIBS} ${OMEIS_LIBS}
 
 BinarizeGlobal: BinarizeGlobal.c readTIFF.h readTiffData.o BSUtils.o
 	$(CC) $(CFLAGS) readTiffData.o BSUtils.o BinarizeGlobal.c -o BinarizeGlobal ${MATH_LIBS} -ltiff
