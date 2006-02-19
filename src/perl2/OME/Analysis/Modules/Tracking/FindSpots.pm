@@ -42,6 +42,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use IO::File;
+use Log::Agent;
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
@@ -55,7 +56,7 @@ sub new {
 
 	my $self = $class->SUPER::new(@_);
 
-	$self->{_options} = "-db -tt -th -c -i -m -g -ms -gs -mc -v -sa -per -ff -box -sd";
+	$self->{_options} = "-tt -th -c -i -m -g -ms -gs -mc -v -sa -per -ff -box -sd";
 
 
 	bless $self,$class;
@@ -186,140 +187,164 @@ sub startImage {
 
 sub finishImage {
 	my ($self) = @_;
-
+	
 	my $output = $self->{_outputHandle};
+	my $image = $self->getCurrentImage();
+	my $channel_rex = qr/^(c|i|m|g|ms|gs)\[(\s*[0-9]+)\]([XYZ])?$/;
+	my $channel;
+
+	my $spotCount = 1;
+	my %Timepoint_key;
+	my %Threshold_key;
+	my %Location_key;
+	my %Extent_key;
+	my %Signals_key;
+	
+	my @headers;
+	my $col_num=0;
 
 	my $headers = <$output>;
 	chomp $headers;
-	my @headers;
 	foreach my $header (split("\t",$headers)) {
-		 $header =~ s/^\s+//;
-		 $header =~ s/\s+$//;
-		 push @headers, $header;
+		$header =~ s/^\s+//;
+		$header =~ s/\s+$//;
+		push @headers, $header;
+
+		if ($header eq "t") {
+			$Timepoint_key{TheT} = $col_num;
+		} elsif ($header eq "Thresh.") {
+			$Threshold_key{Threshold} = $col_num;
+		} elsif ($header eq "mean X") {
+			$Location_key{TheX} = $col_num;
+		} elsif ($header eq "mean Y") {
+			$Location_key{TheY} = $col_num;
+		} elsif ($header eq "mean Z") {
+			$Location_key{TheZ} = $col_num;
+		
+		} elsif ($header eq "volume") {
+			$Extent_key{Volume} = $col_num;
+		} elsif ($header eq "min X") {
+			$Extent_key{MinX} = $col_num;
+		} elsif ($header eq "min Y") {
+			$Extent_key{MinY} = $col_num;
+		} elsif ($header eq "min Z") {
+			$Extent_key{MinZ} = $col_num;
+		} elsif ($header eq "max X") {
+			$Extent_key{MaxX} = $col_num;
+		} elsif ($header eq "max Y") {
+			$Extent_key{MaxY} = $col_num;
+		} elsif ($header eq "max Z") {
+			$Extent_key{MaxZ} = $col_num;
+		} elsif ($header eq "sigma X") {
+			$Extent_key{SigmaX} = $col_num;
+		} elsif ($header eq "sigma Y") {
+			$Extent_key{SigmaY} = $col_num;
+		} elsif ($header eq "sigma Z") {
+			$Extent_key{SigmaZ} = $col_num;
+		} elsif ($header eq "Surf. Area") {
+			$Extent_key{SurfaceArea} = $col_num
+		} elsif ($header eq "perimiter") {
+			$Extent_key{Perimeter} = $col_num;
+		} elsif ($header eq "Form Factor") {
+			$Extent_key{FormFactor} = $col_num;
+		
+		} elsif ($header =~ /$channel_rex/) {
+			my $c1 = $1;
+			my $channel = $2;
+			my $c2 = $3;
+			
+			if (($c1 eq "c") && ($c2 eq "X")) {
+				$Signals_key{$channel}{CentroidX} = $col_num;
+			} elsif (($c1 eq "c") && ($c2 eq "Y")) {
+				$Signals_key{$channel}{CentroidY} = $col_num;
+			} elsif (($c1 eq "c") && ($c2 eq "Z")) {
+				$Signals_key{$channel}{CentroidZ} = $col_num;
+			} elsif ($c1 eq "i") {
+				$Signals_key{$channel}{Integral} = $col_num;
+			} elsif ($c1 eq "m") {
+				$Signals_key{$channel}{Mean} = $col_num;
+			} elsif ($c1 eq "g") {
+				$Signals_key{$channel}{GeometricMean} = $col_num;
+			} elsif ($c1 eq "ms") {
+				$Signals_key{$channel}{Sigma} = $col_num;
+			} elsif ($c1 eq "gs") {
+				$Signals_key{$channel}{GeometricSigma} = $col_num;
+			}
+		}
+
+		$col_num++;
 	}
 
-	my $image = $self->getCurrentImage();
-	my $wavelength_rex = qr/^(c|i|m|g|ms|gs)\[(\s*[0-9]+)\]([XYZ])?$/;
 
-	my $spotCount = 1;
+	my %Timepoint_data;
+	my %Threshold_data;
+	my %Location_data;
+	my %Extent_data;
+	my %Signals_data;
+
 
 	while (my $line = <$output>) {
-			chomp $line;
-			my @data;
-			foreach my $datum (split("\t",$line)) {
-			  $datum =~ s/^\s+//;
-			  $datum =~ s/\s+$//;
-			  push @data, $datum;
-			}
+		chomp $line;
+		my @data;
+		$col_num = 0;
+		foreach my $datum (split("\t",$line)) {
+			$datum =~ s/^\s+//;
+			$datum =~ s/\s+$//;
+			$datum = undef if ($datum =~ /inf/i || $datum =~ /nan/i);
+			push (@data,$datum);
+		}
+		
+		$Timepoint_data{TheT} = $data[$Timepoint_key{TheT}];
+		$Threshold_data{Threshold} = $data[$Threshold_key{Threshold}];
 
-			my $feature = $self->newFeature('Spot '.$spotCount++);
-			my $featureID = $feature->id();
-			print STDERR "ns$featureID ";
+		$Location_data{TheX} = $data[$Location_key{TheX}];
+		$Location_data{TheY} = $data[$Location_key{TheY}];
+		$Location_data{TheZ} = $data[$Location_key{TheZ}];
+		
+		$Extent_data{Volume} = $data[$Extent_key{Volume}];
+		$Extent_data{MinX} = $data[$Extent_key{MinX}];
+		$Extent_data{MinY} = $data[$Extent_key{MinY}];
+		$Extent_data{MinZ} = $data[$Extent_key{MinZ}];
+		$Extent_data{MaxX} = $data[$Extent_key{MaxX}];
+		$Extent_data{MaxY} = $data[$Extent_key{MaxY}];
+		$Extent_data{MaxZ} = $data[$Extent_key{MaxZ}];
+		$Extent_data{SigmaX} = $data[$Extent_key{SigmaX}];
+		$Extent_data{SigmaY} = $data[$Extent_key{SigmaY}];
+		$Extent_data{SigmaZ} = $data[$Extent_key{SigmaZ}];
+		$Extent_data{SurfaceArea} = $data[$Extent_key{SurfaceArea}];
+		$Extent_data{Perimeter} = $data[$Extent_key{Perimeter}];
+		$Extent_data{FormFactor} = $data[$Extent_key{FormFactor}];
+		
+		foreach $channel (keys (%Signals_key) ) {
+			$Signals_data{$channel} = {} unless exists $Signals_data{$channel};
+			$Signals_data{$channel}->{TheC} = $channel;
+			$Signals_data{$channel}->{CentroidX} = $data[$Signals_key{$channel}{CentroidX}];
+			$Signals_data{$channel}->{CentroidY} = $data[$Signals_key{$channel}{CentroidY}];
+			$Signals_data{$channel}->{CentroidZ} = $data[$Signals_key{$channel}{CentroidZ}];
+			$Signals_data{$channel}->{Integral} = $data[$Signals_key{$channel}{Integral}];
+			$Signals_data{$channel}->{Mean} = $data[$Signals_key{$channel}{Mean}];
+			$Signals_data{$channel}->{GeometricMean} = $data[$Signals_key{$channel}{GeometricMean}];
+			$Signals_data{$channel}->{Sigma} = $data[$Signals_key{$channel}{Sigma}];
+			$Signals_data{$channel}->{GeometricSigma} = $data[$Signals_key{$channel}{GeometricSigma}];
+		}
 
-		#my $timepointData = {feature_id => $featureID};
-		#my $thresholdData = {feature_id => $featureID};
-		#my $locationData  = {feature_id => $featureID};
-		#my $extentData	   = {feature_id => $featureID};
-			my $timepointData = {};
-			my $thresholdData = {};
-			my $locationData  = {};
-			my $extentData	  = {};
-			my %signalData;
+		my $feature = $self->newFeature('Spot '.$spotCount++);
+		my $featureID = $feature->id();
+		logdbg "debug", "ns$featureID ";
+		logdbg "debug", "ns$featureID " if ($spotCount % 25 == 0);
 
-			my $i = 0;
-			foreach my $datum (@data) {
+		print STDERR "";
 
+		$self->newAttributes('Timepoint',\%Timepoint_data,
+			'Threshold',\%Threshold_data,
+			'Location',\%Location_data,
+			'Extent',\%Extent_data
+		);
 
-			my $header = $headers[$i++];
-
-			$datum = undef if ($datum eq 'inf' || $datum eq 'nan');
-			if ($header eq "t") {
-				$timepointData->{TheT} = $datum;
-			} elsif ($header eq "Thresh.") {
-				$thresholdData->{Threshold} = $datum;
-			} elsif ($header eq "mean X") {
-				$locationData->{TheX} = $datum;
-			} elsif ($header eq "mean Y") {
-				$locationData->{TheY} = $datum;
-			} elsif ($header eq "mean Z") {
-				$locationData->{TheZ} = $datum;
-
-			} elsif ($header eq "volume") {
-				$extentData->{Volume} = $datum;
-			} elsif ($header eq "min X") {
-				$extentData->{MinX} = $datum;
-			} elsif ($header eq "min Y") {
-				$extentData->{MinY} = $datum;
-			} elsif ($header eq "min Z") {
-				$extentData->{MinZ} = $datum;
-			} elsif ($header eq "max X") {
-				$extentData->{MaxX} = $datum;
-			} elsif ($header eq "max Y") {
-				$extentData->{MaxY} = $datum;
-			} elsif ($header eq "max Z") {
-				$extentData->{MaxZ} = $datum;
-			} elsif ($header eq "sigma X") {
-				$extentData->{SigmaX} = $datum;
-			} elsif ($header eq "sigma Y") {
-				$extentData->{SigmaY} = $datum;
-			} elsif ($header eq "sigma Z") {
-				$extentData->{SigmaZ} = $datum;
-			} elsif ($header eq "Surf. Area") {
-				$extentData->{SurfaceArea} =$datum
-			} elsif ($header eq "perimiter") {
-				if ($datum >10000){
-					$extentData->{Perimeter} =0;#$datum;
-				}else{
-					$extentData->{Perimeter} =$datum;
-				}
-			} elsif ($header eq "Form Factor") {
-				   $extentData->{FormFactor} = $datum;
-
-			} elsif ($header =~ /$wavelength_rex/) {
-				my $c1 = $1;
-				my $wavelength = $2;
-				my $c2 = $3;
-				my $signalData;
-				if (!exists $signalData{$wavelength}) {
-					$signalData = {
-						TheC => $wavelength
-					};
-					$signalData{$wavelength} = $signalData;
-				} else {
-					$signalData = $signalData{$wavelength};
-				}
-				
-				if (($c1 eq "c") && ($c2 eq "X")) {
-					$signalData->{CentroidX} = $datum;
-				} elsif (($c1 eq "c") && ($c2 eq "Y")) {
-					$signalData->{CentroidY} = $datum;
-				} elsif (($c1 eq "c") && ($c2 eq "Z")) {
-					$signalData->{CentroidZ} = $datum;
-				} elsif ($c1 eq "i") {
-					$signalData->{Integral} = $datum;
-				} elsif ($c1 eq "m") {
-					$signalData->{Mean} = $datum;
-				} elsif ($c1 eq "g") {
-					$signalData->{GeometricMean} = $datum;
-				} elsif ($c1 eq "ms") {
-					$signalData->{Sigma} = $datum;
-				} elsif ($c1 eq "gs") {
-					$signalData->{GeometricSigma} = $datum;
-				}
-		} else {
-			  #print STDERR "?";
-		  }
-	  }	 # foreach datum
-
-	  $self->newAttributes('Timepoint',$timepointData,
-							 'Threshold',$thresholdData,
-							 'Location',$locationData,
-							 'Extent',$extentData);
-
-	  foreach my $signal (values %signalData) {
+		foreach my $signal (values %Signals_data) {
 			$self->newAttributes('Signals',$signal);
-	  }
-	} #while
+		}
+	} # foreach row
 
 	close $self->{_outputHandle};
 	close $self->{_errorHandle};
