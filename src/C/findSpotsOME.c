@@ -202,7 +202,7 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 /*##########################                                                    ##########################*/
 /*########################################################################################################*/
 
-typedef uint8_t MaskPixel;
+typedef u_int8_t MaskPixel;
 typedef MaskPixel *MaskPtr;
 typedef void *PixPtr;
 typedef unsigned long coordinate;
@@ -527,16 +527,16 @@ double Get_Thresh_Otsu (PixStack *theStack);
 double Get_Thresh_ME (PixStack *theStack);
 double Get_Thresh_Kittler (PixStack *theStack);
 
-double PixValueIdx_uint8 (PixPtr theStack, size_t pix_indx);
-double PixValueIdx_uint16 (PixPtr theStack, size_t pix_indx);
-double PixValueIdx_uint32 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_u_int8 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_u_int16 (PixPtr theStack, size_t pix_indx);
+double PixValueIdx_u_int32 (PixPtr theStack, size_t pix_indx);
 double PixValueIdx_int8 (PixPtr theStack, size_t pix_indx);
 double PixValueIdx_int16 (PixPtr theStack, size_t pix_indx);
 double PixValueIdx_int32 (PixPtr theStack, size_t pix_indx);
 double PixValueIdx_float (PixPtr theStack, size_t pix_indx);
-double PixValueCrd_uint8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
-double PixValueCrd_uint16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
-double PixValueCrd_uint32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_u_int8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_u_int16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
+double PixValueCrd_u_int32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
 double PixValueCrd_int8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
 double PixValueCrd_int16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
 double PixValueCrd_int32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC);
@@ -633,16 +633,16 @@ fflush (stderr);
 		theStack->PixValueCrd = PixValueCrd_int32;
 	} else if (!ph->isSigned && ph->bp == 1 ) {
 		theStack->pixType = PIX_T_UINT8;
-		theStack->PixValueIdx = PixValueIdx_uint8;
-		theStack->PixValueCrd = PixValueCrd_uint8;
+		theStack->PixValueIdx = PixValueIdx_u_int8;
+		theStack->PixValueCrd = PixValueCrd_u_int8;
 	} else if (!ph->isSigned && ph->bp == 2 ) {
 		theStack->pixType = PIX_T_UINT16;
-		theStack->PixValueIdx = PixValueIdx_uint16;
-		theStack->PixValueCrd = PixValueCrd_uint16;
+		theStack->PixValueIdx = PixValueIdx_u_int16;
+		theStack->PixValueCrd = PixValueCrd_u_int16;
 	} else if (!ph->isSigned && ph->bp == 4 ) {
 		theStack->pixType = PIX_T_UINT32;
-		theStack->PixValueIdx = PixValueIdx_uint32;
-		theStack->PixValueCrd = PixValueCrd_uint32;
+		theStack->PixValueIdx = PixValueIdx_u_int32;
+		theStack->PixValueCrd = PixValueCrd_u_int32;
 	}
 	
 	/*
@@ -725,9 +725,9 @@ double threshold;
 MaskPtr maskPtr, lastMaskPtr;
 size_t nPix;
 
-uint8_t *uint8_p;
-uint16_t *uint16_p;
-uint32_t *uint32_p;
+u_int8_t *u_int8_p;
+u_int16_t *u_int16_p;
+u_int32_t *u_int32_p;
 int8_t *int8_p;
 int16_t *int16_p;
 int32_t *int32_p;
@@ -749,23 +749,23 @@ float *float_p;
 			}
 		break;
 		case PIX_T_UINT8:
-			uint8_p = (uint8_t *) (theStack->stacks[theC]);
+			u_int8_p = (u_int8_t *) (theStack->stacks[theC]);
 			while (maskPtr < lastMaskPtr) {
-				if (*uint8_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				if (*u_int8_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
 				else *maskPtr++ = MASK_PIXEL;
 			}
 		break;
 		case PIX_T_UINT16:
-			uint16_p = (uint16_t *) (theStack->stacks[theC]);
+			u_int16_p = (u_int16_t *) (theStack->stacks[theC]);
 			while (maskPtr < lastMaskPtr) {
-				if (*uint16_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				if (*u_int16_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
 				else *maskPtr++ = MASK_PIXEL;
 			}
 		break;
 		case PIX_T_UINT32:
-			uint32_p = (uint32_t *) (theStack->stacks[theC]);
+			u_int32_p = (u_int32_t *) (theStack->stacks[theC]);
 			while (maskPtr < lastMaskPtr) {
-				if (*uint32_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
+				if (*u_int32_p++ > threshold) *maskPtr++ = SPOT_PIXEL;
 				else *maskPtr++ = MASK_PIXEL;
 			}
 		break;
@@ -2438,9 +2438,9 @@ unsigned long long *intHist;
 double *probHist;
 double scale;
 
-uint8_t *uint8_p0, *uint8_p1;
-uint16_t *uint16_p0, *uint16_p1;
-uint32_t *uint32_p0, *uint32_p1;
+u_int8_t *u_int8_p0, *u_int8_p1;
+u_int16_t *u_int16_p0, *u_int16_p1;
+u_int32_t *u_int32_p0, *u_int32_p1;
 int8_t *int8_p0, *int8_p1;
 int16_t *int16_p0, *int16_p1;
 int32_t *int32_p0, *int32_p1;
@@ -2482,24 +2482,24 @@ float *float_p0, *float_p1;
 			}
 		break;
 		case PIX_T_UINT8:
-			uint8_p0 = (uint8_t *) (theStack->stacks[theC]);
-			uint8_p1 = uint8_p0 + nPix;
-			while (uint8_p0 < uint8_p1) {
-				intHist[(int) ((*uint8_p0++-min)*scale)]++;
+			u_int8_p0 = (u_int8_t *) (theStack->stacks[theC]);
+			u_int8_p1 = u_int8_p0 + nPix;
+			while (u_int8_p0 < u_int8_p1) {
+				intHist[(int) ((*u_int8_p0++-min)*scale)]++;
 			}
 		break;
 		case PIX_T_UINT16:
-			uint16_p0 = (uint16_t *) (theStack->stacks[theC]);
-			uint16_p1 = uint16_p0 + nPix;
-			while (uint16_p0 < uint16_p1) {
-				intHist[(int) ((*uint16_p0++-min)*scale)]++;
+			u_int16_p0 = (u_int16_t *) (theStack->stacks[theC]);
+			u_int16_p1 = u_int16_p0 + nPix;
+			while (u_int16_p0 < u_int16_p1) {
+				intHist[(int) ((*u_int16_p0++-min)*scale)]++;
 			}
 		break;
 		case PIX_T_UINT32:
-			uint32_p0 = (uint32_t *) (theStack->stacks[theC]);
-			uint32_p1 = uint32_p0 + nPix;
-			while (uint32_p0 < uint32_p1) {
-				intHist[(int) ((*uint32_p0++-min)*scale)]++;
+			u_int32_p0 = (u_int32_t *) (theStack->stacks[theC]);
+			u_int32_p1 = u_int32_p0 + nPix;
+			while (u_int32_p0 < u_int32_p1) {
+				intHist[(int) ((*u_int32_p0++-min)*scale)]++;
 			}
 		break;
 		case PIX_T_INT8:
@@ -3169,16 +3169,16 @@ int getArg (int argc, char **argv, const char *theArg) {
 }
 
 
-double PixValueIdx_uint8 (PixPtr theStack, size_t pixIndex) {
-	return (double) *( (uint8_t *)(theStack)+pixIndex);
+double PixValueIdx_u_int8 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (u_int8_t *)(theStack)+pixIndex);
 }
 
-double PixValueIdx_uint16 (PixPtr theStack, size_t pixIndex) {
-	return (double) *( (uint16_t *)(theStack)+pixIndex);
+double PixValueIdx_u_int16 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (u_int16_t *)(theStack)+pixIndex);
 }
 
-double PixValueIdx_uint32 (PixPtr theStack, size_t pixIndex) {
-	return (double) *( (uint32_t *)(theStack)+pixIndex);
+double PixValueIdx_u_int32 (PixPtr theStack, size_t pixIndex) {
+	return (double) *( (u_int32_t *)(theStack)+pixIndex);
 }
 
 double PixValueIdx_int8 (PixPtr theStack, size_t pixIndex) {
@@ -3197,16 +3197,16 @@ double PixValueIdx_float (PixPtr theStack, size_t pixIndex) {
 	return (double) *( (float *)(theStack)+pixIndex);
 }
 
-double PixValueCrd_uint8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
-	return (double) *( (uint8_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+double PixValueCrd_u_int8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (u_int8_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
 }
 
-double PixValueCrd_uint16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
-	return (double) *( (uint16_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+double PixValueCrd_u_int16 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (u_int16_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
 }
 
-double PixValueCrd_uint32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
-	return (double) *( (uint32_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
+double PixValueCrd_u_int32 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
+	return (double) *( (u_int32_t *)(theStack->stacks[theC]) + theX + (theY * theStack->y_increment) + (theZ * theStack->z_increment) );
 }
 
 double PixValueCrd_int8 (PixStack *theStack, coordinate theX, coordinate theY, coordinate theZ, coordinate theC) {
