@@ -239,8 +239,8 @@ typedef struct {
 */
 typedef struct pix_stack {
 	int nwaves;
-	short max_x,max_y,max_z;  /* This is the width, height, thickness, respectively */
-	short min_x,min_y,min_z;  /* These should be set to 0 */
+	coordinate max_x,max_y,max_z;  /* This is the width, height, thickness, respectively */
+	coordinate min_x,min_y,min_z;  /* These should be set to 0 */
 
 	PixPtr *stacks; /*  An array of channels (wavelengths) each containing an XYZ set of pixels */
 
@@ -456,7 +456,7 @@ typedef struct spotStructure {
 */
 	CoordList borderPixels;
 	unsigned long borderCount;
-	double perimiter;
+	double perimeter;
 	double formFactor;
 	double surfaceArea;
 	coordinate seedX;
@@ -1413,7 +1413,7 @@ size_t y_incr,z_incr;
 * This approximation improves as the spots get larger.
 * Since in these types of images (fluorescence microscopy) we are generally interested in SA/volume ratio as an
 * indicator of shape rather than artificially high SAs due to roughness of the contour (where the roughness is caused by
-* noise rather than biological effects), we're reporting the number of perimiter pixels as an approximation of a "smoothed" SA.
+* noise rather than biological effects), we're reporting the number of perimeter pixels as an approximation of a "smoothed" SA.
 	maskPixel = Coords_To_Index (theSpot->itsStack, X, Y, Z);
 	y_incr = theSpot->itsStack->y_increment;
 	z_incr = theSpot->itsStack->z_increment;
@@ -1814,7 +1814,7 @@ case 7:		a -= (y-0.5);	y--; x++;
 void Get_Perimiter (SpotPtr theSpot)
 {
 int nCodes,i;
-double perimiter=0.0;
+double perimeter=0.0;
 char *chainCode;
 
 	nCodes = theSpot->borderCount;
@@ -1827,18 +1827,18 @@ char *chainCode;
 	
 	chain8 (theSpot, chainCode, theSpot->seedX, theSpot->seedY, &nCodes);
 
-	perimiter = 0.0;
+	perimeter = 0.0;
 	for (i=0; i<nCodes; i++)
-	   if (chainCode[i]%2) perimiter += SQUARE_ROOT_OF_2;
-	   else perimiter += 1.0;
+	   if (chainCode[i]%2) perimeter += SQUARE_ROOT_OF_2;
+	   else perimeter += 1.0;
 
 
 	theSpot->surfaceArea = Get_Surface_Area_CC (chainCode,nCodes);
 
 	free (chainCode);
 
-	theSpot->perimiter = perimiter;
-	theSpot->formFactor = (4.0*PI*theSpot->surfaceArea) / (perimiter*perimiter);
+	theSpot->perimeter = perimeter;
+	theSpot->formFactor = (4.0*PI*theSpot->surfaceArea) / (perimeter*perimeter);
 }
 
 
@@ -1871,7 +1871,7 @@ void Get_Surface_Area (SpotPtr theSpot)
 {
 double surfaceArea = 0;
 /*
-* FIXME:  Total hack of computing surface area by using the number of perimiter pixels.  Makes
+* FIXME:  Total hack of computing surface area by using the number of perimeter pixels.  Makes
 * no account of anisotropic space, but otherwise a decent approximation if all the dimensions are 1.
 * Hmm, I wonder since the volume is in the
 * same anisotropic space wether things will conveniently take care of themselves....probably not.
@@ -2000,13 +2000,13 @@ static char dIDcontrolString[32]="-";
 		} /* -v */
 	
 
-/* -per :  Display the spot's perimiter */
+/* -per :  Display the spot's perimeter */
 		if (!strcmp ( argv[theArg],"-per"))
 		{
 			if (saywhat == HEADING)
-				fprintf (stdout,"perimiter");
+				fprintf (stdout,"perimeter");
 			else
-				fprintf (stdout,"%f",outSpot->perimiter);
+				fprintf (stdout,"%f",outSpot->perimeter);
 
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
@@ -3022,6 +3022,7 @@ fflush (stderr);
 
 #ifdef DEBUG
 fprintf (stderr,"theC: %lu theT: %lu\n",theC,theT);
+fprintf (stderr,"max_z: %lu\n",theStack->max_z);
 fprintf (stderr,"theStack->geomean_i[theC]: %f\n",theStack->stats[theC][theT].geomean);
 fprintf (stderr,"theStack->sigma_i[theC]: %f\n",theStack->stats[theC][theT].sigma);
 fprintf (stderr,"Integration threshold:	 %lf\n", theStack->threshold);
@@ -3145,7 +3146,7 @@ void usage (char **argv) {
 		fprintf (stderr,"\t-mc Display the average coordinate values of the spot (center of volume).\n");
 		fprintf (stderr,"\t-v Display the spot's volume\n");
 		fprintf (stderr,"\t-ff Display the spot's form-factor (1 for sphere in 3D or circle in 2D, <1 if deviates)\n");
-		fprintf (stderr,"\t-per Display the spot's perimiter\n");
+		fprintf (stderr,"\t-per Display the spot's perimeter\n");
 		fprintf (stderr,"\t-sa Display the spot's surface area\n");
 		fprintf (stderr,"\t-sd Display the spot's dispersion - std. deviation of the spot's X,Y and Z\n");
 		fprintf (stderr,"\t-box :  Ouput min and max values for the spot's X, Y and Z coordinates (bounding box)\n");
