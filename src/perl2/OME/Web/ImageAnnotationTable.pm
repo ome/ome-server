@@ -113,6 +113,8 @@ sub new {
     $self->{rows}="";
     $self->{columns}="";
     $self->{CategoryGroup}="";
+    $self->{Category}="";
+    $self->{Template} ="";
     # the actual rows and columns
     $self->{rowEntries} = undef;
     $self->{colEntries} = undef;
@@ -155,6 +157,7 @@ sub getPageBody {
 	return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
     }
     $which_tmpl =~ s/%20/ /;
+    $self->{Template}=$which_tmpl;
 
 
     # get the details. this is where the bulk of the work gets done.
@@ -223,6 +226,8 @@ sub getTableDetails {
 
     $tmpl_data{'categoryGroups/render-list_of_options'}=
 	$self->getCategoryGroups($container);
+
+    $self->{Category} = $q->param('Category');
 
     if ($self->{rows} && $self->{columns}) {
 	
@@ -796,12 +801,17 @@ sub populateCells {
 					       { $rowAccessor => $rowLeaf,
 						 $columnAccessor =>
 						     $colLeaf,
-						     __distinct	=>'id'});
+						     __distinct
+						     =>'id'});
+	    my $imagesRef = \@images;
+	    if ($self->{Category} && $self->{CategoryGroup}) {
+		$imagesRef = $self->filterByCategory($imagesRef);
+	    }
 	    # if I find any, store them in double-hashed - keyed off
 	    # of row name and column name.
 	    # indicate when a row and column is active.
-	    if (@images && scalar(@images) > 0) {
-		$cells->{$rName}->{$cName}  = \@images;
+	    if (@images && scalar(@$imagesRef) > 0) {
+		$cells->{$rName}->{$cName}  = $imagesRef;
 		$activeRows{$rName}=1;
 		$activeColumns{$cName} = 1;
 		$hasData =1;
@@ -854,6 +864,43 @@ sub getAccessorName {
 
     my $accessor = "${listAccessor}List.$rootItem";
     return $accessor;
+}
+
+
+=head2 filterByCategory
+    my $imagesRef= $self->filterByCategory($imagesRef);
+
+    filter a list of images, returning only those that have group and 
+    category matching $self->{CategoryGroup} and $self->{Category}
+=cut
+
+sub filterByCategory {
+    my ($self,$images) = @_;
+    my $cg = $self->{CategoryGroup};
+    my $cat = $self->{Category};
+    my @filtered;
+
+    foreach my $image (@$images) {
+	my $classification = 
+	    OME::Tasks::CategoryManager->getImageClassification($image,$cg);
+	if ($classification) {
+	    # potential match
+	    if (ref($classification) eq 'ARRAY') {
+		foreach my $class (@$classification) {
+		    if ($class->Category->Name eq $cat) {
+			push (@filtered,$image);
+			last;
+		    }
+		}
+	    }
+	    else {
+		if ($classification->Category->Name eq $cat) {
+			push (@filtered,$image);
+		}
+	    }
+	}
+    }
+    return \@filtered;
 }
 
 =head2 getActiveList
@@ -1213,6 +1260,9 @@ sub getRendering {
 	    $renderer->renderArray($sortedImages,
 				   'color_code_ref_mass_by_cg'
 				   ,{type=>'OME::Image',
+				     Rows => $self->{rows},
+				     Columns=> $self->{columns},
+				     Template=>$self->{Template},
 				     CategoryGroup =>
 					 $cg});
 	$cell{cell} = $rendering;
