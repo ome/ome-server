@@ -32,6 +32,11 @@ Category Group: <SElECT NAME="CategoryGroup">
 <TMPL_VAR NAME=categoryGroups/render-list_of_options>
 </SELECT>	    
 
+Category: <SELECT NAME="Category">
+<option value="All">All</option>
+<TMPL_VAR NAME=categories/render-list_of_options>
+</SELECT>
+
 <input type="button" value='UpdateDisplay' onclick="javascript:
 document.forms[0].update.value='update'; document.forms[0].submit();">
 
