@@ -227,7 +227,17 @@ sub getTableDetails {
     $tmpl_data{'categoryGroups/render-list_of_options'}=
 	$self->getCategoryGroups($container);
 
-    $self->{Category} = $q->param('Category');
+    $tmpl_data{'categories/render-list_of_options'} = 
+	$self->getCategories($container);
+
+    print STDERR "***RENDERING ..\n";
+    print STDERR "** rows - " . $self->{rows} . ", columns " .
+	$self->{columns} . "\n";
+    print STDERR "** group is " . $self->{CategoryGroup}->Name ."\n" if 
+	($self->{CategoryGroup});
+    print STDERR "** , cat is ". $self->{Category}->Name . "\n" if 
+	($self->{Category});
+    
 
     if ($self->{rows} && $self->{columns}) {
 	
@@ -395,6 +405,64 @@ sub getCategoryGroups {
     my $cats =
 	$renderer->renderArray(\@catGroupList,'list_of_options', 
 				     \%cgHash);
+    return $cats;
+}
+
+=head2 getCategories
+
+    Populate the pull-down with individaul category value.
+
+=cut
+
+
+sub getCategories {
+
+    my $self=shift;
+    my $container = shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my $q = $container->CGI();
+
+    # do the list of categories
+    my $category = $q->param('Category');
+    if ($category eq 'All')  {
+	$self->{Category} = undef;
+	return;
+    }
+    my $group = $self->{CategoryGroup};
+
+    # do nothing if no group specified.
+    return undef unless ($group);
+
+    my %catHash;
+
+    # set up hash to describe rendering. 
+    $catHash{type} = '@Category';
+    my $cat;
+    if ($category =~ /\D+/) { # string, not number
+	$cat = $factory->findObject('@Category',Name=>$category);
+    }
+    else { # $category is an id
+	$cat = $factory->loadObject('@Category',$category);
+    }
+
+    my @catList = $factory->findObjects('@Category',
+					     {CategoryGroup =>
+					     $group});
+    # category can only be set if it's valid for this group
+    if ($cat) {
+	foreach my $catEntry  (@catList) {
+	    if ($catEntry->id == $cat->id) {
+		$self->{Category} = $cat;
+		$catHash{default_value} = $cat->id;
+		last;
+	    }
+	}
+    }
+    my $renderer=  $container->Renderer;
+    my $cats =
+	$renderer->renderArray(\@catList,'list_of_options', 
+				     \%catHash);
     return $cats;
 }
 
@@ -804,9 +872,16 @@ sub populateCells {
 						     __distinct
 						     =>'id'});
 	    my $imagesRef = \@images;
+	    print STDERR "** # of images prefilter " .
+			      scalar(@$imagesRef)  . "\n";
+	    
+
 	    if ($self->{Category} && $self->{CategoryGroup}) {
 		$imagesRef = $self->filterByCategory($imagesRef);
 	    }
+	    print STDERR "** # of images postfilter " .
+			      scalar(@$imagesRef)  . "\n";
+
 	    # if I find any, store them in double-hashed - keyed off
 	    # of row name and column name.
 	    # indicate when a row and column is active.
@@ -887,14 +962,14 @@ sub filterByCategory {
 	    # potential match
 	    if (ref($classification) eq 'ARRAY') {
 		foreach my $class (@$classification) {
-		    if ($class->Category->Name eq $cat) {
+		    if ($class->Category->Name eq $cat->Name) {
 			push (@filtered,$image);
 			last;
 		    }
 		}
 	    }
 	    else {
-		if ($classification->Category->Name eq $cat) {
+		if ($classification->Category->Name eq $cat->Name) {
 			push (@filtered,$image);
 		}
 	    }
