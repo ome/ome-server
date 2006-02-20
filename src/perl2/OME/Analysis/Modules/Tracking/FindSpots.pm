@@ -193,7 +193,6 @@ sub finishImage {
 	my $channel_rex = qr/^(c|i|m|g|ms|gs)\[(\s*[0-9]+)\]([XYZ])?$/;
 	my $channel;
 
-	my $spotCount = 1;
 	my %Timepoint_key;
 	my %Threshold_key;
 	my %Location_key;
@@ -276,14 +275,18 @@ sub finishImage {
 	}
 
 
-	my %Timepoint_data;
-	my %Threshold_data;
-	my %Location_data;
-	my %Extent_data;
-	my %Signals_data;
+	my $spotCount = 0;
 
 
 	while (my $line = <$output>) {
+	# Oddly, the AE handler keeps track of attributes by hash ref, so we have to
+	# declare a new hash fpr each attribute.
+		my %Timepoint_data;
+		my %Threshold_data;
+		my %Location_data;
+		my %Extent_data;
+		my %Signals_data;
+
 		chomp $line;
 		my @data;
 		$col_num = 0;
@@ -294,12 +297,23 @@ sub finishImage {
 			push (@data,$datum);
 		}
 		
+
+		$spotCount++;
+		my $feature = $self->newFeature("Spot $spotCount",$image);
+		my $featureID = $feature->id();
+		my $featureName = $feature->name();
+		logdbg "debug", "Spot $spotCount: Feature ID $featureID ";
+
 		$Timepoint_data{TheT} = $data[$Timepoint_key{TheT}];
+		$Timepoint_data{feature_id} = $featureID;
+
 		$Threshold_data{Threshold} = $data[$Threshold_key{Threshold}];
+		$Threshold_data{feature_id} = $featureID;
 
 		$Location_data{TheX} = $data[$Location_key{TheX}];
 		$Location_data{TheY} = $data[$Location_key{TheY}];
 		$Location_data{TheZ} = $data[$Location_key{TheZ}];
+		$Location_data{feature_id} = $featureID;
 		
 		$Extent_data{Volume} = $data[$Extent_key{Volume}];
 		$Extent_data{MinX} = $data[$Extent_key{MinX}];
@@ -314,6 +328,7 @@ sub finishImage {
 		$Extent_data{SurfaceArea} = $data[$Extent_key{SurfaceArea}];
 		$Extent_data{Perimeter} = $data[$Extent_key{Perimeter}];
 		$Extent_data{FormFactor} = $data[$Extent_key{FormFactor}];
+		$Extent_data{feature_id} = $featureID;
 		
 		foreach $channel (keys (%Signals_key) ) {
 			$Signals_data{$channel} = {} unless exists $Signals_data{$channel};
@@ -326,14 +341,8 @@ sub finishImage {
 			$Signals_data{$channel}->{GeometricMean} = $data[$Signals_key{$channel}{GeometricMean}];
 			$Signals_data{$channel}->{Sigma} = $data[$Signals_key{$channel}{Sigma}];
 			$Signals_data{$channel}->{GeometricSigma} = $data[$Signals_key{$channel}{GeometricSigma}];
+			$Signals_data{$channel}->{feature_id} = $featureID;
 		}
-
-		my $feature = $self->newFeature('Spot '.$spotCount++);
-		my $featureID = $feature->id();
-		logdbg "debug", "ns$featureID ";
-		logdbg "debug", "ns$featureID " if ($spotCount % 25 == 0);
-
-		print STDERR "";
 
 		$self->newAttributes('Timepoint',\%Timepoint_data,
 			'Threshold',\%Threshold_data,
