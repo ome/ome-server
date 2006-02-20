@@ -240,6 +240,13 @@ sub _renderData {
 			my $request_string = $request->{'request_string'};
 			$record{$request_string} = $name;
 		    }
+		    foreach my $request ( @ {
+			$field_requests->{'linkParams'}}) {
+			my $request_string =
+			    $request->{'request_string'};
+			$record{$request_string} = 
+				    $self->getLinkParams($options,$name);
+		    }
 		}
 	    }
 	}
@@ -266,24 +273,43 @@ sub getClassificationColor {
     my @categories = $cg->CategoryList(__order => 'Name');
 
     my @colorList = ("teal","maroon","silver","purple","navy","lime",
-		     "olive","yellow","green","blue","red","aqua");
+		     "aqua","yellow","green","blue","red","olive");
     my %colorMap;
 
     # map categories onto a color list
     foreach my $cat (@categories) {
 	$colorMap{$cat->id} = pop(@colorList);
     }
-    # find a colr
+    # find a color
     my $color = $colorMap{$classification->Category->id};
 
     #build an appropriate css tag
-    my $colorString = "background: $color;";
+    my $colorString = "color: $color;";
     
     #get the name
     my $name = $classification->Category->Name;
     return ($colorString,$name);
 }
 
+sub getLinkParams {
+    my ($self,$options,$name) = @_;
+    my $linkParams;
+    if ($options->{Template}) {
+	$linkParams .= "&Template=". $options->{Template};
+    }
+    if ($options->{Rows}) {
+	$linkParams .= "&Rows=". $options->{Rows};
+    }
+    if ($options->{Columns}) {
+	$linkParams .= "&Columns=". $options->{Columns};
+    }
+    if ($options->{CategoryGroup}) {
+	$linkParams .= "&CategoryGroup=". $options->{CategoryGroup}->Name;
+    }
+    $linkParams .= "&Category=$name";
+    return $linkParams;
+}
+    
 
 =head1 Author
 
