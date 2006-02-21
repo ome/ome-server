@@ -47,7 +47,6 @@ package OME::Web::ImportFiles;
 use strict;
 use warnings; 
 use vars qw($VERSION);
-use CGI;
 use Carp;
 use Data::Dumper;
 use File::Spec;

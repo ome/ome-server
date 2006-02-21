@@ -44,7 +44,7 @@ package OME::Web::FileTable;
 
 use strict;
 use vars qw($VERSION);
-use CGI;
+
 use Carp;
 use Data::Dumper;
 use File::Spec;

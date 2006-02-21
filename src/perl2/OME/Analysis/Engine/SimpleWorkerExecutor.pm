@@ -54,7 +54,7 @@ use LWP::UserAgent;
 use HTTP::Response;
 use Log::Agent;
 use Sys::Hostname;
-use CGI;
+use CGI qw/-no_xhtml/;
 
 use OME::Session;
 use OME::Analysis::Engine::Worker;

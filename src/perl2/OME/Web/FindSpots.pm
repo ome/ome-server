@@ -42,7 +42,7 @@ use vars qw($VERSION);
 use Log::Agent;
 use OME;
 $VERSION = $OME::VERSION;
-use CGI;
+
 use OME::Analysis::Engine;
 use OME::Tasks::AnnotationManager;
 use OME::Tasks::ChainManager;

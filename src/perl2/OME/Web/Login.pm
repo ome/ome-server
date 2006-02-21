@@ -41,7 +41,6 @@ use strict;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
-use CGI;
 use Carp;
 
 use base qw(OME::Web);

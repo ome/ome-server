@@ -40,7 +40,7 @@ package OME::Web::DBObjDetail;
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-use CGI;
+
 use Log::Agent;
 use OME::Web::DBObjTable;
 use base qw(OME::Web);

@@ -55,7 +55,6 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use CGI;
 use Log::Agent;
 use OME::Tasks::ProjectManager;
 

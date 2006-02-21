@@ -43,7 +43,6 @@ use OME;
 $VERSION = $OME::VERSION;
 use base qw{ OME::Web };
 
-use CGI;
 use Log::Agent;
 use OME::ViewerPreferences;
 use OME::Tasks::PixelsManager;

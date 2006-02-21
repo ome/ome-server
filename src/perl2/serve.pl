@@ -40,7 +40,8 @@
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-use CGI;
+# IGG 1/19/06: Emiting xhtml confuses things - we're not compliant with xhtml transitional 1.0
+use CGI qw/-no_xhtml/;
 use OME::DBObject;
 use Log::Agent;
 use OME::Tasks::NotificationManager;

@@ -1319,7 +1319,8 @@ sub mod_perl_script {
 	return <<'SCRIPT_END';
 #!/usr/bin/perl -w
 use strict;
-use CGI;
+use CGI qw/-no_xhtml/;
+
 my $CGI = CGI->new();
 print $CGI->header(-type => 'text/plain'),
 

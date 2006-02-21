@@ -41,7 +41,7 @@ use strict;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
-use CGI;
+
 use OME::Tasks::ImageManager;
 use OME::Tasks::PixelsManager;
 use OME::ViewerPreferences;

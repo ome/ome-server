@@ -79,7 +79,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use Carp;
-use CGI qw(:standard);
+use CGI qw/:standard -no_xhtml/;
 use Fcntl qw (:flock O_RDWR O_CREAT); # import LOCK_* and OPEN constants
 use Log::Agent;
 

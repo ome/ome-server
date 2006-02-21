@@ -44,7 +44,8 @@ package OME::Web::DefaultMenuBuilder;
 
 use strict;
 use vars qw($VERSION);
-use CGI;
+use CGI qw/-no_xhtml/;
+
 use Carp;
 
 # OME Modules

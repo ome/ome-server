@@ -43,7 +43,6 @@ OME::Web - The parent class of OME web pages
 	package OME::Web::Home;
 	use strict;
 	use OME;
-	use CGI;
 	use base qw/OME::Web/;
 
 	our $VERSION;

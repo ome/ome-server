@@ -89,7 +89,7 @@ our $VERSION = $OME::VERSION;
 use OME::Session;
 use OME::Web;
 use OME::Tasks::LSIDManager;
-use CGI;
+
 use Log::Agent;
 use Carp;
 use Carp qw(cluck);
