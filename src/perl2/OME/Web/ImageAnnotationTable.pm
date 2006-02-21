@@ -230,14 +230,6 @@ sub getTableDetails {
     $tmpl_data{'categories/render-list_of_options'} = 
 	$self->getCategories($container);
 
-    print STDERR "***RENDERING ..\n";
-    print STDERR "** rows - " . $self->{rows} . ", columns " .
-	$self->{columns} . "\n";
-    print STDERR "** group is " . $self->{CategoryGroup}->Name ."\n" if 
-	($self->{CategoryGroup});
-    print STDERR "** , cat is ". $self->{Category}->Name . "\n" if 
-	($self->{Category});
-    
 
     if ($self->{rows} && $self->{columns}) {
 	
@@ -425,7 +417,7 @@ sub getCategories {
 
     # do the list of categories
     my $category = $q->param('Category');
-    if ($category eq 'All')  {
+    if ($category && $category eq 'All')  {
 	$self->{Category} = undef;
 	return;
     }
@@ -439,23 +431,26 @@ sub getCategories {
     # set up hash to describe rendering. 
     $catHash{type} = '@Category';
     my $cat;
-    if ($category =~ /\D+/) { # string, not number
-	$cat = $factory->findObject('@Category',Name=>$category);
-    }
-    else { # $category is an id
-	$cat = $factory->loadObject('@Category',$category);
-    }
+    if ($category) {
 
+	if ($category =~ /\D+/) { # string, not number
+	    $cat = $factory->findObject('@Category',Name=>$category);
+	}
+	else { # $category is an id
+	    $cat = $factory->loadObject('@Category',$category);
+	}
+    }
+	
     my @catList = $factory->findObjects('@Category',
-					     {CategoryGroup =>
-					     $group});
+					{CategoryGroup =>
+						 $group});
     # category can only be set if it's valid for this group
     if ($cat) {
 	foreach my $catEntry  (@catList) {
 	    if ($catEntry->id == $cat->id) {
-		$self->{Category} = $cat;
-		$catHash{default_value} = $cat->id;
-		last;
+		    $self->{Category} = $cat;
+		    $catHash{default_value} = $cat->id;
+		    last;
 	    }
 	}
     }
@@ -872,15 +867,11 @@ sub populateCells {
 						     __distinct
 						     =>'id'});
 	    my $imagesRef = \@images;
-	    print STDERR "** # of images prefilter " .
-			      scalar(@$imagesRef)  . "\n";
 	    
 
 	    if ($self->{Category} && $self->{CategoryGroup}) {
 		$imagesRef = $self->filterByCategory($imagesRef);
 	    }
-	    print STDERR "** # of images postfilter " .
-			      scalar(@$imagesRef)  . "\n";
 
 	    # if I find any, store them in double-hashed - keyed off
 	    # of row name and column name.
@@ -1155,7 +1146,7 @@ sub populateBody {
 
     my  @prev; # what's in the previously printed row.
     
-    for (my $rowIndex= $0 ; $rowIndex <scalar(@$activeRows);
+4    for (my $rowIndex= 0 ; $rowIndex <scalar(@$activeRows);
 	 $rowIndex++) {
 	my $row = $activeRows->[$rowIndex];
 	my %rowContents;
@@ -1166,7 +1157,8 @@ sub populateBody {
 	# $i is the index - which field in the row.
 	for (my $i = 0; $i < scalar(@$row)-1; $i++) {
 	    my $val = $row->[$i];
-	    if ($val ne $prev[$i] || $same == 0) {
+	    if ( ($val && (!$prev[$i] || ($val ne $prev[$i])))
+		 || $same == 0) {
 		my %entry;
 		my $rowSpan = 
 		    $self->getRepeatCount($activeRows,$rowIndex,$i);
@@ -1329,17 +1321,19 @@ sub getRendering {
     my %cell;
     if ($images) {
 	# sort them by category group first.
-	my $sortedImages = $self->sortImagesByCG($images,$cg);
 	my $renderer=$container->Renderer();
-	my $rendering =
-	    $renderer->renderArray($sortedImages,
-				   'color_code_ref_mass_by_cg'
-				   ,{type=>'OME::Image',
+	my $renderHash = { type=>'OME::Image',
 				     Rows => $self->{rows},
 				     Columns=> $self->{columns},
-				     Template=>$self->{Template},
-				     CategoryGroup =>
-					 $cg});
+			   Template=>$self->{Template}};
+	my $sortedImages = $images;
+	if ($cg) {
+	    $sortedImages = $self->sortImagesByCG($images,$cg);
+	    $renderHash->{CategoryGroup} = $cg if ($cg);
+	}
+	my $rendering =
+	    $renderer->renderArray($sortedImages,
+				   'color_code_ref_mass_by_cg',$renderHash);
 	$cell{cell} = $rendering;
     }
     return \%cell;
