@@ -87,12 +87,6 @@ use OME::DBObject;
 
 use base qw(Class::Accessor Class::Data::Inheritable);
 
-use constant FIND_USER_SQL => <<"SQL";
-      select attribute_id, password
-        from experimenters
-       where ome_name = ?
-SQL
-
 use constant INVALIDATE_OLD_SESSION_KEYS_SQL => <<"SQL";
 	UPDATE OME_SESSIONS
 	SET SESSION_KEY = NULL
@@ -375,17 +369,18 @@ sub createWithPassword {
 		$dbh->commit ();
 	};
 
-	my ($experimenterID,$dbpass);
+	my $configuration = OME::Configuration->new( $bootstrap_factory );
+
+	my ($experimenter,$experimenterID,$dbpass);
 	eval {
-		($experimenterID,$dbpass) =
-			$dbh->selectrow_array(FIND_USER_SQL,{},$username);
+		$experimenter = $bootstrap_factory->findObject ('OME::SemanticType::BootstrapExperimenter',
+			OMEName => $username);
 	};
-# We're not supposed to release the Factory's DBH.  Only ones we get from Factory->newDBH
-#   $bootstrap_factory->releaseDBH($dbh);
 
 	return undef if $@;
-    
-	return undef unless defined $dbpass and defined $experimenterID;
+	
+    ($experimenterID,$dbpass) = ($experimenter->ID,$experimenter->Password);
+	return undef unless $experimenter and $dbpass;
 	return undef if (crypt($password,$dbpass) ne $dbpass);
 	
 	
@@ -423,25 +418,10 @@ sub createWithPassword {
 	logdie ref($self)."->createWithPassword:  Could not create userState object"
 		unless defined $userState;
 
-
-	# Collect the users and groups visible to this user
-	# groups that the experimenter belongs to
-	# members of the groups this experimenter leads
-	my $ACL;
-	eval {
-		my $configuration = OME::Configuration->new( $bootstrap_factory );
-		my $superuser = $configuration->super_user();
-		my $exp_id = $userState->experimenter_id();
-		if ($superuser and $superuser != $exp_id) {
-			$ACL = {
-				users  => $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$exp_id,$exp_id,$exp_id),
-				groups => $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$exp_id,$exp_id,$exp_id),
-			}
-		}
-	};
-		
-	my $session = OME::Session->instance($userState, $bootstrap_factory, $ACL);
+	my $session = OME::Session->instance($userState, $bootstrap_factory, undef);
 	
+	$self->updateACL();
+
 	$userState->storeObject();
 	$session->commitTransaction();
 	
