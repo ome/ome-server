@@ -218,8 +218,6 @@ sub getTableDetails {
     $self->{rows} = $q->param('Rows');
     $self->{columns} = $q->param('Columns');
 
-
-
     # populate the pull-downs.
     my $types = $self->getTypes($tmpl);
     $self->getChoices(\%tmpl_data,$types);
@@ -1146,8 +1144,7 @@ sub populateBody {
 
     my  @prev; # what's in the previously printed row.
     
-4    for (my $rowIndex= 0 ; $rowIndex <scalar(@$activeRows);
-	 $rowIndex++) {
+    for (my $rowIndex= 0 ; $rowIndex <scalar(@$activeRows); $rowIndex++) {
 	my $row = $activeRows->[$rowIndex];
 	my %rowContents;
 	my @entries;
