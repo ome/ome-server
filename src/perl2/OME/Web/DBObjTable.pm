@@ -690,7 +690,7 @@ sub __getJoinedGroups {
 	my %standard_index_fields = (
 		feature          => undef,
 		image            => undef,
-		module_execution => undef,
+#		module_execution => undef,
 	);
 	my %image_index_fields = (
 		TheZ             => undef,
