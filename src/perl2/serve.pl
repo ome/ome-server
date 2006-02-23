@@ -105,5 +105,6 @@ if ($pageClass) {
 
 	exit(1);
 }
+OME::Session->instance()->idle();
 
 #undef($CGI);

@@ -193,8 +193,7 @@ sub dispatch {
     my $eval_error = $@;
 
     $session->commitTransaction() unless $eval_error;
-    $session->deleteInstance(1);
-    OME::DBObject->clearAllCaches();
+    $session->idle();
 
     die $eval_error if $eval_error;
 
