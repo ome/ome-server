@@ -362,16 +362,26 @@ DESTROY {
 	}
 }
 
-END {
-# Turning AutoCommit on at this point ensures that we have no open transactions
-# when we're just sitting idle.
-# Note that doing this *requires* turning it back on in the SessionManager
-# When re-using a session.  If not reusing a session, the new factory call
-# will create a DBH with transactions on (at least by default).
-	if ($__soleInstance) {
-		$__soleInstance->{Factory}->idle();
-	}
+sub idle {
+    my $self = shift;
+
+	# Forget our access lists
+	$self->{ACL} = undef;    
+
+	# Remove any stale temporary files which might still be lying around.
+	$self->__finishAllTemporaryFiles();
+
+	# Delete any cached DBObject's
+	OME::DBObject->clearAllCaches();		
+
+	# Turning AutoCommit on at this point ensures that we have no open transactions
+	# when we're just sitting idle.
+	# Note that doing this *requires* turning it back on in the SessionManager
+	# When re-using a session.  If not reusing a session, the new factory call
+	# will create a DBH with transactions on (at least by default).
+	$self->{Factory}->idle();
 }
+
 =head2 deleteInstance
 
 Explicitly deletes the singleton instance from the process. This
