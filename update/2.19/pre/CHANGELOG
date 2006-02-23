@@ -1,0 +1,5 @@
+Datatype changes to the following ST used by FindSpots:
+FindSpotsInputs
+	Added integer SE "FadeSpotsTheT", which if not null specifies a timepoint
+	to use to define spots.  All other timepoints will then use this mask to define
+	their spots.
