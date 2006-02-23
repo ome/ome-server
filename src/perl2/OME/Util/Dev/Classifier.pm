@@ -317,14 +317,23 @@ sub compile_sigs {
 	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
 		or die "Cannot open a connection to Matlab!";
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
-	$engine->eval("global signature_labels");
-	$engine->putVariable('signature_labels',$signature_labels_array);
-	$engine->eval("global image_paths");
-	$engine->putVariable('image_paths', OME::Matlab::Array->newStringArray(\@image_paths));	
-	$engine->eval("global signature_vector");
-	$engine->putVariable('signature_vector',$signature_array);
-	$engine->eval( "save $output_file_name signature_labels signature_vector image_paths;" );
-	print "Saved signature vector to file $output_file_name.\n";
+	$engine->eval("global signature_labels_char_array");
+	$engine->putVariable('signature_labels_char_array',$signature_labels_array);
+	# Convert the rectangualar string array that has null terminated strings into a cell array.
+	# Cell arrays are easier to deal with for strings.
+	$engine->eval( "for i=1:size( signature_labels_char_array, 1 ),".
+	               "signature_labels{i} = sprintf( '%s', signature_labels_char_array(i,:) ); ".
+	               "end;" );
+	$engine->eval("global image_paths_char_array");
+	$engine->putVariable('image_paths_char_array', OME::Matlab::Array->newStringArray(\@image_paths));
+	# String array to cell array.
+	$engine->eval( "for i=1:size( image_paths_char_array, 1 ),".
+	               "image_paths{i} = sprintf( '%s', image_paths_char_array(i,:) ); ".
+	               "end;" );
+	$engine->eval("global signature_matrix");
+	$engine->putVariable('signature_matrix',$signature_array);
+	$engine->eval( "save $output_file_name signature_labels signature_matrix image_paths;" );
+	print "Saved signature matrix to file $output_file_name.\n";
 	$engine->close();
 	$engine = undef;
 }	
