@@ -97,6 +97,12 @@ sub getPageBody {
 		} else {
             $h{TimeStop} = undef;
 		}
+		
+		if ($cgi->param('FadeSpotsTheT') =~ /^([0-9]+)$/) {
+			$h{FadeSpotsTheT} = $1;
+		} else {
+			$h{FadeSpotsTheT} = undef;
+		}
 
         # Create a user input MEX for the user inputs
 		my $attributeType="FindSpotsInputs";
@@ -190,15 +196,6 @@ sub print_form{
 	@tableColumns = $cgi->td (\@tableColumns);
 	push (@tableRows,@tableColumns);
 	@tableColumns = ();
-
-
-
-
-
-
-
-
-
 	
 	# channel
 	$tableColumns[0] = $cgi->th ('Channel');
@@ -244,6 +241,13 @@ sub print_form{
 	@tableColumns = $cgi->td (\@tableColumns);
 	push (@tableRows,@tableColumns);
 	@tableColumns = ();
+
+	$tableColumns[0] = $cgi->th ('Define spots only at time:');
+	$tableColumns[1] = $cgi->textfield(-name=>'FadeSpotsTheT',-size=>6,default=>'All Ts');
+	@tableColumns = $cgi->td (\@tableColumns);
+	push (@tableRows,@tableColumns);
+	@tableColumns = ();
+
 
 
 	# html ouput

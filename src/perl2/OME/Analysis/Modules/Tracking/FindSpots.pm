@@ -153,6 +153,10 @@ sub startImage {
 
 		$paramopts .= "$timeopt ";
 	}
+	
+	if (defined $params->FadeSpotsTheT() and $params->FadeSpotsTheT() < $pixels_attr->SizeT()) {
+		$paramopts .= "-fadeSpots ".$params->FadeSpotsTheT()." ";
+	}
 
 	my $cmdLine = "$location $path $paramopts $options";
 
