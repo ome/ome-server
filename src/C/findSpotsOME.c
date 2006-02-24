@@ -2906,11 +2906,14 @@ int main (int argc, char **argv)
 int minSpotVol,argIndx;
 coordinate theC, theT;
 MaskPtr maskIndex,maxIndex;
-coordinate tStart=0,tStop=0;
+coordinate tStart=0,tStop=0, maskT=0;
 SpotPtr theSpot;
 const char* threshold = NULL;
 OID PixelsID;
 PixStack *theStack;
+char doFadeSpots=0;
+MaskPixel *maskCopy=NULL;
+
 
 /*
 * The following line is commented out because it is not
@@ -2977,7 +2980,7 @@ fflush (stderr);
 	* Read the timespan option
 	*/
 	if ( (argIndx = getArg (argc, argv, "-time")) > -1 && argIndx < argc) {
-		sscanf (argv[argIndx+1], "%lu-%lu", &tStart, &tStop);
+		if (argIndx+1 < argc) sscanf (argv[argIndx+1], "%lu-%lu", &tStart, &tStop);
 		if (tStart == tStop) tStop++;
 		if (tStart >= theStack->ph->dt)
 			tStart = 0;
@@ -2986,6 +2989,16 @@ fflush (stderr);
 	} else {
 		tStart = 0;
 		tStop = theStack->ph->dt;
+	}
+	
+	/*
+	* Decide if we're doing fadeSpots
+	*/
+	if ( (argIndx = getArg (argc, argv, "-fadeSpots")) > -1 && argIndx < argc) {
+		doFadeSpots = 1;
+		maskT = 0;
+		if (argIndx+1 < argc) sscanf (argv[argIndx+1], "%lu", &maskT);
+		if (maskT >= theStack->ph->dt) doFadeSpots=0;
 	}
 
 
@@ -3002,21 +3015,36 @@ fflush (stderr);
 */
 
 	for (theT = tStart; theT < tStop; theT++) {
-/*
-* Read in the stacks of planes for this timepoint.
-*/
-		ReadTimepoint (theStack, theT);
-#ifdef DEBUG
-fprintf (stderr,"read timepoint\n");
-fflush (stderr);
-#endif
 	
 	/*
 	* figure out what to set the threshold to from the input parameter
+	* if this is the first timepoint
 	*/
-		theStack->threshold = Set_Threshold (threshold,theStack);
-	/* Make a XYZ mask based on the threshold */
-		MakeThresholdMask (theStack);
+		if (doFadeSpots) {
+			if (theT == tStart) {
+			/* If its the first timepoint, we set up our mask based on the specified timepoint */
+				ReadTimepoint (theStack, maskT);
+				theStack->threshold = Set_Threshold (threshold,theStack);
+				MakeThresholdMask (theStack);
+			/* make a copy of the mask, so we can use the copy on subsequent timepoints */
+				if ( (maskCopy = (MaskPtr) malloc (theStack->nPix*sizeof(MaskPixel))) == NULL) {
+					fprintf (stderr,"Could not allocate memory for a mask copy - exiting\n");
+					exit (-1);
+				}
+				memcpy(maskCopy, theStack->mask, theStack->nPix * sizeof(MaskPixel));
+			/* Make sure we've got the current timepoint read in */
+				if (theT != maskT) ReadTimepoint (theStack, theT);
+			} else {
+			/* After the first timepoint, we copy the mask copy to make it the working mask */
+				memcpy(theStack->mask, maskCopy, theStack->nPix * sizeof(MaskPixel));
+				ReadTimepoint (theStack, theT);
+			}
+		} else {
+		/* Calculate a mask based on the current timepoint */
+			ReadTimepoint (theStack, theT);
+			theStack->threshold = Set_Threshold (threshold,theStack);
+			MakeThresholdMask (theStack);
+		}
 
 		
 
@@ -3126,6 +3154,7 @@ void usage (char **argv) {
 		fprintf (stderr,"\n");	
 		fprintf (stderr,"<optional arguments>:\n");
 		fprintf (stderr,"\t-time <n1>-<n2> begin and end timepoints.  Default is all timepoints. -time 4- will do t4 to the end, etc.  Time begins at 0\n");
+		fprintf (stderr,"\t-fadeSpots <n>  Threshold the image at the <n> timepoint and use this timepoint's mask for all other timepoints. By default <n> = 0\n");
 		fprintf (stderr,"<Output arguments>:\n");
 		fprintf (stderr,"  Output is tab-delimited text with one line per spot.  Any summary information specified (-tm, -tt, etc) will be\n");
 		fprintf (stderr,"  displayed once for each spot - not once per timepoint. Column order will be as specified in <Output arguments>,\n");
