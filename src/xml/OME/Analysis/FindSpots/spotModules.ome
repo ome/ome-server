@@ -169,6 +169,16 @@
     <Element Name="ThresholdValue"
              DBLocation="FIND_SPOTS_INPUTS.THRESHOLD_VALUE"
              DataType="float"/>
+    <Element Name="FadeSpotsTheT"
+             DBLocation="FIND_SPOTS_INPUTS.FADE_SPOTS_THE_T"
+             DataType="integer">
+             <Description>If this is not NULL, it specifies the timepoint to use
+             when generating a mask for finding spots.  All other timepoints
+             will then use this mask for finding spots.  This allows looking
+             at bleaching or signal recovery (i.e. FRAP) in regions defined at
+             the specified timepoint.
+             </Description>
+    </Element>
   </SemanticType>
 
 </STD:SemanticTypeDefinitions>
