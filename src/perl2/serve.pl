@@ -105,6 +105,6 @@ if ($pageClass) {
 
 	exit(1);
 }
-OME::Session->instance()->idle();
+OME::Session->instance()->idle() if OME::Session->hasInstance();
 
 #undef($CGI);
