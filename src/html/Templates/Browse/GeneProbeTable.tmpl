@@ -1,3 +1,7 @@
+<script src="/JavaScript/sarissa.js" type="text/javascript"></script>
+<script src="/JavaScript/categories.js" type="text/javascript"></script>
+
+
 <INPUT TYPE="hidden" name="update">
 
 <TMPL_VAR NAME="Path.load/types-[Gene:ProbeGene:Probe:ImageProbe,EmbryoStage:ImageEmbryoStage]">
@@ -27,12 +31,15 @@ Column: <SELECT NAME ="Columns">
  </SELECT>
 
 <br>
-Category Group: <SElECT NAME="CategoryGroup">
+Category Group: 
+<SELECT NAME="CategoryGroup" 
+	 onchange="changeCategoryGroup(this.form.CategoryGroup)">
 <option value="None">None</option>
 <TMPL_VAR NAME=categoryGroups/render-list_of_options>
 </SELECT>	    
 
-Category: <SELECT NAME="Category">
+
+Category: <SELECT NAME="Category" id="Category">
 <option value="All">All</option>
 <TMPL_VAR NAME=categories/render-list_of_options>
 </SELECT>
