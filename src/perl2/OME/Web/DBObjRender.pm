@@ -96,6 +96,7 @@ use Carp qw(cluck);
 use HTML::Template;
 
 use base qw(OME::Web);
+use Data::Dumper;
 
 my $VALIDATION_INCS = <<END;
 <script type="text/javascript" src="/JavaScript/fValidate/fValidate.config.js"></script>
@@ -135,6 +136,75 @@ sub getName {
 	return $record{ '/name' };
 }
 
+=head2 getPageTitle
+
+=cut
+sub getPageTitle {
+    return "OME: Object Rendering";
+}
+
+
+
+=head2 createOMEPage
+
+ overrides implementation in Web.pm to provide a page without 
+    header, menu, or HTML headings that can get in the way
+=cut 
+
+
+sub createOMEPage {
+	my $self  = shift;
+	my $CGI	  = $self->CGI();
+	my ($result,$body)	= $self->getPageBody();
+	return ($result, $body);
+}
+
+=head2 getPageBody
+
+    Used when DBOBjRender is used as a url.
+=cut
+
+sub getPageBody {
+    my $self = shift ;
+    my $q = $self->CGI() ;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my $output;
+    my $outputType= 'HTML';
+
+    my $options = $q->Vars;
+    my $id = $options->{'ID'};
+    delete $options->{'ID'};
+
+    my $mode = $options->{'Mode'};
+    delete $options->{'Mode'};
+    
+    if (defined $options->{'Output'}) {
+	$outputType = $options->{'Output'};
+	delete $options->{'Output'};
+    }
+	
+
+    # we want to pass Type along to renderer.
+    my $type = $options->{'Type'};
+
+    my $obj =  $factory->loadObject($type,$id);
+
+
+    if ($options->{'Accessor'}) {
+	my $accessor = $options->{'Accessor'};
+	delete $options->{'Accessor'};
+	$accessor .="List" unless ($accessor =~ /.*List/);
+	my @objs = $obj->$accessor;
+	$output = $self->renderArray(\@objs,$mode,$options);
+
+    }
+    else {
+	$output =$self->render($obj,$mode,$options);
+    }
+
+    return ($outputType,$output);	
+}
 
 =head2 render
 
@@ -167,6 +237,7 @@ sub render {
 	my ($tmpl, %tmpl_data);
 
 	return '' unless $obj;
+
 
 	# load a template
 	my $tmpl_path = $self->_findTemplate( $obj, $mode, 'one' );
@@ -312,7 +383,7 @@ sub renderArray {
 	my $field_requests = $self->parse_tmpl_fields( [ $tmpl->param() ] );
 
 	# Determine paging limit. 
-	my $limit;
+	my $limit=0;
 	# First look in run time options
 	if( exists $options->{ paging_limit } ) { 
 		$limit = $options->{ paging_limit };
