@@ -415,15 +415,15 @@ sub getCategories {
 
     # do the list of categories
     my $category = $q->param('Category');
+    print STDERR "*** category is $category\n";
     if ($category && $category eq 'All')  {
 	$self->{Category} = undef;
-	return;
     }
     my $group = $self->{CategoryGroup};
 
     # do nothing if no group specified.
     return undef unless ($group);
-
+    print STDERR "** group is $group\n";
     my %catHash;
 
     # set up hash to describe rendering. 
