@@ -6,7 +6,9 @@ use OME::Tasks::OMEImport;
 
 use Term::ANSIColor qw(:constants);
 
-my @classifierFiles = ("OME/Analysis/Core/PixelIndicies.ome",
+my @classifierFiles = (
+# Signature Chain Modules
+"OME/Analysis/Core/PixelIndicies.ome",  
 "OME/Analysis/Core/PixelSlices.ome",
 "OME/Analysis/Core/PixelSliceModules.ome",
 "OME/Analysis/Filters/HighPassFilter.ome",
@@ -23,12 +25,17 @@ my @classifierFiles = ("OME/Analysis/Core/PixelIndicies.ome",
 "OME/Analysis/Statistics/ZernikeMoments.ome",
 "OME/Analysis/Statistics/ChebyshevStatistics.ome",
 "OME/Analysis/Statistics/ChebyshevFourierStatistics.ome",
+
+# Classification Modules
 "OME/Analysis/Classifier/SignatureStitcher.ome",
 "OME/Analysis/Classifier/ClassificationStatistics.ome",
 "OME/Analysis/Classifier/BayesNetTrainer.ome",
 "OME/Analysis/Classifier/BayesNetClassifier.ome",
-#"OME/Analysis/Classifier/TrainerChain.ome",
-"OME/Analysis/Classifier/SignatureChain.ome");
+
+# Useful Chains
+#"OME/Analysis/Classifier/TrainerChain.ome", # needed
+"OME/Analysis/Classifier/SignatureChain.ome" # unnecessary, but potentially useful to developers
+);
 
 my $session = OME::SessionManager->TTYlogin();
 my $factory = $session->Factory();

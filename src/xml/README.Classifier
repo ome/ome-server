@@ -15,46 +15,8 @@ src/xml/OME/Analysis/Segmentation 76..
 src/xml/OME/Analysis/Statistics   77..
 src/xml/OME/Analysis/Transforms   78..
 
-Below is the order the modules should be imported into OME
-copy and paste this into your command line.
-
-Signature Chain Modules
------
-ome import OME/Analysis/Core/PixelIndicies.ome
-ome import OME/Analysis/Core/PixelSlices.ome
-ome import OME/Analysis/Core/PixelSliceModules.ome
-ome import OME/Analysis/Filters/HighPassFilter.ome
-ome import OME/Analysis/Filters/BandPassFilter.ome
-ome import OME/Analysis/Maths/Gradient.ome
-ome import OME/Analysis/Segmentation/GlobalThreshold.ome
-ome import OME/Analysis/Segmentation/OtsuGlobalThreshold.ome
-ome import OME/Analysis/Transforms/ChebyshevTransform.ome
-ome import OME/Analysis/Transforms/FourierTransform.ome
-ome import OME/Analysis/Transforms/WaveletSignatures.ome
-ome import OME/Analysis/Statistics/EdgeStatistics.ome
-ome import OME/Analysis/Statistics/FeatureStatistics.ome
-ome import OME/Analysis/Statistics/HaralickFeatures.ome
-ome import OME/Analysis/Statistics/ZernikeMoments.ome
-ome import OME/Analysis/Statistics/ChebyshevStatistics.ome
-ome import OME/Analysis/Statistics/ChebyshevFourierStatistics.ome
------
-
-Classification Modules
------
-ome import OME/Analysis/Classifier/SignatureStitcher.ome
-ome import OME/Analysis/Classifier/ClassificationStatistics.ome
-ome import OME/Analysis/Classifier/BayesNetTrainer.ome
-ome import OME/Analysis/Classifier/BayesNetClassifier.ome
------
-
-Useful Chains
------
-# needed
-ome import OME/Analysis/Classifier/TrainerChain.ome
-# unnecessary, but potentially useful to developers
-ome import OME/Analysis/Classifier/SignatureChain.ome
------
-
+Execute the perl script install_classifier.pl to install the analysis modules
+and chains required for the OME integrated classifier.
 
 To get the matlab classifier working in OME, you gotta:
 -----
