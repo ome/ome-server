@@ -2,7 +2,5 @@ noinst_LIBRARIES=libhttpOMEIS.a @MATLAB_LIBRARY@
 EXTRA_LIBRARIES=libhttpOMEISMATLAB.a
 
 libhttpOMEIS_a_SOURCES = httpOMEIS.c httpOMEIS.h httpOMEISaux.c httpOMEISaux.h httpOMEIS-generic.c
-libhttpOMEIS_a_CPPFLAGS = -fPIC
-
 libhttpOMEISMATLAB_a_SOURCES = httpOMEIS.c httpOMEIS.h httpOMEISaux.c httpOMEISaux.h httpOMEIS-MATLAB.c httpOMEISaux-MATLAB.c httpOMEISaux-MATLAB.h
-libhttpOMEISMATLAB_a_CPPFLAGS = @MATLAB_INCLUDE@ -fPIC
+AM_CPPFLAGS = @MATLAB_INCLUDE@ -fPIC
