@@ -1,5 +1,3 @@
 <TMPL_LOOP NAME=/obj_loop>
-	<OPTION VALUE="<TMPL_VAR NAME=id>" <TMPL_IF NAME=/default_value>selected</TMPL_IF>>
-		<TMPL_VAR NAME='/name/max_text_length-20'>
-	</OPTION>
+	<OPTION VALUE="<TMPL_VAR NAME=id>"<TMPL_IF NAME=/default_value>selected</TMPL_IF>><TMPL_VAR NAME='/name/max_text_length-20'></OPTION>
 </TMPL_LOOP>
