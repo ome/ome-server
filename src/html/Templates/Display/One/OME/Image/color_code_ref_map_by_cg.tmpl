@@ -1,8 +1,5 @@
 <TMPL_IF NAME=id>
-<TABLE>
-<TR>
-<TD align="center" class="ome_category_border" >
-    <!--style="<TMPL_VAR NAME=classificationColor>"> -->
+<div class="ome_category_border" >
 <img src="<TMPL_VAR NAME=thumb_url>" UseMap="#Image<TMPL_VAR name=id>">
 <TMPL_IF NAME=classificationName>
 <br>
@@ -11,11 +8,6 @@ NAME=linkParams>"style="<TMPL_VAR NAME=classificationColor>">
 <TMPL_VAR NAME=classificationName>
 </A>
 </TMPL_IF>
-</TD>
-</TR>
-
-
-
-</TABLE>
+</div>
 </TMPL_IF>
 
