@@ -358,6 +358,13 @@ sub serve {
 		$headers->{-type} = $self->contentType();
 		print $self->CGI()->header(%{$headers});
 		print $content;
+	} elsif ($result eq 'XML' && defined $content) {
+	        $self->contentType('application/xml');
+		$headers->{-type} = $self->contentType();
+		print $self->CGI()->header(%{$headers});
+		$content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OME>\n" 
+		    . $content."</OME>\n";
+		print $content;
 	} elsif ($result eq 'IMAGE' && defined $content) {
 		print $self->CGI()->header(%{$headers});
 		print $content;
@@ -582,7 +589,8 @@ The first scalar is treated as a status message to determine what to do with the
 
   return ('HTML',$HTML);
 
-Accepted status strings are C<HTML>, C<IMAGE>, C<SVG>, C<JNLP>, C<FILE>, C<REDIRECT> and C<ERROR>,
+Accepted status strings are C<HTML>, C<IMAGE>, C<SVG>, C<JNLP>,
+    C<FILE>, C<REDIRECT>, C<XML>,  and C<ERROR>,
 If the returned status is C<HTML>, then the page is appropriately decorated to match the other pages in OME.
 No special processing is currently done for C<IMAGE>, C<SVG>, and C<JNLP>. For C<JNLP> the filename that should
 be used on the client must also be returned e.g. 
@@ -601,6 +609,10 @@ containing information to control the download process.  The hash may contain th
 A C<REDIRECT> status is used to get the browser to go to a different URL specified by the second scalar:
 
   return ('REDIRECT','http://ome.org/somewhere/else.html');
+
+A C<XML> status indicates that the results being returned should be
+    labelled with content-type "application/xml". The contents will
+    also be wrapped in <OME>..</OME> tags to insure well-formedness.
 
 A C<ERROR> status means an error has occurred.  The error message should be sent as the second scalar.
 
