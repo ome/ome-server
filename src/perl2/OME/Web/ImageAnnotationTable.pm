@@ -118,7 +118,11 @@ sub new {
     # the actual rows and columns
     $self->{rowEntries} = undef;
     $self->{colEntries} = undef;
-    
+
+    # value chosen for the row.
+    $self->{rowValue}  = undef;
+    # has the row been switched?
+    $self->{rowSwitch} = 0;
     return $self;
 }
 
@@ -217,6 +221,14 @@ sub getTableDetails {
     # error.
     $self->{rows} = $q->param('Rows');
     $self->{columns} = $q->param('Columns');
+    $tmpl_data{'prevRows'} = $self->{rows};
+    if ($q->param('prevRows') && $self->{rows} ne
+	$q->param('prevRows')) {
+	$self->{rowSwitch} =1;
+	print STDERR "** setting row switch!\n";
+    }
+
+    $tmpl_data{'rowFieldName'} = $self->{rows};
 
     # populate the pull-downs.
     my $types = $self->getTypes($tmpl);
@@ -235,7 +247,27 @@ sub getTableDetails {
 	    $tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	}
 	else {
-	    my $hasData = $self->renderDims($container,\%tmpl_data,$types);
+	    my $hasData =
+		$self->renderDims($container,\%tmpl_data,$types);
+	    print STDERR "*** row value is " . $self->{rowValue} ."\n";
+	    print STDERR  "*** rows is " . $self->{rows} . "\n";
+	    if ($q->param('prevRows')) {
+		print STDERR "*** previous rows is " . 
+		    $q->param('prevRows') ."\n";
+	    }
+	    if ($self->{rowValue}) {
+		if ($q->param('prevRows')) {
+		    if ( ($self->{rows} eq $q->param('prevRows'))) {
+			$tmpl_data{'rowValue'} = $self->{rowValue};
+		    }
+		}
+		else {
+		    print STDERR" **setting row value to " .
+			$self->{rowValue} ."\n";
+		    
+		    $tmpl_data{'rowValue'} = $self->{rowValue};
+		}
+	    }
 	    if ($hasData == 0) {
 		$tmpl_data{errorMsg}="No Data to Render\n";
 	    }
@@ -415,7 +447,6 @@ sub getCategories {
 
     # do the list of categories
     my $category = $q->param('Category');
-    print STDERR "*** category is $category\n";
     if ($category && $category eq 'All')  {
 	$self->{Category} = undef;
     }
@@ -423,7 +454,6 @@ sub getCategories {
 
     # do nothing if no group specified.
     return undef unless ($group);
-    print STDERR "** group is $group\n";
     my %catHash;
 
     # set up hash to describe rendering. 
@@ -480,14 +510,18 @@ sub renderDims {
     my $rows = $self->{rows};
     my $columns = $self->{columns};
     my $hasData = 0;
+    my $root;
 
     
     my $rowPath = $types->{$rows};
-    $self->{rowEntries} = $self->getObjects($container,$rows,$rowPath);
+    ($root,$self->{rowEntries}) =
+	$self->getObjects($container,$rows,$rowPath);
+    $self->{rowValue} = $root if ($root);
 
     # same for columns.
     my $colPath = $types->{$columns};
-    $self->{colEntries} = $self->getObjects($container,$columns,$colPath);
+    ($root,$self->{colEntries}) = 
+	$self->getObjects($container,$columns,$colPath);
 
     # populate the cells with data in a hash.
     # activeRows returns a list of rows that have data,
@@ -558,7 +592,7 @@ sub getObjects {
     my $typeST =
 	$factory->findObject('OME::SemanticType',{name=>$type});
     # get root vaalue
-    my $root = $q->param($type);
+    my $root = $q->param($type) unless ($self->{rowSwitch} == 1);
 
     my $objsRef;
     if ($root) {
@@ -581,7 +615,7 @@ sub getObjects {
     # convert that tree into an array,
     my $flatTree = $self->flattenTree($tree);
 
-    return $flatTree;
+    return ($root,$flatTree);
 }
 
 
