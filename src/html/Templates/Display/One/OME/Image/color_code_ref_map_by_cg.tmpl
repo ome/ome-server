@@ -3,10 +3,12 @@
 <img src="<TMPL_VAR NAME=thumb_url>" UseMap="#Image<TMPL_VAR name=id>">
 <TMPL_IF NAME=classificationName>
 <br>
+<p class="ome_category_text">
 <A HREF="serve.pl?Page=OME::Web::ImageAnnotationTable<TMPL_VAR
 NAME=linkParams>"style="<TMPL_VAR NAME=classificationColor>">
 <TMPL_VAR NAME=classificationName>
 </A>
+</p>
 </TMPL_IF>
 </div>
 </TMPL_IF>

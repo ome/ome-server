@@ -143,15 +143,21 @@ a.ome_popup { font-size: smaller; font-weight: normal; }
 /* FOR CATEGORIES */
 .ome_category_border 
 {
-  padding: 0.15em;
-  font-size: .8em;
+  float:left;
+  padding: .5em;
   border: none; 
+}
+
+.ome_category_text { 
+  font-size: .8em;
+  text-align: center;                   
 }
 
 .ome_table_border { 
 
   border: solid;
   border-width: 1px;                  
+  padding: .5em;                    
   border-color: silver;                                            
   text-align:center;
   background-color: #d0d0d0;
