@@ -62,7 +62,8 @@ Usage:
 $script $command_name commands are:
     users            Commands for administering OME users
     groups           Commands for administering OME groups
-    uninstall        Command  for removing your OME installation
+    configure        Utility for modifying configuration variables
+    uninstall        Command for removing your OME installation
     help <command>   Display help information about a specific command
 
 Note that most of these commands will require you to log in as an
