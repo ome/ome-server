@@ -8,6 +8,7 @@ RenderPage = '/perl2/serve.pl?Page=OME::Web::DBObjRender';
 var xmlhttp;
 
 
+
 function changeCategoryGroup(object) {
 	 var id = object.options[object.selectedIndex].value;
 	 var url = RenderPage+"&ID="+id;
@@ -23,48 +24,68 @@ function changeCategoryGroup(object) {
 
 function updateCategory() {
 	 if (xmlhttp.readyState == 4) {
-
 	    var cats = document.getElementById("Category");
-	    clearCats(cats);
-	    var items = xmlhttp.responseXML.getElementsByTagName("OPTION");
-	    for (var i = 0; i < items.length; i++) {
-	       var item = items[i];
-	       addCategory(cats,item);
-            }
-	 }
+	    var optCount = cats.length;
+
+	    for (i = optCount-1; i > 0; i--) {
+   		    cats.remove(i);
+	    }
+
+	    var serializer = new XMLSerializer();
+	    var txt = xmlhttp.responseText;
+
+	    // do the items
+            var select = buildSelect();
+	    var selectString = serializer.serializeToString(select);
+	    
+	    var span = document.getElementById("catSelect");
+	    span.innerHTML="";
+	    span.innerHTML=selectString;
+     }
 }
 
-function clearCats(cats) {
+function buildSelect() {
 
+	 var select = document.createElement("select");
+	 // set name
+	 setNodeAttribute(select,"name","Category");
+	 // set id
+	 setNodeAttribute(select,"id","Category");
 
-    var optCount = cats.length;
-    // leave default "all" value around.
-    for (i = optCount-1; i > 0; i--) {
-	    cats.remove(i);
-    }
+	 // add "all"
+	 var opt = document.createElement("option");
+	 var node = document.createTextNode("All");
+	 opt.value = "All";
+	 opt.appendChild(node);
+	 select.appendChild(opt);
+	 
+	 
 
+	 // add the rest
+         var items = xmlhttp.responseXML.getElementsByTagName("OPTION");
+	 for (var i =0; i < items.length;i++) {
+	   var item = items[i];
+	   var valueNode = item.getAttributeNode("VALUE");
+	   if (valueNode) {
+	      var value = valueNode.nodeValue;
+	      var name = item.firstChild.nodeValue;	
+	      // create the text node
+	      node = document.createTextNode(name);
+	      opt = document.createElement("option");
+	      opt.value = value;
+	      opt.appendChild(node);
+	      select.appendChild(opt);
+	   }
+	}
+	return select;
 }
 
-
-function addCategory(cats,item) {
-     var value = getValue(item);
-     var name = item.firstChild.nodeValue;
-     // create the text node
-     var node = document.createTextNode(name);
-     var opt = document.createElement("option");
-     opt.value = value;
-     opt.appendChild(node);
-     cats.appendChild(opt);
-
+function showCat(object) {
+    var id = object.options[object.selectedIndex].value;
+    alert("selected cat "+id);
 }
 
-function getValue(item) {
-   var value;
-   for (var x = 0; x < item.attributes.length; x++) {
-       var att = item.attributes[x];
-       if (att.nodeName.toLowerCase() == 'value') {
-              return att.nodeValue;
-       }
-   }
-   return null;
+function setNodeAttribute(node,attName,value) {
+	node.setAttributeNode(document.createAttribute(attName));
+	node.setAttribute(attName,value);
 }
