@@ -362,8 +362,8 @@ sub serve {
 	        $self->contentType('application/xml');
 		$headers->{-type} = $self->contentType();
 		print $self->CGI()->header(%{$headers});
-		$content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OME>\n" 
-		    . $content."</OME>\n";
+		$content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" 
+		    . $content."\n";
 		print $content;
 	} elsif ($result eq 'IMAGE' && defined $content) {
 		print $self->CGI()->header(%{$headers});
