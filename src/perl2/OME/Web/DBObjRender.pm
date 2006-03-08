@@ -203,6 +203,10 @@ sub getPageBody {
 	$output =$self->render($obj,$mode,$options);
     }
 
+    if ($outputType eq 'XML') {
+	$output = "<ome>$output</ome>";
+    }
+
     return ($outputType,$output);	
 }
 
