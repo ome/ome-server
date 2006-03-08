@@ -1356,7 +1356,8 @@ sub getRendering {
 	my $renderHash = { type=>'OME::Image',
 				     Rows => $self->{rows},
 				     Columns=> $self->{columns},
-			   Template=>$self->{Template}};
+			   Template=>$self->{Template},
+	                   Page=>'OME::Web::ImageAnnotationTable'};
 	my $sortedImages = $images;
 	if ($cg) {
 	    $sortedImages = $self->sortImagesByCG($images,$cg);
