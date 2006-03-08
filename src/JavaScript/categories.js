@@ -11,13 +11,19 @@ var xmlhttp;
 
 function changeCategoryGroup(object) {
 	 var id = object.options[object.selectedIndex].value;
-	 var url = RenderPage+"&ID="+id;
-	 url += "&Mode=select&Type=@CategoryGroup";
-
-	 xmlhttp = new XMLHttpRequest;
-	 xmlhttp.onreadystatechange = updateCategory;
-	 xmlhttp.open("GET",url,true);
-	 xmlhttp.send(null);
+         var span = document.getElementById("catSelect");	
+	 span.innerHTML="";
+	 if (id != "None") {
+	 	 var url = RenderPage+"&ID="+id;
+	 	 url += "&Mode=select&Type=@CategoryGroup";
+		 xmlhttp = new XMLHttpRequest;
+		 xmlhttp.onreadystatechange = updateCategory;
+		 xmlhttp.open("GET",url,true);
+		 xmlhttp.send(null);
+        }
+	else  {
+	      span.innerHTML="None";
+        }
 }
 
 
