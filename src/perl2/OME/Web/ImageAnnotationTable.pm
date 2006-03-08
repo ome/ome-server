@@ -123,6 +123,9 @@ sub new {
     $self->{rowValue}  = undef;
     # has the row been switched?
     $self->{rowSwitch} = 0;
+
+    # page to return to.
+    $self->{returnPage} = undef;
     return $self;
 }
 
@@ -167,7 +170,8 @@ sub getPageBody {
     # get the details. this is where the bulk of the work gets done.
     # use this procedure to allow for bulk of layout to be called from
     # other modules
-    my $output = $self->getTableDetails($self,$which_tmpl);
+    my $output = $self->getTableDetails($self,$which_tmpl,
+					'OME::Web::ImageAnnotationTable');
 
 
     # and the form.
@@ -181,7 +185,7 @@ sub getPageBody {
 
 =head2 getTableDetails
 
-    my $output = $self->getTableDetails($container,$which_tmpl);
+    my $output = $self->getTableDetails($container,$which_tmpl,$returnPage);
 
     getTableDetails does the meat of the work of building this page.
     We load the template, populate pull-downs that let us switch x and
@@ -189,6 +193,9 @@ sub getPageBody {
 
     $container is the object that calls this code. 
     $which_tmpl is the template that we are populating
+    $returnPage is the page that will be returned to when we click on
+      category group labels.
+    
     
     
 =cut
@@ -199,7 +206,8 @@ sub getTableDetails {
     my $factory = $session->Factory();
 
     # container is the OME::Web object that is calling this code.
-    my ($container,$which_tmpl) = @_;
+    my ($container,$which_tmpl,$returnPage) = @_;
+    $self->{returnPage} = $returnPage;
     my $q = $container->CGI();
     my %tmpl_data;
     # load the appropriate information for the named template.
@@ -1357,7 +1365,7 @@ sub getRendering {
 				     Rows => $self->{rows},
 				     Columns=> $self->{columns},
 			   Template=>$self->{Template},
-	                   Page=>'OME::Web::ImageAnnotationTable'};
+	                   Page=>$self->{returnPage}};
 	my $sortedImages = $images;
 	if ($cg) {
 	    $sortedImages = $self->sortImagesByCG($images,$cg);
