@@ -74,36 +74,6 @@ sub getPageBody {
     
     my $table = new OME::Web::ImageAnnotationTable();
 
-    # get the stage.
-    my @stages = $factory->findObjects('@EmbryoStage');
-
-    my %stageHash;
-    $stageHash{type}='@EmbryoStage';
-
-    # get the stage id  to use as defaults. handle possibility that
-    # stage came in as # or name.
-    my $stage;
-    if (defined $q->param('EmbryoStage')) {
-	$stage = $q->param('EmbryoStage');
-	if ($stage  =~ /\D+/) { # not numbers
-	    my @stageObjs = $factory->findObjects('@EmbryoStage',
-						 {Name=>$stage});
-	    if (scalar(@stageObjs) > 0) {
-		my $stageObj = $stageObjs[0];
-		$stage = $stageObj->ID();
-	    }
-	    else {
-		undef $stage;
-	    }
-	} # if it's not a number, it's an id. do nothing.
-    }
-    
-    $stageHash{default_value}= $stage;
-    $tmpl_data{'embryoStages/render-list_of_options'} 
-          = $self->Renderer->renderArray(\@stages,'list_of_options',\%stageHash);
-
-
-
     my $output =
 	$table->getTableDetails($self,'GeneProbeTable','OME::Web::TableBrowse');
 
