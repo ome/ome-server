@@ -72,7 +72,9 @@ sub new {
 	my $self  = $class->SUPER::new(@_);
 	
 	$self->{ _default_Length } = 25;
-	
+	# Set a 30 second timeout
+	$self->timeout(30);
+
 	return $self;
 }
 
@@ -107,6 +109,7 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;
 	my $q    = $self->CGI();
+
 	
 	if( $q->param( "Type" ) ) {
 		if( $q->param( "Format" ) and $q->param( "Format" ) eq 'txt' ) {

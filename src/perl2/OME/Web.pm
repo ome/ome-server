@@ -114,6 +114,10 @@ __PACKAGE__->contentType('text/html');
 # If we ever do, we would want to turn off the -no_xhtml pragma above
 #__PACKAGE__->contentType('application/xhtml+xml');
 
+# Default timeout for packages is none
+__PACKAGE__->mk_classdata('timeout');
+__PACKAGE__->timeout(0);
+
 my $loginPage = 'OME::Web::Login';
 
 # new()

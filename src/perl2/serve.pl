@@ -48,7 +48,6 @@ use OME::Tasks::NotificationManager;
 
 use CGI::Carp;
 
-
 # DBObject caching
 OME::DBObject->Caching(1);
 OME::DBObject->clearCache();
@@ -80,7 +79,30 @@ if ($pageClass) {
 				print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
 				      "Error calling package constructor $pageClass->new().";
 			} else {
-				$page->serve();
+				my $timeout = $CGI->url_param("Timeout");
+				$timeout = $page->timeout() unless $timeout;
+				if ($timeout) {
+					# Added timeout handling for user-initiated queries
+					# Timeoout can be passed as a CGI parameter
+					# timeout() defined as 0 (none) by Web.pm
+					# timeout() set to 30 by DBObjTable (first use)
+					# This code from:
+					# http://perl.apache.org/docs/2.0/user/coding/coding.html#Using_Signal_Handlers
+					use POSIX qw(SIGALRM);
+					my $mask      = POSIX::SigSet->new( SIGALRM );
+					my $action    = POSIX::SigAction->new(sub { die "Timeout Exceeded ($timeout s)" }, $mask);
+					my $oldaction = POSIX::SigAction->new();
+					POSIX::sigaction(SIGALRM, $action, $oldaction );
+					eval {
+						alarm ($timeout);
+						$page->serve();
+						alarm 0;
+					};
+					POSIX::sigaction(SIGALRM, $oldaction); # restore original
+					die $@ if $@; # Propagate the error if any
+				} else {
+					$page->serve();
+				}
 			}
 		}
 	};
@@ -89,12 +111,11 @@ if ($pageClass) {
 		my $error = $@;
 		carp "Error serving $pageClass: ", $error || "no error message available.";
 		print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
-		      "<pre>Error serving $pageClass: ", $error || "no error message available.", "</pre>";
+			  "<pre>Error serving $pageClass: ", $error || "no error message available.", "</pre>";
 		my @tasks = OME::Tasks::NotificationManager->list(process_id => $$);
 		foreach (@tasks) {
 			$_->died ($error || "no error message available.");
 		}
-
 		exit(1);
 	}
 } else {
