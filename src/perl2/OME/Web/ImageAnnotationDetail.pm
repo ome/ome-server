@@ -134,17 +134,18 @@ sub getPageBody {
     # get a parsed array of the ST types in the path variable.s
     my $pathTypes= $self->getPaths(\@parameters);
 
-    my $html;
     # get the display detail.
-   $html .= $self->getDetail($pathTypes,$image) if
-       (scalar(@$pathTypes) > 0);
+    if (scalar(@$pathTypes) > 0) {
+	$tmpl_data{'AnnotationDetails'} = $self->getDetail($pathTypes,$image);
+    }
 
     my $groups =$self->getCategoryGroups(\@parameters);
 
-    $html .= $self->getGroupsDetail($groups,$image) if 
-	($groups && scalar(@$groups) > 0);
+    if ($groups && scalar(@$groups) > 0) {
+	my $classifications = $self->getGroupsDetail($groups,$image);
+	$tmpl_data{'Classifications'}=$classifications;
+    }
 
-    $tmpl_data{'AnnotationDetails'} = $html;
     
     # populate the template..
     $tmpl->param(%tmpl_data);
@@ -327,7 +328,7 @@ sub getPathDetail {
 		my $target = $map->$targetField;
 		# get the external URL
 		my $url = $self->getObjURL($target,$type);
-		$html .= "<li> $targetField $url</br>";
+		$html .= "<li> $targetField: $url</br>";
 	    }
 	    $html .= "</ul>";
 	}
@@ -340,7 +341,7 @@ sub getPathDetail {
 		# target field is now the next type in the
 		# hierarchy. - probe.
 		my $target = $map->$targetField;
-		$html .= "<li> ". $targetField . " " .
+		$html .= "<li> ". $targetField . ": " .
 		    $self->getObjURL($target,$type) .    "<br>\n";
 
 		# fresh copy of the list of types for the next recursion
@@ -374,9 +375,11 @@ sub getGroupsDetail  {
     my $self  = shift;
     my ($groups,$image)=@_;
     my $html;
+    $html ="<ul>";
     foreach my $group (@$groups) {
 	$html .= $self->getGroupDetail($group,$image);
     }
+    $html.="</ul>";
     return $html;
 }
 
@@ -398,13 +401,13 @@ sub getGroupDetail {
 	OME::Tasks::CategoryManager->getImageClassification($image,$group);
     return "" unless $classification;
 
-    my $html = "<ul><li>";
+    my $html = "<li>";
     my $groupURL = $q->a({ href=> $self->getObjDetailURL($group) },
 			 $group->Name());
     my $cat = $classification->Category();
     my $catURL = $q->a({ href=> $self->getObjDetailURL($cat)}, $cat->Name);
-    $html  .=  "$groupURL $catURL\n";
-    $html .= "</ul>\n";
+    $html  .=  "$groupURL: $catURL\n";
+    $html .= "\n";
     return $html;
 }
 
