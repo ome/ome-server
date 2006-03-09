@@ -242,13 +242,18 @@ sub declassifyImage {
 
 =head2 getImageClassification()
 
+
+	my $classification = OME::Tasks::CategoryManager->
+		getImageClassification($image);
+
 	my $classification = OME::Tasks::CategoryManager->
 		getImageClassification($image, $categoryGroup);
 
-Find the classification for the image in this categoryGroup. If there is
-more than one valid classification found, this method will return an
-array reference. If exactly one valid classification is found, it will
-return it. If none are found, it will return undef.
+Find the classification for the image, with respect to the category
+group, if specified. If there is more than one valid classification
+found, this method will return an array reference. If exactly one
+valid classification is found, it will return it. If none are found,
+it will return undef. 
 
 =cut
 
@@ -256,10 +261,13 @@ sub getImageClassification {
 	my ($proto, $image, $categoryGroup ) = @_;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
+	my $searchHash = {
+	    image => $image};
+	$searchHash->{'Category.CategoryGroup'} = $categoryGroup
+	    if ($categoryGroup);
 	my @classifications = $factory->findObjects( 
 		'@Classification', 
-		'Category.CategoryGroup' => $categoryGroup,
-		image                    => $image
+	        $searchHash
 	);
 	@classifications = grep( ( ( not defined $_->Valid ) || $_->Valid ne 0 ), @classifications );
 	return \@classifications
@@ -268,6 +276,7 @@ sub getImageClassification {
 		if( @classifications eq 1 );
 	return undef;
 }
+
 
 =head2 getUnclassifiedImagesInDataset()
 
