@@ -166,6 +166,7 @@ sub getPageBody {
     $which_tmpl =~ s/%20/ /;
 
 
+
     # get the details. this is where the bulk of the work gets done.
     # use this procedure to allow for bulk of layout to be called from
     # other modules
@@ -204,6 +205,7 @@ sub getTableDetails {
     my $session= $self->Session();
     my $factory = $session->Factory();
 
+
     # container is the OME::Web object that is calling this code.
     my ($container,$which_tmpl,$returnPage) = @_;
     $self->{Template}=$which_tmpl;
@@ -233,7 +235,6 @@ sub getTableDetails {
     if ($q->param('prevRows') && $self->{rows} ne
 	$q->param('prevRows')) {
 	$self->{rowSwitch} =1;
-	print STDERR "** setting row switch!\n";
     }
 
     $tmpl_data{'rowFieldName'} = $self->{rows};
@@ -248,36 +249,28 @@ sub getTableDetails {
     $tmpl_data{'categories/render-list_of_options'} = 
 	$self->getCategories($container);
 
-
-    if ($self->{rows} && $self->{columns}) {
+    if (!$q->param('Base')) {
+	if ($self->{rows} && $self->{columns}) {
 	
-	if ($self->{rows} eq $self->{columns}) {
-	    $tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
-	}
-	else {
-	    my $hasData =
-		$self->renderDims($container,\%tmpl_data,$types);
-	    print STDERR "*** row value is " . $self->{rowValue} ."\n";
-	    print STDERR  "*** rows is " . $self->{rows} . "\n";
-	    if ($q->param('prevRows')) {
-		print STDERR "*** previous rows is " . 
-		    $q->param('prevRows') ."\n";
+	    if ($self->{rows} eq $self->{columns}) {
+		$tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	    }
-	    if ($self->{rowValue}) {
-		if ($q->param('prevRows')) {
-		    if ( ($self->{rows} eq $q->param('prevRows'))) {
+	    else {
+		my $hasData =
+		    $self->renderDims($container,\%tmpl_data,$types);
+		if ($self->{rowValue}) {
+		    if ($q->param('prevRows')) {
+			if ( ($self->{rows} eq $q->param('prevRows'))) {
+			    $tmpl_data{'rowValue'} = $self->{rowValue};
+			}
+		    }
+		    else {
 			$tmpl_data{'rowValue'} = $self->{rowValue};
 		    }
 		}
-		else {
-		    print STDERR" **setting row value to " .
-			$self->{rowValue} ."\n";
-		    
-		    $tmpl_data{'rowValue'} = $self->{rowValue};
+		if ($hasData == 0) {
+		    $tmpl_data{errorMsg}="No Data to Render\n";
 		}
-	    }
-	    if ($hasData == 0) {
-		$tmpl_data{errorMsg}="No Data to Render\n";
 	    }
 	}
     }
