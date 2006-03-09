@@ -164,7 +164,6 @@ sub getPageBody {
 	return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
     }
     $which_tmpl =~ s/%20/ /;
-    $self->{Template}=$which_tmpl;
 
 
     # get the details. this is where the bulk of the work gets done.
@@ -207,6 +206,7 @@ sub getTableDetails {
 
     # container is the OME::Web object that is calling this code.
     my ($container,$which_tmpl,$returnPage) = @_;
+    $self->{Template}=$which_tmpl;
     $self->{returnPage} = $returnPage;
     my $q = $container->CGI();
     my %tmpl_data;
