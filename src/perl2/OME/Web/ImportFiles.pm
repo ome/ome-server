@@ -50,6 +50,7 @@ use vars qw($VERSION);
 use Carp;
 use Data::Dumper;
 use File::Spec;
+use File::Glob ':glob'; # for bsd_glob
 
 # OME Modules
 use OME;
@@ -97,7 +98,7 @@ sub __resolveQueue {
 			my $dir = splice(@$queue, $i, 1);
 
 			# Push its contents
-			push(@$queue, glob("$dir/*"));
+			push(@$queue, bsd_glob("$dir/*"));
 
 			# Changes
 			return 1;
