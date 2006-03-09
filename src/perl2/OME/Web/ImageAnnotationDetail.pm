@@ -82,6 +82,10 @@ Thus, for example, a list of the form
 
 Successive annotation types will be displayed in nested lists.
 
+CategoryGroup/Category annotations for the image will be displayed
+    below the ST annotations. All CategoryGroup/Category
+    annotations for the image will be displayed.
+
 Where possible, the final elements will be displayed with appropriate
    links to external URLs.
        
@@ -139,11 +143,11 @@ sub getPageBody {
 	$tmpl_data{'AnnotationDetails'} = $self->getDetail($pathTypes,$image);
     }
 
-    my $groups =$self->getCategoryGroups(\@parameters);
+    my $classifications =$self->getClassifications($image);
 
-    if ($groups && scalar(@$groups) > 0) {
-	my $classifications = $self->getGroupsDetail($groups,$image);
-	$tmpl_data{'Classifications'}=$classifications;
+    if ($classifications) {
+	my $classificationDetail = $self->getClassificationDetails($classifications);
+	$tmpl_data{'Classifications'}=$classificationDetail;
     }
 
     
@@ -208,51 +212,6 @@ sub getPaths {
     return \@paths;
 }
 
-=head1 getCategoryGroups 
-
-   find a template variable like 
-    <TMPL_VAR NAME="CategoryGroup.load/id=[Test Group,53910]">
-    and return a list of category group objects.
-=cut
-
-sub getCategoryGroups {
-    my  $self=  shift;
-    my $parameters= shift;
-    my $session= $self->Session();
-    my $factory = $session->Factory();
-
-    # find the STs and the mapping STs to be used
-    my $cgST =
-	$factory->findObject('OME::SemanticType',{name=>'CategoryGroup'});
-    
-    my (@cat_params) = grep(/CategoryGroup\.load/,@$parameters);
-    my $request = $cat_params[0];
-    return undef unless $request;
-
-    my @cats;
-    if ($request =~ m/\/id=\[(.*)\]/) {
-	@cats = split(/,/,$1);
-    } else {
-	die "couldn't parse $request";
-    }
-
-    my @cgs;
-    foreach my $cat (@cats) {
-	my $cg;
-	if ($cat =~ /\d+/)  {
-	    $cg =$factory->loadObject('@CategoryGroup', $cat);
-	}
-	else {
-	    my $iter = $factory->findAttributes($cgST,{Name=> $cat});
-	    $cg = $iter->next();
-	}
-	if ($cg) {
-	    push(@cgs,$cg);
-	}
-    }
-    return \@cgs;
-
-}
 
 =head2 getDetail
     loop over allof the paths passed in, getting details for all
@@ -360,46 +319,63 @@ sub getPathDetail {
     }
     else  {
 	# if I found no maps.
-	return "No ${targetField}s found";
+	return "No ${targetField}s found<br>";
     }
     return $html;
 }
 
-=head1 getGroupsDetail
+
+=head1 getClassifications
+
+    Get all of the classifications for this image
+=cut
+
+sub getClassifications {
+    my  $self=  shift;
+    my  $image = shift;
+
+    my $classifications =
+	OME::Tasks::CategoryManager->getImageClassification($image);
+    return $classifications;
+}
+
+
+=head1 getClassificationDetails
 
     get details for each group
 
 =cut
 
-sub getGroupsDetail  {
+sub getClassificationDetails  {
     my $self  = shift;
-    my ($groups,$image)=@_;
+    my $classifications = shift;
     my $html;
     $html ="<ul>";
-    foreach my $group (@$groups) {
-	$html .= $self->getGroupDetail($group,$image);
+    if (ref($classifications) eq 'ARRAY') {
+	foreach my $class (@$classifications) {
+	    $html .= $self->getClassificationDetail($class);
+	}
+    }
+    else { 
+	$html .= $self->getClassificationDetail($classifications);
     }
     $html.="</ul>";
     return $html;
 }
 
-=head1 getGroupDetail
+=head1 getClassificationDetail
 
-    get the detail for a specific group
+    get the detail for a specific classification
 
 =cut
 
-sub getGroupDetail {
+sub getClassificationDetail {
 
     my $self=shift;
     my $q=$self->CGI();
-    my ($group,$image) = @_;
+    my ($classification) = @_;
 
-    # do a list for this group, print category name and value
-    # find classification for this group and this image.
-    my $classification =
-	OME::Tasks::CategoryManager->getImageClassification($image,$group);
-    return "" unless $classification;
+    my $group = $classification->Category()->CategoryGroup();
 
     my $html = "<li>";
     my $groupURL = $q->a({ href=> $self->getObjDetailURL($group) },
