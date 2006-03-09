@@ -98,6 +98,7 @@ if ($pageClass) {
 						$page->serve();
 						alarm 0;
 					};
+					alarm 0;
 					POSIX::sigaction(SIGALRM, $oldaction); # restore original
 					die $@ if $@; # Propagate the error if any
 				} else {
