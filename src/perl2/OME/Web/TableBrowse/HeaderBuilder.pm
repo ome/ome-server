@@ -60,9 +60,7 @@ use OME::Tasks::NotificationManager;
 
 $VERSION = $OME::VERSION_STRING;
 
-my $PM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Project';
-my $DM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Dataset';
-my $HOME_LOCATION = 'serve.pl?Page=OME::Web::Home';
+my $HOME_LOCATION = 'serve.pl?Page=OME::Web::TableBrowse&Base=1';
 
 my $NIH_LOCATION = 'http://www.nih.gov';
 my $NIA_LOCATION = 'http://www.grc.nia.nih.gov';
