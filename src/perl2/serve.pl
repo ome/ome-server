@@ -127,6 +127,8 @@ if ($pageClass) {
 
 	exit(1);
 }
-OME::Session->instance()->idle() if OME::Session->hasInstance();
+
+# Free the session's resources.
+OME::Session->idle();
 
 #undef($CGI);
