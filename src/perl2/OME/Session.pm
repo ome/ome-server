@@ -362,24 +362,40 @@ DESTROY {
 	}
 }
 
+=head2 idle
+
+	OME::Session->idle();
+	# or
+	$session->idle();
+
+Explicitly frees resources used since getting the session. After this
+call, the session will not work properly until revived with
+createSession. The freed resources include open database transactions,
+DBObject caches, and temporary files. This method should be called when
+a persistant process (e.g. an apache child) completes a request. Command
+line processes don't need to call this method because they typically
+exit after completing a request.
+
+=cut
+
 sub idle {
-    my $self = shift;
-
-	# Forget our access lists
-	$self->{ACL} = undef;    
-
-	# Remove any stale temporary files which might still be lying around.
-	$self->__finishAllTemporaryFiles();
-
-	# Delete any cached DBObject's
-	OME::DBObject->clearAllCaches();		
-
-	# Turning AutoCommit on at this point ensures that we have no open transactions
-	# when we're just sitting idle.
-	# Note that doing this *requires* turning it back on in the SessionManager
-	# When re-using a session.  If not reusing a session, the new factory call
-	# will create a DBH with transactions on (at least by default).
-	$self->{Factory}->idle();
+	if ($__soleInstance) {
+		# Forget our access lists
+		$__soleInstance->{ACL} = undef;    
+	
+		# Remove any stale temporary files which might still be lying around.
+		$__soleInstance->__finishAllTemporaryFiles();
+	
+		# Delete any cached DBObject's
+		OME::DBObject->clearAllCaches();		
+	
+		# Turning AutoCommit on at this point ensures that we have no open transactions
+		# when we're just sitting idle.
+		# Note that doing this *requires* turning it back on in the SessionManager
+		# When re-using a session.  If not reusing a session, the new factory call
+		# will create a DBH with transactions on (at least by default).
+		$__soleInstance->{Factory}->idle();
+	}
 }
 
 =head2 deleteInstance
