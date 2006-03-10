@@ -187,6 +187,8 @@ eval {
 		unregister_worker ();
 		$session->commitTransaction();
 		logdbg "debug", "NonBlockingSlaveWorkerCGI: finished executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
+		# Free the session's resources.
+		$session->idle();	
 	});
 	# Commit transaction, setting worker status to BUSY,
 	$session->commitTransaction();
