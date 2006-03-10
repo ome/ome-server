@@ -123,7 +123,6 @@ sub createSession {
 
     my $result = $session->SessionKey();
     $session->deleteInstance(1);
-    OME::DBObject->clearAllCaches();
 
     return $result;
 }
@@ -140,7 +139,6 @@ sub authenticateSession {
       unless defined $session;
 
     $session->deleteInstance(1);
-    OME::DBObject->clearAllCaches();
 
     return 1;
 }
@@ -158,7 +156,6 @@ sub closeSession {
     OME::SessionManager->logout($session->{ApacheSession});
 
     $session->deleteInstance(1);
-    OME::DBObject->clearAllCaches();
 
     return 1;
 }
