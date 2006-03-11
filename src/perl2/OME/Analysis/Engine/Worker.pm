@@ -122,7 +122,7 @@ __PACKAGE__->addColumn(last_used => 'last_used',
                         SQLType => 'timestamp',
                         NotNull => 1,
                         Indexed => 1,
-                        Default => 'now()',
+                        Default => 'CURRENT_TIMESTAMP',
                        });
 __PACKAGE__->addColumn(PID => 'pid',
                        {
