@@ -83,6 +83,9 @@ use constant FIND_DATABASE_SQL => <<SQL;
 	WHERE lower(datname) = lower(?)
 SQL
 
+use constant RESERVED_WORDS => { 
+	CURRENT_TIMESTAMP => 1, 
+};
 
 sub createDatabase {
 	my ($self,$superuser,$password) = @_;
@@ -944,8 +947,12 @@ sub addClassToDatabase {
 				my $column_sql = "$column $sql_type";
 
 				if (defined $default) {
-					$column_sql .= " DEFAULT ?";
-					push @bind_vals, $default;
+					if( exists( RESERVED_WORDS->{ $default } ) ) {
+						$column_sql .= " DEFAULT $default";
+					} else {
+						$column_sql .= " DEFAULT ?";
+						push @bind_vals, $default;
+					}
 				}
 
 				$column_sql .= " NOT NULL" if $not_null;
