@@ -123,6 +123,7 @@ __PACKAGE__->addColumn(inserted => 'inserted',
                        {
                         SQLType => 'timestamp',
                         NotNull => 1,
+                        Default => 'CURRENT_TIMESTAMP',
                        });
 # pixels_id references the default set of pixels. 
 __PACKAGE__->addColumn(pixels_id => 'pixels_id',{SQLType => 'integer'});
