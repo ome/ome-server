@@ -85,7 +85,7 @@ __PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
 __PACKAGE__->addColumn('timestamp' => 'timestamp',
                        {
                         SQLType => 'timestamp',
-                        Default => 'now()',
+                        Default => 'CURRENT_TIMESTAMP',
                        });
 __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                        {

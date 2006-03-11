@@ -132,7 +132,7 @@ __PACKAGE__->addColumn(group => 'group_id','@Group');
 __PACKAGE__->addColumn(timestamp => 'timestamp',
                        {
                         SQLType => 'timestamp',
-                        Default => 'now()',
+                        Default => 'CURRENT_TIMESTAMP',
                        });
 __PACKAGE__->addColumn(['execution_time', 'x_time'] => 'x_time',
                        {SQLType => 'float'});
