@@ -264,6 +264,12 @@ sub waitForAnyModules {
 
 	my $nWorking = $self->countBusyWorkers();
 
+	# Return if the queue is empty and no workers are busy.
+	unless( $nWorking || scalar( @{ $self->{queue} } ) ) {
+		logdbg "debug", "waitForAnyModules: No workers are busy, and no modules are waiting to execute. Returning to avoid an indefinite wait.";
+		return;
+	}
+
 	# Our "event loop"
 	while ($event ne $ourEvent) {
 		# Block until something happens
