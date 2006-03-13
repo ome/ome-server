@@ -54,6 +54,12 @@ OME::DBObject->clearCache();
 
 my $CGI = CGI->new();
 my $pageClass = $CGI->url_param("Page");
+   if (! ($pageClass =~ m/^OME\:\:.*/)) {  # if pageClass doesn't start with "OME::"
+      exit;
+   }
+   if ($pageClass =~ m/[&;`'\"|*?~<>^\(\)\[\]\{\}\$\n\r]/) {  # If pageClass contains any dangerous characters
+      exit;
+   }
 
 if ($pageClass) {
 	logdbg "debug", "Serving package - $pageClass.";
