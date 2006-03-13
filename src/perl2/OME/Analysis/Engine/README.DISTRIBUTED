@@ -25,10 +25,29 @@ The URL would then be http://worker123.node.com/perl2/NonblockingSlaveWorkerCGI.
 src/perl2/OME/Analysis/Engine/install_worker_node.pl as root.
 
 
+Additional Setup to Back End to support remote Workers
+-------------------------------------------------
+* If you will be using remote workers, you will need to configure
+pg_hba.conf which lives on the back-end in pgsql/data/ (the postgres 'home') to
+allow the remote workers to connect to your DB.  Usually a trusted
+authentication from specified IPs is sufficient:
+
+host       all         127.0.0.1     255.255.255.255    trust
+host       all         x.x.x.x     255.255.255.255    trust
+
+Replace x.x.x.x with the IP address of your worker. The first line allows 
+connections from the local machine in the style of: 
+	psql -h [HOSTNAME] -d ome
+
+As distributed analysis gets incorporated into the system more, these steps will gradually
+disappear.
+
 Setup the Back End:
 -------------------
 
-* Install OME
+* Install OME. When prompted for "Host" during "Database Bootstrap" section, 
+you must specify the hostname of the machine you are installing on. This 
+hostname must be resolvable on your local network.
 
 * Manually populate the analysis_workers table with url and status (set to
 'IDLE') for each worker on each node.  A node that hosts more than one worker
@@ -46,19 +65,7 @@ the executor by setting a variable in the CONFIGURATION table:
 UPDATE configuration SET value='OME::Analysis::Engine::SimpleWorkerExecutor'
 WHERE name='executor';
 The default value is 'OME::Analysis::Engine::UnthreadedPerlExecutor'.
-
-Additional Setup to Back End to support remote Workers
--------------------------------------------------
-* If you will be using remote workers, you will need to configure
-pg_hba.conf which lives on the back-end in pgsql/data/ (the postgres 'home') to
-allow the remote workers to connect to your DB.  Usually a trusted
-authentication from specified IPs is sufficient:
-
-host       ome         127.0.0.1     255.255.255.255    trust
-replace 127.0.0.1 with the IP address of your worker.
-
-As distributed analysis gets incorporated into the system more, these steps will gradually
-disappear.
+You must redo this step if you ever re-run the installer.
 
 --------------------------
 Some implementation notes:
