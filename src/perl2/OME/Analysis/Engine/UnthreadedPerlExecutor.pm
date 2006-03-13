@@ -73,10 +73,10 @@ sub executeModule {
 
     croak "Malformed class name $handler_class"
       unless $handler_class =~ /^\w+(\:\:\w+)*$/;
-    $handler_class->require();
-    my $handler = $handler_class->new($mex);
 
     eval {
+		$handler_class->require();
+		my $handler = $handler_class->new($mex);
         $handler->startAnalysis();
         $handler->execute($dependence,$target);
         $handler->finishAnalysis();
