@@ -83,6 +83,11 @@ use CGI qw/:standard -no_xhtml/;
 use Fcntl qw (:flock O_RDWR O_CREAT); # import LOCK_* and OPEN constants
 use Log::Agent;
 
+# Comment this out if you do not want debug statements written to apache's error log
+logconfig(
+	-prefix      => "$0",
+	-level    => 'debug'
+);
 use OME::Install::Environment;
 use OME::SessionManager;
 use OME::Analysis::Engine::UnthreadedPerlExecutor;
