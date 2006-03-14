@@ -1,0 +1,105 @@
+
+<input type="hidden" name="images_to_annotate" value="<TMPL_VAR
+NAME=images_to_annotate>">
+<input type="hidden" name="template" value="<TMPL_VAR NAME=template>">
+<input type="hidden" name="images_completed" value="<TMPL_VAR 
+NAME=images_completed>"> 
+<input type="hidden" name="currentImageID" value="<TMPL_VAR NAME=current_image_id>">
+<input type="hidden" name="SaveAndNext">
+<input type="hidden" name="AddToCG">
+<input type="hidden" name="CreateProbe">
+<input type="hidden" name="NewProbe" value="<TMPL_VAR NAME=NewProbe>">
+<TMPL_VAR NAME=image_large><br>
+
+<a href = "javascript:selectMany('OME::Image','images_to_annotate');"><br>Search for images to annotate</a><br><br> 
+
+<TABLE>
+<TR>
+<TD>
+<table class="ome_table">
+<tr>
+	<td class="ome_td"><center>Classification</center></td>
+	<td class="ome_td"><center>Value</center></td>
+	<td class="ome_td"><center>Add New Value</center></td>
+</tr>
+
+<TMPL_VAR
+NAME="DetailSTs.load/-[Probe:ImageProbe,EmbryoStage:ImageEmbryoStage]">
+<TMPL_VAR NAME="CategoryGroup.load/id=[Localization]">
+<Tmpl_LOOP NAME=st.loop>
+<tr>
+	<td class="ome_td" align="left"><TMPL_VAR
+	NAME=st.Name></td>
+	<td class="ome_td" align="left">
+	<SELECT name="st<TMPL_VAR NAME='st.id'>" WIDTH="200" STYLE="width:200px">
+	<OPTION value="">...</option>
+	<TMPL_VAR NAME=st.val/render-list_of_options></select>
+	</td>
+	<td class="ome_td">	
+	</td>
+</tr>
+</TMPL_LOOP>
+
+<TMPL_LOOP NAME=cg.loop>
+	<tr>
+		<td class="ome_td" align="left"><TMPL_VAR NAME=cg.Name></td>
+		<td class="ome_td" align="left">
+		<SELECT name="FromCG<TMPL_VAR NAME='cg.id'>"
+	WIDTH="200" STYLE="width:200px"><OPTION value="">...</option><TMPL_VAR NAME=cg.cat/render-list_of_options></select></td>
+		<td class="ome_td" align="left"><input type="text" size="15" name="CategoryAddTo<TMPL_VAR NAME='cg.id'>" alt="blank"></td>
+	</tr>
+</TMPL_LOOP>
+
+</TD>
+
+</table>
+
+<TD>
+<TMPL_IF name=Gene>
+<div id="newProbe" class ="ome_alt_input">
+<TABLE>
+<TR><TD colspan="2"><B>Create a new Probe:<B></TD></TR>
+
+<TR><td align="right">Probe Name:</td>
+<td align="left"><input type="text" size="15"
+name="ProbeName"></td></tr>
+
+<tr><TD align="right">Probe Type:</td>
+<td align="left"><SELECT name="ProbeType"><TMPL_VAR name=ProbeType></select></td></tr>
+
+
+<tr><TD align="right">Gene:</td>
+<td align="left"><SELECT name="Gene"><TMPL_VAR name=Gene></select></td></tr>
+
+<tr>
+<td colspan="2">
+<input type="button" value='Create Probe'
+onclick="javascript: document.forms[0].CreateProbe.value='CreateProbe'; document.forms[0].submit();">
+</td>
+<tr>
+
+<tr>
+<td colspan=2>
+<TMPL_VAR NAME="Results">
+</td>
+</tr>
+</TABLE>
+</div>
+</TMPL_IF>
+
+</td>
+</TR>
+</table>
+<input type="button" value='Save & Next' onclick="javascript:
+	document.forms[0].SaveAndNext.value='SaveAndNext';
+	document.forms[0].submit();">
+
+<input type="button" value='Add Categories' onclick="javascript: document.forms[0].AddToCG.value='AddToCG'; document.forms[0].submit();"><br>
+Images left to annotate:<br> 
+
+<TMPL_VAR NAME=image_thumbs><br>
+
+Annotated Images:<br>
+
+<TMPL_VAR NAME=annotated_image_thumbs><br>
+
