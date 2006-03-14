@@ -77,7 +77,8 @@ Load up the correct annotation template, save any annotations, allow
     specified ST and images.
 
     Note that this does not account for ST instances that map directly
-    to images. This functionality is not currently supported
+    to images - image granularity STs. This functionality is not
+    currently supported.
     
 =cut
 
@@ -119,7 +120,6 @@ sub getPageBody {
     # find the STs and the mapping STs to be used
     my $cgST =
     $factory->findObject('OME::SemanticType',{name=>'CategoryGroup'});
-    $cgST->requireAttributeTypePackage();
 
     my ($sts,$maps) = $self->findSTs(\@parameter_names);
 
@@ -128,7 +128,8 @@ sub getPageBody {
 
 
     # display images
-    my ($currentImage,$imageToAnnotate) = $self->populateImageDetails(\%tmpl_data, $tmpl);
+    my ($currentImage,$imageToAnnotate) = 
+	$self->populateImageDetails(\%tmpl_data, $tmpl);
 
 
     # annnotate if they hit 'save and next'
@@ -164,6 +165,7 @@ sub getPageBody {
     if (grep {$_ eq 'cg.loop'} @parameter_names) {
 	$self->populateAnnotationGroups($currentImage,\%tmpl_data,$category_groups);
     }
+
     # populate the template
     $tmpl->param( %tmpl_data );
 
@@ -208,9 +210,11 @@ sub findSTs {
     my  @sts;
     my %maps;
 
+
     foreach my $stEntry (@stlist) {
 	# each entry has form type:mapType
 	my ($st,$mapST) = split(/:/,$stEntry);
+	
 	my $semantic_type = $self->loadST($st);
 	my $map_type = $self->loadST($mapST);
 
@@ -252,6 +256,10 @@ sub loadST  {
 =head1 findCategoryGroups
 
     Find and load category groups as given in template
+    Category groups are listed in a template variable of the form..
+    "CategoryGroup.load/id=[..]", where one or more category
+    groups are specified in between the brackets. Category groups can
+    be specified by name or by ID.
 
 =cut
 
@@ -303,7 +311,7 @@ sub annotateWithSTs {
     my $factory = $session->Factory();
     my ($currentImage,$sts,$maps) = @_;
 
-    # for each incoming category - FromCG.id (in template)
+    # for each incoming sst
     foreach my $st (@$sts) {
 	#find the field name specified in the template
 	my $stAnnotationFieldName = "st".$st->id;
@@ -365,6 +373,9 @@ sub annotateWithCGs {
 
 
 =head2 populateImageDetails
+
+    display image to annotate, images left to annotate, and those
+    already annotated
 
 =cut
 
@@ -546,6 +557,8 @@ sub populateAnnotationSTs {
 =head1 populateAnnotationGroups
 
    Populate the fields for annotation by catgory group.
+    Find the category groups that were requested and populate the
+    pull-downs and related fields.
 
 =cut
 sub populateAnnotationGroups {
