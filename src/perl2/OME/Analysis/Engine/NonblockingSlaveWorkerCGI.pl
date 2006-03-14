@@ -138,7 +138,9 @@ eval {
 		DBPassword => $DBPassword,
 		});
 };
-do_response (SERVER_ERROR,"Unable to get remote session: $@") unless $session;
+do_response (SERVER_ERROR,"Unable to get remote session: $@\n".
+	"SessionKey: '$SessionKey'\n\tDataSource: '$DataSource'\n\DBUser: '$DBUser'"
+) unless $session;
 
 # Get our MEX object and target object if needed.
 my ($factory,$mex);
@@ -169,7 +171,15 @@ eval {
 	$worker->master($MasterID);
 	
 	$worker->storeObject();
-	
+
+# Black magic to get things working. It ends up opening a matlab connection that
+# is cached until doLater needs it. This is a hack!
+# Josiah, 3/14/06
+my $handler_class = $mex->module->module_type();
+$handler_class->require();
+my $handler = $handler_class->new($mex);
+undef $handler;
+
 	# Register the module execution for later
 	OME::Fork->doLater ( sub {
 		# Note that this executor sets the module status on error and stores the MEX
