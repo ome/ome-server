@@ -168,7 +168,7 @@ a.ome_popup { font-size: smaller; font-weight: normal; }
 }
 
 
-.ome_row_header_border, .ome_col_header_border { 
+.ome_row_header_border, .ome_col_header_border,  { 
   padding: 3px;
   font-size: 1em;
   background-color: #b0b0b0;
@@ -183,3 +183,10 @@ a.ome_popup { font-size: smaller; font-weight: normal; }
   padding: 1px;
   background-color: #FFFFFF;
  }
+
+ 
+.ome_alt_input { 
+  padding: 3px;
+  font-size: 1em;
+  background-color: #c0c0c0;
+}
