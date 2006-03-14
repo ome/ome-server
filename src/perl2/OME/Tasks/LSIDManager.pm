@@ -148,6 +148,9 @@ my ($self,$object) = @_;
 			$type = 'ModuleExecution';
 		} elsif ($ref eq 'OME::SemanticType') {
 			$type = 'SemanticType';
+		} elsif ($ref =~ m/^OME::.+$/) {
+			$type = $ref;
+			$type =~ s/::/_/g;
 		}
 	
 	return $type;
@@ -285,6 +288,9 @@ sub getLocalObject () {
 		return $factory->loadObject('OME::ModuleExecution', $localID);
 	} elsif ($namespace eq 'SemanticType') {
 		return $factory->loadObject('OME::SemanticType', $localID);
+	} elsif ($namespace =~ m/^OME_.*$/) {
+		$namespace =~ s/_/::/g;
+		return $factory->loadObject($namespace, $localID);
 	} else {
 		return $factory->loadAttribute($namespace, $localID);
 	}
