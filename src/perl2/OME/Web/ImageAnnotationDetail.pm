@@ -253,13 +253,9 @@ sub getPathDetail {
     # so we have to copy the list when we recurse.
 
     my $map = shift @$pathTypes;
-    my $type = shift @$pathTypes;
-
-    # strip off the "@" to get the field name.
-    $type =~ /@(.*)/;
-    # so, if map is ProbeGeneMap and type is "@Probe", target field
-    # will be probe
-    my $targetField = $1;
+    $map = "@".$map;
+    my $targetField = shift @$pathTypes;
+    my $type = "@".$targetField;
 
     my @maps;
     # find the maps that correspond to the root object.
