@@ -66,8 +66,8 @@ sub getPageBody {
 
     my $sub = $q->param('submit');
 
-    $tmpl_data{'Gene'} = $q->param('Gene') if (defined
-					       $q->param('Gene'));
+    $tmpl_data{$ROW} = $q->param($ROW) if (defined
+					       $q->param($ROW));
 
     # Gene and embryo Stage for rows and columns if not specified
     $q->param(-name=>'Template',-value=>$TEMPLATE) unless $q->param('Template');
