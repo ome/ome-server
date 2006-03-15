@@ -76,7 +76,7 @@ The list of types will alternate between objects and maps. An
     ending with a map that leads to a final ST.
     
 Thus, for example, a list of the form 
-    [@ImageProbe,@Probe,@ProbeGene,@Gene] will start with
+    [ImageProbe,Probe,ProbeGene,Gene] will start with
     an Image, use ImageProbe to find all associated probes, and then
     ProbeGene to find all genes for the probe.
 
@@ -129,7 +129,7 @@ sub getPageBody {
 
     my @parameters=$tmpl->param();
 
-    # load the imaeg.
+    # load the image.
     my $ID = $q->param('ID');
     my $image = $factory->loadObject( 'OME::Image', $ID);
     # populate  the basic image display  in the template.
@@ -163,8 +163,15 @@ sub getPageBody {
 }
 
 =head1 getImageDisplay
+    
+    $self->getImageDisplay($parameter_names,$tmpl_data,$image);
 
-    get the basic display for the image 
+    The template will have a variable name of the form
+    "image/render-<mode", where <mode> describes an image rendering
+    mode, such as "large_no_comments".  This procedure will render the
+    image according to that node ad use it to populate the template
+    data appropriately.
+
 =cut
 sub getImageDisplay {
     my $self  = shift;
@@ -185,9 +192,14 @@ sub getImageDisplay {
 
 =head1 getPaths
 
-    Find the template parameter named "Path.load/types-[...]",
-    parse out the list of types inside the brackets, and return an
-    array reference.
+    $self->getPaths(@parameters);
+
+    Find the template parameters named "Path.load/typesX-[...]", where 
+    X= 0, 1, 2... 
+    Parse out the list of types inside the brackets, and return an
+    reference to an array. The array contains references to the split
+    arrays of all of the type names. Thus, $paths->[0]is an array
+    containing the names in the first path specification, etc. 
     
 
 =cut
@@ -214,7 +226,10 @@ sub getPaths {
 
 
 =head2 getDetail
-    loop over allof the paths passed in, getting details for all
+    $self->getDetail($pathTypes,$root)
+
+    Generate the detailed output from the semantic type paths. Iterate
+    over all paths and concatenate the resulting HTML from each.
 
 =cut
 
@@ -226,13 +241,15 @@ sub getDetail {
     my $html;
 
     foreach my $path (@$pathTypes) {
-	$html  .= $self->getPathDetail($path,'OME::Image',$root);
+	$html  .= $self->getPathDetail('OME::Image',$root,@$path);
     }
     return $html;
 }
 
 =head1 getPathDetail
 
+    $self->getPathDetail($pathTypes,$parentType,$root);
+o
     Recursively iterate through one path of types, populating the list s
     until we get down to the bare items at the end
 
@@ -241,7 +258,13 @@ sub getDetail {
 sub getPathDetail {
     my $self= shift;
     my $q= $self->CGI();
-    my ($pathTypes,$parentType,$root) = @_;
+
+    # each pathTypes array is passed in not as a reference,
+    # but as the actual array.
+    # this way, it gets copied on call, and recursive calls can 
+    # modify their array without fear of doing harm.
+
+    my ($parentType,$root,@pathTypes) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
     my $html;
@@ -252,9 +275,9 @@ sub getPathDetail {
     # shifting walks down the list destructively,
     # so we have to copy the list when we recurse.
 
-    my $map = shift @$pathTypes;
+    my $map = shift @pathTypes;
     $map = "@".$map;
-    my $targetField = shift @$pathTypes;
+    my $targetField = shift @pathTypes;
     my $type = "@".$targetField;
 
     my @maps;
@@ -272,14 +295,13 @@ sub getPathDetail {
     if (scalar(@maps) > 0) {
 	# if i have any maps
 
-	if (scalar(@$pathTypes) ==0 ) {
+	if (scalar(@pathTypes) ==0 ) {
 	    # we're at the end of the list of types.
 	    $html .= "<ul>";
 
 
 	    # find the image associated with the maps.
 	    foreach my $map (@maps) {
-		# now, i've got the gene;
 		my $target = $map->$targetField;
 		# get the external URL
 		my $url = $self->getObjURL($target,$type);
@@ -299,14 +321,9 @@ sub getPathDetail {
 		$html .= "<li> ". $targetField . ": " .
 		    $self->getObjURL($target,$type) .    "<br>\n";
 
-		# fresh copy of the list of types for the next recursion
-		my @localTypes;
-		for (my $i=0; $i < scalar(@$pathTypes); $i++) {
-		    $localTypes[$i]=$pathTypes->[$i];
-		}
-		# recurse to populate the next level.
-		$html .= $self->getPathDetail(\@localTypes,
-					      $targetField,$target);
+		# recurse to populate the next level. Pass the array
+		# as a whole so it will get copied.
+		$html .= $self->getPathDetail($targetField,$target,@pathTypes);
 	    }
 	    # end the list.
 
@@ -323,7 +340,9 @@ sub getPathDetail {
 
 =head1 getClassifications
 
-    Get all of the classifications for this image
+    $self->getClassifications($image);
+
+    Get all of the classifications for the image.
 =cut
 
 sub getClassifications {
@@ -338,7 +357,9 @@ sub getClassifications {
 
 =head1 getClassificationDetails
 
-    get details for each group
+    $self->getClassificationDetails($classifications)
+    get classifications details for each category group, concatenating
+    them into html
 
 =cut
 
@@ -360,6 +381,7 @@ sub getClassificationDetails  {
 }
 
 =head1 getClassificationDetail
+    $self->getClassificationDetail($classification);
 
     get the detail for a specific classification
 
