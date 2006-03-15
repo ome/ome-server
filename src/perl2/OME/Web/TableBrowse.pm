@@ -44,7 +44,9 @@ use OME::Web::ImageAnnotationBrowser;
 use OME::Web::TableBrowse::HeaderBuilder;
 use OME::Web::ImageAnnotationTable;
 
-my $BROWSE_PAGE='OME::Web::ImageAnnotationBrowser';
+my $TEMPLATE='GeneProbeTable';
+my $ROW='Gene';
+my $COLUMN='EmbryoStage';
 
 sub getPageTitle {
     return "OME: Browsing Mouse Images";
@@ -68,14 +70,14 @@ sub getPageBody {
 					       $q->param('Gene'));
 
     # Gene and embryo Stage for rows and columns if not specified
-    $q->param(-name=>'Template',-value=>'GeneProbeTable') unless $q->param('Template');
-    $q->param(-name=>'Rows',-value=>'Gene') unless $q->param('Rows');
-    $q->param(-name=>'Columns',-value=>'EmbryoStage') unless $q->param('Columns');
+    $q->param(-name=>'Template',-value=>$TEMPLATE) unless $q->param('Template');
+    $q->param(-name=>'Rows',-value=>$ROW) unless $q->param('Rows');
+    $q->param(-name=>'Columns',-value=>$COLUMN) unless $q->param('Columns');
     
     my $table = new OME::Web::ImageAnnotationTable();
 
     my $output =
-	$table->getTableDetails($self,'GeneProbeTable','OME::Web::TableBrowse');
+	$table->getTableDetails($self,$TEMPLATE,'OME::Web::TableBrowse');
 
     # and the form.
     my $html =
