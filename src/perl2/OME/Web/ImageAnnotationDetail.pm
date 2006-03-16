@@ -337,8 +337,9 @@ sub getPathDetail {
 =head1 getClassificationDetails
 
     $self->getClassificationDetails($image,$tmpl_data);
-    get classifications details for each category group, concatenating
-    them into html
+    get classifications details for each category group, and populate
+    template.
+
 
 =cut
 
@@ -369,7 +370,7 @@ sub getClassificationDetails  {
 
 =head1 getClassificationDetail
     $self->getClassificationDetail($classification);
-a
+
     get the detail for a specific classification
 
 =cut
