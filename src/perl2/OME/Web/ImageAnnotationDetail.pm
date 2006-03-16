@@ -349,18 +349,21 @@ sub getClassificationDetails  {
     my $classifications = 
 	OME::Tasks::CategoryManager->getImageClassification($image);
     if ($classifications) {
-	my $html;
-	$html ="<ul>";
+	my @annotations;
+	my $annotation;
 	if (ref($classifications) eq 'ARRAY') {
 	    foreach my $class (@$classifications) {
-		$html .= $self->getClassificationDetail($class);
+		$annotation = $self->getClassificationDetail($class);
+		push (@annotations,$annotation);
 	    }
 	}
 	else { 
-	    $html .= $self->getClassificationDetail($classifications);
+	    $annotation =
+		$self->getClassificationDetail($classifications);
+	    push (@annotations,$annotation);
 	}
-	$html.="</ul>";
-	$tmpl_data->{categoryAnnotations} = $html;
+
+	$tmpl_data->{categoryAnnotations} = \@annotations;
     }
 }
 
@@ -376,17 +379,19 @@ sub getClassificationDetail {
     my $self=shift;
     my $q=$self->CGI();
     my ($classification) = @_;
+    my %detail;
 
     my $group = $classification->Category()->CategoryGroup();
 
-    my $html = "<li>";
     my $groupURL = $q->a({ href=> $self->getObjDetailURL($group) },
 			 $group->Name());
     my $cat = $classification->Category();
-    my $catURL = $q->a({ href=> $self->getObjDetailURL($cat)}, $cat->Name);
-    $html  .=  "$groupURL: $catURL\n";
-    $html .= "\n";
-    return $html;
+    my $catURL = $q->a({ href=> $self->getObjDetailURL($cat)},
+			 $cat->Name);
+
+    $detail{catGroup} = $groupURL;
+    $detail{catValue} = $catURL;
+    return \%detail;
 }
 
 
