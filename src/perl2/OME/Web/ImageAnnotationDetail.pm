@@ -106,7 +106,7 @@ sub getPageBody {
     my $which_tmpl = $q->url_param('Template');
     my $referer = $q->referer();
     my $url = $self->pageURL('OME::Web::ImageAnnotationDetail');
-    my $ID = $q->url_param("ID");
+    my $ID = $q->param('ID');
     if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
 	$which_tmpl = $1;
 	$which_tmpl =~ s/%20/ /;
@@ -130,7 +130,7 @@ sub getPageBody {
     my @parameters=$tmpl->param();
 
     # load the image.
-    my $ID = $q->param('ID');
+
     my $image = $factory->loadObject( 'OME::Image', $ID);
     # populate  the basic image display  in the template.
     $self->getImageDisplay(\@parameters,\%tmpl_data,$image);
@@ -143,14 +143,8 @@ sub getPageBody {
 	$tmpl_data{'AnnotationDetails'} = $self->getDetail($pathTypes,$image);
     }
 
-    my $classifications =$self->getClassifications($image);
+    $self->getClassificationDetails($image,\%tmpl_data);
 
-    if ($classifications) {
-	my $classificationDetail = $self->getClassificationDetails($classifications);
-	$tmpl_data{'Classifications'}=$classificationDetail;
-    }
-
-    
     # populate the template..
     $tmpl->param(%tmpl_data);
     # and the form.
@@ -338,26 +332,11 @@ sub getPathDetail {
 }
 
 
-=head1 getClassifications
-
-    $self->getClassifications($image);
-
-    Get all of the classifications for the image.
-=cut
-
-sub getClassifications {
-    my  $self=  shift;
-    my  $image = shift;
-
-    my $classifications =
-	OME::Tasks::CategoryManager->getImageClassification($image);
-    return $classifications;
-}
 
 
 =head1 getClassificationDetails
 
-    $self->getClassificationDetails($classifications)
+    $self->getClassificationDetails($image,$tmpl_data);
     get classifications details for each category group, concatenating
     them into html
 
@@ -365,24 +344,29 @@ sub getClassifications {
 
 sub getClassificationDetails  {
     my $self  = shift;
-    my $classifications = shift;
-    my $html;
-    $html ="<ul>";
-    if (ref($classifications) eq 'ARRAY') {
-	foreach my $class (@$classifications) {
-	    $html .= $self->getClassificationDetail($class);
+    my ($image,$tmpl_data) = @_;
+
+    my $classifications = 
+	OME::Tasks::CategoryManager->getImageClassification($image);
+    if ($classifications) {
+	my $html;
+	$html ="<ul>";
+	if (ref($classifications) eq 'ARRAY') {
+	    foreach my $class (@$classifications) {
+		$html .= $self->getClassificationDetail($class);
+	    }
 	}
+	else { 
+	    $html .= $self->getClassificationDetail($classifications);
+	}
+	$html.="</ul>";
+	$tmpl_data->{categoryAnnotations} = $html;
     }
-    else { 
-	$html .= $self->getClassificationDetail($classifications);
-    }
-    $html.="</ul>";
-    return $html;
 }
 
 =head1 getClassificationDetail
     $self->getClassificationDetail($classification);
-
+a
     get the detail for a specific classification
 
 =cut
