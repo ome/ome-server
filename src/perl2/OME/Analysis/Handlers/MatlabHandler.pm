@@ -78,6 +78,7 @@ my $supported_NS = 'http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd';
 # CONSTANTS #
 #############
 my $_environment = initialize OME::Install::Environment;
+my $_omeis_repository; # this gets filled out during new()
 
 # List of functions in this package make matlab global variables from input execution instructions
 # Keyed by Tag name of elements under <Input>
@@ -210,6 +211,9 @@ sub new {
 	$self->{__inputVariableNames} = {};
 	$self->{__outputVariableNames} = {};
 
+	my $factory = OME::Session->instance()->Factory();
+ 	$_omeis_repository = $factory->findObject('OME::SemanticType::BootstrapRepository') or croak "Couldn't get repository attribute from OME\n";
+ 	
 	# __openEngine this will reuse the current MATLAB engine, if possible
 	$self->__openEngine();
 
@@ -506,21 +510,21 @@ sub Pixels_to_MatlabArray {
 	if (scalar @ROI) {
 		if ($convertToDatatype) {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$_environment->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ".
+							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$_omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		} else {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getROI(openConnectionOMEIS('".$_environment->omeis_url()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ".
+							   "$matlab_var_name = getROI(openConnectionOMEIS('".$_omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		}
 	} else {
 		if ($convertToDatatype) {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels->ImageServerID().")); ".
+							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$_omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID().")); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		} else {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels->ImageServerID()."); ".
+							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$_omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID()."); ".
 							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
 		}
 	}
@@ -704,10 +708,10 @@ sub MatlabArray_to_Pixels {
 
 	my $outBuffer  = " " x 4096;
 	$_engine->setOutputBuffer($outBuffer, length($outBuffer));
-	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
+	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_omeis_repository->ImageServerURL()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
 	$outBuffer =~ s/(\0.*)$//;
 	$outBuffer =~ s/[^[:print:][:space:]]//g;
-	die "ERROR saving pixels to omeis w/ command:\n\t".$matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_environment->omeis_url()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);\n$outBuffer\n"
+	die "ERROR saving pixels to omeis w/ command:\n\t".$matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$_omeis_repository->ImageServerURL()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);\n$outBuffer\n"
 		if( $outBuffer =~ m/\S/);
 	my ($value, $class) = $self->_getScalarFromMatlab($matlab_var_name."_pix");
 	die "Could not write the expected number of pixels to OMEIS"
@@ -1148,11 +1152,12 @@ Starts up the Matlab interface (OME::Matlab::Engine)
 sub __openEngine {
 	my ($self) = @_;
 
-	# load configuration variables
+	# load environment variables
 	my $session = OME::Session->instance();
-	my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
-	my $matlab_exec = $conf->matlab_exec or croak "couldn't retrieve matlab exec path from configuration";
-	my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
+	my $MATLAB = $_environment->matlab_conf() or croak "couldn't retrieve MATLAB environment variables";
+	my $matlab_exec = $MATLAB->{EXEC} or croak "couldn't retrieve matlab exec path from environment";
+	my $matlab_src_dir = $MATLAB->{MATLAB_SRC} or croak "couldn't retrieve matlab src dir from environment";
+	
 	logdbg "debug", "Matlab src dir is $matlab_src_dir";
 		
 	# initially open the MATLAB Engine
