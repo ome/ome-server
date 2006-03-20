@@ -193,6 +193,7 @@ sub pressWorker {
 	# This is mostly used to retry 503 - SERVER_BUSY responces at a later time.
 	$worker->last_used ('now()');
 	$worker->storeObject();
+	OME::Session->instance()->commitTransaction();
 	
 	return undef;
 	
@@ -209,8 +210,11 @@ sub shiftQueue {
 	my $queue = $self->{queue};
 
 	my ($worker,$shifted);
+	my $loopCount = 0;
 	while (scalar @$queue) {
-		logdbg "debug", "SimpleWorkerExecutor->shiftQueue: Getting an idle worker for MEX=".$queue->[0]->{MEX};
+		# Log every 100 tries.
+		logdbg "debug", "SimpleWorkerExecutor->shiftQueue: Getting an idle worker for MEX=".$queue->[0]->{MEX}
+			if( $loopCount++ % 1000 == 0 );
 		# Get an idle worker
 		$worker = $self->getWorker();
 
@@ -270,10 +274,13 @@ sub waitForAnyModules {
 		return;
 	}
 
-	# Our "event loop"
+	# Our "event loop"$
+	my $loopCount = 0;
 	while ($event ne $ourEvent) {
 		# Block until something happens
-		logdbg "debug", "waitForAnyModules: waiting for a worker to finish";
+		# log a debug message every 1000 cycles.
+		logdbg "debug", "waitForAnyModules: waiting for a worker to finish"
+			if( $loopCount++ % 1000 == 0 );
 		$events = OME::Tasks::NotificationManager->listen (5);
 		$event = '';
 		if ($events) {
