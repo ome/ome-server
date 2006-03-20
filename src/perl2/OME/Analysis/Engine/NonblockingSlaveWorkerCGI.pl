@@ -166,11 +166,6 @@ do_response (SERVER_ERROR,"Unable to load Worker ID $Worker_ID: $@") unless $wor
 
 # Set the worker status to 'BUSY'
 eval {
-	$worker->status('BUSY');
-	$worker->PID($$);
-	$worker->master($MasterID);
-	
-	$worker->storeObject();
 
 # Black magic to get things working. It ends up opening a matlab connection that
 # is cached until doLater needs it. This is a hack!
@@ -179,6 +174,12 @@ my $handler_class = $mex->module->module_type();
 $handler_class->require();
 my $handler = $handler_class->new($mex);
 undef $handler;
+
+	$worker->status('BUSY');
+	$worker->PID($$);
+	$worker->master($MasterID);
+	
+	$worker->storeObject();
 
 	# Register the module execution for later
 	OME::Fork->doLater ( sub {
