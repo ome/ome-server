@@ -211,7 +211,9 @@ undef $handler;
 };
 
 if ($@) {
-	do_response (SERVER_ERROR,'Could not initialize worker for MEX $MEX_ID: $@');
+	# Free the session's resources.
+	$session->idle();	
+	do_response (SERVER_ERROR,"Could not initialize worker for MEX $MEX_ID: $@");
 } else {
 	# Send an OK response and exit
 	do_response (STATUS_OK,'OK');
