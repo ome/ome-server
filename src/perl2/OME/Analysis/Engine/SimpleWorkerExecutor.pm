@@ -210,13 +210,12 @@ sub shiftQueue {
 	my $queue = $self->{queue};
 
 	my ($worker,$shifted);
-	my $loopCount = 0;
 	while (scalar @$queue) {
-		# Log every 100 tries.
-		logdbg "debug", "SimpleWorkerExecutor->shiftQueue: Getting an idle worker for MEX=".$queue->[0]->{MEX}
-			if( $loopCount++ % 1000 == 0 );
+		logdbg "debug", "SimpleWorkerExecutor->shiftQueue: Getting an idle worker for MEX=".$queue->[0]->{MEX};
 		# Get an idle worker
 		$worker = $self->getWorker();
+		# Give up if there is not an idle worker.
+		last unless $worker;
 
 		# Try to press him
 		if ($self->pressWorker($worker,$queue->[0]) ) {
@@ -278,9 +277,9 @@ sub waitForAnyModules {
 	my $loopCount = 0;
 	while ($event ne $ourEvent) {
 		# Block until something happens
-		# log a debug message every 1000 cycles.
+		# log a debug message every 100 cycles.
 		logdbg "debug", "waitForAnyModules: waiting for a worker to finish"
-			if( $loopCount++ % 1000 == 0 );
+			if( $loopCount++ % 100 == 0 );
 		$events = OME::Tasks::NotificationManager->listen (5);
 		$event = '';
 		if ($events) {
