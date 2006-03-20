@@ -226,9 +226,11 @@ sub getTableDetails {
 
 
     # figure out what we have for rows and columns
-    # if nothing is specified, we'll just stop.
-    # if the same value is given for each dimension, we report an
-    # error.
+    # set the 'prevRows' field in the template to be equalto hat i
+    # specify for the rows. If there is a value for prevRows in the
+    # CGI, and it's not what i've just selected, 
+    # set rowSwitch to 1.
+    
     $self->{rows} = $q->param('Rows');
     $self->{columns} = $q->param('Columns');
     $tmpl_data{'prevRows'} = $self->{rows};
@@ -256,13 +258,25 @@ sub getTableDetails {
 		$tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	    }
 	    else {
+		# do the bulk of the work.
+
 		my $hasData =
 		    $self->renderDims($container,\%tmpl_data,$types);
+
+		# set the input field for the row value.
+		# Essentially, we want to populate that text field
+		# with the right value if (a) a value has been given
+		# and (b) the Type used for the rows has not
+		# changed. Case (b) can be further broken down to two
+		# cases: if there is no previous row, it has not
+		# changed. If there is, and it is not equal to the
+		# current row, then it has changed, and the input
+		# field should be left blank, by not setting the
+		# template variable. 
 		if ($self->{rowValue}) {
-		    if ($q->param('prevRows')) {
-			if ( ($self->{rows} eq $q->param('prevRows'))) {
-			    $tmpl_data{'rowValue'} = $self->{rowValue};
-			}
+		    if ($q->param('prevRows')&& 
+			($self->{rows} eq $q->param('prevRows'))) {
+			$tmpl_data{'rowValue'} = $self->{rowValue};
 		    }
 		    else {
 			$tmpl_data{'rowValue'} = $self->{rowValue};
@@ -291,7 +305,7 @@ sub getTableDetails {
     some root to a map that refers to an image.
 
     thus, 
-    Path.load/types-[Gene:ProbeGene,Probe:ImageProbe,
+    Path.load/types-[Gene:ProbeGene:Probe:ImageProbe,
                      EmbryoStage:ImageEmbryoStage]
 
     defines two dimensions.
@@ -345,8 +359,8 @@ sub getTypes {
 
     getChoices populates the Columns and Rows pull-down menus in the
     template. This is done by iterating down the root types for each
-    of the dimensions, stripping off the leading '@', and putting them
-    into the template variable.
+    of the dimensions and putting them     into the template
+    variable. 
 
     If something matching the "Rows" or "Columns" parameter is found,
         set that value to be selected
@@ -447,10 +461,12 @@ sub getCategories {
     my $q = $container->CGI();
 
     # do the list of categories
+    # nothing specified for Category if 'All' was selected 
     my $category = $q->param('Category');
     if ($category && $category eq 'All')  {
 	$self->{Category} = undef;
     }
+    # get the group.
     my $group = $self->{CategoryGroup};
 
     # do nothing if no group specified.
@@ -459,6 +475,8 @@ sub getCategories {
 
     # set up hash to describe rendering. 
     $catHash{type} = '@Category';
+
+    # load the category, either by Id or string.
     my $cat;
     if ($category) {
 
@@ -469,11 +487,15 @@ sub getCategories {
 	    $cat = $factory->loadObject('@Category',$category);
 	}
     }
-	
+
+    # find the categories for the group.
     my @catList = $factory->findObjects('@Category',
 					{CategoryGroup =>
 						 $group});
-    # category can only be set if it's valid for this group
+    # category can only be set if it's valid for this group. To see if
+    # that is the case, we must go through the list of categories
+    # to see if i can find my category. if I find it, set the default
+    # value of the hash.
     if ($cat) {
 	foreach my $catEntry  (@catList) {
 	    if ($catEntry->id == $cat->id) {
@@ -514,6 +536,10 @@ sub renderDims {
     my $root;
 
     
+    # firt, we find the objects that we're rendering in the rows
+    # this is either all of the objects specified by the "Rows" CGI
+    # parameter, or it is a list of specific values.
+
     my $rowPath = $types->{$rows};
     ($root,$self->{rowEntries}) =
 	$self->getObjects($container,$rows,$rowPath);
@@ -527,7 +553,6 @@ sub renderDims {
     # populate the cells with data in a hash.
     # activeRows returns a list of rows that have data,
     # active cols indicates columns
-    
     my ($cells,$activeRows,$activeCols) =
 	$self->populateCells($types);
 
@@ -541,10 +566,13 @@ sub renderDims {
 	my $rowEntrySize = $self->getHeaderSize($self->{rowEntries});
 	$tmpl_data->{rowHeaderCount} = $rowEntrySize;
 
+	# populate the headers of the columns
 	my $cHeaders = 
 	    $self->populateColumnHeaders($container,$activeCols,
 					 $rowEntrySize,$colPath);
 	$tmpl_data->{columnHeaders} =$cHeaders;
+
+	# do the body.
 
 	my $body =
 	    $self->populateBody($container,$cells,$activeRows,
@@ -811,7 +839,8 @@ sub flattenTree {
 	my $ent = $sortedRows[$i];
 	for (my $j = 0; $j < scalar(@$ent)-1; $j++) {
 	    my $val = $ent->[$j];
-	    if ($val =~ m/([^_]*)__\d+/) {
+	    #if ($val =~ m/([^_]*)__\d+/) {
+	    if ($val =~ m/(.*)__\d+/) {
 		$ent->[$j]=$1;
 	    }
 	}
@@ -1393,7 +1422,7 @@ sub sortImagesByCG {
 	    $catName = $classification->Category->Name;
 	}
        # populate a new array. each element in this array is a pair
-       # containing [$cgid, $image];
+       # containing [$catName, $image];
 
 	my @imgDetail = ($catName,$image);
 	push(@cgArray,\@imgDetail);
