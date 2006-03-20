@@ -179,33 +179,13 @@ sub getPageBody {
     my $mode = $options->{'Mode'};
     delete $options->{'Mode'};
     
-    if (defined $options->{'Output'}) {
-	$outputType = $options->{'Output'};
-	delete $options->{'Output'};
-    }
-	
 
     # we want to pass Type along to renderer.
     my $type = $options->{'Type'};
 
     my $obj =  $factory->loadObject($type,$id);
 
-
-    if ($options->{'Accessor'}) {
-	my $accessor = $options->{'Accessor'};
-	delete $options->{'Accessor'};
-	$accessor .="List" unless ($accessor =~ /.*List/);
-	my @objs = $obj->$accessor;
-	$output = $self->renderArray(\@objs,$mode,$options);
-
-    }
-    else {
-	$output =$self->render($obj,$mode,$options);
-    }
-
-    if ($outputType eq 'XML') {
-	$output = "<ome>$output</ome>";
-    }
+    $output =$self->render($obj,$mode,$options);
 
     return ($outputType,$output);	
 }
