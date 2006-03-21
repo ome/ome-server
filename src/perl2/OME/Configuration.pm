@@ -154,7 +154,7 @@ my %FOREIGN_KEY_VARS =
                             },
    repository              => {
                              DBColumn => 'repository_id',
-                             FKClass  => '@Repository'
+                             FKClass  => 'OME::SemanticType::BootstrapRepository'
                             },
   );
 
