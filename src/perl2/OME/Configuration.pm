@@ -152,6 +152,10 @@ my %FOREIGN_KEY_VARS =
                              DBColumn => 'administration_module_id',
                              FKClass  => 'OME::Module'
                             },
+   repository              => {
+                             DBColumn => 'repository_id',
+                             FKClass  => '@Repository'
+                            },
   );
 
 sub new {
@@ -308,6 +312,8 @@ sub new {
 
 sub __changeObjRef {
 	my ($self,$IDvariable,$objectType,$object) = @_;
+	# convert ST type to perl package
+	$objectType = "OME::SemanticType::__$1" if $objectType =~ /^\@(\w+)$/;
 	die "In OME::Configuration->__changeObjRef, expected parameter of type '$objectType', but got '".
 		ref($object)."'\n" unless ref($object) eq $objectType;
 	die "In OME::Configuration->__changeObjRef, object '".ref($object)."' is not an OME::DBObject!\n"
