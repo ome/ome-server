@@ -313,7 +313,7 @@ sub instance {
           unless defined $__soleInstance;
     } else {
 		my ($package, $filename, $line) = caller;
-        croak "$package at line $line trying to retrieve a session instance when none exists"
+        confess "$package at line $line trying to retrieve a session instance when none exists"
           unless defined $__soleInstance;
     }
 
