@@ -436,7 +436,13 @@ sub importGroup {
 	# Store info about each input channel (wavelength)
 	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}) {
 		$self->__storeChannelInfoRGB(scalar(@$groupList)*3, @channelInfo);
-		$self->__storeDisplayOptions ({min => 0, max => 2**$xref->{ $file }->{'Data.BitsPerPixel'}-1});
+		my %display_options = map{ 
+			$_ => {
+				BlackLevel => 0, 
+				WhiteLevel => 2**$xref->{ $file }->{'Data.BitsPerPixel'}-1
+			}
+		} ( 0..($maxC-1) );
+		$self->__storeDisplayOptions (\%display_options);
 	} else {
 		$self->__storeChannelInfo (scalar(@$groupList), @channelInfo);
 		$self->__storeDisplayOptions ();
