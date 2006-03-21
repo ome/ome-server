@@ -165,9 +165,12 @@ BLURB
         $confirm_all = 1;
     }
     
-	$lsid = $environment->lsid ($lsid) or croak "Could not get LSID url rom environment\n";
-	my $omeis_repository = $factory->findObject('OME::SemanticType::BootstrapRepository') or croak "Couldn't get repository attribute from OME\n";
-	$omeis_repository_url or $omeis_repository_url = $omeis_repository->ImageServerURL();
+	$lsid = $environment->lsid ($lsid) or croak "Could not get LSID url from environment\n";
+	
+	my $conf = $session->Configuration() ;
+
+	my $omeis_repository = $conf->repository();
+	my $omeis_repository_url = $omeis_repository->ImageServerURL();
 	
     while (1) {
         if ($confirm_all) {
@@ -183,10 +186,39 @@ BLURB
 				last;
 			}
 			$omeis_repository_url = confirm_default ("OMEIS Server", $omeis_repository_url);
-			$omeis_repository->ImageServerURL($omeis_repository_url);
+
+			my $new_repository =  $factory->findObject ('OME::SemanticType::BootstrapRepository', ImageServerURL => $omeis_repository_url);
+			if ($new_repository) {
+				$omeis_repository = $new_repository;
+				$conf->repository ($omeis_repository);
+			} else {
+				my $register_new = confirm_default ('The specified OMEIS URL is not a known repository. '.
+					'You may either register a new repository (R) or change the hostname of the current default repository (C)',
+					'R: register new OMEIS');
+				if (uc ($register_new) eq 'C') {
+					$omeis_repository->ImageServerURL ($omeis_repository_url);
+					$omeis_repository->storeObject();
+				} else {
+					my $admin_mex = $self->getAdminMEX();
+					$new_repository = $factory->newAttribute('Repository',undef,$admin_mex,{
+						ImageServerURL => $omeis_repository_url,
+						IsLocal        => 0,
+            		});
+					$new_repository->storeObject;
+					
+					# We need a OME::SemanticType::BootstrapRepository object instead of the attribute.
+					$omeis_repository =  $factory->findObject ('OME::SemanticType::BootstrapRepository', ImageServerURL => $omeis_repository_url);
+					die "For some reason, the new repository was not created:  New repository object not found in DB." unless $omeis_repository;
+					$conf->repository ($omeis_repository);
+				}
+			}
 			$lsid = confirm_default ("LSID Authority", $lsid);
+			$environment->omeis_url ($omeis_repository_url);
 		}
 	}
+	# Make sure we finish the admin mex in case we started one (no error if none started)
+	$self->finishAdminMEX();
+
     my $apacheConf = $environment->apache_conf() or croak "Could not get Apache Configuration from environment\n";
     my $OME_BASE_DIR = $environment->base_dir() or croak "Could not get base installation directory from environment\n";
     
@@ -266,7 +298,6 @@ BLURB
 	$workerConf->{MaxWorkers} = $max_local_workers if $max_local_workers;
 	$workerConf->{MaxWorkers} = 2 unless exists $workerConf->{MaxWorkers};
 	
-	my $conf = $session->Configuration() ;
 	my $executor = $conf->executor or croak "couldn't retrieve executor from configuration";
 	
     while (1) {
@@ -325,7 +356,6 @@ BLURB
 	    $var->storeObject();
 	}
 	
-	$omeis_repository->storeObject();
     $factory->commitTransaction();
     
     euid(0);
