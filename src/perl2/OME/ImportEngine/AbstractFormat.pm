@@ -646,21 +646,40 @@ sub __storeChannelInfoRGB {
 
 =head2 __storeDisplayOptions
 
-    $self->__storeDisplayOptions($numWaves, @channelInfo);
+    $self->__storeDisplayOptions( {
+		$channelIndex => {
+			BlackLevel => $blackLevel,
+			WhiteLevel => $whiteLevel,
+		}, 
+		colorMap => [ $redChannelIndex, $greenChannelIndex, $blueChannelIndex, $greyChannelIndex ]
+	} );
 
-Stores metadata about an RGB composite channel.  The channelInfo array
-should contain the three RGB channels, which will be stored as channel
-components of a single logical channel.
 
-Each channel info hash is keyed thusly:
-     chnlNumber
-     ExWave
-     EmWave
-     Flour
-     NDfilter
-This channel info is pulled from the first channel in the array and used to
-define the single logical channel.  The chnlNumber is used from each of the 3
-channels to store the channel component index (index into Pixels).
+Stores display settings. The display info hash is optional. If unspecified,
+default values will be provided. If an index in colorMap is undefined, that
+channel will be turned off. For example, to set the red channel to 1 and the
+blue channel to 0, you would use [ 1, undef, 0, undef ].
+
+Note: I (Josiah) would prefer an interface that looked like the following, but do not
+have time for it ATM. If only some RGB+Gray channels were given, the others would be
+presumed to be off. Also, everything up to Red would be optional. Also, Gamma would
+be optional.
+$self->__storeDisplayOptions( {
+	ZStart => ...,
+	ZStop  => ...,
+	TStart => ...,
+	TStop  => ...,
+	DisplayRGB => 1, 
+	Red => {
+		BlackLevel   => $blackLevel,
+		WhiteLevel   => $whiteLevel,
+		Gamma        => $gamma,
+		ChannelIndex => $channelIndex
+	}, 
+	Blue  => {...},
+	Green => {...},
+	Grey  => {...},
+} );
 
 =cut
 
@@ -670,14 +689,6 @@ sub __storeDisplayOptions {
     # FIXME:  This has GOT to go...
 	my $pixels = $self->{pixels};
 	my $image = $self->{image};
-	
-	my ($min, $max);
-	if (defined $opts) {
-	    croak ("min/max/center hashref required.") unless ref($opts) eq 'HASH';
-		$min    = $opts->{min}    if exists ($opts->{min});
-		$max    = $opts->{max}    if exists ($opts->{max});
-	}
-	
 	my $factory = $self->Session()->Factory();
 	    
 	my $module_execution = OME::Tasks::ImportManager->
@@ -697,82 +708,114 @@ sub __storeDisplayOptions {
 	);
 	
 	# set display channels
-	my (%displayChannelData, $channelIndex, @channelOrder);
+	my (%displayChannelData, $channelIndex, @channelColorMap, @RGB_on);
 	my $statsHash = $pixels_data->getStackStatistics();
 
-	 # set up red shift channel ordering 
-	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", 
-							{ Pixels => $pixels_attr } ); 
-	
-	if( @channelComponents && ( ! grep( (not defined $_->LogicalChannel()->EmissionWavelength()), @channelComponents ) ) ) { 
-			@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
-			@channelComponents;
-			@channelOrder = map( $_->Index(), @channelComponents ); 
-	# There's no basis to do redshift ordering. This pixels is lacking channelComponents, which probably means it was computationally derived. 
-	} else { 
-		@channelOrder = (0..($pixels_attr->SizeC - 1)); 
-	} 
+	# Setup the color map. 
+	# First look for it in the parameters
+	if( $opts->{ colorMap } ) {
+		@channelColorMap = $opts->{ colorMap };
+		# Make sure channelColorMap is the right length: Red: 0, Green: 1, Blue: 2, Grey: 3
+		# Undef colors get display channels to fullfill data model requirements,
+		# but are turned off in the display. This strategy sets RGB_on[3], which will never be used.
+		foreach my $colorNum ( 0..3 ) {
+			if( defined $channelColorMap[ $colorNum ] ) {
+				$RGB_on[ $colorNum ] = 1;
+			} else {
+				$channelColorMap[ $colorNum ] = 0;
+				$RGB_on[ $colorNum ] = 0;
+			}
+		}
+	} else {
+		# Fall back to deriving it using red shift channel ordering 
+		my @channelComponents = $factory->findAttributes( "PixelChannelComponent", 
+								{ Pixels => $pixels_attr } ); 
+		if( @channelComponents && ( ! grep( (not defined $_->LogicalChannel()->EmissionWavelength()), @channelComponents ) ) ) { 
+				@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
+				@channelComponents;
+				@channelColorMap = map( $_->Index(), @channelComponents ); 
+		# Final strategy: arbitrary ordering.
+		# This pixels is lacking channelComponents, which probably means it was computationally derived. 
+		} else { 
+			@channelColorMap = (0..($pixels_attr->SizeC - 1)); 
+		}
+		
+		# Make sure channelColorMap is the right length: Red: 0, Green: 1, Blue: 2, Grey: 3
+		foreach my $colorNum ( 0..3 ) {
+			if( defined $channelColorMap[ $colorNum ] ) {
+				$RGB_on[ $colorNum ] = 1;
+			} else {
+				$channelColorMap[ $colorNum ] = 0;
+				$RGB_on[ $colorNum ] = 0;
+			}
+		}
+	}
 
 	# Red Channel
-	$displayData{RedChannelOn} = 1;
-	$channelIndex = $channelOrder[0];
+	$displayData{RedChannelOn} = $RGB_on[ 0 ];
+	$channelIndex = $channelColorMap[0];
 	$displayChannelData{ ChannelNumber } = $channelIndex;
-	if (not defined $max or not defined $min) {
+	if (not defined $opts->{ $channelIndex }) {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
 		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
-		$displayChannelData{BlackLevel} = $min;
-		$displayChannelData{WhiteLevel} = $max;
+		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
+		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
 	}
 	$displayChannelData{ Gamma } = 1.0;
 	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
 	$displayData{ RedChannel } = $displayChannel;
 
-	# Gray Channel
-	$displayData{ GreyChannel } = $displayChannel;
-	if( $pixels_attr->SizeC == 1 ) {
-		$displayData{ DisplayRGB } = 0;
-	}
-	
 	# Green Channel
-	if( $pixels_attr->SizeC > 1 ) {
-		$displayData{GreenChannelOn} = 1;
-		$channelIndex = $channelOrder[1];
-		$displayChannelData{ ChannelNumber } = $channelIndex;
-		if (not defined $max or not defined $min) {
-			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-			$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
-		} else {
-			$displayChannelData{BlackLevel} = $min;
-			$displayChannelData{WhiteLevel} = $max;
-		}
-		$displayChannelData{ Gamma } = 1.0;
-		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	$channelIndex = $channelColorMap[1];
+	$displayData{GreenChannelOn} = $RGB_on[ 1 ];
+	$channelIndex = $channelColorMap[1];
+	$displayChannelData{ ChannelNumber } = $channelIndex;
+	if (not defined $opts->{ $channelIndex }) {
+		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
-		$displayData{GreenChannelOn} = 0;
+		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
+		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
 	}
+	$displayChannelData{ Gamma } = 1.0;
+	$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
 	$displayData{ GreenChannel } = $displayChannel;
 
 
 	# Blue Channel
-	if( $pixels_attr->SizeC > 2 ) {
-		$displayData{BlueChannelOn} = 1;
-		$channelIndex = $channelOrder[2];
-		$displayChannelData{ ChannelNumber } = $channelIndex;
-		if (not defined $max or not defined $min) {
-			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-			$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
-		} else {
-			$displayChannelData{BlackLevel} = $min;
-			$displayChannelData{WhiteLevel} = $max;
-		}
-		$displayChannelData{ Gamma } = 1.0;
-		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	$displayData{BlueChannelOn} = $RGB_on[ 2 ];
+	$channelIndex = $channelColorMap[2];
+	$displayChannelData{ ChannelNumber } = $channelIndex;
+	if (not defined $opts->{ $channelIndex }) {
+		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
-		$displayData{BlueChannelOn} = 0;
+		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
+		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
 	}
+	$displayChannelData{ Gamma } = 1.0;
+	$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
 	$displayData{ BlueChannel } = $displayChannel;
 
+
+	# Gray Channel
+	$channelIndex = $channelColorMap[3];
+	$displayChannelData{ ChannelNumber } = $channelIndex;
+	if (not defined $opts->{ $channelIndex }) {
+		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+	} else {
+		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
+		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
+	}
+	$displayChannelData{ Gamma } = 1.0;
+	$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	if( $pixels_attr->SizeC == 1 ) {
+		$displayData{ DisplayRGB } = 0;
+	}
+	$displayData{ GreyChannel } = $displayChannel;
+	
 	# Make DisplayOptions
 	$factory->newAttribute( "DisplayOptions", $image, $module_execution, \%displayData )
 		or die "Couldn't make a new DisplayOptions";
