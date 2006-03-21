@@ -35,7 +35,7 @@ Widget.prototype.init = function(x, y) {
     this.x     = x;
     this.y     = y;
     this.nodes = new Object();
-    var svgRoot = svgDocument.documentElement;
+    var svgRoot = document.documentElement;
 
     // Initialize properties for anti-zoom and pan;
     this.x_trans  = 0;
@@ -94,8 +94,8 @@ Widget.prototype.addEventListeners = function() {
 *****/
 Widget.prototype.setLabel = function(x, y, content) {
 	if(!this.nodes.label) {
-		this.nodes.label = svgDocument.createElementNS( "http://www.w3.org/2000/svg", "text" );
-		this.nodes.label.appendChild( svgDocument.createTextNode(content) );
+		this.nodes.label = document.createElementNS( "http://www.w3.org/2000/svg", "text" );
+		this.nodes.label.appendChild( document.createTextNode(content) );
     	if( this.nodes.parent )
     		this.nodes.parent.appendChild( this.nodes.label );
     }
@@ -190,7 +190,7 @@ Widget.prototype.textToSVG = function(text) {
         }
     );
 
-    return parseXML(svg, svgDocument);
+    return parseXML(svg, document);
 };
 
 
@@ -200,12 +200,12 @@ Widget.prototype.textToSVG = function(text) {
 *
 *****/
 Widget.prototype.getUserCoordinate = function(node, x, y) {
-    var svgRoot    = svgDocument.documentElement;
+    var svgRoot    = document.documentElement;
     var pan        = svgRoot.getCurrentTranslate();
     var zoom       = svgRoot.getCurrentScale();
     var CTM        = this.getTransformToElement(node);
     var iCTM       = CTM.inverse();
-    var worldPoint = svgDocument.documentElement.createSVGPoint();
+    var worldPoint = document.documentElement.createSVGPoint();
     
     worldPoint.x = (x - pan.x) / zoom;
     worldPoint.y = (y - pan.y) / zoom;
@@ -222,7 +222,7 @@ Widget.prototype.getUserCoordinate = function(node, x, y) {
 Widget.prototype.getTransformToElement = function(node) {
     var CTM = node.getCTM();
 
-    while ( (node = node.parentNode) != svgDocument ) {
+    while ( (node = node.parentNode) != document ) {
         CTM = node.getCTM().multiply(CTM);
     }
     

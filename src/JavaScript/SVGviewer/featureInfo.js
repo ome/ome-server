@@ -73,22 +73,22 @@ FeatureInfo.prototype.buildToolBox = function( controlLayer ) {
 *****/
 FeatureInfo.prototype.buildDisplay = function() {
 
-	this.displayContent = svgDocument.createElementNS( svgns, "g" );
+	this.displayContent = document.createElementNS( svgns, "g" );
 	for( id in this.featureData ) break;
 	var lineCount = 0;
 	for( i in this.featureData[id] ) {
-		var newLabel = svgDocument.createElementNS( svgns, "text" );
+		var newLabel = document.createElementNS( svgns, "text" );
 		newLabel.setAttribute( "dominant-baseline", 'hanging' );
 		newLabel.setAttribute( "y", lineCount + 'em' );
-		newLabel.appendChild( svgDocument.createTextNode( i ) );
+		newLabel.appendChild( document.createTextNode( i ) );
 		this.labels[ i ] = newLabel;
 		
-		var newField = svgDocument.createElementNS( svgns, "text" );
+		var newField = document.createElementNS( svgns, "text" );
 		newField.setAttribute( "x", 160 );
 		newField.setAttribute( "y", lineCount + 'em' );
 		newField.setAttribute( "text-anchor", 'end' );
 		newField.setAttribute( "dominant-baseline", 'hanging' );
-		newField.appendChild( svgDocument.createTextNode( '.' ) );
+		newField.appendChild( document.createTextNode( '.' ) );
 		this.fields[ i ] = newField;
 
 		this.displayContent.appendChild( newLabel );
@@ -117,7 +117,7 @@ FeatureInfo.prototype.loadFeature = function( id, openToolBox ) {
 		this.toolBox.unhide();
 	for( i in this.fields ) {
 		if( this.fields[i].lastChild ) this.fields[i].removeChild( this.fields[i].lastChild );
-		this.fields[i].appendChild( svgDocument.createTextNode( this.features[ id ]['data'][i] ) );
+		this.fields[i].appendChild( document.createTextNode( this.features[ id ]['data'][i] ) );
 	}
 }
 

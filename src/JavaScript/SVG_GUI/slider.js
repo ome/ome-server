@@ -101,7 +101,7 @@ Slider.prototype.buildSVG = function() {
     var translate = "translate(" + this.x + "," + this.y + ")";
     var rotate    = "rotate(" + this.direction + ")";
     var transform = translate + " " + rotate;
-    var slider    = svgDocument.createElementNS(svgns, "g");
+    var slider    = document.createElementNS(svgns, "g");
 
     slider.appendChild( this.textToSVG(this.bodyText) );
     slider.appendChild( this.textToSVG(this.thumbText) );

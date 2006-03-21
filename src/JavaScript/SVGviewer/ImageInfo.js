@@ -28,7 +28,7 @@
 	
 *****/
 
-/*global Util, svgDocument, toolBox */
+/*global Util, document, toolBox */
 
 ImageInfo.prototype.toolboxApperance = {
 	x: 155,
@@ -83,7 +83,7 @@ ImageInfo.prototype.buildDisplay = function() {
 			"dominant-baseline": 'hanging', 
 			"font-size":         fontSize
 		});
-		newLabel.appendChild( svgDocument.createTextNode( i ) );
+		newLabel.appendChild( document.createTextNode( i ) );
 		this.labels[ i ] = newLabel;
 		
 		var newField = Util.createElementSVG( "text", {
@@ -93,7 +93,7 @@ ImageInfo.prototype.buildDisplay = function() {
 			"dominant-baseline": 'hanging', 
 			"font-size":         fontSize
 		});
-		newField.appendChild( svgDocument.createTextNode( this.imageInfo[i] ) );
+		newField.appendChild( document.createTextNode( this.imageInfo[i] ) );
 		this.fields[ i ] = newField;
 
 		this.displayContent.appendChild( newLabel );

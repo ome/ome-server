@@ -189,7 +189,7 @@ Overlay.prototype.addGraphicToSlice = function( theZ, theT, theG ) {
 	if( this.sliceByIndex[theZ] == null ) 
 		this.sliceByIndex[theZ] = new Array();
 	if( this.sliceByIndex[theZ][theT] == null ) {
-		layerSlice = svgDocument.createElementNS( svgns, "g" );
+		layerSlice = document.createElementNS( svgns, "g" );
 		layerSlice.setAttribute( "display", "none" );
 		this.sliceByIndex[theZ][theT] = layerSlice;
 		this.overlayRoot.appendChild( layerSlice );
@@ -210,7 +210,7 @@ Overlay.prototype.init = function( ) {
 	
 	this.oldZ = null;
 	this.oldT = null;
-	this.overlayRoot = svgDocument.createElementNS( svgns, "g" );
+	this.overlayRoot = document.createElementNS( svgns, "g" );
 	this.sliceByIndex = new Array();
 	
 }

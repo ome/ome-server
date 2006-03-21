@@ -108,9 +108,9 @@ OMEimage.prototype.saveState = function() {
 		'&CBW=' + this.getCBW().join() + "&isRGB=" + ( this.colorDisplay() ? 1 : 0 ) + "&Unique=" + unique + 
 		'&PixelsID=' + this.pixelsID;
 
-	tmpImg = svgDocument.getElementById("FakeImageForGET");
+	tmpImg = document.getElementById("FakeImageForGET");
 	if( tmpImg == undefined ) {
-		tmpImg = svgDocument.createElementNS(svgns,"image");
+		tmpImg = document.createElementNS(svgns,"image");
 		tmpImg.setAttribute("id","FakeImageForGET");
 		tmpImg.setAttribute("width",1);
 		tmpImg.setAttribute("height",1);
@@ -528,7 +528,7 @@ OMEimage.prototype.init = function( imageID, imageName, pixelsID, Stats, Dims,  
 *****/
 OMEimage.prototype.buildSVG = function() {
 	// make image container & put in in the parent node
-	this.SVGimageContainer = svgDocument.createElementNS(svgns,'g');
+	this.SVGimageContainer = document.createElementNS(svgns,'g');
 	this.SVGparentNode.appendChild(this.SVGimageContainer);
 }
 

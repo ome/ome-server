@@ -74,7 +74,7 @@ ViewerPreferences.prototype.buildToolBox = function( controlLayer ) {
 	if(! this.initialized) return null;
 
 // build SVG
-	this.displayContent = svgDocument.createElementNS(svgns, "g");
+	this.displayContent = document.createElementNS(svgns, "g");
 
 	// set up GUI
 	this.toolBoxSizeSlider = new Slider(
@@ -143,7 +143,7 @@ ViewerPreferences.prototype.resizeSelf = function() {
 ViewerPreferences.prototype.savePreferences = function(  ) {
 	this.resizeSelf();
 	var tmpImg;
-	tmpImg = svgDocument.createElementNS(svgns,"image");
+	tmpImg = document.createElementNS(svgns,"image");
 	tmpImg.setAttribute("width",0);
 	tmpImg.setAttribute("height",0);
 	// The purpose of unique is to bypass any image caching

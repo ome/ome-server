@@ -86,23 +86,23 @@ Centroid.prototype.init = function( data ) {
 
 
 Centroid.prototype.makePath = function( pathData ) {
-	path = svgDocument.createElementNS( svgns, "path" );
+	path = document.createElementNS( svgns, "path" );
 	path.setAttribute( "d", pathData );
 	path.setAttribute( "stroke", "green" );
 	return path;
 }
 
 Centroid.prototype.makeTextBox = function( ) {
-	textBox = svgDocument.createElementNS( svgns, "g" );
-	text = svgDocument.createElementNS( svgns, "text" );
-	data = svgDocument.createTextNode( '(' + 'foo' + ')');
-//	data = svgDocument.createTextNode( '(' + this.coordinate.join( ', ' ) + ')');
+	textBox = document.createElementNS( svgns, "g" );
+	text = document.createElementNS( svgns, "text" );
+	data = document.createTextNode( '(' + 'foo' + ')');
+//	data = document.createTextNode( '(' + this.coordinate.join( ', ' ) + ')');
 	text.appendChild( data );
 	text.setAttribute( "fill", "black" );
 	text.setAttribute( "y", text.getBBox().height  );
 	text.setAttribute( "x", this.textPadding );
 	
-	textRect = svgDocument.createElementNS( svgns, "rect" );
+	textRect = document.createElementNS( svgns, "rect" );
 	textRect.setAttribute( "width", text.getBBox().width + this.textPadding * 2 );
 	textRect.setAttribute( "height", text.getBBox().height + this.textPadding * 2 );
 	textRect.setAttribute( "fill", "white" );
@@ -115,18 +115,18 @@ Centroid.prototype.makeTextBox = function( ) {
 }
 
 Centroid.prototype.buildSVG = function() {
-	centroidSVG = svgDocument.createElementNS( svgns, "g" );
+	centroidSVG = document.createElementNS( svgns, "g" );
 	translation = 'translate(' + this.theX + ',' + this.theY + ')';
 	centroidSVG.setAttribute( "transform", translation );
-	centroidSVG.appendChild( parseXML( this.circleText, svgDocument ) );
+	centroidSVG.appendChild( parseXML( this.circleText, document ) );
 	this.glyph = centroidSVG.lastChild;
 
-	centroidSVG.appendChild( parseXML( this.focusText, svgDocument ) );
+	centroidSVG.appendChild( parseXML( this.focusText, document ) );
 	this.focusGraphic = centroidSVG.lastChild;
 	this.focusGraphic.setAttribute( "display", "none" );
 
 	// mouseCatcher goes on top!
-	centroidSVG.appendChild( parseXML( this.mouseCatcherText, svgDocument ) );
+	centroidSVG.appendChild( parseXML( this.mouseCatcherText, document ) );
 	this.mouseCatcher = centroidSVG.lastChild;
 	this.mouseCatcher.addEventListener( "mouseover", this, false );
 	this.mouseCatcher.addEventListener( "mouseout", this, false );
@@ -200,7 +200,7 @@ CentroidOverlay.prototype.makeControls = function() {
 	if(this.colors == null) return null;
 
 // build SVG
-	this.root = svgDocument.createElementNS(svgns, "g");
+	this.root = document.createElementNS(svgns, "g");
 
 	var currentLayer = this.layerNames[0];
 
@@ -235,7 +235,7 @@ CentroidOverlay.prototype.makeControls = function() {
 		'</g>'
 	);
 	
-	this.dynamicControls = svgDocument.createElementNS( svgns, "g" );
+	this.dynamicControls = document.createElementNS( svgns, "g" );
 	this.dynamicControls.setAttribute("transform", "translate(20,70)");
 	this.dynamicControls.padding = 5;
 	
@@ -260,7 +260,7 @@ CentroidOverlay.prototype.makeControls = function() {
 	// draw some background
 	this.dynamicControls.appendChild( parseXML(
 		'<rect x="30" y="-5" width="80" height="39" fill="none" stroke="black" stroke-width="2" opacity="0.7"/>',
-		svgDocument
+		document
 	));
 
 //	this.colorPopupList.realize( this.root );

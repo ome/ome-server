@@ -411,9 +411,6 @@ $SVG .= <<ENDSVG;
 		var theT = $theT;
 
 		function init(e) {
-			if ( window.svgDocument == null )
-				svgDocument = e.ownerDocument;
-			
 			var channelLabels        = $channelLabels;
 			var Stats			     = $Stats;
 			var toolBoxScale	     = $toolBoxScale;
@@ -422,11 +419,11 @@ $SVG .= <<ENDSVG;
 			image = new OMEimage($imageID, $imageName, $pixelsID, Stats, $Dims, $ImageServerURL,
 			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB,
 			                     $imageServerID, $theZ, $theT);
-			var imageBox = svgDocument.getElementById("image");
+			var imageBox = document.getElementById("image");
 			image.realize( imageBox );
 			
 			// set up windows
-			var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
+			var toolboxLayer  = document.getElementById("toolboxLayer");
 
 			stats = new Statistics( Stats, channelLabels, image );
 			stats.buildToolBox( toolboxLayer );
@@ -449,7 +446,7 @@ ENDSVG
 # insert centroid data
 if( $centroidData ) {
 $SVG .= <<ENDSVG;
-			var overlayBox  = svgDocument.createElementNS (svgns, "g");
+			var overlayBox  = document.createElementNS (svgns, "g");
 			overlayBox.setAttribute ("id", "overlays");
 			imageBox.appendChild (overlayBox);
 
@@ -492,7 +489,7 @@ $SVG .= <<ENDSVG;
 
 			// finish setup & make controller
 			azap.appendNode(toolboxLayer);
-			mouseTrap = svgDocument.getElementById("mouseTrap");
+			mouseTrap = document.getElementById("mouseTrap");
 			azap.appendNode(mouseTrap); 
 
 			image.registerListener( 'updatePic', xyPlaneControls, 'updatePlaneURL' );
@@ -502,7 +499,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "channels.sync()", 200 );
 			setTimeout( "xyPlaneControls.sync()", 200 );
 //	this next line loads every plane in the image
-//			setTimeout( "image.prefetchImages()", 0 );
+			setTimeout( "image.prefetchImages()", 0 );
 		}
 	]]></script>
 	<g id="mouseTrap">

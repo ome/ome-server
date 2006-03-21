@@ -24,7 +24,7 @@ function AntiZoomAndPan() {
 *
 *****/
 AntiZoomAndPan.prototype.init = function() {
-    var svgRoot = svgDocument.documentElement;
+    var svgRoot = document.documentElement;
 
     // Initialize properties;
     this.svgNodes = new Array();
@@ -128,7 +128,7 @@ AntiZoomAndPan.prototype.SVGResize = function(e) {
 *****/
 AntiZoomAndPan.prototype.update = function() {
     if ( this.svgNodes.length > 0 ) {
-        var svgRoot = svgDocument.documentElement;
+        var svgRoot = document.documentElement;
         var viewbox = ( window.ViewBox != null )
             ? new ViewBox(svgRoot)
             : null;

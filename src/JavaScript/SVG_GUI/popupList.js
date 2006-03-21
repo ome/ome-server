@@ -210,7 +210,7 @@ popupList.prototype.makeCellIntoLink = function( index, attrs ) {
 		alert('invalid index passed to popupList.prototype.makeCellIntoLink'); 
 		return; 
 	}
-	var href = svgDocument.createElementNS( svgns, 'a' );
+	var href = document.createElementNS( svgns, 'a' );
 	for( var i in attrs ) {
 		href.setAttribute( i, attrs[i] );
 	}
@@ -321,8 +321,8 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 	this.size = 0;
 	for(i in itemList) {
 		this.size++;
-		var text = svgDocument.createElementNS( svgns, "text");
-		text.appendChild( svgDocument.createTextNode(itemList[i]) );
+		var text = document.createElementNS( svgns, "text");
+		text.appendChild( document.createTextNode(itemList[i]) );
 		for( j = 0; textStyle != null && j< textStyle.length; j+=2) {
 			text.setAttribute( textStyle[j], textStyle[j+1]	);
 			if( textStyle[j] == 'text-anchor' && textStyle[j+1] == 'end' )
@@ -383,7 +383,7 @@ popupList.prototype.buildSVG = function() {
 	var transform = "translate(" + this.x + "," + this.y  + ")";
 
 	// create root node
-	root = svgDocument.createElementNS(svgns, "g");
+	root = document.createElementNS(svgns, "g");
 	root.setAttributeNS(null, "transform", transform);
 	this.nodes.root = root;
 	this.nodes.parent.appendChild(root);
@@ -397,7 +397,7 @@ popupList.prototype.buildSVG = function() {
 	this.anchorOff = this.nodes.anchor.lastChild;
 
 	// create container to hold list elements
-	this.nodes.listBox = svgDocument.createElementNS(svgns, "g");
+	this.nodes.listBox = document.createElementNS(svgns, "g");
 	root.appendChild(this.nodes.listBox);
 
 	// create list elements and add to appropriate container
@@ -412,7 +412,7 @@ popupList.prototype.buildSVG = function() {
 	this.itemBackgroundOff = new Array();
 	for(i=0;i<this.size;i++) {
 		// add container, move it to position, add on/off animations & switches
-		itemBox = svgDocument.createElementNS(svgns, "g");
+		itemBox = document.createElementNS(svgns, "g");
 		if( i!=this.selection)
 			itemBox.setAttributeNS(null, "display","none");
 		else

@@ -29,7 +29,7 @@ Copyright (C) 2003 Open Microscopy Environment
 
 var svgns = "http://www.w3.org/2000/svg";
 
-/*global toolBox, skinLibrary, svgDocument, popupList */
+/*global toolBox, skinLibrary, document, popupList */
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -109,7 +109,7 @@ Statistics.prototype.buildDisplay = function() {
 	
 	var colWidth = 50;
 
-	this.displayContent = svgDocument.createElementNS(svgns, "g");
+	this.displayContent = document.createElementNS(svgns, "g");
 	
 	// build displays
 	this.labels = new Array();

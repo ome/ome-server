@@ -107,7 +107,7 @@ multipaneToolBox.prototype.addPane = function(newPane, name) {
 	var i = ( name ? name : this.panes.length );
 
 	//	make a new pane, turn its display off
-	this.panes[i] = svgDocument.createElementNS(svgns, 'g');
+	this.panes[i] = document.createElementNS(svgns, 'g');
 	this.panes[i].setAttribute("display","none");
 	this.getGUIbox().appendChild(this.panes[i]);
 
@@ -233,7 +233,7 @@ multipaneToolBox.prototype.buildSVG = function() {
 	// call superclass method
 	multipaneToolBox.superclass.buildSVG.call(this);
 	
-	this.shrinkGUIboxHeight = svgDocument.createElementNS(svgns, "animate");
+	this.shrinkGUIboxHeight = document.createElementNS(svgns, "animate");
 	this.shrinkGUIboxHeight.setAttributeNS(null, "attributeName", "height");
 	this.shrinkGUIboxHeight.setAttributeNS(null, "dur", "0.2s");
 	this.shrinkGUIboxHeight.setAttributeNS(null, "fill", "freeze");

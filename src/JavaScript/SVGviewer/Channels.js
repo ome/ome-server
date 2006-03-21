@@ -216,7 +216,7 @@ Channels.prototype.build_toolbox = function( rendering_layer ) {
 	<stop offset="66%" stop-color="limegreen" />\
 	<stop offset="100%" stop-color="mediumslateblue" />\
 </linearGradient>'	
-	, svgDocument) );
+	, document) );
 	
 	// a button/label to switch display between color & greyscale
 	this.colorButton = new button( {

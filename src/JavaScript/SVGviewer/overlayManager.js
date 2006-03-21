@@ -71,7 +71,7 @@ OverlayManager.prototype.buildToolBox = function( controlLayer ) {
 OverlayManager.prototype.buildDisplay = function() {
 	if(!this.initialized) return null;
 
-	this.displayContent = svgDocument.createElementNS(svgns, "g");
+	this.displayContent = document.createElementNS(svgns, "g");
 
 	var currentLayer = this.layerNames[0];
 
@@ -94,7 +94,7 @@ OverlayManager.prototype.buildDisplay = function() {
 		'<text fill="black" text-decoration="underline">Off</text>'
 	);
 	
-	this.dynamicControls = svgDocument.createElementNS( svgns, "g" );
+	this.dynamicControls = document.createElementNS( svgns, "g" );
 	this.dynamicControls.setAttribute("transform", "translate(5,40)");
 	this.dynamicControls.padding = 5;
 	
@@ -121,7 +121,7 @@ OverlayManager.prototype.buildDisplay = function() {
 	// draw some background
 	this.dynamicControls.appendChild( parseXML(
 		'<rect y="-5" width="80" height="39" fill="none" stroke="black" stroke-width="2" opacity="0.7"/>',
-		svgDocument
+		document
 	));
 
 //	this.colorPopupList.realize( this.displayContent );

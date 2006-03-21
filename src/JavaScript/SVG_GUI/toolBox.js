@@ -172,22 +172,22 @@ toolBox.prototype.buildSVG = function() {
 	// set up movement of location
 	var translate = "translate(" + this.x + "," + this.y + ")";
 	var transform = translate + (this.scale ? " scale("+this.scale+")" : "");
-	var box = svgDocument.createElementNS(svgns, "g");
+	var box = document.createElementNS(svgns, "g");
 	box.setAttribute("transform", transform);
 	this.nodes.root = box;
 	this.nodes.parent.appendChild(box);
 	
 	// create menuBar
-	this.nodes.menuBar = svgDocument.createElementNS(svgns, 'g');
+	this.nodes.menuBar = document.createElementNS(svgns, 'g');
 	this.nodes.menuBar.appendChild( this.textToSVG(this.menuBarText) );
 	this.nodes.menuBar.setAttribute( 'name', 'menuBar' );
 	box.appendChild( this.nodes.menuBar );
 	var menuHeight = this.nodes.menuBar.getBBox().height;
 	
 	// Add toolBox components and keep track of them.
-	var GUIboxContainer = svgDocument.createElementNS(svgns, "g");
-	var GUIboxClip = svgDocument.createElementNS(svgns, "svg");
-	var GUIboxNoClip = svgDocument.createElementNS(svgns, "g");
+	var GUIboxContainer = document.createElementNS(svgns, "g");
+	var GUIboxClip = document.createElementNS(svgns, "svg");
+	var GUIboxNoClip = document.createElementNS(svgns, "g");
 	GUIboxClip.setAttributeNS( null, "width", this.width );
 	GUIboxClip.setAttributeNS( null, "height", this.height );
 	if( this.noclip !== null ) {
@@ -308,8 +308,8 @@ toolBox.prototype.getScale = function() {
 *****/
 toolBox.prototype.setLabel = function(x, y, content) {
 	if(!this.nodes.label) {
-		this.nodes.label = svgDocument.createElementNS( "http://www.w3.org/2000/svg", "text" );
-		this.nodes.label.appendChild( svgDocument.createTextNode(content) );
+		this.nodes.label = document.createElementNS( "http://www.w3.org/2000/svg", "text" );
+		this.nodes.label.appendChild( document.createTextNode(content) );
     	if( this.nodes.menuBar ) {
     		this.nodes.menuBar.appendChild( this.nodes.label );
     	}
@@ -463,7 +463,7 @@ toolBox.prototype.addEventListeners = function() {
 
 // click and drag
 toolBox.prototype.mousedown = function(e) {
-	svgDocument.documentElement.addEventListener("mousemove", this, false);
+	document.documentElement.addEventListener("mousemove", this, false);
 	this.localPoint = this.getUserCoordinate(this.nodes.root, e.clientX, e.clientY);
 	// disable other event listeners while dragging
 	this.nodes.root.removeEventListener("DOMFocusIn", this, false);
@@ -471,7 +471,7 @@ toolBox.prototype.mousedown = function(e) {
 
 // end click and drag
 toolBox.prototype.mouseup = function(e) {
-	svgDocument.documentElement.removeEventListener("mousemove", this, false);
+	document.documentElement.removeEventListener("mousemove", this, false);
 	// re-enable event listeners
 	this.nodes.root.addEventListener("DOMFocusIn", this, false);
 };

@@ -231,7 +231,7 @@ button.prototype.buildSVG = function() {
 	var transform = "translate(" + this.x + "," + this.y  + ")";
 	
 	// create root node
-	root = svgDocument.createElementNS(svgns, "g");
+	root = document.createElementNS(svgns, "g");
 	root.setAttributeNS(null, "transform", transform);
 	this.nodes.root = root;
 	this.nodes.parent.appendChild(root);

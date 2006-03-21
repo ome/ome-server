@@ -27,15 +27,13 @@
 	
 *****/
 
-/*global svgDocument */
-
 var Util = new Object();
 
 Util.svgns = "http://www.w3.org/2000/svg";
 Util.xlinkns  = "http://www.w3.org/1999/xlink";
 
 Util.createElementSVG = function( name, attr_list ) {
-	var new_element = svgDocument.createElementNS(Util.svgns, name);
+	var new_element = document.createElementNS(Util.svgns, name);
 	if( attr_list ) {
 		for( var attr in attr_list ) {
 			new_element.setAttribute( attr, attr_list[attr] );
@@ -46,7 +44,7 @@ Util.createElementSVG = function( name, attr_list ) {
 
 Util.createTextSVG = function( text_data, attr_list ) {
 	var text_element = Util.createElementSVG( 'text', attr_list );
-	text_element.appendChild( svgDocument.createTextNode( text_data ) );
+	text_element.appendChild( document.createTextNode( text_data ) );
 	return text_element;
 };
 
@@ -68,7 +66,7 @@ Util.isFunction = function(Function_IN) {
 
 Util.err = function( msg ) {
 	var tmpImg;
-	tmpImg = svgDocument.createElementNS(svgns,"image");
+	tmpImg = document.createElementNS(svgns,"image");
 	tmpImg.setAttribute("width",0);
 	tmpImg.setAttribute("height",0);
 	// The purpose of unique is to bypass any browser image caching. really, it should be a timestamp
@@ -76,12 +74,12 @@ Util.err = function( msg ) {
 	var unique   = date.getSeconds() + '' + date.getUTCMilliseconds();
 	var imageURL = "/perl2/SVGcatchMsg.pl?msg=" + msg + "&unique=" + unique;
 	tmpImg.setAttributeNS(Util.xlinkns, "href",imageURL);
-	svgDocument.documentElement.appendChild(tmpImg);
-	svgDocument.documentElement.removeChild(tmpImg);
+	document.documentElement.appendChild(tmpImg);
+	document.documentElement.removeChild(tmpImg);
 
 	// scrolling error messages if there's a text element w/ id "_util_text_err"
 	if( !this.err_text ) {
-		this.err_text = svgDocument.getElementById("_util_text_err");
+		this.err_text = document.getElementById("_util_text_err");
 		this.err_lines = new Array();
 	}
 	if( this.err_text ) {
@@ -90,7 +88,7 @@ Util.err = function( msg ) {
 			this.err_text.removeChild( old_line );
 		}
 		var newLine = this.createElementSVG( "tspan", { 'x': 440, 'dy': '1em' } );
-		newLine.appendChild( svgDocument.createTextNode( msg ) );
+		newLine.appendChild( document.createTextNode( msg ) );
 		this.err_lines.push( newLine );
 		this.err_text.appendChild( newLine );
 	}
