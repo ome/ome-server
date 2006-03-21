@@ -323,15 +323,19 @@ sub updateACL {
 	# Compare old and new lists of whose data the logged in user gets access to.
 	my $oldACL = $session->ACL();
 	my $ACLsDiffer = 0;
-	ACL_COMPARISON: foreach my $key ( keys %$oldACL ) {
-		if( scalar( @{ $ACL->{ $key } } ) ne scalar( @{ $oldACL->{ $key } } ) ) {
-			$ACLsDiffer = 1;
-			last ACL_COMPARISON;
-		}
-		for( my $index = 0; $index < scalar( @{ $ACL->{ $key } } ); $index++ ) {
-			if( $oldACL->{ $key }->[ $index ] ne $ACL->{ $key }->[ $index ] ) {
+	if( scalar(keys %$oldACL) != scalar(keys %$ACL) ) {
+		$ACLsDiffer = 1;
+	} else {
+		ACL_COMPARISON: foreach my $key ( keys %$oldACL ) {
+			if( scalar( @{ $ACL->{ $key } } ) ne scalar( @{ $oldACL->{ $key } } ) ) {
 				$ACLsDiffer = 1;
 				last ACL_COMPARISON;
+			}
+			for( my $index = 0; $index < scalar( @{ $ACL->{ $key } } ); $index++ ) {
+				if( $oldACL->{ $key }->[ $index ] ne $ACL->{ $key }->[ $index ] ) {
+					$ACLsDiffer = 1;
+					last ACL_COMPARISON;
+				}
 			}
 		}
 	}
