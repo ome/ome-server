@@ -928,6 +928,7 @@ sub check_repository {
 
  	$ENVIRONMENT->omeis_url($repository_url);
  	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url(), $LOGFILE );
+ 	
 }
 
 # These are things we can load without a MEX,
@@ -1477,6 +1478,11 @@ BLURB
     my $importChain = $factory->
     findObject("OME::AnalysisChain",name => 'Image server stats');
     $configuration->import_chain($importChain);
+
+	# set up the default repository
+    my $repository = $factory->findObject('@Repository',
+    	ImageServerURL => $ENVIRONMENT->omeis_url());
+    $configuration->repository($repository);
 
     # Update the Database version
     update_configuration ($session) or croak "Unable to update the configuration object.";
