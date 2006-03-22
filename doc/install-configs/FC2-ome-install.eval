@@ -1,0 +1,72 @@
+# produced by:
+#perl -MData::Dumper -MStorable -e 'print Dumper(retrieve("/etc/ome-install.store"))'
+# on a Fedora Core 2 machine.
+# Note that at minimum, you need to change:
+# ome_user, lsid, admin_user and omeis_url
+# Also, matlab configuration is turned off
+$VAR1 = bless( {
+                 'matlab_conf' => {
+#                                    'MATLAB_SRC' => '/OME/src/matlab',
+                                    'MATLAB_SRC' => undef,
+#                                    'MATLAB_INST' => '/usr/local/matlab',
+                                    'MATLAB_INST' => undef,
+                                    'AS_DEV' => 0,
+#                                    'USER' => 'josiah',
+                                    'USER' => undef,
+                                    'INSTALL' => 0,
+                                    'EXEC' => '/usr/local/matlab/bin/matlab'
+                                  },
+                 'apache_conf' => {
+                                    'WEB' => '/var/www/html',
+                                    'TEMPLATE_DIR' => '/OME/html/Templates',
+                                    'HUP' => 1,
+                                    'CGI_BIN' => '/var/www/cgi-bin',
+                                    'OMEIS' => 1,
+                                    'HTTPD' => '/usr/sbin/httpd',
+                                    'OMEDS' => 1,
+                                    'HTTPD_CONF' => '/etc/httpd/conf/httpd.conf',
+                                    'APACHECTL' => '/usr/sbin/apachectl',
+                                    'TEMPLATE_DEV_CONF' => 0,
+                                    'DO_CONF' => 1,
+                                    'OMEIS_UP' => 'midnight',
+                                    'DEV_CONF' => 0
+                                  },
+                 'apache_user' => 'apache',
+                 'group' => 'ome',
+                 'admin_user' => 'josiah',
+                 'user' => 'ome',
+                 'cron_conf' => {
+                                  'omeadmin_path' => '/usr/local/bin',
+                                  'pix_comp' => '60',
+                                  'pix_purge' => '90',
+                                  'do_it' => 1,
+                                  'file_comp' => '30',
+                                  'omeadmin' => 1,
+                                  't_vacuum' => '00:00',
+                                  't_compress' => '00:00',
+                                  't_purge' => '00:00'
+                                },
+                 'lsid' => 'lgopt4.grc.nia.nih.gov',
+                 'omeis_base_dir' => '/OME/OMEIS',
+                 'postgres_user' => 'postgres',
+                 'ome_user' => {
+                                 'Password' => 'n0Zh.y6GDT.Wg',
+                                 'FirstName' => 'Josiah',
+                                 'LastName' => 'Johnston',
+                                 'DataDirectory' => '/Images',
+                                 'ExperimenterID' => '1',
+                                 'Email' => 'siah@nih.gov',
+                                 'OMEName' => 'josiah'
+                               },
+                 'base_dir' => '/OME',
+                 'temp_dir' => '/var/tmp/OME',
+                 'DB_conf' => {
+                                'Password' => undef,
+                                'Delegate' => 'OME::Database::PostgresDelegate',
+                                'User' => undef,
+                                'Port' => undef,
+                                'Name' => 'ome',
+                                'Host' => undef
+                              },
+                 'omeis_url' => 'http://lgopt4.grc.nia.nih.gov/cgi-bin/omeis'
+               }, 'OME::Install::Environment' );

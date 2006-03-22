@@ -1,0 +1,67 @@
+# produced by:
+#perl -MData::Dumper -MStorable -e 'print Dumper(retrieve("/etc/ome-install.store"))'
+# on an OS X 10.4 machine.
+# Note that at minimum, you need to change:
+# ome_user, lsid, admin_user and omeis_url
+$VAR1 = bless( {
+                 'matlab_conf' => {
+                                    'MATLAB_SRC' => undef,
+                                    'MATLAB_INST' => undef,
+                                    'USER' => undef,
+                                    'AS_DEV' => 0,
+                                    'INSTALL' => 0
+                                  },
+                 'apache_conf' => {
+                                    'WEB' => '/Library/WebServer/Documents/OME',
+                                    'TEMPLATE_DIR' => '/OME/html/Templates',
+                                    'HUP' => 1,
+                                    'CGI_BIN' => '/Library/WebServer/CGI-Executables',
+                                    'OMEIS' => 1,
+                                    'OMEDS' => 1,
+                                    'HTTPD' => '/usr/sbin/httpd',
+                                    'HTTPD_CONF' => '/etc/httpd/httpd.conf',
+                                    'APACHECTL' => '/usr/sbin/apachectl',
+                                    'TEMPLATE_DEV_CONF' => 0,
+                                    'DO_CONF' => 1,
+                                    'DEV_CONF' => '1',
+                                    'OMEIS_UP' => 'midnight'
+                                  },
+                 'apache_user' => 'www',
+                 'group' => 'ome',
+                 'admin_user' => 'igg',
+                 'user' => 'ome',
+                 'cron_conf' => {
+                                  'omeadmin_path' => '/usr/local/bin',
+                                  'pix_comp' => '60',
+                                  'pix_purge' => '90',
+                                  'do_it' => 1,
+                                  'file_comp' => '30',
+                                  't_vacuum' => '00:00',
+                                  'omeadmin' => 1,
+                                  't_compress' => '00:00',
+                                  't_purge' => '00:00'
+                                },
+                 'lsid' => 'IGG-Lapzilla.local',
+                 'postgres_user' => 'postgres',
+                 'omeis_base_dir' => '/OME/OMEIS',
+                 'ome_user' => {
+                                 'Password' => 'IxpCxGzewdeDs',
+                                 'FirstName' => 'Ilya',
+                                 'DataDirectory' => '/Users/igg',
+                                 'LastName' => 'Goldberg',
+                                 'ExperimenterID' => '1',
+                                 'OMEName' => 'igg',
+                                 'Email' => 'igg@nih.gov'
+                               },
+                 'base_dir' => '/OME',
+                 'DB_conf' => {
+                                'Password' => undef,
+                                'Delegate' => 'OME::Database::PostgresDelegate',
+                                'User' => undef,
+                                'Port' => undef,
+                                'Name' => 'ome',
+                                'Host' => undef
+                              },
+                 'temp_dir' => '/var/tmp/OME',
+                 'omeis_url' => 'http://igg-lapzilla.local/cgi-bin/omeis'
+               }, 'OME::Install::Environment' );
