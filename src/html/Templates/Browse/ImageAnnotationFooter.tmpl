@@ -17,7 +17,7 @@ Rows:
 </td>
 </td>
 <td align="right">
-Column:
+Columns:
 </td>
 <td align="left">
  <SELECT NAME ="Columns">
@@ -83,7 +83,7 @@ document.forms[0].update.value='update'; document.forms[0].submit();">
 use only available space-->
 <COLGROUP SPAN="<TMPL_VAR name=rowHeaderCount>" WIDTH="0*"/>
 
-
+<TMPL_IF NAME=columnHeaders>
 <THEAD>
 
 <TMPL_LOOP NAME=columnHeaders>
@@ -103,7 +103,7 @@ use only available space-->
 </TMPL_LOOP> 
 
 </THEAD>
-
+</TMPL_IF>
 
 <TMPL_IF NAME=cells>
 
