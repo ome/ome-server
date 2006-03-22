@@ -121,7 +121,8 @@ Usage:
 Options:
   -u, --update      do an update instead of install
   -f, --env-file    Location of the stored environment overrides
-                    the default of "/OME/conf/environment.store"
+                    the default of "/etc/ome-install.store".
+                    This file can be in Storable or Data::Dumper format.
   -c, --perl-check  Just run a Perl module check for installed modules
   -l, --lib-check   Just run a library check for installed C libraries 
   -a, --check-all   Run all our sanity checks
@@ -147,7 +148,7 @@ USAGE
 my ($update, $perl_check, $lib_check, $check_all, $usage, $install, $answer_y);
 
 # Default env file location
-my $env_file = ('/etc/ome-install.store');
+my $env_file = '/etc/ome-install.store';
 
 # Parse our command line options
 GetOptions ("u|update" => \$update,           # update
