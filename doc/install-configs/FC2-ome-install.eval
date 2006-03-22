@@ -4,6 +4,7 @@
 # Note that at minimum, you need to change:
 # ome_user, lsid, admin_user and omeis_url
 # Also, matlab configuration is turned off
+# Once you've done that, comment out the last line in the file.
 $VAR1 = bless( {
                  'matlab_conf' => {
 #                                    'MATLAB_SRC' => '/OME/src/matlab',
@@ -70,3 +71,4 @@ $VAR1 = bless( {
                               },
                  'omeis_url' => 'http://lgopt4.grc.nia.nih.gov/cgi-bin/omeis'
                }, 'OME::Install::Environment' );
+$VAR1 = undef;

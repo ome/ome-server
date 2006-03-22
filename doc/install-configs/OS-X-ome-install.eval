@@ -3,6 +3,7 @@
 # on an OS X 10.4 machine.
 # Note that at minimum, you need to change:
 # ome_user, lsid, admin_user and omeis_url
+# Once you've done that, comment out the last line in the file.
 $VAR1 = bless( {
                  'matlab_conf' => {
                                     'MATLAB_SRC' => undef,
@@ -65,3 +66,4 @@ $VAR1 = bless( {
                  'temp_dir' => '/var/tmp/OME',
                  'omeis_url' => 'http://igg-lapzilla.local/cgi-bin/omeis'
                }, 'OME::Install::Environment' );
+$VAR1 = undef;
