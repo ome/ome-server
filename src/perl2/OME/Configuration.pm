@@ -187,7 +187,7 @@ sub new {
 
             if (exists $FOREIGN_KEY_VARS{$name}) {
                 my $fk_spec = $FOREIGN_KEY_VARS{$name};
-                die "Invalid foreign key spec"
+                confess "Invalid foreign key spec"
                   unless ref($fk_spec) eq 'HASH'
                     && defined $fk_spec->{DBColumn}
                       && defined $fk_spec->{FKClass};
@@ -195,7 +195,7 @@ sub new {
                 my $db_column = $fk_spec->{DBColumn};
                 my $fk_class = $fk_spec->{FKClass};
 
-                die "$name must be an instance of $fk_class"
+                confess "$name must be an instance of $fk_class"
                   unless UNIVERSAL::isa($value,$fk_class);
 
                 my $id = $value->id();
@@ -217,7 +217,7 @@ sub new {
                 # reference.  Just create the variable normally,
                 # and store it in the $self hash.
 
-                die "OME::Configuration->new():  Attempt to store a reference as a configuration variable! $name has a reference to ".ref($value)."\n"
+                confess "OME::Configuration->new():  Attempt to store a reference as a configuration variable! $name has a reference to ".ref($value)."\n"
                   if ref ($value);
 
                 $self->{$name} = $value if $factory->
@@ -244,7 +244,7 @@ sub new {
         # Instantiate any foreign key variables we found.
         foreach my $fk_name (keys %FOREIGN_KEY_VARS) {
             my $fk_spec = $FOREIGN_KEY_VARS{$fk_name};
-            die "Invalid foreign key spec"
+            confess "Invalid foreign key spec"
               unless ref($fk_spec) eq 'HASH'
                 && defined $fk_spec->{DBColumn}
                   && defined $fk_spec->{FKClass};
@@ -263,7 +263,7 @@ sub new {
 
             # If we can't read the object, then there's something
             # horribly wrong with the configuration values.
-            die "Value for $fk_name ($id) is not a valid $fk_class"
+            confess "Value for $fk_name ($id) is not a valid $fk_class"
               unless defined $object;
 
             # Save the instantiated object.
@@ -312,11 +312,14 @@ sub new {
 
 sub __changeObjRef {
 	my ($self,$IDvariable,$objectType,$object) = @_;
-	# convert ST type to perl package
-	$objectType = "OME::SemanticType::__$1" if $objectType =~ /^\@(\w+)$/;
-	die "In OME::Configuration->__changeObjRef, expected parameter of type '$objectType', but got '".
+
+	# If the objectType is a Bootstrap ST, then accept an ST parameter
+	my $ST = $1 if ref($object) =~ /^OME::SemanticType::__(\w+)$/;
+	$objectType = "OME::SemanticType::__$ST" if $objectType =~ /^OME::SemanticType::Bootstrap(\w+)$/ and $ST;
+
+	confess "In OME::Configuration->__changeObjRef, expected parameter of type '$objectType', but got '".
 		ref($object)."'\n" unless ref($object) eq $objectType;
-	die "In OME::Configuration->__changeObjRef, object '".ref($object)."' is not an OME::DBObject!\n"
+	confess "In OME::Configuration->__changeObjRef, object '".ref($object)."' is not an OME::DBObject!\n"
 		unless UNIVERSAL::isa($object,"OME::DBObject");
 	my $factory = $object->Session()->Factory() or die "In OME::Configuration->__changeObjRef, object '".ref($object)."' has no Factory!\n";
 	my $IDobject = $factory->findObject('OME::Configuration::Variable',

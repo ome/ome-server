@@ -646,19 +646,22 @@ sub findRepository {
 	$self->activateRepository ($repository);
 
 	$self->{Repository} = $repository;
+	return $repository;
 }
 
 sub findRemoteRepository {
     my $self = shift;
     my $factory = $self->Factory();
-    my $repository;
+    my $repository = $self->Configuration()->repository();
+    
+    return $repository unless (not $repository or $repository->IsLocal());
     
 	eval {
 		$repository = $factory->findAttribute( "Repository", IsLocal => 'f' );
 	};
 	$repository = $factory->findObject( "OME::SemanticType::BootstrapRepository", IsLocal => 'f' )
 		unless $repository;
-	die 'Could not find a remote repository.  Not haing a repository is a "Bad Thing".' unless $repository;
+	confess 'Could not find a remote repository.  Not haing a repository is a "Bad Thing".' unless $repository;
 
 	return ($repository);
 }
@@ -681,7 +684,7 @@ sub findLocalRepository {
 sub activateRepository {
 	my $self = shift;
 	my $repository = shift
-		or die "Trying to activate an undefined repository, I see.";
+		or confess "Trying to activate an undefined repository, I see.";
 	
     my $url = $repository->ImageServerURL();
     if ($url =~ m,^/,) {
