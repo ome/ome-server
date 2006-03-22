@@ -761,9 +761,6 @@ BLURB
              import_formats   => $IMPORT_FORMATS,
              ome_root         => $OME_BASE_DIR,
              template_dir     => $OME_BASE_DIR."/html/Templates",
-             matlab_src_dir   => $MATLAB->{MATLAB_SRC},
-             matlab_exec      => $MATLAB->{EXEC},             
-             matlab_user      => $MATLAB->{USER},
              executor         => $DEFAULT_EXECUTOR,
             });
 
@@ -808,10 +805,6 @@ sub update_configuration {
 		# Make sure there is an executor
 		executor       => $DEFAULT_EXECUTOR,
 		super_user     => $session->experimenter_id(),
-		# update the matlab vars in case the matlab installation et. al. changed since last install
-		matlab_user    => $MATLAB->{USER},
-		matlab_exec    => $MATLAB->{EXEC},
-		matlab_src_dir => $MATLAB->{MATLAB_SRC},
 		template_dir   => $APACHE->{TEMPLATE_DIR},
 	);
 	
@@ -825,11 +818,6 @@ sub update_configuration {
 		executor       => 1,
 		# Note that there shouldn't ever be a superuser at this point
 		super_user     => 1,
-		# the matlab vars should already be there, but it doesn't matter if their not
-		matlab_user    => 1,
-		matlab_src_dir => 1,
-		# If updating from 2.4.0, this variable doesn't exist
-		matlab_exec    => 1,
 		template_dir   => 0,
 	);
 	

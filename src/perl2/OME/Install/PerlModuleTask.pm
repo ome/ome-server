@@ -683,6 +683,7 @@ sub execute {
 			USER        => undef,
 			MATLAB_INST => undef,
 			EXEC => undef,
+			EXEC_FLAGS => undef,
 			AS_DEV      => 0,
 			MATLAB_SRC  => undef,		
 		};
@@ -721,18 +722,24 @@ sub execute {
 					}
 					
 					
-					# Required for people updating from 2.4.0 where MATLAB_EXEC was added
+					# Required for people updating from 2.4.0 where MATLAB_EXEC and MATLAB_EXEC_FLAGS were added
 					if (!$MATLAB->{EXEC}) {
 						# MATLAB_EXEC, path to binary wasn't defined so default was set
 						$MATLAB->{EXEC} = normalize_path(resolve_sym_links($MATLAB->{MATLAB_INST}))."/bin/matlab";	
 						print $LOGFILE "MATLAB_EXEC, path to binary wasn't defined so it was set to default".
 							$MATLAB->{EXEC}."\n";
 					}
+					if (!$MATLAB->{EXEC_FLAGS}) {					
+						$MATLAB->{EXEC_FLAGS} = "-nodisplay -nojvm";
+						print $LOGFILE "MATLAB_EXEC_FLAGS, flags to use when calling MATLAB weren't defined so setting".
+								"to ddefault".$MATLAB->{EXEC_FLAGS}."\n";
+					}
+					
 					# That the specified user is authorized to run matlab
 					print " \\_ Checking if user $MATLAB->{USER} is licensed to run $MATLAB->{EXEC} ";
 					print $LOGFILE "Checking if user $MATLAB->{USER} is licensed to run $MATLAB->{EXEC} ... ";
 					
-					my @outputs = `su $MATLAB->{USER} -c '$MATLAB->{EXEC} -nodisplay -nojvm -r quit'`; 
+					my @outputs = `su $MATLAB->{USER} -c '$MATLAB->{EXEC} $MATLAB->{EXEC_FLAGS} -r quit'`; 
 					my $matlab_ran;
 	
 					foreach (@outputs) {
@@ -773,7 +780,8 @@ sub execute {
 				print " Install MATLAB Perl API?: ", BOLD, $MATLAB->{INSTALL} ? 'yes':'no', RESET, "\n";
 				print "              MATLAB User: ", BOLD, $MATLAB->{USER}, RESET, "\n" if $MATLAB->{INSTALL} ;
 				print "              MATLAB Path: ", BOLD, $MATLAB->{MATLAB_INST}, RESET, "\n" if $MATLAB->{INSTALL} ;
-				print "              MATLAB Exec: ", BOLD, $MATLAB->{EXEC}, RESET, "\n" if $MATLAB->{INSTALL} ;				
+				print "              MATLAB Exec: ", BOLD, $MATLAB->{EXEC}, RESET, "\n" if $MATLAB->{INSTALL} ;
+				print "        MATLAB Exec Flags: ", BOLD, $MATLAB->{EXEC_FLAGS}, RESET, "\n" if $MATLAB->{INSTALL} ;
 				print "   Config MATLAB for dev?: ", BOLD, $MATLAB->{AS_DEV} ? 'yes':'no', RESET, "\n";
 				print "     MATLAB .m files Path: ", BOLD, $MATLAB->{MATLAB_SRC},  RESET, "\n" if $MATLAB->{INSTALL} ;
 				print "\n";  # Spacing
@@ -803,7 +811,12 @@ sub execute {
 					$MATLAB->{EXEC} = $MATLAB->{MATLAB_INST}."/bin/matlab";
 				}
 				$MATLAB->{EXEC} = confirm_path ("Path to MATLAB binary", $MATLAB->{EXEC});
-				
+
+				if (! $MATLAB->{EXEC_FLAGS}) {
+					$MATLAB->{EXEC_FLAGS} = "-nodisplay -nojvm";
+				}
+				$MATLAB->{EXEC_FLAGS} = confirm_path ("Flags to use when calling MATLAB", $MATLAB->{EXEC_FLAGS});
+
 				if (y_or_n ("Configure MATLAB Perl API for developers?")){
 					$MATLAB->{AS_DEV} = 1;
 					$MATLAB->{MATLAB_SRC} = getcwd ()."/src/matlab";
@@ -852,7 +865,7 @@ sub execute {
 				croak "Couldn't copy src/perl2/OME/Matlab for testing to $OME_TMP_DIR/install : $_";
 			}
 			$retval = test_module ("$OME_TMP_DIR/install/Matlab", $LOGFILE, 
-				{user =>"$MATLAB->{USER}"});
+				{user =>"$MATLAB->{USER}", cl_options => "$MATLAB->{EXEC} $MATLAB->{EXEC_FLAGS}"});
 			rmtree("$OME_TMP_DIR/install/Matlab"); # problems here result in croaks
 				
 			print BOLD, "[FAILURE]", RESET, ".\n"

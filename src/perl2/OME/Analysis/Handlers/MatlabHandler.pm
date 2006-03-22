@@ -439,9 +439,7 @@ The guts of this were written by Tomasz
 sub Pixels_to_MatlabArray {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
-	my $conf = $session->Configuration();
-	my $omeis_repository = $conf->repository() or die "Couldn't retrieve repository";
-	
+	my $omeis_repository = $session->findRepository() or die "Couldn't retrieve repository";
 	
 	# Gather the actual input. It may be a Pixels or it may inherit from Pixels
 	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) )
@@ -658,8 +656,7 @@ sub MatlabArray_to_Pixels {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
-	my $conf = $session->Configuration();
-	my $omeis_repository = $conf->repository() or die "Couldn't retrieve repository";
+	my $omeis_repository = $session->findRepository() or die "Couldn't retrieve repository";
 	
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
 	my $formal_output = $self->getFormalOutput( $xmlInstr->getAttribute( 'FormalOutput' ) )
@@ -1160,6 +1157,7 @@ sub __openEngine {
 	my $session = OME::Session->instance();
 	my $MATLAB = $_environment->matlab_conf() or croak "couldn't retrieve MATLAB environment variables";
 	my $matlab_exec = $MATLAB->{EXEC} or croak "couldn't retrieve matlab exec path from environment";
+	my $matlab_flags = $MATLAB->{EXEC_FLAGS} or croak "couldn't retrieve matlab exec flags from environment";
 	my $matlab_src_dir = $MATLAB->{MATLAB_SRC} or croak "couldn't retrieve matlab src dir from environment";
 	
 	logdbg "debug", "Matlab src dir is $matlab_src_dir";
@@ -1167,7 +1165,7 @@ sub __openEngine {
 	# initially open the MATLAB Engine
 	if (!$_engineOpen) {
 		logdbg "debug", "Matlab exec is $matlab_exec";
-		$_engine = OME::Matlab::Engine->open("$matlab_exec -nodisplay -nojvm");
+		$_engine = OME::Matlab::Engine->open("$matlab_exec $matlab_flags");
 		die "Cannot open a connection to Matlab!" unless $_engine;
 		$_engineOpen = 1;
 	}

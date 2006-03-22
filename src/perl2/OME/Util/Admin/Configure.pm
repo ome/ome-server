@@ -264,7 +264,8 @@ BLURB
 			
 			print "              MATLAB User: ", BOLD, $matlabConf->{USER}, RESET, "\n";
 			print "              MATLAB Path: ", BOLD, UNDERLINE, $matlabConf->{MATLAB_INST}, RESET, "\n";
-			print "              MATLAB Exec: ", BOLD, UNDERLINE, $matlabConf->{EXEC}, RESET, "\n";				
+			print "              MATLAB Exec: ", BOLD, UNDERLINE, $matlabConf->{EXEC}, RESET, "\n";
+			print "        MATLAB Exec Flags: ", BOLD, UNDERLINE, $matlabConf->{EXEC_FLAGS}, RESET, "\n";
 			print "   Config MATLAB for dev?: ", BOLD, $matlabConf->{AS_DEV} ? 'yes':'no', RESET, "\n";
 			print "     MATLAB .m files Path: ", BOLD, $matlabConf->{MATLAB_SRC},  RESET, "\n";
 			print "\n";  # Spacing
@@ -338,9 +339,6 @@ BLURB
 		executor       => $executor,
 		lsid_authority => $lsid,
 #		super_user     => $session->experimenter_id(),
-
-		matlab_user    => $matlabConf->{USER},
-		matlab_src_dir => $matlabConf->{MATLAB_SRC},
 		template_dir   => $apacheConf->{TEMPLATE_DIR},
 	);
 	

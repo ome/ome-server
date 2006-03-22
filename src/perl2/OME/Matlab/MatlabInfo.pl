@@ -52,6 +52,7 @@ push (@extra_paths,glob ("/Applications/matlab*/bin"));
 push (@extra_paths,glob ("/Applications/Matlab*/bin"));
 my $matlab_path = which ('matlab',\@extra_paths);
 my $matlab_user;
+my $matlab_flags = "-nodisplay -nojvm"; # default flags
 
 if (scalar(@ARGV) >= 1) {
 	$matlab_user = shift(@ARGV);
@@ -60,6 +61,9 @@ if (scalar(@ARGV) >= 1) {
 }
 if (scalar(@ARGV) >= 1) {
 	$matlab_path = shift(@ARGV);
+}
+if (scalar(@ARGV) >= 1) {
+	$matlab_flags = shift(@ARGV);
 }
 
 my $path_test = $matlab_path;
@@ -91,9 +95,9 @@ if ($result > 0) {
 # Additional Info requries executing matlab.
 #
 if (defined $matlab_user) {
-	@outputs = `su $matlab_user -c '$matlab_path -nodisplay -nojvm -r quit'`; 
+	@outputs = `su $matlab_user -c '$matlab_path $matlab_flags -r quit'`; 
 } else {
-	@outputs = `$matlab_path -nodisplay -nojvm -r quit`; 
+	@outputs = `$matlab_path $matlab_flags -r quit`; 
 }
 
 foreach (@outputs) {

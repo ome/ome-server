@@ -36,9 +36,19 @@
 use strict;
 use OME::Matlab;
 
+my $matlab_path = "matlab";
+my $matlab_flags = "-nodisplay -nojvm";
+
+if (scalar(@ARGV) >= 1) {
+	$matlab_path = shift(@ARGV);
+}
+if (scalar(@ARGV) >= 1) {
+	$matlab_flags = shift(@ARGV);
+}
+
 print "Trying to compute 4x8 using MATLAB ...\n";
 my $x = OME::Matlab::Array->newDoubleScalar(4);
-my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm");
+my $engine = OME::Matlab::Engine->open("$matlab_path $matlab_flags");
 
 if (not defined $engine) {
 	print STDERR "Test Failed.\n Perl Matlab API is incorrectly installed.\n".
