@@ -36,6 +36,7 @@ package OME::Install::Environment;
 use warnings;
 use strict;
 use Carp;
+use Safe;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -65,14 +66,33 @@ my $new = sub {
 sub restore_from {
     my ($self, $env_file) = @_;
     
+    $env_file = $self unless ref ($self);
+
     eval "require Storable;";
     croak "Called OME::Install::Environment->restore_from(), but Storable could not be loaded."
     	if $@;
     
+    
     $env_file = ENV_FILE unless $env_file;
-    $sole_instance = Storable::retrieve ($env_file) if -f $env_file;
 
-    return $sole_instance;
+	return undef unless -f $env_file and -r $env_file;	
+
+    eval {
+    	$sole_instance = Storable::retrieve ($env_file);
+    };
+
+    return $sole_instance if $sole_instance;
+    
+    # Something didn't work.  Try to see if this file is in Data::Dumper form
+	my $safe = new Safe;
+	$sole_instance = $safe->rdo ($env_file);
+	# We have to bless it because its blessed into $safe rather than into our namespace
+	bless ($sole_instance,'OME::Install::Environment');
+	
+	
+	return $sole_instance;
+    
+    
 }
 
 #*********
