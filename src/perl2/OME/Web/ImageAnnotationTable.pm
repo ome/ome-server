@@ -85,7 +85,13 @@ OME::Web::ImageAnnotationTable - An OME page displaying a table of
     Rows=Gene, Columns=EmbryoStage: These parameters will specify the
     root types to be used for the rows and columns of the output
     table. These names must correspond to the initial values given in
-    the "Path.load/types" specification lists.
+    the "Path.load/types" specification lists. 
+    
+    If Rows and Columns are both specified,  the information will be
+    placed in a 2-dimensional table. If only Rows are specified, a
+    one-d list of rows will be presented. A value for Rows is
+    required, but a value for Columns is optional.
+
     
     CategoryGroup=Localization: the category group used for
     color-coding of the images. Note that no color-coding will be used
@@ -102,6 +108,8 @@ use Carp 'cluck';
 use vars qw($VERSION);
 use OME::SessionManager;
 use base qw(OME::Web);
+
+my $NO_COLS='__NONE__';
 
 sub new {
     my $proto =shift;
@@ -212,10 +220,12 @@ sub getTableDetails {
     $self->{returnPage} = $returnPage;
     my $q = $container->CGI();
     my %tmpl_data;
+
+    
     # load the appropriate information for the named template.
     my $tmplData = 
-	$factory->findObject( '@BrowseTemplate', Name => $which_tmpl );
-
+	$factory->findObject( '@BrowseTemplate', Name =>
+			      $which_tmpl );
     
 	
     # instantiate the template
@@ -226,20 +236,32 @@ sub getTableDetails {
 
 
     # figure out what we have for rows and columns
+
+    # if the value of Rows or Columns is 'None', don't set the values
+    # - leave them undefined.
+    
+    if ($q->param('Rows') && $q->param('Rows') ne 'None') {
+	$self->{rows} = $q->param('Rows');
+	$tmpl_data{'rowFieldName'} = $self->{rows};
+    }
+    else {
+	$tmpl_data{'rowFieldName'} = "Rows";
+    }
+    if ($q->param('Columns') && $q->param('Columns') ne 'None') { 
+	$self->{columns} = $q->param('Columns');
+    }
     # set the 'prevRows' field in the template to be equalto hat i
     # specify for the rows. If there is a value for prevRows in the
     # CGI, and it's not what i've just selected, 
-    # set rowSwitch to 1.
-    
-    $self->{rows} = $q->param('Rows');
-    $self->{columns} = $q->param('Columns');
+    # set rowSwitch to 1. This will indicate that the row value has
+    # been changed.
     $tmpl_data{'prevRows'} = $self->{rows};
     if ($q->param('prevRows') && $self->{rows} ne
 	$q->param('prevRows')) {
 	$self->{rowSwitch} =1;
     }
 
-    $tmpl_data{'rowFieldName'} = $self->{rows};
+
 
     # populate the pull-downs.
     my $types = $self->getTypes($tmpl);
@@ -252,9 +274,9 @@ sub getTableDetails {
 	$self->getCategories($container);
 
     if (!$q->param('Base')) {
-	if ($self->{rows} && $self->{columns}) {
+	if ($self->{rows}) {
 	
-	    if ($self->{rows} eq $self->{columns}) {
+	    if ($self->{columns} && $self->{rows} eq $self->{columns}) {
 		$tmpl_data{errorMsg}="You must choose different values for rows and columns\n";
 	    }
 	    else {
@@ -286,6 +308,10 @@ sub getTableDetails {
 		    $tmpl_data{errorMsg}="No Data to Render\n";
 		}
 	    }
+	}
+	else {
+	    # return n error message if no row has been provided.
+	    $tmpl_data{errorMsg}="Please specify a type to be used in the rows of the table.\n";
 	}
     }
     $tmpl->param(%tmpl_data);
@@ -388,7 +414,7 @@ sub getChoices {
 	}
 	push(@rows,\%row);
 	$col{columnName} = $type;
-	if ($type eq $cols) {
+	if ($cols && $type eq $cols) {
 	    $col{selectedCol} = 1;
 	}
 	push (@columns,\%col);
@@ -546,7 +572,9 @@ sub renderDims {
     $self->{rowValue} = $root if ($root);
 
     # same for columns.
-    my $colPath = $types->{$columns};
+    my $colPath;
+    $colPath = $types->{$columns} if ($columns);
+    
     ($root,$self->{colEntries}) = 
 	$self->getObjects($container,$columns,$colPath);
 
@@ -570,7 +598,7 @@ sub renderDims {
 	my $cHeaders = 
 	    $self->populateColumnHeaders($container,$activeCols,
 					 $rowEntrySize,$colPath);
-	$tmpl_data->{columnHeaders} =$cHeaders;
+	$tmpl_data->{columnHeaders} =$cHeaders if ($cHeaders);
 
 	# do the body.
 
@@ -603,7 +631,15 @@ sub renderDims {
     leaves, getObjects returns an array of paths. Each path is itself
     an array, with the first element being the name of the root object being
     searched for, and subsequent elements being names of objects along
-    the way to the atual root object, whih is the last item in the array.
+    the way to the atual root object, whih is the last item in the
+    array.
+
+    If The Type  value is not specified, we have a situation where the
+    column value has not been provided (upstream code prevents row
+    from being unspecified). In this case, return an array with the
+    single enry $NO_COLS. This will later be used as a flag to
+    determine  how columns are handled.
+    
 
 =cut
 
@@ -616,6 +652,12 @@ sub getObjects {
 
     my $type =shift; # type is Probe,EmbryoStage, etc.
     my $paths = shift;
+
+    if (!$type) { # if no type is specified, return a special
+		  # indicator
+	my @res= ($NO_COLS);
+	return (undef,\@res);
+    }
 
     # load the type
     my $typeST =
@@ -898,7 +940,7 @@ sub populateCells {
     # to do this, get type entry for row,
     # get last entry - that gets us image probe.
     my $rowAccessor = $self->getAccessorName($rowName,$types);
-    my $columnAccessor = $self->getAccessorName($colName,$types);
+    my $columnAccessor = $self->getAccessorName($colName,$types) if ($colName);
     
 
     my $cells;
@@ -915,19 +957,29 @@ sub populateCells {
 	my $rName = $rowLeaf->Name;
 
 	foreach my $col (@$colEntries) {
-	    my $colLeaf = $col->[scalar(@$col)-1];
-	    # and colLeaf is an embryoStage.
-	    my $cName = $colLeaf->Name;
 	    # for each row and column, get images.
 	    # the filter clauses end up looking like 
 	    # ImageProbeList.Probe = <probeName> (for row) and 
-	    # ImageEmbryoStageList.EmbryoStage = <embryo stage name>
-	    my @images = $factory->findObjects('OME::Image',
-					       { $rowAccessor => $rowLeaf,
-						 $columnAccessor =>
-						     $colLeaf,
-						     __distinct
-						     =>'id'});
+	    # ImageEmbryoStageList.EmbryoStage = <embryo stage
+	    # name>
+	    
+	    my $findHash = { $rowAccessor => $rowLeaf,
+			     __distinct  =>'id'};
+	    my $cName;
+	    if (ref($col) eq 'ARRAY') { # if columns specified, use them
+				# to get images.
+		my $colLeaf = $col->[scalar(@$col)-1];
+		# and colLeaf is an embryoStage.
+		$cName = $colLeaf->Name;
+		$findHash->{$columnAccessor} = $colLeaf;
+	    }
+	    else {
+		# If no columns have been specified, use $NO_COLS as
+		# the  column name. This will be used in the image
+		# data hash as well.
+		$cName = $col;
+	    }
+	    my @images = $factory->findObjects('OME::Image',$findHash);
 	    my $imagesRef = \@images;
 	    
 
@@ -1054,10 +1106,16 @@ sub getActiveList {
     my ($items,$active) = @_;
     my @results;
     foreach my $entry (@$items) {
-	my $item = $entry->[scalar(@$entry)-1];
-	my $name = $item->Name;
-	# store the whole entry, so we can use it to recontruct the
-	# header
+	my $name;
+	if ($entry eq $NO_COLS) {
+	    # if we see the $NO_COLS marker, just use that name 
+	    #  to check the hash.
+	    $name = $entry;
+	}
+	else {
+	    my $item = $entry->[scalar(@$entry)-1];
+	    $name = $item->Name;
+	}
 	push (@results,$entry) if ($active->{$name});
     }
     return \@results;
@@ -1077,20 +1135,30 @@ sub getActiveList {
 sub populateColumnHeaders {
     my $self=shift;
     my ($container,$columns,$rowSize,$colPath) = @_;
-
-    # colPath is the returned value for types, which will have the
-    # form ST, map, ST, map, etc. let's start by stripping out
-    # every other item.
-    my $colTypes = $self->filterOutMaps($colPath);
     
     
     # create empty headers as need be.
     my  $emptyHeaders = $self->populateEmptyColumnHeaders($rowSize);
     my @headers;
+    my $rowCount = 0;
     my $firstCol = $columns->[0];
-    my $rowCount = scalar(@$firstCol)-1; # of rows in column headers
+
+    # if first column is not an array, we have no columns.
+    if (ref($firstCol) ne 'ARRAY') {
+	# in this caes, the $NO_COLS value has been set, so we don't
+	# need any column headers.
+	return undef;
+    }
+    $rowCount = scalar(@$firstCol)-1; # of rows in column headers
     # is one less than the number of element in the first column.
     # this is also the # of field in the column..
+
+
+    # colPath is the returned value for types, which will have the
+    # form ST, map, ST, map, etc. let's start by stripping out
+    # every other item.
+    my $colTypes = $self->filterOutMaps($colPath);
+
 
     my @prevColumns;
     # for each row in columns
@@ -1356,10 +1424,18 @@ sub populateRow {
     my $rowName = $rowLeaf->Name;
     my @cells;
     foreach my $col (@$activeCols) {
-	# $col s the entire path array for each column
-	# find the last entry in it.
-	my $colLeaf = $col->[scalar(@$col)-1];
-	my $colName = $colLeaf->Name;
+	my $colName;
+	if ($col eq $NO_COLS) {
+	    # if the column name is $NO_COLS, use that name to access 
+	    # images from the hahs.
+	    $colName=$col;
+	}
+	else  {
+	    # $col s the entire path array for each column
+	    # find the last entry in it.
+	    my $colLeaf = $col->[scalar(@$col)-1];
+	    $colName = $colLeaf->Name;
+	}
 	# get cells
 	my $images = $cells->{$rowName}->{$colName};
 	#render them.
