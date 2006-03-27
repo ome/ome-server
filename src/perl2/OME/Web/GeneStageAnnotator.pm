@@ -159,11 +159,23 @@ sub getPageBody {
 	$self->createProbe(\%tmpl_data);
     }
 
+    elsif ($q->param('CreateGene') eq 'CreateGene') {
+	# create a new probe if needed.
+	$self->createGene(\%tmpl_data);
+    }
+
+    # get a hash of all of the "new values specified in the form.
+    # for each input of the form "NewXXX", return a hash with key
+    # being the type of thing being created (XXX) and the value being
+    # the new value.
+    # ie, if "NewProbe" has value ABCED , this $hash{Probe} = "ABCED"
+    my $newVals = $self->getNewValues(\%tmpl_data,\@parameter_names);
+
 
     # display annotation types - first STs
     if (grep {$_ eq 'st.loop'} @parameter_names) {
 	$self->populateAnnotationSTs($currentImage,\%tmpl_data,$sts,$maps,
-	    \@parameter_names);
+	    \@parameter_names,$newVals);
     }
     # and then category groups
     if (grep {$_ eq 'cg.loop'} @parameter_names) {
@@ -171,7 +183,7 @@ sub getPageBody {
     }
 
     # add fields for creating a new probe.
-    $self->populateProbeFields(\%tmpl_data,\@parameter_names);
+    $self->populateProbeFields(\%tmpl_data,\@parameter_names,$newVals);
 
     # populate the template
     $tmpl->param( %tmpl_data );
@@ -514,18 +526,10 @@ Popuate the menus with the various annotation types. For each ST that
 =cut
 sub populateAnnotationSTs {
     my $self = shift ;
-    my ($currentImage,$tmpl_data,$sts,$maps,$parameter_names) = @_;
+    my ($currentImage,$tmpl_data,$sts,$maps,$parameter_names,$newVals) = @_;
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    
-
-    # get a hash of all of the "new values specified in the form.
-    # for each input of the form "NewXXX", return a hash with key
-    # being the type of thing being created (XXX) and the value being
-    # the new value.
-    # ie, if "NewProbe" has value ABCED , this $hash{Probe} = "ABCED"
-    my $newVals = $self->getNewValues($tmpl_data,$parameter_names);
 
 
     my @st_loop_data;
@@ -682,14 +686,14 @@ sub addCategories {
 
 sub populateProbeFields {
     my $self=shift;
-    my ($tmpl_data,$parameter_names)= @_;
+    my ($tmpl_data,$parameter_names,$newVals)= @_;
     
     if (grep {$_ eq 'Gene'} @$parameter_names) {
-	$tmpl_data->{'Gene'} = $self->populateProbePulldown('Gene');
+	$tmpl_data->{'Gene'} = $self->populateProbePulldown('Gene',$newVals);
     }
     if (grep {$_ eq 'ProbeType'} @$parameter_names) {
 	$tmpl_data->{'ProbeType'} =
-	    $self->populateProbePulldown('ProbeType');
+	    $self->populateProbePulldown('ProbeType',$newVals);
     }
 }
 =head1 populateProbePulldown 
@@ -701,16 +705,24 @@ sub populateProbePulldown {
 
     my $self = shift;
     my $type = shift;
+    my $newVals = shift;
     my $session = $self->Session();
     my $factory = $session->Factory();
 
     my $stName = "@".$type;
     my @objs = $factory->findObjects($stName,{ __order =>
 						   ['Name']});
+
+    my %data;
     my $st = $factory->findObject('OME::SemanticType', {name=>$type});
+    $data{type} = $st;
+    my $newVal = $newVals->{$type};
+    if ($newVal) {
+	$data{default_value} =$newVal;
+    }
+
     my $data = $self->Renderer->renderArray(\@objs,
-					    'list_of_options',
-					    {type => $st});
+					    'list_of_options',\%data);
     return $data;
 }
 
@@ -758,6 +770,52 @@ sub createProbe {
 	# put results in to template.
 	$tmpl_data->{'Results'} = "Probe $pName Created!";
 	$tmpl_data->{'NewProbe'} = $probe->ID;
+    }
+}
+
+=head1 createProbe 
+
+create a gene when warranted
+=cut
+
+sub createGene {
+    my $self = shift;
+    my $tmpl_data = shift;
+    my $q = $self->CGI();
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my $gName = $q->param('GeneName');
+    my $gene = $q->param('Gene');
+    my $pType = $q->param('ProbeType');
+  
+    if ($gName eq "") {
+	$tmpl_data->{'Results'} = "Gene name was not specified";
+	return;
+    }
+
+    my $found = $factory->findObject('@Gene',{Name=>$gName});
+    if ($found) {
+	$tmpl_data->{'Results'} = "Geen $gName already exists.";
+	$tmpl_data->{'NewGene'} = $found->ID;
+    }
+    else {
+	# get a mex
+	my $module = $factory->findObject( 'OME::Module', 
+			   name => 'Global import' );
+	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G' );
+
+	# create the attributes
+	my $gene = $factory->newAttribute('Gene',undef,$mex,
+					   {Name=>$gName});
+	# finish the transaction.
+	$mex->status('FINISHED');
+	$mex->storeObject();
+	$session->commitTransaction();
+
+	# put results in to template.
+	$tmpl_data->{'Results'} = "Gene $gName Created!";
+	$tmpl_data->{'NewGene'} = $gene->ID;
     }
 }
 1;

@@ -8,7 +8,10 @@ NAME=images_completed>">
 <input type="hidden" name="SaveAndNext">
 <input type="hidden" name="AddToCG">
 <input type="hidden" name="CreateProbe">
+<input type="hidden" name="CreateGene">
 <input type="hidden" name="NewProbe" value="<TMPL_VAR NAME=NewProbe>">
+<input type="hidden" name="NewGene" value="<TMPL_VAR NAME=NewGene>">
+
 <TMPL_VAR NAME=current_image/render-large_no_comments><br>
 
 <a href = "javascript:selectMany('OME::Image','images_to_annotate');"><br>Search for images to annotate</a><br><br> 
@@ -76,7 +79,19 @@ name="ProbeName"></td></tr>
 <input type="button" value='Create Probe'
 onclick="javascript: document.forms[0].CreateProbe.value='CreateProbe'; document.forms[0].submit();">
 </td>
+</tr>
+
+<TR><TD colspan="2"><B>Create a new Gene:<B></TD></TR>
+<TR><td align="right">Gene Name:</td>
+<td align="left"><input type="text" size="15"
+name="GeneName"></td></tr>
+
 <tr>
+<td colspan="2">
+<input type="button" value='Create Gene'
+onclick="javascript: document.forms[0].CreateGene.value='CreateGene'; document.forms[0].submit();">
+</td>
+</tr>
 
 <tr>
 <td colspan=2>
