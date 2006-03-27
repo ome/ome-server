@@ -108,6 +108,7 @@ use Carp 'cluck';
 use vars qw($VERSION);
 use OME::SessionManager;
 use base qw(OME::Web);
+use Time::HiRes qw(gettimeofday tv_interval);
 
 my $NO_COLS='__NONE__';
 
@@ -214,6 +215,7 @@ sub getTableDetails {
     my $factory = $session->Factory();
 
 
+    my $start = [gettimeofday()];
     # container is the OME::Web object that is calling this code.
     my ($container,$which_tmpl,$returnPage) = @_;
     $self->{Template}=$which_tmpl;
@@ -273,6 +275,9 @@ sub getTableDetails {
     $tmpl_data{'categories/render-list_of_options'} = 
 	$self->getCategories($container);
 
+    # timer stuff.
+    my $elapsed = tv_interval($start);
+    $start = [gettimeofday()];
     if (!$q->param('Base')) {
 	if ($self->{rows}) {
 	
@@ -565,7 +570,7 @@ sub renderDims {
     # firt, we find the objects that we're rendering in the rows
     # this is either all of the objects specified by the "Rows" CGI
     # parameter, or it is a list of specific values.
-
+    my $start = [gettimeofday()];
     my $rowPath = $types->{$rows};
     ($root,$self->{rowEntries}) =
 	$self->getObjects($container,$rows,$rowPath);
@@ -578,13 +583,16 @@ sub renderDims {
     ($root,$self->{colEntries}) = 
 	$self->getObjects($container,$columns,$colPath);
 
+    my $elapsed = tv_interval($start);
+    $start = [gettimeofday()];    
     # populate the cells with data in a hash.
     # activeRows returns a list of rows that have data,
     # active cols indicates columns
     my ($cells,$activeRows,$activeCols) =
 	$self->populateCells($types);
 
-
+    $elapsed = tv_interval($start);
+    $start = [gettimeofday()];    
     # if any data, populate the template
     if ($cells) {
 	$hasData=1;
@@ -593,11 +601,13 @@ sub renderDims {
 	# number of columns needed for row paths..
 	my $rowEntrySize = $self->getHeaderSize($self->{rowEntries});
 	$tmpl_data->{rowHeaderCount} = $rowEntrySize;
-
+	
 	# populate the headers of the columns
 	my $cHeaders = 
 	    $self->populateColumnHeaders($container,$activeCols,
 					 $rowEntrySize,$colPath);
+	$elapsed = tv_interval($start);
+	$start = [gettimeofday()];    
 	$tmpl_data->{columnHeaders} =$cHeaders if ($cHeaders);
 
 	# do the body.
@@ -607,6 +617,7 @@ sub renderDims {
 				$activeCols,$rowPath);
 	$tmpl_data->{cells}=$body;
     }
+    $elapsed = tv_interval($start);
     return $hasData;
 }
 
@@ -948,6 +959,8 @@ sub populateCells {
     my %activeColumns;
     my $hasData =0;
 
+    my $start;
+    my $total;
     foreach my $row (@$rowEntries) {
 	# this is the of objects that define the row. let's get the
 	# last item
@@ -979,7 +992,10 @@ sub populateCells {
 		# data hash as well.
 		$cName = $col;
 	    }
-	    my @images = $factory->findObjects('OME::Image',$findHash);
+	    $start = [gettimeofday()];
+	    my @images =
+		$factory->findObjects('OME::Image',$findHash);
+	    $total += tv_interval($start);
 	    my $imagesRef = \@images;
 	    
 
@@ -1261,6 +1277,8 @@ sub getHeaderSize {
     populateRow, which eventually renders all of the images.
     
 =cut
+my $renderArrayTime = 0;
+my $getTextForTime =0;
 
 sub populateBody {
     my $self= shift;
@@ -1291,9 +1309,11 @@ sub populateBody {
 		my %entry;
 		my $rowSpan = 
 		    $self->getRepeatCount($activeRows,$rowIndex,$i);
+		my $start=[gettimeofday()];
 		$entry{rowNameEntry} = $self->getTextFor($container,
 							 $val,
 							 $rowTypes->[$i]);
+		$getTextForTime += tv_interval($start);
 		$entry{rowNameSpan} = $rowSpan;
 		push(@entries,\%entry);
 
@@ -1363,11 +1383,12 @@ sub getRepeatCount {
     my $text = $self->getTextFor($container,$name,$type);
     given a name of an item and the type of an item,
     find the string to put in a cell.
-    3 posssibilities: 
-    1) there is an external link. put an href to that link,
-      with name as the visible text.
-    2) there is an object detail url. return an appropriate href.
-    3) otherwise, just put the name of the object.
+    put the name of the obect and the links to an ExternalLink objects
+    that are ssociated. These links will display the "Description"
+    field for the external links. 
+
+    if there are no ExternalLinks, display an object detail URL.
+
 
 =cut
 sub getTextFor {
@@ -1383,25 +1404,33 @@ sub getTextFor {
     # find the object
     my $obj = $factory->findObject($typeName,Name=>$name);
     if ($obj) {
+	
+	#eval{ my $maps = $obj->$mapType(); $map = $maps->next() };
+
+	my @maps;
 	my $mapType = $type."ExternalLinkList";
-	
-	my $map;
-	# get the list of links, & find the first element in this list.
-	eval{ my $maps = $obj->$mapType(); $map = $maps->next() };
-	
-	# if there's an error or no map give the object detail url or just
-	# the name (if no details)
-	if ($@ || !$map) {
-	    my $detail = $self->getObjDetailURL($obj);
-	    if ($detail) {
-		$text = $q->a({href=>$detail},$name);
+	eval { @maps = $obj->$mapType()}; 
+	if (@maps && scalar(@maps) > 0 && !$@) {
+	    foreach my $map (@maps) {
+		#foreach my $map (@maps) {
+		my $link = $map->ExternalLink();
+		my $url = $link->URL();
+		my $desc = $link->Description();
+		$text .= "<br><span class=\"ome_ext_link_text\">" .
+		    $q->a({href=>$url,class=>"ome_ext_link_text"},$desc).
+		    "</span>";
 	    }
 	}
-	elsif ($map) { # but, if the link does exist, create it.
-	    
-	    my $link = $map->ExternalLink();
-	    my $url = $link->URL();
-	    $text = $q->a({href=>$url},$name);
+	else  {
+	# if there's an error or no map give the object detail url or just
+	# the name (if no details)
+	    my $detail = $self->getObjDetailURL($obj);
+	    if ($detail) {
+		$text  .= "<br><span class=\"ome_ext_link_text\">" . 
+		    $q->a({href=>$detail,class=>"ome_ext_link_text"},
+			  " Info..") . 
+		    "</span>";
+	    }
 	}
     }
     return $text;
@@ -1440,6 +1469,7 @@ sub populateRow {
 	my $images = $cells->{$rowName}->{$colName};
 	#render them.
 	my $cell = $self->getRendering($container,$images,$cg);
+
 	push(@cells,$cell);
     }
     return \@cells;
@@ -1456,6 +1486,7 @@ sub populateRow {
 sub getRendering {
     my ($self,$container,$images,$cg) = @_;
     my %cell;
+
     if ($images) {
 	# sort them by category group first.
 	my $renderer=$container->Renderer();
@@ -1469,9 +1500,12 @@ sub getRendering {
 	    $sortedImages = $self->sortImagesByCG($images,$cg);
 	    $renderHash->{CategoryGroup} = $cg if ($cg);
 	}
+
+	my $start =[gettimeofday()];
 	my $rendering =
-	    $renderer->renderArray($sortedImages,
-				   'color_code_ref_mass_by_cg',$renderHash);
+	    $renderer->renderArray($sortedImages,'color_code_ref_mass_by_cg',$renderHash);
+			
+	$renderArrayTime += tv_interval($start);
 	$cell{cell} = $rendering;
     }
     return \%cell;
