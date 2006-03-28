@@ -150,6 +150,28 @@ my @MENU = (
 		text => 'Import Spreadsheet',
 	},
 
+        # ** Mouse Annotations ** 
+ 	{
+ 		web_class => undef,
+ 		type => 'heading',
+ 		text => 'Mouse Annotations',
+ 	},
+        {
+ 		web_class => 'OME::Web::GeneStageAnnotator',
+ 		type => 'link',
+		url_param => { Template=>'MouseAnnotations'},
+ 		text => 'Annotate Images'
+ 	},
+        {
+ 		web_class => 'OME::Web::ImageAnnotationTable',
+ 		type => 'link',
+		url_param => { Template=>'GeneProbeTable',
+                               Rows => 'Gene',
+			       Columns => 'EmbryoStage'},
+ 		text => 'View AnnotationTable'
+ 	},
+    
+         
 	# ** Images **
 	{
 		web_class => undef,
