@@ -29,7 +29,13 @@ use strict;
 use English;
 use Getopt::Long;
 
-# command line options
+# command-line options that describe installed MATLAB
+my $matlab_user;
+my $matlab_path;
+my @matlab_flags;
+my $matlab_flags_str;
+
+# command-line options that ctrl script output
 my $result;
 my $ver  = 0;
 my $arch = 0;
@@ -38,7 +44,10 @@ my $inc  = 0;
 my $lib  = 0;
 my $path = 0;
 
-GetOptions('v|version' => \$ver,
+GetOptions('matlab-user=s' => \$matlab_user,
+			'matlab-path=s' => \$matlab_path,
+			'matlab-flags=s' => \@matlab_flags,
+			'v|version' => \$ver,
 			'a|arch' => \$arch,
 			'r|root' => \$root,
 			'i|include' => \$inc,
@@ -46,24 +55,24 @@ GetOptions('v|version' => \$ver,
 			'p|path' => \$path);
 $result = $ver + $arch + $root + $inc + $lib + $path;
 
-# Make sure we have a matlab executable
-my @extra_paths = glob ("/Applications/MATLAB*/bin");
-push (@extra_paths,glob ("/Applications/matlab*/bin"));
-push (@extra_paths,glob ("/Applications/Matlab*/bin"));
-my $matlab_path = which ('matlab',\@extra_paths);
-my $matlab_user;
-my $matlab_flags = "-nodisplay -nojvm"; # default flags
-
-if (scalar(@ARGV) >= 1) {
-	$matlab_user = shift(@ARGV);
+# need to be EUID=0 if we are going to sudo
+if (defined $matlab_user) {
 	die "You must run the makefile as root to pass it a matlab_user" 
-		if ($EUID ne 0);
+		unless ($EUID eq 0);
 }
-if (scalar(@ARGV) >= 1) {
-	$matlab_path = shift(@ARGV);
+
+# Make sure we have a matlab executable
+if (not defined $matlab_path) {
+	my @extra_paths = glob ("/Applications/MATLAB*/bin");
+	push (@extra_paths,glob ("/Applications/matlab*/bin"));
+	push (@extra_paths,glob ("/Applications/Matlab*/bin"));
+	$matlab_path = which ('matlab',\@extra_paths);
 }
-if (scalar(@ARGV) >= 1) {
-	$matlab_flags = shift(@ARGV);
+
+if (scalar @matlab_flags) {
+	$matlab_flags_str = join (' ', @matlab_flags);
+} else {
+	$matlab_flags_str = "-nodisplay -nojvm"; # default flags
 }
 
 my $path_test = $matlab_path;
@@ -95,9 +104,9 @@ if ($result > 0) {
 # Additional Info requries executing matlab.
 #
 if (defined $matlab_user) {
-	@outputs = `su $matlab_user -c '$matlab_path $matlab_flags -r quit'`; 
+	@outputs = `su $matlab_user -c '$matlab_path $matlab_flags_str -r quit'`; 
 } else {
-	@outputs = `$matlab_path $matlab_flags -r quit`; 
+	@outputs = `$matlab_path $matlab_flags_str -r quit`; 
 }
 
 foreach (@outputs) {
