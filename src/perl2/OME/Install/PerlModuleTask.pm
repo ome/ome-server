@@ -841,8 +841,10 @@ sub execute {
 			
 			# Configure 
 			print "  \\_ Configuring ";
+			my @exec_flags = split(/ /, $MATLAB->{EXEC_FLAGS});
+			my $exec_flags_str = '-matlab-flags='.join (' -matlab-flags=', @exec_flags);
 			$retval = configure_module("src/perl2/OME/Matlab/", $LOGFILE, 
-				{options => "$MATLAB->{USER} $MATLAB->{MATLAB_INST}"});
+				{options => "-matlab-user=$MATLAB->{USER} -matlab-path=$MATLAB->{MATLAB_INST} $exec_flags_str"});
 				
 			print BOLD, "[FAILURE]", RESET, ".\n"
 				and croak "Unable to configure module, see $LOGFILE_NAME for details."
@@ -890,7 +892,11 @@ sub execute {
 			
 			# Configure
 			print "  \\_ Configuring omeis-http with MATLAB bindings ";
-			$retval = configure_module ("src/C/omeis-http", $LOGFILE, {options => "--with-MATLAB --with-MATLAB-user=$MATLAB->{USER}"});
+			$retval = configure_module ("src/C/omeis-http", $LOGFILE,
+				{options => "--with-matlab ".
+							"--with-matlab-user=$MATLAB->{USER} ".
+							"--with-matlab-path=$MATLAB->{MATLAB_INST} ".
+							"--with-matlab-flags=\"$MATLAB->{EXEC_FLAGS}\""});
 			
 			print BOLD, "[FAILURE]", RESET, ".\n"
 			and croak "Unable to configure omeis-http, see $LOGFILE_NAME for details."
