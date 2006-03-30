@@ -39,7 +39,7 @@ export WANT_AUTOMAKE="1.6"
 	exit;
 }
 
-echo "Generating configuration files for OMEIS, please wait...."
+echo "Generating configuration files for OMEIS-http, please wait...."
 echo;
 
 aclocal $ACLOCAL_FLAGS || exit;
