@@ -252,7 +252,7 @@ sub createParentalPixels { return shift->createPixels( @_, 1 ); }
 =head2 finishPixels
 
 Usage:
-    OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
+    my $pixelsID = OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
 
 Finalizes the pixels data, sets the FileSHA1 of the pixels attribute,
 and sets the thumbnail.
@@ -261,10 +261,13 @@ and sets the thumbnail.
 
 sub finishPixels {
     my ($proto, $pixels_data, $pixels_attr) = @_;
-
-	$pixels_attr->ImageServerID ($pixels_data->finishPixels());
+	my $pixelsID = $pixels_data->finishPixels();
+	
+	$pixels_attr->ImageServerID ($pixelsID);
 	$pixels_attr->FileSHA1( $pixels_data->getSHA1() );
 	$pixels_attr->storeObject();
+	
+	return $pixelsID;
 }
 
 =head2 loadPixels
