@@ -31,7 +31,8 @@ use strict;
 use ExtUtils::MakeMaker;
 use English;
 
-my @outputs = `perl MatlabInfo.pl @ARGV -a -r -v -i -l`;
+my @outputs = `perl MatlabInfo.pl @ARGV --arch --root --version --include --lib`;
+@ARGV = ();
 
 my $matlab_arch    = $outputs[0];
 my $matlab_dir     = $outputs[1];
