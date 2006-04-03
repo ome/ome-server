@@ -57,6 +57,7 @@ use OME::Web;
 #*********
 
 $VERSION = $OME::VERSION;
+my $ENABLE_MOUSE_ANNOTATIONS = 0;
 
 my @MENU = (
 	# ** CREATE **
@@ -76,6 +77,12 @@ my @MENU = (
 		type => 'link',
 		url_param => { Type => 'OME::Dataset' },
 		text => 'Dataset',
+	},
+	{
+		web_class => 'OME::Web::DBObjCreate',
+		type => 'link',
+		url_param => { Type => '@CategoryGroup' },
+		text => 'Category Group',
 	},
 	{
 		web_class => 'OME::Web::DBObjCreate',
@@ -105,6 +112,12 @@ my @MENU = (
 		type => 'link',
 		url_param => { SearchType => 'OME::Image' },
 		text => 'Images',
+	},
+	{
+		web_class => 'OME::Web::Search',
+		type => 'link',
+		url_param => { SearchType => '@CategoryGroup' },
+		text => 'Category Group',
 	},
 	{
 		web_class => 'OME::Web::Search',
@@ -151,6 +164,7 @@ my @MENU = (
 	},
 
         # ** Mouse Annotations ** 
+( $ENABLE_MOUSE_ANNOTATIONS ? (
  	{
  		web_class => undef,
  		type => 'heading',
@@ -169,7 +183,8 @@ my @MENU = (
                                Rows => 'Gene',
 			       Columns => 'EmbryoStage'},
  		text => 'View AnnotationTable'
- 	},
+ 	}
+) : () ),
     
          
 	# ** Images **
