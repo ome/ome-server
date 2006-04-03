@@ -698,6 +698,7 @@ sub renderData {
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
 	foreach my $field ( keys %$field_requests ) {
+		FIELD_LOOP:
 		foreach my $request ( @{ $field_requests->{ $field } } ) {
 			my $request_string = $request->{ 'request_string' };
 			
@@ -758,15 +759,39 @@ sub renderData {
 					
 			# populate field requests
 			} else {
-				my $type = $obj->getColumnType( $field );
+			
+				# Parse compound field request.
+				my $relativeObject = $obj;
+				my $type;
+				my @path = split( /\./, $field );
+				# Traverse every path but the last one.
+				foreach my $field ( @path[0..( scalar( @path ) -2 ) ]  ) {
+					# Only traverse a relationship
+					$type = $relativeObject->getColumnType( $field );
+					if( $type =~ m/has-/ ) {
+						my $eval_str = '$relativeObject = $relativeObject->'.$field;
+						eval( $eval_str );
+						if( $@ ) {
+							logdbg "debug", "INVALID TEMPLATE REQUEST FOR '$field', full request is '$request_string'.";
+							logdbg "debug", "Error traversing path at: $eval_str";
+							logdbg "debug", "Error message is: $@";
+							next FIELD_LOOP;
+						}
+					} else {
+						last;
+					}
+				}
+				# Set $field & type to the last path element
+				$field = $path[ scalar( @path ) - 1 ];
+				$type = $relativeObject->getColumnType( $field );
 				
 				# work with "count_*" methods
 				if( ( not defined $type ) && ($field =~ m/^count_(.*)$/ ) ) {
 					my $actual_field = $1;
-					my $actual_type  = $obj->getColumnType( $actual_field );
+					my $actual_type  = $relativeObject->getColumnType( $actual_field );
 					# Only has-many and many-to-many fields have a corresponding count_... method
 					if( $actual_type =~ m/many/ ) {
-						$record{ $request_string } = $obj->$field;
+						$record{ $request_string } = $relativeObject->$field;
 						$record{ $request_string } = $q->escapeHTML( $record{ $request_string } )
 							if exists $request->{ escape_html };
 					# If this request is not valid, mark it as such to aid debugging, 
@@ -784,8 +809,8 @@ sub renderData {
 				
 				# data fields
 				if( $type eq 'normal' ) {
-					my $SQLtype = $obj->getColumnSQLType( $field );
-					$record{ $request_string } = $obj->$field;
+					my $SQLtype = $relativeObject->getColumnSQLType( $field );
+					$record{ $request_string } = $relativeObject->$field;
 					my %booleanConvert = ( 0 => 'False', 1 => 'True' );
 					$record{ $request_string } =~ s/^([^:]+(:\d+){2}).*$/$1/
 						if $SQLtype eq 'timestamp';
@@ -796,19 +821,19 @@ sub renderData {
 					$record{ $request_string } = $q->escapeHTML( $record{ $request_string } )
 						if exists $request->{ escape_html };
 				} elsif ($options->{text}) {
-					$record{ $request_string } = $obj->$field() ? $obj->$field()->id() : '<NULL>';
+					$record{ $request_string } = $relativeObject->$field() ? $relativeObject->$field()->id() : '<NULL>';
 				} else {
 					# reference field
 					if( $type eq 'has-one' ) {
 						# request for data
 						if( exists $request->{ field } && defined $request->{ field } ) {
-							my %rendered_data = $self->renderData( $obj->$field(), [$request->{ field }] );
+							my %rendered_data = $self->renderData( $relativeObject->$field(), [$request->{ field }] );
 							$record{ $request_string } = $rendered_data{ $request->{ field } };
 						} 
 						# request for rendering
 						else {
 							my $render_mode = ( $request->{ render } or 'ref' );
-							$record{ $request_string } = $self->render( $obj->$field(), $render_mode, $request );
+							$record{ $request_string } = $self->render( $relativeObject->$field(), $render_mode, $request );
 						}
 					}
 		
@@ -817,10 +842,10 @@ sub renderData {
 						# ref_list is the default mode for rendering object lists.
 						my $render_mode = ( $request->{ render } or 'ref_list' );
 						$record{ $request_string } = $self->renderArray( 
-							[$obj, $field], 
+							[$relativeObject, $field], 
 							$render_mode, 
-							{ more_info_url => $self->getSearchAccessorURL( $obj, $field ),
-							  type => $obj->getAccessorReferenceType( $field )->getFormalName(),
+							{ more_info_url => $self->getSearchAccessorURL( $relativeObject, $field ),
+							  type => $relativeObject->getAccessorReferenceType( $field )->getFormalName(),
 							  %$request
 							}
 						);
@@ -1217,7 +1242,7 @@ The naming convention for subclasses is:
 =head1 Writing Templates
 
 Basically, you write chunks of html peppered with tags that look like
-	<!-- TMPL_VAR NAME='field_name' -->
+	&lt; TMPL_VAR NAME='field_name' &gt;
 that get replaced with the field in question. Look at
 OME_Image_detail.tmpl and OME_Image_summary.tmpl for simple examples.
 See OME_Image_ref_mass.tmpl, generic_list.tmpl, or
@@ -1227,13 +1252,15 @@ field_name can be any of the object's fields from its DBObject
 definition, a field populated by the _renderData method of the
 specialized subclass, or a magic field. To reach through a relation, 
 use 
-	<!-- TMPL_VAR NAME='relation_name/field-field_name' -->
+	&lt; TMPL_VAR NAME='relation_name.field_name' &gt;
 Ex: To use the name of an analysis chain when constructing 
 a template to show an analysis chain execution, use 
-	<!-- TMPL_VAR NAME='analisis_chain/field-name' -->
+	&lt; TMPL_VAR NAME='analisis_chain.name' &gt;
+Ex:	To show the owner of any given attribute, use
+	&lt; TMPL_VAR NAME='module_execution.experimenter' &gt;
 To count the number of objects is a has-many or a many-to-many relation, 
 use the count_* method, e.g.
-	<!-- TMPL_VAR NAME='count_has_many_relation_name' -->
+	&lt; TMPL_VAR NAME='count_has_many_relation_name' &gt;
 
 Standard Modifiers:
 	field/max_text_length-n : truncates the field length to max_text_length
