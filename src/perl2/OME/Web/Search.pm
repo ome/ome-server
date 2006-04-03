@@ -327,8 +327,8 @@ sub getSearchFields {
 		}
 		
 		if( $foreignClass ) {
-			$form_fields->{ $field } = $self->getRefSearchField( 
-				$formal_name, $foreignClass, $field, $defaults->{ $field } );
+			$form_fields->{ $field } = $self->getObjectSelectionField( 
+				$foreignClass, $field, $defaults->{ $field } );
 		} else {
 			$q->param( $field, $defaults->{ $field }  ) 
 				unless defined $q->param( $field );
@@ -343,39 +343,52 @@ sub getSearchFields {
 	return $form_fields;
 }
 
-=head2 getRefSearchField
+=head2 getObjectSelectionField
 
-	# get an html form element that will allow searches to $to_type
+	# get an html form element to select instances of $type
 	my $htmlSearchField = 
-		$self->getRefSearchField( $from_type, $to_type, $accessor_to_type, $default_obj );
+		$self->getObjectSelectionField( $type, $field_name, $options );
 
-the types may be a DBObject name ("OME::Image"), an Attribute name
-("@Pixels"), or an instance of either
-$from_type is the type you are searching from
-$accessor_to_type is an accessor of $from_type that returns an instance of $to_type
-$to_type is the type the accessor returns
+$type is the type of object to select. It may be a DBObject name
+("OME::Image"), an Attribute name ("@Pixels"), or an instance of either.
+$field_name is the desired name of the form field.
+$options is a hash that can optionally contain the following fields:
+	default_obj is the object that will be selected when the page 
+initially loads.
+	max_elements_in_list is the maximum number of elements to allow
+in a list. The default value is 10.
+	list_length is the vertical height of the list. The default value is 3.
 
-returns a form input and a search path for that input.
+returns an html snippets to select objects.
+
+If there are a small number of objects in the DB visible to the logged in user,
+a multi-select field will be returned. If there are a large number of objects,
+the user will see a link to select objects using a popup window. Once they 
+select objects, references to selected objects will also be displayed.
+
 
 =cut
 
-sub getRefSearchField {
-	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
-	my $threshold_Popup = 10;
+sub getObjectSelectionField {
+	my ($self, $type, $field_name, $options) = @_;
+
+	$options = {} unless $options; # makes later code easier
+	my $default_obj     = $options->{ default_obj };
+	my $threshold_Popup = $options->{ max_elements_in_list } || 10;
+	my $list_length     = $options->{ list_length } || 3;
 	
-	if( not defined $default ) {
-		my $specializedSearch = $self->_specialize( $to_type );
-		$default = $specializedSearch->_getDefault( )
+	if( not defined $default_obj ) {
+		my $specializedSearch = $self->_specialize( $type );
+		$default_obj = $specializedSearch->_getDefault( )
 			if( $specializedSearch && $specializedSearch->can('_getDefault') );
 	}
 
-	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
-	my ($to_package, $to_common_name, $to_formal_name) = OME::Web->_loadTypeAndGetInfo( $to_type );
-	$default = $default->id() if $default;
+	my ($to_package, $to_common_name, $to_formal_name) = OME::Web->_loadTypeAndGetInfo( $type );
+	$default_obj = $default_obj->id() if $default_obj;
 
 	my $q = $self->CGI();
-	$q->param( $accessor_to_type, $default  ) 
-		unless defined $q->param($accessor_to_type );
+	$q->param( $field_name, $default_obj  ) 
+		unless defined $q->param($field_name );
 
 	my $factory = $self->Session()->Factory();
 	my $htmlSnippet;
@@ -388,21 +401,21 @@ sub getRefSearchField {
 		$object_names{''} = 'All';
 		$htmlSnippet = 
 			$q->scrolling_list( 
-				-name     => $accessor_to_type,
+				-name     => $field_name,
 				'-values' => $object_order,
 				-labels	  => \%object_names,
-				-default  => $default,
-				-size     => 3,
+				-default  => $default_obj,
+				-size     => $list_length,
 				-multiple => 'true',
 			);
 	# Make a click through link if there are very many objects to select from
 	} else {
-		if( $q->param($accessor_to_type ) ) {
+		if( $q->param($field_name ) ) {
 		
 			# Work out the selection. It will be one or more ids. If it's
 			# one parameter, it could be a comma separated list.
 			my ($selectionRepresentation, @ids);
-			my @selectionVals = $q->param($accessor_to_type );
+			my @selectionVals = $q->param($field_name );
 			if( scalar( @selectionVals ) == 1 ) {
 				@ids = split( /,/, $selectionVals[0] );
 			} else {
@@ -412,31 +425,31 @@ sub getRefSearchField {
 			# Build a representation of the selection
 			# Only show the individual objects if there aren't many selected
 			if( scalar( @ids ) < 5 ) {
-				my @objs = map( $factory->loadObject( $to_type, $_ ), @ids );
+				my @objs = map( $factory->loadObject( $type, $_ ), @ids );
 				$selectionRepresentation = $self->Renderer()->renderArray( \@objs, 'ref_list' );
 			# If there are too many to show, link to a popup page to show them all
 			} else {
 				$selectionRepresentation = $q->a(
-					{ -href => 'javascript: openPopUp( "'.$self->getSearchURL( $to_type, id => join( ',', @ids ) ).'" )' },
+					{ -href => 'javascript: openPopUp( "'.$self->getSearchURL( $type, id => join( ',', @ids ) ).'" )' },
 					scalar( @ids )." selected. "
 				);
 			}
 			
 			my $form_name = $self->{ form_name };
 			$htmlSnippet = 
-				$q->hidden( -name => $accessor_to_type ).
+				$q->hidden( -name => $field_name ).
 				$selectionRepresentation.
-				"(<a href='javascript: document.forms[\"$form_name\"].elements[\"$accessor_to_type\"].value = \"\"; ".
+				"(<a href='javascript: document.forms[\"$form_name\"].elements[\"$field_name\"].value = \"\"; ".
 									 "document.forms[\"$form_name\"].submit();'".
 				   "title='Cancel selection'/>X</a> ".
-				"<a href='javascript: selectMany( \"$to_type\", \"$accessor_to_type\" );'".
+				"<a href='javascript: selectMany( \"$type\", \"$field_name\" );'".
 				   "title='Change selection'/>C</a>)";
 		} else { #  then if nothing is selected.
 			$htmlSnippet = 
-				$q->hidden( -name => $accessor_to_type ).
+				$q->hidden( -name => $field_name ).
 				"(".
 				$q->a( { 
-					-href => "javascript: selectMany( '$to_type', '$accessor_to_type' );"
+					-href => "javascript: selectMany( '$type', '$field_name' );"
 				}, "Select" ).")";
 		}
 	}
