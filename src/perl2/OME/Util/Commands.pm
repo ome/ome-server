@@ -93,6 +93,7 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 use OME::Tasks::ModuleExecutionManager;
+use OME::SessionManager;
 
 use UNIVERSAL::require;
 use Getopt::Long;
