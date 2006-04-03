@@ -43,6 +43,7 @@ use Carp 'cluck';
 use vars qw($VERSION);
 use OME::SessionManager;
 use OME::Util::Dev::Templates;
+use OME::Web::Search;
 
 use base qw(OME::Web);
 
@@ -63,11 +64,10 @@ sub getPageBody {
     my %tmpl_data;
 	
 	my @construct_requests = $q->param( 'selected_objects' );
-	my @categoryGroups = $factory->findObjects ('@CategoryGroup', __order => 'Name');
-	
 	
 	if (scalar(@construct_requests) == 0) {
-		$tmpl_data{ 'checkbox_and_cg' } = $self->Renderer()->renderArray(\@categoryGroups, 'Checkboxes_and_Object');
+		$tmpl_data{ 'checkbox_and_cg' } = $self->SearchUtil()->getObjectSelectionField( 
+			'@CategoryGroup', 'selected_objects', { list_length => 10 } );
 	}
 		
 	# Create three new template files - annotate, browse, display
