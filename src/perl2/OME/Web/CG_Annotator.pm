@@ -275,7 +275,6 @@ sub getPageBody {
 	my @templates = $factory->findObjects('@AnnotationTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
 	my $popup;
 	my $button;
-	my $url = $self->pageURL('OME::Web::CG_Annotator');
 	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
 	my $current = $q->url_param( 'Template' );
 	my $directions = "<i>There are no templates in the database. <a href=\"$createURL\">Create a template</a><br><br>
