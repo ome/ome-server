@@ -219,7 +219,7 @@ sub _renderData {
 	}
 	
 	if (exists $field_requests->{ 'classificationColor'}) {
-	    # if we as for coloring by classification
+	    # if we ask for coloring by classification
 
 	    my $cg= $options->{CategoryGroup};
 	    # get the category group that was sent in
@@ -260,6 +260,8 @@ sub _renderData {
     get a classification color, along with category name, for the
     given object in a given category group
 =cut
+
+
 sub getClassificationColor {
     my ($self,$obj,$cg) = @_;
 
@@ -272,22 +274,22 @@ sub getClassificationColor {
     # get categories in the list.
     my @categories = $cg->CategoryList(__order => 'Name');
 
-    my @colorList = ("teal","maroon","silver","purple","navy","lime",
-		     "aqua","yellow","green","blue","red","olive");
-    my %colorMap;
+
+    my @colorList = ("red","maroon","green","purple","navy","lime",
+		 "aqua","yellow","silver","blue","teal","olive");
 
     # map categories onto a color list
-    foreach my $cat (@categories) {
-	$colorMap{$cat->id} = pop(@colorList);
+    my $color;
+    my $name = $classification->Category->Name;
+    foreach my $c (@categories) {
+	$color = shift @colorList;
+	if ($c->Name eq $name) {
+	    last;
+	}
     }
-    # find a color
-    my $color = $colorMap{$classification->Category->id};
-
     #build an appropriate css tag
     my $colorString = "color: $color;";
-    
-    #get the name
-    my $name = $classification->Category->Name;
+
     return ($colorString,$name);
 }
 
