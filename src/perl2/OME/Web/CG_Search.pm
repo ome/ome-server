@@ -63,7 +63,6 @@ sub getPageBody {
 	my $session= $self->Session();
     my $factory = $session->Factory();
     my %tmpl_data;
-    my $debug;
     my @categoryGroups;
     my $html;
 	
@@ -78,10 +77,11 @@ sub getPageBody {
 		$which_tmpl =~ s/%20/ /;
 		return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
 	}
-	$which_tmpl =~ s/%20/ /;
+
 	my $tmpl;
 	
 	if ($which_tmpl) {
+	        $which_tmpl =~ s/%20/ /;
 		my $tmplAttr = $factory->findObject( '@BrowseTemplate', Name => $which_tmpl )
 						or die "Could not find BrowseTemplate with name $which_tmpl";
 		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
@@ -230,7 +230,6 @@ sub getPageBody {
 	}
 	
 	$html =
-		$debug.
 		$q->startform( { -name => 'primary' } ).
 		$directions.
 		$popup.

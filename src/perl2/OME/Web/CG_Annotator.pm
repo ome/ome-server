@@ -63,7 +63,6 @@ sub getPageBody {
 	my $session= $self->Session();
 	my $factory = $session->Factory();
 	my %tmpl_data;
-	my $debug;
 	my @categoryGroups;
 	my $html;
 
@@ -73,15 +72,15 @@ sub getPageBody {
 	my $which_tmpl = $q->url_param( 'Template' );
 	my $referer = $q->referer();
 	my $url = $self->pageURL('OME::Web::CG_Annotator');
-	if ($referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
+	if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
 		$which_tmpl = $1;
 		$which_tmpl =~ s/%20/ /;
 		return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
 	}
-	$which_tmpl =~ s/%20/ /;
 	my $tmpl;
 	
 	if ($which_tmpl) {
+	        $which_tmpl =~ s/%20/ /;
 		my $tmplAttr = $factory->findObject( '@AnnotationTemplate', Name => $which_tmpl )
 						or die "Could not find AnnotationTemplate with name $which_tmpl";
 		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
@@ -165,13 +164,18 @@ sub getPageBody {
 		my $concatenated_image_ids = $q->param( 'images_to_annotate' );
 		
 		# sort by name
-		my @unsorted_image_ids = split( /,/, $concatenated_image_ids );
+		my @unsorted_image_ids;
+                @unsorted_image_ids = split( /,/, $concatenated_image_ids )
+                              if ($concatenated_image_ids);
 		my @image_ids = sort( { ($factory->loadObject( 'OME::Image', $a))->name cmp ($factory->loadObject( 'OME::Image', $b))->name } @unsorted_image_ids );
 		my @image_thumbs;
 		my $currentImageID;
 		
 		# if no image is displayed, the ID you need is in the array
-		if ($q->param( 'currentImageID' ) eq '') { $currentImageID = shift(@image_ids); }
+		if (!$q->param('currentImageID') ||
+		    $q->param( 'currentImageID' ) eq '')  {
+		    $currentImageID = shift(@image_ids); 
+		}
 		else { $currentImageID = $q->param( 'currentImageID' ); }
 	
 		my $image = $factory->loadObject( 'OME::Image', $currentImageID);
@@ -273,8 +277,8 @@ sub getPageBody {
 	# render the dropdown list of available templates
 	
 	my @templates = $factory->findObjects('@AnnotationTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
-	my $popup;
-	my $button;
+	my $popup="";
+	my $button="";
 	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
 	my $current = $q->url_param( 'Template' );
 	my $directions = "<i>There are no templates in the database. <a href=\"$createURL\">Create a template</a><br><br>
@@ -298,7 +302,6 @@ sub getPageBody {
 	}
 
 	$html =
-		$debug.
 		$q->startform( { -name => 'primary' } ).
 		$directions.
 		$popup.

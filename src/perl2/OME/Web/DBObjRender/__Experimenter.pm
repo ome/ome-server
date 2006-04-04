@@ -60,8 +60,14 @@ sub _renderData {
 	my %record;
 	if( exists $field_requests->{ '/name' } ) {
 		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
-			my $request_string = $request->{ 'request_string' };
-			my $name = $obj->FirstName." ".$obj->LastName;
+			my $request_string = $request->{
+			    'request_string' };
+			my $name = "";
+			$name .= $obj->FirstName if ($obj->FirstName);
+			if ($obj->LastName) {
+			    $name .=" " if ($name ne "");
+			    $name .= $obj->LastName;
+			}
 			$record{ $request_string } = $self->_trim( $name, $request );
 		}
 	}
