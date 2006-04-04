@@ -150,8 +150,11 @@ sub getAnnotationDetails {
     my ($container,$root,$which_tmpl,$tmpl_data) = @_;
 
     # load the appropriate information for the named template.
+
+    my $tmpl_dir=$self->rootTemplateDir('custom');
     my $tmplData = 
-	$factory->findObject( '@BrowseTemplate', Name => $which_tmpl );
+	$factory->findObject( '@BrowseTemplate', Name => $which_tmpl,
+	                         path=>$tmpl_dir);
 
     
 	

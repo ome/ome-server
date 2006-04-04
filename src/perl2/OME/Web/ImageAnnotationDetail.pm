@@ -120,9 +120,10 @@ sub getPageBody {
 	$factory->findObject( '@DisplayTemplate', Name => $which_tmpl );
 	
     # instantiate the template
+    my $tmpl_dir=$self->rootTemplateDir('custom');
     my $tmpl = 
 	HTML::Template->new(filename => $tmplData->Template(),
-			    case_sensitive=>1);
+			    case_sensitive=>1,path=>$tmpl_dir);
 
     # instantiate variables in the template    
     $tmpl_data{'Template'} = $q->param('Template');

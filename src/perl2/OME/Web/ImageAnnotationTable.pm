@@ -225,15 +225,17 @@ sub getTableDetails {
 
     
     # load the appropriate information for the named template.
+    my $tmpl_dir=$self->rootTemplateDir('custom');
     my $tmplData = 
 	$factory->findObject( '@BrowseTemplate', Name =>
-			      $which_tmpl );
+			      $which_tmpl);
     
 	
     # instantiate the template
+    my $tmpl_dir=$self->rootTemplateDir('custom');
     my $tmpl = 
 	HTML::Template->new(filename => $tmplData->Template(),
-			    case_sensitive=>1);
+			    case_sensitive=>1,path=>$tmpl_dir);
     
 
 

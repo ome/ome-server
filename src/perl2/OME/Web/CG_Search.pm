@@ -68,7 +68,7 @@ sub getPageBody {
 	
 	# Load the correct template and make sure the URL still carries the template
 	# name.
-	my $tmpl_dir = $self->actionTemplateDir( 'custom' );
+	my $tmpl_dir = $self->rootTemplateDir( 'custom' );
 	my $which_tmpl = $q->url_param( 'Template' );
 	my $referer = $q->referer();
 	my $url = $self->pageURL('OME::Web::CG_Search');
@@ -85,7 +85,8 @@ sub getPageBody {
 		my $tmplAttr = $factory->findObject( '@BrowseTemplate', Name => $which_tmpl )
 						or die "Could not find BrowseTemplate with name $which_tmpl";
 		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
-										case_sensitive => 1 );
+							case_sensitive	=> 1,
+					                path=>$tmpl_dir );
 		
 		# Load the requested category groups
 		my @parameter_names = $tmpl->param();

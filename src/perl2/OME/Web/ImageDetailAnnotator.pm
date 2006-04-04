@@ -92,7 +92,7 @@ sub getPageBody {
     # Load the correct template and make sure the URL still carries the template
     # name.
 
-    my $tmpl_dir=$self->actionTemplateDir('custom');
+    my $tmpl_dir=$self->rootTemplateDir('custom');
     my $which_tmpl = $q->url_param('Template'); 
 
     my $referer = $q->referer();

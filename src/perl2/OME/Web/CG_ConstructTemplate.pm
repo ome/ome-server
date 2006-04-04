@@ -88,17 +88,24 @@ sub getPageBody {
 		# Put mex ID on the end of the filename to ensure a unique file
 		$filename .= "_".$mex->id;
 		my $tmpl_dir = $self->rootTemplateDir( 'custom' );
-		my $annotator_path = "$tmpl_dir"."/Actions/Annotator/CategoryGroup/$filename.tmpl";
-		my $browse_path = "$tmpl_dir"."/Browse/CategoryGroup/$filename.tmpl";
-		my $display_path = "$tmpl_dir"."/Display/One/OME/Image/$filename.tmpl";
-		
+	#	my $annotator_path = "$tmpl_dir"."/Actions/Annotator/CategoryGroup/$filename.tmpl";
+		#my $browse_path = "$tmpl_dir"."/Browse/CategoryGroup/$filename.tmpl";
+		#my $display_path = "$tmpl_dir"."/Display/One/OME/Image/$filename.tmpl";
+
+		my $annotator_name = "Actions/Annotator/CategoryGroup/$filename.tmpl";
+		my $browse_name = "Browse/CategoryGroup/$filename.tmpl";
+		my $display_name =
+		"Display/One/OME/Image/$filename.tmpl";
+		my $annotator_path = $tmpl_dir."/".$annotator_name;
+		my $browse_path = $tmpl_dir."/".$browse_name;
+		my $display_path = $tmpl_dir."/".$display_name;
 		# WARNING TO TELL USER OF A NAME COLLISION
 		
 		my %annotator_data_hash = (
 			Name       => $templateName,
 #			Arity      => $arity,
 			ObjectType => '@CategoryGroup',
-			Template   => $annotator_path,
+			Template   => $annotator_name,
 			ImplementedBy => "CG_Annotator.pm"
 		);
 		
@@ -106,7 +113,7 @@ sub getPageBody {
 			Name       => $templateName,
 #			Arity      => $arity,
 			ObjectType => '@CategoryGroup',
-			Template   => $browse_path,
+			Template   => $browse_name,
 			ImplementedBy => "CG_Browse.pm"
 		);
 		
@@ -115,7 +122,7 @@ sub getPageBody {
 			Arity      => "one",
 			Mode       => "ref",
 			ObjectType => 'OME::Image',
-			Template   => $display_path
+			Template   => $display_name
 		);
 		
 		# Make this file an attribute of the ST AnnotationTemplate
