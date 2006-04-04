@@ -228,11 +228,10 @@ sub getTableDetails {
     my $tmpl_dir=$self->rootTemplateDir('custom');
     my $tmplData = 
 	$factory->findObject( '@BrowseTemplate', Name =>
-			      $which_tmpl);
+			      $which_tmpl );
     
 	
     # instantiate the template
-    my $tmpl_dir=$self->rootTemplateDir('custom');
     my $tmpl = 
 	HTML::Template->new(filename => $tmplData->Template(),
 			    case_sensitive=>1,path=>$tmpl_dir);
@@ -978,8 +977,12 @@ sub populateCells {
 	    # ImageEmbryoStageList.EmbryoStage = <embryo stage
 	    # name>
 	    
+	    # also look for those things that have been most recent.
 	    my $findHash = { $rowAccessor => $rowLeaf,
 			     __distinct  =>'id'};
+	                 #    'PublicationStatusList.Publishable' => 't',
+	                 #    __order  => 
+			  #    '!PublicationStatusList.module_execution.timestamp'
 	    my $cName;
 	    if (ref($col) eq 'ARRAY') { # if columns specified, use them
 				# to get images.
@@ -1000,7 +1003,9 @@ sub populateCells {
 	    $total += tv_interval($start);
 	    my $imagesRef = \@images;
 	    
-
+	    
+	    $imagesRef= $self->filterByPublicationStatus($imagesRef);
+	
 	    if ($self->{Category} && $self->{CategoryGroup}) {
 		$imagesRef = $self->filterByCategory($imagesRef);
 	    }
@@ -1062,6 +1067,27 @@ sub getAccessorName {
 
     my $accessor = "${listAccessor}List.$rootItem";
     return $accessor;
+}
+
+=head2 filterByPublicationStatus
+
+=cut
+
+sub filterByPublicationStatus {
+    my $self=shift;
+    my ($images) = @_;
+
+    my @filtered;
+    foreach my $image (@$images) {
+	# find most recent publication status for this image.
+	my $statusList = $image->PublicationStatusList(
+	    __order =>'!module_execution.timestamp');
+	if ($statusList) {
+	    my $status = $statusList->next();
+	    push (@filtered,$image)  if ($status && $status->Publishable());
+	}
+    }
+    return \@filtered;
 }
 
 
