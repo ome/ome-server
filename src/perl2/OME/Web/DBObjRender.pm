@@ -562,91 +562,43 @@ sub _pagerControl {
 
 	# setup
 	my $q = $self->CGI();
-	my $offset = ($q->param( $control_name.'___offset' ) or 0);
+	my $currentPage = $q->param( $control_name.'__page_num' );
+	unless( ( $currentPage ) && ( $currentPage =~ m/^\d+$/ ) ) {
+		$currentPage = 1;
+		$q->param( $control_name.'__page_num', $currentPage );
+	}
+		
+	my $offset = ( $currentPage - 1 ) * $limit;
 	my $numPages = POSIX::ceil( $obj_count / $limit );
 	$form_name = 'primary' unless( defined $form_name and $form_name ne '' );
 
-	# Turn the page
-	my $action = $q->param( $control_name.'_page_action' );
-	if( $action ) {
-		if( $action eq 'FirstPage_'.$control_name ) {
-			$offset = 0;
-		} elsif( $action eq 'PrevPage_'.$control_name ) {
-			$offset -= $limit;
-		} elsif( $action eq 'NextPage_'.$control_name ) {
-			$offset += $limit;
-		} elsif( $action eq 'LastPage_'.$control_name ) {
-			$offset = ($numPages - 1)*$limit;
-		}
-	}
-	my $currentPage = int( $offset / $limit ) + 1;
-
-	# Update form parameters
-	$q->delete( $control_name.'_page_action' );
-	$q->param( $control_name.'___offset', $offset );
-
 	# print "Results x-y of N"
-	my $pagingText = "Results ".($offset + 1)."-".
+	my $pagingText = "Items ".($offset + 1)." - ".
 		( ($offset+$limit > $obj_count ) ? $obj_count : $offset+$limit)." of $obj_count. ";
 
 	# make controls
 	if( $numPages > 1 ) {
-		$pagingText .= 
-			$q->hidden( -name => $control_name.'___offset' ).
-			$q->hidden( -name => $control_name.'_page_action' );
-		$pagingText .= $q->a( {
-				-title => "First Page",
-				-href => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='FirstPage_$control_name'; document.forms['$form_name'].submit();",
-				}, 
-				'<<'
-			)." "
-			if ( $currentPage > 1 and $numPages > 2 );
 		$pagingText .= $q->a( {
 				-title => "Previous Page",
-				-href => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='PrevPage_$control_name'; document.forms['$form_name'].submit();",
+				-href  => "javascript: document.forms['$form_name'].elements['${control_name}__page_num'].value = ".($currentPage-1)."; document.forms['$form_name'].submit();",
 				}, 
-				'<'
+				'Previous'
 			)." "
 			if $currentPage > 1;
-		my $minPageNumDisplayed = (
-			( $currentPage - 4 < 1 ) ? 
-			1 : 
-			$currentPage - 4  
-		);
-		my $maxPageNumDisplayed = (
-			( $minPageNumDisplayed + 10 > $numPages ) ?
-			$numPages :
-			$minPageNumDisplayed + 10
-		);
-		$pagingText .= "... " if( $minPageNumDisplayed ne 0 );
-		for my $pageNum ($minPageNumDisplayed..$maxPageNumDisplayed) {
-			unless( $pageNum eq $currentPage ) {
-				$pagingText .= $q->a( {
-					-title => "Jump to page $pageNum",
-					-href => "javascript: document.forms['$form_name'].elements['${control_name}___offset'].value=".(($pageNum - 1 ) * $limit)."; document.forms['$form_name'].submit();",
-					}, 
-					"$pageNum"
-				)." ";
-			} else {
-				$pagingText .= "$currentPage ";
-			}
-		}
-		$pagingText .= "... " if( $maxPageNumDisplayed ne $numPages );
-#		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
+		$pagingText .= 
+			$q->submit( 'Page' ).
+			$q->textfield( 
+				-name => $control_name.'__page_num',
+				-size => 3,
+				-default => $currentPage ).
+			" of $numPages ";
 		$pagingText .= "\n".$q->a( {
 				-title => "Next Page",
-				-href  => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='NextPage_$control_name'; document.forms['$form_name'].submit();",
+				-href  => "javascript: document.forms['$form_name'].elements['${control_name}__page_num'].value = ".($currentPage+1)."; document.forms['$form_name'].submit();",
 				}, 
-				'>'
+				'Next'
 			)." "
 			if $currentPage < $numPages;
-		$pagingText .= "\n".$q->a( {
-				-title => "Last Page",
-				-href  => "javascript: document.forms['$form_name'].elements['${control_name}_page_action'].value='LastPage_$control_name'; document.forms['$form_name'].submit();",
-				}, 
-				'>>'
-			)
-			if( $currentPage < $numPages and $numPages > 2 );
 	}
 
 	return ( $offset, $pagingText );
@@ -720,7 +672,7 @@ sub renderData {
 	
 			# /object = render the object itself. default render mode is ref
 			} elsif( $field eq '/object' ) {
-				my $render_mode = ( $request->{ render } or 'ref' );
+				my $render_mode = ( $request->{ render } || 'ref' );
 				$record{ $request_string } = $self->render( $obj, $render_mode, $options );
 						
 			# /LSID = Object's LSID
