@@ -202,7 +202,11 @@ sub BEGIN {
 
 # This will call the tasks only if we're not in mod_perl
 sub END {
-	if ($MPV == 0) {&$_ foreach @TASKS;}
+	if ($MPV == 0) {
+		OME::Session->instance()->Factory()->revive()
+			if OME::Session->hasInstance();
+		&$_ foreach @TASKS;
+	}
 }
 
 
@@ -212,15 +216,30 @@ my $task = shift;
 
         if ($MPV == 1) {
                 my $r = Apache->request();
-                $r->register_cleanup( sub {&$task;return 0;} );
+                $r->register_cleanup( sub {
+                	OME::Session->instance()->Factory()->revive()
+                		if OME::Session->hasInstance();
+                	&$task;
+                	return 0;
+                } );
         } elsif ($MPV == 1.99) {
                 APR::Pool->require();
                 my $r = Apache->request();
-                $r->pool->cleanup_register( sub {&$task;return 0;} );
+                $r->pool->cleanup_register( sub {
+                	OME::Session->instance()->Factory()->revive()
+                		if OME::Session->hasInstance();
+                	&$task;
+                	return 0;
+                } );
         } elsif ($MPV == 2) {
                 APR::Pool->require();
                 my $r = Apache2::RequestUtil->request();
-                $r->pool->cleanup_register( sub {&$task;return 0;} );
+                $r->pool->cleanup_register( sub {
+                	OME::Session->instance()->Factory()->revive()
+                		if OME::Session->hasInstance();
+                	&$task;
+                	return 0;
+                } );
         } elsif ($MPV == 0) {
                 push (@TASKS,$task);
         }
