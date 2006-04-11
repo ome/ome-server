@@ -63,7 +63,6 @@ sub getCommands {
       {
        'untangle_chains' => 'untangle_chains',
        'uc'              => 'untangle_chains',
-       'classifier'      => ['OME::Util::Dev::Classifier'],
       };
 }
 
