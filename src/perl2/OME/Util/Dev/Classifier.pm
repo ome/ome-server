@@ -69,7 +69,8 @@ sub getCommands {
     return
       {
        'stitch_chain' => 'stitch_chain',
-       'compile_sigs' => 'compile_sigs'
+       'compile_sigs' => 'compile_sigs',
+       'lint' => ['OME::Util::Dev::Lint'],
       };
 }
 
@@ -164,7 +165,7 @@ use constant SIG_MODULE_STDS => <<END_STDS;
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 	
-	<SemanticType Name="SignatureVectorEntry" AppliesTo="I">
+	<SemanticType Name="SignatureVectorEntry" AppliesTo="F">
 	  <Description>A single image signature. A signature describes
 	  something about the image. i.e. number of blobs, whether the
 	  texture is rough or smooth, etc.</Description>
@@ -300,18 +301,27 @@ sub compile_sigs {
 	my @images = $dataset->images;
 	@images = sort {$a->id <=> $b->id} @images;
 	
-	# make an array of image_paths
+	# make an array of image_paths/feature names
+	# img_path [feature name]
+	# img_path [feature name]
+	# ...
 	my @image_paths; # this is the name of the image's original file
 	foreach my $img (@images) {
 		my $originalFile = OME::Tasks::ImageManager->getImageOriginalFiles($img);
 		die "Image ".$_->name." doesn't have exactly one Original File"
 			if( ref( $originalFile ) eq 'ARRAY' );
-		push @image_paths, $originalFile->Path();
+		
+		my @features = $img->all_features();
+		@features = sort {$a->id <=> $b->id} @features;
+		foreach (@features) {
+			push @image_paths, $originalFile->Path()." [".$_->name()."]";
+		}
 	}
 	
 	# make the matlab signature array and label array
 	my ($signature_labels_array, $signature_array) = $self->
-		compile_signature_matrix( $stitcher_mex, \@images);
+		compile_signature_matrix( $stitcher_mex, \@images, scalar(@image_paths)); 	# last parameter is the number of image rois
+																					# which is the number of columns of the sig matrix
 
 	# save the array to disk
 	logdbg "debug", "Saving the array to disk.";
@@ -609,7 +619,7 @@ sub get_classifications_and_category_numbers {
 
 # returns the matlab signature array
 sub compile_signature_matrix {
-	my ($proto, $stitcher_mex, $images, $classification_mex) = @_;
+	my ($proto, $stitcher_mex, $images, $number_of_image_features, $classification_mex) = @_;
 	my $factory = OME::Session->instance()->Factory();
 	my ( $classifications, $category_numbers ) = 
 		$proto->get_classifications_and_category_numbers( $images, $classification_mex );
@@ -626,34 +636,39 @@ sub compile_signature_matrix {
 	$signature_labels_array->makePersistent();
 
 	# instantiate the matlab signature array. 
-	#	number of columns is the size of the signature vector plus one for the image classification.
-	#	number of rows is the number of images
-	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, scalar( @$images ));
+	#	number of rows is the size of the signature vector plus one for the image classification.
+	#	number of columns is the number of image ROIs
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, $number_of_image_features);
 	$signature_array->makePersistent();
 	
 	# populate the signature matrix proper
-	my $image_number = 0;
-	my $category_col_index = scalar( @vector_legends );
+	my $image_feature_number = 0;
+	my $category_row_index = scalar( @vector_legends );
 	foreach my $image ( @$images ) {
-		my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
-			getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
-				{ image => $image }
-			)
-			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
-		print "Compiling Sigs for Image ".($image_number+1)." of ". scalar(@$images). "\n"; 
-		# set the image category
-		my $category_num = ( defined $classifications->{ $image->id } ? 
-			$category_numbers->{ $classifications->{ $image->id }->Category->id } :
-			0
-		);
-		$signature_array->set( $category_col_index, $image_number, $category_num );
-		# set the image's signature vector
-		foreach my $sig_entry ( @$signature_entry_list ) {
-			# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
-			my $col_index = $sig_entry->Legend->VectorPosition() - 1;
-			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
+		my @features = $image->all_features();
+		@features = sort {$a->id <=> $b->id} @features;
+
+		foreach my $feature (@features) {
+			my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
+				getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
+					{ feature => $feature }
+				)
+				or die "Could not load image signature vector for feature (id=".$feature->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
+			print "Compiling Sigs for Image ROI ".($image_feature_number+1)." of ".$number_of_image_features. "\n"; 
+			# set the image category
+			my $category_num = ( defined $classifications->{ $image->id } ? 
+				$category_numbers->{ $classifications->{ $image->id }->Category->id } :
+				0
+			);
+			$signature_array->set( $category_row_index, $image_feature_number, $category_num );
+			# set the image's signature vector
+			foreach my $sig_entry ( @$signature_entry_list ) {
+				# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
+				my $row_index = $sig_entry->Legend->VectorPosition() - 1;
+				$signature_array->set( $row_index, $image_feature_number, $sig_entry->Value() );
+			}
+			$image_feature_number += 1;
 		}
-		$image_number += 1;
 	}	
 
 	return $signature_labels_array, $signature_array, 
