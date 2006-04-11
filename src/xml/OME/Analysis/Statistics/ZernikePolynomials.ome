@@ -34,7 +34,22 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="ZernikeMoments" AppliesTo="I">
+		<SemanticType Name="ZernikePolynomialOrder" AppliesTo="G">
+			<Description>
+			Order of the Zernike polynomial that is used to approximate the
+			image.
+			</Description>
+			<Element 
+				Name="Order" 
+				DBLocation="ZERNIKE_PARAMETERS.ORDERX"   
+				DataType = "integer"/>
+		</SemanticType>	
+		<!--
+		N.B: DBLocation is .ORDERX because .ORDER conflicts with SQL/POSTGRESS
+		reserve words. BUG 457		
+		-->
+		
+		<SemanticType Name="ZernikeMoments" AppliesTo="F">
 			<Description>
 			Nikita, please fill this out.
 			</Description>
@@ -327,21 +342,6 @@
 				DBLocation="ZERNIKE.Z_15_15"
 				DataType="double"/>
 		</SemanticType>
-		
-		<SemanticType Name="ZernikePolynomialOrder" AppliesTo="I">
-			<Description>
-			Order of the Zernike polynomial that is used to approximate the
-			image.
-			</Description>
-			<Element 
-				Name="Order" 
-				DBLocation="ZERNIKE_PARAMETERS.ORDERX"   
-				DataType = "integer"/>
-		</SemanticType>	
-		<!--
-		N.B: DBLocation is .ORDERX because .ORDER conflicts with SQL/POSTGRESS
-		reserve words. BUG 457		
-		-->
 	</SemanticTypeDefinitions>	
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -350,14 +350,15 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_zernike"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7703">
 		  <Description>
    		  Function computes Zernike Moments of an image. 
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalInput
 				Name="Order of Approximate Zernike Polynomial"
@@ -366,12 +367,13 @@
 			<FormalOutput
 				Name="Zernike Moments"
 				SemanticTypeName="ZernikeMoments"
+				IBelongTo="[Iterator]" 
 				Count="!"/>
  		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			  <Input><Scalar InputLocation="Order of Approximate Zernike Polynomial.Order"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>

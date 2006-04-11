@@ -36,7 +36,7 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		 
 		 <!-- Global Edge Descriptors -->
-		 <SemanticType Name="EdgeArea" AppliesTo="I">
+		 <SemanticType Name="EdgeArea" AppliesTo="F">
 			<Description>Number of image pixels that are edge pixels. Edge pixels are pixels that are on after Otsu's method is used to threshold gradient magnitudes.</Description>
 			<Element 
 				Name="EdgeArea" 
@@ -45,7 +45,7 @@
 		</SemanticType>
 		
 		<!-- A pixel's edge magnitude is the magnitude of the pixel's gradient vector -->
-		<SemanticType Name="EdgeMagMean" AppliesTo="I">
+		<SemanticType Name="EdgeMagMean" AppliesTo="F">
 			<Description>Mean edge magnitude.</Description>
 			 <Element
 				Name="MagMean"
@@ -53,7 +53,7 @@
 				DataType="double"/>
 		</SemanticType>
 		
-		<SemanticType Name="EdgeMagMedian" AppliesTo="I">
+		<SemanticType Name="EdgeMagMedian" AppliesTo="F">
 			<Description>Median edge magnitude.</Description>
 			 <Element
 				Name="MagMedian"
@@ -61,7 +61,7 @@
 				DataType="double"/>
 		</SemanticType>
 		
-		<SemanticType Name="EdgeMagVar" AppliesTo="I">
+		<SemanticType Name="EdgeMagVar" AppliesTo="F">
 			<Description>Variance of edge magnitudes.</Description>
 			 <Element
 				Name="MagVar"
@@ -69,7 +69,7 @@
 				DataType="double"/>
 		</SemanticType>
 	
-		<SemanticType Name="EdgeMagHist" AppliesTo="I">
+		<SemanticType Name="EdgeMagHist" AppliesTo="F">
 			<Description>Histogram of edge magnitudes binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
@@ -106,7 +106,7 @@
 		</SemanticType>
 		
 		<!-- A pixel's edge direction is the direction of the pixel's gradient vector -->
-		<SemanticType Name="EdgeDirecMean" AppliesTo="I">
+		<SemanticType Name="EdgeDirecMean" AppliesTo="F">
 			<Description>Mean edge direction.</Description>
 			 <Element
 				Name="DirecMean"
@@ -114,7 +114,7 @@
 				DataType="double"/>
 		</SemanticType>
 		
-		<SemanticType Name="EdgeDirecMedian" AppliesTo="I">
+		<SemanticType Name="EdgeDirecMedian" AppliesTo="F">
 			<Description>Median edge direction.</Description>
 			 <Element
 				Name="DirecMedian"
@@ -122,7 +122,7 @@
 				DataType="double"/>
 		</SemanticType>
 		
-		<SemanticType Name="EdgeDirecVar" AppliesTo="I">
+		<SemanticType Name="EdgeDirecVar" AppliesTo="F">
 			<Description>Variance of edge directions.</Description>
 			 <Element
 				Name="DirecVar"
@@ -130,7 +130,7 @@
 				DataType="double"/>
 		</SemanticType>
 	
-		<SemanticType Name="EdgeDirecHist" AppliesTo="I">
+		<SemanticType Name="EdgeDirecHist" AppliesTo="F">
 			<Description>Histogram of edge directions binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
@@ -180,7 +180,7 @@
 		<!-- These statistics are meant to describe the differences between bins of histogram at
 			 angle and angle+PI. In general, objects have an equal number of pixels at an angle
 			 and angle+PI -->
-		<SemanticType Name="EdgeDirecHomo" AppliesTo="I">
+		<SemanticType Name="EdgeDirecHomo" AppliesTo="F">
 			<Description>fill this in later</Description>
 			 <Element
 				Name="DirecHomo"
@@ -188,7 +188,7 @@
 				DataType="double"/>
 		</SemanticType>
 	
-		<SemanticType Name="EdgeDiffDirecHist" AppliesTo="I">
+		<SemanticType Name="EdgeDiffDirecHist" AppliesTo="F">
 			<Description>Histogram created by computing differences amongst histogram bins at 
 			angle and angle+PI.</Description>
 			<Element
@@ -216,6 +216,7 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="EdgeStatistics"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7700">
 		  <Description>
 		   This module computes statistics about the image's edge magnitudes and directions.
@@ -224,25 +225,25 @@
 			<FormalInput  Name="Gradient"            SemanticTypeName="Gradient"    Count="!"/>
 						
 			<!-- Statistics about Edge Magnitudes -->
-			<FormalOutput Name="Edge Area"           SemanticTypeName="EdgeArea"   Count="!"/>
+			<FormalOutput Name="Edge Area"           SemanticTypeName="EdgeArea" IBelongTo="[Iterator]" Count="!"/>
 
-			<FormalOutput Name="Magnitude Mean"      SemanticTypeName="EdgeMagMean"    Count="!"/>	
-			<FormalOutput Name="Magnitude Median"    SemanticTypeName="EdgeMagMedian"  Count="!"/>	
-			<FormalOutput Name="Magnitude Variance"  SemanticTypeName="EdgeMagVar"     Count="!"/>	
-			<FormalOutput Name="Magnitude Histogram" SemanticTypeName="EdgeMagHist"    Count="!"/>
+			<FormalOutput Name="Magnitude Mean"      SemanticTypeName="EdgeMagMean"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Magnitude Median"    SemanticTypeName="EdgeMagMedian"  IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Magnitude Variance"  SemanticTypeName="EdgeMagVar"     IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Magnitude Histogram" SemanticTypeName="EdgeMagHist"    IBelongTo="[Iterator]" Count="!"/>
 			
 			<!-- Statistics about Edge Directions -->
-			<FormalOutput Name="Direction Mean"      SemanticTypeName="EdgeDirecMean"   Count="!"/>
-			<FormalOutput Name="Direction Median"    SemanticTypeName="EdgeDirecMedian" Count="!"/>	
-			<FormalOutput Name="Direction Variance"  SemanticTypeName="EdgeDirecVar"    Count="!"/>	
-			<FormalOutput Name="Direction Histogram" SemanticTypeName="EdgeDirecHist"   Count="!"/>
+			<FormalOutput Name="Direction Mean"      SemanticTypeName="EdgeDirecMean"   IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Direction Median"    SemanticTypeName="EdgeDirecMedian" IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Direction Variance"  SemanticTypeName="EdgeDirecVar"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Direction Histogram" SemanticTypeName="EdgeDirecHist"   IBelongTo="[Iterator]" Count="!"/>
 			
 			<!-- Boland's Statistics -->
-			<FormalOutput Name="Direction Homogeneity"    SemanticTypeName="EdgeDirecHomo"     Count="!"/>
-			<FormalOutput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" Count="!"/>
+			<FormalOutput Name="Direction Homogeneity"    SemanticTypeName="EdgeDirecHomo"     IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" IBelongTo="[Iterator]" Count="!"/>
 		  </Declaration>
 		
-	     <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+	     <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 				<Input><PixelsArray FormalInput="Gradient" ConvertToDatatype="double"/></Input>
 			</FunctionInputs>

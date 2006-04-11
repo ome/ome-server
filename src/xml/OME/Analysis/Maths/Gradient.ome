@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		 <SemanticType Name="Gradient" AppliesTo="I">
+		 <SemanticType Name="Gradient" AppliesTo="F">
 			<Description> 
 			The gradient vector at each pixel is encoded as magnitude and angle.
 			The magnitude is the channel 0 of the resulting Pixels. The angle is
@@ -44,16 +44,17 @@
 				Name="Parent" 
 				DBLocation="GRADIENT.MAG_AND_DIREC"   
 				DataType="reference"
-				RefersTo="PixelsSlice"/>
+				RefersTo="Pixels"/>
 		 </SemanticType>
 	</SemanticTypeDefinitions>	
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
 		   ModuleName="Gradient"
-		   Category="Maths. "
+		   Category="Maths"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="Gradient"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7501">
 		  <Description>
 			This module computes the image's gradient. It encodes the gradient 
@@ -62,19 +63,13 @@
 			channel 1.
 		  </Description>
 		  <Declaration>
-			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
-				Count="!"/>
-			<FormalOutput
-				Name="Gradient"
-				SemanticTypeName="Gradient"
-				Count="!"/>
+			<FormalInput Name="Pixels" SemanticTypeName="DerivedPixels" Count="!"/>
+			<FormalOutput Name="Gradient" SemanticTypeName="Gradient" IBelongTo="[Iterator]" Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><PixelsArray FormalOutput="Gradient" ConvertToDatatype="single"/></Output>
@@ -84,14 +79,15 @@
 		
 		<!-- Typecaster module for the Gradient -->
 		<AnalysisModule
-		   ModuleName="Gradient -&gt; PixelsPlaneSlice"
+		   ModuleName="Gradient -&gt; DerivedPixels"
 		   Category="Maths.Typecasts"
 		   ModuleType="OME::Analysis::Modules::PPM::Gradient"
 		   ProgramID="Gradient"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7502">
 		  <Description>
 			This module allows a Gradient attribute to be used as a 
-			PixelsPlaneSlice. The PixelsPlaneSlice points to the Gradient's
+			DerivedPixels. The DerivedPixels points to the Gradient's
 			magnitude plane.
 		  </Description>
 		  <Declaration>
@@ -100,8 +96,9 @@
 				SemanticTypeName="Gradient"
 				Count="!"/>
 			<FormalOutput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
+				IBelongTo="[Iterator]" 
 				Count="!"/>
 		  </Declaration>
 		</AnalysisModule>

@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="RadonTransform" AppliesTo="I">
+		<SemanticType Name="RadonTransform" AppliesTo="F">
 			<Description>
 			Signatures based on the Radon transform.
 			</Description>
@@ -99,6 +99,7 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="RadonTransform"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7713"> 
 		  <Description>
 			Signatures based on the Radon transform.
@@ -107,38 +108,39 @@
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalOutput
 				Name="Histogram Of Radon Transform 4 Angles"
 				SemanticTypeName="RadonTransform"
+				IBelongTo="[Iterator]" 
 				Count="!"/>
  		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><Vector DecodeWith="Histogram Of Radon Transform 4 Angles"/></Output>
 			</FunctionOutputs>			
 			  <VectorDecoder ID="Histogram Of Radon Transform 4 Angles">
-				<Element Index="1"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT0_BIN_00"/>
-				<Element Index="2"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT0_BIN_01"/>
-				<Element Index="3"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT0_BIN_02"/>
+				<Element Index="1"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient0_Bin_00"/>
+				<Element Index="2"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient0_Bin_01"/>
+				<Element Index="3"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient0_Bin_02"/>
 				
-				<Element Index="4"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT45_BIN_00"/>
-				<Element Index="5"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT45_BIN_01"/>
-				<Element Index="6"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT45_BIN_02"/>
+				<Element Index="4"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient45_Bin_00"/>
+				<Element Index="5"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient45_Bin_01"/>
+				<Element Index="6"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient45_Bin_02"/>
 				
-				<Element Index="7"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT90_BIN_00"/>
-				<Element Index="8"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT90_BIN_01"/>
-				<Element Index="9"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT90_BIN_02"/>
+				<Element Index="7"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient90_Bin_00"/>
+				<Element Index="8"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient90_Bin_01"/>
+				<Element Index="9"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient90_Bin_02"/>
 				
-				<Element Index="10"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT135_BIN_00"/>
-				<Element Index="11"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT135_BIN_01"/>
-				<Element Index="12"  OutputLocation="Histogram Of Radon Transform 4 Angles.ORIENT135_BIN_02"/>
+				<Element Index="10"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient135_Bin_00"/>
+				<Element Index="11"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient135_Bin_01"/>
+				<Element Index="12"  OutputLocation="Histogram Of Radon Transform 4 Angles.Orient135_Bin_02"/>
 			  </VectorDecoder>	
 			</ExecutionInstructions>
 		</AnalysisModule>

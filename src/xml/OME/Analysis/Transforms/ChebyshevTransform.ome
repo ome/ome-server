@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="ChebyshevCoefficientMatrix" AppliesTo="I">
+		<SemanticType Name="ChebyshevCoefficientMatrix" AppliesTo="F">
 			<Description>
 			2D Chebyshev transform has been realized in a way similar to fft2 matlab function.
 			It runs a 1D transform on the image processing consequently rows then columns.
@@ -43,7 +43,7 @@
 				Name="Parent" 
 				DBLocation="CHEBYSHEV.COEFFICIENT_MATRIX"   
 				DataType = "reference"
-				RefersTo = "PixelsPlaneSlice"/>
+				RefersTo = "Pixels"/>
 		</SemanticType>
 		
 		<SemanticType Name="ChebyshevPolynomialOrder" AppliesTo="G">
@@ -67,14 +67,15 @@
 		   Category="Transforms. "
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="ChebyshevTransform"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7802">
 		  <Description>
 		  This module computes the coefficients for 2D Chebyshev transform.
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalInput
 				Name="Order of Approximate Chebyshev Polynomial"
@@ -83,12 +84,13 @@
 			<FormalOutput
 				Name="Chebyshev Coefficient Matrix"
 				SemanticTypeName="ChebyshevCoefficientMatrix"
+				IBelongTo="[Iterator]"
 				Count="!"/>
  		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="single"/></Input>
 			  <Input><Scalar InputLocation="Order of Approximate Chebyshev Polynomial.Order"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
@@ -99,14 +101,15 @@
 		
 		<!-- Typecaster module for the Chebyshev Transform -->
 		<AnalysisModule
-		   ModuleName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"
+		   ModuleName="ChebyshevCoefficientMatrix -&gt; DerivedPixels"
 		   Category="Transforms.Typecasts"
-		   ModuleType="OME::Analysis::Modules::PPM::Typecast"
+		   ModuleType="OME::Analysis::Modules::PPM::Typecast2DerivedPixels"
 		   ProgramID=""
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7803">
 		  <Description>
-			This module allows a Chebyshev Coefficient Matrix to be used as a 
-			PixelsPlaneSlice.
+			This module allows a Chebyshev Coefficient Matrix to be used as
+			DerivedPixels.
 		  </Description>
 		  <Declaration>
 			<FormalInput
@@ -114,8 +117,9 @@
 				SemanticTypeName="ChebyshevCoefficientMatrix"
 				Count="!"/>
 			<FormalOutput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
+				IBelongTo="[Iterator]"
 				Count="!"/>
 		  </Declaration>
 		</AnalysisModule>

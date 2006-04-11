@@ -9,6 +9,7 @@
 #
 #
 #
+
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
 #    License as published by the Free Software Foundation; either
@@ -34,7 +35,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="ChebyshevCoefficientHistogram" AppliesTo="I">
+		<SemanticType Name="ChebyshevCoefficientHistogram" AppliesTo="F">
 			<Description>
 			32 bin histogram computed from coefficients of 2D Chebyshev Transform
 			</Description>
@@ -176,6 +177,7 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="ChebyshevStatistics"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7708">
 		  <Description>
 			Function computes signatures (32 bin histogram) from coefficients 
@@ -183,8 +185,8 @@
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalInput
 				Name="Order of Approximate Chebyshev Polynomial"
@@ -193,12 +195,13 @@
 			<FormalOutput
 				Name="Chebyshev Coefficient Histogram"
 				SemanticTypeName="ChebyshevCoefficientHistogram"
+				IBelongTo="[Iterator]"
 				Count="!"/>
  		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="single"/></Input>
 			  <Input><Scalar InputLocation="Order of Approximate Chebyshev Polynomial.Order"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>

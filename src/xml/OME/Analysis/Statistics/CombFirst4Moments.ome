@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="Comb4Orient4MomentsHistogram" AppliesTo="I">
+		<SemanticType Name="Comb4Orient4MomentsHistogram" AppliesTo="F">
 			<Description>
 			Four orientational filters (major diagonal, transposed major diagonal, vertical and horizontal) are applied to the image; 
 			then first four moments (mean, std, skewness, kurtosis) are computed (column-wise), and the corresponding vectors
@@ -147,59 +147,6 @@
 				
 				
 			<Element
-				Name="0_Mean_HistBin00"
-				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_00"
-				DataType="integer"/>
-			<Element
-				Name="0_Mean_HistBin01"
-				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_01"
-				DataType="integer"/>
-			<Element
-				Name="0_Mean_HistBin02"
-				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_02"
-				DataType="integer"/>
-				
-			<Element
-				Name="0_Std_HistBin00"
-				DBLocation="COMB4MOMENTS.F0_STD_BIN_00"
-				DataType="integer"/>
-			<Element
-				Name="0_Std_HistBin01"
-				DBLocation="COMB4MOMENTS.F0_STD_BIN_01"
-				DataType="integer"/>
-			<Element
-				Name="0_Std_HistBin02"
-				DBLocation="COMB4MOMENTS.F0_STD_BIN_02"
-				DataType="integer"/>
-				
-			<Element
-				Name="0_Skew_HistBin00"
-				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_00"
-				DataType="integer"/>
-			<Element
-				Name="0_Skew_HistBin01"
-				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_01"
-				DataType="integer"/>
-			<Element
-				Name="0_Skew_HistBin02"
-				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_02"
-				DataType="integer"/>
-				
-			<Element
-				Name="0_Kurt_HistBin00"
-				DBLocation="COMB4MOMENTS.F0_KURT_BIN_00"
-				DataType="integer"/>
-			<Element
-				Name="0_Kurt_HistBin01"
-				DBLocation="COMB4MOMENTS.F0_KURT_BIN_01"
-				DataType="integer"/>
-			<Element
-				Name="0_Kurt_HistBin02"
-				DBLocation="COMB4MOMENTS.F0_KURT_BIN_02"
-				DataType="integer"/>
-				
-				
-			<Element
 				Name="90_Mean_HistBin00"
 				DBLocation="COMB4MOMENTS.F90_MEAN_BIN_00"
 				DataType="integer"/>
@@ -250,8 +197,59 @@
 				Name="90_Kurt_HistBin02"
 				DBLocation="COMB4MOMENTS.F90_KURT_BIN_02"
 				DataType="integer"/>
+				
+			<Element
+				Name="0_Mean_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Mean_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Mean_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_MEAN_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="0_Std_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_STD_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Std_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_STD_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Std_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_STD_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="0_Skew_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Skew_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Skew_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_SKEW_BIN_02"
+				DataType="integer"/>
+				
+			<Element
+				Name="0_Kurt_HistBin00"
+				DBLocation="COMB4MOMENTS.F0_KURT_BIN_00"
+				DataType="integer"/>
+			<Element
+				Name="0_Kurt_HistBin01"
+				DBLocation="COMB4MOMENTS.F0_KURT_BIN_01"
+				DataType="integer"/>
+			<Element
+				Name="0_Kurt_HistBin02"
+				DBLocation="COMB4MOMENTS.F0_KURT_BIN_02"
+				DataType="integer"/>
 		</SemanticType>
-		
 	</SemanticTypeDefinitions>	
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -260,6 +258,7 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="CombFirst4Moments"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7711">
 		  <Description>
 			Original image (m x n) is transformed by each of four filters (-45, +45, +90, 0).
@@ -273,89 +272,90 @@
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalOutput
 				Name="Histogram Vectors For Comb Moments"
 				SemanticTypeName="Comb4Orient4MomentsHistogram"
+				IBelongTo="[Iterator]" 
 				Count="!"/>
  		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="single"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><Vector DecodeWith="Histogram Vectors For Comb Moments"/></Output>
 			</FunctionOutputs>			
 			  <VectorDecoder ID="Histogram Vectors For Comb Moments">
-				<Element Index="1"  OutputLocation="Histogram Vectors For Comb Moments.FM45_MEAN_BIN_00"/>
-				<Element Index="2"  OutputLocation="Histogram Vectors For Comb Moments.FM45_MEAN_BIN_01"/>
-				<Element Index="3"  OutputLocation="Histogram Vectors For Comb Moments.FM45_MEAN_BIN_02"/>
+				<Element Index="1"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Mean_HistBin00"/>
+				<Element Index="2"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Mean_HistBin01"/>
+				<Element Index="3"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Mean_HistBin02"/>
 				
-				<Element Index="4"  OutputLocation="Histogram Vectors For Comb Moments.FM45_STD_BIN_00"/>
-				<Element Index="5"  OutputLocation="Histogram Vectors For Comb Moments.FM45_STD_BIN_01"/>
-				<Element Index="6"  OutputLocation="Histogram Vectors For Comb Moments.FM45_STD_BIN_02"/>
+				<Element Index="4"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Std_HistBin00"/>
+				<Element Index="5"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Std_HistBin01"/>
+				<Element Index="6"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Std_HistBin02"/>
 				
-				<Element Index="7"  OutputLocation="Histogram Vectors For Comb Moments.FM45_SKEW_BIN_00"/>
-				<Element Index="8"  OutputLocation="Histogram Vectors For Comb Moments.FM45_SKEW_BIN_01"/>
-				<Element Index="9"  OutputLocation="Histogram Vectors For Comb Moments.FM45_SKEW_BIN_02"/>
+				<Element Index="7"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Skew_HistBin00"/>
+				<Element Index="8"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Skew_HistBin01"/>
+				<Element Index="9"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Skew_HistBin02"/>
 				
-				<Element Index="10"  OutputLocation="Histogram Vectors For Comb Moments.FM45_KURT_BIN_00"/>
-				<Element Index="11"  OutputLocation="Histogram Vectors For Comb Moments.FM45_KURT_BIN_01"/>
-				<Element Index="12"  OutputLocation="Histogram Vectors For Comb Moments.FM45_KURT_BIN_02"/>
-				
-				
-				<Element Index="13"  OutputLocation="Histogram Vectors For Comb Moments.FP45_MEAN_BIN_00"/>
-				<Element Index="14"  OutputLocation="Histogram Vectors For Comb Moments.FP45_MEAN_BIN_01"/>
-				<Element Index="15"  OutputLocation="Histogram Vectors For Comb Moments.FP45_MEAN_BIN_02"/>
-				
-				<Element Index="16"  OutputLocation="Histogram Vectors For Comb Moments.FP45_STD_BIN_00"/>
-				<Element Index="17"  OutputLocation="Histogram Vectors For Comb Moments.FP45_STD_BIN_01"/>
-				<Element Index="18"  OutputLocation="Histogram Vectors For Comb Moments.FP45_STD_BIN_02"/>
-				
-				<Element Index="19"  OutputLocation="Histogram Vectors For Comb Moments.FP45_SKEW_BIN_00"/>
-				<Element Index="20"  OutputLocation="Histogram Vectors For Comb Moments.FP45_SKEW_BIN_01"/>
-				<Element Index="21"  OutputLocation="Histogram Vectors For Comb Moments.FP45_SKEW_BIN_02"/>
-				
-				<Element Index="22"  OutputLocation="Histogram Vectors For Comb Moments.FP45_KURT_BIN_00"/>
-				<Element Index="23"  OutputLocation="Histogram Vectors For Comb Moments.FP45_KURT_BIN_01"/>
-				<Element Index="24"  OutputLocation="Histogram Vectors For Comb Moments.FP45_KURT_BIN_02"/>
+				<Element Index="10"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Kurt_HistBin00"/>
+				<Element Index="11"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Kurt_HistBin01"/>
+				<Element Index="12"  OutputLocation="Histogram Vectors For Comb Moments.Minus45_Kurt_HistBin02"/>
 				
 				
-				<Element Index="25"  OutputLocation="Histogram Vectors For Comb Moments.F90_MEAN_BIN_00"/>
-				<Element Index="26"  OutputLocation="Histogram Vectors For Comb Moments.F90_MEAN_BIN_01"/>
-				<Element Index="27"  OutputLocation="Histogram Vectors For Comb Moments.F90_MEAN_BIN_02"/>
+				<Element Index="13"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Mean_HistBin00"/>
+				<Element Index="14"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Mean_HistBin01"/>
+				<Element Index="15"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Mean_HistBin02"/>
 				
-				<Element Index="28"  OutputLocation="Histogram Vectors For Comb Moments.F90_STD_BIN_00"/>
-				<Element Index="29"  OutputLocation="Histogram Vectors For Comb Moments.F90_STD_BIN_01"/>
-				<Element Index="30"  OutputLocation="Histogram Vectors For Comb Moments.F90_STD_BIN_02"/>
+				<Element Index="16"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Std_HistBin00"/>
+				<Element Index="17"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Std_HistBin01"/>
+				<Element Index="18"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Std_HistBin02"/>
 				
-				<Element Index="31"  OutputLocation="Histogram Vectors For Comb Moments.F90_SKEW_BIN_00"/>
-				<Element Index="32"  OutputLocation="Histogram Vectors For Comb Moments.F90_SKEW_BIN_01"/>
-				<Element Index="33"  OutputLocation="Histogram Vectors For Comb Moments.F90_SKEW_BIN_02"/>
+				<Element Index="19"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Skew_HistBin00"/>
+				<Element Index="20"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Skew_HistBin01"/>
+				<Element Index="21"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Skew_HistBin02"/>
 				
-				<Element Index="34"  OutputLocation="Histogram Vectors For Comb Moments.F90_KURT_BIN_00"/>
-				<Element Index="35"  OutputLocation="Histogram Vectors For Comb Moments.F90_KURT_BIN_01"/>
-				<Element Index="36"  OutputLocation="Histogram Vectors For Comb Moments.F90_KURT_BIN_02"/>
+				<Element Index="22"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Kurt_HistBin00"/>
+				<Element Index="23"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Kurt_HistBin01"/>
+				<Element Index="24"  OutputLocation="Histogram Vectors For Comb Moments.Plus45_Kurt_HistBin02"/>
 				
 				
-				<Element Index="37"  OutputLocation="Histogram Vectors For Comb Moments.F0_MEAN_BIN_00"/>
-				<Element Index="38"  OutputLocation="Histogram Vectors For Comb Moments.F0_MEAN_BIN_01"/>
-				<Element Index="39"  OutputLocation="Histogram Vectors For Comb Moments.F0_MEAN_BIN_02"/>
+				<Element Index="25"  OutputLocation="Histogram Vectors For Comb Moments.90_Mean_HistBin00"/>
+				<Element Index="26"  OutputLocation="Histogram Vectors For Comb Moments.90_Mean_HistBin01"/>
+				<Element Index="27"  OutputLocation="Histogram Vectors For Comb Moments.90_Mean_HistBin02"/>
 				
-				<Element Index="40"  OutputLocation="Histogram Vectors For Comb Moments.F0_STD_BIN_00"/>
-				<Element Index="41"  OutputLocation="Histogram Vectors For Comb Moments.F0_STD_BIN_01"/>
-				<Element Index="42"  OutputLocation="Histogram Vectors For Comb Moments.F0_STD_BIN_02"/>
+				<Element Index="28"  OutputLocation="Histogram Vectors For Comb Moments.90_Std_HistBin00"/>
+				<Element Index="29"  OutputLocation="Histogram Vectors For Comb Moments.90_Std_HistBin01"/>
+				<Element Index="30"  OutputLocation="Histogram Vectors For Comb Moments.90_Std_HistBin02"/>
 				
-				<Element Index="43"  OutputLocation="Histogram Vectors For Comb Moments.F0_SKEW_BIN_00"/>
-				<Element Index="44"  OutputLocation="Histogram Vectors For Comb Moments.F0_SKEW_BIN_01"/>
-				<Element Index="45"  OutputLocation="Histogram Vectors For Comb Moments.F0_SKEW_BIN_02"/>
+				<Element Index="31"  OutputLocation="Histogram Vectors For Comb Moments.90_Skew_HistBin00"/>
+				<Element Index="32"  OutputLocation="Histogram Vectors For Comb Moments.90_Skew_HistBin01"/>
+				<Element Index="33"  OutputLocation="Histogram Vectors For Comb Moments.90_Skew_HistBin02"/>
 				
-				<Element Index="46"  OutputLocation="Histogram Vectors For Comb Moments.F0_KURT_BIN_00"/>
-				<Element Index="47"  OutputLocation="Histogram Vectors For Comb Moments.F0_KURT_BIN_01"/>
-				<Element Index="48"  OutputLocation="Histogram Vectors For Comb Moments.F0_KURT_BIN_02"/>
+				<Element Index="34"  OutputLocation="Histogram Vectors For Comb Moments.90_Kurt_HistBin00"/>
+				<Element Index="35"  OutputLocation="Histogram Vectors For Comb Moments.90_Kurt_HistBin01"/>
+				<Element Index="36"  OutputLocation="Histogram Vectors For Comb Moments.90_Kurt_HistBin02"/>
+				
+				
+				<Element Index="37"  OutputLocation="Histogram Vectors For Comb Moments.0_Mean_HistBin00"/>
+				<Element Index="38"  OutputLocation="Histogram Vectors For Comb Moments.0_Mean_HistBin01"/>
+				<Element Index="39"  OutputLocation="Histogram Vectors For Comb Moments.0_Mean_HistBin02"/>
+				
+				<Element Index="40"  OutputLocation="Histogram Vectors For Comb Moments.0_Std_HistBin00"/>
+				<Element Index="41"  OutputLocation="Histogram Vectors For Comb Moments.0_Std_HistBin01"/>
+				<Element Index="42"  OutputLocation="Histogram Vectors For Comb Moments.0_Std_HistBin02"/>
+				
+				<Element Index="43"  OutputLocation="Histogram Vectors For Comb Moments.0_Skew_HistBin00"/>
+				<Element Index="44"  OutputLocation="Histogram Vectors For Comb Moments.0_Skew_HistBin01"/>
+				<Element Index="45"  OutputLocation="Histogram Vectors For Comb Moments.0_Skew_HistBin02"/>
+				
+				<Element Index="46"  OutputLocation="Histogram Vectors For Comb Moments.0_Kurt_HistBin00"/>
+				<Element Index="47"  OutputLocation="Histogram Vectors For Comb Moments.0_Kurt_HistBin01"/>
+				<Element Index="48"  OutputLocation="Histogram Vectors For Comb Moments.0_Kurt_HistBin02"/>
 			  </VectorDecoder>	
 			</ExecutionInstructions>
 		</AnalysisModule>

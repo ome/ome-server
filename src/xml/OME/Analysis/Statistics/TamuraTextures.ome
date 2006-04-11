@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="TamuraTextures" AppliesTo="I">
+		<SemanticType Name="TamuraTextures" AppliesTo="F">
 			<Description>
 			6-component vector referring to Tamura texture descriptors.
 			</Description>
@@ -51,7 +51,7 @@
 				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_01"
 				DataType="float"/>
 			<Element
-				Name="Coarseness_Hist_Bin_00"
+				Name="Coarseness_Hist_Bin_02"
 				DBLocation="TAMURA_TEXTURES.COARSENESS_HIST_BIN_02"
 				DataType="float"/>
 			<Element
@@ -72,6 +72,7 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="TamuraTextures"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7712"> 
 		  <Description>
 			6-component vector; Tamura texture descriptors of three basic types:
@@ -82,29 +83,30 @@
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalOutput
 				Name="Tamura Textures"
 				SemanticTypeName="TamuraTextures"
+				IBelongTo="[Iterator]" 
 				Count="!"/>
  		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><Vector DecodeWith="Tamura Textures"/></Output>
+			  <Output><Vector DecodeWith="Tamura Textures" ConvertToDatatype="single"/></Output>
 			</FunctionOutputs>			
 			  <VectorDecoder ID="Tamura Textures">
-				<Element Index="1"  OutputLocation="Tamura Textures.TOTAL_COARSENESS"/>
-				<Element Index="2"  OutputLocation="Tamura Textures.COARSENESS_HIST_BIN_00"/>
-				<Element Index="3"  OutputLocation="Tamura Textures.COARSENESS_HIST_BIN_01"/>
-				<Element Index="4"  OutputLocation="Tamura Textures.COARSENESS_HIST_BIN_02"/>
-				<Element Index="5"  OutputLocation="Tamura Textures.DIRECTIONALITY"/>
-				<Element Index="6"  OutputLocation="Tamura Textures.CONTRAST"/>
+				<Element Index="1"  OutputLocation="Tamura Textures.Total_Coarseness"/>
+				<Element Index="2"  OutputLocation="Tamura Textures.Coarseness_Hist_Bin_00"/>
+				<Element Index="3"  OutputLocation="Tamura Textures.Coarseness_Hist_Bin_01"/>
+				<Element Index="4"  OutputLocation="Tamura Textures.Coarseness_Hist_Bin_02"/>
+				<Element Index="5"  OutputLocation="Tamura Textures.Directionality"/>
+				<Element Index="6"  OutputLocation="Tamura Textures.Contrast"/>
 			  </VectorDecoder>	
 			</ExecutionInstructions>
 		</AnalysisModule>

@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="WaveletCoefficientsLevel1" AppliesTo="I">
+		<SemanticType Name="WaveletCoefficientsLevel1" AppliesTo="F">
 			<Description>
 			Nikita, please fill this out.
 			</Description>
@@ -42,10 +42,10 @@
 				Name="Parent" 
 				DBLocation="WAVELET_COEFFICIENTS1.PARENT"
 				DataType = "reference"
-				RefersTo = "PixelsPlaneSlice"/>
+				RefersTo = "Pixels"/>
 		</SemanticType>
 		
-		<SemanticType Name="WaveletCoefficientsLevel2" AppliesTo="I">
+		<SemanticType Name="WaveletCoefficientsLevel2" AppliesTo="F">
 			<Description>
 			Nikita, please fill this out.
 			</Description>
@@ -53,7 +53,7 @@
 				Name="Parent" 
 				DBLocation="WAVELET_COEFFICIENTS2.PARENT"
 				DataType = "reference"
-				RefersTo = "PixelsPlaneSlice"/>
+				RefersTo = "Pixels"/>
 		</SemanticType>
 		
 	</SemanticTypeDefinitions>	
@@ -64,28 +64,31 @@
 		   Category="Transforms. "
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="WaveletSignatures"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7804">
 		  <Description>
 		  This module computes the wavelet transform of an image.
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalOutput
 				Name="Wavelet Coefficients Level 1"
 				SemanticTypeName="WaveletCoefficientsLevel1"
+				IBelongTo="[Iterator]"
 				Count="!"/>
 			<FormalOutput
 				Name="Wavelet Coefficients Level 2"
 				SemanticTypeName="WaveletCoefficientsLevel2"
+				IBelongTo="[Iterator]"
 				Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="single"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output>
@@ -104,14 +107,15 @@
 		
 		<!-- Typecaster modules for Wavelet Coefficients Matrix -->
 		<AnalysisModule
-		   ModuleName="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice"
+		   ModuleName="WaveletCoefficientsLevel1 -&gt; DerivedPixels"
 		   Category="Transforms.Typecasts"
-		   ModuleType="OME::Analysis::Modules::PPM::Typecast"
+		   ModuleType="OME::Analysis::Modules::PPM::Typecast2DerivedPixels"
 		   ProgramID=""
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7805">
 		  <Description>
 			This module allows a matrix of Level 1 Wavelet Coefficients
-			to be used as a PixelsPlaneSlice.
+			to be used as DerivedPixels.
 		  </Description>
 		  <Declaration>
 			<FormalInput
@@ -119,21 +123,23 @@
 				SemanticTypeName="WaveletCoefficientsLevel1"
 				Count="!"/>
 			<FormalOutput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
+				IBelongTo="[Iterator]"
 				Count="!"/>
 		  </Declaration>
 		</AnalysisModule>
 		
 		<AnalysisModule
-		   ModuleName="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice"
+		   ModuleName="WaveletCoefficientsLevel2 -&gt; DerivedPixels"
 		   Category="Transforms.Typecasts"
-		   ModuleType="OME::Analysis::Modules::PPM::Typecast"
+		   ModuleType="OME::Analysis::Modules::PPM::Typecast2DerivedPixels"
 		   ProgramID=""
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7806">
 		  <Description>
 			This module allows a matrix of Level 2 Wavelet Coefficients
-			to be used as a PixelsPlaneSlice.
+			to be used as DerivedPixels.
 		  </Description>
 		  <Declaration>
 			<FormalInput
@@ -141,8 +147,9 @@
 				SemanticTypeName="WaveletCoefficientsLevel2"
 				Count="!"/>
 			<FormalOutput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
+				IBelongTo="[Iterator]"
 				Count="!"/>
 		  </Declaration>
 		</AnalysisModule>

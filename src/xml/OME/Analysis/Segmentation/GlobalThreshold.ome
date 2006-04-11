@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		 <SemanticType Name="ThresholdLevel" AppliesTo="I">
+		 <SemanticType Name="ThresholdLevel" AppliesTo="F">
 			<Description>The gray-level pixel intensity used to threshold an image into the black
 			and white pixels. The ThresholdLevel must be a floating point precision number 
 			between 0 and 1.
@@ -45,15 +45,15 @@
 				DataType="double"/>
 		</SemanticType>
 		
-		<SemanticType Name="BinaryMask" AppliesTo="I">
+		<SemanticType Name="BinaryMask" AppliesTo="F">
 			<Description> After Global Thresholding, the resulting Pixels are binary. The 
 			high bit represents the foreground.
 			</Description>
 			<Element 
 				Name="Parent"
 				DBLocation="IMAGE_THRESHOLD.BINARY_MASK"
-				DataType = "reference"
-				RefersTo = "PixelsSlice"/>
+				DataType="reference"
+				RefersTo="Pixels"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
 
@@ -63,6 +63,7 @@
 		   Category="Segmentation"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="GlobalThreshold"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7600">
 		  <Description>
 			This module produces binary images from intensity images by normalizing the image's
@@ -70,8 +71,8 @@
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Slice"
-				SemanticTypeName="PixelsSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalInput
 				Name="Threshold Level"
@@ -80,12 +81,13 @@
 			<FormalOutput
 				Name="Binary Mask"
 				SemanticTypeName="BinaryMask"
+				IBelongTo="[Iterator]" 
 				Count="!"/>
 		   </Declaration>
 		
-		   <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		   <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Slice"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			  <Input><Scalar InputLocation="Threshold Level.ThresholdLevel"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>

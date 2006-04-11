@@ -37,7 +37,7 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		 
 		 <!-- Global Feature Descriptors -->
-		 <SemanticType Name="FeatureCount" AppliesTo="I">
+		 <SemanticType Name="FeatureCount" AppliesTo="F">
 			<Description>Number of contigious regions (features) there are in the image after thresholding.</Description>
 			<Element 
 				Name="FeatureCount" 
@@ -45,7 +45,7 @@
 				DataType="integer"/>
 		</SemanticType>
 		
-		<SemanticType Name="FeatureEuler" AppliesTo="I">
+		<SemanticType Name="FeatureEuler" AppliesTo="F">
 			<Description>Euler Number is a topological invariant that equals the number of features in the region minus the number of holes in the features.</Description>
 			 <Element
 				Name="FeatureEuler"
@@ -53,7 +53,7 @@
 				DataType="integer"/>
 		</SemanticType>
 		
-		<SemanticType Name="FeatureCentroid" AppliesTo="I">
+		<SemanticType Name="FeatureCentroid" AppliesTo="F">
 			<Description>Centroid of the image's features.</Description>
 			 <Element
 				Name="X"
@@ -66,7 +66,7 @@
 		</SemanticType>
 		
 		<!-- Feature Area Descriptors -->
-		<SemanticType Name="FeatureAreaMin" AppliesTo="I">
+		<SemanticType Name="FeatureAreaMin" AppliesTo="F">
 			<Description>Minimum area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMin"
@@ -74,7 +74,7 @@
 				DataType="double"/>
 		</SemanticType> 
 		
-		<SemanticType Name="FeatureAreaMax" AppliesTo="I">
+		<SemanticType Name="FeatureAreaMax" AppliesTo="F">
 			<Description>Maximum area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMax"
@@ -82,7 +82,7 @@
 				DataType="double"/>
 		</SemanticType>
 		
-		<SemanticType Name="FeatureAreaMean" AppliesTo="I">
+		<SemanticType Name="FeatureAreaMean" AppliesTo="F">
 			<Description>Average area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMean"
@@ -90,7 +90,7 @@
 				DataType="double"/>
 		</SemanticType> 
 
-		<SemanticType Name="FeatureAreaMedian" AppliesTo="I">
+		<SemanticType Name="FeatureAreaMedian" AppliesTo="F">
 			<Description>Median area of the features. In pixels.</Description>
 			<Element
 				Name="FeatureAreaMedian"
@@ -98,7 +98,7 @@
 				DataType="double"/>
 		</SemanticType> 
 		
-		<SemanticType Name="FeatureAreaVar" AppliesTo="I">
+		<SemanticType Name="FeatureAreaVar" AppliesTo="F">
 			<Description>Variance of feature areas.</Description>
 			<Element
 				Name="FeatureAreaVar"
@@ -106,7 +106,7 @@
 				DataType="double"/>
 		</SemanticType> 
 
-		<SemanticType Name="FeatureAreaHist" AppliesTo="I">
+		<SemanticType Name="FeatureAreaHist" AppliesTo="F">
 			<Description>Histogram of feature areas binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
@@ -151,7 +151,7 @@
 		</SemanticType>
 		
 		<!-- Feature Distance Descriptors -->
-		<SemanticType Name="FeatureDistMin" AppliesTo="I">
+		<SemanticType Name="FeatureDistMin" AppliesTo="F">
 			<Description>Minimum distance between the features and the feature centroid.</Description>
 			<Element
 				Name="FeatureDistMin"
@@ -159,7 +159,7 @@
 				DataType="double"/>
 		</SemanticType> 
 	
-		<SemanticType Name="FeatureDistMax" AppliesTo="I">
+		<SemanticType Name="FeatureDistMax" AppliesTo="F">
 			<Description>Maximum distance between the features and the feature centroid.</Description>
 			<Element
 				Name="FeatureDistMax"
@@ -167,7 +167,7 @@
 				DataType="double"/>
 		</SemanticType> 
 		
-		<SemanticType Name="FeatureDistMean" AppliesTo="I">
+		<SemanticType Name="FeatureDistMean" AppliesTo="F">
 			<Description>Average distance between the features and the feature centroid.</Description>
 			<Element
 				Name="FeatureDistMean"
@@ -175,7 +175,7 @@
 				DataType="double"/>
 		</SemanticType> 
 		
-		<SemanticType Name="FeatureDistMedian" AppliesTo="I">
+		<SemanticType Name="FeatureDistMedian" AppliesTo="F">
 			<Description>Median distance between the features and the feature centroid.</Description>
 			<Element
 				Name="FeatureDistMedian"
@@ -183,7 +183,7 @@
 				DataType="double"/>
 		</SemanticType> 
 		
-		<SemanticType Name="FeatureDistVar" AppliesTo="I">
+		<SemanticType Name="FeatureDistVar" AppliesTo="F">
 			<Description>Variance of feature distances.</Description>
 			<Element
 				Name="FeatureDistVar"
@@ -191,7 +191,7 @@
 				DataType="double"/>
 		</SemanticType> 
 		
-		<SemanticType Name="FeatureDistHist" AppliesTo="I">
+		<SemanticType Name="FeatureDistHist" AppliesTo="F">
 			<Description>Histogram of feature distances binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
@@ -242,6 +242,7 @@
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="FeatureStatistics"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7701">
 		  <Description>
 		   This module computes statistics about the contiguous regions of the image 
@@ -251,26 +252,26 @@
 		  <Declaration>
 			<FormalInput  Name="Binary Mask"   SemanticTypeName="BinaryMask" Count="!"/>
 			
-			<FormalOutput Name="Count"         SemanticTypeName="FeatureCount"     Count="!"/>	
-			<FormalOutput Name="Euler"         SemanticTypeName="FeatureEuler"     Count="!"/>	
-			<FormalOutput Name="Centroid"      SemanticTypeName="FeatureCentroid"  Count="!"/>
+			<FormalOutput Name="Count"         SemanticTypeName="FeatureCount"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Euler"         SemanticTypeName="FeatureEuler"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Centroid"      SemanticTypeName="FeatureCentroid" IBelongTo="[Iterator]" Count="!"/>
 
-			<FormalOutput Name="Area Min"      SemanticTypeName="FeatureAreaMin"    Count="!"/>	
-			<FormalOutput Name="Area Max"      SemanticTypeName="FeatureAreaMax"    Count="!"/>	
-			<FormalOutput Name="Area Mean"     SemanticTypeName="FeatureAreaMean"   Count="!"/>	
-			<FormalOutput Name="Area Median"   SemanticTypeName="FeatureAreaMedian" Count="!"/>	
-			<FormalOutput Name="Area Variance" SemanticTypeName="FeatureAreaVar"    Count="!"/>	
-			<FormalOutput Name="Area Hist"     SemanticTypeName="FeatureAreaHist"   Count="!"/>
+			<FormalOutput Name="Area Min"      SemanticTypeName="FeatureAreaMin"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Area Max"      SemanticTypeName="FeatureAreaMax"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Area Mean"     SemanticTypeName="FeatureAreaMean"   IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Area Median"   SemanticTypeName="FeatureAreaMedian" IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Area Variance" SemanticTypeName="FeatureAreaVar"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Area Hist"     SemanticTypeName="FeatureAreaHist"   IBelongTo="[Iterator]" Count="!"/>
 			
-			<FormalOutput Name="Dist Min"      SemanticTypeName="FeatureDistMin"    Count="!"/>	
-			<FormalOutput Name="Dist Max"      SemanticTypeName="FeatureDistMax"    Count="!"/>	
-			<FormalOutput Name="Dist Mean"     SemanticTypeName="FeatureDistMean"   Count="!"/>	
-			<FormalOutput Name="Dist Median"   SemanticTypeName="FeatureDistMedian" Count="!"/>	
-			<FormalOutput Name="Dist Variance" SemanticTypeName="FeatureDistVar"    Count="!"/>	
-			<FormalOutput Name="Dist Hist"     SemanticTypeName="FeatureDistHist"   Count="!"/>
+			<FormalOutput Name="Dist Min"      SemanticTypeName="FeatureDistMin"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Dist Max"      SemanticTypeName="FeatureDistMax"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Dist Mean"     SemanticTypeName="FeatureDistMean"   IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Dist Median"   SemanticTypeName="FeatureDistMedian" IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Dist Variance" SemanticTypeName="FeatureDistVar"    IBelongTo="[Iterator]" Count="!"/>	
+			<FormalOutput Name="Dist Hist"     SemanticTypeName="FeatureDistHist"   IBelongTo="[Iterator]" Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 				<Input><PixelsArray FormalInput="Binary Mask" ConvertToDatatype="logical"/></Input>
 			</FunctionInputs>

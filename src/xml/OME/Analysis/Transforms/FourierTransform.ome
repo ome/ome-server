@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="FrequencySpace" AppliesTo="I">
+		<SemanticType Name="FrequencySpace" AppliesTo="F">
 			<Description>
 			The frequency space (i.e. the Fourier Transform of Real space) is, 
 			in general, complex. We represent it by its magnitude and phase 
@@ -47,7 +47,7 @@
 				Name="Parent" 
 				DBLocation="FOURIER.MAG_AND_PHASE"   
 				DataType = "reference"
-				RefersTo = "PixelsSlice"/>
+				RefersTo = "Pixels"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
 
@@ -57,24 +57,26 @@
 		   Category="Maths. "
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="FourierTransform"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7503">
 		  <Description>
 		  This module computes the image's Fourier Transform.
 		  </Description>
 		  <Declaration>
 			<FormalInput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalOutput
 				Name="Frequency Space"
 				SemanticTypeName="FrequencySpace"
+				IBelongTo="[Iterator]"
 				Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+		  <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="single"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="single"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><PixelsArray FormalOutput="Frequency Space" ConvertToDatatype="single"/></Output>
@@ -84,14 +86,15 @@
 	
 		<!-- Typecaster module for the Fourier Transform -->
 		<AnalysisModule
-		   ModuleName="FrequencySpace -&gt; PixelsPlaneSlice"
+		   ModuleName="FrequencySpace -&gt; DerivedPixels"
 		   Category="Maths.Typecasts"
 		   ModuleType="OME::Analysis::Modules::PPM::FourierTransform"
 		   ProgramID="FourierTransform"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7504">
 		  <Description>
 			This module allows a FrequencySpace attribute to be used as a 
-			PixelsPlaneSlice. The PixelsPlaneSlice points to the 
+			DerivedPixels. The DerivedPixels points to the 
 			FrequencySpace's magnitude plane.
 		  </Description>
 		  <Declaration>
@@ -100,8 +103,9 @@
 				SemanticTypeName="FrequencySpace"
 				Count="!"/>
 			<FormalOutput
-				Name="Pixels Plane Slice"
-				SemanticTypeName="PixelsPlaneSlice"
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
+				IBelongTo="[Iterator]" 
 				Count="!"/>
 		  </Declaration>
 		</AnalysisModule>
