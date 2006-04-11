@@ -233,17 +233,38 @@ sub startImage {
 	my ($self,$image) = @_;
 	$self->SUPER::startImage($image);
 
-	my $mex = $self->getModuleExecution();
+	if ($self->__checkExecutionGranularity( ) eq 'I') {	
+		my $mex = $self->getModuleExecution();
+	
+		my $start_time = [gettimeofday()];
+		$self->placeInputs();
+		$mex->read_time(tv_interval($start_time));
+		
+		$self->__execute() ;
+		
+		$start_time = [gettimeofday()];
+		$self->getOutputs();
+		$mex->write_time(tv_interval($start_time));
+	}
+}
 
-	my $start_time = [gettimeofday()];
-	$self->placeInputs();
-	$mex->read_time(tv_interval($start_time));
+sub startFeature {
+	my ($self,$feature) = @_;
+	$self->SUPER::startFeature($feature);
+
+	if ($self->__checkExecutionGranularity( ) eq 'F') {	
+		my $mex = $self->getModuleExecution();
 	
-	$self->__execute() if $self->__checkExecutionGranularity( ) eq 'I';
-	
-	$start_time = [gettimeofday()];
-	$self->getOutputs();
-	$mex->write_time(tv_interval($start_time));
+		my $start_time = [gettimeofday()];
+		$self->placeInputs();
+		$mex->read_time($mex->read_time() + tv_interval($start_time));
+		
+		$self->__execute();
+		
+		$start_time = [gettimeofday()];
+		$self->getOutputs();
+		$mex->write_time($mex->write_time() + tv_interval($start_time));
+	}
 }
 
 sub finishAnalysis {
@@ -279,7 +300,7 @@ sub __execute {
 	my $start_time = [gettimeofday()];
 	$_engine->eval($command);
 #	$_engine->eval( "save ome_ml_dump" );
-	$mex->execution_time(tv_interval($start_time));
+	$mex->execution_time($mex->execution_time() + tv_interval($start_time));
 
 	# Save warning messages if found.
 	# Errors may have happened here, but we're going to check for them later
@@ -469,7 +490,7 @@ sub Pixels_to_MatlabArray {
 				$pixels->SizeT
 			) unless( @Dims );
 			last FIND_PIXELS;
-		} elsif ( $ascender->semantic_type->name eq 'PixelsSlice' ) {
+		} elsif ( $ascender->semantic_type->name eq 'DerivedPixels') {
 			@Dims = (
 				$ascender->EndX - $ascender->StartX + 1,
 				$ascender->EndY - $ascender->StartY + 1,
@@ -668,6 +689,8 @@ sub MatlabArray_to_Pixels {
 		# This is diametrically opposite to MATLAB's assumptions.	
 		$_engine->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ".
   					   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
+	} else {
+		$_engine->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
 	}
 
 	# Get array's dimensions and pixel type
@@ -724,55 +747,17 @@ sub MatlabArray_to_Pixels {
 	
 	# Deal with subclassing. This code has both hardcoded and implicit 
 	# dependencies on the structure of STs that subclass Pixels. It
-	# implicitly  assumes that  PixelsSlice is the only subclass of
+	# implicitly  assumes that  DerivedPixels is the only subclass of
 	# Pixels that has additional data fields,  and that every other ST
 	# that inherits (directy or indirectly) will only  have a Parent
-	# field. If a PixelsSlice is part of the inheritence chain,  its
+	# field. If a DerivedPixels is part of the inheritence chain,  its
 	# limits will be set the extent of the image.
+	
+	# convert the ancestry chain into a list of STs.
+	my @ST_tree;
 	my $current_ST = $formal_output->semantic_type();
-	my $last_attribute;
-	# traverse the inheritence path from the bottom up.
-	# Create an attribute for each step along the way, set the Parent element
-	# on the subsequent iteration.
 	while( $current_ST->name() ne 'Pixels' ) {
-		# Make a new attribute
-		my $new_attr;
-		my @factory_params = ( $current_ST, $self->getCurrentImage(), $self->getModuleExecution() );			
-		if( $current_ST->name() eq 'PixelsSlice' ) {
-			push( @factory_params, {
-				StartX => 0,
-				StartY => 0,
-				StartZ => 0,
-				StartC => 0,
-				StartT => 0,
-				EndX   => $pixels_attr->SizeX() - 1,
-				EndY   => $pixels_attr->SizeY() - 1,
-				EndZ   => $pixels_attr->SizeZ() - 1,
-				EndC   => $pixels_attr->SizeC() - 1,
-				EndT   => $pixels_attr->SizeT() - 1,
-				Parent => $pixels_attr
-			} );
-		} else {
-			# Every other Pixels derivatives has only one SE (Parent), and we 
-			# won't make the parent till the next round. Thus, the data hash is
-			# empty.
-			push( @factory_params, { } );
-		}
-		
-		# if we've already created an attribute, then we're in the process of
-		# making the ancestory tree.
-		if( $last_attribute ) {	$new_attr = $factory->newParentAttribute( @factory_params ); } 
-		# otherwise, we're making the actual module output.
-		else { $new_attr = $factory->newAttribute( @factory_params ); } 
-		
-		# Now that we have made a new attribute, use it to satisfy the Parent
-		# field of the last attribute.
-		if( $last_attribute ) {
-			$last_attribute->Parent( $new_attr );
-			$last_attribute->storeObject();
-		}
-		# Update for next loop iteration
-		$last_attribute = $new_attr; 
+		push (@ST_tree, $current_ST);
 		
 		# Take the next step up the ancestry chain
 		my $parent_element = $factory->findObject( 
@@ -785,6 +770,46 @@ sub MatlabArray_to_Pixels {
 		) or die "Could not find ST named ".$parent_element->data_column()->reference_type()." when trying to construct Pixels Parental outputs.";
 	}
 	
+	# traverse the list of STs (in reverse) and create the parental types
+	my $parent = $pixels_attr;
+	foreach (reverse @ST_tree) {
+		$current_ST=$_;	
+		my $new_attr;
+		if( $current_ST->name() eq 'DerivedPixels' ) {
+			$new_attr = $self->newAttributes($current_ST,
+						{
+							StartX => 0,
+							StartY => 0,
+							StartZ => 0,
+							StartC => 0,
+							StartT => 0,
+							EndX   => ($parent->SizeX() - 1),
+							EndY   => ($parent->SizeY() - 1),
+							EndZ   => ($parent->SizeZ() - 1),
+							EndC   => ($parent->SizeC() - 1),
+							EndT   => ($parent->SizeT() - 1),
+							Parent => $parent
+						} ) or die "couldn't make newAttribute [DerivedPixels] in ancestry tree";
+		} else {
+			# Every other Pixels derivatives has only one SE (Parent)
+			$new_attr = $self->newAttributes($current_ST, {Parent => $parent->ID()} )
+				or die "couldn't make newAttribute in ancestry tree";
+		}
+		$parent = $new_attr;
+	}
+	
+	# record the new attributes as parentoutputs, if requried
+	foreach ( push (@ST_tree, 'Pixels') ) {
+		$current_ST=$_;	
+		if (not $factory->findObject("OME::Module::FormalOutput",
+										module        => $self->getModule(),
+										semantic_type => $current_ST) ) {
+			$factory->newObject("OME::ModuleExecution::ParentalOutput", {
+				module_execution => $self->getModuleExecution(),
+				semantic_type    => $current_ST,
+			});
+		}
+	}
 }
 
 =head2 MatlabVector_to_Attrs
@@ -805,7 +830,13 @@ sub MatlabVector_to_Attrs {
 		or die "DecodeWith attribute not specified in ".$xmlInstr->toString();
 	my @decoding_elements = $self->{ execution_instructions }->findnodes( 
 		'MLI:VectorDecoder[@ID="'.$vectorDecodeID.'"]/MLI:Element' );
-
+		
+	# optional 'global' ConvertToDatatype whose scope is applicable to the whole vector
+	my $global_convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' );
+	if ($global_convertToDatatype) {
+		die "Invalid convertToDatatype '$global_convertToDatatype'\n" unless $_convert_to_matlab_class{$global_convertToDatatype};
+	}
+	
 	# decode the Vector
 	# convert the vector into a cell whose elements have the appropriate class	
 	my $matlabCmdString = "";
@@ -821,6 +852,10 @@ sub MatlabVector_to_Attrs {
 			die "Invalid convertToDatatype '$convertToDatatype'\n" unless $_convert_to_matlab_class{$convertToDatatype};
 		}
 		
+		# Use global 
+		$convertToDatatype = $global_convertToDatatype
+			unless defined $convertToDatatype;
+			
 		# TODO
 		# since "vectors of strings" are really "matrices of chars" they need a special treatment
 		# they are cell vectors of strings
