@@ -42,11 +42,16 @@
 %
 function vec = CombFirst4Moments(a),
 	[m,n] = size(a);
-	if min(m,n)<=10
-		vec = zeros(1,16); 
-		mvec = zeros(1,16); 
-		return; 
-	end;
+	
+	% Note. Firstly output has to be typecast into uint16 [same as in other return]
+	% secondly the vector should have 48 not 16 zeros. Finally, do we really need this
+	% conditional logic based on image size? I think not. Tom 04-04-06
+	%if min(m,n)<=10
+	%	vec = zeros(1,16); 
+	%	mvec = zeros(1,16); 
+	%	return; 
+	%end;
+	
 	I = (1:m)'*ones(1,n); 
 	J = ones(m,1)*(1:n); 
 	n2 = round(n/2); 
