@@ -2,235 +2,197 @@
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
   <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-	
-	
-    <SemanticType Name="SignatureVectorEntry" AppliesTo="I">
-
-	  
+    <SemanticType Name="SignatureVectorEntry" AppliesTo="F">
       <Description>
-A single image signature. A signature describes
-	  something about the image. i.e. number of blobs, whether the
-	  texture is rough or smooth, etc.
+      A single image signature. A signature describes something about the image.
+      i.e. number of blobs, whether the texture is rough or smooth, etc.
       </Description>
-
-      
       <Element Name="Value" DBLocation="SIGNATURE.VALUE" DataType="double"/>
-
-      
       <Element Name="Legend" DBLocation="SIGNATURE.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend"/>
-
-    
     </SemanticType>
 
-    
-	
     <SemanticType Name="SignatureVectorLegend" AppliesTo="D">
-
-	  
       <Description>
-Describes the data derivation of a position in a
-	  signature vector. I (Josiah) have been thinking about this having
-	  global granularity. This isn't feasible ATM because modules that
-	  accept non global inputs are not allowed to produce global
-	  outputs.
+	  Describes the data derivation of a position in a signature vector. I
+	  (Josiah) have been thinking about this havingvglobal granularity. This
+	  isn't feasible ATM because modules that accept non global inputs are not
+	  allowed to produce global outputs.
       </Description>
-
       
       <Element Name="VectorPosition" DBLocation="SIGNATURE_LEGEND.VECTOR_POSITION" DataType="integer">
-
-      	
         <Description>
-Will be in the range of 1 to N, where N is the
-      	number of vector positions.
+		Will be in the range of 1 to N, where N is the number of vector positions.
         </Description>
-
-      
       </Element>
-
       
       <Element Name="FormalInput" DBLocation="SIGNATURE_LEGEND.FORMAL_INPUT_NAME" DataType="string">
-
-      	
         <Description>
-The name of the formal input assigned to this
-      	vector position. The function of this is to describe the data
+		The name of the formal input assigned to this vector position. The function of this is to describe the data
       	history. The data history can be accurately derived because
       	the chain will have been locked by the time this is
       	produced.
         </Description>
-
-      
       </Element>
 
-      
       <Element Name="SemanticElement" DBLocation="SIGNATURE_LEGEND.SEMANTIC_ELEMENT_NAME" DataType="string">
-
-      	
         <Description>
-The name of the semantic element of the formal
-      	input assigned to this vector position.
+        The name of the semantic element of the formal input assigned to this vector position.
         </Description>
-
-      
       </Element>
-
-    
     </SemanticType>
 
 
   </SemanticTypeDefinitions>
   <AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
-    <AnalysisModule ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher" Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:9999" ModuleName="Signature Stitcher" ProgramID="">
-      <Description>
-Combines outputs from "signature modules" into a single vector that
-describes the image. This stitching is very handy for classifiers.
-
+    <AnalysisModule
+    	ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher"
+    	Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:9999"
+    	ModuleName="Signature Stitcher"
+    	ProgramID="">
+      <Description> 
+      	Combines outputs from "signature modules" into a single vector that
+		describes the image. This stitching is very handy for classifiers.
       </Description>
       <Declaration>
-        <FormalInput Name="ChebyshevFourierTransform(FourierTransform(im)).ChebyshevFourierCoefficientHistogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="?"/>
-        <FormalInput Name="ChebyshevFourierTransform(im).ChebyshevFourierCoefficientHistogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="?"/>
-        <FormalInput Name="ChebyshevStatistics(im).ChebyshevCoefficientHistogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
-        <FormalInput Name="ChebyshevStatistics(FourierTransform(im)).ChebyshevCoefficientHistogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeDiffDirecHist" SemanticTypeName="EdgeDiffDirecHist" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeDirecHomo" SemanticTypeName="EdgeDirecHomo" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeDirecHist" SemanticTypeName="EdgeDirecHist" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeDirecVar" SemanticTypeName="EdgeDirecVar" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeDirecMedian" SemanticTypeName="EdgeDirecMedian" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeDirecMean" SemanticTypeName="EdgeDirecMean" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeMagHist" SemanticTypeName="EdgeMagHist" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeMagVar" SemanticTypeName="EdgeMagVar" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeMagMedian" SemanticTypeName="EdgeMagMedian" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeMagMean" SemanticTypeName="EdgeMagMean" Count="?"/>
-        <FormalInput Name="EdgeStatistics(Gradient(im)).EdgeArea" SemanticTypeName="EdgeArea" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureDistHist" SemanticTypeName="FeatureDistHist" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureDistVar" SemanticTypeName="FeatureDistVar" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureDistMedian" SemanticTypeName="FeatureDistMedian" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureDistMean" SemanticTypeName="FeatureDistMean" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureDistMax" SemanticTypeName="FeatureDistMax" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureDistMin" SemanticTypeName="FeatureDistMin" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureAreaHist" SemanticTypeName="FeatureAreaHist" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureAreaVar" SemanticTypeName="FeatureAreaVar" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMedian" SemanticTypeName="FeatureAreaMedian" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMean" SemanticTypeName="FeatureAreaMean" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMax" SemanticTypeName="FeatureAreaMax" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureAreaMin" SemanticTypeName="FeatureAreaMin" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureCentroid" SemanticTypeName="FeatureCentroid" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureEuler" SemanticTypeName="FeatureEuler" Count="?"/>
-        <FormalInput Name="FeatureStatistics(GlobalThreshold(im)).FeatureCount" SemanticTypeName="FeatureCount" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(im).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(FourierTransform(im)).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(FourierTransform(im))).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_1.CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_1.CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(FourierTransform(im)))_2.CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(ChebyshevTransform(im)).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
-        <FormalInput Name="HaralickFeaturesRI(WaveletSignatures(im))_2.CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
-        <FormalInput Name="mb_zernike(FourierTransform(im)).ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="?"/>
-        <FormalInput Name="mb_zernike(im).ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="?"/>
+        <FormalInput Name="ChebyshevFourierTransform((im)).ChebyshevFourierCoefficientHistogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="?"/>
+        <FormalInput Name="ChebyshevFourierTransform(FourierTransform((im))).ChebyshevFourierCoefficientHistogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="?"/>
+        <FormalInput Name="ChebyshevStatistics((im)).ChebyshevCoefficientHistogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
+        <FormalInput Name="ChebyshevStatistics(FourierTransform((im))).ChebyshevCoefficientHistogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="?"/>
+        <FormalInput Name="CombFirst4Moments(FourierTransform((im))).Comb4Orient4MomentsHistogram" SemanticTypeName="Comb4Orient4MomentsHistogram" Count="?"/>
+        <FormalInput Name="CombFirst4Moments(WaveletSignatures((im))).Comb4Orient4MomentsHistogram" SemanticTypeName="Comb4Orient4MomentsHistogram" Count="?"/>
+        <FormalInput Name="CombFirst4Moments(ChebyshevTransform(FourierTransform((im)))).Comb4Orient4MomentsHistogram" SemanticTypeName="Comb4Orient4MomentsHistogram" Count="?"/>
+        <FormalInput Name="CombFirst4Moments(WaveletSignatures(FourierTransform((im)))).Comb4Orient4MomentsHistogram" SemanticTypeName="Comb4Orient4MomentsHistogram" Count="?"/>
+        <FormalInput Name="CombFirst4Moments(ChebyshevTransform((im))).Comb4Orient4MomentsHistogram" SemanticTypeName="Comb4Orient4MomentsHistogram" Count="?"/>
+        <FormalInput Name="CombFirst4Moments((im)).Comb4Orient4MomentsHistogram" SemanticTypeName="Comb4Orient4MomentsHistogram" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeDiffDirecHist" SemanticTypeName="EdgeDiffDirecHist" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeDirecHomo" SemanticTypeName="EdgeDirecHomo" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeDirecHist" SemanticTypeName="EdgeDirecHist" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeDirecVar" SemanticTypeName="EdgeDirecVar" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeDirecMedian" SemanticTypeName="EdgeDirecMedian" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeDirecMean" SemanticTypeName="EdgeDirecMean" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeMagHist" SemanticTypeName="EdgeMagHist" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeMagVar" SemanticTypeName="EdgeMagVar" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeMagMedian" SemanticTypeName="EdgeMagMedian" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeMagMean" SemanticTypeName="EdgeMagMean" Count="?"/>
+        <FormalInput Name="EdgeStatistics(Gradient((im))).EdgeArea" SemanticTypeName="EdgeArea" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureDistHist" SemanticTypeName="FeatureDistHist" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureDistVar" SemanticTypeName="FeatureDistVar" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureDistMedian" SemanticTypeName="FeatureDistMedian" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureDistMean" SemanticTypeName="FeatureDistMean" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureDistMax" SemanticTypeName="FeatureDistMax" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureDistMin" SemanticTypeName="FeatureDistMin" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureAreaHist" SemanticTypeName="FeatureAreaHist" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureAreaVar" SemanticTypeName="FeatureAreaVar" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureAreaMedian" SemanticTypeName="FeatureAreaMedian" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureAreaMean" SemanticTypeName="FeatureAreaMean" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureAreaMax" SemanticTypeName="FeatureAreaMax" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureAreaMin" SemanticTypeName="FeatureAreaMin" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureCentroid" SemanticTypeName="FeatureCentroid" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureEuler" SemanticTypeName="FeatureEuler" Count="?"/>
+        <FormalInput Name="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureCount" SemanticTypeName="FeatureCount" Count="?"/>
+        <FormalInput Name="GaborTextureFilters((im)).GaborTextureFilters" SemanticTypeName="GaborTextureFilters" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures((im))).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI((im)).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(FourierTransform((im))).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform((im))).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(WaveletSignatures(FourierTransform((im)))).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_MaximalCorrelationCoefficient_RI" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_SecondMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_FirstMeasureOfCorrelation_RI" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_DifferenceVariance_RI" SemanticTypeName="CoOcMat_DifferenceVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_DifferenceEntropy_RI" SemanticTypeName="CoOcMat_DifferenceEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_Entropy_RI" SemanticTypeName="CoOcMat_Entropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_SumEntropy_RI" SemanticTypeName="CoOcMat_SumEntropy_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_SumVariance_RI" SemanticTypeName="CoOcMat_SumVariance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_SumAverage_RI" SemanticTypeName="CoOcMat_SumAverage_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_InverseDifferenceMoment_RI" SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_Variance_RI" SemanticTypeName="CoOcMat_Variance_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_Correlation_RI" SemanticTypeName="CoOcMat_Correlation_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_Contrast_RI" SemanticTypeName="CoOcMat_Contrast_RI" Count="?"/>
+        <FormalInput Name="HaralickTexturesRI(ChebyshevTransform(FourierTransform((im)))).CoOcMat_AngularSecondMoment_RI" SemanticTypeName="CoOcMat_AngularSecondMoment_RI" Count="?"/>
+        <FormalInput Name="MultiScaleHistograms((im)).MultipleScaleHistograms" SemanticTypeName="MultipleScaleHistograms" Count="?"/>
+        <FormalInput Name="MultiScaleHistograms(FourierTransform((im))).MultipleScaleHistograms" SemanticTypeName="MultipleScaleHistograms" Count="?"/>
+        <FormalInput Name="MultiScaleHistograms(WaveletSignatures((im))).MultipleScaleHistograms" SemanticTypeName="MultipleScaleHistograms" Count="?"/>
+        <FormalInput Name="MultiScaleHistograms(ChebyshevTransform((im))).MultipleScaleHistograms" SemanticTypeName="MultipleScaleHistograms" Count="?"/>
+        <FormalInput Name="MultiScaleHistograms(WaveletSignatures(FourierTransform((im)))).MultipleScaleHistograms" SemanticTypeName="MultipleScaleHistograms" Count="?"/>
+        <FormalInput Name="MultiScaleHistograms(ChebyshevTransform(FourierTransform((im)))).MultipleScaleHistograms" SemanticTypeName="MultipleScaleHistograms" Count="?"/>
+        <FormalInput Name="RadonTransform(ChebyshevTransform((im))).RadonTransform" SemanticTypeName="RadonTransform" Count="?"/>
+        <FormalInput Name="RadonTransform((im)).RadonTransform" SemanticTypeName="RadonTransform" Count="?"/>
+        <FormalInput Name="RadonTransform(FourierTransform((im))).RadonTransform" SemanticTypeName="RadonTransform" Count="?"/>
+        <FormalInput Name="RadonTransform(ChebyshevTransform(FourierTransform((im)))).RadonTransform" SemanticTypeName="RadonTransform" Count="?"/>
+        <FormalInput Name="TamuraTextures(WaveletSignatures((im))).TamuraTextures" SemanticTypeName="TamuraTextures" Count="?"/>
+        <FormalInput Name="TamuraTextures(ChebyshevTransform(FourierTransform((im)))).TamuraTextures" SemanticTypeName="TamuraTextures" Count="?"/>
+        <FormalInput Name="TamuraTextures(WaveletSignatures(FourierTransform((im)))).TamuraTextures" SemanticTypeName="TamuraTextures" Count="?"/>
+        <FormalInput Name="TamuraTextures(ChebyshevTransform((im))).TamuraTextures" SemanticTypeName="TamuraTextures" Count="?"/>
+        <FormalInput Name="TamuraTextures((im)).TamuraTextures" SemanticTypeName="TamuraTextures" Count="?"/>
+        <FormalInput Name="TamuraTextures(FourierTransform((im))).TamuraTextures" SemanticTypeName="TamuraTextures" Count="?"/>
+        <FormalInput Name="mb_zernike((im)).ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="?"/>
+        <FormalInput Name="mb_zernike(FourierTransform((im))).ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="?"/>
         <FormalOutput Name="SignatureVector" SemanticTypeName="SignatureVectorEntry" Count="+"/>
         <FormalOutput Name="VectorLegend" SemanticTypeName="SignatureVectorLegend" Count="+"/>
       </Declaration>

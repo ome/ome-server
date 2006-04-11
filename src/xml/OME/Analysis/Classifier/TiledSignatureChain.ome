@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
-  <AnalysisChain Name="Signature Chain" Locked="false">
+  <AnalysisChain Name="Tiled Signature Chain" Locked="false">
     <Nodes>
       <Node NodeID="Original files" ProgramName="Original files"/>
       <Node NodeID="Image import" ProgramName="Image import"/>
-      <Node NodeID="Whole Image ROI" ProgramName="Whole Image ROI" NewFeatureTag="ROI"/>
+      <Node NodeID="Image 2D Tiled ROIs" ProgramName="Image 2D Tiled ROIs" NewFeatureTag="ROI"/>
       
       <Node NodeID="Chebyshev Fourier Statistics 1" ProgramName="Chebyshev Fourier Statistics" IteratorTag="ROI"/>
       <Node NodeID="Chebyshev Fourier Statistics" ProgramName="Chebyshev Fourier Statistics" IteratorTag="ROI"/>
@@ -61,22 +61,22 @@
     </Nodes>
     <Links>
       <Link FromNodeID="Original files" FromOutputName="Files" ToNodeID="Image import" ToInputName="Files"/>
-      <Link FromNodeID="Image import" FromOutputName="Pixels" ToNodeID="Whole Image ROI" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Multi-Scale Histograms" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Radon Transform 4 Angles" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Comb First 4 Moments" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Haralick Textures 2D Rotation Invariant" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Tamura Textures" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Wavelet Transform" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Chebyshev Fourier Statistics" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Zernike Moments" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Chebyshev Statistics" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Chebyshev Transform" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Gradient" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Otsu's Method" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Global Threshold" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Fourier Transform" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Gabor Texture Filters" ToInputName="Pixels"/>
+      <Link FromNodeID="Image import" FromOutputName="Pixels" ToNodeID="Image 2D Tiled ROIs" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Multi-Scale Histograms" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Radon Transform 4 Angles" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Comb First 4 Moments" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Haralick Textures 2D Rotation Invariant" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Tamura Textures" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Wavelet Transform" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Chebyshev Fourier Statistics" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Zernike Moments" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Chebyshev Statistics" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Chebyshev Transform" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Gradient" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Otsu's Method" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Global Threshold" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Fourier Transform" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Gabor Texture Filters" ToInputName="Pixels"/>
       <Link FromNodeID="Haralick Textures 2D Rotation Invariant" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="HaralickTexturesRI((im)).CoOcMat_AngularSecondMoment_RI"/>
       <Link FromNodeID="Haralick Textures 2D Rotation Invariant" FromOutputName="Contrast" ToNodeID="Signature Stitcher" ToInputName="HaralickTexturesRI((im)).CoOcMat_Contrast_RI"/>
       <Link FromNodeID="Haralick Textures 2D Rotation Invariant" FromOutputName="Correlation" ToNodeID="Signature Stitcher" ToInputName="HaralickTexturesRI((im)).CoOcMat_Correlation_RI"/>
