@@ -69,7 +69,7 @@
 		</SemanticType>
 		
 		<!-- FORMAL OUTPUT STs-->
-		 <SemanticType Name="CoOcMat_AngularSecondMoment" AppliesTo="I">
+		 <SemanticType Name="CoOcMat_AngularSecondMoment" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="ASM" 
@@ -77,7 +77,7 @@
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="CoOcMat_Contrast" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Contrast" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="Contrast" 
@@ -85,7 +85,7 @@
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="CoOcMat_Correlation" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Correlation" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="Correlation" 
@@ -93,7 +93,7 @@
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="CoOcMat_Variance" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Variance" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="Variance" 
@@ -101,7 +101,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_InverseDifferenceMoment" AppliesTo="I">
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="IDM" 
@@ -109,7 +109,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_SumAverage" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SumAverage" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="SumAvg" 
@@ -117,7 +117,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_SumVariance" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SumVariance" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="SumVar" 
@@ -125,7 +125,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_SumEntropy" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SumEntropy" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="SumEntropy" 
@@ -133,7 +133,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_Entropy" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Entropy" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="Entropy" 
@@ -141,7 +141,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_DifferenceEntropy" AppliesTo="I">
+		<SemanticType Name="CoOcMat_DifferenceEntropy" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="DiffEntropy" 
@@ -149,7 +149,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_DifferenceVariance" AppliesTo="I">
+		<SemanticType Name="CoOcMat_DifferenceVariance" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="DiffVar" 
@@ -157,7 +157,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="I">
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="MeasCorr1" 
@@ -165,7 +165,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="MeasCorr2" 
@@ -173,7 +173,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="I">
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F">
 			<Description>Statistical value computed from co-ocurrence matrx.</Description>
 			<Element 
 				Name="MaxCorrCoef" 
@@ -182,7 +182,7 @@
 		</SemanticType>	
 
 		<!-- Rotation Invariant FORMAL OUTPUT STs-->
-		 <SemanticType Name="CoOcMat_AngularSecondMoment_RI" AppliesTo="I">
+		 <SemanticType Name="CoOcMat_AngularSecondMoment_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="ASM_avg" 
@@ -194,7 +194,7 @@
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="CoOcMat_Contrast_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Contrast_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Contrast_avg" 
@@ -206,7 +206,7 @@
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="CoOcMat_Correlation_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Correlation_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Correlation_avg" 
@@ -218,7 +218,7 @@
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="CoOcMat_Variance_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Variance_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Variance_avg" 
@@ -230,7 +230,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_InverseDifferenceMoment_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="IDM_avg" 
@@ -242,7 +242,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_SumAverage_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SumAverage_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="SumAvg_avg" 
@@ -254,7 +254,7 @@
 				DataType="float"/>
 			</SemanticType>
 		
-		<SemanticType Name="CoOcMat_SumVariance_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SumVariance_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="SumVar_avg" 
@@ -266,7 +266,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_SumEntropy_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SumEntropy_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="SumEntropy_avg"
@@ -278,7 +278,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_Entropy_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_Entropy_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="Entropy_avg"
@@ -290,7 +290,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_DifferenceEntropy_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_DifferenceEntropy_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="DiffEntropy_avg" 
@@ -302,7 +302,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_DifferenceVariance_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_DifferenceVariance_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="DiffVar_avg" 
@@ -314,7 +314,7 @@
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="MeasCorr1_avg" 
@@ -326,7 +326,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="MeasCorr2_avg" 
@@ -338,7 +338,7 @@
 				DataType="float"/>
 		</SemanticType>	
 		
-		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_RI" AppliesTo="I">
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_RI" AppliesTo="F">
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="MaxCorrCoef_avg" 
@@ -353,10 +353,11 @@
 	
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
-		   ModuleName="Haralick Features 2D"
+		   ModuleName="Haralick Textures 2D"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7702">
 		  <Description>
 			The gray-level co-occurrence matrix is the two dimensional matrix of joint probabilities P_{d,r}(i,j) 
@@ -379,29 +380,29 @@
 			and nature of gray level transitions.
 		  </Description>
 		  <Declaration>
-			<FormalInput    Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"        Count="!"/>
+			<FormalInput    Name="Pixels" SemanticTypeName="DerivedPixels"       Count="!"/>
 			<FormalInput    Name="Texture Direction"  SemanticTypeName="HaralickTextureDirection" Count="!"/>
 			<FormalInput    Name="Texture Distance"   SemanticTypeName="HaralickTextureDistance"  Count="!"/>	
 			
-			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
-			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>
-			<FormalOutput	Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="!"/>
-			<FormalOutput	Name="Variance"							SemanticTypeName="CoOcMat_Variance" 						Count="!"/>
-			<FormalOutput	Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="!"/>
-			<FormalOutput	Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="!"/>
-			<FormalOutput	Name="Sum Variance"						SemanticTypeName="CoOcMat_SumVariance" 				    	Count="!"/>
-			<FormalOutput	Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="!"/>
-			<FormalOutput	Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="!"/>
-			<FormalOutput	Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="!"/>
-			<FormalOutput	Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="!"/>
-			<FormalOutput	Name="First Measure of Correlation"		SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="!"/>
-			<FormalOutput	Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="!"/>
-			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
+			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		   	 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Variance"							SemanticTypeName="CoOcMat_Variance" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	     IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Sum Variance"						SemanticTypeName="CoOcMat_SumVariance" 				     IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 						 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 			 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"			 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="First Measure of Correlation"		SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"	 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" IBelongTo="[Iterator]" Count="!"/>
 		  </Declaration>
 		
-          <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+          <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="uint8"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="uint8"/></Input>
 			  <Input><Scalar InputLocation="Texture Distance.Distance"/></Input>
 			  <Input><Scalar InputLocation="Texture Direction.Direction_Value"/></Input>
 			</FunctionInputs>
@@ -429,10 +430,11 @@
 		</AnalysisModule>
 		
 		<AnalysisModule
-		   ModuleName="Haralick Features 2D Rotation Invariant"
+		   ModuleName="Haralick Textures 2D Rotation Invariant"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="HaralickFeaturesRI"
+		   ProgramID="HaralickTexturesRI"
+		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7704">
 		  <Description>
 			This module is very similar to Haralick Features 2D except that it
@@ -443,28 +445,28 @@
 			in 45 degree increments. 
 		  </Description>
 		  <Declaration>
-			<FormalInput  Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"         Count="!"/>
+			<FormalInput  Name="Pixels" SemanticTypeName="DerivedPixels"       Count="!"/>
 			<FormalInput  Name="Texture Distance"   SemanticTypeName="HaralickTextureDistance"  Count="?"/>	
 			
-			<FormalOutput Name="Angular Second Moment"			 SemanticTypeName="CoOcMat_AngularSecondMoment_RI" 	    	 Count="!"/>
-			<FormalOutput Name="Contrast"						 SemanticTypeName="CoOcMat_Contrast_RI" 					 Count="!"/>
-			<FormalOutput Name="Correlation"					 SemanticTypeName="CoOcMat_Correlation_RI" 					 Count="!"/>
-			<FormalOutput Name="Variance"						 SemanticTypeName="CoOcMat_Variance_RI" 					 Count="!"/>
-			<FormalOutput Name="Inverse Difference Moment"		 SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI"     	 Count="!"/>
-			<FormalOutput Name="Sum Average"					 SemanticTypeName="CoOcMat_SumAverage_RI" 					 Count="!"/>
-			<FormalOutput Name="Sum Variance"					 SemanticTypeName="CoOcMat_SumVariance_RI" 			    	 Count="!"/>
-			<FormalOutput Name="Sum Entropy"					 SemanticTypeName="CoOcMat_SumEntropy_RI" 					 Count="!"/>
-			<FormalOutput Name="Entropy"						 SemanticTypeName="CoOcMat_Entropy_RI" 						 Count="!"/>
-			<FormalOutput Name="Difference Entropy"				 SemanticTypeName="CoOcMat_DifferenceEntropy_RI" 			 Count="!"/>
-			<FormalOutput Name="Difference Variance"			 SemanticTypeName="CoOcMat_DifferenceVariance_RI"			 Count="!"/>
-			<FormalOutput Name="First Measure of Correlation"    SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI"	 Count="!"/>
-			<FormalOutput Name="Second Measure of Correlation"   SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI"    Count="!"/>
-			<FormalOutput Name="Maximal Correlation Coefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" Count="!"/>
+			<FormalOutput Name="Angular Second Moment"			 SemanticTypeName="CoOcMat_AngularSecondMoment_RI" 	    	 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Contrast"						 SemanticTypeName="CoOcMat_Contrast_RI" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Correlation"					 SemanticTypeName="CoOcMat_Correlation_RI" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Variance"						 SemanticTypeName="CoOcMat_Variance_RI" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Inverse Difference Moment"		 SemanticTypeName="CoOcMat_InverseDifferenceMoment_RI"       IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Sum Average"					 SemanticTypeName="CoOcMat_SumAverage_RI" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Sum Variance"					 SemanticTypeName="CoOcMat_SumVariance_RI" 			    	 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Sum Entropy"					 SemanticTypeName="CoOcMat_SumEntropy_RI" 					 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Entropy"						 SemanticTypeName="CoOcMat_Entropy_RI" 					 	 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Difference Entropy"				 SemanticTypeName="CoOcMat_DifferenceEntropy_RI" 			 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Difference Variance"			 SemanticTypeName="CoOcMat_DifferenceVariance_RI"			 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="First Measure of Correlation"    SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_RI"	 IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Second Measure of Correlation"   SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_RI"    IBelongTo="[Iterator]" Count="!"/>
+			<FormalOutput Name="Maximal Correlation Coefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" IBelongTo="[Iterator]" Count="!"/>
 		  </Declaration>
 		
-          <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+          <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels Plane Slice" ConvertToDatatype="uint8"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="uint8"/></Input>
 			  <Input><Scalar InputLocation="Texture Distance.Distance"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
