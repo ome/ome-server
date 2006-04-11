@@ -42,6 +42,7 @@ use Carp;
 
 use OME;
 use OME::Tasks::AnnotationManager;
+use Data::Dumper;
 
 our $VERSION = $OME::VERSION;
 use base qw(OME::Web);
@@ -210,9 +211,13 @@ sub _getForm {
  	my $tmpl = HTML::Template->new( filename => $tmpl_path, path => $self->_baseTemplateDir(), case_sensitive => 1 );
  	
  	# get data for the template
-	my $requests = $self->_parse_tmpl_fields( [ $tmpl->param( ) ] );
-	my %tmpl_data = $self->getFormInputsForFields( $type, $requests );
+	my $requests = $self->_parse_tmpl_fields( [ $tmpl->param( ) ]
+ 	);
 
+	my %tmpl_data = $self->getFormInputsForFields( $type,$requests );
+
+
+	
 	# /field_loop = Iterate over the fields in the type
 	my ($package_name, $common_name, $formal_name, $ST);
 	($package_name, $common_name, $formal_name, $ST) =
@@ -220,7 +225,7 @@ sub _getForm {
 	if( exists $requests->{ '/field_loop' } && $type ) {
 		foreach my $request ( @{ $requests->{ '/field_loop' } } ) {
 			my $request_string = $request->{ 'request_string' };
-			my $inner_requests = $self->_parse_tmpl_fields( [ $tmpl->query( loop => $request_string ) ] );
+			my $inner_requests = $self->_parse_tmpl_fields( [ $tmpl->query( loop =>	$request_string ) ] );
 			
 			# exclude request: skip some fields
 			my %excluded_fields;
@@ -228,7 +233,11 @@ sub _getForm {
 				if exists $request->{ exclude };
 				
 			# grab the published fields that aren't being excluded
-			my @fields = sort( grep( ( not exists $excluded_fields{ $_ }) , $package_name->getPublishedCols() ) );
+			my @fields = sort( 
+			    grep( ( not exists$excluded_fields{ $_ }), 
+				  $package_name->getPublishedCols() )
+			    );
+
 			
 			# get form inputs iff requested
 			my %rendered_fields;
@@ -400,7 +409,8 @@ sub getFormInputsForFields {
 	return () unless $type;
 	my ( %record, $specializedPkg );
 	$options = {} unless $options; # makes things easier
-	$field_requests = $self->_parse_tmpl_fields( $field_requests );
+	$field_requests = $self->_parse_tmpl_fields( $field_requests
+	    );
 
 	# specialized form fields
 	$specializedPkg = $self->__specialize( $type );
@@ -440,8 +450,11 @@ sub getFormInputsForFields {
 			}
 						
 			# time to get field info
-			my $ref_type = $package_name->getColumnType( $field );
-			next unless $ref_type; # skip if field doesn't exist in this type
+			my $ref_type = $package_name->getColumnType($field );
+
+			next unless $ref_type; # skip if field doesn't
+				# exist in this type
+
 			my $SQL_data_type = $package_name->getColumnSQLType( $field );
 			
 			# field/render-data_type = the sql data type of the field
@@ -458,7 +471,7 @@ sub getFormInputsForFields {
 			
 			# has-one reference
 			elsif( $ref_type eq 'has-one' ) {
-				my $ref_to = $package_name->getAccessorReferenceType( $field );
+				my $ref_to=$package_name->getAccessorReferenceType($field);
 				$record{ $request_string } = $self->getStuffToPopulateHasOneRef( $field, $ref_to );
 			}
 
@@ -525,7 +538,7 @@ get some html that will let the user pick an object to satisfy a has-one referen
 
 sub getStuffToPopulateHasOneRef {
 	my ($self, $accessor_to_type, $type) = @_;
-	
+	my $factory = $self->Session->Factory();	
 	# specialized form fields
 	my $specializedPkg = $self->__specialize( $type );
 	return $specializedPkg->_getStuffToPopulateHasOneRef( $accessor_to_type, $type )
@@ -534,11 +547,17 @@ sub getStuffToPopulateHasOneRef {
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $type );
 	my $q = $self->CGI();
-	my $factory = $self->Session()->Factory();
 	my $obj;
 
+	my $newFieldName = "_New". $accessor_to_type;
+	my $newField = $q->hidden(-name => $newFieldName);
+
 	# is there a selection? try loading it
-	if( $q->param( $accessor_to_type ) && $q->param( $accessor_to_type ) ne '' ) {
+	if ($q->param( $newFieldName) && $q->param($newFieldName) ne'') {
+	    $obj = $factory->loadObject( $type, $q->param( $newFieldName ) )
+		    or die "Could not load object ( type=$type,	id=".$q->param( $accessor_to_type ).")";
+	}
+	elsif( $q->param( $accessor_to_type ) && $q->param($accessor_to_type ) ne '' ) {
 		$obj = $factory->loadObject( $type, $q->param( $accessor_to_type ) )
 			or die "Could not load object ( type=$type, id=".$q->param( $accessor_to_type ).")";
 
@@ -547,36 +566,24 @@ sub getStuffToPopulateHasOneRef {
 		$obj = $specializedPkg->_defaultObj( )
 			if $specializedPkg and $specializedPkg->can('_defaultObj');
 	}
-	
-	# Display a different message if something is already selected, 
-	if( $obj ) {
-		return
-			$q->hidden( -name => $accessor_to_type, -default => $obj->id ).
-			$self->Renderer()->render( $obj, 'ref' ).
-			"( ".
-			$q->a( { 
-				-href => "javascript: selectOne( '$type', '$accessor_to_type' );"
-			}, "Change selection" ).
-			" | ".
-			 $q->a( { 
-				-href => "javascript: creationPopup( '$type', '$accessor_to_type' );"
-			}, "Create a new $common_name" ).
-			")";
-	}
-	
-	# then if nothing is selected.
-	return
-		$q->hidden( -name => $accessor_to_type ).
-		"This needs a $common_name. You may ".
-		$q->a( { 
-			-href => "javascript: selectOne( '$type', '$accessor_to_type' );"
-		}, "Choose" ).
-		" or ".
-		$q->a( { 
-			-href => "javascript: creationPopup( '$type', '$accessor_to_type' );"
-		}, "Create" ).
-		" one.";
 
+	my $create_link = $q->a( { 
+	    -href => "javascript: creationPopup( '$type','$newFieldName' );"}, 
+				 "Create a new $common_name" );
+	# populate a hash
+	my %select_hash;
+	if ($obj) {
+	    $select_hash{default_value} = $obj->id;
+	}
+
+	# get the list of items
+	my @itemList  = $factory->findObjects($type);
+
+	# do the rendering.
+	my $renderer = $self->Renderer;
+	my $options = $renderer->renderArray(\@itemList,'list_of_options',\%select_hash);
+	my $select="<SELECT NAME=\"$accessor_to_type\">$options</SELECT>";
+	return $newField . $select . " or " . $create_link;
 }
 
 
