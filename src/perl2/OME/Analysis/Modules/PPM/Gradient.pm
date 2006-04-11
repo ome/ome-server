@@ -1,4 +1,4 @@
-# OME/Analysis/Modules/Slicers/Planes.pm
+# OME/Analysis/Modules/PPM/Gradient.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -48,12 +48,13 @@ Typecaster module for the Gradient
 =head1 OVERVIEW
 
 This module allows a Gradient attribute to be used as a 
-PixelsPlaneSlice. The PixelsPlaneSlice points to the 
+DerivedPixels. The DerivedPixels points to the 
 Gradient's magnitude plane.
 
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
+use Time::HiRes qw(gettimeofday tv_interval);
 
 sub new {
     my $proto = shift;
@@ -65,28 +66,30 @@ sub new {
     return $self;
 }
 
-sub startImage {
-    my ($self,$image) = @_;
-    $self->SUPER::startImage($image);
+sub startFeature {
+    my ($self,$feature) = @_;
+    $self->SUPER::startFeature($feature);
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
     my $mex     = $self->getModuleExecution();
 
+	my $start_time = [gettimeofday()];
     my @gradients  = $self->getCurrentInputAttributes("Gradient");
-    
+	$mex->read_time(tv_interval($start_time));
+
+	$start_time = [gettimeofday()];
     foreach my $gradient (@gradients) {
-    	my $slice = $gradient->Parent();
+    	my $pixels = $gradient->Parent();
     	
-    	# PixelsSlice points to the zeroth Channel
-		my $parent = $factory->
-		  newParentAttribute('PixelsSlice',$slice->image(),$mex,
+    	# DerivedPixels point to the zeroth Channel
+		$self->newAttributes('Pixels',
 					   {
-						Parent => $slice->Parent(),
-						StartX => $slice->StartX(),
-						EndX   => $slice->EndX(),
-						StartY => $slice->StartY(),
-						EndY   => $slice->EndY(),
+						Parent => $pixels,
+						StartX => 0,
+						EndX   => $pixels->SizeX()-1,
+						StartY => 0,
+						EndY   => $pixels->SizeY()-1,
 						StartZ => 0,
 						EndZ   => 0,
 						StartC => 0,
@@ -94,13 +97,9 @@ sub startImage {
 						StartT => 0,
 						EndT   => 0,
 					   });
-					   
-		# Convert the PixelsSlice into a planes slice;
-		my $new_slice = $self->newAttributes('Pixels Plane Slice',
-											{
-											 Parent => $parent,
-											});
 	}
+	$mex->write_time(tv_interval($start_time));
+	$mex->storeObject();
 }
 
 1;
