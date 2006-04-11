@@ -1,0 +1,91 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="DerivedPixels" AppliesTo="F">
+		  <Description>
+            Feature granualrity pixels. Used as inputs/outputs to computational
+            modules. The DerivedPixels attributes are intially made by the ROI
+            constructors (in a similar way as Pixels are intitally made by the
+            ImageImport module).
+          </Description>
+          <Element
+			 Name="StartX"
+			 DBLocation="DERIVED_PIXELS.START_X"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndX"
+			 DBLocation="DERIVED_PIXELS.END_X"
+			 DataType="integer"/>
+		  <Element
+			 Name="StartY"
+			 DBLocation="DERIVED_PIXELS.START_Y"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndY"
+			 DBLocation="DERIVED_PIXELS.END_Y"
+			 DataType="integer"/>
+		  <Element
+			 Name="StartZ"
+			 DBLocation="DERIVED_PIXELS.START_Z"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndZ"
+			 DBLocation="DERIVED_PIXELS.END_Z"
+			 DataType="integer"/>
+		  <Element
+			 Name="StartC"
+			 DBLocation="DERIVED_PIXELS.START_C"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndC"
+			 DBLocation="DERIVED_PIXELS.END_C"
+			 DataType="integer"/>
+		  <Element
+			 Name="StartT"
+			 DBLocation="DERIVED_PIXELS.START_T"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndT"
+			 DBLocation="DERIVED_PIXELS.END_T"
+			 DataType="integer"/>
+		  <Element 
+			 Name="Parent"
+			 DBLocation="DERIVED_PIXELS.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>
+</OME>
