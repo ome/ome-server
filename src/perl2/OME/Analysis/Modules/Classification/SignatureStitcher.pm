@@ -126,7 +126,7 @@ sub execute {
 			# Create a vector entry for each image
 			foreach my $input_attr (@input_attr_list ) {
 				$factory->newAttribute( 
-					'SignatureVectorEntry', $input_attr->image, $mex,
+					'SignatureVectorEntry', $input_attr->feature_id , $mex,
 					{
 						Value  => $input_attr->$se_name,
 						Legend => $position
