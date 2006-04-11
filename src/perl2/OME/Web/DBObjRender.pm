@@ -426,7 +426,7 @@ sub renderArray {
 		$num_objs = scalar( @$objs );
 		$pager_control_name = $options->{type};
 	}
-	$pager_control_name =~ s/::|@/_/g;
+	$pager_control_name =~ s/::|@/_/g if ($pager_control_name);
 	# Override derived pager_control_name if it was explicitly given.
 	$pager_control_name = $options->{ pager_control_name }
 		if( exists( $options->{ pager_control_name } ) );
