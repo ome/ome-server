@@ -7,30 +7,48 @@ use OME::Tasks::OMEImport;
 use Term::ANSIColor qw(:constants);
 
 my @classifierFiles = (
-# Signature Chain Modules
-"OME/Analysis/Core/PixelIndicies.ome",  
-"OME/Analysis/Core/PixelSlices.ome",
-"OME/Analysis/Core/PixelSliceModules.ome",
-"OME/Analysis/Filters/HighPassFilter.ome",
-"OME/Analysis/Filters/BandPassFilter.ome",
+# Pre Feature Granularity Modules
+#"OME/Analysis/Core/PixelIndicies.ome",  
+#"OME/Analysis/Core/PixelSlices.ome",
+#"OME/Analysis/Core/PixelSliceModules.ome",
+#"OME/Analysis/Filters/HighPassFilter.ome",
+#"OME/Analysis/Filters/BandPassFilter.ome",
+
+# Tiling Trunk
+"OME/Analysis/ROI/DerivedPixels.ome",
+"OME/Analysis/ROI/ImageROIConstructors.ome",
+
+# Modules for computing Edge Statistics
 "OME/Analysis/Maths/Gradient.ome",
+
+# Modules for computing Feature Statistics
 "OME/Analysis/Segmentation/GlobalThreshold.ome",
 "OME/Analysis/Segmentation/OtsuGlobalThreshold.ome",
-"OME/Analysis/Transforms/ChebyshevTransform.ome",
+
+# Transform Modules
 "OME/Analysis/Transforms/FourierTransform.ome",
 "OME/Analysis/Transforms/WaveletSignatures.ome",
+"OME/Analysis/Transforms/ChebyshevTransform.ome",
+
+# Signature Modules
 "OME/Analysis/Statistics/EdgeStatistics.ome",
 "OME/Analysis/Statistics/FeatureStatistics.ome",
-"OME/Analysis/Statistics/HaralickFeatures.ome",
+"OME/Analysis/Statistics/CombFirst4Moments.ome",            # new Nikita
 "OME/Analysis/Statistics/ZernikeMoments.ome",
-"OME/Analysis/Statistics/ChebyshevStatistics.ome",
 "OME/Analysis/Statistics/ChebyshevFourierStatistics.ome",
+"OME/Analysis/Statistics/ChebyshevStatistics.ome",
+"OME/Analysis/Statistics/HaralickTextures.ome",
+"OME/Analysis/Statistics/RadonTransform.ome",               # new Nikita
+"OME/Analysis/Statistics/MultiScaleHistograms.ome",         # new Nikita
+"OME/Analysis/Statistics/TamuraTextures.ome",               # new Nikita
+"OME/Analysis/Statistics/GaborTextureFilters.ome",          # new Nikita
+
 
 # Classification Modules
 "OME/Analysis/Classifier/SignatureStitcher.ome",
-"OME/Analysis/Classifier/ClassificationStatistics.ome",
-"OME/Analysis/Classifier/BayesNetTrainer.ome",
-"OME/Analysis/Classifier/BayesNetClassifier.ome",
+#"OME/Analysis/Classifier/ClassificationStatistics.ome",
+#"OME/Analysis/Classifier/BayesNetTrainer.ome",
+#"OME/Analysis/Classifier/BayesNetClassifier.ome",
 
 # Useful Chains
 #"OME/Analysis/Classifier/TrainerChain.ome", # needed
