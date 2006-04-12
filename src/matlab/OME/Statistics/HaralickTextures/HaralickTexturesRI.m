@@ -31,7 +31,7 @@
 % is unspecified, it will compute features on four angles and return the average.
 % If the input is specified, it will return the Haralick features for that angle.
 
-function [haralick_avg_and_range] = HaralickFeatures2D (Im, dist);
+function [haralick_avg_and_range] = HaralickTextures2D (Im, dist);
 
 if nargin < 2
 	dist = 1;
