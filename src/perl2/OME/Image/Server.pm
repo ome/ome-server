@@ -469,7 +469,7 @@ sub __callOMEIS {
         $session->finishTemporaryFile($_) foreach @temp_files;
 
         if ($response->is_success()) {
-            return $response->content();
+            return ($response->content());
         } else {
             Carp::confess $response->content();
         }
