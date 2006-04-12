@@ -115,7 +115,7 @@ sub startFeature {
         foreach my $value (@values) {
             my $parent = $value->Parent();
             
-            if ($parent->semantic_type()->name() != "Pixels") {
+            if ($parent->semantic_type()->name() ne "Pixels") {
             	die "Formal input '".$formal_input->name()."' of module '".
 			    $module->name()."' PPM inherits from semantic type '".
 			    $parent->semantic_type()->name(). "' which doesn't inherit from
