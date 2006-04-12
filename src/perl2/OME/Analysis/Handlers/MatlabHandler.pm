@@ -227,6 +227,11 @@ sub startAnalysis {
 	my $root   = $tree->getDocumentElement();
 	
 	$self->{ execution_instructions } = $root;
+
+	my $mex = $self->getModuleExecution();
+	$mex->read_time      (0);
+	$mex->write_time     (0);
+	$mex->execution_time (0);
 }
 
 sub startImage {
