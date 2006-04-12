@@ -11,7 +11,7 @@ AC_CHECK_HEADER(curl/curl.h,LIBCURL='yes',AC_MSG_ERROR([
 
 dnl Figure out whether to use matlab bindings or not.
 AC_ARG_WITH(MATLAB,
-			AC_HELP_STRING([--with-MATLAB],
+			AC_HELP_STRING([--with-matlab],
 						   [compile an additional omeis-http library (libhttpOMEIS-MATLAB) with MATLAB bindings [defaults to no]]),
 [
 	if test "$withval" != no ; then
