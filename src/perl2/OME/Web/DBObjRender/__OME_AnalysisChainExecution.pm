@@ -87,6 +87,11 @@ sub _renderData {
 				$_->module->name ne 'Image import' ),
 				@nodes
 			);
+			
+			# Sort Nodes by Module ID. This reflects the order the modules were imported
+			# into OME.
+			@nodes = sort {$a->module->id cmp $b->module->id} @nodes;
+			
 			my @node_execution_links;
 			foreach my $node ( @nodes ) {
 				my $error_count = $obj->count_node_executions( 
