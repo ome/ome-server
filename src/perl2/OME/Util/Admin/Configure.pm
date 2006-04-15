@@ -79,7 +79,7 @@ sub configure {
 	
 	# Parse our command line options
 	my ($db,$user,$pass,$host,$port,$class);
-	my ($omeis_repository_url,$lsid);
+	my ($lsid);
 	my ($templates);
 	my ($matlab_user, $m_files_path);
 	my ($max_local_workers);
@@ -89,7 +89,7 @@ sub configure {
    			   'p|port=i'     => \$port,
    			   #'P|pass=s'    => \$pass,
    			   'c|class=s'    => \$class,
-   			   'omeis_url=s'    => \$omeis_repository_url,
+   	#		   'omeis_url=s'    => \$omeis_repository_url,
    			   'lsid_url=s'     => \$lsid,
    			   'templates=s'    => \$templates,
    			   'matlab-user=s'  => \$matlab_user,
@@ -97,7 +97,7 @@ sub configure {
    			   'max-local-workers=s' => \$max_local_workers);
    			   
 	my $interactive = 0;
-	$interactive = 1 if ($db or $user or $host or $port or $class or $omeis_repository_url or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
+	$interactive = 1 if ($db or $user or $host or $port or $class or $lsid or $templates or $matlab_user or $m_files_path or $max_local_workers);
 
 	print_header("OME Configure");
 	my $blurb = <<BLURB;
@@ -213,7 +213,6 @@ BLURB
 				}
 			}
 			$lsid = confirm_default ("LSID Authority", $lsid);
-			$environment->omeis_url ($omeis_repository_url);
 		}
 	}
 	# Make sure we finish the admin mex in case we started one (no error if none started)
@@ -297,7 +296,7 @@ BLURB
 	
 	my $workerConf = $environment->worker_conf($worker_conf);
 	$workerConf->{MaxWorkers} = $max_local_workers if $max_local_workers;
-	$workerConf->{MaxWorkers} = 2 unless exists $workerConf->{MaxWorkers};
+	$workerConf->{MaxWorkers} = "?" unless exists $workerConf->{MaxWorkers};
 	
 	my $executor = $conf->executor or croak "couldn't retrieve executor from configuration";
 	
@@ -358,7 +357,12 @@ BLURB
     
     euid(0);
 	$environment->DB_conf($dbConf);
-	$environment->store_to ();
+	$environment->omeis_url ($omeis_repository_url);
+	$environment->lsid ($lsid);
+	$environment->apache_conf($apacheConf);
+ 	$environment->matlab_conf($matlabConf);
+	$environment->worker_conf($workerConf);
+	$environment->store_to();
 }
 
 sub configure_help {
