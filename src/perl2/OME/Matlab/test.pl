@@ -34,7 +34,7 @@
 #-------------------------------------------------------------------------------
 
 use strict;
-use OME::Matlab;
+use Matlab;
 
 my $matlab_path = "matlab";
 my $matlab_flags = "-nodisplay -nojvm";
