@@ -39,6 +39,10 @@ die "cmd-line parameters -lib and -include must be specified. \n".
 	"e.g: perl Makefile.pl -lib='-L/Applications/MATLAB704/bin/mac -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz' -include='-I/Applications/MATLAB704/extern/include'\n"
 	if (not defined($matlab_lib) or not defined ($matlab_include));
 
+my $matlab_lib_path = $matlab_lib;
+$matlab_lib_path = $1
+	if ($matlab_lib_path =~ m/-L(\S+)/ );
+				
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
@@ -53,28 +57,19 @@ WriteMakefile(
     'clean'         => {FILES => '../blib'},
 );
 
-#sub MY::test {
-#	package MY;
-#	my $str = shift->SUPER::test(@_);
-#	if ($matlab_arch eq "mac") {
-#		print "Adding DYLD_LIBRARY_PATH to Make Test ...\n"
-#			if $str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 DYLD_LIBRARY_PATH=$matlab_lib_path#;
-#	} else {
-#		print "Adding LD_LIBRARY_PATH to Make Test ...\n"
-#			if $str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 LD_LIBRARY_PATH=$matlab_lib_path#;
-#	}
-#	return $str;
-# }
+sub MY::test {
+	package MY;
+	my $str = shift->SUPER::test(@_);
+	$str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 LD_LIBRARY_PATH=$matlab_lib_path DYLD_LIBRARY_PATH=$matlab_lib_path#;
+	return $str;
+ }
 
-#sub MY::const_loadlibs {
-#	package MY;
-#	my $str = shift->SUPER::const_loadlibs(@_);
-#	if ($matlab_arch ne "mac") {
-#		print "Modifying LD_RUN_PATH...\n"
-#			if $str =~ s#^(LD_RUN_PATH.+)$#$1:$matlab_lib_path#m;
-#		print "Modifying LD_LIBRARY_PATH...\n";
-#		$str = $str."LD_LIBRARY_PATH = $matlab_lib_path";
-#		
-#	}
-#	return $str;
-#}
+sub MY::const_loadlibs {
+	package MY;
+	my $str = shift->SUPER::const_loadlibs(@_);
+	print "Modifying LD_RUN_PATH...\n"
+		if $str =~ s#^(LD_RUN_PATH.+)$#$1:$matlab_lib_path#m;
+	print "Modifying LD_LIBRARY_PATH...\n";
+	$str = $str."LD_LIBRARY_PATH = $matlab_lib_path";		
+	return $str;
+}
