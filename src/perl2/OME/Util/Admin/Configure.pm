@@ -290,11 +290,11 @@ BLURB
 		}
 	}
 	
-	my $worker_conf = {
-		MaxWorkers => $environment->worker_conf() ? $environment->worker_conf()->{MaxWorkers} : 2
+	my $worker_conf_def = {
+		MaxWorkers => 2
 	};
 	
-	my $workerConf = $environment->worker_conf($worker_conf);
+	my $workerConf = defined $environment->worker_conf() ? $environment->worker_conf() : $worker_conf_def;
 	$workerConf->{MaxWorkers} = $max_local_workers if $max_local_workers;
 	$workerConf->{MaxWorkers} = "?" unless exists $workerConf->{MaxWorkers};
 	
