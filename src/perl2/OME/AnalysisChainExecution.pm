@@ -104,6 +104,10 @@ __PACKAGE__->addACL ({
         	froms   => ['experimenters acl'],
         	wheres  => ["acl.attribute_id = experimenter_id"],
         	});
+# timing information column
+__PACKAGE__->addColumn(['total_time', 't_time'] => 't_time',
+                       {SQLType => 'float'});
+                       
 =head1 METHODS (C<AnalysisChainExecution>)
 
 The following methods are available to C<AnalysisChainExecution> in
