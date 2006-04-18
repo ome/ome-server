@@ -538,6 +538,7 @@ ReuseResults flag was set in the call to executeChain().
 =cut
 
 sub executeNodeWithTarget {
+	my $start_time = [gettimeofday()];
     my $self = shift;
     my ($node,$target) = @_;
     my $target_id = (defined $target)? $target->id(): 0;
@@ -609,7 +610,6 @@ sub executeNodeWithTarget {
             # Create a node execution for this node and the matching MEX
             $nex = OME::Tasks::ModuleExecutionManager->
               createNEX($past_mex,$self->{chain_execution},$node);
-            $session->commitTransaction();
 
             return $nex;
         }
@@ -624,7 +624,8 @@ sub executeNodeWithTarget {
     my $executor = $self->{executor};
     logdbg ("debug", "  Executing!");
     $executor->executeModule($mex,$dependence,$target);
-
+	$mex->total_time(tv_interval($start_time));
+	$mex->storeObject();
     return $nex;
 }
 
@@ -718,6 +719,8 @@ sub executeChain {
     my ($chain,$dataset,$user_inputs,$task,%flags) = @_;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
+
+	my $start_time = [gettimeofday()];
 
     # ReuseResults flag has a default value
     $flags{ReuseResults} = 1
@@ -846,15 +849,11 @@ sub executeChain {
                 # Node's ready, let's execute
                 $task->step();
                 $task->setMessage('Executing `'.$node->module->name()."`");
-			
-				my $start_time = [gettimeofday()];
-                my $nex = $self->executeNodeWithTarget($node,$target);
-				my $mex = $nex->module_execution();
-				$mex->total_time(tv_interval($start_time));
-				
+
+                $self->executeNodeWithTarget($node,$target);
+
                 # Mark some state and keep going
-			    $mex->storeObject();
-                $session->commitTransaction();
+				$session->commitTransaction();
                 $self->{started_nodes}->{$node->id()}->{$target_id} = 1;
                 $continue = 1;
             }
@@ -879,6 +878,10 @@ sub executeChain {
     }
     $task->setMessage("");
     $task->finish();
+
+    $chex->total_time(tv_interval($start_time));
+	$chex->storeObject();
+    $session->commitTransaction();
     return $self->{chain_execution};
 }
 
