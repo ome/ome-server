@@ -631,7 +631,7 @@ sub get_classifications_and_category_numbers {
 			$factory->findAttributes( 'Classification', image => $image )
 		);
 		if( scalar( @classification_list ) == 0 ) {
-			print STDERR "Could not find a classification for image id=".$image->id;
+			print STDERR "Could not find a classification for image id=".$image->id."\n";
 			$classifications{ $image->id } = undef;
 			next;
 		}
