@@ -61,7 +61,8 @@ sub startImage {
 	my $start_time = [gettimeofday()];
     my $pixels = $self->getCurrentInputAttributes("Pixels")->[0];
 	$mex->read_time(tv_interval($start_time));
-	
+	$mex->execution_time(0);
+
 	$start_time = [gettimeofday()];
 	
 	for (my $z=0; $z<$pixels->SizeZ(); $z++) {

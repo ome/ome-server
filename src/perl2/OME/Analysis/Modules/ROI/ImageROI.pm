@@ -61,7 +61,8 @@ sub startImage {
 	my $start_time = [gettimeofday()];
     my $pixels = $self->getCurrentInputAttributes("Pixels")->[0];
 	$mex->read_time(tv_interval($start_time));
-	
+	$mex->execution_time(0);
+
 	$start_time = [gettimeofday()];
 	my $feature = $self->newFeature("Whole Image ROI",$image);
 	my $featureID = $feature->id();

@@ -63,6 +63,7 @@ sub startImage {
     my @numOfTilesOptional = $self->getCurrentInputAttributes("Number of Tiles");
 
 	$mex->read_time(tv_interval($start_time));
+	$mex->execution_time(0);
 	$start_time = [gettimeofday()];
 	
 	for (my $z=0; $z<$pixels->SizeZ(); $z++) {
