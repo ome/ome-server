@@ -51,6 +51,7 @@ DerivedPixels.
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
+use Time::HiRes qw(gettimeofday tv_interval);
 
 sub new {
     my $proto = shift;
@@ -71,14 +72,19 @@ sub startFeature {
     my $mex     = $self->getModuleExecution();
     my $module  = $mex->module();
 
+	my $start_time = [gettimeofday()];
 	my $derivedPixelsST = $factory->findObject('OME::SemanticType', {name => 'DerivedPixels'});
 
     # Find all of the formal inputs for this module.  Each one should
     # have a semantic type which is a PPM subclass.
     my @formal_inputs  = $module->inputs();
-	
+    
+	$mex->read_time(tv_interval($start_time));
+	$mex->execution_time(0);
+	$mex->write_time(0);
   INPUT:
     foreach my $formal_input (@formal_inputs) {
+		$start_time = [gettimeofday()];
         # Since the input represents a PPM subclass ST, it should have
         # an element named Parent.  First, check that there is a Parent
         # element for this ST, and that it's a reference element.  If
@@ -109,9 +115,11 @@ sub startFeature {
 	    # We have a valid Parent link for this input.  So, find all of
         # the input values, follow their Parent links, and create
         # virtual MEX outputs for these parents.
-
+		
         my @values = $self->getCurrentInputAttributes($formal_input);
-
+		$mex->read_time($mex->read_time() + tv_interval($start_time));
+		
+		$start_time = [gettimeofday()];
         foreach my $value (@values) {
             my $parent = $value->Parent();
             
@@ -146,6 +154,7 @@ sub startFeature {
 					EndT   => $parent->SizeT()-1,
 				});
         }
+		$mex->write_time($mex->write_time() + tv_interval($start_time));
     }
 }
 

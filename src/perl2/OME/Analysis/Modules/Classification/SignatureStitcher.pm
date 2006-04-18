@@ -67,6 +67,7 @@ use OME::Analysis::Handler;
 use OME::Tasks::ModuleExecutionManager;
 
 use base qw(OME::Analysis::Handler);
+use Time::HiRes qw(gettimeofday tv_interval);
 
 # Finds inputs & stiches them together
 
@@ -85,12 +86,18 @@ sub execute {
 	my $module = $mex->module();
 	
 	# Figure out what's been passed in this time.
+	my $start_time = [gettimeofday()];
 	my @formal_inputs = $factory->findObjects('OME::Module::FormalInput', { module => $module });
+	$mex->read_time(tv_interval($start_time));
+	$mex->execution_time(0);
+	$mex->write_time(0);
+	
 	@formal_inputs = sort { $a->name cmp $b->name } @formal_inputs;
 
 	# Make some entries for each input
 	my $signature_vector_size = 0;
 	foreach my $formal_input ( @formal_inputs ) {
+		$start_time = [gettimeofday()];
 		logdbg "debug", "Creating Signature Vector for ".$formal_input->name()." \n";
 		die "Inputs of arity greater than 1 are not supported at this time. Error with input ".$formal_input->name()
 			if $formal_input->list();
@@ -102,6 +109,9 @@ sub execute {
 		# Every semantic element gets an entry in the vector
 		my @SEs = $formal_input->semantic_type->semantic_elements();
 		@SEs = sort { $a->name cmp $b->name } @SEs;
+		$mex->read_time($mex->read_time() + tv_interval($start_time));
+
+		$start_time = [gettimeofday()];
 		foreach my $se ( @SEs ) {
 		
 			# is SE of an appropriate type i.e a double
@@ -134,6 +144,7 @@ sub execute {
 				) or die "Couldn't make a new vector entry";
 			}
 		}
+		$mex->write_time($mex->write_time() + tv_interval($start_time));
 	}
 
 }
