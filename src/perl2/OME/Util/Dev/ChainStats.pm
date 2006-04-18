@@ -141,11 +141,14 @@ sub chex_stats {
 	my %mexes_wo_time;
 	foreach my $mex (@mexes) {
 		$mex_total_time += $mex->total_time;
-		if ( $mex->execution_time ) {
+		if ( $mex->read_time or
+			 $mex->write_time or
+			 $mex->execution_time ) {
 				$mex_total_time_breakdown += $mex->total_time;
-				$mex_execution_time += $mex->execution_time;
+				
+				$mex_execution_time    += $mex->execution_time;
 				$mex_db_retrieval_time += $mex->read_time;
-				$mex_db_storage_time += $mex->write_time;
+				$mex_db_storage_time   += $mex->write_time;
 				$mexes_w_time++;
 		} else {
 				$mexes_wo_time{ $mex->module->name }++;
@@ -160,6 +163,9 @@ sub chex_stats {
 		print scalar( @executed_nodes )." of ".scalar( @total_nodes )." nodes have been executed.\n";
 	print "	Of those, ".scalar( @error_nodes )." nodes had at least one error.\n"
 		if scalar( @error_nodes );
+	printf( "Chain's Execution Time: %.2f sec\n",$chex->total_time());
+	printf( "Chain Overhead Time: %.2f sec\n", $chex->total_time() - $mex_total_time);
+	
 	
 	# Print NEX/Node stats
 	print "\nNode execution stats:\n";
