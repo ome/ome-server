@@ -10,10 +10,9 @@
 <hr>
 <TMPL_VAR NAME=criteria_controls>
 <hr>
+<p><a href="<TMPL_VAR NAME=Table_URL>">Save results as table</a></p>
 <nobr>Display Results as:</nobr><br>
-<TMPL_LOOP NAME=modes_loop>
-<nobr><input type="radio" name="Mode" value="<TMPL_VAR NAME=mode>" <TMPL_VAR NAME=checked>><TMPL_VAR NAME=mode_title></nobr><br>
-</TMPL_LOOP>
+<TMPL_VAR NAME=availableTemplates>
 <hr>
 <TMPL_VAR NAME=do_select>
 </td>

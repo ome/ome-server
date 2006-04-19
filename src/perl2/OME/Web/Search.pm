@@ -77,10 +77,10 @@ sub new {
 	# _display_modes lists formats the results can be displayed in. 
 	#	mode maps to a template name. 
 	#	mode_title is presented to the user.
-	$self->{ _display_modes } = [
-		{ mode => 'tiled_list', mode_title => 'Summaries' },
-		{ mode => 'tiled_ref_list', mode_title => 'Names' },
-	];
+	$self->{ _display_modes } = {
+		'summary' => 'Summaries',
+		'ref'     => 'Names', 
+	};
 	
 	$self->{ form_name } = 'primary';
 	
@@ -171,14 +171,21 @@ END_HTML
 	$tmpl_data{ search_types } = $self->__get_search_types_popup_menu();
 	
 	# set up display modes
-	my $current_display_mode = ( $q->param( 'Mode' ) || 'tiled_list' );
-	foreach my $entry ( @{ $self->{ _display_modes } } ) {
-		my %mode_data = %$entry;
-		$mode_data{ checked } = 'checked'
-			if( $entry->{mode} eq $current_display_mode );
-		push( @{ $tmpl_data{ modes_loop } }, \%mode_data );
-	}
-	
+	my $displayMode = ( $q->param( 'DisplayTemplate' ) || 'summary' );
+	$q->param( 'DisplayTemplate', $displayMode );
+# These lines allow the user to select any display template available for this type.
+# The drawback is that many templates have random names and were designed for interal use.
+#	my @template_names  = $self->Renderer()->getTemplateList( $type, 'one' );
+#	my %template_labels = map{ $_ => ucfirst( $_ ) } @template_names;
+	my %template_labels = %{ $self->{ _display_modes } };
+	my @template_names  = keys( %template_labels );
+	$tmpl_data{ availableTemplates } = $q->radio_group( 
+		-name      => 'DisplayTemplate', 
+		'-values'  => \@template_names, 
+		-labels    => \%template_labels,
+		-linebreak => 'true'
+	);
+		
 	# If a type is selected, write in the search fields.
 	# Also search if search fields are ready.
 	if( $type ) {
@@ -215,15 +222,19 @@ END_HTML
 		# Get Objects & Render them
 		my %searchParams = $self->_getSearchParams();
 		my $select = $q->param( 'select' );
-		$tmpl_data{ results } = $render->renderArray( [$formal_name, \%searchParams], $current_display_mode, 
-			{ type => $type, no_more_info => 1,
+		$tmpl_data{ results } = $render->renderArray( [$formal_name, \%searchParams], 'tiled_list_param',
+			{ 
+				type => $type, 
+				no_more_info => 1, 
+				object_mode => $displayMode, 
 				( $select && $select eq 'many' ?
 					( draw_checkboxes => 1 ) :
 				( $select && $select eq 'one' ?
 					( draw_radiobuttons => 1 ) :
 					()
-				) )
-			} );
+				) ),
+			} 
+		);
 
 		# Select button
 		$tmpl_data{do_select} = 
@@ -244,6 +255,14 @@ END_HTML
 				-value => 'Select all search results',
 			} )
 			if( $select && $select eq 'many' );
+
+		# Create link to save as table.
+		delete $searchParams{ __offset }
+			if exists $searchParams{ __offset };
+		delete $searchParams{ __limit }
+			if exists $searchParams{ __limit };
+		$tmpl_data{ Table_URL } = 
+			$self->getTableURL( $formal_name, %searchParams );
 
 		# This is used to retain selected objects across pages. 
 		# It takes advantage of CGI's "sticky fields". The values (i.e. LSID's)
@@ -266,7 +285,7 @@ END_HTML
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
 			$q->hidden( -name => 'page_action', -default => undef, -override => 1 );
-		
+			
 	}
 	
 	my $tmpl = HTML::Template->new( 
