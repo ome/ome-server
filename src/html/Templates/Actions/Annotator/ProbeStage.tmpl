@@ -12,9 +12,15 @@ NAME=images_completed>">
 <input type="hidden" name="NewProbe" value="<TMPL_VAR NAME=NewProbe>">
 <input type="hidden" name="NewGene" value="<TMPL_VAR NAME=NewGene>">
 
-<TMPL_VAR NAME=current_image/render-large_no_comments><br>
-
 <a href = "javascript:selectMany('OME::Image','images_to_annotate');"><br>Search for images to annotate</a><br><br> 
+
+
+<TMPL_VAR NAME=current_image/render-large><br>
+Suitable for publication? 
+	 <input type="checkbox" name="publishable" value="publishable"
+	 <TMPL_IF NAME=Publishable>CHECKED</TMPL_IF>/>
+	 <br>
+
 
 <TABLE>
 <TR>
@@ -101,7 +107,6 @@ onclick="javascript: document.forms[0].CreateGene.value='CreateGene'; document.f
 </TABLE>
 </div>
 </TMPL_IF>
-
 </td>
 </TR>
 </table>
