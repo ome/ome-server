@@ -106,7 +106,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.20";
+our $DB_VERSION = "2.21";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
