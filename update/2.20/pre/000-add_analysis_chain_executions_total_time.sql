@@ -1,0 +1,1 @@
+ALTER TABLE analysis_chain_executions ADD COLUMN t_time float;
