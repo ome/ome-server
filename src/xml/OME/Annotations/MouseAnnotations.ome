@@ -201,6 +201,37 @@
 	 DataType = "string"/>
     </SemanticType>
 
+    <!-- A slightly more detailed type of external link is good for
+	 linking to pbublications -->
+    <SemanticType
+       Name="Publication"
+       AppliesTo="G">
+      <Description>A link to a publication </Description>
+      <Element
+	 Name="Author"
+	 DBLocation="PUBLICATION.AUTHOR"
+	 DataType="string"/>
+      <Element
+	 Name="Title"
+	 DBLocation="PUBLICATION.TITLE"
+	 DataType="string"/>
+      <Element 
+	Name="Venue"
+	DBLocation="PUBLICATION.VENUE"
+	DataType="string"/>
+      <Element 
+	Name="Date"
+	DBLocation="PUBLICATION.DATE"
+	DataType="string"/>
+      <Element 
+	Name="PubmedID"
+	DBLocation="PUBLICATION.PMID"
+	DataType="integer"/>
+      <Element 
+	Name="URL"
+        DBLocation="PUBLICATION.URL"
+        DataType="string"/>	       
+    </SemanticType>
 
     <!-- We assume Genes, probes, and strains can each have multiple
 	 external links -->
@@ -258,6 +289,20 @@
 	 DataType = "reference"
 	 RefersTo = "ExternalLink"/>
     </SemanticType>
+
+    <!-- Images can be associated with publications -->
+    <SemanticType
+       Name="ImagePublication"
+       AppliesTo="I">
+      <Description>A link between an image and a
+      publication</Description>
+      <Element 
+	 Name="Publication"
+	 DBLocation="IMAGE_PUBLICATION.PUBLICATION_ID"
+	 DataType="reference"
+	 RefersTo="Publication"/>
+    </SemanticType>
+	
 
     <SemanticType
       Name = "ImageProbe"
