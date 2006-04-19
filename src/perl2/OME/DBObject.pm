@@ -2499,11 +2499,13 @@ no warnings "uninitialized";
 					# Get columns to search on. Start out with every column,
 					# then filter to columns that contain data, and are not 
 					# specified in the search criteria. no foreign keys allowed here.
+					# Also, skip boolean columns
 					my @wildCardColumns;
 					my @startingColumns = $class->getColumns();
 					foreach my $column ( @startingColumns ) {
 						next unless ( $class->getColumnType($column) eq 'normal' );
 						next if ( exists $skip_columns{$column} );
+						next if( $class->getColumnSQLType($column) eq 'boolean' );
 						push @wildCardColumns, $column;
 						# Don't add a column more than once by adding it under other aliases
 						my @aliases = $class->getColumnAliases( $column );
@@ -2755,11 +2757,13 @@ no warnings "uninitialized";
 				# Get columns to search on. Start out with every column,
 				# then filter to columns that contain data, and are not 
 				# specified in the search criteria. no foreign keys allowed here.
+				# Also, skip boolean columns
 				my @wildCardColumns;
 				my @startingColumns = $class->getColumns();
 				foreach my $column ( @startingColumns ) {
 					next unless ( $class->getColumnType($column) eq 'normal' );
 					next if ( exists $skip_columns{$column} );
+					next if( $class->getColumnSQLType($column) eq 'boolean' );
 					push @wildCardColumns, $column;
 					# Don't add a column more than once by adding it under other aliases
 					my @aliases = $class->getColumnAliases( $column );
