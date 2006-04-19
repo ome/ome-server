@@ -88,10 +88,10 @@ sub update {
 	my ($self,$commands) = @_;
 	my %allowed_paths = (
 	#   'Path'        	    => [ 'updateFunction', @parameters_to_pass_into_function ],
-		'Display/One' 	    => [ 'updateDisplayTemplates', 'one' ],
-		'Display/Many' 		=> [ 'updateDisplayTemplates', 'many' ],
-		'Actions/Annotator' => [ 'updateAnnotationTemplates'],
-		'Browse'			=> [ 'updateBrowseTemplates' ]
+		'System/Display/One'       => [ 'updateDisplayTemplates', 'one' ],
+		'System/Display/Many'      => [ 'updateDisplayTemplates', 'many' ],
+		'System/Actions/Annotator' => [ 'updateAnnotationTemplates'],
+		'System/Browse'            => [ 'updateBrowseTemplates' ]
 	);
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
