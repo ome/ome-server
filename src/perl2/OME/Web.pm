@@ -207,12 +207,17 @@ sub pageURL {
 	} else {
 		$base_url = 'serve.pl'
 	}
-	return $base_url."?Page=$page".
+	my $url = $base_url."?Page=$page".
 		( $param ?
 		  '&'.join( '&', map( $_."=".$param->{$_}, keys %$param ) ) :
 		  ''
 		);
-	#return $self->CGI()->escape("serve.pl?Page=$page");
+	# do url-escaping of most meta characters.
+	# The code snippet was obtained from http://glennf.com/writing/hexadecimal.url.encoding.html
+	my $MetaChars = quotemeta( ';,\|+)(*^%$#@!~`');
+	$url =~ s/([$MetaChars\"\'\x80-\xFF])/"%" . uc(sprintf("%2.2x", ord($1)))/eg;
+	$url =~ s/ /\+/g;
+	return $url;
 }
 
 
@@ -1048,6 +1053,42 @@ sub getSearchURL {
 	return $self->pageURL( 'OME::Web::Search', {
 		SearchType      => $formal_name, 
 		@search_params
+	} );
+}
+
+=head2 getTableURL
+
+	my $table_url = $self->getTableURL( $obj_type, @search_params );
+
+same input parameters as $factory->findObjects()
+
+returns a url to a tab delimited table page that contains the search results.
+
+=cut
+
+sub getTableURL {
+	my ($self, $obj_type, %search_params) = @_;
+	my ($package_name, $common_name, $formal_name, $ST) = 
+		$self->_loadTypeAndGetInfo( $obj_type );
+	my %reformattedSearchParams;
+	foreach my $param ( keys %search_params ) {
+		if( ref( $search_params{ $param } ) eq 'ARRAY' ) {
+			if( $search_params{ $param }->[0] =~ m/^(like|ilike)$/ ) {
+				$reformattedSearchParams{ $formal_name.".".$param } = 
+					$search_params{ $param }->[1];
+			} elsif( $search_params{ $param }->[0] eq 'in' ) {
+				$reformattedSearchParams{ $formal_name.".".$param } = 
+					join( ',', @{ $search_params{ $param }->[1] } )
+			}
+		} else {
+			$reformattedSearchParams{ $formal_name.".".$param } = 
+				$search_params{ $param };
+		}
+	}
+	return $self->pageURL( 'OME::Web::DBObjTable', {
+		Type      => $formal_name, 
+		Format    => 'txt', 
+		%reformattedSearchParams
 	} );
 }
 
