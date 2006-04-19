@@ -484,7 +484,7 @@ Returns search controls for a given type. It first attempts to construct
 this with a template specific to the type (for an example see: 
 	OME/src/html/Templates/System/Search/OME/Image/search.tmpl )
 If it cannot find a custom search template, it will determine search fields 
-from field show in the display template for that type.
+to include based on fields show in the display template for that type.
 
 Suggestions or trials at improved logic for this method would be welcome.
 
@@ -518,11 +518,18 @@ sub getSearchCriteria {
 			push @search_fields, $summaryField
 				if( not exists $lookup{ $summaryField } );
 		}
+		# Lookup search fields explicitly requested by the template.
+		my @template_fields = grep( (!m/^\//), $tmpl->param() ); # Screen out special field requests that start with '/'
+		# Add template requests to the list
+		foreach my $tpmlField ( @template_fields ) {
+			push @search_fields, $tpmlField
+				if( not exists $lookup{ $tpmlField } );
+		}
 	} else {
 		# First look for any requested via parameters
 		@search_fields = $q->param( 'search_names' );
 		my %lookup = map{ $_ => undef } @search_fields;
-		# Lookup search fields from the display template.
+		# Lookup search fields from the template.
 		my @template_fields = grep( (!m/^\//), $tmpl->param() ); # Screen out special field requests that start with '/'
 		# Record which fields were not requested by the template
 		my %template_field_lookup = map{ $_ => undef } @template_fields;
@@ -583,7 +590,11 @@ sub getSearchCriteria {
 				sort_down    => $sort_down,
 			) : () )
 		);
-		if( $tmpl->query( name => '/search_fields_loop' ) ) {
+		# Put this search field in the search fields loop if there is such a loop
+		# and the field wasn't explicitly requested by the template.
+		if( ( $tmpl->query( name => '/search_fields_loop' ) ) && 
+		    ( !$tmpl->query( name => $field )  )
+		  ) {
 			push( 
 				@{ $tmpl_data{ '/search_fields_loop' } }, 
 				{ search_field => $search_field_tmpl->output() }
