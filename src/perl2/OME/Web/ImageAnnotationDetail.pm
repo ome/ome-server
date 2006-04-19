@@ -146,6 +146,8 @@ sub getPageBody {
 
     $self->getClassificationDetails($image,\%tmpl_data);
 
+    $self->getPublicationDetails($image,\%tmpl_data);
+
     # populate the template..
     $tmpl->param(%tmpl_data);
     # and the form.
@@ -395,6 +397,31 @@ sub getClassificationDetail {
     $detail{catValue} = $catURL;
     return \%detail;
 }
+
+
+=head1 getPublicationDetails
+
+    $self->getPublicationDetails($image,$tmpl_data);
+    get details for all associated publications
+
+
+=cut
+
+sub getPublicationDetails  {
+    my $self  = shift;
+    my ($image,$tmpl_data) = @_;
+
+    # get the image publications.
+    my @publicationLinks = $image->ImagePublicationList(); 
+    if (scalar(@publicationLinks) > 0) {
+	my @publications = map { $_->Publication} @publicationLinks;
+    
+	$tmpl_data->{'publications/render-item_list'} =  
+	    $self->Renderer()->renderArray(\@publications,'item_list',
+					   {type => '@Publication'});
+    }
+}
+
 
 
 =head1 getObjURL
