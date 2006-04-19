@@ -604,6 +604,57 @@ sub _pagerControl {
 	return ( $offset, $pagingText );
 }
 
+
+
+=head2 getTemplateList
+
+	my @template_names = $self->Renderer->getTemplateList( $type, $arity );
+
+	$type is optional
+	$arity is either 'one' or 'many'
+
+	For the moment, returns the names of templates available for a given type.
+	If no type is specified, only generic templates are given.
+	For now, this list is built from scanning the template directory.
+	When all templates are registered in the DB, then it will be built from a 
+	DB query.
+
+=cut
+
+sub getTemplateList {
+	my ($self, $type, $arity ) = @_;
+	my %template_names;
+	
+	# Find generic templates
+	my $generic_path = $self->_baseTemplateDir( $arity );
+	opendir( DH, $generic_path );
+	while( defined (my $file = readdir DH )) {
+		if( $file =~ m/^generic_([^\.]+)\.tmpl$/ ) {
+			$template_names{ $1 } = undef;
+		}
+	}
+	closedir( DH);
+
+	# Find specialized templates
+	if( $type ) {
+		my $specializedPath = $self->_specializedDisplayTemplateDir( $type, $arity );
+		if( $specializedPath ) {
+			opendir( DH, $specializedPath );
+			while( defined (my $file = readdir DH )) {
+				if( $file =~ m/^([^\.]+)\.tmpl$/ ) {
+					$template_names{ $1 } = undef;
+				}
+			}
+			closedir( DH);
+		}
+	}
+
+	# Return the list of unique templates available for this type.
+	return sort( keys( %template_names ) );
+}
+
+
+
 =head2 renderData
 
 	# plural
@@ -672,7 +723,7 @@ sub renderData {
 	
 			# /object = render the object itself. default render mode is ref
 			} elsif( $field eq '/object' ) {
-				my $render_mode = ( $request->{ render } || 'ref' );
+				my $render_mode = ( $request->{ render } || $options->{object_mode} || 'ref' );
 				$record{ $request_string } = $self->render( $obj, $render_mode, $options );
 						
 			# /LSID = Object's LSID
@@ -927,8 +978,8 @@ sub getFieldTitles {
 		# title needs to reflect the rightmost name.
 		$title =~ s/.*\.//;
 
-# Uncomment this to have "ALL" appear by a wildcard search field.
-#		$title = "ALL" if $alias eq '*';
+		# Give wildcard (*) fields no title.
+		$title = "" if $alias eq '*';
 		$title =~ s/_/ /g;
 		if( $format eq 'txt' ) {
 			$titles{$alias} = ( $pkg_titles->{$alias} or ucfirst($title) );
@@ -1117,7 +1168,7 @@ sub _trim {
 
 	my $template_dir = $self->_baseTemplateDir( $arity );
 	
-	Returns the directory where specialized templates for this class are stored.
+	Returns the base directory where display templates are stored.
 	$arity is either 'one' or 'many'
 
 =cut
@@ -1127,8 +1178,8 @@ sub _baseTemplateDir {
 	my $session = $self->Session();
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
 	$tmpl_dir .= "/System/Display/";
-	$tmpl_dir .= 'One/' if( $arity =~ m/One/i );
-	$tmpl_dir .= 'Many/' if( $arity =~ m/Many/i );
+	$tmpl_dir .= 'One/' if( uc( $arity ) eq 'ONE' );
+	$tmpl_dir .= 'Many/' if( uc( $arity ) eq 'MANY' );
 	return $tmpl_dir;
 }
 
@@ -1145,16 +1196,40 @@ $arity is either 'one' or 'many'.
 sub _findTemplate {
 	my ( $self, $obj, $mode, $arity ) = @_;
 	return undef unless $obj;
-	my $tmpl_dir = $self->_baseTemplateDir( $arity );
-
-	my ($package_name, $common_name, $formal_name, $ST) =
-		$self->_loadTypeAndGetInfo( $obj );
-	my $tmpl_path = $formal_name;
-	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/\//g; 
-	$tmpl_path .= "/".$mode.".tmpl";
+	my $tmpl_dir = $self->_specializedDisplayTemplateDir( $obj, $arity )
+		or return undef;
+	my $tmpl_path = "/".$mode.".tmpl";
 	$tmpl_path = $tmpl_dir.$tmpl_path;
 	return $tmpl_path if -e $tmpl_path;
+	return undef;
+}
+
+=head2 _specializedDisplayTemplateDir
+
+	my $template_dir = $self->_specializedDisplayTemplateDir( $type, $arity );
+	
+	Returns the directory where specialized templates for this class are stored.
+	$arity is either 'one' or 'many'
+	Returns undef if a specialized directory does not exist.
+
+=cut
+
+sub _specializedDisplayTemplateDir {
+	my ($self, $type, $arity ) = @_;
+
+	# Derive path to base template directory
+	my $tmpl_dir = $self->_baseTemplateDir( $arity );
+	
+	my ($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $type );
+	my $tmpl_path = $formal_name;
+	$tmpl_path =~ s/@//g; 
+	$tmpl_path =~ s/::/\//g;
+
+	$tmpl_path = $tmpl_dir.$tmpl_path;
+	# Return a value only if this directory exists
+	return $tmpl_path
+		if -d $tmpl_path;
 	return undef;
 }
 
@@ -1172,6 +1247,8 @@ sub _getLSIDmanager {
 	$self->{ _LSIDmanager } = new OME::Tasks::LSIDManager ();
 	return $self->{ _LSIDmanager };
 }
+
+
 
 =head1 Specialized Rendering
 
