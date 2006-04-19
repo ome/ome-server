@@ -160,8 +160,8 @@ sub getPageBody {
 	my $q = $self->CGI();
 	my $object = $self->_loadObject();
 	$self->{ form_name } = 'primary';
-	# Get template names: File system scan, DB lookup
-	my @template_names = $self->_getPossibleTemplates();
+	# Get template names
+	my @template_names = $self->Renderer()->getTemplateList( $object, 'one' );
 	my $displayMode = $q->param( 'DisplayTemplate' ) || 'detail';
 	$q->param( 'DisplayTemplate', $displayMode );
 	
@@ -219,69 +219,6 @@ sub _loadObject {
 	$self->{__object} = $factory->loadObject( $formal_name, $id )
 		or die "Could not load DBObject $type, id=$id";
 	return $self->{__object};
-}
-
-sub _baseTemplateDir { 
-	my ($self) = @_;
-	my $session = $self->Session();
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	$tmpl_dir .= "/System/Display/One/";
-	return $tmpl_dir;
-}
-
-sub _specializedDisplayTemplateDir {
-	my $self = shift;
-
-	# Derive path to base template directory
-	my $tmpl_dir = $self->_baseTemplateDir();
-	
-	# Derive the subdirectory name
-	my $q    = $self->CGI();
-	my $type = $q->param( 'Type' )
-		or die "Type not specified";
-	my ($package_name, $common_name, $formal_name, $ST) =
-		$self->_loadTypeAndGetInfo( $type );
-	my $tmpl_path = $formal_name;
-	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/\//g; 
-
-	$tmpl_path = $tmpl_dir.$tmpl_path;
-	# Return a value only if this directory exists
-	return $tmpl_path
-		if -d $tmpl_path;
-	return undef;
-}
-
-# For now, scan the disk to get a list of templates. When all templates are 
-# registered in the DB, then read from DB.
-sub _getPossibleTemplates {
-	my $self = shift;
-	my %template_names;
-	
-	# Find generic templates
-	my $generic_path = $self->_baseTemplateDir();
-	opendir( DH, $generic_path );
-	while( defined (my $file = readdir DH )) {
-		if( $file =~ m/^generic_([^\.]+)\.tmpl$/ ) {
-			$template_names{ $1 } = undef;
-		}
-	}
-	closedir( DH);
-
-	# Find specialized templates
-	my $specializedPath = $self->_specializedDisplayTemplateDir();
-	if( $specializedPath ) {
-		opendir( DH, $specializedPath );
-		while( defined (my $file = readdir DH )) {
-			if( $file =~ m/^([^\.]+)\.tmpl$/ ) {
-				$template_names{ $1 } = undef;
-			}
-		}
-		closedir( DH);
-	}
-
-	# Return the list of unique templates available for this type.
-	return sort( keys( %template_names ) );
 }
 
 =head1 Author
