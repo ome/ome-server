@@ -134,9 +134,14 @@ sub getPageBody {
 	$self->populateImageDetails(\%tmpl_data, $tmpl);
 
         # annnotate if they hit 'save and next'
-    if ($q->param('SaveAndNext') eq 'SaveAndNext')  {
+    if ($q->param('SaveAndNext') 
+	&& $q->param('SaveAndNext') eq 'SaveAndNext')  {
 		$self->annotateWithSTs($imageToAnnotate,$sts,$maps);
 		$self->annotateWithCGs($imageToAnnotate,$category_groups);
+		my $publishable = 0;
+		$publishable = 1  if ($q->param('publishable'));
+		$self->setPublishable($imageToAnnotate,$publishable);
+
 		# Save image comments as a text annotation
 		if( $q->param( 'comments' ) ) {
 			my $currentAnnotation = OME::Tasks::ImageManager->
@@ -177,10 +182,17 @@ sub getPageBody {
 	$self->populateAnnotationSTs($currentImage,\%tmpl_data,$sts,$maps,
 	    \@parameter_names,$newVals);
     }
+
+
+
     # and then category groups
     if (grep {$_ eq 'cg.loop'} @parameter_names) {
 	$self->populateAnnotationGroups($currentImage,\%tmpl_data,$category_groups);
     }
+
+    # set publishable tag if needed for this iamge.
+    $self->populatePublicationStatus($currentImage,\%tmpl_data);
+
 
     # add fields for creating a new probe.
     $self->populateProbeFields(\%tmpl_data,\@parameter_names,$newVals);
@@ -359,6 +371,24 @@ sub annotateWithSTs {
     $session->commitTransaction();
 }
 
+=head1 setPublishable
+
+  create a PublicationStatus for this image
+=cut
+
+sub setPublishable {
+
+    my $self=shift;
+    my ($image,$publishable) = @_;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    my $statusType = $self->loadST('PublicationStatus');
+    my ($mex,$attrs) = OME::Tasks::AnnotationManager->annotateImage(
+	$image,$statusType, {Publishable => $publishable});
+    $session->commitTransaction();
+    
+}
 =head2 annotateWithCGs
     
     annotate with images with CategoryGroups.
@@ -674,6 +704,31 @@ sub addCategories {
 	}
     }
     $session->commitTransaction();
+}
+
+=head1 populatePublicationStatus
+
+=cut
+
+sub populatePublicationStatus {
+    my $self= shift;
+    my ($image,$tmpl_data) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+
+    my $status;
+    
+    eval { 
+	my @status_list = $image->PublicationStatusList(__order =>'!module_execution.timestamp');
+	$status= $status_list[0];
+    };
+    if ($status && !$@){
+	my $statusVal = $status->Publishable;
+	if ($statusVal) {
+	    $tmpl_data->{Publishable} = 1;
+	}
+    }
+
 }
 
 
