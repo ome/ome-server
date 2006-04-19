@@ -1,5 +1,12 @@
 <!-- These are the search controls. -->
 That match criteria:<br>
-<TMPL_LOOP NAME=/search_fields_loop>
-	<TMPL_VAR NAME=search_field>
-</TMPL_LOOP>
+<TMPL_VAR NAME='*'>
+<!-- ADVANCED search -->
+<a href="#" onClick="javascript: advanced=document.getElementById('advanced_text'); if (advanced.style.display=='none'){ advanced.style.display='inline'; } else { advanced.style.display='none'; }" >
+	Advanced Search
+</a>
+<div ID="advanced_text" STYLE="position: relative; display: none;">
+	<TMPL_LOOP NAME=/search_fields_loop>
+		<TMPL_VAR NAME=search_field>
+	</TMPL_LOOP>
+</div>

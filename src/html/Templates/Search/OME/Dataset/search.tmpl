@@ -4,6 +4,11 @@ That match criteria:<br>
 <TMPL_VAR NAME='*'>
 <TMPL_VAR NAME=owner>
 <!-- ADVANCED search -->
-<TMPL_VAR NAME=name>
-<TMPL_VAR NAME=description>
-<TMPL_VAR NAME=id>
+<a href="#" onClick="javascript: advanced=document.getElementById('advanced_text'); if (advanced.style.display=='none'){ advanced.style.display='inline'; } else { advanced.style.display='none'; }" >
+	Advanced Search
+</a>
+<div ID="advanced_text" STYLE="position: relative; display: none;">
+	<TMPL_VAR NAME=name>
+	<TMPL_VAR NAME=description>
+	<TMPL_VAR NAME=id>
+</div>
