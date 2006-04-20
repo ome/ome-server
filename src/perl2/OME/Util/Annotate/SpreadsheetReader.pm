@@ -206,6 +206,7 @@ sub processFile {
 	# package up outputs and return
 	# some one-else will be create some human understandable output
 	my $Results;
+	$Results->{global_mex}    = $global_mex;
 	$Results->{ERRORoutput}   = \@ERRORoutput;
 	$Results->{newProjs}      = \@newProjs;
 	$Results->{newDatasets}   = \@newDatasets;
