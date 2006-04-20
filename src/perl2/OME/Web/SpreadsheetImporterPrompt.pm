@@ -82,8 +82,8 @@ sub getPageBody {
 				$output .= "Error annotating: <br><br>";
 				$output .= "<font color='red'>".$results."</font>";
 			} else {
-				$output .= "Finished annotating: <br><br>";
-				$output .= OME::Web::SpreadsheetImporterPrompt->printSpreadsheetAnnotationResultsHTML ($results);
+				$output .= "Finished annotating. ";
+				$output .= $self->printSpreadsheetAnnotationResultsHTML ($results);
 			}
 			unlink $fileToParse;
 		}
@@ -114,6 +114,7 @@ sub printSpreadsheetAnnotationResultsHTML {
 	my $factory = $session->Factory();
 	
 	die "second input to printResultsHTML is expected to be a hash"	if (ref $Results ne "HASH");	
+	my $global_mex     = $Results->{global_mex};
 	my @ERRORoutput    = @{$Results->{ERRORoutput}};
 	my @newProjs       = @{$Results->{newProjs}};
 	my @newDatasets    = @{$Results->{newDatasets}};
@@ -123,7 +124,8 @@ sub printSpreadsheetAnnotationResultsHTML {
 	my $newGlobalSTSE  = $Results->{newGlobalSTSE};
 	my $images         = $Results->{images};
 	
-	my $output;
+	my $output = "<p>A full record of successfully imported meta-data can be found here: ".$self->Renderer()->render( $global_mex, 'ref' )."</p>";
+
 	if (scalar @ERRORoutput) {
 		foreach (@ERRORoutput) {
 			$output .= "<font color='red'>$_</font><br>";
