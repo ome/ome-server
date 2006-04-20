@@ -290,7 +290,8 @@
 	 RefersTo = "ExternalLink"/>
     </SemanticType>
 
-    <!-- Images can be associated with publications -->
+    <!-- Images can be associated with publications, but they may or
+    may not be publishable  -->
     <SemanticType
        Name="ImagePublication"
        AppliesTo="I">
@@ -302,6 +303,17 @@
 	 DataType="reference"
 	 RefersTo="Publication"/>
     </SemanticType>
+
+     <SemanticType 
+	Name="PublicationStatus"
+	AppliesTo="I">
+	<Description>Is the image publishable?</Description>
+	<Element 
+	   Name="Publishable"
+	   DBLocation="PUBLICATION_STATUS.PUBLISHABLE"
+	   DataType="boolean"/>
+       </SemanticType>
+   </SemanticTypeDefinitions>
 	
 
     <SemanticType
