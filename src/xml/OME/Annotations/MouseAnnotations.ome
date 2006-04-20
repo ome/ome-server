@@ -313,8 +313,6 @@
 	   DBLocation="PUBLICATION_STATUS.PUBLISHABLE"
 	   DataType="boolean"/>
        </SemanticType>
-   </SemanticTypeDefinitions>
-	
 
     <SemanticType
       Name = "ImageProbe"
