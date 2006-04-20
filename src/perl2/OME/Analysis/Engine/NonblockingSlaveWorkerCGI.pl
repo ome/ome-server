@@ -342,6 +342,13 @@ sub get_params {
 
 	$DBUser = $CGI->url_param('DBUser');
 	$DBUser = $CGI->param('DBUser') unless $DBUser;
+	# If the host is not specified in $DataSource, then an authenication error
+	# will emerge when $DBUser is specified. The line above removes host from
+	# $DataSource when host is the localhost's IP. We (Josiah & Tomasz) don't 
+	# know why the authentication error occurs, but this is a functional work-around.
+	# This happened when lgopt4 was hosting both a worker and the data server.
+	$DBUser = undef 
+		if( $host eq '127.0.0.1' );
 	
 	$DBPassword = $CGI->url_param('DBPassword');
 	$DBPassword = $CGI->param('DBPassword') unless $DBPassword;
