@@ -146,9 +146,12 @@ sub chex_stats {
 			 $mex->execution_time ) {
 				$mex_total_time_breakdown += $mex->total_time;
 				
-				$mex_execution_time    += $mex->execution_time;
-				$mex_db_retrieval_time += $mex->read_time;
-				$mex_db_storage_time   += $mex->write_time;
+				$mex_execution_time += $mex->execution_time
+					if (defined $mex->execution_time);
+				$mex_db_retrieval_time += $mex->read_time
+					if (defined $mex->read_time);
+				$mex_db_storage_time += $mex->write_time
+					if (defined $mex->write_time);
 				$mexes_w_time++;
 		} else {
 				$mexes_wo_time{ $mex->module->name }++;
