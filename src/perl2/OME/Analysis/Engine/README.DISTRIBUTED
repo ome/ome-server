@@ -24,6 +24,22 @@ The URL would then be http://worker123.node.com/perl2/NonblockingSlaveWorkerCGI.
 * Set the maximum workers the node can host by running 
 src/perl2/OME/Analysis/Engine/install_worker_node.pl as root.
 
+----       Matlab Notes     ----
+* If you would like the worker to run matlab, make sure the matlab libraries 
+are included in the dynamic linking path. The recommended way to do this is
+given below. Change the matlab library path to match your system
+
+	sudo echo "/usr/local/matlab/bin/glnxa64" > /etc/ld.so.conf.d/matlab.conf
+	sudo /sbin/ldconfig
+
+* Also, change the matlab license to the apache user. e.g.
+	sed -e's/current_matlab_user/www/g' /usr/local/matlab/etc/MLM.opt > apacheMLM.opt
+	sudo cp apacheMLM.opt /usr/local/matlab/etc/MLM.opt
+	sudo /usr/local/matlab/etc/lmdown
+	/usr/local/matlab/etc/lmstart
+	# Change permissions or remove log files as needed to get lmstart working. 
+	# It will typically give you error messages and paths.
+
 
 Additional Setup to Back End to support remote Workers
 -------------------------------------------------
