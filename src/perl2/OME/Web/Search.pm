@@ -347,7 +347,7 @@ sub getSearchFields {
 		
 		if( $foreignClass ) {
 			$form_fields->{ $field } = $self->getObjectSelectionField( 
-				$foreignClass, $field, $defaults->{ $field } );
+				$foreignClass, $field, { default_obj => $defaults->{ $field } } );
 		} else {
 			$q->param( $field, $defaults->{ $field }  ) 
 				unless defined $q->param( $field );
@@ -373,7 +373,7 @@ $type is the type of object to select. It may be a DBObject name
 $field_name is the desired name of the form field.
 $options is a hash that can optionally contain the following fields:
 	default_obj is the object that will be selected when the page 
-initially loads.
+initially loads. It may also be an id.
 	max_elements_in_list is the maximum number of elements to allow
 in a list. The default value is 10.
 	list_length is the vertical height of the list. The default value is 3.
@@ -392,6 +392,8 @@ sub getObjectSelectionField {
 	my ($self, $type, $field_name, $options) = @_;
 
 	$options = {} unless $options; # makes later code easier
+	confess "The options parameter is not a hash reference." 
+		unless ref( $options ) eq 'HASH';
 	my $default_obj     = $options->{ default_obj };
 	my $threshold_Popup = $options->{ max_elements_in_list } || 10;
 	my $list_length     = $options->{ list_length } || 3;
@@ -403,7 +405,8 @@ sub getObjectSelectionField {
 	}
 
 	my ($to_package, $to_common_name, $to_formal_name) = OME::Web->_loadTypeAndGetInfo( $type );
-	$default_obj = $default_obj->id() if $default_obj;
+	$default_obj = $default_obj->id() 
+		if( $default_obj && ref( $default_obj ) );
 
 	my $q = $self->CGI();
 	$q->param( $field_name, $default_obj  ) 
