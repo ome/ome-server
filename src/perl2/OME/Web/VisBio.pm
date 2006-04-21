@@ -102,6 +102,7 @@ sub createOMEPage {
 	$jnlp .= "  <resources>\n";
 	$jnlp .= "    <j2se version=\"1.4+\" max-heap-size=\"512m\"/>\n";
 	$jnlp .= "    <jar href=\"visbio.jar\"/>\n";
+	$jnlp .= "    <jar href=\"bio_formats.jar\"/>\n";
 	$jnlp .= "    <jar href=\"commons-httpclient-2.0-rc2.jar\"/>\n";
 	$jnlp .= "    <jar href=\"commons-logging.jar\"/>\n";
 	$jnlp .= "    <jar href=\"forms-1.0.4.jar\"/>\n";
