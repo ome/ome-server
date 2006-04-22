@@ -56,7 +56,7 @@ OME::Factory - database access class
 	                                  });
 	my @images = $factory->findObjects("OME::Image",
 	                                   name => "Image 4");
-	my @Pixels = $factory->findObjects('@Pixels', PixelType => 'uint16' );
+	my @Pixels = $factory->findObjects('@Pixels', PixelType => 'Uint16' );
 
 =head1 DESCRIPTION
 
