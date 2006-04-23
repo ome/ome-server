@@ -812,6 +812,7 @@ sub _getCurrentSearchType {
 	my $q    = $self->CGI();
 	# $type is the formal name of type of object being searched for
 	my $type = $q->param( 'SearchType' ) || $q->param( 'Locked_SearchType' );
+	$type = undef if $type eq 'OME::SemanticType::BootstrapExperimenter';
 	return $type;	
 }
 
