@@ -177,7 +177,7 @@ sub processFile {
 					     $newCategories,$global_mex,
 					     $fileToParse,$timestr);
 
-		$self->processSTs($STCols,\@seVals,$columnHeadings,
+		$newGlobalSTSE = $self->processSTs($STCols,\@seVals,$columnHeadings,
 				  $image,$newGlobalSTSE,
 				  $global_mex,\@ERRORoutput);
 
@@ -511,23 +511,24 @@ sub processSTs {
 	
 		# Granularity is Image, so do image annotation  
 		if ($granularity eq 'I') { 
-			$factory->maybeNewAttribute ($STName, $image->{ Image }, 
+			my $attr = $factory->maybeNewAttribute ($STName, $image->{ Image }, 
 						$global_mex, $data_hash) or 
 				die "could not make new (I) $STName\n\t". 
 					  join( "\n\t", map( $_." => ".$data_hash->{$_}, 
 						 keys %$data_hash ) );
 	
-			$image->{"ST:".$STName} = $data_hash; 
+			$image->{"ST:".$STName} = $attr; 
 		}
 		# Granularity is Global, so do global  
 		elsif ( $granularity eq 'G' ) { 
-			$factory->maybeNewAttribute ($STName, undef, $global_mex, $data_hash) or
+			my $attr = $factory->maybeNewAttribute ($STName, undef, $global_mex, $data_hash) or
 				die "could not make new (G) $STName\n\t". 
 					join( "\n\t", map( $_." => ".$data_hash->{$_}, 
 					   keys %$data_hash ) ); 
-			$newGlobalSTSE->{$STName} = $data_hash; 
+			push( @{ $newGlobalSTSE->{$STName} },  $attr );
 		} 
     }
+    return $newGlobalSTSE;
 }
 
 sub processDatasets{ 
@@ -652,8 +653,8 @@ sub printSpreadsheetAnnotationResultsCL {
 	if (scalar keys %$newGlobalSTSE) {
 		$output .= "New Global Attributes:\n";
 		foreach my $STName (sort keys %$newGlobalSTSE) {
-			foreach my $SEName (sort keys %{$newGlobalSTSE->{$STName}}) {
-				$output .= "&nbsp&nbsp $STName:$SEName -> `".$newGlobalSTSE->{$STName}->{$SEName}."`\n";
+			foreach my $attr ( @{ $newGlobalSTSE->{$STName} } ) {
+				$output .= "		$STName: ".$attr->id()."\n";
 			}
 		}
 		$output .= "\n"; # spacing
@@ -662,22 +663,28 @@ sub printSpreadsheetAnnotationResultsCL {
 		foreach my $imageIdentifier (sort keys %$images) {
 			my $image = $images->{$imageIdentifier};
 			$output .= "Spreadsheet Identifier: '". $imageIdentifier."'\n";
-			$output .= "    Image ID: ".$image->{"Image"}->ID()."\n";
+			$output .= "	Image ID: ".$image->{"Image"}->ID()."\n";
 			delete $image->{"Image"};
 
 			# specialised Rendering for Dataset association
 			if (exists $image->{"Dataset"}) {
-				$output .= "    Dataset: '".$image->{"Dataset"}->name()."'\n";
+				$output .= "	Dataset: '".$image->{"Dataset"}->name()."'\n";
 				delete $image->{"Dataset"};
 			}
 			
 			# generic rendering e.g. for Category Group/Cateogrizations
 			if (scalar keys %$image) {
-				$output .= "    Classifications:\n";
+				my $classificationMsg .= "	Classifications:\n";
+				my $haveClassifications = 0;
 				foreach my $key (sort keys %$image) {
-					my $CG = $factory->findObject ('@CategoryGroup', { Name => $key });
-					$output .= "        \\_ '".$key."' : '".$image->{$key}->Name()."'\n";
+					if( $key =~ m/^ST:(.*)$/ ) {
+						$output .= "\t\t".$1.": ".$image->{$key}->id();
+					} else {
+						$haveClassifications = 1;
+						$classificationMsg .= "		\\_ '".$key."' : '".$image->{$key}->Name()."'\n";
+					}
 				}
+				$output .= $classificationMsg if $haveClassifications;
 			}
 			$output .= "\n"; # spacing
 		}
