@@ -212,6 +212,7 @@ sub _loadObject {
 	
 	my $type = $q->param( 'Type' )
 		or die "Type not specified";
+	die "Type not specified" if $type eq 'OME::SemanticType::BootstrapExperimenter';
 	my $id   = $q->param( 'ID' )
 		or die "ID not specified";
 
