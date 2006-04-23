@@ -170,8 +170,6 @@ sub project_id { return shift->{UserState}->project_id(@_); }
 sub project { return shift->{UserState}->project(@_); }
 sub dataset_id { return shift->{UserState}->dataset_id(@_); }
 sub dataset { return shift->{UserState}->dataset(@_); }
-sub module_execution_id { return shift->{UserState}->module_execution_id(@_); }
-sub module_execution { return shift->{UserState}->module_execution(@_); }
 sub image_view { return shift->{UserState}->image_view(@_); }
 sub feature_view { return shift->{UserState}->feature_view(@_); }
 sub last_access { return shift->{UserState}->last_access(@_); }

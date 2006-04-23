@@ -96,9 +96,6 @@ __PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
                         SQLType => 'integer',
                         ForeignKey => 'datasets',
                        });
-__PACKAGE__->addColumn(module_execution_id => 'module_execution_id');
-__PACKAGE__->addColumn(module_execution => 'module_execution_id',
-                       {SQLType => 'integer'});
 __PACKAGE__->addColumn(image_view => 'image_view',{SQLType => 'text'});
 __PACKAGE__->addColumn(feature_view => 'feature_view',{SQLType => 'text'});
 __PACKAGE__->addColumn(last_access => 'last_access',
