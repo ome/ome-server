@@ -118,6 +118,20 @@ __PACKAGE__->contentType('text/html');
 __PACKAGE__->mk_classdata('timeout');
 __PACKAGE__->timeout(0);
 
+# Default timeout for packages is none
+__PACKAGE__->mk_classdata('invisibleObjects');
+__PACKAGE__->invisibleObjects({
+	'OME::SemanticType::BootstrapExperimenter' => undef,
+	'OME::SemanticType::BootstrapGroup' => undef,
+	'OME::UserState' => undef,
+});
+__PACKAGE__->mk_classdata('adminObjects');
+__PACKAGE__->adminObjects({
+	'@Experimenter' => undef,
+	'@Group' => undef,
+	'@ExperiementerGroup' => undef,
+});
+
 my $loginPage = 'OME::Web::Login';
 
 # new()

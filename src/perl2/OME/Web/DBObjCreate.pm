@@ -553,7 +553,7 @@ sub getStuffToPopulateHasOneRef {
 	my $newField = $q->hidden(-name => $newFieldName);
 
 	# is there a selection? try loading it
-	if ($q->param( $newFieldName) && $q->param($newFieldName) ne'') {
+	if ($q->param( $newFieldName) && $q->param($newFieldName) ne '') {
 	    $obj = $factory->loadObject( $type, $q->param( $newFieldName ) )
 		    or die "Could not load object ( type=$type,	id=".$q->param( $accessor_to_type ).")";
 	}
@@ -702,6 +702,9 @@ sub _getType {
 	my $q    = $self->CGI();
 	my $type = ( $q->param( '_Type' ) || $q->url_param( 'Type' ) ||
 	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	
+	$type = undef 
+		if( exists $self->adminObjects()->{ $type } || exists $self->invisibleObjects()->{ $type } );
 	return $type;
 }
 
