@@ -859,12 +859,18 @@ sub executeChain {
             }
         }
 
-        # Wait for at least one module to finish (we might be using a
+	    # Wait for at least one module to finish (we might be using a
         # multi-threaded or otherwise non-blocking executor) before
         # progressing to the next round.
+		# $executor->waitForAnyModules();
 
-        $executor->waitForAnyModules();
-
+		# changing to waitForAllModules from waitForAnyModules results in 3x speed-up.
+		# Discussion here:
+		# http://cvs.openmicroscopy.org.uk/tiki/tiki-index.php?page=Analysis+Engine+Profiling
+		# Tom Macura
+		$executor->waitForAllModules(); 
+		
+		
         if (!$continue) {
             # No modules were executed this round, but if we're
             # using a multi-threaded Executor, there might be
