@@ -654,7 +654,12 @@ sub printSpreadsheetAnnotationResultsCL {
 		$output .= "New Global Attributes:\n";
 		foreach my $STName (sort keys %$newGlobalSTSE) {
 			foreach my $attr ( @{ $newGlobalSTSE->{$STName} } ) {
-				$output .= "		$STName: ".$attr->id()."\n";
+				$output .= "		$STName: id: ".$attr->id()." ";
+				my $data_hash = $attr->getDataHash();
+				foreach my $seName ( sort keys %$data_hash )  {
+					$output .= ", $seName: ".$data_hash->{ $seName };
+				}
+				$output .= "\n";
 			}
 		}
 		$output .= "\n"; # spacing
@@ -678,7 +683,7 @@ sub printSpreadsheetAnnotationResultsCL {
 				my $haveClassifications = 0;
 				foreach my $key (sort keys %$image) {
 					if( $key =~ m/^ST:(.*)$/ ) {
-						$output .= "\t\t".$1.": ".$image->{$key}->id();
+						$output .= "\t\t".$1.": id:".$image->{$key}->id();
 					} else {
 						$haveClassifications = 1;
 						$classificationMsg .= "		\\_ '".$key."' : '".$image->{$key}->Name()."'\n";
