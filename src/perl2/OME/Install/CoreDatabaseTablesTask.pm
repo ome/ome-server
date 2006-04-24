@@ -794,6 +794,9 @@ sub update_configuration {
     my $factory = $session->Factory();
     my $var;
 	
+	my $MATLAB = $ENVIRONMENT->matlab_conf();
+	my $APACHE = $ENVIRONMENT->apache_conf();
+	
 	my %update_configuration_variables = (
 		# Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
 		# was ignored due to a pre-existing configuration    
