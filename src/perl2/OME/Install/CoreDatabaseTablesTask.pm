@@ -794,16 +794,13 @@ sub update_configuration {
     my $factory = $session->Factory();
     my $var;
 	
-	my $MATLAB = $ENVIRONMENT->matlab_conf();
-	my $APACHE = $ENVIRONMENT->apache_conf();
-	
 	my %update_configuration_variables = (
 		# Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
 		# was ignored due to a pre-existing configuration    
     	db_version     => $DB_VERSION,
 		import_formats => $IMPORT_FORMATS,
 		# Make sure there is an executor
-		executor       => $DEFAULT_EXECUTOR,
+		# executor       => $DEFAULT_EXECUTOR,
 		super_user     => $session->experimenter_id(),
 		template_dir   => $APACHE->{TEMPLATE_DIR},
 	);
