@@ -62,16 +62,16 @@ use File::Spec;
 our %PIXEL_TYPES;
 
 $PIXEL_TYPES{1}{1}{0} = 'int8';
-$PIXEL_TYPES{1}{0}{0} = 'Uint8';
+$PIXEL_TYPES{1}{0}{0} = 'uint8';
 
 $PIXEL_TYPES{2}{1}{0} = 'int16';
-$PIXEL_TYPES{2}{0}{0} = 'Uint16';
+$PIXEL_TYPES{2}{0}{0} = 'uint16';
 
 # "unsigned float" doesn't exist but we map that to float anyway
 $PIXEL_TYPES{4}{1}{1} = 'float';
 $PIXEL_TYPES{4}{0}{1} = 'float';
 $PIXEL_TYPES{4}{1}{0} = 'int32'; 
-$PIXEL_TYPES{4}{0}{0} = 'Uint32';
+$PIXEL_TYPES{4}{0}{0} = 'uint32';
 
 our %PIXEL_INFO;
 

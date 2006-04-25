@@ -99,22 +99,22 @@ my %_translate_from_matlab = (
 # Mapping from OME Pixel Types to matlab classes
 my %_pixel_type_to_matlab_class = (
 	int8   => $mxINT8_CLASS,
-	Uint8  => $mxUINT8_CLASS,
+	uint8  => $mxUINT8_CLASS,
 	int16  => $mxINT16_CLASS,
-	Uint16 => $mxUINT16_CLASS,
+	uint16 => $mxUINT16_CLASS,
 	int32  => $mxINT32_CLASS,
-	Uint32 => $mxUINT32_CLASS,
+	uint32 => $mxUINT32_CLASS,
 	float  => $mxSINGLE_CLASS,
 );
 	
 # Mapping from matlab classes to pixel types. Also limits the supported matlab classes.
 my %_matlab_class_to_pixel_type = (
 	$mxINT8_CLASS   => 'int8',
-	$mxUINT8_CLASS  => 'Uint8' ,
+	$mxUINT8_CLASS  => 'uint8' ,
 	$mxINT16_CLASS  => 'int16',
-	$mxUINT16_CLASS => 'Uint16',
+	$mxUINT16_CLASS => 'uint16',
 	$mxINT32_CLASS  => 'int32',
-	$mxUINT32_CLASS => 'Uint32',
+	$mxUINT32_CLASS => 'uint32',
 	$mxSINGLE_CLASS => 'float' ,
 );
 
