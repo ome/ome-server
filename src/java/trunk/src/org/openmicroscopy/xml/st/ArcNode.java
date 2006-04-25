@@ -1,0 +1,148 @@
+/*
+ * org.openmicroscopy.xml.ArcNode
+ *
+ *-----------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2006 Open Microscopy Environment
+ *      Massachusetts Institute of Technology,
+ *      National Institutes of Health,
+ *      University of Dundee,
+ *      University of Wisconsin-Madison
+ *
+ *
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *-----------------------------------------------------------------------------
+ */
+
+
+/*-----------------------------------------------------------------------------
+ *
+ * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
+ * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ *
+ *-----------------------------------------------------------------------------
+ */
+
+package org.openmicroscopy.xml.st;
+
+import org.openmicroscopy.xml.AttributeNode;
+import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.ds.st.*;
+import org.w3c.dom.Element;
+
+/**
+ * ArcNode is the node corresponding to the
+ * "Arc" XML element.
+ *
+ * Name: Arc
+ * AppliesTo: G
+ * Location: OME/src/xml/OME/Core/Instrument.ome
+ */
+public class ArcNode extends AttributeNode
+  implements Arc
+{
+
+  // -- Constructors --
+
+  /**
+   * Constructs an Arc node
+   * with the given associated DOM element.
+   */
+  public ArcNode(Element element) { super(element); }
+
+  /**
+   * Constructs an Arc node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ArcNode(OMEXMLNode parent) {
+    super(parent.getDOMElement().getOwnerDocument().
+      createElement("Arc"));
+    parent.getDOMElement().appendChild(element);
+  }
+
+  /**
+   * Constructs an Arc node,
+   * creating its associated DOM element beneath the
+   * given parent, using the specified parameter values.
+   */
+  public ArcNode(OMEXMLNode parent, String type, Float power,
+    LightSource lightSource)
+  {
+    this(parent);
+    setType(type);
+    setPower(power);
+    setLightSource(lightSource);
+  }
+
+
+  // -- Arc API methods --
+
+  /**
+   * Gets Type attribute
+   * of the Arc element.
+   */
+  public String getType() {
+    return getAttribute("Type");
+  }
+
+  /**
+   * Sets Type attribute
+   * for the Arc element.
+   */
+  public void setType(String value) {
+    setAttribute("Type", value);
+  }
+
+  /**
+   * Gets Power attribute
+   * of the Arc element.
+   */
+  public Float getPower() {
+    return getFloatAttribute("Power");
+  }
+
+  /**
+   * Sets Power attribute
+   * for the Arc element.
+   */
+  public void setPower(Float value) {
+    setFloatAttribute("Power", value);
+  }
+
+  /**
+   * Gets LightSource referenced by LightSource
+   * attribute of the Arc element.
+   */
+  public LightSource getLightSource() {
+    return (LightSource)
+      createReferencedNode(LightSourceNode.class,
+      "LightSource", "LightSource");
+  }
+
+  /**
+   * Sets LightSource referenced by LightSource
+   * attribute of the Arc element.
+   *
+   * @throws ClassCastException
+   *   if parameter is not an instance of LightSourceNode
+   */
+  public void setLightSource(LightSource value) {
+    setReferencedNode((OMEXMLNode) value, "LightSource", "LightSource");
+  }
+
+}

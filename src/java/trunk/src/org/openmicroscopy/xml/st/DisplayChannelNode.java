@@ -1,0 +1,242 @@
+/*
+ * org.openmicroscopy.xml.DisplayChannelNode
+ *
+ *-----------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2006 Open Microscopy Environment
+ *      Massachusetts Institute of Technology,
+ *      National Institutes of Health,
+ *      University of Dundee,
+ *      University of Wisconsin-Madison
+ *
+ *
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *-----------------------------------------------------------------------------
+ */
+
+
+/*-----------------------------------------------------------------------------
+ *
+ * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
+ * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ *
+ *-----------------------------------------------------------------------------
+ */
+
+package org.openmicroscopy.xml.st;
+
+import java.util.List;
+import org.openmicroscopy.xml.AttributeNode;
+import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.ds.st.*;
+import org.w3c.dom.Element;
+
+/**
+ * DisplayChannelNode is the node corresponding to the
+ * "DisplayChannel" XML element.
+ *
+ * Name: DisplayChannel
+ * AppliesTo: I
+ * Location: OME/src/xml/OME/Core/Image.ome
+ * Description: A specification for displaying a logical channel
+ */
+public class DisplayChannelNode extends AttributeNode
+  implements DisplayChannel
+{
+
+  // -- Constructors --
+
+  /**
+   * Constructs a DisplayChannel node
+   * with the given associated DOM element.
+   */
+  public DisplayChannelNode(Element element) { super(element); }
+
+  /**
+   * Constructs a DisplayChannel node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public DisplayChannelNode(OMEXMLNode parent) {
+    super(parent.getDOMElement().getOwnerDocument().
+      createElement("DisplayChannel"));
+    parent.getDOMElement().appendChild(element);
+  }
+
+  /**
+   * Constructs a DisplayChannel node,
+   * creating its associated DOM element beneath the
+   * given parent, using the specified parameter values.
+   */
+  public DisplayChannelNode(OMEXMLNode parent, Integer channelNumber,
+    Double blackLevel, Double whiteLevel, Float gamma)
+  {
+    this(parent);
+    setChannelNumber(channelNumber);
+    setBlackLevel(blackLevel);
+    setWhiteLevel(whiteLevel);
+    setGamma(gamma);
+  }
+
+
+  // -- DisplayChannel API methods --
+
+  /**
+   * Gets ChannelNumber attribute
+   * of the DisplayChannel element.
+   */
+  public Integer getChannelNumber() {
+    return getIntegerAttribute("ChannelNumber");
+  }
+
+  /**
+   * Sets ChannelNumber attribute
+   * for the DisplayChannel element.
+   */
+  public void setChannelNumber(Integer value) {
+    setIntegerAttribute("ChannelNumber", value);
+  }
+
+  /**
+   * Gets BlackLevel attribute
+   * of the DisplayChannel element.
+   */
+  public Double getBlackLevel() {
+    return getDoubleAttribute("BlackLevel");
+  }
+
+  /**
+   * Sets BlackLevel attribute
+   * for the DisplayChannel element.
+   */
+  public void setBlackLevel(Double value) {
+    setDoubleAttribute("BlackLevel", value);
+  }
+
+  /**
+   * Gets WhiteLevel attribute
+   * of the DisplayChannel element.
+   */
+  public Double getWhiteLevel() {
+    return getDoubleAttribute("WhiteLevel");
+  }
+
+  /**
+   * Sets WhiteLevel attribute
+   * for the DisplayChannel element.
+   */
+  public void setWhiteLevel(Double value) {
+    setDoubleAttribute("WhiteLevel", value);
+  }
+
+  /**
+   * Gets Gamma attribute
+   * of the DisplayChannel element.
+   */
+  public Float getGamma() {
+    return getFloatAttribute("Gamma");
+  }
+
+  /**
+   * Sets Gamma attribute
+   * for the DisplayChannel element.
+   */
+  public void setGamma(Float value) {
+    setFloatAttribute("Gamma", value);
+  }
+
+  /**
+   * Gets a list of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a RedChannel attribute.
+   */
+  public List getDisplayOptionsListByRedChannel() {
+    return createAttrReferralNodes(DisplayOptionsNode.class,
+      "DisplayOptions", "RedChannel");
+  }
+
+  /**
+   * Gets the number of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a RedChannel attribute.
+   */
+  public int countDisplayOptionsListByRedChannel() {
+    return getSize(getAttrReferrals("DisplayOptions",
+      "RedChannel"));
+  }
+
+  /**
+   * Gets a list of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a GreenChannel attribute.
+   */
+  public List getDisplayOptionsListByGreenChannel() {
+    return createAttrReferralNodes(DisplayOptionsNode.class,
+      "DisplayOptions", "GreenChannel");
+  }
+
+  /**
+   * Gets the number of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a GreenChannel attribute.
+   */
+  public int countDisplayOptionsListByGreenChannel() {
+    return getSize(getAttrReferrals("DisplayOptions",
+      "GreenChannel"));
+  }
+
+  /**
+   * Gets a list of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a BlueChannel attribute.
+   */
+  public List getDisplayOptionsListByBlueChannel() {
+    return createAttrReferralNodes(DisplayOptionsNode.class,
+      "DisplayOptions", "BlueChannel");
+  }
+
+  /**
+   * Gets the number of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a BlueChannel attribute.
+   */
+  public int countDisplayOptionsListByBlueChannel() {
+    return getSize(getAttrReferrals("DisplayOptions",
+      "BlueChannel"));
+  }
+
+  /**
+   * Gets a list of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a GreyChannel attribute.
+   */
+  public List getDisplayOptionsListByGreyChannel() {
+    return createAttrReferralNodes(DisplayOptionsNode.class,
+      "DisplayOptions", "GreyChannel");
+  }
+
+  /**
+   * Gets the number of DisplayOptions elements
+   * referencing this DisplayChannel node
+   * via a GreyChannel attribute.
+   */
+  public int countDisplayOptionsListByGreyChannel() {
+    return getSize(getAttrReferrals("DisplayOptions",
+      "GreyChannel"));
+  }
+
+}

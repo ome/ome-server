@@ -1,0 +1,19 @@
+  // -- PixelsNode API methods --
+
+  /** Gets BigEndian attribute of the Pixels element. */
+  public Boolean isBigEndian() { return getBooleanAttribute("BigEndian"); }
+
+  /** Sets BigEndian attribute for the Pixels element. */
+  public void setBigEndian(Boolean value) {
+    setBooleanAttribute("BigEndian", value);
+  }
+
+  /** Gets DimensionOrder attribute of the Pixels element. */
+  public String getDimensionOrder() { return getAttribute("DimensionOrder"); }
+
+  /** Sets DimensionOrder attribute for the Pixels element. */
+  public void setDimensionOrder(String value) {
+    setAttribute("DimensionOrder", value);
+  }
+
+
