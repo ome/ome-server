@@ -97,6 +97,7 @@ use OME::SessionManager;
 
 use UNIVERSAL::require;
 use Getopt::Long;
+use Data::Dumper;
 
 our $DATA_SOURCE;
 our $DB_USER;
@@ -381,12 +382,9 @@ MSG
 sub getSession {
     my ($self) = @_;
 
-    my $session = OME::SessionManager->TTYlogin({
-# We're turning this off until we determine wether or not this is sane
-#    	DataSource => $DATA_SOURCE,
-#    	DBUser     => $DB_USER,
-#    	DBPassword => $DB_PASSWORD,
-    });
+    my $hash;
+    # DataSource is currently not used.
+    my $session = OME::SessionManager->TTYlogin($hash,$DB_USER,$DB_PASSWORD);
     return $session;
 
 }
