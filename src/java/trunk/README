@@ -9,10 +9,11 @@ adding the ome-java-[version].jar file to your classpath.
 Contents
 --------
 
-The library is broken down into two major components:
+The library is broken down into three major components:
 
 - Data service classes (org.openmicroscopy.ds.*)
 - Image server classes (org.openmicroscopy.is.*)
+- OME-XML classes (org.openmicroscopy.xml.*)
 
 The data service provides a series of Java interfaces to represent
 each of the basic data types defined by OME.  (An logical overview of
@@ -42,6 +43,11 @@ direct OMEIS method calls.  Most application writers, however, will
 use the higher-level PixelsFactory class (which is implemented as a
 data service) to make these calls in terms of the appropriate OME
 semantic types (Pixels and OriginalFile).
+
+The OME-XML classes provide easier manipulation of an XML DOM in
+memory by wrapping each DOM element in the corresponding node type.
+Each node type implements the corresponding Java interface defined in
+the org.openmicroscopy.ds.* packages.
 
 
 Requirements
