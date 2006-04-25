@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
+ * Created by curtis via omejava on Tue Apr 25 13:29:24 2006
  *
  *------------------------------------------------------------------------------
  */
@@ -46,7 +46,7 @@ public interface Threshold
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>Threshold</code> */
-    public Integer getThreshold();
-    public void setThreshold(Integer value);
+    public Float getThreshold();
+    public void setThreshold(Float value);
 
 }

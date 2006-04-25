@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
+ * Created by curtis via omejava on Tue Apr 25 13:29:24 2006
  *
  *------------------------------------------------------------------------------
  */
@@ -72,19 +72,19 @@ public class ExtentDTO
     public void setVolume(Integer value)
     { setElement("Volume",value); }
 
-    public Integer getSigmaZ()
-    { return getIntegerElement("SigmaZ"); }
-    public void setSigmaZ(Integer value)
+    public Float getSigmaZ()
+    { return getFloatElement("SigmaZ"); }
+    public void setSigmaZ(Float value)
     { setElement("SigmaZ",value); }
 
-    public Integer getSigmaY()
-    { return getIntegerElement("SigmaY"); }
-    public void setSigmaY(Integer value)
+    public Float getSigmaY()
+    { return getFloatElement("SigmaY"); }
+    public void setSigmaY(Float value)
     { setElement("SigmaY",value); }
 
-    public Integer getSigmaX()
-    { return getIntegerElement("SigmaX"); }
-    public void setSigmaX(Integer value)
+    public Float getSigmaX()
+    { return getFloatElement("SigmaX"); }
+    public void setSigmaX(Float value)
     { setElement("SigmaX",value); }
 
     public Integer getMaxZ()

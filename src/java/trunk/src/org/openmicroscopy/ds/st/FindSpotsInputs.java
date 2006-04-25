@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon May  2 15:12:26 2005
+ * Created by curtis via omejava on Tue Apr 25 13:29:24 2006
  *
  *------------------------------------------------------------------------------
  */
@@ -45,6 +45,10 @@ import java.util.Map;
 public interface FindSpotsInputs
     extends DataInterface, Attribute
 {
+    /** Criteria field name: <code>FadeSpotsTheT</code> */
+    public Integer getFadeSpotsTheT();
+    public void setFadeSpotsTheT(Integer value);
+
     /** Criteria field name: <code>ThresholdValue</code> */
     public Float getThresholdValue();
     public void setThresholdValue(Float value);
@@ -58,8 +62,8 @@ public interface FindSpotsInputs
     public void setMinimumSpotVolume(Float value);
 
     /** Criteria field name: <code>Channel</code> */
-    public Integer getChannel();
-    public void setChannel(Integer value);
+    public String getChannel();
+    public void setChannel(String value);
 
     /** Criteria field name: <code>TimeStop</code> */
     public Integer getTimeStop();

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon May  2 15:12:25 2005
+ * Created by curtis via omejava on Tue Apr 25 13:29:24 2006
  *
  *------------------------------------------------------------------------------
  */
@@ -62,16 +62,16 @@ public interface Extent
     public void setVolume(Integer value);
 
     /** Criteria field name: <code>SigmaZ</code> */
-    public Integer getSigmaZ();
-    public void setSigmaZ(Integer value);
+    public Float getSigmaZ();
+    public void setSigmaZ(Float value);
 
     /** Criteria field name: <code>SigmaY</code> */
-    public Integer getSigmaY();
-    public void setSigmaY(Integer value);
+    public Float getSigmaY();
+    public void setSigmaY(Float value);
 
     /** Criteria field name: <code>SigmaX</code> */
-    public Integer getSigmaX();
-    public void setSigmaX(Integer value);
+    public Float getSigmaX();
+    public void setSigmaX(Float value);
 
     /** Criteria field name: <code>MaxZ</code> */
     public Integer getMaxZ();

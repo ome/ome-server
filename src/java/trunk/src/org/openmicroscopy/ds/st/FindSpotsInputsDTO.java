@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon May  2 15:12:26 2005
+ * Created by curtis via omejava on Tue Apr 25 13:29:24 2006
  *
  *------------------------------------------------------------------------------
  */
@@ -52,6 +52,11 @@ public class FindSpotsInputsDTO
     public String getDTOTypeName() { return "@FindSpotsInputs"; }
     public Class getDTOType() { return FindSpotsInputs.class; }
 
+    public Integer getFadeSpotsTheT()
+    { return getIntegerElement("FadeSpotsTheT"); }
+    public void setFadeSpotsTheT(Integer value)
+    { setElement("FadeSpotsTheT",value); }
+
     public Float getThresholdValue()
     { return getFloatElement("ThresholdValue"); }
     public void setThresholdValue(Float value)
@@ -67,9 +72,9 @@ public class FindSpotsInputsDTO
     public void setMinimumSpotVolume(Float value)
     { setElement("MinimumSpotVolume",value); }
 
-    public Integer getChannel()
-    { return getIntegerElement("Channel"); }
-    public void setChannel(Integer value)
+    public String getChannel()
+    { return getStringElement("Channel"); }
+    public void setChannel(String value)
     { setElement("Channel",value); }
 
     public Integer getTimeStop()
