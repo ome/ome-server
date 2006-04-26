@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class ExperimenterGroupNode extends AttributeNode
    * given parent.
    */
   public ExperimenterGroupNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an ExperimenterGroup node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ExperimenterGroupNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("ExperimenterGroup"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -84,7 +93,7 @@ public class ExperimenterGroupNode extends AttributeNode
   public ExperimenterGroupNode(OMEXMLNode parent, Experimenter experimenter,
     Group group)
   {
-    this(parent);
+    this(parent, true);
     setExperimenter(experimenter);
     setGroup(group);
   }

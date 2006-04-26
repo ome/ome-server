@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -72,9 +72,18 @@ public class ThumbnailNode extends AttributeNode
    * given parent.
    */
   public ThumbnailNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Thumbnail node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ThumbnailNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Thumbnail"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class ThumbnailNode extends AttributeNode
   public ThumbnailNode(OMEXMLNode parent, String mimeType,
     Repository repository, String path)
   {
-    this(parent);
+    this(parent, true);
     setMimeType(mimeType);
     setRepository(repository);
     setPath(path);

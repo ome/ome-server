@@ -58,7 +58,16 @@ public class ProjectNode extends OMEXMLNode implements Project {
    * Constructs a Project node,
    * creating its associated DOM element beneath the given parent.
    */
-  public ProjectNode(OMENode parent) { this(parent, null, null, null, null); }
+  public ProjectNode(OMENode parent) { this(parent, true); }
+
+  /**
+   * Constructs a Project node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public ProjectNode(OMENode parent, boolean attach) {
+    super(parent.getDOMElement().getOwnerDocument().createElement("Project"));
+    if (attach) parent.getDOMElement().appendChild(element);
+  }
 
   /**
    * Constructs a Project node,
@@ -68,8 +77,7 @@ public class ProjectNode extends OMEXMLNode implements Project {
   public ProjectNode(OMENode parent, String name, String description,
     ExperimenterNode experimenter, GroupNode group)
   {
-    super(parent.getDOMElement().getOwnerDocument().createElement("Project"));
-    parent.getDOMElement().appendChild(element);
+    this(parent, true);
     setName(name);
     setDescription(description);
     setOwner(experimenter);

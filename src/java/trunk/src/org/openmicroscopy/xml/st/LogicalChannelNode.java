@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,9 +73,18 @@ public class LogicalChannelNode extends AttributeNode
    * given parent.
    */
   public LogicalChannelNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a LogicalChannel node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public LogicalChannelNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("LogicalChannel"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -94,7 +103,7 @@ public class LogicalChannelNode extends AttributeNode
     Integer excitationWavelength, Integer emissionWavelength, String fluor,
     Float ndfilter)
   {
-    this(parent);
+    this(parent, true);
     setName(name);
     setSamplesPerPixel(samplesPerPixel);
     setFilter(filter);

@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class ImageTestSignatureNode extends AttributeNode
    * given parent.
    */
   public ImageTestSignatureNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an ImageTestSignature node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ImageTestSignatureNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("ImageTestSignature"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -82,7 +91,7 @@ public class ImageTestSignatureNode extends AttributeNode
    */
   public ImageTestSignatureNode(OMEXMLNode parent, Float value)
   {
-    this(parent);
+    this(parent, true);
     setValue(value);
   }
 

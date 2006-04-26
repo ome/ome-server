@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class ClassificationNode extends AttributeNode
    * given parent.
    */
   public ClassificationNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Classification node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ClassificationNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Classification"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -84,7 +93,7 @@ public class ClassificationNode extends AttributeNode
   public ClassificationNode(OMEXMLNode parent, Category category,
     Float confidence, Boolean valid)
   {
-    this(parent);
+    this(parent, true);
     setCategory(category);
     setConfidence(confidence);
     setValid(valid);

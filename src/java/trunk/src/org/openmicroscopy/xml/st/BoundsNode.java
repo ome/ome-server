@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class BoundsNode extends AttributeNode
    * given parent.
    */
   public BoundsNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Bounds node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public BoundsNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Bounds"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -84,7 +93,7 @@ public class BoundsNode extends AttributeNode
   public BoundsNode(OMEXMLNode parent, Integer x, Integer y, Integer width,
     Integer height)
   {
-    this(parent);
+    this(parent, true);
     setX(x);
     setY(y);
     setWidth(width);

@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -72,9 +72,18 @@ public class FilenamePatternNode extends AttributeNode
    * given parent.
    */
   public FilenamePatternNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a FilenamePattern node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public FilenamePatternNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("FilenamePattern"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class FilenamePatternNode extends AttributeNode
   public FilenamePatternNode(OMEXMLNode parent, String format, String regEx,
     String name, String baseName, Integer theZ, Integer theT, Integer theC)
   {
-    this(parent);
+    this(parent, true);
     setFormat(format);
     setRegEx(regEx);
     setName(name);

@@ -224,7 +224,7 @@ public class Xmlgen {
       constBody[i] = new StringBuffer();
       Element def = (Element) defs.elementAt(i);
       String stName = (String) defNames.elementAt(i);
-      constBody[i].append("    this(parent);");
+      constBody[i].append("    this(parent, true);");
       int constLeft = 46 - stName.length();
       NodeList children = def.getChildNodes();
       for (int j=0; j<children.getLength(); j++) {
@@ -420,9 +420,20 @@ public class Xmlgen {
       fout.println("   * given parent.");
       fout.println("   */");
       fout.println("  public " + nodeName + "(OMEXMLNode parent) {");
+      fout.println("    this(parent, true);");
+      fout.println("  }");
+      fout.println();
+      fout.println("  /**");
+      fout.println("   * Constructs " + particle + " " + stName + " node,");
+      fout.println("   * creating its associated DOM element beneath the");
+      fout.println("   * given parent.");
+      fout.println("   */");
+      fout.println("  public " + nodeName +
+        "(OMEXMLNode parent, boolean attach) {");
       fout.println("    super(parent.getDOMElement().getOwnerDocument().");
       fout.println("      createElement(\"" + stName + "\"));");
-      fout.println("    parent.getDOMElement().appendChild(element);");
+      fout.println("    if (attach) " +
+        "parent.getDOMElement().appendChild(element);");
       fout.println("  }");
       fout.println();
       fout.println("  /**");

@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -72,9 +72,18 @@ public class DisplayOptionsNode extends AttributeNode
    * given parent.
    */
   public DisplayOptionsNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a DisplayOptions node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public DisplayOptionsNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("DisplayOptions"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -89,7 +98,7 @@ public class DisplayOptionsNode extends AttributeNode
     DisplayChannel greyChannel, String colorMap, Integer zstart,
     Integer zstop, Integer tstart, Integer tstop)
   {
-    this(parent);
+    this(parent, true);
     setPixels(pixels);
     setZoom(zoom);
     setRedChannel(redChannel);

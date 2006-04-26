@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,9 +73,18 @@ public class ImageAnnotationNode extends AttributeNode
    * given parent.
    */
   public ImageAnnotationNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an ImageAnnotation node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ImageAnnotationNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("ImageAnnotation"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -86,7 +95,7 @@ public class ImageAnnotationNode extends AttributeNode
   public ImageAnnotationNode(OMEXMLNode parent, String content, Integer theC,
     Integer theT, Integer theZ, Boolean valid)
   {
-    this(parent);
+    this(parent, true);
     setContent(content);
     setTheC(theC);
     setTheT(theT);

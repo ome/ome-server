@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class FilterSetNode extends AttributeNode
    * given parent.
    */
   public FilterSetNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a FilterSet node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public FilterSetNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("FilterSet"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -83,7 +92,7 @@ public class FilterSetNode extends AttributeNode
   public FilterSetNode(OMEXMLNode parent, String manufacturer, String model,
     String lotNumber, Filter filter)
   {
-    this(parent);
+    this(parent, true);
     setManufacturer(manufacturer);
     setModel(model);
     setLotNumber(lotNumber);

@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class ImageExperimentNode extends AttributeNode
    * given parent.
    */
   public ImageExperimentNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an ImageExperiment node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ImageExperimentNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("ImageExperiment"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -83,7 +92,7 @@ public class ImageExperimentNode extends AttributeNode
    */
   public ImageExperimentNode(OMEXMLNode parent, Experiment experiment)
   {
-    this(parent);
+    this(parent, true);
     setExperiment(experiment);
   }
 

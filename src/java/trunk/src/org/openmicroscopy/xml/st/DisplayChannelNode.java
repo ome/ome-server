@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -72,9 +72,18 @@ public class DisplayChannelNode extends AttributeNode
    * given parent.
    */
   public DisplayChannelNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a DisplayChannel node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public DisplayChannelNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("DisplayChannel"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class DisplayChannelNode extends AttributeNode
   public DisplayChannelNode(OMEXMLNode parent, Integer channelNumber,
     Double blackLevel, Double whiteLevel, Float gamma)
   {
-    this(parent);
+    this(parent, true);
     setChannelNumber(channelNumber);
     setBlackLevel(blackLevel);
     setWhiteLevel(whiteLevel);

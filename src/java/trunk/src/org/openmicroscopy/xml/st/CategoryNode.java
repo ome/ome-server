@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -72,9 +72,18 @@ public class CategoryNode extends AttributeNode
    * given parent.
    */
   public CategoryNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Category node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public CategoryNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Category"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class CategoryNode extends AttributeNode
   public CategoryNode(OMEXMLNode parent, String name,
     CategoryGroup categoryGroup, String description)
   {
-    this(parent);
+    this(parent, true);
     setName(name);
     setCategoryGroup(categoryGroup);
     setDescription(description);

@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class PlaneCentroidNode extends AttributeNode
    * given parent.
    */
   public PlaneCentroidNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a PlaneCentroid node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public PlaneCentroidNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("PlaneCentroid"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -83,7 +92,7 @@ public class PlaneCentroidNode extends AttributeNode
   public PlaneCentroidNode(OMEXMLNode parent, Integer theZ, Integer theC,
     Integer theT, Float x, Float y)
   {
-    this(parent);
+    this(parent, true);
     setTheZ(theZ);
     setTheC(theC);
     setTheT(theT);

@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class RatioNode extends AttributeNode
    * given parent.
    */
   public RatioNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Ratio node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public RatioNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Ratio"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -82,7 +91,7 @@ public class RatioNode extends AttributeNode
    */
   public RatioNode(OMEXMLNode parent, Float ratio)
   {
-    this(parent);
+    this(parent, true);
     setRatio(ratio);
   }
 

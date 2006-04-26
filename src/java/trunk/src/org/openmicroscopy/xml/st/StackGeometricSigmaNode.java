@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class StackGeometricSigmaNode extends AttributeNode
    * given parent.
    */
   public StackGeometricSigmaNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a StackGeometricSigma node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public StackGeometricSigmaNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("StackGeometricSigma"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -83,7 +92,7 @@ public class StackGeometricSigmaNode extends AttributeNode
   public StackGeometricSigmaNode(OMEXMLNode parent, Integer theC, Integer theT,
     Float geometricSigma)
   {
-    this(parent);
+    this(parent, true);
     setTheC(theC);
     setTheT(theT);
     setGeometricSigma(geometricSigma);

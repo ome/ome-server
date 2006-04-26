@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class PlateScreenNode extends AttributeNode
    * given parent.
    */
   public PlateScreenNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a PlateScreen node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public PlateScreenNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("PlateScreen"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -83,7 +92,7 @@ public class PlateScreenNode extends AttributeNode
    */
   public PlateScreenNode(OMEXMLNode parent, Plate plate, Screen screen)
   {
-    this(parent);
+    this(parent, true);
     setPlate(plate);
     setScreen(screen);
   }

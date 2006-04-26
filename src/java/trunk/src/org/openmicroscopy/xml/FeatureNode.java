@@ -46,10 +46,53 @@ import org.w3c.dom.Element;
 /** FeatureNode is the node corresponding to the "Feature" XML element. */
 public class FeatureNode extends OMEXMLNode implements Feature {
 
-  // -- Constructor --
+  // -- Constructors --
 
   /** Constructs a Feature node with the given associated DOM element. */
   public FeatureNode(Element element) { super(element); }
+
+  /**
+   * Constructs a Feature node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public FeatureNode(FeatureNode parent) {
+    this((OMEXMLNode) parent, true);
+  }
+
+  /**
+   * Constructs a Feature node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public FeatureNode(ImageNode parent) {
+    this((OMEXMLNode) parent, true);
+  }
+
+  /**
+   * Constructs a Feature node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public FeatureNode(FeatureNode parent, boolean attach) {
+    this((OMEXMLNode) parent, attach);
+  }
+
+  /**
+   * Constructs a Feature node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public FeatureNode(ImageNode parent, boolean attach) {
+    this((OMEXMLNode) parent, attach);
+  }
+
+  /**
+   * Constructs a Feature node,
+   * creating its associated DOM element beneath the
+   * given parent, using the specified parameter values.
+   */
+  protected FeatureNode(OMEXMLNode parent, boolean attach) {
+    super(parent.getDOMElement().getOwnerDocument().
+      createElement("Feature"));
+    if (attach) parent.getDOMElement().appendChild(element);
+  }
 
 
   // -- FeatureNode API methods --

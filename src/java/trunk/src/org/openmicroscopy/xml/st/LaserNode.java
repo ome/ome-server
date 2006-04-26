@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -75,9 +75,18 @@ public class LaserNode extends AttributeNode
    * given parent.
    */
   public LaserNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Laser node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public LaserNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Laser"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -89,7 +98,7 @@ public class LaserNode extends AttributeNode
     Integer wavelength, Boolean frequencyDoubled, Boolean tunable,
     String pulse, Float power, LightSource lightSource, LightSource pump)
   {
-    this(parent);
+    this(parent, true);
     setType(type);
     setMedium(medium);
     setWavelength(wavelength);

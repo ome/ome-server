@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class FindSpotsInputsNode extends AttributeNode
    * given parent.
    */
   public FindSpotsInputsNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a FindSpotsInputs node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public FindSpotsInputsNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("FindSpotsInputs"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -84,7 +93,7 @@ public class FindSpotsInputsNode extends AttributeNode
     Integer timeStop, String channel, Float minimumSpotVolume,
     String thresholdType, Float thresholdValue, Integer fadeSpotsTheT)
   {
-    this(parent);
+    this(parent, true);
     setTimeStart(timeStart);
     setTimeStop(timeStop);
     setChannel(channel);

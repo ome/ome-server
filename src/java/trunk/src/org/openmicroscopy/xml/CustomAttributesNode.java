@@ -60,7 +60,7 @@ public class CustomAttributesNode extends OMEXMLNode {
    * creating its associated DOM element beneath the given parent.
    */
   public CustomAttributesNode(DatasetNode parent) {
-    this((OMEXMLNode) parent);
+    this((OMEXMLNode) parent, true);
   }
 
   /**
@@ -68,30 +68,66 @@ public class CustomAttributesNode extends OMEXMLNode {
    * creating its associated DOM element beneath the given parent.
    */
   public CustomAttributesNode(FeatureNode parent) {
-    this((OMEXMLNode) parent);
+    this((OMEXMLNode) parent, true);
   }
 
   /**
    * Constructs a CustomAttributes node,
    * creating its associated DOM element beneath the given parent.
    */
-  public CustomAttributesNode(ImageNode parent) { this((OMEXMLNode) parent); }
+  public CustomAttributesNode(ImageNode parent) {
+    this((OMEXMLNode) parent, true);
+  }
 
   /**
    * Constructs a CustomAttributes node,
    * creating its associated DOM element beneath the given parent.
    */
-  public CustomAttributesNode(OMENode parent) { this((OMEXMLNode) parent); }
+  public CustomAttributesNode(OMENode parent) {
+    this((OMEXMLNode) parent, true);
+  }
+
+  /**
+   * Constructs a CustomAttributes node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public CustomAttributesNode(DatasetNode parent, boolean attach) {
+    this((OMEXMLNode) parent, attach);
+  }
+
+  /**
+   * Constructs a CustomAttributes node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public CustomAttributesNode(FeatureNode parent, boolean attach) {
+    this((OMEXMLNode) parent, attach);
+  }
+
+  /**
+   * Constructs a CustomAttributes node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public CustomAttributesNode(ImageNode parent, boolean attach) {
+    this((OMEXMLNode) parent, attach);
+  }
+
+  /**
+   * Constructs a CustomAttributes node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public CustomAttributesNode(OMENode parent, boolean attach) {
+    this((OMEXMLNode) parent, attach);
+  }
 
   /**
    * Constructs a CustomAttributes node,
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  protected CustomAttributesNode(OMEXMLNode parent) {
+  protected CustomAttributesNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("CustomAttributes"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
 

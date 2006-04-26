@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -72,9 +72,18 @@ public class StageLabelNode extends AttributeNode
    * given parent.
    */
   public StageLabelNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a StageLabel node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public StageLabelNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("StageLabel"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class StageLabelNode extends AttributeNode
   public StageLabelNode(OMEXMLNode parent, String name, Float x, Float y,
     Float z)
   {
-    this(parent);
+    this(parent, true);
     setName(name);
     setX(x);
     setY(y);

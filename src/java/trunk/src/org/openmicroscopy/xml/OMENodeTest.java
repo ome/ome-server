@@ -2644,8 +2644,10 @@ public abstract class OMENodeTest {
       experimenter, null);
 
     // create second OME/CA/ExperimenterGroup
+    GroupNode dummyGroup = new GroupNode(ca, false);
+    dummyGroup.setLSID("urn:lsid:foo.bar.com:Group:123789");
     ExperimenterGroupNode experimenterGroup2 = new ExperimenterGroupNode(ca,
-      experimenter, null);
+      experimenter, dummyGroup);
 
     // create OME/CA/Group
     GroupNode group = new GroupNode(ca, "IICBU", experimenter, experimenter);
@@ -2672,8 +2674,10 @@ public abstract class OMENodeTest {
     lightSource1.setLSID("urn:lsid:foo.bar.com:LightSource:123456");
 
     // create OME/CA/Laser
+    LightSourceNode dummyLightSource = new LightSourceNode(ca, false);
+    dummyLightSource.setLSID("urn:lsid:foo.bar.com:LightSource:123789");
     LaserNode laser = new LaserNode(ca, "Semiconductor", "GaAs",
-      null, null, null, null, null, lightSource1, null);
+      null, null, null, null, null, lightSource1, dummyLightSource);
 
     // create second OME/CA/LightSource
     LightSourceNode lightSource2 = new LightSourceNode(ca,
@@ -2714,13 +2718,14 @@ public abstract class OMENodeTest {
     PlateScreenNode plateScreen1 = new PlateScreenNode(ca, plate, null);
 
     // create second OME/CA/PlateScreen
-    PlateScreenNode plateScreen2 = new PlateScreenNode(ca, plate, null);
+    ScreenNode dummyScreen = new ScreenNode(ca, false);
+    dummyScreen.setLSID("urn:lsid:foo.bar.com:Screen:123789");
+    PlateScreenNode plateScreen2 = new PlateScreenNode(ca, plate, dummyScreen);
 
     // create OME/CA/Screen
     ScreenNode screen = new ScreenNode(ca,
       "Stress Response Pathway Controls", null, "SID.SRPC001");
     screen.setLSID("urn:lsid:foo.bar.com:Screen:123456");
-    plate.setScreen(screen);
     plateScreen1.setScreen(screen);
 
     // -- Depth 3 --

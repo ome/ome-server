@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,9 +73,18 @@ public class InstrumentNode extends AttributeNode
    * given parent.
    */
   public InstrumentNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an Instrument node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public InstrumentNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Instrument"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -86,7 +95,7 @@ public class InstrumentNode extends AttributeNode
   public InstrumentNode(OMEXMLNode parent, String manufacturer, String model,
     String serialNumber, String type)
   {
-    this(parent);
+    this(parent, true);
     setManufacturer(manufacturer);
     setModel(model);
     setSerialNumber(serialNumber);

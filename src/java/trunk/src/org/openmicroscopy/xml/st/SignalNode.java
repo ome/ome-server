@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class SignalNode extends AttributeNode
    * given parent.
    */
   public SignalNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Signal node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public SignalNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Signal"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class SignalNode extends AttributeNode
     Float centroidY, Float centroidZ, Float integral, Float mean,
     Float geometricMean, Float sigma, Float geometricSigma, Float background)
   {
-    this(parent);
+    this(parent, true);
     setTheC(theC);
     setCentroidX(centroidX);
     setCentroidY(centroidY);

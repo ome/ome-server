@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class DisplayROINode extends AttributeNode
    * given parent.
    */
   public DisplayROINode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a DisplayROI node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public DisplayROINode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("DisplayROI"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class DisplayROINode extends AttributeNode
     Integer x1, Integer y1, Integer z1, Integer t0, Integer t1,
     DisplayOptions displayOptions)
   {
-    this(parent);
+    this(parent, true);
     setX0(x0);
     setY0(y0);
     setZ0(z0);

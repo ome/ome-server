@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class DetectorNode extends AttributeNode
    * given parent.
    */
   public DetectorNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Detector node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public DetectorNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Detector"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class DetectorNode extends AttributeNode
     String serialNumber, String type, Float gain, Float voltage, Float offset,
     Instrument instrument)
   {
-    this(parent);
+    this(parent, true);
     setManufacturer(manufacturer);
     setModel(model);
     setSerialNumber(serialNumber);

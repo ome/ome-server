@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class OriginalFileNode extends AttributeNode
    * given parent.
    */
   public OriginalFileNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an OriginalFile node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public OriginalFileNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("OriginalFile"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -84,7 +93,7 @@ public class OriginalFileNode extends AttributeNode
   public OriginalFileNode(OMEXMLNode parent, Repository repository,
     String path, Long fileID, String sha1, String format)
   {
-    this(parent);
+    this(parent, true);
     setRepository(repository);
     setPath(path);
     setFileID(fileID);

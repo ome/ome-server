@@ -56,7 +56,16 @@ public class ImageNode extends OMEXMLNode implements Image {
    * Constructs an Image node, creating its associated
    * DOM element beneath the given parent.
    */
-  public ImageNode(OMENode parent) { this(parent, null, null, null); }
+  public ImageNode(OMENode parent) { this(parent, true); }
+
+  /**
+   * Constructs an Image node, creating its associated
+   * DOM element beneath the given parent.
+   */
+  public ImageNode(OMENode parent, boolean attach) {
+    super(parent.getDOMElement().getOwnerDocument().createElement("Image"));
+    if (attach) parent.getDOMElement().appendChild(element);
+  }
 
   /**
    * Constructs an Image node, creating its associated DOM element
@@ -65,8 +74,7 @@ public class ImageNode extends OMEXMLNode implements Image {
   public ImageNode(OMENode parent, String name,
     String creationDate, String description)
   {
-    super(parent.getDOMElement().getOwnerDocument().createElement("Image"));
-    parent.getDOMElement().appendChild(element);
+    this(parent, true);
     setName(name);
     setCreated(creationDate);
     setDescription(description);

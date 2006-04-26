@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -72,9 +72,18 @@ public class ImagingEnvironmentNode extends AttributeNode
    * given parent.
    */
   public ImagingEnvironmentNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an ImagingEnvironment node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ImagingEnvironmentNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("ImagingEnvironment"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -85,7 +94,7 @@ public class ImagingEnvironmentNode extends AttributeNode
   public ImagingEnvironmentNode(OMEXMLNode parent, Float temperature,
     Float airPressure, Float humidity, Float co2Percent)
   {
-    this(parent);
+    this(parent, true);
     setTemperature(temperature);
     setAirPressure(airPressure);
     setHumidity(humidity);

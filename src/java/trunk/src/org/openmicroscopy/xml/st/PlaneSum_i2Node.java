@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class PlaneSum_i2Node extends AttributeNode
    * given parent.
    */
   public PlaneSum_i2Node(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a PlaneSum_i2 node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public PlaneSum_i2Node(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("PlaneSum_i2"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -83,7 +92,7 @@ public class PlaneSum_i2Node extends AttributeNode
   public PlaneSum_i2Node(OMEXMLNode parent, Integer theZ, Integer theC,
     Integer theT, Float sum_i2)
   {
-    this(parent);
+    this(parent, true);
     setTheZ(theZ);
     setTheC(theC);
     setTheT(theT);

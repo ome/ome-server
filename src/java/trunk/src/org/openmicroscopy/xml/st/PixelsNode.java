@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,9 +73,18 @@ public class PixelsNode extends AttributeNode
    * given parent.
    */
   public PixelsNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs a Pixels node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public PixelsNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Pixels"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -87,7 +96,7 @@ public class PixelsNode extends AttributeNode
     Integer sizeZ, Integer sizeC, Integer sizeT, String pixelType,
     String fileSHA1, Repository repository, Long imageServerID)
   {
-    this(parent);
+    this(parent, true);
     setSizeX(sizeX);
     setSizeY(sizeY);
     setSizeZ(sizeZ);

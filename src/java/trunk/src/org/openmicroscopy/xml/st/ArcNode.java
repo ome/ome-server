@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -70,9 +70,18 @@ public class ArcNode extends AttributeNode
    * given parent.
    */
   public ArcNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an Arc node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ArcNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Arc"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -83,7 +92,7 @@ public class ArcNode extends AttributeNode
   public ArcNode(OMEXMLNode parent, String type, Float power,
     LightSource lightSource)
   {
-    this(parent);
+    this(parent, true);
     setType(type);
     setPower(power);
     setLightSource(lightSource);

@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -71,9 +71,18 @@ public class ExtentNode extends AttributeNode
    * given parent.
    */
   public ExtentNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an Extent node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ExtentNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Extent"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -86,7 +95,7 @@ public class ExtentNode extends AttributeNode
     Float sigmaY, Float sigmaZ, Integer volume, Float surfaceArea,
     Float perimeter, Float formFactor)
   {
-    this(parent);
+    this(parent, true);
     setMinX(minX);
     setMinY(minY);
     setMinZ(minZ);

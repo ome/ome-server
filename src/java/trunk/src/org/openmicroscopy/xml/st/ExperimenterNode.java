@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 24, 2006 4:30:18 PM CDT
+ * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -74,9 +74,18 @@ public class ExperimenterNode extends AttributeNode
    * given parent.
    */
   public ExperimenterNode(OMEXMLNode parent) {
+    this(parent, true);
+  }
+
+  /**
+   * Constructs an Experimenter node,
+   * creating its associated DOM element beneath the
+   * given parent.
+   */
+  public ExperimenterNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Experimenter"));
-    parent.getDOMElement().appendChild(element);
+    if (attach) parent.getDOMElement().appendChild(element);
   }
 
   /**
@@ -87,7 +96,7 @@ public class ExperimenterNode extends AttributeNode
   public ExperimenterNode(OMEXMLNode parent, String firstName, String lastName,
     String email, String institution, String dataDirectory, Group group)
   {
-    this(parent);
+    this(parent, true);
     setFirstName(firstName);
     setLastName(lastName);
     setEmail(email);
