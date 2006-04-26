@@ -83,7 +83,7 @@ use OME::Factory;
 use OME::Session;
 use OME::Configuration;
 use Term::ReadKey;
-use OME::DBObject; 
+use OME::DBObject;
 
 use base qw(Class::Accessor Class::Data::Inheritable);
 
@@ -181,74 +181,30 @@ sub createSession {
 	$manager->TTYlogin ();
 
 This method will attempt to get login information from the user using a terminal interface.
-If successfull, it will cache the SessionKey in the user's ~/.omelogin
-    file.
-
-    If flags, user name, and password are provided (in order), they
-    will be used as appropriate.
+If successfull, it will cache the SessionKey in the user's ~/.omelogin file.
 
 =cut
 
 sub TTYlogin {
     my $self = shift;
-    #my $flags = pop @_ if ref ($_[0]) eq 'HASH';
-    my ($flags,$user,$password) = @_;
+    my $flags = pop @_ if ref ($_[0]) eq 'HASH';
     my $homeDir = $ENV{"HOME"} || ".";
     my $loginFile = "$homeDir/.omelogin";
 
     my $session;
 
+    my $loginFound = open LOGINFILE, "< $loginFile";
 
-    if (!defined $session) {
-	my $key;
+    if ($loginFound) {
+        my $key = <LOGINFILE>;
+        chomp($key);
+        $session = $self->createWithKey($key,$flags);
+        close LOGINFILE;
 
-	# get user name and password from flags;
-	my $loginFound = open LOGINFILE, "< $loginFile";
-	if ($loginFound) {
-	    $key = <LOGINFILE>;
-	    chomp($key);
-	    close LOGINFILE;
-	}
-	$session = $self->createWithKey($key,$flags);
-
-	    
-	# At this point, i'm fine if the session is defined.
-	# if  i have a password and user name. use them.
-	# if this fails, or if I don't have them, try to login via 
-	# user name /password prompts.
-
-	if (!(defined $session) && $user && $password) {
-	    $session = $self->createWithPassword($user,$password,$flags);
-	}
-	$session = $self->promptAndLogin($loginFile,$flags) unless
-	    ($session);
-	if (defined $session) {
-	    my $created = open LOGINFILE, "> $loginFile";
-	    if ($created) {
-		print LOGINFILE $session->SessionKey(), "\n";
-		close LOGINFILE;
-	    }
-	}
+        if (!defined $session) {
+            print "Cannot login via previous session.\n";
+        }
     }
-    return $session;
-}
-
-
-=sub  promptAndLogin
-
-    $session = $self->promptAndLogin($loginFile,$session);
-
-    ask for a session via prompts and try to create it
-=cut
-
-sub promptAndLogin {
-    my $self = shift;
-    my $loginFile = shift;
-    my $flags = pop @_ if ref ($_[0]) eq 'HASH';
-
-    my $session;
-    my $username;
-    my $password;
 
     until (defined $session) {
         print "Please login to OME:\n";
@@ -268,11 +224,17 @@ sub promptAndLogin {
         $session = $self->createWithPassword($username,$password,$flags);
 
         if (defined $session) {
+            my $created = open LOGINFILE, "> $loginFile";
+            if ($created) {
+                print LOGINFILE $session->SessionKey(), "\n";
+                close LOGINFILE;
+            }
+
             print "Great, you're in.\n\n";
         } else {
             print "That username/password is not valid. Please try again.\n\n";
         }
-    }
+	}
 
     return $session;
 }
@@ -293,25 +255,28 @@ sub createWithKey {
 
 
 	my ($session,$factory);
-
 	if (OME::Session->hasInstance()) {
 		$session = OME::Session->instance();
 		$factory = $session->Factory()->revive();
 	}
+
 	$factory = OME::Factory->new($flags) unless $factory;
+	croak "Could not create a new factory" unless $factory;
+
 	my $dbh = $factory->obtainDBH();
 	eval {
 		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
 	};
-	return undef unless ($sessionKey && 
-			     (length ($sessionKey) == $SESSION_KEY_LENGTH));
+
+	return undef unless length ($sessionKey) == $SESSION_KEY_LENGTH;
 	
 	my $userState = $factory->
 		findObject('OME::UserState', session_key => $sessionKey);
 #	logdbg "debug", "createWithKey: found existing userState(s)" if defined $userState;
 	
 	return undef unless defined $userState;
-	
+
+
 	my $host;
 	if (exists $ENV{'REMOTE_HOST'} ) {
 		$host = $ENV{'REMOTE_HOST'};
@@ -324,7 +289,7 @@ sub createWithKey {
 	
 	
 	$session = OME::Session->instance($userState, $factory, undef);
-
+	
 	$self->updateACL();
 	
 	$userState->storeObject();
@@ -401,12 +366,14 @@ sub createWithPassword {
 	return undef unless $username and $password;
 	
 	my $bootstrap_factory = OME::Factory->new($flags);
+	
 	my $dbh = $bootstrap_factory->obtainDBH();
 	eval {
 		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
 		$dbh->commit ();
 	};
-	my $configuration = OME::Configuration->new($bootstrap_factory );
+
+	my $configuration = OME::Configuration->new( $bootstrap_factory );
 
 	my ($experimenter,$experimenterID,$dbpass);
 	eval {
@@ -454,7 +421,9 @@ sub createWithPassword {
 
 	logdie ref($self)."->createWithPassword:  Could not create userState object"
 		unless defined $userState;
+
 	my $session = OME::Session->instance($userState, $bootstrap_factory, undef);
+	
 	$self->updateACL();
 
 	$userState->storeObject();
