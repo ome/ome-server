@@ -104,6 +104,10 @@ our $DB_USER;
 our $DB_PASSWORD;
 our $ADMIN_MEX;
 
+our $OME_USER;
+our $OME_PASSWORD;
+our $OME_SESSION_KEY;
+
 =head2 getCommands
 
 	my $commands = $self->getCommands();
@@ -263,8 +267,13 @@ sub handleCommand {
                 Getopt::Long::Configure('pass_through');
                 my ($datasource,$user,$password);
                 GetOptions('DataSource|db=s' => \$DATA_SOURCE,
-                                     'DBUser|dbu=s' => \$DB_USER,
-                                     'DBPassword|dbpw=s' => \$DB_PASSWORD);
+                           'DBUser|dbu=s' => \$DB_USER,
+                           'DBPassword|dbpw=s'=>\$DB_PASSWORD,
+	                   'OMEUser|ou=s' => \$OME_USER,
+	                   'OMEPassword|opw=s' =>   \$OME_PASSWORD,
+			   'OMESessionKey|ok=s' =>  \$OME_SESSION_KEY,
+		    );
+		
                 Getopt::Long::Configure('no_pass_through');
                 # Execute a specific command
 
@@ -382,9 +391,17 @@ MSG
 sub getSession {
     my ($self) = @_;
 
-    my $hash;
-    # DataSource is currently not used.
-    my $session = OME::SessionManager->TTYlogin($hash,$DB_USER,$DB_PASSWORD);
+    my $session;
+    if ($OME_SESSION_KEY) {
+	$session = OME::SessionManager->createWithKey($OME_SESSION_KEY);
+    }
+    elsif ($OME_USER && $OME_PASSWORD) {
+	$session = OME::SessionManager->createWithPassword($OME_USER,
+							   $OME_PASSWORD);
+    }
+    else  {
+	$session = OME::SessionManager->TTYlogin();
+    }
     return $session;
 
 }
