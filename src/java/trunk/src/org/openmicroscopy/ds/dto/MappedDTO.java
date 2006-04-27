@@ -47,6 +47,7 @@ import org.openmicroscopy.ds.DataFactory;
 import org.openmicroscopy.ds.PrimitiveConverters;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <p>Provides a base implementation of the remote framework DTO
@@ -113,7 +114,7 @@ public abstract class MappedDTO
     protected MappedDTO()
     {
         super();
-        this.elements = null;
+	this.elements = new HashMap();
     }
 
     /**
