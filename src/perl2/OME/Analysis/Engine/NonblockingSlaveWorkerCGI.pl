@@ -180,6 +180,10 @@ undef $handler;
 	$worker->master($MasterID);
 	
 	$worker->storeObject();
+	
+	# Set the MEX as executed by this worker.
+	$mex->executed_by_worker( $worker );
+	$mex->storeObject();
 
 	# Register the module execution for later
 	OME::Fork->doLater ( sub {

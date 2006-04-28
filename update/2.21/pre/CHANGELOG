@@ -1,0 +1,3 @@
+Add a column 'executed_by_worker' to module_executions table. This will allow
+more complete provenance with the distributed AE. It references a worker in the
+analysis_workers table.

@@ -115,6 +115,13 @@ __PACKAGE__->addColumn(image => 'image_id','OME::Image',
                         Indexed => 1,
                         ForeignKey => 'images',
                        });
+__PACKAGE__->addColumn(executed_by_worker => 'EXECUTED_BY_WORKER', 
+                       'OME::Analysis::Engine::Worker', 
+                       {
+                        SQLType    => 'integer',
+                        Indexed    => 1,
+                        ForeignKey => 'analysis_workers',
+                       });
 __PACKAGE__->addColumn(iterator_tag => 'iterator_tag',
                        {SQLType => 'varchar(128)'});
 __PACKAGE__->addColumn(new_feature_tag => 'new_feature_tag',

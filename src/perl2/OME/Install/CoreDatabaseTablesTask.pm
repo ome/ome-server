@@ -106,7 +106,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.21";
+our $DB_VERSION = "2.22";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
@@ -161,6 +161,7 @@ our @core_classes =
    'OME::AnalysisChain::Link',
    'OME::AnalysisPath',
    'OME::AnalysisPath::Map',
+   'OME::Analysis::Engine::Worker',
    'OME::ModuleExecution',
    'OME::ModuleExecution::ActualInput',
    'OME::ModuleExecution::SemanticTypeOutput',
@@ -169,7 +170,6 @@ our @core_classes =
    'OME::AnalysisChainExecution',
    'OME::AnalysisChainExecution::NodeExecution',
    'OME::Task',
-   'OME::Analysis::Engine::Worker',
    # Make sure this next one is last
    'OME::Configuration::Variable',
   );
