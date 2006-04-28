@@ -82,9 +82,9 @@ sub getPageBody {
 		if $mex->virtual_mex();
 
 	$self->{ form_name } = 'primary';
-	my $html = $q->startform( -name => $self->{ form_name }  ).
-	           $q->hidden(-name => 'Type', -default => $q->param( 'Type' ) ).
-	           $q->hidden(-name => 'ID', -default => $q->param( 'ID' ) );
+	$html .= $q->startform( -name => $self->{ form_name }  ).
+	         $q->hidden(-name => 'Type', -default => $q->param( 'Type' ) ).
+	         $q->hidden(-name => 'ID', -default => $q->param( 'ID' ) );
 	
 	my @actual_inputs = $mex->inputs();
 	my @formal_outputs = $mex->module()->outputs();
