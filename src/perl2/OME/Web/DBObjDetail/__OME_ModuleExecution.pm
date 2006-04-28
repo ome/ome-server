@@ -154,14 +154,14 @@ sub getPageBody {
 		my @experimenters = $factory->findObjects( '@Experimenter' );
 		$chown_options->{ 'chown_experimenter' } = 
 			$self->Renderer()->renderArray( \@experimenters, 'dropdown_select', 
-				{ field_name => 'experimenter', default_value => $mex->experimenter_id } );
+				{ field_name => 'experimenter', default_value => $mex->experimenter_id, type => '@Experimenter' } );
 	}
 	# group: the superuser or owner can change the group ownership
 	if( ( $exp->id eq $mex->experimenter_id ) or ($exp->id eq $super_user_id ) ) {
 		my @groups = $factory->findObjects( '@Group' );
 		$chown_options->{ 'chown_group' } = 
 			$self->Renderer()->renderArray( \@groups, 'dropdown_select', 
-				{ field_name => 'group', default_value => $mex->group_id } );
+				{ field_name => 'group', default_value => $mex->group_id, type => '@Group' } );
 	}
 	# Render ;Execution Details
 	$tmpl_data{ mex_detail } = $self->Renderer()->render( $mex, 'detail', $chown_options);
