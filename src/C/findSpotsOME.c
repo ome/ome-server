@@ -482,6 +482,12 @@ typedef struct spotStructure {
 } Spot;
 typedef Spot *SpotPtr;
 
+typedef struct  {
+	unsigned long nRows,nCols;
+	char ***cells; /* 2-D array of char *'s into the *table block */
+	char *table; /* NULL-delimited cell values in a contiguous memory block. */
+	unsigned long xCol,yCol,zCol,tCol;
+} spotsTable;
 
 
 
@@ -517,7 +523,11 @@ void Zero_Spot (SpotPtr theSpot,PixStack *theStack, coordinate itsWave, coordina
 void Finish_Spot_Stats (SpotPtr theSpot);
 void Output_Spot (SpotPtr theSpot, int argc, char**argv,int outArgs, char saywhat);
 void Write_Output (SpotPtr theSpotList,int argc, char**argv,int outArgs);
-int getArg (int argc, char **argv, const char *theArg);
+void SetSpots2SpotsDist (spotsTable *theSpotsTable, SpotPtr theSpotListHead);
+void Write_Spots2spots (spotsTable *theSpotsTable);
+int getArg (int argc, char **argv, const char *arg);
+spotsTable *readSpotsTable (const char *spotsListFilename,int argc, char**argv);
+
 
 
 double Set_Threshold (const char *arg, PixStack *theStack);
@@ -1374,12 +1384,6 @@ MaskPtr maskIndex;
 void Set_Border_Pixel (SpotPtr theSpot, coordinate X, coordinate Y, coordinate Z)
 {
 CoordList newPixel;
-/*
-* Used for calculating maximum sutface area by contouring pixels
-MaskPtr maskPixel;
-int sa = 0;
-size_t y_incr,z_incr;
-*/
 
 /*
 * allocate memory for the border pixel.
@@ -1391,7 +1395,6 @@ size_t y_incr,z_incr;
 		fprintf (stderr,"No border pixels will be reported.\n");
 		return;
 		}
-	
 	newPixel->X = X;
 	newPixel->Y = Y;
 	newPixel->Z = Z;
@@ -1899,7 +1902,7 @@ double surfaceArea = 0;
 */
 void Output_Spot (SpotPtr outSpot, int argc, char**argv,int outArgs, char saywhat)
 {
-int theArg;
+int arg;
 coordinate theWave=0;
 PixStack *theStack;
 char doDB = 0;
@@ -1930,11 +1933,11 @@ static char dIDcontrolString[32]="-";
 * We are going to loop through the arguments. and as we encounter a valid output argument,
 * write stuff to stdout.
 */
-	theArg = outArgs;
-	while (theArg < argc)
+	arg = outArgs;
+	while (arg < argc)
 	{
 /* -ID :	 Ouput spot ID */
-		if (!strcmp ( argv[theArg],"-ID"))
+		if (!strcmp ( argv[arg],"-ID"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"  ID   ");
@@ -1947,7 +1950,7 @@ static char dIDcontrolString[32]="-";
 	
 
 /* -dID :	 Pixels ID from the command line */
-		if (!strcmp ( argv[theArg],"-dID"))
+		if (!strcmp ( argv[arg],"-dID"))
 		{
 			if (strlen (dIDcontrolString) < 2)
 				sprintf (dIDcontrolString,"%%%ds",(int)strlen(argv[2]));
@@ -1962,7 +1965,7 @@ static char dIDcontrolString[32]="-";
 		
 
 /* -v :	 Ouput volume */
-		if (!strcmp ( argv[theArg],"-v"))
+		if (!strcmp ( argv[arg],"-v"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"volume ");
@@ -1975,7 +1978,7 @@ static char dIDcontrolString[32]="-";
 	
 
 /* -ff :  Display the spot's form-factor (1 for sphere or circle in 2D, <1 if deviates) */
-		if (!strcmp ( argv[theArg],"-ff"))
+		if (!strcmp ( argv[arg],"-ff"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"Form Factor");
@@ -1988,7 +1991,7 @@ static char dIDcontrolString[32]="-";
 	
 
 /* -sa :  Display the spot's surface area */
-		if (!strcmp ( argv[theArg],"-sa"))
+		if (!strcmp ( argv[arg],"-sa"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"Surf. Area");
@@ -2001,7 +2004,7 @@ static char dIDcontrolString[32]="-";
 	
 
 /* -per :  Display the spot's perimeter */
-		if (!strcmp ( argv[theArg],"-per"))
+		if (!strcmp ( argv[arg],"-per"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"perimeter");
@@ -2014,7 +2017,7 @@ static char dIDcontrolString[32]="-";
 	
 
 /* -mc :  Ouput mean coordinates (center of volume)	 */
-		else if (!strcmp ( argv[theArg],"-mc"))
+		else if (!strcmp ( argv[arg],"-mc"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"mean X\tmean Y\tmean Z");
@@ -2026,7 +2029,7 @@ static char dIDcontrolString[32]="-";
 	
 
 /* -sd :  Ouput std. deviation for the spot's X, Y and Z (dispersion) */
-		else if (!strcmp ( argv[theArg],"-sd"))
+		else if (!strcmp ( argv[arg],"-sd"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"sigma X\tsigma Y\tsigma Z");
@@ -2038,7 +2041,7 @@ static char dIDcontrolString[32]="-";
 	
 
 /* -box :  Ouput min and max values for the spot's X, Y and Z coordinates (bounding box) */
-		else if (!strcmp ( argv[theArg],"-box"))
+		else if (!strcmp ( argv[arg],"-box"))
 		{
 			if (saywhat == HEADING)
 				fprintf (stdout,"min X\tmin Y\tmin Z\tmax X\tmax Y\tmax Z");
@@ -2050,11 +2053,11 @@ static char dIDcontrolString[32]="-";
 	
 	
 /* -c <n> :	 Ouput centroids (center of mass - different at each wavelegth) */
-		else if (!strcmp ( argv[theArg],"-c")) {
-			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
-			else endPtr = argv[theArg+1];
-			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
-				theArg++;
+		else if (!strcmp ( argv[arg],"-c")) {
+			if (arg+1 < argc) theWave = strtoul(argv[arg+1], &endPtr, 10);
+			else endPtr = argv[arg+1];
+			if (endPtr != argv[arg+1]) { /* at least some of the argument had some digits */
+				arg++;
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
@@ -2082,12 +2085,12 @@ static char dIDcontrolString[32]="-";
 	
 	
 /* -i <n> :	 Ouput Integrals */
-		else if (!strcmp (argv[theArg],"-i"))
+		else if (!strcmp (argv[arg],"-i"))
 		{
-			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
-			else endPtr = argv[theArg+1];
-			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
-				theArg++;
+			if (arg+1 < argc) theWave = strtoul(argv[arg+1], &endPtr, 10);
+			else endPtr = argv[arg+1];
+			if (endPtr != argv[arg+1]) { /* at least some of the argument had some digits */
+				arg++;
 				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
 						fprintf (stdout, " i[%3lu]  ",theWave);
@@ -2108,12 +2111,12 @@ static char dIDcontrolString[32]="-";
 
 
 /* -m <n> :	 Ouput means */
-		else if (!strcmp (argv[theArg],"-m"))
+		else if (!strcmp (argv[arg],"-m"))
 		{
-			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
-			else endPtr = argv[theArg+1];
-			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
-				theArg++;
+			if (arg+1 < argc) theWave = strtoul(argv[arg+1], &endPtr, 10);
+			else endPtr = argv[arg+1];
+			if (endPtr != argv[arg+1]) { /* at least some of the argument had some digits */
+				arg++;
 				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
 						fprintf (stdout, "m[%3lu] ",theWave);
@@ -2134,12 +2137,12 @@ static char dIDcontrolString[32]="-";
 
 
 /* -ms <n> :  Ouput means - number of standard deviations above the wavelegth's mean */
-		else if (!strcmp (argv[theArg],"-ms"))
+		else if (!strcmp (argv[arg],"-ms"))
 		{
-			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
-			else endPtr = argv[theArg+1];
-			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
-				theArg++;
+			if (arg+1 < argc) theWave = strtoul(argv[arg+1], &endPtr, 10);
+			else endPtr = argv[arg+1];
+			if (endPtr != argv[arg+1]) { /* at least some of the argument had some digits */
+				arg++;
 				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
 						fprintf (stdout, "ms[%3lu]",theWave);
@@ -2164,11 +2167,11 @@ static char dIDcontrolString[32]="-";
 
 
 /* -g <n> :	 Ouput geometric means */
-		else if (!strcmp (argv[theArg],"-g")) {
-			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
-			else endPtr = argv[theArg+1];
-			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
-				theArg++;
+		else if (!strcmp (argv[arg],"-g")) {
+			if (arg+1 < argc) theWave = strtoul(argv[arg+1], &endPtr, 10);
+			else endPtr = argv[arg+1];
+			if (endPtr != argv[arg+1]) { /* at least some of the argument had some digits */
+				arg++;
 				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
 						fprintf (stdout, "g[%3lu] ",theWave);
@@ -2189,11 +2192,11 @@ static char dIDcontrolString[32]="-";
 
 
 /* -gs <n> :  Ouput geometric means - number of standard deviations above the wavelegth's geometric mean */
-		else if (!strcmp (argv[theArg],"-gs")) {
-			if (theArg+1 < argc) theWave = strtoul(argv[theArg+1], &endPtr, 10);
-			else endPtr = argv[theArg+1];
-			if (endPtr != argv[theArg+1]) { /* at least some of the argument had some digits */
-				theArg++;
+		else if (!strcmp (argv[arg],"-gs")) {
+			if (arg+1 < argc) theWave = strtoul(argv[arg+1], &endPtr, 10);
+			else endPtr = argv[arg+1];
+			if (endPtr != argv[arg+1]) { /* at least some of the argument had some digits */
+				arg++;
 				if (theWave < outSpot->nwaves) {
 					if (saywhat == HEADING)
 						fprintf (stdout, "gs[%3lu]",theWave);
@@ -2214,28 +2217,28 @@ static char dIDcontrolString[32]="-";
 			}
 			fprintf (stdout,"\t");
 		} /* -gs */
-    	else if (!strcmp ( argv[theArg],"-tm") && doDB)
+    	else if (!strcmp ( argv[arg],"-tm") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout," Mean  \t");
 			else
 				fprintf (stdout,"%f\t",theStack->stats[outSpot->itsWave][outSpot->itsTimePoint].mean);
     		}
-    	else if (!strcmp ( argv[theArg],"-tSD") && doDB)
+    	else if (!strcmp ( argv[arg],"-tSD") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout,"  SD   \t");
 			else
 				fprintf (stdout,"%f\t",outSpot->itsStack->stats[outSpot->itsWave][outSpot->itsTimePoint].sigma);
     		}
-    	else if (!strcmp ( argv[theArg],"-tt") && doDB)
+    	else if (!strcmp ( argv[arg],"-tt") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout," t  \t");
 			else
 				fprintf (stdout,"%lu\t",outSpot->itsTimePoint);
     		}
-    	else if (!strcmp ( argv[theArg],"-th") && doDB)
+    	else if (!strcmp ( argv[arg],"-th") && doDB)
     	    {
 			if (saywhat == HEADING)
 				fprintf (stdout,"Thresh.\t");
@@ -2244,13 +2247,143 @@ static char dIDcontrolString[32]="-";
     		}
 
 
-	theArg++;
-	} /* while theArg < argc */
+	arg++;
+	} /* while arg < argc */
+
+}
+
+
+void SetSpots2SpotsDist (spotsTable *theSpotsTable, SpotPtr theSpotListHead) {
+SpotPtr theSpot;
+int thisTime;
+CoordList borderPixel;
+
+unsigned long nRows, nCols, theR;
+unsigned long xCol, yCol, zCol, tCol;
+float min_dist,dist;
+float min_dX,dX,min_dY,dY,min_dZ,dZ;
+char dist_set = 0;
+float theX,theY,theZ,theT;
+char *endPtr;
+MaskPtr mask_pixel;
+
+	nRows = theSpotsTable->nRows;
+	nCols = theSpotsTable->nCols;
+	xCol = theSpotsTable->xCol;
+	yCol = theSpotsTable->yCol;
+	zCol = theSpotsTable->zCol;
+	tCol = theSpotsTable->tCol;
+
+	if (!( (xCol < nCols-4 && yCol < nCols-4 && zCol < nCols-4) &&
+		(xCol || yCol || zCol) )) { /* these really shouldn't be 0 */
+			return;
+	}
+	
+	for (theR=1; theR < nRows; theR++) {
+
+		thisTime = theSpotListHead->itsTimePoint;
+		theSpot = theSpotListHead;
+
+		if (tCol) {
+			theT = strtof (theSpotsTable->cells[theR][tCol], &endPtr);
+			if (theT != thisTime) continue;
+		}
+		else theT = 0;
+		
+		theX = strtof (theSpotsTable->cells[theR][xCol], &endPtr);
+		theY = strtof (theSpotsTable->cells[theR][yCol], &endPtr);
+		if (zCol) theZ = strtof (theSpotsTable->cells[theR][zCol], &endPtr);
+		else theZ = 0;
+		
+		/* Skip it if the coordinates are out of bounds */
+		if ( (theX > theSpot->clip_Xmax)
+			|| (theX < theSpot->clip_Xmin)
+			|| (theY > theSpot->clip_Ymax)
+			|| (theY < theSpot->clip_Ymin)
+			|| (theZ > theSpot->clip_Zmax)
+			|| (theZ < theSpot->clip_Zmin) ) {
+				fprintf (stderr,"Skipping (%f,%f,%f) - coordinates out of bounds\n",theX,theY,theZ);
+				continue;
+		}
+//fprintf (stderr,"From (%f,%f,%f)",theX,theY,theZ);
+
+		min_dX = theSpot->itsStack->max_x;
+		min_dY = theSpot->itsStack->max_y;
+		min_dZ = theSpot->itsStack->max_z;
+		dist_set = 0;
+		min_dist = sqrt (min_dX*min_dX + min_dY*min_dY + min_dZ*min_dZ);
+		while (theSpot->next != theSpotListHead) {
+//fprintf (stderr,"[%lu]",(unsigned long)theSpot->volume);
+			if (! theSpot->volume) {
+				theSpot = theSpot->next;
+				continue;
+			}
+
+			borderPixel = theSpot->borderPixels;
+			while (borderPixel) {
+				dX = borderPixel->X - theX;
+				dY = borderPixel->Y - theY;
+				if (zCol) dZ = borderPixel->Z - theZ;
+				else dZ = 0;
+				dist = sqrt (dX*dX + dY*dY + dZ*dZ);
+				if (dist < min_dist) {
+					dist_set = 1;
+					min_dist = dist;
+					min_dX = dX;
+					min_dY = dY;
+					min_dZ = dZ;
+				}
+				borderPixel = borderPixel->next;
+			}
+
+		/*
+		* Advance to the next spot in this timepoint.
+		*/
+			theSpot = theSpot->next;
+		}
+		
+		/* finish the row */
+		if (!dist_set) min_dX = min_dY = min_dZ = min_dist = 0.0; /* no border pixels ? */
+		
+		/* Check to see if we're inside or outside */
+		mask_pixel = Coords_To_Index (theSpot->itsStack,theX,theY,theZ);
+		if (*mask_pixel == PROCESSED_SPOT_PIXEL) min_dist = -min_dist;
+		
+		sprintf (theSpotsTable->cells[theR][nCols-4],"%f",min_dX);
+		sprintf (theSpotsTable->cells[theR][nCols-3],"%f",min_dY);
+		sprintf (theSpotsTable->cells[theR][nCols-2],"%f",min_dZ);
+		sprintf (theSpotsTable->cells[theR][nCols-1],"%f",min_dist);
+//fprintf (stderr,"to (%f,%f,%f)\n",min_dX,min_dY,min_dZ);
+	}
 
 }
 
 
 
+void Write_Spots2spots (spotsTable *theSpotsTable) {
+unsigned long nRows, nCols, theR, theC;
+
+	nRows = theSpotsTable->nRows;
+	nCols = theSpotsTable->nCols;
+	
+	
+	/*
+	* Set labels for outputs
+	*/
+	strcpy (theSpotsTable->cells[0][nCols-4],"dX");
+	strcpy (theSpotsTable->cells[0][nCols-3],"dY");
+	strcpy (theSpotsTable->cells[0][nCols-2],"dZ");
+	strcpy (theSpotsTable->cells[0][nCols-1],"dist.");
+	
+	for (theR=0; theR < nRows; theR++) {
+		/* print out the table that was read in */
+		for (theC=0; theC < nCols; theC++) {
+			printf ("%s",theSpotsTable->cells[theR][theC]);
+			if (theC < nCols-1) printf ("\t");
+		}
+		printf ("\n");
+	}
+}
 
 
 void Write_Output (SpotPtr theSpotListHead,int argc, char**argv,int outArgs)
@@ -2876,6 +3009,132 @@ fflush (stderr);
 
 
 
+spotsTable *readSpotsTable (const char *spotsListFilename,int argc, char**argv) {
+spotsTable *theSpotsTable;
+int arg;
+unsigned long xCol=0, yCol=0, zCol=0, tCol=0;
+char *endPtr;
+
+FILE *spotsListFile;
+char line[1024], theC;
+char *table=NULL,*linePtr,*tablePtr, **cellRows;
+unsigned long nRows=0,nCols=0,nColsLine=0, theRow, theCol;
+size_t table_size=0,table_nProcessed=0,line_size=0;
+	
+	if (!spotsListFilename || *spotsListFilename == '-') spotsListFile = stdin;
+	else spotsListFile = fopen (spotsListFilename,"r");
+	
+	if (! spotsListFile) return NULL;
+	
+	/*
+	* Get our X, Y, Z and T columns
+	*/
+	arg = 0;
+	while (arg < argc)
+	{
+		if (!strcmp ( argv[arg],"-xCol") && (arg+1 < argc))
+			xCol = strtoul(argv[arg+1], &endPtr, 10);
+		else if (!strcmp ( argv[arg],"-yCol") && (arg+1 < argc)) 
+			yCol = strtoul(argv[arg+1], &endPtr, 10);
+		else if (!strcmp ( argv[arg],"-zCol") && (arg+1 < argc))
+			zCol = strtoul(argv[arg+1], &endPtr, 10);
+		else if (!strcmp ( argv[arg],"-tCol") && (arg+1 < argc))
+			tCol = strtoul(argv[arg+1], &endPtr, 10);
+		arg++;
+	}
+
+	
+	while (! feof (spotsListFile) ) {
+	/* Get to a non newline character */
+		theC = fgetc (spotsListFile);
+		while ( !feof (spotsListFile) && (theC == '\n' || theC == '\r' ) )
+			theC = fgetc (spotsListFile);
+		if (feof (spotsListFile))
+			break;
+	/* Get to a newline character, storing characters in line[] */
+		line_size = 0;
+		line[line_size++] = theC;
+		while (! feof (spotsListFile) && theC != '\n' && theC != '\r' && line_size < 1022)
+			line[line_size++] = theC = fgetc (spotsListFile);
+	/* terminate the line so far with a \t replacing the newline */
+		line_size--;
+		line[line_size] = '\t';
+	/* make some room for the results, and NULL-terminate */
+		sprintf (line+line_size+1,"%31s\t%31s\t%31s\t%31s","","","","");
+		line_size += (32*4);
+	/* allocate/reallocate table */
+		table_size += line_size+1;
+		if (! table) table = malloc (sizeof (char) * table_size);
+		else table = realloc (table, sizeof (char) * table_size);
+		if (! table) {
+			fprintf (stderr,"Memory could not be allocated for table.\n");
+			exit (-1);
+		}
+		tablePtr = table + table_nProcessed;
+	/* re-process the line, looking for tab characters */
+		linePtr = line;
+		nColsLine = 0;
+		while (*linePtr) {
+			if (*linePtr == '\t') {
+				nColsLine++;
+				*tablePtr++ = '\0';
+				linePtr++;
+			} else {
+				*tablePtr++ = *linePtr++;
+			}
+			table_nProcessed++;
+		}
+		*tablePtr++ = '\0';
+		table_nProcessed++;
+		if (nRows && nColsLine && nColsLine != nCols) {
+			fprintf (stderr,"Table is not square.  Columns in row %lu does not match.  Expecting %lu, got %lu.\n",
+				nRows, nCols, nColsLine);
+			exit (-1);
+		} else {
+			nCols = nColsLine;
+		}
+		nRows++;
+	}
+
+	nCols++;
+//fprintf (stderr,"NCols: %lu\n",nCols);
+	theSpotsTable = (spotsTable *) malloc (sizeof (spotsTable));
+	if (! theSpotsTable) {
+		fprintf (stderr,"Memory could not be allocated for table.\n");
+		exit (-1);
+	}
+	
+	theSpotsTable->nRows = nRows;
+	theSpotsTable->nCols = nCols;
+	theSpotsTable->table = table;
+	theSpotsTable->xCol = xCol;
+	theSpotsTable->yCol = yCol;
+	theSpotsTable->zCol = zCol;
+	theSpotsTable->tCol = tCol;
+	cellRows = malloc (nRows * nCols * sizeof (char *));
+	if (! cellRows) {
+		fprintf (stderr,"Memory could not be allocated for table cells.\n");
+		exit (-1);
+	}
+	theSpotsTable->cells = malloc (nRows * sizeof (char **));
+	if (! theSpotsTable->cells) {
+		fprintf (stderr,"Memory could not be allocated for table cells.\n");
+		exit (-1);
+	}
+
+	/* set the cells pointers */
+	tablePtr = table;
+	for (theRow = 0; theRow < nRows; theRow++) {
+		theSpotsTable->cells[theRow] = cellRows + (theRow * nCols) ;
+		for (theCol = 0; theCol < nCols; theCol++) {
+			theSpotsTable->cells[theRow][theCol] = tablePtr;
+			while (*tablePtr++);
+		}
+	}
+
+	return (theSpotsTable);
+			
+}
 
 
 
@@ -2913,6 +3172,9 @@ OID PixelsID;
 PixStack *theStack;
 char doFadeSpots=0;
 MaskPixel *maskCopy=NULL;
+
+char *spotsListFilename, doSpots2spots=0;
+spotsTable *theSpotsTable = NULL;
 
 
 /*
@@ -2999,6 +3261,17 @@ fflush (stderr);
 		maskT = 0;
 		if (argIndx+1 < argc) sscanf (argv[argIndx+1], "%lu", &maskT);
 		if (maskT >= theStack->ph->dt) doFadeSpots=0;
+	}
+	
+	/*
+	* Decide if we're doing spots2spots
+	*/
+	if ( (argIndx = getArg (argc, argv, "-spotsList")) > -1 && argIndx < argc) {
+		spotsListFilename = NULL;
+		doSpots2spots = 0;
+		if (argIndx+1 < argc) spotsListFilename = argv[argIndx+1];
+		theSpotsTable = readSpotsTable (spotsListFilename, argc, argv);
+		if (theSpotsTable) doSpots2spots = 1;
 	}
 
 
@@ -3118,6 +3391,7 @@ fflush (stderr);
 
 		maskIndex++;
 		} /* loop for all the pixels in a timepoint */
+	if (doSpots2spots) SetSpots2SpotsDist (theSpotsTable,theStack->currSpotList);
 	} /* loop for all the timepoints. */
 
 /*
@@ -3127,8 +3401,10 @@ fflush (stderr);
 
 /*
 * Output of spot info is handled by Write_Output
+* If we read in a table of spots, then call Write_Spots2spots
 */
-	Write_Output (theStack->spots, argc, argv, OUTARGS);
+	if (doSpots2spots) Write_Spots2spots (theSpotsTable);
+	else Write_Output (theStack->spots, argc, argv, OUTARGS);
 	
 /*
 * Exit gracefully.
@@ -3190,10 +3466,10 @@ void usage (char **argv) {
 		fprintf (stderr,"\n");	
 }
 
-int getArg (int argc, char **argv, const char *theArg) {
+int getArg (int argc, char **argv, const char *arg) {
 	while (argc > 0) {
 		argc--;
-		if (! strcmp (theArg,argv[argc]) ) return (argc);
+		if (! strcmp (arg,argv[argc]) ) return (argc);
 	}
 	return (-1);
 }
