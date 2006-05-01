@@ -158,6 +158,17 @@ sub chex_stats {
 		}
 	}
 
+	# Derive DAE information
+	my %mexes_per_DAE_worker;
+
+	foreach my $mex (@mexes) {
+		if ( not defined $mexes_per_DAE_worker{$mex->executed_by_worker()->id()} ){
+			$mexes_per_DAE_worker{$mex->executed_by_worker()->id()} = 1;
+		} else {
+			$mexes_per_DAE_worker{$mex->executed_by_worker()->id()} = 
+				$mexes_per_DAE_worker{$mex->executed_by_worker()->id()} + 1;
+		}
+	}
 
 	# Print Overview
 	print "Displaying information about chain ".$chex->analysis_chain->name." (id:".$chex->analysis_chain->id.") ".
@@ -216,6 +227,16 @@ sub chex_stats {
 		print "	[module name]	[num times it appears in this chex]\n";
 		foreach my $module_name ( sort( keys( %mexes_wo_time )) ) {
 			print "	$module_name	".$mexes_wo_time{ $module_name }."\n";
+		}
+	}
+	
+	# print DAE stats
+	my @DAE_worker_IDs = keys %mexes_per_DAE_worker;
+	if (scalar @DAE_worker_IDs) {
+		print ( "\nDAE Statistics \n" );
+		foreach (sort @DAE_worker_IDs) {
+			my $worker = $factory->loadObject ('OME::Analysis::Engine::Worker', $_);
+			printf("   Worker %s executed %d MEXs.\n", $worker->URL(), $mexes_per_DAE_worker{$_});
 		}
 	}
 }
