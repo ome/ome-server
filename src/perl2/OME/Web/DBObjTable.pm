@@ -217,7 +217,8 @@ sub getTable {
 	if (exists $options->{fields} and $options->{fields}) {
 		@fieldNames = @{$options->{fields}};
 	} else {
-		@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
+		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
+		@fieldNames = $package_name->getPublishedCols();
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 			if exists $options->{excludeFields};
 		push (@fieldNames, keys %{$options->{includeFields}})
@@ -610,7 +611,8 @@ sub getTextTable {
 	if (exists $options->{fields} and $options->{fields}) {
 		@fieldNames = @{$options->{fields}};
 	} else {
-		@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
+		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
+		@fieldNames = $package_name->getPublishedCols();
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 			if exists $options->{excludeFields};
 		push (@fieldNames, keys %{$options->{includeFields}})
@@ -781,7 +783,8 @@ sub __getJoinedGroups {
 		if (exists $entry_options->{fields} and $entry_options->{fields}) {
 			@fieldNames = @{$entry_options->{fields}};
 		} else {
-			@fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
+			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
+			@fieldNames = $package_name->getPublishedCols();
 			@fieldNames = grep( (not exists $entry_options->{excludeFields}->{$_}), @fieldNames )
 				if exists $entry_options->{excludeFields};
 			push (@fieldNames, keys %{$entry_options->{includeFields}})
