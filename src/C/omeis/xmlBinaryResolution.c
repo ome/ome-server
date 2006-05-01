@@ -332,7 +332,7 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 	*
 	* Find the local name of the element: strip the prefix if one exists.
 	*/
-	localName = strchr( name, ':' );
+	localName = strchr( (char *)name, ':' );
 	if( localName != NULL )
 		localName++;
 	else
@@ -356,10 +356,10 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 		state->binDataInfo->compression = NULL;
 		if( attrs != NULL ) {
 			for( i=0; attrs[i] != NULL; i+=2) {
-				if( strcmp( attrs[i], CompressionAttr ) == 0 ) {
-					state->binDataInfo->compression = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1) );
+				if( strcmp( (char *)attrs[i], CompressionAttr ) == 0 ) {
+					state->binDataInfo->compression = (char *) malloc( sizeof(char) * ( strlen((char *)attrs[i+1]) + 1) );
 					assert( state->binDataInfo->compression != NULL);
-					strcpy( state->binDataInfo->compression, attrs[i+1] );
+					strcpy( state->binDataInfo->compression, (char *)attrs[i+1] );
 					break;
 				}
 			}
@@ -444,26 +444,26 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 		state->pixelInfo->bigEndian = -1;
 		state->pixelInfo->dimOrder = state->pixelInfo->pixelType = NULL;
 		for( i=0; attrs[i] != NULL; i+=2 ) {
-			if( strcmp( attrs[i], "SizeX" ) == 0 ) {
-				state->pixelInfo->X = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "SizeY" ) == 0 ) {
-				state->pixelInfo->Y = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "SizeZ" ) == 0 ) {
-				state->pixelInfo->Z = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "SizeC" ) == 0 ) {
-				state->pixelInfo->C = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "SizeT" ) == 0 ) {
-				state->pixelInfo->T = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "DimensionOrder" ) == 0 ) {
-				state->pixelInfo->dimOrder = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1 ) );
+			if( strcmp( (char *)attrs[i], "SizeX" ) == 0 ) {
+				state->pixelInfo->X = atoi( (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "SizeY" ) == 0 ) {
+				state->pixelInfo->Y = atoi( (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "SizeZ" ) == 0 ) {
+				state->pixelInfo->Z = atoi( (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "SizeC" ) == 0 ) {
+				state->pixelInfo->C = atoi( (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "SizeT" ) == 0 ) {
+				state->pixelInfo->T = atoi( (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "DimensionOrder" ) == 0 ) {
+				state->pixelInfo->dimOrder = (char *) malloc( sizeof(char) * ( strlen((char *)attrs[i+1]) + 1 ) );
 				assert( state->pixelInfo->dimOrder != NULL);
-				strcpy( state->pixelInfo->dimOrder, attrs[i+1] );
-			} else if( strcmp( attrs[i], "PixelType" ) == 0 ) {
-				state->pixelInfo->pixelType = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1 ) );
+				strcpy( state->pixelInfo->dimOrder, (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "PixelType" ) == 0 ) {
+				state->pixelInfo->pixelType = (char *) malloc( sizeof(char) * ( strlen((char *)attrs[i+1]) + 1 ) );
 				assert( state->pixelInfo->pixelType != NULL);
-				strcpy( state->pixelInfo->pixelType, attrs[i+1] );
-			} else if( strcmp( attrs[i], "BigEndian" ) == 0 ) {
-				if( strcmp( attrs[i+1], "true" ) == 0 || strcmp( attrs[i+1], "1" ) == 0 )
+				strcpy( state->pixelInfo->pixelType, (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "BigEndian" ) == 0 ) {
+				if( strcmp( (char *)attrs[i+1], "true" ) == 0 || strcmp( (char *)attrs[i+1], "1" ) == 0 )
 					state->pixelInfo->bigEndian = 1;
 				else
 					state->pixelInfo->bigEndian = 0;
@@ -567,10 +567,10 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 		state->BinFileInfo.size = 0;
 		*(state->BinFileInfo.name) = 0;
 		for( i=0; attrs[i] != NULL; i+=2 ) {
-			if( strcmp( attrs[i], "Size" ) == 0 ) {
-				state->BinFileInfo.size = (off_t) atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "FileName" ) == 0 ) {
-				strcpy( state->BinFileInfo.name, attrs[i+1] );
+			if( strcmp( (char *)attrs[i], "Size" ) == 0 ) {
+				state->BinFileInfo.size = (off_t) atoi( (char *)attrs[i+1] );
+			} else if( strcmp( (char *)attrs[i], "FileName" ) == 0 ) {
+				strcpy( state->BinFileInfo.name, (char *)attrs[i+1] );
 			}
 		}
 

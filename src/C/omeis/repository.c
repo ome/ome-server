@@ -281,7 +281,7 @@ int newRepFile (OID theID, char *path, size_t size, char *suffix) {
 		return (-4);
 	}
 	
-	if (lseek(fd, 0LL, SEEK_SET) < 0) {
+	if (lseek(fd, (off_t) 0, SEEK_SET) < 0) {
 		close (fd);
 		return (-5);
 	}
@@ -407,6 +407,7 @@ inflateBZfile (const char *OUTfilename) {
 	fclose (fBZ);
 	lockRepFile (fd_out,'u', 0, 0);
 	close (fd_out);
+	chmod (OUTfilename,0400);
 	return (0);
 }
 

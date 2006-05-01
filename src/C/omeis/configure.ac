@@ -165,4 +165,4 @@ AC_FUNC_MMAP
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(mkdir socket strdup strerror strstr)
 
-AC_OUTPUT([Makefile zoom/Makefile zoom/lib/Makefile])
+AC_OUTPUT([Makefile zoom/Makefile zoom/lib/Makefile t/Makefile])

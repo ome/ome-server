@@ -1,0 +1,41 @@
+OMEIS should be empty (no files in Files or Pixels beginning with a number)
+
+upload 3 files
+make 1 pixels from the three files
+upload the three files again under different names (making aliases)
+three originals should have one alias and one pixel dep
+
+delete the three originals
+the three alias files should now be originals (isAlias is false) with one pixel dep
+
+purge the pixels
+the pixels should be identical (GetPixels and compare SHA1).
+
+delete alias #1
+the remaining two should have no pixel deps
+
+purging the pixels should report 0 pixels purged
+
+the pixels should be identical (GetPixels and compare SHA1).
+
+make 1 pixels (#2) from the remaining 2 file aliases
+the two aliases should have a new pixels dep to #2
+
+make 1 pixels (#3) from alias #3
+the last alias should have two pixel deps (#2 and #3)
+
+purge pixels #2 and #3
+read pixels #2 and #3 - check sha1s
+purge pixels #2 and #3
+
+delete the #2 pixels
+alias #3 should have a pixel dep to Pixels #1
+alias #2 should have no pixel deps
+
+delete the remaining two aliases (no error)
+read pixels #2 and #3 - check sha1s
+
+delete the remaining pixels (no error)
+
+OMEIS should be empty (no files in Files or Pixels beginning with a number)
+

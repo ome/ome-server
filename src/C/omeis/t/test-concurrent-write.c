@@ -23,73 +23,96 @@
  *
  *------------------------------------------------------------------------------
  */
-
-
-
-
 /*------------------------------------------------------------------------------
  *
  * Written by:	Ilya G. Goldberg <igg@nih.gov>   3/2004
  * 
  *------------------------------------------------------------------------------
  */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif  /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-#include <stdarg.h>
 #include <stdlib.h>
-#include <string.h> 
-#include <ctype.h> 
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <unistd.h>
-#include <sys/param.h>
+#include <errno.h>
 
-#include "Pixels.h"
-#include "OMEIS_Error.h"
-#include "omeis.h"
+#define OMEIS_TEST_ROOT "OMEIS-TEST"
+#include "../Pixels.h"
+#include "../OMEIS_Error.h"
 
-#ifndef OMEIS_ROOT
-#define OMEIS_ROOT "."
-#endif
+#define DX 3
+#define DY 3
+#define DZ 3
+#define DC 1
+#define DT 1
+#define BP 4
+#define IS_SIGNED 1
+#define IS_FLOAT 1
 
+int main (void)
+{
+int i;
+OID *array;
+size_t arr_size,npix,j;
+PixelsRep *thePixels;
+char command[256];
 
-int main (int argc, char **argv) {
-OID theID=0,nPurged=0LL;
-PixelsRep *myPixels;
-char iamBigEndian;
-int theArg;
-
-	iamBigEndian = bigEndian();
 	
-	if (argc < 2) {
-		fprintf (stderr,"Purge Pixels files - delete them if they are recoverable from the original File.\n");
-		fprintf (stderr,"Usage:\n%s [PixelsID] [PixelsID]...\n",argv[0]);
-		fprintf (stderr,"  if 0 is specified for PixelsID, the entire repository will be purged.\n");
+	if (chdir (OMEIS_TEST_ROOT)) {
+		OMEIS_ReportError ("Initialization",NULL, (OID)0, "Could not change working directory to %s: %s",
+			OMEIS_TEST_ROOT,strerror (errno));
 		exit (-1);
 	}
 
-	if (chdir (OMEIS_ROOT)) {
-		OMEIS_ReportError ("OMEIS purge",NULL,(OID)0,"Could not change working directory to %s",
-			OMEIS_ROOT);
-		exit (-1);
-	}
-	
-	theArg = 1;
-	while (theArg < argc) {
-		if (strrchr(argv[theArg],'/')) {
-			theID = strtoull(strrchr(argv[theArg],'/')+1, NULL, 10);
-		} else {
-			theID = strtoull(argv[theArg], NULL, 10);
+	arr_size = DX*DY*DZ*DC*DT*8;
+	npix = DX*DY*DZ*DC*DT;
+	array = malloc (arr_size);
+
+	fork(); /* 2 */
+	fork(); /* 4 */
+	fork(); /* 8 */
+	fork(); /* 16 */
+	fork(); /* 32 */
+	fork(); /* 64 */
+
+	for (i=1; i<1000; i++) {
+		OMEIS_ClearError();
+		if (i % 100 == 0) {
+			printf("pix %d\n", i);
+			fflush (stdout);
 		}
-		nPurged += PurgePixels (theID);
-		if (OMEIS_CheckError()) OMEIS_ReportError ("Purge","PixelsID",theID,"Purge errors");
-		theArg++;
+
+		thePixels = NewPixels (DX,DY,DZ,DC,DT,BP,IS_SIGNED,IS_FLOAT);
+		if (! thePixels ) {
+			OMEIS_ReportError ("test-concurrent-write", NULL, 0, "NewPixels failed.");
+			exit (-1);
+		}
+
+		for (j=0; j < npix; j++) {
+			array[j] = rand();
+		}
+
+
+		thePixels->IO_buf = array;
+		if ( DoPixelIO (thePixels, 0, npix, 'w') != npix ) {
+			OMEIS_ReportError ("test-concurrent-write", NULL, 0, "Failure to write all pixels");
+			exit (-1);
+		}
+
+		thePixels->IO_buf = NULL;
+		
+
+		if (! FinishPixels (thePixels, 0) ) {
+			OMEIS_ReportError ("test-concurrent-write", NULL, 0, "Failure calling FinishPixels");
+		}
+
+//		ExpungePixels (thePixels);
+		freePixelsRep (thePixels);
 	}
-	
-	fprintf (stdout,"%llu pixels purged\n",(unsigned long long)nPurged);
-	return (1);
+
+	free (array);
+	return 1;
 }

@@ -151,7 +151,7 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 	*
 	* Find the local name of the element: strip the prefix if one exists.
 	*/
-	localName = strchr( name, ':' );
+	localName = strchr( (char *)name, ':' );
 	if( localName != NULL )
 		localName++;
 	else
@@ -171,8 +171,8 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 
 		state->state	               = IN_OME;
 		while (*attrs != NULL && !state->isOME) {
-			if (!strncmp (*attrs,"xmlns",5)) {
-				if (strstr (*(attrs+1),OME_NS)) {
+			if (!strncmp ((char *)(*attrs),"xmlns",5)) {
+				if (strstr ((char *)(*(attrs+1)),OME_NS)) {
 					state->isOME = 1;
 				}
 			}

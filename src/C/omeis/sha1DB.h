@@ -50,11 +50,10 @@
 #include "digest.h"
 #include "repository.h"
 
-DB *sha1DB_open (const char *file);
-OID sha1DB_get (DB *myDB, unsigned char *md_value);
-int sha1DB_put (DB *myDB, unsigned char *md_value, OID theOID);
-int sha1DB_del (DB *myDB, unsigned char *md_value);
-int sha1DB_close (DB *myDB);
+OID sha1DB_get (const char *file, void *md_value);
+int sha1DB_put (const char *file, void *md_value, OID theOID);
+int sha1DB_update (const char *file, void *md_value, OID theOID);
+int sha1DB_del (const char *file, void *md_value);
 
 
 #endif /* sha1DB_h */

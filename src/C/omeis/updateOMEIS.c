@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/param.h>
+#include <utime.h>
 
 #include "Pixels.h"
 #include "File.h"
@@ -251,6 +252,11 @@ int fd;
 
 
 	if (doVerify) {
+		struct stat myStat;
+		struct utimbuf base_times,bz_times, gz_times, info_times;
+		int base_missing, bz_missing, gz_missing, info_missing;
+		char base_path[OMEIS_PATH_SIZE],bz_path[OMEIS_PATH_SIZE+5],gz_path[OMEIS_PATH_SIZE+5],info_path[OMEIS_PATH_SIZE+6];
+		
 		/*
 		  Process Pixels
 		*/
@@ -259,8 +265,34 @@ int fd;
 			OMEIS_ClearError();
 			if (!beSilent) fprintf(stdout, "\r%25llu  ", (unsigned long long)theID);
 			fflush (stdout);
+			
+			if ( !(myPixels = newPixelsRep (theID)) ) {
+				if (!beSilent) OMEIS_ReportError ("VerifyOMEIS","PixelsID",theID,"Could not get a new PixelsRep");
+				exit (-1);
+			}
+			
+			sprintf (info_path,"%s",myPixels->path_info);
+			if ( (info_missing = lstat (info_path, &myStat)) ) {
+				if (!beSilent) fprintf(stdout, "-- MISSING\n");
+				freePixelsRep (myPixels);
+				continue;
+			} else {info_times.actime = myStat.st_atime; info_times.modtime = myStat.st_mtime;}
+
+			sprintf (base_path,"%s",myPixels->path_rep);
+			base_missing = lstat (base_path, &myStat);
+			if (!base_missing) {base_times.actime = myStat.st_atime; base_times.modtime = myStat.st_mtime;}
+
+			sprintf (bz_path,"%s.bz2",myPixels->path_rep);
+			bz_missing = lstat (bz_path, &myStat);
+			if (!bz_missing) {bz_times.actime = myStat.st_atime; bz_times.modtime = myStat.st_mtime;}
+
+			sprintf (gz_path,"%s.gz",myPixels->path_rep);
+			gz_missing = lstat (gz_path, &myStat);
+			if (!gz_missing) {gz_times.actime = myStat.st_atime; gz_times.modtime = myStat.st_mtime;}
+
+			freePixelsRep (myPixels);
+			
 			if ( (myPixels = GetPixelsRep (theID,'r',1)) ){
-//				if (get_md_from_file (myPixels->path_rep, (unsigned char *)sha1) < 0) {
 				if (get_md_from_buffer (myPixels->pixels, myPixels->size_rep, (unsigned char *)sha1) < 0) {
 					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","PixelsID",theID,"Could not get a sha1 digest");
 				}
@@ -268,6 +300,17 @@ int fd;
 					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","PixelsID",theID,"Digests don't match");
 				}
 				freePixelsRep (myPixels);
+
+				if (base_missing) unlink (base_path);
+				else utime (base_path, &base_times);
+
+				if (bz_missing) unlink (bz_path);
+				else utime (bz_path, &bz_times);
+
+				if (gz_missing) unlink (gz_path);
+				else utime (gz_path, &gz_times);
+				
+				utime (info_path,&info_times);
 			} else {
 				if (!beSilent) OMEIS_ReportError ("verifyOMEIS","PixelsID",theID,"Could not be opened");
 			}
@@ -283,15 +326,50 @@ int fd;
 			OMEIS_ClearError();
 			if (!beSilent) fprintf(stdout, "\r%25llu  ", (unsigned long long)theID);
 			fflush (stdout);
+			
+			if ( !(myFile = newFileRep (theID)) ) {
+				if (!beSilent) OMEIS_ReportError ("VerifyOMEIS","FileID",theID,"Could not get a new FileRep");
+				exit (-1);
+			}
+			
+			sprintf (info_path,"%s",myFile->path_info);
+			if ( (info_missing = lstat (info_path, &myStat)) ) {
+				if (!beSilent) fprintf(stdout, "-- MISSING\n");
+				freeFileRep (myFile);
+				continue;
+			} else {info_times.actime = myStat.st_atime; info_times.modtime = myStat.st_mtime;}
+
+			sprintf (base_path,"%s",myFile->path_rep);
+			base_missing = lstat (base_path, &myStat);
+			if (!base_missing) {base_times.actime = myStat.st_atime; base_times.modtime = myStat.st_mtime;}
+
+			sprintf (bz_path,"%s.bz2",myFile->path_rep);
+			bz_missing = lstat (bz_path, &myStat);
+			if (!bz_missing) {bz_times.actime = myStat.st_atime; bz_times.modtime = myStat.st_mtime;}
+
+			sprintf (gz_path,"%s.gz",myFile->path_rep);
+			gz_missing = lstat (gz_path, &myStat);
+			if (!gz_missing) {gz_times.actime = myStat.st_atime; gz_times.modtime = myStat.st_mtime;}
+
+			freeFileRep (myFile);
+			
 			if ( (myFile = GetFileRep (theID,'r',1)) ){
-//				if ( get_md_from_file (myFile->path_rep, (unsigned char *)sha1) < 0 ) {
 				if ( get_md_from_buffer (myFile->file_buf, myFile->size_rep, (unsigned char *)sha1) < 0 ) {
 					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","FileID",theID,"Could not get a sha1 digest");
 				}
-				if (memcmp (sha1, myFile->file_info.sha1, OME_DIGEST_LENGTH)) {
+				if (memcmp (sha1, myFile->file_info->sha1, OME_DIGEST_LENGTH)) {
 					if (!beSilent) OMEIS_ReportError ("verifyOMEIS","FileID",theID,"Digests don't match");
 				}
 				freeFileRep (myFile);
+
+				if (base_missing && (!bz_missing || !gz_missing)) unlink (base_path);
+				else utime (base_path, &base_times);
+
+				if (!bz_missing) utime (bz_path, &bz_times);
+
+				if (!gz_missing) utime (gz_path, &gz_times);
+
+				utime (info_path,&info_times);
 			} else {
 				if (!beSilent) OMEIS_ReportError ("verifyOMEIS","FileID",theID,"Could not be opened");
 			}

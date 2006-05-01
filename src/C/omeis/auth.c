@@ -57,9 +57,9 @@
 /* INTERNAL */
 #include "auth.h"
 
-const char * user_data_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><methodCall><methodName>createSession</methodName><params><param><value><string></string></value></param><param><value><string></string></value></param></params></methodCall>";
+const unsigned char * user_data_xml = (unsigned char *)"<?xml version=\"1.0\" encoding=\"UTF-8\"?><methodCall><methodName>createSession</methodName><params><param><value><string></string></value></param><param><value><string></string></value></param></params></methodCall>";
 
-const char * sid_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><methodCall><methodName>authenticateSession</methodName><params><param><value><string></string></value></param></params></methodCall>";
+const unsigned char * sid_xml = (unsigned char *)"<?xml version=\"1.0\" encoding=\"UTF-8\"?><methodCall><methodName>authenticateSession</methodName><params><param><value><string></string></value></param></params></methodCall>";
 
 /* _______
  * getline
@@ -173,7 +173,7 @@ parse_xmlrpc_xml (const unsigned char *xml_in, const unsigned char *root)
 	xmlDocPtr doc;
 	xmlNodePtr cur;
 
-	if ((doc = xmlParseMemory (xml_in, strlen(xml_in))) == NULL) {
+	if ((doc = xmlParseMemory ((void *)xml_in, strlen((char *)xml_in))) == NULL) {
         fprintf(stderr, "failed to parse the including file\n");
 		return NULL;
 	}
@@ -219,7 +219,7 @@ user_data_get_xml (const unsigned char *xml_in,
 	plist[0] = username;
 	plist[1] = password;
 
-	if ((doc = parse_xmlrpc_xml(xml_in, "methodCall")) == NULL)
+	if ((doc = parse_xmlrpc_xml(xml_in, (unsigned char *)"methodCall")) == NULL)
 		return NULL;  /* the bogus document will already have been freed */
 
 	cur = xmlDocGetRootElement(doc);  /* Safe, already been verified */
@@ -254,7 +254,7 @@ sid_get_xml (const unsigned char *xml_in, unsigned char *sid)
 	/* Get our parameter list ready */
 	plist[0] = sid;
 
-	if ((doc = parse_xmlrpc_xml(xml_in, "methodCall")) == NULL)
+	if ((doc = parse_xmlrpc_xml(xml_in, (unsigned char *)"methodCall")) == NULL)
 		return NULL;  /* the bogus document will already have been freed */
 
 	cur = xmlDocGetRootElement(doc);  /* Safe, already been verified */
@@ -284,7 +284,7 @@ user_data_parse_xml (const unsigned char *xml)
 	xmlNodePtr cur;
 	xmlChar *key = NULL;
 
-	if ((doc = parse_xmlrpc_xml(xml, "methodResponse")) == NULL)
+	if ((doc = parse_xmlrpc_xml(xml, (unsigned char*)"methodResponse")) == NULL)
 		return NULL;  /* the bogus document will already have been freed */
 
 	cur = xmlDocGetRootElement(doc);
@@ -316,7 +316,7 @@ sid_parse_xml (const unsigned char *xml)
 	xmlNodePtr cur;
 	xmlChar *key = NULL;
 
-	if ((doc = parse_xmlrpc_xml(xml, "methodResponse")) == NULL)
+	if ((doc = parse_xmlrpc_xml(xml, (unsigned char *)"methodResponse")) == NULL)
 		return -1;  /* the bogus document will already have been freed */
 
 	cur = xmlDocGetRootElement(doc);
@@ -329,7 +329,7 @@ sid_parse_xml (const unsigned char *xml)
 			break;
 		}
 
-	if (atoi(key) == 1) {
+	if (atoi((char *)key) == 1) {
 		xmlFree(key);
 		return 1;
 	} else {
@@ -358,16 +358,16 @@ parse_http_request (unsigned char *payload, http_request *request)
 
 	http_header = payload;
 
-	while ((len = getline(field, MAX_FIELD_LEN, http_header)) > 0) {
+	while ((len = getline((char *)field, MAX_FIELD_LEN, (char *)http_header)) > 0) {
 		/* FIXME These really should be case insensitive checks */
-		if (strstr(field, "Content-Length")) {
-			pos = strstr(field, ":");
+		if (strstr((char *)field, "Content-Length")) {
+			pos = (unsigned char *)strstr((char *)field, ":");
 			while (isspace(*(++pos)));  /* Iterate over spaces */
-			content_len = atoi(pos);
-		} else if (strstr(field, "Content-Type")) {
-			pos = strstr(field, ":");
+			content_len = atoi((char *)pos);
+		} else if (strstr((char *)field, "Content-Type")) {
+			pos = (unsigned char *)strstr((char *)field, ":");
 			while (isspace(*(++pos)));  /* Iterate over spaces */
-			strncpy(content_type, pos, MAX_CONTENT_TYPE_LEN);
+			strncpy((char *)content_type, (char *)pos, MAX_CONTENT_TYPE_LEN);
 			content_type[MAX_CONTENT_TYPE_LEN] = '\0';  /* NULL terminte */
 		}
 
@@ -385,14 +385,14 @@ parse_http_request (unsigned char *payload, http_request *request)
 	request->http_payload = payload;
 	request->http_content = http_content;
 
-	if (content_len != strlen(http_content)) {
+	if (content_len != strlen((char *)http_content)) {
 		fprintf(stderr, "Real (%d) and supplied (%d) content lengths differ.", \
-				(int) strlen(http_content), content_len);
+				(int) strlen((char *)http_content), content_len);
 		return -1;
 	}
 	
 	request->content_len = content_len;
-	strcpy(request->content_type, content_type);
+	strcpy((char *)request->content_type, (char *)content_type);
 
 	return 1;
 }
@@ -421,7 +421,7 @@ do_http_post (auth_ctx *ctx, unsigned char *post_data, int post_len)
 	do {
 		if ((rlen = recv(sock, buf, SOCK_BUF_LEN, 0)) > 0) {
 			payload = realloc(payload, payload_len + rlen + 1);
-			strncpy(payload + payload_len, buf, rlen);
+			strncpy((char *)(payload + payload_len), (char *)buf, rlen);
 			payload_len += rlen;
 		}
 	} while (rlen != 0);
@@ -504,16 +504,16 @@ user_data_auth (auth_ctx *ctx, unsigned char *username, unsigned char *password)
 	http_request r;
 
 	post_xml     = user_data_get_xml(user_data_xml, username, password);
-	post_xml_len = strlen(post_xml);
+	post_xml_len = strlen((char *)post_xml);
 	
 	assert(post_xml_len < 1024);
 
-	header       = "POST / HTTP/1.0\n";
-	header_len   = strlen(header);
-	header_len  += sprintf(content_len, "Content-Length: %d\n\n", post_xml_len);
+	header       = (unsigned char *)"POST / HTTP/1.0\n";
+	header_len   = strlen((char *)header);
+	header_len  += sprintf((char *)content_len, "Content-Length: %d\n\n", post_xml_len);
 
 	post_data     = malloc(header_len + post_xml_len + 2);  /* The 2 is LF and \0 */
-	post_data_len = sprintf(post_data, "%s%s%s", header, content_len, post_xml);
+	post_data_len = sprintf((char *)post_data, "%s%s%s", header, content_len, post_xml);
 	
 	free(post_xml);
 
@@ -549,16 +549,16 @@ sid_auth (auth_ctx *ctx, unsigned char *sid)
 	http_request r;
 
 	post_xml     = sid_get_xml(sid_xml, sid);
-	post_xml_len = strlen(post_xml);
+	post_xml_len = strlen((char *)post_xml);
 
 	assert(post_xml_len < 1024);
 
-	header       = "POST / HTTP/1.0\n";
-	header_len   = strlen(header);
-	header_len  += sprintf(content_len, "Content-Length: %d\n\n", post_xml_len);
+	header       = (unsigned char *)"POST / HTTP/1.0\n";
+	header_len   = strlen((char *)header);
+	header_len  += sprintf((char *)content_len, "Content-Length: %d\n\n", post_xml_len);
 
 	post_data     = malloc(header_len + post_xml_len + 2);  /* The 2 is LF and \0 */
-	post_data_len = sprintf(post_data, "%s%s%s", header, content_len, post_xml);
+	post_data_len = sprintf((char *)post_data, "%s%s%s", header, content_len, post_xml);
 	
 	free(post_xml);
 	

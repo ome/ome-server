@@ -299,6 +299,12 @@ dispatch (char **param)
 			freePixelsRep (thePixels);
 			break;
 		case M_DELETEPIXELS:
+			if (getenv ("REMOTE_ADDR") && getenv ("SERVER_ADDR") &&
+				strcmp (getenv ("REMOTE_ADDR"),getenv ("SERVER_ADDR"))) {
+					OMEIS_ReportError (method, "PixelsID", ID, "Deletion supported from local connections only");
+					return (-1);
+				}
+			
 			if (!ID) return (-1);
 
 			if (! (thePixels = GetPixelsRep (ID,'i',iam_BigEndian)) ) {
@@ -499,6 +505,12 @@ dispatch (char **param)
 
 			break;
 		case M_DELETEFILE:
+			if (getenv ("REMOTE_ADDR") && getenv ("SERVER_ADDR") &&
+				strcmp (getenv ("REMOTE_ADDR"),getenv ("SERVER_ADDR"))) {
+					OMEIS_ReportError (method, "PixelsID", ID, "Deletion supported from local connections only");
+					return (-1);
+				}
+
 			if ( (theParam = get_param (param,"FileID")) ) {
 				sscanf (theParam,"%llu",&scan_ID);
 				fileID = (OID)scan_ID;
@@ -514,13 +526,13 @@ dispatch (char **param)
 
 			if ( !ExpungeFile (theFile)) {
 				OMEIS_ReportError (method, "FileID", fileID, "ExpungeFile failed.");
+				freeFileRep (theFile);
 				return (-1);
 			}
+			/* Note that the file is freed at this point */
 
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%llu\n",(unsigned long long)theFile->ID);
-			freeFileRep (theFile);
-
+			fprintf (stdout,"%llu\n",(unsigned long long)fileID);
 			break;
 		case M_FILEINFO:
 			if ( (theParam = get_param (param,"FileID")) ) {
@@ -536,36 +548,40 @@ dispatch (char **param)
 				return (-1);
 			}
 
-			if (GetFileInfo (theFile) < 0) {
+			if (GetFileInfo (theFile,'i') < 0) {
 				freeFileRep (theFile);
 				OMEIS_ReportError (method, "FileID", fileID,"Could not get file info");
 				return (-1);
 			}
 
-			if (GetFileAliases (theFile) < 0) {
-				freeFileRep (theFile);
-				OMEIS_ReportError (method, "FileID", fileID,"Could not get aliases");
-				return (-1);
-			}
-
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"Name=%s\nLength=%lu\nSHA1=",theFile->file_info.name,(unsigned long)theFile->size_rep);
+			fprintf (stdout,"Name=%s\nLength=%lu\nSHA1=",theFile->file_info->name,(unsigned long)theFile->size_rep);
 
 			/* Print our lovely and useful SHA1. */
-			print_md(theFile->file_info.sha1);  /* Convenience provided by digest.c */
+			print_md(theFile->file_info->sha1);  /* Convenience provided by digest.c */
 			printf("\n");
 
 			/* Indicate the original if we're an alias */
-			if (theFile->file_info.isAlias) {
-				fprintf (stdout,"IsAlias=%llu\n",theFile->file_info.isAlias);
+			if (theFile->file_info->isAlias) {
+				fprintf (stdout,"IsAlias=%llu\n",theFile->file_info->isAlias);
 			}
 
 			/* Print out any aliases */
-			if (theFile->file_info.nAliases) {
+			if (theFile->file_info->nAliases) {
 				fprintf (stdout,"HasAliases=");
-				for (i=0; i<theFile->file_info.nAliases; i++) {
+				for (i=0; i<theFile->file_info->nAliases; i++) {
 					fprintf (stdout,"%llu",(unsigned long long) (theFile->aliases[i].ID) );
-					if (i < theFile->file_info.nAliases-1) fprintf (stdout,"\t");
+					if (i < theFile->file_info->nAliases-1) fprintf (stdout,"\t");
+				}
+				fprintf (stdout,"\n");
+			}
+
+			/* Print out any Pixel dependencies */
+			if (theFile->nPixelDeps) {
+				fprintf (stdout,"HasPixelDeps=");
+				for (i=0; i<theFile->nPixelDeps; i++) {
+					fprintf (stdout,"%llu",(unsigned long long) (theFile->PixelDeps[i]) );
+					if (i < theFile->nPixelDeps-1) fprintf (stdout,"\t");
 				}
 				fprintf (stdout,"\n");
 			}
@@ -586,7 +602,7 @@ dispatch (char **param)
 				return (-1);
 			}
 
-			if (GetFileInfo (theFile) < 0) {
+			if (GetFileInfo (theFile,'i') < 0) {
 				freeFileRep (theFile);
 				OMEIS_ReportError (method, "FileID", fileID,"Could not get info for repository file");
 				return (-1);
@@ -596,7 +612,7 @@ dispatch (char **param)
 			HTTP_ResultType ("text/plain");
 
 			/* Print our lovely and useful SHA1. */
-			print_md(theFile->file_info.sha1);  /* Convenience provided by digest.c */
+			print_md(theFile->file_info->sha1);  /* Convenience provided by digest.c */
 			printf("\n");
 			freeFileRep (theFile);
 
@@ -649,12 +665,12 @@ dispatch (char **param)
 				length = theFile->size_rep - offset;
 
 			if (offset == 0 && length == theFile->size_rep && getenv("REQUEST_METHOD") ) {
-				if (GetFileInfo (theFile) < 0) {
+				if (GetFileInfo (theFile,'r') < 0) {
 					OMEIS_ReportError (method, "FileID", fileID, "GetFileInfo failed.");
 					freeFileRep (theFile);
 					return (-1);
 				}
-				fprintf (stdout,"Content-Disposition: attachment; filename=\"%s\"\r\n",theFile->file_info.name);
+				fprintf (stdout,"Content-Disposition: attachment; filename=\"%s\"\r\n",theFile->file_info->name);
 			}
 
 			HTTP_ResultType ("application/octet-stream");

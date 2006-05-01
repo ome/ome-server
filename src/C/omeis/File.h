@@ -64,8 +64,8 @@ typedef struct {
 	u_int32_t mySig;
 	u_int8_t vers;
 	OID ID;
-	char sha1[OME_DIGEST_LENGTH];
-	char name[OMEIS_PATH_SIZE];
+	u_int8_t sha1[OME_DIGEST_LENGTH];
+	u_int8_t name[OMEIS_PATH_SIZE];
 	u_int64_t size;
 	OID isAlias;
 	u_int32_t nAliases;
@@ -94,13 +94,16 @@ typedef struct {
 	char path_DB[OMEIS_PATH_SIZE];
 	int  fd_rep;
 	int  fd_info;
-	DB *DB;
 	size_t size_rep;
 	size_t size_info;
     size_t size_buf;
 	char is_mmapped;
-	FileInfo file_info;
+	FileInfo *file_info;
+	char rorw_info;
+	char mod_info;
 	FileAlias *aliases;
+	u_int32_t nPixelDeps;
+	OID *PixelDeps;
 	void *file_buf;
 } FileRep;
 
@@ -128,10 +131,13 @@ OID
 FinishFile (FileRep *myFile);
 
 int
-GetFileInfo (FileRep *myFile);
+GetFileInfo (FileRep *myFile, char rorw);
 
 int
 GetFileAliases (FileRep *myFile);
+
+int MakePixelsDep (FileRep *myFile, OID theDep);
+int RemovePixelsDep (FileRep *myFile, OID theDep);
 
 OID
 UploadFile (char *filename, size_t size, unsigned char isLocalFile);

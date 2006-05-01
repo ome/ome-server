@@ -5,10 +5,10 @@
 char b64string[] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-long base64_encode (char *to, char *from, unsigned int len)
+long base64_encode (unsigned char *to, unsigned char *from, unsigned int len)
 {
-	char *fromp = from;
-	char *top = to;
+	unsigned char *fromp = from;
+	unsigned char *top = to;
 	unsigned char cbyte;
 	unsigned char obyte;
 	char end[3];

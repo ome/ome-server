@@ -42,6 +42,7 @@
 #include "OMEIS_Error.h"
 #include "Pixels.h"
 #include "omeis.h"
+#include "cgi.h"
 #include "archive.h"
 
 #ifndef OMEIS_ROOT
@@ -84,7 +85,7 @@ zipFiles(char **param) {
     case 0:
     // Getting the FileID parameter
     if ( (theParam = get_param(param,"FileID")) ) {
-      zipFileID = malloc(sizeof(OID) * strlen(theParam));
+      zipFileID = (OID *)malloc(sizeof(OID) * strlen(theParam));
       paramPiece = strtok(theParam, ",");
       while (paramPiece != NULL) {
 	sscanf (paramPiece,"%llu",&scan_ID);
@@ -114,7 +115,7 @@ zipFiles(char **param) {
     strcat(temp_path,"tmp.XXXXXX");
 
     // The "XXXXXX" of the tmp directory will be filled with random chars
-    if (mkdtemp(temp_path) == NULL) {
+    if (!mkdtemp(temp_path)) {
       OMEIS_ReportError(method, NULL, ID,"Temporary directory could not be created");
       error_happened = 1;
       break;
@@ -146,7 +147,7 @@ zipFiles(char **param) {
       strcat(orig_path, file_path);
       
       //Constructing the new symlink path
-      file_name = GetFileRep(fileID,0,0)->file_info.name;
+      file_name = (char *)GetFileRep(fileID,0,0)->file_info->name;
       symlink_path = malloc(strlen(temp_path) + 1 + strlen(file_name) + 1);
       strcpy(symlink_path,temp_path);
       strcat(symlink_path,"/");

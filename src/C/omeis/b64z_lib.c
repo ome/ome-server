@@ -122,15 +122,15 @@ unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned in
 	unsigned char *top = to; /* to pointer; the current write position on the to buffer */
 	unsigned char padding_buf[3]; /* buffer to extract blocks that end with padding 
 	                        that may or may not fit in the output buffer */
-	char *top_backup = NULL; /* backup the write position when using the buffer above */
+	unsigned char *top_backup = NULL; /* backup the write position when using the buffer above */
 
 	/* deal with buffered input of partial blocks. 
 	 *   strm->state->b64_buf will either be empty or contain a partial block
 	 *   a partial block is the beginning substring of a 4 byte base 64 block */
 	if( strm->state->b64_buf[0] != 0 ) {
-		partial_block_counter = 4 - strlen( strm->state->b64_buf );  /* size needed to complete block */
+		partial_block_counter = 4 - strlen( (char *)strm->state->b64_buf );  /* size needed to complete block */
 		if( strm->avail_in >= partial_block_counter ) {
-			memcpy( strm->state->b64_buf + strlen( strm->state->b64_buf ), strm->next_in, partial_block_counter );
+			memcpy( strm->state->b64_buf + strlen( (char *)strm->state->b64_buf ), strm->next_in, partial_block_counter );
 			strm->next_in  += partial_block_counter;
 			strm->total_in += partial_block_counter;
 			strm->avail_in -= partial_block_counter;
@@ -435,7 +435,7 @@ int b64z_decode_init( b64z_stream *strm ) {
 		zlib_stream->zalloc   = NULL;
 		zlib_stream->zfree    = NULL;
 		zlib_stream->opaque   = NULL;
-		zlib_stream->next_in  = (char *) strm->next_in;
+		zlib_stream->next_in  = strm->next_in;
 		zlib_stream->avail_in = strm->avail_in;
 		rC = inflateInit( zlib_stream );
 		switch( rC ) {
@@ -457,7 +457,7 @@ int b64z_decode_init( b64z_stream *strm ) {
 #endif
 				exit(-1);
 		}
-		zlib_stream->next_out  = (char *) strm->next_out;  /* *hopefully* this is a safe cast */
+		zlib_stream->next_out  = strm->next_out;  /* *hopefully* this is a safe cast */
 		zlib_stream->avail_out = strm->avail_out;
 
 		strm->state->zlib_stream = zlib_stream;
@@ -571,9 +571,9 @@ int b64z_decode( b64z_stream *strm ) {
 			*/
 			  case bzip2:
 				bzstr = strm->state->bzip_stream;
-				bzstr->next_in   = begin;
+				bzstr->next_in   = (void *)begin;
 				bzstr->avail_in  = len;
-				bzstr->next_out  = strm->next_out;
+				bzstr->next_out  = (void *)strm->next_out;
 				bzstr->avail_out = strm->avail_out;
 				
 				rC = BZ2_bzDecompress( bzstr );
@@ -587,7 +587,7 @@ int b64z_decode( b64z_stream *strm ) {
 						begin = begin + len - bzstr->avail_in;
 						len   = bzstr->avail_in;
 					}
-					strm->next_out  = bzstr->next_out;
+					strm->next_out  = (void *)bzstr->next_out;
 					strm->avail_out = bzstr->avail_out;
 					strm->total_out = bzstr->total_out_lo32;
 					break;
@@ -849,9 +849,9 @@ int b64z_encode_init( b64z_stream *strm ) {
 				exit(-1);
 				/* for more error messages: http://www.gzip.org/zlib/manual.html#deflateInit */
 		}
-		zlib_stream->next_in  = (char *) strm->next_in;    /* *hopefully* this is a safe cast */
+		zlib_stream->next_in  = strm->next_in;    /* *hopefully* this is a safe cast */
 		zlib_stream->avail_in = strm->avail_in;
-		zlib_stream->next_out  = (char *) strm->next_out;  /* *hopefully* this is a safe cast */
+		zlib_stream->next_out  = strm->next_out;  /* *hopefully* this is a safe cast */
 		zlib_stream->avail_out = strm->avail_out;
 
 		strm->state->zlib_stream = zlib_stream;
@@ -978,9 +978,9 @@ int b64z_encode( b64z_stream *strm, int action ) {
 			  case bzip2:
 				bzstr = strm->state->bzip_stream;
 				
-				bzstr->next_in   = strm->next_in;
+				bzstr->next_in   = (void *)strm->next_in;
 				bzstr->avail_in  = strm->avail_in;
-				bzstr->next_out  = begin + len;
+				bzstr->next_out  = (void *) (begin + len);
 				bzstr->avail_out = buf + size - begin - len;
 
 				if( action == B64Z_RUN )
@@ -1000,7 +1000,7 @@ int b64z_encode( b64z_stream *strm, int action ) {
 				  case BZ_FINISH_OK:
 				  case BZ_OK:
 				  case BZ_RUN_OK:
-					strm->next_in   = bzstr->next_in;
+					strm->next_in   = (void *)bzstr->next_in;
 					strm->avail_in  = bzstr->avail_in;
 					len            += (buf + size - begin - len) - bzstr->avail_out;
 					strm->total_in  = bzstr->total_in_lo32;
@@ -1202,7 +1202,7 @@ int test(char debug) {
 	const int len_strm_input = 7;
 	const int len_strm_output = 7;
 
-	unsigned char *testString = "\"The state can't give you free speech, and the state can't take it away. You're born with it, like your eyes, like your ears. Freedom is something you assume, then you wait for someone to try to take it away. The degree to which you resist is the degree to which you are free...\"\n---Utah Phillips";
+	unsigned char *testString = (unsigned char *)"\"The state can't give you free speech, and the state can't take it away. You're born with it, like your eyes, like your ears. Freedom is something you assume, then you wait for someone to try to take it away. The degree to which you resist is the degree to which you are free...\"\n---Utah Phillips";
 	unsigned char *dec, *enc;
 	compression_type comps[] = { none, bzip2, zlib };
 	char *comp_labels[] = {"none", "bzip2", "zlib" };
@@ -1226,7 +1226,7 @@ int test(char debug) {
 		/* b64z_new_stream(next_in, avail_in, next_out, avail_out, compression); */
 		b64z_encode_init( strm );
 	
-		len_of_remaining_input = strlen( testString );
+		len_of_remaining_input = strlen( (char *)testString );
 		strm->next_in  = testString;
 		strm->avail_in = 0;
 		action_code = B64Z_RUN;
@@ -1294,7 +1294,7 @@ int test(char debug) {
 #ifndef NO_VERBIAGE
 		if( debug == 2 ) fprintf( stdout, "\tdecoded : %s\n", dec );
 		if( debug ) {
-			if( strcmp( testString, dec ) != 0 ) {
+			if( strcmp( (char *)testString, (char *)dec ) != 0 ) {
 				n_failures++;
 				fprintf( stdout, "\tError! Test failed. The original string and the final string differ!\n" );
 			}

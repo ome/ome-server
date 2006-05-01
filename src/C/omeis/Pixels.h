@@ -114,7 +114,6 @@ typedef struct
 	int   fd_rep;   /* This will be < 0 when closed */
 	int   fd_info;  /* This will be < 0 when closed */
 	int   fd_conv;  /* This will be < 0 when closed */
-	DB    *DB;      /* sha1 DB returned from sha1DB_open() (as returned by dbopen()) */
 	size_t size_rep;
 	size_t size_info;
 	FILE *IO_stream;   /* One of these two should be set for reading/writing */
@@ -212,7 +211,7 @@ freePixelsRep (PixelsRep *myPixels);
 PixelsRep *
 GetPixelsRep (OID ID, char rorw, char isBigEndian);
 
-void
+OID
 PurgePixels (OID myID);
 
 int
@@ -222,7 +221,13 @@ int
 isConvertVerified (PixelsRep *myPixels);
 
 int
+hasConvertFile (PixelsRep *myPixels);
+
+int
 recoverPixels (PixelsRep *myPixels, int open_flags, int mmap_flags, char verify);
+
+int
+UnregisterPixelDeps (PixelsRep *myPixels);
 
 void
 ScalePixels (
@@ -273,6 +278,7 @@ ConvertFile (
 	size_t     nPix,
 	char       writeRec);
 
+int RemapPixelDeps (PixelsRep *myPixels,OID fromID,OID toID);
 
 int FinishStats (PixelsRep *myPixels, char force);
 

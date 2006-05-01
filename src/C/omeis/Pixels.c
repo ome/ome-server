@@ -72,7 +72,6 @@ static void
 extractRGBChannels(uint8* read_buf, int nPix, int chan, int samples_per_pixel, uint8* write_buf);
 
 
-
 /*
   PixelRep keeps track of everything having to do with pixel i/o to the repository.
 */
@@ -444,6 +443,9 @@ int myAccess, myOpen, myMode = 0600;
 		myAccess = O_RDONLY;
 		myOpen = O_RDONLY;
 	} else if (rorw == 'w') {
+		myAccess = O_RDWR;
+		myOpen = O_RDWR;
+	} else if (rorw == 'a') {
 		myAccess = O_WRONLY;
 		myOpen = O_WRONLY | O_APPEND | O_CREAT;
 	} else
@@ -467,6 +469,11 @@ int myAccess, myOpen, myMode = 0600;
 				rorw,strerror (errno));
 		return (0);
 	} else {
+		lseek (myPixels->fd_conv, 0, SEEK_SET);
+		if (rorw == 'r')
+			lockRepFile (myPixels->fd_conv,'r', 0, 0);
+		else
+			lockRepFile (myPixels->fd_conv,'w', 0, 0);
 		return (1);
 	}
 }
@@ -477,6 +484,18 @@ closeConvertFile (PixelsRep *myPixels) {
 		close (myPixels->fd_conv);
 		myPixels->fd_conv = -1;
 	}
+}
+
+int
+hasConvertFile (PixelsRep *myPixels) {
+struct stat myStat;
+int is_missing;
+
+	if (!myPixels) return (0);
+	is_missing = stat (myPixels->path_conv, &myStat);
+	
+	if (is_missing == 0) return (1);
+	else return (0);
 }
 
 
@@ -654,7 +673,7 @@ int i;
 		myPixels->pixels = NULL;
 		close (myPixels->fd_rep);
 		myPixels->fd_rep = -1;
-		unlink (myPixels->path_rep);
+		if (doVerify) unlink (myPixels->path_rep); /* this gets rid of the backup!! */
 		strncpy (myPixels->path_rep,oldRepPath,OMEIS_PATH_SIZE-1);
 		OMEIS_DoError ("Error recovering %s", myPixels->path_rep);
 		return (-104);
@@ -665,7 +684,7 @@ int i;
 
 	if (!isVerified) {
 	/* Calculate the SHA1 for the file we generated, and compare to the one in the header */
-		if (get_md_from_buffer (myPixels->pixels, (size_t)myPixels->size_rep, (unsigned char *)sha1) < 0) {
+		if (get_md_from_buffer (myPixels->pixels, (size_t)myPixels->size_rep, sha1) < 0) {
 			OMEIS_DoError ("Unable to retrieve SHA1 for Pixels file during verification.");
 			closeConvertFile (myPixels);
 			munmap (mmap_rep, myPixels->size_rep);
@@ -690,7 +709,8 @@ int i;
 		} else {
 		/* Mark the convert file as verified */
 		/* since we opened it read-only above, we have to reopen it for writing now */
-			if ( !openConvertFile (myPixels, 'w') ) {
+			chmod (myPixels->path_conv,0600);
+			if ( !openConvertFile (myPixels, 'a') ) {
 				OMEIS_DoError ("Could not open %s for writing (marking as verified): %s",myPixels->path_conv,
 					strerror( errno ));
 			} else {
@@ -898,50 +918,57 @@ int result;
   After calling this, there will be either a verified ".convert" file or a Pixels file, but not both.
 */
 
-void
+OID
 PurgePixels (OID myID) {
-OID theID;
+OID theID, nPurged=0LL;
 PixelsRep *myPixels;
-char iamBigEndian, path_rep[OMEIS_PATH_SIZE];
+char iamBigEndian, path_rep[OMEIS_PATH_SIZE], path_comp[OMEIS_PATH_SIZE+5], path_conv[OMEIS_PATH_SIZE+5];
+struct stat myStat;
 
 
 	iamBigEndian = bigEndian();
 
 	if (myID != 0) {
 		myPixels = GetPixelsRep (myID, 'i', iamBigEndian);
-		if (myPixels) {
+		if (myPixels && hasConvertFile (myPixels)) {
 			if (!isConvertVerified(myPixels)) {
 				recoverPixels (myPixels, 0, 0, 1);
 			}
 			if (isConvertVerified(myPixels)) {
-				strncpy (path_rep,myPixels->path_rep,OMEIS_PATH_SIZE-1);
-				freePixelsRep (myPixels);
-				unlink (path_rep);
+				if (register_pixelDeps(myPixels)) {
+					strncpy (path_rep,myPixels->path_rep,OMEIS_PATH_SIZE-1);
+					freePixelsRep (myPixels);
+					unlink (path_rep);
+					sprintf (path_comp,"%s.bz2",path_rep);
+					unlink (path_comp);
+					sprintf (path_comp,"%s.gz",path_rep);
+					unlink (path_comp);
+					nPurged++;
+				}
 			} else {
+			/* If we can't produce a verified pixels, the convert file is no good. */
+				strncpy (path_conv,myPixels->path_conv,OMEIS_PATH_SIZE-1);
 				freePixelsRep (myPixels);
+				unlink (path_conv);
 			}
-		}
+		} else if (myPixels) freePixelsRep (myPixels);
 	} else {
 		myPixels = newPixelsRep (0LL);
 		theID = lastID (myPixels->path_ID);
 		freePixelsRep (myPixels);
 		while (theID) {
-			myPixels = GetPixelsRep (theID, 'i', iamBigEndian);
-			if (myPixels) {
-				if (!isConvertVerified(myPixels)) {
-					recoverPixels (myPixels, 0, 0, 1);
-				}
-				if (isConvertVerified(myPixels)) {
-					strncpy (path_rep,myPixels->path_rep,OMEIS_PATH_SIZE-1);
-					freePixelsRep (myPixels);
-					unlink (path_rep);
-				} else {
-					freePixelsRep (myPixels);
-				}
+			myPixels = newPixelsRep (theID);
+			if (stat (myPixels->path_info, &myStat) == 0) {
+				freePixelsRep (myPixels);
+				nPurged += PurgePixels (theID);
+			} else {
+				freePixelsRep (myPixels);
 			}
 			theID--;
 		}
 	}
+	
+	return (nPurged);
 }
 
 int
@@ -1172,7 +1199,7 @@ void ScalePixels (
 {
 size_t nIO=0, nBytes;
 pixHeader *head;
-unsigned char *thePix, *lastPix;
+char *thePix, *lastPix;
 unsigned char bp;
 register float theVal;
 float scale, blk;
@@ -1192,7 +1219,7 @@ float scale, blk;
 
 	nBytes = nPix*bp;
 
-	thePix = ((char *)myPixels->pixels) + offset;
+	thePix = ((void *)myPixels->pixels) + offset;
 	lastPix = thePix + (nPix*bp);
 
 	if (lockRepFile (myPixels->fd_rep,'r',offset,nBytes) < 0) return;
@@ -1442,7 +1469,7 @@ char  *sCharP;
 short *sShrtP;
 int32_t  *s32bitP;
 float *floatP;
-register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
+register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,scale,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
 int i;
 
 	if (!myPixels) return (0);
@@ -1479,9 +1506,11 @@ int i;
 		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		sCharP = thePix;
+	
+		scale = (NUM_BINS - 1.0) / (max - min);
 		
 		/* Second pass: sum_log_i, plane histogram */
-		if (max-min <= 0){
+		if (max - min <= 0) {
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *sCharP++;
@@ -1490,7 +1519,7 @@ int i;
 		} else		
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *sCharP++;
-				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+				myPlaneInfo.hist[(int) ((theVal-min)*scale)]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 1 && !head->isSigned) {
@@ -1513,6 +1542,8 @@ int i;
 		logOffset = min > 0 ? 0 : 1.0;
 
 		uCharP = (unsigned char *) thePix;
+	
+		scale = (NUM_BINS - 1.0) / (max - min);
 		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
@@ -1524,7 +1555,7 @@ int i;
 		} else		
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *uCharP++;
-				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+				myPlaneInfo.hist[(int) ((theVal-min)*scale)]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 2 && head->isSigned) {
@@ -1548,6 +1579,9 @@ int i;
 		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		sShrtP = (short *) thePix;
+	
+		scale = (NUM_BINS - 1.0) / (max - min);
+		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
@@ -1558,7 +1592,7 @@ int i;
 		} else		
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *sShrtP++;
-				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+				myPlaneInfo.hist[(int) ((theVal-min)*scale)]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 2 && !head->isSigned) {
@@ -1581,6 +1615,9 @@ int i;
 		logOffset = min > 0 ? 0 : 1.0;
 
 		uShrtP = (unsigned short *) thePix;
+	
+		scale = (NUM_BINS - 1.0) / (max - min);
+		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
@@ -1591,7 +1628,7 @@ int i;
 		} else		
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *uShrtP++;
-				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+				myPlaneInfo.hist[(int) ((theVal-min)*scale)]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
@@ -1615,6 +1652,9 @@ int i;
 		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		s32bitP = (int32_t *) thePix;
+	
+		scale = (NUM_BINS - 1.0) / (max - min);
+		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
@@ -1625,7 +1665,7 @@ int i;
 		} else		
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *s32bitP++;
-				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+				myPlaneInfo.hist[(int) ((theVal-min)*scale)]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
@@ -1648,6 +1688,9 @@ int i;
 		logOffset = min > 0 ? 0 : 1.0;
 
 		u32bitP = (uint32_t *) thePix;
+	
+		scale = (NUM_BINS - 1.0) / (max - min);
+		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
@@ -1658,7 +1701,7 @@ int i;
 		} else		
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *u32bitP++;
-				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
+				myPlaneInfo.hist[(int) ((theVal-min)*scale)]++;
 				sum_log_i +=  log (theVal+logOffset);
 			}
 	} else if (head->bp == 4 && head->isFloat) {
@@ -1682,6 +1725,9 @@ int i;
 		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		floatP = (float *) thePix;
+	
+		scale = (NUM_BINS - 1.0) / (max - min);
+		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
@@ -1694,7 +1740,7 @@ int i;
 			int hist_bin;
 			for (i=0;i<nPix;i++) {
 				theVal = (float) *floatP++;
-				hist_bin = ((theVal-min)/(max-min))*(NUM_BINS-1);
+				hist_bin = (theVal-min)*scale;
 				if (hist_bin < 0)
 					hist_bin = 0;
 				else if (hist_bin >= NUM_BINS)
@@ -1911,23 +1957,25 @@ void deletePixels (PixelsRep *myPixels) {
 int ExpungePixels (PixelsRep *myPixels) {
 OID existOID;
 
-	if (! myPixels->DB)	
-		/* if we can't get its SHA1 entry thats really bad */
-		if (! (myPixels->DB = sha1DB_open (myPixels->path_DB)) ) {
-			OMEIS_DoError ("In ExpungePixels, Error opening SHA1 DB for PixelsID=%llu",
-						   	(unsigned long long)myPixels->ID);
-			return (0);
-		}
-
-	if ( existOID = sha1DB_get (myPixels->DB, myPixels->head->sha1) ) {
-		sha1DB_del (myPixels->DB, myPixels->head->sha1);
+	if ( existOID = sha1DB_get (myPixels->path_DB, myPixels->head->sha1) ) {
+		sha1DB_del (myPixels->path_DB, myPixels->head->sha1);
 	} else {
 		OMEIS_DoError ("In ExpungePixels, Pixel's SHA1 not in DB for PixelsID=%llu ?!",
 						(unsigned long long)myPixels->ID);
-		sha1DB_close (myPixels->DB);
 		return (0);
 	}
-	sha1DB_close (myPixels->DB);
+
+
+	/* make sure the convert file is open */
+	if (openConvertFile (myPixels, 'r')) {
+		/* un register dependencies */
+		if (!UnregisterPixelDeps (myPixels)) {
+			OMEIS_DoError ("In ExpungePixels, could not unregister PixelDeps for PixelsID=%llu ?!",
+							(unsigned long long)myPixels->ID);
+			return (0);
+		}
+	}
+
 	
 	deletePixels (myPixels);
 	
@@ -1941,15 +1989,8 @@ OID FinishPixels (PixelsRep *myPixels, char force) {
 OID existOID;
 
 	if (!myPixels) return (0);
-
 	/* wait until we can get a write lock on the whole file */
 	lockRepFile (myPixels->fd_rep,'w',0LL,0LL);
-	
-	/* Make sure all the stats are up to date */
-	if (!FinishStats (myPixels,force)) {
-		OMEIS_DoError ("Unable to finish stats.");
-		return (0);
-	}
 
 	/* Get the SHA1 message digest */
 	if (get_md_from_buffer (myPixels->pixels, myPixels->size_rep, myPixels->head->sha1) < 0) {
@@ -1957,21 +1998,26 @@ OID existOID;
 		return(0);
 	}
 
-	/* Open the DB file if necessary */
-	if (! myPixels->DB)
-		if (! (myPixels->DB = sha1DB_open (myPixels->path_DB)) ) {
-			OMEIS_DoError ("Unable to open sha1DB.");
-			return(0);
+	
+	/* put the SHA1 in the DB */
+	if ( sha1DB_put (myPixels->path_DB, myPixels->head->sha1, myPixels->ID) ) {
+		/* Check if SHA1 exists */
+		if ( (existOID = sha1DB_get (myPixels->path_DB, myPixels->head->sha1)) ) {
+			deletePixels (myPixels);
+			return (existOID);
 		}
-
-	/* Check if SHA1 exists */
-	if ( (existOID = sha1DB_get (myPixels->DB, myPixels->head->sha1)) ) {
-		sha1DB_close (myPixels->DB);
-		myPixels->DB = NULL;
-		deletePixels (myPixels);
-		myPixels->ID = existOID;
-		return (existOID);
+		
+		OMEIS_DoError ("Unable to put sha1 into sha1DB.");
+		return (0);
 	}
+	
+	
+	/* Make sure all the stats are up to date */
+	if (!FinishStats (myPixels,force)) {
+		OMEIS_DoError ("Unable to finish stats.");
+		return (0);
+	}
+	
 
 	myPixels->head->isFinished = 1;
 
@@ -1986,23 +2032,23 @@ OID existOID;
 			return (0);
 		}
 	}
-	
 
-	/* put the SHA1 in the DB */
-	if ( sha1DB_put (myPixels->DB, myPixels->head->sha1, myPixels->ID) ) {
-		sha1DB_close (myPixels->DB);
-		myPixels->DB = NULL;
-		OMEIS_DoError ("Unable to put sha1 into sha1DB.");
-		return (0);
+	/* make sure the convert file is open */
+	if (!openConvertFile (myPixels, 'r')) {
+		/* If it can't be opened at this point, we delete it */
+		unlink (myPixels->path_conv);
+	} else {
+		/* register dependencies, delete the file on error */
+		if (!register_pixelDeps (myPixels)) {
+			close (myPixels->fd_conv);
+			unlink (myPixels->path_conv);
+		}
 	}
-
-	/* Close the DB (and release the exclusive lock) */
-	sha1DB_close (myPixels->DB);
-	myPixels->DB = NULL;
 
 	fchmod (myPixels->fd_rep,0400);
 	fchmod (myPixels->fd_info,0400);
-//	chmod (myPixels->path_conv,0600);
+	closeConvertFile (myPixels);
+	chmod (myPixels->path_conv,0400);
 
 	return (myPixels->ID);
 }
@@ -2064,7 +2110,7 @@ char isBigEndian=1,bp;
 		convRec.spec.file.pix_offset  = (u_int64_t) pix_offset;
 		convRec.spec.file.nPix        = (u_int64_t) nPix;
 
-		if (!openConvertFile (myPixels, 'w'))
+		if (!openConvertFile (myPixels, 'a'))
 			OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
 				(unsigned long long)myPixels->ID,myPixels->path_conv);
 		else {
@@ -2075,7 +2121,6 @@ char isBigEndian=1,bp;
 
 	return (nIO);
 }
-
 
 size_t ConvertTIFF (
 	PixelsRep *myPixels,
@@ -2348,7 +2393,7 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 		convRec.spec.tiff.theT      = (ome_coord) theT;
 		convRec.spec.tiff.dir_index = (u_int32_t) tiffDir;
 	
-		if (!openConvertFile (myPixels, 'w')) {
+		if (!openConvertFile (myPixels, 'a')) {
 			OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
 				(unsigned long long)myPixels->ID,myPixels->path_conv);
 		} else {
@@ -2358,6 +2403,166 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 	}
 	return (nIO);
 }
+
+
+int RemapPixelDeps (PixelsRep *myPixels,OID fromID,OID toID) {
+int convFD;
+convertFileRec convRec, conv0Rec;
+char done=0;
+size_t nIO=0;
+off_t size_rec = sizeof(convertFileRec);
+
+
+	if (!myPixels || !toID || !fromID) return (0);
+
+	chmod (myPixels->path_conv,0600);
+	if (!openConvertFile (myPixels, 'w')) {
+		OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
+			(unsigned long long)myPixels->ID,myPixels->path_conv);
+		return (0);
+	}
+		
+	convFD = myPixels->fd_conv;
+	while (!done) {
+		nIO = read (convFD, (void *)(&convRec), size_rec);
+		if (nIO == 0) {
+			done = 1;
+			break;
+		}
+		if (nIO != size_rec ) {
+			OMEIS_DoError ("Error reading convert record from %s: %s",
+				myPixels->path_conv,strerror( errno ));
+			break;
+		}
+		if (convRec.FileID == fromID) {
+			convRec.FileID = toID;
+			lseek(convFD, - size_rec, SEEK_CUR);
+			if ( (nIO = write (convFD, (const void *)&convRec, size_rec) != size_rec) ) {
+				done=0;
+				break;
+			}
+		}
+	}
+	closeConvertFile (myPixels);
+	chmod (myPixels->path_conv,0400);
+	return ((int) done);
+}
+
+int register_pixelDeps (PixelsRep *myPixels) {
+int convFD;
+convertFileRec convRec;
+char done=0;
+size_t nIO=0;
+FileRep *myFile = NULL;
+
+	if (!myPixels) return (0);
+
+	if (!openConvertFile (myPixels, 'r')) {
+		OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
+			(unsigned long long)myPixels->ID,myPixels->path_conv);
+		return (0);
+	}
+	convFD = myPixels->fd_conv;
+	
+	while (!done) {
+		nIO = read (convFD, (void *)(&convRec), sizeof (convertFileRec));
+		if (nIO == 0) {
+			done = 1;
+			break;
+		}
+		if (nIO != sizeof (convertFileRec) ) {
+			OMEIS_DoError ("Error reading convert record from %s: %s",
+				myPixels->path_conv,strerror( errno ));
+			break;
+		}
+
+		if (convRec.FileID) {
+			if (!myFile) {
+				if (! (myFile = newFileRep (convRec.FileID))) {
+					OMEIS_DoError ("Could not get a File object (out of memory?).");
+					return (0);
+				}
+			}
+	
+			if (myFile->ID != convRec.FileID) {
+				freeFileRep(myFile);
+				if (! (myFile = newFileRep (convRec.FileID))) {
+					OMEIS_DoError ("Could not get a File object (out of memory?).");
+					return (0);
+				}
+			}
+			if (!MakePixelsDep (myFile, myPixels->ID)) {
+				OMEIS_DoError ("Error making Pixels %llu dependency in FileID %llu",
+					(unsigned long long)myPixels->ID,
+					(unsigned long long)myFile->ID);
+				freeFileRep(myFile);
+				return (0);
+			}
+		}
+	}
+	freeFileRep(myFile);
+
+	return ((int) done );
+}
+
+int UnregisterPixelDeps (PixelsRep *myPixels) {
+int convFD;
+convertFileRec convRec;
+char done=0;
+size_t nIO=0;
+FileRep *myFile = NULL;
+
+	if (!myPixels) return (0);
+
+	if (!openConvertFile (myPixels, 'r')) {
+		OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
+			(unsigned long long)myPixels->ID,myPixels->path_conv);
+		return (0);
+	}
+	convFD = myPixels->fd_conv;
+	
+	while (!done) {
+		nIO = read (convFD, (void *)(&convRec), sizeof (convertFileRec));
+		if (nIO == 0) {
+			done = 1;
+			break;
+		}
+		if (nIO != sizeof (convertFileRec) ) {
+			OMEIS_DoError ("Error reading convert record from %s: %s",
+				myPixels->path_conv,strerror( errno ));
+			break;
+		}
+
+		if (convRec.FileID) {
+			if (!myFile) {
+				if (! (myFile = newFileRep (convRec.FileID))) {
+					OMEIS_DoError ("Could not get a File object (out of memory?).");
+					return (0);
+				}
+			}
+			
+			if (myFile->ID != convRec.FileID) {
+				freeFileRep(myFile);
+				if (! (myFile = newFileRep (convRec.FileID))) {
+					OMEIS_DoError ("Could not get a File object (out of memory?).");
+					return (0);
+				}
+			}
+			if (!RemovePixelsDep (myFile, myPixels->ID)) {
+				OMEIS_DoError ("Error making Pixels %llu dependency in FileID %llu",
+					(unsigned long long)myPixels->ID,
+					(unsigned long long)myFile->ID);
+				freeFileRep(myFile);
+				return (0);
+			}
+		}
+	}
+	freeFileRep(myFile);
+
+	return ((int) done );
+}
+
+
 
 /* warning. this function is a mine field. contact me (Tom) if you are thinking of changing it*/
 static int

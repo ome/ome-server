@@ -167,7 +167,7 @@ void _print_element(const xmlChar *name, const xmlChar **attrs) {
 	if( attrs != NULL ) {
 		/* print the attributes. */
 		for( i=0;attrs[i] != NULL;i+=2 ) {
-			fprintf( stdout, "%s = \"%s\" ", attrs[i], attrs[i+1] );
+			fprintf( stdout, "%s = \"%s\" ", (char *)attrs[i], (char *)attrs[i+1] );
 		}
 	}
 }
@@ -230,7 +230,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	* some code that will do it.
 	* Find the local name of the element: strip the prefix if one exists.
 	*/
-	localName = strchr( name, ':' );
+	localName = strchr( (char *)name, ':' );
 	if( localName != NULL )
 		localName++;
 	else
@@ -258,16 +258,16 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		/* Extract data from xml attributes. */
 		PixelsID = 0;
 		for( i=0; attrs[i] != NULL; i+=2 )
-			if( !strcmp( attrs[i], "ImageServerID" ) )
-				PixelsID = atol( attrs[i+1] );
+			if( !strcmp( (char *)attrs[i], "ImageServerID" ) )
+				PixelsID = atol( (char *)attrs[i+1] );
 		assert( PixelsID != 0 );
 				
 		/* print <Pixels> */
 		fprintf( stdout, "<%s ", name );
 		for( i=0;attrs[i] != NULL;i+=2 ) {
-			if( strcmp( attrs[i], "ImageServerID" ) && strcmp( attrs[i], "Repository" ) &&
-			    strcmp( attrs[i], "FileSHA1" ) ) {
-			fprintf( stdout, "%s = \"%s\" ", attrs[i], attrs[i+1] );
+			if( strcmp( (char *)attrs[i], "ImageServerID" ) && strcmp( (char *)attrs[i], "Repository" ) &&
+			    strcmp( (char *)attrs[i], "FileSHA1" ) ) {
+			fprintf( stdout, "%s = \"%s\" ", (char *)attrs[i], (char *)attrs[i+1] );
 		} }
 		
 		/* load Pixels Rep */
