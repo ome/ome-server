@@ -36,7 +36,7 @@
  *-----------------------------------------------------------------------------
  */
 
-package.org.openmicroscopy.xml;
+package org.openmicroscopy.xml;
 
 import java.io.*;
 import java.text.DateFormat;
@@ -169,14 +169,21 @@ public class Xmlgen {
     System.out.println(sts.size() + " interfaces found.");
 
     // read in ST definitions from OME files
+    String[] files;
+    if (args.length > 0) {
+      files = new String[ST_FILES.length + args.length];
+      System.arraycopy(ST_FILES, 0, files, 0, ST_FILES.length);
+      System.arraycopy(args, 0, files, ST_FILES.length, args.length);
+    }
+    else files = ST_FILES;
     System.out.println("\nScanning ST definitions...");
     Vector defs = new Vector();
     Vector defNames = new Vector();
     Vector defLocations = new Vector();
-    for (int i=0; i<ST_FILES.length; i++) {
+    for (int i=0; i<files.length; i++) {
       DocumentBuilderFactory docFact = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = docFact.newDocumentBuilder();
-      Document doc = db.parse(new File(DIR_PREFIX, ST_FILES[i]));
+      Document doc = db.parse(new File(DIR_PREFIX, files[i]));
 
       Vector els = DOMUtil.findElementList("SemanticType", doc);
       for (int j=0; j<els.size(); j++) {
@@ -186,10 +193,10 @@ public class Xmlgen {
         if (index < 0) {
           defs.add(el);
           defNames.add(name);
-          defLocations.add(ST_FILES[i]);
+          defLocations.add(files[i]);
         }
         else {
-          System.out.println(ST_FILES[i] + ": ignoring duplicate " +
+          System.out.println(files[i] + ": ignoring duplicate " +
             name + " ST definition (already defined in " +
             defLocations.elementAt(index) + ").");
         }
