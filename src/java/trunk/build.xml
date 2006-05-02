@@ -84,7 +84,7 @@
 			
     <jar destfile="${jar}/ome-java.jar"
          manifest="${src}/ome-java.manifest">
-      <fileset dir="build" includes="org/openmicroscopy/**/*.class"/>
+      <fileset dir="build" includes="org/openmicroscopy/**/*.class org/openmicroscopy/xml/*.xslt"/>
     </jar>
 
   </target>
