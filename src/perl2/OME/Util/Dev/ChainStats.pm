@@ -162,6 +162,8 @@ sub chex_stats {
 	my %mexes_per_DAE_worker;
 
 	foreach my $mex (@mexes) {
+		continue unless defined $mex->executed_by_worker();
+		
 		if ( not defined $mexes_per_DAE_worker{$mex->executed_by_worker()->id()} ){
 			$mexes_per_DAE_worker{$mex->executed_by_worker()->id()} = 1;
 		} else {
