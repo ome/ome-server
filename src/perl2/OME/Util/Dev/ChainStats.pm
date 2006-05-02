@@ -162,7 +162,7 @@ sub chex_stats {
 	my %mexes_per_DAE_worker;
 
 	foreach my $mex (@mexes) {
-		continue unless defined $mex->executed_by_worker();
+		next unless (defined $mex->executed_by_worker());
 		
 		if ( not defined $mexes_per_DAE_worker{$mex->executed_by_worker()->id()} ){
 			$mexes_per_DAE_worker{$mex->executed_by_worker()->id()} = 1;
@@ -203,6 +203,7 @@ sub chex_stats {
 		my @non_executed_nodes = $chex->analysis_chain->nodes( id => [ 'not in', \@executed_nodes ] );
 		print "Non-executed nodes:\n"
 			if ( scalar( @non_executed_nodes  ) );
+			
 		foreach my $node ( @non_executed_nodes ) {
 			print "\t".$node->module->name()."\n";
 		}
