@@ -335,8 +335,7 @@ sub compile_sigs {
 		if $stitcher_mex->status() eq 'ERROR';
 	logdbg "debug", "found signature stitcher module execution (mex=".$stitcher_mex->id().").";
 	
-	my @images = $dataset->images;
-	@images = sort {$a->id <=> $b->id} @images;
+	my @images = $dataset->images( __order => ['name', 'id'] );
 	
 	# make an array of image_paths/feature names
 	# img_path [feature name]
