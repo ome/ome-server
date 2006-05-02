@@ -612,7 +612,7 @@ sub getTextTable {
 		@fieldNames = @{$options->{fields}};
 	} else {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
-		@fieldNames = $package_name->getPublishedCols();
+		@fieldNames = ('id', sort( $package_name->getPublishedCols() ) );
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 			if exists $options->{excludeFields};
 		push (@fieldNames, keys %{$options->{includeFields}})
