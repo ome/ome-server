@@ -52,6 +52,7 @@ our @EXPORT = qw(confirm_path
 		 print_header
 		 confirm_default
 		 get_password
+                 encrypt
 		 y_or_n
 		 multiple_choice
 		 whereis
@@ -139,12 +140,16 @@ sub get_password {
 
 	last;
     }
+    ReadMode(1);
+    return ($input,encrypt($input));
+}
 
+
+sub encrypt  {
+    my $input = shift;
     my $salt = join('',('.','/',0..9,'A'..'Z','a'..'z')[rand 64, rand 64]);
     my $crypt = crypt($input,$salt);
-
-    ReadMode(1);
-    return ($input, $crypt);
+    return $crypt;
 }
 
 
