@@ -612,6 +612,80 @@ PRINT
 }
 
 
+# configure guest access as needed
+
+sub configure_guest_access {
+    
+    my $session = shift;
+    my $factory = $session->Factory();
+    my $guest_access = $ENVIRONMENT->allow_guest_access();
+    # set to be zero by default
+    $guest_access = 0 unless ($guest_access);
+
+    print "\n"; #spacing
+    my $confirm_all = 1;
+    while (1) {
+	if ($confirm_all) {
+	    print "Enable Guest Access: ", BOLD, $guest_access? 'yes': 'no', RESET ,
+	    "\n";
+	    print "\n";  # Spacing
+	    
+	    (y_or_n ("Is this correct ?",'y')) and  last;
+	}
+	$confirm_all = 0;
+	$guest_access = y_or_n("Enable guest access?",'n');
+	$confirm_all = 1;
+    }
+    $ENVIRONMENT->allow_guest_access($guest_access);
+    if ($ENVIRONMENT->allow_guest_access()) {
+	my $guest =
+	    $factory->findObject('@Experimenter',{FirstName=>'Guest',
+	    LastName=>'User'});
+	if (!$guest) {
+	    print "Creating Guest User!";
+	    my $module = $factory->findObject("OME::Module",name =>
+					      'Administration');
+	    my $mex =
+		OME::Tasks::ModuleExecutionManager->createMEX($module,'G');
+	    my $groupName = "GuestGroup_". $mex->id;
+	    my $group = 
+		$factory->maybeNewAttribute('Group',undef,$mex,
+					    {Name =>$groupName});
+
+	    $guest =
+		$factory->maybeNewAttribute('Experimenter',
+					    undef,$mex, {
+						FirstName => 'Guest',
+						LastName =>'User',
+						Group => $group}); 
+
+	    $group->Leader($guest);
+	    $group->Contact($guest);
+	    $group->storeObject();
+	    
+	    print "Guest is " . $guest . "\n";
+	    my $bootstrap_experimenter =
+		$factory->loadObject('OME::SemanticType::BootstrapExperimenter',
+				     $guest->id());
+	    $bootstrap_experimenter->OMEName('guest');
+	    my $password = encrypt('abc123');
+	    $bootstrap_experimenter->Password($password);
+	    $bootstrap_experimenter->storeObject();
+
+	    my $exp_group =
+		$factory->newAttribute('ExperimenterGroup',
+				       undef,$mex, 
+				       { Experimenter=>$guest,
+					 Group => $group});
+	    $mex->group($group);
+
+	    $mex->storeObject();
+	    $session->commitTransaction();
+	}
+    }
+}
+
+
 
 
 # Make sure an experimenter ends up in the stored environment
@@ -748,6 +822,8 @@ BLURB
 
 	# MATLAB specific settings
 	my $MATLAB = $ENVIRONMENT->matlab_conf();
+
+    my $GUEST_ACCESS = $ENVIRONMENT->allow_guest_access();
 	
     my $configuration = OME::Configuration->new ($factory,
             {
@@ -762,6 +838,7 @@ BLURB
              ome_root         => $OME_BASE_DIR,
              template_dir     => $OME_BASE_DIR."/html/Templates",
              executor         => $DEFAULT_EXECUTOR,
+	     allow_guest_access => $GUEST_ACCESS,
             });
 
     $ENVIRONMENT->lsid ($lsid_authority);
@@ -806,6 +883,7 @@ sub update_configuration {
 		# executor       => $DEFAULT_EXECUTOR,
 		super_user     => $session->experimenter_id(),
 		template_dir   => $APACHE->{TEMPLATE_DIR},
+	        allow_guest_access => $ENVIRONMENT->allow_guest_access(),
 	);
 	
 	# This hash controls whether new configuration variables are created or not
@@ -819,9 +897,11 @@ sub update_configuration {
 		# Note that there shouldn't ever be a superuser at this point
 		super_user     => 1,
 		template_dir   => 0,
+	        allow_guest_access => 1,
 	);
 	
 	foreach my $var_name (keys %update_configuration_variables) {
+	    print "Trying to update $var_name\n";
     	my $var = $factory->findObject('OME::Configuration::Variable',
     									configuration_id => 1,
     									name => $var_name);
@@ -1424,6 +1504,9 @@ BLURB
         load_analysis_core ($session, $LOGFILE)
         or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
     }
+    my $factory = $session->Factory ();
+
+    configure_guest_access($session);
 
     # Drop our UID to the OME_USER
     euid($OME_UID);
@@ -1441,7 +1524,7 @@ BLURB
     # XXX: Ported straight out of the old bootstrap, it carries the same 
     # caveats here as it did there and I have no idea what those were. -Chris
 
-    my $factory = $session->Factory ();
+
 
     # Grab our annotation and import modules and assign them to the
     # configuration object
