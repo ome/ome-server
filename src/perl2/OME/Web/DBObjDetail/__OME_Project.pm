@@ -85,7 +85,7 @@ sub _takeAction {
 	}
 
 	# remove datasets from a project
-	my $dataset_ids = $q->param( 'datasets_to_remove' );
+	$dataset_ids = $q->param( 'datasets_to_remove' );
 	if( $dataset_ids ) {
 		OME::Tasks::ProjectManager->removeDatasets( { $object->id() => [ split( m',', $dataset_ids ) ] } );
 	}
