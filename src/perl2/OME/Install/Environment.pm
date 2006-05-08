@@ -363,4 +363,19 @@ sub DB_conf{
 
     return;
 }
+
+sub allow_guest_access {
+    my $self = shift;
+    if (scalar @_) {
+		$self->{allow_guest_access} = shift @_;
+    } elsif (exists $self->{allow_guest_access})  {
+      return $self->{allow_guest_access};
+    }
+    else {
+	return 0;
+    }
+}
+   
+
+
 1;
