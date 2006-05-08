@@ -58,8 +58,10 @@ use OME::Web;
 
 $VERSION = $OME::VERSION_STRING;
 
-my $PM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Project';
-my $DM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Dataset';
+my $PM_CREATE   = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Project';
+my $PM_SEARCH   = ' serve.pl?Page=OME::Web::Search&SearchType=OME::Project';
+my $DM_CREATE   = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Dataset';
+my $DM_SEARCH   = ' serve.pl?Page=OME::Web::Search&SearchType=OME::Dataset';
 my $HOME_LOCATION = 'serve.pl?Page=OME::Web::Home';
 
 #*********
@@ -105,7 +107,9 @@ sub getPageHeader {
  			$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $obj->id() .');'}, '(Popup)');
 	} else {
 		$project_links = 
-			$q->span({class => 'ome_quiet'}, 'You have no projects. ') .
+			$q->span({class => 'ome_quiet'}, 'You have no current project. ') .
+			$q->a({href => $PM_SEARCH, class =>'ome_quiet'}, 'select') .
+			", " .
 			$q->a({href => $PM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
 	
@@ -118,8 +122,11 @@ sub getPageHeader {
  			$q->a({class => 'ome_popup', href => 'javascript:openInfoDataset(' . $obj->id() .');'}, '(Popup)');
 	} else {
 		$dataset_links = 
-			$q->span({class => 'ome_quiet'}, 'You have no datasets. ') .
-			$q->a({href => $DM_CREATE, class => 'ome_quiet'}, 'create new');
+			$q->span({class => 'ome_quiet'}, 'You have no current dataset. ') .
+			$q->a({href => $DM_SEARCH, class =>'ome_quiet'}, 'select') . 	
+			", " .
+			$q->a({href => $DM_CREATE, class =>'ome_quiet'}, 'create new');
+	
 	}
 
 
