@@ -46,7 +46,6 @@ use strict;
 use vars qw($VERSION);
 
 use Carp;
-use Data::Dumper;
 use UNIVERSAL::require;
 use HTML::Template;
 
@@ -154,7 +153,7 @@ sub __getQuickViewProjectData {
 			my $local_p_dcount = $_->count_datasets();
 
 			# Active/most recent objects are highlighted
-			if ($_->id == $p_id) { $a_options->{'bgcolor'} = 'grey'; }
+			if ($p_id && $_->id == $p_id) { $a_options->{'bgcolor'} = 'grey'; }
 
 			$p_content .= $q->a($a_options, $_->name()) .
 			              $q->span({class => 'ome_quiet'}, " [$local_p_dcount dataset(s)]") .
