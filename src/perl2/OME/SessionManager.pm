@@ -94,6 +94,11 @@ use constant INVALIDATE_OLD_SESSION_KEYS_SQL => <<"SQL";
 			> ?
 SQL
 
+use constant GET_KEY_AGE => <<"SQL";
+	SELECT EXTRACT (EPOCH  from abstime(now()) - abstime(LAST_ACCESS))
+		from OME_SESSIONS where session_key=?
+SQL
+
 use constant GET_VISIBLE_GROUPS_SQL => <<"SQL";
 	SELECT distinct g.attribute_id
 	FROM groups g, experimenter_group_map egm
@@ -119,7 +124,7 @@ use constant GET_VISIBLE_USERS_SQL => <<"SQL";
 SQL
 
 # The lifetime of server-side session keys in seconds
-our $SESSION_KEY_LIFETIME = 30;  # 30 minutes
+our $SESSION_KEY_LIFETIME = 1800;  # 30 minutes, (30*60 sec = 1800 sec)
 our $SESSION_KEY_LENGTH = 32;
 
 =head1 METHODS
@@ -168,7 +173,6 @@ sub createSession {
     } elsif (defined $key) {
         $session = $self->createWithKey($key,$flags);
     }
-
     return $session or undef;
 }
 
@@ -281,7 +285,8 @@ sub promptAndLogin {
 # createWithKey
 # ------------------
 # Creates and returns an OME::Session given a SessionKey
-# Invalidates any stale keys
+# Invalidates any stale keys for the associated user
+# also allows for guest access if the installation is appropriately configured
 # updates last_access + host
 # returns OME::Session upon success
 # returns undef of invalid or stale key.
@@ -291,27 +296,62 @@ sub createWithKey {
 	my $sessionKey = shift;
 	my $flags = shift;
 
+	return undef unless ($sessionKey && 
+			     (length ($sessionKey) ==
+			     $SESSION_KEY_LENGTH));
 
 	my ($session,$factory);
-
 	if (OME::Session->hasInstance()) {
 		$session = OME::Session->instance();
 		$factory = $session->Factory()->revive();
 	}
+
 	$factory = OME::Factory->new($flags) unless $factory;
 	my $dbh = $factory->obtainDBH();
-	eval {
-		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
-	};
-	return undef unless ($sessionKey && 
-			     (length ($sessionKey) == $SESSION_KEY_LENGTH));
 	
 	my $userState = $factory->
 		findObject('OME::UserState', session_key => $sessionKey);
 #	logdbg "debug", "createWithKey: found existing userState(s)" if defined $userState;
 	
 	return undef unless defined $userState;
-	
+	$session = OME::Session->instance($userState, $factory,
+					  undef);
+
+	return undef unless ($session);
+
+	my $exp = $userState->User();	    
+
+	# check to see if this session is for a guest user. If it is,
+	# and if guests are disalllowed, punt.
+	my $configuration = $factory->Configuration();
+
+	if (($exp->FirstName() eq 'Guest') && 
+	    ($exp->LastName() eq 'User')) {
+
+	    if (!$configuration->allow_guest_access()) {
+		$userState->session_key(undef);
+		$userState->storeObject();
+		$session->commitTransaction();
+		return undef;
+	    }
+	}
+	else { #non- guest user
+
+	    my $age = 1;
+	    eval { 
+		 $age =$dbh->selectrow_array(GET_KEY_AGE, undef,
+		$sessionKey);
+	    };
+	    # force it to be too old if need be.
+	    $age += $SESSION_KEY_LIFETIME if ($@);
+
+	    if ($age > $SESSION_KEY_LIFETIME) {
+		$userState->session_key(undef);
+		$userState->storeObject();
+		$session->commitTransaction();
+		return undef;		
+	    }
+	}	
 	my $host;
 	if (exists $ENV{'REMOTE_HOST'} ) {
 		$host = $ENV{'REMOTE_HOST'};
@@ -323,7 +363,6 @@ sub createWithKey {
 	$userState->host($host);
 	
 	
-	$session = OME::Session->instance($userState, $factory, undef);
 
 	$self->updateACL();
 	
@@ -389,10 +428,9 @@ sub updateACL {
 # createWithPassword
 # ----------------
 # Creates and returns an OME::Session given a username/password
-# Invalidates any stale keys
 # updates last_access + host
 # returns OME::Session upon success
-# returns undef of invalid or stale key.
+# returns undef if invalid
 
 sub createWithPassword {
 	my $self = shift;
@@ -402,10 +440,6 @@ sub createWithPassword {
 	
 	my $bootstrap_factory = OME::Factory->new($flags);
 	my $dbh = $bootstrap_factory->obtainDBH();
-	eval {
-		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
-		$dbh->commit ();
-	};
 	my $configuration = OME::Configuration->new($bootstrap_factory );
 
 	my ($experimenter,$experimenterID,$dbpass);
@@ -418,8 +452,12 @@ sub createWithPassword {
 	
     ($experimenterID,$dbpass) = ($experimenter->ID,$experimenter->Password);
 	return undef unless $experimenter and $dbpass;
+
 	return undef if (crypt($password,$dbpass) ne $dbpass);
-	
+
+	return undef if (!$configuration->allow_guest_access() &&
+			   $experimenter->FirstName() eq 'Guest' &&
+			 $experimenter->LastName() eq 'User');
 	
 	my $host;
 	if (exists $ENV{'REMOTE_HOST'} ) {
@@ -429,7 +467,8 @@ sub createWithPassword {
 	}
 
 
-	logdbg "debug", "createWithPassword: looking for userState, experimenter_id=$experimenterID";
+	logdbg "debug", "createWithPassword: looking for userState,
+	experimenter_id=$experimenterID";
 	my $userState = $bootstrap_factory->
 		findObject('OME::UserState',experimenter_id => $experimenterID);
 	
@@ -454,12 +493,13 @@ sub createWithPassword {
 
 	logdie ref($self)."->createWithPassword:  Could not create userState object"
 		unless defined $userState;
-	my $session = OME::Session->instance($userState, $bootstrap_factory, undef);
-	$self->updateACL();
+	my $session = OME::Session->instance($userState,
+		$bootstrap_factory, undef);
 
 	$userState->storeObject();
 	$session->commitTransaction();
 	
+	$self->updateACL();
 	logdbg "debug", "createWithPassword: returning session";
 	return $session;
 }
