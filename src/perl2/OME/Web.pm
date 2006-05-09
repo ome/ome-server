@@ -239,13 +239,15 @@ sub pageURL {
 # -----------
 
 sub ensureLogin {
+    
 	my $self = shift;
 	my $manager = $self->Manager();
 
+
 	#or a new session if we got no cookie my %session;
 	my $sessionKey = $self->getSessionKey();
-
 	if (defined $sessionKey) {
+	    print STDERR "ensure login - trying to create sesssion $sessionKey\n";
 		my $session = $manager->createSession($sessionKey);
 		if ($session) {
 			$self->setSessionCookie($self->Session()->SessionKey());
@@ -255,17 +257,19 @@ sub ensureLogin {
 		}
 		return defined $session;
 	}
-# Uncomment the block of code below to make this installation have 
-# open guest access. You'll also need to set up an account named 'guest', 
-# with password 'abc123'. For instructions on adding a user, from the 
-# command line type: "ome help admin users add"
-#	else {
-#		my $session = $self->Manager()->createSession( 'guest', 'abc123' );
-		# We could reset the user state here. That would keep multiple simoultaneous
-		# guest logins from interfering with each other.
-#		return defined $session;
-#	}
-# End Guest access block
+	else {
+	    # try to login in as guest. note that session manager will
+	    # not  allow this if the configuration has not enabled
+	    # guest logins.
+	    
+	    # note that we don't set the session key here. 
+	    # eventually, we might want to distinguish between
+	    # multiple guest sessions, but we're not going to worry
+	    # about that just yet.
+	    
+	    my $session = $self->Manager()->createSession( 'guest', 'abc123' );
+	    return defined $session;
+	}
 	
 	return;
 }
