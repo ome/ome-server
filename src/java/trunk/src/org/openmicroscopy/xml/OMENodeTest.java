@@ -38,7 +38,7 @@
 
 package org.openmicroscopy.xml;
 
-import java.io.File;
+import java.io.*;
 import java.util.List;
 import org.openmicroscopy.xml.st.*;
 
@@ -2570,9 +2570,8 @@ public abstract class OMENodeTest {
     }
   }
 
-  /** Creates a node wrapping the given file and outputs some information. */
-  public static OMENode fileInfo(File f) throws Exception {
-    OMENode ome = new OMENode(f);
+  /** Outputs some information about the given OME node. */
+  public static void omeInfo(OMENode ome) throws Exception {
     System.out.println();
 
     // dump some information
@@ -2592,8 +2591,6 @@ public abstract class OMENodeTest {
         System.out.println();
       }
     }
-
-    return ome;
   }
 
   /** Builds a node from scratch (to match the Sample.ome file). */
@@ -2823,19 +2820,37 @@ public abstract class OMENodeTest {
   /**
    * Tests the org.openmicroscopy.xml package.
    *
-   * Specify no arguments to test the package's parse of Sample.ome.
-   * Specify -build flag to duplicate the structure in Sample.ome from scratch.
+   * <li>Specify no arguments to parse Sample.ome, then check it for errors.
+   * <li>Specify filename to parse that XML file.
+   * <li>Specify -build flag to duplicate the structure in Sample.ome from
+   *     scratch, then check it for errors.
+   * <li>Specify -string flag followed by filename to use OMENode's string
+   *     constructor (rather than the File constructor).
    */
   public static void main(String[] args) throws Exception {
     boolean noArgs = args.length == 0;
-    boolean build = !noArgs && "-build".equals(args[0]);
+    boolean build = !noArgs && "-build".equalsIgnoreCase(args[0]);
+    boolean string = args.length >= 2 && "-string".equalsIgnoreCase(args[0]);
 
     System.out.println("Creating OME node...");
     System.out.println();
     OMENode ome = null;
     if (build) ome = createNode();
     if (noArgs) ome = new OMENode(new File(SAMPLE_PATH));
-    if (ome == null) ome = fileInfo(new File(args[0]));
+    if (ome == null) {
+      if (string) {
+        StringBuffer sb = new StringBuffer();
+        File file = new File(args[1]);
+        DataInputStream in  = new DataInputStream(new FileInputStream(file));
+        byte[] bytes = new byte[(int) file.length()];
+        in.readFully(bytes);
+        in.close();
+        String xml = new String(bytes);
+        ome = new OMENode(xml);
+      }
+      else ome = new OMENode(new File(args[0]));
+      omeInfo(ome);
+    }
     else {
       // perform some tests on Sample.ome structure
       System.out.println("Performing API tests...");
