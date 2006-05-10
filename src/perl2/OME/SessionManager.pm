@@ -318,6 +318,9 @@ sub createWithKey {
 					  undef);
 
 	return undef unless ($session);
+
+	my $configuration = $factory->Configuration();
+
 	my $exp;
 	eval {
 	    $exp = $userState->User();	    
@@ -325,11 +328,9 @@ sub createWithKey {
 
 	# check to see if this session is for a guest user. If it is,
 	# and if guests are disalllowed, punt.
-	my $configuration = $factory->Configuration();
 
-	if ($exp && ($exp->FirstName() eq 'Guest') && 
-	    ($exp->LastName() eq 'User')) {
 
+	if ($session->isGuestSession()) {
 	    if (!$configuration->allow_guest_access()) {
 		$userState->session_key(undef);
 		$userState->storeObject();

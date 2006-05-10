@@ -697,6 +697,25 @@ sub activateRepository {
     }
 }
 
+=head2 isGuestSession 
+
+    my $isGuestSession = $session->isGuestSession 
+
+=cut
+sub isGuestSession {
+    my $self = shift;
+    my $exp; 
+    
+    eval {
+	$exp = $self->{UserState}->User();	    
+    };
+    # not guest if no user given
+    return 0 unless ($exp);
+
+    return (($exp->FirstName() eq 'Guest') &&
+	    ($exp->LastName() eq 'User'));
+}
+
 
 # added by IGG for benchmarking
 #sub BenchmarkTimer {
