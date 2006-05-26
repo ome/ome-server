@@ -43,6 +43,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #include "OMEIS_Error.h"
 
@@ -79,10 +81,10 @@ va_list ap;
 		fprintf (stdout,"Content-Type: text/plain\r\n\r\n");
 		if (ID_label) {
 			fprintf (stdout,"Error calling %s with %s=%llu: ", method, ID_label, ID);
-			fprintf (stderr,"Error calling %s with %s=%llu: ", method, ID_label, ID);
+			fprintf (stderr,"In PID %d, Error calling %s with %s=%llu: ",(int)getpid (), method, ID_label, ID);
 		} else {
 			fprintf (stdout,"Error calling %s: ", method);
-			fprintf (stderr,"Error calling %s: ", method);
+			fprintf (stderr,"In PID %d, Error calling %s: ",(int)getpid (), method);
 		}
 		if (strlen (template)) {
 			va_start (ap, template);
@@ -104,16 +106,16 @@ va_list ap;
 		}
 	} else {
 		if (ID_label) {
-			fprintf (stderr,"Error calling %s with %s=%llu: ", method, ID_label, ID);
+			fprintf (stderr,"In PID %d, Error calling %s with %s=%llu: ",(int)getpid (), method, ID_label, ID);
 		} else {
-			fprintf (stderr,"Error calling %s: ", method);
+			fprintf (stderr,"In PID %d, Error calling %s: ",(int)getpid (), method);
 		}
 		if (strlen (template)) {
 			va_start (ap, template);
 			vfprintf (stderr, template, ap);
 			va_end (ap);
-			fprintf (stderr,"\n");
 		}
+		fprintf (stderr,"\n");
 		if (errno) {
 			fprintf (stderr,"System Error: %s\n", strerror (errno));
 		}
