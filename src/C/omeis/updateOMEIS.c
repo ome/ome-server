@@ -101,14 +101,14 @@ int fd;
 	  Get the Pixels version and the last used PixelsID
 	*/
 	if ( !(myPixels = newPixelsRep (0LL)) ) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get a new PixelsRep");
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get a new PixelsRep - Exiting.");
 		exit (-1);
 	}
 	if ((fd = open(myPixels->path_ID, O_RDONLY, 0600)) < 0) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s", myPixels->path_ID);
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s (perhaps there is no Pixels repository yet?)", myPixels->path_ID);
 	}
 	if ((read(fd, &thePixID, sizeof (OID)) < 0) || thePixID == 0xFFFFFFFFFFFFFFFFULL) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could get last Pixels ID");
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get last Pixels ID (perhaps there are none?)");
 	}
 	close(fd);
 	if (!beSilent) fprintf (stdout,"%llu Pixels in repository\n",thePixID);
@@ -118,7 +118,7 @@ int fd;
 	freePixelsRep (myPixels);
 
 	if ( (pix_vers_fd = open (pix_vers_path, O_RDWR|O_CREAT, 0600)) < 0 ) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open version file %s",pix_vers_path);
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open or create version file %s.  Exiting.",pix_vers_path);
 		exit (-1);
 	}
 	lockRepFile (pix_vers_fd, 'w', (size_t)0, (size_t)0);
@@ -141,14 +141,14 @@ int fd;
 	  Get the File version and the last used FileID
 	*/
 	if ( !(myFile = newFileRep (0LL)) ) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get a new FileRep");
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get a new FileRep - Exiting");
 		exit (-1);
 	}
 	if ((fd = open(myFile->path_ID, O_RDONLY, 0600)) < 0) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s", myFile->path_ID);
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s (perhaps there is no File repository yet?)", myFile->path_ID);
 	}
 	if ((read(fd, &theFileID, sizeof (OID)) < 0) || theFileID == 0xFFFFFFFFFFFFFFFFULL) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could get last File ID");
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get last File ID (perhaps there are none?)");
 	}
 	close(fd);
 	if (!beSilent) fprintf (stdout,"%llu Files in repository\n",theFileID);
