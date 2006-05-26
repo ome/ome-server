@@ -1207,6 +1207,7 @@ FileRep *existFile;
 
 	/* Get SHA1 */
 	if ( get_md_from_buffer (myFile->file_buf, myFile->size_rep, myFile->file_info->sha1) < 0 ) {
+		OMEIS_DoError ("Unable to calculate SHA1.");
 		DeleteFile (myFile);
 		return (0);
 	}
