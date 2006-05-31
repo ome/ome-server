@@ -1427,18 +1427,39 @@ BLURB
         "You will have to upgrade it manually.  Sorry\n"
         if defined $db_db_version and $db_db_version eq '0';
 
-	print $LOGFILE "Found an existing ome database in the middle of being updated\n".
-		$db_delegate->errorStr()."\n"
-    and croak "Found an existing ome database, but apprently installation failed before it was complete.\n".
-        "You will have to drop the existing ome database before continuing.\n".
-        "WARNING:  Do not do this if you have an existing functional database\n".
-        "          especially if you don't have a current backup!!!\n".
-        "Restart Apache:\n".
-        "> sudo apachectl restart\n".
-        "Drop the ome database:\n".
-        "> dropdb ome\n".
-        "And run the installer again.\n"
-        if defined $db_db_version and $db_db_version =~ /Installing/;
+    if (defined $db_db_version and $db_db_version =~ /Installing/) {
+        my $db_delegate_errorStr = $db_delegate->errorStr();
+        if (not defined $db_delegate_errorStr) { $db_delegate_errorStr = ''; }
+        print $LOGFILE "Found an existing ome database in the middle of being updated\n".$db_delegate_errorStr."\n";
+        print "Found an existing ome database, but apparently installation\n".
+            "failed before it was complete.\n".
+            "The existing ome database must be dropped before continuing.\n".
+            "WARNING:  Do not do this if you have an existing functional database,\n".
+            "          especially if you don't have a current backup!!!\n";
+
+        my $drop_db = '';
+        if (y_or_n ("Are you sure you want to proceed ?",'n')) {
+            `/usr/sbin/apachectl restart > /dev/null 2> /dev/null`;
+            `/usr/sbin/apache2ctl restart > /dev/null 2> /dev/null`;
+            $drop_db = `sudo -u $ADMIN_USER dropdb ome`;
+            if ($drop_db =~ /DROP DATABASE/) {
+                print "Database dropped successfully.\n";
+            }
+            else { print $LOGFILE "Error dropping database:\n$drop_db\n"; }
+        }
+        if ($drop_db !~ /DROP DATABASE/) {
+            print "To drop the existing ome database manually:\n\n".
+                "Restart Apache:\n".
+                "> sudo apachectl restart\n".
+                "Or if running Apache2:\n".
+                "> sudo apache2ctl restart\n".
+                "Then drop the ome database:\n".
+                "> dropdb ome\n".
+                "And run the installer again.\n\n";
+            croak "Database must be dropped before continuing.\n";
+        }
+        else { undef $db_db_version; }
+    }
 
     if (defined $db_db_version) {
         print "Found existing database version $db_db_version.";
