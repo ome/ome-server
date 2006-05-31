@@ -76,7 +76,8 @@ sub print_header {
 sub confirm_path {
     my ($text, $default) = @_; 
 
-    print "$text [", BOLD, $default, RESET, "]: ";
+    if (not defined $default) { print "$text []: "; }
+    else { print "$text [", BOLD, $default, RESET, "]: "; }
     my $input = ReadLine 0;
     chomp $input;
     ($input = $default) unless $input;
