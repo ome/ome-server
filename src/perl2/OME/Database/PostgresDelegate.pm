@@ -118,7 +118,11 @@ sub createDatabase {
 		return 1;
 	}
 
-	$dbh->do(qq{CREATE DATABASE "$dbName"}) or die $dbh->errstr();
+	$dbh->do(qq{CREATE DATABASE "$dbName"}) or die $dbh->errstr().
+		"\n\nThere was a problem creating the database. ".
+		"You could try restarting\nPostgresSQL ".
+		"(e.g., \"sudo /etc/init.d/postgresql-7.4 restart\").";
+
 	print "\t\033[1m[Done.]\033[0m\n";
 	$dbh->disconnect();
 
