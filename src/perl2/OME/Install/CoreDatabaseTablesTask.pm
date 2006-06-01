@@ -1444,6 +1444,9 @@ BLURB
             $drop_db = `sudo -u $ADMIN_USER dropdb ome`;
             if ($drop_db =~ /DROP DATABASE/) {
                 print "Database dropped successfully.\n";
+                # give Postgres some time to recover (try to
+                # avoid subsequent "template1 in use" error)
+                sleep 2;
             }
             else { print $LOGFILE "Error dropping database:\n$drop_db\n"; }
         }
