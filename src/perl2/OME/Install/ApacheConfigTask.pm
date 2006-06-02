@@ -386,7 +386,7 @@ sub need_omeis_update {
 }
 
 sub update_omeis {
-my $sleep;
+	my $sleep;
 
 	if ($APACHE->{OMEIS_UP} eq 'now') {
 		$sleep = 0;
@@ -651,7 +651,20 @@ sub getApacheInfo {
 
 			# Add to our include_set if we don't have it already
 			if ($_ =~ /^\s*Include\s(.*)/ and $1 ne $omeConf) {
-				$include_set->add($1) unless $include_set->contains($1);
+				# split into directory and expression
+				$_ = $1;
+				/(^.*)\/([^\/]*$)/;
+				my $dir = $1;
+				my $exp = glob2pat($2);
+
+				# list matching files in directory
+				opendir(DIR, $dir);
+				my @files = grep(/$exp/,readdir(DIR));
+				closedir(DIR);
+				foreach my $file (@files) {
+					$file = $dir.'/'.$file;
+					$include_set->add($file) unless $include_set->contains($file);
+				}
 			}
 		}
 	};
@@ -715,6 +728,21 @@ sub getApacheInfo {
 	$apache_info->{'mod_perl_off'} = 1 if ($mod_loaded_off or $mod_added_off);
 
 	return $apache_info;
+}
+
+sub glob2pat {
+	# converts shell globs into regular expressions
+	# stolen from the Perl Cookbook, section 6.9
+	my $globstr = shift;
+	my %patmap = (
+		'*' => '.*',
+		'?' => '.',
+		'^' => '^', # added to support Apache2 directive syntax
+		'[' => '[',
+		']' => ']',
+	);
+	$globstr =~ s{(.)} { $patmap{$1} || "\Q$1" }ge;
+	return '^' . $globstr . '$';
 }
 
 
