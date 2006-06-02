@@ -105,10 +105,10 @@ int fd;
 		exit (-1);
 	}
 	if ((fd = open(myPixels->path_ID, O_RDONLY, 0600)) < 0) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s (perhaps there is no Pixels repository yet?)", myPixels->path_ID);
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open %s (perhaps there is no Pixels repository yet? If this is your first time installing OME, this message is normal and can be safely ignored.)", myPixels->path_ID);
 	}
 	if ((read(fd, &thePixID, sizeof (OID)) < 0) || thePixID == 0xFFFFFFFFFFFFFFFFULL) {
-		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get last Pixels ID (perhaps there are none?)");
+		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not get last Pixels ID (perhaps there are none? If this is your first time installing OME, this message is normal and can be safely ignored.)");
 	}
 	close(fd);
 	if (!beSilent) fprintf (stdout,"%llu Pixels in repository\n",thePixID);
