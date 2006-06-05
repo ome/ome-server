@@ -105,8 +105,7 @@ sub pdi_wizard {
 	
 	my @project_dir;
 	if (not $short) {
-		foreach my $proj_dir (scan_dir($root, sub{ !/^\.{1,2}$/ })) {
-			next if not -d $proj_dir;
+		foreach my $proj_dir (scan_dir($root, sub{ (!/^\.{1,2}$/) && ( -d "$root/$_" ) })) {
 			$proj_dir = rel2abs($proj_dir);
 			
 			my $skip;
@@ -125,10 +124,9 @@ sub pdi_wizard {
 	}
 	
 	my @dataset_dir;
-	foreach (@project_dir) {
-		foreach (scan_dir ($_, sub{ !/^\.{1,2}$/})) {
-			push (@dataset_dir, $_) if -d $_;
-		}
+	foreach my $project_directory (@project_dir) {
+		# Add all the subdirectories to the dataset list, excluding '.' and '..'
+		push @dataset_dir, scan_dir($project_directory, sub{ (!/^\.{1,2}$/) && ( -d "$project_directory/$_" ) });
 	}
 
 	my $project_column;
@@ -243,8 +241,8 @@ sub cgc_wizard {
 	# Get CategoryGroups
 	my @cg_dir;
 	if (not $short) {
-		foreach my $dir (scan_dir($root, sub{ !/^\.{1,2}$/})) {
-			next if not -d $root;
+		# iterate through the subdirectories, excluding '.' and '..'
+		foreach my $dir (scan_dir($root, sub{ (!/^\.{1,2}$/) && ( -d "$root/$_" ) })) {
 			$dir = rel2abs($dir);
 
 			my $skip;
@@ -263,20 +261,17 @@ sub cgc_wizard {
 	}
 	
 	my @cg_columns;
-	foreach (@cg_dir) {
+	foreach my $categoryGroupDirectory (@cg_dir) {
 		# get Categories for this CategoryGroup
-		my @category_dir;
-		foreach (scan_dir ($_, sub{ !/^\.{1,2}$/})) {
-			push (@category_dir, $_) if -d $_;
-		}
+		my @category_dir_list = scan_dir($categoryGroupDirectory, sub{ (!/^\.{1,2}$/) && ( -d "$categoryGroupDirectory/$_" ) });
 		# make the hash
-		my ($vol, $dir, $final_dir) = File::Spec->splitpath($_);
+		my ($vol, $dir, $final_dir) = File::Spec->splitpath($categoryGroupDirectory);
 		print STDERR "ColumnName => $final_dir\n";
 		my $cg_column = {ColumnName => "$final_dir"};		
-		foreach (@category_dir) {
-			($vol, $dir, $final_dir) = File::Spec->splitpath($_);
-			print STDERR "\t$final_dir => $_/*\n";
-			$cg_column->{$final_dir} = "$_/*";
+		foreach my $category_dir (@category_dir_list) {
+			($vol, $dir, $final_dir) = File::Spec->splitpath($category_dir);
+			print STDERR "\t$final_dir => $category_dir/*\n";
+			$cg_column->{$final_dir} = "$category_dir/*";
 		}
 		push (@cg_columns, $cg_column);
 	}
