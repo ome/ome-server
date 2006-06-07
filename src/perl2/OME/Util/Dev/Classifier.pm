@@ -107,7 +107,9 @@ sub getCommands {
       {
        'stitch_chain' => 'stitch_chain',
        'compile_sigs' => 'compile_sigs',
+       'compile_chain' => 'compile_chain',
        'lint' => ['OME::Util::Dev::Lint'],
+       'export_chain_to_MATLAB' => ['OME::Util::Dev::ExportChain2MATLAB'],
       };
 }
 
@@ -384,6 +386,233 @@ sub compile_sigs {
 	$engine->close();
 	$engine = undef;
 }	
+
+sub compile_chain {
+	my ($self,$commands) = @_;
+	my ($datasetStr, $chainStr, $output_file_name, $chex_id);
+	
+	GetOptions ('d=s' => \$datasetStr,
+	            'a=s' => \$chainStr,
+	            'o=s' => \$output_file_name,
+	            'e=i' => \$chex_id);
+	            
+	die "one or more options not specified"
+		unless (($datasetStr and $chainStr) or $chex_id) and $output_file_name;
+	
+	my $session = $self->getSession();
+	my $factory = $session->Factory();
+	
+	logdbg "debug", "loading chain, dataset, and signature stitcher chain node";
+	
+	# get chex if appropriate
+	my $chex;
+	my $chain;
+	my $dataset;
+	
+	if ($chex_id) {
+		$chex = $factory->findObject( "OME::AnalysisChainExecution",
+			id => $chex_id,
+		);
+		die "Could not find chain execution with (id=".$chex_id.")"
+			unless ($chex);
+		$chain   = $chex->analysis_chain();
+		$dataset = $chex->dataset();
+		print $chain->name()."  ".$dataset->name()."\n";
+	}
+
+	# get chain	if neccessary
+	if (not defined $chain) {
+		if ($chainStr =~ /^([0-9]+)$/) {
+			$chain= $factory->loadObject( "OME::AnalysisChain", $chainStr )
+				or die "Cannot find an analysis chain with id = $chainStr";
+		} else {
+			my $chainData = {name => $chainStr};
+			$chain = $factory->findObject( "OME::AnalysisChain", $chainData)
+				or die "Cannot find an analysis chain with name = $chainStr";
+		}
+	}
+	
+	# get signature module
+	my $sig_stitch_node = $factory->findObject( "OME::AnalysisChain::Node",
+		analysis_chain  => $chain,
+		'module.name'   => [ 'like', 'Signature Stitcher%' ]
+	) or die "Could not find a signature stitcher module in chain (id = $chainStr, name = '".$chain->name."')";
+	logdbg "debug", "found signature stitcher module (name=".$sig_stitch_node->module->name()."), node (id=".$sig_stitch_node->id.".";
+	
+	
+	# get dataset if neccesary
+	if (not defined $dataset) {
+		if ($datasetStr =~ /^([0-9]+)$/) {
+			my $datasetID = $1;
+			$dataset = $factory->loadObject ("OME::Dataset", $datasetID);
+			die "Dataset with ID $datasetStr doesn't exist!" unless $dataset;
+		} else {
+			my $datasetData = {
+								name   => $datasetStr,
+								owner  => $session->User(),
+							  };
+			$dataset = $factory->findObject( "OME::Dataset", $datasetData);
+			die "Dataset with name $datasetStr doesn't exist!" unless $dataset;
+		}
+	}
+	
+	# Find the chain execution
+	# chex might already be loaded if chex_id was specified as program parameter
+	$chex = $factory->findObject( "OME::AnalysisChainExecution",
+		analysis_chain => $chain,
+		dataset        => $dataset
+	) unless ($chex);
+	
+	if (not $chex) {
+		logdbg "debug", "Could not find execution of chain (id=".$chain->id."). Executing chain";
+		$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
+	}
+	
+	# collect sig stitcher module execution for this chain
+	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
+		analysis_chain_execution => $chex,
+		analysis_chain_node      => $sig_stitch_node
+	) or die "Could not load a chain node execution for the signature stitcher node (id=".$sig_stitch_node->id."), chain execution (id=".$chex->id.").";
+	my $stitcher_mex = $stitcher_nex->module_execution;
+	die "signature stitcher (".$stitcher_mex->module->name.") module execution (id=".$stitcher_mex->id.") has 'ERROR' status!"
+		if $stitcher_mex->status() eq 'ERROR';
+	logdbg "debug", "found signature stitcher module execution (mex=".$stitcher_mex->id().").";
+	
+	# get vector_legends.
+	my $vector_legends_ptr = OME::Tasks::ModuleExecutionManager->
+		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
+		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
+	my @vector_legends = sort {$a->VectorPosition <=> $b->VectorPosition} @$vector_legends_ptr;
+	
+	
+	my @signature_labels =  map( $_->FormalInput(), @vector_legends);
+	
+	###
+	### Open file for writing
+	###
+	open (CHAIN, ">$output_file_name.m");
+	
+	# make a summary
+	my %start_iterator;
+	my %count_iterator;
+	my $vector_position = 1;
+	
+	foreach(@signature_labels) {
+		# remove the trailing ST
+		$_ =~ s|\..*$||;
+		
+		# mb_zernike(FourierTransform((im)) [1-89]
+		if (exists $start_iterator{$_}) {
+			$count_iterator{$_} = $count_iterator{$_} + 1;
+		} else {
+			$start_iterator{$_} = $vector_position;
+			$count_iterator{$_} = 1;
+		}
+		
+		$vector_position++;
+	}
+	
+	# make @signature_labels unique
+    my %saw;
+    @signature_labels = grep(!$saw{$_}++, @signature_labels);
+    
+	foreach (@signature_labels) {
+		print CHAIN "% [".$start_iterator{$_}."-".($start_iterator{$_}+$count_iterator{$_}-1)."]   $_\n";
+	}
+	
+	print CHAIN "\nfunction [signature_vector] = $output_file_name (im); \n";
+	for (my $vec_count=0; $vec_count < scalar(@signature_labels); $vec_count++) {
+		my $cmd = "vec_$vec_count = concat_outputs (".$signature_labels[$vec_count].")";
+		
+		# stick in typecaster modules as needed
+		if ($cmd =~ s/\(FourierTransform/\(FrequencySpace2Pixels\(FourierTransform/) {
+			$cmd = $cmd.")";
+		}
+		if ($cmd =~ s/\(WaveletSignatures/\(WaveletSelector\(WaveletSignatures/) {
+			$cmd = $cmd.")";
+		}
+		print CHAIN $cmd.";\n" ;
+	}
+	
+	print CHAIN "\nsignature_vector = [";
+	for (my $vec_count=0; $vec_count < scalar(@signature_labels); $vec_count++) {
+		print CHAIN "vec_$vec_count ";
+	}
+	print CHAIN "];\n";
+	
+	#write out typecaster modules;
+	print CHAIN <<TYPECASTERS;
+%
+% MATLAB implementation of required typecaster modules
+%
+function pix = FrequencySpace2Pixels(fs)
+pix = fs(:,:,1);
+ 
+function wav_result = WaveletSelector(wav1, wav2)
+wav_result = wav1;
+TYPECASTERS
+
+	# write out concatination function;
+	print CHAIN <<CONCAT_UTILITY;
+ 
+%
+% helper function combines outputs from multiple outputs
+%
+function concat = concat_outputs (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)
+
+if (nargin > 8)
+    error('concat_outputs only supports up to 8 arguments');
+end
+ 
+if (nargin == 1)
+    concat = [straighten(arg1)];
+elseif (nargin == 2)
+    concat = [straighten(arg1) straighten(arg2)];
+elseif (nargin == 3)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3)];
+elseif (nargin == 4)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4)];
+elseif (nargin == 5)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5)];
+elseif (nargin == 6)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6)];
+elseif (nargin == 7)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7)];
+elseif (nargin == 8)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8)];
+elseif (nargin == 9)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9];
+elseif (nargin == 10)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10)];
+elseif (nargin == 11)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11)];
+elseif (nargin == 12)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12)];
+elseif (nargin == 13)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13)];
+elseif (nargin == 14)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13) straighten(arg14)];
+elseif (nargin == 15)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13) straighten(arg14) straighten(arg15)];
+elseif (nargin == 16)
+    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13) straighten(arg14) straighten(arg15) straighten(arg16)]; 
+end
+
+%
+% some vectors are row-oriented others are column-oriented. This fixes them all to be column oriented
+%
+function out = straighten (in)
+[rows, columns] = size(in);
+if (rows < columns)
+ 	out = in;
+else
+	out = in';
+end
+
+CONCAT_UTILITY
+
+	close(CHAIN);
+}
 
 sub stitch_chain {
 	my ($self,$commands) = @_;
