@@ -122,9 +122,11 @@ Returns the result of the URL request in the specified file.
 
 =cut
 
-
 use strict;
 use warnings;
+
+use OME;
+our $VERSION = $OME::VERSION;
 
 use Inline (Config => DIRECTORY => '/var/tmp/Inline');
 use Inline (
@@ -165,7 +167,7 @@ CURL *curl = NULL;
 	curl_easy_setopt(curl, CURLOPT_MUTE, 1);
 	
 	/* bless it into the class */
-	obj_ref = sv_newmortal();
+	obj_ref = newSV(0);
 	sv_setref_pv(obj_ref, class, (void*) curl);
 	SvREADONLY_on(obj_ref);
 
@@ -333,7 +335,7 @@ long response_code;
 void DESTROY (SV *obj)
 {
 CURL *curl = (CURL *)( SvIV(SvRV(obj)) );
-
+fprintf (stderr,"DESTROY\n");
 	if (curl) {
 		curl_easy_cleanup(curl);
 	}
