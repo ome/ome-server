@@ -128,6 +128,8 @@ use warnings;
 
 use OME;
 our $VERSION = $OME::VERSION;
+
+use OME::Install::Environment;
 our $CACHE_DIRECTORY;
 BEGIN {
 	my $environment = initialize OME::Install::Environment;
