@@ -116,7 +116,7 @@ Returns the result of the URL request.
 
 =head2 GET_file
 
-  my $response = $curl->GET_file ($url,$file_path)
+  $curl->GET_file ($url,$file_path)
 
 Returns the result of the URL request in the specified file.
 
@@ -125,12 +125,21 @@ Returns the result of the URL request in the specified file.
 use strict;
 use warnings;
 
+
 use OME;
 our $VERSION = $OME::VERSION;
+our $CACHE_DIRECTORY;
+BEGIN {
+	my $environment = initialize OME::Install::Environment;
+	$CACHE_DIRECTORY = $environment->tmp_dir().'/Inline';
+}
 
-use Inline (Config => DIRECTORY => '/var/tmp/Inline');
+use Inline (Config => DIRECTORY => $CACHE_DIRECTORY);
 use Inline (
-	C => 'DATA', LIBS => ['-lcurl'],
+	C       => 'DATA',
+	LIBS    => ['-lcurl'],
+	NAME    => 'OME::Util::cURL',
+	VERSION => $VERSION,
 #	CLEAN_AFTER_BUILD => 0,
 );
 
