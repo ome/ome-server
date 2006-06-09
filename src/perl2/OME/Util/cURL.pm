@@ -335,7 +335,6 @@ long response_code;
 void DESTROY (SV *obj)
 {
 CURL *curl = (CURL *)( SvIV(SvRV(obj)) );
-fprintf (stderr,"DESTROY\n");
 	if (curl) {
 		curl_easy_cleanup(curl);
 	}
