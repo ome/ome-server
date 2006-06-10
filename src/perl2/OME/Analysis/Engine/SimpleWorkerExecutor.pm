@@ -50,8 +50,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use Carp;
-use LWP::UserAgent;
-use HTTP::Response;
+use OME::Util::cURL;
 use Log::Agent;
 use Sys::Hostname;
 use CGI qw/-no_xhtml/;
@@ -117,7 +116,7 @@ sub new {
 		to_base ($codecVocab,int(rand(65535))); 
 	
 	# Get our user agent
-	$self->{UA} = LWP::UserAgent->new ();
+	$self->{UA} = OME::Util::cURL->new ();
 
 	# Get our DataSource + SessionKey
 	$self->{DataSource}	  = $DATA_SOURCE;
@@ -184,9 +183,9 @@ sub pressWorker {
 	my $url = $worker->URL().'?'.$params;
 
 	logdbg "debug", "pressWorker: Calling ".$url;
-	my $response = $self->{UA}->get($url);
+	my $response = $self->{UA}->GET($url);
 
-	return 1 if $response->is_success();
+	return 1 if $self->{UA}->status() == 200;
 	logerr "pressWorker: Error pressing worker: ".$response->status_line();
 	# Update last_used if the responce was an error
 	# Maybe it will fix itself?

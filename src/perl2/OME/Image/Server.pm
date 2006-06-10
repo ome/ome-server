@@ -77,8 +77,6 @@ use OME::Session;
 use Carp;
 use English '-no_match_vars';
 use URI;
-use HTTP::Request::Common;
-use LWP::UserAgent;
 use Log::Agent;
 
 our $SHOW_CALLS = $OME::MESSAGES{OMEIS_DEBUG};
@@ -112,6 +110,11 @@ use constant DEFAULT_LOCAL_PATH => '/OME/bin/omeis';
 use constant DEFAULT_REMOTE_URL =>
   URI->new('http://localhost/cgi-bin/omeis');
 
+
+use OME::Util::cURL;
+
+
+
 # Class defaults to a remote installation found at DEFAULT_REMOTE_URL
 
 my $local_server = 0;
@@ -127,6 +130,7 @@ my $cache_fileID;
 my $cache_file_size;
 my $cache_start;
 my $cache_end;
+my $curl;
 
 =head1 METHODS
 
@@ -250,25 +254,6 @@ sub __safeBacktick {
     }
 }
 
-=head2 __createUserAgent
-
-	OME::Image::Server->__createUserAgent();
-
-This method is used to instantiate the private class variable
-$user_agent.  This is an instance of the C<LWP::UserAgent> class, and
-is used to perform the actual HTTP communication of a remote image
-server call.  It should never be called from client code; it is called
-as necessary by the C<__callOMEIS> method, which is called by all of
-the image server methods.
-
-=cut
-
-sub __createUserAgent {
-    my $proto = shift;
-
-    $user_agent = LWP::UserAgent->new();
-}
-
 =head2 __callOMEIS
 
 	my $result = OME::Image::Server->__callOMEIS(%params);
@@ -317,9 +302,6 @@ sub __callOMEIS {
     my $proto = shift;
     my %params = @_;
 
-    my $to_filename = $params{__file};
-    delete $params{__file};
-
     my $session = OME::Session->instance();
     
     $session->findRepository() unless defined $server_path;
@@ -344,6 +326,9 @@ sub __callOMEIS {
         my $stdin_filename;
         my $stdin_param;
         my @temp_files;
+		my $to_filename = $params{__file};
+		delete $params{__file};
+
 
         foreach my $param ('File','Pixels') {
             if (exists $params{$param}) {
@@ -406,72 +391,21 @@ sub __callOMEIS {
             return $result;
         }
     } else {
-        # The File and/or Pixels parameters should be transformed into
-        # the appropriate filename reference for the POST request.
-
-        my $stdin_filename;
-        my $stdin_param;
-        my @temp_files;
-
-        foreach my $param ('File','Pixels') {
-            if (exists $params{$param}) {
-                if (ref($params{$param})) {
-                    $stdin_filename = $session->
-                      getTemporaryFilename("omeis","stdin");
-                    $stdin_param = $param;
-                    open INFILE, "> $stdin_filename"
-                      or die "Could not write stdin to a temp file: $!";
-                    print INFILE ${$params{$param}};
-                    close INFILE;
-                    push @temp_files, $stdin_filename;
-                } else {
-                    $stdin_filename = $params{$param};
-                    $stdin_param = $param;
-                }
-
-                # The image server wants the Files and/or Pixels
-                # parameters to be last, so we'll delete it from the
-                # hash now and add it back in a couple of lines.
-
-                delete $params{$param};
-            }
-        }
-
-        # This prevents the request object created below from loading
-        # the entire file into memory.  Since the images could easily
-        # run to 1GB in size, this is quite necessary.
-        $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
-
-        # Bah!   The image server will bomb out unless the Files or
-        # Pixels parameter is last in the list.
-        my @params = %params;
-        if (defined $stdin_filename) {
-            die "Cannot find file $stdin_filename"
-              unless -r $stdin_filename;
-
-            push @params, $stdin_param, [$stdin_filename];
-        }
-
         if ($SHOW_CALLS) {
 			logdbg "debug", "Calling remote OMEIS: $server_path";
 			logdbg "debug", "  Params:";
-            for (my $i = 0; $i < scalar( @params); $i+=2 ) {
-                logdbg "debug", "    '".$params[$i]."' = '".$params[$i+1];
-            }
+			while ( my ($key,$value) = each (%params) ) {
+                logdbg "debug", "    '$key' = '$value'";
+			}
         }
-        my $request =
-          POST($server_path,
-               Content_Type => 'form-data',
-               Content      => \@params);
-        $proto->__createUserAgent() unless defined $user_agent;
-        my $response = $user_agent->request($request,$to_filename);
+        $curl = OME::Util::cURL->new() unless $curl;
+        my $response = $curl->POST ($server_path,\%params);
 
-        $session->finishTemporaryFile($_) foreach @temp_files;
 
-        if ($response->is_success()) {
-            return ($response->content());
+        if ($curl->status() == 200) {
+            return ($response);
         } else {
-            Carp::confess $response->content();
+            Carp::confess $response;
         }
     }
 }
@@ -1762,8 +1696,6 @@ sub getDownloadAllURL {
 
 1;
 
-__END__
-
 =head1 AUTHORS
 
 =over
@@ -1783,5 +1715,4 @@ Douglas Creager <dcreager@alum.mit.edu>
 L<OME>, http://www.openmicroscopy.org/
 
 =cut
-
 
