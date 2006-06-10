@@ -49,12 +49,10 @@ use Time::localtime;
 use Time::Local;
 
 # Packages that should have been installed by now
-use HTTP::Request::Common;
-use LWP::UserAgent;
-
 use OME::Install::Terminal;
 use OME::Install::Environment;
 use OME::Install::Util;
+use OME::Util::cURL;
 
 use base qw(OME::Install::InstallationTask);
 
@@ -200,12 +198,12 @@ sub httpd_test {
 	
 	print "Testing Apache configuration \n";
 
-	print $LOGFILE "Getting an LWP user agent\n";
-	my $user_agent = LWP::UserAgent->new();
+	print $LOGFILE "Getting an OME::Util::cURL user agent\n";
+	my $curl = OME::Util::cURL->new ();
 	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Could not get a LWP user agent\n" and
-		croak "Could not get a LWP user agent"
-	unless $user_agent;
+		print $LOGFILE "Could not get a OME::Util::cURL user agent\n" and
+		croak "Could not get a OME::Util::cURL user agent"
+	unless $curl;
 
 	
 	# Test mod_perl.  Here we will make a little script that we'll put next to serve.pl
@@ -234,15 +232,9 @@ sub httpd_test {
 	
 	# Run the test script as a cgi
 	my $url = 'http://localhost/perl2/mod_perl_test.pl';
-	print $LOGFILE "Making an HTTP::Request object for $url\n";
-	my $request = HTTP::Request->new(GET => $url);
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Could not generate a GET request for $url\n" and
-		croak "Could not generate a request for $url"
-	unless $request;
 
 	print $LOGFILE "Getting response from $url\n";
-	my $response = $user_agent->request($request);
+	my $response = $curl->GET($url);
 	print BOLD, "[FAILURE]", RESET, ".\n" and
 		print $LOGFILE "Apache/mod_perl is not properly configured.  Did not get a response from $url.\n" and
 		croak "Apache/mod_perl is not properly configured.\n".
@@ -250,15 +242,14 @@ sub httpd_test {
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
 	unless $response;
 
-	my $content = $response->content();
 	print $LOGFILE "Checking response from $url\n";
 	print BOLD, "[FAILURE]", RESET, ".\n" and
 		print $LOGFILE "Apache/mod_perl is not properly configured.  Got an error response from $url:\n".
-			"$content\n" and
+			"$response\n" and
 		croak "Apache/mod_perl is not properly configured.  Got an error response from $url:\n".
-			"$content\n".
+			"$response\n".
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	if $response->is_error();
+	unless $curl->status == 200;
 
 	print $LOGFILE "Parsing response from $url\n";
 	# Check for MOD_PERL
@@ -270,7 +261,7 @@ sub httpd_test {
 			"MOD_PERL environment variable is missing in CGI test.\n".
 			"CGI test: $url\n".
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $content =~ /^MOD_PERL\s*=\s*(.*$)/m;
+	unless $response =~ /^MOD_PERL\s*=\s*(.*$)/m;
 
 	# Check that MOD_PERL is set to something containing mod_perl
 	print BOLD, "[FAILURE]", RESET, ".\n" and
@@ -281,7 +272,7 @@ sub httpd_test {
 			"MOD_PERL is \"$1\" in CGI test.  Expecting something with mod_perl.\n".
 			"CGI test: $url\n".
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $content =~ /^MOD_PERL\s*=\s*mod_perl.*$/m;
+	unless $response =~ /^MOD_PERL\s*=\s*mod_perl.*$/m;
 	
 	# Check for GATEWAY_INTERFACE
 	print BOLD, "[FAILURE]", RESET, ".\n" and
@@ -292,7 +283,7 @@ sub httpd_test {
 			"GATEWAY_INTERFACE environment variable is missing in CGI test.\n".
 			"CGI test: $url\n".
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $content =~ /^GATEWAY_INTERFACE\s*=\s*(.*$)/m;
+	unless $response =~ /^GATEWAY_INTERFACE\s*=\s*(.*$)/m;
 
     print BOLD, "[SUCCESS]", RESET, ".\n"
         and print $LOGFILE "mod_perl is configured correctly\n";
@@ -315,26 +306,16 @@ sub omeis_test {
 	my $url = shift;
 	$LOGFILE = shift if @_;
 	
-	print $LOGFILE "Getting an LWP user agent\n";
-	my $user_agent = LWP::UserAgent->new();
+	print $LOGFILE "Getting an OME::Util::cURL user agent\n";
+	my $curl = OME::Util::cURL->new ();
 	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Could not get a LWP user agent\n" and
-		croak "Could not get a LWP user agent"
-	unless $user_agent;
-
-
-	# Get a request
-	print $LOGFILE "Generating request for $url\n";
-	my $request = HTTP::Request->new(GET => $url);
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Could not generate a request for $url.\n" and
-		croak "Could not generate a request for $url\n".
-			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $request;
+		print $LOGFILE "Could not get a OME::Util::cURL user agent\n" and
+		croak "Could not get a OME::Util::cURL user agent"
+	unless $curl;
 
 	# Get a response
 	print $LOGFILE "Getting response from $url\n";
-	my $response = $user_agent->request($request);
+	my $response = $curl->GET($url);
 	print BOLD, "[FAILURE]", RESET, ".\n" and
 		print $LOGFILE "OMEIS could not be reached.\n".
 			"Did not get a response from $url.\n" and
@@ -344,14 +325,13 @@ sub omeis_test {
 
 	# Check the response for 'Method parameter missing'
 	print $LOGFILE "Parsing response from $url\n";
-	my $content = $response->content();
 	print BOLD, "[FAILURE]", RESET, ".\n" and
 		print $LOGFILE "OMEIS could not be reached.\n".
-			"Incorrect response from OMEIS at $url:\n$content\n" and
+			"Incorrect response from OMEIS at $url:\n$response\n" and
 		croak "OMEIS could not be reached.\n".
-			"Incorrect response from OMEIS at $url:\n$content\n".
+			"Incorrect response from OMEIS at $url:\n$response\n".
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $content =~ /Method parameter missing/m;
+	unless $response =~ /Method parameter missing/m;
 
 	print BOLD, "[SUCCESS]", RESET, ".\n"
 		and print $LOGFILE "Repository is configured correctly\n";

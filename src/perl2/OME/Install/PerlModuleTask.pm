@@ -51,6 +51,8 @@ use base qw(OME::Install::InstallationTask);
 
 # Default package repository
 my $REPOSITORY = "http://openmicroscopy.org/packages/perl";
+# For testing local repositories:
+#my $REPOSITORY = "http://localhost/OME-WEBSITE/packages/perl";
 
 # Default ranlib command
 my $RANLIB= "ranlib";
@@ -312,13 +314,52 @@ my @modules = (
 		return 0;
 	}
     },{
-	name => 'LWP',
-	valid_versions => ['ne 5.80'],
-	repository_file => "$REPOSITORY/libwww-perl-5.69.tar.gz",
+# XXX DEPRECATED
+#	name => 'LWP',
+#	valid_versions => ['ne 5.80'],
+#	repository_file => "$REPOSITORY/libwww-perl-5.69.tar.gz",
+#	configure_module => sub {
+#	    # Since libwww has an interactive configure script we need to
+#	    # implement a custom configure_module () subroutine that allows
+#	    # for an interactive install
+#	    my ($path, $logfile) = @_;
+#	    my $iwd = getcwd;  # Initial working directory
+#
+#	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+#
+#	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+#
+#		my @output = `perl Makefile.PL -n 2>&1`;
+#	
+#		if ($? == 0) {
+#		print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+#	
+#		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+#		return 1;
+#		}
+#	
+#		print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+#		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+#	
+#		return 0;
+#	}
+#   },{
+	name => 'Parse::RecDescent',
+	repository_file => "$REPOSITORY/Parse-RecDescent-1.94.tar.gz"
+    },{
+	name => 'Inline::C',
+	repository_file => "$REPOSITORY/Inline-0.44.tar.gz",
+	get_module_version => sub {
+	    my $version;
+	    eval('require Inline::C; $version = $Inline::C::VERSION;');
+
+	    return $version ? $version : undef;
+	},	
 	configure_module => sub {
-	    # Since libwww has an interactive configure script we need to
+	    # Since Inline::C has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
+
 	    my ($path, $logfile) = @_;
 	    my $iwd = getcwd;  # Initial working directory
 
@@ -326,23 +367,20 @@ my @modules = (
 
 	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-		my @output = `perl Makefile.PL -n 2>&1`;
-	
+		print $logfile "USING PERL CONFIGURE SCRIPT -- 'yes | perl Makefile.PL 2>&1'\n";
+		my @output = `yes | perl Makefile.PL 2>&1`;
 		if ($? == 0) {
-		print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+			print $logfile "SUCCESS -- OUTPUT: \"@output\"\n\n";
 	
-		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-		return 1;
+			chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+			return 1;
 		}
 	
-		print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+		print $logfile "FAILURE -- OUTPUT: \"@output\"\n\n";
 		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 	
 		return 0;
-	}
-    },{
-	name => 'XML::NamespaceSupport',
-	repository_file => "$REPOSITORY/XML-NamespaceSupport-1.08.tar.gz"
+	},
     },{
 	name => 'XML::Sax',
 	repository_file => "$REPOSITORY/XML-SAX-0.12.tar.gz",

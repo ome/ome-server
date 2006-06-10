@@ -43,8 +43,7 @@ use Cwd;
 
 use OME::Install::Util;
 use OME::Install::Environment;
-use HTTP::Request::Common;
-use LWP::UserAgent;
+use OME::Util::cURL;
 use base qw(OME::Install::InstallationTask);
 
 
@@ -436,39 +435,38 @@ sub try_to_run_matlab_as_apache {
 	unless $request;
 
 	print $LOGFILE "Getting response from $url\n";
-	my $user_agent = LWP::UserAgent->new();
-	my $response = $user_agent->request($request);
+	my $curl = OME::Util::cURL->new ();
+	my $response = $curl->GET($url);
 	print BOLD, "[FAILURE]", RESET, ".\n" and
 		print $LOGFILE "matlab-apache-test Did not get a response from $url.\n" and
 		croak "Did not get a response from $url.\n".
 			  "See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
 	unless $response;
 
-	my $content = $response->content();
 	print $LOGFILE "Checking response from $url\n";
 	print BOLD, "[FAILURE]", RESET, ".\n" and
 		print $LOGFILE "matlab-apache-test  Got an error response from $url:\n".
-			"$content\n" and
+			"$response\n" and
 		croak "Got an error response from $url:\n".
-			"$content\n".
+			"$response\n".
 			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	if $response->is_error();
+	unless $curl->status == 200;
 
 	print $LOGFILE "Parsing response from $url\n";
 	
-	if ($content =~ /\s*< M A T L A B >\s*/) {
+	if ($response =~ /\s*< M A T L A B >\s*/) {
 		print BOLD, "[SUCCESS]", RESET, ".\n";
-		print $LOGFILE "[SUCCESS] \n Output From Matlab: $content";
+		print $LOGFILE "[SUCCESS] \n Output From Matlab: $response";
 	} else {
 		print BOLD, "[FAILURE]", RESET, ".\n";
-		print $LOGFILE "[FAILURE] \n Output From Matlab: $content";
+		print $LOGFILE "[FAILURE] \n Output From Matlab: $response";
 		
 		print "MATLAB won't start. $MATLAB->{USER} is probably not licensed to run MATLAB.\n";
 		
 		read_matlab_license_file_to_guess_matlab_user();
 	}
 	print "\n"; # spacing
-	return $content;
+	return $response;
 }
 
 sub write_matlab_test_script {

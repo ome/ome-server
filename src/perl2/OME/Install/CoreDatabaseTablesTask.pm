@@ -63,10 +63,6 @@ use OME::Tasks::OMEImport;
 use OME::Tasks::ModuleExecutionManager;
 
 
-# Packages that should have been installed by now
-use HTTP::Request::Common;
-use LWP::UserAgent;
-
 
 
 #*********
