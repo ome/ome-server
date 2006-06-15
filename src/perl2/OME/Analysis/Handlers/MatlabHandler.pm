@@ -304,7 +304,8 @@ sub __execute {
 	
 	my $start_time = [gettimeofday()];
 	$_engine->eval($command);
-#	$_engine->eval( "save ome_ml_dump" );
+#   logdbg "debug", "save /tmp/MEX_".$mex->id()."[".$mex->module()->name()."]\n";
+#   $_engine->eval( "save /tmp/MEX_".$mex->id()."[".$mex->module()->name()."]" );
 	$mex->execution_time($mex->execution_time() + tv_interval($start_time));
 
 	# Save warning messages if found.
