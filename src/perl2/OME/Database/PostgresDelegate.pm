@@ -322,7 +322,6 @@ use constant FIND_TABLE_FOREIGN_KEYS_SQL => <<SQL;
 		   tgargs  AS args
 	  FROM pg_trigger
 	 WHERE tgisconstraint = TRUE
-	   AND tgtype = 21
 	   AND tgrelid = ?;
 SQL
 sub __findForeignKeys {
