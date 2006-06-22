@@ -167,18 +167,10 @@
 						<xsl:attribute name = "PixelSizeX">
 							<xsl:value-of select = "@PixelSizeX"/>
 						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeY">
-							<xsl:value-of select = "@PixelSizeY"/>
-						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeZ">
-							<xsl:value-of select = "@PixelSizeZ"/>
-						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeC">
-							<xsl:value-of select = "@WaveIncrement"/>
-						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeT">
-							<xsl:value-of select = "@TimeIncrement"/>
-						</xsl:attribute>
+						<xsl:apply-templates select = "@PixelSizeY" mode = "OptionalAttribute"/>
+						<xsl:apply-templates select = "@PixelSizeZ" mode = "OptionalAttribute"/>
+						<xsl:apply-templates select = "@PixelSizeC" mode = "OptionalAttribute"/>
+						<xsl:apply-templates select = "@PixelSizeT" mode = "OptionalAttribute"/>
 					</xsl:element>
 				</xsl:if>				
 				<xsl:apply-templates select = "OME:ExperimentRef"/>
