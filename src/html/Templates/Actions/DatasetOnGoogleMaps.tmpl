@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>OME Images in Google Maps</title>
+	<link rel="stylesheet" type="text/css" href="/html/ome2.css" />
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<TMPL_VAR name=apiKey>"
+      type="text/javascript"></script>
+    <script type="text/javascript" src="/JavaScript/ImageOverlay.js"></script>
+	<script type="text/javascript" src="/JavaScript/sarissa.js"></script>
+	<script type="text/javascript" src="/JavaScript/ome2.js"></script>
+    <script type="text/javascript">
+    //<![CDATA[
+	//document.getElementById("debugMsg").innerHTML = 
+	//	document.getElementById("debugMsg").innerHTML + 
+	//	"Debug message here";
+
+
+	var BaltimoreLat = 39.3295;
+	var BaltimoreLong = -76.6167;
+	var lngPadding = 0.05;
+	var latPadding = 0.1;
+	var xmlhttp =  new XMLHttpRequest();
+	var map;
+	
+	// This data needs to come from OME-DS
+	var SessionKey = "";
+	var pixelsInfoList = <TMPL_VAR name=pixelsInfoList>
+	var imageScale = <TMPL_VAR name=imageScale>
+
+	function getPixelDims( pixelsInfo, SessionKey ) {
+		// Get Pixel dimensions from the image server.
+		var req_url = encodeURI(pixelsInfo.omeis_url+"?Method=PixelsInfo&PixelsID=" + pixelsInfo.id + "&SessionKey="+SessionKey);
+		xmlhttp.open('GET', req_url, false);
+		xmlhttp.send(null);
+		if (xmlhttp.readyState == 4) {
+			if (xmlhttp.status == 200) {
+				PixelInfoString = xmlhttp.responseText;
+				var getDims = new RegExp("Dims=(\\d+),(\\d+),(\\d+),(\\d+),(\\d+)");
+				var pix_dims = getDims.exec(PixelInfoString);
+				if (pix_dims == null) {
+					alert("OMEIS error! Could not get Pixel Info for pixels " + pixelsInfo.id );
+				} else {
+					pixelsInfo.sizeX = pix_dims[ 1 ];
+					pixelsInfo.sizeY = pix_dims[ 2 ];
+					pixelsInfo.sizeZ = pix_dims[ 2 ];
+					pixelsInfo.sizeC = pix_dims[ 2 ];
+					pixelsInfo.sizeT = pix_dims[ 2 ];
+
+			        var bounds = map.getBounds();
+					var southWest = bounds.getSouthWest();
+					var northEast = bounds.getNorthEast();		
+					var swPix = map.fromLatLngToDivPixel( southWest );
+					var nePix = map.fromLatLngToDivPixel( northEast );
+					
+					var lngDist = southWest.lng() - northEast.lng();
+					var pixelDistX = swPix.x - nePix.x;
+					var lngToPixRatio = lngDist / pixelDistX;
+					var latDist = northEast.lat() - southWest.lat();
+					var pixelDistY = swPix.y - nePix.y;
+					var latToPixRatio = latDist / pixelDistY;
+
+					pixelsInfo.lngStartWidth = pixelsInfo.sizeX * lngToPixRatio * imageScale;
+					pixelsInfo.latStartHeight = pixelsInfo.sizeY * latToPixRatio * imageScale;
+
+				}		
+			} else {
+				alert ("The server returned an error:\n"+xmlhttp.responseText);
+			}
+		} else {
+			alert ("The request failed - possibly your browser does not support requests?\n");
+		}
+	}
+
+    function load() {
+      if (GBrowserIsCompatible()) {
+        map = new GMap2(document.getElementById("map"));
+        map.addControl(new GLargeMapControl());        
+        map.setCenter(new GLatLng(BaltimoreLat, BaltimoreLong), 9);
+
+        // Display a OMEImage near the upper left corner of the map
+        var bounds = map.getBounds();
+        var southWest = bounds.getSouthWest();
+        var northEast = bounds.getNorthEast();
+        var lngDelta = (northEast.lng() - southWest.lng()) / 10;
+        var latDelta = (northEast.lat() - southWest.lat()) / 10;
+		var topLeft = new GLatLng(northEast.lat() - latDelta,
+                        southWest.lng() + lngDelta);
+        var tallestImgLat = 0;
+       for( pixelsIndex in pixelsInfoList ) {
+			pixelsInfo = pixelsInfoList[ pixelsIndex ];
+			getPixelDims( pixelsInfo, SessionKey )
+
+			// Move the image down a row if it will make the next image
+			// hang off the right of the screen
+			var nextImgLeftCorner = topLeft.lng() + lngPadding + pixelsInfo.lngStartWidth;
+            if( nextImgLeftCorner > northEast.lng() ) {
+            	topLeft = new GLatLng(topLeft.lat() - tallestImgLat - latPadding,
+                    southWest.lng() + lngDelta);
+            	tallestImgLat = 0;
+            }
+
+			// Make a new image & place it.
+			thisImage = new OMEImage(topLeft, pixelsInfo, imageScale );
+			map.addOverlay( thisImage );
+			
+			// Keep track of row's max height
+			if( tallestImgLat < thisImage.latHeight() ) {
+				tallestImgLat = thisImage.latHeight();
+			}
+			
+			// Move "cursor" to the right for the next image.
+			topLeft = new GLatLng(topLeft.lat() ,
+                        topLeft.lng() + lngPadding + thisImage.lngWidth());
+		}
+      }
+    }
+
+    //]]>
+    </script>
+  </head>
+
+  <body onload="load()" onunload="GUnload()">
+	<font class="ome_header_title">Looking at dataset "<TMPL_VAR NAME=name>" overlaid on Google maps.</font><br>
+    <div id="map" style="width: 100%; height: 600px"></div>
+    <div id="debugMsg"><TMPL_VAR name=debug></div>
+  </body>
+</html>
