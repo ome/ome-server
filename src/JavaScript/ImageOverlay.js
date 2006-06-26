@@ -43,10 +43,9 @@ with an expanding info box.
 // map. 
 function OMEImage(topLeft, pixelsInfo, startingScale ) {
   this.topLeftPoint = topLeft;
-  this.scaleRefPoint = new GLatLng(this.topLeftPoint.lat() + .1, this.topLeftPoint.lng() + .1);
   this.pixelsInfo = pixelsInfo;
   this.Scale = startingScale || 0.5;
-  this.currentDownloadedScale = this.Scale;
+  this.currentDownloadedScale = 0;
 }
 OMEImage.prototype = new GOverlay();
 
@@ -56,14 +55,8 @@ OMEImage.prototype.initialize = function(map) {
   // Create the DIV representing our OMEImage
   var div = document.createElement("div");
   div.style.position = "absolute";
+  div.style.background = "grey";
   
-  // Add an image within the DIV
-  this.thumbnail = document.createElement("img");
-	  this.thumbnail.src = this.pixelsInfo.omeis_url + "?Method=GetThumb" + 
-		"&PixelsID=" + this.pixelsInfo.id + "&Format=PNG" + 
-		"&Size=" + Math.round( this.pixelsInfo.sizeX * this.Scale ) + "," +  + Math.round( this.pixelsInfo.sizeY * this.Scale );
-  div.appendChild( this.thumbnail );
-
   // Make a marker for this image.
   // copying this to a temporary string lets me access it inside the function below.
   var tmpString = this.pixelsInfo.moreInfo;
@@ -81,10 +74,28 @@ OMEImage.prototype.initialize = function(map) {
   this.map_ = map;
   this.div_ = div;
 
-  // Calculate the width now to make it easier to calculate change in scale later.
+  // Construct the boundaries of this overlay. 
+  // Start with the pixel coordinates, 
   var c1 = this.map_.fromLatLngToDivPixel(this.topLeftPoint);
-  var c2 = this.map_.fromLatLngToDivPixel(this.scaleRefPoint);
+  var minX = c1.x;
+  var minY = c1.y;
+  var maxX = minX + Math.round( this.pixelsInfo.sizeX * this.Scale );
+  var maxY = minY + Math.round( this.pixelsInfo.sizeY * this.Scale );
+  // Convert to lat & lng
+  var SW = this.map_.fromDivPixelToLatLng( new GPoint( minX, maxY ) );
+  var NE = this.map_.fromDivPixelToLatLng( new GPoint( maxX, minY ) );
+  this.bounds = new GLatLngBounds( SW, NE );
+  this.div_.style.width = Math.round( this.pixelsInfo.sizeX * this.Scale ) + "px";
+  this.div_.style.height = Math.round( this.pixelsInfo.sizeY * this.Scale ) + "px";
+
+  // Calculate the width now to make it easier to calculate change in scale later.
+  var c2 = this.map_.fromLatLngToDivPixel(this.bounds.getNorthEast());
   this.OrigNumericWidth = Math.abs(c2.x - c1.x) / this.Scale;
+
+  // Add a placeholder image within the DIV
+  this.thumbnail = document.createElement("img");
+  this.thumbnail.src = '/images/one_transparent_pixel.gif';
+  div.appendChild( this.thumbnail );
 
 }
 
@@ -95,52 +106,63 @@ OMEImage.prototype.remove = function() {
 
 // Copy our data to a new OMEImage
 OMEImage.prototype.copy = function() {
-  return new OMEImage(this.bounds_, this.weight_, this.color_,
-					   this.backgroundColor_, this.opacity_);
+  return new OMEImage(topLeft, pixelsInfo, startingScale );
 }
 
 // Redraw the OMEImage based on the current projection and zoom level
 OMEImage.prototype.redraw = function(force) {
-  // We only need to redraw if the coordinate system has changed
-  if (!force) return;
+
+  var greyOutAtWidth = 20;
 
   // Calculate the DIV coordinates of two opposite corners of our bounds to
   // get the size and position of our OMEImage
   var c1 = this.map_.fromLatLngToDivPixel(this.topLeftPoint);
-  var c2 = this.map_.fromLatLngToDivPixel(this.scaleRefPoint);
+  var c2 = this.map_.fromLatLngToDivPixel(this.bounds.getNorthEast());
+  this.NumericWidth = Math.abs(c2.x - c1.x);
+  this.Scale = this.NumericWidth / this.OrigNumericWidth;
+  this.width = Math.round( this.pixelsInfo.sizeX * this.Scale );
+  this.height = Math.round( this.pixelsInfo.sizeY * this.Scale );
+
 
   // Position our DIV based on the DIV coordinates of our bounds
   this.div_.style.left = c1.x + "px";
   this.div_.style.top = c1.y + "px";
+  this.div_.style.width = this.width + "px";
+  this.div_.style.height = this.height + "px";
+  this.thumbnail.width = this.width;
+  this.thumbnail.height = this.height;	 
 
-  this.NumericWidth = Math.abs(c2.x - c1.x);
-  this.Scale = this.NumericWidth / this.OrigNumericWidth;
-
-  // Update the image.
-  // If we need a higher resolution, update from OMEIS
-  // If we need a lower resolution, downsample.
-  if( this.Scale > this.currentDownloadedScale ) {
+  // update from OMEIS if we need a higher resolution and we're in the current viewing window
+  var viewWindow = this.map_.getBounds();
+  if( (this.width >= greyOutAtWidth ) && 
+      ( this.Scale > this.currentDownloadedScale ) &&  
+        viewWindow.intersects( this.bounds ) ) {
 	  // update from omeis
-	  this.div_.removeChild( this.thumbnail );
+	  if( this.thumbnail ) this.div_.removeChild( this.thumbnail );
 	  this.thumbnail = document.createElement("img");
 	  this.thumbnail.src = this.pixelsInfo.omeis_url + "?Method=GetThumb" + 
 		"&PixelsID=" + this.pixelsInfo.id + "&Format=JPEG" + 
-		"&Size=" + Math.round( this.pixelsInfo.sizeX * this.Scale ) + "," +  + Math.round( this.pixelsInfo.sizeY * this.Scale );
+		"&Size=" + this.width + "," +  + this.height;
 
 	  this.div_.appendChild( this.thumbnail );
 	  this.currentDownloadedScale = this.Scale;
-  } else {
-	  // Redraw at lower Res.
-	  this.thumbnail.width = Math.round( this.pixelsInfo.sizeX * this.Scale );
-	  this.thumbnail.height = Math.round( this.pixelsInfo.sizeY * this.Scale );	 
   }
+  if( this.width < greyOutAtWidth ) {
+	  if( this.thumbnail ) this.div_.removeChild( this.thumbnail );
+	  this.thumbnail = document.createElement("img");
+      this.thumbnail.src = '/images/one_transparent_pixel.gif';
+      this.div_.appendChild( this.thumbnail );
+      this.currentDownloadedScale = 0;
+  }
+  
+
 }
 
 OMEImage.prototype.lngWidth = function() {
   var c1 = this.map_.fromLatLngToDivPixel(this.topLeftPoint);
-  var c2 = this.map_.fromLatLngToDivPixel(this.scaleRefPoint);
+  var c2 = this.map_.fromLatLngToDivPixel(this.bounds.getNorthEast());
 
-  var lngDist = this.topLeftPoint.lng() - this.scaleRefPoint.lng();
+  var lngDist = this.topLeftPoint.lng() - this.bounds.getNorthEast().lng();
   var pixelDist = c1.x - c2.x;
   var lngToPixRatio = lngDist / pixelDist;
   
@@ -149,10 +171,10 @@ OMEImage.prototype.lngWidth = function() {
 }
 
 OMEImage.prototype.latHeight = function() {
-  var c1 = this.map_.fromLatLngToDivPixel(this.topLeftPoint);
-  var c2 = this.map_.fromLatLngToDivPixel(this.scaleRefPoint);
+  var c1 = this.map_.fromLatLngToDivPixel(this.bounds.getSouthWest());
+  var c2 = this.map_.fromLatLngToDivPixel(this.bounds.getNorthEast());
 
-  var latDist = this.topLeftPoint.lat() - this.scaleRefPoint.lat();
+  var latDist = this.bounds.getSouthWest().lat() - this.bounds.getNorthEast().lat();
   var pixelDist = c1.y - c2.y;
   var latToPixRatio = Math.abs( latDist / pixelDist );
   
