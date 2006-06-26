@@ -111,10 +111,10 @@ picomeis_get_box(void *vp, int *ox, int *oy, int *dx, int *dy)
 {
 CompositeSpec *theOMEisPic = (CompositeSpec *)vp;
 
-	*ox = 0;
-	*oy = 0;
-	*dx = theOMEisPic->thePixels->head->dx;
-	*dy = theOMEisPic->thePixels->head->dy;
+	*ox = theOMEisPic->x0;
+	*oy = theOMEisPic->y0;
+	*dx = (theOMEisPic->x1 - theOMEisPic->x0) + 1;
+	*dy = (theOMEisPic->y1 - theOMEisPic->y0) + 1;
 }
 
 static Pixel1

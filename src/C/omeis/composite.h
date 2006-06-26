@@ -47,6 +47,7 @@ typedef struct {
 	PixelsRep *thePixels;
 	int theZ, theT;
 	int sizeX, sizeY;
+	int x0, y0, x1, y1;
 	char isRGB;
 	size_t nPix;
 	channelSpecType RGBAGr[5];

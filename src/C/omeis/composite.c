@@ -134,6 +134,10 @@ CompositeSpec theComposite;
 	}
 	theComposite.theZ = theZ;
 	theComposite.theT = theT;
+
+	theComposite.x0 = theComposite.y0 = 0;
+	theComposite.x1 = myPixels->head->dx - 1;
+	theComposite.y1 = myPixels->head->dy - 1;
 	
 	if ( (theParam = get_param (param,"SetThumb")) )
 		setThumb=1;
@@ -201,6 +205,26 @@ CompositeSpec theComposite;
 		theChannel->isOn = 1;
 		theChannel->basis = levelBasis;
 		theChannel->time = theT;
+	}
+
+	if ( (theParam = get_param (param,"ROI")) ) {
+		sscanf (theParam,"%d,%d,%d,%d",
+			&(theComposite.x0),&(theComposite.y0),
+			&(theComposite.x1),&(theComposite.y1));
+		if (theComposite.x0 >= myPixels->head->dx  || theComposite.x0 < 0 )
+			theComposite.x0 = 0;
+		if (theComposite.y0 >= myPixels->head->dy  || theComposite.y0 < 0 )
+			theComposite.y0 = 0;
+		if (theComposite.x1 >= myPixels->head->dx  || theComposite.x1 < 0 )
+			theComposite.x1 = myPixels->head->dx - 1;
+		if (theComposite.y1 >= myPixels->head->dy  || theComposite.y1 < 0 )
+			theComposite.y1 = myPixels->head->dy - 1;
+		if (theComposite.x0 > theComposite.x1)
+			theComposite.x0 = 0;
+		if (theComposite.y0 > theComposite.y1)
+			theComposite.y0 = 0;
+		theComposite.sizeX = (theComposite.x1 - theComposite.x0) + 1;
+		theComposite.sizeY = (theComposite.y1 - theComposite.y0) + 1;
 	}
 
 	if ( (theParam = get_param (param,"Size")) ) {
