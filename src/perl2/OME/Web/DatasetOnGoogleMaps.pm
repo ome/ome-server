@@ -111,7 +111,7 @@ sub createOMEPage {
 	$tmpl->param(
 		pixelsInfoList => $pixelsInfoList,
 		name => $dataset->name(),
-		imageScale => $scaleFactor, #.05, #1200000 / $datasetArea, 
+		imageScale => $scaleFactor, 
 		# You must register at http://www.google.com/apis/maps/signup.html to 
 		# receive a key for your domain.
 		# lgopt2: ABQIAAAAdZqyUVgsyagVhMg3j_sQrBRYtPFswSmyvycW8u65UfdBSplTthQEu3mX7aTyqjIsIyDc0SorhBda_Q
