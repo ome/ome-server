@@ -73,7 +73,7 @@ sub new {
 	
 	$self->{ _default_Length } = 25;
 	# Set a 30 second timeout
-	$self->timeout(30);
+	$self->timeout(60);
 
 	return $self;
 }
