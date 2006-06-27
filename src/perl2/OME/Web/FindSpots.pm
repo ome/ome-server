@@ -103,18 +103,25 @@ sub getPageBody {
 		} else {
 			$h{FadeSpotsTheT} = undef;
 		}
-
+		
+		
         # Create a user input MEX for the user inputs
 		my $attributeType="FindSpotsInputs";
         my $mex = OME::Tasks::AnnotationManager->
           annotateGlobal($attributeType,\%h);
         my $cmanager = OME::Tasks::ChainManager->new();
-        my $chain = $cmanager->getChain('Find and track spots');
+        my $chain;
+        if ( $cgi->param( 'DoTrackSpots' ) ) {
+			$chain = $cmanager->getChain('Find and track spots');
+		} else {
+			$chain = $cmanager->getChain('Find spots');
+		}
         my $node  = $cmanager->getNode($chain,'Find spots');
         my $input = $cmanager->getFormalInput($chain,$node,'Parameters');
         my $user_inputs = { $input->id() => $mex };
         my $chain_execution;
         my $reuseResults = $cgi->param( 'DoNotReuseResults' );
+
         eval {
             $chain_execution = OME::Analysis::Engine->
                 executeChain($chain,$session->dataset(),$user_inputs, undef, ReuseResults => $reuseResults );
@@ -258,7 +265,10 @@ sub print_form{
 		$cgi->Tr(\@tableRows)
 		);
 	$html.="<br>";
-	$html.=$cgi->submit(-name=>'Execute',-value=>'Run FindSpots');
+	$html.=$cgi->checkbox(-name=>'DoTrackSpots',-checked=>1,-label=>'Run tracking algorithm (Track spots)');
+	$html.="<br>";
+	$html.="<br>";
+	$html.=$cgi->submit(-name=>'Execute');
 	$html.=$cgi->endform;
 
 	return $html;
