@@ -145,6 +145,7 @@ sub open {
     my ($self,$mode) = @_;
     die "Cannot open on OME::Image::Server::File for writing"
       if exists $self->WRITE_MODES()->{$mode};
+    $self->setCurrentPosition(0);
     return 1;
 }
 
