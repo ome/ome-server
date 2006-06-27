@@ -2176,7 +2176,10 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 	}
 
 	/* Wait for a read lock */
-	lockRepFile (myFile->fd_rep, 'r', 0LL, 0LL);	
+	lockRepFile (myFile->fd_rep, 'r', 0LL, 0LL);
+	
+	/* Shush the warnings */
+	TIFFSetWarningHandler(NULL);
 	
     if (! (tiff = TIFFFdOpen(myFile->fd_rep, myFile->path_rep, "r")) ) {
 		OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.",
@@ -2193,6 +2196,7 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
 	TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
 	TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &samples_per_pixel);
+	if (samples_per_pixel == 0) samples_per_pixel = 1;
 	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &read_bitspp);
 	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &pc);
 	TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC, &is_rgb);  
@@ -2206,8 +2210,8 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 		write_bytespp = 4;
 		
 	/* sanity check */
-	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || (samples_per_pixel > 1 && is_rgb != PHOTOMETRIC_RGB) || write_bytespp != (uint16)(head->bp) ||
-		(is_rgb != PHOTOMETRIC_RGB && pc != PLANARCONFIG_CONTIG ) ){
+	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || write_bytespp != (uint16)(head->bp) ||
+		(is_rgb != PHOTOMETRIC_RGB && pc != PLANARCONFIG_SEPARATE && samples_per_pixel > 1) ){
 			int nc=0;
 			
 			TIFFClose(tiff);
@@ -2215,8 +2219,8 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 				(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID);
 			OMEIS_DoError ("\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
 			OMEIS_DoError ("\tSamples per pixel: Pixels (%d) TIFF (%d)",(int)1,(int)samples_per_pixel);
-			OMEIS_DoError ("\tBits per sample:   Pixels (%d) TIFF (%d)",(int)head->bp*8,(int)read_bitspp);
-			OMEIS_DoError ("\tPlanar Config:     Pixels (%d) TIFF (%d)",(int)PLANARCONFIG_CONTIG,(int)pc);
+			OMEIS_DoError ("\tBits per sample:   Pixels (%d) TIFF (%d)",(int)head->bp*8,(int)write_bytespp);
+			OMEIS_DoError ("\tPlanar Config:     Pixels (%d) TIFF (%d)",(int)PLANARCONFIG_SEPARATE,(int)pc);
 			return (0);
 	}
 
@@ -2255,9 +2259,9 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Not enough samples (%d) per pixel in RGB image.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp, samples_per_pixel);
 		}
 
-		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, 0, theT);
-		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, 1, theT);
-		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, 2, theT);
+		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, theC + 0, theT);
+		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, theC + 1, theT);
+		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, theC + 2, theT);
 		myPixels->IO_buf = write_buf_rgb;
 		pix_offset = 0;
 		
@@ -2284,103 +2288,59 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 		free(write_buf_rgb); 
 	
 	
-	} else if (is_rgb == PHOTOMETRIC_RGB && pc == PLANARCONFIG_SEPARATE) {
-		int red_nOut = 0;
-		int green_nOut = 0;
-		int blue_nOut = 0;
-		
-		/* check channels */
-		if (samples_per_pixel < 3) {
-			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Not enough samples (%d) per pixel in RGB image.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp, samples_per_pixel);
-		} 
-		
-		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, 0, theT);
-		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, 1, theT);
-		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, 2, theT);
-		
-		myPixels->IO_buf = read_buf;
-		myPixels->IO_buf_off = 0;
-		
-		/* red channels */
-		pix_offset = red_offset;
-		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && red_nOut<(head->dx)*(head->dy); strip++) {
-			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
-			nPix = (8*stripSize) / read_bitspp;
-			myPixels->IO_buf_off = 0;
-			
-			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-			pix_offset += stripSize;
-			red_nOut += nOut;
-		}
-		
-		/* green channels */
-		pix_offset = green_offset;
-		for (; strip<TIFFNumberOfStrips(tiff) && green_nOut<(head->dx)*(head->dy); strip++) {
-			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
-			nPix = (8*stripSize) / read_bitspp;
-			myPixels->IO_buf_off = 0;
-			
-			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-			pix_offset += stripSize;
-			green_nOut += nOut;
-		}
-		
-		/* blue channels */
-		pix_offset = blue_offset;
-		for (; strip<TIFFNumberOfStrips(tiff) && blue_nOut<(head->dx)*(head->dy); strip++) {
-			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
-			nPix = (8*stripSize) / read_bitspp;
-			myPixels->IO_buf_off = 0;
-			
-			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-			pix_offset += stripSize;
-			blue_nOut += nOut;
-		}
-		
-		if ((red_nOut != green_nOut) || (blue_nOut != green_nOut)) {
-			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Number of Red (%d) Green (%d) and Blue (%d) pixels is non equal.\n",
-							red_nOut,green_nOut, blue_nOut);
-			_TIFFfree(read_buf);
-			TIFFClose(tiff);
-			return (0);		
-		}
-		
-		nIO = red_nOut;
-		
-	/* do we need to do bit unpacking */
-	} else if (read_bitspp % 8 == 0) {
-		myPixels->IO_buf = read_buf;
-		myPixels->IO_buf_off = 0;
-		pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
-		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && nIO<(head->dx)*(head->dy); strip++) {
-			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
-			nPix = (8*stripSize) / read_bitspp;
-			myPixels->IO_buf_off = 0;
-			
-			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-			pix_offset += stripSize;
-			nIO += nOut;
-		}
-	/* its a standard one channel tiff */
 	} else {
-		myPixels->IO_buf = write_buf_unpack;
-		myPixels->IO_buf_off = 0;
-		pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
-		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && nIO<(head->dx)*(head->dy); strip++) {
-			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
-			nPix = (stripSize*8) / read_bitspp;
+		int thePlane = 0;
+		unsigned long plane_nOut=0;
+
+		strip = 0;
+
+		for (thePlane = 0; thePlane < samples_per_pixel; thePlane++) {
+			pix_offset = GetOffset (myPixels, 0, 0, theZ, theC + thePlane, theT);
+
+			if (read_bitspp % 8 == 0)
+				myPixels->IO_buf = read_buf;
+			else
+				myPixels->IO_buf = write_buf_unpack;
+			
 			myPixels->IO_buf_off = 0;
+			plane_nOut = 0;
+
+			while ( strip < TIFFNumberOfStrips(tiff) && plane_nOut < (head->dx*head->dy) ) {
+				stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+				nPix = (8*stripSize) / read_bitspp;
+				myPixels->IO_buf_off = 0;
+							
+				/* unpack bits to write_buf from read_buf if necessary */
+				if (read_bitspp % 8 != 0)
+					unpackBits((uint8*) read_buf, read_bitspp, write_buf_unpack, write_bytespp, nPix);
+
+				nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+				
+				if (read_bitspp % 8 != 0)
+					pix_offset += nPix*write_bytespp;
+				else
+					pix_offset += stripSize;
+
+				plane_nOut += nOut;
+				strip++;
+			}
 			
-			/* unpack bits to write_buf from read_buf*/
-			unpackBits((uint8*) read_buf, read_bitspp, write_buf_unpack, write_bytespp, nPix);
-			
-			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-			pix_offset += nPix*write_bytespp;
-			nIO += nOut;
+			if ( plane_nOut != (head->dx*head->dy) ) {
+				OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Number of Pixels in plane %d (%d) does not match expected number (%d).\n",
+								thePlane,plane_nOut, (head->dx*head->dy));
+				_TIFFfree(read_buf);
+				TIFFClose(tiff);
+				if (read_bitspp % 8 != 0) free(write_buf_unpack);
+				return (0);		
+			}
 		}
-		free(write_buf_unpack);
+
+		if (read_bitspp % 8 != 0) free(write_buf_unpack);
+		
+		nIO = plane_nOut;
 	}
-	
+
+
 	myPixels->doSwap = doSwap;
 	_TIFFfree(read_buf);
 	TIFFClose(tiff);
