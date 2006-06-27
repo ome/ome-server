@@ -41,6 +41,7 @@ our $VERSION_STRING = '2.5.0';
 
 use Config;
 use Log::Agent;
+use Carp;
 our $THREADS_AVAILABLE;
 our $BIG_ENDIAN;
 
@@ -82,6 +83,13 @@ if (exists $ENV{OMEIS_DEBUG} && $ENV{OMEIS_DEBUG} > 0) {
 if (exists $ENV{OME_WARN_LSID_COLLISION} && $ENV{OME_WARN_LSID_COLLISION} > 0) {
 	$MESSAGES{LSID_COLLISION} = 1;
 }
+
+if (exists $ENV{OME_TRACEBACK} && $ENV{OME_TRACEBACK} > 0) {
+	$SIG{__DIE__} = sub {
+		confess $!;
+	};
+}
+
 
 =head1 NAME
 
