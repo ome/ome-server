@@ -220,6 +220,17 @@ sub finishImport {
     $self = undef;
 }
 
+sub abortImageImport {
+    my $class = shift;
+    die "No active import!" unless defined $self;
+
+    my $image = shift;
+    my $image_id = ref($image)? $image->id(): $image;
+	delete $self->{image_import}->{$image_id};
+	delete $self->{image_files}->{$image_id};
+	
+}
+
 sub forgetImport {
     my $class = shift;
 #    die "No active import!" unless defined $self;
