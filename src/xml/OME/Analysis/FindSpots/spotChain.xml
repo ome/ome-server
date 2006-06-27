@@ -41,6 +41,43 @@
    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
 
   <AnalysisChain
+     Name="Find spots" Locked="false">
+
+    <Nodes>
+	  <Node NodeID = "Files" ProgramName = "Original files"/>
+	  <Node NodeID = "Import" ProgramName = "Image import"/>
+	  <Node NodeID="StackStats"
+            ProgramName="Stack statistics (image server)"/>
+      <Node NodeID="Find" ProgramName="Find spots"/>
+    </Nodes>
+
+    <Links>
+      <Link FromNodeID="Files" FromOutputName="Files"
+            ToNodeID="Import" ToInputName="Files"/>
+
+	  <Link
+         FromNodeID="Import" FromOutputName="Pixels"
+         ToNodeID="StackStats" ToInputName="Pixels"/>
+
+      <Link FromNodeID="Import" FromOutputName="Pixels"
+            ToNodeID="Find" ToInputName="Pixels"/>
+
+      <Link FromNodeID="StackStats" FromOutputName="Minima"
+            ToNodeID="Find" ToInputName="Stack minima"/>
+      <Link FromNodeID="StackStats" FromOutputName="Maxima"
+            ToNodeID="Find" ToInputName="Stack maxima"/>
+      <Link FromNodeID="StackStats" FromOutputName="Mean"
+            ToNodeID="Find" ToInputName="Stack means"/>
+      <Link FromNodeID="StackStats" FromOutputName="Geomean"
+            ToNodeID="Find" ToInputName="Stack geomeans"/>
+      <Link FromNodeID="StackStats" FromOutputName="Sigma"
+            ToNodeID="Find" ToInputName="Stack sigmas"/>
+	 <Link FromNodeID="StackStats" FromOutputName="Geosigma"
+            ToNodeID="Find" ToInputName="Stack geosigmas"/>
+    </Links>
+  </AnalysisChain>
+
+  <AnalysisChain
      Name="Find and track spots" Locked="false">
 
     <Nodes>
