@@ -231,17 +231,17 @@ sub importFiles {
 	if( ref( $filesRef ) eq 'HASH' ) {
 		my %fullPaths;
 		foreach my $path( keys( %$filesRef ) ) {
-			$fullPaths{ $filesRef->{ $path }->getFileID() } = $path;
+			$fullPaths{ $filesRef->{ $path }->getFileID() } = $path if $filesRef->{ $path };
 		}
 		$filesRef = [ values %$filesRef ];
 		OME::ImportEngine::AbstractFormat->fullPaths( \%fullPaths );
 	}
 
     my %files;
-    $self->{nFiles} = scalar (@$filesRef);
     foreach my $file (@$filesRef) {
-        $files{$file->getFilename()} = $file;
+        $files{$file->getFilename()} = $file if $file;
     }
+    $self->{nFiles} = scalar (keys %files);
 
     # Find the formats that are known to the system.
 
@@ -254,7 +254,7 @@ sub importFiles {
     # Instantiate all of the format classes and retrieve the groups for
     # each.
 	my $start_time = [gettimeofday()];
-	
+
     foreach my $format_class (@$formats) {
 	last
 	    unless (scalar(keys %files) > 0);
