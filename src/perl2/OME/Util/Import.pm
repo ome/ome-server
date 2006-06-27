@@ -122,8 +122,8 @@ sub import {
     my @file_names;
     foreach my $filename (@ARGV) {
     	push (@file_names,$filename)
-    		if -f $filename and -r $filename and -s $filename;
-    	push (@file_names,bsd_glob("$filename/*")) if -d $filename and -r $filename;
+    		if $filename and -f $filename and -r $filename and -s $filename;
+    	push (@file_names,bsd_glob("$filename/*")) if $filename and -d $filename and -r $filename;
     }
 	die "No valid files or directories specified for import.\n" unless scalar @file_names;
 

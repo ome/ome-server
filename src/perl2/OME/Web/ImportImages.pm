@@ -280,9 +280,9 @@ sub __getImportBody {
 	my @import_files_q;
 	foreach (@import_q) {
 		push (@import_files_q, $_)
-			if -f $_ and -r $_ and -s $_;
+			if $_ and -f $_ and -r $_ and -s $_;
 		push (@import_q,bsd_glob("$_/*"))
-			if -d $_ and -r $_;
+			if $_ and -d $_ and -r $_;
 	}
 	
 	OME::Tasks::ImageTasks::forkedImportFiles($import_d, \@import_files_q);
