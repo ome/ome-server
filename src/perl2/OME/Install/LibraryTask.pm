@@ -124,7 +124,9 @@ my @libraries = ( {
 		# We need tiff >= 3.5.7 to be able to check for LZW support at runtime
 		# So, this will just fail horribly on libtiffs that don't even let you do this much.
 		get_library_version => q(
-		 	#include "tiffvers.h"
+			#include "tiff.h"
+			#include "tiffio.h"
+			#include "tiffvers.h"
 				/* Semi-ganked from GAIM (http://gaim.sourceforge.net/) cvs rc line parser
 				 * src/gaimrc.c -- parse_line()
 				 * Thanks to ChipX86 for the great idea, this version stub rocks.
