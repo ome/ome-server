@@ -42,10 +42,8 @@ import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.DataFactory;
 import org.openmicroscopy.ds.Criteria;
 import org.openmicroscopy.ds.InstantiatingCaller;
-import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.DuplicateObjectException;
-import org.openmicroscopy.ds.RemoteServerErrorException;
 import org.openmicroscopy.ds.dto.Module;
 import org.openmicroscopy.ds.dto.AnalysisNode;
 import org.openmicroscopy.ds.dto.FormalInput;
@@ -56,7 +54,6 @@ import org.openmicroscopy.ds.dto.ActualInput;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.dto.Image;
 
-import java.lang.Exception;
 
 /**
  *

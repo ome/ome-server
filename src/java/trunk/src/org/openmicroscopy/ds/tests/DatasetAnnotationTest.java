@@ -41,7 +41,6 @@ import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.ServerVersion;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.dto.Project;
-import org.openmicroscopy.ds.st.DatasetAnnotation;
 
 
 /**

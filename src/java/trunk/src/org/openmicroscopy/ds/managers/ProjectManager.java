@@ -42,7 +42,6 @@ import java.util.ArrayList;
 
 import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.RemoteCaller;
-import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.dto.Project;
 import org.openmicroscopy.ds.dto.Dataset;

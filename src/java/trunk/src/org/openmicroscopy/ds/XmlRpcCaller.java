@@ -44,9 +44,7 @@ package org.openmicroscopy.ds;
 
 import java.net.URL;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.Hashtable;
@@ -359,7 +357,7 @@ public class XmlRpcCaller
                                          minor.intValue(),
                                          patch.intValue());
             } else {
-                throw new RemoteServerErrorException("Server version returned was not of the right type: "+result.getClass());
+                throw new RemoteServerErrorException("Server version returned was not of the right type: "+result.getClass()+" ("+result+")");
             }
         }
     }

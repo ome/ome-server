@@ -64,7 +64,7 @@ public class RemoteImportManager
     protected DataFactory factory = null;
     protected ConfigurationManager config = null;
 
-    protected static FieldsSpecification MEX_STATUS_SPEC;
+    protected static final FieldsSpecification MEX_STATUS_SPEC;
     static
     {
         MEX_STATUS_SPEC = new FieldsSpecification();

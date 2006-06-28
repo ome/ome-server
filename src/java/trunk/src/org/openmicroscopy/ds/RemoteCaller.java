@@ -51,17 +51,17 @@ package org.openmicroscopy.ds;
 public interface RemoteCaller
     extends DataService
 {
-    public void login(String username, String password);
+    void login(String username, String password);
 
-    public void logout();
+    void logout();
 
-    public String getSessionKey();
+    String getSessionKey();
 
     /**
      * Sets the session key directly to a known key string.
      * No verification or error checking is performed on the key.
      */
-    public void setSessionKey(String key);
+    void setSessionKey(String key);
 
     /**
      * Returns the version of the server which this
@@ -69,18 +69,18 @@ public interface RemoteCaller
      * ServerVersion} class can be used to compare two versions,
      * allowing clients to check for compatible server versions.
      */
-    public ServerVersion getServerVersion();
+    ServerVersion getServerVersion();
 
     /**
      * Invoke an arbitrary remote procedure.
      */
-    public Object invoke(String procedure, Object[] params);
+    Object invoke(String procedure, Object[] params);
 
     /**
      * Invoke a remote method via the <code>dispatch</code> procedure.
      * The method can receive an arbitrary number of parameters.
      */
-    public Object dispatch(String method, Object[] params);
+    Object dispatch(String method, Object[] params);
 
     /**
      * Invoke a remote method via the <code>dispatch</code> procedure.
@@ -89,10 +89,10 @@ public interface RemoteCaller
      * typecast into an {@link Integer}.  If it can't, a {@link
      * RemoteServerErrorException} is thrown.
      */
-    public Integer dispatchInteger(String method, Object[] params);
+    Integer dispatchInteger(String method, Object[] params);
 
-    public void startProfiler();
-    public void stopProfiler();
-    public void resetProfiler();
-    public long getProfiledMilliseconds();
+    void startProfiler();
+    void stopProfiler();
+    void resetProfiler();
+    long getProfiledMilliseconds();
 }

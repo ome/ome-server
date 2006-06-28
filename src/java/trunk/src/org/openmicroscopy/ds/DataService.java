@@ -38,8 +38,8 @@ package org.openmicroscopy.ds;
 
 public interface DataService
 {
-    public void initializeService(DataServices services);
+    void initializeService(DataServices services);
 
-    public DataServices getDataServices();
+    DataServices getDataServices();
 
 }

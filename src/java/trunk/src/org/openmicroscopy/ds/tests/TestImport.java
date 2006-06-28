@@ -171,12 +171,12 @@ public class TestImport
             // (Obviously, this would usually come from parsing the
             // original file as described above.)
 
-            int SIZE_X = 64;
-            int SIZE_Y = 64;
-            int SIZE_Z = 3;
-            int SIZE_C = 1;
-            int SIZE_T = 1;
-            int BYTES_PER_PIX = 1;
+            int sizeX = 64;
+            int sizeY = 64;
+            int sizeZ = 3;
+            int sizeC = 1;
+            int sizeT = 1;
+            int bytesPerPix = 1;
 
             // Ask the ImportManager for a MEX for this image's
             // metadata.
@@ -190,8 +190,8 @@ public class TestImport
 
 	    System.out.println("Got Image import Mex");
             Pixels pix = pf.newPixels(r,image,ii,
-                                      SIZE_X,SIZE_Y,SIZE_Z,SIZE_C,SIZE_T,
-                                      BYTES_PER_PIX,false,false);
+                                      sizeX,sizeY,sizeZ,sizeC,sizeT,
+                                      bytesPerPix,false,false);
             System.err.println("Created pixels");
 
             /*---------------------------------------------------------*
@@ -201,7 +201,7 @@ public class TestImport
              * pixels using a byte array.             
              *---------------------------------------------------------*/
 
-            byte[] buf = new byte[SIZE_X*SIZE_Y*BYTES_PER_PIX];
+            byte[] buf = new byte[sizeX*sizeY*bytesPerPix];
 
             // Use the Arrays class to fill in the byte array with a
             // different pixel value for each Z-section, then use the
@@ -237,7 +237,7 @@ public class TestImport
 
             System.out.println("Creating PGI thumbnail...");
             pf.setThumbnail(pix,CompositingSettings.
-                            createDefaultPGISettings(SIZE_Z,SIZE_C,SIZE_T));
+                            createDefaultPGISettings(sizeZ,sizeC,sizeT));
 
             // This next piece of metadata is necessary for all
             // images; otherwise, the standard OME viewers will not be
