@@ -42,7 +42,7 @@ function [signature_vector] = sig_chain_MATLAB (im);
 vec_0 = concat_outputs (ChebyshevFourierTransform(im));
 vec_1 = concat_outputs (ChebyshevFourierTransform(FrequencySpace2Pixels(FourierTransform(single(im)))));
 vec_2 = concat_outputs (ChebyshevStatistics(single(im)));
-vec_3 = concat_outputs (ChebyshevStatistics(FrequencySpace2Pixels(FourierTransform((im)))));
+vec_3 = concat_outputs (ChebyshevStatistics(FrequencySpace2Pixels(FourierTransform(single(im)))));
 
 vec_4 = vd_Comb4Moments(concat_outputs (CombFirst4Moments(single(im))));
 vec_5 = vd_Comb4Moments(concat_outputs (CombFirst4Moments(ChebyshevTransform(single(im)))));
