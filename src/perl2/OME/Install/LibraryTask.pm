@@ -506,8 +506,10 @@ sub execute {
 	    	my $finkIncs = '';
 	    	$finkIncs = '-I/sw/include'
 	    		if( $OSNAME eq "darwin" and -e '/sw/include/' );
-			@error = `$CC $finkIncs $source_file -o $binary 2>&1`;
-
+	    	my $darwinPortsIncs = '';
+	    	$darwinPortsIncs = '-I/opt/local/include'
+	    		if( $OSNAME eq "darwin" and -e '/opt/local/include/' );	    	
+			@error = `$CC $finkIncs $darwinPortsIncs $source_file -o $binary 2>&1`;
 	    	if ($? == 0) {
 				$library->{version} = `$binary 2>&1`;
 	    
@@ -626,7 +628,10 @@ sub check {
 	    	my $finkIncs = '';
 	    	$finkIncs = '-I/sw/include'
 	    		if( $OSNAME eq "darwin" and -e '/sw/include/' );
-			@error = `$CC $finkIncs $source_file -o $binary 2>&1`;
+	    	my $darwinPortsIncs = '';
+	    	$darwinPortsIncs = '-I/opt/local/include'
+	    		if( $OSNAME eq "darwin" and -e '/opt/local/include/' );	    	
+			@error = `$CC $finkIncs $darwinPortsIncs $source_file -o $binary 2>&1`;
 
 	    	if ($? == 0) {
 				$library->{version} = `$binary 2>&1`;
