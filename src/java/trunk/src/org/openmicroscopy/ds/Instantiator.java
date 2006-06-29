@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Vector;
 
 import org.openmicroscopy.ds.dto.MappedDTO;
 import org.openmicroscopy.ds.dto.AttributeDTO;
@@ -112,15 +113,15 @@ public class Instantiator
     {
         if (result == null)
             return null;
-	if (result instanceof String) {
-	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
-		s.length() ==0)
-		return null;
-	    else 
-		throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-	}
+        if (result instanceof String) {
+            String s = (String) result;
+            if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
+                s.length() ==0)
+                return null;
+            else
+                throw new RemoteServerErrorException("Invalid result type "+
+                                                     result.getClass());
+        }
         if (result instanceof Map)
         {
             Class dtoClass = getDTOClass(javaClass);
@@ -162,15 +163,14 @@ public class Instantiator
         if (result == null)
             return null;
 
-	if (result instanceof String) {
-	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
-		s.length() ==0)
-		return null;
-	    else 
-		throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-	}
+        if (result instanceof String) {
+            String s = (String) result;
+            if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 || s.length() ==0)
+                return null;
+            else
+                throw new RemoteServerErrorException("Invalid result type "+
+                                                     result.getClass());
+        }
         if (result instanceof Map)
         {
             Class dtoClass = getSemanticTypeClass(semanticType);
@@ -215,17 +215,16 @@ public class Instantiator
         if (result == null)
         {
             return null;
-        } 
-	if (result instanceof String) {
-	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
-		s.length() ==0)
-		return null;
-	    else 
-		throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-	}
-	if (result instanceof List) {
+        }
+        if (result instanceof String) {
+            String s = (String) result;
+            if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 || s.length() ==0)
+                return null;
+            else
+                throw new RemoteServerErrorException("Invalid result type "+
+                                                     result.getClass());
+        }
+        if (result instanceof List) {
             List list = (List) result;
 
             try
@@ -267,17 +266,16 @@ public class Instantiator
         if (result == null)
         {
             return null;
-        } 
-	if (result instanceof String) {
-	    String s = (String) result;
-	    if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 ||
-		s.length() ==0)
-		return null;
-	    else 
-		throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
-	}
-	if (result instanceof List) {
+        }
+        if (result instanceof String) {
+            String s = (String) result;
+            if (s.compareTo(MappedDTO.NULL_REFERENCE) == 0 || s.length() ==0)
+                return null;
+            else
+                throw new RemoteServerErrorException("Invalid result type "+
+                                                     result.getClass());
+        }
+        if (result instanceof List) {
             List list = (List) result;
 
             try
@@ -294,8 +292,10 @@ public class Instantiator
 
             return list;
         } else {
-            throw new RemoteServerErrorException("Invalid result type "+
-                                                 result.getClass());
+            // make a single-element list
+            Vector v = new Vector();
+            v.add(result);
+            return v;
         }
 
     }
