@@ -88,6 +88,13 @@ sub _renderData {
 			).( ( $cut_off > 0 ) ? '...' : '' );
 		}
 	}
+	if( exists $field_requests->{ 'CountImages' } ) {
+		foreach my $request ( @{ $field_requests->{ 'CountImages' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my @images = OME::Tasks::CategoryManager->getImagesInCategory( $obj );
+			$record{ $request_string } = scalar( @images );
+		}
+	}
 	
 	return %record;
 }
