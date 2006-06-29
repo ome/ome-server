@@ -11,7 +11,7 @@ thumbnail.s
 	<TMPL_IF NAME=/more_info_url>
 		<a href="<TMPL_VAR NAME=/more_info_url>">...</a>
 	</TMPL_IF>
-	<TMPL_LOOP NAME=/obj_loop/loop2>
+	<TMPL_LOOP NAME=/obj_loop/loop2/paging_limit-50>
 		<TMPL_VAR NAME=/object/render-map>
 	</TMPL_LOOP>
 <TMPL_ELSE>
