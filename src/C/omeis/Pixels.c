@@ -2196,7 +2196,7 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
 	TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
 	TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &samples_per_pixel);
-	if (samples_per_pixel == 0) samples_per_pixel = 1;
+	if (!samples_per_pixel) samples_per_pixel = 1;
 	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &read_bitspp);
 	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &pc);
 	TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC, &is_rgb);  
