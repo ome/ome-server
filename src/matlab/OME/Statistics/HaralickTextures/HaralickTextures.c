@@ -8,10 +8,10 @@
 //                            23 Nov 1998
 //
 //  Revisions:
-//  13 Sep 2003 T. Macura:  Modified for inclusion in OME.  Generalized to compute
+//  13 Sep 2004 T. Macura:  Modified for inclusion in OME.  Generalized to compute
 //     Haralick Features based on the image's co-occurrence matrix for any 
 //     specified distance and angle. Limits on image's quantisation level removed.
-//     Input is still limited to uin8 (i.e. 255 quantization levels).
+//     Input is still limited to uint8 (i.e. 255 quantization levels).
 //
 /////////////////////////////////////////////////////////////////////////*/
 
@@ -60,7 +60,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		mexErrMsgTxt("mb_texture requires the first input to be numeric\n") ;
 	
 	if (!mxIsUint8(prhs[0]))
-		mexCallMATLAB(1, &img, 1, prhs, "uint8");
+		mexCallMATLAB(1, &img, 1, prhs, "im2uint8_dynamic_range");
 	else
 		img = prhs[0];
 	

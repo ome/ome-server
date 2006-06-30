@@ -402,7 +402,7 @@
 		
           <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="uint8"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			  <Input><Scalar InputLocation="Texture Distance.Distance"/></Input>
 			  <Input><Scalar InputLocation="Texture Direction.Direction_Value"/></Input>
 			</FunctionInputs>
@@ -466,7 +466,7 @@
 		
           <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="uint8"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			  <Input><Scalar InputLocation="Texture Distance.Distance"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
