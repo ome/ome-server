@@ -31,7 +31,7 @@
 % each pixel as a magnitude and angle. The magnitude is the channel 0 of the 
 % resulting pixels set. The angle is channel 1.
 %
-function [outPixels] = Gradient(inPixels)
+function [outPixels] = ImageGradient(inPixels)
 
 % its only a plane
 inPixels = inPixels(:,:);
