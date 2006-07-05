@@ -126,57 +126,16 @@ function out = vd_TamuraTextures(in)
 out = [in(2) in(3) in(4) in(6) in(5) in(1)];
 
 %
-% helper function combines outputs from multiple outputs
+% helper function combines multiple function outputs into a single output vector
 %
-function concat = concat_outputs (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)
-
-if (nargin > 8)
-    error('concat_outputs only supports up to 8 arguments');
-end
- 
-if (nargin == 1)
-    concat = [straighten(arg1)];
-elseif (nargin == 2)
-    concat = [straighten(arg1) straighten(arg2)];
-elseif (nargin == 3)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3)];
-elseif (nargin == 4)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4)];
-elseif (nargin == 5)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5)];
-elseif (nargin == 6)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6)];
-elseif (nargin == 7)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7)];
-elseif (nargin == 8)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8)];
-elseif (nargin == 9)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9];
-elseif (nargin == 10)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10)];
-elseif (nargin == 11)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11)];
-elseif (nargin == 12)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12)];
-elseif (nargin == 13)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13)];
-elseif (nargin == 14)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13) straighten(arg14)];
-elseif (nargin == 15)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13) straighten(arg14) straighten(arg15)];
-elseif (nargin == 16)
-    concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13) straighten(arg14) straighten(arg15) straighten(arg16)]; 
+function concat = concat_outputs (varargin)
+N = nargin;
+concat = [];
+for i=1:N
+	vec = varargin{i};
+	% some vectors are row-oriented others are column-oriented.
+	% This fixes them all to be row oriented
+	vec = vec(:)';
+	concat = [concat vec];
 end
 concat = double(concat);
-
-%
-% some vectors are row-oriented others are column-oriented. This fixes them all to be column oriented
-%
-function out = straighten (in)
-[rows, columns] = size(in);
-if (rows < columns)
- 	out = in;
-else
-	out = in';
-end
-
