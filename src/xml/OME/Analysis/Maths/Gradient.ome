@@ -53,7 +53,7 @@
 		   ModuleName="Gradient"
 		   Category="Maths"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="Gradient"
+		   ProgramID="ImageGradient"
 		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7501">
 		  <Description>
@@ -82,7 +82,7 @@
 		   ModuleName="Gradient -&gt; DerivedPixels"
 		   Category="Maths.Typecasts"
 		   ModuleType="OME::Analysis::Modules::PPM::Gradient"
-		   ProgramID="Gradient"
+		   ProgramID=""
 		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7502">
 		  <Description>
