@@ -8,7 +8,7 @@
 % [273-320]    EXACT  CombFirst4Moments(FourierTransform((im)))
 % [321-368]    EXACT  CombFirst4Moments(WaveletSignatures((im)))
 % [369-416]    EXACT  CombFirst4Moments(WaveletSignatures(FourierTransform((im))))
-% [417-444]    10^-12 <15, 15.8> EdgeStatistics(Gradient((im)))
+% [417-444]    10^-12 <15, 15.8> EdgeStatistics(ImageGradient((im)))
 % [445-478]    10^-12 <15, 15.8> FeatureStatistics(GlobalThreshold(graythresh((im))))
 % [479-485]    EXACT  GaborTextureFilters((im))
 % [486-513]    10^-3  <5, 6.89> HaralickTexturesRI((im))
@@ -53,7 +53,7 @@ vec_7 = vd_Comb4Moments(concat_outputs (CombFirst4Moments(FrequencySpace2Pixels(
 vec_8 = vd_Comb4Moments(concat_outputs (CombFirst4Moments(WaveletSelector(WaveletSignatures(single(im))))));
 vec_9 = vd_Comb4Moments(concat_outputs (CombFirst4Moments(WaveletSelector(WaveletSignatures(FrequencySpace2Pixels(FourierTransform(single(im))))))));
 
-[EdgeArea,MagMean,MagMedian,MagVar,MagHist, DirecMean, DirecMedian,DirecVar,DirecHist,DirecHomo,DiffDirecHist] = EdgeStatistics(double(single(Gradient(single(im)))));
+[EdgeArea,MagMean,MagMedian,MagVar,MagHist, DirecMean, DirecMedian,DirecVar,DirecHist,DirecHomo,DiffDirecHist] = EdgeStatistics(double(single(ImageGradient(single(im)))));
 vec_10 = ro_EdgeStatistics(EdgeArea,MagMean,MagMedian,MagVar,MagHist, DirecMean, DirecMedian,DirecVar,DirecHist,DirecHomo,DiffDirecHist);
 
 [Count, Euler, Centroid, AreaMin, AreaMax, AreaMean, AreaMedian, AreaVar, AreaHist, DistMin, DistMax, DistMean, DistMedian, DistVar, DistHist] = FeatureStatistics(logical(GlobalThreshold(im, graythresh(im))));
