@@ -344,7 +344,8 @@ public class XmlRpcCaller
             {
                 List version = (List) result;
                 if (version.size() != 3)
-                    throw new RemoteServerErrorException("Server version had the wrong size: "+version.size());
+                    throw new RemoteServerErrorException(
+                        "Server version had the wrong size: "+version.size());
 
                 Integer major = PrimitiveConverters.
                     convertToInteger(version.get(0));
@@ -357,7 +358,10 @@ public class XmlRpcCaller
                                          minor.intValue(),
                                          patch.intValue());
             } else {
-                throw new RemoteServerErrorException("Server version returned was not of the right type: "+result.getClass()+" ("+result+")");
+                throw new RemoteServerErrorException(
+                    "Server version returned was not of the right type: " +
+                    (result == null ? "null" :
+                    (result.getClass() + " (" + result + ")")));
             }
         }
     }
@@ -366,7 +370,7 @@ public class XmlRpcCaller
     public void setSessionKey(String key) { sessionKey = key; }
 
     public Object invoke(String method,Object[] params) {
-    		return dispatch(method,params);
+        return dispatch(method,params);
     }
 
     public Object dispatch(String method, Object[] params)
