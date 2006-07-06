@@ -19,6 +19,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	/* MATLAB data structueres */
 	mxArray *m_url, *m_sessionkey;
+	mxArray *permute_inputs[2];
+	int result;
 	
 	char* url, *sessionkey;
 	
@@ -48,8 +50,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	int z0 = (int) mxGetScalar(prhs[4]);
 	int c0 = (int) mxGetScalar(prhs[5]);
 	int t0 = (int) mxGetScalar(prhs[6]);
-	int x1 = (int) mxGetScalar(prhs[7]);
-	int y1 = (int) mxGetScalar(prhs[8]);
+	
+	/* NB x1 and y1 are switched on purpose because of the different orientations
+	 used in MATLAB and OME. See note below */
+	int y1 = (int) mxGetScalar(prhs[7]);
+	int x1 = (int) mxGetScalar(prhs[8]);
+	
 	int z1 = (int) mxGetScalar(prhs[9]);
 	int c1 = (int) mxGetScalar(prhs[10]);
 	int t1 = (int) mxGetScalar(prhs[11]);
@@ -89,7 +95,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	dims[2] = z1-z0+1;
 	dims[3] = c1-c0+1;
 	dims[4] = t1-t0+1;
-
+	
 	/* attach pixels from OMEIS to MATLAB array */
 	int tmp_dims[2] = {1,1};
 	plhs[0] = mxCreateNumericArray (2, tmp_dims, OMEIStoMATLABDatatype(head), mxREAL);
@@ -97,9 +103,33 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	mxSetData (plhs[0], pixels);
 	mxSetDimensions (plhs[0], dims, 5);
 	
+	/*
+		In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
+		This is diametrically opposite to MATLAB's assumptions.
+		hence we do
+		"$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);" 
+		the hard way (groan)
+	*/
+	permute_inputs[0] = plhs[0];
+	permute_inputs[1] = mxCreateDoubleMatrix(1, 5, mxREAL);
+	mxGetPr(permute_inputs[1])[0] = 2;
+	mxGetPr(permute_inputs[1])[1] = 1;
+	mxGetPr(permute_inputs[1])[2] = 3;
+	mxGetPr(permute_inputs[1])[3] = 4;
+	mxGetPr(permute_inputs[1])[4] = 5;
+	/* returns 0 if successful */
+	result = mexCallMATLAB(1, plhs, 2, permute_inputs, "permute"); 
+	
 	/* clean up */
 	mxFree(url);
 	mxFree(sessionkey);
 	mxFree(head);
 	mxFree(is);
+	mxDestroyArray(permute_inputs[1]);
+	
+	if (result) {
+		char err_str[128];
+		sprintf(err_str, "Couldn't permute the pixels to get them in MATLAB orientation");
+		mexErrMsgTxt(err_str);
+	}
 }

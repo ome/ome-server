@@ -527,31 +527,25 @@ sub Pixels_to_MatlabArray {
 	# FIXME: does this datatype conversion taint $matlab_pixels ?
 	my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' );
 
-	# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
-	# This is diametrically opposite to MATLAB's assumptions.
-	# hence we do "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);"
+
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
 
 	my $matlabCmdString = "";
 	if (scalar @ROI) {
 		if ($convertToDatatype) {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ".
-							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ";
 		} else {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getROI(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ".
-							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+							   "$matlab_var_name = getROI(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ";
 		}
 	} else {
 		if ($convertToDatatype) {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID().")); ".
-							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID().")); ";
 		} else {
 			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID()."); ".
-							   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);";
+							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID()."); ";
 		}
 	}
 	$_engine->eval($matlabCmdString);
@@ -690,14 +684,8 @@ sub MatlabArray_to_Pixels {
 		or die "Could not find formal output referenced from ".$xmlInstr->toString();
 	
 	# Convert array datatype if requested
-	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
-		# This is diametrically opposite to MATLAB's assumptions.	
-		$_engine->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ".
-  					   "$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
-	} else {
-		$_engine->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
-	}
+	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) )	
+		$_engine->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ");
 
 	# Get array's dimensions and pixel type
 	my $ml_pixels_array = $_engine->getVariable($matlab_var_name)

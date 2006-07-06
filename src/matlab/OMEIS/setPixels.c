@@ -17,6 +17,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	/* MATLAB data structueres */
 	mxArray *m_url, *m_sessionkey;
+	mxArray *permute_inputs[2];
+	mxArray *copy_input_array; /* we need a local copy so we can transpose it */
 	
 	char* url, *sessionkey;
 	
@@ -24,7 +26,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		mexErrMsgTxt("\n [pix] = setPixels (is, ID, pixels)");
 		
 	if (!mxIsStruct(prhs[0]))
-		mexErrMsgTxt("settPixels requires the first input to be the struct outputed"
+		mexErrMsgTxt("setPixels requires the first input to be the struct outputed"
 					 " from openConnectionOMEIS\n");
 					 
 	if (!(m_url = mxGetField(prhs[0], 0, "url")))
@@ -57,9 +59,40 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		mexErrMsgTxt(err_str);
 	}
 	
+	/*
+		In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
+		This is diametrically opposite to MATLAB's assumptions.
+		hence we do
+		"$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);" 
+		the hard way (groan)
+	*/
+	
+	permute_inputs[0] = prhs[2]; /* permute_input isn't being modified so
+									discarding the const qualifier is okay */
+	permute_inputs[1] = mxCreateDoubleMatrix(1, 5, mxREAL);
+ 	mxGetPr(permute_inputs[1])[0] = 2;
+ 	mxGetPr(permute_inputs[1])[1] = 1;
+ 	mxGetPr(permute_inputs[1])[2] = 3;
+ 	mxGetPr(permute_inputs[1])[3] = 4;
+ 	mxGetPr(permute_inputs[1])[4] = 5;
+ 	
+	/* mexCallMATLAB allocates memory for copy_input_array */
+ 	if (mexCallMATLAB(1, &copy_input_array, 2, permute_inputs, "permute")) {
+		/* clean up */
+		mxFree(url);
+		mxFree(sessionkey);
+		mxFree(head);
+		mxFree(is);
+		
+ 		char err_str[128];
+		sprintf(err_str, "Couldn't permute the pixels to get them in MATLAB orientation");
+		mexErrMsgTxt(err_str);
+ 	}
+	
+	
 	/* check dimension and class check */
-	const int* dims = mxGetDimensions (prhs[2]);
-	switch (mxGetNumberOfDimensions (prhs[2])) {
+	const int* dims = mxGetDimensions (copy_input_array);
+	switch (mxGetNumberOfDimensions (copy_input_array)) {
 		case 5:
 			if (head->dt != dims[4])
 				mexErrMsgTxt("5th Dimension of input array and Pixels doesn't match.\n");
@@ -77,12 +110,19 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 				mexErrMsgTxt("1st Dimension of input array and Pixels doesn't match.\n");
 			break;
 		default:
+			/* clean up */
+			mxFree(url);
+			mxFree(sessionkey);
+			mxFree(head);
+			mxFree(is);
+			mxDestroyArray(copy_input_array);
+					
 			mexErrMsgTxt("Input Array must be 5D or less");
 		break;
 	}
 	
 	pixHeader tmp_head;
-	CtoOMEISDatatype ((char*) mxGetClassName(prhs[2]), &tmp_head);
+	CtoOMEISDatatype ((char*) mxGetClassName(copy_input_array), &tmp_head);
 	
 	if ( !samePixelType(&tmp_head, head)) {
 		/* clean up */
@@ -90,12 +130,13 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		mxFree(sessionkey);
 		mxFree(head);
 		mxFree(is);
-				 
+		mxDestroyArray(copy_input_array);
+		
 		mexErrMsgTxt("Types of input array and Pixels don't match\n");
 	}
 	
 	/* set the pixels */
-	int pix = setPixels (is, ID, mxGetPr(prhs[2]));
+	int pix = setPixels (is, ID, mxGetPr(copy_input_array));
 	
 	/* record number of pixels written */
 	plhs[0] = mxCreateScalarDouble((double) pix);
@@ -105,4 +146,5 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	mxFree(sessionkey);
 	mxFree(head);
 	mxFree(is);
+	mxDestroyArray(copy_input_array);
 }
