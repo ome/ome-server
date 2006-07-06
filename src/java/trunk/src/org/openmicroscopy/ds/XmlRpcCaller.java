@@ -230,7 +230,9 @@ public class XmlRpcCaller
 
                 return retval;
             } catch (IOException e) {
-                throw new RemoteConnectionException(e.getMessage());
+                RemoteConnectionException rce = new RemoteConnectionException();
+                if (e != null) rce.initCause(e);
+                throw rce;
             } catch (Exception e) {
                 if (TRACE_CALLS)
                 {
