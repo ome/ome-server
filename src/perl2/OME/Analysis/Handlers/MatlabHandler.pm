@@ -684,9 +684,10 @@ sub MatlabArray_to_Pixels {
 		or die "Could not find formal output referenced from ".$xmlInstr->toString();
 	
 	# Convert array datatype if requested
-	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) )	
+	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
 		$_engine->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ");
-
+	}
+	
 	# Get array's dimensions and pixel type
 	my $ml_pixels_array = $_engine->getVariable($matlab_var_name)
 		or die "Couldn't retrieve pixels output variable $matlab_var_name from matlab.\n".
