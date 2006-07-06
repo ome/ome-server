@@ -55,12 +55,12 @@ for pix_id = ids
     
 	    % get top left corner and set it on the new imae
     	fprintf ('\tgetROI ...');
-    	im_q = getROI(is, pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0);
+    	im_q = getROI(is, pix_id, floor(sizeX/4), floor(sizeY/4), 0, 0, 0, floor(sizeX/3)-1, floor(sizeY/2)-1, 0, 0, 0);
     	fprintf (' done\n');
     	% figure; imshow(im_q, [min(min(im_q)) max(max(im_q))]);
     
     	fprintf ('\tsetROI ...');
-    	num_pixels = setROI (is, n_pix_id, 0, 0, 0, 0, 0, floor(sizeX/2)-1, floor(sizeY/2)-1, 0, 0, 0, im_q);;
+    	num_pixels = setROI (is, n_pix_id, floor(sizeX/4), floor(sizeY/4), 0, 0, 0, floor(sizeX/3)-1, floor(sizeY/2)-1, 0, 0, 0, im_q);;
     	fprintf (' done\n');
     
 	    fprintf ('\tfinishPixels ...'); n_pix_id = finishPixels (is, n_pix_id); fprintf (' done\n');
