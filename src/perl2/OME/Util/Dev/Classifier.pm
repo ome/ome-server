@@ -355,6 +355,12 @@ sub compile_sigs {
 			push @image_paths, $originalFile->Path()." [".$_->name()."]";
 		}
 	}
+	# sort images by image_path not image name
+	# so /CHO/tumor.tiff will be BEFORE /Pollen/obj_198_1.tiff this is the canonical
+	# MATLAB sort order
+	my @image_path_indices = sort{$image_paths[$a] cmp $image_paths[$b]}0..$#images;
+	@images = @images[@image_path_indices];
+	@image_paths = @image_paths[@image_path_indices];
 	
 	# make the matlab signature array and label array
 	my ($signature_labels_array, $signature_array) = $self->
@@ -597,6 +603,7 @@ elseif (nargin == 15)
 elseif (nargin == 16)
     concat = [straighten(arg1) straighten(arg2) straighten(arg3) straighten(arg4) straighten(arg5) straighten(arg6) straighten(arg7) straighten(arg8) arg9 straighten(arg10) straighten(arg11) straighten(arg12) straighten(arg13) straighten(arg14) straighten(arg15) straighten(arg16)]; 
 end
+concat = double(concat);
 
 %
 % some vectors are row-oriented others are column-oriented. This fixes them all to be column oriented
@@ -919,7 +926,7 @@ sub compile_signature_matrix {
 					{ feature => $feature }
 				)
 				or die "Could not load image signature vector for feature (id=".$feature->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
-			print "Compiling Sigs for Image ROI ".($image_feature_number+1)." of ".$number_of_image_features. "\n"; 
+			print "Compiling Sigs for Image ROI ".($image_feature_number+1)." of ".$number_of_image_features. "(Image Name: ".$image->name.")\n"; 
 			# set the image category
 			my $category_num = ( defined $classifications->{ $image->id } ? 
 				$category_numbers->{ $classifications->{ $image->id }->Category->id } :
