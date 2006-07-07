@@ -9,24 +9,30 @@
 #
 # Modified to work with OME - dont' rely on a map, as was done in the
 # original Frontier code
+# Further modified by igg <igg@nih.gov> to work with Apache2/mod_perl2
 
-package OME::Remote::XMLRPC;
+package OME::Remote::Apache2::XMLRPC;
 
-use Apache::Constants qw(:common);
+use Apache2::RequestRec ();
+use Apache2::RequestIO ();
+use Apache2::Const -compile => qw(OK);
+use APR::Table;
+
 use OME::Remote::RPC2;
 
 sub handler {
-   my $r = shift;
+	my $r = shift;
 
-   my $decoder = OME::Remote::RPC2->new();
+	my $decoder = OME::Remote::RPC2->new();
 
-   my $content;
-   $r->read( $content, $r->header_in( 'Content-length' ) );
+	my $content;
+	my $size = $r->headers_in->get ('Content-Length');
+	$r->read($content, $size);
+	my $answer = $decoder->serve( $content);
+	$r->content_type('text/xml');
+	$r->print($answer);
 
-   my $answer = $decoder->serve( $content);
-   $r->send_http_header();
-   $r->print($answer);
-   return OK;
+	return Apache2::Const::OK;
 }
 
 1;
