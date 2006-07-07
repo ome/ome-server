@@ -504,14 +504,15 @@ sub Pixels_to_MatlabArray {
 				$ascender->EndC - $ascender->StartC + 1,
 				$ascender->EndT - $ascender->StartT + 1,
 			) unless( @Dims );
+			# StartX and StartY are flipped. Because X in OME means width, but in MATLAB means rows
 			@ROI = (
-				$ascender->StartX, 
 				$ascender->StartY, 
+				$ascender->StartX, 
 				$ascender->StartZ, 
 				$ascender->StartC, 
 				$ascender->StartT, 
-				$ascender->EndX, 
 				$ascender->EndY, 
+				$ascender->EndX, 
 				$ascender->EndZ, 
 				$ascender->EndC, 
 				$ascender->EndT, 
