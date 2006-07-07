@@ -735,7 +735,6 @@
 			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "@Zoom" mode = "Attribute2OptionalAttribute"/>
 			<xsl:attribute name = "Display">
 				<xsl:choose>
 					<xsl:when test="@DisplayRGB = 'true' or @DisplayRGB = '1'">
@@ -746,6 +745,7 @@
 					</xsl:otherwise>
 				</xsl:choose>
 			</xsl:attribute>
+			<xsl:apply-templates select = "@Zoom" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "../CA:DisplayChannel [@ID=$RedChannelID]" mode="MakeDisplayChannel">
 				<xsl:with-param name="Name">RedChannel</xsl:with-param>
 				<xsl:with-param name="isOn">
