@@ -102,12 +102,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		case 3:
 			if (head->dz != dims[2])
 				mexErrMsgTxt("3th Dimension of input array and Pixels doesn't match.\n");
+		/* we have to switch the two dimensions because in OME, x is width and y is height */
+		/* in MATLAB x is rows[height], y is columns[width] */
 		case 2:
-			if (head->dy != dims[1])
-				mexErrMsgTxt("2nd Dimension of input array and Pixels doesn't match.\n");
+			if (head->dy != dims[0])
+				mexErrMsgTxt("Height of input array and Pixels doesn't match.\n");
 		case 1:
-			if (head->dx != dims[0])
-				mexErrMsgTxt("1st Dimension of input array and Pixels doesn't match.\n");
+			if (head->dx != dims[1])
+				mexErrMsgTxt("Width of input array and Pixels doesn't match.\n");
 			break;
 		default:
 			/* clean up */

@@ -45,8 +45,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	ID = (OID) mxGetScalar(prhs[1]) ;
 	
 	/* get ROI */
-	int x0 = (int) mxGetScalar(prhs[2]);
-	int y0 = (int) mxGetScalar(prhs[3]);
+	int y0 = (int) mxGetScalar(prhs[3]); /* switched */
+	int x0 = (int) mxGetScalar(prhs[2]); /* switched */
+
 	int z0 = (int) mxGetScalar(prhs[4]);
 	int c0 = (int) mxGetScalar(prhs[5]);
 	int t0 = (int) mxGetScalar(prhs[6]);

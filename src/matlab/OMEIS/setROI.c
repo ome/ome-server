@@ -43,8 +43,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	ID = (OID) mxGetScalar(prhs[1]) ;
 	
 	/* get ROI */
-	int x0 = (int) mxGetScalar(prhs[2]);
-	int y0 = (int) mxGetScalar(prhs[3]);
+	int y0 = (int) mxGetScalar(prhs[2]); /* switched */
+	int x0 = (int) mxGetScalar(prhs[3]); /* switched */
+	
 	int z0 = (int) mxGetScalar(prhs[4]);
 	int c0 = (int) mxGetScalar(prhs[5]);
 	int t0 = (int) mxGetScalar(prhs[6]);
@@ -117,12 +118,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		case 3:
 			if ((z1-z0+1) != dims[2])
 				mexErrMsgTxt("3th Dimension of input array and Pixels doesn't match.\n");
+		/* we have to switch the two dimensions because in OME, x is width and y is height */
+		/* in MATLAB x is rows[height], y is columns[width] */
 		case 2:
 			if ((y1-y0+1) != dims[1])
-				mexErrMsgTxt("2nd Dimension of input array and Pixels doesn't match.\n");
+				mexErrMsgTxt("Height of input array and Pixels doesn't match.\n");
 		case 1:
 			if ((x1-x0+1) != dims[0])
-				mexErrMsgTxt("1st Dimension of input array and Pixels doesn't match.\n");
+				mexErrMsgTxt("Width of input array and Pixels doesn't match.\n");
 			break;
 		default:
 			/* clean up */
