@@ -87,13 +87,13 @@
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "Experimenter">
 				<xsl:value-of select = "OME:ExperimenterRef/@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Group">
 				<xsl:value-of select = "OME:GroupRef/@ID"/>
 			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 		</xsl:element>
 	</xsl:template>
 	<!-- Dataset -->
@@ -105,7 +105,6 @@
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "Locked">
 				<xsl:value-of select = "@Locked"/>
 			</xsl:attribute>
@@ -115,6 +114,7 @@
 			<xsl:attribute name = "Group">
 				<xsl:value-of select = "OME:GroupRef/@ID"/>
 			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:ProjectRef" mode = "CopyRefs"/>
 
 			<xsl:if test = "OME:CustomAttributes/*">
@@ -331,7 +331,6 @@
 			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "@Zoom" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "DisplayRGB">
 				<xsl:choose>
 					<xsl:when test="@Display = 'RGB'">
@@ -342,6 +341,37 @@
 					</xsl:otherwise>
 				</xsl:choose>
 			</xsl:attribute>
+			<xsl:attribute name = "RedChannelOn">
+				<xsl:choose>
+					<xsl:when test="OME:RedChannel/@isOn = 'true' or OME:RedChannel/@isOn = '1'">
+						<xsl:text>true</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:text>false</xsl:text>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:attribute>
+			<xsl:attribute name = "GreenChannelOn">
+				<xsl:choose>
+					<xsl:when test="OME:GreenChannel/@isOn = 'true' or OME:GreenChannel/@isOn = '1'">
+						<xsl:text>true</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:text>false</xsl:text>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:attribute>
+			<xsl:attribute name = "BlueChannelOn">
+				<xsl:choose>
+					<xsl:when test="OME:BlueChannel/@isOn = 'true' or OME:BlueChannel/@isOn = '1'">
+						<xsl:text>true</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:text>false</xsl:text>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:attribute>
+			<xsl:apply-templates select = "@Zoom" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:GreyChannel/@ColorMap" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:Projection/@Zstart" mode = "OptionalAttribute">
 				<xsl:with-param name = "Name">ZStart</xsl:with-param>
@@ -363,16 +393,6 @@
 					<xsl:value-of select = "generate-id(OME:RedChannel)"/>
 				</xsl:with-param>
 			</xsl:apply-templates>
-			<xsl:attribute name = "RedChannelOn">
-				<xsl:choose>
-					<xsl:when test="OME:RedChannel/@isOn = 'true' or OME:RedChannel/@isOn = '1'">
-						<xsl:text>true</xsl:text>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:text>false</xsl:text>
-					</xsl:otherwise>
-				</xsl:choose>
-			</xsl:attribute>
 			<xsl:apply-templates select = "OME:GreenChannel" mode = "MakeRefs">
 				<xsl:with-param name = "Name">
 					<xsl:text>GreenChannel</xsl:text>
@@ -381,16 +401,6 @@
 					<xsl:value-of select = "generate-id(OME:GreenChannel)"/>
 				</xsl:with-param>
 			</xsl:apply-templates>
-			<xsl:attribute name = "GreenChannelOn">
-				<xsl:choose>
-					<xsl:when test="OME:GreenChannel/@isOn = 'true' or OME:GreenChannel/@isOn = '1'">
-						<xsl:text>true</xsl:text>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:text>false</xsl:text>
-					</xsl:otherwise>
-				</xsl:choose>
-			</xsl:attribute>
 			<xsl:apply-templates select = "OME:BlueChannel" mode = "MakeRefs">
 				<xsl:with-param name = "Name">
 					<xsl:text>BlueChannel</xsl:text>
@@ -399,16 +409,6 @@
 					<xsl:value-of select = "generate-id(OME:BlueChannel)"/>
 				</xsl:with-param>
 			</xsl:apply-templates>
-			<xsl:attribute name = "BlueChannelOn">
-				<xsl:choose>
-					<xsl:when test="OME:BlueChannel/@isOn = 'true' or OME:BlueChannel/@isOn = '1'">
-						<xsl:text>true</xsl:text>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:text>false</xsl:text>
-					</xsl:otherwise>
-				</xsl:choose>
-			</xsl:attribute>
 			<xsl:apply-templates select = "OME:GreyChannel" mode = "MakeRefs">
 				<xsl:with-param name = "Name">
 					<xsl:text>GreyChannel</xsl:text>
@@ -436,13 +436,13 @@
 			<xsl:attribute name = "Y0">
 				<xsl:value-of select = "@Y0"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "@Z0" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "X1">
 				<xsl:value-of select = "@X1"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Y1">
 				<xsl:value-of select = "@Y1"/>
 			</xsl:attribute>
+			<xsl:apply-templates select = "@Z0" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "@Z1" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "@T0" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "@T1" mode = "OptionalAttribute"/>
@@ -542,10 +542,10 @@
 			<xsl:attribute name = "Email">
 				<xsl:value-of select = "OME:Email"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:Institution" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "Group">
 				<xsl:value-of select = "OME:GroupRef/@ID [1]"/>
 			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Institution" mode = "OptionalAttribute"/>
 		</xsl:element>
 		<xsl:apply-templates select = "OME:GroupRef" mode = "MakeMapRefs"/>
 	</xsl:template>
@@ -847,10 +847,10 @@
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "ExternalReference">
 				<xsl:value-of select = "@ExternRef"/>
 			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 		</xsl:element>
 	</xsl:template>
 	<!-- Plate -->
