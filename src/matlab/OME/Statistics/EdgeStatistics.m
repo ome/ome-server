@@ -40,16 +40,27 @@
 
 % This module computes statistics about the image's edge magnitudes and directions. 
 %
+%
+% DUDU (TODO)
+%     1) Since DirecHist, MagHist, DiffDirecHist are stored as uint16, if there are
+%        more than 2^16 pixels per bin there is overflow. 
+%	  2) This convolves image size with direction of pixels (which is bad)
+%     Recommendation (1+2) is a normalized histogram as floats
+%
+%     3) Pixels with very small gradient magnitude shouldn't be binned in the DirecHist,
+%     DiffDirecHist because they are noise sensitive, also they result in pile-up in
+%     hist bin for direction 0. 0 can mean a direction or no direction.
+
 function [EdgeArea, MagMean, MagMedian, MagVar, MagHist, ...
 		  DirecMean, DirecMedian, DirecVar, DirecHist, ...
-		  DirecHomogeneity, DiffDirecHist] = EdgeStatistics(Gradient)
+		  DirecHomogeneity, DiffDirecHist] = EdgeStatistics(ComputedImageGradient)
 
 % How many bins the histograms have
 NUM_BINS = 8;
 NUM_BINS_HALF = 4;
 
-GradientMag   = Gradient(:,:,1);
-GradientDirec = Gradient(:,:,2);
+GradientMag   = ComputedImageGradient(:,:,1);
+GradientDirec = ComputedImageGradient(:,:,2);
 
 % Calculate number of image pixels that are edge pixels
 EdgeArea = sum(sum(im2bw( uint8(GradientMag) )));
