@@ -183,6 +183,10 @@ my %tagnames = reverse %$tagHash;
 my $dumpHeader = 0;
 my $tag_hash;
 
+our $IFD_Cache = {};
+our $verifyTIFFcache = {};
+
+
 # Derived from Import_read->checkTIFF, TIFFreader->readTiffIFD, and
 # TIFFreader->readTiffTag
 #
@@ -235,36 +239,34 @@ are not cached.
 sub readTiffIFD {
     my $file = shift;
     my $targetIFD = shift;
+    my $readAll = wantarray;
     my ($buf,$endian,@buf,$offset);
+    
+    $targetIFD = 0 unless defined $targetIFD;
+
+    # Our cache is keyed on the $file object.
+    # The value corresponding to the key is an array reference of IFDs.
+    if (exists $IFD_Cache->{$file}) {
+		if ($readAll and $IFD_Cache->{$file}->{nIFDs}) {
+			return @{$IFD_Cache->{$file}->{IFDs}};
+		} elsif (not $readAll and $IFD_Cache->{$file}->{IFDs}->[$targetIFD]) {
+			return ($IFD_Cache->{$file}->{IFDs}->[$targetIFD]);
+		}
+    }
     
     # Read the TIFF header to determine endianness and to locate the first IFD.
     ($endian, $offset) = __verifyTiff($file);
     return undef unless defined($endian);
 
-    my @IFDs;
-    
-    # CACHING: check if we previously read-in this file's TIFF tags 
-    # If so, don't read the tags again, but return the cached tags
-    my $sha1 = $file->getSHA1();
-    if (exists $tag_hash->{$sha1} and not $targetIFD) {
-  		my $IFD_ref =  $tag_hash->{$file->getSHA1()};
-  		
-  		# did we already compute only the first IFD or all IFDs ? 		
-  		if (ref $IFD_ref eq 'ARRAY') {		
-			@IFDs = @$IFD_ref;
-		}
-			
-		if (wantarray) {
-			return @IFDs if @IFDs;
-		} else {
-			return ($IFDs[0]) if @IFDs;
-			return ($IFD_ref);
-		}
-	}
+    my $IFDoffsets = {};
+
+    my $IFDs = $IFD_Cache->{$file}->{IFDs};
 
     # Read in each IFD
     my $currentIFD = 0;
-    while ($offset > 0) {
+    my $fullScan = 0;
+    my $IFDsRead = 0;
+    while (not $fullScan) {
     	
     	eval {
             my %ifd;
@@ -276,7 +278,7 @@ sub readTiffIFD {
             my $tag_count = unpack(_x->[$endian],$buf);
 			
 			# read the IFD
-			if (wantarray or not $targetIFD or $targetIFD == $currentIFD) {
+			if ( not $IFDs->[$currentIFD] and ($readAll or $targetIFD == $currentIFD) ) {
 				while ($tag_count) {
 
 					# Read the tag
@@ -324,7 +326,8 @@ sub readTiffIFD {
 					}
 					$tag_count--;
 				}
-				push (@IFDs,\%ifd);
+				$IFDs->[$currentIFD] = \%ifd;
+				$IFDsRead++;
 				
 				# Read the offset to the next IFD.
          	    $buf = $file->readData(4);
@@ -338,29 +341,31 @@ sub readTiffIFD {
         };
 		if ($@) {
 			warn $@;
+			$IFDs->[$currentIFD] = undef;
 			return undef;
 		}
 		
-        last if (not wantarray and not $targetIFD); # exit loop if only want IFD 0
-        last if ($targetIFD == $currentIFD);        # exit loop if found IFD looking for
-        
-        $currentIFD++;
+		$fullScan = 1 if (exists $IFDoffsets->{$offset} or $offset == 0);
+		$IFDoffsets->{$offset} = $offset;
+
+		$currentIFD++;
+        # exit loop if only want 1 IFD
+        last if (not $readAll and $targetIFD == $currentIFD);
     }
+    
+    # If we read all the IFDs, then offset == 0
+	$IFD_Cache->{$file}->{nIFDs} = $currentIFD if $IFDsRead == $currentIFD;
+	$IFD_Cache->{$file}->{IFDs} = $IFDs;
 
 	if ($targetIFD and $targetIFD > $currentIFD) { 
 		croak "in readTiffIFD, specified targetIFD is greater than number of IFDs\n";
 	}
 
-	# CACHING: log this image's IFD tag array.
-    if (wantarray) {
-    	$tag_hash->{$sha1} = \@IFDs;    # store reference to list
-        return (@IFDs);
-    } elsif (not $targetIFD) {
-        $tag_hash->{$sha1} = $IFDs[0];  # store reference to hash
-        return $IFDs[0];
-    } else {
-    	return $IFDs[0]; # return without caching
-  	}
+	if ($readAll) {
+		return @{$IFD_Cache->{$file}->{IFDs}};
+	} else {
+		return ($IFD_Cache->{$file}->{IFDs}->[$targetIFD]);
+	}
 }
 
 =head2 getTagValue
@@ -474,39 +479,47 @@ sub verifyTiff {
 
 sub __verifyTiff {
     my $file = shift;
-    my ($buf,$endian,@buf,$offset);
+    my ($buf,@buf);
 
+	if (exists $verifyTIFFcache->{$file}) {
+		return ($verifyTIFFcache->{$file}->{Endian},$verifyTIFFcache->{$file}->{Offset})
+			if defined $verifyTIFFcache->{$file};
+		return undef;
+	}
     # Read the TIFF header to determine endianness and to locate the
     # first IFD.
 
     eval {
-		return undef
-			if $file->getLength() < 8;
-        $file->setCurrentPosition(0,0);
-        $buf = $file->readData(8);
-        @buf = unpack('CCvV',$buf);
-
-        if ($buf[0] == 73 && $buf[1] == 73 && $buf[2] == 42) {
-            $endian = LITTLE_ENDIAN;
-            $offset = $buf[3];
-        } elsif ($buf[0] == 77 && $buf[0] == 77) {
-            @buf = unpack('CCnN',$buf);
-            if ($buf[2] == 42) {
-                $endian = BIG_ENDIAN;
-                $offset = $buf[3];
-            } else {
-                return undef;
-            }
-        } else {
-            return undef;
-        }
+		if ($file->getLength() < 8) {
+			$verifyTIFFcache->{$file} = undef;
+		} else {
+			$file->setCurrentPosition(0,0);
+			$buf = $file->readData(8);
+			@buf = unpack('CCvV',$buf);
+	
+			if ($buf[0] == 73 && $buf[1] == 73 && $buf[2] == 42) {
+				$verifyTIFFcache->{$file}->{Endian} = LITTLE_ENDIAN;
+				$verifyTIFFcache->{$file}->{Offset} = $buf[3];
+			} elsif ($buf[0] == 77 && $buf[0] == 77) {
+				@buf = unpack('CCnN',$buf);
+				if ($buf[2] == 42) {
+					$verifyTIFFcache->{$file}->{Endian} = BIG_ENDIAN;
+					$verifyTIFFcache->{$file}->{Offset} = $buf[3];
+				} else {
+					$verifyTIFFcache->{$file} = undef;
+				}
+			} else {
+				$verifyTIFFcache->{$file} = undef;
+			}
+		}
     };
 
     if ($@) {
         warn $@;
+        delete $verifyTIFFcache->{$file};
         return undef;
     }
-    return ($endian, $offset);
+    return ($verifyTIFFcache->{$file}->{Endian},$verifyTIFFcache->{$file}->{Offset});
 }
 
 
@@ -549,9 +562,9 @@ sub cleanup {
 	my ($file) = shift;
 	
 	if (defined $file) {
-		    delete ($tag_hash->{$file->getSHA1()});
+		    delete ($IFD_Cache->{$file});
 	} else {
-		$tag_hash = undef;
+		$IFD_Cache = undef;
 	}
 }
 

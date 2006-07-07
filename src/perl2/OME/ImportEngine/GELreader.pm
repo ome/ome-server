@@ -148,28 +148,23 @@ The following public methods are available:
 =head2 B<new>
 
 
-    my $importer = OME::ImportEngine->GELreader->new($session, $module_execution)
+    my $importer = OME::ImportEngine->GELreader->new()
 
 Creates a new instance of this class. The other public methods of this
-class are accessed through this instance.  The caller, which would
-normally be OME::ImportEngine::ImportEngine, should already
-have created the session and the module_execution.
+class are accessed through this instance.  The caller would
+normally be OME::ImportEngine::ImportEngine.
 
 =cut
 
 
 
 sub new {
-
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
     my $self = {};
-    my $session = shift;
-    my $module_execution = shift;
 
     bless $self, $class;
-    $self->{super} = $self->SUPER::new($session, $module_execution);
 
     my %paramHash;
     $self->{params} = new OME::ImportEngine::Params(\%paramHash);
@@ -258,7 +253,7 @@ sub importGroup {
     my $status;
 
 
-    my $session = ($self->{super})->Session();
+    my $session = $self->Session();
     my $factory = $session->Factory();
 
     $file->open('r');
@@ -270,7 +265,7 @@ sub importGroup {
     }
 
     my $filename = $file->getFilename();
-    my $base = ($self->{super})->__nameOnly($filename);
+    my $base = $self->nameOnly($filename);
 
     ($offsets_arr, $bytesize_arr) = getStrips($tags);
 
@@ -313,12 +308,11 @@ sub importGroup {
 		unless ($status eq "");
 	}
 
-        $image = ($self->{super})->__newImage($filename);
-	$self->{image} = $image;
+        $image = $self->newImage($filename);
 
 
 	# pack together & store info on input file
-	$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+	$self->storeOneFileInfo(\@finfo, $file, $params, $image,
 				  0, $xref->{'Image.SizeX'}-1,
 				  0, $xref->{'Image.SizeY'}-1,
 				  0, 0,
@@ -328,7 +322,7 @@ sub importGroup {
 
 	$self->{inflation} = ($pixel_format == SQUARE_ROOT) ? 2 : 1;
 	my ($pixels, $pix) = 
-	    ($self->{super})->__createRepositoryFile($image, 
+	    $self->createRepositoryFile($image, 
 						     $xref->{'Image.SizeX'},
 						     $xref->{'Image.SizeY'},
 						     $xref->{'Image.SizeZ'},
@@ -336,16 +330,18 @@ sub importGroup {
 						     $xref->{'Image.NumTimes'},
 						     $self->{inflation} * $xref->{'Data.BitsPerPixel'});
 	$self->{pix} = $pix;
-	$self->{pixels} = $pixels;
 	my $interpretation = $tags->{TAGS->{PhotometricInterpretation}}->[0];
 	$status = readWritePixels($self, $params, $interpretation);
     }
     $file->close();
 
     if ($status eq "") {
-	$self->__storeInputFileInfo(\@finfo);
 	# Store info about each input channel (wavelength).
-	$self->storeChannelInfo();
+    $self->storeChannelInfo($image, [{chnlNumber => 0,
+			ExWave     => undef,
+			EmWave     => undef,
+			Fluor      => undef,
+			NDfilter   => undef}]);
     } else {
 	die "$status";
     }
@@ -353,8 +349,8 @@ sub importGroup {
     my @instrInfo;
     $instrInfo[0] = $fileunits;
     $instrInfo[1] = $manufacturer;
-    $self->__storeInstrumemtInfo($image, @instrInfo);
-	$self->__storeDisplayOptions();
+    $self->storeInstrumemtInfo($image, @instrInfo);
+	$self->storeDisplayOptions($image);
     return $image;
 
 }
@@ -548,22 +544,10 @@ sub getManu {
     }
 }
 
-sub storeChannelInfo {
-    my ($self) = @_;
-    my @channelInfo;
-    # Store info about each input channel (wavelength)
-    push @channelInfo, {chnlNumber => 0,
-			ExWave     => undef,
-			EmWave     => undef,
-			Fluor      => undef,
-			NDfilter   => undef};
-    $self->__storeChannelInfo(1, @channelInfo);
-}
-
 
 sub getSHA1 {
 	my $self = shift;
-    return $self->__getFileSHA1(@_);
+    return $self->getFileSHA1(@_);
 }
 
 

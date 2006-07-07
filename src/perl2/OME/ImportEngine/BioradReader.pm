@@ -65,9 +65,8 @@ The following public methods are available:
     my $importer = OME::ImportEngine::BioradReader->new($session, $module_execution)
 
 Creates a new instance of this class. The other public methods of this
-class are accessed through this instance.  The caller, which would
-normally be OME::ImportEngine::ImportEngine, should already
-have created the session and the module_execution.
+class are accessed through this instance.  The caller would
+normally be OME::ImportEngine::ImportEngine.
 
 =cut
 
@@ -79,7 +78,6 @@ sub new
     my $self = {};
 
     bless $self, $class;
-    $self->{super} = $self->SUPER::new();
 
     my %paramHash;
     $self->{params} = new OME::ImportEngine::Params(\%paramHash);
@@ -120,7 +118,7 @@ sub getGroups
 		$file->close();
     }
     # Clean out $inlist.
-    $self->__removeFiles($inlist, \@prelimOutlist);
+    $self->removeFiles($inlist, \@prelimOutlist);
     
     # Now that you have a list of the valid files, group them again based on whether or not
     # they're related.
@@ -208,7 +206,7 @@ I<undef>, signaling the caller to rollback any associated database transactions.
 sub importGroup
 {
 	my ($self, $fileList, $callback) = @_;
-	my $session = ($self -> {super}) -> Session();
+	my $session = $self -> Session();
 	my $image;
 	
 	foreach my $file (@$fileList)
@@ -246,7 +244,7 @@ sub importGroup
     	
     	if ( $xref -> { 'MultiChannelMultiSection' } == 1)
     	{
-    		$image = ($self -> {super}) -> __newImage($basename);
+    		$image = $self -> newImage($basename);
     		if ( !$image )
     		{
 				$file -> close();
@@ -264,7 +262,7 @@ sub importGroup
 				}
 			) or die "Couldn't make Dimensions attribute";
    
-    		$self->__storeOneFileInfo( \@finfo, $file, $params, $image,
+    		$self->storeOneFileInfo($file, $image,
 				0, $sizeX-1,
 				0, $sizeY-1,
 				0, $sizeZ-1,
@@ -272,7 +270,7 @@ sub importGroup
 				0, $sizeT-1,
 				"Bio-Rad PIC");
           		
-       		my ($pixels, $pix) = ($self -> {super}) -> __createRepositoryFile(
+       		my ($pixels, $pix) = $self -> createRepositoryFile(
     			$image, $sizeX, $sizeY, $sizeZ, $sizeC, $sizeT, $pixelType, 0, 0);
     		
     		$self -> {pixels} = $pixels;
@@ -281,20 +279,18 @@ sub importGroup
     		
     		if ($status ne '')
     		{
-    			($self -> {super}) -> __destroyRepositoryFile($pixels, $pix);
+    			$self -> destroyRepositoryFile($pixels, $pix);
 				die $status;
     		}
     		
-			$self->{image} = $image;
-    		$self->__storeInputFileInfo(\@finfo );
-			$self->__storeDisplayOptions();
+			$self->storeDisplayOptions($image);
     		return $image;
     	}
     	
     	# Different behavior for a single file
     	else
     	{
-    		$image = ($self -> {super}) -> __newImage($filename);
+    		$image = $self -> newImage($filename);
     		if ( !defined($image) )
     		{
 				$file -> close();
@@ -310,7 +306,7 @@ sub importGroup
 				}
 			) or die "Couldn't make Dimensions attribute";
 
-    		$self->__storeOneFileInfo( \@finfo, $file, $params, $image,
+    		$self->storeOneFileInfo($file, $image,
 			0, $sizeX-1,
 		   	0, $sizeY-1,
 		   	0, $sizeZ-1,
@@ -318,7 +314,7 @@ sub importGroup
 	   	   	0, $sizeT-1,
        		"Bio-Rad PIC");
           		
-       		my ($pixels, $pix) = ($self -> {super}) -> __createRepositoryFile(
+       		my ($pixels, $pix) = $self -> createRepositoryFile(
     			$image, $sizeX, $sizeY, $sizeZ, $sizeC, $sizeT, $pixelType, 0, 0);
     		
     		$self -> {pixels} = $pixels;
@@ -329,12 +325,10 @@ sub importGroup
     			
     		if ($status ne '')
     		{
-				($self -> {super}) -> __destroyRepositoryFile($pixels, $pix);
+				$self -> destroyRepositoryFile($pixels, $pix);
 				die $status;
     		}
-			$self->{image} = $image;
-    		$self->__storeInputFileInfo(\@finfo );
-			$self->__storeDisplayOptions();
+			$self->storeDisplayOptions($image);
     		return $image;
     	}
     }

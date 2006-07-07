@@ -86,7 +86,6 @@ use Class::Struct;
 use strict;
 use File::Basename;
 use Log::Agent;
-use OME::ImportEngine::Params;
 use OME::ImportEngine::TIFFUtils;
 use base qw(OME::ImportEngine::AbstractFormat);
 
@@ -105,7 +104,7 @@ a TIFF group that has images of the same plate well taken at 2 different
 illumination wavelengths could have files named "plate4_well54_w1.tiff"
 and "plate4_well54_w2.tiff".
 
-To group related files together, a call to __getRegexGroups() in the superclass
+To group related files together, a call to getRegexGroups() in the superclass
 is used, followed by sorting and verification that files are indeed tiffs.
 
 =cut
@@ -114,37 +113,6 @@ is used, followed by sorting and verification that files are indeed tiffs.
 
 The following public methods are available:
 
-
-=head2 B<new>
-
-
-    my $importer = OME::ImportEngine->TIFFreader->new($session, $module_execution)
-
-Creates a new instance of this class. The other public methods of this
-class are accessed through this instance.  The caller, which would
-normally be OME::ImportEngine::ImportEngine, should already
-have created the session and the module_execution.
-
-=cut
-
-
-sub new {
-    my $invoker = shift;
-    my $class = ref($invoker) || $invoker;   # called from class or instance
-
-	my $self = $class->SUPER::new(@_);
-	   $self->{'super'} = $self;
-
-	# FIXME: Yes, that's a cyclical reference. The class/object semantics here
-	# are horrid. Storing a reference to the superclass in the attribute of the
-	# child? Why exactly? No idea.
-	#
-	# -Chris <callan@blackcat.ca>
-
-    $self->{params} = new OME::ImportEngine::Params;
-
-    return $self;
-}
 
 
 =head2 B<getGroups> S< > S< > S< >
@@ -184,30 +152,20 @@ sub getGroups {
 	}
 
     # Group files with recognized patterns together
-    # Sort them by channels, z's, then timepoints
-    my ($groups, $infoHash) = $self->__getRegexGroups(\%TIFFs);
+    # Sort them by Z's, channels, then timepoints
+    my ($groups, $infoHash) = $self->getRegexGroups(\%TIFFs);
 
 	my ($name,$group);
     while ( ($name,$group) = each %$groups ) {
     	next unless defined($name);
-    	my $maxZ = $infoHash->{ $name }->{ maxZ };
-		my $maxT = $infoHash->{ $name }->{ maxT };
-		my $maxC = $infoHash->{ $name }->{ maxC };
+    	my $nZfiles = $infoHash->{ $name }->{ nZfiles };
+		my $nCfiles = $infoHash->{ $name }->{ nCfiles };
+		my $nTfiles = $infoHash->{ $name }->{ nTfiles };
 		my @groupList;
 	
-		# XXX: The semantics here are strange, previously this was "<=" but the
-		# attribute names start with "max." I'm not sure *exactly* what was
-		# intended but "<" seems to be correct. [Bug #328]
-		#
-		# -Chris <callan@blackcat.ca>
-		#
-		# XXX: This was strange because of a lack of sorting - the string literal
-		# from the RE match was used as an array index resulting in "_w1" going
-		# into c index 1 instead of 0.
-		# -Ilya <igg@nih.gov>
-		for (my $z = 0; $z < $maxZ; $z++) {
-    		for (my $c = 0; $c < $maxC; $c++) {
-    			for (my $t = 0; $t < $maxT; $t++) {
+		for (my $z = 0; $z < $nZfiles; $z++) {
+    		for (my $c = 0; $c < $nCfiles; $c++) {
+    			for (my $t = 0; $t < $nTfiles; $t++) {
     				$file = $group->[$z][$c][$t]->{File};
     				die "Uh, file is not defined at (z,c,t)=($z,$c,$t)!\n"
     					unless ( defined($file) );
@@ -220,16 +178,8 @@ sub getGroups {
 					# Note that undef strings are converted to ''.
     				
     				push (@groupList, $file);
-    				$xref->{ $file }->{ 'Image.SizeZ' } = $maxZ;
-    				$xref->{ $file }->{ 'Image.NumTimes' } = $maxT;
-    				$xref->{ $file }->{ 'Image.NumWaves' } = $maxC;
     				
     				# delete the file from the hash, so it's not processed by other importers
-					# ---
-					# Not sure how the deletion semantics were supposed to work, but this
-					# hash is keyed off of filenames. [Bug #328]
-					#
-					# -Chris <callan@blackcat.ca>
     				$filename = $file->getFilename();
 					logdbg "debug",  "deleting $filename in group $name";
 					delete $fref->{ $filename };
@@ -239,7 +189,11 @@ sub getGroups {
     	}
     	push (@outlist, {
     		Files => \@groupList,
-    		BaseName => $name
+    		BaseName => $name,
+    		GroupInfo => $group,
+    		nZfiles  => $nZfiles,
+    		nCfiles  => $nCfiles,
+    		nTfiles  => $nTfiles,
     	})
     		if ( scalar(@groupList) > 0 );
     }
@@ -248,31 +202,26 @@ sub getGroups {
     foreach $file ( values %TIFFs ) {    	
     	
     	$filename = $file->getFilename();
-    	my $basename = $self->__nameOnly($filename);
-    	
-    	$xref->{ $file }->{ 'Image.SizeZ' } = 1;
-    	$xref->{ $file }->{ 'Image.NumTimes' } = 1;
-    	$xref->{ $file }->{ 'Image.NumWaves' } = 1;
+    	my $basename = $self->nameOnly($filename);
+    	my $group;
+    	$group->[0][0][0]={
+    		File => $file,
+    		Z    => undef,
+    		C    => undef,
+    		T    => undef,
+    	};
     	push (@outlist, {
     		Files => [$file],
-    		BaseName => $basename
+    		BaseName => $basename,
+    		GroupInfo => $group,
+    		nZfiles  => 1,
+    		nCfiles  => 1,
+    		nTfiles  => 1,
     	});
 		logdbg "debug",  "deleting $filename in singleton group $basename";
 		delete $fref->{ $filename };
 		delete $TIFFs{ $filename };
     }
-    
-#     foreach my $element ( @outlist )
-# 	{
-# 		print "Loop: \n";
-# 		foreach my $temp ( @$element )
-# 		{
-# 			print "\t$temp\n";
-# 		}
-# 	}
-    
-    # Store the xml hash for later use in importGroup.
-    $self->{ params }->{ xml_hash } = $xref;
 	
     return \@outlist;
 }
@@ -280,7 +229,10 @@ sub getGroups {
 
 =head2 importGroup
 
-    my $image = $importer->importGroup(\@filenames)
+    my $image = $importer->importGroup($groupHash)
+    $groupHash contains:
+    	Files => an array reference to a list of file objects
+    	BaseName => a string to use as the base name for this group of files.
 
 This method imports a group of related TIFF files into a single
 OME 5D image. The caller passes the ordered set of input files 
@@ -324,128 +276,85 @@ sub importGroup {
 	$file->close();
 	
 	my $filename = $file->getFilename();
+    
+	my $sizeX = $tag0->{TAGS->{ImageWidth}}->[0];
+	my $sizeY = $tag0->{TAGS->{ImageLength}}->[0];
+	my $sizeZ = $group->{nZfiles};
+	my $sizeC = $group->{nCfiles};
+	my $sizeT = $group->{nTfiles};
+	my $bpp = $tag0->{TAGS->{BitsPerSample}}->[0];
 
-    my $params = $self->{params};
-    my $xref = $params->{xml_hash};
-    
-    $params->fref($file);
-    $params->oname($filename);
-    $params->endian($tag0->{__Endian});
-    
-	my $sizeX = $xref->{ $file }->{'Image.SizeX'} = $tag0->{TAGS->{ImageWidth}}->[0];
-	my $sizeY = $xref->{ $file }->{'Image.SizeY'} = $tag0->{TAGS->{ImageLength}}->[0];
-	my $bpp = $xref->{ $file }->{'Data.BitsPerPixel'} = $tag0->{TAGS->{BitsPerSample}}->[0];
-	$params->byte_size( $self->__bitsPerPixel2bytesPerPixel($xref->{ $file}->{'Data.BitsPerPixel'}));
 	
 	# for rgb tiffs, each single image gives three channels
+	my $isRGB;
 	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
-		$xref->{ $file }->{'Image.NumWaves'} = 3;
+		$sizeC *= 3;
+		$isRGB = 1;
 	}
 
 	my $basename = $group->{BaseName};
-	my $image = $self->__newImage($basename);
+	my $image = $self->newImage($basename);
 	$self->{image} = $image;
 
-	# pack together & store info in input file
-	my @finfo;
-
-	my ($pixels, $pix) = $self->__createRepositoryFile($image, 
-						 $xref->{ $file }->{'Image.SizeX'},
-						 $xref->{ $file }->{'Image.SizeY'},
-						 $xref->{ $file }->{'Image.SizeZ'},
-						 $xref->{ $file }->{'Image.NumWaves'},
-						 $xref->{ $file }->{'Image.NumTimes'},
-						 $xref->{ $file }->{'Data.BitsPerPixel'});
-	$self->{pixels} = $pixels;
+	my ($pixels, $pix) = $self->createRepositoryFile($image, 
+						 $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp);
 	
-	my $maxZ = $xref->{ $file }->{'Image.SizeZ'};
-	my $maxT = $xref->{ $file }->{'Image.NumTimes'};
-	my $maxC = $xref->{ $file }->{'Image.NumWaves'};
 	my @channelInfo;
-	
-	# Do a check for RGB.  If it's RGB, each file has 3 channels.
-	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}) {
-		foreach $file (@$groupList) {
-			eval
-			{
-				$pix->convertPlaneFromTIFF($file, 0, 0, 0);
-			};
-			die "RGB convertPlaneFromTIFF failed: $@\n" if $@;
-			$self->doSliceCallback($callback);
-			for (my $i = 0; $i < 3; $i++) {
-				push @channelInfo, {chnlNumber => $i,
-					ExWave     => undef,
-					EmWave     => undef,
-					Fluor      => undef,
-					NDfilter   => undef};
-			}
-			
-			$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-				  0, $xref->{ $file }->{'Image.SizeX'}-1,
-				  0, $xref->{ $file }->{'Image.SizeY'}-1,
-				  0, $xref->{ $file }->{'Image.SizeZ'}-1,
-				  0, $xref->{ $file }->{'Image.NumWaves'}-1,
-				  0, $xref->{ $file }->{'Image.NumTimes'}-1,
-				  "TIFF");
-		}
 
-	# This isn't RGB, so import it normally.  The files are processed in this way because
+	# The files are processed in this way because
 	# of the sorting done in the getGroups method.
-	} else {
-		for (my $z = 0; $z < $maxZ; $z++) {
-			for (my $c = 0; $c < $maxC; $c++) {
-    			for (my $t = 0; $t < $maxT; $t++) {
-    				eval {
-						$file = shift( @$groupList );
-						logdbg "debug",  "shifted ".$file->getFilename();
-						$pix->convertPlaneFromTIFF($file, $z, $c, $t);						
-					};
-					
-					die "convertPlaneFromTIFF failed: $@\n" if $@;
-					$self->doSliceCallback($callback);
-					$xref->{ $file }->{'Image.SizeX'} = $sizeX;
-					$xref->{ $file }->{'Image.SizeY'} = $sizeY;
-					$xref->{ $file }->{'Data.BitsPerPixel'} = $bpp;
-					$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-								  0, $sizeX-1,
-								  0, $sizeY-1,
-								  $z, $z,
-								  $c, $c,
-								  $t, $t,
-								  "TIFF");
+	for (my $z = 0; $z < $sizeZ; $z++) {
+		for (my $c = 0; $c < $sizeC; $c++) {
+			for (my $t = 0; $t < $sizeT; $t++) {
+				eval {
+					$file = shift( @$groupList );
+					logdbg "debug",  "shifted ".$file->getFilename();
+					$pix->convertPlaneFromTIFF($file, $z, $c, $t);						
+				};
+				die "convertPlaneFromTIFF failed: $@\n" if $@;
+				# If it's RGB, each file has 3 channels.
+				my $c1;
+				if ($isRGB) {
+					$c1 = $c+2;
+				} else {
+					$c1 = $c;
 				}
+				$self->doSliceCallback($callback);
+				$self->storeOneFileInfo($file, $image,
+					0, $sizeX-1,
+					0, $sizeY-1,
+					$z, $z,
+					$c, $c1,
+					$t, $t,
+					"TIFF");
+				$c = $c1; # make sure to advance c properly if its RGB
 			}
-		}
-
-		# Only create a channel info for each *channel* not for each and every TIFF
-		# that we import. [Bug #346]
-		#
-		# -Chris <callan@blackcat.ca>
-		for (my $c = 0; $c < $maxC; $c++) {
-			push @channelInfo, {chnlNumber => $c,
-			                    ExWave     => undef,
-			                    EmWave     => undef,
-			                    Fluor      => undef,
-			                    NDfilter   => undef};
 		}
 	}
+
+	for (my $c = 0; $c < $sizeC; $c++) {
+		push @channelInfo, {chnlNumber => $c,
+							ExWave     => undef,
+							EmWave     => undef,
+							Fluor      => undef,
+							NDfilter   => undef};
+	}
 	OME::Tasks::PixelsManager->finishPixels( $pix, $pixels );
-	
-	$self->__storeInputFileInfo(\@finfo);
-	
+		
 	# Store info about each input channel (wavelength)
-	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}) {
-		$self->__storeChannelInfoRGB(scalar(@$groupList)*3, @channelInfo);
+	if ($isRGB) {
+		$self->storeChannelInfoRGB($image, @channelInfo);
+		$self->storeDisplayOptions ($image, {BlackLevel => 0, WhiteLevel => (2**$bpp)-1});
 		my %display_options = map{ 
 			$_ => {
 				BlackLevel => 0, 
-				WhiteLevel => 2**$xref->{ $file }->{'Data.BitsPerPixel'}-1
+				WhiteLevel => (2**$bpp)-1,
 			}
-		} ( 0..($maxC-1) );
-		$self->__storeDisplayOptions (\%display_options);
+		} ( 0..($sizeC-1) );
+		$self->storeDisplayOptions ($image, \%display_options);
 	} else {
-		$self->__storeChannelInfo (scalar(@$groupList), @channelInfo);
-		$self->__storeDisplayOptions ();
+		$self->storeChannelInfo ($image, @channelInfo);
+		$self->storeDisplayOptions ($image);
 	}
 	return $image;
 }

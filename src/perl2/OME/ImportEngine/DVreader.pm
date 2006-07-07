@@ -198,7 +198,7 @@ sub new {
 
 
     bless $self, $class;
-    $self->{super} = $self->SUPER::new();
+
     my %paramHash;
     $self->{params} = new OME::ImportEngine::Params(\%paramHash);
     return $self;
@@ -238,7 +238,7 @@ sub getGroups {
 	}
 
     # Clean out the $filenames list.
-    $self->__removeFiles($fhash,\@files_found);
+    $self->removeFiles($fhash,\@files_found);
 
     return \@files_found;
 }
@@ -280,19 +280,19 @@ sub importGroup {
 
     my $sha1 = $file->getSHA1();
 
-    my $session = ($self->{super})->Session();
+    my $session = $self->Session();
     my $factory = $session->Factory();
 
     $file->open('r');
     my $filename = $file->getFilename();
-    my $base = ($self->{super})->__nameOnly($filename);
+    my $base = $self->nameOnly($filename);
 
     my $params = $self->getParams();
     $params->fref($file);
     $params->oname($base);
     $params->endian(getEndian($file));
 
-    my $image = ($self->{super})->__newImage($filename);
+    my $image = $self->newImage($filename);
     $self->{image} = $image;
     if (!defined($image)) {
 		$file->close();
@@ -315,8 +315,8 @@ sub importGroup {
 	# imported correctly. [Bug #290]
 	my $is_float = $xref->{'Data.BitsPerPixel'} == 32 ? 1 : 0;
 
-	my ($pixels, $pix) = ($self->{super})->
-      __createRepositoryFile($image, 
+	my ($pixels, $pix) = $self->
+      createRepositoryFile($image, 
                              $xref->{'Image.SizeX'},
                              $xref->{'Image.SizeY'},
                              $xref->{'Image.SizeZ'},
@@ -328,40 +328,31 @@ sub importGroup {
     $status = readPixels($self, $params, $pix, $callback);
     if ($status ne '') {
 		$file->close();
-		($self->{super})->__destroyRepositoryFile($pixels, $pix);
+		$self->destroyRepositoryFile($pixels, $pix);
 		die $status ;
     }
 
     # pack together info on input file
     my @finfo;
-    $self->{in_files} = {file => $file,
-                         path => $filename,
-			  file_sha1 => ($file->getSHA1()),
-			  bigendian => ($params->{endian} eq "big"),
-			  image_id => $image->id(),
-			  x_start => 0,
-			  x_stop => $xref->{'Image.SizeX'}-1,
-			  y_start => 0,
-			  y_stop => $xref->{'Image.SizeY'}-1,
-			  z_start => 0,
-			  z_stop => $xref->{'Image.SizeZ'}-1,
-			  w_start => 0,
-			  w_stop => $xref->{'Image.NumWaves'}-1,
-			  t_start => 0,
-			  t_stop => $xref->{'Image.NumTimes'}-1,
-              format => "DeltaVision R3D"};
+	$self->storeOneFileInfo($file, $image,
+		0, $xref->{'Image.SizeX'}-1,
+		0, $xref->{'Image.SizeY'}-1,
+		0, $xref->{'Image.SizeZ'}-1,
+		0, $xref->{'Image.NumWaves'}-1,
+		0, $xref->{'Image.NumTimes'}-1,
+		"DeltaVision R3D");
 
     $file->close();
 
-    $self->storeMetadata($params);
-	$self->__storeDisplayOptions();
+    $self->storeMetadata($image, $params);
+	$self->storeDisplayOptions($image);
     return $image;
 
 }
 
 # Override AbstractFormat's method in order to mimic the display defaults used 
 # by DeltaVision acquisition software.
-sub __defaultBlackWhiteLevels {
+sub defaultBlackWhiteLevels {
 	my ( $self, $statsHash, $channelIndex, $theT ) = @_;	
 	my $blackLevel = $statsHash->{ $channelIndex }{ $theT }->{Minimum};
 	my $whiteLevel = $statsHash->{ $channelIndex }{ $theT }->{Maximum};
@@ -510,62 +501,49 @@ sub readPixels {
 
 
 sub storeMetadata {
-    my ($self, $params) = @_;
+    my ($self, $image, $params) = @_;
 
     # store channel (wavelength) metadata
-    $self->storeChannelInfo($params);
-
-    # run post-import analysis (statistics)
-    #$self->doImportAnalysis($params);
-
-    # store info about the input files
-    $self->storeInputFileInfo();
+    $self->storeMyChannelInfo($image, $params);
 
     # store input file dimension info
-    $self->storeInputPixelDimension($params);
+    $self->storeInputPixelDimension($image, $params);
 
 }
 
 
 # Make array of per wavelength info.
 # Feed it to helper routine to be put in DB
-sub storeChannelInfo {
-    my ($self, $params) = @_;
+sub storeMyChannelInfo {
+    my ($self, $image, $params) = @_;
     my $xml_hash = $params->xml_hash();
     my @channelInfo;
     my $numWaves = $self->{NumWaves};
     my $wv = $xml_hash->{'WavelengthInfo.'};
     for (my $i = 0; $i < $numWaves; $i++) {
 	my $wvh = $wv->[$i];
-	push @channelInfo, {chnlNumber => $i,
+	push @channelInfo, {
+				chnlNumber => $i,
 			    ExWave     => undef,
 			    EmWave     => $wvh->{'WavelengthInfo.EmWave'},
 			    Fluor      => undef,
-			    NDfilter   => undef};
+			    NDfilter   => undef
+		};
     }
 
-    $self->__storeChannelInfo($numWaves, @channelInfo);
+    $self->storeChannelInfo($image, @channelInfo);
 }
 
-
-# Make array of info on input files. Feed it to helper
-# routine to be put in DB tbl for image files XYZWT.
-sub storeInputFileInfo {
-    my ($self) = @_;
-
-    push my @finfo, $self->{in_files};
-    $self->__storeInputFileInfo(\@finfo);
-}
 
 # Make an array of input file's pizel size. Feed it to helper
 # routine to be put in image file pixel dimension DB table.
 sub storeInputPixelDimension {
-    my ($self, $params) = @_;
+    my ($self, $image, $params) = @_;
     my $xml_hash = $params->xml_hash();
     my $pixelInfo = [$xml_hash->{'Image.PixelSizeX'},
 		       $xml_hash->{'Image.PixelSizeY'},
 		       $xml_hash->{'Image.PixelSizeZ'}];
-    $self->__storePixelDimensionInfo($pixelInfo);
+    $self->storePixelDimensionInfo($image,$pixelInfo);
 }
 
 

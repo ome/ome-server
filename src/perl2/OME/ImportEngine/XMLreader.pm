@@ -48,6 +48,7 @@ use OME::Tasks::OMEImport;
 
 use base qw(OME::ImportEngine::AbstractFormat);
 
+
 # We call OMEIS to tell us if files are in XML format (IsOMExml)
 # It returns a 0 or a 1.
 sub getGroups {
@@ -66,7 +67,7 @@ my $file;
 
 
     # Clean out the $filenames list.
-    $self->__removeFiles($fhash,\@outlist);
+    $self->removeFiles($fhash,\@outlist);
 
 	return \@outlist;
 }
@@ -93,14 +94,12 @@ sub importGroup {
 	foreach $object (@$objects) {
 		if (UNIVERSAL::isa($object,'OME::Image')) {
 			foreach my $pixels ($object->pixels() ) {
-				$self->{image} = $object;
-				$self->{pixels} = $pixels;
-				$self->__storeDisplayOptions();
+				$self->storeDisplayOptions($object);
 				OME::Tasks::PixelsManager->saveThumb( $pixels );
 			}
 			OME::Tasks::ImportManager->markImageFiles(
 				$object,
-				$self->__touchOriginalFile ($file,'OME XML'));
+				$self->touchOriginalFile ($file,'OME XML'));
 			logdbg "debug", ref ($self)."->importGroup: Image Name: ".$object->name();
 			push (@images,$object) ;
 		}

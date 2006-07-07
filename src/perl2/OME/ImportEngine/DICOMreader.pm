@@ -102,7 +102,6 @@ sub new {
 
 
     bless $self, $class;
-    $self->{super} = $self->SUPER::new();
 
     my %paramHash;
     $self->{params} = new OME::ImportEngine::Params(\%paramHash);
@@ -140,14 +139,14 @@ sub getGroups {
 	}
 
     # Group files with recognized patterns together
-    my ($groups, $infoHash) = $self->{super}->__getRegexGroups(\%DICOMs);
+    my ($groups, $infoHash) = $self->getRegexGroups(\%DICOMs);
 
 	# process grouped DICOM images first
 	my ($name,$group);
     while ( ($name,$group) = each %$groups ) {
     	next unless defined($name);
     	my @groupList;
-    	my $maxZ = $infoHash->{$name}->{maxZ};
+    	my $maxZ = $infoHash->{$name}->{nZfiles};
 
 		for (my $z = 0; $z < $maxZ; $z++) {
 			$file = $group->[$z][0][0]->{File};
@@ -169,7 +168,7 @@ sub getGroups {
     
     foreach my $file ( values %DICOMs ) {    			
     	$filename = $file->getFilename();
-    	my $basename = $self->__nameOnly($filename);
+    	my $basename = $self->nameOnly($filename);
       	
         # it's in the DICOM format, so remove from input list, put on output list
 		delete $fref->{ $filename };
@@ -221,7 +220,7 @@ database transactions.
 sub importGroup {
     my ($self, $group, $callback) = @_;
     
-    my $session = ($self->{super})->Session();
+    my $session = $self->Session();
     my $factory = $session->Factory();
     my $groupList = $group->{Files};
     
@@ -288,11 +287,11 @@ sub importGroup {
     $params->row_size($xref->{'Image.SizeX'} * ($params->byte_size));
 
     					 
-    my $image = ($self->{super})->__newImage($basename);
+    my $image = $self->newImage($basename);
     $self->{image} = $image;
                   
 	my ($pixels, $pix) = 
-	($self->{super})->__createRepositoryFile($image, 
+	$self->createRepositoryFile($image, 
 						 $xref->{'Image.SizeX'},
 						 $xref->{'Image.SizeY'},
 						 $xref->{'Image.SizeZ'},
@@ -313,7 +312,7 @@ sub importGroup {
 		$file = shift( @$groupList );
 		
 		# store file info 
-		$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+		$self->storeOneFileInfo($file, $image,
 					  0, $xref->{'Image.SizeX'}-1,
 					  0, $xref->{'Image.SizeY'}-1,
 					  0, $xref->{'Image.SizeZ'}-1,
@@ -359,11 +358,9 @@ sub importGroup {
     }
 
 	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
-	
-	$self->__storeInputFileInfo(\@finfo);
-	
+		
 	# Store info about each input channel (wavelength).
-	$self->__storeChannelInfo();
+	$self->storeChannelInfo($image);
 	
 	# Set display options
 	my $windowCenter = $dicom_tags->value('WindowCenter');
@@ -374,9 +371,9 @@ sub importGroup {
 	}
 	
 	if (not defined $windowCenter or not defined $windowWidth) {
-		$self->__storeDisplayOptions();
+		$self->storeDisplayOptions($image);
 	} else {
-		$self->__storeDisplayOptions(
+		$self->storeDisplayOptions($image,
 			{min => $windowCenter - $windowWidth/2 - $rescaleIntercept, 
 			 max => $windowCenter + $windowWidth/2 - $rescaleIntercept });
 	}

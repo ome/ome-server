@@ -322,41 +322,6 @@ sub importFiles {
 
       GROUP:
         foreach my $group (@$groups) {
-            #print STDERR ".";
-
-            # First check to see if this group has been imported yet.
-            my $sha1;
-            eval {
-                $sha1 = $format->getSHA1($group);
-            };
-            if ($@) {
-                logwarn "Error $@ calculating SHA-1: $format_class $group";
-                next GROUP;
-            }
-
-            if (defined $sha1) {
-                my $old_file = $factory->
-                  findAttribute("OriginalFile",
-                                SHA1 => $sha1);
-
-                if (defined $old_file) {
-                    __debug("Image has already been imported.  ");
-                    if ($self->{_flags}->{AllowDuplicates}) {
-                        __debug("AllowDuplicates is on.\n");
-                    } else {
-                        __debug("Skipping...\n");
-                        $self->{nDups}++;
-                        next GROUP;
-                    }
-                } else {
-                    # TODO: This should likely be a database corruption error
-                    # or could it be what happens if an old file gets archived?
-                }
-            } else {
-                # TODO: Should this be an error if getSHA1 returns undef?
-            }
-
-            # This hasn't been imported yet, so slurp it in.
             my ($image,$import_images);
             eval {
                 $image = $format->importGroup($group, \&localSliceCallback);
@@ -386,6 +351,33 @@ sub importFiles {
 			}
 			
 			foreach $image (@$import_images) {
+				my $imageSHA1 = $image->default_pixels()->FileSHA1();
+			# Check for duplicate images
+                my $old_image = $factory->findObject('OME::Image', {
+					'default_pixels.FileSHA1' => $image->default_pixels()->FileSHA1(),
+					'id'                      => ['<>',$image->id()],
+					'__limit'                 => 1,
+				});
+				if ($old_image) {
+					logwarn 'Existing Image '.$old_image->name().' (ID='.$old_image->id().
+						') found with duplicate pixels while importing '.$image->name().
+						' (ID='.$image->id().').';
+
+				# Check the AllowDuplicates flag
+                    if ($self->{_flags}->{AllowDuplicates}) {
+                        logwarn("AllowDuplicates is on.\n");
+                    } else {
+                        logwarn("Skipping...\n");
+                        $self->{nDups}++;
+                        logwarn "This session's Factory has an auto-commit DBH!!!"
+                        	if ($factory->obtainDBH()->{AutoCommit});
+						$factory->rollbackTransaction();
+						OME::Tasks::ImportManager->abortImageImport($image);
+						doGroupCallback($self->{_flags}, 0);
+                        next GROUP;
+                    }
+				}
+				
 				my $image_mex = OME::Tasks::ImportManager->
 				  getImageImportMEX($image);
 				$image_mex->status('FINISHED');
@@ -428,6 +420,8 @@ sub importFiles {
 
     return \@images;
 }
+
+
 
 sub finishImport {
     my $self = shift;

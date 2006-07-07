@@ -46,7 +46,7 @@ package OME::ImportEngine::AbstractFormat;
 
 =head1 NAME
 
-OME::ImportEngine::AbstractFormat - the superclass of all proprietary
+OME::ImportEngine::AbstractFormat - the superclass of all native
 image format importers
 
 =head1 SYNOPSIS
@@ -78,36 +78,10 @@ use Log::Agent;
 use base qw(Class::Data::Inheritable);
 __PACKAGE__->mk_classdata('fullPaths');
 
-=head1 CONTRACT
+=head1 IMPLEMENTATION
 
 The following public methods must be available for a class to be used
 by the import engine to import images.
-
-=head2 new
-
-	my $format = OME::ImportEngine::AbstractFormat->new();
-
-Creates a new instance of this format import class.  Any new
-attributes created by this importer should point to the appropriate
-import module executions, otherwise they will not be visible to any
-future analysis chains.  This MEX's can be obtained via the get*MEX
-methods in the OME::Tasks::ImportManager class.
-
-This is the only contract method which has a non-abstract
-implementation in AbstractFormat.  Any subclasses should be sure to
-call $self->SUPER::new() in their own constructors.
-
-=cut
-
-sub new {
-    my ($proto) = @_;
-    my $class = ref($proto) || $proto;
-
-    my $self = {};
-
-    bless $self, $class;
-    return $self;
-}
 
 =head2 getGroups
 
@@ -130,7 +104,7 @@ this information for you.
 Any files which can be imported should be removed from the $filenames
 array.  (Since it's a reference, these changes will be visible to the
 import engine and to the other format classes.)  A helper method
-(C<__removeFilenames>) is provided to aid in this.  If the files are
+(C<removeFiles>) is provided to aid in this.  If the files are
 not removed from the list, other format classes will have a chance to
 import the file as well, creating duplicates.  This is almost never
 the correct behavior.
@@ -161,7 +135,7 @@ which does not appear in any other image.  (Header files describing
 filename schemes or plate arrangements would not qualify, as they
 would be used by more than one image.)
 
-A helper method (C<__getFileSHA1>) is provided to aid in the
+A helper method (C<getFileSHA1>) is provided to aid in the
 calculation of the SHA-1 digest.
 
 This method has an abstract implementation in AbstractFormat;
@@ -212,7 +186,10 @@ freed in this method.
 
 =cut
 
+
 sub cleanup {
+	# clear out the TIFF tag cache
+	OME::ImportEngine::TIFFUtils::cleanup();
 }
 
 =head1 HELPER METHODS
@@ -221,8 +198,34 @@ The following methods are available to subclasses of AbstractFormat.
 They are intended to factor out the tasks common to all formats.
 B<NOTE:> In the following prototypes, the object is called $self, to
 represent the fact that these methods are to be called from within
-overrides of the above contract methods, and are not meant to be
+overrides of the above methods, and are not meant to be
 called publicly.
+
+
+=head2 new
+
+	my $format = OME::ImportEngine::AbstractFormatSubclass->new();
+
+Creates a new instance of a native format import class.  All format import classes
+inherit from AbstractFormat.
+Any new attributes created by this importer should point to the appropriate
+import module executions, otherwise they will not be visible to any
+future analysis chains.  This MEX's can be obtained via the get*MEX
+methods in the OME::Tasks::ImportManager class.
+
+=cut
+
+sub new {
+    my ($proto) = @_;
+    my $class = ref($proto) || $proto;
+
+    my $self = {};
+
+    bless $self, $class;
+    return $self;
+}
+
+
 
 =head2 Session
 
@@ -237,7 +240,7 @@ C<new> method calls its superclass C<new> method.
 sub Session { return OME::Session->instance(); }
 
 
-=head2 __getRegexGroups
+=head2 getRegexGroups
 
 This method is called from an importer and is passed a reference to a hash
 whose values are OME files.  This method will look for a Semantic Type that
@@ -255,33 +258,30 @@ my $FileNameGroups = {
 	Format    => 'OME::ImportEngine::TIFFreader',
  	RegEx     => '(basename)_t(\d+)_z(\d+)_c(\d+)',
  	Name 	  => 'foo',
-	BaseName  => 1,
+	BaseName  => '$1',
 	T         => 2,
 	Z         => 3,
 	C		  => 4
 
 A hash of the number of Z's, C's and T's found is created during the method
 call:
-		my $maxZ = $infoHash->{ $pattern }->{ maxZ };
+		my $numZ = $infoHash->{ $pattern }->{ nZfiles };
 
 To get a file out of @groups, use my $file = $groups{$basename}[$z][$t][$c];
 
 Usage:
-my ($groups, $infoHash) = $self->__getRegexGroups(\%file_list);
+my ($groups, $infoHash) = $self->getRegexGroups(\%file_list);
 
 };
 
 =cut
 
-sub __getRegexGroups {
+sub getRegexGroups {
     my ($self, $read_only_file_list) = @_;
 
     my $session = $self->Session();
     my $factory = $session->Factory();
     my %groups;
-    my $maxZ;
-    my $maxT;
-    my $maxC;
 
     # An array containing the matches making up basename - NS
     my @basenameMatches; 
@@ -403,9 +403,9 @@ sub __getRegexGroups {
 			@Zs = sort { $a <=> $b } keys %{$pattern->{Z}};
 			@Cs = sort { $a <=> $b } keys %{$pattern->{C}};
 			@Ts = sort { $a <=> $b } keys %{$pattern->{T}};
-			$infoHash->{ $name }->{ maxZ } = scalar (@Zs);
-			$infoHash->{ $name }->{ maxC } = scalar (@Cs);
-			$infoHash->{ $name }->{ maxT } = scalar (@Ts);
+			$infoHash->{ $name }->{ nZfiles } = scalar (@Zs);
+			$infoHash->{ $name }->{ nCfiles } = scalar (@Cs);
+			$infoHash->{ $name }->{ nTfiles } = scalar (@Ts);
 			logdbg "debug",  "Group name $name Zs: @Zs Cs: @Cs Ts: @Ts\n";
 
 			($z,$c,$t) = (0,0,0);
@@ -436,16 +436,16 @@ sub __getRegexGroups {
 }
 
 
-=head2 __newImage
+=head2 newImage
 
-	my $image = $self->__newImage($image_name);
+	my $image = $self->newImage($image_name);
 
 Calls the session's Factory to create a new image object. Those attributes
 that are known before the import are recorded in the new image.
 
 =cut
 
-sub __newImage {
+sub newImage {
     my ($self, $fn, $creation) = @_;
 
     my $session = $self->Session();
@@ -473,9 +473,9 @@ sub __newImage {
 }
 
 
-=head2 __getFileSHA1
+=head2 getFileSHA1
 
-	my $sha1 = $self->__getFileSHA1($filename);
+	my $sha1 = $self->getFileSHA1($filename);
 
 Calculates the SHA-1 digest of the contents of the given file.  If the
 file could not be read, or any other error occurred during the
@@ -483,7 +483,7 @@ calculation of the digest, this method returns C<undef>.
 
 =cut
 
-sub __getFileSHA1 {
+sub getFileSHA1 {
     my ($self,$filename) = @_;
 
     my $cmd = "openssl sha1 $filename |";
@@ -499,9 +499,9 @@ sub __getFileSHA1 {
     return $sha1;
 }
 
-=head2 __touchOriginalFile
+=head2 touchOriginalFile
 
-	my $file_attribute = $self->__touchOriginalFile($filename,$format);
+	my $file_attribute = $self->touchOriginalFile($filename,$format);
 
 Should be called once for each file which constitutes an image.
 Creates an OriginalFile attribute for this file.  If this file is
@@ -510,7 +510,7 @@ will be created.
 
 =cut
 
-sub __touchOriginalFile {
+sub touchOriginalFile {
     my ($self,$file,$format) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
@@ -526,9 +526,9 @@ sub __touchOriginalFile {
       	($self->fullPaths() ? $self->fullPaths()->{ $file->getFileID() } : () ));
 }
 
-=head2 __storeChannelInfo
+=head2 storeChannelInfo
 
-    $self->__storeChannelInfo($numWaves, @channelInfo);
+    $self->storeChannelInfo($image, @channelInfo);
 
 Stores metadata about each channel (wavelength) in the image. Each
 channel may have measures for excitation wavelength, emission wavelength,
@@ -551,11 +551,10 @@ Each channel info hash is keyed thusly:
 
 =cut
 
-sub __storeChannelInfo {
-    my ($self, $numWaves, @channelData) = @_;
-    # FIXME:  This has GOT to go...
-    my $image = $self->{image};
-    my $pixels = $self->{pixels};
+sub storeChannelInfo {
+    my ($self, $image, @channelData) = @_;
+
+    my $pixels = $image->default_pixels();
     my $factory = $self->Session()->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
@@ -583,9 +582,9 @@ sub __storeChannelInfo {
 }
 
 
-=head2 __storeChannelInfoRGB
+=head2 storeChannelInfoRGB
 
-    $self->__storeChannelInfoRGB($numWaves, @channelInfo);
+    $self->storeChannelInfoRGB($image, @channelInfo);
 
 Stores metadata about an RGB composite channel.  The channelInfo array
 should contain the three RGB channels, which will be stored as channel
@@ -603,11 +602,9 @@ channels to store the channel component index (index into Pixels).
 
 =cut
 
-sub __storeChannelInfoRGB {
-    my ($self, $numWaves, @channelData) = @_;
-    # FIXME:  This has GOT to go...
-	my $pixels = $self->{pixels};
-	my $image = $self->{image};
+sub storeChannelInfoRGB {
+    my ($self, $image, @channelData) = @_;
+	my $pixels = $image->default_pixels();
     my $factory = $self->Session()->Factory();
 
     my $module_execution = OME::Tasks::ImportManager->
@@ -644,9 +641,9 @@ sub __storeChannelInfoRGB {
 
 }
 
-=head2 __storeDisplayOptions
+=head2 storeDisplayOptions
 
-    $self->__storeDisplayOptions( {
+    $self->storeDisplayOptions( $image, {
 		$channelIndex => {
 			BlackLevel => $blackLevel,
 			WhiteLevel => $whiteLevel,
@@ -664,7 +661,7 @@ Note: I (Josiah) would prefer an interface that looked like the following, but d
 have time for it ATM. If only some RGB+Gray channels were given, the others would be
 presumed to be off. Also, everything up to Red would be optional. Also, Gamma would
 be optional.
-$self->__storeDisplayOptions( {
+$self->storeDisplayOptions($image, {
 	ZStart => ...,
 	ZStop  => ...,
 	TStart => ...,
@@ -684,11 +681,10 @@ $self->__storeDisplayOptions( {
 =cut
 
 
-sub __storeDisplayOptions {
-	my ($self, $opts) = @_;
-    # FIXME:  This has GOT to go...
-	my $pixels = $self->{pixels};
-	my $image = $self->{image};
+sub storeDisplayOptions {
+	my ($self, $image, $opts) = @_;
+	my $pixels = $image->default_pixels();
+		
 	my $factory = $self->Session()->Factory();
 	    
 	my $module_execution = OME::Tasks::ImportManager->
@@ -757,7 +753,7 @@ sub __storeDisplayOptions {
 	$displayChannelData{ ChannelNumber } = $channelIndex;
 	if (not defined $opts->{ $channelIndex }) {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		$self->defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
 		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
 		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
@@ -773,7 +769,7 @@ sub __storeDisplayOptions {
 	$displayChannelData{ ChannelNumber } = $channelIndex;
 	if (not defined $opts->{ $channelIndex }) {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		$self->defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
 		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
 		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
@@ -789,7 +785,7 @@ sub __storeDisplayOptions {
 	$displayChannelData{ ChannelNumber } = $channelIndex;
 	if (not defined $opts->{ $channelIndex }) {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		$self->defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
 		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
 		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
@@ -804,7 +800,7 @@ sub __storeDisplayOptions {
 	$displayChannelData{ ChannelNumber } = $channelIndex;
 	if (not defined $opts->{ $channelIndex }) {
 		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
-		$self->__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		$self->defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	} else {
 		$displayChannelData{BlackLevel} = $opts->{ $channelIndex }->{BlackLevel};
 		$displayChannelData{WhiteLevel} = $opts->{ $channelIndex }->{WhiteLevel};
@@ -822,7 +818,7 @@ sub __storeDisplayOptions {
 }
 
 
-sub __defaultBlackWhiteLevels {
+sub defaultBlackWhiteLevels {
 	my ( $self, $statsHash, $channelIndex, $theT ) = @_;
 	my ( $blackLevel, $whiteLevel );
 	
@@ -836,80 +832,44 @@ sub __defaultBlackWhiteLevels {
 }
 
 
-=head2 __storeOneFileInfo
+=head2 storeOneFileInfo
 
-   __storeOneFileInfo($self, $info_aref, $fn, $params, $image, $st_x $end_x,
+   storeOneFileInfo($self, $info_aref, $fn, $params, $image, $st_x $end_x,
 		      $st_y, $end_y, $st_z, $end_z, $st_c, $end_c,
 		      $st_t, $end_z, $fileformat)
 
 Helper method for recording input file information.
 Packs the passed metadata about one input file into the info_array
-that is passed by reference. 
+that is passed by reference.  This combines a call to touchOriginalFile with a
+call to OME::Tasks::ImportManager->markImageFiles
 
 =cut
 
-sub __storeOneFileInfo {
-    my ($self, $info_aref, $fn, $params, $image, $st_x, $end_x,
+sub storeOneFileInfo {
+    my ($self, $fn, $image, $st_x, $end_x,
 	$st_y, $end_y, $st_z, $end_z, $st_c, $end_c,
 	$st_t, $end_t,$format) = @_;
 
+	my $file_attr = $self->touchOriginalFile($fn,$format);
+    logdbg "debug",  "Original file: ".$file_attr->Path();
 
-    push @$info_aref, { file => $fn,
-                        path => $fn->getFilename(),
-		      bigendian => ($params->{endian} eq "big"),
-		      image_id => $image->id(),
-		      x_start => $st_x,
-		      x_stop => $end_x,
-		      y_start => $st_y,
-		      y_stop => $end_y,
-		      z_start => $st_z,
-		      z_stop => $end_z,
-		      w_start => $st_c,
-		      w_stop => $end_c,
-		      t_start => $st_t,
-		      t_stop => $end_t,
-              format => $format};
+	OME::Tasks::ImportManager->
+		markImageFiles($image->id(),$file_attr);
 }
 
 
-=head2 __storeInputFileInfo
+=head2 storePixelDimensionInfo
 
-    __storeInputFileInfo(\@infoArray)
-
-Stores metadata about each input file that contributed pixels to the
-OME image. The $self hash has an array of hashes that contain all the
-input file information - one hash per input file. This routine writes
-this input file metadata to the database.
-
-=cut
-
-sub __storeInputFileInfo {
-    my ($self,$inarr) = @_;
-
-    foreach my $file_info (@$inarr) {
-        my $file_attr = $self->{super}->
-          __touchOriginalFile($file_info->{file},
-                              $file_info->{format});
-        OME::Tasks::ImportManager->
-            markImageFiles($file_info->{image_id},$file_attr);
-    }
-
-}
-
-
-=head2 __storePixelDimensionInfo
-
-    __storePixelDimensionInfo(\@pixelInfo)
+    storePixelDimensionInfo($image, \@pixelInfo)
 
 Stores metadata about the size of the input pixel. The dimensions are
 passed in via an array, which may be partially empty.
 
 =cut
 
-sub __storePixelDimensionInfo {
-    my ($self, $pixarr) = @_;
+sub storePixelDimensionInfo {
+    my ($self, $image, $pixarr) = @_;
 
-    my $image = $self->{image};
     my $factory = $self->Session()->Factory();
     my $img_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
         
@@ -922,7 +882,7 @@ sub __storePixelDimensionInfo {
 
 
 
-=head2 __storeInstrumemtInfo
+=head2 storeInstrumemtInfo
 
         $self->storeInstrumemtInfo($image,$model, $manufacturer, $orientation, $sn);
 
@@ -934,7 +894,7 @@ creation of an image composed from input images taken by different instruments.
 
 =cut
 
-sub __storeInstrumemtInfo {
+sub storeInstrumemtInfo {
     my ($self,$image,$model,$manufacturer,$orientation,$serialnum) = @_;
     my $factory = $self->Session()->Factory();
     my $img_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
@@ -949,9 +909,9 @@ sub __storeInstrumemtInfo {
 }
 
 
-=head2 __getFileSQLTimestamp
+=head2 getFileSQLTimestamp
 
-    __getSQLTimestamp($filename)
+    getFileSQLTimestamp($filename)
 
 Returns the GMT last modification time of $filename formated in a form 
 acceptable to Postgres as a timestamp. Currently, this routine outputs 
@@ -962,7 +922,7 @@ the string Mnth-dd-yyyy hh:mm:ss GMT enclosed in single quotes. For instance,
 
 # TODO:  make sure timestamp string is in vanilla SQL form
 
-sub __getFileSQLTimestamp {
+sub getFileSQLTimestamp {
     my ($self,$filename) = @_;
     my $sb = stat($filename);
     my @crtimes = split " ", scalar gmtime $sb->mtime;
@@ -972,9 +932,9 @@ sub __getFileSQLTimestamp {
 }
 
 
-=head2 B<__getNowTime>
+=head2 B<getNowTime>
 
-    __getNowTime()
+    getNowTime()
 
 Returns the current GMT time formated in a form acceptable to Postgres as 
 a timestamp. Currently, this routine outputs the string Mnth-dd-yyyy 
@@ -983,7 +943,7 @@ hh:mm:ss GMT enclosed in single quotes. For instance,
 
 =cut
 
-sub __getNowTime {
+sub getNowTime {
 	my $self = shift;
     my @now = split " ", scalar gmtime;
     my $now = "\'".$now[1]."-".$now[2]."-".$now[4]." ".$now[3]." GMT\'";
@@ -1013,9 +973,9 @@ sub doSliceCallback {
 
 
 
-=head2 __removeFiles
+=head2 removeFiles
 
-	$self->__removeFiles($files,$to_remove);
+	$self->removeFiles($files,$to_remove);
 
 Takes in two array references of files.  After this method returns,
 none of the members of the $to_remove list will exist in the $files
@@ -1023,7 +983,7 @@ list.
 
 =cut
 
-sub __removeFiles {
+sub removeFiles {
     my ($self,$file_list,$to_remove) = @_;
 
     foreach my $file (@$to_remove) {
@@ -1035,16 +995,16 @@ sub __removeFiles {
 }
 
 
-=head2 __nameOnly
+=head2 nameOnly
 
-	my $basename = $self->__nameOnly($full_pathname);
+	my $basename = $self->nameOnly($full_pathname);
 
 Takes in a fully qualified file name, and returns just the base filename.
 No path components and no extension will be returned.
 
 =cut
 
-sub __nameOnly {
+sub nameOnly {
     shift;
     my $basenm = basename($_[0]);
 
@@ -1061,10 +1021,10 @@ sub __nameOnly {
 
 
 
-=head2 __createRepositoryFile
+=head2 createRepositoryFile
 
 	my ($pixels_attribute,$pix_object) = $self->
-	    __createRepositoryFile($image,$sizeX,$sizeY,$sizeZ,
+	    createRepositoryFile($image,$sizeX,$sizeY,$sizeZ,
 	                           $sizeC,$sizeT,$bitsPerPixel,
 	                           [$isSigned],[$isFloat]);
 
@@ -1083,7 +1043,7 @@ access to the repository file.
 =cut
 
 
-sub __createRepositoryFile {
+sub createRepositoryFile {
     my ($self,$image,$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,
         $bitsPerPixel,$isSigned,$isFloat) = @_;
 
@@ -1093,7 +1053,7 @@ sub __createRepositoryFile {
     my $factory = $self->Session()->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
-    my $bytesPerPixel = $self->__bitsPerPixel2bytesPerPixel($bitsPerPixel);
+    my $bytesPerPixel = $self->bitsPerPixel2bytesPerPixel($bitsPerPixel);
 	my $pixelType = 
       OME::Tasks::PixelsManager->getPixelType($bytesPerPixel,$isSigned,$isFloat);
 
@@ -1116,9 +1076,9 @@ sub __createRepositoryFile {
 
 
 
-=head2  __bitsPerPixel2bytesPerPixel
+=head2  bitsPerPixel2bytesPerPixel
 
-        __bitsPerPixel2bytesPerPixel($bitsPerPixel)
+        bitsPerPixel2bytesPerPixel($bitsPerPixel)
 
 logic figures out the correct byte size based on bits.  
 this allows for TIFF files with un-natural pixel depth (i.e. 12bits per pixel)
@@ -1126,7 +1086,7 @@ use this instead of bytesPerPixel = bitsPerPixel/8
 
 =cut
 
-sub __bitsPerPixel2bytesPerPixel {
+sub bitsPerPixel2bytesPerPixel {
 	my ($self,$bitsPerPixel) = @_;
 	my $bytesPerPixel;
 	
@@ -1141,17 +1101,17 @@ sub __bitsPerPixel2bytesPerPixel {
 }
 
 
-=head2  __destroyRepositoryFile
+=head2  destroyRepositoryFile
 
-        __destroyRepositoryFile($pixels, $pix)
+        destroyRepositoryFile($pixels, $pix)
 
 Destroy the repository file referenced by $pixels/$pix. This would normally
-be called if an import fails after __createRepositoryFile() has been
+be called if an import fails after createRepositoryFile() has been
 successfully called.
 
 =cut
 
-sub __destroyRepositoryFile {
+sub destroyRepositoryFile {
     my ($self, $pixels, $pix) = @_;
 
 #    ** TODO**  Implement this

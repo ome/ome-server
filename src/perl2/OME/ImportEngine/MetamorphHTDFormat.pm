@@ -331,7 +331,7 @@ sub getGroups {
     }
 
     # Clean out the $filenames list.
-    $self->__removeFiles($files,\@files_found);
+    $self->removeFiles($files,\@files_found);
 
     #print STDERR "\nFound ",scalar(@groups)," groups.\n";
 
@@ -392,12 +392,12 @@ sub importGroup {
     # Figure out the endian-ness of this machine.
     my $our_endian = OME->BIG_ENDIAN()? BIG_ENDIAN: LITTLE_ENDIAN;
 
-    my $image = $self->__newImage($image_name);
+    my $image = $self->newImage($image_name);
     $self->{image} = $image;
 
     # Touch the HTD file
     my $htd_attr = $self->
-      __touchOriginalFile($group->{htd_file},"MetaMorph HTD");
+      touchOriginalFile($group->{htd_file},"MetaMorph HTD");
     #print STDERR "Got attribute $htd_attr\n";
     OME::Tasks::ImportManager->markImageFiles($image,$htd_attr);
 
@@ -424,7 +424,7 @@ sub importGroup {
 
         # Touch the TIFF file
         my $tiff_attr = $self->
-          __touchOriginalFile($file,"MetaMorph TIFF");
+          touchOriginalFile($file,"MetaMorph TIFF");
         OME::Tasks::ImportManager->markImageFiles($image,$tiff_attr);
 
         $theC++;
@@ -494,7 +494,7 @@ sub importGroup {
             $bitsPerPixel = $thisBitsPerPixel;
 
             ($pixels,$pix) = $self->
-              __createRepositoryFile($image,$sizeX,$sizeY,$sizeZ,
+              createRepositoryFile($image,$sizeX,$sizeY,$sizeZ,
                                      $sizeC,$sizeT,$bitsPerPixel);
 
             $pixels_created = 1;
@@ -593,7 +593,7 @@ sub importGroup {
                     Well   => $address,
                    });
 	
-	$self->__storeDisplayOptions();
+	$self->storeDisplayOptions($image);
 	return $image;
 
 }

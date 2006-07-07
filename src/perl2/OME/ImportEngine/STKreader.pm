@@ -71,8 +71,8 @@ package OME::ImportEngine::STKreader;
 use strict;
 use Carp;
 
-use OME::ImportEngine::Params;
 use OME::ImportEngine::TIFFUtils;
+use Log::Agent;
 
 use base qw(OME::ImportEngine::AbstractFormat);
 use vars qw($VERSION);
@@ -173,34 +173,24 @@ The following public methods are available:
 =head2 B<new>
 
 
-    my $importer = OME::ImportEngine::STKreader->new($session, $module_execution)
+    my $importer = OME::ImportEngine::STKreader->new()
 
 Creates a new instance of this class. The other public methods of this
-class are accessed through this instance.  The caller, which would
-normally be OME::ImportEngine::ImportEngine, should already
-have created the session and the module_execution.
+class are accessed through this instance.  The caller would
+normally be OME::ImportEngine::ImportEngine.
 
 =cut
 
 
 sub new {
-
-    my $invoker = shift;
-    my $class = ref($invoker) || $invoker;   # called from class or instance
+    my ($proto) = @_;
+    my $class = ref($proto) || $proto;
 
     my $self = {};
-    my $session = shift;
-    my $module_execution = shift;
-
 
     bless $self, $class;
-    $self->{super} = $self->SUPER::new();
-
-    my %paramHash;
-    $self->{params} = new OME::ImportEngine::Params(\%paramHash);
     return $self;
-
-};
+}
 
 
 
@@ -222,32 +212,99 @@ has the STK format.
 =cut
 
 
-sub getGroups {
+sub getGroups
+{
     my $self = shift;
     my $fref = shift;
-    my $nmlen = scalar(keys %$fref);
     my @outlist;
+    my $xref;
+	my ($filename,$file);
+	my %STKs;
+	my $uic2 = UIC2;
 
-    foreach my $key (keys %$fref) {
-        my $file = $fref->{$key};
+	# ignore any non-stk files.
+	while ( ($filename,$file) = each %$fref ) {
+		# STK images are TIFF images with a defined UIC tag
+		if (defined(verifyTiff($file))) {
+			my $tag0 = readTiffIFD( $file,0 );
+			$STKs{$filename} = $file if exists ($tag0->{$uic2}) and defined $tag0->{$uic2};
+		}
+	}
 
-        $file->open('r');
-        my $tags = readTiffIFD($file);
-        $file->close();
+    # Group files with recognized patterns together
+    # Sort them by channels, z's, then timepoints
+    my ($groups, $infoHash) = $self->getRegexGroups(\%STKs);
 
-        my $uic2 = UIC2;
-        next unless exists $tags->{$uic2};
-
-        my $t_arr = $tags->{$uic2};
-        my $t_hash = $$t_arr[0];
-
-        # it's STK format, so remove from input list, put on output list
-        delete $fref->{$key};
-        push @outlist, $file;
+	my ($name,$group);
+	
+    while ( ($name,$group) = each %$groups ) {
+    	next unless defined($name);
+    	my $nZfiles = $infoHash->{ $name }->{ nZfiles };
+		my $nCfiles = $infoHash->{ $name }->{ nCfiles };
+		my $nTfiles = $infoHash->{ $name }->{ nTfiles };
+		my @groupList;
+	
+		for (my $z = 0; $z < $nZfiles; $z++) {
+    		for (my $c = 0; $c < $nCfiles; $c++) {
+    			for (my $t = 0; $t < $nTfiles; $t++) {
+    				$file = $group->[$z][$c][$t]->{File};
+    				die "Uh, file is not defined at (z,c,t)=($z,$c,$t)!\n"
+    					unless ( defined($file) );
+    				
+					# The other keys of this hash give access to the actual
+					# sub-patterns matched by the RE:
+    				# $zString = $group->[$z][$c][$t]->{Z};
+    				# $cString = $group->[$z][$c][$t]->{C};
+    				# $tString = $group->[$z][$c][$t]->{T};
+					# Note that undef strings are converted to ''.
+    				
+    				push (@groupList, $file);
+    				
+    				# delete the file from the hash, so it's not processed by other importers
+    				$filename = $file->getFilename();
+					logdbg "debug",  "deleting $filename in group $name";
+					delete $fref->{ $filename };
+					delete $STKs{ $filename };
+    			}
+    		}
+    	}
+    	push (@outlist, {
+    		Files => \@groupList,
+    		BaseName => $name,
+    		GroupInfo => $group,
+    		nZfiles  => $nZfiles,
+    		nCfiles  => $nCfiles,
+    		nTfiles  => $nTfiles,
+    	})
+    		if ( scalar(@groupList) > 0 );
     }
-
-    $self->{groups} = \@outlist;
-
+    
+    # Now look at the rest of the files in the list to see if we
+    # have any single-file STKs.
+    foreach $file ( values %STKs ) {    	
+    	
+    	$filename = $file->getFilename();
+    	my $basename = $self->nameOnly($filename);
+    	my $group;
+    	$group->[0][0][0]={
+    		File => $file,
+    		Z    => undef,
+    		C    => undef,
+    		T    => undef,
+    	};
+    	push (@outlist, {
+    		Files => [$file],
+    		BaseName => $basename,
+    		GroupInfo => $group,
+    		nZfiles  => 1,
+    		nCfiles  => 1,
+    		nTfiles  => 1,
+    	});
+		logdbg "debug",  "deleting $filename in singleton group $basename";
+		delete $fref->{ $filename };
+		delete $STKs{ $filename };
+    }
+	
     return \@outlist;
 }
 
@@ -255,7 +312,7 @@ sub getGroups {
 
 =head2 importGroup
 
-    my $image = $importer->importGroup(\@files)
+    my $image = $importer->importGroup($group, \%localSliceCallback)
 
 This method imports individual STK format files into OME
 5D images. The caller passes a set of input files by
@@ -280,146 +337,153 @@ database transactions.
 
 =cut
 
-
-# Import a single group. For STK format files, a group always contains
-# just one file.
-
 sub importGroup {
-    my ($self, $file, $callback) = @_;
+    my ($self, $group, $callback) = @_;
     my $status;
 
-    my $session = ($self->{super})->Session();
+    my $session = $self->Session();
     my $factory = $session->Factory();
-	my $params = $self->{params};
+    my $groupList = $group->{Files};
 
-	my $filename = $file->getFilename();
-    ($self->{super})->__nameOnly($filename);
-    $params->fref($file);
-    $params->oname($filename);
-    
-	# open file and read TIFF tags or return undef
+    my $file = $groupList->[0];
 	$file->open('r');
-	my $tags = readTiffIFD($file);
-	$file->close();
+	my $tag0 = readTiffIFD( $file,0 );
     
-    if (!defined($tags)) {
-		return undef;
-    }
+	my $filename = $file->getFilename();
+	my $basename = $group->{BaseName};
     
-    # use TIFF tags to fill-out info about the img
-    my ($offsets_arr, $bytesize_arr) = getStrips($tags);
-    $params->image_offsets($offsets_arr);
-    $params->image_bytecounts($bytesize_arr);
-    $params->endian($tags->{__Endian});
-    
-    # read STK tags 
-    my @ui_tags = (UIC1, UIC2, UIC3, UIC4);
-    my @tag_type;
-    my @tag_count;
-    my @tag_offset;
-    
-    foreach my $u (@ui_tags) {
-        my $t_arr = $tags->{$u};
-		my $t_hash = $$t_arr[0];
-		
-		push @tag_type, $t_hash->{tag_type};
-		push @tag_count, $t_hash->{value_count};
-		push @tag_offset, $t_hash->{value_offset};	
-	}
+	my $sizeX = $tag0->{TAGS->{ImageWidth}}->[0];
+	my $sizeY = $tag0->{TAGS->{ImageLength}}->[0];
+	logdbg "debug",  "X: $sizeX, Y: $sizeY";
+
+	# This is the number of Z,C,T in the first file.
+	# The rest of the files in the group are assumed to contain the same number
+	my ($fSizeZ,$fSizeC,$fSizeT,$theCs) = getUICinfo ($file, $tag0);
 	
-	# number of UIC2 tags corresponds to the number of planes. N.B: because of the idicoity of the STK
-	# standard, this must be set before the do_uic* calls are made.
-    $self->{NumStacks} = $tag_count[1];
-    
-    
-	my %uic2 = do_uic2($self, $tag_type[1], $tag_count[1], $tag_offset[1]); # per plane z-position info
-	my %uic3 = do_uic3($self, $tag_type[2], $tag_count[2], $tag_offset[2]); # per plane wavelength info
-	#my %uic1 = do_uic1($self, "UIC1", $tag_type[0], $tag_count[0], $tag_offset[0]); # per stack info
-	#my %uic4 = do_uic1($self, "UIC4", $tag_type[3], $tag_count[3], $tag_offset[3]); # per plane info
-    
-    my $xref = $params->{xml_hash};
-    $xref->{'Image.ImageType'} = "STK";
-    $xref->{'Image.SizeX'} = $tags->{TAGS->{ImageWidth}}->[0];
-    $xref->{'Image.SizeY'} = $tags->{TAGS->{ImageLength}}->[0];
-    
-    # sizeZ is the number of different Z positions the planes were taken in
-    my $sizeZ;
-    foreach (keys(%uic2)) {
-    	my $ptr = $uic2{$_};
-    	my ($i, $Z_dist, $cdt, $cdate, $ctime, $mdate, $mtime) = @$ptr;
-    	if ($Z_dist != 0) {
-    		$sizeZ++;
-    	}
-    }
-	$xref->{'Image.SizeZ'} = $sizeZ;
+	# The total number of Z,C,T in the OME Image is the number in the 1st file
+	# times the number of Z,C,and T files.
+	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) = (
+		$tag0->{TAGS->{ImageWidth}}->[0],
+		$tag0->{TAGS->{ImageLength}}->[0],
+		$fSizeZ,$fSizeC,$fSizeT
+	);
+	$sizeZ *= $group->{nZfiles};
+	$sizeC *= $group->{nCfiles};
+	$sizeT *= $group->{nTfiles};
 
-    # sizeC is the number of different Wavelengths the planes were taken in
-	my %different_wavelengths;
-    foreach (keys(%uic3)) {
- 		my $wavelength = $uic3{$_};
-   		$different_wavelengths{$wavelength} = 0;  
-    }
-    $xref->{'Image.NumWaves'} = scalar keys %different_wavelengths ;
+	my $bpp = $tag0->{TAGS->{BitsPerSample}}->[0];
+    
+    
+    my $xref = {};
+    $xref->{'Image.ImageType'} = "";
 
-        
-    # number of time-points is derived from the number of planes and sizeZ and sizeC
-    $xref->{'Image.NumTimes'} = $self->{NumStacks} / ($xref->{'Image.SizeZ'}  * $xref->{'Image.NumWaves'});
-     
-    $xref->{'Data.BitsPerPixel'} = $tags->{TAGS->{BitsPerSample}}->[0];
-   	$params->byte_size($xref->{'Data.BitsPerPixel'}/8);
-    $params->row_size($xref->{'Image.SizeX'} * ($params->byte_size));
 						 
-    my $image = ($self->{super})->__newImage($filename);
-    $self->{image} = $image;
+    my $image = $self->newImage($basename);
+	my ($pixels, $pix) = $self->createRepositoryFile($image, 
+						 $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp);
 
-
-    # pack together & store info on input file
-    my @finfo;
-    $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-			      0, $xref->{'Image.SizeX'}-1,
-			      0, $xref->{'Image.SizeY'}-1,
-			      0, $xref->{'Image.SizeZ'}-1,
-			      0, $xref->{'Image.NumWaves'}-1,
-			      0, $xref->{'Image.NumTimes'}-1,
-                  "Metamorph STK");
-	
-	my ($pixels, $pix) = 
-	($self->{super})->__createRepositoryFile($image, 
-						 $xref->{'Image.SizeX'},
-						 $xref->{'Image.SizeY'},
-						 $xref->{'Image.SizeZ'},
-						 $xref->{'Image.NumWaves'},
-						 $xref->{'Image.NumTimes'},
-						 $xref->{'Data.BitsPerPixel'});
-    $self->{pixels} = $pixels;
-   
-    # The planes are in the OME canonical order (hopefully, fingers crossed) - write them out
-    my  $start_offset = $$offsets_arr[0];
-    
     my ($t, $c, $z);
-    my $maxY = $xref->{'Image.SizeY'};
-    my $maxZ = $xref->{'Image.SizeZ'};
-    my $maxC = $xref->{'Image.NumWaves'};
-    my $maxT = $xref->{'Image.NumTimes'};
-    my $plane_size = $xref->{'Image.SizeX'} * $xref->{'Image.SizeY'}*$params->byte_size;
-    for (my $i = 0, $t = 0; $t < $maxT; $i++, $t++) {
-		for ($c = 0; $c < $maxC; $c++) {
-			for ($z = 0; $z < $maxZ; $z++) {
-				my $offset = $start_offset + ($z+$c*$maxZ+$t*$maxZ*$maxC) * $plane_size;
-				$pix->convertPlane($file,$offset,$z,$c,$t,$params->endian == BIG_ENDIAN);
-				$self->doSliceCallback($callback);
+    
+    my $nZ = $group->{nZfiles};
+    my $nC = $group->{nCfiles};
+    my $nT = $group->{nTfiles};
+	my $plane_size;
+    my @channelInfo;
+    my %channels;
+
+	# Here we process the files - each of which may have multiple planes.	
+	for ($z = 0; $z < $nZ; $z++) {
+		for ($c = 0; $c < $nC; $c++) {
+			for ($t = 0; $t < $nT; $t++) {
+				my ($z0,$c0,$t0) = ( $z * $fSizeZ, $c * $fSizeC, $t * $fSizeT);
+				$file = $group->{GroupInfo}->[$z][$c][$t]->{File};
+				$tag0 = readTiffIFD( $file,0 );
+				my ($thisSizeZ,$thisSizeC,$thisSizeT,$theseCs) = getUICinfo ($file, $tag0);
+				my ($offsets_arr, $bytesize_arr) = getStrips($tag0);
+				my $lastStrip = scalar (@$offsets_arr) - 1;
+				$plane_size = ($offsets_arr->[$lastStrip] + $bytesize_arr->[$lastStrip]) - $offsets_arr->[0];
+				my $offset;
+				for (my $theZ = 0; $theZ < $fSizeZ; $theZ++) {
+					$offset = $offsets_arr->[0] + ($theZ * $plane_size);
+					$pix->convertPlane($file,$offset,$z0+$theZ,$c0,$t0,$tag0->{__Endian} == BIG_ENDIAN);
+					$self->doSliceCallback($callback);
+				}
+				$self->storeOneFileInfo($file, $image,
+					0, $sizeX-1,
+					0, $sizeY-1,
+					$z0, $z0+$fSizeZ-1,
+					$c0, $c0+$fSizeC-1,
+					$t0, $t0+$fSizeT-1,
+					"Metamorph STK");
+				my $cString = $group->{GroupInfo}->[$z][$c][$t]->{C};
+				# Get rid of leading digits
+				$cString = $1 if $cString =~ /^\d*(.*)$/;
+				logdbg "debug",  "cString: $cString";
+				unless ($channelInfo[$c0]) {
+					$channelInfo[$c0] = {
+						chnlNumber => $c0,
+						ExWave     => undef,
+						EmWave     => $theseCs->[0]->{EmWave} ? $theseCs->[0]->{EmWave} : undef,
+						Fluor      => $cString ? $cString : undef,
+						NDfilter   => undef
+					}
+				}
 			}
 		}
-    }
-
-	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
-
-	$self->__storeInputFileInfo(\@finfo);
-	$self->__storeChannelInfo();
-	$self->__storeDisplayOptions();
+	}
+    OME::Tasks::PixelsManager -> finishPixels( $pix, $pixels );
+    
+    
+    # Now, write the metadata
+    $self->storeChannelInfo ($image,@channelInfo);
+    
+	$self->storeDisplayOptions($image);
 
 	return $image;
 }
+
+
+sub getUICinfo {
+	my ($file, $tags) = @_;
+	my $endian = $tags->{__Endian};
+	my $buffer;
+	my @data;
+	my $uic2_tag_num = UIC2;
+	
+	my $num_planes = $tags->{$uic2_tag_num}->[0]->{value_count};
+	logdbg "debug",  "number of planes: $num_planes, $tags->{$uic2_tag_num}->[0]";
+	die "Apparently there are no planes in ".$file->getFilename()
+		unless $num_planes;
+
+	my $uic2 = do_uic2($file, $tags); # per plane z-position info
+    # sizeZ is the number of different Z positions the planes were taken in
+    my $sizeZ = scalar @$uic2;
+
+
+	my $uic3 = do_uic3($file, $tags); # per plane wavelength info
+    # sizeC is the number of different Wavelengths the planes were taken in
+	my %indexC;
+	my @theCs;
+	my $wavelength;
+    my $sizeC = 0;
+    foreach (@$uic3) {
+    	$wavelength = sprintf("%.0f",$_);
+    	if (not exists $indexC{$wavelength}) {
+			$indexC{$wavelength} = $sizeC;
+			push (@theCs,{
+				EmWave => $wavelength,
+				Label  => undef,
+			});
+			$sizeC++;
+    	}
+    }
+
+	my $sizeT = $num_planes / ($sizeZ * $sizeC);
+
+	return ($sizeZ, $sizeC, $sizeT, \@theCs);
+
+}
+
 
 # The UIC1 tag refers to $cnt ID/value pairs. These will be stored in this instance's 
 # %uic1 hash. In all cases, the ID part of the pair will be the hash key. In some 
@@ -438,63 +502,22 @@ sub importGroup {
 # Nothing is actually done yet with any data from the UIC1 or UIC4 tags. It
 # is parsed in case a use is ever found for it (or the UIC4 data gets reliable)
 
-sub do_uic1 {
-    my ($self, $caller, $type, $tag_cnt, $offset) = @_;
-    
-    my $params   = $self->{params};
-    my $endian   = $params->endian;
-    my $file     = $params->fref;
-    
-   	$file->setCurrentPosition($offset, 0);
-    
-    my $status = "";
-    my $i;
-    my $id;
-    my $id_len; # = ($caller eq "UIC1" ? 4 : 2);
-    
-    my $name;
-    my ($read_it, $readit_loc);
-    my ($type1, $type4);
-    my $MMtype;
-    my $len;
-    my $buf;
-    my $fmt;
-    
-    my %uic1;
+sub do_uic1_4 {
+    my ($TAG_num, $file, $tags) = @_;
+	my $endian = $tags->{__Endian};
+	my $uic2_4_tag = $tags->{$TAG_num}->[0];
+	my $caller = $TAG_num == UIC1 ? 'UIC1' : 'UIC4';
 
-    if ($caller =~ m/UIC1/) {
-		$fmt = ($endian == LITTLE_ENDIAN) ? "V" : "N";
-		$readit_loc = 2;
-		$id_len = 4;
-    } else {
-		$fmt = ($endian == LITTLE_ENDIAN) ? "v" : "n";
-		$readit_loc = 3;
-		$id_len = 2;
-    }
+   	$file->setCurrentPosition($uic2_4_tag->{current_offset}, 0);
+    
+    my %uic1 = OME::ImportEngine::TIFFUtils::getTagValue (
+		$file,
+		$uic2_4_tag->{tag_type},
+		$uic2_4_tag->{value_count},
+		$uic2_4_tag->{value_offset},
+		$endian,
+	);
 
-    for ($i = 0; $i < $tag_cnt; $i++) {
-		# Get ID of next field
-		$id = unpack($fmt, $file->readData($id_len));
-		
-		if (($caller =~ /UIC4/) && ($id == 0)) {
-			last;   # in UIC4, an ID of 0 is the signal to stop processing the tag
-		}
-		
-		# tags 28,29,37,40 and 41 don't apply to UID1
-		if ( ($caller =~ /UIC1/) and (($id == 28) or ($id == 29) or ($id == 37) or ($id==40) or ($id==41)) ){
-			$file->setCurrentPosition(4,1); # move to the next ID
-			redo;
-		}
-		
-		$name   = $codes{$id}[1];
-		croak "Unknown key value $id in $caller tag data" unless (defined $name);
-		$MMtype = $codes{$id}[0];
-		
-		my $tag_value;
-		$tag_value = get_value($self, $MMtype);
-		print STDERR "Value of $caller tag $name($id) $MMtype is $tag_value\n";		
-		$file->setCurrentPosition(4,1); # move to the next ID
-    }
     return %uic1;
 }
 
@@ -506,20 +529,18 @@ sub do_uic1 {
 # Put each set of 6 values, as an array, into the %uic2 hash, keyed by its plane number (0 to N-1)
 
 sub do_uic2 {
-    my ($self, $type, $num_planes, $offset) = @_;
-    my $params   = $self->{params};
-    my $endian   = $params->endian;
-    my $file     = $params->fref;
-    my $xml_hash = $params->xml_hash;
-    my $i;
+    my ($file, $tags) = @_;
+	my $endian = $tags->{__Endian};
+	my $uic2_tag_num = UIC2;
+	my $uic2_tag = $tags->{$uic2_tag_num}->[0];
+	my $num_planes = $uic2_tag->{value_count};
     
-    my %uic2;
+    my @uic2;
 	
-	$file->setCurrentPosition($offset, 0);
+	$file->setCurrentPosition($uic2_tag->{value_offset}, 0);
 		
     # read in a 6-tuple set of values for each of the $num_planes planes in the stack
-    my $last_Z_pos = 0;
-    for ($i = 0; $i < $num_planes; $i++) {
+    for (my $i = 0; $i < $num_planes; $i++) {
     
     	# read 6-tuple set
     	my $fmt = ($endian == LITTLE_ENDIAN) ? "V6" : "N6";
@@ -530,224 +551,47 @@ sub do_uic2 {
 		
 		# include plane # in hash since it won't necessarily equal the key after sorting
 		# Z_dist is the distance between contingious Z-planes
-		$uic2{$i} = [$i, $Z_num/$Z_denom, $cdt, $cdate, $ctime, $mdate, $mtime];		
+		push (@uic2,{
+			PlaneNum => $i,
+			Zdist    => $Z_num/$Z_denom,
+			DateTime => $cdt,
+			Date     => $cdate,
+			Time     => $ctime,
+			Mdate    => $mdate,
+			Mtime    => $mtime,
+		});		
     }
     
-    $self->{uic2} = \%uic2;  # remember to access this hash after doing a `sort keys`
-
-    return %uic2;
+    return \@uic2;
 }
 
 
 # The  UIC3  tag points to a pair of integers for each of the Z planes
 # in the stack. The ratio of each pair is the wavelength used in imaging
-# the pair's associated Z plane. Put these ratios, keyed by the plane
-# number (0 thru N-1) into the %iuc3 hash. Store these ratios along with
-# the other per plane data in the %uic2 hash.
+# the pair's associated Z plane.
 
 sub do_uic3 {
-    my ($self, $type, $num_planes, $offset) = @_;
-    my $params = $self->{params};
-    my $endian = $params->endian;
-    my $file   = $params->fref;
+    my ($file, $tags) = @_;
+	my $endian = $tags->{__Endian};
+	my $fmt = ($endian == LITTLE_ENDIAN) ? "V2" : "N2";
+	my $uic2_tag_num = UIC2;
+	my $uic2_tag = $tags->{$uic2_tag_num}->[0];
+	my $num_planes = $uic2_tag->{value_count};
+
+	my $uic3_tag_num = UIC3;
+	my $uic3_tag = $tags->{$uic3_tag_num}->[0];
     
-    my $i;
-    
-    my %uic3;
-
-    $file->setCurrentPosition($offset, 0);
+    my @uic3;
+	
+	$file->setCurrentPosition($uic3_tag->{value_offset}, 0);
 
 
-    for ($i = 0; $i < $num_planes; $i++) {        
-        my $fmt = ($endian == LITTLE_ENDIAN) ? "V2" : "N2";
+    for (my $i = 0; $i < $num_planes; $i++) {        
 		my ($numer, $denom) = unpack($fmt, $file->readData(2*4));
-		
-		$uic3{$i} = $numer/$denom;
-    }
-    $self->{uic3} = \%uic3;
-    
-    return %uic3;
-}
-
-# get_value returns the value(s) associated with a tag. 
-# It returns the file pointer where it started
-
-sub get_value {
-    my ($self, $MMtype) = @_;
-    my $status;
-    my $cur_offset;
-    my $i;
-    
-    my $params = $self->{params};
-    my $endian = $params->endian;
-    my $file   = $params->fref;
-	my $cnt = $self->{NumStacks};
-
-	$cur_offset = $file->getCurrentPosition();
-
-	# all except types L have an offset to where their values are
-	if ($MMtype !~ /^L$/) {  
-		my $offset;
-		# remember current file pntr position & go to the value(s)
-		$offset = go_there($file, $endian); 
-		
-		# They use an offset of 0 to mean 'Ignore Field'
-		#if ($offset == 0) {
-		#	$file->setCurrentPosition($cur_offset,0);
-		#	return "Ignored";
-		#}
-	}
-
-	# long type
-	if ($MMtype eq 'L') {
-		my $value;
-		get_long($file, $endian, \$value);
-		$file->setCurrentPosition($cur_offset,0);  
-		return $value;
-	}
-	
-	# string type
-	elsif ($MMtype eq 'S') {
-		my $buf;
-		get_string($file, $endian, \$buf);
-		$file->setCurrentPosition($cur_offset,0);  
-		return $buf;
-	}
-	
-	# "rational" type - read 2 longs, value is the 1st divided by the 2nd
-	elsif ($MMtype eq 'R') {
-		my $rat;
-		get_rational($file, $endian, \$rat);
-		$file->setCurrentPosition($cur_offset,0);  
-		return $rat;
-	}
-	
-	# "N4' type - N sets of 4 longs = N sets of 2 rationals
-	elsif ($MMtype eq 'N4') {
-		my ($rat1, $rat2);
-		my @rat_list;
-		
-		for ($i = 0; $i < $cnt; $i++) {	
-			get_rational($file, $endian, \$rat1);   # get 1st rational
-			get_rational($file, $endian, \$rat2);   # get 2nd rational
-			
-			push @rat_list, $rat1;
-			push @rat_list, $rat2;
-		}
-		$file->setCurrentPosition($cur_offset,0);  
-		return @rat_list;
-	}
-	
-	# 'NS' type - N strings
-	elsif ($MMtype eq 'NS') {
-		my $buf;
-		my @buf_list;
-		
-		for ($i = 0; $i < $cnt; $i++) {
-			get_string($file, $endian, \$buf);
-			
-			push @buf_list, $buf;
-		}
-		$file->setCurrentPosition($cur_offset,0);  
-		return @buf_list;
-	}
-	
-	# 'N2' type - N rationals
-	elsif ($MMtype eq 'N2') {
-		my $rat;
-		my @rat_list;
-		
-		for ($i = 0; $i < $cnt; $i++){
-			get_rational($file, $endian, \$rat);
-			
-			push @rat_list, $rat;
-		}
-		$file->setCurrentPosition($cur_offset,0);  			
-		return @rat_list;
-	}
-	
-	# Date/Time type
-	elsif ($MMtype eq 'T') {
-		my $value;
-		get_long ($file, $endian, \$value);
-		$file->setCurrentPosition($cur_offset,0);  
-		return $value;
-	}
-	
-	elsif ($MMtype eq 'NL') {
-		my $value;
-		my @value_list;
-		
-		for ($i = 0; $i < $cnt; $i++) {
-			get_long($file, $endian, \$value);
-			
-			push @value_list, $value;
-		}
-		
-		$file->setCurrentPosition($cur_offset,0);  
-		return @value_list;
-	}
-	
-	# 'LO' type - offset to a single Long. Why not put the long in the tag itself?
-	elsif ($MMtype eq 'LO') {
-		my $value;
-		$status = get_long($file, $endian, \$value);
-		$file->setCurrentPosition($cur_offset,0);  
-		return $value;
-	} else {
-		die "Unknown UIC tag ID: $MMtype";
-	}
-	
-}
-
-sub get_long {
-    my ($fih, $endian, $value) = @_;
-    my $fmt;
-    
-	$fmt = ($endian == LITTLE_ENDIAN) ? "V" : "N";
-	$$value = unpack($fmt, $fih->readData(4));
-}
-
-
-sub go_there {
-    my ($fih, $endian) = @_;
-    my $offset;
-	
-	get_long($fih, $endian, \$offset); # value is offset to where data stored
-    
-    # Apparently, they use an offset of 0 to mean 'ignore field'
-    if ($offset != 0) {
-        $fih->setCurrentPosition($offset, 0);
+		push (@uic3,$numer/$denom);
     }
     
-    return $offset;
-}
-
-
-sub get_string {
-    my ($fih, $endian, $buf) = @_;
-    my $len;
-    
-    get_long($fih, $endian, \$len);    # string length precedes characters
-
-	# TODO Convert between little endian big endian orders
-	$$buf = $fih->readData($len);
-}
-
-
-# get a rational
-sub get_rational {
-    my ($fih, $endian, $rat) = @_;
-    my ($val1, $val2);
-
-    get_long($fih, $endian, \$val1); # read the 2 longs
-	get_long($fih, $endian, \$val2);
-	
-	if ($val2 == 0) {
-		$$rat = -1;
-	} else {
-		$$rat = $val1/$val2;
-	}
+    return \@uic3;
 }
 
 sub getSHA1 {

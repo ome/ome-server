@@ -360,8 +360,8 @@ sub importGroup {
 		}
 
 		# touch each file only once
-		$original_files{$filename} =
-			$self->__touchOriginalFile($file, 'OME TIFF')
+		$original_files{$file} =
+			$self->touchOriginalFile($file, 'OME TIFF')
 			or die "$filename won't let me touch it! While importing OME TIFF.";
 	}
 	logdbg "debug", "OME-TIFF: done processing IFDs.";
@@ -387,16 +387,14 @@ sub importGroup {
 		logdbg "debug", 'OME-TIFF: processing object '.$object;
 		if (UNIVERSAL::isa($object, 'OME::Image')) {
 			foreach my $pixels ($object->pixels()) {
-				$self->{image} = $object;
-				$self->{pixels} = $pixels;
-				$self->__storeDisplayOptions();
+				$self->storeDisplayOptions($object);
 				OME::Tasks::PixelsManager->saveThumb($pixels);
 			}
 			foreach my $file (@$groupList) {
 				my $filename = $file->getFilename();
 				logdbg "debug", "OME-TIFF: markImageFiles $filename";
 				OME::Tasks::ImportManager->markImageFiles($object,
-					$original_files{$filename});
+					$original_files{$file});
 			}
 			push (@images, $object);
 		}
