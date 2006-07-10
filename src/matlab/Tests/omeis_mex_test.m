@@ -45,22 +45,23 @@ for pix_id = ids
     
     	% get image and remove top left corner
     	fprintf ('\tgetPixels ...');  im = getPixels(is, pix_id);            fprintf (' done\n');
-    	% figure; imshow(im, [min(min(im)) max(max(im))]);
     
-	    [sizeX, sizeY, sizeZ, sizeC, sizeT] = size(im);
-   		im (1:floor(sizeX/2), 1:floor(sizeY/2)) = 0;
-    
+	    [Rows, Columns, sizeZ, sizeC, sizeT] = size(im)
+	    sizeX = Columns; % width. sizeX is the OME terminology for width (MATLAB Columns)
+	    sizeY = Rows;    % height. sizeY is the OME termniology for height (MATLAB Columns)
+	    
+   		im (floor(Rows/4):floor(Rows/2), floor(Columns/3):floor(Columns/2)) = 0;
+   		
 	    % set image (without top left corner) on OMEIS
     	fprintf ('\tsetPixels ...');  setPixels(is, n_pix_id, im);           fprintf (' done\n');
     
-	    % get top left corner and set it on the new imae
+	    % get top left corner and set it on the new image
     	fprintf ('\tgetROI ...');
-    	im_q = getROI(is, pix_id, floor(sizeX/4), floor(sizeY/4), 0, 0, 0, floor(sizeX/3)-1, floor(sizeY/2)-1, 0, 0, 0);
+    	im_q = getROI(is, pix_id, floor(Rows/4)-1, floor(Columns/3)-1, 0, 0, 0, floor(Rows/2)-1, floor(Columns/2)-1, 0, 0, 0);
     	fprintf (' done\n');
-    	% figure; imshow(im_q, [min(min(im_q)) max(max(im_q))]);
     
     	fprintf ('\tsetROI ...');
-    	num_pixels = setROI (is, n_pix_id, floor(sizeX/4), floor(sizeY/4), 0, 0, 0, floor(sizeX/3)-1, floor(sizeY/2)-1, 0, 0, 0, im_q);;
+    	num_pixels = setROI (is, n_pix_id, floor(Rows/4)-1, floor(Columns/3)-1, 0, 0, 0, floor(Rows/2)-1, floor(Columns/2)-1, 0, 0, 0, im_q);
     	fprintf (' done\n');
     
 	    fprintf ('\tfinishPixels ...'); n_pix_id = finishPixels (is, n_pix_id); fprintf (' done\n');
