@@ -25,7 +25,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	char* url, *sessionkey;
 	
 	if (nrhs != 12)
-		mexErrMsgTxt("\n [pixels] = getPixels (is, ID, x0, y0, z0, c0, t0, x1, y1, z1, c1, t1)");
+		mexErrMsgTxt("\n [pixels] = getPixels (is, ID, row0 (OME:y0), column0 (OME:x0), z0, c0, t0, row1 (OME:y1), column1 (OME:x1), z1, c1, t1)");
 		
 	if (!mxIsStruct(prhs[0]))
 		mexErrMsgTxt("getPixels requires the first input to be the struct outputed"
@@ -45,18 +45,15 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	ID = (OID) mxGetScalar(prhs[1]) ;
 	
 	/* get ROI */
-	int y0 = (int) mxGetScalar(prhs[3]); /* switched */
-	int x0 = (int) mxGetScalar(prhs[2]); /* switched */
-
+	/* NB x0/y0 and x1/y1 are switched on purpose because of the different orientations
+	 used in MATLAB and OME. See note below */
+	int y0 = (int) mxGetScalar(prhs[2]); /* switched */
+	int x0 = (int) mxGetScalar(prhs[3]); /* switched */
 	int z0 = (int) mxGetScalar(prhs[4]);
 	int c0 = (int) mxGetScalar(prhs[5]);
 	int t0 = (int) mxGetScalar(prhs[6]);
-	
-	/* NB x1 and y1 are switched on purpose because of the different orientations
-	 used in MATLAB and OME. See note below */
-	int y1 = (int) mxGetScalar(prhs[7]);
-	int x1 = (int) mxGetScalar(prhs[8]);
-	
+	int y1 = (int) mxGetScalar(prhs[7]); /* switched */ 
+	int x1 = (int) mxGetScalar(prhs[8]); /* switched */
 	int z1 = (int) mxGetScalar(prhs[9]);
 	int c1 = (int) mxGetScalar(prhs[10]);
 	int t1 = (int) mxGetScalar(prhs[11]);

@@ -93,23 +93,32 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	/* check dimension and class check */
 	const int* dims = mxGetDimensions (copy_input_array);
 	switch (mxGetNumberOfDimensions (copy_input_array)) {
+		char err_str[128];
 		case 5:
-			if (head->dt != dims[4])
-				mexErrMsgTxt("5th Dimension of input array and Pixels doesn't match.\n");
+			if (head->dt != dims[4]) {
+				sprintf (err_str, "5th Dimension (%d) of input array doesn't match OMEIS Pixels (%d).\n", dims[4], head->dt);
+				mexErrMsgTxt(err_str);
+			}
 		case 4:
-			if (head->dc != dims[3])
-				mexErrMsgTxt("4th Dimension of input array and Pixels doesn't match.\n");
+			if (head->dc != dims[3]) {
+				sprintf (err_str, "4th Dimension (%d) of input array doesn't match OMEIS Pixels (%d).\n", dims[3], head->dc);
+				mexErrMsgTxt(err_str);
+			}
 		case 3:
-			if (head->dz != dims[2])
-				mexErrMsgTxt("3th Dimension of input array and Pixels doesn't match.\n");
-		/* we have to switch the two dimensions because in OME, x is width and y is height */
-		/* in MATLAB x is rows[height], y is columns[width] */
+			if (head->dz != dims[2]){
+				sprintf (err_str, "3th Dimension (%d) of input array doesn't match OMEIS Pixels (%d).\n", dims[2], head->dz);
+				mexErrMsgTxt(err_str);
+			}
 		case 2:
-			if (head->dy != dims[0])
-				mexErrMsgTxt("Height of input array and Pixels doesn't match.\n");
+			if (head->dy != dims[1]){
+				sprintf (err_str, "Height (%d) of input array doesn't match OMEIS Pixels (%d).\n", dims[1], head->dy);
+				mexErrMsgTxt(err_str);
+			}
 		case 1:
-			if (head->dx != dims[1])
-				mexErrMsgTxt("Width of input array and Pixels doesn't match.\n");
+			if (head->dx != dims[0]){
+				sprintf (err_str, "Width (%d) of input array doesn't match OMEIS Pixels (%d).\n", dims[0], head->dx);
+				mexErrMsgTxt(err_str);
+			}
 			break;
 		default:
 			/* clean up */
