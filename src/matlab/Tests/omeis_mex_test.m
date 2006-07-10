@@ -46,7 +46,7 @@ for pix_id = ids
     	% get image and remove top left corner
     	fprintf ('\tgetPixels ...');  im = getPixels(is, pix_id);            fprintf (' done\n');
     
-	    [Rows, Columns, sizeZ, sizeC, sizeT] = size(im)
+	    [Rows, Columns, sizeZ, sizeC, sizeT] = size(im);
 	    sizeX = Columns; % width. sizeX is the OME terminology for width (MATLAB Columns)
 	    sizeY = Rows;    % height. sizeY is the OME termniology for height (MATLAB Columns)
 	    
