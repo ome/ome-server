@@ -553,17 +553,15 @@ sub Pixels_to_MatlabArray {
 
 	# check that the gotten variable is the right size	
 	my $ml_pixels_array = $_engine->getVariable($matlab_var_name);
-	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) 
+	my ($rows,$columns,$sizeZ,$sizeC,$sizeT) 
 	      = @{$ml_pixels_array->dimensions()};
-	$sizeX = 1 unless defined($sizeX);
-	$sizeY = 1 unless defined($sizeY);
 	$sizeZ = 1 unless defined($sizeZ);
 	$sizeC = 1 unless defined($sizeC);
 	$sizeT = 1 unless defined($sizeT);
 
 	die "getROI/getPixels failed for pixels ".$pixels->ImageServerID().". The ".
-		"returned MATLAB array has dimensions ($sizeX, $sizeY, $sizeZ, $sizeC, $sizeT)"
-		unless ($sizeX*$sizeY*$sizeZ*$sizeC*$sizeT == $Dims[0]*$Dims[1]*$Dims[2]*$Dims[3]*$Dims[4]);
+		"returned MATLAB array has dimensions ($rows, $columns, $sizeZ, $sizeC, $sizeT)"
+		unless ($rows*$columns*$sizeZ*$sizeC*$sizeT == $Dims[0]*$Dims[1]*$Dims[2]*$Dims[3]*$Dims[4]);
 }
 
 =head2 Attr_to_MatlabScalar
@@ -694,10 +692,12 @@ sub MatlabArray_to_Pixels {
 		or die "Couldn't retrieve pixels output variable $matlab_var_name from matlab.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The execution string was:\n\t".$self->{ __command }."\n";
-	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) 
+	
+	# N.B Rows is Height is SizeY in OME!
+	my ($Rows,$Columns,$sizeZ,$sizeC,$sizeT) 
 	      = @{$ml_pixels_array->dimensions()};
-	$sizeX = 1 unless defined($sizeX);
-	$sizeY = 1 unless defined($sizeY);
+	my $sizeX = $Columns;
+	my $sizeY = $Rows;
 	$sizeZ = 1 unless defined($sizeZ);
 	$sizeC = 1 unless defined($sizeC);
 	$sizeT = 1 unless defined($sizeT);
