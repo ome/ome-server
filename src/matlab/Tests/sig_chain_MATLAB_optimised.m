@@ -136,10 +136,9 @@ function concat = concat_outputs (varargin)
 N = nargin;
 concat = [];
 for i=1:N
-	vec = varargin{i};
+	vec = double(varargin{i}); % promote to doubles
 	% some vectors are row-oriented others are column-oriented.
 	% This fixes them all to be row oriented
 	vec = vec(:)';
 	concat = [concat vec];
 end
-concat = double(concat);
