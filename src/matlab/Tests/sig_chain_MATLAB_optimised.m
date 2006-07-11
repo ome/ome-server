@@ -87,7 +87,7 @@ vec_31 = vd_TamuraTextures(concat_outputs (TamuraTextures(ChebyshevTransform_Fre
 vec_32 = vd_TamuraTextures(concat_outputs (TamuraTextures(FrequencySpace2Pixels_FourierTransform_single_im)));
 vec_33 = vd_TamuraTextures(concat_outputs (TamuraTextures(WaveletSelector_WaveletSignatures_single_im)));
 vec_34 = vd_TamuraTextures(concat_outputs (TamuraTextures(WaveletSelector_WaveletSignatures_FrequencySpace2Pixels_FourierTransform_single_im)));
-vec_35 = concat_outputs (mb_zernike((im)));
+vec_35 = concat_outputs (mb_zernike(im));
 vec_36 = concat_outputs (mb_zernike(FrequencySpace2Pixels_FourierTransform_single_im));
 
 signature_vector = [double(vec_0) vec_1 vec_2 vec_3 vec_4 vec_5 vec_6 vec_7 vec_8 vec_9 vec_10 vec_11 vec_12 vec_13 vec_14 vec_15 vec_16 vec_17 vec_18 vec_19 vec_20 vec_21 vec_22 vec_23 vec_24 vec_25 vec_26 vec_27 vec_28 vec_29 vec_30 vec_31 vec_32 vec_33 vec_34 vec_35 vec_36 ];

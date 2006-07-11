@@ -33,8 +33,6 @@
 % [864-869]    10^0  <6, 9.69> TamuraTextures(FourierTransform((im)))
 % [870-875]    10^-4 <6, 9.69> TamuraTextures(WaveletSignatures((im)))
 % [876-881]    10^-1 <6, 9.69> TamuraTextures(WaveletSignatures(FourierTransform((im))))
-
-
 % [882-953]    10^-17 <16, 16> mb_zernike((im))
 % [954-1025]   10^-17 <16, 16> mb_zernike(FourierTransform((im)))
 
