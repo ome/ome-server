@@ -6,3 +6,7 @@ Compile the main.c file (test creation/deletion API) do:
 gcc -L. main.c -lcurl -lhttpOMEIS
 Compile the testStats file to test retreival of plane and stack statistics
 gcc -L. -o testStats testStats.c -lcurl -lhttpOMEIS
+
+Note that the configure script is maintained on CVS.  This means that if you change
+any of the dependencies, you should run autogen.sh to make a new configure script
+as usual, but then you should commit the new configure script to CVS!

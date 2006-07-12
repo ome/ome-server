@@ -1,0 +1,4 @@
+Please use ./configure --help for additional information
+Note that the configure script is maintained on CVS.  This means that if you change
+any of the dependencies, you should run autogen.sh to make a new configure script
+as usual, but then you should commit the new configure script to CVS!
