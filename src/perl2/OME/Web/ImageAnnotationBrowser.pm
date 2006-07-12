@@ -53,6 +53,19 @@ sub getPageTitle {
     sub getMenuText { return $menu_text }
 }
 
+sub getAuthenticatedTemplate {
+
+    my $self=shift;
+    
+    my $which_tmpl =  $self->getTemplateName('OME::Web::ImageAnnotationBrowser');
+
+    my $tmpl =
+	OME::Web::TemplateManager->getBrowseTemplate($which_tmpl);
+
+    return $tmpl;
+}
+
+
 
 =head1 getPageBody
 
@@ -94,6 +107,7 @@ It is assumed that this module is also called with a query parameter
 
 sub getPageBody {
     my $self = shift ;
+    my $tmpl = shift;
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
@@ -103,17 +117,6 @@ sub getPageBody {
     # the template  name.
     # get template from url parameter, or referer
 
-
-    my $which_tmpl = $q->url_param('Template');
-    my $referer = $q->referer();
-    my $url = $self->pageURL('OME::Web::ImageAnnotationBrowser');
-    if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
-	$which_tmpl = $1;
-	$which_tmpl =~ s/%20/ /;
-	return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
-    }
-    $which_tmpl =~ s/%20/ /;
-
     # get the root object
     my $root = $q->param('Root');
 
@@ -121,7 +124,7 @@ sub getPageBody {
     # get the details. this is where the bulk of the work gets done.
     # use this procedure to allow for bulk of layout to be called from
     # other modules
-    my $output = $self->getAnnotationDetails($self,$root,$which_tmpl,
+    my $output = $self->getAnnotationDetails($self,$root,$tmpl,
 					     \%tmpl_data);
 
 
@@ -145,26 +148,13 @@ sub getPageBody {
 sub getAnnotationDetails {
     my $self = shift;
     my $session= $self->Session();
+    my $q = $self->CGI();
     my $factory = $session->Factory();
     # container is the OME::Web object that is calling this code.
-    my ($container,$root,$which_tmpl,$tmpl_data) = @_;
-
-    # load the appropriate information for the named template.
-
-    my $tmpl_dir=$self->rootTemplateDir('custom');
-    my $tmplData = 
-	$factory->findObject( '@BrowseTemplate', Name => $which_tmpl,
-	                         path=>$tmpl_dir);
-
-    
-	
-    # instantiate the template
-    my $tmpl = 
-	HTML::Template->new(filename => $tmplData->Template(),
-			    case_sensitive=>1);
-    
+    my ($container,$root,$tmpl,$tmpl_data) = @_;
 
 
+    my $which_tmpl = $q>url_param('Template');
     # instantiate variables in the template
     $tmpl_data->{'Root'} = $root;
     $tmpl_data->{'Template'} = $which_tmpl;
