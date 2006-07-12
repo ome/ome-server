@@ -45,7 +45,7 @@ use OME::Tasks::AnnotationManager;
 use Data::Dumper;
 
 our $VERSION = $OME::VERSION;
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 =pod
 
@@ -161,6 +161,16 @@ sub getPageTitle {
 	return $pageTitle;
 }
 
+=head2 getTemplate
+
+=cut
+sub getAuthenticatedTemplate {
+    my $self = shift;
+
+    my $type = $self->_getType();
+    return OME::Web::TemplateManager->getCreateTemplate($type);
+}
+
 =head2 getPageBody
 
 Overridable
@@ -169,12 +179,14 @@ Overridable
 
 sub getPageBody {
 	my $self = shift;
+	my $tmpl = shift;
 	my $q = $self->CGI();
+
 	my $type = $self->_getType();
 	my $locked_type = ( $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
 
 	my $specializedDBObjCreate;
-	return $specializedDBObjCreate->getPageBody( )
+	return $specializedDBObjCreate->getPageBody($tmpl)
 		if( $specializedDBObjCreate = $self->__specialize( $type ) and
 		    ref( $self ) eq __PACKAGE__ );
 
@@ -182,7 +194,7 @@ sub getPageBody {
 	if( $q->param( 'create' ) ) {
 		return $self->_create( );
 	} else {
-		return $self->_getForm();
+		return $self->_getForm($tmpl);
 	}
 }
 	
@@ -194,6 +206,7 @@ Overridable
 
 sub _getForm {
 	my $self    = shift;
+	my $tmpl = shift;
 	my $q       = $self->CGI();
 	my $factory = $self->Session->Factory();
 	my $type = $self->_getType();
@@ -204,15 +217,8 @@ sub _getForm {
 		if( $specializedDetail = $self->__specialize( $type ) and
 		    ref( $self ) eq __PACKAGE__ );
 
-  	# load a template
- 	my $tmpl_path = $self->_findTemplate( $type, 'create' );
- 	$tmpl_path = $self->_baseTemplateDir().'/generic_create.tmpl'
- 		unless $tmpl_path;
- 	my $tmpl = HTML::Template->new( filename => $tmpl_path, path => $self->_baseTemplateDir(), case_sensitive => 1 );
- 	
  	# get data for the template
-	my $requests = $self->_parse_tmpl_fields( [ $tmpl->param( ) ]
- 	);
+	my $requests = $self->_parse_tmpl_fields( [ $tmpl->param( ) ]	);
 
 	my %tmpl_data = $self->getFormInputsForFields( $type,$requests );
 
@@ -658,44 +664,6 @@ sub __specialize {
 	return undef;
 }
 
-=head2 _baseTemplateDir
-
-	my $template_dir = $self->_baseTemplateDir();
-	
-	Returns the directory where specialized templates for this class are stored.
-
-=cut
-
-sub _baseTemplateDir { 
-	my $self = shift;
-	my $session = $self->Session();
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	return $tmpl_dir."/System/Create/";
-}
-
-=head2 _findTemplate
-
-	my $template_path = $self->_findTemplate( $obj, $mode );
-
-returns a path to a custom template (see HTML::Template) for this $obj
-and $mode - OR - undef if no matching template can be found
-
-=cut
-
-sub _findTemplate {
-	my ( $self, $obj, $mode ) = @_;
-	return undef unless $obj;
-	my $tmpl_dir = $self->_baseTemplateDir();
-	my ($package_name, $common_name, $formal_name, $ST) =
-		$self->_loadTypeAndGetInfo( $obj );
-	my $tmpl_path = $formal_name; 
-	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/\//g; 
-	$tmpl_path .= "/".$mode.".tmpl";
-	$tmpl_path = $tmpl_dir.$tmpl_path;
-	return $tmpl_path if -e $tmpl_path;
-	return undef;
-}
 
 sub _getType {
 	my $self = shift;
@@ -703,8 +671,7 @@ sub _getType {
 	my $type = ( $q->param( '_Type' ) || $q->url_param( 'Type' ) ||
 	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
 	
-	$type = undef 
-		if( exists $self->adminObjects()->{ $type } || exists $self->invisibleObjects()->{ $type } );
+	$type = undef if( exists $self->adminObjects()->{ $type } || exists $self->invisibleObjects()->{ $type } );
 	return $type;
 }
 

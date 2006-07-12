@@ -93,7 +93,6 @@ use OME::Tasks::LSIDManager;
 use Log::Agent;
 use Carp;
 use Carp qw(cluck);
-use HTML::Template;
 
 use base qw(OME::Web);
 use Data::Dumper;
@@ -162,6 +161,14 @@ sub createOMEPage {
 =head2 getPageBody
 
     Used when DBOBjRender is used as a url.
+
+    note that we do not use the "getTemplate" call here as in other
+    places. it is assumed that access to dbobjrender is always
+    allowed, and that any per-user template switches will be handled
+    in the TemplateManager.
+    
+    
+    
 =cut
 
 sub getPageBody {
@@ -224,12 +231,9 @@ sub render {
 
 
 	# load a template
-	my $tmpl_path = $self->_findTemplate( $obj, $mode, 'one' );
-	$tmpl_path = $self->_baseTemplateDir('one').'/generic_'.$mode.'.tmpl'
-		unless $tmpl_path;
-	confess "Could not find a specialized or generic template to match Object $obj with mode $mode"
-		unless -e $tmpl_path;
-	$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+
+	$tmpl = 
+	    OME::Web::TemplateManager->getRenderingTemplate($obj,$mode,'one');
 
 	# get data for it	
 	%tmpl_data = $self->_populate_object_in_template( $obj, $tmpl, undef, $options );
@@ -358,11 +362,8 @@ sub renderArray {
 	$options = {} unless $options; # don't have to do undef error checks this way
 	
 	# try to load custom template
-	my $tmpl_path = $self->_findTemplate( $options->{type}, $mode, 'many' );
-	# use generic if there is no custom
-	$tmpl_path = $self->_baseTemplateDir('many').'/generic_'.$mode.'.tmpl'
-		unless $tmpl_path;
-	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+	my $tmpl = OME::Web::TemplateManager->getRenderingTemplate(
+	    $options->{type},$mode,'many');
 	my %tmpl_data;
 	my $field_requests = $self->parse_tmpl_fields( [ $tmpl->param() ] );
 
@@ -605,57 +606,7 @@ sub _pagerControl {
 }
 
 
-
-=head2 getTemplateList
-
-	my @template_names = $self->Renderer->getTemplateList( $type, $arity );
-
-	$type is optional
-	$arity is either 'one' or 'many'
-
-	For the moment, returns the names of templates available for a given type.
-	If no type is specified, only generic templates are given.
-	For now, this list is built from scanning the template directory.
-	When all templates are registered in the DB, then it will be built from a 
-	DB query.
-
-=cut
-
-sub getTemplateList {
-	my ($self, $type, $arity ) = @_;
-	my %template_names;
-	
-	# Find generic templates
-	my $generic_path = $self->_baseTemplateDir( $arity );
-	opendir( DH, $generic_path );
-	while( defined (my $file = readdir DH )) {
-		if( $file =~ m/^generic_([^\.]+)\.tmpl$/ ) {
-			$template_names{ $1 } = undef;
-		}
-	}
-	closedir( DH);
-
-	# Find specialized templates
-	if( $type ) {
-		my $specializedPath = $self->_specializedDisplayTemplateDir( $type, $arity );
-		if( $specializedPath ) {
-			opendir( DH, $specializedPath );
-			while( defined (my $file = readdir DH )) {
-				if( $file =~ m/^([^\.]+)\.tmpl$/ ) {
-					$template_names{ $1 } = undef;
-				}
-			}
-			closedir( DH);
-		}
-	}
-
-	# Return the list of unique templates available for this type.
-	return sort( keys( %template_names ) );
-}
-
-
-
-=head2 renderData
+=Head2 renderData
 
 	# plural
 	my @records = OME::Web::DBObjRender->renderData( \@objects, \@field_requests, $options );
@@ -897,13 +848,16 @@ sub getFields {
 	# alternately: filter fields by specialized templates
 	# try to find a template specific to this type & mode
 	if( $mode ) {
-		my $tmpl_path = 
-			$self->_findTemplate( $type, $mode, 'one' ) || 
-			$self->_findTemplate( $type, $mode, 'many' );
-		if( $tmpl_path ) {
-			my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+	    my $tmpl =
+		OME::Web::TemplateManager->getRenderingTemplate($type,$mode,'one')
+		||
+		OME::Web::TemplateManager->getRenderingTemplate($type,$mode,
+							      'many');
+	    if ($tmpl) {
+
 			# only keep columns that exist in the template
-			my $field_requests = $self->parse_tmpl_fields( [ $tmpl->param() ] );
+			my $field_requests = $self->parse_tmpl_fields( 
+			    [ $tmpl->param() ] );
 			@cols = grep( exists $field_requests->{ $_ }, @cols );
 		}
 	}
@@ -1164,76 +1118,8 @@ sub _trim {
 	return substr( $str, 0, $options->{ max_text_length } - 3 ).'...';
 }
 
-=head2 _baseTemplateDir
 
-	my $template_dir = $self->_baseTemplateDir( $arity );
-	
-	Returns the base directory where display templates are stored.
-	$arity is either 'one' or 'many'
-
-=cut
-
-sub _baseTemplateDir { 
-	my ($self, $arity) = @_;
-	my $session = $self->Session();
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	$tmpl_dir .= "/System/Display/";
-	$tmpl_dir .= 'One/' if( uc( $arity ) eq 'ONE' );
-	$tmpl_dir .= 'Many/' if( uc( $arity ) eq 'MANY' );
-	return $tmpl_dir;
-}
-
-=head2 _findTemplate
-
-	my $template_path = $self->_findTemplate( $obj, $mode, $arity );
-
-returns a path to a custom template (see HTML::Template) for this $obj
-and $mode - OR - undef if no matching template can be found
-$arity is either 'one' or 'many'.
-
-=cut
-
-sub _findTemplate {
-	my ( $self, $obj, $mode, $arity ) = @_;
-	return undef unless $obj;
-	my $tmpl_dir = $self->_specializedDisplayTemplateDir( $obj, $arity )
-		or return undef;
-	my $tmpl_path = "/".$mode.".tmpl";
-	$tmpl_path = $tmpl_dir.$tmpl_path;
-	return $tmpl_path if -e $tmpl_path;
-	return undef;
-}
-
-=head2 _specializedDisplayTemplateDir
-
-	my $template_dir = $self->_specializedDisplayTemplateDir( $type, $arity );
-	
-	Returns the directory where specialized templates for this class are stored.
-	$arity is either 'one' or 'many'
-	Returns undef if a specialized directory does not exist.
-
-=cut
-
-sub _specializedDisplayTemplateDir {
-	my ($self, $type, $arity ) = @_;
-
-	# Derive path to base template directory
-	my $tmpl_dir = $self->_baseTemplateDir( $arity );
-	
-	my ($package_name, $common_name, $formal_name, $ST) =
-		$self->_loadTypeAndGetInfo( $type );
-	my $tmpl_path = $formal_name;
-	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/\//g;
-
-	$tmpl_path = $tmpl_dir.$tmpl_path;
-	# Return a value only if this directory exists
-	return $tmpl_path
-		if -d $tmpl_path;
-	return undef;
-}
-
-=head2 _getLSIDmanager
+=Head2 _getLSIDmanager
 
 	my $lsidManager = $self->_getLSIDmanager();
 

@@ -45,7 +45,7 @@ use OME::SessionManager;
 use OME::Util::Dev::Templates;
 use OME::Web::Search;
 
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 sub getPageTitle {
 	return "OME: Select Category Groups";
@@ -56,10 +56,18 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+sub getAuthenticatedTemplate {
+    print STDERR "getting construct template\n";
+    return OME::Web::TemplateManager->getActionTemplate('CG_ConstructTemplate.tmpl');
+}
+
+
 sub getPageBody {
 	my $self = shift ;
+	my $tmpl = shift;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
+	print STDERR "in construct template. getpage body\n";
     my $factory = $session->Factory();
     my %tmpl_data;
 	
@@ -87,7 +95,7 @@ sub getPageBody {
 			
 		# Put mex ID on the end of the filename to ensure a unique file
 		$filename .= "_".$mex->id;
-		my $tmpl_dir = $self->rootTemplateDir( 'custom' );
+		my $tmpl_dir = OME::Web::TemplateManager->rootTemplateDir();
 	#	my $annotator_path = "$tmpl_dir"."/Actions/Annotator/CategoryGroup/$filename.tmpl";
 		#my $browse_path = "$tmpl_dir"."/Browse/CategoryGroup/$filename.tmpl";
 		#my $display_path = "$tmpl_dir"."/Display/One/OME/Image/$filename.tmpl";
@@ -259,10 +267,6 @@ Images left to annotate:<br>
 	
 	
 	# Load & populate the template
-	my $tmpl_dir = $self->actionTemplateDir();
-	my $tmpl = HTML::Template->new( filename => "CG_ConstructTemplate.tmpl",
-									path => $tmpl_dir,
-	                                case_sensitive => 1 );
 	$tmpl->param( %tmpl_data );
 
 	my $html =

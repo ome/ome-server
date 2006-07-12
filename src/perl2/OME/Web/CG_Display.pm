@@ -57,8 +57,24 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+sub getTemplate {
+
+    my $self=shift;
+    my $q = $self->CGI() ;
+    my $id = $q->url_param('ID');
+
+    my $which_tmpl =  $self->getTemplateName('OME::Web::CG_Display',"&ID=".$id);
+
+    my $tmpl =
+	OME::Web::TemplateManager->getDisplayTemplate($which_tmpl);
+
+    return $tmpl;
+
+
+}
 sub getPageBody {
 	my $self = shift ;
+	my $tmpl = shift;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
     	my $factory = $session->Factory();
@@ -67,34 +83,13 @@ sub getPageBody {
     	my $debug;
     	my @categoryGroups;
     	my $html;
+
+	my $id = $q->url_param('ID');
     	
-    	# Load the correct template and make sure the URL still carries the template
-	# name.
-	my $tmpl_dir = $self->rootTemplateDir( 'custom' );
-	my $which_tmpl = $q->url_param( 'Template' );
-	my $referer = $q->referer();
-	
-	my $id = $q->url_param( 'ID' );
-	
-	my $url = $self->pageURL('OME::Web::CG_Display');
-	if ($referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
-		$which_tmpl = $1;
-		$which_tmpl =~ s/%20/ /;
-		return ('REDIRECT', $self->redirect($url.'&ID='.$id.'&Template='.$which_tmpl));
-	}
-	$which_tmpl =~ s/%20/ /;
-	my $tmpl;
-	
-	if ($which_tmpl) {
-	
+	if ($tmpl ne $OME::Web::TemplateManager::NO_TEMPLATE) {		
+
 		my $image = $factory->loadObject( 'OME::Image', $id) if ($id);
-		
-		my $tmplAttr = $factory->findObject( '@DisplayTemplate', Name => $which_tmpl )
-						or die "Could not find DisplayTemplate with name $which_tmpl";
-		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
-										path => $tmpl_dir,
-										case_sensitive => 1 );
-		
+
 		# Load the requested category groups
 		my @parameter_names = $tmpl->param();
 		my @found_params = grep( m/\.load/, @parameter_names );
@@ -183,7 +178,9 @@ sub getPageBody {
 	
 	# render the dropdown list of available templates, and if they select
 	# one, refresh the page with that param in the URL
-	my @templates = $factory->findObjects('@DisplayTemplate', { ObjectType =>  'OME::Image', Arity => 'one' } );
+	my $templates =  OME::Web::TemplateManager->getImageDisplayTemplates();
+#$factory->findObjects('@DisplayTemplate', { ObjectType =>
+#'OME::Image', Arity => 'one' } ); 
 # 		my @user_templates;
 # 		foreach my $tmpl_attr (@templates) {
 # 			my $mexes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($tmpl_attr);
@@ -199,14 +196,13 @@ sub getPageBody {
 						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
 						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 
-	if ( scalar(@templates) > 0 ) {
+	if ( scalar(@$templates) > 0 ) {
 		$directions = "Current template:<br>";
 		$popup = $q->popup_menu(
 							-name     => 'Templates',
-							'-values' =>  [ map( $_->Name, @templates) ],
-							-labels   =>  { map{ $_->Name => $_->Name } @templates },
-							-default  => $which_tmpl
-						);
+							'-values' =>  [ map( $_->Name, @$templates) ],
+							-labels   =>  { map{ $_->Name => $_->Name } @$templates },
+							-default  => $q->url_param('Template'));
 		$button = $q->submit (
 						-name => 'LoadTemplate',
 						-value => 'Load'
@@ -222,7 +218,9 @@ sub getPageBody {
 		$popup.
 		$button;
 	
-	$html .= $tmpl->output() if ($tmpl);
+	$html .= $tmpl->output() if ($tmpl &&
+		     $tmpl ne $OME::Web::TemplateManager::NO_TEMPLATE);
+
 	$html .= $q->endform();
 
 	return ('HTML',$html);

@@ -161,7 +161,11 @@ sub getPageBody {
 	my $object = $self->_loadObject();
 	$self->{ form_name } = 'primary';
 	# Get template names
-	my @template_names = $self->Renderer()->getTemplateList( $object, 'one' );
+#	my @template_names = $self->Renderer()->getTemplateList(
+#$object, 'one' );
+	my @template_names =
+	OME::Web::TemplateManager->getTemplateList($object,
+						 'one');
 	my $displayMode = $q->param( 'DisplayTemplate' ) || 'detail';
 	$q->param( 'DisplayTemplate', $displayMode );
 	

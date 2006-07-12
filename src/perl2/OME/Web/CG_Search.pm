@@ -56,37 +56,32 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+sub getTemplate {
+
+    my $self=shift;
+    
+    my $which_tmpl =  $self->getTemplateName('OME::Web::CG_Search');
+
+    my $tmpl =
+	OME::Web::TemplateManager->getBrowseTemplate($which_tmpl);
+
+    return $tmpl;
+
+
+}
 # ADD ERROR CHECKING
 sub getPageBody {
 	my $self = shift ;
+	my $tmpl  = shift;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
     my $factory = $session->Factory();
     my %tmpl_data;
     my @categoryGroups;
     my $html;
-	
-	# Load the correct template and make sure the URL still carries the template
-	# name.
-	my $tmpl_dir = $self->rootTemplateDir( 'custom' );
-	my $which_tmpl = $q->url_param( 'Template' );
-	my $referer = $q->referer();
-	my $url = $self->pageURL('OME::Web::CG_Search');
-	if ($referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
-		$which_tmpl = $1;
-		$which_tmpl =~ s/%20/ /;
-		return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
-	}
 
-	my $tmpl;
-	
-	if ($which_tmpl) {
-	        $which_tmpl =~ s/%20/ /;
-		my $tmplAttr = $factory->findObject( '@BrowseTemplate', Name => $which_tmpl )
-						or die "Could not find BrowseTemplate with name $which_tmpl";
-		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
-							case_sensitive	=> 1,
-					                path=>$tmpl_dir );
+	# if we've found a template.
+	if ($tmpl ne $OME::Web::TemplateManager::NO_TEMPLATE) {	
 		
 		# Load the requested category groups
 		my @parameter_names = $tmpl->param();
@@ -206,7 +201,9 @@ sub getPageBody {
 		$tmpl->param( %tmpl_data );
 	}
 	
-	my @templates = $factory->findObjects('@BrowseTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
+	my $templates =
+	    OME::Web::TemplateManager->getCategoryGroupBrowseTemplates();
+
 	my $popup;
 	my $button;
 	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
@@ -214,19 +211,20 @@ sub getPageBody {
 						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
 						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 
-	if ( scalar(@templates) > 0 ) {
+	if ( scalar(@$templates) > 0 ) {
 		$directions = "Current template:";
 		$popup = $q->popup_menu(
 							-name     => 'Templates',
-							'-values' =>  [ map( $_->Name, @templates) ],
-							-labels   =>  { map{ $_->Name => $_->Name } @templates },
-							-default  => $which_tmpl,
+							'-values' =>  [ map( $_->Name, @$templates) ],
+							-labels   =>  { map{ $_->Name => $_->Name } @$templates },
+							-default  => $q->url_param('Template'),
 							#-onChange => return ('REDIRECT', $self->redirect($url.'&Template='.$q->param( 'Templates' )))
 						);
 		$button = $q->submit (
 						-name => 'LoadTemplate',
 						-value => 'Load'
 					 );
+		my $url = $self->pageURL('OME::Web::CG_Search');
 		return ('REDIRECT', $self->redirect($url.'&Template='.$q->param( 'Templates' ))) if ($q->param( 'LoadTemplate' ));
 	}
 	
@@ -236,7 +234,8 @@ sub getPageBody {
 		$popup.
 		$button;
 	
-	$html .= $tmpl->output() if ($tmpl);
+	$html .= $tmpl->output() if ($tmpl &&
+		     $tmpl ne $OME::Web::TemplateManager::NO_TEMPLATE);
 	$html .= $q->endform();
 
 	return ('HTML',$html);

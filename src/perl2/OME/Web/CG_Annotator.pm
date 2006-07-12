@@ -46,7 +46,7 @@ use OME::Tasks::AnnotationManager;
 use OME::Tasks::CategoryManager;
 use OME::Tasks::ImageManager;
 
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 sub getPageTitle {
 	return "OME: Annotate Images";
@@ -57,8 +57,23 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+sub getAuthenticatedTemplate {
+
+    my $self=shift;
+    
+    my $which_tmpl =  $self->getTemplateName('OME::Web::CG_Annotator');
+
+    my $tmpl =
+	OME::Web::TemplateManager->getAnnotationTemplate($which_tmpl);
+
+    return $tmpl;
+
+
+}
+
 sub getPageBody {
 	my $self = shift ;
+	my $tmpl = shift;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
 	my $factory = $session->Factory();
@@ -66,26 +81,8 @@ sub getPageBody {
 	my @categoryGroups;
 	my $html;
 
-	# Load the correct template and make sure the URL still carries the template
-	# name.
-	my $tmpl_dir = $self->rootTemplateDir( 'custom' );
-	my $which_tmpl = $q->url_param( 'Template' );
-	my $referer = $q->referer();
-	my $url = $self->pageURL('OME::Web::CG_Annotator');
-	if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
-		$which_tmpl = $1;
-		$which_tmpl =~ s/%20/ /;
-		return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
-	}
-	my $tmpl;
-	
-	if ($which_tmpl) {
-	        $which_tmpl =~ s/%20/ /;
-		my $tmplAttr = $factory->findObject( '@AnnotationTemplate', Name => $which_tmpl )
-						or die "Could not find AnnotationTemplate with name $which_tmpl";
-		$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
-										path => $tmpl_dir,
-										case_sensitive => 1 );
+	# if we've found a template.
+	if ($tmpl ne $OME::Web::TemplateManager::NO_TEMPLATE) {
 		
 		# Load the requested category groups
 		my @parameter_names = $tmpl->param();
@@ -276,7 +273,8 @@ sub getPageBody {
 	
 	# render the dropdown list of available templates
 	
-	my @templates = $factory->findObjects('@AnnotationTemplate', { ObjectType =>  '@CategoryGroup', __order => 'Name' });
+	my $templates =
+	OME::Web::TemplateManager->getCategoryGroupAnnotationTemplates();
 	my $popup="";
 	my $button="";
 	my $createURL = $self->pageURL('OME::Web::CG_ConstructTemplate');
@@ -285,19 +283,19 @@ sub getPageBody {
 						 If you already have templates in your Browse, Actions/Annotator, or Display/One/OME/Image
 						 directory,<br>from the command line, run 'ome templates update -u all'</i>";
 						 
-	if ( scalar(@templates) > 0 ) {
+	if ( scalar(@$templates) > 0 ) {
 		$directions = "Current Template: ";
 		$popup = $q->popup_menu(
 							-name     => 'Templates',
-							-values =>  [ map( $_->Name, @templates) ],
-							-labels   =>  { map{ $_->Name => $_->Name } @templates },
+							-values =>  [ map( $_->Name, @$templates) ],
+							-labels   =>  { map{ $_->Name => $_->Name } @$templates },
 							-default  => $current
 						);
 		$button = $q->submit (
 						-name => 'LoadTemplate',
 						-value => 'Load'
 					 );
-					 
+		my $url = $self->pageURL('OME::Web::CG_Annotator');
 		return ('REDIRECT', $self->redirect($url.'&Template='.$q->param( 'Templates' ))) if ($q->param( 'LoadTemplate' ));
 	}
 
@@ -307,7 +305,8 @@ sub getPageBody {
 		$popup.
 		$button;
 	
-	$html .= $tmpl->output() if ($tmpl);
+	$html .= $tmpl->output() if ($tmpl && 
+		     $tmpl ne $OME::Web::TemplateManager::NO_TEMPLATE);
 	$html .= $q->endform();
 	
 	return ('HTML',$html);	
