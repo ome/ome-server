@@ -135,7 +135,7 @@ sub ping {
 	foreach my $task (@$tasks) {
 		next unless $task->state() eq 'IN PROGRESS';
 		$task->died ('Task died for unknown reasons')
-			unless kill (0, $task->process_id()) > 0
+			unless getpgrp($task->process_id()) >= 0
 	}
 
 }
