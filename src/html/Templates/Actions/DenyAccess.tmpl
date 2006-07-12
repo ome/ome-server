@@ -1,15 +1,17 @@
-
+<p>
 <TMPL_IF NAME=previousPage>
 
-Your OME account is not configured to allow access to this page.
-Please <A HREF="<TMPL_VAR NAME=previousPage>">return to the previous
-page </A>.
+<p>Your OME account is not configured to allow access to this page.</p>
 
+Please <A HREF="<TMPL_VAR NAME=previousPage>">return to the previous
+page</A>,or .
 
 <TMPL_ELSE>
 
 Your OME account is not configured to allow access to this page
 Please press the &quot;back&quot; button on your browser to continue.
 
-
 </TMPL_IF>
+
+<p>Alternatively, you can also <A HREF="/perl2/serve.pl?Page=OME::Web::Login">Login to OME.</A></p>
+</p>
