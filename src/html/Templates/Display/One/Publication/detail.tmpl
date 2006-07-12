@@ -1,4 +1,14 @@
 <TMPL_VAR NAME='Author'> 
-<A HREF="<TMPL_VAR NAME='URL'>"> <TMPL_VAR NAME='Title'> </A>
+
+<TMPL_IF NAME='ExternalLink/render-detail'>
+<A HREF="<TMPL_VAR NAME='ExternalLink/render-detail'>"> 
+</TMPL_IF>
+
+<TMPL_VAR NAME='Title'> 
+<TMPL_IF NAME='ExternalLink/render-detail'>
+</A>
+</TMPL_IF>
 <TMPL_VAR NAME='Venue'> <TMPL_VAR NAME='Date'>.
 Pubmed ID: <TMPL_VAR NAME='PubmedID'> 
+
+
