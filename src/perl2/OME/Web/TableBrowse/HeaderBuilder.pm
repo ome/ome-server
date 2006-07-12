@@ -93,17 +93,14 @@ sub getPageHeader {
 	# Session goodies
 
 	# Logo image link
-	my $logo_link;
+	my $logo;
 	
-		$logo_link =
-			$q->a({href => $HOME_LOCATION},
-				$q->img( {
-						alt => 'OME Logo',
-						src => '/images/logo-4.png',
-						border => '0'
-					}
-				)
-			);
+	$logo =
+	    $q->img( {
+		alt => 'OME Logo',
+		src => '/images/logo-4.png',
+		border => '0'
+		} );
 	
 	my $nia_link = $q->a({href=>$NIA_LOCATION},	
 			   $q->img({
@@ -113,14 +110,6 @@ sub getPageHeader {
 				   }
  				)
 			);
-        my $nih_link = $q->a({href=>$NIH_LOCATION},
-			   $q->img({ 
-					alt=>'NIH Logo',
-				        src=>'/images/nih1.jpg',
-					border=>'0'
-				   }
-				)
-			);
 	
 	# Our glorious header table
 	my $header_table = $q->table( {
@@ -129,13 +118,13 @@ sub getPageHeader {
 			cellpadding => '0',
 			cellspacing => '0',
 		},
-		$q->Tr(	$q->td($nih_link),$q->td($nia_link),
-			$q->td( {-align => 'left', -valign => 'top' },
+		$q->Tr(	$q->td($nia_link),
+			$q->td( {-align => 'center', -valign => 'top' },
 				$q->span({class => 'ome_menu_title' }, 
 				$q->a({href=>$OME_LOCATION},'Open Microscopy Environment')).
 				' v'.$VERSION
 			),
-			$q->td($logo_link),
+			$q->td($logo),
 		)
 	);
 
