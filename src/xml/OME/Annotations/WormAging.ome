@@ -1,0 +1,175 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    # Copyright (C) 2003 Open Microscopy Environment
+    #       Massachusetts Institue of Technology,
+    #       National Institutes of Health,
+    #       University of Dundee
+    #
+    #
+    #
+    #    This library is free software; you can redistribute it and/or
+    #    modify it under the terms of the GNU Lesser General Public
+    #    License as published by the Free Software Foundation; either
+    #    version 2.1 of the License, or (at your option) any later version.
+    #
+    #    This library is distributed in the hope that it will be useful,
+    #    but WITHOUT ANY WARRANTY; without even the implied warranty ofm, 
+    #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    #    Lesser General Public License for more details.
+    #
+    #    You should have received a copy of the GNU Lesser General Public
+    #    License along with this library; if not, write to the Free Software
+    #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    #
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Written by:  Harry Hochheiser <hsh@nih.gov>
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<OME
+   xmlns=
+   "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+   xmlns:xsi=
+   "http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:STD=
+   "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+   xsi:schemaLocation = "
+	 http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+	 http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+	 http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+	 http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions
+   xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+   xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+   http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<!--
+    # Some Annotations for Worm Aging experiments, June 2006
+    # The contents of this file assume that MouseAnnotations.ome has
+    # already been imported, providing access to PublicationStatus and
+    # related types
+  -->
+     <SemanticType 
+	Name="WormLocation"
+	AppliesTo="G">
+	<Description>Image Location in Worm</Description>
+	<Element 
+	   Name="Name"
+	   DBLocation="WORM_LOCATION.NAME"
+	   DataType="string"/>
+       </SemanticType>
+
+
+     <SemanticType
+	Name= "WormLocationStrain"
+	AppliesTo = "G">
+       <Description>Defines the relationship between Locations and
+	 Strains</Description>
+
+       <Element
+	  Name= "Strain"
+	  DBLocation = "WORM_LOCATION_STRAIN_MAP.STRAIN_ID"
+	  DataType = "reference"
+	  RefersTo = "Strain"/>
+       <Element
+	  Name= "WormLocation"
+	  DBLocation = "WORM_LOCATION_STRAIN_MAP.WORM_LOCATION_ID"
+	  DataType = "reference"
+	  RefersTo = "WormLocation"/>
+     </SemanticType>
+
+     <SemanticType
+	Name="Age"
+	AppliesTo="G">
+       <Description>The worm's Age</Description>
+       <Element
+	 Name="Days"
+	 DBLocation="AGE.DAYS"
+	 DataType="integer"/>
+	<Element 
+	  Name="Name"
+	  DBLocation="AGE.NAME"
+          DataType="string"/>
+     </SemanticType>
+  
+     <SemanticType
+	Name="ImageAge"
+	AppliesTo="I">
+	<Description>A Mapping between an age and an image</Description>
+	<Element
+	 Name="Age"
+	 DBLocation="IMAGE_AGE.AGE"
+	 DataType="reference"
+	 RefersTo="Age"/>
+      </SemanticType>
+
+     <SemanticType
+      Name = "ImageWormLocation"
+       AppliesTo = "I">
+      <Description>A mapping between images and locations
+      </Description>
+      <Element 
+	 Name = "WormLocation"
+	 DBLocation = "IMAGE_WORM_LOCATION.WORM_LOCATION_ID"
+	 DataType = "reference"
+	 RefersTo = "WormLocation"/>
+    </SemanticType>
+
+     <SemanticType
+       Name="MorphologicalScore"
+	AppliesTo="I">
+       <Description>The predicted morphological score.</Description>
+       <Element
+	 Name="Score"
+	 DBLocation="MORPH_SCORE.SCORE"
+	 DataType="float"/>
+     </SemanticType>
+       
+	 
+  </SemanticTypeDefinitions>
+  
+  <CustomAttributes>
+    <WormLocation ID="urn:lsid:localhost:Location:000099">
+       <Name>Terminal Bulb</Name>
+     </WormLocation>
+     <WormLocation ID="urn:lsid:localhost:Location:000100">
+       <Name>Corpus</Name>
+     </WormLocation>
+     <Strain ID="urn:lsid:localhost:Location:000101">
+       <Name>fem-1</Name>
+     </Strain>
+     <Strain ID="urn:lsid:localhost:Location:000102">
+       <Name>eat2fem1</Name>
+     </Strain>
+     <Strain ID="urn:lsid:localhost:Location:000103">
+       <Name>tph1fem1</Name>
+     </Strain>
+     <Age ID="urn:lsid:localhost:Location:000113">
+       <Days>0</Days>
+       <Name>0 Days</Name>
+     </Age>
+     <Age ID="urn:lsid:localhost:Location:000114">
+       <Days>2</Days>
+       <Name>2 Days</Name>
+     </Age>
+     <Age ID="urn:lsid:localhost:Location:000115">
+       <Days>4</Days>
+       <Name>4 Days</Name>
+     </Age>
+     <Age ID="urn:lsid:localhost:Location:000116">
+       <Days>6</Days>
+       <Name>6 Days</Name>
+     </Age>
+     <Age ID="urn:lsid:localhost:Location:000117">
+       <Days>8</Days>
+       <Name>8 Days</Name>
+     </Age>
+  </CustomAttributes>
+
+</OME>
