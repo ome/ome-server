@@ -49,7 +49,7 @@ use OME::Tasks::ChainManager;
 use OME::Tasks::ImageManager;
 
 
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 sub getPageTitle {
 	return "Open Microscopy Environment - FindSpots" ;
@@ -61,6 +61,10 @@ sub getPageTitle {
 
 	sub getMenuText { return $menu_text }
 }
+
+
+# Override's OME::Web
+
 
 sub getPageBody {
 	my	$self = shift ;
@@ -103,8 +107,7 @@ sub getPageBody {
 		} else {
 			$h{FadeSpotsTheT} = undef;
 		}
-		
-		
+
         # Create a user input MEX for the user inputs
 		my $attributeType="FindSpotsInputs";
         my $mex = OME::Tasks::AnnotationManager->

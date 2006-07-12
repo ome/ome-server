@@ -60,7 +60,7 @@ use Log::Agent;
 use Carp;
 use Carp 'cluck';
 
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 #*********
 #********* PUBLIC METHODS

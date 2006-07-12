@@ -46,7 +46,7 @@ use OME::DBObject;
 use OME::Analysis::Engine;
 use OME::Tasks::ChainManager;
 
-use base qw{ OME::Web };
+use base qw{ OME::Web::Authenticated };
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Execute Analysis Chain";
@@ -58,6 +58,8 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+
+# Override's OME::Web
 sub getPageBody {
 	my $self = shift;
 	my $body = "";
