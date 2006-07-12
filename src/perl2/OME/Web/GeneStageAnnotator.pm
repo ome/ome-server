@@ -50,7 +50,7 @@ use OME::Tasks::AnnotationManager;
 use OME::Tasks::CategoryManager;
 use OME::Tasks::ImageManager;
 
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 sub getPageTitle {
     return "OME: Annotate Images";
@@ -59,6 +59,20 @@ sub getPageTitle {
 {
     my $menu_text = "Annotate Images";
     sub getMenuText { return $menu_text }
+}
+
+sub getAuthenticatedTemplate {
+
+    my $self=shift;
+    
+    my $which_tmpl =  $self->getTemplateName('OME::Web::GeneStageAnnotator');
+
+    my $tmpl =
+	OME::Web::TemplateManager->getAnnotationTemplate($which_tmpl);
+
+    return $tmpl;
+
+
 }
 
 =head1 getPageBody
@@ -87,6 +101,7 @@ Load up the correct annotation template, save any annotations, allow
 
 sub getPageBody {
     my $self = shift ;
+    my $tmpl=shift;
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
@@ -95,25 +110,7 @@ sub getPageBody {
     # Load the correct template and make sure the URL still carries the template
     # name.
 
-    my $tmpl_dir=$self->rootTemplateDir('custom');
     my $which_tmpl = $q->url_param('Template'); 
-
-    my $referer = $q->referer();
-    my $url = $self->pageURL('OME::Web::GeneStageAnnotator');
-    if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
-	$which_tmpl = $1;
-	$which_tmpl =~ s/%20/ /;
-	return ('REDIRECT', $self->redirect($url.'&Template='.$which_tmpl));
-    }
-    $which_tmpl =~ s/%20/ /;
-    my $tmpl;
-
-    my $tmpl_Attr  =  $factory->findObject( '@AnnotationTemplate', 
-					    Name => $which_tmpl )
-	or die "Could not find AnnotationTemplate with name $which_tmpl";
-    $tmpl = HTML::Template->new( filename => $tmpl_Attr->Template(),
-				 path => $tmpl_dir,
-				 case_sensitive => 1 );
 
     $tmpl_data{'template'}=$which_tmpl;
     

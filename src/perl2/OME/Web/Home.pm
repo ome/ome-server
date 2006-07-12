@@ -47,7 +47,6 @@ use vars qw($VERSION);
 
 use Carp;
 use UNIVERSAL::require;
-use HTML::Template;
 
 # OME Modules
 use OME;
@@ -60,7 +59,7 @@ use OME::Tasks::ImageManager;
 #*********
 
 $VERSION = $OME::VERSION;
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 use constant QUICK_VIEW_WIDTH     => 3;
 
@@ -234,9 +233,16 @@ sub getPageTitle {
     return "Open Microscopy Environment";
 }
 
+
+sub getTemplate {
+    my $self=shift;
+    return OME::Web::TemplateManager->getActionTemplate('Home.tmpl');
+}
+
 sub getPageBody {
 	my $self = shift;
 	my $session = $self->Session();
+	my $tmpl = shift;
 	my $q = $self->CGI();
 
 	# Project, dataset and counts we'll be using for the quick view
@@ -252,12 +258,7 @@ sub getPageBody {
 	# Build datasets in project header/content
 	my ($d_header, $d_content) = $self->__getQuickViewDatasetData($p);
 
-	# Load & populate the template
-	my $tmpl_dir = $self->actionTemplateDir();
-	my $tmpl = HTML::Template->new( 
-		filename => "Home.tmpl",
-		path     => $tmpl_dir,
-		case_sensitive => 1 );
+
 	$tmpl->param(
 		image_header   => $i_header,
 		project_header => $p_header,

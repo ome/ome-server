@@ -41,7 +41,7 @@ use Carp 'cluck';
 use vars qw($VERSION);
 use OME::Util::Annotate::SpreadsheetReader;
 
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 sub getPageTitle {
 	return "OME: Annotate Images";
@@ -52,8 +52,15 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+
+sub getAuthenticatedTemplate {
+
+    return OME::Web::TemplateManager->getActionTemplate('SpreadsheetImporterPrompt.tmpl');
+}
+
 sub getPageBody {
 	my $self = shift;
+	my $tmpl = shift;
 	my $q = $self->CGI();
 	my $session= $self->Session();
 	my $factory = $session->Factory();
@@ -89,12 +96,7 @@ sub getPageBody {
 		}
 	}
     
-    # Load & populate the template
-	my $tmpl_dir = $self->actionTemplateDir();
-	my $tmpl = HTML::Template->new( filename => "SpreadsheetImporterPrompt.tmpl",
-									path => $tmpl_dir,
-	                                case_sensitive => 1 );
-	
+    # populate the template
 	$tmpl->param( 'Output' => $output );
 	
 	my $html =
