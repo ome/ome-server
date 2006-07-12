@@ -328,10 +328,17 @@ sub createWithKey {
 
 	# check to see if this session is for a guest user. If it is,
 	# and if guests are disalllowed, punt.
-
+	# as some installations may not have this configuration
+	# variable
+	# test for it in eval -if an error happens, guest is not
+	# allowed.
 
 	if ($session->isGuestSession()) {
-	    if (!$configuration->allow_guest_access()) {
+	    my $guestStatus;
+	    eval {
+		$guestStatus = $configuration->allow_guest_access();
+	    };
+	    if (!$guestStatus) {
 		$userState->session_key(undef);
 		$userState->storeObject();
 		$session->commitTransaction();
@@ -458,10 +465,27 @@ sub createWithPassword {
 
 	return undef if (crypt($password,$dbpass) ne $dbpass);
 
-	return undef if (!$configuration->allow_guest_access() &&
-			   $experimenter->FirstName() eq 'Guest' &&
-			 $experimenter->LastName() eq 'User');
 	
+	# if the user name and password indicate a guest user,
+	# check the configuration to see if guest access is allowed.
+	# must wrap the configuration test in an eval
+	# as some installations may not have this set up. This can 
+	# happen if createWithPassword is used to authenticate for 
+	# an installation update, _before_ the configuration flag is
+	# set.
+	# to avoid problems, check for guest credietnails first,
+	# then check guest allowed in an eval.
+
+	if ($experimenter->FirstName() eq 'Guest' &&
+	    $experimenter->LastName() eq 'User') {
+	    # could be guest. is guest allowed?
+	    my $guestStatus;
+	    eval { $guestStatus =
+		       $configuration->allow_guest_access();};
+	    return undef unless $guestStatus;
+	} 
+
+
 	my $host;
 	if (exists $ENV{'REMOTE_HOST'} ) {
 		$host = $ENV{'REMOTE_HOST'};
