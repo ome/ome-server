@@ -352,9 +352,6 @@ sub importGroup {
 	my $filename = $file->getFilename();
 	my $basename = $group->{BaseName};
     
-	my $sizeX = $tag0->{TAGS->{ImageWidth}}->[0];
-	my $sizeY = $tag0->{TAGS->{ImageLength}}->[0];
-	logdbg "debug",  "X: $sizeX, Y: $sizeY";
 
 	# This is the number of Z,C,T in the first file.
 	# The rest of the files in the group are assumed to contain the same number
@@ -367,6 +364,7 @@ sub importGroup {
 		$tag0->{TAGS->{ImageLength}}->[0],
 		$fSizeZ,$fSizeC,$fSizeT
 	);
+	logdbg "debug",  "X: $sizeX, Y: $sizeY";
 	$sizeZ *= $group->{nZfiles};
 	$sizeC *= $group->{nCfiles};
 	$sizeT *= $group->{nTfiles};
