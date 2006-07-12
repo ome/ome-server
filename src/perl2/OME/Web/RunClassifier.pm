@@ -48,7 +48,7 @@ use OME::Tasks::ClassifierTasks;
 use OME::Fork;
 use OME::Tasks::NotificationManager;
 
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 sub getPageTitle {
 	return "OME: Run a Classifier" ;
@@ -61,8 +61,16 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+
+sub getAuthenticatedTemplate {
+
+    return OME::Web::TemplateManager->getActionTemplate('RunClassifier.tmpl');
+}
+
 sub getPageBody {
 	my	$self = shift ;
+	my      $tmpl = shift;
+
 	my 	$q = $self->CGI() ;
 	my	$session=$self->Session();
     my  $factory = $session->Factory();
@@ -138,11 +146,6 @@ END_INSTRS
 	);
 	
 	# Load & populate the template
-	my $tmpl_dir = $self->actionTemplateDir();
-	my $tmpl = HTML::Template->new( 
-		filename => "RunClassifier.tmpl",
-		path     => $tmpl_dir, 
-		case_sensitive => 1 );
 	$tmpl->param(
 		exp_dataset         => ($dataset ? $self->Renderer()->render( $dataset, 'ref' ) : '' ),
 		exp_dataset_id      => ($dataset ? $dataset->id : ''),
