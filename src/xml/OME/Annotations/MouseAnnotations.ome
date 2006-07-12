@@ -69,7 +69,7 @@
 	   Name="Description"
 	   DBLocation="EMBRYO_STAGE.Description"
 	   DataType="string"/>
-       </SemanticType>
+     </SemanticType>
 
      <!-- As shown below, ProbeType values include sense and - anti-sense -->
      <SemanticType 
@@ -176,13 +176,31 @@
 	 RefersTo = "Gene"/>
     </SemanticType>
 
-    <!-- Question: To keep it 	simple, we'll have an id as used by 
-         that data source, and the full URL that can be used to 
-         retrieve data. This is a bit redundant, but providing the URL   
-         as a pattern could be problematic. A possible alternative   
-         would be to have this type include just an id, and reference   
-         an external source, which would be a generic container for a
-	given source. -->
+    <!-- A template containing an expression that can be used to
+    populate link urls -->
+    <SemanticType 
+       Name="ExternalLinkTemplate"
+       AppliesTo="G">
+      <Description>A template for external links. This template can be
+      mofified via a regular expression to create a url for an
+      object.
+      </Description> 
+      <Element 
+	 Name="Name"
+	 DBLocation="EXTERNAL_LINK_TEMPLATE.NAME"
+	 DataType="string"/>
+      <Element 
+	 Name="Template"
+	 DBLocation="EXTERNAL_LINK_TEMPLATE.TEMPLATE"
+	 DataType="string"/>
+      </SemanticType>
+
+    <!-- An external link has a description, an id, and then (usually)
+    either a url or a reference to a template. If the link has a url,
+    that will be used to reference the outside link. Otherwise, the
+    ExternalID will be used to instantiate the URL pattern associated 
+    with the template object -->
+
     <SemanticType 
        Name="ExternalLink"
        AppliesTo="G">
@@ -199,10 +217,15 @@
 	 Name = "URL"
          DBLocation ="EXTERNAL_LINK.URL"
 	 DataType = "string"/>
+      <Element 
+	 Name="Template"
+	 DBLocation="EXTERNAL_LINK.TEMPLATE"
+	 DataType="reference"
+	 RefersTo="ExternalLinkTemplate"/>
     </SemanticType>
 
     <!-- A slightly more detailed type of external link is good for
-	 linking to pbublications -->
+	 linking to publications -->
     <SemanticType
        Name="Publication"
        AppliesTo="G">
@@ -226,12 +249,13 @@
       <Element 
 	Name="PubmedID"
 	DBLocation="PUBLICATION.PMID"
-	DataType="integer"/>
+	DataType="string"/>
       <Element 
-	Name="URL"
-        DBLocation="PUBLICATION.URL"
-        DataType="string"/>	       
-    </SemanticType>
+	Name="ExternalLink"
+        DBLocation="PUBLICATION.EXTERNAL_LINK"
+        DataType="reference"
+	RefersTo="ExternalLink"/>
+`    </SemanticType>
 
     <!-- We assume Genes, probes, and strains can each have multiple
 	 external links -->
@@ -336,8 +360,8 @@
 	RefersTo = "Strain"/>
     </SemanticType>
     
-    <SemanticType
-       Name = "ImageEmbryoStage"
+     <SemanticType
+      Name = "ImageEmbryoStage"
        AppliesTo = "I">
       <Description>A mapping between embryonic stages and images. Not
 	really a many-to-many map, as an image is taken at exactly one
