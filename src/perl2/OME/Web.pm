@@ -92,6 +92,8 @@ use OME::Web::DBObjRender;
 use OME::Web::Util::Category;
 use OME::Web::Util::Dataset;
 use OME::Web::Search;
+use OME::Web::AccessManager;
+use OME::Web::TemplateManager;
 
 use base qw(Class::Data::Inheritable);
 
@@ -103,7 +105,7 @@ use base qw(Class::Data::Inheritable);
 #
 #	 getPageTitle
 #	 getPageBody
-#	 
+#	 getTemplate (optional)
 
 # IGG 9/18/03:
 # contentType no longer defined as a method in this package
@@ -247,7 +249,6 @@ sub ensureLogin {
 	#or a new session if we got no cookie my %session;
 	my $sessionKey = $self->getSessionKey();
 	if (defined $sessionKey) {
-	    print STDERR "ensure login - trying to create sesssion $sessionKey\n";
 		my $session = $manager->createSession($sessionKey);
 		if ($session) {
 			$self->setSessionCookie($self->Session()->SessionKey());
@@ -353,6 +354,39 @@ sub getLogin {
 
 }
 
+
+# getTemplate ()
+# 
+# manage the template by class possibilities. getTemplate calls
+# "getAuthenticatedTemplate" to find the template appropriate for an
+# authenticated user.
+#
+# return the HTML::Template used to instantiate the page in question.
+# three possibilities;
+#   NULL means that the template in question could not be accessed. 
+#     display an error page in this case.
+# NO_TEMPLATE  means that no template is needed for this page.
+#   an HTML::Template option will be passed to getPageBody() and used
+#  to populate the page.
+# 
+#  The default is to return 'NO_TEMPlATE', indicating that no
+# template is needed. Subclasses will over-ride as necessary.
+#
+# subclasses will override getTemplate to (where necessary) provide
+# access controls and branching and getAuthenticatedTemplate to 
+# provide the template for authenticated users.
+# -----------
+
+sub getTemplate {
+    my $self =shift;
+    return $self->getAuthenticatedTemplate();
+}
+
+sub getAuthenticatedTemplate {
+    my $self= shift;
+    return $OME::Web::TemplateManager::NO_TEMPLATE;
+}
+
 # serve()
 # -------
 sub serve {
@@ -366,7 +400,8 @@ sub serve {
 		}
 	}
 
-	my ($result,$content,$jnpl_filename) = $self->createOMEPage();
+	my $template = $self->getTemplate();
+	my ($result,$content,$jnpl_filename) = $self->createOMEPage($template);
 	
 	my $cookies = [values %{$self->{_cookies}}];
 	my $headers = $self->headers();
@@ -511,9 +546,16 @@ sub getSidebar {
 
 sub createOMEPage {
 	my $self  = shift;
+	my $template = shift;
 	my $CGI	  = $self->CGI();
 	my $title = $self->getPageTitle();
-	my ($result,$body)	= $self->getPageBody();
+	my ($result,$body);
+	if (!$template) {
+	    ($result,$body) = $self->getAccessNotAllowedPage();
+	}
+	else {
+	    ($result,$body) = $self->getPageBody($template);
+	}
 	return ('ERROR',undef) if (!defined $title || !defined $body);
 	return ('HTML',$body) if ($result eq 'HTML-complete' );
 	return ($result,$body) if ($result ne 'HTML');
@@ -551,8 +593,16 @@ sub createOMEPage {
 				}, $menu_builder->getPageLocationMenu());
 	}
 
+	# if I have a footer builder, tack the footer onto the end of the body
+	if (my $footer_builder = $self->getFooterBuilder()) {
+	    my $footer = $footer_builder->getPageFooter();
+	    $body .= $footer;
+	}
+
+
 	# Body / Menu Location Table and TD generated only if menu_location
 	my ($body_table, $body_td);
+
 
 	if ($menu_location_td) { 
 		$body_table = $CGI->table({width => '100%'},
@@ -677,6 +727,24 @@ sub getPageBody {
 	return ('ERROR',undef);
 }
 
+
+# getAccessNotAllowedPage()
+# -------------------------
+# a page to be returned if getTemplate() indicates that the page
+# cannot be used.
+#
+sub getAccessNotAllowedPage() {
+    my $self = shift;
+    my $cgi = $self->CGI();
+
+    my $tmpl = OME::Web::TemplateManager->getAccessDeniedTemplate();
+    my $referer = $cgi->referer();
+    $tmpl->param(previousPage => $cgi->referer()) if ($referer);
+    
+    return ('HTML',$tmpl->output());
+}
+
+
 sub getOnLoadJS { return undef };  # Default
 
 sub getMenuBuilder {
@@ -685,7 +753,9 @@ sub getMenuBuilder {
 	my $menu_builder;
 	
 	unless ($self->{_popup} or $self->{_nomenu}) {
-		$menu_builder = new OME::Web::DefaultMenuBuilder ($self);
+	#	$menu_builder = new OME::Web::DefaultMenuBuilder
+	#($self);
+	    $menu_builder = OME::Web::AccessManager->getMenuBuilder ($self);
 	}
 
 	return $menu_builder;
@@ -697,12 +767,26 @@ sub getHeaderBuilder {
 	my $header_builder;
 	
 	unless ($self->{_popup} or $self->{_noheader}) {
-		$header_builder = new OME::Web::DefaultHeaderBuilder;
+		#$header_builder = new OME::Web::DefaultHeaderBuilder;
+	    $header_builder = OME::Web::AccessManager->getHeaderBuilder();
 	}
 
 	return $header_builder;
 }
 
+=head2
+
+    we need to return an nih footer if the page is not a popup and it is a guest sesion.
+=cut
+sub getFooterBuilder {
+    my $self = shift;
+
+    my $footer_builder;
+    unless ($self->{_popup} or $self->{_noheader}) {
+	$footer_builder = OME::Web::AccessManager->getFooterBuilder();
+    }
+    return $footer_builder;
+}
 
 # lookup(customTable, defaultTable, key)
 # --------------------------------------
@@ -942,51 +1026,6 @@ sub _loadTypeAndGetInfo {
 	return ($package_name, $common_name, $formal_name, $ST);	
 }
 
-=head2 actionTemplateDir
-
-	my $template_dir = $self->actionTemplateDir( );
-	
-	Returns the directory where templates for Action layouts are stored.
-	Optionally takes a 'custom' parameter that returns the path 
-	to the custom template Action directory.
-
-=cut
-
-sub actionTemplateDir { 
-	my $self = shift;
-	my $custom = shift;
-	my $session = $self->Session();
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	if( $custom ) {
-		return $tmpl_dir."/Actions/";
-	} else {
-		return $tmpl_dir."/System/Actions/";
-	}
-}
-
-=head2 rootTemplateDir
-
-	my $template_dir = $self->rootTemplateDir( );
-	
-	Returns the directory where templates for layouts are stored.
-	Optionally takes a 'custom' parameter that returns the path 
-	to the custom template directory.
-
-=cut
-
-sub rootTemplateDir { 
-	my $self = shift;
-	my $custom = shift;
-	my $session = $self->Session();
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	if( $custom ) {
-		return $tmpl_dir;
-	} else {
-		return $tmpl_dir."/System/";
-	}
-}
-
-
 
 =head2 getObjDetailURL
 
@@ -1046,7 +1085,7 @@ sub getSearchAccessorURL {
 	} elsif( $type eq "many-to-many" ) {
 		# Derive the path that connects $obj->method to what it returns
 		my $path = $obj->getManyToManyAliasSearchPath( $method );
-		return $self->pageURL( 'OME::Web::Search', {
+		return $self->pageURL("OME::Web::Search", {
 			SearchType      => $searchTypeFormalName,
 			search_names    => $path,
 			$path           => $obj->id
@@ -1110,6 +1149,101 @@ sub getTableURL {
 	} );
 }
 
+=head2 getTemplateName 
+
+for some pages that need Template parameters in the URL but may only
+have them in the referer, we grab the parameter out of the referer and
+redirect to new url including this parameter.
+
+=cut 
+
+sub getTemplateName {
+    my ($self,$page,$extraParams) = @_;
+
+    my $q = $self->CGI() ;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+
+    # Load the correct template and make sure the URL still carries the template
+    # name.
+    my $which_tmpl = $q->url_param( 'Template' );
+    my $referer = $q->referer();
+    my $url = $self->pageURL($page);
+    if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
+	$which_tmpl = $1;
+	$which_tmpl =~ s/%20/ /;
+	return ('REDIRECT',
+		$self->redirect($url.'&Template='.$which_tmpl.$extraParams));
+    }
+    $which_tmpl =~ s/%20/ /;
+    return $which_tmpl;
+}
+
+=head2
+
+getExternalLinkText - get the appropriate url for an object of a given type
+=cut
+
+sub getExternalLinkText {
+    my $self=shift;
+    my ($q,$type,$obj) = @_;
+
+
+    my @maps;
+    
+    my $mapType = $type."ExternalLinkList";
+    my $text ="";
+    eval { @maps = $obj->$mapType()}; 
+    if (@maps && scalar(@maps) > 0 && !$@) {
+	foreach my $map (@maps) {
+	    my $link = $map->ExternalLink();
+	    next unless $link;
+	    my $desc = $link->Description();
+	    my $url = $self->getExternalLinkURL($link);
+	
+	    if ($url ne "") {
+		$text .= "<span class=\"ome_ext_link_text\">" .    
+		    $q->a({href=>$url,class=>"ome_ext_link_text"},$desc) .
+		    "</span>";
+	    }
+	}
+    }
+
+    # if no maps exist to build up links, return nothing
+    return $text;
+}
+
+=head2 
+
+    $self->getExternalLinkURL($externalLink);
+
+    return the url associated with an external link. 3 possibilities
+    1) if the link has a url, return it.
+    2) if the link has a template, use that template and the link id
+    to construct a url
+    3) else return null.
+
+=cut
+sub getExternalLinkURL { 
+
+    my $self = shift;
+    my $externalLink = shift;
+    
+    my $id = $externalLink->ExternalId;
+    my $url = $externalLink->URL();
+	    
+    # if we don't have a url, build one 
+    # up with the template
+    if (!(defined $url)) {
+	my $templateObj =  $externalLink->Template();
+	if ($templateObj) {
+	    my $template = $templateObj->Template();
+	    $template =~ s/~ID~/$id/;
+	    $url = $template;
+	}
+    }
+    return $url;
+}
 1;
 
 =head1 AUTHOR
