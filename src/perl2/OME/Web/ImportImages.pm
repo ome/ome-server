@@ -62,7 +62,7 @@ use OME::Tasks::ImageTasks;
 #*********
 
 $VERSION = $OME::VERSION;
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
 
 use constant UNIX_STYLE => 1;
 use constant FTP_STYLE  => 2;

@@ -41,7 +41,7 @@ use strict;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
-use base qw{ OME::Web };
+use base qw{ OME::Web::Authenticated };
 
 use OME::Tasks::NotificationManager;
 use OME::Web::DBObjTable;
@@ -65,6 +65,8 @@ sub getPageTitle {
 
 	sub getMenuText { return $menu_text }
 }
+
+# Override's OME::Web
 
 sub getPageBody {
 	my $self = shift;
