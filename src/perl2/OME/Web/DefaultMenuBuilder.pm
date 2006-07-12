@@ -273,10 +273,11 @@ sub __getMenuEntryOfCurrentClass {
 	my $web_class    = $self->__getWebClass();
 	my $q = $web_instance->CGI();
 
+	my $menu = $self->getMenu();
 	my @menu_entries = grep( (
 			defined $_->{web_class} and 
 			$_->{web_class} eq $web_class),
-		@MENU );
+		@$menu);
 	return $menu_entries[0] if scalar( @menu_entries ) eq 1;
 	
 	foreach my $entry ( @menu_entries ) {
@@ -293,12 +294,12 @@ sub __getMenuEntryOfCurrentClass {
 }
 
 sub __preProcessMenu {
-	my ($self, @menu) = @_;
+	my ($self, $menu) = @_;
 
 	my $linkage = {};  # Class->Heading linkage
 	my $active_heading = 'HEAD';
 	
-	foreach my $element (@menu) {
+	foreach my $element (@$menu) {
 		if ($element->{'type'} eq 'heading') {
 			$active_heading = $element->{'text'};
 		} elsif ($element->{'type'} eq 'link') {
@@ -406,19 +407,26 @@ sub new {
 	$self = bless($self, $class);
 
 	# Build our linkage hashref
-	$self->{'__class_header_linkage'} = $self->__preProcessMenu(@MENU);
+	$self->{'__class_header_linkage'} = 
+	    $self->__preProcessMenu($self->getMenu());
 
 	return $self;
 }
 
+
+sub getMenu {
+    my $self=shift;
+    return \@MENU;
+}
 sub getPageMenu {
 	my $self = shift;
 	my $q = $self->__CGI();
 
 	my $menu_data;
 
+	my $menu = $self->getMenu();
 	# Process @MENU
-	foreach my $menu_element (@MENU) {
+	foreach my $menu_element (@$menu) {
 		$menu_data .= $self->__processElement($menu_element);
 	}
 

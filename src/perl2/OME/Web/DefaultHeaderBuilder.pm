@@ -108,7 +108,7 @@ sub getPageHeader {
 	} else {
 		$project_links = 
 			$q->span({class => 'ome_quiet'}, 'You have no current project. ') .
-			$q->a({href => $PM_SEARCH, class =>'ome_quiet'}, 'select') .
+			$q->a({href => $self->getProjectSearchLocation(), class =>'ome_quiet'}, 'select') .
 			", " .
 			$q->a({href => $PM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
@@ -123,7 +123,7 @@ sub getPageHeader {
 	} else {
 		$dataset_links = 
 			$q->span({class => 'ome_quiet'}, 'You have no current dataset. ') .
-			$q->a({href => $DM_SEARCH, class =>'ome_quiet'}, 'select') . 	
+			$q->a({href => $self->getDatasetSearchLocation(), class =>'ome_quiet'}, 'select') . 	
 			", " .
 			$q->a({href => $DM_CREATE, class =>'ome_quiet'}, 'create new');
 	
@@ -151,7 +151,7 @@ sub getPageHeader {
 			);
 	} else {
 			$logo_link =
-			$q->a({href => $HOME_LOCATION},
+			$q->a({href => $self->getHomeLocation()},
 				$q->img( {
 						alt => 'OME Logo',
 						src => '/images/logo_smaller.gif',
@@ -182,7 +182,7 @@ sub getPageHeader {
 			),
 			$q->td( {-align => 'left', -valign => 'top' },
 				$q->span({class => 'ome_menu_title' }, 'Open Microscopy Environment').
-				' v'.$VERSION
+				' v'.$self->getVersion()
 			),
 			$q->td($logo_link),
 		)
@@ -191,5 +191,25 @@ print
 	return $header_table;
 }
 
+
+sub getHomeLocation {
+    my $self = shift;
+    return $HOME_LOCATION;
+}
+
+sub getProjectSearchLocation {
+    my $self = shift;
+    return $PM_SEARCH;
+}
+
+sub getDatasetSearchLocation {
+    my $self = shift;
+    return $PM_SEARCH;
+}
+
+sub getVersion {
+    my $self=shift;
+    return $VERSION;
+}
 
 1;
