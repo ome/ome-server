@@ -47,7 +47,8 @@ use OME::Tasks::ImageTasks;
 use HTML::Template;
 
 $VERSION = $OME::VERSION;
-use base qw(OME::Web);
+use base qw(OME::Web::Authenticated);
+
 
 # Override's OME::Web
 sub getPageTitle {
@@ -61,9 +62,16 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+sub getAuthenticatedTemplate {
+
+    return OME::Web::TemplateManager->getActionTemplate('UploadImage.tmpl');
+}
+
+
 # Override's OME::Web
 sub getPageBody {
 	my $self = shift;
+	my $tmpl=shift;
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 	my $q = $self->CGI();
@@ -109,11 +117,6 @@ sub getPageBody {
 
 	my $action = $dataset ? '/perl2/upload.pl' : undef;
 	# Load & populate the template
-	my $tmpl_dir = $self->actionTemplateDir();
-	my $tmpl = HTML::Template->new( 
-		filename => "UploadImage.tmpl",
-		path     => $tmpl_dir, 
-	    case_sensitive => 1 );
 	$tmpl->param( 'Dataset' => $self->Renderer()->render( $dataset, 'ref' ) )
 		if( $dataset );
 	$tmpl->param( 
