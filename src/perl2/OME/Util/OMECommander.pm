@@ -75,9 +75,18 @@ ome commands are:
     top              Command for displaying progress info about OME tasks
     help <command>   Display help information about a specific command
 
+Global options are:
+    --OMEUser, --ou       Specify the OME username (i.e. --ou igg)
+    --OMEPassword, --opw  Specify the OME password (i.e. --opw abc123)
+    --OMESessionKey, --ok Specify the OME SessionKey (i.e. --ok ABC123HKL456)
+    
 Note that most of these commands will require you to log in as an
 already-existing OME administrative user.
 CMDS
+# Note that the following options are temporarily defeated:
+#    --DataSource, --db    Specify the OME database (i.e. --db ome)
+#    --DBUser, --dbu       Specify the database user (i.e. --dbu postgres)
+#    --DBPassword, --dbpw  Specify the database password (i.e. --dbpw def456)
 }
 
 1;
