@@ -633,51 +633,54 @@ sub configure_guest_access {
 	$confirm_all = 1;
     }
     $ENVIRONMENT->allow_guest_access($guest_access);
-    if ($ENVIRONMENT->allow_guest_access()) {
-	my $guest =
-	    $factory->findObject('@Experimenter',{FirstName=>'Guest',
-	    LastName=>'User'});
-	if (!$guest) {
-	    print "Creating Guest User!";
-	    my $module = $factory->findObject("OME::Module",name =>
-					      'Administration');
-	    my $mex =
-		OME::Tasks::ModuleExecutionManager->createMEX($module,'G');
-	    my $groupName = "GuestGroup_". $mex->id;
-	    my $group = 
-		$factory->maybeNewAttribute('Group',undef,$mex,
-					    {Name =>$groupName});
 
-	    $guest =
-		$factory->maybeNewAttribute('Experimenter',
-					    undef,$mex, {
-						FirstName => 'Guest',
-						LastName =>'User',
-						Group => $group}); 
-
-	    $group->Leader($guest);
-	    $group->Contact($guest);
-	    $group->storeObject();
+    # create the guest user. Even if we dont' want the access to be
+    # allowed, we should create the user. This will let us easily turn
+    # guest access on, without having to re-run the install script.
+    
+    my $guest =
+	$factory->findObject('@Experimenter',{FirstName=>'Guest',
+					      LastName=>'User'});
+    if (!$guest) {
+	print "Creating Guest User!";
+	my $module = $factory->findObject("OME::Module",name =>
+					  'Administration');
+	my $mex =
+	    OME::Tasks::ModuleExecutionManager->createMEX($module,'G');
+	my $groupName = "GuestGroup_". $mex->id;
+	my $group = 
+	    $factory->maybeNewAttribute('Group',undef,$mex,
+					{Name =>$groupName});
+	
+	$guest =
+	    $factory->maybeNewAttribute('Experimenter',
+					undef,$mex, {
+					    FirstName => 'Guest',
+					    LastName =>'User',
+					    Group => $group}); 
+	
+	$group->Leader($guest);
+	$group->Contact($guest);
+	$group->storeObject();
 	    
-	    print "Guest is " . $guest . "\n";
-	    my $bootstrap_experimenter =
-		$factory->loadObject('OME::SemanticType::BootstrapExperimenter',
-				     $guest->id());
-	    $bootstrap_experimenter->OMEName('guest');
-	    my $password = encrypt('abc123');
-	    $bootstrap_experimenter->Password($password);
-	    $bootstrap_experimenter->storeObject();
-
-	    my $exp_group =
-		$factory->newAttribute('ExperimenterGroup',
-				       undef,$mex, 
-				       { Experimenter=>$guest,
-					 Group => $group});
-	    $mex->group($group);
-
-	    $mex->storeObject();
-	    $session->commitTransaction();
-	}
+	print "Guest is " . $guest . "\n";
+	my $bootstrap_experimenter =
+	    $factory->loadObject('OME::SemanticType::BootstrapExperimenter',
+				 $guest->id());
+	$bootstrap_experimenter->OMEName('guest');
+	my $password = encrypt('abc123');
+	$bootstrap_experimenter->Password($password);
+	$bootstrap_experimenter->storeObject();
+	
+	my $exp_group =
+	    $factory->newAttribute('ExperimenterGroup',
+				   undef,$mex, 
+				   { Experimenter=>$guest,
+				     Group => $group});
+	$mex->group($group);
+	
+	$mex->storeObject();
+	$session->commitTransaction();
     }
 }
 
