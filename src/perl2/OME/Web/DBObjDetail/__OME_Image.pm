@@ -71,6 +71,7 @@ sub _takeAction {
 	#	$image->storeObject();
 	#	$self->Session()->commitTransaction();
 	#}
+	return unless ($q->param('action'));
 	
 	if( $q->param( 'action' ) eq 'SaveDescription' ) {
 		$image->description( $q->param( 'description' ) );
