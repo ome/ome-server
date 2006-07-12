@@ -1,0 +1,85 @@
+
+This directory contains patches and support files necessary for
+modifying a "stock" OME installation to provide support for viewing
+annotated images in a tabular format. 
+
+The files do not provide a complete, turn-key installation, as the
+actual image data is not included. Furthermore, production deployments
+will likely require refinements of the data model and/or layouts as
+necesary for specific needs. 
+
+The main components of this functionality include:
+
+    1) The use of ImageAnnotationTable.pm to display annotated images
+    in a 2d grid. 
+    2) GeneStageAnnotator and ImageDetailAnnotator as modules for
+    creating annotations.
+    3) ImageAnnotationDetail for showing specific information about
+    each image.
+
+Each of these tools is driven by a set of data types as given in
+src/xml/OME/Annotations/MouseAnnotations.ome.
+
+Details of the implementation, configuration, and use of these tools can be
+found  on the OME Wiki:
+http://cvs.openmicroscopy.org.uk/tiki/tiki-index.php?page=NIA+Annotation+and+Viewing+Tools
+
+
+There are four files in this directory that can be used to modify an
+installation to provide this functionality:
+
+   1) dgas-patch.pl installs the types and values in
+      MouseAnnotations.ome,  configures the system to allow guest
+      access, modifies headers and menus, imports images in a specific
+      directory, and annotates those images with the contents of a
+      spreadsheet file.
+   2) dgas.xls contains the image annotations in a spreadsheet form.
+   3) nih1.jpg and
+   4) nia1.jpg are images used in the modified header.
+
+
+Customizations of this functionality should probably begin with the
+definition of a data model. This model should be instantiated in an
+OME-XML file which would take the place of
+MouseAnnotations.ome. A corresponding annotation spreadsheet,
+containing instances of types from the newly-defined data model, must
+also be built. Appropriate images should be provided if desired, and
+changes to OME::Web::TableBrowse::HeaderBuilder (or a new header
+builder file) should be made to provide the desired page header. Once
+these changes are made, a new patch file based on dgas-patch.pl should
+be written. This new patch file will point to any revised file names
+and will modify the details of the annotation imports to account for
+the new model.
+
+There are three  types of functionality that are not covered by the
+script and annotation files in this directory: category groups,
+publications, and a home page for guest users.
+
+The tabular image display supports color-coding images based on their
+categorization within a specified category group. The stock OME
+facility includes definition of the CategoryGroup and Category
+semantic types, but the patches given here do not instantiate any
+category groups or categories, so no annotations are given. These 
+objects can be imported, or created through the web page. Individual
+images can be categorized with the web interface, but creation of a
+new AnnotationTeplate referring to appropriate category groups might
+be needed. 
+
+The other functionality that is not supported by these patches
+involves publications. The ImageAnnotationDetail display has the
+ability to display publications associated with an image via the
+Publication and ImagePublication types defined in
+MouseAnnotations.ome. If this data is added into the system (again,
+via import or other means), it will be displayed as appropriate on
+image detail pages.
+
+The patch script configures OME to be usable by non-authenticated
+users in a guest mode. As this will involve limited functionality, the
+patch provides guests with a display that does not include the usual
+menu bar.  Access to the home page is also unavailable to guest users.
+Thus, appropriate entry points for guest users must be defined after
+this patch is installed. Usually, these access points will be URLs
+that invoke gene-specific instances of the ImageAnnotationTable
+display. In any case, links can point to OME::Web::Login to allow
+authorized users to login and access full functionality.
+
