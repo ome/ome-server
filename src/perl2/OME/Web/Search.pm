@@ -116,11 +116,19 @@ sub getPageTitle {
 	return $menuText;
 }
 
+
+sub getTemplate {
+    my $self=shift;
+    return OME::Web::TemplateManager->getBasicSearchTemplate();
+}
+
+
 sub getPageBody {
 
 	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
 	# Setup variables
 	my $self = shift;	
+	my $tmpl = shift;
 	my $factory = $self->Session()->Factory();
 	my $q    = $self->CGI();
 	# $type is the formal name of type of object being searched for
@@ -288,11 +296,6 @@ END_HTML
 			
 	}
 	
-	my $tmpl = HTML::Template->new( 
-		filename       => 'Search.tmpl', 
-		path           => $self->_baseTemplateDir(),
-		case_sensitive => 1 
-	);
 	$tmpl->param( %tmpl_data );
 
 	$html .= 
@@ -503,9 +506,7 @@ sub getSearchCriteria {
 		$self->_loadTypeAndGetInfo( $type );
 	my $form_name = $self->{ form_name };
 
-	my $tmpl_path = $self->_findTemplate( $type );
-	my $tmpl = HTML::Template->new( filename => $tmpl_path,
-	                                case_sensitive => 1 );
+	my $tmpl = OME::Web::TemplateManager->getClassSearchTemplate($type);
 	
 	# Acquire search fields
 	my @search_fields;
@@ -557,12 +558,8 @@ sub getSearchCriteria {
 		$self->__sort_field( \@search_fields, $search_fields[0] )
 	);
 	
-	# Render search fields
-	my $search_field_tmpl = HTML::Template->new( 
-		filename       => 'search_field.tmpl',
-		path           => $self->_baseTemplateDir(), 
-		case_sensitive => 1
-	);
+	my $search_field_tmpl = 
+	    OME::Web::TemplateManager->getSearchFieldTemplate();
 	my $specialRequestSection = '';
 	foreach my $field( @search_fields ) {
 		# a button for ascending sort
@@ -716,47 +713,6 @@ sub __sort_field {
 	}
 }
 
-=head2 _baseTemplateDir
-
-	my $template_dir = $self->_baseTemplateDir();
-	
-	Returns the directory where specialized templates for this class are stored.
-
-=cut
-
-sub _baseTemplateDir { 
-	my $self = shift;
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	return $tmpl_dir."/System/Search/";
-}
-
-=head2 _findTemplate
-
-	my $template_path = $self->_findTemplate( $obj );
-
-returns a path to a custom template (see HTML::Template) for this $obj
-and $mode - OR - undef if no matching template can be found
-
-=cut
-
-sub _findTemplate {
-	my ( $self, $obj ) = @_;
-	my $mode = 'search';
-	return undef unless $obj;
-	my $tmpl_dir = $self->_baseTemplateDir();
-	my ($package_name, $common_name, $formal_name, $ST) =
-		$self->_loadTypeAndGetInfo( $obj );
-	my $tmpl_path = $formal_name; 
-	$tmpl_path =~ s/@//g; 
-	$tmpl_path =~ s/::/\//g; 
-	$tmpl_path .= "/".$mode.".tmpl";
-	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
-	return $tmpl_path if -e $tmpl_path;
-	$tmpl_path = $tmpl_dir.'/generic_search.tmpl';
-	die "could not find a search template"
-		unless -e $tmpl_path;
-	return $tmpl_path;
-}
 
 =head2 _specialize
 

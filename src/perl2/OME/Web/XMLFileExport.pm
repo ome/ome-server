@@ -60,8 +60,16 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+
+sub getAuthenticatedTemplate {
+
+    return OME::Web::TemplateManager->getActionTemplate('XMLFileExport.tmpl');
+}
+
+
 sub getPageBody {
 	my $self = shift;
+	my $tmpl = shift;
 	my $cgi = $self->CGI();
 	my $session = $self->Session();
 	my $factory = $session->Factory();
@@ -123,8 +131,6 @@ sub getPageBody {
 	#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 	# Instead of exporting, retrieve and populate the form.
 	$self->contentType('text/html');
-	my $tmpl_dir = $self->actionTemplateDir();
-	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
 	if( @images ) {
 		$tmpl->param( selected_images => $self->Renderer()->renderArray( \@images, 'ref_mass', { type => 'OME::Image' } ) );
 		$tmpl->param( file_size       => $approximate_file_size.' MB' );
