@@ -78,13 +78,13 @@ sub getPageBody {
 	
 	# load a template
 	my ($tmpl, %tmpl_data);
-	my $tmpl_path = $self->Renderer()->_findTemplate( $obj, $mode, 'one' );
-	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
-		unless $tmpl_path;
-	die "Could not find a specialized or generic template to match Object $obj with mode $mode"
-		unless -e $tmpl_path;
-	$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
-
+#	my $tmpl_path = $self->Renderer()->_findTemplate( $obj, $mode, 'one' );
+#	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
+#		unless $tmpl_path;
+#	die "Could not find a specialized or generic template to match Object $obj with mode $mode"
+#		unless -e $tmpl_path;
+#	$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+	$tmpl = OME::Web::TemplateManager->getRenderingTemplate($obj,$mode,'one');
 	# get data for it	
 	%tmpl_data = $self->Renderer()->_populate_object_in_template( $obj, $tmpl, undef);
 

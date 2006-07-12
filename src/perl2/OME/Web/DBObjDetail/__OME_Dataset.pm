@@ -73,8 +73,10 @@ sub getPageBody {
 	my $dataset = $self->_loadObject();
 	my $factory = $self->Session()->Factory();
 
-	my $tmpl_path = $self->Renderer()->_findTemplate( 'OME::Dataset', 'detail', 'one' );
-	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+	my $tmpl = 
+	    OME::Web::TemplateManager->getRenderingTemplate('OME::Dataset',
+							  'detail','one');
+
 	my %tmpl_data = $self->Renderer()->_populate_object_in_template( $dataset, $tmpl );
 	
 	my %cgi_params = $q->Vars();
@@ -210,7 +212,8 @@ sub _takeAction {
 	}
 	
 	# Delete Annotation
-	if( $q->param( 'action' ) eq 'DeleteAnnotation' ) {
+	if( $q->param('action') && 
+	    $q->param( 'action' ) eq 'DeleteAnnotation' ) {
 		OME::Tasks::DatasetManager->deleteCurrentAnnotation( $dataset );
 		$session->commitTransaction();
 	}
