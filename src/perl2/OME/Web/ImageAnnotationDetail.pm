@@ -54,6 +54,23 @@ sub getPageTitle {
     sub getMenuText { return $menu_text }
 }
 
+sub getTemplate {
+
+    my $self=shift;
+    my $id = $self->CGI()->url_param('ID');
+    my $which_tmpl =  
+	$self->getTemplateName('OME::Web::ImageAnnotationDetail',
+	"&ID=$id");
+
+    my $tmpl =
+	OME::Web::TemplateManager->getDisplayTemplate($which_tmpl);
+
+    return $tmpl;
+
+
+}
+
+
 
 =head1 getPageBody
 
@@ -94,36 +111,14 @@ Where possible, the final elements will be displayed with appropriate
 
 sub getPageBody {
     my $self = shift ;
+    my $tmpl= shift;
     my $q = $self->CGI() ;
     my $session= $self->Session();
     my $factory = $session->Factory();
     my %tmpl_data;
 
-    # Load the correct template and make sure the URL still carries
-    # the template  name.
-    # get template from url parameter, or referer
+    my $ID = $q->url_param('ID');
 
-    my $which_tmpl = $q->url_param('Template');
-    my $referer = $q->referer();
-    my $url = $self->pageURL('OME::Web::ImageAnnotationDetail');
-    my $ID = $q->param('ID');
-    if ($referer && $referer =~ m/Template=(.+)$/ && !($which_tmpl)) {
-	$which_tmpl = $1;
-	$which_tmpl =~ s/%20/ /;
-	my $redirect =$self->redirect($url.'&Template='.$which_tmpl."&ID=".$ID);
-	return ('REDIRECT', $redirect);
-    }
-    $which_tmpl =~ s/%20/ /;
-
-    # load the appropriate information for the named template.
-    my $tmplData = 
-	$factory->findObject( '@DisplayTemplate', Name => $which_tmpl );
-	
-    # instantiate the template
-    my $tmpl_dir=$self->rootTemplateDir('custom');
-    my $tmpl = 
-	HTML::Template->new(filename => $tmplData->Template(),
-			    case_sensitive=>1,path=>$tmpl_dir);
 
     # instantiate variables in the template    
     $tmpl_data{'Template'} = $q->param('Template');
@@ -277,6 +272,7 @@ sub getPathDetail {
     my $targetField = shift @pathTypes;
     my $type = "@".$targetField;
 
+
     my @maps;
     # find the maps that correspond to the root object.
     if ($parentType eq 'OME::Image') {
@@ -301,8 +297,9 @@ sub getPathDetail {
 	    foreach my $map (@maps) {
 		my $target = $map->$targetField;
 		# get the external URL
-		my $url = $self->getObjURL($target,$type);
+		my $url = $self->getObjURL($target,$targetField);
 		$html .= "<li> $targetField: $url</br>";
+		
 	    }
 	    $html .= "</ul>";
 	}
@@ -316,7 +313,7 @@ sub getPathDetail {
 		# hierarchy. - probe.
 		my $target = $map->$targetField;
 		$html .= "<li> ". $targetField . ": " .
-		    $self->getObjURL($target,$type) .    "<br>\n";
+		    $self->getObjURL($target,$targetField) . "<br>\n";
 
 		# recurse to populate the next level. Pass the array
 		# as a whole so it will get copied.
@@ -415,7 +412,7 @@ sub getPublicationDetails  {
     my @publicationLinks = $image->ImagePublicationList(); 
     if (scalar(@publicationLinks) > 0) {
 	my @publications = map { $_->Publication} @publicationLinks;
-    
+	my $pubList = "<Ul>";
 	$tmpl_data->{'publications/render-item_list'} =  
 	    $self->Renderer()->renderArray(\@publications,'item_list',
 					   {type => '@Publication'});
@@ -446,27 +443,10 @@ sub getObjURL {
 
     my $name = $target->Name();
     my $html = $name;
-    # type = "@Gene", $target is the gene.
-
-    $type =~ /@(.*)/;
-    my $field =$1;
-
-    my $linkMap = $field."ExternalLinkList";
-
-    my $map;
-    eval {my $maps = $target->$linkMap(); $map = $maps->next();};
-
-    if ($@ ||  !$map) { 
-	my $detail = $self->getObjDetailURL($target);
-	if ($detail) {
-	    $html = $q->a({href=>$detail},$name);
-	}
+    my $extLink = $self->getExternalLinkText($q,$type,$target);
+    if ($extLink) {
+	$html .= " " . $extLink;
     }
-    elsif ($map) {
-	my  $link = $map->ExternalLink();
-	my $url = $link->URL();
-	$html =$q->a({href=>$url},$name);
-    } 
     return $html;
 }
     
