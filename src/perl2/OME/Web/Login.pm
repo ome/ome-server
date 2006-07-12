@@ -165,4 +165,14 @@ sub __loginForm {
 	return $header_table . $login_table . $generic_footer;
 }
 
+=head2 
+    
+    We do not ever want a footer for a login, so return undef
+
+=cut
+sub getFooterBuilder {
+
+    return undef;
+}
+
 1;
