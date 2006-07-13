@@ -417,7 +417,7 @@ sub processCategoryGroups {
 			$category = $factory->newAttribute ('Category', undef, 
 				$global_mex, { Name => $categoryName, 
 						   CategoryGroup => $CG, 
-						   Description => "Created by bulk annotation spreadsheet importer from file $fileToParse on timestr."  }) 		or die "could not make new Category $categoryName"; 
+						   Description => "Created by bulk annotation spreadsheet importer from file $fileToParse on $timestr."  }) 		or die "could not make new Category $categoryName"; 
 			
 			$newCategories->{$CGName}->{$categoryName} = 1; 
 			   # record the creation of new category to generate
