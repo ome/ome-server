@@ -255,7 +255,7 @@ sub getPageBody {
 
 sub getTableDetails {
     my $self = shift;
-    my $q = $self->CGI();
+
     my $session= $self->Session();
     my $factory = $session->Factory();
 
@@ -263,9 +263,9 @@ sub getTableDetails {
     my $start = [gettimeofday()];
     # container is the OME::Web object that is calling this code.
     my ($container,$tmpl,$returnPage) = @_;
+    my $q = $container->CGI();
     $self->{Template}=$q->url_param('Template');
     $self->{returnPage} = $returnPage;
-    my $q = $container->CGI();
     my %tmpl_data;
 
 
