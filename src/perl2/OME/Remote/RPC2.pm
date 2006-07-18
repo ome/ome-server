@@ -192,12 +192,12 @@ sub _item {
 	push @text, "<value><dateTime.iso8601>", $item->repr, "</dateTime.iso8601></value>\n";
     } elsif ($ref eq 'OME::Remote::RPC2::Base64') {
 	push @text, "<value><base64>", $item->repr, "</base64></value>\n";
-    } elsif ($ref =~ /=HASH\(/) {
+    } elsif ("$item" =~ /=HASH\(/) {
 	push @text, $self->_hash($item);
-    } elsif ($ref =~ /=ARRAY\(/) {
+    } elsif ("$item" =~ /=ARRAY\(/) {
 	push @text, $self->_array($item);
     } else {
-	die "can't convert \`$item' to XML\n";
+	die "can't convert '$item' (ref='$ref') to XML\n";
     }
 
     return @text;

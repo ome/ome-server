@@ -30,7 +30,9 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+# Written by:  Ilya Goldberg <igg@nih.gov>
+# Originaly by Douglas Creager <dcreager@alum.mit.edu>
+#                
 #
 #-------------------------------------------------------------------------------
 
@@ -46,155 +48,109 @@ use OME::ImportEngine::ImportEngine;
 use OME::Image::Server::File;
 use OME::Tasks::PixelsManager;
 use OME::Tasks::ImportManager;
+use OME::Tasks::ImageTasks;
 use OME::Analysis::Engine;
+use OME::Fork;
 
 =head1 NAME
 
-OME::Remote::Facades::ImportFacade - implementation of remote facade
-methods pertaining to image-import methods
+OME::Remote::Facades::ImportFacade - Implementation of remote facade methods
+for image import
+
+=head2 getDefaultRepository
+
+my $repository = getDefaultRepository();
+
+Returns a hash reference of the following form:
+  id             => The Repository ID
+  ImageServerURL => The base URL of the OME Image Server (OMEIS)
 
 =cut
 
+
+sub getDefaultRepository {
+	my $proto = shift;
+	my $repository = OME::Session->instance()->findRemoteRepository();
+	return ({
+			'id' => $repository->id(),
+			'ImageServerURL' => $repository->ImageServerURL()
+	});
+}
+
+
+
+=head2 importFiles, startImport
+
+  my $fileIDs = importFiles($repositoryID,$fileIDs,$datasetID);
+  my $fileIDs = importFiles($repositoryID,$fileIDs);
+
+  my $taskID = startImport($repositoryID,$fileIDs,$datasetID);
+  my $taskID = startImport($repositoryID,$fileIDs);
+
+importFiles and startImport accept a repository ID returned by getDefaultRepository,
+a reference to an array of OMEIS FileIDs returned by UploadFile calls to OMEIS,
+and an optional Dataset ID to put the images in (or add images to).
+
+If A Dataset is not specified, one will be created automatically by OME.
+
+importFiles returns a reference to an array of Image IDs resulting from the import.
+This method will block until all images are imported.
+
+startImport returns a task ID (OME::Task class), which can be used to track import progress.
+
+=cut
+
+sub importFiles {
+	my ($dataset,$files) = _makeObjects (@_);
+
+	my $images = OME::Tasks::ImageTasks::importImageServerFiles ($dataset, $files);
+
+	# Make an array of Image IDs
+	my $imageIDs;
+	foreach (@$images) {
+		push (@$imageIDs,$_->id());
+	}
+	return $imageIDs;
+}
+
 sub startImport {
-    my $proto = shift;
-    my $fileIDs = pop;
-    my $datasetID = pop;
+	my ($dataset,$files) = _makeObjects (@_);
 
-    die "startImport expects an array of file ID's"
-      unless ref($fileIDs) eq 'ARRAY';
+	my $task = OME::Tasks::ImageTasks::forkedImportImageServerFiles ($dataset, $files);
 
-    # We need to start the import process before forking, so that we
-    # can return the Import DTO (which contains information about the
-    # global import MEX among other things).
-
-    my $importer = OME::ImportEngine::ImportEngine->new(AllowDuplicates => 1);
-    my $session = OME::Session->instance();
-    my $factory = $session->Factory();
-    my $dataset;
-
-    if (defined $datasetID) {
-        $dataset = $factory->loadObject("OME::Dataset",$datasetID);
-        die "Dataset #${datasetID} does not exist"
-          unless defined $dataset;
-    }
-
-    my $files_mex = $importer->startImport();
-    my $session_key = $session->SessionKey();
-
-    # Fork off the child process
-
-    my $parent_pid = $$;
-    my $pid = OME::Fork->fork();
-
-    if (!defined $pid) {
-        # Fork failed, record as such in the ModuleExecution and return
-        print STDERR "Bad fork\n";
-        die "Could not fork off a process to perform the import";
-    } elsif ($pid) {
-        # Parent process
-
-        print STDERR "Parent\n";
-
-        # TODO:  Define a better Import DTO, encode it, and return it.
-        return $files_mex->id();
-    } else {
-        # Child process
-
-        print STDERR "Child\n";
-
-        # Start a new session so we loose our controling terminal
-        POSIX::setsid () or die "Can't start a new session. $!";
-
-# I believe this line can replace OME::Remote::Facades::ImportFacade::Child::importChild
-# Is that possible? If not, then it can replace the innards of importChild
-#OME::Tasks::ImageTasks::importFiles($dataset, \@file_names, \%opts);
-        eval {
-            OME::Remote::Facades::ImportFacade::Child::importChild
-                ($session_key,$importer,$dataset,$fileIDs);
-        };
-
-        print STDERR $@ if $@;
-
-        print STDERR "Exiting....\n";
-        CORE::exit(0);
-    }
+	return $task->id();
 }
 
-######################
-# Put the following methods in a separate package so that they cannot
-# be called via XML-RPC.
+sub _makeObjects {
+	my ($proto,$repositoryID,$fileIDs,$datasetID) = @_;
+	my $factory = OME::Session->instance()->Factory();
+	my $repository = $factory->findObject(
+		'@Repository', id => $repositoryID
+	);
+	die "Could not find repository with ID=$repositoryID"
+		unless $repository;
 
-package OME::Remote::Facades::ImportFacade::Child;
+	my $dataset;
+	if (defined $datasetID) {
+		$dataset = $factory->findObject(
+			"OME::Dataset", id => $datasetID
+		);
+	}
 
-use Carp;
-
-sub importChild ($$$$) {
-    #local $SIG{__DIE__} = sub { print STDERR "*** DIE DIE DIE CHILD $$\n",@_,"\n"; };
-
-    my ($sessionKey,$importer,$dataset,$fileIDs) = @_;
-    print STDERR "Child\n";
-
-    my $session = OME::Session->instance();
-    print STDERR "  Session $session\n";
-
-    my $factory = $session->Factory();
-    print STDERR "  Factory $factory\n";
-
-    my $repository = $session->findRemoteRepository();
-    print STDERR "  Repository $repository\n";
-
-    $session->activateRepository($repository);
-
-    my @files;
-    foreach my $id (@$fileIDs) {
-        print STDERR "  File $id\n";
-        push @files, OME::Image::Server::File->new($id);
-    }
-
-    print STDERR "  Importing\n";
-    my $image_list = $importer->importFiles(\@files);
-    $importer->finishImport();
-    
-    if( scalar( @$image_list ) > 0 ) {
-	    if( not defined $dataset ) {
-		    print STDERR "  dataset does not exists. creating Import dataset\n";
-			$dataset = $factory->
-			  newObject("OME::Dataset",
-						{
-						 name => "ImportFacade Dummy Dataset",
-						 description => "Images imported by Remote Importer",
-						 locked => 0,
-						 owner_id => $session->experimenter_id(),
-						})
-			or die "Cannot create import dataset";
-		}
-
-	    print STDERR "  adding images to dataset\n";
-		foreach $image (@$image_list) {
-			$factory->newObject("OME::Image::DatasetMap",
-						{
-						 image_id   => $image->id(),
-						 dataset_id => $dataset->id(),
-						});
-		}
-
-		print STDERR "  Executing chain\n";
-		my $chain = $session->Configuration()->import_chain();
-		if (defined $chain) {
-			$OME::Analysis::Engine::DEBUG = 0;
-			OME::Analysis::Engine->executeChain($chain,$dataset,{});
-		}
-    } else {
-		print STDERR "  No images imported. Skipping dataset check and Import Chain execution.\n";
-    }
-
-    return;
+	my $files;
+	foreach (@$fileIDs) {
+		push ( @$files,OME::Image::Server::File->new ($_,$repository) );
+	}
+	return undef unless scalar @$fileIDs;
+	return ($dataset,$files);
 }
-
 1;
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Douglas Creager (dcreager@alum.mit.edu)
+Ilya Goldberg (igg@nih.gov)
+
+Originaly by Douglas Creager <dcreager@alum.mit.edu>
+
 
 =cut
