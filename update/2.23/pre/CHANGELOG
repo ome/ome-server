@@ -1,0 +1,2 @@
+Fix the time/channel pattern for MetaMorph so that one could have either _w or
+_t or both
