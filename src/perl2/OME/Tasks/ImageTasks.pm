@@ -77,6 +77,7 @@ Returns a reference to an array of images imported.
 
 sub importFiles {
 	my ($dataset, $filenames, $options, $task) = @_;
+	my $repository = OME::Session->instance()->findRepository();
 
 	unless ($task) {
 		$task = OME::Tasks::NotificationManager->
@@ -89,26 +90,71 @@ sub importFiles {
 	}
 
 	$task->setPID($$);
+
+	my %files;		
+
+	eval {
+		foreach my $filename (@$filenames) {
+			my $omeis_file = OME::Image::Server::File->upload($filename,$repository)
+				if -f $filename and -r $filename and -s $filename;
+			$files{ $filename } = $omeis_file;
+			$task->step();
+			$task->setMessage("Uploaded $filename");
+		}
+	};
+	
+	if ($@) {
+		my $error = $@;
+		eval {
+			$task->died($error);
+		};
+		logwarn "Could not close task - $@" if $@;
+		die $error;
+	}
+
+	return ( importImageServerFiles ($dataset,\%files,$options,$task) );
+}
+
+=head2 importImageServerFiles
+
+my $image_list = importImageServerFiles($dataset, \@files, \%options);
+
+This method imports files which are already present in an image server
+repository. The import analysis chain is executed and a reference to an array
+of images is returned.
+
+$dataset is optional. It is completely unnecessary for ome files that do not
+contain images. When left unspecified, an Import Dataset will be automatically
+created if images are returned by the ImportEngine.  If $dataset is
+unspecified, replace it with undef.  %options is optional. currently recognized
+options are {AllowDuplicates => 0|1}
+	
+=cut
+
+sub importImageServerFiles {
+	my ($dataset, $files, $options, $task) = @_;
+
+	unless ($task) {
+		$task = OME::Tasks::NotificationManager->
+			new('Importing images',3+scalar(@$files))
+				unless defined $task;
+		
+		$task->setPID($$);
+		$task->step();
+		$task->setMessage('Starting import');
+	}
+
+	$task->setPID($$);
     my $importer = OME::ImportEngine::ImportEngine->new(%$options);
     my $session = OME::Session->instance();
 	my $datasetManager = OME::Tasks::DatasetManager->new($session);
-	
+
     my $files_mex = $importer->startImport();
 
 	eval {
-            my %files;
-
-            foreach my $filename (@$filenames) {
-                my $omeis_file = OME::Image::Server::File->upload($filename)
-                	if -f $filename and -r $filename and -s $filename;
-                $files{ $filename } = $omeis_file;
-                $task->step();
-                $task->setMessage("Uploaded $filename");
-            }
-
             $task->step();
             $task->setMessage('Importing');
-            my $image_list = $importer->importFiles(\%files);
+            my $image_list = $importer->importFiles($files);
             $importer->finishImport();
 
 			if( scalar( @$image_list ) > 0 ) {
@@ -142,115 +188,8 @@ sub importFiles {
             eval {
                 $task->died($error);
             };
-
             logwarn "Could not close task - $@" if $@;
-        } else {
-            eval {
-                $task->finish();
-                $task->setMessage('Imported '.$importer->nImages().' images '.
-                	'from '.$importer->nImageFiles().' files. '.
-                	$importer->nFiles().' scanned. '.
-                	$importer->nUnknown().' unknown format, '.
-                	$importer->nDups().' duplicates, '.
-                	$importer->nError().' errors.'
-                );
-            };
-
-            logwarn "Could not close task - $@" if $@;
-        }
-	return $importer->{_images};
-}
-
-=head2 importImageServerFiles
-
-my $image_list = importImageServerFiles($dataset, \@files, \%options);
-
-This method imports files which are already present in an image server
-repository. The import analysis chain is executed and a reference to an array
-of images is returned.
-
-$dataset is optional. It is completely unnecessary for ome files that do not
-contain images. When left unspecified, an Import Dataset will be automatically
-created if images are returned by the ImportEngine.  If $dataset is
-unspecified, replace it with undef.  %options is optional. currently recognized
-options are {AllowDuplicates => 0|1}
-
-WARNING:
-	This function should probably be deprecated:
-	http://bugs.openmicroscopy.org.uk/show_bug.cgi?id=561
-
-	And it's NewDataset code has a bug. It really should be using the DatasetManager
-	not Factory newObject calls. Anyway the newObject call isn't setting the group_id.
-	
-=cut
-
-sub importImageServerFiles {
-	my ($dataset, $files, $options, $task) = @_;
-
-	unless ($task) {
-		$task = OME::Tasks::NotificationManager->
-			new('Importing images',3+scalar(@$files))
-				unless defined $task;
-		
-		$task->setPID($$);
-		$task->step();
-		$task->setMessage('Starting import');
-	}
-
-	$task->setPID($$);
-    my $importer = OME::ImportEngine::ImportEngine->new(%$options);
-    my $session = OME::Session->instance();
-
-    my $files_mex = $importer->startImport();
-
-	eval {
-            $task->step();
-            $task->setMessage('Importing');
-            my $image_list = $importer->importFiles($files);
-            $importer->finishImport();
-
-			if( scalar( @$image_list ) > 0 ) {
-				my $factory = $session->Factory();
-				if( not defined $dataset ) {
-					$dataset = $factory->
-					  newObject("OME::Dataset",
-								{
-								 name => "Forked import Dummy Dataset",
-								 description => "Images imported by Remote Importer",
-								 locked => 0,
-								 owner_id => $session->experimenter_id(),
-								})
-					or die "Couldn't make a new dataset";
-				}
-	
-				# Add the new images to the dataset.
-				foreach $image (@$image_list) {
-					$factory->newObject("OME::Image::DatasetMap",
-										{
-										 image_id   => $image->id(),
-										 dataset_id => $dataset->id(),
-										});
-				}
-		
-				$task->step();
-				$task->setMessage('Executing import chain');
-				my $chain = $session->Configuration()->import_chain();
-				if (defined $chain) {
-					OME::Analysis::Engine->executeChain($chain,$dataset,{});
-				}
-			} else {
-				$task->step();
-				$task->setMessage('No Images imported. Skipping execution of import chain');
-			}
-        };
-
-        if ($@) {
-            my $error = $@;
-            eval {
-                $task->died($error);
-            };
-
-            logwarn "Could not close task - $@" if $@;
+            die $error;
         } else {
             eval {
                 $task->finish();
@@ -270,7 +209,7 @@ sub importImageServerFiles {
 
 =head2 forkedImportFiles
 
-	(void) forkedImportFiles($dataset,\@filenames,\%options);
+	$task = forkedImportFiles($dataset,\@filenames,\%options);
 
 Performs the same operation as importFiles, but defers the task
 until later.
@@ -288,11 +227,14 @@ sub forkedImportFiles {
 	OME::Fork->doLater ( sub {
 		OME::Tasks::ImageTasks::importFiles($dataset, $filenames, $options, $task);
 	});
+	
+	return $task;
+	
 }
 
 =head2 forkedImportImageServerFiles
 
-	(void) forkedImportImageServerFiles($dataset,\@files,\%options);
+	$task = forkedImportImageServerFiles($dataset,\@files,\%options);
 
 Performs the same operation as importFiles, but defers the task
 until later.
@@ -311,6 +253,8 @@ sub forkedImportImageServerFiles {
 		OME::Tasks::ImageTasks::importImageServerFiles($dataset, $files,
 		                                               $options, $task);
 	});
+	
+	return $task;
 }
 
 =head1 AUTHOR

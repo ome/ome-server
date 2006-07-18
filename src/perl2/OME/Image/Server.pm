@@ -119,7 +119,6 @@ use OME::Util::cURL;
 
 my $local_server = 0;
 my $server_path = undef;
-my $user_agent;
 
 # Cached data for the readFile method
 use constant MAXIMUM_READ_TO_USE_CACHE => 2048;
@@ -303,8 +302,15 @@ sub __callOMEIS {
     my %params = @_;
 
     my $session = OME::Session->instance();
+    my $repository;
     
-    $session->findRepository() unless defined $server_path;
+    if (exists ($params{Repository})) {
+    	confess "Repository exists, but is undef" unless ref ($params{Repository});
+    	$server_path = $params{Repository}->ImageServerURL();
+    	delete $params{Repository};
+    } elsif (not defined $server_path) {
+    	$server_path = $session->findRepository()->ImageServerURL();
+    }
 
 	$params{SessionKey} = $session->SessionKey()
 		unless exists $params{SessionKey};
@@ -405,7 +411,7 @@ sub __callOMEIS {
         if ($curl->status() == 200) {
             return ($response);
         } else {
-            Carp::confess $response;
+            die $response;
         }
     }
 }
@@ -979,7 +985,7 @@ sub setROI {
 
 =head2 uploadFile
 
-	my $fileID = OME::Image::Server->uploadFile($filename);
+	my $fileID = OME::Image::Server->uploadFile($repository,$filename);
 
 Transfers the specified file to the image server, returning a file ID.
 This ID can then be used in calls to the convert* methods, allowing a
@@ -990,8 +996,10 @@ If there is an error calling the image server, this method will die.
 
 sub uploadFile {
     my $proto = shift;
-    my ($filename) = @_;
-    my $result = $proto->__callOMEIS(Method => 'UploadFile',
+    my ($repository,$filename) = @_;
+    die "Repository and filename are required parameters" unless $repository and $filename;
+    my $result = $proto->__callOMEIS(Repository => $repository,
+                                     Method => 'UploadFile',
                                      File   => $filename);
     die "Error uploading file" unless defined $result;
     chomp($result);
@@ -1001,7 +1009,7 @@ sub uploadFile {
 
 =head2 deleteFile
 
-	my $fileID = OME::Image::Server->deleteFile($fileID);
+	my $fileID = OME::Image::Server->deleteFile($repository,$fileID);
 
 This method deletes the specified file on the image server.
 
@@ -1009,8 +1017,10 @@ This method deletes the specified file on the image server.
 
 sub deleteFile {
     my $proto = shift;
-    my ($fileID) = @_;
-    my $result = $proto->__callOMEIS(Method => 'DeleteFile',
+    my ($repository,$fileID) = @_;
+    die "Repository and file ID are required parameters" unless $repository and $fileID;
+    my $result = $proto->__callOMEIS(Repository => $repository,
+                                     Method => 'DeleteFile',
                                      FileID => $fileID);
     die "Error retrieving file info" unless defined $result;
     chomp($result);
@@ -1019,7 +1029,7 @@ sub deleteFile {
 
 =head2 getFileInfo
 
-	my ($filename,$length) = OME::Image::Server->getFileInfo($fileID);
+	my ($filename,$length) = OME::Image::Server->getFileInfo($repository,$fileID);
 
 This method returns the original filename and the length of a
 previously uploaded file.
@@ -1028,8 +1038,10 @@ previously uploaded file.
 
 sub getFileInfo {
     my $proto = shift;
-    my ($fileID) = @_;
-    my $result = $proto->__callOMEIS(Method => 'FileInfo',
+    my ($repository,$fileID) = @_;
+    die "Repository and file ID are required parameters" unless $repository and $fileID;
+    my $result = $proto->__callOMEIS(Repository => $repository,
+                                     Method => 'FileInfo',
                                      FileID => $fileID);
     die "Error retrieving file info" unless defined $result;
     die "Unexpected return result"
@@ -1039,14 +1051,16 @@ sub getFileInfo {
 
 =head2 getFileHA1
 
-	my $sha1 = OME::Image::Server->getFileSHA1($fileID);
+	my $sha1 = OME::Image::Server->getFileSHA1($repository,$fileID);
 
 =cut
 
 sub getFileSHA1 {
     my $proto = shift;
-    my ($fileID) = @_;
-    my $result = $proto->__callOMEIS(Method => 'FileSHA1',
+    my ($repository,$fileID) = @_;
+    die "Repository and file ID are required parameters" unless $repository and $fileID;
+    my $result = $proto->__callOMEIS(Repository => $repository,
+                                     Method => 'FileSHA1',
                                      FileID => $fileID);
     die "Error retrieving file SHA-1" unless defined $result;
     chomp $result;
@@ -1099,7 +1113,7 @@ sub getFileServerPath {
 
 =head2 readFile
 
-	my $data = OME::Image::Server->readFile($fileID,$offset,$length);
+	my $data = OME::Image::Server->readFile($repository,$fileID,$offset,$length);
 
 This method is used to read a portion of an uploaded file.  The method
 implements a limited form of caching, so that client code can read
@@ -1121,7 +1135,8 @@ completely bypassed.  Any previously cached data will not be modified.
 
 sub readFile {
     my $proto = shift;
-    my ($fileID,$offset,$length) = @_;
+    my ($repository,$fileID,$offset,$length) = @_;
+    die "Repository and filen ID are required parameters" unless $repository and $fileID;
 
     print STDERR "Read omeis $fileID $offset $length\n"
       if $SHOW_READS;
@@ -1142,7 +1157,7 @@ sub readFile {
             if ($cache_filled && $cache_fileID == $fileID) {
                 $file_size = $cache_file_size;
             } else {
-                (undef,$file_size) = $proto->getFileInfo($fileID);
+                (undef,$file_size) = $proto->getFileInfo($repository,$fileID);
             }
 
             # Calculate the bounds of a cache block, centered on the
@@ -1160,10 +1175,13 @@ sub readFile {
             print STDERR "Cached read omeis $fileID $real_offset $real_size\n"
               if $SHOW_READS;
 
-            my $data = $proto->__callOMEIS(Method => 'ReadFile',
-                                           FileID => $fileID,
-                                           Offset => $real_offset,
-                                           Length => $real_size);
+            my $data = $proto->__callOMEIS(
+            	Repository => $repository,
+				Method     => 'ReadFile',
+				FileID     => $fileID,
+				Offset     => $real_offset,
+				Length     => $real_size
+			);
             die "Error reading file" unless defined $data;
 
             print STDERR "  Got ",length($data)," bytes\n"
@@ -1183,7 +1201,8 @@ sub readFile {
 
         return substr($cache_data,$offset-$cache_start,$length);
     } else {
-        my $result = $proto->__callOMEIS(Method => 'ReadFile',
+        my $result = $proto->__callOMEIS(Repository => $repository,
+                                         Method => 'ReadFile',
                                          FileID => $fileID,
                                          Offset => $offset,
                                          Length => $length);
@@ -1684,7 +1703,9 @@ sub getStackHistogram{
 sub getDownloadAllURL {
     my ($self, $obj) = @_;
     my $original_files = OME::Tasks::ImageManager->getImageOriginalFiles($obj);
-    my $zip_url = OME::Session->instance()->Factory()->findObject( '@Repository' )->ImageServerURL()."?Method=ZipFiles&FileID=";
+    return unless scalar @$original_files;
+    my $repository = $original_files->[0]->Repository();
+    my $zip_url = $repository->ImageServerURL()."?Method=ZipFiles&FileID=";
     foreach my $zip_imgObj(@{$original_files}) {
 		$zip_url = $zip_url.$zip_imgObj->FileID().",";
     }

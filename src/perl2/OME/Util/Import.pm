@@ -116,7 +116,7 @@ sub import {
                'description|D=s' => \$datasetDescription);
                
     # idiot traps
-    die "You cannot specify a database description without also specifying the database name.\n"
+    die "You cannot specify a dataset description without also specifying the dataset name.\n"
     	if (defined $datasetDescription and not defined $datasetName);
     
     my @file_names;

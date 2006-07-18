@@ -809,12 +809,8 @@ my $keep_pixels = shift;
 			my $omeis_ids_key = $file_spec->{Repository}->id().':'.$file_spec->{FileID};
 			if (not exists $omeis_ids{$omeis_ids_key}) {
 				print "Deleting OMEIS File $omeis_ids_key\n";
-				if ($file_spec->{Repository}->IsLocal()) {
-					OME::Image::Server->useLocalServer($file_spec->{Repository}->Path());
-				} else {
-					OME::Image::Server->useRemoteServer($file_spec->{Repository}->ImageServerURL());
-				}
-				OME::Image::Server->deleteFile($file_spec->{FileID}) unless $keep_files;
+				OME::Image::Server->deleteFile($file_spec->{Repository},$file_spec->{FileID})
+					unless $keep_files;
 			}
 			$omeis_ids{$omeis_ids_key} = 1;
 		}

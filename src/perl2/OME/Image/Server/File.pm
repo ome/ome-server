@@ -53,30 +53,32 @@ use Log::Agent;
 use File::Spec;
 
 
-use constant FILE_ID  => 0;
-use constant FILENAME => 1;
-use constant LENGTH   => 2;
-use constant CURSOR   => 3;
-use constant PATH     => 4;
+use constant FILE_ID    => 0;
+use constant FILENAME   => 1;
+use constant LENGTH     => 2;
+use constant CURSOR     => 3;
+use constant PATH       => 4;
+use constant REPOSITORY => 5;
 
 =head1 DESCRIPTION
 
 This class provides an implementation of the OME::File interface for
 accessing files which have been uploaded to an OME image server.  The
-file I/O is implemented via the OME::Image::Server class.  This
-currently provides a restriction that client code can only access one
-image server at a time.
+file I/O is implemented via the OME::Image::Server class. 
 
 =head1 METHODS
 
 =head2 new
 
 	my $file = OME::Image::Server::File->new($fileID);
+	my $file = OME::Image::Server::File->new($fileID,$repository);
+	my $file = OME::Image::Server::File->new($fileID,$repository,$path);
 	my $file = OME::Image::Server::File->new($fileID,$path);
 
 Opens an image server file for access via the OME::File interface.
-The OME::Image::Server class must be configured to connect to a valid
-image server, via its C<useLocalServer> or <useRemoteServer> methods.
+The $repository parameter is a Repository attribute (OME::SemanticType subclass)
+describing where the file object is stored.  If it is not provided, it is set
+by calling OME::Session->instance()->findRemoteRepository().
 The file itself must have already been uploaded to this image server;
 it is specified by the file ID returned from the C<uploadFile> method.
 The $path parameter is optional, and is used by the upload() method to
@@ -87,7 +89,18 @@ store the original path that was used for the upload.
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my ($fileID,$path) = @_;
+    my ($fileID,$param2,$param3) = @_;
+    my ($repository,$path);
+
+    if (ref ($param2)) {
+    	$repository = $param2;
+    } elsif (defined $param2) {
+    	$path = $param2;
+    }
+    $path = $param3 if $param3 and not $path;
+
+	$repository = OME::Session->instance()->findRemoteRepository()
+		unless $repository;
 
     my $self = [];
     $self->[FILE_ID] = $fileID;
@@ -95,19 +108,22 @@ sub new {
     $self->[LENGTH] = undef;
     $self->[CURSOR] = 0;
     $self->[PATH] = $path;
+    $self->[REPOSITORY] = $repository;
     bless $self,$class;
     return $self;
 }
 
 =head2 upload
 
-	my $file = OME::Image::Server::File->upload($localFile);
+	my $file = OME::Image::Server::File->upload($localFile, $repository);
 
 =cut
 
 sub upload {
     my $proto = shift;
-    my ($localFile) = @_;
+    my ($localFile,$repository) = @_;
+	$repository = OME::Session->instance()->findRemoteRepository()
+		unless $repository;
 
     return $localFile if UNIVERSAL::isa($localFile,__PACKAGE__);
 
@@ -125,9 +141,10 @@ sub upload {
 	die "Can't upload $filename: not a regular file" unless -f $filename;
 	die "Can't upload $filename: not readable" unless -r $filename;
 
-    my $fileID = OME::Image::Server->uploadFile($filename);
+
+    my $fileID = OME::Image::Server->uploadFile($repository,$filename);
     die "Could not upload file $filename" unless defined $fileID;
-    return $proto->new($fileID,File::Spec->rel2abs($filename));
+    return $proto->new($fileID,$repository,File::Spec->rel2abs($filename));
 }
 
 =head2 open
@@ -172,7 +189,7 @@ sub __loadInfo {
     my $self = shift;
     return if defined $self->[FILENAME];
     my ($filename,$length) = OME::Image::Server->
-      getFileInfo($self->[FILE_ID]);
+      getFileInfo($self->[REPOSITORY],$self->[FILE_ID]);
     $self->[FILENAME] = $filename;
     $self->[LENGTH] = $length;
     return;
@@ -214,8 +231,21 @@ Returns a SHA-1 digest of the entire file.
 
 sub getSHA1 {
     my $self = shift;
-    my $fileID = $self->[FILE_ID];
-    return OME::Image::Server->getFileSHA1($fileID);
+    return OME::Image::Server->getFileSHA1($self->[REPOSITORY],$self->[FILE_ID]);
+}
+
+=head2 getRepository
+
+	my $repository = $file->getRepository();
+
+Returns the Repository attribute (OME::SemanticType subclass) describing where
+the file object is stored ($repository->id() and $repository->ImageServerURL() are
+useful methods).
+
+=cut
+
+sub getRepository {
+	return (shift->[REPOSITORY]);
 }
 
 =head2 isReadable
@@ -373,7 +403,7 @@ sub readData {
 
     my $fileID = $self->[FILE_ID];
     my $curpos = $self->[CURSOR];
-    my $buf = OME::Image::Server->readFile($fileID,$curpos,$length);
+    my $buf = OME::Image::Server->readFile($self->[REPOSITORY],$fileID,$curpos,$length);
     die "Could not read data: $!" unless defined $buf;
     my $bytesRead = length($buf);
     $self->[CURSOR] += $bytesRead;
@@ -439,8 +469,7 @@ Note that making any subsequent server calls on this file will result in an erro
 
 sub delete {
     my $self = shift;
-    my $fileID = $self->[FILE_ID];
-    return OME::Image::Server->deleteFile($fileID);
+    return OME::Image::Server->deleteFile($self->[REPOSITORY],$self->[FILE_ID]);
 }
 
 1;

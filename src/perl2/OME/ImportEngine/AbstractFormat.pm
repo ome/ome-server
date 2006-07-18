@@ -385,7 +385,8 @@ sub getRegexGroups {
 				$patterns{$regex}->{$name}->{C}->{$C} = 1;
 				$patterns{$regex}->{$name}->{T}->{$T} = 1;
 				die "$filename matches more than one pattern.  ".
-					"Previous pattern: Name ($name), Z ($Z), C ($C), T ($T)\n"
+					"Previous filename (".$patterns{$regex}->{$name}->{File}->{$Z.':-:'.$C.':-:'.$T}->getFilename().
+					"), Name ($name), Z ($Z), C ($C), T ($T)\n"
 					 if exists $patterns{$regex}->{$name}->{File}->{$Z.':-:'.$C.':-:'.$T};
 				$patterns{$regex}->{$name}->{File}->{$Z.':-:'.$C.':-:'.$T} = $file;
 				
