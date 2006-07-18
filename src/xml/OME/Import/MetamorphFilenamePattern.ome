@@ -36,14 +36,14 @@
 	<CustomAttributes>
 		<FilenamePattern ID="urn:lsid:openmicroscopy.org:FilenamePattern:0"
 			Format="OME::ImportEngine::TIFFreader"
-			RegEx="^(.*?)((_w(\d+[^_.]*?))|(_t(\d+)))+"
+			RegEx="^(.*?)((_w(\d+[^_.]*))|(_t(\d+)))+"
 			Name="Metamorph Filename Pattern for TIFFs"
 			TheC="4"
 			TheT="6"
 			BaseName="$1"/>
 		<FilenamePattern ID="urn:lsid:openmicroscopy.org:FilenamePattern:1"
 			Format="OME::ImportEngine::STKreader"
-			RegEx="^(.*?)((_w(\d+[^_.]*?))|(_t(\d+)))+"
+			RegEx="^(.*?)((_w(\d+[^_.]*))|(_t(\d+)))+"
 			Name="Filename Pattern for STKs"
 			TheC="4"
 			TheT="6"

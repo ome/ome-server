@@ -1,0 +1,2 @@
+The channel pattern was screwed up if non-numeric characters follow the channel
+number.  Made the pattern more greedy by changing [^_.]*? to [^_.]*.
