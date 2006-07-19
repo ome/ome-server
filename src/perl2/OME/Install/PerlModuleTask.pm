@@ -154,7 +154,7 @@ my @modules = (
 	#repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
 	#},{
 	name => 'DBD::Pg',
-	repository_file => "$REPOSITORY/DBD-Pg-1.43.tar.gz",
+	repository_file => "$REPOSITORY/DBD-Pg-1.22.tar.gz",
 	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'ne 1.21', 'eq 1.22',
 		'eq 1.41', 'eq 1.43', 'ne 1.45', 'ne 1.49'
 	],
