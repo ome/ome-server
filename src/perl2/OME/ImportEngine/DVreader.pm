@@ -82,7 +82,48 @@ use OME;
 $VERSION = $OME::VERSION;
 
 
-my %pix_size = (0=>1, 1=>2, 2=>4, 3=>2, 4=>4, 6=>2, 7=>4, 8=>8);
+my %PIX_TYPES = (
+	0=> {
+		bpp      => 1,
+		isSigned => 0, # This is not explicitly defined, assumed false
+		isFloat  => 0,
+		},
+	1=> {
+		bpp      => 2,
+		isSigned => 1,
+		isFloat  => 0,
+		},
+	2=> {
+		bpp      => 4,
+		isSigned => 1,
+		isFloat  => 1,
+		},
+	3=> { # 16-bit complex - not supported, but we'll read as uint16
+		bpp      => 2,
+		isSigned => 0,
+		isFloat  => 0,
+		},
+	4=> { # 32-bit complex - not supported, but we'll read as uint32
+		bpp      => 4,
+		isSigned => 0,
+		isFloat  => 0,
+		},
+	6=> {
+		bpp      => 2,
+		isSigned => 0,
+		isFloat  => 0,
+		},
+	7=> {
+		bpp      => 4,
+		isSigned => 1,
+		isFloat  => 0,
+		},
+#	8=> { # 64-bit float is not supported
+#		bpp      => 8,
+#		isSigned => 1,
+#		isFloat  => 1,
+#		},
+);
 my @seq_types = (0, 1, 2);
 
 use constant DVID               => -16224;
@@ -314,19 +355,16 @@ sub importGroup {
     # Create repository file, and fill it in from the input file pixels.
     my $xref = $params->{xml_hash};
 
-	# XXX: Tad bit of a hack, but should allow float DeltaVision data to be
-	# imported correctly. [Bug #290]
-	my $is_float = $xref->{'Data.BitsPerPixel'} == 32 ? 1 : 0;
-
-	my ($pixels, $pix) = $self->
-      createRepositoryFile($image, 
-                             $xref->{'Image.SizeX'},
-                             $xref->{'Image.SizeY'},
-                             $xref->{'Image.SizeZ'},
-                             $xref->{'Image.NumWaves'},
-                             $xref->{'Image.NumTimes'},
-                             $xref->{'Data.BitsPerPixel'},
-			     0, $is_float);
+	my ($pixels, $pix) = $self->createRepositoryFile($image, 
+		$xref->{'Image.SizeX'},
+		$xref->{'Image.SizeY'},
+		$xref->{'Image.SizeZ'},
+		$xref->{'Image.NumWaves'},
+		$xref->{'Image.NumTimes'},
+		$xref->{'Data.BitsPerPixel'},
+		$xref->{'Data.isSigned'},
+		$xref->{'Data.isFloat'}
+	);
     $self->{pixels} = $pixels;
     $status = readPixels($self, $params, $pix, $callback);
     if ($status ne '') {
@@ -372,7 +410,6 @@ sub readHeaders {
     my $img_len;
     my $calc_len;
     my ($numsecs, $numflds);
-    my $pix_OK = 0;
     my $seq;
     my $seq_OK = 0;
 
@@ -387,16 +424,18 @@ sub readHeaders {
     return($status) if defined $status && $status ne '';
 
     # check that PixelType has a valid value
-    foreach my $ky (keys %pix_size) {
-	if ($ky == $self->{"PixelType"}) {
-	    my $xref = $params->{xml_hash};
-	    $xref->{'Data.BitsPerPixel'} = $pix_size{$ky}*8;
-	    $pix_OK = 1;
-	    last;
+    my $pixel_type = $self->{"PixelType"};
+    my $pixel_bpp;
+    if (exists $PIX_TYPES{$pixel_type}) {
+    	my $pix_type_spec = $PIX_TYPES{$pixel_type};
+    	$pixel_bpp = $pix_type_spec->{bpp};
+    	$params->{xml_hash}->{'Data.bpp'} = $pixel_bpp;
+    	$params->{xml_hash}->{'Data.BitsPerPixel'} = $pixel_bpp*8;
+    	$params->{xml_hash}->{'Data.isSigned'}     = $pix_type_spec->{isSigned};
+    	$params->{xml_hash}->{'Data.isFloat'}      = $pix_type_spec->{isFloat};
+    } else {
+		return ($status = "Bad pixel type: ".$self->{"PixelType"});
 	}
-    }
-    return ($status = "Bad pixel type: ".$self->{"PixelType"})
-	unless $pix_OK == 1;
 
     # check that ImgSeq has a value this module supports
     foreach $seq (@seq_types) {
@@ -409,8 +448,7 @@ sub readHeaders {
 	unless $seq_OK == 1;
 
     # Calculate & verify image length & total file size;
-    $img_len = $self->{NumCol} * $self->{NumRows} * $self->{NumSections};
-    $img_len *= $pix_size{$self->{"PixelType"}};   # Calculate size of image
+    $img_len = $self->{NumCol} * $self->{NumRows} * $self->{NumSections} * $pixel_bpp;
     $calc_len = DV_HEADER_LENGTH + $self->{next} + $img_len;   # + hdr + extended hdrs = file size
     return ($status = "File wrong size")
 	unless $len == $calc_len;
@@ -440,7 +478,7 @@ sub readPixels {
     my $start_offset;
     my $nPix;
     my ($row_size, $plane_size);
-    my $bps = $pix_size{$self->{"PixelType"}};
+    my $bps = $xml_hash->{'Data.bpp'};
     my ($t_jump, $w_jump, $z_jump);
     my ($offset, $t_offset, $w_offset, $z_offset);
     my $order = $self->{ImgSeq};                 # 0 = XYZTW 1 = XYWZT, 2 = XYZWT
