@@ -62,6 +62,7 @@ for image import
 my $repository = getDefaultRepository();
 
 Returns a hash reference of the following form:
+
   id             => The Repository ID
   ImageServerURL => The base URL of the OME Image Server (OMEIS)
 
