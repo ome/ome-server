@@ -128,20 +128,6 @@ sub __debug {
     print STDERR @_;
 }
 
-# Helper method which returns the format classes known to the system.
-# Retrieves the list of classes from the CONFIGURATION table in the DB.
-
-sub __getFormats {
-    my $self = shift;
-    my $session = OME::Session->instance();
-    my $factory = $session->Factory();
-
-    # And find the import formats we can handle
-    my @import_formats = split /\s/, $session->Configuration()->import_formats();
-
-    return \@import_formats;
-}
-
 =head2 importFiles
 
 	my $images = $importer->importFiles($files);
@@ -245,7 +231,7 @@ sub importFiles {
 
     # Find the formats that are known to the system.
 
-    my $formats = $self->__getFormats();
+    my $formats = $session->Configuration()->import_formats();
     my %formats;
     my %groups;
 

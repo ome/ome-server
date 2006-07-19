@@ -75,6 +75,8 @@ the value of the variable when called.  From the example above,
 C<$conf-E<gt>var1()> will return I<123>.  The two mutator methods are
 described below.
 
+=head1 References to OME objects
+
 It is likely that some of the configuration variables will be foreign
 keys into other database tables.  These variables are defined in the
 %FOREIGN_KEY_VARS hash (currently inaccessible outside of the
@@ -108,7 +110,47 @@ C<import_chain> entry keyed to an instance of OME::AnalysisChain,
 B<or> an C<import_chain_id> entry keyed to the ID of an analysis
 chain.
 
+=head1 Serialized objects
+
+Arrays and hashes are serialized to text using perl syntax, and
+are made available as references by the accessor method defined in the
+%SERIALIZED_VARS hash:
+
+	my %SERIALIZED_VARS =
+	  (
+	   import_formats => 'ARRAY',
+	   foo_conf       => 'HASH',
+	  );
+
 =head1 METHODS
+
+=head2 new
+
+  my $conf = OME::Configuration->new();
+  my $conf = OME::Configuration->new($factory, {
+    import_chain   => $chain,
+    import_formats => [qw/ome-xml tiff ome-tiff/],
+    foo_conf       => $foo,
+    });
+
+The constructor can be called parameterless to retreive the configuration stored
+in the DB.  If there is a configuration in the DB, the parameters have no effect.
+Cnfiguration parameters can be provided when initially recording the installation settings. 
+
+=head2 update
+
+  my $conf = OME::Configuration->update($factory, {
+    foo_conf       => $foo2,
+    });
+
+This call will update the configuration as specified by the supplied hash.
+This should really only be called during a synchronized updaate, where there are no
+extant processes that may have cached the configuration. 
+
+=head2 ...
+
+... All of the configuration variables specified in new()
+or update() are also available as accessor methods.
 
 =cut
 
@@ -117,12 +159,15 @@ package OME::Configuration;
 
 use strict;
 use Carp qw (confess cluck);
+use Data::Dumper; # serializer
+use Safe;         # safer deserializer than eval
+
 use OME;
 our $VERSION = $OME::VERSION;
 
 use base qw(Class::Accessor);
 
-my %FOREIGN_KEY_VARS =
+our %FOREIGN_KEY_VARS =
   (
    import_chain          => {
                              DBColumn => 'import_chain_id',
@@ -158,6 +203,10 @@ my %FOREIGN_KEY_VARS =
                             },
   );
 
+our %SERIALIZED_VARS = (
+	import_formats => 'ARRAY',
+);
+
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
@@ -168,6 +217,8 @@ sub new {
 	die "new OME::Configuration called without required factory parameter."
 		unless $factory;
 
+	my $safe_eval = new Safe;
+
 	my $vars = $factory->findObjects('OME::Configuration::Variable',
 		configuration_id => 1);
 	my $var = $vars->next();
@@ -177,58 +228,7 @@ sub new {
 	# The set of variables is write once.
 
 	if (not $var) {
-        my ($name,$value);
-        while (($name,$value) = each %$params) {
-
-            # If the key of the hash is a foreign key variable, then
-            # the value must be an instance of the specified FK
-            # class.  If so, then store that object's ID in the
-            # database in the specified ID field.
-
-            if (exists $FOREIGN_KEY_VARS{$name}) {
-                my $fk_spec = $FOREIGN_KEY_VARS{$name};
-                confess "Invalid foreign key spec"
-                  unless ref($fk_spec) eq 'HASH'
-                    && defined $fk_spec->{DBColumn}
-                      && defined $fk_spec->{FKClass};
-
-                my $db_column = $fk_spec->{DBColumn};
-                my $fk_class = $fk_spec->{FKClass};
-
-                confess "$name must be an instance of $fk_class"
-                  unless UNIVERSAL::isa($value,$fk_class);
-
-                my $id = $value->id();
-                my $success = $factory->
-                  newObject('OME::Configuration::Variable',
-                            {
-                             configuration_id => 1,
-                             name             => $db_column,
-                             value            => $id,
-                            });
-
-                if ($success) {
-                    $self->{$db_column} = $id;
-                    $self->{$name} = $value;
-                }
-            } else {
-
-                # Not a foreign key field.  The value cannot be a
-                # reference.  Just create the variable normally,
-                # and store it in the $self hash.
-
-                confess "OME::Configuration->new():  Attempt to store a reference as a configuration variable! $name has a reference to ".ref($value)."\n"
-                  if ref ($value);
-
-                $self->{$name} = $value if $factory->
-                  newObject('OME::Configuration::Variable',
-                            {
-                             configuration_id => 1,
-                             name => $name,
-                             value => $value
-                            });
-            }
-        }
+		$self = $proto->update ($factory,$params);
  	} else {
 
         # We found some variables already in the database.  Ignore
@@ -269,6 +269,12 @@ sub new {
             # Save the instantiated object.
             $self->{$fk_name} = $object;
         }
+
+		# Deserialize any serialized variables
+        foreach my $ser_var (keys %SERIALIZED_VARS) {
+        	my $deser_val = $safe_eval->reval($self->{$ser_var});
+        	$self->{$ser_var} = $deser_val if $deser_val;
+        }
 	}
 
 	bless($self,$class);
@@ -304,11 +310,110 @@ sub new {
         }
     }
 
+	foreach my $ser_var (keys %SERIALIZED_VARS) {
+        # Create an accessor which uses the __changeSerializedObj method for
+        # its implementation.
+
+        my $accessor = sub {
+            my $self = shift;
+            $self->{$ser_var} = $self->__changeSerializedObj ($ser_var,shift) if scalar @_;
+            return $self->{$ser_var};
+        };
+
+        # Save this accessor into the current package
+        {
+            no strict 'refs';
+            *{__PACKAGE__."\:\:$ser_var"} = $accessor unless defined *{__PACKAGE__."\:\:$ser_var"};
+        }
+	}
+
 	# Make read-only accessors for the variables.
 	$self->mk_ro_accessors(keys %{$self});
 
 	return $self;
 }
+
+sub update {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $factory = shift;
+	my $params = shift;
+	my $self = {};
+
+	die "new OME::Configuration called without required factory parameter."
+		unless $factory;
+	
+	my ($name,$value);
+	while (($name,$value) = each %$params) {
+
+		# If the key of the hash is a foreign key variable, then
+		# the value must be an instance of the specified FK
+		# class.  If so, then store that object's ID in the
+		# database in the specified ID field.
+
+		if (exists $FOREIGN_KEY_VARS{$name}) {
+			my $fk_spec = $FOREIGN_KEY_VARS{$name};
+			confess "Invalid foreign key spec"
+				unless ref($fk_spec) eq 'HASH'
+				&& defined $fk_spec->{DBColumn}
+				&& defined $fk_spec->{FKClass};
+
+			my $db_column = $fk_spec->{DBColumn};
+			my $fk_class = $fk_spec->{FKClass};
+
+			confess "$name must be an instance of $fk_class"
+			  unless UNIVERSAL::isa($value,$fk_class);
+			_create_update_DB_Object ($factory,$db_column,$value->id());
+
+			$self->{$name} = $value;
+			$self->{$db_column} = $value->id();
+		} elsif (exists $SERIALIZED_VARS{$name} and ref ($value) eq $SERIALIZED_VARS{$name}) {
+			my $value_dumper = Data::Dumper->new([$value]);
+			$value_dumper->Indent(0); # Eliminate whitespace
+			$value_dumper->Terse(1);  # Eliminate $VAR*n*
+			_create_update_DB_Object ($factory,$name,$value_dumper->Dump());
+			$self->{$name} = $value;
+		} else {
+			# Not a foreign key field.  The value cannot be an unregistered
+			# reference.  Just create the variable normally,
+			# and store it in the $self hash.
+
+			confess "OME::Configuration->new():  Attempt to store a reference as a configuration variable! $name has a reference to ".ref($value)."\n"
+			  if ref ($value);
+
+			_create_update_DB_Object ($factory,$name,$value);
+			$self->{$name} = $value;
+		}
+	}
+	
+	return $self;
+}
+
+sub _create_update_DB_Object {
+my ($factory,$db_name,$db_value) = @_;
+
+	my $var_object = $factory->findObject('OME::Configuration::Variable', {
+		configuration_id => 1,
+		name             => $db_name,
+	});
+	
+	if ($var_object) {
+		confess "Configuration->update was called without an active session"
+			unless OME::Session->hasInstance();
+		$var_object->value ($db_value);
+		$var_object->storeObject() if OME::Session->hasInstance();
+	} else {
+		$var_object = $factory->newObject('OME::Configuration::Variable', {
+			configuration_id => 1,
+			name             => $db_name,
+			value            => $db_value,
+		}) or confess "Could not create a new OME::Configuration::Variable for $db_name";
+	}
+	
+	return ($var_object);
+}
+
+
 
 sub __changeObjRef {
 	my ($self,$IDvariable,$objectType,$object) = @_;
@@ -322,25 +427,33 @@ sub __changeObjRef {
 	confess "In OME::Configuration->__changeObjRef, object '".ref($object)."' is not an OME::DBObject!\n"
 		unless UNIVERSAL::isa($object,"OME::DBObject");
 	my $factory = $object->Session()->Factory() or die "In OME::Configuration->__changeObjRef, object '".ref($object)."' has no Factory!\n";
-	my $IDobject = $factory->findObject('OME::Configuration::Variable',
-		configuration_id => 1,name => $IDvariable);
-	if ($IDobject and $IDobject->value() ne $object->id()) {
-		$IDobject->value($object->id());
-		$IDobject->storeObject();
-		$self->{$IDvariable} = $IDobject->value();
-	} elsif (not $IDobject) {
-		$IDobject = $factory->newObject('OME::Configuration::Variable', {
-			configuration_id => 1,
-			name => $IDvariable,
-			value => $object->id()
-		});
-		if ($IDobject) {
-			$IDobject->storeObject();
-			$self->mk_ro_accessors ($IDvariable);
-			$self->{$IDvariable} = $IDobject->value();
-		}
-	}
+
+	my $IDobject = _create_update_DB_Object ($factory,$IDvariable,$object->id());
+	$self->{$IDvariable} = $IDobject->value();
+	$self->mk_ro_accessors ($IDvariable);
+
 	return ( $object ) if $IDobject;
+	return ( undef );
+}
+
+sub __changeSerializedObj {
+	my ($self,$ref_name,$the_ref) = @_;
+
+	confess "In OME::Configuration->__changeSerializedObj, expected a reference parameter, but got a scalar"
+		unless ref($the_ref) eq $SERIALIZED_VARS{$ref_name};
+	my $factory = OME::Session->instance()->Factory()
+		or die "In OME::Configuration->__changeSerializedObj, could not get a Factory!\n";
+
+	my $value_dumper = Data::Dumper->new([$the_ref]);
+	$value_dumper->Indent(0); # Eliminate whitespace
+	$value_dumper->Terse(1);  # Eliminate $VAR*n*
+	my $ser_ref = $value_dumper->Dump();
+
+	my $refObject = _create_update_DB_Object ($factory,$ref_name,$ser_ref);
+	$self->{$ref_name} = $the_ref;
+	$self->mk_ro_accessors ($ref_name);
+
+	return ( $the_ref ) if $refObject;
 	return ( undef );
 }
 1;

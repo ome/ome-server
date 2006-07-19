@@ -88,7 +88,7 @@ our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $OME_EXPER, $ADMIN_UID);
 # Default import formats
 # N.B.:  TIFFreader must follow ALL tiff variants
 #        XMLreader is best kept last.
-our $IMPORT_FORMATS = join (' ',qw/
+our $IMPORT_FORMATS = [qw/
     OME::ImportEngine::OMETIFFreader
     OME::ImportEngine::MetamorphHTDFormat
     OME::ImportEngine::DVreader
@@ -99,7 +99,7 @@ our $IMPORT_FORMATS = join (' ',qw/
     OME::ImportEngine::BMPreader
     OME::ImportEngine::DICOMreader
     OME::ImportEngine::XMLreader
-/);
+/];
 
 # Database version
 our $DB_VERSION = "2.25";
@@ -824,21 +824,20 @@ BLURB
 
     my $GUEST_ACCESS = $ENVIRONMENT->allow_guest_access();
 	
-    my $configuration = OME::Configuration->new ($factory,
-            {
-             mac_address      => $mac,
-             db_instance      => $db_instance,
-             db_version       => $DB_VERSION.'-Installing',
-             lsid_authority   => $lsid_authority,
-             tmp_dir          => $OME_TMP_DIR,
-             xml_dir          => $OME_BASE_DIR."/xml",
-             bin_dir          => $OME_BASE_DIR."/bin",
-             import_formats   => $IMPORT_FORMATS,
-             ome_root         => $OME_BASE_DIR,
-             template_dir     => $OME_BASE_DIR."/html/Templates",
-             executor         => $DEFAULT_EXECUTOR,
-	     allow_guest_access => $GUEST_ACCESS,
-            });
+    my $configuration = OME::Configuration->new ($factory, {
+		mac_address      => $mac,
+		db_instance      => $db_instance,
+		db_version       => $DB_VERSION.'-Installing',
+		lsid_authority   => $lsid_authority,
+		tmp_dir          => $OME_TMP_DIR,
+		xml_dir          => $OME_BASE_DIR."/xml",
+		bin_dir          => $OME_BASE_DIR."/bin",
+		import_formats   => $IMPORT_FORMATS,
+		ome_root         => $OME_BASE_DIR,
+		template_dir     => $OME_BASE_DIR."/html/Templates",
+		executor         => $DEFAULT_EXECUTOR,
+		allow_guest_access => $GUEST_ACCESS,
+	});
 
     $ENVIRONMENT->lsid ($lsid_authority);
     $factory->commitTransaction();
@@ -876,49 +875,15 @@ sub update_configuration {
 	my %update_configuration_variables = (
 		# Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
 		# was ignored due to a pre-existing configuration    
-    	db_version     => $DB_VERSION,
-		import_formats => $IMPORT_FORMATS,
+    	db_version         => $DB_VERSION,
+		import_formats     => $IMPORT_FORMATS,
 		# Make sure there is an executor
-		# executor       => $DEFAULT_EXECUTOR,
-		super_user     => $session->experimenter_id(),
-		template_dir   => $APACHE->{TEMPLATE_DIR},
-	        allow_guest_access => $ENVIRONMENT->allow_guest_access(),
+		# executor         => $DEFAULT_EXECUTOR,
+		super_user         => $session->experimenter_id(),
+		template_dir       => $APACHE->{TEMPLATE_DIR},
+		allow_guest_access => $ENVIRONMENT->allow_guest_access(),
 	);
-	
-	# This hash controls whether new configuration variables are created or not
-	# if = 0, variable is expected to be already in the DB. If not, installer croaks
-	# if = 1, variable is added to DB, as required.
-	my %new_configuration_variables = (
-		# these should already be there
-		db_version     => 0,
-		import_formats => 0,
-		executor       => 1,
-		# Note that there shouldn't ever be a superuser at this point
-		super_user     => 1,
-		template_dir   => 0,
-	        allow_guest_access => 1,
-	);
-	
-	foreach my $var_name (keys %update_configuration_variables) {
-	    print "Trying to update $var_name\n";
-    	my $var = $factory->findObject('OME::Configuration::Variable',
-    									configuration_id => 1,
-    									name => $var_name);
-		if (not $var and not $new_configuration_variables{$var_name}) {
-			croak "Could not retreive the configuration variable $var_name";
-		} elsif (not $var) {
-			$var = $factory->newObject ('OME::Configuration::Variable',
-            {
-            configuration_id => 1,
-            name             => $var_name,
-            value            => $update_configuration_variables {$var_name},
-            });
-		} else {
-            $var->value ($update_configuration_variables {$var_name});
-		}
-	    $var->storeObject();
-            
-	}
+	OME::Configuration->update ($factory, \%update_configuration_variables);
 
     $factory->commitTransaction();
     return 1;
