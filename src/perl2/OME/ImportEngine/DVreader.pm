@@ -82,7 +82,7 @@ use OME;
 $VERSION = $OME::VERSION;
 
 
-my %pix_size = (0=>1, 1=>2, 2=>4, 3=>2, 4=>4);
+my %pix_size = (0=>1, 1=>2, 2=>4, 3=>2, 4=>4, 6=>2, 7=>4, 8=>8);
 my @seq_types = (0, 1, 2);
 
 use constant DVID               => -16224;
@@ -99,10 +99,13 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 		  2     => ['NumRows', 4, 'w'],      # Image height
 		  3     => ['NumSections', 4, 'w'],  # total sections = NumZSec * NumWaves * NumTimes
 		  4     => ['PixelType', 4, 'w'],    # 0: 1 byte integer 
-		                                     # 1: 2 byte integer
+		                                     # 1: 2 byte integer signed
 		                                     # 2: 4 byte float 
 		                                     # 3: 2 byte complex
-                                             # 4: 4 byte complex
+                                                     # 4: 4 byte complex
+                                                     # 6: 2 byte integer unsigned
+                                                     # 7: 4 byte integer
+                                                     # 8: 8 byte float
 		  5     => ['mxst', 4, 'w'],         # starting pnt, in pixels,  along X axis of sub-image
 		  6     => ['myst', 4, 'w'],         # starting pnt, in pixels,  along X axis of sub-image
 		  7     => ['mzst', 4, 'w'],         # starting pnt, in pixels,  along X axis of sub-image
