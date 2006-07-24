@@ -502,6 +502,7 @@ sub new {
 
 sub DESTROY {
 	my $self = shift;
+	logdbg "debug", "OME::Factory: Destroy Factory.";
     $self->closeFactory();
 }
 
