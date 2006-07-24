@@ -1,6 +1,6 @@
 # Written By Tom Macura <tmacura@nih.gov>
 
-TARGETS = omeis_http haralick zernike
+TARGETS = omeis_http haralick zernike colour_deconvolution
 
 all: $(TARGETS)
 
@@ -12,7 +12,14 @@ haralick:
 
 zernike:
 	make -C OME/Statistics/zernike/
-		
-clean:
+	
+colour_deconvolution:
+	make -C OME/Filters/colour_deconvolution
+	
+clean: cleanest
+
+cleanest:
+	make -C OMEIS/ cleanest
 	make -C OME/Statistics/haralick/ cleanest
 	make -C OME/Statistics/zernike/ cleanest
+	make -C OME/Filters/colour_deconvolution cleanest
