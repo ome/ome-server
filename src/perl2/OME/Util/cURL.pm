@@ -124,16 +124,28 @@ Returns the result of the URL request in the specified file.
 
 use strict;
 use warnings;
+use Carp;
 
 
 use OME;
 our $VERSION = $OME::VERSION;
 
 use OME::Install::Environment;
+use File::Path;
+
 our $CACHE_DIRECTORY;
 BEGIN {
 	my $environment = initialize OME::Install::Environment;
-	$CACHE_DIRECTORY = $environment->tmp_dir().'/Inline';
+	if ($environment and $environment->base_dir()) {
+		$CACHE_DIRECTORY = $environment->base_dir().'/Inline';
+	} else {
+#		$CACHE_DIRECTORY = '/var/tmp/Inline';
+		croak "OME::Util::cURL was loaded without an OME installation environment!";
+	}
+	if (not -d $CACHE_DIRECTORY) {
+		mkpath $CACHE_DIRECTORY
+			or croak "Could not create cache directory for OME::Util::cURL";
+	}
 }
 
 use Inline (Config => DIRECTORY => $CACHE_DIRECTORY);
