@@ -73,12 +73,8 @@ char pix_vers_str[256], file_vers_str[256];
 u_int8_t sha1[OME_DIGEST_LENGTH];
 int fd;
 
-	
-	if (argc > 1) {
-		/* Can't be both silent and ask questions */
-		if ( !strcmp(argv[1],"-s") ) beSilent = 1;
 		/*
-		  Query.  Does OMEIS need updating?  Returns strings of the following form:
+		  Query Format (-q).  Does OMEIS need updating?  Returns strings of the following form:
 		  [Update] Component [old vers ->] new vers
 		  Files 3
 		  Update Files 2 -> 3
@@ -86,8 +82,11 @@ int fd;
 		  Update Pixels 0 -> 4
 		  Note that 0 is 'undefined'
 		*/
-		if ( !strcmp(argv[1],"-q") ) doQuery = 1; 
-		if ( !strcmp(argv[1],"-v") ) doVerify = 1; 
+
+	for (theArg=1;theArg<argc;theArg++) {
+		if ( !strcmp(argv[theArg],"-s") ) beSilent = 1;
+		if ( !strcmp(argv[theArg],"-q") ) doQuery = 1; 
+		if ( !strcmp(argv[theArg],"-v") ) doVerify = 1; 
 	}
 
 	if (chdir (OMEIS_ROOT)) {
