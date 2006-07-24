@@ -108,13 +108,17 @@ will be the appropriate subclass of OME::Database::Delegate
 
 =cut
 
+our $DEFAULT_DELEGATE;
+
 sub getDefaultDelegate {
+	return $DEFAULT_DELEGATE if $DEFAULT_DELEGATE;
     # Get the database configuration
     my $dbConf = OME::Install::Environment->initialize()->DB_conf();
     croak "Could not get DB configuration enevironment\n".
         "Maybe the installation environment did not load?" unless $dbConf;
     $dbConf->{Delegate}->require();
-    return $dbConf->{Delegate}->getInstance();
+    $DEFAULT_DELEGATE = $dbConf->{Delegate}->getInstance();
+    return $DEFAULT_DELEGATE;
 }
 
 =head1 INTERFACE METHODS
