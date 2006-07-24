@@ -77,7 +77,7 @@ our @core_dirs = (
 		name => "base",
 		path => "/OME",
 		description => "Base OME directory",
-		children => ["xml", "bin", "perl2", "cgi", "crontab", "matlab"],
+		children => ["xml", "bin", "perl2", "cgi", "crontab", "matlab", "Inline"],
 		owner => \$OME_USER,
 		group => \$OME_GROUP,
 		mode => 02755, # Set the "Set-GID" bit on the dir
@@ -97,7 +97,7 @@ our @core_dirs = (
 		name => "temp_base",
 		path => "/var/tmp/OME",
 		description => "Base temporary directory",
-		children => ["lock", "sessions", "install", "Inline"],
+		children => ["lock", "sessions", "install"],
 		owner => \$OME_USER,
 		group => \$OME_GROUP,
 		mode => 02775, # Set the "Set-GID" bit on the dir
@@ -516,6 +516,12 @@ ERROR
 				group => $OME_GROUP,
 			}, "$$OME_BASE_DIR/$directory");
     }
+    
+
+    #********
+    #******** Save the configuration so far
+    #********
+    $environment->store_to();
 
     chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
 
