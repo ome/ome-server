@@ -127,10 +127,19 @@ sub store_to {
     croak "Called OME::Install::Environment->store_to(), but Storable could not be loaded."
     	if $@;
 
+	croak "Tring to store an uninitialized installation environment"
+		unless $sole_instance;
+	# Don't save the flags:
+	my $flags = $sole_instance->{flags};
+	delete $sole_instance->{flags};
+
     $env_file = ENV_FILE unless $env_file;
-    print "Storing OME::Install::Environment in \"$env_file\"\n";
+#	print "Storing OME::Install::Environment in \"$env_file\"\n";
 
     Storable::store ($sole_instance, $env_file) or croak "Unable to store instance in \"$env_file\". $!";
+
+	# restore the flags
+	$sole_instance->{flags} = $flags;
 
     return 1;
 }
