@@ -304,6 +304,8 @@ sub execute {
 		# Child process prints the task status
 		my $lastStep = -1;
 		my $status = $task->state();
+		my $mem_usage = 0;
+		my $mem_usage_steps = 0; # how many steps (each 2 sec) do we average memory over
 		while ($status eq 'IN PROGRESS') {
 			$task->refresh();
 			next if $task->n_steps == -1;
@@ -314,22 +316,40 @@ sub execute {
 			
 			if ($step != $lastStep ) {
 				print "	 $step/",$task->n_steps(),": [",
-				  $task->state(),"] ",
-				  $message,"\n";
+				  $task->state(),"] Currently ",
+				  $message;
 				$lastStep = $step;
+				if ($mem_usage > 0) {
+					printf(" (Past Usage: %.2dmb)",$mem_usage/1024/$mem_usage_steps);
+				}
+				print "\n";
+				$mem_usage = 0;
+				$mem_usage_steps = 0;
 			}
 		
 			$status = $task->state();
 		
 			sleep 2;
+			# if you want to use the lines below, remove the line above (sleep 2)
+			#my @output = `sar -r 5`; # inherently results in 2 second wait
+			#if($output[-1] =~ m/^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/)
+			#{
+        		#	$mem_usage += $3;
+			#	$mem_usage_steps++;
+			#}
+
 		}
 		
 		# print the final task Info
 		$task->refresh();
 		my $step = $task->last_step();
 		print "	 $step/",$task->n_steps(),": [",
-		  $task->state(),"] ",
-		  $task->message(),"\n";	
+		  $task->state(),"] Currently",
+		  $task->message();
+		if ($mem_usage > 0) {
+			printf(" (Past Usage: %.2dmb)",$mem_usage/1024/$mem_usage_steps);
+		}
+		print "\n";	
 	}
 		
 	# my $cache = OME::DBObject->__cache();
