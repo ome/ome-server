@@ -269,14 +269,15 @@ eval "require Storable;";
 
 unless ($@) {
 	my $environment = initialize OME::Install::Environment;
-	# Don't save these flags:
-	$environment->unset_flag ('LIB_CHECK');
-	$environment->unset_flag ('PERL_CHECK');
-	$environment->unset_flag ('ANSWER_Y');
-	$environment->store_to ("/etc/ome-install.store");
+	$environment->store_to ();
 } else {
 	carp "Unable to load the Storable module, continuing without a stored OME::Install::Environment!";
 }
+
+eval {
+	OME::Install::ApacheConfigTask::enable_server_startup_script();
+};
+
 
 # OME installed successfully blurb
 my $blurb = <<BLURB;
