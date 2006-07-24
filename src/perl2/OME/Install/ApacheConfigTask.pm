@@ -97,6 +97,7 @@ our $APACHE_OMEIS_UPDATE_REQUIRED = 0;
 # Global logfile filehandle and name
 our $LOGFILE_NAME = "ApacheConfigTask.log";
 our $LOGFILE;
+our $LOGFILE_OPEN;
 our $OME_TMP_DIR;
 
 
@@ -158,6 +159,11 @@ sub httpd_conf_OK {
 	my $httpdConf = $apache_info->{conf};
 	my $httpdConfBak = $apache_info->{conf_bak};
 	my $apachectlBin = $apache_info->{apachectl};
+	unless ($LOGFILE_OPEN) {
+	    my $environment = initialize OME::Install::Environment;
+		$OME_TMP_DIR  = $environment->tmp_dir() unless $OME_TMP_DIR;
+	    open ($LOGFILE, ">>", "$OME_TMP_DIR/install/$LOGFILE_NAME");
+	}
 
 	print $LOGFILE "Executing $apachectlBin configtest 2>&1\n";
 	my @result = `$apachectlBin configtest 2>&1 `;
@@ -170,6 +176,8 @@ sub httpd_conf_OK {
 	# Revert
 	print STDERR "Apache reports that configuration file has errors:\n".join ("\n",@result)."\n" and
 		print $LOGFILE "Apache reports that configuration file has errors:\n".join ("\n",@result)."\n";
+
+	return (0) unless $httpdConfBak;
 	print STDERR "Reverting to backup configuration\n" and
 		print $LOGFILE "Reverting to backup configuration in $httpdConfBak\n";
 	copy ($httpdConfBak,$httpdConf)
@@ -348,7 +356,7 @@ sub need_omeis_update {
 	# Be the root user for this.
 	my $old_UID = euid($APACHE_UID);
 
-	if ( open(VERS, "$OME_BASE_DIR/bin/updateOMEIS -q |") ) {
+	if ( open(VERS, "$OME_BASE_DIR/bin/updateOMEIS -q -s |") ) {
  	   while (<VERS>) {
  	       $pixels_update = 0 if /^Pixels/;
  	       $files_update  = 0 if /^Files/;
@@ -471,6 +479,48 @@ sub fix_ome_conf {
 	return (1);
 }
 
+
+sub enable_server_startup_script {
+	my $env = initialize OME::Install::Environment;
+	my $conf_dir = $env->base_dir().'/conf';
+	my $conf_file = "$conf_dir/httpd.ome.conf";
+	my $apache_conf = $env->apache_conf();
+	my $do_web = $apache_conf->{WEB};
+	my $do_omeds = $apache_conf->{OMEDS};
+	return unless ($do_web or $do_omeds);
+
+	open(FILE, "<", $conf_file) or
+			croak "Can't open $conf_file for reading: $!";
+	my @lines = <FILE>;
+	close (FILE);
+	my $config = join ('',@lines);
+	unless ($config =~ /OME-startup.pl/m) {
+		$config .= "\nPerlRequire $conf_dir/OME-startup.pl\n";
+		open(FILE, "> $conf_file") or
+			croak "Can't open $conf_file for writing: $!";
+		print FILE $config;
+		close (FILE);
+	}
+	
+	# Test the configuration
+	my $info = {
+		conf => $apache_conf->{HTTPD_CONF},
+		apachectl => $apache_conf->{APACHECTL},
+	};
+	
+	
+	if (httpd_conf_OK ($info) ) {
+		`$apache_conf->{APACHECTL} restart` if $apache_conf->{HUP};
+	} else {
+		$config = join ('',@lines);
+		open(FILE, "> $conf_file") or
+			croak "Can't open $conf_file for writing: $!";
+		print FILE $config;
+		close (FILE);
+		print STDERR "Executing $conf_dir/OME-startup.pl resulted in Apache startup errors - OME-startup.pl disabled\n";
+	}
+
+}
 
 sub getApacheBin {
 	my $apache_info = {};
@@ -774,6 +824,7 @@ BLURB
     or croak "Unable to open logfile \"$OME_TMP_DIR/install/$LOGFILE_NAME\" $!";
     
     print $LOGFILE "Apache setup\n";
+    $LOGFILE_OPEN = 1;
 
 	#********
 	#******** Get info from Apache's httpd.conf
@@ -978,6 +1029,7 @@ BLURB
 	}
 
 	$environment->apache_conf($APACHE);
+	$environment->store_to();
 
 	# Put what we have in the log file
 	print $LOGFILE "Apache configuration:\n";
@@ -1013,6 +1065,7 @@ BLURB
 		print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
 		umask (0002);
 		close ($LOGFILE);
+		$LOGFILE_OPEN = undef;
 		return;
 	}
 
@@ -1165,6 +1218,27 @@ BLURB
 		print $LOGFILE "Not installing WEB\n";
 		$APACHE_WEB_INCLUDE = '';
 	}
+
+
+	#********
+	#******** Install OME-startup.pl in the conf directory
+	#********
+	if ($APACHE->{WEB} or $APACHE->{OMEDS}) {
+		print $LOGFILE "Installing OME-startup.pl\n";
+		$source = 'src/perl2/OME-startup.pl';
+		$dest = $OME_CONF_DIR.'/OME-startup.pl';
+		print $LOGFILE "Copying $source to $dest\n";
+		copy ($source,$dest) or
+			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
+			croak "Could not copy $source to $dest:\n$!\n";
+		print $LOGFILE "chown $dest to uid: $APACHE_UID gid: $OME_GID\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or
+			print $LOGFILE "Could not chown $dest:\n$!\n" and
+			croak "Could not chown $dest:\n$!\n";
+
+	} else {
+		print $LOGFILE "Not installing OME-startup.pl\n";
+	}
 	
 	
 	#********
@@ -1314,6 +1388,7 @@ BLURB
 	}
 
 	close ($LOGFILE);
+	$LOGFILE_OPEN = undef;
     return;
 }
 
