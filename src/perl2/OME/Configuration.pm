@@ -207,11 +207,22 @@ our %SERIALIZED_VARS = (
 	import_formats => 'ARRAY',
 );
 
+our $CACHED_CONFIG;
+
+sub preload {
+	$CACHED_CONFIG = new(@_);
+	return ($CACHED_CONFIG);
+}
+
+
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
 	my $factory = shift;
 	my $params = shift;
+	
+	return ($CACHED_CONFIG) if $CACHED_CONFIG;
+
 	my $self = {};
 
 	die "new OME::Configuration called without required factory parameter."
