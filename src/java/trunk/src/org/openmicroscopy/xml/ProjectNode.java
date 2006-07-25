@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 /** ProjectNode is the node corresponding to the "Project" XML element. */
 public class ProjectNode extends OMEXMLNode implements Project {
 
-  // -- Constructor --
+  // -- Constructors --
 
   /** Constructs a Project node with the given associated DOM element. */
   public ProjectNode(Element element) { super(element); }

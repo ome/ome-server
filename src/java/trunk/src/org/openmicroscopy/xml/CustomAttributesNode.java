@@ -48,7 +48,7 @@ import org.w3c.dom.*;
  */
 public class CustomAttributesNode extends OMEXMLNode {
 
-  // -- Constructor --
+  // -- Constructors --
 
   /**
    * Constructs a CustomAttributes node with the given associated DOM element.

@@ -47,7 +47,7 @@ import org.w3c.dom.Element;
 /** ImageNode is the node corresponding to the "Image" XML element. */
 public class ImageNode extends OMEXMLNode implements Image {
 
-  // -- Constructor --
+  // -- Constructors --
 
   /** Constructs a Image node with the given associated DOM element. */
   public ImageNode(Element element) { super(element); }

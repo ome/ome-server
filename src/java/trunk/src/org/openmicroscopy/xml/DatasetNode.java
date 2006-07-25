@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 /** DatasetNode is the node corresponding to the "Dataset" XML element. */
 public class DatasetNode extends OMEXMLNode implements Dataset {
 
-  // -- Constructor --
+  // -- Constructors --
 
   /** Constructs a Dataset node with the given associated DOM element. */
   public DatasetNode(Element element) { super(element); }
