@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -40,8 +40,7 @@
 package org.openmicroscopy.xml.st;
 
 import java.util.List;
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -72,7 +71,7 @@ public class RepositoryNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public RepositoryNode(OMEXMLNode parent) {
+  public RepositoryNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -81,7 +80,9 @@ public class RepositoryNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public RepositoryNode(OMEXMLNode parent, boolean attach) {
+  public RepositoryNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Repository"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -92,8 +93,8 @@ public class RepositoryNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public RepositoryNode(OMEXMLNode parent, Boolean isLocal, String path,
-    String imageServerURL)
+  public RepositoryNode(CustomAttributesNode parent, Boolean isLocal,
+    String path, String imageServerURL)
   {
     this(parent, true);
     setLocal(isLocal);

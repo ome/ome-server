@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -40,8 +40,7 @@
 package org.openmicroscopy.xml.st;
 
 import java.util.List;
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -70,7 +69,7 @@ public class ObjectiveNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public ObjectiveNode(OMEXMLNode parent) {
+  public ObjectiveNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -79,7 +78,9 @@ public class ObjectiveNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public ObjectiveNode(OMEXMLNode parent, boolean attach) {
+  public ObjectiveNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Objective"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -90,8 +91,8 @@ public class ObjectiveNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public ObjectiveNode(OMEXMLNode parent, String manufacturer, String model,
-    String serialNumber, Float lensNA, Float magnification,
+  public ObjectiveNode(CustomAttributesNode parent, String manufacturer,
+    String model, String serialNumber, Float lensNA, Float magnification,
     Instrument instrument)
   {
     this(parent, true);

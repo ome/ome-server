@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -70,7 +69,7 @@ public class LocationNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public LocationNode(OMEXMLNode parent) {
+  public LocationNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -79,7 +78,9 @@ public class LocationNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public LocationNode(OMEXMLNode parent, boolean attach) {
+  public LocationNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Location"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -90,7 +91,8 @@ public class LocationNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public LocationNode(OMEXMLNode parent, Float theX, Float theY, Float theZ)
+  public LocationNode(CustomAttributesNode parent, Float theX, Float theY,
+    Float theZ)
   {
     this(parent, true);
     setTheX(theX);

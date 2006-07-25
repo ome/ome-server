@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -71,7 +70,7 @@ public class FilenamePatternNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public FilenamePatternNode(OMEXMLNode parent) {
+  public FilenamePatternNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -80,7 +79,9 @@ public class FilenamePatternNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public FilenamePatternNode(OMEXMLNode parent, boolean attach) {
+  public FilenamePatternNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("FilenamePattern"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -91,8 +92,9 @@ public class FilenamePatternNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public FilenamePatternNode(OMEXMLNode parent, String format, String regEx,
-    String name, String baseName, Integer theZ, Integer theT, Integer theC)
+  public FilenamePatternNode(CustomAttributesNode parent, String format,
+    String regEx, String name, String baseName, Integer theZ, Integer theT,
+    Integer theC)
   {
     this(parent, true);
     setFormat(format);

@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -69,7 +68,7 @@ public class TrajectoryEntryNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public TrajectoryEntryNode(OMEXMLNode parent) {
+  public TrajectoryEntryNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -78,7 +77,9 @@ public class TrajectoryEntryNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public TrajectoryEntryNode(OMEXMLNode parent, boolean attach) {
+  public TrajectoryEntryNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("TrajectoryEntry"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -89,9 +90,9 @@ public class TrajectoryEntryNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public TrajectoryEntryNode(OMEXMLNode parent, Trajectory trajectory,
-    Integer order, Float deltaX, Float deltaY, Float deltaZ, Float distance,
-    Float velocity)
+  public TrajectoryEntryNode(CustomAttributesNode parent,
+    Trajectory trajectory, Integer order, Float deltaX, Float deltaY,
+    Float deltaZ, Float distance, Float velocity)
   {
     this(parent, true);
     setTrajectory(trajectory);

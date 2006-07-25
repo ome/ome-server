@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:48 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -71,7 +70,7 @@ public class RenderingSettingsNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public RenderingSettingsNode(OMEXMLNode parent) {
+  public RenderingSettingsNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -80,7 +79,9 @@ public class RenderingSettingsNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public RenderingSettingsNode(OMEXMLNode parent, boolean attach) {
+  public RenderingSettingsNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("RenderingSettings"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -91,11 +92,11 @@ public class RenderingSettingsNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public RenderingSettingsNode(OMEXMLNode parent, Experimenter experimenter,
-    Integer theZ, Integer theT, Integer model, Integer family,
-    Double coefficient, Integer cdStart, Integer cdEnd, Integer bitResolution,
-    Integer theC, Double inputStart, Double inputEnd, Integer red,
-    Integer green, Integer blue, Integer alpha, Boolean active)
+  public RenderingSettingsNode(CustomAttributesNode parent,
+    Experimenter experimenter, Integer theZ, Integer theT, Integer model,
+    Integer family, Double coefficient, Integer cdStart, Integer cdEnd,
+    Integer bitResolution, Integer theC, Double inputStart, Double inputEnd,
+    Integer red, Integer green, Integer blue, Integer alpha, Boolean active)
   {
     this(parent, true);
     setExperimenter(experimenter);

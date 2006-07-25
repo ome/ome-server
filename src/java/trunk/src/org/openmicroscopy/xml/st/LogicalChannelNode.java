@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -40,8 +40,7 @@
 package org.openmicroscopy.xml.st;
 
 import java.util.List;
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -72,7 +71,7 @@ public class LogicalChannelNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public LogicalChannelNode(OMEXMLNode parent) {
+  public LogicalChannelNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -81,7 +80,9 @@ public class LogicalChannelNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public LogicalChannelNode(OMEXMLNode parent, boolean attach) {
+  public LogicalChannelNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("LogicalChannel"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -92,7 +93,7 @@ public class LogicalChannelNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public LogicalChannelNode(OMEXMLNode parent, String name,
+  public LogicalChannelNode(CustomAttributesNode parent, String name,
     Integer samplesPerPixel, Filter filter, LightSource lightSource,
     Float lightAttenuation, Integer lightWavelength, OTF otf,
     Detector detector, Float detectorOffset, Float detectorGain,

@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -69,7 +68,7 @@ public class ExcitationFilterNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public ExcitationFilterNode(OMEXMLNode parent) {
+  public ExcitationFilterNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -78,7 +77,9 @@ public class ExcitationFilterNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public ExcitationFilterNode(OMEXMLNode parent, boolean attach) {
+  public ExcitationFilterNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("ExcitationFilter"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -89,7 +90,7 @@ public class ExcitationFilterNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public ExcitationFilterNode(OMEXMLNode parent, String manufacturer,
+  public ExcitationFilterNode(CustomAttributesNode parent, String manufacturer,
     String model, String lotNumber, String type, Filter filter)
   {
     this(parent, true);

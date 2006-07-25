@@ -151,13 +151,28 @@ public class Xmlgen {
   // -- Main method --
 
   /**
-   * Run 'java Xmlgen' to generate the source code
-   * for the org.openmicroscopy.xml.st package.
+   * Run 'java Xmlgen' to generate the source code for the
+   * org.openmicroscopy.xml.st package. The "-d" flag allows the specification
+   * of a base directory (parent of OME and OME-JAVA) other than user.home.
    */
   public static void main(String[] args) throws Exception {
+    // parse command line arguments
+    String dirPrefix = DIR_PREFIX;
+    Vector extra = new Vector();
+    for (int i=0; i<args.length; i++) {
+      if (args[i].startsWith("-")) {
+        if (i < args.length - 1 && "-d".equals(args[i])) {
+          dirPrefix = args[++i];
+          System.out.println("Directory prefix overridden to: " + dirPrefix);
+        }
+        else System.out.println("Ignoring unknown argument: " + args[i]);
+      }
+      else extra.add(args[i]);
+    }
+
     // glean ST interface list from *DTO.java files
     System.out.println("\nScanning ST interfaces...");
-    File[] stList = new File(DIR_PREFIX, ST_INTERFACE_DIR).listFiles();
+    File[] stList = new File(dirPrefix, ST_INTERFACE_DIR).listFiles();
     Vector sts = new Vector();
     for (int i=0; i<stList.length; i++) {
       File f = stList[i];
@@ -170,10 +185,12 @@ public class Xmlgen {
 
     // read in ST definitions from OME files
     String[] files;
-    if (args.length > 0) {
-      files = new String[ST_FILES.length + args.length];
+    if (extra.size() > 0) {
+      files = new String[ST_FILES.length + extra.size()];
       System.arraycopy(ST_FILES, 0, files, 0, ST_FILES.length);
-      System.arraycopy(args, 0, files, ST_FILES.length, args.length);
+      for (int i=0; i<extra.size(); i++) {
+        files[ST_FILES.length + i] = (String) extra.elementAt(i);
+      }
     }
     else files = ST_FILES;
     System.out.println("\nScanning ST definitions...");
@@ -183,7 +200,7 @@ public class Xmlgen {
     for (int i=0; i<files.length; i++) {
       DocumentBuilderFactory docFact = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = docFact.newDocumentBuilder();
-      Document doc = db.parse(new File(DIR_PREFIX, files[i]));
+      Document doc = db.parse(new File(dirPrefix, files[i]));
 
       Vector els = DOMUtil.findElementList("SemanticType", doc);
       for (int j=0; j<els.size(); j++) {
@@ -234,7 +251,7 @@ public class Xmlgen {
       Element def = (Element) defs.elementAt(i);
       String stName = (String) defNames.elementAt(i);
       constBody[i].append("    this(parent, true);");
-      int constLeft = 46 - stName.length();
+      int constLeft = 36 - stName.length();
       NodeList children = def.getChildNodes();
       for (int j=0; j<children.getLength(); j++) {
         Node node = children.item(j);
@@ -392,8 +409,7 @@ public class Xmlgen {
       if (listSTs[i] != null) {
         fout.println("import java.util.List;");
       }
-      fout.println("import org.openmicroscopy.xml.AttributeNode;");
-      fout.println("import org.openmicroscopy.xml.OMEXMLNode;");
+      fout.println("import org.openmicroscopy.xml.*;");
       fout.println("import org.openmicroscopy.ds.st.*;");
       fout.println("import org.w3c.dom.Element;");
       fout.println();
@@ -428,7 +444,7 @@ public class Xmlgen {
       fout.println("   * creating its associated DOM element beneath the");
       fout.println("   * given parent.");
       fout.println("   */");
-      fout.println("  public " + nodeName + "(OMEXMLNode parent) {");
+      fout.println("  public " + nodeName + "(CustomAttributesNode parent) {");
       fout.println("    this(parent, true);");
       fout.println("  }");
       fout.println();
@@ -437,8 +453,9 @@ public class Xmlgen {
       fout.println("   * creating its associated DOM element beneath the");
       fout.println("   * given parent.");
       fout.println("   */");
-      fout.println("  public " + nodeName +
-        "(OMEXMLNode parent, boolean attach) {");
+      fout.println("  public " + nodeName + "(CustomAttributesNode parent,");
+      fout.println("    boolean attach)");
+      fout.println("  {");
       fout.println("    super(parent.getDOMElement().getOwnerDocument().");
       fout.println("      createElement(\"" + stName + "\"));");
       fout.println("    if (attach) " +
@@ -450,7 +467,7 @@ public class Xmlgen {
       fout.println("   * creating its associated DOM element beneath the");
       fout.println("   * given parent, using the specified parameter values.");
       fout.println("   */");
-      fout.println("  public " + nodeName + "(OMEXMLNode parent," +
+      fout.println("  public " + nodeName + "(CustomAttributesNode parent," +
         constArgs[i] + ")");
       fout.println("  {");
       fout.println(constBody[i]);

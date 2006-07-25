@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -70,7 +69,7 @@ public class DisplayROINode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public DisplayROINode(OMEXMLNode parent) {
+  public DisplayROINode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -79,7 +78,9 @@ public class DisplayROINode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public DisplayROINode(OMEXMLNode parent, boolean attach) {
+  public DisplayROINode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("DisplayROI"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -90,8 +91,8 @@ public class DisplayROINode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public DisplayROINode(OMEXMLNode parent, Integer x0, Integer y0, Integer z0,
-    Integer x1, Integer y1, Integer z1, Integer t0, Integer t1,
+  public DisplayROINode(CustomAttributesNode parent, Integer x0, Integer y0,
+    Integer z0, Integer x1, Integer y1, Integer z1, Integer t0, Integer t1,
     DisplayOptions displayOptions)
   {
     this(parent, true);

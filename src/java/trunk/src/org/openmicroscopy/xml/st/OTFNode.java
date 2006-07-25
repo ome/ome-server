@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -40,8 +40,7 @@
 package org.openmicroscopy.xml.st;
 
 import java.util.List;
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -70,7 +69,7 @@ public class OTFNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public OTFNode(OMEXMLNode parent) {
+  public OTFNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -79,7 +78,9 @@ public class OTFNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public OTFNode(OMEXMLNode parent, boolean attach) {
+  public OTFNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("OTF"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -90,9 +91,10 @@ public class OTFNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public OTFNode(OMEXMLNode parent, Objective objective, Filter filter,
-    Integer sizeX, Integer sizeY, String pixelType, Repository repository,
-    String path, Boolean opticalAxisAverage, Instrument instrument)
+  public OTFNode(CustomAttributesNode parent, Objective objective,
+    Filter filter, Integer sizeX, Integer sizeY, String pixelType,
+    Repository repository, String path, Boolean opticalAxisAverage,
+    Instrument instrument)
   {
     this(parent, true);
     setObjective(objective);

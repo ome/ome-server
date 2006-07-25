@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -69,7 +68,7 @@ public class DichroicNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public DichroicNode(OMEXMLNode parent) {
+  public DichroicNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -78,7 +77,9 @@ public class DichroicNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public DichroicNode(OMEXMLNode parent, boolean attach) {
+  public DichroicNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Dichroic"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -89,8 +90,8 @@ public class DichroicNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public DichroicNode(OMEXMLNode parent, String manufacturer, String model,
-    String lotNumber, Filter filter)
+  public DichroicNode(CustomAttributesNode parent, String manufacturer,
+    String model, String lotNumber, Filter filter)
   {
     this(parent, true);
     setManufacturer(manufacturer);

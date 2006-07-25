@@ -32,15 +32,14 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Apr 26, 2006 2:22:49 PM CDT
+ * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.xml.st;
 
-import org.openmicroscopy.xml.AttributeNode;
-import org.openmicroscopy.xml.OMEXMLNode;
+import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
@@ -71,7 +70,7 @@ public class DimensionsNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public DimensionsNode(OMEXMLNode parent) {
+  public DimensionsNode(CustomAttributesNode parent) {
     this(parent, true);
   }
 
@@ -80,7 +79,9 @@ public class DimensionsNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent.
    */
-  public DimensionsNode(OMEXMLNode parent, boolean attach) {
+  public DimensionsNode(CustomAttributesNode parent,
+    boolean attach)
+  {
     super(parent.getDOMElement().getOwnerDocument().
       createElement("Dimensions"));
     if (attach) parent.getDOMElement().appendChild(element);
@@ -91,8 +92,8 @@ public class DimensionsNode extends AttributeNode
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
-  public DimensionsNode(OMEXMLNode parent, Float pixelSizeX, Float pixelSizeY,
-    Float pixelSizeZ, Float pixelSizeC, Float pixelSizeT)
+  public DimensionsNode(CustomAttributesNode parent, Float pixelSizeX,
+    Float pixelSizeY, Float pixelSizeZ, Float pixelSizeC, Float pixelSizeT)
   {
     this(parent, true);
     setPixelSizeX(pixelSizeX);
