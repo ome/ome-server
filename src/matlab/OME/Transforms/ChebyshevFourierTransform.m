@@ -48,11 +48,14 @@
 %% The default coefficient value is 11. 
 function [coeff_packed] = ChebyshevFourierTransform(Im,N)
 Im = double(Im);
-if nargin<2, N=11; end;
+if nargin<2, N=20; end;
 recYes=0; packingOrder = 32;
 
 [m,n] = size(Im); nLast = n*m;
-if nLast > 256*320, warning(':: ChebyshevFourierTransform :: image size is critical');end
+if nLast > 120*160, %%256*320, 
+ warning(':: ChebyshevFourierTransform :: image size is critical >> downsample');
+%Im = downsample_image(Im); [m,n] = size(Im); nLast = n*m;
+end
 y = linspace(1,-1,m); x = linspace(-1,1,n);
 [X,Y] = meshgrid(x,y); clear x,y;
 xx = X(:); yy = Y(:); img = Im(:);  clear Im;
@@ -63,6 +66,11 @@ NN = 2*N + 1;
 
 %% Get Cheb-Fourier matrix 'C'...
 C = zeros(nLast,NN*NN);
+
+fprintf('sz estimate: %u\n',floor(NN^2 * n*m*(pi/4)));
+fprintf('::ChebyshevFourierTransform:: memory chunk: %ux%u = %u\n\n',nLast,NN*NN,nLast*NN*NN);
+%fprintf('sz total: %u\n',nLast*NN*NN);
+
 %tic0 = cputime;
 for ind = 1:nk, ri = r(kk(ind)); fi = f(kk(ind));
  if ri>1, continue; end
@@ -101,3 +109,11 @@ function [st,hh,mm,ss]=getEtime(tm),
 hh = floor(tm/3600); hrem = rem(tm,3600); mm = floor(hrem/60); ss = rem(hrem,60); 
 st = sprintf('%02i:%02i:%02i.%02i',hh,mm,fix(ss),round(1e2*(ss-fix(ss))));
 return;
+
+function small = downsample_image(orig),
+r = size(orig,1)/size(orig,2);
+% enforce m*n size:
+n = 160; m = fix(r*n);
+small = imresize(orig,[m n],'bicubic');
+return;
+
