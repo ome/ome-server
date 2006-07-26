@@ -66,6 +66,7 @@
 			<xsd:attribute name = "Description" type = "xsd:string"/>
 			<xsd:attribute name = "Experimenter" type = "OME:ExperimenterID"/>
 			<xsd:attribute name = "Group" type = "OME:GroupID"/>
+			<xsd:attribute name = "DefaultPixels" type = "OME:PixelsID"/>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "Feature">
