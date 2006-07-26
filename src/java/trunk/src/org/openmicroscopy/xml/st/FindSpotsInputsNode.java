@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
+ * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -80,9 +80,7 @@ public class FindSpotsInputsNode extends AttributeNode
   public FindSpotsInputsNode(CustomAttributesNode parent,
     boolean attach)
   {
-    super(parent.getDOMElement().getOwnerDocument().
-      createElement("FindSpotsInputs"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(parent, "FindSpotsInputs", attach);
   }
 
   /**

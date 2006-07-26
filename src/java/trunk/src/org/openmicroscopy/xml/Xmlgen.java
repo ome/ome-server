@@ -456,10 +456,7 @@ public class Xmlgen {
       fout.println("  public " + nodeName + "(CustomAttributesNode parent,");
       fout.println("    boolean attach)");
       fout.println("  {");
-      fout.println("    super(parent.getDOMElement().getOwnerDocument().");
-      fout.println("      createElement(\"" + stName + "\"));");
-      fout.println("    if (attach) " +
-        "parent.getDOMElement().appendChild(element);");
+      fout.println("    super(parent, \"" + stName + "\", attach);");
       fout.println("  }");
       fout.println();
       fout.println("  /**");

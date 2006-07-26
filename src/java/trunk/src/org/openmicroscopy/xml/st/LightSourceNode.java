@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
+ * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -81,9 +81,7 @@ public class LightSourceNode extends AttributeNode
   public LightSourceNode(CustomAttributesNode parent,
     boolean attach)
   {
-    super(parent.getDOMElement().getOwnerDocument().
-      createElement("LightSource"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(parent, "LightSource", attach);
   }
 
   /**

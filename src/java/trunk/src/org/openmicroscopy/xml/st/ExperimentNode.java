@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 25, 2006 12:37:00 PM CDT
+ * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -81,9 +81,7 @@ public class ExperimentNode extends AttributeNode
   public ExperimentNode(CustomAttributesNode parent,
     boolean attach)
   {
-    super(parent.getDOMElement().getOwnerDocument().
-      createElement("Experiment"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(parent, "Experiment", attach);
   }
 
   /**

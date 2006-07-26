@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 25, 2006 12:37:01 PM CDT
+ * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -80,9 +80,7 @@ public class PlaneSum_log_iNode extends AttributeNode
   public PlaneSum_log_iNode(CustomAttributesNode parent,
     boolean attach)
   {
-    super(parent.getDOMElement().getOwnerDocument().
-      createElement("PlaneSum_log_i"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(parent, "PlaneSum_log_i", attach);
   }
 
   /**

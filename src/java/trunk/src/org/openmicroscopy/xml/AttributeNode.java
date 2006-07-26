@@ -42,16 +42,36 @@ import org.openmicroscopy.ds.dto.*;
 import org.w3c.dom.Element;
 
 /**
- * AttributeNode is the superclass of nodes (semantic
- * types) implementing the Attribute DTO interface.
+ * AttributeNode is the superclass of nodes (semantic types) implementing the
+ * Attribute DTO interface. It can also be used for custom semantic types that
+ * do not have an explicit implementation in org.openmicroscopy.xml.st.
  */
 public class AttributeNode extends OMEXMLNode implements Attribute {
 
-  // -- Constructor --
+  // -- Constructors --
 
-  /** Constructs an Attribute node with the given associated DOM element. */
+  /** Constructs an attribute node with the given associated DOM element. */
   public AttributeNode(Element element) { super(element); }
 
+  /**
+   * Constructs an attribute node with the given element name,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public AttributeNode(CustomAttributesNode parent, String name) {
+    this(parent, name, true);
+  }
+
+  /**
+   * Constructs an attribute node with the given element name,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public AttributeNode(CustomAttributesNode parent, String name,
+    boolean attach)
+  {
+    super(parent.getDOMElement().getOwnerDocument().
+      createElement(name));
+    if (attach) parent.getDOMElement().appendChild(element);
+  }
 
   // -- Attribute API methods --
 
