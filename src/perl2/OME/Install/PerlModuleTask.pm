@@ -119,7 +119,7 @@ my @modules = (
 	repository_file => "$REPOSITORY/Compress-Zlib-1.19.tar.gz"
    	},{
 	name => 'DBI',
-	repository_file => "$REPOSITORY/DBI-1.30.tar.gz",
+	repository_file => "$REPOSITORY/DBI-1.48.tar.gz",
 	# XXX DBI has never been a problem. In general the problem child is DBD::Pg
 	# so in the collective interest of Sys-admin sanity I'm commenting the
 	# version requirement out. If we have problems we can re-institute it.
@@ -154,7 +154,7 @@ my @modules = (
 	#repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
 	#},{
 	name => 'DBD::Pg',
-	repository_file => "$REPOSITORY/DBD-Pg-1.22.tar.gz",
+	repository_file => "$REPOSITORY/DBD-Pg-1.43.tar.gz",
 	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'ne 1.21', 'eq 1.22',
 		'eq 1.41', 'eq 1.43', 'ne 1.45', 'ne 1.49'
 	],
