@@ -36,6 +36,14 @@
 %
 function [outPixels] = FourierTransform(inPixels)
 
+% If the input is a single datatype, cast it into a double during computation
+% to reduce rounding errors
+singleInput = 0;
+if( strcmp( class( inPixels ), 'single' ) )
+	singleInput = 1;
+	inPixels = double( inPixels );
+end;
+
 % its only a plane
 inPixels = inPixels(:,:);
 
@@ -57,3 +65,9 @@ outPixels(:,:,2) = angle(inPixels);
 
 % Use the following Matlab code to visualize the Fourier Space frequency
 % imshow( mat2gray(log(1+angle(inPixels))) )
+
+% Cast the output back into a single if we expanded to double to reduce 
+% rounding errors
+if( singleInput )
+	inPixels = single( inPixels );
+end;
