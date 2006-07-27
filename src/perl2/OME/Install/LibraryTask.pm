@@ -258,42 +258,64 @@ my @libraries = ( {
 		repository_file => "$REPOSITORY/db-4.2.52.tar.gz",
     }, {
 		name => 'libxml2',
-		get_library_version => sub {
+		pre_install => sub {
+			my ($library,$logfile) = @_;
 	    	my $xml2_config = "xml2-config";
-			my $version;
 
 	    	$xml2_config = whereis ("xml2-config") unless which ("$xml2_config");
 
 			if ($xml2_config) {
-	    		$version = `$xml2_config --version`;
-	    		chomp $version;
+	    		$library->{cflags} = `$xml2_config --cflags`;
+	    		chomp $library->{cflags};
+	    		$library->{ldflags} = `$xml2_config --libs`;
+	    		chomp $library->{ldflags};
 			} else {
 				return undef;
 			}
-
-	    	return $? == 0 ? $version : undef;
+			
+			$library->{get_library_version} = q(
+				#include <stdio.h>
+				#include <libxml/parser.h>
+				#include <libxml/tree.h>
+				int main () {
+					LIBXML_TEST_VERSION
+					printf ("%s",LIBXML_DOTTED_VERSION);
+					return 0;
+				}
+			);
 		},
-		valid_versions => ['ge "2.4.20"'],
-		repository_file => "$REPOSITORY/libxml2-2.5.7.tar.gz",
+		valid_versions => ['ge "2.6.0"'],
+		repository_file => "$REPOSITORY/libxml2-2.6.19.tar.gz",
     }, {
 		name => 'libxslt',
-		get_library_version => sub {
+		pre_install => sub {
+			my ($library,$logfile) = @_;
 	    	my $xslt_config = "xslt-config";
-			my $version;
 
 	    	$xslt_config = whereis ("xslt-config") unless which ("$xslt_config");
 
 			if ($xslt_config) {
-	    		$version = `$xslt_config --version`;
-	    		chomp $version;
+	    		$library->{cflags} = `$xslt_config --cflags`;
+	    		chomp $library->{cflags};
+	    		$library->{ldflags} = `$xslt_config --libs`;
+	    		chomp $library->{ldflags};
 			} else {
 				return undef;
 			}
-
-	    	return $? == 0 ? $version : undef;
+			
+			$library->{get_library_version} = q(
+				#include <stdio.h>
+				#include <libxslt/xslt.h>
+				#include <libxslt/transform.h>
+				#include <libxslt/xsltutils.h>
+				int main () {
+					printf ("%s",LIBXSLT_DOTTED_VERSION);
+					return 0;
+				}
+			);
 		},
-		repository_file => "$REPOSITORY/libxslt-1.0.30.tar.gz",
-		valid_versions => ['ge "1.0"'],
+		repository_file => "$REPOSITORY/libxslt-1.1.14.tar.gz",
+		valid_versions => ['ge "1.1"'],
     }, {
 		name => 'expat',
 		get_library_version => q(
@@ -630,8 +652,13 @@ sub check {
 	    		if( $OSNAME eq "darwin" and -e '/sw/include/' );
 	    	my $darwinPortsIncs = '';
 	    	$darwinPortsIncs = '-I/opt/local/include'
-	    		if( $OSNAME eq "darwin" and -e '/opt/local/include/' );	    	
-			@error = `$CC $finkIncs $darwinPortsIncs $source_file -o $binary 2>&1`;
+	    		if( $OSNAME eq "darwin" and -e '/opt/local/include/' );
+	    	my $incs = '';
+	    	$incs = $library->{cflags} if exists $library->{cflags};
+	    	my $libs = '';
+	    	$libs = $library->{ldflags} if exists $library->{ldflags};
+	    	
+			@error = `$CC $finkIncs $darwinPortsIncs $incs $libs $source_file -o $binary 2>&1`;
 
 	    	if ($? == 0) {
 				$library->{version} = `$binary 2>&1`;
@@ -641,7 +668,7 @@ sub check {
 	    			unlink ($binary);
 					croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}";
 	    		}
-	    	}
+	    	} else {print "Error: @error\n";}
 			unlink ($source_file);
 			unlink ($binary);
 		}
