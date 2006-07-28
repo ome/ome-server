@@ -48,7 +48,10 @@
 %% The default coefficient value is 11. 
 function [coeff_packed] = ChebyshevFourierTransform(Im,N)
 Im = double(Im);
-if nargin<2, N=20; end;
+
+if nargin<2, N=11; end;
+%if nargin<2, N=20; end;
+
 recYes=0; packingOrder = 32;
 
 [m,n] = size(Im); nLast = n*m;
