@@ -51,9 +51,15 @@ use base qw(OME::Install::InstallationTask);
 
 # Default package repository
 my $REPOSITORY = "http://openmicroscopy.org/packages/perl";
+my $FORCE_INSTALL = 0;
+my $PERL_PREFIX = '';
 # For testing local repositories:
 #my $REPOSITORY = "http://localhost/OME-WEBSITE/packages/perl";
+#my $FORCE_INSTALL = 1;
+#my $PERL_PREFIX = '/OME';
 
+my $PERL_MAKEFILE_PL_CL_OPTIONS = '';
+$PERL_MAKEFILE_PL_CL_OPTIONS = "PREFIX=$PERL_PREFIX" if $PERL_PREFIX;
 # Default ranlib command
 my $RANLIB= "ranlib";
 
@@ -107,16 +113,16 @@ my $INSTALL_HOME;
 my @modules = (
     {
 	name => 'Term::ReadKey',
-	repository_file => "$REPOSITORY/TermReadKey-2.21.tar.gz"
+	repository_file => "$REPOSITORY/TermReadKey-2.30.tar.gz"
  	},{
 	name => 'Storable',
-	repository_file => "$REPOSITORY/Storable-1.0.13.tar.gz"
+	repository_file => "$REPOSITORY/Storable-2.15.tar.gz"
    	},{
 	name => 'Carp::Assert',
-	repository_file => "$REPOSITORY/Carp-Assert-0.17.tar.gz"
+	repository_file => "$REPOSITORY/Carp-Assert-0.18.tar.gz"
  	},{
 	name => 'Compress::Zlib',
-	repository_file => "$REPOSITORY/Compress-Zlib-1.19.tar.gz"
+	repository_file => "$REPOSITORY/Compress-Zlib-1.33.tar.gz"
    	},{
 	name => 'DBI',
 	repository_file => "$REPOSITORY/DBI-1.48.tar.gz",
@@ -127,27 +133,27 @@ my @modules = (
 	#valid_versions => ['eq "1.30"', 'eq "1.32"', 'eq "1.35"']
     },{
 	name => 'Digest::MD5',
-	repository_file => "$REPOSITORY/Digest-MD5-2.13.tar.gz"
+	repository_file => "$REPOSITORY/Digest-MD5-2.33.tar.gz"
     },{
 	name => 'MD5',
-	repository_file => "$REPOSITORY/MD5-2.02.tar.gz",
+	repository_file => "$REPOSITORY/MD5-2.03.tar.gz",
 	exception => sub {
 		# N.B: $PERL_VERSION is broken. use $] instead.
 	    if ($] > 5.008) { return 1 };
 	} 
     },{
 	name => 'MIME::Base64',
-	repository_file => "$REPOSITORY/MIME-Base64-2.12.tar.gz"
+	repository_file => "$REPOSITORY/MIME-Base64-3.05.tar.gz"
     },{
 	# XXX DEPRECATED
 	#name => 'Apache::Session',
 	#repository_file => "$REPOSITORY/Apache-Session-1.54.tar.gz"
     #},{
 	name => 'Log::Agent',
-	repository_file => "$REPOSITORY/Log-Agent-0.208.tar.gz"
+	repository_file => "$REPOSITORY/Log-Agent-0.306.tar.gz"
     },{
     name => 'Time::HiRes',
-    repository_file => "$REPOSITORY/Time-HiRes-1.65.tar.gz"
+    repository_file => "$REPOSITORY/Time-HiRes-1.73.tar.gz"
     },{
 	# XXX DEPRECATED
 	#name => 'Tie::IxHash',
@@ -182,24 +188,24 @@ my @modules = (
 	#repository_file => "$REPOSITORY/Sort-Array-0.26.tar.gz",
 	#},{
 	name => 'Test::Harness',
-	repository_file => "$REPOSITORY/Test-Harness-2.26.tar.gz",
+	repository_file => "$REPOSITORY/Test-Harness-2.52.tar.gz",
 	valid_versions => ['gt 2.03']
     },{
 	name => 'Test::Simple',
-	repository_file => "$REPOSITORY/Test-Simple-0.47.tar.gz"
+	repository_file => "$REPOSITORY/Test-Simple-0.60.tar.gz"
     },{
 	name => 'HTML::Template',
-	repository_file => "$REPOSITORY/HTML-Template-2.6.tar.gz"
+	repository_file => "$REPOSITORY/HTML-Template-2.7.tar.gz"
     },{
 	name => 'IPC::Run',
-	repository_file => "$REPOSITORY/IPC-Run-0.75.tar.gz"
+	repository_file => "$REPOSITORY/IPC-Run-0.79.tar.gz"
 	},{
 	# XXX DEPRECATED
 	#name => 'Carp::Assert',
 	#repository_file => "$REPOSITORY/Carp-Assert-0.17.tar.gz"
 	#},{
 	name => 'Class::Accessor',
-	repository_file => "$REPOSITORY/Class-Accessor-0.17.tar.gz"
+	repository_file => "$REPOSITORY/Class-Accessor-0.19.tar.gz"
     },{
 	name => 'Class::Data::Inheritable',
 	repository_file => "$REPOSITORY/Class-Data-Inheritable-0.02.tar.gz"
@@ -213,7 +219,7 @@ my @modules = (
 	#repository_file => "$REPOSITORY/Class-Trigger-0.05.tar.gz"
 	#},{
 	name => 'File::Temp',
-	repository_file => "$REPOSITORY/File-Temp-0.12.tar.gz"
+	repository_file => "$REPOSITORY/File-Temp-0.16.tar.gz"
     },{
 	# XXX DEPRECATED
 	#name => 'Text::CSV_XS',
@@ -262,14 +268,17 @@ my @modules = (
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
 
-	#    my ($path, $logfile) = @_;
+	#    my ($path, $logfile,$options) = @_;
+	#    my $cl_options = '';
+	#    $cl_options = $options->{options} if $options and $options->{options};
+
 	#    my $iwd = getcwd;  # Initial working directory
 
 	#    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
 	#    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-	#    system ("perl Makefile.PL 2>&1");
+	#    system ("perl Makefile.PL $cl_options 2>&1");
 
 	#    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
 
@@ -277,7 +286,7 @@ my @modules = (
 	#}
     #},{
 	name => 'URI',
-	repository_file => "$REPOSITORY/URI-1.23.tar.gz"
+	repository_file => "$REPOSITORY/URI-1.35.tar.gz"
     },{
 	# XXX DEPRECATED
 #	name => 'Image::Magick',
@@ -285,15 +294,17 @@ my @modules = (
 #	#installModule => \&ImageMagickInstall
 #    },{
 	name => 'HTML::Tagset',
-	repository_file => "$REPOSITORY/HTML-Tagset-3.03.tar.gz"
+	repository_file => "$REPOSITORY/HTML-Tagset-3.04.tar.gz"
     },{
 	name => 'HTML::Parser',
-	repository_file => "$REPOSITORY/HTML-Parser-3.35.tar.gz",
+	repository_file => "$REPOSITORY/HTML-Parser-3.45.tar.gz",
 	configure_module => sub {
 	    # Since libwww has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
-	    my ($path, $logfile) = @_;
+	    my ($path, $logfile,$options) = @_;
+		my $cl_options = '';
+		$cl_options = $options->{options} if $options and $options->{options};
 	    my $iwd = getcwd;  # Initial working directory
 
 	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
@@ -301,7 +312,7 @@ my @modules = (
 	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 		print $logfile "Configuring HTML::Parser\n";
 
-	    system ("perl Makefile.PL 2>&1");
+	    system ("perl Makefile.PL $cl_options 2>&1");
 	
 		if ($? == 0) {
 		print $logfile "SUCCESS CONFIGURING HTML::Parser\n";
@@ -324,14 +335,16 @@ my @modules = (
 #	    # Since libwww has an interactive configure script we need to
 #	    # implement a custom configure_module () subroutine that allows
 #	    # for an interactive install
-#	    my ($path, $logfile) = @_;
+#	    my ($path, $logfile, $options) = @_;
+#       my $cl_options = '';
+#       $cl_options = $options->{options} if $options and $options->{options};
 #	    my $iwd = getcwd;  # Initial working directory
 #
 #	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 #
 #	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 #
-#		my @output = `perl Makefile.PL -n 2>&1`;
+#		my @output = `perl Makefile.PL $cl_options -n 2>&1`;
 #	
 #		if ($? == 0) {
 #		print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
@@ -362,15 +375,17 @@ my @modules = (
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
 
-	    my ($path, $logfile) = @_;
+	    my ($path, $logfile, $options) = @_;
+		my $cl_options = '';
+		$cl_options = $options->{options} if $options and $options->{options};
 	    my $iwd = getcwd;  # Initial working directory
 
 	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
 	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-		print $logfile "USING PERL CONFIGURE SCRIPT -- 'yes | perl Makefile.PL 2>&1'\n";
-		my @output = `yes | perl Makefile.PL 2>&1`;
+		print $logfile "USING PERL CONFIGURE SCRIPT -- 'yes | perl Makefile.PL $cl_options 2>&1'\n";
+		my @output = `yes | perl Makefile.PL $cl_options 2>&1`;
 		if ($? == 0) {
 			print $logfile "SUCCESS -- OUTPUT: \"@output\"\n\n";
 	
@@ -383,6 +398,9 @@ my @modules = (
 	
 		return 0;
 	},
+    },{
+	name => 'XML::NamespaceSupport',
+	repository_file => "$REPOSITORY/XML-NamespaceSupport-1.09.tar.gz",
     },{
 	name => 'XML::Sax',
 	repository_file => "$REPOSITORY/XML-SAX-0.12.tar.gz",
@@ -401,22 +419,32 @@ my @modules = (
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
 
-	    my ($path, $logfile) = @_;
+	    my ($path, $logfile, $options) = @_;
+		my $cl_options = '';
+		$cl_options = $options->{options} if $options and $options->{options};
 	    my $iwd = getcwd;  # Initial working directory
 
 	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
 	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-	    system ("perl Makefile.PL 2>&1");
-
-	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
-
-	    return 1;
+		print $logfile "USING PERL CONFIGURE SCRIPT -- 'yes | perl Makefile.PL $cl_options 2>&1'\n";
+		my @output = `yes | perl Makefile.PL $cl_options 2>&1`;
+		if ($? == 0) {
+			print $logfile "SUCCESS -- OUTPUT: \"@output\"\n\n";
+	
+			chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+			return 1;
+		}
+	
+		print $logfile "FAILURE -- OUTPUT: \"@output\"\n\n";
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+	
+		return 0;
 	}
     },{
 	name => 'XML::LibXML::Common',
-	repository_file => "$REPOSITORY/XML-LibXML-Common-0.12.tar.gz"
+	repository_file => "$REPOSITORY/XML-LibXML-Common-0.13.tar.gz"
     },{
 	name => 'XML::LibXML',
 	repository_file => "$REPOSITORY/XML-LibXML-1.58.tar.gz",
@@ -434,27 +462,29 @@ my @modules = (
 	repository_file => "$REPOSITORY/XML-Parser-2.34.tar.gz",
     },{
 	name => 'SOAP::Lite',
-	repository_file => "$REPOSITORY/SOAP-Lite-0.55.tar.gz",
+	repository_file => "$REPOSITORY/SOAP-Lite-0.60.tar.gz",
 	valid_versions => ['ge "0.55"'],
 	configure_module => sub {
 	    # Since SOAP::Lite has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
 
-	    my ($path, $logfile) = @_;
+	    my ($path, $logfile, $options) = @_;
+		my $cl_options = '';
+		$cl_options = $options->{options} if $options and $options->{options};
 	    my $iwd = getcwd;  # Initial working directory
 
 	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
 	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
-	    system ("perl Makefile.PL --noprompt --HTTP-Apache --HTTP-Daemon --noMAILTO-Client --noHTTP-FCGI --noMQ --noJABBER --noMIMEParser 2>&1");
+	    system ("perl Makefile.PL $cl_options --noprompt --HTTP-Apache --HTTP-Daemon --noMAILTO-Client --noHTTP-FCGI --noMQ --noJABBER --noMIMEParser 2>&1");
 	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
 
 	    return 1;
 	}
     },{
 	name => 'XML::LibXSLT',
-	repository_file => "$REPOSITORY/XML-LibXSLT-1.57.tar.gz",
+	repository_file => "$REPOSITORY/XML-LibXSLT-1.58.tar.gz",
      },{
 	name => 'OLE::Storage_Lite',
 	repository_file => "$REPOSITORY/OLE-Storage_Lite-0.14.tar.gz",
@@ -527,8 +557,10 @@ sub install {
 
     # Configure
     print "    \\_ Configuring ";
-    $retval = &{$module->{configure_module}}($wd,$LOGFILE) if exists $module->{configure_module};
-    $retval = configure_module ($wd, $LOGFILE) unless exists $module->{configure_module};
+    $retval = &{$module->{configure_module}}($wd,$LOGFILE, {options => $PERL_MAKEFILE_PL_CL_OPTIONS})
+    	if exists $module->{configure_module};
+    $retval = configure_module ($wd, $LOGFILE, {options => $PERL_MAKEFILE_PL_CL_OPTIONS})
+    	unless exists $module->{configure_module};
     
     print BOLD, "[FAILURE]", RESET, ".\n"
         and croak "Unable to configure module, see $LOGFILE_NAME for details."
@@ -632,6 +664,8 @@ sub execute {
 			if exists $module->{get_module_version};
 		$module->{version} = get_module_version($module->{name})
 			unless $module->{version}; 
+
+		install ($module) if $FORCE_INSTALL;
 
 		if (not $module->{version}) {
 			# Log the error returned by get_module_version()
