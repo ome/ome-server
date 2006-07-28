@@ -60,10 +60,10 @@ my $REPOSITORY = "http://openmicroscopy.org/packages/perl";
 my @modules = (
     {
 	name => 'Term::ReadKey',
-	repository_file => "$REPOSITORY/TermReadKey-2.21.tar.gz"
+	repository_file => "$REPOSITORY/TermReadKey-2.30.tar.gz"
  	},{
 	name => 'Storable',
-	repository_file => "$REPOSITORY/Storable-1.0.13.tar.gz"
+	repository_file => "$REPOSITORY/Storable-2.15.tar.gz"
    	}
 );
 
