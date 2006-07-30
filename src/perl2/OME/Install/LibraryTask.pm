@@ -500,10 +500,6 @@ sub execute {
     foreach my $library (@libraries) {
 		print "  \\_ $library->{name}";
 
-		my @error;
-
-		# Pre-install
-		&{$library->{pre_install}}($library,$LOGFILE) if exists $library->{pre_install};
 
 		# Exceptions
 		if (exists $library->{exception} and &{$library->{exception}}) {
@@ -511,43 +507,13 @@ sub execute {
 	    	next;
 		}
 
-		# If getting the library version requires a subroutine execute it
-		if (ref ($library->{get_library_version}) eq 'CODE') {
-	    	$library->{version} = &{$library->{get_library_version}};
-		} else {
-	    	# We need to compile some source in order to get our library version
-	    	my $binary = "$INSTALL_HOME/$library->{name}_check";
-	    	my $source_file = $binary.".c";
+		my $error = get_lib_version ($library);
+		print "Error: $error\n" if $error;
 
-	    	open (my $CHECK_C, ">", $source_file)
-				or croak "Unable to create version check source file for \"$library->{name}\" $!";
-			print $CHECK_C ($library->{get_library_version}, "\n"); 
-	    	close ($CHECK_C);
-
-	    	$CC = whereis ("compiler") unless which ("$CC");
-	    	my $finkIncs = '';
-	    	$finkIncs = '-I/sw/include'
-	    		if( $OSNAME eq "darwin" and -e '/sw/include/' );
-	    	my $darwinPortsIncs = '';
-	    	$darwinPortsIncs = '-I/opt/local/include'
-	    		if( $OSNAME eq "darwin" and -e '/opt/local/include/' );	    	
-			@error = `$CC $finkIncs $darwinPortsIncs $source_file -o $binary 2>&1`;
-	    	if ($? == 0) {
-				$library->{version} = `$binary 2>&1`;
-	    
-	    		if ($?) {
-	    			unlink ($source_file);
-	    			unlink ($binary);
-					croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}";
-	    		}
-	    	}
-			unlink ($source_file);
-			unlink ($binary);
-		}
 
 		if (not $library->{version}) {
 	    	# Log the error returned by get_library_version ()
-	    	print $LOGFILE "ERRORS LOADING LIBRARY \"$library->{name}\" -- OUTPUT: \"", $@ || @error, "\"\n\n";
+	    	print $LOGFILE "ERRORS LOADING LIBRARY \"$library->{name}\" -- OUTPUT: \"", $@ || $error, "\"\n\n";
 
 	    	print BOLD, " [NOT INSTALLED]", RESET, ".\n";
 
@@ -616,6 +582,10 @@ sub check {
     # chdir into our INSTALL_HOME
     chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
 
+    # Get our logfile and open it for writing
+    open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
+		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\". $!";
+
     #*********
     #********* Check each module (exceptions then version)
     #*********
@@ -623,55 +593,15 @@ sub check {
     foreach my $library (@libraries) {
 		print "  \\_ $library->{name}";
 
-		my @error;
-
-		# Pre-install
-		&{$library->{pre_install}}($library,$LOGFILE) if exists $library->{pre_install};
 
 		# Exceptions
 		if (exists $library->{exception} and &{$library->{exception}}) {
 	    	print BOLD, " [OK]", RESET, ".\n";
 	    	next;
 		}
-
-		# If getting the library version requires a subroutine execute it
-		if (ref ($library->{get_library_version}) eq 'CODE') {
-	    	$library->{version} = &{$library->{get_library_version}};
-		} else {
-	    	# We need to compile some source in order to get our library version
-	    	my $binary = "$INSTALL_HOME/$library->{name}_check";
-	    	my $source_file = $binary.".c";
-
-	    	open (my $CHECK_C, ">", $source_file)
-				or croak "Unable to create version check source file for \"$library->{name}\" $!";
-			print $CHECK_C ($library->{get_library_version}, "\n"); 
-	    	close ($CHECK_C);
-
-	    	my $finkIncs = '';
-	    	$finkIncs = '-I/sw/include'
-	    		if( $OSNAME eq "darwin" and -e '/sw/include/' );
-	    	my $darwinPortsIncs = '';
-	    	$darwinPortsIncs = '-I/opt/local/include'
-	    		if( $OSNAME eq "darwin" and -e '/opt/local/include/' );
-	    	my $incs = '';
-	    	$incs = $library->{cflags} if exists $library->{cflags};
-	    	my $libs = '';
-	    	$libs = $library->{ldflags} if exists $library->{ldflags};
-	    	
-			@error = `$CC $finkIncs $darwinPortsIncs $incs $libs $source_file -o $binary 2>&1`;
-
-	    	if ($? == 0) {
-				$library->{version} = `$binary 2>&1`;
-	    
-	    		if ($?) {
-	    			unlink ($source_file);
-	    			unlink ($binary);
-					croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}";
-	    		}
-	    	} else {print "Error: @error\n";}
-			unlink ($source_file);
-			unlink ($binary);
-		}
+		
+		my $error = get_lib_version ($library);
+		print "Error: $error\n" if $error;
 
 		if (not $library->{version}) {
 	    	# Log the error returned by get_library_version ()
@@ -698,6 +628,8 @@ sub check {
 			$bad_libraries = 1;
 		}
 	}
+	
+	close ($LOGFILE);
 
 	print "\n";  #Spacing
 
@@ -706,6 +638,58 @@ sub check {
 
 	return 1 unless $bad_libraries;
 	return 0;
+}
+
+sub get_lib_version {
+my $library = shift;
+my @error;
+
+	# Pre-install
+	&{$library->{pre_install}}($library,$LOGFILE) if exists $library->{pre_install};
+
+	# If getting the library version requires a subroutine execute it
+	if (ref ($library->{get_library_version}) eq 'CODE') {
+		$library->{version} = &{$library->{get_library_version}};
+	} else {
+		# We need to compile some source in order to get our library version
+		my $binary = "$INSTALL_HOME/$library->{name}_check";
+		my $source_file = $binary.".c";
+
+		open (my $CHECK_C, ">", $source_file)
+			or croak "Unable to create version check source file for \"$library->{name}\" $!";
+		print $CHECK_C ($library->{get_library_version}, "\n"); 
+		close ($CHECK_C);
+
+		my $finkIncs = '';
+		$finkIncs = '-I/sw/include'
+			if( $OSNAME eq "darwin" and -e '/sw/include/' );
+		my $darwinPortsIncs = '';
+		$darwinPortsIncs = '-I/opt/local/include'
+			if( $OSNAME eq "darwin" and -e '/opt/local/include/' );
+		my $incs = '';
+		$incs = $library->{cflags} if exists $library->{cflags};
+		my $libs = '';
+		$libs = $library->{ldflags} if exists $library->{ldflags};
+		
+		@error = `$CC $finkIncs $darwinPortsIncs $incs $libs $source_file -o $binary 2>&1`;
+		print $LOGFILE "executing: $CC $finkIncs $darwinPortsIncs $incs $libs $source_file -o $binary 2>&1\n" if $LOGFILE;
+
+		if ($? == 0) {
+			$library->{version} = `$binary 2>&1`;
+			print $LOGFILE "got: $library->{version}\n" if $LOGFILE;
+	
+			if ($?) {
+				unlink ($source_file);
+				unlink ($binary);
+				croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}";
+			}
+			@error = ();
+		}
+		unlink ($source_file);
+		unlink ($binary);
+	}
+	return (join ("\n",@error)) if scalar (@error);
+	return undef;
 }
 
 1;
