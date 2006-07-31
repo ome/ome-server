@@ -109,6 +109,24 @@
 				DBLocation="MATLAB_TEST_10.ELEMENT_1"  
 				DataType="double"/>
 		</SemanticType>
+		<SemanticType Name="PlusInf" AppliesTo="I">
+			<Element 
+				Name="PlusInf" 
+				DBLocation="MATLAB_TEST_21.PLUS_INF"  
+				DataType="double"/>
+		</SemanticType>
+		<SemanticType Name="MinusInf" AppliesTo="I">
+			<Element 
+				Name="MinusInf" 
+				DBLocation="MATLAB_TEST_22.MINUS_INF"  
+				DataType="double"/>
+		</SemanticType>
+		<SemanticType Name="NotANumber" AppliesTo="I">
+			<Element 
+				Name="NotANumber" 
+				DBLocation="MATLAB_TEST_23.NotANumber"  
+				DataType="double"/>
+		</SemanticType>
 		
 		<!-- Matlab Test Input STs -->
 		<SemanticType Name="StringTest_class" AppliesTo="I">
@@ -200,7 +218,10 @@
 			<FormalOutput Name="Vector Test 2_b" SemanticTypeName="VectorTest2_b" Count="!"/>
 			<FormalOutput Name="Vector Test 2_c" SemanticTypeName="VectorTest2_c" Count="!"/>
 			
-			<FormalOutput Name="Pixel Test"      SemanticTypeName="Pixels" Count="!"/>
+			<FormalOutput Name="Pixel Test"      SemanticTypeName="Pixels"   Count="!"/>
+			<FormalOutput Name="+Inf Test"       SemanticTypeName="PlusInf"  Count="!"/>
+			<FormalOutput Name="-Inf Test"       SemanticTypeName="MinusInf" Count="!"/>
+			<FormalOutput Name="NaN Test"        SemanticTypeName="NotANumber" Count="!"/>
 			
 		  </Declaration>
 		
@@ -216,6 +237,9 @@
 				<Output><Vector DecodeWith="Vector Test 1"/></Output>
 				<Output><Vector DecodeWith="Vector Test 2"/></Output>
 				<Output><PixelsArray FormalOutput="Pixel Test"/></Output>
+				<Output><Scalar OutputLocation="+Inf Test.PlusInf"/></Output>
+				<Output><Scalar OutputLocation="-Inf Test.MinusInf"/></Output>
+				<Output><Scalar OutputLocation="NaN Test.NotANumber"/></Output>
 			<!--	<Output><Struct DecodeWith="Circle Struct"/></Output> -->
 			</FunctionOutputs>
 			
