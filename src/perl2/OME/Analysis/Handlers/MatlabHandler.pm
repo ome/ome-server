@@ -431,8 +431,14 @@ sub _getScalarFromMatlab {
 
 sub _trimNumeric {
 	my ($self, $value, $class) = @_;
+
+	# Don't do trimming on NaNs. Perl v 5.8.6 on OS X & Fedora core 4 doesn't 
+	# have numeric support for NaNs, so string equality "eq" is a valid test 
+	# here, and numeric equality "==" gives wrong answers.
+	# See also: http://perldoc.perl.org/perlop.html#Equality-Operators-equality-equal-equals-operator%2c-equality
+	return $value if( $value eq NaN );
 	
-	# Trimming required to avoid overflow and underflow problems with Postgress
+	# Trimming required to avoid overflow and underflow problems with Postgress	
 	if( $class eq $mxDOUBLE_CLASS) {
 		if( abs( $value ) < $_numerical_constants{min_double} ) {
 			$value = 0;
