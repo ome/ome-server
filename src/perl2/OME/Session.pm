@@ -355,7 +355,7 @@ sub __destroySession {
 # To execute something at the end of each request, put it in an END block
 DESTROY {
 	if ($__soleInstance) {
-    	$__soleInstance->__destroySession();
+    	$__soleInstance->__destroySession(1);
 		$__soleInstance = undef;
 	}
 }
