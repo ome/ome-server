@@ -44,6 +44,14 @@
 function [cc2] = ChebyshevTransform(Im,N);
 if nargin < 2 N = min(size(Im)); end
 
+% If the input is a single datatype, cast it into a double during computation
+% to reduce rounding errors
+singleInput = 0;
+if( strcmp( class( Im ), 'single' ) )
+	singleInput = 1;
+	Im = double( Im );
+end;
+
 packYes=0; recYes=0;
 [m,n]=size(Im);x=1:n;y=1:m;
 x=2.*x./max(x)-1;  y=2.*y./max(y)-1;
@@ -52,6 +60,13 @@ cc2 = getChCoeff(getChCoeff(Im,x,N)',y,N);
 if ~recYes,im2=[];else,im2=(recImg(x,N,recImg(y,N,cc2')'))';end
     % pack up coeff in 'Chebyshev space'
 if packYes, [cc2_packed] = hist(cc2(:),30); cc2=cc2_packed'; end
+
+% Cast the output back into a single if we expanded to double to reduce 
+% rounding errors
+if( singleInput )
+	cc2 = single( cc2 );
+end;
+
 return;
 
 %% ChebyshevTransform for 2D: coefficients
