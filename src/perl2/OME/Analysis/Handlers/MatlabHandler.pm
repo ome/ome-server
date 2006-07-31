@@ -436,7 +436,7 @@ sub _trimNumeric {
 	# have numeric support for NaNs, so string equality "eq" is a valid test 
 	# here, and numeric equality "==" gives wrong answers.
 	# See also: http://perldoc.perl.org/perlop.html#Equality-Operators-equality-equal-equals-operator%2c-equality
-	return $value if( $value eq NaN );
+	return $value if( $value eq "NaN" );
 	
 	# Trimming required to avoid overflow and underflow problems with Postgress	
 	if( $class eq $mxDOUBLE_CLASS) {
