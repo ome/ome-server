@@ -69,5 +69,5 @@ outPixels(:,:,2) = angle(inPixels);
 % Cast the output back into a single if we expanded to double to reduce 
 % rounding errors
 if( singleInput )
-	inPixels = single( inPixels );
+	outPixels = single( outPixels );
 end;
