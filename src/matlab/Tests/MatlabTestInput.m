@@ -35,8 +35,10 @@
 function [StringTest_class, BooleanTest_class, DoubleTest_class, SingleTest_class, ...
 SmallIntTest_class, IntegerTest_class, BigIntTest_class, ConvertTest_class, PixelTest_class] ...
 = MatlabTestInput(StringTest, BooleanTest, DoubleTest, SingleTest, ...
-SmallIntTest, IntegerTest, BigIntTest, ConvertTest, PixelTest)
+SmallIntTest, IntegerTest, BigIntTest, ConvertTest, PixelTest, PlusInf, MinusInf, NotANumber)
 
+DoubleTest
+SingleTest
 StringTest_class   = class(StringTest);
 BooleanTest_class  = class(BooleanTest);
 DoubleTest_class   = class(DoubleTest);
@@ -46,3 +48,7 @@ IntegerTest_class  = class(IntegerTest);
 BigIntTest_class   = class(BigIntTest);
 ConvertTest_class  = class(ConvertTest);
 PixelTest_class    = class(PixelTest);
+
+PlusInf
+MinusInf
+NotANumber

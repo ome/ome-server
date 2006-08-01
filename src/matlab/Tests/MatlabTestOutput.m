@@ -33,7 +33,7 @@
 % in all ways imaginable
 
 function [StringTest, BooleanTest, DoubleTest, SingleTest, SmallIntTest, ...
-IntegerTest, BigIntTest, VectorTest1, VectorTest2, PixelTest] = MatlabTestOutput()
+IntegerTest, BigIntTest, VectorTest1, VectorTest2, PixelTest, PlusInf, MinusInf, NotANumber] = MatlabTestOutput()
 
 StringTest = 'OME Welcomes You';
 BooleanTest = 1;
@@ -47,3 +47,7 @@ VectorTest1 = double([ 0.1 0.2 0.3]);
 VectorTest2 = [111 222 333];
 
 PixelTest = single(rand(5,5));
+
+PlusInf = 1/0;
+MinusInf = -1/0;
+NotANumber = 0/0;

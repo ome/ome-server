@@ -222,7 +222,6 @@
 			<FormalOutput Name="+Inf Test"       SemanticTypeName="PlusInf"  Count="!"/>
 			<FormalOutput Name="-Inf Test"       SemanticTypeName="MinusInf" Count="!"/>
 			<FormalOutput Name="NaN Test"        SemanticTypeName="NotANumber" Count="!"/>
-			
 		  </Declaration>
 		
 		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
@@ -279,6 +278,9 @@
 			<FormalInput Name="Integer Test"   SemanticTypeName="IntegerTest"  Count="!"/>	
 			<FormalInput Name="Big Int Test"   SemanticTypeName="BigIntTest"   Count="!"/>
 			<FormalInput Name="Pixel Test"     SemanticTypeName="Pixels"       Count="!"/>
+			<FormalInput Name="+Inf Test"      SemanticTypeName="PlusInf"      Count="!"/>
+			<FormalInput Name="-Inf Test"      SemanticTypeName="MinusInf"     Count="!"/>
+			<FormalInput Name="NaN Test"       SemanticTypeName="NotANumber"   Count="!"/>
 			
 			<FormalOutput Name="String Test Class"    SemanticTypeName="StringTest_class"   Count="!"/>	
 			<FormalOutput Name="Boolean Test Class"   SemanticTypeName="BooleanTest_class"  Count="!"/>	
@@ -303,6 +305,9 @@
 				<!-- for convert test class -->
 				<Input><Scalar InputLocation="Single Test.SingleTest" ConvertToDatatype="int32"/></Input>
 				<Input><PixelsArray FormalInput="Pixel Test"/></Input>
+				<Input><Scalar InputLocation="+Inf Test.PlusInf"/></Input>
+				<Input><Scalar InputLocation="-Inf Test.MinusInf"/></Input>
+				<Input><Scalar InputLocation="NaN Test.NotANumber"/></Input>
 			</FunctionInputs>
 			
 			<FunctionOutputs>

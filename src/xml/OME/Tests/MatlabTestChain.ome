@@ -21,6 +21,12 @@
                 ToNodeID="Matlab Test Input"     ToInputName="Big Int Test"/>
 		<Link FromNodeID="Matlab Test Output" FromOutputName="Pixel Test"
                 ToNodeID="Matlab Test Input"     ToInputName="Pixel Test"/>
-    </Links>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="+Inf Test"
+                ToNodeID="Matlab Test Input"     ToInputName="+Inf Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="-Inf Test"
+                ToNodeID="Matlab Test Input"     ToInputName="-Inf Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="NaN Test"
+                ToNodeID="Matlab Test Input"     ToInputName="NaN Test"/>         
+         </Links>
   </AnalysisChain>
 </AnalysisChains>
