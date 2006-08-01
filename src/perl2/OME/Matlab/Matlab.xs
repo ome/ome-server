@@ -40,6 +40,9 @@
 
 #include "matrix.h"
 #include "engine.h"
+
+#include "stdlib.h"
+#include "string.h"
 typedef mxArray* OME__Matlab__Array;
 typedef Engine*  OME__Matlab__Engine;
 
@@ -181,24 +184,46 @@ __mxFUNCTION_CLASS()
 MODULE = OME::Matlab	PACKAGE = OME::Matlab::Array
 
 OME::Matlab::Array
-newDoubleScalar(package,value)
-        const char *package = NO_INIT;
-        double value
+newDoubleScalar(package,value_ref)
+        SV * value_ref
+        INIT:
+	        	char* value_str;
+	   	     	STRLEN len;
+	   	     	double value;
         CODE:
-                RETVAL = mxCreateDoubleScalar(value);
+        		value_str = SvPV(value_ref,len);
+        		if (!strcmp(value_str,"NaN") ||
+        		    !strcmp(value_str,"NAN") ||
+        			!strcmp(value_str,"nan"))
+                	value = 0.0/0.0;
+                else
+                	value = atof(value_str);
+				RETVAL = mxCreateDoubleScalar(value);
         OUTPUT:
                 RETVAL
 
 OME::Matlab::Array
-newNumericScalar(package,value,classID=mxDOUBLE_CLASS)
+newNumericScalar(package,value_ref,classID=mxDOUBLE_CLASS)
         const char *package = NO_INIT;
-        double value
+        SV * value_ref;
         mxClassID classID
         INIT:
-        mxComplexity complexity= mxREAL;
-        mxArray * pArray;
-        void* pr;
+				char* value_str;
+				STRLEN len;
+				double value;
+				
+				mxComplexity complexity= mxREAL;
+				mxArray * pArray;
+				void* pr;
         CODE:
+				value_str = SvPV(value_ref,len);
+        		if (!strcmp(value_str,"NaN") ||
+        		    !strcmp(value_str,"NAN") ||
+        			!strcmp(value_str,"nan"))
+                	value = 0.0/0.0;
+                else
+                	value = atof(value_str);
+                	
                 pArray = mxCreateNumericMatrix(1,1,classID, complexity);
                 pr = mxGetData(pArray);
                 switch (classID)
@@ -229,6 +254,8 @@ newNumericScalar(package,value,classID=mxDOUBLE_CLASS)
                         break;
                     case mxDOUBLE_CLASS:
                         ((double *) pr)[0] = (double) value;
+                        
+                        ((double *) pr)[0] = 0/0;
                         break;
                     default:
                         croak("cannot call newNumericScalar on a non-numeric/non-logical array");
@@ -692,7 +719,12 @@ set(pArray,...)
         INIT:
                 int * subs;
                 int numsubs, numdims, i, cid, index;
+                
+                SV* value_ref;
+                char* value_str;
+                STRLEN len;
                 double value;
+                
                 void * pr;
 
                 if (items < 3)
@@ -713,8 +745,15 @@ set(pArray,...)
                 for (i = 0; i < numsubs; i++)
                     subs[i] = (int) SvIV(ST(i+1));
 
-                value = (double) SvNV(ST(items-1));
-
+                value_ref = ST(items-1);
+                value_str = SvPV(value_ref,len);
+        		if (!strcmp(value_str,"NaN") ||
+        		    !strcmp(value_str,"NAN") ||
+        			!strcmp(value_str,"nan"))
+                	value = 0.0/0.0;
+                else
+                	value = atof(value_str);
+                	
                 cid = mxGetClassID(pArray);
                 index = mxCalcSingleSubscript(pArray,numsubs,subs);
                 pr = mxGetData(pArray);
