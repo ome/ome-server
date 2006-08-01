@@ -22,7 +22,6 @@ my @classifierFiles = (
 "OME/Analysis/Maths/Gradient.ome",
 
 # Modules for computing Feature Statistics
-"OME/Analysis/Segmentation/GlobalThreshold.ome",
 "OME/Analysis/Segmentation/OtsuGlobalThreshold.ome",
 
 # Transform Modules

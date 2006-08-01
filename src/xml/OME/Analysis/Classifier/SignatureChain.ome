@@ -25,7 +25,9 @@
       <Node NodeID="Fourier Transform" ProgramName="Fourier Transform" IteratorTag="ROI"/>
       <Node NodeID="FrequencySpace -&gt; DerivedPixels" ProgramName="FrequencySpace -&gt; DerivedPixels" IteratorTag="ROI"/>
       <Node NodeID="Gabor Texture Filters" ProgramName="Gabor Texture Filters" IteratorTag="ROI"/>
-      <Node NodeID="Global Threshold" ProgramName="Global Threshold" IteratorTag="ROI"/>
+      
+      <Node NodeID="Otsu's Global Threshold" ProgramName="Otsu's Global Threshold" IteratorTag="ROI"/>
+      
       <Node NodeID="Gradient" ProgramName="Gradient" IteratorTag="ROI"/>
       <Node NodeID="Haralick Textures 2D Rotation Invariant 1" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
       <Node NodeID="Haralick Textures 2D Rotation Invariant 2" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
@@ -39,7 +41,6 @@
       <Node NodeID="Multi-Scale Histograms 4" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
       <Node NodeID="Multi-Scale Histograms 5" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
       <Node NodeID="Multi-Scale Histograms" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
-      <Node NodeID="Otsu's Method" ProgramName="Otsu's Method" IteratorTag="ROI"/>
       <Node NodeID="Radon Transform 4 Angles 1" ProgramName="Radon Transform 4 Angles" IteratorTag="ROI"/>
       <Node NodeID="Radon Transform 4 Angles 2" ProgramName="Radon Transform 4 Angles" IteratorTag="ROI"/>
       <Node NodeID="Radon Transform 4 Angles 3" ProgramName="Radon Transform 4 Angles" IteratorTag="ROI"/>
@@ -73,8 +74,7 @@
       <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Chebyshev Statistics" ToInputName="Pixels"/>
       <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Chebyshev Transform" ToInputName="Pixels"/>
       <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Gradient" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Otsu's Method" ToInputName="Pixels"/>
-      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Global Threshold" ToInputName="Pixels"/>
+      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Otsu's Global Threshold" ToInputName="Pixels"/>
       <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Fourier Transform" ToInputName="Pixels"/>
       <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Gabor Texture Filters" ToInputName="Pixels"/>
       <Link FromNodeID="Haralick Textures 2D Rotation Invariant" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher" ToInputName="HaralickTexturesRI((im)).CoOcMat_AngularSecondMoment_RI"/>
@@ -91,7 +91,7 @@
       <Link FromNodeID="Haralick Textures 2D Rotation Invariant" FromOutputName="First Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="HaralickTexturesRI((im)).CoOcMat_FirstMeasureOfCorrelation_RI"/>
       <Link FromNodeID="Haralick Textures 2D Rotation Invariant" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher" ToInputName="HaralickTexturesRI((im)).CoOcMat_SecondMeasureOfCorrelation_RI"/>
       <Link FromNodeID="Haralick Textures 2D Rotation Invariant" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher" ToInputName="HaralickTexturesRI((im)).CoOcMat_MaximalCorrelationCoefficient_RI"/>
-      <Link FromNodeID="Global Threshold" FromOutputName="Binary Mask" ToNodeID="Feature Statistics" ToInputName="Binary Mask"/>
+      <Link FromNodeID="Otsu's Global Threshold" FromOutputName="Binary Mask" ToNodeID="Feature Statistics" ToInputName="Binary Mask"/>
       <Link FromNodeID="Feature Statistics" FromOutputName="Count" ToNodeID="Signature Stitcher" ToInputName="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureCount"/>
       <Link FromNodeID="Feature Statistics" FromOutputName="Euler" ToNodeID="Signature Stitcher" ToInputName="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureEuler"/>
       <Link FromNodeID="Feature Statistics" FromOutputName="Centroid" ToNodeID="Signature Stitcher" ToInputName="FeatureStatistics(GlobalThreshold(graythresh((im)))).FeatureCentroid"/>
@@ -193,7 +193,6 @@
       <Link FromNodeID="Chebyshev Fourier Statistics" FromOutputName="Chebyshev Fourier Coefficient Histogram" ToNodeID="Signature Stitcher" ToInputName="ChebyshevFourierTransform((im)).ChebyshevFourierCoefficientHistogram"/>
       <Link FromNodeID="Tamura Textures" FromOutputName="Tamura Textures" ToNodeID="Signature Stitcher" ToInputName="TamuraTextures((im)).TamuraTextures"/>
       <Link FromNodeID="Gabor Texture Filters" FromOutputName="Gabor Texture Filters" ToNodeID="Signature Stitcher" ToInputName="GaborTextureFilters((im)).GaborTextureFilters"/>
-      <Link FromNodeID="Otsu's Method" FromOutputName="Threshold Level" ToNodeID="Global Threshold" ToInputName="Threshold Level"/>
       <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels 1" ToInputName="Wavelet Coefficients Level 1"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Multi-Scale Histograms 4" ToInputName="Pixels"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Comb First 4 Moments 4" ToInputName="Pixels"/>

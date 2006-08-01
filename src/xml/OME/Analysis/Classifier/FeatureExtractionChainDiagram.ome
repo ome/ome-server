@@ -56,8 +56,7 @@
 			<Node NodeID="Gradient"       ProgramName="Gradient"/>
 			
 			<!-- Modules for computing Feature Statistics -->
-			<Node NodeID="OtsusMethod"       ProgramName="Otsu's Method"/>
-			<Node NodeID="GlobalThreshold"   ProgramName="Global Threshold"/>
+			<Node NodeID="OtsusGlobalThreshold"   ProgramName="Otsu's Global Threshold"/>
 	
 			<!-- Transform Modules -->
 			<Node NodeID="FourierTransform" ProgramName="Fourier Transform"/>
@@ -115,15 +114,9 @@
 			<!-- Binary Mask arc into Feature Statistics -->
 			<Link
 				FromNodeID="ROI" FromOutputName="Image ROIs"
-				ToNodeID="OtsusMethod" ToInputName="Pixels"/>
+				ToNodeID="OtsusGlobalThreshold" ToInputName="Pixels"/>
 			<Link
-				FromNodeID="OtsusMethod" FromOutputName="Threshold Level"
-				ToNodeID="GlobalThreshold" ToInputName="Threshold Level"/>
-			<Link
-				FromNodeID="ROI" FromOutputName="Image ROIs"
-				ToNodeID="GlobalThreshold" ToInputName="Pixels"/>
-			<Link
-				FromNodeID="GlobalThreshold" FromOutputName="Binary Mask"
+				FromNodeID="OtsusGlobalThreshold" FromOutputName="Binary Mask"
 				ToNodeID="FeatureStatistics" ToInputName="Binary Mask"/>
 				
 			<!-- Fourier arc into Signatures -->

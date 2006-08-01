@@ -33,12 +33,36 @@
 -->
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		 <SemanticType Name="ThresholdLevel" AppliesTo="F">
+			<Description>The gray-level pixel intensity used to threshold an image into the black
+			and white pixels. The ThresholdLevel must be a floating point precision number 
+			between 0 and 1.
+			</Description>
+			<Element
+				Name="ThresholdLevel"
+				DBLocation="IMAGE_THRESHOLD_LEVEL.THRESHOLD_LEVEL"
+				DataType="double"/>
+		</SemanticType>
+		
+		<SemanticType Name="BinaryMask" AppliesTo="F">
+			<Description> After Global Thresholding, the resulting Pixels are binary. The 
+			high bit represents the foreground.
+			</Description>
+			<Element 
+				Name="Parent"
+				DBLocation="IMAGE_BINARY_MASK.BINARY_MASK"
+				DataType="reference"
+				RefersTo="Pixels"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>
+	
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
-		   ModuleName="Otsu's Method"
+		   ModuleName="Otsu's Global Threshold"
 		   Category="Segmentation"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="graythresh"
+		   ProgramID="OtsuGlobalThreshold"
 		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7601">
 		  <Description>
@@ -55,7 +79,12 @@
 				SemanticTypeName="ThresholdLevel"
 				IBelongTo="[Iterator]"
 				Count="!"/>	
-		  </Declaration>
+			<FormalOutput
+				Name="Binary Mask"
+				SemanticTypeName="BinaryMask"
+				IBelongTo="[Iterator]" 
+				Count="!"/>
+		   </Declaration>
 		
 		   <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
@@ -63,6 +92,10 @@
 			</FunctionInputs>
 			<FunctionOutputs>
 			  <Output><Scalar OutputLocation="Threshold Level.ThresholdLevel"/></Output>
+			  <!-- the output pixels are binary. However, we cannot encode binary images in OMEIS
+				   directly (i.e. as a single bit per pixel). We store them as 8 bit because 
+				   that's the most space-efficient allowable encoding mechanism.  -->
+			  <Output><PixelsArray FormalOutput="Binary Mask" ConvertToDatatype="uint8"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
