@@ -67,6 +67,7 @@ use OME::Analysis::Handler;
 use OME::Session;
 use OME::ModuleExecution;
 use OME::Install::Environment;
+#use Devel::Peek; # for debugging the OME::Matlab XS library
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 #use fields qw(__engine __engineOpen);
@@ -436,8 +437,10 @@ sub _trimNumeric {
 	# have numeric support for NaNs, so string equality "eq" is a valid test 
 	# here, and numeric equality "==" gives wrong answers.
 	# See also: http://perldoc.perl.org/perlop.html#Equality-Operators-equality-equal-equals-operator%2c-equality
-	return $value if( $value eq "NaN" );
-	
+	return "$value" if( "$value" eq "nan" or
+						"$value" eq "NaN" or
+						"$value" eq "NAN");
+
 	# Trimming required to avoid overflow and underflow problems with Postgress	
 	if( $class eq $mxDOUBLE_CLASS) {
 		if( abs( $value ) < $_numerical_constants{min_double} ) {
