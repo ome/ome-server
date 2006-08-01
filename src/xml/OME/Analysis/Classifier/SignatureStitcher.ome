@@ -46,7 +46,7 @@
   <AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
     <AnalysisModule
     	ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher"
-    	Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:9999"
+    	Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:7900"
     	ModuleName="Signature Stitcher"
     	ProgramID="">
       <Description> 
