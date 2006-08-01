@@ -254,8 +254,6 @@ newNumericScalar(package,value_ref,classID=mxDOUBLE_CLASS)
                         break;
                     case mxDOUBLE_CLASS:
                         ((double *) pr)[0] = (double) value;
-                        
-                        ((double *) pr)[0] = 0/0;
                         break;
                     default:
                         croak("cannot call newNumericScalar on a non-numeric/non-logical array");
