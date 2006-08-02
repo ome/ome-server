@@ -93,7 +93,6 @@ Options:
   -c  Compress the output file. 
   
 USAGE
-    CORE::exit(1);
 }
 
 

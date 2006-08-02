@@ -48,8 +48,6 @@ use OME::Tasks::ModuleExecutionManager;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
-
-
 sub getCommands {
     return
       {
@@ -76,11 +74,10 @@ Options:
 	-u all          		Update all template directories.
 	-u Display/One  		Update the Display/One directory
 	-u Display/Many 		Update the Display/Many directory
-	-u Actions/Annotator	Update the Actions/Annotator directory
-	-u Browse				Update the Browse directory
+	-u Actions/Annotator    Update the Actions/Annotator directory
+	-u Browse               Update the Browse directory
 
 USAGE
-    CORE::exit(1);
 }
 
 

@@ -110,7 +110,6 @@ Options:
     Enable DBObject caching.
 
 USAGE
-    CORE::exit(1);
 }
 
 sub execute {

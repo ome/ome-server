@@ -83,7 +83,6 @@ Options:
   --no_compress  Do not compress the output file. (disabled by default)
   
 USAGE
-    CORE::exit(1);
 }
 
 

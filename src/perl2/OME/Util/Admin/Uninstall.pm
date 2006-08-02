@@ -87,7 +87,6 @@ Options:
       
   -a This flag signals to remove everything. 
 USAGE
-    CORE::exit(1);
 }
 
 sub uninstall {

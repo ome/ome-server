@@ -98,7 +98,6 @@ Options:
       XML files.
         
 USAGE
-    CORE::exit(1);
 }
 
 

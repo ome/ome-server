@@ -119,7 +119,6 @@ Options:
   -p, --keep-pixels Keep orphaned OMEIS Pixels.
   -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
 CMDS
-    CORE::exit(1);
 }
 
 
@@ -219,7 +218,6 @@ Options:
   -p, --keep-pixels Keep orphaned OMEIS Pixels.
   -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
 CMDS
-    CORE::exit(1);
 }
 
 

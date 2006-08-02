@@ -84,7 +84,7 @@ sub spreadsheet_importer {
     die "Flag not supported. Inform Tom Macura\n" if $noop;
 	
 	$file = $ARGV[0] if (scalar @ARGV);
-	$self->spreadsheet_help($commands) if (not defined $file);
+	$self->spreadsheet_importer_help($commands) if (not defined $file);
    			   
 	my $results = OME::Util::Annotate::SpreadsheetReader->processFile($file);
 	my $output;
@@ -100,7 +100,7 @@ sub spreadsheet_importer {
 	print "$output";
 }
 
-sub spreadsheet_help {
+sub spreadsheet_importer_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
     my $command_name = $self->commandName($commands);
@@ -114,14 +114,13 @@ This command parses Excel or tsv spreadsheets (e.g. created by the OME
 annotation wizards) to create bulk annotations.
 
 Options:
-	 -f, --file
-	 The Excel or tsv spreadsheet that will be parsed to generate annotations.
+     -f, --file
+     The Excel or tsv spreadsheet that will be parsed to generate annotations.
 	 
      -n, --noop
      Do not create any annotations, just report what would be created.
      
 CMDS
-    CORE::exit(1);
 }
 1;
 

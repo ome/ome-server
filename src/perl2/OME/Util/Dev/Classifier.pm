@@ -108,8 +108,6 @@ sub getCommands {
        'stitch_chain' => 'stitch_chain',
        'compile_sigs' => 'compile_sigs',
        'compile_chain' => 'compile_chain',
-       'lint' => ['OME::Util::Dev::Lint'],
-       'export_chain_to_MATLAB' => ['OME::Util::Dev::ExportChain2MATLAB'],
       };
 }
 
@@ -157,7 +155,6 @@ Options:
     results).
     
 USAGE
-    CORE::exit(1);
 }
 
 
@@ -188,7 +185,6 @@ Options:
   -compress  Compress the output file. 
   
 USAGE
-    CORE::exit(1);
 }
 
 # constants

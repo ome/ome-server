@@ -84,7 +84,6 @@ Options:
 
   -w , --wait optional flag specifying how many seconds to wait before updating
 USAGE
-    CORE::exit(1);
 }
 
 sub top {

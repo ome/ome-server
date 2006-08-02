@@ -211,7 +211,6 @@ Options:
 	 Ignore the specified root subdirectories.
 	 
 USAGE
-    CORE::exit(1);
 }
 
 
@@ -334,7 +333,6 @@ Options:
 	 -x, --exclude
 	 Ignore the specified root subdirectories.
 USAGE
-    CORE::exit(1);
 }
 1;
 
