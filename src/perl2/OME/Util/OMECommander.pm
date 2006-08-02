@@ -45,7 +45,7 @@ sub getCommands {
     return
       {
        'admin'      => ['OME::Util::Admin::OMEAdmin'],
-       'annotate'   => ['OME::Util::Annotate::Annotate'],
+       'annotate'   => ['OME::Util::Annotate'],
        'data'       => ['OME::Util::Data::dbAdmin'],
        'dev'        => ['OME::Util::Dev'],
        'import'     => ['OME::Util::Import'],

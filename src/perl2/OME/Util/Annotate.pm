@@ -1,4 +1,4 @@
-# OME/Util/Annotate/Annotate.pm
+# OME/Util/Annotate.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::Annotate::Annotate;
+package OME::Util::Annotate;
 
 use strict;
 use OME;

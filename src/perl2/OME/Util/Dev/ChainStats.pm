@@ -1,4 +1,4 @@
-# OME/Util/ChainStats.pm
+# OME/Util/Dev/ChainStats.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -34,7 +34,7 @@
 #
 #-------------------------------------------------------------------------------
 
-package OME::Util::ChainStats;
+package OME::Util::Dev::ChainStats;
 
 use strict;
 use OME;
@@ -86,7 +86,6 @@ Options:
      print more information
 
 USAGE
-    CORE::exit(1);
 }
 
 sub chex_stats {
