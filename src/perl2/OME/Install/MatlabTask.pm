@@ -426,14 +426,6 @@ sub try_to_run_matlab_as_apache {
 	
 	# Run the test script as a cgi
 	my $url = 'http://localhost/perl2/matlab_test_script.pl';
-	print $LOGFILE "Making an HTTP::Request object for $url\n";
-	my $request = HTTP::Request->new(GET => $url);
-
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Could not generate a GET request for $url\n" and
-		croak "Could not generate a request for $url"
-	unless $request;
-
 	print $LOGFILE "Getting response from $url\n";
 	my $curl = OME::Util::cURL->new ();
 	my $response = $curl->GET($url);

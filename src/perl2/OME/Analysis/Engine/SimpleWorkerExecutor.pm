@@ -186,7 +186,7 @@ sub pressWorker {
 	my $response = $self->{UA}->GET($url);
 
 	return 1 if $self->{UA}->status() == 200;
-	logerr "pressWorker: Error pressing worker: ".$response->status_line();
+	logerr "pressWorker: Error pressing worker: ".$response;
 	# Update last_used if the responce was an error
 	# Maybe it will fix itself?
 	# This is mostly used to retry 503 - SERVER_BUSY responces at a later time.
