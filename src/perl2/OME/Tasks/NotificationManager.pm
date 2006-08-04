@@ -130,7 +130,8 @@ sub ping {
     my $tasks;
     
     $tasks = $param{tasks} if exists $param{tasks};
-    $tasks = [$class->taskFactory()->findObjects('OME::Task')] unless $tasks;
+    $tasks = [$class->taskFactory()->findObjects('OME::Task',
+    	session_id=>OME::Session->instance()->id())] unless $tasks;
 
 	foreach my $task (@$tasks) {
 		next unless $task->state() eq 'IN PROGRESS';
@@ -154,9 +155,11 @@ sub list {
     my %criteria = @_;
 
 	$class->ping();
-    $criteria{session_id} = OME::Session->instance()->ID()
+    $criteria{session_id} = OME::Session->instance()->id()
     	unless exists $criteria{session_id}
     	or  exists $criteria{session};
+
+    $criteria{__order} = '!id' unless exists $criteria{__order};
 
     return ($class->taskFactory()->findObjects('OME::Task',%criteria));
 }
