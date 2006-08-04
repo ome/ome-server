@@ -65,7 +65,7 @@ $script $command_name commands are:
     wizard           Various wizards to help users define image annotations based 
                      on their directory structure.
     spreadsheet      Command for doing bulk annotations based on Excel or tsv 
-   	                 spreadsheets (e.g. created by the OME annotation wizards) 
+                     spreadsheets (e.g. created by the OME annotation wizards) 
     help <command>   Display help information about a specific command
 
 CMDS
@@ -75,7 +75,6 @@ sub spreadsheet_importer {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
     my $command_name = $self->commandName($commands);
-    my $session = $self->getSession();
 
     my ($file, $noop);
 	GetOptions('f|file=s' => \$file,
@@ -84,8 +83,8 @@ sub spreadsheet_importer {
     die "Flag not supported. Inform Tom Macura\n" if $noop;
 	
 	$file = $ARGV[0] if (scalar @ARGV);
-	$self->spreadsheet_importer_help($commands) if (not defined $file);
-   			   
+	$self->spreadsheet_importer_help($commands) and return if (not defined $file);
+
 	my $results = OME::Util::Annotate::SpreadsheetReader->processFile($file);
 	my $output;
 	if (!ref $results) {
