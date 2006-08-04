@@ -58,22 +58,32 @@ our @DATASET_STs;
 our %DELETED_ATTRS;
 our $RECURSION_LEVEL;
 our %DELETED_MEXES;  # We shouldn't have circular dependencies here, but just in case.
+our %DELETED_IMAGES;
+our %DELETED_EXPERIMENTERS;
+our %DELETED_GROUPS;
+our %DELETED_DATASETS;
 # Analysis chain execution ids with deleted nodes (keys are ACE ids, values are hash of node ids and 'ACE' => ACE)
 our %ACS_DELETED_NODES;
 # Deleted omeis Pixels.  Keys are DB PixelIDs, values are 'Repository' and 'ImageServerID'.
 our %DELETED_PIXELS;
 # Deleted omeis Files.  Keys are DB OriginalFile IDs, values are 'Repository' and 'FileID'.
 our %DELETED_ORIGINAL_FILES;
+our %ST_REFS;
 # The GraphViz object
 our $GRAPH;
 # URL for serve.pl used for links in GraphViz
 our $WEB_UI;
+# Delete OriginalFiles attribute and MEXes if they become orphaned
+# (i.e. not used by any other MEX).
+our $DELETE_ORPHANED_OFs = 1;
 
 sub getCommands {
     return
       {
        'CHEX'    => 'DeleteCHEX',
        'MEX'     => 'DeleteMEX',
+       'Image'   => 'DeleteImage',
+       'Dataset' => 'DeleteDataset',
       };
 }
 
@@ -90,9 +100,12 @@ Usage:
     $script $command_name [command] [options]
 
 Available OME database deletion related commands are:
-    CHEX        Delete a Chain Execution and all of its descendents.
-    MEX         Delete a Module Execution and all of its descendents.
+    CHEX        Delete a Chain Execution and all of its dependencies.
+    MEX         Delete a Module Execution and all of its dependencies.
+    Image       Delete an Image and all of its dependencies.
+    Dataset     Delete a dataset and all of its dependencies, optionally deleting Images.
 CMDS
+#    ST          Delete a Semantic Type and all of its descendents.
 }
 
 sub DeleteCHEX_help {
@@ -103,7 +116,7 @@ sub DeleteCHEX_help {
     $self->printHeader();
     print <<"CMDS";
 Usage:
-    $script $command_name [<options>] [MEX_ID]+
+    $script $command_name [<options>] [CHEX_ID]+
 
 Delete one or more CHEXes and all of their descendents. This can potentially delete a lot.
 Images, Datasets, the whole lot potentially.
@@ -112,6 +125,7 @@ And once its gone, its gone.  You can only get it back from a backup.
 You do have a backup, right?
 
 Options:
+  -o, --orph        Keep orphaned Original Files even if they are not used by any other MEX
   -n, --noop        Do not delete anything, just report what would be deleted.
   -d, --delete      Actually delete the CHEX(es).  Nothing will happen unless -n or -d is specified.  
   -c, --chain       Delete all CHEXes for the specified chain (ID if numeric, otherwise by name).  
@@ -126,21 +140,25 @@ sub DeleteCHEX {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
 	my $command_name = $self->commandName($commands);
-	my ($noop,$delete,$chain_in,$keep_files,$keep_pixels,$make_graph);
+	my ($orph,$noop,$delete,$chain_in,$keep_files,$keep_pixels,$make_graph);
 
 	# Parse our command line options
-	GetOptions('noop|n!' => \$noop,
-		   'delete|d' => \$delete,
-		   'chain|c=s' => \$chain_in,
-		   'keep-files|f' => \$keep_files,
-		   'keep-pixels|p' => \$keep_pixels,
-		   'graph|g=s' => \$make_graph,
-		   );
+	GetOptions(
+		'orph|o!' => \$orph,
+		'noop|n!' => \$noop,
+		'delete|d' => \$delete,
+		'chain|c=s' => \$chain_in,
+		'keep-files|f' => \$keep_files,
+		'keep-pixels|p' => \$keep_pixels,
+		'graph|g=s' => \$make_graph,
+	);
 
 	$self->DeleteCHEX_help($commands) if (scalar(@ARGV) <= 0 and not defined $chain_in);
 	
 	$keep_files  = 1 if $noop;
 	$keep_pixels = 1 if $noop;
+	$DELETE_ORPHANED_OFs = 0 if $orph;
+
 	my $manager = OME::SessionManager->new();
     my $session = $self->getSession();
 	$FACTORY = $session->Factory();
@@ -193,6 +211,194 @@ sub DeleteCHEX {
 	$self->delete_mexes (\@MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
 }
 
+sub DeleteImage_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"CMDS";
+Usage:
+    $script $command_name [<options>] [Image ID | Name]+
+
+Delete one or more Images and all of their descendents. This can potentially delete a lot.
+Images, Datasets, the whole lot potentially.
+It is suggested to try -n first to see what will happen.
+And once its gone, its gone.  You can only get it back from a backup.
+You do have a backup, right?
+
+Options:
+  -o, --orph        Keep orphaned Original Files even if they are not used by any other MEX
+  -n, --noop        Do not delete anything, just report what would be deleted.
+  -d, --delete      Actually delete the Images.  Nothing will happen unless -n or -d is specified.  
+  -f, --keep-files  Keep orphaned OMEIS Files.  
+  -p, --keep-pixels Keep orphaned OMEIS Pixels.
+  -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
+CMDS
+}
+
+
+sub DeleteImage {
+	my ($self,$commands) = @_;
+	my $script = $self->scriptName();
+	my $command_name = $self->commandName($commands);
+	my ($orph,$noop,$delete,$keep_files,$keep_pixels,$make_graph);
+
+	# Parse our command line options
+	GetOptions(
+		'orph|o!' => \$orph,
+		'noop|n!' => \$noop,
+		'delete|d' => \$delete,
+		'keep-files|f' => \$keep_files,
+		'keep-pixels|p' => \$keep_pixels,
+		'graph|g=s' => \$make_graph,
+	);
+
+	$self->DeleteImage_help($commands) if (scalar(@ARGV) <= 0);
+	
+	$keep_files  = 1 if $noop;
+	$keep_pixels = 1 if $noop;
+	$DELETE_ORPHANED_OFs = 0 if $orph;
+	my $manager = OME::SessionManager->new();
+    my $session = $self->getSession();
+	$FACTORY = $session->Factory();
+	
+	# This is useful for debugging:
+	#$FACTORY->obtainDBH()->{AutoCommit} = 1;
+	$IMAGE_IMPORT_MODULE_ID = $session->Configuration()->image_import_module()->id();
+
+	# Get the objects
+	my @objects;
+	foreach my $arg (@ARGV) {
+		my $obj;
+		if ($arg =~ /^(\d+)$/) {
+			$obj = $FACTORY->loadObject( "OME::Image", $arg) or 
+				die "Could not load Image ID=$arg specified on the command-line.\n";
+		} else {
+			my @objs = $FACTORY->findObjects( "OME::Image", {name => $arg});
+			die "Could not load Image named '$arg' specified on the command-line.\n"
+				unless (scalar (@objs));
+			die "There is more than one image named '$arg': ".
+				join (', ',map {$_->id()} @objs)."\nPlease specify IDs\n"
+					if (scalar (@objs) > 1);
+			$obj = $objs[0];
+		}
+		push (@objects,$obj);
+		print "Retreived Image ID = ".$obj->id().", Name = ".$obj->name()."\n";
+	}
+	
+	# Get the import module(s) for each image
+	my @MEXes;
+	foreach my $obj (@objects) {
+		my @img_MEXes = $FACTORY->findObjects ('OME::ModuleExecution',{
+			image_id => $obj->id(),
+			'module_id' => $IMAGE_IMPORT_MODULE_ID,
+		});
+		push (@MEXes,@img_MEXes);
+	}
+
+	$self->delete_mexes (\@MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
+}
+
+
+
+sub DeleteDataset_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"CMDS";
+Usage:
+    $script $command_name [<options>] [Dataset ID | Name]+
+
+Delete one or more Datasets and all of their descendents. This can potentially delete a lot.
+Images, Datasets, the whole lot potentially.
+It is suggested to try -n first to see what will happen.
+And once its gone, its gone.  You can only get it back from a backup.
+You do have a backup, right?
+
+Options:
+  -i, --images      Delete all images (and their dependencies) in each dataset.
+  -o, --orph        Keep orphaned Original Files even if they are not used by any other MEX
+  -n, --noop        Do not delete anything, just report what would be deleted.
+  -d, --delete      Actually delete the Datasets.  Nothing will happen unless -n or -d is specified.  
+  -f, --keep-files  Keep orphaned OMEIS Files.  
+  -p, --keep-pixels Keep orphaned OMEIS Pixels.
+  -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
+CMDS
+}
+
+
+sub DeleteDataset {
+	my ($self,$commands) = @_;
+	my $script = $self->scriptName();
+	my $command_name = $self->commandName($commands);
+	my ($do_images,$orph,$noop,$delete,$keep_files,$keep_pixels,$make_graph);
+
+	# Parse our command line options
+	GetOptions(
+		'images|i!' => \$do_images,
+		'orph|o!' => \$orph,
+		'noop|n!' => \$noop,
+		'delete|d' => \$delete,
+		'keep-files|f' => \$keep_files,
+		'keep-pixels|p' => \$keep_pixels,
+		'graph|g=s' => \$make_graph,
+	);
+
+	$self->DeleteDataset_help($commands) if (scalar(@ARGV) <= 0);
+	
+	$keep_files  = 1 if $noop;
+	$keep_pixels = 1 if $noop;
+	$DELETE_ORPHANED_OFs = 0 if $orph;
+	my $manager = OME::SessionManager->new();
+    my $session = $self->getSession();
+	$FACTORY = $session->Factory();
+	
+	# This is useful for debugging:
+	#$FACTORY->obtainDBH()->{AutoCommit} = 1;
+	$IMAGE_IMPORT_MODULE_ID = $session->Configuration()->image_import_module()->id();
+
+	# Get the objects
+	my @objects;
+	foreach my $arg (@ARGV) {
+		my $obj;
+		if ($arg =~ /^(\d+)$/) {
+			$obj = $FACTORY->loadObject( "OME::Dataset", $arg) or 
+				die "Could not load Dataset ID=$arg specified on the command-line.\n";
+		} else {
+			my @objs = $FACTORY->findObjects( "OME::Dataset", {name => $arg});
+			die "Could not load Dataset named '$arg' specified on the command-line.\n"
+				unless (scalar (@objs));
+			die "There is more than one Dataset named '$arg': ".
+				join (', ',map {$_->id()} @objs)."\nPlease specify IDs\n"
+					if (scalar (@objs) > 1);
+			$obj = $objs[0];
+		}
+		push (@objects,$obj);
+		print "Retreived Dataset ID = ".$obj->id().", Name = ".$obj->name()."\n";
+	}
+	
+	my @MEXes;
+	if ($do_images) {
+		foreach my $obj (@objects) {
+			foreach my $image ($obj->images() ) {
+				my @img_MEXes = $FACTORY->findObjects ('OME::ModuleExecution',{
+					image_id => $image->id(),
+					'module_id' => $IMAGE_IMPORT_MODULE_ID,
+				});
+				push (@MEXes,@img_MEXes);
+			}
+		}
+	}
+
+	$self->delete_mexes (\@MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph)
+		if (scalar (@MEXes));
+	$self->delete_dataset ($_,$delete,undef) foreach @objects;
+	$session->commitTransaction() if $delete;
+}
+
 
 sub DeleteMEX_help {
     my ($self,$commands) = @_;
@@ -211,6 +417,7 @@ And once its gone, its gone.  You can only get it back from a backup.
 You do have a backup, right?
 
 Options:
+  -o, --orph        Keep orphaned Original Files even if they are not used by any other MEX
   -n, --noop        Do not delete anything, just report what would be deleted.
   -d, --delete      Actually delete the MEX(es).  Nothing will happen unless -n or -d is specified.  
   -m, --module      Delete all MEXes for the specified module (ID if numeric, otherwise by name).  
@@ -225,21 +432,24 @@ sub DeleteMEX {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
 	my $command_name = $self->commandName($commands);
-	my ($noop,$delete,$module_in,$keep_files,$keep_pixels,$make_graph);
+	my ($orph,$noop,$delete,$module_in,$keep_files,$keep_pixels,$make_graph);
 
 	# Parse our command line options
-	GetOptions('noop|n!' => \$noop,
-		   'delete|d' => \$delete,
-		   'module|m=s' => \$module_in,
-		   'keep-files|f' => \$keep_files,
-		   'keep-pixels|p' => \$keep_pixels,
-		   'graph|g=s' => \$make_graph,
-		   );
+	GetOptions(
+		'orph|o!' => \$orph,
+		'noop|n!' => \$noop,
+		'delete|d' => \$delete,
+		'module|m=s' => \$module_in,
+		'keep-files|f' => \$keep_files,
+		'keep-pixels|p' => \$keep_pixels,
+		'graph|g=s' => \$make_graph,
+	);
 
 	$self->DeleteMEX_help($commands) if (scalar(@ARGV) <= 0 and not defined $module_in);
 
 	$keep_files  = 1 if $noop;
 	$keep_pixels = 1 if $noop;
+	$DELETE_ORPHANED_OFs = 0 if $orph;
 	my $manager = OME::SessionManager->new();
     my $session = $self->getSession();
 	$FACTORY = $session->Factory();
@@ -295,13 +505,18 @@ sub delete_mexes {
 	my ($self,$MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph) = @_;
 	
 	my $session = $self->getSession();
-
+	
 	$RECURSION_LEVEL=0;
 	undef %DELETED_ATTRS;
 	undef %DELETED_MEXES;
+	undef %DELETED_IMAGES;
+	undef %DELETED_DATASETS;
+	undef %DELETED_EXPERIMENTERS;
+	undef %DELETED_GROUPS;
 	undef %ACS_DELETED_NODES;
 	undef %DELETED_PIXELS;
 	undef %DELETED_ORIGINAL_FILES;
+	undef %ST_REFS;
 
 	foreach my $MEX (@$MEXes) {		
 		
@@ -325,7 +540,6 @@ sub delete_mexes {
 	# So we do this only if the DB transaction succeeds
 	$self->cleanup_omeis($keep_files,$keep_pixels);
 	
-	undef $FACTORY;
 	undef %DELETED_ATTRS;
 	undef %DELETED_MEXES;
 	undef %ACS_DELETED_NODES;
@@ -369,6 +583,11 @@ my $mex_id;
 		$GRAPH->add_edge ($from_mex->id() => $mex_id) if $from_mex;
 	}
 
+	
+	# If the MEX is an $IMAGE_IMPORT_MEX, delete the image
+	$self->delete_image ($mex->image(),$delete,$mex)
+		if ($mex->module->id() == $IMAGE_IMPORT_MODULE_ID and $mex->image());
+
 
 	my $input;
 	my @actual_inputs = $FACTORY->
@@ -377,6 +596,7 @@ my $mex_id;
 			input_module_execution_id => $mex_id,
 			});
 	foreach $input (@actual_inputs) {
+		print $recurs_indent,"  Actual input ",$input->id(),"\n";
 		$self->delete_mex ($input->module_execution(),$delete,$mex) if $input->module_execution();
 	}
 
@@ -385,6 +605,12 @@ my $mex_id;
 	my @outputs = $mex->module()->outputs();
 	my @untyped_outputs = $mex->untypedOutputs();
 	my @parental_outputs = $mex->parentalOutputs();
+	
+	my %features;
+	my $mex_feature_tag = $mex->new_feature_tag();
+	$mex_feature_tag = $2
+		if $mex_feature_tag and $mex_feature_tag =~ /(\[Child|Sibling|Root\:)?([^:\[\]]+)(\])?$/;
+
 	my %parentals;
 	$parentals{$_->id()} = $_ foreach @parental_outputs;
 	push (@outputs,@untyped_outputs,@parental_outputs);
@@ -397,14 +623,30 @@ my $mex_id;
 			exists $parentals{$output->id()} ? '*** Parental ***' : '*** Untyped ***';
 		print $recurs_indent,"  Output = ",$o_name," (",$ST->name(),")\n";
 
-		# Get the output's attributes
-		my $attributes = OME::Tasks::ModuleExecutionManager->
-			getAttributesForMEX($mex,$ST);
-
-		# Delete all attributes - this will delete any vMexes,
-		# any references, and the mexes that generated the references.
-		foreach my $attr (@$attributes) {
-			$self->delete_attribute ($attr,$mex,$delete);
+		if ($mex->virtual_mex()) {
+			my @virtual_mex_maps = $FACTORY->findObjects('OME::ModuleExecution::VirtualMEXMap', {
+					module_execution => $mex,
+			});
+			foreach my $map (@virtual_mex_maps) {
+				print $recurs_indent,"  VirtualMEXMap to MEX ID=",$map->module_execution_id(),"\n";
+				$map->deleteObject() if $delete;
+			}
+		} else {
+			my $attributes = OME::Tasks::ModuleExecutionManager->
+				getAttributesForMEX($mex,$ST);
+			my $feature;
+			my $is_feature_output = 1 if $ST->granularity() eq 'F';
+			# Delete all attributes - this will delete any vMexes,
+			# any references, and the mexes that generated the references.
+			foreach my $attr (@$attributes) {
+				# Register a feature for deletion if this mex made it
+				if ($mex_feature_tag and $is_feature_output) {
+					$feature = $attr->feature();
+					$features{$feature->id()} = $feature
+						if $feature->tag() eq $mex_feature_tag;
+				}
+				$self->delete_attribute ($attr,$mex,$delete);
+			}
 		}
 	}
 	
@@ -419,6 +661,15 @@ my $mex_id;
 	foreach my $output (@parental_outputs) {
 		print $recurs_indent,"  Parental output ",$output->id(),"\n";
 		$output->deleteObject() if $delete;
+	}
+	
+	# Delete any Feature outputs
+	if ($mex_feature_tag) {
+		foreach my $feature (values %features) {
+			print $recurs_indent,"  Feature output ",$feature->id(),"\n";
+			$feature->deleteObject() if $delete;
+		}
+		%features = ();
 	}
 	
 	# Delete the ACE node executions
@@ -441,72 +692,65 @@ my $mex_id;
 	# @actual_inputs has actual inputs with this mex as an input mex.
 	# To these, we want to add the actual inputs produced by this module.
 	my @mex_actual_inputs = $FACTORY->
-		findObjects("OME::ModuleExecution::ActualInput",
-			{
+		findObjects("OME::ModuleExecution::ActualInput",{
 			module_execution_id => $mex_id,
 			});
 	push (@actual_inputs,@mex_actual_inputs);
+	
+
+	# Special handling is done for OriginalFile MEXes that become orphaned as a result
+	# of deleting this MEX.  Depending on passed-in parameters, if this is the last MEX
+	# fed by an OriginalFiles module, delete the mex for the OriginalFiles module as well.
+	if ($DELETE_ORPHANED_OFs) {
+		foreach $input (@mex_actual_inputs) {
+			if ($input->formal_input()->semantic_type()->name() eq 'OriginalFile') {
+				my $nOFmexes = $FACTORY->countObjects ('OME::ModuleExecution::ActualInput', {
+					'input_module_execution_id' => $input->input_module_execution_id(),
+				});
+				next unless $nOFmexes == 1;
+
+				my $orph_MEX = $input->input_module_execution();
+				my $attributes = OME::Tasks::ModuleExecutionManager->
+					getAttributesForMEX($orph_MEX ,'OriginalFile');
+				print $recurs_indent,"  Orphaned MEX ".$orph_MEX->id().": ",$orph_MEX->module()->name(),"\n";
+				$self->delete_mex ($orph_MEX,$delete,$mex);
+				foreach my $attr (@$attributes) {
+					next unless $attr and $attr->module_execution();
+					my @vMEXes = $FACTORY->findObjects('OME::ModuleExecution::VirtualMEXMap',{
+						attribute_id => $attr->id(),
+					});
+					@vMEXes = () if scalar (@vMEXes) == 1 and
+						$vMEXes[0]->module_execution_id() == $orph_MEX->id();
+					next if scalar (@vMEXes);
+
+					my @AIs = $FACTORY->findObjects('OME::ModuleExecution::ActualInput',{
+			# FIXME: 'input_module_execution.OriginalFileList.id' => $OF->id() # Doesn't work?
+						'input_module_execution.OriginalFileList.SHA1' => $attr->SHA1(),
+					});
+					next if scalar (@AIs);
+
+					my $nAttr = $FACTORY->countObjects('@OriginalFile',{
+						module_execution_id => $attr->module_execution_id(),
+					});
+					if ($nAttr > 1) {
+						print $recurs_indent,"  Orphaned Attribute ".$attr->id().": ",$orph_MEX->module()->name(),"\n";
+						$self->delete_attribute ($attr,$attr->module_execution(),$delete);
+					} elsif ($nAttr == 1) {
+						print $recurs_indent,"  Orphaned MEX ".$attr->module_execution()->id().": ",
+							$attr->module_execution()->module()->name(),"\n";
+						$self->delete_mex ($attr->module_execution(),$delete,$orph_MEX);
+					}
+					
+				}
+			}
+		}
+	}
+
 
 	# Delete actual_inputs that used this mex as an input module and those produced by this module
 	foreach $input (@actual_inputs) {
 		print $recurs_indent,"  Actual input ",$input->id(),"\n";
 		$input->deleteObject() if $delete;
-	}
-	
-	# If the MEX is an $IMAGE_IMPORT_MEX, delete the image
-	if ($mex->module->id() == $IMAGE_IMPORT_MODULE_ID and $mex->image()) {
-		my $image = $mex->image();
-		print $recurs_indent,"  Image ",$image->id()," ",$image->name(),"\n";
-
-		# First, delete all MEXes that have this image as the target.
-		my @image_mexes = $FACTORY->
-			findObjects("OME::ModuleExecution",
-				{
-				image_id => $image->id(),
-				});
-		foreach my $image_mex (@image_mexes) {
-			next if $image_mex->id() == $mex_id;
-			print $recurs_indent,"  Image MEX ",$image_mex->id(),"\n";
-			$self->delete_mex ($image_mex,$delete,$mex);
-		}
-		
-		# Next, delete any left-over image attributes that don't have this image as the target.
-		my $image_attrs = $self->get_image_attributes ($mex->image());
-		foreach my $attr (@$image_attrs) { $self->delete_attribute ($attr,$mex,$delete) ;}
-
-		# Since we're at it, we have to delete the image from the OME::Image::DatasetMap
-		my @dataset_links = $FACTORY->findObjects("OME::Image::DatasetMap",
-			{ image_id => $mex->image()->id()}
-		);
-		my @datasets;
-		foreach my $dataset_link (@dataset_links) {
-			print $recurs_indent,"    Dataset Link to ",$dataset_link->dataset()->name(),
-				", ID=",$dataset_link->dataset()->id(),"\n";
-			push (@datasets,$dataset_link->dataset());
-			$dataset_link->deleteObject() if $delete;
-		}
-		
-		# We have to delete all mexes that have this dataset as their target.
-		foreach my $dataset (@datasets) {
-			# Find all dataset mexes for this dataset
-			my @dataset_mexes = $FACTORY->
-				findObjects("OME::ModuleExecution",
-					{
-					dataset_id => $dataset->id(),
-					});
-			foreach my $dataset_mex (@dataset_mexes) {
-				next if $dataset_mex->id() == $mex_id;
-				print $recurs_indent,"      Dataset MEX ",$dataset_mex->id(),"\n";
-				$self->delete_mex ($dataset_mex,$delete,$mex);
-			}
-			
-			# Since there are no dataset mexes for this dataset, unlock it.
-			print $recurs_indent,"    Unlocking Dataset ",
-				$dataset->name(),", ID=",$dataset->id(),"\n";
-			$dataset->locked(0);
-		}
-		
-		$mex->image()->deleteObject() if $delete;
 	}
 
 	# Delete the MEX
@@ -550,6 +794,283 @@ my $mex_id;
 } # delete_mex()
 
 
+sub delete_image () {
+my $self = shift;
+my $image = shift;
+my $delete = shift;
+my $mex = shift;
+my $mex_id = defined $mex ? $mex->id() : undef;
+my $import_mex;
+
+	return if exists $DELETED_IMAGES{$image->id()};
+	$DELETED_IMAGES{$image->id()} = 0;
+	
+	my $recurs_indent='';
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
+
+	print $recurs_indent,"  Image ",$image->id()," ",$image->name(),"\n";
+
+	# First, delete all MEXes that have this image as the target.
+	my @image_mexes = $FACTORY->
+		findObjects("OME::ModuleExecution",
+			{
+			image_id => $image->id(),
+			});
+	foreach my $image_mex (@image_mexes) {
+		$import_mex = $image_mex if $image_mex->module->id() == $IMAGE_IMPORT_MODULE_ID;
+		next if $image_mex->id() == $mex_id;
+		print $recurs_indent,"  Image MEX ",$image_mex->id(),"\n";
+		$self->delete_mex ($image_mex,$delete,$mex);
+	}
+	
+	# Next, delete any left-over image attributes that don't have this image as the target.
+	my $image_attrs = $self->get_image_attributes ($image);
+	foreach my $attr (@$image_attrs) { $self->delete_attribute ($attr,$mex,$delete) ;}
+
+	# Since we're at it, we have to delete the image from the OME::Image::DatasetMap
+	my @dataset_links = $FACTORY->findObjects("OME::Image::DatasetMap",
+		{ image_id => $image->id()}
+	);
+	my @datasets;
+	foreach my $dataset_link (@dataset_links) {
+		print $recurs_indent,"    Dataset Link to ",$dataset_link->dataset()->name(),
+			", ID=",$dataset_link->dataset()->id(),"\n";
+		push (@datasets,$dataset_link->dataset());
+		$dataset_link->deleteObject() if $delete;
+	}
+	
+	# We have to delete all mexes that have this dataset as their target.
+	foreach my $dataset (@datasets) {
+		# Find all dataset mexes for this dataset
+		my @dataset_mexes = $FACTORY->
+			findObjects("OME::ModuleExecution",
+				{
+				dataset_id => $dataset->id(),
+				});
+		foreach my $dataset_mex (@dataset_mexes) {
+			next if $dataset_mex->id() == $mex_id;
+			print $recurs_indent,"      Dataset MEX ",$dataset_mex->id(),"\n";
+			$self->delete_mex ($dataset_mex,$delete,$mex);
+		}
+		
+		# Since there are no dataset mexes for this dataset, unlock it.
+		print $recurs_indent,"    Unlocking Dataset ",
+			$dataset->name(),", ID=",$dataset->id(),"\n";
+		if ($delete) {
+			$dataset->locked(0);
+			$dataset->storeObject();
+		}
+	}
+
+	$image->deleteObject() if $delete;
+	$DELETED_IMAGES{$image->id()} = 1;
+}
+
+sub delete_dataset {
+my $self = shift;
+my $dataset = shift;
+my $delete = shift;
+my $mex = shift;
+my $mex_id = defined $mex ? $mex->id() : undef;
+my $dataset_id = $dataset->id();
+
+	return if exists $DELETED_DATASETS{$dataset_id};
+	$DELETED_DATASETS{$dataset_id} = 0;
+	
+	my $recurs_indent='';
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
+
+	print $recurs_indent,"  Dataset $dataset_id ",$dataset->name(),"\n";
+
+	# First, delete all MEXes that have this dataset as the target.
+	my @dataset_mexes = $FACTORY->
+		findObjects("OME::ModuleExecution",
+			{
+			dataset_id => $dataset_id,
+			});
+	foreach my $dataset_mex (@dataset_mexes) {
+		next if $dataset_mex->id() == $mex_id;
+		print $recurs_indent,"  Dataset MEX ",$dataset_mex->id(),"\n";
+		$self->delete_mex ($dataset_mex,$delete,$mex);
+	}
+	
+	# Next, delete any left-over dataset attributes that don't have this dataset as the target.
+	my $dataset_attrs = $self->get_dataset_attributes ($dataset);
+	foreach my $attr (@$dataset_attrs) { $self->delete_attribute ($attr,$mex,$delete) ;}
+
+	# Since we're at it, we have to delete the dataset from the OME::Image::DatasetMap
+	my @image_links = $FACTORY->findObjects("OME::Image::DatasetMap",
+		{ dataset_id => $dataset_id}
+	);
+
+	foreach my $image_link (@image_links) {
+		my $img = $image_link->image();
+		print $recurs_indent,"    Image Link to ",$img ? $img->name() : 'undefined',
+			", ID=",$img ? $img->id() : 'undefined',"\n";
+		$image_link->deleteObject() if $delete;
+	}
+
+	# And also the dataset from the OME::Project::DatasetMap
+	my @project_links = $FACTORY->findObjects("OME::Project::DatasetMap",
+		{ dataset_id => $dataset_id}
+	);
+	foreach my $project_link (@project_links) {
+		my $project = $project_link->project();
+		print $recurs_indent,"    Project Link to ",$project ? $project->name() : 'undefined',
+			", ID=",$project ? $project->id() : 'undefined',"\n";
+		$project_link->deleteObject() if $delete;
+	}
+	
+	# The dataset may be referenced from the UserState
+	my @USs = $FACTORY->findObjects("OME::UserState",
+		{ dataset_id => $dataset_id}
+	);
+	foreach my $US (@USs) {
+		$US->dataset_id(undef);
+		$US->storeObject() if $delete;
+	}
+		
+	
+	$dataset->deleteObject() if $delete;
+	$DELETED_DATASETS{$dataset_id} = 1;
+}
+
+
+sub delete_group {
+my $self = shift;
+my $group = shift;
+my $delete = shift;
+my $mex = shift;
+my $mex_id = defined $mex ? $mex->id() : undef;
+	return if exists $DELETED_GROUPS{$group->id()};
+	$DELETED_GROUPS{$group->id()} = 0;
+
+	if ($group->id() == $self->getSession()->experimenter->Group->id()) {
+		die "Attempt to delete the default Group of the logged-in OME Experimenter!!!";
+	}
+
+	my $recurs_indent='';
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
+
+	print $recurs_indent,"  Group ",$group->id()," ",$group->Name(),"\n";
+	
+	# A group can be referenced from a MEX, Project, Dataset, Image, Experimenter, AnalysisChain, AnalysisChainExecution
+	my @MEXes = $FACTORY->findObjects ('OME::ModuleExecution',group => $group);
+	foreach my $MEX (@MEXes) {
+		$self->delete_mex ($MEX,$delete,$mex) if $MEX;
+	}
+	
+	my @projects = $FACTORY->findObjects ('OME::Project',group => $group);
+	foreach my $project (@projects) {
+		print $recurs_indent,"    Project ",$project->name(),
+			", ID=",$project->id(),"\n";
+		$project->deleteObject() if $delete;
+		# The project may be referenced from the UserState
+		my @USs = $FACTORY->findObjects("OME::UserState",
+			{ project_id => $project->id()}
+		);
+		foreach my $US (@USs) {
+			$US->project_id(undef);
+			$US->storeObject() if $delete;
+		}
+	}
+	
+	my @datasets = $FACTORY->findObjects ('OME::Dataset',group => $group);
+	foreach my $dataset (@datasets) {
+		$self->delete_dataset ($dataset,$delete,undef) if $dataset;
+	}
+	
+	my @images = $FACTORY->findObjects ('OME::Image',group => $group);
+	foreach my $image (@images) {
+		$self->delete_image ($image,$delete,undef) if $image;
+	}
+
+	my @experimenters = $FACTORY->findObjects ('@Experimenter',Group => $group);
+	foreach my $experimenter (@experimenters) {
+		$self->delete_experimenter ($experimenter,$delete,undef);
+	}
+
+	$self->delete_attribute ($group,undef,$delete);	
+
+
+	$DELETED_GROUPS{$group->id()} = 0;
+}
+
+sub delete_experimenter {
+my $self = shift;
+my $experimenter = shift;
+my $delete = shift;
+my $mex = shift;
+my $mex_id = defined $mex ? $mex->id() : undef;
+
+	return if exists $DELETED_EXPERIMENTERS{$experimenter->id()};
+	$DELETED_EXPERIMENTERS{$experimenter->id()} = 0;
+
+	if ($experimenter->id() == $self->getSession()->experimenter->id()) {
+		die "Attempt to delete the Experimenter associated with the logged-in OME session!!!";
+	}
+
+	my $recurs_indent='';
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
+
+	print $recurs_indent,"  Experimenter ",$experimenter->id()," ",$experimenter->FirstName()," ",$experimenter->LastName(),"\n";
+	
+	# An experimenter can be referenced from a MEX, Project, Dataset, Image, Group, AnalysisChain, AnalysisChainExecution
+	my @MEXes = $FACTORY->findObjects ('OME::ModuleExecution',experimenter => $experimenter);
+	foreach my $MEX (@MEXes) {
+		$self->delete_mex ($MEX,$delete,$mex) if $MEX;
+	}
+	
+	my @projects = $FACTORY->findObjects ('OME::Project',owner => $experimenter);
+	foreach my $project (@projects) {
+		print $recurs_indent,"    Project ",$project->name(),
+			", ID=",$project->id(),"\n";
+		$project->deleteObject() if $delete;
+		# The project may be referenced from the UserState
+		my @USs = $FACTORY->findObjects("OME::UserState",
+			{ project_id => $project->id()}
+		);
+		foreach my $US (@USs) {
+			$US->project_id(undef);
+			$US->storeObject() if $delete;
+		}
+	}
+
+	my @datasets = $FACTORY->findObjects ('OME::Dataset',owner => $experimenter);
+	foreach my $dataset (@datasets) {
+		$self->delete_dataset ($dataset,$delete,undef) if $dataset;
+	}
+
+	my @images = $FACTORY->findObjects ('OME::Image',owner => $experimenter);
+	foreach my $image (@images) {
+		$self->delete_image ($image,$delete,undef) if $image;
+	}
+
+
+	my @groups = $FACTORY->findObjects ('@Group',Leader => $experimenter);
+	my @groups2 = $FACTORY->findObjects ('@Group',Contact => $experimenter);
+	push (@groups,@groups2);
+	foreach my $group (@groups) {
+		$self->delete_group ($group,$delete,undef);
+	}
+
+	# The Experimenter may be referenced from the UserState
+	my @USs = $FACTORY->findObjects("OME::UserState",
+		{ experimenter_id => $experimenter->id()}
+	);
+	foreach my $US (@USs) {
+		$US->deleteObject if $delete;
+	}
+
+
+	$self->delete_attribute ($experimenter,undef,$delete);	
+	
+	
+	$DELETED_EXPERIMENTERS{$experimenter->id()} = 1;
+}
+
+
+
 sub get_image_attributes () {
 my $self = shift;
 my $image = shift;
@@ -566,35 +1087,57 @@ my @image_attrs;
 	return \@image_attrs;
 }
 
+sub get_dataset_attributes () {
+my $self = shift;
+my $dataset = shift;
+my @dataset_attrs;
+
+	@DATASET_STs = $FACTORY->findObjects("OME::SemanticType",granularity => 'D')
+		unless defined @DATASET_STs;
+	
+	foreach my $ST (@DATASET_STs) {
+		my @objects = $FACTORY->findAttributes($ST,{dataset_id => $dataset->id()});
+		push (@dataset_attrs,@objects);
+	}
+	
+	return \@dataset_attrs;
+}
+
 # This belongs in OME::Tasks::SemanticTypeManager
 # Or even better in OME::Tasks::AttributeManager
 sub get_references_to {
 my $self = shift;
 my $attr = shift;
 my $ST = $attr->semantic_type();
-my %ST_refs;
 my $attr_id = $attr->id();
 my @ref_attrs;
 
 
-	my @ref_cols = $FACTORY->
-		findObjects("OME::DataTable::Column",
-			{
-			reference_type => $ST->name(),
-	});
-
-	foreach my $ref_col (@ref_cols) {
-		my @ref_SEs = $FACTORY->findObjects("OME::SemanticType::Element",
-			{
-			data_column_id => $ref_col->id(),
-			});
-		foreach my $ref_SE (@ref_SEs) {
-			$ST_refs {$ref_SE->semantic_type->name()}->{ST} = $ref_SE->semantic_type();
-			$ST_refs {$ref_SE->semantic_type->name()}->{Elements}->{$ref_SE->name()} = $ref_SE;
+	unless (exists $ST_REFS{$ST}) {
+		my $ST_refs;
+		my @ref_cols = $FACTORY->
+			findObjects("OME::DataTable::Column",
+				{
+				reference_type => $ST->name(),
+		});
+	
+		foreach my $ref_col (@ref_cols) {
+			my @ref_SEs = $FACTORY->findObjects("OME::SemanticType::Element",
+				{
+				data_column_id => $ref_col->id(),
+				});
+			foreach my $ref_SE (@ref_SEs) {
+				$ST_refs->{$ref_SE->semantic_type->name()}->{ST} = $ref_SE->semantic_type();
+				$ST_refs->{$ref_SE->semantic_type->name()}->{Elements}->{$ref_SE->name()} = $ref_SE;
+			}
 		}
+		
+		$ST_REFS{$ST} = $ST_refs;
 	}
 	
-	foreach my $ST_ref (values (%ST_refs)) {
+	my $refs = $ST_REFS{$ST};
+	
+	foreach my $ST_ref (values (%$refs)) {
 		foreach my $ref_SE (keys %{$ST_ref->{Elements}}) {
 			my @attrs = $FACTORY->findAttributes($ST_ref->{ST}, {
 				$ref_SE => $attr_id,
@@ -617,21 +1160,21 @@ my $attr = shift;
 # This is the context mex, which isn't necessarily the attribute's mex.
 my $mex = shift;
 my $delete = shift;
+my $mex_id = defined $mex ? $mex->id() : undef;
 
 	return unless $attr;
-	return if exists $DELETED_ATTRS{$attr->id()};
+	return if exists $DELETED_ATTRS{$attr->semantic_type()->name().':'.$attr->id()};
 	# Block infinite recursion
-	$DELETED_ATTRS{$attr->id()} = 0;
+	$DELETED_ATTRS{$attr->semantic_type()->name().':'.$attr->id()} = 0;
 			
 	my $recurs_indent='';
 	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
-
-	my $mex_id = $mex->id();
 
 	# This attribute may have virtual MEXes, so descend again
 	my $vMEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($attr);
 	foreach my $vMex (@$vMEXes) {
 		next unless $vMex;
+		next unless $vMex->virtual_mex();
 		$self->delete_mex ($vMex,$delete,$mex) unless $vMex->id() == $mex_id;		
 	}
 	
@@ -660,6 +1203,7 @@ my $delete = shift;
 		$self->delete_attribute_object ($ref_attr,$delete,$recurs_indent."      Reference from ");
 	}
 	$self->delete_attribute_object ($attr,$delete,$recurs_indent."      ");
+	$DELETED_ATTRS{$attr->semantic_type()->name().':'.$attr->id()} = 1;
 }
 
 # This sub does any special handling for deleting attribute objects
@@ -685,54 +1229,20 @@ sub delete_attribute_object {
 	} elsif ($ST_name eq 'OriginalFile') {
 		$DELETED_ORIGINAL_FILES {$attr_id}->{Repository}   = $attr->Repository();
 		$DELETED_ORIGINAL_FILES {$attr_id}->{FileID}       = $attr->FileID();
+	} elsif ($ST_name eq 'Experimenter') {
+		$self->delete_experimenter ($attr,$delete,undef);
+	} elsif ($ST_name eq 'Group') {
+		$self->delete_group ($attr,$delete,undef);
 	}
-
-	# We are not deleting experimenters (for now), but we will set their MEX to NULL
-	elsif ($ST_name eq 'Experimenter') {
-		my $experimenterName = $attr->FirstName().' '.$attr->LastName();
-		print $message,"Experimenter ID=$attr_id '$experimenterName' ",
-			"Not Deleted - Setting MEX=NULL\n";
-		if ($delete) {
-			$attr->module_execution_id (undef);
-			$attr->storeObject();
-		}
-		$do_del = 0;
-	}
-
-	# Since we are not deleting experimenters (for now), we're also not deleting Groups
-	elsif ($ST_name eq 'Group') {
-		my $groupName = defined $attr->Name() ? $attr->Name() : 'UNDEFINED';
-		print $message,"Group ID=$attr_id '$groupName' ",
-			"Not Deleted - Setting MEX=NULL\n";
-		if ($delete) {
-			$attr->module_execution_id (undef);
-			$attr->storeObject();
-		}
-		$do_del = 0;
-	}
-
-	# Since we are not deleting experimenters (for now), we're also not deleting ExperimenterGroups
-	elsif ($ST_name eq 'ExperimenterGroup') {
-		my $groupName = defined $attr->Group() ? $attr->Group()->Name() : 'UNDEFINED';
-		my $experimenterName;
-		if (defined $attr->Experimenter()) {
-			$experimenterName = $attr->Experimenter()->FirstName().' '.$attr->Experimenter()->LastName();
-		} else {
-			$experimenterName = 'UNDEFINED';
-		}
-		print $message,"ExperimenterGroup ID=$attr_id, '$experimenterName' -> '$groupName' ",
-			"Not Deleted - Setting MEX=NULL\n";
-		if ($delete) {
-			$attr->module_execution_id (undef);
-			$attr->storeObject();
-		}
-		$do_del = 0;
-	}
+	
+	# Special handling for Experimenters, Groups, ExperimenterGroups?
+	# Experimenters and Groups can be refered to from Project, Dataset, Image, Feature
 
 	if ($do_del) {
-		print $message,"Attribute $attr_id (",$attr->semantic_type()->name(),")\n";
-		$attr->deleteObject() if $delete;
-		# FIXME:  Should delete LSIDs.
+		print $message,"Attribute $attr_id ($ST_name)\n";
+		if ($delete) {
+			$attr->deleteObject();
+		}
 	}
 	
 	if ($do_register) {
