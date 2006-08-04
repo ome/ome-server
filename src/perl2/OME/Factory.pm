@@ -705,7 +705,7 @@ sub findObjects {
               while $_ = $class->__newInstance($sth,
                                                $ids_available,$columns_wanted);
         };
-        confess $@ if $@;
+        confess "Error executing SQL:\n$sql\nWith Values:\n".join (',',@$values)."\nError:$@" if $@;
         return @result;
     } else {
         # looking for a scalar
