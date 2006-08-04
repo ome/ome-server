@@ -20,14 +20,14 @@ for i=1:rows
 		% If both are normal numbers, then calculate the number of significant
 		% digits to which they agree.
 		else
-			
-			diff_vec = matrix_a(i,j) - matrix_b(i,j);
-			avg_vec  = (matrix_a(i,j) + matrix_b(i,j))/2;
+			diff_vec = abs(matrix_a(i,j) - matrix_b(i,j));
+			avg_vec  = abs(matrix_a(i,j)) + abs(matrix_b(i,j));
+			avg_vec  = avg_vec/2;
 			
 			if (abs(diff_vec) < eps)
 				sig_digits(i,j) = 16;
 			else 
-				sig_digits(i,j) = uint8(-log10(diff_vec/avg_vec));
+				sig_digits(i,j) = ceil(log10(avg_vec))-ceil(log10(diff_vec));
 			end
 		end
 	end
