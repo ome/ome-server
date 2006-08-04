@@ -71,18 +71,21 @@ my @MENU = (
 		type => 'link',
 		url_param => { Type => 'OME::Project' },
 		text => 'Project',
+		help_link => 'http://www.openmicroscopy.org.uk/concepts/hierarchy.html',
 	},
 	{
 		web_class => 'OME::Web::DBObjCreate',
 		type => 'link',
 		url_param => { Type => 'OME::Dataset' },
 		text => 'Dataset',
+		help_link => 'http://www.openmicroscopy.org.uk/concepts/hierarchy.html',
 	},
 	{
 		web_class => 'OME::Web::DBObjCreate',
 		type => 'link',
 		url_param => { Type => '@CategoryGroup' },
 		text => 'Category Group',
+		help_link => 'http://www.openmicroscopy.org.uk/getting-started/manual_classification.html',
 	},
 	{
 		web_class => 'OME::Web::DBObjCreate',
@@ -100,12 +103,14 @@ my @MENU = (
 		type => 'link',
 		url_param => { SearchType => 'OME::Project' },
 		text => 'Projects',
+		help_link => 'http://www.openmicroscopy.org.uk/concepts/hierarchy.html',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
 		url_param => { SearchType => 'OME::Dataset' },
 		text => 'Datasets',
+		help_link => 'http://www.openmicroscopy.org.uk/concepts/hierarchy.html',
 	},
 	{
 		web_class => 'OME::Web::Search',
@@ -118,18 +123,21 @@ my @MENU = (
 		type => 'link',
 		url_param => { SearchType => '@CategoryGroup' },
 		text => 'Category Group',
+		help_link => 'http://www.openmicroscopy.org.uk/getting-started/manual_classification.html',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
 		url_param => { SearchType => 'OME::ModuleExecution' },
 		text => 'Module Executions',
+		help_link => 'http://www.openmicroscopy.org.uk/concepts/analysis-executions.html',
 	},
 	{
 		web_class => 'OME::Web::Search',
 		type => 'link',
 		url_param => { SearchType => 'OME::AnalysisChainExecution' },
 		text => 'Chain Executions',
+		help_link => 'http://www.openmicroscopy.org.uk/concepts/analysis-executions.html',
 	},
 	{
 		web_class => 'OME::Web::Search',
@@ -141,6 +149,7 @@ my @MENU = (
  		web_class => undef,
  		type => 'heading',
  		text => 'Annotation',
+ 		help_link => 'http://www.openmicroscopy.org.uk/custom-annotations/',
  	},
  	{
  		web_class => 'OME::Web::CG_ConstructTemplate',
@@ -197,11 +206,13 @@ my @MENU = (
 		web_class => 'OME::Web::ImportImages',
 		type => 'link',
 		text => undef,
+		help_link => 'http://www.openmicroscopy.org.uk/getting-started/import.html',
 	},
 	{
 		web_class => 'OME::Web::XMLFileExport',
 		type => 'link',
-		text => undef,
+		text => 'Export as XML',
+		help_link => 'http://www.openmicroscopy.org.uk/getting-started/export.html',
 	},
 	#{
 	#	web_class => 'N/A',
@@ -218,16 +229,19 @@ my @MENU = (
 		web_class => 'OME::Web::FindSpots',
 		type => 'link',
 		text => undef,
+		help_link => 'http://www.openmicroscopy.org.uk/howto/FindSpots-v2.pdf',
 	},
 	{
 		web_class => 'OME::Web::ImportModules',
 		type => 'link',
-		text => undef,
+		text => 'Import Analysis Modules & Chains',
+		help_link => 'http://www.openmicroscopy.org.uk/api/xml/AML/index.html',
 	},
 	{
 		web_class => 'OME::Web::ExecuteChain',
 		type => 'link',
 		text => undef,
+		help_link => 'http://www.openmicroscopy.org.uk/howto/quantitative-image-analysis-MATLAB.html',
 	},
 	{
 		web_class => 'OME::Web::Search',
@@ -339,13 +353,23 @@ sub __processElement {
 				$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'}) );
 		};
 		
-		$element_data .= $q->Tr($q->td(
-			{class => $css_class, align => 'center'},
-			( $web_class ? 
-				$a_href :
-				$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'})
-			)
-		));
+		if ($menu_element->{'help_link'}) {
+			$element_data .= $q->Tr($q->td(
+				{class => $css_class, align => 'center'},
+				( $web_class ? 
+					$a_href :
+					$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'})
+				), $q->span({class => 'ome_main_menu_heading'}, $q->a({class => 'ome_main_menu_heading', href => $menu_element->{'help_link'}, title=> "Help"}, "[?]"))
+			));
+		} else {
+			$element_data .= $q->Tr($q->td(
+				{class => $css_class, align => 'center'},
+				( $web_class ? 
+					$a_href :
+					$q->span({class => 'ome_main_menu_heading'}, $menu_element->{'text'})
+				)
+			));
+		}
 	# LINK
 	} elsif ($menu_element->{'type'} eq 'link') {
 		# Pick CSS class
@@ -367,17 +391,29 @@ sub __processElement {
 				$text = $web_class->getMenuText();
 			}
 		}
+		
+		my $help_link;
+		$help_link = $menu_element->{'help_link'} if( $menu_element->{'help_link'} );
 
 		# Get HREF
 		my $href = OME::Web->pageURL($web_class, $menu_element->{ url_param } );
 
 		# Build TR
-		$element_data .= $q->Tr($q->td( {
-					class => $css_class,
-					onMouseOver => "this.className=\'$css_class" . '_hover\'',
-					onMouseOut => "this.className=\'$css_class\'",
-				}, $q->a({class => $css_class, href => $href}, $text)
-		));
+		if ($help_link) {
+			$element_data .= $q->Tr($q->td( {
+						class => $css_class,
+						onMouseOver => "this.className=\'$css_class" . '_hover\'',
+						onMouseOut => "this.className=\'$css_class\'",
+					}, $q->a({class => $css_class, href => $href}, $text), $q->a({class => $css_class, href => $help_link, title=> "Help"}, "[?]")
+			));
+		} else {
+			$element_data .= $q->Tr($q->td( {
+						class => $css_class,
+						onMouseOver => "this.className=\'$css_class" . '_hover\'',
+						onMouseOut => "this.className=\'$css_class\'",
+					}, $q->a({class => $css_class, href => $href}, $text)
+			));
+		}
 	} else {
 		carp "Unknown menu type '$menu_element->{'type'}'";
 	}
@@ -430,7 +466,7 @@ sub getPageMenu {
 		$menu_data .= $self->__processElement($menu_element);
 	}
 
-	return $q->table({width => '130', class => 'ome_main_menu'}, $menu_data);
+	return $q->table({width => '135', class => 'ome_main_menu'}, $menu_data);
 }
 
 sub getPageLocationMenu {
