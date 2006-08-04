@@ -113,13 +113,16 @@ sub __getDatasetForm {
 		# ROW
 		$q->td($q->input($existing_button_data)) .
 		$q->td({width => '25%'}, $q->span('Existing dataset')) .
-		$q->td({width => '75%'}, $q->popup_menu( {
-					name => 'existing_dataset',
-					values => ['None', @user_dataset_names],
-					default => 'None',
-				}
+		$q->td({width => '75%'}, 
+			$self->SearchUtil()->getObjectSelectionField( 
+				'OME::Dataset', 'existing_dataset', { 
+					max_elements_in_list => 20,
+					list_length => 1, 
+					select_one  => 1,
+					form_name   => 'datatable',
+				} 
 			)
-		),
+		), 
 		# ROW
 		$q->td($q->input($new_button_data)) .
 		$q->td({width => '25%'}, $q->span("New dataset with name *")) .
@@ -156,13 +159,6 @@ sub __getDatasetForm {
 				),
 			),
 			$q->td({-align => 'right'},
-				$q->a( {
-						-href => "#",
-						-onClick => "openExistingDataset($group_id); return false",
-						-class => 'ome_widget'
-					}, "Existing Datasets"
-				),
-				"|",
 				$q->a( {
 						-href => "#",
 						-onClick => "document.forms['datatable'].action.value='import'; document.forms['datatable'].submit(); return false",
@@ -255,15 +251,15 @@ sub __getImportBody {
 			return $body . $q->p($info);  # Return with failure
 		}
 	} elsif ($new_or_existing eq 'existing') {
-		my $d_name = $q->param('existing_dataset');
+		my $d_id = $q->param('existing_dataset');
 
-		unless($import_d = $factory->findObject("OME::Dataset", name => $d_name)) {
+		unless($import_d = $factory->loadObject("OME::Dataset", $d_id)) {
 			$body .= $q->p({class => 'ome_error'},
-				"Unable to find dataset with name '$d_name'");
+				"Unable to find dataset with id '$d_id'");
 			return $body;  # Return with failure
 		}
 		$body .= $q->p($q->span({class => 'ome_info'},
-				"Using existing dataset '$d_name'."));
+				"Using existing dataset '$d_id'."));
 		
 		$self->Session()->dataset($import_d);
 	} else {

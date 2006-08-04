@@ -168,6 +168,7 @@ sub getPageBody {
 		my $ids = join( ',', map( $_->id, @selected_objects ) );
 		$self->{ _onLoadJS } = <<END_HTML;
 				window.opener.document.forms['$return_to_form'].elements['${return_to_form_element}'].value = '$ids';
+				window.opener.document.forms['$return_to_form'].elements['action'].value = 'refresh';
 				window.opener.document.forms['$return_to_form'].submit();
 				window.close();
 END_HTML
@@ -431,7 +432,7 @@ sub getObjectSelectionField {
 				-labels	  => \%object_names,
 				-default  => $default_obj,
 				-size     => $list_length,
-				-multiple => 'true',
+				-multiple => ( $options->{ select_one } ? undef : 'true' ),
 			);
 	# Make a click through link if there are very many objects to select from
 	} else {
@@ -448,8 +449,12 @@ sub getObjectSelectionField {
 			}
 			
 			# Build a representation of the selection
+			# Render as a reference if there is only 1.
+			if( scalar( @ids ) == 1 ) {
+				my $obj = $factory->loadObject( $type, $ids[0] );
+				$selectionRepresentation = $self->Renderer()->render( $obj, 'ref' );
 			# Only show the individual objects if there aren't many selected
-			if( scalar( @ids ) < 5 ) {
+			} elsif( scalar( @ids ) < 5 ) {
 				my @objs = map( $factory->loadObject( $type, $_ ), @ids );
 				$selectionRepresentation = $self->Renderer()->renderArray( \@objs, 'ref_list' );
 			# If there are too many to show, link to a popup page to show them all
@@ -467,14 +472,22 @@ sub getObjectSelectionField {
 				"(<a href='javascript: document.forms[\"$form_name\"].elements[\"$field_name\"].value = \"\"; ".
 									 "document.forms[\"$form_name\"].submit();'".
 				   "title='Cancel selection'/>X</a> ".
-				"<a href='javascript: selectMany( \"$type\", \"$field_name\" );'".
+				"<a href='javascript: ".
+					($options->{ select_one } ? 'selectOne' : 'selectMany' ).
+					"( \"$type\", \"$field_name\"".
+					($options->{ form_name } ? ", '".$options->{ form_name }."'" : "" ).
+					");'".
 				   "title='Change selection'/>C</a>)";
 		} else { #  then if nothing is selected.
 			$htmlSnippet = 
 				$q->hidden( -name => $field_name ).
 				"(".
 				$q->a( { 
-					-href => "javascript: selectMany( '$type', '$field_name' );"
+					-href => "javascript: ".
+						($options->{ select_one } ? 'selectOne' : 'selectMany' ).
+						"( '$type', '$field_name'".
+						($options->{ form_name } ? ", '".$options->{ form_name }."'" : "" ).
+						" );"
 				}, "Select" ).")";
 		}
 	}

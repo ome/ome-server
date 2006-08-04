@@ -139,18 +139,27 @@ function SEdocPopup( SE_id ) {
 
 // selectOne()
 
-function selectOne( type, return_to ) {
+function selectOne( type, return_to, return_to_form, url_parameter ) {
+	var url = SearchPage + '&Locked_SearchType=' + type + '&select=one&return_to=' + return_to;
+	if( return_to_form ) {
+		url += '&return_to_form='+return_to_form;
+	}
+	if( url_parameter ) {
+		url += '&'+url_parameter;
+	}
 	window.open(
-		SearchPage + '&Locked_SearchType=' + type + '&select=one&return_to=' + return_to,
-		'_blank',
+		url, '_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
 	);
 }
 
 // selectMany()
 
-function selectMany( type, return_to, url_parameter ) {
+function selectMany( type, return_to, return_to_form, url_parameter ) {
 	var url = SearchPage + '&Locked_SearchType=' + type + '&select=many&return_to=' + return_to;
+	if( return_to_form ) {
+		url += '&return_to_form='+return_to_form;
+	}
 	if( url_parameter ) {
 		url += '&'+url_parameter;
 	}
