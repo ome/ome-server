@@ -647,6 +647,11 @@ sub configure_guest_access {
 					  'Administration');
 	my $mex =
 	    OME::Tasks::ModuleExecutionManager->createMEX($module,'G');
+    # Create a universal execution for this module, so that the analysis
+    # engine never tries to execute it.
+    OME::Tasks::ModuleExecutionManager->
+        createNEX($mex,undef,undef);
+
 	my $groupName = "GuestGroup_". $mex->id;
 	my $group = 
 	    $factory->maybeNewAttribute('Group',undef,$mex,
@@ -678,7 +683,7 @@ sub configure_guest_access {
 				   { Experimenter=>$guest,
 				     Group => $group});
 	$mex->group($group);
-	
+	$mex->status('FINISHED');
 	$mex->storeObject();
 	$session->commitTransaction();
     }
