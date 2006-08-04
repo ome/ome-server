@@ -352,6 +352,55 @@ $mxINT64_CLASS = __mxINT64_CLASS();
 $mxUINT64_CLASS = __mxUINT64_CLASS();
 $mxFUNCTION_CLASS = __mxFUNCTION_CLASS();
 
+package OME::Matlab::Engine;
+
+# Perl wrapper function for a Matlab engine eval.
+sub callMatlab {
+	my ( $engine, $function, $nargout, $nargin, @inputs ) = @_;
+	my @input_names;
+	my @output_names;
+	my @outputs;
+	my $matlabCmd;
+	
+	# Make up names for inputs and place inputs into matlab memory space
+	for ( my $i = 0; $i < $nargin; $i++ ) {
+		$input_names[$i] = 'eceval_ome_input_'.$i;
+		$engine->putVariable($input_names[$i], $inputs[$i]);
+	}
+	
+	# Make up names for outputs
+	for ( my $i = 0; $i < $nargout; $i++ ) {
+		$output_names[$i] = 'eceval_ome_output_'.$i;
+	}
+	
+	# Compile execution string
+	if ($nargout == 1) {
+		$matlabCmd = $output_names[0]." = ";
+	} else {
+		$matlabCmd = "[".join(',',@output_names)."] = ";
+	}
+	
+	$matlabCmd .= $function;
+	$matlabCmd .= "(".join(',', @input_names).");";
+	
+	my $outBuffer  = " " x 4096;
+	$engine->setOutputBuffer($outBuffer, length($outBuffer));
+		
+	$engine->eval($matlabCmd);
+	$outBuffer =~ s/(\0.*)$//;
+	$outBuffer =~ s/[^[:print:][:space:]]//g;
+	if ($outBuffer =~ m/\S/) {
+		print "A warning resulted from matlab command\n\t$matlabCmd\nThe message is:\n$outBuffer";
+	}
+	
+	# Get outputs from matlab memory space
+	foreach my $out_name ( @output_names ) {
+		push ( @outputs, $engine->getVariable($out_name) );
+	}
+
+	return @outputs;
+}
+
 package OME::Matlab::Array;
 
 use Log::Agent;
