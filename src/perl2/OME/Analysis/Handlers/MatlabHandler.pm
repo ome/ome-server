@@ -28,6 +28,8 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:  Josiah Johnston <siah@nih.gov>
+#			   Tom Macura <tmacura@nih.gov>
+#			   Arpun Nagaraja <arpun@mit.edu>
 # Based on code written by: Douglas Creager <dcreager@alum.mit.edu>
 #
 #-------------------------------------------------------------------------------
@@ -55,6 +57,7 @@ L<http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd>
 
 use strict;
 use Carp;
+use Switch;
 
 use OME;
 use XML::LibXML;
@@ -195,14 +198,15 @@ my %_ome_datatype_to_matlab_class = (
 	'integer'  => $mxINT32_CLASS,
 	'bigint'   => $mxINT64_CLASS,
 );
-my %_numerical_constants; # this gets filled out in _openEngine()
+my %_numerical_constants; # this gets filled out in __openMatlab()
+my %_matlab_variables; # this is added to as needed - stores matlab vars
 
-######################################
-# PERSISTENT MATLAB ENGINE VARIABLES #
-######################################
-my $_engine = undef;
-my $_engineOpen = 0;
-	
+########################################
+# PERSISTENT MATLAB INSTANCE VARIABLES #
+########################################
+my $_matlabOpen = 0;
+my %_matlab_instances; # hash of matlab instances (i.e. engine, library instances)
+
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
@@ -213,8 +217,7 @@ sub new {
 
 	my $factory = OME::Session->instance()->Factory();
  	
-	# __openEngine this will reuse the current MATLAB engine, if possible
-	$self->__openEngine();
+	$self->__openMatlab();
 
 	bless $self,$class;
 	return $self;
@@ -222,13 +225,31 @@ sub new {
 
 sub startAnalysis {
 	my ($self,$module_execution) = @_;
-
+	
 	my $parser = XML::LibXML->new();
 	my $tree   = $parser->parse_string( $self->getModule()->execution_instructions() );
 	my $root   = $tree->getDocumentElement();
 	
 	$self->{ execution_instructions } = $root;
-
+	
+	# Use a compiled library if requested
+	my $libname = $self->{ execution_instructions }->getAttribute( "LibraryName" );
+	
+	# If you want to use a library and you haven't already instantiated an instance,
+	# do it
+	if (defined $libname and not exists $_matlab_instances{ $libname } ) {
+		my $useDeclaration = 'OME::Matlab::Lib::'.$libname.'::'.$libname;
+		eval "use $useDeclaration";
+		if ( $@ ) {
+			# There was some kind of error, so report it and instantiate
+			# the engine
+			logdbg "debug", "Cannot find library $useDeclaration: \n$@";
+			$self->__openEngine() unless $_matlab_instances{ 'engine' };
+		} else {
+			$_matlab_instances{ $libname } = $useDeclaration->new();
+		}
+	}
+	
 	my $mex = $self->getModuleExecution();
 	$mex->read_time      (0);
 	$mex->write_time     (0);
@@ -282,48 +303,35 @@ sub finishAnalysis {
 
 sub __execute {
 	my ($self) = @_;
+	my @response;
 	
 	my $mex = $self->getModuleExecution();
-	my $location = $self->getModule()->location();
+	my $function = $self->getModule()->location();
+			
+	my @outputs = $self->_functionOutputs() or die "Couldn't find any outputs!";
+	my @output_names = map( $self->_outputVarName( $_ ), @outputs );
+	my @input_names = map( $self->_inputVarName( $_ ), $self->_functionInputs() );
 	
-	my $input_cmd = "(".join(',', 
-		map( $self->_inputVarName( $_ ), $self->_functionInputs() )
-	).")";
-
-	my $output_cmd;
-	my @output_names = map( $self->_outputVarName( $_ ), $self->_functionOutputs() )
-		or die "Couldn't find any outputs!";
-	if (scalar(@output_names) eq 1) {
-		$output_cmd = $output_names[0]." = ";
-	} else {
-		$output_cmd = "[".join(',',@output_names)."] = ";
+	# Get the actual mxArrays to pass to the compiled modules
+	my @inputs = map( $_matlab_variables{ $_ }, @input_names );
+	
+	# Use the engine unless we've got a library and it's been loaded
+	my $instanceName = $self->{ execution_instructions }->getAttribute( "LibraryName" );
+	unless ( $_matlab_instances{ $instanceName } ) {
+		$instanceName = 'engine';
+		$self->__openEngine() unless $_matlab_instances{ 'engine' };
 	}
-	my $command = "${output_cmd}${location}${input_cmd};";
-	logdbg "debug", "***** Command to Matlab: $command\n";
-	my $outBuffer  = " " x 4096;
-	$_engine->setOutputBuffer($outBuffer, length($outBuffer));	
+	logdbg "debug", "Using $instanceName ...\n";
 	
 	my $start_time = [gettimeofday()];
-	$_engine->eval($command);
-#   logdbg "debug", "save /tmp/MEX_".$mex->id()."[".$mex->module()->name()."]\n";
-#   $_engine->eval( "save /tmp/MEX_".$mex->id()."[".$mex->module()->name()."]" );
+	@response = $_matlab_instances{ $instanceName }->callMatlab( $function, scalar(@outputs), scalar(@inputs), @inputs );
 	$mex->execution_time($mex->execution_time() + tv_interval($start_time));
-
-	# Save warning messages if found.
-	# Errors may have happened here, but we're going to check for them later
-	# by attempting to retrieve output variables. The death message indicates
-	# the error probalby happened in the executing of the matlab function,
-	# not in retrieving outputs.
-	$outBuffer =~ s/(\0.*)$//;
-	$outBuffer =~ s/[^[:print:][:space:]]//g;
-	if ($outBuffer =~ m/\S/) {
-		$mex->error_message("A warning resulted from matlab command\n\t$command\nThe message is:\n".$outBuffer);
-		logdbg "debug", "A warning resulted from matlab command\n\t$command\nThe message is:\n$outBuffer";
-	} else {
-		logdbg "debug", "Matlab command returned without warning \n";
+	
+	# Store the outputs into our hash
+	foreach my $out_name ( @output_names ) {
+		my $array = shift ( @response );
+		$_matlab_variables{ $out_name } = $array;
 	}
-	# useful for messages from error checks that will happen later.
-	$self->{ __command } = $command;
 }
 
 =head1 Input processing
@@ -364,8 +372,8 @@ sub placeInputs {
 
 	my $array = $self->_putScalarToMatlab( $matlab_var_name, $value, $matlab_class);
 
-Puts a scalar of a particular name, value, and class into the Matlab
-Engine workspace. $matlab_class is optional and will default to double
+Puts a scalar of a particular name, value, and class into a hash that represents
+the variables "in Matlab". $matlab_class is optional and will default to double
 if unspecified. If specified $matlab_class should be one of the constant
 class types defined in OME::Matlab. e.g. $mxDOUBLE_CLASS, $mxLOGICAL_CLASS, etc.
 
@@ -390,8 +398,9 @@ sub _putScalarToMatlab {
 	}
 	
 	$array->makePersistent();
-	$_engine->eval("global $name;");
-	$_engine->putVariable($name,$array);
+	
+	# store the mxArray into a hash that's keyed by the name of the matlab var
+	$_matlab_variables{ $name } = $array;
 	
 	return $array;
 }
@@ -400,7 +409,7 @@ sub _putScalarToMatlab {
 
 	my ($value, $class) = $self->_getScalarFromMatlab($matlab_var_name, $convert_to_matlab_class);
 	
-Gets a scalar of a particular name from the Matlab Engine workspace.
+Gets a scalar of a particular name from the _matlab_variables hash.
 $convert_to_matlab_class is an optional parameter that signals what is
 the desired output Matlab type. If specified it should be one of the
 constant class types defined in OME::Matlab. e.g. $mxDOUBLE_CLASS,
@@ -412,16 +421,23 @@ returns the scalar value of the variable and it's MATLAB type (e.g. $mxDOUBLE_CL
 
 sub _getScalarFromMatlab {
 	my ($self, $name, $convert_class) = @_;
+	my $array;
+	my @response;
+	my @inputs;
+	my $mex = $self->getModuleExecution();
 	
 	# Convert array datatype if requested	
-	$_engine->eval("$name = ".$_matlab_class_to_convert{$convert_class}.
- 				   "($name);") if defined $convert_class;
-
-	my $array = $_engine->getVariable( $name )
-		or die "Couldn't retrieve scalar output variable $name from matlab.\n".
+	if (defined $convert_class and defined $_matlab_variables{ $name }) {
+		push( @inputs, $_matlab_variables{ $name } );
+		@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( $_matlab_class_to_convert{$convert_class}, 
+ 										1, 1, @inputs );
+ 		$_matlab_variables{ $name } = shift( @response );
+ 	}
+ 	
+	$array = $_matlab_variables{ $name }
+		or die "Scalar output variable $name does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
-		       "The execution string was:\n\t".$self->{ __command }."\n";
-
+		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
 	my $value = $array->getScalar();
 	my $class = $array->class();
 
@@ -539,29 +555,48 @@ sub Pixels_to_MatlabArray {
 
 
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
-
-	my $matlabCmdString = "";
+	
+	# Open the connection to OMEIS, because we have to do that for all possible cases
+	my @inputs = ();
+	my $url = OME::Matlab::Array->newStringScalar($omeis_repository->ImageServerURL());
+	push( @inputs, $url );
+	my @response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( "openConnectionOMEIS", 1, scalar( @inputs ), @inputs );
+	
+	# An mxArray that represents the connection to OMEIS
+	my $is = shift( @response );
+	@inputs = ();
+	
 	if (scalar @ROI) {
+		my $serverID = OME::Matlab::Array->newNumericScalar($pixels->ImageServerID(), $mxSINGLE_CLASS);
+		push( @inputs, $is, $serverID );
+		
+		# Convert all the ROI entries into numeric mxArrays
+		foreach my $ROI_entry( @ROI ) {
+			my $array = OME::Matlab::Array->newNumericScalar($ROI_entry, $mxSINGLE_CLASS);
+			push( @inputs, $array);
+		}
+		
+		@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( "getROI", 1, scalar( @inputs ), @inputs );
+		
 		if ($convertToDatatype) {
-			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getROI(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI).")); ";
-		} else {
-			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getROI(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'),".$pixels->ImageServerID().",".join(',',@ROI)."); ";
+			# put the pixels array onto the input stack so we can convert
+			@inputs = shift( @response );
+			@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( $convertToDatatype, 1, 1, @inputs );
 		}
 	} else {
+		my $serverID = OME::Matlab::Array->newNumericScalar($pixels->ImageServerID(), $mxSINGLE_CLASS);
+		push( @inputs, $is, $serverID );
+		@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( "getPixels", 1, scalar( @inputs ), @inputs );
+		
 		if ($convertToDatatype) {
-			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = $convertToDatatype(getPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID().")); ";
-		} else {
-			$matlabCmdString = "global $matlab_var_name; ".
-							   "$matlab_var_name = getPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels->ImageServerID()."); ";
+			# put the pixels array onto the input stack so we can convert
+			@inputs = shift( @response );
+			@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( $convertToDatatype, 1, scalar( @inputs ), @inputs );
 		}
 	}
-	$_engine->eval($matlabCmdString);
-
+		
 	# check that the gotten variable is the right size	
-	my $ml_pixels_array = $_engine->getVariable($matlab_var_name);
+	my $ml_pixels_array = shift( @response );
 	my ($rows,$columns,$sizeZ,$sizeC,$sizeT) 
 	      = @{$ml_pixels_array->dimensions()};
 	$sizeZ = 1 unless defined($sizeZ);
@@ -571,6 +606,9 @@ sub Pixels_to_MatlabArray {
 	die "getROI/getPixels failed for pixels ".$pixels->ImageServerID().". The ".
 		"returned MATLAB array has dimensions ($rows, $columns, $sizeZ, $sizeC, $sizeT)"
 		unless ($rows*$columns*$sizeZ*$sizeC*$sizeT == $Dims[0]*$Dims[1]*$Dims[2]*$Dims[3]*$Dims[4]);
+	
+	# Store the pixels array if everything is copascetic
+	$_matlab_variables{ $matlab_var_name } = $ml_pixels_array;
 }
 
 =head2 Attr_to_MatlabScalar
@@ -583,7 +621,7 @@ Uses <Scalar>
 sub Attr_to_MatlabScalar {
 	my ( $self, $xmlInstr ) = @_;
 	my $factory = OME::Session->instance()->Factory();
-
+	
 	# get input value
 	my $input_location = $xmlInstr->getAttribute( 'InputLocation' )
 		or die "Could not find InputLocation in input ".$xmlInstr->toString();
@@ -686,21 +724,26 @@ sub MatlabArray_to_Pixels {
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	my $omeis_repository = $session->findRepository() or die "Couldn't retrieve repository";
-	
+	my @response;
+	my @inputs;
+	my $mex = $self->getModuleExecution();
+			
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
 	my $formal_output = $self->getFormalOutput( $xmlInstr->getAttribute( 'FormalOutput' ) )
 		or die "Could not find formal output referenced from ".$xmlInstr->toString();
 	
 	# Convert array datatype if requested
 	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$_engine->eval("$matlab_var_name = $convertToDatatype($matlab_var_name); ");
+		push ( @inputs, $_matlab_variables{ $matlab_var_name } );
+		@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( $convertToDatatype, 1, 1, @inputs );
+ 		$_matlab_variables{ $matlab_var_name } = shift( @response );
 	}
 	
 	# Get array's dimensions and pixel type
-	my $ml_pixels_array = $_engine->getVariable($matlab_var_name)
-		or die "Couldn't retrieve pixels output variable $matlab_var_name from matlab.\n".
+	my $ml_pixels_array = $_matlab_variables{ $matlab_var_name }
+		or die "Pixels output variable $matlab_var_name does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
-		       "The execution string was:\n\t".$self->{ __command }."\n";
+		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
 	
 	# N.B Rows is Height is SizeY in OME!
 	my ($Rows,$Columns,$sizeZ,$sizeC,$sizeT) 
@@ -734,14 +777,21 @@ sub MatlabArray_to_Pixels {
 		OME::Tasks::PixelsManager->createPixels( @pixels_params ) :
 		OME::Tasks::PixelsManager->createParentalPixels( @pixels_params )
 	);
-
-	my $outBuffer  = " " x 4096;
-	$_engine->setOutputBuffer($outBuffer, length($outBuffer));
-	$_engine->eval($matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);");
-	$outBuffer =~ s/(\0.*)$//;
-	$outBuffer =~ s/[^[:print:][:space:]]//g;
-	die "ERROR saving pixels to omeis w/ command:\n\t".$matlab_var_name."_pix = setPixels(openConnectionOMEIS('".$omeis_repository->ImageServerURL()."'), ".$pixels_attr->ImageServerID().", $matlab_var_name);\n$outBuffer\n"
-		if( $outBuffer =~ m/\S/);
+	
+	# Open the connection to OMEIS
+	@inputs = ();
+	my $url = OME::Matlab::Array->newStringScalar($omeis_repository->ImageServerURL());
+	push( @inputs, $url );
+	@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( "openConnectionOMEIS", 1, scalar( @inputs ), @inputs );
+	
+	my $is = shift( @response );
+	@inputs = ();
+	
+	my $serverID = OME::Matlab::Array->newNumericScalar($pixels_attr->ImageServerID(), $mxDOUBLE_CLASS);
+	push( @inputs, $is, $serverID, $_matlab_variables{ $matlab_var_name } );
+	@response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( "setPixels", 1, scalar( @inputs ), @inputs );
+	$_matlab_variables{ $matlab_var_name."_pix" } = shift( @response );
+	
 	my ($value, $class) = $self->_getScalarFromMatlab($matlab_var_name."_pix");
 	die "Could not write the expected number of pixels to OMEIS"
 		unless $value == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
@@ -829,6 +879,8 @@ sub MatlabVector_to_Attrs {
 	my $factory = OME::Session->instance()->Factory();
 
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
+	my $mex = $self->getModuleExecution();
+	
 	
 	# get Vector Decoding
 	my $vectorDecodeID = $xmlInstr->getAttribute( 'DecodeWith' )
@@ -844,7 +896,7 @@ sub MatlabVector_to_Attrs {
 	
 	# decode the Vector
 	# convert the vector into a cell whose elements have the appropriate class	
-	my $matlabCmdString = "";
+	my %matlab_vectors;
 	foreach my $element ( @decoding_elements ) {
 
 		# get index
@@ -864,20 +916,41 @@ sub MatlabVector_to_Attrs {
 		# TODO
 		# since "vectors of strings" are really "matrices of chars" they need a special treatment
 		# they are cell vectors of strings
+		my $inputArray = $_matlab_variables { $matlab_var_name };
+		my $class = $inputArray->class();
 		
+		# Create an array for this value if it's numeric or logical; else, store
+		# the array to this hash.  This data storage method is necessary for the section where
+		# you load the vector data hash
+
 		if ($convertToDatatype) {
-			$matlabCmdString .= "$matlab_var_name"."_converted{$index} = $convertToDatatype($matlab_var_name($index));\n";
+			my @inputs;
+
+			if ( $inputArray->is_numeric() || $inputArray->is_logical() ) {
+				my $arrayToConvert = $self->_putScalarToMatlab( 'tempPlaceHolder', @{ $inputArray->getAll() }[$index-1], $class);
+				@inputs = ( $arrayToConvert );
+			} else {
+				@inputs = ( $inputArray );
+			}
+			
+			my @response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( $convertToDatatype, 1, scalar( @inputs ), @inputs );
+			$matlab_vectors{ $index } = shift( @response );
 		} else {
-			$matlabCmdString .= "$matlab_var_name"."_converted{$index} = $matlab_var_name($index);\n";
+			if ( $inputArray->is_numeric() || $inputArray->is_logical() ) {
+				$matlab_vectors{ $index } = $self->_putScalarToMatlab( 'tempPlaceHolder', @{ $inputArray->getAll() }[$index-1], $class );
+			} else {
+				$matlab_vectors{ $index } = $inputArray;
+			}
 		}
 	}
-	$_engine->eval("$matlabCmdString");
 	
-	# retrieve vector from matlab
-	my $convertedCell = $_engine->getVariable("$matlab_var_name"."_converted")
-		or die "Couldn't retrieve vector output variable "."$matlab_var_name"."_converted"." from matlab.\n".
+	$_matlab_variables{ $matlab_var_name."_converted" } = \%matlab_vectors;
+	
+	# retrieve vector from matlab variable hash
+	my $convertedCell = $_matlab_variables{ $matlab_var_name."_converted" }
+		or die "Vector output variable $matlab_var_name"."_converted"." does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
-		       "The execution string was:\n\t".$self->{ __command }."\n";
+		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
 
 	# load the vector data hash
 	my %vectorData; # $vectorData{$formal_output_name}->{$SE_name} = $data	
@@ -889,8 +962,8 @@ sub MatlabVector_to_Attrs {
 		my $formal_output = $self->getFormalOutput( $formal_output_name )
 			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
 		
-		my $array = $convertedCell->getCell($index-1)
-			or die "Could not retrieve the $index th cell. The index is most probably out of bounds\n"; # -1 is needed cause this indexing starts at 0.
+		my $array = $convertedCell->{ $index }
+			or die "Could not retrieve the $index th cell. The index is most probably out of bounds\n";
 		$array->makePersistent();
 		my $value = $array->getScalar();
 		my $class = $array->class();
@@ -940,7 +1013,7 @@ sub MatlabVector_to_Attrs {
 	# Actually make the outputs
 	# Treating %vectorData as an array will automatically convert to the proper format.
 	# e.g. ( formal_output_name, data_hash, formal_output_name, data_hash, ...)
-	$self->newAttributes( %vectorData ); 
+	$self->newAttributes( %vectorData );
 }
 
 =head2 MatlabScalar_to_Attr
@@ -953,7 +1026,7 @@ sub MatlabScalar_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
-	
+
 	# gather formal output & SE
 	my $output_location = $xmlInstr->getAttribute( 'OutputLocation' );
 	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location );
@@ -1026,22 +1099,22 @@ sub MatlabScalar_to_Attr {
 
 sub MatlabStruct_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
-
+	my $mex = $self->getModuleExecution();
+	
 	my $formal_output = $self->getFormalOutput( $xmlInstr->getAttribute( 'FormalOutput' ) )
 		or die "Formal output could not be found. Error processing output: ".$xmlInstr->toString();
 
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
-	my $matlab_output = $_engine->getVariable( $matlab_var_name )
-		or die "Couldn't retrieve struct output variable $matlab_var_name from matlab.\n".
+	my $matlab_output = $_matlab_variables{ $matlab_var_name }
+		or die "Struct output variable $matlab_var_name does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
-		       "The execution string was:\n\t".$self->{ __command }."\n";
+		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
 	$matlab_output->makePersistent();
 
 	# Loop through outputs in the list
 	foreach my $data_hash( @{ $matlab_output->convertToListOfHashes() } ) {
 		$self->newAttributes( $formal_output, $data_hash );
 	}
-
 }
 
 =head1 XML navigation
@@ -1184,46 +1257,96 @@ sub _outputVarName {
 	return $name;
 }
 
-=head2 __openEngine
+=head2 ___openMatlab
 
-Starts up the Matlab interface (OME::Matlab::Engine)
+Starts up the Matlab interface
 
 =cut
 
-sub __openEngine {
+sub __openMatlab {
 	my ($self) = @_;
-
-	# load environment variables
-	my $session = OME::Session->instance();
-	my $MATLAB = $_environment->matlab_conf() or croak "couldn't retrieve MATLAB environment variables";
-	my $matlab_exec = $MATLAB->{EXEC} or croak "couldn't retrieve matlab exec path from environment";
-	my $matlab_flags = $MATLAB->{EXEC_FLAGS} or croak "couldn't retrieve matlab exec flags from environment";
-	my $matlab_src_dir = $MATLAB->{MATLAB_SRC} or croak "couldn't retrieve matlab src dir from environment";
-	
-	logdbg "debug", "Matlab src dir is $matlab_src_dir";
+	my $instance;
 		
-	# initially open the MATLAB Engine
-	if (!$_engineOpen) {
-		logdbg "debug", "Matlab exec is $matlab_exec";
-		$_engine = OME::Matlab::Engine->open("$matlab_exec $matlab_flags");
-		die "Cannot open a connection to Matlab!" unless $_engine;
-		$_engineOpen = 1;
+	# initially open the MATLAB interface
+	if (!$_matlabOpen) {
+		# Let's try to use the library
+		eval "use OME::Matlab::Lib::Utility::Utility";
+
+		if ( $@ ) {
+			logdbg "debug", "Could not find utility library, using the engine instead.\n\tError message: $@";
+			$instance = $self->__openEngine();
+		} else {
+			$instance = OME::Matlab::Lib::Utility::Utility->new();
+		}
+
+		die "Cannot open a connection to Matlab!" unless $instance;
+		
+		# If we have an engine instance, we are storing it twice, but that's okay because
+		# the cleanliness of the 'utility' code depends on this.
+		$_matlab_instances{ 'utility_or_engine' } = $instance;
+		$_matlabOpen = 1;
 	}
 	
 	# figure out MATLAB constants
 	if (not exists $_numerical_constants{'min_double'}) {
-		# set the path and figure out architecture/MATLAB-version specific constants
-		$_engine->eval("constants = [realmin('double') realmax('double') realmin('single') realmax('single') double(-inf) double(inf) single(-inf) single(inf)];");
+		my $min_double;
+		my $max_double;
+		my $min_single;
+		my $max_single;
+		my $double_neg_inf;
+		my $double_inf;
+		my $single_neg_inf;
+		my $single_inf;
 		
-		my $constants = $_engine->getVariable('constants')->getAll() or die "couldn't get constants\n";
-		my $min_double = $constants->[0];
-		my $max_double = $constants->[1];
-		my $min_single = $constants->[2];
-		my $max_single = $constants->[3];
-		my $double_neg_inf = $constants->[4];
-		my $double_inf     = $constants->[5];
-		my $single_neg_inf = $constants->[6];
-		my $single_inf     = $constants->[7];
+		# Odd entries are functions, even entries are inputs
+		my @functions_and_inputs = (
+			'realmin', 'double',
+			'realmax', 'double',
+			'realmin', 'single',  
+			'realmax', 'single',  
+			'double', '-inf',
+			'double', 'inf',  
+			'single', '-inf',
+			'single', 'inf',  
+		);
+		
+		my $counter = 0;
+		while ( scalar ( @functions_and_inputs ) ) {
+			my $function = shift ( @functions_and_inputs );
+			my $value = shift ( @functions_and_inputs );
+			
+			my @input = ( OME::Matlab::Array->newStringScalar( $value ) );
+			my @response = $_matlab_instances{ 'utility_or_engine' }->callMatlab($function, 1, scalar( @input ), @input);
+			my $retVal = shift( @response );
+			my $value_to_store;
+			
+			# If the value we're supposed to get is "inf" or "-inf", MATLAB returns
+			# the ASCII values, so we have to convert them into char entries.
+			# The way I'm checking for this is just seeing if there's more than
+			# one entry in the mxArray that's returned. I'm not sure how secure
+			# this is, so if someone can come up with a better solution, please
+			# implement it.
+			if ( scalar ( @{ $retVal->getAll() } ) > 1 ) {
+				foreach my $entry ( @{ $retVal->getAll() } ) {
+					$value_to_store .= chr($entry);
+				}
+			} else {
+				$value_to_store = @{ $retVal->getAll() }[0];
+			}			
+			
+			switch ($counter) {
+				case 0 { $min_double = $value_to_store };
+				case 1 { $max_double = $value_to_store };
+				case 2 { $min_single = $value_to_store };
+				case 3 { $max_single = $value_to_store  };
+				case 4 { $double_neg_inf = $value_to_store };
+				case 5 { $double_inf = $value_to_store };
+				case 6 { $single_neg_inf = $value_to_store };
+				case 7 { $single_inf = $value_to_store };
+			}
+	
+			$counter++;
+		}
 		
 		%_numerical_constants = (
 			'min_double' => $min_double,
@@ -1236,33 +1359,40 @@ sub __openEngine {
 			'single_inf'     => $single_inf,
 		);	
 	}
-	
-	# check that the MATLAB Engine is running properly and clear out the
-	# current MATLAB environment
-	$_engine->eval("clear; addpath(genpath('$matlab_src_dir')); starter = 12345;");
-
-	my $starter = $_engine->getVariable('starter');
-	if (not defined $starter or $starter->getScalar() != 12345) {
-		logdbg "debug", "RESTARTING MATLAB ENVIRONMENT -- NOT GOOD";
-		$self->__closeEngine();
-		$self->__openEngine();
-	}
 }
 
-=head2 __closeEngine
+=head2 __closeMatlab
 
-Shuts down the Matlab interface (OME::Matlab::Engine)
+Shuts down the Matlab interface - well, just the engine at the moment.
+TODO: Implement something to shut down each instance.
 
 =cut
 
-sub __closeEngine {
-	my ($self) = @_;
+sub __closeMatlab {
+	$_matlab_instances{ 'engine' }->close() if $_matlab_instances{ 'engine' };
+}
 
-	if ($_engineOpen) {
-		$_engine->close();
-		$_engine = undef;
-		$_engineOpen = 0;
-	}
+sub __openEngine {
+
+	# load environment variables
+	my $session = OME::Session->instance();
+	my $MATLAB = $_environment->matlab_conf() or croak "couldn't retrieve MATLAB environment variables";
+	my $matlab_exec = $MATLAB->{EXEC} or croak "couldn't retrieve matlab exec path from environment";
+	my $matlab_flags = $MATLAB->{EXEC_FLAGS} or croak "couldn't retrieve matlab exec flags from environment";
+	my $matlab_src_dir = $MATLAB->{MATLAB_SRC} or croak "couldn't retrieve matlab src dir from environment";
+	
+	logdbg "debug", "Matlab src dir is $matlab_src_dir";
+	logdbg "debug", "Matlab exec is $matlab_exec";
+	
+	my $instance = OME::Matlab::Engine->open("env PATH=/usr/bin:/bin $matlab_exec $matlab_flags");
+	
+	# Add the matlab source directory to the path so we can find our functions
+	$instance->eval("clear; addpath(genpath('$matlab_src_dir'));");
+	
+	# Store the engine into its own place, because we'll need it in execute
+	$_matlab_instances{ 'engine' } = $instance;
+	
+	return $instance;
 }
 
 =head2 __checkExecutionGranularity
@@ -1376,9 +1506,11 @@ sub validateAndProcessExecutionInstructions {
 
 =pod
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Josiah Johnston (siah@nih.gov)
+Josiah Johnston (siah@nih.gov),
+Tom Macura (tmacura@nih.gov),
+Arpun Nagaraja (arpun@mit.edu),
 based on code written by Douglas Creager (dcreager@alum.mit.edu)
 
 =head1 SEE ALSO
