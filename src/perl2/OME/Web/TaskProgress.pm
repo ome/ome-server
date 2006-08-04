@@ -44,7 +44,6 @@ $VERSION = $OME::VERSION;
 use base qw{ OME::Web::Authenticated };
 
 use OME::Tasks::NotificationManager;
-use OME::Web::DBObjTable;
 
 sub new {
 	my $proto = shift;
@@ -71,26 +70,32 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
-	my $user = $self->Session()->User();
-	my @tasks = OME::Tasks::NotificationManager->list();
-	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
+	my @tasks;
 	
 
 	# The action that was "clicked"
 	my $action = $cgi->param('action') || '';
 	my @selected;
 	if ($action eq 'Clear Selected') {
-		@selected = $cgi->param('selected');
+		OME::Tasks::NotificationManager->clear (id => ['in',[$cgi->param('selected')]])
 	} elsif ($action eq 'Clear All') {
-		push (@selected,$_->id()) foreach @tasks;
-	}
-	
-	foreach (@selected) {
-		OME::Tasks::NotificationManager->clear (id => $_);
+		OME::Tasks::NotificationManager->clear ();
+	} elsif ($action eq 'Clear Finished') {
+		OME::Tasks::NotificationManager->clear (state => 'FINISHED');
 	}
 
-	# reload the tasks after 'action' if any.
-	@tasks = OME::Tasks::NotificationManager->list() if scalar (@selected);
+	@tasks = OME::Tasks::NotificationManager->list();
+
+	my @active_tasks;
+	my @other_tasks;
+	foreach (@tasks) {
+		if ($_->state() eq 'IN PROGRESS') {
+			push (@active_tasks,$_);
+		} else {
+			push (@other_tasks,$_);
+		}
+	}
+	@tasks = (@active_tasks,@other_tasks);
 	
 	my $body;
 	if (scalar @tasks) {
