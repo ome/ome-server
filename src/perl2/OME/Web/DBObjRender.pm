@@ -462,13 +462,13 @@ sub renderArray {
 			$options->{ more_info_url } = $self->getSearchAccessorURL( $obj, $method )
 				unless $options->{ no_more_info };
 		} else { # objectList
-			# Paging requires sorted data. Figure out what to sort on, default to id
-			my $sort = ( exists $options->{ __order } ? $options->{ __order } : 'id' );
-			@$objs = sort { $a->$sort cmp $b->$sort } @$objs;
-			$objs = [ splice( @$objs, $offset, $limit ) ];
-
-			$options->{ more_info_url } = $self->getSearchURL( $options->{type}, 'id', join( ',', map( $_->id, @$objs ) ) )
-				unless $options->{ no_more_info };
+			# The list is propagated whole as an id-based search parameter.
+			# We splice out of it what we're
+			# currently displaying determined by paging limits/page number
+			unless ($options->{ no_more_info }) {
+				$options->{ more_info_url } = $self->getSearchURL( $options->{type}, 'id', join( ',', map( $_->id, @$objs ) ) );
+				$objs = [ splice( @$objs, $offset, $limit ) ];
+			}
 		}
 	}
 	# If paging didn't work for whatever reason, load objects as needed.
