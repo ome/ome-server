@@ -105,15 +105,27 @@ sub addUser {
 		# correct user properties till ome admin-user is happy
 		while (1) {
 			$username    = confirm_default("Username?",$username);
+			while( (not defined $username) || ($username eq '') ) {
+				print BOLD,"Username must be specified.\n", RESET;
+				$username    = confirm_default("Username?",$username);
+			}
+			
 			$firstname   = confirm_default("First Name?",$firstname);
 			$lastname    = confirm_default("Last Name?",$lastname);
 			while( (not defined $lastname) || ($lastname eq '') ) {
-				print BOLD,"Last name must be specified.\n";
+				print BOLD,"Last name must be specified.\n", RESET;
 				$lastname    = confirm_default("Last Name?",$lastname);
 			}
 			$email       = confirm_default("Email Address?",$email);
 			$directory   = confirm_path   ("Data Directory?",$directory);
 			$group_input = confirm_default("Group (Name or ID)?",$group_input);
+			while ( (not defined $group_input) || ($group_input eq '') ) {
+				print BOLD, "Each experimenter must belong to a group.\n", RESET;
+				print "If you don't specify an existing group,\n".
+					  "a new one with that name will be made for you.\n";
+				$group_input = confirm_default("Group (Name or ID)?",$group_input);
+						
+			}
 			$password    = get_password   ("Password?",6);
 	
 			print BOLD,"\nConfirm New User's Properties:\n",RESET;
@@ -155,22 +167,20 @@ sub addUser {
 		my $group;
 		my $new_group;
 		my $mex = $self->getAdminMEX();
-		if ($group_input ne '') {
-			$group = $self->getGroup ($group_input);
-			unless (defined $group) {
-			
+		$group = $self->getGroup ($group_input);
+		unless (defined $group) {			
 			# Give the user a chance to create the group.
-				print "Group $group_input could not be found.\n";
-				if (y_or_n ("Create Group $group_input with $username as its leader?",'n')) {
-					$group = $factory->newAttribute('Group',undef,$mex, {
-						Name    => $group_input,
-					}) or 
-						die "Could not create new group";
-					$new_group = 1;
-				} else {
-					$group_input = '';
-					redo;
-				}
+			print "Group $group_input could not be found.\n";
+			if (y_or_n ("Create Group $group_input with $username as its leader?",'n')) {
+				$group = $factory->newAttribute('Group',undef,$mex, {
+					Name    => $group_input,
+				}) or 
+					die "Could not create new group";
+				$new_group = 1;
+			} else {
+				print STDERR "\nThe experimenter must belong to a group.\n\n";
+				$group_input = '';
+				redo;
 			}
 		}
 
@@ -580,12 +590,20 @@ sub editUser {
 			$firstname   = confirm_default("First Name?", $firstname);
 			$lastname    = confirm_default("Last Name?", $lastname);
 			while( (not defined $lastname) || ($lastname eq '') ) {
-				print BOLD,"Last name must be specified.\n";
+				print BOLD,"Last name must be specified.\n", RESET;
 				$lastname    = confirm_default("Last Name?",$lastname);
 			}
 			$email       = confirm_default("Email Address?", $email);
 			$directory   = confirm_default("Data Directory?", $directory);
-			$group_input = confirm_default("Group ID or Name?", $group_input);
+			
+			$group_input = confirm_default("Group (Name or ID)?",$group_input);
+			while ( (not defined $group_input) || ($group_input eq '') ) {
+				print BOLD, "Each experimenter must belong to a group.\n", RESET;
+				print "If you don't specify an existing group,\n".
+					  "a new one with that name will be made for you.\n";
+				$group_input = confirm_default("Group (Name or ID)?",$group_input);
+						
+			}
 			
 			print BOLD,"\nConfirm User's New Properties:\n",RESET;
 			print      "      Username: ", BOLD, $user->OMEName(), RESET, "\n";
