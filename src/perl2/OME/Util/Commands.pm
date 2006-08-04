@@ -391,6 +391,8 @@ MSG
 sub getSession {
     my ($self) = @_;
 
+	return (OME::Session::instance()) if OME::Session::hasInstance;
+
     my $session;
     if ($OME_SESSION_KEY) {
 	$session = OME::SessionManager->createWithKey($OME_SESSION_KEY);
@@ -473,7 +475,8 @@ sub getAdminMEX {
 	# Oddly enough, we have to commit this transaction, otherwise we get
 	# referential integrity errors when we try to commit new attributes
 	# Anymbody got a clue as to why that is?
-	$session->commitTransaction();
+	# (igg 8/2/06) Doesn't appear to be necessary anymore...
+#	$session->commitTransaction();
 	return ($ADMIN_MEX);
 }
 
