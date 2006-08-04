@@ -2584,14 +2584,14 @@ no warnings "uninitialized";
 					$value = 'null' if not defined $value;
 	
 					if ($sql_type eq 'boolean') {
-						# If the column is Boolean, 1/0 won't work.
-						foreach my $value (@new_values) {
-							next unless defined $value;
-							die "Illegal Boolean column value '$value'"
-							  unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
-		
-							$value = 'true' if $value eq '1';
-							$value = 'false' if $value eq '0';
+						if (lc($value) eq 'null') {
+							push @join_clauses, "$location $operation $value";
+							$have_values = 0;
+						} else {
+							if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
+							elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+							else {die "Illegal Boolean column value '$value'";}
+							push @join_clauses, "$location $operation $question";
 						}
 					} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
 						# If the column is a float, the join clause below was used, and the values needs an epsilon
@@ -2699,7 +2699,6 @@ no warnings "uninitialized";
                                  \@join_clauses,\%tables_used,
                                  $column_alias);
             $id_order = 1 if $location eq 'id';
-
             push @order_by, [$location,$order];
         }
 
@@ -2857,16 +2856,15 @@ no warnings "uninitialized";
 					push @join_clauses, [$operation, $question];
 					$id_criteria = 1;
 				} elsif ($sql_type eq 'boolean') {
-					# If the column is Boolean, 1/0 won't work.
-					foreach my $value (@new_values) {
-						next unless defined $value;
-						die "Illegal Boolean column value '$value'"
-						  unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
-	
-						$value = 'true' if $value eq '1';
-						$value = 'false' if $value eq '0';
+					if (lc($value) eq 'null') {
+						push @join_clauses, "$location $operation $value";
+						$have_values = 0;
+					} else {
+						if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
+						elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+						else {die "Illegal Boolean column value '$value'";}
+						push @join_clauses, "$location $operation $question";
 					}
-					push @join_clauses, "$location $operation $question";
 				} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
 					# If the column is a float, = won't work.
 					push @join_clauses, "abs($location - $question) < ?";
