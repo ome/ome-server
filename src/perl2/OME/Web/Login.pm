@@ -113,8 +113,8 @@ sub __loginForm {
 
 	my $table_data = $q->Tr( [
 		$q->td({-align => 'center'}, $q->p({-class => 'ome_title'}, "Welcome to OME")),
-		$q->td({-align => 'center'}, $q->img({-src => '/images/logo-eye.gif'}))
-#		$q->td({-align => 'center'}, $q->img({-src => '/images/logo-selzer.gif'}))
+#		$q->td({-align => 'center'}, $q->img({-src => '/images/logo-eye.gif'}))
+		$q->td({-align => 'center'}, $q->img({-src => '/images/logo-selzer.gif'}))
 		]);
 
 	if ($error) {
@@ -157,7 +157,7 @@ sub __loginForm {
 	my $generic_footer =
 		$q->hr() .
 		$q->p({-align => 'center', -class => 'ome_footer'},
-			  'Powered by OME technology &copy 2005 ',
+			  'Powered by OME technology &copy 2006 ',
 			  $q->a({-href => 'http://www.openmicroscopy.org/', -class => 'ome_footer', -target => '_ome'},
 				  'Open Microscopy Environment')
 		  );
