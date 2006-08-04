@@ -89,9 +89,10 @@ CMDS
 #    --DBPassword, --dbpw  Specify the database password (i.e. --dbpw def456)
 }
 
-my $INDEX_HTML;
+my $TOC_HTML;
 sub selfDocument {
-	my ($self,$commands) = @_;
+	my ($self) = @_;
+	# don't need it
 	my $commands = $self->getCommands();
 	
 	my ($output_dir);
@@ -102,41 +103,51 @@ sub selfDocument {
 		die "The Output Directory needs to be specified.\n"; 
 	}
 	
-	open ($INDEX_HTML, ">index.html");
-	print $INDEX_HTML <<HTMLSTART;
-	
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>OME Commander Online Documentation</title>
-<meta http-equiv="content-type" content="text/html;charset=utf-8">
-<meta http-equiv="Content-Script-Type" content="text/javascript">
-<link href="http://www.openmicroscopy.org.uk/earthy.css" rel="stylesheet" type="text/css" media="all">
-</head>
-
-<body style="background-color: white">
-<h1>OME Commander Online Documentation</h1>
+	# Write the TOC html that will be injected (via javascript) into the various
+	# help pages
+	open ($TOC_HTML, ">$output_dir/toc.html");
+	print $TOC_HTML <<HTMLSTART;
+<h1>OME Commander Reference</h1>
 HTMLSTART
-    print ($INDEX_HTML "<ul>\n");
-	$self->print_methods ($output_dir, $self, $commands);
-    print ($INDEX_HTML "</ul>\n");
+    print ($TOC_HTML "<ul>\n");
+	$self->create_TOC ($output_dir, $self, $commands);
+    print ($TOC_HTML "</ul>\n");
     
-	print $INDEX_HTML <<HTMLEND;
-</body>
-</html>
+	print $TOC_HTML <<HTMLEND;
 HTMLEND
-	close $INDEX_HTML;
+	close $TOC_HTML;
+	
+	open (INDEX_HTML, ">$output_dir/index.html");
+	print INDEX_HTML <<HTMLCONTENTS;
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<link href="http://www.openmicroscopy.org.uk/earthy.css" rel="stylesheet" type="text/css" media="all">
+	<script src="http://www.openmicroscopy.org.uk/templates.js"></script>
+	<script src="http://www.openmicroscopy.org.uk/site.js"></script>
+	<script src="http://www.openmicroscopy.org.uk/sarissa.js"></script>
+  </head>
+
+  <body bgcolor="#ffffff" onload="injectHTML('help_toc','toc.html');">
+	<div class="menu help_toc" id="help_toc"> </div>
+  </body>
+</html>
+HTMLCONTENTS
+	close INDEX_HTML;
 }
 
-sub print_methods {
+sub create_TOC {
 	my ($self, $output_dir, $global_class, $commands, $supercommands) = @_;
     $supercommands = [] unless defined $supercommands;
     
 	foreach my $command (sort keys %$commands) {
 		my @supercommands_command = @$supercommands;
-		if (@$supercommands[scalar @$supercommands - 1] ne $command) {
+		if (@$supercommands[-1] ne $command) {
         	push @supercommands_command, $command;
         }
+        print "@supercommands_command\n";
         
         my $base_method = $commands->{$command};        
         if (ref($base_method) eq 'ARRAY') {
@@ -161,105 +172,94 @@ sub print_methods {
             
             if ($print_in_bullet_list) {
             	# it's a grouping so MAKE an html file listing available commands 
+            	$self->write_method_help ($output_dir, $class, [@supercommands_command], '$class->listCommands($supercommands);');
             	
-				# get method's help information into a tmp file
-				open (STDOUT, ">$output_dir/output_redirect") || die "Can't redirect stdout";
-				$class->listCommands([@supercommands_command]);
-				close(STDOUT);
-				
-				# read the file, fix escape characters and write the html file
-				open (OUTPUT_STDOUT, "<$output_dir/output_redirect");
-				my @output_stdout = <OUTPUT_STDOUT>;
-				close (OUTPUT_STDOUT);
-
-				my $output_html = join ("_", @supercommands_command).".html";				
-				open (OUTPUT_HTML, ">$output_dir/$output_html") || die "Couldn't write HTML file";
-				print($INDEX_HTML "<li><a href=".$output_dir."/".$output_html.">".$command."</a></li>\n");
-				print OUTPUT_HTML <<HTMLSTART2;
-			
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<link href="http://www.openmicroscopy.org.uk/earthy.css" rel="stylesheet" type="text/css" media="all">
-</head>
-
-<body style="background-color: white">
-<div class="body">
-<h1>OME Commander Online Documentation</h1>
-<PRE>
-HTMLSTART2
-				foreach (@output_stdout) {
-					while($_ =~ s/</&lt;/){;}
-					while($_ =~ s/>/&gt;/){;}
-					print OUTPUT_HTML $_;
-				}
-				
-				print OUTPUT_HTML <<HTMLEND2;
-</PRE>
-</div>
-</body>
-</html>
-HTMLEND2
 				# list the grouping's commands
-            	print ($INDEX_HTML "<ul>\n");
-				$self->print_methods($output_dir, $class, $class->getCommands(), [@supercommands_command]);
-				print ($INDEX_HTML "</ul>\n");
+            	print ($TOC_HTML "<ul>\n");
+				$self->create_TOC($output_dir, $class, $class->getCommands(), [@supercommands_command]);
+				print ($TOC_HTML "</ul>\n");
 			
 			} else {
-			
 				# we ignore this grouping cause it isn't real e.g. ome admin configure configure
-				$self->print_methods($output_dir, $class, $class->getCommands(), [@supercommands_command]);
+				$self->create_TOC($output_dir, $class, $class->getCommands(), [@supercommands_command]);
 			}
         
         } else {
- 			my $help_method = "${base_method}_help";
- 			if (UNIVERSAL::can($global_class,"$help_method")) {
- 			
- 				# get method's help information into a tmp file
-				open (STDOUT, ">$output_dir/output_redirect") || die "Can't redirect stdout";
- 				$global_class->$help_method([@supercommands_command]);
-				close(STDOUT);
-				
-				# read the file, fix escape characters and write the html file
-				open (OUTPUT_STDOUT, "<$output_dir/output_redirect");
-				my @output_stdout = <OUTPUT_STDOUT>;
-				close (OUTPUT_STDOUT);
-
-				my $output_html = join ("_", @supercommands_command).".html";				
-				open (OUTPUT_HTML, ">$output_dir/$output_html") || die "Couldn't write HTML file";
-				print($INDEX_HTML "<li><a href=".$output_dir."/".$output_html.">".$command."</a></li>\n");
-				print OUTPUT_HTML <<HTMLSTART2;
-			
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<link href="http://www.openmicroscopy.org.uk/earthy.css" rel="stylesheet" type="text/css" media="all">
-</head>
-
-<body style="background-color: white">
-<div class="body">
-<h1>OME Commander Online Documentation</h1>
-<PRE>
-HTMLSTART2
-				foreach (@output_stdout) {
-					while($_ =~ s/</&lt;/){;}
-					while($_ =~ s/>/&gt;/){;}
-					print OUTPUT_HTML $_;
-				}
-				
-				print OUTPUT_HTML <<HTMLEND2;
-</PRE>
-</div>
-</body>
-</html>
-HTMLEND2
+ 			if (UNIVERSAL::can($global_class,${base_method}."_help")) { 			
+				# write some HTML 			
+            	$self->write_method_help ($output_dir, $global_class, [@supercommands_command], '$class->'.${base_method}.'_help'.'($supercommands);');
  			} else {
  				# No help available
-				print($INDEX_HTML "<li>".$command."</li>\n") unless ($command eq "self-document");
+				print ($TOC_HTML "<li>".$command."</li>\n") unless ($command eq "self-document");
  			}
 
         }
     }
+}
+
+sub write_method_help {
+	my ($self, $output_dir, $class, $supercommands, $print_method_str) = @_;
+	my @cmds = @$supercommands;
+	print STDERR "@cmds\n";
+	
+	# get method's help information into a tmp file
+	open (STDOUT, ">$output_dir/output_redirect") || die "Can't redirect stdout";
+	eval $print_method_str;
+	close(STDOUT);
+	
+	# read the file, fix escape characters and write the html file
+	open (OUTPUT_STDOUT, "<$output_dir/output_redirect");
+	my @output_stdout = <OUTPUT_STDOUT>;
+	close (OUTPUT_STDOUT);
+
+	my $output_html = join ("_", @cmds).".html";				
+	open (OUTPUT_HTML, ">$output_dir/$output_html") || die "Couldn't write HTML file";
+	print($TOC_HTML '<li><a href="'.$output_html.'">'.$cmds[-1]."</a></li>\n");
+	print OUTPUT_HTML <<HTMLSTART2;
+			
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<link href="http://www.openmicroscopy.org.uk/earthy.css" rel="stylesheet" type="text/css" media="all">
+	<script src="http://www.openmicroscopy.org.uk/templates.js"></script>
+	<script src="http://www.openmicroscopy.org.uk/site.js"></script>
+	<script src="http://www.openmicroscopy.org.uk/sarissa.js"></script>
+  </head>
+
+  <body bgcolor="#ffffff" onload="injectHTML('help_toc','toc.html');">
+    <script> startDocument(); </script>
+	<table>
+	<tr>
+		<td style="vertical-align: top;">	
+		<div class="menu help_toc" id="help_toc"> </div>
+		<a href="../index.html">Back to OME Commander Documentation</a>
+		</td>
+		<td style="vertical-align: top;">	
+<PRE>
+HTMLSTART2
+				print OUTPUT_HTML "<h1>ome @cmds</h1>\n";
+				
+				foreach (@output_stdout) {
+					while($_ =~ s/</&lt;/){;}
+					while($_ =~ s/>/&gt;/){;}
+					print OUTPUT_HTML $_;
+				}
+				
+				print OUTPUT_HTML <<HTMLEND2;
+</PRE>
+		</td>
+	</tr>
+	</table>
+    <script> endDocument(); </script>
+  </body>
+</html>
+
+</div>
+</body>
+</html>
+HTMLEND2
 }
 1;
 
