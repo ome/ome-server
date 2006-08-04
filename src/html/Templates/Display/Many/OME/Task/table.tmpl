@@ -1,8 +1,16 @@
 <table class="ome_table" border="0" cellspacing="1" cellpadding="4" width>
-	<caption>Tasks</caption>
+	<caption><nobr>
+		Current Tasks | 
+		<TMPL_VAR NAME=/pager_text>
+		<TMPL_IF NAME=/more_info_url>
+			<TMPL_IF NAME=/pager_text>|</TMPL_IF>
+			<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a>
+		</TMPL_IF>
+	</nobr></caption>
 	<tr>
 		<td align="right" class="ome_td" colspan="10">
 			<a class="ome_widget" title="Update" href="javascript: document.forms[0].action.value='Update'; document.forms[0].submit();">Update</a> | 
+			<a class="ome_widget" title="Clear Finished" href="javascript: document.forms[0].action.value='Clear Finished'; document.forms[0].submit();">Clear Finished</a> | 
 			<a class="ome_widget" title="Clear Selected" href="javascript: document.forms[0].action.value='Clear Selected'; document.forms[0].submit();">Clear Selected</a> | 
 			<a class="ome_widget" title="Clear All" href="javascript: document.forms[0].action.value='Clear All'; document.forms[0].submit();">Clear All</a>
 		</td>
