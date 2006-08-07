@@ -116,7 +116,7 @@ sub actionTemplateDir {
 
 =head2 createTemplateDir
 
-    The directory for creation templates.  Generally, the "Action"
+    The directory for creation templates.  Generally, the "Create"
 	subdirectory under systemTemplateDir. 
 
         This should only be used internally.
