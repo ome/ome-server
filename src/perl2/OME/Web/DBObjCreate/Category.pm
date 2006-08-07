@@ -55,7 +55,7 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Web::DBObjCreate);
 
 sub _create {
-	my ( $self ) = @_;
+	my ( $self, $tmpl ) = @_;
 	my $q = $self->CGI();
 	my $session = $self->Session();
 	my $factory = $session->Factory();
@@ -66,7 +66,7 @@ sub _create {
 			if( $q->param( $_ ) && $q->param( $_ ) ne '' );
 	}
 	if( not exists $data_hash{ CategoryGroup } ) {
-		my ($returnType, $body) = $self->_getForm();
+		my ($returnType, $body) = $self->_getForm( $tmpl );
 		$body = 
 			"<font color='red'>Please select a Category Group</font><br>".
 			$body;
