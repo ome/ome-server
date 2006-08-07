@@ -882,7 +882,7 @@ BLURB
 			print      "                  cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
 			print BOLD,"Web-UI HTML Templates: \n",RESET;
 			print      "  Developer configuration: ", BOLD, $APACHE->{TEMPLATE_DEV_CONF} ?'yes':'no', RESET, "\n";
-			print      " HTML Templates directory: ", BOLD, $APACHE->{TEMPLATE_DIR}, RESET, "\n";
+#			print      " HTML Templates directory: ", BOLD, $APACHE->{TEMPLATE_DIR}, RESET, "\n";
 
 			if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
 				print BOLD,"OMEIS Update:\n",RESET;
@@ -1022,7 +1022,7 @@ BLURB
 			 $APACHE->{TEMPLATE_DEV_CONF} = 0;
 			 $APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
 		}
-		$APACHE->{TEMPLATE_DIR} = confirm_path ('Look for HTML Templates in:', $APACHE->{TEMPLATE_DIR});		
+#		$APACHE->{TEMPLATE_DIR} = confirm_path ('Look for HTML Templates in:', $APACHE->{TEMPLATE_DIR});		
 		
 		print "\n";  # Spacing
 		$confirm_all = 1;
@@ -1047,7 +1047,7 @@ BLURB
 	print $LOGFILE "                  cgi-bin: ", $APACHE->{CGI_BIN}, "\n";
 	print $LOGFILE "Web-UI HTML Templates: \n";
 	print $LOGFILE "  Developer configuration: ", $APACHE->{TEMPLATE_DEV_CONF} ?'yes':'no', "\n";
-	print $LOGFILE " HTML Templates directory: ", $APACHE->{TEMPLATE_DIR}, "\n";
+#	print $LOGFILE " HTML Templates directory: ", $APACHE->{TEMPLATE_DIR}, "\n";
 
 	if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
 		print $LOGFILE "OMEIS Update:\n";
@@ -1276,7 +1276,7 @@ BLURB
 	#******** Read [Bug 531] for more background info and what is happening here
 	
 	# This is 1 if we want to use templates from CVS distribution
-	my $cvs_sourced_templates = path_in_tree(cwd(), $APACHE->{TEMPLATE_DIR});
+	my $cvs_sourced_templates = $APACHE->{TEMPLATE_DEV_CONF};
 	
 	# Clear out system directories
 	print "Installing HTML Templates for Web-UI \n";
@@ -1291,7 +1291,10 @@ BLURB
 		print "Templates structure doesn't exist; it will be created.\n";
 
 	} elsif (not scalar @old_sys_html_dirs and not $cvs_sourced_templates) {
-		# this is a valid condition that occurs in updating from 2.4.0 to 2.4.1
+		# this is a valid condition that occurs in updating from 2.4.0 to later versions
+# DANGER!!!
+# This seems like a very bad thing to do. I'll have to revisit this problem after we
+# get a version of OME 2.4.0 working. The danger is wiping user-defined templates.
 		print $LOGFILE "No HTML System directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
 			"The structure is invalid. It will be cleaned-out and rebuilt.\n";
 		print "No HTML System directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
