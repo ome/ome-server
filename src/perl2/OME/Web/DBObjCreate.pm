@@ -161,9 +161,10 @@ sub getPageTitle {
 	return $pageTitle;
 }
 
-=head2 getTemplate
+=head2 getAuthenticatedTemplate
 
 =cut
+
 sub getAuthenticatedTemplate {
     my $self = shift;
 
@@ -191,8 +192,8 @@ sub getPageBody {
 		    ref( $self ) eq __PACKAGE__ );
 
 	# create?
-	if( $q->param( 'create' ) ) {
-		return $self->_create( );
+	if( $q->param( 'action' ) eq 'create' ) {
+		return $self->_create( $tmpl );
 	} else {
 		return $self->_getForm($tmpl);
 	}
@@ -333,7 +334,7 @@ sub _getForm {
 
 =head2 _create
 
-Accepts no parameters. Responsible for collecting data from $self->CGI
+Accepts $tmpl as a parameter. Responsible for collecting data from $self->CGI
 and using it to create a new object. If successful, should return:
 	return( 'REDIRECT', $self->getObjDetailURL( $obj ) );
 
@@ -343,7 +344,7 @@ Overrideable.
 =cut
 
 sub _create {
-	my ( $self ) = @_;
+	my ( $self, $tmpl ) = @_;
 	my $q = $self->CGI();
 	my $type = $self->_getType();
 	my $session = $self->Session();
@@ -586,9 +587,13 @@ sub getStuffToPopulateHasOneRef {
 	my @itemList  = $factory->findObjects($type);
 
 	# do the rendering.
-	my $renderer = $self->Renderer;
-	my $options = $renderer->renderArray(\@itemList,'list_of_options',\%select_hash);
-	my $select="<SELECT NAME=\"$accessor_to_type\">$options</SELECT>";
+	my $select = $self->SearchUtil()->getObjectSelectionField( 
+		$type, $accessor_to_type, { 
+			max_elements_in_list => 25, 
+			list_length => 1, 
+			select_one => 1 
+		} 
+	);
 	return $newField . $select . " or " . $create_link;
 }
 
