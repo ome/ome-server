@@ -2860,6 +2860,10 @@ public abstract class OMENodeTest {
     System.out.println("Writing OME-XML to String...");
     String s = ome.writeOME(false);
     System.out.println(s);
+    System.out.println();
+    String filename = "omexml.tmp";
+    System.out.println("Writing OME-XML to file " + filename + "...");
+    ome.writeOME(new File(filename), false);
   }
 
 }
