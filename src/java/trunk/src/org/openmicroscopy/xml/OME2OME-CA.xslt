@@ -150,10 +150,17 @@
 				</xsl:attribute>
 			</xsl:if>
 			<xsl:if test = "not (string-length(@DefaultPixels) > 0)">
-				<xsl:if test = "string-length(OME:CustomAttributes/OME:Pixels [1] /@ID) > 0">
+				<xsl:if test = "string-length(OME:Pixels [1] /@ID) > 0">
 					<xsl:attribute name = "DefaultPixels">
-						<xsl:value-of select = "OME:CustomAttributes/OME:Pixels [1] /@ID"/>
+						<xsl:value-of select = "OME:Pixels [1] /@ID"/>
 					</xsl:attribute>
+				</xsl:if>
+				<xsl:if test = "not (string-length(OME:Pixels [1] /@ID) > 0)">
+					<xsl:if test = "string-length(OME:CustomAttributes/OME:Pixels [1] /@ID) > 0">
+						<xsl:attribute name = "DefaultPixels">
+							<xsl:value-of select = "OME:CustomAttributes/OME:Pixels [1] /@ID"/>
+						</xsl:attribute>
+					</xsl:if>
 				</xsl:if>
 			</xsl:if>
 			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
@@ -167,18 +174,14 @@
 						<xsl:attribute name = "PixelSizeX">
 							<xsl:value-of select = "@PixelSizeX"/>
 						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeY">
-							<xsl:value-of select = "@PixelSizeY"/>
-						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeZ">
-							<xsl:value-of select = "@PixelSizeZ"/>
-						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeC">
-							<xsl:value-of select = "@WaveIncrement"/>
-						</xsl:attribute>
-						<xsl:attribute name = "PixelSizeT">
-							<xsl:value-of select = "@TimeIncrement"/>
-						</xsl:attribute>
+						<xsl:apply-templates select = "@PixelSizeY" mode = "OptionalAttribute"/>
+						<xsl:apply-templates select = "@PixelSizeZ" mode = "OptionalAttribute"/>
+						<xsl:apply-templates select = "@WaveIncrement" mode = "OptionalAttribute">
+							<xsl:with-param name = "Name">PixelSizeC</xsl:with-param>
+						</xsl:apply-templates>
+						<xsl:apply-templates select = "@TimeIncrement" mode = "OptionalAttribute">
+							<xsl:with-param name = "Name">PixelSizeT</xsl:with-param>
+						</xsl:apply-templates>
 					</xsl:element>
 				</xsl:if>				
 				<xsl:apply-templates select = "OME:ExperimentRef"/>
