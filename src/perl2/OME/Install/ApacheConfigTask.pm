@@ -85,7 +85,7 @@ our $APACHE_CONF_DEF = {
 	APACHECTL => undef, # Path to the httpdconf binary
 	
 	TEMPLATE_DEV_CONF => 0, # developer templates settings or not?
-	TEMPLATE_DIR => '$OME_BASE_DIR/html/Templates', # Path to system html templates
+	TEMPLATE_DIR => "$OME_BASE_DIR/html/Templates", # Path to system html templates
 };
 
 # Globals
