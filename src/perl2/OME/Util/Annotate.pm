@@ -77,14 +77,15 @@ sub spreadsheet_importer {
     my $command_name = $self->commandName($commands);
 
     my ($file, $noop);
-	GetOptions('f|file=s' => \$file,
+    GetOptions('f|file=s' => \$file,
    			   'n|noop'   => $noop);
    			   
     die "Flag not supported. Inform Tom Macura\n" if $noop;
 	
 	$file = $ARGV[0] if (scalar @ARGV);
 	$self->spreadsheet_importer_help($commands) and return if (not defined $file);
-
+	
+	my $session = $self->getSession();
 	my $results = OME::Util::Annotate::SpreadsheetReader->processFile($file);
 	my $output;
 	if (!ref $results) {
