@@ -57,6 +57,21 @@ public class OMEXMLHandler extends DefaultHandler {
   /** Pixels element attribute lists collected so far. */
   protected Vector pixels = new Vector();
 
+  /** Counter for BinData and TiffData elements. */
+  protected int dataCount = 0;
+
+  /** Path to the XML data. Can be null. */
+  protected String path;
+
+
+  // -- Constructor --
+
+  /** Constructs a new OME-XML SAX handler. */
+  public OMEXMLHandler() { }
+
+  /** Constructs a new OME-XML SAX handler with the given path. */
+  public OMEXMLHandler(String path) { this.path = path; }
+
 
   // -- OMEXMLHandler API methods --
 
@@ -81,12 +96,49 @@ public class OMEXMLHandler extends DefaultHandler {
     return info == null ? null : info.dimOrder;
   }
 
+  /**
+   * Gets the element names of BinData and TiffData children
+   * for the Pixels element with the given ID.
+   */
+  public String[] getDataNames(String id) {
+    PixelsInfo info = getPixelsInfo(id);
+    if (info == null) return null;
+    String[] s = new String[info.data.size()];
+    info.data.copyInto(s);
+    return s;
+  }
+
+  /**
+   * Gets the element attribute names of BinData and TiffData children
+   * for the Pixels element with the given ID.
+   */
+  public String[][] getDataAttrNames(String id) {
+    PixelsInfo info = getPixelsInfo(id);
+    if (info == null) return null;
+    String[][] s = new String[info.attrNames.size()][];
+    info.attrNames.copyInto(s);
+    return s;
+  }
+
+  /**
+   * Gets the element attribute names of BinData and TiffData children
+   * for the Pixels element with the given ID.
+   */
+  public String[][] getDataAttrValues(String id) {
+    PixelsInfo info = getPixelsInfo(id);
+    if (info == null) return null;
+    String[][] s = new String[info.attrValues.size()][];
+    info.attrValues.copyInto(s);
+    return s;
+  }
+
+  /** Gets the path to the XML data, or null if none. */
+  public String getPath() { return path; }
+
 
   // -- DefaultHandler API methods --
 
-  public void startDocument() {
-    pixels.removeAllElements();
-  }
+  public void startDocument() { pixels.removeAllElements(); }
 
   public void startElement(String uri,
     String localName, String qName, Attributes attributes)
@@ -95,6 +147,22 @@ public class OMEXMLHandler extends DefaultHandler {
       isOMECA = attributes.getValue("xmlns").endsWith("CA.xsd");
     }
     else if (qName.equals("Pixels")) pixels.add(new PixelsInfo(attributes));
+    else if (qName.equals("TiffData") ||
+      qName.equals("BinData") || qName.equals("Bin:BinData"))
+    {
+      boolean bin = !qName.equals("TiffData");
+      PixelsInfo info = (PixelsInfo) pixels.lastElement();
+      info.data.addElement(bin ? "BinData" : "TiffData");
+      int len = attributes.getLength();
+      String[] names = new String[len];
+      String[] values = new String[len];
+      info.attrNames.addElement(names);
+      info.attrValues.addElement(values);
+      for (int i=0; i<len; i++) {
+        names[i] = attributes.getQName(i);
+        values[i] = attributes.getValue(i);
+      }
+    }
   }
 
 
@@ -119,10 +187,14 @@ public class OMEXMLHandler extends DefaultHandler {
   /** Stores important Pixels attributes. */
   protected class PixelsInfo {
     String id, bigEndian, dimOrder;
+    Vector data, attrNames, attrValues;
     PixelsInfo(Attributes attr) {
       id = attr.getValue("ID");
       bigEndian = attr.getValue("BigEndian");
       dimOrder = attr.getValue("DimensionOrder");
+      data = new Vector();
+      attrNames = new Vector();
+      attrValues = new Vector();
     }
   }
 
