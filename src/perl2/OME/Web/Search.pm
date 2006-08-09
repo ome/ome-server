@@ -168,7 +168,9 @@ sub getPageBody {
 		my $ids = join( ',', map( $_->id, @selected_objects ) );
 		$self->{ _onLoadJS } = <<END_HTML;
 				window.opener.document.forms['$return_to_form'].elements['${return_to_form_element}'].value = '$ids';
-				window.opener.document.forms['$return_to_form'].elements['action'].value = 'refresh';
+				if( window.opener.document.forms['$return_to_form'].elements['action'] ) {
+					window.opener.document.forms['$return_to_form'].elements['action'].value = 'refresh';
+				}
 				window.opener.document.forms['$return_to_form'].submit();
 				window.close();
 END_HTML
