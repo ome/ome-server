@@ -67,6 +67,7 @@ use OME::Analysis::Handler;
 use OME::Tasks::ModuleExecutionManager;
 
 use base qw(OME::Analysis::Handler);
+use Time::Local;
 use Time::HiRes qw(gettimeofday tv_interval);
 
 # Finds inputs & stiches them together
@@ -98,7 +99,10 @@ sub execute {
 	my $signature_vector_size = 0;
 	foreach my $formal_input ( @formal_inputs ) {
 		$start_time = [gettimeofday()];
-		logdbg "debug", "Creating Signature Vector for ".$formal_input->name()." \n";
+
+		my $timestamp = time;
+		my $timestr = localtime $timestamp;
+		logdbg "debug", "[$timestr] Creating Signature Vector for ".$formal_input->name();
 		die "Inputs of arity greater than 1 are not supported at this time. Error with input ".$formal_input->name()
 			if $formal_input->list();
 		
@@ -110,6 +114,9 @@ sub execute {
 		my @SEs = $formal_input->semantic_type->semantic_elements();
 		@SEs = sort { $a->name cmp $b->name } @SEs;
 		$mex->read_time($mex->read_time() + tv_interval($start_time));
+		$timestamp = time;
+		$timestr = localtime $timestamp;
+		logdbg "debug", "[$timestr] \t Finished getting Input Attributed";
 
 		$start_time = [gettimeofday()];
 		foreach my $se ( @SEs ) {
