@@ -1242,13 +1242,6 @@ BLURB
 				symlink ($source, $dest) or
 				print $LOGFILE "Making sym-link $dest->$source\n$!\n" and
 				croak "Making sym-link $dest->$source\n$!\n";
-			chmod (0755,$dest) or
-				print $LOGFILE "Could not chmod $dest:\n$!\n" and
-				croak "Could not chmod $dest:\n$!\n";
-			print $LOGFILE "chown $dest to uid: $APACHE_UID gid: $OME_GID\n";
-			chown ($APACHE_UID,$OME_GID,$dest) or
-				print $LOGFILE "Could not chown $dest:\n$!\n" and
-				croak "Could not chown $dest:\n$!\n";
 		}
 
 	} else {
