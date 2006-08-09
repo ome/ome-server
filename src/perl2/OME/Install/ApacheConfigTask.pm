@@ -1214,6 +1214,25 @@ BLURB
 
 		$APACHE_WEB_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.web$is_dev.conf";
 		print $LOGFILE "Set APACHE_WEB_INCLUDE to $APACHE_WEB_INCLUDE\n";
+		
+		#********
+		#******** Install DAE web by copying SimpleWorkerExecutor.pm
+		#********
+		print $LOGFILE "Installing DAE web by copying SimpleWorkerExecutor\n";
+		$source = 'src/perl2/OME/Analysis/Engine/SimpleWorkerExecutor.pm';
+		$dest = $OME_BASE_DIR.'/perl2/SimpleWorkerExecutor.pm';
+		print $LOGFILE "Copying $source to $dest\n";
+		copy ($source,$dest) or
+			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
+			croak "Could not copy $source to $dest:\n$!\n";
+		print $LOGFILE "chmod 0755 $dest\n";
+		chmod (0755,$dest) or
+			print $LOGFILE "Could not chmod $dest:\n$!\n" and
+			croak "Could not chmod $dest:\n$!\n";
+		print $LOGFILE "chown $dest to uid: $APACHE_UID gid: $OME_GID\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or
+			print $LOGFILE "Could not chown $dest:\n$!\n" and
+			croak "Could not chown $dest:\n$!\n";
 	} else {
 		print $LOGFILE "Not installing WEB\n";
 		$APACHE_WEB_INCLUDE = '';
