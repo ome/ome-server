@@ -12,9 +12,9 @@ use English;
 		print "perl Makefile.PL uninstall\n";
 		print "--------------------------\n";
 		
-		# the sym-link to SimpleWorkExecutor.pm has got to go for the moment
-		print "Removing sym-linked SimpleWorkerExecutor.pm and not acrrying if we succeed.\n";
-		unlink "SimpleWorkerExecutor.pm";
+		# the sym-link to NonblockingSlaveWorkerCGI.pm has got to go for the moment
+		print "Removing sym-linked NonblockingSlaveWorkerCGI.pm and not acrrying if we succeed.\n";
+		unlink "NonblockingSlaveWorkerCGI.pm";
 		
 		# the OME/Matlab directory is a problem child because it's C code in a directory of
 		# perl code. We have to go inside and do a make clean. Otherwise all the .o files 

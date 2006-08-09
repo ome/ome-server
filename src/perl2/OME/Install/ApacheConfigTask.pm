@@ -1216,11 +1216,11 @@ BLURB
 		print $LOGFILE "Set APACHE_WEB_INCLUDE to $APACHE_WEB_INCLUDE\n";
 		
 		#********
-		#******** Install DAE web by copying SimpleWorkerExecutor.pm
+		#******** Install DAE web by copying NonblockingSlaveWorkerCGI.pm
 		#********
-		print $LOGFILE "Installing DAE web by copying SimpleWorkerExecutor\n";
-		$source = 'src/perl2/OME/Analysis/Engine/SimpleWorkerExecutor.pm';
-		$dest = $OME_BASE_DIR.'/perl2/SimpleWorkerExecutor.pm';
+		print $LOGFILE "Installing DAE web by copying NonblockingSlaveWorkerCGI\n";
+		$source = 'src/perl2/OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pm';
+		$dest = $OME_BASE_DIR.'/perl2/NonblockingSlaveWorkerCGI.pm';
 		print $LOGFILE "Copying $source to $dest\n";
 		copy ($source,$dest) or
 			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
@@ -1236,8 +1236,8 @@ BLURB
 		
 		# sym-link if it's set to Apache Configuration
 		if ($APACHE->{DEV_CONF}) {
-			$source = 'OME/Analysis/Engine/SimpleWorkerExecutor.pm';
-			$dest = 'src/perl2/SimpleWorkerExecutor.pm';
+			$source = 'OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pm';
+			$dest = 'src/perl2/NonblockingSlaveWorkerCGI.pm';
 			print $LOGFILE "Making sym-link $dest->$source\n";
 				symlink ($source, $dest) or
 				print $LOGFILE "Making sym-link $dest->$source\n$!\n" and
