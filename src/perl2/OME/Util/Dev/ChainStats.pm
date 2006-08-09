@@ -188,18 +188,20 @@ sub chex_stats {
 	print "	mode:                        $mode\n";
 	print "	sum:                         $sum\n";
 	if( $verbose ) {
-		print "Executed nodes:\n"
-			if ( scalar( @executed_nodes  ) );
-		foreach my $node ( @executed_nodes ) {
-			print "\t".$node->module->name()." x ".$chex->count_node_executions( analysis_chain_node => $node )."\n";
-		}
-		print "Nodes with errors:\n"
-			if ( scalar( @error_nodes  ) );
-		foreach my $node ( @error_nodes ) {
-			print "\t".$node->module->name().": ".
-				$chex->count_node_executions( analysis_chain_node => $node, 'module_execution.status' => 'ERROR' )." errors\n";
-		}
-		my @non_executed_nodes = $chex->analysis_chain->nodes( id => [ 'not in', \@executed_nodes ] );
+# super-ceded by the MEX stats print below
+# 		print "Executed nodes:\n"
+# 			if ( scalar( @executed_nodes  ) );
+# 		foreach my $node ( @executed_nodes ) {
+# 			print "\t".$node->module->name()." x ".$chex->count_node_executions( analysis_chain_node => $node )."\n";
+# 		}
+ 		print "Nodes with errors:\n"
+ 			if ( scalar( @error_nodes  ) );
+ 		foreach my $node ( @error_nodes ) {
+ 			print "\t".$node->module->name().": ".
+ 				$chex->count_node_executions( analysis_chain_node => $node, 'module_execution.status' => 'ERROR' )." errors\n";
+ 		}
+ 		my @non_executed_nodes = $chex->analysis_chain->nodes( id => [ 'not in', \@executed_nodes ] );
+		
 		print "Non-executed nodes:\n"
 			if ( scalar( @non_executed_nodes  ) );
 			
@@ -209,7 +211,7 @@ sub chex_stats {
 	}
 	
 	# Print MEX stats
-	printf( "\nModule execution stats:\n" );
+	printf( "\nMEX Statistics summarized per Chain Execution:\n" );
 	printf( "	Modules executed: %.0f\n", scalar( @mexes ) );
 	printf( "	Reused MEXes:     %.0f\n", $reused_mex_count );
 	printf( "	Total time spent executing modules: %.2f sec\n", $mex_total_time );
@@ -224,7 +226,32 @@ sub chex_stats {
 		);
 		printf( "	Total time executing these modules: %.2f sec\n", $mex_total_time_breakdown );
 	}
+	
+	# Print MEX stats per Node
 	if( $verbose ) {
+		my %Node_Exec_Time;
+		my %Node_Exec_Count;
+
+		printf( "\nMEX Statistics summarized per Node\n");	
+		foreach my $nex (@nexes) {
+			my $module_name = $nex->analysis_chain_node->module->name;
+			
+			if (not defined $Node_Exec_Time{$module_name}) {
+				$Node_Exec_Time{$module_name} = 0;
+				$Node_Exec_Count{$module_name} =
+					$chex->count_node_executions( analysis_chain_node => $nex->analysis_chain_node );
+			} 
+			
+			$Node_Exec_Time{$module_name} += $nex->module_execution->total_time;
+		}
+		
+		my @node_names = reverse sort{ $Node_Exec_Time{$a} <=> $Node_Exec_Time{$b} } keys %Node_Exec_Time;
+		foreach (@node_names) {
+			printf ("\t%.2f\% [%.2f secs]   ", $Node_Exec_Time{$_}/$chex->total_time()*100, $Node_Exec_Time{$_},);
+			print $_." x ".$Node_Exec_Count{$_}."\n";			
+		}
+		
+		
 		print "These modules did not record the breakdown of their execution time.\n";
 		print "	[module name]	[num times it appears in this chex]\n";
 		foreach my $module_name ( sort( keys( %mexes_wo_time )) ) {
