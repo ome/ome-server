@@ -67,12 +67,19 @@ sub getPageBody {
 	my $tmpl = shift;
 	my $q = $self->CGI() ;
 	my $session= $self->Session();
-	print STDERR "in construct template. getpage body\n";
     my $factory = $session->Factory();
     my %tmpl_data;
 	
 	my @construct_requests = $q->param( 'selected_objects' );
-	
+
+	# If the user selected "All", then @construct_requests will contain one entry
+	# that is blank. In the lines below, we will expand that to all the CategoryGroups
+	if( (scalar(@construct_requests) == 1 ) && ($construct_requests[0] eq '' ) ) {
+		my @categoryGroups = $factory->findObjects( '@CategoryGroup' );
+		@construct_requests = map( $_->id, @categoryGroups );
+	}
+
+	# Construct the object selection field if nothing has been selected
 	if (scalar(@construct_requests) == 0) {
 		$tmpl_data{ 'checkbox_and_cg' } = $self->SearchUtil()->getObjectSelectionField( 
 			'@CategoryGroup', 'selected_objects', { list_length => 10 } );
@@ -84,9 +91,10 @@ sub getPageBody {
 		my $filename = $templateName;
 		
 		# Effort to standardize the file names - remove ".tmpl" extension
-		# if it exists (it will be added later) and replace all spaces with _
+		# if it exists (it will be added later) and replace all spaces and 
+		# nasty charachers with _
 		$filename =~ s/\.tmpl$//;
-		$filename =~ s/ /_/g;
+		$filename =~ s/[ !@#$%^&*()<>?;:'"\/\\|`~=+]/_/g;
 
 		my $module = $factory->findObject( 'OME::Module', name => 'Global import' )
 			or die "couldn't load Global import module";
