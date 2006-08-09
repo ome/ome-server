@@ -90,6 +90,9 @@ int DoThumb (OID ID, FILE *thumbnail, ome_dim sizeX, ome_dim sizeY) {
                    sizeof(channelSpecType)*5);
             strcpy (composite.format,"jpeg");
             composite.stream = stdout;
+            composite.x0 = composite.y0 = 0;
+			composite.x1 = composite.thePixels->head->dx - 1;
+			composite.y1 = composite.thePixels->head->dy - 1;
         }
 
         return (DoCompositeZoom(&composite, 0, NULL));
