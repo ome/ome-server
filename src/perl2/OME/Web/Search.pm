@@ -398,7 +398,7 @@ sub getObjectSelectionField {
 	$options = {} unless $options; # makes later code easier
 	confess "The options parameter is not a hash reference." 
 		unless ref( $options ) eq 'HASH';
-	my $default_obj     = $options->{ default_obj };
+	my $default_obj     = $options->{ object } || $options->{ default_obj };
 	my $threshold_Popup = $options->{ max_elements_in_list } || 10;
 	my $list_length     = $options->{ list_length } || 3;
 	
@@ -414,7 +414,7 @@ sub getObjectSelectionField {
 
 	my $q = $self->CGI();
 	$q->param( $field_name, $default_obj  ) 
-		unless defined $q->param($field_name );
+		if( ( not defined $q->param($field_name ) ) || ( exists $options->{ object } ) );
 
 	my $factory = $self->Session()->Factory();
 	my $htmlSnippet;

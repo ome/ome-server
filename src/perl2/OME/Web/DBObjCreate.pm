@@ -381,11 +381,13 @@ sub _create {
 	# Return new object id to a form element of the referring page
 	if( $q->param( 'return_to' ) || $q->url_param( 'return_to' ) ) {
 		my $return_to = ( $q->param( 'return_to' ) || $q->url_param( 'return_to' ) );
+		my $return_to_form = ( $q->param( 'return_to_form' ) || 'primary');
 		my $id = $obj->id;
 		my $html = <<END_HTML;
 <script language="Javascript" type="text/javascript">
-	window.opener.document.forms[0].$return_to.value = $id;
-	window.opener.document.forms[0].submit();
+	window.opener.document.forms['$return_to_form'].elements['$return_to'].value = $id;
+	window.opener.document.forms['$return_to_form'].elements['action'].value     = 'refresh';
+	window.opener.document.forms['$return_to_form'].submit();
 	window.close();
 </script>
 END_HTML
@@ -557,16 +559,17 @@ sub getStuffToPopulateHasOneRef {
 	my $obj;
 
 	my $newFieldName = "_New". $accessor_to_type;
-	my $newField = $q->hidden(-name => $newFieldName);
+	my $newField     = $q->hidden(-name => $newFieldName);
+	my $fieldName    = $accessor_to_type;
 
 	# is there a selection? try loading it
-	if ($q->param( $newFieldName) && $q->param($newFieldName) ne '') {
+	if ($q->param( $newFieldName) && ( $q->param($newFieldName) ne '') ) {
 	    $obj = $factory->loadObject( $type, $q->param( $newFieldName ) )
-		    or die "Could not load object ( type=$type,	id=".$q->param( $accessor_to_type ).")";
+		    or die "Could not load object ( type=$type,	id=".$q->param( $fieldName ).")";
 	}
-	elsif( $q->param( $accessor_to_type ) && $q->param($accessor_to_type ) ne '' ) {
-		$obj = $factory->loadObject( $type, $q->param( $accessor_to_type ) )
-			or die "Could not load object ( type=$type, id=".$q->param( $accessor_to_type ).")";
+	elsif( $q->param( $fieldName ) && ( $q->param($fieldName ) ne ''  ) ) {
+		$obj = $factory->loadObject( $type, $q->param( $fieldName ) )
+			or die "Could not load object ( type=$type, id=".$q->param( $fieldName ).")";
 
 	# try a default
 	} else {
@@ -577,21 +580,16 @@ sub getStuffToPopulateHasOneRef {
 	my $create_link = $q->a( { 
 	    -href => "javascript: creationPopup( '$type','$newFieldName' );"}, 
 				 "Create a new $common_name" );
-	# populate a hash
-	my %select_hash;
-	if ($obj) {
-	    $select_hash{default_value} = $obj->id;
-	}
 
 	# get the list of items
 	my @itemList  = $factory->findObjects($type);
-
 	# do the rendering.
 	my $select = $self->SearchUtil()->getObjectSelectionField( 
-		$type, $accessor_to_type, { 
+		$type, $fieldName, { 
 			max_elements_in_list => 25, 
-			list_length => 1, 
-			select_one => 1 
+			list_length          => 1, 
+			select_one           => 1,
+			object               => $obj
 		} 
 	);
 	return $newField . $select . " or " . $create_link;
