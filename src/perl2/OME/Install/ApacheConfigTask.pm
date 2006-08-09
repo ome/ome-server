@@ -1281,7 +1281,7 @@ BLURB
 	# Clear out system directories
 	print "Installing HTML Templates for Web-UI \n";
 	
-	print "  \\__ Verifying structure of $APACHE->{TEMPLATE_DIR} ";
+	print "  \\__ Verifying structure of $APACHE->{TEMPLATE_DIR} \n";
 	my @old_sys_html_dirs = scan_tree("$APACHE->{TEMPLATE_DIR}/", sub{m#.*\/System[/]# or m#.*\/System$#});
 	@old_sys_html_dirs = sort { $b cmp $a } @old_sys_html_dirs; # reverse sort
 	if (not -e "$APACHE->{TEMPLATE_DIR}/") {
@@ -1292,13 +1292,20 @@ BLURB
 
 	} elsif (not scalar @old_sys_html_dirs and not $cvs_sourced_templates) {
 		# this is a valid condition that occurs in updating from 2.4.0 to later versions
-# DANGER!!!
-# This seems like a very bad thing to do. I'll have to revisit this problem after we
-# get a version of OME 2.4.0 working. The danger is wiping user-defined templates.
+		# Just in case something important is in there, we'll ask the user to 
+		# archive the old template directory, and manually transfer their changes.
 		print $LOGFILE "No HTML System directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
-			"The structure is invalid. It will be cleaned-out and rebuilt.\n";
+			"If you are updating from a 2.4 installation, then this is normal and expected.\n".
+			"The structure needs to be updated though, and the directory will be cleaned-out and rebuilt.\n".
+			"If you have modified templates in $APACHE->{TEMPLATE_DIR}, then you need to copy this directory ".
+			"before proceeding, and manually transfer your changes to the new directory.\n";
 		print "No HTML System directories in tree $APACHE->{TEMPLATE_DIR}.\n". 
-			"The structure is invalid. It will be cleaned-out and rebuilt.\n";
+			"If you are updating from a 2.4 installation, then this is normal and expected.\n".
+			"The structure needs to be updated though, and the directory will be cleaned-out and rebuilt.\n".
+			"If you have modified templates in $APACHE->{TEMPLATE_DIR}, then you need to copy this directory ".
+			"before proceeding, and manually transfer your changes to the new directory.\n";
+	    y_or_n ("Are you ready to proceed ?",'y') or croak "Template directory update aborted by user";
+		
 		delete_tree("$APACHE->{TEMPLATE_DIR}") or
 			(print BOLD, "[FAILURE]", RESET, ".\n" and
  			 print $LOGFILE ".... delete of tree $APACHE->{TEMPLATE_DIR} failed.\n" and
