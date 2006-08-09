@@ -238,7 +238,7 @@ sub startAnalysis {
 	# If you want to use a library and you haven't already instantiated an instance,
 	# do it
 	if (defined $libname and not exists $_matlab_instances{ $libname } ) {
-		my $useDeclaration = 'OME::Matlab::Lib::'.$libname.'::'.$libname;
+		my $useDeclaration = 'OME::Matlab::Lib::'.$libname;
 		eval "use $useDeclaration";
 		if ( $@ ) {
 			# There was some kind of error, so report it and instantiate
@@ -1270,13 +1270,13 @@ sub __openMatlab {
 	# initially open the MATLAB interface
 	if (!$_matlabOpen) {
 		# Let's try to use the library
-		eval "use OME::Matlab::Lib::Utility::Utility";
+		eval "use OME::Matlab::Lib::Utility";
 
 		if ( $@ ) {
 			logdbg "debug", "Could not find utility library, using the engine instead.\n\tError message: $@";
 			$instance = $self->__openEngine();
 		} else {
-			$instance = OME::Matlab::Lib::Utility::Utility->new();
+			$instance = OME::Matlab::Lib::Utility->new();
 		}
 
 		die "Cannot open a connection to Matlab!" unless $instance;
