@@ -1236,7 +1236,7 @@ BLURB
 		
 		# sym-link if it's set to Apache Configuration
 		if ($APACHE->{DEV_CONF}) {
-			$source = 'src/perl2/OME/Analysis/Engine/SimpleWorkerExecutor.pm';
+			$source = 'OME/Analysis/Engine/SimpleWorkerExecutor.pm';
 			$dest = 'src/perl2/SimpleWorkerExecutor.pm';
 			print $LOGFILE "Making sym-link $dest->$source\n";
 				symlink ($source, $dest) or
