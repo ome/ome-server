@@ -67,8 +67,9 @@ function selectAllCheckboxes (select_name) {
 	for (i = 0; i < document.forms[0].length; i++)
 	{
 		if (document.forms[0].elements[i].type == "checkbox" &&
-		    document.forms[0].elements[i].name == select_name)
+		    document.forms[0].elements[i].name == select_name) {
 			document.forms[0].elements[i].checked = true;
+		}
 	}
 }
 
@@ -77,146 +78,137 @@ function deselectAllCheckboxes (select_name) {
 	for (i = 0; i < document.forms[0].length; i++)
 	{
 		if (document.forms[0].elements[i].type == "checkbox" &&
-		    document.forms[0].elements[i].name == select_name)
+		    document.forms[0].elements[i].name == select_name) {
 			document.forms[0].elements[i].checked = false;
+		}
 	}
 }
 
 // openRelationships()
 
 function openRelationships (o_type, r_type, oid) {
-	window.open(
-		RelationshipPage + '&o_type=' + o_type + '&r_type=' + r_type + '&oid=' + oid,
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
-	);
+	var url     = RelationshipPage + '&o_type=' + o_type + '&r_type=' + r_type + '&oid=' + oid;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600';
+	window.open( url, target, options );
 }
 
 // creationPopup()
 function creationPopup( type, return_to_field ) {
-	window.open(
-		CreationPage + '&Locked_Type=' + type + '&return_to=' + return_to_field,
-		'_create_'+type+'_for_'+return_to_field,
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
-	);
+	var url     = CreationPage + '&Locked_Type=' + type + '&return_to=' + return_to_field;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600';
+	window.open( url, target, options );
 }
 
 // annotateImage()
 function annotateImage( image_id, semantic_type ) {
-	window.open(
-		CreationPage + '&Locked_Type=' + semantic_type + '&refresh_when_done=1' + '&image=' + image_id,
-		'annotateImage',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 300'
-	);
+	var url     = CreationPage + '&Locked_Type=' + semantic_type + '&refresh_when_done=1' + '&image=' + image_id;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 300';
+	window.open( url, target, options );
 }
 
 // annotateDataset()
 function annotateDataset( dataset_id, semantic_type ) {
-	window.open(
-		CreationPage + '&Locked_Type=' + semantic_type + '&refresh_when_done=1' + '&dataset=' + dataset_id,
-		'annotateDataset',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 300'
-	);
+	var url     = CreationPage + '&Locked_Type=' + semantic_type + '&refresh_when_done=1' + '&dataset=' + dataset_id;
+	var target  = 'annotateDataset';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 300';
+	window.open( url, target, options );
 }
 
 // STdocPopup()
 function STdocPopup( ST_name ) {
-	window.open(
-		STdocPage + '&ST_name=' + ST_name,
-		'_doc',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 250'
-	);
+	var url     = STdocPage + '&ST_name=' + ST_name;
+	var target  = '_doc';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 250';
+	window.open( url, target, options );
 }
 
 // SEdocPopup()
 function SEdocPopup( SE_id ) {
-	window.open(
-		STdocPage + '&SE_id=' + SE_id,
-		'_doc',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 250'
-	);
+	var url     = STdocPage + '&SE_id=' + SE_id;
+	var target  = '_doc';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 250';
+	window.open( url, target, options );
 }
 
 // selectOne()
 
 function selectOne( type, return_to, return_to_form, url_parameter ) {
-	var url = SearchPage + '&Locked_SearchType=' + type + '&select=one&return_to=' + return_to;
+	var url     = SearchPage + '&Locked_SearchType=' + type + '&select=one&return_to=' + return_to;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600';
 	if( return_to_form ) {
 		url += '&return_to_form='+return_to_form;
 	}
 	if( url_parameter ) {
 		url += '&'+url_parameter;
 	}
-	window.open(
-		url, '_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
-	);
+	window.open( url, target, options );
 }
 
 // selectMany()
 
 function selectMany( type, return_to, return_to_form, url_parameter ) {
-	var url = SearchPage + '&Locked_SearchType=' + type + '&select=many&return_to=' + return_to;
+	var url     = SearchPage + '&Locked_SearchType=' + type + '&select=many&return_to=' + return_to;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600';
 	if( return_to_form ) {
 		url += '&return_to_form='+return_to_form;
 	}
 	if( url_parameter ) {
 		url += '&'+url_parameter;
 	}
-	window.open(
-		url, '_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
-	);
+	window.open( url, target, options );
 }
 
 // openExistingDataset()
 	
 function openExistingDataset (group_id) {
-	window.open(
-		InfoDatasetPage + '&OME::Dataset_group=' + group_id,
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
-	);
+	var url     = InfoDatasetPage + '&OME::Dataset_group=' + group_id;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600';
+	window.open( url, target, options );
 }
 
 // openExistingProject()
 
 function openExistingProject (group_id) {
-	window.open(
-		InfoProjectPage + '&OME::Project_group=' + group_id,
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
-	);
+	var url     = InfoProjectPage + '&OME::Project_group=' + group_id;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600';
+	window.open( url, target, options );
 }
 
 // openInfoDataset()
 
 function openInfoDataset (dataset_id, url_parameter) {
-	var url = DatasetInfoPage + '&ID=' + dataset_id;
+	var url     = DatasetInfoPage + '&ID=' + dataset_id;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600';
 	if( url_parameter ) {
 		url += '&'+url_parameter;
 	}
-	window.open(url, '_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
-	);
+	window.open( url, target, options );
 }
 
 // openInfoProject()
 
 function openInfoProject (project_id) {
-	window.open(ProjectInfoPage + '&ID=' + project_id,
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
-	);
+	var url     = ProjectInfoPage + '&ID=' + project_id;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600';
+	window.open( url, target, options );
 }
 
 // openInfoDatasetImport()
 
 function openInfoDatasetImport (dataset_id) {
-	window.open(DatasetInfoPage + '&ID=' + dataset_id,
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
-	);
+	var url     = DatasetInfoPage + '&ID=' + dataset_id;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500';
+	window.open( url, target, options );
 }
 
 // openInfoImage()
@@ -232,7 +224,9 @@ function openPopUpImageAs() {
 		var radio_grp = document.forms[0].thumb_click_opens;
 		var val;
 		for( var i=0; i<radio_grp.length; i++ ) {
-			if( radio_grp[i].checked ) val = radio_grp[i].value;
+			if( radio_grp[i].checked ) {
+				val = radio_grp[i].value;
+			}
 		}
 		return val;
 	}
@@ -244,7 +238,7 @@ function openImage (id) {
 
 	var mode = openPopUpImageAs();
 	if ( mode == 'image_detail' ) {
-		openInfoImage(id)
+		openInfoImage(id);
 	} else if( mode == 'declassify' ) {
 		declassifyImage( id );
 	} else if( mode == 'classify' ) {
@@ -274,10 +268,10 @@ function classifyImage (id) {
 
 
 function openPopUp (url) {
-	window.open(
-		url + '&Popup=1',
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
+	url         = url + '&Popup=1';
+	var target  ='_blank';
+	var options ='TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500';
+	window.open( url, target, options );
 }
 
 
@@ -289,27 +283,29 @@ function openPopUpImage (id) {
 	if ( mode == 'image_detail' ) {
 		document.location.href = DetailPage + '&Type=OME::Image&ID=' + id;
 	} else {
-		window.open(GetGraphicsPage + '&ImageID=' + id,
-			'_blank',
-			'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
+		var url     = GetGraphicsPage + '&ImageID=' + id;
+		var target  = '_blank';
+		var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500';
+		window.open( url, target, options );
 	} 
 }
 
 // openPopUpOverlay()
 
 function openPopUpOverlay (mex) {
-
-	window.open(GetGraphicsPage + '&MEX_ID=' + mex,
-			'_blank',
-			'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
+	var url     = GetGraphicsPage + '&MEX_ID=' + mex;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500';
+	window.open( url, target, options );
 }
 
 // openPopUpPixels()
 
 function openPopUpPixels (pixels_id) {
-	window.open(GetGraphicsPage + '&PixelsID=' + pixels_id,
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
+	var url     = GetGraphicsPage + '&PixelsID=' + pixels_id;
+	var target  = '_blank';
+	var options = 'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500';
+	window.open( url, target, options );
 }
 
 // SYNOPOSIS
