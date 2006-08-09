@@ -264,6 +264,49 @@ sub execute {
 	
 		print "Installing MATLAB Perl API \n";
 		
+		# Copy the necessary libraries to the root OME directory so we can
+		# modify them without messing with MATLAB
+		# N.B. This works only on Matlab version 7+
+		my $matlab_lib_src = $MATLAB_INFO{"ROOT"}."/bin/".$MATLAB_INFO{"ARCH"};
+		my $matlab_lib_dir = $MATLAB_INFO{"LIB"};
+		my $target_dir = $1 if $matlab_lib_dir =~ m/-L(\S+)/;
+		print $LOGFILE "target dir is $target_dir\n";
+		print $LOGFILE "matlab lib src is $matlab_lib_src\n";
+		
+		# Make sure we are not copying to the same directory - this will ensure the
+		# patching does not occur to the libraries themselves. Then, patch the paths in them
+		# before we run all that 'make' stuff - but this patching only works so
+		# far on Mac OS X, and not on Linux. However, the library problem
+		# may not exist on Linux.
+		
+		if ($target_dir ne $matlab_lib_src && $MATLAB_INFO{"ARCH"} eq 'mac') {
+			print "  \\_ Copying Libraries ";
+			
+			# Makes the target directory if it doesn't exist
+			# and does the copy.
+			# Dies in OME::Install::Util if there's a problem
+			
+			mkpath($target_dir, 0, 02755) unless ( -d $target_dir);			
+			copy_dir( $matlab_lib_src, $target_dir );
+			print $LOGFILE "Copying matlab libraries...\n";
+			print BOLD, "[SUCCESS]", RESET, ".\n";
+			
+			# Patch!
+			print "  \\_ Patching Libraries ";
+			print $LOGFILE "Patching matlab libraries...\n";
+			my @libs_to_patch = get_file_list( $target_dir );
+			$retval = patch_matlab_dylibs ( $target_dir, \@libs_to_patch );
+			if ( scalar(@$retval) > 0 ) {
+				print $LOGFILE "Errors:\n";
+				print $LOGFILE join("\n\t", @$retval)."\n";
+				print BOLD, "[FAILURE]", RESET, ".\n"
+					and croak "Error patching matlab libraries, see $LOGFILE_NAME for details."
+			}
+			
+			print BOLD, "[SUCCESS]", RESET, ".\n";
+			print $LOGFILE "\tNo Errors\n\n";
+		}
+		
 		# Configure 
 		print "  \\_ Configuring ";
 		
@@ -426,6 +469,14 @@ sub try_to_run_matlab_as_apache {
 	
 	# Run the test script as a cgi
 	my $url = 'http://localhost/perl2/matlab_test_script.pl';
+	print $LOGFILE "Making an HTTP::Request object for $url\n";
+	my $request = HTTP::Request->new(GET => $url);
+
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Could not generate a GET request for $url\n" and
+		croak "Could not generate a request for $url"
+	unless $request;
+
 	print $LOGFILE "Getting response from $url\n";
 	my $curl = OME::Util::cURL->new ();
 	my $response = $curl->GET($url);
@@ -561,16 +612,17 @@ sub matlab_info {
 		$matlab_lib_cmd .= " -L$matlab_root/sys/os/mac -ldl" if $matlab_arch eq 'mac';
 		
 	} elsif ($matlab_vers =~ /7\.0\.0.+/ or $matlab_vers =~ /7\.0\.1.+/
-		or $matlab_vers =~ /7\.0\.4.+/)  {
+		or $matlab_vers =~ /7\.0\.4.+/ or $matlab_vers =~/7\.2\.0.+/ )  {
 		$matlab_include = "-I$matlab_root/extern/include";
 		$matlab_lib = "$matlab_root/bin/$matlab_arch";
-		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
-		
+		$matlab_lib = "$OME_BASE_DIR/lib/matlab_".$matlab_vers if $matlab_arch eq 'mac';
+		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";		
 	} else {
 		print STDERR "WARNING Matlab Version $matlab_vers not supported.\n";
 		# make an educated guess
 		$matlab_include = "-I$matlab_root/extern/include";
 		$matlab_lib = "$matlab_root/bin/$matlab_arch";
+		$matlab_lib = "$OME_BASE_DIR/lib/matlab_".$matlab_vers if $matlab_arch eq 'mac';
 		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
 	}
 	
@@ -579,6 +631,88 @@ sub matlab_info {
 			"VERS"    => $matlab_vers,
 			"INCLUDE" => $matlab_include,
 			"LIB"     => $matlab_lib_cmd);
+}
+
+sub get_file_list {
+	my $root_dir = shift;
+	opendir( DH, $root_dir );
+	my @files;
+	while( defined (my $file = readdir DH )) {
+		next unless $file =~ m/\S+.dylib[1-9.]*/;
+		next if $file =~ m/\S+.csf/;
+		my $full_path = $root_dir."/".$file;
+		push @files, $full_path;
+	}
+	closedir( DH);
+	return @files;
+}
+
+# Usage:
+# patch_matlab_dylibs ( $preferred_path, \@files_to_patch );
+# DO NOT USE THIS ON PRIMARY COPIES OF LIBRARIES. THAT WILL BREAK THINGS!!!
+
+sub patch_matlab_dylibs {
+	my $preferred_DYLD_PATH = shift;
+	my $dylibs_to_patch = shift;
+	my @errors;
+	
+	foreach my $dylib_path ( @$dylibs_to_patch ) {
+		my $dylib_file_name = $dylib_path;
+		$dylib_file_name =~ s/^(.*\/)?(\S+)/$2/;
+		
+		# Use otool to probe a dynamic library (e.g. *.dylib, *.bundle) for 
+		# dependencies, then 
+		my $otool_dump = `otool -L $dylib_path`;
+		# Make sure we can patch this file.
+		`chmod u+w $dylib_path`;
+		my @dependencies = split( /\n/, $otool_dump );
+		
+		# The first line is just the path to the dylib file we're working on
+		shift( @dependencies );	
+		
+		my $dependency_changed_count = 0;
+		foreach my $line ( @dependencies ) {
+			# First, look for dependencies with relative paths. All of these need
+			# to be patched
+			die "Could not parse otool output" unless( $line =~ m/^\t(\S+)/ );
+			my $dependency = $1;
+			# If the dependency has a relative path or an absolute path that does
+			# not exist, attempt to find it in our copy of the matlab lib directory,
+			# and change the reference to refer to our copy with an absolute path
+			if( ( $dependency =~ m/^[^\/]/ ) || 
+			    ( ! -e $dependency ) ) {
+				# Remove all leading directories from the path string, retaining
+				# only the file name.
+				my $referenced_library_file_name = $dependency;
+				$referenced_library_file_name =~ s/^(.*\/)?(\S+)/$2/;
+				my $probable_path = $preferred_DYLD_PATH.'/'.$referenced_library_file_name;
+				if( ! -e $probable_path ) {
+					print $LOGFILE "cannot find $referenced_library_file_name in $preferred_DYLD_PATH.\n";
+					next;
+				}
+				my $command = "install_name_tool -change $dependency $probable_path $dylib_path";
+				# The first dependency is the ID of the dylib file - we need to execute a 
+				# different command on this one to change it.
+				$command = "install_name_tool -id $probable_path $dylib_path"
+					if( $referenced_library_file_name =~ m/^$dylib_file_name((\.\d+)+)?$/);
+				
+				my $return_value = `$command`;
+				if( $return_value ) {
+					push (@errors, "ERROR from command:\n$command\nERROR MSG:\n$return_value\n");
+					next;
+				} else {
+					$dependency_changed_count++;
+				}
+			} 
+		}
+	
+	
+		# Change the file back to write-protected
+		`chmod u-w $dylib_path`;
+		
+		print $LOGFILE "\tChanged $dependency_changed_count dependencies in $dylib_path.\n";
+	}
+	return \@errors;
 }
 
 sub rollback {
