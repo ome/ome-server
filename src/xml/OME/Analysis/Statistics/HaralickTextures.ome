@@ -464,7 +464,7 @@
 			<FormalOutput Name="Maximal Correlation Coefficient" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_RI" IBelongTo="[Iterator]" Count="!"/>
 		  </Declaration>
 		
-          <ExecutionInstructions ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+          <ExecutionInstructions LibraryName="Statistics" ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
 			  <Input><PixelsArray FormalInput="Pixels"/></Input>
 			  <Input><Scalar InputLocation="Texture Distance.Distance"/></Input>
