@@ -19,8 +19,12 @@ my $environment = initialize OME::Install::Environment;
 my $ome_lib_root = '/OME/lib';
 
 my ( $packageName, $path ) = ( @ARGV );
+
+my $src_dir = getcwd()."/Lib/";
+
+# This will be used when we integrate the script into the installer, in lieu of
+# the line above
 #my $src_dir = getcwd()."/src/perl2/OME/Matlab/Lib/";
-my $src_dir = "/Users/arpun/OME/cvs/OME/src/perl2/OME/Matlab/Lib/";
 
 # Regular expression magic to ensure proper library names and paths
 $packageName = $1 if $packageName =~ m/^lib(\S+)OME$/;
@@ -43,7 +47,7 @@ my $include_dir = "/Applications/MATLAB72/extern/include";
 
 # Now, write the package!
 open FILE, "< $file"  or die "Cannot open file: $file\n";
-open PACKAGE, "> $src_dir\/$packageName.pm" or die "Cannot create file $packageName in directory $path\n";
+open PACKAGE, "> $src_dir\/$packageName.pm" or die "Cannot create file $packageName in directory $src_dir\n";
 
 print PACKAGE "# This file was automatically generated using a script.\n";
 
