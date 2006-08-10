@@ -15,8 +15,9 @@ die "Usage: perl writeLibraryPackage.pl libName relative/or/absolute/path/to/lib
 
 my $environment = initialize OME::Install::Environment;
 
-#my $ome_lib_root = $environment->ome_lib_root();
-my $ome_lib_root = '/OME/lib';
+my $session = OME::SessionManager->TTYlogin();
+my $ome_lib_root = $session->Configuration()->ome_lib_root();
+#my $ome_lib_root = '/OME/lib';
 
 my ( $packageName, $path ) = ( @ARGV );
 
@@ -25,6 +26,8 @@ my $src_dir = getcwd()."/Lib/";
 # This will be used when we integrate the script into the installer, in lieu of
 # the line above
 #my $src_dir = getcwd()."/src/perl2/OME/Matlab/Lib/";
+
+mkpath($src_dir, 0, 02775) unless ( -d $src_dir);
 
 # Regular expression magic to ensure proper library names and paths
 $packageName = $1 if $packageName =~ m/^lib(\S+)OME$/;
