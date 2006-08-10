@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+  <AnalysisChain Name="Fourier Chain" Locked="false">
+    <Nodes>
+      <Node NodeID="Original files" ProgramName="Original files"/>
+      <Node NodeID="Image import" ProgramName="Image import"/>
+      <Node NodeID="Whole Image ROI" ProgramName="Whole Image ROI" NewFeatureTag="ROI"/>
+      
+      <Node NodeID="Fourier Transform" ProgramName="Fourier Transform" IteratorTag="ROI"/>
+    </Nodes>
+    <Links>
+      <Link FromNodeID="Original files" FromOutputName="Files" ToNodeID="Image import" ToInputName="Files"/>
+      <Link FromNodeID="Image import" FromOutputName="Pixels" ToNodeID="Whole Image ROI" ToInputName="Pixels"/>
+      <Link FromNodeID="Whole Image ROI" FromOutputName="Image ROI" ToNodeID="Fourier Transform" ToInputName="Pixels"/>
+    </Links>
+  </AnalysisChain>
+</AnalysisChains>
