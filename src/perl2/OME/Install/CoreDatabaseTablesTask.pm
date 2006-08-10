@@ -840,7 +840,6 @@ BLURB
 		import_formats   => $IMPORT_FORMATS,
 		ome_root         => $OME_BASE_DIR,
 		template_dir     => $OME_BASE_DIR."/html/Templates",
-		ome_lib_root	 => $OME_BASE_DIR."/lib",
 		executor         => $DEFAULT_EXECUTOR,
 		allow_guest_access => $GUEST_ACCESS,
 	});
