@@ -53,11 +53,10 @@ use OME::SessionManager;
 use OME::Session;
 use OME::Factory;
 
-use OME::Install::Util;
+use OME::Install::Util; # used for OME::Install::Util::get_db_version()
 use OME::Install::Terminal;
 use OME::Install::Environment;
-use OME::Install::CoreDatabaseTablesTask; # used for OME::Install::CoreDatabaseTablesTask::get_db_version()
-
+										  
 use DBI;
 
 require Storable;
@@ -221,11 +220,14 @@ sub backup {
 	# OMEIS
 	if (not $quick) {
 	    print "    \\_ Backing up OMEIS from $omeis_base_dir \n";
-	    print STDERR "$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup --directory $omeis_base_dir Files Pixels\n";
+		print STDERR "$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup\n";
 		foreach (`$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup --directory $omeis_base_dir Files Pixels 2>&1`) {
 			print STDERR "\nCouldn't create tar archive: $_" and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 		}
-		print "    \\_ Compressing archive \n" unless $compression eq "none";
+	    print STDERR "$prog_path{'tar'} $comp_flag --append --file='$backup_file.tar$comp_ext' --directory $omeis_base_dir Files Pixels\n";
+		foreach (`$prog_path{'tar'} $comp_flag --append --file='$backup_file.tar$comp_ext' --directory $omeis_base_dir Files Pixels 2>&1`) {
+			print STDERR "\nCouldn't create tar archive: $_" and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
+		}
 	} else {
 		print "    \\_ Compressing archive \n" unless $compression eq "none";
 		print STDERR "$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup \n";
@@ -369,7 +371,6 @@ sub restore {
 	unlink "/tmp/OMEmaint" or die "couldn't remove /tmp/OMEmaint";
 	
 	# OMEIS
-	my $semaphore = 0;
 	my $iwd = getcwd();
     
     # check if the OMEIS data was ever archived
@@ -384,6 +385,7 @@ sub restore {
 		}
 	}
 	
+	my $semaphore = 1;
 	if (not $quick and $success) {
 		# warn about OMEIS size
 		print BOLD, "Warning:", RESET, " You have elected to restore OMEIS. Use the ", BOLD, "-q", RESET,
@@ -391,32 +393,34 @@ sub restore {
 			" depending on the size of your OMEIS repository (its estimated size is printed\n",
 			" below), is likely to take a long time.\n";
 		print BOLD, `ls -lh $restore_file`, RESET;
-		$force or y_or_n("Continue?") or exit();
+		$force or y_or_n("Continue?") or $semaphore = 0;
 		
 	    # prepare the omeis_base_dir
-	    if (-d $omeis_base_dir) {
+	    if (-d $omeis_base_dir and $semaphore == 1) {
 	    	if ($force) {
 	    		print "Restoring OMEIS from archive will delete all current files in ".
 	   		  		"$omeis_base_dir. Continue ? ", BOLD, "[y", RESET, "/n", BOLD, "]\n", RESET;
-	   			$semaphore = 1;  		
+	   			# semaphore is 1;  		
 	    	} elsif (y_or_n ("Restoring OMEIS from archive will delete all current files in ".
 	   		  		"$omeis_base_dir. Continue ?")) {
-				$semaphore = 1;
+				# semaphore is  1;
 				
 				# the  $omeis_base_dir directory itself should not be deleted - it should only be emptied.
 				# this is to cover cases where $omeis_base_dir is a hand made symbolic link
 				foreach (bsd_glob("$omeis_base_dir/*")) {
 	   		  		rmtree($_) or die "Could not clean out $_ from $omeis_base_dir";
 	   		  	}
+	   		} else {
+	   			$semaphore = 0;
 	   		}
-	    } else {
+	    } elsif  ($semaphore == 1) {
 	    	# need to make the omeis_base_dir
 	    	mkdir ($omeis_base_dir) or 
 	    	die "Could not create new OMEIS directory $omeis_base_dir";
 	    }
 	    
 	    # expand the tar file directly into the OMEIS directory
-	    if ($semaphore eq 1) {
+	    if ($semaphore == 1) {
 			print "    \\_ Restoring OMEIS to $omeis_base_dir from archive\n";
 			print STDERR "$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory $omeis_base_dir -xf '$restore_file' Files Pixels\n";
 			foreach (`$prog_path{'tar'} $comp_flag --preserve-permissions --same-owner --directory $omeis_base_dir -xf '$restore_file' Files Pixels`) {
@@ -431,7 +435,7 @@ sub restore {
 	
 	# Drop our UID to the OME_USER
     euid (scalar(getpwnam $environment->user() ));
-    my $db_version = eval ("OME::Install::CoreDatabaseTablesTask::get_db_version()");
+    my $db_version = eval ("OME::Install::Util::get_db_version()");
     euid (0);
     
     my ($dropdb, $dropdb_path);
@@ -461,7 +465,7 @@ sub restore {
 					BOLD, "[y", RESET, "/n", BOLD, "]\n", RESET;
 					print BOLD, "\t[WAITING 15 SECONDS]", RESET, "\n" and sleep 15;
 				} else {
-					y_or_n ("Database could not be dropped. Try again ?") ? $dropdb = 0: $dropdb = 1; 
+					$dropdb = 0 unless (y_or_n ("Database could not be dropped. Try again ?",'n'));
 				}
 			} else {
 				# success == 1
