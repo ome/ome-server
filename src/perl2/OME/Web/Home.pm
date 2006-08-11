@@ -127,43 +127,22 @@ sub __getQuickViewProjectData {
 	# Count of projects owned by the Sesssion's user in teh entire DB
 	my $p_count  = OME::Tasks::ProjectManager->getUserProjectCount();
 
-	# Build projects header/content
-	my ($p_header, $p_content);
-
-	# Project ID for the Session's project
-	my $p_id = $p->id() if $p;
-
-	if ($p_count > 0) {
-			# Header
-		$p_header .= $q->a( {
-				href => $self->getSearchURL( 'OME::Project' ),
-				class => 'ome_quiet',
-			}, 'Project Preview ');
-		$p_header .= $q->span({class => 'ome_quiet'}, "[$p_count project(s)]");
-
-			# Content
-		foreach (OME::Tasks::ProjectManager->getUserProjectsLimit(MAX_PREVIEW_PROJECTS)) {
-			my $a_options = {
-				href => $self->getObjDetailURL( $_ ),
-				class => 'ome_quiet',
-			};
-	
-			# Local count of the datasets for *THIS* project
-			my $local_p_dcount = $_->count_datasets();
-
-			# Active/most recent objects are highlighted
-			if ($p_id && $_->id == $p_id) { $a_options->{'bgcolor'} = 'grey'; }
-
-			$p_content .= $q->a($a_options, $_->name()) .
-			              $q->span({class => 'ome_quiet'}, " [$local_p_dcount dataset(s)]") .
-						  $q->br();
+	my $your_projects = $self->Renderer()->renderArray( 
+		[ 'OME::Project', { owner => $self->Session()->experimenter } ] , 
+		'ref_minimalList',
+		{
+			paging_limit => MAX_PREVIEW_PROJECTS
 		}
-	} else {
-		$p_header .= $q->span({style => 'font-weight: bold;'}, 'No Projects');
-		$p_content .= $q->span({class => 'ome_quiet'}, 'The database currently contains no projects. Click <i>\'New Project\'</i> below to create one.');
-	}
+	);
+	my $others_projects = $self->Renderer()->renderArray( 
+		[ 'OME::Project', { owner => ['!=', $self->Session()->experimenter ] } ] , 
+		'ref_minimalList',
+		{
+			paging_limit => MAX_PREVIEW_PROJECTS
+		}
+	);
 
-	return ($p_header, $p_content);
+	return ($your_projects, $others_projects, $p_count);
 }
 
 =head2 __getQuickViewDatasetData
@@ -249,23 +228,24 @@ sub getPageBody {
 	my $p = $session->project();
 	my $d = $session->dataset();
 
-	# Build image header/content
+	# Build image header/content;
 	my ($i_header, $i_content) = $self->__getQuickViewImageData($d);
 	
 	# Build projects header/content
-	my ($p_header, $p_content) = $self->__getQuickViewProjectData($p);
+	my ($your_projects, $others_projects, $your_project_count) = $self->__getQuickViewProjectData($p);
 
 	# Build datasets in project header/content
 	my ($d_header, $d_content) = $self->__getQuickViewDatasetData($p);
 
 
 	$tmpl->param(
-		image_header   => $i_header,
-		project_header => $p_header,
-		dataset_header => $d_header,
-		images         => $i_content,
-		projects       => $p_content,
-		datasets       => $d_content
+		image_header    => $i_header,
+		dataset_header  => $d_header,
+		images          => $i_content,
+		your_projects   => $your_projects, 
+		others_projects => $others_projects, 
+		project_count   => $your_project_count,
+		datasets        => $d_content
 	);
 
 	return ('HTML', $tmpl->output());

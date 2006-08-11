@@ -5,7 +5,7 @@
 			<TMPL_VAR NAME=image_header>
 		</td>
 		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 2px;">
-			<TMPL_VAR NAME=project_header>
+			<a href="serve.pl?Page=OME::Web::Search&Type=OME::Project" class="ome_quiet">You have <TMPL_VAR NAME=project_count> project(s)</a>
 		</td>
 		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 2px;">
 			<TMPL_VAR NAME=dataset_header>
@@ -16,7 +16,10 @@
 			<TMPL_VAR NAME=images>
 		</td>
 		<td align="right" width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 2px;">
-			<TMPL_VAR NAME=projects>
+			<TMPL_VAR NAME=your_projects>
+			<div style="font-weight: bold; text-align: center;" class="ome_quiet">Collaborators' projects</div>
+			<hr>
+			<TMPL_VAR NAME=others_projects>
 		</td>
 		<td align="right" width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 2px;">
 			<TMPL_VAR NAME=datasets>
