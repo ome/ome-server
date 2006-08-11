@@ -1104,12 +1104,50 @@ returns a url to a search page that corresponds to that kind of DB search
 =cut
 
 sub getSearchURL {
-	my ($self, $obj_type, @search_params) = @_;
+	my ($self, $obj_type, %search_params) = @_;
 	my ($package_name, $common_name, $formal_name, $ST) = 
 		$self->_loadTypeAndGetInfo( $obj_type );
+	my @url_params;
+	# Parse search_params into something that is url-friendly
+	foreach my $search_field ( keys %search_params ) {
+		my $search_value = $search_params{ $search_field };
+		push( @url_params, $search_field );
+		# If the search value is an array, then they specified an 
+		# operation and we need to do special parsing.
+		# ex: owner => [ 'in', [ 1, 5, 889 ] ],
+		# ex: Max   => [ '>', 582 ], ...
+		if( ref( $search_value ) && ( ref( $search_value ) eq 'ARRAY' ) ) {
+			my $operation = $search_value->[0];
+			my $operand;
+			# Deal with an operand specification, where the value is an array
+			# ex: owner => [ 'in', [ 1, 5, 889 ] ], ...
+			if( ref( $search_value->[1] ) && 
+			    ( ref( $search_value->[1] ) eq 'ARRAY' ) ) {
+			    my @safe_search_vals = map( 
+					( UNIVERSAL::isa( $_, "OME::DBObject" ) ?
+					  $_->id :
+					  $_
+					), @{ $search_value->[1] } );
+				$operand = join( ',', @safe_search_vals );
+			# Deal with a simple operand specification, where the value is a 
+			# simple scalar
+			# ex: Max => [ '>', 582 ], ...
+			} else {
+				$operand = $search_value->[1];
+				$operand = $operand->id 
+					if( UNIVERSAL::isa( $operand, "OME::DBObject" ) );
+			}
+			push( @url_params, $operation." ".$operand );
+		# It's easier if the search value is a simple scalar
+		} else {
+			$search_value = $search_value->id
+				if( UNIVERSAL::isa( $search_value, "OME::DBObject" ) );
+			push( @url_params, $search_value );
+		}
+	}
 	return $self->pageURL( 'OME::Web::Search', {
 		SearchType      => $formal_name, 
-		@search_params
+		@url_params
 	} );
 }
 
