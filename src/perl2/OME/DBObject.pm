@@ -1651,6 +1651,7 @@ sub getAccessorReferenceType {
 	
 	my $returnedClass;
 	my $accessorType = $class->getColumnType( $alias );
+	return undef if( not defined $accessorType );
 	if( $accessorType eq 'has-many' ) {
 		 $returnedClass = $class->__hasManys()->{$alias}->[0];
 	} elsif( $accessorType eq 'many-to-many' ) {
