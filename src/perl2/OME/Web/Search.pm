@@ -325,7 +325,7 @@ $type can be a DBObject name ("OME::Image"), an Attribute name
 %default_search_values is also optional. If given, it is used to populate the search form fields.
 
 $form_fields is a hash reference of html form inputs { field_name => form_input, ... }
-$search_fields is a list of DBObject fields (or Semantid Elements if searching 
+$search_fields is a list of DBObject fields (or Semantic Elements if searching 
 for an ST) to search on. 
 
 =cut
@@ -525,7 +525,11 @@ sub getSearchCriteria {
 	
 	# Acquire search fields
 	my @search_fields;
-	# Default: template does not care what search fields are given
+	
+	# The search template is asking for us for the name of search fields. 
+	# Make search fields for any requested by url or post parameters, 
+	# fields used in the object's summary display template, and any fields
+	# that are requested by the search template.
 	my %specialRequestSearchFields;
 	if( $tmpl->query( name => '/search_fields_loop' ) ) {
 		# First look for any requested via parameters
@@ -544,6 +548,10 @@ sub getSearchCriteria {
 			push @search_fields, $tpmlField
 				if( not exists $lookup{ $tpmlField } );
 		}
+
+	# The search template is not asking us for the name of search fields. 
+	# The search fields will be those requested by url or post parameters 
+	# and those explicitly specified in the search template.
 	} else {
 		# First look for any requested via parameters
 		@search_fields = $q->param( 'search_names' );

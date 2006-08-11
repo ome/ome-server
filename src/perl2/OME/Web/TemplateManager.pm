@@ -116,7 +116,7 @@ sub actionTemplateDir {
 
 =head2 createTemplateDir
 
-    The directory for creation templates.  Generally, the "Create"
+    The directory for creation templates.  Generally, the "Action"
 	subdirectory under systemTemplateDir. 
 
         This should only be used internally.
@@ -253,6 +253,7 @@ sub getClassSearchTemplate {
     of search fields.
 
 =cut
+
 sub getSearchFieldTemplate {
     my $self = shift;
     my $tmpl_dir = $self->searchTemplateDir();
@@ -328,29 +329,40 @@ sub getClassTemplate {
 
 =head2 getRenderingTemplate
 
+	my $tmpl = OME::Web::TemplateManager->getRenderingTemplate($type, $mode, $arity);
+
     Similar to getClassTemplate, this procedure finds the appropraite
     rendering template for a given "mode" and "arity". In this case, 
-    $mode refers to the type of rendering being used.
+    $mode refers to the type of rendering being used. $arity can be either
+    'one' or 'many'.
 
     As with getClassTemplate, a generic template will be returned if a
     class specific template is not available.
 
+	Optionally, a final noGeneric parameter can be passed in. If specified,
+	this method will not return generic templates.
+
 
 =cut
+
 sub getRenderingTemplate {
     my $self=shift;
-    my ($obj,$mode,$arity) = @_;
+    my ($obj,$mode,$arity,$noGeneric) = @_;
 
     my $tmpl_dir  = $self->baseRenderDir($arity);
 
     my $tmpl_path;
     if ($obj) {
-	$tmpl_path = $self->getTypePathFragment($obj);
-	$tmpl_path = $tmpl_dir . $tmpl_path . "/".$mode.".tmpl";
+		$tmpl_path = $self->getTypePathFragment($obj);
+		$tmpl_path = $tmpl_dir . $tmpl_path . "/".$mode.".tmpl";
     }
     if (!($tmpl_path && -e $tmpl_path)) {
-	# cant' find specific.
-	$tmpl_path =$tmpl_dir . "/generic_".$mode.".tmpl";
+    	if( $noGeneric ) {
+    		return undef;
+    	} else {
+			# cant' find specific.
+			$tmpl_path =$tmpl_dir . "/generic_".$mode.".tmpl";
+		}
     }
     return HTML::Template->new(filename=>$tmpl_path,path=>$tmpl_dir,
 			       case_sensitive=>1);
@@ -384,12 +396,8 @@ sub getTemplateList {
 
 	# Find specialized templates
 	if( $type ) {
-		#my $specializedPath =
-		#$self->_specializedDisplayTemplateDir( $type, $arity
-		#);
-	        my $pathFragment = $self->getTypePathFragment($type);
+        my $pathFragment = $self->getTypePathFragment($type);
 		my $specializedPath = $generic_path . $pathFragment;
-		print STDERR "specialized path is $specializedPath\n";
 		if( $specializedPath ) {
 			opendir( DH, $specializedPath );
 			while( defined (my $file = readdir DH )) {
@@ -494,6 +502,7 @@ sub getTemplatesByType {
     CategoryGroup. 
 
 =cut
+
 sub getCategoryGroupAnnotationTemplates {
     my $self=shift;
     return $self->getTemplatesByType('@AnnotationTemplate','@CategoryGroup');

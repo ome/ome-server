@@ -848,13 +848,15 @@ sub getFields {
 	# alternately: filter fields by specialized templates
 	# try to find a template specific to this type & mode
 	if( $mode ) {
-	    my $tmpl =
-		OME::Web::TemplateManager->getRenderingTemplate($type,$mode,'one')
-		||
-		OME::Web::TemplateManager->getRenderingTemplate($type,$mode,
-							      'many');
+		# A special call that will only load a specialized template for the 
+		# given type in the given mode. If there is a specialized template 
+		# like that, then use its fields to filter down the columns.
+	    my $tmpl = OME::Web::TemplateManager->
+	                   getRenderingTemplate($type, $mode, 'one', 1) ||
+		           OME::Web::TemplateManager->
+		               getRenderingTemplate($type, $mode, 'many', 1);
+		# Only filter if a specialized template was found.
 	    if ($tmpl) {
-
 			# only keep columns that exist in the template
 			my $field_requests = $self->parse_tmpl_fields( 
 			    [ $tmpl->param() ] );
