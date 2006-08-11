@@ -1,0 +1,40 @@
+THE INFORMATION CONTAINED IN THIS FILE HAS ONLY BEEN TESTED ON MAC OS X.
+
+TEMPORARY, UNTIL THIS IS CHANGED ON CVS:
+In the matlab source directory, copy im2uint8_dynamic_range.m from OME/Statistics/haralick
+to a new directory called OME/Typecasting.
+
+In order to create a compiled library, you should cd to the directory that contains 
+the matlab code that you want to compile.
+
+Then, run the following command, where "libName" represents the type of library 
+you're creating.  For example, if I were compiling all the transforms together, 
+I would create a library called "libTransformsOME" (libName = Transforms):
+
+mcc -B csharedlib:liblibNameOME -I /path/to/OME/src/matlab/OMEIS -I /path/to/OME/src/matlab/OMEIS/imformats -I /path/to/OME/src/matlab/OME/Typecasting file1.m file2.m fileN.m -M "-O -inline -I/path/to/OME/src/C/omeis-http/ -L/path/to/OME/src/C/omeis-http -lcurl -lhttpOMEISMATLAB CC=gcc-4.0 CXX=g++-4.0 LD=gcc-4.0" -v
+
+For the Utility library, I'd do this:
+
+mcc -B csharedlib:libUtilityOME -I /path/to/OME/src/matlab/OMEIS -I /path/to/OME/src/matlab/OMEIS/imformats -I /path/to/OME/src/matlab/OME/Typecasting utilityFunctionsMasterFile.m -M "-O -inline -I/path/to/OME/src/C/omeis-http/ -L/path/to/OME/src/C/omeis-http -lcurl -lhttpOMEISMATLAB CC=gcc-4.0 CXX=g++-4.0 LD=gcc-4.0" -v
+
+
+After that, create a directory under /path/to/OME/lib/matlab_compiled called 
+"libName" and move all the liblibName* files from your matlab code directory to 
+this directory. Then you must run the script called "writeLibraryPackage.pl", located
+in your OME/src/perl2/OME/Matlab directory, like so:
+
+perl writeLibraryPackage libName relative/or/absolute/path/to/library
+
+Specifying a relative path will be a path that's relative to OME_BASE_DIR/lib/matlab_compiled
+
+Then run the script called "compileDynamicLibraries.pl", located in the 
+OME/src/perl2/OME/Matlab directory. It must be run as the super user because the 
+cache directory for Inline is OME_BASE_DIR/Inline:
+
+sudo env DYLD_LIBRARY_PATH=/Applications/MATLAB72/bin/mac perl compileDynamicLibraries.pl libName1 libName2 ... libNameN
+
+Your library should be ready to use through the Matlab Handler.  If you do a cvs
+update from HEAD on your src/xml directory, your modules will all try to use the
+libraries.  If you want your own module to be used through a library, modify 
+its execution instructions. After "ExecutionGranularity" add a tag called LibraryName 
+and set it equal to libName: LibraryName="libName".
