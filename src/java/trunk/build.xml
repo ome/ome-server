@@ -33,7 +33,9 @@
 	       destdir="${build}"
            deprecation="${deprecation}"
            debug="${debug}"
-           debuglevel="${debuglevel}">
+           debuglevel="${debuglevel}"
+           source="1.4"
+           target="1.4">
       <classpath>
         <fileset dir="${lib}">
           <include name="**/*.jar"/>
