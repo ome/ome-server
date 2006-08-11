@@ -54,10 +54,9 @@ use OME::SessionManager;
 use OME::Session;
 use OME::Factory;
 
-use OME::Install::Util;
+use OME::Install::Util;  # used for OME::Install::Util::get_db_version()
 use OME::Install::Terminal;
 use OME::Install::Environment;
-use OME::Install::CoreDatabaseTablesTask; # used for OME::Install::CoreDatabaseTablesTask::get_db_version()
 
 use DBI;
 
@@ -171,7 +170,7 @@ sub uninstall {
 	
 	# Drop our UID to the OME_USER
     euid (scalar(getpwnam $environment->user() ));
-    my $db_version = eval ("OME::Install::CoreDatabaseTablesTask::get_db_version()");
+    my $db_version = eval ("OME::Install::Util::get_db_version()");
     
 	if ($db_version) {
 			my $dropdb = 0;

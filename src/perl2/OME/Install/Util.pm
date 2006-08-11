@@ -79,6 +79,7 @@ our @EXPORT = qw(
 		scan_tree
 		copy_dir
 		scan_dir
+		get_db_version
 		);
 
 # Distribution detection
@@ -1268,6 +1269,41 @@ sub resolve_sym_links {
 	}
 	# lots of /../ could have completely emptied the expansion
 	($_ eq '') ? return '/' : return $_;
+}
+
+sub get_db_version {
+    my $dbh;
+    my $sql;
+    my $retval;
+
+    print "Checking database\n";
+	
+    $dbh = OME::Database::Delegate->getDefaultDelegate()->connectToDatabase({RaiseError => 0,PrintError => 0})
+    	or return undef;
+
+    # Check for DB existance
+    my $db_version = $dbh->selectrow_array(q{SELECT value FROM configuration WHERE name = 'db_version'});
+
+    
+    # If we're still here, that means there is an ome DB.
+    # if $db_version is undef, our version is before 2.2, which introduced versioning.
+    # Let's see if its 2.1 (after alpha, but before 2.2)
+    if (not defined $db_version) {
+        my $test = $dbh->selectrow_array(q{SELECT value FROM configuration WHERE name = 'db_instance'});
+        $db_version = '2.1' if $test;
+    }
+    
+    # Still nothing?  See if its alpha
+    if (not defined $db_version) {
+        my $test = $dbh->selectrow_array(q{SELECT DB_INSTANCE FROM configuration});
+        $db_version = '2.0' if $test;
+    }
+    
+    # if its still not defined, it's pre-alpha, so return '0'.
+    $db_version = '0' unless defined $db_version;
+
+    $dbh->disconnect();
+    return ($db_version);
 }
 
 1;
