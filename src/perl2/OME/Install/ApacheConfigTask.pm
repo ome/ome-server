@@ -1192,25 +1192,22 @@ BLURB
 		$dest = $APACHE->{WEB}.'/index.html';
 		print $LOGFILE "Copying $source to $dest\n";
 		if (! -d $APACHE->{WEB}) {
-			my $old_UID = euid($APACHE_UID);
 			eval { mkpath($APACHE->{WEB}) };
-			euid($old_UID);
 			print $LOGFILE "Couldn't create $APACHE->{WEB}: $@\n" and
 				croak "Couldn't create $APACHE->{WEB}: $@"
 				if $@
 		}
+		chmod (0755,$APACHE->{WEB}) or
+			print $LOGFILE "Could not chmod $dest:\n$!\n" and
+			croak "Could not chmod $dest:\n$!\n";
 
 		copy ($source,$dest) or
 			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
 			croak "Could not copy $source to $dest:\n$!\n";
 		print $LOGFILE "chmod 0755 $dest\n";
-		chmod (0755,$dest) or
+		chmod (0644,$dest) or
 			print $LOGFILE "Could not chmod $dest:\n$!\n" and
 			croak "Could not chmod $dest:\n$!\n";
-		print $LOGFILE "chown $dest to uid: $APACHE_UID gid: $OME_GID\n";
-		chown ($APACHE_UID,$OME_GID,$dest) or 
-			print $LOGFILE "Could not chown $dest:\n$!\n" and
-			croak "Could not chown $dest:\n$!\n";
 
 		$APACHE_WEB_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.web$is_dev.conf";
 		print $LOGFILE "Set APACHE_WEB_INCLUDE to $APACHE_WEB_INCLUDE\n";
