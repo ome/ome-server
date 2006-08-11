@@ -1,0 +1,10 @@
+<TMPL_IF NAME=/obj_loop/paging_limit-10>
+	<TMPL_LOOP NAME=/obj_loop/paging_limit-10>
+		<TMPL_VAR NAME=/object/render-ref><br/>
+	</TMPL_LOOP>
+	<TMPL_IF NAME=/more_info_url>
+		<a href="<TMPL_VAR NAME=/more_info_url>" title="View the rest of this list">...</a>
+	</TMPL_IF>
+<TMPL_ELSE>
+	<span class='ome_quiet'>(none)</span>
+</TMPL_IF>
