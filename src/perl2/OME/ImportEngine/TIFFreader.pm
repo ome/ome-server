@@ -344,7 +344,6 @@ sub importGroup {
 	# Store info about each input channel (wavelength)
 	if ($isRGB) {
 		$self->storeChannelInfoRGB($image, @channelInfo);
-		$self->storeDisplayOptions ($image, {BlackLevel => 0, WhiteLevel => (2**$bpp)-1});
 		my %display_options = map{ 
 			$_ => {
 				BlackLevel => 0, 
