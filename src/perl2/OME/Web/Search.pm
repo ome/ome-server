@@ -671,7 +671,19 @@ sub _getSearchParams {
 			my $value = $values[0];
 			# search string parsing
 			$value =~ s/\*/\%/g;
-			unless( $value =~ m/,/ ) {
+			
+			# Parse operations that were specified on the search field.
+			if( $value =~ m/^[!=><]/ ) {
+				my ( $operation, $operand ) = split( m/\s/, $value );
+				$operand =~ s/^\s*(.+)\s*$/\1/;
+				$searchParams{ $search_on } = [ $operation, $operand ];
+
+			# Parse values that were given as a comma separated list
+			} elsif( $value =~ m/,/ ) {
+				$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
+				
+			# Parse normal search values.
+			} else {
 
 				# Determine whether this search path returns a reference.
 				# A field may have the form: dataset_links.dataset The code block below
@@ -688,8 +700,6 @@ sub _getSearchParams {
 				} else {
 					$searchParams{ $search_on } = [ 'ilike', '%'.$value.'%' ];
 				}
-			} else {
-				$searchParams{ $search_on } = [ 'in', [ split( m/,/, $value ) ] ];
 			}
 		}
 	}
