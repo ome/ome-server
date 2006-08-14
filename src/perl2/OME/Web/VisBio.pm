@@ -39,7 +39,7 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use base qw(OME::Web);
-use Sys::Hostname;
+use OME::Install::Environment;
 
 sub new {
 	my $proto = shift;
@@ -66,21 +66,7 @@ sub createOMEPage {
 
 	# load system defaults
 	if (not defined $server) {
-		$server = `hostname -f`;
-		if (not defined $server) {
-			# try hardcoding the path
-			$server = `/bin/hostname -f`;
-			if (not defined $server) {
-				# Mac OS X does not support -f flag
-				$server = `/bin/hostname`;
-			}
-		}
-		if (defined $server) {
-			chop $server;
-		}
-		else { # hostname failed; try using Sys::Hostname
-			$server = hostname();
-		}
+		$server = OME::Install::Environment->initialize()->hostname();
 	}
 	if (not defined $key) {
 		$key = $session->SessionKey();

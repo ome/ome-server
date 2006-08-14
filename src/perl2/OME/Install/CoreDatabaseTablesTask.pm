@@ -449,7 +449,7 @@ BLURB
             } else {
                 ($OME_EXPER->{FirstName},$OME_EXPER->{LastName}) = ('','');
             }
-            $OME_EXPER->{Email} = $OME_EXPER->{OMEName}.'@'.hostname();
+            $OME_EXPER->{Email} = $OME_EXPER->{OMEName}.'@'.$ENVIRONMENT->hostname ();
             $OME_EXPER->{OMEName} = lc ( substr ($OME_EXPER->{FirstName}, 0, 1).$OME_EXPER->{LastName} )
                 unless $OME_EXPER->{OMEName};
 			$OME_EXPER->{Password}  = ''; # triggers Set Password question
@@ -555,7 +555,7 @@ PRINT
 			experimenter_id => $experimenter->attribute_id(),
 			started         => 'now()',
 			last_access     => 'now()',
-			host            => hostname(),
+			host            => $ENVIRONMENT->hostname (),
 			session_key     => $session_key,
 		});
 	$userState->storeObject();
@@ -727,12 +727,12 @@ sub bootstrap_session {
                      experimenter_id => $experimenterObj->id(),
                      started         => 'now()',
                      last_access     => 'now()',
-                     host            => hostname()
+                     host            => $ENVIRONMENT->hostname ()
                     });
         $factory->commitTransaction();
     } else {
         $userState->last_access('now()');
-        $userState->host(hostname());
+        $userState->host($ENVIRONMENT->hostname ());
     }
     croak "Could not create userState object.  Something is probably very very wrong." unless $userState;
 
@@ -748,6 +748,16 @@ sub bootstrap_session {
     return $session;
 }
 
+sub verifyHostname {
+	my $hostname = $ENVIRONMENT->hostname ();
+	return $hostname if
+		( $hostname && y_or_n ("Hostname set to '$hostname'.  OK ?",'y') );
+	
+	$hostname = hostname();
+	$hostname = confirm_default ("Hostname", $hostname);
+    $ENVIRONMENT->hostname ($hostname);
+	return $hostname;
+}
 
 
 sub init_configuration {
@@ -773,7 +783,7 @@ BLURB
     }
 
     unless ($lsid_authority) {
-		$lsid_def = hostname() unless $lsid_def; 
+		$lsid_def = $ENVIRONMENT->hostname () unless $lsid_def; 
 	
 	
 		$lsid_authority = confirm_default ("LSID Authority", $lsid_def);
@@ -863,7 +873,7 @@ sub make_repository {
 
     print "\n";  # Spacing
 
-    my $hostname = hostname();
+    my $hostname = $ENVIRONMENT->hostname ();
 
     # FIXME Make this a little more verbose, probably needs some explanation.
     my $repository_def = $ENVIRONMENT->omeis_url();
@@ -1408,6 +1418,7 @@ BLURB
             print "  Database is current.\n";
         }
         load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
+        verifyHostname();
         # At this point, we want to make sure there are no ACLs in place.
         # This is done by removing the super_user configuration variable
         # The super_user configuration variable will be set to whoever logs in below.
@@ -1441,6 +1452,7 @@ BLURB
         # Create our database
         $db_delegate->createDatabase () or croak "Unable to create database!";
         load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
+        verifyHostname();
         init_configuration () or croak "Unable to initialize the configuration object.";
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
         $session = create_experimenter ($manager) or croak "Unable to create an initial experimenter.";

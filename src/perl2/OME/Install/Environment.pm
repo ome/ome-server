@@ -313,6 +313,18 @@ sub lsid {
     return;
 }
 
+sub hostname {
+    my ($self, $hostname) = @_;
+
+    if($hostname) {
+		$self->{hostname} = $hostname;
+    } elsif( exists $self->{hostname} ) {
+		return $self->{hostname};
+    }
+
+    return;
+}
+
 sub apache_conf {
 	my $self = shift;
 
