@@ -87,13 +87,6 @@ use OME::DBObject;
 
 use base qw(Class::Accessor Class::Data::Inheritable);
 
-use constant INVALIDATE_OLD_SESSION_KEYS_SQL => <<"SQL";
-	UPDATE OME_SESSIONS
-	SET SESSION_KEY = NULL
-	WHERE abstime(now()) - abstime(LAST_ACCESS)
-			> ?
-SQL
-
 use constant GET_KEY_AGE => <<"SQL";
 	SELECT EXTRACT (EPOCH  from abstime(now()) - abstime(LAST_ACCESS))
 		from OME_SESSIONS where session_key=?
@@ -336,13 +329,13 @@ sub createWithKey {
 	if ($session->isGuestSession()) {
 	    my $guestStatus;
 	    eval {
-		$guestStatus = $configuration->allow_guest_access();
+			$guestStatus = $configuration->allow_guest_access();
 	    };
 	    if (!$guestStatus) {
-		$userState->session_key(undef);
-		$userState->storeObject();
-		$session->commitTransaction();
-		return undef;
+			$userState->session_key(undef);
+			$userState->storeObject();
+			$session->commitTransaction();
+			return undef;
 	    }
 	}
 	else { #non- guest user
@@ -356,10 +349,10 @@ sub createWithKey {
 	    $age += $SESSION_KEY_LIFETIME if ($@);
 
 	    if ($age > $SESSION_KEY_LIFETIME) {
-		$userState->session_key(undef);
-		$userState->storeObject();
-		$session->commitTransaction();
-		return undef;		
+			$userState->session_key(undef);
+			$userState->storeObject();
+			$session->commitTransaction();
+			return undef;		
 	    }
 	}	
 	my $host;
@@ -550,11 +543,16 @@ sub logout {
 	return undef unless defined $session;
 	logdbg "debug", ref($self)."->logout: logging out";
 
-	my $userState = $session->getUserState();
-	$userState->last_access('now()');
-	$userState->session_key(undef);
-	$userState->storeObject();
-	$session->commitTransaction();
+# While we have a single key per user, we need to avoid stepping on other keys
+# that may be issued for the same user.  The user may have the AE running in the background
+# for instance.
+# In other words, there is no effect on the back-end/DB from logging out - its purely
+# up to the client to clear out their own authentication tokens (Session keys).
+# 	my $userState = $session->getUserState();
+# 	$userState->last_access('now()');
+# 	$userState->session_key(undef);
+# 	$userState->storeObject();
+# 	$session->commitTransaction();
 
 }
 

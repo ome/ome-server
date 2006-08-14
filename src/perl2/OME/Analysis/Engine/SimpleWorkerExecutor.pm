@@ -99,7 +99,6 @@ sub new {
 	# Array of hashrefs, keyed by 'MexID','Dep','TargetID'
 		queue       => [],
 		UA          => undef,
-		SessionKey  => undef,
 	# The messages the worker will send us when its done.
 		OurWorker   => undef,
 		AnyWorker   => undef,
@@ -118,9 +117,8 @@ sub new {
 	# Get our user agent
 	$self->{UA} = OME::Util::cURL->new ();
 
-	# Get our DataSource + SessionKey
+	# Get our DataSource
 	$self->{DataSource}	  = $DATA_SOURCE;
-	$self->{SessionKey}	  = OME::Session->instance()->SessionKey();
 
 	logdbg "debug", "SimpleWorkerExecutor->new: Registering listeners";
 	
@@ -176,6 +174,7 @@ sub pressWorker {
 	$q->param( "Notice", $self->{OurWorker}, $self->{AnyWorker} );
 	# Put our instance ID as the MasterID
 	$q->param( "MasterID", $self->{instance_id} );
+	$q->param( "SessionKey", OME::Session->instance()->SessionKey() );
 	
 	my $params = $q->self_url();
 	undef $q;
@@ -245,7 +244,6 @@ sub executeModule {
 		DataSource   => $self->{DataSource},
 		DBUser       => $self->{DBUser},
 		DBPassword   => $self->{DBPassword},
-		SessionKey   => $self->{SessionKey},
 	};
 	push (@$queue,$job);
 

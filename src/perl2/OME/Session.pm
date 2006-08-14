@@ -476,7 +476,18 @@ transaction.
 # We explicitly return to throw away any return values.
 # These methods delegate to their implementations in OME::Factory.
 
-sub commitTransaction { shift->{Factory}->commitTransaction(); return; }
+sub commitTransaction {
+my $self = shift;
+
+	if ($self->{UserState}) {
+		$self->{UserState}->last_access('now()');
+		$self->{UserState}->storeObject();
+	}
+	$self->{Factory}->commitTransaction();
+	return;
+}
+
+
 sub rollbackTransaction { shift->{Factory}->rollbackTransaction(); return; }
 
 {
