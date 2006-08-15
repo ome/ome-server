@@ -221,7 +221,7 @@ sub backup {
 	if (not $quick) {
 	    print "    \\_ Backing up OMEIS from $omeis_base_dir \n";
 		print STDERR "$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup\n";
-		foreach (`$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup --directory $omeis_base_dir Files Pixels 2>&1`) {
+		foreach (`$prog_path{'tar'} $comp_flag -cf '$backup_file.tar$comp_ext' --directory /tmp OMEmaint omeDB_backup 2>&1`) {
 			print STDERR "\nCouldn't create tar archive: $_" and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
 		}
 	    print STDERR "$prog_path{'tar'} $comp_flag --append --file='$backup_file.tar$comp_ext' --directory $omeis_base_dir Files Pixels\n";
