@@ -41,16 +41,20 @@
 %	fisher discriminate score for every image.
 %
 % DESCRIPTION
-%	Calculate Fisher Discriminate scores using the formula:
+%	Calculate Fisher Discriminate scores for each signature using the formula:
 %		mean( variance of class means from pooled mean ) /
-%		mean( variance within each class )
+%		( mean( variance within each class ) + eps )
 %
 % NOTES
 %	This is a simplified version of Nikita's classic select_sigs_FisherDiscrim.m
 % (roughly 1/10 the code). It differs in that it does not discretize the data 
-% prior to calculating FD's. It also ignores signature families.
+% prior to calculating FD's. It also ignores signature families, and  does not 
+% normalize the signature data before calculating the FD. It likely has other
+% differences, but select_sigs_FisherDiscrim is extremely hard to read, and 
+% I haven't puzzled out all the differences.
 % When fisherScores is given discretized data, the ordering of signatures is 
-% identical to select_sigs_FisherDiscrim. 
+% usually identical to select_sigs_FisherDiscrim. 
+% Eps is added to the denominator for cases where the inner class variance is 0.
 
 function [fisher_discriminate_scores] = fisherScores( sigMatrix, class_vec );
 
@@ -76,16 +80,9 @@ for sig_index = 1:num_sigs
 		inner_class_var( class_index ) = var(  sigMatrix( sig_index, class_instances ) );
 	end;
 	
-	% Skip this sig if it has no variance (a common occurence) 
-	if( mean( inner_class_var ) == 0 )
-		%fprintf( 'signature %d has no variation\n', sig_index );
-		fisher_discriminate_scores( sig_index ) = 0;
-		continue;
-	end;
-	
 	% Plug in numbers to the Fisher Formula
 	sig_mean = mean( sigMatrix( sig_index, : ) );
 	class_dev_from_mean = ...
 		sum( ( class_means - sig_mean ).^2 ) / ( num_classes - 1 );
-	fisher_discriminate_scores( sig_index ) = class_dev_from_mean / mean( inner_class_var );
+	fisher_discriminate_scores( sig_index ) = class_dev_from_mean / ( mean( inner_class_var ) + eps );
 end;
