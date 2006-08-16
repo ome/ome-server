@@ -749,12 +749,11 @@ sub bootstrap_session {
 }
 
 sub verifyHostname {
-	my $hostname = $ENVIRONMENT->hostname ();
+	my $hostname = $ENVIRONMENT->hostname () || hostname();
 	return $hostname if
 		( $hostname && y_or_n ("Hostname set to '$hostname'.  OK ?",'y') );
 	
-	$hostname = hostname();
-	$hostname = confirm_default ("Hostname", $hostname);
+	$hostname = confirm_default ("Hostname: ", $hostname);
     $ENVIRONMENT->hostname ($hostname);
 	return $hostname;
 }
