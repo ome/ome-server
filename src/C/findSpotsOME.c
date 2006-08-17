@@ -721,15 +721,16 @@ coordinate theC, nwaves, j;
 
 
 
-/*#########################*/
-/*#                       #*/
-/*#  MakeThresholdMask    #*/
-/*#                       #*/
-/*#########################*/
+/*######################################*/
+/*#                                    #*/
+/*#     MakeThresholdMask_lightSpots   #*/
+/*#     MakeThresholdMask_darkSpots    #*/
+/*#                                    #*/
+/*######################################*/
 /* This sets the stack's pre-allocated mask using the 
  * stack's global threshold.
 */
-void MakeThresholdMask (PixStack* theStack) {
+void MakeThresholdMask_lightSpots (PixStack* theStack) {
 coordinate theC;
 double threshold;
 MaskPtr maskPtr, lastMaskPtr;
@@ -807,6 +808,83 @@ float *float_p;
 	
 }
 
+void MakeThresholdMask_darkSpots (PixStack* theStack) {
+coordinate theC;
+double threshold;
+MaskPtr maskPtr, lastMaskPtr;
+size_t nPix;
+
+u_int8_t *u_int8_p;
+u_int16_t *u_int16_p;
+u_int32_t *u_int32_p;
+int8_t *int8_p;
+int16_t *int16_p;
+int32_t *int32_p;
+float *float_p;
+	
+	theC = theStack->spotWave;
+	threshold = theStack->threshold;
+	
+	maskPtr = theStack->mask;
+	nPix = theStack->nPix;
+	lastMaskPtr = maskPtr + nPix;
+	
+	switch (theStack->pixType) {
+		case PIX_T_FLOAT:
+			float_p = (float *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*float_p++ <= threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_UINT8:
+			u_int8_p = (u_int8_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*u_int8_p++ <= threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_UINT16:
+			u_int16_p = (u_int16_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*u_int16_p++ <= threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_UINT32:
+			u_int32_p = (u_int32_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*u_int32_p++ <= threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_INT8:
+			int8_p = (int8_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*int8_p++ <= threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_INT16:
+			int16_p = (int16_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*int16_p++ <= threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		case PIX_T_INT32:
+			int32_p = (int32_t *) (theStack->stacks[theC]);
+			while (maskPtr < lastMaskPtr) {
+				if (*int32_p++ <= threshold) *maskPtr++ = SPOT_PIXEL;
+				else *maskPtr++ = MASK_PIXEL;
+			}
+		break;
+		default:
+		break;
+	}
+
+	
+}
 
 /*#########################*/
 /*#                       #*/
@@ -3171,6 +3249,7 @@ const char* threshold = NULL;
 OID PixelsID;
 PixStack *theStack;
 char doFadeSpots=0;
+char doDarkSpots=0;
 MaskPixel *maskCopy=NULL;
 
 char *spotsListFilename, doSpots2spots=0;
@@ -3264,6 +3343,13 @@ fflush (stderr);
 	}
 	
 	/*
+	* Decide if we're doing darkSpots
+	*/
+	if ( (argIndx = getArg (argc, argv, "-darkSpots")) > -1 && argIndx < argc) {
+		doDarkSpots = 1;
+	}
+	
+	/*
 	* Decide if we're doing spots2spots
 	*/
 	if ( (argIndx = getArg (argc, argv, "-spotsList")) > -1 && argIndx < argc) {
@@ -3298,7 +3384,10 @@ fflush (stderr);
 			/* If its the first timepoint, we set up our mask based on the specified timepoint */
 				ReadTimepoint (theStack, maskT);
 				theStack->threshold = Set_Threshold (threshold,theStack);
-				MakeThresholdMask (theStack);
+				if (doDarkSpots)
+					MakeThresholdMask_darkSpots (theStack);
+				else
+					MakeThresholdMask_lightSpots (theStack);
 			/* make a copy of the mask, so we can use the copy on subsequent timepoints */
 				if ( (maskCopy = (MaskPtr) malloc (theStack->nPix*sizeof(MaskPixel))) == NULL) {
 					fprintf (stderr,"Could not allocate memory for a mask copy - exiting\n");
@@ -3316,8 +3405,11 @@ fflush (stderr);
 		/* Calculate a mask based on the current timepoint */
 			ReadTimepoint (theStack, theT);
 			theStack->threshold = Set_Threshold (threshold,theStack);
-			MakeThresholdMask (theStack);
-		}
+			if (doDarkSpots)
+				MakeThresholdMask_darkSpots (theStack);
+			else
+				MakeThresholdMask_lightSpots (theStack);
+	}
 
 		
 
@@ -3431,6 +3523,8 @@ void usage (char **argv) {
 		fprintf (stderr,"<optional arguments>:\n");
 		fprintf (stderr,"\t-time <n1>-<n2> begin and end timepoints.  Default is all timepoints. -time 4- will do t4 to the end, etc.  Time begins at 0\n");
 		fprintf (stderr,"\t-fadeSpots <n>  Threshold the image at the <n> timepoint and use this timepoint's mask for all other timepoints. By default <n> = 0\n");
+		fprintf (stderr,"\t-darkSpots      By default spots are assumed to be lighter than the background (e.g. Fluorescence labeled proteins). If this\n");
+		fprintf (stderr,"\t                parameter is set, spots are assumed to be darker than background (e.g. Nucleii in H&E stained images).\n");
 		fprintf (stderr,"<Output arguments>:\n");
 		fprintf (stderr,"  Output is tab-delimited text with one line per spot.  Any summary information specified (-tm, -tt, etc) will be\n");
 		fprintf (stderr,"  displayed once for each spot - not once per timepoint. Column order will be as specified in <Output arguments>,\n");
