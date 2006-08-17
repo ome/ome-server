@@ -179,6 +179,15 @@
              the specified timepoint.
              </Description>
     </Element>
+	<Element Name="DarkSpots"
+             DBLocation="FIND_SPOTS_INPUTS.DARK_SPOTS"
+             DataType="boolean">
+             <Description>False (default) sets FindSpots to look for spots lighter
+             than the background (e.g. Fluorescence labeled proteins). If this
+             parameter is set to True, spots are assumed to be darker than 
+             background (e.g. Nucleii in HandE stained images).
+             </Description>
+    </Element>
   </SemanticType>
 
 </STD:SemanticTypeDefinitions>
