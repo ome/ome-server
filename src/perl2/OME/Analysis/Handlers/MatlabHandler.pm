@@ -296,7 +296,8 @@ sub startFeature {
 
 sub finishAnalysis {
 	my ($self) = @_;
-
+	
+	$self->__idleMatlab();
 	# this insures a check of output arities
 	$self->SUPER::finishAnalysis();
 }
@@ -1378,6 +1379,17 @@ TODO: Implement something to shut down each instance.
 
 sub __closeMatlab {
 	$_matlab_instances{ 'engine' }->close() if $_matlab_instances{ 'engine' };
+}
+
+=head2 __idleMatlab
+
+Frees up memory used by the matlab interfaces - well, just the engine at the moment.
+TODO: Implement something to shut down each instance.
+
+=cut
+
+sub __idleMatlab {
+	$_matlab_instances{ 'engine' }->eval("clear") if $_matlab_instances{ 'engine' };
 }
 
 sub __openEngine {
