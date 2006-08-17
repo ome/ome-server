@@ -17,7 +17,7 @@
    This plugin implements stain separation using the colour deconvolution
    method described in:
 
-       Ruifrok AC, Johnston DA. Quantification of histological
+       Ruifrok AC, Johnston DA. Quantification of histochemical
        staining by color deconvolution. Analytical & Quantitative
        Cytology & Histology 2001; 23: 291-299.
 
@@ -72,34 +72,275 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	char* myStain;
 	if (nrhs != 2)
-		mexErrMsgTxt("\n [stain1, stain2, stain3] = colour_deconvolution (im, StainingUsed),\n\n"
-		"This function takes an RGB image and returns three uint8 images with separated stains\n"
-		"if the specimen is stained with a 2 colour scheme (such as H & E) the 3rd image\n"
+		mexErrMsgTxt("\n [stain1, stain2, stain3] = colour_deconvolution (im, StainingMethod),\n\n"
+		"This function takes an RGB image and returns three uint8 images with separated stains.\n"
+		"If the specimen is stained with a 2 colour scheme (such as H & E) the 3rd image\n"
 		"represents the complimentary of the first two colours (i.e. green).\n"
-		"StainingUsed can be a string equal to 'H&E', 'H DAB', 'H&E DAB', 'H AEC'\n"
-		"'FastRed FastBlue DAB', 'Methyl Green DAB', 'Azan-Mallory','Alcian blue & H'\n"
-		"'H PAS','RGB','CMY'");
+		"\n"
+		"StainingMethod can be a struct defining stain vectors or a a string refering to\n"
+		"one of the built-in stain vectors.\n"
+		"\n"
+		"For example, the struct defining the H&E staining method would be defined thus:\n"
+		" StainingMethod.MODx_0 = 0.644211;\n"
+		" StainingMethod.MODy_0 = 0.716556;\n"
+		" StainingMethod.MODz_0 = 0.266844;\n"
+		" StainingMethod.MODx_1 = 0.092789;\n"
+		" StainingMethod.MODy_1 = 0.954111;\n"
+		" StainingMethod.MODz_1 = 0.283111;\n"
+		" StainingMethod.MODx_2 = 0.0;\n"
+		" StainingMethod.MODy_2 = 0.0;\n"
+		" StainingMethod.MODz_2 = 0.0;\n"
+		"\n"
+		"The built-in vectors are:\n"
+		" Haematoxylin and Eosin determined by G.Landini ('H&E')\n"
+		" Haematoxylin and Eosin determined by A.C.Ruifrok ('H&E 2')\n"
+		" Haematoxylin and DAB ('H DAB')\n"
+		" Haematoxylin, Eosin and DAB ('H&E DAB')\n"
+		" Haematoxylin and AEC ('H AEC')\n"
+		" Fast Red, Fast Blue and DAB ('FastRed FastBlue DAB')\n"
+		" Methyl green and DAB ('Methyl Green DAB')\n"
+		" Azan-Mallory ('Azan-Mallory')\n"
+		" Alcian blue & Haematoxylin ('Alcian blue & H')\n"
+		" Haematoxylin and Periodic Acid of Schiff ('H PAS')\n"
+		" RGB subtractive ('RGB')\n"
+		" CMY subtractive ('CMY')\n");
+		
 	else if (nlhs < 1)
 		mexErrMsgTxt ("colour_deconvolution returns at-least a single output.\n");
 	
 	if (!mxIsUint8(prhs[0]))
-		mexErrMsgTxt("mb_texture requires the first input be uint8\n");
+		mexErrMsgTxt("colour_deconvolution requires the first input be uint8\n");
 	
 	img = (u_int8_t*) mxGetData(prhs[0]);
 	dims = mxGetDimensions(prhs[0]);
-	if (!(dims[0] > 1) || !(dims[1] > 1) || !(dims[2] == 3))
-		mexErrMsgTxt("mb_texture requires an RGB input image, not a scalar.\n") ;
+	
+	if (!(dims[0] > 1) || !(dims[1] > 1))
+		mexErrMsgTxt("colour_deconvolution requires an input image, not a scalar.\n") ;
+		
+	int num_of_dims = mxGetNumberOfDimensions(prhs[0]);
+	if ((num_of_dims != 3) && (num_of_dims != 4) ) {		
+		char err_str[128];
+		sprintf(err_str, "colour_deconvolution requires a 3D input image where the third dimension is channel. The current image is %dd)", num_of_dims);
+		mexErrMsgTxt(err_str);
+	}
 	
 	/*
-	  String [] stain={"From ROI", "H&E", "H DAB","FastRed FastBlue DAB","Methyl Green DAB", "H&E DAB", "H AEC","Azan-Mallory","Alcian blue & H","H PAS","RGB","CMY", "User values"};
+		This is hacked code required to get colour_deconvolution to work with
+		the AE. OME assumes the 5D pixel model with the 3rd dimension being the
+		z-section and the 4rd dimension the channel.
+		
+		The Matlab TIFF importer assumes the 3rd dimension is the channel.
+		
+		The unified ROI model will regularize things.
+		
+		The colour_deconvolution code works either way because of this trick,
+		which is based onto deep hooks into MATLAB array serialization
+		
+			int R = img[i];
+			int G = img[i+imagesize];
+			int B = img[i+2*imagesize];
 	*/
-	myStain = mxArrayToString(prhs[1]);
-	
-	double leng, A, V, C, min, log255=log(255.0);
-	int i,j;
+	if (num_of_dims == 4) {
+		/* it's OKAY but only because of the clever code */
+		;
+	}
+
+	/**********************************************************************
+	* Compose the stain-vectors; either based on the inputed MATLAB struct
+	* of the stain-vectors, or based on the built-in vectors
+	***********************************************************************/
 	double MODx[3];
 	double MODy[3];
 	double MODz[3];
+	
+	if (mxIsStruct(prhs[1])) {
+		MODx[0] = mxGetScalar(mxGetField(prhs[1], 0, "MODx_0"));
+		MODy[0] = mxGetScalar(mxGetField(prhs[1], 0, "MODy_0"));
+		MODz[0] = mxGetScalar(mxGetField(prhs[1], 0, "MODz_0"));
+
+		MODx[1] = mxGetScalar(mxGetField(prhs[1], 0, "MODx_1"));
+		MODy[1] = mxGetScalar(mxGetField(prhs[1], 0, "MODy_1"));
+		MODz[1] = mxGetScalar(mxGetField(prhs[1], 0, "MODz_1"));
+		
+		MODx[2] = mxGetScalar(mxGetField(prhs[1], 0, "MODx_2"));
+		MODy[2] = mxGetScalar(mxGetField(prhs[1], 0, "MODy_2"));
+		MODz[2] = mxGetScalar(mxGetField(prhs[1], 0, "MODz_2"));
+	} else if (mxIsChar(prhs[1])) {	
+		myStain = mxArrayToString(prhs[1]);
+		if (!strcmp(myStain,"H&E") || !strcmp(myStain,"HE")){
+			/* GL Haem matrix */
+			MODx[0]= 0.644211;
+			MODy[0]= 0.716556;
+			MODz[0]= 0.266844;
+			/* GL Eos matrix */
+			MODx[1]= 0.092789;
+			MODy[1]= 0.954111;
+			MODz[1]= 0.283111;
+			/*  Zero matrix */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"H&E 2") || !strcmp(myStain,"HE 2")){
+			/* GL Haem matrix */
+			MODx[0]= 0.650;
+			MODy[0]= 0.704;
+			MODz[0]= 0.286;
+			/* GL Eos matrix */
+			MODx[1]= 0.072;
+			MODy[1]= 0.990;
+			MODz[1]= 0.105;
+			/*  Zero rix */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"H DAB")){
+			/* 3,3-diamino-benzidine tetrahydrochloride
+			   Haem matrix */
+			MODx[0]= 0.650;
+			MODy[0]= 0.704;
+			MODz[0]= 0.286;
+			/* DAB matrix */
+			MODx[1]= 0.268;
+			MODy[1]= 0.570;
+			MODz[1]= 0.776;
+			/* Zero matrix */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"FastRed FastBlue DAB")){
+			/* fast red */
+			MODx[0]= 0.21393921;
+			MODy[0]= 0.85112669;
+			MODz[0]= 0.47794022;
+			/* fast blue */
+			MODx[1]= 0.74890292;
+			MODy[1]= 0.60624161;
+			MODz[1]= 0.26731082;
+			/* dab */
+			MODx[2]= 0.268;
+			MODy[2]= 0.570;
+			MODz[2]= 0.776;
+		} else if (!strcmp(myStain,"Methyl Green DAB")){
+			/* MG matrix (GL) */
+			MODx[0]= 0.98003;
+			MODy[0]= 0.144316;
+			MODz[0]= 0.133146;
+			/* DAB matrix */
+			MODx[1]= 0.268;
+			MODy[1]= 0.570;
+			MODz[1]= 0.776;
+			/* Zero matrix */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"H&E DAB")){
+			/* Haem matrix */
+			MODx[0]= 0.650;
+			MODy[0]= 0.704;
+			MODz[0]= 0.286;
+			/* Eos matrix */
+			MODx[1]= 0.072;
+			MODy[1]= 0.990;
+			MODz[1]= 0.105;
+			/* DAB matrix */
+			MODx[2]= 0.268;
+			MODy[2]= 0.570;
+			MODz[2]= 0.776;
+		} else if (!strcmp(myStain,"H AEC")){
+			/* 3-amino-9-ethylcarbazole
+				   Haem matrix */
+			MODx[0]= 0.650;
+			MODy[0]= 0.704;
+			MODz[0]= 0.286;
+			/* AEC matrix */
+			MODx[1]= 0.2743;
+			MODy[1]= 0.6796;
+			MODz[1]= 0.6803;
+			/* Zero matrix */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"Azan-Mallory")){
+			/* Azocarmine and Aniline Blue (AZAN)
+			   GL Blue matrix */
+			MODx[0]= .853033;
+			MODy[0]= .508733;
+			MODz[0]= .112656;
+			/* GL Red matrix */
+			MODx[1]= 0.070933;
+			MODy[1]= 0.977311;
+			MODz[1]= 0.198067;
+			/* Orange matrix (not set yet, currently zero) */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"Alcian blue & H")){
+			/* GL Alcian Blue matrix */
+			MODx[0]= 0.874622;
+			MODy[0]= 0.457711;
+			MODz[0]= 0.158256;
+			/* GL Haematox after PAS matrix */
+			MODx[1]= 0.552556;
+			MODy[1]= 0.7544;
+			MODz[1]= 0.353744;
+			/* Zero matrix */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"H PAS")){
+			/* GL Haem matrix */
+			MODx[0]= 0.644211; /* 0.650; */
+			MODy[0]= 0.716556; /* 0.704; */
+			MODz[0]= 0.266844; /* 0.286; */
+			/* GL PAS matrix */
+			MODx[1]= 0.175411;
+			MODy[1]= 0.972178;
+			MODz[1]= 0.154589;
+			/* Zero matrix */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"RGB")){
+			/* R */
+			MODx[0]= 0.0;
+			MODy[0]= 1.0;
+			MODz[0]= 1.0;
+			/* G */
+			MODx[1]= 1.0;
+			MODy[1]= 0.0;
+			MODz[1]= 1.0;
+			/* B */
+			MODx[2]= 1.0;
+			MODy[2]= 1.0;
+			MODz[2]= 0.0;
+		} else if (!strcmp(myStain,"CMY")){
+			/* C */
+			MODx[0]= 1.0;
+			MODy[0]= 0.0;
+			MODz[0]= 0.0;
+			/* M */
+			MODx[1]= 0.0;
+			MODy[1]= 1.0;
+			MODz[1]= 0.0;
+			/* Y */
+			MODx[2]= 0.0;
+			MODy[2]= 0.0;
+			MODz[2]= 1.0;
+		} else {
+			char err_str[128];
+			sprintf(err_str, "colour_deconvolution doesn't support the stain %s", myStain);
+			mexErrMsgTxt(err_str);
+		}
+	} else {
+		mexErrMsgTxt("colour_deconvolution requires the second input to specify the stain-vectors via a string or struct\n");
+	}
+	
+	/**********************************************************************
+	*  Convert the vectors into LUTs
+	***********************************************************************/
+	double leng, A, V, C, min, log255=log(255.0);
+	int i,j;
+
 	double cosx[3];
 	double cosy[3];
 	double cosz[3];
@@ -109,161 +350,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	int gLUT[255];
 	int bLUT[255];
 
-	if (!strcmp(myStain,"H&E")){
-		/* GL Haem matrix */
-		MODx[0]= 0.644211; /* 0.650; */
-		MODy[0]= 0.716556; /* 0.704; */
-		MODz[0]= 0.266844; /* 0.286; */
-		/* GL Eos matrix */
-		MODx[1]= 0.092789; /* 0.072; */
-		MODy[1]= 0.954111; /* 0.990; */
-		MODz[1]= 0.283111; /* 0.105; */
-		/*  Zero matrix */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"H DAB")){
-		/* 3,3-diamino-benzidine tetrahydrochloride
-		   Haem matrix */
-		MODx[0]= 0.650;
-		MODy[0]= 0.704;
-		MODz[0]= 0.286;
-		/* DAB matrix */
-		MODx[1]= 0.268;
-		MODy[1]= 0.570;
-		MODz[1]= 0.776;
-		/* Zero matrix */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"FastRed FastBlue DAB")){
-		/* fast red */
-		MODx[0]= 0.21393921;
-		MODy[0]= 0.85112669;
-		MODz[0]= 0.47794022;
-		/* fast blue */
-		MODx[1]= 0.74890292;
-		MODy[1]= 0.60624161;
-		MODz[1]= 0.26731082;
-		/* dab */
-		MODx[2]= 0.268;
-		MODy[2]= 0.570;
-		MODz[2]= 0.776;
-	} else if (!strcmp(myStain,"Methyl Green DAB")){
-		/* MG matrix (GL) */
-		MODx[0]= 0.98003;
-		MODy[0]= 0.144316;
-		MODz[0]= 0.133146;
-		/* DAB matrix */
-		MODx[1]= 0.268;
-		MODy[1]= 0.570;
-		MODz[1]= 0.776;
-		/* Zero matrix */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"H&E DAB")){
-		/* Haem matrix */
-		MODx[0]= 0.650;
-		MODy[0]= 0.704;
-		MODz[0]= 0.286;
-		/* Eos matrix */
-		MODx[1]= 0.072;
-		MODy[1]= 0.990;
-		MODz[1]= 0.105;
-		/* DAB matrix */
-		MODx[2]= 0.268;
-		MODy[2]= 0.570;
-		MODz[2]= 0.776;
-	} else if (!strcmp(myStain,"H AEC")){
-		/* 3-amino-9-ethylcarbazole
-	     	   Haem matrix */
-		MODx[0]= 0.650;
-		MODy[0]= 0.704;
-		MODz[0]= 0.286;
-		/* AEC matrix */
-		MODx[1]= 0.2743;
-		MODy[1]= 0.6796;
-		MODz[1]= 0.6803;
-		/* Zero matrix */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"Azan-Mallory")){
-		/* Azocarmine and Aniline Blue (AZAN)
-		   GL Blue matrix */
-		MODx[0]= .853033;
-		MODy[0]= .508733;
-		MODz[0]= .112656;
-		/* GL Red matrix */
-		MODx[1]= 0.070933;
-		MODy[1]= 0.977311;
-		MODz[1]= 0.198067;
-		/* Orange matrix (not set yet, currently zero) */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"Alcian blue & H")){
-		/* GL Alcian Blue matrix */
-		MODx[0]= 0.874622;
-		MODy[0]= 0.457711;
-		MODz[0]= 0.158256;
-		/* GL Haematox after PAS matrix */
-		MODx[1]= 0.552556;
-		MODy[1]= 0.7544;
-		MODz[1]= 0.353744;
-		/* Zero matrix */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"H PAS")){
-		/* GL Haem matrix */
-		MODx[0]= 0.644211; /* 0.650; */
-		MODy[0]= 0.716556; /* 0.704; */
-		MODz[0]= 0.266844; /* 0.286; */
-		/* GL PAS matrix */
-		MODx[1]= 0.175411;
-		MODy[1]= 0.972178;
-		MODz[1]= 0.154589;
-		/* Zero matrix */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"RGB")){
-		/* R */
-		MODx[0]= 0.0;
-		MODy[0]= 1.0;
-		MODz[0]= 1.0;
-		/* G */
-		MODx[1]= 1.0;
-		MODy[1]= 0.0;
-		MODz[1]= 1.0;
-		/* B */
-		MODx[2]= 1.0;
-		MODy[2]= 1.0;
-		MODz[2]= 0.0;
-	} else if (!strcmp(myStain,"CMY")){
-		/* C */
-		MODx[0]= 1.0;
-		MODy[0]= 0.0;
-		MODz[0]= 0.0;
-		/* M */
-		MODx[1]= 0.0;
-		MODy[1]= 1.0;
-		MODz[1]= 0.0;
-		/* Y */
-		MODx[2]= 0.0;
-		MODy[2]= 0.0;
-		MODz[2]= 1.0;
-	} else {
-		char err_str[128];
-		sprintf(err_str, "colour_deconvolution doesn't support the stain %s", myStain);
-		mexErrMsgTxt(err_str);
-	}
-	
-	/**********************************************************************
-	*  Convert the vectors into LUTs
-	***********************************************************************/
 	for (i=0; i<3; i++){
 		/* normalise vector length */
 		cosx[i]=cosy[i]=cosz[i]=0.0;
