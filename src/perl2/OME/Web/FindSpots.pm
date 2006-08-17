@@ -108,6 +108,13 @@ sub getPageBody {
 			$h{FadeSpotsTheT} = undef;
 		}
 
+		if ($cgi->param('Light_DarkSpots') eq 'Light Spots') {	
+			# false means: NOT darkSpots (i.e. lightSpots)
+			$h{DarkSpots}=0;
+		} else {
+			$h{DarkSpots}=1;
+		}
+		
         # Create a user input MEX for the user inputs
 		my $attributeType="FindSpotsInputs";
         my $mex = OME::Tasks::AnnotationManager->
@@ -186,6 +193,21 @@ sub print_form{
 	#@tableColumns = ();
 	###################################
 
+	# DarkSpots vs Light Spots
+	$tableColumns[0] = $cgi->th ('Target Spots');
+	my %labels = ('Light Spots' => 'Light Spots',
+				  'Dark Spots' => 'Dark Spots');
+				  
+	$tableColumns[1] = $cgi->popup_menu( 
+		-name	  => 'Light_DarkSpots',
+		-values => ['Light Spots','Dark Spots'],
+		-default  => 'Light Spots' || undef,
+		-labels	  => \%labels
+	);
+	@tableColumns = $cgi->td (\@tableColumns);
+	push (@tableRows,@tableColumns);
+	@tableColumns = ();
+	
 	$tableColumns[0]=$cgi->th('Time: From/to');
 	#$tableColumns[1]='<b>From:</b>';
 	@radioGrp = $cgi->radio_group(-name=>'startTime',
@@ -215,7 +237,7 @@ sub print_form{
 	my @image_list = $session->dataset()->images();
 	my $image = $image_list[0];
 	my $channelLabels= $imageManager->getImageWavelengths($image);
-	my %labels = map{ $_->{WaveNum} => $_->{Label} } @$channelLabels ;
+	%labels = map{ $_->{WaveNum} => $_->{Label} } @$channelLabels ;
 	my @values = map( $_->{Label}, @$channelLabels );
 	$tableColumns[1] = $cgi->popup_menu( 
 		-name	  => 'Channel',

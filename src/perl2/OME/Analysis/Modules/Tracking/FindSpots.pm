@@ -157,6 +157,10 @@ sub startImage {
 	if (defined $params->FadeSpotsTheT() and $params->FadeSpotsTheT() < $pixels_attr->SizeT()) {
 		$paramopts .= "-fadeSpots ".$params->FadeSpotsTheT()." ";
 	}
+	
+	if (defined $params->DarkSpots() and $params->DarkSpots()) {
+		$paramopts .= "-darkSpots ";
+	}
 
 	my $cmdLine = "$location $path $paramopts $options";
 
