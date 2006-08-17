@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2006 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscffopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Haematoxylin Eosin Colour Deconvolution"
+		   Category="Filters. "
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="colour_deconvolution"
+		   ID="urn:lsid:openmicroscopy.org:Module:7400">
+		  <Description>
+		  This function takes RGB pixels from an H and E stained image and separates
+		  the H and E stains into distinct components. The third image represents
+		  the complimentary of the first two colours.
+		  
+		  This algorithm is based on
+			  	Ruifrok AC, Johnston DA. Quantification of histochemical
+       			staining by color deconvolution. Analytical and Quantitative
+       			Cytology and Histology 2001; 23: 291-299.
+       			
+       	  Implemented by Ruifrok AC, Landini G, and Macura TJ.
+		  </Description>
+		  <Declaration>
+			<FormalInput  Name="RGB Pixels"             SemanticTypeName="Pixels" Count="!"/>
+			<FormalOutput Name="Haematoxylin Staining"  SemanticTypeName="Pixels" Count="!"/>
+			<!--
+				The OME Model is limited in that a module can only have a single formal output
+				of a particular semantic type. We need to change this. 
+			<FormalOutput Name="Eosin Staining"         SemanticTypeName="Pixels" Count="!"/>
+			<FormalOutput Name="Complimentary Staining" SemanticTypeName="Pixels" Count="!"/>
+			-->
+		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+				<Input><PixelsArray FormalInput="RGB Pixels"/></Input>
+				<Input><ConstantScalar Value="HE 2" DataType="char"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+				<Output><PixelsArray FormalOutput="Haematoxylin Staining"/></Output>
+				<!--
+				<Output><PixelsArray FormalOutput="Eosin Staining"/></Output>
+				<Output><PixelsArray FormalOutput="Complimentary Staining"/></Output>
+				-->
+			</FunctionOutputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>	
+	</AML:AnalysisModuleLibrary>
+</OME>
