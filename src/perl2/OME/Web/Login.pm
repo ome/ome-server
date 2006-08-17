@@ -113,8 +113,8 @@ sub __loginForm {
 
 	my $table_data = $q->Tr( [
 		$q->td({-align => 'center'}, $q->p({-class => 'ome_title'}, "Welcome to OME")),
-		$q->td({-align => 'center'}, $q->img({-src => '/images/logo-eye.gif'}))
-#		$q->td({-align => 'center'}, $q->img({-src => '/images/logo-selzer.gif'}))
+		$q->td({-align => 'center'}, $q->img({-src => '/ome-images/logo-eye.gif'}))
+#		$q->td({-align => 'center'}, $q->img({-src => '/ome-images/logo-selzer.gif'}))
 		]);
 
 	if ($error) {

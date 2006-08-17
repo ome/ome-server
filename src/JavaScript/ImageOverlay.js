@@ -94,7 +94,7 @@ OMEImage.prototype.initialize = function(map) {
 
   // Add a placeholder image within the DIV
   this.thumbnail = document.createElement("img");
-  this.thumbnail.src = '/images/one_transparent_pixel.gif';
+  this.thumbnail.src = '/ome-images/one_transparent_pixel.gif';
   div.appendChild( this.thumbnail );
 
 }
@@ -150,7 +150,7 @@ OMEImage.prototype.redraw = function(force) {
   if( this.width < greyOutAtWidth ) {
 	  if( this.thumbnail ) this.div_.removeChild( this.thumbnail );
 	  this.thumbnail = document.createElement("img");
-      this.thumbnail.src = '/images/one_transparent_pixel.gif';
+      this.thumbnail.src = '/ome-images/one_transparent_pixel.gif';
       this.div_.appendChild( this.thumbnail );
       this.currentDownloadedScale = 0;
   }

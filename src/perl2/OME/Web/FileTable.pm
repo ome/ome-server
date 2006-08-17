@@ -253,7 +253,7 @@ sub getTable {
 		my ($size, $date) = (stat($file_path))[7,8];
 		
 		# Type icon link
-		my $icon_link = $directory ? '/images/dir.gif' : '/images/file.gif';
+		my $icon_link = $directory ? '/ome-images/dir.gif' : '/ome-images/file.gif';
 		   $icon_link = $q->img({src => $icon_link, border => 0});
 
 		# Make human readable size and date

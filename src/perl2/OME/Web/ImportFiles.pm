@@ -180,7 +180,7 @@ sub __getDirListHeader {
 	my $icon_td = $q->td($q->a({-href => $self->pageURL(ref($self)) . "&Path=$home_dir"},
 		$q->img( {
 				border => '0',
-				src => '/images/home.png',
+				src => '/ome-images/home.png',
 				width => '24',
 				height => '24'
 			})

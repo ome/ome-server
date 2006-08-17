@@ -127,7 +127,7 @@ sub getPageFooter {
 	my $nih_link=  $q->a({href => "http://www.nih.gov"},
 				$q->img( {
 						alt => 'NIH logo - link to NIH Home Page',
-						src => '/images/nih.gif',
+						src => '/ome-images/nih.gif',
 						border => '0'
 					}
 				)
@@ -136,7 +136,7 @@ sub getPageFooter {
 	my $dhhs_link = $q->a({href=>"http://www.os.dhhs.gov"},
 			   $q->img({
 					alt=>'DHHS logo - link to DHHS Web site',
-					src=>'/images/dhhs.gif',
+					src=>'/ome-images/dhhs.gif',
 					border=>'0'
 				   }
  				)
@@ -145,7 +145,7 @@ sub getPageFooter {
 	my $firstgov_link = $q->a({href=>"http://www.firstgov.gov"},
 			   $q->img({
 					alt=>'FirstGov logo - link to FirstGov Web site',
-					src=>'/images/firstgov.gif',
+					src=>'/ome-images/firstgov.gif',
 					border=>'0'
 				   }
  				)

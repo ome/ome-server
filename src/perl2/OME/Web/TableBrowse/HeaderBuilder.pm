@@ -98,14 +98,14 @@ sub getPageHeader {
 	$logo =
 	    $q->img( {
 		alt => 'OME Logo',
-		src => '/images/logo-4.png',
+		src => '/ome-images/logo-4.png',
 		border => '0'
 		} );
 	
 	my $nia_link = $q->a({href=>$NIA_LOCATION},	
 			   $q->img({
 					alt=>'NIA Logo',
-					src=>'/images/nia1.jpg',
+					src=>'/ome-images/nia1.jpg',
 					border=>'0'
 				   }
  				)

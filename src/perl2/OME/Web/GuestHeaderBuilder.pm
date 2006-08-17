@@ -77,8 +77,8 @@ sub getPageHeader {
 	    $q->a({href => $self->getHomeLocation()},
 		  $q->img( {
 		      alt => 'OME Logo',
-		      src => '/images/logo_smaller.gif',
-#						src => '/images/logo-4.png',
+		      src => '/ome-images/logo_smaller.gif',
+#						src => '/ome-images/logo-4.png',
 		      border => '0'
 			   }
 		  )
