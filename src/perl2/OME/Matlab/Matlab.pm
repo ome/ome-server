@@ -353,9 +353,13 @@ $mxUINT64_CLASS = __mxUINT64_CLASS();
 $mxFUNCTION_CLASS = __mxFUNCTION_CLASS();
 
 package OME::Matlab::Engine;
-use Log::Agent;
 
 # Perl wrapper function for a Matlab engine eval.
+my $MatlabOutputBuffer;
+sub getMatlabOutputBuffer {
+	return $MatlabOutputBuffer;
+}
+
 sub callMatlab {
 	my ( $engine, $function, $nargout, $nargin, @inputs ) = @_;
 	my @input_names;
@@ -391,7 +395,7 @@ sub callMatlab {
 	$outBuffer =~ s/(\0.*)$//;
 	$outBuffer =~ s/[^[:print:][:space:]]//g;
 	if ($outBuffer =~ m/\S/) {
-		logdbg "debug", "A warning resulted from matlab command\n\t$matlabCmd\nThe message is:\n$outBuffer";
+		$MatlabOutputBuffer = "A warning resulted from matlab command\n\t$matlabCmd\nThe message is:\n$outBuffer";
 	}
 	
 	# Get outputs from matlab memory space
