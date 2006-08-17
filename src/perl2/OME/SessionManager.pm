@@ -356,9 +356,9 @@ sub createWithKey {
 	    }
 	}	
 	my $host;
-	if (exists $ENV{'REMOTE_HOST'} ) {
-		$host = $ENV{'REMOTE_HOST'};
-	} else {
+	if (exists $ENV{'HTTP_HOST'} ) {
+		$host = $ENV{'HTTP_HOST'};
+	} elsif (exists $ENV{'HOST'}) {
 		$host = $ENV{'HOST'};
 	}
 	
@@ -480,12 +480,11 @@ sub createWithPassword {
 
 
 	my $host;
-	if (exists $ENV{'REMOTE_HOST'} ) {
-		$host = $ENV{'REMOTE_HOST'};
-	} else {
+	if (exists $ENV{'HTTP_HOST'} ) {
+		$host = $ENV{'HTTP_HOST'};
+	} elsif (exists $ENV{'HOST'}) {
 		$host = $ENV{'HOST'};
 	}
-
 
 	logdbg "debug", "createWithPassword: looking for userState,
 	experimenter_id=$experimenterID";
