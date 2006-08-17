@@ -326,7 +326,8 @@ sub __execute {
 	my $start_time = [gettimeofday()];
 	@response = $_matlab_instances{ $instanceName }->callMatlab( $function, scalar(@outputs), scalar(@inputs), @inputs );
 	$mex->execution_time($mex->execution_time() + tv_interval($start_time));
-	
+	$mex->error_message($_matlab_instances{ $instanceName }->getMatlabOutputBuffer()) if ($instanceName eq 'engine');
+
 	# Store the outputs into our hash
 	foreach my $out_name ( @output_names ) {
 		my $array = shift ( @response );
@@ -668,12 +669,18 @@ sub Constant_to_MatlabScalar {
 	die "Could not find Value in input ".$xmlInstr->toString()
 		if not defined $value;
 		
-	# Convert array datatype if requested
-	my $class = $mxDOUBLE_CLASS;
-	if (my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype')) {
-		$class = $_convert_to_matlab_class{ $convertToDatatype };
+	my $datatype = $xmlInstr->getAttribute( 'DataType' );
+	die "Could not find DataType in input ".$xmlInstr->toString()
+		if not defined $value;
+		
+	# figure out the value's intended datatype	
+	my $class;
+	if ($datatype eq "char") {
+		$class = $mxCHAR_CLASS;
+	} else {
+		$class = $_convert_to_matlab_class{ $datatype };
 	}
-	
+
 	# Place value into matlab
 	$self->_putScalarToMatlab($self->_inputVarName($xmlInstr), $value, $class);
 }
@@ -1275,11 +1282,12 @@ sub __openMatlab {
 		if ( $@ ) {
 			logdbg "debug", "Could not find utility library, using the engine instead.\n\tError message: $@";
 			$instance = $self->__openEngine();
+			die "Could not open a connection to Matlab Engine!" unless $instance;
 		} else {
+			logdbg "debug", "Found the utility library, going to use that instead of the engine.";
 			$instance = OME::Matlab::Lib::Utility->new();
+			die "Could not open a connection to Matlab utility library!" unless $instance;
 		}
-
-		die "Cannot open a connection to Matlab!" unless $instance;
 		
 		# If we have an engine instance, we are storing it twice, but that's okay because
 		# the cleanliness of the 'utility' code depends on this.
@@ -1384,6 +1392,10 @@ sub __openEngine {
 	logdbg "debug", "Matlab src dir is $matlab_src_dir";
 	logdbg "debug", "Matlab exec is $matlab_exec";
 	
+	# Although $matlab_exec is the fully qualified path to the matlab executable,
+	# /usr/bin and /bin needs to be in the PATH environment variable so the
+	# $matlab_exec has access to basic functions such as cd/mkdir/chown that it
+	# needs. Apache doesn't have the PATH variable set by default
 	my $instance = OME::Matlab::Engine->open("env PATH=/usr/bin:/bin $matlab_exec $matlab_flags");
 	
 	# Add the matlab source directory to the path so we can find our functions
