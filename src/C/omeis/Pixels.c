@@ -69,8 +69,7 @@ closeConvertFile (PixelsRep *myPixels);
 static int
 unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp, int nlength);
 static void 
-extractRGBChannels(uint8* read_buf, int nPix, int chan, int samples_per_pixel, uint8* write_buf);
-
+extractRGBChannels(void* read_buf, void* write_buf_rgb, int nPix, int chan, int samples_per_pixel, int bitspp);
 
 /*
   PixelRep keeps track of everything having to do with pixel i/o to the repository.
@@ -2271,15 +2270,15 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 			
 			/* write the red, green, and blue parts of the pixel into different channels*/
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 0, samples_per_pixel, write_buf_rgb); 
+			extractRGBChannels(read_buf, write_buf_rgb, nPix, 0, samples_per_pixel, read_bitspp);				
 			nOut = DoPixelIO (myPixels, red_offset   + pix_offset, nPix, 'w');
 			
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 1, samples_per_pixel, write_buf_rgb);
+			extractRGBChannels(read_buf, write_buf_rgb, nPix, 1, samples_per_pixel, read_bitspp);				
 			nOut = DoPixelIO (myPixels, green_offset + pix_offset, nPix, 'w');
 			
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 2, samples_per_pixel, write_buf_rgb);
+			extractRGBChannels(read_buf, write_buf_rgb, nPix, 2, samples_per_pixel, read_bitspp);				
 			nOut = DoPixelIO (myPixels, blue_offset  + pix_offset, nPix, 'w');
 			
 			pix_offset += nPix*write_bytespp;
@@ -2565,13 +2564,25 @@ unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp,
 /*
 	This function extracts every third element of the read_buf and writes it to
 	the write_buf. If chan=0 Red, if chan=1 Green, and if chan=2 Blue values are
-	extracted. samples_per_pixel is usually set to 3. 
+	extracted. samples_per_pixel is usually set to 3.
+	
+	bitspp is 8 for regular RGBs and 16 for 48bit RGBs
 */
-void extractRGBChannels(uint8* read_buf, int nPix, int chan, int samples_per_pixel, uint8* write_buf_rgb)
+void extractRGBChannels(void* read_buf, void* write_buf, int nPix, int chan, int samples_per_pixel, int bitspp)
 {
 int i;
-	for (i=0; i<nPix; i++)
-		write_buf_rgb[i] = read_buf[chan+(samples_per_pixel)*i];
+uint8* read_buf_8bit  = (uint8*) read_buf;
+uint16* read_buf_16bit = (uint16*) read_buf;
+uint8* write_buf_8bit  = (uint8*) write_buf;
+uint16* write_buf_16bit = (uint16*) write_buf;
+
+	if (bitspp == 8)
+		for (i=0; i<nPix; i++)
+			write_buf_8bit[i] = read_buf_8bit[chan+(samples_per_pixel)*i];
+	else
+		/* So bitspp must be 16 */
+		for (i=0; i<nPix; i++)
+			write_buf_16bit[i] = read_buf_16bit[chan+(samples_per_pixel)*i];
 }
 /*
   GetArchive (PixelsRep myPixels)
