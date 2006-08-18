@@ -83,7 +83,9 @@ use OME::Factory;
 use OME::Session;
 use OME::Configuration;
 use Term::ReadKey;
-use OME::DBObject; 
+use OME::DBObject;
+use OME::Install::Environment;
+use IPC::Run;
 
 use base qw(Class::Accessor Class::Data::Inheritable);
 
@@ -236,6 +238,7 @@ sub TTYlogin {
     $session = $self->promptAndLogin($loginFile,$session);
 
     ask for a session via prompts and try to create it
+
 =cut
 
 sub promptAndLogin {
@@ -427,6 +430,85 @@ sub updateACL {
 	}
 }
 
+
+
+
+=head2 getRSAmodulus
+
+	my $challenge = $manager->getRSAmodulus();
+
+Generates a private key in $TEMP/ome-key.pem, and returns its modulus as a hex string.
+The public exponent is hard-coded to be -F4 (0x10001).
+The modulus is as a public key used by the JavaScript RSA library (or other RSA implementations)
+to encrypt passwords (or other data).
+
+=cut
+
+sub getRSAmodulus {
+my ($self) = @_;
+
+	my $tmp_dir = OME::Install::Environment->initialize()->tmp_dir();
+	my $keyfile = "$tmp_dir/ome-key.pem";
+	my @cmd;
+	my ($in,$out,$errorStream,$modulus);
+	
+	unless (-e $keyfile) {
+		`RANDFILE=$tmp_dir/.rnd openssl genrsa -F4 -out $keyfile 1024`;
+	}
+
+	if (-e $keyfile) {
+		chmod (0400,$keyfile);
+		@cmd = qw( openssl rsa -check -noout -in );
+		push (@cmd,$keyfile);
+		IPC::Run::run (\@cmd,\$in,\$out,\$errorStream);
+	} else {
+		return undef;
+	}
+
+	return undef unless $out =~ /RSA key ok/;
+
+	@cmd = qw( openssl rsa -modulus -noout -in );
+	push (@cmd,$keyfile);
+	IPC::Run::run (\@cmd,\$in,\$modulus,\$errorStream);
+	chomp ($modulus);
+	$modulus = $1 if $modulus =~ /Modulus=(.*)$/;
+	
+	return ($modulus);
+}
+
+
+=head2 createWithRSAPassword
+
+	my $session = $manager->createWithRSAPassword($username,$password,$flags);
+
+Decrypts the password using the RSA key stored in $TEMP/ome-key.pem, then calls
+CreateWithPassword to make the session.
+The password is expected to be base64 encoded after encryption.
+
+=cut
+
+sub createWithRSAPassword {
+	my $self = shift;
+	my ($username, $password, $flags) = @_;
+
+	my $keyfile = OME::Install::Environment->initialize()->tmp_dir().'/ome-key.pem';
+	return undef unless -e $keyfile;
+
+	my @cmd;
+	my ($decoded,$plaintext,$errorStream);
+	@cmd = qw( openssl base64 -d );
+	IPC::Run::run (\@cmd,\$password,\$decoded,\$errorStream);
+	return undef unless $decoded;
+
+	@cmd = qw( openssl rsautl -decrypt -inkey );
+	push (@cmd,$keyfile);
+	IPC::Run::run (\@cmd,\$decoded,\$plaintext,\$errorStream);
+	return undef unless $plaintext;
+
+	return $self->createWithPassword ($username,$plaintext,$flags);
+}
+
+#
 #
 # createWithPassword
 # ----------------

@@ -565,6 +565,8 @@ sub createOMEPage {
 		-style => {'src' => '/html/ome2.css'},
 		-script => {-language => 'JAVASCRIPT', -src => '/JavaScript/ome2.js'},
 		-onLoad => $self->getOnLoadJS() || '',
+		-onClick => $self->getOnClickJS() || '',
+		-onKeyPress => $self->getOnKeyPressJS() || '',
 	);
 
 	# Header TR, shown and generated only if !undef
@@ -746,6 +748,8 @@ sub getAccessNotAllowedPage() {
 
 
 sub getOnLoadJS { return undef };  # Default
+sub getOnClickJS { return undef };  # Default
+sub getOnKeyPressJS { return undef };  # Default
 
 sub getMenuBuilder {
 	my $self = shift;

@@ -41,6 +41,9 @@ use strict;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
+use OME::Install::Environment;
+use OME::SessionManager;
+
 use Carp;
 
 use base qw(OME::Web);
@@ -67,12 +70,22 @@ sub getPageBody {
     my $self = shift;
     my $q = $self->CGI();
 
-	if ($q->param('execute') or ($q->param('username') && $q->param('password'))) {
+	if ($q->param('execute') or ($q->param('username') && ( $q->param('password') || $q->param('crypt_pass') ))) {
 		# results submitted, try to log in
-		my $session = $self->Manager()->createSession(
-			$q->param('username'),
-			$q->param('password'),
-		);
+		my $session;
+		if ($q->param('crypt_pass')) {
+#print STDERR "password-crypt: ".$q->param('crypt_pass')."\n";
+#print STDERR "password: ".$q->param('password')."\n";
+			$session = $self->Manager()->createWithRSAPassword(
+				$q->param('username'),
+				$q->param('crypt_pass'),
+			);
+		} else {
+			$session = $self->Manager()->createSession(
+				$q->param('username'),
+				$q->param('password'),
+			);
+		}
 		my $key_request = $q->param ('SessionKey');
         my $target_url = $self->__getTargetURL(); # get this before deleting the parameters ;)
 		$q->delete_all();
@@ -110,6 +123,8 @@ sub __loginForm {
 	my $self = shift;
 	my $error = shift || undef;
 	my $q = $self->CGI();
+	my $doGuest = OME::Install::Environment->initialize()->allow_guest_access();
+	my $modulus = OME::SessionManager->getRSAmodulus();
 
 	my $table_data = $q->Tr( [
 		$q->td({-align => 'center'}, $q->p({-class => 'ome_title'}, "Welcome to OME")),
@@ -132,7 +147,46 @@ sub __loginForm {
 	my $header_table = $q->table({-border => 0, -align => 'center'}, $table_data);
 
 	my $target_url = $self->__getTargetURL();
-	my $login_table .= $q->startform( { -name => 'primary' } );
+	my $guestLogin = $doGuest ? 
+		' '.$q->a( { -href => $target_url, -class => 'ome_quiet' }, "Guest Login" ) :
+		'';
+
+	my $login_table = $q->startform( {
+		-name => 'primary',
+		-onSubmit => 'do_encrypt();return true;',
+	} );
+	$login_table .= <<END_JS;
+	<script language="JavaScript" type="text/javascript" src="/JavaScript/RSA/jsbn.js"></script>
+	<script language="JavaScript" type="text/javascript" src="/JavaScript/RSA/prng4.js"></script>
+	<script language="JavaScript" type="text/javascript" src="/JavaScript/RSA/rng.js"></script>
+	<script language="JavaScript" type="text/javascript" src="/JavaScript/RSA/rsa.js"></script>
+	<script language="JavaScript" type="text/javascript" src="/JavaScript/RSA/base64.js"></script>
+	<script language="JavaScript"> <!--
+		function do_encrypt() {
+			var rsa = new RSAKey();
+			rsa.setPublic(document.primary.modulus.value, document.primary.exponent.value);
+			var res = rsa.encrypt(document.primary.password.value);
+			if(res) {
+				document.primary.password.value = '';
+				document.primary.crypt_pass.value = linebrk(hex2b64(res), 64);
+			}
+
+		}
+		
+		function check_rsa () {
+			var rsa = new RSAKey();
+			rsa.setPublic('94e94b2912d8d508ce8c0e91d62271a9', '10001');
+			var res = rsa.encrypt('abc');
+			if(res) {
+				document.getElementById ("passMsg").innerHTML = 'Passwords RSA encrypted';
+			}
+		}
+	//--></script>
+END_JS
+
+	$login_table .= $q->hidden( 'modulus',$modulus );
+	$login_table .= $q->hidden( 'exponent','10001' );
+	$login_table .= $q->hidden( 'crypt_pass','' );
 	$login_table .= $q->hidden( 'target_url' )
 		if( $q->param( 'target_url' ) );
 	$login_table .= $q->table({-border => 0, -align => 'center'},
@@ -145,10 +199,9 @@ sub __loginForm {
 						   ), $q->Tr(
 							   $q->td($q->br()),  # Spacing
 							   $q->td({-align => 'center', -colspan => 2},
+							   		$q->span ({-id => 'passMsg', -class=>'ome_quiet'},"Passwords sent as clear text!").$q->br().
 							   		$q->submit(-name => 'execute', -value => 'Log in')
-# This next line works as a guest access link, if guest access is enabled in Web.pm
-# See OME::Web->ensureLogin() for info on setting up guest access.
-#							   		." ".$q->a( { -href => $target_url, -class => 'ome_quiet' }, "Guest Login" )
+							   		.$guestLogin
 							   )
 						   )
 					   ) .
@@ -165,11 +218,17 @@ sub __loginForm {
 	return $header_table . $login_table . $generic_footer;
 }
 
+# Add entropy
+sub getOnLoadJS {return 'rng_seed_time();check_rsa();'};
+sub getOnClickJS {return 'rng_seed_time();'};
+sub getOnKeyPressJS {return 'rng_seed_time();'};
+
 =head2 
     
     We do not ever want a footer for a login, so return undef
 
 =cut
+
 sub getFooterBuilder {
 
     return undef;
