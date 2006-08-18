@@ -177,8 +177,8 @@ sub __loginForm {
 			var rsa = new RSAKey();
 			rsa.setPublic('94e94b2912d8d508ce8c0e91d62271a9', '10001');
 			var res = rsa.encrypt('abc');
-			if(res) {
-				document.getElementById ("passMsg").innerHTML = 'Passwords RSA encrypted';
+			if(res && document.primary.modulus.value) {
+				document.getElementById ("passMsg").innerHTML = 'Passwords are RSA-encrypted';
 			}
 		}
 	//--></script>
