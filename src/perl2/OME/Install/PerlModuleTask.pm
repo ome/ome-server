@@ -89,13 +89,15 @@ my $INSTALL_HOME;
 # $VERSION = '1.01';
 # 
 # Subsequent valid_versions syntax:
-# valid_versions => ['eq 1.01', 'ne 0.94']
+# Accepted if this evaluates to true
+# valid_versions => ['eq 1.01']
+# 
+# Subsequent invalid_versions syntax:
+# Rejected if this evaluates to true
+# invalid_versions => ['eq 0.94']
 #
 # String examples:
 # $VERSION = "1.01";
-#
-# Subsequent valid_versions syntax:
-# valid_versions => ['eq "1.01"', 'ne "0.94"']
 #
 # You can check these version numbers in the module files themselves, for
 # example:
@@ -161,8 +163,9 @@ my @modules = (
 	#},{
 	name => 'DBD::Pg',
 	repository_file => "$REPOSITORY/DBD-Pg-1.43.tar.gz",
-	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'ne 1.21', 'eq 1.22',
-		'eq 1.41', 'eq 1.43', 'ne 1.45', 'ne 1.49'
+	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'eq 1.22','eq 1.43',
+	],
+	invalid_versions => ['eq 1.21','eq 1.41', 'eq 1.45', 'eq 1.49',
 	],
 	pre_install => sub {
 	    my $pg_config = which ("pg_config") or croak "Unable to execute pg_config, are PostgreSQL and its development packages installed ?";
@@ -189,7 +192,8 @@ my @modules = (
 	#},{
 	name => 'Test::Harness',
 	repository_file => "$REPOSITORY/Test-Harness-2.52.tar.gz",
-	valid_versions => ['gt 2.03']
+	valid_versions => ['gt 2.03'],
+	invalid_versions => ['le 2.03'],
     },{
 	name => 'Test::Simple',
 	repository_file => "$REPOSITORY/Test-Simple-0.60.tar.gz"
@@ -329,7 +333,7 @@ my @modules = (
     },{
 # XXX DEPRECATED
 #	name => 'LWP',
-#	valid_versions => ['ne 5.80'],
+#	invalid_versions => ['eq 5.80'],
 #	repository_file => "$REPOSITORY/libwww-perl-5.69.tar.gz",
 #	configure_module => sub {
 #	    # Since libwww has an interactive configure script we need to
@@ -456,7 +460,8 @@ my @modules = (
 
 	    return $version ? $version : undef;
 	},
-	valid_versions => ['ge "1.56"']
+	valid_versions => ['ge "1.56"'],
+	invalid_versions => ['lt "1.56"']
     },{
 	name => 'XML::Parser',
 	repository_file => "$REPOSITORY/XML-Parser-2.34.tar.gz",
@@ -464,6 +469,7 @@ my @modules = (
 	name => 'SOAP::Lite',
 	repository_file => "$REPOSITORY/SOAP-Lite-0.60.tar.gz",
 	valid_versions => ['ge "0.55"'],
+	invalid_versions => ['lt "0.55"'],
 	configure_module => sub {
 	    # Since SOAP::Lite has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
@@ -506,12 +512,21 @@ sub check_module {
 
     foreach my $valid_version (@{$module->{valid_versions}}) {
 		my $eval = 'if ("$module->{version}" '.$valid_version.') { $retval = 1 }';
-
 		eval $eval;
 		last if $retval;
     }
 
+    return $retval ? 1 : 0 unless exists $module->{invalid_versions};
+
+	$retval = 1;
+    foreach my $invalid_version (@{$module->{invalid_versions}}) {
+		my $eval = 'if ("$module->{version}" '.$invalid_version.') { $retval = 0 }';
+		eval $eval;
+		last unless $retval;
+    }
     return $retval ? 1 : 0;
+    
+    
 }
 
 sub install {
