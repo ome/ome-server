@@ -850,12 +850,24 @@ BLURB
 	$APACHE_OMEIS_UPDATE_REQUIRED = need_omeis_update();
 	$APACHE->{OMEIS_UP} = $APACHE_CONF_DEF->{OMEIS_UP} unless defined $APACHE->{OMEIS_UP};
 
-	# Pre Compute $APACHE->{TEMPLATE_DIR} if it is not defined. It is not defined if updating from 2.4.0
-	if (not defined $APACHE->{TEMPLATE_DIR}) {
-		$APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates"
-			and $APACHE->{TEMPLATE_DEV_CONF} = 0 unless $APACHE->{DEV_CONF};
-		$APACHE->{TEMPLATE_DIR} = cwd()."/src/html/Templates"
-			and $APACHE->{TEMPLATE_DEV_CONF} = 1 if $APACHE->{DEV_CONF};
+	# Set $APACHE->{TEMPLATE_DIR} to something appropriate for this installation.
+	# It can either be under the OME root or under the current cvs checkout
+	if( exists $APACHE->{TEMPLATE_DEV_CONF} ) {
+		if( $APACHE->{TEMPLATE_DEV_CONF} ) {
+			$APACHE->{TEMPLATE_DIR} = cwd()."/src/html/Templates";
+		} else {
+			$APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
+		}
+
+	# $APACHE->{TEMPLATE_DIR*} will not be defined if updating from 2.4.0, so
+	# generate intelligent defaults based on whether the web-ui is set to 
+	# developer mode.
+	} elsif( $APACHE->{DEV_CONF} ) {
+		$APACHE->{TEMPLATE_DIR} = cwd()."/src/html/Templates";
+		$APACHE->{TEMPLATE_DEV_CONF} = 1;
+	} else {
+		$APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
+		$APACHE->{TEMPLATE_DEV_CONF} = 0;
 	}
 		
 	# Confirm all flag
