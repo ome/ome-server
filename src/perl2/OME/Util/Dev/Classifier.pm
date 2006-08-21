@@ -306,6 +306,10 @@ sub compile_sigs {
 		}
 	}
 	
+	# open MATLAB connection
+	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
+	or die "Cannot open a connection to Matlab!";
+	
 	# Find the chain execution or re-execute the chain
 	logdbg "debug", "finding signature stitcher module execution.";
 	if ($force_new_chex) {
@@ -365,8 +369,6 @@ sub compile_sigs {
 
 	# save the array to disk
 	logdbg "debug", "Saving the array to disk.";
-	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
-		or die "Cannot open a connection to Matlab!";
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
 	$engine->eval("global signature_labels_char_array");
 	$engine->putVariable('signature_labels_char_array',$signature_labels_array);
