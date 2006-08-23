@@ -355,37 +355,46 @@ sub compile_sigs {
 			push @image_paths, $originalFile->Path()." [".$_->name()."]";
 		}
 	}
-	# sort images by image_path not image name
-	# so /CHO/tumor.tiff will be BEFORE /Pollen/obj_198_1.tiff this is the canonical
-	# MATLAB sort order
+	# sort images by image_path not image name to match MATLAB sort order
+	# so /CHO/tumor.tiff will be before /Pollen/obj_198_1.tiff
 	my @image_path_indices = sort{$image_paths[$a] cmp $image_paths[$b]}0..$#images;
 	@images = @images[@image_path_indices];
 	@image_paths = @image_paths[@image_path_indices];
 	
 	# make the matlab signature array and label array
-	my ($signature_labels_array, $signature_array) = $self->
+	my ($category_names_array, $signature_labels_array, $signature_array) = $self->
 		compile_signature_matrix( $stitcher_mex, \@images, scalar(@image_paths)); 	# last parameter is the number of image rois
 																					# which is the number of columns of the sig matrix
 
 	# save the array to disk
 	logdbg "debug", "Saving the array to disk.";
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
-	$engine->eval("global signature_labels_char_array");
-	$engine->putVariable('signature_labels_char_array',$signature_labels_array);
+	
+	$engine->eval("global category_names_char_array");
+	$engine->putVariable('category_names_char_array',$category_names_array);
 	# Convert the rectangualar string array that has null terminated strings into a cell array.
 	# Cell arrays are easier to deal with for strings.
+	$engine->eval( "for i=1:size( category_names_char_array, 1 ),".
+	               "category_names{i} = sprintf( '%s', category_names_char_array(i,:) ); ".
+	               "end;" );
+	               
+	$engine->eval("global signature_labels_char_array");
+	$engine->putVariable('signature_labels_char_array',$signature_labels_array);
 	$engine->eval( "for i=1:size( signature_labels_char_array, 1 ),".
 	               "signature_labels{i} = sprintf( '%s', signature_labels_char_array(i,:) ); ".
 	               "end;" );
+
 	$engine->eval("global image_paths_char_array");
 	$engine->putVariable('image_paths_char_array', OME::Matlab::Array->newStringArray(\@image_paths));
-	# String array to cell array.
 	$engine->eval( "for i=1:size( image_paths_char_array, 1 ),".
 	               "image_paths{i} = sprintf( '%s', image_paths_char_array(i,:) ); ".
 	               "end;" );
+
 	$engine->eval("global signature_matrix");
 	$engine->putVariable('signature_matrix',$signature_array);
-	$engine->eval( "save $output_file_name signature_labels signature_matrix image_paths;" );
+
+	$engine->eval( "dataset_name = '".$dataset->name()."';" );
+	$engine->eval( "save $output_file_name dataset_name category_names signature_labels signature_matrix image_paths;" );
 	print "Saved signature matrix to file $output_file_name.\n";
 	$engine->close();
 	$engine = undef;
@@ -864,7 +873,7 @@ sub get_classifications_and_category_numbers {
 			$factory->findAttributes( 'Classification', image => $image )
 		);
 		if( scalar( @classification_list ) == 0 ) {
-			print STDERR "Could not find a classification for image id=".$image->id."\n";
+			print STDERR "Could not find a classification for image ".$image->name()." (".$image->id.")\n";
 			$classifications{ $image->id } = undef;
 			next;
 		}
@@ -879,21 +888,26 @@ sub get_classifications_and_category_numbers {
 	# map categories to category numbers
 	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
 	my %category_numbers;
+	my @category_names;
 	my $cn = 0;
 	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
 		$cn++;
 		$category_numbers{ $_->id } = $cn;
+		push(@category_names, $_->Name);
 	}
-	return (\%classifications, \%category_numbers );
+	return (\%classifications, \%category_numbers, \@category_names);
 }
 
 # returns the matlab signature array
 sub compile_signature_matrix {
 	my ($proto, $stitcher_mex, $images, $number_of_image_features, $classification_mex) = @_;
 	my $factory = OME::Session->instance()->Factory();
-	my ( $classifications, $category_numbers ) = 
+	my ( $classifications, $category_numbers, $category_names) = 
 		$proto->get_classifications_and_category_numbers( $images, $classification_mex );
 
+	# get category_names
+	my $category_names_array = OME::Matlab::Array->newStringArray($category_names);
+	
 	# get vector_legends.
 	my $vector_legends_ptr = OME::Tasks::ModuleExecutionManager->
 		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
@@ -941,7 +955,7 @@ sub compile_signature_matrix {
 		}
 	}
 
-	return $signature_labels_array, $signature_array, 
+	return $category_names_array, $signature_labels_array, $signature_array, 
 }
 
 sub get_next_LSID {
