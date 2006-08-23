@@ -102,7 +102,7 @@ our $IMPORT_FORMATS = [qw/
 /];
 
 # Database version
-our $DB_VERSION = "2.25";
+our $DB_VERSION = "2.26";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
