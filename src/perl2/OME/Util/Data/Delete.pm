@@ -58,6 +58,7 @@ our @DATASET_STs;
 our %DELETED_ATTRS;
 our $RECURSION_LEVEL;
 our %DELETED_MEXES;  # We shouldn't have circular dependencies here, but just in case.
+our %DELETED_STS;
 our %DELETED_IMAGES;
 our %DELETED_EXPERIMENTERS;
 our %DELETED_GROUPS;
@@ -84,6 +85,7 @@ sub getCommands {
        'MEX'     => 'DeleteMEX',
        'Image'   => 'DeleteImage',
        'Dataset' => 'DeleteDataset',
+       'ST'      => 'DeleteST',
       };
 }
 
@@ -104,8 +106,69 @@ Available OME database deletion related commands are:
     MEX         Delete a Module Execution and all of its dependencies.
     Image       Delete an Image and all of its dependencies.
     Dataset     Delete a dataset and all of its dependencies, optionally deleting Images.
+    ST          Delete a Semantic Type and all of its descendents.
 CMDS
-#    ST          Delete a Semantic Type and all of its descendents.
+}
+sub DeleteST_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"CMDS";
+Usage:
+    $script $command_name [<options>] [ST]+
+
+Delete an ST definition.
+
+This utility can only deal with a small subset of ST deletions. It can only
+delete STs that are not referenced by other STs or Module Formal Inputs/Outputs
+(therefore there can be no attributes in the DB).
+
+Options:
+  -n, --noop        Do not delete anything, just report what would be deleted.
+  -d, --delete      Actually delete the STs(es).  Nothing will happen unless -n or -d is specified.  
+CMDS
+}
+
+sub DeleteST {
+	my ($self,$commands) = @_;
+	my $script = $self->scriptName();
+	my $command_name = $self->commandName($commands);
+	my ($noop,$delete);
+
+	# Parse our command line options
+	GetOptions(
+		'noop|n!' => \$noop,
+		'delete|d' => \$delete,
+	);
+
+	$self->DeleteST_help($commands) if (scalar(@ARGV) <= 0);
+	
+    my $session = $self->getSession();
+	$FACTORY = $session->Factory();
+
+	# convert the inputed ST ids/names into an array of OME::SemanticType DBObjects
+	my @STs;
+	foreach my $arg_ST (@ARGV) {
+		my $ST;
+		if ($arg_ST =~ /^(\d+)$/) {
+			$ST = $FACTORY->loadObject( "OME::SemanticType", $arg_ST) or 
+				die "Could not load Semantic Type ID $arg_ST\n";
+		} else {
+			$ST = $FACTORY->findObject( "OME::SemanticType", {name => $arg_ST}) or 
+				die "Could not load Semantic Type '$arg_ST'\n";
+		}
+		push (@STs,$ST);
+	}
+
+	# let's try to delete these STs
+	$RECURSION_LEVEL=0;
+	
+	# do these STs meet conditions that make them ineligible for deletion?
+	$self->delete_st ($_, $delete, $noop) foreach (@STs);
+	$session->commitTransaction() if $delete;
+	undef %DELETED_STS;
 }
 
 sub DeleteCHEX_help {
@@ -499,6 +562,111 @@ sub DeleteMEX {
 	$self->delete_mexes (\@MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
 
 
+}
+
+sub delete_st {
+	my ($self, $ST, $delete, $noop) = @_;
+    my $session = $self->getSession();
+	
+	return if exists $DELETED_STS{$ST->id()};
+
+	# This prevents infinite recursion.  When we actually delete the MEX, this
+	# will be set to 1.
+	$DELETED_STS{$ST->id()} = 0;
+	$RECURSION_LEVEL++;
+	my $recurs_indent='';
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '    '; }
+
+	print $recurs_indent,"++Semantic Type ",$ST->id()," ",$ST->name(),"\n";
+
+	# is this ST used as a FormalInput/FormalOutput for some module?
+	my $FI = $FACTORY->findObject( "OME::Module::FormalInput", {semantic_type_id  => $ST->id()});		
+	die "\nFormalInput '".$FI->name()."' of Module '".$FI->module()->name()."' is defined to be".
+		" of Semantic Type '".$ST->name(). "'.\nSo the ST '".$ST->name()."' can't be deleted.\n"
+		if (defined $FI);
+	
+	my $FO = $FACTORY->findObject( "OME::Module::FormalOutput", {semantic_type_id  => $ST->id()});		
+	die "\nFormalOutput '".$FO->name()."' of Module '".$FO->module()->name()."' is defined to be".
+		" of Semantic Type '".$ST->name(). "'.\nSo the ST '".$ST->name()."' can't be deleted.\n"
+		if (defined $FO);
+		
+	my $untypedOutput = $FACTORY->findObject( "OME::ModuleExecution::SemanticTypeOutput",  {semantic_type_id  => $ST->id()});
+	die "\nUntyped Formal Output of Module '".$untypedOutput->module_execution()->module()->name()."' is defined to be".
+		" of Semantic Type '".$ST->name(). "'.\nSo the ST '".$ST->name()."' can't be deleted.\n"
+		if (defined $untypedOutput);
+		
+	# is this ST by referenced by other STs ?
+	my $ST_refs;
+	my @ref_cols = $FACTORY->findObjects("OME::DataTable::Column", {reference_type => $ST->name()});
+
+	foreach my $ref_col (@ref_cols) {
+		my @ref_SEs = $FACTORY->findObjects("OME::SemanticType::Element", {data_column_id => $ref_col->id()});
+		foreach my $ref_SE (@ref_SEs) {
+			$ST_refs->{$ref_SE->semantic_type->name()} = $ref_SE->semantic_type();
+		}
+	}
+	
+	# the referencing STs have to be removed as well
+	foreach my $ST_ref (keys (%$ST_refs)) {
+		print $recurs_indent," -> ".$ST->name()." is being referenced by ST ",$ST_refs->{$ST_ref}->id()," ",$ST_ref,"\n";
+		$self->delete_st($ST_refs->{$ST_ref}, $delete, $noop);
+	}
+	
+	# all checks have passed so let's do the delete
+	my @SEs = $FACTORY->findObjects("OME::SemanticType::Element", {semantic_type_id => $ST->id()});
+	my @cols;
+	my $data_tables; # there can be more than one data_table per ST
+	foreach my $SE (@SEs) {
+	
+		# delete the SE
+		print $recurs_indent. "  ++".$ST->name()."'s SE ".$SE->name."\n";
+		$SE->deleteObject() if $delete;
+		
+		# if the SE is a reference, drop the foreign key constraint
+		my $data_col = $FACTORY->findObject("OME::DataTable::Column", {id => $SE->data_column_id()});
+		my $data_table = $FACTORY->findObject("OME::DataTable", {id => $data_col->data_table_id()});
+
+		# this SE is a reference to another ST. We need to remove the foreign constrain
+		# on the other ST table
+		if ($data_col->reference_type()) {
+		
+			# what SE 
+			my $sql = 'ALTER TABLE "'.lc($data_table->table_name()).'" '.
+					  'DROP CONSTRAINT "@'.$ST->name().'.'.$SE->name().'->@'.$data_col->reference_type.'"';
+
+			print $recurs_indent."  ".$sql."\n";
+			$FACTORY->obtainDBH()->do($sql) or die $FACTORY->obtainDBH()->errstr() if $delete;
+		}
+		$data_col->deleteObject() if $delete;
+
+		# record the DataTable this SE used to be written to, so we can drop table in the future
+		push (@cols, $data_col);
+		$data_tables->{$data_table->table_name()}=$data_table;
+	}
+
+	# delete the ST and drop the table, if appropriate	
+	$ST->deleteObject() if $delete;
+	
+	# there can be more than one ST per data_table. So we need to check data_column
+	foreach my $tname (keys %$data_tables) {
+		my @other_STs_using_data_table = $FACTORY->findObjects("OME::DataTable::Column",
+												               {data_table_id => $data_tables->{$tname}->id()});
+
+		if (scalar(@other_STs_using_data_table) == 0) {		
+			# if there are other STs
+			my $sql = 'DROP TABLE "'.lc($tname).'"';
+			print $recurs_indent."  ".$sql."\n";
+			$FACTORY->obtainDBH()->do($sql) or die $FACTORY->obtainDBH()->errstr() if $delete;
+			$data_tables->{$tname}->deleteObject();
+		} else {
+			print $recurs_indent. "  Didn't DROP TABLE ".lc($tname)." because it stores other STs\n";
+			
+			# remove table foreign keys
+			
+		}
+	}
+	$DELETED_STS{$ST->id()} = 1;
+	$RECURSION_LEVEL--;
 }
 
 sub delete_mexes {
