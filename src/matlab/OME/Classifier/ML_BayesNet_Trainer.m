@@ -19,7 +19,11 @@
 %                     achieved during training
 
 function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ...
-	ML_BayesNet_Trainer(contData)
+	ML_BayesNet_Trainer(contData, sigLabels, sigReductionMethod)
+
+if( ~exist( 'sigReductionMethod', 'var' ) )
+	sigReductionMethod = 'FD-GHC';
+end;
 
 [rows cols] = size(contData);      
 
@@ -54,7 +58,27 @@ discData(end,:) = contData(end,:);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % find optimal subset of signatures                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = FindSignatureSubset(contData, sigs_excluded, @ConfusionMatrixScore);
+if( strcmp( sigReductionMethod, 'FD' ) )
+	[sigs_used, sigs_used_ind] = FindSignatureSubsetFD (contData, sigs_excluded, sigLabels );
+	num_sigs_used = length( sigs_used );
+	% We sometimes get out of memory errors if we use more than 10 signatures 
+	% for training the BayesNet.
+	if( num_sigs_used > 10 )
+		sigs_used     = sigs_used( 1:10 );
+		sigs_used_ind = sigs_used_ind( 1:10 );
+	end;
+elseif( strcmp( sigReductionMethod, 'FD-GHC' ) )
+	target_num_sigs = round( length( sigLabels ) * .2 );
+	[top_fd_sigs, fd_scores] = FindSignatureSubsetFD (contData, sigs_excluded, sigLabels, target_num_sigs );
+	sigs_to_avoid = setdiff( [1:length( sigLabels )], top_fd_sigs );
+	sigs_to_avoid = union( sigs_to_avoid, sigs_excluded );
+	[sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = FindSignatureSubset(contData, sigs_to_avoid, @ConfusionMatrixScore);
+elseif( strcmp( sigReductionMethod, 'GHC' ) )
+	[sigs_used, sigs_used_ind, sigs_used_col, conf_mat] = FindSignatureSubset(contData, sigs_excluded, @ConfusionMatrixScore);
+end;
+fprintf( '%.0d Signatures were selected.\n', length( sigs_used ) );
+sigs_used_col = [];
+conf_mat = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % build the Bayes Net (BNET)                                    %
