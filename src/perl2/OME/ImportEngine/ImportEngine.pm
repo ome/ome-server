@@ -225,7 +225,7 @@ sub importFiles {
 
     my %files;
     foreach my $file (@$filesRef) {
-        $files{$file->getFilename()} = $file if $file;
+		$files{$file->getFileID()} = $file if $file;
     }
     $self->{nFiles} = scalar (keys %files);
 
