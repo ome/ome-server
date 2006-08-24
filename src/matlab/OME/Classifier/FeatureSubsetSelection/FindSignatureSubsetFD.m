@@ -27,67 +27,96 @@
 %             based on concepts developed by Nikita Orlov
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %
+% SYNOPSIS
+%	[selected_sigs, fd_selected_sigs] = ...
+%		FindSignatureSubsetFD (sigMatrix, sigs_excluded, sigLabels );
 %
-% INPUT NEEDED      
-%   'sigMatrix'     - Continuous data. Rows are signatures, columns are images.
-%                     The last row is the class vector
-%   'sigs_excluded' - Signatures to be excluded from consideration. 
-%                     e.g. Signatures that cannot be discretized.
-%   'sigLabels'     - Names of the signatures. Format is: 
+% INPUT NEEDED
+%   'sigMatrix'       - Continuous data. Rows are signatures, columns are images.
+%                       The last row is the class vector
+%   'sigs_excluded'   - Signatures to be excluded from consideration. 
+%                       e.g. Signatures that cannot be discretized.
+%   'sigLabels'       - Names of the signatures. Format is: 
 %                         sig_method( transform( im ) ).sig_ST.SE_name
+%   'target_num_sigs' - The number of signatures to return. Optional. 
+%                       defaults to number of classes + 1
 %
 % OUTPUT GIVEN
 %   'sigs_used'     - integers representing which signatures
-%                     were found to be the best (collectively)
+%                     were found to be the best 
 %                     in classifying the training set.
 %   'fd_sigs_used' -  doubles recording the selected signatures'
 %                     Fisher Discriminate scores
+%
 % INTRODUCTION
-%    This function is based on a file "select_sigs_FisherDiscrim" which Nikita wrote
-% and is not on cvs. The code in select_sigs_FisherDiscrim is very difficult to read,
-% so I rewrote the algorithm into this function. I have not had opporutinity to
-% validate numeric equivalency between the two functions. This note serves as a reminder
-% to check into that.
-%	The method is to calculate fisher discriminate scores for the signatures 
-% (see fisherScores.m), and choose the top scoring signatures from different
-% signature families. The number of signatures chosen is one more than the 
-% number of classes.
+%	This function performs univariate analysis on the rows of sigMatrix and 
+% selects the top signatures from different signature families. In the example
+% sigLabel given above, sig_method( transform( im ) ) is the signature family 
+% name. If more signatures are requested than there are unique families, then 
+% multiple selected signatures per family will be allowed after all families 
+% have been selected from one.
+%    This function is based on a file "select_sigs_FisherDiscrim" which Nikita wrote.
+% The code in select_sigs_FisherDiscrim is very difficult to read,
+% so I rewrote the algorithm into this function. The algorithms are not numerically
+% equivalent, but this one performs significantly better on all problem sets
+% so far. I'll drop the select_sigs_FisherDiscrim from cvs if this one 
+% outperforms it on all problem sets.
+%
 function [selected_sigs, fd_selected_sigs] = ...
-			FindSignatureSubsetFD (sigMatrix, sigs_excluded, sigLabels )
+			FindSignatureSubsetFD (sigMatrix, sigs_excluded, sigLabels, target_num_sigs )
+
+% Convert the list of signature indexes to exclude into a binary list
+% This makes later code easier.
+numClasses         = length( unique( sigMatrix( end,: ) ) );
+num_sigs           = length( sigLabels );
+sigs_excluded_mask = zeros( 1, num_sigs );
+sigs_excluded_mask( sigs_excluded ) = 1;
+if( ~exist( 'target_num_sigs', 'var' ) ) 
+	target_num_sigs = numClasses + 1;
+end;
+
+% Get the list of signature families
+[ sig_is_member_of_family sig_family_names ] = getSigFamilies( sigLabels );
+num_sig_families = length( unique( sig_is_member_of_family ) );
 
 % Get the Fisher Discriminate scores
 sig_fd_scores = fisherScores( sigMatrix );
 
-numClasses = length( unique( sigMatrix( end,: ) ) );
-
-% Get the list of signature families
-sig_family_vector = getSigFamilies( sigLabels );
-num_sig_families = length( unique( sig_family_vector ) );
-target_num_sigs = numClasses + 1;
-
-% Find the top numClasses+1 signatures from distinct families
-[sortedScores rankings] = sort( sig_fd_scores, 2, 'descend' );
-selected_sigs = [];
-families_used = [];
-for ranking_index = 1:length( rankings )
-	sig_index = rankings( ranking_index );
-
-	% Skip this signature if the caller asked for it to be excluded
-	% or if another signature from its family has already been included
-	% or if it has a NaN as a fisher score
-	if( ( length( find( sigs_excluded == sig_index ) ) > 0 ) | ...
-	    ( length( find( families_used == sig_family_vector( sig_index ) ) ) > 0 ) | ...
-	    isnan( sig_fd_scores( sig_index ) ) )
-		continue;
-	end;
-	
-	% Add this signature to the set, and its family to the list of those used
-	selected_sigs( end + 1 ) = sig_index;
-	families_used( end + 1 ) = sig_family_vector( sig_index );
-	
-	% Leave this loop when we reach the desired number of signatures
-	if( length( selected_sigs ) == target_num_sigs )
+% Find the top numClasses+1 signatures from distinct families. Allow repeats
+% from within families when 
+selected_sigs      = [];
+selected_sigs_mask = zeros( 1, num_sigs );
+families_used      = zeros( 1, num_sig_families );
+families_used_mask = zeros( 1, num_sigs );
+nan_scores         = find( isnan( sig_fd_scores ) );
+sigs_excluded_mask( nan_scores ) = 1;
+while( length( selected_sigs ) < target_num_sigs )
+	% Find signatures whos families haven't been used, are not in the 
+	% excluded list, and have not been selected.
+	candidates = find( ...
+		( families_used_mask(:) == 0 ) & ...
+		( sigs_excluded_mask(:) == 0 ) & ...
+		( selected_sigs_mask(:) == 0 ) ...
+	);
+	% Exit if athere are no available candidates.
+	if( length( candidates ) == 0 )
 		break;
+	end;
+	% Find the highest ranking signature from the candidate pool
+	[ junk current_best_sig ] = max( sig_fd_scores( candidates ) );
+	% Convert the candidates index to a signature index and add it to the list
+	current_best_sig = candidates( current_best_sig );
+	selected_sigs_mask( current_best_sig ) = 1;
+	selected_sigs( end + 1 ) = current_best_sig;
+	% Mark this family as being used
+	families_used( sig_is_member_of_family( current_best_sig ) ) = 1;
+	other_sigs_in_this_family = find( ...
+		sig_is_member_of_family == sig_is_member_of_family( current_best_sig ) );
+	families_used_mask( other_sigs_in_this_family ) = 1;
+	% Reset the families used if all have been used once.
+	if( length( find( families_used == 0 ) ) == 0 )
+		families_used      = zeros( 1, num_sig_families );
+		families_used_mask = zeros( 1, num_sigs );
 	end;
 end;
 
@@ -101,7 +130,7 @@ return;
 % Helper function to parse signature families from the larger list of sig labels
 % The signature labels are assumed to be in the form:
 %	sig_method( transform( im ) ).sig_ST.SE_name
-function [sig_family_vector] = getSigFamilies( sigLabels )
+function [sig_family_vector sig_family_names] = getSigFamilies( sigLabels )
 
 sig_family_names = {};
 sig_family_vector = [];
