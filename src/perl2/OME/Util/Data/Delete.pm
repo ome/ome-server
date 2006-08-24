@@ -260,18 +260,24 @@ sub DeleteCHEX {
 		print "Retreived CHEX ID = $arg_chex_id\n";
 	}
 
-	# CONVERT each CHEX into the constituent MEXs
+	# Convert each CHEX into the constituent MEXs
 	my @MEXes;
 	foreach my $chex (@CHEXes) {
 		my @NEXes = $FACTORY->findObjects("OME::AnalysisChainExecution::NodeExecution",
-						{ analysis_chain_execution => $chex }) or
-						die "Could not load MEXs for CHEX ID ".$chex->id()."\n";
-					
+						{ analysis_chain_execution => $chex });
+		print "WARNING: Could not load MEXs for CHEX ID ".$chex->id()."\n"
+			if (scalar @NEXes < 1);
 		my @CHEX_MEXs = map { $_->module_execution} @NEXes;
-		@MEXes = (@MEXes, @CHEX_MEXs);
-	}
+		$self->delete_mexes (\@CHEX_MEXs,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
 
-	$self->delete_mexes (\@MEXes,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
+		# delete_mexes would have cleaned up the OME::AnalysisChainExecution if the
+		# chain made some mexes. But if this chain got interrupted while it was
+		# figuring out dependencies, no mexes would be deleted. In that case, we
+		# clean the CHEXs here.
+		print "--CHEX ",$chex->id()," ",$chex->analysis_chain()->name(),"\n";
+		$chex->deleteObject if $delete;
+		$session->commitTransaction() if $delete;
+	}
 }
 
 sub DeleteImage_help {
@@ -622,15 +628,11 @@ sub delete_st {
 		print $recurs_indent. "  ++".$ST->name()."'s SE ".$SE->name."\n";
 		$SE->deleteObject() if $delete;
 		
-		# if the SE is a reference, drop the foreign key constraint
+		# if the SE is a reference, drop the foreign key constraint on this ST table
 		my $data_col = $FACTORY->findObject("OME::DataTable::Column", {id => $SE->data_column_id()});
 		my $data_table = $FACTORY->findObject("OME::DataTable", {id => $data_col->data_table_id()});
 
-		# this SE is a reference to another ST. We need to remove the foreign constrain
-		# on the other ST table
 		if ($data_col->reference_type()) {
-		
-			# what SE 
 			my $sql = 'ALTER TABLE "'.lc($data_table->table_name()).'" '.
 					  'DROP CONSTRAINT "@'.$ST->name().'.'.$SE->name().'->@'.$data_col->reference_type.'"';
 
@@ -644,25 +646,23 @@ sub delete_st {
 		$data_tables->{$data_table->table_name()}=$data_table;
 	}
 
-	# delete the ST and drop the table, if appropriate	
+	# delete the ST	
 	$ST->deleteObject() if $delete;
 	
-	# there can be more than one ST per data_table. So we need to check data_column
+	# drop the table, if appropriate
 	foreach my $tname (keys %$data_tables) {
+	
+		# there can be more than one ST per data_table -- so we need to check first
 		my @other_STs_using_data_table = $FACTORY->findObjects("OME::DataTable::Column",
 												               {data_table_id => $data_tables->{$tname}->id()});
 
 		if (scalar(@other_STs_using_data_table) == 0) {		
-			# if there are other STs
 			my $sql = 'DROP TABLE "'.lc($tname).'"';
 			print $recurs_indent."  ".$sql."\n";
 			$FACTORY->obtainDBH()->do($sql) or die $FACTORY->obtainDBH()->errstr() if $delete;
 			$data_tables->{$tname}->deleteObject();
 		} else {
 			print $recurs_indent. "  Didn't DROP TABLE ".lc($tname)." because it stores other STs\n";
-			
-			# remove table foreign keys
-			
 		}
 	}
 	$DELETED_STS{$ST->id()} = 1;
