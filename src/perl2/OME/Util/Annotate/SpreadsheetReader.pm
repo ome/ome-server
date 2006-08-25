@@ -105,37 +105,26 @@ sub processFile {
 	my $sheet = $workbook->{ Worksheet }[0] if ($type eq EXCEL); # first sheet from the workbook
 	
 	# Get the column headings - different process for excel and tab
-	my $columnHeadings;
-	my $maxRow;
-	my $maxCol;
-	($maxRow,$maxCol,$columnHeadings) = 
+	my ($maxRow,$maxCol,$columnHeadings) = 
 		$self->getColumnHeadings($type,$sheet,$fileToParse);
 	
 	
-	# Figure out which columns are image identifiers (Image.Name or Image.id),
+	# Figure out which columns are image identifiers
 	# Dataset, Project, Category Group (CG) or Semantic Type (ST)
-	my $imgCol;
-    my $projCol;
-	my $DatasetCols;
-	my $STCols,
-	my $CGCols;
-
-	($imgCol,$projCol,$DatasetCols,$STCols,$CGCols) =
+	my ($imgCol,$projCol,$DatasetCols,$STCols,$CGCols) =
 	    $self->classifyColumnHeadings($columnHeadings,\@ERRORoutput);
 
 	# Use the TimeStamp to make sane Object descriptions
 	my $timestamp = time;
 	my $timestr = localtime $timestamp; 
 	
-	# If a category group referenced in the column headers isn't already in the database
-	# make a new category group with that name 
-	my $newCGs;
 	
-	my $CategoryGroups; # need this later when making new
-			    # categories in order to be able to
-			    # associate categories with CGs
-
-	($newCGs,$CategoryGroups) = 
+	# $newCGs:  If a category group referenced in the column headers isn't already
+	# in the database make a new category group with that name 
+	#
+	# $CategoryGroups: need this later when making new categories in order to be
+	# able to associate categories with CGs
+	my ($newCGs,$CategoryGroups) = 
 	    $self->getCategoryGroups($columnHeadings,$CGCols,$fileToParse,$global_mex,
 	                             $timestr);
 	my $file;
@@ -281,8 +270,8 @@ sub classifyColumnHeadings {
     foreach my $colHead (@$columnHeadings) {
 		if ($colHead eq "" or $colHead =~ m/#.*/) {
 			# skip columns without a heading or use the # character to comment-things out
-		} elsif ($colHead eq 'Image.Name' or $colHead eq 'Image.id') {
-			push (@$ERRORoutput, "Only one image identifier (Image.Name or Image.id) column per spreadsheet is permitted.")
+		} elsif ($colHead eq 'Image.OriginalFile' or $colHead eq 'Image.Name' or $colHead eq 'Image.id') {
+			push (@$ERRORoutput, "Only one image identifier (Image.OriginalFile or Image.Name or Image.id) column per spreadsheet is permitted.")
 			and return @$ERRORoutput if $imgCol;
 			$imgCol = $colCounter;
 		} elsif ($colHead eq 'Project') {
@@ -301,6 +290,9 @@ sub classifyColumnHeadings {
 		$colCounter++;
     }
     
+    die "This spreadsheet is lacking an image identifier column. The spreadsheet needs \n"
+    	"either a Image.OriginalFile, Image.Name, or Image.id column." if (not defined $imgCol);
+    	 
     return ($imgCol,$projCol,\%DatasetCols,\%STCols,\%CGCols);
 }
 
@@ -373,12 +365,19 @@ sub loadImage {
 
     if ( not $$images{$imageIdentifier} ) {
 		my @objects;
-		@objects = $factory->findObjects 
-			( 'OME::Image', { name => "$imageIdentifier" } )
-			if ($$columnHeadings[$imgCol] eq 'Image.Name');
-		@objects = $factory->findObjects ( 'OME::Image', { id =>
-			   "$imageIdentifier" } ) 
-			if ($$columnHeadings[$imgCol] eq 'Image.id');
+		
+		if ($$columnHeadings[$imgCol] eq 'Image.Name') {
+			@objects = $factory->findObjects 
+				( 'OME::Image', { name => "$imageIdentifier" } );
+		} elsif ($$columnHeadings[$imgCol] eq 'Image.id') {
+			@objects = $factory->findObjects
+				( 'OME::Image', { id => "$imageIdentifier" } );
+		} elsif ($$columnHeadings[$imgCol] eq 'Image.OriginalFile') {
+			my $originalFile = $session->Factory->
+				  findAttribute("OriginalFile", {Path => "$imageIdentifier"});
+			$objects[0] = OME::Tasks::ImageManager->getImageByOriginalFile($originalFile)
+					if (defined $originalFile);
+		}
 		
 		die "There are two images in the database with that name
 		$imageIdentifier. ". 
