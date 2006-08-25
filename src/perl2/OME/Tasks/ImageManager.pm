@@ -684,19 +684,33 @@ sub getImageByOriginalFile{
 	my $factory=$session->Factory();
 	
 	my $ImageImport = $factory->findObject( "OME::Module", name => 'Image import');
-											   
 	my $ImageImportFI = $factory->findObject( "OME::Module::FormalInput",
 									module_id => $ImageImport->id(),
 									name       => 'Files' );
 									
+	# First construct a query that assumes all original files uploaded with this 
+	# original file were consumed by a single image import.
 	# ai points to the ImportImage module that was fed the OriginalFiles Attribute as input
 	my $ai = $factory->findObject( "OME::ModuleExecution::ActualInput", 
 						input_module_execution => $originalFile->module_execution_id(),
-						formal_input_id => $ImageImportFI->id()) or return undef;
+						formal_input_id => $ImageImportFI->id());
+	# If that query didn't turn up anything, then construct a second one that 
+	# assumes this original file was wrapped with a virtual module execution, and
+	# consumed by a different image import than some of its siblings.
+	unless( $ai ) {
+		$ai = $factory->
+			findObject( "OME::ModuleExecution::ActualInput", 
+				'input_module_execution.virtual_outputs.attribute_id' => $originalFile->id(),
+				formal_input_id => $ImageImportFI->id()
+			);
+	}
+	# If that query also failed, then this original files wasn't used to import
+	# an image.
+	return undef
+		unless( $ai );
 	
 	# the ImportImage module reveals the image
-	my $ImageImportMEX = $factory->findObject( "OME::ModuleExecution", id =>$ai->module_execution_id());
-	return $ImageImportMEX->image();
+	return  $ai->module_execution()->image();
 }
 
 sub getDisplayOptions{
