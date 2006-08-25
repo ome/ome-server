@@ -77,7 +77,7 @@ end;
 
 % Get the list of signature families
 [ sig_is_member_of_family sig_family_names ] = getSigFamilies( sigLabels );
-num_sig_families = length( unique( sig_is_member_of_family ) );
+num_sig_families = length( unique( sig_is_member_of_family ) )
 
 % Get the Fisher Discriminate scores
 sig_fd_scores = fisherScores( sigMatrix );
@@ -89,14 +89,16 @@ selected_sigs_mask = zeros( 1, num_sigs );
 families_used      = zeros( 1, num_sig_families );
 families_used_mask = zeros( 1, num_sigs );
 nan_scores         = find( isnan( sig_fd_scores ) );
-sigs_excluded_mask( nan_scores ) = 1;
+nan_excluded_mask  = zeros( 1, num_sigs );
+nan_excluded_mask( nan_scores ) = 1;
 while( length( selected_sigs ) < target_num_sigs )
 	% Find signatures whos families haven't been used, are not in the 
 	% excluded list, and have not been selected.
 	candidates = find( ...
 		( families_used_mask(:) == 0 ) & ...
 		( sigs_excluded_mask(:) == 0 ) & ...
-		( selected_sigs_mask(:) == 0 ) ...
+		( selected_sigs_mask(:) == 0 ) & ...
+		( nan_excluded_mask(:) == 0 ) ...
 	);
 	% Exit if athere are no available candidates.
 	if( length( candidates ) == 0 )
@@ -113,8 +115,16 @@ while( length( selected_sigs ) < target_num_sigs )
 	other_sigs_in_this_family = find( ...
 		sig_is_member_of_family == sig_is_member_of_family( current_best_sig ) );
 	families_used_mask( other_sigs_in_this_family ) = 1;
-	% Reset the families used if all have been used once.
-	if( length( find( families_used == 0 ) ) == 0 )
+	% Find signatures whos families haven't been used, are not in the 
+	% excluded list, and have not been selected.
+	candidates = find( ...
+		( families_used_mask(:) == 0 ) & ...
+		( sigs_excluded_mask(:) == 0 ) & ...
+		( selected_sigs_mask(:) == 0 ) & ...
+		( nan_excluded_mask(:) == 0 ) ...
+	);
+	% Reset the families used if we are out of candidates
+	if( length( candidates ) == 0 )
 		families_used      = zeros( 1, num_sig_families );
 		families_used_mask = zeros( 1, num_sigs );
 	end;
