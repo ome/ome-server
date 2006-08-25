@@ -137,6 +137,7 @@ Remove image from datasets
 use strict;
 use OME::SetDB;
 use OME::DBObject;
+use OME::ModuleExecution;
 OME::DBObject->Caching(0);
 
 use OME::Tasks::PixelsManager;
@@ -670,6 +671,33 @@ sub getImageOriginalFiles{
 	return $original_files;
 }
 
+=head2 getImageByOriginalFile
+
+	my $image = OME::Tasks::ImageManager->getImageByOriginalFile($originalFile);
+
+figures out what OME image an OriginalFile produced
+=cut
+
+sub getImageByOriginalFile{
+	my ($self,$originalFile)=@_ ;
+	my $session=$self->__Session();
+	my $factory=$session->Factory();
+	
+	my $ImageImport = $factory->findObject( "OME::Module", name => 'Image import');
+											   
+	my $ImageImportFI = $factory->findObject( "OME::Module::FormalInput",
+									module_id => $ImageImport->id(),
+									name       => 'Files' );
+									
+	# ai points to the ImportImage module that was fed the OriginalFiles Attribute as input
+	my $ai = $factory->findObject( "OME::ModuleExecution::ActualInput", 
+						input_module_execution => $originalFile->module_execution_id(),
+						formal_input_id => $ImageImportFI->id()) or return undef;
+	
+	# the ImportImage module reveals the image
+	my $ImageImportMEX = $factory->findObject( "OME::ModuleExecution", id =>$ai->module_execution_id());
+	return $ImageImportMEX->image();
+}
 
 sub getDisplayOptions{
 	my ($self,$image,$pixels)=@_ ;
