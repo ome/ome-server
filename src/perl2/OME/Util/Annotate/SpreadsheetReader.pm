@@ -290,7 +290,7 @@ sub classifyColumnHeadings {
 		$colCounter++;
     }
     
-    die "This spreadsheet is lacking an image identifier column. The spreadsheet needs \n"
+    die "This spreadsheet is lacking an image identifier column. The spreadsheet needs \n".
     	"either a Image.OriginalFile, Image.Name, or Image.id column." if (not defined $imgCol);
     	 
     return ($imgCol,$projCol,\%DatasetCols,\%STCols,\%CGCols);
