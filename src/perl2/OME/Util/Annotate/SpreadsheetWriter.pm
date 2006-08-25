@@ -54,6 +54,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use Carp;
+use Cwd;
 use File::Glob ':glob'; # for bsd_glob
 use File::Spec; # for splitpath
 
@@ -131,19 +132,8 @@ sub processFile{
 
 		# for each category
 		foreach my $category (keys %$classification_rule) {
-			foreach (bsd_glob ($classification_rule->{$category})) {
-				next if (not -f $_); # skip directories
-				
-				# convert absolute file-path to filename
-				my ($vol, $dir, $file) = File::Spec->splitpath($_);
-				
-				# if the file has an extension, remove it. Goal is to follow
-				# the image naming convention using by OME
-				if (m/.*\..*/) {
-					$file =~m/(.*\.)/; 
-					$file = $1;
-					chop($file);
-				}
+			foreach my $file (bsd_glob ($classification_rule->{$category})) {
+				next if (not -f $file); # skip directories
 #				print "`$file` `$cg` `$category`\n";
 				$master_hash->{$file}->{$cg} = $category;
 			}
@@ -156,10 +146,10 @@ sub processFile{
 	# Use the master hash to write-out a tsv file
 	open (FILEOUT, "> $fn") or die "Couldn't open $fn for writing: $!\n";
 	my @array_cg_list = sort keys (%$cg_list);
-	print FILEOUT "Image.Name\t".join ("\t", @array_cg_list)."\n";
+	print FILEOUT "Image.OriginalFile\t".join ("\t", @array_cg_list)."\n";
 
 	foreach my $file (sort keys %$master_hash) {
-		print FILEOUT "$file\t";
+		print FILEOUT Cwd::realpath($file)."\t";
 
 		foreach my $cg (@array_cg_list) {
 			my $category = $master_hash->{$file}->{$cg};
