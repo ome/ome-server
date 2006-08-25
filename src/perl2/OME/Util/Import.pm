@@ -43,7 +43,7 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Util::Commands);
 
 use Carp;
-use File::Spec;
+use Cwd;
 use File::Glob ':glob';
 
 use OME::SessionManager;
@@ -121,9 +121,9 @@ sub import {
     
     my @file_names;
     foreach my $filename (@ARGV) {
-    	$filename = File::Spec->rel2abs($filename); # if you use absolute filenames here, OriginalFiles.Path
-													# stores absolute filenames. if you use relative paths,
-													# OriginalFiles.Path stores relative filenames
+    	$filename = Cwd::realpath($filename); # if you use absolute filenames here, OriginalFiles.Path
+										 # stores absolute filenames. if you use relative paths,
+										 # OriginalFiles.Path stores relative filenames
     	push (@file_names,$filename)
     		if $filename and -f $filename and -r $filename and -s $filename;
     	push (@file_names,bsd_glob("$filename/*")) if $filename and -d $filename and -r $filename;
