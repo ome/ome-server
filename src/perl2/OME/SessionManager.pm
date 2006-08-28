@@ -352,9 +352,12 @@ sub createWithKey {
 	    $age += $SESSION_KEY_LIFETIME if ($@);
 
 	    if ($age > $SESSION_KEY_LIFETIME) {
-			$userState->session_key(undef);
-			$userState->storeObject();
-			$session->commitTransaction();
+# Do not invalidate the session key if it is stale. Another process may 
+# be using it. We will invalidate stale session keys again once we have
+# implemented multiple session keys per user (e.g. one key per process)
+#			$userState->session_key(undef);
+#			$userState->storeObject();
+#			$session->commitTransaction();
 			return undef;		
 	    }
 	}	
