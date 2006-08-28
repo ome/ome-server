@@ -1,0 +1,129 @@
+use OME::Tasks::SemanticTypeManager;
+
+print "     \\_ Updating ST definitions from OME/Core/Image.ome ... ";
+my @Image_ome_updates = (
+    {
+       semantic_type  => "ImageExperiment",
+       sql_conversion => "INSERT INTO imageexperiment(attribute_id,module_execution_id,image_id,experiment) ".
+						 "SELECT attribute_id,module_execution_id,image_id,experiment FROM image_info",
+    },
+    {
+       semantic_type  => "ImageGroup",
+       sql_conversion => "INSERT INTO imagegroup(attribute_id,module_execution_id,image_id,group_se) ".
+ 					     "SELECT attribute_id,module_execution_id,image_id,group_id FROM image_info",
+    },
+    {
+       semantic_type  => "ImageInstrument",
+       sql_conversion => "INSERT INTO imageinstrument(attribute_id,module_execution_id,image_id,instrument,objective) ".
+					     "SELECT attribute_id,module_execution_id,image_id,instrument,objective FROM image_info",
+    },
+);
+OME::Tasks::SemanticTypeManager->updateSTDefinitions("src/xml/OME/Core/Image.ome",@Image_ome_updates);
+
+print "     \\_ Updating ST definitions from OME/Import/ImageServerStatistics.ome ... ";
+my @ImageServerStatistics_ome_updates = (
+    {
+       semantic_type  => "PlaneMean",
+       sql_conversion => "INSERT INTO planemean(attribute_id,module_execution_id,image_id,thez,thec,thet,mean) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,mean FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneGeometricMean",
+       sql_conversion => "INSERT INTO planegeometricmean(attribute_id,module_execution_id,image_id,thez,thec,thet,geometricmean) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,geomean FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneSigma",
+       sql_conversion => "INSERT INTO planesigma(attribute_id,module_execution_id,image_id,thez,thec,thet,sigma) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,sigma FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneGeometricSigma",
+       sql_conversion => "INSERT INTO planegeometricsigma(attribute_id,module_execution_id,image_id,thez,thec,thet,geometricsigma) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,geosigma FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneMinimum",
+       sql_conversion => "INSERT INTO planeminimum(attribute_id,module_execution_id,image_id,thez,thec,thet,minimum) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,minimum FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneMaximum",
+       sql_conversion => "INSERT INTO planemaximum(attribute_id,module_execution_id,image_id,thez,thec,thet,maximum) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,maximum FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneCentroid",
+       sql_conversion => "INSERT INTO planecentroid(attribute_id,module_execution_id,image_id,thez,thec,thet,x,y) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,centroid_x,centroid_y FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneSum_i",
+       sql_conversion => "INSERT INTO planesum_i(attribute_id,module_execution_id,image_id,thez,thec,thet,sum_i) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,sum_i FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneSum_i2",
+       sql_conversion => "INSERT INTO planesum_i2(attribute_id,module_execution_id,image_id,thez,thec,thet,sum_i2) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,sum_i2 FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneSum_log_i",
+       sql_conversion => "INSERT INTO planesum_log_i(attribute_id,module_execution_id,image_id,thez,thec,thet,sum_log_i) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,sum_log_i FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneSum_Xi",
+       sql_conversion => "INSERT INTO planesum_xi(attribute_id,module_execution_id,image_id,thez,thec,thet,sum_xi) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,sum_xi FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneSum_Yi",
+       sql_conversion => "INSERT INTO planesum_yi(attribute_id,module_execution_id,image_id,thez,thec,thet,sum_yi) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,sum_yi FROM plane_statistics",
+    },
+	{
+       semantic_type  => "PlaneSum_Zi",
+       sql_conversion => "INSERT INTO planesum_zi(attribute_id,module_execution_id,image_id,thez,thec,thet,sum_zi) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_z,the_c,the_t,sum_zi FROM plane_statistics",
+    },
+   	{
+       semantic_type  => "StackMean",
+       sql_conversion => "INSERT INTO stackmean(attribute_id,module_execution_id,image_id,thec,thet,mean) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_c,the_t,mean FROM stack_statistics",
+    },
+	{
+       semantic_type  => "StackGeometricMean",
+       sql_conversion => "INSERT INTO stackgeometricmean(attribute_id,module_execution_id,image_id,thec,thet,geometricmean) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_c,the_t,geomean FROM stack_statistics",
+    },
+	{
+       semantic_type  => "StackSigma",
+       sql_conversion => "INSERT INTO stacksigma(attribute_id,module_execution_id,image_id,thec,thet,sigma) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_c,the_t,sigma FROM stack_statistics",
+    },
+	{
+       semantic_type  => "StackGeometricSigma",
+       sql_conversion => "INSERT INTO stackgeometricsigma(attribute_id,module_execution_id,image_id,thec,thet,geometricsigma) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_c,the_t,geosigma FROM stack_statistics",
+    },
+	{
+       semantic_type  => "StackMinimum",
+       sql_conversion => "INSERT INTO stackminimum(attribute_id,module_execution_id,image_id,thec,thet,minimum) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_c,the_t,minimum FROM stack_statistics",
+    },
+	{
+       semantic_type  => "StackMaximum",
+       sql_conversion => "INSERT INTO stackmaximum(attribute_id,module_execution_id,image_id,thec,thet,maximum) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_c,the_t,maximum FROM stack_statistics",
+    },
+	{
+       semantic_type  => "StackCentroid",
+       sql_conversion => "INSERT INTO stackcentroid(attribute_id,module_execution_id,image_id,thec,thet,x,y) ".
+						 "SELECT attribute_id,module_execution_id,image_id,the_c,the_t,centroid_x,centroid_y FROM stack_statistics",
+    },
+);
+
+OME::Tasks::SemanticTypeManager->updateSTDefinitions("src/xml/OME/Import/ImageServerStatistics.ome",@ImageServerStatistics_ome_updates);
+
+1;
