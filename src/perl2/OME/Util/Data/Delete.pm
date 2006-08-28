@@ -571,7 +571,7 @@ sub DeleteMEX {
 }
 
 sub delete_st {
-	my ($self, $ST, $delete, $noop) = @_;
+	my ($self, $ST, $delete, $noop, $foreign_key_constraint_st_name) = @_;
     my $session = $self->getSession();
 	
 	return if exists $DELETED_STS{$ST->id()};
@@ -586,6 +586,7 @@ sub delete_st {
 	print $recurs_indent,"++Semantic Type ",$ST->id()," ",$ST->name(),"\n";
 
 	# is this ST used as a FormalInput/FormalOutput for some module?
+	$FACTORY = $session->Factory() unless $FACTORY; # so this function can be called outside the OME/Util/Data/ heirarchy
 	my $FI = $FACTORY->findObject( "OME::Module::FormalInput", {semantic_type_id  => $ST->id()});		
 	die "\nFormalInput '".$FI->name()."' of Module '".$FI->module()->name()."' is defined to be".
 		" of Semantic Type '".$ST->name(). "'.\nSo the ST '".$ST->name()."' can't be deleted.\n"
@@ -615,7 +616,7 @@ sub delete_st {
 	# the referencing STs have to be removed as well
 	foreach my $ST_ref (keys (%$ST_refs)) {
 		print $recurs_indent," -> ".$ST->name()." is being referenced by ST ",$ST_refs->{$ST_ref}->id()," ",$ST_ref,"\n";
-		$self->delete_st($ST_refs->{$ST_ref}, $delete, $noop);
+		$self->delete_st($ST_refs->{$ST_ref}, $delete, $noop, $foreign_key_constraint_st_name);
 	}
 	
 	# all checks have passed so let's do the delete
@@ -633,14 +634,23 @@ sub delete_st {
 		my $data_table = $FACTORY->findObject("OME::DataTable", {id => $data_col->data_table_id()});
 
 		if ($data_col->reference_type()) {
+			$foreign_key_constraint_st_name = $ST->name() unless $foreign_key_constraint_st_name;
+		
 			my $sql = 'ALTER TABLE "'.lc($data_table->table_name()).'" '.
-					  'DROP CONSTRAINT "@'.$ST->name().'.'.$SE->name().'->@'.$data_col->reference_type.'"';
+					  'DROP CONSTRAINT "@'.$foreign_key_constraint_st_name.'.'.$SE->name().'->@'.$data_col->reference_type.'"';
 
 			print $recurs_indent."  ".$sql."\n";
 			$FACTORY->obtainDBH()->do($sql) or die $FACTORY->obtainDBH()->errstr() if $delete;
 		}
-		$data_col->deleteObject() if $delete;
-
+		
+		# are other ST SE's using the same data_col ?
+		my @SEs_sharing_data_col = $FACTORY->findObjects("OME::SemanticType::Element", {data_column_id => $data_col->id()});
+		if (scalar @SEs_sharing_data_col) {
+			print $recurs_indent. "  Didn't DROP COLUMN ".$data_col->column_name()." because it stores other ST SEs\n";
+		} else {
+			$data_col->deleteObject() if $delete;
+		}
+		
 		# record the DataTable this SE used to be written to, so we can drop table in the future
 		push (@cols, $data_col);
 		$data_tables->{$data_table->table_name()}=$data_table;
