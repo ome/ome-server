@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+		<SemanticType Name="FirstST" AppliesTo="G">
+			<Element 
+				Name="ABC" 
+				DBLocation="ST_TEST_A.ABC"  
+				DataType="string"/>
+			<Element 
+				Name="DEF" 
+				DBLocation="ST_TEST_B.DEF"  
+				DataType="integer"/>
+		</SemanticType>
+		
+		<SemanticType Name="SecondST" AppliesTo="G">
+			<Element 
+				Name="ABC" 
+				DBLocation="ST_TEST_A.ABC"  
+				DataType="string"/>
+			<Element 
+				Name="HIJ" 
+				DBLocation="ST_TEST_B.HIJ"  
+				DataType="string"/>
+		</SemanticType>
+		
+		<SemanticType Name="ThirdST" AppliesTo="I">
+			<Element 
+				Name="KLM" 
+				DBLocation="ST_TEST_C.KLM"  
+				DataType="reference"
+				RefersTo = "Pixels" />
+		</SemanticType>
+		
+		<SemanticType Name="FourthST" AppliesTo="F">
+			<Element 
+				Name="NOP" 
+				DBLocation="ST_TEST_D.NOP"  
+				DataType="integer"/>
+		</SemanticType>
+		
+		<SemanticType Name="FifthST" AppliesTo="F">
+			<Element 
+				Name="QRS" 
+				DBLocation="ST_TEST_E.QRS"  
+				DataType="integer"/>
+			<Element 
+				Name="TUV" 
+				DBLocation="ST_TEST_E.TUV"  
+				DataType="reference"
+				RefersTo="ThirdST"/>				
+		</SemanticType>
+		
+		<SemanticType Name="SixthST" AppliesTo="F">
+			<Element 
+				Name="WXY" 
+				DBLocation="ST_TEST_F.WXY"  
+				DataType="integer"/>
+			<Element 
+				Name="Z" 
+				DBLocation="ST_TEST_E.Z"  
+				DataType="reference"
+				RefersTo="FifthST"/>
+			<Element 
+				Name="ZZ" 
+				DBLocation="ST_TEST_E.ZZ"  
+				DataType="reference"
+				RefersTo="FourthST"/>
+		</SemanticType>
+		
+		
+		<!--
+			SeventhST
+				<-Ref
+				
+					  NinthST<- Refs		TenthST
+			
+				<-Ref
+			EightST
+		-->
+		<SemanticType Name="SeventhST" AppliesTo="I">
+			<Element
+				Name="AB"
+				DBLocation="ST_Test_Z.AB"
+				DataType="integer"/>
+		</SemanticType>			
+		<SemanticType Name="EightST" AppliesTo="I">
+			<Element
+				Name="CD"
+				DBLocation="ST_Test_Z.CD"
+				DataType="integer"/>
+		</SemanticType>
+		<SemanticType Name="NinthST" AppliesTo="I">
+			<Element
+				Name="EF"
+				DBLocation="ST_Test_Z.EF"
+				DataType="reference"
+				RefersTo="SeventhST"/>
+			<Element
+				Name="GH"
+				DBLocation="ST_Test_Z.GH"
+				DataType="reference"
+				RefersTo="EightST"/>
+		</SemanticType>
+		<SemanticType Name="TenthST" AppliesTo="I">
+			<Element
+				Name="IJ"
+				DBLocation="ST_Test_Z.IJ"
+				DataType="reference"
+				RefersTo="NinthST"/>
+		</SemanticType>
+		
+		<!--
+			Triangle of References
+			
+			11th -> 12th -> 13th -> 11th
+			
+		-->
+		<SemanticType Name="EleventhST" AppliesTo="I">
+			<Element
+				Name="KL"
+				DBLocation="ST_Test_ZZ.KL"
+				DataType="reference"
+				RefersTo="TwelfthST"/>
+		</SemanticType>			
+		<SemanticType Name="TwelfthST" AppliesTo="I">
+			<Element
+				Name="MN"
+				DBLocation="ST_Test_ZZ.MN"
+				DataType="reference"
+				RefersTo="ThirteenthST"/>
+		</SemanticType>
+		<SemanticType Name="ThirteenthST" AppliesTo="I">
+			<Element
+				Name="OP"
+				DBLocation="ST_Test_ZZ.OP"
+				DataType="reference"
+				RefersTo="EleventhST"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>
+</OME>
