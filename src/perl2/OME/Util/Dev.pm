@@ -65,7 +65,6 @@ ome commands are:
     classifier       Commands that facilitate the computation of Image Signatures
     lint             Command for checking/correcting syntax of OME XML files
     templates        Command for displaying progress info about OME tasks
-    self-document    Command for publishing OME Commander documentation in html
     help <command>   Display help information about a specific command
 CMDS
 }
