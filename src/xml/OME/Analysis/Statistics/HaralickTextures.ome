@@ -234,7 +234,7 @@
 			<Description>Rotation invariant statistical value computed from co-ocurrence matrix.</Description>
 			<Element 
 				Name="IDM_avg" 
-				DBLocation="COOCMAT_INVERSEDIFFERENCEMOMENT_RI.IDM_AVG"  
+				DBLocation="COOCMAT_INVERSE_DIFFERENCE_MOMENT_RI.IDM_AVG"  
 				DataType="float"/>
 			<Element 
 				Name="IDM_range" 
