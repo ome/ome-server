@@ -153,6 +153,15 @@ public class OMEXMLOutputHandler extends DefaultHandler {
 
   public void endElement(String uri, String localName, String qName) {
     out.print(qName.equals(lastElement) ? "/>" : ("</" + qName + ">"));
+    lastElement = null;
+  }
+
+  public void characters(char[] ch, int start, int length) {
+    if (lastElement != null) {
+      out.print(">");
+      lastElement = null;
+    }
+    out.write(ch, start, length);
   }
 
   // -- Helper methods --
