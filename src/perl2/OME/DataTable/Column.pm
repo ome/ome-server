@@ -42,13 +42,7 @@ OME::DataTable::Column - a column in a data table
 =head1 DESCRIPTION
 
 The C<DataTable> interface describes the database tables used to store
-OME semantic types.  Note that there can be a many-to-many
-relationship between semantic types and data tables.  Semantic types
-which are logically related can be stored in the same database table,
-to help reduce the overhead of columns added to each table by the
-analysis engine.  Further, semantic types which can be broken into
-sparse distinct subparts can be stored in separate tables to help
-reduce the sparsity of each data row.
+OME semantic types. 
 
 The actual mapping between semantic types and data tables occurs as a
 link between semantic type columns and data table columns.  This link
