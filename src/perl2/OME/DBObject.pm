@@ -2548,13 +2548,19 @@ no warnings "uninitialized";
 							foreach my $arrayval (@$value) {
 								if (defined $arrayval) {
 									push @questions, '?';
-									$arrayval = $arrayval->id()
-									  if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
-										   ref($arrayval) );
-									$arrayval = 'NaN'
-										if( $class->isRealType($sql_type) && 
-											$arrayval && 
-											$value =~ m'^(-)?Inf(inity)?$'i );
+									# Transliteration services to go from perl data syntax
+									# to SQL syntax.
+									if( $class->isRealType($sql_type) && 
+										$arrayval && 
+										$arrayval =~ m'^(-)?Inf(inity)?$'i ) {
+										$arrayval = 'NaN';
+									} elsif( $sql_type eq 'boolean' ) {
+										if ($arrayval =~ /^f(alse)?$|^0$/io) {$arrayval = 'false';}
+										elsif ($arrayval =~ /^t(rue)?$|^1$/io) {$arrayval = 'true';}
+										else {die "Illegal Boolean column value '$arrayval'";}							
+									} elsif (UNIVERSAL::isa($arrayval,"OME::DBObject") && ref($arrayval)) {
+										$arrayval = $arrayval->id();
+									}
 									push @new_values, $arrayval;
 								}
 							}
@@ -2562,21 +2568,37 @@ no warnings "uninitialized";
 						} else {
 							$value = $value->id()
 							  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
-							$value = 'NaN'
-								if( $class->isRealType($sql_type) && 
-									$value && 
-									$value =~ m'^(-)?Inf(inity)?$'i );
+							# Transliteration services to go from perl data syntax
+							# to SQL syntax.
+							if( $class->isRealType($sql_type) && 
+							    $value && 
+							    $value =~ m'^(-)?Inf(inity)?$'i ) {
+								$value = 'NaN';
+							} elsif( $sql_type eq 'boolean' ) {
+								if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
+								elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+								else {die "Illegal Boolean column value '$value'";}							
+							} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
+								$value = $value->id();
+							}
 							push @new_values, $value;
 						}
 						$operation = defined $value? $criterion->[0]: "is"; 
 					} else {
 						$value = $criterion;
-						$value = 'NaN'
-							if( $class->isRealType($sql_type) && 
-								$value && 
-								$value =~ m'^(-)?Inf(inity)?$'i );
-						$value = $value->id()
-						  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+						# Transliteration services to go from perl data syntax
+						# to SQL syntax.
+						if( $class->isRealType($sql_type) && 
+							$value && 
+							$value =~ m'^(-)?Inf(inity)?$'i ) {
+							$value = 'NaN';
+						} elsif( $sql_type eq 'boolean' ) {
+							if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
+							elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+							else {die "Illegal Boolean column value '$value'";}							
+						} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
+							$value = $value->id();
+						}
 						push @new_values, $value;
 						$operation = defined $value? "=": "is";
 					}
@@ -2589,9 +2611,6 @@ no warnings "uninitialized";
 							push @join_clauses, "$location $operation $value";
 							$have_values = 0;
 						} else {
-							if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
-							elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
-							else {die "Illegal Boolean column value '$value'";}
 							push @join_clauses, "$location $operation $question";
 						}
 					} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
@@ -2817,35 +2836,55 @@ no warnings "uninitialized";
 						foreach my $arrayval (@$value) {
 							if (defined $arrayval) {
 								push @questions, '?';
-								$arrayval = $arrayval->id()
-								  if ( UNIVERSAL::isa($arrayval,"OME::DBObject") &&
-									   ref($arrayval) );
-								$arrayval = 'NaN'
-									if( $class->isRealType($sql_type) && 
-										$arrayval && 
-										$value =~ m'^(-)?Inf(inity)?$'i );
+								# Transliteration services to go from perl data syntax
+								# to SQL syntax.
+								if( $class->isRealType($sql_type) && 
+									$arrayval && 
+									$arrayval =~ m'^(-)?Inf(inity)?$'i ) {
+									$arrayval = 'NaN';
+								} elsif( $sql_type eq 'boolean' ) {
+									if ($arrayval =~ /^f(alse)?$|^0$/io) {$arrayval = 'false';}
+									elsif ($arrayval =~ /^t(rue)?$|^1$/io) {$arrayval = 'true';}
+									else {die "Illegal Boolean column value '$arrayval'";}							
+								} elsif (UNIVERSAL::isa($arrayval,"OME::DBObject") && ref($arrayval)) {
+									$arrayval = $arrayval->id();
+								}
 								push @new_values, $arrayval;
 							}
 						}
 						$question = '('.join(',',@questions).')';
 					} else {
-						$value = $value->id()
-						  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
-						$value = 'NaN'
-							if( $class->isRealType($sql_type) && 
-								$value && 
-								$value =~ m'^(-)?Inf(inity)?$'i );
+						# Transliteration services to go from perl data syntax
+						# to SQL syntax.
+						if( $class->isRealType($sql_type) && 
+							$value && 
+							$value =~ m'^(-)?Inf(inity)?$'i ) {
+							$value = 'NaN';
+						} elsif( $sql_type eq 'boolean' ) {
+							if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
+							elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+							else {die "Illegal Boolean column value '$value'";}							
+						} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
+							$value = $value->id();
+						}
 						push @new_values, $value;
 					}
 					$operation = defined $value? $criterion->[0]: "is"; 
 				} else {
 					$value = $criterion;
-					$value = 'NaN'
-						if( $class->isRealType($sql_type) && 
-							$value && 
-							$value =~ m'^(-)?Inf(inity)?$'i );
-					$value = $value->id()
-					  if (UNIVERSAL::isa($value,"OME::DBObject") && ref($value));
+					# Transliteration services to go from perl data syntax
+					# to SQL syntax.
+					if( $class->isRealType($sql_type) && 
+						$value && 
+						$value =~ m'^(-)?Inf(inity)?$'i ) {
+						$value = 'NaN';
+					} elsif( $sql_type eq 'boolean' ) {
+						if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
+						elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+						else {die "Illegal Boolean column value '$value'";}							
+					} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
+						$value = $value->id();
+					}
 					push @new_values, $value;
 					$operation = defined $value? "=": "is";
 				}
@@ -2861,9 +2900,6 @@ no warnings "uninitialized";
 						push @join_clauses, "$location $operation $value";
 						$have_values = 0;
 					} else {
-						if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
-						elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
-						else {die "Illegal Boolean column value '$value'";}
 						push @join_clauses, "$location $operation $question";
 					}
 				} elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
