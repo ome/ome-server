@@ -21,12 +21,9 @@
 %    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 % Written by:  Nikita Orlov <norlov@nih.gov>
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 %% Tamura texture signatures: coarseness, directionality, contrast 
 %%
 %% Reference: Tamura H., Mori S., Yamawaki T., 
@@ -52,7 +49,6 @@ if ~isa(Im,'double'),Im = im2double(Im);end
 [TM_Coarseness,TM_Coarseness_hist] = Tamura_Coarseness(Im);
 TM_Directionality = Tamura_Directionality(Im);
 TM_Contrast = Tamura_Contrast(Im);
-
 allTFeatures = [TM_Coarseness TM_Coarseness_hist TM_Directionality TM_Contrast];
 
 return;
@@ -113,6 +109,7 @@ coarseness_hist = hist(newh(:),nbin);
 coarseness_hist = coarseness_hist./max(coarseness_hist);
 %coarseness_hist = uint16(coarseness_hist);
 return;
+
 
 function sm = moveav(Im,nk),
 kern = ones(nk)./nk.^2; sm = conv2(Im,kern,'same');
