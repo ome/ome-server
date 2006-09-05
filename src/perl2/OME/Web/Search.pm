@@ -250,7 +250,7 @@ END_HTML
 		# Select button
 		$tmpl_data{do_select} = 
 			'<ul class="ome_quiet">'.
-			'<li><a href="javascript:selectAllCheckboxes( \'selected_objects\' );">Check all boxes on this page</a></li'.
+			'<li><a href="javascript:selectAllCheckboxes( \'selected_objects\' );">Check all boxes on this page</a></li>'.
 			'<li><a href="javascript:deselectAllCheckboxes( \'selected_objects\' );">Reset all boxes on this page</a></li>'.
 			'</ul>'
 			if( $select && $select eq 'many' );
