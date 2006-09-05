@@ -1,6 +1,21 @@
 % Tom Macura 2-13-05 Glue code
 % Temporary. Hopefully
 %
+% SYNOPSIS:
+%	% Train a network using default parameters
+%	[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ...
+%		ML_BayesNet_Trainer(contData, sigLabels );
+%	% Train a network using FD univariate analysis selecting 10% of sigs, followed by GHC
+%	[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ...
+%		ML_BayesNet_Trainer(contData, sigLabels, 'sigReductionMethod', 'FD-GHC', 'FDsubselect', 0.1 );
+%
+% INPUTS
+%	Everything aver sigLabels is optional and is a comma separated list of 
+%	name/value pairs. 
+%	'sigReductionMethod' can have the values: 'FD-GHC', 'FD', or 'GHC'
+%	'FD-GHC' has an optional parameter called 'FDsubselect' that specifies 
+%	the percentage of signatures to retain with the initial FD selection.
+%
 % OUTPUT GIVEN
 %   'sigs_used'     - integers representing which signatures
 %                     were found to be the best (collectively)
@@ -19,11 +34,23 @@
 %                     achieved during training
 
 function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, discWalls, bnet, conf_mat] = ...
-	ML_BayesNet_Trainer(contData, sigLabels, sigReductionMethod)
+	ML_BayesNet_Trainer(contData, sigLabels, varargin)
 
-if( ~exist( 'sigReductionMethod', 'var' ) )
-	sigReductionMethod = 'FD-GHC';
+% Default parameters:
+sigReductionMethod = 'FD-GHC';
+FDsubselect        = 0.2;
+
+% Look for inputs that will override the defaults.
+for i=1:2:length( varargin )
+	name  = varargin{ i };
+	value = varargin{ i + 1 };
+	if    ( strcmp( name, 'sigReductionMethod' ) )
+		sigReductionMethod = value;
+	elseif( strcmp( name, 'FDsubselect' ) )
+		FDsubselect        = value;
+	end;
 end;
+
 
 [rows cols] = size(contData);      
 
@@ -68,7 +95,7 @@ if( strcmp( sigReductionMethod, 'FD' ) )
 		sigs_used_ind = sigs_used_ind( 1:10 );
 	end;
 elseif( strcmp( sigReductionMethod, 'FD-GHC' ) )
-	target_num_sigs = round( length( sigLabels ) * .2 );
+	target_num_sigs = round( length( sigLabels ) * FDsubselect );
 	[top_fd_sigs, fd_scores] = FindSignatureSubsetFD (contData, sigs_excluded, sigLabels, target_num_sigs );
 	sigs_to_avoid = setdiff( [1:length( sigLabels )], top_fd_sigs );
 	sigs_to_avoid = union( sigs_to_avoid, sigs_excluded );
