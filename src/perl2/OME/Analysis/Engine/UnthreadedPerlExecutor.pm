@@ -52,6 +52,7 @@ use OME::Session;
 use Carp;
 use UNIVERSAL::require;
 use Log::Agent;
+use Time::HiRes qw(gettimeofday tv_interval);
 
 sub new {
     my $proto = shift;
@@ -74,6 +75,8 @@ sub executeModule {
     croak "Malformed class name $handler_class"
       unless $handler_class =~ /^\w+(\:\:\w+)*$/;
 
+	my $start_time = [gettimeofday()];
+	$mex->timestamp('now()');
     eval {
 		$handler_class->require();
 		my $handler = $handler_class->new($mex);
@@ -81,6 +84,7 @@ sub executeModule {
         $handler->execute($dependence,$target);
         $handler->finishAnalysis();
     };
+	$mex->total_time(tv_interval($start_time));
 
     if ($@) {
         $mex->status('ERROR');

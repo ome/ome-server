@@ -538,7 +538,6 @@ ReuseResults flag was set in the call to executeChain().
 =cut
 
 sub executeNodeWithTarget {
-	my $start_time = [gettimeofday()];
     my $self = shift;
     my ($node,$target) = @_;
     my $target_id = (defined $target)? $target->id(): 0;
@@ -624,7 +623,6 @@ sub executeNodeWithTarget {
     my $executor = $self->{executor};
     logdbg ("debug", "  Executing!");
     $executor->executeModule($mex,$dependence,$target);
-	$mex->total_time(tv_interval($start_time));
 	$mex->storeObject();
     return $nex;
 }
