@@ -499,7 +499,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "channels.sync()", 200 );
 			setTimeout( "xyPlaneControls.sync()", 200 );
 //	this next line loads every plane in the image
-			setTimeout( "image.prefetchImages()", 0 );
+//			setTimeout( "image.prefetchImages()", 0 );
 		}
 	]]></script>
 	<g id="mouseTrap">
