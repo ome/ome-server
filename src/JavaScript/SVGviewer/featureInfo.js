@@ -117,7 +117,24 @@ FeatureInfo.prototype.loadFeature = function( id, openToolBox ) {
 		this.toolBox.unhide();
 	for( i in this.fields ) {
 		if( this.fields[i].lastChild ) this.fields[i].removeChild( this.fields[i].lastChild );
-		this.fields[i].appendChild( document.createTextNode( this.features[ id ]['data'][i] ) );
+		/* If the data starts with a bracket '<', treat it as qualified svg,
+		   Otherwise, treat it as text. */
+		if( typeof( this.features[ id ]['data'][i] )  == 'object' ) {
+			this.fields[i].appendChild( 
+				Util.createTextLinkSVG( {
+					href: this.features[ id ]['data'][i]['href'],
+					attrs: { target: 'featureInfo' },
+					text: this.features[ id ]['data'][i]['text'],
+					text_attrs: { 
+						fill: 'black',
+						'text-decoration': 'underline'
+					}
+				} )
+			/*parseXML( this.features[ id ]['data'][i], document ) */
+			);
+		} else {
+			this.fields[i].appendChild( document.createTextNode( this.features[ id ]['data'][i] ) );
+		}
 	}
 }
 

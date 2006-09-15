@@ -147,7 +147,9 @@ Overlay.prototype.showAllZs = function( value ) {
 		}
 	} else {
 		for( z in this.sliceByIndex ) {
-			this.sliceByIndex[z][this.oldT].setAttribute( "display", "inline" );
+			if( this.sliceByIndex[z][this.oldT] ) {
+				this.sliceByIndex[z][this.oldT].setAttribute( "display", "inline" );
+			}	
 		}
 	}
 	this.updateIndex( this.oldZ, this.oldT );

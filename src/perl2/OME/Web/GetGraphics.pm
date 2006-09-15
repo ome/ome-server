@@ -557,8 +557,8 @@ sub _getJSOverlay {
 	}
 
 	foreach my $feature( values %features ) {
-		my ( $id, $tag, $name ) = ($feature->id(), $feature->tag(), $feature->name() );
-		push ( @featureData, "{ ID: '$id', Tag: '$tag', Name: '$name' }" );
+		my ( $id, $tag, $name, $url ) = ($feature->id(), $feature->tag(), $feature->name(), $self->getObjDetailURL( $feature ) );
+		push ( @featureData, "{ ID: '$id', Tag: '$tag', Name: '$name', ' ': { href: '$url', text: 'More info' } }" );
 	}
 	
 	$featureDataJS  = '['.join( ',', @featureData ).']'
