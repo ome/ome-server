@@ -2,7 +2,7 @@
 use strict;
 use CGI;
 my $CGI = CGI->new();
-print $CGI->header(-type => 'text/plain'),
+print $CGI->header(-type => 'text/plain');
 
 
 my ($key,$value);
