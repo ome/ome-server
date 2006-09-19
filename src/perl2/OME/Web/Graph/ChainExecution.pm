@@ -120,6 +120,9 @@ sub getPageBody {
 		return( 'TXT', $txt );
 	}
 
+	my $timescale_divisions = 
+		$q->param( 'timescale_divisions' ) ||
+		'10 hours';
 	my $graph = SVG::TT::Graph::TimeSeries->new({
 		# Layout settings
 		'height' => '500',
@@ -127,7 +130,7 @@ sub getPageBody {
 		'show_data_values'  => 0,
 #		'rollover_values'   => 1,
 		# X-axis settings
-		'timescale_divisions' => '5 hours',
+		'timescale_divisions' => $timescale_divisions,
 		'rotate_x_labels'     =>  1, 
 		'show_x_title'        => 1,
 		'x_title'             => 'Execution initiation time',
