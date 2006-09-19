@@ -61,13 +61,27 @@ sets '/name' to the module's name
 
 sub _renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
+
 	my %record;
 	if( exists $field_requests->{ '/name' } ) {
-		%record = $self->renderData( 
-			$obj->module(), 
-			{ '/name' => $field_requests->{ '/name' } },
-			$options
-		);
+		my @dup_nodes = $obj->analysis_chain->nodes( module => $obj->module );
+		if( scalar( @dup_nodes ) == 1 ) {
+			%record = $self->renderData( 
+				$obj->module(), 
+				{ '/name' => $field_requests->{ '/name' } },
+				$options
+			);
+		} else {
+			foreach my $request ( @{ $field_requests->{ '/name' } } ) {
+				my $request_string = $request->{ 'request_string' };
+				my @links = $obj->input_links();
+				my @upstreamNodes = map( $_->from_node, @links );
+				my $name = $self->getName( $obj->module )." w/ input from ".
+					join( ", ", map( $self->getName( $_ ), @upstreamNodes ) );
+				$record{ $request_string } = $self->
+					_trim( $name, $request );
+			}
+		}
 	}
 	return %record;
 }
