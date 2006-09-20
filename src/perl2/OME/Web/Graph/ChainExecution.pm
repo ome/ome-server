@@ -203,7 +203,7 @@ sub worker_occupancy {
 	my $graphTitleHeight = $textRowSpacingFactor * ( $graphTitleFontSize + $graphTitleLinkFontSize ) + 4 * $topMargin;
 	
 	my $workerLabelFontSize = 16;
-	my $workerLabelWidth = 200;
+	my $workerLabelWidth = 100;
 	my $workerRowHeight = $textRowSpacingFactor * $workerLabelFontSize;
 	my $workerRowSpacing = 10;
 	my $workerBlockStrokeWidth = 0;
@@ -321,21 +321,21 @@ END
 					$horizontalOffet, 
 					$Rwidth, 
 					$workerRowHeight
-				# Read time: yellow
+				# Execute time: yellow
 				).sprintf( 
 						"\t\t\t\t<rect x='%f' y='0' width='%f' height='%f' fill='yellow'/>\n", 
 					$horizontalOffet + $Rwidth, 
 					$Xwidth, 
 					$workerRowHeight
-				# Read time: blue
+				# Write time: blue
 				).sprintf( 
 						"\t\t\t\t<rect x='%f' y='0' width='%f' height='%f' fill='blue'/>\n", 
 					$horizontalOffet + $Rwidth + $Xwidth, 
 					$Wwidth, 
 					$workerRowHeight
-				# Unaccounted time: orange
+				# Unaccounted time: lightgray
 				).sprintf( 
-						"\t\t\t\t<rect x='%f' y='0' width='%f' height='%f' fill='orange'/>\n", 
+						"\t\t\t\t<rect x='%f' y='0' width='%f' height='%f' fill='lightgray'/>\n", 
 					$horizontalOffet  + $Rwidth + $Xwidth + $Wwidth,
 					$Owidth, 
 					$workerRowHeight
