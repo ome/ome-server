@@ -133,6 +133,7 @@ __PACKAGE__->addColumn(master => 'master',
                         SQLType => 'varchar(64)',
                         Indexed => 1,
                        });
+__PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'executed_by_worker');
 
 # These objects should never be cached to make sure that their status is always current.
 __PACKAGE__->Caching(0);
