@@ -172,11 +172,10 @@ sub baseRenderDir {
 
 =head1 getActionTemplate
 
-    my $template =
-    OME::Web::TemplateManager->getActionTemplate($templateName)
-
+    my $template = OME::Web::TemplateManager->getActionTemplate($templateName)
 
     Get a template from the action directory, by file name.
+
 =cut
 
 sub getActionTemplate {
@@ -184,10 +183,13 @@ sub getActionTemplate {
     my ($tmpl_name) = @_;
 
     my $tmpl_dir = $self->actionTemplateDir();
+    die "Cannot find the template file '$tmpl_name' in the directory '$tmpl_dir'"
+    	unless( -e "$tmpl_dir/$tmpl_name" );
     my $template = HTML::Template->new(
-	filename => $tmpl_name,
-	path => $tmpl_dir,
-	case_sensitive => 1);
+		filename       => $tmpl_name,
+		path           => $tmpl_dir,
+		case_sensitive => 1
+	);
     return $template;
 }
 
