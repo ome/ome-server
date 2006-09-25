@@ -1,0 +1,41 @@
+<h1>Wizard to Import and Annotate Images</h1>
+<p class="ome_error"><TMPL_VAR NAME=error_msg></p>
+<ol>
+	<li>Enter the name of your experiment. <a href="javascript:
+	    document.getElementById('step1Details').style.display = 'inline';
+	    document.getElementById('step1DetailsToggle').style.display = 'none';
+	    void(0);"
+	    id="step1DetailsToggle" class="ome_quiet">further explanation</a>
+	    <span id="step1Details" style="display: none;">
+	    In OME parlance, this will become the name of the dataset that the
+	    images will be imported into. After import, you will have a chance to
+	    add these images to additional datasets if you wish.</span><br/>
+	    <TMPL_VAR NAME=experiment_name>
+	</li>
+	<li>Put the images you wish to upload and import into a structured directory
+	    on your hard drive. An example directory structure is:<br/>
+		<ul>
+		<li>.../AgeSyncronizedPopulations/Day2/</li>
+	    <li>.../AgeSyncronizedPopulations/Day4/</li>
+	    <li>.../AgeSyncronizedPopulations/Day6/</li>
+		</ul>
+		<a href="javascript:
+	    document.getElementById('step2Details').style.display = 'inline';
+	    document.getElementById('step2DetailsToggle').style.display = 'none';
+	    void(0);"
+	    id="step2DetailsToggle" class="ome_quiet">further explanation</a> 
+	    <span id="step2Details" style="display: none;">
+		In this example, I am performing age-related experiments of the 
+		worm C. <i>elegans</i>. The dataset I am uploading has a single 
+		experimental factor, the age of an age-synchronized population.
+		The values of this variable are Day2, Day4, and Day 6. I made a master
+		directory named after my experimental variable, and subdirectories for
+		the values of that variable. I placed images only in the subdirectories;
+		<b>images in the master directory will not be imported or annotated.</b>
+        </span>
+	</li>
+	<li>Make a zip file of your master directory, and select it for upload:
+	    <TMPL_VAR NAME=file_upload_field>
+	</li>
+	<TMPL_VAR NAME=submit>
+</ol>
