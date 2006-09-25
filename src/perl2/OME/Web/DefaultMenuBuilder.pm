@@ -209,6 +209,11 @@ my @MENU = (
 		help_link => 'http://www.openmicroscopy.org.uk/getting-started/import.html',
 	},
 	{
+		web_class => 'OME::Web::Wizards::ImportAndAnnotateImages',
+		type => 'link',
+		text => 'Import and Annotate Wizard',
+	},
+	{
 		web_class => 'OME::Web::XMLFileExport',
 		type => 'link',
 		text => 'Export as XML',
