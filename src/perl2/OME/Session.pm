@@ -377,6 +377,7 @@ exit after completing a request.
 =cut
 
 sub idle {
+	return if( OME::Fork->hasDeferredTasks() );
 	if ($__soleInstance) {
 		# Forget our access lists
 		$__soleInstance->{ACL} = undef;    
