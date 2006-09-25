@@ -176,6 +176,7 @@ my %CHILD_STATUSES;
 
 our @TASKS;        # Deferred tasks - only for END blocks
 our $MPV;          # mod_perl version
+our $TASK_COUNT = 0;
 
 # We need to figure out what mod_perl we're running if we're in
 # Apache before we do anything else.
@@ -205,7 +206,10 @@ sub END {
 	if ($MPV == 0) {
 		OME::Session->instance()->Factory()->revive()
 			if OME::Session->hasInstance();
-		&$_ foreach @TASKS;
+		foreach my $task ( @TASKS ) {
+			&$task;
+			$TASK_COUNT--;
+		}
 	}
 }
 
@@ -220,8 +224,11 @@ my $task = shift;
                 	OME::Session->instance()->Factory()->revive()
                 		if OME::Session->hasInstance();
                 	&$task;
+                	$OME::Fork::TASK_COUNT--;
+                	OME::Session->idle() unless $OME::Fork::TASK_COUNT;
                 	return 0;
                 } );
+                $TASK_COUNT++;
         } elsif ($MPV == 1.99) {
                 APR::Pool->require();
                 my $r = Apache->request();
@@ -229,8 +236,11 @@ my $task = shift;
                 	OME::Session->instance()->Factory()->revive()
                 		if OME::Session->hasInstance();
                 	&$task;
+                	$OME::Fork::TASK_COUNT--;
+                	OME::Session->idle() unless $OME::Fork::TASK_COUNT;
                 	return 0;
                 } );
+                $TASK_COUNT++;
         } elsif ($MPV == 2) {
                 APR::Pool->require();
                 my $r = Apache2::RequestUtil->request();
@@ -238,13 +248,18 @@ my $task = shift;
                 	OME::Session->instance()->Factory()->revive()
                 		if OME::Session->hasInstance();
                 	&$task;
+                	$OME::Fork::TASK_COUNT--;
+                	OME::Session->idle() unless $OME::Fork::TASK_COUNT;
                 	return 0;
                 } );
+                $TASK_COUNT++;
         } elsif ($MPV == 0) {
                 push (@TASKS,$task);
+                $TASK_COUNT++;
         }
 }
 
+sub hasDeferredTasks { return $TASK_COUNT; }
 
 
 # This is taken straight from the perlipc manpage.
