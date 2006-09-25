@@ -78,7 +78,7 @@ use constant TAB => "tab";
 
 =head2 processFile
 
-	my $message = OME::Web::SpreadsheetImporter->processFile( $fileToParse );
+	my $message = OME::Util::Annotate::SpreadsheetReader->processFile( $fileToParse );
 
 $fileToParse is a tab-delimited text file or Excel Spreadsheet in a specified format.
 The format can be found at http://www.openmicroscopy.org/custom-annotations/spreadsheet_importer.html
