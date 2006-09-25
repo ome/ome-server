@@ -59,7 +59,9 @@ use File::Glob ':glob'; # for bsd_glob
 use File::Spec; # for splitpath
 
 =head2 processFile
+
 	processFile ("tmp.tsv", $cg_age, $cg_body_part, $cg_quality);
+
 This is a utility function that converts a set of image annotation rules
 into a tsv spreadsheet. Although it is used by the OME annotation wizards to
 make simple annotations, it is more powerful when used as a PERL API.
@@ -76,6 +78,15 @@ files which will be assigned the column value set based on "key". You can use th
 optional key "DefaultColumnValue" to insert that value for all files that don't
 match any of this column's filename patterns.
 
+If the string '_RelativePaths' is passed in as a parameter following the file 
+name, and the file locations are given as relative paths, then the images will
+be identified by their relative paths in the spreadsheet. This is a useful 
+option if you are programatically creating a temporary directory for images
+subsequent to upload, and the temporary directory name contains no useful 
+information. In such a scenanario, you must be careful to import the images
+using the same relative paths that you use in this call. 
+See OME::Web::Wizards::ImportAndAnnotateImages for an example of this usage
+scenario.
 
 my $root = "/Users/tmacur1/Images/worms/";
 my $cg_age = {
@@ -104,6 +115,7 @@ processFile ("tmp.tsv", $cg_age, $cg_body_part, $cg_quality);
 
 Returns 0 if a spreadsheet could not be written (because of mistaken rules)
 and 1 otherwise.
+
 =cut 
 
 
@@ -115,8 +127,13 @@ sub processFile{
 	my ($self, $fn, @classification_rules) = @_;
 	my $master_hash;
 	my $cg_list; # a hash ref
+	my $useRelativePaths = 0;
 	
 	foreach my $classification_rule (@classification_rules) {
+		if( $classification_rule eq '_RelativePaths' ) {
+			$useRelativePaths = 1;
+			next;
+		}
 	
 		# get Category Group name
 		my $cg = $classification_rule->{"ColumnName"};
@@ -149,7 +166,11 @@ sub processFile{
 	print FILEOUT "Image.OriginalFile\t".join ("\t", @array_cg_list)."\n";
 
 	foreach my $file (sort keys %$master_hash) {
-		print FILEOUT Cwd::realpath($file)."\t";
+		my $path = ( $useRelativePaths ? 
+			$file :
+			Cwd::realpath($file)
+		);
+		print FILEOUT $path."\t";
 
 		foreach my $cg (@array_cg_list) {
 			my $category = $master_hash->{$file}->{$cg};
