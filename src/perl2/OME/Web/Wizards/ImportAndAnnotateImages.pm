@@ -204,23 +204,13 @@ sub getPageBody {
 		$task->setPID($$);
 		$task->step();
 		$task->setMessage('Starting image import');
-	
-		# Upload the files while we are still in this directory.
-		my %files;		
-		my $repository = $session->findRepository();
-		foreach my $filename (@imagePaths) {
-			my $omeis_file = OME::Image::Server::File->upload($filename,$repository)
-				if -f $filename and -r $filename and -s $filename;
-			$files{ $filename } = $omeis_file;
-			$task->step();
-			$task->setMessage("Uploaded $filename");
-		}
-		$session->finishTemporaryFile( $tmpFile );
-		$session->finishTemporaryFile( $tmpDir );
-		$session->commitTransaction();
-		
+			
 		OME::Fork->doLater ( sub {
-			OME::Tasks::ImageTasks::importImageServerFiles($dataset, \%files, {}, $task);
+			# Ensure we are in the right directory after the fork. Otherwise,
+			# the relative paths won't work.
+			chdir( $tmpDir )
+				or die "Couldn't change directories to $tmpDir";
+			OME::Tasks::ImageTasks::importFiles($dataset, \@imagePaths, {}, $task);
 			$task->step();
 			$task->setMessage("Importing spreadsheet annotations");
 			my $importedObjects = OME::Util::Annotate::SpreadsheetReader->processFile( $spreadSheetPath );
@@ -230,6 +220,8 @@ sub getPageBody {
 				$task->setMessage( "Had errors while importing spreadsheet annotations" );
 			}
 			$session->finishTemporaryFile( $spreadSheetPath );
+			$session->finishTemporaryFile( $tmpFile );
+			$session->finishTemporaryFile( $tmpDir );
 			$session->commitTransaction();
 		} );
 
