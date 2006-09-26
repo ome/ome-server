@@ -148,6 +148,7 @@ use File::Path;
 use File::Spec;
 use Log::Agent;
 use OME::Image::Server;
+use OME::Install::Util;
 
 #use Benchmark::Timer;
 
@@ -625,6 +626,10 @@ sub finishTemporaryFile {
             warn "Error removing temp file/directory $filename: $!" if $!;
         }
     } elsif (-d $filename) {
+    	# rmtree will not work if the unix user does not have write permissions
+    	# on individual files inside this directory. We fix this by changing 
+    	# the permissions before calling rmtree
+    	OME::Install::Util::fix_permissions( { mode => 0700, recurse => 1 }, $filename );
         eval { rmtree($filename,0,1); };
         warn "Error removing temp file/directory $filename: $@" if $@;
         warn "Error removing temp file/directory $filename: $!" if $!;
