@@ -30,28 +30,44 @@ function [conf_mat, marginal_probs, aggregate_probs] = ML_BayesNet_Tester (bnet,
 % read the total number of classes this classifier can classify as from the bnet
 % structure
 class_number = bnet.node_sizes(end);
+for class_index = 1:class_number
+	class_counts( class_index ) = length( find( contData(end, :) == class_index ) );
+end;
 
-[hei len] = size(contData);
+% Actually generate predictions
+[num_sigs num_images] = size(contData);
 absolutes   = zeros(class_number, class_number);
 percentages = zeros(class_number, class_number);
-for u = 1:len % for each instance
-	actual_class = contData(end,u);
-	marginal_probs(u,:) = ML_BayesNet_Classifier(bnet, contData([sigs_used],u), sigs_used, discWalls);
+unclassified_counts = zeros(class_number, 1);
+for image_index = 1:num_images % for each instance
+	actual_class = contData(end,image_index);
+	marginal_probs(image_index,:) = ML_BayesNet_Classifier(bnet, contData([sigs_used],image_index), sigs_used, discWalls);
 	
-	% find which classes are predicted
-	predicted_class = find (marginal_probs(u,:) == max(marginal_probs(u,:)));
+	% given a marginal probability distriburion, find which classes are predicted
+	predicted_class = find (marginal_probs(image_index,:) == max(marginal_probs(image_index,:)));
 	predicted_class = predicted_class(randperm(length(predicted_class))); % randomize the predicted class
 	predicted_class = predicted_class(1);                % select the first class
-	
-	if (sum(marginal_probs(u,:)) == 0)
-		fprintf (1, 'All O marginal_probs happened. SHIT\n');
+
+	if (sum(marginal_probs(image_index,:)) == 0)
+		%fprintf (1, 'All O marginal_probs happened for image id: %d.\n', image_index);
+		unclassified_counts( actual_class ) = unclassified_counts( actual_class ) + 1;
 	else 
 		absolutes(actual_class, predicted_class) =  ...
 				absolutes(actual_class, predicted_class) + 1;
 		percentages(actual_class,:) = ... 
-				percentages(actual_class,:) + marginal_probs(u,:);
+				percentages(actual_class,:) + marginal_probs(image_index,:);
 	end
 end
+
+% some warning info about unclassified images. More concise and informative than the previous version.
+if( sum( unclassified_counts ) > 0 )
+	fprintf( '%d images were unclassified. The distribution across classes was:\n\t', ...
+		sum( unclassified_counts ) );
+	for class_index = 1:class_number
+		fprintf( '%d / %d,\t', unclassified_counts( class_index ), class_counts( class_index ) );
+	end;
+	fprintf( '\n' );
+end;
 
 conf_mat = absolutes;
 
