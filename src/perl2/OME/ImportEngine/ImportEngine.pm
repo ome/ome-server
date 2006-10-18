@@ -230,8 +230,16 @@ sub importFiles {
     $self->{nFiles} = scalar (keys %files);
 
     # Find the formats that are known to the system.
-
-    my $formats = $session->Configuration()->import_formats();
+    my $formats;
+    
+    # by default load formats from the database configuration table
+    # these formats might be overridden by passed in options
+    if ($self->{_flags}->{ImageFormats}) {
+		$formats = $self->{_flags}->{ImageFormats};
+	} else {    	
+		$formats = $session->Configuration()->import_formats();
+    }
+    
     my %formats;
     my %groups;
 

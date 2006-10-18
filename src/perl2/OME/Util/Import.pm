@@ -93,6 +93,24 @@ Options:
   -D, --description
       Use this flag if you want to give a description to your new dataset.
       
+  -i, --format
+  	  Suggests the image formats. The Import Engine first checks if the images
+  	  are of the specified format, if not it reverts to default behaviour and
+  	  tries to discover the image formats. This speeds up import times for common
+  	  images such as TIFFs.
+  	  
+  	  Permitted Values:
+  	  OME::ImportEngine::OMETIFFreader
+   	  OME::ImportEngine::MetamorphHTDFormat
+   	  OME::ImportEngine::DVreader
+   	  OME::ImportEngine::STKreader
+   	  OME::ImportEngine::BioradReader
+   	  OME::ImportEngine::LSMreader
+   	  OME::ImportEngine::TIFFreader
+   	  OME::ImportEngine::BMPreader
+   	  OME::ImportEngine::DICOMreader
+   	  OME::ImportEngine::XMLreader
+  	  
   -r, --reimport
       Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
@@ -107,13 +125,15 @@ sub import {
 	my $reuse;
 	my $datasetName;
 	my $datasetDescription;
+	my @priority_formats;
 	
 	my $timestamp = time;
 	my $timestr = localtime $timestamp;
 	
 	GetOptions('reimport|r!' => \$reuse,
                'dataset|d=s' => \$datasetName,
-               'description|D=s' => \$datasetDescription);
+               'description|D=s' => \$datasetDescription,
+               'i|format=s'=>\@priority_formats);
                
     # idiot traps
     die "You cannot specify a dataset description without also specifying the dataset name.\n"
@@ -186,8 +206,31 @@ sub import {
 		$session->commitTransaction();
 	}
 	
+	# re-arrange image formats per the user's instructions
+	my @formats_list;
+	if (scalar @priority_formats) {
+		my $std_formats_ref = $session->Configuration()->import_formats();
+		my @std_formats = @$std_formats_ref;
+		
+		foreach my $priority_format (@priority_formats) {
+			my $found_priority_format = -1;
+			for (my $i = 0; $i < scalar @std_formats; $i++) {
+				my $std_format = $std_formats[$i];
+				if ($priority_format eq $std_format) {
+					$found_priority_format = $i;
+					last;
+				}
+			}
+			die "Image format $priority_format is unknown\n" if $found_priority_format == -1;
+			@std_formats = @std_formats[0..$found_priority_format-1,
+										$found_priority_format+1..-1];
+		}
+		@formats_list = (@priority_formats,@std_formats);
+	}
+
 	my %opts;
 	$opts{AllowDuplicates} = 1 if $reuse;
+	$opts{ImageFormats} = \@formats_list if scalar @formats_list;
 	
 	print "Importing files\n";
 	my $task = OME::Tasks::NotificationManager->
