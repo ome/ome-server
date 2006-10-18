@@ -136,38 +136,3 @@ fd_selected_sigs = sig_fd_scores( selected_sigs );
 return;
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper function to parse signature families from the larger list of sig labels
-% The signature labels are assumed to be in the form:
-%	sig_method( transform( im ) ).sig_ST.SE_name
-function [sig_family_vector sig_family_names] = getSigFamilies( sigLabels )
-
-sig_family_names = {};
-sig_family_vector = [];
-for sig_index = 1:length( sigLabels )
-	% Everything up to the next-to-the-last dot is the signature family name
-	dots = strfind( sigLabels{ sig_index }, '.' );
-	if( length( dots ) < 2 )
-		error( [ 'Could not parse signature label: ' sigLabels{ sig_index } ] );
-	end;
-	sig_family_name = sigLabels{ sig_index }(1:dots( end-1 )-1 );
-	
-	% Mark this signature as not belonging to a family yet.
-	sig_family_vector( sig_index ) = 0;
-	% Look for a family this signature may belong to.
-	for sig_family_index = 1:length( sig_family_names )
-		if( strcmp( sig_family_name, sig_family_names{ sig_family_index } ) )
-			sig_family_vector( sig_index ) = sig_family_index;
-			break;
-		end;
-	end;
-	
-	% If no catalogued signature family matches, then create a new catologue entry
-	if( sig_family_vector( sig_index ) == 0 )
-		sig_family_index = length( sig_family_names ) + 1;
-		sig_family_names{ sig_family_index } = sig_family_name;
-		sig_family_vector( sig_index ) = sig_family_index;
-	end;
-end;
-
-return;
