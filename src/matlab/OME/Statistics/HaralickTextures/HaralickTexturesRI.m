@@ -22,16 +22,17 @@
 %    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 % Written by:  Tom Macura <tmacura@nih.gov>
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+% SYNOPSIS
+%	[haralick_avg_and_range] = HaralickTexturesRI(Im, dist);
+% INPUTS
+%	Im - an image matrix
+%	dist - optional, defaults to 1.
 
-% HaralickFeatures2D accepts an optional input of rotation angle. If the input
-% is unspecified, it will compute features on four angles and return the average.
-% If the input is specified, it will return the Haralick features for that angle.
 
-function [haralick_avg_and_range] = HaralickTextures2D (Im, dist);
+function [haralick_avg_and_range] = HaralickTexturesRI(Im, dist);
 
 if nargin < 2
 	dist = 1;
