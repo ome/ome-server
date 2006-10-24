@@ -42,7 +42,7 @@
 %
 % DESCRIPTION
 %	Calculate Fisher Discriminate scores for each signature using the formula:
-%		mean( variance of class means from pooled mean ) /
+%		( variance of class means from pooled mean ) /
 %		( mean( variance within each class ) + eps )
 %
 % NOTES
@@ -68,21 +68,25 @@ else
 end;
 num_classes = length( unique( class_vec ) );
 
-% Calc a Fisher Discriminate score for one sig at a time.
-% The formula is: 
-%	mean( variance of class means from pooled mean ) /
-%	mean( variance within each class )
-for sig_index = 1:num_sigs
-	% Calculate stats for each class
-	for class_index = 1:num_classes
-		class_instances = find( class_vec == class_index );
-		class_means( class_index )     = mean( sigMatrix( sig_index, class_instances ) );
-		inner_class_var( class_index ) = var(  sigMatrix( sig_index, class_instances ) );
-	end;
-	
-	% Plug in numbers to the Fisher Formula
-	sig_mean = mean( sigMatrix( sig_index, : ) );
-	class_dev_from_mean = ...
-		sum( ( class_means - sig_mean ).^2 ) / ( num_classes - 1 );
-	fisher_discriminate_scores( sig_index ) = class_dev_from_mean / ( mean( inner_class_var ) + eps );
+sig_means = mean( sigMatrix, 2 );
+not_nan_dims = find( ~isnan( mean( sigMatrix, 2 ) ) );
+nan_dims     = setdiff( [1:num_sigs], not_nan_dims );
+sigMatrix = sigMatrix( not_nan_dims, : );
+sig_means = sig_means(not_nan_dims);
+
+% Calculate stats for each class
+sum_sqs = zeros( length( not_nan_dims ), 1 );
+for class_index = 1:num_classes
+	class_instances = find( class_vec == class_index );
+	class_means = mean( sigMatrix( :, class_instances ), 2 );
+	inner_class_var( :, class_index ) = ...
+	    var(  sigMatrix( :, class_instances ), 0, 2 );
+	sum_sqs = sum_sqs + ( class_means - sig_means ).^2;
 end;
+class_dev_from_mean = sum_sqs / ( num_classes - 1 );
+
+% Plug in numbers to the Fisher Formula
+fisher_discriminate_scores( not_nan_dims ) = ...
+	class_dev_from_mean ./ ( mean( inner_class_var, 2 ) + eps );
+fisher_discriminate_scores( nan_dims ) = NaN;
+fisher_discriminate_scores = fisher_discriminate_scores( 1:num_sigs );
