@@ -586,16 +586,16 @@ sub configure_guest_access {
     print "\n"; #spacing
     my $confirm_all = 1;
     while (1) {
-	if ($confirm_all) {
-	    print "Enable Guest Access: ", BOLD, $guest_access? 'yes': 'no', RESET ,
-	    "\n";
-	    print "\n";  # Spacing
-	    
-	    (y_or_n ("Is this correct ?",'y')) and  last;
-	}
-	$confirm_all = 0;
-	$guest_access = y_or_n("Enable guest access?",'n');
-	$confirm_all = 1;
+		if ($confirm_all) {
+			print "Enable Guest Access: ", BOLD, ($guest_access ? 'yes' : 'no'), RESET ,
+			"\n";
+			print "\n";  # Spacing
+			
+			(y_or_n ("Is this correct ?",'y')) and  last;
+		}
+		$confirm_all = 0;
+		$guest_access = y_or_n("Enable guest access?",'n');
+		$confirm_all = 1;
     }
     $ENVIRONMENT->allow_guest_access($guest_access);
 
@@ -607,50 +607,50 @@ sub configure_guest_access {
 	$factory->findObject('@Experimenter',{FirstName=>'Guest',
 					      LastName=>'User'});
     if (!$guest) {
-	print "Creating Guest User!";
-	my $module = $factory->findObject("OME::Module",name =>
-					  'Administration');
-	my $mex =
-	    OME::Tasks::ModuleExecutionManager->createMEX($module,'G');
-    # Create a universal execution for this module, so that the analysis
-    # engine never tries to execute it.
-    OME::Tasks::ModuleExecutionManager->
-        createNEX($mex,undef,undef);
-
-	my $groupName = "GuestGroup_". $mex->id;
-	my $group = 
-	    $factory->maybeNewAttribute('Group',undef,$mex,
-					{Name =>$groupName});
+		print "Creating Guest User!";
+		my $module = $factory->findObject("OME::Module",name =>
+						  'Administration');
+		my $mex =
+			OME::Tasks::ModuleExecutionManager->createMEX($module,'G');
+		# Create a universal execution for this module, so that the analysis
+		# engine never tries to execute it.
+		OME::Tasks::ModuleExecutionManager->
+			createNEX($mex,undef,undef);
 	
-	$guest =
-	    $factory->maybeNewAttribute('Experimenter',
-					undef,$mex, {
-					    FirstName => 'Guest',
-					    LastName =>'User',
-					    Group => $group}); 
-	
-	$group->Leader($guest);
-	$group->Contact($guest);
-	$group->storeObject();
-	    
-	print "Guest is " . $guest . "\n";
-	my $bootstrap_experimenter =
-	    $factory->loadObject('OME::SemanticType::BootstrapExperimenter',
-				 $guest->id());
-	$bootstrap_experimenter->OMEName('guest');
-	my $password = encrypt('abc123');
-	$bootstrap_experimenter->Password($password);
-	$bootstrap_experimenter->storeObject();
-	
-	my $exp_group =
-	    $factory->newAttribute('ExperimenterGroup',
-				   undef,$mex, 
-				   { Experimenter=>$guest,
-				     Group => $group});
-	$mex->group($group);
-	$mex->status('FINISHED');
-	$mex->storeObject();
-	$session->commitTransaction();
+		my $groupName = "GuestGroup_". $mex->id;
+		my $group = 
+			$factory->maybeNewAttribute('Group',undef,$mex,
+						{Name =>$groupName});
+		
+		$guest =
+			$factory->maybeNewAttribute('Experimenter',
+						undef,$mex, {
+							FirstName => 'Guest',
+							LastName =>'User',
+							Group => $group}); 
+		
+		$group->Leader($guest);
+		$group->Contact($guest);
+		$group->storeObject();
+			
+		print "Guest is " . $guest . "\n";
+		my $bootstrap_experimenter =
+			$factory->loadObject('OME::SemanticType::BootstrapExperimenter',
+					 $guest->id());
+		$bootstrap_experimenter->OMEName('guest');
+		my $password = encrypt('abc123');
+		$bootstrap_experimenter->Password($password);
+		$bootstrap_experimenter->storeObject();
+		
+		my $exp_group =
+			$factory->newAttribute('ExperimenterGroup',
+					   undef,$mex, 
+					   { Experimenter=>$guest,
+						 Group => $group});
+		$mex->group($group);
+		$mex->status('FINISHED');
+		$mex->storeObject();
+		$session->commitTransaction();
     }
 }
 
@@ -863,8 +863,8 @@ sub update_configuration {
 		allow_guest_access => $ENVIRONMENT->allow_guest_access(),
 	);
 	OME::Configuration->update ($factory, \%update_configuration_variables);
-
     $factory->commitTransaction();
+	OME::SessionManager->updateACL();
     return 1;
 }
 
@@ -1475,8 +1475,6 @@ BLURB
     }
     my $factory = $session->Factory ();
 
-    configure_guest_access($session);
-
     # Drop our UID to the OME_USER
     euid($OME_UID);
 
@@ -1526,6 +1524,10 @@ BLURB
 
     # Update the Database version
     update_configuration ($session) or croak "Unable to update the configuration object.";
+
+	# Configure guest access. This has to be done after the configuration has 
+	# been updated. See Bug 694.
+    configure_guest_access($session);
 
     # Update the Experimenter in the install environment
     save_exper_env ($session);	
