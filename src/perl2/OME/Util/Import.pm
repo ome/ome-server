@@ -81,7 +81,7 @@ The files can be proprietary format image files or OME XML files that define
 OME objects.
 
 Options:
-      
+
   -d, --dataset (<id> | <name>) 
       Specify which dataset images should be imported into. If you don't
       own an unlocked dataset with the specified name, a new one will be
@@ -89,33 +89,33 @@ Options:
       Analysis Modules, or Chains this parameter is unnecessary. If you
       import images, but don't specify a dataset, a new dataset called
       '<time_stamp> Import Dataset' will be created for you.
-      
+
   -D, --description
       Use this flag if you want to give a description to your new dataset.
-      
+
   -i, --format
-  	  Suggests the image formats. The Import Engine first checks if the images
-  	  are of the specified format, if not it reverts to default behaviour and
-  	  tries to discover the image formats. This speeds up import times for common
-  	  images such as TIFFs.
-  	  
-  	  Permitted Values:
-  	  OME::ImportEngine::OMETIFFreader
-   	  OME::ImportEngine::MetamorphHTDFormat
-   	  OME::ImportEngine::DVreader
-   	  OME::ImportEngine::STKreader
-   	  OME::ImportEngine::BioradReader
-   	  OME::ImportEngine::LSMreader
-   	  OME::ImportEngine::TIFFreader
-   	  OME::ImportEngine::BMPreader
-   	  OME::ImportEngine::DICOMreader
-   	  OME::ImportEngine::XMLreader
-  	  
+      Suggests the image formats. The Import Engine first checks if the images
+      are of the specified format, if not it reverts to default behaviour and
+      tries to discover the image formats. This speeds up import times for
+      common images such as TIFFs.
+
+      Permitted Values:
+      OME::ImportEngine::OMETIFFreader
+      OME::ImportEngine::MetamorphHTDFormat
+      OME::ImportEngine::DVreader
+      OME::ImportEngine::STKreader
+      OME::ImportEngine::BioradReader
+      OME::ImportEngine::LSMreader
+      OME::ImportEngine::TIFFreader
+      OME::ImportEngine::BMPreader
+      OME::ImportEngine::DICOMreader
+      OME::ImportEngine::XMLreader
+
   -r, --reimport
       Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
       XML files.
-        
+
 USAGE
 }
 
