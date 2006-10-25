@@ -140,7 +140,7 @@ eval {
 		});
 };
 do_response (SERVER_ERROR,"Unable to get remote session: $@\n".
-	"SessionKey: '$SessionKey'\n\tDataSource: '$DataSource'\n\DBUser: '$DBUser'"
+	"SessionKey: '$SessionKey'\n\tDataSource: '$DataSource'\n\tDBUser: '$DBUser'"
 ) unless $session;
 
 # Get our MEX object and target object if needed.
