@@ -988,8 +988,8 @@ sub removeFiles {
     my ($self,$file_list,$to_remove) = @_;
 
     foreach my $file (@$to_remove) {
-        my $filename = $file->getFilename();
-        delete $file_list->{$filename};
+        my $file_id = $file->getFileID();
+        delete $file_list->{$file_id};
     }
 
     return;

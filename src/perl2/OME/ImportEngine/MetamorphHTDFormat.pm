@@ -84,7 +84,7 @@ sub getGroups {
     my ($self,$files) = @_;
 
     # Keep a list of the files that we're going to import, so that
-    # we can remove them from $filenames at the end.
+    # we can remove them from the file hash at the end.
     my @files_found;
 
     # Keep track of the groups that we find.
@@ -330,7 +330,7 @@ sub getGroups {
         $file->close() if $file_opened;
     }
 
-    # Clean out the $filenames list.
+    # Clean out the file list.
     $self->removeFiles($files,\@files_found);
 
     #print STDERR "\nFound ",scalar(@groups)," groups.\n";

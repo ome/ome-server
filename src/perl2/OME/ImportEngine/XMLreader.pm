@@ -66,7 +66,7 @@ my $file;
 	logdbg "debug", ref ($self)."->getGroups: XML files: ".scalar @outlist;
 
 
-    # Clean out the $filenames list.
+    # Clean out the file list.
     $self->removeFiles($fhash,\@outlist);
 
 	return \@outlist;

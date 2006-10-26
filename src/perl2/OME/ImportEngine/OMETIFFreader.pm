@@ -117,6 +117,7 @@ sub getGroups {
 	my @inlist = values %$fhash;
 	my @outlist;
 	my $file;
+  my $file_id;
 	my $filename;
 
 	# create XML parser
@@ -214,16 +215,17 @@ sub getGroups {
 		$pixelsElement->setAttribute('Repository', $repositoryLSID);
 
 		# save parameters needed later for the actual import
-		$filename = $file->getFilename();
-		$self->{$filename}->{'CA_doc'} = $CA_doc;
-		$self->{$filename}->{'pixelsElement'} = $pixelsElement;
-		$self->{$filename}->{'dimOrder'} = $dimOrder;
-		$self->{$filename}->{'tiffData'} = \@tiffData;
+    $file_id = $file->getFileID();
+		$self->{$file_id}->{'CA_doc'} = $CA_doc;
+		$self->{$file_id}->{'pixelsElement'} = $pixelsElement;
+		$self->{$file_id}->{'dimOrder'} = $dimOrder;
+		$self->{$file_id}->{'tiffData'} = \@tiffData;
 
 		# passed all tests; add file to corresponding group list
 		push (@{$groups->{$pixelsID}}, $file);
+		$filename = $file->getFilename();
 		logdbg "debug", "OME-TIFF: $filename parsed successfully as OME-TIFF";
-		delete $fhash->{$filename};
+		delete $fhash->{$file_id};
 	}
 
 	# construct output group list
@@ -278,11 +280,12 @@ sub importGroup {
 	# process each TIFF file
 	my %original_files;
 	foreach my $file (@$groupList) {
+    my $file_id = $file->getFileID();
 		my $filename = $file->getFilename();
 		logdbg "debug", "OME-TIFF: importGroup: filename=$filename";
 
 		# get TiffData element(s) stored earlier
-		my @tiffData = @{$self->{$filename}->{'tiffData'}};
+		my @tiffData = @{$self->{$file_id}->{'tiffData'}};
 
 		foreach my $td (@tiffData) {
 			my $firstZ = $td->getAttribute('FirstZ');

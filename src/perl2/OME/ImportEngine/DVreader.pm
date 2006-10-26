@@ -281,7 +281,7 @@ sub getGroups {
 		$file->close();
 	}
 
-    # Clean out the $filenames list.
+    # Clean out the file list.
     $self->removeFiles($fhash,\@files_found);
 
     return \@files_found;

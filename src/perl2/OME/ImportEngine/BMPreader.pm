@@ -133,14 +133,15 @@ sub getGroups {
     my $self = shift;
     my $fref = shift;
     my @outlist;
-    my ($filename,$file);
+    my ($file_id,$file);
+    my $filename;
 	 my %BMPs;
 logdbg "debug", ref ($self)."->getGroups: CHECKING FILES";
 	
 	# ignore any non-bmp files.
-	while ( ($filename,$file) = each %$fref ) {
+	while ( ($file_id,$file) = each %$fref ) {
 		if (defined(verifyBMP($file))) {
-         $BMPs{$filename} = $file;
+         $BMPs{$file_id} = $file;
          logdbg "debug", ref($self)."->getGroups: Adding file: $file";
       }
 	}
@@ -174,10 +175,11 @@ logdbg "debug", ref ($self)."->getGroups: CHECKING FILES";
     				push (@groupList, $file);
     				
     				# delete the file from the hash, so it's not processed by other importers
-    				$filename = $file->getFilename();
+            $filename = $file->getFilename();
+    				$file_id = $file->getFileID();
 					logdbg "debug",  "deleting $filename in group $name";
-					delete $fref->{ $filename };
-					delete $BMPs{ $filename };
+					delete $fref->{ $file_id };
+					delete $BMPs{ $file_id };
     			}
     		}
     	}
@@ -193,8 +195,9 @@ logdbg "debug", ref ($self)."->getGroups: CHECKING FILES";
     }
   
     # Now look at the rest of the files in the list to see if there area any other bmps.
-    foreach $file ( values %BMPs ) {    	
+    foreach $file ( values %BMPs ) {
     	
+      $file_id = $file->getFileID();
     	$filename = $file->getFilename();
     	my $basename = $self->nameOnly($filename);
     	my $group;
@@ -213,8 +216,8 @@ logdbg "debug", ref ($self)."->getGroups: CHECKING FILES";
     		nTfiles  => 1,
     	});
 		logdbg "debug",  ref($self) ."->getGroups: deleting $filename in singleton group $basename";
-		delete $fref->{ $filename };
-		delete $BMPs{ $filename };
+		delete $fref->{ $file_id };
+		delete $BMPs{ $file_id };
     }
 	
     return \@outlist;

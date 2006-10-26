@@ -143,12 +143,13 @@ sub getGroups {
     my $fref = shift;
     my @outlist;
     my $xref;
-	my ($filename,$file);
+    my ($file_id,$file);
+    my $filename;
 	my %TIFFs;
 	
 	# ignore any non-tiff files.
-	while ( ($filename,$file) = each %$fref ) {
-		$TIFFs{$filename} = $file if defined(verifyTiff($file));
+	while ( ($file_id,$file) = each %$fref ) {
+		$TIFFs{$file_id} = $file if defined(verifyTiff($file));
 	}
 
     # Group files with recognized patterns together
@@ -180,10 +181,11 @@ sub getGroups {
     				push (@groupList, $file);
     				
     				# delete the file from the hash, so it's not processed by other importers
+            $file_id = $file->getFileID();
     				$filename = $file->getFilename();
 					logdbg "debug",  "deleting $filename in group $name";
-					delete $fref->{ $filename };
-					delete $TIFFs{ $filename };
+					delete $fref->{ $file_id };
+					delete $TIFFs{ $file_id };
     			}
     		}
     	}
@@ -201,6 +203,7 @@ sub getGroups {
     # Now look at the rest of the files in the list to see if you have any other tiffs.
     foreach $file ( values %TIFFs ) {    	
     	
+      $file_id = $file->getFileID();
     	$filename = $file->getFilename();
     	my $basename = $self->nameOnly($filename);
     	my $group;
@@ -219,8 +222,8 @@ sub getGroups {
     		nTfiles  => 1,
     	});
 		logdbg "debug",  "deleting $filename in singleton group $basename";
-		delete $fref->{ $filename };
-		delete $TIFFs{ $filename };
+		delete $fref->{ $file_id };
+		delete $TIFFs{ $file_id };
     }
 	
     return \@outlist;
@@ -275,8 +278,6 @@ sub importGroup {
 	my $tag0 =  readTiffIFD($file, 0);
 	$file->close();
 	
-	my $filename = $file->getFilename();
-    
 	my $sizeX = $tag0->{TAGS->{ImageWidth}}->[0];
 	my $sizeY = $tag0->{TAGS->{ImageLength}}->[0];
 	my $sizeZ = $group->{nZfiles};

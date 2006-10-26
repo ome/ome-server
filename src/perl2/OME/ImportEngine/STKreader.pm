@@ -218,16 +218,17 @@ sub getGroups
     my $fref = shift;
     my @outlist;
     my $xref;
-	my ($filename,$file);
+    my ($file_id,$file);
+    my $filename;
 	my %STKs;
 	my $uic2 = UIC2;
 
 	# ignore any non-stk files.
-	while ( ($filename,$file) = each %$fref ) {
+	while ( ($file_id,$file) = each %$fref ) {
 		# STK images are TIFF images with a defined UIC tag
 		if (defined(verifyTiff($file))) {
 			my $tag0 = readTiffIFD( $file,0 );
-			$STKs{$filename} = $file if exists ($tag0->{$uic2}) and defined $tag0->{$uic2};
+			$STKs{$file_id} = $file if exists ($tag0->{$uic2}) and defined $tag0->{$uic2};
 		}
 	}
 
@@ -261,10 +262,11 @@ sub getGroups
     				push (@groupList, $file);
     				
     				# delete the file from the hash, so it's not processed by other importers
+            $file_id = $file->getFileID();
     				$filename = $file->getFilename();
 					logdbg "debug",  "deleting $filename in group $name";
-					delete $fref->{ $filename };
-					delete $STKs{ $filename };
+					delete $fref->{ $file_id };
+					delete $STKs{ $file_id };
     			}
     		}
     	}
@@ -283,6 +285,7 @@ sub getGroups
     # have any single-file STKs.
     foreach $file ( values %STKs ) {    	
     	
+      $file_id = $file->getFileID();
     	$filename = $file->getFilename();
     	my $basename = $self->nameOnly($filename);
     	my $group;
@@ -301,8 +304,8 @@ sub getGroups
     		nTfiles  => 1,
     	});
 		logdbg "debug",  "deleting $filename in singleton group $basename";
-		delete $fref->{ $filename };
-		delete $STKs{ $filename };
+		delete $fref->{ $file_id };
+		delete $STKs{ $file_id };
     }
 	
     return \@outlist;
@@ -349,7 +352,6 @@ sub importGroup {
 	$file->open('r');
 	my $tag0 = readTiffIFD( $file,0 );
     
-	my $filename = $file->getFilename();
 	my $basename = $group->{BaseName};
     
 

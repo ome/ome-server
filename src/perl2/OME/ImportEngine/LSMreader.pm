@@ -75,16 +75,17 @@ sub getGroups
     my $fref = shift;
     my @outlist;
     my $xref;
-	my ($filename,$file);
+    my ($file_id,$file);
+    my $filename;
 	my %LSMs;
 	my $lsm = LSM;
 
 	# ignore any non-lsm files.
-	while ( ($filename,$file) = each %$fref ) {
+	while ( ($file_id,$file) = each %$fref ) {
 		# LSM images are TIFF images with a defined LSM tag
 		if (defined(verifyTiff($file))) {
 			my $tag0 = readTiffIFD( $file,0 );
-			$LSMs{$filename} = $file if defined($tag0->{$lsm}->[0]);
+			$LSMs{$file_id} = $file if defined($tag0->{$lsm}->[0]);
 		}
 	}
 
@@ -118,10 +119,11 @@ sub getGroups
     				push (@groupList, $file);
     				
     				# delete the file from the hash, so it's not processed by other importers
+            $file_id = $file->getFileID();
     				$filename = $file->getFilename();
 					logdbg "debug",  "deleting $filename in group $name";
-					delete $fref->{ $filename };
-					delete $LSMs{ $filename };
+					delete $fref->{ $file_id };
+					delete $LSMs{ $file_id };
     			}
     		}
     	}
@@ -138,8 +140,9 @@ sub getGroups
     
     # Now look at the rest of the files in the list to see if we
     # have any single-file LSMs.
-    foreach $file ( values %LSMs ) {    	
+    foreach $file ( values %LSMs ) {
     	
+      $file_id = $file->getFileID();
     	$filename = $file->getFilename();
     	my $basename = $self->nameOnly($filename);
     	my $group;
@@ -158,8 +161,8 @@ sub getGroups
     		nTfiles  => 1,
     	});
 		logdbg "debug",  "deleting $filename in singleton group $basename";
-		delete $fref->{ $filename };
-		delete $LSMs{ $filename };
+		delete $fref->{ $file_id };
+		delete $LSMs{ $file_id };
     }
 	
     return \@outlist;

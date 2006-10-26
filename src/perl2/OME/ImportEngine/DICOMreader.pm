@@ -131,11 +131,12 @@ sub getGroups {
     my $fref = shift;
     my @outlist;
     my %DICOMs;
-	my ($filename,$file);
+    my ($file_id,$file);
+    my $filename;
 
 	# ignore any non-dicom files.
-	while ( ($filename,$file) = each %$fref ) {
-		$DICOMs{$filename} = $file if $self->isDICOM($file);
+	while ( ($file_id,$file) = each %$fref ) {
+		$DICOMs{$file_id} = $file if $self->isDICOM($file);
 	}
 
     # Group files with recognized patterns together
@@ -155,9 +156,9 @@ sub getGroups {
 			
 			# delete the file from the hash, so it's not processed by other importers
 			push (@groupList, $file);
-    		$filename = $file->getFilename();
-			delete $fref->{ $filename };
-			delete $DICOMs{ $filename };
+    		$file_id = $file->getFileID();
+			delete $fref->{ $file_id };
+			delete $DICOMs{ $file_id };
 		}
     	push (@outlist, {
     		Files => \@groupList,
@@ -167,12 +168,13 @@ sub getGroups {
     }
     
     foreach my $file ( values %DICOMs ) {    			
+      $file_id = $file->getFileID();
     	$filename = $file->getFilename();
     	my $basename = $self->nameOnly($filename);
       	
         # it's in the DICOM format, so remove from input list, put on output list
-		delete $fref->{ $filename };
-		delete $DICOMs{ $filename };
+		delete $fref->{ $file_id };
+		delete $DICOMs{ $file_id };
     	push (@outlist, {
     		Files => [$file],
     		BaseName => $basename
