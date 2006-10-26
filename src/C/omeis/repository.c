@@ -529,7 +529,7 @@ int bigEndian(void)
 
 void byteSwap (unsigned char *theBuf, size_t length, char bp)
 {
-char  tmp;
+unsigned char  tmp;
 unsigned char *maxBuf = theBuf+(length*bp);
 	
 	switch (bp) {

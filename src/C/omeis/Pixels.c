@@ -1106,7 +1106,7 @@ unsigned long written=0;
 					}
 					memcpy (swap_buf, pix_P, nBytes);
 					byteSwap (swap_buf, chunk_size, bp);
-					memcpy (IO_buf+myPixels->IO_buf_off, pix_P, nBytes);
+					memcpy (IO_buf+myPixels->IO_buf_off, swap_buf, nBytes);
 					written += chunk_size;
 					pix_P += nBytes;
 					myPixels->IO_buf_off += nBytes;
