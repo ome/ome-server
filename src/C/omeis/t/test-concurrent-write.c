@@ -59,7 +59,7 @@ OID *array;
 size_t arr_size,npix,j;
 PixelsRep *thePixels;
 char command[256];
-
+OID newID,finishID;
 	
 	if (chdir (OMEIS_TEST_ROOT)) {
 		OMEIS_ReportError ("Initialization",NULL, (OID)0, "Could not change working directory to %s: %s",
@@ -90,6 +90,7 @@ char command[256];
 			OMEIS_ReportError ("test-concurrent-write", NULL, 0, "NewPixels failed.");
 			exit (-1);
 		}
+		newID = thePixels->ID;
 
 		for (j=0; j < npix; j++) {
 			array[j] = rand();
@@ -105,9 +106,12 @@ char command[256];
 		thePixels->IO_buf = NULL;
 		
 
-		if (! FinishPixels (thePixels, 0) ) {
+		if (! (finishID = FinishPixels (thePixels, 0)) ) {
 			OMEIS_ReportError ("test-concurrent-write", NULL, 0, "Failure calling FinishPixels");
 		}
+//		if (newID != finishID) {
+//			fprintf (stderr,"%20llu is a duplicate of %20llu\n",newID,finishID);
+//		}
 
 //		ExpungePixels (thePixels);
 		freePixelsRep (thePixels);
