@@ -68,7 +68,8 @@ sub import_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
     my $command_name = $self->commandName($commands);
-    
+    my $session = $self->getSession(); # to print headers
+
     $self->printHeader();
     print <<"USAGE";
 Usage:
@@ -100,23 +101,17 @@ Options:
       common images such as TIFFs.
 
       Permitted Values:
-      OME::ImportEngine::OMETIFFreader
-      OME::ImportEngine::MetamorphHTDFormat
-      OME::ImportEngine::DVreader
-      OME::ImportEngine::STKreader
-      OME::ImportEngine::BioradReader
-      OME::ImportEngine::LSMreader
-      OME::ImportEngine::TIFFreader
-      OME::ImportEngine::BMPreader
-      OME::ImportEngine::DICOMreader
-      OME::ImportEngine::XMLreader
-
+USAGE
+	my $formats = $session->Configuration()->import_formats();
+	print "      $_\n" foreach (@$formats);
+	print <<"MORE_USAGE";
+	
   -r, --reimport
       Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
       XML files.
 
-USAGE
+MORE_USAGE
 }
 
 
