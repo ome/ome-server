@@ -45,17 +45,11 @@
 	mwSize, mwIndex, mwSignedIndex that were introduced with MATLAB 2006b
 	but we need to maintain backwards compatiblity.
 */
-#include "tmwtypes.h"
-#ifndef mwSize
+#ifdef PRE_73
 typedef int mwSize;
-#endif
-#ifndef mwIndex
 typedef int mwIndex;
-#endif
-#ifndef mwSignedIndex
 typedef int mwSignedIndex;
 #endif
-
 
 #include "stdlib.h"
 #include "string.h"

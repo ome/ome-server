@@ -31,8 +31,9 @@ use strict;
 use Getopt::Long;
 use ExtUtils::MakeMaker;
 
-my ($matlab_lib, $matlab_include);
-GetOptions ('lib=s'      => \$matlab_lib,
+my ($matlab_version, $matlab_lib, $matlab_include);
+GetOptions ('version=s' => \$matlab_version,
+			'lib=s'      => \$matlab_lib,
 			'include=s'  => \$matlab_include);
 			
 die "cmd-line parameters -lib and -include must be specified. \n".
@@ -42,7 +43,10 @@ die "cmd-line parameters -lib and -include must be specified. \n".
 my $matlab_lib_path = $matlab_lib;
 $matlab_lib_path = $1
 	if ($matlab_lib_path =~ m/-L(\S+)/ );
-				
+
+my $define = '';
+$define = '-DPRE_73' unless ($matlab_version =~ /7\.3\.0.+/); 
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
@@ -51,7 +55,7 @@ WriteMakefile(
     'VERSION_FROM'	=> '../../OME.pm', # finds $VERSION
     'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
     'LIBS'		    => ["$matlab_lib -L/usr/local/lib -L/sw/lib"], # e.g., '-lm'
-    'DEFINE'		=> '', # e.g., '-DHAVE_SOMETHING'
+    'DEFINE'		=> $define,
     'INC'		    => "$matlab_include", # e.g., '-I/usr/include/other'
     'realclean'     => {FILES => '../blib'},
     'clean'         => {FILES => '../blib'},
