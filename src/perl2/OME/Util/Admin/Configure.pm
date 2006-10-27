@@ -165,9 +165,10 @@ BLURB
         $confirm_all = 1;
     }
     
-	$lsid = $environment->lsid ($lsid) or croak "Could not get LSID url from environment\n";
 	
 	my $conf = $session->Configuration() ;
+	$lsid = $environment->lsid ($lsid) or $lsid = $conf->lsid_authority() or
+		croak "Could not get LSID url from environment or configuration\n";
 
 	my $omeis_repository = $conf->repository();
 	my $omeis_repository_url = $omeis_repository->ImageServerURL();
