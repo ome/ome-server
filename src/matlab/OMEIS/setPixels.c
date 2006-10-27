@@ -3,6 +3,7 @@
 
 #include "mex.h"
 #include "matrix.h"
+#include "ome-Matlab.h" /* backwards compatiblity to mwSize/mwIndex */
 
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
@@ -91,7 +92,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	
 	/* check dimension and class check */
-	const int* dims = mxGetDimensions (copy_input_array);
+	const mwSize* dims = mxGetDimensions (copy_input_array);
 	switch (mxGetNumberOfDimensions (copy_input_array)) {
 		char err_str[128];
 		case 5:

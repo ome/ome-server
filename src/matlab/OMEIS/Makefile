@@ -4,9 +4,9 @@ MEX       = mex
 
 architecture = $(shell uname)
 ifeq ($(architecture),Darwin)
-	MEX_FLAGS = -O -inline -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEISMATLAB CC=gcc-4.0 LD=gcc-4.0
+	MEX_FLAGS = -O -inline -I../ -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEISMATLAB CC=gcc-4.0 LD=gcc-4.0
 else
-	MEX_FLAGS = -O -inline -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEISMATLAB
+	MEX_FLAGS = -O -inline -I../ -I../../C/omeis-http/ -L../../C/omeis-http  -lcurl -lhttpOMEISMATLAB
 endif
 
 targets: newPixels.mex* pixelsInfo.mex* finishPixels.mex* deletePixels.mex* \

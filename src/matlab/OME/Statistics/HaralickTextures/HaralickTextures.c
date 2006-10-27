@@ -64,8 +64,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	else
 		img = prhs[0];
 	
-	mrows = mxGetM(img) ;
-	ncols = mxGetN(img) ;
+	mrows = (int) mxGetM(img) ;
+	ncols = (int) mxGetN(img) ;
 	
 	if (!(mrows > 1) || !(ncols > 1))
 		mexErrMsgTxt("mb_texture requires an input image, not a scalar.\n") ;

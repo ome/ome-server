@@ -65,10 +65,7 @@ print "    Order:  ",$y->order(),"\n";
 print "    Dims:   ",join('x',@{$y->dimensions()}),"\n";
 print "    Values: (",join(',',@{$y->getAll()}),")\n";
 
-# what's the dimensions of a scalar? In previous versions of MATLAB it was 1x1
-# from 7.3 (2006b) it's 1x0. Go Figure.
-
-if ( ($y->class_name() eq "double") && ($y->order() eq  2) && ($y->getAll()->[0] eq 32)  ) {
+if ( ($y->class_name() eq "double") && ($y->order() eq  2) && ($y->dimensions()->[0] eq 1) && ($y->dimensions()->[1] eq 1) && ($y->getAll()->[0] eq 32)  ) {
 	print "Test Passed. Perl Matlab API is correctly installed.\n";
 	$engine->close();
 	exit (0);

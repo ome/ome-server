@@ -58,12 +58,14 @@
 #include "mex.h"
 #include "matrix.h"
 #include <math.h>
+#include "../../../ome-Matlab.h" /* backwards compatiblity to mwSize/mwIndex */
+
 #include <sys/types.h>
 #include <string.h>
 
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
-	const int* dims;
+	const mwSize* dims;
 	const mxArray*  img_mxArray;
 	const u_int8_t* img;
 	u_int8_t* img_stain1;
@@ -117,7 +119,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	if (!(dims[0] > 1) || !(dims[1] > 1))
 		mexErrMsgTxt("colour_deconvolution requires an input image, not a scalar.\n") ;
 		
-	int num_of_dims = mxGetNumberOfDimensions(prhs[0]);
+	mwSize num_of_dims = mxGetNumberOfDimensions(prhs[0]);
 	if ((num_of_dims != 3) && (num_of_dims != 4) ) {		
 		char err_str[128];
 		sprintf(err_str, "colour_deconvolution requires a 3D input image where the third dimension is channel. The current image is %dd)", num_of_dims);

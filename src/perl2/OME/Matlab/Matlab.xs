@@ -41,8 +41,25 @@
 #include "matrix.h"
 #include "engine.h"
 
+/* 
+	mwSize, mwIndex, mwSignedIndex that were introduced with MATLAB 2006b
+	but we need to maintain backwards compatiblity.
+*/
+#include "tmwtypes.h"
+#ifndef mwSize
+typedef int mwSize;
+#endif
+#ifndef mwIndex
+typedef int mwIndex;
+#endif
+#ifndef mwSignedIndex
+typedef int mwSignedIndex;
+#endif
+
+
 #include "stdlib.h"
 #include "string.h"
+
 typedef mxArray* OME__Matlab__Array;
 typedef Engine*  OME__Matlab__Engine;
 
@@ -224,7 +241,7 @@ newNumericScalar(package,value_ref,classID=mxDOUBLE_CLASS)
                 else
                 	value = atof(value_str);
                 	
-                pArray = mxCreateNumericMatrix(1,1,classID, complexity);
+                pArray = mxCreateNumericMatrix((mwSize) 1, (mwSize) 1,classID, complexity);
                 pr = mxGetData(pArray);
                 switch (classID)
                 {
@@ -288,7 +305,7 @@ newDoubleMatrix(package,m,n,complexity=mxREAL)
         int n
         mxComplexity complexity
         CODE:
-                RETVAL = mxCreateDoubleMatrix(m,n,complexity);
+                RETVAL = mxCreateDoubleMatrix((mwSize) m, (mwSize) n,complexity);
         OUTPUT:
                 RETVAL
 
@@ -298,7 +315,7 @@ newLogicalMatrix(package,m,n)
         int m
         int n
         CODE:
-                RETVAL = mxCreateLogicalMatrix(m,n);
+                RETVAL = mxCreateLogicalMatrix((mwSize) m,(mwSize) n);
         OUTPUT:
                 RETVAL
 
@@ -310,7 +327,7 @@ newNumericMatrix(package,m,n,classID=mxDOUBLE_CLASS,complexity=mxREAL)
         mxClassID classID
         mxComplexity complexity
         CODE:
-                RETVAL = mxCreateNumericMatrix(m,n,classID,complexity);
+                RETVAL = mxCreateNumericMatrix((mwSize) m,(mwSize) n,classID,complexity);
         OUTPUT:
                 RETVAL
 
@@ -349,7 +366,7 @@ newStructMatrix(package,m,n,field_names_ref)
                         fields[i] = SvPV(*aval,field_len);
                     }
                 }
-                RETVAL = mxCreateStructMatrix(m,n,numfields,fields);
+                RETVAL = mxCreateStructMatrix((mwSize) m,(mwSize) n,numfields,fields);
                 mxFree(fields);
         OUTPUT:
                 RETVAL
@@ -359,15 +376,15 @@ OME::Matlab::Array
 newLogicalArray(package,...)
         const char *package = NO_INIT;
         INIT:
-                int * dims;
-                int numdims, i;
+                mwSize * dims;
+                mwSize numdims, i;
         CODE:
                 if (items <= 1)
                     croak("newLogicalArray expects a list of dimensions");
-                numdims = items-1;
-                dims = mxCalloc(numdims,sizeof(int));
+                numdims = (mwSize) items-1;
+                dims = mxCalloc(numdims,sizeof(mwSize));
                 for (i = 0; i < numdims; i++)
-                    dims[i] = (int) SvIV(ST(i+1));
+                    dims[i] = (mwSize) ((int) SvIV(ST(i+1)));
                 RETVAL = mxCreateLogicalArray(numdims,dims);
                 mxFree(dims);
         OUTPUT:
@@ -405,7 +422,7 @@ newStringArray(package, strings_ref)
                     }
                 }
 
-                RETVAL = mxCreateCharMatrixFromStrings(num_strings, strings);
+                RETVAL = mxCreateCharMatrixFromStrings((mwSize) num_strings, strings);
                 mxFree(strings);
         OUTPUT:
                 RETVAL
@@ -416,15 +433,15 @@ newNumericArray(package,classID,complexity,...)
         mxClassID classID
         mxComplexity complexity
         INIT:
-                int * dims;
-                int numdims, i;
+                mwSize * dims;
+                mwSize numdims, i;
         CODE:
                 if (items <= 3)
                     croak("newNumericArray expects a list of dimensions");
-                numdims = items-3;
+                numdims = (mwSize) items-3;
                 dims = mxCalloc(numdims,sizeof(int));
                 for (i = 0; i < numdims; i++)
-                    dims[i] = (int) SvIV(ST(i+3));
+                    dims[i] = (mwSize) ((int) SvIV(ST(i+3)));
                 RETVAL = mxCreateNumericArray(numdims,dims,classID,complexity);
                 mxFree(dims);
         OUTPUT:
@@ -458,7 +475,7 @@ int
 order(pArray)
         OME::Matlab::Array pArray
         CODE:
-                RETVAL = mxGetNumberOfDimensions(pArray);
+                RETVAL = (int) mxGetNumberOfDimensions(pArray);
         OUTPUT:
                 RETVAL
 
@@ -468,15 +485,15 @@ dimensions(pArray)
         INIT:
                 AV * dims;
                 int numdims;
-                const int * idims;
+                const mwSize * mwdims;
                 int i;
         CODE:
                 dims = (AV *) sv_2mortal((SV *) newAV());
-                numdims = mxGetNumberOfDimensions(pArray);
-                idims = mxGetDimensions(pArray);
+                numdims = (int) mxGetNumberOfDimensions(pArray);
+                mwdims = mxGetDimensions(pArray);
                 for (i = 0; i < numdims; i++)
                 {
-                    av_push(dims,newSViv(*idims++));
+                    av_push(dims,newSViv((int) (*mwdims++)));
                 }
                 RETVAL = newRV((SV *) dims);
         OUTPUT:
@@ -644,8 +661,10 @@ double
 get(pArray,...)
         OME::Matlab::Array pArray
         INIT:
-                int * subs;
-                int numsubs, numdims, i, cid, index;
+                int numsubs, i, cid;
+                mwIndex * subs;
+                mwSize numdims;
+                mwIndex index;
                 void * pr;
         CODE:
                 if (items < 2)
@@ -663,12 +682,12 @@ get(pArray,...)
                     croak("get: number of subscripts doesn't match number of dimensions");
                 }
 
-                subs = mxCalloc(numsubs,sizeof(int));
-                for (i = 0; i < numsubs; i++)
-                    subs[i] = (int) SvIV(ST(i+1));
+                subs = mxCalloc(numdims,sizeof(mwIndex));
+                for (i = 0; i < numdims; i++)
+                    subs[i] = (mwIndex) ((int) SvIV(ST(i+1)));
 
                 cid = mxGetClassID(pArray);
-                index = mxCalcSingleSubscript(pArray,numsubs,subs);
+                index = mxCalcSingleSubscript(pArray,numdims,subs);
                 pr = mxGetData(pArray);
                 mxFree(subs);
 
@@ -715,8 +734,9 @@ void
 set(pArray,...)
         OME::Matlab::Array pArray
         INIT:
-                int * subs;
-                int numsubs, numdims, i, cid, index;
+                mwIndex * subs;
+                int numsubs, i, cid, index;
+                mwSize numdims;
                 
                 SV* value_ref;
                 char* value_str;
@@ -739,9 +759,9 @@ set(pArray,...)
                     croak("set: number of subscripts doesn't match number of dimensions");
                 }
         CODE:
-                subs = mxCalloc(numsubs,sizeof(int));
+                subs = mxCalloc(numsubs,sizeof(mwIndex));
                 for (i = 0; i < numsubs; i++)
-                    subs[i] = (int) SvIV(ST(i+1));
+                    subs[i] = (mwIndex) ((int) SvIV(ST(i+1)));
 
                 value_ref = ST(items-1);
                 value_str = SvPV(value_ref,len);
@@ -1078,7 +1098,7 @@ getField(pArray,index,field_number)
         int index
         int field_number
         CODE:
-            RETVAL = mxGetFieldByNumber(pArray,index,field_number);
+            RETVAL = mxGetFieldByNumber(pArray,(mwIndex) index,field_number);
         OUTPUT:
             RETVAL
 
@@ -1089,7 +1109,7 @@ setField(pArray,index,field_number,pValue)
         int field_number
         OME::Matlab::Array pValue;
         CODE:
-            mxSetFieldByNumber(pArray,index,field_number,pValue);
+            mxSetFieldByNumber(pArray,(mwIndex) index,field_number,pValue);
         OUTPUT:
 
 int
@@ -1105,7 +1125,7 @@ getFieldName(pArray,index)
         OME::Matlab::Array pArray
         int index
         CODE:
-            RETVAL = mxGetFieldNameByNumber(pArray,index);
+            RETVAL = mxGetFieldNameByNumber(pArray, (mwIndex) index);
         OUTPUT:
             RETVAL
 
@@ -1114,7 +1134,7 @@ getCell(pArray,index)
         OME::Matlab::Array pArray
         int index
         CODE:
-            RETVAL = mxGetCell(pArray,index);
+            RETVAL = mxGetCell(pArray, (mwIndex) index);
         OUTPUT:
             RETVAL
             

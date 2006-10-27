@@ -3,6 +3,7 @@
 
 #include "mex.h"
 #include "matrix.h"
+#include "ome-Matlab.h" /* backwards compatiblity to mwSize/mwIndex */
 
 #include "httpOMEIS.h"
 #include "httpOMEISaux.h"
@@ -61,8 +62,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	}
 	
 	/* figure out dimensions */
-	int dims[5]; dims[0] = head->dx; dims[1] = head->dy;
-		dims[2] = head->dz; dims[3] = head->dc; dims[4] = head->dt;
+	mwSize dims[5]; dims[0] = (mwSize) head->dx; dims[1] = (mwSize) head->dy;
+		dims[2] = (mwSize) head->dz; dims[3] = (mwSize) head->dc; dims[4] = (mwSize) head->dt;
 		
 	if (!(pixels = getPixels (is, ID))) {
 		/* clean up */
@@ -77,7 +78,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	}
 	
 	/* attach pixels from OMEIS to MATLAB array */
-	int tmp_dims[2] = {1,1};
+	mwSize tmp_dims[2] = {1,1};
 	plhs[0] = mxCreateNumericArray (2, tmp_dims, OMEIStoMATLABDatatype(head), mxREAL);
 	
 	mxSetData (plhs[0], pixels);

@@ -9,7 +9,7 @@ omeis_http:
 	
 haralick:
 	make -C OME/Statistics/haralick/
-
+	
 zernike:
 	make -C OME/Statistics/zernike/
 	

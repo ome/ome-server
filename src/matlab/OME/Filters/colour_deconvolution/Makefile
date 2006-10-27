@@ -5,8 +5,8 @@ MEX_FILE  = colour_deconvolution
 MEX_EXT   = c # or cpp
 MEX_FLAGS = -O -inline
 
-all: $(INC) $(LIB) $(MEX_FILE).$(MEX_EXT)
-	$(MEX) $(MEX_FLAGS) $(MEX_FILE).$(MEX_EXT) $(LIB)
+all: $(MEX_FILE).$(MEX_EXT)
+	$(MEX) $(MEX_FLAGS) $(LIB) $(MEX_FILE).$(MEX_EXT) 
 
 # Utilities for cleaning up your directory.  
 # 'make clean' removes emacs backup files
