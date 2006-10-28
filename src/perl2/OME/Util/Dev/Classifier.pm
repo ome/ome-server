@@ -333,7 +333,8 @@ sub compile_sigs {
 	$engine->putVariable('category_names_char_array',$category_names_array);
 	# Convert the rectangualar string array that has null terminated strings into a cell array.
 	# Cell arrays are easier to deal with for strings.
-	$engine->eval( "for i=1:size( category_names_char_array, 1 ),".
+	$engine->eval( "category_names=''; ".
+				   "for i=1:size( category_names_char_array, 1 ),".
 	               "category_names{i} = sprintf( '%s', category_names_char_array(i,:) ); ".
 	               "end;" );
 	               
