@@ -147,7 +147,8 @@ typedef struct {
 	OID FileID;
 	u_int8_t isBigEndian;
 	u_int8_t isTIFF;
-	u_int8_t pad1[6];  /* 64-bit aligned for the next part. */
+	u_int8_t isHflipped;
+	u_int8_t pad1[5];  /* 64-bit aligned for the next part. */
 	union {
 		tiffConvertSpec tiff;
 		fileConvertSpec file;
@@ -271,6 +272,15 @@ ConvertTIFF (
 
 size_t
 ConvertFile (
+	PixelsRep *myPixels,
+	FileRep   *myFile,
+	size_t     file_offset,
+	size_t     pix_offset,
+	size_t     nPix,
+	char       writeRec);
+
+size_t
+ConvertFileHflipped (
 	PixelsRep *myPixels,
 	FileRep   *myFile,
 	size_t     file_offset,

@@ -652,8 +652,13 @@ int i;
 		} else if (convRec.FileID) {
 			if ( (convRec.isBigEndian && !bigEndian()) || (!convRec.isBigEndian && bigEndian()) )
 				myPixels->doSwap = 1;
-			nIO = ConvertFile (myPixels, myFile,
-				(size_t)convRec.spec.file.file_offset, (size_t)convRec.spec.file.pix_offset, (size_t)convRec.spec.file.nPix, 0);
+			if (convRec.isHflipped)
+				nIO = ConvertFileHflipped (myPixels, myFile,
+					(size_t)convRec.spec.file.file_offset, (size_t)convRec.spec.file.pix_offset, (size_t)convRec.spec.file.nPix, 0);
+			else
+				nIO = ConvertFile (myPixels, myFile,
+					(size_t)convRec.spec.file.file_offset, (size_t)convRec.spec.file.pix_offset, (size_t)convRec.spec.file.nPix, 0);
+
 			if (nIO != (size_t)convRec.spec.file.nPix) {
 				OMEIS_DoError ("Error recovering %s: %s. Expected to read %llu pixels, but got only %llu.",
 					myPixels->path_rep, strerror( errno ), (unsigned long long)convRec.spec.file.nPix, (unsigned long long)nIO);
@@ -2121,6 +2126,92 @@ char isBigEndian=1,bp;
 	return (nIO);
 }
 
+size_t ConvertFileHflipped (
+	PixelsRep *myPixels,
+	FileRep   *myFile,
+	size_t     file_offset,
+	size_t     pix_offset,
+	size_t     nPix,
+	char       writeRec) {
+
+pixHeader *head;
+unsigned long nIO;
+convertFileRec convRec;
+FILE *convFileInfo;
+char convFileInfoPth[MAXPATHLEN];
+char isBigEndian=1,bp;
+uint32 width, height;
+size_t local_pix_offset;
+int i;
+
+	if (!myFile || !myPixels) return (0);
+	if (! (head = myPixels->head) ) {
+		OMEIS_DoError ("ConvertFile [Horizontal Flipped] (PixelsID=%llu). Pixels header is not set.",(unsigned long long)myPixels->ID);
+		return (0);
+	}
+	bp = head->bp;
+
+	if ( myFile->size_rep < file_offset + (nPix*bp)) {
+		OMEIS_DoError ("ConvertFile [Horizontal Flipped] (PixelsID=%llu). Attempt to read past end of file ID=%llu.  File size=%lu,  Offset=%lu, # pixels=%lu (%lu bytes)",
+			(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID,
+			(unsigned long)(myFile->size_rep), (unsigned long)file_offset,
+			(unsigned long)nPix, (unsigned long)(nPix*bp));
+		return (0);
+	}
+
+	if ( pix_offset + (nPix*bp) > myPixels->size_rep) {
+		OMEIS_DoError ("ConvertFile [Horizontal Flipped] (PixelsID=%llu). Attempt to write past end of pixels.  Pixels size=%lu,  Pix offset=%lu, # pixels=%lu (%lu bytes)",
+			(unsigned long long)myPixels->ID, (unsigned long)(myPixels->size_rep), (unsigned long)pix_offset,
+			(unsigned long)nPix, (unsigned long)(nPix*bp));
+		return (0);
+	}
+
+	myPixels->IO_buf = (u_int8_t *) myFile->file_buf + file_offset;
+	myPixels->IO_buf_off = 0;	
+	/*
+		Unlike in convertFile() here we do multiple calls to DoPixelIO
+		to flip the rows around
+	*/
+	width = (uint32)(head->dx);
+	height = (uint32)(head->dy);
+	
+	/* go byte by byte through the file filling in pixels in reverse */
+	nIO = 0;
+	local_pix_offset = pix_offset + (height-1) * (width*head->bp);
+	for (i = 0; i < height; i++) {
+		nIO += DoPixelIO (myPixels, local_pix_offset, width, 'w');		
+		local_pix_offset  -= width*head->bp;
+	}
+	
+	if (nIO != nPix) {
+		OMEIS_DoError ("ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)",
+			nIO, (unsigned long)nPix);
+		return (nIO);
+	}
+
+
+	if (writeRec) {
+		memset(&convRec, 0, sizeof(convertFileRec));
+		if ( (myPixels->doSwap && bigEndian()) || (!myPixels->doSwap && !bigEndian()) ) isBigEndian = 0;
+		convRec.FileID                = (u_int8_t)  myFile->ID;
+		convRec.isBigEndian           = (u_int8_t)  isBigEndian;
+		convRec.isHflipped            = (u_int8_t)  1;
+		convRec.spec.file.file_offset = (u_int64_t) file_offset;
+		convRec.spec.file.pix_offset  = (u_int64_t) pix_offset;
+		convRec.spec.file.nPix        = (u_int64_t) nPix;
+
+		if (!openConvertFile (myPixels, 'a'))
+			OMEIS_DoError ("ConvertFile [Horizontal Flipped] (PixelsID=%llu). Couldn't open convert file=%s for writing.",
+				(unsigned long long)myPixels->ID,myPixels->path_conv);
+		else {
+			write (myPixels->fd_conv, (const void *)&convRec, sizeof (convertFileRec));
+			closeConvertFile (myPixels);
+		}
+	}
+
+	return (nIO);
+}
+
 size_t ConvertTIFF (
 	PixelsRep *myPixels,
 	FileRep   *myFile,
@@ -2353,7 +2444,7 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 		convRec.spec.tiff.dir_index = (u_int32_t) tiffDir;
 	
 		if (!openConvertFile (myPixels, 'a')) {
-			OMEIS_DoError ("ConvertFile (PixelsID=%llu). Couldn't open convert file=%s for writing.",
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). Couldn't open convert file=%s for writing.",
 				(unsigned long long)myPixels->ID,myPixels->path_conv);
 		} else {
 			write (myPixels->fd_conv, (const void *)&convRec, sizeof (convertFileRec));

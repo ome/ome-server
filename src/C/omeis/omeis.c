@@ -78,6 +78,7 @@ dispatch (char **param)
 	char *theParam,rorw='r',iam_BigEndian=1;
 	OID ID=0,resultID;
 	size_t offset=0, file_offset=0;
+	int flip_horizontal=0; /* optional parameter to ConvertPlane */
 	unsigned long long scan_off, scan_length, scan_ID;
 	unsigned char isLocalFile=0;
 	char *dims;
@@ -810,6 +811,10 @@ dispatch (char **param)
 				sscanf (theParam,"%llu",&scan_off);
 				file_offset = (size_t)scan_off;
 			}
+			
+			if ( (theParam = get_lc_param (param,"FlipHorizontal")) )
+				if (!strcmp (theParam,"1") || !strcmp (theParam,"true") )
+					flip_horizontal=1;
 
 			tiffDir=0;
 			if ( (theParam = get_param (param,"TIFFDirIndex")) ) {
@@ -887,8 +892,13 @@ dispatch (char **param)
 
 			if (m_val == M_CONVERTTIFF)
 				nIO = ConvertTIFF (thePixels, theFile, theZ, theC, theT, tiffDir, 1);
-			else
-				nIO = ConvertFile (thePixels, theFile, file_offset, offset, nPix, 1);
+			else {
+				/* must be M_CONVERTPLANE */
+				if (flip_horizontal) 
+					nIO = ConvertFileHflipped (thePixels, theFile, file_offset, offset, nPix, 1);
+				else
+					nIO = ConvertFile (thePixels, theFile, file_offset, offset, nPix, 1);
+			}
 			if (nIO != nPix) {
 				OMEIS_ReportError (method, "PixelsID", ID,
 					"Did not convert correct number of pixels.  Expected %llu, got %llu",
