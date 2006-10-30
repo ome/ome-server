@@ -470,7 +470,7 @@ sub convertStack {
 
 =head2 convertPlane
 
-	$pixels->convertPlane($file,$offset,$z,$c,$t,$bigEndian);
+	$pixels->convertPlane($file,$offset,$z,$c,$t,$bigEndian, $flippedHorizontal);
 
 Fills in a plane in this pixels file from another file.  The $file
 parameter should be an instance of the OME::File interface.  This is
@@ -493,13 +493,13 @@ defaults to network order (big-endian).
 =cut
 
 sub convertPlane {
-    my ($self,$file,$offset,$z,$c,$t,$bigEndian) = @_;
+    my ($self,$file,$offset,$z,$c,$t,$bigEndian, $flippedHorizontal) = @_;
     $self->SUPER::convertPlane($file,$offset,$z,$c,$t,$bigEndian)
       unless UNIVERSAL::isa($file,"OME::Image::Server::File");
     my $fileID = $file->getFileID();
     my $pixelsID = $self->[PIXELS_ID];
     OME::Image::Server->convertPlane($pixelsID,$z,$c,$t,
-                                     $fileID,$offset,$bigEndian);
+                                     $fileID,$offset,$bigEndian,$flippedHorizontal);
 }
 
 =head2 convertPlaneFromTIFF

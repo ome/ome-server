@@ -285,7 +285,8 @@ logdbg "debug",  ref($self) ."->importGroup: Reading $filename";
 				eval {
 					$file = shift( @$groupList );
 					logdbg "debug",  "shifted ".$file->getFilename();
-					$pix->convertPlane($file, $offset, $z, $c, $t,0);						
+					# the last 1 means we want to do a horizontal flip
+					$pix->convertPlane($file, $offset, $z, $c, $t, 0, 1);						
 				};
 				
 				die "convertPlane failed: $@\n" if $@;

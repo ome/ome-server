@@ -1311,7 +1311,7 @@ sub convertStack {
 
 	my $pixelsWritten = OME::Image::Server->
 	    convertPlane($pixelsID,$theZ,$theC,$theT,
-	                 $fileID,$offset,$bigEndian);
+	                 $fileID,$offset,$bigEndian,$flipHorizontal);
 
 Copies pixels from an original file into a new pixels file.  The
 original file should have been previously uploaded via the uploadFile
@@ -1340,14 +1340,15 @@ client code.
 sub convertPlane {
     my $proto = shift;
     my ($pixelsID,$theZ,$theC,$theT,
-        $fileID,$offset,$bigEndian) = @_;
+        $fileID,$offset,$bigEndian,$flipHorizontal) = @_;
     my %params = (Method   => 'ConvertPlane',
                   PixelsID => $pixelsID,
                   theZ     => $theZ,
                   theC     => $theC,
                   theT     => $theT,
                   FileID   => $fileID,
-                  Offset   => $offset);
+                  Offset   => $offset,
+                  FlipHorizontal => $flipHorizontal);
     $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
 
