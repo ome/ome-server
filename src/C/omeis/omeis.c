@@ -142,16 +142,17 @@ dispatch (char **param)
 			return (-1);
 		}
 	} else if (m_val != M_NEWPIXELS   &&
-			 m_val != M_FILEINFO      &&
-			 m_val != M_FILESHA1      &&
-			 m_val != M_READFILE      &&
-			 m_val != M_UPLOADFILE    &&
-			 m_val != M_IMPORTOMEFILE &&
-			 m_val != M_EXPORTOMEFILE &&
-			 m_val != M_ISOMEXML      &&
-			 m_val != M_DELETEFILE    &&
-			 m_val != M_GETLOCALPATH  &&
-		         m_val != M_ZIPFILES) {
+		m_val != M_FILEINFO      &&
+		m_val != M_FILESHA1      &&
+		m_val != M_READFILE      &&
+		m_val != M_UPLOADFILE    &&
+		m_val != M_IMPORTOMEFILE &&
+		m_val != M_EXPORTOMEFILE &&
+		m_val != M_ISOMEXML      &&
+		m_val != M_DELETEFILE    &&
+		m_val != M_GETLOCALPATH  &&
+		m_val != M_GETENDIAN     &&
+		m_val != M_ZIPFILES) {
 			OMEIS_ReportError (method, NULL, ID, "PixelsID Parameter missing");
 			return (-1);
 	}
@@ -793,6 +794,13 @@ dispatch (char **param)
 			result = check_xml_file( file_path );
 			fprintf (stdout,"%d\n",result);
 
+			break;
+		case M_GETENDIAN:
+			HTTP_ResultType ("text/plain");
+			if (bigEndian())
+				fprintf (stdout,"Big\n",result);
+			else
+				fprintf (stdout,"Little\n",result);
 			break;
 		case M_CONVERT:
 		case M_CONVERTSTACK:

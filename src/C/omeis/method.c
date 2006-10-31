@@ -103,6 +103,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "Composite") == 0) return M_COMPOSITE;
 	if (strcmp(m_name, "GetThumb") == 0) return M_GETTHUMB;
 	if (strcmp(m_name, "IsOMExml") == 0) return M_ISOMEXML;
+	if (strcmp(m_name, "GetNativeEndian") == 0) return M_GETENDIAN;
 
 	/* fprintf(stderr, "Unknown method '%s'.\n", m_name); */
 	return 0;  /* Unknown method */
