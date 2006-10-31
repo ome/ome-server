@@ -500,10 +500,13 @@ dispatch (char **param)
 					OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed");
 					return (-1);
 				}
-			} else strcpy (file_path,"");
+			} else {
+				OMEIS_ReportError (method, NULL, NULL, "A positive FileID or PixelsID parameter must be supplied");
+				return (-1);
+			}
 
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%s\n",file_path);
+			fprintf (stdout,"%s/%s\n",OMEIS_ROOT,file_path);
 
 			break;
 		case M_DELETEFILE:
