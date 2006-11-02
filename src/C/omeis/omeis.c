@@ -118,7 +118,6 @@ dispatch (char **param)
 	char *method;
 	unsigned int m_val;
 
-
 	if (! (method = get_param (param,"Method")) ) {
 		OMEIS_ReportError ("OMEIS", NULL, ID, "Method parameter missing");
 		return (-1);
@@ -152,6 +151,8 @@ dispatch (char **param)
 		m_val != M_DELETEFILE    &&
 		m_val != M_GETLOCALPATH  &&
 		m_val != M_GETENDIAN     &&
+		m_val != M_ISBIOFORMATS     &&
+		m_val != M_IMPORTBIOFORMATS     &&
 		m_val != M_ZIPFILES) {
 			OMEIS_ReportError (method, NULL, ID, "PixelsID Parameter missing");
 			return (-1);
@@ -501,7 +502,7 @@ dispatch (char **param)
 					return (-1);
 				}
 			} else {
-				OMEIS_ReportError (method, NULL, NULL, "A positive FileID or PixelsID parameter must be supplied");
+				OMEIS_ReportError (method, NULL, (OID)0, "A positive FileID or PixelsID parameter must be supplied");
 				return (-1);
 			}
 
@@ -798,6 +799,39 @@ dispatch (char **param)
 			fprintf (stdout,"%d\n",result);
 
 			break;
+
+		case M_ISBIOFORMATS:
+		/*
+		  omebf is responsible for reporting the error, including sending the http header.
+		*/
+			sprintf (file_path,"./omebf -test -http-response %s",get_param (param,"FileID"));
+			result = system (file_path);
+		/*
+		  The only error we get to report is failure to launch omebf, which is a return code of 127 in the lower 8 bits
+		  Well, technically other things could cause the shell to exit abnormally resulting in 127.
+		  Usually, non-127 means it made it all the way into the command, which means omebf handles the error.
+		*/
+			if (((signed char)(((result) >> 8) & 0xff)) == 127) {
+				OMEIS_ReportError (method, NULL, (OID)0, "BioFormats could not be executed with FileID=%s",get_param (param,"FileID"));
+			}
+			break;
+
+		case M_IMPORTBIOFORMATS:
+		/*
+		  omebf is responsible for reporting the error, including sending the http header.
+		*/
+			sprintf (file_path,"./omebf -http-response %s",get_param (param,"FileID"));
+			result = system (file_path);
+		/*
+		  The only error we get to report is failure to launch omebf, which is a return code of 127 in the lower 8 bits
+		  Well, technically other things could cause the shell to exit abnormally resulting in 127.
+		  Usually, non-127 means it made it all the way into the command, which means omebf handles the error.
+		*/
+			if (((signed char)(((result) >> 8) & 0xff)) == 127) {
+				OMEIS_ReportError (method, NULL, (OID)0, "BioFormats could not be executed with FileID=%s",get_param (param,"FileID"));
+			}
+			break;
+
 		case M_GETENDIAN:
 			HTTP_ResultType ("text/plain");
 			if (bigEndian())
@@ -1168,7 +1202,6 @@ void usage (void) {
 int main (int argc,char **argv) {
 char isCGI=0;
 char **in_params;
-
 	if (chdir (OMEIS_ROOT)) {
 		OMEIS_ReportError ("Initialization",NULL, (OID)0, "Could not change working directory to %s: %s",
 			OMEIS_ROOT,strerror (errno));

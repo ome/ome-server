@@ -94,4 +94,6 @@ get_method_by_name(char * m_name);
 #define M_GETTHUMB      64
 #define M_ISOMEXML      65
 #define M_GETENDIAN     66
+#define M_ISBIOFORMATS  67
+#define M_IMPORTBIOFORMATS  68
 
