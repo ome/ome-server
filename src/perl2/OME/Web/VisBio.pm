@@ -99,14 +99,15 @@ sub createOMEPage {
 	$jnlp .= "  <resources>\n";
 	$jnlp .= "    <j2se version=\"1.4+\" max-heap-size=\"512m\"/>\n";
 	$jnlp .= "    <jar href=\"visbio.jar\"/>\n";
-	$jnlp .= "    <jar href=\"bio_formats.jar\"/>\n";
+	$jnlp .= "    <jar href=\"bio-formats.jar\"/>\n";
 	$jnlp .= "    <jar href=\"commons-httpclient-2.0-rc2.jar\"/>\n";
 	$jnlp .= "    <jar href=\"commons-logging.jar\"/>\n";
 	$jnlp .= "    <jar href=\"forms-1.0.4.jar\"/>\n";
 	$jnlp .= "    <jar href=\"ij.jar\"/>\n";
 	$jnlp .= "    <jar href=\"looks-1.2.2.jar\"/>\n";
 	$jnlp .= "    <jar href=\"ome-java.jar\"/>\n";
-	$jnlp .= "    <jar href=\"visad.jar\"/>\n";
+	$jnlp .= "    <jar href=\"poi-loci.jar\"/>\n";
+	$jnlp .= "    <jar href=\"visad-lite.jar\"/>\n";
 	$jnlp .= "    <jar href=\"xmlrpc-1.2-b1.jar\"/>\n";
 	$jnlp .= "  </resources>\n";
 	$jnlp .= "  <application-desc main-class=\"loci.visbio.VisBio\">\n";
