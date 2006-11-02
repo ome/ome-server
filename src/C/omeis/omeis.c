@@ -496,11 +496,12 @@ dispatch (char **param)
 				strcpy (file_path,thePixels->path_rep);
 				freePixelsRep (thePixels);
 			} else if (fileID) {
-				strcpy (file_path,"Files/");
-				if (! getRepPath (fileID,file_path,0)) {
-					OMEIS_ReportError (method, "FileID", fileID, "getRepPath failed");
+				if ( !(theFile = GetFileRep (fileID,0,0)) ) {
+					OMEIS_ReportError (method, "FileID", fileID, "GetFileRep failed.");
 					return (-1);
 				}
+				strcpy (file_path,theFile->path_rep);
+				freeFileRep   (theFile);
 			} else {
 				OMEIS_ReportError (method, NULL, (OID)0, "A positive FileID or PixelsID parameter must be supplied");
 				return (-1);
@@ -802,9 +803,18 @@ dispatch (char **param)
 
 		case M_ISBIOFORMATS:
 		/*
+		  OmeisImporter.java likes its CLI params as a space-delimited list of FileIDs
+		*/
+			theParam = get_param (param,"FileID");
+			while (*theParam) {
+				if (*theParam == ',') *theParam = ' ';
+				theParam++;
+			}
+			theParam = get_param (param,"FileID");
+		/*
 		  omebf is responsible for reporting the error, including sending the http header.
 		*/
-			sprintf (file_path,"./omebf -test -http-response %s",get_param (param,"FileID"));
+			sprintf (file_path,"./omebf -test -http-response %s",theParam);
 			result = system (file_path);
 		/*
 		  The only error we get to report is failure to launch omebf, which is a return code of 127 in the lower 8 bits
@@ -812,15 +822,24 @@ dispatch (char **param)
 		  Usually, non-127 means it made it all the way into the command, which means omebf handles the error.
 		*/
 			if (((signed char)(((result) >> 8) & 0xff)) == 127) {
-				OMEIS_ReportError (method, NULL, (OID)0, "BioFormats could not be executed with FileID=%s",get_param (param,"FileID"));
+				OMEIS_ReportError (method, NULL, (OID)0, "BioFormats could not be executed with FileID=%s",theParam);
 			}
 			break;
 
 		case M_IMPORTBIOFORMATS:
 		/*
+		  OmeisImporter.java likes its CLI params as a space-delimited list of FileIDs
+		*/
+			theParam = get_param (param,"FileID");
+			while (*theParam) {
+				if (*theParam == ',') *theParam = ' ';
+				theParam++;
+			}
+			theParam = get_param (param,"FileID");
+		/*
 		  omebf is responsible for reporting the error, including sending the http header.
 		*/
-			sprintf (file_path,"./omebf -http-response %s",get_param (param,"FileID"));
+			sprintf (file_path,"./omebf -http-response %s",theParam);
 			result = system (file_path);
 		/*
 		  The only error we get to report is failure to launch omebf, which is a return code of 127 in the lower 8 bits
@@ -828,7 +847,7 @@ dispatch (char **param)
 		  Usually, non-127 means it made it all the way into the command, which means omebf handles the error.
 		*/
 			if (((signed char)(((result) >> 8) & 0xff)) == 127) {
-				OMEIS_ReportError (method, NULL, (OID)0, "BioFormats could not be executed with FileID=%s",get_param (param,"FileID"));
+				OMEIS_ReportError (method, NULL, (OID)0, "BioFormats could not be executed with FileID=%s",theParam);
 			}
 			break;
 
