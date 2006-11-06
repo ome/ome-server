@@ -348,9 +348,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	double cosz[3];
 	double len[3];
 	double q[9];
-	int rLUT[255];
-	int gLUT[255];
-	int bLUT[255];
 
 	for (i=0; i<3; i++){
 		/* normalise vector length */
@@ -415,13 +412,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	q[7] = -q[8] * V / A;
 	q[6] = -q[7] * cosy[0] / cosx[0] - q[8] * cosz[0] / cosx[0];
 
-	for (i=0; i<3; i++) {
-		for (j=0; j<256; j++) {
-			rLUT[255-j]=(int)(255.0 - (double)j * cosx[i]);
-			gLUT[255-j]=(int)(255.0 - (double)j * cosy[i]);
-			bLUT[255-j]=(int)(255.0 - (double)j * cosz[i]);
-		}
-	}
 	
 	/************************************************************************
 	* Apply the LUTs to the original RGB image to make some new stain images
