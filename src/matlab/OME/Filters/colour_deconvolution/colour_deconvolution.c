@@ -2,6 +2,8 @@
 	Translated from ImageJ Java Pluging into MATLAB MEX c code by
 	Tom Macura <tmacura@nih.gov>
 	July 21st, 2006
+	
+	6/Nov/2006 changed the code to also work with 16bit RGBs
 */
 
 /* G.Landini at bham ac uk
@@ -62,22 +64,21 @@
 
 #include <sys/types.h>
 #include <string.h>
+#include <stdlib.h>
 
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	const mwSize* dims;
 	const mxArray*  img_mxArray;
-	const u_int8_t* img;
-	u_int8_t* img_stain1;
-	u_int8_t* img_stain2;
-	u_int8_t* img_stain3;
-	
+	const u_int8_t* img = NULL;
+	const u_int16_t* img16 = NULL;
+
 	char* myStain;
 	if (nrhs != 2)
 		mexErrMsgTxt("\n [stain1, stain2, stain3] = colour_deconvolution (im, StainingMethod),\n\n"
-		"This function takes an RGB image and returns three uint8 images with separated stains.\n"
-		"If the specimen is stained with a 2 colour scheme (such as H & E) the 3rd image\n"
-		"represents the complimentary of the first two colours (i.e. green).\n"
+		"This function takes an RGB image (either 8/16bit) and returns three uint8/uint16 images\n"
+		"with separated stains. If the specimen is stained with a 2 colour scheme (such as H & E)\n"
+		"the 3rd image represents the complimentary of the first two colours (i.e. green).\n"
 		"\n"
 		"StainingMethod can be a struct defining stain vectors or a a string refering to\n"
 		"one of the built-in stain vectors.\n"
@@ -110,10 +111,13 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	else if (nlhs < 1)
 		mexErrMsgTxt ("colour_deconvolution returns at-least a single output.\n");
 	
-	if (!mxIsUint8(prhs[0]))
-		mexErrMsgTxt("colour_deconvolution requires the first input be uint8\n");
-	
-	img = (u_int8_t*) mxGetData(prhs[0]);
+	if (mxIsUint8(prhs[0]))
+		img = (u_int8_t*) mxGetData(prhs[0]);
+	else if (mxIsUint16(prhs[0]))
+		img16 = (u_int16_t*) mxGetData(prhs[0]);
+	else
+		mexErrMsgTxt("colour_deconvolution requires the first input be uint8 or uint16\n");
+
 	dims = mxGetDimensions(prhs[0]);
 	
 	if (!(dims[0] > 1) || !(dims[1] > 1))
@@ -338,17 +342,16 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	}
 	
 	/**********************************************************************
-	*  Convert the vectors into LUTs
+	*  Convert the stain vectors into the 'q' vector
 	***********************************************************************/
-	double leng, A, V, C, min, log255=log(255.0);
-	int i,j;
-
+	double leng, A, V, C, log255=log(255.0), log65535=log(65535.0), log16383=log(16383.0);
 	double cosx[3];
 	double cosy[3];
 	double cosz[3];
 	double len[3];
 	double q[9];
-
+	int i,j;
+	
 	for (i=0; i<3; i++){
 		/* normalise vector length */
 		cosx[i]=cosy[i]=cosz[i]=0.0;
@@ -414,40 +417,89 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 
 	
 	/************************************************************************
-	* Apply the LUTs to the original RGB image to make some new stain images
+	* Apply the 'q' vector to the original RGB image to make some new stain images
 	*************************************************************************/
-	plhs[0] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT8_CLASS, mxREAL);
-	img_stain1 = (u_int8_t*) mxGetData(plhs[0]);
-	plhs[1] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT8_CLASS, mxREAL);
-	img_stain2 = (u_int8_t*) mxGetData(plhs[1]);
-	plhs[2] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT8_CLASS, mxREAL);
-	img_stain3 = (u_int8_t*) mxGetData(plhs[2]);
+	if (img) { /* it's an 8bit img */
+		u_int8_t* img_stain1;
+		u_int8_t* img_stain2;
+		u_int8_t* img_stain3;
+
+		plhs[0] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT8_CLASS, mxREAL);
+		img_stain1 = (u_int8_t*) mxGetData(plhs[0]);
+		plhs[1] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT8_CLASS, mxREAL);
+		img_stain2 = (u_int8_t*) mxGetData(plhs[1]);
+		plhs[2] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT8_CLASS, mxREAL);
+		img_stain3 = (u_int8_t*) mxGetData(plhs[2]);
+		
+		int imagesize = dims[0] * dims[1];
+		for (i=0; i<imagesize;i++){
+			/* log transform the RGB data */
+			int R = img[i];
+			int G = img[i+imagesize];
+			int B = img[i+2*imagesize];
 	
-	int imagesize = dims[0] * dims[1];
-	for (i=0; i<imagesize;i++){
-		/* log transform the RGB data */
-		int R = img[i];
-		int G = img[i+imagesize];
-		int B = img[i+2*imagesize];
-		double Rlog = -((255.0*log(((double)R+1)/255.0))/log255);
-		double Glog = -((255.0*log(((double)G+1)/255.0))/log255);
-		double Blog = -((255.0*log(((double)B+1)/255.0))/log255);
-		
-		for (j=0; j<3; j++){
-			/* rescale to match original paper values */
-			double Rscaled = Rlog * q[j*3];
-			double Gscaled = Glog * q[j*3+1];
-			double Bscaled = Blog * q[j*3+2];
+			double Rlog = -((255.0*log(((double)R+1)/255.0))/log255);
+			double Glog = -((255.0*log(((double)G+1)/255.0))/log255);
+			double Blog = -((255.0*log(((double)B+1)/255.0))/log255);
+
+			for (j=0; j<3; j++){
+				/* rescale to match original paper values */
+				double Rscaled = Rlog * q[j*3];
+				double Gscaled = Glog * q[j*3+1];
+				double Bscaled = Blog * q[j*3+2];
+
+				double output = exp(-((Rscaled + Gscaled + Bscaled) - 255.0) * log255 / 255.0);
+				if(output>255) output=255;
 			
-			double output = exp(-((Rscaled + Gscaled + Bscaled) - 255.0) * log255 / 255.0);
-			if(output>255) output=255;
+				if (j==0) {
+					img_stain1[i] = (u_int8_t)(floor(output+.5));
+				} else if (j==1) {
+					img_stain2[i] = (u_int8_t)(floor(output+.5));
+				} else {
+					img_stain3[i] = (u_int8_t)(floor(output+.5));
+				}
+			}
+		}
+	} else { /* it must be a 16bit image */
+		u_int16_t* img_stain1;
+		u_int16_t* img_stain2;
+		u_int16_t* img_stain3;
+
+		plhs[0] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT16_CLASS, mxREAL);
+		img_stain1 = (u_int16_t*) mxGetData(plhs[0]);
+		plhs[1] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT16_CLASS, mxREAL);
+		img_stain2 = (u_int16_t*) mxGetData(plhs[1]);
+		plhs[2] = mxCreateNumericMatrix(dims[0], dims[1], mxUINT16_CLASS, mxREAL);
+		img_stain3 = (u_int16_t*) mxGetData(plhs[2]);
 		
-			if (j==0) {
-				img_stain1[i] = (u_int8_t)(floor(output+.5));
-			} else if (j==1) {
-				img_stain2[i] = (u_int8_t)(floor(output+.5));
-			} else {
-				img_stain3[i] = (u_int8_t)(floor(output+.5));
+		int imagesize = dims[0] * dims[1];
+		for (i=0; i<imagesize;i++){
+			/* log transform the RGB data */
+			int R = img16[i];
+			int G = img16[i+imagesize];
+			int B = img16[i+2*imagesize];
+
+			double Rlog = -((65535.0*log(((double)R+1)/65535.0))/log65535);
+			double Glog = -((65535.0*log(((double)G+1)/65535.0))/log65535);
+			double Blog = -((65535.0*log(((double)B+1)/65535.0))/log65535);
+			
+			for (j=0; j<3; j++){
+				/* rescale to match original paper values */
+				double Rscaled = Rlog * q[j*3];
+				double Gscaled = Glog * q[j*3+1];
+				double Bscaled = Blog * q[j*3+2];
+
+				double output = exp(-((Rscaled + Gscaled + Bscaled) - 65535.0) * log65535 / 65535.0);
+				
+				if(output>65535) output=65535;
+			
+				if (j==0) {
+					img_stain1[i] = (u_int16_t)(floor(output+.5));
+				} else if (j==1) {
+					img_stain2[i] = (u_int16_t)(floor(output+.5));
+				} else {
+					img_stain3[i] = (u_int16_t)(floor(output+.5));
+				}
 			}
 		}
 	}
