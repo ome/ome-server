@@ -183,6 +183,7 @@ sub startImport {
 	$self->{nImages} = 0;
 	$self->{nImageFiles} = 0;
 	$self->{_image_files} = {};
+	$self->{_duplicate_images} = [];
 	$self->{_images} = [];
     $self->{_formatInstances} = undef;
 	
@@ -356,6 +357,7 @@ sub importFiles {
 					logwarn 'Existing Image '.$old_image->name().' (ID='.$old_image->id().
 						') found with duplicate pixels while importing '.$image->name().
 						' (ID='.$image->id().').';
+                    push( @{ $self->{_duplicate_images} }, $old_image );
 
 				# Check the AllowDuplicates flag
                     if ($self->{_flags}->{AllowDuplicates}) {
@@ -415,7 +417,14 @@ sub importFiles {
     return \@images;
 }
 
-
+sub getDuplicateImages {
+	my $self = shift; 
+	if( wantarray ) {
+		return @{ $self->{_duplicate_images} };
+	} else {
+		return $self->{_duplicate_images};
+	}
+}
 
 sub finishImport {
     my $self = shift;
