@@ -149,6 +149,7 @@ use File::Spec;
 use Log::Agent;
 use OME::Image::Server;
 use OME::Install::Util;
+use OME::Fork;
 
 #use Benchmark::Timer;
 
