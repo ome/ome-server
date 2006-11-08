@@ -155,9 +155,11 @@ sub importImageServerFiles {
             $task->step();
             $task->setMessage('Importing');
             my $image_list = $importer->importFiles($files);
+            my $dup_image_list = $importer->getDuplicateImages();
             $importer->finishImport();
 
-			if( scalar( @$image_list ) > 0 ) {
+			my @images_for_the_dataset = ( @$image_list, @$dup_image_list );
+			if( scalar( @images_for_the_dataset ) > 0 ) {
 				if( not defined $dataset ) {
 					my $timestamp = time;
 					my $timestr = localtime $timestamp;
@@ -168,7 +170,8 @@ sub importImageServerFiles {
 				}
 	
 				# Add the new images to the dataset.
-				foreach $image (@$image_list){
+				foreach $image (@images_for_the_dataset){
+				
 					OME::Tasks::DatasetManager->addToDataset ($dataset,$image)
 				}
 				$task->step();
