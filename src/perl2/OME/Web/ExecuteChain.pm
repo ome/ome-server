@@ -45,6 +45,7 @@ $VERSION = $OME::VERSION;
 use OME::DBObject;
 use OME::Analysis::Engine;
 use OME::Tasks::ChainManager;
+use OME::Fork;
 
 use base qw{ OME::Web::Authenticated };
 
@@ -80,12 +81,17 @@ sub getPageBody {
 		
 		# execute chain
 		my $doNotReuseResults = $cgi->param( 'ReExecuteChain' );
-		my $analysis_chain_execution = OME::Analysis::Engine->
-          executeChain($chain,$session->dataset,{ }, undef, ReuseResults => ( $doNotReuseResults ? 0 : 1 ))
-			or die "Could not execute analysis chain";
-			
-		# display results	
-		return( 'REDIRECT', $self->getObjDetailURL($analysis_chain_execution));
+		my $reuseResults = ($doNotReuseResults ? 0 : 1 );
+		OME::Fork->doLater ( sub {
+			OME::Analysis::Engine->executeChain(
+				$chain,$session->dataset,{ }, undef, 
+				ReuseResults => $reuseResults
+			) or die "Could not execute analysis chain";
+		} );
+		
+		# If we've made it this far, then there should be a task
+		# for the user to view. Forward them to the task page.
+		return( 'REDIRECT', $self->pageURL('OME::Web::TaskProgress') );
 
 	} else {
 		$body .= $self->printForm();
