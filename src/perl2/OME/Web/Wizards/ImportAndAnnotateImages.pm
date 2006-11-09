@@ -174,7 +174,7 @@ sub getPageBody {
 		OME::Util::Annotate::SpreadsheetWriter->processFile( 
 			$spreadSheetPath, 
 			{
-				ColumnName => $cg_name,
+				ColumnName => "'".$cg_name."'",
 				%categoriesAndPaths
 			},
 			'_RelativePaths'
