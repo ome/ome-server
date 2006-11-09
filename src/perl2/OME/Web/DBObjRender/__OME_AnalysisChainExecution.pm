@@ -117,7 +117,7 @@ sub _renderData {
 							'class="ome_detail"'
 						).
 						">".
-						$node->module->name."</a>";
+						$self->getName( $node )."</a>";
 				# Link to the search page if this node has many NEXs
 				} else {
 					$link = "${nex_count}x <a href='".
@@ -132,7 +132,7 @@ sub _renderData {
 							'class="ome_detail"'
 						).
 						">".
-						$node->module->name."</a>";
+						$self->getName( $node )."</a>";
 				}
 				push( @node_execution_links, $link );
 			}
