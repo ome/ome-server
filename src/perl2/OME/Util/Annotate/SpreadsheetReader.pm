@@ -280,7 +280,7 @@ sub classifyColumnHeadings {
 			$projCol = $colCounter;
 		} elsif ($colHead eq 'Dataset') {
 			$DatasetCols{ $colCounter } = 1;
-		} elsif ($colHead =~ m/(\w+)\.(\w+)/) {
+		} elsif ($colHead =~ m/^(\w+)\.(\w+)$/) {
 			#	my $attribute = $factory->findObject('@' $1, { SEName => $2 });
 			my $attribute = 1;
 			$STCols{ $colCounter } = 1;
@@ -307,6 +307,8 @@ sub getCategoryGroups {
 
     foreach my $index (keys(%$CGCols)) {
 		my $CGName = $$columnHeadings[$index];
+		$CGName =~ s/^['"]([^'"]+)['"]$/$1/; # remove quotes if they are present.
+		$$columnHeadings[$index] = $CGName;
 		my $CG = $factory->findObject ('@CategoryGroup', { Name => $CGName });
 		if (not $CG) {
 			$CG = $factory->newAttribute( 'CategoryGroup', undef, $global_mex, {
