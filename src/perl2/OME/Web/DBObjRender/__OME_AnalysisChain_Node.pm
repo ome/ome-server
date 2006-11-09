@@ -76,8 +76,8 @@ sub _renderData {
 				my $request_string = $request->{ 'request_string' };
 				my @links = $obj->input_links();
 				my @upstreamNodes = map( $_->from_node, @links );
-				my $name = $self->getName( $obj->module )." w/ input from ".
-					join( ", ", map( $self->getName( $_ ), @upstreamNodes ) );
+				my $name = $self->getName( $obj->module )." ( ".
+					join( ", ", map( $self->getName( $_ ), @upstreamNodes ) )." ) ";
 				$record{ $request_string } = $self->
 					_trim( $name, $request );
 			}
