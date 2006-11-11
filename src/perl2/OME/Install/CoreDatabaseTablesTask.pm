@@ -155,6 +155,8 @@ our @core_classes =
    'OME::AnalysisChain',
    'OME::AnalysisChain::Node',
    'OME::AnalysisChain::Link',
+   'OME::AnalysisPath',
+   'OME::AnalysisPath::Map',   
    'OME::Analysis::Engine::Worker',
    'OME::ModuleExecution',
    'OME::ModuleExecution::ActualInput',
