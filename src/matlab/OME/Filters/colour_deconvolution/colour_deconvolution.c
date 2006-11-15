@@ -66,6 +66,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+double to_8bit_range (u_int16_t X16, u_int16_t min, u_int16_t max);
+
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	const mwSize* dims;
@@ -344,7 +346,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	/**********************************************************************
 	*  Convert the stain vectors into the 'q' vector
 	***********************************************************************/
-	double leng, A, V, C, log255=log(255.0), log65535=log(65535.0), log16383=log(16383.0);
+	double leng, A, V, C, log255=log(255.0);
 	double cosx[3];
 	double cosy[3];
 	double cosz[3];
@@ -434,9 +436,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		int imagesize = dims[0] * dims[1];
 		for (i=0; i<imagesize;i++){
 			/* log transform the RGB data */
-			int R = img[i];
-			int G = img[i+imagesize];
-			int B = img[i+2*imagesize];
+			u_int8_t R = img[i];
+			u_int8_t G = img[i+imagesize];
+			u_int8_t B = img[i+2*imagesize];
 	
 			double Rlog = -((255.0*log(((double)R+1)/255.0))/log255);
 			double Glog = -((255.0*log(((double)G+1)/255.0))/log255);
@@ -473,24 +475,44 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		img_stain3 = (u_int16_t*) mxGetData(plhs[2]);
 		
 		int imagesize = dims[0] * dims[1];
+		
+		/* figure out the R channel's min and max intensity */
+		u_int16_t min = img16[0];
+		u_int16_t max = img16[0];
+		for (i=1; i<imagesize;i++ ) {
+			if (img16[i] < min)
+				min = img16[i];
+			else if (img16[i] > max)
+				max = img16[i];
+		}
+
+
 		for (i=0; i<imagesize;i++){
 			/* log transform the RGB data */
-			int R = img16[i];
-			int G = img16[i+imagesize];
-			int B = img16[i+2*imagesize];
-
-			double Rlog = -((65535.0*log(((double)R+1)/65535.0))/log65535);
-			double Glog = -((65535.0*log(((double)G+1)/65535.0))/log65535);
-			double Blog = -((65535.0*log(((double)B+1)/65535.0))/log65535);
+			u_int16_t R16 = img16[i];
+			u_int16_t G16 = img16[i+imagesize];
+			u_int16_t B16 = img16[i+2*imagesize];
 			
+			/* convert R,G,B from 16bit to 8 */
+			double R = to_8bit_range (R16, min, max);
+			double G = to_8bit_range (G16, min, max);
+			double B = to_8bit_range (B16, min, max);
+
+			double Rlog = -((255.0*log((R+1)/255.0))/log255);
+			double Glog = -((255.0*log((G+1)/255.0))/log255);
+			double Blog = -((255.0*log((B+1)/255.0))/log255);
+
 			for (j=0; j<3; j++){
 				/* rescale to match original paper values */
 				double Rscaled = Rlog * q[j*3];
 				double Gscaled = Glog * q[j*3+1];
 				double Bscaled = Blog * q[j*3+2];
 
-				double output = exp(-((Rscaled + Gscaled + Bscaled) - 65535.0) * log65535 / 65535.0);
-				
+				double output = exp(-((Rscaled + Gscaled + Bscaled) - 255.0) * log255 / 255.0);				
+				if(output>255) output=255;
+
+				/* to_16bit_range */
+				output = output / 255.0 * (max-min) + min;
 				if(output>65535) output=65535;
 			
 				if (j==0) {
@@ -503,4 +525,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 			}
 		}
 	}
+}
+
+double to_8bit_range (u_int16_t X16, u_int16_t min, u_int16_t max)
+{
+	if (X16 <= min)
+		return 0;
+	else if (X16 >= max)
+		return 255.0;
+	else
+		return ((double) X16 - min) / (max - min) * 255.0;
 }
