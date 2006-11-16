@@ -78,6 +78,7 @@ sub getPageBody {
 	my @selected;
 	if ($action eq 'Clear Selected') {
 		OME::Tasks::NotificationManager->clear (id => ['in',[$cgi->param('selected')]])
+			if( $cgi->param('selected') );
 	} elsif ($action eq 'Clear All') {
 		OME::Tasks::NotificationManager->clear ();
 	} elsif ($action eq 'Clear Finished') {
