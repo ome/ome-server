@@ -2557,6 +2557,7 @@ no warnings "uninitialized";
 									} elsif( $sql_type eq 'boolean' ) {
 										if ($arrayval =~ /^f(alse)?$|^0$/io) {$arrayval = 'false';}
 										elsif ($arrayval =~ /^t(rue)?$|^1$/io) {$arrayval = 'true';}
+										elsif ( (not defined $arrayval ) || ( $arrayval eq '' ) ) { $arrayval = 'null'; }
 										else {die "Illegal Boolean column value '$arrayval'";}							
 									} elsif (UNIVERSAL::isa($arrayval,"OME::DBObject") && ref($arrayval)) {
 										$arrayval = $arrayval->id();
@@ -2577,6 +2578,7 @@ no warnings "uninitialized";
 							} elsif( $sql_type eq 'boolean' ) {
 								if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
 								elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+								elsif ( (not defined $value ) || ( $value eq '' ) ) { $value = 'null'; }
 								else {die "Illegal Boolean column value '$value'";}							
 							} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
 								$value = $value->id();
@@ -2845,6 +2847,7 @@ no warnings "uninitialized";
 								} elsif( $sql_type eq 'boolean' ) {
 									if ($arrayval =~ /^f(alse)?$|^0$/io) {$arrayval = 'false';}
 									elsif ($arrayval =~ /^t(rue)?$|^1$/io) {$arrayval = 'true';}
+									elsif ( (not defined $arrayval ) || ( $arrayval eq '' ) ) { $arrayval = 'null'; }
 									else {die "Illegal Boolean column value '$arrayval'";}							
 								} elsif (UNIVERSAL::isa($arrayval,"OME::DBObject") && ref($arrayval)) {
 									$arrayval = $arrayval->id();
@@ -2863,6 +2866,7 @@ no warnings "uninitialized";
 						} elsif( $sql_type eq 'boolean' ) {
 							if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
 							elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+							elsif ( (not defined $value ) || ( $value eq '' ) ) { $value = 'null'; }
 							else {die "Illegal Boolean column value '$value'";}							
 						} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
 							$value = $value->id();
@@ -2881,12 +2885,13 @@ no warnings "uninitialized";
 					} elsif( $sql_type eq 'boolean' ) {
 						if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
 						elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
-						else {die "Illegal Boolean column value '$value'";}							
+						elsif ( (not defined $value ) || ( $value eq '' ) ) { $value = 'null'; }
+						else {confess "Illegal Boolean column value '$value'";}							
 					} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
 						$value = $value->id();
 					}
 					push @new_values, $value;
-					$operation = defined $value? "=": "is";
+					$operation = (defined $value && $value ne 'null' ) ? "=": "is";
 				}
 				
 				# Treat an undef value the same as a search for a 'null'
