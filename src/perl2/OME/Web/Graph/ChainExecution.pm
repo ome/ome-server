@@ -587,7 +587,7 @@ END
 			$legendFontSize * $textRowSpacingFactor * 2, $legendFontSize, 
 		).sprintf( "<text x='0' y='%d' text-anchor='start' font-size='%d' fill='goldenrod'>Execution time</text>\n", 
 			$legendFontSize * $textRowSpacingFactor * 3, $legendFontSize, 
-		).sprintf( "<text x='0' y='%d' text-anchor='start' font-size='%d' fill='blue'>Write time; writing outnputs of Module executions</text>\n", 
+		).sprintf( "<text x='0' y='%d' text-anchor='start' font-size='%d' fill='blue'>Write time; writing outputs of Module executions</text>\n", 
 			$legendFontSize * $textRowSpacingFactor * 4, $legendFontSize, 
 		).sprintf( "<text x='0' y='%d' text-anchor='start' font-size='%d' fill='darkgray'>Module execution unaccounted for time</text>\n", 
 			$legendFontSize * $textRowSpacingFactor * 5, $legendFontSize, 
