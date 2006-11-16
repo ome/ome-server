@@ -261,11 +261,12 @@ END
 	# Print a link to more info about this chex
 	my $safeUrl = $self->getObjDetailURL( $chex );
 	$safeUrl =~ s/&/;/g;
-	$svg .= sprintf( "<a xlink:href='%s'><text x='%d' y='%d' text-anchor='middle' font-size='%d'>more information on this chain execution</text></a>\n",
+	$svg .= sprintf( "<a xlink:href='%s'><text x='%d' y='%d' text-anchor='middle' font-size='%d'>Total chain execution time: %d seconds. Click for more information on this chain execution</text></a>\n",
 		$safeUrl, 
 		( $graphWidth / 2 ),
 		( $topMargin + $textRowSpacingFactor * $graphTitleFontSize + $graphTitleLinkFontSize), 
 		$graphTitleLinkFontSize, 
+		$chex->total_time
 	);
 
 	# Begin 
@@ -436,11 +437,12 @@ END
 	# Print a link to more info about this chex
 	my $safeUrl = $self->getObjDetailURL( $chex );
 	$safeUrl =~ s/&/;/g;
-	$svg .= sprintf( "<a xlink:href='%s'><text x='%d' y='%d' text-anchor='middle' font-size='%d'>more information on this chain execution</text></a>\n",
+	$svg .= sprintf( "<a xlink:href='%s'><text x='%d' y='%d' text-anchor='middle' font-size='%d'>Total chain execution time: %d seconds. Click for more information on this chain execution</text></a>\n",
 		$safeUrl, 
 		( $graphWidth / 2 ),
 		( $topMargin + $textRowSpacingFactor * $graphTitleFontSize + $graphTitleLinkFontSize), 
 		$graphTitleLinkFontSize, 
+		$totalTime
 	);
 
 	# Print a header for breakdown of chain execution by overhead
