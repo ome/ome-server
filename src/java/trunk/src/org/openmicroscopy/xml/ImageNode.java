@@ -77,35 +77,6 @@ public class ImageNode extends OMEXMLNode implements Image {
   {
     this(parent, true);
     setName(name);
-    if (creationDate == null) {
-      // CreationDate is required; initialize a default value (current time)
-      // use ISO 8601 dateTime format (e.g., 1988-04-07T18:39:09)
-      StringBuffer sb = new StringBuffer();
-      Calendar now = Calendar.getInstance();
-      int year = now.get(Calendar.YEAR);
-      int month = now.get(Calendar.MONTH);
-      int day = now.get(Calendar.DAY_OF_MONTH);
-      int hour = now.get(Calendar.HOUR_OF_DAY);
-      int min = now.get(Calendar.MINUTE);
-      int sec = now.get(Calendar.SECOND);
-      sb.append(year);
-      sb.append("-");
-      if (month < 9) sb.append("0");
-      sb.append(month + 1);
-      sb.append("-");
-      if (day < 10) sb.append("0");
-      sb.append(day);
-      sb.append("T");
-      if (hour < 10) sb.append("0");
-      sb.append(hour);
-      sb.append(":");
-      if (min < 10) sb.append("0");
-      sb.append(min);
-      sb.append(":");
-      if (sec < 10) sb.append("0");
-      sb.append(sec);
-      creationDate = sb.toString();
-    }
     setCreated(creationDate);
     setDescription(description);
   }
@@ -184,7 +155,38 @@ public class ImageNode extends OMEXMLNode implements Image {
   public String getCreated() { return getAttribute("CreationDate"); }
 
   /** Sets CreationDate attribute for the Image element. */
-  public void setCreated(String value) { setAttribute("CreationDate", value); }
+  public void setCreated(String value) {
+    if (value == null && getCreated() == null) {
+      // CreationDate is required; initialize a default value (current time)
+      // use ISO 8601 dateTime format (e.g., 1988-04-07T18:39:09)
+      StringBuffer sb = new StringBuffer();
+      Calendar now = Calendar.getInstance();
+      int year = now.get(Calendar.YEAR);
+      int month = now.get(Calendar.MONTH);
+      int day = now.get(Calendar.DAY_OF_MONTH);
+      int hour = now.get(Calendar.HOUR_OF_DAY);
+      int min = now.get(Calendar.MINUTE);
+      int sec = now.get(Calendar.SECOND);
+      sb.append(year);
+      sb.append("-");
+      if (month < 9) sb.append("0");
+      sb.append(month + 1);
+      sb.append("-");
+      if (day < 10) sb.append("0");
+      sb.append(day);
+      sb.append("T");
+      if (hour < 10) sb.append("0");
+      sb.append(hour);
+      sb.append(":");
+      if (min < 10) sb.append("0");
+      sb.append(min);
+      sb.append(":");
+      if (sec < 10) sb.append("0");
+      sb.append(sec);
+      value = sb.toString();
+    }
+    setAttribute("CreationDate", value);
+  }
 
   /** Returns null. Not applicable for external OME-XML. */
   public String getInserted() { return null; }
