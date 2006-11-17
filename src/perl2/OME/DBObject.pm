@@ -2597,6 +2597,7 @@ no warnings "uninitialized";
 						} elsif( $sql_type eq 'boolean' ) {
 							if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
 							elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
+							elsif ( (not defined $value ) || ( $value eq '' ) ) { $value = 'null'; }
 							else {die "Illegal Boolean column value '$value'";}							
 						} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
 							$value = $value->id();
