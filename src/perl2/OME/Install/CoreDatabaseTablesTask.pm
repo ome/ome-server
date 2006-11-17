@@ -99,6 +99,7 @@ our $IMPORT_FORMATS = [qw/
     OME::ImportEngine::BMPreader
     OME::ImportEngine::DICOMreader
     OME::ImportEngine::XMLreader
+    OME::ImportEngine::BioFormats
 /];
 
 # Database version

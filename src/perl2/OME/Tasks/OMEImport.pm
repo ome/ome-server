@@ -143,25 +143,20 @@ sub importFile {
 			  findAttribute("OriginalFile",SHA1 => $sha1);
 		};
 		return if defined $originalFile;
+	
+	   	logdbg "debug", ref ($self)."->importFile: imported ".$file->getFilename();
+	
 	}
-
-    my $resolver = OME::ImportExport::ResolveFiles->new( parser => $parser )
-    	or die "Could not instantiate OME::ImportExport::ResolveFiles\n";
-    
-    my $doc = $resolver->importFile( $file->getFileID(), $repository );
-	logdbg "debug", ref ($self)."->importFile: imported ".$file->getFilename();
- 	
- 	# Apply Stylesheet
- 	my $xslt = XML::LibXSLT->new();
- 	my $style_doc_path = $session->Configuration()->xml_dir() . "/OME2OME-CA.xslt";
- 	my $style_doc = $parser->parse_file( $style_doc_path );
-	my $stylesheet = $xslt->parse_stylesheet($style_doc);
-	my $CA_doc = $stylesheet->transform($doc);
+	
 
 	# Either initiate the import at this point or use an already initiated import.
-    my $importSelfInitiated = OME::Tasks::ImportManager->startImport(1);
+	my $importSelfInitiated = OME::Tasks::ImportManager->startImport(1);
+	
+	my $importedObjects = $self->importXMLstring (
+		OME::Image::Server->importOMEfile( $file->getFileID() ),
+		%flags
+	);
 
-	my $importedObjects = $self->processDOM($CA_doc->getDocumentElement(),%flags);
 
 	# Store the file hash if we did the upload.
 	if ($filename) {
@@ -179,22 +174,47 @@ sub importFile {
 		}
     }
 
-    # Commit the transaction to the DB.
-    $session->commitTransaction() unless $flags{ DO_NOT_COMMIT };
-
 	# close this Import if we started it.
 	if( $importSelfInitiated ) {
 		OME::Tasks::ImportManager->finishImport();
 	}
 
+
 	# return different things depending on how we were called.
-	if ($filename and $importSelfInitiated) {
+	if ($filename and $originalFile) {
 		return ($importedObjects,$file,$originalFile);
 	} elsif ($filename) {
 		return ($importedObjects,$file);
 	} else {
 		return $importedObjects;
 	}
+
+}
+
+
+sub importXMLstring {
+    my ($self, $xmlString, %flags) = @_;
+    my $session = OME::Session->instance();
+	my $repository = $session->findRepository();
+    my $parser  = $self->{_parser};
+
+	my $doc  = $parser->parse_string( $xmlString )
+		or die "Could not parse XML document";
+    $doc = OME::ImportExport::ResolveFiles->resolveFiles( $doc, $repository )
+    	or die "Could not resolve image server references";
+ 	
+ 	# Apply Stylesheet
+ 	my $xslt = XML::LibXSLT->new();
+ 	my $style_doc_path = $session->Configuration()->xml_dir() . "/OME2OME-CA.xslt";
+ 	my $style_doc = $parser->parse_file( $style_doc_path );
+	my $stylesheet = $xslt->parse_stylesheet($style_doc);
+	my $CA_doc = $stylesheet->transform($doc);
+	my $importedObjects = $self->processDOM($CA_doc->getDocumentElement(),%flags);
+
+    # Commit the transaction to the DB.
+    $session->commitTransaction() unless $flags{ DO_NOT_COMMIT };
+    
+    return ($importedObjects);
 }
 
 # importXML commented out by josiah 6/10/03

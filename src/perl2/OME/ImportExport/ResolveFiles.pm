@@ -99,29 +99,23 @@ sub new {
 	return $self;
 }
 
-
 ###############################################################################
 #
-# importFile
-# parameters:
-#	$path - path to file
+# resolveFiles
 #
-sub importFile() {
+sub resolveFiles {
 	# parameters
-	my ($self, $omeisFileID, $repository) = @_;
+	my ($self, $doc, $repository) = @_;
 
 	# resources
 	my $session       = OME::Session->instance();
 	my $factory       = $session->Factory();
-	my $parser        = $self->{_parser};
 	my $LSIDresolver  = OME::Tasks::LSIDManager->new();
 
 	# storage
 	my @cdataFiles;
 	my %fileInfo;
 
-	my $xmlString = OME::Image::Server->importOMEfile( $omeisFileID );
-	my $doc  = $parser->parse_string( $xmlString );
 	my $root = $doc->getDocumentElement();
 		
 	foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
