@@ -92,7 +92,7 @@ public abstract class OMEXMLNode implements DataInterface {
   /** Constructs an OME-XML node with the given associated DOM element. */
   public OMEXMLNode(Element element) {
     this.element = element;
-    if (hasLSID() && getLSID() == null) setLSID("loci" + nextId++);
+    if (hasLSID() && getLSID() == null) setLSID("id" + nextId++);
   }
 
 
