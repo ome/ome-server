@@ -66,6 +66,7 @@ public class ImageNode extends OMEXMLNode implements Image {
   public ImageNode(OMENode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().createElement("Image"));
     if (attach) parent.getDOMElement().appendChild(element);
+    setCreated(null);
   }
 
   /**
