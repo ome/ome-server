@@ -129,8 +129,8 @@ sub untangle_chains {
 	foreach my $chain( @chains_from_file ) {
 		if( $verbose ) {
 			print "chain ".$chain->name." (id=".$chain->id.")\n";
-			my @chain_elevations = $self->__topological_sort( $chain );
-			$self->__print_topo_of_chain(  @chain_elevations );
+			my @chain_elevations = OME::Tasks::ChainManager->topologicalSort($chain);
+			OME::Tasks::ChainManager->printChainElevations(@chain_elevations);
 		}
 	
 		my $untangled_chain = $self->__untangle( $chain );
@@ -173,7 +173,7 @@ sub __untangle {
 	my $factory = $session->Factory();
 
 	my $untangled_chain = OME::Tasks::ChainManager->cloneChain($chain);
-	my @chain_elvations = $self->__topological_sort( $untangled_chain );
+	my @chain_elvations = OME::Tasks::ChainManager->topologicalSort($untangled_chain);
 	my $chain_was_tangled = 0;
 	
 	foreach my $elevation ( @chain_elvations ) {
@@ -235,50 +235,6 @@ sub __untangle {
 	# el fin
 	return $untangled_chain
 		if( $chain_was_tangled );
-}
-
-sub __topological_sort {
-	my ($self, $chain) = @_;
-	
-	my @nodes = $chain->nodes();
-	my @chain_elevations;
-	my %used_nodes;
-
-	# Build a list of elevations. Each elvation is a list of nodes that can
-	# be executed concurrently. Continue until all nodes are placed.
-	while( @nodes ne keys %used_nodes ) {
-		my @elevation;
-		# collect nodes for this elevation
-		foreach my $node ( @nodes ) {
-			next if exists $used_nodes{ $node->id };
-			my @input_links = $node->input_links();
-			# if all of a node's inputs are in used_nodes
-			if( grep( exists $used_nodes{ $_->from_node_id } , @input_links ) eq scalar( @input_links ) ) {
-				# then add it to @elevation
-				push( @elevation, $node );
-			}
-		}
-		# mark this node as used.
-		$used_nodes{ $_->id } = undef
-			foreach @elevation;
-		# store this elevation
-		push( @chain_elevations, \@elevation );
-	}
-	
-	# el fin
-	return @chain_elevations;
-}
-
-sub __print_topo_of_chain {
-	my ($self, @chain_elvations) = @_;
-	for ( my ( $i, $elevation ) = ( 0, $chain_elvations[ 0 ] );
-		  $i < scalar (@chain_elvations);
-		  $i++, $elevation = $chain_elvations[ $i ] ) {
-		print 
-			"Elevation $i:\n\t".
-			join( ", ", map( $_->module->name.'('.$_->id.')', @$elevation ) ).
-			"\n";
-	}
 }
 
 1;

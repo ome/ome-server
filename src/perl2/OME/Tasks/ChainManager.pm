@@ -769,6 +769,61 @@ sub findPath {
 	}
 	return @path; # return an empty path;
 }
+=head2 topologicalSort
+
+	my @chain_elevations = $manager->topologicalSort( $chain );
+
+Returns a list of elevations. Each elevation is a list of nodes that
+can be executed concurrently.
+
+By Josiah Johnston. Originally in OME/Util/Dev/Lint.pm
+
+=cut
+
+sub topologicalSort {
+	my ($self, $chain) = @_;
+	
+	my @nodes = $chain->nodes();
+	my @chain_elevations;
+	my %used_nodes;
+
+	# Build a list of elevations. Each elvation is a list of nodes that can
+	# be executed concurrently. Continue until all nodes are placed.
+	while( @nodes ne keys %used_nodes ) {
+		my @elevation;
+		# collect nodes for this elevation
+		foreach my $node ( @nodes ) {
+			next if exists $used_nodes{ $node->id };
+			my @input_links = $node->input_links();
+			# if all of a node's inputs are in used_nodes
+			if( grep( exists $used_nodes{ $_->from_node_id } , @input_links ) eq scalar( @input_links ) ) {
+				# then add it to @elevation
+				push( @elevation, $node );
+			}
+		}
+		# mark this node as used.
+		$used_nodes{ $_->id } = undef
+			foreach @elevation;
+		# store this elevation
+		push( @chain_elevations, \@elevation );
+	}
+	
+	# el fin
+	return @chain_elevations;
+}
+
+sub printChainElevations {
+	my ($self, @chain_elevations) = @_;
+	for ( my ( $i, $elevation ) = ( 0, $chain_elevations[ 0 ] );
+		  $i < scalar (@chain_elevations);
+		  $i++, $elevation = $chain_elevations[ $i ] ) {
+		print 
+			"Elevation $i:\n\t".
+			join( ", ", map( $_->module->name.'('.$_->id.')', @$elevation ) ).
+			"\n";
+	}
+}
+
 1;
 
 __END__
