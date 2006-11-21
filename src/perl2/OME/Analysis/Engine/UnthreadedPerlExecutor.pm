@@ -103,8 +103,8 @@ sub executeModule {
 
 
 sub modulesExecuting { return 0; }
-sub waitForAnyModules {}
-sub waitForAllModules {}
+sub waitForAnyModulesToFinish {}
+sub waitForAllModulesToFinish {}
 
 1;
 

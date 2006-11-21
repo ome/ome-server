@@ -165,9 +165,9 @@ sub modulesExecuting {
     die "OME::Analysis::Engine::Executor->modulesExecuting is abstract";
 }
 
-=head2 waitForAnyModules
+=head2 waitForAnyModulesToFinish 
 
-	$executor->waitForAnyModules();
+	$executor->waitForAnyModulesToFinish ();
 
 For multi-threaded Executors, waits for at least one of the spawned
 workers to finish executing a module.  Single-threaded Executors
@@ -176,25 +176,25 @@ methods should simply return immediately.
 
 =cut
 
-sub waitForAnyModules {
+sub waitForAnyModulesToFinish {
     my ($self) = @_;
-    die "OME::Analysis::Engine::Executor->waitForAnyModules is abstract";
+    die "OME::Analysis::Engine::Executor->waitForAnyModulesToFinish is abstract";
 }
 
-=head2 waitForAlModules
+=head2 waitForAlModulesToFinish 
 
-	$executor->waitForAllModules();
+	$executor->waitForAllModulesToFinish ();
 
 For multi-threaded Executors, waits for all of the spawned workers to
 finish executing a module.  Single-threaded Executors should block in
-the executeModule method, so their waitForModules methods should
+the executeModule method, so their waitForAllModules methods should
 simply return immediately.
 
 =cut
 
-sub waitForAllModules {
+sub waitForAllModulesToFinish {
     my ($self) = @_;
-    die "OME::Analysis::Engine::Executor->waitForAllModules is abstract";
+    die "OME::Analysis::Engine::Executor->waitForAllModulesToFinish is abstract";
 }
 
 

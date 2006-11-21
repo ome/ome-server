@@ -198,7 +198,7 @@ sub modulesExecuting {
     return $executor_processes_out{$self};
 }
 
-sub waitForAnyModules {
+sub waitForAnyModulesToFinish  {
     my ($self) = @_;
 
     # Determine how many child processes are currently out there.
@@ -239,7 +239,7 @@ sub waitForAnyModules {
     } until $next < $original;
 }
 
-sub waitForAllModules {
+sub waitForAllModulesToFinish  {
     my ($self) = @_;
 
     # As long as there are outstanding processes,
