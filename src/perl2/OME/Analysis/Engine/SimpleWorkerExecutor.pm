@@ -266,7 +266,7 @@ sub waitForAnyModulesToFinish {
 
 	# Return if the queue is empty and no workers are busy.
 	unless( $nWorking || scalar( @{ $self->{queue} } ) ) {
-		logdbg "debug", "waitForAnyModules: No workers are busy, and no modules are waiting to execute. Returning to avoid an indefinite wait.";
+		logdbg "debug", "waitForAnyModulesToFinish: No workers are busy, and no modules are waiting to execute. Returning to avoid an indefinite wait.";
 		return;
 	}
 
@@ -275,7 +275,7 @@ sub waitForAnyModulesToFinish {
 	while ($event ne $ourEvent) {
 		# Block until something happens
 		# log a debug message every 100 cycles.
-		logdbg "debug", "waitForAnyModules: waiting for a worker to finish"
+		logdbg "debug", "waitForAnyModulesToFinish: waiting for a worker to finish"
 			if( $loopCount++ % 100 == 0 );
 		$events = OME::Tasks::NotificationManager->listen (5);
 		$event = '';
@@ -289,29 +289,29 @@ sub waitForAnyModulesToFinish {
 				$event = $_ and last if $_ eq $ourEvent;
 			}
 		} else {
-#			logdbg "debug", "waitForAnyModules: TIMEOUT while waiting for a worker to finish";
+#			logdbg "debug", "waitForAnyModulesToFinish: TIMEOUT while waiting for a worker to finish";
 			# we timed out waiting for a message.  Maybe we missed it.
 			# If the number of busy workers now is less than before then return
 			if ($self->countBusyWorkers() < $nWorking) {
-				logdbg "debug", "waitForAnyModules: Missed a worker message while waiting for a worker to finish";
+				logdbg "debug", "waitForAnyModulesToFinish: Missed a worker message while waiting for a worker to finish";
 				$self->shiftQueue();
 				return;
 			} else {
 				# Apparently, we timed out without any workers finishing.
 				# Shift the queue, and wait some more.
-#				logdbg "debug", "waitForAnyModules: Nobody finished";
+#				logdbg "debug", "waitForAnyModulesToFinish: Nobody finished";
 				$self->shiftQueue();
 			}
 		}
 	}
-	logdbg "debug", "waitForAnyModules: Received notification from finished worker";
+	logdbg "debug", "waitForAnyModulesToFinish: Received notification from finished worker";
 }
 
 sub waitForAllModulesToFinish {
 	my ($self) = @_;
 
 	while ($self->modulesExecuting()) {
-		$self->waitForAnyModules ();
+		$self->waitForAnyModulesToFinish ();
 	}
 
 }
