@@ -253,7 +253,7 @@ sub executeModule {
 
 sub modulesExecuting {
 	my ($self) = @_;
-	return scalar (@{$self->{queue}});
+	return scalar (@{$self->{queue}}) + $self->countBusyWorkers();
 }
 
 sub waitForAnyModules {
@@ -307,11 +307,28 @@ sub waitForAnyModules {
 	logdbg "debug", "waitForAnyModules: Received notification from finished worker";
 }
 
+# This only waits for the queue to be emptied. It will return as soon as the 
+# last of the queue is assigned. When this returns, there will likely be workers
+# occupied with their recent assignments.
 sub waitForAllModules {
 	my ($self) = @_;
 	my $queue = $self->{queue};
 
 	while (scalar @$queue) {
+		$self->waitForAnyModules ();
+	}
+
+}
+
+sub waitForAllModulesToStart {
+	my ($self) = @_;
+	return $self->waitForAllModules();
+}
+
+sub waitForAllModulesToFinish {
+	my ($self) = @_;
+
+	while ($self->modulesExecuting()) {
 		$self->waitForAnyModules ();
 	}
 
