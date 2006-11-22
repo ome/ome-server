@@ -65,23 +65,26 @@ my $file;
 	};
 	return [] if $@;
 	
-	# Result is a string containing space-delimited FileIDs
-	my @BFs = split (/\s/,$result);
 	logdbg "debug", ref ($self)."->getGroups: IsBioFormats result: $result";
 
+	# Result is a string containing line-delimited groups containing space-delimited FileIDs
+	my $grouplist = [];
+	my @outlist;
+	my @lines = split (/\n/,$result);
+	for (my $i=0; $i < scalar @lines; $i++) {
+		my @grFiles = split (/\s/,$lines[$i]);
+		foreach my $fileID (@grFiles) {
+	    	next unless exists $fhash->{$fileID};
+			logdbg "debug", ref ($self)."->getGroups: BioFormats recognized: ".$fhash->{$fileID}->getFilename();
+		    push (@outlist,$fhash->{$fileID});
+		    push (@{$grouplist->[$i]},$fhash->{$fileID});
+		}
+	}
 	
-    my @outlist;
-    foreach (@BFs) {
-    	next unless exists $fhash->{$_};
-		logdbg "debug", ref ($self)."->getGroups: BioFormats recognized: ".$fhash->{$_}->getFilename();
-	    push (@outlist,$fhash->{$_});
-    }
-
     # Clean out the file list.
     $self->removeFiles($fhash,\@outlist);
 
-	# for now, our list of file groups consists of one group that contains all of the files
-	my $grouplist = [\@outlist];
+	# and return our grouplist
 	return $grouplist;
 }
 
