@@ -866,7 +866,7 @@ sub executeChain {
 		# Discussion here:
 		# http://cvs.openmicroscopy.org.uk/tiki/tiki-index.php?page=Analysis+Engine+Profiling
 		# Tom Macura
-		$executor->waitForAllModules(); 
+		$executor->waitForAllModulesToFinish(); 
 		
 		
         if (!$continue) {
