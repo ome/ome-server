@@ -31,9 +31,11 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Douglas Creager <dcreager@alum.mit.edu>
-#
+#                Tom Macura <tmacura@nih.gov>
+#                    re-wrote executeChain() and executeNodeWithTarget() to use
+#                    topological sort based scheduling algorithm resulting in
+#                    about 20% speed-up of chain executions
 #-------------------------------------------------------------------------------
-
 
 package OME::Analysis::Engine;
 
@@ -53,7 +55,6 @@ use OME::AnalysisChain;
 use OME::ModuleExecution;
 use OME::AnalysisChainExecution;
 use OME::Analysis::Engine::Executor;
-use OME::Analysis::Engine::DataPaths;
 use OME::Tasks::ModuleExecutionManager;
 use OME::Tasks::ChainManager;
 use OME::Tasks::NotificationManager;
@@ -566,23 +567,43 @@ sub executeNodeWithTarget {
     foreach my $formal_input (@inputs) {
         my $input_mex = $self->getPredecessorMEX($node,$formal_input,$target);
 
-        die "Couldn't find an input MEX!"
-          unless defined $input_mex;
+		logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX.")
+			and return unless defined $input_mex;
+          
+        # check input_mexes to verify that the node is ready
+     	my $input_mexes = $input_mex;
+     	$input_mexes = [$input_mexes]
+          unless ref($input_mexes) eq 'ARRAY';
+        
+		# use input_mexes to load module's actual inputs
+		foreach my $in_mex (@$input_mexes) {
+		
+			# These checks were refactored from the method isNodeReady() RIP
+			if ($in_mex->status() ne 'FINISHED') {
+			
+				# Otherwise, we think the module is still running.  Once
+				# it's done, its Executor will set the STATUS field of the
+				# appropriate module execution to FINISHED or ERROR, but
+				# we'll have to refresh the module execution from the
+				# database to see any changes.
+				
+				$in_mex->refresh();
+				
+				# If the predecessor has not finished successfully (i.e.,
+				# it's still running, or it finished with an error), then
+				# the current node cannot execute.
 
-        if (ref($input_mex) eq 'ARRAY') {
-            OME::Tasks::ModuleExecutionManager->
-                addActualInput($_,$mex,$formal_input)
-                foreach @$input_mex;
-        } else {
-            OME::Tasks::ModuleExecutionManager->
-                addActualInput($input_mex,$mex,$formal_input);
-        }
+				logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX.")
+					and return if ($in_mex->status() ne 'FINISHED');		
+			}
+			
+			OME::Tasks::ModuleExecutionManager->
+				addActualInput($in_mex,$mex,$formal_input);
+		}                
     }
 
     # Calculate the new MEX's input tag.
-
-    my $input_tag = OME::Tasks::ModuleExecutionManager->
-      getInputTag($mex);
+    my $input_tag = OME::Tasks::ModuleExecutionManager->getInputTag($mex);
     $mex->input_tag($input_tag);
     $mex->storeObject();
 
@@ -625,61 +646,6 @@ sub executeNodeWithTarget {
     $executor->executeModule($mex,$dependence,$target);
 	$mex->storeObject();
     return $nex;
-}
-
-=head2 isNodeReady
-
-	my $ready = $self->isNodeReady($node,$target);
-
-Checks whether a node is ready to be executed against the specified
-target.
-
-=cut
-
-sub isNodeReady {
-    my $self = shift;
-    my ($node,$target) = @_;
-    my $target_id = (defined $target)? $target->id(): 0;
-
-    logdbg ("debug", "  isNodeReady(".$node->module->name().",$target_id)");
-
-  INPUT:
-    foreach my $formal_input ($node->module()->inputs()) {
-        my $input_mexes = $self->getPredecessorMEX($node,$formal_input,$target);
-        return 0 unless defined $input_mexes;
-
-        $input_mexes = [$input_mexes]
-          unless ref($input_mexes) eq 'ARRAY';
-
-      MEX:
-        foreach my $mex (@$input_mexes) {
-            my $status = $mex->status();
-
-            # If we already know it's finished (successfully or not),
-            # don't bother re-reading from the database
-
-            next MEX if $status eq 'FINISHED';
-
-            return 0 if ($status eq 'ERROR');
-
-            # Otherwise, we think the module is still running.  Once
-            # it's done, its Executor will set the STATUS field of the
-            # appropriate module execution to FINISHED or ERROR, but
-            # we'll have to refresh the module execution from the
-            # database to see any changes.
-
-            $mex->refresh();
-            $status = $mex->status();
-
-            # If the predecessor has not finished successfully (i.e.,
-            # it's still running, or it finished with an error), then
-            # the current node cannot execute.
-
-            return 0 if ($status ne 'FINISHED');
-        }
-    }
-
-    return 1;
 }
 
 =head2 executeChain
@@ -729,7 +695,6 @@ sub executeChain {
                 flags         => \%flags,
                 dataset       => $dataset,
                 user_inputs   => $user_inputs,
-                started_nodes => {},
                };
     bless $self, $class;
 
@@ -741,27 +706,11 @@ sub executeChain {
       getDefaultExecutor();
     $self->{executor} = $executor;
 
-    # Build the data paths.  Since data paths are now associated
-    # with analysis chains, we only need to calculate them once.
-    # Since the view is only locked when it is executed, we assume
-    # that an unlocked view has not had paths calculated, whereas
-    # a locked one has.
-    if (!$chain->locked()) {
-        logdbg ("debug", "  Chain has not been locked yet");
-
-        OME::Analysis::Engine::DataPaths->createDataPaths($chain);
-
-        logdbg ("debug", "  Locking the chain");
-        $chain->locked('true');
-        $chain->storeObject();
-    }
-
+    # If there are any modules which have dataset dependence, then we need to
+    # lock the dataset.  (So that the dataset outputs remain valid.)  If there
+    # are not any dataset-dependent MEX's in this chain, we don't need to
+    # lock the dataset.
     $self->calculateDependences();
-
-    # If there are any modules which have dataset dependence, then we
-    # need to lock the dataset.  (So that the dataset outputs remain
-    # valid.)  If there are not any dataset-dependent MEX's in this
-    # chain, we don't need to lock the dataset.
 
     if ($self->{any_dataset_dependences}) {
         # Lock the dataset
@@ -810,76 +759,37 @@ sub executeChain {
 	
     $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
-    my $continue = 1;
-    my $round = 0;
-    
-  ROUND:
-    while ($continue) {
-        $continue = 0;
-        $round++;
-        logdbg ("debug", "Round $round...");
+	# get a topological sorted list of nodes
+	my @chain_elevations = OME::Tasks::ChainManager->topologicalSort($chain);
 
-      NODE:
-        foreach my $node (@nodes) {
-            my $dependence = $self->{dependences}->{$node->id()};
-            my @targets;
+	# follow the node list and execute
+	for (my $i = 0; $i < scalar (@chain_elevations); $i++) {
+		my @nodes = @{$chain_elevations[$i]};
+		
+		foreach my $node (@nodes) {
 
-            if ($dependence eq 'G') {
-                push @targets, undef;
-            } elsif ($dependence eq 'D') {
-                push @targets, $dataset;
-            } elsif ($dependence eq 'I') {
-                push @targets, ($dataset->images());
-            }
+			my @targets;
+			my $dependence = $self->{dependences}->{$node->id()};
+			if ($dependence eq 'G') {
+				push @targets, undef;
+			} elsif ($dependence eq 'D') {
+				push @targets, $dataset;
+			} elsif ($dependence eq 'I') {
+				push @targets, ($dataset->images());
+			}
 
-          TARGET:
-            foreach my $target (@targets) {
-                my $target_id = (defined $target)? $target->id(): 0;
-
-                # Node has already started executing
-                next TARGET
-                  if $self->{started_nodes}->{$node->id()}->{$target_id};
-
-                # Node isn't ready
-                next TARGET
-                  unless $self->isNodeReady($node,$target);
-
-                # Node's ready, let's execute
-                $task->step();
-                $task->setMessage('Executing `'.$node->module->name()."`");
-
-                $self->executeNodeWithTarget($node,$target);
-
-                # Mark some state and keep going
+			foreach my $target (@targets) {
+				$task->step();
+				$task->setMessage('Executing `'.$node->module->name()."`");
+				$self->executeNodeWithTarget($node,$target);
 				$session->commitTransaction();
-                $self->{started_nodes}->{$node->id()}->{$target_id} = 1;
-                $continue = 1;
-            }
-        }
+			}
+		}
 
-	    # Wait for at least one module to finish (we might be using a
-        # multi-threaded or otherwise non-blocking executor) before
-        # progressing to the next round.
-		# $executor->waitForAnyModules();
-
-		# changing to waitForAllModules from waitForAnyModules results in 3x speed-up.
-		# Discussion here:
-		# http://cvs.openmicroscopy.org.uk/tiki/tiki-index.php?page=Analysis+Engine+Profiling
-		# Tom Macura
-		$executor->waitForAllModulesToFinish(); 
-		
-		
-        if (!$continue) {
-            # No modules were executed this round, but if we're
-            # using a multi-threaded Executor, there might be
-            # modules that are still executing.  If so, we should
-            # keep looping until all of the modules are done,
-            # since their completing might make further nodes
-            # eligible for execution.
-
-            $continue = $executor->modulesExecuting();
-        }
-    }
+		# wait for all modules to finish, then start executing the next set of nodes
+		$executor->waitForAllModulesToFinish();
+	}
+	
     $task->setMessage("");
     $task->finish();
 
@@ -896,7 +806,9 @@ __END__
 =head1 AUTHOR
 
 Douglas Creager <dcreager@alum.mit.edu>,
-Open Microscopy Environment, MIT
+Tom Macura <tmacura@nih.gov>
+
+Open Microscopy Environment, MIT, NIH
 
 =head1 SEE ALSO
 
