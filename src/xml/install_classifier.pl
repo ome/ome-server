@@ -47,13 +47,15 @@ my @classifierFiles = (
 
 # Classification Modules
 "OME/Analysis/Classifier/SignatureStitcher.ome",
+
 #"OME/Analysis/Classifier/ClassificationStatistics.ome",
 #"OME/Analysis/Classifier/BayesNetTrainer.ome",
 #"OME/Analysis/Classifier/BayesNetClassifier.ome",
 
 # Useful Chains
 #"OME/Analysis/Classifier/TrainerChain.ome", # needed
-"OME/Analysis/Classifier/SignatureChain.ome" # unnecessary, but potentially useful to developers
+"OME/Analysis/Classifier/SignatureChain.ome", # unnecessary, but potentially useful to developers
+"OME/Analysis/Classifier/TiledSignatureChain.ome", # unnecessary, but potentially useful to developers
 );
 
 my $session = OME::SessionManager->TTYlogin();
