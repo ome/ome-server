@@ -74,18 +74,23 @@ sub _renderData {
 			}
 		}
 	}
-	if( exists $field_requests->{ 'error' } ) {
-		foreach my $request ( @{ $field_requests->{ 'error' } } ) {
+	if( exists $field_requests->{ 'class_style' } ) {
+		foreach my $request ( @{ $field_requests->{ 'class_style' } } ) {
+			my $error_node_count = $obj->count_node_executions( 
+				'module_execution.status' => 'ERROR'
+			);
+			my $unfinished_node_count = $obj->count_node_executions( 
+				'module_execution.status' => 'UNFINISHED'
+			);
+			
 			my $request_string = $request->{ 'request_string' };
-			$record{ $request_string } = 1
-				if $obj->status eq 'ERROR';
-		}
-	}
-	if( exists $field_requests->{ 'caution' } ) {
-		foreach my $request ( @{ $field_requests->{ 'caution' } } ) {
-			my $request_string = $request->{ 'request_string' };
-			$record{ $request_string } = 1
-				if $obj->status eq 'UNFINISHED';
+			if ($error_node_count) {
+				$record{ $request_string } = 'class="ome_error"';
+			} elsif ($unfinished_node_count) {
+				$record{ $request_string } = 'class="ome_caution"';
+			} else {
+				$record{ $request_string } = 'class="ome_punchline"'; 
+			}
 		}
 	}
 

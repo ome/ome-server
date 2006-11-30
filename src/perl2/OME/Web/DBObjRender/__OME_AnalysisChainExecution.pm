@@ -109,8 +109,8 @@ sub _renderData {
 				
 				# render the counter (FINISHED)x (UNFINISHED)x (ERROR)x
 				my $link = "${finished_count}x";
-				$link .= ' <span class="ome_caution">'."${unfinished_count}</span>x" if $unfinished_count;
-				$link .= ' <span class="ome_error">'."${error_count}x</span>x" if $error_count;
+				$link .= ' <span class="ome_caution">'."${unfinished_count}x</span>" if $unfinished_count;
+				$link .= ' <span class="ome_error">'."${error_count}x</span>" if $error_count;
 
 				# Link straight to the mex if this node has a single NEX
 				if( $finished_count+$unfinished_count+$error_count eq 1 ) {
@@ -120,11 +120,11 @@ sub _renderData {
 						analysis_chain_node      => $node
 					);
 					
-					$link .= "<a href='".$self->getObjDetailURL( $single_nex->module_execution );
+					$link .= " <a href='".$self->getObjDetailURL( $single_nex->module_execution );
 
 				# Link to the search page if this node has many NEXs
 				} else {
-					$link .= "<a href='".
+					$link .= " <a href='".
 						$self->getSearchURL( 
 							'OME::AnalysisChainExecution::NodeExecution',
 							analysis_chain_node      => $node->id,
@@ -155,6 +155,25 @@ sub _renderData {
 			);
 			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = $error_node_count;
+		}
+	}
+	if( exists $field_requests->{ 'class_style' } ) {
+		foreach my $request ( @{ $field_requests->{ 'class_style' } } ) {
+			my $error_node_count = $obj->count_node_executions( 
+				'module_execution.status' => 'ERROR'
+			);
+			my $unfinished_node_count = $obj->count_node_executions( 
+				'module_execution.status' => 'UNFINISHED'
+			);
+			
+			my $request_string = $request->{ 'request_string' };
+			if ($error_node_count) {
+				$record{ $request_string } = 'class="ome_error"';
+			} elsif ($unfinished_node_count) {
+				$record{ $request_string } = 'class="ome_caution"';
+			} else {
+				$record{ $request_string } = 'class="ome_punchline"'; 
+			}
 		}
 	}
 	if( exists $field_requests->{ '/name' } ) {
