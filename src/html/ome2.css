@@ -32,6 +32,8 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_error { color: red; }
 
+.ome_caution { color: #FF6600; }
+
 .ome_blocking_step { background-color: yellow; }
 
 .ome_footer { font-size: 10px; color: #444444; }
@@ -63,7 +65,10 @@ a.ome_quiet:hover { text-decoration: none; color : #FF0000; }  /* Red is tempora
 a.ome_detail { font-weight: normal; color : #2222FF; }
 
 a.ome_error { text-decoration: line-through; font-weight: normal; color : red; }
+
 a.ome_error:hover { color: #006699; }
+
+a.ome_caution {font-weight: normal; color: #FF6600; }
 
 a.ome_punchline { font-weight: bold; color: #22F; }
 .ome_punchline { font-weight: bold; }

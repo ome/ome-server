@@ -1,5 +1,6 @@
 <a title="<TMPL_VAR NAME=analysis_chain.name> executed on <TMPL_VAR NAME=timestamp><TMPL_IF NAME=num_errors> had <TMPL_VAR NAME=num_errors> Errors.</TMPL_IF>" 
    href="<TMPL_VAR NAME=/obj_detail_url>" 
+   <TMPL_IF NAME=caution>class="ome_caution"</TMPL_IF>
    <TMPL_IF NAME=num_errors>class="ome_error"
    <TMPL_ELSE>class="ome_detail"</TMPL_IF>
 >

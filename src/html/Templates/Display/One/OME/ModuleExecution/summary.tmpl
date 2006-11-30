@@ -1,5 +1,6 @@
 <a title="<TMPL_VAR NAME=/name> <TMPL_IF NAME=error>had an error.</TMPL_IF>" 
-   href="<TMPL_VAR NAME=/obj_detail_url>" 
+   href="<TMPL_VAR NAME=/obj_detail_url>"
+   <TMPL_IF NAME=caution>class="ome_caution"</TMPL_IF>
    <TMPL_IF NAME=error>class="ome_error"
    <TMPL_ELSE>class="ome_punchline"</TMPL_IF>
 >

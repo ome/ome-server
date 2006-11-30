@@ -94,46 +94,54 @@ sub _renderData {
 			
 			my @node_execution_links;
 			foreach my $node ( @nodes ) {
+				my $finished_count = $obj->count_node_executions(
+					'module_execution.status' => 'FINISHED',
+					analysis_chain_node       => $node
+				);
+				my $unfinished_count = $obj->count_node_executions( 
+					'module_execution.status' => 'UNFINISHED',
+					analysis_chain_node       => $node
+				);
 				my $error_count = $obj->count_node_executions( 
 					'module_execution.status' => 'ERROR',
 					analysis_chain_node       => $node
 				);
-				my $nex_count = $obj->count_node_executions( 
-					analysis_chain_node       => $node
-				);
-				my $link;
+				
+				# render the counter (FINISHED)x (UNFINISHED)x (ERROR)x
+				my $link = "${finished_count}x";
+				$link .= ' <span class="ome_caution">'."${unfinished_count}</span>x" if $unfinished_count;
+				$link .= ' <span class="ome_error">'."${error_count}x</span>x" if $error_count;
+
 				# Link straight to the mex if this node has a single NEX
-				if( $nex_count eq 1 ) {
+				if( $finished_count+$unfinished_count+$error_count eq 1 ) {
 					my $single_nex = $factory->findObject( 
 						'OME::AnalysisChainExecution::NodeExecution',
 						analysis_chain_execution => $obj,
 						analysis_chain_node      => $node
 					);
-					$link = "${nex_count}x <a href='".
-						$self->getObjDetailURL( $single_nex->module_execution ).
-						"' title='View Executions of this node' ".
-						( $error_count ? 
-							'class="ome_error"' :
-							'class="ome_detail"'
-						).
-						">".
-						$self->getName( $node )."</a>";
+					
+					$link .= "<a href='".$self->getObjDetailURL( $single_nex->module_execution );
+
 				# Link to the search page if this node has many NEXs
 				} else {
-					$link = "${nex_count}x <a href='".
+					$link .= "<a href='".
 						$self->getSearchURL( 
 							'OME::AnalysisChainExecution::NodeExecution',
 							analysis_chain_node      => $node->id,
 							analysis_chain_execution => $obj->id
-						) .
-						"' title='View Executions of this node' ".
-						( $error_count ? 
-							'class="ome_error"' :
-							'class="ome_detail"'
-						).
-						">".
-						$self->getName( $node )."</a>";
+						);
 				}
+				
+				# set the Link title and apperance
+				$link .= "' title='View Executions of this node' ".
+						 ( $error_count ? 
+						 	 'class="ome_error"' : (
+						   $unfinished_count ?
+						   	 'class="ome_caution"':
+							 'class="ome_detail"')
+						 ).
+						 ">".
+						$self->getName( $node )."</a>";
 				push( @node_execution_links, $link );
 			}
 			my $request_string = $request->{ 'request_string' };

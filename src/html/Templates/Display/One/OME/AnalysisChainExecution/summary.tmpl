@@ -1,7 +1,8 @@
 <TMPL_VAR NAME=/selector>
 Analysis chain 
 <a title="<TMPL_VAR NAME=/name><TMPL_IF NAME=num_errors> had <TMPL_VAR NAME=num_errors> Errors.</TMPL_IF>" 
-   href="<TMPL_VAR NAME=/obj_detail_url>" 
+   href="<TMPL_VAR NAME=/obj_detail_url>"
+   <TMPL_IF NAME=caution>class="ome_caution"</TMPL_IF>
    <TMPL_IF NAME=num_errors>class="ome_error"
    <TMPL_ELSE>class="ome_punchline"</TMPL_IF>
 >

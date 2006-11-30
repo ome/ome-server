@@ -102,6 +102,13 @@ sub _renderData {
 				if $obj->module_execution->status eq 'ERROR';
 		}
 	}
+	if( exists $field_requests->{ 'caution' } ) {
+		foreach my $request ( @{ $field_requests->{ 'caution' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = 1
+				if $obj->module_execution->status eq 'UNFINISHED';
+		}
+	}
 	return %record;
 }
 
