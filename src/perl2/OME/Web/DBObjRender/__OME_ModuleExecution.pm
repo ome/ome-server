@@ -76,17 +76,10 @@ sub _renderData {
 	}
 	if( exists $field_requests->{ 'class_style' } ) {
 		foreach my $request ( @{ $field_requests->{ 'class_style' } } ) {
-			my $error_node_count = $obj->count_node_executions( 
-				'module_execution.status' => 'ERROR'
-			);
-			my $unfinished_node_count = $obj->count_node_executions( 
-				'module_execution.status' => 'UNFINISHED'
-			);
-			
 			my $request_string = $request->{ 'request_string' };
-			if ($error_node_count) {
+			if ($obj->status eq 'ERROR') {
 				$record{ $request_string } = 'class="ome_error"';
-			} elsif ($unfinished_node_count) {
+			} elsif ($obj->status eq 'UNFINISHED') {
 				$record{ $request_string } = 'class="ome_caution"';
 			} else {
 				$record{ $request_string } = 'class="ome_punchline"'; 
