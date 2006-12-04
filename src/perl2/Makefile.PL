@@ -35,8 +35,6 @@ use English;
 			ABSTRACT     => 'The Open Microscopy Environment',
 			DIR          => ['OME/Image/Pix','OME/ImportExport/Repacker/'],
             EXE_FILES    => ['OME/Java/omejava'],
-			MAN1PODS     => {},
-			MAN3PODS     => {},
 			INST_BIN     => File::Spec->catdir($pwd,'blib','bin'),
 			INST_LIB     => File::Spec->catdir($pwd,'blib','lib'),
 			INST_ARCHLIB => File::Spec->catdir($pwd,'blib','arch'),
