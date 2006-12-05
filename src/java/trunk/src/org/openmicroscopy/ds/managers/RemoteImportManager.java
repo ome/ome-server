@@ -38,6 +38,7 @@ package org.openmicroscopy.ds.managers;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.DataFactory;
@@ -81,6 +82,52 @@ public class RemoteImportManager
             getService(ConfigurationManager.class);
     }
 
+    public String getDefaultRepository() {
+      Hashtable result = 
+        (Hashtable) caller.dispatch("getDefaultRepository", null);
+      
+      return result.get("id").toString();
+    }
+
+    public List importFiles(List fileIDs) {
+      if (fileIDs == null) {
+        throw new IllegalArgumentException("List of file IDs cannot be null");
+      }
+
+      for (int i=0; i<fileIDs.size(); i++) {
+        if (!(fileIDs.get(i) instanceof Long)) {
+          throw new IllegalArgumentException("Each file ID must be a Long");
+        }
+      }
+
+      Object result = caller.dispatch("importFiles", 
+        new Object[] {getDefaultRepository(), fileIDs});
+   
+      if (result instanceof List) {
+        return (List) result;
+      }
+      return null;
+    }
+
+    public List importFiles(Dataset dataset, List fileIDs) {
+      if (fileIDs == null) {
+        throw new IllegalArgumentException("List of file IDs cannot be null");
+      }
+
+      for (int i=0; i<fileIDs.size(); i++) {
+        if (!(fileIDs.get(i) instanceof Long)) {
+          throw new IllegalArgumentException("Each file ID must be a Long");
+        }
+      }
+
+      Object result = caller.dispatch("importFiles", 
+        new Object[] {getDefaultRepository(), fileIDs, 
+        new Integer(dataset.getID())});
+   
+      if (result instanceof List) return (List) result;
+      return null;
+    }
+
     public int startRemoteImport(List fileIDs)
     {
         if (fileIDs == null)
@@ -91,7 +138,7 @@ public class RemoteImportManager
                 throw new IllegalArgumentException("Each file ID must be a Long");
 
         Object result = caller.dispatch("startImport",
-                                        new Object[] { fileIDs });
+            new Object[] { getDefaultRepository(), fileIDs });
 
         try
         {
@@ -113,6 +160,7 @@ public class RemoteImportManager
 
         Object result = caller.dispatch("startImport",
                                         new Object[] {
+                                            new Integer(getDefaultRepository()),
                                             new Integer(dataset.getID()),
                                             fileIDs
                                         });

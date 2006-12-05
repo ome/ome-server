@@ -58,6 +58,12 @@ public interface RemoteCaller
     String getSessionKey();
 
     /**
+     * Allows an existing connection to be reauthenticated.  Returns true if
+     * successful, or false if the session key is invalid.
+     */
+    boolean authenticate();
+
+    /**
      * Sets the session key directly to a known key string.
      * No verification or error checking is performed on the key.
      */

@@ -320,6 +320,19 @@ public class XmlRpcCaller
         }
     }
 
+    public boolean authenticate() {
+        synchronized(this)
+        {
+            vparams.addElement(sessionKey);
+            Object result = invoke("authenticateSession");
+            if (TRACE_CALLS)
+            {
+                traceFile.println("Authenticate");
+            }
+            return result.toString().trim().equals("1");
+        }
+    }
+
     public ServerVersion getServerVersion()
     {
         synchronized(this)
