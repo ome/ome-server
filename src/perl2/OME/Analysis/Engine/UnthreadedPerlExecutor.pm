@@ -77,6 +77,8 @@ sub executeModule {
 
 	my $start_time = [gettimeofday()];
 	$mex->timestamp('now()');
+	$mex->status('BUSY');
+	$mex->storeObject();
     eval {
 		$handler_class->require();
 		my $handler = $handler_class->new($mex);
