@@ -248,7 +248,7 @@ sub importGroup {
 	# get needed OMECA-XML parameters stored earlier
 	# theoretically, all XML blocks for the group should be identical
 	# (except for the TiffData element(s) specifying planar ordering)
-	my $firstfile = @$groupList[0]->getFilename();
+	my $firstfile = @$groupList[0]->getFileID();
 	logdbg "debug", "OME-TIFF: importGroup $firstfile";
 	my $CA_doc = $self->{$firstfile}->{'CA_doc'};
 	logdbg "debug", "OME-TIFF: OMECA-XML = ".($CA_doc->toString(1));
