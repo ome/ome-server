@@ -270,7 +270,7 @@ sub register_worker {
 	my @live_pids=();
 	foreach my $pid (@pids) {
 		chomp $pid;
-		if ($pid and $pid =~ /^\d+$/ and kill (0, $pid) > 0) {
+		if ($pid and $pid =~ /^\d+$/ and getpgrp ($pid) > 0) {
 			push (@live_pids, $pid);
 		}
 	}
@@ -312,7 +312,7 @@ sub unregister_worker {
 	my @live_pids=();
 	foreach my $pid (@pids) {
 		chomp $pid;
-		if ( $pid and $pid =~ /^\d+$/ and $pid != $$ and kill (0, $pid) > 0) {
+		if ( $pid and $pid =~ /^\d+$/ and $pid != $$ and getpgrp ($pid) > 0) {
 			push (@live_pids, $pid);
 		}
 	}
