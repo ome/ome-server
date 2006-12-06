@@ -183,6 +183,7 @@ undef $handler;
 	$worker->storeObject();
 	
 	# Set the MEX as executed by this worker.
+	$mex->status('BUSY');
 	$mex->executed_by_worker( $worker );
 	$mex->storeObject();
 
@@ -192,8 +193,6 @@ undef $handler;
 		# We probably don't need an eval here, because there's already one in this
 		# executor.
 		logdbg "debug", "NonBlockingSlaveWorkerCGI: executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
-		my $start_time = [gettimeofday()];
-		$mex->timestamp('now()');
 		eval {
 			my $executor = OME::Analysis::Engine::UnthreadedPerlExecutor->new();
 			$executor->executeModule ($mex,$Dependence,$target);
@@ -201,8 +200,7 @@ undef $handler;
 		if ($@) {
 			logdbg "debug", "NonBlockingSlaveWorkerCGI: ERROR executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target:\n$@";
 		}
-		$mex->total_time(tv_interval($start_time));
-		$mex->storeObject();
+
 		$worker->status('IDLE');
 		$worker->last_used('now()');
 		$worker->PID(undef);
