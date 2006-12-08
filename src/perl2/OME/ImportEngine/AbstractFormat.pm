@@ -72,6 +72,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 use OME::Tasks::ImportManager;
 use OME::Tasks::PixelsManager;
+use OME::ImportEngine::TIFFUtils;
 
 use File::Basename;
 use Log::Agent;
