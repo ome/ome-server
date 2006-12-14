@@ -535,8 +535,10 @@ sub getSearchCriteria {
 		# First look for any requested via parameters
 		@search_fields = $q->param( 'search_names' );
 		my %lookup = map{ $_ => undef } @search_fields;
-		# Look for fields shown in the object's summary to add to the bottom of the list
-		my @summaryFields = ( $render->getFields( $type, 'summary' ), 'id' );
+		# Add ALL columns to the list. It ain't necessarily pretty, but at 
+		# least it's complete. An admin or developer can always define a 
+		# search template if they want pretty.
+		my @summaryFields = ( $package_name->getPublishedCols(), 'id' );
 		foreach my $summaryField ( @summaryFields ) {
 			push @search_fields, $summaryField
 				if( not exists $lookup{ $summaryField } );
