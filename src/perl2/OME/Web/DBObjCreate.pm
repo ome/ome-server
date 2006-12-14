@@ -241,7 +241,7 @@ sub _getForm {
 				
 			# grab the published fields that aren't being excluded
 			my @fields = sort( 
-			    grep( ( not exists$excluded_fields{ $_ }), 
+			    grep( ( not exists $excluded_fields{ $_ }), 
 				  $package_name->getPublishedCols() )
 			    );
 
