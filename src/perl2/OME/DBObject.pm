@@ -1595,7 +1595,8 @@ sub getPublishedManyRefs {
 
 Returns a list of package column accessors. This is the "published" list
 of accessors; accessors to foreign key ids are excluded in favor of
-accessors to foreign objects.
+accessors to foreign objects. Also, exclude the 'target' field for ST's because
+it duplicates the more specific dataset, image, or feature field.
 
 =cut
 
@@ -1628,6 +1629,13 @@ sub getPublishedCols {
 			keys %$column_accessors
 		)
 	);
+	
+	# Exclude the target field for ST's that have one. (target duplicates
+	# the dataset, image, or feature field in non-global STs
+	if( UNIVERSAL::isa($class,"OME::SemanticType::Superclass") ) { 
+		@publishedCols = grep( ($_ ne 'target'), @publishedCols );
+	}
+	
 	return @publishedCols;
 }
 
