@@ -56,7 +56,9 @@
 **       with higher quantisations.
 **
 ** Sep 20 04 - T. Macura : ++ precision, all floats replaced with doubles
-**
+** Jan 12 07 - T. Macura : removing hash tables, going back to LUT because
+**                         we aren't actually using quantizations higher than 255
+**                         and the hash-tables have memory-leaks.
 **
 */
 
@@ -65,13 +67,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "CVIPtexture.h"
-#include "mapkit.h"
 
 #define RADIX 2.0
 #define EPSILON 0.000000001
 
 #define SIGN(x,y) ((y)<0 ? -fabs(x) : fabs(x))
 #define SWAP(a,b) {y=(a);(a)=(b);(b)=y;}
+#define PGM_MAXMAXVAL 255
 
 double f1_asm (double **P, int Ng);
 double f2_contrast (double **P, int Ng);
@@ -96,102 +98,97 @@ double *allocate_vector (int nl, int nh);
 double **allocate_matrix (int nrl, int nrh, int ncl, int nch);
 
 double** CoOcMat_Angle_0   (int distance, u_int8_t **grays,
-						   int rows, int cols, map_ii* tone);
+						   int rows, int cols, int* tone_LUT, int tone_count);
 double** CoOcMat_Angle_45  (int distance, u_int8_t **grays,
-						   int rows, int cols, map_ii* tone);
+						   int rows, int cols, int* tone_LUT, int tone_count);
 double** CoOcMat_Angle_90  (int distance, u_int8_t **grays,
-						   int rows, int cols, map_ii* tone);
+						   int rows, int cols, int* tone_LUT, int tone_count);
 double** CoOcMat_Angle_135 (int distance, u_int8_t **grays,
-						   int rows, int cols, map_ii* tone);
+						   int rows, int cols, int* tone_LUT, int tone_count);
 						   
 TEXTURE * Extract_Texture_Features(int distance, int angle, 
 		 		register u_int8_t **grays, int rows, int cols, int max_val)  
 {
-	map_ii tone; /* hash DataStructure from mapkit.c/h key=int value=int */
-	map_ii_element* tone_array;
+	int tone_LUT[PGM_MAXMAXVAL+1]; /* LUT mapping gray tone(0-255) to matrix indicies */
+	int tone_count=0; /* number of tones actually in the img. atleast 1 less than 255 */
+	int itone;
 	int row, col, i;
 	double **P_matrix;
 	double sum_entropy;
 	TEXTURE *Texture;
-
-	mapkit_size_t tones = 1024;
 	Texture = (TEXTURE *) calloc(1,sizeof(TEXTURE));
 	if (!Texture) {
 		printf("\nERROR in TEXTURE structure allocate\n");
 		exit(1);
 	}
 	
-	/* Determine the number of different gray scales (not maxval) */
-	map_ii_init_hint(&tone, tones);
-
-	/* -1 is returned if the key is missing from hash */
-	tone.defaultvalue = -1;
-	tone.alwaysdefault = 1;
-	tones = tone.used;
-	
-	/* set pixel intensity as keys of hash */
+	/* Determine the number of different gray tones (not maxval) */
+	for (row = PGM_MAXMAXVAL; row >= 0; --row)
+		tone_LUT[row] = -1;
 	for (row = rows - 1; row >= 0; --row)
 		for (col = 0; col < cols; ++col)
-			map_ii_set(&tone, grays[row][col], 1);
-	
-	/* set key values to pixel intensity order */
-	map_ii_getall_sorted (&tone, &tone_array, &tones);
-	for (i = 0; i < tones; i++)
-		tone_array[i].value = i;
-	map_ii_setall (&tone, tone_array, tones);
-	
+			tone_LUT[grays[row][col]] = grays[row][col];
+  
+	for (row = PGM_MAXMAXVAL, tone_count = 0; row >= 0; --row)
+		if (tone_LUT[row] != -1)
+			  tone_count++;
+
+	/* Use the number of different tones to build LUT */
+	for (row = 0, itone = 0; row <= PGM_MAXMAXVAL; row++)
+		if (tone_LUT[row] != -1)
+		  tone_LUT[row] = itone++;
+		  
 	/* compute gray-tone spatial dependence matrix */
 	if (angle == 0)
-		P_matrix = CoOcMat_Angle_0   (distance, grays, rows, cols, &tone);
+		P_matrix = CoOcMat_Angle_0   (distance, grays, rows, cols, tone_LUT, tone_count);
 	else if (angle == 45)	
-		P_matrix = CoOcMat_Angle_45  (distance, grays, rows, cols, &tone);
+		P_matrix = CoOcMat_Angle_45  (distance, grays, rows, cols, tone_LUT, tone_count);
 	else if (angle == 90)	
-		P_matrix = CoOcMat_Angle_90  (distance, grays, rows, cols, &tone);
+		P_matrix = CoOcMat_Angle_90  (distance, grays, rows, cols, tone_LUT, tone_count);
 	else if (angle == 135)
-		P_matrix = CoOcMat_Angle_135 (distance, grays, rows, cols, &tone);
+		P_matrix = CoOcMat_Angle_135 (distance, grays, rows, cols, tone_LUT, tone_count);
 	else {
 		fprintf (stderr, "Cannot created co-occurence matrix for angle %d. Unsupported angle.\n", angle); 
 		return NULL;
 	}
 	
 	/* compute the statistics for the spatial dependence matrix */
-  	Texture->ASM           = f1_asm       (P_matrix, tone.used);
-  	Texture->contrast      = f2_contrast  (P_matrix, tone.used);
- 	Texture->correlation   = f3_corr      (P_matrix, tone.used);
-  	Texture->variance      = f4_var       (P_matrix, tone.used);
-  	Texture->IDM           = f5_idm       (P_matrix, tone.used);
-  	Texture->sum_avg       = f6_savg      (P_matrix, tone.used);
+  	Texture->ASM           = f1_asm       (P_matrix, tone_count);
+  	Texture->contrast      = f2_contrast  (P_matrix, tone_count);
+ 	Texture->correlation   = f3_corr      (P_matrix, tone_count);
+  	Texture->variance      = f4_var       (P_matrix, tone_count);
+  	Texture->IDM           = f5_idm       (P_matrix, tone_count);
+  	Texture->sum_avg       = f6_savg      (P_matrix, tone_count);
   	
   	/* T.J.M watch below the cast from float to double */ 
-  	sum_entropy            = f8_sentropy  (P_matrix, tone.used); 
+  	sum_entropy            = f8_sentropy  (P_matrix, tone_count); 
   	Texture->sum_entropy   = sum_entropy;
-	Texture->sum_var       = f7_svar      (P_matrix, tone.used, sum_entropy);
+	Texture->sum_var       = f7_svar      (P_matrix, tone_count, sum_entropy);
 	
-  	Texture->entropy       = f9_entropy   (P_matrix, tone.used);
-  	Texture->diff_var      = f10_dvar     (P_matrix, tone.used);
-  	Texture->diff_entropy  = f11_dentropy (P_matrix, tone.used);
-  	Texture->meas_corr1    = f12_icorr    (P_matrix, tone.used);
-  	Texture->meas_corr2    = f13_icorr    (P_matrix, tone.used);
-    Texture->max_corr_coef = f14_maxcorr  (P_matrix, tone.used);
+  	Texture->entropy       = f9_entropy   (P_matrix, tone_count);
+  	Texture->diff_var      = f10_dvar     (P_matrix, tone_count);
+  	Texture->diff_entropy  = f11_dentropy (P_matrix, tone_count);
+  	Texture->meas_corr1    = f12_icorr    (P_matrix, tone_count);
+  	Texture->meas_corr2    = f13_icorr    (P_matrix, tone_count);
+    Texture->max_corr_coef = f14_maxcorr  (P_matrix, tone_count);
 
 	return (Texture);
 } 
 
 /* Compute gray-tone spatial dependence matrix */
 double** CoOcMat_Angle_0 (int distance, u_int8_t **grays,
-						 int rows, int cols, map_ii* tone)
+						 int rows, int cols, int* tone_LUT, int tone_count)
 {
 	int d = distance;
 	int x, y;
 	int row, col, itone, jtone;
 	int count=0; /* normalizing factor */
-	int tones = tone->used;
 	
-	double** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tone_count, 0, tone_count);
 	
 	/* zero out matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] = 0;
 			
 	for (row = 0; row < rows; ++row)
@@ -202,8 +199,8 @@ double** CoOcMat_Angle_0 (int distance, u_int8_t **grays,
 				
 			/* find x tone */
 			if (col + d < cols && grays[row][col + d]) {
-				x = map_ii_value(tone, grays[row][col]);
-				y = map_ii_value(tone, grays[row][col + d]);
+				x = tone_LUT[grays[row][col]];
+				y = tone_LUT[grays[row][col + d]];
 				matrix[x][y]++;
 				matrix[y][x]++;
 				count += 2 ;
@@ -211,27 +208,26 @@ double** CoOcMat_Angle_0 (int distance, u_int8_t **grays,
 		}
 		
 	/* normalize matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] /= count;
 			
 	return matrix;
 }
 
 double** CoOcMat_Angle_90 (int distance, u_int8_t **grays,
-						 int rows, int cols, map_ii*tone)
+						   int rows, int cols, int* tone_LUT, int tone_count)
 {
 	int d = distance;
 	int x, y;
 	int row, col, itone, jtone;
 	int count=0; /* normalizing factor */
-	int tones = tone->used;
 	
-	double** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tone_count, 0, tone_count);
 	
 	/* zero out matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] = 0;
 			
 	for (row = 0; row < rows; ++row)
@@ -242,8 +238,8 @@ double** CoOcMat_Angle_90 (int distance, u_int8_t **grays,
 				
 			/* find x tone */
 			if (row + d < rows && grays[row + d][col]) {
-				x = map_ii_value (tone, grays[row][col]);
-				y = map_ii_value (tone, grays[row + d][col]);
+				x = tone_LUT [grays[row][col]];
+				y = tone_LUT [grays[row + d][col]];
 				matrix[x][y]++;
 				matrix[y][x]++;
 				count += 2 ;
@@ -251,27 +247,26 @@ double** CoOcMat_Angle_90 (int distance, u_int8_t **grays,
 		}
 		
 	/* normalize matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] /= count;
 
 	return matrix;
 }
 
 double** CoOcMat_Angle_45 (int distance, u_int8_t **grays,
-						 int rows, int cols, map_ii* tone)
+						   int rows, int cols, int* tone_LUT, int tone_count)
 {
 	int d = distance;
 	int x, y;
 	int row, col, itone, jtone;
 	int count=0; /* normalizing factor */
-	int tones = tone->used;
 	
-	double** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tone_count, 0, tone_count);
 	
 	/* zero out matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] = 0;
 			
 	for (row = 0; row < rows; ++row)
@@ -282,8 +277,8 @@ double** CoOcMat_Angle_45 (int distance, u_int8_t **grays,
 				
 			/* find x tone */
 			if (row + d < rows && col - d >= 0 && grays[row + d][col - d]) {
-				x = map_ii_value (tone, grays[row][col]);
-				y = map_ii_value (tone, grays[row + d][col - d]);
+				x = tone_LUT [grays[row][col]];
+				y = tone_LUT [grays[row + d][col - d]];
 				matrix[x][y]++;
 				matrix[y][x]++;
 				count += 2 ;
@@ -291,27 +286,26 @@ double** CoOcMat_Angle_45 (int distance, u_int8_t **grays,
 		}
 		
 	/* normalize matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] /= count;
 			
 	return matrix;
 }
 
 double** CoOcMat_Angle_135 (int distance, u_int8_t **grays,
-						 int rows, int cols, map_ii* tone)
+						    int rows, int cols, int* tone_LUT, int tone_count)
 {
 	int d = distance;
 	int x, y;
 	int row, col, itone, jtone;
 	int count=0; /* normalizing factor */
-	int tones = tone->used;
 	
-	double** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tone_count, 0, tone_count);
 	
 	/* zero out matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] = 0;
 			
 	for (row = 0; row < rows; ++row)
@@ -322,8 +316,8 @@ double** CoOcMat_Angle_135 (int distance, u_int8_t **grays,
 				
 			/* find x tone */
 			if (row + d < rows && col + d < cols && grays[row + d][col + d]) {
-				x = map_ii_value(tone, grays[row][col]);
-				y = map_ii_value(tone, grays[row + d][col + d]);
+				x = tone_LUT [grays[row][col]];
+				y = tone_LUT [grays[row + d][col + d]];
 				matrix[x][y]++;
 				matrix[y][x]++;
 				count += 2 ;
@@ -331,8 +325,8 @@ double** CoOcMat_Angle_135 (int distance, u_int8_t **grays,
 		}
 		
 	/* normalize matrix */
-	for (itone = 0; itone < tones; ++itone)
-		for (jtone = 0; jtone < tones; ++jtone)
+	for (itone = 0; itone < tone_count; ++itone)
+		for (jtone = 0; jtone < tone_count; ++jtone)
 			matrix[itone][jtone] /= count;
 			
 	return matrix;

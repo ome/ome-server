@@ -5,8 +5,8 @@ MEX_FILE  = mb_texture
 MEX_EXT   = c # or cpp
 MEX_FLAGS = -O -inline
 
-INC       = CVIPtexture.h mapkit.h mapkit_generic.h
-LIB       = CVIPtexture.c mapkit.c mapkit_generic.c
+INC       = CVIPtexture.h
+LIB       = CVIPtexture.c
 
 CC        = gcc
 CC_FILE   = mb_texture_cl
