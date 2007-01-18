@@ -367,6 +367,9 @@ sub callMatlab {
 	my @outputs;
 	my $matlabCmd;
 	
+	# debugging instrumentation TJM
+	print "callMatlab ($function, nargout: $nargout, nargin $nargin)\n";
+	
 	# Make up names for inputs and place inputs into matlab memory space
 	for ( my $i = 0; $i < $nargin; $i++ ) {
 		$input_names[$i] = 'eceval_ome_input_'.$i;
