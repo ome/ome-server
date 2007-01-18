@@ -1160,9 +1160,7 @@ getVariable(pEngine,varname)
             RETVAL = engGetVariable(pEngine,varname);
         OUTPUT:
             RETVAL
-/*
-	pArray was renamed to pArray_putVar for debugging instrumentation
-*/
+
 int
 putVariable(pEngine,varname,pArray_putVar)
         OME::Matlab::Engine pEngine;
