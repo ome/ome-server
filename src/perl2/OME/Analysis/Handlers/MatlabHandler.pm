@@ -332,6 +332,9 @@ sub __execute {
 	# Store the outputs into our hash
 	foreach my $out_name ( @output_names ) {
 		my $array = shift ( @response );
+		defined ($array) or die "Output variable $out_name does not exist.\n".
+		       "This typically indicates an error in the execution of the program.\n".
+		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
 		$_matlab_variables{ $out_name } = $array;
 	}
 }
@@ -436,7 +439,8 @@ sub _getScalarFromMatlab {
  		$_matlab_variables{ $name } = shift( @response );
  	}
  	
-	$array = $_matlab_variables{ $name }
+	$array = $_matlab_variables{ $name };
+	defined ($array)
 		or die "Scalar output variable $name does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
@@ -748,7 +752,8 @@ sub MatlabArray_to_Pixels {
 	}
 	
 	# Get array's dimensions and pixel type
-	my $ml_pixels_array = $_matlab_variables{ $matlab_var_name }
+	my $ml_pixels_array = $_matlab_variables{ $matlab_var_name };
+	defined ($ml_pixels_array)
 		or die "Pixels output variable $matlab_var_name does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
@@ -955,7 +960,8 @@ sub MatlabVector_to_Attrs {
 	$_matlab_variables{ $matlab_var_name."_converted" } = \%matlab_vectors;
 	
 	# retrieve vector from matlab variable hash
-	my $convertedCell = $_matlab_variables{ $matlab_var_name."_converted" }
+	my $convertedCell = $_matlab_variables{ $matlab_var_name."_converted" };
+	defined ($convertedCell)
 		or die "Vector output variable $matlab_var_name"."_converted"." does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
@@ -1113,7 +1119,8 @@ sub MatlabStruct_to_Attr {
 		or die "Formal output could not be found. Error processing output: ".$xmlInstr->toString();
 
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
-	my $matlab_output = $_matlab_variables{ $matlab_var_name }
+	my $matlab_output = $_matlab_variables{ $matlab_var_name };
+	defined ($matlab_output)
 		or die "Struct output variable $matlab_var_name does not exist.\n".
 		       "This typically indicates an error in the execution of the program.\n".
 		       "The Module Name is ".$mex->module()->name()." and the Module Execution ID is ".$mex->id().".\n";
