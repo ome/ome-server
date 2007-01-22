@@ -1,19 +1,25 @@
+<tr><td class="ome_location_menu_td"><span class="ome_quiet">Home</span></td></tr>
 <!-- This is the home page for the Web UI. This is used by OME::Web::Home -->
 <table cellpadding="3" width="100%" cellspacing="0">
+
 	<tr>
 		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 0px;">
-			<TMPL_VAR NAME=image_header>
+			<TMPL_IF NAME="image_header"><span class="ome_quiet"><TMPL_VAR NAME=image_header> [<TMPL_VAR NAME=image_count> image(s)]</span>
+			<TMPL_ELSE><span class="ome_quiet" style="font-weight: bold;">No Dataset</span>
+			</TMPL_IF>
 		</td>
 		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 2px;">
-			<a href="serve.pl?Page=OME::Web::Search&Type=OME::Project" class="ome_quiet">You have <TMPL_VAR NAME=project_count> project(s)</a>
+			<span class="ome_quiet"><a href="serve.pl?Page=OME::Web::Search&Type=OME::Project" class="ome_quiet">You have <TMPL_VAR NAME=project_count> project(s)</a></span>
 		</td>
 		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 2px;">
-			<TMPL_VAR NAME=dataset_header>
-		</td>
-	</tr>
+			<TMPL_IF NAME="dataset_header"><span class="ome_quiet">Dataset(s) in <TMPL_VAR NAME=dataset_header> [<TMPL_VAR NAME=dataset_count> dataset(s)]</span>
+			<TMPL_ELSE><span class="ome_quiet" style="font-weight: bold;">No Project</span>
+			</TMPL_IF>	
 	<tr>
 		<td width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 0px;">
-			<TMPL_VAR NAME=images>
+			<TMPL_IF NAME="images"><TMPL_VAR NAME=images>
+			<TMPL_ELSE><span class="ome_quiet">No dataset is available for preview. Click <i>'New Dataset'</i> below to create one.</span>
+			</TMPL_IF>
 		</td>
 		<td align="right" width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 2px;">
 			<TMPL_VAR NAME=your_projects>
@@ -22,7 +28,9 @@
 			<TMPL_VAR NAME=others_projects>
 		</td>
 		<td align="right" width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 2px;">
-			<TMPL_VAR NAME=datasets>
+			<TMPL_IF NAME="datasets"><TMPL_VAR NAME=datasets>
+			<TMPL_ELSE><span class="ome_quiet">No project is available for preview. Click <i>'New Project'</i> below to create one.</span>
+                        </TMPL_IF>
 		</td>
 	</tr>
 	<tr>

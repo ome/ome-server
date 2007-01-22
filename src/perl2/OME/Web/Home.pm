@@ -84,19 +84,19 @@ sub __getQuickViewImageData {
 	my $q = $self->CGI();
 
 	# Build image header/content
-	my ($i_header, $i_content);
+	my ($i_header, $i_content, $d_icount);
 
 	if ($d) {
 		# Count of images in the dataset
-		my $d_icount = $d->count_images();
+		$d_icount = $d->count_images();
 	
 		# Header
 		$i_header  = $q->a( {
 				href => $self->getObjDetailURL( $d ),
 				class => 'ome_quiet',
 				}, 
-		$d->name() . ' Preview ');
-		$i_header .= $q->span({class => 'ome_quiet'}, "[$d_icount image(s)]");
+		$d->name());
+		$i_header .= $q->span({class => 'ome_quiet'});
 
 		# Content
 		$i_content = $self->Renderer()->renderArray( 
@@ -106,12 +106,13 @@ sub __getQuickViewImageData {
 			  more_info_url => $self->getObjDetailURL( $d ) 
 			}
 		);
-	} else {
-		$i_header .= $q->span({style => 'font-weight: bold;'}, 'No Dataset');
-		$i_content .= $q->span({class => 'ome_quiet'}, 'No dataset is available for preview. Click <i>\'New Dataset\'</i> below to create one.');
 	}
+#	else {
+#		$i_header .= $q->span({style => 'font-weight: bold;'}, 'No Dataset');
+#		$i_content .= $q->span({class => 'ome_quiet'}, 'No dataset is available for preview. Click <i>\'New Dataset\'</i> below to create one.');
+#	}
 	
-	return ($i_header, $i_content);
+	return ($i_header, $i_content, $d_icount);
 }
 
 =head2 __getQuickViewProjectData
@@ -124,7 +125,7 @@ sub __getQuickViewProjectData {
 	my ($self, $p) = @_;
 	my $q = $self->CGI();
 
-	# Count of projects owned by the Sesssion's user in teh entire DB
+	# Count of projects owned by the Sesssion's user in the entire DB
 	my $p_count  = OME::Tasks::ProjectManager->getUserProjectCount();
 
 	my $your_projects = $self->Renderer()->renderArray( 
@@ -156,18 +157,18 @@ sub __getQuickViewDatasetData {
 	my $q = $self->CGI();
 
 	# Build datasets in project header/content
-	my ($d_header, $d_content);
+	my ($d_header, $d_content, $p_dcount);
 
 	if ($p) {
 		# Count of datasets in the "most recent" project
-		my $p_dcount = $p->count_datasets();
+		$p_dcount = $p->count_datasets();
 	
 		# Header
 		$d_header .= $q->a( {
 				href => $self->getSearchAccessorURL( $p, 'datasets' ),
 				class => 'ome_quiet',
-			}, 'Datasets in ' . $p->name());
-		$d_header .= $q->span({class => 'ome_quiet'}, " [$p_dcount dataset(s)]");
+			}, $p->name());
+		$d_header .= $q->span({class => 'ome_quiet'});
 
 		my $i = 0;
 
@@ -187,12 +188,13 @@ sub __getQuickViewDatasetData {
 			++$i;
 			last if ($i == MAX_PREVIEW_DATASETS);
 		}
-	} else {
-		$d_header .= $q->span({style => 'font-weight: bold;'}, 'No Project');
-		$d_content .= $q->span({class => 'ome_quiet'}, 'No project is available for preview. Click <i>\'New Project\'</i> below to create one.');
 	}
+#	else {
+#		$d_header .= $q->span({style => 'font-weight: bold;'}, 'No Project');
+#		$d_content .= $q->span({class => 'ome_quiet'}, 'No project is available for preview. Click <i>\'New Project\'</i> below to create one.');
+#	}
 
-	return ($d_header, $d_content);
+	return ($d_header, $d_content, $p_dcount);
 }
 
 
@@ -229,18 +231,20 @@ sub getPageBody {
 	my $d = $session->dataset();
 
 	# Build image header/content;
-	my ($i_header, $i_content) = $self->__getQuickViewImageData($d);
+	my ($i_header, $i_content, $d_icount) = $self->__getQuickViewImageData($d);
 	
 	# Build projects header/content
 	my ($your_projects, $others_projects, $your_project_count) = $self->__getQuickViewProjectData($p);
 
 	# Build datasets in project header/content
-	my ($d_header, $d_content) = $self->__getQuickViewDatasetData($p);
+	my ($d_header, $d_content, $p_dcount) = $self->__getQuickViewDatasetData($p);
 
 
 	$tmpl->param(
 		image_header    => $i_header,
+		image_count	=> $d_icount,
 		dataset_header  => $d_header,
+		dataset_count	=> $p_dcount,
 		images          => $i_content,
 		your_projects   => $your_projects, 
 		others_projects => $others_projects, 
