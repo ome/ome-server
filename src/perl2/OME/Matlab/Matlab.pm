@@ -355,8 +355,14 @@ $mxFUNCTION_CLASS = __mxFUNCTION_CLASS();
 package OME::Matlab::Engine;
 
 # Perl wrapper function for a Matlab engine eval.
-my $MatlabOutputBuffer;
+my $outBuffer ='';
 sub getMatlabOutputBuffer {
+
+	my $MatlabOutputBuffer = $outBuffer;
+	
+	$MatlabOutputBuffer =~ s/(\0.*)$//;
+	$MatlabOutputBuffer =~ s/[^[:print:][:space:]]//g;
+	
 	return $MatlabOutputBuffer;
 }
 
@@ -366,9 +372,6 @@ sub callMatlab {
 	my @output_names;
 	my @outputs;
 	my $matlabCmd;
-	
-	# debugging instrumentation TJM
-	print "callMatlab ($function, nargout: $nargout, nargin $nargin)\n";
 	
 	# Make up names for inputs and place inputs into matlab memory space
 	for ( my $i = 0; $i < $nargin; $i++ ) {
@@ -390,17 +393,11 @@ sub callMatlab {
 	
 	$matlabCmd .= $function;
 	$matlabCmd .= "(".join(',', @input_names).");";
-	
-	my $outBuffer  = " " x 4096;
+
+	$outBuffer  = " " x 4096;
 	$engine->setOutputBuffer($outBuffer, length($outBuffer));
-		
 	$engine->eval($matlabCmd);
-	$outBuffer =~ s/(\0.*)$//;
-	$outBuffer =~ s/[^[:print:][:space:]]//g;
-	if ($outBuffer =~ m/\S/) {
-		$MatlabOutputBuffer = "A warning resulted from matlab command\n\t$matlabCmd\nThe message is:\n$outBuffer";
-	}
-	
+
 	# Get outputs from matlab memory space
 	foreach my $out_name ( @output_names ) {
 		push ( @outputs, $engine->getVariable($out_name) );
