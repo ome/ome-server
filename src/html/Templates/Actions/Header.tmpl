@@ -1,0 +1,27 @@
+<tr>
+	<td colspan="2" class="ome_header_td">
+		<table width="100%" cellspacing="0" cellpadding="0" border="0">
+			<tr>
+				<td align="left" valign="top">
+					<TMPL_UNLESS NAME="guest">
+						<span class="ome_welcome">Welcome, <TMPL_VAR NAME="user"></span><br>
+						
+						<TMPL_IF NAME="project">
+							<span class="ome_quiet">Recently viewed project: </span><TMPL_VAR NAME="project"><br>
+						<TMPL_ELSE>
+							<span class="ome_quiet">You have no current project. </span><a href=" serve.pl?Page=OME::Web::Search&amp;SearchType=OME::Project" class="ome_quiet">select</a>, <a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Project" class="ome_quiet">create new</a><br>
+						</TMPL_IF>
+						
+						<TMPL_IF NAME="dataset">
+							<span class="ome_quiet">Recently viewed dataset: </span><TMPL_VAR NAME="dataset"><br>
+						<TMPL_ELSE>
+							<span class="ome_quiet">You have no current dataset. </span><a href=" serve.pl?Page=OME::Web::Search&amp;SearchType=OME::Dataset" class="ome_quiet">select</a>, <a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Dataset" class="ome_quiet">create new</a>
+						</TMPL_IF>
+					</TMPL_UNLESS>
+				</td>
+				<td align="center" valign="top"><span class="ome_menu_title">Open Microscopy Environment</span> v2.7.0</td>
+				<td align="right" valign="top"><a href="serve.pl?Page=OME::Web::Home"><img alt="OME Logo" src="/ome-images/logo_smaller.gif" border="0"></a></td>
+			</tr>
+		</table>
+	</td>
+</tr> 

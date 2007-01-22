@@ -1,0 +1,45 @@
+<td valign="top" class="ome_main_menu_td">
+	<table width="135" class="ome_main_menu">
+
+		<TMPL_UNLESS NAME="guest">
+			<tr><td align="center" class="ome_main_menu_heading"><span class="ome_main_menu_heading">Create</span></td></tr>
+				<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Project" class="ome_main_menu_link">Project</a> <a href="http://www.openmicroscopy.org.uk/concepts/hierarchy.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+				<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Dataset" class="ome_main_menu_link">Dataset</a> <a href="http://www.openmicroscopy.org.uk/concepts/hierarchy.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+				<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=%40CategoryGroup" class="ome_main_menu_link">Category Group</a> <a href="http://www.openmicroscopy.org.uk/getting-started/manual_classification.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+				<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::DBObjCreate" class="ome_main_menu_link">Other</a></td></tr>
+		</TMPL_UNLESS>
+
+		<tr><td align="center" class="ome_main_menu_heading"><span class="ome_main_menu_heading">Search</span></td></tr>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search&amp;SearchType=OME::Project" class="ome_main_menu_link">Projects</a> <a href="http://www.openmicroscopy.org.uk/concepts/hierarchy.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search&amp;SearchType=OME::Dataset" class="ome_main_menu_link">Datasets</a> <a href="http://www.openmicroscopy.org.uk/concepts/hierarchy.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search&amp;SearchType=OME::Image" class="ome_main_menu_link">Images</a></td></tr>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search&amp;SearchType=%40CategoryGroup" class="ome_main_menu_link">Category Group</a> <a href="http://www.openmicroscopy.org.uk/getting-started/manual_classification.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search&amp;SearchType=OME::ModuleExecution" class="ome_main_menu_link">Module Executions</a> <a href="http://www.openmicroscopy.org.uk/concepts/analysis-executions.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search&amp;SearchType=OME::AnalysisChainExecution" class="ome_main_menu_link">Chain Executions</a> <a href="http://www.openmicroscopy.org.uk/concepts/analysis-executions.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search" class="ome_main_menu_link">Other</a></td></tr>
+
+		<tr><td align="center" class="ome_main_menu_heading"><span class="ome_main_menu_heading">Annotation</span> <span class="ome_main_menu_heading"><a href="http://www.openmicroscopy.org.uk/custom-annotations/" title="Help" class="ome_main_menu_heading">[?]</a></span></td></tr>
+			<TMPL_UNLESS NAME="guest"><tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::CG_ConstructTemplate" class="ome_main_menu_link">Create a Template</a></td></tr></TMPL_UNLESS>
+			<TMPL_UNLESS NAME="guest"><tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::CG_Annotator" class="ome_main_menu_link">Annotate Images</a></td></tr></TMPL_UNLESS>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::CG_Search" class="ome_main_menu_link">Search by Annotation</a></td></tr>
+			<TMPL_UNLESS NAME="guest"><tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::SpreadsheetImporterPrompt" class="ome_main_menu_link">Import Spreadsheet</a></td></tr></TMPL_UNLESS>
+
+		<TMPL_UNLESS NAME="guest">
+			<tr><td align="center" class="ome_main_menu_heading"><span class="ome_main_menu_heading">Images</span></td></tr>
+				<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::ImportImages" class="ome_main_menu_link">Import</a> <a href="http://www.openmicroscopy.org.uk/getting-started/import.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+				<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Wizards::ImportAndAnnotateImages" class="ome_main_menu_link">Import and Annotate Wizard</a></td></tr>
+				<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::XMLFileExport" class="ome_main_menu_link">Export as XML</a> <a href="http://www.openmicroscopy.org.uk/getting-started/export.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr>
+		</TMPL_UNLESS>
+
+		<tr><td align="center" class="ome_main_menu_heading"><span class="ome_main_menu_heading">Analysis</span></td></tr>
+			<TMPL_UNLESS NAME="guest"><tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::FindSpots" class="ome_main_menu_link">Find Spots</a> <a href="http://www.openmicroscopy.org.uk/howto/FindSpots-v2.pdf" title="Help" class="ome_main_menu_link">[?]</a></td></tr></TMPL_UNLESS>
+			<TMPL_UNLESS NAME="guest"><tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::ImportModules" class="ome_main_menu_link">Import Analysis Modules & Chains</a> <a href="http://www.openmicroscopy.org.uk/api/xml/AML/index.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr></TMPL_UNLESS>
+			<TMPL_UNLESS NAME="guest"><tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::ExecuteChain" class="ome_main_menu_link">Execute Chain</a> <a href="http://www.openmicroscopy.org.uk/howto/quantitative-image-analysis-MATLAB.html" title="Help" class="ome_main_menu_link">[?]</a></td></tr></TMPL_UNLESS>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Search&amp;SearchType=OME::AnalysisChainExecution" class="ome_main_menu_link">View Chain Results</a></td></tr>
+
+		<tr><td align="center" class="ome_main_menu_heading"><span class="ome_main_menu_heading">Options</span></td></tr>
+			<TMPL_UNLESS NAME="guest"><tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::TaskProgress" class="ome_main_menu_link">Tasks</a></td></tr></TMPL_UNLESS>
+			<tr><td onmouseover="this.className='ome_main_menu_link_hover'" onmouseout="this.className='ome_main_menu_link'" class="ome_main_menu_link"><a href="serve.pl?Page=OME::Web::Logout" class="ome_main_menu_link">Logout</a></td></tr>
+
+	</table>
+</td>
