@@ -58,6 +58,10 @@ sub new {
     return $self;
 }
 
+sub getMenuTD { return undef }  # No menu
+
+sub getHeaderTR {return undef } # No header
+
 sub getMenuBuilder { return undef }  # No menu
 
 sub getHeaderBuilder { return undef }  # No header
