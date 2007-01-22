@@ -1,4 +1,4 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -25,43 +25,28 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Douglas Creager <dcreager@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
-<OME
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
-  xmlns:xsi=
-    "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:STD=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-
-	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
- 		<SemanticType
-			Name= "Experiment"
-			AppliesTo = "G">
-			<Element
-				Name= "Type"
-				DBLocation = "EXPERIMENTS.TYPE"
-				DataType = "string"/>
-			<Element
-				Name= "Description"
-				DBLocation = "EXPERIMENTS.DESCRIPTION"
-				DataType = "string"/>
-			<Element
-				Name= "Experimenter"
-				DBLocation = "EXPERIMENTS.EXPERIMENTER"
-				DataType = "reference"
-				RefersTo = "Experimenter"/>
-		</SemanticType>
-	</SemanticTypeDefinitions>
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd       http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd     http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd">
+    <SemanticType Name="Experiment" AppliesTo="G">
+      <Label xml:lang="en">Experiment</Label>
+      <Label xml:lang="es">Experimento</Label>
+      <Element Name="Type" DBLocation="EXPERIMENTS.TYPE" DataType="string">
+        <Label xml:lang="en">Type</Label>
+        <Label xml:lang="es">Tipo</Label>
+      </Element>
+      <Element Name="Description" DBLocation="EXPERIMENTS.DESCRIPTION" DataType="string">
+        <Label xml:lang="en">Description</Label>
+        <Label xml:lang="es">Descripcion</Label>
+      </Element>
+      <Element Name="Experimenter" DBLocation="EXPERIMENTS.EXPERIMENTER" DataType="reference" RefersTo="Experimenter">
+        <Label xml:lang="en">Experimenter</Label>
+        <Label xml:lang="es">Investigador</Label>
+      </Element>
+    </SemanticType>
+  </SemanticTypeDefinitions>
 </OME>
