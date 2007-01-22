@@ -564,11 +564,12 @@ sub executeNodeWithTarget {
     # Create all of the appropriate ACTUAL_INPUTS for this MEX.
 
     my @inputs = $node->module()->inputs();
+    my $mex_status_inputs_ready=1;
     foreach my $formal_input (@inputs) {
         my $input_mex = $self->getPredecessorMEX($node,$formal_input,$target);
-
+        
 		logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX.")
-			and return unless defined $input_mex;
+			and $mex_status_inputs_ready=0 unless defined $input_mex;
           
         # check input_mexes to verify that the node is ready
      	my $input_mexes = $input_mex;
@@ -594,7 +595,7 @@ sub executeNodeWithTarget {
 				# the current node cannot execute.
 
 				logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX.")
-					and return if ($in_mex->status() ne 'FINISHED');		
+					and $mex_status_inputs_ready=0 if ($in_mex->status() ne 'FINISHED');		
 			}
 			
 			OME::Tasks::ModuleExecutionManager->
@@ -610,7 +611,7 @@ sub executeNodeWithTarget {
     # Look for an existing MEX with the same input tag.  If we find one,
     # then we've found a MEX which is eligible for attribute reuse.
 
-    if ($self->{flags}->{ReuseResults}) {
+    if ($self->{flags}->{ReuseResults} and $mex_status_inputs_ready) {
         logdbg ("debug", "  Looking for $input_tag");
         my $past_mex = $factory->
           findObject("OME::ModuleExecution",
@@ -640,11 +641,16 @@ sub executeNodeWithTarget {
       createNEX($mex,$self->{chain_execution},$node);
     $session->commitTransaction();
 
-    # Execute the module
-    my $executor = $self->{executor};
-    logdbg ("debug", "  Executing!");
-    $executor->executeModule($mex,$dependence,$target);
-	$mex->storeObject();
+    if ($mex_status_inputs_ready) {
+    	# Execute the module
+		my $executor = $self->{executor};
+		logdbg ("debug", "  Executing!");
+		$executor->executeModule($mex,$dependence,$target);
+		$mex->storeObject();
+	} else {		
+		$mex->status('UNREADY');
+		$mex->storeObject;
+	}
     return $nex;
 }
 
@@ -797,6 +803,73 @@ sub executeChain {
 	$chex->storeObject();
     $session->commitTransaction();
     return $self->{chain_execution};
+}
+
+=head2 finishChainExecution
+
+	OME::Analysis::Engine->finishChainExecution($chex, $task);
+=cut
+sub finishChainExecution {
+	my $class = shift;
+	my ($chex, $task) = @_;
+	my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+    
+    # get a list of MEX's corresponding to this CHEX with status either
+    # ERROR or UNREADY
+	my @error_nodes = $chex->node_executions( 'module_execution.status' => 'ERROR');
+	my @error_MEXs  = map( $_->module_execution, @error_nodes );
+	
+	my @unready_nodes = $chex->node_executions( 'module_execution.status' => 'UNREADY', __order => 'module_execution.timestamp');
+	my @unready_MEXs = map( $_->module_execution, @unready_nodes );
+ 
+	# always set the number of steps as the AE knows besto
+	$task->n_steps(scalar(@error_MEXs) + scalar(@unready_MEXs)); 
+    $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
+
+    # set-up executor
+    my $executor = OME::Analysis::Engine::Executor->
+      getDefaultExecutor();
+      
+	foreach my $mex (@error_MEXs, @unready_MEXs) {
+
+		my $target;
+		my $dependency;
+		if ( defined($target = $mex->image()) ) {
+			$dependency = "I";
+		} elsif ( defined($target = $mex->dataset()) ) {
+			$dependency = "D";
+		} else {
+			$dependency = "G";
+		}
+		
+		$task->step();
+		$task->setMessage('Executing `'.$mex->module->name()."`");
+		
+		# see if module is ready to be executed by checking if the module's
+		# actual inputs are all read		
+		my $mex_ready=1;
+
+		my @input_MEXs = $factory -> findObjects("OME::ModuleExecution::ActualInput", {module_execution => $mex} )
+			or die "Couldn't retrieve actual input MEXs for ".$mex->id()." (".$mex->module->name().") \n";
+		
+		foreach (@input_MEXs) {
+			if ($_->input_module_execution->status ne 'FINISHED') {
+				$mex_ready=0;
+				logdbg "debug", "PredecessorMEX (".$_->input_module_execution->id().") not ready so won't execute ".
+					$mex->module->name()."(".$mex->id().")";
+				last;
+			}
+		}
+		
+		if ($mex_ready) {
+			$executor->executeModule($mex,$dependency,$target);
+			$session->commitTransaction();
+		}
+	}
+	
+	$task->setMessage("");
+    $task->finish();
 }
 
 1;

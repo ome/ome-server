@@ -43,10 +43,11 @@ Getopt::Long::Configure("bundling");
 sub getCommands {
     return
       {
-       'chex_stats' => ['OME::Util::Dev::ChainStats'],
-       'lint'       => ['OME::Util::Dev::Lint'],
-       'classifier' => ['OME::Util::Dev::Classifier'],
-       'templates'  => ['OME::Util::Dev::Templates' ],
+       'chex_stats'     => ['OME::Util::Dev::ChainStats'],
+       'finish_execute' => ['OME::Util::Dev::FinishExecute'],
+       'lint'           => ['OME::Util::Dev::Lint'],
+       'classifier'     => ['OME::Util::Dev::Classifier'],
+       'templates'      => ['OME::Util::Dev::Templates' ],
       };
 }
 
@@ -62,6 +63,7 @@ Usage:
 
 ome commands are:
     chex_stats       Command for getting information about a Chain Execution
+    finish_execute   Command for clearing up a Chain Execution with errors.
     classifier       Commands that facilitate the computation of Image Signatures
     lint             Command for checking/correcting syntax of OME XML files
     templates        Command for displaying progress info about OME tasks
