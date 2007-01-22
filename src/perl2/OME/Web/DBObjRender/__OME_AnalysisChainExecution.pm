@@ -106,14 +106,19 @@ sub _renderData {
 					'module_execution.status' => 'ERROR',
 					analysis_chain_node       => $node
 				);
+				my $unready_count = $obj->count_node_executions( 
+					'module_execution.status' => 'UNREADY',
+					analysis_chain_node       => $node
+				);
 				
-				# render the counter (FINISHED)x (UNFINISHED)x (ERROR)x
+				# render the counter (FINISHED)x (UNFINISHED)x (UNREADY)x (ERROR)x
 				my $link = "${finished_count}x";
+				$link .= ' <span class="ome_another_caution">'."${unready_count}x</span>" if $unready_count;
 				$link .= ' <span class="ome_caution">'."${unfinished_count}x</span>" if $unfinished_count;
 				$link .= ' <span class="ome_error">'."${error_count}x</span>" if $error_count;
 
 				# Link straight to the mex if this node has a single NEX
-				if( $finished_count+$unfinished_count+$error_count eq 1 ) {
+				if( $finished_count+$unfinished_count+$error_count+$unready_count eq 1 ) {
 					my $single_nex = $factory->findObject( 
 						'OME::AnalysisChainExecution::NodeExecution',
 						analysis_chain_execution => $obj,
@@ -137,8 +142,10 @@ sub _renderData {
 						 ( $error_count ? 
 						 	 'class="ome_error"' : (
 						   $unfinished_count ?
-						   	 'class="ome_caution"':
-							 'class="ome_detail"')
+						   	 'class="ome_caution"': (
+						   $unready_count ?
+						   	 'class=ome_another_caution':
+							 'class="ome_detail"') )
 						 ).
 						 ">".
 						$self->getName( $node )."</a>";

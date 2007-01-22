@@ -96,6 +96,8 @@ sub _renderData {
 				$record{ $request_string } = 'class="ome_error"';
 			} elsif ($obj->module_execution->status eq 'UNFINISHED') {
 				$record{ $request_string } = 'class="ome_caution"';
+			} elsif ($obj->module_execution->status eq 'UNREADY') {
+				$record{ $request_string } = 'class="ome_another_caution"';
 			} else {
 				$record{ $request_string } = 'class="ome_punchline"'; 
 			}
