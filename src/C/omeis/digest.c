@@ -39,6 +39,7 @@
 #endif  /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -155,3 +156,21 @@ print_md (unsigned char * md_value)
 		printf("%02x", md_value[i]);
 }
 
+/*
+	This function is an inverse to print_md -- it converts a
+	message digest's ascii representation e.g. 
+	(4c71490bd3b02e0bbd61b59b4a4860699fa3e193) into an array of bits
+*/
+void
+convert_md (char* md_asci, u_int8_t* md_value)
+{
+	int i;
+	char short_string[3];
+	
+	for (i=0; i<20; i++) {
+		short_string[0] = md_asci[2*i];
+		short_string[1] = md_asci[2*i+1];
+		short_string[2] = '\0';
+		md_value[i] = (u_int8_t) strtol (short_string, NULL, 16);
+	}
+}

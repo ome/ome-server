@@ -53,4 +53,6 @@ get_md_from_buffer (void * buf, size_t buf_len, unsigned char * md_value);
 void 
 print_md (unsigned char *md_value);
 
+void
+convert_md (char* md_asci, u_int8_t* md_value);
 #endif /* digest_h */
