@@ -74,6 +74,7 @@ our @EXPORT = qw(
 		path_in_tree
 		which
 		euid
+		uid
 		get_mac
 		resolve_sym_links
 		scan_tree
@@ -1160,6 +1161,20 @@ sub euid {
 	}
 	
 	return ($oldEUID);
+}
+
+# modeled after EUID
+sub uid {
+	my $newUID = shift;
+	my $oldUID = $UID;
+
+	if (defined $newUID ) {
+		$UID = 0;
+		$UID = $newUID;
+		croak "Unable to set UID=$newUID\n" unless $UID == $newUID;
+	}
+	
+	return ($oldUID);
 }
 
 # path_in_tree ($tree,$path)
