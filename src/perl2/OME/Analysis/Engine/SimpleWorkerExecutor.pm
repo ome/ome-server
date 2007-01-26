@@ -312,8 +312,9 @@ sub waitForAllModulesToFinish {
 
 	while ($self->modulesExecuting()) {
 		$self->waitForAnyModulesToFinish ();
+		sleep(2); # a short pause allows workers started (by shiftQueue() )
+				  # to set their state to busy in the DB, before we check the DB
 	}
-
 }
 
 sub DESTROY {
