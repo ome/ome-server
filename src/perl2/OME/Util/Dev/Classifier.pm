@@ -56,6 +56,9 @@ use OME::ImportExport::ChainExport;
 use OME::Matlab;
 use OME::Session;
 
+use OME::Install::Util; # for euid()+uid()
+use OME::Install::Environment;
+
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
@@ -194,6 +197,10 @@ END_STDS
 
 sub compile_sigs {
 	my ($self,$commands) = @_;
+	my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+	my $environment = OME::Install::Environment->initialize();
+
 	my ($datasetStr, $chainStr, $output_file_name, $chex_id, $force_new_chex );
 	
 	GetOptions ('d=s' => \$datasetStr,
@@ -204,7 +211,20 @@ sub compile_sigs {
 	            
 	die "one or more options not specified"
 		unless (($datasetStr and $chainStr) or $chex_id) and $output_file_name;
+	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
 	
+	die "You must run this command with uid=0 (root).\n" if (euid() ne 0);
+	
+	# Drop our UID to the OME matlab user then open MATLAB connection
+	euid(scalar(getpwnam $environment->matlab_conf()->{USER}));
+	uid(scalar(getpwnam $environment->matlab_conf()->{USER}));
+	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
+		or die "Cannot open a connection to Matlab! as user ".$environment->matlab_conf()->{USER};
+	
+	# check if the matlab user has write permissions in this directory 
+	die "The ome matlab user `".$environment->matlab_conf()->{USER}."` lacks permissions to write $output_file_name" unless
+		open (CHECK, ">$output_file_name");
+		
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
 	
@@ -265,10 +285,6 @@ sub compile_sigs {
 		}
 	}
 	
-	# open MATLAB connection
-	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
-	or die "Cannot open a connection to Matlab!";
-	
 	# Find the chain execution or re-execute the chain
 	logdbg "debug", "finding signature stitcher module execution.";
 	if ($force_new_chex) {
@@ -327,7 +343,6 @@ sub compile_sigs {
 
 	# save the array to disk
 	logdbg "debug", "Saving the array to disk.";
-	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
 	
 	$engine->eval("global category_names_char_array");
 	$engine->putVariable('category_names_char_array',$category_names_array);
