@@ -573,6 +573,15 @@ sub createOMEPage {
 	my $header_tr = $self->getHeaderTR();	#replaces previous way of building the header
 	my $menu_td = $self->getMenuTD();	#replaces previous way of building the left menu
 
+	my $menu_location_td;
+	if(my $menu_builder = $self->getMenuBuilder()){
+		$menu_location_td =
+			 $CGI->td( {
+				 class => 'ome_location_menu_td',
+			}, $menu_builder->getPageLocationMenu());
+	}
+		
+
 	# if I have a footer builder, tack the footer onto the end of the body
 	if (my $footer_builder = $self->getFooterBuilder()) {
 	    my $footer = $footer_builder->getPageFooter();
@@ -581,8 +590,17 @@ sub createOMEPage {
 
 	my ($body_table, $body_td);
 
-	$body_table = $CGI->table({width => '100%'},$CGI->td({valign => 'top', width => '100%'}, $body));
-	$body_td = $CGI->td({valign => 'top', width => '100%'}, $body_table);
+	 if ($menu_location_td) {
+		$body_table = $CGI->table({width => '100%'},
+			$CGI->Tr( [
+				$menu_location_td,
+				$CGI->td({valign => 'top', width => '100%'}, $body),
+				])
+		);
+                $body_td = $CGI->td({valign => 'top', width => '100%'}, $body_table);
+         } else {
+		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
+	 }
 
 	# Main TR for the menu and body
 	my $main_tr;
