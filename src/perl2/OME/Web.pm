@@ -569,47 +569,22 @@ sub createOMEPage {
 		-onKeyPress => $self->getOnKeyPressJS() || '',
 	);
 	
-	# this will show up unless it is a popup or the getHeaderTR/getMenuTD are overriden in a subclass (Web::Login.pm)
-	my $header_tr = $self->getHeaderTR();	#replaces previous way of building the header
-	my $menu_td = $self->getMenuTD();	#replaces previous way of building the left menu
+	my $body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
 
-	my $menu_location_td;
-	if(my $menu_builder = $self->getMenuBuilder()){
-		$menu_location_td =
-			 $CGI->td( {
-				 class => 'ome_location_menu_td',
-			}, $menu_builder->getPageLocationMenu());
-	}
-		
-
-	# if I have a footer builder, tack the footer onto the end of the body
-	if (my $footer_builder = $self->getFooterBuilder()) {
-	    my $footer = $footer_builder->getPageFooter();
-	    $body .= $footer;
+	my $header = $self->getHeader();
+	my $header_td;
+	if($header){	#no header no td
+		$header_td = $CGI->td({colspan => '2', class => "ome_header_td"},$header);
 	}
 
-	my ($body_table, $body_td);
-
-	 if ($menu_location_td) {
-		$body_table = $CGI->table({width => '100%'},
-			$CGI->Tr( [
-				$menu_location_td,
-				$CGI->td({valign => 'top', width => '100%'}, $body),
-				])
-		);
-                $body_td = $CGI->td({valign => 'top', width => '100%'}, $body_table);
-         } else {
-		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
-	 }
+	my $menu = $self->getMenu();
+	my $menu_td;
+	if($menu){	#no menu no td
+		$menu_td = $CGI->td({valign => 'top', class => "ome_main_menu_td"}, $menu);
+	}
 
 	# Main TR for the menu and body
-	my $main_tr;
-
-	if ($menu_td) {
-		$main_tr = $CGI->Tr($menu_td . $body_td);
-	} else {
-		$main_tr = $CGI->Tr($body_td);
-	}
+	my $main_tr = $CGI->Tr($menu_td . $body_td);
 
 	# Packing table for the entire page
 	$body = $CGI->table( {
@@ -617,7 +592,7 @@ sub createOMEPage {
 			cellspacing => '0',
 			cellpadding => '3',
 		},
-		$header_tr || '',
+		$header_td || '',
 		$main_tr,
 	);
 		 		 
@@ -733,22 +708,25 @@ sub getOnLoadJS { return undef };  # Default
 sub getOnClickJS { return undef };  # Default
 sub getOnKeyPressJS { return undef };  # Default
 
-sub getMenuTD {
+=head2 getMenu
+=cut
+sub getMenu {
 	my $self = shift;
-	my $menu_td;	
+	my $menu;	
 
 	unless ($self->{_popup} or $self->{_nomenu}) {
 		my $menu_template;
 		$menu_template = OME::Web::TemplateManager->getActionTemplate("Menu.tmpl");
 		$menu_template->param(guest => ($self->Session()->isGuestSession()));
-		$menu_td = $menu_template->output();
+		$menu = $menu_template->output();
 	}
-	return $menu_td;
+	return $menu;
 }
-
-sub getHeaderTR{
+=head2 getHeader
+=cut
+sub getHeader{
 	my $self = shift;
-	my $header_tr;
+	my $header;
         my $CGI = $self->{CGI};
 	
 	my $session = OME::Session->instance();
@@ -765,50 +743,9 @@ sub getHeaderTR{
 		$header_template->param(user => $full_name);
 		$header_template->param(project => $project_links);
 		$header_template->param(dataset => $dataset_links);
-		$header_tr = $header_template->output();
+		$header = $header_template->output();
 	}
-	return $header_tr;
-}
-
-sub getMenuBuilder {
-	my $self = shift;
-
-	my $menu_builder;
-	
-	unless ($self->{_popup} or $self->{_nomenu}) {
-	#	$menu_builder = new OME::Web::DefaultMenuBuilder
-	#($self);
-	    $menu_builder = OME::Web::AccessManager->getMenuBuilder ($self);
-	}
-
-	return $menu_builder;
-}
-
-sub getHeaderBuilder {
-	my $self = shift;
-
-	my $header_builder;
-	
-	unless ($self->{_popup} or $self->{_noheader}) {
-		#$header_builder = new OME::Web::DefaultHeaderBuilder;
-	    $header_builder = OME::Web::AccessManager->getHeaderBuilder();
-	}
-
-	return $header_builder;
-}
-
-=head2
-
-    we need to return an nih footer if the page is not a popup and it is a guest sesion.
-=cut
-sub getFooterBuilder {
-    my $self = shift;
-
-    my $footer_builder;
-    unless ($self->{_popup} or $self->{_noheader}) {
-	$footer_builder = OME::Web::AccessManager->getFooterBuilder();
-    }
-    return $footer_builder;
+	return $header;
 }
 
 # lookup(customTable, defaultTable, key)

@@ -58,13 +58,9 @@ sub new {
     return $self;
 }
 
-sub getMenuTD { return undef }  # No menu
+sub getMenu { return undef }  # No menu
 
-sub getHeaderTR {return undef } # No header
-
-sub getMenuBuilder { return undef }  # No menu
-
-sub getHeaderBuilder { return undef }  # No header
+sub getHeader {return undef } # No header
 
 sub getPageTitle {
     return "Open Microscopy Environment - Login";
