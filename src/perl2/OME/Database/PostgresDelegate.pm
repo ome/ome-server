@@ -311,6 +311,34 @@ sub tableExists {
 	return undef;
 }
 
+# Supposed to be Standard SQL, from http://troels.arvin.dk/db/rdbms/
+use constant FIND_TABLE_COLUMNS => <<SQL;
+	SELECT column_name,data_type,column_default,is_nullable
+	FROM
+		information_schema.tables AS t
+	JOIN
+		information_schema.columns AS c ON
+		t.table_catalog=c.table_catalog AND
+		t.table_schema=c.table_schema AND
+		t.table_name=c.table_name
+	WHERE
+		t.table_name= lower(?)
+	ORDER BY
+		c.ordinal_position;
+SQL
+sub findTableColumns {
+	my ($self, $dbh, $rel) = @_;
+	my $table_array_ref
+		= $dbh->selectall_arrayref(FIND_TABLE_COLUMNS, {},$rel);
+	
+	my @cols;
+	foreach my $ref_col (@$table_array_ref) {
+		# first value in each row is the column name
+		my @row = @$ref_col;
+		push @cols, $row[0];
+	}
+	return @cols;
+}
 
 # Find the FKs for the given table
 # returns a hash ref in the following format:
