@@ -151,6 +151,20 @@ public abstract class DOMUtil {
     return null;
   }
 
+  /** Gets a list of the given element's child DOM elements. */
+  public static Vector getChildElements(Element el) {
+    if (el == null) return null;
+    Vector v = new Vector();
+    NodeList list = el.getChildNodes();
+    int size = list.getLength();
+    for (int i=0; i<size; i++) {
+      Node node = list.item(i);
+      if (!(node instanceof Element)) continue;
+      v.add(node);
+    }
+    return v;
+  }
+
   /**
    * Gets a list of the given element's child DOM elements
    * with the specified name.

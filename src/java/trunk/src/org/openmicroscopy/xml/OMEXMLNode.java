@@ -118,6 +118,11 @@ public abstract class OMEXMLNode implements DataInterface {
     return createNode(DOMUtil.getChildElement(name, element));
   }
 
+  /** Gets a list of all OME-XML node children. */
+  public Vector getChildren() {
+    return createNodes(DOMUtil.getChildElements(element));
+  }
+
   /** Gets a list of OME-XML node children with the given name. */
   public Vector getChildren(String name) {
     return createNodes(DOMUtil.getChildElements(name, element));
