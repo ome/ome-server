@@ -844,6 +844,68 @@ sub countObjectsLike {
     return $self->countObjects($class,$criteria);
 }
 
+sub newObjectsNitrox{
+	my ($self, $st, $mex, $data_ptr) = @_;
+	my $new_objects;
+	my $delegate = OME::Database::Delegate->getDefaultDelegate();
+
+	eval {
+		my $dbh = $self->{__ourDBH};
+		my %column_name_to_datahash;
+		
+		# What's the granularity of the ST?
+		my $gran = $st->granularity();
+		
+		if ($gran eq 'I') {
+			$column_name_to_datahash{'image_id'} = 'Target';
+		} elsif ($gran eq 'F') {
+			$column_name_to_datahash{'feature_id'} = 'Target';
+		} elsif ($gran eq 'D') {
+			$column_name_to_datahash{'dataset_id'} = 'Target';
+		}
+					
+		# How do the Semantic Elements map to Table Columns?
+		my @ses = $st->semantic_elements();
+		$column_name_to_datahash{lc($_->data_column->column_name())} = $_->name()
+			foreach (@ses);
+
+		# What are table's columns (table is to relation to which objects) ?
+		my $tn = $ses[0]->data_column->data_table()->table_name();
+		my @cols = $delegate->findTableColumns($dbh, $tn) or
+        	die "couldn't get Table Columns";
+
+        # inject the attribute_id and module_execution into the data_hashs
+		$column_name_to_datahash{'module_execution_id'} = 'module_execution_id';
+		$column_name_to_datahash{'attribute_id'} = 'attribute_id';
+		
+		my @data_hashs = @$data_ptr;
+        my $mex_id = $mex->id();
+		for (@data_hashs) {
+			$_ -> {'module_execution_id'} = $mex_id;
+			$_ -> {'attribute_id'} =
+						$delegate->getNextSequenceValue ($dbh, 'attribute_seq');
+		}
+		
+        # BUILD the SQL puts the right things in the right place.
+        $dbh->do("COPY $tn FROM STDIN");
+		foreach my $data_hash (@data_hashs) {
+			my $sql = "";
+			foreach my $col (@cols) {
+				$sql .= "\t" unless $sql eq "";
+				
+				die "Data Hash lacks value for ".$col
+					unless (defined $column_name_to_datahash{$col});
+				$sql .= $data_hash->{$column_name_to_datahash{$col}};					
+			}
+			$sql .= "\n";
+			$dbh->pg_putline($sql);
+		}        
+		$dbh->pg_endcopy;
+	};
+	
+	confess $@ if $@;
+	return $@? undef: 1;
+}
 sub newObject {
     my ($self, $class, $data) = @_;
 
