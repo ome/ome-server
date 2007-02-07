@@ -28,6 +28,7 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:	 Josiah Johnston <siah@nih.gov>
+#             optimized by Tom Macura responsible for newObjectsNitrox() 
 #
 #-------------------------------------------------------------------------------
 
@@ -95,6 +96,14 @@ sub execute {
 	
 	@formal_inputs = sort { $a->name cmp $b->name } @formal_inputs;
 
+	# prepare for the Signature Vector Entry outputs;
+	my $st_type = $factory->findObject("OME::SemanticType", name => 'SignatureVectorEntry');
+
+	$factory->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
+			module_execution => $mex,
+			semantic_type    => $st_type,
+	}) or die "Couldn't record MEX's SemanticTypeOutput of SignatureVectorEntry";
+
 	# Make some entries for each input
 	my $signature_vector_size = 0;
 	foreach my $formal_input ( @formal_inputs ) {
@@ -141,15 +150,16 @@ sub execute {
 			) or die "Couldn't make a SignatureVectorLegend";
 			
 			# Create a vector entry for each image
+			my @data_hashs;
 			foreach my $input_attr (@input_attr_list ) {
-				$factory->newAttribute( 
-					'SignatureVectorEntry', $input_attr->feature_id , $mex,
-					{
+				push (@data_hashs,{
 						Value  => $input_attr->$se_name,
-						Legend => $position
-					} 
-				) or die "Couldn't make a new vector entry";
-			}
+						Legend => $position->id(),
+						Target => $input_attr->feature_id(),
+					  });
+			}									
+			$factory->newObjectsNitrox( $st_type, $mex, \@data_hashs)
+				or die "Couldn't make a new vector entry";
 		}
 		$mex->write_time($mex->write_time() + tv_interval($start_time));
 	}
@@ -163,5 +173,6 @@ __END__
 =head1 AUTHOR
 
 Josiah Johnston <siah@nih.gov>
+Tom Macura <tmacura@nih.gov>
 
 =cut
