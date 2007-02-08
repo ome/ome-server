@@ -163,10 +163,10 @@ sub execute {
 	my @Values;
 	my @Legends;
 	@Targets = ();
-	$#Values=$signature_vector_size * num_of_signatures ;
-	$#Legends=$signature_vector_size * num_of_signatures ;
-	$#Targets=$signature_vector_size * num_of_signatures ;
-	
+	$#Values=$signature_vector_size * $num_of_signatures-1;
+	$#Legends=$signature_vector_size * $num_of_signatures-1;
+	$#Targets=$signature_vector_size * $num_of_signatures-1;
+
 	my %SignatureVectorEntries = (
 		Value => \@Values,
 		Legend => \@Legends,
