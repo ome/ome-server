@@ -27,8 +27,8 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:	 Josiah Johnston <siah@nih.gov>
-#             optimized by Tom Macura responsible for newObjectsNitrox() 
+# Written by:	Tom Macura <tmacura@nih.gov>
+#              based on Josiah Johnston <siah@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
@@ -80,6 +80,13 @@ use Time::HiRes qw(gettimeofday tv_interval);
 # This would mandate checking to see if the vector legend actual input is 
 # compatible with the sig stitcher module.
 
+sub print_err_msg {
+	my ($self,$txt) = @_;
+	my $timestamp = time;
+	my $timestr = localtime $timestamp;
+	logdbg "debug", "[$timestr] ".$txt;		
+}
+
 sub execute {
 	my ($self,$dependence,$target) = @_;
 	my $factory = OME::Session->instance()->Factory();
@@ -87,33 +94,77 @@ sub execute {
 	my $mex = $self->getModuleExecution();
 	my $module = $mex->module();
 	
-	# Figure out what's been passed in this time.
-	my $start_time = [gettimeofday()];
+	#
+	# Build the Signature Vector Legend 
+	#
+	$self->print_err_msg ("	Creating Signature VectorLegend (Perl)");
 	my @formal_inputs = $factory->findObjects('OME::Module::FormalInput', { module => $module });
-	$mex->read_time(tv_interval($start_time));
-	$mex->execution_time(0);
-	$mex->write_time(0);
-	
 	@formal_inputs = sort { $a->name cmp $b->name } @formal_inputs;
+	
+	my @VectorPositions;
+	my @FormalInputs;
+	my @SemanticElements;
+	my @Targets;
+	my %SignatureVectorLegends = (
+			VectorPosition => \@VectorPositions,
+			FormalInput => \@FormalInputs,
+			SemanticElement => \@SemanticElements,
+			Target => \@Targets);
+
+	my $signature_vector_size = 0;
+
+	foreach my $formal_input ( @formal_inputs ) {
+		my @SEs = $formal_input->semantic_type->semantic_elements();
+		@SEs = sort { $a->name cmp $b->name } @SEs;
+		
+		foreach my $se ( @SEs ) {
+		
+			# is SE of an appropriate type i.e a double
+			next if $se->data_column()->sql_type() eq 'string';
+			next if $se->data_column()->sql_type() eq 'reference';
+
+			$signature_vector_size++;
+			
+			# Define a new vector position.
+			push (@VectorPositions, $signature_vector_size);
+			push (@FormalInputs, $formal_input->name());
+			push (@SemanticElements, $se->name());
+			push (@Targets, $target->id());
+		}
+	}
+	
+	#	
+	# Build the Signature Vector Entry 
+	#
+	$self->print_err_msg ("	Writing Signature VectorLegend (newObjectsNitrox)");
+	my $SignatureVectorLegendST = $factory->findObject("OME::SemanticType", name => 'SignatureVectorLegend');
+	$factory->newObjectsNitrox ($SignatureVectorLegendST, $mex, %SignatureVectorLegends)
+		or die "Couldn't make SignatureVectorLegends";
 
 	# prepare for the Signature Vector Entry outputs;
-	my $st_type = $factory->findObject("OME::SemanticType", name => 'SignatureVectorEntry');
+	$self->print_err_msg ("	Creating SignatureVectorEntry (Perl)");
+
+	my $SignatureVectorEntryST = $factory->findObject("OME::SemanticType", name => 'SignatureVectorEntry');
 
 	$factory->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
 			module_execution => $mex,
-			semantic_type    => $st_type,
+			semantic_type    => $SignatureVectorEntryST,
 	}) or die "Couldn't record MEX's SemanticTypeOutput of SignatureVectorEntry";
 
-	# Make some entries for each input
-	my $signature_vector_size = 0;
+	my @Values;
+	my @Legends;
+	@Targets = ();
+	my %SignatureVectorEntries = (
+		Value => \@Values,
+		Legend => \@Legends,
+		Target => \@Targets,
+	);
+	
 	foreach my $formal_input ( @formal_inputs ) {
-		$start_time = [gettimeofday()];
-
-		my $timestamp = time;
-		my $timestr = localtime $timestamp;
-		logdbg "debug", "[$timestr] Creating Signature Vector for ".$formal_input->name();
 		die "Inputs of arity greater than 1 are not supported at this time. Error with input ".$formal_input->name()
 			if $formal_input->list();
+		
+		$self->print_err_msg ("	Creating Signature Vector for ".$formal_input->name());
 		
 		# Collect the actual inputs for all the images
 		my @input_attr_list = $self->getInputAttributes( $formal_input )
@@ -122,48 +173,32 @@ sub execute {
 		# Every semantic element gets an entry in the vector
 		my @SEs = $formal_input->semantic_type->semantic_elements();
 		@SEs = sort { $a->name cmp $b->name } @SEs;
-		$mex->read_time($mex->read_time() + tv_interval($start_time));
-		$timestamp = time;
-		$timestr = localtime $timestamp;
-		logdbg "debug", "[$timestr] \t Finished getting Input Attributed";
 
-		$start_time = [gettimeofday()];
 		foreach my $se ( @SEs ) {
-		
 			# is SE of an appropriate type i.e a double
 			next if $se->data_column()->sql_type() eq 'string';
 			next if $se->data_column()->sql_type() eq 'reference';
-
-			$signature_vector_size++;
 			my $se_name = $se->name();
 			
-			# Define a new vector position.
-			my $position = $factory->newAttribute( 
-# The line below is for a Gloabl Signature Vector Legend
-#				'SignatureVectorLegend', undef, $mex,
-				'SignatureVectorLegend', $target, $mex,
-				{
-					VectorPosition  => $signature_vector_size,
-					FormalInput     => $formal_input->name,
-					SemanticElement => $se_name
-				} 
-			) or die "Couldn't make a SignatureVectorLegend";
-			
-			# Create a vector entry for each image
-			my @data_hashs;
-			foreach my $input_attr (@input_attr_list ) {
-				push (@data_hashs,{
-						Value  => $input_attr->$se_name,
-						Legend => $position->id(),
-						Target => $input_attr->feature_id(),
-					  });
-			}									
-			$factory->newObjectsNitrox( $st_type, $mex, \@data_hashs)
-				or die "Couldn't make a new vector entry";
-		}
-		$mex->write_time($mex->write_time() + tv_interval($start_time));
-	}
+			my $position = $factory->findAttribute('SignatureVectorLegend',{
+													FormalInput => $formal_input->name(),
+													SemanticElement => $se_name,
+												  })
+			or die "Couldn't find a SignatureVectorLegend for".$formal_input->name().$se->name();
 
+			# Create a vector entry for each image
+			foreach my $input_attr (@input_attr_list ) {
+				push (@Values, $input_attr->$se_name);
+				push (@Legends, $position->id());
+				push (@Targets, $input_attr->feature_id());
+			}									
+
+		}
+	}
+	$self->print_err_msg ("	Writing SignatureVectorEntry (newObjectsNitrox)");
+	$factory->newObjectsNitrox( $SignatureVectorEntryST, $mex, %SignatureVectorEntries)
+			or die "Couldn't make a new vector entry";
+	$self->print_err_msg ("...done");
 }
 
 1;
@@ -172,7 +207,7 @@ __END__
 
 =head1 AUTHOR
 
-Josiah Johnston <siah@nih.gov>
 Tom Macura <tmacura@nih.gov>
+Josiah Johnston <siah@nih.gov>
 
 =cut
