@@ -845,10 +845,21 @@ sub countObjectsLike {
 }
 
 sub newObjectsNitrox{
-	my ($self, $st, $mex, %data_hash) = @_;
+	my ($self, $st, $mex, $data_hash_ptr, $opts) = @_;
+	my %data_hash = %$data_hash_ptr;
 	my $new_objects;
 	my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
+	my $ChunkSize;
+	my $CommitTransaction;
+	
+	if (defined %$opts) {
+		$ChunkSize = $opts->{'ChunkSize'}
+			if exists ($opts->{'ChunkSize'});
+		$CommitTransaction = $opts->{'CommitTransaction'}
+			if exists ($opts->{'CommitTransaction'});
+		print "chunkisze is $ChunkSize\n";
+	}
 	eval {
 		my $dbh = $self->{__ourDBH};
 		my %column_name_to_datahash;
@@ -879,6 +890,8 @@ sub newObjectsNitrox{
 		$column_name_to_datahash{'attribute_id'} = 'attribute_id';
 		
         my $obj_count = scalar (@{$data_hash{'Target'}});
+        $ChunkSize = $obj_count unless $ChunkSize;
+        
 		my @module_execution_ids;
 		my @attribute_ids;
 		$#module_execution_ids=$obj_count;
@@ -906,8 +919,16 @@ sub newObjectsNitrox{
 			}
 			$sql .= "\n";
 			$dbh->pg_putline($sql);
+
+			if ($i>0 and $i%$ChunkSize == 0) {
+				$dbh->pg_endcopy;
+				$dbh->commit if $CommitTransaction;
+				logdbg "debug", "Chunk $i finished ";
+				$dbh->do("COPY $tn FROM STDIN");
+			}
 		}        
 		$dbh->pg_endcopy;
+		$dbh->commit if $CommitTransaction;
 	};
 	
 	confess $@ if $@;
