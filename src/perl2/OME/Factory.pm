@@ -845,7 +845,7 @@ sub countObjectsLike {
 }
 
 sub newObjectsNitrox{
-	my ($self, $st, $mex, $data_ptr) = @_;
+	my ($self, $st, $mex, %data_hash) = @_;
 	my $new_objects;
 	my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
@@ -878,24 +878,28 @@ sub newObjectsNitrox{
 		$column_name_to_datahash{'module_execution_id'} = 'module_execution_id';
 		$column_name_to_datahash{'attribute_id'} = 'attribute_id';
 		
-		my @data_hashs = @$data_ptr;
+        my $obj_count = scalar (@{$data_hash{'Target'}});
+		my @module_execution_ids;
+		my @attribute_ids;
         my $mex_id = $mex->id();
-		for (@data_hashs) {
-			$_ -> {'module_execution_id'} = $mex_id;
-			$_ -> {'attribute_id'} =
-						$delegate->getNextSequenceValue ($dbh, 'attribute_seq');
+		for (my $i=0; $i<$obj_count; $i++) {
+			push (@module_execution_ids, $mex_id);
+			push (@attribute_ids, $delegate->getNextSequenceValue ($dbh, 'attribute_seq'));
 		}
 		
+		$data_hash{'module_execution_id'}=\@module_execution_ids;
+		$data_hash{'attribute_id'}=\@attribute_ids;
+
         # BUILD the SQL puts the right things in the right place.
         $dbh->do("COPY $tn FROM STDIN");
-		foreach my $data_hash (@data_hashs) {
+		for (my $i=0; $i<$obj_count; $i++) {
 			my $sql = "";
 			foreach my $col (@cols) {
 				$sql .= "\t" unless $sql eq "";
 				
 				die "Data Hash lacks value for ".$col
 					unless (defined $column_name_to_datahash{$col});
-				$sql .= $data_hash->{$column_name_to_datahash{$col}};					
+				$sql .= $data_hash{$column_name_to_datahash{$col}}[$i];					
 			}
 			$sql .= "\n";
 			$dbh->pg_putline($sql);
