@@ -105,6 +105,7 @@ sub execute {
 	my @FormalInputs;
 	my @SemanticElements;
 	my @Targets;
+
 	my %SignatureVectorLegends = (
 			VectorPosition => \@VectorPositions,
 			FormalInput => \@FormalInputs,
@@ -112,8 +113,16 @@ sub execute {
 			Target => \@Targets);
 
 	my $signature_vector_size = 0;
-
+	my $num_of_signatures = 0;
 	foreach my $formal_input ( @formal_inputs ) {
+		
+		# this should only be called once
+		if (not $num_of_signatures) {
+			my @input_attr_list = $self->getInputAttributes( $formal_input )
+			  or logdbg "debug", "Couldn't get inputs for formal input '".$formal_input->name."', (id=".$formal_input->id.")!";
+			$num_of_signatures = scalar (@input_attr_list);
+		}
+		
 		my @SEs = $formal_input->semantic_type->semantic_elements();
 		@SEs = sort { $a->name cmp $b->name } @SEs;
 		
@@ -154,12 +163,17 @@ sub execute {
 	my @Values;
 	my @Legends;
 	@Targets = ();
+	$#Values=$signature_vector_size .* num_of_signatures ;
+	$#Legends=$signature_vector_size .* num_of_signatures ;
+	$#Targets=$signature_vector_size .* num_of_signatures ;
+	
 	my %SignatureVectorEntries = (
 		Value => \@Values,
 		Legend => \@Legends,
 		Target => \@Targets,
 	);
 	
+	my $i=0;
 	foreach my $formal_input ( @formal_inputs ) {
 		die "Inputs of arity greater than 1 are not supported at this time. Error with input ".$formal_input->name()
 			if $formal_input->list();
@@ -188,9 +202,10 @@ sub execute {
 
 			# Create a vector entry for each image
 			foreach my $input_attr (@input_attr_list ) {
-				push (@Values, $input_attr->$se_name);
-				push (@Legends, $position->id());
-				push (@Targets, $input_attr->feature_id());
+				$Values[$i] = $input_attr->$se_name;
+				$Legends[$i] = $position->id();
+				$Targets[$i] = $input_attr->feature_id();
+				$i++;
 			}									
 
 		}

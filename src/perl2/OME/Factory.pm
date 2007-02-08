@@ -881,10 +881,13 @@ sub newObjectsNitrox{
         my $obj_count = scalar (@{$data_hash{'Target'}});
 		my @module_execution_ids;
 		my @attribute_ids;
+		$#module_execution_ids=$obj_count;
+		$#attribute_ids=$obj_count;
+		
         my $mex_id = $mex->id();
 		for (my $i=0; $i<$obj_count; $i++) {
-			push (@module_execution_ids, $mex_id);
-			push (@attribute_ids, $delegate->getNextSequenceValue ($dbh, 'attribute_seq'));
+			$module_execution_ids[$i] = $mex_id;
+			$attribute_ids[$i] = $delegate->getNextSequenceValue ($dbh, 'attribute_seq');
 		}
 		
 		$data_hash{'module_execution_id'}=\@module_execution_ids;
