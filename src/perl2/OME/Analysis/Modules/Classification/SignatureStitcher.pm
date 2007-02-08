@@ -147,7 +147,7 @@ sub execute {
 	#
 	$self->print_err_msg ("	Writing Signature VectorLegend (newObjectsNitrox)");
 	my $SignatureVectorLegendST = $factory->findObject("OME::SemanticType", name => 'SignatureVectorLegend');
-	$factory->newObjectsNitrox ($SignatureVectorLegendST, $mex, %SignatureVectorLegends)
+	$factory->newObjectsNitrox ($SignatureVectorLegendST, $mex, \%SignatureVectorLegends)
 		or die "Couldn't make SignatureVectorLegends";
 
 	# prepare for the Signature Vector Entry outputs;
@@ -211,7 +211,12 @@ sub execute {
 		}
 	}
 	$self->print_err_msg ("	Writing SignatureVectorEntry (newObjectsNitrox)");
-	$factory->newObjectsNitrox( $SignatureVectorEntryST, $mex, %SignatureVectorEntries)
+	my %newObjectsOptions = (
+		ChunkSize => 1000,
+		CommitTransaction => 1
+	);
+	$factory->newObjectsNitrox( $SignatureVectorEntryST, $mex,
+								\%SignatureVectorEntries, \%newObjectsOptions)
 			or die "Couldn't make a new vector entry";
 	$self->print_err_msg ("...done");
 }
