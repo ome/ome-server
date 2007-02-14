@@ -40,6 +40,7 @@ package org.openmicroscopy.xml;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Hashtable;
 import java.util.Vector;
 import org.openmicroscopy.ds.dto.DataInterface;
 import org.w3c.dom.*;
@@ -77,8 +78,8 @@ public abstract class OMEXMLNode implements DataInterface {
 
   // -- Static fields --
 
-  /** Next free ID number for generating internal ID attribute values. */
-  protected static int nextId = 1;
+  /** Next free ID numbers for generating internal ID attribute values. */
+  protected static Hashtable nextIds = new Hashtable();
 
 
   // -- Fields --
@@ -92,7 +93,13 @@ public abstract class OMEXMLNode implements DataInterface {
   /** Constructs an OME-XML node with the given associated DOM element. */
   public OMEXMLNode(Element element) {
     this.element = element;
-    if (hasLSID() && getLSID() == null) setLSID("id" + nextId++);
+    if (hasLSID() && getLSID() == null) {
+      String name = getElementName();
+      Integer id = (Integer) nextIds.get(name);
+      int q = id == null ? 0 : id.intValue();
+      setLSID(name + ":" + q);
+      nextIds.put(name, new Integer(q + 1));
+    }
   }
 
 
