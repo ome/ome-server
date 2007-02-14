@@ -126,12 +126,12 @@ public abstract class OMEXMLNode implements DataInterface {
   }
 
   /** Gets a list of all OME-XML node children. */
-  public Vector getChildren() {
+  public Vector getChildNodes() {
     return createNodes(DOMUtil.getChildElements(element));
   }
 
   /** Gets a list of OME-XML node children with the given name. */
-  public Vector getChildren(String name) {
+  public Vector getChildNodes(String name) {
     return createNodes(DOMUtil.getChildElements(name, element));
   }
 
