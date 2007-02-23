@@ -113,6 +113,23 @@ sub actionTemplateDir {
     return $tmpl_dir;
 }
 
+=head2 locationTemplateDir
+
+	my $template_dir = $self->locationTemplateDir( );
+	
+	Returns the directory where location templates are
+	located: generally, the "Location" subdirectory under
+	systemTemplateDir. 
+
+        This should only be used internally.
+=cut
+
+sub locationTemplateDir {
+    my $self = shift;
+    my $tmpl_dir = $self->systemTemplateDir();
+    $tmpl_dir .="Locations/";
+    return $tmpl_dir;
+}
 
 =head2 createTemplateDir
 
@@ -193,8 +210,30 @@ sub getActionTemplate {
     return $template;
 }
 
+=head1 getLocationTemplate
 
-=head1 getActionTemplate
+    my $template = OME::Web::TemplateManager->getLocationTemplate($templateName)
+
+    Get a template from the location directory, by file name.
+
+=cut
+
+sub getLocationTemplate {
+    my $self=shift;
+    my ($tmpl_name) = @_;
+
+    my $tmpl_dir = $self->locationTemplateDir();
+    die "Cannot find the template file '$tmpl_name' in the directory '$tmpl_dir'"
+    	unless( -e "$tmpl_dir/$tmpl_name" );
+    my $template = HTML::Template->new(
+		filename       => $tmpl_name,
+		path           => $tmpl_dir,
+		case_sensitive => 1
+	);
+    return $template;
+}
+
+=head1 getAccesDeniedTemplate
 
     Return the template used for indicating that the user does not
     have the priveleges to view the specified page.

@@ -172,6 +172,17 @@ sub getAuthenticatedTemplate {
     return OME::Web::TemplateManager->getCreateTemplate($type);
 }
 
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('Create.tmpl');
+	return $template->output();
+}
+
+
+
 =head2 getPageBody
 
 Overridable

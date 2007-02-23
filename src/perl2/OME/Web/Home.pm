@@ -53,6 +53,7 @@ use OME;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ImageManager;
+use OME::Web::TemplateManager;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -218,6 +219,12 @@ sub getPageTitle {
 sub getTemplate {
     my $self=shift;
     return OME::Web::TemplateManager->getActionTemplate('Home.tmpl');
+}
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('Home.tmpl');
+	return $template->output();	
 }
 
 sub getPageBody {

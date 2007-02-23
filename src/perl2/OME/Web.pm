@@ -569,7 +569,6 @@ sub createOMEPage {
 		-onKeyPress => $self->getOnKeyPressJS() || '',
 	);
 	
-	my $body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
 
 	my $header = $self->getHeader();
 	my $header_td;
@@ -581,6 +580,21 @@ sub createOMEPage {
 	my $menu_td;
 	if($menu){	#no menu no td
 		$menu_td = $CGI->td({valign => 'top', class => "ome_main_menu_td"}, $menu);
+	}
+
+	my $menu_location_td = $self->getLocation();
+
+	my ($body_table, $body_td);
+	if($menu_location_td){
+		$body_table = $CGI->table({width => '100%'},
+			$CGI->Tr( [
+				$menu_location_td,
+				$CGI->td({valign => 'top', width => '100%'}, $body),
+				])
+		);
+		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body_table);
+	}else{
+		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
 	}
 
 	# Main TR for the menu and body
@@ -707,6 +721,13 @@ sub getAccessNotAllowedPage() {
 sub getOnLoadJS { return undef };  # Default
 sub getOnClickJS { return undef };  # Default
 sub getOnKeyPressJS { return undef };  # Default
+
+
+=head2 getLocation
+=cut
+sub getLocation {
+	return undef;
+}
 
 =head2 getMenu
 =cut
