@@ -531,6 +531,25 @@ sub getNextSequenceValue {
 	return $row->[0];
 }
 
+# This command reserves a block of consecutive sequence values.
+# It is much quicker than calling getNextSequenceValue many times
+use constant SEQUENCE_BLOCK_SQL => <<SQL;
+  SELECT SETVAL(?,(SELECT NEXTVAL(?))+?);
+SQL
+
+sub getNextSequenceValueBlock {
+	my ($self,$dbh,$sequence,$block_size) = @_;
+	die "getNextSequenceValue: Wrong number of parameters"
+	  unless defined $dbh && defined $sequence && defined $block_size;
+
+	my $sth = $dbh->prepare(SEQUENCE_BLOCK_SQL);
+	$sth->execute($sequence,$sequence,$block_size);
+	my $row = $sth->fetch() or
+	  die "Could not read from sequence $sequence";
+
+	return $row->[0];
+}
+
 
 
 # $sth->execute($table_oid)
