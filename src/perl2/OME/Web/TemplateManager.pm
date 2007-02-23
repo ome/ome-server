@@ -74,41 +74,20 @@ sub rootTemplateDir {
     return $tmpl_dir;
 }
 
-
-=head2 systemTemplateDir
-
-	my $template_dir = $self->systemTemplateDir( );
-	
-	Returns the directory where templates core sytem functions are
-	located: generally, the "System" subdirectory under
-	rootTemplateDir. 
-
-        This should only be used internally.
-=cut
-
-sub systemTemplateDir {
-    my $self =shift;
-    my $tmpl_dir = $self->rootTemplateDir();
-    $tmpl_dir .="/System/";
-    return $tmpl_dir;
-}
-
-
-
 =head2 actionTemplateDir
 
 	my $template_dir = $self->actionTemplateDir( );
 	
 	Returns the directory where templates core sytem functions are
 	located: generally, the "Action" subdirectory under
-	systemTemplateDir. 
+	rootTemplateDir. 
 
         This should only be used internally.
 =cut
 
 sub actionTemplateDir {
     my $self = shift;
-    my $tmpl_dir = $self->systemTemplateDir();
+    my $tmpl_dir = $self->rootTemplateDir();
     $tmpl_dir .="Actions/";
     return $tmpl_dir;
 }
@@ -119,14 +98,14 @@ sub actionTemplateDir {
 	
 	Returns the directory where location templates are
 	located: generally, the "Location" subdirectory under
-	systemTemplateDir. 
+	rootTemplateDir. 
 
         This should only be used internally.
 =cut
 
 sub locationTemplateDir {
     my $self = shift;
-    my $tmpl_dir = $self->systemTemplateDir();
+    my $tmpl_dir = $self->rootTemplateDir();
     $tmpl_dir .="Locations/";
     return $tmpl_dir;
 }
@@ -134,14 +113,14 @@ sub locationTemplateDir {
 =head2 createTemplateDir
 
     The directory for creation templates.  Generally, the "Action"
-	subdirectory under systemTemplateDir. 
+	subdirectory under rootTemplateDir. 
 
         This should only be used internally.
 =cut
 
 sub createTemplateDir { 
     my $self = shift;
-    my $tmpl_dir = $self->systemTemplateDir();
+    my $tmpl_dir = $self->rootTemplateDir();
     return $tmpl_dir."/Create/";
 }
 
@@ -150,7 +129,7 @@ sub createTemplateDir {
 =head2 searchTemplateDir
 
     The directory for search templates.  Generally, the "Search"
-	subdirectory under systemTemplateDir. 
+	subdirectory under rootTemplateDir. 
 
         This should only be used internally.
 
@@ -158,7 +137,7 @@ sub createTemplateDir {
 
 sub searchTemplateDir { 
 	my $self = shift;
-	my $tmpl_dir = $self->systemTemplateDir();
+	my $tmpl_dir = $self->rootTemplateDir();
 	return $tmpl_dir."Search/";
 }
 
@@ -169,7 +148,7 @@ sub searchTemplateDir {
         returned will vary based on the number of items to be rendered
         - the "arity".  If one object is to be displayed, the
         templates will be found in "Display/One" under the
-        systemTemplateDir. Otherwise, the templates will be found
+        rootTemplateDir. Otherwise, the templates will be found
         under "Display/Many".
 
         This should only be used internally.
@@ -179,7 +158,7 @@ sub searchTemplateDir {
 sub baseRenderDir {
     my $self=shift;
     my $arity = shift;
-    my $tmpl_dir  = $self->systemTemplateDir();
+    my $tmpl_dir  = $self->rootTemplateDir();
     $tmpl_dir .= "Display/";
     $tmpl_dir .= 'One/' if( uc( $arity ) eq 'ONE' );
     $tmpl_dir .= 'Many/' if( uc( $arity ) eq 'MANY' );
