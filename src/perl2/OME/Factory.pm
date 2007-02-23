@@ -37,6 +37,8 @@
 
 package OME::Factory;
 use OME;
+use Time::Local;
+use Time::HiRes qw(gettimeofday tv_interval);
 our $VERSION = $OME::VERSION;
 
 =head1 NAME
@@ -844,22 +846,52 @@ sub countObjectsLike {
     return $self->countObjects($class,$criteria);
 }
 
-sub newObjectsNitrox{
+# newObjectsNitrox is used to insert multiple attributes of the same semantic-type
+# into Postgress. newObjectsNitrox was written to insert 16million SignatureVectorEntrie
+# attributes back when we had a 'signature stitcher'.
+#
+# This code is high-performance (uses Postgress's COPY TO command) and has been
+# thorughly tested
+#
+# we ended up not useing this function because we changed the Feature Extraction Chain to
+# longer need a Signature Stitcher Module.
+#
+# Here's an example how to call this function:
+#
+# my %SignatureVectorEntries = (
+# 	Value => \@Values,
+# 	Legend => \@Legends,
+# 	Target => \@Targets,
+# );
+# 	
+# my %newObjectsOptions = (
+# 		ChunkSize => 16000,     # how many rows to insert before committing a transaction
+# 		CommitTransaction => 1, # commit transactions after each chunk
+# 		ObjCount => $i, # length of Value\Legend\Target arrays
+# );
+# $factory->newObjectsNitrox( $SignatureVectorEntryST, $mex,
+# 							\%SignatureVectorEntries, \%newObjectsOptions)
+# or die "Couldn't make a new vector entry";
+				
+sub newObjectsNitrox {
 	my ($self, $st, $mex, $data_hash_ptr, $opts) = @_;
 	my %data_hash = %$data_hash_ptr;
 	my $new_objects;
 	my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
-	my $ChunkSize;
 	my $CommitTransaction;
-	
+	my $ObjCount = scalar (@{$data_hash{'Target'}});
+	my $ChunkSize = $ObjCount;
+
 	if (defined %$opts) {
-		$ChunkSize = $opts->{'ChunkSize'}
-			if exists ($opts->{'ChunkSize'});
 		$CommitTransaction = $opts->{'CommitTransaction'}
 			if exists ($opts->{'CommitTransaction'});
-		print "chunkisze is $ChunkSize\n";
+		$ObjCount = $opts->{'ObjCount'}
+			if exists ($opts->{'ObjCount'});
+		$ChunkSize = $opts->{'ChunkSize'}
+			if exists ($opts->{'ChunkSize'});
 	}
+	
 	eval {
 		my $dbh = $self->{__ourDBH};
 		my %column_name_to_datahash;
@@ -880,7 +912,7 @@ sub newObjectsNitrox{
 		$column_name_to_datahash{lc($_->data_column->column_name())} = $_->name()
 			foreach (@ses);
 
-		# What are table's columns (table is to relation to which objects) ?
+		# What are table's columns ?
 		my $tn = $ses[0]->data_column->data_table()->table_name();
 		my @cols = $delegate->findTableColumns($dbh, $tn) or
         	die "couldn't get Table Columns";
@@ -889,42 +921,50 @@ sub newObjectsNitrox{
 		$column_name_to_datahash{'module_execution_id'} = 'module_execution_id';
 		$column_name_to_datahash{'attribute_id'} = 'attribute_id';
 		
-        my $obj_count = scalar (@{$data_hash{'Target'}});
-        $ChunkSize = $obj_count unless $ChunkSize;
-        
 		my @module_execution_ids;
 		my @attribute_ids;
-		$#module_execution_ids=$obj_count;
-		$#attribute_ids=$obj_count;
+		$#module_execution_ids=$ObjCount;
+		$#attribute_ids=$ObjCount;
 		
         my $mex_id = $mex->id();
-		for (my $i=0; $i<$obj_count; $i++) {
+        my $end_sequence_block = $delegate->getNextSequenceValueBlock
+        							($dbh, 'attribute_seq', $ObjCount);
+        my $start_sequence_value = $end_sequence_block - $ObjCount;
+
+		for (my $i=0; $i<$ObjCount; $i++) {
 			$module_execution_ids[$i] = $mex_id;
-			$attribute_ids[$i] = $delegate->getNextSequenceValue ($dbh, 'attribute_seq');
+			$attribute_ids[$i] = $start_sequence_value + $i;
 		}
 		
 		$data_hash{'module_execution_id'}=\@module_execution_ids;
 		$data_hash{'attribute_id'}=\@attribute_ids;
 
-        # BUILD the SQL puts the right things in the right place.
-        $dbh->do("COPY $tn FROM STDIN");
-		for (my $i=0; $i<$obj_count; $i++) {
-			my $sql = "";
-			foreach my $col (@cols) {
-				$sql .= "\t" unless $sql eq "";
-				
-				die "Data Hash lacks value for ".$col
+		# write a LUT that has the attributes in the same order as the table
+        my @col_LUT = ();
+        my $col_num = scalar(@cols);
+        foreach my $col (@cols) {
+			die "Data Hash lacks value for ".$col
 					unless (defined $column_name_to_datahash{$col});
-				$sql .= $data_hash{$column_name_to_datahash{$col}}[$i];					
+        	push (@col_LUT, $data_hash{$column_name_to_datahash{$col}});
+        }
+        
+        # write SQL puts the right things in the right place.
+        $dbh->do("COPY signature_copy_constraints  FROM STDIN");
+		my $sql = "";
+		for (my $i=0; $i<$ObjCount; $i++) {
+			$sql .= $col_LUT[0][$i]; # first row doesn't need \t
+			for (my $j=1; $j<$col_num; $j++) {
+				$sql .= "\t".$col_LUT[$j][$i];					
 			}
 			$sql .= "\n";
-			$dbh->pg_putline($sql);
 
-			if ($i>0 and $i%$ChunkSize == 0) {
+			if ($i%$ChunkSize == 0 and $i>0) {
+				$dbh->pg_putline($sql);
 				$dbh->pg_endcopy;
 				$dbh->commit if $CommitTransaction;
 				logdbg "debug", "Chunk $i finished ";
-				$dbh->do("COPY $tn FROM STDIN");
+				$sql = "";
+				$dbh->do("COPY signature_copy_constraints  FROM STDIN");
 			}
 		}        
 		$dbh->pg_endcopy;
