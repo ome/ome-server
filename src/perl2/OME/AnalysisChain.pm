@@ -89,8 +89,6 @@ __PACKAGE__->hasMany('nodes',
                      'OME::AnalysisChain::Node' => 'analysis_chain');
 __PACKAGE__->hasMany('links',
                      'OME::AnalysisChain::Link' => 'analysis_chain');
-__PACKAGE__->hasMany('paths',
-                     'OME::AnalysisPath' => 'analysis_chain');
 __PACKAGE__->hasMany('executions',
                      'OME::AnalysisChainExecution' => 'analysis_chain');
 

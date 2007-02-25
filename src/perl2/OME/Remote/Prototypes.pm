@@ -596,9 +596,6 @@ addPrototype("OME::AnalysisChain","nodes",[],['OME::Factory::Iterator'],
 addPrototype("OME::AnalysisChain","links",[],['OME::AnalysisChain::Link','*']);
 addPrototype("OME::AnalysisChain","links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_links");
-addPrototype("OME::AnalysisChain","paths",[],['OME::AnalysisPath','*']);
-addPrototype("OME::AnalysisChain","paths",[],['OME::Factory::Iterator'],
-             publishedName => "iterate_paths");
 
 addPrototype("OME::AnalysisChain::Node","analysis_chain",
              ['OME::AnalysisChain'],['OME::AnalysisChain']);
@@ -627,22 +624,7 @@ addPrototype("OME::AnalysisChain::Link","to_node",
              ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
 addPrototype("OME::AnalysisChain::Link","to_input",
              ['OME::Module::FormalInput'],['OME::Module::FormalInput']);
-
-addPrototype("OME::AnalysisPath","path_length",['$'],['$']);
-addPrototype("OME::AnalysisPath","analysis_chain",
-             ['OME::AnalysisChain'],['OME::AnalysisChain']);
-addPrototype("OME::AnalysisPath","path_nodes",
-             [],['OME::AnalysisPath::Map','*']);
-addPrototype("OME::AnalysisPath","path_nodes",
-             [],['OME::Factory::Iterator'],
-             publishedName => "iterate_path_nodes");
-
-addPrototype("OME::AnalysisPath::Map","path_order",['$'],['$']);
-addPrototype("OME::AnalysisPath::Map","path",
-             ['OME::AnalysisPath'],['OME::AnalysisPath']);
-addPrototype("OME::AnalysisPath::Map","analysis_chain_node",
-             ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
-
+             
 addPrototype("OME::AnalysisChainExecution","timestamp",['$'],['$']);
 addPrototype("OME::AnalysisChainExecution","analysis_chain",
              ['OME::AnalysisChain'],['OME::AnalysisChain']);
