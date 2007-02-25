@@ -53,8 +53,6 @@ OME/AnalysisChain/Link.pm
 OME/AnalysisChain/Node.pm
 OME/AnalysisChainExecution.pm
 OME/AnalysisChainExecution/NodeExecution.pm
-OME/AnalysisPath.pm
-OME/AnalysisPath/Map.pm
 OME/Configuration.pm
 OME/Configuration/Variable.pm
 OME/Database/Delegate.pm

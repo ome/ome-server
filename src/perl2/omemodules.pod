@@ -62,10 +62,6 @@ OME Modules - Table of Contents
 
 =item L<OME::AnalysisChainExecution::NodeExecution>
 
-=item L<OME::AnalysisPath>
-
-=item L<OME::AnalysisPath::Map>
-
 =back
 
 =head2 Session management

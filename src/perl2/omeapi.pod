@@ -179,14 +179,6 @@ C<ANALYSIS_VIEW_LINKS> (L<C<OME::AnalysisView::Link>|OME::AnalysisView>)
 
 =item *
 
-C<ANALYSIS_PATHS> (L<C<OME::AnalysisPath>|OME::AnalysisPath>)
-
-=item *
-
-C<ANALYSIS_PATH_MAP> (L<C<OME::AnalysisPath::Map>|OME::AnalysisPath>)
-
-=item *
-
 C<ANALYSIS_EXECUTIONS> (L<C<OME::AnalysisExecution>|OME::AnalysisExecution>)
 
 =item *
