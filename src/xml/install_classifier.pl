@@ -28,21 +28,21 @@ my @classifierFiles = (
 
 # Transform Modules
 "OME/Analysis/Transforms/FourierTransform.ome",
-"OME/Analysis/Transforms/WaveletSignatures.ome",
+"OME/Analysis/Transforms/WaveletTransform.ome",
 "OME/Analysis/Transforms/ChebyshevTransform.ome",
 
 # Signature Modules
 "OME/Analysis/Statistics/EdgeStatistics.ome",
-"OME/Analysis/Statistics/FeatureStatistics.ome",
+"OME/Analysis/Statistics/ObjectStatistics.ome",
 "OME/Analysis/Statistics/CombFirst4Moments.ome",            # new Nikita
-"OME/Analysis/Statistics/ZernikeMoments.ome",
+"OME/Analysis/Statistics/ZernikePolynomials.ome",
 "OME/Analysis/Statistics/ChebyshevFourierStatistics.ome",
 "OME/Analysis/Statistics/ChebyshevStatistics.ome",
 "OME/Analysis/Statistics/HaralickTextures.ome",
-"OME/Analysis/Statistics/RadonTransform.ome",               # new Nikita
+"OME/Analysis/Statistics/RadonTransformStatistics.ome",     # new Nikita
 "OME/Analysis/Statistics/MultiScaleHistograms.ome",         # new Nikita
 "OME/Analysis/Statistics/TamuraTextures.ome",               # new Nikita
-"OME/Analysis/Statistics/GaborTextureFilters.ome",          # new Nikita
+"OME/Analysis/Statistics/GaborTextures.ome",        		# new Nikita
 
 
 # Classification Modules
@@ -54,7 +54,7 @@ my @classifierFiles = (
 
 # Useful Chains
 #"OME/Analysis/Classifier/TrainerChain.ome", # needed
-"OME/Analysis/Classifier/FeatureExtractionChain.ome", # unnecessary, but potentially useful to developers
+#"OME/Analysis/Classifier/FeatureExtractionChain.ome", # unnecessary, but potentially useful to developers
 #"OME/Analysis/Classifier/TiledSignatureChain.ome", # unnecessary, but potentially useful to developers
 );
 
