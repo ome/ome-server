@@ -91,6 +91,9 @@ sub execute {
 	my ($self,$dependence,$target) = @_;
 	my $factory = OME::Session->instance()->Factory();
 
+	my $start_timestamp = time;
+	my $start_timestr = localtime $start_timestamp;
+
 	my $mex = $self->getModuleExecution();
 	my $module = $mex->module();
 	
@@ -163,9 +166,11 @@ sub execute {
 	my @Values;
 	my @Legends;
 	@Targets = ();
-	$#Values=$signature_vector_size * $num_of_signatures-1;
-	$#Legends=$signature_vector_size * $num_of_signatures-1;
-	$#Targets=$signature_vector_size * $num_of_signatures-1;
+	# pre-sizing is only a guess I assume that each ST has less than 64 SEs
+	# if this guess is wrong, performance will degrade
+	$#Values= 64 * $num_of_signatures-1;
+	$#Legends=64 * $num_of_signatures-1;
+	$#Targets=64 * $num_of_signatures-1;
 
 	my %SignatureVectorEntries = (
 		Value => \@Values,
@@ -173,7 +178,6 @@ sub execute {
 		Target => \@Targets,
 	);
 	
-	my $i=0;
 	foreach my $formal_input ( @formal_inputs ) {
 		die "Inputs of arity greater than 1 are not supported at this time. Error with input ".$formal_input->name()
 			if $formal_input->list();
@@ -188,6 +192,7 @@ sub execute {
 		my @SEs = $formal_input->semantic_type->semantic_elements();
 		@SEs = sort { $a->name cmp $b->name } @SEs;
 
+		my $i=0;
 		foreach my $se ( @SEs ) {
 			# is SE of an appropriate type i.e a double
 			next if $se->data_column()->sql_type() eq 'string';
@@ -207,17 +212,25 @@ sub execute {
 				$Targets[$i] = $input_attr->feature_id();
 				$i++;
 			}									
-
 		}
+		
+		$self->print_err_msg ("	Writing SignatureVectorEntry (newObjectsNitrox)");
+		my %newObjectsOptions = (
+			ChunkSize => 16000,
+			CommitTransaction => 1,
+			ObjCount => $i,
+		);
+		$factory->newObjectsNitrox( $SignatureVectorEntryST, $mex,
+									\%SignatureVectorEntries, \%newObjectsOptions)
+				or die "Couldn't make a new vector entry";
 	}
-	$self->print_err_msg ("	Writing SignatureVectorEntry (newObjectsNitrox)");
-	my %newObjectsOptions = (
-		ChunkSize => 1000,
-		CommitTransaction => 1
-	);
-	$factory->newObjectsNitrox( $SignatureVectorEntryST, $mex,
-								\%SignatureVectorEntries, \%newObjectsOptions)
-			or die "Couldn't make a new vector entry";
+	
+	my $end_timestamp = time;
+	my $end_timestr = localtime $end_timestamp;
+	
+	print "Started $start_timestr\n";
+	print "Finished $end_timestr\n";
+	
 	$self->print_err_msg ("...done");
 }
 
