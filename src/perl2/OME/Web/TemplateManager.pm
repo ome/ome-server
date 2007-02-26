@@ -71,7 +71,7 @@ OME::Web::TemplateManager - code for retrieving and instantiating templates
 sub rootTemplateDir { 
     my $self = shift;
     my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-    return $tmpl_dir;
+    return $tmpl_dir."/";
 }
 
 =head2 actionTemplateDir
