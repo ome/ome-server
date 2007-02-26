@@ -1,7 +1,7 @@
 #  Tomasz Macura
 
 MEX       = mex
-MEX_FILE  = mb_Znl
+MEX_FILE  = Znl
 INC       = complex.h
 LIB       = complex.c
 MEX_EXT   = c # or cpp
