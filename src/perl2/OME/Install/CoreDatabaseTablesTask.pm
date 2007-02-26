@@ -335,7 +335,7 @@ sub get_installation_mex {
 		and croak "Module \"Installation\" not loaded into DB - Bootstrap failed, see $LOGFILE_NAME details."
 		unless $module;
 
-	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G',undef, undef, undef, 0, undef) or
+	my $mex = OME::Tasks::ModuleExecutionManager->createMEX($module,'G',undef, undef, undef, $OME_EXPER->{ExperimenterID}, undef) or
 		print BOLD, "[FAILURE]", RESET, ".\n"
 			and print $LOGFILE "ERROR creating MEX for Installation module\n"
 			and croak "ERROR creating MEX for Installation module, see $LOGFILE_NAME details.";
@@ -603,14 +603,12 @@ sub configure_guest_access {
     # guest access on, without having to re-run the install script.
     
     my $guest =
-	$factory->findObject('@Experimenter',{FirstName=>'Guest',
-					      LastName=>'User'});
+	$factory->findObject('OME::SemanticType::BootstrapExperimenter',OMEName=>'guest');
     if (!$guest) {
 		print "Creating Guest User!";
-		my $module = $factory->findObject("OME::Module",name =>
-						  'Administration');
+		my $module = $session->Configuration()->administration_module();
 		my $mex =
-			OME::Tasks::ModuleExecutionManager->createMEX($module,'G');
+			OME::Tasks::ModuleExecutionManager->createMEX($module,'G',undef, undef, undef, $session->UserState()->experimenter(), undef);
 		# Create a universal execution for this module, so that the analysis
 		# engine never tries to execute it.
 		OME::Tasks::ModuleExecutionManager->
