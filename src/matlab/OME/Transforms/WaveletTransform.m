@@ -43,7 +43,7 @@
 %%      5-11-2004
 %% 
 
-function [det1,det2] = WaveletSignatures(img),
+function [det1,det2] = WaveletTransform(img),
 L = 2; 
 % Perform decomposition at level 2 of 'img' using sym5. 
 [c,s]   = wavedec2(img,L,'sym5');

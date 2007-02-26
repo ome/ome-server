@@ -34,13 +34,14 @@
   
 <AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
 	<AnalysisChain
-		Name="Signature Chain Diagram"
+		Name="Feature Extraction Chain Diagram"
 		Locked="false">
 		<Description>
-			This is a diagram of the signature chain. It will import, but will not execute
-			because outputs of multiple modules lead into a single input.
-			Use `ome help classifier lint` to convert this into a usable chain by
-			unraveling the multiple inputs into separate modules.
+			This is a diagram of the Feature Extraction (signature extraction) chain. It will import, but will
+			not execute because outputs of multiple modules lead into a single input.
+			
+			See `ome help dev lint untangle_chains` to learn how to convert this file into a usable chain by raveling
+			the multiple inputs into separate modules.
 		</Description>
 		<Nodes>
 			<!-- Tiling Trunk-->
@@ -55,7 +56,7 @@
 			<!-- Modules for computing Edge Statistics -->
 			<Node NodeID="Gradient"       ProgramName="Gradient"/>
 			
-			<!-- Modules for computing Feature Statistics -->
+			<!-- Modules for computing Object Statistics -->
 			<Node NodeID="OtsusGlobalThreshold"   ProgramName="Otsu's Global Threshold"/>
 	
 			<!-- Transform Modules -->
@@ -79,17 +80,17 @@
 				ProgramName="ChebyshevCoefficientMatrix -> DerivedPixels"/>
 				
 			<!-- Signature Modules -->
-			<Node NodeID="EdgeStatistics"             ProgramName="Edge Statistics"/>
-			<Node NodeID="FeatureStatistics"          ProgramName="Feature Statistics"/>
-			<Node NodeID="CombFirst4Moments"          ProgramName="Comb First 4 Moments"/>
-			<Node NodeID="ZernikeMoments"             ProgramName="Zernike Moments"/>
-			<Node NodeID="ChebyshevFourierStatistics" ProgramName="Chebyshev Fourier Statistics"/>
-			<Node NodeID="ChebyshevStatistics"        ProgramName="Chebyshev Statistics"/>
-			<Node NodeID="HaralickTextures"           ProgramName="Haralick Textures 2D Rotation Invariant"/>
-			<Node NodeID="RadonTransform4Angles"      ProgramName="Radon Transform 4 Angles"/>
-			<Node NodeID="MultiScaleHistograms"       ProgramName="Multi-Scale Histograms"/>
-			<Node NodeID="TamuraTextures"             ProgramName="Tamura Textures"/>
-			<Node NodeID="GaborTextureFilters"        ProgramName="Gabor Texture Filters"/>
+			<Node NodeID="EdgeStatistics"             	ProgramName="Edge Statistics"/>
+			<Node NodeID="ObjectStatistics"          	ProgramName="Object Statistics"/>
+			<Node NodeID="CombFirst4Moments"          	ProgramName="Comb First 4 Moments"/>
+			<Node NodeID="ZernikePolyomials"            ProgramName="Zernike Polynomials"/>
+			<Node NodeID="ChebyshevFourierStatistics" 	ProgramName="Chebyshev Fourier Statistics"/>
+			<Node NodeID="ChebyshevStatistics"        	ProgramName="Chebyshev Statistics"/>
+			<Node NodeID="HaralickTextures"           	ProgramName="Haralick Textures 2D Rotation Invariant"/>
+			<Node NodeID="RadonTransformStatistics"     ProgramName="Radon Transform Statistics"/>
+			<Node NodeID="MultiScaleHistograms"       	ProgramName="Multi-Scale Histograms"/>
+			<Node NodeID="TamuraTextures"             	ProgramName="Tamura Textures"/>
+			<Node NodeID="GaborTextures"        		ProgramName="Gabor Textures"/>
 		</Nodes>
 		
 		<Links>
@@ -111,13 +112,13 @@
 				FromNodeID="Gradient" FromOutputName="Gradient"
 				ToNodeID="EdgeStatistics" ToInputName="Gradient"/>
 			
-			<!-- Binary Mask arc into Feature Statistics -->
+			<!-- Binary Mask arc into Object Statistics -->
 			<Link
 				FromNodeID="ROI" FromOutputName="Image ROIs"
 				ToNodeID="OtsusGlobalThreshold" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="OtsusGlobalThreshold" FromOutputName="Binary Mask"
-				ToNodeID="FeatureStatistics" ToInputName="Binary Mask"/>
+				ToNodeID="ObjectStatistics" ToInputName="Binary Mask"/>
 				
 			<!-- Fourier arc into Signatures -->
 			<Link
@@ -131,7 +132,7 @@
 				ToNodeID="CombFirst4Moments" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="FrequencySpace->DerivedPixels" FromOutputName="Pixels"
-				ToNodeID="ZernikeMoments" ToInputName="Pixels"/>			
+				ToNodeID="ZernikePolyomials" ToInputName="Pixels"/>			
 			<Link
 				FromNodeID="FrequencySpace->DerivedPixels" FromOutputName="Pixels"
 				ToNodeID="ChebyshevFourierStatistics" ToInputName="Pixels"/>				
@@ -143,7 +144,7 @@
 				ToNodeID="HaralickTextures" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="FrequencySpace->DerivedPixels" FromOutputName="Pixels"
-				ToNodeID="RadonTransform4Angles" ToInputName="Pixels"/>
+				ToNodeID="RadonTransformStatistics" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="FrequencySpace->DerivedPixels" FromOutputName="Pixels"
 				ToNodeID="MultiScaleHistograms" ToInputName="Pixels"/>
@@ -196,7 +197,7 @@
 				ToNodeID="HaralickTextures" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="ChebyshevCoefficientMatrix->DerivedPixels" FromOutputName="Pixels"
-				ToNodeID="RadonTransform4Angles" ToInputName="Pixels"/>
+				ToNodeID="RadonTransformStatistics" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="ChebyshevCoefficientMatrix->DerivedPixels" FromOutputName="Pixels"
 				ToNodeID="MultiScaleHistograms" ToInputName="Pixels"/>
@@ -210,7 +211,7 @@
 				ToNodeID="CombFirst4Moments" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="ROI" FromOutputName="Image ROIs"
-				ToNodeID="ZernikeMoments" ToInputName="Pixels"/>			
+				ToNodeID="ZernikePolyomials" ToInputName="Pixels"/>			
 			<Link
 				FromNodeID="ROI" FromOutputName="Image ROIs"
 				ToNodeID="ChebyshevFourierStatistics" ToInputName="Pixels"/>				
@@ -222,7 +223,7 @@
 				ToNodeID="HaralickTextures" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="ROI" FromOutputName="Image ROIs"
-				ToNodeID="RadonTransform4Angles" ToInputName="Pixels"/>
+				ToNodeID="RadonTransformStatistics" ToInputName="Pixels"/>
 			<Link
 				FromNodeID="ROI" FromOutputName="Image ROIs"
 				ToNodeID="MultiScaleHistograms" ToInputName="Pixels"/>
@@ -231,7 +232,7 @@
 				ToNodeID="TamuraTextures" ToInputName="Pixels"/>	
 			<Link
 				FromNodeID="ROI" FromOutputName="Image ROIs"
-				ToNodeID="GaborTextureFilters" ToInputName="Pixels"/>
+				ToNodeID="GaborTextures" ToInputName="Pixels"/>
 		</Links>
 	</AnalysisChain>
 </AnalysisChains>

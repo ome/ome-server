@@ -63,7 +63,7 @@
 		   ModuleName="Wavelet Transform"
 		   Category="Transforms. "
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="WaveletSignatures"
+		   ProgramID="WaveletTransform"
 		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7804">
 		  <Description>

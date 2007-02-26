@@ -356,7 +356,7 @@
 		   ModuleName="Haralick Textures 2D"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="mb_texture"
+		   ProgramID="HaralickTextures"
 		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7702">
 		  <Description>

@@ -47,7 +47,7 @@
 %% C. Grigorescu, N. Petkov, M. Westenberg, J. of WSCG (ISSN 1213-6972), 11, No 1
 %%
 
-function ratios = GaborTextureFilters(Img),
+function ratios = GaborTextures(Img),
 GRAYthr = .60;  % Gray level; could be customized/automized
 % parameters set up in complience with the paper
 gamma = 0.5; sig2lam = 0.56;

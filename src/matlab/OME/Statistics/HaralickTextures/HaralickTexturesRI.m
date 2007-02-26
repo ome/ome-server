@@ -38,10 +38,10 @@ if nargin < 2
 	dist = 1;
 end
 
-haralick_features(:,1) = mb_texture (Im, dist, 0);
-haralick_features(:,2) = mb_texture (Im, dist, 45);
-haralick_features(:,3) = mb_texture (Im, dist, 90);
-haralick_features(:,4) = mb_texture (Im, dist, 135);
+haralick_features(:,1) = HaralickTextures (Im, dist, 0);
+haralick_features(:,2) = HaralickTextures (Im, dist, 45);
+haralick_features(:,3) = HaralickTextures (Im, dist, 90);
+haralick_features(:,4) = HaralickTextures (Im, dist, 135);
 
 haralick_avg = mean(haralick_features, 2);					
 haralick_range = range(haralick_features, 2);

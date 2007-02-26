@@ -34,7 +34,7 @@
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType Name="GaborTextureFilters" AppliesTo="F">
+		<SemanticType Name="GaborTextures" AppliesTo="F">
 			<Description>
 			7-component vector: signatures based on Gabor texture filter.
 			Every signature is an estimate of how much of the texture energy
@@ -74,10 +74,10 @@
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
-		   ModuleName="Gabor Texture Filters"
+		   ModuleName="Gabor Textures"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="GaborTextureFilters"
+		   ProgramID="GaborTextures"
 		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7710"> 
 		  <Description>
@@ -91,8 +91,8 @@
 				SemanticTypeName="DerivedPixels"
 				Count="!"/>
 			<FormalOutput
-				Name="Gabor Texture Filters"
-				SemanticTypeName="GaborTextureFilters"
+				Name="Gabor Textures"
+				SemanticTypeName="GaborTextures"
 				IBelongTo="[Iterator]" 
 				Count="!"/>
  		  </Declaration>
@@ -102,16 +102,16 @@
 			  <Input><PixelsArray FormalInput="Pixels" ConvertToDatatype="single"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><Vector DecodeWith="Gabor Texture Filters" ConvertToDatatype="single"/></Output>
+			  <Output><Vector DecodeWith="Gabor Textures" ConvertToDatatype="single"/></Output>
 			</FunctionOutputs>			
-			  <VectorDecoder ID="Gabor Texture Filters">
-				<Element Index="1"  OutputLocation="Gabor Texture Filters.Gabor01"/>
-				<Element Index="2"  OutputLocation="Gabor Texture Filters.Gabor02"/>
-				<Element Index="3"  OutputLocation="Gabor Texture Filters.Gabor03"/>
-				<Element Index="4"  OutputLocation="Gabor Texture Filters.Gabor04"/>
-				<Element Index="5"  OutputLocation="Gabor Texture Filters.Gabor05"/>
-				<Element Index="6"  OutputLocation="Gabor Texture Filters.Gabor06"/>
-				<Element Index="7"  OutputLocation="Gabor Texture Filters.Gabor07"/>
+			  <VectorDecoder ID="Gabor Textures">
+				<Element Index="1"  OutputLocation="Gabor Textures.Gabor01"/>
+				<Element Index="2"  OutputLocation="Gabor Textures.Gabor02"/>
+				<Element Index="3"  OutputLocation="Gabor Textures.Gabor03"/>
+				<Element Index="4"  OutputLocation="Gabor Textures.Gabor04"/>
+				<Element Index="5"  OutputLocation="Gabor Textures.Gabor05"/>
+				<Element Index="6"  OutputLocation="Gabor Textures.Gabor06"/>
+				<Element Index="7"  OutputLocation="Gabor Textures.Gabor07"/>
 			  </VectorDecoder>	
 			</ExecutionInstructions>
 		</AnalysisModule>

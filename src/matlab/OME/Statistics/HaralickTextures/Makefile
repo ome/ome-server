@@ -1,7 +1,7 @@
 #  Tomasz Macura
 
 MEX       = mex
-MEX_FILE  = mb_texture
+MEX_FILE  = HaralickTextures
 MEX_EXT   = c # or cpp
 MEX_FLAGS = -O -inline
 
@@ -9,11 +9,11 @@ INC       = CVIPtexture.h
 LIB       = CVIPtexture.c
 
 CC        = gcc
-CC_FILE   = mb_texture_cl
+CC_FILE   = HaralickTexturesCL
 CC_EXT    = c
 CC_FLAGS  = -O -inline -I../../../../C/omeis-http/ -L../../../../C/omeis-http
 
-all: mex
+all: mex cl
 
 # compile the mex file
 mex: $(INC) $(LIB) $(MEX_FILE).$(MEX_EXT)

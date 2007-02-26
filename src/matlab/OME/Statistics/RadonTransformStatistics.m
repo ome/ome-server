@@ -44,9 +44,15 @@
 %
 % Example: hr = RadonTransform(im2double(imread(filename)));
 %
-function hr = RadonTransform(Im),
+
+function hr = RadonTransformStatistics(Im),
+
 hr = []; nbins = 3; th1=0:45:135;
+
 R1 = radon(Im,th1);
+
 for ii = 1:length(th1), hr = [hr hist(R1(:,ii),nbins)]; end
 hr = uint16(hr);
+
 return;
+
