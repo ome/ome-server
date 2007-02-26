@@ -461,6 +461,10 @@ sub _makeDefaultDisplayOptions {
 	# Make DisplayOptions
 	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, $mex, \%displayData )
 		or die "Couldn't make a new DisplayOptions";
+	
+	# set the MEX status to finished,
+	$mex->status("FINISHED");
+	$mex->storeObject();
 	return $displayOptions;
 }
 
