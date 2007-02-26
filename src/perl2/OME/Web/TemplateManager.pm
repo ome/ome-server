@@ -121,7 +121,7 @@ sub locationTemplateDir {
 sub createTemplateDir { 
     my $self = shift;
     my $tmpl_dir = $self->rootTemplateDir();
-    return $tmpl_dir."/Create/";
+    return $tmpl_dir."Create/";
 }
 
 

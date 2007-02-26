@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version = "1.0" encoding = "UTF-8"?>
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -25,464 +25,498 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Douglas Creager <dcreager@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd       http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd     http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd">
-  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC3/STD.xsd">
-    <SemanticType Name="ImageExperiment" AppliesTo="I">
-      <Label xml:lang="en">ImageExperiment</Label>
-      <Label xml:lang="es">Imagen/Experimento</Label>
-      <Description xml:lang="en">This specifies the Experiment an Image belongs to</Description>
-      <Description xml:lang="es">Especifica el Experimento al que una Imagen pertenece</Description>
-      <Element Name="Experiment" DBLocation="IMAGE_INFO.EXPERIMENT" DataType="reference" RefersTo="Experiment">
-        <Label xml:lang="en">Experiment</Label>
-        <Label xml:lang="es">Experimento</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="ImageGroup" AppliesTo="I">
-      <Label xml:lang="en">ImageGroup</Label>
-      <Label xml:lang="es">Imagen/Grupo</Label>
-      <Description xml:lang="en">This specifies the Group that the Image belongs to (these are Groups of Experimenters)</Description>
-      <Description xml:lang="es">Especifica el grupo al que la imagen pertenece (grupos de investigadores)</Description>
-      <Element Name="Group" DBLocation="IMAGE_INFO.GROUP_ID" DataType="reference" RefersTo="Group">
-        <Label xml:lang="en">Group</Label>
-        <Label xml:lang="es">Grupo</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="ImageInstrument" AppliesTo="I">
-      <Label xml:lang="en">ImageInstrument</Label>
-      <Label xml:lang="es">Imagen/Instrumento</Label>
-      <Description xml:lang="en">This specifies the Instrument associated with an Image</Description>
-      <Description xml:lang="es">Especifica el Instrumento asociado con la imagen</Description>
-      <Element Name="Instrument" DBLocation="IMAGE_INFO.INSTRUMENT" DataType="reference" RefersTo="Instrument">
-        <Label xml:lang="en">Instrument</Label>
-        <Label xml:lang="es">Instrumento</Label>
-      </Element>
-      <Element Name="Objective" DBLocation="IMAGE_INFO.OBJECTIVE" DataType="reference" RefersTo="Objective">
-        <Label xml:lang="en">Objective</Label>
-        <Label xml:lang="es">Objectivo</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="ImagingEnvironment" AppliesTo="I">
-      <Label xml:lang="en">ImagingEnvironment</Label>
-      <Label xml:lang="es">Ambiente de Imagenologia</Label>
-      <Description xml:lang="en">Various environmental conditions at the time of image acquisition.</Description>
-      <Description xml:lang="es">Variadas condiciones ambientales al tiempo de la adquisicion de la imagen.</Description>
-      <Element Name="Temperature" DBLocation="IMAGING_ENVIRONMENTS.TEMPERATURE" DataType="float">
-        <Label xml:lang="en">Temperature</Label>
-        <Label xml:lang="es">Temperatura</Label>
-      </Element>
-      <Element Name="AirPressure" DBLocation="IMAGING_ENVIRONMENTS.AIR_PRESSURE" DataType="float">
-        <Label xml:lang="en">AirPressure</Label>
-        <Label xml:lang="es">Presion de Aire</Label>
-      </Element>
-      <Element Name="Humidity" DBLocation="IMAGING_ENVIRONMENTS.HUMIDITY" DataType="float">
-        <Label xml:lang="en">Humidity</Label>
-        <Label xml:lang="es">Humedad</Label>
-      </Element>
-      <Element Name="CO2Percent" DBLocation="IMAGING_ENVIRONMENTS.CO2_PERCENT" DataType="float">
-        <Label xml:lang="en">CO2Percent</Label>
-        <Label xml:lang="es">Porcentaje de CO2</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="Thumbnail" AppliesTo="I">
-      <Label xml:lang="en">Thumbnail</Label>
-      <Label xml:lang="es">Vista Previa</Label>
-      <Description xml:lang="en">A thumbnail is used to display a quick small representation of the image to the user.</Description>
-      <Description xml:lang="es">Una vista previa es usada para mostrar una rapida y pequena representacion de la imagen al usuario.</Description>
-      <Element Name="MimeType" DBLocation="THUMBNAILS.MIME_TYPE" DataType="string">
-        <Label xml:lang="en">MimeType</Label>
-        <Label xml:lang="es">MimeType</Label>
-      </Element>
-      <Element Name="Repository" DBLocation="THUMBNAILS.REPOSITORY" DataType="reference" RefersTo="Repository">
-        <Label xml:lang="en">Repository</Label>
-        <Label xml:lang="es">Repositorio</Label>
-      </Element>
-      <Element Name="Path" DBLocation="THUMBNAILS.PATH" DataType="string">
-        <Label xml:lang="en">Path</Label>
-        <Label xml:lang="es">Ruta</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="LogicalChannel" AppliesTo="I">
-      <Label xml:lang="en">LogicalChannel</Label>
-      <Label xml:lang="es">Canal Logico</Label>
-      <Description xml:lang="en">Various pieces of information pertaining to each logical channel in an image</Description>
-      <Description xml:lang="es">Varias piezas de informacion pertenecientes a cada canal logico en una imagen</Description>
-      <Element Name="Name" DBLocation="LOGICAL_CHANNELS.NAME" DataType="string">
-        <Label xml:lang="en">Name</Label>
-        <Label xml:lang="es">Nombre</Label>
-      </Element>
-      <Element Name="SamplesPerPixel" DBLocation="LOGICAL_CHANNELS.SAMPLES_PER_PIXEL" DataType="integer">
-        <Label xml:lang="en">SamplesPerPixel</Label>
-        <Label xml:lang="es">Muestras por Pixel</Label>
-      </Element>
-      <Element Name="Filter" DBLocation="LOGICAL_CHANNELS.FILTER" DataType="reference" RefersTo="Filter">
-        <Label xml:lang="en">Filter</Label>
-        <Label xml:lang="es">Filtro</Label>
-      </Element>
-      <Element Name="LightSource" DBLocation="LOGICAL_CHANNELS.LIGHT_SOURCE" DataType="reference" RefersTo="LightSource">
-        <Label xml:lang="en">LightSource</Label>
-        <Label xml:lang="es">Fuente de Luz</Label>
-      </Element>
-      <Element Name="LightAttenuation" DBLocation="LOGICAL_CHANNELS.LIGHT_ATTENUATION" DataType="float">
-        <Label xml:lang="en">LightAttenuation</Label>
-        <Label xml:lang="es">Atenuacion de la Luz</Label>
-      </Element>
-      <Element Name="LightWavelength" DBLocation="LOGICAL_CHANNELS.LIGHT_WAVELENGTH" DataType="integer">
-        <Label xml:lang="en">LightWavelength</Label>
-        <Label xml:lang="es">Longitud de Onda de la Luz</Label>
-      </Element>
-      <Element Name="OTF" DBLocation="LOGICAL_CHANNELS.OTF" DataType="reference" RefersTo="OTF">
-        <Label xml:lang="en">OTF</Label>
-        <Label xml:lang="es">OTF</Label>
-      </Element>
-      <Element Name="Detector" DBLocation="LOGICAL_CHANNELS.DETECTOR" DataType="reference" RefersTo="Detector">
-        <Label xml:lang="en">Detector</Label>
-        <Label xml:lang="es">Detector</Label>
-      </Element>
-      <Element Name="DetectorOffset" DBLocation="LOGICAL_CHANNELS.DETECTOR_OFFSET" DataType="float">
-        <Label xml:lang="en">DetectorOffset</Label>
-        <Label xml:lang="es">Desfase del Detector</Label>
-      </Element>
-      <Element Name="DetectorGain" DBLocation="LOGICAL_CHANNELS.DETECTOR_GAIN" DataType="float">
-        <Label xml:lang="en">DetectorGain</Label>
-        <Label xml:lang="es">Ganancia del Detector</Label>
-      </Element>
-      <Element Name="IlluminationType" DBLocation="LOGICAL_CHANNELS.ILLUMINATION_TYPE" DataType="string">
-        <Label xml:lang="en">IlluminationType</Label>
-        <Label xml:lang="es">Tipo de Iluminacion</Label>
-      </Element>
-      <Element Name="PinholeSize" DBLocation="LOGICAL_CHANNELS.PINHOLE_SIZE" DataType="integer">
-        <Label xml:lang="en">PinholeSize</Label>
-        <Label xml:lang="es">PinholeSize</Label>
-      </Element>
-      <Element Name="PhotometricInterpretation" DBLocation="LOGICAL_CHANNELS.PHOTOMETRIC_INTERPRETATION" DataType="string">
-        <Label xml:lang="en">PhotometricInterpretation</Label>
-        <Label xml:lang="es">Interpretacion Fotometrica</Label>
-      </Element>
-      <Element Name="Mode" DBLocation="LOGICAL_CHANNELS.MODE" DataType="string">
-        <Label xml:lang="en">Mode</Label>
-        <Label xml:lang="es">Modo</Label>
-      </Element>
-      <Element Name="ContrastMethod" DBLocation="LOGICAL_CHANNELS.CONTRAST_METHOD" DataType="string">
-        <Label xml:lang="en">ContrastMethod</Label>
-        <Label xml:lang="es">Metodo de Contraste</Label>
-      </Element>
-      <Element Name="AuxLightSource" DBLocation="LOGICAL_CHANNELS.AUX_LIGHT_SOURCE" DataType="reference" RefersTo="LightSource">
-        <Label xml:lang="en">AuxLightSource</Label>
-        <Label xml:lang="es">Fuente de Luz Auxiliar</Label>
-      </Element>
-      <Element Name="AuxLightAttenuation" DBLocation="LOGICAL_CHANNELS.AUX_LIGHT_ATTENUATION" DataType="float">
-        <Label xml:lang="en">AuxLightAttenuation</Label>
-        <Label xml:lang="es">Atenuacion de Luz Auxiliar</Label>
-      </Element>
-      <Element Name="AuxTechnique" DBLocation="LOGICAL_CHANNELS.AUX_TECHNIQUE" DataType="string">
-        <Label xml:lang="en">AuxTechnique</Label>
-        <Label xml:lang="es">Tecnica Auxiliar</Label>
-      </Element>
-      <Element Name="AuxLightWavelength" DBLocation="LOGICAL_CHANNELS.AUX_LIGHT_WAVELENGTH" DataType="integer">
-        <Label xml:lang="en">AuxLightWavelength</Label>
-        <Label xml:lang="es">Longitud de Onda de la Luz Auxiliar</Label>
-      </Element>
-      <Element Name="ExcitationWavelength" DBLocation="LOGICAL_CHANNELS.EX_WAVE" DataType="integer">
-        <Label xml:lang="en">ExcitationWavelength</Label>
-        <Label xml:lang="es">Longitud de Onda de la Exitacion</Label>
-      </Element>
-      <Element Name="EmissionWavelength" DBLocation="LOGICAL_CHANNELS.EM_WAVE" DataType="integer">
-        <Label xml:lang="en">EmissionWavelength</Label>
-        <Label xml:lang="es">Longitud de Onda de la Emision</Label>
-      </Element>
-      <Element Name="Fluor" DBLocation="LOGICAL_CHANNELS.FLUOR" DataType="string">
-        <Label xml:lang="en">Fluor</Label>
-        <Label xml:lang="es">Fluor</Label>
-      </Element>
-      <Element Name="NDFilter" DBLocation="LOGICAL_CHANNELS.ND_FILTER" DataType="float">
-        <Label xml:lang="en">NDFilter</Label>
-        <Label xml:lang="es">Filtro ND</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="PixelChannelComponent" AppliesTo="I">
-      <Label xml:lang="en">PixelChannelComponent</Label>
-      <Label xml:lang="es">PixelChannelComponent</Label>
-      <Description xml:lang="en">This describes how each channel in the pixel array relates to LogicalChannels</Description>
-      <Description xml:lang="es">Describe como cada canal en el arreglo de pixeles se relacion con los Canales Logicos.</Description>
-      <Element Name="Pixels" DBLocation="CHANNEL_COMPONENTS.PIXELS_ID" DataType="reference" RefersTo="Pixels">
-        <Label xml:lang="en">Pixels</Label>
-        <Label xml:lang="es">Pixeles</Label>
-      </Element>
-      <Element Name="Index" DBLocation="CHANNEL_COMPONENTS.INDEX" DataType="integer">
-        <Label xml:lang="en">Index</Label>
-        <Label xml:lang="es">Indice</Label>
-      </Element>
-      <Element Name="ColorDomain" DBLocation="CHANNEL_COMPONENTS.COLOR_DOMAIN" DataType="string">
-        <Label xml:lang="en">ColorDomain</Label>
-        <Label xml:lang="es">Dominio de Color</Label>
-      </Element>
-      <Element Name="LogicalChannel" DBLocation="CHANNEL_COMPONENTS.LOGICAL_CHANNEL" DataType="reference" RefersTo="LogicalChannel">
-        <Label xml:lang="en">LogicalChannel</Label>
-        <Label xml:lang="es">Canal Logico</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="DisplayChannel" AppliesTo="I">
-      <Label xml:lang="en">DisplayChannel</Label>
-      <Label xml:lang="es">Canal de Muestra</Label>
-      <Description xml:lang="en">A specification for displaying a logical channel</Description>
-      <Description xml:lang="es">Especificacion para mostrar un canal logico.</Description>
-      <Element Name="ChannelNumber" DBLocation="DISPLAY_CHANNELS.CHANNEL_NUMBER" DataType="integer">
-        <Label xml:lang="en">ChannelNumber</Label>
-        <Label xml:lang="es">Numero de Canal</Label>
-      </Element>
-      <Element Name="BlackLevel" DBLocation="DISPLAY_CHANNELS.BLACK_LEVEL" DataType="double">
-        <Label xml:lang="en">BlackLevel</Label>
-        <Label xml:lang="es">Nivel de Negro</Label>
-      </Element>
-      <Element Name="WhiteLevel" DBLocation="DISPLAY_CHANNELS.WHITE_LEVEL" DataType="double">
-        <Label xml:lang="en">WhiteLevel</Label>
-        <Label xml:lang="es">Nivel de Blanco</Label>
-      </Element>
-      <Element Name="Gamma" DBLocation="DISPLAY_CHANNELS.GAMMA" DataType="float">
-        <Label xml:lang="en">Gamma</Label>
-        <Label xml:lang="es">Gamma</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="DisplayOptions" AppliesTo="I">
-      <Label xml:lang="en">DisplayOptions</Label>
-      <Label xml:lang="es">Opciones de Muestra</Label>
-      <Description xml:lang="en">Parameters for viewers to optimally display an image</Description>
-      <Description xml:lang="es">Parametros para visores para mostrar de forma optima la imagen.</Description>
-      <Element Name="Pixels" DBLocation="DISPLAY_OPTIONS.Pixels" DataType="reference" RefersTo="Pixels">
-        <Label xml:lang="en">Pixels</Label>
-        <Label xml:lang="es">Pixeles</Label>
-      </Element>
-      <Element Name="Zoom" DBLocation="DISPLAY_OPTIONS.ZOOM" DataType="float">
-        <Label xml:lang="en">Zoom</Label>
-        <Label xml:lang="es">Zoom</Label>
-      </Element>
-      <Element Name="RedChannel" DBLocation="DISPLAY_OPTIONS.RED_CHANNEL" DataType="reference" RefersTo="DisplayChannel">
-        <Label xml:lang="en">RedChannel</Label>
-        <Label xml:lang="es">Canal de Rojo</Label>
-      </Element>
-      <Element Name="RedChannelOn" DBLocation="DISPLAY_OPTIONS.RED_ON" DataType="boolean">
-        <Label xml:lang="en">RedChannelOn</Label>
-        <Label xml:lang="es">Canal Rojo Activado</Label>
-      </Element>
-      <Element Name="GreenChannel" DBLocation="DISPLAY_OPTIONS.GREEN_CHANNEL" DataType="reference" RefersTo="DisplayChannel">
-        <Label xml:lang="en">GreenChannel</Label>
-        <Label xml:lang="es">Canal de Verde</Label>
-      </Element>
-      <Element Name="GreenChannelOn" DBLocation="DISPLAY_OPTIONS.GREEN_ON" DataType="boolean">
-        <Label xml:lang="en">GreenChannelOn</Label>
-        <Label xml:lang="es">Canal de Verde Activado</Label>
-      </Element>
-      <Element Name="BlueChannel" DBLocation="DISPLAY_OPTIONS.BLUE_CHANNEL" DataType="reference" RefersTo="DisplayChannel">
-        <Label xml:lang="en">BlueChannel</Label>
-        <Label xml:lang="es">Canal de Azul</Label>
-      </Element>
-      <Element Name="BlueChannelOn" DBLocation="DISPLAY_OPTIONS.BLUE_ON" DataType="boolean">
-        <Label xml:lang="en">BlueChannelOn</Label>
-        <Label xml:lang="es">Canal de Azul Activado</Label>
-      </Element>
-      <Element Name="DisplayRGB" DBLocation="DISPLAY_OPTIONS.DISPLAY_RGB" DataType="boolean">
-        <Label xml:lang="en">DisplayRGB</Label>
-        <Label xml:lang="es">Mostrar RGB</Label>
-      </Element>
-      <Element Name="GreyChannel" DBLocation="DISPLAY_OPTIONS.GREY_CHANNEL" DataType="reference" RefersTo="DisplayChannel">
-        <Label xml:lang="en">GreyChannel</Label>
-        <Label xml:lang="es">Canal de Gris</Label>
-      </Element>
-      <Element Name="ColorMap" DBLocation="DISPLAY_OPTIONS.COLOR_MAP" DataType="string">
-        <Label xml:lang="en">ColorMap</Label>
-        <Label xml:lang="es">ColorMap</Label>
-      </Element>
-      <Element Name="ZStart" DBLocation="DISPLAY_OPTIONS.Z_START" DataType="integer">
-        <Label xml:lang="en">ZStart</Label>
-        <Label xml:lang="es">ZStart</Label>
-      </Element>
-      <Element Name="ZStop" DBLocation="DISPLAY_OPTIONS.Z_STOP" DataType="integer">
-        <Label xml:lang="en">ZStop</Label>
-        <Label xml:lang="es">ZStop</Label>
-      </Element>
-      <Element Name="TStart" DBLocation="DISPLAY_OPTIONS.T_START" DataType="integer">
-        <Label xml:lang="en">TStart</Label>
-        <Label xml:lang="es">TStart</Label>
-      </Element>
-      <Element Name="TStop" DBLocation="DISPLAY_OPTIONS.T_STOP" DataType="integer">
-        <Label xml:lang="en">TStop</Label>
-        <Label xml:lang="es">TStop</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="DisplayROI" AppliesTo="I">
-      <Label xml:lang="en">DisplayROI</Label>
-      <Label xml:lang="es">Mostrar Region de Interes</Label>
-      <Description xml:lang="en">A region of interest within the image for display purposes</Description>
-      <Description xml:lang="es">Una region de interes dentro de la imagen para propositos de muestra.</Description>
-      <Element Name="X0" DBLocation="DISPLAY_ROI.X0" DataType="integer">
-        <Label xml:lang="en">X0</Label>
-        <Label xml:lang="es">X0</Label>
-      </Element>
-      <Element Name="Y0" DBLocation="DISPLAY_ROI.Y0" DataType="integer">
-        <Label xml:lang="en">Y0</Label>
-        <Label xml:lang="es">Y0</Label>
-      </Element>
-      <Element Name="Z0" DBLocation="DISPLAY_ROI.Z0" DataType="integer">
-        <Label xml:lang="en">Z0</Label>
-        <Label xml:lang="es">Z0</Label>
-      </Element>
-      <Element Name="X1" DBLocation="DISPLAY_ROI.X1" DataType="integer">
-        <Label xml:lang="en">X1</Label>
-        <Label xml:lang="es">X1</Label>
-      </Element>
-      <Element Name="Y1" DBLocation="DISPLAY_ROI.Y1" DataType="integer">
-        <Label xml:lang="en">Y1</Label>
-        <Label xml:lang="es">Y1</Label>
-      </Element>
-      <Element Name="Z1" DBLocation="DISPLAY_ROI.Z1" DataType="integer">
-        <Label xml:lang="en">Z1</Label>
-        <Label xml:lang="es">Z1</Label>
-      </Element>
-      <Element Name="T0" DBLocation="DISPLAY_ROI.T0" DataType="integer">
-        <Label xml:lang="en">T0</Label>
-        <Label xml:lang="es">T0</Label>
-      </Element>
-      <Element Name="T1" DBLocation="DISPLAY_ROI.T1" DataType="integer">
-        <Label xml:lang="en">T1</Label>
-        <Label xml:lang="es">T1</Label>
-      </Element>
-      <Element Name="DisplayOptions" DBLocation="DISPLAY_ROI.DISPLAY_OPTIONS" DataType="reference" RefersTo="DisplayOptions">
-        <Label xml:lang="en">DisplayOptions</Label>
-        <Label xml:lang="es">Opciones de Muestra</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="StageLabel" AppliesTo="I">
-      <Label xml:lang="en">StageLabel</Label>
-      <Label xml:lang="es">StageLabel</Label>
-      <Description xml:lang="en">Stage labels are stage coordinates and a label to recall a microscope stage location</Description>
-      <Description xml:lang="es"/>
-      <Element Name="Name" DBLocation="STAGE_LABELS.NAME" DataType="string">
-        <Label xml:lang="en">Name</Label>
-        <Label xml:lang="es">Nombre</Label>
-      </Element>
-      <Element Name="X" DBLocation="STAGE_LABELS.X" DataType="float">
-        <Label xml:lang="en">X</Label>
-        <Label xml:lang="es">X</Label>
-      </Element>
-      <Element Name="Y" DBLocation="STAGE_LABELS.Y" DataType="float">
-        <Label xml:lang="en">Y</Label>
-        <Label xml:lang="es">Y</Label>
-      </Element>
-      <Element Name="Z" DBLocation="STAGE_LABELS.Z" DataType="float">
-        <Label xml:lang="en">Z</Label>
-        <Label xml:lang="es">Z</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="ImagePlate" AppliesTo="I">
-      <Label xml:lang="en">ImagePlate</Label>
-      <Label xml:lang="es">Imagen/Plato</Label>
-      <Description xml:lang="en">Defines the relationship between Plates and Images.</Description>
-      <Description xml:lang="es">Define la relacion entre Platos e Imagenes.</Description>
-      <Element Name="Plate" DBLocation="IMAGE_PLATES.PLATE" DataType="reference" RefersTo="Plate">
-        <Label xml:lang="en">Plate</Label>
-        <Label xml:lang="es">Plato</Label>
-      </Element>
-      <Element Name="Sample" DBLocation="IMAGE_PLATES.SAMPLE" DataType="integer">
-        <Label xml:lang="en">Sample</Label>
-        <Label xml:lang="es">Muestra</Label>
-      </Element>
-      <Element Name="Well" DBLocation="IMAGE_PLATES.WELL" DataType="string">
-        <Label xml:lang="en">Well</Label>
-        <Label xml:lang="es">Fuente</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="Pixels" AppliesTo="I">
-      <Label xml:lang="en">Pixels</Label>
-      <Label xml:lang="es">Pixeles</Label>
-      <Description xml:lang="en">Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.</Description>
-      <Description xml:lang="es">Lugar de almacenamiento y tipo de dato de los pixeles de la imagen, incluyendo todas las dimensiones del arreglo 5-D.</Description>
-      <Element Name="SizeX" DBLocation="IMAGE_PIXELS.SIZE_X" DataType="integer">
-        <Label xml:lang="en">SizeX</Label>
-        <Label xml:lang="es">Tamano X</Label>
-        <Description xml:lang="en">Number of pixels on the X axis.</Description>
-        <Description xml:lang="es">Numero de pixeles en el eje X.</Description>
-      </Element>
-      <Element Name="SizeY" DBLocation="IMAGE_PIXELS.SIZE_Y" DataType="integer">
-        <Label xml:lang="en">SizeY</Label>
-        <Label xml:lang="es">Tamano Y</Label>
-        <Description xml:lang="en">Number of pixels on the Y axis.</Description>
-        <Description xml:lang="es">Numero de pixeles en el eje Y.</Description>
-      </Element>
-      <Element Name="SizeZ" DBLocation="IMAGE_PIXELS.SIZE_Z" DataType="integer">
-        <Label xml:lang="en">SizeZ</Label>
-        <Label xml:lang="es">Tamano Z</Label>
-        <Description xml:lang="en">Number of pixels on the Z axis.</Description>
-        <Description xml:lang="es">Numero de pixeles en el eje Z.</Description>
-      </Element>
-      <Element Name="SizeC" DBLocation="IMAGE_PIXELS.SIZE_C" DataType="integer">
-        <Label xml:lang="en">SizeC</Label>
-        <Label xml:lang="es">Tamano C</Label>
-        <Description xml:lang="en">Number of channel components in all logical channels.</Description>
-        <Description xml:lang="es">Numero de componentes de canal en todos los canales logicos.</Description>
-      </Element>
-      <Element Name="SizeT" DBLocation="IMAGE_PIXELS.SIZE_T" DataType="integer">
-        <Label xml:lang="en">SizeT</Label>
-        <Label xml:lang="es">Tamano T</Label>
-        <Description xml:lang="en">Number of time points</Description>
-        <Description xml:lang="es">Numero de puntos en el tiempo.</Description>
-      </Element>
-      <Element Name="PixelType" DBLocation="IMAGE_PIXELS.PIXEL_TYPE" DataType="string">
-        <Label xml:lang="en">PixelType</Label>
-        <Label xml:lang="es">Tipo de Pixel</Label>
-      </Element>
-      <Element Name="FileSHA1" DBLocation="IMAGE_PIXELS.FILE_SHA1" DataType="string">
-        <Label xml:lang="en">FileSHA1</Label>
-        <Label xml:lang="es">FileSHA1</Label>
-      </Element>
-      <Element Name="Repository" DBLocation="IMAGE_PIXELS.REPOSITORY" DataType="reference" RefersTo="Repository">
-        <Label xml:lang="en">Repository</Label>
-        <Label xml:lang="es">Repositorio</Label>
-      </Element>
-      <Element Name="ImageServerID" DBLocation="IMAGE_PIXELS.IMAGE_SERVER_ID" DataType="bigint">
-        <Label xml:lang="en">ImageServerID</Label>
-        <Label xml:lang="es">ImageServerID</Label>
-      </Element>
-    </SemanticType>
-    <SemanticType Name="Dimensions" AppliesTo="I">
-      <Label xml:lang="en">Dimensions</Label>
-      <Label xml:lang="es">Dimensiones</Label>
-      <Description xml:lang="en">Describes the physical size of each dimension of the pixels in an image in microns</Description>
-      <Description xml:lang="es">Describe el tamano fisico de cada dimension de los pixeles en una imagen, en micras.</Description>
-      <Element Name="PixelSizeX" DBLocation="IMAGE_DIMENSIONS.PIXEL_SIZE_X" DataType="float">
-        <Label xml:lang="en">PixelSizeX</Label>
-        <Label xml:lang="es">Tamano Pixel X</Label>
-        <Description xml:lang="en">in microns</Description>
-        <Description xml:lang="es">en micras</Description>
-      </Element>
-      <Element Name="PixelSizeY" DBLocation="IMAGE_DIMENSIONS.PIXEL_SIZE_Y" DataType="float">
-        <Label xml:lang="en">PixelSizeY</Label>
-        <Label xml:lang="es">Tamano Pixel Y</Label>
-        <Description xml:lang="en">in microns</Description>
-        <Description xml:lang="es">en micras</Description>
-      </Element>
-      <Element Name="PixelSizeZ" DBLocation="IMAGE_DIMENSIONS.PIXEL_SIZE_Z" DataType="float">
-        <Label xml:lang="en">PixelSizeZ</Label>
-        <Label xml:lang="es">Tamano Pixel Z</Label>
-        <Description xml:lang="en">in microns</Description>
-        <Description xml:lang="es">en micras</Description>
-      </Element>
-      <Element Name="PixelSizeC" DBLocation="IMAGE_DIMENSIONS.PIXEL_SIZE_C" DataType="float">
-        <Label xml:lang="en">PixelSizeC</Label>
-        <Label xml:lang="es">Tamano Pixel C</Label>
-        <Description xml:lang="en">in nanometers</Description>
-        <Description xml:lang="es">en nanometros</Description>
-      </Element>
-      <Element Name="PixelSizeT" DBLocation="IMAGE_DIMENSIONS.PIXEL_SIZE_T" DataType="float">
-        <Label xml:lang="en">PixelSizeT</Label>
-        <Label xml:lang="es">Tamano Pixel T</Label>
-        <Description xml:lang="en">in seconds</Description>
-        <Description xml:lang="es">en segundos</Description>
-      </Element>
-    </SemanticType>
-  </SemanticTypeDefinitions>
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType
+			Name= "ImageExperiment"
+			AppliesTo = "I">
+			<Description>This specifies the Experiment an Image belongs to</Description>
+			<Element
+				Name= "Experiment"
+				DBLocation = "IMAGE_INFO.EXPERIMENT"
+				DataType = "reference"
+				RefersTo = "Experiment"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "ImageGroup"
+			AppliesTo = "I">
+			<Description>This specifies the Group that the Image belongs to (these are Groups of Experimenters)</Description>
+			<Element
+				Name= "Group"
+				DBLocation = "IMAGE_INFO.GROUP_ID"
+				DataType = "reference"
+				RefersTo = "Group"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "ImageInstrument"
+			AppliesTo = "I">
+			<Description>This specifies the Instrument associated with an Image</Description>
+			<Element
+				Name= "Instrument"
+				DBLocation = "IMAGE_INFO.INSTRUMENT"
+				DataType = "reference"
+				RefersTo = "Instrument"/>
+			<Element
+				Name= "Objective"
+				DBLocation = "IMAGE_INFO.OBJECTIVE"
+				DataType = "reference"
+				RefersTo = "Objective"/>
+		</SemanticType>
+				
+		<SemanticType
+			Name= "ImagingEnvironment"
+			AppliesTo = "I">
+			<Description>Various environmental conditions at the time of image acquisition.</Description>
+			<Element
+				Name= "Temperature"
+				DBLocation = "IMAGING_ENVIRONMENTS.TEMPERATURE"
+				DataType = "float"/>
+			<Element
+				Name= "AirPressure"
+				DBLocation = "IMAGING_ENVIRONMENTS.AIR_PRESSURE"
+				DataType = "float"/>
+			<Element
+				Name= "Humidity"
+				DBLocation = "IMAGING_ENVIRONMENTS.HUMIDITY"
+				DataType = "float"/>
+			<Element
+				Name= "CO2Percent"
+				DBLocation = "IMAGING_ENVIRONMENTS.CO2_PERCENT"
+				DataType = "float"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "Thumbnail"
+			AppliesTo = "I">
+			<Description>A thumbnail is used to display a quick small representation of the image to the user.</Description>
+			<Element
+				Name= "MimeType"
+				DBLocation = "THUMBNAILS.MIME_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "THUMBNAILS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+			<Element
+				Name= "Path"
+				DBLocation = "THUMBNAILS.PATH"
+				DataType = "string"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "LogicalChannel"
+			AppliesTo = "I">
+			<Description>Various pieces of information pertaining to each logical channel in an image</Description>
+			<Element
+				Name= "Name"
+				DBLocation = "LOGICAL_CHANNELS.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "SamplesPerPixel"
+				DBLocation = "LOGICAL_CHANNELS.SAMPLES_PER_PIXEL"
+				DataType = "integer"/>
+			<Element
+				Name= "Filter"
+				DBLocation = "LOGICAL_CHANNELS.FILTER"
+				DataType = "reference"
+				RefersTo = "Filter"/>
+			<Element
+				Name= "LightSource"
+				DBLocation = "LOGICAL_CHANNELS.LIGHT_SOURCE"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+			<Element
+				Name= "LightAttenuation"
+				DBLocation = "LOGICAL_CHANNELS.LIGHT_ATTENUATION"
+				DataType = "float"/>
+			<Element
+				Name= "LightWavelength"
+				DBLocation = "LOGICAL_CHANNELS.LIGHT_WAVELENGTH"
+				DataType = "integer"/>
+			<Element
+				Name= "OTF"
+				DBLocation = "LOGICAL_CHANNELS.OTF"
+				DataType = "reference"
+				RefersTo = "OTF"/>
+			<Element
+				Name= "Detector"
+				DBLocation = "LOGICAL_CHANNELS.DETECTOR"
+				DataType = "reference"
+				RefersTo = "Detector"/>
+			<Element
+				Name= "DetectorOffset"
+				DBLocation = "LOGICAL_CHANNELS.DETECTOR_OFFSET"
+				DataType = "float"/>
+			<Element
+				Name= "DetectorGain"
+				DBLocation = "LOGICAL_CHANNELS.DETECTOR_GAIN"
+				DataType = "float"/>
+			<Element
+				Name= "IlluminationType"
+				DBLocation = "LOGICAL_CHANNELS.ILLUMINATION_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "PinholeSize"
+				DBLocation = "LOGICAL_CHANNELS.PINHOLE_SIZE"
+				DataType = "integer"/>
+			<Element
+				Name= "PhotometricInterpretation"
+				DBLocation = "LOGICAL_CHANNELS.PHOTOMETRIC_INTERPRETATION"
+				DataType = "string"/>
+			<Element
+				Name= "Mode"
+				DBLocation = "LOGICAL_CHANNELS.MODE"
+				DataType = "string"/>
+			<Element
+				Name= "ContrastMethod"
+				DBLocation = "LOGICAL_CHANNELS.CONTRAST_METHOD"
+				DataType = "string"/>
+			<Element
+				Name= "AuxLightSource"
+				DBLocation = "LOGICAL_CHANNELS.AUX_LIGHT_SOURCE"
+				DataType = "reference"
+				RefersTo = "LightSource"/>
+			<Element
+				Name= "AuxLightAttenuation"
+				DBLocation = "LOGICAL_CHANNELS.AUX_LIGHT_ATTENUATION"
+				DataType = "float"/>
+			<Element
+				Name= "AuxTechnique"
+				DBLocation = "LOGICAL_CHANNELS.AUX_TECHNIQUE"
+				DataType = "string"/>
+			<Element
+				Name= "AuxLightWavelength"
+				DBLocation = "LOGICAL_CHANNELS.AUX_LIGHT_WAVELENGTH"
+				DataType = "integer"/>
+			<Element
+				Name= "ExcitationWavelength"
+				DBLocation = "LOGICAL_CHANNELS.EX_WAVE"
+				DataType = "integer"/>
+			<Element
+				Name= "EmissionWavelength"
+				DBLocation = "LOGICAL_CHANNELS.EM_WAVE"
+				DataType = "integer"/>
+			<Element
+				Name= "Fluor"
+				DBLocation = "LOGICAL_CHANNELS.FLUOR"
+				DataType = "string"/>
+			<Element
+				Name= "NDFilter"
+				DBLocation = "LOGICAL_CHANNELS.ND_FILTER"
+				DataType = "float"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "PixelChannelComponent"
+			AppliesTo = "I">
+			<Description>This describes how each channel in the pixel array relates to LogicalChannels</Description>
+			<Element
+				Name= "Pixels"
+				DBLocation = "CHANNEL_COMPONENTS.PIXELS_ID"
+				DataType = "reference"
+				RefersTo = "Pixels"/>
+			<Element
+				Name= "Index"
+				DBLocation = "CHANNEL_COMPONENTS.INDEX"
+				DataType = "integer"/>
+			<Element
+				Name= "ColorDomain"
+				DBLocation = "CHANNEL_COMPONENTS.COLOR_DOMAIN"
+				DataType = "string"/>
+			<Element
+				Name= "LogicalChannel"
+				DBLocation = "CHANNEL_COMPONENTS.LOGICAL_CHANNEL"
+				DataType = "reference"
+				RefersTo = "LogicalChannel"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "DisplayChannel"
+			AppliesTo = "I">
+			<Description>A specification for displaying a logical channel</Description>
+			<Element
+				Name= "ChannelNumber"
+				DBLocation = "DISPLAY_CHANNELS.CHANNEL_NUMBER"
+				DataType = "integer"/>
+			<Element
+				Name= "BlackLevel"
+				DBLocation = "DISPLAY_CHANNELS.BLACK_LEVEL"
+				DataType = "double"/>
+			<Element
+				Name= "WhiteLevel"
+				DBLocation = "DISPLAY_CHANNELS.WHITE_LEVEL"
+				DataType = "double"/>
+			<Element
+				Name= "Gamma"
+				DBLocation = "DISPLAY_CHANNELS.GAMMA"
+				DataType = "float"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "DisplayOptions"
+			AppliesTo = "I">
+			<Description>Parameters for viewers to optimally display an image</Description>
+			<Element
+				Name= "Pixels"
+				DBLocation = "DISPLAY_OPTIONS.Pixels"
+				DataType = "reference"
+				RefersTo = "Pixels"/>
+			<Element
+				Name= "Zoom"
+				DBLocation = "DISPLAY_OPTIONS.ZOOM"
+				DataType = "float"/>
+			<Element
+				Name= "RedChannel"
+				DBLocation = "DISPLAY_OPTIONS.RED_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "RedChannelOn"
+				DBLocation = "DISPLAY_OPTIONS.RED_ON"
+				DataType = "boolean"/>
+			<Element
+				Name= "GreenChannel"
+				DBLocation = "DISPLAY_OPTIONS.GREEN_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "GreenChannelOn"
+				DBLocation = "DISPLAY_OPTIONS.GREEN_ON"
+				DataType = "boolean"/>
+			<Element
+				Name= "BlueChannel"
+				DBLocation = "DISPLAY_OPTIONS.BLUE_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "BlueChannelOn"
+				DBLocation = "DISPLAY_OPTIONS.BLUE_ON"
+				DataType = "boolean"/>
+			<Element
+				Name= "DisplayRGB"
+				DBLocation = "DISPLAY_OPTIONS.DISPLAY_RGB"
+				DataType = "boolean"/>
+			<Element
+				Name= "GreyChannel"
+				DBLocation = "DISPLAY_OPTIONS.GREY_CHANNEL"
+				DataType = "reference"
+				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "ColorMap"
+				DBLocation = "DISPLAY_OPTIONS.COLOR_MAP"
+				DataType = "string"/>
+			<Element
+				Name= "ZStart"
+				DBLocation = "DISPLAY_OPTIONS.Z_START"
+				DataType = "integer"/>
+			<Element
+				Name= "ZStop"
+				DBLocation = "DISPLAY_OPTIONS.Z_STOP"
+				DataType = "integer"/>
+			<Element
+				Name= "TStart"
+				DBLocation = "DISPLAY_OPTIONS.T_START"
+				DataType = "integer"/>
+			<Element
+				Name= "TStop"
+				DBLocation = "DISPLAY_OPTIONS.T_STOP"
+				DataType = "integer"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "DisplayROI"
+			AppliesTo = "I">
+			<Description>A region of interest within the image for display purposes</Description>
+			<Element
+				Name= "X0"
+				DBLocation = "DISPLAY_ROI.X0"
+				DataType = "integer"/>
+			<Element
+				Name= "Y0"
+				DBLocation = "DISPLAY_ROI.Y0"
+				DataType = "integer"/>
+			<Element
+				Name= "Z0"
+				DBLocation = "DISPLAY_ROI.Z0"
+				DataType = "integer"/>
+			<Element
+				Name= "X1"
+				DBLocation = "DISPLAY_ROI.X1"
+				DataType = "integer"/>
+			<Element
+				Name= "Y1"
+				DBLocation = "DISPLAY_ROI.Y1"
+				DataType = "integer"/>
+			<Element
+				Name= "Z1"
+				DBLocation = "DISPLAY_ROI.Z1"
+				DataType = "integer"/>
+			<Element
+				Name= "T0"
+				DBLocation = "DISPLAY_ROI.T0"
+				DataType = "integer"/>
+			<Element
+				Name= "T1"
+				DBLocation = "DISPLAY_ROI.T1"
+				DataType = "integer"/>
+			<Element
+				Name= "DisplayOptions"
+				DBLocation = "DISPLAY_ROI.DISPLAY_OPTIONS"
+				DataType = "reference"
+				RefersTo = "DisplayOptions"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "StageLabel"
+			AppliesTo = "I">
+			<Description>Stage labels are stage coordinates and a label to recall a microscope stage location</Description>
+			<Element
+				Name= "Name"
+				DBLocation = "STAGE_LABELS.NAME"
+				DataType = "string"/>
+			<Element
+				Name= "X"
+				DBLocation = "STAGE_LABELS.X"
+				DataType = "float"/>
+			<Element
+				Name= "Y"
+				DBLocation = "STAGE_LABELS.Y"
+				DataType = "float"/>
+			<Element
+				Name= "Z"
+				DBLocation = "STAGE_LABELS.Z"
+				DataType = "float"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name = "ImagePlate"
+			AppliesTo = "I">
+			<Description>Defines the relationship between Plates and Images.</Description>
+			<Element
+				Name= "Plate"
+				DBLocation = "IMAGE_PLATES.PLATE"
+				DataType = "reference"
+				RefersTo = "Plate"/>
+			<Element
+				Name= "Sample"
+				DBLocation = "IMAGE_PLATES.SAMPLE"
+				DataType = "integer"/>
+			<Element
+				Name= "Well"
+				DBLocation = "IMAGE_PLATES.WELL"
+				DataType = "string"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "Pixels"
+			AppliesTo = "I">
+			<Description>Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.</Description>
+			<Element
+				Name= "SizeX"
+				DBLocation = "IMAGE_PIXELS.SIZE_X"
+				DataType = "integer">
+				<Description>Number of pixels on the X axis.</Description>
+			</Element>
+			<Element
+				Name= "SizeY"
+				DBLocation = "IMAGE_PIXELS.SIZE_Y"
+				DataType = "integer">
+				<Description>Number of pixels on the Y axis.</Description>
+			</Element>
+			<Element
+				Name= "SizeZ"
+				DBLocation = "IMAGE_PIXELS.SIZE_Z"
+				DataType = "integer">
+				<Description>Number of pixels on the Z axis.</Description>
+			</Element>
+			<Element
+				Name= "SizeC"
+				DBLocation = "IMAGE_PIXELS.SIZE_C"
+				DataType = "integer">
+				<Description>Number of channel components in all logical channels.</Description>
+			</Element>
+			<Element
+				Name= "SizeT"
+				DBLocation = "IMAGE_PIXELS.SIZE_T"
+				DataType = "integer">
+				<Description>Number of time points</Description>
+			</Element>
+			<Element
+				Name= "PixelType"
+				DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "FileSHA1"
+				DBLocation = "IMAGE_PIXELS.FILE_SHA1"
+				DataType = "string"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "IMAGE_PIXELS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+            <Element
+               Name="ImageServerID"
+               DBLocation="IMAGE_PIXELS.IMAGE_SERVER_ID"
+               DataType="bigint"/>
+		</SemanticType>
+		
+		<SemanticType
+			Name= "Dimensions"
+			AppliesTo = "I">
+			<Description>Describes the physical size of each dimension of the pixels in an image in microns</Description>
+
+			<Element
+				Name= "PixelSizeX"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_X"
+				DataType = "float">
+				<Description>in microns</Description>
+			</Element>
+			<Element
+				Name= "PixelSizeY"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Y"
+				DataType = "float">
+				<Description>in microns</Description>
+			</Element>
+			<Element
+				Name= "PixelSizeZ"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Z"
+				DataType = "float">
+				<Description>in microns</Description>
+			</Element>
+			<Element
+				Name= "PixelSizeC"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_C"
+				DataType = "float">
+				<Description>in nanometers</Description>
+			</Element>
+			<Element
+				Name= "PixelSizeT"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_T"
+				DataType = "float">
+				<Description>in seconds</Description>
+			</Element>
+		</SemanticType>
+	</SemanticTypeDefinitions>
 </OME>
