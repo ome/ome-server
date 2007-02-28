@@ -308,6 +308,15 @@ sub getPageTitle {
 	return "Open Microscopy Environment - Import Images";
 }
 
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('ImportImages.tmpl');
+	return $template->output();
+}
+
 # Override's OME::Web
 {
 	my $menu_text = "Import";

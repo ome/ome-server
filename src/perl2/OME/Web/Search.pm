@@ -116,6 +116,15 @@ sub getPageTitle {
 	return $menuText;
 }
 
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('Search.tmpl');
+	$template->param(ST => $self->getMenuText());
+	return $template->output();
+}
 
 sub getTemplate {
     my $self=shift;

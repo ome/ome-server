@@ -69,6 +69,17 @@ sub getTemplate {
 
 
 }
+
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('CG_Search.tmpl');
+	return $template->output();
+}
+
+
 # ADD ERROR CHECKING
 sub getPageBody {
 	my $self = shift ;

@@ -71,6 +71,16 @@ sub getAuthenticatedTemplate {
 
 }
 
+
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('CG_Annotator.tmpl');
+	return $template->output();
+}
+
 sub getPageBody {
 	my $self = shift ;
 	my $tmpl = shift;

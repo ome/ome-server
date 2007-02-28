@@ -58,6 +58,15 @@ sub getAuthenticatedTemplate {
     return OME::Web::TemplateManager->getActionTemplate('SpreadsheetImporterPrompt.tmpl');
 }
 
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('SpreadsheetImporterPrompt.tmpl');
+	return $template->output();
+}
+
 sub getPageBody {
 	my $self = shift;
 	my $tmpl = shift;

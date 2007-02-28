@@ -63,6 +63,16 @@ sub getPageTitle {
 }
 
 
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('FindSpots.tmpl');
+	return $template->output();
+}
+
+
 # Override's OME::Web
 
 

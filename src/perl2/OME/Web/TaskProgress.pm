@@ -65,6 +65,16 @@ sub getPageTitle {
 	sub getMenuText { return $menu_text }
 }
 
+
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('TaskProgress.tmpl');
+	return $template->output();
+}
+
 # Override's OME::Web
 
 sub getPageBody {

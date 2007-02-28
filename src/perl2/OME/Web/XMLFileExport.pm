@@ -66,6 +66,14 @@ sub getAuthenticatedTemplate {
     return OME::Web::TemplateManager->getActionTemplate('XMLFileExport.tmpl');
 }
 
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('XMLFileExport.tmpl');
+	return $template->output();
+}
 
 sub getPageBody {
 	my $self = shift;

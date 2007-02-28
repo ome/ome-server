@@ -87,6 +87,15 @@ sub getPageTitle {
 	return "Open Microscopy Environment - Wizard: Import and Annotate Images ";
 }
 
+=head2 getLocation
+=cut
+
+sub getLocation {
+	my $self = shift;
+	my $template = OME::Web::TemplateManager->getLocationTemplate('ImportAndAnnotateImages.tmpl');
+	return $template->output();
+}
+
 # Override's OME::Web
 {
 	my $menu_text = "Import and Annotate Images";
