@@ -177,7 +177,7 @@ sub getAuthenticatedTemplate {
 
 sub getLocation {
 	my $self = shift;
-	my $template = OME::Web::TemplateManager->getLocationTemplate('Create.tmpl');
+	my $template = OME::Web::TemplateManager->getLocationTemplate('DBObjCreate.tmpl');
 	$template->param(ST => $self->getMenuText());
 	return $template->output();
 }
