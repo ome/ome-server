@@ -520,10 +520,8 @@ sub getAttributesForMEX {
         my @maps = $factory->
           findObjects('OME::ModuleExecution::VirtualMEXMap',
                       { module_execution => ['in',\@virtual_mexes] });
-        logdbg ("debug", "\n\n**** maps ",scalar(@maps),"\n");
         my @attr_ids = map { $_->attribute_id() } @maps;
-        logdbg ("debug","**** attr ",scalar(@attr_ids),"\n");
-
+        
         $criteria->{id} = ['in',\@attr_ids];
 
         push @attributes, $factory->
