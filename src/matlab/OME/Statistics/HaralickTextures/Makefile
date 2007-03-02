@@ -3,7 +3,7 @@
 MEX       = mex
 MEX_FILE  = HaralickTextures
 MEX_EXT   = c # or cpp
-MEX_FLAGS = -O -inline
+MEX_FLAGS = -O -lm
 
 INC       = CVIPtexture.h
 LIB       = CVIPtexture.c
@@ -11,7 +11,7 @@ LIB       = CVIPtexture.c
 CC        = gcc
 CC_FILE   = HaralickTexturesCL
 CC_EXT    = c
-CC_FLAGS  = -O -inline -I../../../../C/omeis-http/ -L../../../../C/omeis-http
+CC_FLAGS  = -O -lm -I../../../../C/omeis-http/ -L../../../../C/omeis-http
 
 all: mex cl
 

@@ -5,7 +5,7 @@ MEX_FILE  = Znl
 INC       = complex.h
 LIB       = complex.c
 MEX_EXT   = c # or cpp
-MEX_FLAGS = -O -inline
+MEX_FLAGS = -O -lm
 
 all: $(INC) $(LIB) $(MEX_FILE).$(MEX_EXT)
 	$(MEX) $(MEX_FLAGS) $(MEX_FILE).$(MEX_EXT) $(LIB)
