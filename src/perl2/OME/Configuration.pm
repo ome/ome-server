@@ -214,6 +214,10 @@ sub preload {
 	return ($CACHED_CONFIG);
 }
 
+# clears the cache set with preload and OME-startup.pl
+sub flush {
+	$CACHED_CONFIG = undef;
+}
 
 sub new {
 	my $proto = shift;
