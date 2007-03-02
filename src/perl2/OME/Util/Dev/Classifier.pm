@@ -201,23 +201,18 @@ sub compile_sigs {
     my $command_name = $self->commandName($commands);
 	my $environment = OME::Install::Environment->initialize();
 
-	my ($datasetStr, $chainStr, $output_file_name, $chex_id, $force_new_chex );
+	my ($datasetStr, $chainStr, $output_file_name, $chex_id );
 	
 	GetOptions ('d=s' => \$datasetStr,
 	            'a=s' => \$chainStr,
 	            'o=s' => \$output_file_name,
-	            'e=i' => \$chex_id,
-	            'f|force' => \$force_new_chex );
+	            'e=i' => \$chex_id);
 	            
 	die "one or more options not specified"
 		unless (($datasetStr and $chainStr) or $chex_id) and $output_file_name;
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
 	
-	die "You must run this command with uid=0 (root).\n" if (euid() ne 0);
-	
-	# Drop our UID to the OME matlab user then open MATLAB connection
-	euid(scalar(getpwnam $environment->matlab_conf()->{USER}));
-	uid(scalar(getpwnam $environment->matlab_conf()->{USER}));
+	# open MATLAB connection
 	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
 		or die "Cannot open a connection to Matlab! as user ".$environment->matlab_conf()->{USER};
 	
@@ -228,10 +223,8 @@ sub compile_sigs {
 	my $session = $self->getSession();
 	my $factory = $session->Factory();
 	
-	logdbg "debug", "loading chain, dataset, and signature stitcher chain node";
-	
 	# sanity check
-	die "Cannot specify options -f and -e. \n" if (defined $chex_id and $force_new_chex);
+	logdbg "debug", "loading chain and dataset";
 	
 	# get chex if appropriate
 	my $chex;
@@ -261,14 +254,6 @@ sub compile_sigs {
 		}
 	}
 	
-	# get signature module
-	my $sig_stitch_node = $factory->findObject( "OME::AnalysisChain::Node",
-		analysis_chain  => $chain,
-		'module.name'   => [ 'like', 'Signature Stitcher%' ]
-	) or die "Could not find a signature stitcher module in chain (id = $chainStr, name = '".$chain->name."')";
-	logdbg "debug", "found signature stitcher module (name=".$sig_stitch_node->module->name()."), node (id=".$sig_stitch_node->id.".";
-	
-	
 	# get dataset if neccesary
 	if (not defined $dataset) {
 		if ($datasetStr =~ /^([0-9]+)$/) {
@@ -285,63 +270,194 @@ sub compile_sigs {
 		}
 	}
 	
-	# Find the chain execution or re-execute the chain
-	logdbg "debug", "finding signature stitcher module execution.";
-	if ($force_new_chex) {
-		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, undef, ReuseResults => 0);
-	} else {
-		# chex might already be loaded if chex_id was specified as program parameter
-		$chex = $factory->findObject( "OME::AnalysisChainExecution",
-			analysis_chain => $chain,
-			dataset        => $dataset
-		) unless ($chex);
+	# get chex if neccesary,
+	# it might already be loaded if chex_id was specified as program parameter
+	$chex = $factory->findObject( "OME::AnalysisChainExecution",
+		analysis_chain => $chain,
+		dataset        => $dataset
+	) unless ($chex);
+	
+	die "debug", "Could not find execution of chain (id=".$chain->id unless $chex;
+	
+	############################################################################
+	# Figure out the leaf nodes and from them, the signature labels
+	############################################################################
+	my $manager = OME::Tasks::ChainManager->new($session);
+
+	logdbg "debug", "Computing labels for leaf-node names";
+	my @signature_nodes = $manager->findLeaves( $chain );
+	@signature_nodes = sort {$a->module->name cmp $b->module->name} @signature_nodes;
+	my @signature_node_names = $manager->createNodeTags(@signature_nodes);
+	
+	# now that we have the signature_node_names, run through the signature_nodes again,
+	# this time adding FO ST and SE
+	logdbg "debug", "Computing labels for individual signatures";
+	my @signature_labels;
+	foreach my $sig_node (@signature_nodes) {
+		my $signature_node_name = shift(@signature_node_names);
 		
-		if (not $chex) {
-			logdbg "debug", "Could not find execution of chain (id=".$chain->id."). Executing chain";
-			$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
+		my @formal_outputs = $factory->findObjects('OME::Module::FormalOutput', { module => $sig_node->module() });
+		@formal_outputs = sort { $a->name cmp $b->name } @formal_outputs;
+
+		foreach my $fo (@formal_outputs) {	
+			my @SEs = $fo->semantic_type->semantic_elements();
+			@SEs = sort { $a->name cmp $b->name } @SEs;
+			
+			foreach my $se ( @SEs ) {
+			
+				# is SE of an appropriate type i.e a double
+				next if $se->data_column()->sql_type() eq 'string';
+				next if $se->data_column()->sql_type() eq 'reference';
+			
+				push (@signature_labels, $signature_node_name.".".$fo->name().".".$se->name());
+			}
 		}
 	}
-	
-	# collect sig stitcher module execution for this chain
-	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
-		analysis_chain_execution => $chex,
-		analysis_chain_node      => $sig_stitch_node
-	) or die "Could not load a chain node execution for the signature stitcher node (id=".$sig_stitch_node->id."), chain execution (id=".$chex->id.").";
-	my $stitcher_mex = $stitcher_nex->module_execution;
-	die "signature stitcher (".$stitcher_mex->module->name.") module execution (id=".$stitcher_mex->id.") has 'ERROR' status!"
-		if $stitcher_mex->status() eq 'ERROR';
-	logdbg "debug", "found signature stitcher module execution (mex=".$stitcher_mex->id().").";
-	
-	my @images = $dataset->images( __order => ['name', 'id'] );
+
+	my $signature_labels_array = OME::Matlab::Array->newStringArray(\@signature_labels);
+	$signature_labels_array->makePersistent();
+
+	############################################################################
+	# Make an array of image_paths/feature names
+	############################################################################
 	
 	# make an array of image_paths/feature names
 	# img_path [feature name]
 	# img_path [feature name]
 	# ...
-	my @image_paths; # this is the name of the image's original file
+	logdbg "debug", "Making an array of image_paths/feature names";
+
+	my @images = $dataset->images( __order => ['name', 'id'] );
+	my @features = ();
+	my @image_feature_paths; # this is a 'path' to the image feature
+
+	# find the NODE that produces ROIs
+	my $ROI_node = $factory->findObject ("OME::AnalysisChain::Node",
+										analysis_chain => $chain,
+										'module.name' => 'Image 2D Tiled ROIs')
+	or die "Couldn't find ROI producing node in chain";
+	
+	my $ROI_FO = $factory->findObject ("OME::Module::FormalOutput",
+										module => $ROI_node->module(),
+										name => "Image ROIs")
+	or die "Couldn't find ROI Formal Output";
+	
 	foreach my $img (@images) {
 		my $originalFile = OME::Tasks::ImageManager->getImageOriginalFiles($img);
 		die "Image ".$_->name." doesn't have exactly one Original File"
 			if( ref( $originalFile ) eq 'ARRAY' );
 		
-		my @features = $img->all_features();
-		@features = sort {$a->id <=> $b->id} @features;
-		foreach (@features) {
-			push @image_paths, $originalFile->Path()." [".$_->name()."]";
+		# get ROI Node execution
+		my $ROI_nex = $factory->findObject ("OME::AnalysisChainExecution::NodeExecution",
+											analysis_chain_execution => $chex,
+											analysis_chain_node => $ROI_node,
+											'module_execution.image' => $img,
+										   ) or die "couldn't load ROI NEX";
+
+		my @img_features = $img->all_features();
+		@img_features = sort {$a->id <=> $b->id} @img_features;
+		foreach my $feature (@img_features) {
+			# selecte the features made by this CHEX
+			my @attributes = @{OME::Tasks::ModuleExecutionManager->getAttributesForMEX($ROI_nex->module_execution(),
+																					   $ROI_FO->semantic_type(),
+																					   {feature =>$feature})};
+			my $attribute = $attributes[0];
+			next unless (defined $attribute); # i.e. this ROI wasn't made by this signature chain
+			
+			push @features, $feature;
+			push @image_feature_paths, $originalFile->Path()." [".$feature->name()."]";
 		}
 	}
 	# sort images by image_path not image name to match MATLAB sort order
 	# so /CHO/tumor.tiff will be before /Pollen/obj_198_1.tiff
-	my @image_path_indices = sort{$image_paths[$a] cmp $image_paths[$b]}0..$#images;
-	@images = @images[@image_path_indices];
-	@image_paths = @image_paths[@image_path_indices];
+	my @image_feature_path_indices = sort{$image_feature_paths[$a] cmp $image_feature_paths[$b]}0..$#image_feature_paths;
+	@image_feature_paths = @image_feature_paths[@image_feature_path_indices];
+	@features = @features[@image_feature_path_indices];
 	
-	# make the matlab signature array and label array
-	my ($category_names_array, $signature_labels_array, $signature_array) = $self->
-		compile_signature_matrix( $stitcher_mex, \@images, scalar(@image_paths)); 	# last parameter is the number of image rois
-																					# which is the number of columns of the sig matrix
+	my $image_paths_array = OME::Matlab::Array->newStringArray(\@image_feature_paths);
+	$image_paths_array->makePersistent();
+	
+	############################################################################
+	# Figure out image classifications
+	############################################################################
+	my ($classifications, $category_numbers, $category_names) = 
+		get_classifications_and_category_numbers(\@features);
+		
+	my $category_names_array = OME::Matlab::Array->newStringArray($category_names);
+	$category_names_array->makePersistent();
+	
+	############################################################################
+	# Compile the signature matrix
+	############################################################################
 
-	# save the array to disk
+	# analyzing chain structure.
+	# pre computing LUTs speeds up writing out signatures
+	logdbg "debug", "analyzing chain structure";
+	
+	my %sig_node_id_to_FOs;
+	my %FO_id_to_se_names;
+	
+	foreach my $sig_node (@signature_nodes) {
+		my @formal_outputs = $factory->findObjects('OME::Module::FormalOutput', { module => $sig_node->module() });
+		@formal_outputs = sort { $a->name cmp $b->name } @formal_outputs;
+		$sig_node_id_to_FOs{$sig_node->id} = \@formal_outputs;
+		
+		foreach my $fo (@formal_outputs) {
+			my @SEs = $fo->semantic_type->semantic_elements();
+			@SEs = sort { $a->name cmp $b->name } @SEs;
+	
+			my @se_names;
+			foreach my $se ( @SEs ) {
+				# is SE of an appropriate type i.e a double
+				next if $se->data_column()->sql_type() eq 'string';
+				next if $se->data_column()->sql_type() eq 'reference';
+				push (@se_names, $se->name());
+			}
+
+			$FO_id_to_se_names{$fo->id} = \@se_names;
+		}
+	}
+			
+	# instantiate the matlab signature array. 
+	#	number of rows is the size of the signature vector plus one for the image classification.
+	#	number of columns is the number of image ROIs
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar(@signature_labels) + 1, scalar(@image_feature_paths));
+	$signature_array->makePersistent();
+	
+	my $image_feature_number = 0;
+	my $category_row_index = scalar(@signature_labels); # what row in the signature matrix are classifications
+
+														# written to
+	foreach my $feature ( @features ) {
+		print "Compiling Sigs for Image ROI ".($image_feature_number+1)." of ".scalar(@image_feature_paths)." (Image Name: ".$feature->image->name.")\n"; 
+
+		my $sig_row = 0;
+		foreach my $sig_node (@signature_nodes) {
+			my $nex = $factory->findObject ("OME::AnalysisChainExecution::NodeExecution",
+												analysis_chain_execution => $chex,
+												analysis_chain_node => $sig_node,
+												'module_execution.image' => $feature->image,
+												) or die "couldn't load NEX";
+			my $mex = $nex->module_execution();
+
+			my @formal_outputs = @{$sig_node_id_to_FOs{$sig_node->id}};	
+			foreach my $fo (@formal_outputs) {
+				my @attributes = @{OME::Tasks::ModuleExecutionManager->getAttributesForMEX($mex, $fo->semantic_type, {feature =>$feature})};
+				my $attribute = $attributes[0];
+				die "wow batman no attributes" unless (defined $attribute);
+				
+				my @se_names = @{$FO_id_to_se_names{$fo->id}};
+				foreach my $se_name ( @se_names ) {
+					$signature_array->set($sig_row++, $image_feature_number, $attribute->$se_name);
+				}
+			}
+		}
+		$image_feature_number++;
+	}
+
+	############################################################################
+	# Writing the MATLAB file
+	############################################################################
 	logdbg "debug", "Saving the array to disk.";
 	
 	$engine->eval("global category_names_char_array");
@@ -360,7 +476,7 @@ sub compile_sigs {
 	               "end;" );
 
 	$engine->eval("global image_paths_char_array");
-	$engine->putVariable('image_paths_char_array', OME::Matlab::Array->newStringArray(\@image_paths));
+	$engine->putVariable('image_paths_char_array',$image_paths_array);
 	$engine->eval( "for i=1:size( image_paths_char_array, 1 ),".
 	               "image_paths{i} = sprintf( '%s', image_paths_char_array(i,:) ); ".
 	               "end;" );
@@ -641,59 +757,8 @@ sub stitch_chain {
 		join( ', ', map( $_->module->name."(".$_->id.")", @signature_nodes ) );
 	
 	# compute FI names that are going to be used in the signature stitcher
-	my @signature_nodes_FI_names;
+	my @signature_node_names = $manager->createNodeTags (@signature_nodes);
 	
-	my @root_nodes = @{$manager->getRootNodes( $chain )};
-	my $root_node = $root_nodes[0];
-	foreach my $sig_node (@signature_nodes) {
-		# create a FI Name based on the Path of Modules.
-		my @node_path = $manager->findPath($root_node, $sig_node);
-		my $FI_name = "im";
-		
-		foreach (@node_path) {
-			# ignore modules based on their categories
-			next unless (defined $_->module->category); # ignore no category modules
-			my $cat_path = OME::Tasks::ModuleTasks::returnPathToLeafCategory ($_->module->category);
-			next if ($cat_path =~ m/.*Slicers.*/);  # ignore slicer modules 
-			next if ($cat_path =~ m/.*Typecasts.*/); # ignore typecaster modules 
-
-			if (defined $_->module->location) {
-				$FI_name = $_->module->location."($FI_name)"
-			} else {
-				$FI_name = $_->module->name."($FI_name)"
-			}
-		}
-		push @signature_nodes_FI_names, $FI_name;
-	}
-	
-	# make sure that $signature_nodes are all unique strings. If there are multiple
-	# exact same strings, we shall enumerate them.
-	my %unique_FI_names_count;
-	my %unique_FI_names_ptr; # points to the first redundent string. This way we can retroactively add a _1 suffix
-
-	for (my $i=0; $i < scalar @signature_nodes_FI_names; $i++) {
-		my $FI_name = $signature_nodes_FI_names[$i];
-		
-		if (not exists $unique_FI_names_count{$FI_name}) {
-			$unique_FI_names_count{$FI_name} = 1;
-			$unique_FI_names_ptr{$FI_name} = $i;			
-			next;
-		}
-		
-		# retroactively add a _1 suffix to the first redundent string
-		if ($unique_FI_names_count{$FI_name} == 1) {
-#			print "was ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
-			$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}] = 
-				$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."_1";
-#			print "now ".$signature_nodes_FI_names[$unique_FI_names_ptr{$FI_name}]."\n";
-		}
-#		print "was ".$signature_nodes_FI_names[$i]."\n";
-		$unique_FI_names_count{$FI_name} = $unique_FI_names_count{$FI_name} + 1;
-		$signature_nodes_FI_names[$i] = 
-				$signature_nodes_FI_names[$i]."_".$unique_FI_names_count{$FI_name};
-#		print "now ".$signature_nodes_FI_names[$i]."\n";
-	}
-
 	##############
 	# create signature module (xml)
 	logdbg "debug", "Creating signature module";
@@ -739,14 +804,14 @@ ENDDESCRIPTION
 	$module->appendChild( $declaration );
 	
 	# Inputs
-	my  @signature_nodes_FI_names_copy = @signature_nodes_FI_names;
+	my  @signature_node_names_copy = @signature_node_names;
 	foreach my $sig_node ( @signature_nodes ) {
-		my $FI_name = shift @signature_nodes_FI_names_copy;
+		my $signature_node_name = shift @signature_node_names_copy;
 		
 		foreach my $output ( $sig_node->module->outputs ) {
 			my $ST_name = $output->semantic_type->name;
 			my $formal_input = $doc->createElement( 'FormalInput');
-			$formal_input->setAttribute( 'Name', $FI_name.".".$ST_name);
+			$formal_input->setAttribute( 'Name', $signature_node_name.".".$ST_name);
 			$formal_input->setAttribute( 'SemanticTypeName', $ST_name );
 			$formal_input->setAttribute( 'Count', '?' );
 			$declaration->appendChild( $formal_input );
@@ -790,15 +855,15 @@ ENDDESCRIPTION
 	
 	# make links
 	foreach my $sig_node (@signature_nodes) {
-		my $FI_name = shift (@signature_nodes_FI_names);
+		my $signature_node_name = shift (@signature_node_names);
 		foreach my $output ($sig_node->module->outputs) {
 			my $ST_name = $output->semantic_type->name;
 			
 			my $formal_input;
 			$formal_input = $factory->findObject( "OME::Module::FormalInput",
 				module => $stitcher_module,
-				name   => $FI_name.".".$ST_name
-			) or die "Couldn't load input $FI_name::$ST_name for module $module_name";
+				name   => $signature_node_name.".".$ST_name
+			) or die "Couldn't load input $signature_node_name::$ST_name for module $module_name";
 			
 			# use node_mapping to link the new node with the old
 			my $from_node = $node_mapping->{$sig_node->id };
@@ -833,17 +898,18 @@ ENDDESCRIPTION
 # I'm putting this in a separate function because the implementation
 # will probably change.
 sub get_classifications_and_category_numbers {
-	my ($proto, $images, $classification_mex) = @_;
+	my ($proto, $features, $classification_mex) = @_;
 	logdbg "debug", "collecting image classifications.";
 	my $factory = OME::Session->instance()->Factory();
 	my %classifications;
 	my $category_group;
-	foreach my $image ( @$images ) {
+	foreach my $feature ( @$features ) {
+		my $image = $feature->image;
 		# If we were given a mex or list of mexes, then use it to find classifications
 		my @classification_list = ( $classification_mex ?
 			@{ OME::Tasks::ModuleExecutionManager->
 				getAttributesForMEX( $classification_mex, "Classification",
-					{image => $image } 
+					{image => $feature->image } 
 				) } :
 			$factory->findAttributes( 'Classification', image => $image )
 		);
@@ -871,66 +937,6 @@ sub get_classifications_and_category_numbers {
 		push(@category_names, $_->Name);
 	}
 	return (\%classifications, \%category_numbers, \@category_names);
-}
-
-# returns the matlab signature array
-sub compile_signature_matrix {
-	my ($proto, $stitcher_mex, $images, $number_of_image_features, $classification_mex) = @_;
-	my $factory = OME::Session->instance()->Factory();
-	my ( $classifications, $category_numbers, $category_names) = 
-		$proto->get_classifications_and_category_numbers( $images, $classification_mex );
-
-	# get category_names
-	my $category_names_array = OME::Matlab::Array->newStringArray($category_names);
-	
-	# get vector_legends.
-	my $vector_legends_ptr = OME::Tasks::ModuleExecutionManager->
-		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
-		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
-	my @vector_legends = sort {$a->VectorPosition <=> $b->VectorPosition} @$vector_legends_ptr;
-	
-	# populate the signature matrix's labels
-	my @signature_labels =  map( $_->FormalInput().".".$_->SemanticElement(), @vector_legends);
-	my $signature_labels_array = OME::Matlab::Array->newStringArray(\@signature_labels);
-	$signature_labels_array->makePersistent();
-
-	# instantiate the matlab signature array. 
-	#	number of rows is the size of the signature vector plus one for the image classification.
-	#	number of columns is the number of image ROIs
-	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, $number_of_image_features);
-	$signature_array->makePersistent();
-	
-	# populate the signature matrix proper
-	my $image_feature_number = 0;
-	my $category_row_index = scalar( @vector_legends );
-	foreach my $image ( @$images ) {
-		my @features = $image->all_features();
-		@features = sort {$a->id <=> $b->id} @features;
-
-		foreach my $feature (@features) {
-			my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
-				getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
-					{ feature => $feature }
-				)
-				or die "Could not load image signature vector for feature (id=".$feature->id."), mex (id=".( ref( $stitcher_mex ) ne 'ARRAY' ? $stitcher_mex->id : join( ', ', map( $_->id, @$stitcher_mex ) ) ).")";
-			print "Compiling Sigs for Image ROI ".($image_feature_number+1)." of ".$number_of_image_features. "(Image Name: ".$image->name.")\n"; 
-			# set the image category
-			my $category_num = ( defined $classifications->{ $image->id } ? 
-				$category_numbers->{ $classifications->{ $image->id }->Category->id } :
-				0
-			);
-			$signature_array->set( $category_row_index, $image_feature_number, $category_num );
-			# set the image's signature vector
-			foreach my $sig_entry ( @$signature_entry_list ) {
-				# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
-				my $row_index = $sig_entry->Legend->VectorPosition() - 1;
-				$signature_array->set( $row_index, $image_feature_number, $sig_entry->Value() );
-			}
-			$image_feature_number += 1;
-		}
-	}
-
-	return $category_names_array, $signature_labels_array, $signature_array, 
 }
 
 sub get_next_LSID {
