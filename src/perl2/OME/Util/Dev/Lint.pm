@@ -138,8 +138,8 @@ sub untangle_chains {
 			push( @chains_to_save, $untangled_chain );
 			if( $verbose ) {
 				print "Untangled chain ".$untangled_chain->name." (id=".$untangled_chain->id.")\n";
-				my @chain_elevations = $self->__topological_sort( $untangled_chain );
-				$self->__print_topo_of_chain(  @chain_elevations );
+				my @chain_elevations = OME::Tasks::ChainManager->topologicalSort ( $untangled_chain );
+				OME::Tasks::ChainManager->printChainElevations(  @chain_elevations );
 			}
 		} else {
 			push( @chains_to_save, $chain );
