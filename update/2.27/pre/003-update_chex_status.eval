@@ -1,0 +1,13 @@
+my @chexs = $factory->findObjects("OME::AnalysisChainExecution");
+
+foreach my $chex (@chexs) {
+	if ($chex->count_node_executions('module_execution.status' => 'ERROR') or
+		$chex->count_node_executions('module_execution.status' => 'UNREADY')) {
+		$chex->status('ERROR');
+	} else {
+		$chex->status('FINISHED');
+	}
+	$chex->storeObject();
+}
+
+1;
