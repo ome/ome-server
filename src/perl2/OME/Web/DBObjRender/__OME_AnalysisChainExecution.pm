@@ -166,23 +166,25 @@ sub _renderData {
 	}
 	if( exists $field_requests->{ 'class_style' } ) {
 		foreach my $request ( @{ $field_requests->{ 'class_style' } } ) {
-			my $error_node_count = $obj->count_node_executions( 
-				'module_execution.status' => 'ERROR'
-			);
-			my $unfinished_node_count = $obj->count_node_executions( 
-				'module_execution.status' => 'UNFINISHED'
-			);
-			
+			my $status = $obj->status;
+
 			my $request_string = $request->{ 'request_string' };
-			if ($error_node_count) {
-				$record{ $request_string } = 'class="ome_error"';
-			} elsif ($unfinished_node_count) {
+			if ($status eq 'UNFINISHED') {
 				$record{ $request_string } = 'class="ome_caution"';
-			} else {
+			} elsif ($status eq 'ERROR' or $status eq 'INTERRUPTED') {
+				$record{ $request_string } = 'class="ome_error"';
+			} elsif ($status eq 'FINISHED') {
 				$record{ $request_string } = 'class="ome_punchline"'; 
 			}
 		}
 	}
+	if( exists $field_requests->{ 'chex_status' } ) {
+		foreach my $request ( @{ $field_requests->{ 'chex_status' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = $obj->status;
+		}
+	}
+	
 	if( exists $field_requests->{ '/name' } ) {
 		foreach my $request ( @{ $field_requests->{ '/name' } } ) {
 			my $request_string = $request->{ 'request_string' };
