@@ -374,6 +374,7 @@ sub callMatlab {
 	my $matlabCmd;
 	
 	# Make up names for inputs and place inputs into matlab memory space
+	$engine->eval("clear");
 	for ( my $i = 0; $i < $nargin; $i++ ) {
 		$input_names[$i] = 'eceval_ome_input_'.$i;
 		$engine->putVariable($input_names[$i], $inputs[$i]);
