@@ -41,6 +41,7 @@ our $VERSION_STRING = '2.7.0';
 
 use Config;
 use Log::Agent;
+require Log::Agent::Driver::File;
 use Carp;
 our $THREADS_AVAILABLE;
 our $BIG_ENDIAN;
@@ -64,16 +65,16 @@ sub BIG_ENDIAN {
         unless defined $BIG_ENDIAN;
     return $BIG_ENDIAN;
 }
+my $driver = Log::Agent::Driver::File->make(
+	-prefix     => "$0",
+	-stampfmt   => "date",
+	-showpid    => 1,
+	);
 
 if (exists $ENV{OME_DEBUG} && $ENV{OME_DEBUG} > 0) {	
-	logconfig(
-		-prefix      => "$0",
-		-level    => 'debug'
-	);
+	logconfig(-driver => $driver, -level => 'debug');
 } else {
-	logconfig(
-		-prefix      => "$0",
-	);
+	logconfig(-driver => $driver);
 }
 
 if (exists $ENV{OMEIS_DEBUG} && $ENV{OMEIS_DEBUG} > 0) {
