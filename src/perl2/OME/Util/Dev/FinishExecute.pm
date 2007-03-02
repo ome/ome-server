@@ -92,6 +92,16 @@ sub finish_execute {
 	my $chex = $factory->loadObject( 'OME::AnalysisChainExecution', $chex_id )
 		or die "Couldn't load chex $chex_id";
 	
+	if (not defined $chex->status () eq 'UNFINISHED') {
+		die "Chain Execution is in progress, cannot run FinishExecute on that CHEX!\n";
+	} elsif ($chex->status() eq 'FINISHED') {
+		print "Chain Execution has status 'FINISHED' so FinishExecute ".
+			"probably will do nothing for you. Trying anyway...\n";
+	} elsif ($chex->status() eq 'INTERRUPTED') {
+		print "Chain Execution has status 'INTERRUPTED' so FinishExecute ".
+			"probably will do nothing for you. You probably want to re-execute ".
+			"the chain with results-reuse enabled. Trying anyway...\n";
+	}
 	print "Finishing Chain Execution of Analysis Chain `".$chex->analysis_chain->name()."`\n";
 	
 	my $task = OME::Tasks::NotificationManager->
