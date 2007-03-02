@@ -824,6 +824,70 @@ sub printChainElevations {
 	}
 }
 
+#
+# NodeTags are strings that describe 
+#
+sub createNodeTags {
+	my ($self, @nodes) = @_;
+	my @node_tags;
+	
+	my $chain = $nodes[0]->analysis_chain();
+	my @root_nodes = @{$self->getRootNodes( $chain )};
+	my $root_node = $root_nodes[0];
+	
+	foreach my $node (@nodes) {
+		# create a FI Name based on the Path of Modules.
+		my @node_path = $self->findPath($root_node, $node);
+		my $node_name = "im";
+		
+		foreach (@node_path) {
+			# ignore modules based on their categories
+			next unless (defined $_->module->category); # ignore no category modules
+			my $cat_path = OME::Tasks::ModuleTasks::returnPathToLeafCategory ($_->module->category);
+			next if ($cat_path =~ m/.*Slicers.*/);  # ignore slicer modules 
+			next if ($cat_path =~ m/.*Typecasts.*/); # ignore typecaster modules 
+
+			if (defined $_->module->location) {
+				$node_name = $_->module->location."($node_name)"
+			} else {
+				$node_name = $_->module->name."($node_name)"
+			}
+		}
+		push @node_tags, $node_name;
+	}
+	
+	# make sure that $nodes are all unique strings. If there are multiple
+	# exact same strings, we shall enumerate them.
+	my %unique_node_tags_count;
+	my %unique_node_tags_ptr; # points to the first redundent string. This way
+	                           # we can retroactively add a _1 suffix
+
+	for (my $i=0; $i<scalar @node_tags; $i++) {
+		my $node_name = $node_tags[$i];
+		
+		if (not exists $unique_node_tags_count{$node_name}) {
+			$unique_node_tags_count{$node_name} = 1;
+			$unique_node_tags_ptr{$node_name} = $i;			
+			next;
+		}
+		
+		# retroactively add a _1 suffix to the first redundent string
+		if ($unique_node_tags_count{$node_name} == 1) {
+#			print "was ".$node_tags[$unique_node_tags_ptr{$node_name}]."\n";
+			$node_tags[$unique_node_tags_ptr{$node_name}] = 
+				$node_tags[$unique_node_tags_ptr{$node_name}]."_1";
+#			print "now ".$node_tags[$unique_node_tags_ptr{$node_name}]."\n";
+		}
+#		print "was ".$node_tags[$i]."\n";
+		$unique_node_tags_count{$node_name} = $unique_node_tags_count{$node_name} + 1;
+		$node_tags[$i] = 
+				$node_tags[$i]."_".$unique_node_tags_count{$node_name};
+#		print "now ".$node_tags[$i]."\n";
+	}
+	
+	return @node_tags;
+}
+
 1;
 
 __END__
