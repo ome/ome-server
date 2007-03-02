@@ -133,6 +133,15 @@ __PACKAGE__->addColumn(master => 'master',
                         SQLType => 'varchar(64)',
                         Indexed => 1,
                        });
+__PACKAGE__->addColumn(executing_mex => 'executing_mex', 'OME::ModuleExecution',
+                       {
+                        SQLType => 'integer',
+                       });
+__PACKAGE__->addColumn(scheduling_token => 'scheduling_token',
+                       {
+                        SQLType => 'varchar(64)',
+                        Indexed => 1,
+                       });                       
 __PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'executed_by_worker');
 
 # These objects should never be cached to make sure that their status is always current.
