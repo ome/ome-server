@@ -322,7 +322,7 @@ sub __execute {
 		$instanceName = 'engine';
 		$self->__openEngine() unless $_matlab_instances{ 'engine' };
 	}
-	logdbg "debug", "Using $instanceName ...\n";
+	logdbg "debug", "Using $instanceName ...";
 	
 	my $start_time = [gettimeofday()];
 	@response = $_matlab_instances{ $instanceName }->callMatlab( $function, scalar(@outputs), scalar(@inputs), @inputs );
@@ -1013,15 +1013,14 @@ sub MatlabVector_to_Attrs {
 	}
 	
 	# verbose debugging aid. Should be commented out typically.
-	logdbg "debug", "Data from vector $vectorDecodeID is:\n";
+	logdbg "debug", "Data from vector $vectorDecodeID is: ";
 	foreach my $formal_output_name ( keys %vectorData ) {
 		logdbg "debug", "Formal output $formal_output_name has data hash:\n\t".
 			join( ", ", 
 				map( $_." => ".$vectorData{$formal_output_name}->{$_}, 
 					keys %{ $vectorData{$formal_output_name} } 
 				)
-			).
-		"\n";
+			);
 	}
 	
 	# Actually make the outputs
@@ -1373,7 +1372,8 @@ sub __openMatlab {
 			'double_inf'     => $double_inf,
 			'single_neg_inf' => $single_neg_inf,
 			'single_inf'     => $single_inf,
-		);	
+		);
+		$self->__idleMatlab(); # clear the workspace of all the eceval_ome_output_? variables created with callMatlab
 	}
 }
 
