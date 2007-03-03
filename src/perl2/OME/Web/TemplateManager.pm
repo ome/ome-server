@@ -90,6 +90,21 @@ sub sysTemplateDir {
     return $self->rootTemplateDir()."System/";
 }
 
+=head2 localTemplateDir
+
+	my $template_dir = $self->localTemplateDir( );
+	
+	Returns the directory where templates for layouts are stored. This directory
+	stores templates that DID NOT come with the installed source code. 
+	This should only be used internally.
+
+=cut
+
+sub localTemplateDir { 
+    my $self = shift;
+    return $self->rootTemplateDir()."Local/";
+}
+
 
 =head2 actionTemplateDir
 
@@ -504,11 +519,11 @@ sub getTemplateFromST {
 	unless ($tmplName);
 
     my $tmpl;
-    my $tmpl_dir = $self->sysTemplateDir();
+    my $tmpl_dirs = [$self->sysTemplateDir(), $self->localTemplateDir()];
     my $tmplAttr = $factory->findObject($st,{Name=>$tmplName});
     if ($tmplAttr) {
 	$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
-				     path => $tmpl_dir,
+				     path => $tmpl_dirs,
 				     case_sensitive => 1 );
     }
     return $tmpl;
