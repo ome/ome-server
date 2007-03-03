@@ -30,10 +30,11 @@
 #-------------------------------------------------------------------------------
 
 package OME::Web::TemplateManager;
+use strict;
 
 use OME;
 
-use strict;
+use Carp;
 use HTML::Template;
 use base qw(OME::Web);
 
@@ -74,20 +75,36 @@ sub rootTemplateDir {
     return $tmpl_dir."/";
 }
 
+=head2 sysTemplateDir
+
+	my $template_dir = $self->sysTemplateDir( );
+	
+	Returns the directory where templates for layouts are stored. This directory
+	stores templates that came with the installed source code. 
+	This should only be used internally.
+
+=cut
+
+sub sysTemplateDir { 
+    my $self = shift;
+    return $self->rootTemplateDir()."System/";
+}
+
+
 =head2 actionTemplateDir
 
 	my $template_dir = $self->actionTemplateDir( );
 	
 	Returns the directory where templates core sytem functions are
 	located: generally, the "Action" subdirectory under
-	rootTemplateDir. 
+	sysTemplateDir. 
 
         This should only be used internally.
 =cut
 
 sub actionTemplateDir {
     my $self = shift;
-    my $tmpl_dir = $self->rootTemplateDir();
+    my $tmpl_dir = $self->sysTemplateDir();
     $tmpl_dir .="Actions/";
     return $tmpl_dir;
 }
@@ -98,29 +115,29 @@ sub actionTemplateDir {
 	
 	Returns the directory where location templates are
 	located: generally, the "Location" subdirectory under
-	rootTemplateDir. 
+	sysTemplateDir. 
 
         This should only be used internally.
 =cut
 
 sub locationTemplateDir {
     my $self = shift;
-    my $tmpl_dir = $self->rootTemplateDir();
-    $tmpl_dir .="Locations/";
+    my $tmpl_dir = $self->sysTemplateDir();
+    $tmpl_dir .= "Locations/";
     return $tmpl_dir;
 }
 
 =head2 createTemplateDir
 
     The directory for creation templates.  Generally, the "Action"
-	subdirectory under rootTemplateDir. 
+	subdirectory under sysTemplateDir. 
 
         This should only be used internally.
 =cut
 
 sub createTemplateDir { 
     my $self = shift;
-    my $tmpl_dir = $self->rootTemplateDir();
+    my $tmpl_dir = $self->sysTemplateDir();
     return $tmpl_dir."Create/";
 }
 
@@ -129,7 +146,7 @@ sub createTemplateDir {
 =head2 searchTemplateDir
 
     The directory for search templates.  Generally, the "Search"
-	subdirectory under rootTemplateDir. 
+	subdirectory under sysTemplateDir. 
 
         This should only be used internally.
 
@@ -137,7 +154,7 @@ sub createTemplateDir {
 
 sub searchTemplateDir { 
 	my $self = shift;
-	my $tmpl_dir = $self->rootTemplateDir();
+	my $tmpl_dir = $self->sysTemplateDir();
 	return $tmpl_dir."Search/";
 }
 
@@ -148,7 +165,7 @@ sub searchTemplateDir {
         returned will vary based on the number of items to be rendered
         - the "arity".  If one object is to be displayed, the
         templates will be found in "Display/One" under the
-        rootTemplateDir. Otherwise, the templates will be found
+        sysTemplateDir. Otherwise, the templates will be found
         under "Display/Many".
 
         This should only be used internally.
@@ -158,7 +175,7 @@ sub searchTemplateDir {
 sub baseRenderDir {
     my $self=shift;
     my $arity = shift;
-    my $tmpl_dir  = $self->rootTemplateDir();
+    my $tmpl_dir  = $self->sysTemplateDir();
     $tmpl_dir .= "Display/";
     $tmpl_dir .= 'One/' if( uc( $arity ) eq 'ONE' );
     $tmpl_dir .= 'Many/' if( uc( $arity ) eq 'MANY' );
@@ -179,7 +196,7 @@ sub getActionTemplate {
     my ($tmpl_name) = @_;
 
     my $tmpl_dir = $self->actionTemplateDir();
-    die "Cannot find the template file '$tmpl_name' in the directory '$tmpl_dir'"
+    confess "Cannot find the template file '$tmpl_name' in the directory '$tmpl_dir'"
     	unless( -e "$tmpl_dir/$tmpl_name" );
     my $template = HTML::Template->new(
 		filename       => $tmpl_name,
@@ -477,6 +494,7 @@ sub getDisplayTemplate {
     type and name, and instantiate it.
 
 =cut 
+
 sub getTemplateFromST {
     my ($self,$st,$tmplName) = @_;
     my $session= $self->Session();
@@ -486,7 +504,7 @@ sub getTemplateFromST {
 	unless ($tmplName);
 
     my $tmpl;
-    my $tmpl_dir = $self->rootTemplateDir();
+    my $tmpl_dir = $self->sysTemplateDir();
     my $tmplAttr = $factory->findObject($st,{Name=>$tmplName});
     if ($tmplAttr) {
 	$tmpl = HTML::Template->new( filename => $tmplAttr->Template(),
@@ -500,6 +518,7 @@ sub getTemplateFromST {
 =head2 getTemplatesByType
     
     Find all of the templates of type $st that have ObjectType $st.
+    
 =cut
 
 sub getTemplatesByType {
