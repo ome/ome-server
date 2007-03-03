@@ -112,7 +112,7 @@ sub getPageBody {
 			
 		# Put mex ID on the end of the filename to ensure a unique file
 		$filename .= "_".$mex->id;
-		my $tmpl_dir = OME::Web::TemplateManager->rootTemplateDir();
+		my $tmpl_dir = OME::Web::TemplateManager->localTemplateDir();
 	#	my $annotator_path = "$tmpl_dir"."/Actions/Annotator/CategoryGroup/$filename.tmpl";
 		#my $browse_path = "$tmpl_dir"."/Browse/CategoryGroup/$filename.tmpl";
 		#my $display_path = "$tmpl_dir"."/Display/One/OME/Image/$filename.tmpl";
