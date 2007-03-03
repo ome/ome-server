@@ -852,23 +852,18 @@ BLURB
 
 	# Set $APACHE->{TEMPLATE_DIR} to something appropriate for this installation.
 	# It can either be under the OME root or under the current cvs checkout
-	if( exists $APACHE->{TEMPLATE_DEV_CONF} ) {
-		if( $APACHE->{TEMPLATE_DEV_CONF} ) {
-			$APACHE->{TEMPLATE_DIR} = cwd()."/src/html/Templates";
-		} else {
-			$APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
-		}
-
+	my $templateSourceDir = cwd()."/src/html/Templates";
 	# $APACHE->{TEMPLATE_DIR*} will not be defined if updating from 2.4.0, so
 	# generate intelligent defaults based on whether the web-ui is set to 
 	# developer mode.
-	} elsif( $APACHE->{DEV_CONF} ) {
-		$APACHE->{TEMPLATE_DIR} = cwd()."/src/html/Templates";
-		$APACHE->{TEMPLATE_DEV_CONF} = 1;
-	} else {
-		$APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
-		$APACHE->{TEMPLATE_DEV_CONF} = 0;
+	if( ~exists $APACHE->{TEMPLATE_DEV_CONF} ) {
+		if( $APACHE->{DEV_CONF} ) {
+			$APACHE->{TEMPLATE_DEV_CONF} = 1;
+		} else {
+			$APACHE->{TEMPLATE_DEV_CONF} = 0;
+		}
 	}
+	$APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
 		
 	# Confirm all flag
 	my $confirm_all;
@@ -894,7 +889,6 @@ BLURB
 			print      "                  cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
 			print BOLD,"Web-UI HTML Templates: \n",RESET;
 			print      "  Developer configuration: ", BOLD, $APACHE->{TEMPLATE_DEV_CONF} ?'yes':'no', RESET, "\n";
-#			print      " HTML Templates directory: ", BOLD, $APACHE->{TEMPLATE_DIR}, RESET, "\n";
 
 			if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
 				print BOLD,"OMEIS Update:\n",RESET;
@@ -1027,14 +1021,7 @@ BLURB
 		#********
 		#******** HTML Templates
 		#********
-		if (y_or_n("Use HTML Templates configuration for developers ?", 'n')) {
-			 $APACHE->{TEMPLATE_DEV_CONF} = 1;
-			 $APACHE->{TEMPLATE_DIR} = cwd()."/src/html/Templates";
-		} else {
-			 $APACHE->{TEMPLATE_DEV_CONF} = 0;
-			 $APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
-		}
-#		$APACHE->{TEMPLATE_DIR} = confirm_path ('Look for HTML Templates in:', $APACHE->{TEMPLATE_DIR});		
+		$APACHE->{TEMPLATE_DEV_CONF} = y_or_n("Use HTML Templates configuration for developers ?", 'n');
 		
 		print "\n";  # Spacing
 		$confirm_all = 1;
@@ -1059,7 +1046,6 @@ BLURB
 	print $LOGFILE "                  cgi-bin: ", $APACHE->{CGI_BIN}, "\n";
 	print $LOGFILE "Web-UI HTML Templates: \n";
 	print $LOGFILE "  Developer configuration: ", $APACHE->{TEMPLATE_DEV_CONF} ?'yes':'no', "\n";
-#	print $LOGFILE " HTML Templates directory: ", $APACHE->{TEMPLATE_DIR}, "\n";
 
 	if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
 		print $LOGFILE "OMEIS Update:\n";
@@ -1313,23 +1299,41 @@ BLURB
 	#********
 	#******** HTML Templates
 	#******** Read [Bug 531] for more background info and what is happening here
+	# The current structure is:
+	#	* the codebase has a single directory structure of templates
+	#	* these templates directories are copied to /OME/html/Templates/System
+	#	* if developer setting is chosen, a link is made to the templates directory instead of copying
+	#	* the directory structure is copied to /OME/html/Template/Local
+	#	* Templates made by users or sys admins are stored in the Local directory
+	# Previously, the codebase had a src/html/Templates/System directory that actually
+	# contained templates. The structure of this directory was mirrored to src/html/Templates,
+	# but no templates were stored in the mirrored structure. If developer configuration
+	# was chosen, the root template directory entry in the DB was set to the path
+	# of the codebase. The code below has to deal with potentially running into 
+	# those old cases, and update the /OME/html/Templates directory to
+	# reflect the current organizational structure.
 	
 	# This is 1 if we want to use templates from CVS distribution
-	my $cvs_sourced_templates = $APACHE->{TEMPLATE_DEV_CONF};
+	my $templateDevOn = $APACHE->{TEMPLATE_DEV_CONF};
+	my $sys_dir   = $APACHE->{TEMPLATE_DIR}."/System";
+	my $local_dir = $APACHE->{TEMPLATE_DIR}."/Local";
 	
-	# Clear out system directories
+	# Clear out (delete contents of) system directories
 	print "Installing HTML Templates for Web-UI \n";
 	
-	print "  \\__ Verifying structure of $APACHE->{TEMPLATE_DIR} \n";
-	my @old_sys_html_dirs = scan_tree("$APACHE->{TEMPLATE_DIR}/", sub{m#.*\/System[/]# or m#.*\/System$#});
-	@old_sys_html_dirs = sort { $b cmp $a } @old_sys_html_dirs; # reverse sort
-	if (not -e "$APACHE->{TEMPLATE_DIR}/") {
+	print "  \\__ Verifying structure of $APACHE->{TEMPLATE_DIR} ";
+	# In 2.4.x, the template directory was a flat listing of all template files
+	my @tmpl_files_flat = ( -e $APACHE->{TEMPLATE_DIR} ? 
+		scan_dir( $APACHE->{TEMPLATE_DIR}, sub { m#tmpl$# } ) :
+		()
+	);
+	if (not -e $APACHE->{TEMPLATE_DIR}) {
 		# this is a valid condition that occurs when installing OME on a clean system
 		print $LOGFILE "$APACHE->{TEMPLATE_DIR} HTML Templates structure doesn't exist; it will be created.\n";
 		print BOLD, "[SUCCESS]", RESET, ".\n";
 		print "Templates structure doesn't exist; it will be created.\n";
-
-	} elsif (not scalar @old_sys_html_dirs and not $cvs_sourced_templates) {
+		mkdir( $APACHE->{TEMPLATE_DIR} );
+	} elsif (not -e $sys_dir and scalar( @tmpl_files_flat ) ) {
 		# this is a valid condition that occurs in updating from 2.4.0 to later versions
 		# Just in case something important is in there, we'll ask the user to 
 		# archive the old template directory, and manually transfer their changes.
@@ -1351,63 +1355,78 @@ BLURB
 			 croak ("delete of tree $APACHE->{TEMPLATE_DIR} failed.\n"));
 		print BOLD, "[SUCCESS]", RESET, ".\n";
 		
-	} elsif (not $cvs_sourced_templates) {
-		# this is what regularly happens except when the templates directory is set to devel configuration
-		foreach (@old_sys_html_dirs) {
-			print $LOGFILE "HTML system directory $_ exists and will be emptied.\n";
-			(delete_tree($_) and rmdir($_))
+	} elsif( -e $sys_dir) {
+		# this is what regularly happens
+		print $LOGFILE "HTML system directory $sys_dir exists and will be emptied.\n";
+		if( -l $sys_dir ) { # Delete the link
+			unlink( $sys_dir );
+		} else { # Delete the directory
+			(delete_tree($sys_dir) and rmdir($sys_dir))
 				or
 			(print BOLD, "[FAILURE]", RESET, ".\n" and
-			 print $LOGFILE ".... delete of $APACHE->{TEMPLATE_DIR}/System failed.\n" and
-			 croak ("delete of $APACHE->{TEMPLATE_DIR}/System failed.\n"));
+			 print $LOGFILE ".... delete of $sys_dir failed.\n" and
+			 croak ("delete of $sys_dir failed.\n"));
 		}
 		print BOLD, "[SUCCESS]", RESET, ".\n";
 	} else {
 		print BOLD, "[SKIPPING]", RESET, ".\n";
 	}
 	
-	# Verify structure and update structure of user directories
-	print "  \\__ Updating user templates ";
-	my @usr_html_dirs = scan_tree(cwd()."/src/html/Templates/", sub{!m#.*\/System[/]# and !m#.*\/System$# and !m#CVS#});
-	@usr_html_dirs = sort { $a cmp $b } @usr_html_dirs;
-	
-	if (not $cvs_sourced_templates) {
-		foreach (@usr_html_dirs) {
-			my $rel_path = abs2rel ($_, cwd()."/src/html/Templates");
-			
-			if (-d "$APACHE->{TEMPLATE_DIR}/$rel_path") {
-				print $LOGFILE "User Tree $APACHE->{TEMPLATE_DIR}/$rel_path already exists.\n";
-			} else {
-				print $LOGFILE "User Tree $APACHE->{TEMPLATE_DIR}/$rel_path doesn't exist and will be created from $_.\n";
-				copy_dir ($_, "$APACHE->{TEMPLATE_DIR}/$rel_path", sub{ ! /^\.{1,2}$/ and !m#CVS#});
-			}
+	# Copy 'local' template directories into 'local' folder if we're doing an upgrade from pre 2.7.something
+	if( not -e $APACHE->{TEMPLATE_DIR}."/Local" ) {
+		my @local_html_dirs = scan_tree($APACHE->{TEMPLATE_DIR}, sub{!m#\/System# and !m#\.{1,2}$# });
+		@local_html_dirs = sort { $a cmp $b } @local_html_dirs;
+		mkdir( $APACHE->{TEMPLATE_DIR}."/Local" );
+		foreach my $dir (@local_html_dirs) {
+			my $rel_path = abs2rel ($dir, $APACHE->{TEMPLATE_DIR});
+			copy_dir ($dir, "$APACHE->{TEMPLATE_DIR}/Local/$rel_path");
 		}
-		print BOLD, "[SUCCESS]", RESET, ".\n"; 
-	} else {
-		print BOLD, "[SKIPPING]", RESET, ".\n";
+		@local_html_dirs = sort { $b cmp $a } @local_html_dirs;
+		foreach my $dir (@local_html_dirs) {
+			delete_tree($dir) and rmdir($dir);
+		}
 	}
+	
+	# Copy structure of system template directories into a 'local' folder
+	print "  \\__ Updating local template directory structure ";
+	my @html_dirs = scan_tree($templateSourceDir, sub{!/\.{1,2}$/ and !m#CVS#});
+	@html_dirs = sort { $a cmp $b } @html_dirs;
+	foreach my $dir (@html_dirs) {
+		my $rel_path = abs2rel ($dir, $templateSourceDir);
+		
+		if (-d "$APACHE->{TEMPLATE_DIR}/Local/$rel_path") {
+			print $LOGFILE "User Tree $APACHE->{TEMPLATE_DIR}/Local/$rel_path already exists.\n";
+		} else {
+			print $LOGFILE "User Tree $APACHE->{TEMPLATE_DIR}/Local/$rel_path doesn't exist and will be created from $dir.\n";
+			copy_dir ($dir, "$APACHE->{TEMPLATE_DIR}/Local/$rel_path", sub{-d});
+		}
+	}
+	print BOLD, "[SUCCESS]", RESET, ".\n"; 
 
 	# Update system directories
 	print "  \\__ Updating system templates ";
-	my @sys_html_dirs = scan_tree(cwd()."/src/html/Templates", sub{(m#.*\/System[/]# or m#.*\/System$#) and !m#CVS#});
+	my @sys_html_dirs = scan_tree($templateSourceDir, sub{!m#CVS#});
 	@sys_html_dirs = sort { $a cmp $b } @sys_html_dirs;
-
-	if (not $cvs_sourced_templates) {
-		foreach (@sys_html_dirs) {
-			my $rel_path = abs2rel ($_, cwd()."/src/html/Templates");
-			
-			print $LOGFILE "System Tree $APACHE->{TEMPLATE_DIR}/$rel_path will be created from $_.\n";
-			copy_dir ($_, "$APACHE->{TEMPLATE_DIR}/$rel_path", sub{ ! /^\.{1,2}$/ and !m#CVS#});
-			$_ = "$APACHE->{TEMPLATE_DIR}/$rel_path"; # change sys_html_dirs to point to new directory 
-		}
-		print BOLD, "[SUCCESS]", RESET, ".\n"; 
+	if( $APACHE->{TEMPLATE_DEV_CONF} ) {
+		# Make a link to the source code if the developer setting is on.
+		symlink( $templateSourceDir, $sys_dir );
 	} else {
-		print BOLD, "[SKIPPING]", RESET, ".\n";
+		mkdir( $sys_dir );
+		# Copy the source tree to the template directory if the developer setting is off
+		foreach my $dir (@sys_html_dirs) {
+			my $rel_path = abs2rel ($dir, $templateSourceDir);
+			print $LOGFILE "System Tree $APACHE->{TEMPLATE_DIR}/$rel_path will be created from $dir.\n";
+			copy_dir ($dir, "$APACHE->{TEMPLATE_DIR}/System/$rel_path", sub{ ! /\.{1,2}$/ and !m#CVS#});
+			$dir = "$APACHE->{TEMPLATE_DIR}/System/$rel_path"; # change sys_html_dirs to point to new directory 
+		}
+		
 	}
+	print BOLD, "[SUCCESS]", RESET, ".\n"; 
+
 	
 	# Fix Owner and Permissions
 	print "  \\__ Setting owner for templates to ";
-	if (not $cvs_sourced_templates) {
+	if (not $templateDevOn) {
 		print BOLD, "[$APACHE_USER]", RESET, ".\n";	
 		fix_ownership( {owner => $APACHE_USER, group => $OME_GROUP}, "$APACHE->{TEMPLATE_DIR}")
 			or (print $LOGFILE "Couldn't set owner/group for $APACHE->{TEMPLATE_DIR} to $APACHE_USER and $OME_GROUP. \n"
@@ -1417,7 +1436,7 @@ BLURB
 	}
 
 	print "  \\__ Setting permissions for user templates to ";	
-	if (not $cvs_sourced_templates) {
+	if (not $templateDevOn) {
 		print BOLD, "[0755]", RESET, ".\n";
 		fix_permissions( {mode => 0755, recurse => 1}, "$APACHE->{TEMPLATE_DIR}")
 			or (print $LOGFILE "Couldn't set 750 permissions for user-mutable HTML template directories under tree $APACHE->{TEMPLATE_DIR}.\n"
@@ -1427,7 +1446,7 @@ BLURB
 	}
 	
 	print "  \\__ Setting permissions for system templates to ";
-	if (not $cvs_sourced_templates) {
+	if (not $templateDevOn) {
 		print BOLD, "[0555]", RESET, ".\n";
 		fix_permissions( {mode => 0555, recurse => 1}, @sys_html_dirs)
 			or (print $LOGFILE "Couldn't set 550 permissions for system HTML directories.\n"
