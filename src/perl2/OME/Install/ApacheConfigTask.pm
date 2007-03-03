@@ -1417,7 +1417,6 @@ BLURB
 			my $rel_path = abs2rel ($dir, $templateSourceDir);
 			print $LOGFILE "System Tree $APACHE->{TEMPLATE_DIR}/$rel_path will be created from $dir.\n";
 			copy_dir ($dir, "$APACHE->{TEMPLATE_DIR}/System/$rel_path", sub{ ! /\.{1,2}$/ and !m#CVS#});
-			$dir = "$APACHE->{TEMPLATE_DIR}/System/$rel_path"; # change sys_html_dirs to point to new directory 
 		}
 		
 	}
@@ -1425,30 +1424,31 @@ BLURB
 
 	
 	# Fix Owner and Permissions
-	print "  \\__ Setting owner for templates to ";
+	print "  \\__ Setting owner for local templates to ";
+	print BOLD, "[$APACHE_USER]", RESET, ".\n";	
+	fix_ownership( {owner => $APACHE_USER, group => $OME_GROUP}, $local_dir)
+		or (print $LOGFILE "Couldn't set owner/group for $local_dir to $APACHE_USER and $OME_GROUP. \n"
+			and croak "Couldn't set owner/group for $local_dir to $APACHE_USER and $OME_GROUP. \n");
+	print "  \\__ Setting owner for system templates to ";
 	if (not $templateDevOn) {
 		print BOLD, "[$APACHE_USER]", RESET, ".\n";	
-		fix_ownership( {owner => $APACHE_USER, group => $OME_GROUP}, "$APACHE->{TEMPLATE_DIR}")
-			or (print $LOGFILE "Couldn't set owner/group for $APACHE->{TEMPLATE_DIR} to $APACHE_USER and $OME_GROUP. \n"
-				and croak "Couldn't set owner/group for $APACHE->{TEMPLATE_DIR} to $APACHE_USER and $OME_GROUP. \n");
+		fix_ownership( {owner => $APACHE_USER, group => $OME_GROUP}, $sys_dir)
+			or (print $LOGFILE "Couldn't set owner/group for $sys_dir to $APACHE_USER and $OME_GROUP. \n"
+				and croak "Couldn't set owner/group for $sys_dir to $APACHE_USER and $OME_GROUP. \n");
 	} else {
 		print BOLD, "[SKIPPING]", RESET, ".\n";
 	}
 
-	print "  \\__ Setting permissions for user templates to ";	
-	if (not $templateDevOn) {
-		print BOLD, "[0755]", RESET, ".\n";
-		fix_permissions( {mode => 0755, recurse => 1}, "$APACHE->{TEMPLATE_DIR}")
-			or (print $LOGFILE "Couldn't set 750 permissions for user-mutable HTML template directories under tree $APACHE->{TEMPLATE_DIR}.\n"
-				and croak "Couldn't set 750 permissions for user-mutable HTML template directories under tree $APACHE->{TEMPLATE_DIR}.\n");
-	} else {
-		print BOLD, "[SKIPPING]", RESET, ".\n";
-	}
+	print "  \\__ Setting permissions for local templates to ";	
+	print BOLD, "[0755]", RESET, ".\n";
+	fix_permissions( {mode => 0755, recurse => 1}, $local_dir)
+		or (print $LOGFILE "Couldn't set 750 permissions for user-mutable HTML template directories under tree $local_dir.\n"
+			and croak "Couldn't set 750 permissions for user-mutable HTML template directories under tree $local_dir.\n");
 	
 	print "  \\__ Setting permissions for system templates to ";
 	if (not $templateDevOn) {
 		print BOLD, "[0555]", RESET, ".\n";
-		fix_permissions( {mode => 0555, recurse => 1}, @sys_html_dirs)
+		fix_permissions( {mode => 0555, recurse => 1}, $sys_dir)
 			or (print $LOGFILE "Couldn't set 550 permissions for system HTML directories.\n"
 				and croak "Couldn't set 550 permissions for system HTML directories.\n");
 	} else {
