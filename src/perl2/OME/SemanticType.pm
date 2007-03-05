@@ -106,6 +106,8 @@ __PACKAGE__->addColumn(granularity => 'granularity',
 __PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
 __PACKAGE__->hasMany('semantic_elements',
                      'OME::SemanticType::Element' => 'semantic_type');
+__PACKAGE__->hasMany('labels',
+                     'OME::SemanticType::Label' => 'semantic_type');
 
 
 =head1 METHODS
@@ -738,6 +740,59 @@ sub newAttributes {
     }
 }
 
+=head2 label
+
+	# Get the label of this semantic type in the default language for this system
+	my $label = $type->label();
+	# Get the label of this semantic type in the specified language
+	my $label = $type->label( $lang );
+	
+Looks in the configuration table for a default language. Returns a label
+in that language if available. If not avaiable, returns the ST name.
+
+=cut
+
+sub label {
+	my ($self, $lang ) = @_;
+	$lang = OME::Session->instance()->Configuration()->lang()
+		unless $lang;
+	my @labels = $self->labels( 'lang' => $lang );
+	die "More than one label of the same language was found for Semantic Type '".$self->name()."', id=".$self->id()
+		if( scalar( @labels ) > 1 );
+	# Not every ST has been translated into every language. Use the ST description as a fall-back
+	if( @labels ) {
+		return $labels[0]->label();
+	} else {
+		return $self->name();
+	}
+}
+
+=head2 lang_description
+
+	# Get the description of this semantic type in the default language for this system
+	my $description = $type->lang_description();
+	# Get the description of this semantic type in the specified language
+	my $description = $type->lang_description( $lang );
+	
+Looks in the configuration table for a default language. Returns a description
+in that language if available. If not avaiable, returns the ST's description.
+
+=cut
+
+sub lang_description {
+	my ($self, $lang ) = @_;
+	$lang = OME::Session->instance()->Configuration()->lang()
+		unless $lang;
+	my @labels = $self->labels( 'lang' => $lang );
+	die "More than one label of the same language was found for Semantic Type '".$self->name()."', id=".$self->id()
+		if( scalar( @labels ) > 1 );
+	# Not every ST has been translated into every language. Use the ST description as a fall-back
+	if( @labels ) {
+		return $labels[0]->description();
+	} else {
+		return $self->description();
+	}
+}
 
 1;
 
