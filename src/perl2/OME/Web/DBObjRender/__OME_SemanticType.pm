@@ -1,4 +1,4 @@
-# OME/Web/DBObjRender/__OME_SemanticType_Element.pm
+# OME/Web/DBObjRender/__OME_SemanticType.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -35,13 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::DBObjRender::__OME_SemanticType_Element;
+package OME::Web::DBObjRender::__OME_SemanticType;
 
 =pod
 
 =head1 NAME
 
-OME::Web::DBObjRender::__OME_SemanticType_Element
+OME::Web::DBObjRender::__OME_SemanticType
 
 =head1 DESCRIPTION
 
@@ -72,13 +72,6 @@ sub _renderData {
 	my $q       = $self->CGI();
 	my %record;
 
-	# data_type:
-	if( exists $field_requests->{ 'data_type' } ) {
-		foreach my $request ( @{ $field_requests->{ 'data_type' } } ) {
-			my $request_string = $request->{ 'request_string' };
-			$record{ $request_string } = $obj->data_column->sql_type;
-		}
-	}
 	# Language-specific label
 	if( exists $field_requests->{ 'label' } ) {
 		foreach my $request ( @{ $field_requests->{ 'label' } } ) {
