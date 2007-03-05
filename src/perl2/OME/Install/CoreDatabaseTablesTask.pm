@@ -135,7 +135,9 @@ our @core_classes =
    'OME::DataTable',
    'OME::DataTable::Column',
    'OME::SemanticType',
+   'OME::SemanticType::Label',
    'OME::SemanticType::Element',
+   'OME::SemanticType::Element::Label',
    'OME::SemanticType::BootstrapExperimenter',
    'OME::SemanticType::BootstrapGroup',
    'OME::SemanticType::BootstrapExperimenterGroup',
@@ -812,6 +814,7 @@ BLURB
 		import_formats   => $IMPORT_FORMATS,
 		ome_root         => $OME_BASE_DIR,
 		template_dir     => $OME_BASE_DIR."/html/Templates",
+		lang             => 'en',
 		executor         => $DEFAULT_EXECUTOR,
 		allow_guest_access => $GUEST_ACCESS,
 	});
@@ -857,6 +860,7 @@ sub update_configuration {
 		# executor         => $DEFAULT_EXECUTOR,
 		super_user         => $session->experimenter_id(),
 		template_dir       => $APACHE->{TEMPLATE_DIR},
+		lang               => $APACHE->{LANG},
 		allow_guest_access => $ENVIRONMENT->allow_guest_access(),
 	);
 	OME::Configuration->update ($factory, \%update_configuration_variables);
