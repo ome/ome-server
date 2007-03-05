@@ -62,6 +62,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use Carp;
+use Date::Parse;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -147,6 +148,16 @@ __PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'executed_by_
 # These objects should never be cached to make sure that their status is always current.
 __PACKAGE__->Caching(0);
 
+sub elapsed_since_last_used {
+	my ($self) = @_;
+
+	my $used_timestamp = $self->last_used();
+	my ($ss1,$mm1,$hh1,$day1,$month1,$year1,$zone) = strptime($used_timestamp);
+	
+	my ($ss2,$mm2,$hh2,$day2,$month2,$year2) = localtime time;
+	my $elapsed_time = $ss2-$ss1 + 60*($mm2-$mm1) + 60*60*($hh2-$hh1) +
+					   60*60*24*($day2-$day1) + 60*60*24*30*($month2-$month1);
+}
 =head1 AUTHOR
 
 Ilya Goldberg (igg@nih.gov)
