@@ -1,4 +1,4 @@
-# OME/Tasks/Analysis/Engine/SimpleWorkerExecutor.pm
+# OME/Analysis/Engine/SimpleWorkerExecutor.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -128,6 +128,11 @@ sub new {
 	OME::Tasks::NotificationManager->registerListener ($self->{OurWorker});
 	OME::Tasks::NotificationManager->registerListener ($self->{AnyWorker});
 
+	logdbg "debug", "SimpleWorkerExecutor->new: preparing the backup unthreaded_executor";
+	my $unthreaded_executor  = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
+    $unthreaded_executor->require();
+    $self->{unthreaded_executor} = $unthreaded_executor->new();
+
 	logdbg "debug", "SimpleWorkerExecutor->new: returning new executor";
 	
 	return $self;
@@ -158,6 +163,110 @@ sub countBusyWorkers {
 		});
 }
 
+# Free busy workers (e.g. after a chain execution is interrupted with ctrl^Z)
+# cleans up the mess in the analysis_workers table.
+sub freeBusyWorkers {
+	my ($self) = @_;
+	
+	my @workers = OME::Session->instance()->Factory()->findObjects (
+		'OME::Analysis::Engine::Worker',{
+			status	=> 'BUSY',
+			master  => $self->{instance_id},
+	});
+	
+	#
+	# TODO: signal the worker node to kill the running workers
+	#
+	
+	# clear the workers' table
+	foreach (@workers) {
+		$_->refresh();
+		$_->executing_mex(undef);
+		$_->master(undef);
+		$_->PID(undef);
+		$_->status("IDLE");
+		$_->scheduling_token(undef);
+		$_->storeObject();
+	}
+	OME::Session->instance()->commitTransaction();
+	logdbg "debug", "SimpleWorkerExecutor->freeBusyWorkers: finished";
+}
+
+sub inspectWorkers {
+	my ($self) = @_;
+	logdbg ("debug", "inspectWorkers");
+	my @workers = OME::Session->instance()->Factory()->findObjects (
+		'OME::Analysis::Engine::Worker',{
+			status	=> 'BUSY',
+			master  => $self->{instance_id},
+	});
+	
+	foreach my $worker (@workers) {
+		my $elapsed_time = $worker->elapsed_since_last_used();
+#		print "WorkerID is".$worker->id()." - elapsed time is $elapsed_time\n";
+		# after 5 min be sure that worker's MEX status was set to busy
+		if ($elapsed_time > 60) {
+			my $mex = $worker->executing_mex();
+			
+			if ($mex->status ne "BUSY") {
+				logdbg "debug", "inspectWorkers: Worker (".$worker->id().")'s MEX isn't busy";
+				$self->fixBrokenWorker($worker);
+			}
+		}
+		
+		# after 50min the worker is doing something weird and we will pass the
+		# mex to another worker for executing
+		if ($elapsed_time > 60*60) {
+			logdbg "debug", "inspectWorkers: Worker (ID".$worker->id().") has been executing for too long";
+			$self->fixBrokenWorker($worker);
+		}
+	}
+#	logdbg ("debug", "inspectWorkers: finished");
+}
+
+sub fixBrokenWorker {
+	my ($self, $worker) = @_;
+	my $mex = $worker->executing_mex();
+	logdbg ("debug", "fixBrokenWorker. Worker: ".$worker->id()."  MEX: ".$worker->executing_mex->id());
+	
+	# unassign the MEX from current worker, ATM the worker is simply returned as IDLE
+	$worker->last_used('now()'); # so the broken worker won`t be selected as the first to be used
+	$worker->PID(undef);
+	$worker->master(undef);
+	$worker->executing_mex(undef);
+	$worker->scheduling_token('fixed '.localtime time);
+	$worker->status('IDLE');
+	$worker->storeObject();
+	
+	# clean up the MEX
+	# TODO: figure out if the MEX has made any attributes, if so, delete the
+	# attributes
+	$mex->status('UNFINISHED');
+	$mex->executed_by_worker(undef);
+	$mex->storeObject();
+	
+	# put the MEX back on the module execution queue
+	my $queue = $self->{queue};
+	my $dependence = $mex->dependence();
+	my $target;
+	if ($dependence eq 'I') {
+		$target = $mex->image_id();
+	} elsif ($dependence eq 'D') {
+		$target = $mex->dataset_id();
+	}
+
+	my $job = {
+		MEX          => $mex->id(),
+		Dependence   => $dependence,
+		Target       => $target,
+		DataSource   => $self->{DataSource},
+		DBUser       => $self->{DBUser},
+		DBPassword   => $self->{DBPassword},
+	};
+	push (@$queue,$job);
+	OME::Session->instance()->commitTransaction();
+}
+
 #
 # Make a worker do something
 # returns 1 or undef.
@@ -181,7 +290,9 @@ sub pressWorker {
 	$params =~ s/.*?\?//; # Strip the leading junk. ex: http://junk/is/here?params
 	my $url = $worker->URL().'?'.$params;
 
-	logdbg "debug", "pressWorker: Calling ".$url;
+	# This function is the source of 'use of uninitialized value in sprintf' errors
+	# one of the weird character in the url interfer with Log::Agent
+	logdbg "debug", "pressWorker: Calling '".$url."'";
 	my $response = $self->{UA}->GET($url);
 
 	return 1 if $self->{UA}->status() == 200;
@@ -227,7 +338,7 @@ sub shiftQueue {
 		# Break if we're done
 		last unless scalar @$queue;
 	}
-
+	$self->inspectWorkers();
 	return $shifted ? 1 : undef;
 }
 
@@ -235,18 +346,28 @@ sub executeModule {
 	my ($self,$mex,$dependence,$target) = @_;
 	logdbg "debug", "SimpleWorkerExecutor->executeModule: Executing module";
 
-	# Add it to the queue
-	my $queue = $self->{queue};
-	my $job = {
-		MEX          => $mex->id(),
-		Dependence   => $dependence,
-		Target       => $target ? $target->id() : undef,
-		DataSource   => $self->{DataSource},
-		DBUser       => $self->{DBUser},
-		DBPassword   => $self->{DBPassword},
-	};
-	push (@$queue,$job);
-
+	# we assume that modules executed by a MATLAB Handler are computationally
+	# bound (i.e. should be distributed if in DAE configuration) and other modules
+	# are database IO bound (e.g. ROI or Typecaster modules) and so should be
+	# executed sequentially on the master node
+	if ($mex->module->module_type() ne "OME::Analysis::Handlers::MatlabHandler") {
+		my $unthreaded_executor = $self->{unthreaded_executor};
+		logdbg ("debug", "     [Unthreaded]");
+		$unthreaded_executor->executeModule($mex,$dependence,$target);
+	} else {		
+		# Add it to the queue
+		my $queue = $self->{queue};
+		my $job = {
+			MEX          => $mex->id(),
+			Dependence   => $dependence,
+			Target       => $target ? $target->id() : undef,
+			DataSource   => $self->{DataSource},
+			DBUser       => $self->{DBUser},
+			DBPassword   => $self->{DBPassword},
+		};
+		push (@$queue,$job);
+	}
+	
 	# Shift the queue
 	$self->shiftQueue();
 }
