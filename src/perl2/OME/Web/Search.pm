@@ -59,6 +59,7 @@ our $VERSION = $OME::VERSION;
 use Log::Agent;
 use Carp;
 use HTML::Template;
+use OME::Tasks::SemanticTypeManager;
 
 use base qw(OME::Web);
 
@@ -901,17 +902,16 @@ sub __get_search_types_popup_menu {
 			''  => '-- Select a Search Type --', 
 			%search_type_labels,
 			'G' => '-- Global Semantic Types --', 
-			(map{ '@'.$_->name() => $_->name() } @globalSTs ),
+			(map{ '@'.$_->name() => $_->label() } @globalSTs ), 
 			'D' => '-- Dataset Semantic Types --',
-			(map{ '@'.$_->name() => $_->name() } @datasetSTs ),
+			(map{ '@'.$_->name() => $_->label() } @datasetSTs ),
 			'I' => '-- Image Semantic Types --',
-			(map{ '@'.$_->name() => $_->name() } @imageSTs ),
+			(map{ '@'.$_->name() => $_->label() } @imageSTs ),
 			'F' => '-- Feature Semantic Types --',
-			(map{ '@'.$_->name() => $_->name() } @featureSTs ),
+			(map{ '@'.$_->name() => $_->label() } @featureSTs ),
 		},
 		-onchange => "if(this.value != '' && this.value != 'G' && this.value != 'D' && this.value != 'I' && this.value != 'F' ) { document.forms['$form_name'].submit(); } return false;"
 	);
-
 }
 
 
