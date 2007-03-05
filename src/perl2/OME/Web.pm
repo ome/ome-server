@@ -1243,6 +1243,7 @@ sub getExternalLinkText {
     3) else return null.
 
 =cut
+
 sub getExternalLinkURL { 
 
     my $self = shift;
@@ -1263,6 +1264,7 @@ sub getExternalLinkURL {
     }
     return $url;
 }
+
 1;
 
 =head1 AUTHOR
