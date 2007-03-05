@@ -85,7 +85,9 @@ our $APACHE_CONF_DEF = {
 	APACHECTL => undef, # Path to the httpdconf binary
 	
 	TEMPLATE_DEV_CONF => 0, # developer templates settings or not?
-	TEMPLATE_DIR => "$OME_BASE_DIR/html/Templates", # Path to system html templates
+	TEMPLATE_DIR      => "$OME_BASE_DIR/html/Templates", # Path to system html templates
+
+	LANG              => "en", # Language to use
 };
 
 # Globals
@@ -864,7 +866,10 @@ BLURB
 		}
 	}
 	$APACHE->{TEMPLATE_DIR} = $OME_BASE_DIR."/html/Templates";
-		
+	if( !exists( $APACHE->{LANG} ) ) {
+		$APACHE->{LANG} = $APACHE_CONF_DEF->{LANG};
+	}
+	
 	# Confirm all flag
 	my $confirm_all;
 
@@ -889,6 +894,7 @@ BLURB
 			print      "                  cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
 			print BOLD,"Web-UI HTML Templates: \n",RESET;
 			print      "  Developer configuration: ", BOLD, $APACHE->{TEMPLATE_DEV_CONF} ?'yes':'no', RESET, "\n";
+			print      "   Web Interface Language: ", BOLD, $APACHE->{LANG}, RESET, "\n";
 
 			if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
 				print BOLD,"OMEIS Update:\n",RESET;
@@ -1023,6 +1029,11 @@ BLURB
 		#********
 		$APACHE->{TEMPLATE_DEV_CONF} = y_or_n("Use HTML Templates configuration for developers ?", 'n');
 		
+		#********
+		#******** 
+		#********
+		$APACHE->{LANG} = confirm_default("Language to use for the web interface ('en' for english, 'es' for spanish): ", $APACHE->{LANG});
+		
 		print "\n";  # Spacing
 		$confirm_all = 1;
 	}
@@ -1046,6 +1057,7 @@ BLURB
 	print $LOGFILE "                  cgi-bin: ", $APACHE->{CGI_BIN}, "\n";
 	print $LOGFILE "Web-UI HTML Templates: \n";
 	print $LOGFILE "  Developer configuration: ", $APACHE->{TEMPLATE_DEV_CONF} ?'yes':'no', "\n";
+	print $LOGFILE "   Web Interface Language: ", $APACHE->{LANG}, "\n";
 
 	if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
 		print $LOGFILE "OMEIS Update:\n";
