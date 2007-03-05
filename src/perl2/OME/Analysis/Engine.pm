@@ -35,6 +35,7 @@
 #                    re-wrote executeChain() and executeNodeWithTarget() to use
 #                    topological sort based scheduling algorithm resulting in
 #                    about 20% speed-up of chain executions
+#                    also wrote FinishChainExecution()
 #-------------------------------------------------------------------------------
 
 package OME::Analysis::Engine;
@@ -568,8 +569,8 @@ sub executeNodeWithTarget {
     foreach my $formal_input (@inputs) {
         my $input_mex = $self->getPredecessorMEX($node,$formal_input,$target);
         
-		logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX.")
-			and $mex_status_inputs_ready=0 unless defined $input_mex;
+		$mex_status_inputs_ready=0 and logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX. (Condition A)")
+			unless defined $input_mex;
           
         # check input_mexes to verify that the node is ready
      	my $input_mexes = $input_mex;
@@ -594,8 +595,8 @@ sub executeNodeWithTarget {
 				# it's still running, or it finished with an error), then
 				# the current node cannot execute.
 
-				logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX.")
-					and $mex_status_inputs_ready=0 if ($in_mex->status() ne 'FINISHED');		
+				$mex_status_inputs_ready=0 and logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX. (Condition B)")
+					if ($in_mex->status() ne 'FINISHED');		
 			}
 			
 			OME::Tasks::ModuleExecutionManager->
@@ -631,7 +632,7 @@ sub executeNodeWithTarget {
             # Create a node execution for this node and the matching MEX
             $nex = OME::Tasks::ModuleExecutionManager->
               createNEX($past_mex,$self->{chain_execution},$node);
-
+			$session->commitTransaction();
             return $nex;
         }
     }
@@ -651,6 +652,8 @@ sub executeNodeWithTarget {
 		$mex->status('UNREADY');
 		$mex->storeObject;
 	}
+	
+    $session->commitTransaction();
     return $nex;
 }
 
@@ -730,6 +733,7 @@ sub executeChain {
                  analysis_chain  => $chain,
                  dataset         => $dataset,
                  experimenter_id => $session->User(),
+                 status          => 'UNFINISHED',
                 });
     $self->{chain_execution} = $chex;
 
@@ -762,8 +766,14 @@ sub executeChain {
 	}
 	$task->n_steps($count_steps); # always set the number of steps because the
 	                              # AE knows best
-	
-    $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
+
+	# what to do if ctrl^C happens during chain execution
+	$SIG{INT} = sub { $task->died('User Interrupt');
+					  $chex->status('INTERRUPTED');
+					  $chex->storeObject();
+					  $session->commitTransaction();
+					  $executor->freeBusyWorkers();
+					  CORE::exit; };
 
 	# get a topological sorted list of nodes
 	my @chain_elevations = OME::Tasks::ChainManager->topologicalSort($chain);
@@ -788,7 +798,6 @@ sub executeChain {
 				$task->step();
 				$task->setMessage('Executing `'.$node->module->name()."`");
 				$self->executeNodeWithTarget($node,$target);
-				$session->commitTransaction();
 			}
 		}
 
@@ -798,6 +807,14 @@ sub executeChain {
 	
     $task->setMessage("");
     $task->finish();
+    
+    # analyze the chain to set the status to either FINISHED or ERROR
+	if ($chex->count_node_executions('module_execution.status' => 'ERROR') or
+		$chex->count_node_executions('module_execution.status' => 'UNREADY')) {
+		$chex->status('ERROR');
+	} else {
+		$chex->status('FINISHED');
+	}
 
     $chex->total_time(tv_interval($start_time));
 	$chex->storeObject();
@@ -870,6 +887,17 @@ sub finishChainExecution {
 	
 	$task->setMessage("");
     $task->finish();
+	$session->commitTransaction();
+
+    # analyze the chain to set the status to either FINISHED or ERROR
+	if ($chex->status() eq 'ERROR' and
+		$chex->count_node_executions('module_execution.status' => 'ERROR') == 0  and 
+		$chex->count_node_executions('module_execution.status' => 'UNREADY') == 0)
+	{
+		$chex->status('FINISHED');
+	}
+	$chex->storeObject();
+	$session->commitTransaction();
 }
 
 1;
