@@ -157,6 +157,9 @@ my @modules = (
     name => 'Time::HiRes',
     repository_file => "$REPOSITORY/Time-HiRes-1.73.tar.gz"
     },{
+	name => 'Date::Parse',
+    repository_file => "$REPOSITORY/TimeDate-1.16.tar.gz"
+    },{
 	# XXX DEPRECATED
 	#name => 'Tie::IxHash',
 	#repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
