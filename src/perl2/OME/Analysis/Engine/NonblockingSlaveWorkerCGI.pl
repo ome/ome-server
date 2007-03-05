@@ -83,16 +83,21 @@ use CGI qw/:standard -no_xhtml/;
 use Fcntl qw (:flock O_RDWR O_CREAT); # import LOCK_* and OPEN constants
 use Log::Agent;
 use Time::HiRes qw(gettimeofday tv_interval);
+require Log::Agent::Driver::File;
 
 # Comment this out if you do not want debug statements written to apache's error log
-logconfig(
-	-prefix      => "$0",
-	-level    => 'debug'
-);
+my $driver = Log::Agent::Driver::File->make(
+	-prefix     => "$0",
+	-stampfmt   => "date",
+	-showpid    => 1,
+	);
+logconfig(-driver => $driver, -level => 'debug');
+
 use OME::Install::Environment;
 use OME::SessionManager;
 use OME::Analysis::Engine::UnthreadedPerlExecutor;
 use OME::Fork;
+use OME::Configuration;
 use OME::Tasks::NotificationManager;
 
 
@@ -129,6 +134,11 @@ do_response (SERVER_BUSY,"Too many workers running") unless
 my ($DataSource,$SessionKey,$DBUser,$DBPassword,
 	$MEX_ID,$Dependence,$Target_ID,
 	$Notices,$Worker_ID,$MasterID) = get_params ($CGI);
+
+# Clear the configuration preloaded by OME-startup.pl. We want to be using
+# the master node's configuration settings not those of the workers node's
+logdbg "debug", "OME::Configuration->flush()";
+OME::Configuration->flush();
 
 # Try to get a remote session
 my $session;
@@ -176,45 +186,58 @@ $handler_class->require();
 my $handler = $handler_class->new($mex);
 undef $handler;
 
-	$worker->status('BUSY');
+	# a worker is commited to executing this module
 	$worker->PID($$);
 	$worker->master($MasterID);
-	
+	$worker->executing_mex($mex->id);
+	$worker->last_used('now()');
+	$worker->status('BUSY');
 	$worker->storeObject();
-	
-	# Set the MEX as executed by this worker.
-	$mex->status('BUSY');
-	$mex->executed_by_worker( $worker );
-	$mex->storeObject();
+	$session->commitTransaction();
 
 	# Register the module execution for later
 	OME::Fork->doLater ( sub {
-		# Note that this executor sets the module status on error and stores the MEX
+		logdbg "debug", "executing MEX=$MEX_ID, with Dependence=$Dependence and Target=".$target->id();
+
+		# Set the MEX as being executed by this worker.
+		$mex->executed_by_worker( $worker );
+		$mex->storeObject();
+		$session->commitTransaction();
+
 		# We probably don't need an eval here, because there's already one in this
 		# executor.
-		logdbg "debug", "NonBlockingSlaveWorkerCGI: executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
 		eval {
+			# Initially  this executor sets the module status to BUSY.
+			# After MEX finishes, the status is set to ERROR/FINISHED and results stored
 			my $executor = OME::Analysis::Engine::UnthreadedPerlExecutor->new();
 			$executor->executeModule ($mex,$Dependence,$target);
 		};
 		if ($@) {
-			logdbg "debug", "NonBlockingSlaveWorkerCGI: ERROR executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target:\n$@";
+			logdbg "debug", "ERROR executing MEX=$MEX_ID, with Dependence=$Dependence and Target=".$target->id()."\n$@";
+		} else {
+			logdbg "debug", "finished executing MEX=$MEX_ID, with Dependence=$Dependence and Target=".$target->id().":\n$@";
 		}
 
-		$worker->status('IDLE');
+		# in the meantime the worker's status might have been set to 'OFFLINE'
+		# in the worker-table on the master-node. We don't want to overwrite
+		# OFFLINE with IDLE (because then the scheduler would keep assigning
+		# tasks for this worker to execute)
+		$worker->refresh();
+		$worker->status('IDLE')
+			if ($worker->status() eq 'BUSY');
+			
 		$worker->last_used('now()');
 		$worker->PID(undef);
 		$worker->master(undef);
+		$worker->executing_mex(undef);
 		$worker->storeObject();
 		OME::Tasks::NotificationManager->notify ($_) foreach (@$Notices);
 		unregister_worker ();
 		$session->commitTransaction();
-		logdbg "debug", "NonBlockingSlaveWorkerCGI: finished executing MEX=$MEX_ID, with Dependence=$Dependence and Target=$target";
+		logdbg "debug", "worker's state has been updated and master node notified";
 		# Free the session's resources.
 		$session->idle();	
 	});
-	# Commit transaction, setting worker status to BUSY,
-	$session->commitTransaction();
 };
 
 if ($@) {
@@ -232,6 +255,11 @@ if ($@) {
 # End of Code
 ################
 
+END {
+	logdbg "debug", "END BLOCK!. executing MEX=$MEX_ID, with Dependence=$Dependence and Target=".$target->id()."\t".
+					"SessionKey: '$SessionKey'\tDataSource: '$DataSource'\tDBUser: '$DBUser'";
+}
+
 
 # Note that this always results in an exit
 sub do_response {
@@ -244,7 +272,7 @@ my ($code,$message) = @_;
 	print $CGI->header(-type => 'text/plain', -status => "$code $line1", -Connection => 'Close');
 
 	print "$line1\n".join ("\n",@lines)."\n";
-	logerr "$line1\n".join ("\n",@lines)."\n" unless $code == STATUS_OK;
+	logerr "$line1\n".join ("\n",@lines) unless $code == STATUS_OK;
 	
 	# We're still running if status is OK
 	unregister_worker () unless $code == STATUS_OK;
