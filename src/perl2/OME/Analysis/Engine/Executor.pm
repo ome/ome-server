@@ -59,6 +59,7 @@ their own job control routines.
 
 use strict;
 use OME;
+use Log::Agent;
 our $VERSION = $OME::VERSION;
 
 use OME::Session;
@@ -197,6 +198,10 @@ sub waitForAllModulesToFinish {
     die "OME::Analysis::Engine::Executor->waitForAllModulesToFinish is abstract";
 }
 
+sub freeBusyWorkers {
+    my ($self) = @_;
+	logdbg "debug", "OME::Analysis::Engine::Executor->freeBusyWorkers does nothing";
+}
 
 1;
 
