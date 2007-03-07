@@ -182,8 +182,8 @@ Usage:
     $script $command_name [<options>] [CHEX_ID]+
 
 Delete one or more CHEXes and all of their descendents. This can potentially delete a lot.
-Images, Datasets, the whole lot potentially.
-It is suggested to try -n first to see what will happen.
+Images, Datasets, the whole lot potentially. By default, this doesn't delete constituent MEXs
+just the NEXs. It is suggested to try -n first to see what will happen.
 And once its gone, its gone.  You can only get it back from a backup.
 You do have a backup, right?
 
@@ -191,7 +191,8 @@ Options:
   -o, --orph        Keep orphaned Original Files even if they are not used by any other MEX
   -n, --noop        Do not delete anything, just report what would be deleted.
   -d, --delete      Actually delete the CHEX(es).  Nothing will happen unless -n or -d is specified.  
-  -c, --chain       Delete all CHEXes for the specified chain (ID if numeric, otherwise by name).  
+  -c, --chain       Delete all CHEXes for the specified chain (ID if numeric, otherwise by name).
+  -m, --mexs        Delete CHEXes' constituant MEXs too.
   -f, --keep-files  Keep orphaned OMEIS Files.  
   -p, --keep-pixels Keep orphaned OMEIS Pixels.
   -g, --graph       Generate a graph of the dependencies using GraphViz, and save in specified file.
@@ -203,7 +204,7 @@ sub DeleteCHEX {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
 	my $command_name = $self->commandName($commands);
-	my ($orph,$noop,$delete,$chain_in,$keep_files,$keep_pixels,$make_graph);
+	my ($orph,$noop,$delete,$chain_in,$keep_files,$delete_mexs,$keep_pixels,$make_graph);
 
 	# Parse our command line options
 	GetOptions(
@@ -211,6 +212,7 @@ sub DeleteCHEX {
 		'noop|n!' => \$noop,
 		'delete|d' => \$delete,
 		'chain|c=s' => \$chain_in,
+		'mexs|m!' => \$delete_mexs,
 		'keep-files|f' => \$keep_files,
 		'keep-pixels|p' => \$keep_pixels,
 		'graph|g=s' => \$make_graph,
@@ -265,11 +267,19 @@ sub DeleteCHEX {
 	foreach my $chex (@CHEXes) {
 		my @NEXes = $FACTORY->findObjects("OME::AnalysisChainExecution::NodeExecution",
 						{ analysis_chain_execution => $chex });
-		print "WARNING: Could not load MEXs for CHEX ID ".$chex->id()."\n"
+		print "WARNING: Could not load NEXs for CHEX ID ".$chex->id()."\n"
 			if (scalar @NEXes < 1);
-		my @CHEX_MEXs = map { $_->module_execution} @NEXes;
-		$self->delete_mexes (\@CHEX_MEXs,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
-
+		
+		if ($delete_mexs) {
+			my @CHEX_MEXs = map { $_->module_execution} @NEXes;
+			$self->delete_mexes (\@CHEX_MEXs,$delete,$noop,$keep_files,$keep_pixels,$make_graph);
+		} else {
+			foreach my $nodex (@NEXes) {
+				print "  Node execution ",$nodex->id(),"\n";
+				$nodex->deleteObject() if $delete;
+			}
+		}
+		
 		# delete_mexes would have cleaned up the OME::AnalysisChainExecution if the
 		# chain made some mexes. But if this chain got interrupted while it was
 		# figuring out dependencies, no mexes would be deleted. In that case, we
