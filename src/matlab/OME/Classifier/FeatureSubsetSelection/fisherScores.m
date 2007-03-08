@@ -46,15 +46,11 @@
 %		( mean( variance within each class ) + eps )
 %
 % NOTES
-%	This is a simplified version of Nikita's classic select_sigs_FisherDiscrim.m
-% (roughly 1/10 the code). It differs in that it does not discretize the data 
-% prior to calculating FD's. It also ignores signature families, and  does not 
-% normalize the signature data before calculating the FD. It likely has other
-% differences, but select_sigs_FisherDiscrim is extremely hard to read, and 
-% I haven't puzzled out all the differences.
-% When fisherScores is given discretized data, the ordering of signatures is 
-% usually identical to select_sigs_FisherDiscrim. 
-% Eps is added to the denominator for cases where the inner class variance is 0.
+%	Eps is added to the denominator for cases where the inner class variance is 0.
+%
+% 	max allowed FD is 40 (observed range for problems with non-zero inner class 
+% variation is ~0 to ~37). This prevents one signature from Completely dominating
+% when its inner class variation is 0.
 
 function [fisher_discriminate_scores] = fisherScores( sigMatrix, class_vec );
 
@@ -69,13 +65,14 @@ end;
 num_classes = length( unique( class_vec ) );
 
 sig_means = mean( sigMatrix, 2 );
-not_nan_dims = find( ~isnan( mean( sigMatrix, 2 ) ) );
-nan_dims     = setdiff( [1:num_sigs], not_nan_dims );
-sigMatrix = sigMatrix( not_nan_dims, : );
-sig_means = sig_means(not_nan_dims);
+not_nan_dims = find( ~isnan( sig_means ) );
+not_nan_sig_dims = intersect( [1:num_sigs], not_nan_dims );
+nan_dims     = setdiff( [1:num_sigs], not_nan_sig_dims );
+sigMatrix = sigMatrix( not_nan_sig_dims, : );
+sig_means = sig_means(not_nan_sig_dims);
 
 % Calculate stats for each class
-sum_sqs = zeros( length( not_nan_dims ), 1 );
+sum_sqs = zeros( length( not_nan_sig_dims ), 1 );
 for class_index = 1:num_classes
 	class_instances = find( class_vec == class_index );
 	class_means = mean( sigMatrix( :, class_instances ), 2 );
@@ -86,7 +83,15 @@ end;
 class_dev_from_mean = sum_sqs / ( num_classes - 1 );
 
 % Plug in numbers to the Fisher Formula
-fisher_discriminate_scores( not_nan_dims ) = ...
-	class_dev_from_mean ./ ( mean( inner_class_var, 2 ) + eps );
+mean_inner_class_var = mean( inner_class_var, 2 );
+fisher_discriminate_scores( not_nan_sig_dims ) = ...
+	class_dev_from_mean ./ ( mean_inner_class_var + eps );
 fisher_discriminate_scores( nan_dims ) = NaN;
 fisher_discriminate_scores = fisher_discriminate_scores( 1:num_sigs );
+
+% Keep features that have NO inner class variations from COMPLETELY dominating the weights
+dominators = find( ...
+	mean_inner_class_var == 0 & ...
+	fisher_discriminate_scores( not_nan_sig_dims )' > 40 ...
+);
+fisher_discriminate_scores( dominators ) = 40;
