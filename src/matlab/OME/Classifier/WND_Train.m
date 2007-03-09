@@ -35,6 +35,7 @@
 %		columns correspond to samples.
 %	percentage_of_features_to_use - The hard-threshold parameter that specifies
 %		what portion of the top-scoring features to use. Value needs to be between 0 & 1.
+%		This parameter is optional, and defaults to 0.65.
 %
 % OUTPUTS
 %	features_used - indexes of features that make it through the hard-threshold
@@ -57,6 +58,9 @@
 function [features_used, feature_scores, norm_train_matrix, feature_min, feature_max] = ...
 	WND_Train(train_matrix, percentage_of_features_to_use)
 
+if( ~exist( 'percentage_of_features_to_use', 'var' ) )
+	percentage_of_features_to_use = 0.65;
+end;
 
 class_num     = size(unique(train_matrix(end,:)),2);
 num_features  = size(train_matrix,1)-1;
