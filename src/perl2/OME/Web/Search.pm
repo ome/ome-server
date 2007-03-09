@@ -736,26 +736,29 @@ sub _getSearchParams {
 	$search_fields is a list of available search field
 	names.
 
+	Regardless what is returned, the secondary order field will be set to 'id'
+
 =cut
 
 sub __sort_field {
 	my ($self, $search_fields, $default ) = @_;
 	my $q = $self->CGI();
+	my $primary_order_field;
 
 	if( $q->param( '__order' ) && $q->param( '__order' ) ne '' ) {
-		return $q->param( '__order' );
-	}
-	
-	if( grep( $_ eq 'name', @$search_fields ) ) {
+		$primary_order_field = $q->param( '__order' );
+	} elsif( grep( $_ eq 'name', @$search_fields ) ) {
 		$q->param( '__order', 'name' );
-		return 'name';
+		$primary_order_field = 'name';
 	} elsif( grep( $_ eq 'Name', @$search_fields ) ) {
 		$q->param( '__order', 'Name' );
-		return 'Name';
+		$primary_order_field = 'Name';
 	} else {
 		$q->param( '__order', $default );
-		return $default;
+		$primary_order_field = $default;
 	}
+	
+	return [$primary_order_field, 'id'];
 }
 
 
