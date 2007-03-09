@@ -633,6 +633,9 @@ sub executeNodeWithTarget {
             $nex = OME::Tasks::ModuleExecutionManager->
               createNEX($past_mex,$self->{chain_execution},$node);
 			$session->commitTransaction();
+			$self->{executor}->shiftQueue(); # shiftQueue() is typically called by executeModule()
+											 # since we're not doing executeModule, so we will call
+											 # shiftQueue() explicitly
             return $nex;
         }
     }
@@ -651,6 +654,9 @@ sub executeNodeWithTarget {
 	} else {		
 		$mex->status('UNREADY');
 		$mex->storeObject;
+		$self->{executor}->shiftQueue();  # shiftQueue() is typically called by executeModule()
+										  # since we're not doing executeModule, so we will call
+										  # shiftQueue() explicitly
 	}
 	
     $session->commitTransaction();

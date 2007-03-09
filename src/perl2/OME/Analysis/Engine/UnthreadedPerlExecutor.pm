@@ -109,7 +109,7 @@ sub executeModule {
 sub modulesExecuting { return 0; }
 sub waitForAnyModulesToFinish {}
 sub waitForAllModulesToFinish {}
-
+sub shiftQueue {};
 1;
 
 __END__

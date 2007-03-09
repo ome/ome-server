@@ -198,6 +198,11 @@ sub waitForAllModulesToFinish {
     die "OME::Analysis::Engine::Executor->waitForAllModulesToFinish is abstract";
 }
 
+sub shiftQueue {
+    my ($self) = @_;
+    die "OME::Analysis::Engine::Executor->shiftQueue is abstract";
+}
+
 sub freeBusyWorkers {
     my ($self) = @_;
 	logdbg "debug", "OME::Analysis::Engine::Executor->freeBusyWorkers does nothing";
