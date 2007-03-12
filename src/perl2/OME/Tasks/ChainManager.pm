@@ -825,7 +825,8 @@ sub printChainElevations {
 }
 
 #
-# NodeTags are strings that describe 
+# NodeTags are strings that encode the node's data dependency (i.e. its layout
+# in a chain).
 #
 sub createNodeTags {
 	my ($self, @nodes) = @_;
