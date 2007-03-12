@@ -8,7 +8,7 @@ my $session = OME::SessionManager->TTYlogin();
 my $factory = $session->Factory();
 
 my $chain = $factory->findObject( 'OME::AnalysisChain',
-                                   name => "Feature Extraction Chain" )
+                                   id => 9 )
     or die "Got no Feature Extraction Chain";
 
 my $dataset = $factory->findObject( 'OME::Dataset',
@@ -30,7 +30,7 @@ my %user_inputs;
 $user_inputs{$parametersFI->id()} = $mex;
 
 my %flags;
-$flags{ReuseResults} = 0;
+$flags{ReuseResults} = 1;
 my $task = undef;
 
 my $chain_execution = OME::Analysis::Engine->
