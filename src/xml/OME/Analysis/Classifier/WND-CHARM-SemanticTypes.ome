@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="WND_CHARM_TrainedClassifier" AppliesTo="D">
+			<Description>
+			The WND-5 Classifier is a weighted (with Fisher Discriminant scores)
+			neareast neighbour image classifier. See IEEE: lalala
+			</Description>
+			<Element
+				Name="ClassifierObject"
+				DBLocation="WND_CHARM_TRAINEDCLASSIFIER.FILE"
+				DataType="reference"
+				RefersTo="OriginalFile">
+				<Description>
+					The trained classifier is stored on the OMEIS
+					Image Server as an opaque, binary, MATLAB .mat file.
+				</Description>
+			</Element>  
+		</SemanticType>
+		
+		<SemanticType Name="ImageFeaturesLegend" AppliesTo="D">
+			<Description>
+			Records which signatures were excluded from optimal feature subset
+			selection because they could not be succesfully discretized by the
+			choosen discretization method.
+			Granularity should match SignatureVectorLegend.
+			</Description>
+			<Element
+				Name="FeatureDescription"
+				DBLocation="IMAGE_FEATURES_LEGEND_ENTRY.LEGEND_NAME"
+				DataType="string"/>
+			<Element
+				Name="MatrixRow"
+				DBLocation="IMAGE_FEATURES_LEGEND_ENTRY.MATRIX_ROW"
+				DataType="integer"/>
+			<Element
+				Name="Used"
+				DBLocation="IMAGE_FEATURES_LEGEND_ENTRY.USED"
+				DataType="boolean"/>
+		</SemanticType>
+		
+		<SemanticType Name="CategoriesUsed" AppliesTo="D">
+			<Description>
+			Maps the classifier's internal category names with OME Categories (STs).
+			</Description>
+			<Element
+				Name="InternalClassifierCategoryName"
+				DBLocation="CATEGORIES_USED.CATEGORY_NAME"
+				DataType="integer"/>
+			<Element
+				Name="Category"
+				DBLocation="CATEGORIES_USED.CATEGORY"
+				DataType="reference"
+				RefersTo="Category"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>
+</OME>
