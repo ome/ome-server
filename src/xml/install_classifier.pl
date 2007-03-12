@@ -45,7 +45,8 @@ my @classifierFiles = (
 "OME/Analysis/Statistics/GaborTextures.ome",        		# new Nikita
 
 # Useful Chains
-"OME/Analysis/Classifier/FeatureExtractionChain.ome"
+"OME/Analysis/Classifier/FeatureExtractionChain.ome",
+"OME/Analysis/Classifier/WND-CHARM-SemanticTypes.ome",
 );
 
 my $session = OME::SessionManager->TTYlogin();
