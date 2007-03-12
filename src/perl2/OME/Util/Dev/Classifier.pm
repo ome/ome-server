@@ -26,7 +26,8 @@
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 #
-# Written by:    Josiah Johnston <siah@nih.gov>
+# Written by:   Tomasz Macura <tmacura@nih.gov>
+#				Josiah Johnston <siah@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
@@ -67,7 +68,8 @@ Getopt::Long::Configure("bundling");
 sub getCommands {
     return
       {
-       'stitch_chain' => 'stitch_chain',
+       'stitch_training_chain' => 'stitch_training_chain',
+       'stitch_prediction_chain' => 'stitch_prediction_chain',
        'compile_sigs' => 'compile_sigs',
        'compile_chain' => 'compile_chain',
       };
@@ -120,7 +122,7 @@ USAGE
 }
 
 
-sub stitch_chain_help {
+sub stitch_training_chain_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
     my $command_name = $self->commandName($commands);
@@ -149,51 +151,16 @@ Options:
 USAGE
 }
 
+sub stitch_prediction_chain_help {
+	my ($self, $stuff) = @_;
+	return stitch_training_chain_help($stuff);
+}
+
 # constants
 our $OME_NS = 'http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd';
 our $AML_NS = 'http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd';
 our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';
-use constant SIG_MODULE_STDS => <<END_STDS;
-<SemanticTypeDefinitions 
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-	
-	<SemanticType Name="SignatureVectorEntry" AppliesTo="F">
-	  <Description>A single image signature. A signature describes
-	  something about the image. i.e. number of blobs, whether the
-	  texture is rough or smooth, etc.</Description>
-      <Element Name="Value"  DBLocation="SIGNATURE.VALUE" DataType="double"/>
-      <Element Name="Legend"  DBLocation="SIGNATURE.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend"/>
-    </SemanticType>
-    
-	<SemanticType Name="SignatureVectorLegend" AppliesTo="D">
-	  <Description>Describes the data derivation of a position in a
-	  signature vector. I (Josiah) have been thinking about this having
-	  global granularity. This isn't feasible ATM because modules that
-	  accept non global inputs are not allowed to produce global
-	  outputs.</Description>
-      <Element Name="VectorPosition"  DBLocation="SIGNATURE_LEGEND.VECTOR_POSITION" DataType="integer">
-      	<Description>Will be in the range of 1 to N, where N is the
-      	number of vector positions.</Description>
-      </Element>
-      <Element Name="FormalInput"  DBLocation="SIGNATURE_LEGEND.FORMAL_INPUT_NAME" DataType="string">
-      	<Description>The name of the formal input assigned to this
-      	vector position. The function of this is to describe the data
-      	history. The data history can be accurately derived because
-      	the chain will have been locked by the time this is
-      	produced.</Description>
-      </Element>
-      <Element Name="SemanticElement"  DBLocation="SIGNATURE_LEGEND.SEMANTIC_ELEMENT_NAME" DataType="string">
-      	<Description>The name of the semantic element of the formal
-      	input assigned to this vector position.</Description>
-      </Element>
-    </SemanticType>
-</SemanticTypeDefinitions>
-END_STDS
+
 
 sub compile_sigs {
 	my ($self,$commands) = @_;
@@ -213,7 +180,7 @@ sub compile_sigs {
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
 	
 	# open MATLAB connection
-	my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
+	my $engine = OME::Matlab::Engine->openEngine()
 		or die "Cannot open a connection to Matlab! as user ".$environment->matlab_conf()->{USER};
 	
 	# check if the matlab user has write permissions in this directory 
@@ -719,7 +686,7 @@ CONCAT_UTILITY
 	close(CHAIN);
 }
 
-sub stitch_chain {
+sub stitch_prediction_chain {
 	my ($self,$commands) = @_;
 	my ($xml_src, $outdir, $compression, $chain_name );
 	
@@ -739,7 +706,7 @@ sub stitch_chain {
 
 	# find modules that produce signatures
 	# simple implementation of leaf nodes for now
-	logdbg "debug", "Finding Signature Modules in chain $chain_name";
+	logdbg "debug", "Finding Feature Extraction (leaf) Modules in chain $chain_name";
 	my $chain;
 	$chain = $factory->loadObject( "OME::AnalysisChain", $chain_name )
 		if( $chain_name =~ m/^\d+$/ );
@@ -752,16 +719,14 @@ sub stitch_chain {
 	
 	my @signature_nodes = $manager->findLeaves( $chain );
 	@signature_nodes = sort {$a->module->name cmp $b->module->name} @signature_nodes;
-	
-	logdbg "debug", "Found chain nodes. Format of output is 'module_name(node_id)'\n\t".
-		join( ', ', map( $_->module->name."(".$_->id.")", @signature_nodes ) );
-	
-	# compute FI names that are going to be used in the signature stitcher
+
+	# compute FI names that are going to be used in the prediction module
+	logdbg "debug", "Computing names for Formal Inputs to the Prediction module";
 	my @signature_node_names = $manager->createNodeTags (@signature_nodes);
 	
 	##############
 	# create signature module (xml)
-	logdbg "debug", "Creating signature module";
+	logdbg "debug", "Writing Prediction module";
 	my $doc = XML::LibXML::Document->new();
 	die "Cannot create XML document"
 	  unless defined $doc;
@@ -772,21 +737,19 @@ sub stitch_chain {
 
 	# Parse the STDs
 	my $parser = XML::LibXML->new();
-	my $STD_doc = $parser->parse_string( SIG_MODULE_STDS );
-	$root->appendChild( $STD_doc->documentElement() );
-	
+
 	# add the module library
 	my $module_library = $doc->createElementNS($AML_NS,'AnalysisModuleLibrary');
 	$root->appendChild( $module_library );
 	
 	# Make the module
 	my $module = $doc->createElement('AnalysisModule');
-	$module->setAttribute( 'ModuleType', "OME::Analysis::Modules::Classification::SignatureStitcher");
-	$module->setAttribute( 'Category', "Classifier");
+	$module->setAttribute( 'ModuleType', "OME::Analysis::Modules::Classification::WND_CHARM_Predictiction");
+	$module->setAttribute( 'Category', "Classification");
 	my $new_LSID = $self->get_next_LSID( $xml_src );
 	$module->setAttribute( 'ID', $new_LSID );
 	$new_LSID =~ m/urn:lsid:openmicroscopy.org:Module:(\d+)/;
-	my $module_name = "Signature Stitcher ($1)";
+	my $module_name = "WND-CHARM-Prediction($1)";
 	$module->setAttribute( 'ModuleName', $module_name );
 	$module->setAttribute( 'ProgramID', "" );
 	$module_library->appendChild( $module );
@@ -794,8 +757,186 @@ sub stitch_chain {
 	# Make the description
 	my $module_description = $doc->createElement('Description');
 	$module_description->appendChild( XML::LibXML::Text->new( <<ENDDESCRIPTION ) );
-Combines outputs from "signature modules" into a single vector that
-describes the image. This stitching is very handy for classifiers.
+Uses a classifier built with WND_CHARM_TrainerModule to make classification predictions
+to input images.
+ENDDESCRIPTION
+	$module->appendChild( $module_description );
+	
+	# Declaration
+	my $declaration = $doc->createElement('Declaration');
+	$module->appendChild( $declaration );
+	
+	# Inputs
+	my $formal_input = $doc->createElement( 'FormalInput');
+	$formal_input->setAttribute( 'Name', 'Trained Classifier' );
+	$formal_input->setAttribute( 'SemanticTypeName', 'WND_CHARM_TrainedClassifier' );
+	$formal_input->setAttribute( 'Count', '!' );
+	$declaration->appendChild( $formal_input );
+	
+	my $formal_input = $doc->createElement( 'FormalInput');
+	$formal_input->setAttribute( 'Name', 'Categories Used by Trained Classifier' );
+	$formal_input->setAttribute( 'SemanticTypeName', 'CategoriesUsed' );
+	$formal_input->setAttribute( 'Count', '+' );
+	$declaration->appendChild( $formal_input );
+	
+	my  @signature_node_names_copy = @signature_node_names;
+	foreach my $sig_node ( @signature_nodes ) {
+		my $signature_node_name = shift @signature_node_names_copy;
+		
+		foreach my $output ( $sig_node->module->outputs ) {
+			my $ST_name = $output->semantic_type->name;
+			$formal_input = $doc->createElement( 'FormalInput');
+			$formal_input->setAttribute( 'Name', $signature_node_name.".".$ST_name);
+			$formal_input->setAttribute( 'SemanticTypeName', $ST_name );
+			$formal_input->setAttribute( 'Count', '!' );
+			$declaration->appendChild( $formal_input );
+		}
+	}
+	
+	# Outputs
+	my $formal_output = $doc->createElement( 'FormalOutput');
+	$formal_output->setAttribute( 'Name', 'Prediction' );
+	$formal_output->setAttribute( 'SemanticTypeName', 'Classification' );
+	$formal_output->setAttribute( 'Count', '!' );
+	$declaration->appendChild( $formal_output );
+	
+	# save to disk
+	my $file_name = $module_name;
+	$file_name =~ s/ //g;
+	$file_name = $outdir. '/' . $file_name . ".ome";
+	$doc->toFile( $file_name, 2 );
+	logdbg "debug", "Saved WND CHARM Prediction Module to $file_name";
+	
+	# import module
+	logdbg "debug", "Importing module $module_name into DB";
+	OME::Tasks::ImageTasks::importFiles (undef, [ $file_name ] );
+	my $prediction_module = $factory->findObject( "OME::Module", name => $module_name )
+		or die "Could not load WND CHARM Prediction Module named '$module_name'";
+	
+	# create new chain that includes the prediction module (db)
+	logdbg "debug", "Creating new chain that includes the prediction module";
+	my ($new_chain, $node_mapping) = $manager->cloneChain( $chain, undef, 'gimme node mapping!' );
+	$new_chain->name( "Image Classifier Prediction Chain ".$new_chain->id );
+	$new_chain->storeObject();
+	my $prediction_node  = $factory->newObject( 'OME::AnalysisChain::Node', {
+		module         => $prediction_module,
+		analysis_chain => $new_chain
+	} );
+	
+	# make links
+	foreach my $sig_node (@signature_nodes) {
+		my $signature_node_name = shift (@signature_node_names);
+		foreach my $output ($sig_node->module->outputs) {
+			my $ST_name = $output->semantic_type->name;
+			
+			my $formal_input;
+			$formal_input = $factory->findObject( "OME::Module::FormalInput",
+				module => $prediction_module,
+				name   => $signature_node_name.".".$ST_name
+			) or die "Couldn't load input $signature_node_name::$ST_name for module $module_name";
+			
+			# use node_mapping to link the new node with the old
+			my $from_node = $node_mapping->{$sig_node->id };
+			
+			my $data = {
+				to_node     => $prediction_node,
+				to_input    => $formal_input,
+				from_node   => $from_node,
+				from_output => $output,
+				analysis_chain => $new_chain
+			};
+			$factory->newObject( "OME::AnalysisChain::Link", $data )
+				or die "Couldn't make link from ".
+					$from_node->module->name.".". $output->mae." to ".
+					$prediction_node->name.".".$formal_input;
+		}
+	}
+	$session->commitTransaction();
+	
+	
+	# save new chain to disk
+	my $chain_file = $new_chain->name().'.ome';
+	$chain_file =~ s/ //g;
+	$chain_file = $outdir. '/' . $chain_file;
+	logdbg "debug", "Saving new chain to $chain_file";
+	my $chainExport = OME::ImportExport::ChainExport->new();
+	$chainExport->buildDOM ([$new_chain]);
+	$chainExport->exportFile ($chain_file, compression => 0 );
+}
+
+
+sub stitch_training_chain {
+	my ($self,$commands) = @_;
+	my ($xml_src, $outdir, $compression, $chain_name );
+	
+	GetOptions(
+		'x=s' => \$xml_src, 
+		'o=s' => \$outdir, 
+		'a=s' => \$chain_name, 
+		'compress' => \$compression 
+	);
+	$compression = ( $compression ? 7 : 0 );
+	die "one or more options not specified"
+		unless $xml_src and $outdir and $chain_name;
+	
+	my $session = $self->getSession();
+	my $factory = $session->Factory();
+	my $manager = OME::Tasks::ChainManager->new($session);
+
+	# find modules that produce signatures
+	# simple implementation of leaf nodes for now
+	logdbg "debug", "Finding Feature Extraction (leaf) Modules in chain $chain_name";
+	my $chain;
+	$chain = $factory->loadObject( "OME::AnalysisChain", $chain_name )
+		if( $chain_name =~ m/^\d+$/ );
+	unless ($chain) {
+		my @chains = $factory->findObjects( "OME::AnalysisChain", name => $chain_name );
+		die @chains." chains found with that name ($chain_name). Expected exactly 1."
+			unless( scalar( @chains ) eq 1 );
+		$chain = $chains[ 0 ];
+	}
+	
+	my @signature_nodes = $manager->findLeaves( $chain );
+	@signature_nodes = sort {$a->module->name cmp $b->module->name} @signature_nodes;
+
+	# compute FI names that are going to be used in the trainer module
+	logdbg "debug", "Computing names for Formal Inputs to the Trainer module";
+	my @signature_node_names = $manager->createNodeTags (@signature_nodes);
+	
+	##############
+	# create signature module (xml)
+	logdbg "debug", "Writing trainer module";
+	my $doc = XML::LibXML::Document->new();
+	die "Cannot create XML document"
+	  unless defined $doc;
+	my $root = $doc->createElementNS($OME_NS,'OME');
+	$root->setNamespace($XSI_NAMESPACE, 'xsi',0);
+	$root->setAttributeNS($XSI_NAMESPACE,'schemaLocation',"$OME_NS $OME_NS");
+	$doc->setDocumentElement($root);
+
+	# Parse the STDs
+	my $parser = XML::LibXML->new();
+
+	# add the module library
+	my $module_library = $doc->createElementNS($AML_NS,'AnalysisModuleLibrary');
+	$root->appendChild( $module_library );
+	
+	# Make the module
+	my $module = $doc->createElement('AnalysisModule');
+	$module->setAttribute( 'ModuleType', "OME::Analysis::Modules::Classification::WND_CHARM_Trainer");
+	$module->setAttribute( 'Category', "Classification");
+	my $new_LSID = $self->get_next_LSID( $xml_src );
+	$module->setAttribute( 'ID', $new_LSID );
+	$new_LSID =~ m/urn:lsid:openmicroscopy.org:Module:(\d+)/;
+	my $module_name = "WND-CHARM-Trainer($1)";
+	$module->setAttribute( 'ModuleName', $module_name );
+	$module->setAttribute( 'ProgramID', "" );
+	$module_library->appendChild( $module );
+		
+	# Make the description
+	my $module_description = $doc->createElement('Description');
+	$module_description->appendChild( XML::LibXML::Text->new( <<ENDDESCRIPTION ) );
+Builds a WND_CHARM_TrainerModule.
 ENDDESCRIPTION
 	$module->appendChild( $module_description );
 	
@@ -813,20 +954,25 @@ ENDDESCRIPTION
 			my $formal_input = $doc->createElement( 'FormalInput');
 			$formal_input->setAttribute( 'Name', $signature_node_name.".".$ST_name);
 			$formal_input->setAttribute( 'SemanticTypeName', $ST_name );
-			$formal_input->setAttribute( 'Count', '?' );
+			$formal_input->setAttribute( 'Count', '+' );
 			$declaration->appendChild( $formal_input );
 		}
 	}
 	
 	# Outputs
 	my $formal_output = $doc->createElement( 'FormalOutput');
-	$formal_output->setAttribute( 'Name', 'SignatureVector' );
-	$formal_output->setAttribute( 'SemanticTypeName', 'SignatureVectorEntry' );
+	$formal_output->setAttribute( 'Name', 'Trained Classifier' );
+	$formal_output->setAttribute( 'SemanticTypeName', 'WND_CHARM_TrainedClassifier' );
+	$formal_output->setAttribute( 'Count', '!' );
+	$declaration->appendChild( $formal_output );
+	$formal_output = $doc->createElement( 'FormalOutput');
+	$formal_output->setAttribute( 'Name', 'Features Legend' );
+	$formal_output->setAttribute( 'SemanticTypeName', 'ImageFeaturesLegend' );
 	$formal_output->setAttribute( 'Count', '+' );
 	$declaration->appendChild( $formal_output );
 	$formal_output = $doc->createElement( 'FormalOutput');
-	$formal_output->setAttribute( 'Name', 'VectorLegend' );
-	$formal_output->setAttribute( 'SemanticTypeName', 'SignatureVectorLegend' );
+	$formal_output->setAttribute( 'Name', 'Categories Used' );
+	$formal_output->setAttribute( 'SemanticTypeName', 'CategoriesUsed' );
 	$formal_output->setAttribute( 'Count', '+' );
 	$declaration->appendChild( $formal_output );
 	
@@ -835,21 +981,21 @@ ENDDESCRIPTION
 	$file_name =~ s/ //g;
 	$file_name = $outdir. '/' . $file_name . ".ome";
 	$doc->toFile( $file_name, 2 );
-	logdbg "debug", "Saved signature module to $file_name";
+	logdbg "debug", "Saved WND CHARM Trainer Module to $file_name";
 	
 	# import module
 	logdbg "debug", "Importing module $module_name into DB";
 	OME::Tasks::ImageTasks::importFiles (undef, [ $file_name ] );
-	my $stitcher_module = $factory->findObject( "OME::Module", name => $module_name )
-		or die "Could not load Signature Stitcher module named '$module_name'";
+	my $trainer_module = $factory->findObject( "OME::Module", name => $module_name )
+		or die "Could not load WND CHARM Trainer Module named '$module_name'";
 	
-	# create new chain that includes signature module (db)
-	logdbg "debug", "Creating new chain that includes the stitcher";
+	# create new chain that includes the trainer module (db)
+	logdbg "debug", "Creating new chain that includes the trainer module";
 	my ($new_chain, $node_mapping) = $manager->cloneChain( $chain, undef, 'gimme node mapping!' );
-	$new_chain->name( "Autogenerated Signature chain ".$new_chain->id );
+	$new_chain->name( "Image Classifier Training Chain ".$new_chain->id );
 	$new_chain->storeObject();
-	my $stitcher_node  = $factory->newObject( 'OME::AnalysisChain::Node', {
-		module         => $stitcher_module,
+	my $trainer_node  = $factory->newObject( 'OME::AnalysisChain::Node', {
+		module         => $trainer_module,
 		analysis_chain => $new_chain
 	} );
 	
@@ -861,7 +1007,7 @@ ENDDESCRIPTION
 			
 			my $formal_input;
 			$formal_input = $factory->findObject( "OME::Module::FormalInput",
-				module => $stitcher_module,
+				module => $trainer_module,
 				name   => $signature_node_name.".".$ST_name
 			) or die "Couldn't load input $signature_node_name::$ST_name for module $module_name";
 			
@@ -869,7 +1015,7 @@ ENDDESCRIPTION
 			my $from_node = $node_mapping->{$sig_node->id };
 			
 			my $data = {
-				to_node     => $stitcher_node,
+				to_node     => $trainer_node,
 				to_input    => $formal_input,
 				from_node   => $from_node,
 				from_output => $output,
@@ -878,21 +1024,20 @@ ENDDESCRIPTION
 			$factory->newObject( "OME::AnalysisChain::Link", $data )
 				or die "Couldn't make link from ".
 					$from_node->module->name.".". $output->mae." to ".
-					$stitcher_node->name.".".$formal_input;
+					$trainer_node->name.".".$formal_input;
 		}
 	}
 	$session->commitTransaction();
 	
 	
 	# save new chain to disk
-	my $chain_file = $new_chain->name().'.'.$new_chain->id.'.ome';
+	my $chain_file = $new_chain->name().'.ome';
 	$chain_file =~ s/ //g;
 	$chain_file = $outdir. '/' . $chain_file;
 	logdbg "debug", "Saving new chain to $chain_file";
 	my $chainExport = OME::ImportExport::ChainExport->new();
 	$chainExport->buildDOM ([$new_chain]);
 	$chainExport->exportFile ($chain_file, compression => 0 );
-	
 }
 
 # I'm putting this in a separate function because the implementation
