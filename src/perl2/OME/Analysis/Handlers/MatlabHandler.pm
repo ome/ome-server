@@ -1400,29 +1400,9 @@ sub __idleMatlab {
 }
 
 sub __openEngine {
-
-	# load environment variables
-	my $session = OME::Session->instance();
-	my $MATLAB = $_environment->matlab_conf() or croak "couldn't retrieve MATLAB environment variables";
-	my $matlab_exec = $MATLAB->{EXEC} or croak "couldn't retrieve matlab exec path from environment";
-	my $matlab_flags = $MATLAB->{EXEC_FLAGS} or croak "couldn't retrieve matlab exec flags from environment";
-	my $matlab_src_dir = $MATLAB->{MATLAB_SRC} or croak "couldn't retrieve matlab src dir from environment";
-	
-	logdbg "debug", "Matlab src dir is $matlab_src_dir";
-	logdbg "debug", "Matlab exec is $matlab_exec";
-	
-	# Although $matlab_exec is the fully qualified path to the matlab executable,
-	# /usr/bin and /bin needs to be in the PATH environment variable so the
-	# $matlab_exec has access to basic functions such as cd/mkdir/chown that it
-	# needs. Apache doesn't have the PATH variable set by default
-	my $instance = OME::Matlab::Engine->open("env PATH=/usr/bin:/bin $matlab_exec $matlab_flags");
-	
-	# Add the matlab source directory to the path so we can find our functions
-	$instance->eval("clear; addpath(genpath('$matlab_src_dir'));");
-	
-	# Store the engine into its own place, because we'll need it in execute
+	# Store the engine in its own place, because we'll need it in execute
+	my $instance = OME::Matlab::Engine->openEngine();
 	$_matlab_instances{ 'engine' } = $instance;
-	
 	return $instance;
 }
 
