@@ -92,7 +92,7 @@ sub finish_execute {
 	my $chex = $factory->loadObject( 'OME::AnalysisChainExecution', $chex_id )
 		or die "Couldn't load chex $chex_id";
 	
-	if (not defined $chex->status () eq 'UNFINISHED') {
+	if ($chex->status () eq 'UNFINISHED') {
 		die "Chain Execution is in progress, cannot run FinishExecute on that CHEX!\n";
 	} elsif ($chex->status() eq 'FINISHED') {
 		print "Chain Execution has status 'FINISHED' so FinishExecute ".
