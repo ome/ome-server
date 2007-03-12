@@ -879,7 +879,10 @@ sub newObjectsNitrox {
 	my $new_objects;
 	my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
-	my $CommitTransaction;
+	die "newObjects' data_hash input needs to specify the targets"
+		unless defined ($data_hash{'Target'});
+		
+	my $CommitTransaction = 1;
 	my $ObjCount = scalar (@{$data_hash{'Target'}});
 	my $ChunkSize = $ObjCount;
 
@@ -949,7 +952,7 @@ sub newObjectsNitrox {
         }
         
         # write SQL puts the right things in the right place.
-        $dbh->do("COPY signature_copy_constraints  FROM STDIN");
+        $dbh->do("COPY $tn FROM STDIN");
 		my $sql = "";
 		for (my $i=0; $i<$ObjCount; $i++) {
 			$sql .= $col_LUT[0][$i]; # first row doesn't need \t
@@ -964,9 +967,10 @@ sub newObjectsNitrox {
 				$dbh->commit if $CommitTransaction;
 				logdbg "debug", "Chunk $i finished ";
 				$sql = "";
-				$dbh->do("COPY signature_copy_constraints  FROM STDIN");
+				$dbh->do("COPY $tn FROM STDIN");
 			}
-		}        
+		}
+		$dbh->pg_putline($sql);
 		$dbh->pg_endcopy;
 		$dbh->commit if $CommitTransaction;
 	};
