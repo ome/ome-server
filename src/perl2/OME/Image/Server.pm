@@ -1193,6 +1193,17 @@ sub readFile {
     my ($repository,$fileID,$offset,$length) = @_;
     die "Repository and filen ID are required parameters" unless $repository and $fileID;
 
+	# when offset and length are not specified, read the whole file
+	if (not defined $offset and not defined $length) {
+		$offset = 0;
+		(undef,$length) = $proto->getFileInfo($repository,$fileID);
+		
+	# when just offset is specified, read till end of file
+	} elsif (defined $offset and not defined $length) {
+		(undef,$length) = $proto->getFileInfo($repository,$fileID);
+		$length -= $offset;
+	}
+	
     print STDERR "Read omeis $fileID $offset $length\n"
       if $SHOW_READS;
 
