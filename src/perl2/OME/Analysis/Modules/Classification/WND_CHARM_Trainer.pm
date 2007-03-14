@@ -228,9 +228,6 @@ sub execute {
 	logdbg "debug", "	Writing Image Features into a Matrix";
 	my $sig_row=0;
 	foreach my $formal_input ( @formal_inputs ) {
-		die "Inputs of arity greater than 1 are not supported at this time. Error with input ".$formal_input->name()
-			if $formal_input->list();
-		
 		logdbg "debug", "Writing ".$formal_input->name()." Image Features";
 		
 		# Collect the actual inputs for all the images
@@ -266,8 +263,6 @@ sub execute {
 	############################################################################
 	# Writing the MATLAB file
 	############################################################################
-	my $filename = OME::Session->instance()->getTemporaryFilename("WND_TrainedClassifier","mat");
-
 	logdbg "debug", "	Writing the MATLAB Classifier State File";
 	$engine->eval("global category_names_char_array");
 	$engine->putVariable('category_names_char_array',$category_names_array);
@@ -300,8 +295,10 @@ sub execute {
 	$engine->eval("[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] = WND_Train(signature_matrix);");
 
 	# Storing the MATLAB file on OMEIS
+
+	my $filename = OME::Session->instance()->getTemporaryFilename("WND_TrainedClassifier","mat");
 	$engine->eval( "save $filename dataset_name category_names signature_labels signature_matrix image_paths ".
-				   "features_used feature_scores norm_train_matrix feature_min, feature_max;" );
+				   "features_used feature_scores norm_train_matrix feature_min feature_max;" );
 	logdbg "debug", "Saved signature matrix to file $filename.";
 	$engine->close();
 	$engine = undef;
