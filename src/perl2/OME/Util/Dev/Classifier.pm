@@ -72,6 +72,8 @@ sub getCommands {
        'stitch_prediction_chain' => 'stitch_prediction_chain',
        'compile_sigs' => 'compile_sigs',
        'compile_chain' => 'compile_chain',
+       'make_predictions' => 'make_predictions',
+       'import_test_train_dataset' => 'import_test_train_dataset',
       };
 }
 
@@ -161,7 +163,220 @@ our $OME_NS = 'http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd';
 our $AML_NS = 'http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd';
 our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';
 
+sub make_predictions_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"USAGE";
+Usage:
+    $script $command_name [<options>]
 
+  -x Classifier Training Chain Execution ID
+  
+  -a ID/name of the Image Prediction Chain corresponding to the Classifier
+  	 Training Chain with CHEX -x
+ 
+  -d ID/name of Dataset containing images that are going to be classified
+
+USAGE
+}
+
+sub make_predictions {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+
+	my $session = $self->getSession();
+	my $factory = $session->Factory();
+
+	# parse input parameters
+	my ($training_chexStr, $prediction_chainStr, $datasetStr);
+	GetOptions ('x=s' => \$training_chexStr,
+	            'a=s' => \$prediction_chainStr,
+	            'd=s' => \$datasetStr);
+
+	die "-x (training CHEX), -a (prediction chain), -d (dataset)"
+		unless ($training_chexStr and $prediction_chainStr and $datasetStr);
+
+	# get training_chex
+	my $training_chex = $factory->findObject("OME::AnalysisChainExecution", id => $training_chexStr);
+	die "Could not find chain execution with (id=".$training_chexStr.")"
+			unless ($training_chex);
+	
+	# get the WND-TRAINER MEX
+	my $trainer_node = $factory->findObject ("OME::AnalysisChain::Node",
+											analysis_chain => $training_chex->analysis_chain(),
+											'module.name' => ['like', 'WND-CHARM-Trainer%'])
+	or die "Couldn't find WND-Trainer Node specified in chain";
+	
+	my $trainer_nex = $factory->findObject ("OME::AnalysisChainExecution::NodeExecution",
+											analysis_chain_execution => $training_chex,
+											analysis_chain_node => $trainer_node);
+											
+	# get prediction chain
+	my $prediction_chain;
+	if ($prediction_chainStr =~ /^([0-9]+)$/) {
+		$prediction_chain = $factory->loadObject( "OME::AnalysisChain", $prediction_chainStr )
+			or die "Cannot find an analysis chain with id = $prediction_chainStr";
+	} else {
+		my $chainData = {name => $prediction_chainStr};
+		$prediction_chain = $factory->findObject( "OME::AnalysisChain", $chainData)
+			or die "Cannot find an analysis chain with name = $prediction_chainStr";
+	}
+	
+	# get prediction module	
+	my $prediction_node = $factory->findObject ("OME::AnalysisChain::Node",
+											analysis_chain => $prediction_chain,
+											'module.name' => ['like', 'WND-CHARM-Prediction%']);
+	
+	
+	# get dataset to run predictions on
+	my $dataset;
+	if ($datasetStr =~ /^([0-9]+)$/) {
+		my $datasetID = $1;
+		$dataset = $factory->loadObject ("OME::Dataset", $datasetID);
+		die "Dataset with ID $datasetStr doesn't exist!" unless $dataset;
+	} else {
+		my $datasetData = {
+							name   => $datasetStr,
+							owner  => $session->User(),
+						  };
+		$dataset = $factory->findObject( "OME::Dataset", $datasetData);
+		die "Dataset with name $datasetStr doesn't exist!" unless $dataset;
+	}
+	
+	# connect the trainer and categories_used outputted by the trainer chain
+	# as inputs to the prediction chain
+	
+	my $trained_classifier_input = $factory->findObject( 'OME::Module::FormalInput',
+		'module' 	=> $prediction_node->module(),
+		'name'      => 'Trained Classifier') or die "couldn't load Trained Classifier FI";
+	
+	my $categories_used_input = $factory->findObject( 'OME::Module::FormalInput',
+		'module'	=> $prediction_node->module(),
+		'name'      => 'Categories Used by Trained Classifier') or die "couldn't load Categories Used FI";
+
+	my %user_inputs;
+	my $mex = $trainer_nex->module_execution();
+
+	print "Connecting TrainedClassifier FI: ". $trained_classifier_input->id().
+		" to MEX: ".$mex->id()."\n";
+	$user_inputs{$trained_classifier_input->id()} = [$mex];
+	print "Connecting CategoriesUsed FI: ". $categories_used_input->id().
+		" to MEX: ".$mex->id()."\n";
+	$user_inputs{$categories_used_input->id()} = [$mex];
+
+	my %flags;
+	$flags{ReuseResults} = 1;
+	my $task = undef;
+	my $chain_execution = OME::Analysis::Engine->
+		executeChain($prediction_chain,$dataset,\%user_inputs,$task,%flags)
+		or die "Got no chex.";
+	print "Chex ID is ".$chain_execution->id."\n";
+}
+
+sub import_test_train_dataset_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"USAGE";
+Usage:
+    $script $command_name [<options>]
+
+	Given a set of images, this function randomly chooses to import half of
+	the images into the specified datset.
+	
+  -d Name of Dateset to import images into
+  
+  --test or --train (one of these options need to be specified)
+
+USAGE
+}
+
+sub import_test_train_dataset {
+	my ($self,$commands) = @_;
+	my ($datasetName, $train, $test);
+	$train=0;
+	$test=0;
+	GetOptions ('dataset|d=s' => \$datasetName,
+				'train!' => \$train,
+				'test!' => \$test);
+				
+	# idiot traps
+    die "You must specify either --test or --train, but not both!\n"
+    	if ( (not $train and not $test) or ($train and $test));
+
+	# create a whole list of filenames
+	my @file_names;
+    foreach my $filename (@ARGV) {
+    	$filename = Cwd::realpath($filename); # if you use absolute filenames here, OriginalFiles.Path
+										 # stores absolute filenames. if you use relative paths,
+										 # OriginalFiles.Path stores relative filenames
+    	push (@file_names,$filename)
+    		if $filename and -f $filename and -r $filename and -s $filename;
+    	push (@file_names,bsd_glob("$filename/*")) if $filename and -d $filename and -r $filename;
+    }
+	die "No valid files or directories specified for import.\n" unless scalar @file_names;
+	
+	# create the random half of the filenames
+	srand(42); # the seed is purposely set to make rand reproducible.
+
+	my @random_half_file_names;
+	foreach my $filename (@file_names) {
+		if (rand() >= 0.5) {
+			push @random_half_file_names, $filename
+				if ($train);
+		} else {
+			push @random_half_file_names, $filename
+				if ($test);
+		}
+	}
+	
+	
+	my $session = $self->getSession();
+	my $factory = $session->Factory();
+	
+	# make the specified dataset 
+	my $datasetDescription = "These images were imported using the OME dev command-line tool: ome dev classifier import_test_train_dataset";
+	my $dataset_data = {
+						name        => $datasetName,
+						owner       => $session->User(),
+						group       => $session->User()->Group()->id(),
+						locked      => 'false'
+					   };
+
+	my $dataset = $factory->findObject( "OME::Dataset", $dataset_data);
+	if (not defined $dataset) {
+		$dataset_data -> {'description'} = $datasetDescription;
+		$dataset = $factory->newObject( "OME::Dataset", $dataset_data );
+	
+		# If there is a project in this session, then associate this new dataset with it
+		my $project = $session->project();
+		if (defined $project) {
+			
+			# Assign the dataset to the project
+			print '- Adding Dataset "',$dataset->name(),'" to Project "',$project->name(),'"...',"\n";
+			my $projectManager = new OME::Tasks::ProjectManager;
+			$projectManager->addDatasets([ $dataset->id() ], $project->id());
+		}
+	}
+	
+	# do the import!
+	my %opts;
+	$opts{AllowDuplicates} = 1;
+	
+	my $task = OME::Tasks::NotificationManager->
+        new('Importing images',3+scalar(@file_names));
+	$task->setPID($$);
+	$task->step();
+	$task->setMessage('Starting import');
+	
+	my $images = OME::Tasks::ImageTasks::importFiles ($dataset, \@random_half_file_names, \%opts, $task);
+}
 sub compile_sigs {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
@@ -744,7 +959,7 @@ sub stitch_prediction_chain {
 	
 	# Make the module
 	my $module = $doc->createElement('AnalysisModule');
-	$module->setAttribute( 'ModuleType', "OME::Analysis::Modules::Classification::WND_CHARM_Predictiction");
+	$module->setAttribute( 'ModuleType', "OME::Analysis::Modules::Classification::WND_CHARM_Prediction");
 	$module->setAttribute( 'Category', "Classification");
 	my $new_LSID = $self->get_next_LSID( $xml_src );
 	$module->setAttribute( 'ID', $new_LSID );
