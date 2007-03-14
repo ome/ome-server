@@ -618,10 +618,7 @@ sub finishTemporaryFile {
     die "Need a filename"
       unless defined $filename;
 
-	logdbg "debug", "*** $filename\n";
-
     if (-f $filename) {
-		logdbg "debug", "Found\n";
         unless (unlink $filename) {
             warn "Error removing temp file/directory $filename: $@" if $@;
             warn "Error removing temp file/directory $filename: $!" if $!;
