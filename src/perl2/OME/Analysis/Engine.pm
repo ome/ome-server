@@ -59,6 +59,7 @@ use OME::Analysis::Engine::Executor;
 use OME::Tasks::ModuleExecutionManager;
 use OME::Tasks::ChainManager;
 use OME::Tasks::NotificationManager;
+use OME::Util::Data::Delete;
 
 use Time::HiRes qw(gettimeofday tv_interval);
 use Log::Agent;
@@ -843,18 +844,21 @@ sub finishChainExecution {
 	my @error_nodes = $chex->node_executions( 'module_execution.status' => 'ERROR');
 	my @error_MEXs  = map( $_->module_execution, @error_nodes );
 	
+	my @unfinished_nodes = $chex->node_executions( 'module_execution.status' => 'UNFINISHED');
+	my @unfinished_MEXs  = map( $_->module_execution, @error_nodes );
+	
 	my @unready_nodes = $chex->node_executions( 'module_execution.status' => 'UNREADY', __order => 'module_execution.timestamp');
 	my @unready_MEXs = map( $_->module_execution, @unready_nodes );
  
 	# always set the number of steps as the AE knows besto
-	$task->n_steps(scalar(@error_MEXs) + scalar(@unready_MEXs)); 
+	$task->n_steps(scalar(@error_MEXs) + scalar (@unfinished_nodes) + scalar(@unready_MEXs)); 
     $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
     # set-up executor
     my $executor = OME::Analysis::Engine::Executor->
       getDefaultExecutor();
       
-	foreach my $mex (@error_MEXs, @unready_MEXs) {
+	foreach my $mex (@error_MEXs, @unfinished_nodes, @unready_MEXs) {
 
 		my $target;
 		my $dependency;
@@ -885,6 +889,9 @@ sub finishChainExecution {
 			}
 		}
 		
+		logdbg "debug", "Cleaning up all the MEX's previously outputted attributes";
+		OME::Util::Data::Delete->delete_mex_output_attributes($mex,1);
+
 		if ($mex_ready) {
 			$executor->executeModule($mex,$dependency,$target);
 			$session->commitTransaction();
