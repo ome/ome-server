@@ -1,0 +1,69 @@
+STATES IN THE ANALYSIS SYSTEM
+
+By: Tom Macura <tmacura@nih.gov>
+--------------
+Chain Executions have status: (UNFINISHED, INTERRUPTED, FINISHED, ERROR)
+--------------
+
+When a chex is first made its status is set to UNFINISHED and the status remains
+UNFINISHED for the duration of chain execution. After all modules have finished
+excuting, the AnalysisEngine does a pass through all the mexs -- if all mexs
+have FINISHED status the chex's status is set to FINISHED. If there are mexs with
+status UNREADY or ERROR, the CHEX is set to ERROR.
+
+If a chain execution is interrupted (e.g. ctrl^C) it's status is set to INTERRRUPTED.
+
+ome dev finish_execute can fix a chex with status ERROR to status FINISHED.
+When finish_execute is used to fix an INTERRUPTED chex, the chex's status remains
+INTERRUPTED although all of its MEXs could potentially be fixed.
+
+--------------
+Module Executions have status: (UNFINISHED, UNREADY, BUSY, FINISHED, ERROR)
+--------------
+
+Created mexs have initial status 'UNFINISHED'. At some point the Analysis Engine
+evaluates the mex's data-dependencies and set its status to UNREADY or
+proceeds to evaluate them (the mex goes onto the ready-mex-queue or the mex
+is passed to an executor).
+
+Once a mex is taken by an executor (e.g. mex is popped off the queue and passed
+to a NonblockingSlaveWorker) its status is set to BUSY and the executor's
+handler goes to work. Finally the MEX is set to either FINISHED or ERROR, as
+appropriate.
+
+A mex is set to BUSY,FINISHED,ERROR by UnthreadedPerlExecutor's executeModule().
+A mex is set to UNREADY by the Analysis Engine's executeNodeWithTarget().
+
+--------------
+DAE Analysis Workers have status (IDLE, BUSY, OFFLINE) and scheduling_tokens of (undef, 'fixed %timestamp').
+--------------
+
+Worker states mean:
+
+	IDLE: ready to do work
+	BUSY: ostensibly doing work
+	OFFLINE: not available to do work
+		[i] the worker might be executing its last MEX. 'Soon' it will no longer be executing
+	
+Workers with state IDLE will have their master,pid,scheduling_token,executing_mex
+fields set to undef. Workers with state BUSY will have their master,pid,executing_mex
+fields set. The scheduling_token field is optional.
+
+Workers with state OFFLINE will not be assigned further MEXs to execute. A worker
+might be executing the MEX referenced in the 'executing_mex' field. After that MEX
+finishes executing the master,pid,executing_mex fields are set to undef.
+	
+A worker can be set to OFFLINE by human intervention (to reclaim processor cycles
+on the worker computer). TODO: a worker can be set to OFFLINE by the Engine if
+the worker has been habitually fixed.
+
+inspectWorkers() checks the elapsed time since a worker's last_used timestamp.
+If an elapsed time is more than 10 minutes, inspectWorkers() checks to be sure
+that the MEX's status has been set to BUSY. If a MEX has been busy for 60minutes,
+it is assumed to need fixing.
+
+fixBrokenWorker() 'fixes' workers identified by inspectWorkers() as not doing
+productive work. fixBrokenWorker() unassigns the MEX from the current worker,
+cleans up the MEX (by deleting outptu attributes), puts the MEX on to the
+ready mex queue and sets the worker's status to IDLE+scheduling_token to 'fixed %timestamp'.
+
