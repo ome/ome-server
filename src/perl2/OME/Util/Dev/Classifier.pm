@@ -41,6 +41,7 @@ use base qw(OME::Util::Commands);
 
 use Carp;
 use Getopt::Long;
+use File::Glob ':glob';
 
 use Log::Agent;
 use XML::LibXML;
@@ -327,7 +328,7 @@ sub import_test_train_dataset {
 
 	my @random_half_file_names;
 	foreach my $filename (@file_names) {
-		if (rand() >= 0.5) {
+		if (rand() >= 0.25) { # 1/4 of the images are for testing and 1/4 are for training
 			push @random_half_file_names, $filename
 				if ($train);
 		} else {
@@ -370,7 +371,7 @@ sub import_test_train_dataset {
 	$opts{AllowDuplicates} = 1;
 	
 	my $task = OME::Tasks::NotificationManager->
-        new('Importing images',3+scalar(@file_names));
+        new('Importing images',3+scalar(@random_half_file_names));
 	$task->setPID($$);
 	$task->step();
 	$task->setMessage('Starting import');
