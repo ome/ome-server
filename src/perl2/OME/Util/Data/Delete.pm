@@ -788,77 +788,7 @@ my $mex_id;
 		$self->delete_mex ($input->module_execution(),$delete,$mex) if $input->module_execution();
 	}
 
-	
-	# Gather up the typed an untyped outputs
-	my @outputs = $mex->module()->outputs();
-	my @untyped_outputs = $mex->untypedOutputs();
-	my @parental_outputs = $mex->parentalOutputs();
-	
-	my %features;
-	my $mex_feature_tag = $mex->new_feature_tag();
-	$mex_feature_tag = $2
-		if $mex_feature_tag and $mex_feature_tag =~ /(\[Child|Sibling|Root\:)?([^:\[\]]+)(\])?$/;
-
-	my %parentals;
-	$parentals{$_->id()} = $_ foreach @parental_outputs;
-	push (@outputs,@untyped_outputs,@parental_outputs);
-
-	foreach my $output (@outputs) {
-		my $ST = $output->semantic_type();
-		next unless $ST; # Skip the untyped output itself
-		my $o_name;
-		$o_name =  UNIVERSAL::can ($output,'name') ? $output->name() :
-			exists $parentals{$output->id()} ? '*** Parental ***' : '*** Untyped ***';
-		print $recurs_indent,"  Output = ",$o_name," (",$ST->name(),")\n";
-
-		if ($mex->virtual_mex()) {
-			my @virtual_mex_maps = $FACTORY->findObjects('OME::ModuleExecution::VirtualMEXMap', {
-					module_execution => $mex,
-			});
-			foreach my $map (@virtual_mex_maps) {
-				print $recurs_indent,"  VirtualMEXMap to MEX ID=",$map->module_execution_id(),"\n";
-				$map->deleteObject() if $delete;
-			}
-		} else {
-			my $attributes = OME::Tasks::ModuleExecutionManager->
-				getAttributesForMEX($mex,$ST);
-			my $feature;
-			my $is_feature_output = 1 if $ST->granularity() eq 'F';
-			# Delete all attributes - this will delete any vMexes,
-			# any references, and the mexes that generated the references.
-			foreach my $attr (@$attributes) {
-				# Register a feature for deletion if this mex made it
-				if ($mex_feature_tag and $is_feature_output) {
-					$feature = $attr->feature();
-					$features{$feature->id()} = $feature
-						if $feature->tag() eq $mex_feature_tag;
-				}
-				$self->delete_attribute ($attr,$mex,$delete);
-			}
-		}
-	}
-	
-	# Delete any untyped outputs - these are OME::ModuleExecution::SemanticTypeOutput
-	foreach my $output (@untyped_outputs) {
-		print $recurs_indent,"  Untyped output ",$output->id(),"\n";
-		$output->deleteObject() if $delete;
-	}
-	
-	# Delete any parental outputs - these are OME::ModuleExecution::ParentalOutput
-	# These are attributes that get created
-	foreach my $output (@parental_outputs) {
-		print $recurs_indent,"  Parental output ",$output->id(),"\n";
-		$output->deleteObject() if $delete;
-	}
-	
-	# Delete any Feature outputs
-	if ($mex_feature_tag) {
-		foreach my $feature (values %features) {
-			print $recurs_indent,"  Feature output ",$feature->id(),"\n";
-			$feature->deleteObject() if $delete;
-		}
-		%features = ();
-	}
+	$self->delete_mex_output_attributes($mex,$delete);	
 	
 	# Delete the ACE node executions
 	my @node_executions = $FACTORY->
@@ -981,6 +911,87 @@ my $mex_id;
 	} # Cleanup (RECURSION_LEVEL == 0)
 } # delete_mex()
 
+sub delete_mex_output_attributes {
+my $self = shift;
+my $mex = shift;
+my $delete = shift;
+
+	my $recurs_indent='';
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
+	
+	$FACTORY = OME::Session->instance()->Factory() unless defined $FACTORY;
+
+# Gather up the typed an untyped outputs
+	my @outputs = $mex->module()->outputs();
+	my @untyped_outputs = $mex->untypedOutputs();
+	my @parental_outputs = $mex->parentalOutputs();
+	
+	my %features;
+	my $mex_feature_tag = $mex->new_feature_tag();
+	$mex_feature_tag = $2
+		if $mex_feature_tag and $mex_feature_tag =~ /(\[Child|Sibling|Root\:)?([^:\[\]]+)(\])?$/;
+
+	my %parentals;
+	$parentals{$_->id()} = $_ foreach @parental_outputs;
+	push (@outputs,@untyped_outputs,@parental_outputs);
+
+	foreach my $output (@outputs) {
+		my $ST = $output->semantic_type();
+		next unless $ST; # Skip the untyped output itself
+		my $o_name;
+		$o_name =  UNIVERSAL::can ($output,'name') ? $output->name() :
+			exists $parentals{$output->id()} ? '*** Parental ***' : '*** Untyped ***';
+		print $recurs_indent,"  Output = ",$o_name," (",$ST->name(),")\n";
+
+		if ($mex->virtual_mex()) {
+			my @virtual_mex_maps = $FACTORY->findObjects('OME::ModuleExecution::VirtualMEXMap', {
+					module_execution => $mex,
+			});
+			foreach my $map (@virtual_mex_maps) {
+				print $recurs_indent,"  VirtualMEXMap to MEX ID=",$map->module_execution_id(),"\n";
+				$map->deleteObject() if $delete;
+			}
+		} else {
+			my $attributes = OME::Tasks::ModuleExecutionManager->
+				getAttributesForMEX($mex,$ST);
+			my $feature;
+			my $is_feature_output = 1 if $ST->granularity() eq 'F';
+			# Delete all attributes - this will delete any vMexes,
+			# any references, and the mexes that generated the references.
+			foreach my $attr (@$attributes) {
+				# Register a feature for deletion if this mex made it
+				if ($mex_feature_tag and $is_feature_output) {
+					$feature = $attr->feature();
+					$features{$feature->id()} = $feature
+						if $feature->tag() eq $mex_feature_tag;
+				}
+				$self->delete_attribute ($attr,$mex,$delete);
+			}
+		}
+	}
+	
+	# Delete any untyped outputs - these are OME::ModuleExecution::SemanticTypeOutput
+	foreach my $output (@untyped_outputs) {
+		print $recurs_indent,"  Untyped output ",$output->id(),"\n";
+		$output->deleteObject() if $delete;
+	}
+	
+	# Delete any parental outputs - these are OME::ModuleExecution::ParentalOutput
+	# These are attributes that get created
+	foreach my $output (@parental_outputs) {
+		print $recurs_indent,"  Parental output ",$output->id(),"\n";
+		$output->deleteObject() if $delete;
+	}
+	
+	# Delete any Feature outputs
+	if ($mex_feature_tag) {
+		foreach my $feature (values %features) {
+			print $recurs_indent,"  Feature output ",$feature->id(),"\n";
+			$feature->deleteObject() if $delete;
+		}
+		%features = ();
+	}
+}
 
 sub delete_image () {
 my $self = shift;
