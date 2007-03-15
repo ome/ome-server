@@ -60,6 +60,7 @@ use OME::Analysis::Engine::Worker;
 use OME::Tasks::NotificationManager;
 use OME::Database::Delegate;
 use OME::Install::Environment;
+use OME::Util::Data::Delete;
 
 use constant SERVER_BUSY     => 503;
 our $DATA_SOURCE;
@@ -239,12 +240,11 @@ sub fixBrokenWorker {
 	$worker->storeObject();
 	
 	# clean up the MEX
-	# TODO: figure out if the MEX has made any attributes, if so, delete the
-	# attributes
 	$mex->status('UNFINISHED');
 	$mex->executed_by_worker(undef);
 	$mex->storeObject();
-	
+	OME::Util::Data::Delete->delete_mex_output_attributes($mex,1);
+
 	# put the MEX back on the module execution queue
 	my $queue = $self->{queue};
 	my $dependence = $mex->dependence();
