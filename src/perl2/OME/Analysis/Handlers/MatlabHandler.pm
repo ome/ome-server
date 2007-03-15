@@ -262,7 +262,8 @@ sub startImage {
 
 	if ($self->__checkExecutionGranularity( ) eq 'I') {	
 		my $mex = $self->getModuleExecution();
-	
+		$self->__checkMatlab();
+		
 		my $start_time = [gettimeofday()];
 		$self->placeInputs();
 		$mex->read_time(tv_interval($start_time));
@@ -281,7 +282,8 @@ sub startFeature {
 
 	if ($self->__checkExecutionGranularity( ) eq 'F') {	
 		my $mex = $self->getModuleExecution();
-	
+		$self->__checkMatlab();
+
 		my $start_time = [gettimeofday()];
 		$self->placeInputs();
 		$mex->read_time($mex->read_time() + tv_interval($start_time));
@@ -1404,6 +1406,30 @@ sub __openEngine {
 	my $instance = OME::Matlab::Engine->openEngine();
 	$_matlab_instances{ 'engine' } = $instance;
 	return $instance;
+}
+
+# See if the Engine is available for executing, if not restart it.
+# The MATLAB Engine has been known to implode after say 10hrs
+sub __checkMatlab{
+	my $self = shift;
+	if ($_matlab_instances{ 'engine' }) {
+
+		my $engine = $_matlab_instances{ 'engine' };
+		my $x = OME::Matlab::Array->newDoubleScalar(4);
+
+		$engine->putVariable('x',$x);
+		$engine->eval('y = x .* 8;');
+		my $y = $engine->getVariable('y');
+
+		if ( ($y->class_name() ne "double") || ($y->order() ne  2) ||
+			 ($y->dimensions()->[0] ne 1) || ($y->dimensions()->[1] ne 1) ||
+			 ($y->getAll()->[0] ne 32)  ) {
+			 
+			logdbg "debug", "__checkMatlab detected an error, restarting MATLAB";
+			$self->__closeMatlab();
+			$self->__openMatlab();
+		}
+	}		
 }
 
 =head2 __checkExecutionGranularity
