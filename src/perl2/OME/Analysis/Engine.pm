@@ -858,7 +858,7 @@ sub finishChainExecution {
     my $executor = OME::Analysis::Engine::Executor->
       getDefaultExecutor();
       
-	foreach my $mex (@error_MEXs, @unfinished_nodes, @unready_MEXs) {
+	foreach my $mex (@error_MEXs, @unfinished_MEXs, @unready_MEXs) {
 
 		my $target;
 		my $dependency;
