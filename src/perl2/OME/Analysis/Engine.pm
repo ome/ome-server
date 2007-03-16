@@ -898,6 +898,9 @@ sub finishChainExecution {
 		}
 	}
 	
+	# wait for all module executions to finish
+	$executor->waitForAllModulesToFinish();
+	
 	$task->setMessage("");
     $task->finish();
 	$session->commitTransaction();
