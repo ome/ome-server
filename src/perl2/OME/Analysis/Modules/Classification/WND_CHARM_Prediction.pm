@@ -83,7 +83,7 @@ sub startAnalysis {
 											$trainedClassifierOriginalFile->FileID());
 
 	my $filename = OME::Session->instance()->getTemporaryFilename("WND_TrainedClassifier","mat");
-	open (MAT_FILE, ">$filename") || die ("Couldn't open MATLAB temporary file for writing");
+	open (MAT_FILE, ">$filename") || die ("Couldn't open MATLAB temporary file ($filename) for writing");
 	print MAT_FILE $data;
 	close (MAT_FILE);
 	$engine->eval("load $filename");
