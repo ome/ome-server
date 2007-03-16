@@ -179,7 +179,10 @@ sub getPageBody {
 		chdir( $tmpDir )
 			or die "Couldn't change directories to $tmpDir";
 		my $spreadSheetPath = $session->getTemporaryFilename('UploadImportAnnotate', 'tsv');
-		my %categoriesAndPaths = map{ $_ => "$zipFileName/$cg_name/$_/*" } @catNames;
+		my %categoriesAndPaths;
+		foreach (@catNames) {
+			$categoriesAndPaths{"$zipFileName/$cg_name/$_/*"} = "$_";
+		}
 		OME::Util::Annotate::SpreadsheetWriter->processFile( 
 			$spreadSheetPath, 
 			{

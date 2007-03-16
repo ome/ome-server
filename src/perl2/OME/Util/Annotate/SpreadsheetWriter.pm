@@ -91,24 +91,24 @@ scenario.
 my $root = "/Users/tmacur1/Images/worms/";
 my $cg_age = {
 	ColumnName => "Age",
-	"Day 1" => "$root/day1/*",
-	"Day 2" => "$root/day2/*",
-	"Day 4" => "$root/day4/*",
-	"Day 6" => "$root/day6/*",
-	"Day 8" => "$root/day8/*",
+	"$root/day1/*" => "Day 1", 
+	"$root/day2/*" => "Day 2", 
+	"$root/day4/*" => "Day 4",
+	"$root/day6/*" => "Day 6",
+	"$root/day8/*" => "Day 8", 
 };
 
 my $cg_body_part = {
 	ColumnName => "Body Part",
 	DefaultColumnValue => "body",
-	head => "$root/*/day*head*",
+	"$root/*/day*head*" => "head",
 };
 
 my $cg_quality = {
 	ColumnName => "Quality",
 #	DefaultColumnValue => "Average",	
-	Blurry => "$root/*/day*blurry*",
-	Windy  => "$root/*/day*windy*",
+	"$root/*/day*blurry*" => Blurry,
+	"$root/*/day*windy*" => Windy,
 };
 
 processFile ("tmp.tsv", $cg_age, $cg_body_part, $cg_quality);
@@ -125,7 +125,7 @@ and 1 otherwise.
 
 sub processFile{
 	my ($self, $fn, @classification_rules) = @_;
-	my $master_hash;
+	my %master_hash;
 	my $cg_list; # a hash ref
 	my $useRelativePaths = 0;
 	
@@ -148,24 +148,24 @@ sub processFile{
 		$cg_list->{$cg} = $default_category;
 
 		# for each category
-		foreach my $category (keys %$classification_rule) {
-			foreach my $file (bsd_glob ($classification_rule->{$category})) {
-				next if (not -f $file); # skip directories
-#				print "`$file` `$cg` `$category`\n";
-				$master_hash->{$file}->{$cg} = $category;
+		foreach my $file_pattern_rule (keys %$classification_rule) {
+			foreach my $file (bsd_glob ($file_pattern_rule)) {
+				next if (not -f $file); # skip directories				
+#				print "`$file` `$cg` `".$classification_rule->{$file_pattern_rule}."`\n";
+				$master_hash{$file}{$cg} = $classification_rule->{$file_pattern_rule};
 			}
 		}
 	}
 	
 	# check the master hash size
-	return 0 if (not keys %$master_hash);
+	return 0 if (not keys %master_hash);
 	
 	# Use the master hash to write-out a tsv file
 	open (FILEOUT, "> $fn") or die "Couldn't open $fn for writing: $!\n";
 	my @array_cg_list = sort keys (%$cg_list);
 	print FILEOUT "Image.OriginalFile\t".join ("\t", @array_cg_list)."\n";
 
-	foreach my $file (sort keys %$master_hash) {
+	foreach my $file (sort keys %master_hash) {
 		my $path = ( $useRelativePaths ? 
 			$file :
 			Cwd::realpath($file)
@@ -173,7 +173,7 @@ sub processFile{
 		print FILEOUT $path."\t";
 
 		foreach my $cg (@array_cg_list) {
-			my $category = $master_hash->{$file}->{$cg};
+			my $category = $master_hash{$file}{$cg};
 			if (defined $category) {
 				print FILEOUT "$category\t";
 			} else {

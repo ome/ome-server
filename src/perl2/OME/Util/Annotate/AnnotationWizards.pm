@@ -134,14 +134,14 @@ sub pdi_wizard {
 		$project_column = {ColumnName => "Project"};	
 		foreach (@project_dir) {
 			my ($vol, $dir, $final_dir) = File::Spec->splitpath($_);
-			$project_column->{$final_dir} = "$_/*/*";
+			$project_column->{"$_/*/*"} = $final_dir;
 		}
 	}
 	
 	my $dataset_column = {ColumnName => "Dataset"};
 	foreach (@dataset_dir) {
 		my ($vol, $dir, $final_dir) = File::Spec->splitpath($_);
-		$dataset_column->{$final_dir} = "$_/*";
+		$dataset_column->{"$_/*"} = $final_dir;
 	}
 	my $result;
 	if (not $short) {
@@ -269,8 +269,8 @@ sub cgc_wizard {
 		my $cg_column = {ColumnName => "$final_dir"};		
 		foreach my $category_dir (@category_dir_list) {
 			($vol, $dir, $final_dir) = File::Spec->splitpath($category_dir);
-			print STDERR "\t$final_dir => $category_dir/*\n";
-			$cg_column->{$final_dir} = "$category_dir/*";
+			print STDERR "\t$category_dir/* => $final_dir\n";
+			$cg_column->{"$category_dir/*"} = $final_dir;
 		}
 		push (@cg_columns, $cg_column);
 	}
