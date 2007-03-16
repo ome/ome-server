@@ -916,10 +916,11 @@ my $self = shift;
 my $mex = shift;
 my $delete = shift;
 
+	$FACTORY = OME::Session->instance()->Factory() unless defined $FACTORY;
+	$RECURSION_LEVEL = 0 unless defined $RECURSION_LEVEL;
+	
 	my $recurs_indent='';
 	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
-	
-	$FACTORY = OME::Session->instance()->Factory() unless defined $FACTORY;
 
 # Gather up the typed an untyped outputs
 	my @outputs = $mex->module()->outputs();
