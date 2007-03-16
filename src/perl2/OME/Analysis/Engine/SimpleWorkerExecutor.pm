@@ -205,17 +205,18 @@ sub inspectWorkers {
 	foreach my $worker (@workers) {
 		my $elapsed_time = $worker->elapsed_since_last_used();
 #		print "WorkerID is".$worker->id()." - elapsed time is $elapsed_time\n";
-		# after 5 min be sure that worker's MEX status was set to busy
-		if ($elapsed_time > 60) {
+		# after 10 min be sure that worker's MEX status was set to busy
+		if ($elapsed_time > 60*10) {
 			my $mex = $worker->executing_mex();
-			
+			$mex->refresh();
+
 			if ($mex->status ne "BUSY") {
 				logdbg "debug", "inspectWorkers: Worker (".$worker->id().")'s MEX isn't busy";
 				$self->fixBrokenWorker($worker);
 			}
 		}
 		
-		# after 50min the worker is doing something weird and we will pass the
+		# after 60min the worker is doing something weird and we will pass the
 		# mex to another worker for executing
 		if ($elapsed_time > 60*60) {
 			logdbg "debug", "inspectWorkers: Worker (ID".$worker->id().") has been executing for too long";
