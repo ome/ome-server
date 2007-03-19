@@ -47,6 +47,10 @@ my @classifierFiles = (
 # Useful Chains
 "OME/Analysis/Classifier/FeatureExtractionChain.ome",
 "OME/Analysis/Classifier/WND-CHARM-SemanticTypes.ome",
+"OME/Analysis/Classifier/WND-CHARM-Prediction.ome",
+"OME/Analysis/Classifier/WND-CHARM-Trainer.ome",
+"OME/Analysis/Classifier/ImageClassifierPredictionChain.ome",
+"OME/Analysis/Classifier/ImageClassifierTrainingChain.ome",
 );
 
 my $session = OME::SessionManager->TTYlogin();
