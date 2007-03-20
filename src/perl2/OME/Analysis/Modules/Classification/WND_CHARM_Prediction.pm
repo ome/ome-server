@@ -78,7 +78,7 @@ sub startAnalysis {
 	my @input_attr_list = $self->getInputAttributes( $trainedClassifierFI )
 		or die "Couldn't get inputs for WND_CHARM_TrainedClassifier FormalInput";
 	
-	my $trainedClassifierOriginalFile = $input_attr_list[0]->ClassifierObject();
+	my $trainedClassifierOriginalFile = $input_attr_list[0]->Parent();
 	my $data = OME::Image::Server->readFile($trainedClassifierOriginalFile->Repository(),
 											$trainedClassifierOriginalFile->FileID());
 
@@ -90,9 +90,9 @@ sub startAnalysis {
 	OME::Session->instance()->finishTemporaryFile($filename);
 	
 	##############################################################################
-	# create LUT mapping InternalClassifierCategoryName to Category
+	# create LUT mapping CategoryIndex to Category
 	##############################################################################
-	logdbg "debug", "create LUT mapping InternalClassifierCategoryName to Category";
+	logdbg "debug", "create LUT mapping CategoryIndex to Category";
 	my $categoriesUsedFI = $factory->findObject('OME::Module::FormalInput',{
 												module => $module,
 												'semantic_type.name' => "CategoriesUsed",
@@ -102,7 +102,7 @@ sub startAnalysis {
 		or die "Couldn't get inputs for CategoriesUsed FormalInput";
 	my %categoriesUsedLUT;
 	foreach (@input_attr_list) {
-		$categoriesUsedLUT{$_->InternalClassifierCategoryName()} = $_->Category();
+		$categoriesUsedLUT{$_->CategoryIndex()} = $_->Category();
 	}
 
 	##############################################################################

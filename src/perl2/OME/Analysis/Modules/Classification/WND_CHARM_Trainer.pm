@@ -79,12 +79,12 @@ sub execute {
 
 	# Image Features Legend (OME)
 	my @FeatureDescription;
-	my @MatrixRow;
+	my @FeatureIndex;
 	my @Used;
 	my @Target;
 	my %ImageFeaturesLegend = (
 			FeatureDescription => \@FeatureDescription,
-			MatrixRow => \@MatrixRow,
+			FeatureIndex => \@FeatureIndex,
 			Used => \@Used,
 			Target => \@Target);
 
@@ -111,7 +111,7 @@ sub execute {
 			
 			# Define a new vector position.
 			push (@FeatureDescription, $formal_input->name().".".$se->name());
-			push (@MatrixRow, $num_of_features);
+			push (@FeatureIndex, $num_of_features);
 			push (@Used, "1");
 			push (@Target, $target->id());
 			
@@ -210,7 +210,7 @@ sub execute {
 		$factory->newAttribute("CategoriesUsed", $target, $mex,
 			{
 				'Category' => $cat_id,
-				'InternalClassifierCategoryName' => $OME_category_to_category_number{$cat_id},
+				'CategoryIndex' => $OME_category_to_category_number{$cat_id},
 			});
 	}
 	
@@ -320,7 +320,7 @@ sub execute {
 					   
 	$factory->newAttribute("WND_CHARM_TrainedClassifier", $target, $mex,
 		{
-			'ClassifierObject' => $originalFile,
+			'Parent' => $originalFile,
 		});
 }
 

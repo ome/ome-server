@@ -37,10 +37,10 @@
 		<SemanticType Name="WND_CHARM_TrainedClassifier" AppliesTo="D">
 			<Description>
 			The WND-5 Classifier is a weighted (with Fisher Discriminant scores)
-			neareast neighbour image classifier. See IEEE: lalala
+			neareast neighbour image classifier.
 			</Description>
 			<Element
-				Name="ClassifierObject"
+				Name="Parent"
 				DBLocation="WND_CHARM_TRAINEDCLASSIFIER.FILE"
 				DataType="reference"
 				RefersTo="OriginalFile">
@@ -56,14 +56,13 @@
 			Records which signatures were excluded from optimal feature subset
 			selection because they could not be succesfully discretized by the
 			choosen discretization method.
-			Granularity should match SignatureVectorLegend.
 			</Description>
 			<Element
 				Name="FeatureDescription"
 				DBLocation="IMAGE_FEATURES_LEGEND_ENTRY.LEGEND_NAME"
 				DataType="string"/>
 			<Element
-				Name="MatrixRow"
+				Name="FeatureIndex" 
 				DBLocation="IMAGE_FEATURES_LEGEND_ENTRY.MATRIX_ROW"
 				DataType="integer"/>
 			<Element
@@ -77,7 +76,7 @@
 			Maps the classifier's internal category names with OME Categories (STs).
 			</Description>
 			<Element
-				Name="InternalClassifierCategoryName"
+				Name="CategoryIndex" 
 				DBLocation="CATEGORIES_USED.CATEGORY_NAME"
 				DataType="integer"/>
 			<Element
