@@ -345,7 +345,7 @@ sub execute {
 				if ($matlab_lib_path =~ m/-L(\S+)/ );
 			
 			my $env_str;
-			if ($MATLAB_INFO{"ARCH"} eq "mac") {
+			if ($MATLAB_INFO{"ARCH"} eq "mac" or $MATLAB_INFO{"ARCH"} eq "maci") {
 				$env_str = "PERL_DL_NONLAZY=1 DYLD_LIBRARY_PATH=$matlab_lib_path";
 			} else {
 				$env_str = "PERL_DL_NONLAZY=1 LD_LIBRARY_PATH=$matlab_lib_path";
