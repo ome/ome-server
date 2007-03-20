@@ -845,13 +845,13 @@ sub finishChainExecution {
 	my @error_MEXs  = map( $_->module_execution, @error_nodes );
 	
 	my @unfinished_nodes = $chex->node_executions( 'module_execution.status' => 'UNFINISHED');
-	my @unfinished_MEXs  = map( $_->module_execution, @error_nodes );
+	my @unfinished_MEXs  = map( $_->module_execution, @unfinished_nodes );
 	
 	my @unready_nodes = $chex->node_executions( 'module_execution.status' => 'UNREADY', __order => 'module_execution.timestamp');
 	my @unready_MEXs = map( $_->module_execution, @unready_nodes );
  
 	# always set the number of steps as the AE knows besto
-	$task->n_steps(scalar(@error_MEXs) + scalar (@unfinished_nodes) + scalar(@unready_MEXs)); 
+	$task->n_steps(scalar(@error_MEXs) + scalar (@unfinished_MEXs) + scalar(@unready_MEXs)); 
     $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
     # set-up executor
