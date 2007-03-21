@@ -146,6 +146,7 @@ use vars qw($VERSION);
 use OME::SessionManager;
 use base qw(OME::Web);
 use Time::HiRes qw(gettimeofday tv_interval);
+use OME::Web::TemplateManager;
 
 my $NO_COLS='__NONE__';
 
@@ -194,6 +195,7 @@ sub getTemplate {
     my $which_tmpl =  $self->getTemplateName('OME::Web::ImageAnnotationTable');
     my $tmpl =
 	OME::Web::TemplateManager->getBrowseTemplate($which_tmpl);
+	die "Could not load template $which_tmpl" unless $tmpl;
     return $tmpl;
 
 
@@ -1638,23 +1640,3 @@ sub sortImagesByCG {
 
 
 1;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

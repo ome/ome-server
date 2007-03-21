@@ -43,6 +43,7 @@ use base qw(OME::Web);
 use OME::Web::ImageAnnotationBrowser;
 use OME::Web::TableBrowse::HeaderBuilder;
 use OME::Web::ImageAnnotationTable;
+use OME::Web::TemplateManager;
 
 my $TEMPLATE='GeneProbeTable';
 my $ROW='Gene';
@@ -76,8 +77,10 @@ sub getPageBody {
     
     my $table = new OME::Web::ImageAnnotationTable();
 
+    my $tmpl = OME::Web::TemplateManager->getBrowseTemplate($q->param('Template'));
+
     my $output =
-	$table->getTableDetails($self,$TEMPLATE,'OME::Web::TableBrowse');
+	$table->getTableDetails($self,$tmpl,'OME::Web::TableBrowse');
 
     # and the form.
     my $html =
