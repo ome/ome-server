@@ -154,7 +154,7 @@ sub getAnnotationDetails {
     my ($container,$root,$tmpl,$tmpl_data) = @_;
 
 
-    my $which_tmpl = $q>url_param('Template');
+    my $which_tmpl = $q>param('Template');
     # instantiate variables in the template
     $tmpl_data->{'Root'} = $root;
     $tmpl_data->{'Template'} = $which_tmpl;

@@ -110,9 +110,9 @@ sub getPageBody {
     # Load the correct template and make sure the URL still carries the template
     # name.
 
-    my $which_tmpl = $q->url_param('Template'); 
+    my $which_tmpl = $q->param('Template'); 
 
-    $tmpl_data{'template'}=$which_tmpl;
+    $tmpl_data{'Template'}=$which_tmpl;
     
     # Load the requested category groups
     my @parameter_names = $tmpl->param();
