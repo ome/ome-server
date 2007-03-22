@@ -190,17 +190,20 @@ sub startImage {
 	$engine->eval(" [marginal_probabilities, class_predictions, class_similarities] = ".
 				  "WND_Predict( feature_vector, norm_train_matrix, features_used, feature_scores, feature_min, feature_max) ;");
 	
+	$engine->eval("class_prediction_marginal_probability = marginal_probabilities(1,class_predictions);");
 	############################################################################
 	# Convert class_prediction into an OME classification using the CategoriesUsed ST
 	############################################################################
 	logdbg "debug", "Use output from WND_Predict to make a new image classification";
 	my $class_prediction = $engine->getVariable('class_predictions')->getScalar()
 		or die "couldn't load class_predictions variable";
+	my $class_prediction_marginal_probability = $engine->getVariable('class_prediction_marginal_probability')->getScalar()
+		or die "couldn't load class_prediction_marginal_probability variable";
 
 	$factory->newAttribute("Classification", $image, $mex,
 		{
 			'Category' => $self->{categoriesUsedLUT}->{$class_prediction},
-			'Confidence' => '1',
+			'Confidence' => $class_prediction_marginal_probability,
 			'Valid' => '1',
 		});
 }
