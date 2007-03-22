@@ -94,7 +94,9 @@ sub selfDocument {
 	my ($self) = @_;
 	# don't need it
 	my $commands = $self->getCommands();
-	
+	my $session = $self->getSession(); # log-in, just in case (login required to
+									   # display ome import help message
+
 	my ($output_dir);
 	GetOptions ('o|output=s' => \$output_dir);
 
@@ -234,9 +236,9 @@ sub write_method_help {
 	<tr>
 		<td style="vertical-align: top;">	
 		<div class="menu help_toc" id="help_toc"> </div>
-		<a href="../index.html">Back to OME Commander Documentation</a>
 		</td>
 		<td style="vertical-align: top;">	
+		<a href="../index.html">Back to OME Commander Documentation</a>
 <PRE>
 HTMLSTART2
 				print OUTPUT_HTML "<h1>ome @cmds</h1>\n";
