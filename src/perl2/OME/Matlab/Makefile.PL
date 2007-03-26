@@ -45,8 +45,9 @@ $matlab_lib_path = $1
 	if ($matlab_lib_path =~ m/-L(\S+)/ );
 
 my $define = '';
-$define = '-DPRE_73' unless ($matlab_version =~ /7\.3\.0.+/); 
+$define = '-DPRE_73' unless ($matlab_version =~ /7\.3\.0.+/ or $matlab_version =~ /7\.4\.0.+/ ); 
 
+print "define is $define\n\n";
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 

@@ -417,7 +417,7 @@ sub execute {
 	depends on the version of MATLAB installed
 */
 OME_MATLAB_H_START
-		unless ($MATLAB_INFO{"VERS"} =~ /7\.3\.0.+/) {
+		unless ($MATLAB_INFO{"VERS"} =~ /7\.3\.0.+/ or $MATLAB_INFO{"VERS"} =~ /7\.4\.0.+/) {
 			my $ome_matlab_h_augment = "typedef int mwSize;\n".
 									   "typedef int mwIndex;\n".
 									   "typedef int mwSignedIndex;\n";
@@ -635,6 +635,11 @@ sub matlab_info {
 		$matlab_lib = "$matlab_root/bin/$matlab_arch";
 		$matlab_lib = "$OME_BASE_DIR/lib/matlab_".$matlab_vers if $matlab_arch eq 'mac';
 		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";		
+	} elsif ($matlab_vers =~ /7\.3\.0.+/ or $matlab_vers =~ /7\.4\.0.+/) {
+		$matlab_include = "-I$matlab_root/extern/include";
+		$matlab_lib = "$matlab_root/bin/$matlab_arch";
+		$matlab_lib = "$OME_BASE_DIR/lib/matlab_".$matlab_vers if $matlab_arch eq 'mac';
+		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
 	} else {
 		print STDERR "WARNING Matlab Version $matlab_vers not supported.\n";
 		# make an educated guess
