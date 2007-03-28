@@ -116,7 +116,8 @@ Returns the images in $dataset that are not classified by $categoryGroup.
 		getClassificationsInDataset($category, $dataset);
 
 Returns the classifications for images in $dataset that are belong to
-$categoryGroup or $category.
+$categoryGroup or $category. Deals with multiple relevant classifications
+per image by choosing the most recent classification that is marked valid.
 
 =cut
 
@@ -128,15 +129,19 @@ sub getClassificationsInDataset {
 			'Valid'                          => 't',
 			'Category.CategoryGroup'         => $cSomething,
 			'image.dataset_links.dataset_id' => $dataset,
-			'__order'                        => 'image.name'
+			'__order'                        => ['image.name', 'image', '!module_execution.timestamp'], 
+			'__distinct'                     => ['image.name', 'image'], 
 		} );
 	} elsif( $cSomething->semantic_type->name eq 'Category' ) {
-		return $factory->findObjects( '@Classification', {
+		my @classifications = $factory->findObjects( '@Classification', {
 			'Valid'                          => 't',
-			'Category'                       => $cSomething,
+			'Category.CategoryGroup'         => $cSomething->CategoryGroup,
 			'image.dataset_links.dataset_id' => $dataset,
-			'__order'                        => 'image.name'
+			'__order'                        => ['image.name', 'image', '!module_execution.timestamp'], 
+			'__distinct'                     => ['image.name', 'image'], 
 		} );
+		@classifications = grep( $_->Category->id eq $cSomething->id, @classifications );
+		return @classifications;
 	} else {
 		die "parameter $cSomething not recognized";
 	}
