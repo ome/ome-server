@@ -164,6 +164,26 @@ sub getPageBody {
 			CategoryRef => 'Unclassified',
 			images      => $self->Renderer()->renderArray( \@unclassified_images, 'ref_mass_w_paging', { type => 'OME::Image', pager_control_name => 'unclassified_images' } ),
 		} );
+		
+		# a link to save these classifications as a table.
+		$tmpl_data{ downloadClassificationsAsTableURL } = $self->getTableURL(
+			'@Classification',
+			'Valid'                          => 1,
+			'Category.CategoryGroup'         => $cg,
+			'image.dataset_links.dataset_id' => $dataset,
+			'__order'                        => ['image.name', 'image', '!module_execution.timestamp'],
+			'__distinct'                     => ['image.name', 'image'],
+			'__fields'                       => ['image', 'image.name', 'Category', 'Category.Name', 'id', 'Confidence', 'Valid', 'module_execution', 'module_execution.module.name', 'module_execution.timestamp', 'module_execution.experimenter.LastName', 'module_execution.experimenter.Email' ],
+		);
+		# a link to save all classifications as a table.
+		$tmpl_data{ downloadAllClassificationsAsTableURL } = $self->getTableURL(
+			'@Classification',
+			'Valid'                          => 1,
+			'Category.CategoryGroup'         => $cg,
+			'image.dataset_links.dataset_id' => $dataset,
+			'__order'                        => ['image.name'], 
+			'__fields'                       => ['image', 'image.name', 'Category', 'Category.Name', 'id', 'Confidence', 'Valid', 'module_execution', 'module_execution.module.name', 'module_execution.timestamp', 'module_execution.experimenter.LastName', 'module_execution.experimenter.Email' ],
+		);
 	}
 	
 	
