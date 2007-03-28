@@ -707,7 +707,8 @@ sub _getSearchParams {
 				}
 		
 				# Do not insert wildcards in the search value if the search field is a reference
-				if( $foreignClass ) {
+				# or if it is a boolean
+				if( $foreignClass || ( uc($package_name->getColumnSQLType( $search_on )) eq "BOOLEAN" ) ) {
 					$searchParams{ $search_on } = $value;
 				} else {
 					$searchParams{ $search_on } = [ 'ilike', '%'.$value.'%' ];
@@ -715,6 +716,9 @@ sub _getSearchParams {
 			}
 		}
 	}
+	
+	# Look for a '__distinct' cgi parameter
+	$searchParams{ __distinct } = $self->__distinct_param();
 	$searchParams{ __order } = $self->__sort_field();
 	return %searchParams;
 }
@@ -743,24 +747,57 @@ sub _getSearchParams {
 sub __sort_field {
 	my ($self, $search_fields, $default ) = @_;
 	my $q = $self->CGI();
-	my $primary_order_field;
+	my @order_fields;
 
 	if( $q->param( '__order' ) && $q->param( '__order' ) ne '' ) {
-		$primary_order_field = $q->param( '__order' );
+		my $value = $q->param( '__order' );
+		if( $value =~ m/,/o ) {
+			my @values = split( m/,/o, $value );
+			foreach my $val ( @values ) {
+				next if $val eq 'id';
+				$val =~ s/^~/!/o;
+				push( @order_fields, $val );
+			}
+		} else {
+			push( @order_fields, $value );
+		}
 	} elsif( grep( $_ eq 'name', @$search_fields ) ) {
-		$q->param( '__order', 'name' );
-		$primary_order_field = 'name';
+		push( @order_fields, 'name' );
 	} elsif( grep( $_ eq 'Name', @$search_fields ) ) {
-		$q->param( '__order', 'Name' );
-		$primary_order_field = 'Name';
+		push( @order_fields, 'Name' );
 	} else {
-		$q->param( '__order', $default );
-		$primary_order_field = $default;
+		push( @order_fields, $default );
 	}
-	
-	return [$primary_order_field, 'id'];
+
+	push( @order_fields, 'id' );
+	$q->param( '__order', join( ',', @order_fields) );
+	return \@order_fields;
 }
 
+=head2 __distinct_param
+
+=cut
+
+sub __distinct_param {
+	my ($self ) = @_;
+	my $q = $self->CGI();
+	my @distinct_fields;
+
+	if( $q->param( '__distinct' ) && $q->param( '__distinct' ) ne '' ) {
+		my @values = $q->param( '__distinct' );
+		foreach my $value (@values ) {
+			next if $value eq 'id';
+			if( $value =~ m/,/o ) {
+				unshift( @distinct_fields, grep( $_ ne 'id', split( m/,/o, $value ) ) );
+			} else {
+				unshift( @distinct_fields, $value );
+			}
+		}
+		$q->param( '__distinct', join(',',@distinct_fields) );
+		return \@distinct_fields;
+	}
+	return [];
+}
 
 =head2 _specialize
 
