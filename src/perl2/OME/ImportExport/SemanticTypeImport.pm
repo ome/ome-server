@@ -665,7 +665,7 @@ sub _getDescription {
 	# If there is exactly one description, and a specific language was not requested,
 	# return the single description
 	if( ( scalar( @description_list ) == 1 ) && ! $lang ) {
-		$description == $description_list[0];
+		$description = $description_list[0];
 	# If any descriptions are present, determine their language, search through
 	# them for one to return. 
 	# The desired language defaults to english, and the description's language
