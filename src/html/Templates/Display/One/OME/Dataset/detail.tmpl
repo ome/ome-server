@@ -45,7 +45,7 @@
 				</tr>
 				<tr>
 					<td colspan='2'>
-						Description [ <a href="javascript:document.forms[0].action.value='Save'; document.forms[0].submit();" class="ome_widget">Save</a> ]<br>
+						Description [ <a href="javascript:document.forms[0].action.value='Save'; document.forms[0].submit();" class="ome_widget">Save</a> ]<br/>
 						<textarea name="description" rows="5" cols="60"><TMPL_VAR NAME='description'></textarea>
 					</td>
 				</tr>
@@ -66,7 +66,7 @@
 							 <a href="javascript: document.forms[0].action.value='DeleteAnnotation'; document.forms[0].submit();" class="ome_widget">Mark Invalid</a> |
 						 </TMPL_UNLESS>
 						 <a href="javascript:search('@DatasetAnnotation', 'Dataset', <TMPL_VAR Name='id'>);" class="ome_widget">View all <TMPL_VAR NAME=annotation_count> Annotations</a>
-						]<br>
+						]<br/>
 						<textarea name="annotation" rows="5" cols="60"><TMPL_VAR NAME='current_annotation'></textarea>
 					</td>
 				</tr>
@@ -85,19 +85,22 @@
 </table>
 <TMPL_IF NAME=categories_used>
 	<font class="ome_relation_title">To cluster thumbnails by Category, select a CategoryGroup.</font>
-	<TMPL_VAR NAME=categories_used><br>
+	<TMPL_VAR NAME=categories_used><br/>
 	Can't find what you want in that list? You may want to 
 		<a href="javascript: selectOne( '\@CategoryGroup', 'selected_cg' );">Search</a>
 		or
 		<a href="javascript: creationPopup( '\@CategoryGroup', 'selected_cg' );">Create</a>
 	a new one.
-	<input type="hidden" name="selected_cg"><br>
+	<input type="hidden" name="selected_cg"><br/>
 <hr>
 </TMPL_IF>
 <TMPL_IF NAME=selected_category_group_ref>
 	<font class="ome_relation_title">Images are arranged by <TMPL_VAR NAME=selected_category_group_ref>.</font>
-	To add a Category click on <TMPL_VAR NAME=selected_category_group_ref> and refresh this page when you are done.<br>
-	<span class='ome_quiet'>Click the upper left quadrant of a thumbnail for image info. <br> Click elsewhere to:
+	To add a Category click on <TMPL_VAR NAME=selected_category_group_ref> and refresh this page when you are done.<br/>
+	<TMPL_IF NAME=downloadClassificationsAsTableURL>
+		<a href="<TMPL_VAR NAME=downloadClassificationsAsTableURL>">Download Classifications as table</a><br/>
+	</TMPL_IF>
+	<span class='ome_quiet'>Click the upper left quadrant of a thumbnail for image info. <br/> Click elsewhere to:
 	<input type="radio" name="thumb_click_opens" value='viewer' checked>Open Image Viewer
 	<input type="hidden" name="declassifyImage">
 	<input type="radio" name="thumb_click_opens" value='declassify' >Declassify Image
@@ -105,7 +108,7 @@
 		<input type="hidden" name="classifyImage">
 		<input type="radio" name="thumb_click_opens" value='classify' >Classify Image as: <TMPL_VAR NAME=available_categories>
 	</TMPL_IF>
-	</span><br>
+	</span><br/>
 	<table>
 	<TMPL_LOOP NAME=_CategoryList>
 		<tr><td valign="top"><TMPL_VAR NAME=CategoryRef></td><td><TMPL_VAR NAME=images></td></tr>
@@ -114,8 +117,8 @@
 <TMPL_ELSE>
 	<font class="ome_relation_title">Images:</font>
 	<TMPL_VAR NAME=images/render-ref_mass>
-</TMPL_IF><br>
-<br>
+</TMPL_IF><br/>
+<br/>
 
 
 <TMPL_IF NAME=images_are_single_channel>
@@ -133,6 +136,6 @@
 <hr>
 
 <font class="ome_relation_title">Module Executions:</font>
-	<TMPL_VAR NAME=module_executions/render-tiled_list><br>
+	<TMPL_VAR NAME=module_executions/render-tiled_list><br/>
 <font class="ome_relation_title">Chain Executions:</font>
 	<TMPL_VAR NAME=chain_executions/render-tiled_list>
