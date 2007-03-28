@@ -87,7 +87,7 @@ sub _renderData {
 			$record{ $request_string } = $obj->count_images();
 		}
 	}
-	# count_images:
+	# images_are_single_channel:
 	if( exists $field_requests->{ 'images_are_single_channel' } ) {
 		foreach my $request ( @{ $field_requests->{ 'images_are_single_channel' } } ) {
 			my $request_string = $request->{ 'request_string' };
