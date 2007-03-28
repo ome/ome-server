@@ -119,6 +119,8 @@ sub getPageBody {
 				downloadFilename => $title.'.tsv',
 				content          => $table,
 			});
+#			return ('TXT', $table );
+
 		} elsif( $q->param( 'no_decorations' ) ) {
 			return ('HTML-complete', 
 				$q->start_html.
@@ -932,6 +934,9 @@ sub __parseParams {
 	if( $q->param( $table_id.'_OrderBy' ) and $q->param( $table_id.'_OrderBy' ) ne '' ) {
 		$orderBy = $q->param( $table_id.'_OrderBy' );
 	}
+	if( exists $searchParams{ __order } ) {
+		$orderBy = $searchParams{ __order };
+	}
 
 	# get objects
 	if( $mode eq 'cgi' or $mode eq 'search' ) {
@@ -1051,6 +1056,17 @@ sub __get_CGI_search_params {
 		if (index ($param,$type) == 0) {
 			$param = substr ($param, length($type)+1);
 			undef $param if $param =~ /^_/;
+		} elsif( ($param eq '__order' ) || ($param eq '__distinct') ) {
+			if ($value =~ m/,/ ) {
+				$value = [ split( m/,/, $value ) ];
+			} else {
+				$value = [ $value ];
+			}
+			foreach (@$value) {
+				if( m/^~(.*)$/ ) {
+					$_ = '!'.$1;
+				}
+			}
 		} else {
 			undef $param;
 		}
