@@ -92,7 +92,6 @@ __PACKAGE__->newClass();
 __PACKAGE__->setDefaultTable('images');
 __PACKAGE__->setSequence('image_seq');
 __PACKAGE__->addPrimaryKey('image_id');
-__PACKAGE__->addColumn(image_id => 'image_id');
 __PACKAGE__->addColumn(image_guid => 'image_guid',{SQLType => 'varchar(256)'});
 __PACKAGE__->addColumn(name => 'name',
                        {
