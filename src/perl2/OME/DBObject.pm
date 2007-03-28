@@ -2594,6 +2594,10 @@ no warnings "uninitialized";
 							push @new_values, $value;
 						}
 						$operation = defined $value? $criterion->[0]: "is"; 
+						# Protection from factory->findObjectsLike() searches forcing a 'like' on a boolean column
+						# Identifying the terminal data type of a parameter string isn't simple to do.
+						# It seemed easier to do this correction here where sql_type already was identified.
+						$operation = "=" if( ( $sql_type eq 'boolean' ) && ( uc($operation) eq 'LIKE' ) ); 
 					} else {
 						$value = $criterion;
 						# Transliteration services to go from perl data syntax
@@ -2876,13 +2880,17 @@ no warnings "uninitialized";
 							if ($value =~ /^f(alse)?$|^0$/io) {$value = 'false';}
 							elsif ($value =~ /^t(rue)?$|^1$/io) {$value = 'true';}
 							elsif ( (not defined $value ) || ( $value eq '' ) ) { $value = 'null'; }
-							else {die "Illegal Boolean column value '$value'";}							
+							else {confess "Illegal Boolean column value '$value'";}
 						} elsif (UNIVERSAL::isa($value,"OME::DBObject") && ref($value)) {
 							$value = $value->id();
 						}
 						push @new_values, $value;
 					}
 					$operation = defined $value? $criterion->[0]: "is"; 
+					# Protection from factory->findObjectsLike() searches forcing a 'like' on a boolean column
+					# Identifying the terminal data type of a parameter string isn't simple to do.
+					# It seemed easier to do this correction here where sql_type already was identified.
+					$operation = "=" if( ( $sql_type eq 'boolean' ) && ( uc($operation) eq 'LIKE' ) ); 
 				} else {
 					$value = $criterion;
 					# Transliteration services to go from perl data syntax
