@@ -678,15 +678,33 @@ sub findObjects {
 
     # Let's accept a hash ref for the criteria, too.
     if (ref($criteria[0]) eq 'HASH') {
-    	# Make a COPY of the hash because __makeSelectSQL will delete some entries
-    	# from it.
-    	my %hash = %{ $criteria[0] };
+    	# Make a COPY of the hash & any arrays it may contain because 
+    	# __makeSelectSQL will delete some entries from it.
+    	my %hash;
+    	foreach my $key ( keys %{ $criteria[0] } ) {
+    		$hash{ $key } = ( 
+    			( ref( $criteria[0]->{ $key } ) && ( ref( $criteria[0]->{ $key } ) eq 'ARRAY' ) ) ?
+    			( [ @{ $criteria[0]->{ $key } } ] ) :
+    			$criteria[0]->{ $key }
+    		);
+    	}
         $criteria = \%hash;
-    } else {
+   } else {
         # Return undef if the criteria are not well-formed.
 	  return undef
           unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
         $criteria = {@criteria};
+    	# Make a COPY of the hash & any arrays it may contain because 
+    	# __makeSelectSQL will delete some entries from it.
+    	my %hash;
+    	foreach my $key ( keys %$criteria ) {
+    		$hash{ $key } = ( 
+    			( ref( $criteria->{ $key } ) && ( ref( $criteria->{ $key } ) eq 'ARRAY' ) ) ?
+    			( [ @{ $criteria->{ $key } } ] ) :
+    			$criteria->{ $key }
+    		);
+    	}
+        $criteria = \%hash;
     }
 
     __checkClass($class);
@@ -732,21 +750,39 @@ sub countObjects {
 
     # Let's accept a hash ref for the criteria, too.
     if (ref($criteria[0]) eq 'HASH') {
-    	# Make a COPY of the hash because __makeSelectSQL will delete some entries
-    	# from it.
-    	my %hash = %{ $criteria[0] };
+    	# Make a COPY of the hash & any arrays it may contain because 
+    	# __makeSelectSQL will delete some entries from it.
+    	my %hash;
+    	foreach my $key ( keys %{ $criteria[0] } ) {
+    		$hash{ $key } = ( 
+    			( ref( $criteria[0]->{ $key } ) && ( ref( $criteria[0]->{ $key } ) eq 'ARRAY' ) ) ?
+    			( [ @{ $criteria[0]->{ $key } } ] ) :
+    			$criteria[0]->{ $key }
+    		);
+    	}
         $criteria = \%hash;
     } else {
         # Return undef if the criteria are not well-formed.
         return undef
           unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
         $criteria = {@criteria};
+    	# Make a COPY of the hash & any arrays it may contain because 
+    	# __makeSelectSQL will delete some entries from it.
+    	my %hash;
+    	foreach my $key ( keys %$criteria ) {
+    		$hash{ $key } = ( 
+    			( ref( $criteria->{ $key } ) && ( ref( $criteria->{ $key } ) eq 'ARRAY' ) ) ?
+    			( [ @{ $criteria->{ $key } } ] ) :
+    			$criteria->{ $key }
+    		);
+    	}
+        $criteria = \%hash;
     }
 
     __checkClass($class);
     $class->require();
 
-    my ($sql,$ids_available,$values) =
+	my ($sql,$ids_available,$values) =
       $class->__makeSelectSQL('COUNT',$criteria);
     my $sth = $self->{__ourDBH}->prepare($sql);
 
