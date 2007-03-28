@@ -98,7 +98,10 @@
 	<font class="ome_relation_title">Images are arranged by <TMPL_VAR NAME=selected_category_group_ref>.</font>
 	To add a Category click on <TMPL_VAR NAME=selected_category_group_ref> and refresh this page when you are done.<br/>
 	<TMPL_IF NAME=downloadClassificationsAsTableURL>
-		<a href="<TMPL_VAR NAME=downloadClassificationsAsTableURL>">Download Classifications as table</a><br/>
+		<a href="<TMPL_VAR NAME=downloadClassificationsAsTableURL>">Download displayed Classifications as a table</a><br/>
+	</TMPL_IF>
+	<TMPL_IF NAME=downloadAllClassificationsAsTableURL>
+		<a href="<TMPL_VAR NAME=downloadAllClassificationsAsTableURL>">Download All Classifications as a table</a><br/>
 	</TMPL_IF>
 	<span class='ome_quiet'>Click the upper left quadrant of a thumbnail for image info. <br/> Click elsewhere to:
 	<input type="radio" name="thumb_click_opens" value='viewer' checked>Open Image Viewer
