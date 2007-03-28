@@ -223,11 +223,16 @@ sub pageURL {
 	} else {
 		$base_url = 'serve.pl'
 	}
-	my $url = $base_url."?Page=$page".
-		( $param ?
-		  '&'.join( '&', map( $_."=".$param->{$_}, keys %$param ) ) :
-		  ''
-		);
+	my $url = $base_url."?Page=$page";
+	if( $param ) {
+		if( ref( $param ) eq 'HASH' ) {
+			$url .= '&'.join( '&', map( $_."=".$param->{$_}, keys %$param ) );
+		} else {
+			for( my $i=0; $i < scalar( @$param ); $i+=2) {
+				$url .= '&'.$param->[$i]."=".$param->[$i+1];
+			}
+		}
+	}
 	# do url-escaping of most meta characters.
 	# The code snippet was obtained from http://glennf.com/writing/hexadecimal.url.encoding.html
 	my $MetaChars = quotemeta( ';,\|+)(*^%$#@!~`');
@@ -1091,34 +1096,48 @@ sub getSearchURL {
 	my @url_params;
 	# Parse search_params into something that is url-friendly
 	foreach my $search_field ( keys %search_params ) {
+		push( @url_params, "search_names", $search_field );
 		my $search_value = $search_params{ $search_field };
 		push( @url_params, $search_field );
 		# If the search value is an array, then they specified an 
 		# operation and we need to do special parsing.
-		# ex: owner => [ 'in', [ 1, 5, 889 ] ],
-		# ex: Max   => [ '>', 582 ], ...
 		if( ref( $search_value ) && ( ref( $search_value ) eq 'ARRAY' ) ) {
-			my $operation = $search_value->[0];
-			my $operand;
-			# Deal with an operand specification, where the value is an array
-			# ex: owner => [ 'in', [ 1, 5, 889 ] ], ...
-			if( ref( $search_value->[1] ) && 
-			    ( ref( $search_value->[1] ) eq 'ARRAY' ) ) {
-			    my @safe_search_vals = map( 
-					( UNIVERSAL::isa( $_, "OME::DBObject" ) ?
-					  $_->id :
-					  $_
-					), @{ $search_value->[1] } );
-				$operand = join( ',', @safe_search_vals );
-			# Deal with a simple operand specification, where the value is a 
-			# simple scalar
-			# ex: Max => [ '>', 582 ], ...
-			} else {
-				$operand = $search_value->[1];
-				$operand = $operand->id 
-					if( UNIVERSAL::isa( $operand, "OME::DBObject" ) );
+			# ex: __order => [ 'image.name', 'module_execution.id' ]
+			if( ( $search_field eq '__order' ) || ( $search_field eq '__distinct' ) ){
+				my @values;
+				foreach my $val( @{ $search_value } ) {
+					if( $val =~ m/^!/o ) {
+						$val =~ s/^!/~/o;
+					}
+					push( @values, $val );
+				}
+				push( @url_params, join( ',', @values ) );
 			}
-			push( @url_params, $operation." ".$operand );
+			# ex: owner => [ 'in', [ 1, 5, 889 ] ],
+			# ex: Max   => [ '>', 582 ], ...
+			else {
+				my $operation = $search_value->[0];
+				my $operand;
+				# Deal with an operand specification, where the value is an array
+				# ex: owner => [ 'in', [ 1, 5, 889 ] ], ...
+				if( ref( $search_value->[1] ) && 
+					( ref( $search_value->[1] ) eq 'ARRAY' ) ) {
+					my @safe_search_vals = map( 
+						( UNIVERSAL::isa( $_, "OME::DBObject" ) ?
+						  $_->id :
+						  $_
+						), @{ $search_value->[1] } );
+					$operand = join( ',', @safe_search_vals );
+				# Deal with a simple operand specification, where the value is a 
+				# simple scalar
+				# ex: Max => [ '>', 582 ], ...
+				} else {
+					$operand = $search_value->[1];
+					$operand = $operand->id 
+						if( UNIVERSAL::isa( $operand, "OME::DBObject" ) );
+				}
+				push( @url_params, $operation." ".$operand );
+			}
 		# It's easier if the search value is a simple scalar
 		} else {
 			$search_value = $search_value->id
@@ -1126,10 +1145,10 @@ sub getSearchURL {
 			push( @url_params, $search_value );
 		}
 	}
-	return $self->pageURL( 'OME::Web::Search', {
+	return $self->pageURL( 'OME::Web::Search', [
 		SearchType      => $formal_name, 
 		@url_params
-	} );
+	] );
 }
 
 =head2 getTableURL
@@ -1148,17 +1167,49 @@ sub getTableURL {
 		$self->_loadTypeAndGetInfo( $obj_type );
 	my %reformattedSearchParams;
 	foreach my $param ( keys %search_params ) {
-		if( ref( $search_params{ $param } ) eq 'ARRAY' ) {
-			if( $search_params{ $param }->[0] =~ m/^(like|ilike)$/ ) {
-				$reformattedSearchParams{ $formal_name.".".$param } = 
-					$search_params{ $param }->[1];
-			} elsif( $search_params{ $param }->[0] eq 'in' ) {
-				$reformattedSearchParams{ $formal_name.".".$param } = 
-					join( ',', @{ $search_params{ $param }->[1] } )
+		# If the search value is an array, then they specified an 
+		# operation and we need to do special parsing.
+		my $search_value = $search_params{ $param };
+		if( ref( $search_value ) && ( ref( $search_value ) eq 'ARRAY' ) ) {
+			# ex: __order => [ 'image.name', 'module_execution.id' ]
+			if( ( $param eq '__order' ) || ( $param eq '__distinct' ) ){
+				my @values;
+				foreach my $val( @{ $search_value } ) {
+					if( $val =~ m/^!/o ) {
+						$val =~ s/^!/~/o;
+					}
+					push( @values, $val );
+				}
+				$reformattedSearchParams{ $param } = 
+					join( ',', @values );
 			}
+			# Deal with field requests
+			elsif( $param eq '__fields' ) {
+				$reformattedSearchParams{ $formal_name."_".$param } = 
+					join( ',', @{ $search_params{ $param } } );
+			}
+			# ex: owner => [ 'in', [ 1, 5, 889 ] ],
+			# ex: Max   => [ '>', 582 ], ...
+			else {
+				if( $search_params{ $param }->[0] =~ m/^(like|ilike)$/ ) {
+					$reformattedSearchParams{ $formal_name.".".$param } = 
+						$search_params{ $param }->[1];
+				} elsif( $search_params{ $param }->[0] eq 'in' ) {
+					my @safe_search_vals = map( 
+						( UNIVERSAL::isa( $_, "OME::DBObject" ) ?
+						  $_->id :
+						  $_
+						), @{ $search_params{ $param }->[1] } );
+					$reformattedSearchParams{ $formal_name.".".$param } = 
+						join( ',', @safe_search_vals )
+				}
+			}
+		# It's easier if the search value is a simple scalar
 		} else {
 			$reformattedSearchParams{ $formal_name.".".$param } = 
 				$search_params{ $param };
+			$reformattedSearchParams{ $formal_name.".".$param } = $reformattedSearchParams{ $formal_name.".".$param }->id 
+				if( UNIVERSAL::isa( $reformattedSearchParams{ $formal_name.".".$param }, "OME::DBObject" ) );
 		}
 	}
 	return $self->pageURL( 'OME::Web::DBObjTable', {
