@@ -44,6 +44,8 @@ use OME::Session;
 use Log::Agent;
 use strict;
 
+our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';
+
 =head1 NAME
 
 OME::ImportExport::ModuleImport - Import an Analysis Module XML specification.
@@ -394,8 +396,12 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		my $executionInstructionsXML = $executionInstructionList[0];
 		eval( "use $module_type" );
 		die "module type $module_type cannot be loaded.\n$@" if $@;
+
+		$executionInstructionsXML->setNamespace($XSI_NAMESPACE, 'xsi' ,0);
+
 		my $modifiedEIs = $module_type->
 			validateAndProcessExecutionInstructions( $newProgram, $executionInstructionsXML );
+		
         $newProgram->execution_instructions( $modifiedEIs->toString() )
         	if $modifiedEIs;
 	}
