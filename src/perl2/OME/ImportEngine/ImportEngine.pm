@@ -346,19 +346,35 @@ sub importFiles {
 			}
 			
 			foreach $image (@$import_images) {
-				my $imageSHA1 = $image->default_pixels()->FileSHA1();
 			# Check for duplicate images
-                my $old_image = $factory->findObject('OME::Image', {
-					'default_pixels.FileSHA1' => $image->default_pixels()->FileSHA1(),
-					'id'                      => ['<>',$image->id()],
-					'__limit'                 => 1,
-				});
-				if ($old_image) {
-					logwarn 'Existing Image '.$old_image->name().' (ID='.$old_image->id().
-						') found with duplicate pixels while importing '.$image->name().
-						' (ID='.$image->id().').';
-                    push( @{ $self->{_duplicate_images} }, $old_image );
-
+				my @imgpix = $factory->findObjects('@Pixels',{
+				  image_id => $image->id(),
+				  __order => 'FileSHA1'});
+				my $duplicate=0;
+				# if more than one check internal duplicates.
+				for (my $cnt=0;$cnt < scalar (@imgpix) -1; $cnt++){
+					if ($imgpix[$cnt]->FileSHA1() == $imgpix[$cnt+1]->FileSHA1()) {
+						logwarn 'Duplicate Pixels for Image "'.$image->name().
+							'" (ID='.$image->id().').  Duplicate Pixels ID ='.
+							$imgpix[$cnt]->id();
+						$duplicate = 1;
+					}
+				}
+				# Look for other images with similar pixel
+				for (my $cnt=0;$cnt < scalar (@imgpix); $cnt++){
+				  my @otherpix = $factory->findObjects('@Pixels',{
+				  FileSHA1 => $imgpix[$cnt]->FileSHA1(),
+				  image_id => ['<>', $image->id()]});
+				  if (scalar @otherpix > 0) {
+				  	$duplicate = 1 ;
+                    push( @{ $self->{_duplicate_images} }, $otherpix[0]->image() );
+					logwarn 'Image with duplicate Pixels found for Image "'.$image->name().
+						'" (ID='.$image->id().").\nImage with duplicate pixels is '".
+						$otherpix[0]->image()->name()."' (ID=".$otherpix[0]->image()->id().
+						'). Duplicate pixels ID='.$otherpix[0]->id();
+					}
+				}
+				if ($duplicate) {
 				# Check the AllowDuplicates flag
                     if ($self->{_flags}->{AllowDuplicates}) {
                         logwarn("AllowDuplicates is on.\n");
