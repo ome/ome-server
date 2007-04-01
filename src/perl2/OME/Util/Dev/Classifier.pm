@@ -230,7 +230,8 @@ sub make_predictions {
 	# get prediction module	
 	my $prediction_node = $factory->findObject ("OME::AnalysisChain::Node",
 											analysis_chain => $prediction_chain,
-											'module.name' => ['like', 'WND-CHARM-Prediction%']);
+											'module.name' => ['like', 'WND-CHARM-Prediction%'])
+		or die "Chain (".$prediction_chain->name().") specified on the cmd-line with id ".$prediction_chainStr." is not a Prediction Chain";
 	
 	
 	# get dataset to run predictions on
@@ -394,7 +395,10 @@ sub compile_sigs {
 	die "one or more options not specified"
 		unless (($datasetStr and $chainStr) or $chex_id) and $output_file_name;
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
-	
+
+	my $session = $self->getSession();
+	my $factory = $session->Factory();
+
 	# open MATLAB connection
 	my $engine = OME::Matlab::Engine->openEngine()
 		or die "Cannot open a connection to Matlab! as user ".$environment->matlab_conf()->{USER};
@@ -403,10 +407,6 @@ sub compile_sigs {
 	die "The ome matlab user `".$environment->matlab_conf()->{USER}."` lacks permissions to write $output_file_name" unless
 		open (CHECK, ">$output_file_name");
 		
-	my $session = $self->getSession();
-	my $factory = $session->Factory();
-	
-	# sanity check
 	logdbg "debug", "loading chain and dataset";
 	
 	# get chex if appropriate
@@ -540,7 +540,7 @@ sub compile_sigs {
 		my @img_features = $img->all_features();
 		@img_features = sort {$a->id <=> $b->id} @img_features;
 		foreach my $feature (@img_features) {
-			# selecte the features made by this CHEX
+			# select the features made by this CHEX
 			my @attributes = @{OME::Tasks::ModuleExecutionManager->getAttributesForMEX($ROI_nex->module_execution(),
 																					   $ROI_FO->semantic_type(),
 																					   {feature =>$feature})};
@@ -563,12 +563,19 @@ sub compile_sigs {
 	############################################################################
 	# Figure out image classifications
 	############################################################################
-	my ($classifications, $category_numbers, $category_names) = 
-		get_classifications_and_category_numbers(\@features);
+	my ($img_to_classification, $category_group_to_row, $category_group_names, $category_to_number) = 
+		$self->get_classifications_and_category_numbers(\@features);
 		
-	my $category_names_array = OME::Matlab::Array->newStringArray($category_names);
-	$category_names_array->makePersistent();
+	my $category_group_names_array = OME::Matlab::Array->newStringArray($category_group_names);
+	$category_group_names_array->makePersistent();
 	
+	foreach my $cg_id (keys %$category_group_to_row) {
+		my @categories = $factory->findObjects ('@Category',
+												CategoryGroup => $cg_id);
+		foreach (@categories) {
+			$engine->eval("category_mappings {".($category_group_to_row->{$cg_id}+1)."}{".$category_to_number->{$_->id}."} = '".$_->Name."';");
+		}
+	}
 	############################################################################
 	# Compile the signature matrix
 	############################################################################
@@ -602,15 +609,14 @@ sub compile_sigs {
 	}
 			
 	# instantiate the matlab signature array. 
-	#	number of rows is the size of the signature vector plus one for the image classification.
+	#	number of rows is the size of the signature vector plus number of columns for the image classification.
 	#	number of columns is the number of image ROIs
-	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar(@signature_labels) + 1, scalar(@image_feature_paths));
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar(@signature_labels) + scalar(@$category_group_names),
+															  scalar(@image_feature_paths));
 	$signature_array->makePersistent();
 	
 	my $image_feature_number = 0;
-	my $category_row_index = scalar(@signature_labels); # what row in the signature matrix are classifications
 
-														# written to
 	foreach my $feature ( @features ) {
 		print "Compiling Sigs for Image ROI ".($image_feature_number+1)." of ".scalar(@image_feature_paths)." (Image Name: ".$feature->image->name.")\n"; 
 
@@ -635,6 +641,17 @@ sub compile_sigs {
 				}
 			}
 		}
+
+		# write image's classifications
+		my $image_classifications_ref = $img_to_classification->{$feature->image->id};
+		my @image_classifications = @$image_classifications_ref;
+		my $category_row_index = scalar(@signature_labels);
+		
+		foreach (@image_classifications) {
+			$signature_array->set($category_row_index+$category_group_to_row->{$_->Category->CategoryGroup->id},
+								  $image_feature_number,
+								  $category_to_number->{$_->Category->id});
+		}
 		$image_feature_number++;
 	}
 
@@ -643,13 +660,13 @@ sub compile_sigs {
 	############################################################################
 	logdbg "debug", "Saving the array to disk.";
 	
-	$engine->eval("global category_names_char_array");
-	$engine->putVariable('category_names_char_array',$category_names_array);
+	$engine->eval("global category_group_names_char_array");
+	$engine->putVariable('category_group_names_char_array',$category_group_names_array);
 	# Convert the rectangualar string array that has null terminated strings into a cell array.
 	# Cell arrays are easier to deal with for strings.
-	$engine->eval( "category_names=''; ".
-				   "for i=1:size( category_names_char_array, 1 ),".
-	               "category_names{i} = sprintf( '%s', category_names_char_array(i,:) ); ".
+	$engine->eval( "category_group_names=''; ".
+				   "for i=1:size( category_group_names_char_array, 1 ),".
+	               "category_group_names{i} = sprintf( '%s', category_group_names_char_array(i,:) ); ".
 	               "end;" );
 	               
 	$engine->eval("global signature_labels_char_array");
@@ -668,7 +685,7 @@ sub compile_sigs {
 	$engine->putVariable('signature_matrix',$signature_array);
 
 	$engine->eval( "dataset_name = '".$dataset->name()."';" );
-	$engine->eval( "save $output_file_name dataset_name category_names signature_labels signature_matrix image_paths;" );
+	$engine->eval( "save $output_file_name dataset_name category_group_names category_mappings signature_labels signature_matrix image_paths;" );
 	print "Saved signature matrix to file $output_file_name.\n";
 	$engine->close();
 	$engine = undef;
@@ -989,7 +1006,7 @@ ENDDESCRIPTION
 	$formal_input->setAttribute( 'Count', '!' );
 	$declaration->appendChild( $formal_input );
 	
-	my $formal_input = $doc->createElement( 'FormalInput');
+	$formal_input = $doc->createElement( 'FormalInput');
 	$formal_input->setAttribute( 'Name', 'Categories Used by Trained Classifier' );
 	$formal_input->setAttribute( 'SemanticTypeName', 'CategoriesUsed' );
 	$formal_input->setAttribute( 'Count', '+' );
@@ -1256,48 +1273,52 @@ ENDDESCRIPTION
 	$chainExport->exportFile ($chain_file, compression => 0 );
 }
 
-# I'm putting this in a separate function because the implementation
-# will probably change.
 sub get_classifications_and_category_numbers {
 	my ($proto, $features, $classification_mex) = @_;
 	logdbg "debug", "collecting image classifications.";
 	my $factory = OME::Session->instance()->Factory();
 	my %classifications;
 	my $category_group;
+
+	my %img_to_classifications;
+	
+	my %category_group_to_row;
+	my @category_group_names;
+	my $category_group_to_row_itr = 0;
+
+	my %category_group_next_category;
+	my %category_to_number;
+
 	foreach my $feature ( @$features ) {
 		my $image = $feature->image;
+		my @classification_list;
+
 		# If we were given a mex or list of mexes, then use it to find classifications
-		my @classification_list = ( $classification_mex ?
-			@{ OME::Tasks::ModuleExecutionManager->
-				getAttributesForMEX( $classification_mex, "Classification",
-					{image => $feature->image } 
-				) } :
-			$factory->findAttributes( 'Classification', image => $image )
-		);
-		if( scalar( @classification_list ) == 0 ) {
-			print STDERR "Could not find a classification for image ".$image->name()." (".$image->id.")\n";
-			$classifications{ $image->id } = undef;
-			next;
+		if (defined $classification_mex) {
+			@classification_list =	@{ OME::Tasks::ModuleExecutionManager->
+										getAttributesForMEX( $classification_mex, "Classification",image => $feature->image)};
+		} else {
+			@classification_list = $factory->findAttributes( 'Classification', image => $image );
 		}
-		die "More than one classification found for image id=".$image->id
-			unless scalar( @classification_list ) eq 1;
-		$category_group = $classification_list[0]->Category->CategoryGroup
-			unless $category_group;
-		die "Classification for image id=".$image->id." does not belong to the same category group as other images in this dataset."
-			unless $category_group->id eq $classification_list[0]->Category->CategoryGroup->id;
-		$classifications{ $image->id } = $classification_list[0];
+
+		$img_to_classifications { $image->id } = \@classification_list;
+
+		foreach my $classification (@classification_list) {
+			# does this classification introduce a new category group ?
+			if (not exists $category_group_to_row{$classification->Category->CategoryGroup->id}) {
+				$category_group_to_row{$classification->Category->CategoryGroup->id} = $category_group_to_row_itr++;
+				push (@category_group_names, $classification->Category->CategoryGroup->Name());
+				$category_group_next_category{$classification->Category->CategoryGroup->id} = 1;
+			}
+			
+			# does this classification introduce a new category
+			if (not exists $category_to_number{$classification->Category->id}) {
+				$category_to_number{$classification->Category->id} = $category_group_next_category{$classification->Category->CategoryGroup->id}++;
+			}
+		}
 	}
-	# map categories to category numbers
-	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
-	my %category_numbers;
-	my @category_names;
-	my $cn = 0;
-	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
-		$cn++;
-		$category_numbers{ $_->id } = $cn;
-		push(@category_names, $_->Name);
-	}
-	return (\%classifications, \%category_numbers, \@category_names);
+	
+	return (\%img_to_classifications, \%category_group_to_row, \@category_group_names, \%category_to_number);
 }
 
 sub get_next_LSID {
