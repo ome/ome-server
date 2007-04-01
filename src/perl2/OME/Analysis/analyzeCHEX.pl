@@ -8,7 +8,7 @@ my $session = OME::SessionManager->TTYlogin();
 my $factory = $session->Factory();
 
 my $chex = $factory->findObject( 'OME::AnalysisChainExecution',
-                                   id => 44 )
+                                   id => 46 )
     or die "Couldn't load CHEX";
 
 print "Loading Chain Execution's MEXs ...\n";
@@ -39,6 +39,7 @@ foreach my $mex (@MEXs) {
 				my @attributes = @{OME::Tasks::ModuleExecutionManager->getAttributesForMEX($mex, $fo->semantic_type(), {feature=>$feature})};
 				if (scalar @attributes == 0) {
 					print " [ERROR] MEX: '".$mex->id()."' Feature: '".$feature->name()."' FO: '".$fo->name(). "' has ".scalar(@attributes)." attributes\n";
+					$mex->status('ERROR');
 				} elsif (scalar @attributes == 1) {
 					print " [OK] MEX: '".$mex->id(). "' Feature: '".$feature->name()."' FO: '".$fo->name()."'\n";
 				} else {
@@ -55,6 +56,7 @@ foreach my $mex (@MEXs) {
 			;
 		}
 	}
+	$mex->storeObject();
 	print "\n";
 }
 
