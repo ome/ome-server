@@ -3,13 +3,26 @@ use strict;
 use OME::SessionManager;
 use OME::Factory;
 use OME::Tasks::ModuleExecutionManager;
+use OME::Tasks::ImageManager;
 
 my $session = OME::SessionManager->TTYlogin();
 my $factory = $session->Factory();
 
 my $chex = $factory->findObject( 'OME::AnalysisChainExecution',
-                                   id => 46 )
+                                   id => 65 )
     or die "Couldn't load CHEX";
+
+# find the NODE that produces ROIs
+my $ROI_node = $factory->findObject ("OME::AnalysisChain::Node",
+									analysis_chain => $chex->analysis_chain(),
+									'module.name' => 'Image 2D Tiled ROIs')
+or die "Couldn't find ROI producing node in chain";
+
+my $ROI_FO = $factory->findObject ("OME::Module::FormalOutput",
+									module => $ROI_node->module(),
+									name => "Image ROIs")
+or die "Couldn't find ROI Formal Output";
+
 
 print "Loading Chain Execution's MEXs ...\n";
 
@@ -19,19 +32,46 @@ my $i=0;
 foreach my $mex (@MEXs) {
 	print "Analyzing MEX ".$i++." of ".scalar(@MEXs);
 
-	my $image = $mex->image();
-
-	my @img_features = $image->all_features();
-	my $num_features = scalar(@img_features);
-
-	my @formal_outputs = $factory->findObjects('OME::Module::FormalOutput',
-											module => $mex->module()
-									);
 	# skip MEXs that are not finished
 	if ($mex->status ne 'FINISHED') { 
 		print " [SKIP]\n";
 		next;
 	}
+	
+	my $image = $mex->image();
+	
+	#
+	# figure out which MEX's features are relevent to this chain
+	#
+	my $originalFile = OME::Tasks::ImageManager->getImageOriginalFiles($image);
+	die "Image ".$_->name." doesn't have exactly one Original File"
+		if( ref( $originalFile ) eq 'ARRAY' );
+	
+	# get ROI Node execution
+	my $ROI_nex = $factory->findObject ("OME::AnalysisChainExecution::NodeExecution",
+										analysis_chain_execution => $chex,
+										analysis_chain_node => $ROI_node,
+										'module_execution.image' => $image,
+									   ) or die "couldn't load ROI NEX";
+	
+	my @img_features;
+	my @all_img_features = $image->all_features();
+	foreach my $feature (@all_img_features) {
+		# select the features made by this CHEX
+		my @attributes = @{OME::Tasks::ModuleExecutionManager->getAttributesForMEX($ROI_nex->module_execution(),
+																				   $ROI_FO->semantic_type(),
+																				   {feature =>$feature})};
+		my $attribute = $attributes[0];
+		next unless (defined $attribute); # i.e. this ROI wasn't made by this signature chain
+		
+		push @img_features, $feature;
+	}
+	
+	my @formal_outputs = $factory->findObjects('OME::Module::FormalOutput',
+									module => $mex->module()
+								);
+
+	my $num_features = scalar(@img_features);
 	foreach my $fo (@formal_outputs) {
 		my @all_attributes = @{OME::Tasks::ModuleExecutionManager->getAttributesForMEX($mex, $fo->semantic_type())};
 		if (scalar(@all_attributes) ne $num_features) {	
