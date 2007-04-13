@@ -499,7 +499,6 @@ The guts of this were written by Tomasz
 sub Pixels_to_MatlabArray {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
-	my $omeis_repository = $session->findRepository() or die "Couldn't retrieve repository";
 	
 	# Gather the actual input. It may be a Pixels or it may inherit from Pixels
 	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) )
@@ -566,7 +565,7 @@ sub Pixels_to_MatlabArray {
 	
 	# Open the connection to OMEIS, because we have to do that for all possible cases
 	my @inputs = ();
-	my $url = OME::Matlab::Array->newStringScalar($omeis_repository->ImageServerURL());
+	my $url = OME::Matlab::Array->newStringScalar($pixels->Repository->ImageServerURL());
 	push( @inputs, $url );
 	my @response = $_matlab_instances{ 'utility_or_engine' }->callMatlab( "openConnectionOMEIS", 1, scalar( @inputs ), @inputs );
 	
