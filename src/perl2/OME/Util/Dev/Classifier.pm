@@ -573,7 +573,8 @@ sub compile_sigs {
 		my @categories = $factory->findObjects ('@Category',
 												CategoryGroup => $cg_id);
 		foreach (@categories) {
-			$engine->eval("category_mappings {".($category_group_to_row->{$cg_id}+1)."}{".$category_to_number->{$_->id}."} = '".$_->Name."';");
+			$engine->eval("category_mappings {".($category_group_to_row->{$cg_id}+1)."}{".$category_to_number->{$_->id}."} = '".$_->Name."';")
+				if (exists $category_to_number->{$_->id});
 		}
 	}
 	############################################################################
@@ -615,11 +616,14 @@ sub compile_sigs {
 															  scalar(@image_feature_paths));
 	$signature_array->makePersistent();
 	
+	my $image_ids_array = OME::Matlab::Array->newNumericMatrix(1, scalar(@image_feature_paths), $mxUINT32_CLASS);
+	$image_ids_array->makePersistent();
+	
 	my $image_feature_number = 0;
-
 	foreach my $feature ( @features ) {
 		print "Compiling Sigs for Image ROI ".($image_feature_number+1)." of ".scalar(@image_feature_paths)." (Image Name: ".$feature->image->name.")\n"; 
-
+		$image_ids_array->set(0, $image_feature_number, $feature->image->id);
+		
 		my $sig_row = 0;
 		foreach my $sig_node (@signature_nodes) {
 			my $nex = $factory->findObject ("OME::AnalysisChainExecution::NodeExecution",
@@ -681,11 +685,14 @@ sub compile_sigs {
 	               "image_paths{i} = sprintf( '%s', image_paths_char_array(i,:) ); ".
 	               "end;" );
 
+	$engine->eval("global image_ids");
+	$engine->putVariable('image_ids',$image_ids_array);
+
 	$engine->eval("global signature_matrix");
 	$engine->putVariable('signature_matrix',$signature_array);
 
 	$engine->eval( "dataset_name = '".$dataset->name()."';" );
-	$engine->eval( "save $output_file_name dataset_name category_group_names category_mappings signature_labels signature_matrix image_paths;" );
+	$engine->eval( "save $output_file_name dataset_name category_group_names category_mappings signature_labels signature_matrix image_paths image_ids;" );
 	print "Saved signature matrix to file $output_file_name.\n";
 	$engine->close();
 	$engine = undef;
@@ -1277,18 +1284,13 @@ sub get_classifications_and_category_numbers {
 	my ($proto, $features, $classification_mex) = @_;
 	logdbg "debug", "collecting image classifications.";
 	my $factory = OME::Session->instance()->Factory();
-	my %classifications;
-	my $category_group;
-
+	
 	my %img_to_classifications;
 	
-	my %category_group_to_row;
-	my @category_group_names;
-	my $category_group_to_row_itr = 0;
-
-	my %category_group_next_category;
-	my %category_to_number;
-
+ 	my %categoryGroups;
+ 	my %categoryGroupsCategories;
+ 	
+	# iterate through all the features, mapping images to classifications
 	foreach my $feature ( @$features ) {
 		my $image = $feature->image;
 		my @classification_list;
@@ -1302,23 +1304,48 @@ sub get_classifications_and_category_numbers {
 		}
 
 		$img_to_classifications { $image->id } = \@classification_list;
-
+		
 		foreach my $classification (@classification_list) {
-			# does this classification introduce a new category group ?
-			if (not exists $category_group_to_row{$classification->Category->CategoryGroup->id}) {
-				$category_group_to_row{$classification->Category->CategoryGroup->id} = $category_group_to_row_itr++;
-				push (@category_group_names, $classification->Category->CategoryGroup->Name());
-				$category_group_next_category{$classification->Category->CategoryGroup->id} = 1;
+
+			my $cg_id = $classification->Category->CategoryGroup->id;
+			my $category_id = $classification->Category->id;
+		
+			if (not exists $categoryGroups{$cg_id}) {
+				$categoryGroups{$cg_id} = $classification->Category->CategoryGroup;
 			}
-			
-			# does this classification introduce a new category
-			if (not exists $category_to_number{$classification->Category->id}) {
-				$category_to_number{$classification->Category->id} = $category_group_next_category{$classification->Category->CategoryGroup->id}++;
+
+			if (not exists $categoryGroupsCategories{$cg_id}->{$category_id}) {
+				$categoryGroupsCategories{$cg_id}->{$category_id} =
+					$classification->Category;
 			}
 		}
 	}
+
+	# Use categoryGroups and categoryGroupsCategories to fill these structures out 
+	my @category_group_names;
+	my %category_group_to_row;
+	my %category_to_number;
 	
+	my @cg_ids = keys %categoryGroups;
+	@cg_ids = sort{$categoryGroups{$a}->Name() cmp $categoryGroups{$b}->Name()} @cg_ids;
+
+	my $row=0;
+	foreach my $cg_id (@cg_ids) {
+		push (@category_group_names,$categoryGroups{$cg_id}->Name());
+	
+		$category_group_to_row{$cg_id} = $row++;
+		
+		my @category_ids = keys %{$categoryGroupsCategories{$cg_id}};
+		@category_ids = sort{$categoryGroupsCategories{$cg_id}->{$a}->Name() cmp $categoryGroupsCategories{$cg_id}->{$b}->Name()} @category_ids;
+
+		my $category_number=1;
+		foreach (@category_ids) {
+			$category_to_number{$_} = $category_number++
+		}
+	}
+
 	return (\%img_to_classifications, \%category_group_to_row, \@category_group_names, \%category_to_number);
+
 }
 
 sub get_next_LSID {
