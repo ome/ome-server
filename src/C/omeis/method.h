@@ -96,4 +96,5 @@ get_method_by_name(char * m_name);
 #define M_GETENDIAN     66
 #define M_ISBIOFORMATS  67
 #define M_IMPORTBIOFORMATS  68
+#define M_FINDPIXELS    69
 

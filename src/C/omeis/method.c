@@ -55,6 +55,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "NewPixels") == 0) return M_NEWPIXELS;
 	if (strcmp(m_name, "PixelsInfo") == 0) return M_PIXELSINFO;
 	if (strcmp(m_name, "PixelsSHA1") == 0) return M_PIXELSSHA1;
+	if (strcmp(m_name, "FindPixels") == 0) return M_FINDPIXELS;	
 	if (strcmp(m_name, "SetPixels") == 0) return M_SETPIXELS;
 	if (strcmp(m_name, "GetPixels") == 0) return M_GETPIXELS;
 	if (strcmp(m_name, "FinishPixels") == 0) return M_FINISHPIXELS;

@@ -91,6 +91,7 @@ dispatch (char **param)
 	stackInfo *stackInfoP;
 	unsigned long uploadSize;
 	unsigned long length;
+	u_int8_t sha1[20];
 	OID fileID;
 	struct stat fStat;
 	FILE *file;
@@ -153,7 +154,8 @@ dispatch (char **param)
 		m_val != M_GETENDIAN     &&
 		m_val != M_ISBIOFORMATS     &&
 		m_val != M_IMPORTBIOFORMATS     &&
-		m_val != M_ZIPFILES) {
+		m_val != M_ZIPFILES &&
+		m_val != M_FINDPIXELS) {
 			OMEIS_ReportError (method, NULL, ID, "PixelsID Parameter missing");
 			return (-1);
 	}
@@ -275,6 +277,24 @@ dispatch (char **param)
 			freePixelsRep (thePixels);
 
 			break;
+		case M_FINDPIXELS:
+			if (! (theParam = get_param (param,"SHA1")) ) {
+				OMEIS_ReportError (method, NULL, ID, "SHA1 Parameter missing");
+				return (-1);
+			}
+			
+			if (strlen(theParam) != 40) {
+				OMEIS_ReportError (method, NULL, ID, "SHA1 Parameter is not 40 characters");
+				return (-1);
+			}
+			convert_md(theParam, sha1);
+			ID = sha1DB_get("Pixels/sha1DB.idx", sha1);
+			HTTP_ResultType ("text/plain");			
+			if (!ID)
+				fprintf(stdout, "0\n");
+			else			
+				fprintf (stdout,"%llu\n",(unsigned long long)ID);
+			break;
 		case M_FINISHPIXELS:
 			force = 0;
 			result = 0;
@@ -323,7 +343,7 @@ dispatch (char **param)
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%llu\n",(unsigned long long)thePixels->ID);
 			freePixelsRep (thePixels);
-
+			
 			break;
 		case M_GETPLANESSTATS:
 			if (!ID) return (-1);
