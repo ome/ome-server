@@ -1,4 +1,4 @@
-bin_PROGRAMS = omeis purge updateOMEIS
+bin_PROGRAMS = omeis purge updateOMEIS patch_sha1DB
 omeis_SOURCES = File.c Pixels.c OMEIS_Error.c auth.c cgi.c composite.c digest.c method.c \
 				omeis.c repository.c sha1DB.c xmlBinaryResolution.c \
 				xmlBinaryInsertion.c xmlIsOME.c base64.c b64z_lib.c archive.c\
@@ -11,6 +11,7 @@ purge_SOURCES = File.c Pixels.c OMEIS_Error.c auth.c cgi.c digest.c repository.c
 updateOMEIS_SOURCES = File.c Pixels.c OMEIS_Error.c auth.c cgi.c digest.c repository.c sha1DB.c \
 				 update.c update.h File.h Pixels.h OMEIS_Error.h auth.h cgi.h digest.h \
 				 repository.h omeis.h sha1DB.h updateOMEIS.c
+patch_sha1DB_SOURCES = patch_sha1DB.c OMEIS_Error.c digest.c sha1DB.c
 AM_CPPFLAGS = -DOMEIS_ROOT=\"$(OMEIS_ROOT)\" -Izoom/include @LIBXML2_CFLAGS@
 SUBDIRS = zoom t
 LDADD = @LIBXML2_LIBS@ zoom/lib/libzoom.a zoom/lib/libpic.a
