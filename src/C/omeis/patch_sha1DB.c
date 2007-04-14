@@ -1,6 +1,7 @@
 #include "Pixels.h"
 #include "sha1DB.h"
 #include "digest.h"
+#include "stdlib.h"
 
 /*
 	Under certain conditions, pixels were deleted but they still
@@ -15,7 +16,7 @@ int main (void)
 	OID ID=0;
 	u_int8_t sha1[20];
 	char sha1_str[40];
-	
+	chdir (OMEIS_ROOT);	
 	sprintf(sha1_str,"b587b611b4d781e7e90723ffe5acb877d0ea7687");
 	convert_md(sha1_str, sha1);
 	ID = sha1DB_get("Pixels/sha1DB.idx", sha1);
