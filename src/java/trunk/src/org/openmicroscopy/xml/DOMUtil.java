@@ -309,17 +309,17 @@ public abstract class DOMUtil {
   public static void setAttribute(String name, String value, Element el) {
     if (name == null || value == null || el == null) return;
 
-    // strip out null characters from the value
+    // strip out invalid characters from the value
     char[] v = value.toCharArray();
     int count = 0;
     for (int i=0; i<v.length; i++) {
-      if (v[i] != 0) count++;
+      if (!Character.isISOControl(v[i])) count++;
     }
     if (count < v.length) {
       char[] nv = new char[count];
       count = 0;
       for (int i=0; i<v.length; i++) {
-        if (v[i] != 0) nv[count++] = v[i];
+        if (!Character.isISOControl(v[i])) nv[count++] = v[i];
       }
       value = new String(nv);
     }
