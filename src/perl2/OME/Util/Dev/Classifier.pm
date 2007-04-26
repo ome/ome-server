@@ -469,8 +469,12 @@ sub compile_sigs {
 
 	logdbg "debug", "Computing labels for leaf-node names";
 	my @signature_nodes = $manager->findLeaves( $chain );
-	@signature_nodes = sort {$a->module->name cmp $b->module->name} @signature_nodes;
 	my @signature_node_names = $manager->createNodeTags(@signature_nodes);
+	
+	my @signature_node_indices = sort{$signature_node_names[$a] cmp $signature_node_names[$b]}0..$#signature_node_names;
+	@signature_node_names = @signature_node_names[@signature_node_indices];
+	@signature_nodes = @signature_nodes[@signature_node_indices];
+	
 	
 	# now that we have the signature_node_names, run through the signature_nodes again,
 	# this time adding FO ST and SE
@@ -957,12 +961,14 @@ sub stitch_prediction_chain {
 		$chain = $chains[ 0 ];
 	}
 	
-	my @signature_nodes = $manager->findLeaves( $chain );
-	@signature_nodes = sort {$a->module->name cmp $b->module->name} @signature_nodes;
-
 	# compute FI names that are going to be used in the prediction module
 	logdbg "debug", "Computing names for Formal Inputs to the Prediction module";
+	my @signature_nodes = $manager->findLeaves( $chain );
 	my @signature_node_names = $manager->createNodeTags (@signature_nodes);
+	
+	my @signature_node_indices = sort{$signature_node_names[$a] cmp $signature_node_names[$b]}0..$#signature_node_names;
+	@signature_node_names = @signature_node_names[@signature_node_indices];
+	@signature_nodes = @signature_nodes[@signature_node_indices];
 	
 	##############
 	# create signature module (xml)
@@ -1136,12 +1142,14 @@ sub stitch_training_chain {
 		$chain = $chains[ 0 ];
 	}
 	
-	my @signature_nodes = $manager->findLeaves( $chain );
-	@signature_nodes = sort {$a->module->name cmp $b->module->name} @signature_nodes;
-
 	# compute FI names that are going to be used in the trainer module
 	logdbg "debug", "Computing names for Formal Inputs to the Trainer module";
+	my @signature_nodes = $manager->findLeaves( $chain );
 	my @signature_node_names = $manager->createNodeTags (@signature_nodes);
+	
+	my @signature_node_indices = sort{$signature_node_names[$a] cmp $signature_node_names[$b]}0..$#signature_node_names;
+	@signature_node_names = @signature_node_names[@signature_node_indices];
+	@signature_nodes = @signature_nodes[@signature_node_indices];
 	
 	##############
 	# create signature module (xml)
