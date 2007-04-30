@@ -59,10 +59,10 @@
 	
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
-		   ModuleName="Otsu's Global Threshold"
+		   ModuleName="Otsu's Global Threshold (Foreground)"
 		   Category="Segmentation"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="OtsuGlobalThreshold"
+		   ProgramID="OtsuGlobalThresholdForeground"
 		   FeatureIterator="ROI"
 		   ID="urn:lsid:openmicroscopy.org:Module:7601">
 		  <Description>
@@ -99,5 +99,48 @@
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
+
+		<AnalysisModule
+		   ModuleName="Otsu's Global Threshold (Background)"
+		   Category="Segmentation"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="OtsuGlobalThresholdBackground"
+		   FeatureIterator="ROI"
+		   ID="urn:lsid:openmicroscopy.org:Module:7602">
+		  <Description>
+			Otsu's method chooses the threshold to minimize the intraclass variablitity of 
+			the black and white pixels.
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Pixels"
+				SemanticTypeName="DerivedPixels"
+				Count="!"/>
+			<FormalOutput
+				Name="Threshold Level"
+				SemanticTypeName="ThresholdLevel"
+				IBelongTo="[Iterator]"
+				Count="!"/>	
+			<FormalOutput
+				Name="Binary Mask"
+				SemanticTypeName="BinaryMask"
+				IBelongTo="[Iterator]" 
+				Count="!"/>
+		   </Declaration>
+		
+		   <ExecutionInstructions LibraryName="Segmentation" ExecutionGranularity="F" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><Scalar OutputLocation="Threshold Level.ThresholdLevel"/></Output>
+			  <!-- the output pixels are binary. However, we cannot encode binary images in OMEIS
+				   directly (i.e. as a single bit per pixel). We store them as 8 bit because 
+				   that's the most space-efficient allowable encoding mechanism.  -->
+			  <Output><PixelsArray FormalOutput="Binary Mask" ConvertToDatatype="uint8"/></Output>
+			</FunctionOutputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+		
 	</AML:AnalysisModuleLibrary>
 </OME>
