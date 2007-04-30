@@ -53,6 +53,29 @@ OME::DBObject->Caching(1);
 OME::DBObject->clearCache();
 
 my $CGI = CGI->new();
+
+# Global parameter bogosity tests
+my @params;
+@params = $CGI->param();
+my @values;
+my ($nvalue,$nvalues,$value,$name);
+foreach $name (@params) {
+	@values = $CGI->param($name);
+	$nvalues = scalar (@values);
+	for ($nvalue = 0; $nvalue < $nvalues; $nvalue++) {
+		# Cross-site scripting
+		# Clear everything between <script> and </script>
+		$values[$nvalue] =~ s/<script(.*?)<\/script>//isg;
+		# Clear verything after javascript:
+		$values[$nvalue] =~ s/javascript:.*$//isg;
+	}
+	if ($nvalues) {
+		$CGI->param($name,@values);
+	} else {
+		$CGI->param($name,$values[0]);
+	}
+}
+
 my $pageClass = $CGI->url_param("Page");
    if (! ($pageClass =~ m/^OME\:\:.*/)) {  # if pageClass doesn't start with "OME::"
       exit;
