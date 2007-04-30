@@ -29,7 +29,7 @@
 
 % This function returns the opposite binary mask as compared with
 % OtsuGlobalThresholdForeground
-function [level, outPixels] = OtsuGlobalThreshold(inPixels)
+function [level, outPixels] = OtsuGlobalThresholdBackground(inPixels)
 
 level = graythresh(inPixels);
 outPixels = im2bw (inPixels, 1-level);
