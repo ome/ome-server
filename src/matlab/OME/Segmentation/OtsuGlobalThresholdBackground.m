@@ -27,11 +27,9 @@
 % Written by:  Tom Macura <tmacura@nih.gov>
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-% This module produces binary images from intensity images by normalizing the 
-% image's pixel intensities to the [0,1] range and thresholding at the level
-% specified by Otsu's Method. Otsu's method chooses the threshold to minimize
-% the intraclass variablitity of the black and white pixels.
-function [level, outPixels] = OtsuGlobalThresholdForeground(inPixels)
+% This function returns the opposite binary mask as compared with
+% OtsuGlobalThresholdForeground
+function [level, outPixels] = OtsuGlobalThreshold(inPixels)
 
 level = graythresh(inPixels);
-outPixels = im2bw (inPixels, level);
+outPixels = im2bw (inPixels, 1-level);
