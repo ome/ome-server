@@ -1,5 +1,5 @@
 % SYNOPSIS
-%	[signature_vector signature_labels] = sig_chain_MATLAB_optimised (im); 
+%	[signature_vector signature_labels] = sig_chain_MATLAB(im); 
 % DESCRIPTION
 %	Compute CHARM feature vector on an image. 
 
@@ -41,7 +41,7 @@
 % [882-953]    10^-17 <16, 16> mb_zernike((im))
 % [954-1025]   10^-17 <16, 16> mb_zernike(FourierTransform((im)))
 
-function [signature_vector] = sig_chain_MATLAB_optimised (im); 
+function [signature_vector signature_labels] = sig_chain_MATLAB(im); 
 
 FrequencySpace2Pixels_FourierTransform_single_im = FrequencySpace2Pixels(FourierTransform(single(im)));
 ChebyshevTransform_single_im = ChebyshevTransform(single(im));
