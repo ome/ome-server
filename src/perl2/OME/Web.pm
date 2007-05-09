@@ -432,6 +432,12 @@ sub serve {
 		$content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" 
 		    . $content."\n";
 		print $content;
+	} elsif ($result eq 'XML-DOM' && defined $content) {
+	        $self->contentType('application/xml');
+		$headers->{-type} = $self->contentType();
+		print $self->CGI()->header(%{$headers});
+		$content->setEncoding( 'UTF-8' );
+		print $content->toString();
 	} elsif ($result eq 'IMAGE' && defined $content) {
 		print $self->CGI()->header(%{$headers});
 		print $content;
@@ -1180,8 +1186,8 @@ sub getTableURL {
 					}
 					push( @values, $val );
 				}
-				$reformattedSearchParams{ $param } = 
-					join( ',', @values );
+				$reformattedSearchParams{ $param } = join( ',', @values )
+					if( scalar( @values ) > 0 );
 			}
 			# Deal with field requests
 			elsif( $param eq '__fields' ) {
