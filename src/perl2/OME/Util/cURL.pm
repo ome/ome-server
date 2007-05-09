@@ -188,6 +188,7 @@ CURL *curl = NULL;
 		croak("Could not initialize cURL");
 
 	curl_easy_setopt(curl, CURLOPT_MUTE, 1);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "OME::Util::cURL");
 	
 	/* bless it into the class */
 	obj_ref = newSV(0);
