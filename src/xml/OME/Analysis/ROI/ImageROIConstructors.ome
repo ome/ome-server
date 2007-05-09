@@ -36,7 +36,7 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		<SemanticType Name="ROINumberOfTiles" AppliesTo="G">
 			<Description>
-			 This attribute is used to specifie to the ROI Tile 2D constructor
+			 This attribute is used to specify to the ROI Tile 2D constructor
 			 module how to tile the image into ROIs.
 			</Description>
 			<Element
@@ -47,7 +47,29 @@
 				Name="NumOfVerticalTiles"
 				DBLocation="ROI_TILES.VERTICAL"
 				DataType="integer"/>
-		 	</SemanticType>
+		</SemanticType>
+		 	
+		<SemanticType Name="ROIPlane" AppliesTo="G">
+			<Description>
+			 This attribute is used to specify to the ROI Tile 2D constructor
+			 module which 2D planes of the image to tile. Thus planes with
+			 no signal can easily be ignored.
+			 
+			 theZ, theC, and theT enumerations start with 0.
+			</Description>
+			<Element
+				Name="theZ"
+				DBLocation="ROI_PLANE.THE_Z"
+				DataType="integer"/>
+			<Element
+				Name="theC"
+				DBLocation="ROI_PLANE.THE_C"
+				DataType="integer"/>
+			<Element
+				Name="theT"
+				DBLocation="ROI_PLANE.THE_T"
+				DataType="integer"/>
+		</SemanticType>
 	</SemanticTypeDefinitions>
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -119,6 +141,10 @@
 				<FormalInput
 					Name="Number of Tiles"
 					SemanticTypeName="ROINumberOfTiles"
+					Count="*"/>
+				<FormalInput
+					Name="Selected Planes"
+					SemanticTypeName="ROIPlane"
 					Count="*"/>
 				<FormalInput
 					Name="Pixels"

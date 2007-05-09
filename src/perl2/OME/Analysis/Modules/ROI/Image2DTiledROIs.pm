@@ -61,14 +61,36 @@ sub startImage {
 	my $start_time = [gettimeofday()];
     my $pixels = $self->getCurrentInputAttributes("Pixels")->[0];
     my @numOfTilesOptional = $self->getCurrentInputAttributes("Number of Tiles");
+    my @selectedPlanesOptional = $self->getCurrentInputAttributes("Selected Planes");
 
 	$mex->read_time(tv_interval($start_time));
 	$mex->execution_time(0);
 	$start_time = [gettimeofday()];
 	
-	for (my $z=0; $z<$pixels->SizeZ(); $z++) {
-		for (my $c=0; $c<$pixels->SizeC(); $c++) {
-			for (my $t=0; $t<$pixels->SizeT(); $t++) {
+	# parse @selectedPlaneOptional to limit the z,c,t s
+	my %z; my %c; my %t;
+	my @z; my @c; my @t;
+	if (scalar (@selectedPlanesOptional)) {
+		foreach (@selectedPlanesOptional) {
+			die "malformed ROI SelectedPlanes" unless
+				(defined($_->theZ()) and defined($_->theC()) and defined($_->theT()));
+			
+			$z{$_->theZ()}= undef;
+			$c{$_->theC()}= undef;
+			$t{$_->theT()}= undef;
+		}
+		@z = keys %z;
+		@c = keys %c;
+		@t = keys %t;
+	} else {
+		@z = (0 .. $pixels->SizeZ()-1);
+		@c = (0 .. $pixels->SizeC()-1);
+		@t = (0 .. $pixels->SizeT()-1);
+	}
+
+	foreach my $z (@z) {
+		foreach my $c (@c) {
+			foreach my $t (@t) {
 				# Make Tiles
 				if (scalar (@numOfTilesOptional) > 0) {
 				    my $numOfTiles = $numOfTilesOptional[0];    
@@ -79,7 +101,12 @@ sub startImage {
 					for (my $i=0; $i<$numOfTiles->NumOfHorizontalTiles(); $i++) {
 						for (my $j=0; $j<$numOfTiles->NumOfVerticalTiles(); $j++) {
 			
-							my $feature = $self->newFeature("2D Tile ROI $i $j",$image);
+							my $feature;
+							if (scalar (@z) or scalar (@c) or scalar (@t)) {
+								$feature = $self->newFeature("2D Tile ROI $i $j (z:$z c:$c t:$t)",$image);
+							} else {
+								$feature = $self->newFeature("2D Tile ROI $i $j",$image);
+							}
 							my $featureID = $feature->id();
 							
 							$self->newAttributes('Image ROIs',
@@ -100,7 +127,13 @@ sub startImage {
 						}
 					}
 				} else {
-					my $feature = $self->newFeature("2D ROI",$image);
+					my $feature;
+					if (scalar (@z) or scalar (@c) or scalar (@t)) {
+						$feature = $self->newFeature("2D ROI (z:$z c:$c t:$t)",$image);
+					} else{
+						$feature = $self->newFeature("2D ROI",$image);
+					}
+					
 					my $featureID = $feature->id();
 					$self->newAttributes('Image ROIs',
 										{
