@@ -188,6 +188,7 @@ CURL *curl = NULL;
 		croak("Could not initialize cURL");
 
 	curl_easy_setopt(curl, CURLOPT_MUTE, 1);
+	/* Apache's modsecurity requires a user agent string to be set */
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "OME::Util::cURL");
 	
 	/* bless it into the class */
