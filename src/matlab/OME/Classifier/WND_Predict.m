@@ -82,22 +82,26 @@ for query_index = 1:num_queries
 		(feature_max(features_used) - feature_min(features_used)) );
 	
 	% Calculate the weighted distance to each training record
+	use_records = [1:num_train_records];
 	for train_record_index = 1:num_train_records
 		dist(train_record_index) = sum( ...
 			feature_scores(features_used) .^2 .* ...
 			(query_vector - norm_train_matrix(features_used, train_record_index)').^2 ...
 		);
+		if( dist(train_record_index) < eps )
+			use_records = setdiff( [1:num_train_records], train_record_index );
+		end;
 	end
 	
 	% Calculate the 'similarity' to each training record 
 	% as an inverse exponential decay of the distances
-	similarity = dist .^ (-1 * exponent);
+	similarity = dist(use_records) .^ (-1 * exponent);
 	
 	% Calculate 'class similarity' by summing the similarities of each member of 
 	% the class. This implicitly assumes each class has equal representation in 
 	% the training set.
 	for tr_class_index = 1:num_tr_classes
-		class_instances = find( tr_class_vector == tr_class_index );
+		class_instances = find( tr_class_vector(use_records) == tr_class_index );
 		class_similarities( query_index, tr_class_index ) = ...
 			 sum( similarity( class_instances ) );
 	end;
