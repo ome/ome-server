@@ -149,6 +149,8 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use OME::Web::TemplateManager;
 
 my $NO_COLS='__NONE__';
+my $ENABLE_ROW_COLUMN_CHOICES = 0;
+my $ENABLE_CATEGORIES         = 0;
 
 sub new {
     my $proto =shift;
@@ -165,6 +167,8 @@ sub new {
     # the actual rows and columns
     $self->{rowEntries} = undef;
     $self->{colEntries} = undef;
+    # How many rows to show at once.
+    $self->{rowLimit}   = 10;
     #  mapping types from annotation sts to images.
     $self->{ImageMaps}  = undef;
 
@@ -301,13 +305,19 @@ sub getTableDetails {
 
     # populate the pull-downs.
     my $types = $self->getTypes($tmpl);
-    $self->getChoices(\%tmpl_data,$types);
 
-    $tmpl_data{'categoryGroups/render-list_of_options'}=
-	$self->getCategoryGroups($container);
+    if ($ENABLE_ROW_COLUMN_CHOICES != 0) {
+	$self->getChoices(\%tmpl_data,$types);
+    }
 
-    $tmpl_data{'categories/render-list_of_options'} = 
-	$self->getCategories($container);
+    if ($ENABLE_CATEGORIES!=0) {
+	$tmpl_data{'categoryGroups/render-list_of_options'}=
+	    $self->getCategoryGroups($container);
+	
+	$tmpl_data{'categories/render-list_of_options'} = 
+	    $self->getCategories($container);
+	$tmpl_data{HasCategories} = $ENABLE_CATEGORIES;
+    }
 
     # timer stuff.
     my $elapsed = tv_interval($start);
@@ -484,6 +494,7 @@ sub getChoices {
     }
     $tmpl_data->{Columns}=\@columns;
     $tmpl_data->{Rows}=\@rows;
+    $tmpl_data->{HasRowColumnChoice} = $ENABLE_ROW_COLUMN_CHOICES;
 }
 
 =head2 prepareCategoryGroups 
@@ -614,10 +625,9 @@ sub getCategories {
 =cut
 
 sub renderDims {
-    my $self = shift;
+    my ($self, $container, $tmpl_data, $types) = @_;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($container,$tmpl_data,$types) = @_;
     my $q = $container->CGI();
     my $rows = $self->{rows};
     my $columns = $self->{columns};
@@ -630,8 +640,10 @@ sub renderDims {
     # parameter, or it is a list of specific values.
     my $start = [gettimeofday()];
     my $rowPath = $types->{$rows};
-    ($root,$self->{rowEntries}) =
-	$self->getObjects($container,$rows,$rowPath);
+    my $pager_text;
+    ($root,$self->{rowEntries}, $pager_text) =
+		$self->getObjects($container,$rows,$rowPath, $self->{rowLimit});
+	$tmpl_data->{ pager_text } = $pager_text;
     $self->{rowValue} = $root if ($root);
 
     # same for columns.
@@ -712,14 +724,10 @@ sub renderDims {
 =cut
 
 sub getObjects {
-    my $self=shift;
-    my $container = shift;
+    my ($self, $container, $type, $paths, $pagingRowLimit) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
     my $q = $container->CGI();
-
-    my $type =shift; # type is Probe,EmbryoStage, etc.
-    my $paths = shift;
 
     if (!$type) { # if no type is specified, return a special
 		  # indicator
@@ -734,15 +742,24 @@ sub getObjects {
     my $root = $q->param($type) unless ($self->{rowSwitch} == 1);
 
     my $objsRef;
+    my $pager_text = '';
     if ($root) {
 	# get objects that match the root
 	# do single object - or some set of objects
 	$objsRef = $self->getRoots($typeST,$root);
     }
     else {
-	# get all of the given type.
-	my @objs = $factory->findObjects($typeST, {__order => 'id'});
-	$objsRef = \@objs;
+    	my $search_params = { __order => 'id' };
+    	if( $pagingRowLimit ) {
+ 			my $objCount = $factory->countObjects($typeST);
+ 			my $offset;
+   			($offset, $pager_text ) = $self->Renderer()->_pagerControl( 'RowPager', $objCount, $pagingRowLimit );
+   			$search_params->{ __limit }  = $pagingRowLimit;
+			$search_params->{ __offset } = $offset;
+		}
+		# get all of the given type.
+		my @objs = $factory->findObjects($typeST, $search_params);
+		$objsRef = \@objs;		
     }
 
     
@@ -754,7 +771,7 @@ sub getObjects {
     my $tree = $self->getTreeFromRootList($objsRef,@$paths);
     # convert that tree into an array,
     my $flatTree = $self->flattenTree($tree);
-    return ($root,$flatTree);
+    return ($root, $flatTree, $pager_text);
 }
 
 
@@ -777,18 +794,22 @@ sub getRoots {
     my @objs;
     my @roots = split(/,/,$rootList);
     my $obj;
+    my @someObjs;
     foreach my $root (@roots) {
-	undef $obj;
-	if ($root =~ /^\d+$/) {
-	    # load by id
-	    $obj = $factory->loadObject($type,$root);
-	}
-	else {
-	    $obj = $factory->findObject($type,Name=>$root);   
-	}
-	if ($obj) {
-	    push(@objs,$obj);
-	}
+		undef $obj;
+		if ($root =~ /^\d+$/) {
+			# load by id
+			$obj = $factory->loadObject($type,$root);
+			if ($obj) {
+			push(@objs,$obj);
+			}
+		}
+		else {
+			@someObjs = $factory->findObjects($type,Name=>['ilike',$root]);   # was just Name=>$root.
+			if (scalar(@someObjs)) {
+				push(@objs,@someObjs);
+			}
+		}    
     }
     return \@objs;
 }
