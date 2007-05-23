@@ -379,6 +379,12 @@
   
   <CustomAttributes>
     <EmbryoStage
+       ID="urn:lsid:foo.bar.com:EmbryoStage:456831">
+      <Name>Unfertilized Egg</Name>
+      <Description>Unfertilized Egg</Description>
+    </EmbryoStage>
+
+    <EmbryoStage
        ID="urn:lsid:foo.bar.com:EmbryoStage:456832">
       <Name>1-Cell</Name>
       <Description>Single Cell</Description>
@@ -409,77 +415,6 @@
       <Name>Blastocyst</Name>
       <Description>Blastocyst</Description>
     </EmbryoStage>
-
-    <ProbeType ID="urn:lsid:foo.bar.com:ProbeType:456860">
-      <Name>Sense</Name>
-      <Description>Sense</Description>
-    </ProbeType>
-
-
-    <ProbeType ID="urn:lsid:foo.bar.com:ProbeType:456861">
-      <Name>Antisense</Name>
-      <Description>Antisense</Description>
-    </ProbeType>
-
-    <Probe ID="urn:lsid:foo.bar.com:Probe:456961">
-      <Name>C0608A05-AS</Name>
-    </Probe>
-
-    <Probe ID="urn:lsid:foo.bar.com:Probe:456962">
-      <Name>C0608A05-S</Name>
-    </Probe>
-
-    <Probe ID="urn:lsid:foo.bar.com:Probe:45693">
-      <Name>C0234F10-AS</Name>
-    </Probe>
-
-    <Probe ID="urn:lsid:foo.bar.com:Probe:45694">
-      <Name>C0827H10-AS</Name>
-    </Probe>
-
-    <Probe ID="urn:lsid:foo.bar.com:Probe:45695">
-      <Name>H3014D06-AS</Name>
-    </Probe>
-
-    <Gene ID="urn:lsid:foo.bar.com:Gene:45702">
-      <Name>krt2-8</Name>
-    </Gene>
-
-    <Gene ID="urn:lsid:foo.bar.com:Gene:45704">
-      <Name>sp1</Name>
-    </Gene>
-
-    <Gene ID="urn:lsid:foo.bar.com:Gene:45706">
-      <Name>mizl</Name>
-    </Gene>
-
-    <Gene ID="urn:lsid:foo.bar.com:Gene:45713">
-      <Name>zfp219</Name>
-    </Gene>
-
-    <Strain ID="urn:lsid:foo.bar.com:Strain:000465">
-      <Name>HH1</Name>
-    </Strain>
-
-    <Strain ID="urn:lsid:foo.bar.com:Strain:000466">
-      <Name>HH2</Name>
-    </Strain>
-
-    <Strain ID="urn:lsid:foo.bar.com:Strain:000467">
-      <Name>HH3</Name>
-    </Strain>
-
-    <Strain ID="urn:lsid:foo.bar.com:Strain:000468">
-      <Name>HH4</Name>
-    </Strain>
-
-    <Strain ID="urn:lsid:foo.bar.com:Strain:000469">
-      <Name>HH5</Name>
-    </Strain>
-
-    <Strain ID="urn:lsid:foo.bar.com:Strain:000470">
-      <Name>HH6</Name>
-    </Strain>
 
   </CustomAttributes>
 </OME>
