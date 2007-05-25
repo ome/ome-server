@@ -5,61 +5,64 @@
       <Node NodeID="Original files" ProgramName="Original files"/>
       <Node NodeID="Image import" ProgramName="Image import"/>
       <Node NodeID="Image 2D Tiled ROIs" ProgramName="Image 2D Tiled ROIs" NewFeatureTag="ROI"/>
-      <Node NodeID="Multi-Scale Histograms" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
-      <Node NodeID="Gradient" ProgramName="Gradient" IteratorTag="ROI"/>
-      <Node NodeID="Edge Statistics" ProgramName="Edge Statistics" IteratorTag="ROI"/>
-      <Node NodeID="Haralick Textures 2D Rotation Invariant" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
       <Node NodeID="Radon Transform Statistics" ProgramName="Radon Transform Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Multi-Scale Histograms" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
       <Node NodeID="Wavelet Transform" ProgramName="Wavelet Transform" IteratorTag="ROI"/>
       <Node NodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels" ProgramName="WaveletCoefficientsLevel1 -&gt; DerivedPixels" IteratorTag="ROI"/>
-      <Node NodeID="Haralick Textures 2D Rotation Invariant 1" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
-      <Node NodeID="Tamura Textures 1" ProgramName="Tamura Textures" IteratorTag="ROI"/>
       <Node NodeID="Comb First 4 Moments 1" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
+      <Node NodeID="Haralick Textures 2D Rotation Invariant 1" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
       <Node NodeID="Multi-Scale Histograms 1" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
+      <Node NodeID="Tamura Textures 1" ProgramName="Tamura Textures" IteratorTag="ROI"/>
+      <Node NodeID="Gradient" ProgramName="Gradient" IteratorTag="ROI"/>
+      <Node NodeID="Edge Statistics" ProgramName="Edge Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Gabor Textures" ProgramName="Gabor Textures" IteratorTag="ROI"/>
+      <Node NodeID="Chebyshev Statistics" ProgramName="Chebyshev Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Haralick Textures 2D Rotation Invariant" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
       <Node NodeID="Fourier Transform" ProgramName="Fourier Transform" IteratorTag="ROI"/>
       <Node NodeID="FrequencySpace -&gt; DerivedPixels" ProgramName="FrequencySpace -&gt; DerivedPixels" IteratorTag="ROI"/>
       <Node NodeID="Radon Transform Statistics 1" ProgramName="Radon Transform Statistics" IteratorTag="ROI"/>
-      <Node NodeID="Chebyshev Statistics 1" ProgramName="Chebyshev Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Chebyshev Fourier Statistics 1" ProgramName="Chebyshev Fourier Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Haralick Textures 2D Rotation Invariant 2" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
       <Node NodeID="Zernike Polynomials 1" ProgramName="Zernike Polynomials" IteratorTag="ROI"/>
-      <Node NodeID="Multi-Scale Histograms 2" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
       <Node NodeID="Tamura Textures 2" ProgramName="Tamura Textures" IteratorTag="ROI"/>
+      <Node NodeID="Chebyshev Statistics 1" ProgramName="Chebyshev Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Multi-Scale Histograms 2" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
+      <Node NodeID="Comb First 4 Moments 2" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
       <Node NodeID="Chebyshev Transform 1" ProgramName="Chebyshev Transform" IteratorTag="ROI"/>
       <Node NodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels" ProgramName="ChebyshevCoefficientMatrix -&gt; DerivedPixels" IteratorTag="ROI"/>
-      <Node NodeID="Tamura Textures 3" ProgramName="Tamura Textures" IteratorTag="ROI"/>
       <Node NodeID="Multi-Scale Histograms 3" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
-      <Node NodeID="Comb First 4 Moments 3" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
-      <Node NodeID="Haralick Textures 2D Rotation Invariant 3" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
       <Node NodeID="Radon Transform Statistics 2" ProgramName="Radon Transform Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Comb First 4 Moments 3" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
+      <Node NodeID="Tamura Textures 3" ProgramName="Tamura Textures" IteratorTag="ROI"/>
+      <Node NodeID="Haralick Textures 2D Rotation Invariant 3" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
       <Node NodeID="Wavelet Transform 1" ProgramName="Wavelet Transform" IteratorTag="ROI"/>
       <Node NodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels 1" ProgramName="WaveletCoefficientsLevel1 -&gt; DerivedPixels" IteratorTag="ROI"/>
-      <Node NodeID="Haralick Textures 2D Rotation Invariant 4" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
-      <Node NodeID="Comb First 4 Moments 4" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
       <Node NodeID="Multi-Scale Histograms 4" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
       <Node NodeID="Tamura Textures 4" ProgramName="Tamura Textures" IteratorTag="ROI"/>
-      <Node NodeID="Haralick Textures 2D Rotation Invariant 2" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
-      <Node NodeID="Chebyshev Fourier Statistics 1" ProgramName="Chebyshev Fourier Statistics" IteratorTag="ROI"/>
-      <Node NodeID="Comb First 4 Moments 2" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
-      <Node NodeID="Gabor Textures" ProgramName="Gabor Textures" IteratorTag="ROI"/>
+      <Node NodeID="Haralick Textures 2D Rotation Invariant 4" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
+      <Node NodeID="Comb First 4 Moments 4" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
+      <Node NodeID="Comb First 4 Moments" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
       <Node NodeID="Tamura Textures" ProgramName="Tamura Textures" IteratorTag="ROI"/>
+      <Node NodeID="Otsu's Global Threshold (Foreground)" ProgramName="Otsu's Global Threshold (Foreground)" IteratorTag="ROI"/>
+      <Node NodeID="Object Statistics" ProgramName="Object Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Otsu's Global Threshold (Background)" ProgramName="Otsu's Global Threshold (Background)" IteratorTag="ROI"/>
+      <Node NodeID="Object Statistics 1" ProgramName="Object Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Chebyshev Fourier Statistics" ProgramName="Chebyshev Fourier Statistics" IteratorTag="ROI"/>
       <Node NodeID="Chebyshev Transform" ProgramName="Chebyshev Transform" IteratorTag="ROI"/>
       <Node NodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels 1" ProgramName="ChebyshevCoefficientMatrix -&gt; DerivedPixels" IteratorTag="ROI"/>
-      <Node NodeID="Haralick Textures 2D Rotation Invariant 5" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
-      <Node NodeID="Comb First 4 Moments 5" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
       <Node NodeID="Radon Transform Statistics 3" ProgramName="Radon Transform Statistics" IteratorTag="ROI"/>
-      <Node NodeID="Multi-Scale Histograms 5" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
       <Node NodeID="Tamura Textures 5" ProgramName="Tamura Textures" IteratorTag="ROI"/>
-      <Node NodeID="Otsu's Global Threshold" ProgramName="Otsu's Global Threshold" IteratorTag="ROI"/>
-      <Node NodeID="Object Statistics" ProgramName="Object Statistics" IteratorTag="ROI"/>
-      <Node NodeID="Comb First 4 Moments" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
-      <Node NodeID="Chebyshev Statistics" ProgramName="Chebyshev Statistics" IteratorTag="ROI"/>
+      <Node NodeID="Comb First 4 Moments 5" ProgramName="Comb First 4 Moments" IteratorTag="ROI"/>
+      <Node NodeID="Haralick Textures 2D Rotation Invariant 5" ProgramName="Haralick Textures 2D Rotation Invariant" IteratorTag="ROI"/>
+      <Node NodeID="Multi-Scale Histograms 5" ProgramName="Multi-Scale Histograms" IteratorTag="ROI"/>
       <Node NodeID="Zernike Polynomials" ProgramName="Zernike Polynomials" IteratorTag="ROI"/>
-      <Node NodeID="Chebyshev Fourier Statistics" ProgramName="Chebyshev Fourier Statistics" IteratorTag="ROI"/>
     </Nodes>
     <Links>
       <Link FromNodeID="Original files" FromOutputName="Files" ToNodeID="Image import" ToInputName="Files"/>
       <Link FromNodeID="Image import" FromOutputName="Pixels" ToNodeID="Image 2D Tiled ROIs" ToInputName="Pixels"/>
       <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Gradient" ToInputName="Pixels"/>
-      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Otsu's Global Threshold" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Otsu's Global Threshold (Foreground)" ToInputName="Pixels"/>
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Otsu's Global Threshold (Background)" ToInputName="Pixels"/>
       <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Fourier Transform" ToInputName="Pixels"/>
       <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Gabor Textures" ToInputName="Pixels"/>
       <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Zernike Polynomials" ToInputName="Pixels"/>
@@ -72,12 +75,12 @@
       <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Comb First 4 Moments" ToInputName="Pixels"/>
       <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Multi-Scale Histograms" ToInputName="Pixels"/>
       <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="Radon Transform Statistics" ToInputName="Pixels"/>
-      <Link FromNodeID="Gradient" FromOutputName="Gradient" ToNodeID="Edge Statistics" ToInputName="Gradient"/>
       <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels" ToInputName="Wavelet Coefficients Level 1"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels" FromOutputName="Pixels" ToNodeID="Tamura Textures 1" ToInputName="Pixels"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels" FromOutputName="Pixels" ToNodeID="Haralick Textures 2D Rotation Invariant 1" ToInputName="Pixels"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels" FromOutputName="Pixels" ToNodeID="Comb First 4 Moments 1" ToInputName="Pixels"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels" FromOutputName="Pixels" ToNodeID="Multi-Scale Histograms 1" ToInputName="Pixels"/>
+      <Link FromNodeID="Gradient" FromOutputName="Gradient" ToNodeID="Edge Statistics" ToInputName="Gradient"/>
       <Link FromNodeID="Fourier Transform" FromOutputName="Frequency Space" ToNodeID="FrequencySpace -&gt; DerivedPixels" ToInputName="Frequency Space"/>
       <Link FromNodeID="FrequencySpace -&gt; DerivedPixels" FromOutputName="Pixels" ToNodeID="Comb First 4 Moments 2" ToInputName="Pixels"/>
       <Link FromNodeID="FrequencySpace -&gt; DerivedPixels" FromOutputName="Pixels" ToNodeID="Zernike Polynomials 1" ToInputName="Pixels"/>
@@ -100,13 +103,14 @@
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Haralick Textures 2D Rotation Invariant 4" ToInputName="Pixels"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Comb First 4 Moments 4" ToInputName="Pixels"/>
       <Link FromNodeID="WaveletCoefficientsLevel1 -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Multi-Scale Histograms 4" ToInputName="Pixels"/>
+      <Link FromNodeID="Otsu's Global Threshold (Foreground)" FromOutputName="Binary Mask" ToNodeID="Object Statistics" ToInputName="Binary Mask"/>
+      <Link FromNodeID="Otsu's Global Threshold (Background)" FromOutputName="Binary Mask" ToNodeID="Object Statistics 1" ToInputName="Binary Mask"/>
       <Link FromNodeID="Chebyshev Transform" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels 1" ToInputName="Chebyshev Coefficient Matrix"/>
       <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Tamura Textures 5" ToInputName="Pixels"/>
       <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Haralick Textures 2D Rotation Invariant 5" ToInputName="Pixels"/>
       <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Comb First 4 Moments 5" ToInputName="Pixels"/>
       <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Multi-Scale Histograms 5" ToInputName="Pixels"/>
       <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; DerivedPixels 1" FromOutputName="Pixels" ToNodeID="Radon Transform Statistics 3" ToInputName="Pixels"/>
-      <Link FromNodeID="Otsu's Global Threshold" FromOutputName="Binary Mask" ToNodeID="Object Statistics" ToInputName="Binary Mask"/>
     </Links>
   </AnalysisChain>
 </AnalysisChains>
