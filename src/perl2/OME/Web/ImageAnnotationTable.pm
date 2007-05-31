@@ -958,37 +958,36 @@ sub flattenTree {
 
     #recursion
     foreach my $key (keys %$tree) {
-	my $val = $tree->{$key};
-	if (defined $val) {
-	    # recurse - flatten the values
-	    my $valRows = $self->flattenTree($val);
-	    
-	    # for each val in valrows, 
-	    # add key to the front
-	    foreach my $valRow (@$valRows) {
-		unshift @$valRow,$key;
-		push @rows,$valRow;
-	    }
+		my $val = $tree->{$key};
+		if (defined $val) {
+			# recurse - flatten the values
+			my $valRows = $self->flattenTree($val);
+			
+			# for each val in valrows, 
+			# add key to the front
+			foreach my $valRow (@$valRows) {
+				unshift @$valRow,$key;
+				push @rows,$valRow;
+			}
+		} else {
+			my  @valRow;
+			$valRow[0] = $key;
+			push (@rows,\@valRow);
+		}
 	}
-	else {
-	    my  @valRow;
-	    $valRow[0] = $key;
-	    push (@rows,\@valRow);
-	}
-    }
-    # sort the rows by id of first item.
-    my @sortedRows = sort sortByIdKey @rows;
+	# sort the rows by id of first item.
+	my @sortedRows = sort sortByIdKey @rows;
 
-    # strip the ids off of the items.
-    for (my $i = 0; $i < scalar(@sortedRows); $i++ ) {
-	my $ent = $sortedRows[$i];
-	for (my $j = 0; $j < scalar(@$ent); $j++) {
-	    my $val = $ent->[$j];
-	    #if ($val =~ m/([^_]*)__\d+/) {
-	    if ($val =~ m/(.*)__\d+/) {
-		$ent->[$j]=$1;
-	    }
-	}
+	# strip the ids off of the items.
+	for (my $i = 0; $i < scalar(@sortedRows); $i++ ) {
+		my $ent = $sortedRows[$i];
+		for (my $j = 0; $j < scalar(@$ent); $j++) {
+			my $val = $ent->[$j];
+			#if ($val =~ m/([^_]*)__\d+/) {
+			if ($val =~ m/(.*)__\d+/) {
+				$ent->[$j]=$1;
+			}
+		}
     }
 
     return \@sortedRows;
