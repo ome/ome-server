@@ -562,15 +562,19 @@ sub _pagerControl {
 	return () unless ( $obj_count and $limit );
 
 	# setup
+	my $numPages = POSIX::ceil( $obj_count / $limit );
 	my $q = $self->CGI();
 	my $currentPage = $q->param( $control_name.'__page_num' );
+	if( ( $currentPage =~ m/^\d+$/ ) && ( $currentPage > $numPages ) ) {
+		$currentPage = $numPages;
+		$q->param( $control_name.'__page_num', $currentPage );
+	}
 	unless( ( $currentPage ) && ( $currentPage =~ m/^\d+$/ ) ) {
 		$currentPage = 1;
 		$q->param( $control_name.'__page_num', $currentPage );
 	}
 		
 	my $offset = ( $currentPage - 1 ) * $limit;
-	my $numPages = POSIX::ceil( $obj_count / $limit );
 	$form_name = 'primary' unless( defined $form_name and $form_name ne '' );
 
 	# print "Results x-y of N"
@@ -772,8 +776,6 @@ sub renderData {
 						if $SQLtype eq 'boolean';
 					$record{ $request_string } = $self->_trim( $record{ $request_string }, $request )
 						if( $SQLtype =~ m/^varchar|text/ ); 
-					$record{ $request_string } = $self->__round( $record{ $request_string }, $request )
-						if( $SQLtype eq 'float' || $SQLtype eq 'double' );
 					$record{ $request_string } = $q->escapeHTML( $record{ $request_string } )
 						if exists $request->{ escape_html };
 				} elsif ($options->{text}) {
@@ -1122,48 +1124,8 @@ sub _trim {
 	return substr( $str, 0, $options->{ max_text_length } - 3 ).'...';
 }
 
-=head2 __round
 
-	$value = $self->__round( $value, $options );
-
-Package utility for rounding numeric values. It accepts either of the 
-following options
-
-If $options->{ roundTo } exists, and is defined, then the value will be rounded 
-to that number. e.g. 1 rounds to the nearest integer, 
-10 rounds to the nearest 10s place, .1 rounds to the nearest 10th, etc.
-
-If $options->{ sigDigit } exists, and is defined, then the value will be rounded 
-to that number of significant digits. e.g. 1 rounds to the nearest 10, 
-0 rounds to the nearest 1, -1 rounds to the nearest 10th, ...
-
-=cut
-
-sub __round {
-	my ($self, $value, $options ) = @_;
-	my $sig_digit;
-	if( ref( $options ) eq 'HASH' ) {
-		if( ( exists $options->{ roundTo } ) and
-		    ( defined $options->{ roundTo } ) and
-		    ( $options->{ roundTo } )
-		  ) {
-			$sig_digit = 1 / $options->{ roundTo }; #log( $options->{ roundTo } ) / log(10);
-		} elsif( ( exists $options->{ sigDigit } ) and
-			     ( defined $options->{ sigDigit } )
-		       ) { 
-			$sig_digit = 10 ** ( -1 * $options->{ sigDigit } );
-		}
-	}
-	return $value unless(
-		defined $sig_digit and 
-		defined $value
-	);
-	$value = (sprintf( "%d", ($value * $sig_digit + 0.5)) /  $sig_digit );
-	return $value;
-}
-
-
-=head2 _getLSIDmanager
+=Head2 _getLSIDmanager
 
 	my $lsidManager = $self->_getLSIDmanager();
 
@@ -1223,12 +1185,6 @@ use the count_* method, e.g.
 
 Standard Modifiers:
 	field/max_text_length-n : truncates the field length to max_text_length
-	floating_point_field/roundTo-x : rounds the datum to the nearest x. 
-		e.g. 1 rounds to the nearest integer, 10 rounds to the nearest 10s place, 
-		.1 rounds to the nearest 10th, etc.
-	floating_point_field/sigDigit-y : rounds the datum to y significant digits. 
-		e.g. 0 rounds to the nearest integer, 1 rounds to the nearest 10s place, 
-		-1 rounds to the nearest 10th, etc.
 	reference_field/render-mode: render the objects given by has_many_ref in the specified mode.
 		evaluates to a renderArray() call.
 	has_many_ref/render-mode: render the objects given by has_many_ref in the specified mode.
