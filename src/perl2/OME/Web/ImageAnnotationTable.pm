@@ -150,7 +150,7 @@ use OME::Web::TemplateManager;
 
 my $NO_COLS='__NONE__';
 my $ENABLE_ROW_COLUMN_CHOICES = 0;
-my $ENABLE_CATEGORIES         = 0;
+my $ENABLE_CATEGORIES         = 1;
 
 sub new {
     my $proto =shift;
@@ -397,7 +397,9 @@ sub getTableDetails {
       EmbryoStage => ('EmbryoStage','ImageEmbryoStage') }
   
     The return value is the reference to the hash.
+
 =cut
+
 sub getTypes {
 
     my $self= shift;
@@ -641,9 +643,8 @@ sub renderDims {
     my $start = [gettimeofday()];
     my $rowPath = $types->{$rows};
     my $pager_text;
-    ($root,$self->{rowEntries}, $pager_text) =
-		$self->getObjects($container,$rows,$rowPath, $self->{rowLimit});
-	$tmpl_data->{ pager_text } = $pager_text;
+    ($root,$self->{rowEntries}) =
+		$self->getObjects($container,$rows,$rowPath);
     $self->{rowValue} = $root if ($root);
 
     # same for columns.
@@ -651,40 +652,51 @@ sub renderDims {
     $colPath = $types->{$columns} if ($columns);
     
     ($root,$self->{colEntries}) = 
-	$self->getObjects($container,$columns,$colPath);
+		$self->getObjects($container,$columns,$colPath);
 
     my $elapsed = tv_interval($start);
-    $start = [gettimeofday()];    
+    $start      = [gettimeofday()];    
     # populate the cells with data in a hash.
     # activeRows returns a list of rows that have data,
     # active cols indicates columns
     my ($cells,$activeRows,$activeCols) =
-	$self->populateCells($types);
+		$self->populateCells($types);
+
+	# Implement paging of the rows
+	if( $self->{rowLimit} ) {
+		my $objCount = scalar( @$activeRows );
+		my ($offset, $pager_text ) = $self->Renderer()->_pagerControl( 'RowPager', $objCount, $self->{rowLimit} );
+		$activeRows = [ splice( @$activeRows, $offset, $self->{rowLimit} ) ];
+		$tmpl_data->{ pager_text } = $pager_text;
+	}
+
+
+
     $elapsed = tv_interval($start);
-    $start = [gettimeofday()];    
+    $start   = [gettimeofday()];    
     # if any data, populate the template
     if ($cells) {
-	$hasData=1;
-
-	# # of columns is the number of active columns + the 
-	# number of columns needed for row paths..
-	my $rowEntrySize = $self->getHeaderSize($self->{rowEntries});
-	$tmpl_data->{rowHeaderCount} = $rowEntrySize;
+		$hasData=1;
 	
-	# populate the headers of the columns
-	my $cHeaders = 
-	    $self->populateColumnHeaders($container,$activeCols,
-					 $rowEntrySize,$colPath);
-	$elapsed = tv_interval($start);
-	$start = [gettimeofday()];    
-	$tmpl_data->{columnHeaders} =$cHeaders if ($cHeaders);
-
-	# do the body.
-
-	my $body =
-	    $self->populateBody($container,$cells,$activeRows,
-				$activeCols,$rowPath);
-	$tmpl_data->{cells}=$body;
+		# # of columns is the number of active columns + the 
+		# number of columns needed for row paths..
+		my $rowEntrySize = $self->getHeaderSize($self->{rowEntries});
+		$tmpl_data->{rowHeaderCount} = $rowEntrySize;
+		
+		# populate the headers of the columns
+		my $cHeaders = 
+			$self->populateColumnHeaders($container,$activeCols,
+						 $rowEntrySize,$colPath);
+		$elapsed = tv_interval($start);
+		$start = [gettimeofday()];    
+		$tmpl_data->{columnHeaders} =$cHeaders if ($cHeaders);
+	
+		# do the body.
+	
+		my $body =
+			$self->populateBody($container,$cells,$activeRows,
+					$activeCols,$rowPath);
+		$tmpl_data->{cells}=$body;
     }
     $elapsed = tv_interval($start);
     return $hasData;
@@ -724,15 +736,15 @@ sub renderDims {
 =cut
 
 sub getObjects {
-    my ($self, $container, $type, $paths, $pagingRowLimit) = @_;
+    my ($self, $container, $type, $paths) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
     my $q = $container->CGI();
 
     if (!$type) { # if no type is specified, return a special
 		  # indicator
-	my @res= ($NO_COLS);
-	return (undef,\@res);
+		my @res = ($NO_COLS);
+		return (undef,\@res);
     }
 
     # load the type
@@ -742,21 +754,12 @@ sub getObjects {
     my $root = $q->param($type) unless ($self->{rowSwitch} == 1);
 
     my $objsRef;
-    my $pager_text = '';
     if ($root) {
-	# get objects that match the root
-	# do single object - or some set of objects
-	$objsRef = $self->getRoots($typeST,$root);
-    }
-    else {
+		# get objects that match the root
+		# do single object - or some set of objects
+		$objsRef = $self->getRoots($typeST,$root);
+    } else {
     	my $search_params = { __order => 'id' };
-    	if( $pagingRowLimit ) {
- 			my $objCount = $factory->countObjects($typeST);
- 			my $offset;
-   			($offset, $pager_text ) = $self->Renderer()->_pagerControl( 'RowPager', $objCount, $pagingRowLimit );
-   			$search_params->{ __limit }  = $pagingRowLimit;
-			$search_params->{ __offset } = $offset;
-		}
 		# get all of the given type.
 		my @objs = $factory->findObjects($typeST, $search_params);
 		$objsRef = \@objs;		
@@ -771,7 +774,7 @@ sub getObjects {
     my $tree = $self->getTreeFromRootList($objsRef,@$paths);
     # convert that tree into an array,
     my $flatTree = $self->flattenTree($tree);
-    return ($root, $flatTree, $pager_text);
+    return ($root, $flatTree);
 }
 
 
@@ -794,22 +797,26 @@ sub getRoots {
     my @objs;
     my @roots = split(/,/,$rootList);
     my $obj;
-    my @someObjs;
+    my @someObjs; # new
     foreach my $root (@roots) {
-		undef $obj;
-		if ($root =~ /^\d+$/) {
-			# load by id
-			$obj = $factory->loadObject($type,$root);
-			if ($obj) {
-			push(@objs,$obj);
-			}
-		}
-		else {
-			@someObjs = $factory->findObjects($type,Name=>['ilike',$root]);   # was just Name=>$root.
-			if (scalar(@someObjs)) {
-				push(@objs,@someObjs);
-			}
-		}    
+	undef $obj;
+	if ($root =~ /^\d+$/) {
+	    # load by id
+	    $obj = $factory->loadObject($type,$root);
+	    if ($obj) {
+		push(@objs,$obj);
+	    }
+	}
+	else {
+	    #$obj = $factory->findObject($type,Name=>['ilike',$root]);   # was just Name=>$root.
+	    @someObjs = $factory->findObjects($type,Name=>['ilike',$root]);   # was just Name=>$root.
+	    if (scalar(@someObjs)) {
+		push(@objs,@someObjs);
+	    }
+	}    
+	#if ($obj) {
+	#    push(@objs,$obj);
+	#}
     }
     return \@objs;
 }
@@ -857,11 +864,11 @@ sub getTreeFromRootList {
     shift @paths; # discard first type - root of list.
     my %tree;
     foreach my $obj (@$objs) {
-	my $name = $obj->Name();
-	my $id= $obj->id();
-	my $key = $name . "__" . $id;
-	my $subtree = $self->getTree($obj,@paths);
-	$tree{$key} = $subtree;
+		my $name    = $obj->Name();
+		my $id      = $obj->id();
+		my $key     = $name . "__" . $id;
+		my $subtree = $self->getTree($obj,@paths);
+		$tree{$key} = $subtree;
     }
     return \%tree;
 }
@@ -873,6 +880,7 @@ sub getTreeFromRootList {
     The workhorse that does the job of recursively building the tree
     starting from a given object and walking down the types given in path.
     for a given object.
+
 =cut
 
 sub getTree {
@@ -906,15 +914,15 @@ sub getTree {
     my @maps = $obj->$accessor;  # ie., ProbeGeneList.
     my %tree;
     foreach my $map (@maps) { # for each map
-	my $child = $map->$next; # follow the pointer to the next
-				# object (ie., ProbeGeneList->Probe)
-	if ($child) {
-	    my $name = $child->Name(); # get the name
-	    my $id = $child->id(); # and id 
-	    my $key = $name . "__" . $id; 
-	    # recurse.
-	    $tree{$key} = $self->getTree($child,@paths);   
-	}
+		my $child = $map->$next; # follow the pointer to the next
+					# object (ie., ProbeGeneList->Probe)
+		if ($child) {
+			my $name = $child->Name(); # get the name
+			my $id = $child->id(); # and id 
+			my $key = $name . "__" . $id; 
+			# recurse.
+			$tree{$key} = $self->getTree($child,@paths);   
+		}
     }
     return \%tree;
 }
@@ -934,8 +942,8 @@ sub getTree {
     This data is, of course, very redundant, but it is useful for
     populating table columns and headers.
 
-
 =cut
+
 sub flattenTree {
     my $self=shift;
     my $tree = shift;
@@ -1017,17 +1025,16 @@ sub sortByIdKey {
     rows/columns have data. Only those rows/columns with data will be
     drawn.
 
-    
-
 =cut
+
 sub populateCells {
-    my $self=shift;
+    my $self    = shift;
     my $session = $self->Session();
     my $factory = $session->Factory();
 
-    my ($types) = @_;
-    my $rowName= $self->{rows};
-    my $colName = $self->{columns};
+    my ($types)    = @_;
+    my $rowName    = $self->{rows};
+    my $colName    = $self->{columns};
     my $rowEntries = $self->{rowEntries};
     my $colEntries = $self->{colEntries};
     
@@ -1045,61 +1052,61 @@ sub populateCells {
 
     my $start;
     my $total;
-    foreach my $row (@$rowEntries) {
-	# this is the of objects that define the row. let's get the
-	# last item
-	my $rowLeaf = $row->[scalar(@$row)-1];
-
-	#thus, for example $rowLeaf is a probe
-	#my $rName = $rowLeaf->Name;
-	my $rName = $rowLeaf;
-
-	# hard-code some stuff in.
-	my %findHash;
-	$findHash{'__distinct'} = 'id';
-
-	# build up the query hash with values for all of the types  in
-	# the row  that have mapping for images.
-	$self->getImageAccessors(\%findHash,$rowTypes,$row);
-
-	# create a key that will uniquely identify this row.
-	my $rowKey  =  $self->getCellKey($row);
-
-	foreach my $col (@$colEntries) {
-	    
-	    # also look for those things that have been most recent.
-	    if (ref($col) eq 'ARRAY') { 
-                 # if columns specified, use them to get images.
-		$self->getImageAccessors(\%findHash,$colTypes,$col);
-	    }
-	    my @images =
-		$factory->findObjects('OME::Image',\%findHash);
-	    my $imagesRef = \@images;
-	    
-	    $imagesRef= $self->filterByPublicationStatus($imagesRef);
+	foreach my $row (@$rowEntries) {
+		# this is the of objects that define the row. let's get the
+		# last item
+		my $rowLeaf = $row->[scalar(@$row)-1];
 	
-	    if ($self->{Category} && $self->{CategoryGroup}) {
-		$imagesRef = $self->filterByCategory($imagesRef);
-	    }
-
-	    # if I find any, store them in double-hashed - keyed off
-	    # of row name and column name.
-	    # indicate when a row and column is active.
-	    if (@images && scalar(@$imagesRef) > 0) {
-		# key for referencing the column starts out as null
-		my  $colKey = $NO_COLS;
-		if (ref($col) eq 'ARRAY')  {
-		    # set it to the appropriate key if the columns exist.
-		    $colKey  = $self->getCellKey($col);
+		#thus, for example $rowLeaf is a probe
+		#my $rName = $rowLeaf->Name;
+		my $rName = $rowLeaf;
+	
+		# hard-code some stuff in.
+		my %findHash;
+		$findHash{'__distinct'} = 'id';
+	
+		# build up the query hash with values for all of the types  in
+		# the row  that have mapping for images.
+		$self->getImageAccessors(\%findHash,$rowTypes,$row);
+	
+		# create a key that will uniquely identify this row.
+		my $rowKey  =  $self->getCellKey($row);
+	
+		foreach my $col (@$colEntries) {
+			
+			# also look for those things that have been most recent.
+			if (ref($col) eq 'ARRAY') { 
+				# if columns specified, use them to get images.
+				$self->getImageAccessors(\%findHash,$colTypes,$col);
+			}
+			my @images =
+				$factory->findObjects('OME::Image',\%findHash);
+			my $imagesRef = \@images;
+			
+			$imagesRef= $self->filterByPublicationStatus($imagesRef);
+		
+			if ($self->{Category} && $self->{CategoryGroup}) {
+				$imagesRef = $self->filterByCategory($imagesRef);
+			}
+	
+			# if I find any, store them in double-hashed - keyed off
+			# of row name and column name.
+			# indicate when a row and column is active.
+			if (@images && scalar(@$imagesRef) > 0) {
+				# key for referencing the column starts out as null
+				my  $colKey = $NO_COLS;
+				if (ref($col) eq 'ARRAY')  {
+					# set it to the appropriate key if the columns exist.
+					$colKey  = $self->getCellKey($col);
+				}
+				$cells->{$rowKey}->{$colKey}  = $imagesRef;
+				$activeRows{$rowKey}=1;
+		
+				$activeColumns{$colKey} = 1;
+				$hasData =1;
+			}
 		}
-		$cells->{$rowKey}->{$colKey}  = $imagesRef;
-		$activeRows{$rowKey}=1;
-
-		$activeColumns{$colKey} = 1;
-		$hasData =1;
-	    }
 	}
-    }
     return (undef,undef,undef) if ($hasData == 0);
 
     my $aRows = $self->getActiveList($rowEntries,\%activeRows);
