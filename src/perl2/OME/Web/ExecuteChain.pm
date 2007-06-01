@@ -60,6 +60,7 @@ sub getPageTitle {
 }
 
 =head2 getLocation
+
 =cut
 
 sub getLocation {
@@ -68,88 +69,171 @@ sub getLocation {
 	return $template->output();
 }
 
+sub getAuthenticatedTemplate {
+    return OME::Web::TemplateManager->getActionTemplate('ExecuteChain.tmpl');
+}
+
+
 # Override's OME::Web
 sub getPageBody {
-	my $self = shift;
+	my ($self, $tmpl) = @_;
 	my $body = "";
 	my $session = $self->Session();
 	my $factory = $session->Factory();
-	my $cgi = $self->CGI();
+	my $q = $self->CGI();
 	
-	if( $cgi->param( 'executeChain' ) ) {
-		my $chain = $factory->loadObject( "OME::AnalysisChain", $cgi->param( 'chain_id' ) );
+	if( $q->param( 'action' )  && ( $q->param( 'action' ) eq 'executeChain' ) ) {
+		my $chain = $factory->loadObject( "OME::AnalysisChain", $q->param( 'chain_id' ) )
+			or die "Could not load dataset ".$q->param( 'Dataset' );
 	
-		# prompt for user inputs
+		# gather user inputs
 		my $cmanager = OME::Tasks::ChainManager->new($session);
-		my $user_input_list = $cmanager->getUserInputs($chain);		
-#		return ('HTML', $self->collect_user_inputs( $chain ) ) if ( scalar @$user_input_list );
-		
-		return ('HTML', "Cannot execute without a dataset selected" )
-			unless $session->dataset();
-		
-		# execute chain
-		my $doNotReuseResults = $cgi->param( 'ReExecuteChain' );
-		my $reuseResults = ($doNotReuseResults ? 0 : 1 );
-		OME::Fork->doLater ( sub {
-			OME::Analysis::Engine->executeChain(
-				$chain,$session->dataset,{ }, undef, 
-				ReuseResults => $reuseResults
-			) or die "Could not execute analysis chain";
-		} );
-		
-		# If we've made it this far, then there should be a task
-		# for the user to view. Forward them to the task page.
-		return( 'REDIRECT', $self->pageURL('OME::Web::TaskProgress') );
-
-	} else {
-		$body .= $self->printForm();
-	}
+		my $user_inputs = $self->collect_user_inputs( $chain );
+				
+		if( $q->param( 'Dataset' ) && defined $user_inputs ) {
+			my $dataset = $factory->loadObject( 'OME::Dataset', $q->param( 'Dataset' ) )
+				or die "Could not load dataset ".$q->param( 'Dataset' );
+			
+			# execute chain
+			my $doNotReuseResults = $q->param( 'ReExecuteChain' );
+			my $reuseResults = ($doNotReuseResults ? 0 : 1 );
+			OME::Fork->doLater ( sub {
+				OME::Analysis::Engine->executeChain(
+					$chain, $dataset, $user_inputs, undef, 
+					ReuseResults => $reuseResults
+				) or die "Could not execute analysis chain";
+			} );
+			
+			# If we've made it this far, then there should be a task
+			# for the user to view. Forward them to the task page.
+			return( 'REDIRECT', $self->pageURL('OME::Web::TaskProgress') );
+		}
+	} 
+	
+	$body .= $self->printForm($tmpl);
 
 	return ('HTML',$body);
 }
 
 sub printForm {
-	my $self = shift;
-	my $text = "";
-	my $session = $self->Session();
-	my $factory = $session->Factory();
-	my $cgi = $self->CGI();
-
-	my @chains = $factory->findObjects( "OME::AnalysisChain" );
-	
-	# filter out all chains with free inputs for now
+	my ($self, $tmpl) = @_;
+	my $session  = $self->Session();
+	my $factory  = $session->Factory();
+	my $q        = $self->CGI();
+	my $errorMsg = '';
 	my $cmanager = OME::Tasks::ChainManager->new($session);
-	my @chains_without_free_inputs;
-	foreach my $chain ( @chains ) {
-		my $user_input_list = $cmanager->getUserInputs($chain);
-		push( @chains_without_free_inputs, $chain )
-#			if scalar(@$user_input_list) eq 0;
-if( ( scalar(@$user_input_list) eq 0 ) ||
-    ( grep( (not $_->[2]->optional), @$user_input_list ) eq 0 ) );
-	}
-	@chains = @chains_without_free_inputs;
-	
-	my $labels;
-	%$labels = map{ $_->id() => $_->name() } @chains;
-	$text .= "<h2>Execute Analysis Chain</h2>";
-	$text .= $cgi->startform( { -name => 'primary' } );
-	$text .= $cgi->popup_menu( 
-		-name   => 'chain_id',
-		-labels => $labels,
-		-values => [keys %$labels],
-	);
-	$text .= '<br>'.$cgi->checkbox( -name => 'ReExecuteChain', -value => 1, -label => 'Re-Execute Chain' );
-	$text .= '<br>'.$cgi->submit(
-		-name  => 'executeChain',
-		-value => 'Execute Chain'
-	);
-	$text .= $cgi->endform;
 
-	return $text;
+	my $chain_id =  $q->param( 'chain_id' );
+	my ($submit, $user_inputs_mandatory, $user_inputs_optional);
+	if( $chain_id ) {
+		my $chain            = $factory->loadObject( 'OME::AnalysisChain', $chain_id );
+		my $user_input_list  = $cmanager->getUserInputs($chain);
+		foreach my $input ( @$user_input_list ) {
+			my ( $node, $module, $formal_input, $semantic_type ) = @$input;
+			my $fieldName = 'userInput'.$formal_input->id;
+			my ($package_name, $common_name, $formal_name, $ST) = 
+					$self->_loadTypeAndGetInfo( '@'.$semantic_type->name );
+			# Select
+			my $field = "<li>".
+				$self->Renderer()->render( $module, 'ref' ) . "." .
+				$self->Renderer()->render( $formal_input, 'ref' ) . 
+				( $formal_input->optional ? " (optional): " : " (required): " ) . 
+				$self->SearchUtil()->getObjectSelectionField( $formal_name, $fieldName, {
+					select_one  => !$formal_input->list,
+					list_length => 1,
+					max_elements_in_list => -1, 
+				} );
+			# or Create
+			my $create_link = $q->a( { 
+				-href => "javascript: creationPopup( '$formal_name','$fieldName' );"}, 
+						 "Create a new $common_name" );
+			$field .= " or " . $create_link . "</li>";
+
+			if( $formal_input->optional ) {
+				$user_inputs_optional .= $field;
+			} else {
+				$user_inputs_mandatory .= $field;
+			}
+		}
+		
+		# Gather user inputs, see if all mandatory ones are populated. 
+		my $user_inputs = $self->collect_user_inputs( $chain ) || {};
+		my @mandatory_inputs = grep( (not $_->[2]->optional), @$user_input_list );
+		foreach my $input ( @mandatory_inputs ) {
+			my ( $node, $module, $formal_input, $semantic_type ) = @$input;
+			if( !exists( $user_inputs->{ $formal_input->id } ) && $q->param( 'action' ) eq 'executeChain' ) {
+				$errorMsg .= "Input ".
+					$self->Renderer()->render( $module, 'ref' ) . "." .
+					$self->Renderer()->render( $formal_input, 'ref' ) . 
+					" must be filled out.<br/>\n";
+			}
+		}
+		
+		$submit = $q->button(
+			-value   => 'Execute Chain',
+			-onClick => "javascript: document.forms['primary'].elements['action'].value='executeChain'; document.forms['primary'].submit();"
+		);
+	} else {
+		$submit = $q->button(
+			-value   => 'Examine chain inputs',
+			-onClick => "javascript: document.forms['primary'].elements['action'].value='refresh'; document.forms['primary'].submit();"
+		);
+	}
+
+	$tmpl->param( {
+		error_msg     => $errorMsg, 
+		chooseChain   => $self->SearchUtil()->getObjectSelectionField( 'OME::AnalysisChain', 'chain_id', {
+			select_one  => 1,
+			list_length => 1,
+		} ). $q->checkbox( -name => 'ReExecuteChain', -value => 1, -label => 'Re-Execute Chain' ),
+		chooseDataset => $self->SearchUtil()->getObjectSelectionField( 'OME::Dataset', 'Dataset', {
+			default_obj => $session->dataset,
+			select_one  => 1,
+			list_length => 1,
+		} ),
+		mandatoryInputs => "<ul>".$user_inputs_mandatory."</ul>",
+		optionalInputs  => "<ul>".$user_inputs_optional."</ul>",
+		submit          => $submit
+	} );
+	my $html =
+		$q->startform( { -name => 'primary', 
+				 -enctype => 'multipart/form-data' } ).
+		$tmpl->output().
+		$q->hidden( -name => 'action' ).
+		$q->endform();
+
+	return $html;
 }
 
 sub collect_user_inputs {
-	return "This chain requires User inputs. User input collection is not yet supported."
+	my ($self, $chain) = @_;
+	my $session  = $self->Session();
+	my $factory  = $session->Factory();
+	my $q        = $self->CGI();
+	my $cmanager = OME::Tasks::ChainManager->new($session);
+	
+	my $user_inputs = {};
+	my $user_input_list  = $cmanager->getUserInputs($chain);
+	foreach my $input ( @$user_input_list ) {
+		my ( $node, $module, $formal_input, $semantic_type ) = @$input;
+		my $fieldName = 'userInput'.$formal_input->id;
+		if( $q->param( $fieldName ) ) {
+			my @object_ids = $q->param( $fieldName );
+			my %mexes = ();
+			foreach my $id ( @object_ids ) {
+				my $obj = $factory->loadObject( $semantic_type, $q->param( $fieldName ) )
+					or die "Could not loadObject( $semantic_type, \$q->param( $fieldName ) )";
+				$mexes{ $obj->module_execution_id } = $obj->module_execution;
+			}
+			$user_inputs->{ $formal_input->id } = [values %mexes]
+				if( scalar( keys %mexes ) > 0 );
+		}
+		if( ( not exists $user_inputs->{ $formal_input->id } ) && (not $formal_input->optional )) {
+			return undef;
+		}
+	}
+
+	return $user_inputs;
 }
 
 1;
