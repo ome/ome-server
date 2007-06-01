@@ -456,6 +456,7 @@ sub getTypes {
 }
 
 =head2 getChoices
+
     $self->getChoices(\%tmpl_data,$types);
 
     getChoices populates the Columns and Rows pull-down menus in the
@@ -467,6 +468,7 @@ sub getTypes {
         set that value to be selected
         
 =cut
+
 sub getChoices {
     my $self=shift;
     my $tmpl_data = shift;
@@ -642,7 +644,6 @@ sub renderDims {
     # parameter, or it is a list of specific values.
     my $start = [gettimeofday()];
     my $rowPath = $types->{$rows};
-    my $pager_text;
     ($root,$self->{rowEntries}) =
 		$self->getObjects($container,$rows,$rowPath);
     $self->{rowValue} = $root if ($root);
@@ -664,10 +665,33 @@ sub renderDims {
 
 	# Implement paging of the rows
 	if( $self->{rowLimit} ) {
-		my $objCount = scalar( @$activeRows );
+		# Make a list of primary rows (ex. one row per-gene rather than one row per-probe)
+		my %primaryIDs;
+		my @primaryRows;
+		foreach my $row ( @$activeRows ) {
+			if( !exists( $primaryIDs{ $row->[0] } ) ) {
+				$primaryIDs{ $row->[0] } = scalar( @primaryRows );
+			}
+			push( @{ $primaryRows[ $primaryIDs{ $row->[0] } ] }, $row );
+		}
+		
+		# Apply paging to the primary rows
+		my $objCount = scalar( @primaryRows );
 		my ($offset, $pager_text ) = $self->Renderer()->_pagerControl( 'RowPager', $objCount, $self->{rowLimit} );
-		$activeRows = [ splice( @$activeRows, $offset, $self->{rowLimit} ) ];
+		@primaryRows = splice( @primaryRows, $offset, $self->{rowLimit} );
 		$tmpl_data->{ pager_text } = $pager_text;
+		
+		# Convert that paging to the secondary rows
+		$activeRows = [];
+		foreach my $primaryRow( @primaryRows ) {
+			push( @$activeRows, @$primaryRow );
+		}
+		
+		# Alternately, one could use the code below to page over the secondary rows.
+#		my $objCount = scalar( @$activeRows );
+#		my ($offset, $pager_text ) = $self->Renderer()->_pagerControl( 'RowPager', $objCount, $self->{rowLimit} );
+#		$activeRows = [ splice( @$activeRows, $offset, $self->{rowLimit} ) ];
+#		$tmpl_data->{ pager_text } = $pager_text;
 	}
 
 
@@ -974,18 +998,18 @@ sub flattenTree {
 			$valRow[0] = $key;
 			push (@rows,\@valRow);
 		}
-	}
-	# sort the rows by id of first item.
-	my @sortedRows = sort sortByIdKey @rows;
+    }
+    # sort the rows by id of first item.
+    my @sortedRows = sort sortByIdKey @rows;
 
-	# strip the ids off of the items.
-	for (my $i = 0; $i < scalar(@sortedRows); $i++ ) {
+    # strip the ids off of the items.
+    for (my $i = 0; $i < scalar(@sortedRows); $i++ ) {
 		my $ent = $sortedRows[$i];
 		for (my $j = 0; $j < scalar(@$ent); $j++) {
 			my $val = $ent->[$j];
 			#if ($val =~ m/([^_]*)__\d+/) {
 			if ($val =~ m/(.*)__\d+/) {
-				$ent->[$j]=$1;
+			$ent->[$j]=$1;
 			}
 		}
     }
@@ -1114,6 +1138,7 @@ sub populateCells {
 }
 
 =head2 getCellKey
+
     my $key = $self->getCellKey($entry);
 
     The key for a cell is the concatenation of all of the names 
@@ -1258,21 +1283,21 @@ sub filterByCategory {
     item is returned in the resulting array.
 
 =cut
+
 sub getActiveList {
     my $self=shift;
     my ($items,$active) = @_;
     my @results;
     foreach my $entry (@$items) {
-	my $name;
-	if ($entry eq $NO_COLS) {
-	    # if we see the $NO_COLS marker, just use that name 
-	    #  to check the hash.
-	    $name = $entry;
-	}
-	else {
-	    $name = $self->getCellKey($entry);
-	}
-	push (@results,$entry) if ($active->{$name});
+		my $name;
+		if ($entry eq $NO_COLS) {
+			# if we see the $NO_COLS marker, just use that name 
+			#  to check the hash.
+			$name = $entry;
+		} else {
+			$name = $self->getCellKey($entry);
+		}
+		push (@results,$entry) if ($active->{$name});
     }
     return \@results;
 }
@@ -1398,7 +1423,9 @@ sub populateEmptyColumnHeaders {
 
     return the number of items that must be printed in the header for
     each row/column
+
 =cut
+
 sub getHeaderSize {
     my $self= shift;
     my $rowEntries = shift;
@@ -1417,6 +1444,7 @@ sub getHeaderSize {
     populateRow, which eventually renders all of the images.
     
 =cut
+
 my $renderArrayTime = 0;
 my $getTextForTime =0;
 
@@ -1435,39 +1463,37 @@ sub populateBody {
     my  @prev; # what's in the previously printed row.
     
     for (my $rowIndex= 0 ; $rowIndex <scalar(@$activeRows); $rowIndex++) {
-	my $row = $activeRows->[$rowIndex];
-	my %rowContents;
-	my @entries;
+		my $row = $activeRows->[$rowIndex];
+		my %rowContents;
+		my @entries;
+		
+		my  $same=1; # are we in same row as previous?
 	
-	my  $same=1; # are we in same row as previous?
-
-	# $i is the index - which field in the row.
-	for (my $i = 0; $i < scalar(@$row); $i++) {
-	    my $val = $row->[$i];
-	    if ( ($val && (!$prev[$i] || ($val ne $prev[$i])))
-		 || $same == 0) {
-		my %entry;
-		my $rowSpan = 
-		    $self->getRepeatCount($activeRows,$rowIndex,$i);
-		my $start=[gettimeofday()];
-		$entry{rowNameEntry} = $self->getTextFor($container,
-							 $val,
-							 $rowTypes->[$i]);
-		$getTextForTime += tv_interval($start);
-		$entry{rowNameSpan} = $rowSpan;
-		push(@entries,\%entry);
-
-		$prev[$i] = $val;
-		$same = 0;
-	    }
-	    else {
-		$same = 1;
-	    }
-	}
-	$rowContents{rowName} = \@entries;
-	$rowContents{rowCells} = 
-	    $self->populateRow($container,$cells,$row,$activeCols);
-	push (@cellRows,\%rowContents);
+		# $i is the index - which field in the row.
+		for (my $i = 0; $i < scalar(@$row); $i++) {
+			my $val = $row->[$i];
+			if ( ($val && (!$prev[$i] || ($val ne $prev[$i])))
+			 || $same == 0) {
+				my %entry;
+				my $rowSpan = $self->getRepeatCount($activeRows,$rowIndex,$i);
+				my $start=[gettimeofday()];
+				$entry{rowNameEntry} = $self->getTextFor($container,
+									 $val,
+									 $rowTypes->[$i]);
+				$getTextForTime += tv_interval($start);
+				$entry{rowNameSpan} = $rowSpan;
+				push(@entries,\%entry);
+		
+				$prev[$i] = $val;
+				$same = 0;
+			} else {
+				$same = 1;
+			}
+		}
+		$rowContents{rowName} = \@entries;
+		$rowContents{rowCells} = 
+			$self->populateRow($container,$cells,$row,$activeCols);
+		push (@cellRows,\%rowContents);
     }
     return \@cellRows;
 
