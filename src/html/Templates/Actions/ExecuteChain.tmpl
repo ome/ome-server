@@ -1,0 +1,20 @@
+<h1>Execute Analysis Chain</h1>
+<p class="ome_error"><TMPL_VAR NAME=error_msg></p>
+<ol>
+	<li>Choose an analysis chain <TMPL_VAR NAME=chooseChain>
+	</li>
+	<li>Choose a dataset on which to execute  <TMPL_VAR NAME=chooseDataset>
+	</li>
+	
+	<TMPL_IF NAME=mandatoryInputs>
+		<li>Fill out Mandatory chain inputs:<br/> <TMPL_VAR NAME=mandatoryInputs>
+		</li>
+	</TMPL_IF>
+	
+	<TMPL_IF NAME=optionalInputs>
+		<li>Fill out Optional chain inputs:<br/> <TMPL_VAR NAME=optionalInputs>
+		</li>
+	</TMPL_IF>
+	
+	<TMPL_VAR NAME=submit>
+</ol>
