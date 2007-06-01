@@ -832,7 +832,9 @@ sub executeChain {
 =head2 finishChainExecution
 
 	OME::Analysis::Engine->finishChainExecution($chex, $task);
+
 =cut
+
 sub finishChainExecution {
 	my $class = shift;
 	my ($chex, $task) = @_;
