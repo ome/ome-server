@@ -5,6 +5,4 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_RANLIB
 
-AC_CHECK_LIB(fftw3, fftw3_global_init)
-
 AC_OUTPUT(Makefile)
