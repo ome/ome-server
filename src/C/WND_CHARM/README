@@ -1,0 +1,4 @@
+Compile the libimfit.a library:
+./autogen.sh
+make
+
