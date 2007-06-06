@@ -219,14 +219,15 @@ sub collect_user_inputs {
 		my $fieldName = 'userInput'.$formal_input->id;
 		if( $q->param( $fieldName ) ) {
 			my @object_ids = $q->param( $fieldName );
-			my %mexes = ();
+			my @objects;
 			foreach my $id ( @object_ids ) {
 				my $obj = $factory->loadObject( $semantic_type, $q->param( $fieldName ) )
 					or die "Could not loadObject( $semantic_type, \$q->param( $fieldName ) )";
-				$mexes{ $obj->module_execution_id } = $obj->module_execution;
+				push( @objects, $obj );
 			}
-			$user_inputs->{ $formal_input->id } = [values %mexes]
-				if( scalar( keys %mexes ) > 0 );
+			$user_inputs->{ $formal_input->id } = 
+				OME::Tasks::ModuleExecutionManager->coalateInputs( \@objects )
+				if( scalar( @objects ) > 0 );
 		}
 		if( ( not exists $user_inputs->{ $formal_input->id } ) && (not $formal_input->optional )) {
 			return undef;
