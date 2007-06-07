@@ -848,7 +848,7 @@ sub createNodeTags {
 			next if ($cat_path =~ m/.*Slicers.*/);  # ignore slicer modules 
 			next if ($cat_path =~ m/.*Typecasts.*/); # ignore typecaster modules 
 
-			if (defined $_->module->location) {
+			if (defined $_->module->location and  $_->module->location ne "") {
 				$node_name = $_->module->location."($node_name)"
 			} else {
 				$node_name = $_->module->name."($node_name)"
