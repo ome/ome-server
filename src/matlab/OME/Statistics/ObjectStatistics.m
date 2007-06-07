@@ -46,6 +46,31 @@ NUM_BINS = 10;
 
 % Calculate number of contiguous regions in the image
 [ features, Count ] = bwlabel( BinaryMask );
+if (Count == 0)
+	Euler = nan;
+	Centroid = [nan nan];
+	
+	AreaMin    = 0;
+	AreaMax    = 0;
+	AreaMean   = 0;
+	AreaMedian = 0;
+	AreaVar    = nan;
+	AreaHist = ones(1,NUM_BINS)*nan;
+	
+	DistMin    = 0;
+	DistMax    = 0;
+	DistMean   = 0;
+	DistMedian = 0;
+	DistVar    = nan;
+	DistHist = ones(1,NUM_BINS)*nan;
+	
+	% Correctly set output type
+	Count    = uint16(Count);
+	Euler    = int32(Euler);
+	AreaHist = uint16(AreaHist);
+	DistHist = uint16(DistHist);
+	return;
+end
 
 % Calculate region properties. Use regionprops() if available. 
 % regionprops() came out in v 4.1 of the image processing toolbox
