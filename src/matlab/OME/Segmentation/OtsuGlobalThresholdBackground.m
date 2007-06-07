@@ -32,4 +32,4 @@
 function [level, outPixels] = OtsuGlobalThresholdBackground(inPixels)
 
 level = graythresh(inPixels);
-outPixels = im2bw (inPixels, 1-level);
+outPixels = 1-im2bw (inPixels,level);
