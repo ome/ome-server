@@ -519,9 +519,9 @@ sub compile_sigs {
 	my @image_feature_paths; # this is a 'path' to the image feature
 
 	# find the NODE that produces ROIs
-	my $ROI_node = $factory->findObject ("OME::AnalysisChain::Node",
+	my $ROI_node = $factory->findObjectLike ("OME::AnalysisChain::Node",
 										analysis_chain => $chain,
-										'module.name' => 'Image 2D Tiled ROIs')
+										'module.name' => "%Tiled ROI%")
 	or die "Couldn't find ROI producing node in chain";
 	
 	my $ROI_FO = $factory->findObject ("OME::Module::FormalOutput",
@@ -531,7 +531,7 @@ sub compile_sigs {
 	
 	foreach my $img (@images) {
 		my $originalFile = OME::Tasks::ImageManager->getImageOriginalFiles($img);
-		die "Image ".$_->name." doesn't have exactly one Original File"
+		$originalFile = $originalFile->[0]
 			if( ref( $originalFile ) eq 'ARRAY' );
 		
 		# get ROI Node execution
@@ -573,6 +573,7 @@ sub compile_sigs {
 	my $category_group_names_array = OME::Matlab::Array->newStringArray($category_group_names);
 	$category_group_names_array->makePersistent();
 	
+	$engine->eval("global category_mappings");	
 	foreach my $cg_id (keys %$category_group_to_row) {
 		my @categories = $factory->findObjects ('@Category',
 												CategoryGroup => $cg_id);
