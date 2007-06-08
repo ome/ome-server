@@ -12,3 +12,12 @@ libimfit_a_SOURCES = TrainingSet.cpp cmatrix.cpp signatures.cpp colors/FuzzyCalc
 	transforms/wavelet/Symlet5.cpp textures/haarlick/CVIPtexture.cpp textures/zernike/complex.cpp 
 
 AM_CPPFLAGS = -fPIC
+
+noinst_PROGRAMS=wndchrm
+
+wndchrm_SOURCES = wndchrm.cpp
+
+wndchrm_LDADD = -lm -ltiff -L. -limfit -lfftw3
+
+
+
