@@ -163,7 +163,7 @@ sub processFile{
 	# Use the master hash to write-out a tsv file
 	open (FILEOUT, "> $fn") or die "Couldn't open $fn for writing: $!\n";
 	my @array_cg_list = sort keys (%$cg_list);
-	print FILEOUT "Image.OriginalFile\t".join ("\t", @array_cg_list)."\n";
+	print FILEOUT "Image.FilePath\t".join ("\t", @array_cg_list)."\n";
 
 	foreach my $file (sort keys %master_hash) {
 		my $path = ( $useRelativePaths ? 
