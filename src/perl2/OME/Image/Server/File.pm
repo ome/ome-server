@@ -469,7 +469,28 @@ Note that making any subsequent server calls on this file will result in an erro
 
 sub delete {
     my $self = shift;
-    return OME::Image::Server->deleteFile($self->[REPOSITORY],$self->[FILE_ID]);
+    my $fileID;
+	
+	# N.B: why we have the eval? An OMEIS repository only allows deleteFile() 
+	# to be called from local (not remote) connections. After ome import uploads
+	# an image file that turns out to be of an unsupported format,
+	# it needs to remove the file from the image repository by calling this delete()
+	# function. If ome import uploaded the file to a remote OMEIS repository, then
+	# that file cannot be deleted (i.e. OME::Image::Server->deleteFile() dies hence this
+	# eval)
+	
+	# The longer term solution is a synchronization script that would be run locally on
+	# the remote OMEIS to delete the left-over Files/Pixels. This script would be
+	# written in perl, contain a list of OME servers this OMEIS services, connect via
+	# Postgress user authentication to each OME server (so to have super-user/full access
+	# to all Pixels/Files). The script would compare each FileID/PixelsID stored in OMEIS
+	# against OME servers and see which Pixels/Files are un-neccessary and delete them.
+    eval {
+    	$fileID = OME::Image::Server->deleteFile($self->[REPOSITORY],$self->[FILE_ID]);
+    };
+    warn $@ if $@;
+
+    return $fileID;
 }
 
 1;
