@@ -270,9 +270,13 @@ sub classifyColumnHeadings {
     foreach my $colHead (@$columnHeadings) {
 		if ($colHead eq "" or $colHead =~ m/#.*/) {
 			# skip columns without a heading or use the # character to comment-things out
-		} elsif ($colHead eq 'Image.OriginalFile' or $colHead eq 'Image.Name' or $colHead eq 'Image.id') {
-			push (@$ERRORoutput, "Only one image identifier (Image.OriginalFile or Image.Name or Image.id) column per spreadsheet is permitted.")
-			and return @$ERRORoutput if $imgCol;
+		} elsif ($colHead eq 'Image.FilePath' or
+			$colHead eq 'Image.OriginalFile' or # Image.OriginalFile is deprecated, use Image.FilePath
+			$colHead eq 'Image.FileSHA1' or
+			$colHead eq 'Image.Name' or
+			$colHead eq 'Image.id') {
+				push (@$ERRORoutput, "Only one image identifier (Image.FilePath, Image.FileSHA1, Image.Name or Image.id) column per spreadsheet is permitted.")
+					and return @$ERRORoutput if $imgCol;
 			$imgCol = $colCounter;
 		} elsif ($colHead eq 'Project') {
 			push (@$ERRORoutput, "Only one Project column per spreadsheet is permitted.")
@@ -291,7 +295,7 @@ sub classifyColumnHeadings {
     }
     
     die "This spreadsheet is lacking an image identifier column. The spreadsheet needs \n".
-    	"either a Image.OriginalFile, Image.Name, or Image.id column." if (not defined $imgCol);
+    	"either a Image.FilePath, Image.FileSHA1, Image.Name, or Image.id column." if (not defined $imgCol);
     	 
     return ($imgCol,$projCol,\%DatasetCols,\%STCols,\%CGCols);
 }
@@ -367,6 +371,7 @@ sub loadImage {
 
     if ( not $$images{$imageIdentifier} ) {
 		my @objects;
+		my @originalFiles;
 		
 		if ($$columnHeadings[$imgCol] eq 'Image.Name') {
 			@objects = $factory->findObjects 
@@ -374,12 +379,28 @@ sub loadImage {
 		} elsif ($$columnHeadings[$imgCol] eq 'Image.id') {
 			@objects = $factory->findObjects
 				( 'OME::Image', { id => "$imageIdentifier" } );
+		# Image.OriginalFile is deprecated.  Please use Image.FilePath
 		} elsif ($$columnHeadings[$imgCol] eq 'Image.OriginalFile') {
-			my $originalFile = $session->Factory->
-				  findAttribute("OriginalFile", {Path => "$imageIdentifier"});
-			$objects[0] = OME::Tasks::ImageManager->getImageByOriginalFile($originalFile)
-					if (defined $originalFile);
+			@originalFiles = $session->Factory->
+				  findAttributes("OriginalFile", {Path => "$imageIdentifier"});
+		} elsif ($$columnHeadings[$imgCol] eq 'Image.FilePath') {
+			@originalFiles = $session->Factory->
+				  findAttributes("OriginalFile", {Path => "$imageIdentifier"});
+		} elsif ($$columnHeadings[$imgCol] eq 'Image.FileSHA1') {
+			@originalFiles = $session->Factory->
+				  findAttributes("OriginalFile", {SHA1 => "$imageIdentifier"});
 		}
+		
+		# Get the unique Image IDs associated with the OriginalFIles
+		if (scalar (@originalFiles)) {
+			my %image_id_hash;
+			foreach (@originalFiles) {
+				my $img = OME::Tasks::ImageManager->getImageByOriginalFile($_);
+				%image_id_hash->{$img->ID()} = $img if $img;
+			}
+			@objects = values %image_id_hash;
+		}
+
 		
 		die "There are two images in the database with that name
 		$imageIdentifier. ". 
