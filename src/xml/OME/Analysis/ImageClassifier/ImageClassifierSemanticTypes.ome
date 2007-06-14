@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Lior Shamir <shamirl  (-at-) mail dot nih (.) gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+
+
+
+	
+
+    <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="ChebyshevFourierCoefficientHistogram_FFT" Parent="ChebyshevFourierCoefficientHistogram" AppliesTo="F" />
+		<SemanticType Name="ChebyshevCoefficientHistogram_FFT" Parent="ChebyshevCoefficientHistogram" AppliesTo="F" />
+		<SemanticType Name="Comb4Orient4MomentsHistogram_FFT" Parent="Comb4Orient4MomentsHistogram" AppliesTo="F" />
+		<SemanticType Name="Comb4Orient4MomentsHistogram_Chebyshev" Parent="Comb4Orient4MomentsHistogram" AppliesTo="F" />
+		<SemanticType Name="Comb4Orient4MomentsHistogram_ChebyshevFFT" Parent="Comb4Orient4MomentsHistogram" AppliesTo="F" />
+		<SemanticType Name="Comb4Orient4MomentsHistogram_Wavelet" Parent="Comb4Orient4MomentsHistogram" AppliesTo="F" />
+		<SemanticType Name="Comb4Orient4MomentsHistogram_WaveletFFT" Parent="Comb4Orient4MomentsHistogram" AppliesTo="F" />
+
+		<SemanticType Name="CoOcMat_AngularSecondMomentDif" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_ContrastDif" Parent="CoOcMat_Contrast" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_CorrelationDif" Parent="CoOcMat_Correlation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_VarianceDif" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMomentDif" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumAverageDif" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumVarianceDif" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumEntropyDif" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_EntropyDif" Parent="CoOcMat_Entropy" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_DifferenceEntropyDif" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_DifferenceVarianceDif" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelationDif" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+       
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelationDif" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficientDif" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+  
+		
+		<SemanticType Name="CoOcMat_AngularSecondMoment_FFT" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_Contrast_FFT" Parent="CoOcMat_Contrast" AppliesTo="F" />
+ 
+		<SemanticType Name="CoOcMat_Correlation_FFT" Parent="CoOcMat_Correlation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_Variance_FFT" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment_FFT" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_SumAverage_FFT" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SumVariance_FFT" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_SumEntropy_FFT" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_Entropy_FFT" Parent="CoOcMat_Entropy" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_DifferenceEntropy_FFT" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_DifferenceVariance_FFT" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_FFT" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_FFT" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_FFT" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_AngularSecondMomentDif_FFT" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_ContrastDif_FFT" Parent="CoOcMat_Contrast" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_CorrelationDif_FFT" Parent="CoOcMat_Correlation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_VarianceDif_FFT" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMomentDif_FFT" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumAverageDif_FFT" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumVarianceDif_FFT" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumEntropyDif_FFT" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_EntropyDif_FFT" Parent="CoOcMat_Entropy" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_DifferenceEntropyDif_FFT" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_DifferenceVarianceDif_FFT" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelationDif_FFT" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+       
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelationDif_FFT" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficientDif_FFT" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+  
+
+		<SemanticType Name="CoOcMat_AngularSecondMoment_Chebyshev" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_Contrast_Chebyshev" Parent="CoOcMat_Contrast" AppliesTo="F" />
+ 
+		<SemanticType Name="CoOcMat_Correlation_Chebyshev" Parent="CoOcMat_Correlation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_Variance_Chebyshev" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment_Chebyshev" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_SumAverage_Chebyshev" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SumVariance_Chebyshev" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_SumEntropy_Chebyshev" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_Entropy_Chebyshev" Parent="CoOcMat_Entropy" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_DifferenceEntropy_Chebyshev" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_DifferenceVariance_Chebyshev" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_Chebyshev" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_Chebyshev" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_Chebyshev" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_AngularSecondMomentDif_Chebyshev" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_ContrastDif_Chebyshev" Parent="CoOcMat_Contrast" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_CorrelationDif_Chebyshev" Parent="CoOcMat_Correlation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_VarianceDif_Chebyshev" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMomentDif_Chebyshev" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumAverageDif_Chebyshev" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumVarianceDif_Chebyshev" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumEntropyDif_Chebyshev" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_EntropyDif_Chebyshev" Parent="CoOcMat_Entropy" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_DifferenceEntropyDif_Chebyshev" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_DifferenceVarianceDif_Chebyshev" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelationDif_Chebyshev" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+       
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelationDif_Chebyshev" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficientDif_Chebyshev" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+  
+
+		<SemanticType Name="CoOcMat_AngularSecondMoment_ChebyshevFFT" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_Contrast_ChebyshevFFT" Parent="CoOcMat_Contrast" AppliesTo="F" />
+ 
+		<SemanticType Name="CoOcMat_Correlation_ChebyshevFFT" Parent="CoOcMat_Correlation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_Variance_ChebyshevFFT" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment_ChebyshevFFT" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_SumAverage_ChebyshevFFT" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SumVariance_ChebyshevFFT" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_SumEntropy_ChebyshevFFT" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_Entropy_ChebyshevFFT" Parent="CoOcMat_Entropy" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_DifferenceEntropy_ChebyshevFFT" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_DifferenceVariance_ChebyshevFFT" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_ChebyshevFFT" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_ChebyshevFFT" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_ChebyshevFFT" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_AngularSecondMomentDif_ChebyshevFFT" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_ContrastDif_ChebyshevFFT" Parent="CoOcMat_Contrast" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_CorrelationDif_ChebyshevFFT" Parent="CoOcMat_Correlation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_VarianceDif_ChebyshevFFT" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMomentDif_ChebyshevFFT" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumAverageDif_ChebyshevFFT" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumVarianceDif_ChebyshevFFT" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumEntropyDif_ChebyshevFFT" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_EntropyDif_ChebyshevFFT" Parent="CoOcMat_Entropy" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_DifferenceEntropyDif_ChebyshevFFT" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_DifferenceVarianceDif_ChebyshevFFT" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelationDif_ChebyshevFFT" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+       
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelationDif_ChebyshevFFT" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficientDif_ChebyshevFFT" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+  
+
+		<SemanticType Name="CoOcMat_AngularSecondMoment_Wavelet" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_Contrast_Wavelet" Parent="CoOcMat_Contrast" AppliesTo="F" />
+ 
+		<SemanticType Name="CoOcMat_Correlation_Wavelet" Parent="CoOcMat_Correlation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_Variance_Wavelet" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment_Wavelet" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_SumAverage_Wavelet" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SumVariance_Wavelet" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_SumEntropy_Wavelet" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_Entropy_Wavelet" Parent="CoOcMat_Entropy" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_DifferenceEntropy_Wavelet" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_DifferenceVariance_Wavelet" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_Wavelet" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_Wavelet" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_Wavelet" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_AngularSecondMomentDif_Wavelet" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_ContrastDif_Wavelet" Parent="CoOcMat_Contrast" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_CorrelationDif_Wavelet" Parent="CoOcMat_Correlation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_VarianceDif_Wavelet" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMomentDif_Wavelet" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumAverageDif_Wavelet" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumVarianceDif_Wavelet" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumEntropyDif_Wavelet" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_EntropyDif_Wavelet" Parent="CoOcMat_Entropy" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_DifferenceEntropyDif_Wavelet" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_DifferenceVarianceDif_Wavelet" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelationDif_Wavelet" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+       
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelationDif_Wavelet" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficientDif_Wavelet" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+  
+
+		<SemanticType Name="CoOcMat_AngularSecondMoment_WaveletFFT" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_Contrast_WaveletFFT" Parent="CoOcMat_Contrast" AppliesTo="F" />
+ 
+		<SemanticType Name="CoOcMat_Correlation_WaveletFFT" Parent="CoOcMat_Correlation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_Variance_WaveletFFT" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment_WaveletFFT" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+		<SemanticType Name="CoOcMat_SumAverage_WaveletFFT" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SumVariance_WaveletFFT" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_SumEntropy_WaveletFFT" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_Entropy_WaveletFFT" Parent="CoOcMat_Entropy" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_DifferenceEntropy_WaveletFFT" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_DifferenceVariance_WaveletFFT" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation_WaveletFFT" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation_WaveletFFT" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient_WaveletFFT" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_AngularSecondMomentDif_WaveletFFT" Parent="CoOcMat_AngularSecondMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_ContrastDif_WaveletFFT" Parent="CoOcMat_Contrast" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_CorrelationDif_WaveletFFT" Parent="CoOcMat_Correlation" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_VarianceDif_WaveletFFT" Parent="CoOcMat_Variance" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_InverseDifferenceMomentDif_WaveletFFT" Parent="CoOcMat_InverseDifferenceMoment" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumAverageDif_WaveletFFT" Parent="CoOcMat_SumAverage" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumVarianceDif_WaveletFFT" Parent="CoOcMat_SumVariance" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_SumEntropyDif_WaveletFFT" Parent="CoOcMat_SumEntropy" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_EntropyDif_WaveletFFT" Parent="CoOcMat_Entropy" AppliesTo="F" />
+   
+		<SemanticType Name="CoOcMat_DifferenceEntropyDif_WaveletFFT" Parent="CoOcMat_DifferenceEntropy" AppliesTo="F" />
+  
+		<SemanticType Name="CoOcMat_DifferenceVarianceDif_WaveletFFT" Parent="CoOcMat_DifferenceVariance" AppliesTo="F" />
+    
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelationDif_WaveletFFT" Parent="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="F" />
+       
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelationDif_WaveletFFT" Parent="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="F" />
+     
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficientDif_WaveletFFT" Parent="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="F" />
+  
+
+		<SemanticType Name="MultipleScaleHistograms_FFT" Parent="MultipleScaleHistograms" AppliesTo="F" />
+		<SemanticType Name="MultipleScaleHistograms_Chebyshev" Parent="MultipleScaleHistograms" AppliesTo="F" />
+		<SemanticType Name="MultipleScaleHistograms_ChebyshevFFT" Parent="MultipleScaleHistograms" AppliesTo="F" />
+		<SemanticType Name="MultipleScaleHistograms_Wavelet" Parent="MultipleScaleHistograms" AppliesTo="F" />
+		<SemanticType Name="MultipleScaleHistograms_WaveletFFT" Parent="MultipleScaleHistograms" AppliesTo="F" />
+		<SemanticType Name="RadonTransformStatistics_Chebyshev" Parent="RadonTransformStatistics" AppliesTo="F" />
+		<SemanticType Name="RadonTransformStatistics_ChebyshevFFT" Parent="RadonTransformStatistics" AppliesTo="F" />
+		<SemanticType Name="RadonTransformStatistics_FFT" Parent="RadonTransformStatistics" AppliesTo="F" />
+		<SemanticType Name="TamuraTextures_FFT" Parent="TamuraTextures" AppliesTo="F" />
+		<SemanticType Name="TamuraTextures_Chebyshev" Parent="TamuraTextures" AppliesTo="F" />
+		<SemanticType Name="TamuraTextures_ChebyshevFFT" Parent="TamuraTextures" AppliesTo="F" />
+		<SemanticType Name="TamuraTextures_Wavelet" Parent="TamuraTextures" AppliesTo="F" />
+		<SemanticType Name="TamuraTextures_WaveletFFT" Parent="TamuraTextures" AppliesTo="F" />
+		<SemanticType Name="ZernikeMoments_FFT" Parent="ZernikeMoments" AppliesTo="F" />
+	</SemanticTypeDefinitions>
+</OME>
