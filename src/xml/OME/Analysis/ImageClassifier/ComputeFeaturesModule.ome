@@ -1,0 +1,238 @@
+<?xml version="1.0"?>
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
+  <AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+    <AnalysisModule ModuleType="OME::Analysis::Modules::ImageClassifier::ComputeFeatures" Category="ImageClassifier" ID="urn:lsid:openmicroscopy.org:Module:1111111111121" ModuleName="ComputeFeatures" ProgramID="">
+      <Description>
+Builds a ComputeFeatures Module that implements the WND_CHARM image feature extraction.
+
+      </Description>
+      <Declaration>
+        <FormalInput Name="Pixels" SemanticTypeName="DerivedPixels" Count="!"/>
+                
+
+
+        <FormalOutput Name="FeatureCount" SemanticTypeName="FeatureCount" Count="!"/>
+        <FormalOutput Name="FeatureEuler" SemanticTypeName="FeatureEuler" Count="!"/>
+        <FormalOutput Name="FeatureCentroid" SemanticTypeName="FeatureCentroid" Count="!"/>
+        <FormalOutput Name="FeatureAreaMin" SemanticTypeName="FeatureAreaMin" Count="!"/>
+        <FormalOutput Name="FeatureAreaMax" SemanticTypeName="FeatureAreaMax" Count="!"/>
+        <FormalOutput Name="FeatureAreaMean" SemanticTypeName="FeatureAreaMean" Count="!"/>
+        <FormalOutput Name="FeatureAreaMedian" SemanticTypeName="FeatureAreaMedian" Count="!"/>
+        <FormalOutput Name="FeatureAreaVar" SemanticTypeName="FeatureAreaVar" Count="!"/>
+        <FormalOutput Name="FeatureAreaHist" SemanticTypeName="FeatureAreaHist" Count="!"/>
+        <FormalOutput Name="FeatureDistMin" SemanticTypeName="FeatureDistMin" Count="!"/>
+        <FormalOutput Name="FeatureDistMax" SemanticTypeName="FeatureDistMax" Count="!"/>
+        <FormalOutput Name="FeatureDistMean" SemanticTypeName="FeatureDistMean" Count="!"/>
+        <FormalOutput Name="FeatureDistMedian" SemanticTypeName="FeatureDistMedian" Count="!"/>
+        <FormalOutput Name="FeatureDistVar" SemanticTypeName="FeatureDistVar" Count="!"/>
+        <FormalOutput Name="FeatureDistHist" SemanticTypeName="FeatureDistHist" Count="!"/>
+        
+        <FormalOutput Name="EdgeArea" SemanticTypeName="EdgeArea" Count="!"/>
+        <FormalOutput Name="EdgeMagMean" SemanticTypeName="EdgeMagMean" Count="!"/>
+        <FormalOutput Name="EdgeMagMedian" SemanticTypeName="EdgeMagMedian" Count="!"/>
+        <FormalOutput Name="EdgeMagVar" SemanticTypeName="EdgeMagVar" Count="!"/>
+        <FormalOutput Name="EdgeMagHist" SemanticTypeName="EdgeMagHist" Count="!"/>
+        <FormalOutput Name="EdgeDirecMean" SemanticTypeName="EdgeDirecMean" Count="!"/>
+        <FormalOutput Name="EdgeDirecMedian" SemanticTypeName="EdgeDirecMedian" Count="!"/>
+        <FormalOutput Name="EdgeDirecVar" SemanticTypeName="EdgeDirecVar" Count="!"/>
+        <FormalOutput Name="EdgeDirecHist" SemanticTypeName="EdgeDirecHist" Count="!"/>
+        <FormalOutput Name="EdgeDirecHomo" SemanticTypeName="EdgeDirecHomo" Count="!"/>
+        <FormalOutput Name="EdgeDiffDirecHist" SemanticTypeName="EdgeDiffDirecHist" Count="!"/>
+        <FormalOutput Name="EdgeDirecMean" SemanticTypeName="EdgeDirecMean" Count="!"/>
+
+        <FormalOutput Name="GaborTextures" SemanticTypeName="GaborTextures" Count="!"/>
+
+        <FormalOutput Name="ChebyshevFourierCoefficientHistogram" SemanticTypeName="ChebyshevFourierCoefficientHistogram" Count="!"/>
+        <FormalOutput Name="ChebyshevCoefficientHistogram" SemanticTypeName="ChebyshevCoefficientHistogram" Count="!"/>
+        <FormalOutput Name="ChebyshevFourierCoefficientHistogram_FFT" SemanticTypeName="ChebyshevFourierCoefficientHistogram_FFT" Count="!"/>
+        <FormalOutput Name="ChebyshevCoefficientHistogram_FFT" SemanticTypeName="ChebyshevCoefficientHistogram_FFT" Count="!"/>
+
+        <FormalOutput Name="Comb4Orient4MomentsHistogram" SemanticTypeName="Comb4Orient4MomentsHistogram" Count="!"/>
+        <FormalOutput Name="Comb4Orient4MomentsHistogram_FFT" SemanticTypeName="Comb4Orient4MomentsHistogram_FFT" Count="!"/>
+        <FormalOutput Name="Comb4Orient4MomentsHistogram_Chebyshev" SemanticTypeName="Comb4Orient4MomentsHistogram_Chebyshev" Count="!"/>
+        <FormalOutput Name="Comb4Orient4MomentsHistogram_ChebyshevFFT" SemanticTypeName="Comb4Orient4MomentsHistogram_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="Comb4Orient4MomentsHistogram_Wavelet" SemanticTypeName="Comb4Orient4MomentsHistogram_Wavelet" Count="!"/>
+        <FormalOutput Name="Comb4Orient4MomentsHistogram_WaveletFFT" SemanticTypeName="Comb4Orient4MomentsHistogram_WaveletFFT" Count="!"/>
+
+        <FormalOutput Name="CoOcMat_AngularSecondMomentDif" SemanticTypeName="CoOcMat_AngularSecondMomentDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_ContrastDif" SemanticTypeName="CoOcMat_ContrastDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_CorrelationDif" SemanticTypeName="CoOcMat_CorrelationDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_VarianceDif" SemanticTypeName="CoOcMat_VarianceDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMomentDif" SemanticTypeName="CoOcMat_InverseDifferenceMomentDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverageDif" SemanticTypeName="CoOcMat_SumAverageDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVarianceDif" SemanticTypeName="CoOcMat_SumVarianceDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropyDif" SemanticTypeName="CoOcMat_SumEntropyDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_EntropyDif" SemanticTypeName="CoOcMat_EntropyDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropyDif" SemanticTypeName="CoOcMat_DifferenceEntropyDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVarianceDif" SemanticTypeName="CoOcMat_DifferenceVarianceDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelationDif" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelationDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelationDif" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelationDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficientDif" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficientDif" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMoment_FFT" SemanticTypeName="CoOcMat_AngularSecondMoment_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Contrast_FFT" SemanticTypeName="CoOcMat_Contrast_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Correlation_FFT" SemanticTypeName="CoOcMat_Correlation_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Variance_FFT" SemanticTypeName="CoOcMat_Variance_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMoment_FFT" SemanticTypeName="CoOcMat_InverseDifferenceMoment_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverage_FFT" SemanticTypeName="CoOcMat_SumAverage_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVariance_FFT" SemanticTypeName="CoOcMat_SumVariance_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropy_FFT" SemanticTypeName="CoOcMat_SumEntropy_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Entropy_FFT" SemanticTypeName="CoOcMat_Entropy_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropy_FFT" SemanticTypeName="CoOcMat_DifferenceEntropy_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVariance_FFT" SemanticTypeName="CoOcMat_DifferenceVariance_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelation_FFT" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelation_FFT" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficient_FFT" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMomentDif_FFT" SemanticTypeName="CoOcMat_AngularSecondMomentDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_ContrastDif_FFT" SemanticTypeName="CoOcMat_ContrastDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_CorrelationDif_FFT" SemanticTypeName="CoOcMat_CorrelationDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_VarianceDif_FFT" SemanticTypeName="CoOcMat_VarianceDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMomentDif_FFT" SemanticTypeName="CoOcMat_InverseDifferenceMomentDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverageDif_FFT" SemanticTypeName="CoOcMat_SumAverageDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVarianceDif_FFT" SemanticTypeName="CoOcMat_SumVarianceDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropyDif_FFT" SemanticTypeName="CoOcMat_SumEntropyDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_EntropyDif_FFT" SemanticTypeName="CoOcMat_EntropyDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropyDif_FFT" SemanticTypeName="CoOcMat_DifferenceEntropyDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVarianceDif_FFT" SemanticTypeName="CoOcMat_DifferenceVarianceDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelationDif_FFT" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelationDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelationDif_FFT" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelationDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficientDif_FFT" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficientDif_FFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMoment_Chebyshev" SemanticTypeName="CoOcMat_AngularSecondMoment_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_Contrast_Chebyshev" SemanticTypeName="CoOcMat_Contrast_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_Correlation_Chebyshev" SemanticTypeName="CoOcMat_Correlation_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_Variance_Chebyshev" SemanticTypeName="CoOcMat_Variance_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMoment_Chebyshev" SemanticTypeName="CoOcMat_InverseDifferenceMoment_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverage_Chebyshev" SemanticTypeName="CoOcMat_SumAverage_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVariance_Chebyshev" SemanticTypeName="CoOcMat_SumVariance_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropy_Chebyshev" SemanticTypeName="CoOcMat_SumEntropy_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_Entropy_Chebyshev" SemanticTypeName="CoOcMat_Entropy_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropy_Chebyshev" SemanticTypeName="CoOcMat_DifferenceEntropy_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVariance_Chebyshev" SemanticTypeName="CoOcMat_DifferenceVariance_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelation_Chebyshev" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelation_Chebyshev" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficient_Chebyshev" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMomentDif_Chebyshev" SemanticTypeName="CoOcMat_AngularSecondMomentDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_ContrastDif_Chebyshev" SemanticTypeName="CoOcMat_ContrastDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_CorrelationDif_Chebyshev" SemanticTypeName="CoOcMat_CorrelationDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_VarianceDif_Chebyshev" SemanticTypeName="CoOcMat_VarianceDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMomentDif_Chebyshev" SemanticTypeName="CoOcMat_InverseDifferenceMomentDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverageDif_Chebyshev" SemanticTypeName="CoOcMat_SumAverageDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVarianceDif_Chebyshev" SemanticTypeName="CoOcMat_SumVarianceDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropyDif_Chebyshev" SemanticTypeName="CoOcMat_SumEntropyDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_EntropyDif_Chebyshev" SemanticTypeName="CoOcMat_EntropyDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropyDif_Chebyshev" SemanticTypeName="CoOcMat_DifferenceEntropyDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVarianceDif_Chebyshev" SemanticTypeName="CoOcMat_DifferenceVarianceDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelationDif_Chebyshev" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelationDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelationDif_Chebyshev" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelationDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficientDif_Chebyshev" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficientDif_Chebyshev" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMoment_ChebyshevFFT" SemanticTypeName="CoOcMat_AngularSecondMoment_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Contrast_ChebyshevFFT" SemanticTypeName="CoOcMat_Contrast_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Correlation_ChebyshevFFT" SemanticTypeName="CoOcMat_Correlation_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Variance_ChebyshevFFT" SemanticTypeName="CoOcMat_Variance_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMoment_ChebyshevFFT" SemanticTypeName="CoOcMat_InverseDifferenceMoment_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverage_ChebyshevFFT" SemanticTypeName="CoOcMat_SumAverage_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVariance_ChebyshevFFT" SemanticTypeName="CoOcMat_SumVariance_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropy_ChebyshevFFT" SemanticTypeName="CoOcMat_SumEntropy_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Entropy_ChebyshevFFT" SemanticTypeName="CoOcMat_Entropy_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropy_ChebyshevFFT" SemanticTypeName="CoOcMat_DifferenceEntropy_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVariance_ChebyshevFFT" SemanticTypeName="CoOcMat_DifferenceVariance_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelation_ChebyshevFFT" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelation_ChebyshevFFT" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficient_ChebyshevFFT" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMomentDif_ChebyshevFFT" SemanticTypeName="CoOcMat_AngularSecondMomentDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_ContrastDif_ChebyshevFFT" SemanticTypeName="CoOcMat_ContrastDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_CorrelationDif_ChebyshevFFT" SemanticTypeName="CoOcMat_CorrelationDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_VarianceDif_ChebyshevFFT" SemanticTypeName="CoOcMat_VarianceDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMomentDif_ChebyshevFFT" SemanticTypeName="CoOcMat_InverseDifferenceMomentDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverageDif_ChebyshevFFT" SemanticTypeName="CoOcMat_SumAverageDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVarianceDif_ChebyshevFFT" SemanticTypeName="CoOcMat_SumVarianceDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropyDif_ChebyshevFFT" SemanticTypeName="CoOcMat_SumEntropyDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_EntropyDif_ChebyshevFFT" SemanticTypeName="CoOcMat_EntropyDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropyDif_ChebyshevFFT" SemanticTypeName="CoOcMat_DifferenceEntropyDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVarianceDif_ChebyshevFFT" SemanticTypeName="CoOcMat_DifferenceVarianceDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelationDif_ChebyshevFFT" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelationDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelationDif_ChebyshevFFT" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelationDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficientDif_ChebyshevFFT" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficientDif_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMoment_Wavelet" SemanticTypeName="CoOcMat_AngularSecondMoment_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_Contrast_Wavelet" SemanticTypeName="CoOcMat_Contrast_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_Correlation_Wavelet" SemanticTypeName="CoOcMat_Correlation_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_Variance_Wavelet" SemanticTypeName="CoOcMat_Variance_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMoment_Wavelet" SemanticTypeName="CoOcMat_InverseDifferenceMoment_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverage_Wavelet" SemanticTypeName="CoOcMat_SumAverage_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVariance_Wavelet" SemanticTypeName="CoOcMat_SumVariance_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropy_Wavelet" SemanticTypeName="CoOcMat_SumEntropy_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_Entropy_Wavelet" SemanticTypeName="CoOcMat_Entropy_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropy_Wavelet" SemanticTypeName="CoOcMat_DifferenceEntropy_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVariance_Wavelet" SemanticTypeName="CoOcMat_DifferenceVariance_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelation_Wavelet" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelation_Wavelet" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficient_Wavelet" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMomentDif_Wavelet" SemanticTypeName="CoOcMat_AngularSecondMomentDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_ContrastDif_Wavelet" SemanticTypeName="CoOcMat_ContrastDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_CorrelationDif_Wavelet" SemanticTypeName="CoOcMat_CorrelationDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_VarianceDif_Wavelet" SemanticTypeName="CoOcMat_VarianceDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMomentDif_Wavelet" SemanticTypeName="CoOcMat_InverseDifferenceMomentDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverageDif_Wavelet" SemanticTypeName="CoOcMat_SumAverageDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVarianceDif_Wavelet" SemanticTypeName="CoOcMat_SumVarianceDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropyDif_Wavelet" SemanticTypeName="CoOcMat_SumEntropyDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_EntropyDif_Wavelet" SemanticTypeName="CoOcMat_EntropyDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropyDif_Wavelet" SemanticTypeName="CoOcMat_DifferenceEntropyDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVarianceDif_Wavelet" SemanticTypeName="CoOcMat_DifferenceVarianceDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelationDif_Wavelet" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelationDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelationDif_Wavelet" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelationDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficientDif_Wavelet" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficientDif_Wavelet" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMoment_WaveletFFT" SemanticTypeName="CoOcMat_AngularSecondMoment_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Contrast_WaveletFFT" SemanticTypeName="CoOcMat_Contrast_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Correlation_WaveletFFT" SemanticTypeName="CoOcMat_Correlation_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Variance_WaveletFFT" SemanticTypeName="CoOcMat_Variance_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMoment_WaveletFFT" SemanticTypeName="CoOcMat_InverseDifferenceMoment_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverage_WaveletFFT" SemanticTypeName="CoOcMat_SumAverage_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVariance_WaveletFFT" SemanticTypeName="CoOcMat_SumVariance_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropy_WaveletFFT" SemanticTypeName="CoOcMat_SumEntropy_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_Entropy_WaveletFFT" SemanticTypeName="CoOcMat_Entropy_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropy_WaveletFFT" SemanticTypeName="CoOcMat_DifferenceEntropy_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVariance_WaveletFFT" SemanticTypeName="CoOcMat_DifferenceVariance_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelation_WaveletFFT" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelation_WaveletFFT" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficient_WaveletFFT" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_AngularSecondMomentDif_WaveletFFT" SemanticTypeName="CoOcMat_AngularSecondMomentDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_ContrastDif_WaveletFFT" SemanticTypeName="CoOcMat_ContrastDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_CorrelationDif_WaveletFFT" SemanticTypeName="CoOcMat_CorrelationDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_VarianceDif_WaveletFFT" SemanticTypeName="CoOcMat_VarianceDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_InverseDifferenceMomentDif_WaveletFFT" SemanticTypeName="CoOcMat_InverseDifferenceMomentDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumAverageDif_WaveletFFT" SemanticTypeName="CoOcMat_SumAverageDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumVarianceDif_WaveletFFT" SemanticTypeName="CoOcMat_SumVarianceDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SumEntropyDif_WaveletFFT" SemanticTypeName="CoOcMat_SumEntropyDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_EntropyDif_WaveletFFT" SemanticTypeName="CoOcMat_EntropyDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceEntropyDif_WaveletFFT" SemanticTypeName="CoOcMat_DifferenceEntropyDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_DifferenceVarianceDif_WaveletFFT" SemanticTypeName="CoOcMat_DifferenceVarianceDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_FirstMeasureOfCorrelationDif_WaveletFFT" SemanticTypeName="CoOcMat_FirstMeasureOfCorrelationDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_SecondMeasureOfCorrelationDif_WaveletFFT" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelationDif_WaveletFFT" Count="!"/>
+        <FormalOutput Name="CoOcMat_MaximalCorrelationCoefficientDif_WaveletFFT" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficientDif_WaveletFFT" Count="!"/>
+
+        <FormalOutput Name="MultipleScaleHistograms" SemanticTypeName="MultipleScaleHistograms" Count="!"/>
+        <FormalOutput Name="MultipleScaleHistograms_FFT" SemanticTypeName="MultipleScaleHistograms_FFT" Count="!"/>
+        <FormalOutput Name="MultipleScaleHistograms_Chebyshev" SemanticTypeName="MultipleScaleHistograms_Chebyshev" Count="!"/>
+        <FormalOutput Name="MultipleScaleHistograms_ChebyshevFFT" SemanticTypeName="MultipleScaleHistograms_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="MultipleScaleHistograms_Wavelet" SemanticTypeName="MultipleScaleHistograms_Wavelet" Count="!"/>
+        <FormalOutput Name="MultipleScaleHistograms_WaveletFFT" SemanticTypeName="MultipleScaleHistograms_WaveletFFT" Count="!"/>
+
+        <FormalOutput Name="RadonTransformStatistics" SemanticTypeName="RadonTransformStatistics" Count="!"/>
+        <FormalOutput Name="RadonTransformStatistics_Chebyshev" SemanticTypeName="RadonTransformStatistics_Chebyshev" Count="!"/>
+        <FormalOutput Name="RadonTransformStatistics_ChebyshevFFT" SemanticTypeName="RadonTransformStatistics_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="RadonTransformStatistics_FFT" SemanticTypeName="RadonTransformStatistics_FFT" Count="!"/>
+
+        <FormalOutput Name="TamuraTextures" SemanticTypeName="TamuraTextures" Count="!"/>
+        <FormalOutput Name="TamuraTextures_FFT" SemanticTypeName="TamuraTextures_FFT" Count="!"/>
+        <FormalOutput Name="TamuraTextures_Chebyshev" SemanticTypeName="TamuraTextures_Chebyshev" Count="!"/>
+        <FormalOutput Name="TamuraTextures_ChebyshevFFT" SemanticTypeName="TamuraTextures_ChebyshevFFT" Count="!"/>
+        <FormalOutput Name="TamuraTextures_Wavelet" SemanticTypeName="TamuraTextures_Wavelet" Count="!"/>
+        <FormalOutput Name="TamuraTextures_WaveletFFT" SemanticTypeName="TamuraTextures_WaveletFFT" Count="!"/>
+
+        <FormalOutput Name="ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="!"/>                
+        <FormalOutput Name="ZernikeMoments_FFT" SemanticTypeName="ZernikeMoments_FFT" Count="!"/>                
+                
+                
+      </Declaration>
+                </AnalysisModule>
+  </AnalysisModuleLibrary>
+</OME>
