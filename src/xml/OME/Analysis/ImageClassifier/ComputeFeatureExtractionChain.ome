@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<AnalysisChains
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:noNamespaceSchemaLocation=
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+
+  <AnalysisChain Name="ComputeFeatureExtractionChain" Locked="false">  
+  
+  
+    <Nodes>
+      <Node NodeID="Original files" ProgramName="Original files"/>
+      <Node NodeID="Image import" ProgramName="Image import"/>
+      <Node NodeID="Image 2D Tiled ROIs" ProgramName="Image 2D Tiled ROIs" NewFeatureTag="ROI"/>
+      <Node NodeID="ComputeFeatures" ProgramName="ComputeFeatures" NewFeatureTag="ROI"/>
+    </Nodes>
+    
+    <Links>
+      <Link FromNodeID="Original files" FromOutputName="Files" ToNodeID="Image import" ToInputName="Files"/>
+      <Link FromNodeID="Image import" FromOutputName="Pixels" ToNodeID="Image 2D Tiled ROIs" ToInputName="Pixels"/>            
+      <Link FromNodeID="Image 2D Tiled ROIs" FromOutputName="Image ROIs" ToNodeID="ComputeFeatures" ToInputName="Pixels"/>      
+    </Links>
+  </AnalysisChain>
+</AnalysisChains>
