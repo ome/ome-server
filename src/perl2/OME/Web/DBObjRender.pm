@@ -138,6 +138,7 @@ sub getName {
 =head2 getPageTitle
 
 =cut
+
 sub getPageTitle {
     return "OME: Object Rendering";
 }
@@ -148,6 +149,7 @@ sub getPageTitle {
 
  overrides implementation in Web.pm to provide a page without 
     header, menu, or HTML headings that can get in the way
+
 =cut 
 
 
@@ -672,7 +674,7 @@ sub renderData {
 				my $name;
 				$name = $obj->name() if( $obj->getColumnType( 'name' ) );
 				$name = $obj->Name() if( $obj->getColumnType( 'Name' ) );
-				$name = $obj->id() unless $name;
+				$name = $obj->id() unless (defined $name && $name ne '');
 				$name = $self->_trim( $name, $request );
 				$record{ $request_string } = $name;
 	
