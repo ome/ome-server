@@ -1488,7 +1488,12 @@ my $keep_pixels = shift;
 				} else {
 					OME::Image::Server->useRemoteServer($pixels_spec->{Repository}->ImageServerURL());
 				}
-				OME::Image::Server->deletePixels($pixels_spec->{ImageServerID}) unless $keep_pixels;
+				# N.B. the importance of this eval is described with several paragraphs in
+				# OME/Image/Server/File.pm line 462.
+				eval {
+					OME::Image::Server->deletePixels($pixels_spec->{ImageServerID}) unless $keep_pixels;
+				};
+				warn $@ if $@;
 			}
 			$omeis_ids{$omeis_ids_key} = 1;
 		}
