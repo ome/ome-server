@@ -16,4 +16,8 @@ AC_CHECK_LIB(fftw3,fftw_execute,[AC_DEFINE(HAVE_FFTW3,1,"Turn on FFTW3 support."
 AC_CHECK_HEADER(fftw3.h, [],
         AC_MSG_ERROR([the <fftw3.h> header file from FFTW3 could not be found.]))
 
+dnl Set our default prefix to /OME
+AC_PREFIX_DEFAULT(/OME)
+
+
 AC_OUTPUT(Makefile)
