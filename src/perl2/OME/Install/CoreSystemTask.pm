@@ -368,21 +368,8 @@ CROAK
 		my $flag = $map->{'flag'};
 
 		if ($$flag) {
-			if (getpwnam($user) and not get_user($user)) {
-				print "\n";  # Spacing
-
-				my $error = <<ERROR;
-**** Warning: It appears that the user '$user' is either NIS, LDAP or equivilently backed. You will have to add this user to OME group '$OME_GROUP' in the /etc/group file manually. Please do so *before* continuing.
-ERROR
-				print wrap("", "", $error);
-
-				print "\n";  # Spacing
-
-				y_or_n("Are you ready to continue ?") or die;
-			} else {
-				add_user_to_group ($user, $OME_GROUP)
-					or croak "Failure adding user \"$user\" to group \"$OME_GROUP\""
-			}
+		    add_user_to_group ($user, $OME_GROUP)
+				or croak "Failure adding user \"$user\" to group \"$OME_GROUP\"";
 		} 
 	}
 
