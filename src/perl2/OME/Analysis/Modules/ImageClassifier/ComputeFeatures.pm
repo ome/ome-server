@@ -45,9 +45,6 @@ use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use Time::HiRes qw(gettimeofday tv_interval);
 
 
-# use Inline => Config => LIBS => '-L/usr/local/mylib -lmylib';
-# use Inline => Config => INC  => '-I/usr/include';
-
 # use Inline (Config => DIRECTORY => $CACHE_DIRECTORY);
 use Inline (
 	C       => 'DATA',
@@ -144,17 +141,23 @@ ImageMatrix *buff2matrix(unsigned char *buffer, int width, int height, int bytes
      unsigned char *p_buffer;
      ImageMatrix *matrix;
      matrix=new ImageMatrix(width,height);
+     matrix->bits=8*bytes_per_pixel;
      
     p_buffer=buffer;
     for (y=0;y<height;y++)
       for (x=0;x<width;x++)
       {  long *long_pix;
           float *float_pix;
+          unsigned short *short_pix;
           unsigned char *byte_pix;
           double pixel_value;             
           if (bytes_per_pixel==1)
           {    byte_pix=(unsigned char *)p_buffer;  
                 pixel_value=(double )(*byte_pix);                        
+          }
+          if (bytes_per_pixel==2)
+          {  short_pix=(unsigned short *)p_buffer;
+             pixel_value=(double)(*short_pix);
           }
           if (bytes_per_pixel==4)
           {  float_pix=(float *)p_buffer;
