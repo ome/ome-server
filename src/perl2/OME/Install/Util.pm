@@ -125,6 +125,14 @@ my %os_specific = (
 	    my $user = shift;
 	    my @groups;
 
+		# First, try id
+		my $id = which ('id');
+		if ($id) {
+			@groups = split (/\s/,`id -G $user`);
+			return @groups;
+		}
+
+		# Still here, then parse the groups file
 	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
 
 	    # Search the group file for groups that the user is in
@@ -143,29 +151,67 @@ my %os_specific = (
 
 	# XXX: In order to add a user to a group in Linux without modifying the /etc/group file by hand
 	#      we first need to search for the user in every group, then allow usermod to work it's magic.
+	# IGG:  In the wonderful world of Linux, there are a multitude of ways of adding a user to a group.
+	#       A brief survey in 2007-06 found no less than 3: usermod, lgroupmod, gpasswd.
+	#       A truly wonderful new feature of FC6 is that usermod is symlinked to lusermod, which does not
+	#       support the -G flag.
+	#       New strategy is to use our which() call to find (in turn) lgroupmod, gpasswd, and finally usermod.
 	add_user_to_group => sub {
 	    my ($user, $group) = @_;
 	    my @groups;
-
-	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
-
-	    # Search the group file for groups that the user is in
-	    while (<GR_FILE>) {
-		chomp;
-		my ($group_name, $member_string) = (split (/:/, $_))[0,3];  # ($groupname, $password, $gid, $members)
-		my @members = split (/,/, $member_string) if $member_string or undef;
-
-		if (@members) {
-		    foreach my $member (@members) {
-			push (@groups, $group_name) if $user eq $member;
-		    }
-		}
+	    
+	    # First see if user is already in the group
+	    my @users = split (/\s/,(getgrnam($group))[3]);
+	    return 1 if scalar (grep($_ eq $user,@users));
+	    
+	    # Try lgoupmod
+	    my $lgroupmod = which ('lgroupmod');
+	    if ($lgroupmod) {
+	    	system ($lgroupmod,'-M',$user,$group);
+	    	@users = split (/\s/,(getgrnam($group))[3]);
+	    	return 1 if scalar (grep($_ eq $user,@users));
 	    }
-	    close (GR_FILE);
+
+		# Next, try gpasswd
+	    my $gpasswd = which ('gpasswd');
+	    if ($gpasswd) {
+	    	system ($gpasswd,'-a',$user,$group);
+	    	@users = split (/\s/,(getgrnam($group))[3]);
+	    	return 1 if scalar (grep($_ eq $user,@users));
+	    }
+
+		# Next try usermod -a
+		
+		# To use usermod, we need all the groups the user is in.
+		# safest is to use the id command
+		my $id = which ('id');
+		if ($id) {
+			@groups = map (scalar(getgrgid($_)),split (/\s/,`id -G $user`));
+		} else {
+			# try brute-forcing the /etc/group file.
+			open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
+	
+			# Search the group file for groups that the user is in
+			while (<GR_FILE>) {
+			chomp;
+			my ($group_name, $member_string) = (split (/:/, $_))[0,3];  # ($groupname, $password, $gid, $members)
+			my @members = split (/,/, $member_string) if $member_string or undef;
+	
+			if (@members) {
+				foreach my $member (@members) {
+				push (@groups, $group_name) if $user eq $member;
+				}
+			}
+			}
+			close (GR_FILE);
+		}
 
 	    push (@groups, $group);
 
-	    return system ("/usr/sbin/usermod -G " . join (",", @groups) . " $user") == 0 ? 1 : 0;
+	    system ('/usr/sbin/usermod','-G',join (",", @groups),$user);
+		@users = split (/\s/,(getgrnam($group))[3]);
+		return 1 if scalar (grep($_ eq $user,@users));
+		return 0;
 	}
     },
 
