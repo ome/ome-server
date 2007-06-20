@@ -1,4 +1,6 @@
-noinst_LIBRARIES=libimfit.a
+lib_LIBRARIES = libimfit.a
+include_HEADERS = cmatrix.h signatures.h
+
 
 libimfit_a_SOURCES = TrainingSet.cpp cmatrix.cpp signatures.cpp colors/FuzzyCalc.cpp  \
 	transforms/chevishev.cpp transforms/ChebishevFourier.cpp  \
@@ -13,7 +15,7 @@ libimfit_a_SOURCES = TrainingSet.cpp cmatrix.cpp signatures.cpp colors/FuzzyCalc
 
 AM_CPPFLAGS = -fPIC
 
-noinst_PROGRAMS=wndchrm
+bin_PROGRAMS=wndchrm
 
 wndchrm_SOURCES = wndchrm.cpp
 
