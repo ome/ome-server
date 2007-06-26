@@ -382,7 +382,7 @@ sub openEngine {
 	my $instance = OME::Matlab::Engine->open("env PATH=/usr/bin:/bin $matlab_exec $matlab_flags");
 	
 	# Add the matlab source directory to the path so we can find our functions
-	$instance->eval("clear; addpath(genpath('$matlab_src_dir'));");
+	$instance->eval("clear; addpath(genpath('$matlab_src_dir/OME')); addpath(genpath('$matlab_src_dir/OMEIS'));");
 	
 	return $instance;
 }
