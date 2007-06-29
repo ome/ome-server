@@ -245,7 +245,7 @@ void GaborTextureFilters(ImageMatrix *Im, double *ratios)
       bw=Im->duplicate();
       for (y=0;y<bw->height;y++)
         for (x=0;x<bw->width;x++)
-          bw->data[x][y].intensity=e2[y*bw->width+x]*255;
+          bw->data[x][y].intensity=e2[y*bw->width+x]*(pow(2,Im->bits)-1);
       GRAYthr=bw->Otsu();
       for (x=0;x<Im->width*Im->height;x++)
          if (e2[x]<GRAYthr) e2[x]=0;
