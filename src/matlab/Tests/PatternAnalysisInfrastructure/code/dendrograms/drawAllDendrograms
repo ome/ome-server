@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd fem1.Test;  setenv PERL5LIB ..; ln -s PairwiseDist.txt infile; echo 'Y' | ../linux_fitch > fitch.log; ../draw.pl; ../psTree2SVG_discreteState.pl plotfile dendrogram.svg 0,2,4,6,8,10,12; ../psTree2SVG_discreteState.pl plotfile dendrogram.labelled.svg 0,2,4,6,8,10,12 1; java -jar ../batik-rasterizer.jar *.svg;  cd ..;
+cd eat2;       setenv PERL5LIB ..; ln -s PairwiseDist.txt infile; echo 'Y' | ../linux_fitch > fitch.log; ../draw.pl; ../psTree2SVG_discreteState.pl plotfile dendrogram.svg 0,2,4,6,8,10,12; ../psTree2SVG_discreteState.pl plotfile dendrogram.labelled.svg 0,2,4,6,8,10,12 1; java -jar ../batik-rasterizer.jar *.svg;  cd ..;
+cd tph1;       setenv PERL5LIB ..; ln -s PairwiseDist.txt infile; echo 'Y' | ../linux_fitch > fitch.log; ../draw.pl; ../psTree2SVG_discreteState.pl plotfile dendrogram.svg 0,2,4,6,8,10,12; ../psTree2SVG_discreteState.pl plotfile dendrogram.labelled.svg 0,2,4,6,8,10,12 1; java -jar ../batik-rasterizer.jar *.svg;  cd ..;
+cd fem1.Train; setenv PERL5LIB ..; ln -s PairwiseDist.txt infile; echo 'Y' | ../linux_fitch > fitch.log; ../draw.pl; ../psTree2SVG_discreteState.pl plotfile dendrogram.svg 0,2,4,6,8,10,12; ../psTree2SVG_discreteState.pl plotfile dendrogram.labelled.svg 0,2,4,6,8,10,12 1; java -jar ../batik-rasterizer.jar *.svg;  cd ..;
