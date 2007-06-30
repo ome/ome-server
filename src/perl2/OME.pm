@@ -87,7 +87,7 @@ if (exists $ENV{OME_WARN_LSID_COLLISION} && $ENV{OME_WARN_LSID_COLLISION} > 0) {
 
 if (exists $ENV{OME_TRACEBACK} && $ENV{OME_TRACEBACK} > 0) {
 	$SIG{__DIE__} = sub {
-		croak $!;
+		confess shift;
 	};
 }
 
