@@ -129,7 +129,7 @@
 	<!-- Feature CAs -->
 	<xsl:template match = "CA:Feature/CA:CustomAttributes" mode = "pass-through-CAs">
 		<xsl:element name = "CustomAttributes">
-			<xsl:apply-templates select = "*"  mode = "pass-through-CAs"/>
+			<xsl:apply-templates select = "*" mode = "pass-through-CAs"/>
 		</xsl:element>
 	</xsl:template>
 
@@ -263,6 +263,14 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeX" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeY" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeZ" mode = "Attribute2OptionalAttribute"/>
+		
+			<xsl:attribute name = "WaveIncrement">
+				<xsl:value-of select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeC"/>
+			</xsl:attribute>
+			<xsl:attribute name = "TimeIncrement">
+				<xsl:value-of select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeT"/>
+			</xsl:attribute>
+
 			<xsl:apply-templates select = "@CreationDate" mode = "Attribute2OptionalElement"/>
 			<xsl:apply-templates select = "@Experimenter" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "@Description" mode = "Attribute2OptionalElement"/>
