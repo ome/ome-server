@@ -106,14 +106,20 @@ sub getGroups
 	my @secondOutlist;
 	my @finalOutlist;
 	my $params = $self -> getParams();
+	my @xrefs;
 
 	foreach my $file (values (%$inlist))
 	{
     	$file->open('r');
 		if ($file->getLength() > BIORAD_HEADER_LENGTH)
 		{
-			# getEndian also checks for whether or not the file is Biorad (see getEndian)
-			push (@prelimOutlist, $file) if getEndian($file) ne ""; 
+			# readHeaderData checks for whether or not the file is Biorad (see getEndian)
+			my $xref = readHeaderData ($file);
+			if ($xref) {
+		    	$xref -> {'File'} = $file;
+				push (@xrefs,$xref);
+				push (@prelimOutlist, $file); 
+			}
 		}
 		$file->close();
     }
@@ -124,9 +130,9 @@ sub getGroups
     # they're related.
     
     # First you need to read in all the metadata
-    foreach my $file ( @prelimOutlist )
+    foreach my $xref ( @xrefs )
     {
-    	my $xref = readHeaderData( $file );
+    	my $file = $xref -> {'File'};
     	my $notesExist = $xref -> { 'NotesExist' };
     	
     	if ($notesExist == 1)
@@ -450,6 +456,9 @@ sub readHeaderData
 		$template = BIORAD_BIG_TEMPLATE;
 		$imageTable { 'BigEndian' } = 1;
 	}
+	else {
+		return undef;
+	}
 	
 	$file -> setCurrentPosition(0);
 	my $buffer = $file -> readData(BIORAD_HEADER_LENGTH);
@@ -460,6 +469,29 @@ sub readHeaderData
 	{
 		$imageTable { $element } = $headerData[$cntr];
 		$cntr++;
+	}
+
+
+	#set the NotesExist value to a boolean
+	if ($imageTable { 'NotesExist' } != 0) {
+		$imageTable { 'NotesExist' } = 1 ;
+	} else {
+		$imageTable { 'NotesExist' } = 0 ;
+	}
+	
+	# Check if the size of the file is consistent with what was read in the header
+	my $claimed_size = $imageTable { 'SizeX' } * $imageTable { 'SizeY' } * $imageTable { 'SizeZ' };
+	$claimed_size *= $imageTable { 'PixelType' }; # bytes per pixel.
+	$claimed_size += BIORAD_HEADER_LENGTH; # bytes in the header.
+	# the size of the file must be the $claimed_size plus BIORAD_HEADER_LENGTH
+	# plus an integer multiple of NOTES_LENGTH if $imageTable { 'NotesExist' }
+	my $diff = $file->getLength() - $claimed_size;
+	if ($diff > 0 and $imageTable { 'NotesExist' } and $diff % NOTES_LENGTH == 0) {
+		$imageTable { 'NumNotes' } = $diff / NOTES_LENGTH;
+	} elsif ($diff == 0 and not $imageTable { 'NotesExist' }) {
+		$imageTable { 'NumNotes' } = 0;
+	} else {
+		return undef; # Invalid BioRad image.
 	}
 	
 	#set the pixel type to be OME friendly
@@ -472,18 +504,6 @@ sub readHeaderData
 	else
 	{
 		$imageTable{ 'PixelType' } = 16;
-	}
-	
-	#set the NotesExist value to a boolean
-	my $notes = $imageTable { 'NotesExist' };
-	if ($notes != 0)
-	{
-		$imageTable { 'NotesExist' } = 1;
-	}
-	
-	else
-	{
-		$imageTable { 'NotesExist' } = 0;
 	}
 	
 	# set the defaults for an image
@@ -502,6 +522,7 @@ sub readNotesData
 {
 	my $file = shift;
 	my $imageTable = shift;
+	return 0 unless $imageTable -> { 'NotesExist' };
 	my $endian = $imageTable -> { 'BigEndian' };
 
 	my $template;
@@ -511,7 +532,7 @@ sub readNotesData
 	elsif ($endian == 1) { $template = "x10nx4a80"; }
 
 	# check to see if there really are notes
-	my $numNotes = getNumNotes($file, $imageTable);
+	my $numNotes = $imageTable -> { 'NumNotes' };
 	return 0 if ($numNotes == 0);
 	
 	# value to jump to notes portion of file
@@ -737,29 +758,6 @@ sub interpretNotesData
 	# Time course axis?
 	
 	return $imageTable;
-}
-
-
-#   Returns the number of notes in this file.  Notes are 96 bytes long.
-# 
-# 	Usage: my $notes = $importer->getNumNotes($fileObject)
-# 
-#
-
-sub getNumNotes
-{
-	my $file = shift;
-	my $imageTable = shift;
-	my $notes = $imageTable -> { 'NotesExist' };
-	
-	return 0 if ($notes == 0);
-	
-	# check to see how many notes there are
-	my $actFileSize = $file -> getLength();
-	my $xyz = getXYZ( $imageTable );
-	$notes = ($actFileSize - $xyz - BIORAD_HEADER_LENGTH) / (NOTES_LENGTH);
-	
-	return $notes;
 }
 
 
