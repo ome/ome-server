@@ -14,7 +14,7 @@ end;
 
 keep_files = [];
 for file_index = 1:length(in_paths)
-	if( in_paths( file_index ).name(1) ~= '.' )
+	if( in_paths( file_index ).name(1) ~= '.' & ~strcmp( in_paths( file_index ).name, 'CVS') )
 		if( onlyKeepDirs )
 			if( onlyKeepDirs == 1 & in_paths( file_index ).isdir )
 				keep_files( end + 1 ) = file_index;
