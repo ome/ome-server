@@ -42,12 +42,11 @@
 %
 %
 % DUDU (TODO)
-%     1) Since DirecHist, MagHist, DiffDirecHist are stored as uint16, if there are
-%        more than 2^16 pixels per bin there is overflow. 
-%	  2) This convolves image size with direction of pixels (which is bad)
-%     Recommendation (1+2) is a normalized histogram as floats
 %
-%     3) Pixels with very small gradient magnitude shouldn't be binned in the DirecHist,
+%	  1) DirecHist, MagHist, DiffDirecHist convolves image size with direction
+%         of pixels (which is bad)
+%
+%     2) Pixels with very small gradient magnitude shouldn't be binned in the DirecHist,
 %     DiffDirecHist because they are noise sensitive, also they result in pile-up in
 %     hist bin for direction 0. 0 can mean a direction or no direction.
 
@@ -89,6 +88,6 @@ DiffDirecHist = DiffDirecHist ./ (DirecHist(1:NUM_BINS_HALF)+DirecHist(NUM_BINS_
 DirecHomogeneity = sum(DirecHist(1:2))/sum(DirecHist);
 
 % Correctly set output type
-EdgeArea  = uint16(EdgeArea);
-MagHist   = uint16(MagHist);
-DirecHist = uint16(DirecHist);
+EdgeArea  = int32(EdgeArea);
+MagHist   = int32(MagHist);
+DirecHist = int32(DirecHist);
