@@ -13,22 +13,27 @@
    output -array of double- a pre-allocated array of 28 doubles
 */
 
-void haarlick(ImageMatrix *Im, double distance, double max_value, double *out)
+void haarlick(ImageMatrix *Im, double distance, double *out)
 {  int a,x,y;
    unsigned char **p_gray;
    TEXTURE *features;
    long angle;
    double min[14],max[14],sum[14];
+   double min_value=INF,max_value=-INF;//max_value=pow(2,Im->bits)-1;
 
    if (distance<=0) distance=1;
-
+   
    p_gray=new unsigned char *[Im->height];
    for (y=0;y<Im->height;y++)
-     p_gray[y]=new unsigned char[Im->width];
+      p_gray[y]=new unsigned char[Im->width];
+   /* for more than 8 bits - normalize the image to (0,255) range */
+   
+   Im->BasicStatistics(NULL, NULL, NULL, &min_value, &max_value, NULL, 0);   
    for (y=0;y<Im->height;y++)
-     for (x=0;x<Im->width;x++)
-       p_gray[y][x]=(unsigned char)(Im->data[x][y].intensity)*(255.0/max_value);
-
+	 for (x=0;x<Im->width;x++)
+	    if (Im->bits>8) p_gray[y][x]=(unsigned char)((Im->data[x][y].intensity-min_value)*(255.0/(max_value-min_value)));
+		else p_gray[y][x]=(unsigned char)(Im->data[x][y].intensity);
+   
    for (a=0;a<14;a++)
    {  min[a]=INF;
       max[a]=-INF;
