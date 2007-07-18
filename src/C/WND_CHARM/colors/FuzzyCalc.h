@@ -1,4 +1,33 @@
-//---------------------------------------------------------------------------
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/*                                                                               */
+/*    Copyright (C) 2007 Open Microscopy Environment                             */
+/*         Massachusetts Institue of Technology,                                 */
+/*         National Institutes of Health,                                        */
+/*         University of Dundee                                                  */
+/*                                                                               */
+/*                                                                               */
+/*                                                                               */
+/*    This library is free software; you can redistribute it and/or              */
+/*    modify it under the terms of the GNU Lesser General Public                 */
+/*    License as published by the Free Software Foundation; either               */
+/*    version 2.1 of the License, or (at your option) any later version.         */
+/*                                                                               */
+/*    This library is distributed in the hope that it will be useful,            */
+/*    but WITHOUT ANY WARRANTY; without even the implied warranty of             */
+/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU          */
+/*    Lesser General Public License for more details.                            */
+/*                                                                               */
+/*    You should have received a copy of the GNU Lesser General Public           */
+/*    License along with this library; if not, write to the Free Software        */
+/*    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA  */
+/*                                                                               */
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/*                                                                               */
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/* Written by:  Lior Shamir <shamirl [at] mail [dot] nih [dot] gov>              */
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+
 #ifndef FuzzyCalcH
 #define FuzzyCalcH
 //---------------------------------------------------------------------------
@@ -163,8 +192,8 @@ float tend_dark_value(float value);
 float tend_light_value(float value);
 float light_value(float value);
 
-float CalculateRules(float hue,float saturation,float value);
-long FindColor(short hue, short saturation, short value, unsigned char *certainties);
+float CalculateRules2(float hue,float saturation,float value);
+long FindColor(short hue, short saturation, short value, float *certainties);
 int color2num(char *color);
 int saturation2num(char *saturation);
 int value2num(char *value);
