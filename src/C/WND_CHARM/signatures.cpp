@@ -1,6 +1,6 @@
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*                                                                               */
-/*    Copyright (C) 2003 Open Microscopy Environment                             */
+/*    Copyright (C) 2007 Open Microscopy Environment                             */
 /*         Massachusetts Institue of Technology,                                 */
 /*         National Institutes of Health,                                        */
 /*         University of Dundee                                                  */
@@ -37,6 +37,7 @@
 #include "signatures.h"
 #include "cmatrix.h"
 #include "TrainingSet.h"
+#include "colors/FuzzyCalc.h"
 
 #ifndef WIN32
 #include <stdlib.h>
@@ -83,7 +84,8 @@ void signatures::Add(char *name,double value)
 //printf("%s %f\n",name,value);
    if (strchr(name,'\n')) *(strchr(name,'\n'))='\0';  /* prevent end of lines inside the features names */
    if (name) strcpy(data[count].name,name);   
-if (value>INF) value=INF;  /* prevent error */
+if (value>INF) value=INF;        /* prevent error */
+if (value<1/INF && value>-1/INF) value=0;  /* prevent a numerical error */
    data[count].value=value;
    count++;
 }
@@ -260,6 +262,7 @@ void signatures::compute(ImageMatrix *matrix)
 		   "CoOcMat_SecondMeasureOfCorrelation","MeasCorr2","CoOcMat_MaximalCorrelationCoefficient" ,"MaxCorrCoef","CoOcMat_AngularSecondMomentDif", "ASM","CoOcMat_ContrastDif" ,"Contrast","CoOcMat_CorrelationDif","Correlation","CoOcMat_VarianceDif","Variance",
 		   "CoOcMat_InverseDifferenceMomentDif","IDM","CoOcMat_SumAverageDif","SumAvg","CoOcMat_SumVarianceDif","SumVar","CoOcMat_SumEntropyDif" ,"SumEntropy","CoOcMat_EntropyDif","Entropy","CoOcMat_DifferenceEntropyDif","DiffEntropy","CoOcMat_DifferenceVarianceDif","DiffVar",
 		   "CoOcMat_FirstMeasureOfCorrelationDif","MeasCorr1","CoOcMat_SecondMeasureOfCorrelationDif","MeasCorr2","CoOcMat_MaximalCorrelationCoefficientDif","MaxCorrCoef"};
+
    matrix->HaarlickTexture(0,vec);
    for (a=0;a<28;a++)
    {  sprintf(buffer,"%s %s",haarlick_names[a*2],haarlick_names[a*2+1]);
@@ -485,7 +488,7 @@ void signatures::compute(ImageMatrix *matrix)
    }
 
    /* general color image statistics */
-   {  double hue_avg, hue_std, sat_avg, sat_std, val_avg, val_std, max_color, colors[COLOR_NUM];
+   {  double hue_avg, hue_std, sat_avg, sat_std, val_avg, val_std, max_color, colors[COLORS_NUM];
       matrix->GetColorStatistics(&hue_avg, &hue_std, &sat_avg, &sat_std, &val_avg, &val_std, &max_color, colors);
       Add("hue average",hue_avg);
       Add("hue stddev",hue_std);
@@ -494,7 +497,7 @@ void signatures::compute(ImageMatrix *matrix)
       Add("value average",val_avg);
       Add("value stddev",val_std);
       Add("most common color",max_color);
-      for (a=0;a<COLOR_NUM;a++)
+      for (a=0;a<COLORS_NUM;a++)
       {  sprintf(buffer,"color %d",a);
          Add(buffer,colors[a]);
       }
@@ -705,7 +708,7 @@ void signatures::CompGroupD(ImageMatrix *matrix, char *transform_label)
    char buffer[80];
 
    /* general color image statistics */
-   {  double hue_avg, hue_std, sat_avg, sat_std, val_avg, val_std, max_color, colors[COLOR_NUM];
+   {  double hue_avg, hue_std, sat_avg, sat_std, val_avg, val_std, max_color, colors[COLORS_NUM];
       matrix->GetColorStatistics(&hue_avg, &hue_std, &sat_avg, &sat_std, &val_avg, &val_std, &max_color, colors);
       Add("hue average",hue_avg);
       Add("hue stddev",hue_std);
@@ -714,7 +717,7 @@ void signatures::CompGroupD(ImageMatrix *matrix, char *transform_label)
       Add("value average",val_avg);
       Add("value stddev",val_std);
       Add("most popular color",max_color);
-      for (a=0;a<COLOR_NUM;a++)
+      for (a=1;a<COLORS_NUM;a++)
       {  sprintf(buffer,"color %d (%s)",a,transform_label);
          Add(buffer,colors[a]);
       }
@@ -761,6 +764,7 @@ void signatures::ComputeGroups(ImageMatrix *matrix)
   CompGroupA(matrix,"");
   CompGroupB(matrix,"");
   CompGroupC(matrix,"");
+//  CompGroupD(matrix,"");
 
   CompGroupB(FourierTransform,"Fourier");
   CompGroupC(FourierTransform,"Fourier");
@@ -854,7 +858,7 @@ void signatures::ComputeFromDouble(double *data, int height, int width)
    path -char *- path to the file to be opened. If NULL then open path is the original file name with ".sig" extention.
 */
 FILE *signatures::FileOpen(char *path, int tile_x, int tile_y)
-{  char filename[256],buffer[256];
+{  char filename[512],buffer[512];
    FILE *ret;
    if (path) strcpy(filename,path);
    else

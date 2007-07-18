@@ -12,7 +12,7 @@
 #endif
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*                                                                               */
-/* Copyright (C) 2003 Open Microscopy Environment                                */
+/* Copyright (C) 2007 Open Microscopy Environment                                */
 /*       Massachusetts Institue of Technology,                                   */
 /*       National Institutes of Health,                                          */
 /*       University of Dundee                                                    */
@@ -45,7 +45,6 @@
 
 #define INF 10E20
 
-#define COLOR_NUM 19
 
 typedef unsigned char byte;
 
@@ -62,18 +61,10 @@ typedef union
    HSVcolor HSV;
 }color;
 
-//typedef struct FFT
-//{  float abs;
-//   float angle;
-//}fft;
 
 typedef struct PIX_DATA
 {  color clr;
-//   byte classified_color;  /* the color classification of clr     */
-//   byte prob;       /* normailized to (0,255) interval */
    double intensity;  /* normailized to (0,255) interval */
-//   byte stddev;     /* stddev of the intensity normailized to (0,255) interval */
-//   byte tag;
 } pix_data;
 
 
@@ -85,25 +76,26 @@ class ImageMatrix
    pix_data **data;                                /* data of the colors                   */
    unsigned short bits;                            /* the number of intensity bits (8,16, etc) */
    int width,height;                               /* width and height of the picture      */
-   double average;                                 /* average hue */
-   double stddev;                                  /* stddev hue  */
 #ifdef WIN32   
    int LoadImage(TPicture *picture,int ColorMode);
    int LoadBMP(char *filename,int ColorMode);      /* load from a bitmap file              */
 #endif
    int LoadTIFF(char *filename);                   /* load from TIFF file                  */
+   int SaveTiff(char *filename);                   /* save a matrix in TIF format          */
    int LoadPPM(char *filename, int ColorMode);     /* load from a PPM file                 */
    ImageMatrix();                                  /* basic constructor                    */
    ImageMatrix(int width,int height);              /* construct a new empty matrix         */
-   ImageMatrix(ImageMatrix *matrix,int x1, int y1, int x2, int y2);  /* creat a new matrix which is part of the original one */
-   ~ImageMatrix();                                 /* destructor */   
+   ImageMatrix(ImageMatrix *matrix,int x1, int y1, int x2, int y2);  /* create a new matrix which is part of the original one */
+   ~ImageMatrix();                                 /* destructor */
    ImageMatrix *duplicate();                       /* create a new identical matrix        */
    void diff(ImageMatrix *matrix);                 /* compute the difference from another image */
-   void BasicStatistics(double *mean, double *median, double *std, double *min, double *max, double *histogram, int bins);
    void normalize(double min, double max, int range);
-   void Downsample(double x_ratio, double y_ratio);
+   void to8bits();
+   void flip();                                    /* flip an image horizonatally          */
+   void Downsample(double x_ratio, double y_ratio);/* down sample an image                 */
    void convolve(ImageMatrix *filter);
-   void GetColorStatistics(double *hue_avg, double *hue_std, double *sat_avg, double *sat_std, double *val_avg, double *val_std, double *max_color, double colors[COLOR_NUM]);
+   void BasicStatistics(double *mean, double *median, double *std, double *min, double *max, double *histogram, int bins);
+   void GetColorStatistics(double *hue_avg, double *hue_std, double *sat_avg, double *sat_std, double *val_avg, double *val_std, double *max_color, double *colors);
    void ColorTransform(RGBcolor rgb);
    void histogram(double *bins,unsigned short bins_num, int imhist);
    double Otsu();                                  /* Otsu grey threshold                  */

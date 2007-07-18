@@ -1,6 +1,6 @@
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*                                                                               */
-/* Copyright (C) 2003 Open Microscopy Environment                                */
+/* Copyright (C) 2007 Open Microscopy Environment                                */
 /*       Massachusetts Institue of Technology,                                   */
 /*       National Institutes of Health,                                          */
 /*       University of Dundee                                                    */
@@ -188,67 +188,118 @@ int ImageMatrix::LoadTIFF(char *filename)
 {
 #ifndef WIN32
    unsigned long h,w,x,y;
-   unsigned short int c,bpp;
+   unsigned short int spp,bps;
    TIFF *tif = NULL;
    //tdata_t buf;
-   unsigned char *buf;
+   unsigned char *buf8;
+   unsigned short *buf16;
+   double max_val;
    
    if (tif = TIFFOpen(filename, "r"))
-   { 
+   {
      TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
      width = w;
      TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
      height = h;
-     TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bpp);
-	 bits=bpp;
- 	 TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &c);
-	 
-	 /* allocate the data */
+     TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bps);
+     bits=bps;
+     TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &spp);
+
+     /* allocate the data */
      data=new pix_data *[width];
      if (!data) return(0); /* memory allocation failed */
      for (x=0;x<width;x++)
      {  data[x]=new pix_data[height];
         if (!data[x]) return (0);   /* memory allocation failed */
      }
-	 
+
+     max_val=pow(2,bits)-1;
      /* read TIFF header and determine image size */
-     buf = (unsigned char *)_TIFFmalloc(TIFFScanlineSize(tif));
+     buf8 = (unsigned char *)_TIFFmalloc(TIFFScanlineSize(tif)*spp);
+     buf16 = (unsigned short *)_TIFFmalloc(TIFFScanlineSize(tif)*sizeof(unsigned short)*spp);
  	 for (y = 0; y < height; y++)
 	 {   int col;
-	     TIFFReadScanline(tif, buf, y);
-	     x=0;col=0;	 
+	     if (bits==8) TIFFReadScanline(tif, buf8, y);
+		 else TIFFReadScanline(tif, buf16, y);
+	     x=0;col=0;
 	 	 while (x<width)
 		 { unsigned char byte_data;
 		   unsigned short short_data;
-		   double val,max_val;
-		   byte_data=buf[col];
-		   short_data = *((unsigned short *)(&(buf[col])));
-		   if (bits>8) val=(double)(short_data);
-		   else val=(double)byte_data;
-		   max_val=pow(2,bits);
-           data[x][y].clr.RGB.red=(unsigned char)(val/max_val);
-           data[x][y].clr.RGB.green=(unsigned char)(val/max_val);
-           data[x][y].clr.RGB.blue=(unsigned char)(val/max_val);
-		   data[x][y].intensity=val;
+		   double val;
+		   byte_data=buf8[col];
+           short_data=buf16[col];
+		   int sample_index;	   
+		   for (sample_index=0;sample_index<spp;sample_index++)
+		   {  if (bits==8) val=(double)byte_data;
+		      else val=(double)(short_data);
+			  if (spp==3)  /* RGB image */
+			  {  if (sample_index==0) data[x][y].clr.RGB.red=(unsigned char)(val/max_val);
+			     if (sample_index==1) data[x][y].clr.RGB.green=(unsigned char)(val/max_val);
+ 				 if (sample_index==2) data[x][y].clr.RGB.blue=(unsigned char)(val/max_val);
+			  }
+		   }
+		   if (spp==3) data[x][y].intensity=COLOR2GRAY(RGB2COLOR(data[x][y].clr.RGB));
+		   if (spp==1)	  
+           {  data[x][y].clr.RGB.red=(unsigned char)(val/max_val);
+              data[x][y].clr.RGB.green=(unsigned char)(val/max_val);
+              data[x][y].clr.RGB.blue=(unsigned char)(val/max_val);
+		      data[x][y].intensity=val;
+		   }	  
 		   x++;
-		   col++;
-		   if (bits>8) col++;
+		   col+=spp;
 		 }
 	 }
-	 _TIFFfree(buf);
+	 _TIFFfree(buf8);
+	 _TIFFfree(buf16);
 	 TIFFClose(tif);
    }
-   else
-   return(0);
-#endif   
-  return(1);
+   else return(0);
+#endif
+   return(1);
 }
 
+/*  SaveTiff
+    Save a matrix in TIFF format (16 bits per pixel)
+*/
+int ImageMatrix::SaveTiff(char *filename)
+{
+#ifndef WIN32
+   int x,y;
+   TIFF* tif = TIFFOpen(filename, "w");
+   unsigned short *BufImage16 = new unsigned short[width*height];
+   unsigned char *BufImage8 = new unsigned char[width*height];
+
+   if (!tif) return(0);
+
+   for (y = 0; y < height; y++)
+     for (x = 0; x < width ; x++)
+     {  if (bits==16) BufImage16[x + (y * width)] = (unsigned short)(data[x][y].intensity);
+        else BufImage8[x + (y * width)] = (unsigned char)(data[x][y].intensity);
+     }
+
+   TIFFSetField(tif,TIFFTAG_IMAGEWIDTH, width);
+   TIFFSetField(tif,TIFFTAG_IMAGELENGTH, height);
+   TIFFSetField(tif, TIFFTAG_PLANARCONFIG,1);
+   TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, 1);
+   TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bits);
+   TIFFSetField(tif, TIFFTAG_COMPRESSION, 1);
+
+   for (y = 0; y < height; y ++)
+   {  if (bits==16) TIFFWriteScanline (tif, &(BufImage16[y*width]), y,0 );
+      else TIFFWriteScanline (tif, &(BufImage8[y*width]), y,0 );
+   }
+
+   TIFFClose(tif);
+   delete BufImage8;
+   delete BufImage16;
+#endif
+   return(1);
+}
 
 /* LoadPPM
    filename -char *- full path to the image file
-
 */
+
 int ImageMatrix::LoadPPM(char *filename, int ColorMode)
 {  FILE *fi;
 
@@ -350,7 +401,7 @@ ImageMatrix::ImageMatrix(ImageMatrix *matrix,int x1, int y1, int x2, int y2)
 {  int x,y;
    bits=matrix->bits;
    ColorMode=matrix->ColorMode;
-   /* verify that the measurements are OK */
+   /* verify that the image size is OK */
    if (x1<0) x1=0;
    if (y1<0) y1=0;
    if (x2>=matrix->width) x2=matrix->width-1;
@@ -377,7 +428,7 @@ ImageMatrix::~ImageMatrix()
    data=NULL;
 }
 
-/* ompute the difference from another image */
+/* compute the difference from another image */
 void ImageMatrix::diff(ImageMatrix *matrix)
 {  int x,y;
    for (y=0;y<height;y++)
@@ -407,13 +458,39 @@ ImageMatrix *ImageMatrix::duplicate()
    new_matrix->height=height;
    new_matrix->bits=bits;
    new_matrix->ColorMode=ColorMode;
-   new_matrix->average=average;
-   new_matrix->stddev=stddev;
 
    for (y=0;y<height;y++)
      for (x=0;x<width;x++)
        new_matrix->data[x][y]=data[x][y];
   return(new_matrix);
+}
+
+/* to8bits
+   convert a 16 bit matrix to 8 bits
+*/
+void ImageMatrix::to8bits()
+{  int x,y;
+   double max_val;
+   if (bits==8) return;
+   max_val=pow(2,bits)-1;
+   bits=8;
+   for (y=0;y<height;y++)
+     for (x=0;x<width;x++)
+       data[x][y].intensity=255*(data[x][y].intensity/max_val);
+}
+
+/* flip
+   flip an image horizontaly
+*/
+void ImageMatrix::flip()
+{  int x,y;
+   pix_data temp;
+   for (y=0;y<height;y++)
+     for (x=0;x<width/2;x++)
+	 { temp=data[x][y];
+	   data[x][y]=data[width-x-1][y];
+	   data[width-x-1][y]=temp;	   
+	 }
 }
 
 /* Downsample
@@ -537,7 +614,7 @@ int compare_doubles (const void *a, const void *b)
 }
 
 /* BasicStatistics
-   get basic statistical properties of the image
+   get basic statistical properties of the intensity of the image
    mean -double *- pre-allocated one double for the mean intensity of the image
    median -double *- pre-allocated one double for the median intensity of the image
    std -double *- pre-allocated one double for the standard deviation of the intensity of the image
@@ -545,51 +622,48 @@ int compare_doubles (const void *a, const void *b)
    max -double *- pre-allocated one double for the maximal intensity of the image
    histogram -double *- a pre-allocated vector for the histogram. If NULL then histogram is not calculated
    nbins -int- the number of bins for the histogram
+   
+   if one of the pointers is NULL, the corresponding value is not computed.
 */
 void ImageMatrix::BasicStatistics(double *mean, double *median, double *std, double *min, double *max, double *hist, int bins)
 {  int x,y,pixel_index,num_pixels;
    double *pixels;
-
+   double min1=INF,max1=-INF,mean_sum=0;
+   
    num_pixels=height*width;
    pixels=new double[num_pixels];
 
    /* calculate the average, min and max */
-   *min=INF;
-   *max=-INF;
-   *mean=0;
    for (y=0;y<height;y++)
      for (x=0;x<width;x++)
-     {  *mean+=data[x][y].intensity;
-        if (data[x][y].intensity>*max)
-          *max=data[x][y].intensity;
-        if (data[x][y].intensity<*min)
-          *min=data[x][y].intensity;
+     {  mean_sum+=data[x][y].intensity;
+        if (data[x][y].intensity>max1)
+          max1=data[x][y].intensity;
+        if (data[x][y].intensity<min1)
+          min1=data[x][y].intensity;
         pixels[y*width+x]=data[x][y].intensity;
      }
-   *mean=*mean/num_pixels;
+   if (max) *max=max1;	 
+   if (min) *min=min1;
+   if (mean) *mean=mean_sum/num_pixels;
 
    /* calculate the standard deviation */
-   *std=0;
-   for (pixel_index=0;pixel_index<num_pixels;pixel_index++)
-     *std=*std+pow(pixels[pixel_index]-*mean,2);
-   *std=sqrt(*std/(num_pixels-1));
-
+   if (std)
+   {  *std=0;
+      for (pixel_index=0;pixel_index<num_pixels;pixel_index++)
+        *std=*std+pow(pixels[pixel_index]-*mean,2);
+      *std=sqrt(*std/(num_pixels-1));
+   }
+   
    if (hist)  /* do the histogram only if needed */
      histogram(hist,bins,0);
 
    /* find the median */
-   qsort(pixels,num_pixels,sizeof(double),compare_doubles);
-   *median=pixels[num_pixels/2];
+   if (median)
+   {  qsort(pixels,num_pixels,sizeof(double),compare_doubles);
+      *median=pixels[num_pixels/2];
+   }
 
-   /* calculate the statistical orders */
-//   if (bins>0)
-//   {  for (pixel_index=0;pixel_index<bins;pixel_index++)
-//       histogram[pixel_index]=0;  /* initialize the histogram before counting */
-//      for (pixel_index=0;pixel_index<num_pixels;pixel_index++)
-//       if (pixels[pixel_index]==*max) histogram[bins-1]+=1;
-//       else
-//       histogram[int(((pixels[pixel_index]-*min)/(*max-*min))*bins)]+=1;
-//   }
    delete pixels;
 }
 
@@ -598,7 +672,10 @@ void ImageMatrix::normalize(double min, double max, int range)
 {  int x,y;
    for (y=0;y<height;y++)
      for (x=0;x<width;x++)
-       data[x][y].intensity=((data[x][y].intensity-min)/(max-min))*range;
+     {  if (data[x][y].intensity<min) data[x][y].intensity=0;
+	    else if (data[x][y].intensity>max) data[x][y].intensity=range;
+	    else data[x][y].intensity=((data[x][y].intensity-min)/(max-min))*range;
+	 }
 }
 
 /* concolve
@@ -633,29 +710,40 @@ void ImageMatrix::convolve(ImageMatrix *filter)
   delete copy;
 }
 
-/* find the basic color statistics */
+/* find the basic color statistics
+   hue_avg -double *- average hue
+   hue_std -double *- standard deviation of the hue
+   sat_avg -double *- average saturation
+   sat_std -double *- standard deviation of the saturation
+   val_avg -double *- average value
+   val_std -double *- standard deviation of the value
+   max_color -double *- the most popular color
+   colors -double *- a histogram of colors
+   if values are NULL - the value is not computed
+*/
 
-void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *sat_avg, double *sat_std, double *val_avg, double *val_std, double *max_color, double colors[COLOR_NUM])
-{  int x,y,a,pixel_num,color_index;
+void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *sat_avg, double *sat_std, double *val_avg, double *val_std, double *max_color, double *colors)
+{  int x,y,a,color_index;
    color hsv;
-   double max;
-   byte certainties[COLOR_NUM];
+   double max,pixel_num;
+   float certainties[COLORS_NUM];
 
    pixel_num=height*width;
 
    /* calculate the average hue, saturation, value */
-   *hue_avg=0;
-   *sat_avg=0;
-   *val_avg=0;
-   for (a=0;a<COLOR_NUM;a++)
-     colors[a]=0;
+   if (hue_avg) *hue_avg=0;
+   if (sat_avg) *sat_avg=0;
+   if (val_avg) *val_avg=0;
+   if (colors)
+     for (a=0;a<COLORS_NUM;a++)
+       colors[a]=0;
 
    for (y=0;y<height;y++)
-     for (x=0;x<height;x++)
+     for (x=0;x<width;x++)
      {  hsv=data[x][y].clr;
-        *hue_avg+=hsv.HSV.hue;
-        *sat_avg+=hsv.HSV.saturation;
-        *val_avg+=hsv.HSV.value;
+        if (hue_avg) *hue_avg+=hsv.HSV.hue;
+        if (sat_avg) *sat_avg+=hsv.HSV.saturation;
+        if (val_avg) *val_avg+=hsv.HSV.value;
          color_index=FindColor(hsv.HSV.hue,hsv.HSV.saturation,hsv.HSV.value,certainties);
 //         data[x][y].classified_color=(byte)color_index;
          colors[color_index]+=1;
@@ -665,32 +753,34 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
    *val_avg=*val_avg/pixel_num;
 
    /* max color (the most common color in the image) */
-   *max_color=0;
-   max=0.0;
-   for (a=0;a<COLOR_NUM;a++)
-   if (colors[a]>max)
-   {  max=colors[a];
-      *max_color=a;
+   if (max_color)
+   {  *max_color=0;
+      max=0.0;
+      for (a=0;a<COLORS_NUM;a++)
+        if (colors[a]>max)
+        {  max=colors[a];
+           *max_color=a;
+        }
    }
-
    /* colors */
-   for (a=0;a<COLOR_NUM;a++)
-     colors[a]/=pixel_num;
+   if (colors)
+     for (a=0;a<COLORS_NUM;a++)
+       colors[a]=colors[a]/pixel_num;
 
-  /* standard deviation of hue, saturation and value */
-  *hue_std=0;
-  *sat_std=0;
-  *val_std=0;
+   /* standard deviation of hue, saturation and value */
+   if (hue_std) *hue_std=0;
+   if (sat_std) *sat_std=0;
+   if (val_std) *val_std=0;
    for (y=0;y<height;y++)
-     for (x=0;x<height;x++)
+     for (x=0;x<width;x++)
      {  hsv=data[x][y].clr;
-        *hue_std+=pow(hsv.HSV.hue-*hue_avg,2);
-        *sat_std+=pow(hsv.HSV.saturation-*sat_avg,2);
-        *val_std+=pow(hsv.HSV.value-*val_avg,2);
+        if (hue_std && hue_avg) *hue_std+=pow(hsv.HSV.hue-*hue_avg,2);
+        if (sat_std && sat_avg) *sat_std+=pow(hsv.HSV.saturation-*sat_avg,2);
+        if (val_std && val_avg) *val_std+=pow(hsv.HSV.value-*val_avg,2);
      }
-   *hue_std=sqrt(*hue_std/pixel_num);
-   *sat_std=sqrt(*sat_std/pixel_num);
-   *val_std=sqrt(*val_std/pixel_num);
+   if (hue_std && hue_avg) *hue_std=sqrt(*hue_std/pixel_num);
+   if (sat_std && sat_avg) *sat_std=sqrt(*sat_std/pixel_num);
+   if (val_std && val_avg) *val_std=sqrt(*val_std/pixel_num);
 }
 
 /* ColorTransform
@@ -702,7 +792,7 @@ void ImageMatrix::ColorTransform(RGBcolor rgb)
 {  int x,y,base_color;
    HSVcolor hsv;
    color hsv_pixel;
-   byte certainties[COLOR_NUM];
+   float certainties[COLORS_NUM];
    hsv=RGB2HSV(rgb);
    base_color=FindColor(hsv.hue,hsv.saturation,hsv.value,certainties);
    for (y=0;y<height;y++)
@@ -1003,8 +1093,10 @@ void ImageMatrix::PerwittDirection(ImageMatrix *output)
 void ImageMatrix::EdgeStatistics(long *EdgeArea, double *MagMean, double *MagMedian, double *MagVar, double *MagHist, double *DirecMean, double *DirecMedian, double *DirecVar, double *DirecHist, double *DirecHomogeneity, double *DiffDirecHist, int num_bins)
 {  ImageMatrix *GradientMagnitude,*GradientDirection;
    int x,y,bin_index;
-   double min,max,sum;
-
+   double min,max,sum,max_intensity;
+   
+   max_intensity=pow(bits,2)-1;
+   
    GradientMagnitude=duplicate();
    PerwittMagnitude(GradientMagnitude);
    GradientDirection=duplicate();
@@ -1020,7 +1112,7 @@ void ImageMatrix::EdgeStatistics(long *EdgeArea, double *MagMean, double *MagMed
 
    for (y=0;y<GradientMagnitude->height;y++)
      for (x=0;x<GradientMagnitude->width;x++)
-        if (GradientMagnitude->data[x][y].intensity>255*0.5) (*EdgeArea)+=1; /* find the edge area */
+        if (GradientMagnitude->data[x][y].intensity>max_intensity*0.5) (*EdgeArea)+=1; /* find the edge area */
 //   GradientMagnitude->OtsuBinaryMaskTransform();
 
    /* find direction statistics */
@@ -1123,7 +1215,7 @@ double ImageMatrix::Otsu()
      {  sum+=a;
         count++;
      }
-   return((sum/count)/max);
+   return((pow(2,bits)/256.0)*((sum/count)/max));
 }
 
 //-----------------------------------------------------------------------------------
@@ -1133,27 +1225,9 @@ double ImageMatrix::Otsu()
 */
 double ImageMatrix::OtsuBinaryMaskTransform()
 {  int x,y;
-//   unsigned char *pixels;
    double OtsuGlobalThreshold;
    double max=pow(2,bits)-1;
 
-//   pixels=new unsigned char[width*height];
-
-//   max=-10000000000;
-//   double min=100000000;
-//   for (y=0;y<height;y++)
-//     for (x=0;x<width;x++)
-//     {  if (data[x][y].intensity<min) min=data[x][y].intensity;
-//        if (data[x][y].intensity>max) max=data[x][y].intensity;
-//     }
-
-   /* convert to char */
-//   for (y=0;y<height;y++)
-//     for (x=0;x<width;x++)
-//       if (data[x][y].intensity>max) pixels[y*width+x]=255;
-//       else pixels[y*width+x]=(unsigned char)((data[x][y].intensity*255)/max); // (((data[x][y].intensity-min)/(max-min))*255);
-
-//   OtsuGlobalThreshold=otsu(pixels, height, width, 0, 0, 92, 112);
    OtsuGlobalThreshold=Otsu();
 
    /* classify the pixels by the threshold */
@@ -1300,7 +1374,7 @@ void ImageMatrix::GaborFilters(double *ratios)
 */
 void ImageMatrix::HaarlickTexture(double distance, double *out)
 {  if (distance<=0) distance=1;
-   haarlick(this,distance,pow(2,bits)-1,out);
+   haarlick(this,distance,out);
 }
 
 /* MultiScaleHistogram
