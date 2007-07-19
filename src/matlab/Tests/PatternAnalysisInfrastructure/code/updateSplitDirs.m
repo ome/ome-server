@@ -209,7 +209,9 @@ for sig_set_index = 1:length( sig_dirs )
 				fprintf( 'Generating a new division of training and test sets.\n' );
 				% Calculate the number of samples of each class to put in the training set.
 				min_class_size = min( num_instances_per_class );
-				if( training_perc < 1 )
+				if( training_perc <= 1 ) % train_perc == 1 means 100% of the images are used
+										 % for training. 100% for training is used for computing
+										 % the individual normalizing vector
 					training_samples_per_class = ceil(training_perc*min_class_size);
 				else
 					training_samples_per_class = training_perc;
