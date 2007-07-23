@@ -20,25 +20,30 @@ for split_index = 1:num_splits
 	if( trainOrTest )
 		confusion_matrixes_by_split( split_index, :, : ) = ...
 			results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.confusion_matrix;
-		class_vector = load( results(problem_index).Splits(split_index).SigSet(sig_set_index).test_path, 'signature_matrix' );
+		class_vector = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.class_vector;
+		load( results(problem_index).Splits(split_index).SigSet.test_path, 'signature_matrix' );
 	else
 		confusion_matrixes_by_split( split_index, :, : ) = ...
 			results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).train_predictions.confusion_matrix;
-		class_vector = load( results(problem_index).Splits(split_index).SigSet(sig_set_index).train_path, 'signature_matrix' );
+		class_vector = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).train_predictions.class_vector;
+		load( results(problem_index).Splits(split_index).SigSet.train_path, 'signature_matrix' );
 	end;
-	class_vector = class_vector.signature_matrix(end,:);
-	num_images   = length( class_vector );
+
 	% Determine which images have predictions available
 	predictions_available = [];
-	for i = 1:num_images
-		if( trainOrTest )
+	if( trainOrTest )
+		num_images = length(class_vector);
+		for i=1:num_images
 			if( sum( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.marginal_probs( i, : ) ) > 0 )
 				predictions_available(end+1) = i;
 			else
 				unclassified_by_split( split_index, class_vector( i ) ) = ...
 					unclassified_by_split( split_index, class_vector( i ) ) + 1;
 			end;
-		else
+		end;	
+	else
+		num_images = length(class_vector);
+		for i=1:num_images
 			if( sum( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).train_predictions.marginal_probs( i, : ) ) > 0 )
 				predictions_available(end+1) = i;
 			else
@@ -77,7 +82,7 @@ confusion_matrixes     = [];
 avg_marg_probs         = [];
 avg_class_similarities = [];
 for c = 1:num_classes
-	num_imgs_per_class(c)          = length( find( class_vector == c ) ); % Is same for every splt
+	num_imgs_per_class(c)      = sum(confusion_matrixes_by_split(1,c,:));
 	confusion_matrixes( c, : )     = mean( confusion_matrixes_by_split( :, c, : ) );
 	std_confusion( c, : )          = std( confusion_matrixes_by_split( :, c, : ) );
 	confusion_matrixes( c, : )     = confusion_matrixes( c, : ) ./ num_imgs_per_class(c);
