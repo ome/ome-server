@@ -97,6 +97,9 @@ end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Generate an overview of everything
 [REPORT_HTML] = fopen( report_path,'w');
+if (REPORT_HTML == -1)
+	error(sprintf ('Failed to open %s for writing', report_path));
+end;
 fprintf( REPORT_HTML, '<html><head><script type="text/javascript">function toggleVisibility( element_id ) { el = document.getElementById(element_id); if (el.style.display=="none"){ el.style.display="inline"; } else { el.style.display="none"; } } </script></head><body>\n' );
 fprintf( REPORT_HTML, '<h1>Results.</h1>last updated %s<br>\n', datestr( now ) );
 fprintf( REPORT_HTML, '<a href="%s">Signature assessments</a><br>\n', sig_assess_rel_path );
@@ -206,7 +209,7 @@ for sig_set_index = 1:length( results( 1 ).Splits( 1 ).SigSet )
 				% Calculate a normalized correctness value. First we calculate the accuracy for each class, then we average those accuracies together.
 				for class_index = 1:num_classes
 					per_class_correct_of_total( class_index, split_index ) = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.confusion_matrix( class_index, class_index ) / ...
-						results( problem_index ).Splits( split_index ).divisions.test_class_counts( class_index );
+						sum( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.confusion_matrix( class_index, : ) );
 					flattened_accuracies_by_ai{ ai_index }( end + 1 ) = per_class_correct_of_total( class_index, split_index );
 				end;
 				% Calculate correlations of predictions to known values if class values are available
@@ -672,7 +675,7 @@ for problem_index = 1:length( results )
 				per_class_correct_of_total = [];
 				for class_index = 1:num_classes
 					per_class_correct_of_total( class_index ) = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.confusion_matrix( class_index, class_index ) / ...
-						results( problem_index ).Splits( split_index ).divisions.test_class_counts( class_index );
+						sum( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.confusion_matrix( class_index, : ) );
 				end;
 				% Print performance metrics
 				fprintf( REPORT_HTML, '\t\t<b>%.0f &plusmn; %.0f %% Avg per Class Correct of total</b><br/>\n', ...
