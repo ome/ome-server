@@ -34,11 +34,11 @@ end;
 
 % get paths to all utilities
 svg_convert_path     = fullfile( codeDir, 'ps2SVG_coloredTree.pl' );
-fitch_path           = fullfile( codeDir, 'fitch' );
+fitch_path           = fullfile( codeDir, 'phylip3.65_src/fitch' );
+kitsch_path          = fullfile( codeDir, 'phylip3.65_src/kitsch' );
 fitch_infile_path    = fullfile( codeDir, 'fitch.infile' );
-drawtree_path        = fullfile( codeDir, 'drawtree' );
+drawtree_path        = fullfile( codeDir, 'phylip3.65_src/drawtree' );
 drawtree_infile_path = fullfile( codeDir, 'drawtree.infile' );
-batick_path          = fullfile( codeDir, 'batik-rasterizer.jar' );
 font_path            = fullfile( codeDir, 'font1' );
 
 fitch_log_path       = 'fitch.log';
@@ -71,9 +71,15 @@ labelled_svg_convert_command = [ labelled_svg_convert_command comma_delimited_bi
 perlLibIncludes = sprintf( 'export PERL5LIB=%s; ', codeDir );
 
 % Commands to generate a dendrogram
-fitch_command    = sprintf( '%s < %s &> %s; ', fitch_path, fitch_infile_path, fitch_log_path );
+if (num_samples > 3)
+	fitch_command    = sprintf( '%s < %s &> %s; ', fitch_path, fitch_infile_path, fitch_log_path );
+else
+	% we need to use kitsch if there are fewer than 4 classes.
+	fitch_command    = sprintf( '%s < %s &> %s; ', kitsch_path, fitch_infile_path, fitch_log_path );
+end
+
 drawtree_command = sprintf( 'ln -s %s fontfile; %s < %s &> %s; ', font_path, drawtree_path, drawtree_infile_path, drawtree_log_path );
-png_command      = sprintf( 'java -jar %s *svg; ', batick_path );
+png_command  = 'convert -density 96x96 dendrogram.svg dendrogram.gif; convert -density 96x96 dendrogram.labelled.svg dendrogram.labelled.gif;';
 
 % Make the system calls to generate a dendrogram figure in png and svg formats.
 current_dir = pwd;
@@ -93,11 +99,11 @@ end;
 if( ~exist( fullfile( saveDir, 'dendrogram.labelled.svg'), 'file' ) | ~reuseResults )
 	command = [ command labelled_svg_convert_command ];
 end;
-if( ( ~exist( fullfile( saveDir, 'dendrogram.png'), 'file' ) | ~exist( fullfile( saveDir, 'dendrogram.labelled.png'), 'file' ) ) | ~reuseResults )
+if( ( ~exist( fullfile( saveDir, 'dendrogram.gif'), 'file' ) | ~exist( fullfile( saveDir, 'dendrogram.labelled.gif'), 'file' ) ) | ~reuseResults )
 	command = [ command png_command ];
 end;
 command = [command sprintf( 'cd %s; ', current_dir ) ];
 system( command );
 
 svgPath = fullfile( saveDir, 'dendrogram.labelled.svg' );
-pngPath = fullfile( saveDir, 'dendrogram.labelled.png' );
+pngPath = fullfile( saveDir, 'dendrogram.labelled.gif' );
