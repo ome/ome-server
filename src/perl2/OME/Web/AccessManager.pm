@@ -38,6 +38,8 @@ use OME::Web::DefaultHeaderBuilder;
 use OME::Web::DefaultMenuBuilder;
 use OME::Web::GuestMenuBuilder;
 use OME::Web::GuestHeaderBuilder;
+use OME::Web::GuestFooterBuilder;
+use OME::Web::DefaultFooterBuilder;
 use base qw(OME::Web);
 
 
@@ -67,6 +69,7 @@ sub  getHeaderBuilder {
 =head2 getMenuBuilder
 
     Gets a menu builder for the user, based on guest status
+
 =cut
 
 sub getMenuBuilder {
@@ -85,6 +88,7 @@ sub getMenuBuilder {
 =head2 getFooterBuilder
     
     gets a footer builder..
+
 =cut
 
 
@@ -93,12 +97,10 @@ sub getFooterBuilder {
     my $self = shift;
     my $page = shift;
 
-    my $FOOTER_FILE=undef;
-
-    if ($self->Session()->isGuestSession() && $FOOTER_FILE) {
-	return new $FOOTER_FILE;
+    if ($self->Session()->isGuestSession()) {
+	return new OME::Web::GuestFooterBuilder;
     }
-    return undef;
+    return new OME::Web::DefaultFooterBuilder;
 }
 
 1;
