@@ -305,9 +305,7 @@ sub createWithKey {
 	$factory = OME::Factory->new($flags) unless $factory;
 	my $dbh = $factory->obtainDBH();
 	
-	my $userState = $factory->
-		findObject('OME::UserState', session_key => $sessionKey);
-#	logdbg "debug", "createWithKey: found existing userState(s)" if defined $userState;
+	my $userState = $self->makeOrGetUserState($factory,session_key => $sessionKey);
 	
 	return undef unless defined $userState;
 	$session = OME::Session->instance($userState, $factory,
@@ -316,11 +314,6 @@ sub createWithKey {
 	return undef unless ($session);
 
 	my $configuration = $factory->Configuration();
-
-	my $exp;
-	eval {
-	    $exp = $userState->User();	    
-	};
 
 	# check to see if this session is for a guest user. If it is,
 	# and if guests are disalllowed, punt.
@@ -361,15 +354,6 @@ sub createWithKey {
 			return undef;		
 	    }
 	}	
-	my $host;
-	if (exists $ENV{'HTTP_HOST'} ) {
-		$host = $ENV{'HTTP_HOST'};
-	} elsif (exists $ENV{'HOST'}) {
-		$host = $ENV{'HOST'};
-	}
-	
-	$userState->last_access('now()');
-	$userState->host($host);
 	
 	
 
@@ -564,39 +548,8 @@ sub createWithPassword {
 	} 
 
 
-	my $host;
-	if (exists $ENV{'HTTP_HOST'} ) {
-		$host = $ENV{'HTTP_HOST'};
-	} elsif (exists $ENV{'HOST'}) {
-		$host = $ENV{'HOST'};
-	}
+	my $userState = $self->makeOrGetUserState($bootstrap_factory,experimenter => $experimenter);
 
-	logdbg "debug", "createWithPassword: looking for userState,
-	experimenter_id=$experimenterID";
-	my $userState = $bootstrap_factory->
-		findObject('OME::UserState',experimenter_id => $experimenterID);
-	
-	if (!defined $userState) {
-		my $sessionKey = $self->generateSessionKey();
-		$userState = $bootstrap_factory->
-			newObject('OME::UserState', {
-				experimenter_id => $experimenterID,
-				session_key     => $sessionKey,
-				started         => 'now()',
-				last_access     => 'now()',
-				host            => $host
-			});
-		logdbg "debug", "createWithPassword: created new userState";
-		$bootstrap_factory->commitTransaction();
-	} else {
-		$userState->last_access('now()');
-		$userState->host($host);
-		$userState->session_key($self->generateSessionKey()) unless $userState->session_key();
-		logdbg "debug", "createWithPassword: found existing userState(s)";
-	}
-
-	logdie ref($self)."->createWithPassword:  Could not create userState object"
-		unless defined $userState;
 	my $session = OME::Session->instance($userState,
 		$bootstrap_factory, undef);
 
@@ -608,6 +561,80 @@ sub createWithPassword {
 	return $session;
 }
 
+=head2 makeOrGetUserState
+
+	$manager->makeOrGetUserState ( $factory, experimenter_id => $my_exp_id );
+	$manager->makeOrGetUserState ( $factory, experimenter => $my_experimenter_object );
+	$manager->makeOrGetUserState ( $factory, OMEName => $my_experimenter_username );
+	$manager->makeOrGetUserState ( $factory, session_key => $my_key );
+	# Note that passing session_key will return undef unless the key exists.
+	# In all other cases, the userstate will be created if it doesn't exist.
+
+=cut
+
+sub makeOrGetUserState {
+	my $self = shift;
+	my $factory = shift;
+	my %flags = @_;
+	my $experimenter;
+	my $userState;
+
+	if (exists $flags{experimenter_id} and defined $flags{experimenter_id}) {
+		$experimenter = $factory->loadObject ('OME::SemanticType::BootstrapExperimenter',
+			$flags{experimenter_id})
+				or logdie ref($self)."->makeOrGetUserState:  could not find experimenter ID ".$flags{experimenter_id};
+	} elsif (exists $flags{experimenter} and defined $flags{experimenter}) {
+		$experimenter = $factory->loadObject ('OME::SemanticType::BootstrapExperimenter',
+			$flags{experimenter}->id())
+				or logdie ref($self)."->makeOrGetUserState:  could not find experimenter ID ".$flags{experimenter}->id();
+	} elsif (exists $flags{OMEName} and defined $flags{OMEName}) {
+		$experimenter = $factory->findObject ('OME::SemanticType::BootstrapExperimenter',
+			OMEName => $flags{OMEName})
+				or logdie ref($self)."->makeOrGetUserState:  could not find experimenter OMEName=".$flags{OMEName};
+	} elsif (exists $flags{session_key} and defined $flags{session_key}) {
+		$userState = $factory->findObject('OME::UserState', session_key => $flags{session_key});
+		return $userState;
+	} else {
+		logdie ref($self)."->makeOrGetUserState:  missing parameters"
+	}
+
+
+
+	my $host;
+	if (exists $ENV{'HTTP_HOST'} ) {
+		$host = $ENV{'HTTP_HOST'};
+	} elsif (exists $ENV{'HOST'}) {
+		$host = $ENV{'HOST'};
+	}
+
+
+	$userState = $factory->
+		findObject('OME::UserState',experimenter_id => $experimenter->ID()) if $experimenter;
+	
+	if (!defined $userState) {
+		my $sessionKey = $self->generateSessionKey();
+		$userState = $factory->
+			newObject('OME::UserState', {
+				experimenter_id => $experimenter->ID(),
+				session_key     => $sessionKey,
+				started         => 'now()',
+				last_access     => 'now()',
+				host            => $host
+			});
+		logdbg "debug", "makeOrGetUserState: created new userState";
+		$factory->commitTransaction();
+	} else {
+		$userState->last_access('now()');
+		$userState->host($host);
+		$userState->session_key($self->generateSessionKey()) unless $userState->session_key();
+		logdbg "debug", "createWithPassword: found existing userState(s)";
+	}
+
+	logdie ref($self)."->makeOrGetUserState:  Could not create userState object"
+		unless defined $userState;
+	
+	return $userState;
+}
 
 #
 # logout
