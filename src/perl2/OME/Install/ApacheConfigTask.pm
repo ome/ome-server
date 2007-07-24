@@ -1245,6 +1245,7 @@ BLURB
 		if ($APACHE->{DEV_CONF}) {
 			$source = 'OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl';
 			$dest = 'src/perl2/NonblockingSlaveWorkerCGI.pl';
+			unlink( $dest ) if (-e $dest and ! -d $dest);
 			print $LOGFILE "Making sym-link $dest->$source\n";
 				symlink ($source, $dest) or
 				print $LOGFILE "Making sym-link $dest->$source\n$!\n" and
