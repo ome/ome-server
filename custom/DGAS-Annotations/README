@@ -19,7 +19,7 @@ To quickly see an example of this working, take the following 5 steps:
     with your username in ES_Bank_images.txt (be careful with the tabs, line endings, etc!)
   perl dgas-templates.pl
     This installs the templates
-  ome import ../src/xml/OME/Annotations/DGASannotations.ome
+  ome import ../../src/xml/OME/Annotations/DGASannotations.ome
     This imports the semantic types for genes, probes, etc.
   perl parseDGASannotations.pl DGAS_annotations.txt
     This imports images in ./DGAS_Images/, and annotates them using DGAS_annotations.txt
