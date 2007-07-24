@@ -1,0 +1,12 @@
+ImagePath	UserName	Cell Line	Task	ES Cell Type	Gene Symbol	Clone_No	Probe/AntiBody/Staining Type	Culture Condition	Magnification	ImageName
+DGAS_Images/B6R(5)/Live/Overexpression/Pou5f1/Clone_1/Dox+/10x1.TIF	thomasmp	B6R(5)	Live	Overexpression	Pou5f1	Clone_1		Dox+	10	10x1.TIF
+DGAS_Images/B6R(5)/Live/Overexpression/Pou5f1/Clone_1/Dox-/20x1.TIF	thomasmp	B6R(5)	Live	Overexpression	Pou5f1	Clone_1		Dox-	20	20x1.TIF
+DGAS_Images/B6R(5)/Live/Repression/Pou5f1/Clone_1/Dox+/10x1.TIF	thomasmp	B6R(5)	Live	Repression	Pou5f1	Clone_1		Dox+	10	10x1.TIF
+DGAS_Images/B6R(5)/In_situ/Overexpression/Nanog/Clone_1/Pou5f1/Dox+/5x1.TIF	thomasmp	B6R(5)	In_situ	Overexpression	Nanog	Clone_1	Pou5f1	Dox+	5	5x1.TIF
+DGAS_Images/B6R(5)/In_situ/Repression/Nanog/Clone_1/Pou5f1/Dox-/20x4.TIF	thomasmp	B6R(5)	In_situ	Repression	Nanog	Clone_1	Pou5f1	Dox-	20	20x4.TIF
+DGAS_Images/B6R(5)/Immunochemistry/Repression/Sox2/Clone_1/SSEA-1/Dox-/5x3.TIF	thomasmp	B6R(5)	Immunochemistry	Repression	Sox2	Clone_1	SSEA-1	Dox-	5	5x3.TIF
+DGAS_Images/B6R(5)/Staining/Repression/Otx2/Clone_1/Alkaline_Phosphatase/Dox-/5x2.TIF	thomasmp	B6R(5)	Staining	Repression	Otx2	Clone_1	Alkaline_Phosphatase	Dox-	5	5x2.TIF
+DGAS_Images/B6R(5)/Staining/Repression/Otx2/Clone_1/Alkaline_Phosphatase/Dox-/20x1.TIF	thomasmp	B6R(5)	Staining	Repression	Otx2	Clone_1	Alkaline_Phosphatase	Dox-	20	20x1.TIF
+DGAS_Images/MC1R(10)/Live/Overexpression/Pou5f1/Clone_1/Dox+/10x3.TIF	thomasmp	MC1R(10)	Live	Overexpression	Pou5f1	Clone_1		Dox+	10	10x3.TIF
+DGAS_Images/MC1R(10)/Live/Overexpression/Pou5f1/Clone_1/Dox+/5x10.TIF	thomasmp	MC1R(10)	Live	Overexpression	Pou5f1	Clone_1		Dox+	5	5x10.TIF
+DGAS_Images/MC1R(10)/Immunochemistry/Repression/Sox2/Clone_1/SSEA-1/Dox-/5x4.TIF	thomasmp	MC1R(10)	Immunochemistry	Repression	Sox2	Clone_1	SSEA-1	Dox-	5	5x4.TIF

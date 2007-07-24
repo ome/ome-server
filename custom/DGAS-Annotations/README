@@ -1,0 +1,105 @@
+This directory contains patches and support files necessary for
+modifying a "stock" OME installation to provide support for viewing
+annotated images in a tabular format. 
+
+The files provide a turn-key example installation using image files in the
+ES_Bank directory.  The image files are screenshots of text listing the
+correct annotations for each image.  The image files are arranged in a directory
+structure that represents how they should be annotated, but this directory
+structure is not parsed directly by the annotator, and the parsing code is not
+included as this would varry greatly depending on the particular work-flow used
+to collect the images.  What is included is a tab-delimited text file of the
+correct annotations for each image.  The parser for this file is also included in the
+distribution as it serves a useful example of a fairly sophisticated automated custom
+annotator.
+
+To quickly see an example of this working, take the following 5 steps:
+  ome admin users add -u thomasmp
+    This user will own the images and annotations.  Instead, you can replace thomasmp
+    with your username in ES_Bank_images.txt (be careful with the tabs, line endings, etc!)
+  perl dgas-templates.pl
+    This installs the templates
+  ome import ../src/xml/OME/Annotations/DGASannotations.ome
+    This imports the semantic types for genes, probes, etc.
+  perl parseDGASannotations.pl DGAS_annotations.txt
+    This imports images in ./DGAS_Images/, and annotates them using DGAS_annotations.txt
+  visit http://localhost/perl2/serve.pl?Page=OME::Web::TableBrowse&Template=GeneManipulationTable
+  
+  Try playing with the rows/columns menus to see the layout possibilities.
+  Restrict the display by typing in specific Genes separated by commas.
+  Modify parseES-BankAnnotations.pl to link Genes to your favorite genomic database.
+  Modify your favorite genomic database to link to image data in OME (all parameters
+    can be specified in the URL)
+  
+
+The main components of this functionality include:
+
+    1) The use of ImageAnnotationTable.pm to display annotated images
+    in a 2d grid. 
+    2) GeneStageAnnotator and ImageDetailAnnotator as modules for
+    creating annotations.
+    3) ImageAnnotationDetail for showing specific information about
+    each image.
+
+Each of these tools is driven by a set of data types as given in
+src/xml/OME/Annotations/DGASannotations.ome.
+
+Details of the implementation, configuration, and use of these tools can be
+found  on the OME Wiki:
+http://cvs.openmicroscopy.org.uk/tiki/tiki-index.php?page=NIA+Annotation+and+Viewing+Tools
+
+
+There are several files in this directory that can be used to modify an
+installation to provide this functionality:
+
+   1) dgas-templates.pl installs the appropriate view and browse templates
+      in the database:
+      Browse/GeneProbeTable.tmpl, Browse/GeneManipulationTable.tmpl
+      Display/One/OME/Image/GeneProbeTable.tmpl, Display/One/OME/Image/GeneManipulationTable.tmpl,
+      /Actions/Annotator/ProbeStage.tmpl
+   2) parseDGASannotations.pl is a perl script that reads annotations
+      from the tab-delimited DGAS_annotations.txt file, and imports images
+      from the DGAS_Images directory.
+   3) wish.xls contains image annotations for the WISH project in a spreadsheet form.
+      This spreadsheet is parsed by parseWISHannotations.pl, which is a slightly older
+      example than parseDGASannotations.pl (use parseDGASannotations.pl for future work).
+   4) Several display customizations are done using files in the ../NIA/ directory
+
+
+Customizations of this functionality should begin with the
+definition of a data model. This model should be instantiated in an
+OME-XML file which would take the place of
+DGASannotations.ome. A corresponding annotation spreadsheet,
+containing instances of types from the newly-defined data model, must
+also be built. Appropriate images should be obviously be provided as well.
+
+There are three  types of functionality that are not covered by the
+script and annotation files in this directory: category groups,
+publications, and a home page for guest users.
+
+The tabular image display supports color-coding images based on their
+categorization within a specified category group. The stock OME
+facility includes definition of the CategoryGroup and Category
+semantic types, but the patches given here do not instantiate any
+category groups or categories, so no annotations are given. These 
+objects can be imported, or created through the web page. Individual
+images can be categorized with the web interface, but creation of a
+new AnnotationTeplate referring to appropriate category groups might
+be needed. 
+
+The other functionality that is not supported by these patches
+involves publications. The ImageAnnotationDetail display has the
+ability to display publications associated with an image via the
+Publication and ImagePublication types defined in
+DGASannotations.ome. If this data is added into the system (again,
+via import or other means), it will be displayed as appropriate on
+image detail pages.
+
+Guest users do not have a default home page, so an appropriate entry point should be constructed
+if these pages are to be made available to guest users.
+Note that the parseDGASannotations.pl script retains user and group ownership for image annotations.
+In order for guests to have access to this data, the group ownership must be set to "undefined" for
+the Images, and the IImage MEXes that create the image Semantic Types
+(typically, ImageProbe, ImageExperiment, etc.).  There are commented-out lines in the
+parseDGASannotations.pl script that show how to do this.
+

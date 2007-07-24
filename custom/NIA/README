@@ -1,0 +1,16 @@
+These files are used to customize the appearnace of the public OME page at
+http://ome.grc.nia.nih.gov
+
+The customizations to the appearnace are:
+Custom Headers and Footers are generated for guest users:
+	GuestHeaderBuilder.pm replaces src/perl2/OME/Web/GuestHeaderBuilder.pm
+	GuestFooterBuilder.pm replaces src/perl2/OME/Web/GuestFooterBuilder.pm
+The default index.html OME page is changed to a two-level access page.
+	index.html replaces /var/www/html/index.html (on Fedora and RedHat systems)
+	index-yoshikawa.html added to /var/www/html/index.html (on Fedora and RedHat systems)
+Custom images added for government logos (added to OME's image directory - /OME/images/)
+	dhhs.gif
+	nia1.jpg
+	nih1.jpg
+	firstgov.gif
+	nih.gif
