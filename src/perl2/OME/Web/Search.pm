@@ -411,7 +411,7 @@ sub getObjectSelectionField {
 	confess "The options parameter is not a hash reference." 
 		unless ref( $options ) eq 'HASH';
 	my $default_obj     = $options->{ object } || $options->{ default_obj };
-	my $threshold_Popup = $options->{ max_elements_in_list } || 10;
+	my $threshold_Popup = $options->{ max_elements_in_list } || 50;
 	my $list_length     = $options->{ list_length } || 3;
 	
 	if( not defined $default_obj ) {
