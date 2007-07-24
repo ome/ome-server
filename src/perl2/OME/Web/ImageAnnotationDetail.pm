@@ -198,21 +198,16 @@ sub getImageDisplay {
 sub getPaths {
     my $self= shift;
     my $parameters = shift;
-
-    my @found_params = grep (m/\.load\/types/,@$parameters);
-    my $size = scalar(@found_params);
     my @paths;
 
-    for (my $i = 0; $i < $size; $i++) {
-	# get ith params
-	my @tmp = grep (m/\.load\/types$i/,@found_params);
-	my $path = $tmp[0];
-	# pull out entry
-	$path  =~ m/Path.load\/types$i-\[(.*)\]/;
-	# split them up.
-	my @elts = split(/,/,$1);
-	push(@paths,\@elts);
+    my @found_params = grep (m/Path\.load=/,@$parameters);
+    foreach my $param (@found_params) {
+    	$paths[$1] = [split (/,/,$2)] if $param =~ m/Path\.load=\[(\d+)\](.*)$/;
     }
+#     print STDERR "paths...\n";
+#     print STDERR Dumper(\@paths);
+#     print STDERR "\n";
+
     return \@paths;
 }
 
@@ -266,68 +261,67 @@ sub getPathDetail {
     # type will be undef when the map maps directly to image.
     # shifting walks down the list destructively,
     # so we have to copy the list when we recurse.
+	my ($STName1,$SEName) = split (/\./, shift @pathTypes);
+	my $STName2;
+	($STName2,$SEName) = split (/\./, shift (@pathTypes)) unless $SEName;
+#  print STDERR "\n\ngetPathDetail STName1,SEName: '$STName1','$SEName'\n";
+#  print STDERR "getPathDetail STName2,SEName: '$STName2','$SEName'\n";
 
-    my $map = shift @pathTypes;
-    $map = "@".$map;
-    my $targetField = shift @pathTypes;
-    my $type = "@".$targetField;
-
-
-    my @maps;
-    # find the maps that correspond to the root object.
+    my @objs;
+    my $accessor;
     if ($parentType eq 'OME::Image') {
-	@maps = $factory->findObjects($map,image=>$root);
-    }
-    else {
-	@maps = $factory->
-	    findObjects($map, { $parentType  =>
-				    $root});
+		$accessor = 'image';
+    } else {
+		$accessor = $parentType;
     }
 
-    
-    if (scalar(@maps) > 0) {
-	# if i have any maps
-
-	if (scalar(@pathTypes) ==0 ) {
-	    # we're at the end of the list of types.
-	    $html .= "<ul>";
-
-
-	    # find the image associated with the maps.
-	    foreach my $map (@maps) {
-		my $target = $map->$targetField;
-		# get the external URL
-		my $url = $self->getObjURL($target,$targetField);
-		$html .= "<li> $targetField: $url</br>";
-		
-	    }
-	    $html .= "</ul>";
+    # find the objects that correspond to the root object.
+	my ($target, $targetField, $targetType);
+#  print STDERR "getPathDetail Parent: $parentType, $STName1 -> $accessor; objects:\n";
+	if ($STName2) {
+		$targetType = $STName2;
+		$targetField = $STName2;
+		@objs = $factory->findObjects('@'.$STName1,$accessor=>$root);
+	} else {
+		# The object is not a map, so its the target
+		$targetType = $STName1;
+		$targetField = $STName1;
+		@objs = ($root->$STName1());
 	}
-	else  { # still more to go.
-	    #start a new list
-	    $html .= "<ul>";
-	    foreach my $map (@maps) {
-		# image probes now
+#  print STDERR Dumper(\@objs);
+#  print STDERR "\n";
 
-		# target field is now the next type in the
-		# hierarchy. - probe.
-		my $target = $map->$targetField;
-		$html .= "<li> ". $targetField . ": " .
-		    $self->getObjURL($target,$targetField) . "<br>\n";
+	# start a new list
+	$html .= "<ul>";
+    if (scalar(@objs) > 0) {
+	# if i have any objs
 
-		# recurse to populate the next level. Pass the array
-		# as a whole so it will get copied.
-		$html .= $self->getPathDetail($targetField,$target,@pathTypes);
+	    foreach my $obj (@objs) {
+	    	if ($STName2) {
+	    		# the object is a map, so we get the target by calling the targetField
+	    		$target = $obj->$targetField;
+	    	} else {
+	    		$target = $obj;
+	    	}
+	    	
+#      print STDERR "targetType: $targetType, SEName: $SEName object: $obj\n";
+			# get the external URL
+			if ($target) {
+				my $url = $self->getObjURL($target,$targetType,$SEName);
+				$html .= "<li> $targetField: $url</li>";
+				# recurse to populate the next level. Pass the array
+				# as a whole so it will get copied.
+				$html .= $self->getPathDetail($targetType,$target,@pathTypes) if scalar (@pathTypes);
+			} else {
+				$html .= "<li> $targetField: ** undefined **</li>";
+			}
 	    }
-	    # end the list.
-
-	    $html .= "</ul>";
-	}
+	} else  {
+		# if I found no objects.
+		$html .=  "<li>No ${targetField}s found</li>";
     }
-    else  {
-	# if I found no maps.
-	return "No ${targetField}s found<br>";
-    }
+	# end the list.
+	$html .= "</ul>";
     return $html;
 }
 
@@ -435,13 +429,13 @@ sub getPublicationDetails  {
 =cut
 sub getObjURL {
     my $self = shift;
-    my ($target,$type) = @_;
+    my ($target,$type,$field) = @_;
 
     my $session = $self->Session();
     my $factory = $session->Factory();
     my $q  = $self->CGI();
 
-    my $name = $target->Name();
+    my $name = $target->$field();
     my $html = $name;
     my $extLink = $self->getExternalLinkText($q,$type,$target);
     if ($extLink) {
