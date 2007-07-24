@@ -157,8 +157,8 @@ sub new {
 
 	# Popup info
 	$self->{_popup} = 1 if ( $CGI->param('Popup') or $CGI->url_param('Popup') );
-	$self->{_nomenu} = 1 if ( $CGI->param('NoMenu') or $CGI->url_param('Popup') );
-	$self->{_noheader} = 1 if ( $CGI->param('NoHeader') or $CGI->url_param('Popup') );
+	$self->{_nomenu} = 1 if ( $CGI->param('NoMenu') or $CGI->url_param('NoMenu') );
+	$self->{_noheader} = 1 if ( $CGI->param('NoHeader') or $CGI->url_param('NoHeader') );
 
 	$self->{RequireLogin} = 1;
 
@@ -604,7 +604,7 @@ sub createOMEPage {
 				])
 		);
 		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body_table);
-	}else{
+	} else {
 		$body_td = $CGI->td({valign => 'top', width => '100%'}, $body);
 	}
 
