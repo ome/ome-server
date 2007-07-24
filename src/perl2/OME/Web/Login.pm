@@ -210,7 +210,7 @@ END_JS
 	my $generic_footer =
 		$q->hr() .
 		$q->p({-align => 'center', -class => 'ome_footer'},
-			  'Powered by OME technology &copy 2006 ',
+			  'Powered by OME technology &copy 1999-2007 ',
 			  $q->a({-href => 'http://www.openmicroscopy.org/', -class => 'ome_footer', -target => '_ome'},
 				  'Open Microscopy Environment')
 		  );
