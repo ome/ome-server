@@ -202,6 +202,10 @@ execution are used as input.
 sub addActualInput {
     my $class = shift;
     my ($output_mex,$input_mex,$input_name) = @_;
+
+    Carp::confess "Undefined input MEX" unless defined $input_mex;
+    Carp::confess "Undefined input name" unless defined $input_name;
+
     my $factory = OME::Session->instance()->Factory();
 
     my $input_module = $input_mex->module();
@@ -492,6 +496,7 @@ given ST that were output by any MEXs in the array.
 sub getAttributesForMEX {
     my $class = shift;
     my ($mexes,$semantic_type,$criteria) = @_;
+	Carp::carp "Undefined mexes" and return undef unless defined $mexes;
     my $factory = OME::Session->instance()->Factory();
 
     $mexes = (ref($mexes) eq 'ARRAY')? $mexes: [$mexes];
@@ -771,6 +776,90 @@ sub getInputTag {
 
     return $input_tag;
 }
+
+
+=head2 chownMEX
+
+	OME::Tasks::ModuleExecutionManager->chownMEX ($image, user=>$user, group=>$group);
+	OME::Tasks::ModuleExecutionManager->chownMEX ($image, group_id=>$group->id());
+	# Make the MEX public
+	OME::Tasks::ModuleExecutionManager->chownMEX ($image, group_id=>undef);
+	# this doesn't do anything but returns true if the call would be successfull otherwise
+	my $canChown = OME::Tasks::ModuleExecutionManager->chownMEX ($image, group_id=>undef, try=>1);
+
+Changes the group and experimenter owner of the MEX.
+The OME::Session owner must either be superuser, leader of the group of the mex owner,
+or the experimenter owner of the mex.
+
+=cut
+
+sub chownMEX {
+	my ($self,$mex,@params_in)=@_ ;
+	my ($params, $group, $user, $hasGroup);
+	
+	return undef unless $mex and ref($mex) eq 'OME::ModuleExecution';
+	
+	# Let's accept a hash ref for the params, too.
+    if (ref($params_in[0]) eq 'HASH') {
+        $params = $params_in[0];
+    } else {
+        # Return undef if the params are not well-formed.
+	  return undef
+          unless (scalar(@params_in) >= 0) && ((scalar(@params_in) % 2) == 0);
+        $params = {@params_in};
+    }
+    
+    # Check the user/group params
+	my $session=OME::Session->instance();
+	my $factory=$session->Factory();
+
+	if (exists $params->{user_id}) {
+		# If the user is defined return if we can't load it
+		$user = $factory->loadObject('@Experimenter', $params->{user_id});
+		return undef unless $user;
+	} elsif (exists $params->{user}) {
+		$user = $params->{user};
+		return undef unless ref($user) eq 'OME::SemanticType::__Experimenter';
+	}
+
+	if (exists $params->{group_id}) {
+		# If the group is defined return if we can't load it
+		if ($params->{group_id}) {
+			$group = $factory->loadObject('@Group', $params->{group_id});
+			return undef unless $group;
+		}
+		$hasGroup=1; # We need to know if the caller set group to undef intentionally
+	} elsif (exists $params->{group}) {
+		# If the group is defined return if we can't load it
+		if ($params->{group}) {
+			$group = $params->{group};
+			return undef unless ref($group) eq 'OME::SemanticType::__Group';
+		}
+		$hasGroup=1; # We need to know if the caller set group to undef intentionally
+	}
+	
+	return undef unless $user or $hasGroup;
+	# check if the Session owner can change ownership of the MEX
+	my $canChownMEX = 1 if (
+		# The owner
+		($session->experimenter_id() == $mex->experimenter->id()) or
+		# The owner's boss
+		($session->experimenter_id() == $mex->experimenter->Group->Leader->id()) or
+		# The super-user
+		($session->isSuSession())
+	);
+	
+	return 0 unless $canChownMEX;
+	return 1 if $params->{try};
+	
+	$mex->experimenter ($user) if $user;
+	$mex->group ($group) if $hasGroup;
+	$mex->storeObject();
+	
+	return 1;
+
+}
+
 
 1;
 
