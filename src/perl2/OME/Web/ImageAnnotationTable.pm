@@ -171,6 +171,8 @@ sub new {
     $self->{rowLimit}   = 10;
     #  mapping types from annotation sts to images.
     $self->{ImageMaps}  = undef;
+    # Any image filters specified by the template.
+    $self->{filters}  = {};
 
 
     # value chosen for the row.
@@ -276,6 +278,8 @@ sub getTableDetails {
 
 
     # figure out what we have for rows and columns
+    # This will get $self->{filters}, $self->{rows} and $self->{columns}
+    my $types = $self->getTmplParams($tmpl);
 
     # if the value of Rows or Columns is 'None', don't set the values
     # - leave them undefined.
@@ -284,11 +288,18 @@ sub getTableDetails {
 	$self->{rows} = $q->param('Rows');
 	$tmpl_data{'rowFieldName'} = $self->{rows};
     }
-    else {
+    elsif ($q->param('Rows') && $q->param('Rows') eq 'None') {
+	$self->{rows} = undef;
 	$tmpl_data{'rowFieldName'} = "Rows";
     }
+    else {
+	$tmpl_data{'rowFieldName'} = $self->{rows};
+    }
+
     if ($q->param('Columns') && $q->param('Columns') ne 'None') { 
 	$self->{columns} = $q->param('Columns');
+    } elsif ($q->param('Columns') && $q->param('Columns') eq 'None') {
+	$self->{columns} = undef;
     }
     # set the 'prevRows' field in the template to be equalto hat i
     # specify for the rows. If there is a value for prevRows in the
@@ -304,7 +315,6 @@ sub getTableDetails {
 
 
     # populate the pull-downs.
-    my $types = $self->getTypes($tmpl);
 
     if ($ENABLE_ROW_COLUMN_CHOICES != 0) {
 	$self->getChoices(\%tmpl_data,$types);
@@ -370,9 +380,9 @@ sub getTableDetails {
 
 =head2
 
-    my $types = $self->getTypes($tmpl);
+    my $types = $self->getTmplParams($tmpl);
 
-    getTypes - for the template. For a gievn template, 
+    get Types for the template. For a gievn template, 
     finds the TMPL_VARS given in a  Path.load/types-[..] format. 
     
     this will be a list of paths, separated by commas.
@@ -397,21 +407,45 @@ sub getTableDetails {
       EmbryoStage => ('EmbryoStage','ImageEmbryoStage') }
   
     The return value is the reference to the hash.
-
+    
+    Additional template parameters are:
+    Filter.load/ImageAttributeList.AttributeElement:value
+    Thus,
+    Filter.load/PublicationStatusList.Publishable:1
+    will only display images that have PublicationStatusList.Publishable set to true.
+    
+    
+    DefaultRow.load/Key=Gene
+    DefaultColumn.load/Key=EmbryoStage
+    Sets the default Row and Column (unless specified in the query/form) to one of the
+    dimensions defined above.
+    
 =cut
 
-sub getTypes {
+sub getTmplParams {
 
     my $self= shift;
     my $tmpl = shift;
     my @parameters = $tmpl->param();
-    my @found_params  = grep (m/\.load\/types/,@parameters);
-    my $paramCount = scalar(@found_params);
+    my @default_params = grep (m/Default(Column|Row)\.load\//,@parameters);
+    my @filt_params = grep (m/Filter\.load\//,@parameters);
+    my @types_params  = grep (m/\.load\/types/,@parameters);
+    my $typesParamCount = scalar(@types_params);
     my %pathSet;
-    # iterate over them in order
-    for (my $i = 0; $i < $paramCount;  $i++) {
+    
+    
+    foreach my $def (@default_params) {
+    	$self->{columns} = $1 if $def =~ /Column\.load\/Key=(.+)$/;
+    	$self->{rows} = $1 if $def =~ /Row\.load\/Key=(.+)$/;
+    }
+    foreach my $filt (@filt_params) {
+    	$self->{filters}->{$1} = $2 if $filt =~ /Filter\.load\/([^:]+):(.+)$/;
+    }
 
-	my $param = $found_params[$i];
+    # iterate over the types params in order
+    for (my $i = 0; $i < $typesParamCount;  $i++) {
+
+	my $param = $types_params[$i];
 
 	# find the path value.
 	$param =~ m/Path.load\/types-\[(.*)\]/;
@@ -622,7 +656,7 @@ sub getCategories {
     
     The main rendering code. Parameters are the container in which
     this is being executed, the template being populated, and the
-    types hash as returned from getTypes.
+    types hash as returned from getTmplParams.
 
     Return value is true if data is found, else false
 
@@ -1085,7 +1119,7 @@ sub populateCells {
 		my $rName = $rowLeaf;
 	
 		# hard-code some stuff in.
-		my %findHash;
+		my %findHash = %{$self->{filters}};
 		$findHash{'__distinct'} = 'id';
 	
 		# build up the query hash with values for all of the types  in
@@ -1106,7 +1140,6 @@ sub populateCells {
 				$factory->findObjects('OME::Image',\%findHash);
 			my $imagesRef = \@images;
 			
-			$imagesRef= $self->filterByPublicationStatus($imagesRef);
 		
 			if ($self->{Category} && $self->{CategoryGroup}) {
 				$imagesRef = $self->filterByCategory($imagesRef);
@@ -1206,28 +1239,6 @@ sub getImageAccessors {
     }
 }
 	    
-
-=head2 filterByPublicationStatus
-
-=cut
-
-sub filterByPublicationStatus {
-    my $self=shift;
-    my ($images) = @_;
-
-    my @filtered;
-    foreach my $image (@$images) {
-	# find most recent publication status for this image.
-	my $statusList = $image->PublicationStatusList(
-	    __order =>'!module_execution.timestamp');
-	if ($statusList) {
-	    my $status = $statusList->next();
-	    push (@filtered,$image)  if ($status && $status->Publishable());
-	}
-    }
-    return \@filtered;
-}
-
 
 =head2 filterByCategory
     my $imagesRef= $self->filterByCategory($imagesRef);
