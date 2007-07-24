@@ -58,7 +58,7 @@ use base qw(OME::Web::DefaultMenuBuilder);
 #*********
 
 $VERSION = $OME::VERSION;
-my $ENABLE_MOUSE_ANNOTATIONS = 1;
+my $ENABLE_DGAS_ANNOTATIONS = 1;
 
 my @GUEST_MENU = (
 	# ** Search **
@@ -120,12 +120,12 @@ my @GUEST_MENU = (
  		text => 'Search by Annotation',
  	},
 
-        # ** Mouse Annotations ** 
-( $ENABLE_MOUSE_ANNOTATIONS ? (
+        # ** DGAS Annotations ** 
+( $ENABLE_DGAS_ANNOTATIONS ? (
  	{
  		web_class => undef,
  		type => 'heading',
- 		text => 'Mouse Annotations',
+ 		text => 'DGAS Annotations',
  	},
         {
  		web_class => 'OME::Web::ImageAnnotationTable',
@@ -162,7 +162,7 @@ my @GUEST_MENU = (
 		text => 'Options',
 	},
 	{
-		web_class => 'OME::Web::Logout',
+		web_class => 'OME::Web::Login',
 		type => 'link',
 		text => undef,
 	},

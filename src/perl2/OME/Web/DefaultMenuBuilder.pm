@@ -57,7 +57,7 @@ use OME::Web;
 #*********
 
 $VERSION = $OME::VERSION;
-my $ENABLE_MOUSE_ANNOTATIONS = 0;
+my $ENABLE_DGAS_ANNOTATIONS = 0;
 
 my @MENU = (
 	# ** CREATE **
@@ -172,17 +172,17 @@ my @MENU = (
 		text => 'Import Spreadsheet',
 	},
 
-        # ** Mouse Annotations ** 
-( $ENABLE_MOUSE_ANNOTATIONS ? (
+        # ** DGAS Annotations ** 
+( $ENABLE_DGAS_ANNOTATIONS ? (
  	{
  		web_class => undef,
  		type => 'heading',
- 		text => 'Mouse Annotations',
+ 		text => 'DGAS Annotations',
  	},
         {
  		web_class => 'OME::Web::GeneStageAnnotator',
  		type => 'link',
-		url_param => { Template=>'MouseAnnotations'},
+		url_param => { Template=>'DGASannotations'},
  		text => 'Annotate Images'
  	},
         {
