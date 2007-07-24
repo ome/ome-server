@@ -496,17 +496,6 @@
 	</SemanticType>
 
 	<SemanticType 
-		Name="ImageGeneticManipulation"
-		AppliesTo="I">
-		<Description>Relationship between an Image and a GeneticManipulation.</Description>
-		<Element 
-			Name="GeneticManipulation"
-			DBLocation="IMAGE_GENETIC_MANIPULATION.GENETIC_MANIPULATION_ID"
-			DataType="reference"
-			RefersTo="GeneticManipulation"/>
-	</SemanticType>
-
-	<SemanticType 
 		Name="CellLine"
 		AppliesTo="G">
 		<Description>A parental cell line.</Description>
