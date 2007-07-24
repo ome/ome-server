@@ -45,16 +45,12 @@ use OME::Web::TableBrowse::HeaderBuilder;
 use OME::Web::ImageAnnotationTable;
 use OME::Web::TemplateManager;
 
-my $TEMPLATE='GeneProbeTable';
-my $ROW='Gene';
-my $COLUMN='EmbryoStage';
-
 sub getPageTitle {
-    return "OME: Browsing Mouse Images";
+    return "OME: Browsing Images in Table View";
 }
 
 {
-	my $menu_text = "Browse Mouse Images";
+	my $menu_text = "Browse Image Table";
 	sub getMenuText { return $menu_text }
 }
 
@@ -63,21 +59,24 @@ sub getPageBody {
     my $q =  $self->CGI();
     my $session = $self->Session();
     my $factory = $session->Factory();
-    my %tmpl_data;
 
-    my $sub = $q->param('submit');
-
-    $tmpl_data{$ROW} = $q->param($ROW) if (defined
-					       $q->param($ROW));
-
-    # Gene and embryo Stage for rows and columns if not specified
-    $q->param(-name=>'Template',-value=>$TEMPLATE) unless $q->param('Template');
-    $q->param(-name=>'Rows',-value=>$ROW) unless $q->param('Rows');
-    $q->param(-name=>'Columns',-value=>$COLUMN) unless $q->param('Columns');
+    # Find a template if not specified
+    if ( not $q->param('Template') and $q->url_param('Template') ) {
+    	$q->param(-name=>'Template',-value=> $q->url_param('Template'));
+    	print STDERR "Got url param but not param\n";
+    }
+    if (not $q->param('Template')) {
+    	my $template = $factory->findObject ('@BrowseTemplate',{
+    		ImplementedBy => ref ($self)
+    	});
+		die "Could not find appropriate BrowseTemplate for OME::Web::TableBrowse" unless $template;
+    	$q->param(-name=>'Template',-value=> $template->Name());
+    }
     
     my $table = new OME::Web::ImageAnnotationTable();
 
     my $tmpl = OME::Web::TemplateManager->getBrowseTemplate($q->param('Template'));
+	die "The template '".$q->param('Template')."' could not be loaded" unless $tmpl;
 
     my $output =
 	$table->getTableDetails($self,$tmpl,'OME::Web::TableBrowse');
@@ -91,13 +90,9 @@ sub getPageBody {
     return ('HTML',$html);	
 }
 
-
+# These are turned off
 sub getMenuBuilder {
     return undef;
-}
-
-sub getHeaderBuilder {
-    return new OME::Web::TableBrowse::HeaderBuilder();
 }
 
 
