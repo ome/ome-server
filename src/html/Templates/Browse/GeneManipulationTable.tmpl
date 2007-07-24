@@ -1,0 +1,24 @@
+<TMPL_INCLUDE NAME="ImageAnnotationHeader.tmpl">
+<!--
+Format for table paths:
+Each path starts with an ST and terminates with an Image ST.  The intermediate objects complete the path from the ST to the image.
+The string in brackets is an optional menu label.  If not specified, the first ST name will be displayed in the menu.
+-->
+<TMPL_VAR NAME="Path.load=[Gene Manipulation]Gene.Name:GeneticManipulation.Type(ImageGeneticManipulation)">
+<TMPL_VAR NAME="Path.load=[Culture Condition]CultureCondition.Name(ImageCultureCondition)">
+<TMPL_VAR NAME="Path.load=[Expression State]ExpressionState.Name(ImageExpressionState)">
+<TMPL_VAR NAME="Path.load=[Probe Gene]Gene.Name:ProbeGene:Probe.Name:ExperimentProbe:Experiment.Type(ImageExperiment)">
+<TMPL_VAR NAME="Path.load=[Experiment Type]Experiment.Type(ImageExperiment)">
+<TMPL_VAR NAME="Path.load=[Cell Line]CellLine.Name(ImageCellLine)">
+<!--
+Format for DefaultRow and DefaultColumn:
+The string following the parenthesis is the label from above.
+-->
+
+<TMPL_VAR NAME="DefaultRow.load/Key=Gene Manipulation">
+<TMPL_VAR NAME="DefaultColumn.load/Key=Expression State">
+<TMPL_VAR NAME="RowColumnMenu.load/Enabled=1">
+<TMPL_VAR NAME="CategoriesMenu.load/Enabled=1">
+
+
+<TMPL_INCLUDE NAME="ImageAnnotationFooter.tmpl">
