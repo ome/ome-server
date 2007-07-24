@@ -264,6 +264,7 @@ sub getPageBody {
 
 	# Actual Inputs Tables
 	foreach my $ai ( @actual_inputs ) {
+		next unless $ai->input_module_execution();
 		my $attributes = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX($ai->input_module_execution,$ai->formal_input()->semantic_type);
 		push( @{ $tmpl_data{ inputs } }, { input => 
