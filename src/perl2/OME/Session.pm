@@ -717,6 +717,7 @@ sub activateRepository {
     my $isGuestSession = $session->isGuestSession 
 
 =cut
+
 sub isGuestSession {
     my $self = shift;
     my $exp; 
@@ -729,6 +730,28 @@ sub isGuestSession {
 
     return (($exp->FirstName() eq 'Guest') &&
 	    ($exp->LastName() eq 'User'));
+}
+
+=head2 isSuSession 
+
+    my $isGuestSession = $session->isSuSession 
+
+returns true if this is a super-user session
+
+=cut
+
+sub isSuSession {
+    my $self = shift;
+	my $configuration = $self->factory->Configuration();
+    my ($exp_id,$superuser);
+        
+    eval {
+		$exp_id = $self->experimenter_id();	    
+		$superuser     = $configuration->super_user();
+    };
+    return undef unless $exp_id;
+    return 0 if ($superuser and $exp_id != $superuser);
+    return 1;
 }
 
 
