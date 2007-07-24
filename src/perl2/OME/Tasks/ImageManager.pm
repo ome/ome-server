@@ -631,6 +631,100 @@ sub getImageWavelengths{
 	return \@Wavelengths;
 }
 
+
+=head2 chownImage
+
+	OME::Tasks::ImageManager->chownImage($image,user=>$user,group=>$group);
+	OME::Tasks::ImageManager->chownImage($image,group_id=>$group->id());
+	# Make the Image public
+	OME::Tasks::ImageManager->chownImage($image,group_id=>undef);
+	# this doesn't do anything but returns true if the call would be successfull otherwise
+	my $canChown = OME::Tasks::ImageManager->chownImage($image, group_id=>undef, try=>1);
+
+Changes the group and experimenter owner of the image and its import MEX.
+The OME::Session owner must either be superuser, leader of the group of the image and mex owner,
+or the experimenter owner of the image and mex.
+
+=cut
+
+sub chownImage {
+	my ($self,$image,@params_in)=@_ ;
+	my ($params, $group, $user, $hasGroup);
+	
+	return undef unless $image and ref($image) eq 'OME::Image';
+	
+	# Let's accept a hash ref for the params, too.
+    if (ref($params_in[0]) eq 'HASH') {
+        $params = $params_in[0];
+    } else {
+        # Return undef if the params are not well-formed.
+	  return undef
+          unless (scalar(@params_in) >= 0) && ((scalar(@params_in) % 2) == 0);
+        $params = {@params_in};
+    }
+    
+    # Check the user/group params
+	my $session=$self->__Session();
+	my $factory=$session->Factory();
+
+	if (exists $params->{user_id}) {
+		# If the user is defined return if we can't load it
+		$user = $factory->loadObject('@Experimenter', $params->{user_id});
+		return undef unless $user;
+	} elsif (exists $params->{user}) {
+		$user = $params->{user};
+		return undef unless ref($user) eq 'OME::SemanticType::__Experimenter';
+	}
+
+	if (exists $params->{group_id}) {
+		# If the group is defined return if we can't load it
+		if ($params->{group_id}) {
+			$group = $factory->loadObject('@Group', $params->{group_id});
+			return undef unless $group;
+		}
+		$hasGroup=1; # We need to know if the caller set group to undef intentionally
+	} elsif (exists $params->{group}) {
+		# If the group is defined return if we can't load it
+		if ($params->{group}) {
+			$group = $params->{group};
+			return undef unless ref($group) eq 'OME::SemanticType::__Group';
+		}
+		$hasGroup=1; # We need to know if the caller set group to undef intentionally
+	}
+	
+	return undef unless $user or $hasGroup;
+	
+	# Get the import MEX	
+	my $import_mex = $factory->findObject( "OME::ModuleExecution", 
+		'module.name' => 'Image import', 
+		image => $image, 
+		__order => 'timestamp'
+	) or return undef;
+	
+	my $canChownMEX = 
+		OME::Tasks::ModuleExecutionManager->chownMEX ($import_mex, $params);
+	return $canChownMEX unless $canChownMEX == 1;
+
+	# check if the Session owner can change ownership of the OME::Image
+	my $canChownImage = 1 if (
+		# The owner
+		($session->experimenter_id() == $image->experimenter->id()) or
+		# The owner's boss
+		($session->experimenter_id() == $image->experimenter->Group->Leader->id()) or
+		# The super-user
+		($session->isSuSession())
+	);
+	return 0 unless $canChownImage;
+	return 1 if $params->{try};
+
+	$image->experimenter ($user) if $user;
+	$image->group ($group) if $hasGroup;
+	$image->storeObject();
+
+	return 1;
+}
+
+
 =head2 getImageOriginalFiles
 
 	my $originalFiles = OME::Tasks::ImageManager->getImageOriginalFiles($image);
