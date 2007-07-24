@@ -116,7 +116,6 @@ sub __getDatasetForm {
 		$q->td({width => '75%'}, 
 			$self->SearchUtil()->getObjectSelectionField( 
 				'OME::Dataset', 'existing_dataset', { 
-					max_elements_in_list => 20,
 					list_length => 1, 
 					select_one  => 1,
 					form_name   => 'datatable',
