@@ -172,9 +172,8 @@ sub getAnnotationDetails {
     my $roots = $self->parseRoots($root);
 
     # get the header
-    my $annotation_detail;
-    my $ok;
-    my ($annotation_detail,$ok,$roots) = $self->loadRoots($roots,$paths);
+    my ($annotation_detail,$ok);
+    ($annotation_detail,$ok,$roots) = $self->loadRoots($roots,$paths);
     
     print  STDERR "**roots loaded. ok is $ok \n";
     if ($ok ==  1) {
@@ -324,7 +323,7 @@ sub getPageHeader {
 	next unless ($root);
 	my $rootType = $paths->[$i]->[0];
 	my $header = $self->getHeader($container,$root,$rootType);
-	if ($i > 0  & $rootText ne "") {
+	if ($i > 0  && $rootText ne "") {
 	    $rootText .= ", ";
 	}
 	$rootType =~ /@(.*)/;
@@ -399,18 +398,6 @@ sub getDimLayoutCode {
 
     my ($container,$paths,$roots,$template,$first,$images) =@_;
 
-    my $factory = $session->Factory();
-    if (!$images) {
-	my @imageArray;
-	$images = \@imageArray;
-    }
-
-    # first time through require special handling: for first
-    # dimension, we will grab images. for all others, we will 
-    # filter from originalset.
-    $first = 1 unless (defined $first);
-
-    my $factory = $session->Factory();
     if (!$images) {
 	my @imageArray;
 	$images = \@imageArray;
