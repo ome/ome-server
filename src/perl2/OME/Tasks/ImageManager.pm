@@ -646,7 +646,7 @@ sub getImageOriginalFiles{
 	my ($self,$image)=@_ ;
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
-	
+
 	my $import_mex = $factory->findObject( "OME::ModuleExecution", 
 		'module.name' => 'Image import', 
 		image => $image, 
@@ -658,6 +658,8 @@ sub getImageOriginalFiles{
 		module_execution => $import_mex,
 		'formal_input.semantic_type.name' => 'OriginalFile'
 	) or return undef;
+	
+	return undef unless $ai->input_module_execution();
 
 	my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
 		$ai->input_module_execution,
