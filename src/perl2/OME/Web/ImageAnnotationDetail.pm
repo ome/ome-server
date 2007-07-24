@@ -165,6 +165,7 @@ sub getPageBody {
     data appropriately.
 
 =cut
+
 sub getImageDisplay {
     my $self  = shift;
     my ($parameter_names,$tmpl_data,$image) = @_;
@@ -195,6 +196,7 @@ sub getImageDisplay {
     
 
 =cut
+
 sub getPaths {
     my $self= shift;
     my $parameters = shift;
@@ -213,6 +215,7 @@ sub getPaths {
 
 
 =head2 getDetail
+
     $self->getDetail($pathTypes,$root)
 
     Generate the detailed output from the semantic type paths. Iterate
@@ -236,7 +239,7 @@ sub getDetail {
 =head1 getPathDetail
 
     $self->getPathDetail($pathTypes,$parentType,$root);
-o
+
     Recursively iterate through one path of types, populating the list s
     until we get down to the bare items at the end
 
@@ -363,6 +366,7 @@ sub getClassificationDetails  {
 }
 
 =head1 getClassificationDetail
+
     $self->getClassificationDetail($classification);
 
     get the detail for a specific classification
@@ -427,6 +431,7 @@ sub getPublicationDetails  {
     available, the name of the object is returned.
 
 =cut
+
 sub getObjURL {
     my $self = shift;
     my ($target,$type,$field) = @_;
