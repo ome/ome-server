@@ -1,5 +1,5 @@
-# OME/Web/TableBrowse/HeaderBuilder.pm
-# Default header generation class for a non-overriden getPageHeader()
+# OME/Web/GuestHeaderBuilder.pm
+# Custom header generation class for a guest user
 
 #-------------------------------------------------------------------------------
 #
@@ -37,7 +37,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::TableBrowse::HeaderBuilder;
+package OME::Web::GuestHeaderBuilder;
 
 #*********
 #********* INCLUDES

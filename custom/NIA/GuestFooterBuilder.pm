@@ -1,4 +1,5 @@
-# OME/Web/TableBrowse/FooterBuilder.pm
+# OME/Web/GuestFooterBuilder.pm
+# Custom footer generation class for a guest user
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -34,7 +35,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::TableBrowse::FooterBuilder;
+package OME::Web::GuestFooterBuilder;
 
 #*********
 #********* INCLUDES
