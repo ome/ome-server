@@ -600,7 +600,6 @@ sub getStuffToPopulateHasOneRef {
 	# do the rendering.
 	my $select = $self->SearchUtil()->getObjectSelectionField( 
 		$type, $fieldName, { 
-			max_elements_in_list => 25, 
 			list_length          => 1, 
 			select_one           => 1,
 			object               => $obj
