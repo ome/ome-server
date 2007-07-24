@@ -30,6 +30,9 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Harry Hochheiser <hsh@nih.gov>
+#                Ilya Goldberg <igg@nih.gov>
+#                  * Added ability to specify hierarchies without mapping types (one-to-many)
+#                  * Moved several options into template parameters, and clenaed up format.
 #
 #-------------------------------------------------------------------------------
 
@@ -54,7 +57,7 @@ OME::Web::ImageAnnotationTable - An OME page displaying a table of
     development stages as the columns and genes/probes forming the
     rows (Yoshikawa, et al., Figure 3). 
 
-    ImageAnnotationTable is an OME::Web page tha supports this
+    ImageAnnotationTable is an OME::Web page that supports this
     layout. Furthermore, for any given grid construction, images
     within a cell can be color-coded on the basis of values from a
     specified category group.
@@ -92,28 +95,27 @@ OME::Web::ImageAnnotationTable - An OME page displaying a table of
 =head1 TYPE SPECIFICATION
 
 
-    The template must contain an entry of the form 
+    The template must contain at least two entries of the form 
 
-    <TMPL_VAR   NAME="Path.load/types-[Gene:ProbeGene:Probe(ImageProbe),
-    EmbryoStage(ImageEmbryoStage)]"> 
+    <TMPL_VAR NAME="Path.load=[Gene Manipulation]Gene.Name:GeneticManipulation.Type(ImageGeneticManipulation)">
 
-    This list has two items. Each are lists of data types and mapping
-    types that map between those types. Thus, Gene is a type that can
-    map to Probes via the ProbeGene mapping type. Parenthesized types
-    are types that map from the given type to images: thus, ImageProbe
+	Each of these specifies a hierarchy to be used as an axis in the table - rows and columns.
+	The text in square brackets ([]) is used as a label for this hierarchy or path.
+	Each item in the path is separated by ':'.  The last item, which must be an Image attribute, is
+	surrounded by parentheses.  Each item in the path must also be connected to its neighbors with
+	references:  GeneticManipulation has a reference to Gene.  ImageGeneticManipulation has a
+	reference to GeneticManipulation, so GeneticManipulation is connected to both Gene and to
+	ImageGeneticManipulation.  These objects have direct connections.  It is also possible to specify
+	connections using mapping objects.  Mapping objects are listed as path items without fields, and
+	they will not appear in the table, though they will obviously be used in the queries that generate it.
+	The example below illustrates a hierarchy connected using mapping objects:
+
+    <TMPL_VAR NAME="Path.load=[Gene-Probe]Gene.Name:ProbeGene:Probe.Name(ImageProbe)">
+	
+	Both of these examples use a two-level hierarchy on a single axis because they contains two object.field
+	specifications, each of which will be expanded in the table.
+    Parenthesized types are types that map from the given type to images: thus, ImageProbe
     relates Probes to Images.  
-
-    Each of these lists forms a type path from some starting point to
-    an ending point: ie., from Gene - Probe. These paths will form the
-    nested rows or columns of the table display. 
-
-    The parenthesized types will be used to find images that relate to
-    the specified types. Thus, after a search has identified all
-    genes, and for each gene found all probes, ImageProbe will be used
-    to find the images for a specific probe: the probe provides
-    specific enough information.   Each path given in the
-    list must specify at least one parenthesized type to match to
-    images.
 
     In the Gene:ProbeGene:Probe(ImageProbe) example, the ProbeGene
     relationship is essentially a many-to-one: one gene can have many
@@ -133,8 +135,8 @@ OME::Web::ImageAnnotationTable - An OME page displaying a table of
     This can be accomplished by providing mapping types from both
     locations and strains to images, as follows:
 
-    <TMPL_VAR NAME="Path.load/types-[WormLocation(ImageWormLocation):
-         WormLocationStrain:Strain(ImageStrain),Age(ImageAge)]">
+    <TMPL_VAR NAME="Path.load=[Worm-Location]WormLocation(ImageWormLocation):
+         WormLocationStrain:Strain(ImageStrain)">
 
 =cut
 
@@ -147,10 +149,9 @@ use OME::SessionManager;
 use base qw(OME::Web);
 use Time::HiRes qw(gettimeofday tv_interval);
 use OME::Web::TemplateManager;
+use Data::Dumper;
 
 my $NO_COLS='__NONE__';
-my $ENABLE_ROW_COLUMN_CHOICES = 0;
-my $ENABLE_CATEGORIES         = 1;
 
 sub new {
     my $proto =shift;
@@ -173,6 +174,11 @@ sub new {
     $self->{ImageMaps}  = undef;
     # Any image filters specified by the template.
     $self->{filters}  = {};
+    # Row/Column Menus enabled
+    $self->{HasRowColumnChoice}  = 0;
+    # Row/Column Menus enabled
+    $self->{HasCategories}  = 1;
+    
 
 
     # value chosen for the row.
@@ -281,25 +287,28 @@ sub getTableDetails {
     # This will get $self->{filters}, $self->{rows} and $self->{columns}
     my $types = $self->getTmplParams($tmpl);
 
+  #  print STDERR" *** types are ***\n";
+#    print STDERR Dumper($types);
+#    print "\n\n";
     # if the value of Rows or Columns is 'None', don't set the values
     # - leave them undefined.
     
     if ($q->param('Rows') && $q->param('Rows') ne 'None') {
-	$self->{rows} = $q->param('Rows');
-	$tmpl_data{'rowFieldName'} = $self->{rows};
+		$self->{rows} = $q->param('Rows');
+		$tmpl_data{'rowFieldName'} = $self->{rows};
     }
     elsif ($q->param('Rows') && $q->param('Rows') eq 'None') {
-	$self->{rows} = undef;
-	$tmpl_data{'rowFieldName'} = "Rows";
+		$self->{rows} = undef;
+		$tmpl_data{'rowFieldName'} = "Rows";
     }
     else {
-	$tmpl_data{'rowFieldName'} = $self->{rows};
+		$tmpl_data{'rowFieldName'} = $self->{rows};
     }
 
     if ($q->param('Columns') && $q->param('Columns') ne 'None') { 
-	$self->{columns} = $q->param('Columns');
+		$self->{columns} = $q->param('Columns');
     } elsif ($q->param('Columns') && $q->param('Columns') eq 'None') {
-	$self->{columns} = undef;
+		$self->{columns} = undef;
     }
     # set the 'prevRows' field in the template to be equalto hat i
     # specify for the rows. If there is a value for prevRows in the
@@ -316,17 +325,17 @@ sub getTableDetails {
 
     # populate the pull-downs.
 
-    if ($ENABLE_ROW_COLUMN_CHOICES != 0) {
+    if ($self->{HasRowColumnChoice}) {
 	$self->getChoices(\%tmpl_data,$types);
     }
 
-    if ($ENABLE_CATEGORIES!=0) {
+    if ($self->{HasCategories}) {
 	$tmpl_data{'categoryGroups/render-list_of_options'}=
 	    $self->getCategoryGroups($container);
 	
 	$tmpl_data{'categories/render-list_of_options'} = 
 	    $self->getCategories($container);
-	$tmpl_data{HasCategories} = $ENABLE_CATEGORIES;
+	$tmpl_data{HasCategories} = $self->{HasCategories};
     }
 
     # timer stuff.
@@ -390,10 +399,12 @@ sub getTableDetails {
     some root to a map that refers to an image.
 
     thus, 
-    Path.load/types-[Gene:ProbeGene:Probe:ImageProbe,
-                     EmbryoStage:ImageEmbryoStage]
+    Path.load=[Gene-Probe]Gene.Name:ProbeGene:Probe.Name(ImageProbe)
+    Path.load=[Genetic Manipulation]Gene.Name:GeneticManipulation.Type(ImageGeneticManipulation)
+    Path.load=EmbryoStage.Name(ImageEmbryoStage)
+                     
 
-    defines two dimensions.
+    defines three dimensions.
 
     The result of this call will be a hash. The keys to the hash will
     be the first entries (the roots) in each of the dimension paths.
@@ -403,8 +414,12 @@ sub getTableDetails {
     path objects.
     Thus, for the above example, we will have the following result:
 
-    { Gene =>  ('Gene','ProbeGene','Probe','ImageProbe'),
-      EmbryoStage => ('EmbryoStage','ImageEmbryoStage') }
+    {
+      'Gene-Probe' =>  ['Gene.Name','ProbeGene','Probe.Name'],
+      'Genetic Manipulation' => ['Gene.Name','GeneticManipulation.Type'],
+      'EmbryoStage' => ['EmbryoStage.Name'] }
+
+    {
   
     The return value is the reference to the hash.
     
@@ -415,10 +430,16 @@ sub getTableDetails {
     will only display images that have PublicationStatusList.Publishable set to true.
     
     
-    DefaultRow.load/Key=Gene
+    DefaultRow.load/Key=Gene-Probe
     DefaultColumn.load/Key=EmbryoStage
     Sets the default Row and Column (unless specified in the query/form) to one of the
-    dimensions defined above.
+    dimension labels defined above.  Note that there can be different paths
+    from a given root to an image object, so path labels must be used to distinguish them.
+    
+    RowColumnMenu.load/Enabled=1
+    Enables display of Row/Column menu (disabled by default)
+    CategoriesMenu.load/Enabled=0
+    Enables display of the Categories menu (enabled by default)
     
 =cut
 
@@ -428,64 +449,67 @@ sub getTmplParams {
     my $tmpl = shift;
     my @parameters = $tmpl->param();
     my @default_params = grep (m/Default(Column|Row)\.load\//,@parameters);
+    my @menu_params = grep (m/Menu\.load\//,@parameters);
     my @filt_params = grep (m/Filter\.load\//,@parameters);
-    my @types_params  = grep (m/\.load\/types/,@parameters);
+    my @types_params  = grep (m/Path\.load=/,@parameters);
     my $typesParamCount = scalar(@types_params);
     my %pathSet;
+# 	print STDERR "types_params parameters...\n";
+# 	print STDERR Dumper(@types_params);
+# 	print STDERR "\n";
     
     
     foreach my $def (@default_params) {
     	$self->{columns} = $1 if $def =~ /Column\.load\/Key=(.+)$/;
     	$self->{rows} = $1 if $def =~ /Row\.load\/Key=(.+)$/;
     }
+    foreach my $menu (@menu_params) {
+    	$self->{HasRowColumnChoice} = 1 if $menu =~ /RowColumnMenu\.load\/Enabled=1/;
+    	$self->{HasCategories} = 0 if $menu =~ /CategoriesMenu\.load\/Enabled=0/;
+    }
     foreach my $filt (@filt_params) {
     	$self->{filters}->{$1} = $2 if $filt =~ /Filter\.load\/([^:]+):(.+)$/;
     }
 
     # iterate over the types params in order
-    for (my $i = 0; $i < $typesParamCount;  $i++) {
+    foreach my $type (@types_params) {
+		# find the path label and value.
+		my ($label,$path) = ($2,$3) if ($type =~ m/Path.load=(\[([^\]]+)\])?(.*)$/);
+#    print STDERR "path $type: $label = $path\n";
 
-	my $param = $types_params[$i];
-
-	# find the path value.
-	$param =~ m/Path.load\/types-\[(.*)\]/;
-	#convert to array
-	my @paths = split (/,/,$1);
-	#now, each  entry in  @paths is something like
-	#Gene:ProbeGene:Probe:ImageProbe,
-	# etc.
-	# or, it might be Gene(ImageGene):ProbeGene:Probe:ImageProbe
-	# for each entry, if it has a parentehesized match,
-	# use that as the val for an imageaps entry.
-	# thus, if I have Gene(ImageGene), put Gene into entries
-	# and { Gene=>ImageGene} into imageMaps.
-	
-	foreach my $path (@paths) {
 	    my @entries = split (/:/, $path);
 	    my @parsedEntries;
 	    
 	    foreach my $entry (@entries) {
-		# this regex checks to see if the entry
-		# looks like foo(bar) - a specification of a type
-		# along  with a mapping type to an image.
-		# if there is a match, the type becomse $1
-		# and the mapping type $2.  Put the type into the 
-		# resulting list, and create an appropriate map for
-		# that type. Otherwise, just use the type as specified.
-		if ($entry =~ /(.*)\(([^)]*)\)/ )  {
-		    push @parsedEntries,$1;
-		    $self->{ImageMaps}->{$1} = $2;
-		}
-	        else {
-		    push @parsedEntries,$entry;
-		}
+	    	# Entries are either a bare object name or an object name and a field (i.e. Object.Field).
+	    	# Entries that specify a field are assumed to be "splitting" fields, which means the field values
+	    	# will be displayed as rows or columns.
+	    	# Entries without a field are assumed to be pure mapping objects.
+
+			# this regex checks to see if the entry
+			# looks like foo(bar) - a specification of a type
+			# along  with a mapping type to an image.
+			# if there is a match, the type becomse $1
+			# and the mapping type $2.  Put the type into the 
+			# resulting list, and create an appropriate map for
+			# that type. Otherwise, just use the type as specified.
+			if ($entry =~ /(.*)\(([^)]*)\)/ )  {
+				$entry = $1;
+				$self->{ImageMaps}->{$1} = $2;
+#print STDERR "ImageMaps $1 = $2\n";
+			}
+			my ($object,$field) = split (/\./,$entry);
+			# Set the label if there isn't one yet.
+			$label = $object unless $label;
+			# Push the object and field onto the list.
+			push (@parsedEntries,$entry);
 	    }
-	    # first item becomes a key
-	    my $dimensionKey = $parsedEntries[0];
-	    $pathSet{$dimensionKey} = \@parsedEntries;
+	    $pathSet{$label} = \@parsedEntries;
 	}
-    }
     # return ref to array of refs.
+#     print STDERR "pathSet...\n";
+#     print STDERR Dumper(\%pathSet);
+#     print STDERR "\n";
     return \%pathSet;
 }
 
@@ -517,28 +541,31 @@ sub getChoices {
 
     foreach my $type (keys %$types) {
 	# clear off header if it's an st
-	my %row;
-	my %col;
-	$row{rowName} = $type;
-	if ($type eq $rows) {
-	    $row{selectedRow} = 1;
-	}
-	push(@rows,\%row);
-	$col{columnName} = $type;
-	if ($cols && $type eq $cols) {
-	    $col{selectedCol} = 1;
-	}
-	push (@columns,\%col);
+		my %row;
+		my %col;
+		$row{rowName} = $type;
+		if ($type eq $rows) {
+	 	   $row{selectedRow} = 1;
+		}
+
+		push(@rows,\%row);
+		$col{columnName} = $type;
+		if ($cols && $type eq $cols) {
+		    $col{selectedCol} = 1;
+		}
+		push (@columns,\%col);
     }
+
     $tmpl_data->{Columns}=\@columns;
     $tmpl_data->{Rows}=\@rows;
-    $tmpl_data->{HasRowColumnChoice} = $ENABLE_ROW_COLUMN_CHOICES;
+    $tmpl_data->{HasRowColumnChoice} = $self->{HasRowColumnChoice};
 }
 
 =head2 prepareCategoryGroups 
     $cgs = $self->getCategoryGroups($container);
 
     prepare and populate the category groups parameter and pull-down 
+
 =cut
 
 sub getCategoryGroups {
@@ -685,9 +712,14 @@ sub renderDims {
     # same for columns.
     my $colPath;
     $colPath = $types->{$columns} if ($columns);
+ #   print STDERR " columns is $columns.\n";
+#    print STDERR " colpath is \n";
+#    print STDERR Dumper($colPath);
     
     ($root,$self->{colEntries}) = 
 		$self->getObjects($container,$columns,$colPath);
+ #   print STDERR "column entries...\n";
+  #  print STDERR Dumper($self->{colEntries}) . "\n";
 
     my $elapsed = tv_interval($start);
     $start      = [gettimeofday()];    
@@ -799,6 +831,9 @@ sub getObjects {
     my $factory = $session->Factory();
     my $q = $container->CGI();
 
+#     print  STDERR "getting type for $type.  paths:\n";
+# 	print STDERR Dumper($paths). "\n";
+
     if (!$type) { # if no type is specified, return a special
 		  # indicator
 		my @res = ($NO_COLS);
@@ -806,8 +841,9 @@ sub getObjects {
     }
 
     # load the type
-    my $typeST =
-	$factory->findObject('OME::SemanticType',{name=>$type});
+    my ($STName,$SEName) = split (/\./, $paths->[0]);
+#    print  STDERR "got $STName,$SEName for $paths->[0]\n";
+    my $typeST = $factory->findObject('OME::SemanticType',{name=>$STName});
     # get root vaalue
     my $root = $q->param($type) unless ($self->{rowSwitch} == 1);
 
@@ -815,24 +851,34 @@ sub getObjects {
     if ($root) {
 		# get objects that match the root
 		# do single object - or some set of objects
-		$objsRef = $self->getRoots($typeST,$root);
+		$objsRef = $self->getRoots($typeST,$SEName,$root);
     } else {
+	#print STDERR " no root specified \n";
     	my $search_params = { __order => 'id' };
-		# get all of the given type.
+	# get all of the given type.
+#	print STDERR "st .. " . Dumper($typeST) . "\n";
+#	print STDERR "search params..\n";
+#	print STDERR Dumper($search_params). "\n";
+
 		my @objs = $factory->findObjects($typeST, $search_params);
 		$objsRef = \@objs;		
     }
+# 	print STDERR "root objects found ...\n";
+# 	print STDERR Dumper($objsRef);
+# 	print STDERR "\n";
 
-    
     # now, objsRef is a reference to an aaray containing the list of
     # top-level items that I want to work with
 
     # get a tree of objects
 
-    my $tree = $self->getTreeFromRootList($objsRef,@$paths);
+	my $tree = $self->getTreeFromRootList($objsRef,@$paths);
+#     print STDERR "tree...\n";
+#     print STDERR Dumper($tree);
+#     print STDERR "\n";
     # convert that tree into an array,
-    my $flatTree = $self->flattenTree($tree);
-    return ($root, $flatTree);
+	my $flatTree = $self->flattenTree($tree);
+	return ($root, $flatTree);
 }
 
 
@@ -840,16 +886,17 @@ sub getObjects {
 
 =head2 getRoots 
 
-    my $arrayRef = $self->getRoots($type,$root);
+    my $arrayRef = $self->getRoots($type,$element,$root);
 
     Get the root objects corresponding to a comma-separated list of
     objects from the CGI parameter. load the object either by Name or
     by Id.
+
 =cut
 
 sub getRoots {
     my $self = shift;
-    my ($type,$rootList) = @_;
+    my ($type,$element,$rootList) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
     my @objs;
@@ -867,9 +914,9 @@ sub getRoots {
 	}
 	else {
 	    #$obj = $factory->findObject($type,Name=>['ilike',$root]);   # was just Name=>$root.
-	    @someObjs = $factory->findObjects($type,Name=>['ilike',$root]);   # was just Name=>$root.
+	    @someObjs = $factory->findObjects($type, $element => ['ilike',$root]);   # was just Name=>$root.
 	    if (scalar(@someObjs)) {
-		push(@objs,@someObjs);
+			push(@objs,@someObjs);
 	    }
 	}    
 	#if ($obj) {
@@ -919,10 +966,10 @@ sub getTreeFromRootList {
     my $self =shift;
     my ($objs,@paths) = @_;
 
-    shift @paths; # discard first type - root of list.
+    my ($STName,$SEName) = split (/\./, shift @paths);
     my %tree;
     foreach my $obj (@$objs) {
-		my $name    = $obj->Name();
+		my $name    = $obj->$SEName();
 		my $id      = $obj->id();
 		my $key     = $name . "__" . $id;
 		my $subtree = $self->getTree($obj,@paths);
@@ -951,37 +998,41 @@ sub getTree {
 
     # now, $obj is a gene, $paths is
     # [ProbeGene,Probe]
-    # or, map followed by class followed by map.
+    # or, an array of path steps from one object to the next.
 
-    #termination condition - stop when we've hit the last non-map
-    #class (in this case, probe),  and   simply return the object.
+    #termination condition - stop when we've hit the last class in the list
 
-    return undef if (scalar(@paths) < 2);
+    return undef if (scalar(@paths) < 1);
 
-    # strategy. find all of the maps 
-    # load the mapping type (ie, ProbeGene)
-    my $map = shift @paths;
+	my %tree;
 
-    # next type is probe.
-    my $next = shift @paths;
+    # strategy.
+    # Some objects in the path are mapping objects, which means they're simply a fancy
+    # edge in our graph.  Other objects have field designations, which means they are nodes.
+    # Getting to a node means we expand it and recurse over the children.
+    # Getting to a map, we expand over the mapping objects, then recurse over each mapping object's child.
+    # Getting a mapping object means that we shift the paths array an extra time to get to the child objects.
+	my ($STName1,$SEName) = split (/\./, shift @paths);
+#    print STDERR "getTree STName1,SEName: '$STName1','$SEName'\n";
 
-    # build the accessor.
-    my $accessor = "${map}List"; #
+	# Only shift out the next thing if the first thing had no field (i.e. was a map)
+	my $STName2;
+	($STName2,$SEName) = split (/\./, shift (@paths)) unless $SEName;
+#    print STDERR "getTree STName2,SEName: '$STName2','$SEName'\n";
 
-    # find the maps
-    my @maps = $obj->$accessor;  # ie., ProbeGeneList.
-    my %tree;
-    foreach my $map (@maps) { # for each map
-		my $child = $map->$next; # follow the pointer to the next
-					# object (ie., ProbeGeneList->Probe)
-		if ($child) {
-			my $name = $child->Name(); # get the name
-			my $id = $child->id(); # and id 
-			my $key = $name . "__" . $id; 
-			# recurse.
-			$tree{$key} = $self->getTree($child,@paths);   
-		}
-    }
+	my $accessor = "${STName1}List";
+    my @objects = $obj->$accessor;
+	foreach my $child (@objects) { # for each object
+		# If the first path item was a map, then we have a list of map objects
+		$child = $child->$STName2 if $STName2;
+#     print STDERR "child...\n";
+#     print STDERR Dumper($child);
+#     print STDERR "\n";
+
+		# recurse.
+		$tree{$child->$SEName() . "__" . $child->id()} = $self->getTree($child,@paths);   
+	}
+    
     return \%tree;
 }
 
@@ -1059,6 +1110,7 @@ sub flattenTree {
 
 
 =cut
+
 sub sortByIdKey {
     $a->[0]=~ /[^_]*__(\d+)/;
     my $aID = $1;
@@ -1101,6 +1153,11 @@ sub populateCells {
 
     my $rowTypes = $types->{$rowName};
     my $colTypes = $types->{$colName};
+#    print STDERR "  *** ROW TYPES \n";
+#    print STDERR  Dumper($rowTypes) . "\n";
+#    print STDERR "  *** COLUMN TYPES \n";
+#    print STDERR  Dumper($colTypes) . "\n";
+
 
     my $cells;
     my %activeRows;
@@ -1113,6 +1170,7 @@ sub populateCells {
 		# this is the of objects that define the row. let's get the
 		# last item
 		my $rowLeaf = $row->[scalar(@$row)-1];
+#		print STDERR "row:\n".Dumper ($row);
 	
 		#thus, for example $rowLeaf is a probe
 		#my $rName = $rowLeaf->Name;
@@ -1125,20 +1183,26 @@ sub populateCells {
 		# build up the query hash with values for all of the types  in
 		# the row  that have mapping for images.
 		$self->getImageAccessors(\%findHash,$rowTypes,$row);
+
+#		print STDERR "findHash:\n".Dumper (\%findHash);
 	
 		# create a key that will uniquely identify this row.
 		my $rowKey  =  $self->getCellKey($row);
-	
+	#	print STDERR "populate cells: column entries... ";
+		#print STDERR Dumper($colEntries) ." \n";
 		foreach my $col (@$colEntries) {
+		 #   print STDERR "looking for data for column $col\n";
 			
 			# also look for those things that have been most recent.
 			if (ref($col) eq 'ARRAY') { 
 				# if columns specified, use them to get images.
 				$self->getImageAccessors(\%findHash,$colTypes,$col);
 			}
+#print STDERR "findHash for finding images:\n".Dumper (\%findHash);
 			my @images =
 				$factory->findObjects('OME::Image',\%findHash);
 			my $imagesRef = \@images;
+# print STDERR "images:\n".Dumper (\@images);
 			
 		
 			if ($self->{Category} && $self->{CategoryGroup}) {
@@ -1213,30 +1277,62 @@ sub getCellKey {
 	'ImageWormLocationList.WormLocation.Name'=>'Terminal Bulb'
 	will be added to the hash.
 	
-=cut 
+=cut
+
 sub getImageAccessors {
-    my $self =shift;
-    my ($findHash,$types,$item) =@_;
+	my $self =shift;
+	my ($findHash,$types,$item) =@_;
+# print STDERR "getImageAccessors types:\n".Dumper ($types);
+# print STDERR "getImageAccessors item:\n".Dumper ($item);
 
-    # iterate over items and types. skip every other "types" entry,
-    # as those are the mapping types
-    for (my $i = 0, my $j=0; $i < scalar(@$item); $i++, $j+=2) {
-	my $element = $item->[$i];
-	my $type = $types->[$j];
+	# for every item, look at types in the list.
+	# The types list will have as many object.field types as there are values in the item list.
+	# There may or may not be mapping types interspersed in the types list.
 
-	# get the mapping type out 
-	my $imageMap = $self->{ImageMaps}->{$type};
-	if (defined $imageMap && $imageMap)  {
-	    # imageMap is now a class name like ImageWormLocation
-	    # $type is WormLocation
-	    # to make the appropriate factory criteria
-	    # we must realize that the imageMap will be a list 
-	    # associated with the image
-	    my $key  = "${imageMap}List.$type.Name";
-	    # value we want to associate with it comes from the row/col
-	    $findHash->{$key}  = $element;
+	my ($itemType,$j) = (0,0);
+	for (my $i =0; $i < scalar(@$item); $i++) {
+		my $value = $item->[$i];
+		# Use $itemType as an index into types that contains the object and field for the current item
+		# find the type for this item in the types list - it will be the next type with a field
+		for ($j = $itemType; $j < scalar(@$types); $j++, $itemType++) {
+			last if $types->[$j] =~ /\./;
+		}
+		
+		# $key is what we prepend things to from the types list
+		# The key has to begin with the type and field that corresponds to the current item
+		my $key = $types->[$itemType];
+		# split the object and the field from the types
+		my ($type,$field) = split (/\./,$key);
+#print STDERR "$type.$field = $value; key is $key\n";
+		# Now we have to go the rest of the way in the types list, adding maps and types until we get
+		# to the end of the type list.
+		for ($j = $itemType+1; $j < scalar(@$types); $j++) {
+			my ($pathType,$pathField) = split (/\./,$types->[$j]);
+			if ($pathField) { # Not a map.
+				$key = "$pathType.$key";
+			} else { # Its a map
+				$key = "${pathType}List.$key";
+			}
+		}
+		# we're done with the itemType for this item, so increment it for the next item.
+		$itemType++;
+#print STDERR "$type.$field = $value; key is now $key\n";
+		
+		# get the mapping type out   at end
+		my $imageMap = $self->{ImageMaps}->{$types->[$j-1]};
+		if ($imageMap)  {
+			# imageMap is now a class name like ImageWormLocation
+			# $type is WormLocation
+			# to make the appropriate factory criteria
+			# we must realize that the imageMap will be a list 
+			# associated with the image
+			my $key  = "${imageMap}List.". $key;
+			# value we want to associate with it comes from the row/col
+			$findHash->{$key}  = $value;
+		}
 	}
-    }
+	
+	
 }
 	    
 
@@ -1245,6 +1341,7 @@ sub getImageAccessors {
 
     filter a list of images, returning only those that have group and 
     category matching $self->{CategoryGroup} and $self->{Category}
+
 =cut
 
 sub filterByCategory {
@@ -1324,6 +1421,7 @@ sub getActiveList {
     entries. $colPath is the path of types to the columns.
 
 =cut
+
 sub populateColumnHeaders {
     my $self=shift;
     my ($container,$columns,$rowSize,$colPath) = @_;
@@ -1346,9 +1444,8 @@ sub populateColumnHeaders {
     # this is also the # of field in the column..
 
 
-    # colPath is the returned value for types, which will have the
-    # form ST, map, ST, map, etc. let's start by stripping out
-    # every other item.
+    # colPath is the returned value for types let's start by stripping out
+    # the map types.
     my $colTypes = $self->filterOutMaps($colPath);
 
 
@@ -1361,9 +1458,13 @@ sub populateColumnHeaders {
 	$header{emptyColumnHeaders} = $emptyHeaders;
 	my @columns;
 
+	# clear out any previous columns for this row
+	@prevColumns = ();
+
 	# for each column in that row.
 	for (my $j = 0; $j < scalar(@$columns); $j++) {
 
+#  print STDERR "populateColumnHeaders : columns->[$j]->[$i] = $columns->[$j]->[$i]:\n";
 	    my $same =1;
 	    # look @ all previous entries in this column to see if
 	    # they match  whatever was in the most recent column
@@ -1381,6 +1482,7 @@ sub populateColumnHeaders {
 	    if (!$same) {
 		# get the val.
 		my  $val = $columns->[$j]->[$i];
+#  print STDERR "NOT SAME populateColumnHeaders : columns->[$j]->[$i] = $columns->[$j]->[$i]:\n";
 
 		my %column;
 		# find out how many times the column is repeating.
@@ -1411,6 +1513,7 @@ sub populateColumnHeaders {
     my $emptyColumns = $self->populateEmptyColumnHeaders($size);
 
    create  the requisite number of empty column headings.
+
 =cut 
 
 
@@ -1519,12 +1622,10 @@ sub populateBody {
     object types.
 
 =cut
+
 sub filterOutMaps {
     my ($self,$path)  = @_;
-    my @filtered;
-    for (my $i =0,my $j=0; $i < scalar(@$path) ; $i+=2,$j++) {
-	$filtered[$j]=$path->[$i];
-    }
+	my @filtered = grep (/\./,@$path);
     return \@filtered;
 }
    
@@ -1538,6 +1639,7 @@ sub filterOutMaps {
     
 
 =cut
+
 sub getRepeatCount {
     my ($self,$entries,$start,$field) = @_;
 
@@ -1568,25 +1670,28 @@ sub getRepeatCount {
 
 
 =cut
+
 sub getTextFor {
-    my ($self,$container,$name,$type)  = @_;
-    my $session = $self->Session;
-    my $factory = $session->Factory;
-    my $q = $container->CGI;
-
-    my $text = $name; #default
-
-    my $typeName = "@".$type;
-
-    # find the object
-    my $obj = $factory->findObject($typeName,Name=>$name);
-    if ($obj) {
-	my $extLink = $self->getExternalLinkText($q,$type,$obj);
-	if ($extLink) {
-	    $text .= "<BR>".$extLink;
+	my ($self,$container,$name,$type)  = @_;
+	my $session = $self->Session;
+	my $factory = $session->Factory;
+	my $q = $container->CGI;
+	
+	my $text = $name; #default
+	my ($STName,$SEName) = split (/\./, $type);
+	
+	
+	my $typeName = "@".$STName;
+	
+	# find the object
+	my $obj = $factory->findObject($typeName,$SEName=>$name);
+	if ($obj) {
+		my $extLink = $self->getExternalLinkText($q,$STName,$obj);
+		if ($extLink) {
+			$text .= "<BR>".$extLink;
+		}
 	}
-    }
-    return $text;
+	return $text;
 }
 
 =head2 populateRow
@@ -1595,7 +1700,9 @@ sub getTextFor {
     
 
     put sets of images from cells into the output table.
+
 =cut
+
 sub populateRow {
     my $self=shift;
     my ($container,$cells,$row,$activeCols) = @_;
@@ -1636,6 +1743,7 @@ sub populateRow {
     my $rendering = $self->getRendering($container,$images,$cg);
 
     Render the images according to the category group
+
 =cut
 
 sub getRendering {
@@ -1672,6 +1780,7 @@ sub getRendering {
    
 
     Sort the images by cateogory  in a given group.
+
 =cut
 
 sub sortImagesByCG {
