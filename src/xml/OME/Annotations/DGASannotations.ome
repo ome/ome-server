@@ -1,0 +1,573 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    # Copyright (C) 2003 Open Microscopy Environment
+    #       Massachusetts Institue of Technology,
+    #       National Institutes of Health,
+    #       University of Dundee
+    #
+    #
+    #
+    #    This library is free software; you can redistribute it and/or
+    #    modify it under the terms of the GNU Lesser General Public
+    #    License as published by the Free Software Foundation; either
+    #    version 2.1 of the License, or (at your option) any later version.
+    #
+    #    This library is distributed in the hope that it will be useful,
+    #    but WITHOUT ANY WARRANTY; without even the implied warranty ofm, 
+    #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    #    Lesser General Public License for more details.
+    #
+    #    You should have received a copy of the GNU Lesser General Public
+    #    License along with this library; if not, write to the Free Software
+    #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    #
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<!--
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Written by:  Harry Hochheiser <hsh@nih.gov>
+    #              Ilya Goldberg <igg@nih.gov>
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -->
+
+<OME
+	xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+	xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+		http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+		http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+		http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+	<SemanticTypeDefinitions
+		xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+		http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+
+<!--
+    # These types and instances take the categories and category
+    # groups that Arpun created for mouse annotation and re-casts them 
+    # as SemanticTypes. 
+    # 
+    # Relationships involving probes, strains, genes, and external
+    # links have also been fleshed out
+  -->
+	<!-- As shown below, ProbeType values include sense and - anti-sense -->
+	<SemanticType 
+		Name="ProbeType"
+		AppliesTo="G">
+		<Description>Type of Probe</Description>
+		<Element 
+			Name="Name"
+			DBLocation="PROBE_TYPE.Name"
+			DataType="string"/>
+		<Element 
+			Name="Description"
+			DBLocation="PROBE_TYPE.Description"
+			DataType="string"/>
+	</SemanticType>
+	
+	
+	<!-- Question: is there anything else that we need to say about a 
+	probe? -->
+	
+	<SemanticType
+		Name= "Probe"
+		AppliesTo = "G">
+		<Description>An Experimental Probe</Description>
+		<Element
+			Name= "Name"
+			DBLocation = "PROBE.NAME"
+			DataType = "string"/>
+		<Element 
+			Name = "Type"
+			DBLocation = "PROBE.PROBE_TYPE"
+			DataType = "reference"
+			RefersTo = "ProbeType"/>
+	</SemanticType>
+	
+	
+	<SemanticType
+		Name= "ExperimentProbe"
+		AppliesTo = "G">
+		<Description>An map between an Experiment and a Probe</Description>
+		<Element 
+			Name = "Experiment"
+			DBLocation = "EXPERIMENT_PROBE_MAP.EXPERIMENT_ID"
+			DataType = "reference"
+			RefersTo = "Experiment"/>
+		<Element 
+			Name = "Probe"
+			DBLocation = "EXPERIMENT_PROBE_MAP.PROBE_ID"
+			DataType = "reference"
+			RefersTo = "Probe"/>
+	</SemanticType>
+	
+	<!-- Question: is there anything else that we need to say about a 
+	strain? in this model, all of the meaningful information
+	would  be found in some external link, but this won't work
+	for locally-defined strains. What information do we need 
+	about strains?
+	
+	We might associate optional information with a strain
+	by adding a 'StrainDescription' type with appropriate fields
+	and a reference to a strain. This could be created 
+	and populated for any homegrown strain.'  -->
+	<SemanticType
+		Name= "Strain"
+		AppliesTo = "G">
+		<Description>An Experimental Strain</Description>
+		<Element
+			Name= "Name"
+			DBLocation = "STRAIN.NAME"
+			DataType = "string"/>
+	</SemanticType>
+	
+	<SemanticType
+		Name= "Clone"
+		AppliesTo = "G">
+		<Description>A Clone for a Gene</Description>
+		<Element
+			Name= "Name"
+			DBLocation = "CLONE.NAME"
+			DataType = "string"/>
+	</SemanticType>
+	
+	<!-- Question: as with strain: is more information needed? With 
+	genes, it's perhaps more plausible to believe that all
+	relevant info will be found by chasing an external link.  -->
+	<SemanticType
+		Name= "Gene"
+		AppliesTo = "G">
+		<Description>A Gene</Description>
+		<Element
+			Name= "Name"
+			DBLocation = "GENE.NAME"
+			DataType = "string"/>
+	</SemanticType>
+	
+	<SemanticType
+		Name= "GeneAlias"
+		AppliesTo = "G">
+		<Description>A Gene Alias is an alternate name for a gene.
+		Each GeneAlias is associated with exactly one Gene.
+		</Description>
+		<Element
+			Name= "Name"
+			DBLocation = "GENE_ALIAS.NAME"
+			DataType = "string"/>
+		<Element
+			Name= "Gene"
+			DBLocation = "GENE_ALIAS.GENE_ID"
+			DataType = "reference"
+			RefersTo = "Gene"/>
+	</SemanticType>
+	
+	<!-- Question: can a probe be associated with multiple genes?
+	Shoule we replace this map with a reference in Probe to a 
+	Gene? -->
+	
+	<SemanticType
+		Name= "ProbeGene"
+		AppliesTo = "G">
+		<Description>Defines the relationship between Probes and Genes.</Description>
+		<Element
+			Name= "Probe"
+			DBLocation = "PROBE_GENE_MAP.PROBE_ID"
+			DataType = "reference"
+			RefersTo = "Probe"/>
+		<Element
+			Name= "Gene"
+			DBLocation = "PROBE_GENE_MAP.GENE_ID"
+			DataType = "reference"
+			RefersTo = "Gene"/>
+	</SemanticType>
+	
+	<!-- A strain definitely can be associated with multiple genes -->
+	<SemanticType
+		Name= "StrainGene"
+		AppliesTo = "G">
+		<Description>Defines the relationship between Strains and Genes.
+		</Description>
+		<Element
+			Name= "Strain"
+			DBLocation = "STRAIN_GENE_MAP.STRAIN_ID"
+			DataType = "reference"
+			RefersTo = "Strain"/>
+		<Element
+			Name= "Gene"
+			DBLocation = "STRAIN_GENE_MAP.GENE_ID"
+			DataType = "reference"
+			RefersTo = "Gene"/>
+	</SemanticType>
+	
+	<SemanticType
+		Name= "CloneGene"
+		AppliesTo = "G">
+		<Description>Defines the relationship between Clones and Genes.</Description>
+		<Element
+			Name= "Clone"
+			DBLocation = "CLONE_GENE_MAP.CLONE_ID"
+			DataType = "reference"
+			RefersTo = "Clone"/>
+		<Element
+			Name= "Gene"
+			DBLocation = "CLONE_GENE_MAP.GENE_ID"
+			DataType = "reference"
+			RefersTo = "Gene"/>
+	</SemanticType>
+	
+	<!-- A template containing an expression that can be used to
+	populate link urls -->
+	<SemanticType 
+		Name="ExternalLinkTemplate"
+		AppliesTo="G">
+		<Description>A template for external links. This template can be
+		mofified via a regular expression to create a url for an
+		object.
+		</Description> 
+		<Element 
+			Name="Name"
+			DBLocation="EXTERNAL_LINK_TEMPLATE.NAME"
+			DataType="string"/>
+		<Element 
+			Name="Template"
+			DBLocation="EXTERNAL_LINK_TEMPLATE.TEMPLATE"
+			DataType="string"/>
+	</SemanticType>
+	
+	<!-- An external link has a description, an id, and then (usually)
+	either a url or a reference to a template. If the link has a url,
+	that will be used to reference the outside link. Otherwise, the
+	ExternalID will be used to instantiate the URL pattern associated 
+	with the template object -->
+	
+	<SemanticType 
+		Name="ExternalLink"
+		AppliesTo="G">
+		<Description>A link to an external data source.</Description>
+		<Element
+			Name = "Description"
+			DBLocation = "EXTERNAL_LINK.DESCRIPTION"
+			DataType="string"/>
+		<Element 
+			Name = "ExternalId"
+			DBLocation ="EXTERNAL_LINK.EXTERNAL_ID"
+			DataType = "string"/>
+		<Element 
+			Name = "URL"
+			DBLocation ="EXTERNAL_LINK.URL"
+			DataType = "string"/>
+		<Element 
+			Name="Template"
+			DBLocation="EXTERNAL_LINK.TEMPLATE"
+			DataType="reference"
+			RefersTo="ExternalLinkTemplate"/>
+	</SemanticType>
+	
+	<!-- A slightly more detailed type of external link is good for
+	linking to publications -->
+	<SemanticType
+		Name="Publication"
+		AppliesTo="G">
+		<Description>A link to a publication </Description>
+		<Element
+			Name="Author"
+			DBLocation="PUBLICATION.AUTHOR"
+			DataType="string"/>
+		<Element
+			Name="Title"
+			DBLocation="PUBLICATION.TITLE"
+			DataType="string"/>
+		<Element 
+			Name="Venue"
+			DBLocation="PUBLICATION.VENUE"
+			DataType="string"/>
+		<Element 
+			Name="Date"
+			DBLocation="PUBLICATION.DATE"
+			DataType="string"/>
+		<Element 
+			Name="PubmedID"
+			DBLocation="PUBLICATION.PMID"
+			DataType="string"/>
+		<Element 
+			Name="ExternalLink"
+			DBLocation="PUBLICATION.EXTERNAL_LINK"
+			DataType="reference"
+			RefersTo="ExternalLink"/>
+	</SemanticType>
+	
+	<!-- We assume Genes, probes, and strains can each have multiple
+	external links -->
+	
+	<SemanticType
+		Name= "GeneExternalLink"
+		AppliesTo = "G">
+		<Description>Defines the relationship between Genes and External
+		links.</Description>
+		<Element
+			Name= "Gene"
+			DBLocation = "GENE_EXTERNAL_LINK_MAP.GENE_ID"
+			DataType = "reference"
+			RefersTo = "Gene"/>
+		<Element
+			Name= "ExternalLink"
+			DBLocation = "GENE_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
+			DataType = "reference"
+			RefersTo = "ExternalLink"/>
+	</SemanticType>
+	
+	
+	<SemanticType
+		Name= "ProbeExternalLink"
+		AppliesTo = "G">
+		<Description>Defines the relationship between Probes and External
+		links.</Description>
+		<Element
+			Name= "Probe"
+			DBLocation = "PROBE_EXTERNAL_LINK_MAP.PROBE_ID"
+			DataType = "reference"
+			RefersTo = "Probe"/>
+		<Element
+			Name= "ExternalLink"
+			DBLocation = "PROBE_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
+			DataType = "reference"
+			RefersTo = "ExternalLink"/>
+	</SemanticType>
+	
+	
+	
+	<SemanticType
+		Name= "StrainExternalLink"
+		AppliesTo = "G">
+		<Description>Defines the relationship between Strains and External
+		links.</Description>
+		<Element
+			Name= "Strain"
+			DBLocation = "STRAIN_EXTERNAL_LINK_MAP.STRAIN_ID"
+			DataType = "reference"
+			RefersTo = "Strain"/>
+		<Element
+			Name= "ExternalLink"
+			DBLocation = "STRAIN_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
+			DataType = "reference"
+			RefersTo = "ExternalLink"/>
+	</SemanticType>
+	
+	<!-- Images can be associated with publications, but they may or
+	may not be publishable  -->
+	<SemanticType
+		Name="ImagePublication"
+		AppliesTo="I">
+		<Description>A link between an image and a
+		publication</Description>
+		<Element 
+			Name="Publication"
+			DBLocation="IMAGE_PUBLICATION.PUBLICATION_ID"
+			DataType="reference"
+			RefersTo="Publication"/>
+	</SemanticType>
+	
+	<SemanticType 
+		Name="PublicationStatus"
+		AppliesTo="I">
+		<Description>Is the image publishable?</Description>
+		<Element 
+			Name="Publishable"
+			DBLocation="PUBLICATION_STATUS.PUBLISHABLE"
+			DataType="boolean"/>
+	</SemanticType>
+	
+	<SemanticType
+		Name = "ImageProbe"
+		AppliesTo = "I">
+		<Description>A mapping between probes and images</Description>
+		<Element
+			Name = "Probe"
+			DBLocation = "PROBE_IMAGE_MAP.PROBE_ID"
+			DataType = "reference"
+			RefersTo = "Probe"/>
+	</SemanticType>
+	
+	<SemanticType
+		Name = "ImageStrain"
+		AppliesTo = "I">
+		<Description>A mapping between strains and images</Description>
+		<Element
+			Name = "Strain"
+			DBLocation = "STRAIN_IMAGE_MAP.STRAIN_ID"
+			DataType = "reference"
+			RefersTo = "Strain"/>
+	</SemanticType>
+	
+	<SemanticType
+		Name = "ImageClone"
+		AppliesTo = "I">
+		<Description>A mapping between clones and images</Description>
+		<Element
+			Name = "Clone"
+			DBLocation = "CLONE_IMAGE_MAP.CLONE_ID"
+			DataType = "reference"
+			RefersTo = "Clone"/>
+	</SemanticType>
+
+
+	<SemanticType 
+		Name="EmbryoStage"
+		AppliesTo="G">
+		<Description>Embryo's Stage of growth.</Description>
+		<Element 
+			Name="Name"
+			DBLocation="EMBRYO_STAGE.NAME"
+			DataType="string"/>
+		<Element 
+			Name="Description"
+			DBLocation="EMBRYO_STAGE.Description"
+			DataType="string"/>
+	</SemanticType>
+	<SemanticType
+		Name = "ImageEmbryoStage"
+		AppliesTo = "I">
+		<Description>A mapping between embryonic stages and images. Not
+		really a many-to-many map, as an image is taken at exactly one
+		embryonic stage. However, the definition of an image is not
+		easily extended.
+		</Description>
+		<Element 
+			Name = "EmbryoStage"
+			DBLocation = "IMAGE_EMBRYO_STAGE.EMBRYO_STAGE_ID"
+			DataType = "reference"
+			RefersTo = "EmbryoStage"/>
+	</SemanticType>
+
+	<!-- These annotations were added by Ilya Goldberg to support the
+	     ES Bank project in Minoru Ko's group:
+	     Developmental Genetics and Aging Section - DGAS
+	     Multiple cell embryonic stem cell lines are generated carrying
+	     overexpression or gene-repression constructs, cultured under different
+	     conditions to turn repression/overexpression on and off, and assayed
+	     for general morphology, in-situ hybridization and immunohistochemistry
+	 -->
+
+	<SemanticType 
+		Name="GeneticManipulation"
+		AppliesTo="G">
+		<Description>Overexpression/Repression manipulation for a Gene.</Description>
+		<Element 
+			Name="Type"
+			DBLocation="GENETIC_MANIPULATION.TYPE"
+			DataType="string"/>
+		<Element 
+			Name="Gene"
+			DBLocation="GENETIC_MANIPULATION.GENE_ID"
+			DataType="reference"
+			RefersTo="Gene"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="GeneticManipulationGene"
+		AppliesTo="G">
+		<Description>The Gene undergoing GeneticManipulation.</Description>
+		<Element 
+			Name="GeneticManipulation"
+			DBLocation="GENETIC_MANIPULATION_GENE_MAP.GENETIC_MANIPULATION_ID"
+			DataType="reference"
+			RefersTo="GeneticManipulation"/>
+		<Element 
+			Name="Gene"
+			DBLocation="GENETIC_MANIPULATION_GENE_MAP.GENE_ID"
+			DataType="reference"
+			RefersTo="Gene"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="ImageGeneticManipulation"
+		AppliesTo="I">
+		<Description>Relationship between an Image and a GeneticManipulation.</Description>
+		<Element 
+			Name="GeneticManipulation"
+			DBLocation="IMAGE_GENETIC_MANIPULATION.GENETIC_MANIPULATION_ID"
+			DataType="reference"
+			RefersTo="GeneticManipulation"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="ImageGeneticManipulation"
+		AppliesTo="I">
+		<Description>Relationship between an Image and a GeneticManipulation.</Description>
+		<Element 
+			Name="GeneticManipulation"
+			DBLocation="IMAGE_GENETIC_MANIPULATION.GENETIC_MANIPULATION_ID"
+			DataType="reference"
+			RefersTo="GeneticManipulation"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="CellLine"
+		AppliesTo="G">
+		<Description>A parental cell line.</Description>
+		<Element 
+			Name="Name"
+			DBLocation="CELL_LINE.NAME"
+			DataType="string"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="ImageCellLine"
+		AppliesTo="I">
+		<Description>Relationship between an Image and a CellLine.</Description>
+		<Element 
+			Name="CellLine"
+			DBLocation="IMAGE_CELL_LINE.CELL_LINE_ID"
+			DataType="reference"
+			RefersTo="CellLine"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="CultureCondition"
+		AppliesTo="G">
+		<Description>Drugs/factors added to culture media.</Description>
+		<Element 
+			Name="Name"
+			DBLocation="CULTURE_CONDITION.NAME"
+			DataType="string"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="ImageCultureCondition"
+		AppliesTo="I">
+		<Description>Relationship between an Image and a CultureCondition.</Description>
+		<Element 
+			Name="CultureCondition"
+			DBLocation="IMAGE_CULTURE_CONDITION.CULTURE_CONDITION_ID"
+			DataType="reference"
+			RefersTo="CultureCondition"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="ExpressionState"
+		AppliesTo="G">
+		<Description>Baseline or Altered expression state.</Description>
+		<Element 
+			Name="Name"
+			DBLocation="EXPRESSION_STATE.NAME"
+			DataType="string"/>
+	</SemanticType>
+
+	<SemanticType 
+		Name="ImageExpressionState"
+		AppliesTo="I">
+		<Description>Relationship between an Image and a ExpressionState.</Description>
+		<Element 
+			Name="ExpressionState"
+			DBLocation="IMAGE_EXPRESSION_STATE.EXPRESSION_STATE_ID"
+			DataType="reference"
+			RefersTo="ExpressionState"/>
+	</SemanticType>
+	</SemanticTypeDefinitions>
+  
+</OME>
