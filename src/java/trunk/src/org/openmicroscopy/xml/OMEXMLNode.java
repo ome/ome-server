@@ -550,6 +550,11 @@ public abstract class OMEXMLNode implements DataInterface {
         return createNode(c, el);
       }
       catch (ClassNotFoundException exc) { }
+      catch (RuntimeException exc) {
+        // HACK: workaround for bug in Apache Axis2
+        Throwable cause = exc.getCause();
+        if (!(cause instanceof ClassNotFoundException)) throw exc; 
+      }
     }
 
     // no subclass found; wrap element in generic CA type
