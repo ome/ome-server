@@ -96,6 +96,13 @@ public class Instantiator
             Class clazz = AttributeDTO.class;
             semanticTypeClassCache.put(semanticTypeName,clazz);
             return clazz;
+        } catch (RuntimeException exc) {
+            // HACK: workaround for bug in Apache Axis2
+            Throwable cause = exc.getCause();
+            if (!(cause instanceof ClassNotFoundException)) throw exc;
+            Class clazz = AttributeDTO.class;
+            semanticTypeClassCache.put(semanticTypeName,clazz);
+            return clazz;
         }
     }
 
