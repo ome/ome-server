@@ -455,7 +455,7 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
                   }
                }
                /* compute the features */
-			   if (large_set) ImageSignatures->ComputeGroups(tile_matrix);
+               if (large_set) ImageSignatures->ComputeGroups(tile_matrix);
                else ImageSignatures->compute(tile_matrix);
                ImageSignatures->sample_class=samp_class;
                if (!multi_processor)
@@ -511,8 +511,7 @@ double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confu
    /* start going over the test samples */   
    for (test_sample_index=0;test_sample_index<TestSet->count;test_sample_index++)
    {  char last_path[IMAGE_PATH_LENGTH];
-      test_signature=TestSet->samples[test_sample_index]->duplicate();  //new signatures(&(TestSet->samples[test_sample_index]),TestSet->signature_count);    
-//printf("image path: %s \n",test_signature->full_path);   
+      test_signature=TestSet->samples[test_sample_index]->duplicate();  //new signatures(&(TestSet->samples[test_sample_index]),TestSet->signature_count);
       if (method==0) predicted_class=WNNclassify(test_signature, probabilities);
       if (method==1) predicted_class=classify2(test_signature, probabilities);
       /* check that the tile is consistent */
@@ -875,8 +874,8 @@ long TrainingSet::report(char *data_set_name, data_split *splits, unsigned short
    {  int inst_num=0;
       for (sample_index=0;sample_index<count;sample_index++)
         if (samples[sample_index]->sample_class==class_index) inst_num++;
-      fprintf(output_file,"<td>%d</td>\n",inst_num);		
-   }  
+      fprintf(output_file,"<td>%d</td>\n",inst_num);
+   }
    fprintf(output_file,"<tr>\n<td>Testing</td>\n");
    for (class_index=1;class_index<=class_num;class_index++)
    {  int inst_num=0;

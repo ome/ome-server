@@ -1,6 +1,6 @@
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*                                                                               */
-/*    Copyright (C) 2003 Open Microscopy Environment                             */
+/*    Copyright (C) 2007 Open Microscopy Environment                             */
 /*         Massachusetts Institue of Technology,                                 */
 /*         National Institutes of Health,                                        */
 /*         University of Dundee                                                  */
@@ -34,8 +34,8 @@
 
 #include <stdio.h>
 
-//#include "TrainingSet.h"
 #include "cmatrix.h"
+//#include "TrainingSet.h"
 
 #define MAX_SIGNATURE_NUM 3000
 #define SIGNATURE_NAME_LENGTH 80
@@ -58,13 +58,14 @@ struct signature
 class signatures
 {
   private:
+    int IsNeeded(long start_index, long group_length);  /* check if the group of signatures is needed */
   public:
     signature data[MAX_SIGNATURE_NUM];
     unsigned short sample_class;                    /* the class of the sample */
     long count;
-	long index;                                     /* a running index whether the feature was added or not. used to avoid computing uneeded features */
-    char full_path[IMAGE_PATH_LENGTH];                            /* optional - full path the the image file   */
-    signatures();
+    char full_path[IMAGE_PATH_LENGTH];              /* optional - full path the the image file   */
+    void *ScoresTrainingSet;            /* a pointer to a training set with computed Fisher scores (to avoid computing 0-scored signatures) */
+    signatures();                       /* constructor */
     signatures *duplicate();            /* create an identical signature vector object */
 //    signatures(sample *one_sample, int sigs_count);
     void Add(char *name, double value);

@@ -93,7 +93,7 @@ int split_and_test(char *filename, int class_num, int method, int tiles, double 
 	   delete test;
 	 } 
 	 printf("\n\n");
-	 ts->report(filename,splits,splits_num);	 
+	 ts->report(filename,splits,split_num);	 
 	 delete ts;	 
 	 for (split_index=0;split_index<split_num;split_index++)
 	 {  delete splits[split_index].confusion_matrix;

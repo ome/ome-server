@@ -55,6 +55,7 @@ signatures::signatures()
    count=0;
    sample_class=0;
    full_path[0]='\0';
+   ScoresTrainingSet=NULL;
 }
 //---------------------------------------------------------------------------
 
@@ -84,8 +85,9 @@ void signatures::Add(char *name,double value)
 //printf("%s %f\n",name,value);
    if (strchr(name,'\n')) *(strchr(name,'\n'))='\0';  /* prevent end of lines inside the features names */
    if (name) strcpy(data[count].name,name);   
-if (value>INF) value=INF;        /* prevent error */
-if (value<1/INF && value>-1/INF) value=0;  /* prevent a numerical error */
+   if (value>INF) value=INF;        /* prevent error */
+   if (value<-INF) value=-INF;      /* prevent error */
+   if (value<1/INF && value>-1/INF) value=0;  /* prevent a numerical error */
    data[count].value=value;
    count++;
 }
@@ -97,6 +99,13 @@ void signatures::Clear()
 {  count=0;
 }
 
+int signatures::IsNeeded(long start_index, long group_length)
+{  int sig_index;
+   if (!ScoresTrainingSet) return(1);
+   for (sig_index=start_index;sig_index<start_index+group_length;sig_index++)
+     if (((TrainingSet *)(ScoresTrainingSet))->SignatureWeights[sig_index]>0) return(1);
+   return(0);
+}
 
 /* compute
    compute signature set of a given image and add the
@@ -366,7 +375,7 @@ void signatures::compute(ImageMatrix *matrix)
    {  sprintf(buffer,"RadonTransformStatistics_FFT Orient%d_Bin_%02d",45*(int)(a/3),a % 3);
       Add(buffer,vec[a]);
    }
- 
+
    char tamura_names[80][80]={"Total_Coarseness","Coarseness_Hist_Bin_00","Coarseness_Hist_Bin_01","Coarseness_Hist_Bin_02","Directionality","Contrast"};
    /* tamura texture (signatures 845 - 880) */
    matrix->TamuraTexture(vec);
@@ -531,11 +540,14 @@ void signatures::compute(ImageMatrix *matrix)
 void signatures::CompGroupA(ImageMatrix *matrix, char *transform_label)
 {  int a;
    char buffer[80];
-   double vec[32];
+   double vec[7]={0,0,0,0,0,0,0};
    /* edge statistics */
-   {  long EdgeArea;
-      double MagMean, MagMedian, MagVar, MagHist[8], DirecMean, DirecMedian, DirecVar, DirecHist[8], DirecHomogeneity, DiffDirecHist[4];
-      matrix->EdgeStatistics(&EdgeArea, &MagMean, &MagMedian, &MagVar, MagHist, &DirecMean, &DirecMedian, &DirecVar, DirecHist, &DirecHomogeneity, DiffDirecHist, 8);
+   {  long EdgeArea=0;
+      double MagMean=0, MagMedian=0, MagVar=0, MagHist[8]={0,0,0,0,0,0,0,0}, DirecMean=0, DirecMedian=0, DirecVar=0, DirecHist[8]={0,0,0,0,0,0,0,0}, DirecHomogeneity=0, DiffDirecHist[4]={0,0,0,0};
+
+
+      if (IsNeeded(count,28))  /* check if this group of signatures is needed */
+        matrix->EdgeStatistics(&EdgeArea, &MagMean, &MagMedian, &MagVar, MagHist, &DirecMean, &DirecMedian, &DirecVar, DirecHist, &DirecHomogeneity, DiffDirecHist, 8);
       Add("Edge Area",EdgeArea);
       for (a=0;a<4;a++)
       {  sprintf(buffer,"DiffDirecHist bin %d",a);
@@ -559,10 +571,11 @@ void signatures::CompGroupA(ImageMatrix *matrix, char *transform_label)
    }
 
    /* object statistics */
-   {  int count, Euler, AreaMin, AreaMax, AreaMedian, area_histogram[10], dist_histogram[10];
-      double centroid_x, centroid_y, AreaMean, AreaVar, DistMin, DistMax, DistMean, DistMedian, DistVar;
+   {  int feature_count=0, Euler=0, AreaMin=0, AreaMax=0, AreaMedian=0, area_histogram[10]={0,0,0,0,0,0,0,0,0,0}, dist_histogram[10]={0,0,0,0,0,0,0,0,0,0};
+      double centroid_x=0, centroid_y=0, AreaMean=0, AreaVar=0, DistMin=0, DistMax=0, DistMean=0, DistMedian=0, DistVar=0;
 
-      matrix->FeatureStatistics(&count, &Euler, &centroid_x, &centroid_y, &AreaMin, &AreaMax, &AreaMean, &AreaMedian, &AreaVar, area_histogram, &DistMin, &DistMax,
+      if (IsNeeded(count,34))  /* check if this group of signatures is needed */
+        matrix->FeatureStatistics(&feature_count, &Euler, &centroid_x, &centroid_y, &AreaMin, &AreaMax, &AreaMean, &AreaMedian, &AreaVar, area_histogram, &DistMin, &DistMax,
                         &DistMean, &DistMedian, &DistVar, dist_histogram, 10);
 
       for (a=0;a<10;a++)  /* area histogram */
@@ -576,7 +589,7 @@ void signatures::CompGroupA(ImageMatrix *matrix, char *transform_label)
       Add("Feature AreaVar",AreaVar);
       Add("Feature X Centroid",centroid_x);
       Add("Feature Y Centroid",centroid_y);
-      Add("Feature Count",count);
+      Add("Feature Count",feature_count);
       for (a=0;a<10;a++)
       {  sprintf(buffer,"Feature dist histogram bin %d",a);
          Add("Feature DistHist",dist_histogram[a]);
@@ -590,7 +603,8 @@ void signatures::CompGroupA(ImageMatrix *matrix, char *transform_label)
    }
 
    /* gabor filters */
-   matrix->GaborFilters(vec);
+   if (IsNeeded(count,7))
+     matrix->GaborFilters(vec);
    for (a=0;a<7;a++)
    {  sprintf(buffer,"Gabor Filters bin %d",a);
       Add(buffer,vec[a]);
@@ -610,8 +624,9 @@ void signatures::CompGroupB(ImageMatrix *matrix, char *transform_label)
    ImageMatrix *TempMatrix;
 
    /* chebichev fourier transform (signatures 0 - 63) */
-   for (a=0;a<32;a++) vec[a]=0;
-   matrix->ChebyshevFourierTransform(vec);
+   for (a=0;a<72;a++) vec[a]=0;
+   if (IsNeeded(count,32))
+     matrix->ChebyshevFourierTransform(vec);
    for (a=0;a<32;a++)
    {  sprintf(buffer,"Chebishev Fourier Transform bin %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
@@ -619,7 +634,8 @@ void signatures::CompGroupB(ImageMatrix *matrix, char *transform_label)
 
    /* Chebyshev Statistics (signatures 64 - 127) */
    TempMatrix=matrix->duplicate();
-   TempMatrix->ChebyshevStatistics(vec,0,32);
+   if (IsNeeded(count,32))
+     TempMatrix->ChebyshevStatistics(vec,0,32);
    for (a=0;a<32;a++)
    {  sprintf(buffer,"Chebishev Statistics bin %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
@@ -628,8 +644,9 @@ void signatures::CompGroupB(ImageMatrix *matrix, char *transform_label)
 
    /* zernike (signatures 881 - 1024) */
    long output_size;   /* output size is normally 72 */
-   matrix->zernike(vec,&output_size);
-   for (a=0;a<output_size;a++)
+   if (IsNeeded(count,72))
+     matrix->zernike(vec,&output_size);
+   for (a=0;a<72;a++)
    {  sprintf(buffer,"Zernike %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
    }
@@ -643,57 +660,64 @@ void signatures::CompGroupB(ImageMatrix *matrix, char *transform_label)
 */
 void signatures::CompGroupC(ImageMatrix *matrix, char *transform_label)
 {  int a;
-   double vec[72];
+   double vec[48];
    char buffer[80];
-   double mean, median, std, min, max;
-   
+   double mean=0, median=0, std=0, min=0, max=0;
+
+   for (a=0;a<48;a++) vec[a]=0;
    /* Comb4Moments */
-   matrix->CombFirstFourMoments(vec);
+   if (IsNeeded(count,48))
+     matrix->CombFirstFourMoments(vec);
    for (a=0;a<48;a++)
    {  sprintf(buffer,"CombFirstFourMoments %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
    }
 
    /* haarlick textures */
-   matrix->HaarlickTexture(0,vec);
+   if (IsNeeded(count,28))
+     matrix->HaarlickTexture(0,vec);
    for (a=0;a<28;a++)
    {  sprintf(buffer,"Haarlick Texture %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
    }
 
    /* multiple histogram of the original image */
-   matrix->MultiScaleHistogram(vec);
+   if (IsNeeded(count,24))
+     matrix->MultiScaleHistogram(vec);
    for (a=0;a<24;a++)
    {  sprintf(buffer,"MultiScale Histogram bin %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
    }
 
    /* tamura texture */
-   matrix->TamuraTexture(vec);
+   if (IsNeeded(count,6))
+     matrix->TamuraTexture(vec);
    for (a=0;a<6;a++)
    {  sprintf(buffer,"Tamura Texture %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
    }
 
    /* radon transform */
-   matrix->RadonTransform(vec);
+   if (IsNeeded(count,12))
+     matrix->RadonTransform(vec);
    for (a=0;a<12;a++)
    {  sprintf(buffer,"Radon bin %d (%s)",a,transform_label);
       Add(buffer,vec[a]);
    }
-   
+
    /* basic statistics */
-   matrix->BasicStatistics(&mean, &median, &std, &min, &max, NULL, 10);
+   if (IsNeeded(count,5))
+     matrix->BasicStatistics(&mean, &median, &std, &min, &max, NULL, 10);
    sprintf(buffer,"mean (%s)",transform_label);
    Add(buffer,mean);
-   sprintf(buffer,"median (%s)",transform_label);   
+   sprintf(buffer,"median (%s)",transform_label);
    Add(buffer,median);
-   sprintf(buffer,"stddev (%s)",transform_label);      
+   sprintf(buffer,"stddev (%s)",transform_label);
    Add(buffer,std);
-   sprintf(buffer,"min (%s)",transform_label);         
+   sprintf(buffer,"min (%s)",transform_label);
    Add(buffer,min);
-   sprintf(buffer,"max (%s)",transform_label);            
-   Add(buffer,max);   
+   sprintf(buffer,"max (%s)",transform_label);
+   Add(buffer,max);
 }
 
 /* CompGroupD
@@ -704,12 +728,13 @@ void signatures::CompGroupC(ImageMatrix *matrix, char *transform_label)
 */
 void signatures::CompGroupD(ImageMatrix *matrix, char *transform_label)
 {  int a;
-   double vec[72];
    char buffer[80];
 
    /* general color image statistics */
-   {  double hue_avg, hue_std, sat_avg, sat_std, val_avg, val_std, max_color, colors[COLORS_NUM];
-      matrix->GetColorStatistics(&hue_avg, &hue_std, &sat_avg, &sat_std, &val_avg, &val_std, &max_color, colors);
+   {  double hue_avg=0, hue_std=0, sat_avg=0, sat_std=0, val_avg=0, val_std=0, max_color=0, colors[COLORS_NUM];
+      for (a=0;a<COLORS_NUM;a++) colors[a]=0;
+      if (IsNeeded(count,7+COLORS_NUM))
+        matrix->GetColorStatistics(&hue_avg, &hue_std, &sat_avg, &sat_std, &val_avg, &val_std, &max_color, colors);
       Add("hue average",hue_avg);
       Add("hue stddev",hue_std);
       Add("saturation average",sat_avg);
