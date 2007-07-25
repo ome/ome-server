@@ -743,6 +743,11 @@ my $delete = shift;
 my $from_mex = shift;
 my $mex_id;
 
+	$FACTORY = OME::Session->instance()->Factory() unless defined $FACTORY;
+	$RECURSION_LEVEL = 0 unless defined $RECURSION_LEVEL;
+	$IMAGE_IMPORT_MODULE_ID = OME::Session->instance()->Configuration()->image_import_module()->id()
+		unless defined $IMAGE_IMPORT_MODULE_ID;
+
 	confess "NULL MEX!" unless $mex;
 
 	$mex_id = $mex->id();
