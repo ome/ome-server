@@ -3654,7 +3654,7 @@ sub __newByID {
     die "ID not available"
       unless $id_available;
 
-    #print "\n$sql\n";
+    #print STDERR "\n$sql\n";
     #print join(',',@$columns_wanted),"\n";
 
     my $sth = $dbh->prepare($sql);
