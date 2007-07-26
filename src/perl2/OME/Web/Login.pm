@@ -97,7 +97,11 @@ sub getPageBody {
             return ('TXT',$self->Session()->SessionKey()."\n");
 		} else {
 			# login failed, report it
-			return ('HTML', $self->__loginForm("The username and/or password you entered don't match an experimenter in the system.  Please try again."));
+			return ('HTML', $self->__loginForm(<<EOF));
+The username or password you entered didn't match an experimenter in the system.<br>
+Or, you've taken too long to respond to this form.<br>
+Please try again.
+EOF
 		}
     } else { return ('HTML', $self->__loginForm()) }
 }
@@ -165,7 +169,7 @@ sub __loginForm {
 		function do_encrypt() {
 			var rsa = new RSAKey();
 			rsa.setPublic(document.primary.modulus.value, document.primary.exponent.value);
-			var res = rsa.encrypt(document.primary.password.value);
+			var res = rsa.encrypt(document.primary.server_time.value+document.primary.password.value);
 			if(res) {
 				document.primary.password.value = '';
 				document.primary.crypt_pass.value = linebrk(hex2b64(res), 64);
@@ -187,6 +191,15 @@ END_JS
 	$login_table .= $q->hidden( 'modulus',$modulus );
 	$login_table .= $q->hidden( 'exponent','10001' );
 	$login_table .= $q->hidden( 'crypt_pass','' );
+	# Login forms should include a unique value to be encrypted with the password in order to ensure
+	# that the person at the other end actually knew the plaintext password, and in not just sending
+	# an encrypted password back.
+	# The easiest way to do this is to include the server's time() in the form so that it will
+	# be encrupted with the password when the form is returned.  This way we can refuse to process
+	# stale forms as well.
+	# The plaintext password entry will then be the server time in brackets followed directly by the
+	# plaintext password.
+	$login_table .= $q->hidden( 'server_time', '['.time().']' );
 	$login_table .= $q->hidden( 'target_url' )
 		if( $q->param( 'target_url' ) );
 	$login_table .= $q->table({-border => 0, -align => 'center'},
