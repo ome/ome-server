@@ -693,18 +693,6 @@ sub chownImage {
 	}
 	
 	return undef unless $user or $hasGroup;
-	
-	# Get the import MEX	
-	my $import_mex = $factory->findObject( "OME::ModuleExecution", 
-		'module.name' => 'Image import', 
-		image => $image, 
-		__order => 'timestamp'
-	) or return undef;
-	
-	my $canChownMEX = 
-		OME::Tasks::ModuleExecutionManager->chownMEX ($import_mex, $params);
-	return $canChownMEX unless $canChownMEX == 1;
-
 	# check if the Session owner can change ownership of the OME::Image
 	my $canChownImage = 1 if (
 		# The owner
@@ -715,6 +703,17 @@ sub chownImage {
 		($session->isSuSession())
 	);
 	return 0 unless $canChownImage;
+	
+	# Get the import MEX	
+	my $import_mex = $factory->findObject( "OME::ModuleExecution", 
+		'module.name' => 'Image import', 
+		image => $image, 
+		__order => 'timestamp'
+	) or return undef;
+	
+	my $canChownMEX = 
+		OME::Tasks::ModuleExecutionManager->chownMEX ($import_mex, $params);
+	return $canChownMEX unless $canChownMEX;
 	return 1 if $params->{try};
 
 	$image->experimenter ($user) if $user;
