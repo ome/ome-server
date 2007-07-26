@@ -1010,14 +1010,14 @@ BLURB
 		if (y_or_n("Install web server ?",'y')) {
 			my $docRoot = $APACHE->{WEB};
 			$docRoot = $apache_info->{DocumentRoot} unless $docRoot;
-			$APACHE->{WEB} = confirm_path ('Copy index.html to :', $docRoot);
+			$APACHE->{WEB} = confirm_path ('Copy index.html and favicon to :', $docRoot);
 			while (! -d $APACHE->{WEB}) {
 				my $old_UID = euid($APACHE_UID);
 				eval { mkpath($APACHE->{WEB}) };
 				euid($old_UID);
 				if ($@) {
 					print "Couldn't create $APACHE->{WEB}: $@";
-					$APACHE->{WEB} = confirm_path ('Copy index.html to :', $docRoot);
+					$APACHE->{WEB} = confirm_path ('Copy index.html and favicon to :', $docRoot);
 				}
 			}
 		} else {
@@ -1179,7 +1179,7 @@ BLURB
 	}
 
 	#********
-	#******** Install web by copying serve.pl and index.html
+	#******** Install web by copying serve.pl and index.html and favicon
 	#********
 	if (length($APACHE->{WEB})) {
 		print $LOGFILE "Installing WEB\n";
@@ -1214,7 +1214,17 @@ BLURB
 		copy ($source,$dest) or
 			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
 			croak "Could not copy $source to $dest:\n$!\n";
-		print $LOGFILE "chmod 0755 $dest\n";
+		print $LOGFILE "chmod 0644 $dest\n";
+		chmod (0644,$dest) or
+			print $LOGFILE "Could not chmod $dest:\n$!\n" and
+			croak "Could not chmod $dest:\n$!\n";
+
+		$source = 'src/html/favicon.ico';
+		$dest = $APACHE->{WEB}.'/favicon.ico';
+		copy ($source,$dest) or
+			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
+			croak "Could not copy $source to $dest:\n$!\n";
+		print $LOGFILE "chmod 0644 $dest\n";
 		chmod (0644,$dest) or
 			print $LOGFILE "Could not chmod $dest:\n$!\n" and
 			croak "Could not chmod $dest:\n$!\n";
