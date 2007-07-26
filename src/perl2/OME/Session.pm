@@ -382,7 +382,12 @@ sub idle {
 	return if( OME::Fork->hasDeferredTasks() );
 	if ($__soleInstance) {
 		# Forget our access lists
-		$__soleInstance->{ACL} = undef;    
+		# IGG 2007-07-25: We can't just forget them unfortunately, unless we also clear
+		# The SQL cache, which might be useful if we later revive this
+		# session with the same user.
+		# Instead, we'll keep them here, and decide what to do with them
+		# in SessionManager when we revive the session.
+		#$__soleInstance->{ACL} = undef;    
 	
 		# Remove any stale temporary files which might still be lying around.
 		$__soleInstance->__finishAllTemporaryFiles();
