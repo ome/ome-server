@@ -164,7 +164,7 @@ my @GUEST_MENU = (
 	{
 		web_class => 'OME::Web::Login',
 		type => 'link',
-		text => undef,
+		text => 'Login',
 	},
 );
 
