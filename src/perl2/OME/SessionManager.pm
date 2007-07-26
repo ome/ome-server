@@ -76,6 +76,7 @@ use strict;
 
 use Carp;
 use Log::Agent;
+use Data::Dumper;
 use Class::Accessor;
 use Class::Data::Inheritable;
 use Digest::MD5;
@@ -121,6 +122,13 @@ SQL
 # The lifetime of server-side session keys in seconds
 our $SESSION_KEY_LIFETIME = 1800;  # 30 minutes, (30*60 sec = 1800 sec)
 our $SESSION_KEY_LENGTH = 32;
+
+# Info about our crypto keys
+our $KEY_FILE = 'ome-key-512.pem';
+our $KEY_LENGTH = 512;
+# This is the maximum difference between time() and what is passed in the encrypted password string
+# In seconds (since time() is in seconds)
+our $CRYPT_LIFETIME = 30;
 
 =head1 METHODS
 
@@ -296,22 +304,33 @@ sub createWithKey {
 			     (length ($sessionKey) ==
 			     $SESSION_KEY_LENGTH));
 
-	my ($session,$factory);
-	if (OME::Session->hasInstance()) {
-		$session = OME::Session->instance();
-		$factory = $session->Factory()->revive();
-	}
-
-	$factory = OME::Factory->new($flags) unless $factory;
-	my $dbh = $factory->obtainDBH();
+	my ($session,$factory,$ACL);
 	
+	# If a Session instance exists, get the factory from it as well as the ACL
+	if (OME::Session->hasInstance()) {
+		$factory = OME::Session->instance()->Factory()->revive();
+		$ACL = OME::Session->instance()->ACL();
+	} else {
+	# Otherwise, make a new one and leave $ACL undef
+		$factory = OME::Factory->new($flags) unless $factory;
+	}
+	
+	# Not being able to get a Factory means there's no point in doing anything with this process.
+	die "Could not obtain a Factory while creating a Session" unless $factory;
+
+	my $dbh = $factory->obtainDBH();
+
+	# UserState has no ACL, so this will allways find it if the key exists.
 	my $userState = $self->makeOrGetUserState($factory,session_key => $sessionKey);
 	
+	# Not finding a UserState is not deadly - just means no Session for you.
 	return undef unless defined $userState;
-	$session = OME::Session->instance($userState, $factory,
-					  undef);
-
-	return undef unless ($session);
+	
+	# Now we can get a Session object and update its ACL.
+	$session = OME::Session->instance($userState, $factory,$ACL);
+	# Not being able to get a Session given a $userState and a $factory means we're in deep doodoo
+	die "Could not obtain a Session object" unless $session;
+	$self->updateACL();
 
 	my $configuration = $factory->Configuration();
 
@@ -334,6 +353,11 @@ sub createWithKey {
 			return undef;
 	    }
 	}
+	
+	# We have to get pretty deep into Session making before we can punt on an expired key
+	# This is caused by how we check if this is a Guest Session.  Guest's keys don't expire,
+	# But to determine if its a Guest Session, we have to go all the way through making it.
+	# At this point its not a Guest Session, so check for an expired key.
 	else { #non- guest user
 
 	    my $age = 1;
@@ -356,8 +380,6 @@ sub createWithKey {
 	}	
 	
 	
-
-	$self->updateACL();
 	
 	$userState->storeObject();
 	$session->commitTransaction();
@@ -390,7 +412,11 @@ sub updateACL {
 	# Compare old and new lists of whose data the logged in user gets access to.
 	my $oldACL = $session->ACL();
 	my $ACLsDiffer = 0;
-	if( scalar(keys %$oldACL) != scalar(keys %$ACL) ) {
+	# We check for this first because calling keys() on an undef variable will turn it into {}
+	# which is not the same as undef.
+	if ( defined($ACL) ne defined($oldACL) ) {
+		$ACLsDiffer = 1;
+	} elsif( scalar(keys %$oldACL) != scalar(keys %$ACL) ) {
 		$ACLsDiffer = 1;
 	} else {
 		ACL_COMPARISON: foreach my $key ( keys %$oldACL ) {
@@ -424,7 +450,7 @@ sub updateACL {
 
 	my $challenge = $manager->getRSAmodulus();
 
-Generates a private key in $TEMP/ome-key.pem, and returns its modulus as a hex string.
+Generates a private key in $TEMP/$KEY_FILE, and returns its modulus as a hex string.
 The public exponent is hard-coded to be -F4 (0x10001).
 The modulus is as a public key used by the JavaScript RSA library (or other RSA implementations)
 to encrypt passwords (or other data).
@@ -435,16 +461,16 @@ sub getRSAmodulus {
 my ($self) = @_;
 
 	my $tmp_dir = OME::Install::Environment->initialize()->tmp_dir();
-	my $keyfile = "$tmp_dir/ome-key.pem";
+	my $keyfile = "$tmp_dir/$KEY_FILE";
 	my @cmd;
 	my ($in,$out,$errorStream,$modulus);
 	
 	unless (-e $keyfile) {
-		`RANDFILE=$tmp_dir/.rnd openssl genrsa -F4 -out $keyfile 1024`;
+		`RANDFILE=$tmp_dir/.rnd openssl genrsa -F4 -out $keyfile $KEY_LENGTH`;
+		chmod (0400,$keyfile);
 	}
 
 	if (-e $keyfile) {
-		chmod (0400,$keyfile);
 		@cmd = qw( openssl rsa -check -noout -in );
 		push (@cmd,$keyfile);
 		IPC::Run::run (\@cmd,\$in,\$out,\$errorStream);
@@ -468,9 +494,12 @@ my ($self) = @_;
 
 	my $session = $manager->createWithRSAPassword($username,$password,$flags);
 
-Decrypts the password using the RSA key stored in $TEMP/ome-key.pem, then calls
+Decrypts the password using the RSA key stored in $TEMP/$KEY_FILE, then calls
 CreateWithPassword to make the session.
-The password is expected to be base64 encoded after encryption.
+The plaintext password follows a time signature (result of time() call) in brackets.
+For example: [1185410367]abc123
+corresponds to 2007-07-26 00:39:27Z, and the plaintext password abc123
+This plaintext string is encrypted and then base-64 encoded.
 
 =cut
 
@@ -478,7 +507,7 @@ sub createWithRSAPassword {
 	my $self = shift;
 	my ($username, $password, $flags) = @_;
 
-	my $keyfile = OME::Install::Environment->initialize()->tmp_dir().'/ome-key.pem';
+	my $keyfile = OME::Install::Environment->initialize()->tmp_dir()."/$KEY_FILE";
 	return undef unless -e $keyfile;
 
 	my @cmd;
@@ -491,8 +520,12 @@ sub createWithRSAPassword {
 	push (@cmd,$keyfile);
 	IPC::Run::run (\@cmd,\$decoded,\$plaintext,\$errorStream);
 	return undef unless $plaintext;
+	
+	my ($time,$plain_password) = ($1,$2) if ($plaintext =~ /^\[(\d+)\](.*)$/);
+	return undef unless $time and $password;
+	return undef if time() - $time > $CRYPT_LIFETIME;
 
-	return $self->createWithPassword ($username,$plaintext,$flags);
+	return $self->createWithPassword ($username,$plain_password,$flags);
 }
 
 #
@@ -509,14 +542,24 @@ sub createWithPassword {
 	my ($username,$password,$flags) = @_;
 	
 	return undef unless $username and $password;
+
+	my ($session,$factory,$ACL);
 	
-	my $bootstrap_factory = OME::Factory->new($flags);
-	my $dbh = $bootstrap_factory->obtainDBH();
-	my $configuration = OME::Configuration->new($bootstrap_factory );
+	# If a Session instance exists, get the factory from it as well as the ACL
+	if (OME::Session->hasInstance()) {
+		$factory = OME::Session->instance()->Factory()->revive();
+		$ACL = OME::Session->instance()->ACL();
+	} else {
+	# Otherwise, make a new one and leave $ACL undef
+		$factory = OME::Factory->new($flags) unless $factory;
+	}
+	
+	my $dbh = $factory->obtainDBH();
+	my $configuration = OME::Configuration->new($factory );
 
 	my ($experimenter,$experimenterID,$dbpass);
 	eval {
-		$experimenter = $bootstrap_factory->findObject ('OME::SemanticType::BootstrapExperimenter',
+		$experimenter = $factory->findObject ('OME::SemanticType::BootstrapExperimenter',
 			OMEName => $username);
 	};
 
@@ -548,15 +591,14 @@ sub createWithPassword {
 	} 
 
 
-	my $userState = $self->makeOrGetUserState($bootstrap_factory,experimenter => $experimenter);
+	my $userState = $self->makeOrGetUserState($factory,experimenter => $experimenter);
 
-	my $session = OME::Session->instance($userState,
-		$bootstrap_factory, undef);
+	my $session = OME::Session->instance($userState, $factory, $ACL);
+	$self->updateACL();
 
 	$userState->storeObject();
 	$session->commitTransaction();
 	
-	$self->updateACL();
 	logdbg "debug", "createWithPassword: returning session";
 	return $session;
 }
@@ -593,7 +635,6 @@ sub makeOrGetUserState {
 				or logdie ref($self)."->makeOrGetUserState:  could not find experimenter OMEName=".$flags{OMEName};
 	} elsif (exists $flags{session_key} and defined $flags{session_key}) {
 		$userState = $factory->findObject('OME::UserState', session_key => $flags{session_key});
-		return $userState;
 	} else {
 		logdie ref($self)."->makeOrGetUserState:  missing parameters"
 	}
@@ -609,7 +650,8 @@ sub makeOrGetUserState {
 
 
 	$userState = $factory->
-		findObject('OME::UserState',experimenter_id => $experimenter->ID()) if $experimenter;
+		findObject('OME::UserState',experimenter_id => $experimenter->ID()) if $experimenter
+			and not $userState;
 	
 	if (!defined $userState) {
 		my $sessionKey = $self->generateSessionKey();
