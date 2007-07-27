@@ -98,8 +98,8 @@ public class Instantiator
             return clazz;
         } catch (RuntimeException exc) {
             // HACK: workaround for bug in Apache Axis2
-            Throwable cause = exc.getCause();
-            if (!(cause instanceof ClassNotFoundException)) throw exc;
+            String msg = exc.getMessage();
+            if (msg != null && msg.indexOf("ClassNotFound") < 0) throw exc;
             Class clazz = AttributeDTO.class;
             semanticTypeClassCache.put(semanticTypeName,clazz);
             return clazz;
