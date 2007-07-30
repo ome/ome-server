@@ -6,6 +6,6 @@
 
 #include "../../cmatrix.h"
 
-void haarlick(ImageMatrix *Im, double distance, double max_value, double *out);
+void haarlick(ImageMatrix *Im, double distance, double *out);
 
 #endif
