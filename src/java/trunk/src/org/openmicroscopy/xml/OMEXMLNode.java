@@ -97,7 +97,7 @@ public abstract class OMEXMLNode implements DataInterface {
       String name = getElementName();
       Integer id = (Integer) nextIds.get(name);
       int q = id == null ? 0 : id.intValue();
-      setLSID(name + ":" + q);
+      setLSID("openmicroscopy.org:" + name + ":" + q);
       nextIds.put(name, new Integer(q + 1));
     }
   }
