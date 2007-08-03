@@ -1412,7 +1412,7 @@ BLURB
 	
 	# Copy structure of system template directories into a 'local' folder
 	print "  \\__ Updating local template directory structure ";
-	my @html_dirs = scan_tree($templateSourceDir, sub{!/\.{1,2}$/ and !m#CVS#});
+	my @html_dirs = scan_tree($templateSourceDir, sub{!/\.{1,2}$/ and !m#CVS[/]$#});
 	@html_dirs = sort { $a cmp $b } @html_dirs;
 	foreach my $dir (@html_dirs) {
 		my $rel_path = abs2rel ($dir, $templateSourceDir);
@@ -1428,7 +1428,7 @@ BLURB
 
 	# Update system directories
 	print "  \\__ Updating system templates ";
-	my @sys_html_dirs = scan_tree($templateSourceDir, sub{!m#CVS#});
+	my @sys_html_dirs = scan_tree($templateSourceDir, sub{!m#CVS[/]$#});
 	@sys_html_dirs = sort { $a cmp $b } @sys_html_dirs;
 	if( $APACHE->{TEMPLATE_DEV_CONF} ) {
 		# Make a link to the source code if the developer setting is on.
@@ -1439,7 +1439,7 @@ BLURB
 		foreach my $dir (@sys_html_dirs) {
 			my $rel_path = abs2rel ($dir, $templateSourceDir);
 			print $LOGFILE "System Tree $APACHE->{TEMPLATE_DIR}/$rel_path will be created from $dir.\n";
-			copy_dir ($dir, "$APACHE->{TEMPLATE_DIR}/System/$rel_path", sub{ ! /\.{1,2}$/ and !m#CVS#});
+			copy_dir ($dir, "$APACHE->{TEMPLATE_DIR}/System/$rel_path", sub{ ! /\.{1,2}$/ and !m#CVS[/]$#});
 		}
 		
 	}
