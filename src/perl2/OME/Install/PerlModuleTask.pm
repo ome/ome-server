@@ -112,7 +112,7 @@ my $INSTALL_HOME;
 # 
 # -Chris (callan@blackcat.ca)
 
-my @modules = (
+our @modules = (
     {
 	name => 'Term::ReadKey',
 	repository_file => "$REPOSITORY/TermReadKey-2.30.tar.gz"
@@ -595,16 +595,18 @@ sub install {
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Test
-    print "    \\_ Testing ";
-    $retval = test_module ($wd, $LOGFILE);
-    
-    print BOLD, "[FAILURE]", RESET, ".\n"
-        and carp "Unable to test module, see $LOGFILE_NAME for details."
-        unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n" if $retval;
-
-    y_or_n ("Some tests failed, would you like to continue anyway ?")
-	or croak "Stopping at user request" unless $retval;    
+    if ( not (exists $module->{skip_test} and $module->{skip_test}) ) {
+		print "    \\_ Testing ";
+		$retval = test_module ($wd, $LOGFILE);
+		
+		print BOLD, "[FAILURE]", RESET, ".\n"
+			and carp "Unable to test module, see $LOGFILE_NAME for details."
+			unless $retval;
+		print BOLD, "[SUCCESS]", RESET, ".\n" if $retval;
+		
+		y_or_n ("Some tests failed, would you like to continue anyway ?")
+		or croak "Stopping at user request" unless $retval;    
+	}
 
     # Install
     print "    \\_ Installing ";
@@ -670,6 +672,7 @@ sub execute {
     print "Checking modules\n";
     foreach my $module (@modules) {
 		print "  \\_ $module->{name}";
+		install ($module) if $FORCE_INSTALL;
 
 		if (exists $module->{exception} and &{$module->{exception}}) {
 			print BOLD, " [OK]", RESET, ".\n";
@@ -683,7 +686,6 @@ sub execute {
 		$module->{version} = get_module_version($module->{name})
 			unless $module->{version}; 
 
-		install ($module) if $FORCE_INSTALL;
 
 		if (not $module->{version}) {
 			# Log the error returned by get_module_version()
@@ -694,11 +696,27 @@ sub execute {
 
 			if ($retval) {
 				install ($module);
-				next;
 	    	} else { 
 				print "**** Warning: Not installing module $module->{name}.\n\n"; 
 				next;
 	    	}
+			print "  \\_ $module->{name}";
+	    	# Get the module version again...
+			# If we've got a get_module_version() override in the module definition use it,
+			# otherwise just use the default function.
+			$module->{version} = &{$module->{get_module_version}}
+				if exists $module->{get_module_version};
+			$module->{version} = get_module_version($module->{name})
+				unless $module->{version};
+			if (not $module->{version}) {
+				print $LOGFILE "ERRORS LOADING MODULE \"$module->{name}\" -- OUTPUT FROM EVAL: \"$@\"\n\n";
+				print BOLD, " [NOT INSTALLED]", RESET, ".\n";
+				$retval = 0;
+			} else {
+				print " $module->{version} ", BOLD, "[OK]", RESET, ".\n";
+				$retval = 1;
+			}
+			next;
 		}
 
 		if (check_module($module)) {
