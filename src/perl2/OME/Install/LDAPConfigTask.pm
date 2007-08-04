@@ -353,6 +353,11 @@ sub check_LDAP_packages {
 		name => 'Convert::ASN1',
 		repository_file => "$REPOSITORY/Convert-ASN1-0.20.tar.gz",
 		},{
+		{
+		# Digest::HMAC_MD5 is required for Authen::SASL
+		name => 'Digest::HMAC_MD5',
+		repository_file => "$REPOSITORY/Digest-HMAC-1.01.tar.gz",
+		},{
 		# Authen::SASL is required for Net::LDAP
 		name => 'Authen::SASL',
 		repository_file => "$REPOSITORY/Authen-SASL-2.10.tar.gz",
