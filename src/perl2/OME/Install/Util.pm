@@ -109,6 +109,24 @@ my %os_specific = (
 	    return $macAddr;
 	},
 
+
+	# The technique here is to find the user in the /etc/passwd file.
+	is_local_user => sub {
+		my $username = shift;
+	
+		# Grab our user from the password file if he/she is there
+		open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
+		while (<PW_FILE>) {
+			chomp;
+			if ((split ":")[0] =~ /$username/) {
+				close (PW_FILE);
+				return 1;
+			}
+		}
+	
+		close (PW_FILE);
+		return 0;
+	},
 	add_user => sub {
 	    my ($user, $homedir, $group) = @_;
 
@@ -228,6 +246,18 @@ my %os_specific = (
 	    chomp($macAddr);
 
 	    return $macAddr;
+	},
+
+	# The technique here is to use dscl with the '.' local domain
+	# to try and get user info.  The RecordName is the username, so its guaranteed
+	# to be there if the user is local.
+	is_local_user => sub {
+	    my ($user) = @_;
+	    
+	    my $resp = `dscl . read /users/$user RecordName`;
+	    chomp ($resp);
+	    return 1 if $resp =~ /RecordName.+$user$/;
+	    return 0;
 	},
 
 	# XXX: Since OS X is braindead and has no useradd commands we have to do the whole thing ourselves.
