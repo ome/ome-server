@@ -205,6 +205,7 @@ our %FOREIGN_KEY_VARS =
 
 our %SERIALIZED_VARS = (
 	import_formats => 'ARRAY',
+	ldap_conf => 'HASH',
 );
 
 our $CACHED_CONFIG;
