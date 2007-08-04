@@ -122,21 +122,6 @@ our $OME_TMP_DIR    = \$core_dirs[2]->{path};
 #********* LOCAL SUBROUTINES
 #*********
 
-sub get_user {
-    my $username = shift;
-
-	# Grab our user from the password file if he/she is there
-	open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
-	while (<PW_FILE>) {
-	    chomp;
-	    if ((split ":")[0] =~ /$username/) {
-			return 1;
-		}
-    }
-
-	return 0;
-}
-
 sub get_apache_user {
     my $username = shift;  # A user specified default if we have one
 
@@ -368,8 +353,29 @@ CROAK
 		my $flag = $map->{'flag'};
 
 		if ($$flag) {
-		    add_user_to_group ($user, $OME_GROUP)
-				or croak "Failure adding user \"$user\" to group \"$OME_GROUP\"";
+			add_user_to_group ($user, $OME_GROUP)
+				or croak "Failure adding user \"$user\" to group \"$OME_GROUP\""
+# IGG: Not sure what the point of this was.
+# If add_user_to_group works, it works.  If not, then not.
+# I made the local user check OS-specific, but commented this section out anyway.
+# If there is a good reason for not adding users to groups unless the user is local,
+# could you please explain it here before uncoomenting this code?
+# 			if (getpwnam($user) and not is_local_user($user)) {
+# 			
+# 				print "\n";  # Spacing
+# 
+# 				my $error = <<ERROR;
+# **** Warning: It appears that the user '$user' is either NIS, LDAP or equivilently backed. You will have to add this user to OME group '$OME_GROUP' in the /etc/group file manually. Please do so *before* continuing.
+# ERROR
+# 				print wrap("", "", $error);
+# 
+# 				print "\n";  # Spacing
+# 
+# 				y_or_n("Are you ready to continue ?") or die;
+# 			} else {
+# 				add_user_to_group ($user, $OME_GROUP)
+# 					or croak "Failure adding user \"$user\" to group \"$OME_GROUP\""
+# 			}
 		} 
 	}
 
