@@ -958,6 +958,7 @@ sub download_package {
 	or croak "Unable to find a suitable downloader for \"$package->{name}\", please install either curl or wget."
     unless $downloader;
 
+	print $logfile "Download command:\n$downloader $package_url 2>&1\n";
     my @output = `$downloader $package_url 2>&1`;
     
     if ($? == 0) {
