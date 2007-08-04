@@ -396,7 +396,17 @@ sub allow_guest_access {
 	return 0;
     }
 }
-   
 
+sub ldap_conf {
+	my $self = shift;
+
+    if (scalar @_) {
+		$self->{LDAP} = shift @_;
+    } else {
+		return $self->{LDAP} unless not exists $self->{LDAP};
+    }
+
+    return;
+}
 
 1;
