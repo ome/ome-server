@@ -1538,11 +1538,15 @@ BLURB
 
     $session->commitTransaction();
     
+    # We're basically ready to use OME at this point other than possibly
+    # also installing optional stuff.  So, store the installation environment so far.
+	$ENVIRONMENT->store_to();
+
     #*********
     #********* Logout and cleanup
     #*********
-    
-    $manager->logout($session);
+    # We might need the session later, so don't log out yet.
+    # $manager->logout($session);
 
 
     close ($LOGFILE);
