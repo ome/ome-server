@@ -41,7 +41,6 @@ use strict;
 use warnings;
 use Carp;
 use English;
-use Term::ReadKey;
 use Term::ANSIColor qw(:constants);
 
 use Cwd;
@@ -61,9 +60,6 @@ use base qw(OME::Install::InstallationTask);
 # Default package repository
 my $REPOSITORY = "http://openmicroscopy.org/packages/perl";
 
-# Default ranlib command
-my $RANLIB= "ranlib";
-
 # Global logfile filehandle and name
 my $LOGFILE_NAME = "LDAPConfigTask.log";
 my $LOGFILE;
@@ -74,11 +70,7 @@ my $LDAP;
 
 # Installation home
 my $INSTALL_HOME;
-
-# Environment/db strings
-my $ldap_string ="";
-my $tls_string = "";
-my $dn_string = "";
+my $ENVIRONMENT;
 
 sub execute {
 	# This is eval'ed because it contains a dependency on Term::ReadKey which
@@ -91,6 +83,7 @@ sub execute {
 	
 	# Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
+    $ENVIRONMENT = $environment;
 
     # Set our globals
     $OME_TMP_DIR = $environment->tmp_dir()
@@ -247,12 +240,7 @@ sub execute {
 			print "The URIs will be tested for functionality as you enter them.\n";
 			print "For a proper test, enter a username and password that will authenticate with your LDAP server list\n";
 			my $username = confirm_default("LDAP username to test: ", $USERNAME);
-			print "Password: ";
-			ReadMode(2);
-			my $passwd = ReadLine(0);
-			chomp($passwd);
-			print "\n";
-			ReadMode(1);
+			my ($passwd,undef) = get_password ('Password: ');
 			my @URIs;
 			my $num=0;
 			while (1) {
@@ -333,6 +321,7 @@ sub execute {
 
 	# Store the ldap conf in the environment
 	$environment->ldap_conf($LDAP);
+	$environment->store_to();
 	my $session = OME::Session->instance() if OME::Session->hasInstance();
 	if ($session) {
 		my $configuration = $session->Configuration;
@@ -353,10 +342,13 @@ sub check_LDAP_packages {
 		name => 'Convert::ASN1',
 		repository_file => "$REPOSITORY/Convert-ASN1-0.20.tar.gz",
 		},{
-		{
 		# Digest::HMAC_MD5 is required for Authen::SASL
 		name => 'Digest::HMAC_MD5',
 		repository_file => "$REPOSITORY/Digest-HMAC-1.01.tar.gz",
+		},{
+		# GSSAPI is required for Authen::SASL
+		name => 'GSSAPI',
+		repository_file => "$REPOSITORY/GSSAPI-0.24.tar.gz",
 		},{
 		# Authen::SASL is required for Net::LDAP
 		name => 'Authen::SASL',
@@ -364,51 +356,54 @@ sub check_LDAP_packages {
 		},{
 		# Net::SSLeay is required for IO::Socket::SSL
 		name => 'Net::SSLeay',
-		repository_file => "$REPOSITORY/Net-SSLeay.pm-1.30.tar.gz",
+		repository_file => "$REPOSITORY/Net_SSLeay.pm-1.30.tar.gz",
+		# Stupidly, Net::SSLeay testing requires interaction, so no test for you
+		skip_test => 1,
 		},{
 		# IO::Socket::SSL is required for Net::LDAPS
 		name => 'IO::Socket::SSL',
 		repository_file => "$REPOSITORY/IO-Socket-SSL-0.999.tar.gz",
 		},{
+		# XML::Filter::BufferText is required for XML::SAX::Writer
+		name => 'XML::Filter::BufferText',
+		repository_file => "$REPOSITORY/XML-Filter-BufferText-1.01.tar.gz",
+		},{
+		# Text::Iconv is required for XML::SAX::Writer
+		name => 'Text::Iconv',
+		repository_file => "$REPOSITORY/Text-Iconv-1.4.tar.gz",
+		},{
+		# XML::SAX::Writer is required for Net::LDAP
+		name => 'XML::SAX::Writer',
+		repository_file => "$REPOSITORY/XML-SAX-Writer-0.50.tar.gz",
+		},{
 		name => 'Net::LDAP',
-		repository_file => "$REPOSITORY/perl-ldap-0.33.tar.gz",
+		repository_file => "$REPOSITORY/perl-ldap-0.34.tar.gz",
 		}
 	);
+	
+	# We're going to use OME::Install::PerlModuleTask::execute to do all of our work.
+	# To do this, we have to change this packages module list,
+	# and set the 'PERL_CHECK' flag in the environment.
+	# to be good citizens, we will set these back to what they were before returning.
+	my $perl_check = $ENVIRONMENT->get_flag ("PERL_CHECK");
+	$ENVIRONMENT->set_flag ('PERL_CHECK');
 
-    # Store our IWD so we can get back to it later
-    my $iwd = getcwd ();
-    
-    # chdir into our INSTALL_HOME	
-    chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
+	my @saved_modules = @OME::Install::PerlModuleTask::modules;
+	@OME::Install::PerlModuleTask::modules = @modules;
 
-
-    print "Checking module dependencies\n";
-	foreach my $module (@modules) {
-		print "  \\_ $module->{name}";
-		# If we've got a get_module_version() override in the module definition use it,
-		# otherwise just use the default function.
-		$module->{version} = &{$module->{get_module_version}}
-			if exists $module->{get_module_version};
-		$module->{version} = OME::Install::PerlModuleTask::get_module_version($module->{name})
-			unless $module->{version}; 
-
-		if (not $module->{version}) {
-			print BOLD, " [NOT INSTALLED]\n", RESET;
-
-			if (y_or_n("\n\nWould you like to install $module->{name} from the repository ?")) {
-				OME::Install::PerlModuleTask::install ($module);
-	    	} else { 
-				chdir ($iwd) or croak "Unable to chdir to \"$iwd\", $!";
-				return 0;
-	    	}
-		}
-		if (OME::Install::PerlModuleTask::check_module($module)) {
-			print " $module->{version} ", BOLD, "[OK]", RESET, ".\n";
-		}
+	my $result;
+	eval {
+		$result = OME::Install::PerlModuleTask::execute();
+	};
+	
+	if ($perl_check) {
+		$ENVIRONMENT->set_flag ('PERL_CHECK');
+	} else {
+		$ENVIRONMENT->unset_flag ('PERL_CHECK');
 	}
-
-	chdir ($iwd) or croak "Unable to chdir to \"$iwd\", $!";
-	return 1;
+	@OME::Install::PerlModuleTask::modules = @saved_modules;
+	
+	return $result;
 }
 
 sub rollback {
