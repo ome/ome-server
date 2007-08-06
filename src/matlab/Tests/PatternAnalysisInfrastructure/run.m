@@ -32,9 +32,14 @@ sig_sets          = { ...
 results_path = fullfile( data_root, 'results.mat' );
 % Train classifiers, generate predictions for both the test set and the 
 % training set, and compile the results into a .mat file when done.
-scanAndTrainAndTest(data_root, classifier_dir, sig_sets, results_path);
-% This second form of calling performs a scan only
-%scanAndTrainAndTest(data_root, classifier_dir, sig_sets, results_path, [], 1);
+
+% UNCOMMENT line below to perform a scan only
+% scan_opts.compile_results_only = 1;
+
+% UNCOMMENT line below to use an artifact_correction_vector
+scan_opts.artifact_correction_vector_path = ...
+	'/iicbu/macurato/AGEMAP/Experiments/SKM/indNormalVector/individualityNormalizingVector_hande+.mat';
+scanAndTrainAndTest(data_root, classifier_dir, sig_sets, results_path, [], scan_opts);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Build a report
