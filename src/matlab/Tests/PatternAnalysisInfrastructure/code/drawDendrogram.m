@@ -1,22 +1,36 @@
 % SYNOPSIS
-%	[svgPath pngPath] = drawDendrogram( distanceMatrix, sampleNames, classNumericValues, saveDir, codeDir, reuseResults )
+%	[svgPath pngPath] = drawDendrogram( distanceMatrix, saveDir, codeDir, sampleLabels, sampleCategories, sampleNumericValues)
 % DESCRIPTION
 %	draw a dendrogram from the given information
+%
+function [svgPath pngPath] = drawDendrogram( distanceMatrix, saveDir, codeDir, sampleLabels, sampleCategories, sampleNumericValues)
+reuseResults = 1;
 
-function [svgPath pngPath] = drawDendrogram( distanceMatrix, sampleNames, classNumericValues, saveDir, codeDir, reuseResults )
-
-if( ~exist( 'reuseResults', 'var' ) )
-	reuseResults = 0;
-end;
-num_samples = length( sampleNames );
+num_samples = length( sampleLabels );
 
 pairwiseDistPath = fullfile( saveDir, 'PairwiseDist.txt' );
+
+sampleLabelsCmdParameter = '';
+sampleCategoriesCmdParameter = '';
+sampleValuesCmdParameter = '';
+
 % Print the results to file.
 if( ~exist( pairwiseDistPath, 'file' ) | ~reuseResults)
 	DIST_DUMP = fopen( pairwiseDistPath, 'w' );
 	fprintf( DIST_DUMP, '%d\n', num_samples );
 	for i = 1:num_samples
-		fprintf( DIST_DUMP, '%-15s', sampleNames{i} );
+
+		% Fitch/drawtree uses Sample%d to produce a PS but ps2SVG replaces 
+		% Sample%d with sampleNames using sampleLabels;
+		fprintf( DIST_DUMP, 'Sample%d', i);
+		sampleLabelsCmdParameter     = [sampleLabelsCmdParameter     sprintf( '--label="%s" ',sampleLabels{i})];
+	
+		sampleCategoriesCmdParameter = [sampleCategoriesCmdParameter sprintf( '--category="%s" ',sampleCategories{i})];
+		
+		if( ~exist( 'sampleNumericValues', 'var' ) )
+			sampleValuesCmdParameter = [sampleValuesCmdParameter     sprintf( '--value="%d" ',sampleNumericValues{i})];
+		end;
+
 		% Print the distances from that sample to every other sample
 		for j = 1:num_samples
 			fprintf( DIST_DUMP, '%13.4f', distanceMatrix(i, j) );
@@ -45,29 +59,12 @@ fitch_log_path       = 'fitch.log';
 drawtree_log_path    = 'drawtree.log';
 
 % Commands to convert from postscript output to svg
-svg_convert_command = sprintf( '%s plotfile dendrogram.svg ', svg_convert_path );
-labelled_svg_convert_command = sprintf( '%s plotfile dendrogram.labelled.svg ', svg_convert_path );
-comma_delimited_bins = '';
-if( length( classNumericValues ) > 0 )
-	classNumericValues = sort( classNumericValues );
-	for b = 1:length( classNumericValues )
-		if( b < length( classNumericValues ) )
-			comma_delimited_bins = [comma_delimited_bins sprintf( '%.0f,', classNumericValues(b) )];
-		else
-			comma_delimited_bins = [comma_delimited_bins sprintf( '%.0f', classNumericValues(b) )];
-		end;
-	end;
-else
-	for b = 0:length( sampleNames )-1
-		if( b < length( sampleNames )-1 )
-			comma_delimited_bins = [comma_delimited_bins sprintf( '%.0f,', b )];
-		else
-			comma_delimited_bins = [comma_delimited_bins sprintf( '%.0f', b )];
-		end;
-	end;
-end;
-svg_convert_command = [ svg_convert_command comma_delimited_bins '; ' ];
-labelled_svg_convert_command = [ labelled_svg_convert_command comma_delimited_bins ' 1; ' ];
+svg_convert_command = sprintf( '%s plotfile dendrogram.svg %s %s %s; ', svg_convert_path, ...
+	sampleLabelsCmdParameter, sampleCategoriesCmdParameter, sampleValuesCmdParameter);
+	
+labelled_svg_convert_command = sprintf( '%s plotfile dendrogram.labelled.svg --showLabels %s %s %s; ', svg_convert_path, ...
+	sampleLabelsCmdParameter, sampleCategoriesCmdParameter, sampleValuesCmdParameter);
+
 perlLibIncludes = sprintf( 'export PERL5LIB=%s; ', codeDir );
 
 % Commands to generate a dendrogram
@@ -79,7 +76,7 @@ else
 end
 
 drawtree_command = sprintf( 'ln -s %s fontfile; %s < %s &> %s; ', font_path, drawtree_path, drawtree_infile_path, drawtree_log_path );
-png_command  = 'convert -density 96x96 dendrogram.svg dendrogram.gif; convert -density 96x96 dendrogram.labelled.svg dendrogram.labelled.gif;';
+png_command  = 'convert -density 32x32 dendrogram.labelled.svg dendrogram.labelled.gif; convert -density 32x32 dendrogram.svg dendrogram.gif; ';
 
 % Make the system calls to generate a dendrogram figure in png and svg formats.
 current_dir = pwd;
