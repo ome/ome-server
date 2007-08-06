@@ -28,4 +28,9 @@ for file_index = 1:length(in_paths)
 end;
 out_paths = in_paths(keep_files);
 
+% convert out_paths from array of structs into a cell of strings, then sort it
+for file_index = 1:length(out_paths)
+	new_out_path{file_index} = out_paths(file_index).name;
+end;
+out_paths = sort_nat(new_out_path);
 return;

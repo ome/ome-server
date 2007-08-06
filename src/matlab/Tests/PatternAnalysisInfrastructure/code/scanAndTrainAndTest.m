@@ -90,8 +90,9 @@ for problem_number = 1:length( problem_dirs )
 	split_dirs = dir( problem_path );
 	split_dirs = filterOutHiddenFiles( split_dirs, 1 ); % removes '.' & '..', and only keeps directories
 	for split_index = 1:length( split_dirs )
-		split_path = fullfile( problem_path, split_dirs( split_index ).name );
-		results( problem_number ).Splits( split_index ).name = split_dirs( split_index ).name;
+		split_path = fullfile( problem_path, split_dirs{split_index} )
+		
+		results( problem_number ).Splits( split_index ).name = split_dirs{split_index};
 		% Begin with the assumption that everything is finished. Change this assumption if we find something unfinished.
 		results( problem_number ).Splits( split_index ).finished = 1;
 		% This next line creates a structure with fields trainIndexes and testIndexes
@@ -221,13 +222,13 @@ for problem_number = 1:length( problem_dirs )
 				experimental_datasets = filterOutHiddenFiles( experimental_datasets, 2 ); % removes '.' & '..', and only keeps files
 				% Generate predictions for each experimental data set
 				for d = 1:length( experimental_datasets )
-					if( length( find( strcmp( experimental_datasets(d).name, skip_files ) ) ) > 0 )
+					if( length( find( strcmp( experimental_datasets{d}, skip_files ) ) ) > 0 )
 						continue;
 					end;
 					%%%%%%%%%%%%%%%%%%%%%%%%
 					% Determine experimental dataset names & paths
-					experimental_dataset_name         = experimental_datasets(d).name(1:end-4);
-					experimental_dataset_input_path   = fullfile( sig_set_path, experimental_datasets(d).name );
+					experimental_dataset_name         = experimental_datasets{d}(1:end-4);
+					experimental_dataset_input_path   = fullfile( sig_set_path, experimental_datasets{d} );
 					experimental_dataset_results_path = fullfile( classifier_save_dir, [ experimental_dataset_name '.Results.mat' ] );
 					in_progress_flag                  = [ experimental_dataset_results_path '.in.progress' ];
 					%%%%%%%%%%%%%%%%%%%%%%%%
