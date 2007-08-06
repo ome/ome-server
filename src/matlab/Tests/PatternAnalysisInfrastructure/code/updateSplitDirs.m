@@ -192,7 +192,7 @@ for sig_set_index = 1:length( sig_dirs )
 			% Skip this directory if it has already been made
 			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			if( ~exist( split_dir, 'dir' ) )
-				fprintf( 'Making split "%s" directory for problem "%s".\n', split_name, problem_name );
+				fprintf( 'Making split "%s" directory for problem "%s" (Split-on: %s) .\n', split_name, problem_name, split_on );
 				mkdir( split_dir );
 			end;
 			if( ~exist( split_sig_dir, 'dir' ) )
