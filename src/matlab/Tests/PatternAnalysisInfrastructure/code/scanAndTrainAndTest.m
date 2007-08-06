@@ -1,10 +1,10 @@
-function [ results ] = scanAndTrainAndTest( compiled_sig_dir, classifier_dir, sig_sets, results_path, problem_dirs, compile_results_only)
+function [ results ] = scanAndTrainAndTest( compiled_sig_dir, classifier_dir, sig_sets, results_path, problem_dirs, options)
 % SYNOPSIS:
 %	compiled_sig_dir = 'data/classifiers';
 %	classifier_dir   = 'code/Classifiers/';
 %	sig_sets          = { 'computedInOME_AE' };
 %	results_path     = 'data/results.mat';
-%	scanAndTrainAndTest(compiled_sig_dir, classifier_dir, sig_sets, results_path);
+%
 % OUTPUTS GIVEN:
 %	For each classification problem, this makes directories for each 
 % classification strategy, trains and tests each classification strategy,
@@ -21,15 +21,30 @@ function [ results ] = scanAndTrainAndTest( compiled_sig_dir, classifier_dir, si
 % classifier. e.g. BayesMultiWay, SVM_OneAgainstAll, etc.
 %
 % ADDITIONAL BEHAVIOR
-% There is an optional flag to compile results only that can be passed at
-% the end of the function. So if you call the function like this:
-%	scanAndTrainAndTest(compiled_sig_dir, classifier_dir, sig_sets, 'compile_results_only');
-% or this
-%	scanAndTrainAndTest(compiled_sig_dir, classifier_dir, sig_sets, 1);
-% The function will not train or test, but with scan through the entire
-% problem space and compile the existing results.
+%	options is a struct that controls scanAndTranAndTest's behaviour with its
+% 	various fields:
+%
+%	scan_opts.artifact_correction_vector_path = '../indNormalVector/individualityNormalizingVector_hande+.mat ';
+%	scan_opts.compile_results_only = 1;
 %
 % Written by Josiah Johnston <siah@nih.gov>
+
+if (exist( 'options', 'var' ))
+	if (isfield(options, 'compile_results_only'))
+		compile_results_only = options.compile_results_only;
+	else
+		compile_results_only = 0;
+	end;
+	
+	if (isfield(options, 'artifact_correction_vector_path'))
+		artifact_correction_vector_path = options.artifact_correction_vector_path;
+	else
+		artifact_correction_vector_path = '';
+	end;
+else
+	compile_results_only = 0;
+	artifact_correction_vector_path = '';
+end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Find problem names by scanning the compiled signature directory
@@ -147,18 +162,18 @@ for problem_number = 1:length( problem_dirs )
 					training_pred;
 
 				% Make the directory if needed
-				if( ~exist( classifier_save_dir, 'dir' ) & ~exist( 'compile_results_only', 'var' ) )
+				if( ~exist( classifier_save_dir, 'dir' ) & ~compile_results_only )
 					mkdir( classifier_save_dir );
 				end;
 				
 				% Is this training problem up for grabs?
-				if( ~exist( training_flag, 'file' ) & ~exist( classifier_path, 'file' ) & ~exist( 'compile_results_only', 'var' ) )
+				if( ~exist( training_flag, 'file' ) & ~exist( classifier_path, 'file' ) & ~compile_results_only )
 					fprintf( 'Training %s with classifier %s\n', train_path, classifier_name );
 					foo = 1;
 					save( training_flag, 'foo' );
 					save( [ training_flag '.by.' hostname ], 'foo' );
 					addpath( genpath( ai_path ) );
-					Train( train_path, classifier_path );
+					Train( train_path, classifier_path, artifact_correction_vector_path);
 					rmpath( genpath( ai_path ) );
 					delete( training_flag );
 					delete( [ training_flag '.by.' hostname ] );
@@ -173,7 +188,7 @@ for problem_number = 1:length( problem_dirs )
 				end;
 
 				% Do the same stuff for testing.
-				if( ~exist( testing_flag, 'file' ) & ~exist( test_save_path, 'file' ) & exist( classifier_path, 'file' ) & ~exist( 'compile_results_only', 'var' ) )
+				if( ~exist( testing_flag, 'file' ) & ~exist( test_save_path, 'file' ) & exist( classifier_path, 'file' ) & ~compile_results_only )
 					fprintf( 'Testing %s with classifier %s\n', test_path, classifier_name );
 					foo = 1;
 					save( testing_flag, 'foo' );
@@ -194,7 +209,7 @@ for problem_number = 1:length( problem_dirs )
 				end;
 
 				% Generate predictions for the training set.
-				if( ~exist( training_pred_flag, 'file' ) & ~exist( training_pred, 'file' ) & exist( classifier_path, 'file' ) & ~exist( 'compile_results_only', 'var' ) )
+				if( ~exist( training_pred_flag, 'file' ) & ~exist( training_pred, 'file' ) & exist( classifier_path, 'file' ) & ~compile_results_only )
 					fprintf( 'Generating predictions for %s with classifier %s\n', train_path, classifier_name );
 					foo = 1;
 					save( training_pred_flag, 'foo' );
@@ -233,7 +248,7 @@ for problem_number = 1:length( problem_dirs )
 					in_progress_flag                  = [ experimental_dataset_results_path '.in.progress' ];
 					%%%%%%%%%%%%%%%%%%%%%%%%
 					% Generate predictions for this data set.
-					if( ~exist( in_progress_flag, 'file' ) & ~exist( experimental_dataset_results_path, 'file' ) & exist( classifier_path, 'file' ) & ~exist( 'compile_results_only', 'var' ) )
+					if( ~exist( in_progress_flag, 'file' ) & ~exist( experimental_dataset_results_path, 'file' ) & exist( classifier_path, 'file' ) & ~compile_results_only )
 						fprintf( 'Generating predictions for %s with classifier %s\n', experimental_dataset_input_path, classifier_name );
 						foo = 1;
 						save( in_progress_flag, 'foo' );

@@ -1,6 +1,6 @@
-function Train( train_path, save_path )
+function Train( train_path, save_path, artifact_correction_vector_path)
 % SYNOPSIS
-%	Train( train_path, save_path )
+%	Train( train_path, save_path, artifact_correction_vector_path)
 % DESCRIPTION
 %	Trains Weighted NN on the training data in train_path,
 % and saves the resultant classifier and logging data to save_path.
@@ -20,6 +20,11 @@ save_vars = { 'sigs_used', 'sigs_used_ind', 'sig_labels', 'signature_scores', ..
 if( isfield( trainingSet, 'slide_class_vector' ) )
 	[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] ...
 		= WND_Train(feature_matrix, percentage_of_features_to_use, 'slide_class_vector', trainingSet.slide_class_vector);
+elseif( exist( 'artifact_correction_vector_path', 'var' ))
+	artifact_correction_vector = load(artifact_correction_vector_path);
+	fprintf( 'Using artifact_correction_vector %s\n', artifact_correction_vector );
+	[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] ...
+		= WND_Train(feature_matrix, percentage_of_features_to_use, 'artifact_correction_vector', artifact_correction_vector);
 elseif( isfield( trainingSet, 'artifact_correction_vector' ) )
 	[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] ...
 		= WND_Train(feature_matrix, percentage_of_features_to_use, 'artifact_correction_vector', trainingSet.artifact_correction_vector);
