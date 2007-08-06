@@ -1,5 +1,5 @@
 % SYNOPSIS
-%	report( results, 'reports' )
+%  [classDendrograms_rel_paths, sampleDendrograms_rel_paths] = report(results, report_root);
 % INPUTS
 %	results can be either the path to the 'results' file, typically 'data/classifiers/results.mat',
 %		or it can be the results structure that has been loaded from the results file via loadResults()
@@ -7,47 +7,13 @@
 % DESCRIPTION
 %	Generate a html report that allows easy comparision of the performance of
 % the classifier against different Signature Sets.
-function [] = report( results, report_root )
+function [classDendrograms_rel_paths, sampleDendrograms_rel_paths] = report( results, report_root )
 
 if( strcmp( class( results ), 'char' ) )
 	[results] = loadResults( results );
 end;
 
 num_ais = length( results( 1 ).Splits( 1 ).SigSet(1).AI );
-% Sample-based dendrogram stuff
-draw_class_based_dendrograms       = 0;
-% Define Class-to-Class Distance functions for drawing dendrograms
-classDistanceFunctionNames = { ...
-	'Marginal Probability - based distance' ...%, ...
-...%	'Class centroid distances in Marginal probability space', ...
-...%	'Class density - based distance', ...
-...%	'Class disjuction - based distance' ...
-};
-classDistanceFunctions = {
-	@getMPClassDist ...%, ...
-...%	@getMPClassCentroidDist, ...
-...%	@getCSClassDist, ...
-...%	@getDisjunctionClassDist ...
-};
-
-% Sample-based dendrogram stuff
-draw_sample_based_dendrograms       = 0;
-draw_sample_dendrogram_for_X_splits = 1;
-max_samples_to_use_in_histogram     = 50;
-% Define Sample-to-Sample Distance functions for drawing dendrograms
-sampleDistanceFunctionNames = { ...
-	'Marginal Probability space' ...%, ...
-...%	'Class Density space', ...
-...%	'Weighted Feature space', ...
-...%	'Raw Feature space', ...
-};
-sampleDistanceFunctions = {
-	@getMPSampleDist ...%, ...
-...%	@getCSSampleDist, ...
-...%	@getWFSampleDist, ...
-...%	@getRFSampleDist ...
-};
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Generate paths for the report overview and all major subcomponents
@@ -77,17 +43,17 @@ for problem_index = 1:length( results )
 					fullfile( report_root, confMatrix_rel_path );
 
 				% set up paths for class-based dendrograms
-				classDendrograms_rel_path = sprintf( 'classDendrograms_Prob%.0f_SigSet%.0f_AI%.0f', problem_index, sig_set_index, ai_index );
+				classDendrograms_rel_path = sprintf( 'classDendrograms_Prob%.0f_SigSet%.0f_AI%.0f.html', problem_index, sig_set_index, ai_index );
 				classDendrograms_rel_paths{ problem_index, sig_set_index, ai_index } = ...
 					classDendrograms_rel_path;
 				classDendrograms_paths{ problem_index, sig_set_index, ai_index } = ...
 					fullfile( report_root, classDendrograms_rel_path );
 
 				% set up paths for sample-based dendrograms
-				sampleDendrograms_rel_path = sprintf( 'sampleDendrograms_Prob%.0f_SigSet%.0f_AI%.0f', problem_index, split_index, sig_set_index, ai_index );
-				sampleDendrograms_rel_paths{ problem_index, split_index, sig_set_index, ai_index } = ...
+				sampleDendrograms_rel_path = sprintf( 'sampleDendrograms_Prob%.0f_SigSet%.0f_AI%.0f.html', problem_index, sig_set_index, ai_index );
+				sampleDendrograms_rel_paths{ problem_index, sig_set_index, ai_index } = ...
 					sampleDendrograms_rel_path;
-				sampleDendrograms_paths{ problem_index, split_index, sig_set_index, ai_index } = ...
+				sampleDendrograms_paths{ problem_index, sig_set_index, ai_index } = ...
 					fullfile( report_root, sampleDendrograms_rel_path );
 			end;
 		end;
@@ -304,194 +270,14 @@ for sig_set_index = 1:length( results( 1 ).Splits( 1 ).SigSet )
 				confMatrix_rel_paths{ problem_index, sig_set_index, ai_index } ...
 			);
 			printConfusionMatrixesAndVariants( confMatrix_paths{ problem_index, sig_set_index, ai_index }, results, problem_index, sig_set_index, ai_index );
-			
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			% Draw Diagrams
-			diagram_id = sprintf( 'Prob%d_SigSet%d_AI%d.Diagrams', ...
-				problem_index, sig_set_index, ai_index ...
+
+			% Links to Dendograms
+			fprintf( REPORT_HTML, '\t\t<a href="%s">Class Based Dendrograms </a> \n', ...
+				classDendrograms_rel_paths{ problem_index, sig_set_index, ai_index } ...
 			);
-			fprintf( REPORT_HTML, '<a href="#" onClick="toggleVisibility(''%s''); return false;">Diagrams</a> \n', ...
-				diagram_id ...
+			fprintf( REPORT_HTML, '\t\t<a href="%s">Sample Based Dendrograms </a> \n', ...
+				sampleDendrograms_rel_paths{ problem_index, sig_set_index, ai_index } ...
 			);
-			fprintf( REPORT_HTML, '\t\t<div id="%s" style="display: none"><br/>\n', diagram_id );
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			% Draw Class-based Dendrograms
-			if( draw_class_based_dendrograms )
-				if( isfield( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results, 'class_numeric_values' ) )
-					continuousClassProblems(end + 1) = problem_index;
-					class_numeric_values  = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.class_numeric_values;
-					true_class_distances  = pdist( class_numeric_values' );
-				end;
-				reuseResults = 1;
-				fprintf( REPORT_HTML, '\t\t<div>\n' );
-				for d = 1:length( classDistanceFunctions )
-					distanceFunction = classDistanceFunctions{ d };
-					[classDistanceMatrix] = distanceFunction( results, problem_index, sig_set_index, ai_index );
-					rel_dendrogram_path = sprintf( '%s.%.0f', classDendrograms_rel_paths{ problem_index, sig_set_index, ai_index }, d );
-					dendrogram_path     = sprintf( '%s.%.0f', classDendrograms_paths{ problem_index, sig_set_index, ai_index }, d );
-					if( ~exist( dendrogram_path, 'dir' ) )
-						mkdir( report_root, rel_dendrogram_path );
-					end;
-					if( isfield( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results, 'class_numeric_values' ) )
-						for c = 1:length( class_numeric_values )
-							labels{c} = sprintf( '%.2f', class_numeric_values(c) );
-						end;
-						[svgPath pngPath] = drawDendrogram( classDistanceMatrix, labels, class_numeric_values, dendrogram_path, fullfile( pwd, 'code/dendrograms' ), reuseResults );
-						% Calculate correlation between the distance measure and difference in class
-						[rho pValue] = corr( true_class_distances', squareform(classDistanceMatrix)', 'type', 'Pearson' );
-						distanceFunctionCorrelationsByProblemAndFunction( problem_index, d ) = rho;
-						fprintf( REPORT_HTML, '<span>Class-based dendrogram using the "%s" distance function<br/><a href="../%s"><img src="../%s"/></a><br/>Correlation of distance measure and known class distances: %.2f</span>\n', classDistanceFunctionNames{d}, svgPath, pngPath, rho );
-					else
-						[svgPath pngPath] = drawDendrogram( classDistanceMatrix, results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.category_names, [], dendrogram_path, fullfile( pwd, 'code/dendrograms' ), reuseResults );
-						fprintf( REPORT_HTML, '<span>Class-based dendrogram using the "%s" distance function<br/><a href="../%s"><img src="../%s"/></a></span>\n', classDistanceFunctionNames{d}, svgPath, pngPath );
-					end;
-				end;
-				fprintf( REPORT_HTML, '\t\t</div>\n' );
-			end;
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			% Draw sample-based dendrograms
-			if( draw_sample_based_dendrograms )
-				% Iterate over splits
-				fprintf( REPORT_HTML, '<br/><b>Sample-based dendrograms from each split</b><br/>\n' );
-				for split_index = 1:draw_sample_dendrogram_for_X_splits
-					sample_based_dendrogram_id = sprintf( 'Prob%d_SigSet%d_AI%d.SampleBasedDendrogram%.0f', ...
-						problem_index, sig_set_index, ai_index, split_index ...
-					);
-					fprintf( REPORT_HTML, '<a href="#" onClick="toggleVisibility(''%s''); return false;">%.0f</a> \n', ...
-						sample_based_dendrogram_id, split_index ...
-					);
-					fprintf( REPORT_HTML, '\t\t<div id="%s" style="display: none"><br/>\n', sample_based_dendrogram_id );
-					% Derive path to store dendrogram
-					rel_dendrogram_path = sprintf( '%s.%.0f', sampleDendrograms_rel_paths{ problem_index, split_index, sig_set_index, ai_index }, d );
-					dendrogram_path = sprintf( '%s.%.0f', sampleDendrograms_paths{ problem_index, split_index, sig_set_index, ai_index }, d );
-					if( ~exist( dendrogram_path, 'dir' ) )
-						mkdir( report_root, rel_dendrogram_path );
-					end;
-					% Select test samples to use for this dendrogram
-					use_samples_path = fullfile( dendrogram_path, 'useSamples.mat' );
-					% Try to load them from file
-					if( exist( use_samples_path, 'file' ) )
-						use_samples = load( use_samples_path );
-					else
-					% If the file doesn't exist, make it
-						control_test_samples = [];
-						class_vector   = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.class_vector;
-						classes        = unique( class_vector );
-						min_class_size = length( class_vector ); % Initialize, then look for min class size
-						total_classes  = length( classes );
-						for c = classes
-							ci = find( class_vector == c );
-							min_class_size = min( [ min_class_size length( ci ) ] );
-						end;
-						% If experimental datasets are present, look up their class sizes
-						if( isfield( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ), 'experimental_datasets' ) )
-							for exp_index = 1:length( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets )
-								exp_class_vector   = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).experimental_datasets(exp_index).results.class_vector;
-								exp_classes        = unique( exp_class_vector );
-								total_classes      = total_classes + length( exp_classes );
-								for c = classes
-									ci = find( exp_class_vector == c);
-									min_class_size = min( [ min_class_size length( ci ) ] );
-								end;
-							end;
-						end;
-						samples_per_class = min_class_size;
-						if( samples_per_class * total_classes > max_samples_to_use_in_histogram )
-							samples_per_class = floor( max_samples_to_use_in_histogram / total_classes );
-						end;
-						for c = classes
-							ci = find( class_vector == c );
-							rand_order = randperm( length( ci ) );
-							control_test_samples = [ control_test_samples ci( rand_order( 1:samples_per_class ) ) ];
-						end;
-						% If experimental datasets are present, choose samples from them
-						if( isfield( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ), 'experimental_datasets' ) )
-							exp_samples = {};
-							for exp_index = 1:length( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets )
-								exp_class_vector   = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).experimental_datasets(exp_index).results.class_vector;
-								exp_classes        = unique( exp_class_vector );
-								total_classes      = total_classes + length( exp_classes );
-								exp_samples{exp_index} = [];
-								for c = exp_classes
-									ci = find( exp_class_vector == c);
-									rand_order = randperm( length( ci ) );
-									exp_samples{exp_index} = [ exp_samples{exp_index} ci( rand_order( 1:samples_per_class ) ) ];
-								end;
-							end;
-							save( use_samples_path, 'control_test_samples', 'exp_samples' );
-						else
-							save( use_samples_path, 'control_test_samples' );
-						end;
-						use_samples = load( use_samples_path );
-					end; % End determine which samples to draw the dendrogram with
-					% Derive true distance between samples if possible
-					if( isfield( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results, 'known_values' ) )
-						known_values          = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.known_values(use_samples.control_test_samples);
-						true_sample_distances = pdist( known_values );
-					end;
-					% Generate labels for each sample
-					labels         = {};
-					for i=use_samples.control_test_samples
-						if( isfield( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).results, 'known_values' ) )
-							labels{end+1} = sprintf( 'A%.0f_%.0f', results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).results.known_values(i), i );
-						else
-							labels{end+1} = sprintf( 'A%.0f', results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.global_image_indexes( i ) );
-						end;
-					end;
-					if( isfield( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ), 'experimental_datasets' ) )
-						% put all experimental results in a convenient data structure
-						for exp_index = 1:length( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets )
-							exp_letter = char('A' + exp_index);
-							for i = use_samples.exp_samples{ exp_index }
-								if( isfield( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets( exp_index ).results, 'known_values' ) )
-									labels{end+1} = sprintf( '%s%.0f_%.0f', exp_letter, results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets( exp_index ).results.known_values(i), i );
-								else
-									labels{end+1} = sprintf( '%s_%.0f', exp_letter, i );							
-								end;
-							end;
-						end;
-					end;
-					% Generate dendrograms for each sample-based distance function
-					for d = 1:length( sampleDistanceFunctions )
-						distanceFunction = sampleDistanceFunctions{ d };
-						if( isfield( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ), 'experimental_datasets' ) )
-							% put all experimental results in a convenient data structure
-							for exp_index = 1:length( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets )
-								exp_results{ exp_index } = results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).experimental_datasets(exp_index).results;
-							end;
-							distanceMatrix = distanceFunction( ...
-								results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results, ...
-								use_samples.control_test_samples, ...
-								exp_results, use_samples.exp_samples );
-							clear exp_results;
-						else
-							distanceMatrix = distanceFunction( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results, use_samples.control_test_samples );
-						end;
-						rel_dendrogram_path = sprintf( '%s.%.0f', sampleDendrograms_rel_paths{ problem_index, split_index, sig_set_index, ai_index }, d );
-						dendrogram_path     = sprintf( '%s.%.0f', sampleDendrograms_paths{ problem_index, split_index, sig_set_index, ai_index }, d );
-						if( ~exist( dendrogram_path, 'dir' ) )
-							mkdir( report_root, rel_dendrogram_path );
-						end;
-						% Make link show the dendrogram from a given split
-						if( isfield( results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results, 'control_class_numeric_values' ) )
-							[svgPath pngPath] = drawDendrogram( distanceMatrix, labels, results( problem_index ).Splits( split_index ).SigSet(sig_set_index).AI( ai_index ).results.control_class_numeric_values, dendrogram_path, fullfile( pwd, 'code/dendrograms' ), reuseResults );
-							% Calculate correlation between the distance measure and difference in class
-							if( isfield( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ), 'experimental_datasets' ) )
-								num_control_samples = length( use_samples.control_test_samples );
-								distanceMatrix = distanceMatrix( [1:num_control_samples], [1:num_control_samples] );
-							end;
-							[rho pValue] = corr( true_sample_distances', squareform(distanceMatrix)', 'type', 'Pearson' );
-							sampleDistanceFunctionCorrelationsByProblemAndFunction( problem_index, d ) = rho;
-							fprintf( REPORT_HTML, '<div>Sample-based dendrogram using the "%s" distance function<br/><a href="../%s"><img src="../%s"/></a><br/>Correlation of distance measure and known class distances for control images from the test set: %.2f</div>\n', sampleDistanceFunctionNames{d}, svgPath, pngPath, rho );
-						else
-							[svgPath pngPath] = drawDendrogram( distanceMatrix, labels, [], dendrogram_path, fullfile( pwd, 'code/dendrograms' ), reuseResults );
-							fprintf( REPORT_HTML, '<div>Sample-based dendrogram using the "%s" distance function<br/><a href="../%s"><img src="../%s"/></a></div>\n', sampleDistanceFunctionNames{d}, svgPath, pngPath );
-						end;		
-					end;
-					fprintf( REPORT_HTML, '\t\t</div>\n' );
-				end; % End iterating over splits
-			end; % End drawing sample-based dendrograms
-			fprintf( REPORT_HTML, '\t\t</div>\n' ); % Close the Diagrams element
 
 			fprintf( REPORT_HTML, '\t</td>\n' );
 
@@ -499,45 +285,7 @@ for sig_set_index = 1:length( results( 1 ).Splits( 1 ).SigSet )
 		fprintf( REPORT_HTML, '</tr>\n', results( problem_index ).name );
 	end; % end Problem loop
 	fprintf( REPORT_HTML, '</table><br/><br/><br/>\n' );
-
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	% Cross-compare each different distance function if there is more than one to evaluate
-	if( length( classDistanceFunctions ) > 1 )
-		fprintf( REPORT_HTML, '<h2>Cross-comparison of distance functions.</h2>\n' );	
-		fprintf( REPORT_HTML, '<table border="1" cellspacing="0" cellpadding="5"><caption>Mean & std of correlations</caption><tr>\n' );
-		fprintf( REPORT_HTML, '<td>%s</td>\n', classDistanceFunctionNames{:} );
-		fprintf( REPORT_HTML, '</tr><tr>\n' );
-		mean_distanceFunctionCorrelationsByProblemAndFunction = mean( distanceFunctionCorrelationsByProblemAndFunction(continuousClassProblems, :), 1 );
-		std_distanceFunctionCorrelationsByProblemAndFunction = std( distanceFunctionCorrelationsByProblemAndFunction(continuousClassProblems, :), 0, 1 );
-		for df_index = 1:length( classDistanceFunctionNames )
-			fprintf( REPORT_HTML, '<td>%.2f +- %.2f</td>\n', mean_distanceFunctionCorrelationsByProblemAndFunction( df_index ), std_distanceFunctionCorrelationsByProblemAndFunction( df_index ) );
-		end;
-		fprintf( REPORT_HTML, '</tr></table>\n' );
-		fprintf( REPORT_HTML, '<table border="1" cellspacing="0" cellpadding="5"><caption>Cell entries are the probability that the distance function in the column outperformed the distance function in the row. Results are based on a paired ttest. Significant entries are given in bold.</caption>\n' );
-		fprintf( REPORT_HTML, '<tr>\n\t<td> </td>\n' );
-		for df_index = 1:length( classDistanceFunctionNames )
-			fprintf( REPORT_HTML, '\t<td>%s</td>\n', classDistanceFunctionNames{ df_index } );	
-		end;
-		fprintf( REPORT_HTML, '</tr>\n' );
-		for df_indexA = 1:length( classDistanceFunctionNames )
-			fprintf( REPORT_HTML, '<tr>\n\t<td>%s</td>\n', classDistanceFunctionNames{ df_indexA } );	
-			for df_indexB = 1:length( classDistanceFunctionNames )
-				[h p] = ttest( ...
-					distanceFunctionCorrelationsByProblemAndFunction( continuousClassProblems, df_indexA ), ...
-					distanceFunctionCorrelationsByProblemAndFunction( continuousClassProblems, df_indexB ), ...
-					0.05, 'left' ...
-				);
-				style = '';
-				if( h ==1 )
-					style = 'font-weight: bold;';
-				end;
-				fprintf( REPORT_HTML, '\t<td style="%s">%.2f</td>\n', style, p );
-			end;
-			fprintf( REPORT_HTML, '</tr>\n' );
-		end;
-		fprintf( REPORT_HTML, '</table>\n' );
-	end;
-
+	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% Cross-compare each different classifier
 	ai_comparison_id = sprintf( 'ai_comp_%d', sig_set_index );
@@ -739,7 +487,9 @@ for problem_index = 1:length( results )
 			fprintf( PROB_OVERVIEW, '<p>Predictions and other statistics were averaged across all splits</p>\n' );
 			for exp_index = 1:length( results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets )
 				% Make up a predictions that averages predictions from all the splits
-				changing_fields = {'continuous_score', 'norm_avg_marg_probs', 'avg_class_similarities', 'avg_marg_probs', 'norm_confusion_matrix', 'class_predictions', 'num_unclassified', 'marginal_probs', 'confusion_matrix' };
+				
+				%% FIX ME optionally inject 'continuous_score'
+				changing_fields = {'norm_avg_marg_probs', 'avg_class_similarities', 'avg_marg_probs', 'norm_confusion_matrix', 'class_predictions', 'num_unclassified', 'marginal_probs', 'confusion_matrix' };
 				for split_index = 1:num_splits
 					predictions = results( problem_index ).Splits( split_index ).SigSet( sig_set_index ).AI( ai_index ).experimental_datasets(exp_index).results;
 					for field = changing_fields
