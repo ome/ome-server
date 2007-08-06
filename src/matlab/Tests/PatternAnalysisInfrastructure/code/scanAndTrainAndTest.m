@@ -105,7 +105,7 @@ for problem_number = 1:length( problem_dirs )
 	split_dirs = dir( problem_path );
 	split_dirs = filterOutHiddenFiles( split_dirs, 1 ); % removes '.' & '..', and only keeps directories
 	for split_index = 1:length( split_dirs )
-		split_path = fullfile( problem_path, split_dirs{split_index} )
+		split_path = fullfile( problem_path, split_dirs{split_index} );
 		
 		results( problem_number ).Splits( split_index ).name = split_dirs{split_index};
 		% Begin with the assumption that everything is finished. Change this assumption if we find something unfinished.

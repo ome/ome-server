@@ -80,7 +80,7 @@ if( strcmp( artifact_correction_type, 'slide_class_vector' ) )
 		feature_scores(1:num_features) = raw_feature_scores(1:num_features);
 	end;
 elseif( strcmp( artifact_correction_type, 'artifact_correction_vector' ) )
-	feature_scores(1:num_features) = raw_feature_scores(1:num_features) - artifact_correction_vector(1:num_features);
+	feature_scores(1:num_features) = raw_feature_scores(1:num_features) - artifact_correction_data(1:num_features);
 	if( length( find( feature_scores > 0 ) ) == 0 )
 		warning( 'Artifact correction caused all features to have negative weights. Consequently, ARTIFACT CORRECTION IS NOT BEING APPLIED TO THIS PROBLEM.' );
 		feature_scores(1:num_features) = raw_feature_scores(1:num_features);

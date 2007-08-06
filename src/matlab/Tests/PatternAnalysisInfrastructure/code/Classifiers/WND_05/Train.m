@@ -22,9 +22,9 @@ if( isfield( trainingSet, 'slide_class_vector' ) )
 		= WND_Train(feature_matrix, percentage_of_features_to_use, 'slide_class_vector', trainingSet.slide_class_vector);
 elseif( exist( 'artifact_correction_vector_path', 'var' ))
 	artifact_correction_vector = load(artifact_correction_vector_path);
-	fprintf( 'Using artifact_correction_vector %s\n', artifact_correction_vector );
+	fprintf( 'Using artifact_correction_vector from %s\n', artifact_correction_vector_path);
 	[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] ...
-		= WND_Train(feature_matrix, percentage_of_features_to_use, 'artifact_correction_vector', artifact_correction_vector);
+		= WND_Train(feature_matrix, percentage_of_features_to_use, 'artifact_correction_vector', artifact_correction_vector.avg_feature_scores);
 elseif( isfield( trainingSet, 'artifact_correction_vector' ) )
 	[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] ...
 		= WND_Train(feature_matrix, percentage_of_features_to_use, 'artifact_correction_vector', trainingSet.artifact_correction_vector);
