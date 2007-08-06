@@ -1,36 +1,101 @@
 #!/usr/bin/perl
 
 use strict;
-use Spiral;
 use HeatMap;
+use Getopt::Long;
+
 
 if( scalar( @ARGV ) < 2 ) {
 	print "Simple usage is:\n".
-	      "./psTree2SVG_discreteState.pl infile.ps outfile.svg 0,2,4\n";
+	      "./psTree2SVG_coloredTree.pl infile.ps outfile.svg --label WRM_00 --label WRM_01 --category Day1 --category Day4 --value 1 --value 4\n";
 	exit;
 }
 
 my $psFile   = shift @ARGV;
 my $savePath = shift @ARGV;
-my ($showVals, $catNames, $showLabels);
-while( my $optional_input = shift( @ARGV ) ) {
-	if( $optional_input =~ m/^((\d+\.?\d*),)+(\d+\.?\d*)$/ ) {
-		$showVals = [ split( ',', $optional_input ) ];
-	} elsif( $optional_input =~ m/^((\w+),)+(\w+)$/ ) {
-		$catNames = [ split( ',', $optional_input ) ];
-	} elsif( $optional_input =~ m/^\d$/ ) {
-		$showLabels = $optional_input;
+
+###################################################################
+# Convert from Sample%d which are labels in the PS file into
+# actual SampleLabels/SampleValues for the SVG
+###################################################################
+my @sampleLabels;
+my @sampleCategories;
+my @sampleValues;
+my $showLabels = '';
+GetOptions('label=s' => \@sampleLabels,
+		   'value=s' => \@sampleValues,
+		   'category=s' => \@sampleCategories,
+		   'showLabels!' => \$showLabels);
+		   
+# by default arbitrarily assign categories values 1...n
+if (not scalar @sampleValues) {
+	my %catNumLUT;
+
+	# figure out category -> value mapping
+	foreach(@sampleCategories){
+		$catNumLUT{$_} = "";
+	}
+	my $i=1;
+	foreach (sort(keys %catNumLUT)) {
+		$catNumLUT{$_}= $i++;
+	}
+	# apply category->value mapping
+	foreach (@sampleCategories){
+		push (@sampleValues, $catNumLUT{$_});
 	}
 }
 
+if (scalar @sampleLabels != scalar @sampleCategories) {
+	print "ERROR: number of sample categories (--category) needs to match number of sample labels (--label)\n";
+	exit(-1);
+}
+
+my %sampleLabelsKey;
+my %sampleValuesKey;
+my %sampleCategoriesKey;
+
+my $i=1;
+foreach (@sampleLabels) {
+	$sampleLabelsKey{sprintf("Sample%d",$i++)} = $_;
+}
+$i=1;
+foreach (@sampleCategories) {
+	$sampleCategoriesKey{sprintf("Sample%d",$i++)} = $_;
+}
+$i=1;
+foreach (@sampleValues) {
+	$sampleValuesKey{sprintf("Sample%d",$i++)} = $_;
+}
+
 my ($nodes, $nodeDists, $connectedNodes) = parsePSFile( $psFile );
+
+# Label Nodes
+foreach (@$nodes) {
+	if($_->{isLeaf}) {
+		my $sampleHashKey = $_->{label};
+		$_->{label}    = $sampleLabelsKey{$sampleHashKey};
+		$_->{value}    = $sampleValuesKey{$sampleHashKey};
+		$_->{category} = $sampleCategoriesKey{$sampleHashKey};
+	}
+}
+
+#foreach (@$nodes) {
+#		print "$_->{label} $_->{value} $_->{category}\n";
+#}
+
 $nodes = oozingPaint($nodes, $nodeDists, $connectedNodes, {} );
-printNodes2SVG( $nodes, $connectedNodes, $savePath, $showVals, {
+
+# ShowValues are the unique values in sampleValues
+my @showValues = (1..scalar @sampleValues);
+
+printNodes2SVG( $nodes, $connectedNodes, $savePath, \@showValues, {
 	lineWidth         => 1,
-	markerRadius      => 2,
+	markerRadius      => 5,
 	markerStrokeWidth => 0,
 	printMarkers      => 1,
-	categoryNames     => $catNames
+	multipleShapes    => 1, # otherwise, all categories are circles just with different colors
+	showLabels        => $showLabels,
+# ABSOLUTELY WRONG, catNames does some ordering weirdness	categoryNames     => \@sampleCategories,
 });
 
 ########################################################
@@ -100,15 +165,12 @@ sub parsePSFile {
 				$labelY = sprintf("%.2f", $labelY );
 			} elsif( $line =~ m/^\s*\((.+)\)\s+show/ ) {
 				my $label = $1;
-				my ($category, $value, $id) = parse_label( $label );
+				
 				# Match the labels with nodes
 				for my $i (0..(scalar( @nodes )-1)) {
 					my $node = $nodes[ $i ];
 					if( $node->{ 'x' } == $labelX && $node->{ 'y' } == $labelY ) {
 						$node->{ label }    = $label;
-						$node->{ value }    = $value;
-						$node->{ category } = $category;
-						$node->{ id }       = $id;
 						$node->{ isLeaf }   = 1;
 						last;
 					}
@@ -272,18 +334,27 @@ sub oozingPaint {
 # Print to an SVG file.
 sub printNodes2SVG {
 	my ($nodes, $connectedNodes, $svgSavePath, $showVals, $options) = @_;
-
+	
 	# Find the range of values for the heat map
 	my @values;
-	my %categoryID;
+	my @categories;
+	
 	for my $i (0..(scalar( @$nodes )-1)) {
 		next unless exists( $nodes->[$i]->{ isLeaf } );
 		push( @values, $nodes->[$i]->{ value } );
-		# Set up category:id mappings
-		$categoryID{ $nodes->[$i]->{ category } } = scalar( keys( %categoryID ) )
-			unless exists $categoryID{ $nodes->[$i]->{ category } };
+		push( @categories, $nodes->[$i]->{ category } );
 	}
-	my $heatMap = new HeatMap( 'Days since molting', \@values );
+	
+	# Set up category:id mappings	
+	@categories = sort(@categories);
+	my %categoryID;
+	foreach (@categories) {
+		$categoryID{$_} = scalar( keys( %categoryID ) )
+			unless exists $categoryID{ $_ };
+	}
+	my $numCategories = scalar (keys %categoryID);
+			
+	my $heatMap = new HeatMap( 'HeatMap Legend', \@values );
 		
 	# Constants
 	my $margin        = ( exists $options->{ margin } ? $options->{margin} : 20 );
@@ -294,6 +365,7 @@ sub printNodes2SVG {
 		? $options->{markerStrokeWidth} : 
 		2 / 3 * $markerRadius );
 	my $markerOuterRadius = $markerRadius + $markerStrokeWidth / 2;
+	my $showLabels  = ( exists $options->{ showLabels } ? $options->{showLabels} : 1 );
 
 	# Print the lines connecting nodes
 	my @drawnEdges = [];
@@ -328,59 +400,62 @@ sub printNodes2SVG {
 	my $markersSVG = "";
 	my $categoryLegend = "";
 	if( $options->{ printMarkers } ) {
-		# Set up category templates: cirle, star, triangle. For now, assume maximum of 3 categories
+		
+		# Set up category templates: star, triangle, square, circle+. So if more
+		# than four categories, the fifth etc. categories will also be circles
 		my @label_templates;
-		# Circle
-		$label_templates[0] = '<circle id="%s" cx="%.2f" cy= "%.2f" stroke="black" stroke-width="'.($markerStrokeWidth).'" r="'.($markerRadius).'" opacity=".8" %s/>';
-		# Star
-		my $points = '';
-		my $pi = atan2(0,-1);
-		my $aspectRatio = 0.3 * $markerRadius;
-		foreach my $i (0..4) {
-			my $theta1 = 2*$pi/5*$i + $pi / 2;
-			my $theta2 = 2*$pi/5*$i + $pi / 2 + 2 * $pi / 10;
-			$points .= sprintf( '%.2f,%.2f %.2f,%.2f ', 
-				$markerRadius * cos($theta1), $markerRadius * sin($theta1),
-				$aspectRatio  * cos($theta2), $aspectRatio  * sin($theta2)
-			);
-		}
-		$label_templates[1] = '<polygon id="%s" transform = "translate(%.2f,%.2f)" stroke="black" stroke-width="'.($markerStrokeWidth).'" points="'.$points.'" opacity=".8" %s />';
-		# Triangle
-		my $points = '';
-		my $pi = atan2(0,-1);
-		foreach my $i (0..2) {
-			my $theta = 2*$pi/3*$i + $pi / 2;
-			$points .= sprintf( '%.2f,%.2f ', 
-				$markerRadius * cos($theta), $markerRadius * sin($theta),
-			);
-		}
-		$label_templates[2] = '<polygon id="%s" transform = "translate(%.2f,%.2f)" stroke="black" stroke-width="'.($markerStrokeWidth).'" points="'.$points.'" opacity=".8" %s />';		
-
-		# Draw up categorical legend
-		$categoryLegend = '<g id="CategoricalLegend" transform = "translate(%.2f,%.2f) scale(3)">'."\n";
-		my @categoryNames = sort keys %categoryID;
-		my $legendLineHeight = ( $labelFontSize > 2*$markerRadius ? $labelFontSize : 2*$markerRadius );
-		foreach my $i ( 0..(scalar(@categoryNames)-1) ) {
-			my $category = $categoryNames[$i];
-			my $categoryName = $category;
-			if( $options->{ categoryNames } ) {
-				my $index = ord($category) - ord("A");
-				$categoryName = $options->{ categoryNames }->[ $index ];
+		if ($options->{ multipleShapes } ) {
+			# Star
+			my $points = '';
+			my $pi = atan2(0,-1);
+			my $aspectRatio = 0.3 * $markerRadius;
+			foreach my $i (0..4) {
+				my $theta1 = 2*$pi/5*$i + $pi / 2;
+				my $theta2 = 2*$pi/5*$i + $pi / 2 + 2 * $pi / 10;
+				$points .= sprintf( '%.2f,%.2f %.2f,%.2f ', 
+					$markerRadius * cos($theta1), $markerRadius * sin($theta1),
+					$aspectRatio  * cos($theta2), $aspectRatio  * sin($theta2)
+				);
 			}
-			$categoryLegend .= "\t".sprintf( $label_templates[ $categoryID{ $category } ], 
-				$category, 
-				0,
-				-1.5 * $legendLineHeight * $i,
-				'fill="red"'
-			)." <text x='".2*$markerRadius."' y='".(-1.5 * $legendLineHeight * $i + $markerRadius)."' font-size='$labelFontSize' text-anchor='start' opacity='1'>$categoryName</text>\n";
-		}
-		$categoryLegend .= "</g>\n";
+			$label_templates[0] = '<polygon id="%s" transform = "translate(%.2f,%.2f)" stroke="black" stroke-width="'.($markerStrokeWidth).'" points="'.$points.'" opacity=".8" %s />'."\n";
 
-        # Add text to the label templates if requested
+			# Triangle
+			my $points = '';
+			my $pi = atan2(0,-1);
+			foreach my $i (0..2) {
+				my $theta = 2*$pi/3*$i + $pi / 2;
+				$points .= sprintf( '%.2f,%.2f ', 
+					$markerRadius * cos($theta), $markerRadius * sin($theta),
+				);
+			}
+			$label_templates[1] = '<polygon id="%s" transform = "translate(%.2f,%.2f)" stroke="black" stroke-width="'.($markerStrokeWidth).'" points="'.$points.'" opacity=".8" %s />'."\n";		
+			# Square
+			my $points = '';
+			my $pi = atan2(0,-1);
+			foreach my $i (0..3) {
+				my $theta = -$pi/4 + $pi/2*$i ;
+				$points .= sprintf( '%.2f,%.2f ', 
+					$markerRadius * cos($theta), $markerRadius * sin($theta),
+				);
+			}
+			$label_templates[2] = '<polygon id="%s" transform = "translate(%.2f,%.2f)" stroke="black" stroke-width="'.($markerStrokeWidth).'" points="'.$points.'" opacity=".8" %s />'."\n";		
+			
+			# The other categories are rendered as circles
+			for (my $i=3; $i<$numCategories; $i++) {
+				$label_templates[$i] = '<circle id="%s" cx="%.2f" cy= "%.2f" stroke="black" stroke-width="'.($markerStrokeWidth).'" r="'.($markerRadius).'" opacity=".8" %s/>'."\n";
+			}
+		} else {
+			# All categories are rendered as circles
+			for (my $i=0; $i<$numCategories; $i++) {
+				$label_templates[$i] = '<circle id="%s" cx="%.2f" cy= "%.2f" stroke="black" stroke-width="'.($markerStrokeWidth).'" r="'.($markerRadius).'" opacity=".8" %s/>'."\n";
+			}
+		}
+        # Add text to the label_template markers
 		$_ .= ( $showLabels ? "<text x='%.2f' y='%.2f' font-size='%d' text-anchor='start' opacity='.7'>%s</text>\n" : '' )
 			foreach @label_templates;
-
-		# Print the labels
+			
+		# Print the markers
+		my %categoryIDcolor; # figure out what colors are used for which category
 		for my $i (0..(scalar( @$nodes )-1)) {
 			next unless exists( $nodes->[$i]->{ isLeaf } );
 			my $x = $nodes->[$i]->{ 'x' };
@@ -388,7 +463,9 @@ sub printNodes2SVG {
 			
 			my $rgb         = $nodes->[ $i ]->{ rgb };
 			my $colorString = 'fill="rgb('.join(',', @$rgb ).')"';
-			$markersSVG .= sprintf( $label_templates[ $categoryID{ $nodes->[$i]->{ category } } ], 
+			my $catID = $categoryID{ $nodes->[$i]->{ category } };
+			$categoryIDcolor{$catID} = $colorString;
+			$markersSVG .= sprintf( $label_templates[$catID], 
 				$nodes->[$i]->{ label }, 
 				$x,
 				-1 * $y,
@@ -398,11 +475,36 @@ sub printNodes2SVG {
 					-1 * $y + $labelFontSize / 2,
 					$labelFontSize, 
 					$nodes->[$i]->{ label } ) : ()
-				)
+				),"\n"
 			);
 		}
+		
+		# Draw up categorical legend
+		$categoryLegend = '<g id="CategoricalLegend" transform = "translate(%.2f,%.2f) scale(3)">'."\n";
+		my @categoryNames = sort keys %categoryID;
+
+		my $legendLineHeight = ( $labelFontSize > 2*$markerRadius ? $labelFontSize : 2*$markerRadius );
+		foreach my $i ( 0..(scalar(@categoryNames)-1) ) {
+			my $category = $categoryNames[$i];
+			my $categoryName = $category;
+			
+			if( $options->{ categoryNames } ) {
+				my $index = ord($category) - ord("A");
+				$categoryName = $options->{ categoryNames }->[ $index ];
+			}
+			my $catID = $categoryID{ $category };
+			my $colorString = $categoryIDcolor{$catID};
+			$categoryLegend .= "\t".sprintf( $label_templates[$catID], 
+				$category, 
+				0,
+				1.5 * $legendLineHeight * $i,
+				$colorString
+			)." <text x='".2*$markerRadius."' y='".(1.5 * $legendLineHeight * $i + $markerRadius)."' font-size='$labelFontSize' text-anchor='start' opacity='1'>$categoryName</text>\n";
+		}
+		$categoryLegend .= "</g>\n";
+
+
 	}
-	
 	open( SVG_OUT, "> $svgSavePath" )
 		or die "Couldn't open $svgSavePath for writing.";
 	
@@ -422,7 +524,7 @@ xmlns="http://www.w3.org/2000/svg">
 
 END
 	# Print the contesnts, legend & footer
-	print SVG_OUT $gradientsSVG."<g id='lines'>".$linesSVG."</g><g id='markers'>".$markersSVG."</g>";
+	print SVG_OUT $gradientsSVG."<g id='lines'>".$linesSVG."</g><g id='markers'>\n".$markersSVG."</g>";
 	print SVG_OUT "\n\n\n</g>".
  		$heatMap->getLegend( $showVals, {
  			x_offset => 30, 
@@ -431,7 +533,6 @@ END
  		} )."\n\n".
  		sprintf( $categoryLegend, 30, 300).
 		"</svg>\n";
-	
 	close( SVG_OUT );
 } 
 
@@ -450,13 +551,4 @@ sub getLineAndGradient {
 		$gradient = sprintf( $gradient_template, $gradientID, $colorString1, $colorString2 );
 	
 	return ( $rect, $gradient );
-}
-
-
-sub parse_label {
-	my $label = shift;
-	$label =~ m/^\s*(\D+)?(\d+\.?\d*)?[_ ]?(\d+)?\s*$/o
-		or die "Couldn't parse '$label'";
-	my ($category, $value, $id) = ($1,$2,$3);
-	return ($category, $value, $id);
 }
