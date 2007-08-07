@@ -20,7 +20,7 @@ save_vars = { 'sigs_used', 'sigs_used_ind', 'sig_labels', 'signature_scores', ..
 if( isfield( trainingSet, 'slide_class_vector' ) )
 	[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] ...
 		= WND_Train(feature_matrix, percentage_of_features_to_use, 'slide_class_vector', trainingSet.slide_class_vector);
-elseif( exist( 'artifact_correction_vector_path', 'var' ))
+elseif( exist( 'artifact_correction_vector_path', 'var' ) & length(artifact_correction_vector_path>0) )
 	artifact_correction_vector = load(artifact_correction_vector_path);
 	fprintf( 'Using artifact_correction_vector from %s\n', artifact_correction_vector_path);
 	[features_used, feature_scores, norm_train_matrix, feature_min, feature_max] ...
