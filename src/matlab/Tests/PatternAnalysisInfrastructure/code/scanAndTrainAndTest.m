@@ -26,24 +26,26 @@ function [ results ] = scanAndTrainAndTest( compiled_sig_dir, classifier_dir, si
 %
 %	scan_opts.artifact_correction_vector_path = '../indNormalVector/individualityNormalizingVector_hande+.mat ';
 %	scan_opts.compile_results_only = 1;
-%
+%	scan_opts.train_only = 1;
 % Written by Josiah Johnston <siah@nih.gov>
 
+% default choices
+train_only = 0;
+compile_results_only = 0;
+artifact_correction_vector_path = '';
+
 if (exist( 'options', 'var' ))
+	if (isfield(options, 'train_only'))
+		train_only = options.train_only;
+	end;
+	
 	if (isfield(options, 'compile_results_only'))
 		compile_results_only = options.compile_results_only;
-	else
-		compile_results_only = 0;
 	end;
 	
 	if (isfield(options, 'artifact_correction_vector_path'))
 		artifact_correction_vector_path = options.artifact_correction_vector_path;
-	else
-		artifact_correction_vector_path = '';
-	end;
-else
-	compile_results_only = 0;
-	artifact_correction_vector_path = '';
+	end;	
 end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,7 +190,8 @@ for problem_number = 1:length( problem_dirs )
 				end;
 
 				% Do the same stuff for testing.
-				if( ~exist( testing_flag, 'file' ) & ~exist( test_save_path, 'file' ) & exist( classifier_path, 'file' ) & ~compile_results_only )
+				if( ~exist( testing_flag, 'file' ) & ~exist( test_save_path, 'file' ) ...
+					& exist( classifier_path, 'file' ) & ~compile_results_only & ~train_only)
 					fprintf( 'Testing %s with classifier %s\n', test_path, classifier_name );
 					foo = 1;
 					save( testing_flag, 'foo' );
@@ -209,7 +212,8 @@ for problem_number = 1:length( problem_dirs )
 				end;
 
 				% Generate predictions for the training set.
-				if( ~exist( training_pred_flag, 'file' ) & ~exist( training_pred, 'file' ) & exist( classifier_path, 'file' ) & ~compile_results_only )
+				if( ~exist( training_pred_flag, 'file' ) & ~exist( training_pred, 'file' ) ...
+					& exist( classifier_path, 'file' ) & ~compile_results_only & ~train_only)
 					fprintf( 'Generating predictions for %s with classifier %s\n', train_path, classifier_name );
 					foo = 1;
 					save( training_pred_flag, 'foo' );
