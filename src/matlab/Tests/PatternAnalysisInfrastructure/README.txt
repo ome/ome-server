@@ -41,6 +41,7 @@ DATA FILE
 * image_metadata_href: Stores a url to detailed information about each column of the signature matrix. Will be used in the future during report generation.
 * image_ids: OME image IDs for each column of the signature matrix
 * sample_ids: Arbitrary sample IDs for each column of the signature matrix. Typically corresponds to biological replicates.
+* sample_labels: A cell array of labels for each sample_id
 * split_on: Determines if training/test divisions will be made per-tile, per-image, or pre-sample. Can take the values of "sample_ids", "image_ids", and "tiles". Defaults to sample_ids if that variable is present, then image_ids if that variable is present, and falls back to tiles if neigther variable is present.
 	Optional variables if categories are based on a numeric variable
 * continuous_values: Stores the numeric experimental value for each column of the signature matrix that the categories are based on.
