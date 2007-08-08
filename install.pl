@@ -61,6 +61,7 @@ my @tasks = qw(
     OME::Install::MatlabTask
     OME::Install::CoreDatabaseTablesTask
     OME::Install::MaintenanceTask
+    OME::Install::LDAPConfigTask
 );
 
 # Task stack
