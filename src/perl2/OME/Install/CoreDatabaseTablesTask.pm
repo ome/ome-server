@@ -1537,10 +1537,6 @@ BLURB
     add_DB_constraints ($session, $LOGFILE);
 
     $session->commitTransaction();
-    
-    # We're basically ready to use OME at this point other than possibly
-    # also installing optional stuff.  So, store the installation environment so far.
-	$ENVIRONMENT->store_to();
 
     #*********
     #********* Logout and cleanup
@@ -1553,6 +1549,11 @@ BLURB
     
     # Back to UID 0
     euid(0);
+
+    
+    # We're basically ready to use OME at this point other than possibly
+    # also installing optional stuff.  So, store the installation environment so far.
+	$ENVIRONMENT->store_to();
 
     return 1;
 }
